@@ -13,6 +13,15 @@ export default [
             { path: 'admin/analytics', component: () => import('@/pages/admin/Analytics.vue'), meta: { role: 'admin' } },
             { path: 'admin/settings', component: () => import('@/pages/admin/Settings.vue'), meta: { role: 'admin' } },
 
+            // Secretary Routes
+            { path: 'secretary', component: () => import('@/pages/secretary/Index.vue'), meta: { role: 'secretary' } },
+            { path: 'secretary/documents', component: () => import('@/pages/secretary/Documents.vue'), meta: { role: 'secretary' } },
+            { path: 'secretary/users', component: () => import('@/pages/secretary/Users.vue'), meta: { role: 'secretary' } },
+            { path: 'secretary/students', component: () => import('@/pages/secretary/Students.vue'), meta: { role: 'secretary' } },
+            { path: 'secretary/communications', component: () => import('@/pages/secretary/Communications.vue'), meta: { role: 'secretary' } },
+            { path: 'secretary/reports', component: () => import('@/pages/secretary/Reports.vue'), meta: { role: 'secretary' } },
+            { path: 'secretary/settings', component: () => import('@/pages/secretary/Settings.vue'), meta: { role: 'secretary' } },
+
             // Teacher Routes
             { path: 'teacher', component: () => import('@/pages/teacher/Index.vue'), meta: { role: 'teacher' } },
 
