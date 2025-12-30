@@ -1,0 +1,96 @@
+package scheduling
+
+import (
+	"context"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+)
+
+// Mocks
+type MockRepo struct {
+	mock.Mock
+}
+
+func (m *MockRepo) CreateSlot(ctx context.Context, s *ColloquioSlot) error {
+	s.ID = "new-id"
+	return nil
+}
+func (m *MockRepo) GetSlots(ctx context.Context, tID string, f, t time.Time) ([]ColloquioSlot, error) {
+	return []ColloquioSlot{}, nil
+}
+func (m *MockRepo) GetAvailableSlots(ctx context.Context, s, tID string, f, t time.Time) ([]ColloquioSlot, error) {
+	return nil, nil
+}
+func (m *MockRepo) GetSlotByID(ctx context.Context, id string) (*ColloquioSlot, error) {
+	args := m.Called(id)
+	return args.Get(0).(*ColloquioSlot), args.Error(1)
+}
+func (m *MockRepo) UpdateSlot(ctx context.Context, s *ColloquioSlot) error { return nil }
+func (m *MockRepo) CreateBooking(ctx context.Context, b *ColloquioBooking) error {
+	b.ID = "booking-id"
+	return nil
+}
+func (m *MockRepo) GetBooking(ctx context.Context, id string) (*ColloquioBooking, error) {
+	return nil, nil
+}
+func (m *MockRepo) GetBookingsByParent(ctx context.Context, pID string) ([]ColloquioBooking, error) {
+	return nil, nil
+}
+func (m *MockRepo) GetBookingsByTeacher(ctx context.Context, tID string) ([]ColloquioBooking, error) {
+	return nil, nil
+}
+func (m *MockRepo) UpdateBooking(ctx context.Context, b *ColloquioBooking) error { return nil }
+func (m *MockRepo) CountBookingsForParent(ctx context.Context, pID string, d time.Time, s, e time.Time) (int, error) {
+	return 0, nil
+}
+func (m *MockRepo) GetSettings(ctx context.Context, sID string) (*ColloquioSettings, error) {
+	return &ColloquioSettings{BookingBufferHours: 1, BookingWindowDays: 60}, nil
+}
+func (m *MockRepo) UpdateSettings(ctx context.Context, s *ColloquioSettings) error { return nil }
+func (m *MockRepo) GetAnalytics(ctx context.Context, sID string) (*AnalyticsResponse, error) {
+	return nil, nil
+}
+
+func TestService_CreateSlot(t *testing.T) {
+	repo := new(MockRepo)
+	svc := NewService(repo)
+
+	req := CreateSlotRequest{
+		Date:      time.Now().AddDate(0, 0, 1).Format("2006-01-02"), // Future
+		StartTime: "10:00", EndTime: "11:00",
+		Type: SlotIndividual,
+	}
+
+	err := svc.CreateSlots(context.Background(), "teacher1", req)
+	assert.NoError(t, err)
+}
+
+func TestService_BookSlot(t *testing.T) {
+	repo := new(MockRepo)
+	svc := NewService(repo)
+
+	slotID := "slot-1"
+	slotDate := time.Now().AddDate(0, 0, 2)
+	slot := &ColloquioSlot{
+		ID: slotID, Date: slotDate,
+		StartTime: time.Date(0, 0, 0, 10, 0, 0, 0, time.UTC),
+		EndTime:   time.Date(0, 0, 0, 11, 0, 0, 0, time.UTC),
+	}
+
+	repo.On("GetSlotByID", slotID).Return(slot, nil)
+
+	res, err := svc.BookSlot(context.Background(), "parent1", BookSlotRequest{SlotID: slotID})
+	assert.NoError(t, err)
+	assert.Equal(t, "booking-id", res.ID)
+}
+
+func TestValidator_ValidateSlot(t *testing.T) {
+	v := NewValidator()
+	s := &ColloquioSlot{
+		Date: time.Now().AddDate(0, 0, -1), // Past
+	}
+	assert.Error(t, v.ValidateSlot(s))
+}

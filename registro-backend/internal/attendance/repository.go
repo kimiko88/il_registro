@@ -3,11 +3,24 @@ package attendance
 import (
 	"database/sql"
 	"fmt"
+	"time"
 )
 
 type Repository interface {
-	FindByClassAndDate(classID uint, date string) ([]Attendance, error)
-	Create(attendance *Attendance) error
+	Create(att *Attendance) error
+	BatchCreate(atts []*Attendance) error
+	Update(att *Attendance) error
+
+	FindByID(id string) (*Attendance, error)
+	FindByClassAndDate(classID string, date time.Time) ([]Attendance, error)
+	FindByStudent(studentID string, startDate, endDate time.Time) ([]Attendance, error)
+	GetStats(studentID string) (*SummaryResponse, error)
+
+	// Justifications
+	CreateJustification(j *Justification) error
+	UpdateJustification(j *Justification) error
+	FindJustificationByID(id string) (*Justification, error)
+	FindPendingJustifications(classID string) ([]Justification, error)
 }
 
 type repository struct {
@@ -18,31 +31,189 @@ func NewRepository(db *sql.DB) Repository {
 	return &repository{db: db}
 }
 
-func (r *repository) FindByClassAndDate(classID uint, date string) ([]Attendance, error) {
-	query := `SELECT id, student_id, class_id, date, status, justified, created_at, updated_at FROM attendance WHERE class_id = $1 AND date::date = $2::date AND deleted_at IS NULL`
+// --- Attendance ---
+
+func (r *repository) Create(a *Attendance) error {
+	query := `
+		INSERT INTO attendance (
+			school_id, student_id, class_id, teacher_id, date, status, 
+			entry_time, exit_time, minutes_late, is_justified, notes, created_at, updated_at
+		) VALUES (
+			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW()
+		) RETURNING id`
+
+	return r.db.QueryRow(query,
+		a.SchoolID, a.StudentID, a.ClassID, a.TeacherID, a.Date, a.Status,
+		a.EntryTime, a.ExitTime, a.MinutesLate, a.IsJustified, a.Notes,
+	).Scan(&a.ID)
+}
+
+func (r *repository) BatchCreate(atts []*Attendance) error {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	stmt, err := tx.Prepare(`
+		INSERT INTO attendance (
+			school_id, student_id, class_id, teacher_id, date, status, 
+			entry_time, exit_time, minutes_late, is_justified, notes, created_at, updated_at
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
+		ON CONFLICT (student_id, date) WHERE deleted_at IS NULL
+		DO UPDATE SET status = EXCLUDED.status, updated_at = NOW()
+		RETURNING id
+	`)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	for _, a := range atts {
+		err := stmt.QueryRow(
+			a.SchoolID, a.StudentID, a.ClassID, a.TeacherID, a.Date, a.Status,
+			a.EntryTime, a.ExitTime, a.MinutesLate, a.IsJustified, a.Notes,
+		).Scan(&a.ID)
+		if err != nil {
+			return fmt.Errorf("batch insert error: %w", err)
+		}
+	}
+	return tx.Commit()
+}
+
+func (r *repository) Update(a *Attendance) error {
+	query := `
+		UPDATE attendance SET 
+			status=$1, entry_time=$2, exit_time=$3, notes=$4, is_justified=$5, updated_at=NOW()
+		WHERE id=$6 AND deleted_at IS NULL`
+	_, err := r.db.Exec(query, a.Status, a.EntryTime, a.ExitTime, a.Notes, a.IsJustified, a.ID)
+	return err
+}
+
+func (r *repository) FindByID(id string) (*Attendance, error) {
+	query := `SELECT id, student_id, class_id, date, status, entry_time, exit_time, is_justified, notes FROM attendance WHERE id=$1`
+	var a Attendance
+	err := r.db.QueryRow(query, id).Scan(
+		&a.ID, &a.StudentID, &a.ClassID, &a.Date, &a.Status,
+		&a.EntryTime, &a.ExitTime, &a.IsJustified, &a.Notes,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &a, nil
+}
+
+func (r *repository) FindByClassAndDate(classID string, date time.Time) ([]Attendance, error) {
+	query := `
+		SELECT id, student_id, class_id, date, status, entry_time, exit_time, is_justified, notes
+		FROM attendance 
+		WHERE class_id=$1 AND date=$2 AND deleted_at IS NULL`
+
 	rows, err := r.db.Query(query, classID, date)
 	if err != nil {
-		return nil, fmt.Errorf("query error: %w", err)
+		return nil, err
 	}
 	defer rows.Close()
 
-	var atts []Attendance
+	var res []Attendance
 	for rows.Next() {
 		var a Attendance
-		if err := rows.Scan(&a.ID, &a.StudentID, &a.ClassID, &a.Date, &a.Status, &a.Justified, &a.CreatedAt, &a.UpdatedAt); err != nil {
+		if err := rows.Scan(&a.ID, &a.StudentID, &a.ClassID, &a.Date, &a.Status, &a.EntryTime, &a.ExitTime, &a.IsJustified, &a.Notes); err != nil {
 			return nil, err
 		}
-		atts = append(atts, a)
+		res = append(res, a)
 	}
-	return atts, nil
+	return res, nil
 }
 
-func (r *repository) Create(attendance *Attendance) error {
-	query := `INSERT INTO attendance (student_id, class_id, date, status, justified, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, NOW(), NOW()) RETURNING id`
+func (r *repository) FindByStudent(studentID string, startDate, endDate time.Time) ([]Attendance, error) {
+	query := `
+		SELECT id, student_id, class_id, date, status, entry_time, exit_time, is_justified, notes
+		FROM attendance 
+		WHERE student_id=$1 AND date BETWEEN $2 AND $3 AND deleted_at IS NULL
+		ORDER BY date DESC`
 
-	err := r.db.QueryRow(query, attendance.StudentID, attendance.ClassID, attendance.Date, attendance.Status, attendance.Justified).Scan(&attendance.ID)
+	rows, err := r.db.Query(query, studentID, startDate, endDate)
 	if err != nil {
-		return fmt.Errorf("create error: %w", err)
+		return nil, err
 	}
-	return nil
+	defer rows.Close()
+
+	var res []Attendance
+	for rows.Next() {
+		var a Attendance
+		if err := rows.Scan(&a.ID, &a.StudentID, &a.ClassID, &a.Date, &a.Status, &a.EntryTime, &a.ExitTime, &a.IsJustified, &a.Notes); err != nil {
+			return nil, err
+		}
+		res = append(res, a)
+	}
+	return res, nil
+}
+
+func (r *repository) GetStats(studentID string) (*SummaryResponse, error) {
+	// Simple aggregation
+	query := `
+		SELECT 
+			COUNT(*) FILTER (WHERE status = 'absent') as absences,
+			COUNT(*) FILTER (WHERE status = 'late') as lates,
+			COUNT(*) FILTER (WHERE is_justified = true) as justified
+		FROM attendance
+		WHERE student_id = $1 AND deleted_at IS NULL`
+
+	var s SummaryResponse
+	err := r.db.QueryRow(query, studentID).Scan(&s.TotalAbsences, &s.TotalLates, &s.JustifiedCount)
+	if err != nil {
+		return nil, err
+	}
+	return &s, nil
+}
+
+// --- Justifications ---
+
+func (r *repository) CreateJustification(j *Justification) error {
+	query := `
+		INSERT INTO justifications (student_id, parent_id, start_date, end_date, reason, status, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW()) RETURNING id`
+	return r.db.QueryRow(query, j.StudentID, j.ParentID, j.StartDate, j.EndDate, j.Reason, j.Status).Scan(&j.ID)
+}
+
+func (r *repository) UpdateJustification(j *Justification) error {
+	query := `UPDATE justifications SET status=$1, approved_by=$2, approved_at=$3, updated_at=NOW() WHERE id=$4`
+	_, err := r.db.Exec(query, j.Status, j.ApprovedBy, j.ApprovedAt, j.ID)
+	return err
+}
+
+func (r *repository) FindJustificationByID(id string) (*Justification, error) {
+	var j Justification
+	query := `SELECT id, student_id, parent_id, start_date, end_date, reason, status, approved_by FROM justifications WHERE id=$1`
+	err := r.db.QueryRow(query, id).Scan(&j.ID, &j.StudentID, &j.ParentID, &j.StartDate, &j.EndDate, &j.Reason, &j.Status, &j.ApprovedBy)
+	if err != nil {
+		return nil, err
+	}
+	return &j, nil
+}
+
+func (r *repository) FindPendingJustifications(classID string) ([]Justification, error) {
+	// Join with students to filter by class
+	query := `
+		SELECT j.id, j.student_id, j.start_date, j.end_date, j.reason, j.status 
+		FROM justifications j
+		JOIN students s ON j.student_id = s.id
+		WHERE s.class_id = $1 AND j.status = 'pending'`
+
+	rows, err := r.db.Query(query, classID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var res []Justification
+	for rows.Next() {
+		var j Justification
+		if err := rows.Scan(&j.ID, &j.StudentID, &j.StartDate, &j.EndDate, &j.Reason, &j.Status); err != nil {
+			return nil, err
+		}
+		res = append(res, j)
+	}
+	return res, nil
 }

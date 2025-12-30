@@ -1,0 +1,42 @@
+grading:
+  # Scala numerica
+  numericScale:
+    min: 0
+    max: 10
+    decimals: 2
+
+  # Giudizi ammessi
+  judgments:
+    - Insufficiente
+    - Mediocre
+    - Sufficiente
+    - Discreto
+    - Buono
+    - Distinto
+    - Ottimo
+
+  # Grade categories
+  categories:
+    - formativo   # valutazione in itinere
+    - sommativo   # verifiche/test
+    - pratico     # laboratori/progetti
+
+  # Calendari scrutini
+  scrutinyDates:
+    semester1: "2026-01-31"
+    semester2: "2026-06-30"
+
+  # Lock periods (non puoi modificare voti)
+  lockPeriods:
+    - semester: 1
+      lockedAt: "2026-01-28"
+      releasedAt: "2026-02-15"
+    - semester: 2
+      lockedAt: "2026-06-25"
+      releasedAt: "2026-07-15"
+
+  # Weight defaults
+  weights:
+    formativo: 0.3
+    sommativo: 0.7
+    pratico: 0.5

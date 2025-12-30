@@ -1,0 +1,133 @@
+package attendance
+
+import (
+	"context"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+)
+
+// --- Mocks ---
+
+type MockRepo struct {
+	mock.Mock
+}
+
+func (m *MockRepo) Create(a *Attendance) error {
+	args := m.Called(a)
+	return args.Error(0)
+}
+func (m *MockRepo) BatchCreate(atts []*Attendance) error {
+	args := m.Called(atts)
+	return args.Error(0)
+}
+func (m *MockRepo) Update(a *Attendance) error {
+	args := m.Called(a)
+	return args.Error(0)
+}
+func (m *MockRepo) FindByID(id string) (*Attendance, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*Attendance), args.Error(1)
+}
+func (m *MockRepo) FindByClassAndDate(classID string, date time.Time) ([]Attendance, error) {
+	args := m.Called(classID, date)
+	return args.Get(0).([]Attendance), args.Error(1)
+}
+func (m *MockRepo) FindByStudent(studentID string, start, end time.Time) ([]Attendance, error) {
+	args := m.Called(studentID, start, end)
+	return args.Get(0).([]Attendance), args.Error(1)
+}
+func (m *MockRepo) GetStats(studentID string) (*SummaryResponse, error) {
+	args := m.Called(studentID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*SummaryResponse), args.Error(1)
+}
+func (m *MockRepo) CreateJustification(j *Justification) error {
+	args := m.Called(j)
+	return args.Error(0)
+}
+func (m *MockRepo) UpdateJustification(j *Justification) error {
+	args := m.Called(j)
+	return args.Error(0)
+}
+func (m *MockRepo) FindJustificationByID(id string) (*Justification, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*Justification), args.Error(1)
+}
+func (m *MockRepo) FindPendingJustifications(classID string) ([]Justification, error) {
+	args := m.Called(classID)
+	return args.Get(0).([]Justification), args.Error(1)
+}
+
+// --- Tests ---
+
+func TestValidator_ValidateEntry(t *testing.T) {
+	v := NewValidator()
+
+	t.Run("Valid Present", func(t *testing.T) {
+		a := &Attendance{
+			Date:   time.Now(),
+			Status: StatusPresent,
+		}
+		assert.NoError(t, v.ValidateEntry(a))
+	})
+
+	t.Run("Future Date Error", func(t *testing.T) {
+		a := &Attendance{
+			Date:   time.Now().Add(48 * time.Hour),
+			Status: StatusPresent,
+		}
+		assert.Error(t, v.ValidateEntry(a))
+	})
+
+	t.Run("Late without Time Error", func(t *testing.T) {
+		a := &Attendance{
+			Date:      time.Now(),
+			Status:    StatusLate,
+			EntryTime: nil,
+		}
+		assert.Error(t, v.ValidateEntry(a))
+	})
+}
+
+func TestService_MarkAttendance(t *testing.T) {
+	mockRepo := new(MockRepo)
+	svc := NewService(mockRepo)
+
+	req := CreateAttendanceRequest{
+		StudentID: "S1", ClassID: "C1", Date: time.Now().Format("2006-01-02"), Status: StatusPresent,
+	}
+
+	mockRepo.On("Create", mock.Anything).Return(nil)
+
+	err := svc.MarkAttendance(context.Background(), "T1", req)
+	assert.NoError(t, err)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestService_ProcessJustification(t *testing.T) {
+	mockRepo := new(MockRepo)
+	svc := NewService(mockRepo)
+
+	jid := "J1"
+	j := &Justification{ID: jid, Status: JustificationPending}
+
+	mockRepo.On("FindJustificationByID", jid).Return(j, nil)
+	mockRepo.On("UpdateJustification", mock.MatchedBy(func(j *Justification) bool {
+		return j.Status == JustificationApproved && j.ApprovedBy != nil
+	})).Return(nil)
+
+	err := svc.ProcessJustification(context.Background(), "T1", jid, true)
+	assert.NoError(t, err)
+	mockRepo.AssertExpectations(t)
+}

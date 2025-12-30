@@ -67,6 +67,10 @@ func (m *MockRepository) HardDelete(ctx context.Context, id string) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)
 }
+func (m *MockRepository) IsGuardian(ctx context.Context, parentID, studentID string) (bool, error) {
+	args := m.Called(ctx, parentID, studentID)
+	return args.Bool(0), args.Error(1)
+}
 
 func TestService_CreateUser(t *testing.T) {
 	mockRepo := new(MockRepository)

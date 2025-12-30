@@ -34,6 +34,9 @@ type Repository interface {
 
 	// GDPR
 	HardDelete(ctx context.Context, id string) error // Actual DB delete
+
+	// Guardianship
+	IsGuardian(ctx context.Context, parentUserID string, studentUserID string) (bool, error)
 }
 
 type PostgresRepository struct {
@@ -345,4 +348,42 @@ func (r *PostgresRepository) BulkCreate(ctx context.Context, users []User) (int,
 	}
 
 	return count, errs, nil
+}
+
+func (r *PostgresRepository) IsGuardian(ctx context.Context, parentUserID string, studentID string) (bool, error) {
+	// The table is `student_parents`, linking `student_id` (from `students` table) and `parent_id` (from `parents` table).
+	// However, our input is `parentUserID` (from JWT) and `studentID` (could be student USER ID or student PROFILE ID??).
+	// The Grades Service refers to `StudentID`.
+	// In `003_academic_structure.sql`, `students` table has `id` and `user_id`.
+	// The `grades` table links to `students.id` (profile ID) usually, but key name is `student_id`.
+	// Let's assume the API inputs typically use the Profile IDs (UUIDs from `students`/`parents` tables), NOT User IDs.
+	// BUT, the JWT usually contains the USER ID.
+	// So we need to map ParentUserID -> ParentID first, OR check via join.
+	//
+	// Query: Check if there is a row in student_parents where parent's user_id matches and student's id matches.
+	//
+	// Join: student_parents sp JOIN parents p ON sp.parent_id = p.id
+	// WHERE p.user_id = $1 AND sp.student_id = $2
+	//
+	// Note: `studentID` param: Grades Service usually uses the Student Profile ID (`students.id`).
+	// If the `studentID` param passed forces UserID, we'd adjust.
+	// The prompt says "Verifica che ParentID sia genitore di StudentID in DB".
+	// Assuming logic:
+	// 1. Resolve Parent Profile ID from Parent User ID.
+	// 2. Check relationship with Target Student ID.
+
+	query := `
+		SELECT EXISTS (
+			SELECT 1 
+			FROM student_parents sp
+			JOIN parents p ON sp.parent_id = p.id
+			WHERE p.user_id = $1 AND sp.student_id = $2
+		)`
+
+	var exists bool
+	err := r.db.QueryRowContext(ctx, query, parentUserID, studentID).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
 }

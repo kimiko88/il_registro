@@ -2,23 +2,58 @@ package scheduling
 
 import "time"
 
-type CreateScheduleRequest struct {
-	ClassID   uint         `json:"class_id" binding:"required"`
-	SubjectID uint         `json:"subject_id" binding:"required"`
-	TeacherID uint         `json:"teacher_id" binding:"required"`
-	DayOfWeek time.Weekday `json:"day_of_week" binding:"required"`
-	StartTime string       `json:"start_time" binding:"required"`
-	EndTime   string       `json:"end_time" binding:"required"`
-	Room      string       `json:"room"`
+// Requests
+
+type CreateSlotRequest struct {
+	Date        string   `json:"date" binding:"required"`       // YYYY-MM-DD
+	StartTime   string   `json:"start_time" binding:"required"` // HH:MM
+	EndTime     string   `json:"end_time" binding:"required"`
+	MaxBookings int      `json:"max_bookings"` // Default 1
+	Type        SlotType `json:"type" binding:"required"`
+	Location    string   `json:"location"`
 }
 
-type ScheduleResponse struct {
-	ID        uint         `json:"id"`
-	ClassID   uint         `json:"class_id"`
-	Subject   string       `json:"subject"`
-	Teacher   string       `json:"teacher"`
-	DayOfWeek time.Weekday `json:"day_of_week"`
-	StartTime string       `json:"start_time"`
-	EndTime   string       `json:"end_time"`
-	Room      string       `json:"room"`
+type UpdateSlotRequest struct {
+	Location    *string `json:"location,omitempty"`
+	IsCancelled *bool   `json:"is_cancelled,omitempty"`
+}
+
+type BookSlotRequest struct {
+	SlotID    string  `json:"slot_id" binding:"required"`
+	StudentID *string `json:"student_id,omitempty"` // Which child
+}
+
+type UpdateBookingRequest struct {
+	Notes  *string        `json:"notes,omitempty"`
+	Status *BookingStatus `json:"status,omitempty"` // For cancellations or completion
+}
+
+type GeneralScheduleRequest struct {
+	StartDate string `json:"start_date" binding:"required"`
+	EndDate   string `json:"end_date" binding:"required"`
+}
+
+// Responses
+
+type SlotResponse struct {
+	ID        string   `json:"id"`
+	Date      string   `json:"date"`
+	TimeRange string   `json:"time_range"`
+	Type      SlotType `json:"type"`
+	Available bool     `json:"available"`
+	TeacherID string   `json:"teacher_id"`
+}
+
+type BookingResponse struct {
+	ID       string        `json:"id"`
+	SlotInfo SlotResponse  `json:"slot_info"`
+	Status   BookingStatus `json:"status"`
+	BookedAt time.Time     `json:"booked_at"`
+	Notes    string        `json:"notes"`
+}
+
+type AnalyticsResponse struct {
+	TotalSlots       int     `json:"total_slots"`
+	UtilizationRate  float64 `json:"utilization_rate"`
+	CancellationRate float64 `json:"cancellation_rate"`
 }
