@@ -24,4 +24,14 @@ describe('Admin Store', () => {
         expect(store.admins[0].email).toBe('admin@test.com');
         expect(store.loading).toBe(false);
     });
+
+    it('handles error during fetch', async () => {
+        const store = useAdminStore();
+        adminService.getAdmins.mockRejectedValue(new Error('API Error'));
+
+        await store.fetchAdmins();
+
+        expect(store.error).toBe('API Error');
+        expect(store.loading).toBe(false);
+    });
 });

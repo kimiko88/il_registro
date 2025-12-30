@@ -5,6 +5,7 @@ export const useAdminStore = defineStore('admin', {
     state: () => ({
         admins: [],
         loading: false,
+        error: null,
         pagination: {
             page: 1,
             rowsPerPage: 10,
@@ -14,6 +15,7 @@ export const useAdminStore = defineStore('admin', {
     actions: {
         async fetchAdmins(params = {}) {
             this.loading = true;
+            this.error = null;
             try {
                 const response = await adminService.getAdmins({
                     page: params.page || this.pagination.page,
@@ -22,6 +24,8 @@ export const useAdminStore = defineStore('admin', {
                 });
                 this.admins = response.data.items;
                 this.pagination.rowsNumber = response.data.total;
+            } catch (err) {
+                this.error = err.message;
             } finally {
                 this.loading = false;
             }

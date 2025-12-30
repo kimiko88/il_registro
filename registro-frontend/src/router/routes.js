@@ -24,9 +24,22 @@ export default [
 
             // Teacher Routes
             { path: 'teacher', component: () => import('@/pages/teacher/Index.vue'), meta: { role: 'teacher' } },
+            { path: 'teacher/grades', component: () => import('@/pages/teacher/Grades.vue'), meta: { role: 'teacher' } },
+            { path: 'teacher/attendance', component: () => import('@/pages/teacher/Attendance.vue'), meta: { role: 'teacher' } },
+            { path: 'teacher/classes', component: () => import('@/pages/teacher/Classes.vue'), meta: { role: 'teacher' } },
+            { path: 'teacher/documents', component: () => import('@/pages/teacher/Documents.vue'), meta: { role: 'teacher' } },
+            { path: 'teacher/colloqui', component: () => import('@/pages/teacher/Colloqui.vue'), meta: { role: 'teacher' } },
+            { path: 'teacher/communications', component: () => import('@/pages/teacher/Communications.vue'), meta: { role: 'teacher' } },
 
             // Student Routes
             { path: 'student', component: () => import('@/pages/student/Index.vue'), meta: { role: 'student' } },
+            { path: 'student/grades', component: () => import('@/pages/student/Grades.vue'), meta: { role: 'student' } },
+            { path: 'student/attendance', component: () => import('@/pages/student/Attendance.vue'), meta: { role: 'student' } },
+            { path: 'student/documents', component: () => import('@/pages/student/Documents.vue'), meta: { role: 'student' } },
+            { path: 'student/profile', component: () => import('@/pages/student/Profile.vue'), meta: { role: 'student' } },
+            { path: 'student/pcto', component: () => import('@/pages/student/PCTO.vue'), meta: { role: 'student' } },
+            { path: 'student/orientamento', component: () => import('@/pages/student/Orientamento.vue'), meta: { role: 'student' } },
+            { path: 'student/communications', component: () => import('@/pages/student/Communications.vue'), meta: { role: 'student' } },
 
             // Parent Routes
             { path: 'parent', component: () => import('@/pages/parent/Index.vue'), meta: { role: 'parent' } },
