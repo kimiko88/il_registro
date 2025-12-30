@@ -17,15 +17,15 @@
         <div class="text-caption text-grey q-mb-sm">Distribution</div>
         <div class="row items-center q-mb-xs">
           <span class="text-xs q-mr-xs">9-10</span>
-          <q-linear-progress value="0.2" color="green" class="col" />
+          <q-linear-progress :value="0.2" color="green" class="col" />
         </div>
         <div class="row items-center q-mb-xs">
           <span class="text-xs q-mr-xs">6-8</span>
-          <q-linear-progress value="0.5" color="blue" class="col" />
+          <q-linear-progress :value="0.5" color="blue" class="col" />
         </div>
         <div class="row items-center">
           <span class="text-xs q-mr-xs">&lt;6</span>
-          <q-linear-progress value="0.3" color="red" class="col" />
+          <q-linear-progress :value="0.3" color="red" class="col" />
         </div>
       </div>
     </q-card-section>

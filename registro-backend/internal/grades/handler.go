@@ -43,24 +43,6 @@ func (h *Handler) RegisterRoutes(router *gin.RouterGroup) {
 		grades.GET("/my-grades/semester/:semester", h.GetSemesterReport)
 
 		// Parent Endpoints
-
-		// Analytics (Director/Admin)
-		grades.GET("/analytics/class/:classID", h.GetClassAnalysis)
-		grades.GET("/analytics/subject/:subjectID", h.GetSubjectAnalysis)
-		grades.GET("/analytics/student/:studentID", h.GetStudentProfile)
-		grades.GET("/statistics", h.GetSchoolStatistics)
-
-		// Legacy Analytics? (Merge if needed, or keep for simple use)
-		grades.GET("/analytics/student/:studentID/average", h.GetStudentAverage)
-		grades.GET("/analytics/class/:classID/average", h.GetClassAverage)
-
-		// Student Endpoints
-		grades.GET("/my-grades", h.GetMyGrades)
-		grades.GET("/my-grades/average", h.GetMyAverages)
-		grades.GET("/my-grades/trend", h.GetMyTrend)
-		grades.GET("/my-grades/semester/:semester", h.GetSemesterReport)
-
-		// Parent Endpoints
 		grades.GET("/child-grades/:studentID", h.GetChildGrades)
 		grades.GET("/child-grades/:studentID/average", h.GetChildGradesAverage)
 	}

@@ -11,9 +11,29 @@ export function useAuth() {
     async function login(email, password) {
         try {
             const response = await api.post('/auth/login', { email, password })
-            const { user: userData, token } = response.data
+            const { user: userData, access_token: token } = response.data
             authStore.login(userData, token)
-            router.push('/')
+
+            // Redirect based on role
+            switch (userData.role) {
+                case 'admin':
+                    router.push('/admin')
+                    break
+                case 'secretary':
+                    router.push('/secretary')
+                    break
+                case 'teacher':
+                    router.push('/teacher')
+                    break
+                case 'student':
+                    router.push('/student')
+                    break
+                case 'parent':
+                    router.push('/parent')
+                    break
+                default:
+                    router.push('/')
+            }
             return null
         } catch (error) {
             return error.response?.data?.error || 'Login failed'
