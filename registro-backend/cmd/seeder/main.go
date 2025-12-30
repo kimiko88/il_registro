@@ -33,7 +33,38 @@ func main() {
 		log.Fatal("Could not connect to DB:", err)
 	}
 
-	// 1. Generate Hash
+	// 1. Create schools table if not exists
+	schoolsTable := `
+	CREATE TABLE IF NOT EXISTS schools (
+		id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+		name VARCHAR(255) NOT NULL,
+		code VARCHAR(50) NOT NULL UNIQUE,
+		address VARCHAR(255),
+		city VARCHAR(100),
+		province VARCHAR(50),
+		zip_code VARCHAR(10),
+		phone VARCHAR(50),
+		email VARCHAR(255),
+		principal VARCHAR(255),
+		type VARCHAR(50),
+		is_active BOOLEAN DEFAULT true,
+		created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+		updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+	);
+	`
+	_, err = db.Exec(schoolsTable)
+	if err != nil {
+		log.Printf("Warning: schools table creation: %v", err)
+	}
+
+	// Add code column if not exists
+	addCodeColumn := `ALTER TABLE schools ADD COLUMN IF NOT EXISTS code VARCHAR(50);`
+	_, err = db.Exec(addCodeColumn)
+	if err != nil {
+		log.Printf("Warning: adding code column: %v", err)
+	}
+
+	// 2. Generate Hash
 	pwd := "password"
 	hash, err := bcrypt.GenerateFromPassword([]byte(pwd), bcrypt.DefaultCost)
 	if err != nil {
@@ -60,6 +91,7 @@ func main() {
 	tID := "00000000-0000-0000-0000-000000000001"
 	sID := "00000000-0000-0000-0000-000000000002"
 	pID := "00000000-0000-0000-0000-000000000003"
+	aID := "00000000-0000-0000-0000-000000000004"
 
 	// Check if ID column is UUID type?
 	// I'll try execute. If it fails on UUID format, I'll fix.
@@ -69,6 +101,18 @@ func main() {
 		sID, "student@school.it",
 		pID, "parent@school.it",
 	)
+	if err != nil {
+		log.Fatalf("Failed to seed users: %v", err)
+	}
+
+	// Admin Query
+	adminQuery := `
+	INSERT INTO users (id, email, password_hash, role, first_name, last_name, is_active, created_at, updated_at)
+	VALUES ($1, $2, $3, 'admin', 'Super', 'Admin', true, NOW(), NOW())
+	ON CONFLICT (email) DO UPDATE 
+	SET password_hash = EXCLUDED.password_hash, is_active = true, role = 'admin';
+	`
+	_, err = db.Exec(adminQuery, aID, "admin@school.it", string(hash))
 	if err != nil {
 		log.Fatalf("Failed to seed users: %v", err)
 	}

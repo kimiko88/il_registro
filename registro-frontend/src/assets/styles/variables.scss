@@ -1,11 +1,20 @@
 // Quasar SCSS Variables
-// $primary   : #1976D2;
-// $secondary : #26A69A;
-// $accent    : #9C27B0;
+// Quasar SCSS Variables
+$primary : #4F46E5;
+$secondary : #06B6D4;
+$accent : #F59E0B;
 
-// $dark      : #1D1D1D;
+$dark : #1E293B;
+$dark-page : #0F172A;
 
-// $positive  : #21BA45;
-// $negative  : #C10015;
-// $info      : #31CCEC;
-// $warning   : #F2C037;
+$positive : #10B981;
+$negative : #EF4444;
+$info : #3B82F6;
+$warning : #F59E0B;
+
+$typography-font-family : 'Inter',
+'-apple-system',
+'Helvetica Neue',
+Helvetica,
+Arial,
+sans-serif !default;

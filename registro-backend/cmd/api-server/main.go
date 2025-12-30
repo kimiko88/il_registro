@@ -18,6 +18,7 @@ import (
 	"registro-backend/internal/orientamento"
 	"registro-backend/internal/pcto"
 	"registro-backend/internal/scheduling"
+	"registro-backend/internal/schools"
 	"registro-backend/internal/users"
 	"registro-backend/pkg/jwt"
 	"registro-backend/pkg/logger"
@@ -61,6 +62,7 @@ func main() {
 	schedRepo := scheduling.NewRepository(database)
 	pctoRepo := pcto.NewRepository(database)
 	orientRepo := orientamento.NewRepository(database)
+	schoolsRepo := schools.NewRepository(database)
 
 	// 6. Setup Services
 	authSvc := auth.NewService(authRepo, tokenManager, mfaService)
@@ -72,6 +74,7 @@ func main() {
 	schedSvc := scheduling.NewService(schedRepo)
 	pctoSvc := pcto.NewService(pctoRepo)
 	orientSvc := orientamento.NewService(orientRepo)
+	schoolsSvc := schools.NewService(schoolsRepo)
 
 	// 7. Setup Handlers
 	authH := auth.NewHandler(authSvc)
@@ -140,6 +143,9 @@ func main() {
 
 			orientH := orientamento.NewHandler(orientSvc)
 			orientH.RegisterRoutes(protected)
+
+			schoolsH := schools.NewHandler(schoolsSvc)
+			schoolsH.RegisterRoutes(protected)
 		}
 	}
 

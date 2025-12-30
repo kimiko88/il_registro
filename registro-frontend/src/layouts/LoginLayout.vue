@@ -1,13 +1,5 @@
 <template>
-  <q-layout view="lHh Lpr lFf">
-    <q-header elevated>
-      <q-toolbar>
-        <q-toolbar-title>
-          Registro Elettronico
-        </q-toolbar-title>
-      </q-toolbar>
-    </q-header>
-
+  <q-layout view="lHh Lpr lFf" class="bg-gradient-primary">
     <q-page-container>
       <router-view />
     </q-page-container>

@@ -6,16 +6,17 @@
 export default {
     config: {
         brand: {
-            primary: '#1976d2',
-            secondary: '#26a69a',
-            accent: '#9c27b0',
+            primary: '#4F46E5',  // Indigo 600
+            secondary: '#06B6D4', // Cyan 500
+            accent: '#F59E0B',   // Amber 500
 
-            dark: '#1d1d1d',
+            dark: '#1E293B',     // Slate 900
+            'dark-page': '#0F172A', // Slate 950
 
-            positive: '#21ba45',
-            negative: '#c10015',
-            info: '#31ccec',
-            warning: '#f2c037'
+            positive: '#10B981', // Emerald 500
+            negative: '#EF4444', // Red 500
+            info: '#3B82F6',     // Blue 500
+            warning: '#F59E0B'   // Amber 500
         },
         dark: 'auto' // or boolean true/false
     },

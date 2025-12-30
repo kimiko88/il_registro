@@ -1,8 +1,101 @@
 <template>
-  <q-page class="q-pa-md">
-    <div class="text-h4 q-mb-md">Dashboard</div>
-    <div v-if="user">
-      Welcome back, {{ user.first_name }} {{ user.last_name }}!
+  <q-page class="q-pa-md q-pa-lg-xl">
+    <!-- Hero Section -->
+    <div class="row items-center q-mb-xl">
+      <div class="col-12 col-md-8">
+        <div class="text-h4 text-weight-bold text-dark q-mb-sm" style="letter-spacing: -0.5px">
+          Good Morning, <span class="text-primary">{{ user?.first_name || 'User' }}</span>!
+        </div>
+        <div class="text-subtitle1 text-grey-7">
+          Here's what's happening in your school today.
+        </div>
+      </div>
+      <div class="col-12 col-md-4 text-right gt-sm">
+        <div class="text-caption text-grey-6">{{ new Date().toLocaleDateString('it-IT', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) }}</div>
+      </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row q-col-gutter-md q-mb-xl">
+      <div class="col-12 col-sm-6 col-md-3" v-for="(stat, index) in stats" :key="index">
+        <q-card class="no-shadow glass-card cursor-pointer hover-scale">
+          <q-card-section class="row items-center no-wrap">
+            <div :class="`bg-${stat.color}-1 text-${stat.color} q-pa-md rounded-lg q-mr-md`">
+              <q-icon :name="stat.icon" size="24px" />
+            </div>
+            <div>
+              <div class="text-h5 text-weight-bold text-dark">{{ stat.value }}</div>
+              <div class="text-caption text-grey-7">{{ stat.label }}</div>
+            </div>
+          </q-card-section>
+        </q-card>
+      </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="row q-col-gutter-lg">
+      <!-- Recent Activity / Schedule -->
+      <div class="col-12 col-md-8">
+        <q-card class="no-shadow bordered-card full-height">
+          <q-card-section class="row items-center justify-between">
+            <div class="text-h6 text-weight-bold text-dark">Today's Schedule</div>
+            <q-btn flat round dense icon="more_horiz" color="grey-7" />
+          </q-card-section>
+          
+          <q-list class="q-px-sm">
+            <q-item v-for="n in 3" :key="n" class="q-mb-sm rounded-lg hover-bg-grey">
+              <q-item-section avatar>
+                <div class="text-center bg-grey-2 rounded-lg q-pa-sm" style="min-width: 50px">
+                  <div class="text-weight-bold text-primary">0{{ 8 + n }}:00</div>
+                </div>
+              </q-item-section>
+              <q-item-section>
+                <q-item-label class="text-weight-bold">Mathematics - Class 3A</q-item-label>
+                <q-item-label caption>Room 102 • Lecture Hall</q-item-label>
+              </q-item-section>
+              <q-item-section side>
+                <q-chip size="sm" :color="n === 1 ? 'primary' : 'grey-3'" :text-color="n === 1 ? 'white' : 'grey-8'">
+                  {{ n === 1 ? 'Ongoing' : 'Upcoming' }}
+                </q-chip>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-card>
+      </div>
+
+      <!-- Quick Actions / Notifications -->
+      <div class="col-12 col-md-4">
+        <q-card class="no-shadow bg-primary text-white q-mb-md" style="background: linear-gradient(135deg, #4F46E5 0%, #3B82F6 100%);">
+          <q-card-section>
+            <div class="text-subtitle2 text-blue-1 q-mb-xs">ANNOUNCEMENT</div>
+            <div class="text-h6 text-weight-bold q-mb-sm">School Meeting</div>
+            <div class="text-body2 text-blue-1 opacity-80">
+              There will be a staff meeting today at 2 PM in the main auditorium.
+            </div>
+          </q-card-section>
+        </q-card>
+
+        <q-card class="no-shadow bordered-card">
+          <q-card-section>
+            <div class="text-h6 text-weight-bold text-dark q-mb-md">Quick Actions</div>
+            <div class="row q-col-gutter-sm">
+              <div class="col-6" v-for="action in actions" :key="action.label">
+                <q-btn 
+                  outline 
+                  class="full-width text-dark" 
+                  style="border-color: #e2e8f0; border-radius: 12px; height: 80px"
+                  no-caps
+                >
+                  <div class="column items-center">
+                    <q-icon :name="action.icon" color="primary" size="sm" class="q-mb-xs" />
+                    <div class="text-caption text-weight-medium">{{ action.label }}</div>
+                  </div>
+                </q-btn>
+              </div>
+            </div>
+          </q-card-section>
+        </q-card>
+      </div>
     </div>
   </q-page>
 </template>
@@ -10,7 +103,41 @@
 <script setup>
 import { useAuthStore } from '@/stores/auth'
 import { storeToRefs } from 'pinia'
+import { ref } from 'vue'
 
 const authStore = useAuthStore()
 const { user } = storeToRefs(authStore)
+
+const stats = [
+  { label: 'Total Students', value: '1,245', icon: 'school', color: 'indigo' },
+  { label: 'Active Classes', value: '32', icon: 'class', color: 'cyan' },
+  { label: 'Events Today', value: '4', icon: 'event', color: 'amber' },
+  { label: 'Pending Reports', value: '12', icon: 'assignment', color: 'red' }
+]
+
+const actions = [
+  { label: 'New Event', icon: 'add_circle' },
+  { label: 'Send Email', icon: 'mail' },
+  { label: 'Print Grades', icon: 'print' },
+  { label: 'Settings', icon: 'settings' }
+]
 </script>
+
+<style scoped>
+.hover-scale {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-scale:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.bordered-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+}
+
+.hover-bg-grey:hover {
+  background-color: #f8fafc;
+}
+</style>
