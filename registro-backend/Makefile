@@ -9,8 +9,20 @@ build:
 run:
 	go run cmd/api-server/main.go
 
+
+# Enhanced Testing
 test:
-	go test -v ./...
+	go test -v ./tests/... ./internal/...
+
+test-unit:
+	go test -v ./tests/unit/...
+
+test-integration:
+	go test -v ./tests/integration/...
+
+test-coverage:
+	go test -coverprofile=coverage.out ./internal/...
+	go tool cover -html=coverage.out
 
 lint:
 	golangci-lint run

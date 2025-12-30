@@ -9,8 +9,8 @@
     "dev": "vite",
     "build": "vite build",
     "test": "vitest",
-    "test:unit": "vitest",
-    "test:e2e": "echo 'No e2e tests implemented yet'",
+    "test:unit": "vitest run tests/unit",
+    "test:e2e": "vitest run tests/e2e",
     "lint": "eslint --ext .js,.vue src"
   },
   "dependencies": {

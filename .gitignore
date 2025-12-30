@@ -16,6 +16,7 @@
 /registro-backend/*.exe
 /registro-backend/*.test
 /registro-backend/coverage.txt
+/registro-backend/docker/supabase/
 
 # Frontend (Node.js/Vue)
 /registro-frontend/node_modules/
