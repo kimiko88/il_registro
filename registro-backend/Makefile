@@ -1,0 +1,35 @@
+.PHONY: build run test lint docker-build docker-up migrate-up migrate-down
+
+BINARY_NAME=api-server
+DOCKER_IMAGE=registro-backend:latest
+
+build:
+	go build -o bin/$(BINARY_NAME) cmd/api-server/main.go
+
+run:
+	go run cmd/api-server/main.go
+
+test:
+	go test -v ./...
+
+lint:
+	golangci-lint run
+
+docker-build:
+	docker build -f docker/Dockerfile.prod -t $(DOCKER_IMAGE) .
+
+docker-up:
+	docker-compose -f docker/docker-compose.yml up --build
+
+# Migration commands (using golang-migrate)
+# Install: go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+MIGRATE_CMD=migrate -path migrations -database "postgres://user:password@localhost:5432/registro?sslmode=disable"
+
+migrate-up:
+	$(MIGRATE_CMD) up
+
+migrate-down:
+	$(MIGRATE_CMD) down
+
+migrate-create:
+	migrate create -ext sql -dir migrations -seq $(name)

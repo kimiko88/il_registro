@@ -1,0 +1,40 @@
+{
+  "name": "registro-frontend",
+  "version": "0.0.1",
+  "description": "Vue3/Quasar Frontend for Registro Elettronico",
+  "productName": "Registro Elettronico",
+  "author": "Antigravity <antigravity@example.com>",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "test": "vitest",
+    "test:unit": "vitest",
+    "test:e2e": "echo 'No e2e tests implemented yet'",
+    "lint": "eslint --ext .js,.vue src"
+  },
+  "dependencies": {
+    "@quasar/extras": "^1.16.4",
+    "axios": "^1.6.0",
+    "pinia": "^2.1.7",
+    "quasar": "^2.14.0",
+    "vue": "^3.3.4",
+    "vue-router": "^4.2.5"
+  },
+  "devDependencies": {
+    "@quasar/vite-plugin": "^1.6.0",
+    "@vitejs/plugin-vue": "^4.2.3",
+    "@vue/test-utils": "^2.4.1",
+    "autoprefixer": "^10.4.2",
+    "happy-dom": "^12.10.3",
+    "postcss": "^8.4.14",
+    "sass": "^1.32.12",
+    "vite": "^4.4.5",
+    "vitest": "^0.34.0"
+  },
+  "engines": {
+    "node": "^18 || ^20 || ^22",
+    "npm": ">= 6.13.4",
+    "yarn": ">= 1.21.1"
+  }
+}

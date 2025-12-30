@@ -1,0 +1,28 @@
+# General
+.DS_Store
+*.log
+.idea/
+.vscode/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Backend (Go)
+/registro-backend/bin/
+/registro-backend/vendor/
+/registro-backend/tmp/
+/registro-backend/*.exe
+/registro-backend/*.test
+/registro-backend/coverage.txt
+
+# Frontend (Node.js/Vue)
+/registro-frontend/node_modules/
+/registro-frontend/dist/
+/registro-frontend/.quasar/
+/registro-frontend/npm-debug.log*
+/registro-frontend/yarn-debug.log*
+/registro-frontend/yarn-error.log*
+/registro-frontend/tests/e2e/reports
+/registro-frontend/tests/unit/coverage
