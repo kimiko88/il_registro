@@ -43,6 +43,13 @@ export default [
 
             // Parent Routes
             { path: 'parent', component: () => import('@/pages/parent/Index.vue'), meta: { role: 'parent' } },
+            { path: 'parent/children', component: () => import('@/pages/parent/Children.vue'), meta: { role: 'parent' } },
+            { path: 'parent/grades', component: () => import('@/pages/parent/Grades.vue'), meta: { role: 'parent' } },
+            { path: 'parent/attendance', component: () => import('@/pages/parent/Attendance.vue'), meta: { role: 'parent' } },
+            { path: 'parent/colloqui', component: () => import('@/pages/parent/Colloqui.vue'), meta: { role: 'parent' } },
+            { path: 'parent/communications', component: () => import('@/pages/parent/Communications.vue'), meta: { role: 'parent' } },
+            { path: 'parent/profile', component: () => import('@/pages/parent/Profile.vue'), meta: { role: 'parent' } },
+            { path: 'parent/support', component: () => import('@/pages/parent/Support.vue'), meta: { role: 'parent' } },
         ]
     },
     {
