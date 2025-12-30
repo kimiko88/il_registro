@@ -7,8 +7,11 @@ export default [
 
             // Admin Routes
             { path: 'admin', component: () => import('@/pages/admin/Index.vue'), meta: { role: 'admin' } },
-            { path: 'admin/users', component: () => import('@/pages/admin/Users.vue'), meta: { role: 'admin' } },
             { path: 'admin/schools', component: () => import('@/pages/admin/Schools.vue'), meta: { role: 'admin' } },
+            { path: 'admin/users', component: () => import('@/pages/admin/AdminUsers.vue'), meta: { role: 'admin' } },
+            { path: 'admin/monitoring', component: () => import('@/pages/admin/Monitoring.vue'), meta: { role: 'admin' } },
+            { path: 'admin/analytics', component: () => import('@/pages/admin/Analytics.vue'), meta: { role: 'admin' } },
+            { path: 'admin/settings', component: () => import('@/pages/admin/Settings.vue'), meta: { role: 'admin' } },
 
             // Teacher Routes
             { path: 'teacher', component: () => import('@/pages/teacher/Index.vue'), meta: { role: 'teacher' } },

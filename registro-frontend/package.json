@@ -16,12 +16,15 @@
   "dependencies": {
     "@quasar/extras": "^1.16.4",
     "axios": "^1.6.0",
+    "chart.js": "^4.5.1",
     "pinia": "^2.1.7",
     "quasar": "^2.14.0",
     "vue": "^3.3.4",
+    "vue-chartjs": "^5.3.3",
     "vue-router": "^4.2.5"
   },
   "devDependencies": {
+    "@pinia/testing": "^1.0.3",
     "@quasar/vite-plugin": "^1.6.0",
     "@vitejs/plugin-vue": "^4.2.3",
     "@vue/test-utils": "^2.4.1",

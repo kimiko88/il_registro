@@ -1,38 +1,27 @@
 <template>
-  <q-page class="q-pa-md">
-    <div class="text-h4 q-mb-lg">Admin Dashboard</div>
+  <q-page padding>
+    <div class="text-h4 q-mb-md">Dashboard</div>
     
-    <q-tabs
-      v-model="tab"
-      dense
-      class="text-grey"
-      active-color="primary"
-      indicator-color="primary"
-      align="justify"
-      narrow-indicator
-    >
-      <q-tab name="users" label="Users" />
-      <q-tab name="schools" label="Schools" />
-    </q-tabs>
+    <div class="row q-col-gutter-md q-mb-lg">
+      <div class="col-12 col-md-3">
+        <q-btn class="full-width" color="primary" icon="school" label="Manage Schools" to="/admin/schools" size="lg" />
+      </div>
+      <div class="col-12 col-md-3">
+        <q-btn class="full-width" color="secondary" icon="analytics" label="System Health" to="/admin/monitoring" size="lg" />
+      </div>
+    </div>
 
-    <q-separator />
-
-    <q-tab-panels v-model="tab" animated>
-      <q-tab-panel name="users">
-        <UserManagement />
-      </q-tab-panel>
-
-      <q-tab-panel name="schools">
-        <SchoolManagement />
-      </q-tab-panel>
-    </q-tab-panels>
+    <div class="row q-col-gutter-md">
+      <div class="col-12 col-md-6">
+        <q-card>
+          <q-card-section>
+            <div class="text-h6">Quick Stats</div>
+          </q-card-section>
+          <q-card-section>
+             <!-- Mini stats -->
+          </q-card-section>
+        </q-card>
+      </div>
+    </div>
   </q-page>
 </template>
-
-<script setup>
-import { ref } from 'vue'
-import UserManagement from '@/components/Admin/UserManagement.vue'
-import SchoolManagement from '@/components/Admin/SchoolManagement.vue'
-
-const tab = ref('users')
-</script>
