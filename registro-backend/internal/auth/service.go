@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
-	"fmt"
 	"time"
 
 	"registro-backend/pkg/jwt"
@@ -83,17 +82,13 @@ func (s *Service) Login(ctx context.Context, req *LoginRequest, ipAddress, userA
 	// Get user
 	user, err := s.repo.GetUserByEmail(ctx, req.Email)
 	if err != nil {
-		fmt.Printf("DEBUG SERVICE: GetUserByEmail failed for %s: %v\n", req.Email, err)
 		s.recordFailedAttempt(ctx, req.Email, ipAddress)
 		return nil, ErrInvalidCredentials
 	}
-	fmt.Printf("DEBUG SERVICE: User found: %s, HashLen: %d, Hash: %s\n", user.Email, len(user.PasswordHash), user.PasswordHash)
 
 	// Verify password
-	fmt.Printf("DEBUG SERVICE: Verifying password: %s\n", req.Password)
 	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password))
 	if err != nil {
-		fmt.Printf("DEBUG SERVICE: Password verification failed: %v\n", err)
 		s.recordFailedAttempt(ctx, req.Email, ipAddress)
 		return nil, ErrInvalidCredentials
 	}

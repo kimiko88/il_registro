@@ -80,15 +80,20 @@ func (r *repository) GetUserByEmail(ctx context.Context, email string) (*User, e
 		WHERE email = $1 AND deleted_at IS NULL
 	`
 	user := &User{}
+	var mfaSecret sql.NullString
 	err := r.db.QueryRowContext(ctx, query, email).Scan(
 		&user.ID, &user.Email, &user.PasswordHash, &user.FirstName, &user.LastName,
 		&user.Role, &user.SchoolID, &user.IsActive, &user.EmailVerified,
-		&user.MFAEnabled, &user.MFASecret, &user.CreatedAt, &user.UpdatedAt, &user.LastLogin,
+		&user.MFAEnabled, &mfaSecret, &user.CreatedAt, &user.UpdatedAt, &user.LastLogin,
 	)
 	if err == sql.ErrNoRows {
 		return nil, ErrUserNotFound
 	}
-	return user, err
+	if err != nil {
+		return nil, err
+	}
+	user.MFASecret = mfaSecret.String
+	return user, nil
 }
 
 func (r *repository) GetUserByID(ctx context.Context, id string) (*User, error) {
@@ -99,15 +104,20 @@ func (r *repository) GetUserByID(ctx context.Context, id string) (*User, error) 
 		WHERE id = $1 AND deleted_at IS NULL
 	`
 	user := &User{}
+	var mfaSecret sql.NullString
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
 		&user.ID, &user.Email, &user.PasswordHash, &user.FirstName, &user.LastName,
 		&user.Role, &user.SchoolID, &user.IsActive, &user.EmailVerified,
-		&user.MFAEnabled, &user.MFASecret, &user.CreatedAt, &user.UpdatedAt, &user.LastLogin,
+		&user.MFAEnabled, &mfaSecret, &user.CreatedAt, &user.UpdatedAt, &user.LastLogin,
 	)
 	if err == sql.ErrNoRows {
 		return nil, ErrUserNotFound
 	}
-	return user, err
+	if err != nil {
+		return nil, err
+	}
+	user.MFASecret = mfaSecret.String
+	return user, nil
 }
 
 func (r *repository) UpdateUser(ctx context.Context, user *User) error {
