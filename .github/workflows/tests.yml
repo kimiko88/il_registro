@@ -1,0 +1,57 @@
+name: Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  test-backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./registro-backend
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: registro
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+      - run: go mod download
+      - run: go test -v -race -coverprofile=coverage.out ./tests/... ./internal/...
+      - run: go tool cover -html=coverage.out -o coverage.html
+      - uses: codecov/codecov-action@v3
+        with:
+          files: ./registro-backend/coverage.out
+          flags: backend
+
+  test-frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./registro-frontend
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - run: npm ci
+      - run: npm run test:unit
+      # - run: npm run test:coverage # Uncomment when configured
+      - uses: codecov/codecov-action@v3
+        with:
+          files: ./registro-frontend/coverage/coverage-final.json
+          flags: frontend

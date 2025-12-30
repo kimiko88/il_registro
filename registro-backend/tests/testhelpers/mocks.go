@@ -268,3 +268,45 @@ func (m *MockUsersRepository) IsGuardian(ctx context.Context, parentID, studentI
 	args := m.Called(ctx, parentID, studentID)
 	return args.Bool(0), args.Error(1)
 }
+
+// MockAnalyticsService mocks grades.AnalyticsService
+type MockAnalyticsService struct {
+	mock.Mock
+}
+
+func (m *MockAnalyticsService) GetStudentAverage(studentID string, subjectID string) (float64, error) {
+	args := m.Called(studentID, subjectID)
+	return args.Get(0).(float64), args.Error(1)
+}
+func (m *MockAnalyticsService) GetClassAverage(classID string, subjectID string) (float64, error) {
+	args := m.Called(classID, subjectID)
+	return args.Get(0).(float64), args.Error(1)
+}
+func (m *MockAnalyticsService) GetClassAnalysis(classID string, semester int) (*grades.AnalyticsClassResponse, error) {
+	args := m.Called(classID, semester)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*grades.AnalyticsClassResponse), args.Error(1)
+}
+func (m *MockAnalyticsService) GetSubjectAnalysis(subjectID string, semester int) (*grades.AnalyticsSubjectResponse, error) {
+	args := m.Called(subjectID, semester)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*grades.AnalyticsSubjectResponse), args.Error(1)
+}
+func (m *MockAnalyticsService) GetStudentProfile(studentID string, semester int) (*grades.AnalyticsStudentResponse, error) {
+	args := m.Called(studentID, semester)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*grades.AnalyticsStudentResponse), args.Error(1)
+}
+func (m *MockAnalyticsService) GetSchoolStatistics(year string) (*grades.SchoolStatisticsResponse, error) {
+	args := m.Called(year)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*grades.SchoolStatisticsResponse), args.Error(1)
+}

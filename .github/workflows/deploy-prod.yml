@@ -1,0 +1,36 @@
+name: Deploy Production
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v3
+      
+      # Frontend Deploy (Netlify Production)
+      - name: Deploy Frontend
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - run: |
+          cd registro-frontend
+          npm ci
+          npm run build
+      - uses: jsmrcaga/action-netlify-deploy@master
+        with:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+          build_directory: registro-frontend/dist
+          deploy_alias: production
+
+      # Backend Deploy (Dokku)
+      - name: Deploy Backend
+        uses: dokku/github-action@master
+        with:
+          git_remote_url: ssh://dokku@${{ secrets.DOKKU_HOST }}/registro-backend
+          ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
+          branch: main

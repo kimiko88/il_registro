@@ -1,0 +1,20 @@
+version: 2
+updates:
+  - package-ecosystem: "gomod"
+    directory: "/registro-backend"
+    schedule:
+      interval: "weekly"
+    reviewers:
+      - "team-backend"
+
+  - package-ecosystem: "npm"
+    directory: "/registro-frontend"
+    schedule:
+      interval: "weekly"
+    reviewers:
+      - "team-frontend"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"

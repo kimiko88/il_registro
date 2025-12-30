@@ -1,0 +1,13 @@
+# Backend
+/registro-backend/ @backend-team @tech-lead
+
+# Frontend
+/registro-frontend/ @frontend-team @tech-lead
+
+# DevOps
+/.github/ @devops-team
+/Makefile @devops-team
+/docker/ @devops-team
+
+# Documentation
+/*.md @all-teams
