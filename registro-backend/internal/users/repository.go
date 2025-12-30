@@ -1,33 +1,231 @@
 package users
 
 import (
+	"context"
 	"database/sql"
+	"errors"
 	"fmt"
+	"strings"
+	"time"
+
+	"github.com/lib/pq"
+)
+
+var (
+	ErrUserNotFound = errors.New("user not found")
+	ErrEmailExists  = errors.New("email already exists")
+	ErrFiscalCode   = errors.New("fiscal code already exists")
 )
 
 type Repository interface {
-	FindAll() ([]User, error)
-	FindByID(id string) (*User, error)
-	Create(user *User) error
+	Create(ctx context.Context, user *User) error
+	GetByID(ctx context.Context, id string) (*User, error)
+	GetByEmail(ctx context.Context, email string) (*User, error)
+	Update(ctx context.Context, user *User) error
+	Delete(ctx context.Context, id string) error  // Soft delete
+	Restore(ctx context.Context, id string) error // Restore
+	List(ctx context.Context, filter UserFilter) ([]User, int, error)
+	ListByIDs(ctx context.Context, ids []string) ([]User, error)
+
+	// Audit & Bulk
+	LogAudit(ctx context.Context, log *AuditLog) error
+	GetAuditLogs(ctx context.Context, userID string, limit, offset int) ([]AuditLog, int, error)
+	BulkCreate(ctx context.Context, users []User) (int, []string, error) // Returns count, errors
+
+	// GDPR
+	HardDelete(ctx context.Context, id string) error // Actual DB delete
 }
 
-type repository struct {
+type PostgresRepository struct {
 	db *sql.DB
 }
 
 func NewRepository(db *sql.DB) Repository {
-	return &repository{db: db}
+	return &PostgresRepository{db: db}
 }
 
-func (r *repository) FindAll() ([]User, error) {
+func (r *PostgresRepository) Create(ctx context.Context, user *User) error {
 	query := `
-		SELECT id, first_name, last_name, email, role, school_id, is_active, email_verified, created_at, updated_at 
-		FROM users 
-		WHERE deleted_at IS NULL
+		INSERT INTO users (
+			id, email, password_hash, first_name, last_name, fiscal_code,
+			role, school_id, is_active, email_verified, mfa_enabled, mfa_secret,
+			phone_number, job_title, created_at, updated_at
+		) VALUES (
+			$1, $2, $3, $4, $5, $6,
+			$7, $8, $9, $10, $11, $12,
+			$13, $14, $15, $16
+		)
 	`
-	rows, err := r.db.Query(query)
+	_, err := r.db.ExecContext(ctx, query,
+		user.ID, user.Email, user.PasswordHash, user.FirstName, user.LastName, user.FiscalCode,
+		user.Role, user.SchoolID, user.IsActive, user.EmailVerified, user.MFAEnabled, user.MFASecret,
+		user.PhoneNumber, user.JobTitle, user.CreatedAt, user.UpdatedAt,
+	)
+
 	if err != nil {
-		return nil, fmt.Errorf("query error: %w", err)
+		if pqErr, ok := err.(*pq.Error); ok {
+			if pqErr.Code == "23505" { // Unique violation
+				if strings.Contains(pqErr.Message, "email") {
+					return ErrEmailExists
+				}
+				if strings.Contains(pqErr.Message, "fiscal_code") {
+					return ErrFiscalCode
+				}
+			}
+		}
+		return err
+	}
+	return nil
+}
+
+func (r *PostgresRepository) GetByID(ctx context.Context, id string) (*User, error) {
+	query := `
+		SELECT id, email, password_hash, first_name, last_name, fiscal_code,
+		       role, school_id, is_active, email_verified, mfa_enabled, phone_number, job_title,
+		       created_at, updated_at, last_login, deleted_at, pseudonymized_at
+		FROM users WHERE id = $1
+	`
+	var u User
+	err := r.db.QueryRowContext(ctx, query, id).Scan(
+		&u.ID, &u.Email, &u.PasswordHash, &u.FirstName, &u.LastName, &u.FiscalCode,
+		&u.Role, &u.SchoolID, &u.IsActive, &u.EmailVerified, &u.MFAEnabled, &u.PhoneNumber, &u.JobTitle,
+		&u.CreatedAt, &u.UpdatedAt, &u.LastLogin, &u.DeletedAt, &u.PseudonymizedAt,
+	)
+	if err == sql.ErrNoRows {
+		return nil, ErrUserNotFound
+	}
+	return &u, err
+}
+
+func (r *PostgresRepository) GetByEmail(ctx context.Context, email string) (*User, error) {
+	query := `SELECT id, email, password_hash, role, is_active, mfa_enabled, school_id FROM users WHERE email = $1`
+	var u User
+	err := r.db.QueryRowContext(ctx, query, email).Scan(
+		&u.ID, &u.Email, &u.PasswordHash, &u.Role, &u.IsActive, &u.MFAEnabled, &u.SchoolID,
+	)
+	if err == sql.ErrNoRows {
+		return nil, ErrUserNotFound
+	}
+	return &u, err
+}
+
+func (r *PostgresRepository) Update(ctx context.Context, user *User) error {
+	query := `
+		UPDATE users SET
+			first_name = $1, last_name = $2, phone_number = $3, job_title = $4,
+			is_active = $5, role = $6, school_id = $7, updated_at = $8,
+			password_hash = $9, mfa_enabled = $10
+		WHERE id = $11
+	`
+	res, err := r.db.ExecContext(ctx, query,
+		user.FirstName, user.LastName, user.PhoneNumber, user.JobTitle,
+		user.IsActive, user.Role, user.SchoolID, time.Now(),
+		user.PasswordHash, user.MFAEnabled,
+		user.ID,
+	)
+	if err != nil {
+		return err
+	}
+	rows, _ := res.RowsAffected()
+	if rows == 0 {
+		return ErrUserNotFound
+	}
+	return nil
+}
+
+func (r *PostgresRepository) Delete(ctx context.Context, id string) error {
+	query := `UPDATE users SET deleted_at = $1 WHERE id = $2`
+	res, err := r.db.ExecContext(ctx, query, time.Now(), id)
+	if err != nil {
+		return err
+	}
+	rows, _ := res.RowsAffected()
+	if rows == 0 {
+		return ErrUserNotFound
+	}
+	return nil
+}
+
+func (r *PostgresRepository) Restore(ctx context.Context, id string) error {
+	query := `UPDATE users SET deleted_at = NULL WHERE id = $1`
+	res, err := r.db.ExecContext(ctx, query, id)
+	if err != nil {
+		return err
+	}
+	rows, _ := res.RowsAffected()
+	if rows == 0 {
+		return ErrUserNotFound
+	}
+	return nil
+}
+
+func (r *PostgresRepository) List(ctx context.Context, filter UserFilter) ([]User, int, error) {
+	baseQuery := `
+		SELECT id, email, first_name, last_name, role, school_id, is_active, created_at, deleted_at, pseudonymized_at
+		FROM users WHERE 1=1
+	`
+	countQuery := `SELECT COUNT(*) FROM users WHERE 1=1`
+	var args []interface{}
+	argCount := 1
+
+	// Filters
+	if !filter.IsDeleted {
+		baseQuery += fmt.Sprintf(" AND deleted_at IS NULL")
+		countQuery += fmt.Sprintf(" AND deleted_at IS NULL")
+	}
+	if filter.Role != "" {
+		baseQuery += fmt.Sprintf(" AND role = $%d", argCount)
+		countQuery += fmt.Sprintf(" AND role = $%d", argCount)
+		args = append(args, filter.Role)
+		argCount++
+	}
+	if filter.SchoolID != nil {
+		baseQuery += fmt.Sprintf(" AND school_id = $%d", argCount)
+		countQuery += fmt.Sprintf(" AND school_id = $%d", argCount)
+		args = append(args, *filter.SchoolID)
+		argCount++
+	}
+	if filter.IsActive != nil {
+		baseQuery += fmt.Sprintf(" AND is_active = $%d", argCount)
+		countQuery += fmt.Sprintf(" AND is_active = $%d", argCount)
+		args = append(args, *filter.IsActive)
+		argCount++
+	}
+	if filter.Query != "" {
+		q := "%" + filter.Query + "%"
+		// Note: We replicate the argument for each ILIKE because standard sql driver doesn't support named params easily
+		baseQuery += fmt.Sprintf(" AND (email ILIKE $%d OR first_name ILIKE $%d OR last_name ILIKE $%d OR fiscal_code ILIKE $%d)", argCount, argCount+1, argCount+2, argCount+3)
+		countQuery += fmt.Sprintf(" AND (email ILIKE $%d OR first_name ILIKE $%d OR last_name ILIKE $%d OR fiscal_code ILIKE $%d)", argCount, argCount+1, argCount+2, argCount+3)
+		args = append(args, q, q, q, q)
+		argCount += 4
+	}
+
+	// Count total
+	var total int
+	err := r.db.QueryRowContext(ctx, countQuery, args...).Scan(&total)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// Sort and Paginate
+	sortBy := "created_at"
+	if filter.SortBy != "" {
+		switch filter.SortBy {
+		case "last_name", "email", "role":
+			sortBy = filter.SortBy
+		}
+	}
+	sortOrder := "DESC"
+	if strings.ToUpper(filter.SortOrder) == "ASC" {
+		sortOrder = "ASC"
+	}
+
+	baseQuery += fmt.Sprintf(" ORDER BY %s %s LIMIT $%d OFFSET $%d", sortBy, sortOrder, argCount, argCount+1)
+	args = append(args, filter.PageSize, (filter.Page-1)*filter.PageSize)
+
+	rows, err := r.db.QueryContext(ctx, baseQuery, args...)
+	if err != nil {
+		return nil, 0, err
 	}
 	defer rows.Close()
 
@@ -35,9 +233,39 @@ func (r *repository) FindAll() ([]User, error) {
 	for rows.Next() {
 		var u User
 		if err := rows.Scan(
-			&u.ID, &u.FirstName, &u.LastName, &u.Email, &u.Role, &u.SchoolID,
-			&u.IsActive, &u.EmailVerified, &u.CreatedAt, &u.UpdatedAt,
+			&u.ID, &u.Email, &u.FirstName, &u.LastName, &u.Role, &u.SchoolID, &u.IsActive, &u.CreatedAt, &u.DeletedAt, &u.PseudonymizedAt,
 		); err != nil {
+			return nil, 0, err
+		}
+		users = append(users, u)
+	}
+
+	return users, total, nil
+}
+
+func (r *PostgresRepository) ListByIDs(ctx context.Context, ids []string) ([]User, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	// Construct IN clause
+	placeholders := make([]string, len(ids))
+	args := make([]interface{}, len(ids))
+	for i, id := range ids {
+		placeholders[i] = fmt.Sprintf("$%d", i+1)
+		args[i] = id
+	}
+	query := fmt.Sprintf("SELECT id, email, first_name, last_name, role FROM users WHERE id IN (%s)", strings.Join(placeholders, ","))
+
+	rows, err := r.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []User
+	for rows.Next() {
+		var u User
+		if err := rows.Scan(&u.ID, &u.Email, &u.FirstName, &u.LastName, &u.Role); err != nil {
 			return nil, err
 		}
 		users = append(users, u)
@@ -45,45 +273,76 @@ func (r *repository) FindAll() ([]User, error) {
 	return users, nil
 }
 
-func (r *repository) FindByID(id string) (*User, error) {
-	query := `
-		SELECT id, first_name, last_name, email, role, school_id, is_active, email_verified, created_at, updated_at 
-		FROM users 
-		WHERE id = $1 AND deleted_at IS NULL
-	`
-	row := r.db.QueryRow(query, id)
-
-	u := &User{}
-	err := row.Scan(
-		&u.ID, &u.FirstName, &u.LastName, &u.Email, &u.Role, &u.SchoolID,
-		&u.IsActive, &u.EmailVerified, &u.CreatedAt, &u.UpdatedAt,
-	)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("query error: %w", err)
-	}
-	return u, nil
+func (r *PostgresRepository) HardDelete(ctx context.Context, id string) error {
+	_, err := r.db.ExecContext(ctx, "DELETE FROM users WHERE id = $1", id)
+	return err
 }
 
-func (r *repository) Create(user *User) error {
-	query := `
-		INSERT INTO users (
-			first_name, last_name, email, role, school_id, 
-			created_at, updated_at, is_active, email_verified
-		) 
-		VALUES ($1, $2, $3, $4, $5, NOW(), NOW(), true, false) 
-		RETURNING id, created_at, updated_at
-	`
+func (r *PostgresRepository) LogAudit(ctx context.Context, log *AuditLog) error {
+	_, err := r.db.ExecContext(ctx,
+		"INSERT INTO audit_logs (id, user_id, actor_id, action, details, ip_address, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+		log.ID, log.UserID, log.ActorID, log.Action, log.Details, log.IPAddress, log.CreatedAt,
+	)
+	return err
+}
 
-	err := r.db.QueryRow(
-		query,
-		user.FirstName, user.LastName, user.Email, user.Role, user.SchoolID,
-	).Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt)
+func (r *PostgresRepository) GetAuditLogs(ctx context.Context, userID string, limit, offset int) ([]AuditLog, int, error) {
+	// Simple implementation
+	var logs []AuditLog
+	var total int
 
+	r.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM audit_logs WHERE user_id = $1", userID).Scan(&total)
+
+	rows, err := r.db.QueryContext(ctx,
+		"SELECT id, user_id, actor_id, action, details, ip_address, created_at FROM audit_logs WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3",
+		userID, limit, offset,
+	)
 	if err != nil {
-		return fmt.Errorf("create error: %w", err)
+		return nil, 0, err
 	}
-	return nil
+	defer rows.Close()
+
+	for rows.Next() {
+		var l AuditLog
+		rows.Scan(&l.ID, &l.UserID, &l.ActorID, &l.Action, &l.Details, &l.IPAddress, &l.CreatedAt)
+		logs = append(logs, l)
+	}
+	return logs, total, nil
+}
+
+func (r *PostgresRepository) BulkCreate(ctx context.Context, users []User) (int, []string, error) {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return 0, nil, err
+	}
+	defer tx.Rollback()
+
+	// Prepare COPY statement
+	stmt, err := tx.PrepareContext(ctx, pq.CopyIn("users", "id", "email", "password_hash", "first_name", "last_name", "fiscal_code", "role", "created_at", "updated_at"))
+	if err != nil {
+		return 0, nil, err
+	}
+	defer stmt.Close()
+
+	var errs []string
+	count := 0
+
+	for _, u := range users {
+		_, err := stmt.ExecContext(ctx, u.ID, u.Email, u.PasswordHash, u.FirstName, u.LastName, u.FiscalCode, u.Role, u.CreatedAt, u.UpdatedAt)
+		if err != nil {
+			errs = append(errs, fmt.Sprintf("Failed to stage %s: %v", u.Email, err))
+			continue
+		}
+		count++
+	}
+
+	if _, err := stmt.ExecContext(ctx); err != nil {
+		return 0, nil, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return 0, nil, err
+	}
+
+	return count, errs, nil
 }

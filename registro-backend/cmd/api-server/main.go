@@ -102,8 +102,22 @@ func main() {
 		{
 			usersGroup := protected.Group("/users")
 			{
-				usersGroup.GET("/", usersH.GetUsers)
-				usersGroup.POST("/", usersH.CreateUser)
+				// Admin Endpoints
+				usersGroup.POST("/", usersH.Create)
+				usersGroup.GET("/", usersH.List)
+				usersGroup.GET("/:id", usersH.Get)
+				usersGroup.PATCH("/:id", usersH.Update)
+				usersGroup.DELETE("/:id", usersH.Delete)
+				usersGroup.POST("/:id/restore", usersH.Restore)
+				usersGroup.POST("/bulk-import", usersH.BulkImport)
+				usersGroup.POST("/:id/change-password", usersH.ChangePassword)
+				usersGroup.POST("/:id/reset-password", usersH.ForceResetPassword)
+				usersGroup.PATCH("/:id/roles", usersH.AssignRoles)
+				usersGroup.GET("/:id/audit-log", usersH.GetAuditLog)
+				usersGroup.POST("/:id/gdpr-export", usersH.ExportGDPR)
+				usersGroup.DELETE("/:id/gdpr-delete", usersH.DeleteGDPR)
+				usersGroup.GET("/search", usersH.List) // Merged into List logic
+				usersGroup.PATCH("/:id/disable-mfa", usersH.DisableMFA)
 			}
 
 			gradesGroup := protected.Group("/grades")
