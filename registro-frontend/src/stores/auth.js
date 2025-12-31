@@ -10,7 +10,7 @@ export const useAuthStore = defineStore('auth', () => {
     const userRole = computed(() => user.value?.role || null)
     const userName = computed(() => {
         if (!user.value) return 'User'
-        return `${user.value.first_name} ${user.value.last_name}`
+        return `${user.value.first_name || user.value.firstName || ''} ${user.value.last_name || user.value.lastName || ''}`.trim() || 'User'
     })
 
     function login(userData, tokenData, refreshTokenData) {

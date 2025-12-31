@@ -1,100 +1,208 @@
 <template>
   <q-page class="q-pa-md">
-    <div class="text-h4 q-mb-md">Le Mie Comunicazioni</div>
+    <div class="row items-center justify-between q-mb-md">
+       <div class="text-h4">Comunicazioni</div>
+       <q-btn round flat icon="refresh" @click="studentStore.fetchNotifications()" />
+    </div>
 
-    <q-card>
-        <q-toolbar class="bg-grey-2">
-            <q-input dense outlined v-model="search" placeholder="Cerca..." class="full-width" bg-color="white">
-                <template v-slot:prepend><q-icon name="search" /></template>
-            </q-input>
-        </q-toolbar>
-        
-        <q-separator />
+    <div class="row q-col-gutter-lg">
+        <!-- Message List -->
+        <div class="col-12 col-md-5">
+            <q-card class="column full-height" style="min-height: 70vh">
+                <q-card-section class="q-pa-none">
+                    <q-tabs v-model="tab" dense class="text-grey bg-grey-1" active-color="primary" indicator-color="primary" align="justify">
+                        <q-tab name="inbox">
+                            <div class="row items-center no-wrap">
+                                <q-icon name="mail" class="q-mr-sm" />
+                                <div>In Arrivo</div>
+                                <q-badge color="red" floating v-if="unreadCount">{{ unreadCount }}</q-badge>
+                            </div>
+                        </q-tab>
+                        <q-tab name="archive" icon="archive" label="Archivio" />
+                    </q-tabs>
+                    <q-separator />
+                    
+                    <q-input v-model="search" dense borderless placeholder="Cerca..." class="q-px-md">
+                        <template v-slot:append>
+                            <q-icon name="search" />
+                        </template>
+                    </q-input>
+                    <q-separator />
+                </q-card-section>
 
-        <q-card-section v-if="loading" class="text-center">
-            <q-spinner color="primary" size="3em" />
-        </q-card-section>
+                <q-card-section class="q-pa-none scroll col">
+                    <q-list separator>
+                        <q-item 
+                            v-for="msg in filteredMessages" 
+                            :key="msg.id" 
+                            clickable 
+                            v-ripple 
+                            :active="selectedMessage?.id === msg.id"
+                            active-class="bg-blue-1 text-primary"
+                            @click="selectMessage(msg)"
+                        >
+                            <q-item-section avatar>
+                                <q-avatar :color="msg.read ? 'grey-3' : 'blue'" text-color="white" size="md">
+                                    {{ msg.sender[0] }}
+                                </q-avatar>
+                            </q-item-section>
+                            <q-item-section>
+                                <q-item-label :class="{'text-weight-bold': !msg.read}">{{ msg.subject }}</q-item-label>
+                                <q-item-label caption lines="1">{{ msg.sender }}</q-item-label>
+                                <q-item-label caption lines="2">{{ msg.preview }}</q-item-label>
+                            </q-item-section>
+                            <q-item-section side>
+                                <div class="text-caption">{{ msg.date }}</div>
+                                <q-icon name="attachment" size="xs" color="grey" v-if="msg.hasAttachment" />
+                            </q-item-section>
+                        </q-item>
+                    </q-list>
+                </q-card-section>
+            </q-card>
+        </div>
 
-        <q-list separator v-else>
-            <q-item 
-                v-for="msg in filteredMessages" 
-                :key="msg.id" 
-                clickable 
-                v-ripple 
-                @click="openMessage(msg)"
-                :class="{'bg-blue-1': !msg.read_at}"
-            >
-                <q-item-section avatar>
-                    <q-avatar color="primary" text-color="white" icon="campaign" />
-                </q-item-section>
+        <!-- content -->
+        <div class="col-12 col-md-7">
+            <q-card class="full-height" style="min-height: 70vh">
+                <div v-if="selectedMessage">
+                    <q-card-section class="bg-grey-1 row items-center justify-between">
+                         <div class="row items-center">
+                             <q-avatar color="primary" text-color="white" class="q-mr-md">
+                                 {{ selectedMessage.sender[0] }}
+                             </q-avatar>
+                             <div>
+                                 <div class="text-h6">{{ selectedMessage.subject }}</div>
+                                 <div class="text-caption">Da: <strong>{{ selectedMessage.sender }}</strong> &lt;{{ selectedMessage.email }}&gt;</div>
+                             </div>
+                         </div>
+                         <div class="text-caption text-grey">{{ selectedMessage.fullDate }}</div>
+                    </q-card-section>
+                    <q-separator />
+                    
+                    <q-card-section class="q-pa-lg">
+                        <div class="text-body1" style="white-space: pre-line">{{ selectedMessage.body }}</div>
+                    </q-card-section>
+
+                    <q-card-section v-if="selectedMessage.attachments && selectedMessage.attachments.length">
+                        <div class="text-subtitle2 q-mb-sm">Allegati ({{ selectedMessage.attachments.length }})</div>
+                        <div class="row q-gutter-sm">
+                            <q-chip 
+                                v-for="att in selectedMessage.attachments" 
+                                :key="att" 
+                                clickable 
+                                @click="downloadAttachment(att)"
+                                color="grey-3" 
+                                text-color="black" 
+                                icon="attachment"
+                            >
+                                {{ att }}
+                            </q-chip>
+                        </div>
+                    </q-card-section>
+                    
+                    <q-separator />
+                    <q-card-actions align="right">
+                         <q-btn flat icon="archive" label="Archivia" color="warning" />
+                         <q-btn flat icon="reply" label="Rispondi" color="primary" disable>
+                             <q-tooltip>Risposta disabilitata per studenti</q-tooltip>
+                         </q-btn>
+                    </q-card-actions>
+                </div>
                 
-                <q-item-section>
-                    <q-item-label class="text-weight-bold">{{ msg.subject }}</q-item-label>
-                    <q-item-label caption lines="1">{{ msg.sender_id }}</q-item-label>
-                </q-item-section>
-
-                <q-item-section side>
-                    <q-item-label caption>{{ formatDate(msg.created_at) }}</q-item-label>
-                    <q-chip v-if="msg.type === 'circolare'" size="xs" color="orange" text-color="white">Circolare</q-chip>
-                </q-item-section>
-            </q-item>
-            
-            <q-item v-if="filteredMessages.length === 0">
-                 <q-item-section class="text-center text-grey q-pa-lg">Nessun messaggio trovato</q-item-section>
-            </q-item>
-        </q-list>
-    </q-card>
-    
-    <!-- Message Detail Dialog -->
-    <q-dialog v-model="showMessage" transition-show="scale" transition-hide="scale">
-        <q-card style="min-width: 500px">
-            <q-card-section class="bg-primary text-white">
-                <div class="text-h6">{{ selectedMessage?.subject }}</div>
-                <div class="text-subtitle2">{{ selectedMessage?.sender_id }} - {{ formatDate(selectedMessage?.created_at) }}</div>
-            </q-card-section>
-
-            <q-card-section class="q-pt-md">
-                <div class="text-body1" style="white-space: pre-wrap;">{{ selectedMessage?.body }}</div>
-            </q-card-section>
-
-            <q-card-actions align="right">
-                <q-btn flat label="Chiudi" v-close-popup />
-                <q-btn flat label="Scarica Allegato" icon="download" color="primary" v-if="selectedMessage?.hasAttachment" />
-            </q-card-actions>
-        </q-card>
-    </q-dialog>
-
+                <div v-else class="full-height flex flex-center text-grey column">
+                    <q-icon name="mail_outline" size="100px" color="grey-3" />
+                    <div class="text-h5 q-mt-md">Seleziona un messaggio</div>
+                </div>
+            </q-card>
+        </div>
+    </div>
   </q-page>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useCommunicationsStore } from 'src/stores/communications'
-import { date } from 'quasar'
+import { useStudentStore } from 'src/stores/student'
+import { useQuasar } from 'quasar'
 
-const store = useCommunicationsStore()
+const $q = useQuasar()
+const studentStore = useStudentStore()
+
+const tab = ref('inbox')
 const search = ref('')
-const showMessage = ref(false)
 const selectedMessage = ref(null)
 
-onMounted(() => {
-    store.fetchMessages()
-})
+// Mock Data
+const messages = ref([
+    {
+        id: 1,
+        sender: 'Segreteria Didattica',
+        email: 'segreteria@scuola.it',
+        subject: 'Consegna Documentazione',
+        preview: 'Si ricorda che entro il 30 Maggio è necessario consegnare...',
+        body: 'Gentile Studente,\n\nSi ricorda che entro il 30 Maggio è necessario consegnare la documentazione relativa alle vaccinazioni obbligatorie.\n\nCordiali Saluti,\nLa Segreteria',
+        date: 'Ieri',
+        fullDate: '30 Gen 2025, 10:30',
+        read: false,
+        hasAttachment: true,
+        attachments: ['Modulo.pdf'],
+        archived: false
+    },
+    {
+        id: 2,
+        sender: 'Prof. Verdi',
+        email: 'verdi@scuola.it',
+        subject: 'Materiale Lezione Storia',
+        preview: 'In allegato le slide della lezione di oggi sulla Rivoluzione...',
+        body: 'Cari ragazzi,\n\nIn allegato le slide della lezione di oggi.\n\nBuono studio.',
+        date: '28 Gen',
+        fullDate: '28 Gen 2025, 14:15',
+        read: true,
+        hasAttachment: true,
+        attachments: ['Slide_Rivoluzione.ppt'],
+        archived: false
+    },
+     {
+        id: 3,
+        sender: 'Presidenza',
+        email: 'preside@scuola.it',
+        subject: 'Circolare n. 45 - Vacanze Pasquali',
+        preview: 'Si comunica il calendario delle vacanze pasquali...',
+        body: 'Si comunica che la scuola resterà chiusa dal... al...',
+        date: '15 Gen',
+        fullDate: '15 Gen 2025, 08:00',
+        read: true,
+        hasAttachment: false,
+        archived: true
+    }
+])
 
-const loading = computed(() => store.loading)
+const unreadCount = computed(() => messages.value.filter(m => !m.read && !m.archived).length)
 
 const filteredMessages = computed(() => {
-    if(!search.value) return store.messages
-    return store.messages.filter(m => m.subject.toLowerCase().includes(search.value.toLowerCase()))
+    return messages.value.filter(m => {
+        const matchesTab = tab.value === 'inbox' ? !m.archived : m.archived;
+        const matchesSearch = m.subject.toLowerCase().includes(search.value.toLowerCase()) || 
+                              m.sender.toLowerCase().includes(search.value.toLowerCase());
+        return matchesTab && matchesSearch;
+    })
 })
 
-const openMessage = (msg) => {
+const selectMessage = (msg) => {
     selectedMessage.value = msg
-    showMessage.value = true
-    // Mark as read API call would go here
+    if (!msg.read) {
+        msg.read = true
+        // api.markAsRead(msg.id)
+    }
 }
 
-const formatDate = (val) => {
-    return date.formatDate(val, 'DD/MM/YYYY HH:mm')
+const downloadAttachment = (name) => {
+    $q.notify({ message: `Download ${name}`, color: 'primary' })
 }
+
+onMounted(() => {
+    if (filteredMessages.value.length > 0 && window.innerWidth > 1023) {
+        // Auto select first message on desktop
+        // selectMessage(filteredMessages.value[0])
+    }
+})
 </script>

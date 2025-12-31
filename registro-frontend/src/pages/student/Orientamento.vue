@@ -1,100 +1,143 @@
 <template>
   <q-page class="q-pa-md">
-    <div class="text-h4 q-mb-md">Orientamento in Uscita</div>
+    <div class="row items-center q-mb-lg">
+       <div class="col">
+           <div class="text-h4">Orientamento in Uscita</div>
+           <div class="text-subtitle1 text-grey">Eventi universitari e opportunità post-diploma</div>
+       </div>
+    </div>
 
     <div class="row q-col-gutter-lg">
-        <!-- Upcoming Events -->
+        <!-- Event List -->
         <div class="col-12 col-md-8">
-            <q-card>
-                <q-toolbar class="bg-primary text-white">
-                    <q-toolbar-title>Eventi in Arrivo</q-toolbar-title>
-                    <q-btn flat round icon="filter_list" />
-                </q-toolbar>
+            <q-tabs v-model="tab" dense class="text-grey q-mb-md" active-color="primary" indicator-color="primary" align="left">
+                <q-tab name="upcoming" label="Prossimi Eventi" />
+                <q-tab name="registered" label="I Miei Eventi" />
+                <q-tab name="past" label="Passati" />
+            </q-tabs>
 
-                <q-list separator>
-                    <q-item v-for="event in events" :key="event.id" class="q-py-md">
-                        <q-item-section avatar>
-                            <q-avatar rounded color="blue-1" text-color="blue" icon="school" />
-                        </q-item-section>
-                        
-                        <q-item-section>
-                            <div class="text-h6">{{ event.title }}</div>
-                            <div class="text-subtitle2 text-grey-8">{{ event.organizer }}</div>
-                            <div class="row items-center text-caption text-grey q-gutter-md q-mt-xs">
-                                <span><q-icon name="event" /> {{ event.date }}</span>
-                                <span><q-icon name="place" /> {{ event.location }}</span>
-                            </div>
-                        </q-item-section>
-                        
-                        <q-item-section side>
-                            <q-btn 
-                                :label="event.registered ? 'Iscritto' : 'Iscriviti'" 
-                                :color="event.registered ? 'green' : 'primary'"
-                                :outline="!event.registered"
-                                :icon="event.registered ? 'check' : 'add'"
-                                @click="toggleRegistration(event)"
-                            />
-                        </q-item-section>
-                    </q-item>
-                </q-list>
-            </q-card>
+            <q-tab-panels v-model="tab" animated class="bg-transparent">
+                <q-tab-panel name="upcoming" class="q-pa-none">
+                     <div class="row q-col-gutter-md">
+                         <div class="col-12 col-md-6" v-for="event in upcomingEvents" :key="event.id">
+                             <q-card>
+                                 <q-img :src="event.image" style="height: 140px">
+                                     <div class="absolute-bottom text-subtitle2 flex justify-between items-center">
+                                         <span>{{ event.date }}</span>
+                                         <q-chip color="white" text-color="black" size="sm">{{ event.university }}</q-chip>
+                                     </div>
+                                 </q-img>
+                                 <q-card-section>
+                                     <div class="text-h6">{{ event.title }}</div>
+                                     <div class="text-caption text-grey">{{ event.description }}</div>
+                                 </q-card-section>
+                                 <q-separator />
+                                 <q-card-actions align="right">
+                                     <q-btn flat label="Dettagli" color="primary" />
+                                     <q-btn color="primary" label="Iscriviti" icon="event_available" @click="register(event)" />
+                                 </q-card-actions>
+                             </q-card>
+                         </div>
+                     </div>
+                </q-tab-panel>
+
+                 <q-tab-panel name="registered" class="q-pa-none">
+                     <q-list bordered separator class="bg-white rounded-borders">
+                         <q-item v-for="event in registeredEvents" :key="event.id">
+                             <q-item-section avatar>
+                                 <q-icon name="event" color="green" size="md" />
+                             </q-item-section>
+                             <q-item-section>
+                                 <q-item-label>{{ event.title }}</q-item-label>
+                                 <q-item-label caption>{{ event.university }} - {{ event.date }}</q-item-label>
+                             </q-item-section>
+                             <q-item-section side>
+                                 <q-chip color="green" text-color="white" icon="check">Iscritto</q-chip>
+                             </q-item-section>
+                         </q-item>
+                     </q-list>
+                </q-tab-panel>
+            </q-tab-panels>
         </div>
 
-        <!-- My Schedule / Resources -->
+        <!-- Sidebar -->
         <div class="col-12 col-md-4">
-            <q-card class="q-mb-md">
-                <q-card-section>
-                    <div class="text-h6">I Miei Appuntamenti</div>
-                    <q-list dense class="q-mt-sm">
-                        <q-item v-if="myEvents.length === 0">
-                            <q-item-section class="text-grey text-italic">Nessun evento prenotato</q-item-section>
-                        </q-item>
-                        <q-item v-for="ev in myEvents" :key="ev.id">
-                             <q-item-section>
-                                 <q-item-label>{{ ev.title }}</q-item-label>
-                                 <q-item-label caption>{{ ev.date }}</q-item-label>
-                             </q-item-section>
-                        </q-item>
-                    </q-list>
-                </q-card-section>
-            </q-card>
+             <q-card class="bg-primary text-white text-center q-mb-md">
+                 <q-card-section>
+                     <div class="text-h2 text-weight-bolder">8</div>
+                     <div class="text-subtitle2">Ore di Orientamento Svolte</div>
+                 </q-card-section>
+             </q-card>
 
-            <q-card class="bg-teal-1">
-                <q-card-section>
-                    <div class="text-subtitle1 text-weight-bold">Risorse Utili</div>
-                    <q-list class="q-mt-sm">
-                         <q-item clickable tag="a" href="#">
-                             <q-item-section avatar><q-icon name="language" /></q-item-section>
-                             <q-item-section>Portale Universitaly</q-item-section>
-                         </q-item>
-                         <q-item clickable tag="a" href="#">
-                             <q-item-section avatar><q-icon name="work" /></q-item-section>
-                             <q-item-section>Guida ITS 2025</q-item-section>
-                         </q-item>
-                    </q-list>
-                </q-card-section>
-            </q-card>
+             <q-card>
+                 <q-card-section>
+                     <div class="text-h6">Risorse Utili</div>
+                 </q-card-section>
+                 <q-list separator>
+                     <q-item clickable v-ripple href="https://www.universitaly.it/" target="_blank">
+                         <q-item-section avatar><q-icon name="public" color="blue" /></q-item-section>
+                         <q-item-section>
+                             <q-item-label>Universitaly</q-item-label>
+                             <q-item-label caption>Il portale del Ministero</q-item-label>
+                         </q-item-section>
+                         <q-item-section side><q-icon name="open_in_new" size="sm" /></q-item-section>
+                     </q-item>
+                      <q-item clickable v-ripple>
+                         <q-item-section avatar><q-icon name="psychology" color="orange" /></q-item-section>
+                         <q-item-section>Test Attitudinale</q-item-section>
+                         <q-item-section side><q-icon name="chevron_right" /></q-item-section>
+                     </q-item>
+                 </q-list>
+             </q-card>
         </div>
     </div>
   </q-page>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { useQuasar } from 'quasar'
 
 const $q = useQuasar()
+const tab = ref('upcoming')
 
-const events = ref([
-    { id: 1, title: 'Open Day Politecnico', organizer: 'Politecnico di Milano', date: '20 Feb 2025', location: 'Milano / Online', registered: false },
-    { id: 2, title: 'Salone dello Studente', organizer: 'Campus Editori', date: '15 Mar 2025', location: 'Fiera Roma', registered: true }
+const upcomingEvents = ref([
+    {
+        id: 1,
+        title: 'Open Day Ingegneria',
+        university: 'Politecnico',
+        date: '25 Marzo, 09:00',
+        description: 'Presentazione dei corsi di laurea triennale in Ingegneria.',
+        image: 'https://cdn.quasar.dev/img/parallax2.jpg'
+    },
+    {
+        id: 2,
+        title: 'Medicina: Test di Ammissione',
+        university: 'Statale',
+        date: '10 Aprile, 14:00',
+        description: 'Simulazione del test di ingresso e Q&A con studenti.',
+        image: 'https://cdn.quasar.dev/img/parallax1.jpg'
+    }
 ])
 
-const myEvents = computed(() => events.value.filter(e => e.registered))
+const registeredEvents = ref([
+    {
+        id: 3,
+        title: 'Salone dello Studente',
+        university: 'Fiera',
+        date: '15 Febbraio, 09:00'
+    }
+])
 
-const toggleRegistration = (event) => {
-    event.registered = !event.registered
-    const msg = event.registered ? 'Iscrizione confermata' : 'Iscrizione annullata'
-    $q.notify({ type: 'info', message: msg })
+const register = (event) => {
+    $q.dialog({
+        title: 'Conferma Iscrizione',
+        message: `Vuoi iscriverti a "${event.title}"?`,
+        cancel: true,
+        persistent: true
+    }).onOk(() => {
+        $q.notify({ type: 'positive', message: 'Iscrizione effettuata con successo!' })
+        // Add logic to move from upcoming to registered
+    })
 }
 </script>
