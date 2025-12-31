@@ -54,6 +54,7 @@ export default [
             { path: 'secretary/communications', component: () => import('@/pages/secretary/Communications.vue'), meta: { role: 'secretary' } },
             { path: 'secretary/reports', component: () => import('@/pages/secretary/Reports.vue'), meta: { role: 'secretary' } },
             { path: 'secretary/settings', component: () => import('@/pages/secretary/Settings.vue'), meta: { role: 'secretary' } },
+            { path: 'secretary/classes', component: () => import('@/pages/secretary/Classes.vue'), meta: { role: 'secretary' } },
 
             // Teacher Routes
             { path: 'teacher', component: () => import('@/pages/teacher/Index.vue'), meta: { role: 'teacher' } },

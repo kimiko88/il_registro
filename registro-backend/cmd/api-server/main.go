@@ -12,27 +12,7 @@ import (
 	"registro-backend/internal/auth"
 	"registro-backend/internal/classes"
 	"registro-backend/internal/communications"
-// ...
-	usersRepo := users.NewRepository(database)
-    classesRepo := classes.NewRepository(database) // New
-	gradesRepo := grades.NewRepository(database)
-// ...
-	usersSvc := users.NewService(usersRepo)
-    classesSvc := classes.NewService(classesRepo) // New
-	gradesSvc := grades.NewService(gradesRepo, usersRepo, database)
-// ...
-	usersH := users.NewHandler(usersSvc)
-    classesH := classes.NewHandler(classesSvc) // New
-	gradesH := grades.NewHandler(gradesSvc, gradesAnalytics)
-// ...
-			commsH := communications.NewHandler(commsSvc)
-			commsH.RegisterRoutes(protected)
-
-            // Classes route
-            classesH.RegisterRoutes(protected)
-
-			// Admin routes
-			adminH.RegisterRoutes(protected, adminMiddleware)	"registro-backend/internal/config"
+	"registro-backend/internal/config"
 	"registro-backend/internal/db"
 	"registro-backend/internal/documents"
 	"registro-backend/internal/grades"
@@ -80,6 +60,7 @@ func main() {
 	// 5. Setup Repositories
 	authRepo := auth.NewRepository(database)
 	usersRepo := users.NewRepository(database)
+	classesRepo := classes.NewRepository(database)
 	gradesRepo := grades.NewRepository(database)
 	attendanceRepo := attendance.NewRepository(database)
 	docsRepo := documents.NewRepository(database)
@@ -93,6 +74,7 @@ func main() {
 	// 6. Setup Services
 	authSvc := auth.NewService(authRepo, tokenManager, mfaService)
 	usersSvc := users.NewService(usersRepo)
+	classesSvc := classes.NewService(classesRepo)
 	gradesSvc := grades.NewService(gradesRepo, usersRepo, database)
 	gradesAnalytics := grades.NewAnalyticsService(gradesRepo)
 	attendanceSvc := attendance.NewService(attendanceRepo)
@@ -107,6 +89,7 @@ func main() {
 	// 7. Setup Handlers
 	authH := auth.NewHandler(authSvc)
 	usersH := users.NewHandler(usersSvc)
+	classesH := classes.NewHandler(classesSvc)
 	gradesH := grades.NewHandler(gradesSvc, gradesAnalytics)
 	attendanceH := attendance.NewHandler(attendanceSvc)
 	docsH := documents.NewHandler(docsSvc)
@@ -180,6 +163,8 @@ func main() {
 
 			commsH := communications.NewHandler(commsSvc)
 			commsH.RegisterRoutes(protected)
+
+			classesH.RegisterRoutes(protected)
 
 			// Admin routes
 			adminH.RegisterRoutes(protected, adminMiddleware)
