@@ -267,8 +267,25 @@ func (h *Handler) DisableMFA(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "mfa disabled"})
 }
 
+// 16. GET /api/v1/users/me/children
+func (h *Handler) GetMyChildren(c *gin.Context) {
+	actorID := getActorID(c)
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	children, err := h.service.GetChildren(c.Request.Context(), actorID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, children)
+}
+
 // Helpers
 func toUserResponse(u *User) UserResponse {
+
 	return UserResponse{
 		ID: u.ID, Email: u.Email, FirstName: u.FirstName, LastName: u.LastName,
 		FiscalCode: u.FiscalCode, Role: u.Role, SchoolID: u.SchoolID,

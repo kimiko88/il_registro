@@ -1,41 +1,48 @@
 import { defineStore } from 'pinia';
+import { api } from 'boot/axios';
 
 export const useParentStore = defineStore('parent', {
     state: () => ({
-        profile: null,
+        children: [], // List of { id, name, class, school }
+        selectedChild: null,
         loading: false,
-        error: null,
-        notifications: []
+        error: null
     }),
 
     getters: {
-        fullName: (state) => state.profile ? `${state.profile.firstName} ${state.profile.lastName}` : '',
-        isAuthenticated: (state) => !!state.profile
+        currentChildId: (state) => state.selectedChild?.id
     },
 
     actions: {
-        async fetchProfile() {
+        async fetchChildren() {
             this.loading = true;
             try {
-                await new Promise(resolve => setTimeout(resolve, 500));
-                // Mock Data
-                this.profile = {
-                    id: 'p1',
-                    firstName: 'Giulia',
-                    lastName: 'Mancini',
-                    email: 'giulia.mancini@email.com',
-                    avatar: 'https://cdn.quasar.dev/img/avatar2.jpg'
-                };
+                const response = await api.get('/users/me/children');
+                // Map backend response if needed, for instance formatting name
+                this.children = response.data.map(c => ({
+                    id: c.id, // Keeping Profile ID or User ID? Backend sends both. Frontend usually needs Profile ID for queries?
+                    // The Backend sends: ID (Student ID), UserID, FirstName, LastName, Class, SchoolName.
+                    // Let's ensure we use the student PROFILE ID for grades queries if grades service expects it. 
+                    // Grades service usually takes Student ID.
+                    name: `${c.first_name} ${c.last_name}`,
+                    class: c.class,
+                    school: c.school_name,
+                    userId: c.user_id // Keep ref
+                }));
+
+                if (!this.selectedChild && this.children.length > 0) {
+                    this.selectedChild = this.children[0];
+                }
+            } catch (err) {
+                console.error(err);
+                this.error = 'Failed to fetch children';
             } finally {
                 this.loading = false;
             }
         },
 
-        async fetchNotifications() {
-            this.notifications = [
-                { id: 1, title: 'New Grade', message: 'Mario received a grade', date: '2025-01-20', type: 'info' },
-                { id: 2, title: 'Meeting', message: 'Colloquio tomorrow', date: '2025-01-21', type: 'warning' }
-            ];
+        selectChild(child) {
+            this.selectedChild = child;
         }
     }
 });

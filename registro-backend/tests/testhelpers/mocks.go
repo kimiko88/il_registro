@@ -269,6 +269,17 @@ func (m *MockUsersRepository) IsGuardian(ctx context.Context, parentID, studentI
 	return args.Bool(0), args.Error(1)
 }
 
+func (m *MockUsersRepository) GetChildren(ctx context.Context, parentID string) ([]users.StudentChild, error) {
+	args := m.Called(ctx, parentID)
+	// Return empty slice if not mocked specifically to avoid panic on .Get(0) if not set up,
+	// but standard testify Mock usage implies we set it up.
+	// For compilation, signature match is enough.
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]users.StudentChild), args.Error(1)
+}
+
 // MockAnalyticsService mocks grades.AnalyticsService
 type MockAnalyticsService struct {
 	mock.Mock

@@ -89,6 +89,14 @@ func (s *Service) CreateUser(ctx context.Context, actorRole string, req CreateUs
 	return user, nil
 }
 
+func (s *Service) IsGuardian(ctx context.Context, parentID, studentID string) (bool, error) {
+	return s.repo.IsGuardian(ctx, parentID, studentID)
+}
+
+func (s *Service) GetChildren(ctx context.Context, parentUserID string) ([]StudentChild, error) {
+	return s.repo.GetChildren(ctx, parentUserID)
+}
+
 func (s *Service) GetUser(ctx context.Context, actorRole string, id string) (*User, error) {
 	if !s.permManager.HasPermission(actorRole, permissions.UserRead) {
 		return nil, ErrUnauthorized

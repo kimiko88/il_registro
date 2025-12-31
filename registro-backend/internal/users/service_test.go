@@ -72,6 +72,11 @@ func (m *MockRepository) IsGuardian(ctx context.Context, parentID, studentID str
 	return args.Bool(0), args.Error(1)
 }
 
+func (m *MockRepository) GetChildren(ctx context.Context, parentID string) ([]StudentChild, error) {
+	args := m.Called(ctx, parentID)
+	return args.Get(0).([]StudentChild), args.Error(1)
+}
+
 func TestService_CreateUser(t *testing.T) {
 	mockRepo := new(MockRepository)
 	service := NewService(mockRepo)

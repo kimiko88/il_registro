@@ -10,7 +10,29 @@ import (
 	"registro-backend/internal/admin"
 	"registro-backend/internal/attendance"
 	"registro-backend/internal/auth"
-	"registro-backend/internal/config"
+	"registro-backend/internal/classes"
+	"registro-backend/internal/communications"
+// ...
+	usersRepo := users.NewRepository(database)
+    classesRepo := classes.NewRepository(database) // New
+	gradesRepo := grades.NewRepository(database)
+// ...
+	usersSvc := users.NewService(usersRepo)
+    classesSvc := classes.NewService(classesRepo) // New
+	gradesSvc := grades.NewService(gradesRepo, usersRepo, database)
+// ...
+	usersH := users.NewHandler(usersSvc)
+    classesH := classes.NewHandler(classesSvc) // New
+	gradesH := grades.NewHandler(gradesSvc, gradesAnalytics)
+// ...
+			commsH := communications.NewHandler(commsSvc)
+			commsH.RegisterRoutes(protected)
+
+            // Classes route
+            classesH.RegisterRoutes(protected)
+
+			// Admin routes
+			adminH.RegisterRoutes(protected, adminMiddleware)	"registro-backend/internal/config"
 	"registro-backend/internal/db"
 	"registro-backend/internal/documents"
 	"registro-backend/internal/grades"
@@ -65,6 +87,7 @@ func main() {
 	pctoRepo := pcto.NewRepository(database)
 	orientRepo := orientamento.NewRepository(database)
 	schoolsRepo := schools.NewRepository(database)
+	commsRepo := communications.NewRepository(database)
 	adminRepo := postgres.NewAdminRepository(database)
 
 	// 6. Setup Services
@@ -78,6 +101,7 @@ func main() {
 	pctoSvc := pcto.NewService(pctoRepo)
 	orientSvc := orientamento.NewService(orientRepo)
 	schoolsSvc := schools.NewService(schoolsRepo)
+	commsSvc := communications.NewService(commsRepo)
 	adminSvc := admin.NewService(adminRepo)
 
 	// 7. Setup Handlers
@@ -120,6 +144,7 @@ func main() {
 			usersGroup := protected.Group("/users")
 			{
 				// Admin Endpoints
+				usersGroup.GET("/me/children", usersH.GetMyChildren) // New: Parent's children
 				usersGroup.POST("/", usersH.Create)
 				usersGroup.GET("/", usersH.List)
 				usersGroup.GET("/:id", usersH.Get)
@@ -152,6 +177,9 @@ func main() {
 
 			schoolsH := schools.NewHandler(schoolsSvc)
 			schoolsH.RegisterRoutes(protected)
+
+			commsH := communications.NewHandler(commsSvc)
+			commsH.RegisterRoutes(protected)
 
 			// Admin routes
 			adminH.RegisterRoutes(protected, adminMiddleware)

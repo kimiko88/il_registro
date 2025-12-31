@@ -37,10 +37,52 @@ type Repository interface {
 
 	// Guardianship
 	IsGuardian(ctx context.Context, parentUserID string, studentUserID string) (bool, error)
+	GetChildren(ctx context.Context, parentUserID string) ([]StudentChild, error)
+}
+
+type StudentChild struct {
+	ID         string `json:"id"`      // Student Profile ID
+	UserID     string `json:"user_id"` // Student User ID
+	FirstName  string `json:"first_name"`
+	LastName   string `json:"last_name"`
+	Class      string `json:"class"`
+	SchoolName string `json:"school_name"`
 }
 
 type PostgresRepository struct {
 	db *sql.DB
+}
+
+// ... existing NewRepository ...
+
+// ... existing methods ...
+
+func (r *PostgresRepository) GetChildren(ctx context.Context, parentUserID string) ([]StudentChild, error) {
+	query := `
+		SELECT s.id, u.id, u.first_name, u.last_name, COALESCE(c.name, 'N/A'), sc.name
+		FROM student_parents sp
+		JOIN parents p ON sp.parent_id = p.id
+		JOIN students s ON sp.student_id = s.id
+		JOIN users u ON s.user_id = u.id
+		LEFT JOIN classes c ON s.class_id = c.id
+		JOIN schools sc ON u.school_id = sc.id
+		WHERE p.user_id = $1
+	`
+	rows, err := r.db.QueryContext(ctx, query, parentUserID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var children []StudentChild
+	for rows.Next() {
+		var c StudentChild
+		if err := rows.Scan(&c.ID, &c.UserID, &c.FirstName, &c.LastName, &c.Class, &c.SchoolName); err != nil {
+			return nil, err
+		}
+		children = append(children, c)
+	}
+	return children, nil
 }
 
 func NewRepository(db *sql.DB) Repository {
