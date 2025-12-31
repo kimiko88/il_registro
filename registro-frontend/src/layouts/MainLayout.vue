@@ -24,7 +24,16 @@
         </q-btn>
 
         <!-- Fullscreen Toggle -->
-        <q-btn flat round dense :icon="$q.fullscreen.isActive ? 'fullscreen_exit' : 'fullscreen'" @click="$q.fullscreen.toggle()" color="primary" class="q-mr-sm">
+        <q-btn 
+          v-if="$q.fullscreen"
+          flat 
+          round 
+          dense 
+          :icon="$q.fullscreen.isActive ? 'fullscreen_exit' : 'fullscreen'" 
+          @click="$q.fullscreen.toggle()" 
+          color="primary" 
+          class="q-mr-sm"
+        >
            <q-tooltip>Toggle Fullscreen</q-tooltip>
         </q-btn>
 
@@ -41,7 +50,7 @@
       :width="260"
     >
       <!-- User Profile Section -->
-      <div class="q-pa-md bg-gradient-primary text-white">
+      <div class="q-pa-md bg-gradient-primary text-white" v-if="userName">
         <div class="row items-center q-mb-sm">
           <q-avatar size="48px" color="white" text-color="primary" class="q-mr-md">
             <q-icon name="person" size="28px" />
@@ -115,6 +124,7 @@ const loggingOut = ref(false)
 
 // Get role label for display
 const roleLabel = computed(() => {
+  if (!userRole.value) return 'Utente'
   const roleLabels = {
     admin: 'Amministratore',
     secretary: 'Segretario',
@@ -122,11 +132,12 @@ const roleLabel = computed(() => {
     student: 'Studente',
     parent: 'Genitore'
   }
-  return roleLabels[userRole.value] || 'Utente'
+  return roleLabels[userRole.value] || userRole.value
 })
 
 // Get menu items based on role
 const menuItems = computed(() => {
+  if (!userRole.value) return []
   return useMenuItems(userRole.value)
 })
 

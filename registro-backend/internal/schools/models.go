@@ -10,7 +10,7 @@ type School struct {
 	Address       string    `json:"address" db:"address"`
 	City          string    `json:"city" db:"city"`
 	Province      string    `json:"province" db:"province"`
-	Cap           string    `json:"cap" db:"cap"`
+	Cap           string    `json:"cap" db:"zip_code"`
 	Phone         string    `json:"phone" db:"phone"`
 	Email         string    `json:"email" db:"email"`
 	CodiceFiscale string    `json:"codice_fiscale" db:"codice_fiscale"`
