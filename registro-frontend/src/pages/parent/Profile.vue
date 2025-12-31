@@ -1,58 +1,41 @@
 <template>
-  <q-page class="q-pa-md">
-    <h1 class="text-h4 q-my-none q-mb-md">Profile & Settings</h1>
+  <q-page class="q-pa-md bg-slate-50">
+    <div class="text-h5 text-weight-bold text-slate-800 q-mb-md">Il Mio Profilo</div>
     
-    <div v-if="store.profile">
-        <q-card class="q-mb-md">
-            <q-card-section>
-                <div class="row items-center">
-                    <q-avatar size="70px" class="q-mr-md">
-                        <img :src="store.profile.avatar || 'https://cdn.quasar.dev/img/avatar2.jpg'" />
-                    </q-avatar>
-                    <div>
-                        <div class="text-h6">{{ store.fullName }}</div>
-                        <div class="text-subtitle2">{{ store.profile.email }}</div>
-                    </div>
-                </div>
-            </q-card-section>
-             <q-separator />
-            <q-card-actions>
-                <q-btn flat label="Edit Contact" color="primary" />
-            </q-card-actions>
+    <div class="row q-col-gutter-lg">
+      <div class="col-12 col-md-6">
+        <q-card class="shadow-sm">
+          <q-card-section>
+            <div class="text-h6">Dati Personali</div>
+            <q-separator class="q-my-sm" />
+            <q-input v-model="form.name" label="Nome" readonly filled class="q-mb-sm" />
+            <q-input v-model="form.email" label="Email" readonly filled class="q-mb-sm" />
+            <q-input v-model="form.phone" label="Telefono" outlined />
+            <q-btn label="Salva Modifiche" color="primary" class="q-mt-sm" />
+          </q-card-section>
         </q-card>
+      </div>
 
-         <q-list bordered separator class="bg-white rounded-borders">
-            <q-item-label header>Preferences</q-item-label>
-            <q-item>
-                <q-item-section>
-                    <q-item-label>Email Notifications</q-item-label>
-                </q-item-section>
-                <q-item-section side>
-                    <q-toggle v-model="emailNotif" />
-                </q-item-section>
-            </q-item>
-             <q-item>
-                <q-item-section>
-                    <q-item-label>SMS Alerts</q-item-label>
-                </q-item-section>
-                <q-item-section side>
-                    <q-toggle v-model="smsNotif" />
-                </q-item-section>
-            </q-item>
-         </q-list>
+      <div class="col-12 col-md-6">
+        <q-card class="shadow-sm">
+          <q-card-section>
+            <div class="text-h6 text-negative">Area Sicurezza</div>
+            <q-separator class="q-my-sm" />
+            <q-btn outline color="primary" label="Cambia Password" class="full-width q-mb-sm" />
+            <q-btn flat color="grey" label="Esporta Dati GDPR" class="full-width" />
+          </q-card-section>
+        </q-card>
+      </div>
     </div>
   </q-page>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { useParentStore } from 'src/stores/parent';
+import { reactive } from 'vue'
 
-const store = useParentStore();
-const emailNotif = ref(true);
-const smsNotif = ref(false);
-
-onMounted(() => {
-    store.fetchProfile();
-});
+const form = reactive({
+  name: 'Giuseppe Verdi',
+  email: 'g.verdi@example.com',
+  phone: '+39 333 1234567'
+})
 </script>

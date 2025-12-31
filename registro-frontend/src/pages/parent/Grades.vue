@@ -1,95 +1,88 @@
 <template>
-  <q-page class="q-pa-md bg-grey-1">
-    <div v-if="!selectedChild" class="text-center q-pa-xl text-grey">
-        <q-icon name="face" size="64px" />
-        <div class="text-h6">Seleziona un figlio dalla Dashboard per vedere i voti.</div>
-        <q-btn label="Vai alla Dashboard" color="primary" flat to="/parent" />
+  <q-page class="q-pa-md bg-slate-50">
+    <div class="row items-center justify-between q-mb-md">
+      <div class="text-h5 text-weight-bold text-slate-800">
+        Voti: {{ selectedChild?.firstName || '...' }}
+      </div>
+      <q-btn flat icon="download" label="Scarica Pagella" color="primary" @click="downloadReport" />
     </div>
 
-    <div v-else>
-        <div class="row items-center justify-between q-mb-md">
-           <div class="text-h4">Voti di {{ selectedChild.name }}</div>
-           <q-btn-toggle
-              v-model="period"
-              toggle-color="primary"
-              :options="[{label: '1° Quad', value: 1}, {label: '2° Quad', value: 2}]"
-              rounded unelevated
-              class="bg-white border-primary"
-           />
-        </div>
-
-        <!-- Grade List Grouped -->
-        <div v-for="(subject, name) in gradesBySubject" :key="name" class="q-mb-md">
-            <q-expansion-item
-                class="shadow-1 overflow-hidden bg-white"
-                style="border-radius: 8px"
-                icon="book"
-                :label="name"
-                :caption="'Media: ' + subject.average"
-                header-class="text-weight-medium"
-            >
-                <q-table
-                    :rows="subject.grades"
-                    :columns="columns"
-                    hide-bottom
-                    flat dense
-                >
-                    <template v-slot:body-cell-value="props">
-                        <q-td :props="props">
-                            <q-badge :color="getGradeColor(props.value)" class="text-subtitle2 q-pa-xs">
-                                {{ props.value }}
-                            </q-badge>
-                        </q-td>
-                    </template>
-                </q-table>
-            </q-expansion-item>
-        </div>
+    <!-- Filters -->
+    <div class="row q-gutter-sm q-mb-md">
+       <q-select 
+         dense 
+         outlined 
+         v-model="period" 
+         :options="['Primo Quadrimestre', 'Secondo Quadrimestre']" 
+         label="Periodo" 
+         class="bg-white" 
+         style="width: 200px" 
+       />
     </div>
+
+    <!-- Grades Table -->
+    <q-card class="shadow-sm rounded-lg">
+      <q-table
+        :rows="mockGrades"
+        :columns="columns"
+        row-key="id"
+        flat
+        bordered
+        :pagination="{ rowsPerPage: 10 }"
+      >
+        <template v-slot:body-cell-value="props">
+          <q-td :props="props">
+            <q-badge :color="getGradeColor(props.value)" class="text-subtitle2 q-pa-xs">
+              {{ props.value }}
+            </q-badge>
+          </q-td>
+        </template>
+      </q-table>
+    </q-card>
+    
+    <!-- Child Selector Warning -->
+    <div v-if="!selectedChild" class="fixed-bottom q-pa-md bg-warning text-white text-center">
+      Seleziona un figlio dalla Dashboard per vedere i dati corretti.
+    </div>
+
   </q-page>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
-import { useParentStore } from 'src/stores/parent'
+import { useParentStore } from '@/stores/parent'
+import { storeToRefs } from 'pinia'
+import { useQuasar } from 'quasar'
 
+const $q = useQuasar()
 const parentStore = useParentStore()
-const selectedChild = computed(() => parentStore.selectedChild)
-const period = ref(1)
+const { selectedChild } = storeToRefs(parentStore)
+
+const period = ref('Primo Quadrimestre')
 
 const columns = [
-    { name: 'date', label: 'Data', field: 'date', align: 'left', sortable: true },
-    { name: 'type', label: 'Tipo', field: 'type', align: 'left' },
-    { name: 'value', label: 'Voto', field: 'value', align: 'center', sortable: true },
-    { name: 'notes', label: 'Note', field: 'notes', align: 'left' }
+  { name: 'date', label: 'Data', field: 'date', align: 'left', sortable: true },
+  { name: 'subject', label: 'Materia', field: 'subject', align: 'left', sortable: true },
+  { name: 'type', label: 'Tipo', field: 'type', align: 'left' },
+  { name: 'value', label: 'Voto', field: 'value', align: 'center', sortable: true },
+  { name: 'notes', label: 'Note', field: 'notes', align: 'left' }
 ]
 
-// Mock data
-const rawGrades = [
-    { id: 1, subject: 'Matematica', value: 8.5, date: '2025-01-10', type: 'Scritto', notes: '', semester: 1 },
-    { id: 2, subject: 'Matematica', value: 7, date: '2025-01-20', type: 'Orale', notes: '', semester: 1 },
-    { id: 3, subject: 'Storia', value: 6, date: '2025-01-15', type: 'Orale', notes: 'Interrogazione', semester: 1 },
+const mockGrades = [
+  { id: 1, date: '2024-12-20', subject: 'Matematica', type: 'Scritto', value: 5.0, notes: 'Equazioni' },
+  { id: 2, date: '2024-12-18', subject: 'Storia', type: 'Orale', value: 7.5, notes: 'Interrogazione' },
+  { id: 3, date: '2024-12-15', subject: 'Inglese', type: 'Scritto', value: 8.0, notes: 'Grammar Test' },
+  { id: 4, date: '2024-12-10', subject: 'Fisica', type: 'Pratico', value: 6.5, notes: 'Laboratorio' },
+  { id: 5, date: '2024-11-28', subject: 'Italiano', type: 'Scritto', value: 6.0, notes: 'Tema' },
 ]
 
-const gradesBySubject = computed(() => {
-    const grouped = {}
-    rawGrades.filter(g => g.semester === period.value).forEach(g => {
-        if (!grouped[g.subject]) {
-            grouped[g.subject] = { grades: [], total: 0, count: 0, average: 0 }
-        }
-        grouped[g.subject].grades.push(g)
-        grouped[g.subject].total += g.value
-        grouped[g.subject].count++
-    })
-    
-    Object.keys(grouped).forEach(k => {
-        grouped[k].average = (grouped[k].total / grouped[k].count).toFixed(1)
-    })
-    return grouped
-})
+function getGradeColor(val) {
+  if (val < 6) return 'negative';
+  if (val >= 8) return 'positive';
+  return 'orange';
+}
 
-const getGradeColor = (val) => {
-    if (val < 6) return 'red'
-    if (val < 8) return 'orange'
-    return 'green'
+function downloadReport() {
+  $q.notify({ type: 'info', message: 'Download avviato...' })
 }
 </script>

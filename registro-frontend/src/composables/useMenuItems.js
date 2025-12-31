@@ -48,14 +48,15 @@ export function useMenuItems(role) {
             { label: 'Profilo', icon: 'person', path: '/student/profile' }
         ],
         parent: [
-            { label: 'Dashboard', icon: 'dashboard', path: '/', exact: true },
+            { label: 'Dashboard', icon: 'dashboard', path: '/parent', exact: true },
             { label: 'I Miei Figli', icon: 'family_restroom', path: '/parent/children' },
             { label: 'Voti', icon: 'grade', path: '/parent/grades' },
             { label: 'Presenze', icon: 'how_to_reg', path: '/parent/attendance' },
             { label: 'Colloqui', icon: 'event', path: '/parent/colloqui' },
+            { label: 'Documenti', icon: 'description', path: '/parent/documents' },
             { label: 'Comunicazioni', icon: 'email', path: '/parent/communications' },
-            { label: 'Supporto', icon: 'help', path: '/parent/support' },
-            { label: 'Profilo', icon: 'person', path: '/parent/profile' }
+            { label: 'Profilo', icon: 'person', path: '/parent/profile' },
+            { label: 'Supporto', icon: 'help', path: '/parent/support' }
         ]
     }
 
