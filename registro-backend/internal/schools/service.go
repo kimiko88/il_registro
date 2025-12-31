@@ -2,13 +2,22 @@ package schools
 
 import "context"
 
+// Repository defines the interface for school storage
+type Repository interface {
+	Create(ctx context.Context, school *School) error
+	GetByID(ctx context.Context, id string) (*School, error)
+	List(ctx context.Context, params *ListParams) ([]*School, int, error)
+	Update(ctx context.Context, id string, req *UpdateSchoolRequest) error
+	Delete(ctx context.Context, id string) error
+}
+
 // Service handles business logic for schools
 type Service struct {
-	repo *Repository
+	repo Repository
 }
 
 // NewService creates a new schools service
-func NewService(repo *Repository) *Service {
+func NewService(repo Repository) *Service {
 	return &Service{repo: repo}
 }
 

@@ -9,18 +9,18 @@ import (
 	"github.com/google/uuid"
 )
 
-// Repository handles database operations for schools
-type Repository struct {
+// PostgresRepository handles database operations for schools
+type PostgresRepository struct {
 	db *sql.DB
 }
 
 // NewRepository creates a new schools repository
-func NewRepository(db *sql.DB) *Repository {
-	return &Repository{db: db}
+func NewRepository(db *sql.DB) *PostgresRepository {
+	return &PostgresRepository{db: db}
 }
 
 // Create inserts a new school
-func (r *Repository) Create(ctx context.Context, school *School) error {
+func (r *PostgresRepository) Create(ctx context.Context, school *School) error {
 	school.ID = uuid.New().String()
 	school.CreatedAt = time.Now()
 	school.UpdatedAt = time.Now()
@@ -37,7 +37,7 @@ func (r *Repository) Create(ctx context.Context, school *School) error {
 }
 
 // GetByID retrieves a school by ID
-func (r *Repository) GetByID(ctx context.Context, id string) (*School, error) {
+func (r *PostgresRepository) GetByID(ctx context.Context, id string) (*School, error) {
 	query := `SELECT id, name, COALESCE(code, ''), address, COALESCE(city, ''), phone, email, created_at, updated_at FROM schools WHERE id = $1 AND deleted_at IS NULL`
 	school := &School{}
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
@@ -51,7 +51,7 @@ func (r *Repository) GetByID(ctx context.Context, id string) (*School, error) {
 }
 
 // List retrieves schools with pagination
-func (r *Repository) List(ctx context.Context, params *ListParams) ([]*School, int, error) {
+func (r *PostgresRepository) List(ctx context.Context, params *ListParams) ([]*School, int, error) {
 	if params.Page < 1 {
 		params.Page = 1
 	}
@@ -109,7 +109,7 @@ func (r *Repository) List(ctx context.Context, params *ListParams) ([]*School, i
 }
 
 // Update updates a school
-func (r *Repository) Update(ctx context.Context, id string, req *UpdateSchoolRequest) error {
+func (r *PostgresRepository) Update(ctx context.Context, id string, req *UpdateSchoolRequest) error {
 	query := `UPDATE schools SET updated_at = $1`
 	args := []interface{}{time.Now()}
 	argIndex := 2
@@ -153,7 +153,7 @@ func (r *Repository) Update(ctx context.Context, id string, req *UpdateSchoolReq
 }
 
 // Delete soft-deletes a school
-func (r *Repository) Delete(ctx context.Context, id string) error {
+func (r *PostgresRepository) Delete(ctx context.Context, id string) error {
 	query := `UPDATE schools SET deleted_at = $1, updated_at = $1 WHERE id = $2`
 	_, err := r.db.ExecContext(ctx, query, time.Now(), id)
 	return err

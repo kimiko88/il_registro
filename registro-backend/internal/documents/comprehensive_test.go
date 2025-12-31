@@ -54,8 +54,14 @@ func (m *MockRepo) GetTemplates(id string) ([]DocumentTemplate, error) { return 
 func (m *MockRepo) CreateTemplate(t *DocumentTemplate) error           { return nil }
 func (m *MockRepo) FindByClass(c string) ([]Document, error)           { return nil, nil }
 func (m *MockRepo) FindByStudent(s string) ([]Document, error)         { return nil, nil }
-func (m *MockRepo) GetInbox(s string) ([]Document, error)              { return nil, nil }
-func (m *MockRepo) GetReviewQueue(s string) ([]Document, error)        { return nil, nil }
+func (m *MockRepo) GetInbox(s string) ([]Document, error) {
+	args := m.Called(s)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]Document), args.Error(1)
+}
+func (m *MockRepo) GetReviewQueue(s string) ([]Document, error) { return nil, nil }
 
 // --- Tests ---
 
@@ -98,4 +104,18 @@ func TestService_SignDocument(t *testing.T) {
 	req := SignDocumentRequest{CertificateData: "cert", SignatureData: "sig"}
 	err := svc.SignDocument(context.Background(), "user1", docID, req)
 	assert.NoError(t, err)
+}
+
+func TestService_GetInbox(t *testing.T) {
+	mockRepo := new(MockRepo)
+	svc := NewService(mockRepo)
+
+	docs := []Document{{ID: "doc1", Title: "Inbox Doc", Status: StatusSubmitted}}
+	mockRepo.On("GetInbox", "default-school").Return(docs, nil)
+
+	res, err := svc.GetInbox(context.Background())
+	assert.NoError(t, err)
+	assert.Len(t, res, 1)
+	assert.Equal(t, "Inbox Doc", res[0].Title)
+	mockRepo.AssertExpectations(t)
 }
