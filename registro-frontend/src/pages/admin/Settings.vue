@@ -1,36 +1,31 @@
 <template>
-  <q-page padding>
-    <div class="text-h4 q-mb-md">System Settings</div>
+  <q-page class="q-pa-md">
+    <div class="text-h4 text-weight-bold q-mb-md">Impostazioni</div>
     
-    <div class="row q-col-gutter-md">
-      <div class="col-12 col-md-6">
-        <ConfigurationPanel title="Email Settings" :loading="store.loading" @submit="saveEmail">
-          <q-input v-model="store.config.email.smtp_host" label="SMTP Host" />
-          <q-input v-model="store.config.email.smtp_port" label="SMTP Port" />
-        </ConfigurationPanel>
-      </div>
+     <q-list bordered class="rounded-borders bg-white">
+      <q-item-label header>Generale</q-item-label>
       
-      <div class="col-12 col-md-6">
-        <ConfigurationPanel title="Backup Settings" :loading="store.loading" @submit="saveBackup">
-          <q-toggle v-model="store.config.backup.enabled" label="Enable Auto Backup" />
-          <q-input v-model="store.config.backup.frequency" label="Frequency (Cron)" />
-        </ConfigurationPanel>
-      </div>
-    </div>
+      <q-item clickable v-ripple>
+        <q-item-section avatar>
+          <q-icon name="language" />
+        </q-item-section>
+        <q-item-section>
+          <q-item-label>Lingua</q-item-label>
+          <q-item-label caption>Italiano</q-item-label>
+        </q-item-section>
+      </q-item>
+
+      <q-separator />
+      
+       <q-item clickable v-ripple>
+        <q-item-section avatar>
+          <q-icon name="security" />
+        </q-item-section>
+        <q-item-section>
+          <q-item-label>Sicurezza</q-item-label>
+          <q-item-label caption>Policy password e 2FA</q-item-label>
+        </q-item-section>
+      </q-item>
+    </q-list>
   </q-page>
 </template>
-
-<script setup>
-import ConfigurationPanel from 'src/components/Common/ConfigurationPanel.vue';
-import { useSettingsStore } from 'src/stores/settings';
-import { onMounted } from 'vue';
-
-const store = useSettingsStore();
-
-onMounted(() => {
-  store.fetchSettings();
-});
-
-const saveEmail = () => store.updateSettings('email', store.config.email);
-const saveBackup = () => store.updateSettings('backup', store.config.backup);
-</script>

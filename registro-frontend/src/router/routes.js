@@ -5,13 +5,46 @@ export default [
         children: [
             { path: '', component: () => import('@/pages/Dashboard.vue') },
 
-            // Admin Routes
-            { path: 'admin', component: () => import('@/pages/admin/Index.vue'), meta: { role: 'admin' } },
-            { path: 'admin/schools', component: () => import('@/pages/admin/Schools.vue'), meta: { role: 'admin' } },
-            { path: 'admin/users', component: () => import('@/pages/admin/AdminUsers.vue'), meta: { role: 'admin' } },
-            { path: 'admin/monitoring', component: () => import('@/pages/admin/Monitoring.vue'), meta: { role: 'admin' } },
-            { path: 'admin/analytics', component: () => import('@/pages/admin/Analytics.vue'), meta: { role: 'admin' } },
-            { path: 'admin/settings', component: () => import('@/pages/admin/Settings.vue'), meta: { role: 'admin' } },
+            // Admin Routes (SuperAdmin + Admin)
+            {
+                path: 'admin',
+                redirect: '/admin/dashboard'
+            },
+            {
+                path: 'admin/dashboard',
+                component: () => import('@/pages/Admin/Dashboard.vue'),
+                meta: { roles: ['superadmin', 'admin'] }
+            },
+            {
+                path: 'admin/schools',
+                component: () => import('@/pages/Admin/SchoolManagement.vue'),
+                meta: { roles: ['superadmin', 'admin'] }
+            },
+            {
+                path: 'admin/admins',
+                component: () => import('@/pages/admin/AdminUsers.vue'),
+                meta: { roles: ['superadmin'] }
+            },
+            {
+                path: 'admin/monitoring',
+                component: () => import('@/pages/admin/Monitoring.vue'),
+                meta: { roles: ['superadmin'] }
+            },
+            {
+                path: 'admin/analytics',
+                component: () => import('@/pages/admin/Analytics.vue'),
+                meta: { roles: ['superadmin', 'admin'] }
+            },
+            {
+                path: 'admin/settings',
+                component: () => import('@/pages/admin/Settings.vue'),
+                meta: { roles: ['superadmin'] }
+            },
+            {
+                path: 'admin/audit-logs',
+                component: () => import('@/pages/Admin/AuditLog.vue'),
+                meta: { roles: ['superadmin'] }
+            },
 
             // Secretary Routes
             { path: 'secretary', component: () => import('@/pages/secretary/Index.vue'), meta: { role: 'secretary' } },

@@ -4,10 +4,10 @@
     <div class="row items-center q-mb-xl">
       <div class="col-12 col-md-8">
         <div class="text-h4 text-weight-bold text-dark q-mb-sm" style="letter-spacing: -0.5px">
-          Good Morning, <span class="text-primary">{{ user?.first_name || 'User' }}</span>!
+          {{ greeting }}, <span class="text-primary">{{ user?.first_name || 'Utente' }}</span>!
         </div>
         <div class="text-subtitle1 text-grey-7">
-          Here's what's happening in your school today.
+          Ecco cosa succede oggi nella tua scuola.
         </div>
       </div>
       <div class="col-12 col-md-4 text-right gt-sm">
@@ -103,23 +103,63 @@
 <script setup>
 import { useAuthStore } from '@/stores/auth'
 import { storeToRefs } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 const authStore = useAuthStore()
-const { user } = storeToRefs(authStore)
+const { user, userName, userRole } = storeToRefs(authStore)
 
-const stats = [
-  { label: 'Total Students', value: '1,245', icon: 'school', color: 'indigo' },
-  { label: 'Active Classes', value: '32', icon: 'class', color: 'cyan' },
-  { label: 'Events Today', value: '4', icon: 'event', color: 'amber' },
-  { label: 'Pending Reports', value: '12', icon: 'assignment', color: 'red' }
-]
+// Greeting based on time of day
+const greeting = computed(() => {
+  const hour = new Date().getHours()
+  if (hour < 12) return 'Buongiorno'
+  if (hour < 18) return 'Buon pomeriggio'
+  return 'Buonasera'
+})
+
+// Role-specific stats (placeholder - would come from backend)
+const stats = computed(() => {
+  // These would be fetched from the backend based on user role
+  const roleStats = {
+    admin: [
+      { label: 'Totale Scuole', value: '12', icon: 'school', color: 'indigo' },
+      { label: 'Utenti Attivi', value: '1,245', icon: 'people', color: 'cyan' },
+      { label: 'Eventi Oggi', value: '4', icon: 'event', color: 'amber' },
+      { label: 'Report Pending', value: '12', icon: 'assignment', color: 'red' }
+    ],
+    teacher: [
+      { label: 'Le Mie Classi', value: '5', icon: 'class', color: 'indigo' },
+      { label: 'Studenti', value: '120', icon: 'school', color: 'cyan' },
+      { label: 'Lezioni Oggi', value: '4', icon: 'event', color: 'amber' },
+      { label: 'Voti da inserire', value: '8', icon: 'grade', color: 'red' }
+    ],
+    student: [
+      { label: 'Media Voti', value: '7.5', icon: 'grade', color: 'indigo' },
+      { label: 'Presenze', value: '95%', icon: 'how_to_reg', color: 'cyan' },
+      { label: 'Compiti', value: '3', icon: 'assignment', color: 'amber' },
+      { label: 'Documenti', value: '12', icon: 'description', color: 'purple' }
+    ],
+    parent: [
+      { label: 'I Miei Figli', value: '2', icon: 'family_restroom', color: 'indigo' },
+      { label: 'Colloqui', value: '1', icon: 'event', color: 'cyan' },
+      { label: 'Comunicazioni', value: '3', icon: 'email', color: 'amber' },
+      { label: 'Documenti', value: '8', icon: 'description', color: 'purple' }
+    ],
+    secretary: [
+      { label: 'Studenti', value: '450', icon: 'school', color: 'indigo' },
+      { label: 'Docenti', value: '45', icon: 'people', color: 'cyan' },
+      { label: 'Documenti', value: '24', icon: 'description', color: 'amber' },
+      { label: 'Richieste', value: '7', icon: 'assignment', color: 'red' }
+    ]
+  }
+  
+  return roleStats[userRole.value] || roleStats.student
+})
 
 const actions = [
-  { label: 'New Event', icon: 'add_circle' },
-  { label: 'Send Email', icon: 'mail' },
-  { label: 'Print Grades', icon: 'print' },
-  { label: 'Settings', icon: 'settings' }
+  { label: 'Nuovo Evento', icon: 'add_circle' },
+  { label: 'Invia Email', icon: 'mail' },
+  { label: 'Stampa Voti', icon: 'print' },
+  { label: 'Impostazioni', icon: 'settings' }
 ]
 </script>
 

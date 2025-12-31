@@ -35,7 +35,7 @@ docker-up:
 
 # Migration commands (using golang-migrate)
 # Install: go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
-MIGRATE_CMD=migrate -path migrations -database "postgres://user:password@localhost:5432/registro?sslmode=disable"
+MIGRATE_CMD=migrate -path migrations -database "postgres://postgres:password@localhost:5432/registro?sslmode=disable"
 
 migrate-up:
 	$(MIGRATE_CMD) up

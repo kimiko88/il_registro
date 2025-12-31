@@ -1,18 +1,18 @@
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
-import api from '@/services/api'
+import authService from '@/services/authService'
 
 export function useAuth() {
     const authStore = useAuthStore()
     const router = useRouter()
-    const { user, isAuthenticated } = storeToRefs(authStore)
+    const { user, isAuthenticated, refreshToken } = storeToRefs(authStore)
 
     async function login(email, password) {
         try {
-            const response = await api.post('/auth/login', { email, password })
-            const { user: userData, access_token: token } = response.data
-            authStore.login(userData, token)
+            const response = await authService.login(email, password)
+            const { user: userData, access_token: token, refresh_token: refreshTokenValue } = response
+            authStore.login(userData, token, refreshTokenValue)
 
             // Redirect based on role
             switch (userData.role) {
@@ -40,9 +40,20 @@ export function useAuth() {
         }
     }
 
-    function logout() {
-        authStore.logout()
-        router.push('/login')
+    async function logout() {
+        try {
+            // Call backend logout API if we have a refresh token
+            if (refreshToken.value) {
+                await authService.logout(refreshToken.value)
+            }
+        } catch (error) {
+            console.error('Logout API error:', error)
+            // Continue with local logout even if API call fails
+        } finally {
+            // Clear local state and redirect
+            authStore.logout()
+            router.push('/login')
+        }
     }
 
     return {

@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"registro-backend/internal/admin"
 	"registro-backend/internal/attendance"
 	"registro-backend/internal/auth"
 	"registro-backend/internal/config"
@@ -17,6 +18,7 @@ import (
 	"registro-backend/internal/middleware"
 	"registro-backend/internal/orientamento"
 	"registro-backend/internal/pcto"
+	"registro-backend/internal/postgres"
 	"registro-backend/internal/scheduling"
 	"registro-backend/internal/schools"
 	"registro-backend/internal/users"
@@ -63,6 +65,7 @@ func main() {
 	pctoRepo := pcto.NewRepository(database)
 	orientRepo := orientamento.NewRepository(database)
 	schoolsRepo := schools.NewRepository(database)
+	adminRepo := postgres.NewAdminRepository(database)
 
 	// 6. Setup Services
 	authSvc := auth.NewService(authRepo, tokenManager, mfaService)
@@ -75,6 +78,7 @@ func main() {
 	pctoSvc := pcto.NewService(pctoRepo)
 	orientSvc := orientamento.NewService(orientRepo)
 	schoolsSvc := schools.NewService(schoolsRepo)
+	adminSvc := admin.NewService(adminRepo)
 
 	// 7. Setup Handlers
 	authH := auth.NewHandler(authSvc)
@@ -83,6 +87,8 @@ func main() {
 	attendanceH := attendance.NewHandler(attendanceSvc)
 	docsH := documents.NewHandler(docsSvc)
 	schedH := scheduling.NewHandler(schedSvc)
+	adminH := admin.NewHandler(adminSvc)
+	adminMiddleware := admin.NewMiddleware()
 	// ...
 	healthH := handler.NewHealthHandler(database)
 
@@ -146,6 +152,9 @@ func main() {
 
 			schoolsH := schools.NewHandler(schoolsSvc)
 			schoolsH.RegisterRoutes(protected)
+
+			// Admin routes
+			adminH.RegisterRoutes(protected, adminMiddleware)
 		}
 	}
 

@@ -1,22 +1,16 @@
 <template>
-  <q-page padding>
-    <div class="text-h4 q-mb-md">Global Analytics</div>
-    <div class="row q-col-gutter-md">
-      <div class="col-12 col-md-4">
-        <q-card>
-          <q-card-section>
-            <div class="text-subtitle2">Total Schools</div>
-            <div class="text-h3">{{ stats.schools }}</div>
-          </q-card-section>
-        </q-card>
-      </div>
-      <!-- More widgets -->
+  <q-page class="q-pa-md">
+    <div class="text-h4 text-weight-bold q-mb-md">Analytics</div>
+    
+    <div class="row q-gutter-md">
+        <div class="col-12">
+            <q-banner class="bg-grey-3 rounded-borders">
+                <template v-slot:avatar>
+                    <q-icon name="analytics" color="primary" />
+                </template>
+                Dashboard analitica in costruzione.
+            </q-banner>
+        </div>
     </div>
   </q-page>
 </template>
-
-<script setup>
-import { useGlobalAnalytics } from 'src/composables/useGlobalAnalytics';
-
-const { stats } = useGlobalAnalytics();
-</script>

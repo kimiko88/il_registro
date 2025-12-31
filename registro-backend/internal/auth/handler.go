@@ -118,6 +118,33 @@ func (h *Handler) Logout(c *gin.Context) {
 	c.JSON(http.StatusOK, MessageResponse{Message: "logged out successfully"})
 }
 
+// GetCurrentUser returns the current authenticated user's profile
+// GET /auth/me
+func (h *Handler) GetCurrentUser(c *gin.Context) {
+	userID, exists := GetUserID(c)
+	if !exists {
+		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "user not authenticated"})
+		return
+	}
+
+	user, err := h.service.GetUserByID(c.Request.Context(), userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, UserResponse{
+		ID:            user.ID,
+		Email:         user.Email,
+		FirstName:     user.FirstName,
+		LastName:      user.LastName,
+		Role:          user.Role,
+		SchoolID:      user.SchoolID,
+		EmailVerified: user.EmailVerified,
+		MFAEnabled:    user.MFAEnabled,
+	})
+}
+
 // SetupMFA initiates MFA setup
 // POST /auth/mfa/setup
 func (h *Handler) SetupMFA(c *gin.Context) {
@@ -218,6 +245,7 @@ func (h *Handler) RegisterRoutes(router *gin.RouterGroup, middleware *Middleware
 		protected := auth.Group("")
 		protected.Use(middleware.Authenticate())
 		{
+			protected.GET("/me", h.GetCurrentUser)
 			protected.POST("/logout", h.Logout)
 			protected.POST("/mfa/setup", h.SetupMFA)
 			protected.POST("/mfa/verify", h.VerifyMFA)

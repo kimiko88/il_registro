@@ -220,6 +220,11 @@ func (s *Service) Logout(ctx context.Context, refreshToken string) error {
 	return s.repo.RevokeRefreshToken(ctx, rt.ID)
 }
 
+// GetUserByID retrieves a user by ID
+func (s *Service) GetUserByID(ctx context.Context, userID string) (*User, error) {
+	return s.repo.GetUserByID(ctx, userID)
+}
+
 // SetupMFA initiates MFA setup for a user
 func (s *Service) SetupMFA(ctx context.Context, userID string) (*MFASetupResponse, error) {
 	user, err := s.repo.GetUserByID(ctx, userID)
