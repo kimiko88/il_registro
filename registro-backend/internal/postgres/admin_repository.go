@@ -458,7 +458,7 @@ func (r *AdminRepository) ListAdminUsers(ctx context.Context, offset, limit int,
 			u.role, 
 			u.school_id, 
 			s.name as school_name,
-			u.email_verified,
+			u.is_active,
 			u.created_at
 		FROM users u
 		LEFT JOIN schools s ON u.school_id = s.id
@@ -603,11 +603,8 @@ func (r *AdminRepository) UpdateAdminUser(ctx context.Context, adminID string, r
 		args = append(args, req.SchoolID)
 		argCount++
 	}
-	// Note: IsActive update requires `is_active` column or mapping to something else.
-	// For now we skip or map to email_verified/suspended if exists.
-	// Assuming email_verified is used as active flag for simplicity in this MVP
 	if req.IsActive != nil {
-		query += fmt.Sprintf(", email_verified = $%d", argCount)
+		query += fmt.Sprintf(", is_active = $%d", argCount)
 		args = append(args, *req.IsActive)
 		argCount++
 	}

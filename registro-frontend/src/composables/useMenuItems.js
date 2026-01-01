@@ -21,6 +21,7 @@ export function useMenuItems(role) {
         ],
         secretary: [
             { label: 'Dashboard', icon: 'dashboard', path: '/', exact: true },
+            { label: 'Classi', icon: 'room', path: '/secretary/classes' },
             { label: 'Documenti', icon: 'description', path: '/secretary/documents' },
             { label: 'Studenti', icon: 'school', path: '/secretary/students' },
             { label: 'Utenti', icon: 'people', path: '/secretary/users' },

@@ -55,6 +55,10 @@ const (
 
 // RoleDefinitions maps roles to their default permissions
 var RoleDefinitions = map[string][]Permission{
+	"superadmin": {
+		UserCreate, UserRead, UserUpdate, UserDelete, UserImport, UserExport, UserAudit,
+		AuditRead,
+	},
 	"admin": {
 		UserCreate, UserRead, UserUpdate, UserDelete, UserImport, UserExport, UserAudit,
 		AuditRead,

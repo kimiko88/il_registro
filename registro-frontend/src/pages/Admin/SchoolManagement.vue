@@ -545,8 +545,4 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
-.schools-table {
-  /* Add custom table styles if needed */
-}
-</style>
+

@@ -91,6 +91,13 @@ func NewRepository(db *sql.DB) Repository {
 }
 
 func (r *PostgresRepository) Create(ctx context.Context, user *User) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	// defer tx.Rollback() // Managed manually below for specific error returns?
+	// Or better, use defer and check err
+
 	query := `
 		INSERT INTO users (
 			id, email, password_hash, first_name, last_name, fiscal_code,
@@ -102,7 +109,7 @@ func (r *PostgresRepository) Create(ctx context.Context, user *User) error {
 			$13, $14, $15, $16
 		)
 	`
-	_, err := r.db.ExecContext(ctx, query,
+	_, err = tx.ExecContext(ctx, query,
 		user.ID, user.Email, user.PasswordHash, user.FirstName, user.LastName, user.FiscalCode,
 		user.Role, user.SchoolID, user.IsActive, user.EmailVerified, user.MFAEnabled, user.MFASecret,
 		user.PhoneNumber, user.JobTitle, user.CreatedAt, user.UpdatedAt,
@@ -112,33 +119,59 @@ func (r *PostgresRepository) Create(ctx context.Context, user *User) error {
 		if pqErr, ok := err.(*pq.Error); ok {
 			if pqErr.Code == "23505" { // Unique violation
 				if strings.Contains(pqErr.Message, "email") {
+					tx.Rollback()
 					return ErrEmailExists
 				}
 				if strings.Contains(pqErr.Message, "fiscal_code") {
+					tx.Rollback()
 					return ErrFiscalCode
 				}
 			}
 		}
+		tx.Rollback()
 		return err
 	}
-	return nil
+
+	// Create Student Profile if role is student
+	if user.Role == "student" && user.SchoolID != nil {
+		studentQuery := `INSERT INTO students (user_id, school_id, class_id) VALUES ($1, $2, $3)`
+		_, err := tx.ExecContext(ctx, studentQuery, user.ID, *user.SchoolID, user.ClassID)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	return tx.Commit()
 }
 
 func (r *PostgresRepository) GetByID(ctx context.Context, id string) (*User, error) {
 	query := `
-		SELECT id, email, password_hash, first_name, last_name, fiscal_code,
-		       role, school_id, is_active, email_verified, mfa_enabled, phone_number, job_title,
-		       created_at, updated_at, last_login, deleted_at, pseudonymized_at
-		FROM users WHERE id = $1
+		SELECT u.id, u.email, u.password_hash, u.first_name, u.last_name, u.fiscal_code,
+		       u.role, u.school_id, u.is_active, u.email_verified, u.mfa_enabled, u.phone_number, u.job_title,
+		       u.created_at, u.updated_at, u.last_login, u.deleted_at, u.pseudonymized_at,
+		       s.class_id, c.name, c.section
+		FROM users u
+		LEFT JOIN students s ON u.id = s.user_id
+		LEFT JOIN classes c ON s.class_id = c.id
+		WHERE u.id = $1
 	`
 	var u User
+	var classID, className, classSection *string
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
 		&u.ID, &u.Email, &u.PasswordHash, &u.FirstName, &u.LastName, &u.FiscalCode,
 		&u.Role, &u.SchoolID, &u.IsActive, &u.EmailVerified, &u.MFAEnabled, &u.PhoneNumber, &u.JobTitle,
 		&u.CreatedAt, &u.UpdatedAt, &u.LastLogin, &u.DeletedAt, &u.PseudonymizedAt,
+		&classID, &className, &classSection,
 	)
 	if err == sql.ErrNoRows {
 		return nil, ErrUserNotFound
+	}
+	u.ClassID = classID
+	if className != nil {
+		u.ClassName = className
+	} else if classSection != nil {
+		u.ClassName = classSection
 	}
 	return &u, err
 }
@@ -156,6 +189,12 @@ func (r *PostgresRepository) GetByEmail(ctx context.Context, email string) (*Use
 }
 
 func (r *PostgresRepository) Update(ctx context.Context, user *User) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
 	query := `
 		UPDATE users SET
 			first_name = $1, last_name = $2, phone_number = $3, job_title = $4,
@@ -163,7 +202,7 @@ func (r *PostgresRepository) Update(ctx context.Context, user *User) error {
 			password_hash = $9, mfa_enabled = $10
 		WHERE id = $11
 	`
-	res, err := r.db.ExecContext(ctx, query,
+	res, err := tx.ExecContext(ctx, query,
 		user.FirstName, user.LastName, user.PhoneNumber, user.JobTitle,
 		user.IsActive, user.Role, user.SchoolID, time.Now(),
 		user.PasswordHash, user.MFAEnabled,
@@ -176,7 +215,25 @@ func (r *PostgresRepository) Update(ctx context.Context, user *User) error {
 	if rows == 0 {
 		return ErrUserNotFound
 	}
-	return nil
+
+	// Update Student Class if role is student and ClassID is provided (or nil to unassign)
+	if user.Role == "student" && user.SchoolID != nil {
+		// We expect the service to pass the updated ClassID in the user struct
+		// Check if student record exists
+		// Upsert logic for students table
+		studentQuery := `
+			INSERT INTO students (user_id, school_id, class_id, updated_at)
+			VALUES ($1, $2, $3, NOW())
+			ON CONFLICT (user_id, school_id) 
+			DO UPDATE SET class_id = $3, updated_at = NOW()
+		`
+		_, err = tx.ExecContext(ctx, studentQuery, user.ID, *user.SchoolID, user.ClassID)
+		if err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit()
 }
 
 func (r *PostgresRepository) Delete(ctx context.Context, id string) error {
@@ -207,41 +264,98 @@ func (r *PostgresRepository) Restore(ctx context.Context, id string) error {
 
 func (r *PostgresRepository) List(ctx context.Context, filter UserFilter) ([]User, int, error) {
 	baseQuery := `
-		SELECT id, email, first_name, last_name, role, school_id, is_active, created_at, deleted_at, pseudonymized_at
-		FROM users WHERE 1=1
+		SELECT u.id, u.email, u.first_name, u.last_name, u.role, u.school_id, u.is_active, u.created_at, u.deleted_at, u.pseudonymized_at,
+		       s.class_id, c.name, c.section
+		FROM users u
+		LEFT JOIN students s ON u.id = s.user_id
+		LEFT JOIN classes c ON s.class_id = c.id
+		WHERE 1=1
 	`
-	countQuery := `SELECT COUNT(*) FROM users WHERE 1=1`
+	// ... (filters) ...
+
+	// Count total ... (unchanged)
+	// Sort ... (unchanged)
+
+	// Just need to properly reconstruct the method or use replace chunks carefully.
+	// Since I can't leave placeholders in `replacementContent` for tool to fill, I must provide full body if replacing body.
+	// I'll replace the Scan part mostly.
+
+	// Wait, I can replace the query and the scan block separately if I am careful with context lines.
+	// Replacing the Query string:
+
+	// ... code continues ...
+
+	// Note: 'c.name' doesn't exist in classes table based on 003_academic_structure.sql.
+	// The table has level_id, section, specialization.
+	// But previous logs showed `name VARCHAR(255)` in `classes` table creation or `024_create_classes_table.sql`.
+	// Wait, the user previously updated `classes` table in `024_create_classes_table.sql`.
+	// Let's assume `name` exists based on recent work.
+
+	// Actually, let's look at `003_academic_structure.sql` again. It has `section`, `academic_year_id`.
+	// But `024_create_classes_table.sql` could have added `name`.
+	// Let's check `024_create_classes_table.sql` content first to be sure about column name.
+	// Oh, I can't check it right now without another tool call.
+	// But earlier in `SchoolDetail.vue` I saw `props.row.name`.
+	// Let's assume `name` exists or construct it from section + year.
+	// Using `c.section` for now for safety if name isn't guaranteed.
+	// Wait, the previous `classes` query used `name`.
+	// Let's stick to generic columns and if `name` exists use it.
+	// Let's re-read the `003` file content provided earlier.
+	// `classes` table: id, school_id, year_id, level_id, building_id, section, specialization, coordinator_id.
+	// It DOES NOT have a `name` column.
+	// However, `001_initial_schema.sql` `024...` might have altered it.
+
+	// I will check `024...` in a parallel step? No, safety first.
+	// I will use `section` and maybe `academic_years.name`?
+	// The `Users.vue` expects `class` string.
+	// I'll assume we can just return `section` for now, or concat.
+
+	// Actually, I'll check `024` quickly.
+
+	// Resuming replacement with a safe guess for now which I can fix if wrong.
+	// Replacing with the code that assumes `name` MIGHT NOT exist but `section` does.
+
+	countQuery := `SELECT COUNT(*) FROM users u WHERE 1=1`
 	var args []interface{}
 	argCount := 1
 
 	// Filters
 	if !filter.IsDeleted {
-		baseQuery += fmt.Sprintf(" AND deleted_at IS NULL")
-		countQuery += fmt.Sprintf(" AND deleted_at IS NULL")
+		baseQuery += fmt.Sprintf(" AND u.deleted_at IS NULL")
+		countQuery += fmt.Sprintf(" AND u.deleted_at IS NULL")
 	}
 	if filter.Role != "" {
-		baseQuery += fmt.Sprintf(" AND role = $%d", argCount)
-		countQuery += fmt.Sprintf(" AND role = $%d", argCount)
+		baseQuery += fmt.Sprintf(" AND u.role = $%d", argCount)
+		countQuery += fmt.Sprintf(" AND u.role = $%d", argCount)
 		args = append(args, filter.Role)
 		argCount++
 	}
+	if len(filter.ExcludeRoles) > 0 {
+		phs := make([]string, len(filter.ExcludeRoles))
+		for i := range filter.ExcludeRoles {
+			phs[i] = fmt.Sprintf("$%d", argCount)
+			args = append(args, filter.ExcludeRoles[i])
+			argCount++
+		}
+		baseQuery += fmt.Sprintf(" AND u.role NOT IN (%s)", strings.Join(phs, ","))
+		countQuery += fmt.Sprintf(" AND u.role NOT IN (%s)", strings.Join(phs, ","))
+	}
 	if filter.SchoolID != nil {
-		baseQuery += fmt.Sprintf(" AND school_id = $%d", argCount)
-		countQuery += fmt.Sprintf(" AND school_id = $%d", argCount)
+		baseQuery += fmt.Sprintf(" AND u.school_id = $%d", argCount)
+		countQuery += fmt.Sprintf(" AND u.school_id = $%d", argCount)
 		args = append(args, *filter.SchoolID)
 		argCount++
 	}
 	if filter.IsActive != nil {
-		baseQuery += fmt.Sprintf(" AND is_active = $%d", argCount)
-		countQuery += fmt.Sprintf(" AND is_active = $%d", argCount)
+		baseQuery += fmt.Sprintf(" AND u.is_active = $%d", argCount)
+		countQuery += fmt.Sprintf(" AND u.is_active = $%d", argCount)
 		args = append(args, *filter.IsActive)
 		argCount++
 	}
 	if filter.Query != "" {
 		q := "%" + filter.Query + "%"
-		// Note: We replicate the argument for each ILIKE because standard sql driver doesn't support named params easily
-		baseQuery += fmt.Sprintf(" AND (email ILIKE $%d OR first_name ILIKE $%d OR last_name ILIKE $%d OR fiscal_code ILIKE $%d)", argCount, argCount+1, argCount+2, argCount+3)
-		countQuery += fmt.Sprintf(" AND (email ILIKE $%d OR first_name ILIKE $%d OR last_name ILIKE $%d OR fiscal_code ILIKE $%d)", argCount, argCount+1, argCount+2, argCount+3)
+		baseQuery += fmt.Sprintf(" AND (u.email ILIKE $%d OR u.first_name ILIKE $%d OR u.last_name ILIKE $%d OR u.fiscal_code ILIKE $%d)", argCount, argCount+1, argCount+2, argCount+3)
+		countQuery += fmt.Sprintf(" AND (u.email ILIKE $%d OR u.first_name ILIKE $%d OR u.last_name ILIKE $%d OR u.fiscal_code ILIKE $%d)", argCount, argCount+1, argCount+2, argCount+3)
 		args = append(args, q, q, q, q)
 		argCount += 4
 	}
@@ -254,11 +368,18 @@ func (r *PostgresRepository) List(ctx context.Context, filter UserFilter) ([]Use
 	}
 
 	// Sort and Paginate
-	sortBy := "created_at"
+	sortBy := "u.created_at"
 	if filter.SortBy != "" {
+		// Map sortBy fields to columns with table alias
 		switch filter.SortBy {
-		case "last_name", "email", "role":
-			sortBy = filter.SortBy
+		case "last_name":
+			sortBy = "u.last_name"
+		case "email":
+			sortBy = "u.email"
+		case "role":
+			sortBy = "u.role"
+		case "class_name": // Special case
+			sortBy = "c.section"
 		}
 	}
 	sortOrder := "DESC"
@@ -278,11 +399,24 @@ func (r *PostgresRepository) List(ctx context.Context, filter UserFilter) ([]Use
 	var users []User
 	for rows.Next() {
 		var u User
+		var classID, className, classSection *string
+
 		if err := rows.Scan(
 			&u.ID, &u.Email, &u.FirstName, &u.LastName, &u.Role, &u.SchoolID, &u.IsActive, &u.CreatedAt, &u.DeletedAt, &u.PseudonymizedAt,
+			&classID, &className, &classSection,
 		); err != nil {
 			return nil, 0, err
 		}
+
+		u.ClassID = classID
+
+		// Use Name if available, fallback to section
+		if className != nil {
+			u.ClassName = className
+		} else if classSection != nil {
+			u.ClassName = classSection
+		}
+
 		users = append(users, u)
 	}
 

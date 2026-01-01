@@ -65,6 +65,7 @@ func (s *Service) CreateUser(ctx context.Context, actorRole string, req CreateUs
 		FiscalCode:   SanitizeText(req.FiscalCode),
 		Role:         req.Role,
 		SchoolID:     req.SchoolID,
+		ClassID:      req.ClassID,
 		PhoneNumber:  req.PhoneNumber,
 		JobTitle:     req.JobTitle,
 		IsActive:     true,
@@ -108,6 +109,12 @@ func (s *Service) ListUsers(ctx context.Context, actorRole string, filter UserFi
 	if !s.permManager.HasPermission(actorRole, permissions.UserRead) {
 		return nil, 0, ErrUnauthorized
 	}
+
+	// Filter out superadmins for non-superadmin users
+	if actorRole != "superadmin" {
+		filter.ExcludeRoles = append(filter.ExcludeRoles, "superadmin")
+	}
+
 	// Improve: Restrict filter based on role (e.g. principal can only see their school)
 	// For now, allow full list based on broad permission
 	return s.repo.List(ctx, filter)
@@ -143,6 +150,9 @@ func (s *Service) UpdateUser(ctx context.Context, actorRole string, id string, r
 	}
 	if req.SchoolID != nil {
 		user.SchoolID = req.SchoolID
+	}
+	if req.ClassID != nil {
+		user.ClassID = req.ClassID // Will be handled by repo Update
 	}
 	if req.FiscalCode != nil {
 		if !s.validator.ValidateFiscalCode(*req.FiscalCode) {

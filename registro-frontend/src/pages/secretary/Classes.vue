@@ -29,13 +29,15 @@
     <!-- Dialog Create/Edit -->
     <q-dialog v-model="showDialog">
       <q-card style="min-width: 400px">
-        <q-card-section>
+        <q-card-section class="row items-center q-pb-none">
           <div class="text-h6">{{ isEdit ? 'Modifica Classe' : 'Nuova Classe' }}</div>
+          <q-space />
+          <q-btn icon="close" flat round dense v-close-popup />
         </q-card-section>
 
         <q-card-section>
           <q-form @submit="saveClass" class="q-gutter-md">
-            <q-input v-model="form.name" label="Nome (es. 1, 5, I, V)" outlined :rules="[val => !!val || 'Campo obbligatorio']" />
+            <q-input v-model="form.name" label="Nome (es. 1A, 5B)" outlined :rules="[val => !!val || 'Campo obbligatorio']" />
             <q-input v-model="form.section" label="Sezione (es. A, B)" outlined :rules="[val => !!val || 'Campo obbligatorio']" />
             <q-input v-model="form.academic_year" label="Anno Accademico (es. 2024/2025)" outlined :rules="[val => !!val || 'Campo obbligatorio']" />
             <!-- Coordinator Selection could go here if we fetch teachers -->
@@ -55,10 +57,12 @@
 <script setup>
 import { ref, onMounted, reactive } from 'vue'
 import { useClassesStore } from '@/stores/classes'
+import { useAuthStore } from '@/stores/auth'
 import { useQuasar } from 'quasar'
 
 const $q = useQuasar()
 const classesStore = useClassesStore()
+const authStore = useAuthStore()
 
 const filter = ref('')
 const showDialog = ref(false)
@@ -82,7 +86,9 @@ const columns = [
 ]
 
 onMounted(() => {
-  classesStore.fetchClasses()
+  if (authStore.user?.school_id) {
+    classesStore.fetchClasses({ school_id: authStore.user.school_id })
+  }
 })
 
 const openDialog = (row = null) => {
@@ -106,11 +112,13 @@ const openDialog = (row = null) => {
 
 const saveClass = async () => {
   try {
+    const payload = { ...form, school_id: authStore.user.school_id };
+    
     if (isEdit.value) {
-      await classesStore.updateClass(form.id, { ...form })
+      await classesStore.updateClass(form.id, payload)
       $q.notify({ type: 'positive', message: 'Classe aggiornata' })
     } else {
-      await classesStore.createClass({ ...form })
+      await classesStore.createClass(payload)
       $q.notify({ type: 'positive', message: 'Classe creata' })
     }
     showDialog.value = false
@@ -122,7 +130,7 @@ const saveClass = async () => {
 const confirmDelete = (row) => {
   $q.dialog({
     title: 'Conferma',
-    message: `Vuoi eliminare la classe ${row.name}${row.section}?`,
+    message: `Vuoi eliminare la classe ${row.name}?`,
     cancel: true,
     persistent: true
   }).onOk(async () => {

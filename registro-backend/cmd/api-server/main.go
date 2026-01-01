@@ -1,8 +1,6 @@
 package main
 
 import (
-	"crypto/rand"
-	"crypto/rsa"
 	"log"
 
 	"github.com/gin-gonic/gin"
@@ -47,12 +45,11 @@ func main() {
 	defer database.Close()
 
 	// 4. Setup Authentication (Keys & Managers)
-	// TODO: In production, load keys from files or KMS
-	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	// Keys are saved to disk to persist sessions across restarts
+	privateKey, publicKey, err := jwt.GetOrGenerateKeys("private_key.pem", "public_key.pem")
 	if err != nil {
-		log.Fatalf("Failed to generate RSA keys: %v", err)
+		log.Fatalf("Failed to load/generate RSA keys: %v", err)
 	}
-	publicKey := &privateKey.PublicKey
 
 	tokenManager := jwt.NewTokenManager(privateKey, publicKey)
 	mfaService := auth.NewMFAService("RegistroElettronico")
@@ -135,8 +132,8 @@ func main() {
 			{
 				// Admin Endpoints
 				usersGroup.GET("/me/children", usersH.GetMyChildren) // New: Parent's children
-				usersGroup.POST("/", usersH.Create)
-				usersGroup.GET("/", usersH.List)
+				usersGroup.POST("", usersH.Create)
+				usersGroup.GET("", usersH.List)
 				usersGroup.GET("/:id", usersH.Get)
 				usersGroup.PATCH("/:id", usersH.Update)
 				usersGroup.DELETE("/:id", usersH.Delete)

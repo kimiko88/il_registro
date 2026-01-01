@@ -217,6 +217,7 @@ const getGradeColor = (val) => {
     return 'red';
 }
 
+onMounted(() => {
     studentStore.fetchProfile();
     studentStore.fetchNotifications();
     fetchDashboardData();

@@ -21,6 +21,10 @@ type User struct {
 	PhoneNumber   string  `json:"phone_number" db:"phone_number"`
 	JobTitle      string  `json:"job_title" db:"job_title"`
 
+	// Student specific (populated via joins)
+	ClassID   *string `json:"class_id,omitempty" db:"class_id"`
+	ClassName *string `json:"class_name,omitempty" db:"class_name"`
+
 	// Audit & Lifecycle
 	CreatedAt time.Time  `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time  `json:"updated_at" db:"updated_at"`
@@ -44,13 +48,14 @@ type AuditLog struct {
 
 // UserFilter defines criteria for searching/filtering users
 type UserFilter struct {
-	Query     string // Search by name, email, fiscal_code
-	Role      string
-	SchoolID  *string
-	IsActive  *bool
-	IsDeleted bool // If true, include soft-deleted users
-	Page      int
-	PageSize  int
-	SortBy    string
-	SortOrder string // ASC or DESC
+	Query        string // Search by name, email, fiscal_code
+	Role         string
+	ExcludeRoles []string
+	SchoolID     *string
+	IsActive     *bool
+	IsDeleted    bool // If true, include soft-deleted users
+	Page         int
+	PageSize     int
+	SortBy       string
+	SortOrder    string // ASC or DESC
 }

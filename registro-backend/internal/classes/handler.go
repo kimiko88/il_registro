@@ -30,9 +30,16 @@ func (h *Handler) Create(c *gin.Context) {
 		return
 	}
 
-	schoolID := getSchoolID(c)
+	// 1. Check if SchoolID is provided in request (SuperAdmin overriding)
+	schoolID := req.SchoolID
+
+	// 2. If not in request, get from context (Standard Admin/Teacher flow)
 	if schoolID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "school_id missing from context"})
+		schoolID = getSchoolID(c)
+	}
+
+	if schoolID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "school_id required (either in body or context)"})
 		return
 	}
 

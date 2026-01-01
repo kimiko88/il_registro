@@ -14,6 +14,7 @@ type CreateUserRequest struct {
 	SchoolID    *string `json:"school_id"`
 	PhoneNumber string  `json:"phone_number"`
 	JobTitle    string  `json:"job_title"`
+	ClassID     *string `json:"class_id"` // For students
 }
 
 type UpdateUserRequest struct {
@@ -25,6 +26,7 @@ type UpdateUserRequest struct {
 	IsActive    *bool   `json:"is_active"`
 	Role        *string `json:"role"`
 	SchoolID    *string `json:"school_id"`
+	ClassID     *string `json:"class_id"` // For students
 }
 
 type ChangePasswordRequest struct {
@@ -44,6 +46,8 @@ type UserResponse struct {
 	FiscalCode      string     `json:"fiscal_code"`
 	Role            string     `json:"role"`
 	SchoolID        *string    `json:"school_id,omitempty"`
+	ClassID         *string    `json:"class_id,omitempty"`   // For students
+	ClassName       *string    `json:"class_name,omitempty"` // For students
 	IsActive        bool       `json:"is_active"`
 	EmailVerified   bool       `json:"email_verified"`
 	MFAEnabled      bool       `json:"mfa_enabled"`

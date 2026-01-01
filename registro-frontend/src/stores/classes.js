@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { api } from '../boot/axios';
+import api from '../services/api';
 
 export const useClassesStore = defineStore('classes', {
     state: () => ({
@@ -9,10 +9,10 @@ export const useClassesStore = defineStore('classes', {
     }),
 
     actions: {
-        async fetchClasses() {
+        async fetchClasses(params = {}) {
             this.loading = true;
             try {
-                const response = await api.get('/classes');
+                const response = await api.get('/classes', { params });
                 this.classes = response.data;
             } catch (err) {
                 this.error = 'Failed to fetch classes';

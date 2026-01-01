@@ -31,7 +31,7 @@ func NewRepository(db *sql.DB) Repository {
 func (r *PostgresRepository) ListByTeacher(ctx context.Context, teacherUserID string) ([]Class, error) {
 	// Combine classes where user is coordinator OR assigned as teacher (via class_subjects)
 	query := `
-		SELECT DISTINCT c.id, c.school_id, c.name, c.section, c.academic_year, COALESCE(c.coordinator_id, ''), c.created_at, c.updated_at
+		SELECT DISTINCT c.id, c.school_id, c.name, COALESCE(c.section, ''), c.academic_year, c.coordinator_id, c.created_at, c.updated_at
 		FROM classes c
 		LEFT JOIN class_subjects cs ON c.id = cs.class_id
 		LEFT JOIN teachers t ON cs.teacher_id = t.id
@@ -72,7 +72,7 @@ func (r *PostgresRepository) Create(ctx context.Context, c *Class) error {
 }
 
 func (r *PostgresRepository) List(ctx context.Context, schoolID string) ([]Class, error) {
-	query := `SELECT id, school_id, name, section, academic_year, COALESCE(coordinator_id, ''), created_at, updated_at 
+	query := `SELECT id, school_id, name, COALESCE(section, ''), academic_year, coordinator_id, created_at, updated_at 
 	          FROM classes WHERE school_id = $1 ORDER BY name`
 	rows, err := r.db.QueryContext(ctx, query, schoolID)
 	if err != nil {
@@ -94,7 +94,7 @@ func (r *PostgresRepository) List(ctx context.Context, schoolID string) ([]Class
 }
 
 func (r *PostgresRepository) Get(ctx context.Context, id string) (*Class, error) {
-	query := `SELECT id, school_id, name, section, academic_year, COALESCE(coordinator_id, ''), created_at, updated_at 
+	query := `SELECT id, school_id, name, COALESCE(section, ''), academic_year, coordinator_id, created_at, updated_at 
 	          FROM classes WHERE id = $1`
 	var c Class
 	var coord sql.NullString

@@ -15,6 +15,7 @@ type Class struct {
 
 type CreateClassRequest struct {
 	Name          string `json:"name" binding:"required"`
+	SchoolID      string `json:"school_id"`
 	Section       string `json:"section"`
 	AcademicYear  string `json:"academic_year" binding:"required"`
 	CoordinatorID string `json:"coordinator_id"`

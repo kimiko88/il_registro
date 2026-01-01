@@ -3,6 +3,7 @@
     <div class="row items-center justify-between q-mb-md">
        <div class="text-h4 text-weight-bold">Gestione Utenti</div>
        <div class="q-gutter-sm">
+           <q-btn label="Nuova Classe" color="primary" icon="add" outline @click="openClassDialog" />
            <q-btn label="Importa CSV" color="secondary" icon="upload" outline @click="showImport=true" />
            <q-btn flat icon="history" label="Audit Log" @click="$q.notify('Audit Log non disponibile per Segreteria')" />
        </div>
@@ -23,11 +24,13 @@
     <!-- Create/Edit User Dialog -->
     <q-dialog v-model="showUserDialog">
         <q-card style="min-width: 500px">
-            <q-card-section>
+            <q-card-section class="row items-center q-pb-none">
                 <div class="text-h6">{{ isEditing ? 'Modifica Utente' : 'Nuovo Utente' }}</div>
+                <q-space />
+                <q-btn icon="close" flat round dense v-close-popup />
             </q-card-section>
             
-            <q-card-section class="q-pt-none">
+            <q-card-section>
                 <q-form @submit="saveUser" class="q-gutter-md">
                     <div class="row q-col-gutter-sm">
                         <div class="col-6">
@@ -38,7 +41,7 @@
                         </div>
                     </div>
                     <q-input v-model="userForm.email" label="Email" outlined dense type="email" :rules="[val => !!val || 'Obbligatorio']" />
-                    <q-input v-model="userForm.cf" label="Codice Fiscale" outlined dense maxlength="16" />
+                    <q-input v-model="userForm.fiscal_code" label="Codice Fiscale" outlined dense maxlength="16" />
                     
                     <q-select 
                         v-model="userForm.role" 
@@ -50,15 +53,29 @@
                         map-options
                     />
 
-                    <q-input 
-                        v-if="userForm.role === 'student'"
-                        v-model="userForm.class" 
-                        label="Classe (es. 1A)" 
-                        outlined 
-                        dense 
-                        hint="Classe di appartenenza"
-                    />
+                    <div v-if="userForm.role === 'student'">
+                         <q-select
+                            v-model="userForm.class_id"
+                            :options="classOptions"
+                            label="Classe"
+                            outlined
+                            dense
+                            emit-value
+                            map-options
+                            hint="Seleziona la classe di appartenenza"
+                            :loading="loadingClasses"
+                         />
+                    </div>
                     
+                     <q-input
+                         v-if="!isEditing"
+                         v-model="userForm.password"
+                         label="Password Provvisoria"
+                         outlined dense
+                         type="password"
+                         :rules="[val => !!val || 'Campo obbligatorio', val => val.length >= 8 || 'Minimo 8 caratteri']"
+                    />
+
                     <div class="row justify-end q-mt-lg">
                         <q-btn label="Annulla" flat v-close-popup color="grey" />
                         <q-btn :label="isEditing ? 'Salva' : 'Crea'" type="submit" color="primary" class="q-ml-sm" />
@@ -68,22 +85,44 @@
         </q-card>
     </q-dialog>
 
+    <!-- Create Class Dialog -->
+    <q-dialog v-model="showClassDialog">
+        <q-card style="min-width: 400px">
+            <q-card-section class="row items-center q-pb-none">
+                <div class="text-h6">Nuova Classe</div>
+                <q-space />
+                <q-btn icon="close" flat round dense v-close-popup />
+            </q-card-section>
+
+            <q-card-section>
+                 <q-form @submit="saveClass" class="q-gutter-md">
+                    <q-input v-model="classForm.name" label="Nome (es. 1A)" outlined dense :rules="[val => !!val || 'Obbligatorio']" />
+                    <q-input v-model="classForm.academic_year" label="Anno Scolastico" outlined dense />
+                    
+                    <div class="row justify-end">
+                        <q-btn label="Annulla" flat v-close-popup color="grey" />
+                        <q-btn label="Crea Classe" type="submit" color="primary" />
+                    </div>
+                 </q-form>
+            </q-card-section>
+        </q-card>
+    </q-dialog>
+
     <!-- Import Dialog -->
     <q-dialog v-model="showImport">
         <q-card style="min-width: 400px">
-            <q-card-section>
+             <q-card-section class="row items-center q-pb-none">
                 <div class="text-h6">Importazione Massiva</div>
-                <div class="text-caption text-grey">Carica un file CSV o XLSX con i dati degli utenti.</div>
+                <q-space />
+                <q-btn icon="close" flat round dense v-close-popup />
             </q-card-section>
             <q-card-section>
+                <div class="text-caption text-grey q-mb-md">Carica un file CSV o XLSX con i dati degli utenti.</div>
                 <q-file v-model="importFile" label="Seleziona File" outlined dense accept=".csv, .xlsx">
                      <template v-slot:prepend>
                         <q-icon name="attach_file" />
                      </template>
                 </q-file>
-                <div class="bg-grey-2 q-pa-sm q-mt-sm rounded-borders text-caption">
-                    Colonne richieste: Nome, Cognome, Email, Ruolo, CF
-                </div>
             </q-card-section>
             <q-card-actions align="right">
                 <q-btn flat label="Annulla" v-close-popup />
@@ -95,14 +134,18 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, reactive } from 'vue';
+import { ref, computed, onMounted, reactive, watch } from 'vue';
 import { useQuasar, exportFile } from 'quasar';
 import UserTable from 'src/components/Secretary/UserTable.vue';
 import { userService } from 'src/services/userService';
+import adminService from 'src/services/adminService';
+import { useAuthStore } from 'src/stores/auth';
 
 const $q = useQuasar();
+const authStore = useAuthStore();
 const loading = ref(false);
 const showUserDialog = ref(false);
+const showClassDialog = ref(false);
 const showImport = ref(false);
 const isEditing = ref(false);
 const importFile = ref(null);
@@ -110,8 +153,38 @@ const currentRoleFilter = ref('all');
 
 const users = ref([]); 
 
+// Classes
+const classes = ref([]);
+const loadingClasses = ref(false);
+const classOptions = computed(() => {
+    return classes.value.map(c => ({
+        label: c.name || `${c.section} ${c.academic_year}`, // Fallback if name optional
+        value: c.id
+    }))
+});
+
+// Forms
+const userForm = reactive({
+    id: null,
+    first_name: '',
+    last_name: '',
+    email: '',
+    role: 'student',
+    class_id: null,
+    fiscal_code: '',
+    password: ''
+});
+
+const classForm = reactive({
+    name: '',
+    section: '',
+    academic_year: '2024/2025'
+});
+
+
 onMounted(() => {
     fetchUsers()
+    fetchClasses()
 });
 
 const fetchUsers = async () => {
@@ -126,19 +199,25 @@ const fetchUsers = async () => {
     }
 }
 
+const fetchClasses = async () => {
+    if (!authStore.user?.school_id) return;
+    loadingClasses.value = true;
+    try {
+        const res = await adminService.getSchoolClasses(authStore.user.school_id);
+        classes.value = res.data;
+    } catch (e) {
+        console.error("Error loading classes", e);
+    } finally {
+        loadingClasses.value = false;
+    }
+}
+
 // Watch filter change
-import { watch } from 'vue'
 watch(currentRoleFilter, () => {
     fetchUsers()
 })
 
-const filteredUsers = computed(() => {
-    // Filter handled by API or client side if API returns all
-    // Since we fetch on change, we just return users.value
-    // But if API returns pagination, we might need to handle it.
-    // For now, assume simple list.
-    return users.value
-});
+const filteredUsers = computed(() => users.value);
 
 const roleOptions = [
     { label: 'Studente', value: 'student' },
@@ -147,38 +226,79 @@ const roleOptions = [
     { label: 'Personale ATA', value: 'staff' }
 ];
 
-const userForm = reactive({
-    id: null,
-    first_name: '',
-    last_name: '',
-    email: '',
-    role: 'student',
-    class: '',
-    cf: ''
-});
-
 const openCreate = () => {
     isEditing.value = false;
-    Object.assign(userForm, { id: null, first_name: '', last_name: '', email: '', role: 'student', class: '', cf: '' });
+    // Reset form
+    userForm.id = null;
+    userForm.first_name = '';
+    userForm.last_name = '';
+    userForm.email = '';
+    userForm.role = 'student';
+    userForm.class_id = null;
+    userForm.fiscal_code = '';
+    userForm.password = '';
+    
     showUserDialog.value = true;
 };
 
 const openEdit = (user) => {
     isEditing.value = true;
-    Object.assign(userForm, { ...user });
+    Object.assign(userForm, user);
+    // Explicitly set class_id if missing (though should come from API now)
+    if (user.ClassID) userForm.class_id = user.ClassID; // Ensure casing matches API DTO
+    // Note: API returns snake_case usually, check naming. 
+    // Go struct: ClassID `json:"class_id"` -> response has class_id.
+    // user object from API should have class_id.
+    // The table might be flattening it.
+    
     showUserDialog.value = true;
 };
 
-const saveUser = () => {
-    if (isEditing.value) {
-        const index = users.value.findIndex(u => u.id === userForm.id);
-        if (index !== -1) users.value[index] = { ...userForm };
-        $q.notify({ type: 'positive', message: 'Utente aggiornato test' });
-    } else {
-        users.value.unshift({ ...userForm, id: Date.now(), active: true });
-        $q.notify({ type: 'positive', message: 'Utente creato test' });
+const openClassDialog = () => {
+    classForm.name = '';
+    classForm.section = '';
+    classForm.academic_year = '2024/2025';
+    showClassDialog.value = true;
+};
+
+const saveUser = async () => {
+    try {
+        const payload = { ...userForm, school_id: authStore.user.school_id };
+        // If editing, don't send empty password
+        if (isEditing.value) {
+            delete payload.password; 
+            await userService.update(userForm.id, payload);
+             $q.notify({ type: 'positive', message: 'Utente aggiornato' });
+        } else {
+             await userService.create(payload);
+             $q.notify({ type: 'positive', message: 'Utente creato' });
+        }
+        showUserDialog.value = false;
+        fetchUsers();
+    } catch (e) {
+        $q.notify({ type: 'negative', message: 'Errore salvataggio utente', caption: e.message });
     }
-    showUserDialog.value = false;
+};
+
+const saveClass = async () => {
+    try {
+        // Need to split name into section if needed or just send name
+        // The API CreateClassRequest expects Name, AcademicYear, SchoolID
+        // We'll map name to name (e.g. "1A") and maybe section to "A"?
+        // Simpler: Just send name.
+        const payload = {
+            name: classForm.name,
+            academic_year: classForm.academic_year,
+            school_id: authStore.user.school_id,
+            section: classForm.name.replace(/[0-9]/g, '') // Rough guess
+        };
+        await adminService.createClass(payload);
+        $q.notify({ type: 'positive', message: 'Classe creata con successo' });
+        showClassDialog.value = false;
+        fetchClasses();
+    } catch(e) {
+        $q.notify({ type: 'negative', message: 'Errore creazione classe', caption: e.message });
+    }
 };
 
 const confirmDelete = (user) => {
@@ -187,9 +307,14 @@ const confirmDelete = (user) => {
         message: `Vuoi davvero eliminare ${user.first_name} ${user.last_name}?`,
         cancel: true,
         persistent: true
-    }).onOk(() => {
-        users.value = users.value.filter(u => u.id !== user.id);
-        $q.notify({ type: 'positive', message: 'Utente eliminato' });
+    }).onOk(async () => {
+        try {
+            await userService.delete(user.id);
+            $q.notify({ type: 'positive', message: 'Utente eliminato' });
+            fetchUsers();
+        } catch(e) {
+            $q.notify({ type: 'negative', message: 'Errore eliminazione' });
+        }
     });
 };
 
@@ -198,47 +323,31 @@ const confirmResetPwd = (user) => {
         title: 'Reset Password',
         message: `Inviare link di reset password a ${user.email}?`,
         cancel: true
-    }).onOk(() => {
-        $q.notify({ type: 'positive', message: 'Link inviato con successo' });
+    }).onOk(async () => {
+         try {
+            await userService.resetPassword(user.id);
+            $q.notify({ type: 'positive', message: 'Link inviato con successo' });
+        } catch(e) {
+             $q.notify({ type: 'negative', message: 'Errore reset password' });
+        }
     });
 };
 
 const bulkDelete = (selected) => {
-    $q.dialog({
-        title: 'Eliminazione Multipla',
-        message: `Eliminare ${selected.length} utenti?`,
-        cancel: true,
-        persistent: true
-    }).onOk(() => {
-        const ids = selected.map(u => u.id);
-        users.value = users.value.filter(u => !ids.includes(u.id));
-        $q.notify({ type: 'positive', message: `${selected.length} utenti eliminati` });
-    });
+     // TODO: Implement bulk delete API
+     $q.notify({ type: 'warning', message: 'Funzionalità non ancora implementata nel backend' });
 };
 
-const handleImport = () => {
-    $q.loading.show({ message: 'Elaborazione CSV...' });
-    setTimeout(() => {
-        $q.loading.hide();
-        users.value.push({
-            id: Date.now(),
-            first_name: 'Importato',
-            last_name: 'Utente',
-            email: 'import@test.it',
-            role: 'student',
-            active: true
-        });
-        showImport.value = false;
-        importFile.value = null;
-        $q.notify({ type: 'positive', message: 'Importazione completata: 1 utente aggiunto' });
-    }, 1500);
+const handleImport = async () => {
+    // TODO: Implement real import via service
+     $q.notify({ type: 'warning', message: 'Funzionalità mock per demo' });
+     showImport.value = false;
 };
 
 const exportUsers = () => {
-    // Simple CSV Export logic
     const content = [
         'ID,Nome,Cognome,Email,Ruolo,Classe',
-        ...filteredUsers.value.map(u => `${u.id},${u.first_name},${u.last_name},${u.email},${u.role},${u.class || ''}`)
+        ...filteredUsers.value.map(u => `${u.id},${u.first_name},${u.last_name},${u.email},${u.role},${u.class_name || ''}`)
     ].join('\r\n');
 
     const status = exportFile(
@@ -246,11 +355,6 @@ const exportUsers = () => {
         content,
         'text/csv'
     );
-
-    if (status !== true) {
-        $q.notify({ type: 'negative', message: 'Export fallito' });
-    } else {
-        $q.notify({ type: 'positive', message: 'Export completato' });
-    }
+    if (!status) $q.notify({ type: 'negative', message: 'Export fallito' });
 };
 </script>
