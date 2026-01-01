@@ -144,6 +144,36 @@ func (h *Handler) GetTeacherClasses(c *gin.Context) {
 	c.JSON(http.StatusOK, classes)
 }
 
+func (h *Handler) AssignSubject(c *gin.Context) {
+	var req AssignSubjectRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if err := h.service.AssignSubject(c.Request.Context(), c.Param("id"), req); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.Status(http.StatusCreated)
+}
+
+func (h *Handler) GetClassSubjects(c *gin.Context) {
+	res, err := h.service.GetClassSubjects(c.Request.Context(), c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, res)
+}
+
+func (h *Handler) RemoveSubject(c *gin.Context) {
+	if err := h.service.RemoveSubject(c.Request.Context(), c.Param("assignmentId")); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.Status(http.StatusNoContent)
+}
+
 func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	group := rg.Group("/classes")
 	{
@@ -152,6 +182,11 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 		group.GET("/:id", h.Get)
 		group.PUT("/:id", h.Update)
 		group.DELETE("/:id", h.Delete)
+
+		// Assignments
+		group.POST("/:id/subjects", h.AssignSubject)
+		group.GET("/:id/subjects", h.GetClassSubjects)
+		group.DELETE("/:id/subjects/:assignmentId", h.RemoveSubject)
 	}
 
 	// Teacher specific routes

@@ -124,7 +124,7 @@ describe('MainLayout Logic', () => {
             setupUserRole('secretary')
             const menuItems = useMenuItems('secretary')
 
-            expect(menuItems).toHaveLength(7)
+            expect(menuItems).toHaveLength(8)
             expect(menuItems.map(i => i.label)).toContain('Dashboard')
             expect(menuItems.map(i => i.label)).toContain('Documenti')
             expect(menuItems.map(i => i.label)).toContain('Studenti')

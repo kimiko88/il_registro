@@ -19,6 +19,7 @@
         @filter-role="currentRoleFilter = $event"
         @export="exportUsers"
         @bulk-delete="bulkDelete"
+        @manage-subjects="openManageSubjects"
     />
 
     <!-- Create/Edit User Dialog -->
@@ -128,6 +129,53 @@
                 <q-btn flat label="Annulla" v-close-popup />
                 <q-btn color="primary" label="Carica ed Elabora" @click="handleImport" :disable="!importFile" />
             </q-card-actions>
+        </q-card>
+    </q-dialog>
+
+    <!-- Teacher Subjects Dialog -->
+    <q-dialog v-model="showSubjectsDialog" full-width>
+        <q-card>
+            <q-card-section class="row items-center q-pb-none">
+                <div class="text-h6">Materie Docente - {{ currentTeacherName }}</div>
+                <q-space />
+                <q-btn icon="close" flat round dense v-close-popup />
+            </q-card-section>
+
+            <q-card-section>
+                <div class="row q-col-gutter-md">
+                    <div class="col-md-7 col-12">
+                        <q-list bordered separator>
+                            <q-item-label header>Materie Abilitate</q-item-label>
+                            <q-item v-if="teacherSubjects.length === 0">
+                                <q-item-section class="text-grey italic">Nessuna materia assegnata</q-item-section>
+                            </q-item>
+                            <q-item v-for="ts in teacherSubjects" :key="ts.id">
+                                <q-item-section>
+                                    <q-item-label>{{ ts.subject_name }}</q-item-label>
+                                </q-item-section>
+                                <q-item-section side>
+                                    <q-btn flat round icon="delete" color="negative" @click="removeTeacherSubject(ts.subject_id)" />
+                                </q-item-section>
+                            </q-item>
+                        </q-list>
+                    </div>
+                    <div class="col-md-5 col-12">
+                         <q-card flat bordered class="q-pa-md">
+                            <div class="text-subtitle2 q-mb-sm">Aggiungi Abilitazione</div>
+                            <q-select
+                                v-model="selectedSubjectToAdd"
+                                :options="availableSubjects"
+                                label="Materia"
+                                outlined
+                                dense
+                                emit-value
+                                map-options
+                            />
+                            <q-btn label="Aggiungi" color="primary" class="full-width q-mt-md" @click="addTeacherSubject" :disable="!selectedSubjectToAdd" />
+                         </q-card>
+                    </div>
+                </div>
+            </q-card-section>
         </q-card>
     </q-dialog>
   </q-page>
@@ -357,4 +405,74 @@ const exportUsers = () => {
     );
     if (!status) $q.notify({ type: 'negative', message: 'Export fallito' });
 };
+
+// Teacher Subjects Logic
+const showSubjectsDialog = ref(false)
+const teacherSubjects = ref([])
+const availableSubjects = ref([])
+const selectedSubjectToAdd = ref(null)
+const currentTeacherId = ref(null)
+const currentTeacherName = ref('')
+const teachersCache = ref([]) // Cache teachers list to map user_id -> teacher_id
+
+const openManageSubjects = async (user) => {
+    currentTeacherName.value = `${user.last_name} ${user.first_name}`
+    currentTeacherId.value = null
+    teacherSubjects.value = []
+    selectedSubjectToAdd.value = null
+    showSubjectsDialog.value = true
+    
+    // 1. Find Teacher ID
+    try {
+        if (teachersCache.value.length === 0) {
+            const tRes = await adminService.getTeachersList(authStore.user.school_id)
+            teachersCache.value = tRes.data || []
+        }
+        const teacher = teachersCache.value.find(t => t.user_id === user.id)
+        if (!teacher) {
+            $q.notify({ type: 'warning', message: 'Profilo docente non trovato. Assicurati che sia stato creato.' })
+            showSubjectsDialog.value = false
+            return
+        }
+        currentTeacherId.value = teacher.id
+        
+        // 2. Load Subjects (Assigned & Available)
+        await loadTeacherSubjects()
+        if (availableSubjects.value.length === 0) {
+            const sRes = await adminService.getSubjects(authStore.user.school_id)
+            availableSubjects.value = (sRes.data || []).map(s => ({ label: s.name, value: s.id }))
+        }
+
+    } catch(e) {
+        $q.notify({ type: 'negative', message: 'Errore caricamento dati docente' })
+    }
+}
+
+const loadTeacherSubjects = async () => {
+    if (!currentTeacherId.value) return
+    const res = await adminService.getTeacherSubjects(currentTeacherId.value)
+    teacherSubjects.value = res.data || []
+}
+
+const addTeacherSubject = async () => {
+    if (!selectedSubjectToAdd.value || !currentTeacherId.value) return
+    try {
+        await adminService.assignSubjectToTeacher(currentTeacherId.value, selectedSubjectToAdd.value)
+        $q.notify({ type: 'positive', message: 'Materia aggiunta' })
+        loadTeacherSubjects()
+        selectedSubjectToAdd.value = null
+    } catch(e) {
+         $q.notify({ type: 'negative', message: 'Errore assegnazione materia' })
+    }
+}
+
+const removeTeacherSubject = async (subjectId) => {
+    try {
+        await adminService.removeTeacherSubject(currentTeacherId.value, subjectId)
+        loadTeacherSubjects()
+        $q.notify({ type: 'positive', message: 'Materia rimossa' })
+    } catch(e) {
+         $q.notify({ type: 'negative', message: 'Errore rimozione materia' })
+    }
+}
 </script>

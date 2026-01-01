@@ -22,6 +22,8 @@ import (
 	"registro-backend/internal/postgres"
 	"registro-backend/internal/scheduling"
 	"registro-backend/internal/schools"
+	"registro-backend/internal/subjects"
+	"registro-backend/internal/teachers"
 	"registro-backend/internal/users"
 	"registro-backend/pkg/jwt"
 	"registro-backend/pkg/logger"
@@ -170,6 +172,16 @@ func main() {
 
 			classesH.RegisterRoutes(protected)
 			notesH.RegisterRoutes(protected)
+
+			subjectsRepo := subjects.NewRepository(database)
+			subjectsSvc := subjects.NewService(subjectsRepo)
+			subjectsH := subjects.NewHandler(subjectsSvc)
+			subjectsH.RegisterRoutes(protected)
+
+			teachersRepo := teachers.NewRepository(database)
+			teachersSvc := teachers.NewService(teachersRepo)
+			teachersH := teachers.NewHandler(teachersSvc)
+			teachersH.RegisterRoutes(protected)
 
 			// Admin routes
 			adminH.RegisterRoutes(protected, adminMiddleware)

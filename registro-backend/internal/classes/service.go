@@ -58,3 +58,15 @@ func (s *Service) UpdateClass(ctx context.Context, id string, req CreateClassReq
 func (s *Service) DeleteClass(ctx context.Context, id string) error {
 	return s.repo.Delete(ctx, id)
 }
+
+func (s *Service) AssignSubject(ctx context.Context, classID string, req AssignSubjectRequest) error {
+	return s.repo.AssignSubject(ctx, classID, req.SubjectID, req.TeacherID, req.HoursPerWeek)
+}
+
+func (s *Service) RemoveSubject(ctx context.Context, assignmentID string) error {
+	return s.repo.UnassignSubject(ctx, assignmentID)
+}
+
+func (s *Service) GetClassSubjects(ctx context.Context, classID string) ([]ClassSubject, error) {
+	return s.repo.GetClassSubjects(ctx, classID)
+}

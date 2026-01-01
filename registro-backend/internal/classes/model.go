@@ -20,3 +20,19 @@ type CreateClassRequest struct {
 	AcademicYear  string `json:"academic_year" binding:"required"`
 	CoordinatorID string `json:"coordinator_id"`
 }
+
+type ClassSubject struct {
+	ID           string  `json:"id" db:"id"`
+	ClassID      string  `json:"class_id" db:"class_id"`
+	SubjectID    string  `json:"subject_id" db:"subject_id"`
+	SubjectName  string  `json:"subject_name,omitempty"`     // Joined
+	TeacherID    *string `json:"teacher_id" db:"teacher_id"` // Nullable
+	TeacherName  string  `json:"teacher_name,omitempty"`     // Joined
+	HoursPerWeek float64 `json:"hours_per_week" db:"hours_per_week"`
+}
+
+type AssignSubjectRequest struct {
+	SubjectID    string  `json:"subject_id" binding:"required"`
+	TeacherID    *string `json:"teacher_id"`
+	HoursPerWeek float64 `json:"hours_per_week"`
+}

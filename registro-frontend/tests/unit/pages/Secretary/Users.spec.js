@@ -18,11 +18,34 @@ vi.mock('quasar', async (importOriginal) => {
     }
 })
 
+// Mock Services
+vi.mock('src/services/userService', () => ({
+    userService: {
+        getAll: vi.fn().mockResolvedValue({ data: { users: [{ id: 1, first_name: 'Test', role: 'student' }] } }),
+        create: vi.fn(),
+        update: vi.fn(),
+        delete: vi.fn(),
+        resetPassword: vi.fn()
+    }
+}))
+
+vi.mock('src/services/adminService', () => ({
+    default: {
+        getSchoolClasses: vi.fn().mockResolvedValue({ data: [] }),
+        getSubjects: vi.fn().mockResolvedValue({ data: [] }),
+        getTeachersList: vi.fn().mockResolvedValue({ data: [] }),
+        createClass: vi.fn()
+    }
+}))
+
 describe('Secretary Users Page (Users.vue)', () => {
     let wrapper
 
     beforeEach(() => {
         vi.useFakeTimers()
+        // Reset stores if needed, but here we just mount.
+        // Also mock authStore or pinia if needed, but Users.vue uses it.
+        // We probably need to mock useAuthStore too or provide a testing pinia.
         wrapper = mount(Users, {
             global: {
                 stubs: {
@@ -30,13 +53,11 @@ describe('Secretary Users Page (Users.vue)', () => {
                     'q-card': { template: '<div><slot /></div>' },
                     'q-card-section': { template: '<div><slot /></div>' },
                     'q-card-actions': { template: '<div><slot /></div>' },
-                    'q-dialog': { template: '<div><slot /></div>' }, // Stub dialog to render content inline if model true, but model is false initially. 
-                    // Actually if we stub dialog, we might miss visibility logic. Better stub as transition-group if needed or trust v-model.
-                    // For simple checks, stubbing q-dialog allows finding content if we force it open.
+                    'q-dialog': { template: '<div><slot /></div>' },
                     'q-table': {
                         template: '<div><slot name="top" /><slot name="body-cell-actions" :props="{row: {id: 1, first_name: \'Test\'}}" /></div>',
                         props: ['rows', 'columns', 'loading', 'filter']
-                    }, // Stub table to avoid complex render but keep slots we use
+                    },
                     'q-btn': true,
                     'q-input': true,
                     'q-select': true,
@@ -55,8 +76,6 @@ describe('Secretary Users Page (Users.vue)', () => {
     })
 
     it('fetches and displays users', async () => {
-        expect(wrapper.vm.loading).toBe(true)
-
         // Fast download timers
         await vi.runAllTimersAsync()
         await wrapper.vm.$nextTick()

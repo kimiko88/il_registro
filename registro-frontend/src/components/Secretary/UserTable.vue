@@ -84,6 +84,12 @@
                   <q-item-section avatar><q-icon name="lock_reset" /></q-item-section>
                   <q-item-section>Reset Password</q-item-section>
                 </q-item>
+                
+                <q-item v-if="props.row.role === 'teacher'" clickable v-close-popup @click="$emit('manage-subjects', props.row)">
+                  <q-item-section avatar><q-icon name="menu_book" /></q-item-section>
+                  <q-item-section>Gestione Materie</q-item-section>
+                </q-item>
+                
                 <q-separator />
                 <q-item clickable v-close-popup class="text-negative" @click="$emit('delete', props.row)">
                   <q-item-section avatar><q-icon name="delete" /></q-item-section>
@@ -102,7 +108,7 @@
 import { ref } from 'vue'
 
 const props = defineProps(['users', 'loading']);
-const emit = defineEmits(['create', 'edit', 'delete', 'reset-pwd', 'filter-role', 'export', 'bulk-delete', 'bulk-reset', 'import'])
+const emit = defineEmits(['create', 'edit', 'delete', 'reset-pwd', 'filter-role', 'export', 'bulk-delete', 'bulk-reset', 'import', 'manage-subjects'])
 
 const filter = ref('')
 const roleFilter = ref('all')

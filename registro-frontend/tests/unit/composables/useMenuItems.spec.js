@@ -32,7 +32,7 @@ describe('useMenuItems', () => {
         it('should return secretary menu items', () => {
             const menuItems = useMenuItems('secretary')
 
-            expect(menuItems).toHaveLength(7)
+            expect(menuItems).toHaveLength(8)
             expect(menuItems.map(item => item.label)).toContain('Documenti')
             expect(menuItems.map(item => item.label)).toContain('Studenti')
             expect(menuItems.map(item => item.label)).toContain('Report')

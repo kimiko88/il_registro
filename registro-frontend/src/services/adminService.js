@@ -68,6 +68,57 @@ export default {
         return api.delete(`/classes/${id}`)
     },
 
+    getClassSubjects(classId) {
+        return api.get(`/classes/${classId}/subjects`)
+    },
+
+    assignSubjectToClass(classId, data) {
+        return api.post(`/classes/${classId}/subjects`, data)
+    },
+
+    removeClassSubject(classId, assignmentId) {
+        return api.delete(`/classes/${classId}/subjects/${assignmentId}`)
+    },
+
+    // ========== Subjects Management ==========
+
+    getSubjects(schoolId) {
+        return api.get('/subjects', { params: { school_id: schoolId } })
+    },
+
+    createSubject(data) {
+        return api.post('/subjects', data)
+    },
+
+    updateSubject(id, data) {
+        return api.put(`/subjects/${id}`, data)
+    },
+
+    deleteSubject(id) {
+        return api.delete(`/subjects/${id}`)
+    },
+
+    // ========== Teachers Management ==========
+
+    // Get specialized teacher list (with qualification etc)
+    getTeachersList(schoolId, subjectId = null) {
+        const params = { school_id: schoolId }
+        if (subjectId) params.subject_id = subjectId
+        return api.get('/teachers', { params })
+    },
+
+    getTeacherSubjects(teacherId) {
+        return api.get(`/teachers/${teacherId}/subjects`)
+    },
+
+    assignSubjectToTeacher(teacherId, subjectId) {
+        return api.post(`/teachers/${teacherId}/subjects`, { subject_id: subjectId })
+    },
+
+    removeTeacherSubject(teacherId, subjectId) {
+        return api.delete(`/teachers/${teacherId}/subjects/${subjectId}`)
+    },
+
     // ========== Admin Users Management (SuperAdmin only) ==========
 
     getAdmins(params) {
