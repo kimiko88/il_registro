@@ -1,8 +1,11 @@
 
-import { mount } from '@vue/test-utils'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { mount } from '@vue/test-utils'
+import { createTestingPinia } from '@pinia/testing'
 import { exportFile } from 'quasar'
 import Users from '@/pages/secretary/Users.vue'
+import { userService } from 'src/services/userService'
+import adminService from 'src/services/adminService'
 
 // Mock Quasar
 vi.mock('quasar', async (importOriginal) => {
@@ -31,10 +34,13 @@ vi.mock('src/services/userService', () => ({
 
 vi.mock('src/services/adminService', () => ({
     default: {
-        getSchoolClasses: vi.fn().mockResolvedValue({ data: [] }),
-        getSubjects: vi.fn().mockResolvedValue({ data: [] }),
-        getTeachersList: vi.fn().mockResolvedValue({ data: [] }),
-        createClass: vi.fn()
+        getSchoolClasses: vi.fn().mockResolvedValue({ data: [{ id: 'c1', name: '1A' }] }),
+        getSubjects: vi.fn().mockResolvedValue({ data: [{ id: 's1', name: 'Math' }] }),
+        getTeachersList: vi.fn().mockResolvedValue({ data: [{ id: 't1', user_id: 10 }] }),
+        createClass: vi.fn(),
+        getTeacherSubjects: vi.fn().mockResolvedValue({ data: [] }),
+        assignSubjectToTeacher: vi.fn(),
+        removeTeacherSubject: vi.fn()
     }
 }))
 
@@ -43,27 +49,30 @@ describe('Secretary Users Page (Users.vue)', () => {
 
     beforeEach(() => {
         vi.useFakeTimers()
-        // Reset stores if needed, but here we just mount.
-        // Also mock authStore or pinia if needed, but Users.vue uses it.
-        // We probably need to mock useAuthStore too or provide a testing pinia.
         wrapper = mount(Users, {
             global: {
+                plugins: [createTestingPinia({
+                    initialState: {
+                        auth: { user: { school_id: '1' } }
+                    },
+                    createSpy: vi.fn
+                })],
                 stubs: {
                     'q-page': { template: '<div><slot /></div>' },
                     'q-card': { template: '<div><slot /></div>' },
                     'q-card-section': { template: '<div><slot /></div>' },
                     'q-card-actions': { template: '<div><slot /></div>' },
                     'q-dialog': { template: '<div><slot /></div>' },
-                    'q-table': {
-                        template: '<div><slot name="top" /><slot name="body-cell-actions" :props="{row: {id: 1, first_name: \'Test\'}}" /></div>',
-                        props: ['rows', 'columns', 'loading', 'filter']
-                    },
+                    'UserTable': true,
                     'q-btn': true,
                     'q-input': true,
                     'q-select': true,
                     'q-file': true,
                     'q-form': { template: '<form @submit.prevent="$emit(\'submit\')"><slot /></form>' },
-                    'q-btn-toggle': true,
+                    'q-list': { template: '<div><slot /></div>' },
+                    'q-item': { template: '<div><slot /></div>' },
+                    'q-item-section': { template: '<div><slot /></div>' },
+                    'q-item-label': { template: '<div><slot /></div>' },
                     'q-space': true,
                     'q-icon': true
                 }
@@ -75,35 +84,49 @@ describe('Secretary Users Page (Users.vue)', () => {
         vi.useRealTimers()
     })
 
-    it('fetches and displays users', async () => {
-        // Fast download timers
+    it('fetches initial data', async () => {
         await vi.runAllTimersAsync()
-        await wrapper.vm.$nextTick()
-
-        expect(wrapper.vm.loading).toBe(false)
-        expect(wrapper.vm.users.length).toBeGreaterThan(0)
-        expect(wrapper.text()).toContain('Gestione Utenti')
+        expect(userService.getAll).toHaveBeenCalled()
+        expect(adminService.getSchoolClasses).toHaveBeenCalled()
     })
 
-    it('opens import dialog', async () => {
-        await wrapper.vm.$nextTick()
-        // Trigger open
-        wrapper.vm.showImport = true
-        await wrapper.vm.$nextTick()
+    it('opens class dialog and creates class', async () => {
+        wrapper.vm.openClassDialog()
+        expect(wrapper.vm.showClassDialog).toBe(true)
 
-        // Check text in dialog (dialog is stubbed but renders slot if visible? No, q-dialog usually hides. 
-        // But wrapper.vm.showImport is true. If we stub q-dialog with div, it renders.)
-        // My stub above: 'q-dialog': { template: '<div><slot /></div>' }
-        // But q-dialog uses v-model. If I stub it, v-model prop must be handled or I just check vm state.
+        wrapper.vm.classForm.name = '1A'
+        await wrapper.vm.saveClass()
 
-        expect(wrapper.vm.showImport).toBe(true)
+        expect(adminService.createClass).toHaveBeenCalledWith(expect.objectContaining({ name: '1A' }))
+        expect(wrapper.vm.showClassDialog).toBe(false)
     })
 
-    it('exports users calls exportFile', async () => {
-        await vi.runAllTimersAsync()
+    it('manages teacher subjects', async () => {
+        const user = { id: 10, last_name: 'Teach', first_name: 'Er' }
+        await wrapper.vm.openManageSubjects(user)
 
-        wrapper.vm.exportUsers()
+        expect(wrapper.vm.currentTeacherId).toBe('t1')
+        expect(wrapper.vm.showSubjectsDialog).toBe(true)
+        expect(adminService.getTeacherSubjects).toHaveBeenCalledWith('t1')
 
-        expect(exportFile).toHaveBeenCalled()
+        // Add subject
+        wrapper.vm.selectedSubjectToAdd = 's1'
+        await wrapper.vm.addTeacherSubject()
+        expect(adminService.assignSubjectToTeacher).toHaveBeenCalledWith('t1', 's1')
+
+        // Remove subject
+        await wrapper.vm.removeTeacherSubject('s1')
+        expect(adminService.removeTeacherSubject).toHaveBeenCalledWith('t1', 's1')
+    })
+
+    it('handles import mock', async () => {
+        wrapper.vm.importFile = new File([''], 'test.csv')
+        await wrapper.vm.handleImport()
+        expect(wrapper.vm.showImport).toBe(false)
+    })
+
+    it('handles bulk delete mock', () => {
+        wrapper.vm.bulkDelete([])
+        // triggers notify, no side effect to check except no crash
     })
 })

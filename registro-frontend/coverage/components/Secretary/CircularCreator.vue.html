@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">96.51% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>83/86</span>
+                <span class='fraction'>92/92</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">73.33% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>11/15</span>
+                <span class='fraction'>15/15</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">96.51% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>83/86</span>
+                <span class='fraction'>92/92</span>
             </div>
         
             
@@ -149,7 +149,13 @@
 <a name='L84'></a><a href='#L84'>84</a>
 <a name='L85'></a><a href='#L85'>85</a>
 <a name='L86'></a><a href='#L86'>86</a>
-<a name='L87'></a><a href='#L87'>87</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L87'></a><a href='#L87'>87</a>
+<a name='L88'></a><a href='#L88'>88</a>
+<a name='L89'></a><a href='#L89'>89</a>
+<a name='L90'></a><a href='#L90'>90</a>
+<a name='L91'></a><a href='#L91'>91</a>
+<a name='L92'></a><a href='#L92'>92</a>
+<a name='L93'></a><a href='#L93'>93</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -222,18 +228,24 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">&lt;template&gt;
   &lt;q-card style="min-width: 600px"&gt;
@@ -307,10 +319,10 @@ const form = reactive({
 })
 &nbsp;
 const sendCircular = () =&gt; {
-    if (!form.recipients.teachers <span class="branch-0 cbranch-no" title="branch not covered" >&amp;&amp; !form.recipients.parents <span class="branch-0 cbranch-no" title="branch not covered" ></span>&amp;&amp; !form.recipients.students <span class="branch-0 cbranch-no" title="branch not covered" ></span>&amp;&amp; !form.recipients.staff)</span> <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
-<span class="cstat-no" title="statement not covered" >        $q.notify({ type: 'warning', message: 'Seleziona almeno un gruppo di destinatari' })</span>
-<span class="cstat-no" title="statement not covered" >        return</span>
-<span class="cstat-no" title="statement not covered" >    }</span>
+    if (!form.recipients.teachers &amp;&amp; !form.recipients.parents &amp;&amp; !form.recipients.students &amp;&amp; !form.recipients.staff) {
+        $q.notify({ type: 'warning', message: 'Seleziona almeno un gruppo di destinatari' })
+        return
+    }
 &nbsp;
     sending.value = true
     // Mock API
@@ -320,6 +332,12 @@ const sendCircular = () =&gt; {
         emit('sent', { ...form, date: new Date().toLocaleDateString() })
     }, 1500)
 }
+&nbsp;
+defineExpose({
+    form,
+    sendCircular,
+    sending
+})
 &lt;/script&gt;
 &nbsp;</pre></td></tr></table></pre>
 
@@ -328,7 +346,7 @@ const sendCircular = () =&gt; {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-01T20:44:24.932Z
+                at 2026-01-01T23:49:14.210Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

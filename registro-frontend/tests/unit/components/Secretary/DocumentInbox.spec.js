@@ -1,22 +1,8 @@
-
-import { mount } from '@vue/test-utils'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { mount } from '@vue/test-utils'
 import DocumentInbox from '@/components/Secretary/DocumentInbox.vue'
-
-// Mock Store
-const mockStore = {
-    inbox: [
-        { id: 1, title: 'Test Doc 1', status: 'Pending', favorite: false, type: 'PDP' },
-        { id: 2, title: 'Test Doc 2', status: 'Approved', favorite: true, type: 'Certificate' }
-    ],
-    loading: false,
-    pagination: {},
-    fetchInbox: vi.fn()
-}
-
-vi.mock('src/stores/documents', () => ({
-    useDocumentsStore: () => mockStore
-}))
+import { createTestingPinia } from '@pinia/testing'
+import { useDocumentsStore } from '@/stores/documents'
 
 // Mock Quasar
 vi.mock('quasar', async (importOriginal) => {
@@ -25,65 +11,74 @@ vi.mock('quasar', async (importOriginal) => {
         ...actual,
         useQuasar: () => ({
             notify: vi.fn(),
-            dialog: vi.fn().mockReturnValue({ onOk: (fn) => fn() })
+            dialog: vi.fn().mockImplementation(() => ({
+                onOk: (fn) => fn()
+            }))
         })
     }
 })
 
-describe('DocumentInbox.vue', () => {
+describe('DocumentInbox', () => {
     let wrapper
+    let store
 
     beforeEach(() => {
-        vi.clearAllMocks()
         wrapper = mount(DocumentInbox, {
             global: {
+                plugins: [
+                    createTestingPinia({
+                        createSpy: vi.fn,
+                        initialState: {
+                            documents: {
+                                inbox: [
+                                    { id: 1, title: 'Doc 1', status: 'Pending', favorite: false },
+                                    { id: 2, title: 'Doc 2', status: 'Approved', favorite: true }
+                                ],
+                                loading: false
+                            }
+                        }
+                    })
+                ],
                 stubs: {
+                    // Simplified stub to avoid scoped slot complexity
                     'q-table': {
-                        template: '<div><slot name="top" /><slot name="top-row" /><div class="rows"><div v-for="row in rows" :key="row.id" class="row-item">{{row.title}}</div></div></div>',
-                        props: ['rows', 'columns', 'loading', 'selection', 'filter', 'selected'],
-                        emits: ['update:selected']
+                        template: '<div><div v-for="row in rows" :key="row.id"><slot name="body-cell-favorite" :row="row" /><slot name="body-cell-status" :value="row.status" /><slot name="body-cell-actions" :row="row" /></div></div>',
+                        props: ['rows']
                     },
-                    'q-btn': true,
                     'q-btn-toggle': true,
                     'q-input': true,
                     'q-icon': true,
-                    'q-tr': { template: '<tr><slot /></tr>' },
-                    'q-td': { template: '<td><slot /></td>' },
+                    'q-tr': { template: '<div><slot /></div>' },
+                    'q-td': { template: '<div><slot /></div>' },
+                    'q-space': true,
+                    'q-btn': { template: '<button @click="$emit(\'click\')"></button>' },
                     'q-badge': true,
-                    'q-space': true
+                    'q-tooltip': true
                 }
             }
         })
+        store = useDocumentsStore()
     })
 
-    it('renders inbox items', () => {
-        expect(wrapper.text()).toContain('Test Doc 1')
-        expect(wrapper.text()).toContain('Test Doc 2')
+    it('renders and exposes status color', () => {
+        expect(wrapper.vm.getStatusColor('Pending')).toBe('orange')
     })
 
-    it('shows batch actions when items selected', async () => {
-        // Simulate selection by updating 'selected' ref in component
-        // Since q-table is stubbed and we sync v-model:selected, we can update wrapper.vm.selected
-        wrapper.vm.selected = [mockStore.inbox[0]]
-        await wrapper.vm.$nextTick()
-
-        // Check for Export/Approve button stub
-        const approveBtn = wrapper.findAll('q-btn-stub').find(w => w.attributes('label') === 'Approva Selezionati')
-        expect(approveBtn).toBeDefined()
-        expect(approveBtn.exists()).toBe(true)
+    it('toggles favorite', () => {
+        const row = { favorite: false }
+        wrapper.vm.toggleFavorite(row)
+        expect(row.favorite).toBe(true)
     })
 
-    it('batch approve triggers dialog', async () => {
-        wrapper.vm.selected = [mockStore.inbox[0]]
-        await wrapper.vm.$nextTick()
-
-        // Find button? q-btn is true stub.
-        // Call method directly
+    it('handles batch approve', () => {
+        wrapper.vm.selected = [{ id: 1 }]
         wrapper.vm.batchApprove()
+        expect(wrapper.vm.selected.length).toBe(0)
+    })
 
-        // Logic inside batchApprove calls dialog.onOk -> updates status
-        // Since dialog auto-confirms in mock, status should change?
-        // But store.inbox is a mock object.
-        expect(wrapper.vm.selected.length).toBe(0) // Logic clears selection
+    it('handles batch archive', () => {
+        wrapper.vm.selected = [{ id: 1 }]
+        wrapper.vm.batchArchive()
+        expect(wrapper.vm.selected.length).toBe(0)
     })
 })

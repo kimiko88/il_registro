@@ -117,4 +117,50 @@ describe('SchoolManagement.vue', () => {
         // Since dialog auto-confirms in mock, it should call service
         expect(adminService.deleteSchool).toHaveBeenCalledWith('1')
     })
+
+    it('opens create dialog', async () => {
+        await wrapper.vm.$nextTick()
+        wrapper.vm.openCreate()
+        await wrapper.vm.$nextTick()
+        expect(wrapper.vm.showCreateDialog).toBe(true)
+        expect(wrapper.vm.editingSchool).toBeNull()
+        expect(wrapper.vm.schoolForm.name).toBe('')
+    })
+
+    it('opens edit dialog', async () => {
+        await wrapper.vm.$nextTick()
+        const school = { id: '1', name: 'Original', address: 'Addr' }
+        wrapper.vm.editSchool(school)
+        await wrapper.vm.$nextTick()
+        expect(wrapper.vm.showCreateDialog).toBe(true)
+        expect(wrapper.vm.editingSchool).not.toBeNull()
+        expect(wrapper.vm.schoolForm.name).toBe('Original')
+    })
+
+    it('creates school successfully', async () => {
+        wrapper.vm.openCreate()
+        wrapper.vm.schoolForm.name = 'New School'
+        wrapper.vm.schoolForm.code = 'NS'
+
+        await wrapper.vm.saveSchool()
+
+        expect(adminService.createSchool).toHaveBeenCalled()
+        expect(wrapper.vm.showCreateDialog).toBe(false)
+    })
+
+    it('updates school successfully', async () => {
+        const school = { id: '1', name: 'Old' }
+        wrapper.vm.editSchool(school)
+        wrapper.vm.schoolForm.name = 'Updated'
+
+        await wrapper.vm.saveSchool()
+
+        expect(adminService.updateSchool).toHaveBeenCalledWith('1', expect.objectContaining({ name: 'Updated' }))
+    })
+
+    it('confirms delete school', async () => {
+        const school = { id: '1' }
+        wrapper.vm.confirmDelete(school)
+        expect(adminService.deleteSchool).toHaveBeenCalledWith('1')
+    })
 })

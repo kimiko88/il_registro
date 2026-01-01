@@ -361,4 +361,22 @@ const createSubject = async () => {
         $q.notify({ type: 'negative', message: 'Errore creazione materia' })
     }
 }
+
+defineExpose({
+    openDialog,
+    saveClass,
+    confirmDelete,
+    openAssignmentsDialog,
+    addAssignment,
+    removeAssignment,
+    createSubject,
+    fetchAssignments,
+    fetchSchoolData,
+    form,
+    assignForm,
+    currentClass,
+    showDialog,
+    isEdit,
+    assignments
+})
 </script>

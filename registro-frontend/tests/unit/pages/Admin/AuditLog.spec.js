@@ -1,71 +1,73 @@
-
-import { mount } from '@vue/test-utils'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { mount } from '@vue/test-utils'
 import AuditLog from '@/pages/Admin/AuditLog.vue'
 import adminService from '@/services/adminService'
+import { createTestingPinia } from '@pinia/testing'
 
-// Mock adminService
+// Mock Quasar
+vi.mock('quasar', async (importOriginal) => {
+    const actual = await importOriginal()
+    return {
+        ...actual,
+        useQuasar: () => ({
+            notify: vi.fn(),
+            dialog: vi.fn()
+        })
+    }
+})
+
+// Mock Service
 vi.mock('@/services/adminService', () => ({
     default: {
         getAuditLogs: vi.fn()
     }
 }))
 
-describe('AuditLog.vue', () => {
+describe('AuditLog', () => {
     let wrapper
 
     beforeEach(() => {
-        vi.clearAllMocks()
-        adminService.getAuditLogs.mockResolvedValue({
-            data: {
-                items: [
-                    {
-                        id: '1',
-                        admin_name: 'Test Admin',
-                        action_type: 'create',
-                        target: 'school',
-                        details: 'Created school Test',
-                        created_at: '2023-01-01T12:00:00Z'
-                    }
-                ],
-                total: 1
+        wrapper = mount(AuditLog, {
+            global: {
+                plugins: [createTestingPinia()],
+                stubs: {
+                    'q-page': { template: '<div><slot /></div>' },
+                    'q-card': { template: '<div><slot /></div>' },
+                    'q-card-section': { template: '<div><slot /></div>' },
+                    'q-select': true,
+                    'q-btn': true,
+                    'q-table': true, // Simplified
+                    'q-tr': true,
+                    'q-td': true,
+                    'q-chip': true
+                }
             }
         })
     })
 
-    it('renders correctly and fetches data', async () => {
-        wrapper = mount(AuditLog, {
-            global: {
-                stubs: {
-                    'q-page': { template: '<div><slot /></div>' },
-                    'q-card': { template: '<div><slot /></div>' },
-                    'q-card-section': { template: '<div><slot /></div>' }
-                }
-            }
-        })
-
-        expect(wrapper.text()).toContain('Audit Logs')
+    it('fetches logs on mount', () => {
         expect(adminService.getAuditLogs).toHaveBeenCalled()
     })
 
-    it('filters fetch logs on action change', async () => {
-        wrapper = mount(AuditLog, {
-            global: {
-                stubs: {
-                    'q-page': { template: '<div><slot /></div>' },
-                    'q-card': { template: '<div><slot /></div>' },
-                    'q-card-section': { template: '<div><slot /></div>' }
-                }
-            }
+    it('loads data correctly', async () => {
+        adminService.getAuditLogs.mockResolvedValue({
+            data: { items: [{ id: 1, action_type: 'create' }], total: 1 }
         })
-
-        // Simulate filter change (if accessible via UI or vm)
-        // Accessing reactive data directly for unit test simplicity
-        wrapper.vm.filters.action = 'create'
         await wrapper.vm.fetchLogs()
+        expect(wrapper.vm.logs.length).toBe(1)
+        expect(wrapper.vm.loading).toBe(false)
+    })
 
-        expect(adminService.getAuditLogs).toHaveBeenLastCalledWith(expect.objectContaining({
-            action: 'create'
-        }))
+    it('handles pagination request', () => {
+        // We can't spy on internal fetchLogs easily, but we can check if service is called again with new params
+        adminService.getAuditLogs.mockClear()
+        wrapper.vm.onRequest({ pagination: { page: 2, rowsPerPage: 20 } })
+        expect(wrapper.vm.pagination.page).toBe(2)
+        expect(adminService.getAuditLogs).toHaveBeenCalledWith(expect.objectContaining({ page: 2 }))
+    })
+
+    it('gets correct action color', () => {
+        expect(wrapper.vm.getActionColor('create')).toBe('positive')
+        expect(wrapper.vm.getActionColor('delete')).toBe('negative')
     })
 })

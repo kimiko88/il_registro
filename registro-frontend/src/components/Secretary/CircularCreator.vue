@@ -83,4 +83,10 @@ const sendCircular = () => {
         emit('sent', { ...form, date: new Date().toLocaleDateString() })
     }, 1500)
 }
+
+defineExpose({
+    form,
+    sendCircular,
+    sending
+})
 </script>

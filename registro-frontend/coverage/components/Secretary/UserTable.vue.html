@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">88.96% </span>
+                <span class="strong">94.48% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>129/145</span>
+                <span class='fraction'>137/145</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">69.23% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>7/7</span>
+                <span class='fraction'>9/13</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">30% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/10</span>
+                <span class='fraction'>3/10</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">88.96% </span>
+                <span class="strong">94.48% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>129/145</span>
+                <span class='fraction'>137/145</span>
             </div>
         
             
@@ -334,14 +334,14 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -368,7 +368,7 @@
         &lt;div class="text-h6 q-mr-md"&gt;Lista Utenti&lt;/div&gt;
         
         &lt;q-btn-toggle
-          v-model="<span class="fstat-no" title="function not covered" >roleFilter"</span>
+          v-model="roleFilter"
           push
           glossy
           toggle-color="primary"
@@ -380,7 +380,7 @@
             {label: 'Personale', value: 'staff'}
           ]"
           class="q-mr-md"
-          @update:model-value="<span class="fstat-no" title="function not covered" >$emit('filter-role', $event)"</span>
+          @update:model-value="$emit('filter-role', $event)"
         /&gt;
 &nbsp;
         &lt;q-space /&gt;
@@ -478,15 +478,15 @@ const columns = [
     { name: 'actions', label: 'Azioni', align: 'right' }
 ];
 &nbsp;
-const getRoleColor = <span class="fstat-no" title="function not covered" >(role) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    switch(role) {</span>
-<span class="cstat-no" title="statement not covered" >        case 'student': return 'green'</span>
-<span class="cstat-no" title="statement not covered" >        case 'teacher': return 'purple'</span>
-<span class="cstat-no" title="statement not covered" >        case 'parent': return 'orange'</span>
-<span class="cstat-no" title="statement not covered" >        case 'staff': return 'blue-grey'</span>
-<span class="cstat-no" title="statement not covered" >        default: return 'grey'</span>
-<span class="cstat-no" title="statement not covered" >    }</span>
-<span class="cstat-no" title="statement not covered" >}</span>
+const getRoleColor = (role) =&gt; {
+    switch(role) {
+<span class="branch-0 cbranch-no" title="branch not covered" >        case 'student': return 'green'</span>
+<span class="branch-0 cbranch-no" title="branch not covered" >        case 'teacher': return 'purple'</span>
+<span class="branch-0 cbranch-no" title="branch not covered" >        case 'parent': return 'orange'</span>
+<span class="branch-0 cbranch-no" title="branch not covered" >        case 'staff': return 'blue-grey'</span>
+        default: return 'grey'
+    }
+}
 &nbsp;
 const getRoleLabel = <span class="fstat-no" title="function not covered" >(role) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    switch(role) {</span>
@@ -505,7 +505,7 @@ const getRoleLabel = <span class="fstat-no" title="function not covered" >(role)
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-01T20:44:24.932Z
+                at 2026-01-01T23:49:14.210Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

@@ -139,6 +139,15 @@ const generate = (format) => {
         $q.notify({ type: 'positive', message: 'Report scaricato con successo', icon: 'download' })
     }, 1500)
 }
+
+defineExpose({
+    openReport,
+    generate,
+    currentReport,
+    showDialog,
+    info,
+    ReportCard
+})
 </script>
 
 <style scoped>

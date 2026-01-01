@@ -1,44 +1,74 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { describe, it, expect, vi } from 'vitest'
-import StudentEnrollmentForm from 'src/components/Secretary/StudentEnrollmentForm.vue'
-import { createTestingPinia } from '@pinia/testing'
+import StudentEnrollmentForm from '@/components/Secretary/StudentEnrollmentForm.vue'
 
-const mockNotify = vi.fn()
-const mockLoading = { show: vi.fn(), hide: vi.fn() }
-
-vi.mock('quasar', async () => {
-    const actual = await vi.importActual('quasar')
+// Mock Quasar
+vi.mock('quasar', async (importOriginal) => {
+    const actual = await importOriginal()
     return {
         ...actual,
         useQuasar: () => ({
-            loading: mockLoading,
-            notify: mockNotify
+            loading: { show: vi.fn(), hide: vi.fn() },
+            notify: vi.fn()
         })
     }
 })
 
 describe('StudentEnrollmentForm', () => {
-    it('renders stepper', () => {
-        const wrapper = mount(StudentEnrollmentForm, {
+    let wrapper
+
+    beforeEach(() => {
+        vi.useFakeTimers()
+        wrapper = mount(StudentEnrollmentForm, {
             global: {
-                plugins: [createTestingPinia()],
                 stubs: {
-                    'q-stepper': { template: '<div class="q-stepper"><slot /><slot name="navigation" /></div>', methods: { next: vi.fn(), previous: vi.fn() } },
-                    'q-step': { template: '<div class="q-step" v-if="name===1"><slot /></div>', props: ['name', 'title'] },
-                    'q-stepper-navigation': { template: '<div><slot /></div>' },
-                    'q-input': { template: '<input />', props: ['modelValue', 'rules'] },
-                    'q-select': true,
-                    'q-btn': true,
                     'q-card': { template: '<div><slot /></div>' },
                     'q-card-section': { template: '<div><slot /></div>' },
-                    'q-toggle': true,
-                    'q-separator': true
+                    'q-stepper': {
+                        template: '<div><slot /></div>',
+                        methods: { next: vi.fn(), previous: vi.fn() }
+                    },
+                    'q-step': { template: '<div><slot /></div>' },
+                    'q-stepper-navigation': { template: '<div><slot /></div>' },
+                    'q-input': { template: '<div></div>', props: ['modelValue'] },
+                    'q-select': { template: '<div></div>' },
+                    'q-toggle': { template: '<div></div>' },
+                    'q-btn': { template: '<button @click="$emit(\'click\')"></button>' },
+                    'q-separator': true,
+                    'q-icon': true
                 }
             }
         })
-        expect(wrapper.find('.q-stepper').exists()).toBe(true)
-        expect(wrapper.find('.text-h6').text()).toContain('Nuova Iscrizione Studente')
+        // Mock stepper ref
+        wrapper.vm.stepper = { next: vi.fn(), previous: vi.fn() }
     })
 
-    // Add more tests for next/prev logic if possible, but stepper is complex to mock fully
+    afterEach(() => {
+        vi.useRealTimers()
+    })
+
+    it('initializes correctly', () => {
+        expect(wrapper.vm.step).toBe(1)
+        expect(wrapper.vm.form.firstName).toBe('')
+    })
+
+    it('advances step', async () => {
+        wrapper.vm.nextStep()
+        expect(wrapper.vm.stepper.next).toHaveBeenCalled()
+    })
+
+    it('completes enrollment', async () => {
+        wrapper.vm.step = 4
+        wrapper.vm.form.firstName = 'New Student'
+
+        wrapper.vm.nextStep()
+
+        // Should show loading
+        // (Mocked Quasar logic assumes inline call to $q.loading.show())
+
+        await vi.runAllTimersAsync()
+
+        expect(wrapper.emitted('complete')).toBeTruthy()
+        expect(wrapper.emitted('complete')[0][0].firstName).toBe('New Student')
+    })
 })

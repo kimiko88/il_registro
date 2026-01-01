@@ -36,6 +36,18 @@ func (m *MockRepository) ListByTeacher(ctx context.Context, teacherUserID string
 	args := m.Called(ctx, teacherUserID)
 	return args.Get(0).([]Class), args.Error(1)
 }
+func (m *MockRepository) AssignSubject(ctx context.Context, classID string, subjectID string, teacherID *string, hours float64) error {
+	args := m.Called(ctx, classID, subjectID, teacherID, hours)
+	return args.Error(0)
+}
+func (m *MockRepository) UnassignSubject(ctx context.Context, assignmentID string) error {
+	args := m.Called(ctx, assignmentID)
+	return args.Error(0)
+}
+func (m *MockRepository) GetClassSubjects(ctx context.Context, classID string) ([]ClassSubject, error) {
+	args := m.Called(ctx, classID)
+	return args.Get(0).([]ClassSubject), args.Error(1)
+}
 
 func TestService_CreateClass(t *testing.T) {
 	mockRepo := new(MockRepository)

@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">61.53% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>16/26</span>
+                <span class='fraction'>26/26</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/0</span>
+                <span class='fraction'>6/6</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/6</span>
+                <span class='fraction'>6/6</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">61.53% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>16/26</span>
+                <span class='fraction'>26/26</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line medium'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -93,52 +93,52 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import api from './api';
 &nbsp;
 export default {
-<span class="fstat-no" title="function not covered" >    getSchools(params) {</span>
-<span class="cstat-no" title="statement not covered" >        return api.get('/schools', { params });</span>
+    getSchools(params) {
+        return api.get('/schools', { params });
     },
-<span class="fstat-no" title="function not covered" >    getSchool(id) {</span>
-<span class="cstat-no" title="statement not covered" >        return api.get(`/schools/${id}`);</span>
+    getSchool(id) {
+        return api.get(`/schools/${id}`);
     },
-<span class="fstat-no" title="function not covered" >    createSchool(data) {</span>
-<span class="cstat-no" title="statement not covered" >        return api.post('/schools', data);</span>
+    createSchool(data) {
+        return api.post('/schools', data);
     },
-<span class="fstat-no" title="function not covered" >    updateSchool(id, data) {</span>
-<span class="cstat-no" title="statement not covered" >        return api.patch(`/schools/${id}`, data);</span>
+    updateSchool(id, data) {
+        return api.patch(`/schools/${id}`, data);
     },
-<span class="fstat-no" title="function not covered" >    deleteSchool(id) {</span>
-<span class="cstat-no" title="statement not covered" >        return api.delete(`/schools/${id}`);</span>
+    deleteSchool(id) {
+        return api.delete(`/schools/${id}`);
     },
-<span class="fstat-no" title="function not covered" >    importSchools(file) {</span>
-<span class="cstat-no" title="statement not covered" >        const formData = new FormData();</span>
-<span class="cstat-no" title="statement not covered" >        formData.append('file', file);</span>
-<span class="cstat-no" title="statement not covered" >        return api.post('/schools/import', formData, {</span>
-<span class="cstat-no" title="statement not covered" >            headers: { 'Content-Type': 'multipart/form-data' },</span>
-<span class="cstat-no" title="statement not covered" >        });</span>
+    importSchools(file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        return api.post('/schools/import', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
     },
 };
 &nbsp;</pre></td></tr></table></pre>
@@ -148,7 +148,7 @@ export default {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-01T20:44:24.932Z
+                at 2026-01-01T23:49:14.210Z
             </div>
         <script src="../prettify.js"></script>
         <script>

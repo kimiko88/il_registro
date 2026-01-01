@@ -173,4 +173,11 @@ const nextStep = () => {
         stepper.value.next()
     }
 }
+
+defineExpose({
+    form,
+    step,
+    nextStep,
+    stepper
+})
 </script>

@@ -495,13 +495,13 @@ const saveSchool = async () => {
   
   try {
     if (editingSchool.value) {
-      await adminService.updateSchool(editingSchool.value.id, schoolForm)
+      await adminService.updateSchool(editingSchool.value.id, { ...schoolForm })
       $q.notify({
         type: 'positive',
         message: 'Scuola aggiornata con successo'
       })
     } else {
-      await adminService.createSchool(schoolForm)
+      await adminService.createSchool({ ...schoolForm })
       $q.notify({
         type: 'positive',
         message: 'Scuola creata con successo'
@@ -538,7 +538,37 @@ const closeDialog = () => {
   })
 }
 
-const stats = computed(() => pagination.value.rowsNumber)
+const openCreate = () => {
+  editingSchool.value = null
+  Object.assign(schoolForm, {
+    name: '',
+    code: '',
+    address: '',
+    city: '',
+    province: '',
+    zip_code: '',
+    phone: '',
+    email: '',
+    website: '',
+    is_active: true
+  })
+  showCreateDialog.value = true
+}
+
+defineExpose({
+    fetchSchools,
+    openCreate,
+    editSchool,
+    saveSchool,
+    confirmDelete,
+    deleteSelected,
+    exportTable,
+    schoolForm,
+    showCreateDialog,
+    editingSchool,
+    filters,
+    selected
+})
 
 onMounted(() => {
   fetchSchools()

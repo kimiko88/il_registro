@@ -159,4 +159,14 @@ const onRequest = (props) => {
 onMounted(() => {
   fetchLogs()
 })
+
+defineExpose({
+  fetchLogs,
+  onRequest,
+  filters,
+  pagination,
+  logs,
+  loading,
+  getActionColor
+})
 </script>

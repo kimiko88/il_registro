@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">51.28% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>20/39</span>
+                <span class='fraction'>39/39</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>1/1</span>
+                <span class='fraction'>8/8</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">25% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>1/4</span>
+                <span class='fraction'>6/6</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">51.28% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>20/39</span>
+                <span class='fraction'>39/39</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line medium'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -106,6 +106,10 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -114,31 +118,27 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { defineStore } from 'pinia';
@@ -152,32 +152,32 @@ export const useColloquiStore = defineStore('colloqui', {
     }),
 &nbsp;
     actions: {
-<span class="fstat-no" title="function not covered" >        async fetchSlots(rangeStart, rangeEnd) {</span>
-<span class="cstat-no" title="statement not covered" >            this.loading = true;</span>
-<span class="cstat-no" title="statement not covered" >            try {</span>
-<span class="cstat-no" title="statement not covered" >                await new Promise(resolve =&gt; setTimeout(resolve, 500));</span>
-<span class="cstat-no" title="statement not covered" >                // Mock slots</span>
-<span class="cstat-no" title="statement not covered" >                this.slots = [</span>
-<span class="cstat-no" title="statement not covered" >                    { id: 1, date: '2025-01-20', startTime: '15:00', endTime: '15:15', booked: true },</span>
-<span class="cstat-no" title="statement not covered" >                    { id: 2, date: '2025-01-20', startTime: '15:15', endTime: '15:30', booked: false }</span>
-<span class="cstat-no" title="statement not covered" >                ];</span>
-<span class="cstat-no" title="statement not covered" >                this.bookings = [</span>
-<span class="cstat-no" title="statement not covered" >                    { slotId: 1, parentName: 'Mrs. Rossi', studentName: 'Mario Rossi', notes: 'Math grade' }</span>
-<span class="cstat-no" title="statement not covered" >                ];</span>
-<span class="cstat-no" title="statement not covered" >            } finally {</span>
-<span class="cstat-no" title="statement not covered" >                this.loading = false;</span>
-<span class="cstat-no" title="statement not covered" >            }</span>
+        async fetchSlots(rangeStart, rangeEnd) {
+            this.loading = true;
+            try {
+                await new Promise(resolve =&gt; setTimeout(resolve, 500));
+                // Mock slots
+                this.slots = [
+                    { id: 1, date: '2025-01-20', startTime: '15:00', endTime: '15:15', booked: true },
+                    { id: 2, date: '2025-01-20', startTime: '15:15', endTime: '15:30', booked: false }
+                ];
+                this.bookings = [
+                    { slotId: 1, parentName: 'Mrs. Rossi', studentName: 'Mario Rossi', notes: 'Math grade' }
+                ];
+            } finally {
+                this.loading = false;
+            }
         },
 &nbsp;
-<span class="fstat-no" title="function not covered" >        async createSlots(slotsData) {</span>
-<span class="cstat-no" title="statement not covered" >            // Mock API</span>
-<span class="cstat-no" title="statement not covered" >            await new Promise(resolve =&gt; setTimeout(resolve, 500));</span>
-<span class="cstat-no" title="statement not covered" >            this.slots.push(...slotsData.map(s =&gt; ({ ...s, id: Math.random(), booked: false })));</span>
+        async createSlots(slotsData) {
+            // Mock API
+            await new Promise(resolve =&gt; setTimeout(resolve, 500));
+            this.slots.push(...slotsData.map(s =&gt; ({ ...s, id: Math.random(), booked: false })));
         },
 &nbsp;
-<span class="fstat-no" title="function not covered" >        async deleteSlot(id) {</span>
-<span class="cstat-no" title="statement not covered" >            this.slots = this.slots.filter(s =&gt; s.id !== id);</span>
-<span class="cstat-no" title="statement not covered" >        }</span>
+        async deleteSlot(id) {
+            this.slots = this.slots.filter(s =&gt; s.id !== id);
+        }
     }
 });
 &nbsp;</pre></td></tr></table></pre>
@@ -187,7 +187,7 @@ export const useColloquiStore = defineStore('colloqui', {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-01T20:44:24.932Z
+                at 2026-01-01T23:49:14.210Z
             </div>
         <script src="../prettify.js"></script>
         <script>

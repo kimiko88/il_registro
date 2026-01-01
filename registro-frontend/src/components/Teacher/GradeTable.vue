@@ -77,4 +77,10 @@ const calculateAverage = (studentId) => {
   const sum = grades.reduce((acc, g) => acc + g.value, 0);
   return (sum / grades.length).toFixed(1);
 };
+
+defineExpose({
+    getStudentGrades,
+    getGradeColor,
+    calculateAverage
+})
 </script>

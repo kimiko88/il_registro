@@ -136,4 +136,14 @@ const batchArchive = () => {
      $q.notify({ message: 'Documenti archiviati', icon: 'archive' });
      selected.value = [];
 }
+
+defineExpose({
+    getStatusColor,
+    toggleFavorite,
+    batchApprove,
+    batchArchive,
+    selected,
+    filter,
+    typeFilter
+})
 </script>
