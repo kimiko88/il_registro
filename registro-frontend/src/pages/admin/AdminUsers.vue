@@ -156,7 +156,7 @@
         </q-card-section>
 
         <q-card-section>
-          <q-form @submit="saveAdmin" class="q-gutter-md">
+          <q-form @submit="saveAdmin" class="q-gutter-y-md">
             <div class="row q-col-gutter-md">
               <div class="col-6">
                 <q-input

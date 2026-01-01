@@ -179,7 +179,7 @@
         </q-card-section>
 
         <q-card-section>
-          <div class="q-gutter-md">
+          <div class="q-gutter-y-md">
             <q-input
               v-model="schoolForm.name"
               label="Nome Scuola *"

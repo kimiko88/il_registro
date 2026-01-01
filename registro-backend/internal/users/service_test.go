@@ -77,6 +77,11 @@ func (m *MockRepository) GetChildren(ctx context.Context, parentID string) ([]St
 	return args.Get(0).([]StudentChild), args.Error(1)
 }
 
+func (m *MockRepository) IsActive(ctx context.Context, id string) (bool, error) {
+	args := m.Called(ctx, id)
+	return args.Bool(0), args.Error(1)
+}
+
 func TestService_CreateUser(t *testing.T) {
 	mockRepo := new(MockRepository)
 	service := NewService(mockRepo)

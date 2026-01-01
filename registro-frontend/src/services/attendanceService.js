@@ -9,5 +9,11 @@ export const attendanceService = {
     },
     async justify(absenceId, justification) {
         return api.post(`/parent/attendance/${absenceId}/justify`, justification)
+    },
+    async getChildAttendance(studentId) {
+        return api.get(`/attendance/child-attendance/${studentId}`)
+    },
+    async getMyAttendance() {
+        return api.get('/attendance/my-attendance')
     }
 }

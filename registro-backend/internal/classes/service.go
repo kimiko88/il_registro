@@ -30,6 +30,10 @@ func (s *Service) ListClasses(ctx context.Context, schoolID string) ([]Class, er
 	return s.repo.List(ctx, schoolID)
 }
 
+func (s *Service) GetTeacherClasses(ctx context.Context, teacherID string) ([]Class, error) {
+	return s.repo.ListByTeacher(ctx, teacherID)
+}
+
 func (s *Service) GetClass(ctx context.Context, id string) (*Class, error) {
 	return s.repo.Get(ctx, id)
 }

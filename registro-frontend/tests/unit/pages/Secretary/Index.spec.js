@@ -1,6 +1,7 @@
 
 import { mount } from '@vue/test-utils'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { Quasar } from 'quasar'
 import Index from '@/pages/secretary/Index.vue'
 
 // Mock Quasar
@@ -11,7 +12,7 @@ vi.mock('quasar', async (importOriginal) => {
         useQuasar: () => ({
             loading: { show: vi.fn(), hide: vi.fn() },
             notify: vi.fn(),
-            config: {}
+            config: {} // Ensure config is mocked here too if accessed via useQuasar
         })
     }
 })
@@ -31,6 +32,7 @@ describe('Secretary Dashboard (Index.vue)', () => {
         vi.clearAllMocks()
         wrapper = mount(Index, {
             global: {
+                plugins: [Quasar],
                 stubs: {
                     'q-page': { template: '<div><slot /></div>' },
                     'q-card': { template: '<div><slot /></div>' },

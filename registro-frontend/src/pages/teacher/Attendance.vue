@@ -3,8 +3,18 @@
     <div class="row items-center justify-between q-mb-md">
        <div class="text-h4">Registro Presenze</div>
        <div class="row q-gutter-md">
-           <q-input dense outlined v-model="date" type="date" label="Data" bg-color="white" />
-           <q-select dense outlined v-model="selectedClass" :options="classes" label="Classe" bg-color="white" style="min-width: 120px" />
+           <q-input dense outlined v-model="date" type="date" label="Data" bg-color="white" @update:model-value="fetchData" />
+           <q-select 
+              dense outlined 
+              v-model="selectedClass" 
+              :options="classesStore.classes" 
+              option-label="name"
+              option-value="id"
+              label="Classe" 
+              bg-color="white" 
+              style="min-width: 150px"
+              @update:model-value="onClassChange"
+           />
        </div>
     </div>
 
@@ -49,19 +59,31 @@
     <q-card>
         <q-toolbar class="bg-grey-2 text-grey-8">
             <q-toolbar-title class="text-subtitle1">Appello - {{ date }}</q-toolbar-title>
-            <q-btn flat dense icon="check_circle" label="Tutti Presenti" color="primary" @click="markAllPresent" />
+            <q-btn flat dense icon="check_circle" label="Tutti Presenti" color="primary" @click="markAllPresent" :disable="loading" />
         </q-toolbar>
         
-        <q-list separator>
+        <div v-if="loading" class="row justify-center q-pa-lg">
+            <q-spinner color="primary" size="3em" />
+        </div>
+
+        <q-list separator v-else>
             <q-item v-for="student in students" :key="student.id" class="q-py-md">
                 <q-item-section avatar>
-                    <q-avatar size="md" color="grey-3" text-color="black">{{ student.name.charAt(0) }}</q-avatar>
+                    <q-avatar size="md" color="grey-3" text-color="black">
+                        {{ student.first_name ? student.first_name.charAt(0) : '?' }}
+                    </q-avatar>
                 </q-item-section>
                 
                 <q-item-section>
-                    <q-item-label class="text-weight-medium">{{ student.name }}</q-item-label>
-                    <q-item-label caption v-if="student.status === 'absent'">Assente</q-item-label>
-                    <q-item-label caption v-if="student.status === 'late'">In ritardo di {{ student.lateMinutes }} min</q-item-label>
+                    <div class="row items-center">
+                       <div class="col">
+                           <q-item-label class="text-weight-medium">{{ student.last_name }} {{ student.first_name }}</q-item-label>
+                           <q-item-label caption v-if="student.status === 'absent'">Assente</q-item-label>
+                           <q-item-label caption v-if="student.status === 'late'">
+                               Ritardo ({{ formatLateLabel(student) }})
+                           </q-item-label>
+                        </div>
+                    </div>
                 </q-item-section>
 
                 <q-item-section>
@@ -82,18 +104,42 @@
                     </q-btn-toggle>
                 </q-item-section>
 
-                <q-item-section v-if="student.status === 'late' || student.status === 'early_exit'" side>
-                     <q-input v-model.number="student.lateMinutes" type="number" dense outlined style="width: 60px" label="Min" />
+                <!-- Late Time Input -->
+                <q-item-section v-if="student.status === 'late'" side style="min-width: 120px">
+                     <q-input 
+                        v-model="student.entry_time" 
+                        type="time" 
+                        dense outlined 
+                        label="Ora Ingresso" 
+                        :rules="[val => !!val || 'Richiesto']"
+                     />
+                </q-item-section>
+
+                <!-- Early Exit Time Input -->
+                <q-item-section v-if="student.status === 'early_exit'" side style="min-width: 120px">
+                     <q-input 
+                        v-model="student.exit_time" 
+                        type="time" 
+                        dense outlined 
+                        label="Ora Uscita" 
+                        :rules="[val => !!val || 'Richiesto']"
+                     />
                 </q-item-section>
                 
                 <q-item-section side>
-                    <q-btn round flat icon="chat_bubble_outline" color="grey" @click="openNoteDialog(student)" />
+                    <q-btn round flat icon="note_add" color="grey-7" @click="openNoteDialog(student)">
+                        <q-tooltip>Aggiungi Nota</q-tooltip>
+                    </q-btn>
                 </q-item-section>
+            </q-item>
+
+            <q-item v-if="students.length === 0" class="text-center text-grey">
+                <q-item-section>Nessuno studente in questa classe (o seleziona una classe)</q-item-section>
             </q-item>
         </q-list>
         
         <q-card-actions align="right" class="bg-grey-1 q-pa-md">
-            <q-btn label="Salva Registro" color="primary" size="lg" icon="save" @click="saveAttendance" :loading="saving" />
+            <q-btn label="Salva Registro" color="primary" size="lg" icon="save" @click="saveAttendance" :loading="saving" :disable="!selectedClass" />
         </q-card-actions>
     </q-card>
 
@@ -104,13 +150,13 @@
             <q-list separator>
                 <q-item v-for="req in justificationRequests" :key="req.id">
                     <q-item-section>
-                        <q-item-label>{{ req.student }}</q-item-label>
+                        <q-item-label>{{ req.student_name }}</q-item-label>
                         <q-item-label caption>Assenza del {{ req.date }} - {{ req.reason }}</q-item-label>
                     </q-item-section>
                     <q-item-section side>
                         <div class="row q-gutter-sm">
-                            <q-btn flat round color="green" icon="check" @click="approveJustification(req.id)" />
-                            <q-btn flat round color="red" icon="close" @click="rejectJustification(req.id)" />
+                            <q-btn flat round color="green" icon="check" @click="processJustification(req.id, true)" />
+                            <q-btn flat round color="red" icon="close" @click="processJustification(req.id, false)" />
                         </div>
                     </q-item-section>
                 </q-item>
@@ -122,31 +168,39 @@
         </q-card>
     </q-dialog>
 
+    <!-- Note Dialog -->
+    <NoteDialog
+        v-if="selectedClass" 
+        v-model="showNoteDialog"
+        :student="selectedStudentForNote"
+        :class-id="String(selectedClass.id)" 
+    />
+
   </q-page>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
+import { useClassesStore } from '@/stores/classes'
+import { attendanceService } from 'src/services/attendanceService'
+import { api } from 'src/boot/axios'
+import NoteDialog from 'src/components/Teacher/NoteDialog.vue'
 
 const $q = useQuasar()
+const classesStore = useClassesStore()
+
 const date = ref(new Date().toISOString().split('T')[0])
-const selectedClass = ref('5A')
-const classes = ['5A', '4B', '3C']
+const selectedClass = ref(null)
+const students = ref([])
+const justificationRequests = ref([])
+const loading = ref(false)
 const saving = ref(false)
 const showJustifications = ref(false)
 
-const students = ref([
-    { id: 1, name: 'Rossi Mario', status: 'present', lateMinutes: 0 },
-    { id: 2, name: 'Bianchi Anna', status: 'absent', lateMinutes: 0 },
-    { id: 3, name: 'Verdi Paolo', status: 'present', lateMinutes: 0 },
-    { id: 4, name: 'Neri Giulia', status: 'late', lateMinutes: 15 },
-])
-
-const justificationRequests = ref([
-    { id: 101, student: 'Bianchi Anna', date: '2025-01-10', reason: 'Salute' },
-    { id: 102, student: 'Neri Giulia', date: '2025-01-12', reason: 'Visita Medica' }
-])
+// Note Dialog State
+const showNoteDialog = ref(false)
+const selectedStudentForNote = ref(null)
 
 const stats = computed(() => ({
     present: students.value.filter(s => s.status === 'present').length,
@@ -155,25 +209,130 @@ const stats = computed(() => ({
     toJustify: justificationRequests.value.length
 }))
 
+onMounted(async () => {
+    await classesStore.fetchAssignedClasses()
+    if (classesStore.classes.length > 0) {
+        selectedClass.value = classesStore.classes[0]
+        fetchData()
+    }
+})
+
+const onClassChange = () => {
+    fetchData()
+}
+
+const fetchData = async () => {
+    if (!selectedClass.value) return
+    
+    loading.value = true
+    try {
+        // 1. Fetch Students
+        // Using users endpoint filtered by class
+        const usersRes = await api.get('/users', { 
+            params: { 
+                class_id: selectedClass.value.id,
+                role: 'student',
+                page_size: 100 // Ensure we get all students, usually classes are small
+            }
+        })
+        const studentList = usersRes.data.users || []
+        
+        // 2. Fetch Existing Attendance
+        // attendanceService.getByClass likely returns list of records
+        let attendanceMap = {}
+        try {
+            const attRes = await attendanceService.getByClass(selectedClass.value.id, date.value)
+            // Assuming response is array of { student_id, status, entry_time, exit_time ... }
+            if (Array.isArray(attRes.data)) {
+                attRes.data.forEach(r => attendanceMap[r.student_id] = r)
+            }
+        } catch (e) {
+            console.warn("No attendance found or error", e)
+        }
+
+        // Merge
+        students.value = studentList.map(s => {
+            const existing = attendanceMap[s.id]
+            return {
+                id: s.id,
+                first_name: s.first_name,
+                last_name: s.last_name,
+                status: existing ? existing.status : 'present', // Default present? Or 'absent' if not marked? Default present is typical for "Appello".
+                entry_time: existing ? existing.entry_time : '',
+                exit_time: existing ? existing.exit_time : '',
+                // lateMinutes calculated if needed, or stored
+            }
+        })
+
+        // 3. Fetch Justifications
+        const justRes = await api.get('/teacher/attendance/pending-justifications', {
+             params: { class_id: selectedClass.value.id }
+        })
+        justificationRequests.value = justRes.data || []
+
+    } catch (error) {
+        $q.notify({ type: 'negative', message: 'Errore caricamento dati' })
+        console.error(error)
+    } finally {
+        loading.value = false
+    }
+}
+
 const markAllPresent = () => {
-    students.value.forEach(s => s.status = 'present')
+    students.value.forEach(s => {
+        s.status = 'present'
+        s.entry_time = ''
+        s.exit_time = ''
+    })
 }
 
-const saveAttendance = () => {
+const formatLateLabel = (student) => {
+    if (student.entry_time) {
+        return `Ingresso: ${student.entry_time}`
+    }
+    return 'Inserisci orario'
+}
+
+const saveAttendance = async () => {
     saving.value = true
-    setTimeout(() => {
-        saving.value = false
+    try {
+        const payload = {
+            class_id: selectedClass.value.id,
+            date: date.value,
+            statuses: students.value.map(s => ({
+                student_id: s.id,
+                status: s.status,
+                entry_time: s.status === 'late' ? s.entry_time : null,
+                exit_time: s.status === 'early_exit' ? s.exit_time : null
+            }))
+        }
+        
+        // Assuming bulk mark endpoint exists
+        await api.post('/teacher/attendance/mark-bulk', payload)
+        
         $q.notify({ type: 'positive', message: 'Registro salvato con successo' })
-    }, 1000)
+    } catch (error) {
+        $q.notify({ type: 'negative', message: 'Errore salvataggio' })
+    } finally {
+        saving.value = false
+    }
 }
 
-const approveJustification = (id) => {
-    justificationRequests.value = justificationRequests.value.filter(r => r.id !== id)
-    $q.notify({ message: 'Giustificazione accettata', color: 'green' })
+const processJustification = async (id, approved) => {
+    try {
+        await api.post(`/teacher/attendance/justification/${id}/process`, { approve: approved })
+        justificationRequests.value = justificationRequests.value.filter(r => r.id !== id)
+        $q.notify({ 
+            message: approved ? 'Giustificazione accettata' : 'Giustificazione respinta', 
+            color: approved ? 'green' : 'orange' 
+        })
+    } catch (error) {
+        $q.notify({ type: 'negative', message: 'Errore elaborazione' })
+    }
 }
 
-const rejectJustification = (id) => {
-    justificationRequests.value = justificationRequests.value.filter(r => r.id !== id)
-    $q.notify({ message: 'Giustificazione respinta', color: 'orange' })
+const openNoteDialog = (student) => {
+    selectedStudentForNote.value = student
+    showNoteDialog.value = true
 }
 </script>

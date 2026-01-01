@@ -15,5 +15,8 @@ export const gradeService = {
     },
     async deleteGrade(id) {
         return api.delete(`/teacher/grades/${id}`)
+    },
+    async getChildGrades(studentId, params) {
+        return api.get(`/grades/child-grades/${studentId}`, { params })
     }
 }

@@ -27,7 +27,7 @@
            </q-card-section>
            
            <q-list separator v-if="pendingReviews.length > 0">
-             <q-item v-for="item in pendingReviews" :key="item.id" clickable v-ripple @click="$router.push(`/secretary/documents?id=${item.id}`)">
+             <q-item v-for="item in pendingReviews" :key="item.id" clickable v-ripple @click="router.push(`/secretary/documents?id=${item.id}`)">
                <q-item-section avatar>
                  <q-icon name="description" color="primary" />
                </q-item-section>

@@ -18,6 +18,7 @@ import (
 	"registro-backend/internal/grades"
 	"registro-backend/internal/handler"
 	"registro-backend/internal/middleware"
+	"registro-backend/internal/notes"
 	"registro-backend/internal/orientamento"
 	"registro-backend/internal/pcto"
 	"registro-backend/internal/postgres"
@@ -55,7 +56,6 @@ func main() {
 
 	tokenManager := jwt.NewTokenManager(privateKey, publicKey)
 	mfaService := auth.NewMFAService("RegistroElettronico")
-	authMiddleware := auth.NewMiddleware(tokenManager)
 
 	// 5. Setup Repositories
 	authRepo := auth.NewRepository(database)
@@ -69,7 +69,10 @@ func main() {
 	orientRepo := orientamento.NewRepository(database)
 	schoolsRepo := schools.NewRepository(database)
 	commsRepo := communications.NewRepository(database)
+	notesRepo := notes.NewRepository(database)
 	adminRepo := postgres.NewAdminRepository(database)
+
+	authMiddleware := auth.NewMiddleware(tokenManager, usersRepo)
 
 	// 6. Setup Services
 	authSvc := auth.NewService(authRepo, tokenManager, mfaService)
@@ -83,7 +86,9 @@ func main() {
 	pctoSvc := pcto.NewService(pctoRepo)
 	orientSvc := orientamento.NewService(orientRepo)
 	schoolsSvc := schools.NewService(schoolsRepo)
+
 	commsSvc := communications.NewService(commsRepo)
+	notesSvc := notes.NewService(notesRepo)
 	adminSvc := admin.NewService(adminRepo)
 
 	// 7. Setup Handlers
@@ -94,6 +99,8 @@ func main() {
 	attendanceH := attendance.NewHandler(attendanceSvc)
 	docsH := documents.NewHandler(docsSvc)
 	schedH := scheduling.NewHandler(schedSvc)
+
+	notesH := notes.NewHandler(notesSvc)
 	adminH := admin.NewHandler(adminSvc)
 	adminMiddleware := admin.NewMiddleware()
 	// ...
@@ -165,6 +172,7 @@ func main() {
 			commsH.RegisterRoutes(protected)
 
 			classesH.RegisterRoutes(protected)
+			notesH.RegisterRoutes(protected)
 
 			// Admin routes
 			adminH.RegisterRoutes(protected, adminMiddleware)

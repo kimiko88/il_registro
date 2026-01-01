@@ -23,7 +23,7 @@
     <!-- Grades Table -->
     <q-card class="shadow-sm rounded-lg">
       <q-table
-        :rows="mockGrades"
+        :rows="currentGrades"
         :columns="columns"
         row-key="id"
         flat
@@ -49,10 +49,11 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useParentStore } from '@/stores/parent'
 import { storeToRefs } from 'pinia'
 import { useQuasar } from 'quasar'
+import { gradeService } from 'src/services/gradeService'
 
 const $q = useQuasar()
 const parentStore = useParentStore()
@@ -68,13 +69,45 @@ const columns = [
   { name: 'notes', label: 'Note', field: 'notes', align: 'left' }
 ]
 
-const mockGrades = [
-  { id: 1, date: '2024-12-20', subject: 'Matematica', type: 'Scritto', value: 5.0, notes: 'Equazioni' },
-  { id: 2, date: '2024-12-18', subject: 'Storia', type: 'Orale', value: 7.5, notes: 'Interrogazione' },
-  { id: 3, date: '2024-12-15', subject: 'Inglese', type: 'Scritto', value: 8.0, notes: 'Grammar Test' },
-  { id: 4, date: '2024-12-10', subject: 'Fisica', type: 'Pratico', value: 6.5, notes: 'Laboratorio' },
-  { id: 5, date: '2024-11-28', subject: 'Italiano', type: 'Scritto', value: 6.0, notes: 'Tema' },
-]
+const gradesData = ref(null)
+
+// Compute grades based on selected period
+const currentGrades = computed(() => {
+    if (!gradesData.value || !gradesData.value.semesters) return []
+    
+    const semNum = period.value === 'Primo Quadrimestre' ? 1 : 2
+    const semData = gradesData.value.semesters.find(s => s.semester === semNum)
+    if (!semData || !semData.grades) return []
+    
+    return semData.grades.map(g => ({
+        id: g.id,
+        date: g.date.split('T')[0],
+        subject: g.subject_id, // TODO: Map to Name
+        type: g.grade_type,
+        value: g.grade_value,
+        notes: g.description
+    }))
+})
+
+onMounted(() => {
+    if (selectedChild.value) {
+        fetchGrades()
+    }
+})
+
+watch(selectedChild, (val) => {
+    if (val) fetchGrades()
+})
+
+const fetchGrades = async () => {
+    try {
+        const res = await gradeService.getChildGrades(selectedChild.value.id)
+        gradesData.value = res.data
+    } catch (e) {
+        console.error(e)
+        // Optionally notify error
+    }
+}
 
 function getGradeColor(val) {
   if (val < 6) return 'negative';

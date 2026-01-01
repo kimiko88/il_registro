@@ -28,21 +28,21 @@
     <q-list bordered class="bg-white rounded-borders shadow-sm">
       <q-item-label header class="text-weight-bold">Ultimi Eventi</q-item-label>
 
-      <q-item v-for="event in mockEvents" :key="event.id">
+      <q-item v-for="event in events" :key="event.id">
         <q-item-section avatar>
           <q-icon 
-            :name="event.type === 'absence' ? 'cancel' : 'schedule'" 
-            :color="event.type === 'absence' ? 'negative' : 'warning'" 
+            :name="event.status === 'absent' ? 'cancel' : 'schedule'" 
+            :color="event.status === 'absent' ? 'negative' : 'warning'" 
           />
         </q-item-section>
         
         <q-item-section>
-          <q-item-label>{{ event.date }} - {{ event.type === 'absence' ? 'Assenza' : 'Ritardo' }}</q-item-label>
-          <q-item-label caption v-if="event.justified" class="text-positive">Giustificata</q-item-label>
+          <q-item-label>{{ event.date }} - {{ event.status === 'absent' ? 'Assenza' : 'Ritardo' }}</q-item-label>
+          <q-item-label caption v-if="event.is_justified" class="text-positive">Giustificata</q-item-label>
           <q-item-label caption v-else class="text-negative">Da Giustificare</q-item-label>
         </q-item-section>
 
-        <q-item-section side v-if="!event.justified">
+        <q-item-section side v-if="!event.is_justified">
           <q-btn outline color="primary" size="sm" label="Giustifica" @click="openJustifyDialog(event)" />
         </q-item-section>
       </q-item>
@@ -75,10 +75,11 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useParentStore } from '@/stores/parent'
 import { storeToRefs } from 'pinia'
 import { useQuasar } from 'quasar'
+import { attendanceService } from 'src/services/attendanceService'
 
 const $q = useQuasar()
 const parentStore = useParentStore()
@@ -89,11 +90,29 @@ const selectedEvent = ref(null)
 const reason = ref('Salute')
 const notes = ref('')
 
-const mockEvents = ref([
-  { id: 1, date: '12/12/2024', type: 'absence', justified: false },
-  { id: 2, date: '01/12/2024', type: 'delay', justified: true },
-  { id: 3, date: '28/11/2024', type: 'absence', justified: true },
-])
+const events = ref([])
+
+onMounted(() => {
+    if (selectedChild.value) {
+        fetchAttendance()
+    }
+})
+
+watch(selectedChild, (val) => {
+    if (val) fetchAttendance()
+})
+
+const fetchAttendance = async () => {
+    try {
+        const res = await attendanceService.getChildAttendance(selectedChild.value.id)
+        // Backend returns generic attendance list. Filter for absence/late if needed or show all?
+        // Mock UI showed "Ultimi Eventi" (Absences/Lays).
+        // Let's filter for non-present statuses for the list.
+        events.value = (res.data || []).filter(e => e.status !== 'present')
+    } catch (e) {
+        console.error(e)
+    }
+}
 
 function openJustifyDialog(event) {
   selectedEvent.value = event
@@ -102,14 +121,22 @@ function openJustifyDialog(event) {
   justifyDialog.value = true
 }
 
-function submitJustification() {
-  // Mock API Call
-  setTimeout(() => {
-    const idx = mockEvents.value.findIndex(e => e.id === selectedEvent.value.id)
-    if (idx !== -1) mockEvents.value[idx].justified = true
-    
-    $q.notify({ type: 'positive', message: 'Giustificazione inviata con successo' })
-    justifyDialog.value = false
-  }, 500)
+async function submitJustification() {
+  try {
+      // API call to justify
+      await attendanceService.justify(selectedEvent.value.id, {
+          student_id: selectedChild.value.id,
+          start_date: selectedEvent.value.date,
+          end_date: selectedEvent.value.date,
+          reason: reason.value + (notes.value ? ` - ${notes.value}` : '')
+      })
+      
+      $q.notify({ type: 'positive', message: 'Giustificazione inviata con successo' })
+      justifyDialog.value = false
+      // Refetch to update status
+      fetchAttendance() 
+  } catch (e) {
+      $q.notify({ type: 'negative', message: 'Errore invio giustificazione' })
+  }
 }
 </script>

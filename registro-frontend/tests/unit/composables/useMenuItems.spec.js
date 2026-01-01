@@ -6,13 +6,11 @@ describe('useMenuItems', () => {
         it('should return admin menu items', () => {
             const menuItems = useMenuItems('admin')
 
-            expect(menuItems).toHaveLength(6)
+            expect(menuItems).toHaveLength(4)
             expect(menuItems[0].label).toBe('Dashboard')
-            expect(menuItems[1].label).toBe('Gestione Scuole')
-            expect(menuItems[2].label).toBe('Utenti')
-            expect(menuItems[3].label).toBe('Monitoraggio')
-            expect(menuItems[4].label).toBe('Analytics')
-            expect(menuItems[5].label).toBe('Impostazioni')
+            expect(menuItems[1].label).toBe('La Mia Scuola')
+            expect(menuItems[2].label).toBe('Analytics')
+            expect(menuItems[3].label).toBe('Impostazioni')
         })
 
         it('should have correct paths for admin', () => {
@@ -20,7 +18,7 @@ describe('useMenuItems', () => {
 
             expect(menuItems[0].path).toBe('/')
             expect(menuItems[1].path).toBe('/admin/schools')
-            expect(menuItems[2].path).toBe('/admin/users')
+            expect(menuItems[2].path).toBe('/admin/analytics')
         })
 
         it('should have exact flag for dashboard', () => {
@@ -78,7 +76,7 @@ describe('useMenuItems', () => {
         it('should return parent menu items', () => {
             const menuItems = useMenuItems('parent')
 
-            expect(menuItems).toHaveLength(8)
+            expect(menuItems).toHaveLength(9)
             expect(menuItems.map(item => item.label)).toContain('I Miei Figli')
             expect(menuItems.map(item => item.label)).toContain('Colloqui')
             expect(menuItems.map(item => item.label)).toContain('Supporto')
@@ -133,7 +131,11 @@ describe('useMenuItems', () => {
             roles.forEach(role => {
                 const menuItems = useMenuItems(role)
                 expect(menuItems[0].label).toBe('Dashboard')
-                expect(menuItems[0].path).toBe('/')
+                if (role === 'parent') {
+                    expect(menuItems[0].path).toBe('/parent')
+                } else {
+                    expect(menuItems[0].path).toBe('/')
+                }
             })
         })
     })

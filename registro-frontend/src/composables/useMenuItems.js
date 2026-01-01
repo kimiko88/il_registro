@@ -17,7 +17,7 @@ export function useMenuItems(role) {
             { label: 'Dashboard', icon: 'dashboard', path: '/', exact: true },
             { label: 'La Mia Scuola', icon: 'school', path: '/admin/schools' },
             { label: 'Analytics', icon: 'analytics', path: '/admin/analytics' },
-            { label: 'Impostazioni', icon: 'settings', path: '/settings' }
+            { label: 'Impostazioni', icon: 'settings', path: '/admin/settings' }
         ],
         secretary: [
             { label: 'Dashboard', icon: 'dashboard', path: '/', exact: true },

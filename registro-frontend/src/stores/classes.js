@@ -22,6 +22,20 @@ export const useClassesStore = defineStore('classes', {
             }
         },
 
+        async fetchAssignedClasses() {
+            this.loading = true;
+            try {
+                // Endpoint for classes assigned to the current teacher
+                const response = await api.get('/teacher/classes');
+                this.classes = response.data;
+            } catch (err) {
+                this.error = 'Failed to fetch assigned classes';
+                console.error(err);
+            } finally {
+                this.loading = false;
+            }
+        },
+
         async createClass(classData) {
             try {
                 const response = await api.post('/classes', classData);

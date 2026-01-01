@@ -7,7 +7,7 @@ echo "Cleaning up previous test data..."
 echo "----------------------------------------"
 # Attempt to delete the test user (requires sudo if docker needs it)
 # We use || true to ensure script continues if user doesn't exist
-sudo docker-compose -f docker/docker-compose.yml exec -T db psql -U user -d registro -c "DELETE FROM users WHERE email='testuser@example.com';" || true
+sudo docker compose -f docker/docker-compose.yml exec -T db psql -U user -d registro -c "DELETE FROM users WHERE email='testuser@example.com';" || true
 echo "Cleanup attempted."
 echo ""
 

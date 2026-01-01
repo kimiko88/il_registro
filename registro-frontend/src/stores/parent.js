@@ -38,12 +38,8 @@ export const useParentStore = defineStore('parent', () => {
         error.value = null
         try {
             // Try fetching from API
-            // const response = await api.get('/users/me/children')
-            // children.value = response.data
-
-            // Fallback to mock for now
-            await new Promise(r => setTimeout(r, 500))
-            children.value = mockChildren
+            const response = await api.get('/users/me/children')
+            children.value = response.data
 
             // Select first if none selected
             if (!selectedChildId.value && children.value.length > 0) {
@@ -52,7 +48,7 @@ export const useParentStore = defineStore('parent', () => {
             }
         } catch (err) {
             console.error('Failed to fetch children:', err)
-            children.value = mockChildren // Fallback
+            children.value = []
             error.value = 'Failed to load children'
         } finally {
             loading.value = false

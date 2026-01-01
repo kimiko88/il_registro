@@ -98,6 +98,7 @@
 import { ref, computed, onMounted, reactive } from 'vue';
 import { useQuasar, exportFile } from 'quasar';
 import UserTable from 'src/components/Secretary/UserTable.vue';
+import { userService } from 'src/services/userService';
 
 const $q = useQuasar();
 const loading = ref(false);
@@ -107,26 +108,36 @@ const isEditing = ref(false);
 const importFile = ref(null);
 const currentRoleFilter = ref('all');
 
-const users = ref([]); // Mock data source
+const users = ref([]); 
 
-// Mock Data Load
 onMounted(() => {
-    loading.value = true;
-    setTimeout(() => {
-        users.value = [
-            { id: 1, first_name: 'Mario', last_name: 'Rossi', email: 'mario.rossi@studenti.it', role: 'student', class: '1A', active: true, cf: 'RSSMRA00A01H501Z' },
-            { id: 2, first_name: 'Giulia', last_name: 'Bianchi', email: 'giulia.bianchi@docenti.it', role: 'teacher', active: true },
-            { id: 3, first_name: 'Luca', last_name: 'Verdi', email: 'luca.verdi@genitori.it', role: 'parent', active: true, children: ['Mario Rossi'] },
-            { id: 4, first_name: 'Anna', last_name: 'Neri', email: 'anna.neri@staff.it', role: 'staff', active: true },
-            { id: 5, first_name: 'Francesco', last_name: 'Gialli', email: 'francesco.gialli@studenti.it', role: 'student', class: '2B', active: false }
-        ];
-        loading.value = false;
-    }, 500);
+    fetchUsers()
 });
 
+const fetchUsers = async () => {
+    loading.value = true
+    try {
+        const res = await userService.getAll({ role: currentRoleFilter.value === 'all' ? undefined : currentRoleFilter.value })
+        users.value = res.data.users || []
+    } catch (e) {
+        $q.notify({ type: 'negative', message: 'Errore caricamento utenti' })
+    } finally {
+        loading.value = false
+    }
+}
+
+// Watch filter change
+import { watch } from 'vue'
+watch(currentRoleFilter, () => {
+    fetchUsers()
+})
+
 const filteredUsers = computed(() => {
-    if (currentRoleFilter.value === 'all') return users.value;
-    return users.value.filter(u => u.role === currentRoleFilter.value);
+    // Filter handled by API or client side if API returns all
+    // Since we fetch on change, we just return users.value
+    // But if API returns pagination, we might need to handle it.
+    // For now, assume simple list.
+    return users.value
 });
 
 const roleOptions = [

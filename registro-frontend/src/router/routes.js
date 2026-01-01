@@ -21,6 +21,11 @@ export default [
                 meta: { roles: ['superadmin', 'admin'] }
             },
             {
+                path: 'admin/schools/:id',
+                component: () => import('@/pages/Admin/SchoolDetail.vue'),
+                meta: { roles: ['superadmin', 'admin'] }
+            },
+            {
                 path: 'admin/admins',
                 component: () => import('@/pages/admin/AdminUsers.vue'),
                 meta: { roles: ['superadmin'] }

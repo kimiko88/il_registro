@@ -38,6 +38,7 @@ type Repository interface {
 	// Guardianship
 	IsGuardian(ctx context.Context, parentUserID string, studentUserID string) (bool, error)
 	GetChildren(ctx context.Context, parentUserID string) ([]StudentChild, error)
+	IsActive(ctx context.Context, id string) (bool, error)
 }
 
 type StudentChild struct {
@@ -428,4 +429,17 @@ func (r *PostgresRepository) IsGuardian(ctx context.Context, parentUserID string
 		return false, err
 	}
 	return exists, nil
+}
+
+func (r *PostgresRepository) IsActive(ctx context.Context, id string) (bool, error) {
+	query := `SELECT is_active FROM users WHERE id = $1 AND deleted_at IS NULL`
+	var isActive bool
+	err := r.db.QueryRowContext(ctx, query, id).Scan(&isActive)
+	if err == sql.ErrNoRows {
+		return false, nil // User not found effectively means not active
+	}
+	if err != nil {
+		return false, err
+	}
+	return isActive, nil
 }

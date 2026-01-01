@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"registro-backend/internal/users"
 	"registro-backend/pkg/jwt"
 
 	"github.com/gin-gonic/gin"
@@ -13,12 +14,14 @@ import (
 // Middleware provides authentication middleware
 type Middleware struct {
 	tokenManager *jwt.TokenManager
+	userRepo     users.Repository
 }
 
 // NewMiddleware creates a new auth middleware
-func NewMiddleware(tokenManager *jwt.TokenManager) *Middleware {
+func NewMiddleware(tokenManager *jwt.TokenManager, userRepo users.Repository) *Middleware {
 	return &Middleware{
 		tokenManager: tokenManager,
+		userRepo:     userRepo,
 	}
 }
 
@@ -46,6 +49,21 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 			c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "invalid or expired token"})
 			c.Abort()
 			return
+		}
+
+		// Check if user is active in DB (security check for disabled users)
+		if m.userRepo != nil {
+			isActive, err := m.userRepo.IsActive(c.Request.Context(), claims.UserID)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "auth check failed"})
+				c.Abort()
+				return
+			}
+			if !isActive {
+				c.JSON(http.StatusForbidden, ErrorResponse{Error: "account is disabled"})
+				c.Abort()
+				return
+			}
 		}
 
 		// Set claims in context

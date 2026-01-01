@@ -8,7 +8,7 @@
              <q-list bordered class="bg-white rounded-borders">
                  <q-item-label header class="text-weight-bold bg-grey-2">Elenco Classi</q-item-label>
                  <q-item 
-                    v-for="cls in classes" 
+                    v-for="cls in classesStore.classes" 
                     :key="cls.id" 
                     clickable 
                     v-ripple
@@ -53,7 +53,15 @@
                                  <template v-slot:append><q-icon name="search" /></template>
                              </q-input>
                          </div>
-                         <q-table :rows="filteredStudents" :columns="columns" flat bordered row-key="id" />
+                         <q-table :rows="filteredStudents" :columns="columns" flat bordered row-key="id">
+                            <template v-slot:body-cell-actions="props">
+                                <q-td :props="props">
+                                    <q-btn round flat dense icon="note_add" color="grey-7" @click="openNoteDialog(props.row)">
+                                        <q-tooltip>Aggiungi Nota</q-tooltip>
+                                    </q-btn>
+                                </q-td>
+                            </template>
+                         </q-table>
                      </q-tab-panel>
 
                      <!-- Grades Summary -->
@@ -103,41 +111,77 @@
         </div>
     </div>
 
+    <!-- Note Dialog -->
+    <NoteDialog
+        v-if="selectedClass" 
+        v-model="showNoteDialog"
+        :student="selectedStudentForNote"
+        :class-id="String(selectedClass.id)" 
+    />
   </q-page>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+
+import { ref, computed, onMounted } from 'vue'
+import { useQuasar } from 'quasar'
+import NoteDialog from 'src/components/Teacher/NoteDialog.vue'
+import { useClassesStore } from '@/stores/classes'
+import { api } from 'src/boot/axios'
+
+const classesStore = useClassesStore()
+const $q = useQuasar()
 
 const tab = ref('students')
 const search = ref('')
 const selectedClass = ref(null)
+const students = ref([])
+const loadingStudents = ref(false)
 
-const classes = ref([
-    { id: 1, name: '5A', students: 22, isCoordinator: true },
-    { id: 2, name: '4B', students: 19, isCoordinator: false },
-    { id: 3, name: '3C', students: 25, isCoordinator: false }
-])
+const showNoteDialog = ref(false)
+const selectedStudentForNote = ref(null)
 
-const studentsMock = [
-    { id: 1, name: 'Rossi Mario', email: 'mario.rossi@school.it', avg: 7.5 },
-    { id: 2, name: 'Bianchi Anna', email: 'anna.bianchi@school.it', avg: 5.2 },
-    { id: 3, name: 'Verdi Paolo', email: 'paolo.verdi@school.it', avg: 6.0 },
-]
+onMounted(() => {
+    classesStore.fetchAssignedClasses()
+})
 
 const columns = [
-    { name: 'name', label: 'Nome', field: 'name', align: 'left', sortable: true },
+    { name: 'name', label: 'Nome', field: row => `${row.last_name} ${row.first_name}`, align: 'left', sortable: true },
     { name: 'email', label: 'Email', field: 'email', align: 'left' },
-    { name: 'avg', label: 'Media Attuale', field: 'avg', align: 'center', sortable: true }
+    { name: 'actions', label: 'Azioni', align: 'center' }
 ]
 
 const filteredStudents = computed(() => {
-    if (!search.value) return studentsMock
-    return studentsMock.filter(s => s.name.toLowerCase().includes(search.value.toLowerCase()))
+    if (!search.value) return students.value
+    const lower = search.value.toLowerCase()
+    return students.value.filter(s => 
+        s.last_name.toLowerCase().includes(lower) || 
+        s.first_name.toLowerCase().includes(lower)
+    )
 })
 
-const selectClass = (cls) => {
+const selectClass = async (cls) => {
     selectedClass.value = cls
     tab.value = 'students'
+    await fetchStudents(cls.id)
+}
+
+const fetchStudents = async (classId) => {
+    loadingStudents.value = true
+    try {
+        const res = await api.get('/users', {
+            params: { class_id: classId, role: 'student', page_size: 100 }
+        })
+        students.value = res.data.users || []
+    } catch (e) {
+        $q.notify({ type: 'negative', message: 'Errore caricamento studenti' })
+    } finally {
+        loadingStudents.value = false
+    }
+}
+
+const openNoteDialog = (student) => {
+    selectedStudentForNote.value = student
+    showNoteDialog.value = true
 }
 </script>

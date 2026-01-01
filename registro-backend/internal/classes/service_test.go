@@ -32,6 +32,10 @@ func (m *MockRepository) Delete(ctx context.Context, id string) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)
 }
+func (m *MockRepository) ListByTeacher(ctx context.Context, teacherUserID string) ([]Class, error) {
+	args := m.Called(ctx, teacherUserID)
+	return args.Get(0).([]Class), args.Error(1)
+}
 
 func TestService_CreateClass(t *testing.T) {
 	mockRepo := new(MockRepository)

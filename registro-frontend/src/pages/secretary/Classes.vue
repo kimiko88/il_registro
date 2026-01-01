@@ -54,7 +54,7 @@
 
 <script setup>
 import { ref, onMounted, reactive } from 'vue'
-import { useClassesStore } from 'stores/classes'
+import { useClassesStore } from '@/stores/classes'
 import { useQuasar } from 'quasar'
 
 const $q = useQuasar()

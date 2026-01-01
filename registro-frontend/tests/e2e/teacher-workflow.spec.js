@@ -18,10 +18,27 @@ describe('Teacher Workflow', () => {
                     createTestingPinia({
                         createSpy: vi.fn,
                         initialState: {
-                            teacher: { name: 'Prof. Rossi' }
+                            teacher: {
+                                profile: {
+                                    firstName: 'Prof.',
+                                    lastName: 'Rossi'
+                                }
+                            }
                         }
                     })
-                ]
+                ],
+                stubs: {
+                    'q-page': { template: '<div><slot /></div>' },
+                    'q-card': { template: '<div><slot /></div>' },
+                    'q-card-section': { template: '<div><slot /></div>' },
+                    'q-avatar': true,
+                    'q-list': { template: '<ul><slot /></ul>' },
+                    'q-item': { template: '<li><slot /></li>' },
+                    'q-item-section': { template: '<div><slot /></div>' },
+                    'q-item-label': { template: '<span><slot /></span>' },
+                    'q-icon': true,
+                    'q-btn': true
+                }
             }
         })
 

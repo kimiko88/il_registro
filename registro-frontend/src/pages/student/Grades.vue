@@ -55,8 +55,9 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
+import { gradeService } from 'src/services/gradeService'
 
 const $q = useQuasar()
 
@@ -73,19 +74,55 @@ const columns = [
     { name: 'desc', label: 'Argomento', align: 'left', field: 'description' }
 ]
 
-const grades = ref([
-    { id: 1, date: '2024-10-15', subject: 'Matematica', type: 'Scritto', value: 8.5, description: 'Equazioni', semester: 1 },
-    { id: 2, date: '2024-10-18', subject: 'Storia', type: 'Orale', value: 7, description: 'Interrogazione', semester: 1 },
-    { id: 3, date: '2024-11-02', subject: 'Fisica', type: 'Pratico', value: 5.5, description: 'Lab', semester: 1 },
-    { id: 4, date: '2025-02-10', subject: 'Matematica', type: 'Scritto', value: 9, description: 'Funzioni', semester: 2 },
-])
+const grades = ref([])
+
+onMounted(() => {
+    fetchMyGrades()
+})
+
+const fetchMyGrades = async () => {
+    try {
+        const res = await gradeService.getMyGrades()
+        // Flatten
+        const all = []
+        if (res.data && res.data.semesters) {
+            res.data.semesters.forEach(s => {
+                if (s.grades) {
+                   s.grades.forEach(g => {
+                       all.push({
+                           id: g.id,
+                           date: g.date.split('T')[0],
+                           subject: g.subject_id, // Map if possible
+                           type: g.grade_type,
+                           value: g.grade_value,
+                           description: g.description,
+                           semester: g.semester
+                       })
+                   })
+                }
+            })
+        }
+        grades.value = all
+    } catch (e) {
+        console.error(e)
+        // $q.notify(...)
+    }
+}
 
 const filteredGrades = computed(() => {
-    return grades.value.filter(g => g.semester === filters.value.semester)
+    // Filter by Semester
+    let list = grades.value.filter(g => g.semester === filters.value.semester)
+    
+    // Filter by Period
+    // ... logic for last month/week if needed, skipping for MVP or implementing simple check
+    if (filters.value.period === 'Ultimo Mese') {
+        const monthAgo = new Date(); monthAgo.setMonth(monthAgo.getMonth() - 1);
+        list = list.filter(g => new Date(g.date) >= monthAgo)
+    }
+    return list
 })
 
 const subjectAverages = computed(() => {
-    // simplified calculation
     const sums = {}
     const counts = {}
     filteredGrades.value.forEach(g => {

@@ -71,10 +71,10 @@ This guide details how to set up the RegistroV2 development environment.
 ---
 
 ## 2. Docker Setup (Recommended)
-You can run the entire stack using `docker-compose` (if file provided in root).
+You can run the entire stack using `docker compose` (if file provided in root).
 
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
 If separate Dockerfiles are used:

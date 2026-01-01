@@ -15,6 +15,7 @@ type Repository interface {
 	Get(ctx context.Context, id string) (*Class, error)
 	Update(ctx context.Context, class *Class) error
 	Delete(ctx context.Context, id string) error
+	ListByTeacher(ctx context.Context, teacherUserID string) ([]Class, error)
 }
 
 type PostgresRepository struct {
@@ -23,6 +24,37 @@ type PostgresRepository struct {
 
 func NewRepository(db *sql.DB) Repository {
 	return &PostgresRepository{db: db}
+}
+
+// ... existing methods ...
+
+func (r *PostgresRepository) ListByTeacher(ctx context.Context, teacherUserID string) ([]Class, error) {
+	// Combine classes where user is coordinator OR assigned as teacher (via class_subjects)
+	query := `
+		SELECT DISTINCT c.id, c.school_id, c.name, c.section, c.academic_year, COALESCE(c.coordinator_id, ''), c.created_at, c.updated_at
+		FROM classes c
+		LEFT JOIN class_subjects cs ON c.id = cs.class_id
+		LEFT JOIN teachers t ON cs.teacher_id = t.id
+		WHERE t.user_id = $1 OR c.coordinator_id = $1
+		ORDER BY c.name
+	`
+	rows, err := r.db.QueryContext(ctx, query, teacherUserID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var classes []Class
+	for rows.Next() {
+		var c Class
+		var coord sql.NullString
+		if err := rows.Scan(&c.ID, &c.SchoolID, &c.Name, &c.Section, &c.AcademicYear, &coord, &c.CreatedAt, &c.UpdatedAt); err != nil {
+			return nil, err
+		}
+		c.CoordinatorID = coord.String
+		classes = append(classes, c)
+	}
+	return classes, nil
 }
 
 func (r *PostgresRepository) Create(ctx context.Context, c *Class) error {

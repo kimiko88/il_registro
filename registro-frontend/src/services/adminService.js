@@ -32,6 +32,16 @@ export default {
         return api.delete(`/admin/schools/${id}`)
     },
 
+    getSchoolClasses(schoolId) {
+        return api.get('/classes', { params: { school_id: schoolId } })
+    },
+
+    getSchoolUsers(schoolId, role = null) {
+        const params = { school_id: schoolId }
+        if (role) params.role = role
+        return api.get('/users', { params })
+    },
+
     // ========== Admin Users Management (SuperAdmin only) ==========
 
     getAdmins(params) {

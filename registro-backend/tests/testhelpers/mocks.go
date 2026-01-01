@@ -280,6 +280,11 @@ func (m *MockUsersRepository) GetChildren(ctx context.Context, parentID string) 
 	return args.Get(0).([]users.StudentChild), args.Error(1)
 }
 
+func (m *MockUsersRepository) IsActive(ctx context.Context, id string) (bool, error) {
+	args := m.Called(ctx, id)
+	return args.Bool(0), args.Error(1)
+}
+
 // MockAnalyticsService mocks grades.AnalyticsService
 type MockAnalyticsService struct {
 	mock.Mock

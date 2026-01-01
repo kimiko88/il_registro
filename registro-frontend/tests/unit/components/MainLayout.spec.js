@@ -92,11 +92,11 @@ describe('MainLayout Logic', () => {
             setupUserRole('admin')
             const menuItems = useMenuItems('admin')
 
-            expect(menuItems).toHaveLength(6)
+            expect(menuItems).toHaveLength(4)
             expect(menuItems.map(i => i.label)).toContain('Dashboard')
-            expect(menuItems.map(i => i.label)).toContain('Gestione Scuole')
-            expect(menuItems.map(i => i.label)).toContain('Utenti')
-            expect(menuItems.map(i => i.label)).toContain('Monitoraggio')
+            expect(menuItems.map(i => i.label)).toContain('La Mia Scuola')
+            expect(menuItems.map(i => i.label)).toContain('Analytics')
+            expect(menuItems.map(i => i.label)).toContain('Impostazioni')
         })
 
         it('should provide student menu items', () => {
@@ -114,7 +114,7 @@ describe('MainLayout Logic', () => {
             setupUserRole('parent')
             const menuItems = useMenuItems('parent')
 
-            expect(menuItems).toHaveLength(8)
+            expect(menuItems).toHaveLength(9)
             expect(menuItems.map(i => i.label)).toContain('Dashboard')
             expect(menuItems.map(i => i.label)).toContain('I Miei Figli')
             expect(menuItems.map(i => i.label)).toContain('Colloqui')

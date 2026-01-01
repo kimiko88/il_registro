@@ -21,8 +21,8 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        // Handle 401 Unauthorized globally
-        if (error.response && error.response.status === 401) {
+        // Handle 401 Unauthorized globally, but ignore for login requests
+        if (error.response && error.response.status === 401 && !error.config.url.includes('/auth/login')) {
             localStorage.removeItem('token');
             window.location.href = '/login';
         }
