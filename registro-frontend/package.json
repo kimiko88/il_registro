@@ -17,7 +17,7 @@
     "@quasar/extras": "^1.16.4",
     "axios": "^1.6.0",
     "chart.js": "^4.5.1",
-    "pinia": "^2.1.7",
+    "pinia": "^3.0.4",
     "quasar": "^2.14.0",
     "vue": "^3.3.4",
     "vue-chartjs": "^5.3.3",
