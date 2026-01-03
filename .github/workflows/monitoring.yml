@@ -16,6 +16,6 @@ jobs:
         run: curl -f https://registro.it/ || exit 1
       - name: Notify Slack on failure
         if: failure()
-        uses: slackapi/slack-github-action@v1
+        uses: slackapi/slack-github-action@v2
         with:
           webhook-url: ${{ secrets.SLACK_WEBHOOK }}
