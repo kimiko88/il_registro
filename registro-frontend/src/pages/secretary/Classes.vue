@@ -377,6 +377,13 @@ defineExpose({
     currentClass,
     showDialog,
     isEdit,
-    assignments
+    assignForm,
+    currentClass,
+    showDialog,
+    isEdit,
+    assignments,
+    teachers,
+    newSubjectName,
+    showSubjectDialog
 })
 </script>

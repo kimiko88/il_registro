@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">72.72% </span>
+                <span class="strong">93.93% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>24/33</span>
+                <span class='fraction'>31/33</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">25% </span>
+                <span class="strong">50% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>1/4</span>
+                <span class='fraction'>2/4</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">72.72% </span>
+                <span class="strong">93.93% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>24/33</span>
+                <span class='fraction'>31/33</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line medium'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -107,10 +107,11 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -118,21 +119,20 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import axios from 'axios';
 &nbsp;
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL <span class="branch-0 cbranch-no" title="branch not covered" ><span class="branch-0 cbranch-no" title="branch not covered" >|| '/api/v1',</span></span>
+    baseURL: import.meta.env.VITE_API_URL <span class="branch-0 cbranch-no" title="branch not covered" >|| '/api/v1',</span>
     headers: {
         'Content-Type': 'application/json',
     },
@@ -152,13 +152,13 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) =&gt; response,
     (error) =&gt; {
-<span class="cstat-no" title="statement not covered" >        // Handle 401 Unauthorized globally, but ignore for login requests</span>
-<span class="cstat-no" title="statement not covered" >        if (error.response &amp;&amp; error.response.status === 401 &amp;&amp; !error.config.url.includes('/auth/login')) {</span>
-<span class="cstat-no" title="statement not covered" >            localStorage.removeItem('token');</span>
-<span class="cstat-no" title="statement not covered" >            window.location.href = '/login';</span>
-<span class="cstat-no" title="statement not covered" >        }</span>
-<span class="cstat-no" title="statement not covered" >        return Promise.reject(error);</span>
-<span class="cstat-no" title="statement not covered" >    }</span>
+        // Handle 401 Unauthorized globally, but ignore for login requests
+        if (error.response &amp;&amp; error.response.status === 401 &amp;&amp; !error.config.url.includes('/auth/login')) {
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+        }
+        return Promise.reject(error);
+    }
 );
 &nbsp;
 export default api;
@@ -169,7 +169,7 @@ export default api;
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-01T23:50:03.473Z
+                at 2026-01-03T11:45:14.216Z
             </div>
         <script src="../prettify.js"></script>
         <script>

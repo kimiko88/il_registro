@@ -37,6 +37,11 @@ describe('Classes Page', () => {
     let authStore
 
     beforeEach(() => {
+        // Setup default mock responses to avoid errors during mount
+        mockAdminService.getSubjects.mockResolvedValue({ data: [] })
+        mockAdminService.getTeachersList.mockResolvedValue({ data: [] })
+        mockAdminService.getClassSubjects.mockResolvedValue({ data: [] })
+
         wrapper = mount(Classes, {
             global: {
                 plugins: [
@@ -126,6 +131,22 @@ describe('Classes Page', () => {
         expect(mockAdminService.assignSubjectToClass).toHaveBeenCalled()
     })
 
+    it('handles assignment error gracefully', async () => {
+        wrapper.vm.currentClass = { id: 1 }
+        mockAdminService.assignSubjectToClass.mockRejectedValue(new Error('Assign failed'))
+        await wrapper.vm.addAssignment()
+        // Should notify error (we can't easily check notify without better mock, but we can verify no crash)
+        // And maybe list is not refreshed if error?
+        // If error, fetchAssignments is NOT called? 
+        // Code: catch(e) { notify } - fetchAssignments is in try block.
+        // So fetch should not be called.
+        // mockAdminService.getClassSubjects was called in openAssignmentsDialog, let's reset
+        mockAdminService.getClassSubjects.mockClear()
+
+        await wrapper.vm.addAssignment()
+        expect(mockAdminService.getClassSubjects).not.toHaveBeenCalled()
+    })
+
     it('removes assignment', async () => {
         wrapper.vm.currentClass = { id: 1 }
         const assignment = { id: 99, class_id: 1 }
@@ -147,5 +168,39 @@ describe('Classes Page', () => {
         // I'll skip detailed assertion of internal ref if not exposed, or just rely on standard component interaction if I could find the input.
         // Stub `q-input` makes it hard to v-model.
         // I will trust the other tests are good enough.
+    })
+    it('filters teachers availability when subject selected', async () => {
+        // Mock data
+        mockAdminService.getTeachersList.mockResolvedValue({ data: [{ id: 101, last_name: 'Fermi' }] })
+
+        // Trigger watch on subject_id
+        wrapper.vm.assignForm.subject_id = 99
+
+
+        // Wait for watcher
+        await wrapper.vm.$nextTick()
+        // Wait for promise resolution (microtask)
+        await new Promise(resolve => setTimeout(resolve, 0))
+
+        expect(mockAdminService.getTeachersList).toHaveBeenCalledWith(1, 99)
+        expect(wrapper.vm.teachers).toHaveLength(1)
+        expect(wrapper.vm.teachers[0].last_name).toBe('Fermi')
+        // teacher_id should be reset
+        expect(wrapper.vm.assignForm.teacher_id).toBeNull()
+    })
+
+    it('creates subject during assignment flow', async () => {
+        // Test "Quick Create" flow from assignments dialog
+        wrapper.vm.openCreateSubject()
+        expect(wrapper.vm.showSubjectDialog).toBe(true)
+
+        wrapper.vm.newSubjectName = 'Physics'
+        mockAdminService.createSubject.mockResolvedValue({})
+
+        await wrapper.vm.createSubject()
+
+        expect(mockAdminService.createSubject).toHaveBeenCalledWith(expect.objectContaining({ name: 'Physics' }))
+        expect(wrapper.vm.showSubjectDialog).toBe(false)
+        expect(mockAdminService.getSubjects).toHaveBeenCalled() // Refresh
     })
 })

@@ -4,6 +4,7 @@ import api from '../services/api';
 export const useClassesStore = defineStore('classes', {
     state: () => ({
         classes: [],
+        selectedClassId: null,
         loading: false,
         error: null
     }),
@@ -64,10 +65,17 @@ export const useClassesStore = defineStore('classes', {
             try {
                 await api.delete(`/classes/${id}`);
                 this.classes = this.classes.filter(c => c.id !== id);
+                if (this.selectedClassId === id) {
+                    this.selectedClassId = null;
+                }
             } catch (err) {
                 this.error = 'Failed to delete class';
                 throw err;
             }
+        },
+
+        selectClass(id) {
+            this.selectedClassId = id;
         }
     }
 });

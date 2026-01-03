@@ -30,8 +30,11 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useApi } from '@/composables/useApi'
+import { useQuasar } from 'quasar'
+import adminService from '@/services/adminService'
 import ConfirmDialog from '@/components/Common/ConfirmDialog.vue'
 
+const $q = useQuasar()
 const { data: users, loading, fetch } = useApi('/users')
 const showConfirm = ref(false)
 const selectedUser = ref(null)
@@ -50,11 +53,11 @@ onMounted(() => {
 })
 
 function openAddUserDialog() {
-  console.log('Open add user dialog')
+  // logic to open add dialog
 }
 
 function editUser(user) {
-  console.log('Edit user', user)
+  // logic to open edit dialog
 }
 
 function confirmDelete(user) {
@@ -62,8 +65,14 @@ function confirmDelete(user) {
   showConfirm.value = true
 }
 
-function deleteUser() {
-  console.log('Delete user', selectedUser.value)
-  // Implement delete logic here using API
+async function deleteUser() {
+  if (!selectedUser.value) return
+  try {
+    await adminService.deleteUser(selectedUser.value.id)
+    $q.notify({ type: 'positive', message: 'User deleted successfully' })
+    fetch() // Reload list
+  } catch (error) {
+    $q.notify({ type: 'negative', message: 'Error deleting user' })
+  }
 }
 </script>

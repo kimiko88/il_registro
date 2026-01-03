@@ -147,8 +147,8 @@ func (r *PostgresRepository) Create(ctx context.Context, user *User) error {
 
 func (r *PostgresRepository) GetByID(ctx context.Context, id string) (*User, error) {
 	query := `
-		SELECT u.id, u.email, u.password_hash, u.first_name, u.last_name, u.fiscal_code,
-		       u.role, u.school_id, u.is_active, u.email_verified, u.mfa_enabled, u.phone_number, u.job_title,
+		SELECT u.id, u.email, u.password_hash, u.first_name, u.last_name, COALESCE(u.fiscal_code, ''),
+		       u.role, u.school_id, u.is_active, u.email_verified, u.mfa_enabled, COALESCE(u.phone_number, ''), COALESCE(u.job_title, ''),
 		       u.created_at, u.updated_at, u.last_login, u.deleted_at, u.pseudonymized_at,
 		       s.class_id, c.name, c.section
 		FROM users u

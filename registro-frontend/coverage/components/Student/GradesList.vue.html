@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">78.46% </span>
+                <span class="strong">93.84% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>51/65</span>
+                <span class='fraction'>61/65</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">75% </span>
+                <span class="quiet">Branches</span>
+                <span class='fraction'>9/12</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
-                <span class="quiet">Branches</span>
-                <span class='fraction'>0/0</span>
-            </div>
-        
-            
-            <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/4</span>
+                <span class='fraction'>4/4</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">78.46% </span>
+                <span class="strong">93.84% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>51/65</span>
+                <span class='fraction'>61/65</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line medium'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -172,24 +172,24 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
@@ -236,25 +236,25 @@
 &lt;script setup&gt;
 const props = defineProps(['gradesBySubject', 'averages', 'getTrend']);
 &nbsp;
-const getGradeColor = <span class="fstat-no" title="function not covered" >(val) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    if (val &gt;= 8) return 'green';</span>
-<span class="cstat-no" title="statement not covered" >    if (val &gt;= 6) return 'blue';</span>
-<span class="cstat-no" title="statement not covered" >    return 'red';</span>
-<span class="cstat-no" title="statement not covered" >};</span>
+const getGradeColor = (val) =&gt; {
+    if (val &gt;= 8) return 'green';
+    if (val &gt;= 6) return 'blue';
+    return 'red';
+};
 &nbsp;
-const getAverageColor = <span class="fstat-no" title="function not covered" >(val) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    return val &gt;= 6 ? 'text-green' : 'text-red';</span>
-<span class="cstat-no" title="statement not covered" >};</span>
+const getAverageColor = (val) =&gt; {
+    return val &gt;= 6 ? 'text-green' <span class="branch-0 cbranch-no" title="branch not covered" >: 'text-red';</span>
+};
 &nbsp;
-const getTrendIcon = <span class="fstat-no" title="function not covered" >(trend) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    if (trend === 'up') return 'trending_up';</span>
-<span class="cstat-no" title="statement not covered" >    if (trend === 'down') return 'trending_down';</span>
+const getTrendIcon = (trend) =&gt; {
+    if (trend === 'up') return 'trending_up';
+    if (trend === 'down') return 'trending_down'<span class="branch-0 cbranch-no" title="branch not covered" >;</span>
 <span class="cstat-no" title="statement not covered" >    return 'trending_flat';</span>
 <span class="cstat-no" title="statement not covered" >};</span>
 &nbsp;
-const getTrendColor = <span class="fstat-no" title="function not covered" >(trend) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    if (trend === 'up') return 'green';</span>
-<span class="cstat-no" title="statement not covered" >    if (trend === 'down') return 'red';</span>
+const getTrendColor = (trend) =&gt; {
+    if (trend === 'up') return 'green';
+    if (trend === 'down') return 'red'<span class="branch-0 cbranch-no" title="branch not covered" >;</span>
 <span class="cstat-no" title="statement not covered" >    return 'grey';</span>
 <span class="cstat-no" title="statement not covered" >};</span>
 &lt;/script&gt;
@@ -265,7 +265,7 @@ const getTrendColor = <span class="fstat-no" title="function not covered" >(tren
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-01T23:50:03.473Z
+                at 2026-01-03T11:45:14.216Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

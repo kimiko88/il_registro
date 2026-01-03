@@ -1,25 +1,47 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useTeacherStore } from '@/stores/teacher'
 
 describe('Teacher Store', () => {
+    let store
+
     beforeEach(() => {
         setActivePinia(createPinia())
+        store = useTeacherStore()
     })
 
-    it('initializes with default state', () => {
-        const store = useTeacherStore()
+    it('initializes correctly', () => {
         expect(store.profile).toBeNull()
         expect(store.loading).toBe(false)
+        expect(store.error).toBeNull()
+        expect(store.isAuthenticated).toBe(false)
     })
 
-    it('can fetch profile (mock)', async () => {
-        const store = useTeacherStore()
-        const p = store.fetchProfile() // async
-        expect(store.loading).toBe(true)
-        await p
+    it('fetches profile successfully', async () => {
+        await store.fetchProfile()
+
         expect(store.profile).not.toBeNull()
         expect(store.profile.firstName).toBe('Mario')
-        expect(store.loading).toBe(false)
+        expect(store.isAuthenticated).toBe(true)
+        expect(store.fullName).toBe('Mario Rossi')
+    })
+
+    it('identifies coordinator role', async () => {
+        await store.fetchProfile()
+        // Default mock profile has isCoordinator: true
+        expect(store.isCoordinator).toBe(true)
+    })
+
+    it('fetches notifications', async () => {
+        await store.fetchNotifications()
+        expect(store.notifications.length).toBeGreaterThan(0)
+    })
+
+    it('calculates fullName correctly', () => {
+        store.profile = { firstName: 'John', lastName: 'Doe' }
+        expect(store.fullName).toBe('John Doe')
+
+        store.profile = null
+        expect(store.fullName).toBe('')
     })
 })

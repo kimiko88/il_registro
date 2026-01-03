@@ -38,7 +38,7 @@ import { ref, watch } from 'vue';
 const props = defineProps(['modelValue', 'date']);
 const emit = defineEmits(['update:modelValue', 'submit']);
 
-const isOpen = ref(false);
+const isOpen = ref(props.modelValue);
 const reason = ref('Illness');
 const notes = ref('');
 

@@ -8,6 +8,7 @@ import { userService } from 'src/services/userService'
 import adminService from 'src/services/adminService'
 
 // Mock Quasar
+const mockDialog = vi.fn()
 vi.mock('quasar', async (importOriginal) => {
     const actual = await importOriginal()
     return {
@@ -16,7 +17,7 @@ vi.mock('quasar', async (importOriginal) => {
         useQuasar: () => ({
             loading: { show: vi.fn(), hide: vi.fn() },
             notify: vi.fn(),
-            dialog: vi.fn().mockReturnValue({ onOk: (fn) => fn() })
+            dialog: mockDialog.mockImplementation(() => ({ onOk: (fn) => fn() }))
         })
     }
 })
@@ -25,10 +26,10 @@ vi.mock('quasar', async (importOriginal) => {
 vi.mock('src/services/userService', () => ({
     userService: {
         getAll: vi.fn().mockResolvedValue({ data: { users: [{ id: 1, first_name: 'Test', role: 'student' }] } }),
-        create: vi.fn(),
-        update: vi.fn(),
-        delete: vi.fn(),
-        resetPassword: vi.fn()
+        create: vi.fn().mockResolvedValue({ data: { id: 2 } }),
+        update: vi.fn().mockResolvedValue({}),
+        delete: vi.fn().mockResolvedValue({}),
+        resetPassword: vi.fn().mockResolvedValue({})
     }
 }))
 
@@ -37,10 +38,10 @@ vi.mock('src/services/adminService', () => ({
         getSchoolClasses: vi.fn().mockResolvedValue({ data: [{ id: 'c1', name: '1A' }] }),
         getSubjects: vi.fn().mockResolvedValue({ data: [{ id: 's1', name: 'Math' }] }),
         getTeachersList: vi.fn().mockResolvedValue({ data: [{ id: 't1', user_id: 10 }] }),
-        createClass: vi.fn(),
+        createClass: vi.fn().mockResolvedValue({}),
         getTeacherSubjects: vi.fn().mockResolvedValue({ data: [] }),
-        assignSubjectToTeacher: vi.fn(),
-        removeTeacherSubject: vi.fn()
+        assignSubjectToTeacher: vi.fn().mockResolvedValue({}),
+        removeTeacherSubject: vi.fn().mockResolvedValue({})
     }
 }))
 
@@ -49,6 +50,7 @@ describe('Secretary Users Page (Users.vue)', () => {
 
     beforeEach(() => {
         vi.useFakeTimers()
+        vi.clearAllMocks()
         wrapper = mount(Users, {
             global: {
                 plugins: [createTestingPinia({
@@ -63,7 +65,10 @@ describe('Secretary Users Page (Users.vue)', () => {
                     'q-card-section': { template: '<div><slot /></div>' },
                     'q-card-actions': { template: '<div><slot /></div>' },
                     'q-dialog': { template: '<div><slot /></div>' },
-                    'UserTable': true,
+                    'UserTable': {
+                        template: '<div class="user-table"></div>',
+                        emits: ['create', 'edit', 'delete', 'reset-pwd', 'filter-role', 'export', 'bulk-delete', 'manage-subjects']
+                    },
                     'q-btn': true,
                     'q-input': true,
                     'q-select': true,
@@ -74,7 +79,9 @@ describe('Secretary Users Page (Users.vue)', () => {
                     'q-item-section': { template: '<div><slot /></div>' },
                     'q-item-label': { template: '<div><slot /></div>' },
                     'q-space': true,
-                    'q-icon': true
+                    'q-icon': true,
+                    'q-toolbar': true,
+                    'q-toolbar-title': true
                 }
             }
         })
@@ -91,6 +98,8 @@ describe('Secretary Users Page (Users.vue)', () => {
     })
 
     it('opens class dialog and creates class', async () => {
+        const btn = wrapper.find('q-btn[label="Nuova Classe"]')
+        // Direct VM access for testing
         wrapper.vm.openClassDialog()
         expect(wrapper.vm.showClassDialog).toBe(true)
 
@@ -127,6 +136,31 @@ describe('Secretary Users Page (Users.vue)', () => {
 
     it('handles bulk delete mock', () => {
         wrapper.vm.bulkDelete([])
-        // triggers notify, no side effect to check except no crash
+    })
+
+    it('confirms and deletes user via dialog', async () => {
+        const user = { id: 7, first_name: 'Delete', last_name: 'Me' }
+
+        await wrapper.vm.confirmDelete(user)
+
+        expect(mockDialog).toHaveBeenCalled()
+        expect(userService.delete).toHaveBeenCalledWith(7)
+    })
+
+    it('exports users to CSV', () => {
+        wrapper.vm.users = [
+            { id: 1, first_name: 'Test', last_name: 'User', email: 'test@test.com', role: 'student' }
+        ]
+        wrapper.vm.exportUsers()
+        expect(exportFile).toHaveBeenCalled()
+    })
+
+    it('confirms and resets password', async () => {
+        const user = { id: 8, email: 'reset@test.com', first_name: 'Test', last_name: 'User' }
+
+        await wrapper.vm.confirmResetPwd(user)
+
+        expect(mockDialog).toHaveBeenCalled()
+        expect(userService.resetPassword).toHaveBeenCalledWith(8)
     })
 })

@@ -7,7 +7,7 @@
           {{ isSuperAdmin ? 'Gestione Scuole' : 'La Mia Scuola' }}
         </div>
         <div class="text-subtitle1 text-grey-7">
-          {{stats || 0}} scuole total{{stats === 1 ? 'e' : 'i'}}
+          {{ pagination.rowsNumber || 0 }} scuole total{{ pagination.rowsNumber === 1 ? 'e' : 'i' }}
           <span v-if="selected.length > 0" class="text-primary text-weight-bold q-ml-md">
             {{ selected.length }} selezionate
           </span>

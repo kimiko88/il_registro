@@ -57,6 +57,9 @@ describe('SchoolManagement.vue', () => {
     it('renders correctly and has export button', async () => {
         wrapper = mount(SchoolManagement, {
             global: {
+                mocks: {
+                    $router: { push: vi.fn() }
+                },
                 stubs: {
                     'q-page': { template: '<div><slot /></div>' },
                     'q-card': { template: '<div><slot /></div>' },
