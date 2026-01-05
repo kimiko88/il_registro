@@ -34,7 +34,11 @@ func (m *MockRepo) CreateBooking(ctx context.Context, b *ColloquioBooking) error
 	return nil
 }
 func (m *MockRepo) GetBooking(ctx context.Context, id string) (*ColloquioBooking, error) {
-	return nil, nil
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*ColloquioBooking), args.Error(1)
 }
 func (m *MockRepo) GetBookingsByParent(ctx context.Context, pID string) ([]ColloquioBooking, error) {
 	return nil, nil
@@ -93,4 +97,68 @@ func TestValidator_ValidateSlot(t *testing.T) {
 		Date: time.Now().AddDate(0, 0, -1), // Past
 	}
 	assert.Error(t, v.ValidateSlot(s))
+}
+
+func TestService_CancelBooking_Ownership(t *testing.T) {
+	repo := new(MockRepo)
+	svc := NewService(repo)
+	ctx := context.Background()
+
+	bookingID := "booking-1"
+	parentID := "parent-1"
+	otherParentID := "parent-2"
+
+	booking := &ColloquioBooking{
+		ID:       bookingID,
+		ParentID: &parentID,
+		SlotID:   "slot-1",
+		Status:   StatusConfirmed,
+	}
+
+	repo.On("GetBooking", bookingID).Return(booking, nil)
+	// Mock Try to cancel as other parent
+	// The service will check parentID, fail, then try to load slot to check teacherID
+	// We need to mock GetSlotByID for that fallback check
+	slot := &ColloquioSlot{ID: "slot-1", TeacherID: "teacher-1"}
+	repo.On("GetSlotByID", "slot-1").Return(slot, nil)
+
+	err := svc.CancelBooking(ctx, otherParentID, bookingID)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "unauthorized")
+
+	// Try as correct parent
+	repo.On("GetBooking", bookingID).Return(booking, nil)
+	repo.On("UpdateBooking", mock.Anything).Return(nil)
+
+	err = svc.CancelBooking(ctx, parentID, bookingID)
+	assert.NoError(t, err)
+}
+
+func TestService_BookSlot_Past(t *testing.T) {
+	repo := new(MockRepo)
+	svc := NewService(repo)
+	ctx := context.Background()
+
+	slotID := "slot-past"
+	// Slot in the past
+	slotDate := time.Now().AddDate(0, 0, -5)
+	slot := &ColloquioSlot{
+		ID: slotID, Date: slotDate,
+		StartTime: slotDate, EndTime: slotDate.Add(time.Hour),
+		SchoolID: "school-1",
+	}
+
+	repo.On("GetSlotByID", slotID).Return(slot, nil)
+	// Return settings needed for validation
+	repo.On("GetSettings", "school-1").Return(&ColloquioSettings{
+		BookingBufferHours: 1, BookingWindowDays: 30,
+	}, nil)
+
+	req := BookSlotRequest{SlotID: slotID, StudentID: nil}
+	_, err := svc.BookSlot(ctx, "parent-1", req)
+	assert.Error(t, err)
+	// The validator should catch "too late" or similar logic depending on implementation
+	// ValidateBooking checks now.Add(buffer).After(slotTime)
+	// Since slot is in past, now > slotTime, so it should error "too late to book this slot"
+	assert.Contains(t, err.Error(), "too late")
 }

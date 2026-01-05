@@ -157,7 +157,19 @@ func (s *service) CancelBooking(ctx context.Context, userID, bookingID string) e
 		return err
 	}
 
-	// Verify ownership (simplified)
+	// Verify ownership
+	isParent := b.ParentID != nil && *b.ParentID == userID
+
+	if !isParent {
+		// Check if it's the teacher
+		slot, err := s.repo.GetSlotByID(ctx, b.SlotID)
+		if err != nil {
+			return err
+		}
+		if slot.TeacherID != userID {
+			return errors.New("unauthorized: you cannot cancel this booking")
+		}
+	}
 
 	b.Status = StatusCancelled
 	return s.repo.UpdateBooking(ctx, b)

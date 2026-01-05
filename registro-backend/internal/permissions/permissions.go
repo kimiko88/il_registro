@@ -49,6 +49,22 @@ const (
 	UserExport Permission = "users:export"
 	UserAudit  Permission = "users:audit"
 
+	// Grade Permissions
+	GradeCreate Permission = "grades:create"
+	GradeRead   Permission = "grades:read"
+	GradeUpdate Permission = "grades:update"
+	GradeDelete Permission = "grades:delete"
+
+	// Attendance Permissions
+	AttendanceCreate Permission = "attendance:create"
+	AttendanceRead   Permission = "attendance:read"
+	AttendanceUpdate Permission = "attendance:update"
+
+	// Scheduling Permissions
+	SchedulingRead   Permission = "scheduling:read"
+	SchedulingCreate Permission = "scheduling:create"
+	SchedulingBook   Permission = "scheduling:book"
+
 	// Audit Permissions
 	AuditRead Permission = "audit:read"
 )
@@ -58,27 +74,42 @@ var RoleDefinitions = map[string][]Permission{
 	"superadmin": {
 		UserCreate, UserRead, UserUpdate, UserDelete, UserImport, UserExport, UserAudit,
 		AuditRead,
+		GradeRead, GradeCreate, GradeUpdate, GradeDelete,
+		AttendanceRead, AttendanceCreate, AttendanceUpdate,
+		SchedulingRead, SchedulingCreate, SchedulingBook,
 	},
 	"admin": {
 		UserCreate, UserRead, UserUpdate, UserDelete, UserImport, UserExport, UserAudit,
 		AuditRead,
+		GradeRead, GradeUpdate,
+		AttendanceRead, AttendanceUpdate,
+		SchedulingRead, SchedulingCreate,
 	},
 	"principal": {
 		UserRead, UserExport, UserAudit,
 		AuditRead,
+		GradeRead,
+		AttendanceRead,
+		SchedulingRead,
 	},
 	"secretary": {
 		UserRead, UserCreate, UserUpdate,
 		UserExport,
+		AttendanceRead, AttendanceUpdate, // Secretary often manages attendance
 	},
 	"teacher": {
 		UserRead,
+		GradeCreate, GradeRead, GradeUpdate,
+		AttendanceCreate, AttendanceRead, AttendanceUpdate,
+		SchedulingRead, SchedulingCreate, // Teachers create slots
 	},
 	"student": {
 		// Minimal self-access is usually handled by logic, not generic permissions
+		GradeRead, AttendanceRead, SchedulingRead,
 	},
 	"parent": {
 		// Minimal self-access
+		GradeRead, AttendanceRead, SchedulingBook, SchedulingRead,
 	},
 }
 

@@ -4,6 +4,8 @@ import (
 	"context"
 	"registro-backend/internal/auth"
 	"registro-backend/internal/grades"
+	"registro-backend/internal/schools"
+	"registro-backend/internal/subjects"
 	"registro-backend/internal/users"
 	"time"
 
@@ -325,4 +327,68 @@ func (m *MockAnalyticsService) GetSchoolStatistics(year string) (*grades.SchoolS
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*grades.SchoolStatisticsResponse), args.Error(1)
+}
+
+// MockSchoolsRepository mocks schools.Repository
+type MockSchoolsRepository struct {
+	mock.Mock
+}
+
+func (m *MockSchoolsRepository) Create(ctx context.Context, school *schools.School) error {
+	args := m.Called(ctx, school)
+	return args.Error(0)
+}
+func (m *MockSchoolsRepository) GetByID(ctx context.Context, id string) (*schools.School, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*schools.School), args.Error(1)
+}
+func (m *MockSchoolsRepository) List(ctx context.Context, params *schools.ListParams) ([]*schools.School, int, error) {
+	args := m.Called(ctx, params)
+	if args.Get(0) == nil {
+		return nil, args.Int(1), args.Error(2)
+	}
+	return args.Get(0).([]*schools.School), args.Int(1), args.Error(2)
+}
+func (m *MockSchoolsRepository) Update(ctx context.Context, id string, req *schools.UpdateSchoolRequest) error {
+	args := m.Called(ctx, id, req)
+	return args.Error(0)
+}
+func (m *MockSchoolsRepository) Delete(ctx context.Context, id string) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+// MockSubjectsRepository mocks subjects.Repository
+type MockSubjectsRepository struct {
+	mock.Mock
+}
+
+func (m *MockSubjectsRepository) Create(ctx context.Context, subject *subjects.Subject) error {
+	args := m.Called(ctx, subject)
+	return args.Error(0)
+}
+func (m *MockSubjectsRepository) List(ctx context.Context, schoolID string) ([]subjects.Subject, error) {
+	args := m.Called(ctx, schoolID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]subjects.Subject), args.Error(1)
+}
+func (m *MockSubjectsRepository) Get(ctx context.Context, id string) (*subjects.Subject, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*subjects.Subject), args.Error(1)
+}
+func (m *MockSubjectsRepository) Delete(ctx context.Context, id string) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+func (m *MockSubjectsRepository) Update(ctx context.Context, subject *subjects.Subject) error {
+	args := m.Called(ctx, subject)
+	return args.Error(0)
 }

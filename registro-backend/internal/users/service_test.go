@@ -479,3 +479,157 @@ func TestService_DisableMFA(t *testing.T) {
 		})
 	}
 }
+
+func TestService_IsGuardian(t *testing.T) {
+	mockRepo := new(MockRepository)
+	service := NewService(mockRepo)
+
+	tests := []struct {
+		name       string
+		parentID   string
+		studentID  string
+		isGuardian bool
+		wantErr    bool
+	}{
+		{
+			name:       "Is guardian",
+			parentID:   "parent-1",
+			studentID:  "student-1",
+			isGuardian: true,
+			wantErr:    false,
+		},
+		{
+			name:       "Is not guardian",
+			parentID:   "parent-2",
+			studentID:  "student-1",
+			isGuardian: false,
+			wantErr:    false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo.On("IsGuardian", mock.Anything, tt.parentID, tt.studentID).Return(tt.isGuardian, nil).Once()
+
+			got, err := service.IsGuardian(context.Background(), tt.parentID, tt.studentID)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.isGuardian, got)
+			}
+			mockRepo.AssertExpectations(t)
+		})
+	}
+}
+
+func TestService_GetChildren(t *testing.T) {
+	mockRepo := new(MockRepository)
+	service := NewService(mockRepo)
+
+	tests := []struct {
+		name     string
+		parentID string
+		mockFn   func()
+		wantErr  bool
+	}{
+		{
+			name:     "Get children success",
+			parentID: "parent-1",
+			mockFn: func() {
+				children := []StudentChild{{ID: "child-1", FirstName: "Child", LastName: "One"}}
+				mockRepo.On("GetChildren", mock.Anything, "parent-1").Return(children, nil).Once()
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockFn()
+			_, err := service.GetChildren(context.Background(), tt.parentID)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+			mockRepo.AssertExpectations(t)
+		})
+	}
+}
+
+func TestService_ExportUsers(t *testing.T) {
+	mockRepo := new(MockRepository)
+	service := NewService(mockRepo)
+
+	tests := []struct {
+		name      string
+		actorRole string
+		format    string
+		mockSetup func()
+		wantErr   bool
+	}{
+		{
+			name:      "Admin export csv",
+			actorRole: "admin",
+			format:    "csv",
+			mockSetup: func() {
+				users := []User{{ID: "u1", Email: "test@example.com", Role: "student"}}
+				mockRepo.On("List", mock.Anything, mock.AnythingOfType("users.UserFilter")).Return(users, 1, nil).Once()
+			},
+			wantErr: false,
+		},
+		{
+			name:      "Unauthorized export",
+			actorRole: "student",
+			format:    "csv",
+			mockSetup: func() {},
+			wantErr:   true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockSetup()
+			data, err := service.ExportUsers(context.Background(), tt.actorRole, UserFilter{}, tt.format)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, data)
+			}
+		})
+	}
+}
+
+func TestService_GDPRConvert(t *testing.T) {
+	mockRepo := new(MockRepository)
+	service := NewService(mockRepo)
+
+	t.Run("GDPR Export", func(t *testing.T) {
+		user := &User{ID: "user-1", Email: "u@e.com", FirstName: "U", LastName: "S", Role: "student"}
+		logs := []AuditLog{}
+
+		mockRepo.On("GetByID", mock.Anything, "user-1").Return(user, nil).Once()
+		mockRepo.On("GetAuditLogs", mock.Anything, "user-1", 1000, 0).Return(logs, 0, nil).Once()
+
+		data, err := service.GDPRDataExport(context.Background(), "admin", "user-1")
+		assert.NoError(t, err)
+		assert.NotNil(t, data)
+		profile := data["profile"].(map[string]interface{})
+		assert.Equal(t, "u@e.com", profile["email"])
+	})
+
+	t.Run("GDPR Delete", func(t *testing.T) {
+		user := &User{ID: "user-del", Email: "del@e.com", FirstName: "F", LastName: "L"}
+
+		mockRepo.On("GetByID", mock.Anything, "user-del").Return(user, nil).Once()
+		// Update should be called with modified user
+		mockRepo.On("Update", mock.Anything, mock.MatchedBy(func(u *User) bool {
+			return u.Email != "del@e.com" // Basic check that it changed
+		})).Return(nil).Once()
+
+		err := service.GDPRDelete(context.Background(), "admin", "user-del")
+		assert.NoError(t, err)
+	})
+}
