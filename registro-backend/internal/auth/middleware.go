@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -28,24 +29,31 @@ func NewMiddleware(tokenManager *jwt.TokenManager, userRepo users.Repository) *M
 // Authenticate validates JWT token and sets user context
 func (m *Middleware) Authenticate() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		var token string
 		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
-			c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "missing authorization header"})
+
+		// 1. Try Header
+		if authHeader != "" {
+			parts := strings.Split(authHeader, " ")
+			if len(parts) == 2 && parts[0] == "Bearer" {
+				token = parts[1]
+			}
+		}
+
+		// 2. Try Query Param (Fallback)
+		if token == "" {
+			token = c.Query("token")
+		}
+
+		if token == "" {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "missing authorization header or token param"})
 			c.Abort()
 			return
 		}
 
-		// Extract token from "Bearer <token>"
-		parts := strings.Split(authHeader, " ")
-		if len(parts) != 2 || parts[0] != "Bearer" {
-			c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "invalid authorization header format"})
-			c.Abort()
-			return
-		}
-
-		token := parts[1]
 		claims, err := m.tokenManager.ValidateToken(token)
 		if err != nil {
+			fmt.Printf("DEBUG: Token Validation Failed: %v\n", err)
 			c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "invalid or expired token"})
 			c.Abort()
 			return

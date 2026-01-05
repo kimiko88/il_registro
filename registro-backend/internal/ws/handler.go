@@ -104,13 +104,13 @@ func NewHandler(hub *Hub) *Handler {
 
 func (h *Handler) Listen(c *gin.Context) {
 	// Retrieve user info from context (set by auth middleware)
-	userID, exists := c.Get("userID")
+	userID, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 	role, _ := c.Get("role")
-	schoolID := "" // Ideally get from user context or DB
+	schoolID, _ := c.Get("school_id")
 
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
@@ -124,7 +124,7 @@ func (h *Handler) Listen(c *gin.Context) {
 		Send:     make(chan []byte, 256),
 		UserID:   userID.(string),
 		Role:     role.(string),
-		SchoolID: schoolID,
+		SchoolID: schoolID.(string),
 	}
 
 	client.Hub.register <- client

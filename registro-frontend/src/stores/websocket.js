@@ -21,7 +21,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
         }
 
         // Use query param for token auth standard in browsers
-        const wsUrl = `${import.meta.env.VITE_API_BASE_URL.replace('http', 'ws')}/ws?token=${token}`
+        const wsUrl = `${import.meta.env.VITE_API_URL.replace('http', 'ws')}/ws?token=${token}`
 
         socket.value = new WebSocket(wsUrl)
 
