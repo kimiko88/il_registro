@@ -33,7 +33,7 @@ func (m *MockAttRepo) GetStats(studentID string) (*SummaryResponse, error) { ret
 
 func TestRegression_FutureAttendance(t *testing.T) {
 	repo := &MockAttRepo{}
-	svc := NewService(repo)
+	svc := NewService(repo, nil)
 	ctx := context.Background()
 
 	// Scenario: Marking attendance for way in future (> 24h allowed buffer)
@@ -54,7 +54,7 @@ func TestRegression_FutureAttendance(t *testing.T) {
 
 func TestRegression_BulkMixedValidity(t *testing.T) {
 	repo := &MockAttRepo{}
-	svc := NewService(repo)
+	svc := NewService(repo, nil)
 	ctx := context.Background()
 
 	future := time.Now().AddDate(0, 0, 2).Format("2006-01-02")

@@ -20,8 +20,8 @@ func TestGradesIntegration_GetMyGrades(t *testing.T) {
 	mockUserRepo := new(testhelpers.MockUsersRepository)
 	mockAnalytics := new(testhelpers.MockAnalyticsService)
 
-	// NewService(r Repository, ur users.Repository, db *sql.DB)
-	service := grades.NewService(mockRepo, mockUserRepo, nil)
+	// NewService(r Repository, ur users.Repository, db *sql.DB, b EventBroadcaster)
+	service := grades.NewService(mockRepo, mockUserRepo, nil, nil)
 
 	// NewHandler(s Service, a AnalyticsService)
 	handler := grades.NewHandler(service, mockAnalytics)
@@ -61,7 +61,7 @@ func TestGradesIntegration_GetClassGrades(t *testing.T) {
 	mockUserRepo := new(testhelpers.MockUsersRepository)
 	mockAnalytics := new(testhelpers.MockAnalyticsService)
 
-	service := grades.NewService(mockRepo, mockUserRepo, nil)
+	service := grades.NewService(mockRepo, mockUserRepo, nil, nil)
 	handler := grades.NewHandler(service, mockAnalytics)
 
 	router := gin.Default()

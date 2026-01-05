@@ -6,6 +6,12 @@ import (
 	"time"
 )
 
+// EventBroadcaster defines the interface for real-time notifications
+type EventBroadcaster interface {
+	BroadcastToUser(userID string, msgType string, payload interface{})
+	BroadcastToSchool(schoolID string, msgType string, payload interface{})
+}
+
 type Service interface {
 	MarkAttendance(ctx context.Context, teacherID string, req CreateAttendanceRequest) error
 	MarkBulk(ctx context.Context, teacherID string, req BulkAttendanceRequest) error
@@ -26,14 +32,16 @@ type Service interface {
 }
 
 type service struct {
-	repo      Repository
-	validator *Validator
+	repo        Repository
+	validator   *Validator
+	broadcaster EventBroadcaster
 }
 
-func NewService(repo Repository) Service {
+func NewService(repo Repository, b EventBroadcaster) Service {
 	return &service{
-		repo:      repo,
-		validator: NewValidator(),
+		repo:        repo,
+		validator:   NewValidator(),
+		broadcaster: b,
 	}
 }
 
@@ -61,7 +69,15 @@ func (s *service) MarkAttendance(ctx context.Context, teacherID string, req Crea
 		return err
 	}
 
-	return s.repo.Create(att)
+	if err := s.repo.Create(att); err != nil {
+		return err
+	}
+
+	if s.broadcaster != nil {
+		s.broadcaster.BroadcastToUser(att.StudentID, "ATTENDANCE_"+string(att.Status), att)
+	}
+
+	return nil
 }
 
 func (s *service) MarkBulk(ctx context.Context, teacherID string, req BulkAttendanceRequest) error {

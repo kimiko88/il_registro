@@ -22,9 +22,11 @@ import (
 	"registro-backend/internal/postgres"
 	"registro-backend/internal/scheduling"
 	"registro-backend/internal/schools"
+	"registro-backend/internal/signatures"
 	"registro-backend/internal/subjects"
 	"registro-backend/internal/teachers"
 	"registro-backend/internal/users"
+	"registro-backend/internal/ws"
 	"registro-backend/pkg/jwt"
 	"registro-backend/pkg/logger"
 )
@@ -55,6 +57,8 @@ func main() {
 
 	tokenManager := jwt.NewTokenManager(privateKey, publicKey)
 	mfaService := auth.NewMFAService("RegistroElettronico")
+	wsHub := ws.NewHub()
+	go wsHub.Run()
 
 	// 5. Setup Repositories
 	authRepo := auth.NewRepository(database)
@@ -77,14 +81,15 @@ func main() {
 	authSvc := auth.NewService(authRepo, tokenManager, mfaService)
 	usersSvc := users.NewService(usersRepo)
 	classesSvc := classes.NewService(classesRepo)
-	gradesSvc := grades.NewService(gradesRepo, usersRepo, database)
+	gradesSvc := grades.NewService(gradesRepo, usersRepo, database, wsHub)
 	gradesAnalytics := grades.NewAnalyticsService(gradesRepo)
-	attendanceSvc := attendance.NewService(attendanceRepo)
+	attendanceSvc := attendance.NewService(attendanceRepo, wsHub)
 	docsSvc := documents.NewService(docsRepo)
 	schedSvc := scheduling.NewService(schedRepo)
 	pctoSvc := pcto.NewService(pctoRepo)
 	orientSvc := orientamento.NewService(orientRepo)
 	schoolsSvc := schools.NewService(schoolsRepo)
+	signaturesSvc := signatures.NewService(signatures.NewRepository(database), docsSvc)
 
 	commsSvc := communications.NewService(commsRepo)
 	notesSvc := notes.NewService(notesRepo)
@@ -98,9 +103,13 @@ func main() {
 	attendanceH := attendance.NewHandler(attendanceSvc)
 	docsH := documents.NewHandler(docsSvc)
 	schedH := scheduling.NewHandler(schedSvc)
+	signaturesH := signatures.NewHandler(signaturesSvc)
 
 	notesH := notes.NewHandler(notesSvc)
 	adminH := admin.NewHandler(adminSvc)
+
+	wsHandler := ws.NewHandler(wsHub)
+
 	adminMiddleware := admin.NewMiddleware()
 	// ...
 	healthH := handler.NewHealthHandler(database)
@@ -123,6 +132,11 @@ func main() {
 
 		// Auth Routes
 		authH.RegisterRoutes(api, authMiddleware)
+
+		// WebSocket Route
+		api.GET("/ws", authMiddleware.Authenticate(), func(c *gin.Context) {
+			wsHandler.Listen(c)
+		})
 
 		// Protected routes
 		protected := api.Group("/")
@@ -185,6 +199,9 @@ func main() {
 
 			// Admin routes
 			adminH.RegisterRoutes(protected, adminMiddleware)
+			signatures := protected.Group("/signatures")
+			signatures.POST("/", signaturesH.SignDocument)
+			signatures.GET("/:id", signaturesH.GetSignatures)
 		}
 	}
 

@@ -56,12 +56,6 @@ func TestCalculator_EdgeCases(t *testing.T) {
 }
 
 // --- Service Filtering Regression Tests ---
-// Since we don't have a full mock repo in this specific test file easily without re-implementing it or using the package one
-// We can test the logic if it was exposed.
-// Since GetStudentGradesWithFilter logic is inside Service method using array manipulation,
-// we can skip unit testing the PRIVATE internal loop unless we use an integration test with the mock.
-// Assuming "comprehensive_test" style, we can use the MockRepository defined in "service_test.go" (if available in package).
-// But `service_test.go` isn't in my viewed files. I'll make a local mock struct here for regression testing the filter logic.
 
 type RegressionMockRepo struct {
 	data []Grade
@@ -103,7 +97,7 @@ func TestService_FilterLogicRegex(t *testing.T) {
 	}
 
 	repo := &RegressionMockRepo{data: mockData}
-	svc := NewService(repo, nil, nil) // userRepo nil, db nil
+	svc := NewService(repo, nil, nil, nil) // userRepo nil, db nil, broadcaster nil
 
 	t.Run("Filter by Semester", func(t *testing.T) {
 		res, err := svc.GetStudentGradesWithFilter("S1", GradeFilter{Semester: 1})

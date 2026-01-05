@@ -26,6 +26,9 @@ type Service interface {
 
 	// Export
 	ExportDocument(ctx context.Context, id, format string) ([]byte, string, error)
+
+	// Status
+	LockDocument(ctx context.Context, id string) error
 }
 
 type service struct {
@@ -163,6 +166,11 @@ func (s *service) ProcessWorkflow(ctx context.Context, userID, docID string, req
 	}
 
 	return s.repo.UpdateStatus(docID, next)
+}
+
+func (s *service) LockDocument(ctx context.Context, id string) error {
+	// StatusSigned or StatusLocked
+	return s.repo.UpdateStatus(id, StatusSigned)
 }
 
 func (s *service) SignDocument(ctx context.Context, userID, docID string, req SignDocumentRequest) error {

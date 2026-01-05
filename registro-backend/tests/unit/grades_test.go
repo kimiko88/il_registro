@@ -15,8 +15,8 @@ func TestGradesService_GetMyGrades(t *testing.T) {
 	mockRepo := new(testhelpers.MockGradesRepository)
 	mockUserRepo := new(testhelpers.MockUsersRepository)
 
-	// DB passed as nil
-	service := grades.NewService(mockRepo, mockUserRepo, nil)
+	// DB passed as nil, Broadcaster passed as nil
+	service := grades.NewService(mockRepo, mockUserRepo, nil, nil)
 
 	t.Run("success", func(t *testing.T) {
 		mockRepo.On("FindByStudent", "student1").Return([]grades.Grade{
@@ -36,7 +36,7 @@ func TestGradesService_GetMyGrades(t *testing.T) {
 	t.Run("ignores unpublished", func(t *testing.T) {
 		// Fresh mock
 		mockRepo2 := new(testhelpers.MockGradesRepository)
-		service2 := grades.NewService(mockRepo2, mockUserRepo, nil)
+		service2 := grades.NewService(mockRepo2, mockUserRepo, nil, nil)
 
 		mockRepo2.On("FindByStudent", "student1").Return([]grades.Grade{
 			{ID: "1", GradeValue: 9.0, IsPublished: false},
@@ -50,7 +50,7 @@ func TestGradesService_GetMyGrades(t *testing.T) {
 
 func TestGradesService_Export(t *testing.T) {
 	mockRepo := new(testhelpers.MockGradesRepository)
-	service := grades.NewService(mockRepo, new(testhelpers.MockUsersRepository), nil)
+	service := grades.NewService(mockRepo, new(testhelpers.MockUsersRepository), nil, nil)
 
 	t.Run("export csv", func(t *testing.T) {
 		mockRepo.On("FindWithFilter", mock.Anything).Return([]grades.Grade{

@@ -46,6 +46,11 @@ export default [
                 meta: { roles: ['superadmin'] }
             },
             {
+                path: 'admin/scheduler',
+                component: () => import('@/pages/admin/Scheduler.vue'),
+                meta: { roles: ['superadmin', 'admin'] }
+            },
+            {
                 path: 'admin/audit-logs',
                 component: () => import('@/pages/Admin/AuditLog.vue'),
                 meta: { roles: ['superadmin'] }

@@ -79,7 +79,7 @@ func (m *MockRepository) FindPendingJustifications(classID string) ([]Justificat
 
 func TestMarkAttendance(t *testing.T) {
 	mockRepo := new(MockRepository)
-	service := NewService(mockRepo)
+	service := NewService(mockRepo, nil)
 
 	ctx := context.Background()
 	teacherID := "t1"
@@ -121,7 +121,7 @@ func TestMarkAttendance(t *testing.T) {
 
 func TestGetClassAttendance(t *testing.T) {
 	mockRepo := new(MockRepository)
-	service := NewService(mockRepo)
+	service := NewService(mockRepo, nil)
 	ctx := context.Background()
 
 	t.Run("ReturnsSummary", func(t *testing.T) {
@@ -146,7 +146,7 @@ func TestGetClassAttendance(t *testing.T) {
 
 func TestJustificationFlow(t *testing.T) {
 	mockRepo := new(MockRepository)
-	service := NewService(mockRepo)
+	service := NewService(mockRepo, nil)
 	ctx := context.Background()
 
 	t.Run("RequestJustification", func(t *testing.T) {

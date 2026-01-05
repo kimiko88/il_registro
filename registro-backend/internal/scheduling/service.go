@@ -20,11 +20,14 @@ type Service interface {
 	// Admin
 	UpdateSettings(ctx context.Context, req GeneralScheduleRequest) error
 	GetAnalytics(ctx context.Context) (*AnalyticsResponse, error)
+	ValidateSchedule(ctx context.Context, slots []Slot) ([]Conflict, error)
+	GenerateSchedule(ctx context.Context, req GenerationRequest) ([]Slot, error)
 }
 
 type service struct {
 	repo      Repository
 	validator *Validator
+	generator *Generator
 	notif     *NotificationService
 	calendar  *CalendarService
 	analytics *AnalyticsService
@@ -34,6 +37,7 @@ func NewService(repo Repository) Service {
 	return &service{
 		repo:      repo,
 		validator: NewValidator(),
+		generator: NewGenerator(),
 		notif:     NewNotificationService(),
 		calendar:  NewCalendarService(),
 		analytics: NewAnalyticsService(repo),
@@ -182,6 +186,16 @@ func (s *service) UpdateSettings(ctx context.Context, req GeneralScheduleRequest
 
 func (s *service) GetAnalytics(ctx context.Context) (*AnalyticsResponse, error) {
 	return s.analytics.GetStats("default-school"), nil
+}
+
+func (s *service) ValidateSchedule(ctx context.Context, slots []Slot) ([]Conflict, error) {
+	// Simple wrapper around validator logic
+	// In real app, might hydrate teacher names etc.
+	return s.validator.ValidateSchedule(slots), nil
+}
+
+func (s *service) GenerateSchedule(ctx context.Context, req GenerationRequest) ([]Slot, error) {
+	return s.generator.Generate(req)
 }
 
 // Helpers

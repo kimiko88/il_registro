@@ -13,6 +13,12 @@ import (
 	"registro-backend/internal/users"
 )
 
+// EventBroadcaster defines the interface for real-time notifications
+type EventBroadcaster interface {
+	BroadcastToUser(userID string, msgType string, payload interface{})
+	BroadcastToSchool(schoolID string, msgType string, payload interface{})
+}
+
 type Service interface {
 	GetStudentGrades(studentID string) ([]GradeResponse, error)
 	GetStudentGradesWithFilter(studentID string, filter GradeFilter) ([]GradeResponse, error)
@@ -38,18 +44,20 @@ type Service interface {
 }
 
 type service struct {
-	repo       Repository
-	userRepo   users.Repository
-	validator  *Validator
-	calculator *Calculator
+	repo        Repository
+	userRepo    users.Repository
+	validator   *Validator
+	calculator  *Calculator
+	broadcaster EventBroadcaster
 }
 
-func NewService(r Repository, ur users.Repository, db *sql.DB) Service {
+func NewService(r Repository, ur users.Repository, db *sql.DB, b EventBroadcaster) Service {
 	return &service{
-		repo:       r,
-		userRepo:   ur,
-		validator:  NewValidator(db),
-		calculator: NewCalculator(),
+		repo:        r,
+		userRepo:    ur,
+		validator:   NewValidator(db),
+		calculator:  NewCalculator(),
+		broadcaster: b,
 	}
 }
 
@@ -257,6 +265,11 @@ func (s *service) AddGrade(teacherID string, req CreateGradeRequest) error {
 
 	if err := s.repo.Create(grade); err != nil {
 		return fmt.Errorf("failed to create grade: %w", err)
+	}
+
+	// Real-time Notification
+	if s.broadcaster != nil {
+		s.broadcaster.BroadcastToUser(grade.StudentID, "GRADE_ADDED", s.mapSingleResponse(*grade))
 	}
 
 	return nil

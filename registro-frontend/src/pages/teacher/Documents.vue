@@ -23,6 +23,7 @@
                                  <q-list style="min-width: 100px">
                                      <q-item clickable v-close-popup @click="editDocument(doc)"><q-item-section>Modifica</q-item-section></q-item>
                                      <q-item clickable v-close-popup><q-item-section>PDF / Stampa</q-item-section></q-item>
+                                     <q-item clickable v-close-popup class="text-primary" @click="startSigning(doc)"><q-item-section>Firma Documento</q-item-section></q-item>
                                      <q-item clickable v-close-popup class="text-negative"><q-item-section>Elimina</q-item-section></q-item>
                                  </q-list>
                              </q-menu>
@@ -112,11 +113,37 @@
     </q-dialog>
 
   </q-page>
+
+  <!-- Signing Dialog -->
+  <q-dialog v-model="showSignDialog">
+      <q-card style="min-width: 350px">
+          <q-card-section>
+              <div class="text-h6">Firma Digitale Reale</div>
+              <div class="text-caption">Stai firmando: {{ docToSign?.title }}</div>
+          </q-card-section>
+
+          <q-card-section class="q-pt-none">
+              <q-input v-model="signPin" label="Inserisci PIN Firma (Es. 1234)" type="password" outlined autofocus @keyup.enter="confirmSign" />
+              <div class="text-caption text-grey q-mt-sm">
+                  Nota: Questa azione renderà il documento immutabile.
+              </div>
+          </q-card-section>
+
+          <q-card-actions align="right" class="text-primary">
+              <q-btn flat label="Annulla" v-close-popup />
+              <q-btn flat label="Firma Ora" @click="confirmSign" :loading="docsStore.loading" />
+          </q-card-actions>
+      </q-card>
+  </q-dialog>
 </template>
 
 <script setup>
 import { ref, reactive } from 'vue'
+import { useDocumentsStore } from 'src/stores/documents'
+import { useQuasar } from 'quasar'
 
+const $q = useQuasar()
+const docsStore = useDocumentsStore()
 const showCreateDialog = ref(false)
 const filter = reactive({ class: '5A', type: 'Tutti' })
 const classes = ['5A', '4B']
@@ -153,6 +180,29 @@ const editDocument = (doc) => {
 
 const openDocument = (doc) => {
     editDocument(doc);
+}
+
+// Signing Logic
+const showSignDialog = ref(false)
+const docToSign = ref(null)
+const signPin = ref('')
+
+const startSigning = (doc) => {
+    docToSign.value = doc
+    signPin.value = ''
+    showSignDialog.value = true
+}
+
+const confirmSign = async () => {
+    if (!docToSign.value) return
+    try {
+        await docsStore.signDocument(docToSign.value.id.toString(), signPin.value)
+        $q.notify({ type: 'positive', message: 'Documento firmato con successo!' })
+        showSignDialog.value = false
+        // Refresh?
+    } catch (e) {
+        $q.notify({ type: 'negative', message: 'Errore durante la firma: PIN errato' })
+    }
 }
 </script>
 

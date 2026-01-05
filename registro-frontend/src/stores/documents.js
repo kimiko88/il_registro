@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import documentService from '../services/documentService';
+import { api } from 'src/boot/axios';
 
 export const useDocumentsStore = defineStore('documents', {
     state: () => ({
@@ -82,6 +83,20 @@ export const useDocumentsStore = defineStore('documents', {
                     { id: 1, title: 'Report Card Semester 1', date: '2025-01-15', type: 'Report', extension: 'pdf' },
                     { id: 2, title: 'PDP Signed', date: '2024-11-20', type: 'PDP', extension: 'pdf' }
                 ];
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async signDocument(docId, pin) {
+            this.loading = true;
+            try {
+                // Real API Call
+                const res = await api.post('/signatures/', { document_id: docId, pin: pin });
+                return res.data;
+            } catch (err) {
+                console.error("Signing failed", err);
+                throw err;
             } finally {
                 this.loading = false;
             }

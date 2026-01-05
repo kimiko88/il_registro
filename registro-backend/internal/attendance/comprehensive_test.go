@@ -102,7 +102,7 @@ func TestValidator_ValidateEntry(t *testing.T) {
 
 func TestService_MarkAttendance(t *testing.T) {
 	mockRepo := new(MockRepo)
-	svc := NewService(mockRepo)
+	svc := NewService(mockRepo, nil)
 
 	req := CreateAttendanceRequest{
 		StudentID: "S1", ClassID: "C1", Date: time.Now().Format("2006-01-02"), Status: StatusPresent,
@@ -117,7 +117,7 @@ func TestService_MarkAttendance(t *testing.T) {
 
 func TestService_ProcessJustification(t *testing.T) {
 	mockRepo := new(MockRepo)
-	svc := NewService(mockRepo)
+	svc := NewService(mockRepo, nil)
 
 	jid := "J1"
 	j := &Justification{ID: jid, Status: JustificationPending}
