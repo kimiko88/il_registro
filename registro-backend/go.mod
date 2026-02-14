@@ -9,7 +9,7 @@ require (
 	github.com/go-pdf/fpdf v0.9.0
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/gorilla/websocket v1.5.3
-	github.com/lib/pq v1.10.9
+	github.com/lib/pq v1.11.2
 	github.com/sirupsen/logrus v1.9.3
 	github.com/sony/gobreaker v1.0.0
 	github.com/spf13/viper v1.21.0
