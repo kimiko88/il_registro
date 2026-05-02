@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"registro-backend/pkg/jwt"
+	"registro-backend/pkg/logger"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -308,8 +309,9 @@ func (s *Service) RequestPasswordReset(ctx context.Context, email string) error 
 		return err
 	}
 
-	// TODO: Send email with reset link containing token
-	// For now, just return success
+	// Log the token for local development / testing
+	// In production, this would send an email.
+	logger.Log.Infof("PASSWORD RESET REQUEST for %s. Reset Token: %s", email, token)
 
 	return nil
 }

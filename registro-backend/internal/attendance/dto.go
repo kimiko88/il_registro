@@ -48,6 +48,7 @@ type AttendanceResponse struct {
 type SummaryResponse struct {
 	TotalAbsences   int     `json:"total_absences"`
 	TotalLates      int     `json:"total_lates"`
+	TotalEarlyExits int     `json:"total_early_exits"`
 	JustifiedCount  int     `json:"justified_count"`
 	AbsenceRate     float64 `json:"absence_rate"` // %
 	RiskLevel       string  `json:"risk_level"`   // Normal, Warning, Critical

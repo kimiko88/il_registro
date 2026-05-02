@@ -10,6 +10,7 @@ type Repository interface {
 	GetProjects(ctx context.Context, schoolID string) ([]Project, error)
 	GetProjectByID(ctx context.Context, id string) (*Project, error)
 	UpdateProject(ctx context.Context, p *Project) error
+	DeleteProject(ctx context.Context, id string) error
 
 	AssignStudent(ctx context.Context, participation *Participation) error
 	GetParticipationsByProject(ctx context.Context, projectID string) ([]Participation, error)
@@ -68,6 +69,11 @@ func (r *repository) GetProjectByID(ctx context.Context, id string) (*Project, e
 
 func (r *repository) UpdateProject(ctx context.Context, p *Project) error {
 	_, err := r.db.ExecContext(ctx, `UPDATE pcto_projects SET title=$1, description=$2, total_hours=$3 WHERE id=$4`, p.Title, p.Description, p.TotalHours, p.ID)
+	return err
+}
+
+func (r *repository) DeleteProject(ctx context.Context, id string) error {
+	_, err := r.db.ExecContext(ctx, `DELETE FROM pcto_projects WHERE id=$1`, id)
 	return err
 }
 

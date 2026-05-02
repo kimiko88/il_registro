@@ -11,7 +11,7 @@ import (
 
 type Repository interface {
 	Create(ctx context.Context, class *Class) error
-	List(ctx context.Context, schoolID string) ([]Class, error)
+	List(ctx context.Context, schoolID string, academicYear string) ([]Class, error)
 	Get(ctx context.Context, id string) (*Class, error)
 	Update(ctx context.Context, class *Class) error
 	Delete(ctx context.Context, id string) error
@@ -135,10 +135,18 @@ func (r *PostgresRepository) Create(ctx context.Context, c *Class) error {
 	return err
 }
 
-func (r *PostgresRepository) List(ctx context.Context, schoolID string) ([]Class, error) {
+func (r *PostgresRepository) List(ctx context.Context, schoolID string, academicYear string) ([]Class, error) {
 	query := `SELECT id, school_id, name, COALESCE(section, ''), academic_year, coordinator_id, created_at, updated_at 
-	          FROM classes WHERE school_id = $1 ORDER BY name`
-	rows, err := r.db.QueryContext(ctx, query, schoolID)
+	          FROM classes WHERE school_id = $1`
+	
+	args := []interface{}{schoolID}
+	if academicYear != "" {
+		query += " AND academic_year = $2"
+		args = append(args, academicYear)
+	}
+	query += " ORDER BY name"
+	
+	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}

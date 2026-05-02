@@ -90,22 +90,23 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { useGradesStore } from 'src/stores/grades';
 import { useQuasar } from 'quasar';
+import { gradeService } from 'src/services/gradeService';
 
 const props = defineProps(['classId', 'subject', 'date', 'type']);
 const emit = defineEmits(['refresh']);
 const $q = useQuasar();
+const gradesStore = useGradesStore();
 
 const loading = ref(false);
 const isOnline = ref(navigator.onLine);
 const entryData = ref({});
 const initialSnapshot = ref({});
 
-// Mock data generation
-const studentsWithGrades = ref([
-    { id: 'S1', name: 'Rossi Mario', absences: 2, grades: [{id: 1, value: 7, date: '2025-01-10', type: 'Orale'}], average: 7.0 },
-    { id: 'S2', name: 'Bianchi Anna', absences: 0, grades: [{id: 2, value: 8.5, date: '2025-01-12', type: 'Scritto'}], average: 8.5 },
-    { id: 'S3', name: 'Verdi Paolo', absences: 5, grades: [{id: 3, value: 5, date: '2025-01-15', type: 'Pratico'}], average: 5.0 }
-]);
+const studentsWithGrades = computed(() => {
+    // The gradesStore should have students for the selected class
+    // We assume the store populates gradesStore.classGrades
+    return gradesStore.classGrades || [];
+});
 
 const columns = [
     { name: 'name', label: 'Studente', align: 'left' },
@@ -115,7 +116,6 @@ const columns = [
     { name: 'actions', label: '', align: 'right' }
 ];
 
-// Initialize entry data
 const initData = () => {
     studentsWithGrades.value.forEach(s => {
         if (!entryData.value[s.id]) {
@@ -125,7 +125,7 @@ const initData = () => {
     initialSnapshot.value = JSON.parse(JSON.stringify(entryData.value));
 };
 
-watch(studentsWithGrades, initData, { immediate: true });
+watch(studentsWithGrades, initData, { immediate: true, deep: true });
 
 const hasChanges = computed(() => {
     return JSON.stringify(entryData.value) !== JSON.stringify(initialSnapshot.value);
@@ -143,37 +143,62 @@ const saveLine = async (id) => {
     const data = entryData.value[id];
     if (!data.value) return;
 
-    // Simulate save
-    $q.notify({ message: `Voto ${data.value} salvato per ${id}`, color: 'positive', timeout: 500 });
-    
-    // Update snapshot for this item
-    initialSnapshot.value[id] = JSON.parse(JSON.stringify(data));
-    
-    // Add to local history mock
-    studentsWithGrades.value.find(s => s.id === id).grades.push({
-        id: Date.now(),
-        value: data.value,
-        date: props.date,
-        type: props.type
-    });
+    try {
+        let payloadType = "numeric";
+        if (typeof data.value === 'string' && isNaN(Number(data.value))) {
+            payloadType = "judgment";
+        }
+        let mappedType = null;
+        if (props.type === "Scritto") mappedType = "Written";
+        if (props.type === "Orale") mappedType = "Oral";
+        if (props.type === "Pratico") mappedType = "Practical";
+
+        await gradeService.saveGrade({
+            student_id: id,
+            subject_id: props.subject,
+            grade_value: Number(data.value),
+            grade_type: payloadType,
+            semester: 1, // Defaulting to 1 for MVP
+            description: data.notes,
+            date: props.date,
+            is_published: true,
+            grade_category: "formative",
+            evaluation_type: mappedType
+        });
+
+        $q.notify({ message: `Voto ${data.value} salvato`, color: 'positive', timeout: 500 });
+        initialSnapshot.value[id] = JSON.parse(JSON.stringify(data));
+        emit('refresh');
+    } catch (err) {
+        $q.notify({ type: 'negative', message: 'Errore nel salvataggio' });
+    }
 };
 
 const saveAll = async () => {
     loading.value = true;
-    // Simulate bulk API
-    setTimeout(() => {
-        loading.value = false;
+    try {
+        for (const s of studentsWithGrades.value) {
+            if (isDirty(s.id)) {
+                await saveLine(s.id);
+            }
+        }
         $q.notify({ type: 'positive', message: 'Tutti i voti sono stati salvati.'});
-        // Reset dirty state
-        initialSnapshot.value = JSON.parse(JSON.stringify(entryData.value));
-    }, 1000);
+    } catch (err) {
+        $q.notify({ type: 'negative', message: 'Errore durante il salvataggio multiplo' });
+    } finally {
+        loading.value = false;
+    }
 };
 
 const focusNext = (index) => {
     // Logic to focus next input would ideally use refs map
 };
 
-// Check connectivity
 window.addEventListener('online', () => isOnline.value = true);
 window.addEventListener('offline', () => isOnline.value = false);
+
+onMounted(() => {
+    // Initialize if data already present
+    initData();
+});
 </script>

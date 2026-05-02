@@ -26,8 +26,8 @@ func (s *Service) CreateClass(ctx context.Context, schoolID string, req CreateCl
 	return c, nil
 }
 
-func (s *Service) ListClasses(ctx context.Context, schoolID string) ([]Class, error) {
-	return s.repo.List(ctx, schoolID)
+func (s *Service) ListClasses(ctx context.Context, schoolID string, academicYear string) ([]Class, error) {
+	return s.repo.List(ctx, schoolID, academicYear)
 }
 
 func (s *Service) GetTeacherClasses(ctx context.Context, teacherID string) ([]Class, error) {

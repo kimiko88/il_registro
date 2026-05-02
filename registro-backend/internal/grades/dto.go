@@ -14,8 +14,9 @@ type CreateGradeRequest struct {
 	RubricID      *string `json:"rubric_id"`
 	Weight        float64 `json:"weight"`
 	IsPublished   bool    `json:"is_published"`
-	GradeCategory string  `json:"grade_category"`          // formative/summative/practical
-	Date          string  `json:"date" binding:"required"` // ISO date string preferred for input
+	GradeCategory  string  `json:"grade_category"`          // formative/summative/practical
+	EvaluationType *string `json:"evaluation_type"`         // Written/Oral/Practical
+	Date           string  `json:"date" binding:"required"` // ISO date string preferred for input
 }
 
 type UpdateGradeRequest struct {
@@ -24,8 +25,9 @@ type UpdateGradeRequest struct {
 	Description   *string  `json:"description"`
 	Weight        *float64 `json:"weight"`
 	IsPublished   *bool    `json:"is_published"`
-	GradeCategory *string  `json:"grade_category"`
-	Reason        string   `json:"reason" binding:"required"` // Reason is mandatory for updates
+	GradeCategory  *string  `json:"grade_category"`
+	EvaluationType *string  `json:"evaluation_type"`
+	Reason         string   `json:"reason" binding:"required"` // Reason is mandatory for updates
 }
 
 type BulkImportRequest struct {
@@ -53,9 +55,10 @@ type GradeResponse struct {
 	GradeType     string    `json:"grade_type"`
 	Semester      int       `json:"semester"`
 	Description   string    `json:"description"`
-	Date          time.Time `json:"date"`
-	GradeCategory string    `json:"grade_category"`
-	IsPublished   bool      `json:"is_published"`
+	Date           time.Time `json:"date"`
+	GradeCategory  string    `json:"grade_category"`
+	EvaluationType *string   `json:"evaluation_type,omitempty"`
+	IsPublished    bool      `json:"is_published"`
 }
 
 // --- Student/Parent Specific Responses ---

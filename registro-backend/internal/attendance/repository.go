@@ -156,12 +156,13 @@ func (r *repository) GetStats(studentID string) (*SummaryResponse, error) {
 		SELECT 
 			COUNT(*) FILTER (WHERE status = 'absent') as absences,
 			COUNT(*) FILTER (WHERE status = 'late') as lates,
+			COUNT(*) FILTER (WHERE status = 'early_exit') as early_exits,
 			COUNT(*) FILTER (WHERE is_justified = true) as justified
 		FROM attendance
 		WHERE student_id = $1 AND deleted_at IS NULL`
 
 	var s SummaryResponse
-	err := r.db.QueryRow(query, studentID).Scan(&s.TotalAbsences, &s.TotalLates, &s.JustifiedCount)
+	err := r.db.QueryRow(query, studentID).Scan(&s.TotalAbsences, &s.TotalLates, &s.TotalEarlyExits, &s.JustifiedCount)
 	if err != nil {
 		return nil, err
 	}

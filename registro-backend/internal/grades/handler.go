@@ -76,8 +76,10 @@ func (h *Handler) GetClassGrades(c *gin.Context) {
 	}
 
 	filter := h.parseFilter(c)
+	actorID := c.GetString("userID")
+	actorRole := c.GetString("role")
 
-	resp, err := h.service.GetClassGrades(classID, filter)
+	resp, err := h.service.GetClassGrades(c.Request.Context(), actorID, actorRole, classID, filter)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

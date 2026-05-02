@@ -15,6 +15,7 @@ import (
 	"registro-backend/internal/documents"
 	"registro-backend/internal/grades"
 	"registro-backend/internal/handler"
+	"registro-backend/internal/lessons"
 	"registro-backend/internal/middleware"
 	"registro-backend/internal/notes"
 	"registro-backend/internal/orientamento"
@@ -22,9 +23,11 @@ import (
 	"registro-backend/internal/postgres"
 	"registro-backend/internal/scheduling"
 	"registro-backend/internal/schools"
+	"registro-backend/internal/scrutiny"
 	"registro-backend/internal/signatures"
 	"registro-backend/internal/subjects"
 	"registro-backend/internal/teachers"
+	"registro-backend/internal/textbooks"
 	"registro-backend/internal/users"
 	"registro-backend/internal/ws"
 	"registro-backend/pkg/jwt"
@@ -158,6 +161,7 @@ func main() {
 				usersGroup.DELETE("/:id", usersH.Delete)
 				usersGroup.POST("/:id/restore", usersH.Restore)
 				usersGroup.POST("/bulk-import", usersH.BulkImport)
+				usersGroup.POST("/bulk-delete", usersH.BulkDelete)
 				usersGroup.POST("/:id/change-password", usersH.ChangePassword)
 				usersGroup.POST("/:id/reset-password", usersH.ForceResetPassword)
 				usersGroup.PATCH("/:id/roles", usersH.AssignRoles)
@@ -166,6 +170,9 @@ func main() {
 				usersGroup.DELETE("/:id/gdpr-delete", usersH.DeleteGDPR)
 				usersGroup.GET("/search", usersH.List) // Merged into List logic
 				usersGroup.PATCH("/:id/disable-mfa", usersH.DisableMFA)
+				usersGroup.GET("/:id/guardians", usersH.GetGuardians)
+				usersGroup.POST("/:id/guardians", usersH.AddGuardian)
+				usersGroup.DELETE("/:id/guardians/:guardianId", usersH.RemoveGuardian)
 			}
 
 			gradesH.RegisterRoutes(protected)
@@ -178,6 +185,11 @@ func main() {
 			pctoH := pcto.NewHandler(pctoSvc)
 			pctoH.RegisterRoutes(protected)
 
+			lessonsRepo := lessons.NewRepository(database)
+			lessonsSvc := lessons.NewService(lessonsRepo)
+			lessonsH := lessons.NewHandler(lessonsSvc)
+			lessonsH.RegisterRoutes(protected)
+
 			orientH := orientamento.NewHandler(orientSvc)
 			orientH.RegisterRoutes(protected)
 
@@ -186,6 +198,17 @@ func main() {
 
 			commsH := communications.NewHandler(commsSvc)
 			commsH.RegisterRoutes(protected)
+
+			textbooksRepo := textbooks.NewRepository(database)
+			textbooksSvc := textbooks.NewService(textbooksRepo)
+			textbooksH := textbooks.NewHandler(textbooksSvc)
+			textbooksH.RegisterRoutes(protected)
+
+			scrutinyRepo := scrutiny.NewRepository(database)
+			attendanceRepo := attendance.NewRepository(database)
+			scrutinySvc := scrutiny.NewService(scrutinyRepo, gradesRepo, classesRepo, usersRepo, attendanceRepo)
+			scrutinyH := scrutiny.NewHandler(scrutinySvc)
+			scrutinyH.RegisterRoutes(protected)
 
 			classesH.RegisterRoutes(protected)
 			notesH.RegisterRoutes(protected)

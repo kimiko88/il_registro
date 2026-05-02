@@ -59,3 +59,20 @@ type UserFilter struct {
 	SortBy       string
 	SortOrder    string // ASC or DESC
 }
+type StudentChild struct {
+	ID         string `json:"id"`      // Student Profile ID
+	UserID     string `json:"user_id"` // Student User ID
+	FirstName  string `json:"first_name"`
+	LastName   string `json:"last_name"`
+	Class      string `json:"class"`
+	SchoolName string `json:"school_name"`
+}
+
+type GuardianInfo struct {
+	ID               string `json:"id"`
+	ParentUserID     string `json:"parent_user_id"`
+	FirstName        string `json:"first_name"`
+	LastName         string `json:"last_name"`
+	Email            string `json:"email"`
+	RelationshipType string `json:"relationship_type"`
+}

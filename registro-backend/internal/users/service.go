@@ -2,6 +2,7 @@ package users
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"mime/multipart"
@@ -44,7 +45,7 @@ func (s *Service) CreateUser(ctx context.Context, actorRole string, req CreateUs
 		return nil, ErrUnauthorized
 	}
 
-	if !s.validator.ValidateFiscalCode(req.FiscalCode) {
+	if req.FiscalCode != "" && !s.validator.ValidateFiscalCode(req.FiscalCode) {
 		return nil, fmt.Errorf("invalid fiscal code")
 	}
 	if !s.validator.ValidatePassword(req.Password) {
@@ -97,6 +98,8 @@ func (s *Service) IsGuardian(ctx context.Context, parentID, studentID string) (b
 func (s *Service) GetChildren(ctx context.Context, parentUserID string) ([]StudentChild, error) {
 	return s.repo.GetChildren(ctx, parentUserID)
 }
+
+
 
 func (s *Service) GetUser(ctx context.Context, actorRole string, id string) (*User, error) {
 	if !s.permManager.HasPermission(actorRole, permissions.UserRead) {
@@ -155,7 +158,7 @@ func (s *Service) UpdateUser(ctx context.Context, actorRole string, id string, r
 		user.ClassID = req.ClassID // Will be handled by repo Update
 	}
 	if req.FiscalCode != nil {
-		if !s.validator.ValidateFiscalCode(*req.FiscalCode) {
+		if *req.FiscalCode != "" && !s.validator.ValidateFiscalCode(*req.FiscalCode) {
 			return nil, fmt.Errorf("invalid fiscal code")
 		}
 		user.FiscalCode = SanitizeText(*req.FiscalCode)
@@ -173,6 +176,13 @@ func (s *Service) DeleteUser(ctx context.Context, actorRole, id string) error {
 		return ErrUnauthorized
 	}
 	return s.repo.Delete(ctx, id)
+}
+
+func (s *Service) BulkDeleteUsers(ctx context.Context, actorRole string, ids []string) (int, error) {
+	if !s.permManager.HasPermission(actorRole, permissions.UserDelete) {
+		return 0, ErrUnauthorized
+	}
+	return s.repo.BulkDelete(ctx, ids)
 }
 
 func (s *Service) RestoreUser(ctx context.Context, actorRole, id string) error {
@@ -322,4 +332,47 @@ func (s *Service) GDPRDelete(ctx context.Context, actorRole, userID string) erro
 	s.gdpr.PseudonymizeUser(user)
 
 	return s.repo.Update(ctx, user)
+}
+func (s *Service) GetGuardians(ctx context.Context, actorRole, studentUserID string) ([]GuardianInfo, error) {
+	if !s.permManager.HasPermission(actorRole, permissions.UserRead) {
+		return nil, ErrUnauthorized
+	}
+	studentProfileID, err := s.repo.GetStudentProfile(ctx, studentUserID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return []GuardianInfo{}, nil
+		}
+		return nil, err
+	}
+	return s.repo.GetGuardians(ctx, studentProfileID)
+}
+
+func (s *Service) AddGuardian(ctx context.Context, actorRole, studentUserID, parentUserID, relationship string) error {
+	if !s.permManager.HasPermission(actorRole, permissions.UserUpdate) {
+		return ErrUnauthorized
+	}
+	studentProfileID, err := s.repo.GetStudentProfile(ctx, studentUserID)
+	if err != nil {
+		return err
+	}
+	parentProfileID, err := s.repo.GetParentProfile(ctx, parentUserID)
+	if err != nil {
+		return err
+	}
+	return s.repo.AddGuardian(ctx, studentProfileID, parentProfileID, relationship)
+}
+
+func (s *Service) RemoveGuardian(ctx context.Context, actorRole, studentUserID, parentUserID string) error {
+	if !s.permManager.HasPermission(actorRole, permissions.UserUpdate) {
+		return ErrUnauthorized
+	}
+	studentProfileID, err := s.repo.GetStudentProfile(ctx, studentUserID)
+	if err != nil {
+		return err
+	}
+	parentProfileID, err := s.repo.GetParentProfile(ctx, parentUserID)
+	if err != nil {
+		return err
+	}
+	return s.repo.RemoveGuardian(ctx, studentProfileID, parentProfileID)
 }

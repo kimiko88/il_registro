@@ -9,7 +9,7 @@ type CreateUserRequest struct {
 	Password    string  `json:"password" binding:"required,min=8"`
 	FirstName   string  `json:"first_name" binding:"required"`
 	LastName    string  `json:"last_name" binding:"required"`
-	FiscalCode  string  `json:"fiscal_code" binding:"required,len=16"`
+	FiscalCode  string  `json:"fiscal_code" binding:"omitempty,len=16"`
 	Role        string  `json:"role" binding:"required,oneof=admin principal secretary teacher student parent"`
 	SchoolID    *string `json:"school_id"`
 	PhoneNumber string  `json:"phone_number"`
@@ -80,4 +80,8 @@ type ImportResult struct {
 	Failed      int      `json:"failed"`
 	Errors      []string `json:"errors,omitempty"`
 	DownloadURL string   `json:"download_url,omitempty"` // URL to download generic import template/report
+}
+
+type BulkDeleteRequest struct {
+	UserIDs []string `json:"user_ids" binding:"required,min=1"`
 }

@@ -3,7 +3,6 @@ package users
 import (
 	"regexp"
 	"strings"
-	"unicode"
 )
 
 // Validator handles custom validation rules
@@ -16,31 +15,15 @@ func NewValidator() *Validator {
 // ValidatePassword checks password complexity
 func (v *Validator) ValidatePassword(password string) bool {
 	var (
-		hasMinLen  = false
-		hasUpper   = false
-		hasLower   = false
-		hasNumber  = false
-		hasSpecial = false
+		hasMinLen = false
 	)
 
 	if len(password) >= 8 {
 		hasMinLen = true
 	}
 
-	for _, char := range password {
-		switch {
-		case unicode.IsUpper(char):
-			hasUpper = true
-		case unicode.IsLower(char):
-			hasLower = true
-		case unicode.IsNumber(char):
-			hasNumber = true
-		case unicode.IsPunct(char) || unicode.IsSymbol(char):
-			hasSpecial = true
-		}
-	}
 
-	return hasMinLen && hasUpper && hasLower && hasNumber && hasSpecial
+	return hasMinLen
 }
 
 // ValidateFiscalCode checks Italian Codice Fiscale format

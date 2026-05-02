@@ -19,12 +19,15 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 
 	// Teacher/Creator
 	docs.POST("", h.CreateDocument)
+	docs.GET("", h.ListDocuments)
 	docs.GET("/:id", h.GetDocument)
 	docs.PATCH("/:id", h.UpdateDocument)
+	docs.DELETE("/:id", h.DeleteDocument)
 	docs.POST("/:id/workflow", h.ProcessWorkflow) // Submit
 
 	// Templates
 	docs.POST("/template", h.CreateTemplate)
+	docs.GET("/template", h.ListTemplates)
 
 	// Secretary
 	docs.GET("/inbox", h.GetInbox)
@@ -43,8 +46,10 @@ func (h *Handler) CreateDocument(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	userID := c.GetString("userID")
-	res, err := h.service.CreateDocument(c.Request.Context(), userID, req)
+	userID := c.GetString("user_id")
+	schoolID := c.GetString("school_id")
+	role := c.GetString("role")
+	res, err := h.service.CreateDocument(c.Request.Context(), role, userID, schoolID, req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -69,8 +74,9 @@ func (h *Handler) UpdateDocument(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	userID := c.GetString("userID")
-	if err := h.service.UpdateDocument(c.Request.Context(), userID, id, req); err != nil {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	if err := h.service.UpdateDocument(c.Request.Context(), role, userID, id, req); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -84,7 +90,7 @@ func (h *Handler) ProcessWorkflow(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	userID := c.GetString("userID")
+	userID := c.GetString("user_id")
 	if err := h.service.ProcessWorkflow(c.Request.Context(), userID, id, req); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -99,7 +105,7 @@ func (h *Handler) SignDocument(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	userID := c.GetString("userID")
+	userID := c.GetString("user_id")
 	if err := h.service.SignDocument(c.Request.Context(), userID, id, req); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -108,7 +114,8 @@ func (h *Handler) SignDocument(c *gin.Context) {
 }
 
 func (h *Handler) GetInbox(c *gin.Context) {
-	res, err := h.service.GetInbox(c.Request.Context())
+	schoolID := c.GetString("school_id")
+	res, err := h.service.GetInbox(c.Request.Context(), schoolID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -117,7 +124,8 @@ func (h *Handler) GetInbox(c *gin.Context) {
 }
 
 func (h *Handler) GetReviewQueue(c *gin.Context) {
-	res, err := h.service.GetReviewQueue(c.Request.Context())
+	schoolID := c.GetString("school_id")
+	res, err := h.service.GetReviewQueue(c.Request.Context(), schoolID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -131,7 +139,8 @@ func (h *Handler) CreateTemplate(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	if err := h.service.CreateTemplate(c.Request.Context(), req); err != nil {
+	schoolID := c.GetString("school_id")
+	if err := h.service.CreateTemplate(c.Request.Context(), schoolID, req); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -147,4 +156,39 @@ func (h *Handler) ExportDocument(c *gin.Context) {
 		return
 	}
 	c.Data(http.StatusOK, contentType, data)
+}
+func (h *Handler) ListDocuments(c *gin.Context) {
+	docType := c.Query("type")
+	var dt *DocType
+	if docType != "" {
+		val := DocType(docType)
+		dt = &val
+	}
+	role := c.GetString("role")
+	schoolID := c.GetString("school_id")
+	res, err := h.service.ListDocuments(c.Request.Context(), role, schoolID, dt)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, res)
+}
+
+func (h *Handler) DeleteDocument(c *gin.Context) {
+	id := c.Param("id")
+	role := c.GetString("role")
+	if err := h.service.DeleteDocument(c.Request.Context(), role, id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "deleted"})
+}
+func (h *Handler) ListTemplates(c *gin.Context) {
+	schoolID := c.GetString("school_id")
+	res, err := h.service.ListTemplates(c.Request.Context(), schoolID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, res)
 }

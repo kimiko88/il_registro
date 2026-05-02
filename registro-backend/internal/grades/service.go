@@ -22,7 +22,7 @@ type EventBroadcaster interface {
 type Service interface {
 	GetStudentGrades(studentID string) ([]GradeResponse, error)
 	GetStudentGradesWithFilter(studentID string, filter GradeFilter) ([]GradeResponse, error)
-	GetClassGrades(classID string, filter GradeFilter) (*ClassGradesResponse, error)
+	GetClassGrades(ctx context.Context, actorID string, actorRole string, classID string, filter GradeFilter) (*ClassGradesResponse, error)
 	GetSubjectGrades(subjectID string, filter GradeFilter) (*SubjectStatsResponse, error)
 	// ... (Other standard CRUD)
 	AddGrade(teacherID string, req CreateGradeRequest) error
@@ -104,14 +104,38 @@ func (s *service) GetStudentGradesWithFilter(studentID string, filter GradeFilte
 	return s.mapToResponse(filtered), nil
 }
 
-func (s *service) GetClassGrades(classID string, filter GradeFilter) (*ClassGradesResponse, error) {
-	// This requires organizing grades by student
-	// Assuming logic: Fetch all grades for class + subject? Or just class?
-	// The prompt implies a matrix view.
-	// If subjectID is provided in filter, we limit to that subject.
+func (s *service) GetClassGrades(ctx context.Context, actorID string, actorRole string, classID string, filter GradeFilter) (*ClassGradesResponse, error) {
+	// 1. Permission Check
+	if actorRole != "admin" && actorRole != "secretary" {
+		// Check if user is the class coordinator
+		// Better: use classRepo if available in service. Currently service has userRepo but not classRepo.
+		// Actually, I should probably add classRepo to grades.Service to be cleaner.
+		// For now, let's use a raw query or assume s.validator can check it.
+		
+		var coordID sql.NullString
+		err := s.validator.db.QueryRow(`SELECT coordinator_id FROM classes WHERE id = $1`, classID).Scan(&coordID)
+		if err != nil {
+			return nil, fmt.Errorf("class not found")
+		}
+		
+		if !coordID.Valid || coordID.String != actorID {
+			// Not coordinator. Can only see if they are a teacher of a subject in that class? 
+			// Usually teachers can only see their own subjects unless they are coordinator.
+			if filter.SubjectID == "" {
+				return nil, fmt.Errorf("unauthorized: only coordinators can see full class matrix")
+			}
+			// If subjectID is provided, check if actor teaches it in this class
+			var exists bool
+			s.validator.db.QueryRow(`SELECT EXISTS(SELECT 1 FROM class_subjects cs JOIN teachers t ON cs.teacher_id = t.id WHERE cs.class_id = $1 AND cs.subject_id = $2 AND t.user_id = $3)`, 
+				classID, filter.SubjectID, actorID).Scan(&exists)
+			if !exists {
+				return nil, fmt.Errorf("unauthorized: you do not teach this subject in this class")
+			}
+		}
+	}
 
 	semester := filter.Semester
-	subjectID := filter.SubjectID // Could be empty
+	subjectID := filter.SubjectID
 
 	grades, err := s.repo.FindByClassAndSubject(classID, subjectID, semester)
 	if err != nil {
@@ -242,21 +266,28 @@ func (s *service) AddGrade(teacherID string, req CreateGradeRequest) error {
 
 	date, _ := time.Parse("2006-01-02", req.Date)
 
+	var evalType *EvaluationType
+	if req.EvaluationType != nil {
+		val := EvaluationType(*req.EvaluationType)
+		evalType = &val
+	}
+
 	grade := &Grade{
-		StudentID:     req.StudentID,
-		SubjectID:     req.SubjectID,
-		TeacherID:     teacherID,
-		SchoolID:      "placeholder-school-id",
-		GradeValue:    req.GradeValue,
-		GradeType:     GradeType(req.GradeType),
-		Semester:      Semester(req.Semester),
-		Date:          date,
-		Description:   req.Description,
-		RubricID:      req.RubricID,
-		Weight:        req.Weight,
-		IsPublished:   req.IsPublished,
-		GradeCategory: GradeCategory(req.GradeCategory),
-		CreatedBy:     teacherID,
+		StudentID:      req.StudentID,
+		SubjectID:      req.SubjectID,
+		TeacherID:      teacherID,
+		SchoolID:       "placeholder-school-id",
+		GradeValue:     req.GradeValue,
+		GradeType:      GradeType(req.GradeType),
+		Semester:       Semester(req.Semester),
+		Date:           date,
+		Description:    req.Description,
+		RubricID:       req.RubricID,
+		Weight:         req.Weight,
+		IsPublished:    req.IsPublished,
+		GradeCategory:  GradeCategory(req.GradeCategory),
+		EvaluationType: evalType,
+		CreatedBy:      teacherID,
 	}
 
 	if grade.Weight == 0 {
@@ -393,6 +424,11 @@ func (s *service) UpdateGrade(teacherID string, gradeID string, req UpdateGradeR
 	}
 	if req.GradeCategory != nil {
 		grade.GradeCategory = GradeCategory(*req.GradeCategory)
+		changes = true
+	}
+	if req.EvaluationType != nil {
+		val := EvaluationType(*req.EvaluationType)
+		grade.EvaluationType = &val
 		changes = true
 	}
 
@@ -757,17 +793,23 @@ func (s *service) mapToResponse(grades []Grade) []GradeResponse {
 }
 
 func (s *service) mapSingleResponse(g Grade) GradeResponse {
+	var evalType *string
+	if g.EvaluationType != nil {
+		str := string(*g.EvaluationType)
+		evalType = &str
+	}
 	return GradeResponse{
-		ID:            g.ID,
-		StudentID:     g.StudentID,
-		SubjectID:     g.SubjectID,
-		TeacherID:     g.TeacherID,
-		GradeValue:    g.GradeValue,
-		GradeType:     string(g.GradeType),
-		Semester:      int(g.Semester),
-		Description:   g.Description,
-		Date:          g.Date,
-		GradeCategory: string(g.GradeCategory),
-		IsPublished:   g.IsPublished,
+		ID:             g.ID,
+		StudentID:      g.StudentID,
+		SubjectID:      g.SubjectID,
+		TeacherID:      g.TeacherID,
+		GradeValue:     g.GradeValue,
+		GradeType:      string(g.GradeType),
+		Semester:       int(g.Semester),
+		Description:    g.Description,
+		Date:           g.Date,
+		GradeCategory:  string(g.GradeCategory),
+		EvaluationType: evalType,
+		IsPublished:    g.IsPublished,
 	}
 }

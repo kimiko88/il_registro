@@ -69,7 +69,8 @@ func (h *Handler) List(c *gin.Context) {
 		return
 	}
 
-	classes, err := h.service.ListClasses(c.Request.Context(), schoolID)
+	academicYear := c.Query("academic_year")
+	classes, err := h.service.ListClasses(c.Request.Context(), schoolID, academicYear)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

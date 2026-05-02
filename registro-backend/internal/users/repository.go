@@ -31,24 +31,26 @@ type Repository interface {
 	LogAudit(ctx context.Context, log *AuditLog) error
 	GetAuditLogs(ctx context.Context, userID string, limit, offset int) ([]AuditLog, int, error)
 	BulkCreate(ctx context.Context, users []User) (int, []string, error) // Returns count, errors
+	BulkDelete(ctx context.Context, ids []string) (int, error)
 
 	// GDPR
 	HardDelete(ctx context.Context, id string) error // Actual DB delete
 
-	// Guardianship
+	// Relationships
 	IsGuardian(ctx context.Context, parentUserID string, studentUserID string) (bool, error)
 	GetChildren(ctx context.Context, parentUserID string) ([]StudentChild, error)
+	GetStudentsByClass(ctx context.Context, classID string) ([]User, error)
+	GetStudentProfile(ctx context.Context, userID string) (string, error)
+	GetParentProfile(ctx context.Context, userID string) (string, error)
+	AddGuardian(ctx context.Context, studentProfileID, parentProfileID, relationship string) error
+	RemoveGuardian(ctx context.Context, studentProfileID, parentProfileID string) error
+	GetGuardians(ctx context.Context, studentProfileID string) ([]GuardianInfo, error)
+
+	// Guardianship
 	IsActive(ctx context.Context, id string) (bool, error)
 }
 
-type StudentChild struct {
-	ID         string `json:"id"`      // Student Profile ID
-	UserID     string `json:"user_id"` // Student User ID
-	FirstName  string `json:"first_name"`
-	LastName   string `json:"last_name"`
-	Class      string `json:"class"`
-	SchoolName string `json:"school_name"`
-}
+
 
 type PostgresRepository struct {
 	db *sql.DB
@@ -132,10 +134,19 @@ func (r *PostgresRepository) Create(ctx context.Context, user *User) error {
 		return err
 	}
 
-	// Create Student Profile if role is student
-	if user.Role == "student" && user.SchoolID != nil {
-		studentQuery := `INSERT INTO students (user_id, school_id, class_id) VALUES ($1, $2, $3)`
-		_, err := tx.ExecContext(ctx, studentQuery, user.ID, *user.SchoolID, user.ClassID)
+	// Create Role-Specific Profiles
+	if user.SchoolID != nil {
+		switch user.Role {
+		case "student":
+			studentQuery := `INSERT INTO students (user_id, school_id, class_id) VALUES ($1, $2, $3)`
+			_, err = tx.ExecContext(ctx, studentQuery, user.ID, *user.SchoolID, user.ClassID)
+		case "parent":
+			parentQuery := `INSERT INTO parents (user_id, school_id) VALUES ($1, $2)`
+			_, err = tx.ExecContext(ctx, parentQuery, user.ID, *user.SchoolID)
+		case "teacher":
+			teacherQuery := `INSERT INTO teachers (user_id, school_id) VALUES ($1, $2)`
+			_, err = tx.ExecContext(ctx, teacherQuery, user.ID, *user.SchoolID)
+		}
 		if err != nil {
 			tx.Rollback()
 			return err
@@ -249,6 +260,31 @@ func (r *PostgresRepository) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
+func (r *PostgresRepository) BulkDelete(ctx context.Context, ids []string) (int, error) {
+	if len(ids) == 0 {
+		return 0, nil
+	}
+	
+	placeholders := make([]string, len(ids))
+	args := make([]interface{}, len(ids)+1)
+	args[0] = time.Now()
+	
+	for i, id := range ids {
+		placeholders[i] = fmt.Sprintf("$%d", i+2)
+		args[i+1] = id
+	}
+	
+	query := fmt.Sprintf("UPDATE users SET deleted_at = $1 WHERE id IN (%s)", strings.Join(placeholders, ","))
+	
+	res, err := r.db.ExecContext(ctx, query, args...)
+	if err != nil {
+		return 0, err
+	}
+	
+	rows, _ := res.RowsAffected()
+	return int(rows), nil
+}
+
 func (r *PostgresRepository) Restore(ctx context.Context, id string) error {
 	query := `UPDATE users SET deleted_at = NULL WHERE id = $1`
 	res, err := r.db.ExecContext(ctx, query, id)
@@ -271,50 +307,7 @@ func (r *PostgresRepository) List(ctx context.Context, filter UserFilter) ([]Use
 		LEFT JOIN classes c ON s.class_id = c.id
 		WHERE 1=1
 	`
-	// ... (filters) ...
-
-	// Count total ... (unchanged)
-	// Sort ... (unchanged)
-
-	// Just need to properly reconstruct the method or use replace chunks carefully.
-	// Since I can't leave placeholders in `replacementContent` for tool to fill, I must provide full body if replacing body.
-	// I'll replace the Scan part mostly.
-
-	// Wait, I can replace the query and the scan block separately if I am careful with context lines.
-	// Replacing the Query string:
-
-	// ... code continues ...
-
-	// Note: 'c.name' doesn't exist in classes table based on 003_academic_structure.sql.
-	// The table has level_id, section, specialization.
-	// But previous logs showed `name VARCHAR(255)` in `classes` table creation or `024_create_classes_table.sql`.
-	// Wait, the user previously updated `classes` table in `024_create_classes_table.sql`.
-	// Let's assume `name` exists based on recent work.
-
-	// Actually, let's look at `003_academic_structure.sql` again. It has `section`, `academic_year_id`.
-	// But `024_create_classes_table.sql` could have added `name`.
-	// Let's check `024_create_classes_table.sql` content first to be sure about column name.
-	// Oh, I can't check it right now without another tool call.
-	// But earlier in `SchoolDetail.vue` I saw `props.row.name`.
-	// Let's assume `name` exists or construct it from section + year.
-	// Using `c.section` for now for safety if name isn't guaranteed.
-	// Wait, the previous `classes` query used `name`.
-	// Let's stick to generic columns and if `name` exists use it.
-	// Let's re-read the `003` file content provided earlier.
-	// `classes` table: id, school_id, year_id, level_id, building_id, section, specialization, coordinator_id.
-	// It DOES NOT have a `name` column.
-	// However, `001_initial_schema.sql` `024...` might have altered it.
-
-	// I will check `024...` in a parallel step? No, safety first.
-	// I will use `section` and maybe `academic_years.name`?
-	// The `Users.vue` expects `class` string.
-	// I'll assume we can just return `section` for now, or concat.
-
-	// Actually, I'll check `024` quickly.
-
-	// Resuming replacement with a safe guess for now which I can fix if wrong.
-	// Replacing with the code that assumes `name` MIGHT NOT exist but `section` does.
-
+	// Apply filters
 	countQuery := `SELECT COUNT(*) FROM users u WHERE 1=1`
 	var args []interface{}
 	argCount := 1
@@ -576,4 +569,69 @@ func (r *PostgresRepository) IsActive(ctx context.Context, id string) (bool, err
 		return false, err
 	}
 	return isActive, nil
+}
+func (r *PostgresRepository) GetStudentsByClass(ctx context.Context, classID string) ([]User, error) {
+	query := `SELECT id, email, first_name, last_name, fiscal_code, role, school_id, is_active, created_at, updated_at 
+	          FROM users WHERE class_id = $1 AND role = 'student' AND deleted_at IS NULL ORDER BY last_name, first_name`
+	rows, err := r.db.QueryContext(ctx, query, classID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []User
+	for rows.Next() {
+		var u User
+		if err := rows.Scan(&u.ID, &u.Email, &u.FirstName, &u.LastName, &u.FiscalCode, &u.Role, &u.SchoolID, &u.IsActive, &u.CreatedAt, &u.UpdatedAt); err != nil {
+			return nil, err
+		}
+		users = append(users, u)
+	}
+	return users, nil
+}
+func (r *PostgresRepository) GetStudentProfile(ctx context.Context, userID string) (string, error) {
+	var id string
+	err := r.db.QueryRowContext(ctx, "SELECT id FROM students WHERE user_id = $1", userID).Scan(&id)
+	return id, err
+}
+
+func (r *PostgresRepository) GetParentProfile(ctx context.Context, userID string) (string, error) {
+	var id string
+	err := r.db.QueryRowContext(ctx, "SELECT id FROM parents WHERE user_id = $1", userID).Scan(&id)
+	return id, err
+}
+
+func (r *PostgresRepository) AddGuardian(ctx context.Context, studentProfileID, parentProfileID, relationship string) error {
+	_, err := r.db.ExecContext(ctx, `INSERT INTO student_parents (student_id, parent_id, relationship_type) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`, studentProfileID, parentProfileID, relationship)
+	return err
+}
+
+func (r *PostgresRepository) RemoveGuardian(ctx context.Context, studentProfileID, parentProfileID string) error {
+	_, err := r.db.ExecContext(ctx, `DELETE FROM student_parents WHERE student_id = $1 AND parent_id = $2`, studentProfileID, parentProfileID)
+	return err
+}
+
+func (r *PostgresRepository) GetGuardians(ctx context.Context, studentProfileID string) ([]GuardianInfo, error) {
+	query := `
+		SELECT sp.parent_id, u.id as user_id, u.first_name, u.last_name, u.email, sp.relationship_type
+		FROM student_parents sp
+		JOIN parents p ON sp.parent_id = p.id
+		JOIN users u ON p.user_id = u.id
+		WHERE sp.student_id = $1
+	`
+	rows, err := r.db.QueryContext(ctx, query, studentProfileID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var guardians []GuardianInfo
+	for rows.Next() {
+		var g GuardianInfo
+		if err := rows.Scan(&g.ID, &g.ParentUserID, &g.FirstName, &g.LastName, &g.Email, &g.RelationshipType); err != nil {
+			return nil, err
+		}
+		guardians = append(guardians, g)
+	}
+	return guardians, nil
 }

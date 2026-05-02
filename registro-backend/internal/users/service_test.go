@@ -64,6 +64,10 @@ func (m *MockRepository) BulkCreate(ctx context.Context, users []User) (int, []s
 	args := m.Called(ctx, users)
 	return args.Int(0), args.Get(1).([]string), args.Error(2)
 }
+func (m *MockRepository) BulkDelete(ctx context.Context, ids []string) (int, error) {
+	args := m.Called(ctx, ids)
+	return args.Int(0), args.Error(1)
+}
 func (m *MockRepository) HardDelete(ctx context.Context, id string) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)
@@ -76,6 +80,11 @@ func (m *MockRepository) IsGuardian(ctx context.Context, parentID, studentID str
 func (m *MockRepository) GetChildren(ctx context.Context, parentID string) ([]StudentChild, error) {
 	args := m.Called(ctx, parentID)
 	return args.Get(0).([]StudentChild), args.Error(1)
+}
+
+func (m *MockRepository) GetStudentsByClass(ctx context.Context, classID string) ([]User, error) {
+	args := m.Called(ctx, classID)
+	return args.Get(0).([]User), args.Error(1)
 }
 
 func (m *MockRepository) IsActive(ctx context.Context, id string) (bool, error) {

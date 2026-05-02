@@ -15,7 +15,7 @@
         @create="openCreate"
         @edit="openEdit"
         @delete="confirmDelete"
-        @reset-pwd="confirmResetPwd"
+        @reset-pwd="openResetPwd"
         @filter-role="currentRoleFilter = $event"
         @export="exportUsers"
         @bulk-delete="bulkDelete"
@@ -176,6 +176,23 @@
                     </div>
                 </div>
             </q-card-section>
+        </q-card>
+    </q-dialog>
+
+    <!-- Reset Password Dialog -->
+    <q-dialog v-model="showResetPwdDialog">
+        <q-card style="min-width: 350px">
+            <q-card-section>
+                <div class="text-h6">Reset Password</div>
+                <div class="text-subtitle2">{{ resetTargetName }}</div>
+            </q-card-section>
+            <q-card-section>
+                <q-input v-model="newPassword" label="Nuova Password" type="password" outlined dense />
+            </q-card-section>
+            <q-card-actions align="right">
+                <q-btn flat label="Annulla" v-close-popup />
+                <q-btn color="primary" label="Reset" @click="handleResetPwd" :disable="newPassword.length < 6" />
+            </q-card-actions>
         </q-card>
     </q-dialog>
   </q-page>
@@ -366,30 +383,57 @@ const confirmDelete = (user) => {
     });
 };
 
-const confirmResetPwd = (user) => {
+const showResetPwdDialog = ref(false);
+const resetTargetId = ref(null);
+const resetTargetName = ref('');
+const newPassword = ref('');
+
+const openResetPwd = (user) => {
+    resetTargetId.value = user.id;
+    resetTargetName.value = `${user.first_name} ${user.last_name}`;
+    newPassword.value = '';
+    showResetPwdDialog.value = true;
+};
+
+const handleResetPwd = async () => {
+    try {
+        await userService.forceResetPassword(resetTargetId.value, newPassword.value);
+        $q.notify({ type: 'positive', message: 'Password aggiornata con successo' });
+        showResetPwdDialog.value = false;
+    } catch (e) {
+        $q.notify({ type: 'negative', message: 'Errore durante il reset della password' });
+    }
+};
+
+const bulkDelete = (selected) => {
     $q.dialog({
-        title: 'Reset Password',
-        message: `Inviare link di reset password a ${user.email}?`,
-        cancel: true
+        title: 'Eliminazione Massiva',
+        message: `Sei sicuro di voler eliminare ${selected.length} utenti?`,
+        cancel: true,
+        persistent: true
     }).onOk(async () => {
-         try {
-            await userService.resetPassword(user.id);
-            $q.notify({ type: 'positive', message: 'Link inviato con successo' });
+        try {
+            const ids = selected.map(u => u.id);
+            await userService.bulkDelete(ids);
+            $q.notify({ type: 'positive', message: `${selected.length} utenti eliminati` });
+            fetchUsers();
         } catch(e) {
-             $q.notify({ type: 'negative', message: 'Errore reset password' });
+            $q.notify({ type: 'negative', message: 'Errore eliminazione massiva' });
         }
     });
 };
 
-const bulkDelete = (selected) => {
-     // TODO: Implement bulk delete API
-     $q.notify({ type: 'warning', message: 'Funzionalità non ancora implementata nel backend' });
-};
-
 const handleImport = async () => {
-    // TODO: Implement real import via service
-     $q.notify({ type: 'warning', message: 'Funzionalità mock per demo' });
-     showImport.value = false;
+    if (!importFile.value) return;
+    try {
+        const res = await userService.bulkImport(importFile.value);
+        $q.notify({ type: 'positive', message: `Importati ${res.data.created} utenti su ${res.data.total}` });
+        showImport.value = false;
+        importFile.value = null;
+        fetchUsers();
+    } catch(e) {
+        $q.notify({ type: 'negative', message: 'Errore importazione file' });
+    }
 };
 
 const exportUsers = () => {

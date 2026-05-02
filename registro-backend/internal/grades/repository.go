@@ -58,19 +58,19 @@ func (r *repository) Create(grade *Grade) error {
 			student_id, school_id, subject_id, teacher_id,
 			grade_value, grade_type, semester, date, 
 			description, rubric_id, weight, is_published, published_at,
-			grade_category, created_by, created_at, updated_at
+			grade_category, evaluation_type, created_by, created_at, updated_at
 		) VALUES (
 			$1, $2, $3, $4,
 			$5, $6, $7, $8, 
 			$9, $10, $11, $12, $13,
-			$14, $15, NOW(), NOW()
+			$14, $15, $16, NOW(), NOW()
 		) RETURNING id`
 
 	err := r.db.QueryRow(query,
 		grade.StudentID, grade.SchoolID, grade.SubjectID, grade.TeacherID,
 		grade.GradeValue, grade.GradeType, grade.Semester, grade.Date,
 		grade.Description, grade.RubricID, grade.Weight, grade.IsPublished, grade.PublishedAt,
-		grade.GradeCategory, grade.CreatedBy,
+		grade.GradeCategory, grade.EvaluationType, grade.CreatedBy,
 	).Scan(&grade.ID)
 
 	if err != nil {
@@ -91,12 +91,12 @@ func (r *repository) BatchCreate(grades []*Grade) error {
 			student_id, school_id, subject_id, teacher_id,
 			grade_value, grade_type, semester, date, 
 			description, rubric_id, weight, is_published, published_at,
-			grade_category, created_by, created_at, updated_at
+			grade_category, evaluation_type, created_by, created_at, updated_at
 		) VALUES (
 			$1, $2, $3, $4,
 			$5, $6, $7, $8, 
 			$9, $10, $11, $12, $13,
-			$14, $15, NOW(), NOW()
+			$14, $15, $16, NOW(), NOW()
 		) RETURNING id`
 
 	stmt, err := tx.Prepare(query)
@@ -110,7 +110,7 @@ func (r *repository) BatchCreate(grades []*Grade) error {
 			grade.StudentID, grade.SchoolID, grade.SubjectID, grade.TeacherID,
 			grade.GradeValue, grade.GradeType, grade.Semester, grade.Date,
 			grade.Description, grade.RubricID, grade.Weight, grade.IsPublished, grade.PublishedAt,
-			grade.GradeCategory, grade.CreatedBy,
+			grade.GradeCategory, grade.EvaluationType, grade.CreatedBy,
 		).Scan(&grade.ID)
 
 		if err != nil {
@@ -141,14 +141,15 @@ func (r *repository) Update(grade *Grade, history *GradeHistory) error {
 			is_published = $8,
 			published_at = $9,
 			grade_category = $10,
-			modified_by = $11,
+			evaluation_type = $11,
+			modified_by = $12,
 			updated_at = NOW()
-		WHERE id = $12 AND deleted_at IS NULL`
+		WHERE id = $13 AND deleted_at IS NULL`
 
 	_, err = tx.Exec(updateQuery,
 		grade.GradeValue, grade.GradeType, grade.Semester, grade.Date,
 		grade.Description, grade.RubricID, grade.Weight, grade.IsPublished, grade.PublishedAt,
-		grade.GradeCategory, grade.ModifiedBy, grade.ID,
+		grade.GradeCategory, grade.EvaluationType, grade.ModifiedBy, grade.ID,
 	)
 	if err != nil {
 		return fmt.Errorf("update grade error: %w", err)
@@ -189,9 +190,9 @@ func (r *repository) Delete(id string, deletedBy string) error {
 func (r *repository) FindByID(id string) (*Grade, error) {
 	query := `
 		SELECT id, student_id, school_id, subject_id, teacher_id, 
-		       grade_value, grade_type, semester, date, 
-		       description, rubric_id, weight, is_published, published_at,
-		       grade_category, created_by, created_at, updated_at 
+			       grade_value, grade_type, semester, date, 
+			       description, rubric_id, weight, is_published, published_at,
+			       grade_category, evaluation_type, created_by, created_at, updated_at 
 		FROM grades 
 		WHERE id = $1 AND deleted_at IS NULL`
 
@@ -214,9 +215,9 @@ func (r *repository) FindByID(id string) (*Grade, error) {
 func (r *repository) FindByStudent(studentID string) ([]Grade, error) {
 	query := `
 		SELECT id, student_id, school_id, subject_id, teacher_id, 
-		       grade_value, grade_type, semester, date, 
-		       description, rubric_id, weight, is_published, published_at,
-		       grade_category, created_by, created_at, updated_at 
+			       grade_value, grade_type, semester, date, 
+			       description, rubric_id, weight, is_published, published_at,
+			       grade_category, evaluation_type, created_by, created_at, updated_at 
 		FROM grades 
 		WHERE student_id = $1 AND deleted_at IS NULL
 		ORDER BY date DESC`
@@ -234,7 +235,7 @@ func (r *repository) FindByClassAndSubject(classID string, subjectID string, sem
 			SELECT g.id, g.student_id, g.school_id, g.subject_id, g.teacher_id, 
 			       g.grade_value, g.grade_type, g.semester, g.date, 
 			       g.description, g.rubric_id, g.weight, g.is_published, g.published_at,
-			       g.grade_category, g.created_by, g.created_at, g.updated_at 
+			       g.grade_category, g.evaluation_type, g.created_by, g.created_at, g.updated_at 
 			FROM grades g
 			JOIN students s ON g.student_id = s.id
 			WHERE s.class_id = $1 AND g.subject_id = $2 AND g.semester = $3 AND g.deleted_at IS NULL
@@ -246,7 +247,7 @@ func (r *repository) FindByClassAndSubject(classID string, subjectID string, sem
 			SELECT g.id, g.student_id, g.school_id, g.subject_id, g.teacher_id, 
 			       g.grade_value, g.grade_type, g.semester, g.date, 
 			       g.description, g.rubric_id, g.weight, g.is_published, g.published_at,
-			       g.grade_category, g.created_by, g.created_at, g.updated_at 
+			       g.grade_category, g.evaluation_type, g.created_by, g.created_at, g.updated_at 
 			FROM grades g
 			JOIN students s ON g.student_id = s.id
 			WHERE s.class_id = $1 AND g.subject_id = $2 AND g.deleted_at IS NULL
@@ -266,7 +267,7 @@ func (r *repository) FindByClass(classID string, semester int) ([]Grade, error) 
 			SELECT g.id, g.student_id, g.school_id, g.subject_id, g.teacher_id, 
 			       g.grade_value, g.grade_type, g.semester, g.date, 
 			       g.description, g.rubric_id, g.weight, g.is_published, g.published_at,
-			       g.grade_category, g.created_by, g.created_at, g.updated_at 
+			       g.grade_category, g.evaluation_type, g.created_by, g.created_at, g.updated_at 
 			FROM grades g
 			JOIN students s ON g.student_id = s.id
 			WHERE s.class_id = $1 AND g.semester = $2 AND g.deleted_at IS NULL
@@ -277,7 +278,7 @@ func (r *repository) FindByClass(classID string, semester int) ([]Grade, error) 
 			SELECT g.id, g.student_id, g.school_id, g.subject_id, g.teacher_id, 
 			       g.grade_value, g.grade_type, g.semester, g.date, 
 			       g.description, g.rubric_id, g.weight, g.is_published, g.published_at,
-			       g.grade_category, g.created_by, g.created_at, g.updated_at 
+			       g.grade_category, g.evaluation_type, g.created_by, g.created_at, g.updated_at 
 			FROM grades g
 			JOIN students s ON g.student_id = s.id
 			WHERE s.class_id = $1 AND g.deleted_at IS NULL
@@ -297,7 +298,7 @@ func (r *repository) FindBySubject(subjectID string, semester int) ([]Grade, err
 			SELECT id, student_id, school_id, subject_id, teacher_id, 
 			       grade_value, grade_type, semester, date, 
 			       description, rubric_id, weight, is_published, published_at,
-			       grade_category, created_by, created_at, updated_at 
+			       grade_category, evaluation_type, created_by, created_at, updated_at 
 			FROM grades 
 			WHERE subject_id = $1 AND semester = $2 AND deleted_at IS NULL
 			ORDER BY date DESC, student_id ASC`
@@ -307,7 +308,7 @@ func (r *repository) FindBySubject(subjectID string, semester int) ([]Grade, err
 			SELECT id, student_id, school_id, subject_id, teacher_id, 
 			       grade_value, grade_type, semester, date, 
 			       description, rubric_id, weight, is_published, published_at,
-			       grade_category, created_by, created_at, updated_at 
+			       grade_category, evaluation_type, created_by, created_at, updated_at 
 			FROM grades 
 			WHERE subject_id = $1 AND deleted_at IS NULL
 			ORDER BY date DESC, student_id ASC`
@@ -320,9 +321,9 @@ func (r *repository) FindBySubject(subjectID string, semester int) ([]Grade, err
 func (r *repository) FindWithFilter(filter GradeFilter) ([]Grade, error) {
 	baseQuery := `
 		SELECT id, student_id, school_id, subject_id, teacher_id, 
-		       grade_value, grade_type, semester, date, 
-		       description, rubric_id, weight, is_published, published_at,
-		       grade_category, created_by, created_at, updated_at 
+			       grade_value, grade_type, semester, date, 
+			       description, rubric_id, weight, is_published, published_at,
+			       grade_category, evaluation_type, created_by, created_at, updated_at 
 		FROM grades 
 		WHERE deleted_at IS NULL`
 
@@ -363,9 +364,9 @@ func (r *repository) FindWithFilter(filter GradeFilter) ([]Grade, error) {
 func (r *repository) FindByTeacher(teacherID string) ([]Grade, error) {
 	query := `
 		SELECT id, student_id, school_id, subject_id, teacher_id, 
-		       grade_value, grade_type, semester, date, 
-		       description, rubric_id, weight, is_published, published_at,
-		       grade_category, created_by, created_at, updated_at 
+			       grade_value, grade_type, semester, date, 
+			       description, rubric_id, weight, is_published, published_at,
+			       grade_category, evaluation_type, created_by, created_at, updated_at 
 		FROM grades 
 		WHERE teacher_id = $1 AND deleted_at IS NULL
 		ORDER BY date DESC`
@@ -421,7 +422,7 @@ func (r *repository) scanRows(rows *sql.Rows) ([]Grade, error) {
 			&g.ID, &g.StudentID, &g.SchoolID, &g.SubjectID, &g.TeacherID,
 			&g.GradeValue, &g.GradeType, &g.Semester, &g.Date,
 			&g.Description, &g.RubricID, &g.Weight, &g.IsPublished, &g.PublishedAt,
-			&g.GradeCategory, &g.CreatedBy, &g.CreatedAt, &g.UpdatedAt,
+			&g.GradeCategory, &g.EvaluationType, &g.CreatedBy, &g.CreatedAt, &g.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}

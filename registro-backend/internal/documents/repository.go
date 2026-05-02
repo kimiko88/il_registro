@@ -8,6 +8,8 @@ type Repository interface {
 	Create(doc *Document, initialContent string) error
 	Update(doc *Document, newContent, changeLog string) error
 	UpdateStatus(docID string, status DocStatus) error
+	Delete(docID string) error
+	ListAll(schoolID string, docType *DocType) ([]Document, error)
 
 	FindByID(id string) (*Document, error)
 	GetContent(docID string, version int) (string, error)
@@ -112,6 +114,20 @@ func (r *repository) Update(d *Document, newContent, changeLog string) error {
 func (r *repository) UpdateStatus(docID string, status DocStatus) error {
 	_, err := r.db.Exec(`UPDATE documents_enhanced SET status=$1, updated_at=NOW() WHERE id=$2`, status, docID)
 	return err
+}
+
+func (r *repository) Delete(docID string) error {
+	_, err := r.db.Exec(`UPDATE documents_enhanced SET deleted_at=NOW() WHERE id=$1`, docID)
+	return err
+}
+
+func (r *repository) ListAll(schoolID string, docType *DocType) ([]Document, error) {
+	query := `SELECT id, school_id, title, type, student_id, class_id, status, current_version, is_signed, signed_by, signed_at, created_by, created_at, updated_at, deleted_at FROM documents_enhanced WHERE school_id = $1 AND deleted_at IS NULL`
+	if docType != nil {
+		query += ` AND type = '` + string(*docType) + `'`
+	}
+	query += ` ORDER BY updated_at DESC`
+	return r.queryDocs(query, schoolID)
 }
 
 func (r *repository) FindByID(id string) (*Document, error) {
@@ -228,7 +244,9 @@ func (r *repository) GetTemplates(schoolID string) ([]DocumentTemplate, error) {
 	var tpls []DocumentTemplate
 	for rows.Next() {
 		var t DocumentTemplate
-		rows.Scan(&t.ID, &t.Name, &t.Type, &t.Content)
+		if err := rows.Scan(&t.ID, &t.Name, &t.Type, &t.Content); err != nil {
+			return nil, err
+		}
 		tpls = append(tpls, t)
 	}
 	return tpls, nil

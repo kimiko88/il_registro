@@ -35,6 +35,15 @@ const (
 	SemesterThird  Semester = 3 // Rare, but supported for trimesters
 )
 
+// EvaluationType defines the type of test
+type EvaluationType string
+
+const (
+	EvaluationTypeWritten   EvaluationType = "Written"
+	EvaluationTypeOral      EvaluationType = "Oral"
+	EvaluationTypePractical EvaluationType = "Practical"
+)
+
 // Grade represents a single evaluation entry in the Italian school context
 type Grade struct {
 	ID string `json:"id" db:"id"`
@@ -59,7 +68,8 @@ type Grade struct {
 	IsPublished bool       `json:"is_published" db:"is_published"`
 	PublishedAt *time.Time `json:"published_at,omitempty" db:"published_at"`
 
-	GradeCategory GradeCategory `json:"grade_category" db:"grade_category"`
+	GradeCategory  GradeCategory   `json:"grade_category" db:"grade_category"`
+	EvaluationType *EvaluationType `json:"evaluation_type,omitempty" db:"evaluation_type"`
 
 	// Audit fields
 	CreatedBy string     `json:"created_by" db:"created_by"`

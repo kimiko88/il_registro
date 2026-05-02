@@ -3,6 +3,7 @@ package users
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -44,6 +45,10 @@ func (h *Handler) Create(c *gin.Context) {
 	if err != nil {
 		if err == ErrUnauthorized {
 			c.JSON(http.StatusForbidden, gin.H{"error": "insufficient permissions"})
+			return
+		}
+		if err == ErrEmailExists || err == ErrFiscalCode || strings.Contains(err.Error(), "password") || strings.Contains(err.Error(), "fiscal code") {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -126,6 +131,18 @@ func (h *Handler) Update(c *gin.Context) {
 
 	user, err := h.service.UpdateUser(c.Request.Context(), getActorRole(c), c.Param("id"), req)
 	if err != nil {
+		if err == ErrUnauthorized {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+			return
+		}
+		if err == ErrUserNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+			return
+		}
+		if err == ErrEmailExists || err == ErrFiscalCode || (err.Error() != "" && strings.Contains(err.Error(), "fiscal code")) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -135,10 +152,39 @@ func (h *Handler) Update(c *gin.Context) {
 // 5. DELETE /api/v1/users/{id} - Soft delete
 func (h *Handler) Delete(c *gin.Context) {
 	if err := h.service.DeleteUser(c.Request.Context(), getActorRole(c), c.Param("id")); err != nil {
+		if err == ErrUnauthorized {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+			return
+		}
+		if err == ErrUserNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.Status(http.StatusNoContent)
+}
+
+// POST /api/v1/users/bulk-delete
+func (h *Handler) BulkDelete(c *gin.Context) {
+	var req BulkDeleteRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	count, err := h.service.BulkDeleteUsers(c.Request.Context(), getActorRole(c), req.UserIDs)
+	if err != nil {
+		if err == ErrUnauthorized {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "users deleted", "count": count})
 }
 
 // 6. POST /api/v1/users/{id}/restore
@@ -302,4 +348,54 @@ func toUserResponses(users []User) []UserResponse {
 		res[i] = toUserResponse(&u)
 	}
 	return res
+}
+func (h *Handler) GetGuardians(c *gin.Context) {
+	studentID := c.Param("id")
+	guardians, err := h.service.GetGuardians(c.Request.Context(), getActorRole(c), studentID)
+	if err != nil {
+		if err == ErrUnauthorized {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, guardians)
+}
+
+func (h *Handler) AddGuardian(c *gin.Context) {
+	studentID := c.Param("id")
+	var req struct {
+		ParentUserID     string `json:"parent_user_id" binding:"required"`
+		RelationshipType string `json:"relationship_type"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.service.AddGuardian(c.Request.Context(), getActorRole(c), studentID, req.ParentUserID, req.RelationshipType); err != nil {
+		if err == ErrUnauthorized {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "guardian added"})
+}
+
+func (h *Handler) RemoveGuardian(c *gin.Context) {
+	studentID := c.Param("id")
+	parentID := c.Param("guardianId")
+
+	if err := h.service.RemoveGuardian(c.Request.Context(), getActorRole(c), studentID, parentID); err != nil {
+		if err == ErrUnauthorized {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "guardian removed"})
 }

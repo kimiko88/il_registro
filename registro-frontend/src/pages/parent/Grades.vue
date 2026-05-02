@@ -54,6 +54,7 @@ import { useParentStore } from '@/stores/parent'
 import { storeToRefs } from 'pinia'
 import { useQuasar } from 'quasar'
 import { gradeService } from 'src/services/gradeService'
+import adminService from 'src/services/adminService'
 
 const $q = useQuasar()
 const parentStore = useParentStore()
@@ -70,6 +71,7 @@ const columns = [
 ]
 
 const gradesData = ref(null)
+const subjectsMap = ref({})
 
 // Compute grades based on selected period
 const currentGrades = computed(() => {
@@ -82,7 +84,7 @@ const currentGrades = computed(() => {
     return semData.grades.map(g => ({
         id: g.id,
         date: g.date.split('T')[0],
-        subject: g.subject_id, // TODO: Map to Name
+        subject: subjectsMap.value[g.subject_id] || g.subject_id,
         type: g.grade_type,
         value: g.grade_value,
         notes: g.description
@@ -90,6 +92,7 @@ const currentGrades = computed(() => {
 })
 
 onMounted(() => {
+    fetchSubjects()
     if (selectedChild.value) {
         fetchGrades()
     }
@@ -98,6 +101,19 @@ onMounted(() => {
 watch(selectedChild, (val) => {
     if (val) fetchGrades()
 })
+
+const fetchSubjects = async () => {
+    try {
+        const { data } = await adminService.getSubjects(parentStore.user?.school_id)
+        if (data) {
+            const map = {}
+            data.forEach(s => map[s.id] = s.name)
+            subjectsMap.value = map
+        }
+    } catch (e) {
+        console.error("Error loading subjects", e)
+    }
+}
 
 const fetchGrades = async () => {
     try {

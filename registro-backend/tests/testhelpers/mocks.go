@@ -262,6 +262,10 @@ func (m *MockUsersRepository) BulkCreate(ctx context.Context, usersList []users.
 	}
 	return args.Int(0), errs, args.Error(2)
 }
+func (m *MockUsersRepository) BulkDelete(ctx context.Context, ids []string) (int, error) {
+	args := m.Called(ctx, ids)
+	return args.Int(0), args.Error(1)
+}
 func (m *MockUsersRepository) HardDelete(ctx context.Context, id string) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)

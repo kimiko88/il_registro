@@ -22,6 +22,8 @@ const (
 	ResourceAssignments Resource = "assignments"
 	ResourceAttendance  Resource = "attendance"
 	ResourceAudit       Resource = "audit"
+	ResourceDocuments   Resource = "documents"
+	ResourcePCTO        Resource = "pcto"
 )
 
 const (
@@ -67,6 +69,18 @@ const (
 
 	// Audit Permissions
 	AuditRead Permission = "audit:read"
+
+	// Document Permissions
+	DocumentCreate Permission = "documents:create"
+	DocumentRead   Permission = "documents:read"
+	DocumentUpdate Permission = "documents:update"
+	DocumentDelete Permission = "documents:delete"
+
+	// PCTO Permissions
+	PCTORead   Permission = "pcto:read"
+	PCTOCreate Permission = "pcto:create"
+	PCTOUpdate Permission = "pcto:update"
+	PCTODelete Permission = "pcto:delete"
 )
 
 // RoleDefinitions maps roles to their default permissions
@@ -77,6 +91,8 @@ var RoleDefinitions = map[string][]Permission{
 		GradeRead, GradeCreate, GradeUpdate, GradeDelete,
 		AttendanceRead, AttendanceCreate, AttendanceUpdate,
 		SchedulingRead, SchedulingCreate, SchedulingBook,
+		DocumentRead, DocumentCreate, DocumentUpdate, DocumentDelete,
+		PCTORead, PCTOCreate, PCTOUpdate, PCTODelete,
 	},
 	"admin": {
 		UserCreate, UserRead, UserUpdate, UserDelete, UserImport, UserExport, UserAudit,
@@ -93,9 +109,11 @@ var RoleDefinitions = map[string][]Permission{
 		SchedulingRead,
 	},
 	"secretary": {
-		UserRead, UserCreate, UserUpdate,
+		UserRead, UserCreate, UserUpdate, UserDelete,
 		UserExport,
-		AttendanceRead, AttendanceUpdate, // Secretary often manages attendance
+		AttendanceRead, AttendanceUpdate,
+		DocumentRead, DocumentCreate, DocumentUpdate, DocumentDelete,
+		PCTORead, PCTOCreate, PCTOUpdate, PCTODelete,
 	},
 	"teacher": {
 		UserRead,

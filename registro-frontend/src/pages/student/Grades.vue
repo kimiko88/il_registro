@@ -58,8 +58,11 @@
 import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { gradeService } from 'src/services/gradeService'
+import adminService from 'src/services/adminService'
+import { useStudentStore } from 'src/stores/student'
 
 const $q = useQuasar()
+const studentStore = useStudentStore()
 
 const filters = ref({
     semester: 1,
@@ -69,21 +72,44 @@ const filters = ref({
 const columns = [
     { name: 'date', label: 'Data', align: 'left', field: 'date', sortable: true },
     { name: 'subject', label: 'Materia', align: 'left', field: 'subject', sortable: true },
-    { name: 'type', label: 'Tipo', align: 'left', field: 'type' },
+    { name: 'evalType', label: 'Tipo Prova', align: 'left', field: 'evalType' },
+    { name: 'type', label: 'Categoria', align: 'left', field: 'type' },
     { name: 'value', label: 'Voto', align: 'center', field: 'value', sortable: true },
     { name: 'desc', label: 'Argomento', align: 'left', field: 'description' }
 ]
 
 const grades = ref([])
+const subjectsMap = ref({})
 
-onMounted(() => {
+onMounted(async () => {
+    await studentStore.fetchProfile()
+    await fetchSubjects()
     fetchMyGrades()
 })
+
+const fetchSubjects = async () => {
+    try {
+        const schoolId = studentStore.profile?.school_id
+        if (!schoolId) return
+        const { data } = await adminService.getSubjects(schoolId)
+        if (data) {
+            const map = {}
+            data.forEach(s => map[s.id] = s.name)
+            subjectsMap.value = map
+        }
+    } catch (e) {
+        console.error('Error loading subjects', e)
+    }
+}
+
+const mapEvalType = (type) => {
+    const map = { Written: 'Scritto', Oral: 'Orale', Practical: 'Pratico' }
+    return map[type] || type || '-'
+}
 
 const fetchMyGrades = async () => {
     try {
         const res = await gradeService.getMyGrades()
-        // Flatten
         const all = []
         if (res.data && res.data.semesters) {
             res.data.semesters.forEach(s => {
@@ -92,7 +118,8 @@ const fetchMyGrades = async () => {
                        all.push({
                            id: g.id,
                            date: g.date.split('T')[0],
-                           subject: g.subject_id, // Map if possible
+                           subject: subjectsMap.value[g.subject_id] || g.subject_id,
+                           evalType: mapEvalType(g.evaluation_type),
                            type: g.grade_type,
                            value: g.grade_value,
                            description: g.description,
@@ -105,16 +132,11 @@ const fetchMyGrades = async () => {
         grades.value = all
     } catch (e) {
         console.error(e)
-        // $q.notify(...)
     }
 }
 
 const filteredGrades = computed(() => {
-    // Filter by Semester
     let list = grades.value.filter(g => g.semester === filters.value.semester)
-    
-    // Filter by Period
-    // ... logic for last month/week if needed, skipping for MVP or implementing simple check
     if (filters.value.period === 'Ultimo Mese') {
         const monthAgo = new Date(); monthAgo.setMonth(monthAgo.getMonth() - 1);
         list = list.filter(g => new Date(g.date) >= monthAgo)
