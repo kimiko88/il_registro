@@ -1,58 +1,60 @@
 <template>
   <q-page class="q-pa-md bg-grey-1">
     <!-- Header -->
-    <div class="row items-center q-mb-md justify-between">
+    <div class="row items-center q-mb-xl justify-between">
       <div>
-        <h1 class="text-h4 q-my-none">Teacher Dashboard</h1>
-        <div class="text-subtitle1 text-grey-8">Welcome back, {{ teacherStore.fullName }}</div>
+        <h1 class="text-h3 text-weight-bold text-outfit bg-clip-text text-transparent bg-gradient-premium q-my-none" style="display: inline-block;">
+            Teacher Dashboard
+        </h1>
+        <div class="text-subtitle1 text-slate-500 q-mt-sm">Benvenuto, Prof. {{ teacherStore.fullName }}</div>
       </div>
       <div class="text-right">
-        <div class="text-caption text-grey">Today</div>
-        <div class="text-h6">{{ todayDate }}</div>
+        <div class="text-caption text-slate-400 text-uppercase letter-spacing-1">Oggi</div>
+        <div class="text-h6 text-outfit text-weight-bold text-slate-700">{{ todayDate }}</div>
       </div>
     </div>
 
     <!-- Stats Cards -->
-    <div class="row q-col-gutter-md q-mb-lg">
+    <div class="row q-col-gutter-lg q-mb-xl">
       <div class="col-12 col-sm-6 col-md-3">
-        <q-card class="dashboard-card bg-primary text-white">
+        <q-card class="dashboard-card glass-card bg-indigo-600 text-white shadow-soft overflow-hidden">
           <q-card-section>
-            <div class="text-subtitle2">Next Class</div>
-            <div class="text-h5 q-mt-sm">5A - Math</div>
-            <div class="text-caption">09:00 - 10:00 (Room 101)</div>
+            <div class="text-caption opacity-80 text-uppercase letter-spacing-1">Prossima Lezione</div>
+            <div class="text-h4 text-weight-bold q-mt-sm">5A - Matematica</div>
+            <div class="text-caption q-mt-xs">09:00 - 10:00 (Aula 101)</div>
           </q-card-section>
           <q-icon name="schedule" class="card-bg-icon" />
         </q-card>
       </div>
 
       <div class="col-12 col-sm-6 col-md-3">
-        <q-card class="dashboard-card bg-orange text-white">
+        <q-card class="dashboard-card glass-card bg-orange-600 text-white shadow-soft overflow-hidden">
           <q-card-section>
-            <div class="text-subtitle2">Pending Actions</div>
-            <div class="text-h5 q-mt-sm">3 Reviews</div>
-            <div class="text-caption">2 Justifications, 1 Document</div>
+            <div class="text-caption opacity-80 text-uppercase letter-spacing-1">Da Fare</div>
+            <div class="text-h4 text-weight-bold q-mt-sm">3 Revisioni</div>
+            <div class="text-caption q-mt-xs">Giustificazioni e Firma Doc</div>
           </q-card-section>
           <q-icon name="pending_actions" class="card-bg-icon" />
         </q-card>
       </div>
 
       <div class="col-12 col-sm-6 col-md-3">
-        <q-card class="dashboard-card bg-teal text-white">
+        <q-card class="dashboard-card glass-card bg-emerald-600 text-white shadow-soft overflow-hidden">
           <q-card-section>
-            <div class="text-subtitle2">Upcoming Colloqui</div>
-            <div class="text-h5 q-mt-sm">2 Bookings</div>
-            <div class="text-caption">Tomorrow, 15:00</div>
+            <div class="text-caption opacity-80 text-uppercase letter-spacing-1">Colloqui</div>
+            <div class="text-h4 text-weight-bold q-mt-sm">2 Prenotazioni</div>
+            <div class="text-caption q-mt-xs">Domani, ore 15:00</div>
           </q-card-section>
           <q-icon name="people" class="card-bg-icon" />
         </q-card>
       </div>
 
       <div class="col-12 col-sm-6 col-md-3">
-        <q-card class="dashboard-card bg-deep-purple text-white">
+        <q-card class="dashboard-card glass-card bg-violet-600 text-white shadow-soft overflow-hidden">
           <q-card-section>
-            <div class="text-subtitle2">Unread Messages</div>
-            <div class="text-h5 q-mt-sm">{{ teacherStore.notifications.filter(n => !n.read).length }} New</div>
-            <div class="text-caption">Check Communications</div>
+            <div class="text-caption opacity-80 text-uppercase letter-spacing-1">Messaggi</div>
+            <div class="text-h4 text-weight-bold q-mt-sm">{{ teacherStore.notifications.filter(n => !n.read).length }} Nuovi</div>
+            <div class="text-caption q-mt-xs">Controlla le circolari</div>
           </q-card-section>
           <q-icon name="mail" class="card-bg-icon" />
         </q-card>
@@ -164,20 +166,42 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.bg-clip-text {
+    -webkit-background-clip: text;
+    background-clip: text;
+}
+
+.bg-gradient-premium {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+}
+
+.letter-spacing-1 {
+    letter-spacing: 1px;
+}
+
 .dashboard-card {
-  height: 140px;
+  height: 160px;
   position: relative;
   overflow: hidden;
-  transition: transform 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none !important;
 }
+
 .dashboard-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-8px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
 }
+
 .card-bg-icon {
   position: absolute;
   right: -20px;
   bottom: -20px;
-  font-size: 100px;
-  opacity: 0.2;
+  font-size: 120px;
+  opacity: 0.15;
 }
+
+.bg-indigo-600 { background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%); }
+.bg-orange-600 { background: linear-gradient(135deg, #ea580c 0%, #f97316 100%); }
+.bg-emerald-600 { background: linear-gradient(135deg, #059669 0%, #10b981 100%); }
+.bg-violet-600 { background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%); }
 </style>

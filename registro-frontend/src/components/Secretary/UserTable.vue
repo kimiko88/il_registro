@@ -1,5 +1,5 @@
 <template>
-  <q-card>
+  <q-card class="glass-card shadow-soft overflow-hidden">
     <q-table
       :rows="users"
       :columns="columns"
@@ -10,13 +10,15 @@
       v-model:selected="selected"
     >
       <template v-slot:top>
-        <div class="text-h6 q-mr-md">Lista Utenti</div>
+        <div class="text-h5 text-weight-bold text-outfit q-mr-lg">Utenti Registrati</div>
         
         <q-btn-toggle
           v-model="roleFilter"
-          push
-          glossy
+          unelevated
           toggle-color="primary"
+          toggle-text-color="white"
+          color="white"
+          text-color="grey-7"
           :options="[
             {label: 'Tutti', value: 'all'},
             {label: 'Studenti', value: 'student'},
@@ -24,20 +26,22 @@
             {label: 'Genitori', value: 'parent'},
             {label: 'Personale', value: 'staff'}
           ]"
-          class="q-mr-md"
+          class="shadow-soft rounded-lg q-mr-md"
           @update:model-value="$emit('filter-role', $event)"
         />
 
         <q-space />
         
-        <q-input dense debounce="300" v-model="filter" placeholder="Cerca...">
-          <template v-slot:append>
-            <q-icon name="search" />
+        <q-input dense outlined bg-color="white" v-model="filter" placeholder="Cerca..." class="q-mr-sm" style="min-width: 250px">
+          <template v-slot:prepend>
+            <q-icon name="search" color="primary" />
           </template>
         </q-input>
         
-        <q-btn color="primary" icon="add" label="Nuovo" class="q-ml-md" @click="$emit('create')" />
-        <q-btn flat round icon="cloud_download" color="primary" @click="$emit('export')" tooltip="Export CSV" />
+        <q-btn unelevated color="primary" icon="add" label="Crea Utente" class="rounded-lg shadow-sm" @click="$emit('create')" />
+        <q-btn flat round icon="file_download" color="grey-7" class="q-ml-sm" @click="$emit('export')">
+            <q-tooltip>Esporta CSV</q-tooltip>
+        </q-btn>
       </template>
 
       <!-- Bulk Actions -->

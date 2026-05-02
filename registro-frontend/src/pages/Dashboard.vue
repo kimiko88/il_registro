@@ -3,29 +3,30 @@
     <!-- Hero Section -->
     <div class="row items-center q-mb-xl">
       <div class="col-12 col-md-8">
-        <div class="text-h4 text-weight-bold text-dark q-mb-sm" style="letter-spacing: -0.5px">
-          {{ greeting }}, <span class="text-primary">{{ user?.first_name || 'Utente' }}</span>!
-        </div>
-        <div class="text-subtitle1 text-grey-7">
-          Ecco cosa succede oggi nella tua scuola.
+        <h1 class="text-h3 text-weight-bold text-outfit q-my-none bg-clip-text text-transparent bg-gradient-premium" style="display: inline-block;">
+          {{ greeting }}, {{ user?.first_name || 'Utente' }}
+        </h1>
+        <div class="text-subtitle1 text-slate-500 q-mt-sm">
+          Bentornato! Ecco il riepilogo delle attività scolastiche di oggi.
         </div>
       </div>
       <div class="col-12 col-md-4 text-right gt-sm">
-        <div class="text-caption text-grey-6">{{ new Date().toLocaleDateString('it-IT', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) }}</div>
+        <div class="text-caption text-slate-400 text-uppercase letter-spacing-1">Data Odierna</div>
+        <div class="text-h6 text-outfit text-weight-bold text-slate-700">{{ new Date().toLocaleDateString('it-IT', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) }}</div>
       </div>
     </div>
 
     <!-- Quick Stats -->
-    <div class="row q-col-gutter-md q-mb-xl">
+    <div class="row q-col-gutter-lg q-mb-xl">
       <div class="col-12 col-sm-6 col-md-3" v-for="(stat, index) in stats" :key="index">
-        <q-card class="no-shadow glass-card cursor-pointer hover-scale">
+        <q-card class="glass-card stat-card full-height">
           <q-card-section class="row items-center no-wrap">
-            <div :class="`bg-${stat.color}-1 text-${stat.color} q-pa-md rounded-lg q-mr-md`">
-              <q-icon :name="stat.icon" size="24px" />
+            <div :class="`bg-${stat.color}-100 text-${stat.color}-700 q-pa-md rounded-xl q-mr-md`">
+              <q-icon :name="stat.icon" size="28px" />
             </div>
             <div>
-              <div class="text-h5 text-weight-bold text-dark">{{ stat.value }}</div>
-              <div class="text-caption text-grey-7">{{ stat.label }}</div>
+              <div class="text-h5 text-weight-bold text-outfit">{{ stat.value }}</div>
+              <div class="text-caption text-slate-500 text-uppercase letter-spacing-1" style="font-size: 10px">{{ stat.label }}</div>
             </div>
           </q-card-section>
         </q-card>
@@ -164,20 +165,34 @@ const actions = [
 </script>
 
 <style scoped>
-.hover-scale {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+.bg-clip-text {
+    -webkit-background-clip: text;
+    background-clip: text;
 }
-.hover-scale:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
+.bg-gradient-premium {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+}
+
+.letter-spacing-1 {
+    letter-spacing: 1px;
+}
+
+.stat-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stat-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 .bordered-card {
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
+  border: 1px solid rgba(0,0,0,0.05);
+  border-radius: 20px;
 }
 
 .hover-bg-grey:hover {
-  background-color: #f8fafc;
+  background-color: rgba(79, 70, 229, 0.05);
 }
 </style>

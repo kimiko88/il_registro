@@ -1,19 +1,24 @@
 <template>
   <q-page class="q-pa-md">
     <!-- Header -->
-    <div class="row items-center q-mb-lg">
+    <div class="row items-center q-mb-xl">
       <div class="col">
-        <div class="text-h4 text-weight-bold">Dashboard Admin</div>
-        <div class="text-subtitle1 text-grey-7">
-          {{ isSuperAdmin ? 'Panoramica Globale' : 'La Mia Scuola' }}
+        <h1 class="text-h3 text-weight-bold text-outfit q-my-none bg-clip-text text-transparent bg-gradient-premium" style="display: inline-block;">
+          Dashboard Admin
+        </h1>
+        <div class="text-subtitle1 text-slate-500 q-mt-sm">
+          {{ isSuperAdmin ? 'Benvenuto nel pannello di controllo globale' : 'Gestione centralizzata della tua scuola' }}
         </div>
       </div>
       <div class="col-auto">
         <q-btn
           v-if="isSuperAdmin"
-          color="primary"
+          unelevated
+          color="white"
+          text-color="primary"
           icon="refresh"
-          label="Aggiorna"
+          label="Sincronizza Dati"
+          class="rounded-lg shadow-soft q-px-md"
           @click="fetchDashboardStats"
           :loading="loading"
         />
@@ -28,18 +33,20 @@
     </div>
 
     <!-- Stats Cards -->
-    <div v-else-if="stats" class="row q-gutter-md q-mb-lg">
+    <div v-else-if="stats" class="row q-col-gutter-lg q-mb-xl">
       <!-- Total Schools (SuperAdmin only) -->
-      <div v-if="isSuperAdmin" class="col-12 col-md-3">
-        <q-card class="stat-card">
+      <div v-if="isSuperAdmin" class="col-12 col-sm-6 col-md-3">
+        <q-card class="glass-card stat-card full-height">
           <q-card-section>
-            <div class="row items-center">
+            <div class="row items-center no-wrap">
               <div class="col">
-                <div class="text-h6 text-weight-bold">{{ stats.total_schools }}</div>
-                <div class="text-caption text-grey-7">Totale Scuole</div>
+                <div class="text-caption text-slate-500 text-uppercase letter-spacing-1 q-mb-xs">Scuole</div>
+                <div class="text-h4 text-weight-bold text-outfit">{{ stats.total_schools }}</div>
               </div>
               <div class="col-auto">
-                <q-icon name="school" size="48px" color="indigo" />
+                <div class="bg-indigo-100 q-pa-md rounded-xl">
+                    <q-icon name="school" size="32px" color="indigo-700" />
+                </div>
               </div>
             </div>
           </q-card-section>
@@ -47,16 +54,18 @@
       </div>
 
       <!-- Total Users -->
-      <div class="col-12 col-md-3">
-        <q-card class="stat-card">
+      <div class="col-12 col-sm-6 col-md-3">
+        <q-card class="glass-card stat-card full-height">
           <q-card-section>
-            <div class="row items-center">
+            <div class="row items-center no-wrap">
               <div class="col">
-                <div class="text-h6 text-weight-bold">{{ stats.total_users }}</div>
-                <div class="text-caption text-grey-7">Totale Utenti</div>
+                <div class="text-caption text-slate-500 text-uppercase letter-spacing-1 q-mb-xs">Utenti</div>
+                <div class="text-h4 text-weight-bold text-outfit">{{ stats.total_users }}</div>
               </div>
               <div class="col-auto">
-                <q-icon name="people" size="48px" color="cyan" />
+                <div class="bg-cyan-100 q-pa-md rounded-xl">
+                    <q-icon name="people" size="32px" color="cyan-700" />
+                </div>
               </div>
             </div>
           </q-card-section>
@@ -64,16 +73,18 @@
       </div>
 
       <!-- Total Students -->
-      <div class="col-12 col-md-3">
-        <q-card class="stat-card">
+      <div class="col-12 col-sm-6 col-md-3">
+        <q-card class="glass-card stat-card full-height">
           <q-card-section>
-            <div class="row items-center">
+            <div class="row items-center no-wrap">
               <div class="col">
-                <div class="text-h6 text-weight-bold">{{ stats.total_students }}</div>
-                <div class="text-caption text-grey-7">Studenti</div>
+                <div class="text-caption text-slate-500 text-uppercase letter-spacing-1 q-mb-xs">Studenti</div>
+                <div class="text-h4 text-weight-bold text-outfit">{{ stats.total_students }}</div>
               </div>
               <div class="col-auto">
-                <q-icon name="school" size="48px" color="amber" />
+                <div class="bg-amber-100 q-pa-md rounded-xl">
+                    <q-icon name="face" size="32px" color="amber-700" />
+                </div>
               </div>
             </div>
           </q-card-section>
@@ -81,16 +92,18 @@
       </div>
 
       <!-- Total Teachers -->
-      <div class="col-12 col-md-3">
-        <q-card class="stat-card">
+      <div class="col-12 col-sm-6 col-md-3">
+        <q-card class="glass-card stat-card full-height">
           <q-card-section>
-            <div class="row items-center">
+            <div class="row items-center no-wrap">
               <div class="col">
-                <div class="text-h6 text-weight-bold">{{ stats.total_teachers }}</div>
-                <div class="text-caption text-grey-7">Docenti</div>
+                <div class="text-caption text-slate-500 text-uppercase letter-spacing-1 q-mb-xs">Docenti</div>
+                <div class="text-h4 text-weight-bold text-outfit">{{ stats.total_teachers }}</div>
               </div>
               <div class="col-auto">
-                <q-icon name="person" size="48px" color="purple" />
+                <div class="bg-purple-100 q-pa-md rounded-xl">
+                    <q-icon name="supervisor_account" size="32px" color="purple-700" />
+                </div>
               </div>
             </div>
           </q-card-section>
@@ -98,12 +111,15 @@
       </div>
     </div>
 
-    <div v-if="stats" class="row q-col-gutter-md">
+    <div v-if="stats" class="row q-col-gutter-xl">
       <!-- Recent Events -->
       <div class="col-12 col-md-8">
-        <q-card>
-          <q-card-section>
-            <div class="text-h6 q-mb-md">Eventi Recenti</div>
+        <q-card class="glass-card shadow-soft overflow-hidden">
+          <q-card-section class="q-pa-lg">
+            <div class="row items-center justify-between q-mb-lg">
+                <div class="text-h5 text-weight-bold text-outfit">Attività Recenti</div>
+                <q-btn flat color="primary" label="Vedi Audit Log" to="/admin/audit-logs" no-caps v-if="isSuperAdmin" />
+            </div>
             <q-list v-if="stats.recent_events && stats.recent_events.length > 0" separator>
               <q-item v-for="event in stats.recent_events" :key="event.id">
                 <q-item-section avatar>
@@ -132,9 +148,9 @@
 
       <!-- Health Status (SuperAdmin only) -->
       <div v-if="isSuperAdmin && stats.health_status" class="col-12 col-md-4">
-        <q-card>
-          <q-card-section>
-            <div class="text-h6 q-mb-md">Stato Sistema</div>
+        <q-card class="glass-card shadow-soft q-mb-lg">
+          <q-card-section class="q-pa-lg">
+            <div class="text-h5 text-weight-bold text-outfit q-mb-lg">Monitoraggio</div>
             <div class="q-gutter-sm">
               <div class="health-item">
                 <div class="row items-center">
@@ -341,7 +357,7 @@ const goToAnalytics = () => {
 }
 
 const goToSettings = () => {
-  router.push('/settings')
+  router.push('/admin/settings')
 }
 
 onMounted(() => {
@@ -350,16 +366,33 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.bg-clip-text {
+    -webkit-background-clip: text;
+    background-clip: text;
+}
+
+.bg-gradient-premium {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+}
+
+.letter-spacing-1 {
+    letter-spacing: 1px;
+}
+
 .stat-card {
-  transition: transform 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .stat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-8px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 .health-item {
-  padding: 8px 0;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+.health-item:last-child {
+    border-bottom: none;
 }
 </style>

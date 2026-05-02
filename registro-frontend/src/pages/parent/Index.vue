@@ -1,17 +1,19 @@
 <template>
   <q-page class="q-pa-md bg-slate-50">
     <!-- Header with Child Switcher -->
-    <div class="row items-center justify-between q-mb-md">
+    <div class="row items-center justify-between q-mb-xl">
       <div>
-        <div class="text-h5 text-weight-bold text-slate-800">Benvenuto, Genitore</div>
-        <div class="text-subtitle2 text-slate-500">Panoramica studente</div>
+        <h1 class="text-h3 text-weight-bold text-outfit bg-clip-text text-transparent bg-gradient-premium q-my-none" style="display: inline-block;">
+          Bentornato, Genitore
+        </h1>
+        <div class="text-subtitle1 text-slate-500 q-mt-sm">Panoramica delle attività per i tuoi figli</div>
       </div>
       <div v-if="children.length > 0">
         <q-btn-dropdown
-          color="primary"
-          outline
+          color="indigo-600"
+          unelevated
           no-caps
-          rounded
+          class="rounded-xl shadow-soft q-px-md"
           :label="selectedChild ? `${selectedChild.firstName} ${selectedChild.lastName}` : 'Seleziona Figlio'"
           icon="face"
         >
@@ -47,48 +49,52 @@
     <div v-else-if="selectedChild" class="row q-col-gutter-md">
       
       <!-- Quick Stats -->
-      <div class="col-12 col-md-3">
-        <q-card class="shadow-sm rounded-lg full-height">
+      <div class="col-12 col-sm-6 col-md-3">
+        <q-card class="glass-card stat-card shadow-soft full-height overflow-hidden">
           <q-card-section>
-            <div class="text-overline text-slate-500">Media Voti</div>
-            <div class="text-h4 text-weight-bold text-primary">7.8</div>
+            <div class="text-caption text-slate-400 text-uppercase letter-spacing-1">Media Voti</div>
+            <div class="text-h3 text-weight-bold text-indigo-600 q-mt-sm">7.8</div>
             <div class="row items-center q-mt-sm">
               <q-icon name="trending_up" color="positive" class="q-mr-xs" />
-              <span class="text-positive text-caption">+0.2 vs mese scorso</span>
+              <span class="text-positive text-caption text-weight-medium">+0.2 vs mese scorso</span>
             </div>
           </q-card-section>
+          <q-icon name="grade" class="card-bg-icon text-indigo-100" />
         </q-card>
       </div>
 
-      <div class="col-12 col-md-3">
-        <q-card class="shadow-sm rounded-lg full-height">
+      <div class="col-12 col-sm-6 col-md-3">
+        <q-card class="glass-card stat-card shadow-soft full-height overflow-hidden">
           <q-card-section>
-            <div class="text-overline text-slate-500">Assenze</div>
-            <div class="text-h4 text-weight-bold text-orange">3</div>
+            <div class="text-caption text-slate-400 text-uppercase letter-spacing-1">Assenze</div>
+            <div class="text-h3 text-weight-bold text-orange-600 q-mt-sm">3</div>
             <div class="row items-center q-mt-sm">
-              <span class="text-caption text-grey">Ultima: 12/12/2024</span>
+              <span class="text-caption text-slate-500">Ultima: 12/12/2024</span>
             </div>
           </q-card-section>
+          <q-icon name="how_to_reg" class="card-bg-icon text-orange-100" />
         </q-card>
       </div>
 
-      <div class="col-12 col-md-3">
-        <q-card class="shadow-sm rounded-lg full-height">
+      <div class="col-12 col-sm-6 col-md-3">
+        <q-card class="glass-card stat-card shadow-soft full-height overflow-hidden">
           <q-card-section>
-            <div class="text-overline text-slate-500">Prossimo Colloquio</div>
-            <div class="text-h5 text-weight-bold truncate">Nessuno</div>
-            <q-btn flat dense no-caps color="primary" label="Prenota ora" to="/parent/colloqui" class="q-mt-xs" />
+            <div class="text-caption text-slate-400 text-uppercase letter-spacing-1">Prossimo Colloquio</div>
+            <div class="text-h5 text-weight-bold q-mt-sm">Nessuno</div>
+            <q-btn flat dense no-caps color="indigo-600" label="Prenota ora" to="/parent/colloqui" class="q-mt-sm rounded-lg" />
           </q-card-section>
+          <q-icon name="event" class="card-bg-icon text-slate-100" />
         </q-card>
       </div>
 
-       <div class="col-12 col-md-3">
-        <q-card class="shadow-sm rounded-lg full-height">
+       <div class="col-12 col-sm-6 col-md-3">
+        <q-card class="glass-card stat-card shadow-soft full-height overflow-hidden">
           <q-card-section>
-            <div class="text-overline text-slate-500">Avvisi</div>
-            <div class="text-h4 text-weight-bold text-red">2</div>
-            <div class="text-caption text-grey q-mt-sm">Da leggere</div>
+            <div class="text-caption text-slate-400 text-uppercase letter-spacing-1">Avvisi</div>
+            <div class="text-h3 text-weight-bold text-rose-600 q-mt-sm">2</div>
+            <div class="text-caption text-slate-500 q-mt-sm text-weight-medium">Da leggere</div>
           </q-card-section>
+          <q-icon name="notifications_active" class="card-bg-icon text-rose-100" />
         </q-card>
       </div>
 
@@ -167,3 +173,44 @@ onMounted(() => {
   }
 })
 </script>
+
+<style scoped>
+.bg-clip-text {
+    -webkit-background-clip: text;
+    background-clip: text;
+}
+
+.bg-gradient-premium {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+}
+
+.letter-spacing-1 {
+    letter-spacing: 1px;
+}
+
+.stat-card {
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.stat-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.card-bg-icon {
+  position: absolute;
+  right: -10px;
+  bottom: -10px;
+  font-size: 80px;
+  opacity: 0.5;
+  z-index: 0;
+}
+
+.truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+</style>

@@ -50,22 +50,24 @@
       :width="260"
     >
       <!-- User Profile Section -->
-      <div class="q-pa-md bg-gradient-primary text-white" v-if="userName">
-        <div class="row items-center q-mb-sm">
-          <q-avatar size="48px" color="white" text-color="primary" class="q-mr-md">
-            <q-icon name="person" size="28px" />
+      <div class="q-pa-lg bg-gradient-premium text-white relative-position overflow-hidden" v-if="userName">
+        <div class="row items-center q-mb-sm relative-position" style="z-index: 1">
+          <q-avatar size="56px" color="white" text-color="primary" class="q-mr-md shadow-soft">
+            <q-icon name="person" size="32px" />
           </q-avatar>
           <div class="col">
-            <div class="text-weight-bold">{{ userName }}</div>
-            <div class="text-caption opacity-80">{{ roleLabel }}</div>
+            <div class="text-h6 text-weight-bold no-wrap">{{ userName }}</div>
+            <div class="text-caption opacity-80 text-uppercase letter-spacing-1">{{ roleLabel }}</div>
           </div>
         </div>
+        <!-- Decorative Circle -->
+        <div class="absolute-bottom-right q-mr-n-lg q-mb-n-lg" style="width: 120px; height: 120px; border-radius: 50%; background: rgba(255,255,255,0.1)"></div>
       </div>
 
       <!-- Menu Items -->
       <div class="q-pa-md">
-        <div class="text-overline text-grey-6 q-mb-sm">MENU</div>
-        <q-list padding class="rounded-borders">
+        <div class="text-overline text-grey-5 q-px-md q-mb-sm letter-spacing-2">MENU PRINCIPALE</div>
+        <q-list padding class="q-gutter-y-xs">
           <q-item 
             v-for="item in menuItems"
             :key="item.path"
@@ -73,13 +75,14 @@
             v-ripple
             :to="item.path"
             :exact="item.exact"
-            active-class="bg-primary text-white rounded-lg shadow-soft"
+            active-class="bg-indigo-50 text-indigo-700 active-menu-item"
+            class="rounded-lg q-mx-sm transition-all"
           >
             <q-item-section avatar>
-              <q-icon :name="item.icon" />
+              <q-icon :name="item.icon" size="22px" />
             </q-item-section>
             <q-item-section>
-              <q-item-label class="text-weight-medium">{{ item.label }}</q-item-label>
+              <q-item-label class="text-weight-bold">{{ item.label }}</q-item-label>
             </q-item-section>
           </q-item>
         </q-list>
@@ -169,11 +172,38 @@ async function handleLogout() {
 </script>
 
 <style scoped>
-.bg-gradient-primary {
-  background: linear-gradient(135deg, #4F46E5 0%, #3B82F6 100%);
+.bg-gradient-premium {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
 }
 
 .opacity-80 {
   opacity: 0.8;
+}
+
+.letter-spacing-1 {
+    letter-spacing: 1px;
+}
+
+.letter-spacing-2 {
+    letter-spacing: 2px;
+}
+
+.transition-all {
+    transition: all 0.3s ease;
+}
+
+.active-menu-item {
+    position: relative;
+    box-shadow: inset 4px 0 0 #4f46e5;
+}
+
+.active-menu-item::after {
+    content: '';
+    position: absolute;
+    right: 8px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #4f46e5;
 }
 </style>

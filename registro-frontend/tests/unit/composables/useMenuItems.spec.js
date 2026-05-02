@@ -6,11 +6,12 @@ describe('useMenuItems', () => {
         it('should return admin menu items', () => {
             const menuItems = useMenuItems('admin')
 
-            expect(menuItems).toHaveLength(4)
+            expect(menuItems).toHaveLength(5)
             expect(menuItems[0].label).toBe('Dashboard')
             expect(menuItems[1].label).toBe('La Mia Scuola')
-            expect(menuItems[2].label).toBe('Analytics')
-            expect(menuItems[3].label).toBe('Impostazioni')
+            expect(menuItems[2].label).toBe('Gestione Utenti')
+            expect(menuItems[3].label).toBe('Analytics')
+            expect(menuItems[4].label).toBe('Impostazioni')
         })
 
         it('should have correct paths for admin', () => {
@@ -32,7 +33,7 @@ describe('useMenuItems', () => {
         it('should return secretary menu items', () => {
             const menuItems = useMenuItems('secretary')
 
-            expect(menuItems).toHaveLength(8)
+            expect(menuItems).toHaveLength(11)
             expect(menuItems.map(item => item.label)).toContain('Documenti')
             expect(menuItems.map(item => item.label)).toContain('Studenti')
             expect(menuItems.map(item => item.label)).toContain('Report')
@@ -43,7 +44,7 @@ describe('useMenuItems', () => {
         it('should return teacher menu items', () => {
             const menuItems = useMenuItems('teacher')
 
-            expect(menuItems).toHaveLength(7)
+            expect(menuItems).toHaveLength(9)
             expect(menuItems.map(item => item.label)).toContain('Le Mie Classi')
             expect(menuItems.map(item => item.label)).toContain('Voti')
             expect(menuItems.map(item => item.label)).toContain('Presenze')
@@ -64,7 +65,7 @@ describe('useMenuItems', () => {
         it('should return student menu items', () => {
             const menuItems = useMenuItems('student')
 
-            expect(menuItems).toHaveLength(8)
+            expect(menuItems).toHaveLength(9)
             expect(menuItems.map(item => item.label)).toContain('I Miei Voti')
             expect(menuItems.map(item => item.label)).toContain('Le Mie Presenze')
             expect(menuItems.map(item => item.label)).toContain('PCTO')

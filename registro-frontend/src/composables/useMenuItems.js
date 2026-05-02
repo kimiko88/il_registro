@@ -7,6 +7,7 @@ export function useMenuItems(role) {
         superadmin: [
             { label: 'Dashboard', icon: 'dashboard', path: '/', exact: true },
             { label: 'Gestione Scuole', icon: 'school', path: '/admin/schools' },
+            { label: 'Gestione Utenti', icon: 'people', path: '/admin/users' },
             { label: 'Gestione Admin', icon: 'admin_panel_settings', path: '/admin/admins' },
             { label: 'Monitoraggio Sistema', icon: 'monitor_heart', path: '/admin/monitoring' },
             { label: 'Analytics Globali', icon: 'analytics', path: '/admin/analytics' },
@@ -16,6 +17,7 @@ export function useMenuItems(role) {
         admin: [
             { label: 'Dashboard', icon: 'dashboard', path: '/', exact: true },
             { label: 'La Mia Scuola', icon: 'school', path: '/admin/schools' },
+            { label: 'Gestione Utenti', icon: 'people', path: '/admin/users' },
             { label: 'Analytics', icon: 'analytics', path: '/admin/analytics' },
             { label: 'Impostazioni', icon: 'settings', path: '/admin/settings' }
         ],

@@ -12,17 +12,17 @@ export default [
             },
             {
                 path: 'admin/dashboard',
-                component: () => import('@/pages/Admin/Dashboard.vue'),
+                component: () => import('@/pages/admin/Dashboard.vue'),
                 meta: { roles: ['superadmin', 'admin'] }
             },
             {
                 path: 'admin/schools',
-                component: () => import('@/pages/Admin/SchoolManagement.vue'),
+                component: () => import('@/pages/admin/SchoolManagement.vue'),
                 meta: { roles: ['superadmin', 'admin'] }
             },
             {
                 path: 'admin/schools/:id',
-                component: () => import('@/pages/Admin/SchoolDetail.vue'),
+                component: () => import('@/pages/admin/SchoolDetail.vue'),
                 meta: { roles: ['superadmin', 'admin'] }
             },
             {
@@ -34,6 +34,11 @@ export default [
                 path: 'admin/monitoring',
                 component: () => import('@/pages/admin/Monitoring.vue'),
                 meta: { roles: ['superadmin'] }
+            },
+            {
+                path: 'admin/users',
+                component: () => import('@/pages/secretary/Users.vue'),
+                meta: { roles: ['superadmin', 'admin'] }
             },
             {
                 path: 'admin/analytics',
@@ -52,7 +57,7 @@ export default [
             },
             {
                 path: 'admin/audit-logs',
-                component: () => import('@/pages/Admin/AuditLog.vue'),
+                component: () => import('@/pages/admin/AuditLog.vue'),
                 meta: { roles: ['superadmin'] }
             },
 

@@ -23,63 +23,83 @@
     />
 
     <!-- Create/Edit User Dialog -->
-    <q-dialog v-model="showUserDialog">
-        <q-card style="min-width: 500px">
-            <q-card-section class="row items-center q-pb-none">
-                <div class="text-h6">{{ isEditing ? 'Modifica Utente' : 'Nuovo Utente' }}</div>
+    <q-dialog v-model="showUserDialog" class="premium-dialog">
+        <q-card style="min-width: 550px">
+            <q-card-section class="row items-center q-pa-lg bg-gradient-premium text-white">
+                <div class="text-h6 text-weight-bold text-outfit">{{ isEditing ? 'Modifica Profilo' : 'Crea Nuovo Profilo' }}</div>
                 <q-space />
-                <q-btn icon="close" flat round dense v-close-popup />
+                <q-btn icon="close" flat round dense v-close-popup color="white" />
             </q-card-section>
             
-            <q-card-section>
-                <q-form @submit="saveUser" class="q-gutter-md">
-                    <div class="row q-col-gutter-sm">
+            <q-card-section class="q-pa-lg">
+                <q-form @submit="saveUser" class="q-gutter-y-lg">
+                    <div class="row q-col-gutter-md">
                         <div class="col-6">
-                            <q-input v-model="userForm.first_name" label="Nome" outlined dense :rules="[val => !!val || 'Obbligatorio']" />
+                            <q-input v-model="userForm.first_name" label="Nome" outlined :rules="[val => !!val || 'Obbligatorio']" bg-color="white" />
                         </div>
                         <div class="col-6">
-                            <q-input v-model="userForm.last_name" label="Cognome" outlined dense :rules="[val => !!val || 'Obbligatorio']" />
+                            <q-input v-model="userForm.last_name" label="Cognome" outlined :rules="[val => !!val || 'Obbligatorio']" bg-color="white" />
                         </div>
                     </div>
-                    <q-input v-model="userForm.email" label="Email" outlined dense type="email" :rules="[val => !!val || 'Obbligatorio']" />
-                    <q-input v-model="userForm.fiscal_code" label="Codice Fiscale" outlined dense maxlength="16" />
+                    <q-input v-model="userForm.email" label="Email Istituzionale" outlined type="email" :rules="[val => !!val || 'Obbligatorio']" bg-color="white" />
+                    <q-input v-model="userForm.fiscal_code" label="Codice Fiscale" outlined maxlength="16" bg-color="white" />
                     
-                    <q-select 
-                        v-model="userForm.role" 
-                        :options="roleOptions"
-                        label="Ruolo"
-                        outlined
-                        dense
-                        emit-value
-                        map-options
-                    />
+                    <div class="row q-col-gutter-md">
+                        <div :class="isSuperAdmin ? 'col-6' : 'col-12'">
+                            <q-select 
+                                v-model="userForm.role" 
+                                :options="roleOptions"
+                                label="Tipo di Profilo"
+                                outlined
+                                emit-value
+                                map-options
+                                bg-color="white"
+                            />
+                        </div>
+                        <div v-if="isSuperAdmin" class="col-6">
+                            <q-select 
+                                v-model="userForm.school_id" 
+                                :options="schoolOptions"
+                                label="Scuola di Riferimento"
+                                outlined
+                                emit-value
+                                map-options
+                                option-label="name"
+                                option-value="id"
+                                :rules="[val => !!val || 'Obbligatorio']"
+                                @update:model-value="fetchClassesForSchool"
+                                bg-color="white"
+                            />
+                        </div>
+                    </div>
 
-                    <div v-if="userForm.role === 'student'">
+                    <div v-if="userForm.role === 'student'" class="bg-indigo-50 q-pa-md rounded-lg">
                          <q-select
                             v-model="userForm.class_id"
                             :options="classOptions"
-                            label="Classe"
+                            label="Assegna Classe"
                             outlined
-                            dense
                             emit-value
                             map-options
-                            hint="Seleziona la classe di appartenenza"
+                            hint="Lo studente verrà inserito nel registro di questa classe"
                             :loading="loadingClasses"
+                            bg-color="white"
                          />
                     </div>
                     
                      <q-input
                          v-if="!isEditing"
                          v-model="userForm.password"
-                         label="Password Provvisoria"
-                         outlined dense
+                         label="Password Iniziale"
+                         outlined
                          type="password"
                          :rules="[val => !!val || 'Campo obbligatorio', val => val.length >= 8 || 'Minimo 8 caratteri']"
+                         bg-color="white"
                     />
 
-                    <div class="row justify-end q-mt-lg">
-                        <q-btn label="Annulla" flat v-close-popup color="grey" />
-                        <q-btn :label="isEditing ? 'Salva' : 'Crea'" type="submit" color="primary" class="q-ml-sm" />
+                    <div class="row justify-end q-mt-xl q-gutter-sm">
+                        <q-btn label="Annulla" flat v-close-popup color="grey-7" no-caps />
+                        <q-btn :label="isEditing ? 'Aggiorna Profilo' : 'Crea Profilo'" type="submit" color="primary" class="q-px-xl rounded-lg shadow-soft" no-caps />
                     </div>
                 </q-form>
             </q-card-section>
@@ -87,22 +107,17 @@
     </q-dialog>
 
     <!-- Create Class Dialog -->
-    <q-dialog v-model="showClassDialog">
+    <q-dialog v-model="showClassDialog" class="premium-dialog">
         <q-card style="min-width: 400px">
-            <q-card-section class="row items-center q-pb-none">
-                <div class="text-h6">Nuova Classe</div>
-                <q-space />
-                <q-btn icon="close" flat round dense v-close-popup />
-            </q-card-section>
-
-            <q-card-section>
-                 <q-form @submit="saveClass" class="q-gutter-md">
-                    <q-input v-model="classForm.name" label="Nome (es. 1A)" outlined dense :rules="[val => !!val || 'Obbligatorio']" />
-                    <q-input v-model="classForm.academic_year" label="Anno Scolastico" outlined dense />
+            <q-card-section class="q-pa-lg">
+                <div class="text-h6 text-weight-bold text-outfit q-mb-md">Nuova Classe</div>
+                 <q-form @submit="saveClass" class="q-gutter-y-md">
+                    <q-input v-model="classForm.name" label="Nome Classe (es. 1A, 5B)" outlined :rules="[val => !!val || 'Obbligatorio']" />
+                    <q-input v-model="classForm.academic_year" label="Anno Scolastico" outlined placeholder="2024/2025" />
                     
-                    <div class="row justify-end">
-                        <q-btn label="Annulla" flat v-close-popup color="grey" />
-                        <q-btn label="Crea Classe" type="submit" color="primary" />
+                    <div class="row justify-end q-mt-lg">
+                        <q-btn label="Annulla" flat v-close-popup color="grey-7" />
+                        <q-btn label="Crea Classe" type="submit" color="primary" class="q-ml-sm shadow-sm" />
                     </div>
                  </q-form>
             </q-card-section>
@@ -205,9 +220,11 @@ import UserTable from 'src/components/Secretary/UserTable.vue';
 import { userService } from 'src/services/userService';
 import adminService from 'src/services/adminService';
 import { useAuthStore } from 'src/stores/auth';
+import { usePermissions } from 'src/composables/usePermissions';
 
 const $q = useQuasar();
 const authStore = useAuthStore();
+const { isSuperAdmin } = usePermissions();
 const loading = ref(false);
 const showUserDialog = ref(false);
 const showClassDialog = ref(false);
@@ -236,6 +253,7 @@ const userForm = reactive({
     email: '',
     role: 'student',
     class_id: null,
+    school_id: null,
     fiscal_code: '',
     password: ''
 });
@@ -247,9 +265,15 @@ const classForm = reactive({
 });
 
 
+const schools = ref([]);
+const schoolOptions = computed(() => schools.value);
+
 onMounted(() => {
     fetchUsers()
     fetchClasses()
+    if (isSuperAdmin.value) {
+        fetchSchools()
+    }
 });
 
 const fetchUsers = async () => {
@@ -265,15 +289,31 @@ const fetchUsers = async () => {
 }
 
 const fetchClasses = async () => {
-    if (!authStore.user?.school_id) return;
+    const targetSchoolId = isSuperAdmin.value ? userForm.school_id : authStore.user?.school_id;
+    if (!targetSchoolId) return;
     loadingClasses.value = true;
     try {
-        const res = await adminService.getSchoolClasses(authStore.user.school_id);
+        const res = await adminService.getSchoolClasses(targetSchoolId);
         classes.value = res.data;
     } catch (e) {
         console.error("Error loading classes", e);
     } finally {
         loadingClasses.value = false;
+    }
+}
+
+const fetchClassesForSchool = () => {
+    classes.value = [];
+    userForm.class_id = null;
+    fetchClasses();
+}
+
+const fetchSchools = async () => {
+    try {
+        const res = await adminService.getSchools({ page_size: 100 });
+        schools.value = res.data.items || [];
+    } catch (e) {
+        console.error("Error loading schools", e);
     }
 }
 
@@ -300,6 +340,7 @@ const openCreate = () => {
     userForm.email = '';
     userForm.role = 'student';
     userForm.class_id = null;
+    userForm.school_id = isSuperAdmin.value ? null : authStore.user?.school_id;
     userForm.fiscal_code = '';
     userForm.password = '';
     
@@ -309,8 +350,11 @@ const openCreate = () => {
 const openEdit = (user) => {
     isEditing.value = true;
     Object.assign(userForm, user);
-    // Explicitly set class_id if missing (though should come from API now)
-    if (user.ClassID) userForm.class_id = user.ClassID; // Ensure casing matches API DTO
+    if (user.ClassID) userForm.class_id = user.ClassID;
+    if (user.SchoolID) userForm.school_id = user.SchoolID;
+    if (isSuperAdmin.value && userForm.school_id) {
+        fetchClasses();
+    }
     // Note: API returns snake_case usually, check naming. 
     // Go struct: ClassID `json:"class_id"` -> response has class_id.
     // user object from API should have class_id.
@@ -328,7 +372,8 @@ const openClassDialog = () => {
 
 const saveUser = async () => {
     try {
-        const payload = { ...userForm, school_id: authStore.user.school_id };
+        const targetSchoolId = isSuperAdmin.value ? userForm.school_id : authStore.user.school_id;
+        const payload = { ...userForm, school_id: targetSchoolId };
         // If editing, don't send empty password
         if (isEditing.value) {
             delete payload.password; 
@@ -351,10 +396,11 @@ const saveClass = async () => {
         // The API CreateClassRequest expects Name, AcademicYear, SchoolID
         // We'll map name to name (e.g. "1A") and maybe section to "A"?
         // Simpler: Just send name.
+        const targetSchoolId = isSuperAdmin.value ? userForm.school_id : authStore.user.school_id;
         const payload = {
             name: classForm.name,
             academic_year: classForm.academic_year,
-            school_id: authStore.user.school_id,
+            school_id: targetSchoolId,
             section: classForm.name.replace(/[0-9]/g, '') // Rough guess
         };
         await adminService.createClass(payload);
@@ -468,8 +514,9 @@ const openManageSubjects = async (user) => {
     
     // 1. Find Teacher ID
     try {
+        const targetSchoolId = user.school_id || authStore.user.school_id;
         if (teachersCache.value.length === 0) {
-            const tRes = await adminService.getTeachersList(authStore.user.school_id)
+            const tRes = await adminService.getTeachersList(targetSchoolId)
             teachersCache.value = tRes.data || []
         }
         const teacher = teachersCache.value.find(t => t.user_id === user.id)
@@ -483,7 +530,8 @@ const openManageSubjects = async (user) => {
         // 2. Load Subjects (Assigned & Available)
         await loadTeacherSubjects()
         if (availableSubjects.value.length === 0) {
-            const sRes = await adminService.getSubjects(authStore.user.school_id)
+            const targetSchoolId = user.school_id || authStore.user.school_id;
+            const sRes = await adminService.getSubjects(targetSchoolId)
             availableSubjects.value = (sRes.data || []).map(s => ({ label: s.name, value: s.id }))
         }
 

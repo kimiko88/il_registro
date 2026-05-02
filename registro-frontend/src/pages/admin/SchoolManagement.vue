@@ -1,14 +1,14 @@
 <template>
   <q-page class="q-pa-md" @keydown.ctrl.k.prevent="focusSearch">
     <!-- Header -->
-    <div class="row items-center q-mb-md">
+    <div class="row items-center q-mb-xl">
       <div class="col">
-        <div class="text-h4 text-weight-bold">
+        <h1 class="text-h3 text-weight-bold text-outfit bg-clip-text text-transparent bg-gradient-premium q-my-none" style="display: inline-block;">
           {{ isSuperAdmin ? 'Gestione Scuole' : 'La Mia Scuola' }}
-        </div>
-        <div class="text-subtitle1 text-grey-7">
-          {{ pagination.rowsNumber || 0 }} scuole total{{ pagination.rowsNumber === 1 ? 'e' : 'i' }}
-          <span v-if="selected.length > 0" class="text-primary text-weight-bold q-ml-md">
+        </h1>
+        <div class="text-subtitle1 text-slate-500 q-mt-sm">
+          {{ pagination.rowsNumber || 0 }} istituti registrati nel sistema
+          <span v-if="selected.length > 0" class="text-indigo-600 text-weight-bold q-ml-md bg-indigo-50 q-px-sm rounded-lg">
             {{ selected.length }} selezionate
           </span>
         </div>
@@ -19,14 +19,17 @@
             color="negative"
             icon="delete"
             label="Elimina Selezione"
-            outline
+            unelevated
+            class="rounded-lg shadow-soft"
             @click="deleteSelected"
         />
         <q-btn
-            color="secondary"
+            color="white"
+            text-color="grey-7"
             icon="file_download"
-            label="Export CSV"
-            outline
+            label="Esporta"
+            unelevated
+            class="rounded-lg shadow-soft"
             @click="exportTable"
         />
         <q-btn
@@ -34,27 +37,29 @@
           color="primary"
           icon="add"
           label="Nuova Scuola"
+          unelevated
+          class="rounded-lg shadow-soft q-px-lg"
           @click="showCreateDialog = true"
         />
       </div>
     </div>
 
     <!-- Filters -->
-    <q-card class="q-mb-md">
-      <q-card-section>
-        <div class="row q-col-gutter-md">
+    <q-card class="glass-card q-mb-xl shadow-soft">
+      <q-card-section class="q-pa-lg">
+        <div class="row q-col-gutter-lg">
           <div class="col-12 col-md-6">
             <q-input
               ref="searchInput"
               v-model="filters.search"
               placeholder="Cerca scuola... (Ctrl+K)"
-              dense
               outlined
+              bg-color="white"
               clearable
               @update:model-value="debouncedFetch"
             >
               <template v-slot:prepend>
-                <q-icon name="search" />
+                <q-icon name="search" color="primary" />
               </template>
             </q-input>
           </div>
@@ -62,9 +67,9 @@
             <q-select
               v-model="filters.status"
               :options="statusOptions"
-              label="Stato"
-              dense
+              label="Stato Istituto"
               outlined
+              bg-color="white"
               clearable
               emit-value
               map-options
@@ -73,13 +78,15 @@
           </div>
           <div class="col-12 col-md-3">
             <q-btn
-              outline
-              color="primary"
+              unelevated
+              color="indigo-50"
+              text-color="indigo-700"
               icon="refresh"
               label="Aggiorna"
               @click="fetchSchools"
               :loading="loading"
-              class="full-width"
+              class="full-width rounded-lg h-full"
+              style="height: 56px"
             />
           </div>
         </div>
@@ -87,7 +94,7 @@
     </q-card>
 
     <!-- Schools Table -->
-    <q-card>
+    <q-card class="glass-card shadow-soft overflow-hidden">
       <q-table
         v-model:selected="selected"
         :rows="schools"
@@ -98,7 +105,8 @@
         @request="onRequest"
         :selection="isSuperAdmin ? 'multiple' : 'none'"
         binary-state-sort
-        class="schools-table"
+        flat
+        class="bg-transparent"
       >
         <template v-slot:body-cell-name="props">
           <q-td :props="props">
