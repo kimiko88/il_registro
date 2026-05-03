@@ -41,7 +41,7 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 }
 
 func (h *Handler) GetMySummary(c *gin.Context) {
-	studentID := c.GetString("userID")
+	studentID := c.GetString("user_id")
 	res, err := h.service.GetStudentSummary(c.Request.Context(), studentID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -73,7 +73,7 @@ func (h *Handler) GetChildSummary(c *gin.Context) {
 
 func (h *Handler) ApproveJustification(c *gin.Context) {
 	id := c.Param("id")
-	teacherID := c.GetString("userID")
+	teacherID := c.GetString("user_id")
 	if err := h.service.ProcessJustification(c.Request.Context(), teacherID, id, true); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -106,7 +106,7 @@ func (h *Handler) MarkAttendance(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	userID := c.GetString("userID") // From middleware
+	userID := c.GetString("user_id") // From middleware
 	if err := h.service.MarkAttendance(c.Request.Context(), userID, req); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -120,7 +120,7 @@ func (h *Handler) MarkBulk(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	userID := c.GetString("userID")
+	userID := c.GetString("user_id")
 	if err := h.service.MarkBulk(c.Request.Context(), userID, req); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -145,7 +145,7 @@ func (h *Handler) GetClassAttendance(c *gin.Context) {
 
 func (h *Handler) GetMyAttendance(c *gin.Context) {
 	// studentID from token
-	studentID := c.GetString("userID")
+	studentID := c.GetString("user_id")
 	res, err := h.service.GetStudentAttendance(c.Request.Context(), studentID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -161,7 +161,7 @@ func (h *Handler) RequestJustification(c *gin.Context) {
 		return
 	}
 	// Verify logical parent ownership? Service handles logic
-	parentID := c.GetString("userID")
+	parentID := c.GetString("user_id")
 	if err := h.service.RequestJustification(c.Request.Context(), parentID, req); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -188,7 +188,7 @@ func (h *Handler) ProcessJustification(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	teacherID := c.GetString("userID")
+	teacherID := c.GetString("user_id")
 	if err := h.service.ProcessJustification(c.Request.Context(), teacherID, id, req.Approve); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

@@ -40,6 +40,19 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	pcto.GET("/my-projects", h.GetMyProjects)
 	pcto.POST("/hours", h.LogHours)
 	pcto.GET("/my-projects/:id", h.GetProjectDetails)
+
+	// Stats
+	pcto.GET("/stats", h.GetStats)
+}
+
+func (h *Handler) GetStats(c *gin.Context) {
+	schoolID := getSchoolID(c)
+	res, err := h.service.GetStats(c.Request.Context(), schoolID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, res)
 }
 
 func (h *Handler) CreateProject(c *gin.Context) {
@@ -48,7 +61,7 @@ func (h *Handler) CreateProject(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	userID := c.GetString("userID")
+	userID := c.GetString("user_id")
 	role := c.GetString("role")
 	schoolID := getSchoolID(c)
 	if err := h.service.CreateProject(c.Request.Context(), schoolID, role, userID, req); err != nil {
@@ -111,7 +124,7 @@ func (h *Handler) GetCompanies(c *gin.Context) {
 }
 
 func (h *Handler) GetMyProjects(c *gin.Context) {
-	userID := c.GetString("userID")
+	userID := c.GetString("user_id")
 	res, err := h.service.GetMyProjects(c.Request.Context(), userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -126,7 +139,7 @@ func (h *Handler) LogHours(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	userID := c.GetString("userID")
+	userID := c.GetString("user_id")
 	if err := h.service.LogHours(c.Request.Context(), userID, req); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -136,7 +149,7 @@ func (h *Handler) LogHours(c *gin.Context) {
 
 func (h *Handler) GetProjectDetails(c *gin.Context) {
 	projectID := c.Param("id")
-	userID := c.GetString("userID")
+	userID := c.GetString("user_id")
 	part, logs, err := h.service.GetMyProjectDetails(c.Request.Context(), userID, projectID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

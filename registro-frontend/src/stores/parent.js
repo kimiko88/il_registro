@@ -8,26 +8,6 @@ export const useParentStore = defineStore('parent', () => {
     const loading = ref(false)
     const error = ref(null)
 
-    // Mock data for development if API fails or is empty
-    const mockChildren = [
-        {
-            id: 'student-123',
-            firstName: 'Luigi',
-            lastName: 'Rossi',
-            schoolName: 'Liceo Scientifico "A. Einstein"',
-            class: '3A',
-            avatar: null
-        },
-        {
-            id: 'student-456',
-            firstName: 'Maria',
-            lastName: 'Rossi',
-            schoolName: 'Liceo Scientifico "A. Einstein"',
-            class: '1B',
-            avatar: null
-        }
-    ]
-
     const selectedChild = computed(() => {
         if (!selectedChildId.value) return children.value[0] || null
         return children.value.find(c => c.id === selectedChildId.value) || children.value[0] || null

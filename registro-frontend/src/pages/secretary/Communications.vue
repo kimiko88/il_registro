@@ -51,7 +51,7 @@
                      <template v-slot:body-cell-actions="props">
                         <q-td :props="props" auto-width>
                             <q-btn flat round icon="visibility" color="grey-7" />
-                            <q-btn flat round icon="delete" color="negative" />
+                            <q-btn flat round icon="delete" color="negative" @click="deleteCircular(props.row.id)" />
                         </q-td>
                     </template>
                 </q-table>
@@ -66,18 +66,25 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useCommunicationsStore } from 'src/stores/communications'
 import CircularCreator from 'src/components/Secretary/CircularCreator.vue'
+import { useQuasar } from 'quasar'
 
+const $q = useQuasar()
+const commStore = useCommunicationsStore()
 const showCreator = ref(false)
 const filter = ref('all')
 const search = ref('')
 
-const circulars = ref([
-    { id: 1, title: 'Convocazione Collegio Docenti', date: '10/01/2025', recipients: { teachers: true }, specificClasses: [] },
-    { id: 2, title: 'Sciopero 20 Gennaio', date: '12/01/2025', recipients: { parents: true, students: true }, specificClasses: [] },
-    { id: 3, title: 'Uscita Anticipata 1A', date: '15/01/2025', recipients: { parents: true }, specificClasses: ['1A'] }
-])
+const circulars = computed(() => commStore.communications.map(c => ({
+    id: c.id,
+    title: c.title,
+    date: new Date(c.created_at).toLocaleDateString('it-IT'),
+    recipients: c.recipients || { teachers: false, parents: false, students: false },
+    specificClasses: c.specific_classes || [],
+    content: c.content
+})))
 
 const columns = [
     { name: 'date', label: 'Data', field: 'date', align: 'left', sortable: true, style: 'width: 100px' },
@@ -86,6 +93,18 @@ const columns = [
     { name: 'actions', label: '', align: 'right' }
 ]
 
+onMounted(async () => {
+    await fetchData()
+})
+
+const fetchData = async () => {
+    try {
+        await commStore.fetchCommunications()
+    } catch (err) {
+        $q.notify({ type: 'negative', message: 'Errore durante il caricamento' })
+    }
+}
+
 const filteredCirculars = computed(() => {
     let res = circulars.value
     if (filter.value === 'teachers') res = res.filter(c => c.recipients.teachers)
@@ -93,15 +112,25 @@ const filteredCirculars = computed(() => {
     return res
 })
 
-const onSent = (newCircular) => {
+const onSent = async () => {
     showCreator.value = false
-    circulars.value.unshift({
-        id: Date.now(),
-        title: newCircular.title,
-        date: newCircular.date,
-        recipients: newCircular.recipients,
-        specificClasses: newCircular.specificClasses,
-        content: newCircular.content
+    await fetchData()
+}
+
+const deleteCircular = async (id) => {
+    $q.dialog({
+        title: 'Conferma',
+        message: 'Vuoi eliminare questa circolare?',
+        cancel: true,
+        persistent: true
+    }).onOk(async () => {
+        try {
+            await commStore.deleteCommunication(id)
+            $q.notify({ type: 'positive', message: 'Circolare eliminata' })
+            await fetchData()
+        } catch (err) {
+            $q.notify({ type: 'negative', message: 'Errore durante l\'eliminazione' })
+        }
     })
 }
 </script>

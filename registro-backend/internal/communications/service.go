@@ -29,3 +29,7 @@ func (s *Service) SendMessage(ctx context.Context, senderID string, req CreateMe
 func (s *Service) ListMessages(ctx context.Context, userID string) ([]*Message, error) {
 	return s.repo.List(ctx, userID)
 }
+
+func (s *Service) DeleteMessage(ctx context.Context, id string) error {
+	return s.repo.Delete(ctx, id)
+}

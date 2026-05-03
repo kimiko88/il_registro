@@ -76,7 +76,7 @@ func (h *Handler) GetClassGrades(c *gin.Context) {
 	}
 
 	filter := h.parseFilter(c)
-	actorID := c.GetString("userID")
+	actorID := c.GetString("user_id")
 	actorRole := c.GetString("role")
 
 	resp, err := h.service.GetClassGrades(c.Request.Context(), actorID, actorRole, classID, filter)
@@ -107,7 +107,7 @@ func (h *Handler) GetSubjectGrades(c *gin.Context) {
 }
 
 func (h *Handler) BulkImport(c *gin.Context) {
-	teacherID := c.GetString("userID")
+	teacherID := c.GetString("user_id")
 	if teacherID == "" {
 		teacherID = "dev-teacher-id"
 	}
@@ -136,7 +136,7 @@ func (h *Handler) BulkImport(c *gin.Context) {
 }
 
 func (h *Handler) Export(c *gin.Context) {
-	teacherID := c.GetString("userID")
+	teacherID := c.GetString("user_id")
 	if teacherID == "" {
 		teacherID = "dev-teacher-id"
 	}
@@ -182,7 +182,7 @@ func (h *Handler) AddGrade(c *gin.Context) {
 		return
 	}
 
-	teacherID := c.GetString("userID")
+	teacherID := c.GetString("user_id")
 	if teacherID == "" {
 		// For testing purpose if auth middleware missing, checking header or mocking
 		// In prod this is fatal or handled by middleware
@@ -214,7 +214,7 @@ func (h *Handler) UpdateGrade(c *gin.Context) {
 		return
 	}
 
-	teacherID := c.GetString("userID")
+	teacherID := c.GetString("user_id")
 	if teacherID == "" {
 		teacherID = "dev-teacher-id"
 	}
@@ -235,7 +235,7 @@ func (h *Handler) DeleteGrade(c *gin.Context) {
 		return
 	}
 
-	teacherID := c.GetString("userID")
+	teacherID := c.GetString("user_id")
 	if teacherID == "" {
 		teacherID = "dev-teacher-id"
 	}
@@ -297,7 +297,7 @@ func (h *Handler) GetClassAverage(c *gin.Context) {
 // --- Student Endpoints ---
 
 func (h *Handler) GetMyGrades(c *gin.Context) {
-	studentID := c.GetString("userID")
+	studentID := c.GetString("user_id")
 	if studentID == "" {
 		studentID = "dev-student-id"
 	}
@@ -314,7 +314,7 @@ func (h *Handler) GetMyGrades(c *gin.Context) {
 }
 
 func (h *Handler) GetMyAverages(c *gin.Context) {
-	studentID := c.GetString("userID")
+	studentID := c.GetString("user_id")
 	if studentID == "" {
 		studentID = "dev-student-id"
 	}
@@ -329,7 +329,7 @@ func (h *Handler) GetMyAverages(c *gin.Context) {
 }
 
 func (h *Handler) GetMyTrend(c *gin.Context) {
-	studentID := c.GetString("userID")
+	studentID := c.GetString("user_id")
 	if studentID == "" {
 		studentID = "dev-student-id"
 	}
@@ -346,7 +346,7 @@ func (h *Handler) GetMyTrend(c *gin.Context) {
 }
 
 func (h *Handler) GetSemesterReport(c *gin.Context) {
-	studentID := c.GetString("userID")
+	studentID := c.GetString("user_id")
 	if studentID == "" {
 		studentID = "dev-student-id"
 	}
@@ -369,7 +369,7 @@ func (h *Handler) GetSemesterReport(c *gin.Context) {
 // --- Parent Endpoints ---
 
 func (h *Handler) GetChildGrades(c *gin.Context) {
-	parentID := c.GetString("userID")
+	parentID := c.GetString("user_id")
 	if parentID == "" {
 		parentID = "dev-parent-id"
 	}

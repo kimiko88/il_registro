@@ -571,8 +571,11 @@ func (r *PostgresRepository) IsActive(ctx context.Context, id string) (bool, err
 	return isActive, nil
 }
 func (r *PostgresRepository) GetStudentsByClass(ctx context.Context, classID string) ([]User, error) {
-	query := `SELECT id, email, first_name, last_name, fiscal_code, role, school_id, is_active, created_at, updated_at 
-	          FROM users WHERE class_id = $1 AND role = 'student' AND deleted_at IS NULL ORDER BY last_name, first_name`
+	query := `SELECT u.id, u.email, u.first_name, u.last_name, u.fiscal_code, u.role, u.school_id, u.is_active, u.created_at, u.updated_at, s.id as student_id
+	          FROM users u
+	          JOIN students s ON u.id = s.user_id
+	          WHERE s.class_id = $1 AND u.role = 'student' AND u.deleted_at IS NULL 
+	          ORDER BY u.last_name, u.first_name`
 	rows, err := r.db.QueryContext(ctx, query, classID)
 	if err != nil {
 		return nil, err
@@ -582,7 +585,7 @@ func (r *PostgresRepository) GetStudentsByClass(ctx context.Context, classID str
 	var users []User
 	for rows.Next() {
 		var u User
-		if err := rows.Scan(&u.ID, &u.Email, &u.FirstName, &u.LastName, &u.FiscalCode, &u.Role, &u.SchoolID, &u.IsActive, &u.CreatedAt, &u.UpdatedAt); err != nil {
+		if err := rows.Scan(&u.ID, &u.Email, &u.FirstName, &u.LastName, &u.FiscalCode, &u.Role, &u.SchoolID, &u.IsActive, &u.CreatedAt, &u.UpdatedAt, &u.StudentID); err != nil {
 			return nil, err
 		}
 		users = append(users, u)

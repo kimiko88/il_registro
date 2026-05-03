@@ -23,6 +23,7 @@ type Repository interface {
 
 	CreateCompany(ctx context.Context, c *Company) error
 	GetCompanies(ctx context.Context, schoolID string) ([]Company, error)
+	GetStats(ctx context.Context, schoolID string) (*PCTOStats, error)
 }
 
 type repository struct {
@@ -184,4 +185,34 @@ func (r *repository) GetCompanies(ctx context.Context, schoolID string) ([]Compa
 		comps = append(comps, c)
 	}
 	return comps, nil
+}
+
+func (r *repository) GetStats(ctx context.Context, schoolID string) (*PCTOStats, error) {
+	stats := &PCTOStats{}
+
+	// Total Projects
+	err := r.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM pcto_projects WHERE school_id = $1", schoolID).Scan(&stats.TotalProjects)
+	if err != nil {
+		return nil, err
+	}
+
+	// Total Students Involved
+	err = r.db.QueryRowContext(ctx, "SELECT COUNT(DISTINCT student_id) FROM pcto_participations WHERE project_id IN (SELECT id FROM pcto_projects WHERE school_id = $1)", schoolID).Scan(&stats.TotalStudents)
+	if err != nil {
+		return nil, err
+	}
+
+	// Total Hours Recorded
+	err = r.db.QueryRowContext(ctx, "SELECT COALESCE(SUM(hours), 0) FROM pcto_hours WHERE participation_id IN (SELECT id FROM pcto_participations WHERE project_id IN (SELECT id FROM pcto_projects WHERE school_id = $1))", schoolID).Scan(&stats.TotalHours)
+	if err != nil {
+		return nil, err
+	}
+
+	// Active Companies
+	err = r.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM pcto_companies WHERE school_id = $1", schoolID).Scan(&stats.ActiveCompanies)
+	if err != nil {
+		return nil, err
+	}
+
+	return stats, nil
 }

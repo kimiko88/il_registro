@@ -352,38 +352,42 @@ func (h *Handler) GetAdminActivity(c *gin.Context) {
 
 // RegisterRoutes registers all admin routes
 func (h *Handler) RegisterRoutes(router *gin.RouterGroup, middleware *Middleware) {
-	admin := router.Group("/admin")
-	admin.Use(middleware.RequireAdminOrSuperAdmin())
+	adminGroup := router.Group("/admin")
 	{
-		// Dashboard (both admin and superadmin)
-		admin.GET("/dashboard/stats", middleware.SetSchoolFilter(), h.GetDashboardStats)
+		// Dashboard stats (accessible to admin, superadmin, and secretary)
+		adminGroup.GET("/dashboard/stats", middleware.RequireStaff(), middleware.SetSchoolFilter(), h.GetDashboardStats)
 
-		// Schools (with role-based access)
-		schools := admin.Group("/schools")
-		schools.Use(middleware.SetSchoolFilter())
+		// Restricted admin routes (admin and superadmin only)
+		restricted := adminGroup.Group("/")
+		restricted.Use(middleware.RequireAdminOrSuperAdmin())
 		{
-			schools.GET("", h.ListSchools)
-			schools.GET("/:id", h.GetSchool)
-			schools.PUT("/:id", h.UpdateSchool)
+			// Schools (with role-based access)
+			schools := restricted.Group("/schools")
+			schools.Use(middleware.SetSchoolFilter())
+			{
+				schools.GET("", h.ListSchools)
+				schools.GET("/:id", h.GetSchool)
+				schools.PUT("/:id", h.UpdateSchool)
 
-			// Superadmin only
-			schools.POST("", middleware.RequireSuperAdmin(), h.CreateSchool)
-			schools.DELETE("/:id", middleware.RequireSuperAdmin(), h.DeleteSchool)
+				// Superadmin only
+				schools.POST("", middleware.RequireSuperAdmin(), h.CreateSchool)
+				schools.DELETE("/:id", middleware.RequireSuperAdmin(), h.DeleteSchool)
+			}
+
+			// Admin users (superadmin only)
+			admins := restricted.Group("/users/admins")
+			admins.Use(middleware.RequireSuperAdmin())
+			{
+				admins.GET("", h.ListAdminUsers)
+				admins.POST("", h.CreateAdminUser)
+				admins.PUT("/:id", h.UpdateAdminUser)
+				admins.DELETE("/:id", h.DeleteAdminUser)
+				admins.GET("/:id/activity", h.GetAdminActivity)
+			}
+
+			// Audit Logs (SuperAdmin only)
+			restricted.GET("/audit-logs", middleware.RequireSuperAdmin(), h.ListAuditLogs)
 		}
-
-		// Admin users (superadmin only)
-		admins := admin.Group("/users/admins")
-		admins.Use(middleware.RequireSuperAdmin())
-		{
-			admins.GET("", h.ListAdminUsers)
-			admins.POST("", h.CreateAdminUser)
-			admins.PUT("/:id", h.UpdateAdminUser)
-			admins.DELETE("/:id", h.DeleteAdminUser)
-			admins.GET("/:id/activity", h.GetAdminActivity)
-		}
-
-		// Audit Logs (SuperAdmin only)
-		admin.GET("/audit-logs", middleware.RequireSuperAdmin(), h.ListAuditLogs)
 	}
 }
 

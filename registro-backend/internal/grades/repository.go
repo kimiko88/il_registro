@@ -201,7 +201,7 @@ func (r *repository) FindByID(id string) (*Grade, error) {
 		&g.ID, &g.StudentID, &g.SchoolID, &g.SubjectID, &g.TeacherID,
 		&g.GradeValue, &g.GradeType, &g.Semester, &g.Date,
 		&g.Description, &g.RubricID, &g.Weight, &g.IsPublished, &g.PublishedAt,
-		&g.GradeCategory, &g.CreatedBy, &g.CreatedAt, &g.UpdatedAt,
+		&g.GradeCategory, &g.EvaluationType, &g.CreatedBy, &g.CreatedAt, &g.UpdatedAt,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {

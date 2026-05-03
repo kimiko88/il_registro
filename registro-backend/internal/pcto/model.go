@@ -68,3 +68,10 @@ type LogHourRequest struct {
 	Hours     float64 `json:"hours" binding:"required"`
 	Activity  string  `json:"activity" binding:"required"`
 }
+
+type PCTOStats struct {
+	TotalProjects   int64   `json:"total_projects"`
+	TotalStudents   int64   `json:"total_students"`
+	TotalHours      float64 `json:"total_hours"`
+	ActiveCompanies int64   `json:"active_companies"`
+}

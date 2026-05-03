@@ -2,8 +2,8 @@
   <q-page class="q-pa-md">
     <div class="row items-center q-mb-xl">
       <div class="col">
-        <h1 class="text-h3 text-weight-bold text-outfit bg-clip-text text-transparent bg-gradient-premium q-my-none" style="display: inline-block;">
-          Impostazioni
+        <h1 class="text-h3 text-weight-bold text-outfit q-my-none text-gradient-premium">
+          Impostazioni Sistema
         </h1>
         <div class="text-subtitle1 text-slate-500 q-mt-sm">Configura le preferenze del sistema</div>
       </div>
@@ -63,15 +63,6 @@
 </template>
 
 <style scoped>
-.bg-clip-text {
-    -webkit-background-clip: text;
-    background-clip: text;
-}
-
-.bg-gradient-premium {
-    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-}
-
 .letter-spacing-1 {
     letter-spacing: 1px;
 }

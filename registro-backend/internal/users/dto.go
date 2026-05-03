@@ -43,7 +43,7 @@ type UserResponse struct {
 	Email           string     `json:"email"`
 	FirstName       string     `json:"first_name"`
 	LastName        string     `json:"last_name"`
-	FiscalCode      string     `json:"fiscal_code"`
+	FiscalCode      *string    `json:"fiscal_code"`
 	Role            string     `json:"role"`
 	SchoolID        *string    `json:"school_id,omitempty"`
 	ClassID         *string    `json:"class_id,omitempty"`   // For students
@@ -51,8 +51,8 @@ type UserResponse struct {
 	IsActive        bool       `json:"is_active"`
 	EmailVerified   bool       `json:"email_verified"`
 	MFAEnabled      bool       `json:"mfa_enabled"`
-	PhoneNumber     string     `json:"phone_number,omitempty"`
-	JobTitle        string     `json:"job_title,omitempty"`
+	PhoneNumber     *string    `json:"phone_number,omitempty"`
+	JobTitle        *string    `json:"job_title,omitempty"`
 	CreatedAt       time.Time  `json:"created_at"`
 	LastLogin       *time.Time `json:"last_login,omitempty"`
 	DeletedAt       *time.Time `json:"deleted_at,omitempty"`

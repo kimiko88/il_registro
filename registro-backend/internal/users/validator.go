@@ -42,3 +42,11 @@ func SanitizeEmail(email string) string {
 func SanitizeText(text string) string {
 	return strings.TrimSpace(text)
 }
+
+func SanitizeTextPtr(text string) *string {
+	s := strings.TrimSpace(text)
+	if s == "" {
+		return nil
+	}
+	return &s
+}

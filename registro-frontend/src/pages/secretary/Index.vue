@@ -1,6 +1,13 @@
 <template>
   <q-page class="q-pa-md bg-grey-1">
-    <div class="text-h4 text-weight-bold text-dark q-mb-md">Dashboard Segreteria</div>
+    <div class="row items-center q-mb-xl">
+      <div class="col">
+        <h1 class="text-h3 text-weight-bold text-outfit q-my-none text-gradient-premium">
+          Dashboard Segreteria
+        </h1>
+        <div class="text-subtitle1 text-slate-500 q-mt-sm">Gestione amministrativa e scolastica</div>
+      </div>
+    </div>
 
     <!-- Stats Cards -->
     <div class="row q-col-gutter-md q-mb-lg">
@@ -47,35 +54,24 @@
         </q-card>
 
         <q-card class="shadow-1 q-mt-md">
-            <q-card-section>
-                 <div class="text-h6 text-weight-bold">Attività Recenti</div>
-            </q-card-section>
-             <q-list>
-                 <q-item>
-                     <q-item-section avatar>
-                         <q-icon name="person_add" color="secondary" />
-                     </q-item-section>
-                     <q-item-section>
-                         <q-item-label>Nuovo studente iscritto</q-item-label>
-                         <q-item-label caption>Mario Rossi (1A)</q-item-label>
-                     </q-item-section>
-                     <q-item-section side>
-                         <span class="text-grey-6 text-caption">10 min fa</span>
-                     </q-item-section>
-                 </q-item>
-                 <q-item>
-                     <q-item-section avatar>
-                         <q-icon name="campaign" color="primary" />
-                     </q-item-section>
-                     <q-item-section>
-                         <q-item-label>Circolare inviata</q-item-label>
-                         <q-item-label caption>Sciopero Docenti</q-item-label>
-                     </q-item-section>
-                     <q-item-section side>
-                         <span class="text-grey-6 text-caption">1 ora fa</span>
-                     </q-item-section>
-                 </q-item>
-             </q-list>
+             <q-card-section>
+                  <div class="text-h6 text-weight-bold">Attività Recenti</div>
+             </q-card-section>
+              <q-list v-if="recentEvents.length > 0">
+                  <q-item v-for="event in recentEvents" :key="event.id">
+                      <q-item-section avatar>
+                          <q-icon :name="getEventIcon(event.type)" :color="getEventColor(event.type)" />
+                      </q-item-section>
+                      <q-item-section>
+                          <q-item-label>{{ event.description }}</q-item-label>
+                          <q-item-label caption>{{ event.user_name }}</q-item-label>
+                      </q-item-section>
+                      <q-item-section side>
+                          <span class="text-grey-6 text-caption">{{ formatDate(event.created_at) }}</span>
+                      </q-item-section>
+                  </q-item>
+              </q-list>
+              <div v-else class="q-pa-md text-center text-grey">Nessuna attività recente</div>
         </q-card>
       </div>
 
@@ -153,34 +149,80 @@
 import { ref, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRouter } from 'vue-router'
+import adminService from 'src/services/adminService'
+import documentService from 'src/services/documentService'
 
 const $q = useQuasar()
 const router = useRouter()
 
 const statsCards = ref([
-    { label: 'Documenti Pendenti', value: '12', icon: 'pending_actions', color: 'orange' },
-    { label: 'Richieste Utenti', value: '5', icon: 'person_search', color: 'blue' },
-    { label: 'Totale Studenti', value: '1,240', icon: 'school', color: 'green' },
-    { label: 'Totale Docenti', value: '128', icon: 'work', color: 'purple' }
+    { label: 'Documenti Pendenti', value: '0', icon: 'pending_actions', color: 'orange' },
+    { label: 'Circolari', value: '0', icon: 'campaign', color: 'blue' },
+    { label: 'Totale Studenti', value: '0', icon: 'school', color: 'green' },
+    { label: 'Totale Docenti', value: '0', icon: 'work', color: 'purple' }
 ])
 
-const pendingReviews = ref([
-    { id: 1, title: 'PDP - Giulia Verdi', author: 'Prof. Bianchi', date: 'Oggi' },
-    { id: 2, title: 'Certificato Medico - Rossi', author: 'Segreteria', date: 'Ieri' }
-])
+const pendingReviews = ref([])
+const recentEvents = ref([])
+const announcements = ref([])
+const loading = ref(false)
 
 const fetchData = async () => {
-    // Mock fetch
-    $q.loading.show()
-    setTimeout(() => {
-        $q.loading.hide()
-        // Here we would call stores to get real data
-        $q.notify({ type: 'positive', message: 'Dati aggiornati' })
-    }, 500)
+    loading.value = true
+    try {
+        // Fetch Stats
+        const statsRes = await adminService.getDashboardStats()
+        if (statsRes.data) {
+            statsCards.value[0].value = statsRes.data.pending_documents_count || '0'
+            statsCards.value[1].value = statsRes.data.announcements_count || '0'
+            statsCards.value[2].value = statsRes.data.total_students || '0'
+            statsCards.value[3].value = statsRes.data.total_teachers || '0'
+            recentEvents.value = statsRes.data.recent_events || []
+        }
+
+        // Fetch Pending Reviews
+        const docRes = await documentService.getInbox({ status: 'pending' })
+        if (docRes.data && docRes.data.items) {
+            pendingReviews.value = docRes.data.items.slice(0, 5).map(d => ({
+                id: d.id,
+                title: d.title,
+                author: d.author || 'Docente',
+                date: new Date(d.created_at).toLocaleDateString('it-IT')
+            }))
+        }
+
+        // Fetch Communications for Announcements
+        const { useCommunicationsStore } = await import('src/stores/communications')
+        const commStore = useCommunicationsStore()
+        await commStore.fetchCommunications()
+        announcements.value = commStore.communications.slice(0, 3)
+    } catch (e) {
+        console.error("Error fetching secretary dashboard data", e)
+    } finally {
+        loading.value = false
+    }
+}
+
+const getEventIcon = (type) => {
+    const icons = { create: 'add_circle', update: 'edit', delete: 'delete', login: 'login' }
+    return icons[type] || 'event'
+}
+
+const getEventColor = (type) => {
+    const colors = { create: 'positive', update: 'info', delete: 'negative', login: 'primary' }
+    return colors[type] || 'grey'
+}
+
+const formatDate = (dateString) => {
+    const date = new Date(dateString)
+    const diff = new Date() - date
+    if (diff < 3600000) return `${Math.floor(diff / 60000)} min fa`
+    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h fa`
+    return date.toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })
 }
 
 onMounted(() => {
-    // fetchData()
+    fetchData()
 })
 </script>
 

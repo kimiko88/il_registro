@@ -10,13 +10,11 @@ import (
 type AttendanceStatus string
 
 const (
-	StatusPresent      AttendanceStatus = "present"
-	StatusAbsent       AttendanceStatus = "absent"
-	StatusLate         AttendanceStatus = "late"
-	StatusEarlyExit    AttendanceStatus = "early_exit"
-	StatusSick         AttendanceStatus = "sick"
-	StatusJustified    AttendanceStatus = "justified"
-	StatusFamilyReason AttendanceStatus = "family_reason"
+	StatusPresent   AttendanceStatus = "Present"
+	StatusAbsent    AttendanceStatus = "Absent"
+	StatusLate      AttendanceStatus = "Late"
+	StatusEarlyExit AttendanceStatus = "LeftEarly"
+	StatusExempt    AttendanceStatus = "Exempt"
 )
 
 type JustificationStatus string

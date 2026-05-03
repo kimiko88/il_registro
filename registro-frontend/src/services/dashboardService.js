@@ -6,12 +6,17 @@ import api from './api'
 export default {
     /**
      * Get dashboard stats based on user role
+     * @param {string} role - User role
      * @returns {Promise} Dashboard statistics
      */
-    async getDashboardStats() {
-        // For now, return empty stats - this would typically call
-        // a backend endpoint like /api/v1/dashboard/stats
-        // which would return role-specific statistics
+    async getDashboardStats(role) {
+        if (role === 'admin' || role === 'superadmin') {
+            const response = await api.get('/admin/dashboard/stats')
+            return response.data
+        }
+        
+        // For other roles, this could be expanded later
+        // For now, return empty or mock that will be handled in the component
         return {
             stats: [],
             schedule: [],

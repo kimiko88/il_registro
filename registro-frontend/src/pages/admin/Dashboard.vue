@@ -3,7 +3,7 @@
     <!-- Header -->
     <div class="row items-center q-mb-xl">
       <div class="col">
-        <h1 class="text-h3 text-weight-bold text-outfit q-my-none bg-clip-text text-transparent bg-gradient-premium" style="display: inline-block;">
+        <h1 class="text-h3 text-weight-bold text-outfit q-my-none text-gradient-premium">
           Dashboard Admin
         </h1>
         <div class="text-subtitle1 text-slate-500 q-mt-sm">
@@ -34,75 +34,17 @@
 
     <!-- Stats Cards -->
     <div v-else-if="stats" class="row q-col-gutter-lg q-mb-xl">
-      <!-- Total Schools (SuperAdmin only) -->
-      <div v-if="isSuperAdmin" class="col-12 col-sm-6 col-md-3">
-        <q-card class="glass-card stat-card full-height">
+      <div v-for="card in statCards" :key="card.label" class="col-12 col-sm-6 col-md-3">
+        <q-card class="glass-card stat-card full-height shadow-soft rounded-xl">
           <q-card-section>
             <div class="row items-center no-wrap">
               <div class="col">
-                <div class="text-caption text-slate-500 text-uppercase letter-spacing-1 q-mb-xs">Scuole</div>
-                <div class="text-h4 text-weight-bold text-outfit">{{ stats.total_schools }}</div>
+                <div class="text-caption text-slate-500 text-uppercase letter-spacing-1 q-mb-xs">{{ card.label }}</div>
+                <div class="text-h4 text-weight-bold text-outfit">{{ stats[card.key] || 0 }}</div>
               </div>
               <div class="col-auto">
-                <div class="bg-indigo-100 q-pa-md rounded-xl">
-                    <q-icon name="school" size="32px" color="indigo-700" />
-                </div>
-              </div>
-            </div>
-          </q-card-section>
-        </q-card>
-      </div>
-
-      <!-- Total Users -->
-      <div class="col-12 col-sm-6 col-md-3">
-        <q-card class="glass-card stat-card full-height">
-          <q-card-section>
-            <div class="row items-center no-wrap">
-              <div class="col">
-                <div class="text-caption text-slate-500 text-uppercase letter-spacing-1 q-mb-xs">Utenti</div>
-                <div class="text-h4 text-weight-bold text-outfit">{{ stats.total_users }}</div>
-              </div>
-              <div class="col-auto">
-                <div class="bg-cyan-100 q-pa-md rounded-xl">
-                    <q-icon name="people" size="32px" color="cyan-700" />
-                </div>
-              </div>
-            </div>
-          </q-card-section>
-        </q-card>
-      </div>
-
-      <!-- Total Students -->
-      <div class="col-12 col-sm-6 col-md-3">
-        <q-card class="glass-card stat-card full-height">
-          <q-card-section>
-            <div class="row items-center no-wrap">
-              <div class="col">
-                <div class="text-caption text-slate-500 text-uppercase letter-spacing-1 q-mb-xs">Studenti</div>
-                <div class="text-h4 text-weight-bold text-outfit">{{ stats.total_students }}</div>
-              </div>
-              <div class="col-auto">
-                <div class="bg-amber-100 q-pa-md rounded-xl">
-                    <q-icon name="face" size="32px" color="amber-700" />
-                </div>
-              </div>
-            </div>
-          </q-card-section>
-        </q-card>
-      </div>
-
-      <!-- Total Teachers -->
-      <div class="col-12 col-sm-6 col-md-3">
-        <q-card class="glass-card stat-card full-height">
-          <q-card-section>
-            <div class="row items-center no-wrap">
-              <div class="col">
-                <div class="text-caption text-slate-500 text-uppercase letter-spacing-1 q-mb-xs">Docenti</div>
-                <div class="text-h4 text-weight-bold text-outfit">{{ stats.total_teachers }}</div>
-              </div>
-              <div class="col-auto">
-                <div class="bg-purple-100 q-pa-md rounded-xl">
-                    <q-icon name="supervisor_account" size="32px" color="purple-700" />
+                <div :class="`bg-${card.color}-100`" class="q-pa-md rounded-xl">
+                    <q-icon :name="card.icon" size="32px" :color="`${card.color}-700`" />
                 </div>
               </div>
             </div>
@@ -273,6 +215,19 @@ const loading = ref(false)
 const stats = ref(null)
 const error = ref(null)
 
+const statCards = computed(() => {
+  const base = [
+    { label: 'Studenti', key: 'total_students', icon: 'face', color: 'amber' },
+    { label: 'Docenti', key: 'total_teachers', icon: 'supervisor_account', color: 'purple' },
+    { label: 'Documenti', key: 'total_documents', icon: 'description', color: 'blue' },
+    { label: 'Richieste', key: 'pending_documents_count', icon: 'pending_actions', color: 'rose' }
+  ]
+  if (isSuperAdmin.value) {
+    base.unshift({ label: 'Scuole', key: 'total_schools', icon: 'school', color: 'indigo' })
+  }
+  return base
+})
+
 const fetchDashboardStats = async () => {
   loading.value = true
   error.value = null
@@ -366,15 +321,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.bg-clip-text {
-    -webkit-background-clip: text;
-    background-clip: text;
-}
-
-.bg-gradient-premium {
-    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-}
-
 .letter-spacing-1 {
     letter-spacing: 1px;
 }

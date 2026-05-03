@@ -11,15 +11,16 @@ type User struct {
 	PasswordHash  string  `json:"-" db:"password_hash"`
 	FirstName     string  `json:"first_name" db:"first_name"`
 	LastName      string  `json:"last_name" db:"last_name"`
-	FiscalCode    string  `json:"fiscal_code" db:"fiscal_code"` // Codice Fiscale
+	FiscalCode    *string `json:"fiscal_code,omitempty" db:"fiscal_code"` // Codice Fiscale
 	Role          string  `json:"role" db:"role"`
 	SchoolID      *string `json:"school_id,omitempty" db:"school_id"`
+	StudentID     string  `json:"student_id,omitempty" db:"student_id"` // Profile ID
 	IsActive      bool    `json:"is_active" db:"is_active"`
 	EmailVerified bool    `json:"email_verified" db:"email_verified"`
 	MFAEnabled    bool    `json:"mfa_enabled" db:"mfa_enabled"`
 	MFASecret     string  `json:"-" db:"mfa_secret"`
-	PhoneNumber   string  `json:"phone_number" db:"phone_number"`
-	JobTitle      string  `json:"job_title" db:"job_title"`
+	PhoneNumber   *string `json:"phone_number,omitempty" db:"phone_number"`
+	JobTitle      *string `json:"job_title,omitempty" db:"job_title"`
 
 	// Student specific (populated via joins)
 	ClassID   *string `json:"class_id,omitempty" db:"class_id"`

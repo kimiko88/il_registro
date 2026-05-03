@@ -53,10 +53,10 @@
         <q-card class="glass-card stat-card shadow-soft full-height overflow-hidden">
           <q-card-section>
             <div class="text-caption text-slate-400 text-uppercase letter-spacing-1">Media Voti</div>
-            <div class="text-h3 text-weight-bold text-indigo-600 q-mt-sm">7.8</div>
+            <div class="text-h3 text-weight-bold text-indigo-600 q-mt-sm">{{ averageGrade }}</div>
             <div class="row items-center q-mt-sm">
               <q-icon name="trending_up" color="positive" class="q-mr-xs" />
-              <span class="text-positive text-caption text-weight-medium">+0.2 vs mese scorso</span>
+              <span class="text-positive text-caption text-weight-medium">Andamento generale</span>
             </div>
           </q-card-section>
           <q-icon name="grade" class="card-bg-icon text-indigo-100" />
@@ -67,9 +67,9 @@
         <q-card class="glass-card stat-card shadow-soft full-height overflow-hidden">
           <q-card-section>
             <div class="text-caption text-slate-400 text-uppercase letter-spacing-1">Assenze</div>
-            <div class="text-h3 text-weight-bold text-orange-600 q-mt-sm">3</div>
+            <div class="text-h3 text-weight-bold text-orange-600 q-mt-sm">{{ totalAbsences }}</div>
             <div class="row items-center q-mt-sm">
-              <span class="text-caption text-slate-500">Ultima: 12/12/2024</span>
+              <span class="text-caption text-slate-500">Anno in corso</span>
             </div>
           </q-card-section>
           <q-icon name="how_to_reg" class="card-bg-icon text-orange-100" />
@@ -106,22 +106,23 @@
             <q-btn flat no-caps color="primary" label="Vedi tutti" to="/parent/grades" />
           </q-card-section>
           <q-separator />
-          <q-list separator>
-            <q-item v-for="n in 3" :key="n">
+          <q-list separator v-if="recentGrades.length > 0">
+            <q-item v-for="grade in recentGrades" :key="grade.id">
               <q-item-section>
-                <q-item-label class="text-weight-medium">Matematica</q-item-label>
-                <q-item-label caption>Verifica scritta</q-item-label>
+                <q-item-label class="text-weight-medium">{{ grade.subject_id }}</q-item-label>
+                <q-item-label caption>{{ grade.grade_type }}</q-item-label>
               </q-item-section>
               <q-item-section side>
                 <div class="row items-center">
-                   <q-badge :color="n === 1 ? 'negative' : 'positive'" class="text-subtitle1 q-pa-xs">
-                     {{ n === 1 ? '5.0' : '8.5' }}
+                   <q-badge :color="grade.grade_value >= 6 ? 'positive' : 'negative'" class="text-subtitle1 q-pa-xs">
+                     {{ grade.grade_value }}
                    </q-badge>
-                   <div class="text-caption text-grey q-ml-md">20 Dic</div>
+                   <div class="text-caption text-grey q-ml-md">{{ new Date(grade.date).toLocaleDateString('it-IT') }}</div>
                 </div>
               </q-item-section>
             </q-item>
           </q-list>
+          <div v-else class="q-pa-lg text-center text-grey">Nessun voto registrato di recente</div>
         </q-card>
       </div>
 
@@ -159,18 +160,68 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useParentStore } from '@/stores/parent'
 import { storeToRefs } from 'pinia'
+import { gradeService } from 'src/services/gradeService'
+import { attendanceService } from 'src/services/attendanceService'
 
 const parentStore = useParentStore()
 const { children, selectedChild, selectedChildId, loading } = storeToRefs(parentStore)
 const { fetchChildren, selectChild } = parentStore
 
-onMounted(() => {
+const averageGrade = ref('0.0')
+const totalAbsences = ref(0)
+const recentGrades = ref([])
+const dataLoading = ref(false)
+
+const fetchChildData = async () => {
+    if (!selectedChildId.value) return
+    
+    dataLoading.value = true
+    try {
+        // Fetch Grades
+        const gradesRes = await gradeService.getChildGrades(selectedChildId.value)
+        const allGrades = []
+        if (gradesRes.data && gradesRes.data.semesters) {
+             gradesRes.data.semesters.forEach(s => {
+                 if(s.grades) allGrades.push(...s.grades)
+             })
+        }
+        
+        if (allGrades.length > 0) {
+            const sum = allGrades.reduce((acc, g) => acc + g.grade_value, 0)
+            averageGrade.value = (sum / allGrades.length).toFixed(1)
+            
+            allGrades.sort((a,b) => new Date(b.date) - new Date(a.date))
+            recentGrades.value = allGrades.slice(0, 5)
+        } else {
+            averageGrade.value = '0.0'
+            recentGrades.value = []
+        }
+
+        // Fetch Attendance
+        const attRes = await attendanceService.getChildAttendance(selectedChildId.value)
+        if (attRes.data) {
+             const records = Array.isArray(attRes.data) ? attRes.data : (attRes.data.records || [])
+             totalAbsences.value = records.filter(r => r.status === 'absent').length
+        }
+    } catch (e) {
+        console.error("Error fetching child data", e)
+    } finally {
+        dataLoading.value = false
+    }
+}
+
+watch(selectedChildId, () => {
+    fetchChildData()
+})
+
+onMounted(async () => {
   if (children.value.length === 0) {
-    fetchChildren()
+    await fetchChildren()
   }
+  fetchChildData()
 })
 </script>
 

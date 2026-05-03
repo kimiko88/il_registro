@@ -63,12 +63,12 @@ func (s *Service) CreateUser(ctx context.Context, actorRole string, req CreateUs
 		PasswordHash: string(hashed),
 		FirstName:    SanitizeText(req.FirstName),
 		LastName:     SanitizeText(req.LastName),
-		FiscalCode:   SanitizeText(req.FiscalCode),
+		FiscalCode:   SanitizeTextPtr(req.FiscalCode),
 		Role:         req.Role,
 		SchoolID:     req.SchoolID,
 		ClassID:      req.ClassID,
-		PhoneNumber:  req.PhoneNumber,
-		JobTitle:     req.JobTitle,
+		PhoneNumber:  SanitizeTextPtr(req.PhoneNumber),
+		JobTitle:     SanitizeTextPtr(req.JobTitle),
 		IsActive:     true,
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
@@ -140,10 +140,10 @@ func (s *Service) UpdateUser(ctx context.Context, actorRole string, id string, r
 		user.LastName = SanitizeText(*req.LastName)
 	}
 	if req.PhoneNumber != nil {
-		user.PhoneNumber = *req.PhoneNumber
+		user.PhoneNumber = SanitizeTextPtr(*req.PhoneNumber)
 	}
 	if req.JobTitle != nil {
-		user.JobTitle = *req.JobTitle
+		user.JobTitle = SanitizeTextPtr(*req.JobTitle)
 	}
 	if req.IsActive != nil {
 		user.IsActive = *req.IsActive
@@ -161,7 +161,7 @@ func (s *Service) UpdateUser(ctx context.Context, actorRole string, id string, r
 		if *req.FiscalCode != "" && !s.validator.ValidateFiscalCode(*req.FiscalCode) {
 			return nil, fmt.Errorf("invalid fiscal code")
 		}
-		user.FiscalCode = SanitizeText(*req.FiscalCode)
+		user.FiscalCode = SanitizeTextPtr(*req.FiscalCode)
 	}
 
 	if err := s.repo.Update(ctx, user); err != nil {

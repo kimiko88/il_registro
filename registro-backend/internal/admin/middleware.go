@@ -56,6 +56,31 @@ func (m *Middleware) RequireAdminOrSuperAdmin() gin.HandlerFunc {
 	}
 }
 
+// RequireStaff ensures the user is an admin, superadmin or secretary
+func (m *Middleware) RequireStaff() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		role, exists := auth.GetUserRole(c)
+		if !exists {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Error:   "unauthorized",
+				Message: "authentication required",
+			})
+			c.Abort()
+			return
+		}
+
+		if role != "admin" && role != "superadmin" && role != "secretary" {
+			c.JSON(http.StatusForbidden, ErrorResponse{
+				Error:   "forbidden",
+				Message: "staff access required",
+			})
+			c.Abort()
+			return
+		}
+		c.Next()
+	}
+}
+
 // SetSchoolFilter sets school filter in context for admin users
 // SuperAdmin users can access all schools, so no filter is set
 func (m *Middleware) SetSchoolFilter() gin.HandlerFunc {

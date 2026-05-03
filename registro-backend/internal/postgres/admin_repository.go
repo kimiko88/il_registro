@@ -799,17 +799,60 @@ func (r *AdminRepository) ListAuditLogs(ctx context.Context, req *admin.AuditLog
 
 // LogAdminAction logs an admin action
 func (r *AdminRepository) LogAdminAction(ctx context.Context, adminID, actionType, target string, targetID *string, schoolID *string, details string) error {
-	detailsJSON := map[string]interface{}{
-		"description": details,
-		"timestamp":   time.Now(),
+	query := `
+		INSERT INTO admin_actions (admin_id, action_type, target_entity, target_id, school_id, details)
+		VALUES ($1, $2, $3, $4, $5, $6)
+	`
+	var detailsJSON json.RawMessage
+	if details != "" {
+		_ = json.Unmarshal([]byte(fmt.Sprintf(`{"description": "%s"}`, details)), &detailsJSON)
 	}
 
-	detailsBytes, _ := json.Marshal(detailsJSON)
-
-	_, err := r.db.ExecContext(ctx,
-		"INSERT INTO admin_actions (admin_id, action_type, target_entity, target_id, school_id, details) VALUES ($1, $2, $3, $4, $5, $6)",
-		adminID, actionType, target, targetID, schoolID, detailsBytes,
-	)
-
+	_, err := r.db.ExecContext(ctx, query, adminID, actionType, target, targetID, schoolID, detailsJSON)
 	return err
+}
+
+// CountDocuments returns total number of documents
+func (r *AdminRepository) CountDocuments(ctx context.Context, schoolID *string) (int64, error) {
+	query := "SELECT COUNT(*) FROM documents_enhanced WHERE deleted_at IS NULL"
+	args := []interface{}{}
+
+	if schoolID != nil {
+		query += " AND school_id = $1"
+		args = append(args, *schoolID)
+	}
+
+	var count int64
+	err := r.db.QueryRowContext(ctx, query, args...).Scan(&count)
+	return count, err
+}
+
+// CountPendingDocuments returns count of documents with pending status
+func (r *AdminRepository) CountPendingDocuments(ctx context.Context, schoolID *string) (int64, error) {
+	query := "SELECT COUNT(*) FROM documents_enhanced WHERE (status = 'submitted' OR status = 'review') AND deleted_at IS NULL"
+	args := []interface{}{}
+
+	if schoolID != nil {
+		query += " AND school_id = $1"
+		args = append(args, *schoolID)
+	}
+
+	var count int64
+	err := r.db.QueryRowContext(ctx, query, args...).Scan(&count)
+	return count, err
+}
+
+// CountCommunications returns total number of communications
+func (r *AdminRepository) CountCommunications(ctx context.Context, schoolID *string) (int64, error) {
+	query := `SELECT COUNT(*) FROM communications c`
+	args := []interface{}{}
+
+	if schoolID != nil {
+		query += ` JOIN users u ON c.sender_id = u.id WHERE u.school_id = $1`
+		args = append(args, *schoolID)
+	}
+
+	var count int64
+	err := r.db.QueryRowContext(ctx, query, args...).Scan(&count)
+	return count, err
 }

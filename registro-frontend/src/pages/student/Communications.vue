@@ -123,6 +123,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useStudentStore } from 'src/stores/student'
 import { useQuasar } from 'quasar'
+import { communicationService } from 'src/services/communicationService'
 
 const $q = useQuasar()
 const studentStore = useStudentStore()
@@ -130,51 +131,36 @@ const studentStore = useStudentStore()
 const tab = ref('inbox')
 const search = ref('')
 const selectedMessage = ref(null)
+const messages = ref([])
+const loading = ref(false)
 
-// Mock Data
-const messages = ref([
-    {
-        id: 1,
-        sender: 'Segreteria Didattica',
-        email: 'segreteria@scuola.it',
-        subject: 'Consegna Documentazione',
-        preview: 'Si ricorda che entro il 30 Maggio è necessario consegnare...',
-        body: 'Gentile Studente,\n\nSi ricorda che entro il 30 Maggio è necessario consegnare la documentazione relativa alle vaccinazioni obbligatorie.\n\nCordiali Saluti,\nLa Segreteria',
-        date: 'Ieri',
-        fullDate: '30 Gen 2025, 10:30',
-        read: false,
-        hasAttachment: true,
-        attachments: ['Modulo.pdf'],
-        archived: false
-    },
-    {
-        id: 2,
-        sender: 'Prof. Verdi',
-        email: 'verdi@scuola.it',
-        subject: 'Materiale Lezione Storia',
-        preview: 'In allegato le slide della lezione di oggi sulla Rivoluzione...',
-        body: 'Cari ragazzi,\n\nIn allegato le slide della lezione di oggi.\n\nBuono studio.',
-        date: '28 Gen',
-        fullDate: '28 Gen 2025, 14:15',
-        read: true,
-        hasAttachment: true,
-        attachments: ['Slide_Rivoluzione.ppt'],
-        archived: false
-    },
-     {
-        id: 3,
-        sender: 'Presidenza',
-        email: 'preside@scuola.it',
-        subject: 'Circolare n. 45 - Vacanze Pasquali',
-        preview: 'Si comunica il calendario delle vacanze pasquali...',
-        body: 'Si comunica che la scuola resterà chiusa dal... al...',
-        date: '15 Gen',
-        fullDate: '15 Gen 2025, 08:00',
-        read: true,
-        hasAttachment: false,
-        archived: true
+const fetchMessages = async () => {
+    loading.value = true
+    try {
+        const res = await communicationService.getMessages()
+        // Map backend messages to frontend format if necessary
+        // Backend Message might have: id, sender_id, recipient_id, subject, body, created_at, read
+        messages.value = (res.data || []).map(m => ({
+            id: m.id,
+            sender: m.sender_name || 'Sistema',
+            email: m.sender_email || '',
+            subject: m.subject,
+            preview: m.body.substring(0, 50) + '...',
+            body: m.body,
+            date: new Date(m.created_at).toLocaleDateString('it-IT'),
+            fullDate: new Date(m.created_at).toLocaleString('it-IT'),
+            read: m.read || false,
+            hasAttachment: false, // Update if backend supports attachments
+            attachments: [],
+            archived: m.archived || false
+        }))
+    } catch (e) {
+        $q.notify({ message: 'Errore nel caricamento dei messaggi', color: 'negative' })
+        console.error(e)
+    } finally {
+        loading.value = false
     }
-])
+}
 
 const unreadCount = computed(() => messages.value.filter(m => !m.read && !m.archived).length)
 
@@ -200,9 +186,7 @@ const downloadAttachment = (name) => {
 }
 
 onMounted(() => {
-    if (filteredMessages.value.length > 0 && window.innerWidth > 1023) {
-        // Auto select first message on desktop
-        // selectMessage(filteredMessages.value[0])
-    }
+    fetchMessages()
+})
 })
 </script>

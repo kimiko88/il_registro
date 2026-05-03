@@ -78,28 +78,47 @@
 
             <!-- Subject Averages -->
             <q-td v-for="sub in matrix.subjects" :key="sub.id" align="center">
-              <div class="grade-badge" :class="getAverageColor(props.row.subject_data[sub.id]?.average)">
-                {{ props.row.subject_data[sub.id]?.average?.toFixed(1) || '-' }}
+              <!-- Average Reference -->
+              <div class="text-caption text-grey-5 mb-1">
+                Avg: {{ props.row.subject_data[sub.id]?.average?.toFixed(1) || '-' }}
               </div>
+              
+              <!-- Final Grade Input -->
+              <q-input
+                v-if="scrutinyData[props.row.student_id]"
+                v-model.number="scrutinyData[props.row.student_id].grades[sub.id]"
+                type="number"
+                dense dark outlined
+                input-class="text-center text-weight-bold"
+                style="width: 45px"
+                :bg-color="getAverageColor(scrutinyData[props.row.student_id].grades[sub.id])"
+              />
+
               <div class="text-caption text-indigo-2 q-mt-xs" v-if="props.row.subject_data[sub.id]?.grade_count > 0">
                 <q-icon name="grade" size="10px" /> {{ props.row.subject_data[sub.id].grade_count }}
               </div>
             </q-td>
 
             <!-- Conduct -->
-            <q-td align="center" class="bg-amber-1 text-black">
+            <q-td align="center" class="conduct-cell">
+              <div class="text-caption text-grey-7 q-mb-xs">Condotta</div>
               <q-input
+                v-if="scrutinyData[props.row.student_id]"
                 v-model.number="scrutinyData[props.row.student_id].conduct_grade"
                 type="number"
-                dense borderless
-                input-class="text-center text-h6 text-weight-bolder"
-                style="width: 50px"
+                dense
+                outlined
+                rounded
+                input-class="text-center text-weight-bold"
+                class="conduct-input"
+                :bg-color="scrutinyData[props.row.student_id].conduct_grade < 6 ? 'red-1' : 'amber-1'"
               />
             </q-td>
 
             <!-- Decision -->
             <q-td align="center">
               <q-select
+                v-if="scrutinyData[props.row.student_id]"
                 v-model="scrutinyData[props.row.student_id].final_decision"
                 :options="['Ammesso', 'Non Ammesso', 'Sospeso', 'Promosso', 'Respinto']"
                 dense dark outlined
@@ -130,9 +149,11 @@ import { ref, reactive, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { scrutinyService } from 'src/services/scrutinyService'
 import { useClassesStore } from 'src/stores/classes'
+import { useAuthStore } from 'src/stores/auth'
 
 const $q = useQuasar()
 const classesStore = useClassesStore()
+const authStore = useAuthStore()
 
 const selectedClassId = ref(null)
 const semester = ref(1)
@@ -141,16 +162,33 @@ const saving = ref(false)
 const matrix = ref({})
 const classOptions = ref([])
 
+const columns = [
+  { name: 'student_name', label: 'Studente', field: 'student_name', align: 'left' },
+  { name: 'absences', label: 'Ass.', align: 'center' },
+  { name: 'lates', label: 'Rit.', align: 'center' },
+  { name: 'early_exits', label: 'Usc.', align: 'center' },
+  { name: 'conduct', label: 'Condotta', align: 'center' },
+  { name: 'decision', label: 'Esito', align: 'center' },
+  { name: 'actions', label: 'Azioni', align: 'right' }
+]
+
 // Map: StudentID -> { conduct_grade, final_decision, grades: { subject_id: final_grade } }
 const scrutinyData = reactive({})
 
 onMounted(async () => {
-  await classesStore.fetchAssignedClasses()
-  // Filter only classes where the user is coordinator
-  // (Assuming backend or store filters this, or we filter here)
-  classOptions.value = classesStore.classes || []
+  if (authStore.userRole === 'admin' || authStore.userRole === 'secretary') {
+    await classesStore.fetchClasses()
+  } else {
+    await classesStore.fetchAssignedClasses()
+  }
+  
+  classOptions.value = classesStore.classes.map(c => ({
+    label: `${c.name}${c.section} - ${c.academic_year}`,
+    value: c.id
+  }))
+  
   if (classOptions.value.length > 0) {
-    selectedClassId.value = classOptions.value[0].id
+    selectedClassId.value = classOptions.value[0].value
   }
 })
 
@@ -162,21 +200,29 @@ const fetchMatrix = async () => {
   loading.value = true
   try {
     const res = await scrutinyService.getMatrix(selectedClassId.value, semester.value)
-    matrix.value = res.data
     
-    // Initialize state
-    res.data.students.forEach(s => {
-      scrutinyData[s.student_id] = {
+    // Initialize state BEFORE updating matrix.value to avoid render race conditions
+    const newScrutinyData = {}
+    const students = res.data.students || []
+    const subjects = res.data.subjects || []
+
+    students.forEach(s => {
+      newScrutinyData[s.student_id] = {
         conduct_grade: s.record?.conduct_grade || 8,
         final_decision: s.record?.final_decision || 'Ammesso',
         grades: {}
       }
       // Populate final grades from record if exists, otherwise from averages
-      res.data.subjects.forEach(sub => {
+      subjects.forEach(sub => {
         const existing = s.record?.grades?.find(g => g.subject_id === sub.id)
-        scrutinyData[s.student_id].grades[sub.id] = existing ? existing.final_grade : Math.round(s.subject_data[sub.id]?.average || 6)
+        newScrutinyData[s.student_id].grades[sub.id] = existing ? existing.final_grade : Math.round(s.subject_data[sub.id]?.average || 6)
       })
     })
+
+    // Clear old data and batch update state
+    for (const key in scrutinyData) delete scrutinyData[key]
+    Object.assign(scrutinyData, newScrutinyData)
+    matrix.value = res.data
   } catch (e) {
     $q.notify({ type: 'negative', message: 'Errore caricamento matrice' })
   } finally {
@@ -263,6 +309,19 @@ const getAverageColor = (avg) => {
 }
 .decision-select {
   min-width: 130px;
+}
+.conduct-cell {
+  background: rgba(255, 193, 7, 0.05);
+  border-left: 2px solid #ffc107;
+  min-width: 80px;
+}
+.conduct-input {
+  width: 65px;
+  margin: 0 auto;
+}
+.conduct-input :deep(.q-field__control) {
+  height: 40px;
+  background: white !important;
 }
 .opacity-70 { opacity: 0.7; }
 </style>

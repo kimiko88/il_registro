@@ -52,6 +52,26 @@ func (s *Service) GetDashboardStats(ctx context.Context, isSuperAdmin bool, scho
 	}
 	stats.TotalTeachers = teacherCount
 
+	// Get document counts
+	docCount, err := s.repo.CountDocuments(ctx, schoolID)
+	if err != nil {
+		return nil, err
+	}
+	stats.TotalDocuments = docCount
+
+	pendingDocCount, err := s.repo.CountPendingDocuments(ctx, schoolID)
+	if err != nil {
+		return nil, err
+	}
+	stats.PendingDocumentsCount = pendingDocCount
+
+	// Get communications count
+	commCount, err := s.repo.CountCommunications(ctx, schoolID)
+	if err != nil {
+		return nil, err
+	}
+	stats.AnnouncementsCount = commCount
+
 	// Get active users in last 24h
 	activeCount, err := s.repo.CountActiveUsers24h(ctx, schoolID)
 	if err != nil {

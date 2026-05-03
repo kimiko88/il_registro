@@ -3,7 +3,7 @@
     <!-- Hero Section -->
     <div class="row items-center q-mb-xl">
       <div class="col-12 col-md-8">
-        <h1 class="text-h3 text-weight-bold text-outfit q-my-none bg-clip-text text-transparent bg-gradient-premium" style="display: inline-block;">
+        <h1 class="text-h3 text-weight-bold text-outfit q-my-none text-gradient-premium">
           {{ greeting }}, {{ user?.first_name || 'Utente' }}
         </h1>
         <div class="text-subtitle1 text-slate-500 q-mt-sm">
@@ -104,10 +104,13 @@
 <script setup>
 import { useAuthStore } from '@/stores/auth'
 import { storeToRefs } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import dashboardService from 'src/services/dashboardService'
 
 const authStore = useAuthStore()
 const { user, userName, userRole } = storeToRefs(authStore)
+
+const realStats = ref([])
 
 // Greeting based on time of day
 const greeting = computed(() => {
@@ -117,9 +120,13 @@ const greeting = computed(() => {
   return 'Buonasera'
 })
 
-// Role-specific stats (placeholder - would come from backend)
+// Role-specific stats
 const stats = computed(() => {
-  // These would be fetched from the backend based on user role
+  if (realStats.value && realStats.value.length > 0) {
+      return realStats.value
+  }
+
+  // Fallback to placeholders if no real data
   const roleStats = {
     admin: [
       { label: 'Totale Scuole', value: '12', icon: 'school', color: 'indigo' },
@@ -156,6 +163,30 @@ const stats = computed(() => {
   return roleStats[userRole.value] || roleStats.student
 })
 
+const fetchDashboardData = async () => {
+    try {
+        const data = await dashboardService.getDashboardStats(userRole.value)
+        if (data && data.stats) {
+            // Map backend stats to the format expected by the component
+            // For admin, it might return { schools_count: X, users_count: Y, ... }
+            if (userRole.value === 'admin' || userRole.value === 'superadmin') {
+                realStats.value = [
+                    { label: 'Totale Scuole', value: data.schools_count || '0', icon: 'school', color: 'indigo' },
+                    { label: 'Utenti Attivi', value: data.users_count || '0', icon: 'people', color: 'cyan' },
+                    { label: 'Eventi Oggi', value: '0', icon: 'event', color: 'amber' },
+                    { label: 'Report Pending', value: '0', icon: 'assignment', color: 'red' }
+                ]
+            }
+        }
+    } catch (e) {
+        console.error("Error fetching dashboard data", e)
+    }
+}
+
+onMounted(() => {
+    fetchDashboardData()
+})
+
 const actions = [
   { label: 'Nuovo Evento', icon: 'add_circle' },
   { label: 'Invia Email', icon: 'mail' },
@@ -165,15 +196,6 @@ const actions = [
 </script>
 
 <style scoped>
-.bg-clip-text {
-    -webkit-background-clip: text;
-    background-clip: text;
-}
-
-.bg-gradient-premium {
-    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-}
-
 .letter-spacing-1 {
     letter-spacing: 1px;
 }

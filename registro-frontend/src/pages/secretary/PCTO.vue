@@ -230,12 +230,19 @@ const showCompanies = ref(false);
 const showAddCompany = ref(false);
 const savingCompany = ref(false);
 
-const stats = [
-  { label: 'Progetti Totali', value: '12', icon: 'work', trend: 2, trendText: '+2 questo mese' },
-  { label: 'Studenti Coinvolti', value: '156', icon: 'people', trend: 15, trendText: '+15 nell\'anno' },
-  { label: 'Ore Registrate', value: '4.2k', icon: 'timer', trend: 120, trendText: '+120 questa settimana' },
-  { label: 'Aziende Partner', value: '48', icon: 'business', trend: 0, trendText: 'Stabile' },
-];
+const pctoStats = ref({
+  total_projects: 0,
+  total_students: 0,
+  total_hours: 0,
+  active_companies: 0
+});
+
+const stats = computed(() => [
+  { label: 'Progetti Totali', value: pctoStats.value.total_projects, icon: 'work', trend: 0, trendText: 'Dati in tempo reale' },
+  { label: 'Studenti Coinvolti', value: pctoStats.value.total_students, icon: 'people', trend: 0, trendText: 'Iscritti ai percorsi' },
+  { label: 'Ore Registrate', value: pctoStats.value.total_hours.toFixed(0), icon: 'timer', trend: 0, trendText: 'Ore totali validate' },
+  { label: 'Aziende Partner', value: pctoStats.value.active_companies, icon: 'business', trend: 0, trendText: 'Convenzioni attive' },
+]);
 
 const form = ref({
   id: null,
@@ -281,12 +288,14 @@ onMounted(async () => {
 const fetchData = async () => {
   loading.value = true;
   try {
-    const [pRes, cRes] = await Promise.all([
+    const [pRes, cRes, sRes] = await Promise.all([
       api.get('/pcto/projects'),
-      api.get('/pcto/companies')
+      api.get('/pcto/companies'),
+      api.get('/pcto/stats')
     ]);
     projects.value = pRes.data || [];
     companies.value = cRes.data || [];
+    pctoStats.value = sRes.data || pctoStats.value;
   } catch (err) {
     console.error(err);
     $q.notify({ type: 'negative', message: 'Errore durante il caricamento dei dati' });

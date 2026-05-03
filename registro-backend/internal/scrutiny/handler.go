@@ -3,6 +3,7 @@ package scrutiny
 import (
 	"net/http"
 	"strconv"
+	pkgLogger "registro-backend/pkg/logger"
 	"github.com/gin-gonic/gin"
 )
 
@@ -28,6 +29,7 @@ func (h *Handler) GetMatrix(c *gin.Context) {
 	
 	matrix, err := h.service.GetMatrix(c.Request.Context(), classID, semester)
 	if err != nil {
+		pkgLogger.Log.Error("failed to get scrutiny matrix", "error", err, "classId", classID)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

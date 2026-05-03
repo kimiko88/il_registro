@@ -202,6 +202,7 @@ import { useStudentStore } from 'src/stores/student';
 import { gradeService } from 'src/services/gradeService'
 import { attendanceService } from 'src/services/attendanceService'
 import { pctoService } from 'src/services/pctoService'
+import { communicationService } from 'src/services/communicationService'
 import adminService from 'src/services/adminService'
 
 const studentStore = useStudentStore();
@@ -237,7 +238,7 @@ onMounted(async () => {
 
 const fetchSubjects = async () => {
     try {
-        const schoolId = studentStore.profile?.schoolId
+        const schoolId = studentStore.profile?.school_id || studentStore.profile?.schoolId
         if (schoolId) {
             const res = await adminService.getSubjects(schoolId)
             subjects.value = res.data || []
@@ -268,7 +269,7 @@ const fetchDashboardData = async () => {
                 id: g.id,
                 subject: getSubjectName(g.subject_id),
                 value: g.grade_value,
-                date: g.date.split('T')[0],
+                date: new Date(g.date).toLocaleDateString('it-IT'),
                 type: g.grade_type,
                 description: g.description
             }))
@@ -288,13 +289,18 @@ const fetchDashboardData = async () => {
         // PCTO
         const pctoRes = await pctoService.getMyProjects()
         if (pctoRes.data) {
-             // Let's assume projects have hours
              let totalHours = 0
              const projects = Array.isArray(pctoRes.data) ? pctoRes.data : []
              projects.forEach(p => {
                  totalHours += p.hours_done || 0
              })
              pctoHours.value = totalHours
+        }
+
+        // Communications
+        const commsRes = await communicationService.getMessages()
+        if (commsRes.data) {
+            unreadMessages.value = commsRes.data.filter(m => !m.read && !m.archived).length
         }
 
     } catch (e) {

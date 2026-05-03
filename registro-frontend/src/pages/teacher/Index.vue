@@ -3,8 +3,8 @@
     <!-- Header -->
     <div class="row items-center q-mb-xl justify-between">
       <div>
-        <h1 class="text-h3 text-weight-bold text-outfit bg-clip-text text-transparent bg-gradient-premium q-my-none" style="display: inline-block;">
-            Teacher Dashboard
+        <h1 class="text-h3 text-weight-bold text-outfit q-my-none text-gradient-premium">
+          Pannello Docente
         </h1>
         <div class="text-subtitle1 text-slate-500 q-mt-sm">Benvenuto, Prof. {{ teacherStore.fullName }}</div>
       </div>
@@ -20,8 +20,8 @@
         <q-card class="dashboard-card glass-card bg-indigo-600 text-white shadow-soft overflow-hidden">
           <q-card-section>
             <div class="text-caption opacity-80 text-uppercase letter-spacing-1">Prossima Lezione</div>
-            <div class="text-h4 text-weight-bold q-mt-sm">5A - Matematica</div>
-            <div class="text-caption q-mt-xs">09:00 - 10:00 (Aula 101)</div>
+            <div class="text-h4 text-weight-bold q-mt-sm">{{ nextLesson?.class_id || 'Nessuna' }}</div>
+            <div class="text-caption q-mt-xs">{{ nextLesson?.subject_id || '-' }}</div>
           </q-card-section>
           <q-icon name="schedule" class="card-bg-icon" />
         </q-card>
@@ -31,8 +31,8 @@
         <q-card class="dashboard-card glass-card bg-orange-600 text-white shadow-soft overflow-hidden">
           <q-card-section>
             <div class="text-caption opacity-80 text-uppercase letter-spacing-1">Da Fare</div>
-            <div class="text-h4 text-weight-bold q-mt-sm">3 Revisioni</div>
-            <div class="text-caption q-mt-xs">Giustificazioni e Firma Doc</div>
+            <div class="text-h4 text-weight-bold q-mt-sm">{{ pendingTasksCount }} Revisioni</div>
+            <div class="text-caption q-mt-xs">Giustificazioni in sospeso</div>
           </q-card-section>
           <q-icon name="pending_actions" class="card-bg-icon" />
         </q-card>
@@ -42,8 +42,8 @@
         <q-card class="dashboard-card glass-card bg-emerald-600 text-white shadow-soft overflow-hidden">
           <q-card-section>
             <div class="text-caption opacity-80 text-uppercase letter-spacing-1">Colloqui</div>
-            <div class="text-h4 text-weight-bold q-mt-sm">2 Prenotazioni</div>
-            <div class="text-caption q-mt-xs">Domani, ore 15:00</div>
+            <div class="text-h4 text-weight-bold q-mt-sm">{{ upcomingColloquiCount }} Prenotazioni</div>
+            <div class="text-caption q-mt-xs">Controlla l'agenda</div>
           </q-card-section>
           <q-icon name="people" class="card-bg-icon" />
         </q-card>
@@ -53,8 +53,8 @@
         <q-card class="dashboard-card glass-card bg-violet-600 text-white shadow-soft overflow-hidden">
           <q-card-section>
             <div class="text-caption opacity-80 text-uppercase letter-spacing-1">Messaggi</div>
-            <div class="text-h4 text-weight-bold q-mt-sm">{{ teacherStore.notifications.filter(n => !n.read).length }} Nuovi</div>
-            <div class="text-caption q-mt-xs">Controlla le circolari</div>
+            <div class="text-h4 text-weight-bold q-mt-sm">{{ unreadMessagesCount }} Nuovi</div>
+            <div class="text-caption q-mt-xs">Comunicazioni interne</div>
           </q-card-section>
           <q-icon name="mail" class="card-bg-icon" />
         </q-card>
@@ -156,6 +156,11 @@ const classesStore = useClassesStore();
 
 const todayDate = computed(() => date.formatDate(Date.now(), 'DD MMMM YYYY'));
 
+const nextLesson = computed(() => teacherStore.profile?.next_lesson || null);
+const pendingTasksCount = computed(() => teacherStore.notifications.filter(n => n.type === 'action').length);
+const upcomingColloquiCount = computed(() => teacherStore.profile?.colloqui_count || 0);
+const unreadMessagesCount = computed(() => teacherStore.notifications.filter(n => !n.read).length);
+
 onMounted(async () => {
   await Promise.all([
     teacherStore.fetchProfile(),
@@ -166,15 +171,6 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.bg-clip-text {
-    -webkit-background-clip: text;
-    background-clip: text;
-}
-
-.bg-gradient-premium {
-    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-}
-
 .letter-spacing-1 {
     letter-spacing: 1px;
 }

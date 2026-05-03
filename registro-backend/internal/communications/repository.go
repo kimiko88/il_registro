@@ -12,6 +12,7 @@ import (
 type Repository interface {
 	Create(ctx context.Context, msg *Message) error
 	List(ctx context.Context, userID string) ([]*Message, error)
+	Delete(ctx context.Context, id string) error
 }
 
 type PostgresRepository struct {
@@ -42,7 +43,7 @@ func (r *PostgresRepository) List(ctx context.Context, userID string) ([]*Messag
 	query := `
 		SELECT id, sender_id, receiver_ids, subject, body, type, created_at
 		FROM communications
-		WHERE sender_id = $1 OR $1 = ANY(receiver_ids)
+		WHERE sender_id::text = $1 OR $1 = ANY(receiver_ids)
 		ORDER BY created_at DESC
 	`
 	rows, err := r.db.QueryContext(ctx, query, userID)
@@ -64,4 +65,9 @@ func (r *PostgresRepository) List(ctx context.Context, userID string) ([]*Messag
 		msgs = append(msgs, m)
 	}
 	return msgs, nil
+}
+
+func (r *PostgresRepository) Delete(ctx context.Context, id string) error {
+	_, err := r.db.ExecContext(ctx, "DELETE FROM communications WHERE id = $1", id)
+	return err
 }

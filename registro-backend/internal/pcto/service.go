@@ -21,6 +21,7 @@ type Service interface {
 
 	CreateCompany(ctx context.Context, schoolID, actorRole string, c Company) error
 	GetCompanies(ctx context.Context, schoolID string) ([]Company, error)
+	GetStats(ctx context.Context, schoolID string) (*PCTOStats, error)
 }
 
 type service struct {
@@ -157,4 +158,8 @@ func (s *service) DeleteProject(ctx context.Context, actorRole, id string) error
 
 func (s *service) GetCompanies(ctx context.Context, schoolID string) ([]Company, error) {
 	return s.repo.GetCompanies(ctx, schoolID)
+}
+
+func (s *service) GetStats(ctx context.Context, schoolID string) (*PCTOStats, error) {
+	return s.repo.GetStats(ctx, schoolID)
 }

@@ -9,6 +9,9 @@ type Repository interface {
 	CountUsers(ctx context.Context, schoolID *string) (int64, error)
 	CountUsersByRole(ctx context.Context, role string, schoolID *string) (int64, error)
 	CountActiveUsers24h(ctx context.Context, schoolID *string) (int64, error)
+	CountDocuments(ctx context.Context, schoolID *string) (int64, error)
+	CountPendingDocuments(ctx context.Context, schoolID *string) (int64, error)
+	CountCommunications(ctx context.Context, schoolID *string) (int64, error)
 	GetRecentEvents(ctx context.Context, limit int, schoolID *string) ([]RecentEvent, error)
 	GetSystemHealth(ctx context.Context) (*SystemHealthStatus, error)
 

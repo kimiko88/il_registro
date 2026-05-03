@@ -2,6 +2,7 @@ package scrutiny
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"registro-backend/internal/attendance"
 	"registro-backend/internal/classes"
@@ -39,6 +40,7 @@ func (s *Service) GetMatrix(ctx context.Context, classID string, semester int) (
 	if err != nil {
 		return nil, err
 	}
+	fmt.Printf("DEBUG: Found %d students for class %s\n", len(allStudents), classID)
 
 	// 3. Get Existing Records
 	records, err := s.repo.ListRecordsByClass(ctx, classID, semester)
@@ -76,7 +78,7 @@ func (s *Service) GetMatrix(ctx context.Context, classID string, semester int) (
 			var sum float64
 			var count int
 			for _, g := range gradesList {
-				if g.StudentID == stu.ID && g.IsPublished && g.DeletedAt == nil {
+				if g.StudentID == stu.StudentID && g.IsPublished && g.DeletedAt == nil {
 					sum += g.GradeValue
 					count++
 				}
@@ -101,7 +103,7 @@ func (s *Service) GetMatrix(ctx context.Context, classID string, semester int) (
 		}
 
 		// 4. Get Attendance Stats
-		stats, err := s.attRepo.GetStats(stu.ID) // Note: GetStats should ideally take semester dates
+		stats, err := s.attRepo.GetStats(stu.StudentID) // Note: GetStats should ideally take semester dates
 		if err == nil && stats != nil {
 			row.AttendanceStats = AttendanceSummary{
 				Absences:   stats.TotalAbsences,
