@@ -2,6 +2,15 @@ import { setActivePinia, createPinia } from 'pinia';
 import { useChildrenStore } from 'src/stores/children';
 import { useChildGrades } from 'src/composables/useChildGrades';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { gradeService } from '@/services/gradeService';
+
+// Mock gradeService
+vi.mock('@/services/gradeService', () => ({
+    gradeService: {
+        getMyGrades: vi.fn().mockResolvedValue({ data: [] }),
+        getByClass: vi.fn().mockResolvedValue({ data: [] })
+    }
+}))
 
 describe('Parent Logic', () => {
     beforeEach(() => {

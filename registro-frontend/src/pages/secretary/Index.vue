@@ -131,13 +131,18 @@
         </q-card>
         
         <!-- Notifications small -->
-        <q-card class="bg-indigo-1 text-indigo-9">
+        <q-card class="bg-indigo-1 text-indigo-9 shadow-soft">
              <q-card-section>
-                 <div class="text-weight-bold q-mb-sm">Avvisi Importanti</div>
-                 <ul class="q-pl-md q-mb-none">
-                     <li>Scadenza iscrizioni: 20 Gennaio</li>
-                     <li>Consegna PDP entro Venerdì</li>
+                 <div class="text-weight-bold q-mb-sm row items-center">
+                    <q-icon name="campaign" class="q-mr-xs" />
+                    Avvisi Importanti
+                 </div>
+                 <ul class="q-pl-md q-mb-none" v-if="announcements.length > 0">
+                     <li v-for="ann in announcements" :key="ann.id" class="q-mb-xs">
+                        {{ ann.title }}
+                     </li>
                  </ul>
+                 <div v-else class="text-caption text-indigo-7">Nessun avviso recente</div>
              </q-card-section>
         </q-card>
       </div>

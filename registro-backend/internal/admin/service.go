@@ -303,3 +303,13 @@ func (s *Service) ListAuditLogs(ctx context.Context, req *AuditLogListRequest) (
 func (s *Service) LogAdminAction(ctx context.Context, adminID, actionType, target string, targetID *string, schoolID *string, details string) error {
 	return s.repo.LogAdminAction(ctx, adminID, actionType, target, targetID, schoolID, details)
 }
+
+// GetSchoolSetting retrieves a school setting
+func (s *Service) GetSchoolSetting(ctx context.Context, schoolID, key string) (string, error) {
+	return s.repo.GetSetting(ctx, schoolID, key)
+}
+
+// UpdateSchoolSetting updates a school setting
+func (s *Service) UpdateSchoolSetting(ctx context.Context, schoolID, key, value string) error {
+	return s.repo.UpdateSetting(ctx, schoolID, key, value)
+}

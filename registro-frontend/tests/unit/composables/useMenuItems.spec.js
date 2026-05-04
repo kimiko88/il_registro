@@ -19,7 +19,8 @@ describe('useMenuItems', () => {
 
             expect(menuItems[0].path).toBe('/')
             expect(menuItems[1].path).toBe('/admin/schools')
-            expect(menuItems[2].path).toBe('/admin/analytics')
+            expect(menuItems[2].path).toBe('/admin/users')
+            expect(menuItems[3].path).toBe('/admin/analytics')
         })
 
         it('should have exact flag for dashboard', () => {

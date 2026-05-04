@@ -7,15 +7,16 @@ import { useAuthStore } from '@/stores/auth'
 import adminService from '@/services/adminService'
 
 // Mock Quasar
-vi.mock('quasar', async (importOriginal) => {
-    const actual = await importOriginal()
+vi.mock('quasar', async () => {
+    const actual = await vi.importActual('quasar')
     return {
         ...actual,
         useQuasar: () => ({
+            dark: { isActive: false },
+            lang: { current: 'it' },
+            screen: { lt: { md: false } },
             notify: vi.fn(),
-            dialog: vi.fn().mockImplementation(() => ({
-                onOk: (fn) => fn()
-            }))
+            dialog: vi.fn(() => ({ onOk: vi.fn(callback => callback()) }))
         })
     }
 })
@@ -78,7 +79,7 @@ describe('Classes Page', () => {
     })
 
     it('fetches data on mount', () => {
-        expect(classesStore.fetchClasses).toHaveBeenCalledWith({ school_id: 1 })
+        expect(classesStore.fetchClasses).toHaveBeenCalledWith({ school_id: 1, academic_year: '2024/2025' })
         expect(mockAdminService.getSubjects).toHaveBeenCalled()
     })
 

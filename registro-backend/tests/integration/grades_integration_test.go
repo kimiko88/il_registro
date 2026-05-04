@@ -30,7 +30,7 @@ func TestGradesIntegration_GetMyGrades(t *testing.T) {
 	router := gin.Default()
 
 	router.GET("/grades/my", func(c *gin.Context) {
-		c.Set("userID", "student1")
+		c.Set("user_id", "student1")
 		c.Set("role", "student")
 		handler.GetMyGrades(c)
 	})
@@ -66,8 +66,8 @@ func TestGradesIntegration_GetClassGrades(t *testing.T) {
 
 	router := gin.Default()
 	router.GET("/grades/class/:classID", func(c *gin.Context) {
-		c.Set("userID", "teacher1")
-		c.Set("role", "teacher")
+		c.Set("user_id", "admin1")
+		c.Set("role", "admin")
 		handler.GetClassGrades(c)
 	})
 

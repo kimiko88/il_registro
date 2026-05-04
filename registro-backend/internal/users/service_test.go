@@ -92,6 +92,31 @@ func (m *MockRepository) IsActive(ctx context.Context, id string) (bool, error) 
 	return args.Bool(0), args.Error(1)
 }
 
+func (m *MockRepository) AddGuardian(ctx context.Context, studentProfileID, parentProfileID, relationship string) error {
+	args := m.Called(ctx, studentProfileID, parentProfileID, relationship)
+	return args.Error(0)
+}
+
+func (m *MockRepository) GetStudentProfile(ctx context.Context, userID string) (string, error) {
+	args := m.Called(ctx, userID)
+	return args.String(0), args.Error(1)
+}
+
+func (m *MockRepository) GetParentProfile(ctx context.Context, userID string) (string, error) {
+	args := m.Called(ctx, userID)
+	return args.String(0), args.Error(1)
+}
+
+func (m *MockRepository) RemoveGuardian(ctx context.Context, studentProfileID, parentProfileID string) error {
+	args := m.Called(ctx, studentProfileID, parentProfileID)
+	return args.Error(0)
+}
+
+func (m *MockRepository) GetGuardians(ctx context.Context, studentProfileID string) ([]GuardianInfo, error) {
+	args := m.Called(ctx, studentProfileID)
+	return args.Get(0).([]GuardianInfo), args.Error(1)
+}
+
 func TestService_CreateUser(t *testing.T) {
 	mockRepo := new(MockRepository)
 	service := NewService(mockRepo)
@@ -311,8 +336,8 @@ func TestService_DeleteUser(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:      "Secretary cannot delete (no UserDelete permission)",
-			actorRole: "secretary",
+			name:      "Teacher cannot delete (no UserDelete permission)",
+			actorRole: "teacher",
 			userID:    "user-123",
 			mockSetup: func() {},
 			wantErr:   true,

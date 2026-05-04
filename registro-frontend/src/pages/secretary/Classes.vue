@@ -557,6 +557,26 @@ const removeTextbook = async (row) => {
         $q.notify({ type: 'negative', message: 'Errore rimozione' })
     }
 }
+
+defineExpose({
+    showDialog,
+    isEdit,
+    form,
+    showAssignmentsDialog,
+    showSubjectDialog,
+    currentClass,
+    assignments,
+    assignForm,
+    newSubjectName,
+    openDialog,
+    saveClass,
+    confirmDelete,
+    openAssignmentsDialog,
+    addAssignment,
+    removeAssignment,
+    openCreateSubject,
+    createSubject
+})
 </script>
 
 <style scoped>

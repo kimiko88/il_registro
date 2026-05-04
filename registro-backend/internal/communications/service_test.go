@@ -22,6 +22,11 @@ func (m *MockRepository) List(ctx context.Context, userID string) ([]*Message, e
 	return args.Get(0).([]*Message), args.Error(1)
 }
 
+func (m *MockRepository) Delete(ctx context.Context, id string) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
 func TestService_SendMessage(t *testing.T) {
 	mockRepo := new(MockRepository)
 	svc := NewService(mockRepo)

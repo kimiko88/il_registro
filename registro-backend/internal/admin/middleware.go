@@ -87,8 +87,8 @@ func (m *Middleware) SetSchoolFilter() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		role, _ := auth.GetUserRole(c)
 
-		// Only filter for admin role, not for superadmin
-		if role == "admin" {
+		// Filter for admin and secretary roles, not for superadmin
+		if role == "admin" || role == "secretary" {
 			schoolID, exists := auth.GetSchoolID(c)
 			if exists && schoolID != "" {
 				c.Set("filter_school_id", schoolID)

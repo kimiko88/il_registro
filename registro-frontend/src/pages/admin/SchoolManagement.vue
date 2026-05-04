@@ -110,33 +110,35 @@
       >
         <template v-slot:body-cell-name="props">
           <q-td :props="props">
-            <div class="text-weight-medium">{{ props.row.name }}</div>
-            <div class="text-caption text-grey-7">{{ props.row.code }}</div>
+            <template v-if="props.row">
+              <div class="text-weight-medium">{{ props.row.name }}</div>
+              <div class="text-caption text-grey-7">{{ props.row.code }}</div>
+            </template>
           </q-td>
         </template>
 
         <template v-slot:body-cell-location="props">
           <q-td :props="props">
-            <div>{{ props.row.city }}, {{ props.row.province }}</div>
-            <div class="text-caption text-grey-7">{{ props.row.address }}</div>
+            <div v-if="props.row">{{ props.row.city }}, {{ props.row.province }}</div>
+            <div v-if="props.row" class="text-caption text-grey-7">{{ props.row.address }}</div>
           </q-td>
         </template>
 
         <template v-slot:body-cell-students="props">
           <q-td :props="props">
-            <q-badge color="amber">{{ props.row.student_count || 0 }}</q-badge>
+            <q-badge v-if="props.row" color="amber">{{ props.row.student_count || 0 }}</q-badge>
           </q-td>
         </template>
 
         <template v-slot:body-cell-teachers="props">
           <q-td :props="props">
-            <q-badge color="purple">{{ props.row.teacher_count || 0 }}</q-badge>
+            <q-badge v-if="props.row" color="purple">{{ props.row.teacher_count || 0 }}</q-badge>
           </q-td>
         </template>
 
         <template v-slot:body-cell-is_active="props">
           <q-td :props="props">
-            <q-badge :color="props.row.is_active ? 'positive' : 'negative'">
+            <q-badge v-if="props.row" :color="props.row.is_active ? 'positive' : 'negative'">
               {{ props.row.is_active ? 'Attiva' : 'Disattiva' }}
             </q-badge>
           </q-td>
@@ -144,36 +146,38 @@
 
         <template v-slot:body-cell-actions="props">
           <q-td :props="props">
-            <q-btn
-              flat
-              dense
-              round
-              icon="visibility"
-              @click="viewSchool(props.row)"
-            >
-              <q-tooltip>Visualizza</q-tooltip>
-            </q-btn>
-            <q-btn
-              v-if="canEditSchool(props.row.id)"
-              flat
-              dense
-              round
-              icon="edit"
-              @click="editSchool(props.row)"
-            >
-              <q-tooltip>Modifica</q-tooltip>
-            </q-btn>
-            <q-btn
-              v-if="canDeleteSchools"
-              flat
-              dense
-              round
-              icon="delete"
-              color="negative"
-              @click="confirmDelete(props.row)"
-            >
-              <q-tooltip>Elimina</q-tooltip>
-            </q-btn>
+            <div v-if="props.row" class="q-gutter-xs">
+              <q-btn
+                flat
+                dense
+                round
+                icon="visibility"
+                @click="viewSchool(props.row)"
+              >
+                <q-tooltip>Visualizza</q-tooltip>
+              </q-btn>
+              <q-btn
+                v-if="canEditSchool(props.row.id)"
+                flat
+                dense
+                round
+                icon="edit"
+                @click="editSchool(props.row)"
+              >
+                <q-tooltip>Modifica</q-tooltip>
+              </q-btn>
+              <q-btn
+                v-if="canDeleteSchools"
+                flat
+                dense
+                round
+                icon="delete"
+                color="negative"
+                @click="confirmDelete(props.row)"
+              >
+                <q-tooltip>Elimina</q-tooltip>
+              </q-btn>
+            </div>
           </q-td>
         </template>
       </q-table>

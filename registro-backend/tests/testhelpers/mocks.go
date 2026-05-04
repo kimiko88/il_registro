@@ -291,6 +291,31 @@ func (m *MockUsersRepository) IsActive(ctx context.Context, id string) (bool, er
 	return args.Bool(0), args.Error(1)
 }
 
+func (m *MockUsersRepository) AddGuardian(ctx context.Context, studentID, parentID, relation string) error {
+	args := m.Called(ctx, studentID, parentID, relation)
+	return args.Error(0)
+}
+func (m *MockUsersRepository) GetStudentsByClass(ctx context.Context, classID string) ([]users.User, error) {
+	args := m.Called(ctx, classID)
+	return args.Get(0).([]users.User), args.Error(1)
+}
+func (m *MockUsersRepository) GetStudentProfile(ctx context.Context, userID string) (string, error) {
+	args := m.Called(ctx, userID)
+	return args.String(0), args.Error(1)
+}
+func (m *MockUsersRepository) GetParentProfile(ctx context.Context, userID string) (string, error) {
+	args := m.Called(ctx, userID)
+	return args.String(0), args.Error(1)
+}
+func (m *MockUsersRepository) RemoveGuardian(ctx context.Context, studentID, parentID string) error {
+	args := m.Called(ctx, studentID, parentID)
+	return args.Error(0)
+}
+func (m *MockUsersRepository) GetGuardians(ctx context.Context, studentID string) ([]users.GuardianInfo, error) {
+	args := m.Called(ctx, studentID)
+	return args.Get(0).([]users.GuardianInfo), args.Error(1)
+}
+
 // MockAnalyticsService mocks grades.AnalyticsService
 type MockAnalyticsService struct {
 	mock.Mock

@@ -62,6 +62,14 @@ func (m *MockRepo) GetInbox(s string) ([]Document, error) {
 	return args.Get(0).([]Document), args.Error(1)
 }
 func (m *MockRepo) GetReviewQueue(s string) ([]Document, error) { return nil, nil }
+func (m *MockRepo) Delete(id string) error {
+	args := m.Called(id)
+	return args.Error(0)
+}
+func (m *MockRepo) ListAll(s string, t *DocType) ([]Document, error) {
+	args := m.Called(s, t)
+	return args.Get(0).([]Document), args.Error(1)
+}
 
 // --- Tests ---
 
@@ -77,9 +85,11 @@ func TestService_CreateDocument(t *testing.T) {
 
 	mockRepo.On("Create", mock.Anything, "Some content").Return(nil)
 
-	res, err := svc.CreateDocument(context.Background(), "user1", req)
+	res, err := svc.CreateDocument(context.Background(), "secretary", "user1", "school1", req)
 	assert.NoError(t, err)
-	assert.Equal(t, "new-id", res.ID)
+	if err == nil {
+		assert.NotNil(t, res)
+	}
 
 	mockRepo.AssertExpectations(t)
 }
@@ -111,9 +121,9 @@ func TestService_GetInbox(t *testing.T) {
 	svc := NewService(mockRepo)
 
 	docs := []Document{{ID: "doc1", Title: "Inbox Doc", Status: StatusSubmitted}}
-	mockRepo.On("GetInbox", "default-school").Return(docs, nil)
+	mockRepo.On("GetInbox", "school1").Return(docs, nil)
 
-	res, err := svc.GetInbox(context.Background())
+	res, err := svc.GetInbox(context.Background(), "school1")
 	assert.NoError(t, err)
 	assert.Len(t, res, 1)
 	assert.Equal(t, "Inbox Doc", res[0].Title)

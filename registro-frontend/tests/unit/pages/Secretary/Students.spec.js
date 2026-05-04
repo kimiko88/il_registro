@@ -5,6 +5,23 @@ import { Quasar } from 'quasar'
 import SecretaryStudents from '@/pages/secretary/Students.vue'
 import { useAuthStore } from '@/stores/auth'
 
+// Mock Quasar
+vi.mock('quasar', async () => {
+    const actual = await vi.importActual('quasar')
+    return {
+        ...actual,
+        useQuasar: () => ({
+            notify: vi.fn(),
+            dialog: vi.fn(() => ({
+                onOk: (cb) => {
+                    cb()
+                    return { onCancel: (cb2) => cb2() }
+                }
+            }))
+        })
+    }
+})
+
 // Mock services
 const { mockGetAllUsers, mockGetSchoolClasses, mockUpdateUser } = vi.hoisted(() => ({
     mockGetAllUsers: vi.fn(),
@@ -22,18 +39,6 @@ vi.mock('src/services/adminService', () => ({
     default: { getSchoolClasses: mockGetSchoolClasses }
 }))
 
-// Mock Quasar
-vi.mock('quasar', async (importOriginal) => {
-    const actual = await importOriginal()
-    return {
-        ...actual,
-        useQuasar: () => ({
-            notify: vi.fn(),
-            loading: { show: vi.fn(), hide: vi.fn() },
-            dialog: vi.fn(() => ({ onOk: (fn) => fn() }))
-        })
-    }
-})
 
 describe('Secretary/Students.vue', () => {
     let wrapper
@@ -102,35 +107,31 @@ describe('Secretary/Students.vue', () => {
     })
 
     it('opens enrollment dialog', async () => {
-        // There is a QBtn with @click="showEnrollment = true"
-        // Since we stub QBtn, we can find it by label or icon if we rendered attributes, 
-        // BUT simplest is to check if dialog state changes if we could access vm.
-        // Or we trigger the button click.
-        // The button has label "Nuova Iscrizione".
-        // Stubbed q-btn usually emits click.
+        // There is a QBtn with @click="openEnrollment"
         const btn = wrapper.findAllComponents({ name: 'q-btn' }).find(b => b.attributes('label') === 'Nuova Iscrizione')
         if (btn) await btn.trigger('click')
 
-        expect(wrapper.vm.showEnrollment).toBe(true)
+        expect(wrapper.vm.showUserDialog).toBe(true)
     })
 
     it('opens edit dialog with student data', () => {
         const student = { id: 'u1', first_name: 'Mario', last_name: 'Rossi', email: 'mario@test.com', ClassName: '1A', ClassID: 'c1' }
         // Call directly or via table row click if emulated
         wrapper.vm.editStudent(student)
-        expect(wrapper.vm.showEditDialog).toBe(true)
-        expect(wrapper.vm.editForm.first_name).toBe('Mario')
-        expect(wrapper.vm.editForm.class_id).toBe('c1')
+        expect(wrapper.vm.showUserDialog).toBe(true)
+        expect(wrapper.vm.userForm.first_name).toBe('Mario')
+        expect(wrapper.vm.userForm.class_id).toBe('c1')
     })
 
     it('saves student changes', async () => {
-        wrapper.vm.editForm.id = 'u1'
-        wrapper.vm.editForm.class_id = 'c2'
+        wrapper.vm.isEditing = true
+        wrapper.vm.userForm.id = 'u1'
+        wrapper.vm.userForm.class_id = 'c2'
 
         await wrapper.vm.saveStudent()
 
         expect(mockUpdateUser).toHaveBeenCalledWith('u1', expect.objectContaining({ class_id: 'c2' }))
-        expect(wrapper.vm.showEditDialog).toBe(false)
+        expect(wrapper.vm.showUserDialog).toBe(false)
         // Should refresh list
         expect(mockGetAllUsers).toHaveBeenCalledTimes(2) // Once on mount, once after save
     })
@@ -140,10 +141,10 @@ describe('Secretary/Students.vue', () => {
         const student = { id: 'u1', first_name: 'Mario', ClassID: 'c1' }
         wrapper.vm.editStudent(student)
 
-        expect(wrapper.vm.editForm.class_id).toBe('c1')
+        expect(wrapper.vm.userForm.class_id).toBe('c1')
 
         // Simulate changing selection
-        wrapper.vm.editForm.class_id = 'c2'
+        wrapper.vm.userForm.class_id = 'c2'
 
         await wrapper.vm.saveStudent()
         expect(mockUpdateUser).toHaveBeenCalledWith('u1', expect.objectContaining({ class_id: 'c2' }))
@@ -156,20 +157,7 @@ describe('Secretary/Students.vue', () => {
         await wrapper.vm.saveStudent()
 
         // Check for notify error
-        // Note: We need to spy on notify. In mock setup, we return a notify mock.
-        // But we don't have access to the specific spy instance returned by the factory unless we hoist it or use a global mock.
-        // In this file, useQuasar is mocked inline.
-        // We can inspect the console or better, refactor the mock to expose the spy.
-        // Alternatively, check if showEditDialog remains open or verify side effects.
-        expect(wrapper.vm.showEditDialog).toBe(true) // Should stay open on error?
-        // Actually the code resets close but notifies error? Let's check source code.
-        // Source: } catch (e) { $q.notify(...) } 
-        // It does NOT close dialog in catch block? Source says: 
-        /*
-        try { ... showEditDialog.value = false ... } catch (e) { $q.notify ... }
-        */
-        // So yes, it should stay open.
-        expect(wrapper.vm.showEditDialog).toBe(true)
+        expect(wrapper.vm.showUserDialog).toBe(true)
     })
 
     it('validates school ID during update', async () => {

@@ -12,6 +12,19 @@ vi.mock('@/services/documentService', () => ({
     }
 }))
 
+// Mock api from boot/axios
+const { mockGet, mockPost } = vi.hoisted(() => ({
+    mockGet: vi.fn(),
+    mockPost: vi.fn()
+}))
+
+vi.mock('src/boot/axios', () => ({
+    api: {
+        get: mockGet,
+        post: mockPost
+    }
+}))
+
 describe('Documents Store', () => {
     let store
 
@@ -69,6 +82,7 @@ describe('Documents Store', () => {
     })
 
     it('fetches my documents (teacher) with simulated delay', async () => {
+        documentService.getInbox.mockResolvedValue({ data: { items: [{ id: 1 }, { id: 2 }], total: 2 } })
         const promise = store.fetchMyDocuments()
 
         expect(store.loading).toBe(true)
@@ -80,26 +94,28 @@ describe('Documents Store', () => {
     })
 
     it('fetches templates', async () => {
+        mockGet.mockResolvedValue({ data: [{ id: 1, type: 'PDP' }, { id: 2, type: 'PEI' }] })
         const templates = await store.fetchTemplates()
         expect(templates).toHaveLength(2)
         expect(templates[0].type).toBe('PDP')
     })
 
-    it('creates document with simulated delay', async () => {
+    it('creates document', async () => {
         const docData = { title: 'New Doc' }
+        mockPost.mockResolvedValue({ data: { id: 100, ...docData } })
         const promise = store.createDocument(docData)
 
-        await vi.runAllTimersAsync()
-        await promise
+        const result = await promise
 
+        expect(result.title).toBe('New Doc')
         expect(store.inbox[0].title).toBe('New Doc')
     })
 
-    it('fetches my files (student) with simulated delay', async () => {
+    it('fetches my files (student)', async () => {
+        mockGet.mockResolvedValue({ data: [{ id: 1 }, { id: 2 }] })
         const promise = store.fetchMyFiles()
 
         expect(store.loading).toBe(true)
-        await vi.runAllTimersAsync()
         await promise
 
         expect(store.inbox).toHaveLength(2)

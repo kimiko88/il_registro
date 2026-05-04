@@ -35,4 +35,8 @@ type Repository interface {
 	GetAdminActivity(ctx context.Context, adminID string, limit int) ([]ActivityLogEntry, error)
 	ListAuditLogs(ctx context.Context, req *AuditLogListRequest, offset int) ([]ActivityLogEntry, int64, error)
 	LogAdminAction(ctx context.Context, adminID, actionType, target string, targetID *string, schoolID *string, details string) error
+
+	// Settings
+	GetSetting(ctx context.Context, schoolID, key string) (string, error)
+	UpdateSetting(ctx context.Context, schoolID, key, value string) error
 }

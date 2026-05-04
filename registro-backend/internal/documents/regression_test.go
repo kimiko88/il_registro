@@ -40,6 +40,14 @@ func (m *MockRegRepo) CreateTemplate(tpl *DocumentTemplate) error               
 func (m *MockRegRepo) FindByClass(classID string) ([]Document, error)           { return nil, nil }
 func (m *MockRegRepo) FindByStudent(studentID string) ([]Document, error)       { return nil, nil }
 func (m *MockRegRepo) GetTemplates(schoolID string) ([]DocumentTemplate, error) { return nil, nil }
+func (m *MockRegRepo) Delete(id string) error {
+	args := m.Called(id)
+	return args.Error(0)
+}
+func (m *MockRegRepo) ListAll(s string, t *DocType) ([]Document, error) {
+	args := m.Called(s, t)
+	return args.Get(0).([]Document), args.Error(1)
+}
 
 func TestVideoRegression_UpdatesOnApprovedDoc(t *testing.T) {
 	repo := &MockRegRepo{}
@@ -55,7 +63,7 @@ func TestVideoRegression_UpdatesOnApprovedDoc(t *testing.T) {
 
 	repo.On("FindByID", "doc-123").Return(doc, nil)
 
-	err := svc.UpdateDocument(ctx, "user-1", "doc-123", UpdateDocumentRequest{})
+	err := svc.UpdateDocument(ctx, "secretary", "user-1", "doc-123", UpdateDocumentRequest{})
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "cannot edit non-draft document")
 }

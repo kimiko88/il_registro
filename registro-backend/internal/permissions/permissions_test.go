@@ -115,10 +115,10 @@ func TestManager_HasPermission(t *testing.T) {
 			expected:   true,
 		},
 		{
-			name:       "secretary does not have user delete",
+			name:       "secretary has user delete",
 			role:       "secretary",
 			permission: UserDelete,
-			expected:   false,
+			expected:   true,
 		},
 		{
 			name:       "secretary does not have audit read",
@@ -246,10 +246,10 @@ func TestManager_CheckPermissions(t *testing.T) {
 			expected:    true,
 		},
 		{
-			name:        "secretary missing one permission",
+			name:        "secretary has all requested permissions",
 			role:        "secretary",
 			permissions: []Permission{UserCreate, UserRead, UserDelete},
-			expected:    false,
+			expected:    true,
 		},
 		{
 			name:        "teacher has only user read",

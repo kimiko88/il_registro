@@ -43,7 +43,7 @@ describe('Teacher Workflow', () => {
                             },
                             classes: {
                                 selectedClass: { id: 'c1', name: '1A' },
-                                students: [{ id: 'st1', firstName: 'Student', lastName: 'One' }]
+                                students: [{ id: 'st1', firstName: 'Mario', lastName: 'Rossi' }]
                             }
                         }
                     })
@@ -74,10 +74,13 @@ describe('Teacher Workflow', () => {
                         initialState: {
                             classes: {
                                 selectedClass: { id: 'c1', name: '1A' },
-                                students: [{ id: 'st1', firstName: 'Student', lastName: 'One' }]
+                                students: [{ id: 'st1', firstName: 'Mario', lastName: 'Rossi' }]
                             },
                             subjects: {
                                 selectedSubject: { id: 's1', name: 'Math' }
+                            },
+                            grades: {
+                                grades: [{ id: 'st1', name: 'Rossi Mario', absences: 2, grades: [{ id: 'g1', value: 8, date: '2025-01-01', type: 'Written' }] }]
                             }
                         }
                     })

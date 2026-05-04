@@ -417,6 +417,16 @@ const removeGuardian = (guardian) => {
         }
     })
 }
+
+defineExpose({
+    showUserDialog,
+    isEditing,
+    userForm,
+    fetchStudents,
+    editStudent,
+    saveStudent,
+    openEnrollment
+})
 </script>
 
 <style scoped>

@@ -356,6 +356,8 @@ func (h *Handler) RegisterRoutes(router *gin.RouterGroup, middleware *Middleware
 	{
 		// Dashboard stats (accessible to admin, superadmin, and secretary)
 		adminGroup.GET("/dashboard/stats", middleware.RequireStaff(), middleware.SetSchoolFilter(), h.GetDashboardStats)
+		adminGroup.GET("/settings/:key", middleware.RequireStaff(), middleware.SetSchoolFilter(), h.GetSchoolSetting)
+		adminGroup.PUT("/settings/:key", middleware.RequireStaff(), middleware.SetSchoolFilter(), h.UpdateSchoolSetting)
 
 		// Restricted admin routes (admin and superadmin only)
 		restricted := adminGroup.Group("/")
@@ -413,4 +415,61 @@ func (h *Handler) ListAuditLogs(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, logs)
+}
+
+// GetSchoolSetting returns a school setting
+// GET /api/v1/admin/settings/:key
+func (h *Handler) GetSchoolSetting(c *gin.Context) {
+	key := c.Param("key")
+	schoolID := GetFilteredSchoolID(c)
+
+	if schoolID == "" {
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "school_id required"})
+		return
+	}
+
+	value, err := h.service.GetSchoolSetting(c.Request.Context(), schoolID, key)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error:   "failed to get setting",
+			Message: err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"key": key, "value": value})
+}
+
+// UpdateSchoolSetting updates a school setting
+// PUT /api/v1/admin/settings/:key
+func (h *Handler) UpdateSchoolSetting(c *gin.Context) {
+	key := c.Param("key")
+	schoolID := GetFilteredSchoolID(c)
+
+	if schoolID == "" {
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "school_id required"})
+		return
+	}
+
+	var req struct {
+		Value string `json:"value" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error:   "invalid request",
+			Message: err.Error(),
+		})
+		return
+	}
+
+	err := h.service.UpdateSchoolSetting(c.Request.Context(), schoolID, key, req.Value)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error:   "failed to update setting",
+			Message: err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, MessageResponse{Message: "setting updated successfully"})
 }

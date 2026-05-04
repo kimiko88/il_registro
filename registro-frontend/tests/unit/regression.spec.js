@@ -1,9 +1,28 @@
 import { setActivePinia, createPinia } from 'pinia';
-import { useGradesStore } from 'src/stores/grades';
-import { useAttendanceStore } from 'src/stores/attendance';
-import { useDocumentsStore } from 'src/stores/documents';
-import { useMyGrades } from 'src/composables/useMyGrades';
+import { useGradesStore } from '@/stores/grades';
+import { useAttendanceStore } from '@/stores/attendance';
+import { useDocumentsStore } from '@/stores/documents';
+import { useMyGrades } from '@/composables/useMyGrades';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { gradeService } from '@/services/gradeService';
+
+// Mock Services
+vi.mock('@/services/gradeService', () => ({
+    gradeService: {
+        getByClass: vi.fn(),
+        getMyGrades: vi.fn(),
+        saveGrade: vi.fn(),
+        updateGrade: vi.fn(),
+        deleteGrade: vi.fn()
+    }
+}));
+
+vi.mock('@/services/documentService', () => ({
+    default: {
+        createDocument: vi.fn(),
+        getInbox: vi.fn()
+    }
+}));
 
 // Mock Quasar
 vi.mock('quasar', () => ({
@@ -20,7 +39,11 @@ describe('Regression Tests', () => {
         const store = useGradesStore();
 
         // Hypothetical valid range 0-10
+        // Mock saveGrade
+        gradeService.saveGrade.mockResolvedValue({ data: { id: 'g1', value: 10, studentId: 's1' } });
         await store.addGrade({ value: 10, studentId: 's1' });
+        
+        gradeService.saveGrade.mockResolvedValue({ data: { id: 'g2', value: 0, studentId: 's1' } });
         await store.addGrade({ value: 0, studentId: 's1' });
 
         const studentGrades = store.grades.filter(g => g.studentId === 's1');

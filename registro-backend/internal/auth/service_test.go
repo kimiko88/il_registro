@@ -13,6 +13,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"registro-backend/pkg/jwt"
+	"registro-backend/pkg/logger"
 )
 
 // MockRepository is a mock implementation of the Repository interface
@@ -142,6 +143,9 @@ func (m *MockRepository) RevokeAllUserTokens(ctx context.Context, userID string)
 
 // Helper to create service with mocks
 func setupTest(t *testing.T) (*Service, *MockRepository) {
+	// Initialize logger to avoid nil panics
+	logger.Init("info")
+
 	mockRepo := new(MockRepository)
 
 	// Create a real token manager for testing

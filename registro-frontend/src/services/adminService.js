@@ -197,5 +197,15 @@ export default {
 
     getPerformanceTrends(params) {
         return api.get('/admin/analytics/performance', { params })
+    },
+
+    // ========== School Settings ==========
+
+    getSchoolSetting(key) {
+        return api.get(`/admin/settings/${key}`)
+    },
+
+    updateSchoolSetting(key, value) {
+        return api.put(`/admin/settings/${key}`, { value: String(value) })
     }
 }

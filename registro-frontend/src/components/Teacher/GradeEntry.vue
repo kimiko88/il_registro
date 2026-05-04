@@ -19,7 +19,7 @@
        </template>
 
        <template v-slot:body="props">
-          <q-tr :props="props">
+          <q-tr :props="props" v-if="props.row">
              <q-td key="name" :props="props">
                 <div class="text-weight-bold">{{ props.row.name }}</div>
                 <div class="text-caption text-grey">Assenze: {{ props.row.absences }}</div>
@@ -104,8 +104,7 @@ const initialSnapshot = ref({});
 
 const studentsWithGrades = computed(() => {
     // The gradesStore should have students for the selected class
-    // We assume the store populates gradesStore.classGrades
-    return gradesStore.classGrades || [];
+    return gradesStore.grades || [];
 });
 
 const columns = [
@@ -132,6 +131,7 @@ const hasChanges = computed(() => {
 });
 
 const isDirty = (id) => {
+    if (!entryData.value[id] || !initialSnapshot.value[id]) return false;
     return JSON.stringify(entryData.value[id]) !== JSON.stringify(initialSnapshot.value[id]);
 };
 

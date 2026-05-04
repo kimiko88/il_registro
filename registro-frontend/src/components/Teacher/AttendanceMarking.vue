@@ -12,7 +12,7 @@
         dense outlined
         style="min-width: 140px"
       />
-      <q-input v-model="date" type="date" label="Data" dense outlined style="max-width: 160px" />
+      <q-input v-model="dateVal" type="date" label="Data" dense outlined style="max-width: 160px" />
       <q-space />
       <q-btn color="primary" icon="save" label="Salva Presenze" :loading="saving" @click="saveAll" :disable="!hasChanges" />
     </div>
@@ -35,7 +35,7 @@
         <q-tr :props="props">
           <!-- Student Name -->
           <q-td key="name" :props="props">
-            <div class="text-weight-bold">{{ props.row.name }}</div>
+            <div class="text-weight-bold" v-if="props.row">{{ props.row.name }}</div>
           </q-td>
 
           <!-- Status Toggle -->
@@ -178,13 +178,6 @@ const fetchStudentsAndAttendance = async () => {
     const res = await attendanceService.getByClass(selectedClassId.value, dateVal.value)
     const records = res.data || []
 
-    // Build student list + map from existing records
-    const fetched = records.map(r => ({
-      id: r.student_id,
-      name: r.student_name || r.student_id
-    }))
-    students.value = fetched
-
     // Initialize attendance map
     records.forEach(r => {
       attendanceMap[r.student_id] = {
@@ -195,6 +188,13 @@ const fetchStudentsAndAttendance = async () => {
         isJustified: r.is_justified || false
       }
     })
+
+    // Build student list + map from existing records
+    const fetched = records.map(r => ({
+      id: r.student_id,
+      name: r.student_name || r.student_id
+    }))
+    students.value = fetched
     initialSnapshot.value = JSON.stringify(attendanceMap)
   } catch (e) {
     console.error(e)
@@ -257,4 +257,15 @@ const submitJustify = async () => {
     $q.notify({ type: 'negative', message: 'Errore nella giustificazione' })
   }
 }
+
+defineExpose({
+    selectedClassId,
+    dateVal,
+    students,
+    attendanceMap,
+    fetchStudentsAndAttendance,
+    saveAll,
+    openJustify,
+    submitJustify
+})
 </script>

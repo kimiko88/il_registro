@@ -36,7 +36,7 @@ func (r *AdminRepository) CountSchools(ctx context.Context, schoolID *string) (i
 
 // CountUsers returns the total number of users
 func (r *AdminRepository) CountUsers(ctx context.Context, schoolID *string) (int64, error) {
-	query := "SELECT COUNT(*) FROM users WHERE 1=1"
+	query := "SELECT COUNT(*) FROM users WHERE 1=1 AND deleted_at IS NULL"
 	args := []interface{}{}
 
 	if schoolID != nil {
@@ -58,6 +58,8 @@ func (r *AdminRepository) CountUsersByRole(ctx context.Context, role string, sch
 		query += " AND school_id = $2"
 		args = append(args, *schoolID)
 	}
+
+	query += " AND deleted_at IS NULL"
 
 	var count int64
 	err := r.db.QueryRowContext(ctx, query, args...).Scan(&count)
@@ -855,4 +857,27 @@ func (r *AdminRepository) CountCommunications(ctx context.Context, schoolID *str
 	var count int64
 	err := r.db.QueryRowContext(ctx, query, args...).Scan(&count)
 	return count, err
+}
+
+// GetSetting retrieves a school setting by key
+func (r *AdminRepository) GetSetting(ctx context.Context, schoolID, key string) (string, error) {
+	var value string
+	err := r.db.QueryRowContext(ctx, "SELECT value FROM settings WHERE school_id = $1 AND key = $2", schoolID, key).Scan(&value)
+	if err == sql.ErrNoRows {
+		return "", nil
+	}
+	return value, err
+}
+
+// UpdateSetting creates or updates a school setting
+func (r *AdminRepository) UpdateSetting(ctx context.Context, schoolID, key, value string) error {
+	query := `
+		INSERT INTO settings (school_id, key, value, updated_at)
+		VALUES ($1, $2, $3, NOW())
+		ON CONFLICT (school_id, key) DO UPDATE SET
+			value = EXCLUDED.value,
+			updated_at = NOW()
+	`
+	_, err := r.db.ExecContext(ctx, query, schoolID, key, value)
+	return err
 }

@@ -4,19 +4,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { Quasar } from 'quasar'
 import Index from '@/pages/secretary/Index.vue'
 
-// Mock Quasar
-vi.mock('quasar', async (importOriginal) => {
-    const actual = await importOriginal()
-    return {
-        ...actual,
-        useQuasar: () => ({
-            loading: { show: vi.fn(), hide: vi.fn() },
-            notify: vi.fn(),
-            config: {} // Ensure config is mocked here too if accessed via useQuasar
-        })
-    }
-})
-
 // Mock Router
 const mockRouter = {
     push: vi.fn()
@@ -25,10 +12,37 @@ vi.mock('vue-router', () => ({
     useRouter: () => mockRouter
 }))
 
+// Mock Services
+const { mockAdminService, mockDocumentService } = vi.hoisted(() => ({
+    mockAdminService: {
+        getDashboardStats: vi.fn().mockResolvedValue({
+            data: {
+                pending_documents_count: '5',
+                announcements_count: '2',
+                total_students: '100',
+                total_teachers: '20'
+            }
+        })
+    },
+    mockDocumentService: {
+        getInbox: vi.fn().mockResolvedValue({
+            data: {
+                items: [
+                    { id: 1, title: 'PDP - Giulia Verdi', author: 'Mario Rossi', created_at: '2025-01-20T10:00:00Z' }
+                ]
+            }
+        })
+    }
+}))
+
+vi.mock('src/services/adminService', () => ({ default: mockAdminService }))
+vi.mock('src/services/documentService', () => ({ default: mockDocumentService }))
+
+
 describe('Secretary Dashboard (Index.vue)', () => {
     let wrapper
 
-    beforeEach(() => {
+    beforeEach(async () => {
         vi.clearAllMocks()
         wrapper = mount(Index, {
             global: {
@@ -51,6 +65,9 @@ describe('Secretary Dashboard (Index.vue)', () => {
                 }
             }
         })
+        // Wait for fetchData
+        await new Promise(resolve => setTimeout(resolve, 0))
+        await wrapper.vm.$nextTick()
     })
 
     it('renders dashboard title and stats cards', () => {

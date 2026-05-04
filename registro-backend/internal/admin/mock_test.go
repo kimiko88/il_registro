@@ -142,3 +142,28 @@ func (m *MockRepository) LogAdminAction(ctx context.Context, adminID, actionType
 	args := m.Called(ctx, adminID, actionType, target, targetID, schoolID, details)
 	return args.Error(0)
 }
+
+func (m *MockRepository) CountCommunications(ctx context.Context, schoolID *string) (int64, error) {
+	args := m.Called(ctx, schoolID)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *MockRepository) CountDocuments(ctx context.Context, schoolID *string) (int64, error) {
+	args := m.Called(ctx, schoolID)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *MockRepository) CountPendingDocuments(ctx context.Context, schoolID *string) (int64, error) {
+	args := m.Called(ctx, schoolID)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *MockRepository) GetSetting(ctx context.Context, schoolID, key string) (string, error) {
+	args := m.Called(ctx, schoolID, key)
+	return args.String(0), args.Error(1)
+}
+
+func (m *MockRepository) UpdateSetting(ctx context.Context, schoolID, key, value string) error {
+	args := m.Called(ctx, schoolID, key, value)
+	return args.Error(0)
+}
