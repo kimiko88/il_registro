@@ -39,11 +39,31 @@
       <div class="col-12 col-md-8">
         <q-card class="no-shadow bordered-card full-height">
           <q-card-section class="row items-center justify-between">
-            <div class="text-h6 text-weight-bold text-dark">Today's Schedule</div>
+            <div class="text-h6 text-weight-bold text-dark">{{ userRole === 'secretary' || userRole === 'admin' ? 'Attività Recenti' : "Today's Schedule" }}</div>
             <q-btn flat round dense icon="more_horiz" color="grey-7" />
           </q-card-section>
           
-          <q-list class="q-px-sm">
+          <q-list class="q-px-sm" v-if="userRole === 'secretary' || userRole === 'admin'">
+            <q-item v-for="event in recentEvents" :key="event.id" class="q-mb-sm rounded-lg hover-bg-grey">
+              <q-item-section avatar>
+                <div class="text-center bg-grey-2 rounded-lg q-pa-sm" style="min-width: 50px">
+                  <q-icon :name="getEventIcon(event.type)" :color="getEventColor(event.type)" size="sm" />
+                </div>
+              </q-item-section>
+              <q-item-section>
+                <q-item-label class="text-weight-bold">{{ event.description }}</q-item-label>
+                <q-item-label caption>{{ event.user_name }} • {{ event.school_name || 'Sistema' }}</q-item-label>
+              </q-item-section>
+              <q-item-section side>
+                <div class="text-caption text-grey-6">{{ formatDate(event.created_at) }}</div>
+              </q-item-section>
+            </q-item>
+            <q-item v-if="recentEvents.length === 0" class="text-center text-grey q-pa-md">
+                Nessuna attività recente
+            </q-item>
+          </q-list>
+          
+          <q-list class="q-px-sm" v-else>
             <q-item v-for="n in 3" :key="n" class="q-mb-sm rounded-lg hover-bg-grey">
               <q-item-section avatar>
                 <div class="text-center bg-grey-2 rounded-lg q-pa-sm" style="min-width: 50px">
@@ -111,6 +131,7 @@ const authStore = useAuthStore()
 const { user, userName, userRole } = storeToRefs(authStore)
 
 const realStats = ref([])
+const recentEvents = ref([])
 
 // Greeting based on time of day
 const greeting = computed(() => {
@@ -166,21 +187,47 @@ const stats = computed(() => {
 const fetchDashboardData = async () => {
     try {
         const data = await dashboardService.getDashboardStats(userRole.value)
-        if (data && data.stats) {
+        if (data) {
             // Map backend stats to the format expected by the component
-            // For admin, it might return { schools_count: X, users_count: Y, ... }
             if (userRole.value === 'admin' || userRole.value === 'superadmin') {
                 realStats.value = [
-                    { label: 'Totale Scuole', value: data.schools_count || '0', icon: 'school', color: 'indigo' },
-                    { label: 'Utenti Attivi', value: data.users_count || '0', icon: 'people', color: 'cyan' },
-                    { label: 'Eventi Oggi', value: '0', icon: 'event', color: 'amber' },
-                    { label: 'Report Pending', value: '0', icon: 'assignment', color: 'red' }
+                    { label: 'Totale Scuole', value: data.total_schools || '0', icon: 'school', color: 'indigo' },
+                    { label: 'Utenti Attivi', value: data.total_users || '0', icon: 'people', color: 'cyan' },
+                    { label: 'Eventi Oggi', value: data.active_users_24h || '0', icon: 'event', color: 'amber' },
+                    { label: 'Report Pending', value: data.pending_documents_count || '0', icon: 'assignment', color: 'red' }
                 ]
+                recentEvents.value = data.recent_events || []
+            } else if (userRole.value === 'secretary') {
+                realStats.value = [
+                    { label: 'Studenti', value: data.total_students || '0', icon: 'school', color: 'indigo' },
+                    { label: 'Docenti', value: data.total_teachers || '0', icon: 'people', color: 'cyan' },
+                    { label: 'Documenti', value: data.total_documents || '0', icon: 'description', color: 'amber' },
+                    { label: 'Richieste', value: data.pending_documents_count || '0', icon: 'assignment', color: 'red' }
+                ]
+                recentEvents.value = data.recent_events || []
             }
         }
     } catch (e) {
         console.error("Error fetching dashboard data", e)
     }
+}
+
+const getEventIcon = (type) => {
+    const icons = { create: 'add_circle', update: 'edit', delete: 'delete', login: 'login' }
+    return icons[type] || 'event'
+}
+
+const getEventColor = (type) => {
+    const colors = { create: 'positive', update: 'info', delete: 'negative', login: 'primary' }
+    return colors[type] || 'grey'
+}
+
+const formatDate = (dateString) => {
+    const date = new Date(dateString)
+    const diff = new Date() - date
+    if (diff < 3600000) return `${Math.floor(diff / 60000)} min fa`
+    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h fa`
+    return date.toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })
 }
 
 onMounted(() => {

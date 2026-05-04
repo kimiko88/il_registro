@@ -10,7 +10,7 @@ export default {
      * @returns {Promise} Dashboard statistics
      */
     async getDashboardStats(role) {
-        if (role === 'admin' || role === 'superadmin') {
+        if (role === 'admin' || role === 'superadmin' || role === 'secretary') {
             const response = await api.get('/admin/dashboard/stats')
             return response.data
         }
