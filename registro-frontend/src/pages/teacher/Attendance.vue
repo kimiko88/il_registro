@@ -6,6 +6,28 @@
            <q-input dense outlined v-model="date" type="date" label="Data" bg-color="white" @update:model-value="fetchData" />
            <q-select 
               dense outlined 
+              v-model="selectedHour" 
+              :options="[1,2,3,4,5,6,7,8]" 
+              label="Ora" 
+              bg-color="white" 
+              style="min-width: 80px"
+              @update:model-value="fetchData"
+           />
+           <q-select 
+              dense outlined 
+              v-model="selectedSubject" 
+              :options="gradesStore.subjects" 
+              option-label="name"
+              option-value="subject_id"
+              emit-value
+              map-options
+              label="Materia" 
+              bg-color="white" 
+              style="min-width: 150px"
+              @update:model-value="fetchData"
+           />
+           <q-select 
+              dense outlined 
               v-model="selectedClass" 
               :options="classesStore.classes" 
               option-label="name"
@@ -61,6 +83,22 @@
             <q-toolbar-title class="text-subtitle1">Appello - {{ date }}</q-toolbar-title>
             <q-btn flat dense icon="check_circle" label="Tutti Presenti" color="primary" @click="markAllPresent" :disable="loading" />
         </q-toolbar>
+
+        <!-- Daily Timeline (Previous Hours) -->
+        <div v-if="dailyLessons.length > 0" class="q-px-md q-py-sm bg-blue-50 border-b">
+            <div class="text-caption text-weight-bold text-blue-9 q-mb-xs">ATTIVITÀ DEL GIORNO</div>
+            <div class="row q-gutter-xs">
+                <div v-for="l in dailyLessons" :key="l.id" class="col-auto">
+                    <q-chip dense outline color="blue-7" text-color="white" icon="history">
+                        Ora {{ l.hour }}: {{ l.topic }}
+                        <q-tooltip>
+                            Materia: {{ l.subject_id }}<br>
+                            Tipo: {{ l.type }}
+                        </q-tooltip>
+                    </q-chip>
+                </div>
+            </div>
+        </div>
         
         <div v-if="loading" class="row justify-center q-pa-lg">
             <q-spinner color="primary" size="3em" />
@@ -183,12 +221,14 @@
 import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { useClassesStore } from '@/stores/classes'
+import { useGradesStore } from '@/stores/grades'
 import { attendanceService } from 'src/services/attendanceService'
-import { api } from 'src/boot/axios'
+import api from '@/services/api'
 import NoteDialog from 'src/components/Teacher/NoteDialog.vue'
 
 const $q = useQuasar()
 const classesStore = useClassesStore()
+const gradesStore = useGradesStore()
 
 const date = ref(new Date().toISOString().split('T')[0])
 const selectedClass = ref(null)
@@ -201,6 +241,11 @@ const showJustifications = ref(false)
 // Note Dialog State
 const showNoteDialog = ref(false)
 const selectedStudentForNote = ref(null)
+
+const selectedHour = ref(1)
+const selectedSubject = ref(null)
+
+const dailyLessons = ref([])
 
 const stats = computed(() => ({
     present: students.value.filter(s => s.status === 'present').length,
@@ -217,7 +262,15 @@ onMounted(async () => {
     }
 })
 
-const onClassChange = () => {
+const onClassChange = async () => {
+    if (selectedClass.value) {
+        await gradesStore.fetchClassSubjects(selectedClass.value.id)
+        if (gradesStore.subjects.length > 0) {
+            selectedSubject.value = gradesStore.subjects[0].subject_id
+        } else {
+            selectedSubject.value = null
+        }
+    }
     fetchData()
 }
 
@@ -242,9 +295,15 @@ const fetchData = async () => {
         let attendanceMap = {}
         try {
             const attRes = await attendanceService.getByClass(selectedClass.value.id, date.value)
-            // Assuming response is array of { student_id, status, entry_time, exit_time ... }
+            // Filter attendance by selected hour
             if (Array.isArray(attRes.data)) {
-                attRes.data.forEach(r => attendanceMap[r.student_id] = r)
+                attRes.data.forEach(r => {
+                    // Check if record hour matches selectedHour
+                    // Backend returns hour as string (from my earlier fmt.Sprintf) or int
+                    if (String(r.entry_time) === String(selectedHour.value)) {
+                        attendanceMap[r.student_id] = r
+                    }
+                })
             }
         } catch (e) {
             console.warn("No attendance found or error", e)
@@ -265,10 +324,16 @@ const fetchData = async () => {
         })
 
         // 3. Fetch Justifications
-        const justRes = await api.get('/teacher/attendance/pending-justifications', {
+        const justRes = await api.get('/attendance/pending-justifications', {
              params: { class_id: selectedClass.value.id }
         })
         justificationRequests.value = justRes.data || []
+
+        // 4. Fetch Daily Lessons for Timeline
+        const lessonRes = await api.get(`/lessons/class/${selectedClass.value.id}`, {
+            params: { date: date.value }
+        })
+        dailyLessons.value = lessonRes.data || []
 
     } catch (error) {
         $q.notify({ type: 'negative', message: 'Errore caricamento dati' })
@@ -299,16 +364,20 @@ const saveAttendance = async () => {
         const payload = {
             class_id: selectedClass.value.id,
             date: date.value,
+            hour: selectedHour.value,
+            subject_id: selectedSubject.value || '00000000-0000-0000-0000-000000000000', 
             statuses: students.value.map(s => ({
                 student_id: s.id,
                 status: s.status,
                 entry_time: s.status === 'late' ? s.entry_time : null,
-                exit_time: s.status === 'early_exit' ? s.exit_time : null
+                exit_time: s.status === 'early_exit' ? s.exit_time : null,
+                hour: selectedHour.value,
+                subject_id: selectedSubject.value || '00000000-0000-0000-0000-000000000000'
             }))
         }
         
         // Assuming bulk mark endpoint exists
-        await api.post('/teacher/attendance/mark-bulk', payload)
+        await api.post('/attendance/mark-bulk', payload)
         
         $q.notify({ type: 'positive', message: 'Registro salvato con successo' })
     } catch (error) {
@@ -320,7 +389,7 @@ const saveAttendance = async () => {
 
 const processJustification = async (id, approved) => {
     try {
-        await api.post(`/teacher/attendance/justification/${id}/process`, { approve: approved })
+        await api.post(`/attendance/justification/${id}/process`, { approve: approved })
         justificationRequests.value = justificationRequests.value.filter(r => r.id !== id)
         $q.notify({ 
             message: approved ? 'Giustificazione accettata' : 'Giustificazione respinta', 

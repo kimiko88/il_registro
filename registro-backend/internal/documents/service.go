@@ -28,6 +28,8 @@ type Service interface {
 	// Templates
 	CreateTemplate(ctx context.Context, schoolID string, req TemplateRequest) error
 	ListTemplates(ctx context.Context, schoolID string) ([]DocumentTemplate, error)
+	UpdateTemplate(ctx context.Context, id string, req TemplateRequest) error
+	DeleteTemplate(ctx context.Context, id string) error
 
 	// Export
 	ExportDocument(ctx context.Context, id, format string) ([]byte, string, error)
@@ -269,6 +271,19 @@ func (s *service) CreateTemplate(ctx context.Context, schoolID string, req Templ
 
 func (s *service) ListTemplates(ctx context.Context, schoolID string) ([]DocumentTemplate, error) {
 	return s.repo.GetTemplates(schoolID)
+}
+
+func (s *service) UpdateTemplate(ctx context.Context, id string, req TemplateRequest) error {
+	return s.repo.UpdateTemplate(&DocumentTemplate{
+		ID:      id,
+		Name:    req.Name,
+		Type:    req.Type,
+		Content: req.Content,
+	})
+}
+
+func (s *service) DeleteTemplate(ctx context.Context, id string) error {
+	return s.repo.DeleteTemplate(id)
 }
 
 func (s *service) ExportDocument(ctx context.Context, id, format string) ([]byte, string, error) {

@@ -7,7 +7,7 @@ import (
 
 type Service interface {
 	CreateLesson(teacherID string, req CreateLessonRequest) (*LessonResponse, error)
-	GetLessons(classID, subjectID string) ([]LessonResponse, error)
+	GetLessons(classID, subjectID string, date string) ([]LessonResponse, error)
 	CreateHomework(teacherID string, req CreateHomeworkRequest) (*HomeworkResponse, error)
 	GetHomeworks(classID string) ([]HomeworkResponse, error)
 }
@@ -31,6 +31,8 @@ func (s *service) CreateLesson(teacherID string, req CreateLessonRequest) (*Less
 		SubjectID: req.SubjectID,
 		TeacherID: teacherID,
 		Date:      date,
+		Hour:      req.Hour,
+		Duration:  req.Duration,
 		Topic:     req.Topic,
 		Type:      req.Type,
 		Notes:     req.Notes,
@@ -43,14 +45,14 @@ func (s *service) CreateLesson(teacherID string, req CreateLessonRequest) (*Less
 	return s.mapLessonResponse(lesson), nil
 }
 
-func (s *service) GetLessons(classID, subjectID string) ([]LessonResponse, error) {
+func (s *service) GetLessons(classID, subjectID string, date string) ([]LessonResponse, error) {
 	var lessons []Lesson
 	var err error
 
 	if subjectID != "" {
-		lessons, err = s.repo.GetLessonsByClassAndSubject(classID, subjectID)
+		lessons, err = s.repo.GetLessonsByClassAndSubject(classID, subjectID, date)
 	} else {
-		lessons, err = s.repo.GetLessonsByClass(classID)
+		lessons, err = s.repo.GetLessonsByClass(classID, date)
 	}
 
 	if err != nil {
@@ -106,6 +108,8 @@ func (s *service) mapLessonResponse(l *Lesson) *LessonResponse {
 		TeacherID: l.TeacherID,
 		SubjectID: l.SubjectID,
 		Date:      l.Date,
+		Hour:      l.Hour,
+		Duration:  l.Duration,
 		Topic:     l.Topic,
 		Type:      l.Type,
 		Notes:     l.Notes,

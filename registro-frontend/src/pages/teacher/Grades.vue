@@ -5,7 +5,7 @@
       <q-card-section class="row items-center q-pb-none">
         <div class="text-h6 q-mr-md">Gestione Voti</div>
         <q-select
-          v-model="classesStore.selectedClassId"
+          v-model="selectedClassId"
           :options="classesStore.classes"
           option-value="id"
           option-label="name"
@@ -13,18 +13,24 @@
           dense outlined
           options-dense
           class="q-mr-md"
-          style="min-width: 120px"
+          style="min-width: 150px"
           emit-value
           map-options
+          :loading="classesStore.loading"
         />
         <q-select
           v-model="selectedSubject"
           :options="gradesStore.subjects"
+          option-label="name"
+          option-value="subject_id"
+          emit-value
+          map-options
           label="Materia"
           dense outlined
           options-dense
           style="min-width: 150px"
           class="q-mr-md"
+          @update:model-value="refreshGrades"
         />
         <q-space />
         <div class="row items-center q-gutter-sm">
@@ -62,14 +68,14 @@
     </q-card>
 
     <!-- Main Content Area -->
-    <div v-if="classesStore.selectedClassId">
+    <div v-if="selectedClassId">
         
         <!-- Table View -->
         <div v-show="viewMode === 'table'">
             <div class="row q-col-gutter-md">
                 <div class="col-12" :class="{'col-md-9': showRubric, 'col-md-12': !showRubric}">
                      <GradeEntry
-                        :class-id="classesStore.selectedClassId"
+                        :class-id="selectedClassId"
                         :subject="selectedSubject"
                         :date="filterDate"
                         :type="gradeType"
@@ -94,7 +100,7 @@
 
         <!-- Stats View -->
         <div v-show="viewMode === 'stats'">
-             <GradeStatistics :class-id="classesStore.selectedClassId" :subject="selectedSubject" />
+             <GradeStatistics :class-id="selectedClassId" :subject="selectedSubject" />
         </div>
 
     </div>
@@ -133,7 +139,8 @@ const $q = useQuasar();
 const classesStore = useClassesStore();
 const gradesStore = useGradesStore();
 
-const selectedSubject = ref('Matematica');
+const selectedClassId = ref(null);
+const selectedSubject = ref(null); 
 const viewMode = ref('table');
 const filterDate = ref(date.formatDate(Date.now(), 'YYYY-MM-DD'));
 const gradeType = ref('Orale');
@@ -143,13 +150,21 @@ const offlineMode = ref(false);
 const showImportDialog = ref(false);
 const importFile = ref(null);
 
-watch(() => classesStore.selectedClassId, () => {
+watch(selectedClassId, async (newVal) => {
+    if (newVal) {
+        await gradesStore.fetchClassSubjects(newVal);
+        if (gradesStore.subjects.length > 0) {
+            selectedSubject.value = gradesStore.subjects[0].subject_id;
+        } else {
+            selectedSubject.value = null;
+        }
+    }
     refreshGrades();
 });
 
 const refreshGrades = async () => {
-    if (!classesStore.selectedClassId) return;
-    await gradesStore.fetchGrades(classesStore.selectedClassId, selectedSubject.value);
+    if (!selectedClassId.value) return;
+    await gradesStore.fetchGrades(selectedClassId.value, selectedSubject.value);
 };
 
 const printReport = () => {
@@ -166,8 +181,11 @@ const processImport = () => {
     }, 1500);
 };
 
-onMounted(() => {
-    classesStore.fetchAssignedClasses();
+onMounted(async () => {
+    await classesStore.fetchAssignedClasses();
+    if (classesStore.classes.length > 0) {
+        selectedClassId.value = classesStore.classes[0].id;
+    }
 });
 </script>
 

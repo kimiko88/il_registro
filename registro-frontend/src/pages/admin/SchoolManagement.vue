@@ -3,7 +3,7 @@
     <!-- Header -->
     <div class="row items-center q-mb-xl">
       <div class="col">
-        <h1 class="text-h3 text-weight-bold text-outfit bg-clip-text text-transparent bg-gradient-premium q-my-none" style="display: inline-block;">
+        <h1 class="text-h3 text-weight-bold text-outfit text-gradient-premium q-my-none" style="display: inline-block;">
           {{ isSuperAdmin ? 'Gestione Scuole' : 'La Mia Scuola' }}
         </h1>
         <div class="text-subtitle1 text-slate-500 q-mt-sm">

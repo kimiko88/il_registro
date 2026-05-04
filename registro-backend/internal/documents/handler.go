@@ -28,6 +28,8 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	// Templates
 	docs.POST("/template", h.CreateTemplate)
 	docs.GET("/template", h.ListTemplates)
+	docs.PATCH("/template/:id", h.UpdateTemplate)
+	docs.DELETE("/template/:id", h.DeleteTemplate)
 
 	// Secretary
 	docs.GET("/inbox", h.GetInbox)
@@ -145,6 +147,29 @@ func (h *Handler) CreateTemplate(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusCreated, gin.H{"message": "template created"})
+}
+
+func (h *Handler) UpdateTemplate(c *gin.Context) {
+	id := c.Param("id")
+	var req TemplateRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if err := h.service.UpdateTemplate(c.Request.Context(), id, req); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "template updated"})
+}
+
+func (h *Handler) DeleteTemplate(c *gin.Context) {
+	id := c.Param("id")
+	if err := h.service.DeleteTemplate(c.Request.Context(), id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "template deleted"})
 }
 
 func (h *Handler) ExportDocument(c *gin.Context) {

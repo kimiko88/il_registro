@@ -188,5 +188,4 @@ const downloadAttachment = (name) => {
 onMounted(() => {
     fetchMessages()
 })
-})
 </script>

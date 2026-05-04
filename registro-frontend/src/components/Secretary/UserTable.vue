@@ -1,5 +1,5 @@
 <template>
-  <q-card class="glass-card shadow-soft overflow-hidden">
+  <q-card flat class="rounded-xl border border-slate-100 bg-white shadow-soft overflow-hidden">
     <q-table
       :rows="users"
       :columns="columns"
@@ -8,51 +8,60 @@
       row-key="id"
       selection="multiple"
       v-model:selected="selected"
+      flat
+      class="bg-transparent"
     >
       <template v-slot:top>
-        <div class="text-h5 text-weight-bold text-outfit q-mr-lg">Utenti Registrati</div>
-        
-        <q-btn-toggle
-          v-model="roleFilter"
-          unelevated
-          toggle-color="primary"
-          toggle-text-color="white"
-          color="white"
-          text-color="grey-7"
-          :options="[
-            {label: 'Tutti', value: 'all'},
-            {label: 'Studenti', value: 'student'},
-            {label: 'Docenti', value: 'teacher'},
-            {label: 'Genitori', value: 'parent'},
-            {label: 'Personale', value: 'staff'}
-          ]"
-          class="shadow-soft rounded-lg q-mr-md"
-          @update:model-value="$emit('filter-role', $event)"
-        />
+        <div class="row items-center full-width q-mb-md">
+          <div class="text-h5 text-weight-bold text-outfit q-mr-xl text-slate-800">Elenco Utenti</div>
+          
+          <q-btn-toggle
+            v-model="roleFilter"
+            unelevated
+            toggle-color="indigo-50"
+            toggle-text-color="indigo-700"
+            color="white"
+            text-color="slate-400"
+            :options="[
+              {label: 'Tutti', value: 'all'},
+              {label: 'Studenti', value: 'student'},
+              {label: 'Docenti', value: 'teacher'},
+              {label: 'Genitori', value: 'parent'},
+              {label: 'Staff', value: 'staff'}
+            ]"
+            class="rounded-lg border border-slate-100 no-caps font-medium"
+            @update:model-value="$emit('filter-role', $event)"
+          />
 
-        <q-space />
-        
-        <q-input dense outlined bg-color="white" v-model="filter" placeholder="Cerca..." class="q-mr-sm" style="min-width: 250px">
-          <template v-slot:prepend>
-            <q-icon name="search" color="primary" />
-          </template>
-        </q-input>
-        
-        <q-btn unelevated color="primary" icon="add" label="Crea Utente" class="rounded-lg shadow-sm" @click="$emit('create')" />
-        <q-btn flat round icon="file_download" color="grey-7" class="q-ml-sm" @click="$emit('export')">
-            <q-tooltip>Esporta CSV</q-tooltip>
-        </q-btn>
+          <q-space />
+          
+          <div class="row q-gutter-sm">
+            <q-input dense outlined v-model="filter" placeholder="Cerca per nome, email..." class="bg-white min-width-250">
+              <template v-slot:prepend>
+                <q-icon name="search" color="slate-300" />
+              </template>
+            </q-input>
+            
+            <q-btn unelevated color="primary" icon="add" label="Nuovo Utente" class="rounded-lg shadow-sm" no-caps @click="$emit('create')" />
+            <q-btn flat round icon="file_download" color="slate-400" @click="$emit('export')">
+                <q-tooltip>Esporta in CSV</q-tooltip>
+            </q-btn>
+          </div>
+        </div>
       </template>
 
       <!-- Bulk Actions -->
       <template v-slot:top-row v-if="selected.length > 0">
-         <q-tr>
+         <q-tr class="bg-indigo-50 animate-fade-in">
            <q-td colspan="100%">
-             <div class="row items-center q-gutter-sm bg-blue-1 q-pa-sm rounded-borders">
-               <span class="text-weight-bold text-primary">{{ selected.length }} selezionati</span>
+             <div class="row items-center q-gutter-md q-pa-sm">
+               <q-icon name="check_circle" color="indigo" size="24px" />
+               <span class="text-weight-bold text-indigo-700">{{ selected.length }} utenti selezionati</span>
                <q-space />
-               <q-btn size="sm" color="negative" icon="delete" label="Elimina Massa" @click="$emit('bulk-delete', selected)" />
-               <q-btn size="sm" color="warning" text-color="dark" icon="lock_reset" label="Reset Pwd Massa" @click="$emit('bulk-reset', selected)" />
+               <div class="row q-gutter-sm">
+                 <q-btn unelevated size="sm" color="negative" icon="delete" label="Elimina Selezionati" no-caps class="rounded-md" @click="$emit('bulk-delete', selected)" />
+                 <q-btn outline size="sm" color="indigo" icon="lock_reset" label="Reset Password" no-caps class="rounded-md" @click="$emit('bulk-reset', selected)" />
+               </div>
              </div>
            </q-td>
          </q-tr>
@@ -61,7 +70,7 @@
       <!-- Custom Body -->
       <template v-slot:body-cell-role="props">
         <q-td :props="props">
-          <q-chip :color="getRoleColor(props.value)" text-color="white" size="sm">
+          <q-chip :color="getRoleColor(props.value) + '-50'" :text-color="getRoleColor(props.value) + '-700'" size="sm" class="text-weight-bold rounded-md">
             {{ getRoleLabel(props.value) }}
           </q-chip>
         </q-td>
@@ -69,45 +78,54 @@
 
       <template v-slot:body-cell-status="props">
          <q-td :props="props">
-            <q-badge :color="props.row.active ? 'positive' : 'grey'">
+            <div class="row items-center q-gutter-xs">
+              <div :class="props.row.active ? 'bg-emerald-500' : 'bg-slate-300'" class="status-dot"></div>
+              <span :class="props.row.active ? 'text-emerald-700 text-weight-medium' : 'text-slate-400'">
                 {{ props.row.active ? 'Attivo' : 'Inattivo' }}
-            </q-badge>
+              </span>
+            </div>
          </q-td>
       </template>
 
       <template v-slot:body-cell-actions="props">
         <q-td :props="props" auto-width>
-          <q-btn flat round size="sm" color="grey-7" icon="more_vert">
-            <q-menu>
-              <q-list style="min-width: 150px">
-                <q-item clickable v-close-popup @click="$emit('edit', props.row)">
-                  <q-item-section avatar><q-icon name="edit" /></q-item-section>
-                  <q-item-section>Modifica</q-item-section>
+          <q-btn flat round size="sm" color="slate-400" icon="more_horiz">
+            <q-menu class="rounded-lg shadow-2xl border border-slate-100">
+              <q-list style="min-width: 180px" padding>
+                <q-item clickable v-close-popup class="q-mx-sm rounded-md" @click="$emit('edit', props.row)">
+                  <q-item-section avatar><q-icon name="edit" color="primary" /></q-item-section>
+                  <q-item-section class="text-slate-700">Modifica Profilo</q-item-section>
                 </q-item>
-                <q-item clickable v-close-popup @click="$emit('reset-pwd', props.row)">
-                  <q-item-section avatar><q-icon name="lock_reset" /></q-item-section>
-                  <q-item-section>Reset Password</q-item-section>
-                </q-item>
-                
-                <q-item v-if="props.row.role === 'teacher'" clickable v-close-popup @click="$emit('manage-subjects', props.row)">
-                  <q-item-section avatar><q-icon name="menu_book" /></q-item-section>
-                  <q-item-section>Gestione Materie</q-item-section>
+                <q-item clickable v-close-popup class="q-mx-sm rounded-md" @click="$emit('reset-pwd', props.row)">
+                  <q-item-section avatar><q-icon name="lock_reset" color="orange" /></q-item-section>
+                  <q-item-section class="text-slate-700">Reset Password</q-item-section>
                 </q-item>
                 
-                <q-separator />
-                <q-item clickable v-close-popup class="text-negative" @click="$emit('delete', props.row)">
-                  <q-item-section avatar><q-icon name="delete" /></q-item-section>
-                  <q-item-section>Elimina</q-item-section>
+                <q-item v-if="props.row.role === 'teacher'" clickable v-close-popup class="q-mx-sm rounded-md" @click="$emit('manage-subjects', props.row)">
+                  <q-item-section avatar><q-icon name="menu_book" color="indigo" /></q-item-section>
+                  <q-item-section class="text-slate-700">Gestione Materie</q-item-section>
+                </q-item>
+                
+                <q-separator class="q-my-sm opacity-50" />
+                <q-item clickable v-close-popup class="q-mx-sm rounded-md text-negative" @click="$emit('delete', props.row)">
+                  <q-item-section avatar><q-icon name="delete" color="negative" /></q-item-section>
+                  <q-item-section class="text-weight-bold">Elimina Account</q-item-section>
                 </q-item>
               </q-list>
             </q-menu>
           </q-btn>
         </q-td>
       </template>
+      
+      <template v-slot:no-data>
+        <div class="full-width q-pa-xl text-center text-slate-400">
+          <q-icon name="group_off" size="64px" class="opacity-10 q-mb-md" />
+          <div class="text-h6">Nessun utente trovato</div>
+        </div>
+      </template>
     </q-table>
   </q-card>
 </template>
-
 <script setup>
 import { ref } from 'vue'
 

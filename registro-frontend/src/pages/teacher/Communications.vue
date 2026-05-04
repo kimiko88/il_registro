@@ -106,6 +106,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useCommunicationsStore } from 'src/stores/communications'
+import api from '@/services/api'
 
 const store = useCommunicationsStore()
 const showCompose = ref(false)
@@ -113,14 +114,14 @@ const selectedMessage = ref(null)
 const search = ref('')
 
 onMounted(() => {
-    store.fetchMessages()
+    store.fetchCommunications()
 })
 
 const filteredMessages = computed(() => {
-    if (!search.value) return store.messages
-    return store.messages.filter(m => 
-        (m.sender_id || '').toLowerCase().includes(search.value.toLowerCase()) || 
-        m.subject.toLowerCase().includes(search.value.toLowerCase())
+    if (!search.value) return store.communications
+    return store.communications.filter(m => 
+        (m.sender_name || '').toLowerCase().includes(search.value.toLowerCase()) || 
+        (m.subject || '').toLowerCase().includes(search.value.toLowerCase())
     )
 })
 

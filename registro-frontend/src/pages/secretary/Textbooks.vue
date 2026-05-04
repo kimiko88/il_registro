@@ -1,45 +1,127 @@
 <template>
-  <q-page class="q-pa-md bg-grey-1">
-    <div class="row items-center q-mb-md">
-      <div class="text-h4 text-weight-bold">
-        <q-icon name="auto_stories" color="primary" class="q-mr-sm" />
-        Gestione Libri di Testo
+  <q-page padding class="bg-slate-50">
+    <div class="row items-center q-mb-lg">
+      <div class="col">
+        <h1 class="text-h4 text-weight-bold text-slate-800 q-my-none">Gestione Libri di Testo</h1>
+        <p class="text-subtitle1 text-slate-500 q-mb-none">Catalogo dei testi adottati e in adozione</p>
       </div>
-      <q-space />
-      <q-btn color="primary" icon="add" label="Nuovo Libro" @click="openCreateDialog" />
+      <div class="col-auto">
+        <q-btn 
+          color="primary" 
+          icon="add" 
+          label="Nuovo Libro" 
+          class="rounded-lg q-px-md shadow-soft" 
+          @click="openCreateDialog" 
+        />
+      </div>
     </div>
 
-    <q-table
-      :rows="textbooks"
-      :columns="columns"
-      row-key="id"
-      flat bordered
-      :loading="loading"
-    >
-      <template v-slot:body-cell-actions="props">
-        <q-td :props="props" auto-width>
-          <q-btn flat round color="negative" icon="delete" @click="confirmDelete(props.row)" />
-        </q-td>
-      </template>
-    </q-table>
+    <q-card class="glass-card shadow-soft border-slate-100 overflow-hidden">
+      <q-table
+        :rows="textbooks"
+        :columns="columns"
+        row-key="id"
+        flat
+        :loading="loading"
+        class="bg-transparent"
+        :pagination="{ rowsPerPage: 10 }"
+      >
+        <template v-slot:header="props">
+          <q-tr :props="props" class="bg-slate-50 text-slate-700">
+            <q-th v-for="col in props.cols" :key="col.name" :props="props" class="text-weight-bold text-uppercase">
+              {{ col.label }}
+            </q-th>
+          </q-tr>
+        </template>
 
-    <!-- Dialog Create Textbook -->
-    <q-dialog v-model="showDialog">
-      <q-card style="min-width: 400px">
-        <q-card-section>
-          <div class="text-h6">Nuovo Libro di Testo</div>
+        <template v-slot:body-cell-title="props">
+          <q-td :props="props">
+            <div class="row items-center no-wrap">
+              <q-avatar color="indigo-50" text-color="indigo-700" icon="book" size="32px" class="q-mr-sm" />
+              <div class="text-weight-bold text-slate-800">{{ props.value }}</div>
+            </div>
+          </q-td>
+        </template>
+
+        <template v-slot:body-cell-price="props">
+          <q-td :props="props">
+            <q-chip outline color="primary" text-color="primary" dense class="text-weight-bold">
+              €{{ props.value.toFixed(2) }}
+            </q-chip>
+          </q-td>
+        </template>
+
+        <template v-slot:body-cell-actions="props">
+          <q-td :props="props" auto-width>
+            <div class="row q-gutter-xs">
+              <q-btn flat round dense color="primary" icon="edit" @click="openEditDialog(props.row)">
+                <q-tooltip>Modifica</q-tooltip>
+              </q-btn>
+              <q-btn flat round dense color="negative" icon="delete" @click="confirmDelete(props.row)">
+                <q-tooltip>Elimina</q-tooltip>
+              </q-btn>
+            </div>
+          </q-td>
+        </template>
+
+        <template v-slot:no-data>
+          <div class="full-width column flex-center q-pa-xl text-slate-400">
+            <q-icon name="auto_stories" size="80px" class="opacity-20" />
+            <div class="text-h6 q-mt-md">Nessun libro trovato</div>
+            <p>Inizia aggiungendo un nuovo testo al catalogo.</p>
+          </div>
+        </template>
+      </q-table>
+    </q-card>
+
+    <!-- Dialog Create/Edit Textbook -->
+    <q-dialog v-model="showDialog" persistent class="premium-dialog">
+      <q-card style="min-width: 500px" class="glass-card overflow-hidden">
+        <q-card-section class="bg-gradient-primary text-white q-pa-lg row items-center">
+          <div class="text-h5 text-weight-bold text-outfit">
+            {{ isEdit ? 'Modifica Libro' : 'Nuovo Libro di Testo' }}
+          </div>
+          <q-space />
+          <q-btn icon="close" flat round dense v-close-popup />
         </q-card-section>
-        <q-card-section>
-          <q-form @submit="saveTextbook" class="q-gutter-md">
-            <q-input v-model="form.title" label="Titolo" outlined :rules="[val => !!val || 'Obbligatorio']" />
-            <q-input v-model="form.author" label="Autore" outlined />
-            <q-input v-model="form.isbn" label="ISBN" outlined />
-            <q-input v-model="form.publisher" label="Editore" outlined />
-            <q-input v-model.number="form.price" label="Prezzo" type="number" outlined />
+
+        <q-card-section class="q-pa-xl">
+          <q-form @submit="saveTextbook" class="q-gutter-y-lg">
+            <q-input 
+              v-model="form.title" 
+              label="Titolo" 
+              outlined 
+              placeholder="Inserisci il titolo del libro"
+              :rules="[val => !!val || 'Obbligatorio']" 
+            />
             
-            <div class="row justify-end q-mt-md">
-              <q-btn flat label="Annulla" v-close-popup />
-              <q-btn type="submit" label="Salva" color="primary" />
+            <div class="row q-col-gutter-md">
+              <div class="col-12 col-md-6">
+                <q-input v-model="form.author" label="Autore" outlined placeholder="Nome dell'autore" />
+              </div>
+              <div class="col-12 col-md-6">
+                <q-input v-model="form.publisher" label="Editore" outlined placeholder="Casa editrice" />
+              </div>
+            </div>
+
+            <div class="row q-col-gutter-md">
+              <div class="col-12 col-md-8">
+                <q-input v-model="form.isbn" label="ISBN" outlined placeholder="Codice ISBN-13" />
+              </div>
+              <div class="col-12 col-md-4">
+                <q-input v-model.number="form.price" label="Prezzo (€)" type="number" step="0.01" outlined />
+              </div>
+            </div>
+            
+            <div class="row justify-end q-mt-xl q-gutter-sm">
+              <q-btn flat label="Annulla" v-close-popup class="rounded-lg" />
+              <q-btn 
+                type="submit" 
+                :label="isEdit ? 'Aggiorna' : 'Crea Libro'" 
+                color="primary" 
+                class="q-px-xl rounded-lg shadow-sm" 
+                :loading="saving"
+              />
             </div>
           </q-form>
         </q-card-section>
@@ -56,7 +138,10 @@ import { textbookService } from 'src/services/textbookService'
 const $q = useQuasar()
 const textbooks = ref([])
 const loading = ref(false)
+const saving = ref(false)
 const showDialog = ref(false)
+const isEdit = ref(false)
+const selectedId = ref(null)
 
 const form = reactive({
   title: '',
@@ -68,10 +153,10 @@ const form = reactive({
 
 const columns = [
   { name: 'title', label: 'Titolo', field: 'title', align: 'left', sortable: true },
-  { name: 'author', label: 'Autore', field: 'author', align: 'left' },
+  { name: 'author', label: 'Autore', field: 'author', align: 'left', sortable: true },
   { name: 'isbn', label: 'ISBN', field: 'isbn', align: 'left' },
-  { name: 'publisher', label: 'Editore', field: 'publisher', align: 'left' },
-  { name: 'price', label: 'Prezzo', field: 'price', format: val => `€${val.toFixed(2)}`, align: 'right' },
+  { name: 'publisher', label: 'Editore', field: 'publisher', align: 'left', sortable: true },
+  { name: 'price', label: 'Prezzo', field: 'price', align: 'right', sortable: true },
   { name: 'actions', label: 'Azioni', align: 'center' }
 ]
 
@@ -82,35 +167,77 @@ async function fetchTextbooks() {
   try {
     const res = await textbookService.getAll()
     textbooks.value = res.data || []
+  } catch (err) {
+    console.error(err)
   } finally {
     loading.value = false
   }
 }
 
 function openCreateDialog() {
+  isEdit.value = false
+  selectedId.value = null
   Object.assign(form, { title: '', author: '', isbn: '', publisher: '', price: 0 })
   showDialog.value = true
 }
 
+function openEditDialog(row) {
+  isEdit.value = true
+  selectedId.value = row.id
+  Object.assign(form, { 
+    title: row.title, 
+    author: row.author, 
+    isbn: row.isbn, 
+    publisher: row.publisher, 
+    price: row.price 
+  })
+  showDialog.value = true
+}
+
 async function saveTextbook() {
+  saving.value = true
   try {
-    await textbookService.create(form)
-    $q.notify({ type: 'positive', message: 'Libro creato con successo' })
+    if (isEdit.value) {
+      await textbookService.update(selectedId.value, form)
+      $q.notify({ type: 'positive', message: 'Libro aggiornato con successo' })
+    } else {
+      await textbookService.create(form)
+      $q.notify({ type: 'positive', message: 'Libro creato con successo' })
+    }
     showDialog.value = false
     fetchTextbooks()
   } catch (e) {
     $q.notify({ type: 'negative', message: 'Errore durante il salvataggio' })
+  } finally {
+    saving.value = false
   }
 }
 
 async function confirmDelete(row) {
   $q.dialog({
-    title: 'Conferma',
-    message: `Vuoi eliminare "${row.title}"?`,
-    cancel: true
+    title: 'Conferma Eliminazione',
+    message: `Sei sicuro di voler eliminare il libro "${row.title}"? Questa azione non può essere annullata.`,
+    cancel: true,
+    persistent: true,
+    ok: {
+      color: 'negative',
+      label: 'Elimina',
+      flat: false
+    }
   }).onOk(async () => {
-    await textbookService.delete(row.id)
-    fetchTextbooks()
+    try {
+      await textbookService.delete(row.id)
+      $q.notify({ type: 'positive', message: 'Libro eliminato' })
+      fetchTextbooks()
+    } catch (err) {
+      $q.notify({ type: 'negative', message: 'Errore durante l\'eliminazione' })
+    }
   })
 }
 </script>
+
+<style scoped>
+.opacity-20 {
+  opacity: 0.2;
+}
+</style>

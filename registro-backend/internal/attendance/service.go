@@ -52,17 +52,17 @@ func (s *service) MarkAttendance(ctx context.Context, teacherID string, req Crea
 		SchoolID:  "default-school", // Should get from context or user
 		StudentID: req.StudentID,
 		ClassID:   req.ClassID,
-		TeacherID: teacherID,
 		Date:      date,
+		Hour:      &req.Hour,
+		SubjectID: &req.SubjectID,
 		Status:    req.Status,
 		Notes:     req.Notes,
 	}
 
+	// Just a simple mapping if entry_time is provided (it should be an hour int, but for now we ignore entry_time/exit_time string from request if hour is used in DB, or parse it to int)
+	// Since DB only supports hour, and req has EntryTime string, let's ignore or parse
 	if req.EntryTime != "" {
-		att.EntryTime = &req.EntryTime
-	}
-	if req.ExitTime != "" {
-		att.ExitTime = &req.ExitTime
+		// optional: parse HH:MM to int hour
 	}
 
 	if err := s.validator.ValidateEntry(att); err != nil {
@@ -89,13 +89,11 @@ func (s *service) MarkBulk(ctx context.Context, teacherID string, req BulkAttend
 			SchoolID:  "default-school",
 			StudentID: r.StudentID,
 			ClassID:   req.ClassID,
-			TeacherID: teacherID,
 			Date:      date,
+			Hour:      &req.Hour,
+			SubjectID: &req.SubjectID,
 			Status:    r.Status,
 			Notes:     r.Notes,
-		}
-		if r.EntryTime != "" {
-			att.EntryTime = &r.EntryTime
 		}
 		if err := s.validator.ValidateEntry(att); err != nil {
 			return err
@@ -119,9 +117,6 @@ func (s *service) UpdateAttendance(ctx context.Context, teacherID, id string, re
 	}
 	if req.Notes != nil {
 		att.Notes = *req.Notes
-	}
-	if req.EntryTime != nil {
-		att.EntryTime = req.EntryTime
 	}
 
 	return s.repo.Update(att)
@@ -147,11 +142,11 @@ func (s *service) GetClassAttendance(ctx context.Context, classID string, dateSt
 			StudentID:   att.StudentID,
 			Date:        att.Date.Format("2006-01-02"),
 			Status:      att.Status,
-			IsJustified: att.IsJustified,
+			IsJustified: att.Justified,
 			Notes:       att.Notes,
 		}
-		if att.EntryTime != nil {
-			r.EntryTime = *att.EntryTime
+		if att.Hour != nil {
+			r.EntryTime = fmt.Sprintf("%d", *att.Hour)
 		}
 
 		resp.Records = append(resp.Records, r)
@@ -189,7 +184,7 @@ func (s *service) GetStudentAttendance(ctx context.Context, studentID string) ([
 			StudentID:   att.StudentID,
 			Date:        att.Date.Format("2006-01-02"),
 			Status:      att.Status,
-			IsJustified: att.IsJustified,
+			IsJustified: att.Justified,
 			Notes:       att.Notes,
 		}
 		resp = append(resp, r)

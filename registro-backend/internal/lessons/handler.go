@@ -1,6 +1,7 @@
 package lessons
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -31,9 +32,11 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 func (h *Handler) GetLessons(c *gin.Context) {
 	classID := c.Param("class_id")
 	subjectID := c.Query("subject_id")
+	date := c.Query("date")
 
-	res, err := h.service.GetLessons(classID, subjectID)
+	res, err := h.service.GetLessons(classID, subjectID, date)
 	if err != nil {
+		fmt.Printf("DEBUG: GetLessons error: %v\n", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

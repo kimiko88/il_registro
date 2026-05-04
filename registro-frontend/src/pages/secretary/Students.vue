@@ -36,13 +36,15 @@
             <q-btn flat round dense icon="family_restroom" color="indigo-600" @click="openGuardians(props.row)">
               <q-tooltip>Gestione Genitori</q-tooltip>
             </q-btn>
-            <q-btn flat round dense icon="school" color="emerald-600" @click="$q.notify('Funzionalità voti in sviluppo')">
+            <q-btn flat round dense icon="school" color="emerald-600" @click="openRecords(props.row)">
               <q-tooltip>Voti e Assenze</q-tooltip>
             </q-btn>
           </q-td>
         </template>
       </q-table>
     </q-card>
+
+    <StudentRecords v-model="showRecords" :student="selectedStudentForRecords" />
 
     <!-- Enrollment / Edit Dialog -->
     <q-dialog v-model="showUserDialog" persistent>
@@ -223,6 +225,7 @@ import { userService } from 'src/services/userService'
 import adminService from 'src/services/adminService'
 import { useAuthStore } from 'src/stores/auth'
 import { useQuasar } from 'quasar'
+import StudentRecords from 'src/components/Secretary/StudentRecords.vue'
 
 const $q = useQuasar()
 const authStore = useAuthStore()
@@ -258,6 +261,15 @@ const parentSearchText = ref('')
 const parentOptions = ref([])
 const newGuardianRel = ref('Padre')
 const addingGuardian = ref(false)
+
+// Student Records Dialog
+const showRecords = ref(false)
+const selectedStudentForRecords = ref(null)
+
+const openRecords = (student) => {
+    selectedStudentForRecords.value = student
+    showRecords.value = true
+}
 
 const columns = [
     { name: 'name', label: 'Nome', field: row => `${row.last_name} ${row.first_name}`, align: 'left', sortable: true },

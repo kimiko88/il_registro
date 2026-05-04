@@ -1,125 +1,141 @@
 <template>
   <q-page padding class="bg-slate-50">
-    <div class="row items-center q-mb-lg">
-      <div class="col">
-        <h1 class="text-h4 text-weight-bold text-slate-800 q-my-none">Gestione PCTO</h1>
-        <p class="text-subtitle1 text-slate-500 q-mb-none">Pianificazione e monitoraggio Percorsi per le Competenze Trasversali e l'Orientamento</p>
+    <div class="row items-center justify-between q-mb-xl">
+      <div>
+        <h1 class="text-h4 text-weight-bold text-outfit q-my-none text-gradient-premium">
+          Gestione PCTO
+        </h1>
+        <p class="text-subtitle1 text-slate-500 q-mt-sm q-mb-none">Pianificazione e monitoraggio percorsi per l'orientamento</p>
       </div>
-      <div class="col-auto">
-        <q-btn color="primary" icon="add" label="Nuovo Progetto" class="rounded-lg q-px-md shadow-sm" @click="openCreateDialog" />
-        <q-btn outline color="primary" icon="business" label="Aziende" class="q-ml-sm rounded-lg" @click="showCompanies = true" />
+      <div class="row items-center q-gutter-sm">
+        <q-btn color="primary" unelevated icon="add" label="Nuovo Progetto" class="rounded-lg q-px-md shadow-sm" no-caps @click="openCreateDialog" />
+        <q-btn outline color="primary" icon="business" label="Aziende" class="rounded-lg q-px-md" no-caps @click="showCompanies = true" />
       </div>
     </div>
 
-    <div class="row q-col-gutter-lg q-mb-lg">
-      <div class="col-12 col-md-3" v-for="stat in stats" :key="stat.label">
-        <q-card class="rounded-xl shadow-soft border-slate-100 h-full overflow-hidden">
-          <div class="absolute-top-right q-pa-md opacity-10">
-            <q-icon :name="stat.icon" size="64px" />
-          </div>
-          <q-card-section>
-            <div class="text-overline text-slate-400">{{ stat.label }}</div>
-            <div class="text-h3 text-weight-bold text-slate-800 q-my-sm">{{ stat.value }}</div>
-            <div class="row items-center">
-              <q-icon :name="stat.trend > 0 ? 'trending_up' : 'trending_flat'" :color="stat.trend > 0 ? 'positive' : 'grey-5'" class="q-mr-xs" />
-              <span :class="stat.trend > 0 ? 'text-positive' : 'text-grey-5'" class="text-caption font-medium">{{ stat.trendText }}</span>
+    <div class="row q-col-gutter-lg q-mb-xl">
+      <div class="col-12 col-sm-6 col-md-3" v-for="stat in stats" :key="stat.label">
+        <q-card class="rounded-xl shadow-soft border-slate-100 overflow-hidden h-full bg-white">
+          <q-card-section class="q-pa-lg">
+            <div class="row items-center justify-between q-mb-md">
+              <div class="text-overline text-slate-400 letter-spacing-1">{{ stat.label }}</div>
+              <q-avatar :color="stat.color + '-50'" :text-color="stat.color + '-700'" :icon="stat.icon" size="40px" />
             </div>
+            <div class="text-h3 text-weight-bold text-slate-800 q-my-none">{{ stat.value }}</div>
+            <div class="text-caption text-slate-500 q-mt-sm">{{ stat.trendText }}</div>
           </q-card-section>
         </q-card>
       </div>
     </div>
 
-    <q-card class="rounded-xl shadow-soft border-slate-100 overflow-hidden">
+    <q-card class="rounded-xl shadow-soft border-slate-100 overflow-hidden bg-white">
       <q-tabs
         v-model="activeTab"
         dense
-        class="text-grey-7 bg-white"
+        class="text-slate-500 border-b border-slate-100"
         active-color="primary"
         indicator-color="primary"
         align="left"
         narrow-indicator
+        no-caps
       >
-        <q-tab name="active" label="Progetti Attivi" />
-        <q-tab name="archived" label="Archivio" />
+        <q-tab name="active" label="Progetti Attivi" class="q-px-lg py-4" />
+        <q-tab name="archived" label="Archivio Storico" class="q-px-lg py-4" />
       </q-tabs>
 
-      <q-separator />
+      <q-tab-panels v-model="activeTab" animated class="bg-transparent">
+        <q-tab-panel name="active" class="q-pa-none">
+          <q-table
+            :rows="filteredProjects"
+            :columns="columns"
+            row-key="id"
+            flat
+            :loading="loading"
+            class="bg-transparent"
+            :pagination="{ rowsPerPage: 10 }"
+          >
+            <template v-slot:body-cell-type="props">
+              <q-td :props="props">
+                <q-chip 
+                  :color="props.value === 'Interno' ? 'indigo-50' : 'blue-50'" 
+                  :text-color="props.value === 'Interno' ? 'indigo-700' : 'blue-700'"
+                  size="sm" 
+                  class="text-weight-bold rounded-md"
+                >
+                  {{ props.value }}
+                </q-chip>
+              </q-td>
+            </template>
 
-      <q-table
-        :rows="filteredProjects"
-        :columns="columns"
-        row-key="id"
-        flat
-        :loading="loading"
-        class="bg-white"
-        :pagination="{ rowsPerPage: 10 }"
-      >
-        <template v-slot:body-cell-type="props">
-          <q-td :props="props">
-            <q-chip 
-              :color="props.value === 'Interno' ? 'indigo-50' : 'blue-50'" 
-              :text-color="props.value === 'Interno' ? 'indigo-700' : 'blue-700'"
-              size="sm" 
-              class="text-weight-medium rounded-md"
-            >
-              {{ props.value }}
-            </q-chip>
-          </q-td>
-        </template>
+            <template v-slot:body-cell-status="props">
+              <q-td :props="props">
+                <q-badge :color="getStatusColor(props.row)" rounded class="q-px-sm q-py-xs shadow-xs">
+                  {{ getStatusLabel(props.row) }}
+                </q-badge>
+              </q-td>
+            </template>
 
-        <template v-slot:body-cell-status="props">
-          <q-td :props="props">
-            <q-badge :color="getStatusColor(props.row)" rounded class="q-px-sm q-py-xs">
-              {{ getStatusLabel(props.row) }}
-            </q-badge>
-          </q-td>
-        </template>
-
-        <template v-slot:body-cell-actions="props">
-          <q-td :props="props" class="text-right">
-            <q-btn flat round dense color="blue-600" icon="edit" @click="editProject(props.row)">
-              <q-tooltip>Modifica</q-tooltip>
-            </q-btn>
-            <q-btn flat round dense color="indigo-600" icon="group_add" @click="assignStudents(props.row)">
-              <q-tooltip>Assegna Studenti</q-tooltip>
-            </q-btn>
-            <q-btn flat round dense color="red-600" icon="delete" @click="confirmDelete(props.row)">
-              <q-tooltip>Elimina</q-tooltip>
-            </q-btn>
-          </q-td>
-        </template>
-      </q-table>
+            <template v-slot:body-cell-actions="props">
+              <q-td :props="props" class="text-right">
+                <div class="row q-gutter-xs justify-end">
+                  <q-btn flat round dense color="primary" icon="edit" @click="editProject(props.row)">
+                    <q-tooltip>Modifica Progetto</q-tooltip>
+                  </q-btn>
+                  <q-btn flat round dense color="indigo" icon="group_add" @click="assignStudents(props.row)">
+                    <q-tooltip>Assegna Studenti</q-tooltip>
+                  </q-btn>
+                  <q-btn flat round dense color="negative" icon="delete" @click="confirmDelete(props.row)">
+                    <q-tooltip>Elimina</q-tooltip>
+                  </q-btn>
+                </div>
+              </q-td>
+            </template>
+            
+            <template v-slot:no-data>
+              <div class="full-width q-pa-xl text-center text-slate-400">
+                <q-icon name="work_outline" size="64px" class="opacity-20 q-mb-md" />
+                <div class="text-h6">Nessun progetto trovato</div>
+              </div>
+            </template>
+          </q-table>
+        </q-tab-panel>
+        
+        <q-tab-panel name="archived" class="q-pa-none">
+          <div class="q-pa-xl text-center text-slate-400">
+            <q-icon name="history" size="64px" class="opacity-20 q-mb-md" />
+            <div class="text-h6">L'archivio storico verrà caricato a breve</div>
+          </div>
+        </q-tab-panel>
+      </q-tab-panels>
     </q-card>
 
     <!-- Project Dialog -->
-    <q-dialog v-model="dialog" persistent>
-      <q-card style="min-width: 500px" class="rounded-xl shadow-2xl">
-        <q-card-section class="row items-center q-pb-none">
-          <div class="text-h6 text-weight-bold">{{ isEdit ? 'Modifica Progetto' : 'Nuovo Progetto PCTO' }}</div>
-          <q-space />
-          <q-btn icon="close" flat round dense v-close-popup />
+    <q-dialog v-model="dialog" persistent class="premium-dialog">
+      <q-card style="min-width: 600px" class="rounded-xl overflow-hidden shadow-24">
+        <q-card-section class="bg-gradient-primary text-white q-pa-lg">
+          <div class="text-h5 text-weight-bold">{{ isEdit ? 'Modifica Progetto' : 'Nuovo Progetto PCTO' }}</div>
         </q-card-section>
 
-        <q-card-section class="q-pt-md">
-          <q-form @submit="saveProject" class="q-gutter-md">
-            <q-input v-model="form.title" label="Titolo Progetto" outlined dense :rules="[val => !!val || 'Campo richiesto']" />
-            <q-input v-model="form.description" type="textarea" label="Descrizione" outlined dense />
+        <q-card-section class="q-pa-xl">
+          <q-form @submit="saveProject" class="q-gutter-y-lg">
+            <q-input v-model="form.title" label="Titolo Progetto" outlined :rules="[val => !!val || 'Campo richiesto']" />
+            <q-input v-model="form.description" type="textarea" label="Descrizione" outlined rows="3" />
             
-            <div class="row q-col-gutter-md">
+            <div class="row q-col-gutter-lg">
               <div class="col-6">
-                <q-select v-model="form.type" :options="['Interno', 'Esterno']" label="Tipologia" outlined dense />
+                <q-select v-model="form.type" :options="['Interno', 'Esterno']" label="Tipologia" outlined />
               </div>
               <div class="col-6">
-                <q-input v-model.number="form.total_hours" type="number" label="Ore Totali" outlined dense />
+                <q-input v-model.number="form.total_hours" type="number" label="Ore Totali" outlined />
               </div>
             </div>
 
-            <div class="row q-col-gutter-md">
+            <div class="row q-col-gutter-lg">
               <div class="col-6">
-                <q-input v-model="form.start_date" type="date" label="Data Inizio" outlined dense />
+                <q-input v-model="form.start_date" type="date" label="Data Inizio" outlined stack-label />
               </div>
               <div class="col-6">
-                <q-input v-model="form.end_date" type="date" label="Data Fine" outlined dense />
+                <q-input v-model="form.end_date" type="date" label="Data Fine" outlined stack-label />
               </div>
             </div>
 
@@ -133,14 +149,13 @@
               map-options
               label="Azienda Ospitante" 
               outlined 
-              dense 
             />
 
-            <q-input v-model="form.company_tutor_name" label="Tutor Aziendale" outlined dense />
+            <q-input v-model="form.company_tutor_name" label="Tutor Aziendale" outlined />
 
-            <div class="row justify-end q-mt-lg">
-              <q-btn flat label="Annulla" color="grey-7" v-close-popup class="q-mr-sm" />
-              <q-btn type="submit" color="primary" :label="isEdit ? 'Aggiorna' : 'Crea'" class="q-px-lg rounded-md" :loading="saving" />
+            <div class="row justify-end q-mt-xl q-gutter-sm">
+              <q-btn flat label="Annulla" color="slate-400" v-close-popup no-caps />
+              <q-btn type="submit" color="primary" :label="isEdit ? 'Aggiorna Progetto' : 'Crea Progetto'" class="q-px-xl rounded-lg shadow-sm" no-caps :loading="saving" />
             </div>
           </q-form>
         </q-card-section>
@@ -150,61 +165,68 @@
     <!-- Companies List Dialog -->
     <q-dialog v-model="showCompanies" maximized transition-show="slide-up" transition-hide="slide-down">
       <q-card class="bg-slate-50">
-        <q-toolbar class="bg-white border-b-slate-100">
-          <q-btn flat round dense icon="arrow_back" v-close-popup />
-          <q-toolbar-title class="text-weight-bold">Gestione Aziende Convenzionate</q-toolbar-title>
-          <q-btn color="primary" label="Aggiungi Azienda" @click="showAddCompany = true" />
+        <q-toolbar class="bg-white border-b border-slate-100 q-py-md">
+          <q-btn flat round dense icon="arrow_back" v-close-popup class="text-slate-400" />
+          <q-toolbar-title class="text-weight-bold text-slate-800">Aziende Convenzionate</q-toolbar-title>
+          <q-btn unelevated color="primary" label="Aggiungi Azienda" class="rounded-lg q-px-md" no-caps @click="showAddCompany = true" />
         </q-toolbar>
 
-        <q-card-section>
-          <div class="row q-col-gutter-md">
-            <div class="col-12 col-md-4" v-for="company in companies" :key="company.id">
-              <q-card class="rounded-xl shadow-soft border-slate-100 h-full">
-                <q-card-section>
-                  <div class="row items-center no-wrap">
-                    <q-avatar color="blue-50" text-color="blue-700" icon="business" />
+        <q-card-section class="q-pa-xl">
+          <div class="row q-col-gutter-xl">
+            <div class="col-12 col-sm-6 col-md-4" v-for="company in companies" :key="company.id">
+              <q-card flat class="rounded-xl border-slate-100 bg-white shadow-soft h-full overflow-hidden">
+                <q-card-section class="q-pa-lg">
+                  <div class="row items-center no-wrap q-mb-lg">
+                    <q-avatar color="blue-50" text-color="blue-700" icon="business" size="48px" />
                     <div class="q-ml-md">
-                      <div class="text-subtitle1 text-weight-bold">{{ company.name }}</div>
-                      <div class="text-caption text-grey-6">P.IVA: {{ company.vat_number }}</div>
+                      <div class="text-subtitle1 text-weight-bold text-slate-800">{{ company.name }}</div>
+                      <div class="text-caption text-slate-400">P.IVA: {{ company.vat_number }}</div>
                     </div>
                   </div>
-                  <q-separator class="q-my-md opacity-50" />
-                  <div class="q-gutter-xs">
+                  <q-separator class="q-my-lg opacity-50" />
+                  <div class="q-gutter-y-sm">
                     <div class="row items-center">
-                      <q-icon name="place" color="grey-5" size="16px" class="q-mr-sm" />
-                      <span class="text-caption text-slate-700">{{ company.address }}</span>
+                      <q-icon name="place" color="slate-300" size="18px" class="q-mr-sm" />
+                      <span class="text-caption text-slate-600">{{ company.address }}</span>
                     </div>
                     <div class="row items-center">
-                      <q-icon name="person" color="grey-5" size="16px" class="q-mr-sm" />
-                      <span class="text-caption text-slate-700">{{ company.contact_person || 'N/D' }}</span>
+                      <q-icon name="person" color="slate-300" size="18px" class="q-mr-sm" />
+                      <span class="text-caption text-slate-600">{{ company.contact_person || 'Contatto non definito' }}</span>
                     </div>
                   </div>
                 </q-card-section>
-                <q-card-actions align="right">
-                  <q-btn flat dense color="primary" icon="edit" label="Modifica" size="sm" />
-                  <q-btn flat dense color="negative" icon="delete" label="Rimuovi" size="sm" />
+                <q-card-actions align="right" class="bg-slate-50 q-pa-md">
+                  <q-btn flat dense color="primary" icon="edit" label="Modifica" size="sm" no-caps />
+                  <q-btn flat dense color="negative" icon="delete" label="Rimuovi" size="sm" no-caps />
                 </q-card-actions>
               </q-card>
             </div>
+          </div>
+          
+          <div v-if="companies.length === 0" class="full-width q-pa-xl text-center text-slate-400">
+            <q-icon name="business_center" size="64px" class="opacity-20 q-mb-md" />
+            <div class="text-h6">Nessuna azienda convenzionata</div>
           </div>
         </q-card-section>
       </q-card>
     </q-dialog>
 
     <!-- Add Company Dialog -->
-    <q-dialog v-model="showAddCompany">
-      <q-card style="min-width: 400px" class="rounded-xl">
-        <q-card-section class="text-h6 text-weight-bold">Aggiungi Nuova Azienda</q-card-section>
-        <q-card-section>
-          <q-form @submit="addCompany" class="q-gutter-md">
-            <q-input v-model="companyForm.name" label="Ragione Sociale" outlined dense />
-            <q-input v-model="companyForm.vat_number" label="P.IVA" outlined dense />
-            <q-input v-model="companyForm.address" label="Indirizzo Sede" outlined dense />
-            <q-input v-model="companyForm.contact_person" label="Persona di Riferimento" outlined dense />
-            <q-input v-model="companyForm.email" label="Email Contatto" outlined dense />
-            <div class="row justify-end q-mt-lg">
-              <q-btn flat label="Annulla" v-close-popup />
-              <q-btn type="submit" color="primary" label="Salva Azienda" class="q-ml-sm" :loading="savingCompany" />
+    <q-dialog v-model="showAddCompany" class="premium-dialog">
+      <q-card style="min-width: 450px" class="rounded-xl overflow-hidden shadow-24 bg-white">
+        <q-card-section class="bg-gradient-primary text-white q-pa-lg">
+          <div class="text-h5 text-weight-bold">Nuova Azienda</div>
+        </q-card-section>
+        <q-card-section class="q-pa-xl">
+          <q-form @submit="addCompany" class="q-gutter-y-lg">
+            <q-input v-model="companyForm.name" label="Ragione Sociale" outlined />
+            <q-input v-model="companyForm.vat_number" label="Partita IVA" outlined />
+            <q-input v-model="companyForm.address" label="Indirizzo Sede" outlined />
+            <q-input v-model="companyForm.contact_person" label="Persona di Riferimento" outlined />
+            <q-input v-model="companyForm.email" label="Email Contatto" outlined />
+            <div class="row justify-end q-mt-xl q-gutter-sm">
+              <q-btn flat label="Annulla" color="slate-400" v-close-popup no-caps />
+              <q-btn type="submit" color="primary" label="Salva Azienda" class="q-px-xl rounded-lg shadow-sm" no-caps :loading="savingCompany" />
             </div>
           </q-form>
         </q-card-section>
@@ -238,10 +260,10 @@ const pctoStats = ref({
 });
 
 const stats = computed(() => [
-  { label: 'Progetti Totali', value: pctoStats.value.total_projects, icon: 'work', trend: 0, trendText: 'Dati in tempo reale' },
-  { label: 'Studenti Coinvolti', value: pctoStats.value.total_students, icon: 'people', trend: 0, trendText: 'Iscritti ai percorsi' },
-  { label: 'Ore Registrate', value: pctoStats.value.total_hours.toFixed(0), icon: 'timer', trend: 0, trendText: 'Ore totali validate' },
-  { label: 'Aziende Partner', value: pctoStats.value.active_companies, icon: 'business', trend: 0, trendText: 'Convenzioni attive' },
+  { label: 'Progetti Totali', value: pctoStats.value.total_projects, icon: 'work', color: 'indigo', trendText: 'Dati in tempo reale' },
+  { label: 'Studenti Coinvolti', value: pctoStats.value.total_students, icon: 'people', color: 'blue', trendText: 'Iscritti ai percorsi' },
+  { label: 'Ore Registrate', value: pctoStats.value.total_hours.toFixed(0), icon: 'timer', color: 'emerald', trendText: 'Ore totali validate' },
+  { label: 'Aziende Partner', value: pctoStats.value.active_companies, icon: 'business', color: 'orange', trendText: 'Convenzioni attive' },
 ]);
 
 const form = ref({
@@ -265,12 +287,12 @@ const companyForm = ref({
 });
 
 const columns = [
-  { name: 'title', label: 'Progetto', field: 'title', align: 'left', sortable: true },
+  { name: 'title', label: 'Progetto', field: 'title', align: 'left', sortable: true, classes: 'text-weight-bold text-slate-800' },
   { name: 'type', label: 'Tipo', field: 'type', align: 'left' },
   { name: 'hours', label: 'Ore', field: 'total_hours', align: 'center' },
   { name: 'dates', label: 'Periodo', field: row => `${row.start_date.split('T')[0]} - ${row.end_date.split('T')[0]}`, align: 'left' },
   { name: 'status', label: 'Stato', align: 'center' },
-  { name: 'actions', label: 'Azioni', align: 'right' }
+  { name: 'actions', label: '', align: 'right' }
 ];
 
 const filteredProjects = computed(() => {
@@ -349,7 +371,7 @@ const confirmDelete = (row) => {
     message: `Sei sicuro di voler eliminare il progetto "${row.title}"? Questa azione è irreversibile.`,
     cancel: true,
     persistent: true,
-    ok: { color: 'negative', label: 'Elimina' }
+    ok: { color: 'negative', label: 'Elimina', flat: false }
   }).onOk(async () => {
     try {
       await api.delete(`/pcto/projects/${row.id}`);
@@ -392,12 +414,14 @@ const getStatusColor = (row) => {
 };
 
 const assignStudents = (row) => {
-  // Navigation or specific dialog for student assignments
   $q.notify({ message: 'Funzionalità di assegnazione in fase di sviluppo' });
 };
 </script>
 
 <style scoped>
+.letter-spacing-1 { letter-spacing: 1px; }
+.opacity-20 { opacity: 0.2; }
+.py-4 { padding-top: 1rem; padding-bottom: 1rem; }
 .rounded-xl { border-radius: 1rem; }
 .rounded-lg { border-radius: 0.75rem; }
 .rounded-md { border-radius: 0.5rem; }

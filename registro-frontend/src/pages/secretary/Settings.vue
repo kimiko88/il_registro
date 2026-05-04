@@ -1,129 +1,129 @@
 <template>
-  <q-page padding class="bg-grey-1">
-    <div class="row items-center q-mb-lg">
+  <q-page padding class="bg-slate-50">
+    <div class="row items-center q-mb-xl">
       <div class="col">
         <h1 class="text-h4 text-weight-bold text-outfit q-my-none text-gradient-premium">
           Impostazioni Scuola
         </h1>
-        <div class="text-subtitle1 text-slate-500 q-mt-xs">Configurazione istituto e calendario scolastico</div>
+        <div class="text-subtitle1 text-slate-500 q-mt-sm">Configurazione istituto, calendario e orari</div>
       </div>
     </div>
 
-    <q-card class="shadow-1 rounded-lg overflow-hidden">
+    <q-card class="rounded-xl shadow-soft border-slate-100 overflow-hidden bg-white">
         <q-tabs
             v-model="tab"
             dense
-            class="bg-white text-grey-7"
+            class="text-slate-500 border-b border-slate-100"
             active-color="primary"
             indicator-color="primary"
             align="left"
             narrow-indicator
+            no-caps
         >
-            <q-tab name="general" label="Generale" icon="settings" class="q-px-lg" />
-            <q-tab name="calendar" label="Calendario Scolastico" icon="calendar_today" class="q-px-lg" />
-            <q-tab name="hours" label="Orari Uffici" icon="schedule" class="q-px-lg" />
+            <q-tab name="general" label="Generale" icon="settings" class="q-px-xl py-4" />
+            <q-tab name="calendar" label="Calendario Scolastico" icon="calendar_today" class="q-px-xl py-4" />
+            <q-tab name="hours" label="Orari Ricevimento" icon="schedule" class="q-px-xl py-4" />
         </q-tabs>
 
-        <q-separator />
-
-        <q-tab-panels v-model="tab" animated class="bg-white">
+        <q-tab-panels v-model="tab" animated class="bg-transparent">
             <!-- General Settings -->
             <q-tab-panel name="general" class="q-pa-xl">
-                <div class="text-h6 text-weight-bold q-mb-xl row items-center">
-                  <q-icon name="business" color="primary" size="md" class="q-mr-sm" />
-                  Dati Istituto
+                <div class="row items-center q-mb-xl">
+                  <q-avatar color="indigo-50" text-color="indigo-700" icon="business" size="48px" class="q-mr-md" />
+                  <div class="text-h5 text-weight-bold text-slate-800">Dati Istituto</div>
                 </div>
+                
                 <div class="row q-col-gutter-lg">
                     <div class="col-12 col-md-6">
-                        <q-input v-model="settings.schoolName" label="Nome Istituto" outlined bg-color="white" />
+                        <q-input v-model="settings.schoolName" label="Nome Istituto" outlined />
                     </div>
                     <div class="col-12 col-md-6">
-                        <q-input v-model="settings.schoolCode" label="Codice Meccanografico" outlined bg-color="white" />
+                        <q-input v-model="settings.schoolCode" label="Codice Meccanografico" outlined />
                     </div>
                     <div class="col-12 col-md-8">
-                        <q-input v-model="settings.address" label="Indirizzo" outlined bg-color="white" />
+                        <q-input v-model="settings.address" label="Indirizzo" outlined />
                     </div>
                     <div class="col-12 col-md-4">
-                        <q-input v-model="settings.email" label="Email Segreteria" outlined bg-color="white" />
+                        <q-input v-model="settings.email" label="Email Segreteria" outlined />
                     </div>
                     <div class="col-12 col-md-6">
-                        <q-input v-model="settings.pec" label="PEC" outlined bg-color="white" />
+                        <q-input v-model="settings.pec" label="PEC" outlined />
                     </div>
                     <div class="col-12 col-md-6">
-                        <q-input v-model="settings.phone" label="Telefono" outlined bg-color="white" />
+                        <q-input v-model="settings.phone" label="Telefono" outlined />
                     </div>
                 </div>
                 <div class="row q-mt-xl">
-                    <q-btn color="primary" label="Salva Modifiche" size="lg" padding="md xl" no-caps class="rounded-lg shadow-soft" @click="saveSettings" />
+                    <q-btn color="primary" label="Salva Modifiche" size="lg" padding="md xl" no-caps class="rounded-lg shadow-sm" @click="saveSettings" />
                 </div>
             </q-tab-panel>
 
             <!-- Calendar -->
             <q-tab-panel name="calendar" class="q-pa-xl">
                 <div class="row items-center justify-between q-mb-xl">
-                  <div class="text-h6 text-weight-bold row items-center">
-                    <q-icon name="event" color="primary" size="md" class="q-mr-sm" />
-                    Anno Scolastico 2024/2025
+                  <div class="row items-center">
+                    <q-avatar color="orange-50" text-color="orange-700" icon="event" size="48px" class="q-mr-md" />
+                    <div class="text-h5 text-weight-bold text-slate-800">Anno Scolastico {{ currentYearStr }}</div>
                   </div>
-                  <q-btn color="primary" outline label="Aggiungi Chiusura" icon="add" no-caps @click="openHolidayDialog()" />
+                  <q-btn color="primary" unelevated label="Aggiungi Chiusura" icon="add" no-caps class="rounded-lg q-px-md" @click="openHolidayDialog()" />
                 </div>
                 
-                <div class="q-pa-lg bg-indigo-50 rounded-lg q-mb-xl border-indigo-100 border-1">
-                     <div class="text-subtitle2 text-indigo-9 text-weight-bold q-mb-md">Periodi Valutazione</div>
+                <div class="q-pa-xl bg-slate-50 rounded-2xl q-mb-xl border-slate-200">
+                     <div class="text-subtitle1 text-slate-800 text-weight-bold q-mb-lg">Periodi di Valutazione</div>
                      <div class="row q-col-gutter-lg items-center">
                          <div class="col-12 col-sm-6">
-                             <q-input v-model="settings.term1End" type="date" outlined label="Fine I Quadrimestre" bg-color="white" stack-label />
+                             <q-input v-model="settings.term1End" type="date" outlined label="Fine I Quadrimestre" stack-label />
                          </div>
                          <div class="col-12 col-sm-6">
-                             <q-input v-model="settings.term2End" type="date" outlined label="Fine II Quadrimestre" bg-color="white" stack-label />
+                             <q-input v-model="settings.term2End" type="date" outlined label="Fine II Quadrimestre" stack-label />
                          </div>
                      </div>
                 </div>
 
-                <div class="text-subtitle2 text-weight-bold q-mb-md">Festività & Chiusure</div>
-                <q-list bordered separator class="rounded-lg bg-white overflow-hidden">
-                     <q-item v-for="(holiday, index) in holidays" :key="index" class="q-py-md">
+                <div class="text-subtitle1 text-slate-800 text-weight-bold q-mb-md">Festività & Chiusure</div>
+                <q-list separator class="rounded-xl border-slate-100 overflow-hidden">
+                     <q-item v-for="(holiday, index) in holidays" :key="index" class="q-py-lg">
                          <q-item-section avatar>
-                            <q-avatar color="orange-1" text-color="orange-9" icon="celebration" size="md" />
+                            <q-avatar color="orange-50" text-color="orange-700" icon="celebration" size="40px" />
                          </q-item-section>
                          <q-item-section>
-                            <q-item-label class="text-weight-bold">{{ holiday.title }}</q-item-label>
-                            <q-item-label caption>{{ formatDateRange(holiday.start, holiday.end) }}</q-item-label>
+                            <q-item-label class="text-weight-bold text-slate-800">{{ holiday.title }}</q-item-label>
+                            <q-item-label caption class="text-slate-500">{{ formatDateRange(holiday.start, holiday.end) }}</q-item-label>
                          </q-item-section>
                          <q-item-section side>
                             <div class="row q-gutter-xs">
-                              <q-btn flat round icon="edit" color="primary" size="sm" @click="openHolidayDialog(index)" />
-                              <q-btn flat round icon="delete" color="negative" size="sm" @click="confirmDeleteHoliday(index)" />
+                              <q-btn flat round icon="edit" color="primary" @click="openHolidayDialog(index)" />
+                              <q-btn flat round icon="delete" color="negative" @click="confirmDeleteHoliday(index)" />
                             </div>
                          </q-item-section>
                      </q-item>
-                     <q-item v-if="holidays.length === 0" class="q-pa-xl text-center text-grey">
+                     <q-item v-if="holidays.length === 0" class="q-pa-xl text-center text-slate-400">
                         <q-item-section>
-                          <q-icon name="calendar_today" size="40px" class="q-mb-sm" />
-                          <div>Nessuna festività configurata</div>
+                          <q-icon name="calendar_today" size="64px" class="q-mb-md opacity-20" />
+                          <div class="text-h6">Nessuna festività configurata</div>
                         </q-item-section>
                      </q-item>
                 </q-list>
                 
                 <div class="row q-mt-xl">
-                    <q-btn color="primary" label="Salva Calendario" size="lg" padding="md xl" no-caps class="rounded-lg shadow-soft" @click="saveHolidays" :loading="savingHolidays" />
+                    <q-btn color="primary" label="Salva Calendario" size="lg" padding="md xl" no-caps class="rounded-lg shadow-sm" @click="saveHolidays" :loading="savingHolidays" />
                 </div>
             </q-tab-panel>
             
             <!-- Hours -->
             <q-tab-panel name="hours" class="q-pa-xl">
                  <div class="row items-center justify-between q-mb-xl">
-                   <div class="text-h6 text-weight-bold row items-center">
-                      <q-icon name="schedule" color="primary" size="md" class="q-mr-sm" />
-                      Orari Ricevimento Segreteria
+                   <div class="row items-center">
+                      <q-avatar color="emerald-50" text-color="emerald-700" icon="schedule" size="48px" class="q-mr-md" />
+                      <div class="text-h5 text-weight-bold text-slate-800">Orari Ricevimento Segreteria</div>
                    </div>
-                   <q-btn color="primary" outline label="Aggiungi Orario" icon="add" no-caps @click="addHourRow" />
+                   <q-btn color="primary" unelevated label="Aggiungi Orario" icon="add" no-caps class="rounded-lg q-px-md" @click="addHourRow" />
                  </div>
 
-                 <div class="row q-col-gutter-lg q-mt-sm">
+                 <div class="row q-col-gutter-lg">
                      <div class="col-12 col-md-6" v-for="(hour, index) in officeHours" :key="index">
-                         <q-card bordered flat class="rounded-lg bg-grey-1">
-                             <q-card-section class="row q-col-gutter-sm items-center">
+                         <q-card flat class="rounded-xl border-slate-100 bg-slate-50">
+                             <q-card-section class="row q-col-gutter-md items-center">
                                  <div class="col-4">
                                      <q-select 
                                         v-model="hour.day" 
@@ -131,14 +131,14 @@
                                         label="Giorno" 
                                         outlined 
                                         dense 
-                                        bg-color="white" 
+                                        class="rounded-lg"
                                      />
                                  </div>
                                  <div class="col">
-                                     <q-input outlined dense v-model="hour.start" label="Dalle" type="time" bg-color="white" />
+                                     <q-input outlined dense v-model="hour.start" label="Dalle" type="time" class="rounded-lg" />
                                  </div>
                                  <div class="col">
-                                     <q-input outlined dense v-model="hour.end" label="Alle" type="time" bg-color="white" />
+                                     <q-input outlined dense v-model="hour.end" label="Alle" type="time" class="rounded-lg" />
                                  </div>
                                  <div class="col-auto">
                                      <q-btn flat round icon="delete" color="negative" size="sm" @click="officeHours.splice(index, 1)" />
@@ -148,28 +148,28 @@
                      </div>
                  </div>
 
-                 <div v-if="officeHours.length === 0" class="q-pa-xl text-center text-grey">
-                    <q-icon name="schedule" size="40px" class="q-mb-sm" />
-                    <div>Nessun orario configurato</div>
+                 <div v-if="officeHours.length === 0" class="q-pa-xl text-center text-slate-400">
+                    <q-icon name="schedule" size="64px" class="q-mb-md opacity-20" />
+                    <div class="text-h6">Nessun orario configurato</div>
                  </div>
 
                  <div class="q-mt-xl row">
-                     <q-btn color="primary" label="Salva Orari" size="lg" padding="md xl" no-caps class="rounded-lg shadow-soft" @click="saveOfficeHours" :loading="savingHours" />
+                     <q-btn color="primary" label="Salva Orari" size="lg" padding="md xl" no-caps class="rounded-lg shadow-sm" @click="saveOfficeHours" :loading="savingHours" />
                  </div>
             </q-tab-panel>
         </q-tab-panels>
     </q-card>
 
     <!-- Holiday Dialog -->
-    <q-dialog v-model="holidayDialog.show" persistent>
-      <q-card style="min-width: 400px" class="rounded-lg">
-        <q-card-section class="bg-primary text-white q-pa-md">
-          <div class="text-h6 text-weight-bold">{{ holidayDialog.editIndex !== null ? 'Modifica Chiusura' : 'Nuova Chiusura' }}</div>
+    <q-dialog v-model="holidayDialog.show" persistent class="premium-dialog">
+      <q-card style="min-width: 500px" class="rounded-xl overflow-hidden shadow-24">
+        <q-card-section class="bg-gradient-primary text-white q-pa-lg">
+          <div class="text-h5 text-weight-bold">{{ holidayDialog.editIndex !== null ? 'Modifica Chiusura' : 'Nuova Chiusura' }}</div>
         </q-card-section>
 
-        <q-card-section class="q-pa-lg q-gutter-y-md">
+        <q-card-section class="q-pa-xl q-gutter-y-lg">
           <q-input v-model="holidayForm.title" label="Descrizione (es. Vacanze Natale)" outlined />
-          <div class="row q-col-gutter-sm">
+          <div class="row q-col-gutter-lg">
             <div class="col-6">
               <q-input v-model="holidayForm.start" type="date" label="Inizio" outlined stack-label />
             </div>
@@ -179,9 +179,16 @@
           </div>
         </q-card-section>
 
-        <q-card-actions align="right" class="q-pa-md">
-          <q-btn flat label="Annulla" v-close-popup color="grey-7" />
-          <q-btn :label="holidayDialog.editIndex !== null ? 'Aggiorna' : 'Aggiungi'" color="primary" @click="saveHolidayToList" :disable="!holidayForm.title || !holidayForm.start || !holidayForm.end" />
+        <q-card-actions align="right" class="q-pa-lg bg-slate-50">
+          <q-btn flat label="Annulla" v-close-popup color="slate-400" no-caps class="rounded-lg q-px-md" />
+          <q-btn 
+            unelevated 
+            :label="holidayDialog.editIndex !== null ? 'Aggiorna' : 'Aggiungi'" 
+            color="primary" 
+            class="rounded-lg q-px-xl shadow-sm" 
+            @click="saveHolidayToList" 
+            :disable="!holidayForm.title || !holidayForm.start || !holidayForm.end" 
+          />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -194,6 +201,19 @@ import { useQuasar } from 'quasar'
 import adminService from 'src/services/adminService'
 
 const $q = useQuasar()
+
+const getCurrentAcademicYear = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1; // 1-12
+  if (month >= 9) { 
+    return `${year}/${year + 1}`;
+  } else {
+    return `${year - 1}/${year}`;
+  }
+}
+const currentYearStr = getCurrentAcademicYear();
+
 const tab = ref('general')
 const loading = ref(false)
 const savingHolidays = ref(false)
@@ -241,7 +261,6 @@ const fetchOfficeHours = async () => {
     if (res.data && res.data.value) {
       officeHours.value = JSON.parse(res.data.value)
     } else {
-      // Default fallback
       officeHours.value = [
         { day: 'Lunedì', start: '08:00', end: '14:00' },
         { day: 'Martedì', start: '08:00', end: '14:00' },
@@ -309,7 +328,12 @@ const confirmDeleteHoliday = (index) => {
     title: 'Conferma eliminazione',
     message: 'Sei sicuro di voler rimuovere questa chiusura?',
     cancel: true,
-    persistent: true
+    persistent: true,
+    ok: {
+      color: 'negative',
+      label: 'Elimina',
+      flat: false
+    }
   }).onOk(() => {
     holidays.value.splice(index, 1)
   })
@@ -336,15 +360,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.text-gradient-premium {
-  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-.shadow-soft {
-  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);
-}
-.border-indigo-100 {
-  border: 1px solid #e0e7ff;
-}
+.opacity-20 { opacity: 0.2; }
+.py-4 { padding-top: 1rem; padding-bottom: 1rem; }
 </style>

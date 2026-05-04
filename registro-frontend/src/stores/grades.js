@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia';
+import api from '../services/api';
 import { gradeService } from 'src/services/gradeService';
 
 export const useGradesStore = defineStore('grades', {
@@ -6,22 +7,41 @@ export const useGradesStore = defineStore('grades', {
         grades: [],
         loading: false,
         error: null,
-        subjects: ['Mathematics', 'Physics', 'History'], // Fallback subjects if not fetched
+        subjects: [], // Now stored as [{id, name, teacher_id}]
     }),
 
     getters: {
         getGradesByStudent: (state) => (studentId) => {
-            return state.grades.filter(g => g.studentId === studentId);
+            if (!state.grades || !state.grades.students) return [];
+            const student = state.grades.students.find(s => s.student_id === studentId);
+            return student ? student.grades : [];
         },
         classAverage: (state) => {
-            const validGrades = state.grades.filter(g => typeof g.grade_value === 'number');
-            if (validGrades.length === 0) return 0;
-            const sum = validGrades.reduce((acc, curr) => acc + curr.grade_value, 0);
-            return (sum / validGrades.length).toFixed(1);
+            if (!state.grades || !state.grades.students) return 0;
+            let sum = 0;
+            let count = 0;
+            state.grades.students.forEach(s => {
+                s.grades.forEach(g => {
+                    if (typeof g.grade_value === 'number') {
+                        sum += g.grade_value;
+                        count++;
+                    }
+                });
+            });
+            if (count === 0) return 0;
+            return (sum / count).toFixed(1);
         }
     },
 
     actions: {
+        async fetchClassSubjects(classId) {
+            try {
+                const response = await api.get(`/classes/${classId}/subjects`);
+                this.subjects = response.data || [];
+            } catch (err) {
+                console.error("Error fetching class subjects:", err);
+            }
+        },
         // Teacher Actions
         async fetchGrades(classId, subjectId) {
             this.loading = true;

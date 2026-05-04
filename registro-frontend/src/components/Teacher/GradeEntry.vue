@@ -3,7 +3,7 @@
     <q-table
        :rows="studentsWithGrades"
        :columns="columns"
-       row-key="id"
+       row-key="student_id"
        :loading="loading"
        separator="cell"
        dense
@@ -19,43 +19,43 @@
        </template>
 
        <template v-slot:body="props">
-          <q-tr :props="props" v-if="props.row">
-             <q-td key="name" :props="props">
-                <div class="text-weight-bold">{{ props.row.name }}</div>
-                <div class="text-caption text-grey">Assenze: {{ props.row.absences }}</div>
-             </q-td>
+           <q-tr :props="props" v-if="props.row">
+              <q-td key="name" :props="props">
+                 <div class="text-weight-bold">{{ props.row.full_name }}</div>
+                 <div class="text-caption text-grey">Assenze: {{ props.row.absences || 0 }}</div>
+              </q-td>
 
-             <q-td key="current_grade" :props="props" style="width: 250px">
-                <div class="row items-center no-wrap q-gutter-sm">
-                   <q-input
-                      v-model.number="entryData[props.row.id].value"
+              <q-td key="current_grade" :props="props" style="width: 250px">
+                 <div class="row items-center no-wrap q-gutter-sm">
+                    <q-input
+                       v-model.number="entryData[props.row.student_id].value"
                       type="number"
                       dense outlined
                       placeholder="-"
                       style="width: 70px"
                       @keydown.tab="focusNext(props.rowIndex)"
-                      :bg-color="getGradeColor(entryData[props.row.id].value)"
+                      :bg-color="getGradeColor(entryData[props.row.student_id].value)"
                       min="1" max="10" step="0.5"
                    />
-                   <q-input
-                      v-model="entryData[props.row.id].notes"
+                    <q-input
+                       v-model="entryData[props.row.student_id].notes"
                       dense outlined
                       placeholder="Note..."
                       class="col"
                    />
-                   <q-btn 
-                      icon="save" round flat dense color="primary" 
-                      :disable="!isDirty(props.row.id)"
-                      @click="saveLine(props.row.id)" 
-                   />
+                    <q-btn 
+                       icon="save" round flat dense color="primary" 
+                       :disable="!isDirty(props.row.student_id)"
+                       @click="saveLine(props.row.student_id)" 
+                    />
                 </div>
              </q-td>
 
              <q-td key="history" :props="props">
                 <div class="row q-gutter-xs">
-                   <q-badge v-for="g in props.row.grades" :key="g.id" :color="getBadgeColor(g.value)">
-                      {{ g.value }}
-                      <q-tooltip>{{ g.date }} - {{ g.type }}</q-tooltip>
+                   <q-badge v-for="g in props.row.grades" :key="g.id" :color="getBadgeColor(g.grade_value)">
+                      {{ g.grade_value }}
+                      <q-tooltip>{{ g.date }} - {{ g.grade_type }}</q-tooltip>
                    </q-badge>
                 </div>
              </q-td>
@@ -104,7 +104,10 @@ const initialSnapshot = ref({});
 
 const studentsWithGrades = computed(() => {
     // The gradesStore should have students for the selected class
-    return gradesStore.grades || [];
+    if (gradesStore.grades && gradesStore.grades.students) {
+        return gradesStore.grades.students;
+    }
+    return [];
 });
 
 const columns = [
@@ -116,9 +119,10 @@ const columns = [
 ];
 
 const initData = () => {
+    if (!studentsWithGrades.value) return;
     studentsWithGrades.value.forEach(s => {
-        if (!entryData.value[s.id]) {
-            entryData.value[s.id] = { value: null, notes: '' };
+        if (!entryData.value[s.student_id]) {
+            entryData.value[s.student_id] = { value: null, notes: '' };
         }
     });
     initialSnapshot.value = JSON.parse(JSON.stringify(entryData.value));
@@ -178,8 +182,8 @@ const saveAll = async () => {
     loading.value = true;
     try {
         for (const s of studentsWithGrades.value) {
-            if (isDirty(s.id)) {
-                await saveLine(s.id);
+            if (isDirty(s.student_id)) {
+                await saveLine(s.student_id);
             }
         }
         $q.notify({ type: 'positive', message: 'Tutti i voti sono stati salvati.'});

@@ -113,9 +113,12 @@ func (s *Service) ListUsers(ctx context.Context, actorRole string, filter UserFi
 		return nil, 0, ErrUnauthorized
 	}
 
-	// Filter out superadmins for non-superadmin users
+	// Filter out higher privileged roles for non-superadmin users
 	if actorRole != "superadmin" {
 		filter.ExcludeRoles = append(filter.ExcludeRoles, "superadmin")
+	}
+	if actorRole == "secretary" {
+		filter.ExcludeRoles = append(filter.ExcludeRoles, "admin")
 	}
 
 	// Improve: Restrict filter based on role (e.g. principal can only see their school)

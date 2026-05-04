@@ -1,22 +1,25 @@
-import { api } from 'src/boot/axios'
+import api from './api'
 
 export const gradeService = {
     async getMyGrades() {
-        return api.get('/student/grades')
+        return api.get('/grades/my-grades')
     },
     async getByClass(classId, subjectId) {
-        return api.get(`/teacher/grades/class/${classId}`, { params: { subjectId } })
+        return api.get(`/grades/class/${classId}`, { params: { subject_id: subjectId } })
     },
     async saveGrade(gradeData) {
-        return api.post('/teacher/grades', gradeData)
+        return api.post('/grades', gradeData)
     },
     async updateGrade(id, gradeData) {
-        return api.put(`/teacher/grades/${id}`, gradeData)
+        return api.patch(`/grades/${id}`, gradeData)
     },
     async deleteGrade(id) {
-        return api.delete(`/teacher/grades/${id}`)
+        return api.delete(`/grades/${id}`)
     },
     async getChildGrades(studentId, params) {
         return api.get(`/grades/child-grades/${studentId}`, { params })
+    },
+    async getStudentGrades(studentId, params) {
+        return api.get(`/grades/student/${studentId}`, { params })
     }
 }

@@ -6,6 +6,8 @@ type CreateLessonRequest struct {
 	ClassID   string `json:"class_id" binding:"required"`
 	SubjectID string `json:"subject_id" binding:"required"`
 	Date      string `json:"date" binding:"required"` // YYYY-MM-DD
+	Hour      int    `json:"hour" binding:"required"`
+	Duration  int    `json:"duration" binding:"required"`
 	Topic     string `json:"topic" binding:"required"`
 	Type      string `json:"type" binding:"required"`
 	Notes     string `json:"notes"`
@@ -36,6 +38,8 @@ type LessonResponse struct {
 	TeacherID string    `json:"teacher_id"`
 	SubjectID string    `json:"subject_id"`
 	Date      time.Time `json:"date"`
+	Hour      int       `json:"hour"`
+	Duration  int       `json:"duration"`
 	Topic     string    `json:"topic"`
 	Type      string    `json:"type"`
 	Notes     string    `json:"notes"`

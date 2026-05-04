@@ -127,7 +127,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import NoteDialog from 'src/components/Teacher/NoteDialog.vue'
 import { useClassesStore } from '@/stores/classes'
-import { api } from 'src/boot/axios'
+import api from '@/services/api'
 
 const classesStore = useClassesStore()
 const $q = useQuasar()

@@ -1,6 +1,7 @@
 package grades
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -81,6 +82,7 @@ func (h *Handler) GetClassGrades(c *gin.Context) {
 
 	resp, err := h.service.GetClassGrades(c.Request.Context(), actorID, actorRole, classID, filter)
 	if err != nil {
+		fmt.Printf("DEBUG: GetClassGrades error: %v\n", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

@@ -9,9 +9,11 @@ type Lesson struct {
 	TeacherID string    `json:"teacher_id" db:"teacher_id"`
 	SubjectID string    `json:"subject_id" db:"subject_id"`
 	Date      time.Time `json:"date" db:"date"`
-	Topic     string    `json:"topic" db:"topic"` // Argomento
-	Type      string    `json:"type" db:"type"`   // Frontale, Laboratorio, Verifica
-	Notes     string    `json:"notes" db:"notes"` // Note aggiuntive interne
+	Hour      int       `json:"hour" db:"hour"`         // Quale ora
+	Duration  int       `json:"duration" db:"duration"` // Per quante ore
+	Topic     string    `json:"topic" db:"topic"`       // Argomento
+	Type      string    `json:"type" db:"type"`         // Frontale, Laboratorio, Verifica
+	Notes     string    `json:"notes" db:"notes"`       // Note aggiuntive interne
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 }

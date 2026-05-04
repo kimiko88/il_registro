@@ -3,7 +3,7 @@
     <!-- Header with Child Switcher -->
     <div class="row items-center justify-between q-mb-xl">
       <div>
-        <h1 class="text-h3 text-weight-bold text-outfit bg-clip-text text-transparent bg-gradient-premium q-my-none" style="display: inline-block;">
+        <h1 class="text-h3 text-weight-bold text-outfit text-gradient-premium q-my-none" style="display: inline-block;">
           Bentornato, Genitore
         </h1>
         <div class="text-subtitle1 text-slate-500 q-mt-sm">Panoramica delle attività per i tuoi figli</div>

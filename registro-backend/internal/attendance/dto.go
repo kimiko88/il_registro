@@ -6,6 +6,8 @@ type CreateAttendanceRequest struct {
 	StudentID string           `json:"student_id" binding:"required"`
 	ClassID   string           `json:"class_id" binding:"required"`
 	Date      string           `json:"date" binding:"required"` // YYYY-MM-DD
+	Hour      int              `json:"hour" binding:"required"`
+	SubjectID string           `json:"subject_id"`
 	Status    AttendanceStatus `json:"status" binding:"required"`
 	EntryTime string           `json:"entry_time,omitempty"` // HH:MM
 	ExitTime  string           `json:"exit_time,omitempty"`  // HH:MM
@@ -20,9 +22,11 @@ type UpdateAttendanceRequest struct {
 }
 
 type BulkAttendanceRequest struct {
-	ClassID  string                    `json:"class_id" binding:"required"`
-	Date     string                    `json:"date" binding:"required"`
-	Statuses []CreateAttendanceRequest `json:"statuses" binding:"required"`
+	ClassID   string                    `json:"class_id" binding:"required"`
+	Date      string                    `json:"date" binding:"required"`
+	Hour      int                       `json:"hour" binding:"required"`
+	SubjectID string                    `json:"subject_id" binding:"required"`
+	Statuses  []CreateAttendanceRequest `json:"statuses" binding:"required"`
 }
 
 type JustificationRequest struct {

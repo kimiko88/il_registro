@@ -124,6 +124,28 @@
             placeholder="Es: Le equazioni di secondo grado"
             :rules="[v => !!v || 'Campo obbligatorio']"
           />
+          <div class="row q-col-gutter-sm">
+            <div class="col-12 col-md-6">
+              <q-input
+                v-model.number="newLesson.hour"
+                type="number"
+                label="Quale ora *"
+                outlined dense
+                min="1" max="10"
+                :rules="[v => !!v || 'Campo obbligatorio']"
+              />
+            </div>
+            <div class="col-12 col-md-6">
+              <q-input
+                v-model.number="newLesson.duration"
+                type="number"
+                label="Quante ore *"
+                outlined dense
+                min="1" max="5"
+                :rules="[v => !!v || 'Campo obbligatorio']"
+              />
+            </div>
+          </div>
           <q-select
             v-model="newLesson.type"
             :options="['Frontale', 'Laboratorio', 'Verifica', 'Discussione', 'Lavoro di gruppo', 'Altro']"
@@ -230,6 +252,8 @@ const subjectOptions = ref([])
 
 const newLesson = ref({
   date: date.formatDate(Date.now(), 'YYYY-MM-DD'),
+  hour: 1,
+  duration: 1,
   topic: '',
   type: 'Frontale',
   notes: '',
@@ -285,6 +309,8 @@ const fetchHomeworks = async () => {
 const openNewLesson = () => {
   newLesson.value = {
     date: date.formatDate(Date.now(), 'YYYY-MM-DD'),
+    hour: 1,
+    duration: 1,
     topic: '',
     type: 'Frontale',
     notes: '',
@@ -314,6 +340,8 @@ const saveLesson = async () => {
       class_id: selectedClass.value,
       subject_id: selectedSubject.value,
       date: newLesson.value.date,
+      hour: newLesson.value.hour,
+      duration: newLesson.value.duration,
       topic: newLesson.value.topic,
       type: newLesson.value.type,
       notes: newLesson.value.notes

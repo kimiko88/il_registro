@@ -12,8 +12,7 @@
           label="Anno Accademico"
           outlined
           dense
-          class="bg-white rounded-lg"
-          style="min-width: 150px"
+          class="rounded-lg min-width-150"
           @update:model-value="onYearChange"
         />
         <q-btn color="primary" icon="add" label="Nuova Classe" class="rounded-lg shadow-sm" @click="openDialog()" />
@@ -21,7 +20,7 @@
     </div>
 
     <!-- Classes List -->
-    <q-card class="rounded-xl shadow-soft border-slate-100 overflow-hidden">
+    <q-card class="rounded-xl shadow-soft border-slate-100 overflow-hidden bg-white">
       <q-table
         :rows="classesStore.classes"
         :columns="columns"
@@ -29,11 +28,11 @@
         :loading="classesStore.loading"
         row-key="id"
         flat
-        class="bg-white"
+        class="bg-transparent"
         :pagination="{ rowsPerPage: 10 }"
       >
         <template v-slot:top-right>
-          <q-input dense debounce="300" v-model="filter" placeholder="Cerca classe..." outlined class="bg-white">
+          <q-input dense debounce="300" v-model="filter" placeholder="Cerca classe..." outlined>
             <template v-slot:append>
               <q-icon name="search" color="grey-5" />
             </template>
@@ -42,16 +41,16 @@
         
         <template v-slot:body-cell-actions="props">
           <q-td :props="props" class="text-right">
-            <q-btn flat round dense icon="menu_book" color="indigo-600" @click="openAssignmentsDialog(props.row)">
+            <q-btn flat round dense icon="menu_book" color="indigo" @click="openAssignmentsDialog(props.row)">
               <q-tooltip>Gestione Materie & Docenti</q-tooltip>
             </q-btn>
-            <q-btn flat round dense icon="auto_stories" color="emerald-600" @click="openTextbooksDialog(props.row)">
+            <q-btn flat round dense icon="auto_stories" color="emerald" @click="openTextbooksDialog(props.row)">
               <q-tooltip>Libri di Testo</q-tooltip>
             </q-btn>
-            <q-btn flat round dense icon="edit" color="blue-600" @click="openDialog(props.row)">
+            <q-btn flat round dense icon="edit" color="primary" @click="openDialog(props.row)">
               <q-tooltip>Modifica Classe</q-tooltip>
             </q-btn>
-            <q-btn flat round dense icon="delete" color="red-600" @click="confirmDelete(props.row)">
+            <q-btn flat round dense icon="delete" color="negative" @click="confirmDelete(props.row)">
               <q-tooltip>Elimina Classe</q-tooltip>
             </q-btn>
           </q-td>
@@ -60,22 +59,22 @@
     </q-card>
 
     <!-- Dialog Create/Edit Class -->
-    <q-dialog v-model="showDialog" persistent>
-      <q-card style="min-width: 450px" class="rounded-xl shadow-2xl">
-        <q-card-section class="row items-center q-pb-none">
+    <q-dialog v-model="showDialog" persistent class="premium-dialog">
+      <q-card style="min-width: 450px" class="rounded-xl overflow-hidden shadow-24">
+        <q-card-section class="bg-gradient-primary text-white row items-center q-pa-lg">
           <div class="text-h6 text-weight-bold">{{ isEdit ? 'Modifica Classe' : 'Nuova Classe' }}</div>
           <q-space />
           <q-btn icon="close" flat round dense v-close-popup />
         </q-card-section>
 
-        <q-card-section class="q-pt-md">
-          <q-form @submit="saveClass" class="q-gutter-md">
-            <div class="row q-col-gutter-sm">
+        <q-card-section class="q-pa-xl">
+          <q-form @submit="saveClass" class="q-gutter-y-lg">
+            <div class="row q-col-gutter-lg">
               <div class="col-8">
-                <q-input v-model="form.name" label="Nome (es. 1, 5)" outlined dense :rules="[val => !!val || 'Obbligatorio']" />
+                <q-input v-model="form.name" label="Nome (es. 1, 5)" outlined :rules="[val => !!val || 'Obbligatorio']" />
               </div>
               <div class="col-4">
-                <q-input v-model="form.section" label="Sezione (es. A, B)" outlined dense :rules="[val => !!val || 'Obbligatorio']" />
+                <q-input v-model="form.section" label="Sezione (es. A, B)" outlined :rules="[val => !!val || 'Obbligatorio']" />
               </div>
             </div>
             
@@ -84,7 +83,6 @@
               :options="academicYearOptions"
               label="Anno Accademico"
               outlined
-              dense
               :rules="[val => !!val || 'Obbligatorio']"
             />
             
@@ -93,15 +91,14 @@
               :options="teacherUserOptions"
               label="Coordinatore di Classe"
               outlined
-              dense
               emit-value
               map-options
               clearable
             />
             
-            <div class="row justify-end q-mt-lg">
-              <q-btn label="Annulla" flat v-close-popup color="grey-7" class="q-mr-sm" />
-              <q-btn :label="isEdit ? 'Aggiorna' : 'Crea Classe'" type="submit" color="primary" class="q-px-lg rounded-md" :loading="saving" />
+            <div class="row justify-end q-mt-xl q-gutter-sm">
+              <q-btn label="Annulla" flat v-close-popup color="slate-400" />
+              <q-btn :label="isEdit ? 'Aggiorna' : 'Crea Classe'" type="submit" color="primary" class="q-px-xl rounded-lg shadow-sm" :loading="saving" />
             </div>
           </q-form>
         </q-card-section>
@@ -109,17 +106,22 @@
     </q-dialog>
 
     <!-- Assignments Dialog -->
-    <q-dialog v-model="showAssignmentsDialog" full-width>
-      <q-card class="rounded-xl overflow-hidden shadow-2xl">
-        <q-card-section class="bg-indigo-600 text-white row items-center">
-          <div class="text-h6 text-weight-bold">Cattedre - Classe {{ currentClass?.name }}{{ currentClass?.section }}</div>
+    <q-dialog v-model="showAssignmentsDialog" full-width class="premium-dialog">
+      <q-card class="rounded-xl overflow-hidden shadow-24 bg-white">
+        <q-card-section class="bg-gradient-primary text-white row items-center q-pa-lg">
+          <div class="row items-center">
+            <q-avatar color="white-20" text-color="white" icon="menu_book" class="q-mr-md" />
+            <div>
+              <div class="text-h6 text-weight-bold">Cattedre - Classe {{ currentClass?.name }}{{ currentClass?.section }}</div>
+              <div class="text-subtitle2 opacity-80">{{ currentClass?.academic_year }}</div>
+            </div>
+          </div>
           <q-space />
-          <div class="text-subtitle2">{{ currentClass?.academic_year }}</div>
-          <q-btn icon="close" flat round dense v-close-popup class="q-ml-md" />
+          <q-btn icon="close" flat round dense v-close-popup />
         </q-card-section>
 
-        <q-card-section class="q-pa-md">
-          <div class="row q-col-gutter-lg">
+        <q-card-section class="q-pa-xl">
+          <div class="row q-col-gutter-xl">
             <div class="col-12 col-md-8">
               <q-table
                 title="Programmazione Didattica"
@@ -127,8 +129,7 @@
                 :columns="assignmentsColumns"
                 row-key="id"
                 flat
-                bordered
-                class="rounded-lg"
+                class="bg-transparent border-slate-100 rounded-xl"
               >
                 <template v-slot:body-cell-actions="props">
                   <q-td :props="props" auto-width>
@@ -139,18 +140,16 @@
             </div>
             
             <div class="col-12 col-md-4">
-              <q-card flat bordered class="rounded-lg bg-slate-50 q-pa-md">
-                <div class="text-subtitle1 text-weight-bold q-mb-md">Assegna Materia</div>
-                <q-form @submit="addAssignment" class="q-gutter-md">
+              <q-card flat class="rounded-2xl bg-slate-50 q-pa-xl border-slate-200">
+                <div class="text-h6 text-weight-bold text-slate-800 q-mb-xl">Assegna Materia</div>
+                <q-form @submit="addAssignment" class="q-gutter-y-lg">
                   <q-select
                     v-model="assignForm.subject_id"
                     :options="subjectOptions"
                     label="Materia"
                     outlined
-                    dense
                     emit-value
                     map-options
-                    class="bg-white"
                     :rules="[val => !!val || 'Seleziona materia']"
                   >
                     <template v-slot:no-option>
@@ -168,10 +167,8 @@
                     :options="teacherOptions"
                     label="Docente"
                     outlined
-                    dense
                     emit-value
                     map-options
-                    class="bg-white"
                   />
 
                   <q-input
@@ -179,12 +176,10 @@
                     label="Ore Settimanali"
                     type="number"
                     outlined
-                    dense
                     min="1"
-                    class="bg-white"
                   />
 
-                  <q-btn type="submit" label="Assegna" color="indigo-600" class="full-width rounded-md" />
+                  <q-btn type="submit" label="Assegna Cattedra" color="primary" class="full-width rounded-lg q-py-md shadow-sm q-mt-lg" />
                 </q-form>
               </q-card>
             </div>
@@ -194,17 +189,22 @@
     </q-dialog>
 
     <!-- Textbooks Dialog -->
-    <q-dialog v-model="showTextbooksDialog" full-width>
-      <q-card class="rounded-xl overflow-hidden shadow-2xl">
-        <q-card-section class="bg-emerald-600 text-white row items-center">
-          <div class="text-h6 text-weight-bold">Adozioni Libri - Classe {{ currentClass?.name }}{{ currentClass?.section }}</div>
+    <q-dialog v-model="showTextbooksDialog" full-width class="premium-dialog">
+      <q-card class="rounded-xl overflow-hidden shadow-24 bg-white">
+        <q-card-section class="bg-gradient-premium text-white row items-center q-pa-lg">
+          <div class="row items-center">
+            <q-avatar color="white-20" text-color="white" icon="auto_stories" class="q-mr-md" />
+            <div>
+              <div class="text-h6 text-weight-bold">Adozioni Libri - Classe {{ currentClass?.name }}{{ currentClass?.section }}</div>
+              <div class="text-subtitle2 opacity-80">{{ currentClass?.academic_year }}</div>
+            </div>
+          </div>
           <q-space />
-          <div class="text-subtitle2">{{ currentClass?.academic_year }}</div>
-          <q-btn icon="close" flat round dense v-close-popup class="q-ml-md" />
+          <q-btn icon="close" flat round dense v-close-popup />
         </q-card-section>
 
-        <q-card-section class="q-pa-md">
-          <div class="row q-col-gutter-lg">
+        <q-card-section class="q-pa-xl">
+          <div class="row q-col-gutter-xl">
             <div class="col-12 col-md-8">
               <q-table
                 title="Libri Adottati"
@@ -212,8 +212,7 @@
                 :columns="textbookColumns"
                 row-key="id"
                 flat
-                bordered
-                class="rounded-lg"
+                class="bg-transparent border-slate-100 rounded-xl"
               >
                 <template v-slot:body-cell-actions="props">
                   <q-td :props="props" auto-width>
@@ -224,18 +223,16 @@
             </div>
             
             <div class="col-12 col-md-4">
-              <q-card flat bordered class="rounded-lg bg-slate-50 q-pa-md">
-                <div class="text-subtitle1 text-weight-bold q-mb-md">Adotta Libro</div>
-                <q-form @submit="addTextbookToClass" class="q-gutter-md">
+              <q-card flat class="rounded-2xl bg-slate-50 q-pa-xl border-slate-200">
+                <div class="text-h6 text-weight-bold text-slate-800 q-mb-xl">Adotta Libro</div>
+                <q-form @submit="addTextbookToClass" class="q-gutter-y-lg">
                   <q-select
                     v-model="textbookForm.textbook_id"
                     :options="allTextbooksOptions"
                     label="Libro"
                     outlined
-                    dense
                     emit-value
                     map-options
-                    class="bg-white"
                     :rules="[val => !!val || 'Seleziona libro']"
                   />
                   <q-select
@@ -243,14 +240,12 @@
                     :options="subjectOptions"
                     label="Materia"
                     outlined
-                    dense
                     emit-value
                     map-options
-                    class="bg-white"
                     :rules="[val => !!val || 'Seleziona materia']"
                   />
-                  <q-checkbox v-model="textbookForm.is_optional" label="Opzionale" />
-                  <q-btn type="submit" label="Aggiungi" color="emerald-600" class="full-width rounded-md" />
+                  <q-checkbox v-model="textbookForm.is_optional" label="Il libro è opzionale" class="text-slate-700" />
+                  <q-btn type="submit" label="Conferma Adozione" color="primary" class="full-width rounded-lg q-py-md shadow-sm q-mt-lg" />
                 </q-form>
               </q-card>
             </div>
@@ -261,16 +256,16 @@
     
     <!-- Quick Create Subject Dialog -->
     <q-dialog v-model="showSubjectDialog">
-      <q-card style="min-width: 350px" class="rounded-xl">
-        <q-card-section>
-          <div class="text-h6 text-weight-bold">Nuova Materia</div>
+      <q-card style="min-width: 350px" class="rounded-xl shadow-24 bg-white">
+        <q-card-section class="q-pa-lg">
+          <div class="text-h6 text-weight-bold text-slate-800">Nuova Materia</div>
         </q-card-section>
-        <q-card-section>
-          <q-input v-model="newSubjectName" label="Nome Materia" outlined dense autofocus @keyup.enter="createSubject" />
+        <q-card-section class="q-px-lg q-pb-lg">
+          <q-input v-model="newSubjectName" label="Nome Materia" outlined autofocus @keyup.enter="createSubject" />
         </q-card-section>
-        <q-card-actions align="right" class="q-pa-md">
-          <q-btn flat label="Annulla" v-close-popup color="grey-7" />
-          <q-btn label="Crea" color="primary" class="rounded-md q-px-md" @click="createSubject" />
+        <q-card-actions align="right" class="q-pa-lg bg-slate-50">
+          <q-btn flat label="Annulla" v-close-popup color="slate-400" />
+          <q-btn label="Crea" color="primary" class="rounded-lg q-px-lg" @click="createSubject" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -294,12 +289,26 @@ const filter = ref('')
 const showDialog = ref(false)
 const isEdit = ref(false)
 const saving = ref(false)
-const selectedYear = ref('2024/2025')
+const getCurrentAcademicYear = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1; // 1-12
+  // In Italy, the academic year usually starts in September
+  if (month >= 9) { 
+    return `${year}/${year + 1}`;
+  } else {
+    return `${year - 1}/${year}`;
+  }
+}
 
+const currentYearStr = getCurrentAcademicYear();
+const selectedYear = ref(currentYearStr);
+
+const currentStart = parseInt(currentYearStr.split('/')[0]);
 const academicYearOptions = [
-  '2023/2024',
-  '2024/2025',
-  '2025/2026'
+  `${currentStart - 1}/${currentStart}`,
+  currentYearStr,
+  `${currentStart + 1}/${currentStart + 2}`
 ]
 
 // Assignments State
@@ -330,7 +339,7 @@ const form = reactive({
   id: null,
   name: '',
   section: '',
-  academic_year: '2024/2025',
+  academic_year: currentYearStr,
   coordinator_id: ''
 })
 

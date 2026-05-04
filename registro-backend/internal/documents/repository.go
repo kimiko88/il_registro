@@ -30,6 +30,8 @@ type Repository interface {
 	GetTemplates(schoolID string) ([]DocumentTemplate, error)
 	GetTemplate(id string) (*DocumentTemplate, error)
 	CreateTemplate(tpl *DocumentTemplate) error
+	UpdateTemplate(tpl *DocumentTemplate) error
+	DeleteTemplate(id string) error
 }
 
 type repository struct {
@@ -262,6 +264,18 @@ func (r *repository) CreateTemplate(t *DocumentTemplate) error {
 	return r.db.QueryRow(`
 		INSERT INTO document_templates (school_id, name, type, content) VALUES ($1, $2, $3, $4) RETURNING id`,
 		t.SchoolID, t.Name, t.Type, t.Content).Scan(&t.ID)
+}
+
+func (r *repository) UpdateTemplate(t *DocumentTemplate) error {
+	_, err := r.db.Exec(`
+		UPDATE document_templates SET name=$1, type=$2, content=$3, updated_at=NOW() WHERE id=$4`,
+		t.Name, t.Type, t.Content, t.ID)
+	return err
+}
+
+func (r *repository) DeleteTemplate(id string) error {
+	_, err := r.db.Exec(`UPDATE document_templates SET is_active=FALSE WHERE id=$1`, id)
+	return err
 }
 
 // Helper

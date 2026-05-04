@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import documentService from '../services/documentService';
-import { api } from 'src/boot/axios';
+import api from '@/services/api';
 
 export const useDocumentsStore = defineStore('documents', {
     state: () => ({

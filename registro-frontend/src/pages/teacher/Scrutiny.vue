@@ -1,144 +1,141 @@
 <template>
-  <q-page class="q-pa-md bg-indigo-10">
-    <div class="row items-center q-mb-xl text-white">
-      <div class="text-h3 text-weight-bolder glass-header q-pa-md rounded-borders shadow-10">
-        <q-icon name="auto_awesome" color="amber" class="q-mr-sm" />
-        Scrutinio Accademico
+  <q-page padding class="bg-slate-50">
+    <div class="row items-center q-mb-lg">
+      <div class="col">
+        <h1 class="text-h4 text-weight-bold text-slate-800 q-my-none">Scrutinio Accademico</h1>
+        <p class="text-subtitle1 text-slate-500 q-mb-none">Gestione voti finali e deliberazioni del Consiglio di Classe</p>
       </div>
-      <q-space />
-      <div class="row q-gutter-md glass-card q-pa-md rounded-borders">
-        <q-select
-          v-model="selectedClassId"
-          :options="classOptions"
-          label="Seleziona Classe"
-          dark outlined dense
-          style="min-width: 250px"
-          emit-value map-options
-          bg-color="white-1"
-        />
-        <q-btn-toggle
-          v-model="semester"
-          toggle-color="amber"
-          flat dark
-          :options="[{label: '1° Quad', value: 1}, {label: '2° Quad', value: 2}]"
-        />
+      <div class="col-auto">
+        <div class="row q-gutter-md glass-card q-pa-sm rounded-xl border-slate-200">
+          <q-select
+            v-model="selectedClassId"
+            :options="classOptions"
+            label="Classe"
+            outlined dense
+            style="min-width: 200px"
+            emit-value map-options
+            class="rounded-lg"
+          />
+          <q-btn-toggle
+            v-model="semester"
+            toggle-color="primary"
+            flat
+            class="rounded-lg border-slate-200"
+            :options="[{label: '1° Quad', value: 1}, {label: '2° Quad', value: 2}]"
+          />
+        </div>
       </div>
     </div>
 
-    <div v-if="!selectedClassId" class="flex flex-center" style="height: 50vh">
-        <q-card class="glass-card text-center q-pa-xl text-white">
-            <q-icon name="rocket_launch" size="80px" color="amber-2" class="q-mb-md" />
-            <div class="text-h4 text-weight-light">Pronto per il Consiglio di Classe?</div>
-            <div class="text-subtitle1 opacity-70">Seleziona una classe per iniziare il processo di scrutinio.</div>
+    <div v-if="!selectedClassId" class="flex flex-center" style="height: 60vh">
+        <q-card class="glass-card text-center q-pa-xl rounded-2xl border-slate-100 shadow-soft">
+            <q-icon name="rocket_launch" size="80px" color="primary" class="q-mb-md opacity-80" />
+            <div class="text-h4 text-weight-bold text-slate-800">Consiglio di Classe</div>
+            <div class="text-subtitle1 text-slate-500 q-mt-sm">Seleziona una classe per iniziare il processo di scrutinio.</div>
         </q-card>
     </div>
 
-    <q-card v-else class="glass-card shadow-24 rounded-borders overflow-hidden">
-      <q-table
-        :rows="matrix.students || []"
-        :columns="columns"
-        row-key="student_id"
-        flat dark
-        class="bg-transparent"
-        :loading="loading"
-        hide-bottom
-        :pagination="{ rowsPerPage: 0 }"
-      >
-        <!-- Header: Subjects -->
-        <template v-slot:header="props">
-          <q-tr :props="props" class="bg-indigo-9">
-            <q-th rowspan="2" align="left" class="text-h6">Studente</q-th>
-            <q-th colspan="3" align="center" class="bg-indigo-7">Presenze</q-th>
-            <q-th v-for="sub in matrix.subjects" :key="sub.id" align="center" class="subject-header">
-              {{ sub.name }}
-            </q-th>
-            <q-th rowspan="2" align="center" class="bg-amber-9 text-black">Condotta</q-th>
-            <q-th rowspan="2" align="center" class="bg-green-9">Esito</q-th>
-            <q-th rowspan="2" align="center">Azioni</q-th>
-          </q-tr>
-          <q-tr :props="props" class="bg-indigo-8">
-            <q-th align="center" class="text-caption text-indigo-2">Ass.</q-th>
-            <q-th align="center" class="text-caption text-indigo-2">Rit.</q-th>
-            <q-th align="center" class="text-caption text-indigo-2">Usc.</q-th>
-            <q-th v-for="sub in matrix.subjects" :key="sub.id" align="center" class="text-caption text-indigo-2">
-              Media Aggregata
-            </q-th>
-          </q-tr>
-        </template>
+    <q-card v-else class="glass-card shadow-soft border-slate-100 overflow-hidden">
+      <div class="scroll-container overflow-auto">
+        <q-table
+          :rows="matrix.students || []"
+          :columns="columns"
+          row-key="student_id"
+          flat
+          class="bg-transparent scrutiny-table"
+          :loading="loading"
+          hide-bottom
+          :pagination="{ rowsPerPage: 0 }"
+        >
+          <!-- Header: Subjects -->
+          <template v-slot:header="props">
+            <q-tr :props="props" class="bg-slate-50">
+              <q-th rowspan="2" align="left" class="text-weight-bold text-slate-700 sticky-col">Studente</q-th>
+              <q-th colspan="3" align="center" class="bg-indigo-50 text-indigo-900 border-x">Presenze</q-th>
+              <q-th v-for="sub in matrix.subjects" :key="sub.id" align="center" class="subject-header text-weight-bold text-slate-600">
+                {{ sub.name }}
+              </q-th>
+              <q-th rowspan="2" align="center" class="bg-amber-50 text-amber-900 border-l text-weight-bold">Condotta</q-th>
+              <q-th rowspan="2" align="center" class="bg-emerald-50 text-emerald-900 text-weight-bold">Esito</q-th>
+              <q-th rowspan="2" align="center" class="text-slate-500">Azioni</q-th>
+            </q-tr>
+            <q-tr :props="props" class="bg-slate-50">
+              <q-th align="center" class="text-caption text-indigo-400 border-l">Ass.</q-th>
+              <q-th align="center" class="text-caption text-indigo-400">Rit.</q-th>
+              <q-th align="center" class="text-caption text-indigo-400 border-r">Usc.</q-th>
+              <q-th v-for="sub in matrix.subjects" :key="sub.id" align="center" class="text-caption text-slate-400">
+                Media
+              </q-th>
+            </q-tr>
+          </template>
 
-        <!-- Body -->
-        <template v-slot:body="props">
-          <q-tr :props="props" class="hover-row">
-            <q-td class="text-weight-bold text-h6 text-amber-1">{{ props.row.student_name }}</q-td>
-            
-            <!-- Attendance Stats -->
-            <q-td align="center" class="text-indigo-2 text-weight-bold">{{ props.row.attendance_stats?.absences || 0 }}</q-td>
-            <q-td align="center" class="text-indigo-2">{{ props.row.attendance_stats?.lates || 0 }}</q-td>
-            <q-td align="center" class="text-indigo-2">{{ props.row.attendance_stats?.early_exits || 0 }}</q-td>
-
-            <!-- Subject Averages -->
-            <q-td v-for="sub in matrix.subjects" :key="sub.id" align="center">
-              <!-- Average Reference -->
-              <div class="text-caption text-grey-5 mb-1">
-                Avg: {{ props.row.subject_data[sub.id]?.average?.toFixed(1) || '-' }}
-              </div>
+          <!-- Body -->
+          <template v-slot:body="props">
+            <q-tr :props="props" class="hover-row">
+              <q-td class="text-weight-bold text-slate-800 sticky-col bg-white">
+                {{ props.row.student_name }}
+              </q-td>
               
-              <!-- Final Grade Input -->
-              <q-input
-                v-if="scrutinyData[props.row.student_id]"
-                v-model.number="scrutinyData[props.row.student_id].grades[sub.id]"
-                type="number"
-                dense dark outlined
-                input-class="text-center text-weight-bold"
-                style="width: 45px"
-                :bg-color="getAverageColor(scrutinyData[props.row.student_id].grades[sub.id])"
-              />
+              <!-- Attendance Stats -->
+              <q-td align="center" class="text-indigo-700 text-weight-medium border-l">{{ props.row.attendance_stats?.absences || 0 }}</q-td>
+              <q-td align="center" class="text-slate-500">{{ props.row.attendance_stats?.lates || 0 }}</q-td>
+              <q-td align="center" class="text-slate-500 border-r">{{ props.row.attendance_stats?.early_exits || 0 }}</q-td>
 
-              <div class="text-caption text-indigo-2 q-mt-xs" v-if="props.row.subject_data[sub.id]?.grade_count > 0">
-                <q-icon name="grade" size="10px" /> {{ props.row.subject_data[sub.id].grade_count }}
-              </div>
-            </q-td>
+              <!-- Subject Averages -->
+              <q-td v-for="sub in matrix.subjects" :key="sub.id" align="center" class="subject-cell">
+                <div class="text-caption text-slate-400 q-mb-xs">
+                  {{ props.row.subject_data[sub.id]?.average?.toFixed(1) || '-' }}
+                </div>
+                
+                <q-input
+                  v-if="scrutinyData[props.row.student_id]"
+                  v-model.number="scrutinyData[props.row.student_id].grades[sub.id]"
+                  type="number"
+                  dense outlined
+                  input-class="text-center text-weight-bold"
+                  class="grade-input rounded-lg overflow-hidden"
+                  :class="getGradeClass(scrutinyData[props.row.student_id].grades[sub.id])"
+                />
+              </q-td>
 
-            <!-- Conduct -->
-            <q-td align="center" class="conduct-cell">
-              <div class="text-caption text-grey-7 q-mb-xs">Condotta</div>
-              <q-input
-                v-if="scrutinyData[props.row.student_id]"
-                v-model.number="scrutinyData[props.row.student_id].conduct_grade"
-                type="number"
-                dense
-                outlined
-                rounded
-                input-class="text-center text-weight-bold"
-                class="conduct-input"
-                :bg-color="scrutinyData[props.row.student_id].conduct_grade < 6 ? 'red-1' : 'amber-1'"
-              />
-            </q-td>
+              <!-- Conduct -->
+              <q-td align="center" class="bg-amber-50 border-l">
+                <q-input
+                  v-if="scrutinyData[props.row.student_id]"
+                  v-model.number="scrutinyData[props.row.student_id].conduct_grade"
+                  type="number"
+                  dense outlined
+                  input-class="text-center text-weight-bold"
+                  class="conduct-input rounded-lg"
+                  :class="scrutinyData[props.row.student_id].conduct_grade < 6 ? 'bg-negative text-white' : 'bg-amber-100 text-amber-900'"
+                />
+              </q-td>
 
-            <!-- Decision -->
-            <q-td align="center">
-              <q-select
-                v-if="scrutinyData[props.row.student_id]"
-                v-model="scrutinyData[props.row.student_id].final_decision"
-                :options="['Ammesso', 'Non Ammesso', 'Sospeso', 'Promosso', 'Respinto']"
-                dense dark outlined
-                options-dense
-                class="decision-select"
-              />
-            </q-td>
+              <!-- Decision -->
+              <q-td align="center">
+                <q-select
+                  v-if="scrutinyData[props.row.student_id]"
+                  v-model="scrutinyData[props.row.student_id].final_decision"
+                  :options="['Ammesso', 'Non Ammesso', 'Sospeso', 'Promosso', 'Respinto']"
+                  dense outlined
+                  options-dense
+                  class="decision-select rounded-lg"
+                />
+              </q-td>
 
-            <q-td align="center">
-              <q-btn fab-mini icon="save" color="amber" text-color="black" @click="saveStudentScrutiny(props.row.student_id)">
-                <q-tooltip>Salva Singolo</q-tooltip>
-              </q-btn>
-            </q-td>
-          </q-tr>
-        </template>
-      </q-table>
+              <q-td align="center">
+                <q-btn flat round dense icon="save" color="primary" @click="saveStudentScrutiny(props.row.student_id)">
+                  <q-tooltip>Salva Singolo</q-tooltip>
+                </q-btn>
+              </q-td>
+            </q-tr>
+          </template>
+        </q-table>
+      </div>
       
       <q-separator />
-      <q-card-actions align="right" class="q-pa-md">
-        <q-btn label="Salva Tutto" color="primary" icon="done_all" @click="saveAll" :loading="saving" />
+      <q-card-actions align="right" class="q-pa-md bg-transparent">
+        <q-btn label="Salva Scrutinio Finale" color="primary" icon="done_all" class="q-px-lg rounded-lg shadow-sm" @click="saveAll" :loading="saving" />
       </q-card-actions>
     </q-card>
   </q-page>
@@ -172,7 +169,6 @@ const columns = [
   { name: 'actions', label: 'Azioni', align: 'right' }
 ]
 
-// Map: StudentID -> { conduct_grade, final_decision, grades: { subject_id: final_grade } }
 const scrutinyData = reactive({})
 
 onMounted(async () => {
@@ -201,7 +197,6 @@ const fetchMatrix = async () => {
   try {
     const res = await scrutinyService.getMatrix(selectedClassId.value, semester.value)
     
-    // Initialize state BEFORE updating matrix.value to avoid render race conditions
     const newScrutinyData = {}
     const students = res.data.students || []
     const subjects = res.data.subjects || []
@@ -212,14 +207,12 @@ const fetchMatrix = async () => {
         final_decision: s.record?.final_decision || 'Ammesso',
         grades: {}
       }
-      // Populate final grades from record if exists, otherwise from averages
       subjects.forEach(sub => {
         const existing = s.record?.grades?.find(g => g.subject_id === sub.id)
         newScrutinyData[s.student_id].grades[sub.id] = existing ? existing.final_grade : Math.round(s.subject_data[sub.id]?.average || 6)
       })
     })
 
-    // Clear old data and batch update state
     for (const key in scrutinyData) delete scrutinyData[key]
     Object.assign(scrutinyData, newScrutinyData)
     matrix.value = res.data
@@ -245,7 +238,7 @@ const saveStudentScrutiny = async (studentId) => {
       }))
     }
     await scrutinyService.save(payload)
-    $q.notify({ type: 'positive', message: 'Dati salvati per lo studente', position: 'top' })
+    $q.notify({ type: 'positive', message: 'Dati salvati con successo', position: 'top' })
   } catch (e) {
     $q.notify({ type: 'negative', message: 'Errore durante il salvataggio' })
   }
@@ -257,71 +250,76 @@ const saveAll = async () => {
     for (const sid of Object.keys(scrutinyData)) {
       await saveStudentScrutiny(sid)
     }
-    $q.notify({ type: 'positive', message: 'Tutto salvato con successo!' })
+    $q.notify({ type: 'positive', message: 'Scrutinio salvato correttamente' })
   } finally {
     saving.value = false
   }
 }
 
-const getAverageColor = (avg) => {
-  if (!avg) return 'bg-grey-7'
-  if (avg < 5.5) return 'bg-insufficient'
-  if (avg < 6) return 'bg-warning-grade'
-  if (avg < 8) return 'bg-sufficient'
-  return 'bg-excellent'
+const getGradeClass = (avg) => {
+  if (!avg) return 'bg-slate-100'
+  if (avg < 5.5) return 'bg-red-50 text-red-900'
+  if (avg < 6) return 'bg-orange-50 text-orange-900'
+  if (avg < 8) return 'bg-blue-50 text-blue-900'
+  return 'bg-emerald-50 text-emerald-900'
 }
 </script>
 
 <style scoped>
-.glass-header {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+.scrutiny-table {
+  min-width: 1200px;
 }
-.glass-card {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(15px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+.sticky-col {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  border-right: 1px solid var(--border-color);
 }
-.grade-badge {
-  width: 45px;
-  height: 45px;
-  line-height: 45px;
-  border-radius: 12px;
-  font-weight: 800;
-  font-size: 1.1rem;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+.border-x {
+  border-left: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
 }
-.bg-insufficient { background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%); color: white; }
-.bg-warning-grade { background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); color: white; }
-.bg-sufficient { background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%); color: white; }
-.bg-excellent { background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%); color: white; }
-
-.hover-row:hover {
-  background: rgba(255, 255, 255, 0.05) !important;
-  transition: all 0.3s ease;
+.border-l {
+  border-left: 1px solid var(--border-color);
+}
+.border-r {
+  border-right: 1px solid var(--border-color);
 }
 .subject-header {
   min-width: 100px;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  font-size: 0.7rem;
 }
-.decision-select {
-  min-width: 130px;
+.subject-cell {
+  min-width: 100px;
+  border-left: 1px solid var(--border-color);
 }
-.conduct-cell {
-  background: rgba(255, 193, 7, 0.05);
-  border-left: 2px solid #ffc107;
-  min-width: 80px;
+.grade-input {
+  width: 50px;
+  margin: 0 auto;
+}
+.grade-input :deep(.q-field__control) {
+  height: 40px;
+  padding: 0;
 }
 .conduct-input {
-  width: 65px;
+  width: 60px;
   margin: 0 auto;
 }
 .conduct-input :deep(.q-field__control) {
   height: 40px;
-  background: white !important;
 }
-.opacity-70 { opacity: 0.7; }
+.decision-select {
+  min-width: 140px;
+}
+.hover-row:hover {
+  background: var(--bg-primary) !important;
+}
+.body--dark .sticky-col {
+  background-color: var(--bg-secondary) !important;
+}
+.body--dark .bg-white {
+  background-color: var(--bg-secondary) !important;
+}
 </style>

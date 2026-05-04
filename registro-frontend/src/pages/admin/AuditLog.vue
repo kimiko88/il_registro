@@ -138,7 +138,7 @@ const fetchLogs = async () => {
       action: filters.action || undefined
     }
     const response = await adminService.getAuditLogs(params)
-    logs.value = response.data.items
+    logs.value = response.data.items || []
     pagination.value.rowsNumber = response.data.total
   } catch (error) {
     $q.notify({

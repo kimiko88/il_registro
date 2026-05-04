@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { api } from 'src/boot/axios'
+import api from '@/services/api'
 
 export const useSchedulingStore = defineStore('scheduling', () => {
     const generatedSchedule = ref([])
