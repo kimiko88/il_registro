@@ -3,6 +3,9 @@
 BINARY_NAME=api-server
 DOCKER_IMAGE=registro-backend:latest
 
+export DOCKER_BUILDKIT=0
+export COMPOSE_DOCKER_CLI_BUILD=0
+
 build:
 	go build -o bin/$(BINARY_NAME) cmd/api-server/main.go
 
@@ -31,7 +34,7 @@ docker-build:
 	docker build -f docker/Dockerfile.prod -t $(DOCKER_IMAGE) .
 
 docker-up:
-	DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 docker compose -p registro-backend --env-file .env -f docker/docker-compose.yml up --build
+	docker compose -p registro-backend --env-file .env -f docker/docker-compose.yml up --build
 
 # Aliases for "make docker up"
 docker:
