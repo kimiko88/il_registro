@@ -28,9 +28,9 @@ describe('Grades Store', () => {
     })
 
     it('initializes with default state', () => {
-        expect(store.grades).toEqual([])
+        expect(store.grades).toBeNull()
         expect(store.loading).toBe(false)
-        expect(store.subjects).toContain('Mathematics')
+        expect(store.subjects).toEqual([])
     })
 
     it('fetches grades for teacher', async () => {
@@ -54,35 +54,54 @@ describe('Grades Store', () => {
     it('adds a grade', async () => {
         const gradeData = { studentId: 's5', value: 9 }
         gradeService.saveGrade.mockResolvedValue({ data: { id: 'g_new', ...gradeData } })
+        gradeService.getByClass.mockResolvedValue({ data: { students: [] } })
+        
+        // Mock a previous fetch so it refetches
+        store._lastClassId = 'c1'
+        store._lastSubjectId = 'Math'
+        
         const promise = store.addGrade(gradeData)
         const newGrade = await promise
         expect(newGrade.id).toBeDefined()
-        expect(store.grades).toContainEqual(newGrade)
+        expect(gradeService.getByClass).toHaveBeenCalledWith('c1', 'Math')
     })
 
     it('updates a grade', async () => {
-        store.grades = [{ id: 'g1', value: 5 }]
+        store.grades = { semesters: [{ grades: [{ id: 'g1', value: 5 }] }] }
         gradeService.updateGrade.mockResolvedValue({ data: { id: 'g1', value: 6 } })
+        gradeService.getByClass.mockResolvedValue({ data: { students: [] } })
+        
+        store._lastClassId = 'c1'
+        store._lastSubjectId = 'Math'
+
         await store.updateGrade('g1', { value: 6 })
-        expect(store.grades[0].value).toBe(6)
+        expect(gradeService.updateGrade).toHaveBeenCalledWith('g1', { value: 6 })
+        expect(gradeService.getByClass).toHaveBeenCalledWith('c1', 'Math')
     })
 
     it('deletes a grade', async () => {
-        store.grades = [{ id: 'g1' }, { id: 'g2' }]
+        store.grades = { students: [{ grades: [{ id: 'g1' }, { id: 'g2' }] }] }
         gradeService.deleteGrade.mockResolvedValue({})
+        gradeService.getByClass.mockResolvedValue({ data: { students: [] } })
+        
+        // Mock a previous fetch so it refetches
+        store._lastClassId = 'c1'
+        store._lastSubjectId = 'Math'
+
         await store.deleteGrade('g1')
-        expect(store.grades.length).toBe(1)
-        expect(store.grades[0].id).toBe('g2')
+        expect(gradeService.deleteGrade).toHaveBeenCalledWith('g1')
+        expect(gradeService.getByClass).toHaveBeenCalledWith('c1', 'Math')
     })
 
     it('calculates class average', () => {
         expect(store.classAverage).toBe(0)
-        store.grades = [{ grade_value: 6 }, { grade_value: 8 }]
+        store.grades = { students: [{ grades: [{ grade_value: 6 }, { grade_value: 8 }] }] }
         expect(store.classAverage).toBe('7.0')
     })
 
     it('gets grades by student', () => {
-        store.grades = [{ studentId: 's1' }, { studentId: 's2' }]
+        store.grades = { students: [{ student_id: 's1', grades: [{ id: '1' }] }, { student_id: 's2', grades: [{ id: '2' }] }] }
         expect(store.getGradesByStudent('s1').length).toBe(1)
+        expect(store.getGradesByStudent('s3')).toEqual([])
     })
 })

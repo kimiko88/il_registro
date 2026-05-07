@@ -18,8 +18,8 @@ const { mockGet, mockPost } = vi.hoisted(() => ({
     mockPost: vi.fn()
 }))
 
-vi.mock('src/boot/axios', () => ({
-    api: {
+vi.mock('@/services/api', () => ({
+    default: {
         get: mockGet,
         post: mockPost
     }

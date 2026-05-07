@@ -299,8 +299,8 @@ const fetchData = async () => {
             if (Array.isArray(attRes.data)) {
                 attRes.data.forEach(r => {
                     // Check if record hour matches selectedHour
-                    // Backend returns hour as string (from my earlier fmt.Sprintf) or int
-                    if (String(r.entry_time) === String(selectedHour.value)) {
+                    // Backend returns hour as int
+                    if (String(r.hour) === String(selectedHour.value)) {
                         attendanceMap[r.student_id] = r
                     }
                 })

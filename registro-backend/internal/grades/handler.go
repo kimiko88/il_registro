@@ -111,7 +111,8 @@ func (h *Handler) GetSubjectGrades(c *gin.Context) {
 func (h *Handler) BulkImport(c *gin.Context) {
 	teacherID := c.GetString("user_id")
 	if teacherID == "" {
-		teacherID = "dev-teacher-id"
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
 	}
 
 	file, _, err := c.Request.FormFile("file")
@@ -140,7 +141,8 @@ func (h *Handler) BulkImport(c *gin.Context) {
 func (h *Handler) Export(c *gin.Context) {
 	teacherID := c.GetString("user_id")
 	if teacherID == "" {
-		teacherID = "dev-teacher-id"
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
 	}
 
 	format := c.Query("format")
@@ -186,12 +188,8 @@ func (h *Handler) AddGrade(c *gin.Context) {
 
 	teacherID := c.GetString("user_id")
 	if teacherID == "" {
-		// For testing purpose if auth middleware missing, checking header or mocking
-		// In prod this is fatal or handled by middleware
-		// c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		// return
-		// ALLOW PASS for development if local
-		teacherID = "dev-teacher-id"
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
 	}
 
 	if err := h.service.AddGrade(teacherID, req); err != nil {
@@ -218,7 +216,8 @@ func (h *Handler) UpdateGrade(c *gin.Context) {
 
 	teacherID := c.GetString("user_id")
 	if teacherID == "" {
-		teacherID = "dev-teacher-id"
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
 	}
 
 	if err := h.service.UpdateGrade(teacherID, gradeID, req); err != nil {
@@ -239,7 +238,8 @@ func (h *Handler) DeleteGrade(c *gin.Context) {
 
 	teacherID := c.GetString("user_id")
 	if teacherID == "" {
-		teacherID = "dev-teacher-id"
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
 	}
 
 	if err := h.service.DeleteGrade(teacherID, gradeID); err != nil {
@@ -373,7 +373,8 @@ func (h *Handler) GetSemesterReport(c *gin.Context) {
 func (h *Handler) GetChildGrades(c *gin.Context) {
 	parentID := c.GetString("user_id")
 	if parentID == "" {
-		parentID = "dev-parent-id"
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
 	}
 
 	studentID := c.Param("studentID")
@@ -381,7 +382,12 @@ func (h *Handler) GetChildGrades(c *gin.Context) {
 
 	resp, err := h.service.GetChildGrades(parentID, studentID, filter)
 	if err != nil {
-		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		// Distinguish access denied from internal errors
+		if err.Error() == "access denied: not a guardian" || err.Error() == "guardianship check failed" {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 

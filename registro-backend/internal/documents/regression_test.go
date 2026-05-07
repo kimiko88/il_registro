@@ -37,6 +37,8 @@ func (m *MockRegRepo) AddSignature(sig *DocumentSignature) error                
 func (m *MockRegRepo) GetInbox(schoolID string) ([]Document, error)             { return nil, nil }
 func (m *MockRegRepo) GetReviewQueue(schoolID string) ([]Document, error)       { return nil, nil }
 func (m *MockRegRepo) CreateTemplate(tpl *DocumentTemplate) error               { return nil }
+func (m *MockRegRepo) UpdateTemplate(tpl *DocumentTemplate) error               { return nil }
+func (m *MockRegRepo) DeleteTemplate(id string) error                           { return nil }
 func (m *MockRegRepo) FindByClass(classID string) ([]Document, error)           { return nil, nil }
 func (m *MockRegRepo) FindByStudent(studentID string) ([]Document, error)       { return nil, nil }
 func (m *MockRegRepo) GetTemplates(schoolID string) ([]DocumentTemplate, error) { return nil, nil }

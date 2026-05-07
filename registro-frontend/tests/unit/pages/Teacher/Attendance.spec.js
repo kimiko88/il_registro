@@ -14,8 +14,8 @@ const { mockGetByClass, mockApiGet, mockApiPost } = vi.hoisted(() => ({
 vi.mock('src/services/attendanceService', () => ({
     attendanceService: { getByClass: mockGetByClass }
 }))
-vi.mock('src/boot/axios', () => ({
-    api: { get: mockApiGet, post: mockApiPost }
+vi.mock('@/services/api', () => ({
+    default: { get: mockApiGet, post: mockApiPost }
 }))
 
 // Mock Quasar
@@ -51,7 +51,7 @@ describe('Teacher/Attendance.vue', () => {
         })
 
         mockGetByClass.mockResolvedValue({
-            data: [{ student_id: 's2', status: 'absent' }]
+            data: [{ student_id: 's2', status: 'absent', hour: 1 }]
         })
 
         wrapper = mount(TeacherAttendance, {
@@ -192,6 +192,6 @@ describe('Teacher/Attendance.vue', () => {
 
         await wrapper.vm.saveAttendance()
 
-        expect(mockApiPost).toHaveBeenCalledWith('/teacher/attendance/mark-bulk', expect.anything())
+        expect(mockApiPost).toHaveBeenCalledWith('/attendance/mark-bulk', expect.anything())
     })
 })

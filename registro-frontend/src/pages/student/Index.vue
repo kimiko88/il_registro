@@ -3,7 +3,7 @@
     <!-- Header -->
     <div class="row items-center q-mb-md justify-between">
       <div>
-        <h1 class="text-h4 q-my-none">Bentornato, {{ studentStore.profile?.firstName }}</h1>
+        <h1 class="text-h4 q-my-none">Bentornato, {{ studentStore.profile?.first_name }}</h1>
         <div class="text-subtitle1 text-grey-8">{{ studentStore.className || 'Classe 5A' }}</div>
       </div>
       <q-btn round flat icon="notifications" color="grey-8">

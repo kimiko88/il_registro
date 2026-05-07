@@ -79,7 +79,7 @@ describe('Classes Page', () => {
     })
 
     it('fetches data on mount', () => {
-        expect(classesStore.fetchClasses).toHaveBeenCalledWith({ school_id: 1, academic_year: '2024/2025' })
+        expect(classesStore.fetchClasses).toHaveBeenCalledWith({ school_id: 1, academic_year: '2025/2026' })
         expect(mockAdminService.getSubjects).toHaveBeenCalled()
     })
 

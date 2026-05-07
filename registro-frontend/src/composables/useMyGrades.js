@@ -6,9 +6,14 @@ export function useMyGrades() {
 
     const gradesBySubject = computed(() => {
         const grouped = {};
-        store.grades.forEach(g => {
-            if (!grouped[g.subject]) grouped[g.subject] = [];
-            grouped[g.subject].push(g);
+        if (!store.grades || !store.grades.semesters) return grouped;
+        
+        store.grades.semesters.forEach(semester => {
+            semester.grades.forEach(g => {
+                const subject = g.subject_id;
+                if (!grouped[subject]) grouped[subject] = [];
+                grouped[subject].push(g);
+            });
         });
         return grouped;
     });
@@ -17,7 +22,7 @@ export function useMyGrades() {
         const avgs = {};
         for (const subject in gradesBySubject.value) {
             const grades = gradesBySubject.value[subject];
-            const sum = grades.reduce((a, b) => a + b.value, 0);
+            const sum = grades.reduce((a, b) => a + b.grade_value, 0);
             avgs[subject] = (sum / grades.length).toFixed(1);
         }
         return avgs;
@@ -29,8 +34,8 @@ export function useMyGrades() {
         // Simple logic: compare last 2 grades
         // Assuming grades are sorted by date (mock data is, but ideally should sort)
         // Here we'll just check last two added
-        const last = grades[grades.length - 1].value;
-        const prev = grades[grades.length - 2].value;
+        const last = grades[grades.length - 1].grade_value;
+        const prev = grades[grades.length - 2].grade_value;
         if (last > prev) return 'up';
         if (last < prev) return 'down';
         return 'stable';

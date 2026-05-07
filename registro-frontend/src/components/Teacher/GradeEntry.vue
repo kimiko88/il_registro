@@ -87,7 +87,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useGradesStore } from 'src/stores/grades';
 import { useQuasar } from 'quasar';
 import { gradeService } from 'src/services/gradeService';
@@ -198,8 +198,16 @@ const focusNext = (index) => {
     // Logic to focus next input would ideally use refs map
 };
 
-window.addEventListener('online', () => isOnline.value = true);
-window.addEventListener('offline', () => isOnline.value = false);
+const handleOnline = () => { isOnline.value = true };
+const handleOffline = () => { isOnline.value = false };
+
+window.addEventListener('online', handleOnline);
+window.addEventListener('offline', handleOffline);
+
+onUnmounted(() => {
+  window.removeEventListener('online', handleOnline);
+  window.removeEventListener('offline', handleOffline);
+});
 
 onMounted(() => {
     // Initialize if data already present

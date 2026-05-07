@@ -97,8 +97,7 @@ func (r *PostgresRepository) Create(ctx context.Context, user *User) error {
 	if err != nil {
 		return err
 	}
-	// defer tx.Rollback() // Managed manually below for specific error returns?
-	// Or better, use defer and check err
+	defer tx.Rollback() // Safe: no-op after Commit()
 
 	query := `
 		INSERT INTO users (
@@ -121,16 +120,13 @@ func (r *PostgresRepository) Create(ctx context.Context, user *User) error {
 		if pqErr, ok := err.(*pq.Error); ok {
 			if pqErr.Code == "23505" { // Unique violation
 				if strings.Contains(pqErr.Message, "email") {
-					tx.Rollback()
 					return ErrEmailExists
 				}
 				if strings.Contains(pqErr.Message, "fiscal_code") {
-					tx.Rollback()
 					return ErrFiscalCode
 				}
 			}
 		}
-		tx.Rollback()
 		return err
 	}
 
@@ -148,7 +144,6 @@ func (r *PostgresRepository) Create(ctx context.Context, user *User) error {
 			_, err = tx.ExecContext(ctx, teacherQuery, user.ID, *user.SchoolID)
 		}
 		if err != nil {
-			tx.Rollback()
 			return err
 		}
 	}
@@ -210,13 +205,15 @@ func (r *PostgresRepository) Update(ctx context.Context, user *User) error {
 		UPDATE users SET
 			first_name = $1, last_name = $2, phone_number = $3, job_title = $4,
 			is_active = $5, role = $6, school_id = $7, updated_at = $8,
-			password_hash = $9, mfa_enabled = $10
-		WHERE id = $11
+			password_hash = $9, mfa_enabled = $10,
+			fiscal_code = COALESCE(NULLIF($11, ''), fiscal_code)
+		WHERE id = $12
 	`
 	res, err := tx.ExecContext(ctx, query,
 		user.FirstName, user.LastName, user.PhoneNumber, user.JobTitle,
 		user.IsActive, user.Role, user.SchoolID, time.Now(),
 		user.PasswordHash, user.MFAEnabled,
+		user.FiscalCode,
 		user.ID,
 	)
 	if err != nil {

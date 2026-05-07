@@ -4,10 +4,13 @@ import { gradeService } from 'src/services/gradeService';
 
 export const useGradesStore = defineStore('grades', {
     state: () => ({
-        grades: [],
+        grades: null,      // ClassGradesResponse { students: [...] } or MyGradesResponse { semesters: [...] }
         loading: false,
         error: null,
-        subjects: [], // Now stored as [{id, name, teacher_id}]
+        subjects: [],      // [{ id, name, teacher_id, ... }]
+        // Track last fetch context to enable refetch after mutations
+        _lastClassId: null,
+        _lastSubjectId: null,
     }),
 
     getters: {
@@ -46,9 +49,11 @@ export const useGradesStore = defineStore('grades', {
         async fetchGrades(classId, subjectId) {
             this.loading = true;
             this.error = null;
+            this._lastClassId = classId;
+            this._lastSubjectId = subjectId;
             try {
                 const response = await gradeService.getByClass(classId, subjectId);
-                this.grades = response.data || [];
+                this.grades = response.data || null;
             } catch (err) {
                 this.error = err.message;
                 console.error("Error fetching grades:", err);
@@ -76,7 +81,10 @@ export const useGradesStore = defineStore('grades', {
             this.loading = true;
             try {
                 const response = await gradeService.saveGrade(gradeData);
-                this.grades.push(response.data);
+                // Refetch to keep the full class view consistent
+                if (this._lastClassId) {
+                    await this.fetchGrades(this._lastClassId, this._lastSubjectId);
+                }
                 return response.data;
             } catch (err) {
                 console.error("Error adding grade:", err);
@@ -89,10 +97,11 @@ export const useGradesStore = defineStore('grades', {
         async updateGrade(id, updates) {
             try {
                 const response = await gradeService.updateGrade(id, updates);
-                const index = this.grades.findIndex(g => g.id === id);
-                if (index !== -1) {
-                    this.grades[index] = response.data;
+                // Refetch to keep the full class view consistent
+                if (this._lastClassId) {
+                    await this.fetchGrades(this._lastClassId, this._lastSubjectId);
                 }
+                return response.data;
             } catch (err) {
                 console.error("Error updating grade:", err);
                 throw err;
@@ -102,7 +111,10 @@ export const useGradesStore = defineStore('grades', {
         async deleteGrade(id) {
             try {
                 await gradeService.deleteGrade(id);
-                this.grades = this.grades.filter(g => g.id !== id);
+                // Refetch to keep the full class view consistent
+                if (this._lastClassId) {
+                    await this.fetchGrades(this._lastClassId, this._lastSubjectId);
+                }
             } catch (err) {
                 console.error("Error deleting grade:", err);
                 throw err;
