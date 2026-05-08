@@ -28,6 +28,7 @@ import (
 	"registro-backend/internal/subjects"
 	"registro-backend/internal/teachers"
 	"registro-backend/internal/textbooks"
+	"registro-backend/internal/timetables"
 	"registro-backend/internal/users"
 	"registro-backend/internal/ws"
 	"registro-backend/pkg/jwt"
@@ -80,6 +81,7 @@ func main() {
 	commsRepo := communications.NewRepository(database)
 	notesRepo := notes.NewRepository(database)
 	adminRepo := postgres.NewAdminRepository(database)
+	timetablesRepo := timetables.NewRepository(database)
 
 	authMiddleware := auth.NewMiddleware(tokenManager, usersRepo)
 
@@ -113,6 +115,7 @@ func main() {
 
 	notesH := notes.NewHandler(notesSvc)
 	adminH := admin.NewHandler(adminSvc)
+	timetablesH := timetables.NewHandler(timetablesRepo)
 
 	wsHandler := ws.NewHandler(wsHub)
 
@@ -180,6 +183,7 @@ func main() {
 			attendanceH.RegisterRoutes(protected)
 			docsH.RegisterRoutes(protected)
 			schedH.RegisterRoutes(protected)
+			timetablesH.RegisterRoutes(protected)
 
 			// New modules
 			pctoH := pcto.NewHandler(pctoSvc)

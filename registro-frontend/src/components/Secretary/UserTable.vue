@@ -1,5 +1,5 @@
 <template>
-  <q-card flat class="rounded-xl border border-slate-100 bg-white shadow-soft overflow-hidden">
+    <q-card flat class="rounded-xl border border-slate-100 bg-white shadow-soft overflow-hidden">
     <q-table
       :rows="users"
       :columns="columns"
@@ -15,21 +15,15 @@
         <div class="row items-center full-width q-mb-md">
           <div class="text-h5 text-weight-bold text-outfit q-mr-xl text-slate-800">Elenco Utenti</div>
           
-          <q-btn-toggle
+          <q-select
             v-model="roleFilter"
-            unelevated
-            toggle-color="indigo-50"
-            toggle-text-color="indigo-700"
-            color="white"
-            text-color="slate-400"
-            :options="[
-              {label: 'Tutti', value: 'all'},
-              {label: 'Studenti', value: 'student'},
-              {label: 'Docenti', value: 'teacher'},
-              {label: 'Genitori', value: 'parent'},
-              {label: 'Staff', value: 'staff'}
-            ]"
-            class="rounded-lg border border-slate-100 no-caps font-medium"
+            :options="roleFilterOptions"
+            dense
+            outlined
+            emit-value
+            map-options
+            bg-color="white"
+            class="rounded-lg border border-slate-100 min-width-200"
             @update:model-value="$emit('filter-role', $event)"
           />
 
@@ -67,6 +61,13 @@
          </q-tr>
       </template>
 
+      <!-- Header -->
+      <template v-slot:header-cell="props">
+        <q-th :props="props" class="text-slate-500 font-bold">
+          {{ props.col.label }}
+        </q-th>
+      </template>
+
       <!-- Custom Body -->
       <template v-slot:body-cell-role="props">
         <q-td :props="props">
@@ -90,7 +91,7 @@
       <template v-slot:body-cell-actions="props">
         <q-td :props="props" auto-width>
           <q-btn flat round size="sm" color="slate-400" icon="more_horiz">
-            <q-menu class="rounded-lg shadow-2xl border border-slate-100">
+            <q-menu class="rounded-lg shadow-2xl border border-slate-100" transition-show="fade" transition-hide="fade">
               <q-list style="min-width: 180px" padding>
                 <q-item clickable v-close-popup class="q-mx-sm rounded-md" @click="$emit('edit', props.row)">
                   <q-item-section avatar><q-icon name="edit" color="primary" /></q-item-section>
@@ -127,7 +128,7 @@
   </q-card>
 </template>
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 const props = defineProps(['users', 'loading']);
 const emit = defineEmits(['create', 'edit', 'delete', 'reset-pwd', 'filter-role', 'export', 'bulk-delete', 'bulk-reset', 'import', 'manage-subjects'])
@@ -135,6 +136,14 @@ const emit = defineEmits(['create', 'edit', 'delete', 'reset-pwd', 'filter-role'
 const filter = ref('')
 const roleFilter = ref('all')
 const selected = ref([])
+
+const roleFilterOptions = [
+  {label: 'Tutti', value: 'all'},
+  {label: 'Studenti', value: 'student'},
+  {label: 'Docenti', value: 'teacher'},
+  {label: 'Genitori', value: 'parent'},
+  {label: 'Staff', value: 'staff'}
+]
 
 const columns = [
     { name: 'name', label: 'Nome Completo', field: row => `${row.last_name} ${row.first_name}`, sortable: true, align: 'left' },

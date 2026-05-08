@@ -49,57 +49,68 @@
       :class="$q.dark.isActive ? 'bg-dark' : 'bg-white'"
       :width="260"
     >
-      <!-- User Profile Section -->
-      <div class="q-pa-lg bg-gradient-premium text-white relative-position overflow-hidden" v-if="userName">
-        <div class="row items-center q-mb-sm relative-position" style="z-index: 1">
-          <q-avatar size="56px" color="white" text-color="primary" class="q-mr-md shadow-soft">
-            <q-icon name="person" size="32px" />
-          </q-avatar>
-          <div class="col">
-            <div class="text-h6 text-weight-bold no-wrap">{{ userName }}</div>
-            <div class="text-caption opacity-80 text-uppercase letter-spacing-1">{{ roleLabel }}</div>
+      <div class="column full-height no-wrap">
+        <!-- User Profile Section -->
+        <div class="q-pa-lg bg-gradient-premium text-white relative-position overflow-hidden" v-if="userName">
+          <div class="row items-center q-mb-sm relative-position" style="z-index: 1">
+            <q-avatar size="56px" color="white" text-color="primary" class="q-mr-md shadow-soft">
+              <q-icon name="person" size="32px" />
+            </q-avatar>
+            <div class="col">
+              <div class="text-h6 text-weight-bold no-wrap">{{ userName }}</div>
+              <div class="text-caption opacity-80 text-uppercase letter-spacing-1">{{ roleLabel }}</div>
+            </div>
           </div>
+          <!-- Decorative Circle -->
+          <div class="absolute-bottom-right q-mr-n-lg q-mb-n-lg" style="width: 120px; height: 120px; border-radius: 50%; background: rgba(255,255,255,0.1)"></div>
         </div>
-        <!-- Decorative Circle -->
-        <div class="absolute-bottom-right q-mr-n-lg q-mb-n-lg" style="width: 120px; height: 120px; border-radius: 50%; background: rgba(255,255,255,0.1)"></div>
-      </div>
 
-      <!-- Menu Items -->
-      <div class="q-pa-md">
-        <div class="text-overline text-grey-5 q-px-md q-mb-sm letter-spacing-2">MENU PRINCIPALE</div>
-        <q-list padding class="q-gutter-y-xs">
-          <q-item 
-            v-for="item in menuItems"
-            :key="item.path"
-            clickable 
+        <!-- Menu Items -->
+        <q-scroll-area class="col">
+          <div class="q-pa-md">
+            <div class="text-overline text-grey-5 q-px-md q-mb-sm letter-spacing-2">MENU PRINCIPALE</div>
+            <q-list padding class="q-gutter-y-xs">
+              <q-item 
+                v-for="item in menuItems"
+                :key="item.path"
+                clickable 
+                v-ripple
+                :to="item.path"
+                :exact="item.exact"
+                active-class="bg-indigo-50 text-indigo-700 active-menu-item"
+                class="rounded-lg q-mx-sm transition-all"
+              >
+                <q-item-section avatar>
+                  <q-icon :name="item.icon" size="22px" />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label class="text-weight-bold">{{ item.label }}</q-item-label>
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </div>
+        </q-scroll-area>
+
+        <!-- Logout Button at Bottom -->
+        <div class="q-pa-md border-t border-slate-100">
+          <q-item
+            clickable
             v-ripple
-            :to="item.path"
-            :exact="item.exact"
-            active-class="bg-indigo-50 text-indigo-700 active-menu-item"
-            class="rounded-lg q-mx-sm transition-all"
+            class="rounded-lg bg-red-50 text-negative q-pa-md"
+            @click="handleLogout"
+            :disable="loggingOut"
           >
             <q-item-section avatar>
-              <q-icon :name="item.icon" size="22px" />
+              <q-icon name="logout" size="20px" />
             </q-item-section>
-            <q-item-section>
-              <q-item-label class="text-weight-bold">{{ item.label }}</q-item-label>
+            <q-item-section class="text-weight-bold">
+              Esci
+            </q-item-section>
+            <q-item-section side v-if="loggingOut">
+              <q-spinner size="20px" />
             </q-item-section>
           </q-item>
-        </q-list>
-      </div>
-
-      <!-- Logout Button at Bottom -->
-      <div class="absolute-bottom q-pa-md">
-        <q-btn
-          outline
-          color="negative"
-          icon="logout"
-          label="Esci"
-          class="full-width"
-          @click="handleLogout"
-          :loading="loggingOut"
-          no-caps
-        />
+        </div>
       </div>
     </q-drawer>
 

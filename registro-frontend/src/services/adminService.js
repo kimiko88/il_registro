@@ -80,6 +80,14 @@ export default {
         return api.delete(`/classes/${classId}/subjects/${assignmentId}`)
     },
 
+    getClassSchedule(classId) {
+        return api.get(`/classes/${classId}/schedule`)
+    },
+
+    saveClassSchedule(classId, data) {
+        return api.post(`/classes/${classId}/schedule`, data)
+    },
+
     // ========== Subjects Management ==========
 
     getSubjects(schoolId) {

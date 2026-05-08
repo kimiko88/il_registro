@@ -31,21 +31,30 @@
         class="bg-transparent"
         :pagination="{ rowsPerPage: 10 }"
       >
-        <template v-slot:top-right>
+        <template #top-right>
           <q-input dense debounce="300" v-model="filter" placeholder="Cerca classe..." outlined>
-            <template v-slot:append>
+            <template #append>
               <q-icon name="search" color="grey-5" />
             </template>
           </q-input>
         </template>
         
-        <template v-slot:body-cell-actions="props">
+        <template #header-cell="props">
+          <q-th :props="props" class="text-slate-500 font-bold">
+            {{ props.col.label }}
+          </q-th>
+        </template>
+
+        <template #body-cell-actions="props">
           <q-td :props="props" class="text-right">
             <q-btn flat round dense icon="menu_book" color="indigo" @click="openAssignmentsDialog(props.row)">
               <q-tooltip>Gestione Materie & Docenti</q-tooltip>
             </q-btn>
             <q-btn flat round dense icon="auto_stories" color="emerald" @click="openTextbooksDialog(props.row)">
               <q-tooltip>Libri di Testo</q-tooltip>
+            </q-btn>
+            <q-btn flat round dense icon="calendar_today" color="orange" @click="openScheduleDialog(props.row)">
+              <q-tooltip>Orario Settimanale</q-tooltip>
             </q-btn>
             <q-btn flat round dense icon="edit" color="primary" @click="openDialog(props.row)">
               <q-tooltip>Modifica Classe</q-tooltip>
@@ -131,7 +140,13 @@
                 flat
                 class="bg-transparent border-slate-100 rounded-xl"
               >
-                <template v-slot:body-cell-actions="props">
+                <template #header-cell="props">
+                  <q-th :props="props" class="text-slate-500 font-bold">
+                    {{ props.col.label }}
+                  </q-th>
+                </template>
+
+                <template #body-cell-actions="props">
                   <q-td :props="props" auto-width>
                     <q-btn flat round dense color="negative" icon="delete" @click="removeAssignment(props.row)" />
                   </q-td>
@@ -152,7 +167,7 @@
                     map-options
                     :rules="[val => !!val || 'Seleziona materia']"
                   >
-                    <template v-slot:no-option>
+                    <template #no-option>
                       <q-item>
                         <q-item-section class="text-grey">Nessuna materia trovata</q-item-section>
                       </q-item>
@@ -214,7 +229,13 @@
                 flat
                 class="bg-transparent border-slate-100 rounded-xl"
               >
-                <template v-slot:body-cell-actions="props">
+                <template #header-cell="props">
+                  <q-th :props="props" class="text-slate-500 font-bold">
+                    {{ props.col.label }}
+                  </q-th>
+                </template>
+
+                <template #body-cell-actions="props">
                   <q-td :props="props" auto-width>
                     <q-btn flat round dense color="negative" icon="delete" @click="removeTextbook(props.row)" />
                   </q-td>
@@ -253,6 +274,32 @@
         </q-card-section>
       </q-card>
     </q-dialog>
+
+    <!-- Schedule Dialog -->
+    <q-dialog v-model="showScheduleDialog" full-width class="premium-dialog">
+      <q-card class="rounded-xl overflow-hidden shadow-24 bg-white">
+        <q-card-section class="bg-gradient-warning text-white row items-center q-pa-lg">
+          <div class="row items-center">
+            <q-avatar color="white-20" text-color="white" icon="calendar_today" class="q-mr-md" />
+            <div>
+              <div class="text-h6 text-weight-bold">Orario Settimanale - Classe {{ currentClass?.name }}{{ currentClass?.section }}</div>
+              <div class="text-subtitle2 opacity-80">{{ currentClass?.academic_year }}</div>
+            </div>
+          </div>
+          <q-space />
+          <q-btn icon="close" flat round dense v-close-popup />
+        </q-card-section>
+
+        <q-card-section class="q-pa-xl">
+          <ScheduleGrid 
+            :assignments="assignments"
+            :initial-schedule="currentSchedule"
+            :loading="scheduleLoading"
+            @save="saveSchedule"
+          />
+        </q-card-section>
+      </q-card>
+    </q-dialog>
     
     <!-- Quick Create Subject Dialog -->
     <q-dialog v-model="showSubjectDialog">
@@ -280,6 +327,7 @@ import { useAuthStore } from 'src/stores/auth'
 import adminService from 'src/services/adminService'
 import { useQuasar } from 'quasar'
 import { textbookService } from 'src/services/textbookService'
+import ScheduleGrid from 'src/components/Secretary/ScheduleGrid.vue'
 
 const $q = useQuasar()
 const classesStore = useClassesStore()
@@ -319,6 +367,10 @@ const assignments = ref([])
 const subjects = ref([])
 const teachers = ref([])
 const newSubjectName = ref('')
+
+const showScheduleDialog = ref(false)
+const scheduleLoading = ref(false)
+const currentSchedule = ref([])
 
 const assignForm = reactive({
     subject_id: null,
@@ -564,6 +616,38 @@ const removeTextbook = async (row) => {
         fetchClassTextbooks(currentClass.value.id)
     } catch(e) {
         $q.notify({ type: 'negative', message: 'Errore rimozione' })
+    }
+}
+
+
+// Schedule Logic
+const openScheduleDialog = async (row) => {
+    currentClass.value = row
+    showScheduleDialog.value = true
+    scheduleLoading.value = true
+    try {
+        // We need both assignments (for options) and the current schedule
+        await fetchAssignments(row.id)
+        const res = await adminService.getClassSchedule(row.id)
+        currentSchedule.value = res.data || []
+    } catch(e) {
+        $q.notify({ type: 'negative', message: 'Errore caricamento orario' })
+    } finally {
+        scheduleLoading.value = false
+    }
+}
+
+const saveSchedule = async (entries) => {
+    if (!currentClass.value) return
+    scheduleLoading.value = true
+    try {
+        await adminService.saveClassSchedule(currentClass.value.id, { entries })
+        $q.notify({ type: 'positive', message: 'Orario salvato con successo' })
+        showScheduleDialog.value = false
+    } catch(e) {
+        $q.notify({ type: 'negative', message: 'Errore durante il salvataggio dell\'orario' })
+    } finally {
+        scheduleLoading.value = false
     }
 }
 

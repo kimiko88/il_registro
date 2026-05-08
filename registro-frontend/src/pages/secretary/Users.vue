@@ -30,7 +30,7 @@
     </div>
 
     <UserTable 
-        :users="filteredUsers" 
+        :users="users" 
         :loading="loading"
         @create="openCreate"
         @edit="openEdit"
@@ -154,7 +154,7 @@
             <q-card-section class="q-pa-xl">
                 <div class="text-body1 text-slate-500 q-mb-lg">Seleziona un file CSV o Excel contenente l'elenco degli utenti da importare.</div>
                 <q-file v-model="importFile" label="Scegli file..." outlined counter class="rounded-lg">
-                     <template v-slot:prepend>
+                     <template #prepend>
                         <q-icon name="cloud_upload" color="primary" />
                      </template>
                 </q-file>

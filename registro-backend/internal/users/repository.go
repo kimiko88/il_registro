@@ -224,18 +224,32 @@ func (r *PostgresRepository) Update(ctx context.Context, user *User) error {
 		return ErrUserNotFound
 	}
 
-	// Update Student Class if role is student and ClassID is provided (or nil to unassign)
-	if user.Role == "student" && user.SchoolID != nil {
-		// We expect the service to pass the updated ClassID in the user struct
-		// Check if student record exists
-		// Upsert logic for students table
-		studentQuery := `
-			INSERT INTO students (user_id, school_id, class_id, updated_at)
-			VALUES ($1, $2, $3, NOW())
-			ON CONFLICT (user_id, school_id) 
-			DO UPDATE SET class_id = $3, updated_at = NOW()
-		`
-		_, err = tx.ExecContext(ctx, studentQuery, user.ID, *user.SchoolID, user.ClassID)
+	// Role-Specific Profile Upsert
+	if user.SchoolID != nil {
+		switch user.Role {
+		case "student":
+			studentQuery := `
+				INSERT INTO students (user_id, school_id, class_id, updated_at)
+				VALUES ($1, $2, $3, NOW())
+				ON CONFLICT (user_id, school_id) 
+				DO UPDATE SET class_id = $3, updated_at = NOW()
+			`
+			_, err = tx.ExecContext(ctx, studentQuery, user.ID, *user.SchoolID, user.ClassID)
+		case "teacher":
+			teacherQuery := `
+				INSERT INTO teachers (user_id, school_id, updated_at)
+				VALUES ($1, $2, NOW())
+				ON CONFLICT (user_id, school_id) DO UPDATE SET updated_at = NOW()
+			`
+			_, err = tx.ExecContext(ctx, teacherQuery, user.ID, *user.SchoolID)
+		case "parent":
+			parentQuery := `
+				INSERT INTO parents (user_id, school_id, created_at)
+				VALUES ($1, $2, NOW())
+				ON CONFLICT (user_id, school_id) DO NOTHING
+			`
+			_, err = tx.ExecContext(ctx, parentQuery, user.ID, *user.SchoolID)
+		}
 		if err != nil {
 			return err
 		}
