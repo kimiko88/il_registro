@@ -92,9 +92,9 @@ func TestValidator_ValidateEntry(t *testing.T) {
 
 	t.Run("Late without Time Error", func(t *testing.T) {
 		a := &Attendance{
-			Date:      time.Now(),
-			Status:    StatusLate,
-			EntryTime: nil,
+			Date:   time.Now(),
+			Status: StatusLate,
+			Hour:   nil,
 		}
 		assert.Error(t, v.ValidateEntry(a))
 	})

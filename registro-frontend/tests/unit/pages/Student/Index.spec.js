@@ -72,7 +72,7 @@ describe('Student/Index.vue', () => {
                         createSpy: vi.fn,
                         initialState: {
                             student: {
-                                profile: { firstName: 'Mario', lastName: 'Rossi', class: '5A', schoolId: '1' }
+                                profile: { first_name: 'Mario', last_name: 'Rossi', class_id: '5A', school_id: '1' }
                             }
                         },
                         stubActions: true

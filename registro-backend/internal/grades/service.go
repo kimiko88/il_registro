@@ -158,6 +158,13 @@ func (s *service) GetClassGrades(ctx context.Context, actorID string, actorRole 
 		ClassID: classID,
 	}
 
+	// Build student name map
+	studentUsers, _ := s.userRepo.GetStudentsByClass(ctx, classID)
+	nameMap := make(map[string]string, len(studentUsers))
+	for _, u := range studentUsers {
+		nameMap[u.StudentID] = u.FirstName + " " + u.LastName
+	}
+
 	for sID, gList := range studentMap {
 		// Calculate Averages
 		var sum1, sum2 float64
@@ -183,8 +190,8 @@ func (s *service) GetClassGrades(ctx context.Context, actorID string, actorRole 
 		}
 
 		resp.Students = append(resp.Students, StudentGradeSummary{
-			StudentID: sID,
-			// FullName:  "FetchedFromUserSvcIfNeeded", // Leaving empty or requires user lookup
+			StudentID:    sID,
+			FullName:     nameMap[sID],
 			AvgSemester1: avg1,
 			AvgSemester2: avg2,
 			Grades:       gList,
@@ -264,6 +271,16 @@ func (s *service) AddGrade(teacherID string, req CreateGradeRequest) error {
 		return fmt.Errorf("validation failed: %w", err)
 	}
 
+	// 2. Resolve teacher's school_id from their user profile
+	teacherUser, err := s.userRepo.GetByID(context.Background(), teacherID)
+	if err != nil {
+		return fmt.Errorf("could not resolve teacher profile: %w", err)
+	}
+	if teacherUser.SchoolID == nil {
+		return fmt.Errorf("teacher is not associated with a school")
+	}
+	schoolID := *teacherUser.SchoolID
+
 	date, _ := time.Parse("2006-01-02", req.Date)
 
 	var evalType *EvaluationType
@@ -276,7 +293,7 @@ func (s *service) AddGrade(teacherID string, req CreateGradeRequest) error {
 		StudentID:      req.StudentID,
 		SubjectID:      req.SubjectID,
 		TeacherID:      teacherID,
-		SchoolID:       "placeholder-school-id",
+		SchoolID:       schoolID,
 		GradeValue:     req.GradeValue,
 		GradeType:      GradeType(req.GradeType),
 		Semester:       Semester(req.Semester),
@@ -472,20 +489,10 @@ func (s *service) DeleteGrade(teacherID string, gradeID string) error {
 // --- Student/Parent Implementation ---
 
 func (s *service) GetChildGrades(parentID string, studentID string, filter GradeFilter) (*MyGradesResponse, error) {
-	// 1. Verify Guardianship
-	// We need context for the Repo call, usually we pass context down from Handler.
-	// For now, using Background/TODO or if I update Service interface to take Context (best practice).
-	// To minimize refactor size, I will use context.Background() but ideally this should be fixed.
-	// Actually, `users.Repository` methods take context.
-	// I'll assume context.Background() for now to fit the prompt "Aggiorna service.go".
+	ctx := context.Background()
 
-	// Check if parent is guardian
-	// We can't access context here easily without changing interface.
-	// I'll create a TODO or usage:
-	// "Check guardianship_relationships"
-	isGuardian, err := s.userRepo.IsGuardian(context.Background(), parentID, studentID) // Context nil might panic in some drivers, use specific one.
-	// Let's modify imports to include context.
-
+	// Verify guardianship
+	isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, studentID)
 	if err != nil {
 		return nil, fmt.Errorf("guardianship check failed: %w", err)
 	}
@@ -545,11 +552,12 @@ func (s *service) GetMyGrades(studentID string, filter GradeFilter) (*MyGradesRe
 	}
 
 	// Sem 1
+	sem1Start, sem1End, sem2Start, sem2End := academicYearDates()
 	if gr, ok := semestersMap[1]; ok {
 		response.Semesters = append(response.Semesters, SemesterGradesSummary{
 			Semester:  1,
-			StartDate: "2025-09-01",
-			EndDate:   "2026-01-31",
+			StartDate: sem1Start,
+			EndDate:   sem1End,
 			Grades:    gr,
 		})
 	}
@@ -557,8 +565,8 @@ func (s *service) GetMyGrades(studentID string, filter GradeFilter) (*MyGradesRe
 	if gr, ok := semestersMap[2]; ok {
 		response.Semesters = append(response.Semesters, SemesterGradesSummary{
 			Semester:  2,
-			StartDate: "2026-02-01",
-			EndDate:   "2026-06-10",
+			StartDate: sem2Start,
+			EndDate:   sem2End,
 			Grades:    gr,
 		})
 	}
@@ -813,3 +821,21 @@ func (s *service) mapSingleResponse(g Grade) GradeResponse {
 		IsPublished:    g.IsPublished,
 	}
 }
+
+// academicYearDates returns semester date boundaries for the current Italian school year.
+// Semester 1: Sep 1 – Jan 31 | Semester 2: Feb 1 – Jun 10
+func academicYearDates() (sem1Start, sem1End, sem2Start, sem2End string) {
+	now := time.Now()
+	year := now.Year()
+	// If we're between Jan and Aug the school year started last calendar year
+	if now.Month() < time.September {
+		year--
+	}
+	nextYear := year + 1
+	sem1Start = fmt.Sprintf("%d-09-01", year)
+	sem1End = fmt.Sprintf("%d-01-31", nextYear)
+	sem2Start = fmt.Sprintf("%d-02-01", nextYear)
+	sem2End = fmt.Sprintf("%d-06-10", nextYear)
+	return
+}
+

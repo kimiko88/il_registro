@@ -8,10 +8,12 @@ import (
 	"time"
 
 	"registro-backend/internal/grades"
+	"registro-backend/internal/users"
 	"registro-backend/tests/testhelpers"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestGradesIntegration_GetMyGrades(t *testing.T) {
@@ -79,6 +81,9 @@ func TestGradesIntegration_GetClassGrades(t *testing.T) {
 		// FindByClassAndSubject signature: (classID, subjectID string, semester int)
 		// handler calls with subjectID="" if not provided in query.
 		mockRepo.On("FindByClassAndSubject", "classA", "", 0).Return(repoGrades, nil)
+		
+		// Mock student lookup for names
+		mockUserRepo.On("GetStudentsByClass", mock.Anything, "classA").Return([]users.User{}, nil)
 
 		req := httptest.NewRequest("GET", "/grades/class/classA", nil)
 		res := httptest.NewRecorder()

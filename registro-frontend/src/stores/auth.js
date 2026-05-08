@@ -31,6 +31,7 @@ export const useAuthStore = defineStore('auth', () => {
         localStorage.removeItem('user')
         localStorage.removeItem('token')
         localStorage.removeItem('refreshToken')
+        localStorage.removeItem('selectedChildId') // Clear parent child selection
     }
 
     function updateUser(userData) {

@@ -20,8 +20,8 @@
         <q-card class="dashboard-card glass-card bg-indigo-600 text-white shadow-soft overflow-hidden">
           <q-card-section>
             <div class="text-caption opacity-80 text-uppercase letter-spacing-1">Prossima Lezione</div>
-            <div class="text-h4 text-weight-bold q-mt-sm">{{ nextLesson?.class_id || 'Nessuna' }}</div>
-            <div class="text-caption q-mt-xs">{{ nextLesson?.subject_id || '-' }}</div>
+            <div class="text-h4 text-weight-bold q-mt-sm">{{ nextLesson?.class_name || nextLesson?.class_id || 'Nessuna' }}</div>
+            <div class="text-caption q-mt-xs">{{ nextLesson?.subject_name || nextLesson?.subject_id || '-' }}</div>
           </q-card-section>
           <q-icon name="schedule" class="card-bg-icon" />
         </q-card>
@@ -128,14 +128,14 @@
           <q-list separator>
             <q-item v-for="cls in classesStore.classes" :key="cls.id" clickable @click="classesStore.selectClass(cls.id)" :active="cls.id === classesStore.selectedClassId" active-class="bg-blue-1 text-primary">
               <q-item-section avatar>
-                <q-avatar color="primary" text-color="white" size="sm">{{ cls.name }}</q-avatar>
+                <q-avatar color="primary" text-color="white" size="sm">{{ cls.name?.charAt(0) || '?' }}</q-avatar>
               </q-item-section>
               <q-item-section>
-                <q-item-label>{{ cls.id }}</q-item-label>
-                <q-item-label caption>{{ cls.type }} - {{ cls.studentsCount }} students</q-item-label>
+                <q-item-label>{{ cls.name }}</q-item-label>
+                <q-item-label caption>{{ cls.academic_year }} · {{ cls.section }}</q-item-label>
               </q-item-section>
-              <q-item-section side v-if="cls.coordinator">
-                <q-icon name="star" color="orange" title="Coordinator" />
+              <q-item-section side v-if="cls.coordinator_id">
+                <q-icon name="star" color="orange" title="Coordinatore" />
               </q-item-section>
             </q-item>
           </q-list>

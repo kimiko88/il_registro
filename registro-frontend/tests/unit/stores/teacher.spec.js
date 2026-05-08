@@ -30,7 +30,7 @@ describe('Teacher Store', () => {
         await store.fetchProfile()
 
         expect(store.profile).not.toBeNull()
-        expect(store.profile.firstName).toBe('Mario')
+        expect(store.profile.first_name).toBe('Mario')
         expect(store.isAuthenticated).toBe(true)
         expect(store.fullName).toBe('Mario Rossi')
     })
@@ -48,7 +48,7 @@ describe('Teacher Store', () => {
     })
 
     it('calculates fullName correctly', () => {
-        store.profile = { firstName: 'John', lastName: 'Doe' }
+        store.profile = { first_name: 'John', last_name: 'Doe' }
         expect(store.fullName).toBe('John Doe')
 
         store.profile = null

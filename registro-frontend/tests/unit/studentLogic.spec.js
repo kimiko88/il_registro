@@ -18,11 +18,17 @@ describe('Student Logic', () => {
 
     it('calculates averages per subject in useMyGrades', () => {
         const gradesStore = useGradesStore();
-        gradesStore.grades = [
-            { subject: 'Math', value: 8 },
-            { subject: 'Math', value: 6 },
-            { subject: 'History', value: 9 }
-        ];
+        gradesStore.grades = {
+            semesters: [
+                {
+                    grades: [
+                        { subject_id: 'Math', grade_value: 8 },
+                        { subject_id: 'Math', grade_value: 6 },
+                        { subject_id: 'History', grade_value: 9 }
+                    ]
+                }
+            ]
+        };
 
         const { averages } = useMyGrades();
         expect(averages.value['Math']).toBe('7.0');

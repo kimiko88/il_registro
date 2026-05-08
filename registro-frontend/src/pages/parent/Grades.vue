@@ -2,7 +2,7 @@
   <q-page class="q-pa-md bg-slate-50">
     <div class="row items-center justify-between q-mb-md">
       <div class="text-h5 text-weight-bold text-slate-800">
-        Voti: {{ selectedChild?.firstName || '...' }}
+        Voti: {{ selectedChild?.first_name || '...' }}
       </div>
       <q-btn flat icon="download" label="Scarica Pagella" color="primary" @click="downloadReport" />
     </div>
@@ -51,6 +51,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useParentStore } from '@/stores/parent'
+import { useAuthStore } from '@/stores/auth'
 import { storeToRefs } from 'pinia'
 import { useQuasar } from 'quasar'
 import { gradeService } from 'src/services/gradeService'
@@ -58,6 +59,7 @@ import adminService from 'src/services/adminService'
 
 const $q = useQuasar()
 const parentStore = useParentStore()
+const authStore = useAuthStore()
 const { selectedChild } = storeToRefs(parentStore)
 
 const period = ref('Primo Quadrimestre')
@@ -104,7 +106,12 @@ watch(selectedChild, (val) => {
 
 const fetchSubjects = async () => {
     try {
-        const { data } = await adminService.getSubjects(parentStore.user?.school_id)
+        // Use school_id from auth user, or fall back to the selected child's school
+        const schoolId = authStore.user?.school_id ||
+                         authStore.user?.schoolId ||
+                         selectedChild.value?.school_id
+        if (!schoolId) return
+        const { data } = await adminService.getSubjects(schoolId)
         if (data) {
             const map = {}
             data.forEach(s => map[s.id] = s.name)

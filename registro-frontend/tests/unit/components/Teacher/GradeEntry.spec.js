@@ -40,11 +40,13 @@ describe('GradeEntry.vue', () => {
                         createSpy: vi.fn,
                         initialState: {
                             grades: {
-                                grades: [
-                                    { id: 'S1', name: 'Mario Rossi', absences: 2, grades: [], average: '0.0' },
-                                    { id: 'S2', name: 'Luigi Verdi', absences: 0, grades: [], average: '0.0' },
-                                    { id: 'S3', name: 'Anna Neri', absences: 1, grades: [], average: '0.0' }
-                                ]
+                                grades: {
+                                    students: [
+                                        { student_id: 'S1', full_name: 'Mario Rossi', absences: 2, grades: [], average: '0.0' },
+                                        { student_id: 'S2', full_name: 'Luigi Verdi', absences: 0, grades: [], average: '0.0' },
+                                        { student_id: 'S3', full_name: 'Anna Neri', absences: 1, grades: [], average: '0.0' }
+                                    ]
+                                }
                             }
                         }
                     })

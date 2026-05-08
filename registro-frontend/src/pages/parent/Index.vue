@@ -14,7 +14,7 @@
           unelevated
           no-caps
           class="rounded-xl shadow-soft q-px-md"
-          :label="selectedChild ? `${selectedChild.firstName} ${selectedChild.lastName}` : 'Seleziona Figlio'"
+          :label="selectedChild ? `${selectedChild.first_name} ${selectedChild.last_name}` : 'Seleziona Figlio'"
           icon="face"
         >
           <q-list>
@@ -28,10 +28,10 @@
               active-class="bg-blue-1 text-primary"
             >
               <q-item-section avatar>
-                <q-avatar size="sm" color="primary" text-color="white">{{ child.firstName.charAt(0) }}</q-avatar>
+                <q-avatar size="sm" color="primary" text-color="white">{{ child.first_name.charAt(0) }}</q-avatar>
               </q-item-section>
               <q-item-section>
-                <q-item-label>{{ child.firstName }} {{ child.lastName }}</q-item-label>
+                <q-item-label>{{ child.first_name }} {{ child.last_name }}</q-item-label>
                 <q-item-label caption>{{ child.class }}</q-item-label>
               </q-item-section>
             </q-item>

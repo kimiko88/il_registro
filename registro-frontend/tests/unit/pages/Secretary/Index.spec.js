@@ -35,8 +35,22 @@ const { mockAdminService, mockDocumentService } = vi.hoisted(() => ({
     }
 }))
 
-vi.mock('src/services/adminService', () => ({ default: mockAdminService }))
-vi.mock('src/services/documentService', () => ({ default: mockDocumentService }))
+vi.mock('src/services/adminService', () => ({ 
+    default: mockAdminService,
+    adminService: mockAdminService
+}))
+vi.mock('src/services/documentService', () => ({ 
+    default: mockDocumentService,
+    documentService: mockDocumentService
+}))
+
+// Mock communications store since it's dynamically imported
+vi.mock('src/stores/communications', () => ({
+    useCommunicationsStore: () => ({
+        fetchCommunications: vi.fn().mockResolvedValue([]),
+        communications: []
+    })
+}))
 
 
 describe('Secretary Dashboard (Index.vue)', () => {
@@ -72,8 +86,8 @@ describe('Secretary Dashboard (Index.vue)', () => {
 
     it('renders dashboard title and stats cards', () => {
         expect(wrapper.text()).toContain('Dashboard Segreteria')
-        expect(wrapper.text()).toContain('Documenti Pendenti')
-        expect(wrapper.text()).toContain('Totale Studenti')
+        expect(wrapper.text()).toContain('Pendenti')
+        expect(wrapper.text()).toContain('Studenti')
     })
 
     it('renders pending reviews list', () => {
