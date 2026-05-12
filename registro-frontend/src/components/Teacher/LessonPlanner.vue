@@ -25,9 +25,9 @@
         />
         <q-select
           v-model="selectedSubject"
-          :options="subjectOptions"
-          option-value="id"
-          option-label="name"
+          :options="gradesStore.subjects"
+          option-value="subject_id"
+          option-label="subject_name"
           emit-value map-options
           label="Materia"
           dense outlined
@@ -230,10 +230,12 @@
 import { ref, onMounted, watch } from 'vue'
 import { useQuasar, date } from 'quasar'
 import { useClassesStore } from 'src/stores/classes'
+import { useGradesStore } from 'src/stores/grades'
 import { lessonService } from 'src/services/lessonService'
 
 const $q = useQuasar()
 const classesStore = useClassesStore()
+const gradesStore = useGradesStore()
 
 const selectedClass = ref(null)
 const selectedSubject = ref(null)
@@ -274,7 +276,10 @@ onMounted(async () => {
   }
 })
 
-watch(selectedClass, () => {
+watch(selectedClass, async () => {
+  if (selectedClass.value) {
+    await gradesStore.fetchClassSubjects(selectedClass.value)
+  }
   fetchData()
 })
 

@@ -86,6 +86,7 @@ func (h *Handler) List(c *gin.Context) {
 		PageSize:  pageSize,
 		SortBy:    c.Query("sort_by"),
 		SortOrder: c.Query("sort_order"),
+		ClassID:   c.Query("class_id"),
 	}
 
 	users, total, err := h.service.ListUsers(c.Request.Context(), getActorRole(c), filter)

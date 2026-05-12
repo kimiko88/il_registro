@@ -356,6 +356,12 @@ func (r *PostgresRepository) List(ctx context.Context, filter UserFilter) ([]Use
 		args = append(args, *filter.IsActive)
 		argCount++
 	}
+	if filter.ClassID != "" {
+		baseQuery += fmt.Sprintf(" AND s.class_id = $%d", argCount)
+		countQuery += fmt.Sprintf(" AND s.user_id IN (SELECT user_id FROM students WHERE class_id = $%d)", argCount)
+		args = append(args, filter.ClassID)
+		argCount++
+	}
 	if filter.Query != "" {
 		q := "%" + filter.Query + "%"
 		baseQuery += fmt.Sprintf(" AND (u.email ILIKE $%d OR u.first_name ILIKE $%d OR u.last_name ILIKE $%d OR u.fiscal_code ILIKE $%d)", argCount, argCount+1, argCount+2, argCount+3)

@@ -21,7 +21,7 @@
         <q-select
           v-model="selectedSubject"
           :options="gradesStore.subjects"
-          option-label="name"
+          option-label="subject_name"
           option-value="subject_id"
           emit-value
           map-options

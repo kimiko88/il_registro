@@ -82,6 +82,7 @@ func main() {
 	notesRepo := notes.NewRepository(database)
 	adminRepo := postgres.NewAdminRepository(database)
 	timetablesRepo := timetables.NewRepository(database)
+	teachersRepo := teachers.NewRepository(database)
 
 	authMiddleware := auth.NewMiddleware(tokenManager, usersRepo)
 
@@ -93,7 +94,7 @@ func main() {
 	gradesAnalytics := grades.NewAnalyticsService(gradesRepo)
 	attendanceSvc := attendance.NewService(attendanceRepo, wsHub)
 	docsSvc := documents.NewService(docsRepo)
-	schedSvc := scheduling.NewService(schedRepo)
+	schedSvc := scheduling.NewService(schedRepo, teachersRepo)
 	pctoSvc := pcto.NewService(pctoRepo)
 	orientSvc := orientamento.NewService(orientRepo)
 	schoolsSvc := schools.NewService(schoolsRepo)
@@ -222,7 +223,6 @@ func main() {
 			subjectsH := subjects.NewHandler(subjectsSvc)
 			subjectsH.RegisterRoutes(protected)
 
-			teachersRepo := teachers.NewRepository(database)
 			teachersSvc := teachers.NewService(teachersRepo)
 			teachersH := teachers.NewHandler(teachersSvc)
 			teachersH.RegisterRoutes(protected)

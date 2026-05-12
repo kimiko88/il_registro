@@ -10,6 +10,7 @@
           aria-label="Menu"
           color="primary"
           @click="toggleLeftDrawer"
+          :key="'drawer-toggle'"
         />
 
         <q-toolbar-title class="text-weight-bold text-primary">
@@ -19,7 +20,7 @@
         <q-space />
         
         <!-- Dark Mode Toggle -->
-        <q-btn flat round dense :icon="$q.dark.isActive ? 'light_mode' : 'dark_mode'" @click="$q.dark.toggle()" color="primary" class="q-mr-sm">
+        <q-btn flat round dense :icon="$q.dark.isActive ? 'light_mode' : 'dark_mode'" @click="$q.dark.toggle()" color="primary" class="q-mr-sm" :key="'dark-toggle'">
            <q-tooltip>Toggle Dark Mode</q-tooltip>
         </q-btn>
 
@@ -33,6 +34,7 @@
           @click="$q.fullscreen.toggle()" 
           color="primary" 
           class="q-mr-sm"
+          :key="'fullscreen-toggle'"
         >
            <q-tooltip>Toggle Fullscreen</q-tooltip>
         </q-btn>
@@ -74,7 +76,6 @@
                 v-for="item in menuItems"
                 :key="item.path"
                 clickable 
-                v-ripple
                 :to="item.path"
                 :exact="item.exact"
                 active-class="bg-indigo-50 text-indigo-700 active-menu-item"
@@ -95,7 +96,6 @@
         <div class="q-pa-md border-t border-slate-100">
           <q-item
             clickable
-            v-ripple
             class="rounded-lg bg-red-50 text-negative q-pa-md"
             @click="handleLogout"
             :disable="loggingOut"
@@ -121,7 +121,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useAuth } from '@/composables/useAuth'
 import { useMenuItems } from '@/composables/useMenuItems'
@@ -150,10 +150,14 @@ const roleLabel = computed(() => {
 })
 
 // Get menu items based on role
-const menuItems = computed(() => {
-  if (!userRole.value) return []
-  return useMenuItems(userRole.value)
-})
+const menuItems = ref([])
+watch(userRole, (newRole) => {
+  if (newRole) {
+    menuItems.value = useMenuItems(newRole)
+  } else {
+    menuItems.value = []
+  }
+}, { immediate: true })
 
 function toggleLeftDrawer() {
   leftDrawerOpen.value = !leftDrawerOpen.value

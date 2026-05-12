@@ -59,6 +59,7 @@ type UserFilter struct {
 	PageSize     int
 	SortBy       string
 	SortOrder    string // ASC or DESC
+	ClassID      string
 }
 type StudentChild struct {
 	ID         string `json:"id"`      // Student Profile ID

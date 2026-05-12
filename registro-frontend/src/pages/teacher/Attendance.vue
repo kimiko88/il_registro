@@ -17,7 +17,7 @@
               dense outlined 
               v-model="selectedSubject" 
               :options="gradesStore.subjects" 
-              option-label="name"
+              option-label="subject_name"
               option-value="subject_id"
               emit-value
               map-options
@@ -116,9 +116,12 @@
                     <div class="row items-center">
                        <div class="col">
                            <q-item-label class="text-weight-medium">{{ student.last_name }} {{ student.first_name }}</q-item-label>
-                           <q-item-label caption v-if="student.status === 'absent'">Assente</q-item-label>
-                           <q-item-label caption v-if="student.status === 'late'">
+                           <q-item-label caption v-if="student.status === 'Absent'">Assente</q-item-label>
+                           <q-item-label caption v-if="student.status === 'Late'">
                                Ritardo ({{ formatLateLabel(student) }})
+                           </q-item-label>
+                           <q-item-label caption v-if="student.status === 'LeftEarly'">
+                               Uscita Anticipata ({{ formatEarlyExitLabel(student) }})
                            </q-item-label>
                         </div>
                     </div>
@@ -129,10 +132,10 @@
                         v-model="student.status"
                         flat dense
                         :options="[
-                            {icon: 'check', value: 'present', slot: 'present'},
-                            {icon: 'close', value: 'absent', slot: 'absent'},
-                            {icon: 'schedule', value: 'late', slot: 'late'},
-                            {icon: 'logout', value: 'early_exit', slot: 'early'}
+                            {icon: 'check', value: 'Present', slot: 'present'},
+                            {icon: 'close', value: 'Absent', slot: 'absent'},
+                            {icon: 'schedule', value: 'Late', slot: 'late'},
+                            {icon: 'logout', value: 'LeftEarly', slot: 'early'}
                         ]"
                     >
                         <template v-slot:present><q-tooltip>Presente</q-tooltip></template>
@@ -143,7 +146,7 @@
                 </q-item-section>
 
                 <!-- Late Time Input -->
-                <q-item-section v-if="student.status === 'late'" side style="min-width: 120px">
+                <q-item-section v-if="student.status === 'Late'" side style="min-width: 120px">
                      <q-input 
                         v-model="student.entry_time" 
                         type="time" 
@@ -154,7 +157,7 @@
                 </q-item-section>
 
                 <!-- Early Exit Time Input -->
-                <q-item-section v-if="student.status === 'early_exit'" side style="min-width: 120px">
+                <q-item-section v-if="student.status === 'LeftEarly'" side style="min-width: 120px">
                      <q-input 
                         v-model="student.exit_time" 
                         type="time" 
@@ -248,9 +251,9 @@ const selectedSubject = ref(null)
 const dailyLessons = ref([])
 
 const stats = computed(() => ({
-    present: students.value.filter(s => s.status === 'present').length,
-    absent: students.value.filter(s => s.status === 'absent').length,
-    late: students.value.filter(s => s.status === 'late').length,
+    present: students.value.filter(s => s.status === 'Present').length,
+    absent: students.value.filter(s => s.status === 'Absent').length,
+    late: students.value.filter(s => s.status === 'Late').length,
     toJustify: justificationRequests.value.length
 }))
 
@@ -316,10 +319,9 @@ const fetchData = async () => {
                 id: s.id,
                 first_name: s.first_name,
                 last_name: s.last_name,
-                status: existing ? existing.status : 'present', // Default present? Or 'absent' if not marked? Default present is typical for "Appello".
+                status: existing ? existing.status : 'Present', // Default Present
                 entry_time: existing ? existing.entry_time : '',
                 exit_time: existing ? existing.exit_time : '',
-                // lateMinutes calculated if needed, or stored
             }
         })
 
@@ -345,10 +347,17 @@ const fetchData = async () => {
 
 const markAllPresent = () => {
     students.value.forEach(s => {
-        s.status = 'present'
+        s.status = 'Present'
         s.entry_time = ''
         s.exit_time = ''
     })
+}
+
+const formatEarlyExitLabel = (student) => {
+    if (student.exit_time) {
+        return `Uscita: ${student.exit_time}`
+    }
+    return 'Inserisci orario'
 }
 
 const formatLateLabel = (student) => {
@@ -369,8 +378,8 @@ const saveAttendance = async () => {
             statuses: students.value.map(s => ({
                 student_id: s.id,
                 status: s.status,
-                entry_time: s.status === 'late' ? s.entry_time : null,
-                exit_time: s.status === 'early_exit' ? s.exit_time : null,
+                entry_time: s.status === 'Late' ? s.entry_time : null,
+                exit_time: s.status === 'LeftEarly' ? s.exit_time : null,
                 hour: selectedHour.value,
                 subject_id: selectedSubject.value || '00000000-0000-0000-0000-000000000000'
             }))
