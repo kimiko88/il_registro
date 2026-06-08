@@ -16,6 +16,10 @@ type MockSchedRepo struct {
 func (m *MockSchedRepo) CreateSlot(ctx context.Context, s *ColloquioSlot) error {
 	return m.Called(s).Error(0)
 }
+func (m *MockSchedRepo) CreateSlotsBatch(ctx context.Context, slots []ColloquioSlot) error {
+	return m.Called(slots).Error(0)
+}
+func (m *MockSchedRepo) DeleteSlot(ctx context.Context, id string) error { return nil }
 func (m *MockSchedRepo) GetSlots(ctx context.Context, tid string, f, t time.Time) ([]ColloquioSlot, error) {
 	return nil, nil
 }
@@ -61,7 +65,7 @@ func (m *MockSchedRepo) GetAnalytics(ctx context.Context, schoolID string) (*Ana
 
 func TestRegression_DoubleBooking(t *testing.T) {
 	repo := &MockSchedRepo{}
-	svc := NewService(repo)
+	svc := NewService(repo, new(MockTeacherRepo))
 	ctx := context.Background()
 
 	// 2 days in future -> Inside 14d window, Outside 24h buffer

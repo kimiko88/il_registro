@@ -27,5 +27,5 @@
 /registro-frontend/yarn-error.log*
 /registro-frontend/tests/e2e/reports
 /registro-frontend/tests/unit/coverage
-registro-frontend/coverage/pages/Admin/index.html
-registro-frontend/coverage/pages/admin/index.html
+/registro-frontend/coverage/*
+

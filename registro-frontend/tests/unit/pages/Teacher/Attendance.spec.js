@@ -51,7 +51,7 @@ describe('Teacher/Attendance.vue', () => {
         })
 
         mockGetByClass.mockResolvedValue({
-            data: [{ student_id: 's2', status: 'absent', hour: 1 }]
+            data: [{ student_id: 's2', status: 'Absent', hour: 1 }]
         })
 
         wrapper = mount(TeacherAttendance, {
@@ -167,8 +167,8 @@ describe('Teacher/Attendance.vue', () => {
         const harry = wrapper.vm.students.find(s => s.id === 's1')
         const hermione = wrapper.vm.students.find(s => s.id === 's2')
 
-        expect(harry.status).toBe('present')
-        expect(hermione.status).toBe('absent')
+        expect(harry.status).toBe('Present')
+        expect(hermione.status).toBe('Absent')
 
         // Stats
         expect(wrapper.vm.stats.present).toBe(1)

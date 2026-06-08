@@ -45,6 +45,7 @@ type SlotResponse struct {
 	Type      SlotType `json:"type"`
 	Available bool     `json:"available"`
 	TeacherID string   `json:"teacher_id"`
+	Location  string   `json:"location"`
 }
 
 type BookingResponse struct {
