@@ -97,7 +97,7 @@ func (r *PostgresRepository) Create(ctx context.Context, user *User) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback() // Safe: no-op after Commit()
+	defer func() { _ = tx.Rollback() }() // Safe: no-op after Commit()
 
 	query := `
 		INSERT INTO users (
@@ -199,7 +199,7 @@ func (r *PostgresRepository) Update(ctx context.Context, user *User) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	query := `
 		UPDATE users SET
@@ -325,8 +325,8 @@ func (r *PostgresRepository) List(ctx context.Context, filter UserFilter) ([]Use
 
 	// Filters
 	if !filter.IsDeleted {
-		baseQuery += fmt.Sprintf(" AND u.deleted_at IS NULL")
-		countQuery += fmt.Sprintf(" AND u.deleted_at IS NULL")
+		baseQuery += " AND u.deleted_at IS NULL"
+		countQuery += " AND u.deleted_at IS NULL"
 	}
 	if filter.Role != "" {
 		baseQuery += fmt.Sprintf(" AND u.role = $%d", argCount)
@@ -481,7 +481,7 @@ func (r *PostgresRepository) GetAuditLogs(ctx context.Context, userID string, li
 	var logs []AuditLog
 	var total int
 
-	r.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM audit_logs WHERE user_id = $1", userID).Scan(&total)
+	_ = r.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM audit_logs WHERE user_id = $1", userID).Scan(&total)
 
 	rows, err := r.db.QueryContext(ctx,
 		"SELECT id, user_id, actor_id, action, details, ip_address, created_at FROM audit_logs WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3",
@@ -494,7 +494,7 @@ func (r *PostgresRepository) GetAuditLogs(ctx context.Context, userID string, li
 
 	for rows.Next() {
 		var l AuditLog
-		rows.Scan(&l.ID, &l.UserID, &l.ActorID, &l.Action, &l.Details, &l.IPAddress, &l.CreatedAt)
+		_ = rows.Scan(&l.ID, &l.UserID, &l.ActorID, &l.Action, &l.Details, &l.IPAddress, &l.CreatedAt)
 		logs = append(logs, l)
 	}
 	return logs, total, nil
@@ -505,7 +505,7 @@ func (r *PostgresRepository) BulkCreate(ctx context.Context, users []User) (int,
 	if err != nil {
 		return 0, nil, err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	// Prepare COPY statement
 	stmt, err := tx.PrepareContext(ctx, pq.CopyIn("users", "id", "email", "password_hash", "first_name", "last_name", "fiscal_code", "role", "created_at", "updated_at"))

@@ -65,14 +65,14 @@ func (e *Exporter) ToXLSX(data []map[string]interface{}) ([]byte, error) {
 
 	for i, h := range headers {
 		cell, _ := excelize.CoordinatesToCellName(i+1, 1)
-		f.SetCellValue(sheet, cell, h)
+		_ = f.SetCellValue(sheet, cell, h)
 	}
 
 	// Rows
 	for r, row := range data {
 		for c, h := range headers {
 			cell, _ := excelize.CoordinatesToCellName(c+1, r+2)
-			f.SetCellValue(sheet, cell, row[h])
+			_ = f.SetCellValue(sheet, cell, row[h])
 		}
 	}
 

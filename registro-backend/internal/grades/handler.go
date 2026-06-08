@@ -123,11 +123,7 @@ func (h *Handler) BulkImport(c *gin.Context) {
 	defer file.Close()
 
 	semester := 1 // Default
-	if s := c.PostForm("semester"); s != "" {
-		// handle parsing or bind
-		// simplicity:
-		// ignore error for MVP or use 1
-	}
+	_ = c.PostForm("semester")
 
 	result, err := h.service.BulkImport(teacherID, file, semester)
 	if err != nil {
@@ -171,9 +167,7 @@ func (h *Handler) parseFilter(c *gin.Context) GradeFilter {
 	var filter GradeFilter
 
 	// BindQuery requires struct tags `form:"name"` which we added to DTO
-	if err := c.BindQuery(&filter); err != nil {
-		// Log error or ignore
-	}
+	_ = c.BindQuery(&filter)
 
 	return filter
 }

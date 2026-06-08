@@ -114,7 +114,6 @@ func (r *PostgresRepository) List(ctx context.Context, filter NoteFilter) ([]Stu
 	if filter.DateFrom != "" {
 		query += fmt.Sprintf(" AND n.date >= $%d", argIdx)
 		args = append(args, filter.DateFrom)
-		argIdx++
 	}
 
 	query += " ORDER BY n.date DESC, n.created_at DESC"

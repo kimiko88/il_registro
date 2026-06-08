@@ -79,7 +79,7 @@ func (s *Service) CreateUser(ctx context.Context, actorRole string, req CreateUs
 	}
 
 	// Audit
-	s.repo.LogAudit(ctx, &AuditLog{
+	_ = s.repo.LogAudit(ctx, &AuditLog{
 		ID:        uuid.New().String(),
 		UserID:    user.ID,
 		ActorID:   "system", // In real app, pass actor ID

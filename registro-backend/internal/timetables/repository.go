@@ -62,7 +62,7 @@ func (r *PostgresRepository) Update(ctx context.Context, classID string, entries
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	// 1. Delete existing schedule for the class
 	_, err = tx.ExecContext(ctx, "DELETE FROM class_schedules WHERE class_id = $1", classID)

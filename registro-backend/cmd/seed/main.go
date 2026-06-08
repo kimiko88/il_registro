@@ -94,7 +94,7 @@ func cleanup(ctx context.Context, db *sql.DB) {
 	// Only delete test data based on email patterns?
 	// For now, simpler to not aggressively delete to avoid wiping dev's other work if any.
 	// But to restart fresh:
-	db.ExecContext(ctx, "TRUNCATE TABLE users, schools, classes, students, parents, grades, attendance, student_parents CASCADE")
+	_, _ = db.ExecContext(ctx, "TRUNCATE TABLE users, schools, classes, students, parents, grades, attendance, student_parents CASCADE")
 }
 
 func execute(ctx context.Context, db *sql.DB, query string, args ...any) {

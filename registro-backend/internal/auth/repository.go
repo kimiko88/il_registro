@@ -166,7 +166,7 @@ func (r *repository) CreateRecoveryCodes(ctx context.Context, userID string, cod
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	for _, code := range codes {
 		_, err := tx.ExecContext(ctx, query, uuid.New().String(), userID, code, time.Now())

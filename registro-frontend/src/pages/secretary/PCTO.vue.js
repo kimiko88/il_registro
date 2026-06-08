@@ -195,37 +195,37 @@ const __VLS_2 = __VLS_1({
     ...{ class: "bg-slate-50" },
 }, ...__VLS_functionalComponentArgsRest(__VLS_1));
 var __VLS_5 = {};
-/** @type {__VLS_StyleScopedClasses['bg-slate-50']} */ ;
+/** @type {__VLS_StyleScopedClasses['bg-slate-50']} */ 
 const { default: __VLS_6 } = __VLS_3.slots;
 __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
     ...{ class: "row items-center justify-between q-mb-xl" },
 });
-/** @type {__VLS_StyleScopedClasses['row']} */ ;
-/** @type {__VLS_StyleScopedClasses['items-center']} */ ;
-/** @type {__VLS_StyleScopedClasses['justify-between']} */ ;
-/** @type {__VLS_StyleScopedClasses['q-mb-xl']} */ ;
+/** @type {__VLS_StyleScopedClasses['row']} */ 
+/** @type {__VLS_StyleScopedClasses['items-center']} */ 
+/** @type {__VLS_StyleScopedClasses['justify-between']} */ 
+/** @type {__VLS_StyleScopedClasses['q-mb-xl']} */ 
 __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({});
 __VLS_asFunctionalElement1(__VLS_intrinsics.h1, __VLS_intrinsics.h1)({
     ...{ class: "text-h4 text-weight-bold text-outfit q-my-none text-gradient-premium" },
 });
-/** @type {__VLS_StyleScopedClasses['text-h4']} */ ;
-/** @type {__VLS_StyleScopedClasses['text-weight-bold']} */ ;
-/** @type {__VLS_StyleScopedClasses['text-outfit']} */ ;
-/** @type {__VLS_StyleScopedClasses['q-my-none']} */ ;
-/** @type {__VLS_StyleScopedClasses['text-gradient-premium']} */ ;
+/** @type {__VLS_StyleScopedClasses['text-h4']} */ 
+/** @type {__VLS_StyleScopedClasses['text-weight-bold']} */ 
+/** @type {__VLS_StyleScopedClasses['text-outfit']} */ 
+/** @type {__VLS_StyleScopedClasses['q-my-none']} */ 
+/** @type {__VLS_StyleScopedClasses['text-gradient-premium']} */ 
 __VLS_asFunctionalElement1(__VLS_intrinsics.p, __VLS_intrinsics.p)({
     ...{ class: "text-subtitle1 text-slate-500 q-mt-sm q-mb-none" },
 });
-/** @type {__VLS_StyleScopedClasses['text-subtitle1']} */ ;
-/** @type {__VLS_StyleScopedClasses['text-slate-500']} */ ;
-/** @type {__VLS_StyleScopedClasses['q-mt-sm']} */ ;
-/** @type {__VLS_StyleScopedClasses['q-mb-none']} */ ;
+/** @type {__VLS_StyleScopedClasses['text-subtitle1']} */ 
+/** @type {__VLS_StyleScopedClasses['text-slate-500']} */ 
+/** @type {__VLS_StyleScopedClasses['q-mt-sm']} */ 
+/** @type {__VLS_StyleScopedClasses['q-mb-none']} */ 
 __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
     ...{ class: "row items-center q-gutter-sm" },
 });
-/** @type {__VLS_StyleScopedClasses['row']} */ ;
-/** @type {__VLS_StyleScopedClasses['items-center']} */ ;
-/** @type {__VLS_StyleScopedClasses['q-gutter-sm']} */ ;
+/** @type {__VLS_StyleScopedClasses['row']} */ 
+/** @type {__VLS_StyleScopedClasses['items-center']} */ 
+/** @type {__VLS_StyleScopedClasses['q-gutter-sm']} */ 
 let __VLS_7;
 /** @ts-ignore @type { | typeof __VLS_components.qBtn | typeof __VLS_components.QBtn | typeof __VLS_components['q-btn']} */
 qBtn;
@@ -251,9 +251,9 @@ const __VLS_9 = __VLS_8({
 let __VLS_12;
 const __VLS_13 = ({ click: {} },
     { onClick: (__VLS_ctx.openCreateDialog) });
-/** @type {__VLS_StyleScopedClasses['rounded-lg']} */ ;
-/** @type {__VLS_StyleScopedClasses['q-px-md']} */ ;
-/** @type {__VLS_StyleScopedClasses['shadow-sm']} */ ;
+/** @type {__VLS_StyleScopedClasses['rounded-lg']} */ 
+/** @type {__VLS_StyleScopedClasses['q-px-md']} */ 
+/** @type {__VLS_StyleScopedClasses['shadow-sm']} */ 
 var __VLS_10;
 var __VLS_11;
 let __VLS_14;
@@ -285,24 +285,24 @@ const __VLS_20 = ({ click: {} },
             // @ts-ignore
             [openCreateDialog, showCompanies,];
         } });
-/** @type {__VLS_StyleScopedClasses['rounded-lg']} */ ;
-/** @type {__VLS_StyleScopedClasses['q-px-md']} */ ;
+/** @type {__VLS_StyleScopedClasses['rounded-lg']} */ 
+/** @type {__VLS_StyleScopedClasses['q-px-md']} */ 
 var __VLS_17;
 var __VLS_18;
 __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
     ...{ class: "row q-col-gutter-lg q-mb-xl" },
 });
-/** @type {__VLS_StyleScopedClasses['row']} */ ;
-/** @type {__VLS_StyleScopedClasses['q-col-gutter-lg']} */ ;
-/** @type {__VLS_StyleScopedClasses['q-mb-xl']} */ ;
+/** @type {__VLS_StyleScopedClasses['row']} */ 
+/** @type {__VLS_StyleScopedClasses['q-col-gutter-lg']} */ 
+/** @type {__VLS_StyleScopedClasses['q-mb-xl']} */ 
 for (const [stat] of __VLS_vFor((__VLS_ctx.stats))) {
     __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
         ...{ class: "col-12 col-sm-6 col-md-3" },
         key: (stat.label),
     });
-    /** @type {__VLS_StyleScopedClasses['col-12']} */ ;
-    /** @type {__VLS_StyleScopedClasses['col-sm-6']} */ ;
-    /** @type {__VLS_StyleScopedClasses['col-md-3']} */ ;
+    /** @type {__VLS_StyleScopedClasses['col-12']} */ 
+    /** @type {__VLS_StyleScopedClasses['col-sm-6']} */ 
+    /** @type {__VLS_StyleScopedClasses['col-md-3']} */ 
     let __VLS_21;
     /** @ts-ignore @type { | typeof __VLS_components.qCard | typeof __VLS_components.QCard | typeof __VLS_components['q-card'] | typeof __VLS_components.qCard | typeof __VLS_components.QCard | typeof __VLS_components['q-card']} */
     qCard;
@@ -313,12 +313,12 @@ for (const [stat] of __VLS_vFor((__VLS_ctx.stats))) {
     const __VLS_23 = __VLS_22({
         ...{ class: "rounded-xl shadow-soft border-slate-100 overflow-hidden h-full bg-white" },
     }, ...__VLS_functionalComponentArgsRest(__VLS_22));
-    /** @type {__VLS_StyleScopedClasses['rounded-xl']} */ ;
-    /** @type {__VLS_StyleScopedClasses['shadow-soft']} */ ;
-    /** @type {__VLS_StyleScopedClasses['border-slate-100']} */ ;
-    /** @type {__VLS_StyleScopedClasses['overflow-hidden']} */ ;
-    /** @type {__VLS_StyleScopedClasses['h-full']} */ ;
-    /** @type {__VLS_StyleScopedClasses['bg-white']} */ ;
+    /** @type {__VLS_StyleScopedClasses['rounded-xl']} */ 
+    /** @type {__VLS_StyleScopedClasses['shadow-soft']} */ 
+    /** @type {__VLS_StyleScopedClasses['border-slate-100']} */ 
+    /** @type {__VLS_StyleScopedClasses['overflow-hidden']} */ 
+    /** @type {__VLS_StyleScopedClasses['h-full']} */ 
+    /** @type {__VLS_StyleScopedClasses['bg-white']} */ 
     const { default: __VLS_26 } = __VLS_24.slots;
     let __VLS_27;
     /** @ts-ignore @type { | typeof __VLS_components.qCardSection | typeof __VLS_components.QCardSection | typeof __VLS_components['q-card-section'] | typeof __VLS_components.qCardSection | typeof __VLS_components.QCardSection | typeof __VLS_components['q-card-section']} */
@@ -330,21 +330,21 @@ for (const [stat] of __VLS_vFor((__VLS_ctx.stats))) {
     const __VLS_29 = __VLS_28({
         ...{ class: "q-pa-lg" },
     }, ...__VLS_functionalComponentArgsRest(__VLS_28));
-    /** @type {__VLS_StyleScopedClasses['q-pa-lg']} */ ;
+    /** @type {__VLS_StyleScopedClasses['q-pa-lg']} */ 
     const { default: __VLS_32 } = __VLS_30.slots;
     __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
         ...{ class: "row items-center justify-between q-mb-md" },
     });
-    /** @type {__VLS_StyleScopedClasses['row']} */ ;
-    /** @type {__VLS_StyleScopedClasses['items-center']} */ ;
-    /** @type {__VLS_StyleScopedClasses['justify-between']} */ ;
-    /** @type {__VLS_StyleScopedClasses['q-mb-md']} */ ;
+    /** @type {__VLS_StyleScopedClasses['row']} */ 
+    /** @type {__VLS_StyleScopedClasses['items-center']} */ 
+    /** @type {__VLS_StyleScopedClasses['justify-between']} */ 
+    /** @type {__VLS_StyleScopedClasses['q-mb-md']} */ 
     __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
         ...{ class: "text-overline text-slate-400 letter-spacing-1" },
     });
-    /** @type {__VLS_StyleScopedClasses['text-overline']} */ ;
-    /** @type {__VLS_StyleScopedClasses['text-slate-400']} */ ;
-    /** @type {__VLS_StyleScopedClasses['letter-spacing-1']} */ ;
+    /** @type {__VLS_StyleScopedClasses['text-overline']} */ 
+    /** @type {__VLS_StyleScopedClasses['text-slate-400']} */ 
+    /** @type {__VLS_StyleScopedClasses['letter-spacing-1']} */ 
     (stat.label);
     let __VLS_33;
     /** @ts-ignore @type { | typeof __VLS_components.qAvatar | typeof __VLS_components.QAvatar | typeof __VLS_components['q-avatar']} */
@@ -365,17 +365,17 @@ for (const [stat] of __VLS_vFor((__VLS_ctx.stats))) {
     __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
         ...{ class: "text-h3 text-weight-bold text-slate-800 q-my-none" },
     });
-    /** @type {__VLS_StyleScopedClasses['text-h3']} */ ;
-    /** @type {__VLS_StyleScopedClasses['text-weight-bold']} */ ;
-    /** @type {__VLS_StyleScopedClasses['text-slate-800']} */ ;
-    /** @type {__VLS_StyleScopedClasses['q-my-none']} */ ;
+    /** @type {__VLS_StyleScopedClasses['text-h3']} */ 
+    /** @type {__VLS_StyleScopedClasses['text-weight-bold']} */ 
+    /** @type {__VLS_StyleScopedClasses['text-slate-800']} */ 
+    /** @type {__VLS_StyleScopedClasses['q-my-none']} */ 
     (stat.value);
     __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
         ...{ class: "text-caption text-slate-500 q-mt-sm" },
     });
-    /** @type {__VLS_StyleScopedClasses['text-caption']} */ ;
-    /** @type {__VLS_StyleScopedClasses['text-slate-500']} */ ;
-    /** @type {__VLS_StyleScopedClasses['q-mt-sm']} */ ;
+    /** @type {__VLS_StyleScopedClasses['text-caption']} */ 
+    /** @type {__VLS_StyleScopedClasses['text-slate-500']} */ 
+    /** @type {__VLS_StyleScopedClasses['q-mt-sm']} */ 
     (stat.trendText);
     // @ts-ignore
     [stats,];
@@ -396,11 +396,11 @@ const __VLS_39 = __VLS_asFunctionalComponent1(__VLS_38, new __VLS_38({
 const __VLS_40 = __VLS_39({
     ...{ class: "rounded-xl shadow-soft border-slate-100 overflow-hidden bg-white" },
 }, ...__VLS_functionalComponentArgsRest(__VLS_39));
-/** @type {__VLS_StyleScopedClasses['rounded-xl']} */ ;
-/** @type {__VLS_StyleScopedClasses['shadow-soft']} */ ;
-/** @type {__VLS_StyleScopedClasses['border-slate-100']} */ ;
-/** @type {__VLS_StyleScopedClasses['overflow-hidden']} */ ;
-/** @type {__VLS_StyleScopedClasses['bg-white']} */ ;
+/** @type {__VLS_StyleScopedClasses['rounded-xl']} */ 
+/** @type {__VLS_StyleScopedClasses['shadow-soft']} */ 
+/** @type {__VLS_StyleScopedClasses['border-slate-100']} */ 
+/** @type {__VLS_StyleScopedClasses['overflow-hidden']} */ 
+/** @type {__VLS_StyleScopedClasses['bg-white']} */ 
 const { default: __VLS_43 } = __VLS_41.slots;
 let __VLS_44;
 /** @ts-ignore @type { | typeof __VLS_components.qTabs | typeof __VLS_components.QTabs | typeof __VLS_components['q-tabs'] | typeof __VLS_components.qTabs | typeof __VLS_components.QTabs | typeof __VLS_components['q-tabs']} */
@@ -426,9 +426,9 @@ const __VLS_46 = __VLS_45({
     narrowIndicator: true,
     noCaps: true,
 }, ...__VLS_functionalComponentArgsRest(__VLS_45));
-/** @type {__VLS_StyleScopedClasses['text-slate-500']} */ ;
-/** @type {__VLS_StyleScopedClasses['border-b']} */ ;
-/** @type {__VLS_StyleScopedClasses['border-slate-100']} */ ;
+/** @type {__VLS_StyleScopedClasses['text-slate-500']} */ 
+/** @type {__VLS_StyleScopedClasses['border-b']} */ 
+/** @type {__VLS_StyleScopedClasses['border-slate-100']} */ 
 const { default: __VLS_49 } = __VLS_47.slots;
 let __VLS_50;
 /** @ts-ignore @type { | typeof __VLS_components.qTab | typeof __VLS_components.QTab | typeof __VLS_components['q-tab']} */
@@ -444,8 +444,8 @@ const __VLS_52 = __VLS_51({
     label: "Progetti Attivi",
     ...{ class: "q-px-lg py-4" },
 }, ...__VLS_functionalComponentArgsRest(__VLS_51));
-/** @type {__VLS_StyleScopedClasses['q-px-lg']} */ ;
-/** @type {__VLS_StyleScopedClasses['py-4']} */ ;
+/** @type {__VLS_StyleScopedClasses['q-px-lg']} */ 
+/** @type {__VLS_StyleScopedClasses['py-4']} */ 
 let __VLS_55;
 /** @ts-ignore @type { | typeof __VLS_components.qTab | typeof __VLS_components.QTab | typeof __VLS_components['q-tab']} */
 qTab;
@@ -460,8 +460,8 @@ const __VLS_57 = __VLS_56({
     label: "Archivio Storico",
     ...{ class: "q-px-lg py-4" },
 }, ...__VLS_functionalComponentArgsRest(__VLS_56));
-/** @type {__VLS_StyleScopedClasses['q-px-lg']} */ ;
-/** @type {__VLS_StyleScopedClasses['py-4']} */ ;
+/** @type {__VLS_StyleScopedClasses['q-px-lg']} */ 
+/** @type {__VLS_StyleScopedClasses['py-4']} */ 
 // @ts-ignore
 [activeTab,];
 var __VLS_47;
@@ -479,7 +479,7 @@ const __VLS_62 = __VLS_61({
     animated: true,
     ...{ class: "bg-transparent" },
 }, ...__VLS_functionalComponentArgsRest(__VLS_61));
-/** @type {__VLS_StyleScopedClasses['bg-transparent']} */ ;
+/** @type {__VLS_StyleScopedClasses['bg-transparent']} */ 
 const { default: __VLS_65 } = __VLS_63.slots;
 let __VLS_66;
 /** @ts-ignore @type { | typeof __VLS_components.qTabPanel | typeof __VLS_components.QTabPanel | typeof __VLS_components['q-tab-panel'] | typeof __VLS_components.qTabPanel | typeof __VLS_components.QTabPanel | typeof __VLS_components['q-tab-panel']} */
@@ -493,7 +493,7 @@ const __VLS_68 = __VLS_67({
     name: "active",
     ...{ class: "q-pa-none" },
 }, ...__VLS_functionalComponentArgsRest(__VLS_67));
-/** @type {__VLS_StyleScopedClasses['q-pa-none']} */ ;
+/** @type {__VLS_StyleScopedClasses['q-pa-none']} */ 
 const { default: __VLS_71 } = __VLS_69.slots;
 let __VLS_72;
 /** @ts-ignore @type { | typeof __VLS_components.qTable | typeof __VLS_components.QTable | typeof __VLS_components['q-table'] | typeof __VLS_components.qTable | typeof __VLS_components.QTable | typeof __VLS_components['q-table']} */
@@ -517,7 +517,7 @@ const __VLS_74 = __VLS_73({
     ...{ class: "bg-transparent" },
     pagination: ({ rowsPerPage: 10 }),
 }, ...__VLS_functionalComponentArgsRest(__VLS_73));
-/** @type {__VLS_StyleScopedClasses['bg-transparent']} */ ;
+/** @type {__VLS_StyleScopedClasses['bg-transparent']} */ 
 const { default: __VLS_77 } = __VLS_75.slots;
 {
     const { 'body-cell-type': __VLS_78 } = __VLS_75.slots;
@@ -549,8 +549,8 @@ const { default: __VLS_77 } = __VLS_75.slots;
         size: "sm",
         ...{ class: "text-weight-bold rounded-md" },
     }, ...__VLS_functionalComponentArgsRest(__VLS_86));
-    /** @type {__VLS_StyleScopedClasses['text-weight-bold']} */ ;
-    /** @type {__VLS_StyleScopedClasses['rounded-md']} */ ;
+    /** @type {__VLS_StyleScopedClasses['text-weight-bold']} */ 
+    /** @type {__VLS_StyleScopedClasses['rounded-md']} */ 
     const { default: __VLS_90 } = __VLS_88.slots;
     (props.value);
     // @ts-ignore
@@ -590,9 +590,9 @@ const { default: __VLS_77 } = __VLS_75.slots;
         rounded: true,
         ...{ class: "q-px-sm q-py-xs shadow-xs" },
     }, ...__VLS_functionalComponentArgsRest(__VLS_99));
-    /** @type {__VLS_StyleScopedClasses['q-px-sm']} */ ;
-    /** @type {__VLS_StyleScopedClasses['q-py-xs']} */ ;
-    /** @type {__VLS_StyleScopedClasses['shadow-xs']} */ ;
+    /** @type {__VLS_StyleScopedClasses['q-px-sm']} */ 
+    /** @type {__VLS_StyleScopedClasses['q-py-xs']} */ 
+    /** @type {__VLS_StyleScopedClasses['shadow-xs']} */ 
     const { default: __VLS_103 } = __VLS_101.slots;
     (__VLS_ctx.getStatusLabel(props.row));
     // @ts-ignore
@@ -619,14 +619,14 @@ const { default: __VLS_77 } = __VLS_75.slots;
         props: (props),
         ...{ class: "text-right" },
     }, ...__VLS_functionalComponentArgsRest(__VLS_106));
-    /** @type {__VLS_StyleScopedClasses['text-right']} */ ;
+    /** @type {__VLS_StyleScopedClasses['text-right']} */ 
     const { default: __VLS_110 } = __VLS_108.slots;
     __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
         ...{ class: "row q-gutter-xs justify-end" },
     });
-    /** @type {__VLS_StyleScopedClasses['row']} */ ;
-    /** @type {__VLS_StyleScopedClasses['q-gutter-xs']} */ ;
-    /** @type {__VLS_StyleScopedClasses['justify-end']} */ ;
+    /** @type {__VLS_StyleScopedClasses['row']} */ 
+    /** @type {__VLS_StyleScopedClasses['q-gutter-xs']} */ 
+    /** @type {__VLS_StyleScopedClasses['justify-end']} */ 
     let __VLS_111;
     /** @ts-ignore @type { | typeof __VLS_components.qBtn | typeof __VLS_components.QBtn | typeof __VLS_components['q-btn'] | typeof __VLS_components.qBtn | typeof __VLS_components.QBtn | typeof __VLS_components['q-btn']} */
     qBtn;
@@ -764,10 +764,10 @@ const { default: __VLS_77 } = __VLS_75.slots;
     __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
         ...{ class: "full-width q-pa-xl text-center text-slate-400" },
     });
-    /** @type {__VLS_StyleScopedClasses['full-width']} */ ;
-    /** @type {__VLS_StyleScopedClasses['q-pa-xl']} */ ;
-    /** @type {__VLS_StyleScopedClasses['text-center']} */ ;
-    /** @type {__VLS_StyleScopedClasses['text-slate-400']} */ ;
+    /** @type {__VLS_StyleScopedClasses['full-width']} */ 
+    /** @type {__VLS_StyleScopedClasses['q-pa-xl']} */ 
+    /** @type {__VLS_StyleScopedClasses['text-center']} */ 
+    /** @type {__VLS_StyleScopedClasses['text-slate-400']} */ 
     let __VLS_154;
     /** @ts-ignore @type { | typeof __VLS_components.qIcon | typeof __VLS_components.QIcon | typeof __VLS_components['q-icon']} */
     qIcon;
@@ -782,12 +782,12 @@ const { default: __VLS_77 } = __VLS_75.slots;
         size: "64px",
         ...{ class: "opacity-20 q-mb-md" },
     }, ...__VLS_functionalComponentArgsRest(__VLS_155));
-    /** @type {__VLS_StyleScopedClasses['opacity-20']} */ ;
-    /** @type {__VLS_StyleScopedClasses['q-mb-md']} */ ;
+    /** @type {__VLS_StyleScopedClasses['opacity-20']} */ 
+    /** @type {__VLS_StyleScopedClasses['q-mb-md']} */ 
     __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
         ...{ class: "text-h6" },
     });
-    /** @type {__VLS_StyleScopedClasses['text-h6']} */ ;
+    /** @type {__VLS_StyleScopedClasses['text-h6']} */ 
     // @ts-ignore
     [];
 }
@@ -809,14 +809,14 @@ const __VLS_161 = __VLS_160({
     name: "archived",
     ...{ class: "q-pa-none" },
 }, ...__VLS_functionalComponentArgsRest(__VLS_160));
-/** @type {__VLS_StyleScopedClasses['q-pa-none']} */ ;
+/** @type {__VLS_StyleScopedClasses['q-pa-none']} */ 
 const { default: __VLS_164 } = __VLS_162.slots;
 __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
     ...{ class: "q-pa-xl text-center text-slate-400" },
 });
-/** @type {__VLS_StyleScopedClasses['q-pa-xl']} */ ;
-/** @type {__VLS_StyleScopedClasses['text-center']} */ ;
-/** @type {__VLS_StyleScopedClasses['text-slate-400']} */ ;
+/** @type {__VLS_StyleScopedClasses['q-pa-xl']} */ 
+/** @type {__VLS_StyleScopedClasses['text-center']} */ 
+/** @type {__VLS_StyleScopedClasses['text-slate-400']} */ 
 let __VLS_165;
 /** @ts-ignore @type { | typeof __VLS_components.qIcon | typeof __VLS_components.QIcon | typeof __VLS_components['q-icon']} */
 qIcon;
@@ -831,12 +831,12 @@ const __VLS_167 = __VLS_166({
     size: "64px",
     ...{ class: "opacity-20 q-mb-md" },
 }, ...__VLS_functionalComponentArgsRest(__VLS_166));
-/** @type {__VLS_StyleScopedClasses['opacity-20']} */ ;
-/** @type {__VLS_StyleScopedClasses['q-mb-md']} */ ;
+/** @type {__VLS_StyleScopedClasses['opacity-20']} */ 
+/** @type {__VLS_StyleScopedClasses['q-mb-md']} */ 
 __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
     ...{ class: "text-h6" },
 });
-/** @type {__VLS_StyleScopedClasses['text-h6']} */ ;
+/** @type {__VLS_StyleScopedClasses['text-h6']} */ 
 // @ts-ignore
 [];
 var __VLS_162;
@@ -860,7 +860,7 @@ const __VLS_172 = __VLS_171({
     persistent: true,
     ...{ class: "premium-dialog" },
 }, ...__VLS_functionalComponentArgsRest(__VLS_171));
-/** @type {__VLS_StyleScopedClasses['premium-dialog']} */ ;
+/** @type {__VLS_StyleScopedClasses['premium-dialog']} */ 
 const { default: __VLS_175 } = __VLS_173.slots;
 let __VLS_176;
 /** @ts-ignore @type { | typeof __VLS_components.qCard | typeof __VLS_components.QCard | typeof __VLS_components['q-card'] | typeof __VLS_components.qCard | typeof __VLS_components.QCard | typeof __VLS_components['q-card']} */
@@ -874,9 +874,9 @@ const __VLS_178 = __VLS_177({
     ...{ style: {} },
     ...{ class: "rounded-xl overflow-hidden shadow-24" },
 }, ...__VLS_functionalComponentArgsRest(__VLS_177));
-/** @type {__VLS_StyleScopedClasses['rounded-xl']} */ ;
-/** @type {__VLS_StyleScopedClasses['overflow-hidden']} */ ;
-/** @type {__VLS_StyleScopedClasses['shadow-24']} */ ;
+/** @type {__VLS_StyleScopedClasses['rounded-xl']} */ 
+/** @type {__VLS_StyleScopedClasses['overflow-hidden']} */ 
+/** @type {__VLS_StyleScopedClasses['shadow-24']} */ 
 const { default: __VLS_181 } = __VLS_179.slots;
 let __VLS_182;
 /** @ts-ignore @type { | typeof __VLS_components.qCardSection | typeof __VLS_components.QCardSection | typeof __VLS_components['q-card-section'] | typeof __VLS_components.qCardSection | typeof __VLS_components.QCardSection | typeof __VLS_components['q-card-section']} */
@@ -888,15 +888,15 @@ const __VLS_183 = __VLS_asFunctionalComponent1(__VLS_182, new __VLS_182({
 const __VLS_184 = __VLS_183({
     ...{ class: "bg-gradient-primary text-white q-pa-lg" },
 }, ...__VLS_functionalComponentArgsRest(__VLS_183));
-/** @type {__VLS_StyleScopedClasses['bg-gradient-primary']} */ ;
-/** @type {__VLS_StyleScopedClasses['text-white']} */ ;
-/** @type {__VLS_StyleScopedClasses['q-pa-lg']} */ ;
+/** @type {__VLS_StyleScopedClasses['bg-gradient-primary']} */ 
+/** @type {__VLS_StyleScopedClasses['text-white']} */ 
+/** @type {__VLS_StyleScopedClasses['q-pa-lg']} */ 
 const { default: __VLS_187 } = __VLS_185.slots;
 __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
     ...{ class: "text-h5 text-weight-bold" },
 });
-/** @type {__VLS_StyleScopedClasses['text-h5']} */ ;
-/** @type {__VLS_StyleScopedClasses['text-weight-bold']} */ ;
+/** @type {__VLS_StyleScopedClasses['text-h5']} */ 
+/** @type {__VLS_StyleScopedClasses['text-weight-bold']} */ 
 (__VLS_ctx.isEdit ? 'Modifica Progetto' : 'Nuovo Progetto PCTO');
 // @ts-ignore
 [dialog, isEdit,];
@@ -911,7 +911,7 @@ const __VLS_189 = __VLS_asFunctionalComponent1(__VLS_188, new __VLS_188({
 const __VLS_190 = __VLS_189({
     ...{ class: "q-pa-xl" },
 }, ...__VLS_functionalComponentArgsRest(__VLS_189));
-/** @type {__VLS_StyleScopedClasses['q-pa-xl']} */ ;
+/** @type {__VLS_StyleScopedClasses['q-pa-xl']} */ 
 const { default: __VLS_193 } = __VLS_191.slots;
 let __VLS_194;
 /** @ts-ignore @type { | typeof __VLS_components.qForm | typeof __VLS_components.QForm | typeof __VLS_components['q-form'] | typeof __VLS_components.qForm | typeof __VLS_components.QForm | typeof __VLS_components['q-form']} */
@@ -928,7 +928,7 @@ const __VLS_196 = __VLS_195({
 let __VLS_199;
 const __VLS_200 = ({ submit: {} },
     { onSubmit: (__VLS_ctx.saveProject) });
-/** @type {__VLS_StyleScopedClasses['q-gutter-y-lg']} */ ;
+/** @type {__VLS_StyleScopedClasses['q-gutter-y-lg']} */ 
 const { default: __VLS_201 } = __VLS_197.slots;
 let __VLS_202;
 /** @ts-ignore @type { | typeof __VLS_components.qInput | typeof __VLS_components.QInput | typeof __VLS_components['q-input']} */
@@ -967,12 +967,12 @@ const __VLS_209 = __VLS_208({
 __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
     ...{ class: "row q-col-gutter-lg" },
 });
-/** @type {__VLS_StyleScopedClasses['row']} */ ;
-/** @type {__VLS_StyleScopedClasses['q-col-gutter-lg']} */ ;
+/** @type {__VLS_StyleScopedClasses['row']} */ 
+/** @type {__VLS_StyleScopedClasses['q-col-gutter-lg']} */ 
 __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
     ...{ class: "col-6" },
 });
-/** @type {__VLS_StyleScopedClasses['col-6']} */ ;
+/** @type {__VLS_StyleScopedClasses['col-6']} */ 
 let __VLS_212;
 /** @ts-ignore @type { | typeof __VLS_components.qSelect | typeof __VLS_components.QSelect | typeof __VLS_components['q-select']} */
 qSelect;
@@ -992,7 +992,7 @@ const __VLS_214 = __VLS_213({
 __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
     ...{ class: "col-6" },
 });
-/** @type {__VLS_StyleScopedClasses['col-6']} */ ;
+/** @type {__VLS_StyleScopedClasses['col-6']} */ 
 let __VLS_217;
 /** @ts-ignore @type { | typeof __VLS_components.qInput | typeof __VLS_components.QInput | typeof __VLS_components['q-input']} */
 qInput;
@@ -1014,12 +1014,12 @@ const __VLS_219 = __VLS_218({
 __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
     ...{ class: "row q-col-gutter-lg" },
 });
-/** @type {__VLS_StyleScopedClasses['row']} */ ;
-/** @type {__VLS_StyleScopedClasses['q-col-gutter-lg']} */ ;
+/** @type {__VLS_StyleScopedClasses['row']} */ 
+/** @type {__VLS_StyleScopedClasses['q-col-gutter-lg']} */ 
 __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
     ...{ class: "col-6" },
 });
-/** @type {__VLS_StyleScopedClasses['col-6']} */ ;
+/** @type {__VLS_StyleScopedClasses['col-6']} */ 
 let __VLS_222;
 /** @ts-ignore @type { | typeof __VLS_components.qInput | typeof __VLS_components.QInput | typeof __VLS_components['q-input']} */
 qInput;
@@ -1041,7 +1041,7 @@ const __VLS_224 = __VLS_223({
 __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
     ...{ class: "col-6" },
 });
-/** @type {__VLS_StyleScopedClasses['col-6']} */ ;
+/** @type {__VLS_StyleScopedClasses['col-6']} */ 
 let __VLS_227;
 /** @ts-ignore @type { | typeof __VLS_components.qInput | typeof __VLS_components.QInput | typeof __VLS_components['q-input']} */
 qInput;
@@ -1103,10 +1103,10 @@ const __VLS_239 = __VLS_238({
 __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
     ...{ class: "row justify-end q-mt-xl q-gutter-sm" },
 });
-/** @type {__VLS_StyleScopedClasses['row']} */ ;
-/** @type {__VLS_StyleScopedClasses['justify-end']} */ ;
-/** @type {__VLS_StyleScopedClasses['q-mt-xl']} */ ;
-/** @type {__VLS_StyleScopedClasses['q-gutter-sm']} */ ;
+/** @type {__VLS_StyleScopedClasses['row']} */ 
+/** @type {__VLS_StyleScopedClasses['justify-end']} */ 
+/** @type {__VLS_StyleScopedClasses['q-mt-xl']} */ 
+/** @type {__VLS_StyleScopedClasses['q-gutter-sm']} */ 
 let __VLS_242;
 /** @ts-ignore @type { | typeof __VLS_components.qBtn | typeof __VLS_components.QBtn | typeof __VLS_components['q-btn']} */
 qBtn;
@@ -1144,9 +1144,9 @@ const __VLS_249 = __VLS_248({
     noCaps: true,
     loading: (__VLS_ctx.saving),
 }, ...__VLS_functionalComponentArgsRest(__VLS_248));
-/** @type {__VLS_StyleScopedClasses['q-px-xl']} */ ;
-/** @type {__VLS_StyleScopedClasses['rounded-lg']} */ ;
-/** @type {__VLS_StyleScopedClasses['shadow-sm']} */ ;
+/** @type {__VLS_StyleScopedClasses['q-px-xl']} */ 
+/** @type {__VLS_StyleScopedClasses['rounded-lg']} */ 
+/** @type {__VLS_StyleScopedClasses['shadow-sm']} */ 
 // @ts-ignore
 [isEdit, saveProject, form, form, form, form, form, form, form, form, form, companies, vClosePopup, saving,];
 var __VLS_197;
@@ -1187,7 +1187,7 @@ const __VLS_259 = __VLS_asFunctionalComponent1(__VLS_258, new __VLS_258({
 const __VLS_260 = __VLS_259({
     ...{ class: "bg-slate-50" },
 }, ...__VLS_functionalComponentArgsRest(__VLS_259));
-/** @type {__VLS_StyleScopedClasses['bg-slate-50']} */ ;
+/** @type {__VLS_StyleScopedClasses['bg-slate-50']} */ 
 const { default: __VLS_263 } = __VLS_261.slots;
 let __VLS_264;
 /** @ts-ignore @type { | typeof __VLS_components.qToolbar | typeof __VLS_components.QToolbar | typeof __VLS_components['q-toolbar'] | typeof __VLS_components.qToolbar | typeof __VLS_components.QToolbar | typeof __VLS_components['q-toolbar']} */
@@ -1199,10 +1199,10 @@ const __VLS_265 = __VLS_asFunctionalComponent1(__VLS_264, new __VLS_264({
 const __VLS_266 = __VLS_265({
     ...{ class: "bg-white border-b border-slate-100 q-py-md" },
 }, ...__VLS_functionalComponentArgsRest(__VLS_265));
-/** @type {__VLS_StyleScopedClasses['bg-white']} */ ;
-/** @type {__VLS_StyleScopedClasses['border-b']} */ ;
-/** @type {__VLS_StyleScopedClasses['border-slate-100']} */ ;
-/** @type {__VLS_StyleScopedClasses['q-py-md']} */ ;
+/** @type {__VLS_StyleScopedClasses['bg-white']} */ 
+/** @type {__VLS_StyleScopedClasses['border-b']} */ 
+/** @type {__VLS_StyleScopedClasses['border-slate-100']} */ 
+/** @type {__VLS_StyleScopedClasses['q-py-md']} */ 
 const { default: __VLS_269 } = __VLS_267.slots;
 let __VLS_270;
 /** @ts-ignore @type { | typeof __VLS_components.qBtn | typeof __VLS_components.QBtn | typeof __VLS_components['q-btn']} */
@@ -1223,7 +1223,7 @@ const __VLS_272 = __VLS_271({
     ...{ class: "text-slate-400" },
 }, ...__VLS_functionalComponentArgsRest(__VLS_271));
 __VLS_asFunctionalDirective(__VLS_directives.vClosePopup, {})(null, { ...__VLS_directiveBindingRestFields, }, null, null);
-/** @type {__VLS_StyleScopedClasses['text-slate-400']} */ ;
+/** @type {__VLS_StyleScopedClasses['text-slate-400']} */ 
 let __VLS_275;
 /** @ts-ignore @type { | typeof __VLS_components.qToolbarTitle | typeof __VLS_components.QToolbarTitle | typeof __VLS_components['q-toolbar-title'] | typeof __VLS_components.qToolbarTitle | typeof __VLS_components.QToolbarTitle | typeof __VLS_components['q-toolbar-title']} */
 qToolbarTitle;
@@ -1234,8 +1234,8 @@ const __VLS_276 = __VLS_asFunctionalComponent1(__VLS_275, new __VLS_275({
 const __VLS_277 = __VLS_276({
     ...{ class: "text-weight-bold text-slate-800" },
 }, ...__VLS_functionalComponentArgsRest(__VLS_276));
-/** @type {__VLS_StyleScopedClasses['text-weight-bold']} */ ;
-/** @type {__VLS_StyleScopedClasses['text-slate-800']} */ ;
+/** @type {__VLS_StyleScopedClasses['text-weight-bold']} */ 
+/** @type {__VLS_StyleScopedClasses['text-slate-800']} */ 
 const { default: __VLS_280 } = __VLS_278.slots;
 // @ts-ignore
 [showCompanies, vClosePopup,];
@@ -1267,8 +1267,8 @@ const __VLS_287 = ({ click: {} },
             // @ts-ignore
             [showAddCompany,];
         } });
-/** @type {__VLS_StyleScopedClasses['rounded-lg']} */ ;
-/** @type {__VLS_StyleScopedClasses['q-px-md']} */ ;
+/** @type {__VLS_StyleScopedClasses['rounded-lg']} */ 
+/** @type {__VLS_StyleScopedClasses['q-px-md']} */ 
 var __VLS_284;
 var __VLS_285;
 // @ts-ignore
@@ -1284,21 +1284,21 @@ const __VLS_289 = __VLS_asFunctionalComponent1(__VLS_288, new __VLS_288({
 const __VLS_290 = __VLS_289({
     ...{ class: "q-pa-xl" },
 }, ...__VLS_functionalComponentArgsRest(__VLS_289));
-/** @type {__VLS_StyleScopedClasses['q-pa-xl']} */ ;
+/** @type {__VLS_StyleScopedClasses['q-pa-xl']} */ 
 const { default: __VLS_293 } = __VLS_291.slots;
 __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
     ...{ class: "row q-col-gutter-xl" },
 });
-/** @type {__VLS_StyleScopedClasses['row']} */ ;
-/** @type {__VLS_StyleScopedClasses['q-col-gutter-xl']} */ ;
+/** @type {__VLS_StyleScopedClasses['row']} */ 
+/** @type {__VLS_StyleScopedClasses['q-col-gutter-xl']} */ 
 for (const [company] of __VLS_vFor((__VLS_ctx.companies))) {
     __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
         ...{ class: "col-12 col-sm-6 col-md-4" },
         key: (company.id),
     });
-    /** @type {__VLS_StyleScopedClasses['col-12']} */ ;
-    /** @type {__VLS_StyleScopedClasses['col-sm-6']} */ ;
-    /** @type {__VLS_StyleScopedClasses['col-md-4']} */ ;
+    /** @type {__VLS_StyleScopedClasses['col-12']} */ 
+    /** @type {__VLS_StyleScopedClasses['col-sm-6']} */ 
+    /** @type {__VLS_StyleScopedClasses['col-md-4']} */ 
     let __VLS_294;
     /** @ts-ignore @type { | typeof __VLS_components.qCard | typeof __VLS_components.QCard | typeof __VLS_components['q-card'] | typeof __VLS_components.qCard | typeof __VLS_components.QCard | typeof __VLS_components['q-card']} */
     qCard;
@@ -1311,12 +1311,12 @@ for (const [company] of __VLS_vFor((__VLS_ctx.companies))) {
         flat: true,
         ...{ class: "rounded-xl border-slate-100 bg-white shadow-soft h-full overflow-hidden" },
     }, ...__VLS_functionalComponentArgsRest(__VLS_295));
-    /** @type {__VLS_StyleScopedClasses['rounded-xl']} */ ;
-    /** @type {__VLS_StyleScopedClasses['border-slate-100']} */ ;
-    /** @type {__VLS_StyleScopedClasses['bg-white']} */ ;
-    /** @type {__VLS_StyleScopedClasses['shadow-soft']} */ ;
-    /** @type {__VLS_StyleScopedClasses['h-full']} */ ;
-    /** @type {__VLS_StyleScopedClasses['overflow-hidden']} */ ;
+    /** @type {__VLS_StyleScopedClasses['rounded-xl']} */ 
+    /** @type {__VLS_StyleScopedClasses['border-slate-100']} */ 
+    /** @type {__VLS_StyleScopedClasses['bg-white']} */ 
+    /** @type {__VLS_StyleScopedClasses['shadow-soft']} */ 
+    /** @type {__VLS_StyleScopedClasses['h-full']} */ 
+    /** @type {__VLS_StyleScopedClasses['overflow-hidden']} */ 
     const { default: __VLS_299 } = __VLS_297.slots;
     let __VLS_300;
     /** @ts-ignore @type { | typeof __VLS_components.qCardSection | typeof __VLS_components.QCardSection | typeof __VLS_components['q-card-section'] | typeof __VLS_components.qCardSection | typeof __VLS_components.QCardSection | typeof __VLS_components['q-card-section']} */
@@ -1328,15 +1328,15 @@ for (const [company] of __VLS_vFor((__VLS_ctx.companies))) {
     const __VLS_302 = __VLS_301({
         ...{ class: "q-pa-lg" },
     }, ...__VLS_functionalComponentArgsRest(__VLS_301));
-    /** @type {__VLS_StyleScopedClasses['q-pa-lg']} */ ;
+    /** @type {__VLS_StyleScopedClasses['q-pa-lg']} */ 
     const { default: __VLS_305 } = __VLS_303.slots;
     __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
         ...{ class: "row items-center no-wrap q-mb-lg" },
     });
-    /** @type {__VLS_StyleScopedClasses['row']} */ ;
-    /** @type {__VLS_StyleScopedClasses['items-center']} */ ;
-    /** @type {__VLS_StyleScopedClasses['no-wrap']} */ ;
-    /** @type {__VLS_StyleScopedClasses['q-mb-lg']} */ ;
+    /** @type {__VLS_StyleScopedClasses['row']} */ 
+    /** @type {__VLS_StyleScopedClasses['items-center']} */ 
+    /** @type {__VLS_StyleScopedClasses['no-wrap']} */ 
+    /** @type {__VLS_StyleScopedClasses['q-mb-lg']} */ 
     let __VLS_306;
     /** @ts-ignore @type { | typeof __VLS_components.qAvatar | typeof __VLS_components.QAvatar | typeof __VLS_components['q-avatar']} */
     qAvatar;
@@ -1356,19 +1356,19 @@ for (const [company] of __VLS_vFor((__VLS_ctx.companies))) {
     __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
         ...{ class: "q-ml-md" },
     });
-    /** @type {__VLS_StyleScopedClasses['q-ml-md']} */ ;
+    /** @type {__VLS_StyleScopedClasses['q-ml-md']} */ 
     __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
         ...{ class: "text-subtitle1 text-weight-bold text-slate-800" },
     });
-    /** @type {__VLS_StyleScopedClasses['text-subtitle1']} */ ;
-    /** @type {__VLS_StyleScopedClasses['text-weight-bold']} */ ;
-    /** @type {__VLS_StyleScopedClasses['text-slate-800']} */ ;
+    /** @type {__VLS_StyleScopedClasses['text-subtitle1']} */ 
+    /** @type {__VLS_StyleScopedClasses['text-weight-bold']} */ 
+    /** @type {__VLS_StyleScopedClasses['text-slate-800']} */ 
     (company.name);
     __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
         ...{ class: "text-caption text-slate-400" },
     });
-    /** @type {__VLS_StyleScopedClasses['text-caption']} */ ;
-    /** @type {__VLS_StyleScopedClasses['text-slate-400']} */ ;
+    /** @type {__VLS_StyleScopedClasses['text-caption']} */ 
+    /** @type {__VLS_StyleScopedClasses['text-slate-400']} */ 
     (company.vat_number);
     let __VLS_311;
     /** @ts-ignore @type { | typeof __VLS_components.qSeparator | typeof __VLS_components.QSeparator | typeof __VLS_components['q-separator']} */
@@ -1380,17 +1380,17 @@ for (const [company] of __VLS_vFor((__VLS_ctx.companies))) {
     const __VLS_313 = __VLS_312({
         ...{ class: "q-my-lg opacity-50" },
     }, ...__VLS_functionalComponentArgsRest(__VLS_312));
-    /** @type {__VLS_StyleScopedClasses['q-my-lg']} */ ;
-    /** @type {__VLS_StyleScopedClasses['opacity-50']} */ ;
+    /** @type {__VLS_StyleScopedClasses['q-my-lg']} */ 
+    /** @type {__VLS_StyleScopedClasses['opacity-50']} */ 
     __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
         ...{ class: "q-gutter-y-sm" },
     });
-    /** @type {__VLS_StyleScopedClasses['q-gutter-y-sm']} */ ;
+    /** @type {__VLS_StyleScopedClasses['q-gutter-y-sm']} */ 
     __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
         ...{ class: "row items-center" },
     });
-    /** @type {__VLS_StyleScopedClasses['row']} */ ;
-    /** @type {__VLS_StyleScopedClasses['items-center']} */ ;
+    /** @type {__VLS_StyleScopedClasses['row']} */ 
+    /** @type {__VLS_StyleScopedClasses['items-center']} */ 
     let __VLS_316;
     /** @ts-ignore @type { | typeof __VLS_components.qIcon | typeof __VLS_components.QIcon | typeof __VLS_components['q-icon']} */
     qIcon;
@@ -1407,18 +1407,18 @@ for (const [company] of __VLS_vFor((__VLS_ctx.companies))) {
         size: "18px",
         ...{ class: "q-mr-sm" },
     }, ...__VLS_functionalComponentArgsRest(__VLS_317));
-    /** @type {__VLS_StyleScopedClasses['q-mr-sm']} */ ;
+    /** @type {__VLS_StyleScopedClasses['q-mr-sm']} */ 
     __VLS_asFunctionalElement1(__VLS_intrinsics.span, __VLS_intrinsics.span)({
         ...{ class: "text-caption text-slate-600" },
     });
-    /** @type {__VLS_StyleScopedClasses['text-caption']} */ ;
-    /** @type {__VLS_StyleScopedClasses['text-slate-600']} */ ;
+    /** @type {__VLS_StyleScopedClasses['text-caption']} */ 
+    /** @type {__VLS_StyleScopedClasses['text-slate-600']} */ 
     (company.address);
     __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
         ...{ class: "row items-center" },
     });
-    /** @type {__VLS_StyleScopedClasses['row']} */ ;
-    /** @type {__VLS_StyleScopedClasses['items-center']} */ ;
+    /** @type {__VLS_StyleScopedClasses['row']} */ 
+    /** @type {__VLS_StyleScopedClasses['items-center']} */ 
     let __VLS_321;
     /** @ts-ignore @type { | typeof __VLS_components.qIcon | typeof __VLS_components.QIcon | typeof __VLS_components['q-icon']} */
     qIcon;
@@ -1435,12 +1435,12 @@ for (const [company] of __VLS_vFor((__VLS_ctx.companies))) {
         size: "18px",
         ...{ class: "q-mr-sm" },
     }, ...__VLS_functionalComponentArgsRest(__VLS_322));
-    /** @type {__VLS_StyleScopedClasses['q-mr-sm']} */ ;
+    /** @type {__VLS_StyleScopedClasses['q-mr-sm']} */ 
     __VLS_asFunctionalElement1(__VLS_intrinsics.span, __VLS_intrinsics.span)({
         ...{ class: "text-caption text-slate-600" },
     });
-    /** @type {__VLS_StyleScopedClasses['text-caption']} */ ;
-    /** @type {__VLS_StyleScopedClasses['text-slate-600']} */ ;
+    /** @type {__VLS_StyleScopedClasses['text-caption']} */ 
+    /** @type {__VLS_StyleScopedClasses['text-slate-600']} */ 
     (company.contact_person || 'Contatto non definito');
     // @ts-ignore
     [companies,];
@@ -1457,8 +1457,8 @@ for (const [company] of __VLS_vFor((__VLS_ctx.companies))) {
         align: "right",
         ...{ class: "bg-slate-50 q-pa-md" },
     }, ...__VLS_functionalComponentArgsRest(__VLS_327));
-    /** @type {__VLS_StyleScopedClasses['bg-slate-50']} */ ;
-    /** @type {__VLS_StyleScopedClasses['q-pa-md']} */ ;
+    /** @type {__VLS_StyleScopedClasses['bg-slate-50']} */ 
+    /** @type {__VLS_StyleScopedClasses['q-pa-md']} */ 
     const { default: __VLS_331 } = __VLS_329.slots;
     let __VLS_332;
     /** @ts-ignore @type { | typeof __VLS_components.qBtn | typeof __VLS_components.QBtn | typeof __VLS_components['q-btn']} */
@@ -1517,10 +1517,10 @@ if (__VLS_ctx.companies.length === 0) {
     __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
         ...{ class: "full-width q-pa-xl text-center text-slate-400" },
     });
-    /** @type {__VLS_StyleScopedClasses['full-width']} */ ;
-    /** @type {__VLS_StyleScopedClasses['q-pa-xl']} */ ;
-    /** @type {__VLS_StyleScopedClasses['text-center']} */ ;
-    /** @type {__VLS_StyleScopedClasses['text-slate-400']} */ ;
+    /** @type {__VLS_StyleScopedClasses['full-width']} */ 
+    /** @type {__VLS_StyleScopedClasses['q-pa-xl']} */ 
+    /** @type {__VLS_StyleScopedClasses['text-center']} */ 
+    /** @type {__VLS_StyleScopedClasses['text-slate-400']} */ 
     let __VLS_342;
     /** @ts-ignore @type { | typeof __VLS_components.qIcon | typeof __VLS_components.QIcon | typeof __VLS_components['q-icon']} */
     qIcon;
@@ -1535,12 +1535,12 @@ if (__VLS_ctx.companies.length === 0) {
         size: "64px",
         ...{ class: "opacity-20 q-mb-md" },
     }, ...__VLS_functionalComponentArgsRest(__VLS_343));
-    /** @type {__VLS_StyleScopedClasses['opacity-20']} */ ;
-    /** @type {__VLS_StyleScopedClasses['q-mb-md']} */ ;
+    /** @type {__VLS_StyleScopedClasses['opacity-20']} */ 
+    /** @type {__VLS_StyleScopedClasses['q-mb-md']} */ 
     __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
         ...{ class: "text-h6" },
     });
-    /** @type {__VLS_StyleScopedClasses['text-h6']} */ ;
+    /** @type {__VLS_StyleScopedClasses['text-h6']} */ 
 }
 // @ts-ignore
 [companies,];
@@ -1563,7 +1563,7 @@ const __VLS_349 = __VLS_348({
     modelValue: (__VLS_ctx.showAddCompany),
     ...{ class: "premium-dialog" },
 }, ...__VLS_functionalComponentArgsRest(__VLS_348));
-/** @type {__VLS_StyleScopedClasses['premium-dialog']} */ ;
+/** @type {__VLS_StyleScopedClasses['premium-dialog']} */ 
 const { default: __VLS_352 } = __VLS_350.slots;
 let __VLS_353;
 /** @ts-ignore @type { | typeof __VLS_components.qCard | typeof __VLS_components.QCard | typeof __VLS_components['q-card'] | typeof __VLS_components.qCard | typeof __VLS_components.QCard | typeof __VLS_components['q-card']} */
@@ -1577,10 +1577,10 @@ const __VLS_355 = __VLS_354({
     ...{ style: {} },
     ...{ class: "rounded-xl overflow-hidden shadow-24 bg-white" },
 }, ...__VLS_functionalComponentArgsRest(__VLS_354));
-/** @type {__VLS_StyleScopedClasses['rounded-xl']} */ ;
-/** @type {__VLS_StyleScopedClasses['overflow-hidden']} */ ;
-/** @type {__VLS_StyleScopedClasses['shadow-24']} */ ;
-/** @type {__VLS_StyleScopedClasses['bg-white']} */ ;
+/** @type {__VLS_StyleScopedClasses['rounded-xl']} */ 
+/** @type {__VLS_StyleScopedClasses['overflow-hidden']} */ 
+/** @type {__VLS_StyleScopedClasses['shadow-24']} */ 
+/** @type {__VLS_StyleScopedClasses['bg-white']} */ 
 const { default: __VLS_358 } = __VLS_356.slots;
 let __VLS_359;
 /** @ts-ignore @type { | typeof __VLS_components.qCardSection | typeof __VLS_components.QCardSection | typeof __VLS_components['q-card-section'] | typeof __VLS_components.qCardSection | typeof __VLS_components.QCardSection | typeof __VLS_components['q-card-section']} */
@@ -1592,15 +1592,15 @@ const __VLS_360 = __VLS_asFunctionalComponent1(__VLS_359, new __VLS_359({
 const __VLS_361 = __VLS_360({
     ...{ class: "bg-gradient-primary text-white q-pa-lg" },
 }, ...__VLS_functionalComponentArgsRest(__VLS_360));
-/** @type {__VLS_StyleScopedClasses['bg-gradient-primary']} */ ;
-/** @type {__VLS_StyleScopedClasses['text-white']} */ ;
-/** @type {__VLS_StyleScopedClasses['q-pa-lg']} */ ;
+/** @type {__VLS_StyleScopedClasses['bg-gradient-primary']} */ 
+/** @type {__VLS_StyleScopedClasses['text-white']} */ 
+/** @type {__VLS_StyleScopedClasses['q-pa-lg']} */ 
 const { default: __VLS_364 } = __VLS_362.slots;
 __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
     ...{ class: "text-h5 text-weight-bold" },
 });
-/** @type {__VLS_StyleScopedClasses['text-h5']} */ ;
-/** @type {__VLS_StyleScopedClasses['text-weight-bold']} */ ;
+/** @type {__VLS_StyleScopedClasses['text-h5']} */ 
+/** @type {__VLS_StyleScopedClasses['text-weight-bold']} */ 
 // @ts-ignore
 [showAddCompany,];
 var __VLS_362;
@@ -1614,7 +1614,7 @@ const __VLS_366 = __VLS_asFunctionalComponent1(__VLS_365, new __VLS_365({
 const __VLS_367 = __VLS_366({
     ...{ class: "q-pa-xl" },
 }, ...__VLS_functionalComponentArgsRest(__VLS_366));
-/** @type {__VLS_StyleScopedClasses['q-pa-xl']} */ ;
+/** @type {__VLS_StyleScopedClasses['q-pa-xl']} */ 
 const { default: __VLS_370 } = __VLS_368.slots;
 let __VLS_371;
 /** @ts-ignore @type { | typeof __VLS_components.qForm | typeof __VLS_components.QForm | typeof __VLS_components['q-form'] | typeof __VLS_components.qForm | typeof __VLS_components.QForm | typeof __VLS_components['q-form']} */
@@ -1631,7 +1631,7 @@ const __VLS_373 = __VLS_372({
 let __VLS_376;
 const __VLS_377 = ({ submit: {} },
     { onSubmit: (__VLS_ctx.addCompany) });
-/** @type {__VLS_StyleScopedClasses['q-gutter-y-lg']} */ ;
+/** @type {__VLS_StyleScopedClasses['q-gutter-y-lg']} */ 
 const { default: __VLS_378 } = __VLS_374.slots;
 let __VLS_379;
 /** @ts-ignore @type { | typeof __VLS_components.qInput | typeof __VLS_components.QInput | typeof __VLS_components['q-input']} */
@@ -1706,10 +1706,10 @@ const __VLS_401 = __VLS_400({
 __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
     ...{ class: "row justify-end q-mt-xl q-gutter-sm" },
 });
-/** @type {__VLS_StyleScopedClasses['row']} */ ;
-/** @type {__VLS_StyleScopedClasses['justify-end']} */ ;
-/** @type {__VLS_StyleScopedClasses['q-mt-xl']} */ ;
-/** @type {__VLS_StyleScopedClasses['q-gutter-sm']} */ ;
+/** @type {__VLS_StyleScopedClasses['row']} */ 
+/** @type {__VLS_StyleScopedClasses['justify-end']} */ 
+/** @type {__VLS_StyleScopedClasses['q-mt-xl']} */ 
+/** @type {__VLS_StyleScopedClasses['q-gutter-sm']} */ 
 let __VLS_404;
 /** @ts-ignore @type { | typeof __VLS_components.qBtn | typeof __VLS_components.QBtn | typeof __VLS_components['q-btn']} */
 qBtn;
@@ -1747,9 +1747,9 @@ const __VLS_411 = __VLS_410({
     noCaps: true,
     loading: (__VLS_ctx.savingCompany),
 }, ...__VLS_functionalComponentArgsRest(__VLS_410));
-/** @type {__VLS_StyleScopedClasses['q-px-xl']} */ ;
-/** @type {__VLS_StyleScopedClasses['rounded-lg']} */ ;
-/** @type {__VLS_StyleScopedClasses['shadow-sm']} */ ;
+/** @type {__VLS_StyleScopedClasses['q-px-xl']} */ 
+/** @type {__VLS_StyleScopedClasses['rounded-lg']} */ 
+/** @type {__VLS_StyleScopedClasses['shadow-sm']} */ 
 // @ts-ignore
 [vClosePopup, addCompany, companyForm, companyForm, companyForm, companyForm, companyForm, savingCompany,];
 var __VLS_374;

@@ -102,7 +102,7 @@ func (r *repository) CreateSlotsBatch(ctx context.Context, slots []ColloquioSlot
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	query := `
 		INSERT INTO colloquio_slots (teacher_id, school_id, date, start_time, end_time, max_bookings, type, location)
@@ -129,7 +129,7 @@ func (r *repository) CreateBooking(ctx context.Context, b *ColloquioBooking) err
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	// 1. Lock Slot row to prevent race condition
 	var current, max int

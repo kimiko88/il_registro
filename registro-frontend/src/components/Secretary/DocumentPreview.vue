@@ -7,7 +7,6 @@
     </q-card-section>
     <q-separator />
     <q-card-section class="scroll" style="height: calc(100% - 50px)">
-        <!-- PDF Preview Stub -->
         <div v-if="doc?.url" class="fit">
             <iframe :src="doc.url" width="100%" height="100%" frameborder="0"></iframe>
         </div>

@@ -26,7 +26,7 @@ func (r *postgresRepository) SaveRecord(ctx context.Context, rec *ScrutinyRecord
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	// 1. Upsert Scrutiny Record
 	if rec.ID == "" {

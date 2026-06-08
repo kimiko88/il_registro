@@ -126,7 +126,7 @@ func (s *service) GetClassGrades(ctx context.Context, actorID string, actorRole 
 			}
 			// If subjectID is provided, check if actor teaches it in this class
 			var exists bool
-			s.validator.db.QueryRow(`SELECT EXISTS(SELECT 1 FROM class_subjects cs JOIN teachers t ON cs.teacher_id = t.id WHERE cs.class_id = $1 AND cs.subject_id = $2 AND t.user_id = $3)`, 
+			_ = s.validator.db.QueryRow(`SELECT EXISTS(SELECT 1 FROM class_subjects cs JOIN teachers t ON cs.teacher_id = t.id WHERE cs.class_id = $1 AND cs.subject_id = $2 AND t.user_id = $3)`, 
 				classID, filter.SubjectID, actorID).Scan(&exists)
 			if !exists {
 				return nil, fmt.Errorf("unauthorized: you do not teach this subject in this class")
@@ -678,12 +678,12 @@ func (s *service) GetMyTrend(studentID string, subjectID string) (*TrendResponse
 	// Calculate Moving Average (window 3)
 	for i, g := range relevant {
 		val := g.GradeValue
-		if val == 0 && g.GradeType == GradeTypeJudgment {
-			// Convert if needed. Currently `GradeValue` is assumed populated.
-			// But if it was 0, we might need manual conversion?
-			// The Calculator has `ConvertJudgmentToValue`.
-			// Let's assume validation ensured GradeValue represents the numeric equivalent.
-		}
+		// if val == 0 && g.GradeType == GradeTypeJudgment {
+		// 	// Convert if needed. Currently `GradeValue` is assumed populated.
+		// 	// But if it was 0, we might need manual conversion?
+		// 	// The Calculator has `ConvertJudgmentToValue`.
+		// 	// Let's assume validation ensured GradeValue represents the numeric equivalent.
+		// }
 
 		// Moving Avg
 		start := i - 2

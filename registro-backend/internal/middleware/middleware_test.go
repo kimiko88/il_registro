@@ -194,7 +194,7 @@ func TestErrorMiddleware(t *testing.T) {
 			r.Use(ErrorMiddleware())
 			r.GET("/test", func(c *gin.Context) {
 				if tt.addError {
-					c.Error(assert.AnError)
+					_ = c.Error(assert.AnError)
 				}
 				c.Status(http.StatusOK)
 			})

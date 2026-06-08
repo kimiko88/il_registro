@@ -3,7 +3,6 @@ package middleware
 import (
 	"net/http"
 	"sync"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/time/rate"
@@ -24,14 +23,14 @@ func NewIPRateLimiter(r rate.Limit, b int) *IPRateLimiter {
 		b:   b,
 	}
 
-	go func() {
-		for {
-			time.Sleep(time.Minute)
-			i.mu.Lock()
-			// Cleanup old entries logic could be here
-			i.mu.Unlock()
-		}
-	}()
+	// go func() {
+	// 	for {
+	// 		time.Sleep(time.Minute)
+	// 		i.mu.Lock()
+	// 		// Cleanup old entries logic could be here
+	// 		i.mu.Unlock()
+	// 	}
+	// }()
 
 	return i
 }

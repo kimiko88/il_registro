@@ -92,7 +92,7 @@ func (r *repository) GetParticipationsByProject(ctx context.Context, projectID s
 	var parts []Participation
 	for rows.Next() {
 		var p Participation
-		rows.Scan(&p.ID, &p.ProjectID, &p.StudentID, &p.Status, &p.HoursCompleted)
+		_ = rows.Scan(&p.ID, &p.ProjectID, &p.StudentID, &p.Status, &p.HoursCompleted)
 		parts = append(parts, p)
 	}
 	return parts, nil
@@ -107,7 +107,7 @@ func (r *repository) GetParticipationsByStudent(ctx context.Context, studentID s
 	var parts []Participation
 	for rows.Next() {
 		var p Participation
-		rows.Scan(&p.ID, &p.ProjectID, &p.StudentID, &p.Status, &p.HoursCompleted)
+		_ = rows.Scan(&p.ID, &p.ProjectID, &p.StudentID, &p.Status, &p.HoursCompleted)
 		parts = append(parts, p)
 	}
 	return parts, nil
@@ -124,7 +124,7 @@ func (r *repository) LogHours(ctx context.Context, h *HourLog) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	// Insert Log
 	err = tx.QueryRowContext(ctx, `INSERT INTO pcto_hours (participation_id, date, hours, activity_description) VALUES ($1, $2, $3, $4) RETURNING id`,
@@ -152,7 +152,7 @@ func (r *repository) GetHours(ctx context.Context, participationID string) ([]Ho
 	for rows.Next() {
 		var h HourLog
 		var verifiedBy sql.NullString
-		rows.Scan(&h.ID, &h.ParticipationID, &h.Date, &h.Hours, &h.Activity, &h.Verified, &verifiedBy)
+		_ = rows.Scan(&h.ID, &h.ParticipationID, &h.Date, &h.Hours, &h.Activity, &h.Verified, &verifiedBy)
 		if verifiedBy.Valid {
 			val := verifiedBy.String
 			h.VerifiedBy = &val
@@ -181,7 +181,7 @@ func (r *repository) GetCompanies(ctx context.Context, schoolID string) ([]Compa
 	var comps []Company
 	for rows.Next() {
 		var c Company
-		rows.Scan(&c.ID, &c.SchoolID, &c.Name, &c.VatNumber, &c.Address)
+		_ = rows.Scan(&c.ID, &c.SchoolID, &c.Name, &c.VatNumber, &c.Address)
 		comps = append(comps, c)
 	}
 	return comps, nil

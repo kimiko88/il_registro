@@ -244,8 +244,24 @@ func (s *service) CancelBooking(ctx context.Context, userID, bookingID string) e
 }
 
 func (s *service) UpdateSettings(ctx context.Context, req GeneralScheduleRequest) error {
-	// Stub config update
-	return nil
+	start, err := time.Parse("2006-01-02", req.StartDate)
+	if err != nil {
+		return fmt.Errorf("invalid start date: %w", err)
+	}
+	end, err := time.Parse("2006-01-02", req.EndDate)
+	if err != nil {
+		return fmt.Errorf("invalid end date: %w", err)
+	}
+
+	settings := &ColloquioSettings{
+		SchoolID:           "default-school", // Temporary default
+		BookingWindowDays:  14,
+		BookingBufferHours: 24,
+		GeneralWindowStart: &start,
+		GeneralWindowEnd:   &end,
+	}
+
+	return s.repo.UpdateSettings(ctx, settings)
 }
 
 func (s *service) GetAnalytics(ctx context.Context) (*AnalyticsResponse, error) {

@@ -53,7 +53,7 @@ func (r *repository) BatchCreate(atts []*Attendance) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	stmt, err := tx.Prepare(`
 		INSERT INTO attendance (

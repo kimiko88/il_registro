@@ -61,9 +61,9 @@ func (s *service) MarkAttendance(ctx context.Context, teacherID string, req Crea
 
 	// Just a simple mapping if entry_time is provided (it should be an hour int, but for now we ignore entry_time/exit_time string from request if hour is used in DB, or parse it to int)
 	// Since DB only supports hour, and req has EntryTime string, let's ignore or parse
-	if req.EntryTime != "" {
-		// optional: parse HH:MM to int hour
-	}
+	// if req.EntryTime != "" {
+	// 	// optional: parse HH:MM to int hour
+	// }
 
 	if err := s.validator.ValidateEntry(att); err != nil {
 		return err

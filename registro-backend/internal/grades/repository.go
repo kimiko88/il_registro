@@ -84,7 +84,7 @@ func (r *repository) BatchCreate(grades []*Grade) error {
 	if err != nil {
 		return fmt.Errorf("batch create begin tx error: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	query := `
 		INSERT INTO grades (
@@ -126,7 +126,7 @@ func (r *repository) Update(grade *Grade, history *GradeHistory) error {
 	if err != nil {
 		return fmt.Errorf("begin transaction error: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	// 1. Update Grade
 	updateQuery := `
@@ -349,7 +349,6 @@ func (r *repository) FindWithFilter(filter GradeFilter) ([]Grade, error) {
 	if filter.IsPublished != nil {
 		conditions = append(conditions, fmt.Sprintf("is_published = $%d", argIdx))
 		args = append(args, *filter.IsPublished)
-		argIdx++
 	}
 
 	if len(conditions) > 0 {

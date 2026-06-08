@@ -145,7 +145,7 @@ func (s *Service) Login(ctx context.Context, req *LoginRequest, ipAddress, userA
 	}
 
 	// Update last login
-	s.repo.UpdateLastLogin(ctx, user.ID)
+	_ = s.repo.UpdateLastLogin(ctx, user.ID)
 
 	// Record successful attempt
 	s.recordSuccessfulAttempt(ctx, req.Email, ipAddress)
@@ -357,7 +357,7 @@ func (s *Service) ResetPassword(ctx context.Context, token, newPassword string) 
 	}
 
 	// Revoke all refresh tokens for security
-	s.repo.RevokeAllUserTokens(ctx, prt.UserID)
+	_ = s.repo.RevokeAllUserTokens(ctx, prt.UserID)
 
 	return nil
 }
@@ -369,7 +369,7 @@ func (s *Service) recordFailedAttempt(ctx context.Context, email, ipAddress stri
 		Success:     false,
 		AttemptedAt: time.Now(),
 	}
-	s.repo.RecordLoginAttempt(ctx, attempt)
+	_ = s.repo.RecordLoginAttempt(ctx, attempt)
 }
 
 func (s *Service) recordSuccessfulAttempt(ctx context.Context, email, ipAddress string) {
@@ -379,5 +379,5 @@ func (s *Service) recordSuccessfulAttempt(ctx context.Context, email, ipAddress 
 		Success:     true,
 		AttemptedAt: time.Now(),
 	}
-	s.repo.RecordLoginAttempt(ctx, attempt)
+	_ = s.repo.RecordLoginAttempt(ctx, attempt)
 }

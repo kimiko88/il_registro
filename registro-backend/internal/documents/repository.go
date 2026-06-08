@@ -47,7 +47,7 @@ func (r *repository) Create(d *Document, content string) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	// 1. Insert Document Header
 	query := `
@@ -83,7 +83,7 @@ func (r *repository) Update(d *Document, newContent, changeLog string) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	// Increment Version
 	newVersion := d.CurrentVersion + 1
@@ -196,7 +196,7 @@ func (r *repository) AddSignature(sig *DocumentSignature) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	// 1. Insert Sig
 	_, err = tx.Exec(`
