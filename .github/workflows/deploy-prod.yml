@@ -20,12 +20,11 @@ jobs:
           cd registro-frontend
           npm ci
           npm run build
-      - uses: jsmrcaga/action-netlify-deploy@master
-        with:
+      - name: Deploy to Netlify Production
+        run: npx netlify-cli deploy --prod --dir=registro-frontend/dist
+        env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-          build_directory: registro-frontend/dist
-          deploy_alias: production
 
       # Backend Deploy (Dokku)
       - name: Deploy Backend
