@@ -9,11 +9,11 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       
       # Frontend Deploy (Netlify Production)
       - name: Deploy Frontend
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
       - run: |
@@ -27,6 +27,13 @@ jobs:
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
 
       # Backend Deploy (Dokku)
+      - name: Configure Dokku
+        uses: dokku/github-action@master
+        with:
+          git_remote_url: ssh://dokku@${{ secrets.DOKKU_HOST }}/registro-backend
+          ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
+          command: builder-docker:set registro-backend dockerfile-path registro-backend/docker/Dockerfile.prod
+
       - name: Deploy Backend
         uses: dokku/github-action@master
         with:

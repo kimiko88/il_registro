@@ -10,8 +10,9 @@ jobs:
     steps:
       - name: Check API health
         run: |
-      #     curl -f https://api.registro.it/health || exit 1
-      #     # curl -f https://api.registro.it/ready || exit 1
+          echo "WIP - Monitoring setup is pending"
+          # curl -f https://api.registro.it/health || exit 1
+          # curl -f https://api.registro.it/ready || exit 1
       # - name: Check Frontend
       #   run: curl -f https://registro.it/ || exit 1
       # - name: Notify Slack on failure

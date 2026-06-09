@@ -8,45 +8,29 @@ on:
     branches: [main, develop]
 
 jobs:
-  build-backend:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./registro-backend
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v4
-        with:
-          go-version: '1.21'
-      - run: go build -o registro-api ./cmd/api-server
-      - uses: actions/upload-artifact@v3
-        with:
-          name: registro-api
-          path: registro-backend/registro-api
-
   build-frontend:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./registro-frontend
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '18'
       - run: npm ci
       - run: npm run build
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: dist
           path: registro-frontend/dist
 
   docker-build:
-    needs: [build-backend, build-frontend]
+    needs: [build-frontend]
     runs-on: ubuntu-latest
     if: github.event_name != 'pull_request'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v2
       - uses: docker/login-action@v2
         with:
