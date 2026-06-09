@@ -38,6 +38,10 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       
+      # Convert repository name to lowercase for Docker tags
+      - name: Set lowercase repository name
+        run: echo "REPO_LC=${GITHUB_REPOSITORY,,}" >> ${GITHUB_ENV}
+
       # Build Backend Image
       - name: Build and push Backend
         uses: docker/build-push-action@v4
@@ -45,7 +49,7 @@ jobs:
           context: ./registro-backend
           file: ./registro-backend/docker/Dockerfile.prod
           push: true
-          tags: ghcr.io/${{ github.repository }}-backend:${{ github.sha }},ghcr.io/${{ github.repository }}-backend:latest
+          tags: ghcr.io/${{ env.REPO_LC }}-backend:${{ github.sha }},ghcr.io/${{ env.REPO_LC }}-backend:latest
 
       # Build Frontend Image (Assuming Dockerfile exists or using generic nginx one)
       # If no Dockerfile in frontend, we might skip this or use a generic one.
@@ -56,4 +60,4 @@ jobs:
       #   with:
       #     context: ./registro-frontend
       #     push: true
-      #     tags: ghcr.io/${{ github.repository }}-frontend:${{ github.sha }}
+      #     tags: ghcr.io/${{ env.REPO_LC }}-frontend:${{ github.sha }}
