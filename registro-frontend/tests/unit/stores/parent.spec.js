@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useParentStore } from '@/stores/parent'
-import { api } from '@/boot/axios'
+import api from '@/services/api'
 
-vi.mock('@/boot/axios', () => ({
-    api: {
+vi.mock('@/services/api', () => ({
+    default: {
         get: vi.fn()
     }
 }))

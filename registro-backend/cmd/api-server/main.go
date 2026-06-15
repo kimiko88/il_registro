@@ -41,9 +41,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
-	if err != nil {
-		log.Fatalf("Failed to load config: %v", err)
-	}
 
 	// 2. Init Logger
 	logger.Init(cfg.Server.Mode)

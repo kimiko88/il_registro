@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { api } from '../boot/axios'
+import api from '../services/api'
 import { ref, computed } from 'vue'
 
 export const useParentStore = defineStore('parent', () => {
