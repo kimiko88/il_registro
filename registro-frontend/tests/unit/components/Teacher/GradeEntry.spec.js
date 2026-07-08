@@ -72,6 +72,10 @@ describe('GradeEntry.vue', () => {
                         template: '<input :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
                         props: ['modelValue']
                     },
+                    'q-select': {
+                        template: '<select :value="modelValue" @change="$emit(\'update:modelValue\', $event.target.value)"><option v-for="opt in options" :key="opt" :value="opt">{{ opt }}</option></select>',
+                        props: ['modelValue', 'options']
+                    },
                     'q-btn': { template: '<button @click="$emit(\'click\')"></button>' },
                     'q-badge': { template: '<span><slot /></span>' },
                     'q-tooltip': { template: '<span><slot /></span>' },

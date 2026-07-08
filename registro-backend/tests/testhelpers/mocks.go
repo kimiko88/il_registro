@@ -192,6 +192,32 @@ func (m *MockGradesRepository) GetHistory(gradeID string) ([]grades.GradeHistory
 	}
 	return args.Get(0).([]grades.GradeHistory), args.Error(1)
 }
+func (m *MockGradesRepository) CreateTest(test *grades.ClassTest) error {
+	args := m.Called(test)
+	return args.Error(0)
+}
+func (m *MockGradesRepository) FindTestsByClassAndSubject(classID string, subjectID string) ([]grades.ClassTest, error) {
+	args := m.Called(classID, subjectID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]grades.ClassTest), args.Error(1)
+}
+func (m *MockGradesRepository) DeleteTest(id string) error {
+	args := m.Called(id)
+	return args.Error(0)
+}
+func (m *MockGradesRepository) UpdateTest(test *grades.ClassTest) error {
+	args := m.Called(test)
+	return args.Error(0)
+}
+func (m *MockGradesRepository) FindGradesByTestID(testID string) ([]grades.Grade, error) {
+	args := m.Called(testID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]grades.Grade), args.Error(1)
+}
 
 // MockUsersRepository mocks users.Repository
 type MockUsersRepository struct {

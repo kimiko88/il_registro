@@ -62,6 +62,9 @@ func (m *MockSchedRepo) UpdateBooking(ctx context.Context, b *ColloquioBooking) 
 func (m *MockSchedRepo) GetAnalytics(ctx context.Context, schoolID string) (*AnalyticsResponse, error) {
 	return nil, nil
 }
+func (m *MockSchedRepo) ResolveParentUserID(ctx context.Context, userID string) (string, error) {
+	return userID, nil
+}
 
 func TestRegression_DoubleBooking(t *testing.T) {
 	repo := &MockSchedRepo{}

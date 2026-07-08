@@ -31,6 +31,9 @@ type Repository interface {
 
 	// Analytics
 	GetAnalytics(ctx context.Context, schoolID string) (*AnalyticsResponse, error)
+
+	// User to Profile resolver
+	ResolveParentUserID(ctx context.Context, userID string) (string, error)
 }
 
 type repository struct {
@@ -159,13 +162,36 @@ func (r *repository) CreateBooking(ctx context.Context, b *ColloquioBooking) err
 }
 
 func (r *repository) GetBooking(ctx context.Context, id string) (*ColloquioBooking, error) {
+	query := `
+		SELECT b.id, b.slot_id, b.parent_id, b.student_id, b.status, b.notes, b.booked_at,
+		       COALESCE(up.last_name || ' ' || up.first_name, '') as parent_name,
+		       COALESCE(us.last_name || ' ' || us.first_name, '') as student_name
+		FROM colloquio_bookings b
+		LEFT JOIN parents p ON b.parent_id = p.id
+		LEFT JOIN users up ON p.user_id = up.id
+		LEFT JOIN students st ON b.student_id = st.id
+		LEFT JOIN users us ON st.user_id = us.id
+		WHERE b.id=$1`
+	
 	var b ColloquioBooking
-	err := r.db.QueryRowContext(ctx, `SELECT id, slot_id, parent_id, student_id, status, notes, booked_at FROM colloquio_bookings WHERE id=$1`, id).Scan(
+	err := r.db.QueryRowContext(ctx, query, id).Scan(
 		&b.ID, &b.SlotID, &b.ParentID, &b.StudentID, &b.Status, &b.Notes, &b.BookedAt,
+		&b.ParentName, &b.StudentName,
 	)
-	return &b, err
+	if err != nil {
+		return nil, err
+	}
+	return &b, nil
 }
-func (r *repository) GetBookingsByParent(ctx context.Context, parentID string) ([]ColloquioBooking, error) {
+func (r *repository) GetBookingsByParent(ctx context.Context, parentUserID string) ([]ColloquioBooking, error) {
+	parentProfileID, err := r.ResolveParentUserID(ctx, parentUserID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+
 	query := `
 		SELECT b.id, b.slot_id, b.parent_id, b.student_id, b.status, b.notes, b.booked_at,
 		       s.date, s.start_time, s.end_time, s.location, s.type,
@@ -179,7 +205,7 @@ func (r *repository) GetBookingsByParent(ctx context.Context, parentID string) (
 		LEFT JOIN users us ON st.user_id = us.id
 		WHERE b.parent_id=$1 
 		ORDER BY s.date DESC, s.start_time DESC`
-	return r.queryBookings(ctx, query, parentID)
+	return r.queryBookings(ctx, query, parentProfileID)
 }
 
 func (r *repository) GetBookingsByTeacher(ctx context.Context, teacherID string) ([]ColloquioBooking, error) {
@@ -209,7 +235,15 @@ func (r *repository) UpdateBooking(ctx context.Context, b *ColloquioBooking) err
 	return err
 }
 
-func (r *repository) CountBookingsForParent(ctx context.Context, parentID string, date time.Time, start, end time.Time) (int, error) {
+func (r *repository) CountBookingsForParent(ctx context.Context, parentUserID string, date time.Time, start, end time.Time) (int, error) {
+	parentProfileID, err := r.ResolveParentUserID(ctx, parentUserID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return 0, nil
+		}
+		return 0, err
+	}
+
 	// Check overlap
 	query := `
 		SELECT COUNT(*) 
@@ -221,11 +255,8 @@ func (r *repository) CountBookingsForParent(ctx context.Context, parentID string
 		AND (
 			(s.start_time < $4 AND s.end_time > $3) -- Overlap logic
 		)`
-	// Time comparison in SQL might need casting if passing Go Time objects for TIME columns.
-	// Assuming driver handles it or we cast.
-	// Postgres TIME type is time of day.
 	var count int
-	err := r.db.QueryRowContext(ctx, query, parentID, date, start, end).Scan(&count)
+	err = r.db.QueryRowContext(ctx, query, parentProfileID, date, start, end).Scan(&count)
 	return count, err
 }
 
@@ -299,4 +330,10 @@ func (r *repository) queryBookings(ctx context.Context, query string, args ...in
 		bookings = append(bookings, b)
 	}
 	return bookings, nil
+}
+
+func (r *repository) ResolveParentUserID(ctx context.Context, userID string) (string, error) {
+	var id string
+	err := r.db.QueryRowContext(ctx, "SELECT id FROM parents WHERE user_id = $1", userID).Scan(&id)
+	return id, err
 }

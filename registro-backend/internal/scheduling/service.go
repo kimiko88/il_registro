@@ -171,6 +171,11 @@ func (s *service) GetAvailableSlots(ctx context.Context, teacherID string) ([]Sl
 }
 
 func (s *service) BookSlot(ctx context.Context, parentID string, req BookSlotRequest) (*BookingResponse, error) {
+	parentProfileID, err := s.repo.ResolveParentUserID(ctx, parentID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to resolve parent profile: %w", err)
+	}
+
 	slot, err := s.repo.GetSlotByID(ctx, req.SlotID)
 	if err != nil {
 		return nil, err
@@ -189,7 +194,7 @@ func (s *service) BookSlot(ctx context.Context, parentID string, req BookSlotReq
 
 	booking := &ColloquioBooking{
 		SlotID:    req.SlotID,
-		ParentID:  &parentID,
+		ParentID:  &parentProfileID,
 		StudentID: req.StudentID,
 		Status:    StatusConfirmed,
 	}
@@ -198,10 +203,30 @@ func (s *service) BookSlot(ctx context.Context, parentID string, req BookSlotReq
 		return nil, err
 	}
 
+	// Hydrate booking response details (parent name/student name)
+	hydrated, err := s.repo.GetBooking(ctx, booking.ID)
+	if err == nil && hydrated != nil {
+		booking = hydrated
+		booking.Slot = slot
+	}
+
 	s.notif.NotifyBooking(booking, slot, "parent")
 
-	// Stub Response
-	return &BookingResponse{ID: booking.ID, Status: StatusConfirmed}, nil
+	return &BookingResponse{
+		ID:       booking.ID,
+		Status:   booking.Status,
+		BookedAt: booking.BookedAt,
+		Notes:    booking.Notes,
+		SlotInfo: SlotResponse{
+			ID:        slot.ID,
+			Date:      slot.Date.Format("2006-01-02"),
+			TimeRange: fmt.Sprintf("%s - %s", slot.StartTime.Format("15:04"), slot.EndTime.Format("15:04")),
+			Type:      slot.Type,
+			Location:  slot.Location,
+		},
+		ParentName:  booking.ParentName,
+		StudentName: booking.StudentName,
+	}, nil
 }
 
 func (s *service) GetMyBookings(ctx context.Context, userID, role string) ([]BookingResponse, error) {
@@ -225,8 +250,10 @@ func (s *service) CancelBooking(ctx context.Context, userID, bookingID string) e
 		return err
 	}
 
-	// Verify ownership
-	isParent := b.ParentID != nil && *b.ParentID == userID
+	// Try to resolve parent profile ID to match parent ownership check
+	parentProfileID, _ := s.repo.ResolveParentUserID(ctx, userID)
+
+	isParent := b.ParentID != nil && parentProfileID != "" && *b.ParentID == parentProfileID
 
 	if !isParent {
 		// Check if it's the teacher

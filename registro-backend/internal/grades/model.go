@@ -79,6 +79,8 @@ type Grade struct {
 
 	// ModifiedBy tracks the last editor
 	ModifiedBy *string `json:"modified_by,omitempty" db:"modified_by"`
+
+	TestID *string `json:"test_id,omitempty" db:"test_id"`
 }
 
 // GradeHistory maintains an audit trail of changes to grades
@@ -151,4 +153,19 @@ func (g *Grade) IsValid() bool {
 		return false
 	}
 	return true
+}
+
+// ClassTest represents an assessment scheduled by a teacher
+type ClassTest struct {
+	ID             string    `json:"id" db:"id"`
+	ClassID        string    `json:"class_id" db:"class_id"`
+	SubjectID      string    `json:"subject_id" db:"subject_id"`
+	TeacherID      string    `json:"teacher_id" db:"teacher_id"`
+	Title          string    `json:"title" db:"title"`
+	Date           time.Time `json:"date" db:"date"`
+	TeacherNotes   string    `json:"teacher_notes" db:"teacher_notes"`
+	ParentNotes    string    `json:"parent_notes" db:"parent_notes"`
+	EvaluationType string    `json:"evaluation_type" db:"evaluation_type"`
+	CreatedAt      time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at" db:"updated_at"`
 }

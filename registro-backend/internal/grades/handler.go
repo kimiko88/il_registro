@@ -24,6 +24,12 @@ func (h *Handler) RegisterRoutes(router *gin.RouterGroup) {
 		grades.PATCH("/:id", h.UpdateGrade)
 		grades.DELETE("/:id", h.DeleteGrade)
 
+		// Class Tests
+		grades.POST("/tests", h.CreateTestWithGrades)
+		grades.GET("/tests", h.GetClassTestsList)
+		grades.DELETE("/tests/:id", h.DeleteClassTest)
+		grades.PATCH("/tests/:id", h.UpdateClassTest)
+
 		// Retrieval
 		grades.GET("/export", h.Export) // Export all/filtered
 		grades.POST("/bulk-import", h.BulkImport)
@@ -457,4 +463,90 @@ func (h *Handler) GetSchoolStatistics(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, resp)
+}
+
+func (h *Handler) CreateTestWithGrades(c *gin.Context) {
+	var req CreateClassTestRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	teacherID := c.GetString("user_id")
+	if teacherID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	if err := h.service.CreateTestWithGrades(teacherID, req); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"message": "test and grades created successfully"})
+}
+
+func (h *Handler) GetClassTestsList(c *gin.Context) {
+	classID := c.Query("class_id")
+	subjectID := c.Query("subject_id")
+	if classID == "" || subjectID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "class_id and subject_id are required"})
+		return
+	}
+
+	resp, err := h.service.GetClassTests(classID, subjectID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, resp)
+}
+
+func (h *Handler) DeleteClassTest(c *gin.Context) {
+	testID := c.Param("id")
+	if testID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "test ID is required"})
+		return
+	}
+
+	teacherID := c.GetString("user_id")
+	if teacherID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	if err := h.service.DeleteClassTest(teacherID, testID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "test and linked grades deleted successfully"})
+}
+
+func (h *Handler) UpdateClassTest(c *gin.Context) {
+	testID := c.Param("id")
+	if testID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "test ID is required"})
+		return
+	}
+
+	teacherID := c.GetString("user_id")
+	if teacherID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	var req UpdateClassTestRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.service.UpdateClassTest(teacherID, testID, req); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "test and linked grades updated successfully"})
 }

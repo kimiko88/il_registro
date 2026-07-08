@@ -80,6 +80,9 @@ func (m *MockRepo) UpdateSettings(ctx context.Context, s *ColloquioSettings) err
 func (m *MockRepo) GetAnalytics(ctx context.Context, sID string) (*AnalyticsResponse, error) {
 	return nil, nil
 }
+func (m *MockRepo) ResolveParentUserID(ctx context.Context, userID string) (string, error) {
+	return userID, nil
+}
 
 func TestService_CreateSlot(t *testing.T) {
 	repo := new(MockRepo)
@@ -108,6 +111,7 @@ func TestService_BookSlot(t *testing.T) {
 	}
 
 	repo.On("GetSlotByID", slotID).Return(slot, nil)
+	repo.On("GetBooking", "booking-id").Return(&ColloquioBooking{ID: "booking-id", ParentName: "Parent", StudentName: "Student"}, nil)
 
 	res, err := svc.BookSlot(context.Background(), "parent1", BookSlotRequest{SlotID: slotID})
 	assert.NoError(t, err)

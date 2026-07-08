@@ -1,7 +1,6 @@
 package grades
 
 import (
-	"io"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -84,9 +83,13 @@ func (m *RegressionMockRepo) FindWithFilter(f GradeFilter) ([]Grade, error)     
 func (m *RegressionMockRepo) BatchCreate(grades []*Grade) error                 { return nil }
 func (m *RegressionMockRepo) GetHistory(gradeID string) ([]GradeHistory, error) { return nil, nil }
 func (m *RegressionMockRepo) FindByTeacher(teacherID string) ([]Grade, error)   { return nil, nil }
-func (m *RegressionMockRepo) BulkImport(t string, r io.Reader, s int) (*ImportResult, error) {
+func (m *RegressionMockRepo) CreateTest(test *ClassTest) error                  { return nil }
+func (m *RegressionMockRepo) FindTestsByClassAndSubject(classID string, subjectID string) ([]ClassTest, error) {
 	return nil, nil
 }
+func (m *RegressionMockRepo) DeleteTest(id string) error { return nil }
+func (m *RegressionMockRepo) UpdateTest(test *ClassTest) error { return nil }
+func (m *RegressionMockRepo) FindGradesByTestID(testID string) ([]Grade, error) { return nil, nil }
 
 func TestService_FilterLogicRegex(t *testing.T) {
 	// Setup specific data

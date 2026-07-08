@@ -358,7 +358,7 @@ func (r *PostgresRepository) List(ctx context.Context, filter UserFilter) ([]Use
 	}
 	if filter.ClassID != "" {
 		baseQuery += fmt.Sprintf(" AND s.class_id = $%d", argCount)
-		countQuery += fmt.Sprintf(" AND s.user_id IN (SELECT user_id FROM students WHERE class_id = $%d)", argCount)
+		countQuery += fmt.Sprintf(" AND u.id IN (SELECT user_id FROM students WHERE class_id = $%d)", argCount)
 		args = append(args, filter.ClassID)
 		argCount++
 	}

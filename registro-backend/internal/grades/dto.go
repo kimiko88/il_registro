@@ -20,11 +20,12 @@ type CreateGradeRequest struct {
 }
 
 type UpdateGradeRequest struct {
-	GradeValue    *float64 `json:"grade_value"`
-	GradeType     *string  `json:"grade_type"`
-	Description   *string  `json:"description"`
-	Weight        *float64 `json:"weight"`
-	IsPublished   *bool    `json:"is_published"`
+	GradeValue     *float64 `json:"grade_value"`
+	GradeType      *string  `json:"grade_type"`
+	Description    *string  `json:"description"`
+	Date           *string  `json:"date"` // YYYY-MM-DD
+	Weight         *float64 `json:"weight"`
+	IsPublished    *bool    `json:"is_published"`
 	GradeCategory  *string  `json:"grade_category"`
 	EvaluationType *string  `json:"evaluation_type"`
 	Reason         string   `json:"reason" binding:"required"` // Reason is mandatory for updates
@@ -59,6 +60,7 @@ type GradeResponse struct {
 	GradeCategory  string    `json:"grade_category"`
 	EvaluationType *string   `json:"evaluation_type,omitempty"`
 	IsPublished    bool      `json:"is_published"`
+	TestID         *string   `json:"test_id,omitempty"`
 }
 
 // --- Student/Parent Specific Responses ---
@@ -479,4 +481,48 @@ type ImportResult struct {
 type ImportError struct {
 	Row   int    `json:"row"`
 	Error string `json:"error"`
+}
+
+type CreateClassTestRequest struct {
+	ClassID        string              `json:"class_id" binding:"required"`
+	SubjectID      string              `json:"subject_id" binding:"required"`
+	Title          string              `json:"title" binding:"required"`
+	Date           string              `json:"date" binding:"required"`
+	TeacherNotes   string              `json:"teacher_notes"`
+	ParentNotes    string              `json:"parent_notes"`
+	EvaluationType string              `json:"evaluation_type" binding:"required"` // Written/Oral/Practical
+	Grades         []StudentGradeInput `json:"grades"`
+}
+
+type StudentGradeInput struct {
+	StudentID  string  `json:"student_id" binding:"required"`
+	GradeValue float64 `json:"grade_value" binding:"required"`
+	Notes      string  `json:"notes"`
+}
+
+type ClassTestResponse struct {
+	ID             string `json:"id"`
+	ClassID        string `json:"class_id"`
+	SubjectID      string `json:"subject_id"`
+	TeacherID      string `json:"teacher_id"`
+	Title          string `json:"title"`
+	Date           string `json:"date"`
+	TeacherNotes   string `json:"teacher_notes,omitempty"`
+	ParentNotes    string `json:"parent_notes,omitempty"`
+	EvaluationType string `json:"evaluation_type"`
+}
+
+type UpdateClassTestRequest struct {
+	Title          string                    `json:"title" binding:"required"`
+	Date           string                    `json:"date" binding:"required"`
+	TeacherNotes   string                    `json:"teacher_notes"`
+	ParentNotes    string                    `json:"parent_notes"`
+	EvaluationType string                    `json:"evaluation_type" binding:"required"`
+	Grades         []UpdateStudentGradeInput `json:"grades"`
+}
+
+type UpdateStudentGradeInput struct {
+	StudentID  string   `json:"student_id" binding:"required"`
+	GradeValue *float64 `json:"grade_value"`
+	Notes      string   `json:"notes"`
 }

@@ -41,6 +41,12 @@ type Service interface {
 
 	// Parent
 	GetChildGrades(parentID string, studentID string, filter GradeFilter) (*MyGradesResponse, error)
+
+	// Class Tests
+	CreateTestWithGrades(teacherID string, req CreateClassTestRequest) error
+	GetClassTests(classID string, subjectID string) ([]ClassTestResponse, error)
+	DeleteClassTest(teacherID string, testID string) error
+	UpdateClassTest(teacherID string, testID string, req UpdateClassTestRequest) error
 }
 
 type service struct {
@@ -158,14 +164,17 @@ func (s *service) GetClassGrades(ctx context.Context, actorID string, actorRole 
 		ClassID: classID,
 	}
 
-	// Build student name map
+	// Build student name map and complete list
 	studentUsers, _ := s.userRepo.GetStudentsByClass(ctx, classID)
-	nameMap := make(map[string]string, len(studentUsers))
-	for _, u := range studentUsers {
-		nameMap[u.StudentID] = u.FirstName + " " + u.LastName
-	}
+	addedStudents := make(map[string]bool)
 
-	for sID, gList := range studentMap {
+	for _, u := range studentUsers {
+		sID := u.StudentID
+		gList := studentMap[sID]
+		if gList == nil {
+			gList = []GradeResponse{}
+		}
+
 		// Calculate Averages
 		var sum1, sum2 float64
 		var count1, count2 int
@@ -191,11 +200,47 @@ func (s *service) GetClassGrades(ctx context.Context, actorID string, actorRole 
 
 		resp.Students = append(resp.Students, StudentGradeSummary{
 			StudentID:    sID,
-			FullName:     nameMap[sID],
+			FullName:     u.FirstName + " " + u.LastName,
 			AvgSemester1: avg1,
 			AvgSemester2: avg2,
 			Grades:       gList,
 		})
+		addedStudents[sID] = true
+	}
+
+	// Handle robust fallback for students who might have grades but are not returned by GetStudentsByClass
+	for sID, gList := range studentMap {
+		if !addedStudents[sID] {
+			var sum1, sum2 float64
+			var count1, count2 int
+
+			for _, g := range gList {
+				val := g.GradeValue
+				if g.Semester == 1 {
+					sum1 += val
+					count1++
+				} else {
+					sum2 += val
+					count2++
+				}
+			}
+
+			var avg1, avg2 float64
+			if count1 > 0 {
+				avg1 = sum1 / float64(count1)
+			}
+			if count2 > 0 {
+				avg2 = sum2 / float64(count2)
+			}
+
+			resp.Students = append(resp.Students, StudentGradeSummary{
+				StudentID:    sID,
+				FullName:     "Student (" + sID + ")",
+				AvgSemester1: avg1,
+				AvgSemester2: avg2,
+				Grades:       gList,
+			})
+		}
 	}
 
 	return resp, nil
@@ -281,6 +326,13 @@ func (s *service) AddGrade(teacherID string, req CreateGradeRequest) error {
 	}
 	schoolID := *teacherUser.SchoolID
 
+	// Resolve teacher profile ID from user_id to prevent FK violation
+	var teacherProfileID string
+	err = s.validator.db.QueryRow(`SELECT id FROM teachers WHERE user_id = $1`, teacherID).Scan(&teacherProfileID)
+	if err != nil {
+		return fmt.Errorf("could not resolve teacher profile ID: %w", err)
+	}
+
 	date, _ := time.Parse("2006-01-02", req.Date)
 
 	var evalType *EvaluationType
@@ -292,7 +344,7 @@ func (s *service) AddGrade(teacherID string, req CreateGradeRequest) error {
 	grade := &Grade{
 		StudentID:      req.StudentID,
 		SubjectID:      req.SubjectID,
-		TeacherID:      teacherID,
+		TeacherID:      teacherProfileID,
 		SchoolID:       schoolID,
 		GradeValue:     req.GradeValue,
 		GradeType:      GradeType(req.GradeType),
@@ -447,6 +499,13 @@ func (s *service) UpdateGrade(teacherID string, gradeID string, req UpdateGradeR
 		val := EvaluationType(*req.EvaluationType)
 		grade.EvaluationType = &val
 		changes = true
+	}
+	if req.Date != nil && *req.Date != "" {
+		parsedDate, parseErr := time.Parse("2006-01-02", *req.Date)
+		if parseErr == nil {
+			grade.Date = parsedDate
+			changes = true
+		}
 	}
 
 	if !changes {
@@ -819,6 +878,7 @@ func (s *service) mapSingleResponse(g Grade) GradeResponse {
 		GradeCategory:  string(g.GradeCategory),
 		EvaluationType: evalType,
 		IsPublished:    g.IsPublished,
+		TestID:         g.TestID,
 	}
 }
 
@@ -837,5 +897,263 @@ func academicYearDates() (sem1Start, sem1End, sem2Start, sem2End string) {
 	sem2Start = fmt.Sprintf("%d-02-01", nextYear)
 	sem2End = fmt.Sprintf("%d-06-10", nextYear)
 	return
+}
+
+func (s *service) CreateTestWithGrades(teacherID string, req CreateClassTestRequest) error {
+	// 1. Resolve teacher's school_id from user profile
+	teacherUser, err := s.userRepo.GetByID(context.Background(), teacherID)
+	if err != nil {
+		return fmt.Errorf("could not resolve teacher profile: %w", err)
+	}
+	if teacherUser.SchoolID == nil {
+		return fmt.Errorf("teacher is not associated with a school")
+	}
+	schoolID := *teacherUser.SchoolID
+
+	// Resolve teacher profile ID from user_id
+	var teacherProfileID string
+	err = s.validator.db.QueryRow(`SELECT id FROM teachers WHERE user_id = $1`, teacherID).Scan(&teacherProfileID)
+	if err != nil {
+		return fmt.Errorf("could not resolve teacher profile ID: %w", err)
+	}
+
+	testDate, err := time.Parse("2006-01-02", req.Date)
+	if err != nil {
+		testDate = time.Now()
+	}
+
+	// 2. Insert class_test
+	test := &ClassTest{
+		ClassID:        req.ClassID,
+		SubjectID:      req.SubjectID,
+		TeacherID:      teacherID, // class_tests references users(id)
+		Title:          req.Title,
+		Date:           testDate,
+		TeacherNotes:   req.TeacherNotes,
+		ParentNotes:    req.ParentNotes,
+		EvaluationType: req.EvaluationType,
+	}
+
+	if err := s.repo.CreateTest(test); err != nil {
+		return fmt.Errorf("failed to create test: %w", err)
+	}
+
+	// 3. For each grade, populate and insert
+	var gradesList []*Grade
+	for _, gInput := range req.Grades {
+		// Ignore empty values if passed (e.g. absent student)
+		if gInput.GradeValue <= 0 {
+			continue
+		}
+
+		desc := req.ParentNotes
+		if gInput.Notes != "" {
+			if desc != "" {
+				desc += " - " + gInput.Notes
+			} else {
+				desc = gInput.Notes
+			}
+		}
+
+		var evalType *EvaluationType
+		val := EvaluationType(req.EvaluationType)
+		evalType = &val
+
+		grade := &Grade{
+			StudentID:      gInput.StudentID,
+			SubjectID:      req.SubjectID,
+			TeacherID:      teacherProfileID, // references teachers(id)
+			SchoolID:       schoolID,
+			GradeValue:     gInput.GradeValue,
+			GradeType:      "numeric",
+			Semester:       Semester(1), // Default to first semester for now
+			Date:           testDate,
+			Description:    desc,
+			Weight:         1.0,
+			IsPublished:    true,
+			GradeCategory:  "summative",
+			EvaluationType: evalType,
+			CreatedBy:      teacherID,
+			TestID:         &test.ID,
+		}
+		gradesList = append(gradesList, grade)
+	}
+
+	if len(gradesList) > 0 {
+		if err := s.repo.BatchCreate(gradesList); err != nil {
+			return fmt.Errorf("failed to insert grades for test: %w", err)
+		}
+
+		// Notify students in real-time
+		if s.broadcaster != nil {
+			for _, g := range gradesList {
+				s.broadcaster.BroadcastToUser(g.StudentID, "GRADE_ADDED", s.mapSingleResponse(*g))
+			}
+		}
+	}
+
+	return nil
+}
+
+func (s *service) GetClassTests(classID string, subjectID string) ([]ClassTestResponse, error) {
+	tests, err := s.repo.FindTestsByClassAndSubject(classID, subjectID)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp []ClassTestResponse
+	for _, t := range tests {
+		resp = append(resp, ClassTestResponse{
+			ID:             t.ID,
+			ClassID:        t.ClassID,
+			SubjectID:      t.SubjectID,
+			TeacherID:      t.TeacherID,
+			Title:          t.Title,
+			Date:           t.Date.Format("2006-01-02"),
+			TeacherNotes:   t.TeacherNotes,
+			ParentNotes:    t.ParentNotes,
+			EvaluationType: t.EvaluationType,
+		})
+	}
+	return resp, nil
+}
+
+func (s *service) DeleteClassTest(teacherID string, testID string) error {
+	return s.repo.DeleteTest(testID)
+}
+
+func (s *service) UpdateClassTest(teacherID string, testID string, req UpdateClassTestRequest) error {
+	// 1. Fetch teacher user profile for school_id
+	teacherUser, err := s.userRepo.GetByID(context.Background(), teacherID)
+	if err != nil {
+		return fmt.Errorf("could not resolve teacher profile: %w", err)
+	}
+	if teacherUser.SchoolID == nil {
+		return fmt.Errorf("teacher is not associated with a school")
+	}
+	schoolID := *teacherUser.SchoolID
+
+	// Resolve teacher profile ID from user_id
+	var teacherProfileID string
+	err = s.validator.db.QueryRow(`SELECT id FROM teachers WHERE user_id = $1`, teacherID).Scan(&teacherProfileID)
+	if err != nil {
+		return fmt.Errorf("could not resolve teacher profile ID: %w", err)
+	}
+
+	// Resolve class and subject from test
+	var classID, subjectID string
+	err = s.validator.db.QueryRow(`SELECT class_id, subject_id FROM class_tests WHERE id = $1`, testID).Scan(&classID, &subjectID)
+	if err != nil {
+		return fmt.Errorf("could not resolve test details: %w", err)
+	}
+
+	testDate, err := time.Parse("2006-01-02", req.Date)
+	if err != nil {
+		testDate = time.Now()
+	}
+
+	// 2. Update Class Test metadata
+	test := &ClassTest{
+		ID:             testID,
+		ClassID:        classID,
+		SubjectID:      subjectID,
+		TeacherID:      teacherID,
+		Title:          req.Title,
+		Date:           testDate,
+		TeacherNotes:   req.TeacherNotes,
+		ParentNotes:    req.ParentNotes,
+		EvaluationType: req.EvaluationType,
+	}
+
+	if err := s.repo.UpdateTest(test); err != nil {
+		return fmt.Errorf("failed to update test metadata: %w", err)
+	}
+
+	// 3. Retrieve existing grades linked to this test
+	existingGrades, err := s.repo.FindGradesByTestID(testID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch existing grades for test: %w", err)
+	}
+
+	existingMap := make(map[string]Grade)
+	for _, eg := range existingGrades {
+		existingMap[eg.StudentID] = eg
+	}
+
+	// 4. Update, insert, or delete grades based on input
+	for _, gInput := range req.Grades {
+		existingGrade, exists := existingMap[gInput.StudentID]
+
+		// Option A: Input grade value is nil or <= 0 -> we delete the grade if it exists
+		if gInput.GradeValue == nil || *gInput.GradeValue <= 0 {
+			if exists {
+				if err := s.repo.Delete(existingGrade.ID, teacherID); err != nil {
+					return fmt.Errorf("failed to delete grade for student %s: %w", gInput.StudentID, err)
+				}
+			}
+			continue
+		}
+
+		// Option B: Input grade is valid -> Update or Insert
+		desc := req.ParentNotes
+		if gInput.Notes != "" {
+			if desc != "" {
+				desc += " - " + gInput.Notes
+			} else {
+				desc = gInput.Notes
+			}
+		}
+
+		val := EvaluationType(req.EvaluationType)
+		evalType := &val
+
+		if exists {
+			// Update existing grade
+			history := &GradeHistory{
+				GradeID:        existingGrade.ID,
+				ModifiedBy:     teacherID,
+				Reason:         "Aggiornamento verifica in blocco",
+				OldValue:       &existingGrade.GradeValue,
+				OldDescription: existingGrade.Description,
+			}
+			newValue := *gInput.GradeValue
+			history.NewValue = &newValue
+			history.NewDescription = desc
+
+			existingGrade.GradeValue = newValue
+			existingGrade.Description = desc
+			existingGrade.Date = testDate
+			existingGrade.EvaluationType = evalType
+
+			if err := s.repo.Update(&existingGrade, history); err != nil {
+				return fmt.Errorf("failed to update grade for student %s: %w", gInput.StudentID, err)
+			}
+		} else {
+			// Insert new grade linked to test
+			grade := &Grade{
+				StudentID:      gInput.StudentID,
+				SubjectID:      subjectID,
+				TeacherID:      teacherProfileID,
+				SchoolID:       schoolID,
+				GradeValue:     *gInput.GradeValue,
+				GradeType:      "numeric",
+				Semester:       Semester(1),
+				Date:           testDate,
+				Description:    desc,
+				Weight:         1.0,
+				IsPublished:    true,
+				GradeCategory:  "summative",
+				EvaluationType: evalType,
+				CreatedBy:      teacherID,
+				TestID:         &testID,
+			}
+			var gradesList []*Grade = []*Grade{grade}
+			if err := s.repo.BatchCreate(gradesList); err != nil {
+				return fmt.Errorf("failed to insert new grade for student %s: %w", gInput.StudentID, err)
+			}
+		}
+	}
+
+	return nil
 }
 

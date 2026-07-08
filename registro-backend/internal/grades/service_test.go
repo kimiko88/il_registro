@@ -89,6 +89,32 @@ func (m *MockRepository) FindWithFilter(filter GradeFilter) ([]Grade, error) {
 	}
 	return args.Get(0).([]Grade), args.Error(1)
 }
+func (m *MockRepository) CreateTest(test *ClassTest) error {
+	args := m.Called(test)
+	return args.Error(0)
+}
+func (m *MockRepository) FindTestsByClassAndSubject(classID string, subjectID string) ([]ClassTest, error) {
+	args := m.Called(classID, subjectID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]ClassTest), args.Error(1)
+}
+func (m *MockRepository) DeleteTest(id string) error {
+	args := m.Called(id)
+	return args.Error(0)
+}
+func (m *MockRepository) UpdateTest(test *ClassTest) error {
+	args := m.Called(test)
+	return args.Error(0)
+}
+func (m *MockRepository) FindGradesByTestID(testID string) ([]Grade, error) {
+	args := m.Called(testID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]Grade), args.Error(1)
+}
 
 // MockUserRepo
 type MockUserRepo struct {

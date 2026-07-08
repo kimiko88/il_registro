@@ -119,6 +119,55 @@ export const useGradesStore = defineStore('grades', {
                 console.error("Error deleting grade:", err);
                 throw err;
             }
+        },
+
+        async createClassTest(testData) {
+            this.loading = true;
+            try {
+                const response = await gradeService.createClassTest(testData);
+                // Refetch grades to show the new grades in the register
+                if (this._lastClassId) {
+                    await this.fetchGrades(this._lastClassId, this._lastSubjectId);
+                }
+                return response.data;
+            } catch (err) {
+                console.error("Error creating class test:", err);
+                throw err;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async updateClassTest(id, testData) {
+            this.loading = true;
+            try {
+                const response = await gradeService.updateClassTest(id, testData);
+                if (this._lastClassId) {
+                    await this.fetchGrades(this._lastClassId, this._lastSubjectId);
+                }
+                return response.data;
+            } catch (err) {
+                console.error("Error updating class test:", err);
+                throw err;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async deleteClassTest(id) {
+            this.loading = true;
+            try {
+                const response = await gradeService.deleteClassTest(id);
+                if (this._lastClassId) {
+                    await this.fetchGrades(this._lastClassId, this._lastSubjectId);
+                }
+                return response.data;
+            } catch (err) {
+                console.error("Error deleting class test:", err);
+                throw err;
+            } finally {
+                this.loading = false;
+            }
         }
     }
 });
