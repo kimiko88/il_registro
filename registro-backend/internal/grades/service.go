@@ -181,12 +181,14 @@ func (s *service) GetClassGrades(ctx context.Context, actorID string, actorRole 
 
 		for _, g := range gList {
 			val := g.GradeValue
-			if g.Semester == 1 {
-				sum1 += val
-				count1++
-			} else {
-				sum2 += val
-				count2++
+			if val >= 0 {
+				if g.Semester == 1 {
+					sum1 += val
+					count1++
+				} else {
+					sum2 += val
+					count2++
+				}
 			}
 		}
 
@@ -216,12 +218,14 @@ func (s *service) GetClassGrades(ctx context.Context, actorID string, actorRole 
 
 			for _, g := range gList {
 				val := g.GradeValue
-				if g.Semester == 1 {
-					sum1 += val
-					count1++
-				} else {
-					sum2 += val
-					count2++
+				if val >= 0 {
+					if g.Semester == 1 {
+						sum1 += val
+						count1++
+					} else {
+						sum2 += val
+						count2++
+					}
 				}
 			}
 
@@ -941,8 +945,8 @@ func (s *service) CreateTestWithGrades(teacherID string, req CreateClassTestRequ
 	// 3. For each grade, populate and insert
 	var gradesList []*Grade
 	for _, gInput := range req.Grades {
-		// Ignore empty values if passed (e.g. absent student)
-		if gInput.GradeValue <= 0 {
+		// Ignore empty/nil values or invalid negative values (< -1)
+		if gInput.GradeValue == nil || *gInput.GradeValue < -1 {
 			continue
 		}
 
@@ -964,7 +968,7 @@ func (s *service) CreateTestWithGrades(teacherID string, req CreateClassTestRequ
 			SubjectID:      req.SubjectID,
 			TeacherID:      teacherProfileID, // references teachers(id)
 			SchoolID:       schoolID,
-			GradeValue:     gInput.GradeValue,
+			GradeValue:     *gInput.GradeValue,
 			GradeType:      "numeric",
 			Semester:       Semester(1), // Default to first semester for now
 			Date:           testDate,
@@ -1084,8 +1088,8 @@ func (s *service) UpdateClassTest(teacherID string, testID string, req UpdateCla
 	for _, gInput := range req.Grades {
 		existingGrade, exists := existingMap[gInput.StudentID]
 
-		// Option A: Input grade value is nil or <= 0 -> we delete the grade if it exists
-		if gInput.GradeValue == nil || *gInput.GradeValue <= 0 {
+		// Option A: Input grade value is nil or < -1 -> we delete the grade if it exists
+		if gInput.GradeValue == nil || *gInput.GradeValue < -1 {
 			if exists {
 				if err := s.repo.Delete(existingGrade.ID, teacherID); err != nil {
 					return fmt.Errorf("failed to delete grade for student %s: %w", gInput.StudentID, err)

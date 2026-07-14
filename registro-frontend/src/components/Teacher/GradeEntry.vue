@@ -264,7 +264,7 @@ const gradeOptions = [
 function gradeToNumeric(gradeStr) {
     if (gradeStr === undefined || gradeStr === null || gradeStr === '') return null;
     const clean = String(gradeStr).trim().toUpperCase();
-    if (clean === 'A') return 0;
+    if (clean === 'A') return -1;
     
     if (clean.includes('/')) {
         const parts = clean.split('/');
@@ -300,7 +300,7 @@ function formatGrade(val) {
     if (val === undefined || val === null || val === '-') return '-';
     const num = Number(val);
     if (isNaN(num)) return val;
-    if (num === 0) return 'A';
+    if (num === -1) return 'A';
     
     const integerPart = Math.floor(num);
     const decimalPart = num - integerPart;
@@ -322,14 +322,14 @@ function formatGrade(val) {
 
 const getBadgeColor = (val) => {
     const numeric = typeof val === 'string' ? gradeToNumeric(val) : val;
-    if (numeric === null || numeric === undefined) return 'grey';
+    if (numeric === null || numeric === undefined || numeric === -1) return 'grey';
     return numeric < 6 ? 'red' : 'green';
 };
 
 const getGradeColor = (val) => {
     if (val === undefined || val === null || val === '') return '';
     const numeric = gradeToNumeric(val);
-    if (numeric === 0) return 'bg-red-1';
+    if (numeric === -1) return 'bg-red-1';
     return numeric < 6 ? 'bg-red-1' : 'bg-green-1';
 };
 

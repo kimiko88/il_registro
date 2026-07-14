@@ -103,16 +103,17 @@ func (s *service) GetHomeworks(classID string) ([]HomeworkResponse, error) {
 
 func (s *service) mapLessonResponse(l *Lesson) *LessonResponse {
 	return &LessonResponse{
-		ID:        l.ID,
-		ClassID:   l.ClassID,
-		TeacherID: l.TeacherID,
-		SubjectID: l.SubjectID,
-		Date:      l.Date,
-		Hour:      l.Hour,
-		Duration:  l.Duration,
-		Topic:     l.Topic,
-		Type:      l.Type,
-		Notes:     l.Notes,
+		ID:          l.ID,
+		ClassID:     l.ClassID,
+		TeacherID:   l.TeacherID,
+		TeacherName: l.TeacherName,
+		SubjectID:   l.SubjectID,
+		Date:        l.Date,
+		Hour:        l.Hour,
+		Duration:    l.Duration,
+		Topic:       l.Topic,
+		Type:        l.Type,
+		Notes:       l.Notes,
 	}
 }
 
@@ -123,6 +124,7 @@ func (s *service) mapHomeworkResponse(h *Homework) *HomeworkResponse {
 		ClassID:     h.ClassID,
 		SubjectID:   h.SubjectID,
 		TeacherID:   h.TeacherID,
+		TeacherName: h.TeacherName,
 		DueDate:     h.DueDate,
 		Description: h.Description,
 	}

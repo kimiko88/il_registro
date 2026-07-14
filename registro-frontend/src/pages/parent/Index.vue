@@ -114,8 +114,8 @@
               </q-item-section>
               <q-item-section side>
                 <div class="row items-center">
-                   <q-badge :color="grade.grade_value >= 6 ? 'positive' : 'negative'" class="text-subtitle1 q-pa-xs">
-                     {{ grade.grade_value }}
+                   <q-badge :color="grade.grade_value === -1 ? 'grey' : (grade.grade_value >= 6 ? 'positive' : 'negative')" class="text-subtitle1 q-pa-xs">
+                     {{ grade.grade_value === -1 ? 'A' : grade.grade_value }}
                    </q-badge>
                    <div class="text-caption text-grey q-ml-md">{{ new Date(grade.date).toLocaleDateString('it-IT') }}</div>
                 </div>
@@ -189,16 +189,15 @@ const fetchChildData = async () => {
              })
         }
         
-        if (allGrades.length > 0) {
-            const sum = allGrades.reduce((acc, g) => acc + g.grade_value, 0)
-            averageGrade.value = (sum / allGrades.length).toFixed(1)
-            
-            allGrades.sort((a,b) => new Date(b.date) - new Date(a.date))
-            recentGrades.value = allGrades.slice(0, 5)
+        const validGrades = allGrades.filter(g => g.grade_value >= 0)
+        if (validGrades.length > 0) {
+            const sum = validGrades.reduce((acc, g) => acc + g.grade_value, 0)
+            averageGrade.value = (sum / validGrades.length).toFixed(1)
         } else {
-            averageGrade.value = '0.0'
-            recentGrades.value = []
+            averageGrade.value = '-'
         }
+        allGrades.sort((a,b) => new Date(b.date) - new Date(a.date))
+        recentGrades.value = allGrades.slice(0, 5)
 
         // Fetch Attendance
         const attRes = await attendanceService.getChildAttendance(selectedChildId.value)

@@ -121,7 +121,7 @@ const fetchMyGrades = async () => {
                            subject: subjectsMap.value[g.subject_id] || g.subject_id,
                            evalType: mapEvalType(g.evaluation_type),
                            type: g.grade_type,
-                           value: g.grade_value,
+                           value: g.grade_value === -1 ? 'A' : g.grade_value,
                            description: g.description,
                            semester: g.semester
                        })
@@ -148,17 +148,19 @@ const subjectAverages = computed(() => {
     const sums = {}
     const counts = {}
     filteredGrades.value.forEach(g => {
+        if (g.value === 'A') return;
         if (!sums[g.subject]) { sums[g.subject] = 0; counts[g.subject] = 0; }
         sums[g.subject] += g.value;
         counts[g.subject]++;
     });
     return Object.keys(sums).map(sub => ({
         name: sub,
-        avg: (sums[sub] / counts[sub]).toFixed(1)
+        avg: counts[sub] > 0 ? (sums[sub] / counts[sub]).toFixed(1) : '-'
     }))
 })
 
 const getGradeColor = (val) => {
+    if (val === 'A') return 'grey'
     if (val >= 8) return 'green'
     if (val >= 6) return 'orange'
     return 'red'

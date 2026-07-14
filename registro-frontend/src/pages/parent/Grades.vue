@@ -88,7 +88,7 @@ const currentGrades = computed(() => {
         date: g.date.split('T')[0],
         subject: subjectsMap.value[g.subject_id] || g.subject_id,
         type: g.grade_type,
-        value: g.grade_value,
+        value: g.grade_value === -1 ? 'A' : g.grade_value,
         notes: g.description
     }))
 })
@@ -133,6 +133,7 @@ const fetchGrades = async () => {
 }
 
 function getGradeColor(val) {
+  if (val === 'A' || val === -1) return 'grey';
   if (val < 6) return 'negative';
   if (val >= 8) return 'positive';
   return 'orange';

@@ -565,7 +565,7 @@ const submitEditTest = async () => {
             evaluation_type: editTestForm.value.evaluationType === 'Scritto' ? 'Written' : (editTestForm.value.evaluationType === 'Orale' ? 'Oral' : 'Practical'),
             grades: editTestForm.value.grades.map(g => ({
                 student_id: g.student_id,
-                grade_value: g.grade_value ? gradeToNumeric(g.grade_value) : null,
+                grade_value: (g.grade_value !== null && g.grade_value !== undefined && g.grade_value !== '') ? gradeToNumeric(g.grade_value) : null,
                 notes: g.notes
             }))
         };
@@ -617,7 +617,7 @@ function formatGrade(val) {
     if (val === undefined || val === null || val === '-') return null;
     const num = Number(val);
     if (isNaN(num)) return val;
-    if (num === 0) return 'A';
+    if (num === -1) return 'A';
     
     const integerPart = Math.floor(num);
     const decimalPart = num - integerPart;
@@ -665,7 +665,7 @@ const gradeOptions = [
 function gradeToNumeric(gradeStr) {
     if (gradeStr === undefined || gradeStr === null || gradeStr === '') return null;
     const clean = String(gradeStr).trim().toUpperCase();
-    if (clean === 'A') return 0;
+    if (clean === 'A') return -1;
     
     if (clean.includes('/')) {
         const parts = clean.split('/');
@@ -700,7 +700,7 @@ function gradeToNumeric(gradeStr) {
 const getGradeColor = (val) => {
     if (val === undefined || val === null || val === '') return '';
     const numeric = gradeToNumeric(val);
-    if (numeric === 0) return 'bg-red-1';
+    if (numeric === -1) return 'bg-red-1';
     return numeric < 6 ? 'bg-red-1' : 'bg-green-1';
 };
 </script>

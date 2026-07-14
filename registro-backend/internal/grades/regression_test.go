@@ -125,3 +125,27 @@ func TestService_FilterLogicRegex(t *testing.T) {
 		assert.Equal(t, 5.0, res[0].GradeValue)
 	})
 }
+
+func TestCalculator_AverageWithAbsence(t *testing.T) {
+	c := NewCalculator()
+
+	t.Run("Average excludes -1", func(t *testing.T) {
+		grades := []Grade{
+			{GradeValue: 8.0, Weight: 1.0},
+			{GradeValue: -1.0, Weight: 1.0}, // Absence
+			{GradeValue: 6.0, Weight: 1.0},
+		}
+		assert.Equal(t, 7.0, c.CalculateAverage(grades))
+		assert.Equal(t, 7.0, c.CalculateWeightedAverage(grades))
+	})
+
+	t.Run("Average includes 0", func(t *testing.T) {
+		grades := []Grade{
+			{GradeValue: 8.0, Weight: 1.0},
+			{GradeValue: 0.0, Weight: 1.0}, // Zero grade
+			{GradeValue: 6.0, Weight: 1.0},
+		}
+		assert.Equal(t, 4.67, c.CalculateAverage(grades))
+		assert.Equal(t, 4.67, c.CalculateWeightedAverage(grades))
+	})
+}

@@ -20,8 +20,8 @@ func NewValidator(db *sql.DB) *Validator {
 func (v *Validator) ValidateGradeValue(value float64, gradeType string) error {
 	switch GradeType(gradeType) {
 	case GradeTypeNumeric:
-		if value < 0 || value > 10 {
-			return errors.New("Voto deve essere tra 0 e 10")
+		if (value < 0 && value != -1) || value > 10 {
+			return errors.New("Voto deve essere tra 0 e 10, o -1 per assenza")
 		}
 		// Decimals check (optional string formatting check, but float logic is simpler)
 	case GradeTypeJudgment:

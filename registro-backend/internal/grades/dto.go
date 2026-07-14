@@ -495,9 +495,9 @@ type CreateClassTestRequest struct {
 }
 
 type StudentGradeInput struct {
-	StudentID  string  `json:"student_id" binding:"required"`
-	GradeValue float64 `json:"grade_value" binding:"required"`
-	Notes      string  `json:"notes"`
+	StudentID  string   `json:"student_id" binding:"required"`
+	GradeValue *float64 `json:"grade_value" binding:"required"`
+	Notes      string   `json:"notes"`
 }
 
 type ClassTestResponse struct {

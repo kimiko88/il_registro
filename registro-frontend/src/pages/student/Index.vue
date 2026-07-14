@@ -218,6 +218,7 @@ const recentGrades = ref([])
 const upcomingEvents = ref([])
 
 const getGradeColor = (val) => {
+    if (val === 'A' || val === -1) return 'grey-6';
     const v = parseFloat(val);
     if (v >= 8) return 'green-6';
     if (v >= 6) return 'orange-6';
@@ -259,21 +260,24 @@ const fetchDashboardData = async () => {
             })
         }
         // Calculate Average
-        if (allGrades.length > 0) {
-            const sum = allGrades.reduce((acc, g) => acc + g.grade_value, 0)
-            averageGrade.value = (sum / allGrades.length).toFixed(1)
-            
-            // Recent Grades (Last 5)
-            allGrades.sort((a,b) => new Date(b.date) - new Date(a.date))
-            recentGrades.value = allGrades.slice(0, 5).map(g => ({
-                id: g.id,
-                subject: getSubjectName(g.subject_id),
-                value: g.grade_value,
-                date: new Date(g.date).toLocaleDateString('it-IT'),
-                type: g.grade_type,
-                description: g.description
-            }))
+        const validGrades = allGrades.filter(g => g.grade_value >= 0)
+        if (validGrades.length > 0) {
+            const sum = validGrades.reduce((acc, g) => acc + g.grade_value, 0)
+            averageGrade.value = (sum / validGrades.length).toFixed(1)
+        } else {
+            averageGrade.value = '-'
         }
+        
+        // Recent Grades (Last 5)
+        allGrades.sort((a,b) => new Date(b.date) - new Date(a.date))
+        recentGrades.value = allGrades.slice(0, 5).map(g => ({
+            id: g.id,
+            subject: getSubjectName(g.subject_id),
+            value: g.grade_value === -1 ? 'A' : g.grade_value,
+            date: new Date(g.date).toLocaleDateString('it-IT'),
+            type: g.grade_type,
+            description: g.description
+        }))
 
         // Attendance
         const attRes = await attendanceService.getMyAttendance()

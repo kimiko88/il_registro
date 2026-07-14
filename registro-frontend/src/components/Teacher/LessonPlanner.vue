@@ -110,6 +110,16 @@
           </div>
         </q-card-section>
         <q-card-section class="q-gutter-md">
+          <q-select
+            v-model="newLesson.subject_id"
+            :options="gradesStore.subjects"
+            option-value="subject_id"
+            option-label="subject_name"
+            emit-value map-options
+            label="Materia *"
+            outlined dense
+            :rules="[v => !!v || 'Campo obbligatorio']"
+          />
           <q-input
             v-model="newLesson.date"
             type="date"
@@ -200,6 +210,16 @@
           </div>
         </q-card-section>
         <q-card-section class="q-gutter-md">
+          <q-select
+            v-model="newHomework.subject_id"
+            :options="gradesStore.subjects"
+            option-value="subject_id"
+            option-label="subject_name"
+            emit-value map-options
+            label="Materia *"
+            outlined dense
+            :rules="[v => !!v || 'Campo obbligatorio']"
+          />
           <q-input
             v-model="newHomework.description"
             label="Descrizione Compito *"
@@ -259,12 +279,14 @@ const newLesson = ref({
   topic: '',
   type: 'Frontale',
   notes: '',
+  subject_id: null,
   homeworkDesc: '',
   homeworkDue: ''
 })
 
 const newHomework = ref({
   description: '',
+  subject_id: null,
   dueDate: date.formatDate(Date.now(), 'YYYY-MM-DD')
 })
 
@@ -279,6 +301,13 @@ onMounted(async () => {
 watch(selectedClass, async () => {
   if (selectedClass.value) {
     await gradesStore.fetchClassSubjects(selectedClass.value)
+    if (gradesStore.subjects && gradesStore.subjects.length > 0) {
+      selectedSubject.value = gradesStore.subjects[0].subject_id
+    } else {
+      selectedSubject.value = null
+    }
+  } else {
+    selectedSubject.value = null
   }
   fetchData()
 })
@@ -319,6 +348,7 @@ const openNewLesson = () => {
     topic: '',
     type: 'Frontale',
     notes: '',
+    subject_id: selectedSubject.value,
     homeworkDesc: '',
     homeworkDue: ''
   }
@@ -329,13 +359,14 @@ const openNewLesson = () => {
 const openNewHomework = () => {
   newHomework.value = {
     description: '',
+    subject_id: selectedSubject.value,
     dueDate: date.formatDate(Date.now(), 'YYYY-MM-DD')
   }
   homeworkDialog.value = true
 }
 
 const saveLesson = async () => {
-  if (!newLesson.value.topic || !newLesson.value.date || !newLesson.value.type) {
+  if (!newLesson.value.topic || !newLesson.value.date || !newLesson.value.type || !newLesson.value.subject_id) {
     $q.notify({ type: 'warning', message: 'Compila tutti i campi obbligatori' })
     return
   }
@@ -343,7 +374,7 @@ const saveLesson = async () => {
   try {
     const lessonPayload = {
       class_id: selectedClass.value,
-      subject_id: selectedSubject.value,
+      subject_id: newLesson.value.subject_id,
       date: newLesson.value.date,
       hour: newLesson.value.hour,
       duration: newLesson.value.duration,
@@ -357,7 +388,7 @@ const saveLesson = async () => {
     if (assignHomeworkToo.value && newLesson.value.homeworkDesc) {
       await lessonService.createHomework({
         class_id: selectedClass.value,
-        subject_id: selectedSubject.value,
+        subject_id: newLesson.value.subject_id,
         lesson_id: lessonRes.data?.id,
         due_date: newLesson.value.homeworkDue,
         description: newLesson.value.homeworkDesc
@@ -375,7 +406,7 @@ const saveLesson = async () => {
 }
 
 const saveHomework = async () => {
-  if (!newHomework.value.description || !newHomework.value.dueDate) {
+  if (!newHomework.value.description || !newHomework.value.dueDate || !newHomework.value.subject_id) {
     $q.notify({ type: 'warning', message: 'Compila tutti i campi obbligatori' })
     return
   }
@@ -383,7 +414,7 @@ const saveHomework = async () => {
   try {
     await lessonService.createHomework({
       class_id: selectedClass.value,
-      subject_id: selectedSubject.value,
+      subject_id: newHomework.value.subject_id,
       due_date: newHomework.value.dueDate,
       description: newHomework.value.description
     })

@@ -25,7 +25,7 @@ export const useGradesStore = defineStore('grades', {
             let count = 0;
             state.grades.students.forEach(s => {
                 s.grades.forEach(g => {
-                    if (typeof g.grade_value === 'number') {
+                    if (typeof g.grade_value === 'number' && g.grade_value >= 0) {
                         sum += g.grade_value;
                         count++;
                     }
