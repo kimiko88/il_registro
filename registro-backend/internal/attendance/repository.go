@@ -37,14 +37,14 @@ func (r *repository) Create(a *Attendance) error {
 	query := `
 		INSERT INTO attendance (
 			school_id, student_id, class_id, date, hour, subject_id, status, 
-			justified, justified_by, justified_at, notes, created_at, updated_at
+			justified, justified_by, justified_at, notes, entry_time, exit_time, created_at, updated_at
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW()
+			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW(), NOW()
 		) RETURNING id`
 
 	return r.db.QueryRow(query,
 		a.SchoolID, a.StudentID, a.ClassID, a.Date, a.Hour, a.SubjectID, a.Status,
-		a.Justified, a.JustifiedBy, a.JustifiedAt, a.Notes,
+		a.Justified, a.JustifiedBy, a.JustifiedAt, a.Notes, a.EntryTime, a.ExitTime,
 	).Scan(&a.ID)
 }
 
@@ -58,8 +58,8 @@ func (r *repository) BatchCreate(atts []*Attendance) error {
 	stmt, err := tx.Prepare(`
 		INSERT INTO attendance (
 			school_id, student_id, class_id, date, hour, subject_id, status, 
-			justified, justified_by, justified_at, notes, created_at, updated_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
+			justified, justified_by, justified_at, notes, entry_time, exit_time, created_at, updated_at
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW(), NOW())
 		ON CONFLICT (id) DO NOTHING
 		RETURNING id
 	`)
@@ -71,7 +71,7 @@ func (r *repository) BatchCreate(atts []*Attendance) error {
 	for _, a := range atts {
 		err := stmt.QueryRow(
 			a.SchoolID, a.StudentID, a.ClassID, a.Date, a.Hour, a.SubjectID, a.Status,
-			a.Justified, a.JustifiedBy, a.JustifiedAt, a.Notes,
+			a.Justified, a.JustifiedBy, a.JustifiedAt, a.Notes, a.EntryTime, a.ExitTime,
 		).Scan(&a.ID)
 		if err != nil {
 			return fmt.Errorf("batch insert error: %w", err)
@@ -83,18 +83,18 @@ func (r *repository) BatchCreate(atts []*Attendance) error {
 func (r *repository) Update(a *Attendance) error {
 	query := `
 		UPDATE attendance SET 
-			status=$1, hour=$2, subject_id=$3, notes=$4, justified=$5, justified_by=$6, justified_at=$7, updated_at=NOW()
-		WHERE id=$8`
-	_, err := r.db.Exec(query, a.Status, a.Hour, a.SubjectID, a.Notes, a.Justified, a.JustifiedBy, a.JustifiedAt, a.ID)
+			status=$1, hour=$2, subject_id=$3, notes=$4, justified=$5, justified_by=$6, justified_at=$7, entry_time=$8, exit_time=$9, updated_at=NOW()
+		WHERE id=$10`
+	_, err := r.db.Exec(query, a.Status, a.Hour, a.SubjectID, a.Notes, a.Justified, a.JustifiedBy, a.JustifiedAt, a.EntryTime, a.ExitTime, a.ID)
 	return err
 }
 
 func (r *repository) FindByID(id string) (*Attendance, error) {
-	query := `SELECT id, student_id, class_id, date, hour, subject_id, status, justified, justified_by, justified_at, notes FROM attendance WHERE id=$1`
+	query := `SELECT id, student_id, class_id, date, hour, subject_id, status, justified, justified_by, justified_at, notes, entry_time, exit_time FROM attendance WHERE id=$1`
 	var a Attendance
 	err := r.db.QueryRow(query, id).Scan(
 		&a.ID, &a.StudentID, &a.ClassID, &a.Date, &a.Hour, &a.SubjectID, &a.Status,
-		&a.Justified, &a.JustifiedBy, &a.JustifiedAt, &a.Notes,
+		&a.Justified, &a.JustifiedBy, &a.JustifiedAt, &a.Notes, &a.EntryTime, &a.ExitTime,
 	)
 	if err != nil {
 		return nil, err
@@ -104,7 +104,7 @@ func (r *repository) FindByID(id string) (*Attendance, error) {
 
 func (r *repository) FindByClassAndDate(classID string, date time.Time) ([]Attendance, error) {
 	query := `
-		SELECT id, student_id, class_id, date, hour, subject_id, status, justified, justified_by, justified_at, notes
+		SELECT id, student_id, class_id, date, hour, subject_id, status, justified, justified_by, justified_at, notes, entry_time, exit_time
 		FROM attendance 
 		WHERE class_id=$1 AND date=$2`
 
@@ -117,7 +117,10 @@ func (r *repository) FindByClassAndDate(classID string, date time.Time) ([]Atten
 	var res []Attendance
 	for rows.Next() {
 		var a Attendance
-		if err := rows.Scan(&a.ID, &a.StudentID, &a.ClassID, &a.Date, &a.Hour, &a.SubjectID, &a.Status, &a.Justified, &a.JustifiedBy, &a.JustifiedAt, &a.Notes); err != nil {
+		if err := rows.Scan(
+			&a.ID, &a.StudentID, &a.ClassID, &a.Date, &a.Hour, &a.SubjectID, &a.Status, 
+			&a.Justified, &a.JustifiedBy, &a.JustifiedAt, &a.Notes, &a.EntryTime, &a.ExitTime,
+		); err != nil {
 			return nil, err
 		}
 		res = append(res, a)
@@ -127,7 +130,7 @@ func (r *repository) FindByClassAndDate(classID string, date time.Time) ([]Atten
 
 func (r *repository) FindByStudent(studentID string, startDate, endDate time.Time) ([]Attendance, error) {
 	query := `
-		SELECT id, student_id, class_id, date, hour, subject_id, status, justified, justified_by, justified_at, notes
+		SELECT id, student_id, class_id, date, hour, subject_id, status, justified, justified_by, justified_at, notes, entry_time, exit_time
 		FROM attendance 
 		WHERE student_id=$1 AND date BETWEEN $2 AND $3
 		ORDER BY date DESC`
@@ -141,7 +144,10 @@ func (r *repository) FindByStudent(studentID string, startDate, endDate time.Tim
 	var res []Attendance
 	for rows.Next() {
 		var a Attendance
-		if err := rows.Scan(&a.ID, &a.StudentID, &a.ClassID, &a.Date, &a.Hour, &a.SubjectID, &a.Status, &a.Justified, &a.JustifiedBy, &a.JustifiedAt, &a.Notes); err != nil {
+		if err := rows.Scan(
+			&a.ID, &a.StudentID, &a.ClassID, &a.Date, &a.Hour, &a.SubjectID, &a.Status, 
+			&a.Justified, &a.JustifiedBy, &a.JustifiedAt, &a.Notes, &a.EntryTime, &a.ExitTime,
+		); err != nil {
 			return nil, err
 		}
 		res = append(res, a)

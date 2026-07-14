@@ -101,11 +101,22 @@
                     </q-card-section>
                     
                     <q-separator />
-                    <q-card-actions align="right">
+                    <q-card-actions align="right" class="q-pa-md row items-center justify-between">
+                         <div class="row items-center q-gutter-sm">
+                             <q-btn 
+                                 v-if="!selectedMessage.is_signed"
+                                 color="positive" 
+                                 icon="check" 
+                                 label="Firma per Presa Visione" 
+                                 no-caps
+                                 @click="signReceipt(selectedMessage)" 
+                             />
+                             <q-badge v-else color="positive" class="q-pa-sm text-weight-bold" outline>
+                                 <q-icon name="check_circle" class="q-mr-xs" />
+                                 Letto e Firmato per Presa Visione
+                             </q-badge>
+                         </div>
                          <q-btn flat icon="archive" label="Archivia" color="warning" />
-                         <q-btn flat icon="reply" label="Rispondi" color="primary" disable>
-                             <q-tooltip>Risposta disabilitata per studenti</q-tooltip>
-                         </q-btn>
                     </q-card-actions>
                 </div>
                 
@@ -138,8 +149,6 @@ const fetchMessages = async () => {
     loading.value = true
     try {
         const res = await communicationService.getMessages()
-        // Map backend messages to frontend format if necessary
-        // Backend Message might have: id, sender_id, recipient_id, subject, body, created_at, read
         messages.value = (res.data || []).map(m => ({
             id: m.id,
             sender: m.sender_name || 'Sistema',
@@ -150,8 +159,9 @@ const fetchMessages = async () => {
             date: new Date(m.created_at).toLocaleDateString('it-IT'),
             fullDate: new Date(m.created_at).toLocaleString('it-IT'),
             read: m.read || false,
-            hasAttachment: false, // Update if backend supports attachments
+            hasAttachment: false, 
             attachments: [],
+            is_signed: m.is_signed || false,
             archived: m.archived || false
         }))
     } catch (e) {
@@ -177,7 +187,16 @@ const selectMessage = (msg) => {
     selectedMessage.value = msg
     if (!msg.read) {
         msg.read = true
-        // api.markAsRead(msg.id)
+    }
+}
+
+const signReceipt = async (msg) => {
+    try {
+        await communicationService.signMessage(msg.id)
+        msg.is_signed = true
+        $q.notify({ type: 'positive', message: 'Presa visione registrata con successo' })
+    } catch (e) {
+        $q.notify({ type: 'negative', message: 'Errore nella registrazione della firma' })
     }
 }
 

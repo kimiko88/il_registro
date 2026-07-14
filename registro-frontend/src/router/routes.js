@@ -83,6 +83,8 @@ export default [
             { path: 'teacher/colloqui', component: () => import('@/pages/teacher/Colloqui.vue'), meta: { role: 'teacher' } },
             { path: 'teacher/communications', component: () => import('@/pages/teacher/Communications.vue'), meta: { role: 'teacher' } },
             { path: 'teacher/lessons', component: () => import('@/components/Teacher/LessonPlanner.vue'), meta: { role: 'teacher' } },
+            { path: 'teacher/didactics', component: () => import('@/pages/teacher/Didactics.vue'), meta: { role: 'teacher' } },
+            { path: 'teacher/timetable', component: () => import('@/pages/teacher/Timetable.vue'), meta: { role: 'teacher' } },
             { path: 'teacher/scrutiny', component: () => import('@/pages/teacher/Scrutiny.vue'), meta: { role: 'teacher' } },
 
             // Student Routes
@@ -95,6 +97,9 @@ export default [
             { path: 'student/orientamento', component: () => import('@/pages/student/Orientamento.vue'), meta: { role: 'student' } },
             { path: 'student/communications', component: () => import('@/pages/student/Communications.vue'), meta: { role: 'student' } },
             { path: 'student/homework', component: () => import('@/pages/student/Homework.vue'), meta: { role: 'student' } },
+            { path: 'student/didactics', component: () => import('@/pages/student/Didactics.vue'), meta: { role: 'student' } },
+            { path: 'student/notes', component: () => import('@/pages/student/Notes.vue'), meta: { role: 'student' } },
+            { path: 'student/timetable', component: () => import('@/pages/student/Timetable.vue'), meta: { role: 'student' } },
 
             // Parent Routes
             { path: 'parent', component: () => import('@/pages/parent/Index.vue'), meta: { role: 'parent' } },
@@ -104,6 +109,9 @@ export default [
             { path: 'parent/colloqui', component: () => import('@/pages/parent/Colloqui.vue'), meta: { role: 'parent' } },
             { path: 'parent/communications', component: () => import('@/pages/parent/Communications.vue'), meta: { role: 'parent' } },
             { path: 'parent/profile', component: () => import('@/pages/parent/Profile.vue'), meta: { role: 'parent' } },
+            { path: 'parent/didactics', component: () => import('@/pages/parent/Didactics.vue'), meta: { role: 'parent' } },
+            { path: 'parent/notes', component: () => import('@/pages/parent/Notes.vue'), meta: { role: 'parent' } },
+            { path: 'parent/timetable', component: () => import('@/pages/parent/Timetable.vue'), meta: { role: 'parent' } },
             { path: 'parent/support', component: () => import('@/pages/parent/Support.vue'), meta: { role: 'parent' } },
         ]
     },

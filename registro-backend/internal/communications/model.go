@@ -13,6 +13,7 @@ type Message struct {
 	Type        string     `json:"type"` // 'email', 'notification', 'internal'
 	CreatedAt   time.Time  `json:"created_at"`
 	ReadAt      *time.Time `json:"read_at,omitempty"`
+	IsSigned    bool       `json:"is_signed"`
 }
 
 type CreateMessageRequest struct {

@@ -40,6 +40,8 @@ type Attendance struct {
 	JustifiedBy *string    `json:"justified_by,omitempty" db:"justified_by"`
 	JustifiedAt *time.Time `json:"justified_at,omitempty" db:"justified_at"`
 	Notes       string     `json:"notes,omitempty" db:"notes"`
+	EntryTime   *string    `json:"entry_time,omitempty" db:"entry_time"`
+	ExitTime    *string    `json:"exit_time,omitempty" db:"exit_time"`
 
 	CreatedAt time.Time  `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time  `json:"updated_at" db:"updated_at"`

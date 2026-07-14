@@ -33,3 +33,11 @@ func (s *Service) ListMessages(ctx context.Context, userID string) ([]*Message, 
 func (s *Service) DeleteMessage(ctx context.Context, id string) error {
 	return s.repo.Delete(ctx, id)
 }
+
+func (s *Service) SignMessage(ctx context.Context, communicationID string, userID string) error {
+	return s.repo.Sign(ctx, communicationID, userID)
+}
+
+func (s *Service) GetMessageSignatures(ctx context.Context, communicationID string) ([]string, error) {
+	return s.repo.GetSignatures(ctx, communicationID)
+}

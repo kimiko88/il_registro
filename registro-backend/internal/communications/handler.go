@@ -20,6 +20,8 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 		g.GET("", h.List)
 		g.POST("", h.Send)
 		g.DELETE("/:id", h.Delete)
+		g.POST("/:id/sign", h.Sign)
+		g.GET("/:id/signatures", h.GetSignatures)
 	}
 }
 
@@ -64,4 +66,29 @@ func (h *Handler) Delete(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "deleted"})
+}
+
+func (h *Handler) Sign(c *gin.Context) {
+	id := c.Param("id")
+	uid := c.GetString("user_id")
+	if uid == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	if err := h.service.SignMessage(c, id, uid); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "signed"})
+}
+
+func (h *Handler) GetSignatures(c *gin.Context) {
+	id := c.Param("id")
+	names, err := h.service.GetMessageSignatures(c, id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, names)
 }

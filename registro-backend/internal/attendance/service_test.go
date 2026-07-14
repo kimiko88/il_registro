@@ -100,6 +100,24 @@ func TestMarkAttendance(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
+	t.Run("MarkSingle_WithTimes_Success", func(t *testing.T) {
+		req := CreateAttendanceRequest{
+			StudentID: "s1",
+			ClassID:   "c1",
+			Date:      "2025-10-10",
+			Status:    StatusLate,
+			EntryTime: "08:30",
+			ExitTime:  "13:00",
+		}
+
+		mockRepo.On("Create", mock.MatchedBy(func(a *Attendance) bool {
+			return a.StudentID == "s1" && a.Status == StatusLate && a.EntryTime != nil && *a.EntryTime == "08:30" && a.ExitTime != nil && *a.ExitTime == "13:00"
+		})).Return(nil).Once()
+
+		err := service.MarkAttendance(ctx, teacherID, req)
+		assert.NoError(t, err)
+	})
+
 	t.Run("MarkBulk_Success", func(t *testing.T) {
 		req := BulkAttendanceRequest{
 			ClassID: "c1",

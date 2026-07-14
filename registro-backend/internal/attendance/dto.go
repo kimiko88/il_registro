@@ -45,6 +45,7 @@ type AttendanceResponse struct {
 	Date        string           `json:"date"`
 	Status      AttendanceStatus `json:"status"`
 	EntryTime   string           `json:"entry_time,omitempty"`
+	ExitTime    string           `json:"exit_time,omitempty"`
 	IsJustified bool             `json:"is_justified"`
 	Notes       string           `json:"notes,omitempty"`
 }

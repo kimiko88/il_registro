@@ -31,13 +31,13 @@
       <q-item v-for="event in events" :key="event.id">
         <q-item-section avatar>
           <q-icon 
-            :name="event.status === 'absent' ? 'cancel' : 'schedule'" 
-            :color="event.status === 'absent' ? 'negative' : 'warning'" 
+            :name="getIconName(event.status)" 
+            :color="getIconColor(event.status)" 
           />
         </q-item-section>
         
         <q-item-section>
-          <q-item-label>{{ event.date }} - {{ event.status === 'absent' ? 'Assenza' : 'Ritardo' }}</q-item-label>
+          <q-item-label>{{ event.date }} - {{ event.displayStatus }}</q-item-label>
           <q-item-label caption v-if="event.is_justified" class="text-positive">Giustificata</q-item-label>
           <q-item-label caption v-else class="text-negative">Da Giustificare</q-item-label>
         </q-item-section>
@@ -105,13 +105,37 @@ watch(selectedChild, (val) => {
 const fetchAttendance = async () => {
     try {
         const res = await attendanceService.getChildAttendance(selectedChild.value.id)
-        // Backend returns generic attendance list. Filter for absence/late if needed or show all?
-        // Mock UI showed "Ultimi Eventi" (Absences/Lays).
-        // Let's filter for non-present statuses for the list.
-        events.value = (res.data || []).filter(e => e.status !== 'present')
+        events.value = (res.data || []).filter(e => {
+            const s = String(e.status).toLowerCase()
+            return s !== 'present'
+        }).map(e => {
+            let timeDetail = ''
+            const s = String(e.status).toLowerCase()
+            if (s === 'late') {
+                timeDetail = e.entry_time ? ` (Ingresso: ${e.entry_time})` : ' (Ritardo)'
+            } else if (s === 'leftearly' || s === 'early') {
+                timeDetail = e.exit_time ? ` (Uscita: ${e.exit_time})` : ' (Uscita anticipata)'
+            }
+            return {
+                id: e.id,
+                date: e.date,
+                status: e.status,
+                displayStatus: mapStatus(e.status) + timeDetail,
+                is_justified: e.is_justified,
+                notes: e.notes
+            }
+        })
     } catch (e) {
         console.error(e)
     }
+}
+
+function mapStatus(status) {
+    const s = String(status).toLowerCase()
+    if (s === 'absent') return 'Assenza'
+    if (s === 'late') return 'Ritardo'
+    if (s === 'leftearly' || s === 'early') return 'Uscita Anticipata'
+    return status
 }
 
 function openJustifyDialog(event) {
@@ -123,7 +147,6 @@ function openJustifyDialog(event) {
 
 async function submitJustification() {
   try {
-      // API call to justify
       await attendanceService.justify(selectedEvent.value.id, {
           student_id: selectedChild.value.id,
           start_date: selectedEvent.value.date,
@@ -133,10 +156,24 @@ async function submitJustification() {
       
       $q.notify({ type: 'positive', message: 'Giustificazione inviata con successo' })
       justifyDialog.value = false
-      // Refetch to update status
       fetchAttendance() 
   } catch (e) {
       $q.notify({ type: 'negative', message: 'Errore invio giustificazione' })
   }
+}
+
+function getIconName(status) {
+    const s = String(status).toLowerCase()
+    if (s === 'absent') return 'cancel'
+    if (s === 'late') return 'schedule'
+    if (s === 'leftearly' || s === 'early') return 'logout'
+    return 'help'
+}
+function getIconColor(status) {
+    const s = String(status).toLowerCase()
+    if (s === 'absent') return 'negative'
+    if (s === 'late') return 'warning'
+    if (s === 'leftearly' || s === 'early') return 'blue'
+    return 'grey'
 }
 </script>

@@ -59,11 +59,12 @@ func (s *service) MarkAttendance(ctx context.Context, teacherID string, req Crea
 		Notes:     req.Notes,
 	}
 
-	// Just a simple mapping if entry_time is provided (it should be an hour int, but for now we ignore entry_time/exit_time string from request if hour is used in DB, or parse it to int)
-	// Since DB only supports hour, and req has EntryTime string, let's ignore or parse
-	// if req.EntryTime != "" {
-	// 	// optional: parse HH:MM to int hour
-	// }
+	if req.EntryTime != "" {
+		att.EntryTime = &req.EntryTime
+	}
+	if req.ExitTime != "" {
+		att.ExitTime = &req.ExitTime
+	}
 
 	if err := s.validator.ValidateEntry(att); err != nil {
 		return err
@@ -95,6 +96,12 @@ func (s *service) MarkBulk(ctx context.Context, teacherID string, req BulkAttend
 			Status:    r.Status,
 			Notes:     r.Notes,
 		}
+		if r.EntryTime != "" {
+			att.EntryTime = &r.EntryTime
+		}
+		if r.ExitTime != "" {
+			att.ExitTime = &r.ExitTime
+		}
 		if err := s.validator.ValidateEntry(att); err != nil {
 			return err
 		}
@@ -117,6 +124,12 @@ func (s *service) UpdateAttendance(ctx context.Context, teacherID, id string, re
 	}
 	if req.Notes != nil {
 		att.Notes = *req.Notes
+	}
+	if req.EntryTime != nil {
+		att.EntryTime = req.EntryTime
+	}
+	if req.ExitTime != nil {
+		att.ExitTime = req.ExitTime
 	}
 
 	return s.repo.Update(att)
@@ -145,8 +158,13 @@ func (s *service) GetClassAttendance(ctx context.Context, classID string, dateSt
 			IsJustified: att.Justified,
 			Notes:       att.Notes,
 		}
-		if att.Hour != nil {
+		if att.EntryTime != nil && *att.EntryTime != "" {
+			r.EntryTime = *att.EntryTime
+		} else if att.Hour != nil {
 			r.EntryTime = fmt.Sprintf("%d", *att.Hour)
+		}
+		if att.ExitTime != nil {
+			r.ExitTime = *att.ExitTime
 		}
 
 		resp.Records = append(resp.Records, r)
@@ -186,6 +204,12 @@ func (s *service) GetStudentAttendance(ctx context.Context, studentID string) ([
 			Status:      att.Status,
 			IsJustified: att.Justified,
 			Notes:       att.Notes,
+		}
+		if att.EntryTime != nil {
+			r.EntryTime = *att.EntryTime
+		}
+		if att.ExitTime != nil {
+			r.ExitTime = *att.ExitTime
 		}
 		resp = append(resp, r)
 	}

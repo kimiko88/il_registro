@@ -12,6 +12,7 @@ import (
 	"registro-backend/internal/communications"
 	"registro-backend/internal/config"
 	"registro-backend/internal/db"
+	"registro-backend/internal/didactic_materials"
 	"registro-backend/internal/documents"
 	"registro-backend/internal/grades"
 	"registro-backend/internal/handler"
@@ -191,6 +192,11 @@ func main() {
 			lessonsSvc := lessons.NewService(lessonsRepo)
 			lessonsH := lessons.NewHandler(lessonsSvc)
 			lessonsH.RegisterRoutes(protected)
+
+			materialsRepo := didactic_materials.NewRepository(database)
+			materialsSvc := didactic_materials.NewService(materialsRepo)
+			materialsH := didactic_materials.NewHandler(materialsSvc)
+			materialsH.RegisterRoutes(protected)
 
 			orientH := orientamento.NewHandler(orientSvc)
 			orientH.RegisterRoutes(protected)
