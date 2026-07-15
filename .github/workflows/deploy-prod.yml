@@ -17,6 +17,21 @@ jobs:
         with:
           node-version: '18'
 
+      - name: Debug Secrets
+        run: |
+          if [ -z "${{ secrets.VITE_API_URL }}" ]; then
+            echo "::warning::secrets.VITE_API_URL is EMPTY"
+          else
+            echo "secrets.VITE_API_URL is configured (length: ${#secret_val})"
+          fi
+          if [ -z "${{ vars.VITE_API_URL }}" ]; then
+            echo "vars.VITE_API_URL is EMPTY"
+          else
+            echo "vars.VITE_API_URL is configured"
+          fi
+        env:
+          secret_val: ${{ secrets.VITE_API_URL }}
+
       - name: Build Frontend
         run: |
           cd registro-frontend
