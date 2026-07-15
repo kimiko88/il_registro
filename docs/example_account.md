@@ -1,5 +1,5 @@
 Ruolo Email Password
-Super Admin superadmin@registroelettronico.it oppure C password
+Super Admin superadmin@registroelettronico.it oppure superadmin@school.it password
 Admin (Scuola) admin@liceogalilei.it password
 Segreteria segreteria@liceogalilei.it password
 Docente p.verdi@liceogalilei.it oppure a.neri@liceogalilei.it password
