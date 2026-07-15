@@ -21,7 +21,11 @@ export const useWebSocketStore = defineStore('websocket', () => {
         }
 
         // Calculate base API URL safely
-        const baseUrl = import.meta.env.VITE_API_URL || `${window.location.protocol}//${window.location.host}/api/v1`
+        const rawUrl = import.meta.env.VITE_API_URL;
+        let baseUrl = rawUrl || `${window.location.protocol}//${window.location.host}/api/v1`;
+        if (rawUrl && !rawUrl.endsWith('/api/v1') && !rawUrl.endsWith('/api/v1/')) {
+            baseUrl = rawUrl.endsWith('/') ? `${rawUrl}api/v1` : `${rawUrl}/api/v1`;
+        }
         const wsUrl = `${baseUrl.replace('http', 'ws')}/ws?token=${token}`
 
         socket.value = new WebSocket(wsUrl)
