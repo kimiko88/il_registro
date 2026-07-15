@@ -453,6 +453,7 @@ const donutSegments = computed(() => {
 .text-gradient-premium {
   background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 50%, #EC4899 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 .glass-card {
