@@ -83,7 +83,7 @@ const plans = ref([
     { id: 101, title: 'Piano Didattico Personalizzato (PDP)', date: '15/11/2024', signed: true }
 ])
 
-const download = (doc) => {
+const download = (_doc) => {
     $q.notify({ type: 'progress', message: 'Download in corso...' })
 }
 

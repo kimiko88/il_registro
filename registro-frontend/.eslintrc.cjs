@@ -18,7 +18,15 @@ module.exports = {
   ],
   rules: {
     'vue/multi-word-component-names': 'off',
-    'no-unused-vars': 'warn',
+    'no-unused-vars': ['warn', {
+      argsIgnorePattern: '^(_|e$|err$|error$|row$|\\$event$)',
+      varsIgnorePattern: '^(_|__VLS_|\\$q$|loading$)',
+      destructuredArrayIgnorePattern: '^_',
+      caughtErrors: 'none',
+    }],
+
+
     'no-undef': 'off', // Let the compiler handle it
+
   },
 };

@@ -132,7 +132,6 @@ const classesStore = useClassesStore()
 const selectedClassId = ref(null)
 const today = date.formatDate(Date.now(), 'YYYY-MM-DD')
 const dateVal = ref(today)
-const date_ = dateVal // alias
 
 const saving = ref(false)
 const loading = ref(false)

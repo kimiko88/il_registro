@@ -197,7 +197,7 @@
 </template>
 
 <script setup>
-import { onMounted, computed, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useStudentStore } from 'src/stores/student';
 import { gradeService } from 'src/services/gradeService'
 import { attendanceService } from 'src/services/attendanceService'

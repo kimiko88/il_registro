@@ -10,18 +10,27 @@ jobs:
     environment: production
     steps:
       - uses: actions/checkout@v4
-      
+
       # Frontend Deploy (Netlify Production)
-      - name: Deploy Frontend
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-      - run: |
+
+      - name: Build Frontend
+        run: |
           cd registro-frontend
           npm ci
           npm run build
+
       - name: Deploy to Netlify Production
-        run: npx netlify-cli deploy --prod --dir=registro-frontend/dist
+        run: |
+          npx netlify-cli@latest deploy \
+            --prod \
+            --dir=registro-frontend/dist \
+            --site=$NETLIFY_SITE_ID \
+            --auth=$NETLIFY_AUTH_TOKEN \
+            --message="Production deploy from GitHub Actions"
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}

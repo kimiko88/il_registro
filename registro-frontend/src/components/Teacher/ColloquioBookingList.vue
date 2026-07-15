@@ -22,7 +22,7 @@
 <script setup>
 import { useColloquiStore } from 'src/stores/colloqui';
 
-const props = defineProps(['slots']);
+defineProps(['slots']);
 const store = useColloquiStore();
 
 const getBooking = (slotId) => store.bookings.find(b => b.slotId === slotId);

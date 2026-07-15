@@ -29,9 +29,10 @@
     </q-card>
 
     <!-- Materials List -->
-    <q-card v-slot:default v-if="loading" class="text-center q-pa-xl shadow-1">
+    <q-card v-if="loading" class="text-center q-pa-xl shadow-1">
       <q-spinner-dots color="primary" size="60px" />
     </q-card>
+
 
     <div v-else>
       <q-card v-if="filteredMaterials.length === 0" class="text-center q-pa-xl text-grey-6 shadow-1">

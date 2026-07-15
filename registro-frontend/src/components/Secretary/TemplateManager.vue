@@ -117,7 +117,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, watch, onMounted } from 'vue'
+import { ref, reactive, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import api from 'src/services/api'
 

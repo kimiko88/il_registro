@@ -109,6 +109,7 @@ const props = defineProps({
   loading: { type: Boolean, default: false }
 })
 
+// eslint-disable-next-line no-unused-vars
 const emit = defineEmits(['save'])
 
 const days = [
@@ -196,10 +197,6 @@ const removeCell = (day, hour) => {
 
 const totalHours = computed(() => gridEntries.value.length)
 
-const stickyTop = {
-  position: 'sticky',
-  top: '20px'
-}
 </script>
 
 <style scoped>

@@ -128,9 +128,11 @@
   </q-card>
 </template>
 <script setup>
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 
+// eslint-disable-next-line no-unused-vars
 const props = defineProps(['users', 'loading']);
+// eslint-disable-next-line no-unused-vars
 const emit = defineEmits(['create', 'edit', 'delete', 'reset-pwd', 'filter-role', 'export', 'bulk-delete', 'bulk-reset', 'import', 'manage-subjects'])
 
 const filter = ref('')

@@ -106,7 +106,8 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useCommunicationsStore } from 'src/stores/communications'
-import api from '@/services/api'
+
+
 
 const store = useCommunicationsStore()
 const showCompose = ref(false)
@@ -131,10 +132,6 @@ const compose = ref({
     body: '',
     type: 'email'
 })
-
-const sendMessage = async () => {
-    await store.sendMessage(compose.value)
-}
 </script>
 
 <style scoped>
