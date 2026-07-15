@@ -20,10 +20,9 @@ jobs:
       - name: Build Frontend
         run: |
           cd registro-frontend
+          echo "VITE_API_URL=${{ secrets.VITE_API_URL || vars.VITE_API_URL }}" > .env.production
           npm ci
           npm run build
-        env:
-          VITE_API_URL: ${{ secrets.VITE_API_URL || vars.VITE_API_URL }}
 
       - name: Deploy to Netlify Production
         run: |
