@@ -80,9 +80,9 @@
       <template v-slot:body-cell-status="props">
          <q-td :props="props">
             <div class="row items-center q-gutter-xs">
-              <div :class="props.row.active ? 'bg-emerald-500' : 'bg-slate-300'" class="status-dot"></div>
-              <span :class="props.row.active ? 'text-emerald-700 text-weight-medium' : 'text-slate-400'">
-                {{ props.row.active ? 'Attivo' : 'Inattivo' }}
+              <div :class="props.value ? 'bg-emerald-500' : 'bg-slate-300'" class="status-dot"></div>
+              <span :class="props.value ? 'text-emerald-700 text-weight-medium' : 'text-slate-400'">
+                {{ props.value ? 'Attivo' : 'Inattivo' }}
               </span>
             </div>
          </q-td>
@@ -151,8 +151,8 @@ const columns = [
     { name: 'name', label: 'Nome Completo', field: row => `${row.last_name} ${row.first_name}`, sortable: true, align: 'left' },
     { name: 'email', label: 'Email', field: 'email', sortable: true, align: 'left' },
     { name: 'role', label: 'Ruolo', field: 'role', sortable: true, align: 'center' },
-    { name: 'class', label: 'Classe', field: row => row.class || '-', align: 'center' },
-    { name: 'status', label: 'Stato', field: 'active', align: 'center' },
+    { name: 'class', label: 'Classe', field: row => row.class_name || row.class || '-', align: 'center' },
+    { name: 'status', label: 'Stato', field: row => row.is_active !== undefined ? row.is_active : row.active, align: 'center' },
     { name: 'actions', label: 'Azioni', align: 'right' }
 ];
 

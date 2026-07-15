@@ -48,6 +48,9 @@ func main() {
 	log.Printf("School created: %s", schoolID)
 
 	// 3. Create Users
+	// SuperAdmin
+	createSuperAdmin(ctx, db, "superadmin@test.com", "Super", "Admin")
+
 	// Admin
 	createAdmin(ctx, db, schoolID, "admin@test.com", "Admin", "User")
 
@@ -107,6 +110,12 @@ func execute(ctx context.Context, db *sql.DB, query string, args ...any) {
 func hashPwd(p string) string {
 	b, _ := bcrypt.GenerateFromPassword([]byte(p), bcrypt.DefaultCost)
 	return string(b)
+}
+
+func createSuperAdmin(ctx context.Context, db *sql.DB, email, first, last string) {
+	id := uuid.New().String()
+	execute(ctx, db, `INSERT INTO users (id, email, password_hash, first_name, last_name, role, school_id, is_active, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+		id, email, hashPwd("password"), first, last, "superadmin", nil, true, time.Now(), time.Now())
 }
 
 func createAdmin(ctx context.Context, db *sql.DB, schoolID, email, first, last string) {

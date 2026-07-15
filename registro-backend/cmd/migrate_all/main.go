@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"database/sql"
 	"fmt"
 	"log"
@@ -12,7 +13,32 @@ import (
 	_ "github.com/lib/pq"
 )
 
+func loadEnv() {
+	file, err := os.Open(".env")
+	if err != nil {
+		return
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" || strings.HasPrefix(line, "#") || !strings.Contains(line, "=") {
+			continue
+		}
+		parts := strings.SplitN(line, "=", 2)
+		key := strings.TrimSpace(parts[0])
+		val := strings.TrimSpace(parts[1])
+		val = strings.Trim(val, `"'`)
+		if os.Getenv(key) == "" {
+			os.Setenv(key, val)
+		}
+	}
+}
+
 func main() {
+	loadEnv()
+
 	// Default connection string
 	user := "user"
 	pass := "password"
@@ -42,7 +68,7 @@ func main() {
 	}
 
 	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s", user, pass, host, port, dbname, sslmode)
-	
+
 	fmt.Printf("Connecting to %s:%s/%s...\n", host, port, dbname)
 
 	db, err := sql.Open("postgres", connStr)
@@ -77,7 +103,7 @@ func main() {
 
 	for _, fileName := range migrationFiles {
 		fmt.Printf("[%s] Applying...", fileName)
-		
+
 		content, err := os.ReadFile(filepath.Join("migrations", fileName))
 		if err != nil {
 			log.Fatalf("\nFailed to read migration %s: %v", fileName, err)

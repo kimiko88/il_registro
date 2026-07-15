@@ -39,11 +39,13 @@
       <div class="col-12 col-md-8">
         <q-card class="no-shadow bordered-card full-height">
           <q-card-section class="row items-center justify-between">
-            <div class="text-h6 text-weight-bold text-dark">{{ userRole === 'secretary' || userRole === 'admin' ? 'Attività Recenti' : "Today's Schedule" }}</div>
+            <div class="text-h6 text-weight-bold text-dark">
+              {{ isDashboardAdmin ? 'Attività Recenti' : 'Lezioni di Oggi' }}
+            </div>
             <q-btn flat round dense icon="more_horiz" color="grey-7" />
           </q-card-section>
           
-          <q-list class="q-px-sm" v-if="userRole === 'secretary' || userRole === 'admin'">
+          <q-list class="q-px-sm" v-if="isDashboardAdmin">
             <q-item v-for="event in recentEvents" :key="event.id" class="q-mb-sm rounded-lg hover-bg-grey">
               <q-item-section avatar>
                 <div class="text-center bg-grey-2 rounded-lg q-pa-sm" style="min-width: 50px">
@@ -64,20 +66,27 @@
           </q-list>
           
           <q-list class="q-px-sm" v-else>
-            <q-item v-for="n in 3" :key="n" class="q-mb-sm rounded-lg hover-bg-grey">
+            <q-item v-for="entry in todaySchedule" :key="entry.id" class="q-mb-sm rounded-lg hover-bg-grey">
               <q-item-section avatar>
                 <div class="text-center bg-grey-2 rounded-lg q-pa-sm" style="min-width: 50px">
-                  <div class="text-weight-bold text-primary">0{{ 8 + n }}:00</div>
+                  <div class="text-weight-bold text-primary">{{ entry.hour_index }}ª Ora</div>
                 </div>
               </q-item-section>
               <q-item-section>
-                <q-item-label class="text-weight-bold">Mathematics - Class 3A</q-item-label>
-                <q-item-label caption>Room 102 • Lecture Hall</q-item-label>
+                <q-item-label class="text-weight-bold">{{ entry.subject_name }}</q-item-label>
+                <q-item-label caption>
+                  {{ entry.teacher_name }} <span v-if="entry.room">• Aula {{ entry.room }}</span>
+                </q-item-label>
               </q-item-section>
               <q-item-section side>
-                <q-chip size="sm" :color="n === 1 ? 'primary' : 'grey-3'" :text-color="n === 1 ? 'white' : 'grey-8'">
-                  {{ n === 1 ? 'Ongoing' : 'Upcoming' }}
+                <q-chip size="sm" color="grey-3" text-color="grey-8">
+                  Pianificata
                 </q-chip>
+              </q-item-section>
+            </q-item>
+            <q-item v-if="todaySchedule.length === 0" class="text-center text-grey q-pa-md">
+              <q-item-section>
+                Nessuna lezione pianificata per oggi
               </q-item-section>
             </q-item>
           </q-list>
@@ -88,10 +97,14 @@
       <div class="col-12 col-md-4">
         <q-card class="no-shadow bg-primary text-white q-mb-md" style="background: linear-gradient(135deg, #4F46E5 0%, #3B82F6 100%);">
           <q-card-section>
-            <div class="text-subtitle2 text-blue-1 q-mb-xs">ANNOUNCEMENT</div>
-            <div class="text-h6 text-weight-bold q-mb-sm">School Meeting</div>
+            <div class="text-subtitle2 text-blue-1 q-mb-xs">
+              {{ latestAnnouncement ? latestAnnouncement.type.toUpperCase() : 'COMUNICAZIONE' }}
+            </div>
+            <div class="text-h6 text-weight-bold q-mb-sm">
+              {{ latestAnnouncement ? latestAnnouncement.subject : 'Benvenuto nel Registro' }}
+            </div>
             <div class="text-body2 text-blue-1 opacity-80">
-              There will be a staff meeting today at 2 PM in the main auditorium.
+              {{ latestAnnouncement ? latestAnnouncement.body : 'Le comunicazioni ufficiali e gli annunci per l\'anno scolastico corrente saranno mostrati in questa sezione.' }}
             </div>
           </q-card-section>
         </q-card>
@@ -106,6 +119,7 @@
                   class="full-width text-dark" 
                   style="border-color: #e2e8f0; border-radius: 12px; height: 80px"
                   no-caps
+                  @click="handleActionClick(action)"
                 >
                   <div class="column items-center">
                     <q-icon :name="action.icon" color="primary" size="sm" class="q-mb-xs" />
@@ -125,13 +139,35 @@
 import { useAuthStore } from '@/stores/auth'
 import { storeToRefs } from 'pinia'
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useQuasar } from 'quasar'
+import { useStudentStore } from 'src/stores/student'
+import { useParentStore } from 'src/stores/parent'
+import { useClassesStore } from 'src/stores/classes'
+import adminService from 'src/services/adminService'
 import dashboardService from 'src/services/dashboardService'
+import { communicationService } from '@/services/communicationService'
 
 const authStore = useAuthStore()
 const { user, userName, userRole } = storeToRefs(authStore)
+const router = useRouter()
+const $q = useQuasar()
 
 const realStats = ref([])
 const recentEvents = ref([])
+const announcements = ref([])
+const todaySchedule = ref([])
+
+const isDashboardAdmin = computed(() => {
+  return userRole.value === 'secretary' || userRole.value === 'admin' || userRole.value === 'superadmin'
+})
+
+const latestAnnouncement = computed(() => {
+  if (announcements.value && announcements.value.length > 0) {
+    return announcements.value[0]
+  }
+  return null
+})
 
 // Greeting based on time of day
 const greeting = computed(() => {
@@ -230,9 +266,98 @@ const formatDate = (dateString) => {
     return date.toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })
 }
 
+const fetchAnnouncements = async () => {
+    try {
+        const response = await communicationService.getMessages()
+        announcements.value = response.data || []
+    } catch (e) {
+        console.error("Error fetching announcements:", e)
+    }
+}
+
+const fetchTodaySchedule = async () => {
+    if (isDashboardAdmin.value) return
+
+    try {
+        let classId = null
+
+        if (userRole.value === 'student') {
+            const studentStore = useStudentStore()
+            await studentStore.fetchProfile()
+            classId = studentStore.profile?.class_id
+        } else if (userRole.value === 'parent') {
+            const parentStore = useParentStore()
+            await parentStore.fetchChildren()
+            if (parentStore.children && parentStore.children.length > 0) {
+                classId = parentStore.children[0].class_id
+            }
+        } else if (userRole.value === 'teacher') {
+            const classesStore = useClassesStore()
+            await classesStore.fetchAssignedClasses()
+            if (classesStore.classes && classesStore.classes.length > 0) {
+                classId = classesStore.classes[0].id
+            }
+        }
+
+        if (classId) {
+            const res = await adminService.getClassSchedule(classId)
+            const allEntries = res.data || []
+
+            const todayDay = new Date().getDay() // 0 = Sunday, 1 = Monday, ...
+            const targetDay = todayDay === 0 ? 1 : todayDay // Fallback to Monday if Sunday
+
+            const filtered = allEntries.filter(e => e.day_of_week === targetDay)
+            filtered.sort((a, b) => a.hour_index - b.hour_index)
+
+            todaySchedule.value = filtered
+        }
+    } catch (e) {
+        console.error('Error fetching today schedule:', e)
+    }
+}
+
 onMounted(() => {
     fetchDashboardData()
+    fetchAnnouncements()
+    fetchTodaySchedule()
 })
+
+const handleActionClick = (action) => {
+    if (action.label === 'Nuovo Evento' || action.label === 'Invia Email') {
+        if (userRole.value === 'teacher') {
+            router.push('/teacher/communications')
+        } else if (userRole.value === 'secretary') {
+            router.push('/secretary/communications')
+        } else if (userRole.value === 'student') {
+            router.push('/student/communications')
+        } else if (userRole.value === 'parent') {
+            router.push('/parent/communications')
+        } else {
+            router.push('/admin/users')
+        }
+    } else if (action.label === 'Impostazioni') {
+        if (userRole.value === 'admin' || userRole.value === 'superadmin') {
+            router.push('/admin/settings')
+        } else if (userRole.value === 'secretary') {
+            router.push('/secretary/settings')
+        } else {
+            router.push(userRole.value === 'teacher' ? '/teacher' : `/${userRole.value}/profile`)
+        }
+    } else if (action.label === 'Stampa Voti') {
+        if (userRole.value === 'teacher') {
+            router.push('/teacher/grades')
+        } else if (userRole.value === 'student') {
+            router.push('/student/grades')
+        } else if (userRole.value === 'parent') {
+            router.push('/parent/grades')
+        } else {
+            $q.notify({
+                type: 'info',
+                message: 'Funzionalità disponibile per docenti, studenti e genitori.'
+            })
+        }
+    }
+}
 
 const actions = [
   { label: 'Nuovo Evento', icon: 'add_circle' },
