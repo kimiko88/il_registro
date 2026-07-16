@@ -3,6 +3,8 @@ package documents
 import (
 	"net/http"
 
+	"registro-backend/pkg/upload"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,6 +21,7 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 
 	// Teacher/Creator
 	docs.POST("", h.CreateDocument)
+	docs.POST("/upload", h.UploadFile) // multipart file upload with magic-byte validation
 	docs.GET("", h.ListDocuments)
 	docs.GET("/:id", h.GetDocument)
 	docs.PATCH("/:id", h.UpdateDocument)
@@ -57,6 +60,40 @@ func (h *Handler) CreateDocument(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusCreated, res)
+}
+
+// UploadFile handles multipart file uploads with magic-byte MIME validation.
+// POST /documents/upload
+// Form fields: file (required), document_id (optional, to associate with an existing document)
+func (h *Handler) UploadFile(c *gin.Context) {
+	// Parse multipart form (limits to MaxUploadSize + small overhead for form fields)
+	if err := c.Request.ParseMultipartForm(upload.MaxUploadSize + (1 << 10)); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Impossibile leggere il form: " + err.Error()})
+		return
+	}
+
+	file, header, err := c.Request.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Campo 'file' mancante nel form"})
+		return
+	}
+	defer file.Close()
+
+	// Validate size + real MIME type via magic bytes
+	if err := upload.ValidateUpload(file, header); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
+	}
+
+	// At this point the file is validated and the read position is reset to 0.
+	// TODO: persist the file to storage (S3, local FS, etc.) and
+	// associate it with a document record via document_id query param.
+	// For now, we return a success response with metadata.
+	c.JSON(http.StatusOK, gin.H{
+		"message":   "File caricato e validato con successo",
+		"filename":  header.Filename,
+		"size_bytes": header.Size,
+	})
 }
 
 func (h *Handler) GetDocument(c *gin.Context) {

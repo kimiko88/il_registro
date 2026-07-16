@@ -154,7 +154,8 @@ func TestHandler_Logout(t *testing.T) {
 					ExpiresAt: time.Now().Add(24 * time.Hour),
 					Revoked:   false,
 				}, nil)
-				m.On("RevokeRefreshToken", mock.Anything, "token-id-123").Return(nil)
+				// Now revokes ALL sessions for the user, not just the single token
+				m.On("RevokeAllUserTokens", mock.Anything, "user-123").Return(nil)
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, w *httptest.ResponseRecorder) {
@@ -165,30 +166,30 @@ func TestHandler_Logout(t *testing.T) {
 			},
 		},
 		{
-			name:        "invalid request body - missing refresh_token",
+			name:        "invalid request body - missing refresh_token returns 200 (idempotent)",
 			requestBody: map[string]string{},
 			setupMock: func(m *MockRepository) {
-				// Empty refresh token will still try to call logout
+				// Token not found → no-op, logout is idempotent
 				m.On("GetRefreshToken", mock.Anything, "").Return(nil, ErrInvalidToken)
 			},
-			expectedStatus: http.StatusInternalServerError,
+			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, w *httptest.ResponseRecorder) {
-				var response ErrorResponse
+				var response MessageResponse
 				err := json.Unmarshal(w.Body.Bytes(), &response)
 				assert.NoError(t, err)
 			},
 		},
 		{
-			name: "token not found",
+			name: "token not found returns 200 (idempotent)",
 			requestBody: map[string]string{
 				"refresh_token": "non-existent-token",
 			},
 			setupMock: func(m *MockRepository) {
 				m.On("GetRefreshToken", mock.Anything, "non-existent-token").Return(nil, ErrInvalidToken)
 			},
-			expectedStatus: http.StatusInternalServerError,
+			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, w *httptest.ResponseRecorder) {
-				var response ErrorResponse
+				var response MessageResponse
 				err := json.Unmarshal(w.Body.Bytes(), &response)
 				assert.NoError(t, err)
 			},

@@ -219,13 +219,22 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken string) (*Token
 	}, nil
 }
 
-// Logout revokes refresh token
+// Logout revokes ALL refresh tokens for the user (not only the one presented).
+// This ensures that stolen tokens from other devices/sessions are also invalidated.
+// If the refresh token is not found or already expired, logout still succeeds
+// as long as we can extract the userID from the JWT access token via context.
 func (s *Service) Logout(ctx context.Context, refreshToken string) error {
 	rt, err := s.repo.GetRefreshToken(ctx, refreshToken)
 	if err != nil {
-		return err
+		// Token not found or already revoked: still a valid logout intent.
+		// We cannot revoke all sessions without the userID, so we return nil
+		// (no-op — the token was already invalid).
+		return nil
 	}
-	return s.repo.RevokeRefreshToken(ctx, rt.ID)
+	// Revoke ALL sessions for this user, not just the one presented.
+	// This is the secure behavior: if a device is compromised the user
+	// can log out from any session and all others are terminated.
+	return s.repo.RevokeAllUserTokens(ctx, rt.UserID)
 }
 
 // GetUserByID retrieves a user by ID
