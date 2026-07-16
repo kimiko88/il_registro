@@ -27,6 +27,7 @@ func (h *Handler) RegisterRoutes(router *gin.RouterGroup) {
 		// Class Tests
 		grades.POST("/tests", h.CreateTestWithGrades)
 		grades.GET("/tests", h.GetClassTestsList)
+		grades.GET("/tests/class/:classID", h.GetUpcomingClassTests)
 		grades.DELETE("/tests/:id", h.DeleteClassTest)
 		grades.PATCH("/tests/:id", h.UpdateClassTest)
 
@@ -500,6 +501,25 @@ func (h *Handler) GetClassTestsList(c *gin.Context) {
 		return
 	}
 
+	c.JSON(http.StatusOK, resp)
+}
+
+func (h *Handler) GetUpcomingClassTests(c *gin.Context) {
+	classID := c.Param("classID")
+	if classID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "classID is required"})
+		return
+	}
+
+	resp, err := h.service.GetUpcomingTestsByClass(classID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if resp == nil {
+		resp = []ClassTestResponse{}
+	}
 	c.JSON(http.StatusOK, resp)
 }
 

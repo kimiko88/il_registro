@@ -130,10 +130,24 @@
       <div class="col-12 col-md-4">
         <q-card class="shadow-sm rounded-lg full-height">
           <q-card-section>
-            <div class="text-h6 text-slate-800 q-mb-sm">Prossimi Eventi</div>
-            <q-timeline color="primary" layout="dense">
-              <q-timeline-entry title="Vacanza Invernale" subtitle="23 Dic - 7 Gen" icon="school" />
-              <q-timeline-entry title="Consiglio di Classe" subtitle="15 Gen" icon="people" color="orange" />
+            <div class="text-h6 text-slate-800 q-mb-sm">Prossimi Impegni</div>
+            <div v-if="upcomingTests.length === 0" class="text-center text-grey q-pa-md">
+              <q-icon name="event_available" size="2em" color="grey-4" class="q-mb-sm" />
+              <div class="text-caption">Nessun impegno in programma</div>
+            </div>
+            <q-timeline v-else color="primary" layout="dense">
+              <q-timeline-entry
+                v-for="test in upcomingTests"
+                :key="test.id"
+                :title="test.title"
+                :subtitle="formatDate(test.date)"
+                :icon="evalTypeIcon(test.evaluation_type)"
+                :color="evalTypeColor(test.evaluation_type)"
+              >
+                <div v-if="test.parent_notes" class="text-caption text-grey-7">
+                  {{ test.parent_notes }}
+                </div>
+              </q-timeline-entry>
             </q-timeline>
           </q-card-section>
         </q-card>
@@ -173,7 +187,33 @@ const { fetchChildren, selectChild } = parentStore
 const averageGrade = ref('0.0')
 const totalAbsences = ref(0)
 const recentGrades = ref([])
+const upcomingTests = ref([])
 const dataLoading = ref(false)
+
+const formatDate = (dateStr) => {
+  if (!dateStr) return ''
+  return new Date(dateStr).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
+const evalTypeIcon = (type) => {
+  const icons = {
+    'scritto': 'edit_note',
+    'orale': 'record_voice_over',
+    'pratico': 'build',
+    'test': 'quiz',
+  }
+  return icons[type?.toLowerCase()] || 'assignment'
+}
+
+const evalTypeColor = (type) => {
+  const colors = {
+    'scritto': 'blue',
+    'orale': 'orange',
+    'pratico': 'green',
+    'test': 'purple',
+  }
+  return colors[type?.toLowerCase()] || 'primary'
+}
 
 const fetchChildData = async () => {
     if (!selectedChildId.value) return
@@ -204,6 +244,20 @@ const fetchChildData = async () => {
         if (attRes.data) {
              const records = Array.isArray(attRes.data) ? attRes.data : (attRes.data.records || [])
              totalAbsences.value = records.filter(r => r.status === 'absent').length
+        }
+
+        // Fetch Upcoming Tests
+        const child = selectedChild.value
+        if (child && child.class_id) {
+            try {
+                const testsRes = await gradeService.getUpcomingTestsForClass(child.class_id)
+                upcomingTests.value = Array.isArray(testsRes.data) ? testsRes.data : []
+            } catch (e) {
+                console.warn('Could not fetch upcoming tests:', e)
+                upcomingTests.value = []
+            }
+        } else {
+            upcomingTests.value = []
         }
     } catch (e) {
         console.error("Error fetching child data", e)

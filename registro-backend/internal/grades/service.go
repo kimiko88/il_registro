@@ -45,6 +45,7 @@ type Service interface {
 	// Class Tests
 	CreateTestWithGrades(teacherID string, req CreateClassTestRequest) error
 	GetClassTests(classID string, subjectID string) ([]ClassTestResponse, error)
+	GetUpcomingTestsByClass(classID string) ([]ClassTestResponse, error)
 	DeleteClassTest(teacherID string, testID string) error
 	UpdateClassTest(teacherID string, testID string, req UpdateClassTestRequest) error
 }
@@ -1001,6 +1002,29 @@ func (s *service) CreateTestWithGrades(teacherID string, req CreateClassTestRequ
 
 func (s *service) GetClassTests(classID string, subjectID string) ([]ClassTestResponse, error) {
 	tests, err := s.repo.FindTestsByClassAndSubject(classID, subjectID)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp []ClassTestResponse
+	for _, t := range tests {
+		resp = append(resp, ClassTestResponse{
+			ID:             t.ID,
+			ClassID:        t.ClassID,
+			SubjectID:      t.SubjectID,
+			TeacherID:      t.TeacherID,
+			Title:          t.Title,
+			Date:           t.Date.Format("2006-01-02"),
+			TeacherNotes:   t.TeacherNotes,
+			ParentNotes:    t.ParentNotes,
+			EvaluationType: t.EvaluationType,
+		})
+	}
+	return resp, nil
+}
+
+func (s *service) GetUpcomingTestsByClass(classID string) ([]ClassTestResponse, error) {
+	tests, err := s.repo.FindUpcomingTestsByClass(classID)
 	if err != nil {
 		return nil, err
 	}

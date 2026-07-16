@@ -33,5 +33,8 @@ export const gradeService = {
     },
     async updateClassTest(id, testData) {
         return api.patch(`/grades/tests/${id}`, testData)
+    },
+    async getUpcomingTestsForClass(classId) {
+        return api.get(`/grades/tests/class/${classId}`)
     }
 }
