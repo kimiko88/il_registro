@@ -12,14 +12,16 @@ export function useMenuItems(role) {
             { label: 'Monitoraggio Sistema', icon: 'monitor_heart', path: '/admin/monitoring' },
             { label: 'Analytics Globali', icon: 'analytics', path: '/admin/analytics' },
             { label: 'Audit Logs', icon: 'history', path: '/admin/audit-logs' },
-            { label: 'Impostazioni', icon: 'settings', path: '/admin/settings' }
+            { label: 'Impostazioni', icon: 'settings', path: '/admin/settings' },
+            { label: 'Supporto', icon: 'help', path: '/support' }
         ],
         admin: [
             { label: 'Dashboard', icon: 'dashboard', path: '/', exact: true },
             { label: 'La Mia Scuola', icon: 'school', path: '/admin/schools' },
             { label: 'Gestione Utenti', icon: 'people', path: '/admin/users' },
             { label: 'Analytics', icon: 'analytics', path: '/admin/analytics' },
-            { label: 'Impostazioni', icon: 'settings', path: '/admin/settings' }
+            { label: 'Impostazioni', icon: 'settings', path: '/admin/settings' },
+            { label: 'Supporto', icon: 'help', path: '/support' }
         ],
         secretary: [
             { label: 'Dashboard', icon: 'dashboard', path: '/', exact: true },
@@ -32,7 +34,8 @@ export function useMenuItems(role) {
             { label: 'PCTO', icon: 'work', path: '/secretary/pcto' },
             { label: 'Libri di Testo', icon: 'auto_stories', path: '/secretary/textbooks' },
             { label: 'Scrutinio', icon: 'analytics', path: '/secretary/scrutiny' },
-            { label: 'Impostazioni', icon: 'settings', path: '/secretary/settings' }
+            { label: 'Impostazioni', icon: 'settings', path: '/secretary/settings' },
+            { label: 'Supporto', icon: 'help', path: '/support' }
         ],
         teacher: [
             { label: 'Dashboard', icon: 'dashboard', path: '/', exact: true },
@@ -45,7 +48,8 @@ export function useMenuItems(role) {
             { label: 'Presenze', icon: 'how_to_reg', path: '/teacher/attendance' },
             { label: 'Documenti', icon: 'description', path: '/teacher/documents' },
             { label: 'Colloqui', icon: 'event', path: '/teacher/colloqui' },
-            { label: 'Comunicazioni', icon: 'email', path: '/teacher/communications' }
+            { label: 'Comunicazioni', icon: 'email', path: '/teacher/communications' },
+            { label: 'Supporto', icon: 'help', path: '/support' }
         ],
         student: [
             { label: 'Dashboard', icon: 'dashboard', path: '/', exact: true },
@@ -59,7 +63,8 @@ export function useMenuItems(role) {
             { label: 'PCTO', icon: 'work', path: '/student/pcto' },
             { label: 'Orientamento', icon: 'explore', path: '/student/orientamento' },
             { label: 'Comunicazioni', icon: 'email', path: '/student/communications' },
-            { label: 'Profilo', icon: 'person', path: '/student/profile' }
+            { label: 'Profilo', icon: 'person', path: '/student/profile' },
+            { label: 'Supporto', icon: 'help', path: '/support' }
         ],
         parent: [
             { label: 'Dashboard', icon: 'dashboard', path: '/parent', exact: true },
@@ -73,7 +78,7 @@ export function useMenuItems(role) {
             { label: 'Orario Lezioni', icon: 'schedule', path: '/parent/timetable' },
             { label: 'Comunicazioni', icon: 'email', path: '/parent/communications' },
             { label: 'Profilo', icon: 'person', path: '/parent/profile' },
-            { label: 'Supporto', icon: 'help', path: '/parent/support' }
+            { label: 'Supporto', icon: 'help', path: '/support' }
         ]
     }
 

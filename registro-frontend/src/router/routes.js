@@ -112,8 +112,8 @@ export default [
             { path: 'parent/didactics', component: () => import('@/pages/parent/Didactics.vue'), meta: { role: 'parent' } },
             { path: 'parent/notes', component: () => import('@/pages/parent/Notes.vue'), meta: { role: 'parent' } },
             { path: 'parent/timetable', component: () => import('@/pages/parent/Timetable.vue'), meta: { role: 'parent' } },
-            { path: 'parent/support', component: () => import('@/pages/parent/Support.vue'), meta: { role: 'parent' } },
             { path: 'parent/documents', component: () => import('@/pages/parent/Documents.vue'), meta: { role: 'parent' } },
+            { path: 'support', component: () => import('@/pages/Support.vue') }
         ]
     },
     {
