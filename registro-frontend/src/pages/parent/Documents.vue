@@ -1,6 +1,6 @@
 <template>
   <q-page class="q-pa-md bg-slate-50">
-    <div class="text-h5 text-weight-bold text-slate-800 q-mb-md">Documenti: {{ selectedChild?.firstName || '...' }}</div>
+    <div class="text-h5 text-weight-bold text-slate-800 q-mb-md">Documenti: {{ selectedChild ? `${selectedChild.first_name} ${selectedChild.last_name}` : '...' }}</div>
 
     <q-list bordered separator class="bg-white rounded-borders shadow-sm">
       <q-item-label header>Pagelle e Report</q-item-label>

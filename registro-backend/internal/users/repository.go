@@ -621,7 +621,7 @@ func (r *PostgresRepository) RemoveGuardian(ctx context.Context, studentProfileI
 
 func (r *PostgresRepository) GetGuardians(ctx context.Context, studentProfileID string) ([]GuardianInfo, error) {
 	query := `
-		SELECT sp.parent_id, u.id as user_id, u.first_name, u.last_name, u.email, sp.relationship_type
+		SELECT sp.parent_id, u.id as user_id, u.first_name, u.last_name, u.email, COALESCE(sp.relationship_type, '')
 		FROM student_parents sp
 		JOIN parents p ON sp.parent_id = p.id
 		JOIN users u ON p.user_id = u.id
