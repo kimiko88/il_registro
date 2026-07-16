@@ -159,7 +159,7 @@ func (r *repository) Update(grade *Grade, history *GradeHistory) error {
 			evaluation_type = $11,
 			modified_by = $12,
 			updated_at = NOW()
-		WHERE id = $13 AND deleted_at IS NULL`
+		WHERE id = $13::uuid AND deleted_at IS NULL`
 
 	_, err = tx.Exec(updateQuery,
 		grade.GradeValue, grade.GradeType, grade.Semester, grade.Date,
@@ -177,7 +177,7 @@ func (r *repository) Update(grade *Grade, history *GradeHistory) error {
 				grade_id, old_value, new_value, 
 				old_description, new_description, 
 				modified_by, modified_at, reason
-			) VALUES ($1, $2, $3, $4, $5, $6, NOW(), $7) RETURNING id`
+			) VALUES ($1::uuid, $2, $3, $4, $5, $6, NOW(), $7) RETURNING id`
 
 		err = tx.QueryRow(historyQuery,
 			grade.ID, history.OldValue, history.NewValue,
@@ -194,7 +194,7 @@ func (r *repository) Update(grade *Grade, history *GradeHistory) error {
 }
 
 func (r *repository) Delete(id string, deletedBy string) error {
-	query := `UPDATE grades SET deleted_at = NOW(), modified_by = $1 WHERE id = $2`
+	query := `UPDATE grades SET deleted_at = NOW(), modified_by = $1 WHERE id = $2::uuid`
 	_, err := r.db.Exec(query, deletedBy, id)
 	if err != nil {
 		return fmt.Errorf("delete grade error: %w", err)
@@ -209,7 +209,7 @@ func (r *repository) FindByID(id string) (*Grade, error) {
 			       description, rubric_id, weight, is_published, published_at,
 			       grade_category, evaluation_type, created_by, created_at, updated_at, test_id
 		FROM grades 
-		WHERE id = $1 AND deleted_at IS NULL`
+		WHERE id = $1::uuid AND deleted_at IS NULL`
 
 	var g Grade
 	err := r.db.QueryRow(query, id).Scan(
@@ -234,7 +234,7 @@ func (r *repository) FindByStudent(studentID string) ([]Grade, error) {
 			       description, rubric_id, weight, is_published, published_at,
 			       grade_category, evaluation_type, created_by, created_at, updated_at, test_id
 		FROM grades 
-		WHERE student_id = $1 AND deleted_at IS NULL
+		WHERE student_id = $1::uuid AND deleted_at IS NULL
 		ORDER BY date DESC`
 
 	return r.scanGrades(query, studentID)
@@ -253,7 +253,7 @@ func (r *repository) FindByClassAndSubject(classID string, subjectID string, sem
 			       g.grade_category, g.evaluation_type, g.created_by, g.created_at, g.updated_at, g.test_id
 			FROM grades g
 			JOIN students s ON g.student_id = s.id
-			WHERE s.class_id = $1 AND g.subject_id = $2 AND g.semester = $3 AND g.deleted_at IS NULL
+			WHERE s.class_id = $1::uuid AND g.subject_id = $2::uuid AND g.semester = $3 AND g.deleted_at IS NULL
 			ORDER BY g.date DESC`
 		args = []interface{}{classID, subjectID, semester}
 	} else {
@@ -265,7 +265,7 @@ func (r *repository) FindByClassAndSubject(classID string, subjectID string, sem
 			       g.grade_category, g.evaluation_type, g.created_by, g.created_at, g.updated_at, g.test_id
 			FROM grades g
 			JOIN students s ON g.student_id = s.id
-			WHERE s.class_id = $1 AND g.subject_id = $2 AND g.deleted_at IS NULL
+			WHERE s.class_id = $1::uuid AND g.subject_id = $2::uuid AND g.deleted_at IS NULL
 			ORDER BY g.date DESC`
 		args = []interface{}{classID, subjectID}
 	}
@@ -285,7 +285,7 @@ func (r *repository) FindByClass(classID string, semester int) ([]Grade, error) 
 			       g.grade_category, g.evaluation_type, g.created_by, g.created_at, g.updated_at, g.test_id
 			FROM grades g
 			JOIN students s ON g.student_id = s.id
-			WHERE s.class_id = $1 AND g.semester = $2 AND g.deleted_at IS NULL
+			WHERE s.class_id = $1::uuid AND g.semester = $2 AND g.deleted_at IS NULL
 			ORDER BY g.date DESC`
 		args = []interface{}{classID, semester}
 	} else {
@@ -296,7 +296,7 @@ func (r *repository) FindByClass(classID string, semester int) ([]Grade, error) 
 			       g.grade_category, g.evaluation_type, g.created_by, g.created_at, g.updated_at, g.test_id
 			FROM grades g
 			JOIN students s ON g.student_id = s.id
-			WHERE s.class_id = $1 AND g.deleted_at IS NULL
+			WHERE s.class_id = $1::uuid AND g.deleted_at IS NULL
 			ORDER BY g.date DESC`
 		args = []interface{}{classID}
 	}
@@ -315,7 +315,7 @@ func (r *repository) FindBySubject(subjectID string, semester int) ([]Grade, err
 			       description, rubric_id, weight, is_published, published_at,
 			       grade_category, evaluation_type, created_by, created_at, updated_at, test_id
 			FROM grades 
-			WHERE subject_id = $1 AND semester = $2 AND deleted_at IS NULL
+			WHERE subject_id = $1::uuid AND semester = $2 AND deleted_at IS NULL
 			ORDER BY date DESC, student_id ASC`
 		args = []interface{}{subjectID, semester}
 	} else {
@@ -325,7 +325,7 @@ func (r *repository) FindBySubject(subjectID string, semester int) ([]Grade, err
 			       description, rubric_id, weight, is_published, published_at,
 			       grade_category, evaluation_type, created_by, created_at, updated_at, test_id
 			FROM grades 
-			WHERE subject_id = $1 AND deleted_at IS NULL
+			WHERE subject_id = $1::uuid AND deleted_at IS NULL
 			ORDER BY date DESC, student_id ASC`
 		args = []interface{}{subjectID}
 	}
@@ -352,7 +352,7 @@ func (r *repository) FindWithFilter(filter GradeFilter) ([]Grade, error) {
 		argIdx++
 	}
 	if filter.SubjectID != "" {
-		conditions = append(conditions, fmt.Sprintf("subject_id = $%d", argIdx))
+		conditions = append(conditions, fmt.Sprintf("subject_id = $%d::uuid", argIdx))
 		args = append(args, filter.SubjectID)
 		argIdx++
 	}
@@ -382,7 +382,7 @@ func (r *repository) FindByTeacher(teacherID string) ([]Grade, error) {
 			       description, rubric_id, weight, is_published, published_at,
 			       grade_category, evaluation_type, created_by, created_at, updated_at, test_id
 		FROM grades 
-		WHERE teacher_id = $1 AND deleted_at IS NULL
+		WHERE teacher_id = $1::uuid AND deleted_at IS NULL
 		ORDER BY date DESC`
 
 	return r.scanGrades(query, teacherID)
@@ -394,7 +394,7 @@ func (r *repository) GetHistory(gradeID string) ([]GradeHistory, error) {
 		       old_description, new_description, 
 		       modified_by, modified_at, reason
 		FROM grade_history
-		WHERE grade_id = $1
+		WHERE grade_id = $1::uuid
 		ORDER BY modified_at DESC`
 
 	rows, err := r.db.Query(query, gradeID)
@@ -452,7 +452,7 @@ func (r *repository) CreateTest(test *ClassTest) error {
 			class_id, subject_id, teacher_id, title, date,
 			teacher_notes, parent_notes, evaluation_type, created_at, updated_at
 		) VALUES (
-			$1, $2, $3, $4, $5,
+			$1::uuid, $2::uuid, $3::uuid, $4, $5,
 			$6, $7, $8, NOW(), NOW()
 		) RETURNING id`
 
@@ -473,7 +473,7 @@ func (r *repository) FindTestsByClassAndSubject(classID string, subjectID string
 		SELECT id, class_id, subject_id, teacher_id, title, date,
 		       teacher_notes, parent_notes, evaluation_type, created_at, updated_at
 		FROM class_tests
-		WHERE class_id = $1 AND subject_id = $2
+		WHERE class_id = $1::uuid AND subject_id = $2::uuid
 		ORDER BY date DESC, created_at DESC`
 
 	rows, err := r.db.Query(query, classID, subjectID)
@@ -499,7 +499,7 @@ func (r *repository) FindTestsByClassAndSubject(classID string, subjectID string
 
 // DeleteTest deletes a test (cascade delete will handle grades in DB)
 func (r *repository) DeleteTest(id string) error {
-	query := `DELETE FROM class_tests WHERE id = $1`
+	query := `DELETE FROM class_tests WHERE id = $1::uuid`
 	_, err := r.db.Exec(query, id)
 	if err != nil {
 		return fmt.Errorf("delete test error: %w", err)
@@ -512,7 +512,7 @@ func (r *repository) UpdateTest(test *ClassTest) error {
 	query := `
 		UPDATE class_tests
 		SET title = $1, date = $2, teacher_notes = $3, parent_notes = $4, evaluation_type = $5, updated_at = NOW()
-		WHERE id = $6`
+		WHERE id = $6::uuid`
 
 	_, err := r.db.Exec(query,
 		test.Title, test.Date, test.TeacherNotes, test.ParentNotes, test.EvaluationType, test.ID,
@@ -531,6 +531,6 @@ func (r *repository) FindGradesByTestID(testID string) ([]Grade, error) {
 			       description, rubric_id, weight, is_published, published_at,
 			       grade_category, evaluation_type, created_by, created_at, updated_at, test_id
 		FROM grades 
-		WHERE test_id = $1 AND deleted_at IS NULL`
+		WHERE test_id = $1::uuid AND deleted_at IS NULL`
 	return r.scanGrades(query, testID)
 }

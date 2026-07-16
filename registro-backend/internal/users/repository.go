@@ -160,7 +160,7 @@ func (r *PostgresRepository) GetByID(ctx context.Context, id string) (*User, err
 		FROM users u
 		LEFT JOIN students s ON u.id = s.user_id
 		LEFT JOIN classes c ON s.class_id = c.id
-		WHERE u.id = $1
+		WHERE u.id = $1::uuid
 	`
 	var u User
 	var classID, className, classSection *string
@@ -207,7 +207,7 @@ func (r *PostgresRepository) Update(ctx context.Context, user *User) error {
 			is_active = $5, role = $6, school_id = $7, updated_at = $8,
 			password_hash = $9, mfa_enabled = $10,
 			fiscal_code = COALESCE(NULLIF($11, ''), fiscal_code)
-		WHERE id = $12
+		WHERE id = $12::uuid
 	`
 	res, err := tx.ExecContext(ctx, query,
 		user.FirstName, user.LastName, user.PhoneNumber, user.JobTitle,
@@ -230,22 +230,22 @@ func (r *PostgresRepository) Update(ctx context.Context, user *User) error {
 		case "student":
 			studentQuery := `
 				INSERT INTO students (user_id, school_id, class_id, updated_at)
-				VALUES ($1, $2, $3, NOW())
+				VALUES ($1::uuid, $2::uuid, $3::uuid, NOW())
 				ON CONFLICT (user_id, school_id) 
-				DO UPDATE SET class_id = $3, updated_at = NOW()
+				DO UPDATE SET class_id = $3::uuid, updated_at = NOW()
 			`
 			_, err = tx.ExecContext(ctx, studentQuery, user.ID, *user.SchoolID, user.ClassID)
 		case "teacher":
 			teacherQuery := `
 				INSERT INTO teachers (user_id, school_id, updated_at)
-				VALUES ($1, $2, NOW())
+				VALUES ($1::uuid, $2::uuid, NOW())
 				ON CONFLICT (user_id, school_id) DO UPDATE SET updated_at = NOW()
 			`
 			_, err = tx.ExecContext(ctx, teacherQuery, user.ID, *user.SchoolID)
 		case "parent":
 			parentQuery := `
 				INSERT INTO parents (user_id, school_id, created_at)
-				VALUES ($1, $2, NOW())
+				VALUES ($1::uuid, $2::uuid, NOW())
 				ON CONFLICT (user_id, school_id) DO NOTHING
 			`
 			_, err = tx.ExecContext(ctx, parentQuery, user.ID, *user.SchoolID)
@@ -259,7 +259,7 @@ func (r *PostgresRepository) Update(ctx context.Context, user *User) error {
 }
 
 func (r *PostgresRepository) Delete(ctx context.Context, id string) error {
-	query := `UPDATE users SET deleted_at = $1 WHERE id = $2`
+	query := `UPDATE users SET deleted_at = $1 WHERE id = $2::uuid`
 	res, err := r.db.ExecContext(ctx, query, time.Now(), id)
 	if err != nil {
 		return err
@@ -281,7 +281,7 @@ func (r *PostgresRepository) BulkDelete(ctx context.Context, ids []string) (int,
 	args[0] = time.Now()
 	
 	for i, id := range ids {
-		placeholders[i] = fmt.Sprintf("$%d", i+2)
+		placeholders[i] = fmt.Sprintf("$%d::uuid", i+2)
 		args[i+1] = id
 	}
 	
@@ -297,7 +297,7 @@ func (r *PostgresRepository) BulkDelete(ctx context.Context, ids []string) (int,
 }
 
 func (r *PostgresRepository) Restore(ctx context.Context, id string) error {
-	query := `UPDATE users SET deleted_at = NULL WHERE id = $1`
+	query := `UPDATE users SET deleted_at = NULL WHERE id = $1::uuid`
 	res, err := r.db.ExecContext(ctx, query, id)
 	if err != nil {
 		return err
@@ -441,7 +441,7 @@ func (r *PostgresRepository) ListByIDs(ctx context.Context, ids []string) ([]Use
 	placeholders := make([]string, len(ids))
 	args := make([]interface{}, len(ids))
 	for i, id := range ids {
-		placeholders[i] = fmt.Sprintf("$%d", i+1)
+		placeholders[i] = fmt.Sprintf("$%d::uuid", i+1)
 		args[i] = id
 	}
 	query := fmt.Sprintf("SELECT id, email, first_name, last_name, role FROM users WHERE id IN (%s)", strings.Join(placeholders, ","))
@@ -464,7 +464,7 @@ func (r *PostgresRepository) ListByIDs(ctx context.Context, ids []string) ([]Use
 }
 
 func (r *PostgresRepository) HardDelete(ctx context.Context, id string) error {
-	_, err := r.db.ExecContext(ctx, "DELETE FROM users WHERE id = $1", id)
+	_, err := r.db.ExecContext(ctx, "DELETE FROM users WHERE id = $1::uuid", id)
 	return err
 }
 
@@ -576,7 +576,7 @@ func (r *PostgresRepository) IsGuardian(ctx context.Context, parentUserID string
 }
 
 func (r *PostgresRepository) IsActive(ctx context.Context, id string) (bool, error) {
-	query := `SELECT is_active FROM users WHERE id = $1 AND deleted_at IS NULL`
+	query := `SELECT is_active FROM users WHERE id = $1::uuid AND deleted_at IS NULL`
 	var isActive bool
 	err := r.db.QueryRowContext(ctx, query, id).Scan(&isActive)
 	if err == sql.ErrNoRows {
@@ -591,7 +591,7 @@ func (r *PostgresRepository) GetStudentsByClass(ctx context.Context, classID str
 	query := `SELECT u.id, u.email, u.first_name, u.last_name, u.fiscal_code, u.role, u.school_id, u.is_active, u.created_at, u.updated_at, s.id as student_id
 	          FROM users u
 	          JOIN students s ON u.id = s.user_id
-	          WHERE s.class_id = $1 AND u.role = 'student' AND u.deleted_at IS NULL 
+	          WHERE s.class_id = $1::uuid AND u.role = 'student' AND u.deleted_at IS NULL 
 	          ORDER BY u.last_name, u.first_name`
 	rows, err := r.db.QueryContext(ctx, query, classID)
 	if err != nil {
@@ -637,7 +637,7 @@ func (r *PostgresRepository) GetGuardians(ctx context.Context, studentProfileID 
 		FROM student_parents sp
 		JOIN parents p ON sp.parent_id = p.id
 		JOIN users u ON p.user_id = u.id
-		WHERE sp.student_id = $1
+		WHERE sp.student_id = $1::uuid
 	`
 	rows, err := r.db.QueryContext(ctx, query, studentProfileID)
 	if err != nil {
