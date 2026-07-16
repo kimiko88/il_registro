@@ -309,10 +309,12 @@ func (s *Service) DisableMFA(ctx context.Context, actorRole, userID string) erro
 }
 
 // GDPR Exports
-func (s *Service) GDPRDataExport(ctx context.Context, actorRole, userID string) (map[string]interface{}, error) {
-	// User can export their own data, or DPO
-	// Assuming checks are done in handler or here via permissions
-	// Simply allow if we got this far
+func (s *Service) GDPRDataExport(ctx context.Context, actorID, actorRole, userID string) (map[string]interface{}, error) {
+	// User can export their own data, or admin/DPO with permission
+	if actorID != userID && !s.permManager.HasPermission(actorRole, permissions.UserExport) {
+		return nil, ErrUnauthorized
+	}
+
 	user, err := s.repo.GetByID(ctx, userID)
 	if err != nil {
 		return nil, err

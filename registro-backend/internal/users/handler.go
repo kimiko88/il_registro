@@ -288,7 +288,7 @@ func (h *Handler) GetAuditLog(c *gin.Context) {
 
 // 12. POST /api/v1/users/{id}/gdpr-export
 func (h *Handler) ExportGDPR(c *gin.Context) {
-	data, err := h.service.GDPRDataExport(c.Request.Context(), getActorRole(c), c.Param("id"))
+	data, err := h.service.GDPRDataExport(c.Request.Context(), getActorID(c), getActorRole(c), c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

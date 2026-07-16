@@ -647,7 +647,7 @@ func TestService_GDPRConvert(t *testing.T) {
 		mockRepo.On("GetByID", mock.Anything, "user-1").Return(user, nil).Once()
 		mockRepo.On("GetAuditLogs", mock.Anything, "user-1", 1000, 0).Return(logs, 0, nil).Once()
 
-		data, err := service.GDPRDataExport(context.Background(), "admin", "user-1")
+		data, err := service.GDPRDataExport(context.Background(), "user-1", "student", "user-1")
 		assert.NoError(t, err)
 		assert.NotNil(t, data)
 		profile := data["profile"].(map[string]interface{})
