@@ -554,12 +554,20 @@ func (s *service) DeleteGrade(teacherID string, gradeID string) error {
 
 func (s *service) GetChildGrades(parentID string, studentID string, filter GradeFilter) (*MyGradesResponse, error) {
 	ctx := context.Background()
+	fmt.Printf("DEBUG service.GetChildGrades: parentID=%q studentID=%q\n", parentID, studentID)
+
+	// Validate UUIDs before hitting DB
+	if parentID == "" || studentID == "" {
+		return nil, fmt.Errorf("access denied: not a guardian")
+	}
 
 	// Verify guardianship
 	isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, studentID)
 	if err != nil {
+		fmt.Printf("DEBUG IsGuardian error: %v\n", err)
 		return nil, fmt.Errorf("guardianship check failed: %w", err)
 	}
+	fmt.Printf("DEBUG IsGuardian result: %v\n", isGuardian)
 	if !isGuardian {
 		return nil, fmt.Errorf("access denied: not a guardian")
 	}

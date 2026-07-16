@@ -210,7 +210,7 @@ func (r *repository) FindByID(id string) (*Grade, error) {
 		SELECT id, student_id, school_id, subject_id, teacher_id, 
 			       grade_value, grade_type, semester, date, 
 			       description, rubric_id, weight, is_published, published_at,
-			       grade_category, evaluation_type, COALESCE(created_by, ''), created_at, updated_at, test_id
+			       grade_category, evaluation_type, COALESCE(created_by::text, ''), created_at, updated_at, test_id
 		FROM grades 
 		WHERE id = $1::uuid AND deleted_at IS NULL`
 
@@ -235,7 +235,7 @@ func (r *repository) FindByStudent(studentID string) ([]Grade, error) {
 		SELECT id, student_id, school_id, subject_id, teacher_id, 
 			       grade_value, grade_type, semester, date, 
 			       description, rubric_id, weight, is_published, published_at,
-			       grade_category, evaluation_type, COALESCE(created_by, ''), created_at, updated_at, test_id
+			       grade_category, evaluation_type, COALESCE(created_by::text, ''), created_at, updated_at, test_id
 		FROM grades 
 		WHERE student_id = $1::uuid AND deleted_at IS NULL
 		ORDER BY date DESC`
@@ -253,7 +253,7 @@ func (r *repository) FindByClassAndSubject(classID string, subjectID string, sem
 			SELECT g.id, g.student_id, g.school_id, g.subject_id, g.teacher_id, 
 			       g.grade_value, g.grade_type, g.semester, g.date, 
 			       g.description, g.rubric_id, g.weight, g.is_published, g.published_at,
-			       g.grade_category, g.evaluation_type, COALESCE(g.created_by, ''), g.created_at, g.updated_at, g.test_id
+			       g.grade_category, g.evaluation_type, COALESCE(g.created_by::text, ''), g.created_at, g.updated_at, g.test_id
 			FROM grades g
 			JOIN students s ON g.student_id = s.id
 			WHERE s.class_id = $1::uuid AND g.subject_id = $2::uuid AND g.semester = $3 AND g.deleted_at IS NULL
@@ -265,7 +265,7 @@ func (r *repository) FindByClassAndSubject(classID string, subjectID string, sem
 			SELECT g.id, g.student_id, g.school_id, g.subject_id, g.teacher_id, 
 			       g.grade_value, g.grade_type, g.semester, g.date, 
 			       g.description, g.rubric_id, g.weight, g.is_published, g.published_at,
-			       g.grade_category, g.evaluation_type, COALESCE(g.created_by, ''), g.created_at, g.updated_at, g.test_id
+			       g.grade_category, g.evaluation_type, COALESCE(g.created_by::text, ''), g.created_at, g.updated_at, g.test_id
 			FROM grades g
 			JOIN students s ON g.student_id = s.id
 			WHERE s.class_id = $1::uuid AND g.subject_id = $2::uuid AND g.deleted_at IS NULL
@@ -285,7 +285,7 @@ func (r *repository) FindByClass(classID string, semester int) ([]Grade, error) 
 			SELECT g.id, g.student_id, g.school_id, g.subject_id, g.teacher_id, 
 			       g.grade_value, g.grade_type, g.semester, g.date, 
 			       g.description, g.rubric_id, g.weight, g.is_published, g.published_at,
-			       g.grade_category, g.evaluation_type, COALESCE(g.created_by, ''), g.created_at, g.updated_at, g.test_id
+			       g.grade_category, g.evaluation_type, COALESCE(g.created_by::text, ''), g.created_at, g.updated_at, g.test_id
 			FROM grades g
 			JOIN students s ON g.student_id = s.id
 			WHERE s.class_id = $1::uuid AND g.semester = $2 AND g.deleted_at IS NULL
@@ -296,7 +296,7 @@ func (r *repository) FindByClass(classID string, semester int) ([]Grade, error) 
 			SELECT g.id, g.student_id, g.school_id, g.subject_id, g.teacher_id, 
 			       g.grade_value, g.grade_type, g.semester, g.date, 
 			       g.description, g.rubric_id, g.weight, g.is_published, g.published_at,
-			       g.grade_category, g.evaluation_type, COALESCE(g.created_by, ''), g.created_at, g.updated_at, g.test_id
+			       g.grade_category, g.evaluation_type, COALESCE(g.created_by::text, ''), g.created_at, g.updated_at, g.test_id
 			FROM grades g
 			JOIN students s ON g.student_id = s.id
 			WHERE s.class_id = $1::uuid AND g.deleted_at IS NULL
@@ -316,7 +316,7 @@ func (r *repository) FindBySubject(subjectID string, semester int) ([]Grade, err
 			SELECT id, student_id, school_id, subject_id, teacher_id, 
 			       grade_value, grade_type, semester, date, 
 			       description, rubric_id, weight, is_published, published_at,
-			       grade_category, evaluation_type, COALESCE(created_by, ''), created_at, updated_at, test_id
+			       grade_category, evaluation_type, COALESCE(created_by::text, ''), created_at, updated_at, test_id
 			FROM grades 
 			WHERE subject_id = $1::uuid AND semester = $2 AND deleted_at IS NULL
 			ORDER BY date DESC, student_id ASC`
@@ -326,7 +326,7 @@ func (r *repository) FindBySubject(subjectID string, semester int) ([]Grade, err
 			SELECT id, student_id, school_id, subject_id, teacher_id, 
 			       grade_value, grade_type, semester, date, 
 			       description, rubric_id, weight, is_published, published_at,
-			       grade_category, evaluation_type, COALESCE(created_by, ''), created_at, updated_at, test_id
+			       grade_category, evaluation_type, COALESCE(created_by::text, ''), created_at, updated_at, test_id
 			FROM grades 
 			WHERE subject_id = $1::uuid AND deleted_at IS NULL
 			ORDER BY date DESC, student_id ASC`
@@ -341,7 +341,7 @@ func (r *repository) FindWithFilter(filter GradeFilter) ([]Grade, error) {
 		SELECT id, student_id, school_id, subject_id, teacher_id, 
 			       grade_value, grade_type, semester, date, 
 			       description, rubric_id, weight, is_published, published_at,
-			       grade_category, evaluation_type, COALESCE(created_by, ''), created_at, updated_at, test_id
+			       grade_category, evaluation_type, COALESCE(created_by::text, ''), created_at, updated_at, test_id
 		FROM grades 
 		WHERE deleted_at IS NULL`
 
@@ -383,7 +383,7 @@ func (r *repository) FindByTeacher(teacherID string) ([]Grade, error) {
 		SELECT id, student_id, school_id, subject_id, teacher_id, 
 			       grade_value, grade_type, semester, date, 
 			       description, rubric_id, weight, is_published, published_at,
-			       grade_category, evaluation_type, COALESCE(created_by, ''), created_at, updated_at, test_id
+			       grade_category, evaluation_type, COALESCE(created_by::text, ''), created_at, updated_at, test_id
 		FROM grades 
 		WHERE teacher_id = $1::uuid AND deleted_at IS NULL
 		ORDER BY date DESC`

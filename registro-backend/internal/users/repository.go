@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/lib/pq"
 )
 
@@ -62,7 +63,7 @@ type PostgresRepository struct {
 
 func (r *PostgresRepository) GetChildren(ctx context.Context, parentUserID string) ([]StudentChild, error) {
 	query := `
-		SELECT s.id, u.id, u.first_name, u.last_name, COALESCE(c.name, 'N/A'), sc.name
+		SELECT s.id, u.id, u.first_name, u.last_name, COALESCE(c.name, 'N/A'), COALESCE(s.class_id::text, ''), sc.name
 		FROM student_parents sp
 		JOIN parents p ON sp.parent_id = p.id
 		JOIN students s ON sp.student_id = s.id
@@ -80,7 +81,7 @@ func (r *PostgresRepository) GetChildren(ctx context.Context, parentUserID strin
 	var children []StudentChild
 	for rows.Next() {
 		var c StudentChild
-		if err := rows.Scan(&c.ID, &c.UserID, &c.FirstName, &c.LastName, &c.Class, &c.SchoolName); err != nil {
+		if err := rows.Scan(&c.ID, &c.UserID, &c.FirstName, &c.LastName, &c.Class, &c.ClassID, &c.SchoolName); err != nil {
 			return nil, err
 		}
 		children = append(children, c)
@@ -538,26 +539,13 @@ func (r *PostgresRepository) BulkCreate(ctx context.Context, users []User) (int,
 }
 
 func (r *PostgresRepository) IsGuardian(ctx context.Context, parentUserID string, studentID string) (bool, error) {
-	// The table is `student_parents`, linking `student_id` (from `students` table) and `parent_id` (from `parents` table).
-	// However, our input is `parentUserID` (from JWT) and `studentID` (could be student USER ID or student PROFILE ID??).
-	// The Grades Service refers to `StudentID`.
-	// In `003_academic_structure.sql`, `students` table has `id` and `user_id`.
-	// The `grades` table links to `students.id` (profile ID) usually, but key name is `student_id`.
-	// Let's assume the API inputs typically use the Profile IDs (UUIDs from `students`/`parents` tables), NOT User IDs.
-	// BUT, the JWT usually contains the USER ID.
-	// So we need to map ParentUserID -> ParentID first, OR check via join.
-	//
-	// Query: Check if there is a row in student_parents where parent's user_id matches and student's id matches.
-	//
-	// Join: student_parents sp JOIN parents p ON sp.parent_id = p.id
-	// WHERE p.user_id = $1 AND sp.student_id = $2
-	//
-	// Note: `studentID` param: Grades Service usually uses the Student Profile ID (`students.id`).
-	// If the `studentID` param passed forces UserID, we'd adjust.
-	// The prompt says "Verifica che ParentID sia genitore di StudentID in DB".
-	// Assuming logic:
-	// 1. Resolve Parent Profile ID from Parent User ID.
-	// 2. Check relationship with Target Student ID.
+	// Validate UUIDs to avoid SQL syntax errors when casting empty/invalid string
+	if _, err := uuid.Parse(parentUserID); err != nil {
+		return false, nil
+	}
+	if _, err := uuid.Parse(studentID); err != nil {
+		return false, nil
+	}
 
 	query := `
 		SELECT EXISTS (

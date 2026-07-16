@@ -89,6 +89,9 @@ func (m *RegressionMockRepo) FindTestsByClassAndSubject(classID string, subjectI
 }
 func (m *RegressionMockRepo) DeleteTest(id string) error { return nil }
 func (m *RegressionMockRepo) UpdateTest(test *ClassTest) error { return nil }
+func (m *RegressionMockRepo) FindUpcomingTestsByClass(classID string) ([]ClassTest, error) {
+	return nil, nil
+}
 func (m *RegressionMockRepo) FindGradesByTestID(testID string) ([]Grade, error) { return nil, nil }
 
 func TestService_FilterLogicRegex(t *testing.T) {

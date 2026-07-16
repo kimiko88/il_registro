@@ -203,6 +203,13 @@ func (m *MockGradesRepository) FindTestsByClassAndSubject(classID string, subjec
 	}
 	return args.Get(0).([]grades.ClassTest), args.Error(1)
 }
+func (m *MockGradesRepository) FindUpcomingTestsByClass(classID string) ([]grades.ClassTest, error) {
+	args := m.Called(classID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]grades.ClassTest), args.Error(1)
+}
 func (m *MockGradesRepository) DeleteTest(id string) error {
 	args := m.Called(id)
 	return args.Error(0)

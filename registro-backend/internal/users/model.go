@@ -67,6 +67,7 @@ type StudentChild struct {
 	FirstName  string `json:"first_name"`
 	LastName   string `json:"last_name"`
 	Class      string `json:"class"`
+	ClassID    string `json:"class_id"` // Add this field
 	SchoolName string `json:"school_name"`
 }
 

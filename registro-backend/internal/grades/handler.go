@@ -379,10 +379,12 @@ func (h *Handler) GetChildGrades(c *gin.Context) {
 	}
 
 	studentID := c.Param("studentID")
+	fmt.Printf("DEBUG GetChildGrades: parentID=%q studentID=%q\n", parentID, studentID)
 	filter := h.parseFilter(c)
 
 	resp, err := h.service.GetChildGrades(parentID, studentID, filter)
 	if err != nil {
+		fmt.Printf("DEBUG GetChildGrades error: %v\n", err)
 		// Distinguish access denied from internal errors
 		if err.Error() == "access denied: not a guardian" || err.Error() == "guardianship check failed" {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
