@@ -18,7 +18,13 @@ export const useParentStore = defineStore('parent', () => {
         error.value = null
         try {
             const response = await api.get('/users/me/children')
-            children.value = response.data
+            children.value = (response.data || []).map(c => ({
+                ...c,
+                firstName: c.first_name,
+                lastName: c.last_name,
+                schoolName: c.school_name,
+                className: c.class
+            }))
 
             // Validate the stored selectedChildId still belongs to this user's children
             if (selectedChildId.value) {
