@@ -90,7 +90,7 @@ func (r *repository) Update(a *Attendance) error {
 }
 
 func (r *repository) FindByID(id string) (*Attendance, error) {
-	query := `SELECT id, student_id, class_id, date, hour, subject_id, status, justified, justified_by, justified_at, notes, entry_time, exit_time FROM attendance WHERE id=$1::uuid`
+	query := `SELECT id, student_id, class_id, date, hour, subject_id, status, justified, justified_by, justified_at, COALESCE(notes, ''), entry_time, exit_time FROM attendance WHERE id=$1::uuid`
 	var a Attendance
 	err := r.db.QueryRow(query, id).Scan(
 		&a.ID, &a.StudentID, &a.ClassID, &a.Date, &a.Hour, &a.SubjectID, &a.Status,
@@ -104,7 +104,7 @@ func (r *repository) FindByID(id string) (*Attendance, error) {
 
 func (r *repository) FindByClassAndDate(classID string, date time.Time) ([]Attendance, error) {
 	query := `
-		SELECT id, student_id, class_id, date, hour, subject_id, status, justified, justified_by, justified_at, notes, entry_time, exit_time
+		SELECT id, student_id, class_id, date, hour, subject_id, status, justified, justified_by, justified_at, COALESCE(notes, ''), entry_time, exit_time
 		FROM attendance 
 		WHERE class_id=$1::uuid AND date=$2`
 
@@ -130,7 +130,7 @@ func (r *repository) FindByClassAndDate(classID string, date time.Time) ([]Atten
 
 func (r *repository) FindByStudent(studentID string, startDate, endDate time.Time) ([]Attendance, error) {
 	query := `
-		SELECT id, student_id, class_id, date, hour, subject_id, status, justified, justified_by, justified_at, notes, entry_time, exit_time
+		SELECT id, student_id, class_id, date, hour, subject_id, status, justified, justified_by, justified_at, COALESCE(notes, ''), entry_time, exit_time
 		FROM attendance 
 		WHERE student_id=$1::uuid AND date BETWEEN $2 AND $3
 		ORDER BY date DESC`
