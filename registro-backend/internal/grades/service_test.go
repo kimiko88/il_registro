@@ -179,6 +179,12 @@ func (m *MockUserRepo) RemoveGuardian(ctx context.Context, studentID, parentID s
 func (m *MockUserRepo) GetGuardians(ctx context.Context, studentID string) ([]users.GuardianInfo, error) {
 	return nil, nil
 }
+func (m *MockUserRepo) GetPasswordHistory(ctx context.Context, userID string) ([]string, error) {
+	return nil, nil
+}
+func (m *MockUserRepo) AddPasswordHistory(ctx context.Context, userID, passwordHash string) error {
+	return nil
+}
 
 func TestAddGrade(t *testing.T) {
 	mockRepo := new(MockRepository)

@@ -78,6 +78,8 @@ func (s *Service) CreateUser(ctx context.Context, actorRole string, req CreateUs
 		return nil, err
 	}
 
+	_ = s.repo.AddPasswordHistory(ctx, user.ID, user.PasswordHash)
+
 	// Audit
 	_ = s.repo.LogAudit(ctx, &AuditLog{
 		ID:        uuid.New().String(),
@@ -210,10 +212,27 @@ func (s *Service) ChangePassword(ctx context.Context, userID string, req ChangeP
 		return fmt.Errorf("new password too weak")
 	}
 
+	// Check password history (prevent reuse of last 5)
+	history, err := s.repo.GetPasswordHistory(ctx, userID)
+	if err == nil {
+		for _, oldHash := range history {
+			if bcrypt.CompareHashAndPassword([]byte(oldHash), []byte(req.NewPassword)) == nil {
+				return errors.New("la nuova password non può essere uguale ad una delle ultime 5 utilizzate")
+			}
+		}
+	}
+
 	hashed, _ := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
 	user.PasswordHash = string(hashed)
+	now := time.Now()
+	user.PasswordChangedAt = &now
 
-	return s.repo.Update(ctx, user)
+	if err := s.repo.Update(ctx, user); err != nil {
+		return err
+	}
+
+	_ = s.repo.AddPasswordHistory(ctx, userID, user.PasswordHash)
+	return nil
 }
 
 func (s *Service) ResetPassword(ctx context.Context, actorRole, userID, newPassword string) error {
@@ -226,10 +245,31 @@ func (s *Service) ResetPassword(ctx context.Context, actorRole, userID, newPassw
 		return err
 	}
 
+	if !s.validator.ValidatePassword(newPassword) {
+		return fmt.Errorf("new password too weak")
+	}
+
+	// Check password history (prevent reuse of last 5)
+	history, err := s.repo.GetPasswordHistory(ctx, userID)
+	if err == nil {
+		for _, oldHash := range history {
+			if bcrypt.CompareHashAndPassword([]byte(oldHash), []byte(newPassword)) == nil {
+				return errors.New("la nuova password non può essere uguale ad una delle ultime 5 utilizzate")
+			}
+		}
+	}
+
 	hashed, _ := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
 	user.PasswordHash = string(hashed)
+	now := time.Now()
+	user.PasswordChangedAt = &now
 
-	return s.repo.Update(ctx, user)
+	if err := s.repo.Update(ctx, user); err != nil {
+		return err
+	}
+
+	_ = s.repo.AddPasswordHistory(ctx, userID, user.PasswordHash)
+	return nil
 }
 
 // BulkImport handles CSV/XLSX

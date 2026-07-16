@@ -12,18 +12,33 @@ func NewValidator() *Validator {
 	return &Validator{}
 }
 
-// ValidatePassword checks password complexity
+// ValidatePassword checks password complexity (min 10 chars, upper, lower, digit, special char)
 func (v *Validator) ValidatePassword(password string) bool {
-	var (
-		hasMinLen = false
-	)
-
-	if len(password) >= 8 {
-		hasMinLen = true
+	if len(password) < 10 {
+		return false
 	}
 
+	var (
+		hasUpper   bool
+		hasLower   bool
+		hasNumber  bool
+		hasSpecial bool
+	)
 
-	return hasMinLen
+	for _, char := range password {
+		switch {
+		case char >= 'A' && char <= 'Z':
+			hasUpper = true
+		case char >= 'a' && char <= 'z':
+			hasLower = true
+		case char >= '0' && char <= '9':
+			hasNumber = true
+		case strings.ContainsRune("!@#$%^&*()-_=+[]{}|;:',.<>/?~`", char):
+			hasSpecial = true
+		}
+	}
+
+	return hasUpper && hasLower && hasNumber && hasSpecial
 }
 
 // ValidateFiscalCode checks Italian Codice Fiscale format

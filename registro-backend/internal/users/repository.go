@@ -23,6 +23,11 @@ type Repository interface {
 	GetByID(ctx context.Context, id string) (*User, error)
 	GetByEmail(ctx context.Context, email string) (*User, error)
 	Update(ctx context.Context, user *User) error
+
+	// Password history
+	GetPasswordHistory(ctx context.Context, userID string) ([]string, error)
+	AddPasswordHistory(ctx context.Context, userID, passwordHash string) error
+
 	Delete(ctx context.Context, id string) error  // Soft delete
 	Restore(ctx context.Context, id string) error // Restore
 	List(ctx context.Context, filter UserFilter) ([]User, int, error)
@@ -155,8 +160,8 @@ func (r *PostgresRepository) Create(ctx context.Context, user *User) error {
 func (r *PostgresRepository) GetByID(ctx context.Context, id string) (*User, error) {
 	query := `
 		SELECT u.id, u.email, u.password_hash, u.first_name, u.last_name, COALESCE(u.fiscal_code, ''),
-		       u.role, u.school_id, u.is_active, u.email_verified, u.mfa_enabled, COALESCE(u.phone_number, ''), COALESCE(u.job_title, ''),
-		       u.created_at, u.updated_at, u.last_login, u.deleted_at, u.pseudonymized_at,
+		       u.role, u.school_id, u.is_active, u.email_verified, u.mfa_enabled, COALESCE(u.mfa_secret, ''), COALESCE(u.phone_number, ''), COALESCE(u.job_title, ''),
+		       u.created_at, u.updated_at, u.last_login, u.deleted_at, u.pseudonymized_at, u.password_changed_at,
 		       s.class_id, c.name, c.section
 		FROM users u
 		LEFT JOIN students s ON u.id = s.user_id
@@ -167,8 +172,8 @@ func (r *PostgresRepository) GetByID(ctx context.Context, id string) (*User, err
 	var classID, className, classSection *string
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
 		&u.ID, &u.Email, &u.PasswordHash, &u.FirstName, &u.LastName, &u.FiscalCode,
-		&u.Role, &u.SchoolID, &u.IsActive, &u.EmailVerified, &u.MFAEnabled, &u.PhoneNumber, &u.JobTitle,
-		&u.CreatedAt, &u.UpdatedAt, &u.LastLogin, &u.DeletedAt, &u.PseudonymizedAt,
+		&u.Role, &u.SchoolID, &u.IsActive, &u.EmailVerified, &u.MFAEnabled, &u.MFASecret, &u.PhoneNumber, &u.JobTitle,
+		&u.CreatedAt, &u.UpdatedAt, &u.LastLogin, &u.DeletedAt, &u.PseudonymizedAt, &u.PasswordChangedAt,
 		&classID, &className, &classSection,
 	)
 	if err == sql.ErrNoRows {
@@ -184,10 +189,10 @@ func (r *PostgresRepository) GetByID(ctx context.Context, id string) (*User, err
 }
 
 func (r *PostgresRepository) GetByEmail(ctx context.Context, email string) (*User, error) {
-	query := `SELECT id, email, password_hash, role, is_active, mfa_enabled, school_id FROM users WHERE email = $1`
+	query := `SELECT id, email, password_hash, role, is_active, mfa_enabled, school_id, password_changed_at FROM users WHERE email = $1`
 	var u User
 	err := r.db.QueryRowContext(ctx, query, email).Scan(
-		&u.ID, &u.Email, &u.PasswordHash, &u.Role, &u.IsActive, &u.MFAEnabled, &u.SchoolID,
+		&u.ID, &u.Email, &u.PasswordHash, &u.Role, &u.IsActive, &u.MFAEnabled, &u.SchoolID, &u.PasswordChangedAt,
 	)
 	if err == sql.ErrNoRows {
 		return nil, ErrUserNotFound
@@ -207,14 +212,16 @@ func (r *PostgresRepository) Update(ctx context.Context, user *User) error {
 			first_name = $1, last_name = $2, phone_number = $3, job_title = $4,
 			is_active = $5, role = $6, school_id = $7, updated_at = $8,
 			password_hash = $9, mfa_enabled = $10,
-			fiscal_code = COALESCE(NULLIF($11, ''), fiscal_code)
-		WHERE id = $12::uuid
+			fiscal_code = COALESCE(NULLIF($11, ''), fiscal_code),
+			password_changed_at = COALESCE($12, password_changed_at)
+		WHERE id = $13::uuid
 	`
 	res, err := tx.ExecContext(ctx, query,
 		user.FirstName, user.LastName, user.PhoneNumber, user.JobTitle,
 		user.IsActive, user.Role, user.SchoolID, time.Now(),
 		user.PasswordHash, user.MFAEnabled,
 		user.FiscalCode,
+		user.PasswordChangedAt,
 		user.ID,
 	)
 	if err != nil {
@@ -642,4 +649,38 @@ func (r *PostgresRepository) GetGuardians(ctx context.Context, studentProfileID 
 		guardians = append(guardians, g)
 	}
 	return guardians, nil
+}
+
+func (r *PostgresRepository) GetPasswordHistory(ctx context.Context, userID string) ([]string, error) {
+	query := `
+		SELECT password_hash 
+		FROM user_password_history 
+		WHERE user_id = $1::uuid 
+		ORDER BY created_at DESC 
+		LIMIT 5
+	`
+	rows, err := r.db.QueryContext(ctx, query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var history []string
+	for rows.Next() {
+		var h string
+		if err := rows.Scan(&h); err != nil {
+			return nil, err
+		}
+		history = append(history, h)
+	}
+	return history, nil
+}
+
+func (r *PostgresRepository) AddPasswordHistory(ctx context.Context, userID, passwordHash string) error {
+	query := `
+		INSERT INTO user_password_history (user_id, password_hash)
+		VALUES ($1::uuid, $2)
+	`
+	_, err := r.db.ExecContext(ctx, query, userID, passwordHash)
+	return err
 }

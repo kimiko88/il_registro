@@ -1,12 +1,12 @@
 <template>
-  <q-page class="q-pa-md bg-slate-50">
+  <q-page class="q-pa-md bg-slate-50" role="main">
     <!-- Header with Child Switcher -->
     <div class="row items-center justify-between q-mb-xl">
       <div>
-        <h1 class="text-h3 text-weight-bold text-outfit text-gradient-premium q-my-none" style="display: inline-block;">
+        <h1 class="text-h3 text-weight-bold text-outfit parent-heading q-my-none" style="display: inline-block;">
           Bentornato, Genitore
         </h1>
-        <div class="text-subtitle1 text-slate-500 q-mt-sm">Panoramica delle attività per i tuoi figli</div>
+        <div class="text-subtitle1 text-slate-600 q-mt-sm" aria-live="polite">Panoramica delle attività per i tuoi figli</div>
       </div>
       <div v-if="children.length > 0">
         <q-btn-dropdown
@@ -16,8 +16,9 @@
           class="rounded-xl shadow-soft q-px-md"
           :label="selectedChild ? `${selectedChild.first_name} ${selectedChild.last_name}` : 'Seleziona Figlio'"
           icon="face"
+          aria-label="Seleziona figlio da visualizzare"
         >
-          <q-list>
+          <q-list role="listbox" aria-label="Lista figli">
             <q-item
               v-for="child in children"
               :key="child.id"
@@ -26,9 +27,11 @@
               @click="selectChild(child.id)"
               :active="selectedChildId === child.id"
               active-class="bg-blue-1 text-primary"
+              role="option"
+              :aria-selected="selectedChildId === child.id"
             >
               <q-item-section avatar>
-                <q-avatar size="sm" color="primary" text-color="white">{{ child.first_name.charAt(0) }}</q-avatar>
+                <q-avatar size="sm" color="primary" text-color="white" :aria-label="`Iniziale di ${child.first_name}`">{{ child.first_name.charAt(0) }}</q-avatar>
               </q-item-section>
               <q-item-section>
                 <q-item-label>{{ child.first_name }} {{ child.last_name }}</q-item-label>
@@ -41,7 +44,7 @@
     </div>
 
     <!-- Loading State -->
-    <div v-if="loading" class="row justify-center q-pa-lg">
+    <div v-if="loading" class="row justify-center q-pa-lg" role="status" aria-label="Caricamento in corso">
       <q-spinner color="primary" size="3em" />
     </div>
 
@@ -49,80 +52,84 @@
     <div v-else-if="selectedChild" class="row q-col-gutter-md">
       
       <!-- Quick Stats -->
-      <div class="col-12 col-sm-6 col-md-3">
+      <div class="col-12 col-sm-6 col-md-3" role="region" aria-label="Media voti">
         <q-card class="glass-card stat-card shadow-soft full-height overflow-hidden">
           <q-card-section>
-            <div class="text-caption text-slate-400 text-uppercase letter-spacing-1">Media Voti</div>
-            <div class="text-h3 text-weight-bold text-indigo-600 q-mt-sm">{{ averageGrade }}</div>
+            <div class="text-caption text-slate-600 text-uppercase letter-spacing-1">Media Voti</div>
+            <div class="text-h3 text-weight-bold text-indigo-700 q-mt-sm" aria-label="Media voti: {{ averageGrade }}">{{ averageGrade }}</div>
             <div class="row items-center q-mt-sm">
-              <q-icon name="trending_up" color="positive" class="q-mr-xs" />
+              <q-icon name="trending_up" color="positive" class="q-mr-xs" aria-hidden="true" />
               <span class="text-positive text-caption text-weight-medium">Andamento generale</span>
             </div>
           </q-card-section>
-          <q-icon name="grade" class="card-bg-icon text-indigo-100" />
+          <q-icon name="grade" class="card-bg-icon text-indigo-100" aria-hidden="true" />
         </q-card>
       </div>
 
-      <div class="col-12 col-sm-6 col-md-3">
+      <div class="col-12 col-sm-6 col-md-3" role="region" aria-label="Assenze">
         <q-card class="glass-card stat-card shadow-soft full-height overflow-hidden">
           <q-card-section>
-            <div class="text-caption text-slate-400 text-uppercase letter-spacing-1">Assenze</div>
-            <div class="text-h3 text-weight-bold text-orange-600 q-mt-sm">{{ totalAbsences }}</div>
+            <div class="text-caption text-slate-600 text-uppercase letter-spacing-1">Assenze</div>
+            <div class="text-h3 text-weight-bold text-orange-700 q-mt-sm" aria-label="Numero assenze: {{ totalAbsences }}">{{ totalAbsences }}</div>
             <div class="row items-center q-mt-sm">
-              <span class="text-caption text-slate-500">Anno in corso</span>
+              <span class="text-caption text-slate-600">Anno in corso</span>
             </div>
           </q-card-section>
-          <q-icon name="how_to_reg" class="card-bg-icon text-orange-100" />
+          <q-icon name="how_to_reg" class="card-bg-icon text-orange-100" aria-hidden="true" />
         </q-card>
       </div>
 
-      <div class="col-12 col-sm-6 col-md-3">
+      <div class="col-12 col-sm-6 col-md-3" role="region" aria-label="Prossimo colloquio">
         <q-card class="glass-card stat-card shadow-soft full-height overflow-hidden">
           <q-card-section>
-            <div class="text-caption text-slate-400 text-uppercase letter-spacing-1">Prossimo Colloquio</div>
-            <div class="text-h5 text-weight-bold q-mt-sm">Nessuno</div>
-            <q-btn flat dense no-caps color="primary" label="Prenota ora" to="/parent/colloqui" class="q-mt-sm rounded-lg" />
+            <div class="text-caption text-slate-600 text-uppercase letter-spacing-1">Prossimo Colloquio</div>
+            <div class="text-h5 text-weight-bold text-slate-800 q-mt-sm">Nessuno</div>
+            <q-btn flat dense no-caps color="primary" label="Prenota ora" to="/parent/colloqui" class="q-mt-sm rounded-lg" aria-label="Prenota un colloquio" />
           </q-card-section>
-          <q-icon name="event" class="card-bg-icon text-slate-100" />
+          <q-icon name="event" class="card-bg-icon text-slate-100" aria-hidden="true" />
         </q-card>
       </div>
 
-       <div class="col-12 col-sm-6 col-md-3">
+       <div class="col-12 col-sm-6 col-md-3" role="region" aria-label="Avvisi da leggere">
         <q-card class="glass-card stat-card shadow-soft full-height overflow-hidden">
           <q-card-section>
-            <div class="text-caption text-slate-400 text-uppercase letter-spacing-1">Avvisi</div>
-            <div class="text-h3 text-weight-bold text-rose-600 q-mt-sm">2</div>
-            <div class="text-caption text-slate-500 q-mt-sm text-weight-medium">Da leggere</div>
+            <div class="text-caption text-slate-600 text-uppercase letter-spacing-1">Avvisi</div>
+            <div class="text-h3 text-weight-bold text-rose-700 q-mt-sm" aria-label="2 avvisi da leggere">2</div>
+            <div class="text-caption text-slate-600 q-mt-sm text-weight-medium">Da leggere</div>
           </q-card-section>
-          <q-icon name="notifications_active" class="card-bg-icon text-rose-100" />
+          <q-icon name="notifications_active" class="card-bg-icon text-rose-100" aria-hidden="true" />
         </q-card>
       </div>
 
       <!-- Recent Activities / Grades -->
       <div class="col-12 col-md-8">
-        <q-card class="shadow-sm rounded-lg">
+        <q-card class="shadow-sm rounded-lg" role="region" aria-label="Ultimi voti">
           <q-card-section class="row items-center justify-between">
             <div class="text-h6 text-slate-800">Ultimi Voti</div>
-            <q-btn flat no-caps color="primary" label="Vedi tutti" to="/parent/grades" />
+            <q-btn flat no-caps color="primary" label="Vedi tutti" to="/parent/grades" aria-label="Vedi tutti i voti" />
           </q-card-section>
           <q-separator />
-          <q-list separator v-if="recentGrades.length > 0">
-            <q-item v-for="grade in recentGrades" :key="grade.id">
+          <q-list separator v-if="recentGrades.length > 0" role="list" aria-label="Lista voti recenti">
+            <q-item v-for="grade in recentGrades" :key="grade.id" role="listitem">
               <q-item-section>
-                <q-item-label class="text-weight-medium">{{ grade.subject_id }}</q-item-label>
-                <q-item-label caption>{{ grade.grade_type }}</q-item-label>
+                <q-item-label class="text-weight-medium text-slate-800">{{ grade.subject_id }}</q-item-label>
+                <q-item-label caption class="text-slate-600">{{ grade.grade_type }}</q-item-label>
               </q-item-section>
               <q-item-section side>
                 <div class="row items-center">
-                   <q-badge :color="grade.grade_value === -1 ? 'grey' : (grade.grade_value >= 6 ? 'positive' : 'negative')" class="text-subtitle1 q-pa-xs">
+                   <q-badge
+                     :color="grade.grade_value === -1 ? 'grey' : (grade.grade_value >= 6 ? 'positive' : 'negative')"
+                     class="text-subtitle1 q-pa-xs"
+                     :aria-label="`Voto: ${grade.grade_value === -1 ? 'Assente' : grade.grade_value}`"
+                   >
                      {{ grade.grade_value === -1 ? 'A' : grade.grade_value }}
                    </q-badge>
-                   <div class="text-caption text-grey q-ml-md">{{ new Date(grade.date).toLocaleDateString('it-IT') }}</div>
+                   <div class="text-caption text-slate-600 q-ml-md">{{ new Date(grade.date).toLocaleDateString('it-IT') }}</div>
                 </div>
               </q-item-section>
             </q-item>
           </q-list>
-          <div v-else class="q-pa-lg text-center text-grey">Nessun voto registrato di recente</div>
+          <div v-else class="q-pa-lg text-center text-slate-500" role="status">Nessun voto registrato di recente</div>
         </q-card>
       </div>
 
@@ -156,10 +163,10 @@
     </div>
 
     <!-- Empty State -->
-    <div v-else class="text-center q-pa-xl">
-      <q-icon name="family_restroom" size="4em" color="grey-4" />
-      <div class="text-h6 text-grey-6 q-mt-sm">Nessun figlio associato</div>
-      <p class="text-grey-5">Contatta la segreteria se ritieni ci sia un errore.</p>
+    <div v-else class="text-center q-pa-xl" role="status">
+      <q-icon name="family_restroom" size="4em" color="grey-6" aria-hidden="true" />
+      <div class="text-h6 text-slate-600 q-mt-sm">Nessun figlio associato</div>
+      <p class="text-slate-500">Contatta la segreteria se ritieni ci sia un errore.</p>
     </div>
 
     <!-- Quick Actions (FAB on Mobile) -->
@@ -279,6 +286,15 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+/* WCAG AA compliant heading — avoids transparent text on light backgrounds */
+.parent-heading {
+  color: #312e81; /* indigo-900: contrast ratio ~10:1 su bg-slate-50 */
+}
+
+.body--dark .parent-heading {
+  color: #a5b4fc; /* indigo-300: contrasto adeguato su sfondo scuro */
+}
+
 .bg-clip-text {
     -webkit-background-clip: text;
     background-clip: text;

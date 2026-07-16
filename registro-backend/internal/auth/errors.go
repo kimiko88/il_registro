@@ -16,11 +16,12 @@ var (
 	ErrInvalidEmail       = errors.New("invalid email format")
 
 	// Password errors
-	ErrPasswordTooShort    = errors.New("password must be at least 8 characters")
+	ErrPasswordTooShort    = errors.New("password must be at least 10 characters")
 	ErrPasswordNoUppercase = errors.New("password must contain uppercase letter")
 	ErrPasswordNoLowercase = errors.New("password must contain lowercase letter")
 	ErrPasswordNoNumber    = errors.New("password must contain number")
 	ErrPasswordNoSpecial   = errors.New("password must contain special character")
+	ErrPasswordExpired     = errors.New("la password è scaduta e deve essere cambiata")
 
 	// MFA errors
 	ErrMFARequired       = errors.New("MFA token required")
@@ -34,4 +35,5 @@ var (
 	// Generic errors
 	ErrMissingRequiredFields = errors.New("missing required fields")
 	ErrInvalidRole           = errors.New("invalid user role")
+	ErrPasswordReused        = errors.New("la nuova password non può essere uguale ad una delle ultime 5 utilizzate")
 )

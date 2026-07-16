@@ -1,26 +1,27 @@
 <template>
   <q-layout view="lHh Lpr lFf" class="bg-slate-50">
-    <q-header class="glass-effect text-slate-900 q-py-xs" :class="$q.dark.isActive ? 'bg-dark' : 'bg-white'">
-      <q-toolbar>
+    <q-header class="glass-effect text-slate-900 q-py-xs" :class="$q.dark.isActive ? 'bg-dark' : 'bg-white'" role="banner">
+      <q-toolbar role="navigation" aria-label="Barra di navigazione principale">
         <q-btn
           flat
           dense
           round
           icon="menu"
-          aria-label="Menu"
+          aria-label="Apri/chiudi menu di navigazione"
+          :aria-expanded="leftDrawerOpen"
           color="primary"
           @click="toggleLeftDrawer"
           :key="'drawer-toggle'"
         />
 
         <q-toolbar-title class="text-weight-bold text-primary">
-          Registro Elettronico
+          <span role="heading" aria-level="1">Registro Elettronico</span>
         </q-toolbar-title>
 
         <q-space />
         
         <!-- Dark Mode Toggle -->
-        <q-btn flat round dense :icon="$q.dark.isActive ? 'light_mode' : 'dark_mode'" @click="$q.dark.toggle()" color="primary" class="q-mr-sm" :key="'dark-toggle'">
+        <q-btn flat round dense :icon="$q.dark.isActive ? 'light_mode' : 'dark_mode'" @click="$q.dark.toggle()" color="primary" class="q-mr-sm" :key="'dark-toggle'" :aria-label="$q.dark.isActive ? 'Attiva modalità chiara' : 'Attiva modalità scura'">
            <q-tooltip>Toggle Dark Mode</q-tooltip>
         </q-btn>
 
@@ -35,12 +36,13 @@
           color="primary" 
           class="q-mr-sm"
           :key="'fullscreen-toggle'"
+          :aria-label="$q.fullscreen.isActive ? 'Esci da schermo intero' : 'Vai a schermo intero'"
         >
            <q-tooltip>Toggle Fullscreen</q-tooltip>
         </q-btn>
 
-        <div class="text-caption text-grey-6 q-mr-sm">v0.0.1</div>
-        <q-btn flat round dense icon="account_circle" color="primary" />
+        <div class="text-caption text-grey-6 q-mr-sm" aria-hidden="true">v0.0.1</div>
+        <q-btn flat round dense icon="account_circle" color="primary" aria-label="Profilo utente" />
       </q-toolbar>
     </q-header>
 
@@ -50,28 +52,30 @@
       bordered
       :class="$q.dark.isActive ? 'bg-dark' : 'bg-white'"
       :width="260"
+      role="navigation"
+      aria-label="Menu laterale di navigazione"
     >
       <div class="column full-height no-wrap">
         <!-- User Profile Section -->
-        <div class="q-pa-lg bg-gradient-premium text-white relative-position overflow-hidden" v-if="userName">
+        <div class="q-pa-lg bg-gradient-premium text-white relative-position overflow-hidden" v-if="userName" role="region" aria-label="Profilo utente">
           <div class="row items-center q-mb-sm relative-position" style="z-index: 1">
-            <q-avatar size="56px" color="white" text-color="primary" class="q-mr-md shadow-soft">
+            <q-avatar size="56px" color="white" text-color="primary" class="q-mr-md shadow-soft" aria-hidden="true">
               <q-icon name="person" size="32px" />
             </q-avatar>
             <div class="col">
-              <div class="text-h6 text-weight-bold no-wrap">{{ userName }}</div>
-              <div class="text-caption opacity-80 text-uppercase letter-spacing-1">{{ roleLabel }}</div>
+              <div class="text-h6 text-weight-bold no-wrap" aria-label="Utente connesso: {{ userName }}">{{ userName }}</div>
+              <div class="text-caption opacity-80 text-uppercase letter-spacing-1" aria-label="Ruolo: {{ roleLabel }}">{{ roleLabel }}</div>
             </div>
           </div>
           <!-- Decorative Circle -->
-          <div class="absolute-bottom-right q-mr-n-lg q-mb-n-lg" style="width: 120px; height: 120px; border-radius: 50%; background: rgba(255,255,255,0.1)"></div>
+          <div class="absolute-bottom-right q-mr-n-lg q-mb-n-lg" style="width: 120px; height: 120px; border-radius: 50%; background: rgba(255,255,255,0.1)" aria-hidden="true"></div>
         </div>
 
         <!-- Menu Items -->
         <q-scroll-area class="col">
           <div class="q-pa-md">
-            <div class="text-overline text-grey-5 q-px-md q-mb-sm letter-spacing-2">MENU PRINCIPALE</div>
-            <q-list padding class="q-gutter-y-xs">
+            <div class="text-overline text-grey-5 q-px-md q-mb-sm letter-spacing-2" aria-hidden="true">MENU PRINCIPALE</div>
+            <q-list padding class="q-gutter-y-xs" role="menubar" aria-label="Navigazione principale">
               <q-item 
                 v-for="item in menuItems"
                 :key="item.path"
@@ -80,9 +84,11 @@
                 :exact="item.exact"
                 active-class="bg-indigo-50 text-indigo-700 active-menu-item"
                 class="rounded-lg q-mx-sm transition-all"
+                role="menuitem"
+                :aria-label="item.label"
               >
                 <q-item-section avatar>
-                  <q-icon :name="item.icon" size="22px" />
+                  <q-icon :name="item.icon" size="22px" aria-hidden="true" />
                 </q-item-section>
                 <q-item-section>
                   <q-item-label class="text-weight-bold">{{ item.label }}</q-item-label>
@@ -99,9 +105,12 @@
             class="rounded-lg bg-red-50 text-negative q-pa-md"
             @click="handleLogout"
             :disable="loggingOut"
+            role="button"
+            aria-label="Esci dall'applicazione"
+            :aria-busy="loggingOut"
           >
             <q-item-section avatar>
-              <q-icon name="logout" size="20px" />
+              <q-icon name="logout" size="20px" aria-hidden="true" />
             </q-item-section>
             <q-item-section class="text-weight-bold">
               Esci
@@ -114,7 +123,7 @@
       </div>
     </q-drawer>
 
-    <q-page-container>
+    <q-page-container role="main">
       <router-view />
     </q-page-container>
   </q-layout>

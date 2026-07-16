@@ -17,7 +17,7 @@ type PasswordValidator struct {
 // NewPasswordValidator creates a new password validator with default rules
 func NewPasswordValidator() *PasswordValidator {
 	return &PasswordValidator{
-		MinLength:      8,
+		MinLength:      10,
 		RequireUpper:   true,
 		RequireLower:   true,
 		RequireNumber:  true,

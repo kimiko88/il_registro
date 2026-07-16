@@ -34,6 +34,7 @@ type User struct {
 
 	// GDPR
 	PseudonymizedAt *time.Time `json:"pseudonymized_at,omitempty" db:"pseudonymized_at"`
+	PasswordChangedAt *time.Time `json:"password_changed_at,omitempty" db:"password_changed_at"`
 }
 
 // AuditLog tracks specific actions on user records

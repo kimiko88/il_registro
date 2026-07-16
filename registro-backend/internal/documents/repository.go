@@ -2,6 +2,7 @@ package documents
 
 import (
 	"database/sql"
+	"registro-backend/pkg/crypto"
 )
 
 type Repository interface {
@@ -70,7 +71,12 @@ func (r *repository) Create(d *Document, content string) error {
 		INSERT INTO document_versions (document_id, version_num, content, created_by, change_log)
 		VALUES ($1, 1, $2, $3, 'Initial Creation')`
 
-	_, err = tx.Exec(vQuery, d.ID, content, d.CreatedBy)
+	encryptedContent, err := crypto.EncryptString(content)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(vQuery, d.ID, encryptedContent, d.CreatedBy)
 	if err != nil {
 		return err
 	}
@@ -93,7 +99,12 @@ func (r *repository) Update(d *Document, newContent, changeLog string) error {
 		INSERT INTO document_versions (document_id, version_num, content, created_by, change_log)
 		VALUES ($1, $2, $3, $4, $5)`
 
-	_, err = tx.Exec(vQuery, d.ID, newVersion, newContent, d.CreatedBy, changeLog) // CreatedBy here is the updater
+	encryptedContent, err := crypto.EncryptString(newContent)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(vQuery, d.ID, newVersion, encryptedContent, d.CreatedBy, changeLog) // CreatedBy here is the updater
 	if err != nil {
 		return err
 	}
@@ -153,7 +164,15 @@ func (r *repository) FindByID(id string) (*Document, error) {
 func (r *repository) GetContent(docID string, version int) (string, error) {
 	var content string
 	err := r.db.QueryRow(`SELECT content FROM document_versions WHERE document_id=$1 AND version_num=$2`, docID, version).Scan(&content)
-	return content, err
+	if err != nil {
+		return "", err
+	}
+
+	decrypted, err := crypto.DecryptString(content)
+	if err == nil {
+		return decrypted, nil
+	}
+	return content, nil
 }
 
 func (r *repository) GetVersions(docID string) ([]DocumentVersion, error) {

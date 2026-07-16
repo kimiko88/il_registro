@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"registro-backend/pkg/crypto"
 )
 
 type Repository interface {
@@ -30,25 +31,34 @@ func (r *PostgresRepository) Create(ctx context.Context, n *StudentNote) error {
 	n.CreatedAt = time.Now()
 	n.UpdatedAt = time.Now()
 
+	encryptedNote, err := crypto.EncryptString(n.Note)
+	if err != nil {
+		return err
+	}
+
 	query := `
 		INSERT INTO student_notes (id, school_id, student_id, teacher_id, class_id, subject_id, type, note, date, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 	`
-	_, err := r.db.ExecContext(ctx, query,
+	_, err = r.db.ExecContext(ctx, query,
 		n.ID, n.SchoolID, n.StudentID, n.TeacherID, n.ClassID, n.SubjectID,
-		n.Type, n.Note, n.Date, n.CreatedAt, n.UpdatedAt,
+		n.Type, encryptedNote, n.Date, n.CreatedAt, n.UpdatedAt,
 	)
 	return err
 }
 
 func (r *PostgresRepository) Update(ctx context.Context, n *StudentNote) error {
 	n.UpdatedAt = time.Now()
+	encryptedNote, err := crypto.EncryptString(n.Note)
+	if err != nil {
+		return err
+	}
 	query := `
 		UPDATE student_notes 
 		SET type=$1, note=$2, date=$3, subject_id=$4, updated_at=$5
 		WHERE id=$6
 	`
-	_, err := r.db.ExecContext(ctx, query, n.Type, n.Note, n.Date, n.SubjectID, n.UpdatedAt, n.ID)
+	_, err = r.db.ExecContext(ctx, query, n.Type, encryptedNote, n.Date, n.SubjectID, n.UpdatedAt, n.ID)
 	return err
 }
 
@@ -75,6 +85,12 @@ func (r *PostgresRepository) Get(ctx context.Context, id string) (*StudentNote, 
 		s := subjectID.String
 		n.SubjectID = &s
 	}
+
+	decrypted, err := crypto.DecryptString(n.Note)
+	if err == nil {
+		n.Note = decrypted
+	}
+
 	return &n, nil
 }
 
@@ -143,6 +159,12 @@ func (r *PostgresRepository) List(ctx context.Context, filter NoteFilter) ([]Stu
 		if subjectName.Valid {
 			n.SubjectName = subjectName.String
 		}
+
+		decrypted, err := crypto.DecryptString(n.Note)
+		if err == nil {
+			n.Note = decrypted
+		}
+
 		notes = append(notes, n)
 	}
 	return notes, nil

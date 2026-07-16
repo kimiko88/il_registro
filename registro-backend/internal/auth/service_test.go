@@ -26,6 +26,19 @@ func (m *MockRepository) CreateUser(ctx context.Context, user *User) error {
 	return args.Error(0)
 }
 
+func (m *MockRepository) GetPasswordHistory(ctx context.Context, userID string) ([]string, error) {
+	args := m.Called(ctx, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]string), args.Error(1)
+}
+
+func (m *MockRepository) AddPasswordHistory(ctx context.Context, userID, passwordHash string) error {
+	args := m.Called(ctx, userID, passwordHash)
+	return args.Error(0)
+}
+
 func (m *MockRepository) GetUserByEmail(ctx context.Context, email string) (*User, error) {
 	args := m.Called(ctx, email)
 	if args.Get(0) == nil {
@@ -403,7 +416,9 @@ func TestPasswordReset(t *testing.T) {
 		}
 
 		mockRepo.On("GetPasswordResetToken", mock.Anything, token).Return(prt, nil).Once()
+		mockRepo.On("GetPasswordHistory", mock.Anything, "user-123").Return([]string{}, nil).Once()
 		mockRepo.On("UpdatePassword", mock.Anything, "user-123", mock.Anything).Return(nil).Once()
+		mockRepo.On("AddPasswordHistory", mock.Anything, "user-123", mock.Anything).Return(nil).Once()
 		mockRepo.On("UsePasswordResetToken", mock.Anything, "prt-1").Return(nil).Once()
 		mockRepo.On("RevokeAllUserTokens", mock.Anything, "user-123").Return(nil).Once()
 

@@ -204,3 +204,68 @@ body {
 .q-btn:active {
     transform: translateY(0);
 }
+
+/* =========================================
+   WCAG 2.1 Legge Stanca Compliance Helpers
+   ========================================= */
+
+/* Skip-to-content link for keyboard users */
+.skip-to-content {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: #312e81;
+    color: #ffffff;
+    padding: 8px 16px;
+    z-index: 99999;
+    border-radius: 0 0 8px 0;
+    font-weight: 600;
+    text-decoration: none;
+    transition: top 0.2s ease;
+}
+
+.skip-to-content:focus {
+    top: 0;
+}
+
+/* Ensure all interactive elements have a visible focus ring */
+*:focus-visible {
+    outline: 3px solid #4338CA;
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* Quasar overrides: ensure focus ring on buttons */
+.q-btn:focus-visible {
+    outline: 3px solid #4338CA;
+    outline-offset: 2px;
+}
+
+/* WCAG AA: Minimum contrast 4.5:1 for normal text.
+   text-slate-400 (#94a3b8) on white (#fff) is only 2.98:1 — non-compliant.
+   Override to text-slate-600 (#475569) which is 5.74:1 — compliant. */
+.text-slate-400,
+.q-item__label--caption.text-slate-400 {
+    color: #475569 !important; /* slate-600 — 5.74:1 on white */
+}
+
+.body--dark .text-slate-400 {
+    color: #94a3b8 !important; /* slate-400 is fine on dark bg */
+}
+
+/* Reduced motion: respect OS prefers-reduced-motion for users with vestibular disorders */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+    
+    .q-btn:hover,
+    .stat-card:hover {
+        transform: none !important;
+    }
+}

@@ -96,7 +96,7 @@ func main() {
 	pctoSvc := pcto.NewService(pctoRepo)
 	orientSvc := orientamento.NewService(orientRepo)
 	schoolsSvc := schools.NewService(schoolsRepo)
-	signaturesSvc := signatures.NewService(signatures.NewRepository(database), docsSvc)
+	signaturesSvc := signatures.NewService(signatures.NewRepository(database), docsSvc, usersRepo)
 
 	commsSvc := communications.NewService(commsRepo)
 	notesSvc := notes.NewService(notesRepo)

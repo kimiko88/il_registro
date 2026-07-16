@@ -99,6 +99,13 @@ func (s *Service) Login(ctx context.Context, req *LoginRequest, ipAddress, userA
 		return nil, ErrUserInactive
 	}
 
+	// Check if password has expired (90 days for admin/secretary/superadmin)
+	if user.Role == "admin" || user.Role == "superadmin" || user.Role == "secretary" {
+		if user.PasswordChangedAt != nil && time.Since(*user.PasswordChangedAt) > 90*24*time.Hour {
+			return nil, ErrPasswordExpired
+		}
+	}
+
 	// Check MFA
 	if user.MFAEnabled {
 		if req.MFAToken == "" {
@@ -340,6 +347,22 @@ func (s *Service) ResetPassword(ctx context.Context, token, newPassword string) 
 		return ErrInvalidToken
 	}
 
+	// Validate password complexity
+	validator := NewPasswordValidator()
+	if err := validator.Validate(newPassword); err != nil {
+		return err
+	}
+
+	// Check password history (prevent reuse of last 5)
+	history, err := s.repo.GetPasswordHistory(ctx, prt.UserID)
+	if err == nil {
+		for _, oldHash := range history {
+			if bcrypt.CompareHashAndPassword([]byte(oldHash), []byte(newPassword)) == nil {
+				return ErrPasswordReused
+			}
+		}
+	}
+
 	// Hash new password
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(newPassword), s.bcryptCost)
 	if err != nil {
@@ -350,6 +373,9 @@ func (s *Service) ResetPassword(ctx context.Context, token, newPassword string) 
 	if err := s.repo.UpdatePassword(ctx, prt.UserID, string(passwordHash)); err != nil {
 		return err
 	}
+
+	// Add to password history
+	_ = s.repo.AddPasswordHistory(ctx, prt.UserID, string(passwordHash))
 
 	// Mark token as used
 	if err := s.repo.UsePasswordResetToken(ctx, prt.ID); err != nil {

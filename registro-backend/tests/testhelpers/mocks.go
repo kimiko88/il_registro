@@ -21,6 +21,17 @@ func (m *MockAuthRepository) CreateUser(ctx context.Context, user *auth.User) er
 	args := m.Called(ctx, user)
 	return args.Error(0)
 }
+func (m *MockAuthRepository) GetPasswordHistory(ctx context.Context, userID string) ([]string, error) {
+	args := m.Called(ctx, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]string), args.Error(1)
+}
+func (m *MockAuthRepository) AddPasswordHistory(ctx context.Context, userID, passwordHash string) error {
+	args := m.Called(ctx, userID, passwordHash)
+	return args.Error(0)
+}
 func (m *MockAuthRepository) GetUserByEmail(ctx context.Context, email string) (*auth.User, error) {
 	args := m.Called(ctx, email)
 	if args.Get(0) == nil {
@@ -233,6 +244,17 @@ type MockUsersRepository struct {
 
 func (m *MockUsersRepository) Create(ctx context.Context, user *users.User) error {
 	args := m.Called(ctx, user)
+	return args.Error(0)
+}
+func (m *MockUsersRepository) GetPasswordHistory(ctx context.Context, userID string) ([]string, error) {
+	args := m.Called(ctx, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]string), args.Error(1)
+}
+func (m *MockUsersRepository) AddPasswordHistory(ctx context.Context, userID, passwordHash string) error {
+	args := m.Called(ctx, userID, passwordHash)
 	return args.Error(0)
 }
 func (m *MockUsersRepository) GetByID(ctx context.Context, id string) (*users.User, error) {

@@ -39,6 +39,10 @@ type Repository interface {
 	UsePasswordResetToken(ctx context.Context, tokenID string) error
 	UpdatePassword(ctx context.Context, userID, passwordHash string) error
 
+	// Password history
+	GetPasswordHistory(ctx context.Context, userID string) ([]string, error)
+	AddPasswordHistory(ctx context.Context, userID, passwordHash string) error
+
 	// Rate limiting
 	RecordLoginAttempt(ctx context.Context, attempt *LoginAttempt) error
 	GetRecentLoginAttempts(ctx context.Context, email, ipAddress string, since time.Time) (int, error)
@@ -75,7 +79,7 @@ func (r *repository) CreateUser(ctx context.Context, user *User) error {
 func (r *repository) GetUserByEmail(ctx context.Context, email string) (*User, error) {
 	query := `
 		SELECT id, email, password_hash, first_name, last_name, role, school_id, 
-		       is_active, email_verified, mfa_enabled, mfa_secret, created_at, updated_at, last_login
+		       is_active, email_verified, mfa_enabled, mfa_secret, created_at, updated_at, last_login, password_changed_at
 		FROM users
 		WHERE email = $1 AND deleted_at IS NULL
 	`
@@ -84,7 +88,7 @@ func (r *repository) GetUserByEmail(ctx context.Context, email string) (*User, e
 	err := r.db.QueryRowContext(ctx, query, email).Scan(
 		&user.ID, &user.Email, &user.PasswordHash, &user.FirstName, &user.LastName,
 		&user.Role, &user.SchoolID, &user.IsActive, &user.EmailVerified,
-		&user.MFAEnabled, &mfaSecret, &user.CreatedAt, &user.UpdatedAt, &user.LastLogin,
+		&user.MFAEnabled, &mfaSecret, &user.CreatedAt, &user.UpdatedAt, &user.LastLogin, &user.PasswordChangedAt,
 	)
 	if err == sql.ErrNoRows {
 		return nil, ErrUserNotFound
@@ -99,7 +103,7 @@ func (r *repository) GetUserByEmail(ctx context.Context, email string) (*User, e
 func (r *repository) GetUserByID(ctx context.Context, id string) (*User, error) {
 	query := `
 		SELECT id, email, password_hash, first_name, last_name, role, school_id,
-		       is_active, email_verified, mfa_enabled, mfa_secret, created_at, updated_at, last_login
+		       is_active, email_verified, mfa_enabled, mfa_secret, created_at, updated_at, last_login, password_changed_at
 		FROM users
 		WHERE id = $1 AND deleted_at IS NULL
 	`
@@ -108,7 +112,7 @@ func (r *repository) GetUserByID(ctx context.Context, id string) (*User, error) 
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
 		&user.ID, &user.Email, &user.PasswordHash, &user.FirstName, &user.LastName,
 		&user.Role, &user.SchoolID, &user.IsActive, &user.EmailVerified,
-		&user.MFAEnabled, &mfaSecret, &user.CreatedAt, &user.UpdatedAt, &user.LastLogin,
+		&user.MFAEnabled, &mfaSecret, &user.CreatedAt, &user.UpdatedAt, &user.LastLogin, &user.PasswordChangedAt,
 	)
 	if err == sql.ErrNoRows {
 		return nil, ErrUserNotFound
@@ -293,7 +297,7 @@ func (r *repository) UsePasswordResetToken(ctx context.Context, tokenID string) 
 }
 
 func (r *repository) UpdatePassword(ctx context.Context, userID, passwordHash string) error {
-	query := `UPDATE users SET password_hash = $1, updated_at = $2 WHERE id = $3`
+	query := `UPDATE users SET password_hash = $1, updated_at = $2, password_changed_at = $2 WHERE id = $3`
 	_, err := r.db.ExecContext(ctx, query, passwordHash, time.Now(), userID)
 	return err
 }
@@ -316,4 +320,38 @@ func (r *repository) GetRecentLoginAttempts(ctx context.Context, email, ipAddres
 	var count int
 	err := r.db.QueryRowContext(ctx, query, email, ipAddress, since).Scan(&count)
 	return count, err
+}
+
+func (r *repository) GetPasswordHistory(ctx context.Context, userID string) ([]string, error) {
+	query := `
+		SELECT password_hash 
+		FROM user_password_history 
+		WHERE user_id = $1::uuid 
+		ORDER BY created_at DESC 
+		LIMIT 5
+	`
+	rows, err := r.db.QueryContext(ctx, query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var history []string
+	for rows.Next() {
+		var h string
+		if err := rows.Scan(&h); err != nil {
+			return nil, err
+		}
+		history = append(history, h)
+	}
+	return history, nil
+}
+
+func (r *repository) AddPasswordHistory(ctx context.Context, userID, passwordHash string) error {
+	query := `
+		INSERT INTO user_password_history (user_id, password_hash)
+		VALUES ($1::uuid, $2)
+	`
+	_, err := r.db.ExecContext(ctx, query, userID, passwordHash)
+	return err
 }

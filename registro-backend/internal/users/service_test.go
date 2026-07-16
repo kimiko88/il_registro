@@ -18,6 +18,17 @@ func (m *MockRepository) Create(ctx context.Context, user *User) error {
 	args := m.Called(ctx, user)
 	return args.Error(0)
 }
+func (m *MockRepository) GetPasswordHistory(ctx context.Context, userID string) ([]string, error) {
+	args := m.Called(ctx, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]string), args.Error(1)
+}
+func (m *MockRepository) AddPasswordHistory(ctx context.Context, userID, passwordHash string) error {
+	args := m.Called(ctx, userID, passwordHash)
+	return args.Error(0)
+}
 func (m *MockRepository) GetByID(ctx context.Context, id string) (*User, error) {
 	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
@@ -137,6 +148,7 @@ func TestService_CreateUser(t *testing.T) {
 			},
 			mockSetup: func() {
 				mockRepo.On("Create", mock.Anything, mock.AnythingOfType("*users.User")).Return(nil)
+				mockRepo.On("AddPasswordHistory", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 				mockRepo.On("LogAudit", mock.Anything, mock.AnythingOfType("*users.AuditLog")).Return(nil)
 			},
 			wantErr: false,
@@ -381,7 +393,9 @@ func TestService_ChangePassword(t *testing.T) {
 			mockSetup: func() {
 				user := &User{ID: "user-123", PasswordHash: string(oldHashedPassword)}
 				mockRepo.On("GetByID", mock.Anything, "user-123").Return(user, nil)
+				mockRepo.On("GetPasswordHistory", mock.Anything, "user-123").Return([]string{}, nil)
 				mockRepo.On("Update", mock.Anything, mock.AnythingOfType("*users.User")).Return(nil)
+				mockRepo.On("AddPasswordHistory", mock.Anything, "user-123", mock.Anything).Return(nil)
 			},
 			wantErr: false,
 		},
