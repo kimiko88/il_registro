@@ -10,7 +10,7 @@
       </div>
       <div v-if="children.length > 0">
         <q-btn-dropdown
-          color="indigo-600"
+          color="primary"
           unelevated
           no-caps
           class="rounded-xl shadow-soft q-px-md"
@@ -81,7 +81,7 @@
           <q-card-section>
             <div class="text-caption text-slate-400 text-uppercase letter-spacing-1">Prossimo Colloquio</div>
             <div class="text-h5 text-weight-bold q-mt-sm">Nessuno</div>
-            <q-btn flat dense no-caps color="indigo-600" label="Prenota ora" to="/parent/colloqui" class="q-mt-sm rounded-lg" />
+            <q-btn flat dense no-caps color="primary" label="Prenota ora" to="/parent/colloqui" class="q-mt-sm rounded-lg" />
           </q-card-section>
           <q-icon name="event" class="card-bg-icon text-slate-100" />
         </q-card>

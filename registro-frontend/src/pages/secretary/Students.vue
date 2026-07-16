@@ -30,13 +30,13 @@
         
         <template v-slot:body-cell-actions="props">
           <q-td :props="props" class="text-right">
-            <q-btn flat round dense icon="edit" color="blue-600" @click="editStudent(props.row)">
+            <q-btn flat round dense icon="edit" color="blue" @click="editStudent(props.row)">
               <q-tooltip>Modifica Studente</q-tooltip>
             </q-btn>
-            <q-btn flat round dense icon="family_restroom" color="indigo-600" @click="openGuardians(props.row)">
+            <q-btn flat round dense icon="family_restroom" color="primary" @click="openGuardians(props.row)">
               <q-tooltip>Gestione Genitori</q-tooltip>
             </q-btn>
-            <q-btn flat round dense icon="school" color="emerald-600" @click="openRecords(props.row)">
+            <q-btn flat round dense icon="school" color="green" @click="openRecords(props.row)">
               <q-tooltip>Voti e Assenze</q-tooltip>
             </q-btn>
           </q-td>
