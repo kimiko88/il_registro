@@ -84,13 +84,13 @@ func (r *repository) Update(a *Attendance) error {
 	query := `
 		UPDATE attendance SET 
 			status=$1, hour=$2, subject_id=$3, notes=$4, justified=$5, justified_by=$6, justified_at=$7, entry_time=$8, exit_time=$9, updated_at=NOW()
-		WHERE id=$10`
+		WHERE id=$10::uuid`
 	_, err := r.db.Exec(query, a.Status, a.Hour, a.SubjectID, a.Notes, a.Justified, a.JustifiedBy, a.JustifiedAt, a.EntryTime, a.ExitTime, a.ID)
 	return err
 }
 
 func (r *repository) FindByID(id string) (*Attendance, error) {
-	query := `SELECT id, student_id, class_id, date, hour, subject_id, status, justified, justified_by, justified_at, notes, entry_time, exit_time FROM attendance WHERE id=$1`
+	query := `SELECT id, student_id, class_id, date, hour, subject_id, status, justified, justified_by, justified_at, notes, entry_time, exit_time FROM attendance WHERE id=$1::uuid`
 	var a Attendance
 	err := r.db.QueryRow(query, id).Scan(
 		&a.ID, &a.StudentID, &a.ClassID, &a.Date, &a.Hour, &a.SubjectID, &a.Status,
@@ -106,7 +106,7 @@ func (r *repository) FindByClassAndDate(classID string, date time.Time) ([]Atten
 	query := `
 		SELECT id, student_id, class_id, date, hour, subject_id, status, justified, justified_by, justified_at, notes, entry_time, exit_time
 		FROM attendance 
-		WHERE class_id=$1 AND date=$2`
+		WHERE class_id=$1::uuid AND date=$2`
 
 	rows, err := r.db.Query(query, classID, date)
 	if err != nil {
@@ -132,7 +132,7 @@ func (r *repository) FindByStudent(studentID string, startDate, endDate time.Tim
 	query := `
 		SELECT id, student_id, class_id, date, hour, subject_id, status, justified, justified_by, justified_at, notes, entry_time, exit_time
 		FROM attendance 
-		WHERE student_id=$1 AND date BETWEEN $2 AND $3
+		WHERE student_id=$1::uuid AND date BETWEEN $2 AND $3
 		ORDER BY date DESC`
 
 	rows, err := r.db.Query(query, studentID, startDate, endDate)
@@ -164,7 +164,7 @@ func (r *repository) GetStats(studentID string) (*SummaryResponse, error) {
 			COUNT(*) FILTER (WHERE status = 'LeftEarly') as early_exits,
 			COUNT(*) FILTER (WHERE justified = true) as justified
 		FROM attendance
-		WHERE student_id = $1`
+		WHERE student_id = $1::uuid`
 
 	var s SummaryResponse
 	err := r.db.QueryRow(query, studentID).Scan(&s.TotalAbsences, &s.TotalLates, &s.TotalEarlyExits, &s.JustifiedCount)
@@ -179,19 +179,19 @@ func (r *repository) GetStats(studentID string) (*SummaryResponse, error) {
 func (r *repository) CreateJustification(j *Justification) error {
 	query := `
 		INSERT INTO justifications (student_id, parent_id, start_date, end_date, reason, status, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW()) RETURNING id`
+		VALUES ($1::uuid, $2::uuid, $3, $4, $5, $6, NOW(), NOW()) RETURNING id`
 	return r.db.QueryRow(query, j.StudentID, j.ParentID, j.StartDate, j.EndDate, j.Reason, j.Status).Scan(&j.ID)
 }
 
 func (r *repository) UpdateJustification(j *Justification) error {
-	query := `UPDATE justifications SET status=$1, approved_by=$2, approved_at=$3, updated_at=NOW() WHERE id=$4`
+	query := `UPDATE justifications SET status=$1, approved_by=$2::uuid, approved_at=$3, updated_at=NOW() WHERE id=$4::uuid`
 	_, err := r.db.Exec(query, j.Status, j.ApprovedBy, j.ApprovedAt, j.ID)
 	return err
 }
 
 func (r *repository) FindJustificationByID(id string) (*Justification, error) {
 	var j Justification
-	query := `SELECT id, student_id, parent_id, start_date, end_date, reason, status, approved_by FROM justifications WHERE id=$1`
+	query := `SELECT id, student_id, parent_id, start_date, end_date, reason, status, approved_by FROM justifications WHERE id=$1::uuid`
 	err := r.db.QueryRow(query, id).Scan(&j.ID, &j.StudentID, &j.ParentID, &j.StartDate, &j.EndDate, &j.Reason, &j.Status, &j.ApprovedBy)
 	if err != nil {
 		return nil, err
@@ -205,7 +205,7 @@ func (r *repository) FindPendingJustifications(classID string) ([]Justification,
 		SELECT j.id, j.student_id, j.start_date, j.end_date, j.reason, j.status 
 		FROM justifications j
 		JOIN students s ON j.student_id = s.id
-		WHERE s.class_id = $1 AND j.status = 'pending'`
+		WHERE s.class_id = $1::uuid AND j.status = 'pending'`
 
 	rows, err := r.db.Query(query, classID)
 	if err != nil {
