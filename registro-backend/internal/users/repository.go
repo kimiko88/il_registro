@@ -69,7 +69,7 @@ func (r *PostgresRepository) GetChildren(ctx context.Context, parentUserID strin
 		JOIN users u ON s.user_id = u.id
 		LEFT JOIN classes c ON s.class_id = c.id
 		JOIN schools sc ON u.school_id = sc.id
-		WHERE p.user_id = $1
+		WHERE p.user_id = $1::uuid
 	`
 	rows, err := r.db.QueryContext(ctx, query, parentUserID)
 	if err != nil {
@@ -564,7 +564,7 @@ func (r *PostgresRepository) IsGuardian(ctx context.Context, parentUserID string
 			SELECT 1 
 			FROM student_parents sp
 			JOIN parents p ON sp.parent_id = p.id
-			WHERE p.user_id = $1 AND sp.student_id = $2
+			WHERE p.user_id = $1::uuid AND sp.student_id = $2::uuid
 		)`
 
 	var exists bool
@@ -611,23 +611,23 @@ func (r *PostgresRepository) GetStudentsByClass(ctx context.Context, classID str
 }
 func (r *PostgresRepository) GetStudentProfile(ctx context.Context, userID string) (string, error) {
 	var id string
-	err := r.db.QueryRowContext(ctx, "SELECT id FROM students WHERE user_id = $1", userID).Scan(&id)
+	err := r.db.QueryRowContext(ctx, "SELECT id FROM students WHERE user_id = $1::uuid", userID).Scan(&id)
 	return id, err
 }
 
 func (r *PostgresRepository) GetParentProfile(ctx context.Context, userID string) (string, error) {
 	var id string
-	err := r.db.QueryRowContext(ctx, "SELECT id FROM parents WHERE user_id = $1", userID).Scan(&id)
+	err := r.db.QueryRowContext(ctx, "SELECT id FROM parents WHERE user_id = $1::uuid", userID).Scan(&id)
 	return id, err
 }
 
 func (r *PostgresRepository) AddGuardian(ctx context.Context, studentProfileID, parentProfileID, relationship string) error {
-	_, err := r.db.ExecContext(ctx, `INSERT INTO student_parents (student_id, parent_id, relationship_type) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`, studentProfileID, parentProfileID, relationship)
+	_, err := r.db.ExecContext(ctx, `INSERT INTO student_parents (student_id, parent_id, relationship_type) VALUES ($1::uuid, $2::uuid, $3) ON CONFLICT DO NOTHING`, studentProfileID, parentProfileID, relationship)
 	return err
 }
 
 func (r *PostgresRepository) RemoveGuardian(ctx context.Context, studentProfileID, parentProfileID string) error {
-	_, err := r.db.ExecContext(ctx, `DELETE FROM student_parents WHERE student_id = $1 AND parent_id = $2`, studentProfileID, parentProfileID)
+	_, err := r.db.ExecContext(ctx, `DELETE FROM student_parents WHERE student_id = $1::uuid AND parent_id = $2::uuid`, studentProfileID, parentProfileID)
 	return err
 }
 

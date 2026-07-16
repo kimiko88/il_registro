@@ -52,45 +52,49 @@
             
             <q-card-section class="q-pa-xl">
                 <q-form @submit="saveUser" class="q-gutter-y-lg">
-                    <div class="row q-col-gutter-lg">
-                        <div class="col-6">
-                            <q-input v-model="userForm.first_name" label="Nome" outlined :rules="[val => !!val || 'Campo richiesto']" />
-                        </div>
-                        <div class="col-6">
-                            <q-input v-model="userForm.last_name" label="Cognome" outlined :rules="[val => !!val || 'Campo richiesto']" />
+                    <div>
+                        <div class="row q-col-gutter-lg">
+                            <div class="col-6">
+                                <q-input v-model="userForm.first_name" label="Nome" outlined :rules="[val => !!val || 'Campo richiesto']" />
+                            </div>
+                            <div class="col-6">
+                                <q-input v-model="userForm.last_name" label="Cognome" outlined :rules="[val => !!val || 'Campo richiesto']" />
+                            </div>
                         </div>
                     </div>
                     <q-input v-model="userForm.email" label="Email Istituzionale" outlined type="email" :rules="[val => !!val || 'Inserire un email valida']" />
                     <q-input v-model="userForm.fiscal_code" label="Codice Fiscale" outlined maxlength="16" class="uppercase-input" />
                     
-                    <div class="row q-col-gutter-lg">
-                        <div :class="isSuperAdmin ? 'col-6' : 'col-12'">
-                            <q-select 
-                                v-model="userForm.role" 
-                                :options="roleOptions"
-                                label="Ruolo"
-                                outlined
-                                emit-value
-                                map-options
-                            />
-                        </div>
-                        <div v-if="isSuperAdmin" class="col-6">
-                            <q-select 
-                                v-model="userForm.school_id" 
-                                :options="schoolOptions"
-                                label="Scuola"
-                                outlined
-                                emit-value
-                                map-options
-                                option-label="name"
-                                option-value="id"
-                                :rules="[val => !!val || 'Selezionare una scuola']"
-                                @update:model-value="fetchClassesForSchool"
-                            />
+                    <div>
+                        <div class="row q-col-gutter-lg">
+                            <div :class="isSuperAdmin ? 'col-6' : 'col-12'">
+                                <q-select 
+                                    v-model="userForm.role" 
+                                    :options="roleOptions"
+                                    label="Ruolo"
+                                    outlined
+                                    emit-value
+                                    map-options
+                                />
+                            </div>
+                            <div v-if="isSuperAdmin" class="col-6">
+                                <q-select 
+                                    v-model="userForm.school_id" 
+                                    :options="schoolOptions"
+                                    label="Scuola"
+                                    outlined
+                                    emit-value
+                                    map-options
+                                    option-label="name"
+                                    option-value="id"
+                                    :rules="[val => !!val || 'Selezionare una scuola']"
+                                    @update:model-value="fetchClassesForSchool"
+                                />
+                            </div>
                         </div>
                     </div>
 
-                    <div v-if="userForm.role === 'student'" class="bg-indigo-50 q-pa-lg rounded-xl border border-indigo-100">
+                    <div v-if="userForm.role === 'student'" class="bg-indigo-50 q-px-lg q-pt-lg q-pb-md rounded-xl border border-indigo-100">
                          <div class="text-subtitle2 text-indigo-700 q-mb-md">Dettagli Studente</div>
                          <q-select
                             v-model="userForm.class_id"
@@ -112,6 +116,7 @@
                          outlined
                          type="password"
                          :rules="[val => !!val || 'Campo obbligatorio', val => val.length >= 8 || 'La password deve contenere almeno 8 caratteri']"
+                         :class="{ 'q-mt-md': userForm.role === 'student' }"
                     />
 
                     <div class="row justify-end q-mt-xl q-gutter-sm">
@@ -271,10 +276,19 @@ const users = ref([]);
 const classes = ref([]);
 const loadingClasses = ref(false);
 const classOptions = computed(() => {
-    return classes.value.map(c => ({
-        label: c.name || `${c.section} ${c.academic_year}`,
-        value: c.id
-    }))
+    return classes.value.map(c => {
+        let label = `${c.name || ''}${c.section || ''}`.trim()
+        if (c.articolazione) {
+            label += ` - ${c.articolazione}`
+        }
+        if (c.academic_year) {
+            label += ` (${c.academic_year})`
+        }
+        return {
+            label: label || `Classe ${c.id.substring(0, 8)}`,
+            value: c.id
+        }
+    })
 });
 
 // Forms
@@ -401,6 +415,7 @@ const openCreate = () => {
     userForm.fiscal_code = '';
     userForm.password = '';
     
+    fetchClasses();
     showUserDialog.value = true;
 };
 
@@ -409,9 +424,7 @@ const openEdit = (user) => {
     Object.assign(userForm, user);
     if (user.class_id) userForm.class_id = user.class_id;
     if (user.school_id) userForm.school_id = user.school_id;
-    if (isSuperAdmin.value && userForm.school_id) {
-        fetchClasses();
-    }
+    fetchClasses();
     showUserDialog.value = true;
 };
 

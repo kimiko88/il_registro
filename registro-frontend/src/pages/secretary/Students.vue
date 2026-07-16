@@ -280,10 +280,19 @@ const columns = [
 ]
 
 const classOptions = computed(() => {
-    return classes.value.map(c => ({
-        label: c.name || `${c.section} ${c.academic_year}`,
-        value: c.id
-    }))
+    return classes.value.map(c => {
+        let label = `${c.name || ''}${c.section || ''}`.trim()
+        if (c.articolazione) {
+            label += ` - ${c.articolazione}`
+        }
+        if (c.academic_year) {
+            label += ` (${c.academic_year})`
+        }
+        return {
+            label: label || `Classe ${c.id.substring(0, 8)}`,
+            value: c.id
+        }
+    })
 })
 
 onMounted(() => {
@@ -329,6 +338,7 @@ const openEnrollment = () => {
         school_id: authStore.user.school_id,
         password: ''
     })
+    fetchClasses()
     showUserDialog.value = true
 }
 
@@ -336,6 +346,7 @@ const editStudent = (row) => {
     isEditing.value = true
     Object.assign(userForm, row)
     userForm.class_id = row.ClassID || row.class_id
+    fetchClasses()
     showUserDialog.value = true
 }
 

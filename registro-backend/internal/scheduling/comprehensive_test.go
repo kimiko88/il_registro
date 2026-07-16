@@ -28,6 +28,9 @@ func (m *MockTeacherRepo) GetBySubject(ctx context.Context, subjectID string) ([
 func (m *MockTeacherRepo) GetSubjects(ctx context.Context, teacherID string) ([]teachers.TeacherSubject, error) { return nil, nil }
 func (m *MockTeacherRepo) AssignSubject(ctx context.Context, teacherID, subjectID string) error { return nil }
 func (m *MockTeacherRepo) RemoveSubject(ctx context.Context, teacherID, subjectID string) error { return nil }
+func (m *MockTeacherRepo) GetDashboardStats(ctx context.Context, teacherUserID string) (map[string]interface{}, error) {
+	return nil, nil
+}
 
 
 func (m *MockRepo) CreateSlot(ctx context.Context, s *ColloquioSlot) error {

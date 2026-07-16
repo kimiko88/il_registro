@@ -7,8 +7,8 @@
       </div>
       <div class="col-auto row q-gutter-sm">
         <q-btn unelevated color="primary" icon="add" label="Nuovo Documento" class="rounded-lg q-px-lg shadow-sm" no-caps @click="openCreateDialog" />
-        <q-btn outline color="primary" icon="settings" label="Template" class="rounded-lg q-px-md" no-caps @click="showTemplates = true">
-          <q-tooltip>Gestione Template Documenti</q-tooltip>
+        <q-btn outline color="primary" icon="settings" label="Modelli" class="rounded-lg q-px-md" no-caps @click="showTemplates = true">
+          <q-tooltip>Gestione Modelli Documenti</q-tooltip>
         </q-btn>
       </div>
     </div>
@@ -165,7 +165,7 @@
                     <div class="text-subtitle2 text-indigo-700 font-medium">Suggerimento</div>
                   </div>
                   <div class="text-body2 text-indigo-600">
-                    Utilizza i template predefiniti per velocizzare la compilazione. Puoi personalizzare i template dalla sezione impostazioni.
+                    Utilizza i modelli predefiniti per velocizzare la compilazione. Puoi personalizzare i modelli cliccando sul tasto "Modelli" in alto.
                   </div>
                 </q-card-section>
               </q-card>
@@ -175,16 +175,16 @@
               <q-card flat class="rounded-xl border border-slate-100 bg-white shadow-soft overflow-hidden">
                 <q-card-section class="bg-slate-50 border-b border-slate-100 q-pa-lg row items-center justify-between">
                   <div class="text-subtitle1 text-weight-bold text-slate-700">Editor Contenuto</div>
-                  <q-btn-dropdown unelevated label="Applica Template" color="indigo-50" text-color="indigo-700" icon="auto_awesome" class="rounded-lg no-caps">
+                  <q-btn-dropdown unelevated label="Applica Modello" color="indigo-50" text-color="indigo-700" icon="auto_awesome" class="rounded-lg no-caps">
                     <q-list padding class="rounded-lg">
                       <q-item v-for="t in templates" :key="t.id" clickable v-close-popup class="q-mx-sm rounded-md" @click="applyTemplate(t)">
                         <q-item-section>
                           <q-item-label class="text-weight-medium">{{ t.name }}</q-item-label>
-                          <q-item-label caption>{{ t.type }}</q-item-label>
+                          <q-item-label caption>{{ getTypeLabel(t.type) }}</q-item-label>
                         </q-item-section>
                       </q-item>
                       <q-item v-if="templates.length === 0" class="q-pa-md text-center text-slate-400">
-                        <q-item-section>Nessun template disponibile</q-item-section>
+                        <q-item-section>Nessun modello disponibile</q-item-section>
                       </q-item>
                     </q-list>
                   </q-btn-dropdown>
@@ -421,6 +421,16 @@ const getTypeColor = (type) => {
     case 'certificate': return 'emerald';
     case 'pcto': return 'orange';
     default: return 'slate';
+  }
+};
+
+const getTypeLabel = (type) => {
+  switch (type) {
+    case 'circular': return 'Circolare';
+    case 'certificate': return 'Certificato';
+    case 'report': return 'Verbale/Pagella';
+    case 'other': return 'Altro';
+    default: return type;
   }
 };
 

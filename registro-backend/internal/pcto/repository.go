@@ -3,6 +3,7 @@ package pcto
 import (
 	"context"
 	"database/sql"
+	"strings"
 )
 
 type Repository interface {
@@ -168,12 +169,24 @@ func (r *repository) VerifyHours(ctx context.Context, hourID, teacherID string) 
 }
 
 func (r *repository) CreateCompany(ctx context.Context, c *Company) error {
-	return r.db.QueryRowContext(ctx, `INSERT INTO pcto_companies (school_id, name, vat_number, address, contact_person, email) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
-		c.SchoolID, c.Name, c.VatNumber, c.Address, c.ContactPerson, c.Email).Scan(&c.ID)
+	if c.ContactPerson == "" && (c.ContactPersonFirstName != "" || c.ContactPersonLastName != "") {
+		c.ContactPerson = strings.TrimSpace(c.ContactPersonFirstName + " " + c.ContactPersonLastName)
+	}
+	query := `
+		INSERT INTO pcto_companies (school_id, name, vat_number, address, contact_person, contact_person_first_name, contact_person_last_name, contact_person_phone, email)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id
+	`
+	return r.db.QueryRowContext(ctx, query,
+		c.SchoolID, c.Name, c.VatNumber, c.Address, c.ContactPerson, c.ContactPersonFirstName, c.ContactPersonLastName, c.ContactPersonPhone, c.Email).Scan(&c.ID)
 }
 
 func (r *repository) GetCompanies(ctx context.Context, schoolID string) ([]Company, error) {
-	rows, err := r.db.QueryContext(ctx, `SELECT id, school_id, name, vat_number, address FROM pcto_companies WHERE school_id=$1`, schoolID)
+	query := `
+		SELECT id, school_id, name, vat_number, address, contact_person, COALESCE(contact_person_first_name, ''), COALESCE(contact_person_last_name, ''), COALESCE(contact_person_phone, ''), email
+		FROM pcto_companies
+		WHERE school_id=$1
+	`
+	rows, err := r.db.QueryContext(ctx, query, schoolID)
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +194,12 @@ func (r *repository) GetCompanies(ctx context.Context, schoolID string) ([]Compa
 	var comps []Company
 	for rows.Next() {
 		var c Company
-		_ = rows.Scan(&c.ID, &c.SchoolID, &c.Name, &c.VatNumber, &c.Address)
+		err := rows.Scan(
+			&c.ID, &c.SchoolID, &c.Name, &c.VatNumber, &c.Address, &c.ContactPerson, &c.ContactPersonFirstName, &c.ContactPersonLastName, &c.ContactPersonPhone, &c.Email,
+		)
+		if err != nil {
+			return nil, err
+		}
 		comps = append(comps, c)
 	}
 	return comps, nil

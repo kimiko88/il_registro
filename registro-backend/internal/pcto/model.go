@@ -5,14 +5,17 @@ import (
 )
 
 type Company struct {
-	ID            string    `json:"id" db:"id"`
-	SchoolID      string    `json:"school_id" db:"school_id"`
-	Name          string    `json:"name" db:"name"`
-	VatNumber     string    `json:"vat_number" db:"vat_number"`
-	Address       string    `json:"address" db:"address"`
-	ContactPerson string    `json:"contact_person" db:"contact_person"`
-	Email         string    `json:"email" db:"email"`
-	AgreementDate time.Time `json:"agreement_date" db:"agreement_date"`
+	ID                     string    `json:"id" db:"id"`
+	SchoolID               string    `json:"school_id" db:"school_id"`
+	Name                   string    `json:"name" db:"name"`
+	VatNumber              string    `json:"vat_number" db:"vat_number"`
+	Address                string    `json:"address" db:"address"`
+	ContactPerson          string    `json:"contact_person" db:"contact_person"`
+	ContactPersonFirstName string    `json:"contact_person_first_name" db:"contact_person_first_name"`
+	ContactPersonLastName  string    `json:"contact_person_last_name" db:"contact_person_last_name"`
+	ContactPersonPhone     string    `json:"contact_person_phone" db:"contact_person_phone"`
+	Email                  string    `json:"email" db:"email"`
+	AgreementDate          time.Time `json:"agreement_date" db:"agreement_date"`
 }
 
 type Project struct {

@@ -191,7 +191,17 @@
                     </div>
                     <div class="row items-center">
                       <q-icon name="person" color="slate-300" size="18px" class="q-mr-sm" />
-                      <span class="text-caption text-slate-600">{{ company.contact_person || 'Contatto non definito' }}</span>
+                      <span class="text-caption text-slate-600">
+                        {{ company.contact_person_first_name ? `${company.contact_person_first_name} ${company.contact_person_last_name}` : (company.contact_person || 'Contatto non definito') }}
+                      </span>
+                    </div>
+                    <div v-if="company.contact_person_phone" class="row items-center">
+                      <q-icon name="phone" color="slate-300" size="18px" class="q-mr-sm" />
+                      <span class="text-caption text-slate-600">{{ company.contact_person_phone }}</span>
+                    </div>
+                    <div v-if="company.email" class="row items-center">
+                      <q-icon name="email" color="slate-300" size="18px" class="q-mr-sm" />
+                      <span class="text-caption text-slate-600">{{ company.email }}</span>
                     </div>
                   </div>
                 </q-card-section>
@@ -222,8 +232,16 @@
             <q-input v-model="companyForm.name" label="Ragione Sociale" outlined />
             <q-input v-model="companyForm.vat_number" label="Partita IVA" outlined />
             <q-input v-model="companyForm.address" label="Indirizzo Sede" outlined />
-            <q-input v-model="companyForm.contact_person" label="Persona di Riferimento" outlined />
-            <q-input v-model="companyForm.email" label="Email Contatto" outlined />
+            <div class="row q-col-gutter-md">
+              <div class="col-6">
+                <q-input v-model="companyForm.contact_person_first_name" label="Nome Referente" outlined />
+              </div>
+              <div class="col-6">
+                <q-input v-model="companyForm.contact_person_last_name" label="Cognome Referente" outlined />
+              </div>
+            </div>
+            <q-input v-model="companyForm.contact_person_phone" label="Telefono Referente" outlined />
+            <q-input v-model="companyForm.email" label="Email Referente" outlined type="email" />
             <div class="row justify-end q-mt-xl q-gutter-sm">
               <q-btn flat label="Annulla" color="slate-400" v-close-popup no-caps />
               <q-btn type="submit" color="primary" label="Salva Azienda" class="q-px-xl rounded-lg shadow-sm" no-caps :loading="savingCompany" />
@@ -283,6 +301,9 @@ const companyForm = ref({
   vat_number: '',
   address: '',
   contact_person: '',
+  contact_person_first_name: '',
+  contact_person_last_name: '',
+  contact_person_phone: '',
   email: ''
 });
 
@@ -389,6 +410,16 @@ const addCompany = async () => {
     await api.post('/pcto/companies', companyForm.value);
     $q.notify({ type: 'positive', message: 'Azienda aggiunta' });
     showAddCompany.value = false;
+    companyForm.value = {
+      name: '',
+      vat_number: '',
+      address: '',
+      contact_person: '',
+      contact_person_first_name: '',
+      contact_person_last_name: '',
+      contact_person_phone: '',
+      email: ''
+    };
     await fetchData();
   } catch (err) {
     $q.notify({ type: 'negative', message: 'Errore durante il salvataggio' });

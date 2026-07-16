@@ -67,29 +67,29 @@
       <div class="col-12 col-md-8">
         <q-card class="q-mb-md">
           <q-card-section>
-            <div class="text-h6 q-mb-md">Quick Actions</div>
+            <div class="text-h6 q-mb-md">Azioni Rapide</div>
             <div class="row q-col-gutter-sm">
               <div class="col-6 col-sm-3">
                 <q-btn
-                  push color="primary" label="Grade Class" icon="grade"
+                  push color="primary" label="Registra Voti" icon="grade"
                   class="full-width" size="lg" to="/teacher/grades"
                 />
               </div>
               <div class="col-6 col-sm-3">
                 <q-btn
-                  push color="secondary" label="Attendance" icon="fact_check"
+                  push color="secondary" label="Presenze" icon="fact_check"
                   class="full-width" size="lg" to="/teacher/attendance"
                 />
               </div>
               <div class="col-6 col-sm-3">
                 <q-btn
-                  push color="accent" label="Sign Doc" icon="draw"
+                  push color="accent" label="Firma Doc" icon="draw"
                   class="full-width" size="lg" to="/teacher/documents"
                 />
               </div>
               <div class="col-6 col-sm-3">
                 <q-btn
-                  push color="info" label="Message" icon="send"
+                  push color="info" label="Messaggi" icon="send"
                   class="full-width" size="lg" to="/teacher/communications"
                 />
               </div>
@@ -100,7 +100,7 @@
         <!-- Recent Activity / Notifications -->
         <q-card>
           <q-card-section>
-            <div class="text-h6">Notifications & Activity</div>
+            <div class="text-h6">Notifiche & Attività</div>
           </q-card-section>
           <q-list separator>
             <q-item v-for="note in teacherStore.notifications" :key="note.id" clickable v-ripple>
@@ -123,7 +123,7 @@
       <div class="col-12 col-md-4">
         <q-card class="full-height">
           <q-card-section class="bg-grey-2">
-            <div class="text-h6">My Classes</div>
+            <div class="text-h6">Le Mie Classi</div>
           </q-card-section>
           <q-list separator>
             <q-item v-for="cls in classesStore.classes" :key="cls.id" clickable @click="classesStore.selectClass(cls.id)" :active="cls.id === classesStore.selectedClassId" active-class="bg-blue-1 text-primary">
@@ -131,8 +131,8 @@
                 <q-avatar color="primary" text-color="white" size="sm">{{ cls.name?.charAt(0) || '?' }}</q-avatar>
               </q-item-section>
               <q-item-section>
-                <q-item-label>{{ cls.name }}</q-item-label>
-                <q-item-label caption>{{ cls.academic_year }} · {{ cls.section }}</q-item-label>
+                <q-item-label>{{ cls.name || '' }}{{ cls.section || '' }}{{ cls.articolazione ? ' - ' + cls.articolazione : '' }}</q-item-label>
+                <q-item-label caption>{{ cls.academic_year }}</q-item-label>
               </q-item-section>
               <q-item-section side v-if="cls.coordinator_id">
                 <q-icon name="star" color="orange" title="Coordinatore" />
@@ -149,12 +149,11 @@
 import { onMounted, computed } from 'vue';
 import { useTeacherStore } from 'src/stores/teacher';
 import { useClassesStore } from 'src/stores/classes';
-import { date } from 'quasar';
 
 const teacherStore = useTeacherStore();
 const classesStore = useClassesStore();
 
-const todayDate = computed(() => date.formatDate(Date.now(), 'DD MMMM YYYY'));
+const todayDate = computed(() => new Date().toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' }));
 
 const nextLesson = computed(() => teacherStore.profile?.next_lesson || null);
 const pendingTasksCount = computed(() => teacherStore.notifications.filter(n => n.type === 'action').length);

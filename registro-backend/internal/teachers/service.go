@@ -35,3 +35,7 @@ func (s *Service) AssignSubject(ctx context.Context, teacherID, subjectID string
 func (s *Service) RemoveSubject(ctx context.Context, teacherID, subjectID string) error {
 	return s.repo.RemoveSubject(ctx, teacherID, subjectID)
 }
+
+func (s *Service) GetDashboardStats(ctx context.Context, teacherUserID string) (map[string]interface{}, error) {
+	return s.repo.GetDashboardStats(ctx, teacherUserID)
+}

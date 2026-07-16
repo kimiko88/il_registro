@@ -93,10 +93,10 @@
                     <!-- Sidebar Helpers -->
                     <div class="col-12 col-md-3">
                         <q-card class="q-pa-md q-mb-md">
-                           <div class="text-subtitle1 text-weight-bold">Template & Aiuto</div>
+                           <div class="text-subtitle1 text-weight-bold">Modelli & Aiuto</div>
                            <q-list dense bordered class="rounded-borders q-mt-sm">
-                               <q-item clickable v-ripple @click="loadTemplate('pdp')"><q-item-section>Template PDP Standard</q-item-section></q-item>
-                               <q-item clickable v-ripple @click="loadTemplate('bes')"><q-item-section>Template BES</q-item-section></q-item>
+                               <q-item clickable v-ripple @click="loadTemplate('pdp')"><q-item-section>Modello PDP Standard</q-item-section></q-item>
+                               <q-item clickable v-ripple @click="loadTemplate('bes')"><q-item-section>Modello BES</q-item-section></q-item>
                            </q-list>
                         </q-card>
                         

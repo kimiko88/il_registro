@@ -42,9 +42,9 @@ func (r *PostgresRepository) Create(ctx context.Context, msg *Message) error {
 func (r *PostgresRepository) List(ctx context.Context, userID string) ([]*Message, error) {
 	query := `
 		SELECT c.id, c.sender_id, c.receiver_ids, c.subject, c.body, c.type, c.created_at,
-		       EXISTS(SELECT 1 FROM communication_signatures cs WHERE cs.communication_id = c.id AND cs.user_id = $1) AS is_signed
+		       EXISTS(SELECT 1 FROM communication_signatures cs WHERE cs.communication_id = c.id AND cs.user_id = $1::uuid) AS is_signed
 		FROM communications c
-		WHERE c.sender_id::text = $1 OR $1 = ANY(c.receiver_ids)
+		WHERE c.sender_id = $1::uuid OR $1::text = ANY(c.receiver_ids)
 		ORDER BY c.created_at DESC
 	`
 	rows, err := r.db.QueryContext(ctx, query, userID)
@@ -69,14 +69,14 @@ func (r *PostgresRepository) List(ctx context.Context, userID string) ([]*Messag
 }
 
 func (r *PostgresRepository) Delete(ctx context.Context, id string) error {
-	_, err := r.db.ExecContext(ctx, "DELETE FROM communications WHERE id = $1", id)
+	_, err := r.db.ExecContext(ctx, "DELETE FROM communications WHERE id = $1::uuid", id)
 	return err
 }
 
 func (r *PostgresRepository) Sign(ctx context.Context, communicationID string, userID string) error {
 	query := `
 		INSERT INTO communication_signatures (communication_id, user_id, signed_at)
-		VALUES ($1, $2, NOW())
+		VALUES ($1::uuid, $2::uuid, NOW())
 		ON CONFLICT (communication_id, user_id) DO NOTHING
 	`
 	_, err := r.db.ExecContext(ctx, query, communicationID, userID)
@@ -88,7 +88,7 @@ func (r *PostgresRepository) GetSignatures(ctx context.Context, communicationID 
 		SELECT COALESCE(u.first_name || ' ' || u.last_name, '') AS name
 		FROM communication_signatures cs
 		JOIN users u ON cs.user_id = u.id
-		WHERE cs.communication_id = $1
+		WHERE cs.communication_id = $1::uuid
 		ORDER BY cs.signed_at ASC
 	`
 	rows, err := r.db.QueryContext(ctx, query, communicationID)

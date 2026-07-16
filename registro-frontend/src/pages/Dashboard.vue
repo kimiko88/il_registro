@@ -241,6 +241,13 @@ const fetchDashboardData = async () => {
                     { label: 'Richieste', value: data.pending_documents_count || '0', icon: 'assignment', color: 'red' }
                 ]
                 recentEvents.value = data.recent_events || []
+            } else if (userRole.value === 'teacher') {
+                realStats.value = [
+                    { label: 'Le Mie Classi', value: data.classes_count || '0', icon: 'class', color: 'indigo' },
+                    { label: 'Studenti', value: data.students_count || '0', icon: 'school', color: 'cyan' },
+                    { label: 'Lezioni Oggi', value: data.lessons_today_count || '0', icon: 'event', color: 'amber' },
+                    { label: 'Voti da inserire', value: data.grades_pending_count || '0', icon: 'grade', color: 'red' }
+                ]
             }
         }
     } catch (e) {

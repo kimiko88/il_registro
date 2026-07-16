@@ -17,6 +17,7 @@ func (s *Service) CreateClass(ctx context.Context, schoolID string, req CreateCl
 		SchoolID:      schoolID,
 		Name:          req.Name,
 		Section:       req.Section,
+		Articolazione: req.Articolazione,
 		AcademicYear:  req.AcademicYear,
 		CoordinatorID: req.CoordinatorID,
 	}
@@ -46,6 +47,7 @@ func (s *Service) UpdateClass(ctx context.Context, id string, req CreateClassReq
 
 	c.Name = req.Name
 	c.Section = req.Section
+	c.Articolazione = req.Articolazione
 	c.AcademicYear = req.AcademicYear
 	c.CoordinatorID = req.CoordinatorID
 

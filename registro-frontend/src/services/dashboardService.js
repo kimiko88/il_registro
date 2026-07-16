@@ -14,6 +14,10 @@ export default {
             const response = await api.get('/admin/dashboard/stats')
             return response.data
         }
+        if (role === 'teacher') {
+            const response = await api.get('/teachers/dashboard/stats')
+            return response.data
+        }
         
         // For other roles, this could be expanded later
         // For now, return empty or mock that will be handled in the component
