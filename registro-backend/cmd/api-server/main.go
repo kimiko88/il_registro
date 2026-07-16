@@ -127,6 +127,7 @@ func main() {
 	r.Use(gin.Recovery())
 	r.Use(middleware.LoggerMiddleware())
 	r.Use(middleware.CORSMiddleware())
+	r.Use(middleware.SecurityHeadersMiddleware())
 	r.Use(middleware.RateLimitMiddleware()) // New Rate Limit
 
 	// Initialize Circuit Breaker
