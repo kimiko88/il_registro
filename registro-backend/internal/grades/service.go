@@ -11,6 +11,7 @@ import (
 
 	// ... imports
 	"registro-backend/internal/users"
+	"registro-backend/pkg/logger"
 )
 
 // EventBroadcaster defines the interface for real-time notifications
@@ -21,7 +22,7 @@ type EventBroadcaster interface {
 
 type Service interface {
 	GetStudentGrades(studentID string) ([]GradeResponse, error)
-	GetStudentGradesWithFilter(studentID string, filter GradeFilter) ([]GradeResponse, error)
+	GetStudentGradesWithFilter(ctx context.Context, actorID string, actorRole string, studentID string, filter GradeFilter) ([]GradeResponse, error)
 	GetClassGrades(ctx context.Context, actorID string, actorRole string, classID string, filter GradeFilter) (*ClassGradesResponse, error)
 	GetSubjectGrades(subjectID string, filter GradeFilter) (*SubjectStatsResponse, error)
 	// ... (Other standard CRUD)
@@ -41,6 +42,7 @@ type Service interface {
 
 	// Parent
 	GetChildGrades(parentID string, studentID string, filter GradeFilter) (*MyGradesResponse, error)
+	GetChildAverages(parentID string, studentID string) (*StudentAveragesResponse, error)
 
 	// Class Tests
 	CreateTestWithGrades(teacherID string, req CreateClassTestRequest) error
@@ -80,12 +82,21 @@ func (s *service) GetStudentGrades(studentID string) ([]GradeResponse, error) {
 	return s.mapToResponse(grades), nil
 }
 
-func (s *service) GetStudentGradesWithFilter(studentID string, filter GradeFilter) ([]GradeResponse, error) {
-	// Repository doesn't have FindByStudentWithFilter but has FindWithFilter generic.
-	// But FindWithFilter doesn't filter by StudentID unless we add it to GradeFilter struct.
-	// Let's implement logical filtering here or assume GradeFilter was updated (it wasn't).
-	// For now, simpler to fetch all and filter in memory or update DTO/Repo.
-	// Filter logic in memory for MVP speed on this complex task:
+func (s *service) GetStudentGradesWithFilter(ctx context.Context, actorID string, actorRole string, studentID string, filter GradeFilter) ([]GradeResponse, error) {
+	// Authorization check for IDOR prevention
+	if actorRole == "student" && actorID != studentID {
+		return nil, fmt.Errorf("unauthorized: student can only view their own grades")
+	}
+	if actorRole == "parent" {
+		isGuardian, err := s.userRepo.IsGuardian(ctx, actorID, studentID)
+		if err != nil {
+			return nil, fmt.Errorf("guardianship check failed: %w", err)
+		}
+		if !isGuardian {
+			return nil, fmt.Errorf("unauthorized: not a guardian of this student")
+		}
+	}
+
 	grades, err := s.repo.FindByStudent(studentID)
 	if err != nil {
 		return nil, err
@@ -554,7 +565,7 @@ func (s *service) DeleteGrade(teacherID string, gradeID string) error {
 
 func (s *service) GetChildGrades(parentID string, studentID string, filter GradeFilter) (*MyGradesResponse, error) {
 	ctx := context.Background()
-	fmt.Printf("DEBUG service.GetChildGrades: parentID=%q studentID=%q\n", parentID, studentID)
+	logger.Log.Debugf("GetChildGrades requested by parent")
 
 	// Validate UUIDs before hitting DB
 	if parentID == "" || studentID == "" {
@@ -564,15 +575,32 @@ func (s *service) GetChildGrades(parentID string, studentID string, filter Grade
 	// Verify guardianship
 	isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, studentID)
 	if err != nil {
-		fmt.Printf("DEBUG IsGuardian error: %v\n", err)
+		logger.Log.Errorf("IsGuardian error: %v", err)
 		return nil, fmt.Errorf("guardianship check failed: %w", err)
 	}
-	fmt.Printf("DEBUG IsGuardian result: %v\n", isGuardian)
+	logger.Log.Debugf("IsGuardian result: %v", isGuardian)
 	if !isGuardian {
 		return nil, fmt.Errorf("access denied: not a guardian")
 	}
 
 	return s.GetMyGrades(studentID, filter)
+}
+
+func (s *service) GetChildAverages(parentID string, studentID string) (*StudentAveragesResponse, error) {
+	ctx := context.Background()
+	if parentID == "" || studentID == "" {
+		return nil, fmt.Errorf("access denied: not a guardian")
+	}
+
+	isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, studentID)
+	if err != nil {
+		return nil, fmt.Errorf("guardianship check failed: %w", err)
+	}
+	if !isGuardian {
+		return nil, fmt.Errorf("access denied: not a guardian")
+	}
+
+	return s.GetMyAverages(studentID)
 }
 
 func (s *service) GetMyGrades(studentID string, filter GradeFilter) (*MyGradesResponse, error) {

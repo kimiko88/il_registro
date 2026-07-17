@@ -1,6 +1,7 @@
 package grades
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -106,7 +107,7 @@ func TestService_FilterLogicRegex(t *testing.T) {
 	svc := NewService(repo, nil, nil, nil) // userRepo nil, db nil, broadcaster nil
 
 	t.Run("Filter by Semester", func(t *testing.T) {
-		res, err := svc.GetStudentGradesWithFilter("S1", GradeFilter{Semester: 1})
+		res, err := svc.GetStudentGradesWithFilter(context.Background(), "admin-id", "admin", "S1", GradeFilter{Semester: 1})
 		assert.NoError(t, err)
 		assert.Len(t, res, 2)
 		assert.Equal(t, 5.0, res[0].GradeValue)
@@ -114,7 +115,7 @@ func TestService_FilterLogicRegex(t *testing.T) {
 	})
 
 	t.Run("Filter by Subject", func(t *testing.T) {
-		res, err := svc.GetStudentGradesWithFilter("S1", GradeFilter{SubjectID: "HIST"})
+		res, err := svc.GetStudentGradesWithFilter(context.Background(), "admin-id", "admin", "S1", GradeFilter{SubjectID: "HIST"})
 		assert.NoError(t, err)
 		assert.Len(t, res, 1)
 		assert.Equal(t, 8.0, res[0].GradeValue)
@@ -122,7 +123,7 @@ func TestService_FilterLogicRegex(t *testing.T) {
 
 	t.Run("Filter by Published", func(t *testing.T) {
 		pub := true
-		res, err := svc.GetStudentGradesWithFilter("S1", GradeFilter{IsPublished: &pub})
+		res, err := svc.GetStudentGradesWithFilter(context.Background(), "admin-id", "admin", "S1", GradeFilter{IsPublished: &pub})
 		assert.NoError(t, err)
 		assert.Len(t, res, 2)
 		assert.Equal(t, 5.0, res[0].GradeValue)

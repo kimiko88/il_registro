@@ -1,8 +1,9 @@
 package grades
 
 import (
-	"fmt"
 	"net/http"
+
+	"registro-backend/pkg/logger"
 
 	"github.com/gin-gonic/gin"
 )
@@ -65,9 +66,12 @@ func (h *Handler) GetStudentGrades(c *gin.Context) {
 		return
 	}
 
+	actorID := c.GetString("user_id")
+	actorRole := c.GetString("role")
+
 	filter := h.parseFilter(c)
 
-	grades, err := h.service.GetStudentGradesWithFilter(studentID, filter)
+	grades, err := h.service.GetStudentGradesWithFilter(c.Request.Context(), actorID, actorRole, studentID, filter)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -89,7 +93,7 @@ func (h *Handler) GetClassGrades(c *gin.Context) {
 
 	resp, err := h.service.GetClassGrades(c.Request.Context(), actorID, actorRole, classID, filter)
 	if err != nil {
-		fmt.Printf("DEBUG: GetClassGrades error: %v\n", err)
+		logger.Log.Errorf("GetClassGrades error: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -130,7 +134,10 @@ func (h *Handler) BulkImport(c *gin.Context) {
 	defer file.Close()
 
 	semester := 1 // Default
-	_ = c.PostForm("semester")
+	semStr := c.PostForm("semester")
+	if semStr == "2" {
+		semester = 2
+	}
 
 	result, err := h.service.BulkImport(teacherID, file, semester)
 	if err != nil {
@@ -302,7 +309,8 @@ func (h *Handler) GetClassAverage(c *gin.Context) {
 func (h *Handler) GetMyGrades(c *gin.Context) {
 	studentID := c.GetString("user_id")
 	if studentID == "" {
-		studentID = "dev-student-id"
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
 	}
 
 	filter := h.parseFilter(c)
@@ -319,7 +327,8 @@ func (h *Handler) GetMyGrades(c *gin.Context) {
 func (h *Handler) GetMyAverages(c *gin.Context) {
 	studentID := c.GetString("user_id")
 	if studentID == "" {
-		studentID = "dev-student-id"
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
 	}
 
 	resp, err := h.service.GetMyAverages(studentID)
@@ -334,7 +343,8 @@ func (h *Handler) GetMyAverages(c *gin.Context) {
 func (h *Handler) GetMyTrend(c *gin.Context) {
 	studentID := c.GetString("user_id")
 	if studentID == "" {
-		studentID = "dev-student-id"
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
 	}
 
 	subjectID := c.Query("subject_id")
@@ -351,7 +361,8 @@ func (h *Handler) GetMyTrend(c *gin.Context) {
 func (h *Handler) GetSemesterReport(c *gin.Context) {
 	studentID := c.GetString("user_id")
 	if studentID == "" {
-		studentID = "dev-student-id"
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
 	}
 
 	semStr := c.Param("semester")
@@ -379,12 +390,12 @@ func (h *Handler) GetChildGrades(c *gin.Context) {
 	}
 
 	studentID := c.Param("studentID")
-	fmt.Printf("DEBUG GetChildGrades: parentID=%q studentID=%q\n", parentID, studentID)
+	logger.Log.Debugf("GetChildGrades request by parent")
 	filter := h.parseFilter(c)
 
 	resp, err := h.service.GetChildGrades(parentID, studentID, filter)
 	if err != nil {
-		fmt.Printf("DEBUG GetChildGrades error: %v\n", err)
+		logger.Log.Errorf("GetChildGrades error: %v", err)
 		// Distinguish access denied from internal errors
 		if err.Error() == "access denied: not a guardian" || err.Error() == "guardianship check failed" {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
@@ -398,7 +409,24 @@ func (h *Handler) GetChildGrades(c *gin.Context) {
 }
 
 func (h *Handler) GetChildGradesAverage(c *gin.Context) {
-	c.JSON(http.StatusNotImplemented, gin.H{"error": "GetChildAverages not fully wired"})
+	parentID := c.GetString("user_id")
+	if parentID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	studentID := c.Param("studentID")
+	resp, err := h.service.GetChildAverages(parentID, studentID)
+	if err != nil {
+		if err.Error() == "access denied: not a guardian" || err.Error() == "guardianship check failed" {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, resp)
 }
 
 // --- Analytics Handlers ---

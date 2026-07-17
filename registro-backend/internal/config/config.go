@@ -62,8 +62,8 @@ func LoadConfig() (*Config, error) {
 	}
 
 	viper.SetDefault("SERVER_PORT", "8080")
-	viper.SetDefault("SERVER_MODE", "debug")
-	viper.SetDefault("DB_SSLMODE", "disable")
+	viper.SetDefault("SERVER_MODE", "release")
+	viper.SetDefault("DB_SSLMODE", "require")
 
 	config := &Config{
 		Server: ServerConfig{

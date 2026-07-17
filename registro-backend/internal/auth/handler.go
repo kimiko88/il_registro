@@ -63,10 +63,6 @@ func (h *Handler) Login(c *gin.Context) {
 	ipAddress := c.ClientIP()
 	userAgent := c.GetHeader("User-Agent")
 
-	// Debug logging
-	// Debug logging
-	// fmt.Printf("DEBUG HANDLER: Login Request: %+v\n", req)
-
 	authResp, err := h.service.Login(c.Request.Context(), &req, ipAddress, userAgent)
 	if err != nil {
 		statusCode := http.StatusUnauthorized

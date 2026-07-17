@@ -274,8 +274,7 @@ func (s *Service) SetupMFA(ctx context.Context, userID string) (*MFASetupRespons
 	}
 
 	// Temporarily store secret (will be confirmed on verification)
-	// For now, we'll enable it immediately - in production, require verification first
-	if err := s.repo.EnableMFA(ctx, userID, secret); err != nil {
+	if err := s.repo.SaveTempMFASecret(ctx, userID, secret); err != nil {
 		return nil, err
 	}
 
@@ -286,7 +285,7 @@ func (s *Service) SetupMFA(ctx context.Context, userID string) (*MFASetupRespons
 	}, nil
 }
 
-// VerifyMFA verifies MFA token
+// VerifyMFA verifies MFA token and enables it on successful confirmation
 func (s *Service) VerifyMFA(ctx context.Context, userID, token string) error {
 	secret, err := s.repo.GetMFASecret(ctx, userID)
 	if err != nil {
@@ -297,7 +296,8 @@ func (s *Service) VerifyMFA(ctx context.Context, userID, token string) error {
 		return ErrInvalidMFAToken
 	}
 
-	return nil
+	// Token is correct, enable MFA officially
+	return s.repo.ConfirmMFA(ctx, userID)
 }
 
 // RequestPasswordReset creates a password reset token

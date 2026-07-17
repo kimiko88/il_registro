@@ -6,10 +6,9 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var Log *logrus.Logger
+var Log = logrus.New()
 
 func Init(level string) {
-	Log = logrus.New()
 	Log.SetOutput(os.Stdout)
 
 	// Set JSON formatter for production-ready logs

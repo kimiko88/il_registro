@@ -2,12 +2,12 @@ package auth
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"strings"
 
 	"registro-backend/internal/users"
 	"registro-backend/pkg/jwt"
+	"registro-backend/pkg/logger"
 
 	"github.com/gin-gonic/gin"
 )
@@ -40,20 +40,15 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 			}
 		}
 
-		// 2. Try Query Param (Fallback)
 		if token == "" {
-			token = c.Query("token")
-		}
-
-		if token == "" {
-			c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "missing authorization header or token param"})
+			c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "missing authorization header"})
 			c.Abort()
 			return
 		}
 
 		claims, err := m.tokenManager.ValidateToken(token)
 		if err != nil {
-			fmt.Printf("DEBUG: Token Validation Failed: %v\n", err)
+			logger.Log.Debugf("Token Validation Failed: %v", err)
 			c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "invalid or expired token"})
 			c.Abort()
 			return

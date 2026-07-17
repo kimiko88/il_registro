@@ -2,12 +2,12 @@ package scrutiny
 
 import (
 	"context"
-	"fmt"
 	"math"
 	"registro-backend/internal/attendance"
 	"registro-backend/internal/classes"
 	"registro-backend/internal/grades"
 	"registro-backend/internal/users"
+	"registro-backend/pkg/logger"
 )
 
 type Service struct {
@@ -40,7 +40,7 @@ func (s *Service) GetMatrix(ctx context.Context, classID string, semester int) (
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("DEBUG: Found %d students for class %s\n", len(allStudents), classID)
+	logger.Log.Debugf("Found %d students for class %s", len(allStudents), classID)
 
 	// 3. Get Existing Records
 	records, err := s.repo.ListRecordsByClass(ctx, classID, semester)

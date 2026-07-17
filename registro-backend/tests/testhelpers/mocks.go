@@ -89,6 +89,14 @@ func (m *MockAuthRepository) DisableMFA(ctx context.Context, userID string) erro
 	args := m.Called(ctx, userID)
 	return args.Error(0)
 }
+func (m *MockAuthRepository) SaveTempMFASecret(ctx context.Context, userID, secret string) error {
+	args := m.Called(ctx, userID, secret)
+	return args.Error(0)
+}
+func (m *MockAuthRepository) ConfirmMFA(ctx context.Context, userID string) error {
+	args := m.Called(ctx, userID)
+	return args.Error(0)
+}
 func (m *MockAuthRepository) GetMFASecret(ctx context.Context, userID string) (string, error) {
 	args := m.Called(ctx, userID)
 	return args.String(0), args.Error(1)

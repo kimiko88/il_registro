@@ -21,6 +21,8 @@ type Repository interface {
 	EnableMFA(ctx context.Context, userID, secret string) error
 	DisableMFA(ctx context.Context, userID string) error
 	GetMFASecret(ctx context.Context, userID string) (string, error)
+	SaveTempMFASecret(ctx context.Context, userID, secret string) error
+	ConfirmMFA(ctx context.Context, userID string) error
 
 	// Recovery codes
 	CreateRecoveryCodes(ctx context.Context, userID string, codes []string) error
@@ -155,13 +157,25 @@ func (r *repository) DisableMFA(ctx context.Context, userID string) error {
 }
 
 func (r *repository) GetMFASecret(ctx context.Context, userID string) (string, error) {
-	query := `SELECT mfa_secret FROM users WHERE id = $1 AND mfa_enabled = true`
-	var secret string
+	query := `SELECT mfa_secret FROM users WHERE id = $1`
+	var secret sql.NullString
 	err := r.db.QueryRowContext(ctx, query, userID).Scan(&secret)
-	if err == sql.ErrNoRows {
+	if err == sql.ErrNoRows || !secret.Valid || secret.String == "" {
 		return "", ErrMFANotEnabled
 	}
-	return secret, err
+	return secret.String, err
+}
+
+func (r *repository) SaveTempMFASecret(ctx context.Context, userID, secret string) error {
+	query := `UPDATE users SET mfa_enabled = false, mfa_secret = $1 WHERE id = $2`
+	_, err := r.db.ExecContext(ctx, query, secret, userID)
+	return err
+}
+
+func (r *repository) ConfirmMFA(ctx context.Context, userID string) error {
+	query := `UPDATE users SET mfa_enabled = true WHERE id = $1`
+	_, err := r.db.ExecContext(ctx, query, userID)
+	return err
 }
 
 func (r *repository) CreateRecoveryCodes(ctx context.Context, userID string, codes []string) error {

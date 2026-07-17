@@ -1,8 +1,9 @@
 package lessons
 
 import (
-	"fmt"
 	"net/http"
+
+	"registro-backend/pkg/logger"
 
 	"github.com/gin-gonic/gin"
 )
@@ -36,7 +37,7 @@ func (h *Handler) GetLessons(c *gin.Context) {
 
 	res, err := h.service.GetLessons(classID, subjectID, date)
 	if err != nil {
-		fmt.Printf("DEBUG: GetLessons error: %v\n", err)
+		logger.Log.Errorf("GetLessons error: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
