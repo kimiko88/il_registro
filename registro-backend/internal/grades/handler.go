@@ -3,6 +3,7 @@ package grades
 import (
 	"errors"
 	"net/http"
+	"strconv"
 
 	"registro-backend/pkg/logger"
 
@@ -34,10 +35,9 @@ func (h *Handler) RegisterRoutes(router *gin.RouterGroup) {
 		grades.PATCH("/tests/:id", h.UpdateClassTest)
 
 		// Retrieval
-		grades.GET("/export", h.Export) // Export all/filtered
+		grades.GET("/export", h.Export)
 		grades.POST("/bulk-import", h.BulkImport)
 
-		// Retrieval
 		grades.GET("/student/:studentID", h.GetStudentGrades)
 		grades.GET("/class/:classID", h.GetClassGrades)
 		grades.GET("/subject/:subjectID", h.GetSubjectGrades)
@@ -45,6 +45,10 @@ func (h *Handler) RegisterRoutes(router *gin.RouterGroup) {
 		// Analytics
 		grades.GET("/analytics/student/:studentID/average", h.GetStudentAverage)
 		grades.GET("/analytics/class/:classID/average", h.GetClassAverage)
+		grades.GET("/analytics/class/:classID/analysis", h.GetClassAnalysis)
+		grades.GET("/analytics/subject/:subjectID/analysis", h.GetSubjectAnalysis)
+		grades.GET("/analytics/student/:studentID/profile", h.GetStudentProfile)
+		grades.GET("/analytics/statistics", h.GetSchoolStatistics)
 
 		// Student Endpoints
 		grades.GET("/my-grades", h.GetMyGrades)
@@ -58,7 +62,6 @@ func (h *Handler) RegisterRoutes(router *gin.RouterGroup) {
 	}
 }
 
-// GetStudentGrades retrieves all grades for a specific student
 // GetStudentGrades retrieves all grades for a specific student with optional filters
 func (h *Handler) GetStudentGrades(c *gin.Context) {
 	studentID := c.Param("studentID")
@@ -186,10 +189,7 @@ func (h *Handler) Export(c *gin.Context) {
 // Helper to parse query params into GradeFilter
 func (h *Handler) parseFilter(c *gin.Context) GradeFilter {
 	var filter GradeFilter
-
-	// BindQuery requires struct tags `form:"name"` which we added to DTO
 	_ = c.BindQuery(&filter)
-
 	return filter
 }
 
@@ -208,7 +208,7 @@ func (h *Handler) AddGrade(c *gin.Context) {
 	}
 
 	if err := h.service.AddGrade(teacherID, req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()}) // Changed to 400 as validations are common
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -269,7 +269,7 @@ func (h *Handler) DeleteGrade(c *gin.Context) {
 
 func (h *Handler) GetStudentAverage(c *gin.Context) {
 	studentID := c.Param("studentID")
-	subjectID := c.Query("subject_id") // Optional filter
+	subjectID := c.Query("subject_id")
 
 	if studentID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "studentID is required"})
@@ -291,7 +291,7 @@ func (h *Handler) GetStudentAverage(c *gin.Context) {
 
 func (h *Handler) GetClassAverage(c *gin.Context) {
 	classID := c.Param("classID")
-	subjectID := c.Query("subject_id") // Optional
+	subjectID := c.Query("subject_id")
 
 	if classID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "classID is required"})
@@ -373,9 +373,10 @@ func (h *Handler) GetSemesterReport(c *gin.Context) {
 	}
 
 	semStr := c.Param("semester")
-	sem := 1
-	if semStr == "2" {
-		sem = 2
+	sem, err := strconv.Atoi(semStr)
+	if err != nil || (sem != 1 && sem != 2) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "semester must be 1 or 2"})
+		return
 	}
 
 	resp, err := h.service.GetSemesterReport(studentID, sem)
@@ -439,17 +440,23 @@ func (h *Handler) GetChildGradesAverage(c *gin.Context) {
 
 func (h *Handler) GetClassAnalysis(c *gin.Context) {
 	classID := c.Param("classID")
+	if classID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "classID is required"})
+		return
+	}
+
 	semStr := c.Query("semester")
 	sem := 1
-	if semStr == "2" {
-		sem = 2
+	if semStr != "" {
+		parsed, err := strconv.Atoi(semStr)
+		if err != nil || (parsed != 1 && parsed != 2) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "semester must be 1 or 2"})
+			return
+		}
+		sem = parsed
 	}
 
 	resp, err := h.analytics.GetClassAnalysis(classID, sem)
-	// Note: Handler sees Service interface. `analyticsService` is separate struct in current mapping.
-	// `Handler` struct has `analytics` field of type `AnalyticsService`.
-	// I should call h.analytics.GetClassAnalysis
-
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -459,10 +466,20 @@ func (h *Handler) GetClassAnalysis(c *gin.Context) {
 
 func (h *Handler) GetSubjectAnalysis(c *gin.Context) {
 	subjectID := c.Param("subjectID")
+	if subjectID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "subjectID is required"})
+		return
+	}
+
 	semStr := c.Query("semester")
 	sem := 1
-	if semStr == "2" {
-		sem = 2
+	if semStr != "" {
+		parsed, err := strconv.Atoi(semStr)
+		if err != nil || (parsed != 1 && parsed != 2) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "semester must be 1 or 2"})
+			return
+		}
+		sem = parsed
 	}
 
 	resp, err := h.analytics.GetSubjectAnalysis(subjectID, sem)
@@ -475,13 +492,20 @@ func (h *Handler) GetSubjectAnalysis(c *gin.Context) {
 
 func (h *Handler) GetStudentProfile(c *gin.Context) {
 	studentID := c.Param("studentID")
-	semStr := c.Query("semester")
-	sem := 0
-	if semStr == "1" {
-		sem = 1
+	if studentID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "studentID is required"})
+		return
 	}
-	if semStr == "2" {
-		sem = 2
+
+	sem := 0
+	semStr := c.Query("semester")
+	if semStr != "" {
+		parsed, err := strconv.Atoi(semStr)
+		if err != nil || parsed < 0 || parsed > 2 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "semester must be 0, 1 or 2"})
+			return
+		}
+		sem = parsed
 	}
 
 	resp, err := h.analytics.GetStudentProfile(studentID, sem)
@@ -493,7 +517,7 @@ func (h *Handler) GetStudentProfile(c *gin.Context) {
 }
 
 func (h *Handler) GetSchoolStatistics(c *gin.Context) {
-	year := c.Query("year") // Optional
+	year := c.Query("year")
 	resp, err := h.analytics.GetSchoolStatistics(year)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
