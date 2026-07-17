@@ -60,6 +60,9 @@ type Repository interface {
 
 	// FindGradesByTestID retrieves all grades linked to a class test
 	FindGradesByTestID(testID string) ([]Grade, error)
+
+	// FindTestByID retrieves a single class test by its ID
+	FindTestByID(id string) (*ClassTest, error)
 }
 
 type repository struct {
@@ -566,4 +569,22 @@ func (r *repository) FindGradesByTestID(testID string) ([]Grade, error) {
 		FROM grades 
 		WHERE test_id = $1::uuid AND deleted_at IS NULL`
 	return r.scanGrades(query, testID)
+}
+
+func (r *repository) FindTestByID(id string) (*ClassTest, error) {
+	query := `
+		SELECT id, class_id, subject_id, teacher_id, title, date, teacher_notes, parent_notes, evaluation_type, created_at, updated_at
+		FROM class_tests
+		WHERE id = $1::uuid`
+	var t ClassTest
+	err := r.db.QueryRow(query, id).Scan(
+		&t.ID, &t.ClassID, &t.SubjectID, &t.TeacherID, &t.Title, &t.Date, &t.TeacherNotes, &t.ParentNotes, &t.EvaluationType, &t.CreatedAt, &t.UpdatedAt,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("test not found")
+		}
+		return nil, fmt.Errorf("find test by id error: %w", err)
+	}
+	return &t, nil
 }

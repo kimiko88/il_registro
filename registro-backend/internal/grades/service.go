@@ -14,6 +14,12 @@ import (
 	"registro-backend/pkg/logger"
 )
 
+var (
+	ErrNotGuardian      = fmt.Errorf("access denied: not a guardian")
+	ErrUnauthorized     = fmt.Errorf("unauthorized")
+	ErrValidationFailed = fmt.Errorf("validation failed")
+)
+
 // EventBroadcaster defines the interface for real-time notifications
 type EventBroadcaster interface {
 	BroadcastToUser(userID string, msgType string, payload interface{})
@@ -85,15 +91,15 @@ func (s *service) GetStudentGrades(studentID string) ([]GradeResponse, error) {
 func (s *service) GetStudentGradesWithFilter(ctx context.Context, actorID string, actorRole string, studentID string, filter GradeFilter) ([]GradeResponse, error) {
 	// Authorization check for IDOR prevention
 	if actorRole == "student" && actorID != studentID {
-		return nil, fmt.Errorf("unauthorized: student can only view their own grades")
+		return nil, ErrUnauthorized
 	}
 	if actorRole == "parent" {
 		isGuardian, err := s.userRepo.IsGuardian(ctx, actorID, studentID)
 		if err != nil {
-			return nil, fmt.Errorf("guardianship check failed: %w", err)
+			return nil, err
 		}
 		if !isGuardian {
-			return nil, fmt.Errorf("unauthorized: not a guardian of this student")
+			return nil, ErrNotGuardian
 		}
 	}
 
@@ -569,18 +575,18 @@ func (s *service) GetChildGrades(parentID string, studentID string, filter Grade
 
 	// Validate UUIDs before hitting DB
 	if parentID == "" || studentID == "" {
-		return nil, fmt.Errorf("access denied: not a guardian")
+		return nil, ErrNotGuardian
 	}
 
 	// Verify guardianship
 	isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, studentID)
 	if err != nil {
 		logger.Log.Errorf("IsGuardian error: %v", err)
-		return nil, fmt.Errorf("guardianship check failed: %w", err)
+		return nil, err
 	}
 	logger.Log.Debugf("IsGuardian result: %v", isGuardian)
 	if !isGuardian {
-		return nil, fmt.Errorf("access denied: not a guardian")
+		return nil, ErrNotGuardian
 	}
 
 	return s.GetMyGrades(studentID, filter)
@@ -589,15 +595,15 @@ func (s *service) GetChildGrades(parentID string, studentID string, filter Grade
 func (s *service) GetChildAverages(parentID string, studentID string) (*StudentAveragesResponse, error) {
 	ctx := context.Background()
 	if parentID == "" || studentID == "" {
-		return nil, fmt.Errorf("access denied: not a guardian")
+		return nil, ErrNotGuardian
 	}
 
 	isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, studentID)
 	if err != nil {
-		return nil, fmt.Errorf("guardianship check failed: %w", err)
+		return nil, err
 	}
 	if !isGuardian {
-		return nil, fmt.Errorf("access denied: not a guardian")
+		return nil, ErrNotGuardian
 	}
 
 	return s.GetMyAverages(studentID)
@@ -748,8 +754,6 @@ func (s *service) GetMyAverages(studentID string) (*StudentAveragesResponse, err
 
 func (s *service) GetMyTrend(studentID string, subjectID string) (*TrendResponse, error) {
 	// Fetch grades for subject, sorted by date asc
-	// Repo FindByClassAndSubject uses class... we need FindByStudentAndSubject?
-	// Use FindByStudent and filter.
 	grades, err := s.repo.FindByStudent(studentID)
 	if err != nil {
 		return nil, err
@@ -771,19 +775,25 @@ func (s *service) GetMyTrend(studentID string, subjectID string) (*TrendResponse
 		return relevant[i].Date.Before(relevant[j].Date)
 	})
 
-	// Limit to last N? Prompt says "last=10". we leave unlimited for now or slice at end.
+	// Calculate the actual class average for this subject
+	classAverage := 0.0
+	var classID string
+	err = s.validator.db.QueryRow(`SELECT class_id FROM class_students WHERE student_id = $1`, studentID).Scan(&classID)
+	if err == nil && classID != "" {
+		_ = s.validator.db.QueryRow(
+			`SELECT COALESCE(AVG(grade_value), 0.0) FROM grades g 
+			 JOIN class_students cs ON g.student_id = cs.student_id 
+			 WHERE cs.class_id = $1 AND g.subject_id = $2 AND g.is_published = true AND g.deleted_at IS NULL`,
+			classID, subjectID,
+		).Scan(&classAverage)
+		classAverage = math.Round(classAverage*100) / 100
+	}
 
 	var points []TrendPoint
 
 	// Calculate Moving Average (window 3)
 	for i, g := range relevant {
 		val := g.GradeValue
-		// if val == 0 && g.GradeType == GradeTypeJudgment {
-		// 	// Convert if needed. Currently `GradeValue` is assumed populated.
-		// 	// But if it was 0, we might need manual conversion?
-		// 	// The Calculator has `ConvertJudgmentToValue`.
-		// 	// Let's assume validation ensured GradeValue represents the numeric equivalent.
-		// }
 
 		// Moving Avg
 		start := i - 2
@@ -793,12 +803,19 @@ func (s *service) GetMyTrend(studentID string, subjectID string) (*TrendResponse
 		subset := relevant[start : i+1]
 		avg3 := s.calculator.CalculateAverage(subset)
 
+		position := "at_average"
+		if val > classAverage {
+			position = "above_average"
+		} else if val < classAverage {
+			position = "below_average"
+		}
+
 		points = append(points, TrendPoint{
 			Date:         g.Date.Format("2006-01-02"),
 			Grade:        val,
 			MovingAvg3:   avg3,
-			ClassAverage: 7.0, // Mock for MVP, hard to calc realtime
-			Position:     "at_average",
+			ClassAverage: classAverage,
+			Position:     position,
 		})
 	}
 
@@ -1007,7 +1024,12 @@ func (s *service) CreateTestWithGrades(teacherID string, req CreateClassTestRequ
 			SchoolID:       schoolID,
 			GradeValue:     *gInput.GradeValue,
 			GradeType:      "numeric",
-			Semester:       Semester(1), // Default to first semester for now
+			Semester:       Semester(func() int {
+				if req.Semester == 1 || req.Semester == 2 {
+					return req.Semester
+				}
+				return 1
+			}()),
 			Date:           testDate,
 			Description:    desc,
 			Weight:         1.0,
@@ -1083,6 +1105,13 @@ func (s *service) GetUpcomingTestsByClass(classID string) ([]ClassTestResponse, 
 }
 
 func (s *service) DeleteClassTest(teacherID string, testID string) error {
+	test, err := s.repo.FindTestByID(testID)
+	if err != nil {
+		return err
+	}
+	if test.TeacherID != teacherID {
+		return ErrUnauthorized
+	}
 	return s.repo.DeleteTest(testID)
 }
 
@@ -1188,6 +1217,12 @@ func (s *service) UpdateClassTest(teacherID string, testID string, req UpdateCla
 			existingGrade.Description = desc
 			existingGrade.Date = testDate
 			existingGrade.EvaluationType = evalType
+			existingGrade.Semester = Semester(func() int {
+				if req.Semester == 1 || req.Semester == 2 {
+					return req.Semester
+				}
+				return 1
+			}())
 
 			if err := s.repo.Update(&existingGrade, history); err != nil {
 				return fmt.Errorf("failed to update grade for student %s: %w", gInput.StudentID, err)
@@ -1201,7 +1236,12 @@ func (s *service) UpdateClassTest(teacherID string, testID string, req UpdateCla
 				SchoolID:       schoolID,
 				GradeValue:     *gInput.GradeValue,
 				GradeType:      "numeric",
-				Semester:       Semester(1),
+				Semester:       Semester(func() int {
+					if req.Semester == 1 || req.Semester == 2 {
+						return req.Semester
+					}
+					return 1
+				}()),
 				Date:           testDate,
 				Description:    desc,
 				Weight:         1.0,

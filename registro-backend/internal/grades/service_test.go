@@ -115,6 +115,13 @@ func (m *MockRepository) UpdateTest(test *ClassTest) error {
 	args := m.Called(test)
 	return args.Error(0)
 }
+func (m *MockRepository) FindTestByID(id string) (*ClassTest, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*ClassTest), args.Error(1)
+}
 func (m *MockRepository) FindGradesByTestID(testID string) ([]Grade, error) {
 	args := m.Called(testID)
 	if args.Get(0) == nil {

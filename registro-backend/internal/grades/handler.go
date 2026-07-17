@@ -1,6 +1,7 @@
 package grades
 
 import (
+	"errors"
 	"net/http"
 
 	"registro-backend/pkg/logger"
@@ -135,8 +136,14 @@ func (h *Handler) BulkImport(c *gin.Context) {
 
 	semester := 1 // Default
 	semStr := c.PostForm("semester")
-	if semStr == "2" {
-		semester = 2
+	if semStr != "" {
+		if semStr != "1" && semStr != "2" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "semester must be 1 or 2"})
+			return
+		}
+		if semStr == "2" {
+			semester = 2
+		}
 	}
 
 	result, err := h.service.BulkImport(teacherID, file, semester)
@@ -390,14 +397,13 @@ func (h *Handler) GetChildGrades(c *gin.Context) {
 	}
 
 	studentID := c.Param("studentID")
-	logger.Log.Debugf("GetChildGrades request by parent")
+	logger.Log.Debugf("GetChildGrades: parentID=%s studentID=%s", parentID, studentID)
 	filter := h.parseFilter(c)
 
 	resp, err := h.service.GetChildGrades(parentID, studentID, filter)
 	if err != nil {
 		logger.Log.Errorf("GetChildGrades error: %v", err)
-		// Distinguish access denied from internal errors
-		if err.Error() == "access denied: not a guardian" || err.Error() == "guardianship check failed" {
+		if errors.Is(err, ErrNotGuardian) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
@@ -418,7 +424,7 @@ func (h *Handler) GetChildGradesAverage(c *gin.Context) {
 	studentID := c.Param("studentID")
 	resp, err := h.service.GetChildAverages(parentID, studentID)
 	if err != nil {
-		if err.Error() == "access denied: not a guardian" || err.Error() == "guardianship check failed" {
+		if errors.Is(err, ErrNotGuardian) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
@@ -567,6 +573,10 @@ func (h *Handler) DeleteClassTest(c *gin.Context) {
 	}
 
 	if err := h.service.DeleteClassTest(teacherID, testID); err != nil {
+		if errors.Is(err, ErrUnauthorized) {
+			c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: not the author of this test"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

@@ -244,6 +244,13 @@ func (m *MockGradesRepository) FindGradesByTestID(testID string) ([]grades.Grade
 	}
 	return args.Get(0).([]grades.Grade), args.Error(1)
 }
+func (m *MockGradesRepository) FindTestByID(id string) (*grades.ClassTest, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*grades.ClassTest), args.Error(1)
+}
 
 // MockUsersRepository mocks users.Repository
 type MockUsersRepository struct {

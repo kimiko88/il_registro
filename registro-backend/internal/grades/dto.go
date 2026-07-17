@@ -491,6 +491,7 @@ type CreateClassTestRequest struct {
 	TeacherNotes   string              `json:"teacher_notes"`
 	ParentNotes    string              `json:"parent_notes"`
 	EvaluationType string              `json:"evaluation_type" binding:"required"` // Written/Oral/Practical
+	Semester       int                 `json:"semester"`
 	Grades         []StudentGradeInput `json:"grades"`
 }
 
@@ -518,6 +519,7 @@ type UpdateClassTestRequest struct {
 	TeacherNotes   string                    `json:"teacher_notes"`
 	ParentNotes    string                    `json:"parent_notes"`
 	EvaluationType string                    `json:"evaluation_type" binding:"required"`
+	Semester       int                       `json:"semester"`
 	Grades         []UpdateStudentGradeInput `json:"grades"`
 }
 
