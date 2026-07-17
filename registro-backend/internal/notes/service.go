@@ -3,14 +3,21 @@ package notes
 import (
 	"context"
 	"errors"
+
+	"registro-backend/internal/users"
 )
 
 type Service struct {
-	repo Repository
+	repo     Repository
+	userRepo users.Repository
 }
 
-func NewService(repo Repository) *Service {
-	return &Service{repo: repo}
+func NewService(repo Repository, uRepo ...users.Repository) *Service {
+	var userRepo users.Repository
+	if len(uRepo) > 0 {
+		userRepo = uRepo[0]
+	}
+	return &Service{repo: repo, userRepo: userRepo}
 }
 
 func (s *Service) CreateNote(ctx context.Context, teacherID, schoolID string, req CreateNoteRequest) (*StudentNote, error) {
@@ -69,5 +76,24 @@ func (s *Service) DeleteNote(ctx context.Context, teacherID, noteID string) erro
 }
 
 func (s *Service) ListNotes(ctx context.Context, filter NoteFilter) ([]StudentNote, error) {
+	// Authorization checks
+	if filter.ActorRole == "student" {
+		// Student can only see their own notes
+		filter.StudentID = filter.ActorID
+	} else if filter.ActorRole == "parent" {
+		// Parent can only see their children's notes.
+		if filter.StudentID == "" {
+			return nil, errors.New("unauthorized: parent must specify student_id")
+		}
+		if s.userRepo != nil {
+			isGuardian, err := s.userRepo.IsGuardian(ctx, filter.ActorID, filter.StudentID)
+			if err != nil {
+				return nil, err
+			}
+			if !isGuardian {
+				return nil, errors.New("unauthorized: not a guardian of this student")
+			}
+		}
+	}
 	return s.repo.List(ctx, filter)
 }

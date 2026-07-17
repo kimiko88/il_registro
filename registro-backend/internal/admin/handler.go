@@ -181,6 +181,15 @@ func (h *Handler) UpdateSchool(c *gin.Context) {
 func (h *Handler) DeleteSchool(c *gin.Context) {
 	schoolID := c.Param("id")
 
+	// Check access permission
+	if !CanAccessSchool(c, schoolID) {
+		c.JSON(http.StatusForbidden, ErrorResponse{
+			Error:   "forbidden",
+			Message: "you don't have access to this school",
+		})
+		return
+	}
+
 	err := h.service.DeleteSchool(c.Request.Context(), schoolID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, ErrorResponse{
@@ -214,7 +223,15 @@ func (h *Handler) ListAdminUsers(c *gin.Context) {
 		}
 	}
 
+	// Get school filter from middleware/role context
+	filterSchoolID := GetFilteredSchoolID(c)
 	schoolFilter := c.Query("school_id")
+
+	if filterSchoolID != "" {
+		// Non-superadmin: force their own school_id
+		schoolFilter = filterSchoolID
+	}
+
 	var schoolPtr *string
 	if schoolFilter != "" {
 		schoolPtr = &schoolFilter

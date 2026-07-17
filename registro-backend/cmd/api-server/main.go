@@ -99,7 +99,7 @@ func main() {
 	signaturesSvc := signatures.NewService(signatures.NewRepository(database), docsSvc, usersRepo)
 
 	commsSvc := communications.NewService(commsRepo)
-	notesSvc := notes.NewService(notesRepo)
+	notesSvc := notes.NewService(notesRepo, usersRepo)
 	adminSvc := admin.NewService(adminRepo)
 
 	// 7. Setup Handlers

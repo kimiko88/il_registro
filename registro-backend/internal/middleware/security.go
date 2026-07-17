@@ -24,9 +24,6 @@ func SecurityHeadersMiddleware() gin.HandlerFunc {
 
 		// Store the nonce so templates / other middleware can reference it
 		c.Set("csp_nonce", nonce)
-		// Expose it to the frontend via header so the SPA can pass it to
-		// dynamically-injected scripts (Quasar reads this on boot if configured)
-		c.Writer.Header().Set("X-CSP-Nonce", nonce)
 
 		// Prevent Clickjacking
 		c.Writer.Header().Set("X-Frame-Options", "DENY")
