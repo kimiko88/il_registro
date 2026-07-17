@@ -90,7 +90,7 @@ func main() {
 	classesSvc := classes.NewService(classesRepo)
 	gradesSvc := grades.NewService(gradesRepo, usersRepo, database, wsHub)
 	gradesAnalytics := grades.NewAnalyticsService(gradesRepo)
-	attendanceSvc := attendance.NewService(attendanceRepo, wsHub)
+	attendanceSvc := attendance.NewService(attendanceRepo, usersRepo, wsHub)
 	docsSvc := documents.NewService(docsRepo)
 	schedSvc := scheduling.NewService(schedRepo, teachersRepo)
 	pctoSvc := pcto.NewService(pctoRepo)

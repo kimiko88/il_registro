@@ -212,9 +212,32 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken string) (*Token
 		return nil, err
 	}
 
+	// Revoke the old refresh token
+	if err := s.repo.RevokeRefreshToken(ctx, rt.ID); err != nil {
+		return nil, err
+	}
+
+	// Generate a new refresh token
+	newRefreshToken, err := s.tokenManager.GenerateRefreshToken(user.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Store the new refresh token in DB
+	newRt := &RefreshToken{
+		UserID:    user.ID,
+		Token:     newRefreshToken,
+		ExpiresAt: time.Now().Add(7 * 24 * time.Hour),
+		IPAddress: rt.IPAddress,
+		UserAgent: rt.UserAgent,
+	}
+	if err := s.repo.CreateRefreshToken(ctx, newRt); err != nil {
+		return nil, err
+	}
+
 	return &TokenPair{
 		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
+		RefreshToken: newRefreshToken,
 		ExpiresIn:    s.tokenManager.GetAccessTokenTTL(),
 	}, nil
 }
@@ -325,9 +348,8 @@ func (s *Service) RequestPasswordReset(ctx context.Context, email string) error 
 		return err
 	}
 
-	// Log the token for local development / testing
-	// In production, this would send an email.
-	logger.Log.Infof("PASSWORD RESET REQUEST for %s. Reset Token: %s", email, token)
+	// Log the reset request
+	logger.Log.Infof("PASSWORD RESET REQUEST for %s", email)
 
 	return nil
 }
@@ -354,12 +376,6 @@ func (s *Service) ResetPassword(ctx context.Context, token, newPassword string) 
 	// Check if expired
 	if time.Now().After(prt.ExpiresAt) {
 		return ErrInvalidToken
-	}
-
-	// Validate password complexity
-	validator := NewPasswordValidator()
-	if err := validator.Validate(newPassword); err != nil {
-		return err
 	}
 
 	// Check password history (prevent reuse of last 5)

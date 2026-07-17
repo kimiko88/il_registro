@@ -42,6 +42,10 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 
 func (h *Handler) GetMySummary(c *gin.Context) {
 	studentID := c.GetString("user_id")
+	if studentID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	res, err := h.service.GetStudentSummary(c.Request.Context(), studentID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -51,10 +55,18 @@ func (h *Handler) GetMySummary(c *gin.Context) {
 }
 
 func (h *Handler) GetChildAttendance(c *gin.Context) {
+	parentID := c.GetString("user_id")
+	if parentID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	studentID := c.Param("studentID")
-	// Verify guardianship here or in service!
-	res, err := h.service.GetStudentAttendance(c.Request.Context(), studentID)
+	res, err := h.service.GetChildAttendance(c.Request.Context(), parentID, studentID)
 	if err != nil {
+		if err.Error() == "unauthorized: not a guardian of this student" {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -62,9 +74,18 @@ func (h *Handler) GetChildAttendance(c *gin.Context) {
 }
 
 func (h *Handler) GetChildSummary(c *gin.Context) {
+	parentID := c.GetString("user_id")
+	if parentID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	studentID := c.Param("studentID")
-	res, err := h.service.GetStudentSummary(c.Request.Context(), studentID)
+	res, err := h.service.GetChildSummary(c.Request.Context(), parentID, studentID)
 	if err != nil {
+		if err.Error() == "unauthorized: not a guardian of this student" {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -83,8 +104,13 @@ func (h *Handler) ApproveJustification(c *gin.Context) {
 
 func (h *Handler) RejectJustification(c *gin.Context) {
 	id := c.Param("id")
-	// Using DELETE as Reject per requirements
-	if err := h.service.DeleteJustification(c.Request.Context(), id); err != nil {
+	actorID := c.GetString("user_id")
+	actorRole := c.GetString("role")
+	if actorID == "" || (actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin") {
+		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized"})
+		return
+	}
+	if err := h.service.DeleteJustification(c.Request.Context(), actorID, id); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -92,6 +118,11 @@ func (h *Handler) RejectJustification(c *gin.Context) {
 }
 
 func (h *Handler) GetAnalytics(c *gin.Context) {
+	role := c.GetString("role")
+	if role != "admin" && role != "superadmin" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
 	res, err := h.service.GetSchoolAnalytics(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -146,6 +177,10 @@ func (h *Handler) GetClassAttendance(c *gin.Context) {
 func (h *Handler) GetMyAttendance(c *gin.Context) {
 	// studentID from token
 	studentID := c.GetString("user_id")
+	if studentID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	res, err := h.service.GetStudentAttendance(c.Request.Context(), studentID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

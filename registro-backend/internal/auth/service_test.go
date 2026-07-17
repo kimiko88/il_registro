@@ -359,12 +359,14 @@ func TestRefreshToken(t *testing.T) {
 
 		mockRepo.On("GetRefreshToken", mock.Anything, token).Return(rt, nil).Once()
 		mockRepo.On("GetUserByID", mock.Anything, userID).Return(user, nil).Once()
+		mockRepo.On("RevokeRefreshToken", mock.Anything, "rt-1").Return(nil).Once()
+		mockRepo.On("CreateRefreshToken", mock.Anything, mock.AnythingOfType("*auth.RefreshToken")).Return(nil).Once()
 
 		pair, err := s.RefreshToken(context.Background(), token)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, pair)
-		assert.Equal(t, token, pair.RefreshToken)
+		assert.NotEqual(t, token, pair.RefreshToken)
 		assert.NotEmpty(t, pair.AccessToken)
 		mockRepo.AssertExpectations(t)
 	})
