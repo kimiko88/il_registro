@@ -195,7 +195,7 @@ func main() {
 			lessonsH.RegisterRoutes(protected)
 
 			materialsRepo := didactic_materials.NewRepository(database)
-			materialsSvc := didactic_materials.NewService(materialsRepo)
+			materialsSvc := didactic_materials.NewService(materialsRepo, usersRepo)
 			materialsH := didactic_materials.NewHandler(materialsSvc)
 			materialsH.RegisterRoutes(protected)
 

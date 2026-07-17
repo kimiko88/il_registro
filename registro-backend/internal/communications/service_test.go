@@ -37,6 +37,14 @@ func (m *MockRepository) GetSignatures(ctx context.Context, communicationID stri
 	return args.Get(0).([]string), args.Error(1)
 }
 
+func (m *MockRepository) Get(ctx context.Context, id string) (*Message, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*Message), args.Error(1)
+}
+
 func TestService_SendMessage(t *testing.T) {
 	mockRepo := new(MockRepository)
 	svc := NewService(mockRepo)

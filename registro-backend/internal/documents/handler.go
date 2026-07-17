@@ -1,11 +1,15 @@
 package documents
 
 import (
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 
 	"registro-backend/pkg/upload"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type Handler struct {
@@ -86,20 +90,49 @@ func (h *Handler) UploadFile(c *gin.Context) {
 	}
 
 	// At this point the file is validated and the read position is reset to 0.
-	// TODO: persist the file to storage (S3, local FS, etc.) and
-	// associate it with a document record via document_id query param.
-	// For now, we return a success response with metadata.
+	uploadDir := "./uploads"
+	if err := os.MkdirAll(uploadDir, os.ModePerm); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Impossibile creare la cartella di destinazione: " + err.Error()})
+		return
+	}
+
+	// Generate a unique safe filename
+	destPath := filepath.Join(uploadDir, uuid.New().String()+"-"+filepath.Base(header.Filename))
+	out, err := os.Create(destPath)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Impossibile creare il file di destinazione: " + err.Error()})
+		return
+	}
+	defer out.Close()
+
+	if _, err := io.Copy(out, file); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Errore durante il salvataggio del file: " + err.Error()})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
-		"message":   "File caricato e validato con successo",
-		"filename":  header.Filename,
-		"size_bytes": header.Size,
+		"message":      "File caricato e salvato con successo",
+		"filename":     header.Filename,
+		"size_bytes":    header.Size,
+		"storage_path": destPath,
 	})
 }
 
 func (h *Handler) GetDocument(c *gin.Context) {
 	id := c.Param("id")
-	res, err := h.service.GetDocument(c.Request.Context(), id)
+	role := c.GetString("role")
+	schoolID := c.GetString("school_id")
+	if role == "" || schoolID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	res, err := h.service.GetDocument(c.Request.Context(), role, schoolID, id)
 	if err != nil {
+		if err.Error() == "unauthorized" || err.Error() == "unauthorized: cannot access documents of another school" {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
@@ -179,6 +212,10 @@ func (h *Handler) CreateTemplate(c *gin.Context) {
 		return
 	}
 	schoolID := c.GetString("school_id")
+	if schoolID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	if err := h.service.CreateTemplate(c.Request.Context(), schoolID, req); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -188,12 +225,22 @@ func (h *Handler) CreateTemplate(c *gin.Context) {
 
 func (h *Handler) UpdateTemplate(c *gin.Context) {
 	id := c.Param("id")
+	schoolID := c.GetString("school_id")
+	if schoolID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
 	var req TemplateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	if err := h.service.UpdateTemplate(c.Request.Context(), id, req); err != nil {
+	if err := h.service.UpdateTemplate(c.Request.Context(), schoolID, id, req); err != nil {
+		if err.Error() == "unauthorized: template belongs to another school" {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -202,7 +249,17 @@ func (h *Handler) UpdateTemplate(c *gin.Context) {
 
 func (h *Handler) DeleteTemplate(c *gin.Context) {
 	id := c.Param("id")
-	if err := h.service.DeleteTemplate(c.Request.Context(), id); err != nil {
+	schoolID := c.GetString("school_id")
+	if schoolID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	if err := h.service.DeleteTemplate(c.Request.Context(), schoolID, id); err != nil {
+		if err.Error() == "unauthorized: template belongs to another school" {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -212,7 +269,14 @@ func (h *Handler) DeleteTemplate(c *gin.Context) {
 func (h *Handler) ExportDocument(c *gin.Context) {
 	id := c.Param("id")
 	format := c.Query("format") // pdf, docx
-	data, contentType, err := h.service.ExportDocument(c.Request.Context(), id, format)
+	role := c.GetString("role")
+	schoolID := c.GetString("school_id")
+	if role == "" || schoolID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	data, contentType, err := h.service.ExportDocument(c.Request.Context(), role, schoolID, id, format)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

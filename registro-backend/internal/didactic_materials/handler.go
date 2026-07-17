@@ -24,9 +24,19 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 }
 
 func (h *Handler) GetByClass(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	classID := c.Param("class_id")
-	res, err := h.service.GetMaterialsByClass(classID)
+	res, err := h.service.GetMaterialsByClass(c.Request.Context(), userID, role, classID)
 	if err != nil {
+		if err.Error() == "unauthorized: student does not belong to this class" || err.Error() == "unauthorized: parent does not have any children in this class" || err.Error() == "unauthorized: invalid role" {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

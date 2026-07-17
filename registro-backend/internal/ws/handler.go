@@ -3,6 +3,8 @@ package ws
 import (
 	"log"
 	"net/http"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -26,9 +28,29 @@ const (
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
-	// Allow all origins for now (dev mode), should restrict in prod
 	CheckOrigin: func(r *http.Request) bool {
-		return true
+		origin := r.Header.Get("Origin")
+		if origin == "" {
+			return true
+		}
+		allowedOriginsStr := os.Getenv("ALLOWED_ORIGINS")
+		var allowedOrigins []string
+		if allowedOriginsStr != "" {
+			allowedOrigins = strings.Split(allowedOriginsStr, ",")
+		} else {
+			allowedOrigins = []string{
+				"http://localhost:5173",
+				"http://localhost:3000",
+				"http://localhost:8080",
+				"https://registro-elettronico.netlify.app",
+			}
+		}
+		for _, o := range allowedOrigins {
+			if strings.TrimSpace(o) == origin {
+				return true
+			}
+		}
+		return false
 	},
 }
 
@@ -104,13 +126,14 @@ func NewHandler(hub *Hub) *Handler {
 
 func (h *Handler) Listen(c *gin.Context) {
 	// Retrieve user info from context (set by auth middleware)
-	userID, exists := c.Get("user_id")
-	if !exists {
+	userIDStr := c.GetString("user_id")
+	roleStr := c.GetString("role")
+	schoolIDStr := c.GetString("school_id")
+
+	if userIDStr == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	role, _ := c.Get("role")
-	schoolID, _ := c.Get("school_id")
 
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
@@ -122,9 +145,9 @@ func (h *Handler) Listen(c *gin.Context) {
 		Hub:      h.hub,
 		Conn:     conn,
 		Send:     make(chan []byte, 256),
-		UserID:   userID.(string),
-		Role:     role.(string),
-		SchoolID: schoolID.(string),
+		UserID:   userIDStr,
+		Role:     roleStr,
+		SchoolID: schoolIDStr,
 	}
 
 	client.Hub.register <- client

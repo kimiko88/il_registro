@@ -1,6 +1,7 @@
 package didactic_materials
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -92,14 +93,14 @@ func TestGetMaterialsByClass(t *testing.T) {
 	}
 	s := NewService(repo)
 
-	res, err := s.GetMaterialsByClass("class-1")
+	res, err := s.GetMaterialsByClass(context.Background(), "user-1", "teacher", "class-1")
 	assert.NoError(t, err)
 	assert.Len(t, res, 1)
 	assert.Equal(t, "Math", res[0].Title)
 
 	// Test repository error
 	repo.errGet = errors.New("get error")
-	res, err = s.GetMaterialsByClass("class-1")
+	res, err = s.GetMaterialsByClass(context.Background(), "user-1", "teacher", "class-1")
 	assert.Nil(t, res)
 	assert.EqualError(t, err, "get error")
 }

@@ -9,7 +9,7 @@ import (
 
 type Service interface {
 	CreateDocument(ctx context.Context, actorRole, userID, schoolID string, req CreateDocumentRequest) (*DocumentListResponse, error)
-	GetDocument(ctx context.Context, id string) (*DocumentDetailResponse, error)
+	GetDocument(ctx context.Context, actorRole, schoolID, id string) (*DocumentDetailResponse, error)
 	UpdateDocument(ctx context.Context, actorRole, userID, id string, req UpdateDocumentRequest) error
 	DeleteDocument(ctx context.Context, actorRole, id string) error
 
@@ -28,11 +28,11 @@ type Service interface {
 	// Templates
 	CreateTemplate(ctx context.Context, schoolID string, req TemplateRequest) error
 	ListTemplates(ctx context.Context, schoolID string) ([]DocumentTemplate, error)
-	UpdateTemplate(ctx context.Context, id string, req TemplateRequest) error
-	DeleteTemplate(ctx context.Context, id string) error
+	UpdateTemplate(ctx context.Context, schoolID, id string, req TemplateRequest) error
+	DeleteTemplate(ctx context.Context, schoolID, id string) error
 
 	// Export
-	ExportDocument(ctx context.Context, id, format string) ([]byte, string, error)
+	ExportDocument(ctx context.Context, actorRole, schoolID, id, format string) ([]byte, string, error)
 
 	// Status
 	LockDocument(ctx context.Context, id string) error
@@ -97,10 +97,16 @@ func (s *service) CreateDocument(ctx context.Context, actorRole, userID, schoolI
 	return &DocumentListResponse{ID: doc.ID, Title: doc.Title, Status: doc.Status}, nil
 }
 
-func (s *service) GetDocument(ctx context.Context, id string) (*DocumentDetailResponse, error) {
+func (s *service) GetDocument(ctx context.Context, actorRole, schoolID, id string) (*DocumentDetailResponse, error) {
+	if !s.permManager.HasPermission(actorRole, permissions.DocumentRead) {
+		return nil, errors.New("unauthorized")
+	}
 	doc, err := s.repo.FindByID(id)
 	if err != nil {
 		return nil, err
+	}
+	if doc.SchoolID != schoolID {
+		return nil, errors.New("unauthorized: cannot access documents of another school")
 	}
 
 	content, _ := s.repo.GetContent(id, doc.CurrentVersion)
@@ -273,21 +279,38 @@ func (s *service) ListTemplates(ctx context.Context, schoolID string) ([]Documen
 	return s.repo.GetTemplates(schoolID)
 }
 
-func (s *service) UpdateTemplate(ctx context.Context, id string, req TemplateRequest) error {
+func (s *service) UpdateTemplate(ctx context.Context, schoolID, id string, req TemplateRequest) error {
+	t, err := s.repo.GetTemplate(id)
+	if err != nil {
+		return err
+	}
+	if t.SchoolID != schoolID {
+		return errors.New("unauthorized: template belongs to another school")
+	}
+
 	return s.repo.UpdateTemplate(&DocumentTemplate{
-		ID:      id,
-		Name:    req.Name,
-		Type:    req.Type,
-		Content: req.Content,
+		ID:       id,
+		SchoolID: schoolID,
+		Name:     req.Name,
+		Type:     req.Type,
+		Content:  req.Content,
+		IsActive: t.IsActive,
 	})
 }
 
-func (s *service) DeleteTemplate(ctx context.Context, id string) error {
+func (s *service) DeleteTemplate(ctx context.Context, schoolID, id string) error {
+	t, err := s.repo.GetTemplate(id)
+	if err != nil {
+		return err
+	}
+	if t.SchoolID != schoolID {
+		return errors.New("unauthorized: template belongs to another school")
+	}
 	return s.repo.DeleteTemplate(id)
 }
 
-func (s *service) ExportDocument(ctx context.Context, id, format string) ([]byte, string, error) {
-	doc, err := s.GetDocument(ctx, id)
+func (s *service) ExportDocument(ctx context.Context, actorRole, schoolID, id, format string) ([]byte, string, error) {
+	doc, err := s.GetDocument(ctx, actorRole, schoolID, id)
 	if err != nil {
 		return nil, "", err
 	}

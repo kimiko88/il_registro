@@ -2,6 +2,7 @@ package communications
 
 import (
 	"context"
+	"errors"
 )
 
 type Service struct {
@@ -30,7 +31,14 @@ func (s *Service) ListMessages(ctx context.Context, userID string) ([]*Message, 
 	return s.repo.List(ctx, userID)
 }
 
-func (s *Service) DeleteMessage(ctx context.Context, id string) error {
+func (s *Service) DeleteMessage(ctx context.Context, actorID string, actorRole string, id string) error {
+	msg, err := s.repo.Get(ctx, id)
+	if err != nil {
+		return err
+	}
+	if msg.SenderID != actorID && actorRole != "admin" && actorRole != "superadmin" {
+		return errors.New("unauthorized: cannot delete message of another user")
+	}
 	return s.repo.Delete(ctx, id)
 }
 

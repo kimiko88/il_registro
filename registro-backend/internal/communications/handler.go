@@ -61,7 +61,17 @@ func (h *Handler) Send(c *gin.Context) {
 
 func (h *Handler) Delete(c *gin.Context) {
 	id := c.Param("id")
-	if err := h.service.DeleteMessage(c, id); err != nil {
+	uid := c.GetString("user_id")
+	role := c.GetString("role")
+	if uid == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if err := h.service.DeleteMessage(c.Request.Context(), uid, role, id); err != nil {
+		if err.Error() == "unauthorized: cannot delete message of another user" {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

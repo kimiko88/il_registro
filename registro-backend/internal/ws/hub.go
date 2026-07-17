@@ -77,6 +77,8 @@ func (h *Hub) Run() {
 			h.mu.Unlock()
 
 		case message := <-h.broadcast:
+			var deadClients []*Client
+
 			h.mu.RLock()
 			// Direct message to specific user
 			if message.Recipient != "" {
@@ -86,8 +88,7 @@ func (h *Hub) Run() {
 						select {
 						case client.Send <- bytes:
 						default:
-							close(client.Send)
-							delete(clients, client)
+							deadClients = append(deadClients, client)
 						}
 					}
 				}
@@ -100,14 +101,29 @@ func (h *Hub) Run() {
 							select {
 							case client.Send <- bytes:
 							default:
-								close(client.Send)
-								delete(clients, client)
+								deadClients = append(deadClients, client)
 							}
 						}
 					}
 				}
 			}
 			h.mu.RUnlock()
+
+			if len(deadClients) > 0 {
+				h.mu.Lock()
+				for _, client := range deadClients {
+					if userClients, ok := h.clients[client.UserID]; ok {
+						if _, exists := userClients[client]; exists {
+							delete(userClients, client)
+							close(client.Send)
+							if len(userClients) == 0 {
+								delete(h.clients, client.UserID)
+							}
+						}
+					}
+				}
+				h.mu.Unlock()
+			}
 		}
 	}
 }

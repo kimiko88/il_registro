@@ -15,6 +15,7 @@ type Repository interface {
 	Delete(ctx context.Context, id string) error
 	Sign(ctx context.Context, communicationID string, userID string) error
 	GetSignatures(ctx context.Context, communicationID string) ([]string, error)
+	Get(ctx context.Context, id string) (*Message, error)
 }
 
 type PostgresRepository struct {
@@ -106,4 +107,22 @@ func (r *PostgresRepository) GetSignatures(ctx context.Context, communicationID 
 		names = append(names, name)
 	}
 	return names, nil
+}
+
+func (r *PostgresRepository) Get(ctx context.Context, id string) (*Message, error) {
+	query := `
+		SELECT id, sender_id, receiver_ids, subject, body, type, created_at
+		FROM communications
+		WHERE id = $1::uuid
+	`
+	m := &Message{}
+	var receivers []string
+	err := r.db.QueryRowContext(ctx, query, id).Scan(
+		&m.ID, &m.SenderID, pq.Array(&receivers), &m.Subject, &m.Body, &m.Type, &m.CreatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+	m.ReceiverIDs = receivers
+	return m, nil
 }
