@@ -90,15 +90,10 @@ func (h *Handler) GetTeacherBookings(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-// GetAvailableSlots scopes results to the caller's school.
+// GetAvailableSlots returns available colloquio slots, optionally filtered by teacher_id.
 func (h *Handler) GetAvailableSlots(c *gin.Context) {
-	schoolID := c.GetString("school_id")
-	if schoolID == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
 	teacherID := c.Query("teacher_id")
-	res, err := h.service.GetAvailableSlots(c.Request.Context(), schoolID, teacherID)
+	res, err := h.service.GetAvailableSlots(c.Request.Context(), teacherID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

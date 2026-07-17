@@ -30,8 +30,9 @@ func (h *Handler) GetByClass(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
+	role := c.GetString("role")
 	classID := c.Param("class_id")
-	res, err := h.service.GetMaterialsByClass(classID)
+	res, err := h.service.GetMaterialsByClass(c.Request.Context(), userID, role, classID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

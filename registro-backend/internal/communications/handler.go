@@ -65,8 +65,9 @@ func (h *Handler) Delete(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
+	role := c.GetString("role")
 	id := c.Param("id")
-	if err := h.service.DeleteMessage(c, uid, id); err != nil {
+	if err := h.service.DeleteMessage(c, uid, role, id); err != nil {
 		if err.Error() == "forbidden" {
 			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 			return
