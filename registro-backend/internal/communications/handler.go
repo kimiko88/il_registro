@@ -28,7 +28,6 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 func (h *Handler) List(c *gin.Context) {
 	uid := c.GetString("user_id")
 	if uid == "" {
-		// Fallback for dev if needed, but should be set by middleware
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
@@ -59,17 +58,17 @@ func (h *Handler) Send(c *gin.Context) {
 	c.JSON(http.StatusCreated, msg)
 }
 
+// Delete verifies that the caller is the author of the message before deleting.
 func (h *Handler) Delete(c *gin.Context) {
-	id := c.Param("id")
 	uid := c.GetString("user_id")
-	role := c.GetString("role")
 	if uid == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if err := h.service.DeleteMessage(c.Request.Context(), uid, role, id); err != nil {
-		if err.Error() == "unauthorized: cannot delete message of another user" {
-			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+	id := c.Param("id")
+	if err := h.service.DeleteMessage(c, uid, id); err != nil {
+		if err.Error() == "forbidden" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 			return
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -85,7 +84,6 @@ func (h *Handler) Sign(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-
 	if err := h.service.SignMessage(c, id, uid); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

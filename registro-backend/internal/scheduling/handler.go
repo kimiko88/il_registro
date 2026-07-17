@@ -37,6 +37,10 @@ func (h *Handler) CreateSlot(c *gin.Context) {
 		return
 	}
 	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	if err := h.service.CreateSlots(c.Request.Context(), userID, req); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -46,6 +50,10 @@ func (h *Handler) CreateSlot(c *gin.Context) {
 
 func (h *Handler) GetMySlots(c *gin.Context) {
 	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	res, err := h.service.GetMySlots(c.Request.Context(), userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -57,6 +65,10 @@ func (h *Handler) GetMySlots(c *gin.Context) {
 func (h *Handler) DeleteSlot(c *gin.Context) {
 	id := c.Param("id")
 	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	if err := h.service.DeleteSlot(c.Request.Context(), userID, id); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -66,6 +78,10 @@ func (h *Handler) DeleteSlot(c *gin.Context) {
 
 func (h *Handler) GetTeacherBookings(c *gin.Context) {
 	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	res, err := h.service.GetMyBookings(c.Request.Context(), userID, "teacher")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -74,9 +90,15 @@ func (h *Handler) GetTeacherBookings(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+// GetAvailableSlots scopes results to the caller's school.
 func (h *Handler) GetAvailableSlots(c *gin.Context) {
-	teacherID := c.Query("teacher_id") // Optional filter
-	res, err := h.service.GetAvailableSlots(c.Request.Context(), teacherID)
+	schoolID := c.GetString("school_id")
+	if schoolID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	teacherID := c.Query("teacher_id")
+	res, err := h.service.GetAvailableSlots(c.Request.Context(), schoolID, teacherID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -91,6 +113,10 @@ func (h *Handler) BookSlot(c *gin.Context) {
 		return
 	}
 	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	res, err := h.service.BookSlot(c.Request.Context(), userID, req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -101,6 +127,10 @@ func (h *Handler) BookSlot(c *gin.Context) {
 
 func (h *Handler) GetParentBookings(c *gin.Context) {
 	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	res, err := h.service.GetMyBookings(c.Request.Context(), userID, "parent")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -112,6 +142,10 @@ func (h *Handler) GetParentBookings(c *gin.Context) {
 func (h *Handler) CancelBooking(c *gin.Context) {
 	id := c.Param("id")
 	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	if err := h.service.CancelBooking(c.Request.Context(), userID, id); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

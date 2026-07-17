@@ -12,18 +12,26 @@ import (
 )
 
 const (
-	// Time allowed to write a message to the peer.
-	writeWait = 10 * time.Second
-
-	// Time allowed to read the next pong message from the peer.
-	pongWait = 60 * time.Second
-
-	// Send pings to peer with this period. Must be less than pongWait.
-	pingPeriod = (pongWait * 9) / 10
-
-	// Maximum message size allowed from peer.
+	writeWait      = 10 * time.Second
+	pongWait       = 60 * time.Second
+	pingPeriod     = (pongWait * 9) / 10
 	maxMessageSize = 512
 )
+
+// allowedOrigins returns the set of permitted WebSocket origins from the
+// ALLOWED_ORIGINS environment variable (comma-separated). Falls back to
+// rejecting all cross-origin requests if the variable is not set.
+func allowedOrigins() map[string]bool {
+	raw := os.Getenv("ALLOWED_ORIGINS")
+	set := make(map[string]bool)
+	for _, o := range strings.Split(raw, ",") {
+		o = strings.TrimSpace(o)
+		if o != "" {
+			set[o] = true
+		}
+	}
+	return set
+}
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -31,30 +39,13 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		origin := r.Header.Get("Origin")
 		if origin == "" {
+			// No Origin header: same-origin request or non-browser client
 			return true
 		}
-		allowedOriginsStr := os.Getenv("ALLOWED_ORIGINS")
-		var allowedOrigins []string
-		if allowedOriginsStr != "" {
-			allowedOrigins = strings.Split(allowedOriginsStr, ",")
-		} else {
-			allowedOrigins = []string{
-				"http://localhost:5173",
-				"http://localhost:3000",
-				"http://localhost:8080",
-				"https://registro-elettronico.netlify.app",
-			}
-		}
-		for _, o := range allowedOrigins {
-			if strings.TrimSpace(o) == origin {
-				return true
-			}
-		}
-		return false
+		return allowedOrigins()[origin]
 	},
 }
 
-// Client readPump pumps messages from the websocket connection to the hub.
 func (c *Client) readPump() {
 	defer func() {
 		c.Hub.unregister <- c
@@ -62,20 +53,21 @@ func (c *Client) readPump() {
 	}()
 	c.Conn.SetReadLimit(maxMessageSize)
 	_ = c.Conn.SetReadDeadline(time.Now().Add(pongWait))
-	c.Conn.SetPongHandler(func(string) error { _ = c.Conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
+	c.Conn.SetPongHandler(func(string) error {
+		_ = c.Conn.SetReadDeadline(time.Now().Add(pongWait))
+		return nil
+	})
 	for {
 		_, _, err := c.Conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("error: %v", err)
+				log.Printf("ws error: %v", err)
 			}
 			break
 		}
-		// Currently we don't handle incoming messages from clients, only push
 	}
 }
 
-// Client writePump pumps messages from the hub to the websocket connection.
 func (c *Client) writePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
@@ -87,23 +79,18 @@ func (c *Client) writePump() {
 		case message, ok := <-c.Send:
 			_ = c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
-				// The hub closed the channel.
 				_ = c.Conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
-
 			w, err := c.Conn.NextWriter(websocket.TextMessage)
 			if err != nil {
 				return
 			}
 			_, _ = w.Write(message)
-
-			// Add queued chat messages to the current websocket message.
 			n := len(c.Send)
 			for i := 0; i < n; i++ {
 				_, _ = w.Write(<-c.Send)
 			}
-
 			if err := w.Close(); err != nil {
 				return
 			}
@@ -125,19 +112,33 @@ func NewHandler(hub *Hub) *Handler {
 }
 
 func (h *Handler) Listen(c *gin.Context) {
-	// Retrieve user info from context (set by auth middleware)
-	userIDStr := c.GetString("user_id")
-	roleStr := c.GetString("role")
-	schoolIDStr := c.GetString("school_id")
-
-	if userIDStr == "" {
+	userIDRaw, exists := c.Get("user_id")
+	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
+	}
+	userID, ok := userIDRaw.(string)
+	if !ok || userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	// Safe extraction with ok-pattern to avoid panic on missing/wrong-typed values.
+	role := ""
+	if v, ok := c.Get("role"); ok {
+		if s, ok := v.(string); ok {
+			role = s
+		}
+	}
+	schoolID := ""
+	if v, ok := c.Get("school_id"); ok {
+		if s, ok := v.(string); ok {
+			schoolID = s
+		}
 	}
 
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		log.Println(err)
+		log.Println("ws upgrade error:", err)
 		return
 	}
 
@@ -145,15 +146,12 @@ func (h *Handler) Listen(c *gin.Context) {
 		Hub:      h.hub,
 		Conn:     conn,
 		Send:     make(chan []byte, 256),
-		UserID:   userIDStr,
-		Role:     roleStr,
-		SchoolID: schoolIDStr,
+		UserID:   userID,
+		Role:     role,
+		SchoolID: schoolID,
 	}
 
 	client.Hub.register <- client
-
-	// Allow collection of memory referenced by the caller by doing all work in
-	// new goroutines.
 	go client.writePump()
 	go client.readPump()
 }

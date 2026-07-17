@@ -14,10 +14,8 @@ func NewHandler(s Service) *Handler {
 	return &Handler{service: s}
 }
 
-// RegisterRoutes sets up the routes
 func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	att := r.Group("/attendance")
-	// att.Use(middleware.AuthMiddleware()) // Assumed global or higher level
 
 	// Teacher
 	att.POST("/mark", h.MarkAttendance)
@@ -92,10 +90,16 @@ func (h *Handler) GetChildSummary(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+// ApproveJustification requires teacher or admin role.
 func (h *Handler) ApproveJustification(c *gin.Context) {
+	actorID := c.GetString("user_id")
+	actorRole := c.GetString("role")
+	if actorID == "" || (actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin") {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
 	id := c.Param("id")
-	teacherID := c.GetString("user_id")
-	if err := h.service.ProcessJustification(c.Request.Context(), teacherID, id, true); err != nil {
+	if err := h.service.ProcessJustification(c.Request.Context(), actorID, id, true); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -137,7 +141,11 @@ func (h *Handler) MarkAttendance(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	userID := c.GetString("user_id") // From middleware
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	if err := h.service.MarkAttendance(c.Request.Context(), userID, req); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -152,6 +160,10 @@ func (h *Handler) MarkBulk(c *gin.Context) {
 		return
 	}
 	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	if err := h.service.MarkBulk(c.Request.Context(), userID, req); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -159,9 +171,20 @@ func (h *Handler) MarkBulk(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "bulk marked"})
 }
 
+// GetClassAttendance requires teacher, admin, or superadmin role.
 func (h *Handler) GetClassAttendance(c *gin.Context) {
+	actorID := c.GetString("user_id")
+	actorRole := c.GetString("role")
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
 	classID := c.Param("id")
-	date := c.Query("date") // YYYY-MM-DD
+	date := c.Query("date")
 	if date == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "date required"})
 		return
@@ -175,7 +198,6 @@ func (h *Handler) GetClassAttendance(c *gin.Context) {
 }
 
 func (h *Handler) GetMyAttendance(c *gin.Context) {
-	// studentID from token
 	studentID := c.GetString("user_id")
 	if studentID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
@@ -195,8 +217,11 @@ func (h *Handler) RequestJustification(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	// Verify logical parent ownership? Service handles logic
 	parentID := c.GetString("user_id")
+	if parentID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	if err := h.service.RequestJustification(c.Request.Context(), parentID, req); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -205,7 +230,13 @@ func (h *Handler) RequestJustification(c *gin.Context) {
 }
 
 func (h *Handler) GetPendingJustifications(c *gin.Context) {
-	classID := c.Query("class_id") // Teacher filters by class
+	actorID := c.GetString("user_id")
+	actorRole := c.GetString("role")
+	if actorID == "" || (actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin") {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+	classID := c.Query("class_id")
 	res, err := h.service.GetPendingJustifications(c.Request.Context(), classID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -231,5 +262,4 @@ func (h *Handler) ProcessJustification(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "processed"})
 }
 
-// Needed for compatibility with main
 func (h *Handler) GetAttendance(c *gin.Context) { h.GetMyAttendance(c) }
