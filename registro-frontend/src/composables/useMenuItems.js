@@ -20,8 +20,7 @@ export function useMenuItems(role) {
             { label: 'La Mia Scuola', icon: 'school', path: '/admin/schools' },
             { label: 'Gestione Utenti', icon: 'people', path: '/admin/users' },
             { label: 'Analytics', icon: 'analytics', path: '/admin/analytics' },
-            { label: 'Impostazioni', icon: 'settings', path: '/admin/settings' },
-            { label: 'Supporto', icon: 'help', path: '/support' }
+            { label: 'Impostazioni', icon: 'settings', path: '/admin/settings' }
         ],
         secretary: [
             { label: 'Dashboard', icon: 'dashboard', path: '/', exact: true },
@@ -34,8 +33,7 @@ export function useMenuItems(role) {
             { label: 'PCTO', icon: 'work', path: '/secretary/pcto' },
             { label: 'Libri di Testo', icon: 'auto_stories', path: '/secretary/textbooks' },
             { label: 'Scrutinio', icon: 'analytics', path: '/secretary/scrutiny' },
-            { label: 'Impostazioni', icon: 'settings', path: '/secretary/settings' },
-            { label: 'Supporto', icon: 'help', path: '/support' }
+            { label: 'Impostazioni', icon: 'settings', path: '/secretary/settings' }
         ],
         teacher: [
             { label: 'Dashboard', icon: 'dashboard', path: '/', exact: true },
@@ -48,8 +46,7 @@ export function useMenuItems(role) {
             { label: 'Presenze', icon: 'how_to_reg', path: '/teacher/attendance' },
             { label: 'Documenti', icon: 'description', path: '/teacher/documents' },
             { label: 'Colloqui', icon: 'event', path: '/teacher/colloqui' },
-            { label: 'Comunicazioni', icon: 'email', path: '/teacher/communications' },
-            { label: 'Supporto', icon: 'help', path: '/support' }
+            { label: 'Comunicazioni', icon: 'email', path: '/teacher/communications' }
         ],
         student: [
             { label: 'Dashboard', icon: 'dashboard', path: '/', exact: true },
@@ -63,8 +60,7 @@ export function useMenuItems(role) {
             { label: 'PCTO', icon: 'work', path: '/student/pcto' },
             { label: 'Orientamento', icon: 'explore', path: '/student/orientamento' },
             { label: 'Comunicazioni', icon: 'email', path: '/student/communications' },
-            { label: 'Profilo', icon: 'person', path: '/student/profile' },
-            { label: 'Supporto', icon: 'help', path: '/support' }
+            { label: 'Profilo', icon: 'person', path: '/student/profile' }
         ],
         parent: [
             { label: 'Dashboard', icon: 'dashboard', path: '/parent', exact: true },

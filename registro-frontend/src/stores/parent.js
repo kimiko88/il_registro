@@ -18,12 +18,14 @@ export const useParentStore = defineStore('parent', () => {
         error.value = null
         try {
             const response = await api.get('/users/me/children')
+            // Normalize API snake_case fields to camelCase only when the raw
+            // API fields are present; preserve already-mapped values otherwise.
             children.value = (response.data || []).map(c => ({
                 ...c,
-                firstName: c.first_name,
-                lastName: c.last_name,
-                schoolName: c.school_name,
-                className: c.class
+                firstName: c.first_name ?? c.firstName,
+                lastName: c.last_name ?? c.lastName,
+                schoolName: c.school_name ?? c.schoolName,
+                className: c.class ?? c.className
             }))
 
             // Validate the stored selectedChildId still belongs to this user's children

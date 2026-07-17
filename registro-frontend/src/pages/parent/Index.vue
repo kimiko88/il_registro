@@ -14,7 +14,7 @@
           unelevated
           no-caps
           class="rounded-xl shadow-soft q-px-md"
-          :label="selectedChild ? `${selectedChild.first_name} ${selectedChild.last_name}` : 'Seleziona Figlio'"
+          :label="selectedChild ? `${selectedChild.first_name || selectedChild.firstName} ${selectedChild.last_name || selectedChild.lastName}` : 'Seleziona Figlio'"
           icon="face"
           aria-label="Seleziona figlio da visualizzare"
         >
@@ -31,10 +31,10 @@
               :aria-selected="selectedChildId === child.id"
             >
               <q-item-section avatar>
-                <q-avatar size="sm" color="primary" text-color="white" :aria-label="`Iniziale di ${child.first_name}`">{{ child.first_name.charAt(0) }}</q-avatar>
+                <q-avatar size="sm" color="primary" text-color="white" :aria-label="`Iniziale di ${child.firstName || child.first_name}`">{{ (child.firstName || child.first_name || '?').charAt(0) }}</q-avatar>
               </q-item-section>
               <q-item-section>
-                <q-item-label>{{ child.first_name }} {{ child.last_name }}</q-item-label>
+                <q-item-label>{{ child.firstName || child.first_name }} {{ child.lastName || child.last_name }}</q-item-label>
                 <q-item-label caption>{{ child.class }}</q-item-label>
               </q-item-section>
             </q-item>
@@ -50,13 +50,13 @@
 
     <!-- Dashboard Content -->
     <div v-else-if="selectedChild" class="row q-col-gutter-md">
-      
+
       <!-- Quick Stats -->
       <div class="col-12 col-sm-6 col-md-3" role="region" aria-label="Media voti">
         <q-card class="glass-card stat-card shadow-soft full-height overflow-hidden">
           <q-card-section>
             <div class="text-caption text-slate-600 text-uppercase letter-spacing-1">Media Voti</div>
-            <div class="text-h3 text-weight-bold text-indigo-700 q-mt-sm" aria-label="Media voti: {{ averageGrade }}">{{ averageGrade }}</div>
+            <div class="text-h3 text-weight-bold text-indigo-700 q-mt-sm" :aria-label="`Media voti: ${averageGrade}`">{{ averageGrade }}</div>
             <div class="row items-center q-mt-sm">
               <q-icon name="trending_up" color="positive" class="q-mr-xs" aria-hidden="true" />
               <span class="text-positive text-caption text-weight-medium">Andamento generale</span>
@@ -70,7 +70,7 @@
         <q-card class="glass-card stat-card shadow-soft full-height overflow-hidden">
           <q-card-section>
             <div class="text-caption text-slate-600 text-uppercase letter-spacing-1">Assenze</div>
-            <div class="text-h3 text-weight-bold text-orange-700 q-mt-sm" aria-label="Numero assenze: {{ totalAbsences }}">{{ totalAbsences }}</div>
+            <div class="text-h3 text-weight-bold text-orange-700 q-mt-sm" :aria-label="`Numero assenze: ${totalAbsences}`">{{ totalAbsences }}</div>
             <div class="row items-center q-mt-sm">
               <span class="text-caption text-slate-600">Anno in corso</span>
             </div>
@@ -90,7 +90,7 @@
         </q-card>
       </div>
 
-       <div class="col-12 col-sm-6 col-md-3" role="region" aria-label="Avvisi da leggere">
+      <div class="col-12 col-sm-6 col-md-3" role="region" aria-label="Avvisi da leggere">
         <q-card class="glass-card stat-card shadow-soft full-height overflow-hidden">
           <q-card-section>
             <div class="text-caption text-slate-600 text-uppercase letter-spacing-1">Avvisi</div>
@@ -117,14 +117,14 @@
               </q-item-section>
               <q-item-section side>
                 <div class="row items-center">
-                   <q-badge
-                     :color="grade.grade_value === -1 ? 'grey' : (grade.grade_value >= 6 ? 'positive' : 'negative')"
-                     class="text-subtitle1 q-pa-xs"
-                     :aria-label="`Voto: ${grade.grade_value === -1 ? 'Assente' : grade.grade_value}`"
-                   >
-                     {{ grade.grade_value === -1 ? 'A' : grade.grade_value }}
-                   </q-badge>
-                   <div class="text-caption text-slate-600 q-ml-md">{{ new Date(grade.date).toLocaleDateString('it-IT') }}</div>
+                  <q-badge
+                    :color="grade.grade_value === -1 ? 'grey' : (grade.grade_value >= 6 ? 'positive' : 'negative')"
+                    class="text-subtitle1 q-pa-xs"
+                    :aria-label="`Voto: ${grade.grade_value === -1 ? 'Assente' : grade.grade_value}`"
+                  >
+                    {{ grade.grade_value === -1 ? 'A' : grade.grade_value }}
+                  </q-badge>
+                  <div class="text-caption text-slate-600 q-ml-md">{{ new Date(grade.date).toLocaleDateString('it-IT') }}</div>
                 </div>
               </q-item-section>
             </q-item>
@@ -137,7 +137,7 @@
       <div class="col-12 col-md-4">
         <q-card class="shadow-sm rounded-lg full-height">
           <q-card-section>
-            <div class="text-h6 text-slate-800 q-mb-sm">Prossimi Impegni</div>
+            <div class="text-h6 text-slate-800 q-mb-sm">Prossimi Eventi</div>
             <div v-if="upcomingTests.length === 0" class="text-center text-grey q-pa-md">
               <q-icon name="event_available" size="2em" color="grey-4" class="q-mb-sm" />
               <div class="text-caption">Nessun impegno in programma</div>
@@ -224,18 +224,18 @@ const evalTypeColor = (type) => {
 
 const fetchChildData = async () => {
     if (!selectedChildId.value) return
-    
+
     dataLoading.value = true
     try {
         // Fetch Grades
         const gradesRes = await gradeService.getChildGrades(selectedChildId.value)
         const allGrades = []
         if (gradesRes.data && gradesRes.data.semesters) {
-             gradesRes.data.semesters.forEach(s => {
-                 if(s.grades) allGrades.push(...s.grades)
-             })
+            gradesRes.data.semesters.forEach(s => {
+                if (s.grades) allGrades.push(...s.grades)
+            })
         }
-        
+
         const validGrades = allGrades.filter(g => g.grade_value >= 0)
         if (validGrades.length > 0) {
             const sum = validGrades.reduce((acc, g) => acc + g.grade_value, 0)
@@ -243,14 +243,14 @@ const fetchChildData = async () => {
         } else {
             averageGrade.value = '-'
         }
-        allGrades.sort((a,b) => new Date(b.date) - new Date(a.date))
+        allGrades.sort((a, b) => new Date(b.date) - new Date(a.date))
         recentGrades.value = allGrades.slice(0, 5)
 
         // Fetch Attendance
         const attRes = await attendanceService.getChildAttendance(selectedChildId.value)
         if (attRes.data) {
-             const records = Array.isArray(attRes.data) ? attRes.data : (attRes.data.records || [])
-             totalAbsences.value = records.filter(r => r.status === 'absent').length
+            const records = Array.isArray(attRes.data) ? attRes.data : (attRes.data.records || [])
+            totalAbsences.value = records.filter(r => r.status === 'absent').length
         }
 
         // Fetch Upcoming Tests
@@ -267,7 +267,7 @@ const fetchChildData = async () => {
             upcomingTests.value = []
         }
     } catch (e) {
-        console.error("Error fetching child data", e)
+        console.error('Error fetching child data', e)
     } finally {
         dataLoading.value = false
     }
@@ -286,22 +286,12 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* WCAG AA compliant heading — avoids transparent text on light backgrounds */
 .parent-heading {
-  color: #312e81; /* indigo-900: contrast ratio ~10:1 su bg-slate-50 */
+  color: #312e81;
 }
 
 .body--dark .parent-heading {
-  color: #a5b4fc; /* indigo-300: contrasto adeguato su sfondo scuro */
-}
-
-.bg-clip-text {
-    -webkit-background-clip: text;
-    background-clip: text;
-}
-
-.bg-gradient-premium {
-    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  color: #a5b4fc;
 }
 
 .letter-spacing-1 {

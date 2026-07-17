@@ -6,6 +6,11 @@ import path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  build: {
+    // Use esbuild instead of terser to avoid serialize-javascript
+    // crypto.randomUUID() error in CI / Node < 20 environments
+    minify: 'esbuild'
+  },
   plugins: [
     vue({
       template: { transformAssetUrls }
@@ -75,8 +80,8 @@ export default defineConfig({
           {
             // API responses caching: Stale-while-revalidate for static list resources
             urlPattern: ({ url }) => {
-              return url.pathname.includes('/teachers') || 
-                     url.pathname.includes('/subjects') || 
+              return url.pathname.includes('/teachers') ||
+                     url.pathname.includes('/subjects') ||
                      url.pathname.includes('/schools')
             },
             handler: 'StaleWhileRevalidate',
@@ -105,7 +110,7 @@ export default defineConfig({
   css: {
     preprocessorOptions: {
       scss: {
-        api: 'modern-compiler', // or 'modern'
+        api: 'modern-compiler',
         silenceDeprecations: ['legacy-js-api'],
       }
     }
