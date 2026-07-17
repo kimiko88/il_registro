@@ -13,7 +13,7 @@ COPY . .
 
 # Build the binary
 # CGO_ENABLED=0 ensures a static binary
-RUN CGO_ENABLED=0 GOOS=linux go build -o api-server cmd/api-server/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o api-server ./cmd/api-server/
 
 # Production Stage
 FROM alpine:3.19
