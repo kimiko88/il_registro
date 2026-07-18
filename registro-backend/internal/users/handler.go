@@ -296,18 +296,18 @@ func (h *Handler) GetAuditLog(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if actorID != targetID && actorRole != "admin" && actorRole != "superadmin" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
-		return
-	}
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "50"))
 	if pageSize > 100 {
 		pageSize = 100
 	}
 	offset := (page - 1) * pageSize
-	logs, total, err := h.service.repo.GetAuditLogs(c.Request.Context(), targetID, pageSize, offset)
+	logs, total, err := h.service.GetAuditLogs(c.Request.Context(), actorID, actorRole, targetID, pageSize, offset)
 	if err != nil {
+		if err == ErrUnauthorized {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
