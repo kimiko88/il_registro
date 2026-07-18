@@ -1,7 +1,13 @@
 package main
 
 import (
+	"context"
 	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -119,44 +125,35 @@ func main() {
 	wsHandler := ws.NewHandler(wsHub)
 
 	adminMiddleware := admin.NewMiddleware()
-	// ...
 	healthH := handler.NewHealthHandler(database)
 
 	// 8. Setup Router
-	r := gin.New() // Use New() to control middleware order explicitly
+	r := gin.New()
 	r.Use(gin.Recovery())
 	r.Use(middleware.LoggerMiddleware())
 	r.Use(middleware.CORSMiddleware())
 	r.Use(middleware.SecurityHeadersMiddleware())
-	r.Use(middleware.RateLimitMiddleware()) // New Rate Limit
+	r.Use(middleware.RateLimitMiddleware())
 
-	// Initialize Circuit Breaker
 	middleware.InitCircuitBreaker()
 
 	api := r.Group("/api/v1")
 	{
-		// Health Checks
 		r.GET("/health", healthH.Health)
 		r.GET("/ready", healthH.Ready)
 
-		// Auth Routes
 		authH.RegisterRoutes(api, authMiddleware)
 
-		// WebSocket Route
 		api.GET("/ws", authMiddleware.Authenticate(), func(c *gin.Context) {
 			wsHandler.Listen(c)
 		})
 
-		// Protected routes
 		protected := api.Group("/")
 		protected.Use(authMiddleware.Authenticate())
-		// Optional: Apply circuit breaker to specific routes if they call external services like Supabase
-		// protected.Use(middleware.CircuitBreakerMiddleware())
 		{
 			usersGroup := protected.Group("/users")
 			{
-				// Admin Endpoints
-				usersGroup.GET("/me/children", usersH.GetMyChildren) // New: Parent's children
+				usersGroup.GET("/me/children", usersH.GetMyChildren)
 				usersGroup.POST("", usersH.Create)
 				usersGroup.GET("", usersH.List)
 				usersGroup.GET("/:id", usersH.Get)
@@ -171,7 +168,7 @@ func main() {
 				usersGroup.GET("/:id/audit-log", usersH.GetAuditLog)
 				usersGroup.POST("/:id/gdpr-export", usersH.ExportGDPR)
 				usersGroup.DELETE("/:id/gdpr-delete", adminMiddleware.RequireAdminOrSuperAdmin(), usersH.DeleteGDPR)
-				usersGroup.GET("/search", usersH.List) // Merged into List logic
+				usersGroup.GET("/search", usersH.List)
 				usersGroup.PATCH("/:id/disable-mfa", usersH.DisableMFA)
 				usersGroup.GET("/:id/guardians", usersH.GetGuardians)
 				usersGroup.POST("/:id/guardians", usersH.AddGuardian)
@@ -179,13 +176,11 @@ func main() {
 			}
 
 			gradesH.RegisterRoutes(protected)
-
 			attendanceH.RegisterRoutes(protected)
 			docsH.RegisterRoutes(protected)
 			schedH.RegisterRoutes(protected)
 			timetablesH.RegisterRoutes(protected)
 
-			// New modules
 			pctoH := pcto.NewHandler(pctoSvc)
 			pctoH.RegisterRoutes(protected)
 
@@ -214,8 +209,8 @@ func main() {
 			textbooksH.RegisterRoutes(protected)
 
 			scrutinyRepo := scrutiny.NewRepository(database)
-			attendanceRepo := attendance.NewRepository(database)
-			scrutinySvc := scrutiny.NewService(scrutinyRepo, gradesRepo, classesRepo, usersRepo, attendanceRepo)
+			attendanceRepo2 := attendance.NewRepository(database)
+			scrutinySvc := scrutiny.NewService(scrutinyRepo, gradesRepo, classesRepo, usersRepo, attendanceRepo2)
 			scrutinyH := scrutiny.NewHandler(scrutinySvc)
 			scrutinyH.RegisterRoutes(protected)
 
@@ -231,17 +226,42 @@ func main() {
 			teachersH := teachers.NewHandler(teachersSvc)
 			teachersH.RegisterRoutes(protected)
 
-			// Admin routes
 			adminH.RegisterRoutes(protected, adminMiddleware)
-			signatures := protected.Group("/signatures")
-			signatures.POST("/", signaturesH.SignDocument)
-			signatures.GET("/:id", signaturesH.GetSignatures)
+			signaturesGroup := protected.Group("/signatures")
+			signaturesGroup.POST("/", signaturesH.SignDocument)
+			signaturesGroup.GET("/:id", signaturesH.GetSignatures)
 		}
 	}
 
-	// 9. Run
-	logger.Log.Infof("Server starting on port %s", cfg.Server.Port)
-	if err := r.Run(":" + cfg.Server.Port); err != nil {
-		logger.Log.Fatalf("Server failed to start: %v", err)
+	// 9. Start server with graceful shutdown
+	srv := &http.Server{
+		Addr:    ":" + cfg.Server.Port,
+		Handler: r,
 	}
+
+	// Listen for OS signals in a goroutine; block main on srv.ListenAndServe.
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	go func() {
+		logger.Log.Infof("Server starting on port %s", cfg.Server.Port)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			logger.Log.Fatalf("Server error: %v", err)
+		}
+	}()
+
+	// Block until a signal is received.
+	<-ctx.Done()
+	stop() // restore default signal behaviour
+	logger.Log.Info("Shutdown signal received — draining in-flight requests (max 15s)...")
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		logger.Log.Errorf("Graceful shutdown failed: %v", err)
+		os.Exit(1)
+	}
+
+	logger.Log.Info("Server stopped cleanly.")
 }
