@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"time"
 
+	"registro-backend/pkg/crypto"
 	"registro-backend/pkg/jwt"
 	"registro-backend/pkg/logger"
 
@@ -65,6 +66,9 @@ func (s *Service) Register(ctx context.Context, req *RegisterRequest) (*User, er
 		return nil, err
 	}
 
+	// Seed password history so ResetPassword can detect immediate re-use.
+	_ = s.repo.AddPasswordHistory(ctx, user.ID, string(passwordHash))
+
 	return user, nil
 }
 
@@ -117,12 +121,16 @@ func (s *Service) Login(ctx context.Context, req *LoginRequest, ipAddress, userA
 		}
 	}
 
-	// Check MFA
+	// Check MFA — decrypt stored secret before verifying the TOTP code.
 	if user.MFAEnabled {
 		if req.MFAToken == "" {
 			return nil, ErrMFARequired
 		}
-		secret, err := s.repo.GetMFASecret(ctx, user.ID)
+		encryptedSecret, err := s.repo.GetMFASecret(ctx, user.ID)
+		if err != nil {
+			return nil, err
+		}
+		secret, err := crypto.DecryptString(encryptedSecret)
 		if err != nil {
 			return nil, err
 		}
@@ -185,7 +193,9 @@ func (s *Service) Login(ctx context.Context, req *LoginRequest, ipAddress, userA
 	}, nil
 }
 
-// RefreshToken generates new access token from refresh token
+// RefreshToken generates new access token from refresh token.
+// It also verifies that the user account is still active before issuing
+// a new token — prevents disabled accounts from silently regaining access.
 func (s *Service) RefreshToken(ctx context.Context, refreshToken string) (*TokenPair, error) {
 	// Get refresh token from DB
 	rt, err := s.repo.GetRefreshToken(ctx, refreshToken)
@@ -207,6 +217,14 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken string) (*Token
 	user, err := s.repo.GetUserByID(ctx, rt.UserID)
 	if err != nil {
 		return nil, err
+	}
+
+	// Verify account is still active before issuing a new access token.
+	// A disabled account must not be able to obtain new tokens via refresh.
+	if !user.IsActive {
+		// Revoke the refresh token so it cannot be retried.
+		_ = s.repo.RevokeRefreshToken(ctx, rt.ID)
+		return nil, ErrUserInactive
 	}
 
 	// Generate new access token
@@ -275,7 +293,9 @@ func (s *Service) GetUserByID(ctx context.Context, userID string) (*User, error)
 	return s.repo.GetUserByID(ctx, userID)
 }
 
-// SetupMFA initiates MFA setup for a user
+// SetupMFA initiates MFA setup for a user.
+// The TOTP secret is encrypted with AES-256-GCM before being stored so that
+// a database compromise does not expose raw secrets.
 func (s *Service) SetupMFA(ctx context.Context, userID string) (*MFASetupResponse, error) {
 	user, err := s.repo.GetUserByID(ctx, userID)
 	if err != nil {
@@ -286,41 +306,60 @@ func (s *Service) SetupMFA(ctx context.Context, userID string) (*MFASetupRespons
 		return nil, ErrMFAAlreadyEnabled
 	}
 
-	// Generate secret
+	// Generate plaintext secret
 	secret, err := s.mfaService.GenerateSecret()
 	if err != nil {
 		return nil, err
 	}
 
-	// Generate QR code URL
+	// Generate QR code URL using the plaintext secret
 	qrURL := s.mfaService.GenerateQRCodeURL(user.Email, secret)
 
-	// Generate recovery codes
-	recoveryCodes, err := s.mfaService.GenerateRecoveryCodes(10)
+	// Generate recovery codes (plaintext — shown once to the user)
+	plainRecoveryCodes, err := s.mfaService.GenerateRecoveryCodes(10)
 	if err != nil {
 		return nil, err
 	}
 
-	// Store recovery codes
-	if err := s.repo.CreateRecoveryCodes(ctx, userID, recoveryCodes); err != nil {
+	// Hash each recovery code before persisting.
+	// bcrypt is used so that a DB compromise does not leak usable codes.
+	hashedCodes := make([]string, len(plainRecoveryCodes))
+	for i, code := range plainRecoveryCodes {
+		h, err := bcrypt.GenerateFromPassword([]byte(code), s.bcryptCost)
+		if err != nil {
+			return nil, err
+		}
+		hashedCodes[i] = string(h)
+	}
+	if err := s.repo.CreateRecoveryCodes(ctx, userID, hashedCodes); err != nil {
 		return nil, err
 	}
 
-	// Temporarily store secret (will be confirmed on verification)
-	if err := s.repo.SaveTempMFASecret(ctx, userID, secret); err != nil {
+	// Encrypt the TOTP secret before storing it.
+	encryptedSecret, err := crypto.EncryptString(secret)
+	if err != nil {
+		return nil, err
+	}
+	if err := s.repo.SaveTempMFASecret(ctx, userID, encryptedSecret); err != nil {
 		return nil, err
 	}
 
 	return &MFASetupResponse{
-		Secret:        secret,
+		Secret:        secret,           // plaintext shown once to the user for manual entry
 		QRCodeURL:     qrURL,
-		RecoveryCodes: recoveryCodes,
+		RecoveryCodes: plainRecoveryCodes, // shown once; hashed copy already in DB
 	}, nil
 }
 
-// VerifyMFA verifies MFA token and enables it on successful confirmation
+// VerifyMFA verifies MFA token and enables it on successful confirmation.
+// The stored encrypted secret is decrypted before TOTP validation.
 func (s *Service) VerifyMFA(ctx context.Context, userID, token string) error {
-	secret, err := s.repo.GetMFASecret(ctx, userID)
+	encryptedSecret, err := s.repo.GetMFASecret(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	secret, err := crypto.DecryptString(encryptedSecret)
 	if err != nil {
 		return err
 	}
@@ -333,11 +372,24 @@ func (s *Service) VerifyMFA(ctx context.Context, userID, token string) error {
 	return s.repo.ConfirmMFA(ctx, userID)
 }
 
-// RequestPasswordReset creates a password reset token
+// RequestPasswordReset creates a password reset token.
+// To prevent email flooding attacks, at most 3 reset requests are allowed
+// per email address in a 15-minute window.
 func (s *Service) RequestPasswordReset(ctx context.Context, email string) error {
 	user, err := s.repo.GetUserByEmail(ctx, email)
 	if err != nil {
-		// Don't reveal if email exists
+		// Don't reveal whether the email exists — always return success.
+		return nil
+	}
+
+	// Rate limit: max 3 password reset requests per email in 15 minutes.
+	since15m := time.Now().Add(-15 * time.Minute)
+	recentResets, err := s.repo.GetRecentPasswordResets(ctx, user.ID, since15m)
+	if err != nil {
+		return err
+	}
+	if recentResets >= 3 {
+		// Silently drop the request — do not reveal the throttle to the caller.
 		return nil
 	}
 
@@ -358,8 +410,8 @@ func (s *Service) RequestPasswordReset(ctx context.Context, email string) error 
 		return err
 	}
 
-	// Log the reset request
-	logger.Log.Infof("PASSWORD RESET REQUEST for %s", email)
+	// Log the reset request (no sensitive data in log)
+	logger.Log.Infof("PASSWORD RESET REQUEST for user %s", user.ID)
 
 	return nil
 }

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // Repository handles auth-related database operations
@@ -25,9 +26,13 @@ type Repository interface {
 	ConfirmMFA(ctx context.Context, userID string) error
 
 	// Recovery codes
-	CreateRecoveryCodes(ctx context.Context, userID string, codes []string) error
+	// NOTE: codes passed to CreateRecoveryCodes must already be bcrypt-hashed.
+	CreateRecoveryCodes(ctx context.Context, userID string, hashedCodes []string) error
 	GetRecoveryCodes(ctx context.Context, userID string) ([]*MFARecoveryCode, error)
-	UseRecoveryCode(ctx context.Context, userID, code string) error
+	// UseRecoveryCode finds a recovery code for userID that matches plainCode via
+	// constant-time bcrypt comparison and marks it as used. Returns ErrInvalidMFAToken
+	// if no matching unused code is found.
+	UseRecoveryCode(ctx context.Context, userID, plainCode string) error
 
 	// Refresh tokens
 	CreateRefreshToken(ctx context.Context, token *RefreshToken) error
@@ -40,6 +45,9 @@ type Repository interface {
 	GetPasswordResetToken(ctx context.Context, token string) (*PasswordResetToken, error)
 	UsePasswordResetToken(ctx context.Context, tokenID string) error
 	UpdatePassword(ctx context.Context, userID, passwordHash string) error
+	// GetRecentPasswordResets counts how many reset tokens have been created for
+	// userID since the given time. Used to rate-limit reset emails.
+	GetRecentPasswordResets(ctx context.Context, userID string, since time.Time) (int, error)
 
 	// Password history
 	GetPasswordHistory(ctx context.Context, userID string) ([]string, error)
@@ -183,7 +191,10 @@ func (r *repository) ConfirmMFA(ctx context.Context, userID string) error {
 	return err
 }
 
-func (r *repository) CreateRecoveryCodes(ctx context.Context, userID string, codes []string) error {
+// CreateRecoveryCodes stores pre-hashed recovery codes.
+// Callers (service layer) are responsible for hashing codes with bcrypt before
+// passing them here — raw codes must never be persisted.
+func (r *repository) CreateRecoveryCodes(ctx context.Context, userID string, hashedCodes []string) error {
 	query := `INSERT INTO mfa_recovery_codes (id, user_id, code, used, created_at) VALUES ($1, $2, $3, false, $4)`
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -191,7 +202,7 @@ func (r *repository) CreateRecoveryCodes(ctx context.Context, userID string, cod
 	}
 	defer func() { _ = tx.Rollback() }()
 
-	for _, code := range codes {
+	for _, code := range hashedCodes {
 		_, err := tx.ExecContext(ctx, query, uuid.New().String(), userID, code, time.Now())
 		if err != nil {
 			return err
@@ -220,17 +231,29 @@ func (r *repository) GetRecoveryCodes(ctx context.Context, userID string) ([]*MF
 	return codes, rows.Err()
 }
 
-func (r *repository) UseRecoveryCode(ctx context.Context, userID, code string) error {
-	query := `UPDATE mfa_recovery_codes SET used = true, used_at = $1 WHERE user_id = $2 AND code = $3 AND used = false`
-	result, err := r.db.ExecContext(ctx, query, time.Now(), userID, code)
+// UseRecoveryCode compares plainCode against every unused bcrypt-hashed code
+// for the user using constant-time comparison, then marks the matching code
+// as used. This prevents timing-based enumeration of valid codes.
+func (r *repository) UseRecoveryCode(ctx context.Context, userID, plainCode string) error {
+	codes, err := r.GetRecoveryCodes(ctx, userID)
 	if err != nil {
 		return err
 	}
-	affected, _ := result.RowsAffected()
-	if affected == 0 {
-		return ErrInvalidMFAToken
+
+	for _, rc := range codes {
+		if rc.Used {
+			continue
+		}
+		// bcrypt.CompareHashAndPassword is constant-time against timing attacks.
+		if bcrypt.CompareHashAndPassword([]byte(rc.Code), []byte(plainCode)) == nil {
+			// Found the matching code — mark it as used.
+			query := `UPDATE mfa_recovery_codes SET used = true, used_at = $1 WHERE id = $2`
+			_, err := r.db.ExecContext(ctx, query, time.Now(), rc.ID)
+			return err
+		}
 	}
-	return nil
+
+	return ErrInvalidMFAToken
 }
 
 func (r *repository) CreateRefreshToken(ctx context.Context, token *RefreshToken) error {
@@ -319,6 +342,19 @@ func (r *repository) UpdatePassword(ctx context.Context, userID, passwordHash st
 	query := `UPDATE users SET password_hash = $1, updated_at = $2, password_changed_at = $2 WHERE id = $3`
 	_, err := r.db.ExecContext(ctx, query, passwordHash, time.Now(), userID)
 	return err
+}
+
+// GetRecentPasswordResets counts password_reset_tokens created for userID after `since`.
+// Used to rate-limit reset email requests (max 3 in 15 minutes).
+func (r *repository) GetRecentPasswordResets(ctx context.Context, userID string, since time.Time) (int, error) {
+	query := `
+		SELECT COUNT(*)
+		FROM password_reset_tokens
+		WHERE user_id = $1 AND created_at > $2
+	`
+	var count int
+	err := r.db.QueryRowContext(ctx, query, userID, since).Scan(&count)
+	return count, err
 }
 
 func (r *repository) RecordLoginAttempt(ctx context.Context, attempt *LoginAttempt) error {

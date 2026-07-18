@@ -5,6 +5,14 @@ import (
 	"unicode"
 )
 
+// Field length limits prevent oversized payloads from reaching the database
+// or consuming excessive memory during hashing.
+const (
+	maxEmailLength     = 254 // RFC 5321 maximum
+	maxNameLength      = 100
+	maxPasswordLength  = 128 // bcrypt silently truncates beyond 72 bytes; 128 is a safe practical limit
+)
+
 // PasswordValidator validates password strength
 type PasswordValidator struct {
 	MinLength      int
@@ -29,6 +37,9 @@ func NewPasswordValidator() *PasswordValidator {
 func (v *PasswordValidator) Validate(password string) error {
 	if len(password) < v.MinLength {
 		return ErrPasswordTooShort
+	}
+	if len(password) > maxPasswordLength {
+		return ErrPasswordTooLong
 	}
 
 	var (
@@ -79,8 +90,11 @@ func NewEmailValidator() *EmailValidator {
 	}
 }
 
-// Validate checks if email is valid
+// Validate checks if email is valid and within allowed length.
 func (v *EmailValidator) Validate(email string) error {
+	if len(email) > maxEmailLength {
+		return ErrInvalidEmail
+	}
 	if !v.emailRegex.MatchString(email) {
 		return ErrInvalidEmail
 	}
@@ -111,6 +125,9 @@ func ValidateRegisterRequest(req *RegisterRequest) error {
 
 	if req.FirstName == "" || req.LastName == "" {
 		return ErrMissingRequiredFields
+	}
+	if len(req.FirstName) > maxNameLength || len(req.LastName) > maxNameLength {
+		return ErrFieldTooLong
 	}
 
 	if !publicRegistrationRoles[req.Role] {

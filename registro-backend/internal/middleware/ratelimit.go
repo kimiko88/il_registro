@@ -16,6 +16,14 @@ type ipEntry struct {
 }
 
 // IPRateLimiter tracks per-IP rate limiters with automatic cleanup to prevent memory leaks.
+//
+// ⚠️  MULTI-INSTANCE WARNING: This implementation is in-memory and is NOT shared
+// across multiple server replicas. If the service runs with more than one instance
+// (e.g. Docker Swarm, Kubernetes, Render with multiple workers) an attacker can
+// round-robin requests across replicas and multiply the effective rate limit by N.
+// To fix this for multi-instance deployments, replace this struct with a Redis-backed
+// implementation using the go-redis/redis_rate package:
+//   https://github.com/go-redis/redis_rate
 type IPRateLimiter struct {
 	ips map[string]*ipEntry
 	mu  sync.RWMutex
@@ -83,7 +91,8 @@ func (i *IPRateLimiter) GetLimiter(ip string) *rate.Limiter {
 }
 
 func RateLimitMiddleware() gin.HandlerFunc {
-	// 5 requests per second, burst of 10
+	// 5 requests per second, burst of 10.
+	// See IPRateLimiter doc comment for multi-instance limitations.
 	limiter := NewIPRateLimiter(5, 10)
 
 	return func(c *gin.Context) {
