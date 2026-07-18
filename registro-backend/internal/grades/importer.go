@@ -12,6 +12,7 @@ import (
 type ImportRequest struct {
 	StudentID     string
 	SubjectID     string
+	SchoolID      string
 	GradeValue    float64
 	GradeType     GradeType
 	Date          time.Time
@@ -77,7 +78,14 @@ func ParseCSVGrades(r io.Reader, semester int) ([]ImportRequest, error) {
 }
 
 // ParseXLSXGrades parses an XLSX file into ImportRequest slice.
-func ParseXLSXGrades(r io.Reader) ([]ImportRequest, error) {
+// The semester parameter is applied to every row so the caller controls
+// which academic period the imported grades belong to.
+// fix: semester era precedentemente hardcodato a 1, ignorando il valore reale.
+func ParseXLSXGrades(r io.Reader, semester int) ([]ImportRequest, error) {
+	if semester != 1 && semester != 2 {
+		semester = 1 // safe default
+	}
+
 	f, err := excelize.OpenReader(r)
 	if err != nil {
 		return nil, err
@@ -108,20 +116,35 @@ func ParseXLSXGrades(r io.Reader) ([]ImportRequest, error) {
 		val, _ := strconv.ParseFloat(row[2], 64)
 		date, _ := time.Parse("2006-01-02", row[3])
 
+		cat := GradeCategorySummative
+		if len(row) > 4 {
+			cat = GradeCategory(row[4])
+		}
+
+		desc := ""
+		if len(row) > 5 {
+			desc = row[5]
+		}
+
 		requests = append(requests, ImportRequest{
-			StudentID:  row[0],
-			SubjectID:  row[1],
-			GradeValue: val,
-			GradeType:  GradeTypeNumeric,
-			Date:       date,
-			Semester:   1,
-			Weight:     1.0,
+			StudentID:     row[0],
+			SubjectID:     row[1],
+			GradeValue:    val,
+			GradeType:     GradeTypeNumeric,
+			Date:          date,
+			Semester:      semester,
+			GradeCategory: cat,
+			Description:   desc,
+			Weight:        1.0,
 		})
 	}
 	return requests, nil
 }
 
 // ProcessBulkImport inserts the parsed ImportRequests via the repository.
+// teacherID is used as both TeacherID and CreatedBy on each Grade.
+// fix: SchoolID e CreatedBy erano assenti causando potenziali constraint
+// violation su colonne NOT NULL nel database.
 func ProcessBulkImport(repo Repository, reqs []ImportRequest, teacherID string) (ImportResult, error) {
 	res := ImportResult{}
 
@@ -129,11 +152,13 @@ func ProcessBulkImport(repo Repository, reqs []ImportRequest, teacherID string) 
 	for _, req := range reqs {
 		grades = append(grades, &Grade{
 			StudentID:     req.StudentID,
+			SchoolID:      req.SchoolID,
 			SubjectID:     req.SubjectID,
 			GradeValue:    req.GradeValue,
 			GradeType:     req.GradeType,
 			Date:          req.Date,
 			TeacherID:     teacherID,
+			CreatedBy:     teacherID,
 			Semester:      Semester(req.Semester),
 			GradeCategory: req.GradeCategory,
 			Weight:        req.Weight,

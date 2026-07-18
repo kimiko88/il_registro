@@ -94,7 +94,12 @@ func (m *RegressionMockRepo) FindUpcomingTestsByClass(classID string) ([]ClassTe
 	return nil, nil
 }
 func (m *RegressionMockRepo) FindGradesByTestID(testID string) ([]Grade, error) { return nil, nil }
-func (m *RegressionMockRepo) FindTestByID(id string) (*ClassTest, error)         { return nil, nil }
+func (m *RegressionMockRepo) FindTestByID(id string) (*ClassTest, error)        { return nil, nil }
+
+// fix: FindEnrolledSubjects era mancante nel mock causando errore di compilazione
+func (m *RegressionMockRepo) FindEnrolledSubjects(studentID string, semester int) ([]string, error) {
+	return nil, nil
+}
 
 func TestService_FilterLogicRegex(t *testing.T) {
 	// Setup specific data
