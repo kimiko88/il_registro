@@ -31,13 +31,10 @@ func NewService(repo Repository, tokenManager *jwt.TokenManager, mfaService *MFA
 	}
 }
 
-// Register creates a new user account
+// Register creates a new user account.
+// Input validation and RBAC checks are performed by the handler layer
+// (ValidateRegisterRequest in validator.go) before this method is called.
 func (s *Service) Register(ctx context.Context, req *RegisterRequest) (*User, error) {
-	// Validate input
-	if err := ValidateRegisterRequest(req); err != nil {
-		return nil, err
-	}
-
 	// Check if email already exists
 	_, err := s.repo.GetUserByEmail(ctx, req.Email)
 	if err == nil {
@@ -345,7 +342,7 @@ func (s *Service) SetupMFA(ctx context.Context, userID string) (*MFASetupRespons
 	}
 
 	return &MFASetupResponse{
-		Secret:        secret,           // plaintext shown once to the user for manual entry
+		Secret:        secret,             // plaintext shown once to the user for manual entry
 		QRCodeURL:     qrURL,
 		RecoveryCodes: plainRecoveryCodes, // shown once; hashed copy already in DB
 	}, nil
