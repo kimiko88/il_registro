@@ -4,6 +4,31 @@ import { createTestingPinia } from '@pinia/testing'
 import { Quasar } from 'quasar'
 import ParentIndex from '@/pages/parent/Index.vue'
 import { useParentStore } from '@/stores/parent'
+import { gradeService } from '@/services/gradeService'
+import { attendanceService } from '@/services/attendanceService'
+
+// Mock services
+vi.mock('@/services/gradeService', () => ({
+    gradeService: {
+        getChildGrades: vi.fn().mockResolvedValue({ data: { semesters: [] } })
+    }
+}))
+
+vi.mock('@/services/attendanceService', () => ({
+    attendanceService: {
+        getChildAttendance: vi.fn().mockResolvedValue({ data: [] })
+    }
+}))
+
+// Mock axios
+vi.mock('@/boot/axios', () => ({
+    api: {
+        get: vi.fn().mockResolvedValue({ data: [] }),
+        post: vi.fn().mockResolvedValue({ data: {} }),
+        put: vi.fn().mockResolvedValue({ data: {} }),
+        delete: vi.fn().mockResolvedValue({ data: {} })
+    }
+}))
 
 describe('Parent/Index.vue', () => {
     let wrapper
@@ -28,7 +53,7 @@ describe('Parent/Index.vue', () => {
                                 selectedChildId: null
                             }
                         },
-                        stubActions: false
+                        stubActions: true
                     })
                 ],
                 // Stub Quasar components that might be complex
@@ -102,7 +127,7 @@ describe('Parent/Index.vue', () => {
                             }
                         },
                         // We need the real store logic usually for getters
-                        stubActions: false
+                        stubActions: true
                     })
                 ],
                 stubs: {

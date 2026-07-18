@@ -34,13 +34,15 @@ func (m *MockRepo) GetParticipationsByStudent(ctx context.Context, id string) ([
 func (m *MockRepo) GetHours(ctx context.Context, id string) ([]HourLog, error)    { return nil, nil }
 func (m *MockRepo) VerifyHours(ctx context.Context, h, t string) error            { return nil }
 func (m *MockRepo) GetCompanies(ctx context.Context, s string) ([]Company, error) { return nil, nil }
+func (m *MockRepo) DeleteProject(ctx context.Context, id string) error { return nil }
+func (m *MockRepo) GetStats(ctx context.Context, schoolID string) (*PCTOStats, error) { return nil, nil }
 
 func TestService_CreateProject(t *testing.T) {
 	repo := new(MockRepo)
 	svc := NewService(repo)
 
 	req := CreateProjectRequest{Title: "Internship", Type: "External", StartDate: "2025-01-01", EndDate: "2025-02-01"}
-	err := svc.CreateProject(context.Background(), "t1", req)
+	err := svc.CreateProject(context.Background(), "school1", "secretary", "t1", req)
 	assert.NoError(t, err)
 }
 

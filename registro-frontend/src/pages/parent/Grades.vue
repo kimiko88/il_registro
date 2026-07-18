@@ -1,62 +1,142 @@
 <template>
-  <q-page class="q-pa-md bg-slate-50">
+  <q-page class="q-pa-md bg-grey-1">
+    <!-- Header -->
     <div class="row items-center justify-between q-mb-md">
       <div class="text-h5 text-weight-bold text-slate-800">
-        Voti: {{ selectedChild?.firstName || '...' }}
+        Voti: {{ selectedChild ? `${selectedChild.first_name} ${selectedChild.last_name}` : '...' }}
       </div>
       <q-btn flat icon="download" label="Scarica Pagella" color="primary" @click="downloadReport" />
     </div>
 
-    <!-- Filters -->
-    <div class="row q-gutter-sm q-mb-md">
-       <q-select 
-         dense 
-         outlined 
-         v-model="period" 
-         :options="['Primo Quadrimestre', 'Secondo Quadrimestre']" 
-         label="Periodo" 
-         class="bg-white" 
-         style="width: 200px" 
-       />
-    </div>
-
-    <!-- Grades Table -->
-    <q-card class="shadow-sm rounded-lg">
-      <q-table
-        :rows="currentGrades"
-        :columns="columns"
-        row-key="id"
-        flat
-        bordered
-        :pagination="{ rowsPerPage: 10 }"
-      >
-        <template v-slot:body-cell-value="props">
-          <q-td :props="props">
-            <q-badge :color="getGradeColor(props.value)" class="text-subtitle2 q-pa-xs">
-              {{ props.value }}
-            </q-badge>
-          </q-td>
-        </template>
-      </q-table>
-    </q-card>
-    
     <!-- Child Selector Warning -->
-    <div v-if="!selectedChild" class="fixed-bottom q-pa-md bg-warning text-white text-center">
-      Seleziona un figlio dalla Dashboard per vedere i dati corretti.
-    </div>
+    <q-card v-if="!selectedChild" class="text-center q-pa-lg bg-warning text-white q-mb-md">
+      Seleziona un figlio dal menu in alto per visualizzare la situazione voti
+    </q-card>
 
+    <div v-else class="row q-col-gutter-lg">
+        <!-- Sidebar Controls -->
+        <div class="col-12 col-md-4">
+            <q-card class="q-mb-md shadow-1">
+                <q-card-section>
+                    <div class="text-h6 text-outfit text-weight-bold q-mb-md">Filtri</div>
+                    <q-select 
+                      dense 
+                      outlined 
+                      v-model="period" 
+                      :options="['Primo Quadrimestre', 'Secondo Quadrimestre']" 
+                      label="Periodo" 
+                      class="bg-white" 
+                    />
+                </q-card-section>
+            </q-card>
+
+            <q-card class="q-mb-md shadow-1">
+               <q-card-section>
+                   <div class="text-h6 text-outfit text-weight-bold q-mb-md">Andamento Medie</div>
+                   <div v-for="sub in subjectAverages" :key="sub.name" class="q-mb-sm">
+                       <div class="row justify-between text-caption">
+                           <span class="text-weight-medium">{{ sub.name }}</span>
+                           <span :class="{'text-green text-weight-bold': sub.avg>=6, 'text-red text-weight-bold': sub.avg<6 || sub.avg==='-'}">{{ sub.avg }}</span>
+                       </div>
+                       <q-linear-progress :value="sub.avg !== '-' ? sub.avg/10 : 0" :color="sub.avg>=6?'green':'red'" />
+                   </div>
+               </q-card-section>
+            </q-card>
+
+            <!-- Simulator & Projection Card -->
+            <q-card class="shadow-1">
+                <q-card-section>
+                    <div class="text-h6 text-weight-bold text-outfit row items-center q-mb-md">
+                        <q-icon name="calculate" color="primary" class="q-mr-sm" />
+                        Simulatore & Proiezioni
+                    </div>
+
+                    <!-- Sufficiency Warnings -->
+                    <div v-if="subjectsBelowSufficiency.length > 0" class="q-mb-md">
+                        <div class="text-caption text-weight-bold text-red-9 q-mb-sm">PER RAGGIUNGERE LA SUFFICIENZA (6.0):</div>
+                        <q-list dense separator class="bg-red-1 rounded q-pa-xs">
+                            <q-item v-for="item in subjectsBelowSufficiency" :key="item.name">
+                                <q-item-section>
+                                    <div class="text-caption text-weight-bold">{{ item.name }}</div>
+                                    <div class="text-caption text-grey-8">Media attuale: {{ item.avg }}</div>
+                                </q-item-section>
+                                <q-item-section side>
+                                    <q-badge color="negative" class="text-weight-bold q-pa-xs">
+                                        Prossimo voto: {{ item.needed }}
+                                    </q-badge>
+                                </q-item-section>
+                            </q-item>
+                        </q-list>
+                    </div>
+
+                    <!-- Interactive Simulator -->
+                    <q-separator class="q-my-md" />
+                    <div class="text-caption text-weight-bold text-grey-7 q-mb-sm">SIMULA PROSSIMO VOTO:</div>
+                    <q-select
+                        v-model="simSubject"
+                        :options="subjectNames"
+                        label="Seleziona Materia"
+                        dense outlined
+                        class="q-mb-sm"
+                    />
+                    <div class="row q-col-gutter-sm items-center">
+                        <div class="col-6">
+                            <q-input
+                                v-model.number="simGrade"
+                                type="number"
+                                label="Voto ipotetico"
+                                dense outlined
+                                min="1" max="10" step="0.25"
+                            />
+                        </div>
+                        <div class="col-6 text-center">
+                            <div class="text-caption text-grey">Nuova Media</div>
+                            <div class="text-h6 text-weight-bold" :class="simulatedAverage >= 6 ? 'text-green' : 'text-red'">
+                                {{ simulatedAverage }}
+                            </div>
+                        </div>
+                    </div>
+                </q-card-section>
+            </q-card>
+        </div>
+
+        <!-- Main Grade Table -->
+        <div class="col-12 col-md-8">
+            <q-card class="shadow-sm rounded-lg">
+              <q-table
+                :rows="currentGrades"
+                :columns="columns"
+                row-key="id"
+                flat
+                bordered
+                :pagination="{ rowsPerPage: 10 }"
+              >
+                <template v-slot:body-cell-value="props">
+                  <q-td :props="props">
+                    <q-badge :color="getGradeColor(props.value)" class="text-subtitle2 q-pa-xs">
+                      {{ props.value }}
+                    </q-badge>
+                  </q-td>
+                </template>
+              </q-table>
+            </q-card>
+        </div>
+    </div>
   </q-page>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useParentStore } from '@/stores/parent'
+import { useAuthStore } from '@/stores/auth'
 import { storeToRefs } from 'pinia'
 import { useQuasar } from 'quasar'
 import { gradeService } from 'src/services/gradeService'
+import adminService from 'src/services/adminService'
 
 const $q = useQuasar()
 const parentStore = useParentStore()
+const authStore = useAuthStore()
 const { selectedChild } = storeToRefs(parentStore)
 
 const period = ref('Primo Quadrimestre')
@@ -70,6 +150,7 @@ const columns = [
 ]
 
 const gradesData = ref(null)
+const subjectsMap = ref({})
 
 // Compute grades based on selected period
 const currentGrades = computed(() => {
@@ -82,14 +163,15 @@ const currentGrades = computed(() => {
     return semData.grades.map(g => ({
         id: g.id,
         date: g.date.split('T')[0],
-        subject: g.subject_id, // TODO: Map to Name
+        subject: subjectsMap.value[g.subject_id] || g.subject_id,
         type: g.grade_type,
-        value: g.grade_value,
+        value: g.grade_value === -1 ? 'A' : g.grade_value,
         notes: g.description
     }))
 })
 
 onMounted(() => {
+    fetchSubjects()
     if (selectedChild.value) {
         fetchGrades()
     }
@@ -99,17 +181,95 @@ watch(selectedChild, (val) => {
     if (val) fetchGrades()
 })
 
+const fetchSubjects = async () => {
+    try {
+        const schoolId = authStore.user?.school_id ||
+                         authStore.user?.schoolId ||
+                         selectedChild.value?.school_id
+        if (!schoolId) return
+        const { data } = await adminService.getSubjects(schoolId)
+        if (data) {
+            const map = {}
+            data.forEach(s => map[s.id] = s.name)
+            subjectsMap.value = map
+        }
+    } catch (e) {
+        console.error("Error loading subjects", e)
+    }
+}
+
 const fetchGrades = async () => {
     try {
         const res = await gradeService.getChildGrades(selectedChild.value.id)
         gradesData.value = res.data
     } catch (e) {
         console.error(e)
-        // Optionally notify error
     }
 }
 
+const subjectAverages = computed(() => {
+    const sums = {}
+    const counts = {}
+    currentGrades.value.forEach(g => {
+        if (g.value === 'A') return
+        if (!sums[g.subject]) { sums[g.subject] = 0; counts[g.subject] = 0; }
+        sums[g.subject] += Number(g.value)
+        counts[g.subject]++
+    })
+    return Object.keys(sums).map(sub => ({
+        name: sub,
+        avg: counts[sub] > 0 ? (sums[sub] / counts[sub]).toFixed(1) : '-'
+    }))
+})
+
+const simSubject = ref(null)
+const simGrade = ref(6)
+
+const subjectNames = computed(() => {
+    return subjectAverages.value.map(s => s.name)
+})
+
+const simulatedAverage = computed(() => {
+    if (!simSubject.value || !simGrade.value) return '-'
+    const targetSub = simSubject.value
+    let sum = 0
+    let count = 0
+    
+    currentGrades.value.forEach(g => {
+        if (g.subject === targetSub && g.value !== 'A') {
+            sum += Number(g.value)
+            count++
+        }
+    })
+    
+    if (count === 0) return Number(simGrade.value).toFixed(2)
+    sum += Number(simGrade.value)
+    count++
+    
+    return (sum / count).toFixed(2)
+})
+
+const subjectsBelowSufficiency = computed(() => {
+    return subjectAverages.value.filter(s => s.avg !== '-' && Number(s.avg) < 6.0).map(s => {
+        let sum = 0
+        let count = 0
+        currentGrades.value.forEach(g => {
+            if (g.subject === s.name && g.value !== 'A') {
+                sum += Number(g.value)
+                count++
+            }
+        })
+        const needed = 6 * (count + 1) - sum
+        return {
+            name: s.name,
+            avg: s.avg,
+            needed: needed > 10 ? 'N/A (>10)' : needed.toFixed(2)
+        }
+    })
+})
+
 function getGradeColor(val) {
+  if (val === 'A' || val === -1) return 'grey';
   if (val < 6) return 'negative';
   if (val >= 8) return 'positive';
   return 'orange';

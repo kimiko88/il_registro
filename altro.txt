@@ -1,2 +1,2 @@
-Add the required secrets (e.g., NETLIFY_AUTH_TOKEN, DOKKU_HOST, SLACK_WEBHOOK) to your GitHub Repository secrets.
+Add the required secrets (e.g., NETLIFY_AUTH_TOKEN, VITE_API_URL, SLACK_WEBHOOK) to your GitHub Repository secrets.
 Enable Branch Protection rules as documented.

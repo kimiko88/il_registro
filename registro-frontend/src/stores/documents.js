@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import documentService from '../services/documentService';
+import api from '@/services/api';
 
 export const useDocumentsStore = defineStore('documents', {
     state: () => ({
@@ -49,39 +50,60 @@ export const useDocumentsStore = defineStore('documents', {
         async fetchMyDocuments() {
             this.loading = true;
             try {
-                // Mock API
-                await new Promise(resolve => setTimeout(resolve, 500));
-                this.inbox = [ // Reusing inbox state for list, or separate? Let's use 'inbox' as generic list for now or add 'myDocuments' state
-                    { id: 'doc1', title: 'PDP - Mario Rossi', status: 'Draft', type: 'PDP', date: '2025-01-20' },
-                    { id: 'doc2', title: 'PFI - Sofia Bianchi', status: 'Approved', type: 'PFI', date: '2025-01-10' }
-                ];
+                // Using the inbox endpoint filtered for my documents
+                const response = await documentService.getInbox({ filter: 'mine' });
+                this.inbox = response.data.items || [];
+            } catch (err) {
+                this.error = err.message;
             } finally {
                 this.loading = false;
             }
         },
         async fetchTemplates() {
-            // Mock Templates
-            return [
-                { id: 't1', name: 'PDP Standard', type: 'PDP', content: '<h1>PDP Template</h1>...' },
-                { id: 't2', name: 'PFI 2024', type: 'PFI', content: '<h1>PFI Template</h1>...' }
-            ];
+            try {
+                const response = await api.get('/documents/templates');
+                return response.data || [];
+            } catch (err) {
+                console.error("Failed to fetch templates:", err);
+                return [];
+            }
         },
         async createDocument(docData) {
-            // Mock Create
-            await new Promise(resolve => setTimeout(resolve, 500));
-            this.inbox.unshift({ ...docData, id: 'new', status: 'Draft', date: new Date().toISOString() });
+            this.loading = true;
+            try {
+                const response = await api.post('/documents', docData);
+                this.inbox.unshift(response.data);
+                return response.data;
+            } catch (err) {
+                console.error("Failed to create document:", err);
+                throw err;
+            } finally {
+                this.loading = false;
+            }
         },
 
         // Student Actions
         async fetchMyFiles() {
             this.loading = true;
             try {
-                // Mock Data
-                await new Promise(resolve => setTimeout(resolve, 500));
-                this.inbox = [ // Sharing inbox or separate list
-                    { id: 1, title: 'Report Card Semester 1', date: '2025-01-15', type: 'Report', extension: 'pdf' },
-                    { id: 2, title: 'PDP Signed', date: '2024-11-20', type: 'PDP', extension: 'pdf' }
-                ];
+                const response = await api.get('/documents/my-files');
+                this.inbox = response.data || [];
+            } catch (err) {
+                this.error = err.message;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async signDocument(docId, pin) {
+            this.loading = true;
+            try {
+                // Real API Call
+                const res = await api.post('/signatures/', { document_id: docId, pin: pin });
+                return res.data;
+            } catch (err) {
+                console.error("Signing failed", err);
+                throw err;
             } finally {
                 this.loading = false;
             }

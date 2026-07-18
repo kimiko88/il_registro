@@ -33,7 +33,7 @@ func (h *Handler) CreateEvent(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	userID := c.GetString("userID")
+	userID := c.GetString("user_id")
 	if err := h.service.CreateEvent(c.Request.Context(), userID, req); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -58,7 +58,7 @@ func (h *Handler) RegisterStudent(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	userID := c.GetString("userID")
+	userID := c.GetString("user_id")
 	if err := h.service.RegisterStudent(c.Request.Context(), userID, req.EventID); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -67,7 +67,7 @@ func (h *Handler) RegisterStudent(c *gin.Context) {
 }
 
 func (h *Handler) GetMyEvents(c *gin.Context) {
-	userID := c.GetString("userID")
+	userID := c.GetString("user_id")
 	res, err := h.service.GetMyEvents(c.Request.Context(), userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

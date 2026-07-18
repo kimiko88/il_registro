@@ -5,12 +5,15 @@ import "time"
 // Requests
 
 type CreateSlotRequest struct {
-	Date        string   `json:"date" binding:"required"`       // YYYY-MM-DD
+	Dates       []string `json:"dates" binding:"required"`      // YYYY-MM-DD
 	StartTime   string   `json:"start_time" binding:"required"` // HH:MM
 	EndTime     string   `json:"end_time" binding:"required"`
+	Duration    int      `json:"duration"`     // Minutes per slot, if > 0 split range
 	MaxBookings int      `json:"max_bookings"` // Default 1
-	Type        SlotType `json:"type" binding:"required"`
-	Location    string   `json:"location"`
+	Type           SlotType `json:"type" binding:"required"`
+	Location       string   `json:"location"`
+	IsRecurring    bool     `json:"is_recurring"`
+	RecurringUntil string   `json:"recurring_until"` // YYYY-MM-DD
 }
 
 type UpdateSlotRequest struct {
@@ -42,14 +45,17 @@ type SlotResponse struct {
 	Type      SlotType `json:"type"`
 	Available bool     `json:"available"`
 	TeacherID string   `json:"teacher_id"`
+	Location  string   `json:"location"`
 }
 
 type BookingResponse struct {
-	ID       string        `json:"id"`
-	SlotInfo SlotResponse  `json:"slot_info"`
-	Status   BookingStatus `json:"status"`
-	BookedAt time.Time     `json:"booked_at"`
-	Notes    string        `json:"notes"`
+	ID          string        `json:"id"`
+	SlotInfo    SlotResponse  `json:"slot_info"`
+	Status      BookingStatus `json:"status"`
+	BookedAt    time.Time     `json:"booked_at"`
+	Notes       string        `json:"notes"`
+	ParentName  string        `json:"parent_name"`
+	StudentName string        `json:"student_name"`
 }
 
 type AnalyticsResponse struct {

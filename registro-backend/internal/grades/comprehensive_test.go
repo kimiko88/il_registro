@@ -25,7 +25,8 @@ func TestValidateGradeValue(t *testing.T) {
 		{"Valid numeric 0", 0, string(GradeTypeNumeric), false, ""},
 		{"Valid numeric 10", 10, string(GradeTypeNumeric), false, ""},
 		{"Invalid numeric > 10", 10.1, string(GradeTypeNumeric), true, "Voto deve essere tra 0 e 10"},
-		{"Invalid numeric < 0", -1, string(GradeTypeNumeric), true, "Voto deve essere tra 0 e 10"},
+		{"Invalid numeric < 0 (except -1)", -2, string(GradeTypeNumeric), true, "Voto deve essere tra 0 e 10"},
+		{"Valid numeric -1 (absence)", -1, string(GradeTypeNumeric), false, ""},
 		{"Invalid judgment value", -1, string(GradeTypeJudgment), true, "Valore giudizio fuori range"},
 		{"Valid judgment value", 6, string(GradeTypeJudgment), false, ""},
 		{"Valid credit", 5, string(GradeTypeCredit), false, ""},
@@ -160,7 +161,8 @@ S2,SUB1,6.0,2025-10-15,formativo,Quiz
 S3,SUB1,invalid,,`
 
 	r := strings.NewReader(csvContent)
-	reqs, err := ParseCSVGrades(r)
+	// Pass semester=1 to match the updated ParseCSVGrades(r io.Reader, semester int) signature.
+	reqs, err := ParseCSVGrades(r, 1)
 
 	assert.NoError(t, err)
 	assert.Len(t, reqs, 3) // Now returns 3 items (invalid one is parsed with default 0 status)

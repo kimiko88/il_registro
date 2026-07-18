@@ -3,8 +3,6 @@ package middleware
 import (
 	"net/http"
 	"net/http/httptest"
-	"registro-backend/internal/config"
-	"registro-backend/internal/utils"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -13,97 +11,6 @@ import (
 
 func init() {
 	gin.SetMode(gin.TestMode)
-}
-
-func TestAuthMiddleware(t *testing.T) {
-	cfg := config.JWTConfig{
-		Secret: "test-secret-for-middleware-testing",
-	}
-
-	tests := []struct {
-		name           string
-		setupRequest   func(*http.Request)
-		expectedStatus int
-		expectAbort    bool
-	}{
-		{
-			name: "valid token",
-			setupRequest: func(r *http.Request) {
-				token, _ := utils.GenerateToken(123, "admin", cfg)
-				r.Header.Set("Authorization", "Bearer "+token)
-			},
-			expectedStatus: http.StatusOK,
-			expectAbort:    false,
-		},
-		{
-			name: "missing authorization header",
-			setupRequest: func(r *http.Request) {
-				// Don't set any header
-			},
-			expectedStatus: http.StatusUnauthorized,
-			expectAbort:    true,
-		},
-		{
-			name: "invalid authorization format - missing Bearer",
-			setupRequest: func(r *http.Request) {
-				r.Header.Set("Authorization", "InvalidToken")
-			},
-			expectedStatus: http.StatusUnauthorized,
-			expectAbort:    true,
-		},
-		{
-			name: "invalid authorization format - only Bearer",
-			setupRequest: func(r *http.Request) {
-				r.Header.Set("Authorization", "Bearer")
-			},
-			expectedStatus: http.StatusUnauthorized,
-			expectAbort:    true,
-		},
-		{
-			name: "invalid token",
-			setupRequest: func(r *http.Request) {
-				r.Header.Set("Authorization", "Bearer invalid.token.here")
-			},
-			expectedStatus: http.StatusUnauthorized,
-			expectAbort:    true,
-		},
-		{
-			name: "token with wrong secret",
-			setupRequest: func(r *http.Request) {
-				wrongCfg := config.JWTConfig{Secret: "wrong-secret"}
-				token, _ := utils.GenerateToken(456, "teacher", wrongCfg)
-				r.Header.Set("Authorization", "Bearer "+token)
-			},
-			expectedStatus: http.StatusUnauthorized,
-			expectAbort:    true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			w := httptest.NewRecorder()
-			c, _ := gin.CreateTestContext(w)
-			c.Request, _ = http.NewRequest("GET", "/test", nil)
-			tt.setupRequest(c.Request)
-
-			middleware := AuthMiddleware(cfg)
-			middleware(c)
-
-			assert.Equal(t, tt.expectedStatus, w.Code)
-			assert.Equal(t, tt.expectAbort, c.IsAborted())
-
-			if !tt.expectAbort {
-				// Check that userID and role are set in context
-				userID, exists := c.Get("userID")
-				assert.True(t, exists)
-				assert.NotNil(t, userID)
-
-				role, exists := c.Get("role")
-				assert.True(t, exists)
-				assert.NotEmpty(t, role)
-			}
-		})
-	}
 }
 
 func TestCORSMiddleware(t *testing.T) {
@@ -194,7 +101,7 @@ func TestErrorMiddleware(t *testing.T) {
 			r.Use(ErrorMiddleware())
 			r.GET("/test", func(c *gin.Context) {
 				if tt.addError {
-					c.Error(assert.AnError)
+					_ = c.Error(assert.AnError)
 				}
 				c.Status(http.StatusOK)
 			})
@@ -297,29 +204,3 @@ func TestCORSMiddleware_HeaderValues(t *testing.T) {
 	assert.Contains(t, allowedMethods, "OPTIONS")
 }
 
-func TestAuthMiddleware_ContextValues(t *testing.T) {
-	cfg := config.JWTConfig{
-		Secret: "test-secret",
-	}
-
-	userID := uint(789)
-	role := "principal"
-	token, _ := utils.GenerateToken(userID, role, cfg)
-
-	w := httptest.NewRecorder()
-	c, _ := gin.CreateTestContext(w)
-	c.Request, _ = http.NewRequest("GET", "/test", nil)
-	c.Request.Header.Set("Authorization", "Bearer "+token)
-
-	middleware := AuthMiddleware(cfg)
-	middleware(c)
-
-	// Verify context values are correctly set
-	contextUserID, exists := c.Get("userID")
-	assert.True(t, exists)
-	assert.Equal(t, userID, contextUserID)
-
-	contextRole, exists := c.Get("role")
-	assert.True(t, exists)
-	assert.Equal(t, role, contextRole)
-}

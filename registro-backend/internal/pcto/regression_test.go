@@ -16,7 +16,7 @@ func TestRegression_CreateProject_Validation(t *testing.T) {
 			Title: "Test", Type: "Internal",
 			StartDate: "invalid", EndDate: "2025-01-01",
 		}
-		err := svc.CreateProject(context.Background(), "t1", req)
+		err := svc.CreateProject(context.Background(), "school1", "secretary", "t1", req)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "invalid start_date")
 	})
@@ -26,7 +26,7 @@ func TestRegression_CreateProject_Validation(t *testing.T) {
 			Title: "Test", Type: "Internal",
 			StartDate: "2025-02-01", EndDate: "2025-01-01",
 		}
-		err := svc.CreateProject(context.Background(), "t1", req)
+		err := svc.CreateProject(context.Background(), "school1", "secretary", "t1", req)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "end_date cannot be before")
 	})

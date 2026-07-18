@@ -7,6 +7,7 @@ import (
 
 	"registro-backend/internal/users"
 	"registro-backend/pkg/jwt"
+	"registro-backend/pkg/logger"
 
 	"github.com/gin-gonic/gin"
 )
@@ -28,24 +29,26 @@ func NewMiddleware(tokenManager *jwt.TokenManager, userRepo users.Repository) *M
 // Authenticate validates JWT token and sets user context
 func (m *Middleware) Authenticate() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		var token string
 		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
+
+		// 1. Try Header
+		if authHeader != "" {
+			parts := strings.Split(authHeader, " ")
+			if len(parts) == 2 && parts[0] == "Bearer" {
+				token = parts[1]
+			}
+		}
+
+		if token == "" {
 			c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "missing authorization header"})
 			c.Abort()
 			return
 		}
 
-		// Extract token from "Bearer <token>"
-		parts := strings.Split(authHeader, " ")
-		if len(parts) != 2 || parts[0] != "Bearer" {
-			c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "invalid authorization header format"})
-			c.Abort()
-			return
-		}
-
-		token := parts[1]
 		claims, err := m.tokenManager.ValidateToken(token)
 		if err != nil {
+			logger.Log.Debugf("Token Validation Failed: %v", err)
 			c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "invalid or expired token"})
 			c.Abort()
 			return

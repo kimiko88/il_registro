@@ -77,14 +77,20 @@
         @request="onRequest"
         binary-state-sort
       >
-        <template v-slot:body-cell-user="props">
+        <template #header-cell="props">
+          <q-th :props="props" class="text-grey-8 font-bold">
+            {{ props.col.label }}
+          </q-th>
+        </template>
+
+        <template #body-cell-user="props">
           <q-td :props="props">
             <div class="text-weight-medium">{{ props.row.first_name }} {{ props.row.last_name }}</div>
             <div class="text-caption text-grey-7">{{ props.row.email }}</div>
           </q-td>
         </template>
 
-        <template v-slot:body-cell-school="props">
+        <template #body-cell-school="props">
           <q-td :props="props">
              <div v-if="props.row.school_name">
                 <q-icon name="school" size="xs" color="primary" class="q-mr-xs" />
@@ -94,7 +100,7 @@
           </q-td>
         </template>
 
-        <template v-slot:body-cell-status="props">
+        <template #body-cell-status="props">
           <q-td :props="props">
             <q-badge :color="props.row.is_active ? 'positive' : 'negative'">
               {{ props.row.is_active ? 'Attivo' : 'Disattivo' }}
@@ -102,13 +108,13 @@
           </q-td>
         </template>
         
-        <template v-slot:body-cell-last_login="props">
+        <template #body-cell-last_login="props">
           <q-td :props="props">
             {{ formatDate(props.row.last_login_at) }}
           </q-td>
         </template>
 
-        <template v-slot:body-cell-actions="props">
+        <template #body-cell-actions="props">
           <q-td :props="props">
             <q-btn-dropdown flat dense round icon="more_vert">
               <q-list>
@@ -254,7 +260,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { useQuasar, debounce } from 'quasar'
 import adminService from '@/services/adminService'
 
@@ -295,13 +301,13 @@ const adminForm = reactive({
 })
 
 // Columns
-const columns = [
+const columns = computed(() => [
   { name: 'user', label: 'Utente', align: 'left', field: 'email', sortable: true },
   { name: 'school', label: 'Scuola', align: 'left', field: 'school_name', sortable: true },
   { name: 'status', label: 'Stato', align: 'center', field: 'is_active', sortable: true },
   { name: 'last_login', label: 'Ultimo Accesso', align: 'left', field: 'last_login_at', sortable: true },
   { name: 'actions', label: 'Azioni', align: 'center' }
-]
+])
 
 const activityColumns = [
   { name: 'action', label: 'Azione', align: 'left', field: 'action_type' },

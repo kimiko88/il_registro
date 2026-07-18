@@ -53,4 +53,6 @@ type NoteFilter struct {
 	Type      NoteType
 	DateFrom  string
 	DateTo    string
+	ActorID   string
+	ActorRole string
 }

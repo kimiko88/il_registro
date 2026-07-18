@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -17,6 +18,7 @@ type Repository interface {
 	GetSubjects(ctx context.Context, teacherID string) ([]TeacherSubject, error)
 	AssignSubject(ctx context.Context, teacherID, subjectID string) error
 	RemoveSubject(ctx context.Context, teacherID, subjectID string) error
+	GetDashboardStats(ctx context.Context, teacherUserID string) (map[string]interface{}, error)
 }
 
 type PostgresRepository struct {
@@ -94,7 +96,7 @@ func (r *PostgresRepository) Get(ctx context.Context, id string) (*Teacher, erro
 }
 
 func (r *PostgresRepository) GetByUserID(ctx context.Context, userID string) (*Teacher, error) {
-	query := `SELECT id FROM teachers WHERE user_id = $1`
+	query := `SELECT id FROM teachers WHERE user_id = $1::uuid`
 	var id string
 	err := r.db.QueryRowContext(ctx, query, userID).Scan(&id)
 	if err != nil {
@@ -177,6 +179,82 @@ func (r *PostgresRepository) AssignSubject(ctx context.Context, teacherID, subje
 }
 
 func (r *PostgresRepository) RemoveSubject(ctx context.Context, teacherID, subjectID string) error {
-	_, err := r.db.ExecContext(ctx, "DELETE FROM teacher_subjects WHERE teacher_id = $1 AND subject_id = $2", teacherID, subjectID)
+	_, err := r.db.ExecContext(ctx, "DELETE FROM teacher_subjects WHERE teacher_id = $1::uuid AND subject_id = $2::uuid", teacherID, subjectID)
 	return err
+}
+
+func (r *PostgresRepository) GetDashboardStats(ctx context.Context, teacherUserID string) (map[string]interface{}, error) {
+	stats := make(map[string]interface{})
+
+	// 1. Classes Count
+	var classesCount int64
+	classesQuery := `
+		SELECT COUNT(DISTINCT class_id) FROM (
+			SELECT cs.class_id 
+			FROM class_subjects cs
+			JOIN teachers t ON cs.teacher_id = t.id
+			WHERE t.user_id = $1::uuid
+			UNION
+			SELECT id AS class_id
+			FROM classes 
+			WHERE coordinator_id = $1::uuid
+		) AS temp`
+	err := r.db.QueryRowContext(ctx, classesQuery, teacherUserID).Scan(&classesCount)
+	if err != nil {
+		return nil, err
+	}
+	stats["classes_count"] = classesCount
+
+	// 2. Students Count
+	var studentsCount int64
+	studentsQuery := `
+		SELECT COUNT(DISTINCT s.id)
+		FROM students s
+		WHERE s.class_id IN (
+			SELECT cs.class_id 
+			FROM class_subjects cs
+			JOIN teachers t ON cs.teacher_id = t.id
+			WHERE t.user_id = $1::uuid
+			UNION
+			SELECT id 
+			FROM classes 
+			WHERE coordinator_id = $1::uuid
+		)`
+	err = r.db.QueryRowContext(ctx, studentsQuery, teacherUserID).Scan(&studentsCount)
+	if err != nil {
+		return nil, err
+	}
+	stats["students_count"] = studentsCount
+
+	// 3. Lessons Today Count
+	var lessonsTodayCount int64
+	weekday := int(time.Now().Weekday())
+	if weekday == 0 {
+		weekday = 7 // Sunday
+	}
+	lessonsQuery := `
+		SELECT COUNT(*)
+		FROM class_schedules
+		WHERE teacher_id = $1::uuid AND day_of_week = $2`
+	err = r.db.QueryRowContext(ctx, lessonsQuery, teacherUserID, weekday).Scan(&lessonsTodayCount)
+	if err != nil {
+		return nil, err
+	}
+	stats["lessons_today_count"] = lessonsTodayCount
+
+	// 4. Grades Pending Count (Voti da inserire)
+	var gradesPendingCount int64
+	gradesQuery := `
+		SELECT COUNT(*)
+		FROM class_tests ct
+		JOIN students s ON ct.class_id = s.class_id
+		LEFT JOIN grades g ON g.test_id = ct.id AND g.student_id = s.id AND g.deleted_at IS NULL
+		WHERE ct.teacher_id = $1::uuid AND ct.date <= CURRENT_DATE AND g.id IS NULL`
+	err = r.db.QueryRowContext(ctx, gradesQuery, teacherUserID).Scan(&gradesPendingCount)
+	if err != nil {
+		return nil, err
+	}
+	stats["grades_pending_count"] = gradesPendingCount
+
+	return stats, nil
 }

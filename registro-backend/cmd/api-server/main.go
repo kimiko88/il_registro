@@ -12,9 +12,11 @@ import (
 	"registro-backend/internal/communications"
 	"registro-backend/internal/config"
 	"registro-backend/internal/db"
+	"registro-backend/internal/didactic_materials"
 	"registro-backend/internal/documents"
 	"registro-backend/internal/grades"
 	"registro-backend/internal/handler"
+	"registro-backend/internal/lessons"
 	"registro-backend/internal/middleware"
 	"registro-backend/internal/notes"
 	"registro-backend/internal/orientamento"
@@ -22,9 +24,14 @@ import (
 	"registro-backend/internal/postgres"
 	"registro-backend/internal/scheduling"
 	"registro-backend/internal/schools"
+	"registro-backend/internal/scrutiny"
+	"registro-backend/internal/signatures"
 	"registro-backend/internal/subjects"
 	"registro-backend/internal/teachers"
+	"registro-backend/internal/textbooks"
+	"registro-backend/internal/timetables"
 	"registro-backend/internal/users"
+	"registro-backend/internal/ws"
 	"registro-backend/pkg/jwt"
 	"registro-backend/pkg/logger"
 )
@@ -55,6 +62,8 @@ func main() {
 
 	tokenManager := jwt.NewTokenManager(privateKey, publicKey)
 	mfaService := auth.NewMFAService("RegistroElettronico")
+	wsHub := ws.NewHub()
+	go wsHub.Run()
 
 	// 5. Setup Repositories
 	authRepo := auth.NewRepository(database)
@@ -70,6 +79,8 @@ func main() {
 	commsRepo := communications.NewRepository(database)
 	notesRepo := notes.NewRepository(database)
 	adminRepo := postgres.NewAdminRepository(database)
+	timetablesRepo := timetables.NewRepository(database)
+	teachersRepo := teachers.NewRepository(database)
 
 	authMiddleware := auth.NewMiddleware(tokenManager, usersRepo)
 
@@ -77,17 +88,18 @@ func main() {
 	authSvc := auth.NewService(authRepo, tokenManager, mfaService)
 	usersSvc := users.NewService(usersRepo)
 	classesSvc := classes.NewService(classesRepo)
-	gradesSvc := grades.NewService(gradesRepo, usersRepo, database)
+	gradesSvc := grades.NewService(gradesRepo, usersRepo, database, wsHub)
 	gradesAnalytics := grades.NewAnalyticsService(gradesRepo)
-	attendanceSvc := attendance.NewService(attendanceRepo)
+	attendanceSvc := attendance.NewService(attendanceRepo, usersRepo, wsHub)
 	docsSvc := documents.NewService(docsRepo)
-	schedSvc := scheduling.NewService(schedRepo)
+	schedSvc := scheduling.NewService(schedRepo, teachersRepo)
 	pctoSvc := pcto.NewService(pctoRepo)
 	orientSvc := orientamento.NewService(orientRepo)
 	schoolsSvc := schools.NewService(schoolsRepo)
+	signaturesSvc := signatures.NewService(signatures.NewRepository(database), docsSvc, usersRepo)
 
 	commsSvc := communications.NewService(commsRepo)
-	notesSvc := notes.NewService(notesRepo)
+	notesSvc := notes.NewService(notesRepo, usersRepo)
 	adminSvc := admin.NewService(adminRepo)
 
 	// 7. Setup Handlers
@@ -98,9 +110,14 @@ func main() {
 	attendanceH := attendance.NewHandler(attendanceSvc)
 	docsH := documents.NewHandler(docsSvc)
 	schedH := scheduling.NewHandler(schedSvc)
+	signaturesH := signatures.NewHandler(signaturesSvc)
 
 	notesH := notes.NewHandler(notesSvc)
 	adminH := admin.NewHandler(adminSvc)
+	timetablesH := timetables.NewHandler(timetablesRepo)
+
+	wsHandler := ws.NewHandler(wsHub)
+
 	adminMiddleware := admin.NewMiddleware()
 	// ...
 	healthH := handler.NewHealthHandler(database)
@@ -110,6 +127,7 @@ func main() {
 	r.Use(gin.Recovery())
 	r.Use(middleware.LoggerMiddleware())
 	r.Use(middleware.CORSMiddleware())
+	r.Use(middleware.SecurityHeadersMiddleware())
 	r.Use(middleware.RateLimitMiddleware()) // New Rate Limit
 
 	// Initialize Circuit Breaker
@@ -123,6 +141,11 @@ func main() {
 
 		// Auth Routes
 		authH.RegisterRoutes(api, authMiddleware)
+
+		// WebSocket Route
+		api.GET("/ws", authMiddleware.Authenticate(), func(c *gin.Context) {
+			wsHandler.Listen(c)
+		})
 
 		// Protected routes
 		protected := api.Group("/")
@@ -141,14 +164,18 @@ func main() {
 				usersGroup.DELETE("/:id", usersH.Delete)
 				usersGroup.POST("/:id/restore", usersH.Restore)
 				usersGroup.POST("/bulk-import", usersH.BulkImport)
+				usersGroup.POST("/bulk-delete", adminMiddleware.RequireAdminOrSuperAdmin(), usersH.BulkDelete)
 				usersGroup.POST("/:id/change-password", usersH.ChangePassword)
 				usersGroup.POST("/:id/reset-password", usersH.ForceResetPassword)
-				usersGroup.PATCH("/:id/roles", usersH.AssignRoles)
+				usersGroup.PATCH("/:id/roles", adminMiddleware.RequireAdminOrSuperAdmin(), usersH.AssignRoles)
 				usersGroup.GET("/:id/audit-log", usersH.GetAuditLog)
 				usersGroup.POST("/:id/gdpr-export", usersH.ExportGDPR)
-				usersGroup.DELETE("/:id/gdpr-delete", usersH.DeleteGDPR)
+				usersGroup.DELETE("/:id/gdpr-delete", adminMiddleware.RequireAdminOrSuperAdmin(), usersH.DeleteGDPR)
 				usersGroup.GET("/search", usersH.List) // Merged into List logic
 				usersGroup.PATCH("/:id/disable-mfa", usersH.DisableMFA)
+				usersGroup.GET("/:id/guardians", usersH.GetGuardians)
+				usersGroup.POST("/:id/guardians", usersH.AddGuardian)
+				usersGroup.DELETE("/:id/guardians/:guardianId", usersH.RemoveGuardian)
 			}
 
 			gradesH.RegisterRoutes(protected)
@@ -156,10 +183,21 @@ func main() {
 			attendanceH.RegisterRoutes(protected)
 			docsH.RegisterRoutes(protected)
 			schedH.RegisterRoutes(protected)
+			timetablesH.RegisterRoutes(protected)
 
 			// New modules
 			pctoH := pcto.NewHandler(pctoSvc)
 			pctoH.RegisterRoutes(protected)
+
+			lessonsRepo := lessons.NewRepository(database)
+			lessonsSvc := lessons.NewService(lessonsRepo)
+			lessonsH := lessons.NewHandler(lessonsSvc)
+			lessonsH.RegisterRoutes(protected)
+
+			materialsRepo := didactic_materials.NewRepository(database)
+			materialsSvc := didactic_materials.NewService(materialsRepo, usersRepo)
+			materialsH := didactic_materials.NewHandler(materialsSvc)
+			materialsH.RegisterRoutes(protected)
 
 			orientH := orientamento.NewHandler(orientSvc)
 			orientH.RegisterRoutes(protected)
@@ -170,6 +208,17 @@ func main() {
 			commsH := communications.NewHandler(commsSvc)
 			commsH.RegisterRoutes(protected)
 
+			textbooksRepo := textbooks.NewRepository(database)
+			textbooksSvc := textbooks.NewService(textbooksRepo)
+			textbooksH := textbooks.NewHandler(textbooksSvc)
+			textbooksH.RegisterRoutes(protected)
+
+			scrutinyRepo := scrutiny.NewRepository(database)
+			attendanceRepo := attendance.NewRepository(database)
+			scrutinySvc := scrutiny.NewService(scrutinyRepo, gradesRepo, classesRepo, usersRepo, attendanceRepo)
+			scrutinyH := scrutiny.NewHandler(scrutinySvc)
+			scrutinyH.RegisterRoutes(protected)
+
 			classesH.RegisterRoutes(protected)
 			notesH.RegisterRoutes(protected)
 
@@ -178,13 +227,15 @@ func main() {
 			subjectsH := subjects.NewHandler(subjectsSvc)
 			subjectsH.RegisterRoutes(protected)
 
-			teachersRepo := teachers.NewRepository(database)
 			teachersSvc := teachers.NewService(teachersRepo)
 			teachersH := teachers.NewHandler(teachersSvc)
 			teachersH.RegisterRoutes(protected)
 
 			// Admin routes
 			adminH.RegisterRoutes(protected, adminMiddleware)
+			signatures := protected.Group("/signatures")
+			signatures.POST("/", signaturesH.SignDocument)
+			signatures.GET("/:id", signaturesH.GetSignatures)
 		}
 	}
 

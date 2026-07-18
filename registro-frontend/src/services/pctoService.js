@@ -1,4 +1,4 @@
-import { api } from 'src/boot/axios'
+import api from './api'
 
 export const pctoService = {
     async getMyProjects() {

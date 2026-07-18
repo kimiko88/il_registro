@@ -9,7 +9,7 @@ export const useColloquiStore = defineStore('colloqui', {
     }),
 
     actions: {
-        async fetchSlots(rangeStart, rangeEnd) {
+        async fetchSlots(_rangeStart, _rangeEnd) {
             this.loading = true;
             try {
                 await new Promise(resolve => setTimeout(resolve, 500));

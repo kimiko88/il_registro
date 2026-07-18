@@ -72,7 +72,6 @@ func (r *PostgresRepository) List(ctx context.Context, params *ListParams) ([]*S
 	if params.Search != "" {
 		countQuery += fmt.Sprintf(" AND (name ILIKE $%d OR code ILIKE $%d)", argIndex, argIndex)
 		args = append(args, "%"+params.Search+"%")
-		argIndex++
 	}
 
 	var total int
@@ -142,7 +141,6 @@ func (r *PostgresRepository) Update(ctx context.Context, id string, req *UpdateS
 	if req.Email != nil {
 		query += fmt.Sprintf(", email = $%d", argIndex)
 		args = append(args, *req.Email)
-		argIndex++
 	}
 
 	query += fmt.Sprintf(" WHERE id = $%d", argIndex)

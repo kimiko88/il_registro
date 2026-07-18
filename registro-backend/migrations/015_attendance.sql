@@ -43,8 +43,10 @@ CREATE TABLE IF NOT EXISTS attendance (
     deleted_at TIMESTAMP WITH TIME ZONE,
     
     -- Constraints
-    CONSTRAINT unique_daily_student_attendance UNIQUE (student_id, date) WHERE deleted_at IS NULL
+    CONSTRAINT unique_daily_student_attendance UNIQUE (student_id, date)
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_daily_student_attendance ON attendance (student_id, date) WHERE deleted_at IS NULL;
 
 -- Justifications Table
 CREATE TABLE IF NOT EXISTS justifications (

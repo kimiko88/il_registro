@@ -56,7 +56,7 @@ function openAddUserDialog() {
   // logic to open add dialog
 }
 
-function editUser(user) {
+function editUser(_user) {
   // logic to open edit dialog
 }
 

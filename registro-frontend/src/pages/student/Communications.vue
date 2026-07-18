@@ -101,11 +101,22 @@
                     </q-card-section>
                     
                     <q-separator />
-                    <q-card-actions align="right">
+                    <q-card-actions align="right" class="q-pa-md row items-center justify-between">
+                         <div class="row items-center q-gutter-sm">
+                             <q-btn 
+                                 v-if="!selectedMessage.is_signed"
+                                 color="positive" 
+                                 icon="check" 
+                                 label="Firma per Presa Visione" 
+                                 no-caps
+                                 @click="signReceipt(selectedMessage)" 
+                             />
+                             <q-badge v-else color="positive" class="q-pa-sm text-weight-bold" outline>
+                                 <q-icon name="check_circle" class="q-mr-xs" />
+                                 Letto e Firmato per Presa Visione
+                             </q-badge>
+                         </div>
                          <q-btn flat icon="archive" label="Archivia" color="warning" />
-                         <q-btn flat icon="reply" label="Rispondi" color="primary" disable>
-                             <q-tooltip>Risposta disabilitata per studenti</q-tooltip>
-                         </q-btn>
                     </q-card-actions>
                 </div>
                 
@@ -123,6 +134,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useStudentStore } from 'src/stores/student'
 import { useQuasar } from 'quasar'
+import { communicationService } from 'src/services/communicationService'
 
 const $q = useQuasar()
 const studentStore = useStudentStore()
@@ -130,51 +142,35 @@ const studentStore = useStudentStore()
 const tab = ref('inbox')
 const search = ref('')
 const selectedMessage = ref(null)
+const messages = ref([])
+const loading = ref(false)
 
-// Mock Data
-const messages = ref([
-    {
-        id: 1,
-        sender: 'Segreteria Didattica',
-        email: 'segreteria@scuola.it',
-        subject: 'Consegna Documentazione',
-        preview: 'Si ricorda che entro il 30 Maggio è necessario consegnare...',
-        body: 'Gentile Studente,\n\nSi ricorda che entro il 30 Maggio è necessario consegnare la documentazione relativa alle vaccinazioni obbligatorie.\n\nCordiali Saluti,\nLa Segreteria',
-        date: 'Ieri',
-        fullDate: '30 Gen 2025, 10:30',
-        read: false,
-        hasAttachment: true,
-        attachments: ['Modulo.pdf'],
-        archived: false
-    },
-    {
-        id: 2,
-        sender: 'Prof. Verdi',
-        email: 'verdi@scuola.it',
-        subject: 'Materiale Lezione Storia',
-        preview: 'In allegato le slide della lezione di oggi sulla Rivoluzione...',
-        body: 'Cari ragazzi,\n\nIn allegato le slide della lezione di oggi.\n\nBuono studio.',
-        date: '28 Gen',
-        fullDate: '28 Gen 2025, 14:15',
-        read: true,
-        hasAttachment: true,
-        attachments: ['Slide_Rivoluzione.ppt'],
-        archived: false
-    },
-     {
-        id: 3,
-        sender: 'Presidenza',
-        email: 'preside@scuola.it',
-        subject: 'Circolare n. 45 - Vacanze Pasquali',
-        preview: 'Si comunica il calendario delle vacanze pasquali...',
-        body: 'Si comunica che la scuola resterà chiusa dal... al...',
-        date: '15 Gen',
-        fullDate: '15 Gen 2025, 08:00',
-        read: true,
-        hasAttachment: false,
-        archived: true
+const fetchMessages = async () => {
+    loading.value = true
+    try {
+        const res = await communicationService.getMessages()
+        messages.value = (res.data || []).map(m => ({
+            id: m.id,
+            sender: m.sender_name || 'Sistema',
+            email: m.sender_email || '',
+            subject: m.subject,
+            preview: m.body.substring(0, 50) + '...',
+            body: m.body,
+            date: new Date(m.created_at).toLocaleDateString('it-IT'),
+            fullDate: new Date(m.created_at).toLocaleString('it-IT'),
+            read: m.read || false,
+            hasAttachment: false, 
+            attachments: [],
+            is_signed: m.is_signed || false,
+            archived: m.archived || false
+        }))
+    } catch (e) {
+        $q.notify({ message: 'Errore nel caricamento dei messaggi', color: 'negative' })
+        console.error(e)
+    } finally {
+        loading.value = false
     }
-])
+}
 
 const unreadCount = computed(() => messages.value.filter(m => !m.read && !m.archived).length)
 
@@ -191,7 +187,16 @@ const selectMessage = (msg) => {
     selectedMessage.value = msg
     if (!msg.read) {
         msg.read = true
-        // api.markAsRead(msg.id)
+    }
+}
+
+const signReceipt = async (msg) => {
+    try {
+        await communicationService.signMessage(msg.id)
+        msg.is_signed = true
+        $q.notify({ type: 'positive', message: 'Presa visione registrata con successo' })
+    } catch (e) {
+        $q.notify({ type: 'negative', message: 'Errore nella registrazione della firma' })
     }
 }
 
@@ -200,9 +205,6 @@ const downloadAttachment = (name) => {
 }
 
 onMounted(() => {
-    if (filteredMessages.value.length > 0 && window.innerWidth > 1023) {
-        // Auto select first message on desktop
-        // selectMessage(filteredMessages.value[0])
-    }
+    fetchMessages()
 })
 </script>

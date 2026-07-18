@@ -29,7 +29,7 @@ vi.mock('src/services/userService', () => ({
         create: vi.fn().mockResolvedValue({ data: { id: 2 } }),
         update: vi.fn().mockResolvedValue({}),
         delete: vi.fn().mockResolvedValue({}),
-        resetPassword: vi.fn().mockResolvedValue({})
+        forceResetPassword: vi.fn().mockResolvedValue({})
     }
 }))
 
@@ -55,7 +55,10 @@ describe('Secretary Users Page (Users.vue)', () => {
             global: {
                 plugins: [createTestingPinia({
                     initialState: {
-                        auth: { user: { school_id: '1' } }
+                        auth: { 
+                            user: { school_id: '1' },
+                            userRole: 'secretary'
+                        }
                     },
                     createSpy: vi.fn
                 })],
@@ -155,12 +158,17 @@ describe('Secretary Users Page (Users.vue)', () => {
         expect(exportFile).toHaveBeenCalled()
     })
 
-    it('confirms and resets password', async () => {
+    it('opens reset password dialog and handles reset', async () => {
         const user = { id: 8, email: 'reset@test.com', first_name: 'Test', last_name: 'User' }
+ 
+        wrapper.vm.openResetPwd(user)
+        expect(wrapper.vm.showResetPwdDialog).toBe(true)
+        expect(wrapper.vm.resetTargetId).toBe(8)
 
-        await wrapper.vm.confirmResetPwd(user)
+        wrapper.vm.newPassword = 'newPassword123'
+        await wrapper.vm.handleResetPwd()
 
-        expect(mockDialog).toHaveBeenCalled()
-        expect(userService.resetPassword).toHaveBeenCalledWith(8)
+        expect(userService.forceResetPassword).toHaveBeenCalledWith(8, 'newPassword123')
+        expect(wrapper.vm.showResetPwdDialog).toBe(false)
     })
 })

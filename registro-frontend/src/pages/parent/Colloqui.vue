@@ -58,39 +58,111 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
+import api from '@/services/api'
+import { useChildrenStore } from '@/stores/children'
 
 const $q = useQuasar()
+const childrenStore = useChildrenStore()
+
 const tab = ref('book')
 const selectedTeacher = ref(null)
+const teachers = ref([])
+const availableSlots = ref([])
+const myBookings = ref([])
 
-const teachers = [
-  { label: 'Prof. Verdi (Matematica)', value: 1 },
-  { label: 'Prof. Bianchi (Storia)', value: 2 },
-  { label: 'Prof. Neri (Inglese)', value: 3 },
-]
+onMounted(async () => {
+  await loadTeachers()
+  await loadMyBookings()
+  if (childrenStore.children.length === 0) {
+    await childrenStore.fetchChildren()
+  }
+})
 
-const availableSlots = ref([
-  { date: 'Lun 15 Gen', time: '16:00' },
-  { date: 'Lun 15 Gen', time: '16:15' },
-  { date: 'Mer 17 Gen', time: '10:00' },
-])
+// Reload slots when selected teacher changes
+watch(selectedTeacher, async (newVal) => {
+  if (newVal) {
+    await loadAvailableSlots(newVal.value)
+  } else {
+    availableSlots.value = []
+  }
+})
 
-const myBookings = ref([
-  { id: 101, teacher: 'Prof. Bianchi (Storia)', date: 'Ven 12 Gen', time: '11:00' }
-])
+async function loadTeachers() {
+  try {
+    const res = await api.get('/teachers')
+    teachers.value = (res.data || []).map(t => ({
+      label: `Prof. ${t.last_name || ''} ${t.first_name || ''} (${t.qualification || 'Docente'})`,
+      value: t.id
+    }))
+  } catch (err) {
+    console.error('Failed to load teachers:', err)
+  }
+}
+
+async function loadAvailableSlots(teacherId) {
+  try {
+    const res = await api.get('/colloqui/available-slots', {
+      params: { teacher_id: teacherId }
+    })
+    availableSlots.value = (res.data || []).map(s => ({
+      id: s.id,
+      date: s.date,
+      time: s.time_range,
+      teacher_id: s.teacher_id
+    }))
+  } catch (err) {
+    console.error('Failed to load available slots:', err)
+    $q.notify({ type: 'negative', message: 'Errore caricamento slot' })
+  }
+}
+
+async function loadMyBookings() {
+  try {
+    const res = await api.get('/colloqui/my-bookings')
+    myBookings.value = (res.data || []).map(b => {
+      // Find teacher name from loaded list or default
+      const teacher = teachers.value.find(t => t.value === b.slot_info.teacher_id)
+      return {
+        id: b.id,
+        teacher: teacher ? teacher.label : `Docente (Ref: ${b.slot_info.teacher_id.slice(0, 8)})`,
+        date: b.slot_info.date,
+        time: b.slot_info.time_range
+      }
+    })
+  } catch (err) {
+    console.error('Failed to load my bookings:', err)
+  }
+}
 
 function confirmBooking(slot) {
+  if (!childrenStore.selectedChildId) {
+    $q.notify({ type: 'warning', message: 'Seleziona prima uno studente/figlio' })
+    return
+  }
   $q.dialog({
     title: 'Conferma Prenotazione',
-    message: `Vuoi prenotare il colloquio con ${selectedTeacher.value.label} per ${slot.date} alle ${slot.time}?`,
+    message: `Vuoi prenotare il colloquio con ${selectedTeacher.value.label} per il ${slot.date} alle ${slot.time}?`,
     cancel: true,
     persistent: true
-  }).onOk(() => {
-    myBookings.value.push({ id: Date.now(), teacher: selectedTeacher.value.label, ...slot })
-    $q.notify({ type: 'positive', message: 'Prenotazione confermata!' })
-    tab.value = 'my-bookings'
+  }).onOk(async () => {
+    try {
+      await api.post('/colloqui/book', {
+        slot_id: slot.id,
+        student_id: childrenStore.selectedChildId
+      })
+      $q.notify({ type: 'positive', message: 'Prenotazione confermata!' })
+      await loadMyBookings()
+      tab.value = 'my-bookings'
+      // Refresh available slots for selected teacher
+      if (selectedTeacher.value) {
+        await loadAvailableSlots(selectedTeacher.value.value)
+      }
+    } catch (err) {
+      console.error('Failed to book slot:', err)
+      $q.notify({ type: 'negative', message: 'Errore prenotazione' })
+    }
   })
 }
 
@@ -99,9 +171,18 @@ function cancelBooking(id) {
     title: 'Annulla',
     message: 'Sei sicuro di voler annullare?',
     cancel: true
-  }).onOk(() => {
-    myBookings.value = myBookings.value.filter(b => b.id !== id)
-    $q.notify({ type: 'info', message: 'Prenotazione annullata' })
+  }).onOk(async () => {
+    try {
+      await api.patch(`/colloqui/bookings/${id}/cancel`)
+      $q.notify({ type: 'info', message: 'Prenotazione annullata' })
+      await loadMyBookings()
+      if (selectedTeacher.value) {
+        await loadAvailableSlots(selectedTeacher.value.value)
+      }
+    } catch (err) {
+      console.error('Failed to cancel booking:', err)
+      $q.notify({ type: 'negative', message: 'Errore annullamento' })
+    }
   })
 }
 </script>

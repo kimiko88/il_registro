@@ -1,5 +1,17 @@
 import { defineStore } from 'pinia';
-// import { api } from 'src/boot/axios'; // Removed invalid import
+import authService from 'src/services/authService';
+
+// Normalize the user profile from backend (snake_case) to a consistent shape
+function normalizeProfile(data) {
+    if (!data) return null
+    return {
+        ...data,
+        // Ensure both naming conventions work, preferring snake_case source
+        first_name: data.first_name || data.firstName || '',
+        last_name: data.last_name || data.lastName || '',
+        school_id: data.school_id || data.schoolId || null,
+    }
+}
 
 export const useTeacherStore = defineStore('teacher', {
     state: () => ({
@@ -11,42 +23,29 @@ export const useTeacherStore = defineStore('teacher', {
 
     getters: {
         isAuthenticated: (state) => !!state.profile,
-        isCoordinator: (state) => !!state.profile?.isCoordinator,
-        fullName: (state) => state.profile ? `${state.profile.firstName} ${state.profile.lastName}` : ''
+        isCoordinator: (state) => !!state.profile?.is_coordinator,
+        fullName: (state) => state.profile
+            ? `${state.profile.first_name} ${state.profile.last_name}`.trim()
+            : ''
     },
 
     actions: {
         async fetchProfile() {
             this.loading = true;
             try {
-                // Mock API call
-                // const response = await api.get('/teacher/profile');
-                // this.profile = response.data;
-
-                // Mock Data
-                await new Promise(resolve => setTimeout(resolve, 500));
-                this.profile = {
-                    id: 'te-1',
-                    firstName: 'Mario',
-                    lastName: 'Rossi',
-                    email: 'mario.rossi@school.it',
-                    subjects: ['Mathematics', 'Physics'],
-                    isCoordinator: true, // For testing Coordinator view
-                    avatar: 'https://cdn.quasar.dev/img/avatar.png'
-                };
+                const userData = await authService.getCurrentUser();
+                this.profile = normalizeProfile(userData);
             } catch (err) {
                 this.error = err.message;
+                console.error("Error fetching teacher profile:", err);
             } finally {
                 this.loading = false;
             }
         },
 
         async fetchNotifications() {
-            // Mock notifications
-            this.notifications = [
-                { id: 1, title: 'Meeting Reminder', message: 'Colloquio with Parent A at 10:00', read: false, type: 'info' },
-                { id: 2, title: 'Document Signed', message: 'Director signed PDP for Student B', read: false, type: 'positive' }
-            ];
+            // Notifications are currently empty or fetched via Communications
+            this.notifications = [];
         }
     }
 });

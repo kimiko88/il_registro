@@ -3,12 +3,15 @@ package documents
 import (
 	"context"
 	"errors"
+
+	"registro-backend/internal/permissions"
 )
 
 type Service interface {
-	CreateDocument(ctx context.Context, userID string, req CreateDocumentRequest) (*DocumentListResponse, error)
-	GetDocument(ctx context.Context, id string) (*DocumentDetailResponse, error)
-	UpdateDocument(ctx context.Context, userID, id string, req UpdateDocumentRequest) error
+	CreateDocument(ctx context.Context, actorRole, userID, schoolID string, req CreateDocumentRequest) (*DocumentListResponse, error)
+	GetDocument(ctx context.Context, actorRole, schoolID, id string) (*DocumentDetailResponse, error)
+	UpdateDocument(ctx context.Context, actorRole, userID, id string, req UpdateDocumentRequest) error
+	DeleteDocument(ctx context.Context, actorRole, id string) error
 
 	// Workflow
 	ProcessWorkflow(ctx context.Context, userID, docID string, req WorkflowActionRequest) error
@@ -17,38 +20,50 @@ type Service interface {
 	SignDocument(ctx context.Context, userID, docID string, req SignDocumentRequest) error
 
 	// Lists
-	GetInbox(ctx context.Context) ([]DocumentListResponse, error)
-	GetReviewQueue(ctx context.Context) ([]DocumentListResponse, error)
+	GetInbox(ctx context.Context, schoolID string) ([]DocumentListResponse, error)
+	GetReviewQueue(ctx context.Context, schoolID string) ([]DocumentListResponse, error)
 	GetMyDocuments(ctx context.Context, userID string) ([]DocumentListResponse, error)
+	ListDocuments(ctx context.Context, actorRole, schoolID string, docType *DocType) ([]DocumentListResponse, error)
 
 	// Templates
-	CreateTemplate(ctx context.Context, req TemplateRequest) error
+	CreateTemplate(ctx context.Context, schoolID string, req TemplateRequest) error
+	ListTemplates(ctx context.Context, schoolID string) ([]DocumentTemplate, error)
+	UpdateTemplate(ctx context.Context, schoolID, id string, req TemplateRequest) error
+	DeleteTemplate(ctx context.Context, schoolID, id string) error
 
 	// Export
-	ExportDocument(ctx context.Context, id, format string) ([]byte, string, error)
+	ExportDocument(ctx context.Context, actorRole, schoolID, id, format string) ([]byte, string, error)
+
+	// Status
+	LockDocument(ctx context.Context, id string) error
 }
 
 type service struct {
-	repo      Repository
-	validator *Validator
-	workflow  *WorkflowEngine
-	tpl       *TemplateEngine
-	signer    *SignatureProvider
-	exporter  *Exporter
+	repo        Repository
+	validator   *Validator
+	workflow    *WorkflowEngine
+	tpl         *TemplateEngine
+	signer      *SignatureProvider
+	exporter    *Exporter
+	permManager *permissions.Manager
 }
 
 func NewService(repo Repository) Service {
 	return &service{
-		repo:      repo,
-		validator: NewValidator(),
-		workflow:  NewWorkflowEngine(),
-		tpl:       NewTemplateEngine(),
-		signer:    NewSignatureProvider(),
-		exporter:  NewExporter(),
+		repo:        repo,
+		validator:   NewValidator(),
+		workflow:    NewWorkflowEngine(),
+		tpl:         NewTemplateEngine(),
+		signer:      NewSignatureProvider(),
+		exporter:    NewExporter(),
+		permManager: permissions.NewManager(),
 	}
 }
 
-func (s *service) CreateDocument(ctx context.Context, userID string, req CreateDocumentRequest) (*DocumentListResponse, error) {
+func (s *service) CreateDocument(ctx context.Context, actorRole, userID, schoolID string, req CreateDocumentRequest) (*DocumentListResponse, error) {
+	if !s.permManager.HasPermission(actorRole, permissions.DocumentCreate) {
+		return nil, errors.New("unauthorized")
+	}
 	content := req.Content
 
 	// Template usage
@@ -62,7 +77,7 @@ func (s *service) CreateDocument(ctx context.Context, userID string, req CreateD
 	}
 
 	doc := &Document{
-		SchoolID:  "default-school",
+		SchoolID:  schoolID,
 		Title:     req.Title,
 		Type:      req.Type,
 		Status:    StatusDraft,
@@ -82,10 +97,16 @@ func (s *service) CreateDocument(ctx context.Context, userID string, req CreateD
 	return &DocumentListResponse{ID: doc.ID, Title: doc.Title, Status: doc.Status}, nil
 }
 
-func (s *service) GetDocument(ctx context.Context, id string) (*DocumentDetailResponse, error) {
+func (s *service) GetDocument(ctx context.Context, actorRole, schoolID, id string) (*DocumentDetailResponse, error) {
+	if !s.permManager.HasPermission(actorRole, permissions.DocumentRead) {
+		return nil, errors.New("unauthorized")
+	}
 	doc, err := s.repo.FindByID(id)
 	if err != nil {
 		return nil, err
+	}
+	if doc.SchoolID != schoolID {
+		return nil, errors.New("unauthorized: cannot access documents of another school")
 	}
 
 	content, _ := s.repo.GetContent(id, doc.CurrentVersion)
@@ -109,7 +130,10 @@ func (s *service) GetDocument(ctx context.Context, id string) (*DocumentDetailRe
 	}, nil
 }
 
-func (s *service) UpdateDocument(ctx context.Context, userID, id string, req UpdateDocumentRequest) error {
+func (s *service) UpdateDocument(ctx context.Context, actorRole, userID, id string, req UpdateDocumentRequest) error {
+	if !s.permManager.HasPermission(actorRole, permissions.DocumentUpdate) {
+		return errors.New("unauthorized")
+	}
 	doc, err := s.repo.FindByID(id)
 	if err != nil {
 		return err
@@ -135,6 +159,13 @@ func (s *service) UpdateDocument(ctx context.Context, userID, id string, req Upd
 	}
 
 	return s.repo.Update(doc, content, req.ChangeLog)
+}
+
+func (s *service) DeleteDocument(ctx context.Context, actorRole, id string) error {
+	if !s.permManager.HasPermission(actorRole, permissions.DocumentDelete) {
+		return errors.New("unauthorized")
+	}
+	return s.repo.Delete(id)
 }
 
 func (s *service) ProcessWorkflow(ctx context.Context, userID, docID string, req WorkflowActionRequest) error {
@@ -163,6 +194,11 @@ func (s *service) ProcessWorkflow(ctx context.Context, userID, docID string, req
 	}
 
 	return s.repo.UpdateStatus(docID, next)
+}
+
+func (s *service) LockDocument(ctx context.Context, id string) error {
+	// StatusSigned or StatusLocked
+	return s.repo.UpdateStatus(id, StatusSigned)
 }
 
 func (s *service) SignDocument(ctx context.Context, userID, docID string, req SignDocumentRequest) error {
@@ -196,16 +232,16 @@ func (s *service) SignDocument(ctx context.Context, userID, docID string, req Si
 	return s.repo.AddSignature(sig)
 }
 
-func (s *service) GetInbox(ctx context.Context) ([]DocumentListResponse, error) {
-	docs, err := s.repo.GetInbox("default-school")
+func (s *service) GetInbox(ctx context.Context, schoolID string) ([]DocumentListResponse, error) {
+	docs, err := s.repo.GetInbox(schoolID)
 	if err != nil {
 		return nil, err
 	}
 	return convertList(docs), nil
 }
 
-func (s *service) GetReviewQueue(ctx context.Context) ([]DocumentListResponse, error) {
-	docs, err := s.repo.GetReviewQueue("default-school")
+func (s *service) GetReviewQueue(ctx context.Context, schoolID string) ([]DocumentListResponse, error) {
+	docs, err := s.repo.GetReviewQueue(schoolID)
 	if err != nil {
 		return nil, err
 	}
@@ -219,17 +255,62 @@ func (s *service) GetMyDocuments(ctx context.Context, userID string) ([]Document
 	return nil, nil
 }
 
-func (s *service) CreateTemplate(ctx context.Context, req TemplateRequest) error {
+func (s *service) ListDocuments(ctx context.Context, actorRole, schoolID string, docType *DocType) ([]DocumentListResponse, error) {
+	if !s.permManager.HasPermission(actorRole, permissions.DocumentRead) {
+		return nil, errors.New("unauthorized")
+	}
+	docs, err := s.repo.ListAll(schoolID, docType)
+	if err != nil {
+		return nil, err
+	}
+	return convertList(docs), nil
+}
+
+func (s *service) CreateTemplate(ctx context.Context, schoolID string, req TemplateRequest) error {
 	return s.repo.CreateTemplate(&DocumentTemplate{
-		SchoolID: "default-school",
+		SchoolID: schoolID,
 		Name:     req.Name,
 		Type:     req.Type,
 		Content:  req.Content,
 	})
 }
 
-func (s *service) ExportDocument(ctx context.Context, id, format string) ([]byte, string, error) {
-	doc, err := s.GetDocument(ctx, id)
+func (s *service) ListTemplates(ctx context.Context, schoolID string) ([]DocumentTemplate, error) {
+	return s.repo.GetTemplates(schoolID)
+}
+
+func (s *service) UpdateTemplate(ctx context.Context, schoolID, id string, req TemplateRequest) error {
+	t, err := s.repo.GetTemplate(id)
+	if err != nil {
+		return err
+	}
+	if t.SchoolID != schoolID {
+		return errors.New("unauthorized: template belongs to another school")
+	}
+
+	return s.repo.UpdateTemplate(&DocumentTemplate{
+		ID:       id,
+		SchoolID: schoolID,
+		Name:     req.Name,
+		Type:     req.Type,
+		Content:  req.Content,
+		IsActive: t.IsActive,
+	})
+}
+
+func (s *service) DeleteTemplate(ctx context.Context, schoolID, id string) error {
+	t, err := s.repo.GetTemplate(id)
+	if err != nil {
+		return err
+	}
+	if t.SchoolID != schoolID {
+		return errors.New("unauthorized: template belongs to another school")
+	}
+	return s.repo.DeleteTemplate(id)
+}
+
+func (s *service) ExportDocument(ctx context.Context, actorRole, schoolID, id, format string) ([]byte, string, error) {
+	doc, err := s.GetDocument(ctx, actorRole, schoolID, id)
 	if err != nil {
 		return nil, "", err
 	}

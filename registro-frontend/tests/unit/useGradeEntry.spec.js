@@ -1,5 +1,7 @@
-import { setActivePinia, createPinia } from 'pinia';
+import { setActivePinia } from 'pinia';
+import { createTestingPinia } from '@pinia/testing';
 import { useGradeEntry } from 'src/composables/useGradeEntry';
+import { useGradesStore } from 'src/stores/grades';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Mock Quasar
@@ -11,8 +13,12 @@ vi.mock('quasar', () => ({
 }));
 
 describe('useGradeEntry', () => {
+    let pinia;
     beforeEach(() => {
-        setActivePinia(createPinia());
+        pinia = createTestingPinia({
+            stubActions: false
+        });
+        setActivePinia(pinia);
         mockNotify.mockClear();
     });
 
@@ -25,6 +31,10 @@ describe('useGradeEntry', () => {
 
     it('submits successfully with valid data', async () => {
         const { submitGrade } = useGradeEntry();
+        const gradesStore = useGradesStore();
+        
+        // Mock the store action
+        gradesStore.addGrade = vi.fn().mockResolvedValue({ id: 'g1' });
 
         const validData = {
             studentId: 's1',

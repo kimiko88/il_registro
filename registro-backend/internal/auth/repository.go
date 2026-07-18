@@ -21,6 +21,8 @@ type Repository interface {
 	EnableMFA(ctx context.Context, userID, secret string) error
 	DisableMFA(ctx context.Context, userID string) error
 	GetMFASecret(ctx context.Context, userID string) (string, error)
+	SaveTempMFASecret(ctx context.Context, userID, secret string) error
+	ConfirmMFA(ctx context.Context, userID string) error
 
 	// Recovery codes
 	CreateRecoveryCodes(ctx context.Context, userID string, codes []string) error
@@ -39,9 +41,18 @@ type Repository interface {
 	UsePasswordResetToken(ctx context.Context, tokenID string) error
 	UpdatePassword(ctx context.Context, userID, passwordHash string) error
 
+	// Password history
+	GetPasswordHistory(ctx context.Context, userID string) ([]string, error)
+	AddPasswordHistory(ctx context.Context, userID, passwordHash string) error
+
 	// Rate limiting
 	RecordLoginAttempt(ctx context.Context, attempt *LoginAttempt) error
+	// GetRecentLoginAttempts counts failed attempts for a specific (email, IP) pair since `since`.
+	// Used for per-IP rate limiting (max 5 in 15 min).
 	GetRecentLoginAttempts(ctx context.Context, email, ipAddress string, since time.Time) (int, error)
+	// GetRecentLoginAttemptsByEmail counts failed attempts for an email across ALL IPs since `since`.
+	// Used for anti-IP-rotation rate limiting (max 20 in 1 hour).
+	GetRecentLoginAttemptsByEmail(ctx context.Context, email string, since time.Time) (int, error)
 }
 
 type repository struct {
@@ -75,7 +86,7 @@ func (r *repository) CreateUser(ctx context.Context, user *User) error {
 func (r *repository) GetUserByEmail(ctx context.Context, email string) (*User, error) {
 	query := `
 		SELECT id, email, password_hash, first_name, last_name, role, school_id, 
-		       is_active, email_verified, mfa_enabled, mfa_secret, created_at, updated_at, last_login
+		       is_active, email_verified, mfa_enabled, mfa_secret, created_at, updated_at, last_login, password_changed_at
 		FROM users
 		WHERE email = $1 AND deleted_at IS NULL
 	`
@@ -84,7 +95,7 @@ func (r *repository) GetUserByEmail(ctx context.Context, email string) (*User, e
 	err := r.db.QueryRowContext(ctx, query, email).Scan(
 		&user.ID, &user.Email, &user.PasswordHash, &user.FirstName, &user.LastName,
 		&user.Role, &user.SchoolID, &user.IsActive, &user.EmailVerified,
-		&user.MFAEnabled, &mfaSecret, &user.CreatedAt, &user.UpdatedAt, &user.LastLogin,
+		&user.MFAEnabled, &mfaSecret, &user.CreatedAt, &user.UpdatedAt, &user.LastLogin, &user.PasswordChangedAt,
 	)
 	if err == sql.ErrNoRows {
 		return nil, ErrUserNotFound
@@ -99,7 +110,7 @@ func (r *repository) GetUserByEmail(ctx context.Context, email string) (*User, e
 func (r *repository) GetUserByID(ctx context.Context, id string) (*User, error) {
 	query := `
 		SELECT id, email, password_hash, first_name, last_name, role, school_id,
-		       is_active, email_verified, mfa_enabled, mfa_secret, created_at, updated_at, last_login
+		       is_active, email_verified, mfa_enabled, mfa_secret, created_at, updated_at, last_login, password_changed_at
 		FROM users
 		WHERE id = $1 AND deleted_at IS NULL
 	`
@@ -108,7 +119,7 @@ func (r *repository) GetUserByID(ctx context.Context, id string) (*User, error) 
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
 		&user.ID, &user.Email, &user.PasswordHash, &user.FirstName, &user.LastName,
 		&user.Role, &user.SchoolID, &user.IsActive, &user.EmailVerified,
-		&user.MFAEnabled, &mfaSecret, &user.CreatedAt, &user.UpdatedAt, &user.LastLogin,
+		&user.MFAEnabled, &mfaSecret, &user.CreatedAt, &user.UpdatedAt, &user.LastLogin, &user.PasswordChangedAt,
 	)
 	if err == sql.ErrNoRows {
 		return nil, ErrUserNotFound
@@ -151,13 +162,25 @@ func (r *repository) DisableMFA(ctx context.Context, userID string) error {
 }
 
 func (r *repository) GetMFASecret(ctx context.Context, userID string) (string, error) {
-	query := `SELECT mfa_secret FROM users WHERE id = $1 AND mfa_enabled = true`
-	var secret string
+	query := `SELECT mfa_secret FROM users WHERE id = $1`
+	var secret sql.NullString
 	err := r.db.QueryRowContext(ctx, query, userID).Scan(&secret)
-	if err == sql.ErrNoRows {
+	if err == sql.ErrNoRows || !secret.Valid || secret.String == "" {
 		return "", ErrMFANotEnabled
 	}
-	return secret, err
+	return secret.String, err
+}
+
+func (r *repository) SaveTempMFASecret(ctx context.Context, userID, secret string) error {
+	query := `UPDATE users SET mfa_enabled = false, mfa_secret = $1 WHERE id = $2`
+	_, err := r.db.ExecContext(ctx, query, secret, userID)
+	return err
+}
+
+func (r *repository) ConfirmMFA(ctx context.Context, userID string) error {
+	query := `UPDATE users SET mfa_enabled = true WHERE id = $1`
+	_, err := r.db.ExecContext(ctx, query, userID)
+	return err
 }
 
 func (r *repository) CreateRecoveryCodes(ctx context.Context, userID string, codes []string) error {
@@ -166,7 +189,7 @@ func (r *repository) CreateRecoveryCodes(ctx context.Context, userID string, cod
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	for _, code := range codes {
 		_, err := tx.ExecContext(ctx, query, uuid.New().String(), userID, code, time.Now())
@@ -293,7 +316,7 @@ func (r *repository) UsePasswordResetToken(ctx context.Context, tokenID string) 
 }
 
 func (r *repository) UpdatePassword(ctx context.Context, userID, passwordHash string) error {
-	query := `UPDATE users SET password_hash = $1, updated_at = $2 WHERE id = $3`
+	query := `UPDATE users SET password_hash = $1, updated_at = $2, password_changed_at = $2 WHERE id = $3`
 	_, err := r.db.ExecContext(ctx, query, passwordHash, time.Now(), userID)
 	return err
 }
@@ -307,6 +330,8 @@ func (r *repository) RecordLoginAttempt(ctx context.Context, attempt *LoginAttem
 	return err
 }
 
+// GetRecentLoginAttempts counts failed attempts for a specific (email, IP) pair.
+// Used for per-IP burst protection (max 5 in 15 minutes).
 func (r *repository) GetRecentLoginAttempts(ctx context.Context, email, ipAddress string, since time.Time) (int, error) {
 	query := `
 		SELECT COUNT(*) 
@@ -316,4 +341,51 @@ func (r *repository) GetRecentLoginAttempts(ctx context.Context, email, ipAddres
 	var count int
 	err := r.db.QueryRowContext(ctx, query, email, ipAddress, since).Scan(&count)
 	return count, err
+}
+
+// GetRecentLoginAttemptsByEmail counts failed attempts for an email across ALL IPs.
+// Used for anti-IP-rotation protection (max 20 in 1 hour).
+func (r *repository) GetRecentLoginAttemptsByEmail(ctx context.Context, email string, since time.Time) (int, error) {
+	query := `
+		SELECT COUNT(*)
+		FROM login_attempts
+		WHERE email = $1 AND success = false AND attempted_at > $2
+	`
+	var count int
+	err := r.db.QueryRowContext(ctx, query, email, since).Scan(&count)
+	return count, err
+}
+
+func (r *repository) GetPasswordHistory(ctx context.Context, userID string) ([]string, error) {
+	query := `
+		SELECT password_hash 
+		FROM user_password_history 
+		WHERE user_id = $1::uuid 
+		ORDER BY created_at DESC 
+		LIMIT 5
+	`
+	rows, err := r.db.QueryContext(ctx, query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var history []string
+	for rows.Next() {
+		var h string
+		if err := rows.Scan(&h); err != nil {
+			return nil, err
+		}
+		history = append(history, h)
+	}
+	return history, nil
+}
+
+func (r *repository) AddPasswordHistory(ctx context.Context, userID, passwordHash string) error {
+	query := `
+		INSERT INTO user_password_history (user_id, password_hash)
+		VALUES ($1::uuid, $2)
+	`
+	_, err := r.db.ExecContext(ctx, query, userID, passwordHash)
+	return err
 }

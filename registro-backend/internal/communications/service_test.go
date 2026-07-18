@@ -22,6 +22,29 @@ func (m *MockRepository) List(ctx context.Context, userID string) ([]*Message, e
 	return args.Get(0).([]*Message), args.Error(1)
 }
 
+func (m *MockRepository) Delete(ctx context.Context, id string) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+func (m *MockRepository) Sign(ctx context.Context, communicationID string, userID string) error {
+	args := m.Called(ctx, communicationID, userID)
+	return args.Error(0)
+}
+
+func (m *MockRepository) GetSignatures(ctx context.Context, communicationID string) ([]string, error) {
+	args := m.Called(ctx, communicationID)
+	return args.Get(0).([]string), args.Error(1)
+}
+
+func (m *MockRepository) Get(ctx context.Context, id string) (*Message, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*Message), args.Error(1)
+}
+
 func TestService_SendMessage(t *testing.T) {
 	mockRepo := new(MockRepository)
 	svc := NewService(mockRepo)
@@ -60,4 +83,26 @@ func TestService_ListMessages(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, msgs, 1)
 	assert.Equal(t, "Hi", msgs[0].Subject)
+}
+
+func TestService_SignMessage(t *testing.T) {
+	mockRepo := new(MockRepository)
+	svc := NewService(mockRepo)
+
+	mockRepo.On("Sign", mock.Anything, "msg-1", "user-1").Return(nil)
+
+	err := svc.SignMessage(context.Background(), "msg-1", "user-1")
+	assert.NoError(t, err)
+}
+
+func TestService_GetMessageSignatures(t *testing.T) {
+	mockRepo := new(MockRepository)
+	svc := NewService(mockRepo)
+
+	expected := []string{"user-1", "user-2"}
+	mockRepo.On("GetSignatures", mock.Anything, "msg-1").Return(expected, nil)
+
+	sigs, err := svc.GetMessageSignatures(context.Background(), "msg-1")
+	assert.NoError(t, err)
+	assert.Equal(t, expected, sigs)
 }
