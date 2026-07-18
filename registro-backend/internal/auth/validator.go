@@ -8,10 +8,63 @@ import (
 // Field length limits prevent oversized payloads from reaching the database
 // or consuming excessive memory during hashing.
 const (
-	maxEmailLength     = 254 // RFC 5321 maximum
-	maxNameLength      = 100
-	maxPasswordLength  = 128 // bcrypt silently truncates beyond 72 bytes; 128 is a safe practical limit
+	maxEmailLength    = 254 // RFC 5321 maximum
+	maxNameLength     = 100
+	maxPasswordLength = 128 // bcrypt silently truncates beyond 72 bytes; 128 is a safe practical limit
 )
+
+// Role constants — single source of truth used by validator, service and middleware.
+const (
+	RoleSuperAdmin = "superadmin"
+	RoleAdmin      = "admin"
+	RoleSegreteria = "segreteria"
+	RoleTeacher    = "teacher"
+	RoleStudent    = "student"
+	RoleParent     = "parent"
+)
+
+// allRoles is the exhaustive set of valid role strings.
+var allRoles = map[string]bool{
+	RoleSuperAdmin: true,
+	RoleAdmin:      true,
+	RoleSegreteria: true,
+	RoleTeacher:    true,
+	RoleStudent:    true,
+	RoleParent:     true,
+}
+
+// creatableRoles defines which roles each caller role is allowed to create.
+//
+// Permission matrix:
+//   superadmin → can create any role
+//   admin      → can create admin, segreteria, teacher, student, parent
+//                (cannot create superadmin)
+//   segreteria → can create teacher, student, parent
+//                (cannot create superadmin or admin)
+//
+// Any role not listed here (teacher, student, parent) cannot register other users.
+var creatableRoles = map[string]map[string]bool{
+	RoleSuperAdmin: {
+		RoleSuperAdmin: true,
+		RoleAdmin:      true,
+		RoleSegreteria: true,
+		RoleTeacher:    true,
+		RoleStudent:    true,
+		RoleParent:     true,
+	},
+	RoleAdmin: {
+		RoleAdmin:      true,
+		RoleSegreteria: true,
+		RoleTeacher:    true,
+		RoleStudent:    true,
+		RoleParent:     true,
+	},
+	RoleSegreteria: {
+		RoleTeacher: true,
+		RoleStudent: true,
+		RoleParent:  true,
+	},
+}
 
 // PasswordValidator validates password strength
 type PasswordValidator struct {
@@ -101,18 +154,16 @@ func (v *EmailValidator) Validate(email string) error {
 	return nil
 }
 
-// publicRegistrationRoles are the only roles allowed via the public /auth/register endpoint.
-// Privileged roles (admin, superadmin) must be created by a superadmin via the admin API.
-var publicRegistrationRoles = map[string]bool{
-	"student": true,
-	"teacher": true,
-	"parent":  true,
-}
-
-// ValidateRegisterRequest validates a public registration request.
-// Admin and superadmin roles are rejected here; they must be created
-// through the dedicated admin user management endpoint.
-func ValidateRegisterRequest(req *RegisterRequest) error {
+// ValidateRegisterRequest validates an authenticated registration request.
+// callerRole is extracted from the JWT by the handler and must never come
+// from the request body.
+//
+// Rules:
+//   - Only superadmin, admin and segreteria can call this endpoint.
+//   - Each caller can only create roles within their permission set
+//     (see creatableRoles matrix above).
+func ValidateRegisterRequest(callerRole string, req *RegisterRequest) error {
+	// 1. Validate email and password first (cheap checks before DB hits)
 	emailValidator := NewEmailValidator()
 	if err := emailValidator.Validate(req.Email); err != nil {
 		return err
@@ -130,8 +181,20 @@ func ValidateRegisterRequest(req *RegisterRequest) error {
 		return ErrFieldTooLong
 	}
 
-	if !publicRegistrationRoles[req.Role] {
+	// 2. Requested role must be a known role string
+	if !allRoles[req.Role] {
 		return ErrInvalidRole
+	}
+
+	// 3. Caller must be allowed to register users at all
+	allowed, callerCanRegister := creatableRoles[callerRole]
+	if !callerCanRegister {
+		return ErrInsufficientRole
+	}
+
+	// 4. Caller must be allowed to assign the requested role
+	if !allowed[req.Role] {
+		return ErrCannotCreateRole
 	}
 
 	return nil
