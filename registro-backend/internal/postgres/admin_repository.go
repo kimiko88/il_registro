@@ -146,13 +146,11 @@ func (r *AdminRepository) GetRecentEvents(ctx context.Context, limit int, school
 
 // GetSystemHealth returns system health status
 func (r *AdminRepository) GetSystemHealth(ctx context.Context) (*admin.SystemHealthStatus, error) {
-	// Check database connection
 	dbHealth := admin.HealthCheck{Status: "healthy", Message: "Database is connected and responding"}
 	if err := r.db.PingContext(ctx); err != nil {
 		dbHealth.Status = "error"
 		dbHealth.Message = "Database ping failed: " + err.Error()
 	} else {
-		// Verify query execution
 		var val int
 		if err := r.db.QueryRowContext(ctx, "SELECT 1").Scan(&val); err != nil {
 			dbHealth.Status = "warning"
@@ -160,19 +158,16 @@ func (r *AdminRepository) GetSystemHealth(ctx context.Context) (*admin.SystemHea
 		}
 	}
 
-	// Storage health
 	storageHealth := admin.HealthCheck{
 		Status:  "healthy",
 		Message: "Storage space is sufficient",
 	}
 
-	// API health
 	apiHealth := admin.HealthCheck{
 		Status:  "healthy",
 		Message: "API services are operational",
 	}
 
-	// Determine overall status
 	overallStatus := "healthy"
 	if dbHealth.Status == "error" || storageHealth.Status == "error" || apiHealth.Status == "error" {
 		overallStatus = "down"
@@ -190,7 +185,6 @@ func (r *AdminRepository) GetSystemHealth(ctx context.Context) (*admin.SystemHea
 
 // ListSchools retrieves a paginated list of schools
 func (r *AdminRepository) ListSchools(ctx context.Context, req *admin.SchoolListRequest, offset int, schoolID *string) ([]admin.SchoolResponse, int64, error) {
-	// Build query
 	query := `
 		SELECT 
 			s.id,
@@ -215,7 +209,6 @@ func (r *AdminRepository) ListSchools(ctx context.Context, req *admin.SchoolList
 	args := []interface{}{}
 	argCount := 1
 
-	// Filter by school ID if provided (for admin users)
 	if schoolID != nil {
 		query += fmt.Sprintf(" AND s.id = $%d", argCount)
 		countQuery += fmt.Sprintf(" AND id = $%d", argCount)
@@ -223,7 +216,6 @@ func (r *AdminRepository) ListSchools(ctx context.Context, req *admin.SchoolList
 		argCount++
 	}
 
-	// Search filter
 	if req.Search != "" {
 		searchPattern := "%" + req.Search + "%"
 		query += fmt.Sprintf(" AND (s.name ILIKE $%d OR s.code ILIKE $%d)", argCount, argCount)
@@ -232,7 +224,6 @@ func (r *AdminRepository) ListSchools(ctx context.Context, req *admin.SchoolList
 		argCount++
 	}
 
-	// Status filter
 	if req.Status != "" {
 		isActive := req.Status == "active"
 		query += fmt.Sprintf(" AND s.is_active = $%d", argCount)
@@ -241,14 +232,12 @@ func (r *AdminRepository) ListSchools(ctx context.Context, req *admin.SchoolList
 		argCount++
 	}
 
-	// Get total count
 	var total int64
 	err := r.db.QueryRowContext(ctx, countQuery, args...).Scan(&total)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	// Add sorting and pagination
 	query += fmt.Sprintf(" ORDER BY s.created_at DESC LIMIT $%d OFFSET $%d", argCount, argCount+1)
 	args = append(args, req.PageSize, offset)
 
@@ -380,7 +369,6 @@ func (r *AdminRepository) CreateSchool(ctx context.Context, req *admin.CreateSch
 
 // UpdateSchool updates an existing school
 func (r *AdminRepository) UpdateSchool(ctx context.Context, schoolID string, req *admin.UpdateSchoolRequest) (*admin.SchoolResponse, error) {
-	// Build dynamic update query
 	query := "UPDATE schools SET updated_at = NOW()"
 	args := []interface{}{}
 	argCount := 1
@@ -439,7 +427,6 @@ func (r *AdminRepository) UpdateSchool(ctx context.Context, schoolID string, req
 		return nil, err
 	}
 
-	// Return updated school
 	return r.GetSchool(ctx, schoolID)
 }
 
@@ -485,11 +472,9 @@ func (r *AdminRepository) ListAdminUsers(ctx context.Context, offset, limit int,
 		argCount++
 	}
 
-	// Order by created_at desc
 	query += fmt.Sprintf(" ORDER BY u.created_at DESC LIMIT $%d OFFSET $%d", argCount, argCount+1)
 	args = append(args, limit, offset)
 
-	// Get count
 	var total int64
 	if err := r.db.QueryRowContext(ctx, countQuery, args[:len(args)-2]...).Scan(&total); err != nil {
 		return nil, 0, err
@@ -515,7 +500,7 @@ func (r *AdminRepository) ListAdminUsers(ctx context.Context, offset, limit int,
 			&u.Role,
 			&schoolID,
 			&schoolName,
-			&u.IsActive, // Maps to email_verified for now or we need is_active column on users
+			&u.IsActive,
 			&u.CreatedAt,
 		)
 		if err != nil {
@@ -529,7 +514,6 @@ func (r *AdminRepository) ListAdminUsers(ctx context.Context, offset, limit int,
 			u.SchoolName = &schoolName.String
 		}
 
-		// Fetch last login from sessions
 		var lastLogin sql.NullTime
 		_ = r.db.QueryRowContext(ctx, "SELECT created_at FROM user_sessions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1", u.ID).Scan(&lastLogin)
 		if lastLogin.Valid {
@@ -542,11 +526,64 @@ func (r *AdminRepository) ListAdminUsers(ctx context.Context, offset, limit int,
 	return users, total, nil
 }
 
+// GetAdminUserByID retrieves a single admin user by their ID
+func (r *AdminRepository) GetAdminUserByID(ctx context.Context, adminID string) (*admin.AdminUserResponse, error) {
+	query := `
+		SELECT 
+			u.id,
+			u.email,
+			u.first_name,
+			u.last_name,
+			u.role,
+			u.school_id,
+			s.name as school_name,
+			u.is_active,
+			u.created_at
+		FROM users u
+		LEFT JOIN schools s ON u.school_id = s.id
+		WHERE u.id = $1 AND u.role = 'admin'
+	`
+
+	var u admin.AdminUserResponse
+	var schoolID sql.NullString
+	var schoolName sql.NullString
+
+	err := r.db.QueryRowContext(ctx, query, adminID).Scan(
+		&u.ID,
+		&u.Email,
+		&u.FirstName,
+		&u.LastName,
+		&u.Role,
+		&schoolID,
+		&schoolName,
+		&u.IsActive,
+		&u.CreatedAt,
+	)
+	if err == sql.ErrNoRows {
+		return nil, fmt.Errorf("admin user not found")
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if schoolID.Valid {
+		u.SchoolID = &schoolID.String
+	}
+	if schoolName.Valid {
+		u.SchoolName = &schoolName.String
+	}
+
+	var lastLogin sql.NullTime
+	_ = r.db.QueryRowContext(ctx, "SELECT created_at FROM user_sessions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1", u.ID).Scan(&lastLogin)
+	if lastLogin.Valid {
+		u.LastLoginAt = &lastLogin.Time
+	}
+
+	return &u, nil
+}
+
 // CreateAdminUser creates a new admin user
 func (r *AdminRepository) CreateAdminUser(ctx context.Context, req *admin.CreateAdminRequest) (*admin.AdminUserResponse, error) {
-	// 1. Hash password (temporary default)
-	// In production, we'd generate a random one and email it.
-	// Here we use the fixed hash for 'password' from our setup
 	defaultHash := "$2a$10$i/ZZOUG0J0m5YaNUYQszo.Cj9k7Ok3MgR7ue31A.U.2dJxQ5BHhp6"
 
 	query := `
@@ -565,14 +602,13 @@ func (r *AdminRepository) CreateAdminUser(ctx context.Context, req *admin.Create
 		req.LastName,
 		req.Role,
 		req.SchoolID,
-		true, // Auto verify for admin created users
+		true,
 	).Scan(&id, &createdAt)
 
 	if err != nil {
 		return nil, err
 	}
 
-	// Fetch school name
 	var schoolName string
 	if req.SchoolID != nil {
 		_ = r.db.QueryRowContext(ctx, "SELECT name FROM schools WHERE id = $1", req.SchoolID).Scan(&schoolName)
@@ -626,8 +662,6 @@ func (r *AdminRepository) UpdateAdminUser(ctx context.Context, adminID string, r
 		return nil, err
 	}
 
-	// Return updated user (can reuse List or just construct)
-	// For simplicity, returning what we have essentially
 	return &admin.AdminUserResponse{ID: id}, nil
 }
 
@@ -756,13 +790,11 @@ func (r *AdminRepository) ListAuditLogs(ctx context.Context, req *admin.AuditLog
 		argCount++
 	}
 
-	// Get count
 	var total int64
 	if err := r.db.QueryRowContext(ctx, countQuery, args...).Scan(&total); err != nil {
 		return nil, 0, err
 	}
 
-	// Order and Limit
 	query += fmt.Sprintf(" ORDER BY aa.created_at DESC LIMIT $%d OFFSET $%d", argCount, argCount+1)
 	args = append(args, req.PageSize, offset)
 

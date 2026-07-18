@@ -43,6 +43,10 @@ type Repository interface {
 	// GetHistory retrieves the modification history of a grade
 	GetHistory(gradeID string) ([]GradeHistory, error)
 
+	// FindEnrolledSubjects returns the subject IDs a student is enrolled in for a given semester.
+	// Used by GetSemesterReport to count subjects with no grades as failed.
+	FindEnrolledSubjects(studentID string, semester int) ([]string, error)
+
 	// CreateTest inserts a new class test
 	CreateTest(test *ClassTest) error
 
@@ -149,7 +153,6 @@ func (r *repository) Update(grade *Grade, history *GradeHistory) error {
 	}
 	defer func() { _ = tx.Rollback() }()
 
-	// 1. Update Grade
 	updateQuery := `
 		UPDATE grades SET
 			grade_value = $1,
@@ -176,7 +179,6 @@ func (r *repository) Update(grade *Grade, history *GradeHistory) error {
 		return fmt.Errorf("update grade error: %w", err)
 	}
 
-	// 2. Insert History if provided
 	if history != nil {
 		historyQuery := `
 			INSERT INTO grade_history (
@@ -247,7 +249,6 @@ func (r *repository) FindByStudent(studentID string) ([]Grade, error) {
 }
 
 func (r *repository) FindByClassAndSubject(classID string, subjectID string, semester int) ([]Grade, error) {
-	// This requires joining with students table to filter by class_id
 	var query string
 	var args []interface{}
 
@@ -263,7 +264,6 @@ func (r *repository) FindByClassAndSubject(classID string, subjectID string, sem
 			ORDER BY g.date DESC`
 		args = []interface{}{classID, subjectID, semester}
 	} else {
-		// All semesters
 		query = `
 			SELECT g.id, g.student_id, g.school_id, g.subject_id, g.teacher_id, 
 			       g.grade_value, g.grade_type, g.semester, g.date, 
@@ -376,7 +376,7 @@ func (r *repository) FindWithFilter(filter GradeFilter) ([]Grade, error) {
 		baseQuery += " AND " + strings.Join(conditions, " AND ")
 	}
 
-	baseQuery += " ORDER BY date DESC" // Default sorting
+	baseQuery += " ORDER BY date DESC"
 
 	return r.scanGrades(baseQuery, args...)
 }
@@ -422,6 +422,35 @@ func (r *repository) GetHistory(gradeID string) ([]GradeHistory, error) {
 		history = append(history, h)
 	}
 	return history, nil
+}
+
+// FindEnrolledSubjects returns the distinct subject IDs a student is enrolled in
+// for the given semester via their class's class_subjects assignments.
+// semester is accepted for API consistency but not used in the query because
+// class_subjects does not carry a semester column; the caller filters by semester
+// at the grade level.
+func (r *repository) FindEnrolledSubjects(studentID string, semester int) ([]string, error) {
+	query := `
+		SELECT DISTINCT cs.subject_id::text
+		FROM class_subjects cs
+		JOIN students st ON st.class_id = cs.class_id
+		WHERE st.id = $1::uuid`
+
+	rows, err := r.db.Query(query, studentID)
+	if err != nil {
+		return nil, fmt.Errorf("FindEnrolledSubjects error: %w", err)
+	}
+	defer rows.Close()
+
+	var subjects []string
+	for rows.Next() {
+		var subID string
+		if err := rows.Scan(&subID); err != nil {
+			return nil, err
+		}
+		subjects = append(subjects, subID)
+	}
+	return subjects, rows.Err()
 }
 
 // Helper to scan rows into Grade slice
