@@ -2,6 +2,7 @@ package attendance
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -32,19 +33,50 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	att.GET("/child-attendance/:studentID", h.GetChildAttendance)
 	att.GET("/child-attendance/:studentID/summary", h.GetChildSummary)
 
-	// Admin
+	// Admin / Secretary
 	att.POST("/justification/:id/approve", h.ApproveJustification)
 	att.DELETE("/justification/:id", h.RejectJustification)
 	att.GET("/analytics", h.GetAnalytics)
 }
 
+// parseWindowParams legge i query param from/to; se assenti usa l'intero anno scolastico corrente.
+func parseWindowParams(c *gin.Context) (from, to time.Time, err error) {
+	const layout = "2006-01-02"
+	fromStr := c.Query("from")
+	toStr := c.Query("to")
+	if fromStr != "" {
+		from, err = time.Parse(layout, fromStr)
+		if err != nil {
+			return
+		}
+	} else {
+		// Default: inizio anno scolastico (1 settembre dell'anno corrente o precedente).
+		now := time.Now()
+		year := now.Year()
+		if now.Month() < time.September {
+			year--
+		}
+		from = time.Date(year, time.September, 1, 0, 0, 0, 0, time.UTC)
+	}
+	if toStr != "" {
+		to, err = time.Parse(layout, toStr)
+		if err != nil {
+			return
+		}
+	} else {
+		to = time.Now()
+	}
+	return
+}
+
 func (h *Handler) GetMySummary(c *gin.Context) {
 	studentID := c.GetString("user_id")
+	schoolID := c.GetString("school_id")
 	if studentID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	res, err := h.service.GetStudentSummary(c.Request.Context(), studentID)
+	res, err := h.service.GetStudentSummary(c.Request.Context(), studentID, schoolID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -59,7 +91,12 @@ func (h *Handler) GetChildAttendance(c *gin.Context) {
 		return
 	}
 	studentID := c.Param("studentID")
-	res, err := h.service.GetChildAttendance(c.Request.Context(), parentID, studentID)
+	from, to, err := parseWindowParams(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "parametro data non valido: " + err.Error()})
+		return
+	}
+	res, err := h.service.GetChildAttendance(c.Request.Context(), parentID, studentID, from, to)
 	if err != nil {
 		if err.Error() == "unauthorized: not a guardian of this student" {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
@@ -73,12 +110,13 @@ func (h *Handler) GetChildAttendance(c *gin.Context) {
 
 func (h *Handler) GetChildSummary(c *gin.Context) {
 	parentID := c.GetString("user_id")
+	schoolID := c.GetString("school_id")
 	if parentID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 	studentID := c.Param("studentID")
-	res, err := h.service.GetChildSummary(c.Request.Context(), parentID, studentID)
+	res, err := h.service.GetChildSummary(c.Request.Context(), parentID, studentID, schoolID)
 	if err != nil {
 		if err.Error() == "unauthorized: not a guardian of this student" {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
@@ -118,7 +156,7 @@ func (h *Handler) RejectJustification(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "rejected"})
+	c.JSON(http.StatusOK, gin.H{"message": "deleted"})
 }
 
 func (h *Handler) GetAnalytics(c *gin.Context) {
@@ -127,7 +165,12 @@ func (h *Handler) GetAnalytics(c *gin.Context) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
-	res, err := h.service.GetSchoolAnalytics(c.Request.Context())
+	schoolID := c.GetString("school_id")
+	if schoolID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "school_id mancante nel token"})
+		return
+	}
+	res, err := h.service.GetSchoolAnalytics(c.Request.Context(), schoolID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -142,12 +185,13 @@ func (h *Handler) MarkAttendance(c *gin.Context) {
 		return
 	}
 	userID := c.GetString("user_id")
+	schoolID := c.GetString("school_id")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if err := h.service.MarkAttendance(c.Request.Context(), userID, req); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	if err := h.service.MarkAttendance(c.Request.Context(), userID, schoolID, req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "marked"})
@@ -160,12 +204,13 @@ func (h *Handler) MarkBulk(c *gin.Context) {
 		return
 	}
 	userID := c.GetString("user_id")
+	schoolID := c.GetString("school_id")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if err := h.service.MarkBulk(c.Request.Context(), userID, req); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	if err := h.service.MarkBulk(c.Request.Context(), userID, schoolID, req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "bulk marked"})
@@ -191,7 +236,7 @@ func (h *Handler) GetClassAttendance(c *gin.Context) {
 	}
 	res, err := h.service.GetClassAttendance(c.Request.Context(), classID, date)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, res)
@@ -203,7 +248,12 @@ func (h *Handler) GetMyAttendance(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	res, err := h.service.GetStudentAttendance(c.Request.Context(), studentID)
+	from, to, err := parseWindowParams(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "parametro data non valido: " + err.Error()})
+		return
+	}
+	res, err := h.service.GetStudentAttendance(c.Request.Context(), studentID, from, to)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -223,7 +273,7 @@ func (h *Handler) RequestJustification(c *gin.Context) {
 		return
 	}
 	if err := h.service.RequestJustification(c.Request.Context(), parentID, req); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "requested"})

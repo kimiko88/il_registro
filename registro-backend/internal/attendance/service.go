@@ -14,13 +14,19 @@ type EventBroadcaster interface {
 	BroadcastToSchool(schoolID string, msgType string, payload interface{})
 }
 
+// CalendarService is used to calculate real school days for absence rate.
+type CalendarService interface {
+	CountTeachingDays(ctx context.Context, schoolID string, from, to time.Time) (int, error)
+	GetSchoolYear(ctx context.Context, schoolID string) (start, end time.Time, err error)
+}
+
 type Service interface {
-	MarkAttendance(ctx context.Context, teacherID string, req CreateAttendanceRequest) error
-	MarkBulk(ctx context.Context, teacherID string, req BulkAttendanceRequest) error
-	UpdateAttendance(ctx context.Context, teacherID, id string, req UpdateAttendanceRequest) error
+	MarkAttendance(ctx context.Context, teacherID, schoolID string, req CreateAttendanceRequest) error
+	MarkBulk(ctx context.Context, teacherID, schoolID string, req BulkAttendanceRequest) error
+	UpdateAttendance(ctx context.Context, teacherID, schoolID, id string, req UpdateAttendanceRequest) error
 
 	GetClassAttendance(ctx context.Context, classID string, date string) (*ClassDailyAttendance, error)
-	GetStudentAttendance(ctx context.Context, studentID string) ([]AttendanceResponse, error)
+	GetStudentAttendance(ctx context.Context, studentID string, from, to time.Time) ([]AttendanceResponse, error)
 
 	// Justifications
 	RequestJustification(ctx context.Context, parentID string, req JustificationRequest) error
@@ -29,12 +35,12 @@ type Service interface {
 	DeleteJustification(ctx context.Context, actorID string, justificationID string) error
 
 	// Analytics & Summaries
-	GetStudentSummary(ctx context.Context, studentID string) (*SummaryResponse, error)
-	GetSchoolAnalytics(ctx context.Context) (*AnalyticsResponse, error) // To be defined
+	GetStudentSummary(ctx context.Context, studentID, schoolID string) (*SummaryResponse, error)
+	GetSchoolAnalytics(ctx context.Context, schoolID string) (*AnalyticsResponse, error)
 
 	// Parent Access (with guardianship checks)
-	GetChildAttendance(ctx context.Context, parentID, studentID string) ([]AttendanceResponse, error)
-	GetChildSummary(ctx context.Context, parentID, studentID string) (*SummaryResponse, error)
+	GetChildAttendance(ctx context.Context, parentID, studentID string, from, to time.Time) ([]AttendanceResponse, error)
+	GetChildSummary(ctx context.Context, parentID, studentID, schoolID string) (*SummaryResponse, error)
 }
 
 type service struct {
@@ -42,22 +48,30 @@ type service struct {
 	userRepo    users.Repository
 	validator   *Validator
 	broadcaster EventBroadcaster
+	calendar    CalendarService
 }
 
-func NewService(repo Repository, uRepo users.Repository, b EventBroadcaster) Service {
+func NewService(repo Repository, uRepo users.Repository, b EventBroadcaster, cal CalendarService) Service {
 	return &service{
 		repo:        repo,
 		userRepo:    uRepo,
 		validator:   NewValidator(),
 		broadcaster: b,
+		calendar:    cal,
 	}
 }
 
-func (s *service) MarkAttendance(ctx context.Context, teacherID string, req CreateAttendanceRequest) error {
-	date, _ := time.Parse("2006-01-02", req.Date)
+func (s *service) MarkAttendance(ctx context.Context, teacherID, schoolID string, req CreateAttendanceRequest) error {
+	if schoolID == "" {
+		return fmt.Errorf("school_id mancante nel token")
+	}
+	date, err := time.Parse("2006-01-02", req.Date)
+	if err != nil {
+		return fmt.Errorf("data non valida '%s': usa il formato YYYY-MM-DD", req.Date)
+	}
 
 	att := &Attendance{
-		SchoolID:  "default-school", // Should get from context or user
+		SchoolID:  schoolID,
 		StudentID: req.StudentID,
 		ClassID:   req.ClassID,
 		Date:      date,
@@ -89,13 +103,19 @@ func (s *service) MarkAttendance(ctx context.Context, teacherID string, req Crea
 	return nil
 }
 
-func (s *service) MarkBulk(ctx context.Context, teacherID string, req BulkAttendanceRequest) error {
-	date, _ := time.Parse("2006-01-02", req.Date)
+func (s *service) MarkBulk(ctx context.Context, teacherID, schoolID string, req BulkAttendanceRequest) error {
+	if schoolID == "" {
+		return fmt.Errorf("school_id mancante nel token")
+	}
+	date, err := time.Parse("2006-01-02", req.Date)
+	if err != nil {
+		return fmt.Errorf("data non valida '%s': usa il formato YYYY-MM-DD", req.Date)
+	}
 
 	var atts []*Attendance
 	for _, r := range req.Statuses {
 		att := &Attendance{
-			SchoolID:  "default-school",
+			SchoolID:  schoolID,
 			StudentID: r.StudentID,
 			ClassID:   req.ClassID,
 			Date:      date,
@@ -119,13 +139,16 @@ func (s *service) MarkBulk(ctx context.Context, teacherID string, req BulkAttend
 	return s.repo.BatchCreate(atts)
 }
 
-func (s *service) UpdateAttendance(ctx context.Context, teacherID, id string, req UpdateAttendanceRequest) error {
+func (s *service) UpdateAttendance(ctx context.Context, teacherID, schoolID, id string, req UpdateAttendanceRequest) error {
 	att, err := s.repo.FindByID(id)
 	if err != nil {
 		return err
 	}
 
-	// Check perm (teacher of class) - skipped for brevity, assumed checked or implicit
+	// Ownership check: il docente deve appartenere alla stessa scuola del record.
+	if att.SchoolID != schoolID {
+		return fmt.Errorf("forbidden: impossibile modificare presenze di un'altra scuola")
+	}
 
 	if req.Status != nil {
 		att.Status = *req.Status
@@ -144,7 +167,10 @@ func (s *service) UpdateAttendance(ctx context.Context, teacherID, id string, re
 }
 
 func (s *service) GetClassAttendance(ctx context.Context, classID string, dateStr string) (*ClassDailyAttendance, error) {
-	date, _ := time.Parse("2006-01-02", dateStr)
+	date, err := time.Parse("2006-01-02", dateStr)
+	if err != nil {
+		return nil, fmt.Errorf("data non valida '%s': usa il formato YYYY-MM-DD", dateStr)
+	}
 	atts, err := s.repo.FindByClassAndDate(classID, date)
 	if err != nil {
 		return nil, err
@@ -193,12 +219,8 @@ func (s *service) GetClassAttendance(ctx context.Context, classID string, dateSt
 	return resp, nil
 }
 
-func (s *service) GetStudentAttendance(ctx context.Context, studentID string) ([]AttendanceResponse, error) {
-	// Last 30 days default or similar
-	start := time.Now().AddDate(0, 0, -30)
-	end := time.Now()
-
-	atts, err := s.repo.FindByStudent(studentID, start, end)
+func (s *service) GetStudentAttendance(ctx context.Context, studentID string, from, to time.Time) ([]AttendanceResponse, error) {
+	atts, err := s.repo.FindByStudent(studentID, from, to)
 	if err != nil {
 		return nil, err
 	}
@@ -227,8 +249,14 @@ func (s *service) GetStudentAttendance(ctx context.Context, studentID string) ([
 // Justifications
 
 func (s *service) RequestJustification(ctx context.Context, parentID string, req JustificationRequest) error {
-	start, _ := time.Parse("2006-01-02", req.StartDate)
-	end, _ := time.Parse("2006-01-02", req.EndDate)
+	start, err := time.Parse("2006-01-02", req.StartDate)
+	if err != nil {
+		return fmt.Errorf("start_date non valida '%s': usa il formato YYYY-MM-DD", req.StartDate)
+	}
+	end, err := time.Parse("2006-01-02", req.EndDate)
+	if err != nil {
+		return fmt.Errorf("end_date non valida '%s': usa il formato YYYY-MM-DD", req.EndDate)
+	}
 
 	j := &Justification{
 		StudentID: req.StudentID,
@@ -258,9 +286,21 @@ func (s *service) ProcessJustification(ctx context.Context, teacherID, justifica
 		j.ApprovedBy = &teacherID
 		j.ApprovedAt = &now
 
-		// Auto-update attendance records?
-		// Logic: Loop dates from Start to End, find Absence, set Justified=true
-		// Omitted for brevity but crucial for "Workflow" feature
+		// Auto-update: marca come giustificate tutte le assenze nel range di date.
+		for d := j.StartDate; !d.After(j.EndDate); d = d.AddDate(0, 0, 1) {
+			atts, findErr := s.repo.FindByStudent(j.StudentID, d, d)
+			if findErr != nil {
+				continue
+			}
+			for i := range atts {
+				if atts[i].Status == StatusAbsent && !atts[i].Justified {
+					atts[i].Justified = true
+					atts[i].JustifiedBy = &teacherID
+					atts[i].JustifiedAt = &now
+					_ = s.repo.Update(&atts[i])
+				}
+			}
+		}
 	} else {
 		j.Status = JustificationRejected
 	}
@@ -286,21 +326,38 @@ func (s *service) GetPendingJustifications(ctx context.Context, classID string) 
 	return resp, nil
 }
 
+// DeleteJustification elimina fisicamente la giustifica.
 func (s *service) DeleteJustification(ctx context.Context, actorID string, justificationID string) error {
-	// Semantically, DELETE acts as Reject in this implementation.
-	return s.ProcessJustification(ctx, actorID, justificationID, false)
+	_, err := s.repo.FindJustificationByID(justificationID)
+	if err != nil {
+		return fmt.Errorf("giustifica non trovata: %w", err)
+	}
+	return s.repo.DeleteJustification(justificationID)
 }
 
-func (s *service) GetStudentSummary(ctx context.Context, studentID string) (*SummaryResponse, error) {
+func (s *service) GetStudentSummary(ctx context.Context, studentID, schoolID string) (*SummaryResponse, error) {
 	stats, err := s.repo.GetStats(studentID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Calc rate (mock total days or fetch)
-	// Assume 100 days so far for MVP calculation
-	totalDays := 100.0
-	stats.AbsenceRate = (float64(stats.TotalAbsences) / totalDays) * 100
+	// Calcolo totalDays dal calendario scolastico reale.
+	totalDays := 0
+	if s.calendar != nil && schoolID != "" {
+		yearStart, yearEnd, calErr := s.calendar.GetSchoolYear(ctx, schoolID)
+		if calErr == nil {
+			totalDays, _ = s.calendar.CountTeachingDays(ctx, schoolID, yearStart, yearEnd)
+		}
+	}
+	if totalDays == 0 {
+		// Fallback: conta i giorni distinti presenti nel DB per questo studente.
+		totalDays, err = s.repo.CountDistinctDays(studentID)
+		if err != nil || totalDays == 0 {
+			totalDays = 1 // Evita divisione per zero.
+		}
+	}
+
+	stats.AbsenceRate = (float64(stats.TotalAbsences) / float64(totalDays)) * 100
 
 	if stats.AbsenceRate > 25.0 {
 		stats.RiskLevel = "Critical"
@@ -313,15 +370,11 @@ func (s *service) GetStudentSummary(ctx context.Context, studentID string) (*Sum
 	return stats, nil
 }
 
-func (s *service) GetSchoolAnalytics(ctx context.Context) (*AnalyticsResponse, error) {
-	// Mock implementation for Admin Analytics
-	return &AnalyticsResponse{
-		AverageAbsenceRate: 12.5,
-		TopAbsentees:       []string{}, // Populate later
-	}, nil
+func (s *service) GetSchoolAnalytics(ctx context.Context, schoolID string) (*AnalyticsResponse, error) {
+	return s.repo.GetAnalytics(ctx, schoolID)
 }
 
-func (s *service) GetChildAttendance(ctx context.Context, parentID, studentID string) ([]AttendanceResponse, error) {
+func (s *service) GetChildAttendance(ctx context.Context, parentID, studentID string, from, to time.Time) ([]AttendanceResponse, error) {
 	if s.userRepo != nil {
 		isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, studentID)
 		if err != nil {
@@ -331,10 +384,10 @@ func (s *service) GetChildAttendance(ctx context.Context, parentID, studentID st
 			return nil, fmt.Errorf("unauthorized: not a guardian of this student")
 		}
 	}
-	return s.GetStudentAttendance(ctx, studentID)
+	return s.GetStudentAttendance(ctx, studentID, from, to)
 }
 
-func (s *service) GetChildSummary(ctx context.Context, parentID, studentID string) (*SummaryResponse, error) {
+func (s *service) GetChildSummary(ctx context.Context, parentID, studentID, schoolID string) (*SummaryResponse, error) {
 	if s.userRepo != nil {
 		isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, studentID)
 		if err != nil {
@@ -344,5 +397,5 @@ func (s *service) GetChildSummary(ctx context.Context, parentID, studentID strin
 			return nil, fmt.Errorf("unauthorized: not a guardian of this student")
 		}
 	}
-	return s.GetStudentSummary(ctx, studentID)
+	return s.GetStudentSummary(ctx, studentID, schoolID)
 }

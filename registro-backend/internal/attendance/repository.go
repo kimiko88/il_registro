@@ -1,6 +1,7 @@
 package attendance
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"time"
@@ -15,12 +16,15 @@ type Repository interface {
 	FindByClassAndDate(classID string, date time.Time) ([]Attendance, error)
 	FindByStudent(studentID string, startDate, endDate time.Time) ([]Attendance, error)
 	GetStats(studentID string) (*SummaryResponse, error)
+	CountDistinctDays(studentID string) (int, error)
+	GetAnalytics(ctx context.Context, schoolID string) (*AnalyticsResponse, error)
 
 	// Justifications
 	CreateJustification(j *Justification) error
 	UpdateJustification(j *Justification) error
 	FindJustificationByID(id string) (*Justification, error)
 	FindPendingJustifications(classID string) ([]Justification, error)
+	DeleteJustification(id string) error
 }
 
 type repository struct {
@@ -60,7 +64,10 @@ func (r *repository) BatchCreate(atts []*Attendance) error {
 			school_id, student_id, class_id, date, hour, subject_id, status, 
 			justified, justified_by, justified_at, notes, entry_time, exit_time, created_at, updated_at
 		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW(), NOW())
-		ON CONFLICT (id) DO NOTHING
+		ON CONFLICT (student_id, class_id, date, hour) DO UPDATE SET
+			status = EXCLUDED.status,
+			notes = EXCLUDED.notes,
+			updated_at = NOW()
 		RETURNING id
 	`)
 	if err != nil {
@@ -90,10 +97,10 @@ func (r *repository) Update(a *Attendance) error {
 }
 
 func (r *repository) FindByID(id string) (*Attendance, error) {
-	query := `SELECT id, student_id, class_id, date, hour, subject_id, status, justified, justified_by, justified_at, COALESCE(notes, ''), entry_time, exit_time FROM attendance WHERE id=$1::uuid`
+	query := `SELECT id, school_id, student_id, class_id, date, hour, subject_id, status, justified, justified_by, justified_at, COALESCE(notes, ''), entry_time, exit_time FROM attendance WHERE id=$1::uuid`
 	var a Attendance
 	err := r.db.QueryRow(query, id).Scan(
-		&a.ID, &a.StudentID, &a.ClassID, &a.Date, &a.Hour, &a.SubjectID, &a.Status,
+		&a.ID, &a.SchoolID, &a.StudentID, &a.ClassID, &a.Date, &a.Hour, &a.SubjectID, &a.Status,
 		&a.Justified, &a.JustifiedBy, &a.JustifiedAt, &a.Notes, &a.EntryTime, &a.ExitTime,
 	)
 	if err != nil {
@@ -104,7 +111,7 @@ func (r *repository) FindByID(id string) (*Attendance, error) {
 
 func (r *repository) FindByClassAndDate(classID string, date time.Time) ([]Attendance, error) {
 	query := `
-		SELECT id, student_id, class_id, date, hour, subject_id, status, justified, justified_by, justified_at, COALESCE(notes, ''), entry_time, exit_time
+		SELECT id, school_id, student_id, class_id, date, hour, subject_id, status, justified, justified_by, justified_at, COALESCE(notes, ''), entry_time, exit_time
 		FROM attendance 
 		WHERE class_id=$1::uuid AND date=$2`
 
@@ -118,7 +125,7 @@ func (r *repository) FindByClassAndDate(classID string, date time.Time) ([]Atten
 	for rows.Next() {
 		var a Attendance
 		if err := rows.Scan(
-			&a.ID, &a.StudentID, &a.ClassID, &a.Date, &a.Hour, &a.SubjectID, &a.Status, 
+			&a.ID, &a.SchoolID, &a.StudentID, &a.ClassID, &a.Date, &a.Hour, &a.SubjectID, &a.Status,
 			&a.Justified, &a.JustifiedBy, &a.JustifiedAt, &a.Notes, &a.EntryTime, &a.ExitTime,
 		); err != nil {
 			return nil, err
@@ -130,7 +137,7 @@ func (r *repository) FindByClassAndDate(classID string, date time.Time) ([]Atten
 
 func (r *repository) FindByStudent(studentID string, startDate, endDate time.Time) ([]Attendance, error) {
 	query := `
-		SELECT id, student_id, class_id, date, hour, subject_id, status, justified, justified_by, justified_at, COALESCE(notes, ''), entry_time, exit_time
+		SELECT id, school_id, student_id, class_id, date, hour, subject_id, status, justified, justified_by, justified_at, COALESCE(notes, ''), entry_time, exit_time
 		FROM attendance 
 		WHERE student_id=$1::uuid AND date BETWEEN $2 AND $3
 		ORDER BY date DESC`
@@ -145,7 +152,7 @@ func (r *repository) FindByStudent(studentID string, startDate, endDate time.Tim
 	for rows.Next() {
 		var a Attendance
 		if err := rows.Scan(
-			&a.ID, &a.StudentID, &a.ClassID, &a.Date, &a.Hour, &a.SubjectID, &a.Status, 
+			&a.ID, &a.SchoolID, &a.StudentID, &a.ClassID, &a.Date, &a.Hour, &a.SubjectID, &a.Status,
 			&a.Justified, &a.JustifiedBy, &a.JustifiedAt, &a.Notes, &a.EntryTime, &a.ExitTime,
 		); err != nil {
 			return nil, err
@@ -156,7 +163,6 @@ func (r *repository) FindByStudent(studentID string, startDate, endDate time.Tim
 }
 
 func (r *repository) GetStats(studentID string) (*SummaryResponse, error) {
-	// Simple aggregation
 	query := `
 		SELECT 
 			COUNT(*) FILTER (WHERE status = 'Absent') as absences,
@@ -172,6 +178,54 @@ func (r *repository) GetStats(studentID string) (*SummaryResponse, error) {
 		return nil, err
 	}
 	return &s, nil
+}
+
+func (r *repository) CountDistinctDays(studentID string) (int, error) {
+	var count int
+	err := r.db.QueryRow(`SELECT COUNT(DISTINCT date) FROM attendance WHERE student_id=$1::uuid`, studentID).Scan(&count)
+	return count, err
+}
+
+func (r *repository) GetAnalytics(ctx context.Context, schoolID string) (*AnalyticsResponse, error) {
+	var res AnalyticsResponse
+
+	query := `
+		SELECT
+			ROUND(
+				100.0 * COUNT(*) FILTER (WHERE status = 'Absent') /
+				NULLIF(COUNT(*), 0),
+			2) AS avg_absence_rate
+		FROM attendance
+		WHERE school_id = $1`
+	err := r.db.QueryRowContext(ctx, query, schoolID).Scan(&res.AverageAbsenceRate)
+	if err != nil {
+		return nil, err
+	}
+
+	topQuery := `
+		SELECT u.first_name || ' ' || u.last_name
+		FROM attendance a
+		JOIN users u ON u.id = a.student_id::uuid
+		WHERE a.school_id = $1 AND a.status = 'Absent'
+		GROUP BY a.student_id, u.first_name, u.last_name
+		ORDER BY COUNT(*) DESC
+		LIMIT 5`
+	rows, err := r.db.QueryContext(ctx, topQuery, schoolID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			return nil, err
+		}
+		res.TopAbsentees = append(res.TopAbsentees, name)
+	}
+	if res.TopAbsentees == nil {
+		res.TopAbsentees = []string{}
+	}
+	return &res, nil
 }
 
 // --- Justifications ---
@@ -200,11 +254,10 @@ func (r *repository) FindJustificationByID(id string) (*Justification, error) {
 }
 
 func (r *repository) FindPendingJustifications(classID string) ([]Justification, error) {
-	// Join with students to filter by class
 	query := `
 		SELECT j.id, j.student_id, j.start_date, j.end_date, j.reason, j.status 
 		FROM justifications j
-		JOIN students s ON j.student_id = s.id
+		JOIN users s ON j.student_id = s.id::uuid
 		WHERE s.class_id = $1::uuid AND j.status = 'pending'`
 
 	rows, err := r.db.Query(query, classID)
@@ -222,4 +275,9 @@ func (r *repository) FindPendingJustifications(classID string) ([]Justification,
 		res = append(res, j)
 	}
 	return res, nil
+}
+
+func (r *repository) DeleteJustification(id string) error {
+	_, err := r.db.Exec(`DELETE FROM justifications WHERE id=$1::uuid`, id)
+	return err
 }

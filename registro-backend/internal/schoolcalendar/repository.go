@@ -1,0 +1,97 @@
+package schoolcalendar
+
+import (
+	"database/sql"
+	"time"
+)
+
+type Repository interface {
+	UpsertYear(s *SchoolYearSettings) error
+	GetYear(schoolID string) (*SchoolYearSettings, error)
+
+	AddNonTeachingDay(d *NonTeachingDay) error
+	DeleteNonTeachingDay(schoolID, id string) error
+	ListNonTeachingDays(schoolID string) ([]NonTeachingDay, error)
+
+	// CountTeachingDays conta i giorni lavorativi (lun-ven) nell'intervallo
+	// escludendo i giorni non didattici registrati.
+	CountTeachingDays(schoolID string, from, to time.Time) (int, error)
+}
+
+type repository struct {
+	db *sql.DB
+}
+
+func NewRepository(db *sql.DB) Repository {
+	return &repository{db: db}
+}
+
+func (r *repository) UpsertYear(s *SchoolYearSettings) error {
+	query := `
+		INSERT INTO school_calendar_settings
+			(school_id, year_label, start_date, end_date, created_by, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+		ON CONFLICT (school_id) DO UPDATE SET
+			year_label = EXCLUDED.year_label,
+			start_date = EXCLUDED.start_date,
+			end_date   = EXCLUDED.end_date,
+			updated_at = NOW()
+		RETURNING id`
+	return r.db.QueryRow(query, s.SchoolID, s.YearLabel, s.StartDate, s.EndDate, s.CreatedBy).Scan(&s.ID)
+}
+
+func (r *repository) GetYear(schoolID string) (*SchoolYearSettings, error) {
+	var s SchoolYearSettings
+	query := `SELECT id, school_id, year_label, start_date, end_date, created_by FROM school_calendar_settings WHERE school_id=$1`
+	err := r.db.QueryRow(query, schoolID).Scan(&s.ID, &s.SchoolID, &s.YearLabel, &s.StartDate, &s.EndDate, &s.CreatedBy)
+	if err != nil {
+		return nil, err
+	}
+	return &s, nil
+}
+
+func (r *repository) AddNonTeachingDay(d *NonTeachingDay) error {
+	query := `
+		INSERT INTO school_non_teaching_days (school_id, date, label, created_by, created_at)
+		VALUES ($1, $2, $3, $4, NOW())
+		ON CONFLICT (school_id, date) DO UPDATE SET label = EXCLUDED.label
+		RETURNING id`
+	return r.db.QueryRow(query, d.SchoolID, d.Date, d.Label, d.CreatedBy).Scan(&d.ID)
+}
+
+func (r *repository) DeleteNonTeachingDay(schoolID, id string) error {
+	_, err := r.db.Exec(`DELETE FROM school_non_teaching_days WHERE id=$1::uuid AND school_id=$2`, id, schoolID)
+	return err
+}
+
+func (r *repository) ListNonTeachingDays(schoolID string) ([]NonTeachingDay, error) {
+	rows, err := r.db.Query(`SELECT id, school_id, date, label FROM school_non_teaching_days WHERE school_id=$1 ORDER BY date ASC`, schoolID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var res []NonTeachingDay
+	for rows.Next() {
+		var d NonTeachingDay
+		if err := rows.Scan(&d.ID, &d.SchoolID, &d.Date, &d.Label); err != nil {
+			return nil, err
+		}
+		res = append(res, d)
+	}
+	return res, nil
+}
+
+func (r *repository) CountTeachingDays(schoolID string, from, to time.Time) (int, error) {
+	// Genera la serie di date e sottrae i giorni non didattici e i weekend.
+	query := `
+		SELECT COUNT(*)
+		FROM generate_series($1::date, $2::date, '1 day'::interval) AS d(date)
+		WHERE
+			EXTRACT(DOW FROM d.date) NOT IN (0, 6) -- Esclude sabato e domenica
+			AND d.date NOT IN (
+				SELECT date FROM school_non_teaching_days WHERE school_id = $3
+			)`
+	var count int
+	err := r.db.QueryRow(query, from, to, schoolID).Scan(&count)
+	return count, err
+}

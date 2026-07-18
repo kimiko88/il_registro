@@ -1,73 +1,36 @@
 package attendance
 
-// Requests
+import "time"
 
-type CreateAttendanceRequest struct {
-	StudentID string           `json:"student_id" binding:"required"`
-	ClassID   string           `json:"class_id" binding:"required"`
-	Date      string           `json:"date" binding:"required"` // YYYY-MM-DD
-	Hour      int              `json:"hour" binding:"required"`
-	SubjectID string           `json:"subject_id"`
-	Status    AttendanceStatus `json:"status" binding:"required"`
-	EntryTime string           `json:"entry_time,omitempty"` // HH:MM
-	ExitTime  string           `json:"exit_time,omitempty"`  // HH:MM
-	Notes     string           `json:"notes,omitempty"`
+// AnalyticsResponse contiene le statistiche aggregate di assenza per la scuola.
+type AnalyticsResponse struct {
+	AverageAbsenceRate float64  `json:"average_absence_rate"`
+	TopAbsentees       []string `json:"top_absentees"`
 }
 
-type UpdateAttendanceRequest struct {
-	Status    *AttendanceStatus `json:"status,omitempty"`
-	EntryTime *string           `json:"entry_time,omitempty"`
-	ExitTime  *string           `json:"exit_time,omitempty"`
-	Notes     *string           `json:"notes,omitempty"`
-}
-
-type BulkAttendanceRequest struct {
-	ClassID   string                    `json:"class_id" binding:"required"`
-	Date      string                    `json:"date" binding:"required"`
-	Hour      int                       `json:"hour" binding:"required"`
-	SubjectID string                    `json:"subject_id" binding:"required"`
-	Statuses  []CreateAttendanceRequest `json:"statuses" binding:"required"`
-}
-
-type JustificationRequest struct {
-	StudentID string `json:"student_id" binding:"required"`
-	StartDate string `json:"start_date" binding:"required"`
-	EndDate   string `json:"end_date" binding:"required"`
-	Reason    string `json:"reason" binding:"required"`
-}
-
-// Responses
-
-type AttendanceResponse struct {
-	ID          string           `json:"id"`
-	StudentID   string           `json:"student_id"`
-	StudentName string           `json:"student_name,omitempty"` // Enriched
-	Date        string           `json:"date"`
-	Status      AttendanceStatus `json:"status"`
-	EntryTime   string           `json:"entry_time,omitempty"`
-	ExitTime    string           `json:"exit_time,omitempty"`
-	IsJustified bool             `json:"is_justified"`
-	Notes       string           `json:"notes,omitempty"`
-}
-
+// SummaryResponse contiene il riepilogo delle assenze di uno studente.
 type SummaryResponse struct {
 	TotalAbsences   int     `json:"total_absences"`
 	TotalLates      int     `json:"total_lates"`
 	TotalEarlyExits int     `json:"total_early_exits"`
 	JustifiedCount  int     `json:"justified_count"`
-	AbsenceRate     float64 `json:"absence_rate"` // %
-	RiskLevel       string  `json:"risk_level"`   // Normal, Warning, Critical
-	PendingRequests int     `json:"pending_requests"`
+	AbsenceRate     float64 `json:"absence_rate"`
+	RiskLevel       string  `json:"risk_level"`
 }
 
-type JustificationResponse struct {
-	ID        string `json:"id"`
-	Status    string `json:"status"`
-	Requestor string `json:"requestor"`
-	DateRange string `json:"date_range"`
-	Reason    string `json:"reason"`
+// AttendanceResponse è la risposta DTO per un singolo record di presenza.
+type AttendanceResponse struct {
+	ID          string           `json:"id"`
+	StudentID   string           `json:"student_id"`
+	Date        string           `json:"date"`
+	Status      AttendanceStatus `json:"status"`
+	IsJustified bool             `json:"is_justified"`
+	Notes       string           `json:"notes,omitempty"`
+	EntryTime   string           `json:"entry_time,omitempty"`
+	ExitTime    string           `json:"exit_time,omitempty"`
 }
 
+// ClassDailyAttendance è la risposta per le presenze di una classe in un giorno.
 type ClassDailyAttendance struct {
 	ClassID string               `json:"class_id"`
 	Date    string               `json:"date"`
@@ -79,7 +42,58 @@ type ClassDailyAttendance struct {
 	} `json:"summary"`
 }
 
-type AnalyticsResponse struct {
-	AverageAbsenceRate float64  `json:"average_absence_rate"`
-	TopAbsentees       []string `json:"top_absentees"`
+// JustificationResponse è la risposta DTO per una giustifica.
+type JustificationResponse struct {
+	ID        string `json:"id"`
+	StudentID string `json:"student_id,omitempty"`
+	Status    string `json:"status"`
+	Reason    string `json:"reason"`
+	DateRange string `json:"date_range"`
 }
+
+// --- Request DTOs ---
+
+type CreateAttendanceRequest struct {
+	StudentID string           `json:"student_id" binding:"required"`
+	ClassID   string           `json:"class_id" binding:"required"`
+	Date      string           `json:"date" binding:"required"`
+	Hour      int              `json:"hour"`
+	SubjectID string           `json:"subject_id"`
+	Status    AttendanceStatus `json:"status" binding:"required"`
+	Notes     string           `json:"notes"`
+	EntryTime string           `json:"entry_time"`
+	ExitTime  string           `json:"exit_time"`
+}
+
+type StudentStatusRequest struct {
+	StudentID string           `json:"student_id" binding:"required"`
+	Status    AttendanceStatus `json:"status" binding:"required"`
+	Notes     string           `json:"notes"`
+	EntryTime string           `json:"entry_time"`
+	ExitTime  string           `json:"exit_time"`
+}
+
+type BulkAttendanceRequest struct {
+	ClassID   string                 `json:"class_id" binding:"required"`
+	Date      string                 `json:"date" binding:"required"`
+	Hour      int                    `json:"hour"`
+	SubjectID string                 `json:"subject_id"`
+	Statuses  []StudentStatusRequest `json:"statuses" binding:"required"`
+}
+
+type UpdateAttendanceRequest struct {
+	Status    *AttendanceStatus `json:"status"`
+	Notes     *string           `json:"notes"`
+	EntryTime *string           `json:"entry_time"`
+	ExitTime  *string           `json:"exit_time"`
+}
+
+type JustificationRequest struct {
+	StudentID string `json:"student_id" binding:"required"`
+	StartDate string `json:"start_date" binding:"required"`
+	EndDate   string `json:"end_date" binding:"required"`
+	Reason    string `json:"reason" binding:"required"`
+}
+
+// Ensure time package is used (needed if time.Time appears in other DTOs).
+var _ = time.Now
