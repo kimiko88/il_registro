@@ -1,7 +1,7 @@
 package grades
 
 import (
-	"io"
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -84,7 +84,20 @@ func (m *RegressionMockRepo) FindWithFilter(f GradeFilter) ([]Grade, error)     
 func (m *RegressionMockRepo) BatchCreate(grades []*Grade) error                 { return nil }
 func (m *RegressionMockRepo) GetHistory(gradeID string) ([]GradeHistory, error) { return nil, nil }
 func (m *RegressionMockRepo) FindByTeacher(teacherID string) ([]Grade, error)   { return nil, nil }
-func (m *RegressionMockRepo) BulkImport(t string, r io.Reader, s int) (*ImportResult, error) {
+func (m *RegressionMockRepo) CreateTest(test *ClassTest) error                  { return nil }
+func (m *RegressionMockRepo) FindTestsByClassAndSubject(classID string, subjectID string) ([]ClassTest, error) {
+	return nil, nil
+}
+func (m *RegressionMockRepo) DeleteTest(id string) error { return nil }
+func (m *RegressionMockRepo) UpdateTest(test *ClassTest) error { return nil }
+func (m *RegressionMockRepo) FindUpcomingTestsByClass(classID string) ([]ClassTest, error) {
+	return nil, nil
+}
+func (m *RegressionMockRepo) FindGradesByTestID(testID string) ([]Grade, error) { return nil, nil }
+func (m *RegressionMockRepo) FindTestByID(id string) (*ClassTest, error)        { return nil, nil }
+
+// fix: FindEnrolledSubjects era mancante nel mock causando errore di compilazione
+func (m *RegressionMockRepo) FindEnrolledSubjects(studentID string, semester int) ([]string, error) {
 	return nil, nil
 }
 
@@ -100,7 +113,7 @@ func TestService_FilterLogicRegex(t *testing.T) {
 	svc := NewService(repo, nil, nil, nil) // userRepo nil, db nil, broadcaster nil
 
 	t.Run("Filter by Semester", func(t *testing.T) {
-		res, err := svc.GetStudentGradesWithFilter("S1", GradeFilter{Semester: 1})
+		res, err := svc.GetStudentGradesWithFilter(context.Background(), "admin-id", "admin", "S1", GradeFilter{Semester: 1})
 		assert.NoError(t, err)
 		assert.Len(t, res, 2)
 		assert.Equal(t, 5.0, res[0].GradeValue)
@@ -108,7 +121,7 @@ func TestService_FilterLogicRegex(t *testing.T) {
 	})
 
 	t.Run("Filter by Subject", func(t *testing.T) {
-		res, err := svc.GetStudentGradesWithFilter("S1", GradeFilter{SubjectID: "HIST"})
+		res, err := svc.GetStudentGradesWithFilter(context.Background(), "admin-id", "admin", "S1", GradeFilter{SubjectID: "HIST"})
 		assert.NoError(t, err)
 		assert.Len(t, res, 1)
 		assert.Equal(t, 8.0, res[0].GradeValue)
@@ -116,9 +129,33 @@ func TestService_FilterLogicRegex(t *testing.T) {
 
 	t.Run("Filter by Published", func(t *testing.T) {
 		pub := true
-		res, err := svc.GetStudentGradesWithFilter("S1", GradeFilter{IsPublished: &pub})
+		res, err := svc.GetStudentGradesWithFilter(context.Background(), "admin-id", "admin", "S1", GradeFilter{IsPublished: &pub})
 		assert.NoError(t, err)
 		assert.Len(t, res, 2)
 		assert.Equal(t, 5.0, res[0].GradeValue)
+	})
+}
+
+func TestCalculator_AverageWithAbsence(t *testing.T) {
+	c := NewCalculator()
+
+	t.Run("Average excludes -1", func(t *testing.T) {
+		grades := []Grade{
+			{GradeValue: 8.0, Weight: 1.0},
+			{GradeValue: -1.0, Weight: 1.0}, // Absence
+			{GradeValue: 6.0, Weight: 1.0},
+		}
+		assert.Equal(t, 7.0, c.CalculateAverage(grades))
+		assert.Equal(t, 7.0, c.CalculateWeightedAverage(grades))
+	})
+
+	t.Run("Average includes 0", func(t *testing.T) {
+		grades := []Grade{
+			{GradeValue: 8.0, Weight: 1.0},
+			{GradeValue: 0.0, Weight: 1.0}, // Zero grade
+			{GradeValue: 6.0, Weight: 1.0},
+		}
+		assert.Equal(t, 4.67, c.CalculateAverage(grades))
+		assert.Equal(t, 4.67, c.CalculateWeightedAverage(grades))
 	})
 }

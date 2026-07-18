@@ -39,7 +39,7 @@
 </template>
 
 <script setup>
-const props = defineProps(['gradesBySubject', 'averages', 'getTrend']);
+defineProps(['gradesBySubject', 'averages', 'getTrend']);
 
 const getGradeColor = (val) => {
     if (val >= 8) return 'green';

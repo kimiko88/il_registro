@@ -13,6 +13,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"registro-backend/pkg/jwt"
+	"registro-backend/pkg/logger"
 )
 
 // MockRepository is a mock implementation of the Repository interface
@@ -22,6 +23,19 @@ type MockRepository struct {
 
 func (m *MockRepository) CreateUser(ctx context.Context, user *User) error {
 	args := m.Called(ctx, user)
+	return args.Error(0)
+}
+
+func (m *MockRepository) GetPasswordHistory(ctx context.Context, userID string) ([]string, error) {
+	args := m.Called(ctx, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]string), args.Error(1)
+}
+
+func (m *MockRepository) AddPasswordHistory(ctx context.Context, userID, passwordHash string) error {
+	args := m.Called(ctx, userID, passwordHash)
 	return args.Error(0)
 }
 
@@ -77,6 +91,16 @@ func (m *MockRepository) EnableMFA(ctx context.Context, userID, secret string) e
 }
 
 func (m *MockRepository) DisableMFA(ctx context.Context, userID string) error {
+	args := m.Called(ctx, userID)
+	return args.Error(0)
+}
+
+func (m *MockRepository) SaveTempMFASecret(ctx context.Context, userID, secret string) error {
+	args := m.Called(ctx, userID, secret)
+	return args.Error(0)
+}
+
+func (m *MockRepository) ConfirmMFA(ctx context.Context, userID string) error {
 	args := m.Called(ctx, userID)
 	return args.Error(0)
 }
@@ -142,6 +166,9 @@ func (m *MockRepository) RevokeAllUserTokens(ctx context.Context, userID string)
 
 // Helper to create service with mocks
 func setupTest(t *testing.T) (*Service, *MockRepository) {
+	// Initialize logger to avoid nil panics
+	logger.Init("info")
+
 	mockRepo := new(MockRepository)
 
 	// Create a real token manager for testing
@@ -332,12 +359,14 @@ func TestRefreshToken(t *testing.T) {
 
 		mockRepo.On("GetRefreshToken", mock.Anything, token).Return(rt, nil).Once()
 		mockRepo.On("GetUserByID", mock.Anything, userID).Return(user, nil).Once()
+		mockRepo.On("RevokeRefreshToken", mock.Anything, "rt-1").Return(nil).Once()
+		mockRepo.On("CreateRefreshToken", mock.Anything, mock.AnythingOfType("*auth.RefreshToken")).Return(nil).Once()
 
 		pair, err := s.RefreshToken(context.Background(), token)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, pair)
-		assert.Equal(t, token, pair.RefreshToken)
+		assert.NotEqual(t, token, pair.RefreshToken)
 		assert.NotEmpty(t, pair.AccessToken)
 		mockRepo.AssertExpectations(t)
 	})
@@ -399,7 +428,9 @@ func TestPasswordReset(t *testing.T) {
 		}
 
 		mockRepo.On("GetPasswordResetToken", mock.Anything, token).Return(prt, nil).Once()
+		mockRepo.On("GetPasswordHistory", mock.Anything, "user-123").Return([]string{}, nil).Once()
 		mockRepo.On("UpdatePassword", mock.Anything, "user-123", mock.Anything).Return(nil).Once()
+		mockRepo.On("AddPasswordHistory", mock.Anything, "user-123", mock.Anything).Return(nil).Once()
 		mockRepo.On("UsePasswordResetToken", mock.Anything, "prt-1").Return(nil).Once()
 		mockRepo.On("RevokeAllUserTokens", mock.Anything, "user-123").Return(nil).Once()
 

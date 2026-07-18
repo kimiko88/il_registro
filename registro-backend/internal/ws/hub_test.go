@@ -69,7 +69,7 @@ func TestHub_Broadcast(t *testing.T) {
 	select {
 	case received := <-client.Send:
 		var parsed Message
-		json.Unmarshal(received, &parsed)
+		_ = json.Unmarshal(received, &parsed)
 		assert.Equal(t, "TEST_EVENT", parsed.Type)
 		assert.Equal(t, "hello", parsed.Payload)
 	case <-time.After(1 * time.Second):

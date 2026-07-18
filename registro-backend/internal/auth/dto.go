@@ -3,7 +3,7 @@ package auth
 // RegisterRequest represents user registration data
 type RegisterRequest struct {
 	Email     string `json:"email" validate:"required,email"`
-	Password  string `json:"password" validate:"required,min=8"`
+	Password  string `json:"password" validate:"required,min=10"`
 	FirstName string `json:"first_name" validate:"required"`
 	LastName  string `json:"last_name" validate:"required"`
 	Role      string `json:"role" validate:"required,oneof=student teacher parent admin"`
@@ -30,7 +30,7 @@ type PasswordResetRequest struct {
 // PasswordResetConfirmRequest represents password reset confirmation
 type PasswordResetConfirmRequest struct {
 	Token       string `json:"token" validate:"required"`
-	NewPassword string `json:"new_password" validate:"required,min=8"`
+	NewPassword string `json:"new_password" validate:"required,min=10"`
 }
 
 // MFASetupRequest represents MFA setup initiation

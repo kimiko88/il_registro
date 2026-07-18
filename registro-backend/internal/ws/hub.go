@@ -7,7 +7,6 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// Client represents a connected user
 type Client struct {
 	Hub      *Hub
 	Conn     *websocket.Conn
@@ -17,30 +16,19 @@ type Client struct {
 	Role     string
 }
 
-// Hub maintains the set of active clients and broadcasts messages
 type Hub struct {
-	// Registered clients map[UserID]map[*Client]bool (allows multiple devices per user)
-	clients map[string]map[*Client]bool
-
-	// Inbound messages from the clients
-	broadcast chan Message
-
-	// Register requests from the clients
-	register chan *Client
-
-	// Unregister requests from clients
+	clients    map[string]map[*Client]bool
+	broadcast  chan Message
+	register   chan *Client
 	unregister chan *Client
-
-	// Lock for map access (though channels handle most sync, map reads might need it if extended)
-	mu sync.RWMutex
+	mu         sync.RWMutex
 }
 
-// Message defines the structure of WebSocket messages
 type Message struct {
 	Type      string      `json:"type"`
 	Payload   interface{} `json:"payload"`
-	Recipient string      `json:"recipient,omitempty"` // UserID
-	SchoolID  string      `json:"school_id,omitempty"` // Broadcast to school
+	Recipient string      `json:"recipient,omitempty"`
+	SchoolID  string      `json:"school_id,omitempty"`
 }
 
 func NewHub() *Hub {
@@ -77,8 +65,8 @@ func (h *Hub) Run() {
 			h.mu.Unlock()
 
 		case message := <-h.broadcast:
-			h.mu.RLock()
-			// Direct message to specific user
+			// Use full Lock (not RLock) because we may delete stale clients from the map.
+			h.mu.Lock()
 			if message.Recipient != "" {
 				if clients, ok := h.clients[message.Recipient]; ok {
 					bytes, _ := json.Marshal(message)
@@ -92,7 +80,6 @@ func (h *Hub) Run() {
 					}
 				}
 			} else if message.SchoolID != "" {
-				// Broadcast to all in school (naive implementation, could be optimized)
 				bytes, _ := json.Marshal(message)
 				for _, clients := range h.clients {
 					for client := range clients {
@@ -107,7 +94,7 @@ func (h *Hub) Run() {
 					}
 				}
 			}
-			h.mu.RUnlock()
+			h.mu.Unlock()
 		}
 	}
 }

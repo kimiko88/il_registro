@@ -1,0 +1,58 @@
+package timetables
+
+import (
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+)
+
+type Handler struct {
+	repo Repository
+}
+
+func NewHandler(repo Repository) *Handler {
+	return &Handler{repo: repo}
+}
+
+func (h *Handler) GetByClass(c *gin.Context) {
+	classID := c.Param("id")
+	if classID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Class ID is required"})
+		return
+	}
+
+	schedule, err := h.repo.GetByClass(c.Request.Context(), classID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, schedule)
+}
+
+func (h *Handler) Update(c *gin.Context) {
+	classID := c.Param("id")
+	if classID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Class ID is required"})
+		return
+	}
+
+	var req UpdateScheduleRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	err := h.repo.Update(c.Request.Context(), classID, req.Entries)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Schedule updated successfully"})
+}
+
+func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
+	r.GET("/classes/:id/schedule", h.GetByClass)
+	r.POST("/classes/:id/schedule", h.Update)
+}

@@ -6,6 +6,8 @@ type CreateAttendanceRequest struct {
 	StudentID string           `json:"student_id" binding:"required"`
 	ClassID   string           `json:"class_id" binding:"required"`
 	Date      string           `json:"date" binding:"required"` // YYYY-MM-DD
+	Hour      int              `json:"hour" binding:"required"`
+	SubjectID string           `json:"subject_id"`
 	Status    AttendanceStatus `json:"status" binding:"required"`
 	EntryTime string           `json:"entry_time,omitempty"` // HH:MM
 	ExitTime  string           `json:"exit_time,omitempty"`  // HH:MM
@@ -20,9 +22,11 @@ type UpdateAttendanceRequest struct {
 }
 
 type BulkAttendanceRequest struct {
-	ClassID  string                    `json:"class_id" binding:"required"`
-	Date     string                    `json:"date" binding:"required"`
-	Statuses []CreateAttendanceRequest `json:"statuses" binding:"required"`
+	ClassID   string                    `json:"class_id" binding:"required"`
+	Date      string                    `json:"date" binding:"required"`
+	Hour      int                       `json:"hour" binding:"required"`
+	SubjectID string                    `json:"subject_id" binding:"required"`
+	Statuses  []CreateAttendanceRequest `json:"statuses" binding:"required"`
 }
 
 type JustificationRequest struct {
@@ -41,6 +45,7 @@ type AttendanceResponse struct {
 	Date        string           `json:"date"`
 	Status      AttendanceStatus `json:"status"`
 	EntryTime   string           `json:"entry_time,omitempty"`
+	ExitTime    string           `json:"exit_time,omitempty"`
 	IsJustified bool             `json:"is_justified"`
 	Notes       string           `json:"notes,omitempty"`
 }
@@ -48,6 +53,7 @@ type AttendanceResponse struct {
 type SummaryResponse struct {
 	TotalAbsences   int     `json:"total_absences"`
 	TotalLates      int     `json:"total_lates"`
+	TotalEarlyExits int     `json:"total_early_exits"`
 	JustifiedCount  int     `json:"justified_count"`
 	AbsenceRate     float64 `json:"absence_rate"` // %
 	RiskLevel       string  `json:"risk_level"`   // Normal, Warning, Critical

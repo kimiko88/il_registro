@@ -12,15 +12,14 @@ jobs:
       run:
         working-directory: ./registro-frontend
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '18'
       - run: npm ci
       - run: npm run build
-      - uses: jsmrcaga/action-netlify-deploy@master
-        with:
+      - name: Deploy to Netlify (Staging)
+        run: npx netlify-cli deploy --alias=staging --dir=dist
+        env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-          deploy_alias: staging
-          build_directory: registro-frontend/dist

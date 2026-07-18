@@ -15,8 +15,12 @@ func NewHandler(service *Service) *Handler {
 }
 
 func (h *Handler) Create(c *gin.Context) {
-	userID := c.MustGet("user_id").(string)
-	schoolID := c.MustGet("school_id").(string)
+	userID := c.GetString("user_id")
+	schoolID := c.GetString("school_id")
+	if userID == "" || schoolID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 
 	var req CreateNoteRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -33,7 +37,11 @@ func (h *Handler) Create(c *gin.Context) {
 }
 
 func (h *Handler) Update(c *gin.Context) {
-	userID := c.MustGet("user_id").(string)
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	noteID := c.Param("id")
 
 	var req UpdateNoteRequest
@@ -55,7 +63,11 @@ func (h *Handler) Update(c *gin.Context) {
 }
 
 func (h *Handler) Delete(c *gin.Context) {
-	userID := c.MustGet("user_id").(string)
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	noteID := c.Param("id")
 
 	if err := h.service.DeleteNote(c.Request.Context(), userID, noteID); err != nil {
@@ -70,6 +82,13 @@ func (h *Handler) Delete(c *gin.Context) {
 }
 
 func (h *Handler) List(c *gin.Context) {
+	actorID := c.GetString("user_id")
+	actorRole := c.GetString("role")
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
 	filter := NoteFilter{
 		StudentID: c.Query("student_id"),
 		ClassID:   c.Query("class_id"),
@@ -77,17 +96,16 @@ func (h *Handler) List(c *gin.Context) {
 		Type:      NoteType(c.Query("type")),
 		DateFrom:  c.Query("date_from"),
 		DateTo:    c.Query("date_to"),
+		ActorID:   actorID,
+		ActorRole: actorRole,
 	}
-
-	// Filter by school? usually List is constrained by school automatically or access.
-	// But List accepts context.
-	// We might want to enforce SchoolID if tenant based.
-	// For now, Repository list filters by what is passed.
-	// The Service could enforce access checks, but generally Parents see children notes, Teachers see class notes.
-	// This simple handler relies on query params.
 
 	notes, err := h.service.ListNotes(c.Request.Context(), filter)
 	if err != nil {
+		if err.Error() == "unauthorized: not a guardian of this student" || err.Error() == "unauthorized: parent must specify student_id" {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

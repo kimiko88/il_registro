@@ -20,6 +20,7 @@ type User struct {
 	CreatedAt     time.Time  `json:"created_at"`
 	UpdatedAt     time.Time  `json:"updated_at"`
 	LastLogin     *time.Time `json:"last_login,omitempty"`
+	PasswordChangedAt *time.Time `json:"password_changed_at,omitempty"`
 }
 
 // RefreshToken represents a refresh token in the database

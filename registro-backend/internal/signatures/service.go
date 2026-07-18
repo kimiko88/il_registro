@@ -6,19 +6,27 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+
+	"github.com/pquerna/otp/totp"
+	"registro-backend/internal/users"
 )
 
 type DocumentService interface {
 	LockDocument(ctx context.Context, id string) error
 }
 
-type service struct {
-	repo    Repository
-	docsSvc DocumentService
+type UserLookup interface {
+	GetByID(ctx context.Context, id string) (*users.User, error)
 }
 
-func NewService(repo Repository, docsSvc DocumentService) Service {
-	return &service{repo: repo, docsSvc: docsSvc}
+type service struct {
+	repo     Repository
+	docsSvc  DocumentService
+	userRepo UserLookup
+}
+
+func NewService(repo Repository, docsSvc DocumentService, userRepo UserLookup) Service {
+	return &service{repo: repo, docsSvc: docsSvc, userRepo: userRepo}
 }
 
 func (s *service) SignDocument(signerID string, req SignRequest) (*Signature, error) {
@@ -29,16 +37,24 @@ func (s *service) SignDocument(signerID string, req SignRequest) (*Signature, er
 		return nil, errors.New("pin is required")
 	}
 
-	// 1. Verify PIN (MFA Simulation)
-	// In a real system, we'd check against a hashed secret for the user.
-	// For MVP: assume "1234" is the correct PIN for everyone (or check something basic)
-	if req.Pin != "1234" {
-		return nil, errors.New("invalid pin")
+	// 1. Verify OTP/PIN (MFA FEA Verification)
+	user, err := s.userRepo.GetByID(context.Background(), signerID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve user: %w", err)
+	}
+
+	if user.MFAEnabled {
+		if !totp.Validate(req.Pin, user.MFASecret) {
+			return nil, errors.New("codice OTP non valido")
+		}
+	} else {
+		// Fallback to legacy PIN for backwards compatibility / dev mode
+		if req.Pin != "1234" {
+			return nil, errors.New("mfa non abilitato e PIN non valido")
+		}
 	}
 
 	// 2. Fetch Document Content (Mocked)
-	// We need to hash the *content* to make it immutable.
-	// In a real app, we'd fetch the document BLOB or text content.
 	docContent := fmt.Sprintf("content-of-%s", req.DocumentID)
 
 	// 3. Calculate Hash
@@ -50,7 +66,7 @@ func (s *service) SignDocument(signerID string, req SignRequest) (*Signature, er
 		DocumentID:    req.DocumentID,
 		SignerID:      signerID,
 		SignatureHash: hashString,
-		IPAddress:     "127.0.0.1", // In real handler, get from Context
+		IPAddress:     "127.0.0.1",
 		Metadata:      "{}",
 	}
 
@@ -60,8 +76,6 @@ func (s *service) SignDocument(signerID string, req SignRequest) (*Signature, er
 
 	// 5. Lock Document
 	if err := s.docsSvc.LockDocument(context.Background(), req.DocumentID); err != nil {
-		// Log error but don't fail signature creation? Or fail?
-		// Ideally transactional. For now, return error.
 		return nil, fmt.Errorf("failed to lock document: %w", err)
 	}
 

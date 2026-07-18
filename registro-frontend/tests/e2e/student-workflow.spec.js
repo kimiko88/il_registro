@@ -47,7 +47,7 @@ describe('Student Workflow', () => {
                             auth: { user: { role: 'student', first_name: 'Student', id: 1 } },
                             student: {
                                 // Fix: Provide profile data used in template
-                                profile: { firstName: 'Student', lastName: 'User' },
+                                profile: { first_name: 'Student', last_name: 'User' },
                                 notifications: [],
                                 stats: { average: 7.5, absences: 2 },
                                 recentGrades: [],

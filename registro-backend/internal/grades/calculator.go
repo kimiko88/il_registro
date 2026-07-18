@@ -32,7 +32,7 @@ func (c *Calculator) CalculateAverage(grades []Grade) float64 {
 		// Assumption: GradeValue is already set correctly on INSERT.
 		// But for "Trend" and special averaging, let's implement the conversion utility.
 
-		if g.GradeValue > 0 {
+		if g.GradeValue >= 0 {
 			total += g.GradeValue
 			count++
 		}
@@ -79,7 +79,7 @@ func (c *Calculator) CalculateWeightedAverage(grades []Grade) float64 {
 	var totalWeights float64
 
 	for _, g := range grades {
-		if g.GradeValue > 0 && g.Weight > 0 {
+		if g.GradeValue >= 0 && g.Weight > 0 {
 			totalWeighted += g.GradeValue * g.Weight
 			totalWeights += g.Weight
 		}
@@ -193,7 +193,7 @@ func (c *Calculator) DetectOutliers(grades []Grade) []string {
 func (c *Calculator) extractValues(grades []Grade) []float64 {
 	var vals []float64
 	for _, g := range grades {
-		if g.GradeValue > 0 {
+		if g.GradeValue >= 0 {
 			vals = append(vals, g.GradeValue)
 		}
 	}

@@ -5,7 +5,7 @@ import { mount } from '@vue/test-utils'
 // I will check file list or assume SchoolManagement if not.
 // Let's assume there is an Admin Dashboard or checking SchoolManagement is enough.
 // Default to SchoolManagement as "Admin Workflow" entry.
-import SchoolManagement from '@/pages/Admin/SchoolManagement.vue'
+import SchoolManagement from '@/pages/admin/SchoolManagement.vue'
 import { createTestingPinia } from '@pinia/testing'
 
 // Mock Quasar

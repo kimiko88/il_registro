@@ -3,6 +3,8 @@ package scheduling
 import (
 	"context"
 	"errors"
+	"fmt"
+	"registro-backend/internal/teachers"
 	"time"
 )
 
@@ -25,75 +27,137 @@ type Service interface {
 }
 
 type service struct {
-	repo      Repository
-	validator *Validator
-	generator *Generator
-	notif     *NotificationService
-	calendar  *CalendarService
-	analytics *AnalyticsService
+	repo        Repository
+	teacherRepo teachers.Repository
+	validator   *Validator
+	generator   *Generator
+	notif       *NotificationService
+	calendar    *CalendarService
+	analytics   *AnalyticsService
 }
 
-func NewService(repo Repository) Service {
+func NewService(repo Repository, teacherRepo teachers.Repository) Service {
 	return &service{
-		repo:      repo,
-		validator: NewValidator(),
-		generator: NewGenerator(),
-		notif:     NewNotificationService(),
-		calendar:  NewCalendarService(),
-		analytics: NewAnalyticsService(repo),
+		repo:        repo,
+		teacherRepo: teacherRepo,
+		validator:   NewValidator(),
+		generator:   NewGenerator(),
+		notif:       NewNotificationService(),
+		calendar:    NewCalendarService(),
+		analytics:   NewAnalyticsService(repo),
 	}
 }
 
-func (s *service) CreateSlots(ctx context.Context, teacherID string, req CreateSlotRequest) error {
-	date, _ := time.Parse("2006-01-02", req.Date)
+func (s *service) CreateSlots(ctx context.Context, userID string, req CreateSlotRequest) error {
+	// 1. Resolve Teacher Profile
+	teacher, err := s.teacherRepo.GetByUserID(ctx, userID)
+	if err != nil {
+		return fmt.Errorf("failed to resolve teacher profile: %w", err)
+	}
+
 	start, _ := time.Parse("15:04", req.StartTime)
 	end, _ := time.Parse("15:04", req.EndTime)
 
-	slot := &ColloquioSlot{
-		TeacherID:   teacherID,
-		SchoolID:    "default-school",
-		Date:        date,
-		StartTime:   start,
-		EndTime:     end,
-		MaxBookings: 1,
-		Type:        req.Type,
-		Location:    req.Location,
-	}
-	if req.MaxBookings > 1 {
-		slot.MaxBookings = req.MaxBookings
+	var allSlots []ColloquioSlot
+
+	for _, dateStr := range req.Dates {
+		firstDate, _ := time.Parse("2006-01-02", dateStr)
+		
+		targetDates := []time.Time{firstDate}
+		if req.IsRecurring && req.RecurringUntil != "" {
+			untilDate, _ := time.Parse("2006-01-02", req.RecurringUntil)
+			current := firstDate.AddDate(0, 0, 7)
+			for !current.After(untilDate) {
+				targetDates = append(targetDates, current)
+				current = current.AddDate(0, 0, 7)
+			}
+		}
+
+		for _, date := range targetDates {
+			if req.Duration > 0 {
+				// Split range into slots
+				current := start
+				for current.Add(time.Duration(req.Duration) * time.Minute).Before(end) || current.Add(time.Duration(req.Duration)*time.Minute).Equal(end) {
+					slot := ColloquioSlot{
+						TeacherID:   teacher.ID,
+						SchoolID:    teacher.SchoolID,
+						Date:        date,
+						StartTime:   current,
+						EndTime:     current.Add(time.Duration(req.Duration) * time.Minute),
+						MaxBookings: 1,
+						Type:        req.Type,
+						Location:    req.Location,
+					}
+					if req.MaxBookings > 1 {
+						slot.MaxBookings = req.MaxBookings
+					}
+					allSlots = append(allSlots, slot)
+					current = current.Add(time.Duration(req.Duration) * time.Minute)
+				}
+			} else {
+				// Single slot for the whole range
+				slot := ColloquioSlot{
+					TeacherID:   teacher.ID,
+					SchoolID:    teacher.SchoolID,
+					Date:        date,
+					StartTime:   start,
+					EndTime:     end,
+					MaxBookings: 1,
+					Type:        req.Type,
+					Location:    req.Location,
+				}
+				if req.MaxBookings > 1 {
+					slot.MaxBookings = req.MaxBookings
+				}
+				allSlots = append(allSlots, slot)
+			}
+		}
 	}
 
-	if err := s.validator.ValidateSlot(slot); err != nil {
-		return err
+	if len(allSlots) == 0 {
+		return errors.New("no slots generated")
 	}
 
-	return s.repo.CreateSlot(ctx, slot)
+	return s.repo.CreateSlotsBatch(ctx, allSlots)
 }
 
-func (s *service) GetMySlots(ctx context.Context, teacherID string) ([]SlotResponse, error) {
-	// next 30 days
-	from := time.Now()
-	to := from.AddDate(0, 0, 30)
-	slots, err := s.repo.GetSlots(ctx, teacherID, from, to)
+func (s *service) GetMySlots(ctx context.Context, userID string) ([]SlotResponse, error) {
+	teacher, err := s.teacherRepo.GetByUserID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// next 60 days
+	from := time.Now().Truncate(24 * time.Hour)
+	to := from.AddDate(0, 0, 60)
+	slots, err := s.repo.GetSlots(ctx, teacher.ID, from, to)
 	if err != nil {
 		return nil, err
 	}
 	return convertSlots(slots), nil
 }
 
-func (s *service) DeleteSlot(ctx context.Context, teacherID, slotID string) error {
-	// Should check if it has bookings first?
-	// Simplified: Mark cancelled
+func (s *service) DeleteSlot(ctx context.Context, userID, slotID string) error {
+	teacher, err := s.teacherRepo.GetByUserID(ctx, userID)
+	if err != nil {
+		return err
+	}
+
 	slot, err := s.repo.GetSlotByID(ctx, slotID)
 	if err != nil {
 		return err
 	}
-	if slot.TeacherID != teacherID {
+	if slot.TeacherID != teacher.ID {
 		return errors.New("unauthorized")
 	}
 
-	slot.IsCancelled = true
-	return s.repo.UpdateSlot(ctx, slot)
+	if slot.BookingCount > 0 {
+		// Cannot delete if there are bookings, mark cancelled
+		slot.IsCancelled = true
+		return s.repo.UpdateSlot(ctx, slot)
+	}
+
+	return s.repo.DeleteSlot(ctx, slotID)
 }
 
 func (s *service) GetAvailableSlots(ctx context.Context, teacherID string) ([]SlotResponse, error) {
@@ -107,6 +171,11 @@ func (s *service) GetAvailableSlots(ctx context.Context, teacherID string) ([]Sl
 }
 
 func (s *service) BookSlot(ctx context.Context, parentID string, req BookSlotRequest) (*BookingResponse, error) {
+	parentProfileID, err := s.repo.ResolveParentUserID(ctx, parentID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to resolve parent profile: %w", err)
+	}
+
 	slot, err := s.repo.GetSlotByID(ctx, req.SlotID)
 	if err != nil {
 		return nil, err
@@ -125,7 +194,7 @@ func (s *service) BookSlot(ctx context.Context, parentID string, req BookSlotReq
 
 	booking := &ColloquioBooking{
 		SlotID:    req.SlotID,
-		ParentID:  &parentID,
+		ParentID:  &parentProfileID,
 		StudentID: req.StudentID,
 		Status:    StatusConfirmed,
 	}
@@ -134,10 +203,30 @@ func (s *service) BookSlot(ctx context.Context, parentID string, req BookSlotReq
 		return nil, err
 	}
 
+	// Hydrate booking response details (parent name/student name)
+	hydrated, err := s.repo.GetBooking(ctx, booking.ID)
+	if err == nil && hydrated != nil {
+		booking = hydrated
+		booking.Slot = slot
+	}
+
 	s.notif.NotifyBooking(booking, slot, "parent")
 
-	// Stub Response
-	return &BookingResponse{ID: booking.ID, Status: StatusConfirmed}, nil
+	return &BookingResponse{
+		ID:       booking.ID,
+		Status:   booking.Status,
+		BookedAt: booking.BookedAt,
+		Notes:    booking.Notes,
+		SlotInfo: SlotResponse{
+			ID:        slot.ID,
+			Date:      slot.Date.Format("2006-01-02"),
+			TimeRange: fmt.Sprintf("%s - %s", slot.StartTime.Format("15:04"), slot.EndTime.Format("15:04")),
+			Type:      slot.Type,
+			Location:  slot.Location,
+		},
+		ParentName:  booking.ParentName,
+		StudentName: booking.StudentName,
+	}, nil
 }
 
 func (s *service) GetMyBookings(ctx context.Context, userID, role string) ([]BookingResponse, error) {
@@ -161,8 +250,10 @@ func (s *service) CancelBooking(ctx context.Context, userID, bookingID string) e
 		return err
 	}
 
-	// Verify ownership
-	isParent := b.ParentID != nil && *b.ParentID == userID
+	// Try to resolve parent profile ID to match parent ownership check
+	parentProfileID, _ := s.repo.ResolveParentUserID(ctx, userID)
+
+	isParent := b.ParentID != nil && parentProfileID != "" && *b.ParentID == parentProfileID
 
 	if !isParent {
 		// Check if it's the teacher
@@ -180,8 +271,24 @@ func (s *service) CancelBooking(ctx context.Context, userID, bookingID string) e
 }
 
 func (s *service) UpdateSettings(ctx context.Context, req GeneralScheduleRequest) error {
-	// Stub config update
-	return nil
+	start, err := time.Parse("2006-01-02", req.StartDate)
+	if err != nil {
+		return fmt.Errorf("invalid start date: %w", err)
+	}
+	end, err := time.Parse("2006-01-02", req.EndDate)
+	if err != nil {
+		return fmt.Errorf("invalid end date: %w", err)
+	}
+
+	settings := &ColloquioSettings{
+		SchoolID:           "default-school", // Temporary default
+		BookingWindowDays:  14,
+		BookingBufferHours: 24,
+		GeneralWindowStart: &start,
+		GeneralWindowEnd:   &end,
+	}
+
+	return s.repo.UpdateSettings(ctx, settings)
 }
 
 func (s *service) GetAnalytics(ctx context.Context) (*AnalyticsResponse, error) {
@@ -204,7 +311,10 @@ func convertSlots(slots []ColloquioSlot) []SlotResponse {
 	for _, s := range slots {
 		res = append(res, SlotResponse{
 			ID: s.ID, Date: s.Date.Format("2006-01-02"),
-			Type: s.Type, TeacherID: s.TeacherID,
+			TimeRange: fmt.Sprintf("%s - %s", s.StartTime.Format("15:04"), s.EndTime.Format("15:04")),
+			Type:      s.Type,
+			Available: !s.IsCancelled && s.BookingCount < s.MaxBookings,
+			TeacherID: s.TeacherID,
 		})
 	}
 	return res
@@ -213,7 +323,21 @@ func convertSlots(slots []ColloquioSlot) []SlotResponse {
 func convertBookings(bookings []ColloquioBooking) []BookingResponse {
 	var res []BookingResponse
 	for _, b := range bookings {
-		res = append(res, BookingResponse{ID: b.ID, Status: b.Status, Notes: b.Notes, BookedAt: b.BookedAt})
+		br := BookingResponse{
+			ID: b.ID, Status: b.Status, Notes: b.Notes, BookedAt: b.BookedAt,
+			ParentName:  b.ParentName,
+			StudentName: b.StudentName,
+		}
+		if b.Slot != nil {
+			br.SlotInfo = SlotResponse{
+				ID:        b.Slot.ID,
+				Date:      b.Slot.Date.Format("2006-01-02"),
+				TimeRange: fmt.Sprintf("%s - %s", b.Slot.StartTime.Format("15:04"), b.Slot.EndTime.Format("15:04")),
+				Type:      b.Slot.Type,
+				Location:  b.Slot.Location,
+			}
+		}
+		res = append(res, br)
 	}
 	return res
 }

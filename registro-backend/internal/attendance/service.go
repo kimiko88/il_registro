@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"time"
+
+	"registro-backend/internal/users"
 )
 
 // EventBroadcaster defines the interface for real-time notifications
@@ -24,22 +26,28 @@ type Service interface {
 	RequestJustification(ctx context.Context, parentID string, req JustificationRequest) error
 	ProcessJustification(ctx context.Context, teacherID, justificationID string, approve bool) error
 	GetPendingJustifications(ctx context.Context, classID string) ([]JustificationResponse, error)
-	DeleteJustification(ctx context.Context, justificationID string) error
+	DeleteJustification(ctx context.Context, actorID string, justificationID string) error
 
 	// Analytics & Summaries
 	GetStudentSummary(ctx context.Context, studentID string) (*SummaryResponse, error)
 	GetSchoolAnalytics(ctx context.Context) (*AnalyticsResponse, error) // To be defined
+
+	// Parent Access (with guardianship checks)
+	GetChildAttendance(ctx context.Context, parentID, studentID string) ([]AttendanceResponse, error)
+	GetChildSummary(ctx context.Context, parentID, studentID string) (*SummaryResponse, error)
 }
 
 type service struct {
 	repo        Repository
+	userRepo    users.Repository
 	validator   *Validator
 	broadcaster EventBroadcaster
 }
 
-func NewService(repo Repository, b EventBroadcaster) Service {
+func NewService(repo Repository, uRepo users.Repository, b EventBroadcaster) Service {
 	return &service{
 		repo:        repo,
+		userRepo:    uRepo,
 		validator:   NewValidator(),
 		broadcaster: b,
 	}
@@ -52,8 +60,9 @@ func (s *service) MarkAttendance(ctx context.Context, teacherID string, req Crea
 		SchoolID:  "default-school", // Should get from context or user
 		StudentID: req.StudentID,
 		ClassID:   req.ClassID,
-		TeacherID: teacherID,
 		Date:      date,
+		Hour:      &req.Hour,
+		SubjectID: &req.SubjectID,
 		Status:    req.Status,
 		Notes:     req.Notes,
 	}
@@ -89,13 +98,17 @@ func (s *service) MarkBulk(ctx context.Context, teacherID string, req BulkAttend
 			SchoolID:  "default-school",
 			StudentID: r.StudentID,
 			ClassID:   req.ClassID,
-			TeacherID: teacherID,
 			Date:      date,
+			Hour:      &req.Hour,
+			SubjectID: &req.SubjectID,
 			Status:    r.Status,
 			Notes:     r.Notes,
 		}
 		if r.EntryTime != "" {
 			att.EntryTime = &r.EntryTime
+		}
+		if r.ExitTime != "" {
+			att.ExitTime = &r.ExitTime
 		}
 		if err := s.validator.ValidateEntry(att); err != nil {
 			return err
@@ -123,6 +136,9 @@ func (s *service) UpdateAttendance(ctx context.Context, teacherID, id string, re
 	if req.EntryTime != nil {
 		att.EntryTime = req.EntryTime
 	}
+	if req.ExitTime != nil {
+		att.ExitTime = req.ExitTime
+	}
 
 	return s.repo.Update(att)
 }
@@ -147,11 +163,16 @@ func (s *service) GetClassAttendance(ctx context.Context, classID string, dateSt
 			StudentID:   att.StudentID,
 			Date:        att.Date.Format("2006-01-02"),
 			Status:      att.Status,
-			IsJustified: att.IsJustified,
+			IsJustified: att.Justified,
 			Notes:       att.Notes,
 		}
-		if att.EntryTime != nil {
+		if att.EntryTime != nil && *att.EntryTime != "" {
 			r.EntryTime = *att.EntryTime
+		} else if att.Hour != nil {
+			r.EntryTime = fmt.Sprintf("%d", *att.Hour)
+		}
+		if att.ExitTime != nil {
+			r.ExitTime = *att.ExitTime
 		}
 
 		resp.Records = append(resp.Records, r)
@@ -189,8 +210,14 @@ func (s *service) GetStudentAttendance(ctx context.Context, studentID string) ([
 			StudentID:   att.StudentID,
 			Date:        att.Date.Format("2006-01-02"),
 			Status:      att.Status,
-			IsJustified: att.IsJustified,
+			IsJustified: att.Justified,
 			Notes:       att.Notes,
+		}
+		if att.EntryTime != nil {
+			r.EntryTime = *att.EntryTime
+		}
+		if att.ExitTime != nil {
+			r.ExitTime = *att.ExitTime
 		}
 		resp = append(resp, r)
 	}
@@ -259,18 +286,9 @@ func (s *service) GetPendingJustifications(ctx context.Context, classID string) 
 	return resp, nil
 }
 
-func (s *service) DeleteJustification(ctx context.Context, justificationID string) error {
-	// Logical delete or actual delete? Assuming "Reject" is processed via ProcessJustification(false).
-	// If this means "Cancel Request", we can delete.
-	// For "Reject", use Process.
-	// Let's implement Delete as effectively canceling a pending request.
-	// Requirement 14: DELETE /justification/{id} - Rifiuta giustificazione?
-	// Usually "DELETE" implies removal. "Rejecting" is a state change.
-	// I'll map DELETE endpoint to "Reject" logic or add a Delete method to repo.
-	// Let's assume DELETE = Reject for API consistency if requested, but semantically usually POST {action}.
-	// The prompt requested: DELETE ... - Rifiuta giustificazione.
-	// So I will implement it as Reject.
-	return s.ProcessJustification(ctx, "admin", justificationID, false)
+func (s *service) DeleteJustification(ctx context.Context, actorID string, justificationID string) error {
+	// Semantically, DELETE acts as Reject in this implementation.
+	return s.ProcessJustification(ctx, actorID, justificationID, false)
 }
 
 func (s *service) GetStudentSummary(ctx context.Context, studentID string) (*SummaryResponse, error) {
@@ -301,4 +319,30 @@ func (s *service) GetSchoolAnalytics(ctx context.Context) (*AnalyticsResponse, e
 		AverageAbsenceRate: 12.5,
 		TopAbsentees:       []string{}, // Populate later
 	}, nil
+}
+
+func (s *service) GetChildAttendance(ctx context.Context, parentID, studentID string) ([]AttendanceResponse, error) {
+	if s.userRepo != nil {
+		isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, studentID)
+		if err != nil {
+			return nil, err
+		}
+		if !isGuardian {
+			return nil, fmt.Errorf("unauthorized: not a guardian of this student")
+		}
+	}
+	return s.GetStudentAttendance(ctx, studentID)
+}
+
+func (s *service) GetChildSummary(ctx context.Context, parentID, studentID string) (*SummaryResponse, error) {
+	if s.userRepo != nil {
+		isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, studentID)
+		if err != nil {
+			return nil, err
+		}
+		if !isGuardian {
+			return nil, fmt.Errorf("unauthorized: not a guardian of this student")
+		}
+	}
+	return s.GetStudentSummary(ctx, studentID)
 }

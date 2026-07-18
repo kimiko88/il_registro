@@ -10,13 +10,11 @@ import (
 type AttendanceStatus string
 
 const (
-	StatusPresent      AttendanceStatus = "present"
-	StatusAbsent       AttendanceStatus = "absent"
-	StatusLate         AttendanceStatus = "late"
-	StatusEarlyExit    AttendanceStatus = "early_exit"
-	StatusSick         AttendanceStatus = "sick"
-	StatusJustified    AttendanceStatus = "justified"
-	StatusFamilyReason AttendanceStatus = "family_reason"
+	StatusPresent   AttendanceStatus = "Present"
+	StatusAbsent    AttendanceStatus = "Absent"
+	StatusLate      AttendanceStatus = "Late"
+	StatusEarlyExit AttendanceStatus = "LeftEarly"
+	StatusExempt    AttendanceStatus = "Exempt"
 )
 
 type JustificationStatus string
@@ -27,27 +25,26 @@ const (
 	JustificationRejected JustificationStatus = "rejected"
 )
 
-// Attendance represents a single daily record
 type Attendance struct {
 	ID        string `json:"id" db:"id"`
 	SchoolID  string `json:"school_id" db:"school_id"`
 	StudentID string `json:"student_id" db:"student_id"`
 	ClassID   string `json:"class_id" db:"class_id"`
-	TeacherID string `json:"teacher_id" db:"teacher_id"`
 
-	Date   time.Time        `json:"date" db:"date"`
-	Status AttendanceStatus `json:"status" db:"status"`
+	Date      time.Time        `json:"date" db:"date"`
+	Hour      *int             `json:"hour,omitempty" db:"hour"`
+	SubjectID *string          `json:"subject_id,omitempty" db:"subject_id"`
+	Status    AttendanceStatus `json:"status" db:"status"`
 
-	EntryTime   *string `json:"entry_time,omitempty" db:"entry_time"` // HH:MM
-	ExitTime    *string `json:"exit_time,omitempty" db:"exit_time"`   // HH:MM
-	MinutesLate int     `json:"minutes_late" db:"minutes_late"`
-
-	IsJustified bool   `json:"is_justified" db:"is_justified"`
-	Notes       string `json:"notes,omitempty" db:"notes"`
+	Justified   bool       `json:"justified" db:"justified"`
+	JustifiedBy *string    `json:"justified_by,omitempty" db:"justified_by"`
+	JustifiedAt *time.Time `json:"justified_at,omitempty" db:"justified_at"`
+	Notes       string     `json:"notes,omitempty" db:"notes"`
+	EntryTime   *string    `json:"entry_time,omitempty" db:"entry_time"`
+	ExitTime    *string    `json:"exit_time,omitempty" db:"exit_time"`
 
 	CreatedAt time.Time  `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time  `json:"updated_at" db:"updated_at"`
-	DeletedAt *time.Time `json:"deleted_at,omitempty" db:"deleted_at"`
 }
 
 // Justification represents a request to justify an absence
@@ -70,7 +67,7 @@ type Justification struct {
 }
 
 func (a *Attendance) IsValid() bool {
-	if a.StudentID == "" || a.ClassID == "" || a.TeacherID == "" {
+	if a.StudentID == "" || a.ClassID == "" {
 		return false
 	}
 	if a.Date.IsZero() {

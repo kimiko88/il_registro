@@ -32,7 +32,7 @@ func (h *Handler) Register(c *gin.Context) {
 		statusCode := http.StatusInternalServerError
 		if err == ErrEmailAlreadyExists {
 			statusCode = http.StatusConflict
-		} else if err == ErrInvalidEmail || err == ErrPasswordTooShort {
+		} else if err == ErrInvalidEmail || err == ErrPasswordTooShort || err == ErrInvalidRole {
 			statusCode = http.StatusBadRequest
 		}
 		c.JSON(statusCode, ErrorResponse{Error: err.Error()})
@@ -62,10 +62,6 @@ func (h *Handler) Login(c *gin.Context) {
 
 	ipAddress := c.ClientIP()
 	userAgent := c.GetHeader("User-Agent")
-
-	// Debug logging
-	// Debug logging
-	// fmt.Printf("DEBUG HANDLER: Login Request: %+v\n", req)
 
 	authResp, err := h.service.Login(c.Request.Context(), &req, ipAddress, userAgent)
 	if err != nil {
@@ -110,7 +106,19 @@ func (h *Handler) Logout(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.Logout(c.Request.Context(), req.RefreshToken); err != nil {
+	// Extract the authenticated user's ID from the JWT (set by Authenticate middleware).
+	// This ensures a user can only revoke their own sessions.
+	callerUserID, exists := GetUserID(c)
+	if !exists {
+		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "user not authenticated"})
+		return
+	}
+
+	if err := h.service.Logout(c.Request.Context(), req.RefreshToken, callerUserID); err != nil {
+		if err == ErrUnauthorized {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: "token does not belong to the authenticated user"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
 		return
 	}

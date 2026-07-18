@@ -1,66 +1,271 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --bg-primary: #f1f5f9;
+    --bg-secondary: #ffffff;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --border-color: #e2e8f0;
+    --glass-bg: rgba(255, 255, 255, 0.6);
+    --glass-card-bg: rgba(255, 255, 255, 0.8);
+    --premium-dialog-bg: rgba(255, 255, 255, 0.95);
+    --premium-border: rgba(255, 255, 255, 0.5);
+}
+
+.body--dark {
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --border-color: #334155;
+    --glass-bg: rgba(15, 23, 42, 0.6);
+    --glass-card-bg: rgba(30, 41, 59, 0.8);
+    --premium-dialog-bg: rgba(30, 41, 59, 0.98);
+    --premium-border: rgba(255, 255, 255, 0.1);
+}
 
 body {
     margin: 0;
     padding: 0;
-    font-family: 'Inter', -apple-system, Helvetica Neue, Helvetica, Arial, sans-serif;
-    background-color: #f8fafc; /* Slate 50 */
-    color: #1e293b; /* Slate 900 */
+    font-family: 'Outfit', 'Inter', -apple-system, Helvetica Neue, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.text-inter {
-    font-family: 'Inter', sans-serif;
+.text-outfit {
+    font-family: 'Outfit', sans-serif;
 }
 
 /* Glassmorphism */
 .glass-effect {
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    border: 1px solid var(--premium-border);
 }
 
 .glass-card {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    border-radius: 16px;
+    background: var(--glass-card-bg);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid var(--premium-border);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+    border-radius: 20px;
 }
 
 /* Shadows & Gradients */
 .shadow-soft {
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+}
+
+.body--dark .shadow-soft {
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
 }
 
 .bg-gradient-primary {
-    background: linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%);
+    background: linear-gradient(135deg, #6366f1 0%, #3b82f6 100%);
     color: white;
 }
 
-.bg-gradient-dark {
-    background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
-    color: white;
+.bg-gradient-premium {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+}
+
+.text-gradient-premium {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: transparent;
+    display: inline-block;
+}
+
+.body--dark .text-gradient-premium {
+    background: linear-gradient(135deg, #a5b4fc 0%, #d8b4fe 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Premium Dialog Styling */
+.premium-dialog .q-card {
+    border-radius: 24px;
+    background: var(--premium-dialog-bg);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--premium-border);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.body--dark .q-card {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.body--dark .q-table {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.body--dark .q-table thead tr th {
+    color: var(--text-secondary);
+}
+
+.body--dark .q-field--outlined .q-field__control {
+    border-color: var(--border-color);
+}
+
+.body--dark .q-field--outlined .q-field__native,
+.body--dark .q-field--outlined .q-field__input {
+    color: var(--text-primary);
+}
+
+/* Dark Mode Utility Overrides */
+.body--dark .bg-white {
+    background-color: var(--bg-secondary) !important;
+}
+
+.body--dark .bg-slate-50,
+.body--dark .bg-grey-1,
+.body--dark .bg-indigo-50,
+.body--dark .bg-amber-50,
+.body--dark .bg-emerald-50,
+.body--dark .bg-orange-50 {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    color: var(--text-primary) !important;
+}
+
+.body--dark .bg-slate-100,
+.body--dark .bg-grey-2,
+.body--dark .bg-indigo-100,
+.body--dark .bg-amber-100,
+.body--dark .bg-emerald-100,
+.body--dark .bg-orange-100 {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: var(--text-primary) !important;
+}
+
+.body--dark .text-slate-800,
+.body--dark .text-slate-700,
+.body--dark .text-indigo-900,
+.body--dark .text-amber-900,
+.body--dark .text-emerald-900,
+.body--dark .text-orange-900 {
+    color: var(--text-primary) !important;
+}
+
+.body--dark .text-slate-500,
+.body--dark .text-slate-400,
+.body--dark .text-indigo-400 {
+    color: var(--text-secondary) !important;
+}
+
+.body--dark .border-slate-100,
+.body--dark .border-slate-200 {
+    border-color: var(--border-color) !important;
 }
 
 /* Utilities */
+.rounded-2xl {
+    border-radius: 1.5rem;
+}
+
 .rounded-xl {
     border-radius: 1rem;
 }
 
 .rounded-lg {
-    border-radius: 0.5rem;
+    border-radius: 0.75rem;
 }
 
 /* Form Styles Override */
 .q-field--outlined .q-field__control {
-    border-radius: 12px;
+    border-radius: 14px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.q-field--outlined.q-field--focused .q-field__control {
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
 }
 
 .q-btn {
-    border-radius: 8px;
-    font-weight: 500;
+    border-radius: 12px;
+    font-weight: 600;
     text-transform: none;
     letter-spacing: 0.01em;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.q-btn:hover {
+    transform: translateY(-1px);
+}
+
+.q-btn:active {
+    transform: translateY(0);
+}
+
+/* =========================================
+   WCAG 2.1 Legge Stanca Compliance Helpers
+   ========================================= */
+
+/* Skip-to-content link for keyboard users */
+.skip-to-content {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: #312e81;
+    color: #ffffff;
+    padding: 8px 16px;
+    z-index: 99999;
+    border-radius: 0 0 8px 0;
+    font-weight: 600;
+    text-decoration: none;
+    transition: top 0.2s ease;
+}
+
+.skip-to-content:focus {
+    top: 0;
+}
+
+/* Ensure all interactive elements have a visible focus ring */
+*:focus-visible {
+    outline: 3px solid #4338CA;
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* Quasar overrides: ensure focus ring on buttons */
+.q-btn:focus-visible {
+    outline: 3px solid #4338CA;
+    outline-offset: 2px;
+}
+
+/* WCAG AA: Minimum contrast 4.5:1 for normal text.
+   text-slate-400 (#94a3b8) on white (#fff) is only 2.98:1 — non-compliant.
+   Override to text-slate-600 (#475569) which is 5.74:1 — compliant. */
+.text-slate-400,
+.q-item__label--caption.text-slate-400 {
+    color: #475569 !important; /* slate-600 — 5.74:1 on white */
+}
+
+.body--dark .text-slate-400 {
+    color: #94a3b8 !important; /* slate-400 is fine on dark bg */
+}
+
+/* Reduced motion: respect OS prefers-reduced-motion for users with vestibular disorders */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+    
+    .q-btn:hover,
+    .stat-card:hover {
+        transform: none !important;
+    }
 }

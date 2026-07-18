@@ -16,5 +16,5 @@
 </template>
 
 <script setup>
-const props = defineProps(['documents']);
+defineProps(['documents']);
 </script>

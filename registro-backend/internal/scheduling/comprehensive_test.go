@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 	"time"
+	"registro-backend/internal/teachers"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -14,10 +15,35 @@ type MockRepo struct {
 	mock.Mock
 }
 
+type MockTeacherRepo struct {
+	mock.Mock
+}
+
+func (m *MockTeacherRepo) List(ctx context.Context, schoolID string) ([]teachers.Teacher, error) { return nil, nil }
+func (m *MockTeacherRepo) Get(ctx context.Context, id string) (*teachers.Teacher, error) { return nil, nil }
+func (m *MockTeacherRepo) GetByUserID(ctx context.Context, userID string) (*teachers.Teacher, error) {
+	return &teachers.Teacher{ID: "teacher1", UserID: userID, SchoolID: "school1"}, nil
+}
+func (m *MockTeacherRepo) GetBySubject(ctx context.Context, subjectID string) ([]teachers.Teacher, error) { return nil, nil }
+func (m *MockTeacherRepo) GetSubjects(ctx context.Context, teacherID string) ([]teachers.TeacherSubject, error) { return nil, nil }
+func (m *MockTeacherRepo) AssignSubject(ctx context.Context, teacherID, subjectID string) error { return nil }
+func (m *MockTeacherRepo) RemoveSubject(ctx context.Context, teacherID, subjectID string) error { return nil }
+func (m *MockTeacherRepo) GetDashboardStats(ctx context.Context, teacherUserID string) (map[string]interface{}, error) {
+	return nil, nil
+}
+
+
 func (m *MockRepo) CreateSlot(ctx context.Context, s *ColloquioSlot) error {
 	s.ID = "new-id"
 	return nil
 }
+func (m *MockRepo) CreateSlotsBatch(ctx context.Context, slots []ColloquioSlot) error {
+	for i := range slots {
+		slots[i].ID = "new-id"
+	}
+	return nil
+}
+func (m *MockRepo) DeleteSlot(ctx context.Context, id string) error { return nil }
 func (m *MockRepo) GetSlots(ctx context.Context, tID string, f, t time.Time) ([]ColloquioSlot, error) {
 	return []ColloquioSlot{}, nil
 }
@@ -57,13 +83,16 @@ func (m *MockRepo) UpdateSettings(ctx context.Context, s *ColloquioSettings) err
 func (m *MockRepo) GetAnalytics(ctx context.Context, sID string) (*AnalyticsResponse, error) {
 	return nil, nil
 }
+func (m *MockRepo) ResolveParentUserID(ctx context.Context, userID string) (string, error) {
+	return userID, nil
+}
 
 func TestService_CreateSlot(t *testing.T) {
 	repo := new(MockRepo)
-	svc := NewService(repo)
+	svc := NewService(repo, new(MockTeacherRepo))
 
 	req := CreateSlotRequest{
-		Date:      time.Now().AddDate(0, 0, 1).Format("2006-01-02"), // Future
+		Dates:      []string{time.Now().AddDate(0, 0, 1).Format("2006-01-02")}, // Future
 		StartTime: "10:00", EndTime: "11:00",
 		Type: SlotIndividual,
 	}
@@ -74,7 +103,7 @@ func TestService_CreateSlot(t *testing.T) {
 
 func TestService_BookSlot(t *testing.T) {
 	repo := new(MockRepo)
-	svc := NewService(repo)
+	svc := NewService(repo, new(MockTeacherRepo))
 
 	slotID := "slot-1"
 	slotDate := time.Now().AddDate(0, 0, 2)
@@ -85,6 +114,7 @@ func TestService_BookSlot(t *testing.T) {
 	}
 
 	repo.On("GetSlotByID", slotID).Return(slot, nil)
+	repo.On("GetBooking", "booking-id").Return(&ColloquioBooking{ID: "booking-id", ParentName: "Parent", StudentName: "Student"}, nil)
 
 	res, err := svc.BookSlot(context.Background(), "parent1", BookSlotRequest{SlotID: slotID})
 	assert.NoError(t, err)
@@ -101,7 +131,7 @@ func TestValidator_ValidateSlot(t *testing.T) {
 
 func TestService_CancelBooking_Ownership(t *testing.T) {
 	repo := new(MockRepo)
-	svc := NewService(repo)
+	svc := NewService(repo, new(MockTeacherRepo))
 	ctx := context.Background()
 
 	bookingID := "booking-1"
@@ -136,7 +166,7 @@ func TestService_CancelBooking_Ownership(t *testing.T) {
 
 func TestService_BookSlot_Past(t *testing.T) {
 	repo := new(MockRepo)
-	svc := NewService(repo)
+	svc := NewService(repo, new(MockTeacherRepo))
 	ctx := context.Background()
 
 	slotID := "slot-past"

@@ -18,6 +18,17 @@ func (m *MockRepository) Create(ctx context.Context, user *User) error {
 	args := m.Called(ctx, user)
 	return args.Error(0)
 }
+func (m *MockRepository) GetPasswordHistory(ctx context.Context, userID string) ([]string, error) {
+	args := m.Called(ctx, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]string), args.Error(1)
+}
+func (m *MockRepository) AddPasswordHistory(ctx context.Context, userID, passwordHash string) error {
+	args := m.Called(ctx, userID, passwordHash)
+	return args.Error(0)
+}
 func (m *MockRepository) GetByID(ctx context.Context, id string) (*User, error) {
 	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
@@ -64,6 +75,10 @@ func (m *MockRepository) BulkCreate(ctx context.Context, users []User) (int, []s
 	args := m.Called(ctx, users)
 	return args.Int(0), args.Get(1).([]string), args.Error(2)
 }
+func (m *MockRepository) BulkDelete(ctx context.Context, ids []string) (int, error) {
+	args := m.Called(ctx, ids)
+	return args.Int(0), args.Error(1)
+}
 func (m *MockRepository) HardDelete(ctx context.Context, id string) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)
@@ -78,9 +93,39 @@ func (m *MockRepository) GetChildren(ctx context.Context, parentID string) ([]St
 	return args.Get(0).([]StudentChild), args.Error(1)
 }
 
+func (m *MockRepository) GetStudentsByClass(ctx context.Context, classID string) ([]User, error) {
+	args := m.Called(ctx, classID)
+	return args.Get(0).([]User), args.Error(1)
+}
+
 func (m *MockRepository) IsActive(ctx context.Context, id string) (bool, error) {
 	args := m.Called(ctx, id)
 	return args.Bool(0), args.Error(1)
+}
+
+func (m *MockRepository) AddGuardian(ctx context.Context, studentProfileID, parentProfileID, relationship string) error {
+	args := m.Called(ctx, studentProfileID, parentProfileID, relationship)
+	return args.Error(0)
+}
+
+func (m *MockRepository) GetStudentProfile(ctx context.Context, userID string) (string, error) {
+	args := m.Called(ctx, userID)
+	return args.String(0), args.Error(1)
+}
+
+func (m *MockRepository) GetParentProfile(ctx context.Context, userID string) (string, error) {
+	args := m.Called(ctx, userID)
+	return args.String(0), args.Error(1)
+}
+
+func (m *MockRepository) RemoveGuardian(ctx context.Context, studentProfileID, parentProfileID string) error {
+	args := m.Called(ctx, studentProfileID, parentProfileID)
+	return args.Error(0)
+}
+
+func (m *MockRepository) GetGuardians(ctx context.Context, studentProfileID string) ([]GuardianInfo, error) {
+	args := m.Called(ctx, studentProfileID)
+	return args.Get(0).([]GuardianInfo), args.Error(1)
 }
 
 func TestService_CreateUser(t *testing.T) {
@@ -103,6 +148,7 @@ func TestService_CreateUser(t *testing.T) {
 			},
 			mockSetup: func() {
 				mockRepo.On("Create", mock.Anything, mock.AnythingOfType("*users.User")).Return(nil)
+				mockRepo.On("AddPasswordHistory", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 				mockRepo.On("LogAudit", mock.Anything, mock.AnythingOfType("*users.AuditLog")).Return(nil)
 			},
 			wantErr: false,
@@ -302,8 +348,8 @@ func TestService_DeleteUser(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:      "Secretary cannot delete (no UserDelete permission)",
-			actorRole: "secretary",
+			name:      "Teacher cannot delete (no UserDelete permission)",
+			actorRole: "teacher",
 			userID:    "user-123",
 			mockSetup: func() {},
 			wantErr:   true,
@@ -347,7 +393,9 @@ func TestService_ChangePassword(t *testing.T) {
 			mockSetup: func() {
 				user := &User{ID: "user-123", PasswordHash: string(oldHashedPassword)}
 				mockRepo.On("GetByID", mock.Anything, "user-123").Return(user, nil)
+				mockRepo.On("GetPasswordHistory", mock.Anything, "user-123").Return([]string{}, nil)
 				mockRepo.On("Update", mock.Anything, mock.AnythingOfType("*users.User")).Return(nil)
+				mockRepo.On("AddPasswordHistory", mock.Anything, "user-123", mock.Anything).Return(nil)
 			},
 			wantErr: false,
 		},
@@ -613,7 +661,7 @@ func TestService_GDPRConvert(t *testing.T) {
 		mockRepo.On("GetByID", mock.Anything, "user-1").Return(user, nil).Once()
 		mockRepo.On("GetAuditLogs", mock.Anything, "user-1", 1000, 0).Return(logs, 0, nil).Once()
 
-		data, err := service.GDPRDataExport(context.Background(), "admin", "user-1")
+		data, err := service.GDPRDataExport(context.Background(), "user-1", "student", "user-1")
 		assert.NoError(t, err)
 		assert.NotNil(t, data)
 		profile := data["profile"].(map[string]interface{})

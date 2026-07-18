@@ -9,7 +9,7 @@ export function useCoordination() {
     const isCoordinator = computed(() => teacherStore.isCoordinator);
 
     const coordinatedClasses = computed(() =>
-        classesStore.classes.filter(c => c.coordinator)
+        classesStore.classes.filter(c => !!c.coordinator_id)
     );
 
     const getProblemStudents = (classId) => {

@@ -1,13 +1,12 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { api } from 'src/boot/axios'
 
 export const useSchedulingStore = defineStore('scheduling', () => {
     const generatedSchedule = ref([])
     const conflicts = ref([])
     const isLoading = ref(false)
 
-    async function generateSchedule(constraints) {
+    async function generateSchedule(_constraints) {
         isLoading.value = true
         conflicts.value = []
         try {

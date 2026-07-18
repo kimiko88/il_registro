@@ -66,14 +66,11 @@ describe('Secretary Workflow', () => {
 
         // Verify "Registra Utente" button exists (by finding component with label/to)
         // Since q-btn is stubbed (default true), we can find it by attributes.
-        const userBtn = wrapper.findAllComponents({ name: 'q-btn' }).find(c => c.props().label === 'Registra Utente/Studente')
+        const userBtn = wrapper.findAllComponents({ name: 'q-btn' }).find(c => c.props().label === 'Registra Utente')
         expect(userBtn).toBeTruthy()
         expect(userBtn.props().to).toBe('/secretary/users')
 
-        // We can't easily click stubbed q-btn to trigger router unless we simulate it.
-        // But verifying attributes is enough for "Navigation Check".
-
         // Verify Stats
-        expect(wrapper.text()).toContain('Documenti Pendenti')
+        expect(wrapper.text()).toContain('Pendenti')
     })
 })

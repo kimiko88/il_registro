@@ -89,6 +89,53 @@ func (m *MockRepository) FindWithFilter(filter GradeFilter) ([]Grade, error) {
 	}
 	return args.Get(0).([]Grade), args.Error(1)
 }
+func (m *MockRepository) FindEnrolledSubjects(studentID string, semester int) ([]string, error) {
+	args := m.Called(studentID, semester)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]string), args.Error(1)
+}
+func (m *MockRepository) CreateTest(test *ClassTest) error {
+	args := m.Called(test)
+	return args.Error(0)
+}
+func (m *MockRepository) FindTestsByClassAndSubject(classID string, subjectID string) ([]ClassTest, error) {
+	args := m.Called(classID, subjectID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]ClassTest), args.Error(1)
+}
+func (m *MockRepository) FindUpcomingTestsByClass(classID string) ([]ClassTest, error) {
+	args := m.Called(classID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]ClassTest), args.Error(1)
+}
+func (m *MockRepository) DeleteTest(id string) error {
+	args := m.Called(id)
+	return args.Error(0)
+}
+func (m *MockRepository) UpdateTest(test *ClassTest) error {
+	args := m.Called(test)
+	return args.Error(0)
+}
+func (m *MockRepository) FindTestByID(id string) (*ClassTest, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*ClassTest), args.Error(1)
+}
+func (m *MockRepository) FindGradesByTestID(testID string) ([]Grade, error) {
+	args := m.Called(testID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]Grade), args.Error(1)
+}
 
 // MockUserRepo
 type MockUserRepo struct {
@@ -129,6 +176,31 @@ func (m *MockUserRepo) GetChildren(ctx context.Context, parentID string) ([]user
 	return nil, nil
 }
 func (m *MockUserRepo) IsActive(ctx context.Context, id string) (bool, error) { return false, nil }
+func (m *MockUserRepo) AddGuardian(ctx context.Context, studentID, parentID, relation string) error {
+	return nil
+}
+func (m *MockUserRepo) BulkDelete(ctx context.Context, ids []string) (int, error) { return 0, nil }
+func (m *MockUserRepo) GetStudentsByClass(ctx context.Context, classID string) ([]users.User, error) {
+	return nil, nil
+}
+func (m *MockUserRepo) GetStudentProfile(ctx context.Context, userID string) (string, error) {
+	return "", nil
+}
+func (m *MockUserRepo) GetParentProfile(ctx context.Context, userID string) (string, error) {
+	return "", nil
+}
+func (m *MockUserRepo) RemoveGuardian(ctx context.Context, studentID, parentID string) error {
+	return nil
+}
+func (m *MockUserRepo) GetGuardians(ctx context.Context, studentID string) ([]users.GuardianInfo, error) {
+	return nil, nil
+}
+func (m *MockUserRepo) GetPasswordHistory(ctx context.Context, userID string) ([]string, error) {
+	return nil, nil
+}
+func (m *MockUserRepo) AddPasswordHistory(ctx context.Context, userID, passwordHash string) error {
+	return nil
+}
 
 func TestAddGrade(t *testing.T) {
 	mockRepo := new(MockRepository)

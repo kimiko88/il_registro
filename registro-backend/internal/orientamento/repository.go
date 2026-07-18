@@ -38,7 +38,7 @@ func (r *repository) GetEvents(ctx context.Context, schoolID string) ([]Event, e
 	var events []Event
 	for rows.Next() {
 		var e Event
-		rows.Scan(&e.ID, &e.SchoolID, &e.Title, &e.Description, &e.Category, &e.Date, &e.EndDate, &e.Location, &e.Hours, &e.MaxAttendees, &e.CreatedBy)
+		_ = rows.Scan(&e.ID, &e.SchoolID, &e.Title, &e.Description, &e.Category, &e.Date, &e.EndDate, &e.Location, &e.Hours, &e.MaxAttendees, &e.CreatedBy)
 		events = append(events, e)
 	}
 	return events, nil
@@ -58,7 +58,7 @@ func (r *repository) GetParticipations(ctx context.Context, studentID string) ([
 	var parts []Participation
 	for rows.Next() {
 		var p Participation
-		rows.Scan(&p.ID, &p.EventID, &p.StudentID, &p.Status, &p.Attended, &p.RegisteredAt)
+		_ = rows.Scan(&p.ID, &p.EventID, &p.StudentID, &p.Status, &p.Attended, &p.RegisteredAt)
 		parts = append(parts, p)
 	}
 	return parts, nil

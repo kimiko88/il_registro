@@ -37,13 +37,13 @@ describe('Teacher Workflow', () => {
                         initialState: {
                             auth: { user: { role: 'teacher', id: 't1' } },
                             teacher: {
-                                profile: { firstName: 'Prof', lastName: 'X' },
+                                profile: { first_name: 'Prof', last_name: 'X' },
                                 classes: [{ id: 'c1', name: '1A' }],
                                 subjects: [{ id: 's1', name: 'Math' }]
                             },
                             classes: {
                                 selectedClass: { id: 'c1', name: '1A' },
-                                students: [{ id: 'st1', firstName: 'Student', lastName: 'One' }]
+                                students: [{ id: 'st1', first_name: 'Mario', last_name: 'Rossi' }]
                             }
                         }
                     })
@@ -74,10 +74,17 @@ describe('Teacher Workflow', () => {
                         initialState: {
                             classes: {
                                 selectedClass: { id: 'c1', name: '1A' },
-                                students: [{ id: 'st1', firstName: 'Student', lastName: 'One' }]
+                                students: [{ id: 'st1', first_name: 'Mario', last_name: 'Rossi' }]
                             },
                             subjects: {
                                 selectedSubject: { id: 's1', name: 'Math' }
+                            },
+                            grades: {
+                                grades: {
+                                    students: [
+                                        { student_id: 'st1', full_name: 'Rossi Mario', absences: 2, grades: [{ id: 'g1', grade_value: 8, date: '2025-01-01', grade_type: 'Written' }] }
+                                    ]
+                                }
                             }
                         }
                     })

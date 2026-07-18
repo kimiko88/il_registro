@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useDocumentsStore } from './documents'
-import { api } from 'src/boot/axios'
+import api from '@/services/api'
 
 // Mock api
-vi.mock('src/boot/axios', () => ({
-    api: {
+vi.mock('@/services/api', () => ({
+    default: {
         post: vi.fn(),
         get: vi.fn()
     }
