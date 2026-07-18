@@ -10,6 +10,7 @@ var (
 	ErrEmailNotVerified   = errors.New("email not verified")
 	ErrInvalidToken       = errors.New("invalid or expired token")
 	ErrTokenRevoked       = errors.New("token has been revoked")
+	ErrUnauthorized       = errors.New("unauthorized")
 
 	// Registration errors
 	ErrEmailAlreadyExists = errors.New("email already registered")

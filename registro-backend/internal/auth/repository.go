@@ -47,7 +47,12 @@ type Repository interface {
 
 	// Rate limiting
 	RecordLoginAttempt(ctx context.Context, attempt *LoginAttempt) error
+	// GetRecentLoginAttempts counts failed attempts for a specific (email, IP) pair since `since`.
+	// Used for per-IP rate limiting (max 5 in 15 min).
 	GetRecentLoginAttempts(ctx context.Context, email, ipAddress string, since time.Time) (int, error)
+	// GetRecentLoginAttemptsByEmail counts failed attempts for an email across ALL IPs since `since`.
+	// Used for anti-IP-rotation rate limiting (max 20 in 1 hour).
+	GetRecentLoginAttemptsByEmail(ctx context.Context, email string, since time.Time) (int, error)
 }
 
 type repository struct {
@@ -325,6 +330,8 @@ func (r *repository) RecordLoginAttempt(ctx context.Context, attempt *LoginAttem
 	return err
 }
 
+// GetRecentLoginAttempts counts failed attempts for a specific (email, IP) pair.
+// Used for per-IP burst protection (max 5 in 15 minutes).
 func (r *repository) GetRecentLoginAttempts(ctx context.Context, email, ipAddress string, since time.Time) (int, error) {
 	query := `
 		SELECT COUNT(*) 
@@ -333,6 +340,19 @@ func (r *repository) GetRecentLoginAttempts(ctx context.Context, email, ipAddres
 	`
 	var count int
 	err := r.db.QueryRowContext(ctx, query, email, ipAddress, since).Scan(&count)
+	return count, err
+}
+
+// GetRecentLoginAttemptsByEmail counts failed attempts for an email across ALL IPs.
+// Used for anti-IP-rotation protection (max 20 in 1 hour).
+func (r *repository) GetRecentLoginAttemptsByEmail(ctx context.Context, email string, since time.Time) (int, error) {
+	query := `
+		SELECT COUNT(*)
+		FROM login_attempts
+		WHERE email = $1 AND success = false AND attempted_at > $2
+	`
+	var count int
+	err := r.db.QueryRowContext(ctx, query, email, since).Scan(&count)
 	return count, err
 }
 
