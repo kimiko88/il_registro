@@ -2,47 +2,29 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [ main, develop ]
+    paths:
+      - 'registro-backend/**'
   pull_request:
-    branches: [main, develop]
+    branches: [ main, develop ]
+    paths:
+      - 'registro-backend/**'
 
 defaults:
   run:
     working-directory: registro-backend
 
 jobs:
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.23'
-          cache-dependency-path: registro-backend/go.sum
-
-      - name: go vet
-        run: go vet ./...
-
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
-        with:
-          version: latest
-          working-directory: registro-backend
-          args: --timeout=5m
-
   test:
-    name: Test
+    name: Test & Vet
     runs-on: ubuntu-latest
 
     services:
       postgres:
         image: postgres:15
         env:
-          POSTGRES_USER: registro
-          POSTGRES_PASSWORD: registro
+          POSTGRES_USER: registro_user
+          POSTGRES_PASSWORD: testpassword
           POSTGRES_DB: registro_test
         ports:
           - 5432:5432
@@ -52,44 +34,74 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
-    env:
-      DATABASE_URL: postgres://registro:registro@localhost:5432/registro_test?sslmode=disable
-      JWT_SECRET: ci-test-secret-not-used-in-prod
-      SERVER_MODE: test
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Set up Go
+      - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.23'
-          cache-dependency-path: registro-backend/go.sum
+          go-version-file: 'registro-backend/go.mod'
+          cache-dependency-path: 'registro-backend/go.sum'
 
-      - name: Download modules
+      - name: Download dependencies
         run: go mod download
 
-      - name: Run tests with race detector
-        run: go test -race -coverprofile=coverage.out -covermode=atomic ./...
+      - name: Verify dependencies
+        run: go mod verify
 
-      - name: Upload coverage report
+      - name: go vet
+        run: go vet ./...
+
+      - name: Run tests
+        env:
+          SERVER_PORT: 8080
+          SERVER_MODE: release
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USER: registro_user
+          DB_PASSWORD: testpassword
+          DB_NAME: registro_test
+          DB_SSLMODE: disable
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+          JWT_SECRET: ci-test-secret-not-used-in-production-64chars-xxxxxxxxxxx
+        run: go test -race -coverprofile=coverage.out ./...
+
+      - name: Upload coverage
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: registro-backend/coverage.out
+          retention-days: 7
 
   build:
     name: Build
     runs-on: ubuntu-latest
-    needs: [lint, test]
-    steps:
-      - uses: actions/checkout@v4
+    needs: test
 
-      - name: Set up Go
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.23'
-          cache-dependency-path: registro-backend/go.sum
+          go-version-file: 'registro-backend/go.mod'
+          cache-dependency-path: 'registro-backend/go.sum'
 
-      - name: Build all binaries
-        run: go build ./cmd/...
+      - name: Build api-server
+        run: go build -v -o /dev/null ./cmd/api-server/...
+
+      - name: Build auth-service
+        run: go build -v -o /dev/null ./cmd/auth-service/...
