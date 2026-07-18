@@ -36,11 +36,12 @@ var allRoles = map[string]bool{
 // creatableRoles defines which roles each caller role is allowed to create.
 //
 // Permission matrix:
-//   superadmin → can create any role
-//   admin      → can create admin, segreteria, teacher, student, parent
-//                (cannot create superadmin)
-//   segreteria → can create teacher, student, parent
-//                (cannot create superadmin or admin)
+//
+//	superadmin → can create any role
+//	admin      → can create admin, segreteria, teacher, student, parent
+//	             (cannot create superadmin)
+//	segreteria → can create segreteria, teacher, student, parent
+//	             (cannot create superadmin or admin)
 //
 // Any role not listed here (teacher, student, parent) cannot register other users.
 var creatableRoles = map[string]map[string]bool{
@@ -60,9 +61,10 @@ var creatableRoles = map[string]map[string]bool{
 		RoleParent:     true,
 	},
 	RoleSegreteria: {
-		RoleTeacher: true,
-		RoleStudent: true,
-		RoleParent:  true,
+		RoleSegreteria: true,
+		RoleTeacher:    true,
+		RoleStudent:    true,
+		RoleParent:     true,
 	},
 }
 
