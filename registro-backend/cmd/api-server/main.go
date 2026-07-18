@@ -96,7 +96,9 @@ func main() {
 	classesSvc := classes.NewService(classesRepo)
 	gradesSvc := grades.NewService(gradesRepo, usersRepo, database, wsHub)
 	gradesAnalytics := grades.NewAnalyticsService(gradesRepo)
-	attendanceSvc := attendance.NewService(attendanceRepo, usersRepo, wsHub)
+	// wsHub satisfies attendance.EventBroadcaster (BroadcastToUser + BroadcastToSchool).
+	// CalendarService is nil: the attendance service falls back to CountDistinctDays.
+	attendanceSvc := attendance.NewService(attendanceRepo, usersRepo, wsHub, nil)
 	docsSvc := documents.NewService(docsRepo)
 	schedSvc := scheduling.NewService(schedRepo, teachersRepo)
 	pctoSvc := pcto.NewService(pctoRepo)
@@ -238,7 +240,6 @@ func main() {
 		Handler: r,
 	}
 
-	// Listen for OS signals in a goroutine; block main on srv.ListenAndServe.
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
@@ -249,9 +250,8 @@ func main() {
 		}
 	}()
 
-	// Block until a signal is received.
 	<-ctx.Done()
-	stop() // restore default signal behaviour
+	stop()
 	logger.Log.Info("Shutdown signal received — draining in-flight requests (max 15s)...")
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
