@@ -99,7 +99,7 @@ func (tm *TokenManager) ValidateToken(tokenString string) (*Claims, error) {
 			return tm.publicKey, nil
 		},
 		// Validate issuer: only accept tokens we signed.
-		jwt.WithIssuers("registro-backend"),
+		jwt.WithIssuer("registro-backend"),
 		// Validate audience: only accept tokens destined for this API.
 		jwt.WithAudience(jwtAudience),
 		jwt.WithExpirationRequired(),
