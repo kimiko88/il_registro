@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
+	"mime/multipart"
 	"time"
 
 	"github.com/google/uuid"
@@ -55,6 +55,22 @@ func (s *Service) CreateUser(ctx context.Context, actorRole string, req CreateUs
 		return nil, fmt.Errorf("password hashing failed: %w", err)
 	}
 
+	var fiscalCode *string
+	if req.FiscalCode != "" {
+		fc := req.FiscalCode
+		fiscalCode = &fc
+	}
+	var phoneNumber *string
+	if req.PhoneNumber != "" {
+		ph := req.PhoneNumber
+		phoneNumber = &ph
+	}
+	var jobTitle *string
+	if req.JobTitle != "" {
+		jt := req.JobTitle
+		jobTitle = &jt
+	}
+
 	now := time.Now()
 	user := &User{
 		ID:           uuid.New().String(),
@@ -62,12 +78,12 @@ func (s *Service) CreateUser(ctx context.Context, actorRole string, req CreateUs
 		PasswordHash: string(hash),
 		FirstName:    req.FirstName,
 		LastName:     req.LastName,
-		FiscalCode:   req.FiscalCode,
+		FiscalCode:   fiscalCode,
 		Role:         req.Role,
 		SchoolID:     req.SchoolID,
 		ClassID:      req.ClassID,
-		PhoneNumber:  req.PhoneNumber,
-		JobTitle:     req.JobTitle,
+		PhoneNumber:  phoneNumber,
+		JobTitle:     jobTitle,
 		IsActive:     true,
 		CreatedAt:    now,
 		UpdatedAt:    now,
@@ -111,9 +127,6 @@ func (s *Service) UpdateUser(ctx context.Context, actorRole string, id string, r
 	}
 	if req.LastName != nil {
 		user.LastName = *req.LastName
-	}
-	if req.Email != nil {
-		user.Email = *req.Email
 	}
 	if req.Role != nil {
 		user.Role = *req.Role
@@ -179,7 +192,8 @@ func (s *Service) ChangePassword(ctx context.Context, userID string, req ChangeP
 		return err
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.OldPassword)); err != nil {
+	// Field is CurrentPassword in ChangePasswordRequest DTO
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.CurrentPassword)); err != nil {
 		return errors.New("current password is incorrect")
 	}
 
@@ -246,20 +260,43 @@ func (s *Service) DisableMFA(ctx context.Context, actorRole string, userID strin
 
 // ─── Bulk Import ─────────────────────────────────────────────────────────────
 
-// BulkImport imports users from a CSV or JSON file.
-func (s *Service) BulkImport(ctx context.Context, actorRole string, file io.Reader, filename string) (*BulkImportResult, error) {
+// BulkImport imports users from a CSV or XLSX file.
+// Returns an ImportResult (the type defined in dto.go).
+func (s *Service) BulkImport(ctx context.Context, actorRole string, file multipart.File, filename string) (*ImportResult, error) {
 	if !isPrivileged(actorRole) {
 		return nil, ErrUnauthorized
 	}
-	importer := NewImporter(s.repo)
-	return importer.Import(ctx, file, filename)
+
+	// NewImporter takes no arguments
+	importer := NewImporter()
+	users, parseErrors, err := importer.ParseFile(file, filename)
+	if err != nil {
+		return nil, err
+	}
+
+	result := &ImportResult{
+		Total:  len(users) + len(parseErrors),
+		Failed: len(parseErrors),
+		Errors: parseErrors,
+	}
+
+	if len(users) > 0 {
+		count, bulkErrors, err := s.repo.BulkCreate(ctx, users)
+		if err != nil {
+			return nil, err
+		}
+		result.Created = count
+		result.Failed += len(bulkErrors)
+		result.Errors = append(result.Errors, bulkErrors...)
+	}
+
+	return result, nil
 }
 
 // ─── GDPR ────────────────────────────────────────────────────────────────────
 
 // GDPRDataExport exports all personal data for a user (GDPR right of access).
 func (s *Service) GDPRDataExport(ctx context.Context, actorID, actorRole, targetID string) (map[string]interface{}, error) {
-	// Only the user themselves or admin/superadmin can export
 	if actorID != targetID && actorRole != "admin" && actorRole != "superadmin" {
 		return nil, ErrUnauthorized
 	}
@@ -267,8 +304,14 @@ func (s *Service) GDPRDataExport(ctx context.Context, actorID, actorRole, target
 	if err != nil {
 		return nil, err
 	}
-	exporter := NewExporter(s.repo)
-	return exporter.Export(ctx, user)
+	// Fetch audit logs for the export (max 1000, offset 0)
+	logs, _, err := s.repo.GetAuditLogs(ctx, targetID, 1000, 0)
+	if err != nil {
+		return nil, err
+	}
+	// NewExporter takes no arguments; GenerateDataExport is on GDPRHandler
+	gdpr := NewGDPRHandler(s.repo)
+	return gdpr.GenerateDataExport(user, logs), nil
 }
 
 // GDPRDelete pseudonymizes a user (GDPR right to erasure).
@@ -276,8 +319,14 @@ func (s *Service) GDPRDelete(ctx context.Context, actorRole string, targetID str
 	if actorRole != "admin" && actorRole != "superadmin" {
 		return ErrUnauthorized
 	}
+	user, err := s.repo.GetByID(ctx, targetID)
+	if err != nil {
+		return err
+	}
 	gdpr := NewGDPRHandler(s.repo)
-	return gdpr.Pseudonymize(ctx, targetID)
+	gdpr.PseudonymizeUser(user)
+	// Persist the pseudonymized data
+	return s.repo.Update(ctx, user)
 }
 
 // ─── Audit ───────────────────────────────────────────────────────────────────
