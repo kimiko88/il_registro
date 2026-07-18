@@ -300,8 +300,8 @@ func (h *Handler) UpdateAdminUser(c *gin.Context) {
 		return
 	}
 
-	// Fetch target admin to verify ownership before mutating.
-	target, err := h.service.repo.GetAdminUserByID(c.Request.Context(), adminID)
+	// Fetch target admin via service to verify school ownership before mutating.
+	target, err := h.service.GetAdminUserByID(c.Request.Context(), adminID)
 	if err != nil {
 		c.JSON(http.StatusNotFound, ErrorResponse{Error: "admin user not found"})
 		return
@@ -371,7 +371,7 @@ func (h *Handler) GetAdminActivity(c *gin.Context) {
 	}
 
 	// Ownership check: verify caller can access the target admin's school.
-	target, err := h.service.repo.GetAdminUserByID(c.Request.Context(), adminID)
+	target, err := h.service.GetAdminUserByID(c.Request.Context(), adminID)
 	if err != nil {
 		c.JSON(http.StatusNotFound, ErrorResponse{Error: "admin user not found"})
 		return

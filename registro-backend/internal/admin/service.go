@@ -216,6 +216,12 @@ func (s *Service) ListAdminUsers(ctx context.Context, page, pageSize int, school
 	}, nil
 }
 
+// GetAdminUserByID retrieves a single admin user by ID.
+// Used by handlers for ownership checks before mutating admin records.
+func (s *Service) GetAdminUserByID(ctx context.Context, adminID string) (*AdminUserResponse, error) {
+	return s.repo.GetAdminUserByID(ctx, adminID)
+}
+
 // CreateAdminUser creates a new admin user (superadmin only).
 // Validates password strength before persisting.
 func (s *Service) CreateAdminUser(ctx context.Context, req *CreateAdminRequest) (*AdminUserResponse, error) {

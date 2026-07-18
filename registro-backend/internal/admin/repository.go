@@ -25,12 +25,12 @@ type Repository interface {
 
 	// Admin Users
 	ListAdminUsers(ctx context.Context, offset, limit int, schoolFilter *string) ([]AdminUserResponse, int64, error)
+	GetAdminUserByID(ctx context.Context, adminID string) (*AdminUserResponse, error)
 	CreateAdminUser(ctx context.Context, req *CreateAdminRequest) (*AdminUserResponse, error)
 	UpdateAdminUser(ctx context.Context, adminID string, req *UpdateAdminRequest) (*AdminUserResponse, error)
 	DeleteAdminUser(ctx context.Context, adminID string) error
 	UserEmailExists(ctx context.Context, email string) (bool, error)
 
-	// Activity Log
 	// Activity Log
 	GetAdminActivity(ctx context.Context, adminID string, limit int) ([]ActivityLogEntry, error)
 	ListAuditLogs(ctx context.Context, req *AuditLogListRequest, offset int) ([]ActivityLogEntry, int64, error)
