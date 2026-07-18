@@ -226,10 +226,16 @@ func (h *Handler) ConfirmPasswordReset(c *gin.Context) {
 
 	if err := h.service.ResetPassword(c.Request.Context(), req.Token, req.NewPassword); err != nil {
 		statusCode := http.StatusInternalServerError
-		if err == ErrInvalidToken {
+		switch err {
+		case ErrInvalidToken:
 			statusCode = http.StatusBadRequest
-		} else if err == ErrPasswordTooShort {
+		case ErrPasswordTooShort:
 			statusCode = http.StatusBadRequest
+		case ErrPasswordReused:
+			// 422 Unprocessable Entity: the request is well-formed but the new
+			// password violates the reuse policy. Using 400 would conflate it
+			// with malformed-request errors.
+			statusCode = http.StatusUnprocessableEntity
 		}
 		c.JSON(statusCode, ErrorResponse{Error: err.Error()})
 		return

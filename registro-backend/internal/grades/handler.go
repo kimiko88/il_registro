@@ -62,7 +62,10 @@ func (h *Handler) RegisterRoutes(router *gin.RouterGroup) {
 	}
 }
 
-// GetStudentGrades retrieves all grades for a specific student with optional filters
+// GetStudentGrades retrieves all grades for a specific student with optional filters.
+// actorID and actorRole are forwarded to the service layer so it can enforce
+// ownership rules (a student may only read their own grades; a teacher may
+// only read grades for their classes; a parent must be a registered guardian).
 func (h *Handler) GetStudentGrades(c *gin.Context) {
 	studentID := c.Param("studentID")
 	if studentID == "" {
@@ -77,6 +80,10 @@ func (h *Handler) GetStudentGrades(c *gin.Context) {
 
 	grades, err := h.service.GetStudentGradesWithFilter(c.Request.Context(), actorID, actorRole, studentID, filter)
 	if err != nil {
+		if errors.Is(err, ErrUnauthorized) || errors.Is(err, ErrNotGuardian) {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -105,6 +112,9 @@ func (h *Handler) GetClassGrades(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
+// GetSubjectGrades retrieves grades for a subject.
+// actorID and actorRole are passed to the service so it can verify that
+// the caller is a teacher assigned to that subject (or an admin/superadmin).
 func (h *Handler) GetSubjectGrades(c *gin.Context) {
 	subjectID := c.Param("subjectID")
 	if subjectID == "" {
@@ -123,6 +133,10 @@ func (h *Handler) GetSubjectGrades(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
+// BulkImport imports grades from an uploaded file.
+// The semester parameter (1 or 2) is read from the multipart form; if absent
+// it defaults to 1. Previously the form value was read but silently discarded
+// with `_ = c.PostForm(...)`, causing all imports to land in semester 1.
 func (h *Handler) BulkImport(c *gin.Context) {
 	teacherID := c.GetString("user_id")
 	if teacherID == "" {
@@ -137,7 +151,7 @@ func (h *Handler) BulkImport(c *gin.Context) {
 	}
 	defer file.Close()
 
-	semester := 1 // Default
+	semester := 1 // default
 	semStr := c.PostForm("semester")
 	if semStr != "" {
 		if semStr != "1" && semStr != "2" {
