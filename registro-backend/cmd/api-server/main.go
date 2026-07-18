@@ -209,8 +209,7 @@ func main() {
 			textbooksH.RegisterRoutes(protected)
 
 			scrutinyRepo := scrutiny.NewRepository(database)
-			attendanceRepo2 := attendance.NewRepository(database)
-			scrutinySvc := scrutiny.NewService(scrutinyRepo, gradesRepo, classesRepo, usersRepo, attendanceRepo2)
+			scrutinySvc := scrutiny.NewService(scrutinyRepo, gradesRepo, classesRepo, usersRepo, attendanceRepo)
 			scrutinyH := scrutiny.NewHandler(scrutinySvc)
 			scrutinyH.RegisterRoutes(protected)
 
