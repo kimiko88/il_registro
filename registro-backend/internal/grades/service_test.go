@@ -89,6 +89,13 @@ func (m *MockRepository) FindWithFilter(filter GradeFilter) ([]Grade, error) {
 	}
 	return args.Get(0).([]Grade), args.Error(1)
 }
+func (m *MockRepository) FindEnrolledSubjects(studentID string, semester int) ([]string, error) {
+	args := m.Called(studentID, semester)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]string), args.Error(1)
+}
 func (m *MockRepository) CreateTest(test *ClassTest) error {
 	args := m.Called(test)
 	return args.Error(0)
@@ -169,7 +176,9 @@ func (m *MockUserRepo) GetChildren(ctx context.Context, parentID string) ([]user
 	return nil, nil
 }
 func (m *MockUserRepo) IsActive(ctx context.Context, id string) (bool, error) { return false, nil }
-func (m *MockUserRepo) AddGuardian(ctx context.Context, studentID, parentID, relation string) error { return nil }
+func (m *MockUserRepo) AddGuardian(ctx context.Context, studentID, parentID, relation string) error {
+	return nil
+}
 func (m *MockUserRepo) BulkDelete(ctx context.Context, ids []string) (int, error) { return 0, nil }
 func (m *MockUserRepo) GetStudentsByClass(ctx context.Context, classID string) ([]users.User, error) {
 	return nil, nil

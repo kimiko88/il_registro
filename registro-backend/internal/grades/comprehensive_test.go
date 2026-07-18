@@ -161,7 +161,8 @@ S2,SUB1,6.0,2025-10-15,formativo,Quiz
 S3,SUB1,invalid,,`
 
 	r := strings.NewReader(csvContent)
-	reqs, err := ParseCSVGrades(r)
+	// Pass semester=1 to match the updated ParseCSVGrades(r io.Reader, semester int) signature.
+	reqs, err := ParseCSVGrades(r, 1)
 
 	assert.NoError(t, err)
 	assert.Len(t, reqs, 3) // Now returns 3 items (invalid one is parsed with default 0 status)

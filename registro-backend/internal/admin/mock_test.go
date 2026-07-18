@@ -96,6 +96,14 @@ func (m *MockRepository) ListAdminUsers(ctx context.Context, offset, limit int, 
 	return args.Get(0).([]AdminUserResponse), args.Get(1).(int64), args.Error(2)
 }
 
+func (m *MockRepository) GetAdminUserByID(ctx context.Context, adminID string) (*AdminUserResponse, error) {
+	args := m.Called(ctx, adminID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*AdminUserResponse), args.Error(1)
+}
+
 func (m *MockRepository) CreateAdminUser(ctx context.Context, req *CreateAdminRequest) (*AdminUserResponse, error) {
 	args := m.Called(ctx, req)
 	if args.Get(0) == nil {
