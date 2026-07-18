@@ -70,13 +70,24 @@ func (s *Service) Register(ctx context.Context, req *RegisterRequest) (*User, er
 
 // Login authenticates a user and returns tokens
 func (s *Service) Login(ctx context.Context, req *LoginRequest, ipAddress, userAgent string) (*AuthResponse, error) {
-	// Check rate limiting
-	since := time.Now().Add(-15 * time.Minute)
-	attempts, err := s.repo.GetRecentLoginAttempts(ctx, req.Email, ipAddress, since)
+	// --- Rate limiting ---
+	// 1. Per (email, IP): max 5 attempts in 15 minutes — blocks single-IP bursts.
+	// 2. Per email only: max 20 attempts in 1 hour — blocks distributed IP-rotation attacks.
+	since15m := time.Now().Add(-15 * time.Minute)
+	attemptsPerIP, err := s.repo.GetRecentLoginAttempts(ctx, req.Email, ipAddress, since15m)
 	if err != nil {
 		return nil, err
 	}
-	if attempts >= 5 {
+	if attemptsPerIP >= 5 {
+		return nil, ErrTooManyAttempts
+	}
+
+	since1h := time.Now().Add(-1 * time.Hour)
+	attemptsPerEmail, err := s.repo.GetRecentLoginAttemptsByEmail(ctx, req.Email, since1h)
+	if err != nil {
+		return nil, err
+	}
+	if attemptsPerEmail >= 20 {
 		return nil, ErrTooManyAttempts
 	}
 
@@ -242,21 +253,20 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken string) (*Token
 	}, nil
 }
 
-// Logout revokes ALL refresh tokens for the user (not only the one presented).
-// This ensures that stolen tokens from other devices/sessions are also invalidated.
-// If the refresh token is not found or already expired, logout still succeeds
-// as long as we can extract the userID from the JWT access token via context.
-func (s *Service) Logout(ctx context.Context, refreshToken string) error {
+// Logout revokes ALL refresh tokens for the user.
+// It verifies that the refresh token presented belongs to the authenticated
+// user (from the JWT access token in context) to prevent cross-user logout.
+func (s *Service) Logout(ctx context.Context, refreshToken string, callerUserID string) error {
 	rt, err := s.repo.GetRefreshToken(ctx, refreshToken)
 	if err != nil {
-		// Token not found or already revoked: still a valid logout intent.
-		// We cannot revoke all sessions without the userID, so we return nil
-		// (no-op — the token was already invalid).
+		// Token not found or already revoked — still a valid logout intent.
 		return nil
 	}
-	// Revoke ALL sessions for this user, not just the one presented.
-	// This is the secure behavior: if a device is compromised the user
-	// can log out from any session and all others are terminated.
+	// Ownership check: refuse to revoke another user's sessions.
+	if rt.UserID != callerUserID {
+		return ErrUnauthorized
+	}
+	// Revoke ALL sessions for this user for maximum security.
 	return s.repo.RevokeAllUserTokens(ctx, rt.UserID)
 }
 

@@ -4,6 +4,8 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,6 +18,16 @@ func generateNonce() string {
 		return "fallback-nonce-replace-me"
 	}
 	return base64.StdEncoding.EncodeToString(b)
+}
+
+// backendURL returns the backend origin used in connect-src.
+// It is read from the BACKEND_URL environment variable so that the production
+// URL is never hardcoded in source code. Falls back to localhost for local dev.
+func backendURL() string {
+	if url := strings.TrimSpace(os.Getenv("BACKEND_URL")); url != "" {
+		return url
+	}
+	return "http://localhost:8080"
 }
 
 func SecurityHeadersMiddleware() gin.HandlerFunc {
@@ -45,20 +57,20 @@ func SecurityHeadersMiddleware() gin.HandlerFunc {
 			"camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=()")
 
 		// Content Security Policy — nonce-based, no unsafe-inline / unsafe-eval
-		// Quasar bundles its scripts as static assets; any runtime eval requirement
-		// should be addressed by using 'wasm-unsafe-eval' only if WASM is used.
+		// The backend origin is read from BACKEND_URL env var to avoid hardcoding
+		// infrastructure details in source code.
 		csp := fmt.Sprintf(
 			"default-src 'self'; "+
 				"script-src 'self' 'nonce-%s'; "+
 				"style-src 'self' 'nonce-%s' https://fonts.googleapis.com; "+
 				"font-src 'self' https://fonts.gstatic.com; "+
 				"img-src 'self' data: blob: https://cdn.quasar.dev; "+
-				"connect-src 'self' https://registro-backend-fdu2.onrender.com http://localhost:8080 http://localhost:5173 ws: wss:; "+
+				"connect-src 'self' %s http://localhost:5173 ws: wss:; "+
 				"object-src 'none'; "+
 				"base-uri 'self'; "+
 				"form-action 'self'; "+
 				"frame-ancestors 'none';",
-			nonce, nonce,
+			nonce, nonce, backendURL(),
 		)
 		c.Writer.Header().Set("Content-Security-Policy", csp)
 

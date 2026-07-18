@@ -285,6 +285,9 @@ func (h *Handler) CreateAdminUser(c *gin.Context) {
 
 // UpdateAdminUser updates an existing admin user
 // PUT /api/v1/admin/users/admins/:id
+// Only a superadmin may call this endpoint (enforced by RequireSuperAdmin middleware).
+// We additionally verify that the target admin belongs to a school the caller
+// can access, preventing cross-school privilege escalation.
 func (h *Handler) UpdateAdminUser(c *gin.Context) {
 	adminID := c.Param("id")
 
@@ -293,6 +296,20 @@ func (h *Handler) UpdateAdminUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, ErrorResponse{
 			Error:   "invalid request",
 			Message: err.Error(),
+		})
+		return
+	}
+
+	// Fetch target admin to verify ownership before mutating.
+	target, err := h.service.repo.GetAdminUserByID(c.Request.Context(), adminID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, ErrorResponse{Error: "admin user not found"})
+		return
+	}
+	if target.SchoolID != nil && !CanAccessSchool(c, *target.SchoolID) {
+		c.JSON(http.StatusForbidden, ErrorResponse{
+			Error:   "forbidden",
+			Message: "you don't have access to this admin's school",
 		})
 		return
 	}
@@ -342,6 +359,7 @@ func (h *Handler) DeleteAdminUser(c *gin.Context) {
 
 // GetAdminActivity returns activity log for an admin user
 // GET /api/v1/admin/users/admins/:id/activity
+// Verifies that the requesting superadmin can access the target admin's school.
 func (h *Handler) GetAdminActivity(c *gin.Context) {
 	adminID := c.Param("id")
 	limit := 50
@@ -350,6 +368,20 @@ func (h *Handler) GetAdminActivity(c *gin.Context) {
 		if _, err := fmt.Sscanf(l, "%d", &limit); err != nil {
 			limit = 50
 		}
+	}
+
+	// Ownership check: verify caller can access the target admin's school.
+	target, err := h.service.repo.GetAdminUserByID(c.Request.Context(), adminID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, ErrorResponse{Error: "admin user not found"})
+		return
+	}
+	if target.SchoolID != nil && !CanAccessSchool(c, *target.SchoolID) {
+		c.JSON(http.StatusForbidden, ErrorResponse{
+			Error:   "forbidden",
+			Message: "you don't have access to this admin's school",
+		})
+		return
 	}
 
 	activity, err := h.service.GetAdminActivity(c.Request.Context(), adminID, limit)
@@ -447,10 +479,7 @@ func (h *Handler) GetSchoolSetting(c *gin.Context) {
 
 	value, err := h.service.GetSchoolSetting(c.Request.Context(), schoolID, key)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, ErrorResponse{
-			Error:   "failed to get setting",
-			Message: err.Error(),
-		})
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
 		return
 	}
 
@@ -468,23 +497,16 @@ func (h *Handler) UpdateSchoolSetting(c *gin.Context) {
 		return
 	}
 
-	var req struct {
+	var body struct {
 		Value string `json:"value" binding:"required"`
 	}
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, ErrorResponse{
-			Error:   "invalid request",
-			Message: err.Error(),
-		})
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 		return
 	}
 
-	err := h.service.UpdateSchoolSetting(c.Request.Context(), schoolID, key, req.Value)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, ErrorResponse{
-			Error:   "failed to update setting",
-			Message: err.Error(),
-		})
+	if err := h.service.UpdateSchoolSetting(c.Request.Context(), schoolID, key, body.Value); err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
 		return
 	}
 

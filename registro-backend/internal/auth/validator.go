@@ -87,7 +87,17 @@ func (v *EmailValidator) Validate(email string) error {
 	return nil
 }
 
-// ValidateRegisterRequest validates registration request
+// publicRegistrationRoles are the only roles allowed via the public /auth/register endpoint.
+// Privileged roles (admin, superadmin) must be created by a superadmin via the admin API.
+var publicRegistrationRoles = map[string]bool{
+	"student": true,
+	"teacher": true,
+	"parent":  true,
+}
+
+// ValidateRegisterRequest validates a public registration request.
+// Admin and superadmin roles are rejected here; they must be created
+// through the dedicated admin user management endpoint.
 func ValidateRegisterRequest(req *RegisterRequest) error {
 	emailValidator := NewEmailValidator()
 	if err := emailValidator.Validate(req.Email); err != nil {
@@ -103,15 +113,7 @@ func ValidateRegisterRequest(req *RegisterRequest) error {
 		return ErrMissingRequiredFields
 	}
 
-	validRoles := map[string]bool{
-		"student":    true,
-		"teacher":    true,
-		"parent":     true,
-		"admin":      true,
-		"superadmin": true,
-	}
-
-	if !validRoles[req.Role] {
+	if !publicRegistrationRoles[req.Role] {
 		return ErrInvalidRole
 	}
 

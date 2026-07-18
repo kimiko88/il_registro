@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"math"
+
+	"registro-backend/internal/auth"
 )
 
 // Service provides admin business logic
@@ -214,7 +216,8 @@ func (s *Service) ListAdminUsers(ctx context.Context, page, pageSize int, school
 	}, nil
 }
 
-// CreateAdminUser creates a new admin user (superadmin only)
+// CreateAdminUser creates a new admin user (superadmin only).
+// Validates password strength before persisting.
 func (s *Service) CreateAdminUser(ctx context.Context, req *CreateAdminRequest) (*AdminUserResponse, error) {
 	// Validate that admin role has school_id
 	if req.Role == "admin" && (req.SchoolID == nil || *req.SchoolID == "") {
@@ -224,6 +227,12 @@ func (s *Service) CreateAdminUser(ctx context.Context, req *CreateAdminRequest) 
 	// Validate that superadmin role doesn't have school_id
 	if req.Role == "superadmin" && req.SchoolID != nil {
 		return nil, fmt.Errorf("superadmin role cannot have school_id")
+	}
+
+	// Validate password strength (must meet the same rules as public registration)
+	pv := auth.NewPasswordValidator()
+	if err := pv.Validate(req.Password); err != nil {
+		return nil, err
 	}
 
 	// Check if email already exists
