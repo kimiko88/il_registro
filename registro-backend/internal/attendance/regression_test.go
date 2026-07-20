@@ -30,10 +30,15 @@ func (m *MockAttRepo) FindPendingJustifications(classID string) ([]Justification
 	return nil, nil
 }
 func (m *MockAttRepo) GetStats(studentID string) (*SummaryResponse, error) { return nil, nil }
+func (m *MockAttRepo) CountDistinctDays(studentID string) (int, error)     { return 0, nil }
+func (m *MockAttRepo) GetAnalytics(ctx context.Context, schoolID string) (*AnalyticsResponse, error) {
+	return nil, nil
+}
+func (m *MockAttRepo) DeleteJustification(id string) error { return nil }
 
 func TestRegression_FutureAttendance(t *testing.T) {
 	repo := &MockAttRepo{}
-	svc := NewService(repo, nil, nil)
+	svc := NewService(repo, nil, nil, nil)
 	ctx := context.Background()
 
 	// Scenario: Marking attendance for way in future (> 24h allowed buffer)
@@ -47,14 +52,14 @@ func TestRegression_FutureAttendance(t *testing.T) {
 	}
 
 	// Expect Create NOT to be called because validation should fail
-	err := svc.MarkAttendance(ctx, "teacher-1", req)
+	err := svc.MarkAttendance(ctx, "teacher-1", "school-1", req)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "future")
 }
 
 func TestRegression_BulkMixedValidity(t *testing.T) {
 	repo := &MockAttRepo{}
-	svc := NewService(repo, nil, nil)
+	svc := NewService(repo, nil, nil, nil)
 	ctx := context.Background()
 
 	future := time.Now().AddDate(0, 0, 2).Format("2006-01-02")
@@ -62,11 +67,11 @@ func TestRegression_BulkMixedValidity(t *testing.T) {
 	req := BulkAttendanceRequest{
 		ClassID: "class-A",
 		Date:    future,
-		Statuses: []CreateAttendanceRequest{
+		Statuses: []StudentStatusRequest{
 			{StudentID: "s1", Status: StatusPresent},
 		},
 	}
 
-	err := svc.MarkBulk(ctx, "teacher-1", req)
+	err := svc.MarkBulk(ctx, "teacher-1", "school-1", req)
 	assert.Error(t, err)
 }

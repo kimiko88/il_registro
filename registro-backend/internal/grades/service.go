@@ -29,7 +29,7 @@ type Service interface {
 	GetStudentGrades(studentID string) ([]GradeResponse, error)
 	GetStudentGradesWithFilter(ctx context.Context, actorID string, actorRole string, studentID string, filter GradeFilter) ([]GradeResponse, error)
 	GetClassGrades(ctx context.Context, actorID string, actorRole string, classID string, filter GradeFilter) (*ClassGradesResponse, error)
-	GetSubjectGrades(subjectID string, filter GradeFilter) (*SubjectStatsResponse, error)
+	GetSubjectGrades(ctx context.Context, actorID string, actorRole string, subjectID string, filter GradeFilter) (*SubjectStatsResponse, error)
 	AddGrade(teacherID string, req CreateGradeRequest) error
 	BatchCreateGrades(teacherID string, grades []*Grade) error
 	BulkImport(teacherID string, r io.Reader, semester int) (*ImportResult, error)
@@ -230,7 +230,28 @@ func calcSemesterAverages(grades []GradeResponse) (avg1, avg2 float64) {
 	return
 }
 
-func (s *service) GetSubjectGrades(subjectID string, filter GradeFilter) (*SubjectStatsResponse, error) {
+func (s *service) GetSubjectGrades(ctx context.Context, actorID string, actorRole string, subjectID string, filter GradeFilter) (*SubjectStatsResponse, error) {
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" {
+		if actorRole != "teacher" {
+			return nil, ErrUnauthorized
+		}
+		var exists bool
+		if err := s.validator.db.QueryRowContext(
+			ctx,
+			`SELECT EXISTS(
+				SELECT 1 FROM class_subjects cs
+				JOIN teachers t ON cs.teacher_id = t.id
+				WHERE cs.subject_id = $1 AND t.user_id = $2
+			)`,
+			subjectID, actorID,
+		).Scan(&exists); err != nil {
+			return nil, fmt.Errorf("authorization check failed: %w", err)
+		}
+		if !exists {
+			return nil, fmt.Errorf("%w: you are not assigned to teach this subject", ErrUnauthorized)
+		}
+	}
+
 	grades, err := s.repo.FindBySubject(subjectID, filter.Semester)
 	if err != nil {
 		return nil, err

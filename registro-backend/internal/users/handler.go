@@ -1,6 +1,7 @@
 package users
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -204,6 +205,10 @@ func (h *Handler) BulkDelete(c *gin.Context) {
 // 6. POST /api/v1/users/{id}/restore
 func (h *Handler) Restore(c *gin.Context) {
 	if err := h.service.RestoreUser(c.Request.Context(), getActorRole(c), c.Param("id")); err != nil {
+		if errors.Is(err, ErrUnauthorized) || err == ErrUnauthorized {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

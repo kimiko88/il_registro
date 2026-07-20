@@ -1,10 +1,13 @@
 package users
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"mime/multipart"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -48,6 +51,10 @@ func (s *Service) CreateUser(ctx context.Context, actorRole string, req CreateUs
 	}
 	if !allowed[req.Role] {
 		return nil, ErrUnauthorized
+	}
+
+	if len(req.Password) < 8 {
+		return nil, fmt.Errorf("password must be at least 8 characters long")
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
@@ -105,7 +112,7 @@ func (s *Service) ListUsers(ctx context.Context, actorRole string, filter UserFi
 
 // GetUser returns a single user by ID.
 func (s *Service) GetUser(ctx context.Context, actorRole string, id string) (*User, error) {
-	if !isPrivileged(actorRole) {
+	if !isPrivileged(actorRole) && actorRole != "teacher" {
 		return nil, ErrUnauthorized
 	}
 	return s.repo.GetByID(ctx, id)
@@ -282,12 +289,13 @@ func (s *Service) BulkImport(ctx context.Context, actorRole string, file multipa
 
 	if len(users) > 0 {
 		count, bulkErrors, err := s.repo.BulkCreate(ctx, users)
-		if err != nil {
-			return nil, err
-		}
 		result.Created = count
 		result.Failed += len(bulkErrors)
 		result.Errors = append(result.Errors, bulkErrors...)
+		if err != nil && len(bulkErrors) == 0 {
+			result.Errors = append(result.Errors, err.Error())
+			result.Failed += len(users)
+		}
 	}
 
 	return result, nil
@@ -389,4 +397,29 @@ func (s *Service) RemoveGuardian(ctx context.Context, actorRole, studentUserID, 
 		return fmt.Errorf("parent profile not found: %w", err)
 	}
 	return s.repo.RemoveGuardian(ctx, studentProfileID, parentProfileID)
+}
+
+// IsGuardian checks if parentUserID is a guardian for studentUserID.
+func (s *Service) IsGuardian(ctx context.Context, parentUserID, studentUserID string) (bool, error) {
+	return s.repo.IsGuardian(ctx, parentUserID, studentUserID)
+}
+
+// ExportUsers exports users matching filter in specified format ("csv" or "json").
+func (s *Service) ExportUsers(ctx context.Context, actorRole string, filter UserFilter, format string) ([]byte, error) {
+	if !isPrivileged(actorRole) {
+		return nil, ErrUnauthorized
+	}
+	users, _, err := s.repo.List(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	if strings.ToLower(format) == "csv" {
+		var buf bytes.Buffer
+		buf.WriteString("ID,Email,FirstName,LastName,Role\n")
+		for _, u := range users {
+			buf.WriteString(fmt.Sprintf("%s,%s,%s,%s,%s\n", u.ID, u.Email, u.FirstName, u.LastName, u.Role))
+		}
+		return buf.Bytes(), nil
+	}
+	return json.Marshal(users)
 }

@@ -421,6 +421,9 @@ func (r *repository) GetHistory(gradeID string) ([]GradeHistory, error) {
 		}
 		history = append(history, h)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return history, nil
 }
 
@@ -477,6 +480,9 @@ func (r *repository) scanRows(rows *sql.Rows) ([]Grade, error) {
 		}
 		results = append(results, g)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return results, nil
 }
 
@@ -529,6 +535,9 @@ func (r *repository) FindTestsByClassAndSubject(classID string, subjectID string
 		}
 		tests = append(tests, t)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return tests, nil
 }
 
@@ -558,6 +567,9 @@ func (r *repository) FindUpcomingTestsByClass(classID string) ([]ClassTest, erro
 			return nil, err
 		}
 		tests = append(tests, t)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return tests, nil
 }

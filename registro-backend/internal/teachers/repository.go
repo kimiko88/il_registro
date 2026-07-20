@@ -63,6 +63,9 @@ func (r *PostgresRepository) List(ctx context.Context, schoolID string) ([]Teach
 		t.Qualification = qual.String
 		teachers = append(teachers, t)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return teachers, nil
 }
 
@@ -128,6 +131,9 @@ func (r *PostgresRepository) GetSubjects(ctx context.Context, teacherID string) 
 		}
 		results = append(results, ts)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return results, nil
 }
 
@@ -165,6 +171,9 @@ func (r *PostgresRepository) GetBySubject(ctx context.Context, subjectID string)
 		}
 		t.Qualification = qual.String
 		teachers = append(teachers, t)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return teachers, nil
 }

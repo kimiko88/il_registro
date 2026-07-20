@@ -19,7 +19,7 @@ func NewValidator(db *sql.DB) *Validator {
 // ValidateGradeValue checks if the grade value matches the grade type requirements.
 func (v *Validator) ValidateGradeValue(value float64, gradeType string) error {
 	switch GradeType(gradeType) {
-	case GradeTypeNumeric:
+	case GradeTypeNumeric, "":
 		if (value < 0 && value != -1) || value > 10 {
 			return errors.New("Voto deve essere tra 0 e 10, o -1 per assenza")
 		}
@@ -34,6 +34,10 @@ func (v *Validator) ValidateGradeValue(value float64, gradeType string) error {
 	case GradeTypeCompetence:
 		if value < 1 || value > 4 {
 			return errors.New("Livello competenza non valido (1-4)")
+		}
+	default:
+		if (value < 0 && value != -1) || value > 10 {
+			return errors.New("Voto deve essere tra 0 e 10, o -1 per assenza")
 		}
 	}
 	return nil

@@ -35,6 +35,10 @@ func NewService(repo Repository, tokenManager *jwt.TokenManager, mfaService *MFA
 // Input validation and RBAC checks are performed by the handler layer
 // (ValidateRegisterRequest in validator.go) before this method is called.
 func (s *Service) Register(ctx context.Context, req *RegisterRequest) (*User, error) {
+	if len(req.Password) < 8 {
+		return nil, ErrPasswordTooShort
+	}
+
 	// Check if email already exists
 	_, err := s.repo.GetUserByEmail(ctx, req.Email)
 	if err == nil {

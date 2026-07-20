@@ -7,9 +7,9 @@ import "time"
 type CreateGradeRequest struct {
 	StudentID     string  `json:"student_id" binding:"required"`
 	SubjectID     string  `json:"subject_id" binding:"required"`
-	GradeValue    float64 `json:"grade_value" binding:"required"`
+	GradeValue    float64 `json:"grade_value" binding:"required,min=-1,max=10"`
 	GradeType     string  `json:"grade_type" binding:"required"`
-	Semester      int     `json:"semester" binding:"required"` // 1 or 2
+	Semester      int     `json:"semester" binding:"required,min=1,max=2"` // 1 or 2
 	Description   string  `json:"description"`
 	RubricID      *string `json:"rubric_id"`
 	Weight        float64 `json:"weight"`

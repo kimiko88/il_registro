@@ -76,10 +76,25 @@ func (m *MockRepository) FindPendingJustifications(classID string) ([]Justificat
 	}
 	return args.Get(0).([]Justification), args.Error(1)
 }
+func (m *MockRepository) CountDistinctDays(studentID string) (int, error) {
+	args := m.Called(studentID)
+	return args.Int(0), args.Error(1)
+}
+func (m *MockRepository) GetAnalytics(ctx context.Context, schoolID string) (*AnalyticsResponse, error) {
+	args := m.Called(ctx, schoolID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*AnalyticsResponse), args.Error(1)
+}
+func (m *MockRepository) DeleteJustification(id string) error {
+	args := m.Called(id)
+	return args.Error(0)
+}
 
 func TestMarkAttendance(t *testing.T) {
 	mockRepo := new(MockRepository)
-	service := NewService(mockRepo, nil, nil)
+	service := NewService(mockRepo, nil, nil, nil)
 
 	ctx := context.Background()
 	teacherID := "t1"
@@ -96,7 +111,7 @@ func TestMarkAttendance(t *testing.T) {
 			return a.StudentID == "s1" && a.Status == StatusPresent
 		})).Return(nil).Once()
 
-		err := service.MarkAttendance(ctx, teacherID, req)
+		err := service.MarkAttendance(ctx, teacherID, "school-1", req)
 		assert.NoError(t, err)
 	})
 
@@ -114,7 +129,7 @@ func TestMarkAttendance(t *testing.T) {
 			return a.StudentID == "s1" && a.Status == StatusLate && a.EntryTime != nil && *a.EntryTime == "08:30" && a.ExitTime != nil && *a.ExitTime == "13:00"
 		})).Return(nil).Once()
 
-		err := service.MarkAttendance(ctx, teacherID, req)
+		err := service.MarkAttendance(ctx, teacherID, "school-1", req)
 		assert.NoError(t, err)
 	})
 
@@ -122,7 +137,7 @@ func TestMarkAttendance(t *testing.T) {
 		req := BulkAttendanceRequest{
 			ClassID: "c1",
 			Date:    "2025-10-10",
-			Statuses: []CreateAttendanceRequest{
+			Statuses: []StudentStatusRequest{
 				{StudentID: "s1", Status: StatusPresent},
 				{StudentID: "s2", Status: StatusAbsent},
 			},
@@ -132,14 +147,14 @@ func TestMarkAttendance(t *testing.T) {
 			return len(atts) == 2
 		})).Return(nil).Once()
 
-		err := service.MarkBulk(ctx, teacherID, req)
+		err := service.MarkBulk(ctx, teacherID, "school-1", req)
 		assert.NoError(t, err)
 	})
 }
 
 func TestGetClassAttendance(t *testing.T) {
 	mockRepo := new(MockRepository)
-	service := NewService(mockRepo, nil, nil)
+	service := NewService(mockRepo, nil, nil, nil)
 	ctx := context.Background()
 
 	t.Run("ReturnsSummary", func(t *testing.T) {
@@ -164,7 +179,7 @@ func TestGetClassAttendance(t *testing.T) {
 
 func TestJustificationFlow(t *testing.T) {
 	mockRepo := new(MockRepository)
-	service := NewService(mockRepo, nil, nil)
+	service := NewService(mockRepo, nil, nil, nil)
 	ctx := context.Background()
 
 	t.Run("RequestJustification", func(t *testing.T) {
@@ -181,6 +196,7 @@ func TestJustificationFlow(t *testing.T) {
 		jPending := &Justification{ID: jID, Status: JustificationPending}
 
 		mockRepo.On("FindJustificationByID", jID).Return(jPending, nil).Once()
+		mockRepo.On("FindByStudent", mock.Anything, mock.Anything, mock.Anything).Return([]Attendance{}, nil).Once()
 		mockRepo.On("UpdateJustification", mock.MatchedBy(func(j *Justification) bool {
 			return j.Status == JustificationApproved && j.ApprovedBy != nil
 		})).Return(nil).Once()

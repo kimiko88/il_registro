@@ -81,6 +81,14 @@ func (m *MockAuthRepository) GetRecentLoginAttempts(ctx context.Context, email, 
 	args := m.Called(ctx, email, ip, since)
 	return args.Int(0), args.Error(1)
 }
+func (m *MockAuthRepository) GetRecentLoginAttemptsByEmail(ctx context.Context, email string, since time.Time) (int, error) {
+	args := m.Called(ctx, email, since)
+	return args.Int(0), args.Error(1)
+}
+func (m *MockAuthRepository) GetRecentPasswordResets(ctx context.Context, userID string, since time.Time) (int, error) {
+	args := m.Called(ctx, userID, since)
+	return args.Int(0), args.Error(1)
+}
 func (m *MockAuthRepository) EnableMFA(ctx context.Context, userID, secret string) error {
 	args := m.Called(ctx, userID, secret)
 	return args.Error(0)
@@ -250,6 +258,13 @@ func (m *MockGradesRepository) FindTestByID(id string) (*grades.ClassTest, error
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*grades.ClassTest), args.Error(1)
+}
+func (m *MockGradesRepository) FindEnrolledSubjects(studentID string, semester int) ([]string, error) {
+	args := m.Called(studentID, semester)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]string), args.Error(1)
 }
 
 // MockUsersRepository mocks users.Repository

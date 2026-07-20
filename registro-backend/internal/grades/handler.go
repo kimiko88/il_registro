@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"registro-backend/pkg/logger"
 
@@ -123,9 +124,15 @@ func (h *Handler) GetSubjectGrades(c *gin.Context) {
 	}
 
 	filter := h.parseFilter(c)
+	actorID := c.GetString("user_id")
+	actorRole := c.GetString("role")
 
-	resp, err := h.service.GetSubjectGrades(subjectID, filter)
+	resp, err := h.service.GetSubjectGrades(c.Request.Context(), actorID, actorRole, subjectID, filter)
 	if err != nil {
+		if errors.Is(err, ErrUnauthorized) || strings.Contains(err.Error(), "unauthorized") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -412,7 +419,7 @@ func (h *Handler) GetChildGrades(c *gin.Context) {
 	}
 
 	studentID := c.Param("studentID")
-	logger.Log.Debugf("GetChildGrades: parentID=%s studentID=%s", parentID, studentID)
+	logger.Log.Debug("GetChildGrades requested by parent")
 	filter := h.parseFilter(c)
 
 	resp, err := h.service.GetChildGrades(parentID, studentID, filter)
@@ -531,6 +538,12 @@ func (h *Handler) GetStudentProfile(c *gin.Context) {
 }
 
 func (h *Handler) GetSchoolStatistics(c *gin.Context) {
+	actorRole := c.GetString("role")
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "secretary" && actorRole != "teacher" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: school statistics accessible only to staff and administrators"})
+		return
+	}
+
 	year := c.Query("year")
 	resp, err := h.analytics.GetSchoolStatistics(year)
 	if err != nil {

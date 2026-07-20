@@ -91,6 +91,9 @@ func (r *PostgresRepository) GetChildren(ctx context.Context, parentUserID strin
 		}
 		children = append(children, c)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return children, nil
 }
 
@@ -182,8 +185,6 @@ func (r *PostgresRepository) GetByID(ctx context.Context, id string) (*User, err
 	u.ClassID = classID
 	if className != nil {
 		u.ClassName = className
-	} else if classSection != nil {
-		u.ClassName = classSection
 	}
 	return &u, err
 }
@@ -387,18 +388,19 @@ func (r *PostgresRepository) List(ctx context.Context, filter UserFilter) ([]Use
 
 	// Sort and Paginate
 	sortBy := "u.created_at"
-	if filter.SortBy != "" {
-		// Map sortBy fields to columns with table alias
-		switch filter.SortBy {
-		case "last_name":
-			sortBy = "u.last_name"
-		case "email":
-			sortBy = "u.email"
-		case "role":
-			sortBy = "u.role"
-		case "class_name": // Special case
-			sortBy = "c.section"
-		}
+	switch filter.SortBy {
+	case "last_name":
+		sortBy = "u.last_name"
+	case "email":
+		sortBy = "u.email"
+	case "role":
+		sortBy = "u.role"
+	case "class_name":
+		sortBy = "c.section"
+	case "created_at":
+		sortBy = "u.created_at"
+	default:
+		sortBy = "u.created_at"
 	}
 	sortOrder := "DESC"
 	if strings.ToUpper(filter.SortOrder) == "ASC" {
@@ -427,17 +429,15 @@ func (r *PostgresRepository) List(ctx context.Context, filter UserFilter) ([]Use
 		}
 
 		u.ClassID = classID
-
-		// Use Name if available, fallback to section
 		if className != nil {
 			u.ClassName = className
-		} else if classSection != nil {
-			u.ClassName = classSection
 		}
 
 		users = append(users, u)
 	}
-
+	if err := rows.Err(); err != nil {
+		return nil, 0, err
+	}
 	return users, total, nil
 }
 
@@ -468,6 +468,9 @@ func (r *PostgresRepository) ListByIDs(ctx context.Context, ids []string) ([]Use
 		}
 		users = append(users, u)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return users, nil
 }
 
@@ -485,11 +488,12 @@ func (r *PostgresRepository) LogAudit(ctx context.Context, log *AuditLog) error 
 }
 
 func (r *PostgresRepository) GetAuditLogs(ctx context.Context, userID string, limit, offset int) ([]AuditLog, int, error) {
-	// Simple implementation
 	var logs []AuditLog
 	var total int
 
-	_ = r.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM audit_logs WHERE user_id = $1", userID).Scan(&total)
+	if err := r.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM audit_logs WHERE user_id = $1", userID).Scan(&total); err != nil {
+		return nil, 0, fmt.Errorf("failed to count audit logs: %w", err)
+	}
 
 	rows, err := r.db.QueryContext(ctx,
 		"SELECT id, user_id, actor_id, action, details, ip_address, created_at FROM audit_logs WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3",
@@ -502,8 +506,13 @@ func (r *PostgresRepository) GetAuditLogs(ctx context.Context, userID string, li
 
 	for rows.Next() {
 		var l AuditLog
-		_ = rows.Scan(&l.ID, &l.UserID, &l.ActorID, &l.Action, &l.Details, &l.IPAddress, &l.CreatedAt)
+		if err := rows.Scan(&l.ID, &l.UserID, &l.ActorID, &l.Action, &l.Details, &l.IPAddress, &l.CreatedAt); err != nil {
+			return nil, 0, err
+		}
 		logs = append(logs, l)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, 0, err
 	}
 	return logs, total, nil
 }
@@ -535,11 +544,13 @@ func (r *PostgresRepository) BulkCreate(ctx context.Context, users []User) (int,
 	}
 
 	if _, err := stmt.ExecContext(ctx); err != nil {
-		return 0, nil, err
+		errs = append(errs, fmt.Sprintf("COPY flush failed: %v", err))
+		return 0, errs, fmt.Errorf("bulk insert flush failed: %w", err)
 	}
 
 	if err := tx.Commit(); err != nil {
-		return 0, nil, err
+		errs = append(errs, fmt.Sprintf("Commit failed: %v", err))
+		return 0, errs, fmt.Errorf("transaction commit failed: %w", err)
 	}
 
 	return count, errs, nil
@@ -602,6 +613,9 @@ func (r *PostgresRepository) GetStudentsByClass(ctx context.Context, classID str
 		}
 		users = append(users, u)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return users, nil
 }
 func (r *PostgresRepository) GetStudentProfile(ctx context.Context, userID string) (string, error) {
@@ -648,6 +662,9 @@ func (r *PostgresRepository) GetGuardians(ctx context.Context, studentProfileID 
 		}
 		guardians = append(guardians, g)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return guardians, nil
 }
 
@@ -672,6 +689,9 @@ func (r *PostgresRepository) GetPasswordHistory(ctx context.Context, userID stri
 			return nil, err
 		}
 		history = append(history, h)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return history, nil
 }
