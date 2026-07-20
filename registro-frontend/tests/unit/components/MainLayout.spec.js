@@ -81,7 +81,7 @@ describe('MainLayout Logic', () => {
             setupUserRole('teacher')
             const menuItems = useMenuItems('teacher')
 
-            expect(menuItems).toHaveLength(11)
+            expect(menuItems).toHaveLength(13)
             expect(menuItems.map(i => i.label)).toContain('Dashboard')
             expect(menuItems.map(i => i.label)).toContain('Le Mie Classi')
             expect(menuItems.map(i => i.label)).toContain('Voti')
@@ -92,7 +92,7 @@ describe('MainLayout Logic', () => {
             setupUserRole('admin')
             const menuItems = useMenuItems('admin')
 
-            expect(menuItems).toHaveLength(5)
+            expect(menuItems).toHaveLength(6)
             expect(menuItems.map(i => i.label)).toContain('Dashboard')
             expect(menuItems.map(i => i.label)).toContain('La Mia Scuola')
             expect(menuItems.map(i => i.label)).toContain('Analytics')
@@ -124,7 +124,7 @@ describe('MainLayout Logic', () => {
             setupUserRole('secretary')
             const menuItems = useMenuItems('secretary')
 
-            expect(menuItems).toHaveLength(11)
+            expect(menuItems).toHaveLength(12)
             expect(menuItems.map(i => i.label)).toContain('Dashboard')
             expect(menuItems.map(i => i.label)).toContain('Documenti')
             expect(menuItems.map(i => i.label)).toContain('Studenti')

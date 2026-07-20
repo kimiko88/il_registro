@@ -19,12 +19,14 @@ export function useMenuItems(role) {
             { label: 'Dashboard', icon: 'dashboard', path: '/', exact: true },
             { label: 'La Mia Scuola', icon: 'school', path: '/admin/schools' },
             { label: 'Gestione Utenti', icon: 'people', path: '/admin/users' },
+            { label: 'Feature Flags & Istituto', icon: 'toggle_on', path: '/admin/school-settings' },
             { label: 'Analytics', icon: 'analytics', path: '/admin/analytics' },
             { label: 'Impostazioni', icon: 'settings', path: '/admin/settings' }
         ],
         secretary: [
             { label: 'Dashboard', icon: 'dashboard', path: '/', exact: true },
             { label: 'Classi', icon: 'room', path: '/secretary/classes' },
+            { label: 'Gruppi Linguistici', icon: 'groups', path: '/secretary/groups' },
             { label: 'Documenti', icon: 'description', path: '/secretary/documents' },
             { label: 'Studenti', icon: 'school', path: '/secretary/students' },
             { label: 'Utenti', icon: 'people', path: '/secretary/users' },
@@ -38,6 +40,8 @@ export function useMenuItems(role) {
         teacher: [
             { label: 'Dashboard', icon: 'dashboard', path: '/', exact: true },
             { label: 'Le Mie Classi', icon: 'class', path: '/teacher/classes' },
+            { label: 'Gruppi Linguistici', icon: 'groups', path: '/teacher/groups' },
+            { label: 'Coordinamento', icon: 'co_present', path: '/teacher/coordinator' },
             { label: 'Voti', icon: 'grade', path: '/teacher/grades' },
             { label: 'Registro Classe', icon: 'menu_book', path: '/teacher/lessons' },
             { label: 'Didattica', icon: 'folder_shared', path: '/teacher/didactics' },

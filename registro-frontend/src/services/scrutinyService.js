@@ -6,5 +6,11 @@ export const scrutinyService = {
     },
     save(data) {
         return api.post('/scrutiny/save', data)
+    },
+    startScrutiny(classId, semester = 1) {
+        return api.post(`/scrutiny/class/${classId}/start`, null, { params: { semester } })
+    },
+    validateScrutiny(classId, semester = 1) {
+        return api.post(`/scrutiny/class/${classId}/validate`, null, { params: { semester } })
     }
 }

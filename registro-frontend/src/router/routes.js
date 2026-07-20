@@ -56,6 +56,11 @@ export default [
                 meta: { roles: ['superadmin', 'admin'] }
             },
             {
+                path: 'admin/school-settings',
+                component: () => import('@/pages/admin/SchoolSettings.vue'),
+                meta: { roles: ['superadmin', 'admin'] }
+            },
+            {
                 path: 'admin/audit-logs',
                 component: () => import('@/pages/admin/AuditLog.vue'),
                 meta: { roles: ['superadmin'] }
@@ -73,12 +78,15 @@ export default [
             { path: 'secretary/scrutiny', component: () => import('@/pages/teacher/Scrutiny.vue'), meta: { role: 'secretary' } },
             { path: 'secretary/settings', component: () => import('@/pages/secretary/Settings.vue'), meta: { role: 'secretary' } },
             { path: 'secretary/classes', component: () => import('@/pages/secretary/Classes.vue'), meta: { role: 'secretary' } },
+            { path: 'secretary/groups', component: () => import('@/pages/teacher/Groups.vue'), meta: { role: 'secretary' } },
 
             // Teacher Routes
             { path: 'teacher', component: () => import('@/pages/teacher/Index.vue'), meta: { role: 'teacher' } },
             { path: 'teacher/grades', component: () => import('@/pages/teacher/Grades.vue'), meta: { role: 'teacher' } },
             { path: 'teacher/attendance', component: () => import('@/pages/teacher/Attendance.vue'), meta: { role: 'teacher' } },
             { path: 'teacher/classes', component: () => import('@/pages/teacher/Classes.vue'), meta: { role: 'teacher' } },
+            { path: 'teacher/groups', component: () => import('@/pages/teacher/Groups.vue'), meta: { role: 'teacher' } },
+            { path: 'teacher/coordinator', component: () => import('@/pages/teacher/CoordinatorView.vue'), meta: { role: 'teacher' } },
             { path: 'teacher/documents', component: () => import('@/pages/teacher/Documents.vue'), meta: { role: 'teacher' } },
             { path: 'teacher/colloqui', component: () => import('@/pages/teacher/Colloqui.vue'), meta: { role: 'teacher' } },
             { path: 'teacher/communications', component: () => import('@/pages/teacher/Communications.vue'), meta: { role: 'teacher' } },
