@@ -21,6 +21,9 @@ type Service interface {
 	CountTeachingDays(ctx context.Context, schoolID string, from, to time.Time) (int, error)
 	// GetSchoolYearDates implementa l'interfaccia attendance.CalendarService.
 	GetSchoolYearDates(ctx context.Context, schoolID string) (start, end time.Time, err error)
+
+	CreateAcademicPeriod(ctx context.Context, actorRole, schoolID string, req CreateAcademicPeriodRequest) (*AcademicPeriod, error)
+	ListAcademicPeriods(ctx context.Context, schoolID string) ([]AcademicPeriod, error)
 }
 
 type service struct {
@@ -142,4 +145,37 @@ func (s *service) GetSchoolYearDates(ctx context.Context, schoolID string) (star
 		return
 	}
 	return settings.StartDate, settings.EndDate, nil
+}
+
+func (s *service) CreateAcademicPeriod(ctx context.Context, actorRole, schoolID string, req CreateAcademicPeriodRequest) (*AcademicPeriod, error) {
+	if !isSecretary(actorRole) {
+		return nil, errors.New("forbidden: solo la segreteria può creare i periodi valutativi")
+	}
+	start, err := time.Parse("2006-01-02", req.StartDate)
+	if err != nil {
+		return nil, fmt.Errorf("start_date non valida: %w", err)
+	}
+	end, err := time.Parse("2006-01-02", req.EndDate)
+	if err != nil {
+		return nil, fmt.Errorf("end_date non valida: %w", err)
+	}
+
+	p := &AcademicPeriod{
+		SchoolID:       schoolID,
+		AcademicYearID: req.AcademicYearID,
+		Name:           req.Name,
+		Code:           req.Code,
+		StartDate:      start,
+		EndDate:        end,
+		IsCurrent:      req.IsCurrent,
+	}
+
+	if err := s.repo.CreateAcademicPeriod(p); err != nil {
+		return nil, err
+	}
+	return p, nil
+}
+
+func (s *service) ListAcademicPeriods(ctx context.Context, schoolID string) ([]AcademicPeriod, error) {
+	return s.repo.ListAcademicPeriods(schoolID)
 }

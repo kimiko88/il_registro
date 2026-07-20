@@ -396,7 +396,7 @@ func (r *repository) GetPasswordHistory(ctx context.Context, userID string) ([]s
 	query := `
 		SELECT password_hash 
 		FROM user_password_history 
-		WHERE user_id = $1::uuid 
+		WHERE user_id = $1 
 		ORDER BY created_at DESC 
 		LIMIT 5
 	`
@@ -420,7 +420,7 @@ func (r *repository) GetPasswordHistory(ctx context.Context, userID string) ([]s
 func (r *repository) AddPasswordHistory(ctx context.Context, userID, passwordHash string) error {
 	query := `
 		INSERT INTO user_password_history (user_id, password_hash)
-		VALUES ($1::uuid, $2)
+		VALUES ($1, $2)
 	`
 	_, err := r.db.ExecContext(ctx, query, userID, passwordHash)
 	return err

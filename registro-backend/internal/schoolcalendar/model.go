@@ -25,3 +25,16 @@ type NonTeachingDay struct {
 	CreatedBy string    `json:"created_by" db:"created_by"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 }
+
+// AcademicPeriod rappresenta un periodo valutativo (es. 1° Quadrimestre, 2° Quadrimestre, 1° Trimestre).
+type AcademicPeriod struct {
+	ID             string    `json:"id" db:"id"`
+	SchoolID       string    `json:"school_id" db:"school_id"`
+	AcademicYearID *string   `json:"academic_year_id,omitempty" db:"academic_year_id"`
+	Name           string    `json:"name" db:"name"`
+	Code           string    `json:"code" db:"code"`
+	StartDate      time.Time `json:"start_date" db:"start_date"`
+	EndDate        time.Time `json:"end_date" db:"end_date"`
+	IsCurrent      bool      `json:"is_current" db:"is_current"`
+	CreatedAt      time.Time `json:"created_at" db:"created_at"`
+}

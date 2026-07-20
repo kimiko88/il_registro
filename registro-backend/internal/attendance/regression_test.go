@@ -35,10 +35,14 @@ func (m *MockAttRepo) GetAnalytics(ctx context.Context, schoolID string) (*Analy
 	return nil, nil
 }
 func (m *MockAttRepo) DeleteJustification(id string) error { return nil }
+func (m *MockAttRepo) IsTeacherAssignedToClass(ctx context.Context, teacherID, classID string) (bool, error) {
+	return true, nil
+}
 
 func TestRegression_FutureAttendance(t *testing.T) {
 	repo := &MockAttRepo{}
-	svc := NewService(repo, nil, nil, nil)
+	mockUserRepo := new(MockUserRepo)
+	svc := NewService(repo, mockUserRepo, nil, nil)
 	ctx := context.Background()
 
 	// Scenario: Marking attendance for way in future (> 24h allowed buffer)
@@ -59,7 +63,8 @@ func TestRegression_FutureAttendance(t *testing.T) {
 
 func TestRegression_BulkMixedValidity(t *testing.T) {
 	repo := &MockAttRepo{}
-	svc := NewService(repo, nil, nil, nil)
+	mockUserRepo := new(MockUserRepo)
+	svc := NewService(repo, mockUserRepo, nil, nil)
 	ctx := context.Background()
 
 	future := time.Now().AddDate(0, 0, 2).Format("2006-01-02")

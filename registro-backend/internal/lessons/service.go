@@ -106,6 +106,7 @@ func (s *service) CreateHomework(teacherID string, req CreateHomeworkRequest) (*
 		LessonID:    req.LessonID,
 		DueDate:     dueDate,
 		Description: req.Description,
+		Type:        req.Type,
 	}
 
 	if err := s.repo.CreateHomework(hw); err != nil {
@@ -159,5 +160,6 @@ func (s *service) mapHomeworkResponse(h *Homework) *HomeworkResponse {
 		TeacherName: h.TeacherName,
 		DueDate:     h.DueDate,
 		Description: h.Description,
+		Type:        h.Type,
 	}
 }

@@ -154,10 +154,13 @@ func (r *repository) scanLessons(query string, args ...interface{}) ([]Lesson, e
 }
 
 func (r *repository) CreateHomework(homework *Homework) error {
+	if homework.Type == "" {
+		homework.Type = "compito"
+	}
 	query := `
 		WITH inserted AS (
-			INSERT INTO class_homeworks (lesson_id, class_id, subject_id, teacher_id, due_date, description, created_at, updated_at)
-			VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+			INSERT INTO class_homeworks (lesson_id, class_id, subject_id, teacher_id, due_date, description, type, created_at, updated_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
 			RETURNING id, teacher_id
 		)
 		SELECT inserted.id, COALESCE(u.first_name || ' ' || u.last_name, '') AS teacher_name
@@ -166,12 +169,12 @@ func (r *repository) CreateHomework(homework *Homework) error {
 	`
 	return r.db.QueryRow(query,
 		homework.LessonID, homework.ClassID, homework.SubjectID, homework.TeacherID,
-		homework.DueDate, homework.Description,
+		homework.DueDate, homework.Description, homework.Type,
 	).Scan(&homework.ID, &homework.TeacherName)
 }
 
 func (r *repository) GetHomeworkByClass(classID string) ([]Homework, error) {
-	query := `SELECT ch.id, ch.lesson_id, ch.class_id, ch.subject_id, ch.teacher_id, COALESCE(u.first_name || ' ' || u.last_name, '') AS teacher_name, ch.due_date, ch.description, ch.created_at, ch.updated_at 
+	query := `SELECT ch.id, ch.lesson_id, ch.class_id, ch.subject_id, ch.teacher_id, COALESCE(u.first_name || ' ' || u.last_name, '') AS teacher_name, ch.due_date, ch.description, COALESCE(ch.type, 'compito'), ch.created_at, ch.updated_at 
 	          FROM class_homeworks ch
 	          LEFT JOIN users u ON ch.teacher_id = u.id
 	          WHERE ch.class_id = $1 ORDER BY ch.due_date ASC`
@@ -184,8 +187,12 @@ func (r *repository) GetHomeworkByClass(classID string) ([]Homework, error) {
 	var homeworks []Homework
 	for rows.Next() {
 		var h Homework
-		if err := rows.Scan(&h.ID, &h.LessonID, &h.ClassID, &h.SubjectID, &h.TeacherID, &h.TeacherName, &h.DueDate, &h.Description, &h.CreatedAt, &h.UpdatedAt); err != nil {
+		var lessonID sql.NullString
+		if err := rows.Scan(&h.ID, &lessonID, &h.ClassID, &h.SubjectID, &h.TeacherID, &h.TeacherName, &h.DueDate, &h.Description, &h.Type, &h.CreatedAt, &h.UpdatedAt); err != nil {
 			return nil, err
+		}
+		if lessonID.Valid {
+			h.LessonID = &lessonID.String
 		}
 		homeworks = append(homeworks, h)
 	}

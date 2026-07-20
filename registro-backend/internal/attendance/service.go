@@ -52,6 +52,12 @@ type service struct {
 }
 
 func NewService(repo Repository, uRepo users.Repository, b EventBroadcaster, cal CalendarService) Service {
+	if repo == nil {
+		panic("attendance.NewService: repo must not be nil")
+	}
+	if uRepo == nil {
+		panic("attendance.NewService: userRepo must not be nil — required for guardianship and access checks")
+	}
 	return &service{
 		repo:        repo,
 		userRepo:    uRepo,
@@ -64,6 +70,15 @@ func NewService(repo Repository, uRepo users.Repository, b EventBroadcaster, cal
 func (s *service) MarkAttendance(ctx context.Context, teacherID, schoolID string, req CreateAttendanceRequest) error {
 	if schoolID == "" {
 		return fmt.Errorf("school_id mancante nel token")
+	}
+	if teacherID != "" {
+		isAssigned, err := s.repo.IsTeacherAssignedToClass(ctx, teacherID, req.ClassID)
+		if err != nil {
+			return fmt.Errorf("errore verifica docente per classe: %w", err)
+		}
+		if !isAssigned {
+			return fmt.Errorf("forbidden: docente non assegnato alla classe")
+		}
 	}
 	date, err := time.Parse("2006-01-02", req.Date)
 	if err != nil {
@@ -106,6 +121,15 @@ func (s *service) MarkAttendance(ctx context.Context, teacherID, schoolID string
 func (s *service) MarkBulk(ctx context.Context, teacherID, schoolID string, req BulkAttendanceRequest) error {
 	if schoolID == "" {
 		return fmt.Errorf("school_id mancante nel token")
+	}
+	if teacherID != "" {
+		isAssigned, err := s.repo.IsTeacherAssignedToClass(ctx, teacherID, req.ClassID)
+		if err != nil {
+			return fmt.Errorf("errore verifica docente per classe: %w", err)
+		}
+		if !isAssigned {
+			return fmt.Errorf("forbidden: docente non assegnato alla classe")
+		}
 	}
 	date, err := time.Parse("2006-01-02", req.Date)
 	if err != nil {
@@ -326,12 +350,31 @@ func (s *service) GetPendingJustifications(ctx context.Context, classID string) 
 	return resp, nil
 }
 
-// DeleteJustification elimina fisicamente la giustifica.
+// DeleteJustification elimina fisicamente la giustifica previa verifica dell'autorizzazione dell'actorID.
 func (s *service) DeleteJustification(ctx context.Context, actorID string, justificationID string) error {
-	_, err := s.repo.FindJustificationByID(justificationID)
+	j, err := s.repo.FindJustificationByID(justificationID)
 	if err != nil {
 		return fmt.Errorf("giustifica non trovata: %w", err)
 	}
+
+	if actorID != "" && actorID != j.ParentID && actorID != j.StudentID {
+		if s.userRepo != nil {
+			actorUser, err := s.userRepo.GetByID(ctx, actorID)
+			if err != nil {
+				return fmt.Errorf("unauthorized: impossibile verificare permessi dell'utente: %w", err)
+			}
+			studentUser, err := s.userRepo.GetByID(ctx, j.StudentID)
+			if err != nil {
+				return fmt.Errorf("unauthorized: impossibile verificare lo studente della giustifica: %w", err)
+			}
+			if actorUser.Role != "superadmin" {
+				if actorUser.SchoolID == nil || studentUser.SchoolID == nil || *actorUser.SchoolID != *studentUser.SchoolID {
+					return fmt.Errorf("forbidden: impossibile eliminare giustifiche di un'altra scuola")
+				}
+			}
+		}
+	}
+
 	return s.repo.DeleteJustification(justificationID)
 }
 
@@ -375,27 +418,29 @@ func (s *service) GetSchoolAnalytics(ctx context.Context, schoolID string) (*Ana
 }
 
 func (s *service) GetChildAttendance(ctx context.Context, parentID, studentID string, from, to time.Time) ([]AttendanceResponse, error) {
-	if s.userRepo != nil {
-		isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, studentID)
-		if err != nil {
-			return nil, err
-		}
-		if !isGuardian {
-			return nil, fmt.Errorf("unauthorized: not a guardian of this student")
-		}
+	if s.userRepo == nil {
+		return nil, fmt.Errorf("unauthorized: userRepo is nil")
+	}
+	isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, studentID)
+	if err != nil {
+		return nil, err
+	}
+	if !isGuardian {
+		return nil, fmt.Errorf("unauthorized: not a guardian of this student")
 	}
 	return s.GetStudentAttendance(ctx, studentID, from, to)
 }
 
 func (s *service) GetChildSummary(ctx context.Context, parentID, studentID, schoolID string) (*SummaryResponse, error) {
-	if s.userRepo != nil {
-		isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, studentID)
-		if err != nil {
-			return nil, err
-		}
-		if !isGuardian {
-			return nil, fmt.Errorf("unauthorized: not a guardian of this student")
-		}
+	if s.userRepo == nil {
+		return nil, fmt.Errorf("unauthorized: userRepo is nil")
+	}
+	isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, studentID)
+	if err != nil {
+		return nil, err
+	}
+	if !isGuardian {
+		return nil, fmt.Errorf("unauthorized: not a guardian of this student")
 	}
 	return s.GetStudentSummary(ctx, studentID, schoolID)
 }

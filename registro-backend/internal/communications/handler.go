@@ -18,10 +18,12 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	g := rg.Group("/communications")
 	{
 		g.GET("", h.List)
+		g.GET("/bacheca", h.ListBacheca)
 		g.POST("", h.Send)
 		g.DELETE("/:id", h.Delete)
 		g.POST("/:id/sign", h.Sign)
 		g.GET("/:id/signatures", h.GetSignatures)
+		g.GET("/:id/signature-report", h.GetSignatureReport)
 	}
 }
 
@@ -31,7 +33,22 @@ func (h *Handler) List(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	msgs, err := h.service.ListMessages(c, uid)
+	msgs, err := h.service.ListMessages(c.Request.Context(), uid)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, msgs)
+}
+
+func (h *Handler) ListBacheca(c *gin.Context) {
+	uid := c.GetString("user_id")
+	schoolID := c.GetString("school_id")
+	if uid == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	msgs, err := h.service.ListBacheca(c.Request.Context(), schoolID, uid)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -50,7 +67,7 @@ func (h *Handler) Send(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	msg, err := h.service.SendMessage(c, uid, req)
+	msg, err := h.service.SendMessage(c.Request.Context(), uid, req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -67,7 +84,7 @@ func (h *Handler) Delete(c *gin.Context) {
 	}
 	role := c.GetString("role")
 	id := c.Param("id")
-	if err := h.service.DeleteMessage(c, uid, role, id); err != nil {
+	if err := h.service.DeleteMessage(c.Request.Context(), uid, role, id); err != nil {
 		if err.Error() == "forbidden" {
 			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 			return
@@ -85,7 +102,8 @@ func (h *Handler) Sign(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if err := h.service.SignMessage(c, id, uid); err != nil {
+	ipAddress := c.ClientIP()
+	if err := h.service.SignMessageWithIP(c.Request.Context(), id, uid, ipAddress); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -94,10 +112,25 @@ func (h *Handler) Sign(c *gin.Context) {
 
 func (h *Handler) GetSignatures(c *gin.Context) {
 	id := c.Param("id")
-	names, err := h.service.GetMessageSignatures(c, id)
+	names, err := h.service.GetMessageSignatures(c.Request.Context(), id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, names)
+}
+
+func (h *Handler) GetSignatureReport(c *gin.Context) {
+	id := c.Param("id")
+	role := c.GetString("role")
+	report, err := h.service.GetSignatureReport(c.Request.Context(), role, id)
+	if err != nil {
+		if err.Error() == "forbidden: signature reports are restricted to staff" {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, report)
 }

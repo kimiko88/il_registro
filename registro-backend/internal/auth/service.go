@@ -197,7 +197,7 @@ func (s *Service) Login(ctx context.Context, req *LoginRequest, ipAddress, userA
 // RefreshToken generates new access token from refresh token.
 // It also verifies that the user account is still active before issuing
 // a new token — prevents disabled accounts from silently regaining access.
-func (s *Service) RefreshToken(ctx context.Context, refreshToken string) (*TokenPair, error) {
+func (s *Service) RefreshToken(ctx context.Context, refreshToken, ipAddress, userAgent string) (*TokenPair, error) {
 	// Get refresh token from DB
 	rt, err := s.repo.GetRefreshToken(ctx, refreshToken)
 	if err != nil {
@@ -253,13 +253,23 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken string) (*Token
 		return nil, err
 	}
 
+	// Update IP and UserAgent from current request if provided, falling back to previous token's values
+	newIp := ipAddress
+	if newIp == "" {
+		newIp = rt.IPAddress
+	}
+	newUserAgent := userAgent
+	if newUserAgent == "" {
+		newUserAgent = rt.UserAgent
+	}
+
 	// Store the new refresh token in DB
 	newRt := &RefreshToken{
 		UserID:    user.ID,
 		Token:     newRefreshToken,
 		ExpiresAt: time.Now().Add(7 * 24 * time.Hour),
-		IPAddress: rt.IPAddress,
-		UserAgent: rt.UserAgent,
+		IPAddress: newIp,
+		UserAgent: newUserAgent,
 	}
 	if err := s.repo.CreateRefreshToken(ctx, newRt); err != nil {
 		return nil, err
@@ -332,16 +342,17 @@ func (s *Service) SetupMFA(ctx context.Context, userID string) (*MFASetupRespons
 		}
 		hashedCodes[i] = string(h)
 	}
-	if err := s.repo.CreateRecoveryCodes(ctx, userID, hashedCodes); err != nil {
-		return nil, err
-	}
-
-	// Encrypt the TOTP secret before storing it.
+	// Encrypt and store the TOTP secret FIRST, before saving recovery codes.
+	// This prevents orphan recovery codes if secret encryption or saving fails.
 	encryptedSecret, err := crypto.EncryptString(secret)
 	if err != nil {
 		return nil, err
 	}
 	if err := s.repo.SaveTempMFASecret(ctx, userID, encryptedSecret); err != nil {
+		return nil, err
+	}
+
+	if err := s.repo.CreateRecoveryCodes(ctx, userID, hashedCodes); err != nil {
 		return nil, err
 	}
 

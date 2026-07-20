@@ -23,7 +23,30 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 		scrutiny.POST("/save", h.Save)
 		scrutiny.POST("/class/:classId/start", h.Start)
 		scrutiny.POST("/class/:classId/validate", h.Validate)
+		scrutiny.GET("/export/:studentId/pdf", h.ExportPagellaPDF)
 	}
+}
+
+func (h *Handler) ExportPagellaPDF(c *gin.Context) {
+	studentID := c.Param("studentId")
+	classID := c.Query("class_id")
+	semester, _ := strconv.Atoi(c.DefaultQuery("semester", "1"))
+	actorID := c.GetString("user_id")
+	actorRole := c.GetString("role")
+
+	pdfBytes, err := h.service.ExportPagellaPDF(c.Request.Context(), actorID, actorRole, classID, studentID, semester)
+	if err != nil {
+		if err == ErrScrutinyNotValidated {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.Header("Content-Type", "application/pdf")
+	c.Header("Content-Disposition", "attachment; filename=pagella.pdf")
+	c.Data(http.StatusOK, "application/pdf", pdfBytes)
 }
 
 func (h *Handler) GetMatrix(c *gin.Context) {

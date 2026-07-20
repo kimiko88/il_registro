@@ -33,11 +33,13 @@ type CreateHomeworkRequest struct {
 	LessonID    *string `json:"lesson_id"`
 	DueDate     string  `json:"due_date" binding:"required"` // YYYY-MM-DD
 	Description string  `json:"description" binding:"required"`
+	Type        string  `json:"type"` // compito, verifica, avviso, interrogazione
 }
 
 type UpdateHomeworkRequest struct {
 	DueDate     string `json:"due_date"`
 	Description string `json:"description"`
+	Type        string `json:"type"`
 }
 
 type LessonResponse struct {
@@ -61,11 +63,12 @@ type LessonResponse struct {
 
 type HomeworkResponse struct {
 	ID          string    `json:"id"`
-	LessonID    *string   `json:"lesson_id"`
+	LessonID    *string   `json:"lesson_id,omitempty"`
 	ClassID     string    `json:"class_id"`
 	SubjectID   string    `json:"subject_id"`
 	TeacherID   string    `json:"teacher_id"`
 	TeacherName string    `json:"teacher_name"`
 	DueDate     time.Time `json:"due_date"`
 	Description string    `json:"description"`
+	Type        string    `json:"type"`
 }

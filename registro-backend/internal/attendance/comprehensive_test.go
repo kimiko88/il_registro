@@ -83,6 +83,10 @@ func (m *MockRepo) DeleteJustification(id string) error {
 	args := m.Called(id)
 	return args.Error(0)
 }
+func (m *MockRepo) IsTeacherAssignedToClass(ctx context.Context, teacherID, classID string) (bool, error) {
+	args := m.Called(ctx, teacherID, classID)
+	return args.Bool(0), args.Error(1)
+}
 
 // --- Tests ---
 
@@ -117,12 +121,14 @@ func TestValidator_ValidateEntry(t *testing.T) {
 
 func TestService_MarkAttendance(t *testing.T) {
 	mockRepo := new(MockRepo)
-	svc := NewService(mockRepo, nil, nil, nil)
+	mockUserRepo := new(MockUserRepo)
+	svc := NewService(mockRepo, mockUserRepo, nil, nil)
 
 	req := CreateAttendanceRequest{
 		StudentID: "S1", ClassID: "C1", Date: time.Now().Format("2006-01-02"), Status: StatusPresent,
 	}
 
+	mockRepo.On("IsTeacherAssignedToClass", mock.Anything, "T1", "C1").Return(true, nil).Maybe()
 	mockRepo.On("Create", mock.Anything).Return(nil)
 
 	err := svc.MarkAttendance(context.Background(), "T1", "school-1", req)
@@ -132,7 +138,8 @@ func TestService_MarkAttendance(t *testing.T) {
 
 func TestService_ProcessJustification(t *testing.T) {
 	mockRepo := new(MockRepo)
-	svc := NewService(mockRepo, nil, nil, nil)
+	mockUserRepo := new(MockUserRepo)
+	svc := NewService(mockRepo, mockUserRepo, nil, nil)
 
 	jid := "J1"
 	j := &Justification{ID: jid, Status: JustificationPending}

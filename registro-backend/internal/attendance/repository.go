@@ -25,6 +25,9 @@ type Repository interface {
 	FindJustificationByID(id string) (*Justification, error)
 	FindPendingJustifications(classID string) ([]Justification, error)
 	DeleteJustification(id string) error
+
+	// Teacher Assignment Check
+	IsTeacherAssignedToClass(ctx context.Context, teacherID, classID string) (bool, error)
 }
 
 type repository struct {
@@ -280,4 +283,18 @@ func (r *repository) FindPendingJustifications(classID string) ([]Justification,
 func (r *repository) DeleteJustification(id string) error {
 	_, err := r.db.Exec(`DELETE FROM justifications WHERE id=$1::uuid`, id)
 	return err
+}
+
+func (r *repository) IsTeacherAssignedToClass(ctx context.Context, teacherID, classID string) (bool, error) {
+	query := `
+		SELECT EXISTS (
+			SELECT 1 FROM classes c
+			LEFT JOIN class_subjects cs ON c.id = cs.class_id
+			LEFT JOIN teachers t ON cs.teacher_id = t.id
+			WHERE c.id = $1::uuid AND (t.user_id = $2::uuid OR c.coordinator_id = $2::uuid)
+		)
+	`
+	var exists bool
+	err := r.db.QueryRowContext(ctx, query, classID, teacherID).Scan(&exists)
+	return exists, err
 }

@@ -1,0 +1,110 @@
+package parents
+
+import (
+	"context"
+	"errors"
+	"registro-backend/internal/attendance"
+	"registro-backend/internal/communications"
+	"registro-backend/internal/grades"
+	"registro-backend/internal/users"
+)
+
+var (
+	ErrUnauthorized = errors.New("unauthorized: target student is not linked to this parent")
+)
+
+type Service struct {
+	repo       Repository
+	usersRepo  users.Repository
+	gradesRepo grades.Repository
+	attRepo    attendance.Repository
+	commsRepo  communications.Repository
+}
+
+func NewService(repo Repository, ur users.Repository, gr grades.Repository, ar attendance.Repository, cr communications.Repository) *Service {
+	return &Service{
+		repo:       repo,
+		usersRepo:  ur,
+		gradesRepo: gr,
+		attRepo:    ar,
+		commsRepo:  cr,
+	}
+}
+
+func (s *Service) GetDashboard(ctx context.Context, parentUserID string) (*ParentDashboardResponse, error) {
+	children, err := s.usersRepo.GetChildren(ctx, parentUserID)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &ParentDashboardResponse{
+		ParentID: parentUserID,
+		Children: []ChildOverview{},
+	}
+
+	for _, child := range children {
+		overview := ChildOverview{
+			Student: child,
+		}
+
+		// Fetch grades by student user_id
+		if gradesList, err := s.gradesRepo.FindByStudent(child.UserID); err == nil {
+			var sum float64
+			var count int
+			for _, g := range gradesList {
+				if g.IsPublished && g.DeletedAt == nil {
+					overview.Grades = append(overview.Grades, g)
+					sum += g.GradeValue
+					count++
+				}
+			}
+			if count > 0 {
+				overview.AverageGrade = sum / float64(count)
+			}
+		}
+
+		// Fetch attendance stats by student profile id
+		if stats, err := s.attRepo.GetStats(child.ID); err == nil {
+			overview.AttendanceStats = stats
+		}
+
+		// Fetch pending circulars
+		if msgs, err := s.commsRepo.ListBacheca(ctx, "school-id", child.UserID); err == nil {
+			for _, m := range msgs {
+				if m.RequiresSignature && !m.IsSigned {
+					overview.PendingCirculars = append(overview.PendingCirculars, m)
+				}
+			}
+		}
+
+		resp.Children = append(resp.Children, overview)
+	}
+
+	return resp, nil
+}
+
+func (s *Service) GetChildGradesAverage(ctx context.Context, parentUserID, studentID string) (float64, error) {
+	isGuard, err := s.usersRepo.IsGuardian(ctx, parentUserID, studentID)
+	if err != nil || !isGuard {
+		return 0, ErrUnauthorized
+	}
+
+	gradesList, err := s.gradesRepo.FindByStudent(studentID)
+	if err != nil {
+		return 0, err
+	}
+
+	var sum float64
+	var count int
+	for _, g := range gradesList {
+		if g.IsPublished && g.DeletedAt == nil {
+			sum += g.GradeValue
+			count++
+		}
+	}
+
+	if count == 0 {
+		return 0, nil
+	}
+	return sum / float64(count), nil
+}

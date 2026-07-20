@@ -208,3 +208,11 @@ func (s *Service) SaveScrutiny(ctx context.Context, coordinatorID, actorRole str
 
 	return s.repo.SaveRecord(ctx, rec)
 }
+
+func (s *Service) ExportPagellaPDF(ctx context.Context, actorID, actorRole, classID, studentID string, semester int) ([]byte, error) {
+	matrix, err := s.GetMatrix(ctx, actorID, actorRole, classID, semester)
+	if err != nil {
+		return nil, err
+	}
+	return GeneratePagellaPDF(matrix, studentID)
+}

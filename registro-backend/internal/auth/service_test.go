@@ -376,7 +376,7 @@ func TestRefreshToken(t *testing.T) {
 		mockRepo.On("RevokeRefreshToken", mock.Anything, "rt-1").Return(nil).Once()
 		mockRepo.On("CreateRefreshToken", mock.Anything, mock.AnythingOfType("*auth.RefreshToken")).Return(nil).Once()
 
-		pair, err := s.RefreshToken(context.Background(), token)
+		pair, err := s.RefreshToken(context.Background(), token, "127.0.0.1", "TestAgent")
 
 		assert.NoError(t, err)
 		assert.NotNil(t, pair)
@@ -394,7 +394,7 @@ func TestRefreshToken(t *testing.T) {
 
 		mockRepo.On("GetRefreshToken", mock.Anything, token).Return(rt, nil).Once()
 
-		_, err := s.RefreshToken(context.Background(), token)
+		_, err := s.RefreshToken(context.Background(), token, "", "")
 		assert.ErrorIs(t, err, ErrTokenRevoked)
 		mockRepo.AssertExpectations(t)
 	})
@@ -408,7 +408,7 @@ func TestRefreshToken(t *testing.T) {
 
 		mockRepo.On("GetRefreshToken", mock.Anything, token).Return(rt, nil).Once()
 
-		_, err := s.RefreshToken(context.Background(), token)
+		_, err := s.RefreshToken(context.Background(), token, "", "")
 		assert.ErrorIs(t, err, ErrInvalidToken)
 		mockRepo.AssertExpectations(t)
 	})

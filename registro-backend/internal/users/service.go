@@ -404,6 +404,18 @@ func (s *Service) IsGuardian(ctx context.Context, parentUserID, studentUserID st
 	return s.repo.IsGuardian(ctx, parentUserID, studentUserID)
 }
 
+// SwitchChildContext verifies that parentUserID is guardian of studentUserID and returns the target student's profile context.
+func (s *Service) SwitchChildContext(ctx context.Context, parentUserID, targetStudentID string) (*User, error) {
+	isGuard, err := s.repo.IsGuardian(ctx, parentUserID, targetStudentID)
+	if err != nil {
+		return nil, err
+	}
+	if !isGuard {
+		return nil, errors.New("forbidden: target user is not a child of this parent")
+	}
+	return s.repo.GetByID(ctx, targetStudentID)
+}
+
 // ExportUsers exports users matching filter in specified format ("csv" or "json").
 func (s *Service) ExportUsers(ctx context.Context, actorRole string, filter UserFilter, format string) ([]byte, error) {
 	if !isPrivileged(actorRole) {

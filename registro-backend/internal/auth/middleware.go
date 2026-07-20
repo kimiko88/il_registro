@@ -99,7 +99,7 @@ func (m *Middleware) RequireRole(allowedRoles ...string) gin.HandlerFunc {
 
 		roleStr := role.(string)
 		for _, allowedRole := range allowedRoles {
-			if roleStr == allowedRole || roleStr == "superadmin" {
+			if roleStr == allowedRole {
 				c.Next()
 				return
 			}

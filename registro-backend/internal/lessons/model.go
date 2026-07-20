@@ -34,6 +34,7 @@ type Homework struct {
 	TeacherName string    `json:"teacher_name" db:"teacher_name"`
 	DueDate     time.Time `json:"due_date" db:"due_date"`
 	Description string    `json:"description" db:"description"`
+	Type        string    `json:"type" db:"type"` // compito, verifica, avviso, interrogazione
 	CreatedAt   time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at" db:"updated_at"`
 }

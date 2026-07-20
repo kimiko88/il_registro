@@ -149,14 +149,14 @@ func (h *Handler) RejectJustification(c *gin.Context) {
 	actorID := c.GetString("user_id")
 	actorRole := c.GetString("role")
 	if actorID == "" || (actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin") {
-		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized"})
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
-	if err := h.service.DeleteJustification(c.Request.Context(), actorID, id); err != nil {
+	if err := h.service.ProcessJustification(c.Request.Context(), actorID, id, false); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "deleted"})
+	c.JSON(http.StatusOK, gin.H{"message": "rejected"})
 }
 
 func (h *Handler) GetAnalytics(c *gin.Context) {
@@ -305,6 +305,11 @@ func (h *Handler) ProcessJustification(c *gin.Context) {
 		return
 	}
 	teacherID := c.GetString("user_id")
+	actorRole := c.GetString("role")
+	if teacherID == "" || (actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin") {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
 	if err := h.service.ProcessJustification(c.Request.Context(), teacherID, id, req.Approve); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

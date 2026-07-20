@@ -362,6 +362,25 @@ func (h *Handler) GetMyChildren(c *gin.Context) {
 	c.JSON(http.StatusOK, children)
 }
 
+// 17. POST /api/v1/users/me/switch-child/:studentId
+func (h *Handler) SwitchChild(c *gin.Context) {
+	parentID := getActorID(c)
+	studentID := c.Param("studentId")
+	if parentID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	student, err := h.service.SwitchChildContext(c.Request.Context(), parentID, studentID)
+	if err != nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"active_child": toUserResponse(student),
+		"message":      "switched child context successfully",
+	})
+}
+
 func toUserResponse(u *User) UserResponse {
 	return UserResponse{
 		ID: u.ID, Email: u.Email, FirstName: u.FirstName, LastName: u.LastName,

@@ -16,6 +16,9 @@ type Repository interface {
 	// CountTeachingDays conta i giorni lavorativi (lun-ven) nell'intervallo
 	// escludendo i giorni non didattici registrati.
 	CountTeachingDays(schoolID string, from, to time.Time) (int, error)
+
+	CreateAcademicPeriod(p *AcademicPeriod) error
+	ListAcademicPeriods(schoolID string) ([]AcademicPeriod, error)
 }
 
 type repository struct {
@@ -94,4 +97,45 @@ func (r *repository) CountTeachingDays(schoolID string, from, to time.Time) (int
 	var count int
 	err := r.db.QueryRow(query, from, to, schoolID).Scan(&count)
 	return count, err
+}
+
+func (r *repository) CreateAcademicPeriod(p *AcademicPeriod) error {
+	query := `
+		INSERT INTO academic_periods (school_id, academic_year_id, name, code, start_date, end_date, is_current)
+		VALUES ($1::uuid, $2::uuid, $3, $4, $5, $6, $7)
+		RETURNING id, created_at
+	`
+	var yearUUID interface{} = nil
+	if p.AcademicYearID != nil && *p.AcademicYearID != "" {
+		yearUUID = *p.AcademicYearID
+	}
+	return r.db.QueryRow(query, p.SchoolID, yearUUID, p.Name, p.Code, p.StartDate, p.EndDate, p.IsCurrent).Scan(&p.ID, &p.CreatedAt)
+}
+
+func (r *repository) ListAcademicPeriods(schoolID string) ([]AcademicPeriod, error) {
+	query := `
+		SELECT id, school_id, academic_year_id, name, COALESCE(code, ''), start_date, end_date, is_current, created_at
+		FROM academic_periods
+		WHERE school_id = $1::uuid
+		ORDER BY start_date ASC
+	`
+	rows, err := r.db.Query(query, schoolID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var list []AcademicPeriod
+	for rows.Next() {
+		var p AcademicPeriod
+		var yearID sql.NullString
+		if err := rows.Scan(&p.ID, &p.SchoolID, &yearID, &p.Name, &p.Code, &p.StartDate, &p.EndDate, &p.IsCurrent, &p.CreatedAt); err != nil {
+			return nil, err
+		}
+		if yearID.Valid {
+			p.AcademicYearID = &yearID.String
+		}
+		list = append(list, p)
+	}
+	return list, rows.Err()
 }

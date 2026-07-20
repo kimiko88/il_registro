@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"registro-backend/internal/users"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -91,13 +93,31 @@ func (m *MockRepository) DeleteJustification(id string) error {
 	args := m.Called(id)
 	return args.Error(0)
 }
+func (m *MockRepository) IsTeacherAssignedToClass(ctx context.Context, teacherID, classID string) (bool, error) {
+	args := m.Called(ctx, teacherID, classID)
+	return args.Bool(0), args.Error(1)
+}
+
+type MockUserRepo struct {
+	users.Repository
+}
+
+func (m *MockUserRepo) IsGuardian(ctx context.Context, parentID, studentID string) (bool, error) {
+	return true, nil
+}
+
+func (m *MockUserRepo) GetByID(ctx context.Context, id string) (*users.User, error) {
+	return &users.User{ID: id, Role: "teacher"}, nil
+}
 
 func TestMarkAttendance(t *testing.T) {
 	mockRepo := new(MockRepository)
-	service := NewService(mockRepo, nil, nil, nil)
+	mockUserRepo := new(MockUserRepo)
+	service := NewService(mockRepo, mockUserRepo, nil, nil)
 
 	ctx := context.Background()
 	teacherID := "t1"
+	mockRepo.On("IsTeacherAssignedToClass", mock.Anything, teacherID, "c1").Return(true, nil).Maybe()
 
 	t.Run("MarkSingle_Success", func(t *testing.T) {
 		req := CreateAttendanceRequest{
@@ -154,7 +174,8 @@ func TestMarkAttendance(t *testing.T) {
 
 func TestGetClassAttendance(t *testing.T) {
 	mockRepo := new(MockRepository)
-	service := NewService(mockRepo, nil, nil, nil)
+	mockUserRepo := new(MockUserRepo)
+	service := NewService(mockRepo, mockUserRepo, nil, nil)
 	ctx := context.Background()
 
 	t.Run("ReturnsSummary", func(t *testing.T) {
@@ -179,7 +200,8 @@ func TestGetClassAttendance(t *testing.T) {
 
 func TestJustificationFlow(t *testing.T) {
 	mockRepo := new(MockRepository)
-	service := NewService(mockRepo, nil, nil, nil)
+	mockUserRepo := new(MockUserRepo)
+	service := NewService(mockRepo, mockUserRepo, nil, nil)
 	ctx := context.Background()
 
 	t.Run("RequestJustification", func(t *testing.T) {

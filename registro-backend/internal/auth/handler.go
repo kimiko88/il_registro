@@ -108,7 +108,9 @@ func (h *Handler) RefreshToken(c *gin.Context) {
 		return
 	}
 
-	tokens, err := h.service.RefreshToken(c.Request.Context(), req.RefreshToken)
+	ipAddress := c.ClientIP()
+	userAgent := c.GetHeader("User-Agent")
+	tokens, err := h.service.RefreshToken(c.Request.Context(), req.RefreshToken, ipAddress, userAgent)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: err.Error()})
 		return

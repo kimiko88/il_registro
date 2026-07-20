@@ -12,33 +12,42 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"registro-backend/internal/admin"
+	"registro-backend/internal/agenda"
 	"registro-backend/internal/attendance"
 	"registro-backend/internal/auth"
 	"registro-backend/internal/classes"
+	"registro-backend/internal/colloqui"
 	"registro-backend/internal/communications"
 	"registro-backend/internal/config"
 	"registro-backend/internal/db"
 	"registro-backend/internal/didactic_materials"
 	"registro-backend/internal/documents"
+	"registro-backend/internal/extracurricular"
 	"registro-backend/internal/grades"
 	"registro-backend/internal/groups"
 	"registro-backend/internal/handler"
 	"registro-backend/internal/lessons"
 	"registro-backend/internal/middleware"
 	"registro-backend/internal/notes"
+	"registro-backend/internal/notifications"
 	"registro-backend/internal/orientamento"
+	"registro-backend/internal/parents"
 	"registro-backend/internal/pcto"
 	"registro-backend/internal/postgres"
+	"registro-backend/internal/reports"
 	"registro-backend/internal/scheduling"
 	"registro-backend/internal/schools"
 	"registro-backend/internal/schoolsettings"
 	"registro-backend/internal/scrutiny"
+	"registro-backend/internal/search"
 	"registro-backend/internal/signatures"
 	"registro-backend/internal/subjects"
 	"registro-backend/internal/teachers"
 	"registro-backend/internal/textbooks"
 	"registro-backend/internal/timetables"
+	"registro-backend/internal/trips"
 	"registro-backend/internal/users"
+	"registro-backend/internal/verbali"
 	"registro-backend/internal/ws"
 	"registro-backend/pkg/jwt"
 	"registro-backend/pkg/logger"
@@ -89,6 +98,12 @@ func main() {
 	adminRepo := postgres.NewAdminRepository(database)
 	timetablesRepo := timetables.NewRepository(database)
 	teachersRepo := teachers.NewRepository(database)
+	agendaRepo := agenda.NewRepository(database)
+	colloquiRepo := colloqui.NewRepository(database)
+	verbaliRepo := verbali.NewRepository(database)
+	extraRepo := extracurricular.NewRepository(database)
+	notifRepo := notifications.NewRepository(database)
+	tripsRepo := trips.NewRepository(database)
 
 	authMiddleware := auth.NewMiddleware(tokenManager, usersRepo)
 
@@ -111,6 +126,12 @@ func main() {
 	commsSvc := communications.NewService(commsRepo)
 	notesSvc := notes.NewService(notesRepo, usersRepo)
 	adminSvc := admin.NewService(adminRepo)
+	agendaSvc := agenda.NewService(agendaRepo)
+	colloquiSvc := colloqui.NewService(colloquiRepo)
+	verbaliSvc := verbali.NewService(verbaliRepo)
+	extraSvc := extracurricular.NewService(extraRepo)
+	notifSvc := notifications.NewService(notifRepo)
+	tripsSvc := trips.NewService(tripsRepo)
 
 	// 7. Setup Handlers
 	authH := auth.NewHandler(authSvc)
@@ -125,6 +146,12 @@ func main() {
 	notesH := notes.NewHandler(notesSvc)
 	adminH := admin.NewHandler(adminSvc)
 	timetablesH := timetables.NewHandler(timetablesRepo)
+	agendaH := agenda.NewHandler(agendaSvc)
+	colloquiH := colloqui.NewHandler(colloquiSvc)
+	verbaliH := verbali.NewHandler(verbaliSvc)
+	extraH := extracurricular.NewHandler(extraSvc)
+	notifH := notifications.NewHandler(notifSvc)
+	tripsH := trips.NewHandler(tripsSvc)
 
 	wsHandler := ws.NewHandler(wsHub)
 
@@ -145,6 +172,7 @@ func main() {
 	{
 		r.GET("/health", healthH.Health)
 		r.GET("/ready", healthH.Ready)
+		r.GET("/metrics", healthH.Metrics)
 
 		authH.RegisterRoutes(api, authMiddleware)
 
@@ -177,6 +205,7 @@ func main() {
 				usersGroup.GET("/:id/guardians", usersH.GetGuardians)
 				usersGroup.POST("/:id/guardians", usersH.AddGuardian)
 				usersGroup.DELETE("/:id/guardians/:guardianId", usersH.RemoveGuardian)
+				usersGroup.POST("/me/switch-child/:studentId", usersH.SwitchChild)
 			}
 
 			gradesH.RegisterRoutes(protected)
@@ -184,6 +213,12 @@ func main() {
 			docsH.RegisterRoutes(protected)
 			schedH.RegisterRoutes(protected)
 			timetablesH.RegisterRoutes(protected)
+			agendaH.RegisterRoutes(protected)
+			colloquiH.RegisterRoutes(protected)
+			verbaliH.RegisterRoutes(protected)
+			extraH.RegisterRoutes(protected)
+			notifH.RegisterRoutes(protected)
+			tripsH.RegisterRoutes(protected)
 
 			pctoH := pcto.NewHandler(pctoSvc)
 			pctoH.RegisterRoutes(protected)
@@ -238,6 +273,20 @@ func main() {
 			schoolSettingsSvc := schoolsettings.NewService(schoolSettingsRepo)
 			schoolSettingsH := schoolsettings.NewHandler(schoolSettingsSvc)
 			schoolSettingsH.RegisterRoutes(protected)
+
+			reportsSvc := reports.NewService(scrutinySvc)
+			reportsH := reports.NewHandler(reportsSvc)
+			reportsH.RegisterRoutes(protected)
+
+			searchRepo := search.NewRepository(database)
+			searchSvc := search.NewService(searchRepo)
+			searchH := search.NewHandler(searchSvc)
+			searchH.RegisterRoutes(protected)
+
+			parentsRepo := parents.NewRepository(database)
+			parentsSvc := parents.NewService(parentsRepo, usersRepo, gradesRepo, attendanceRepo, commsRepo)
+			parentsH := parents.NewHandler(parentsSvc)
+			parentsH.RegisterRoutes(protected)
 
 			adminH.RegisterRoutes(protected, adminMiddleware)
 			signaturesGroup := protected.Group("/signatures")
