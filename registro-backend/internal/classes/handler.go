@@ -182,6 +182,15 @@ func (h *Handler) RemoveSubject(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
+func (h *Handler) GetClassGuardians(c *gin.Context) {
+	guardians, err := h.service.GetClassGuardians(c.Request.Context(), c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, guardians)
+}
+
 func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	group := rg.Group("/classes")
 	{
@@ -194,6 +203,7 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 		group.POST("/:id/subjects", h.AssignSubject)
 		group.GET("/:id/subjects", h.GetClassSubjects)
 		group.DELETE("/:id/subjects/:assignmentId", h.RemoveSubject)
+		group.GET("/:id/guardians", h.GetClassGuardians)
 	}
 	rg.GET("/teacher/classes", h.GetTeacherClasses)
 }

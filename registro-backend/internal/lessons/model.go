@@ -14,9 +14,14 @@ type Lesson struct {
 	Duration    int       `json:"duration" db:"duration"` // Per quante ore
 	Topic       string    `json:"topic" db:"topic"`       // Argomento
 	Type        string    `json:"type" db:"type"`         // Frontale, Laboratorio, Verifica
-	Notes       string    `json:"notes" db:"notes"`       // Note aggiuntive interne
-	CreatedAt   time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at" db:"updated_at"`
+	GroupID                *string   `json:"group_id,omitempty" db:"group_id"`
+	IsSubstitution         bool      `json:"is_substitution" db:"is_substitution"`
+	SubstitutedTeacherID   *string   `json:"substituted_teacher_id,omitempty" db:"substituted_teacher_id"`
+	SubstitutedTeacherName string    `json:"substituted_teacher_name,omitempty" db:"substituted_teacher_name"`
+	ActivityType           string    `json:"activity_type" db:"activity_type"` // e.g. standard, substitution, ptof, project, assembly, trip, lab, other
+	Notes                  string    `json:"notes" db:"notes"`
+	CreatedAt              time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt              time.Time `json:"updated_at" db:"updated_at"`
 }
 
 // Homework represents an assignment given to a class

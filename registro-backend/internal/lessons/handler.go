@@ -20,6 +20,7 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	lessons := rg.Group("/lessons")
 	{
 		lessons.GET("/class/:class_id", h.GetLessons)
+		lessons.GET("/group/:group_id", h.GetLessonsByGroup)
 		lessons.POST("", h.CreateLesson)
 	}
 
@@ -38,6 +39,19 @@ func (h *Handler) GetLessons(c *gin.Context) {
 	res, err := h.service.GetLessons(classID, subjectID, date)
 	if err != nil {
 		logger.Log.Errorf("GetLessons error: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, res)
+}
+
+func (h *Handler) GetLessonsByGroup(c *gin.Context) {
+	groupID := c.Param("group_id")
+	date := c.Query("date")
+
+	res, err := h.service.GetLessonsByGroup(groupID, date)
+	if err != nil {
+		logger.Log.Errorf("GetLessonsByGroup error: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

@@ -38,3 +38,13 @@ type AssignSubjectRequest struct {
 	TeacherID    *string `json:"teacher_id"`
 	HoursPerWeek float64 `json:"hours_per_week"`
 }
+
+type GuardianInfo struct {
+	GuardianID  string `json:"guardian_id"`
+	FirstName   string `json:"first_name"`
+	LastName    string `json:"last_name"`
+	Email       string `json:"email"`
+	Phone       string `json:"phone"`
+	StudentID   string `json:"student_id"`
+	StudentName string `json:"student_name"`
+}

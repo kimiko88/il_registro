@@ -21,16 +21,16 @@ func NewService(repo Repository, uRepo ...users.Repository) *Service {
 }
 
 func (s *Service) CreateNote(ctx context.Context, teacherID, schoolID string, req CreateNoteRequest) (*StudentNote, error) {
-	// Validate type? binding already does.
 	n := &StudentNote{
-		SchoolID:  schoolID,
-		TeacherID: teacherID,
-		StudentID: req.StudentID,
-		ClassID:   req.ClassID,
-		SubjectID: req.SubjectID,
-		Type:      req.Type,
-		Note:      req.Note,
-		Date:      req.Date,
+		SchoolID:   schoolID,
+		TeacherID:  teacherID,
+		StudentID:  req.StudentID,
+		ClassID:    req.ClassID,
+		SubjectID:  req.SubjectID,
+		Type:       req.Type,
+		Note:       req.Note,
+		Date:       req.Date,
+		IsApproved: true, // Approved by default unless configured otherwise
 	}
 	if err := s.repo.Create(ctx, n); err != nil {
 		return nil, err
@@ -38,8 +38,14 @@ func (s *Service) CreateNote(ctx context.Context, teacherID, schoolID string, re
 	return n, nil
 }
 
+func (s *Service) ApproveNote(ctx context.Context, actorID, actorRole, noteID string) error {
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "vice_principal" {
+		return errors.New("unauthorized: only dirigenza or admin can approve notes")
+	}
+	return s.repo.ApproveNote(ctx, noteID, actorID)
+}
+
 func (s *Service) UpdateNote(ctx context.Context, teacherID, noteID string, req UpdateNoteRequest) (*StudentNote, error) {
-	// Get note first to check permission
 	n, err := s.repo.Get(ctx, noteID)
 	if err != nil {
 		return nil, err
@@ -76,12 +82,9 @@ func (s *Service) DeleteNote(ctx context.Context, teacherID, noteID string) erro
 }
 
 func (s *Service) ListNotes(ctx context.Context, filter NoteFilter) ([]StudentNote, error) {
-	// Authorization checks
 	if filter.ActorRole == "student" {
-		// Student can only see their own notes
 		filter.StudentID = filter.ActorID
 	} else if filter.ActorRole == "parent" {
-		// Parent can only see their children's notes.
 		if filter.StudentID == "" {
 			return nil, errors.New("unauthorized: parent must specify student_id")
 		}

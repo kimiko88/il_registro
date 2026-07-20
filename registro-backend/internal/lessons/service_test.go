@@ -45,6 +45,13 @@ func (m *mockRepository) GetLessonsByClassAndSubject(classID, subjectID string, 
 	return res, nil
 }
 
+func (m *mockRepository) GetLessonsByGroup(groupID string, date string) ([]Lesson, error) {
+	if m.errLesson != nil {
+		return nil, m.errLesson
+	}
+	return m.lessons, nil
+}
+
 func (m *mockRepository) CreateHomework(h *Homework) error {
 	if m.errHW != nil {
 		return m.errHW

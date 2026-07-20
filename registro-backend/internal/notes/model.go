@@ -22,9 +22,12 @@ type StudentNote struct {
 	SubjectID *string   `json:"subject_id,omitempty"` // Nullable
 	Type      NoteType  `json:"type"`
 	Note      string    `json:"note"`
-	Date      string    `json:"date"` // YYYY-MM-DD
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	Date       string     `json:"date"` // YYYY-MM-DD
+	IsApproved bool       `json:"is_approved"`
+	ApprovedBy string     `json:"approved_by,omitempty"`
+	ApprovedAt *time.Time `json:"approved_at,omitempty"`
+	CreatedAt  time.Time  `json:"created_at"`
+	UpdatedAt  time.Time  `json:"updated_at"`
 
 	// Joined fields for display
 	TeacherName string `json:"teacher_name,omitempty"`

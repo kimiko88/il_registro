@@ -61,6 +61,13 @@ func (m *MockRepository) GetClassSubjects(ctx context.Context, classID string) (
 	}
 	return args.Get(0).([]ClassSubject), args.Error(1)
 }
+func (m *MockRepository) GetClassGuardians(ctx context.Context, classID string) ([]GuardianInfo, error) {
+	args := m.Called(ctx, classID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]GuardianInfo), args.Error(1)
+}
 
 func TestService_CreateClass(t *testing.T) {
 	tests := []struct {

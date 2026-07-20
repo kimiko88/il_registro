@@ -21,6 +21,7 @@ import (
 	"registro-backend/internal/didactic_materials"
 	"registro-backend/internal/documents"
 	"registro-backend/internal/grades"
+	"registro-backend/internal/groups"
 	"registro-backend/internal/handler"
 	"registro-backend/internal/lessons"
 	"registro-backend/internal/middleware"
@@ -30,6 +31,7 @@ import (
 	"registro-backend/internal/postgres"
 	"registro-backend/internal/scheduling"
 	"registro-backend/internal/schools"
+	"registro-backend/internal/schoolsettings"
 	"registro-backend/internal/scrutiny"
 	"registro-backend/internal/signatures"
 	"registro-backend/internal/subjects"
@@ -226,6 +228,16 @@ func main() {
 			teachersSvc := teachers.NewService(teachersRepo)
 			teachersH := teachers.NewHandler(teachersSvc)
 			teachersH.RegisterRoutes(protected)
+
+			groupsRepo := groups.NewRepository(database)
+			groupsSvc := groups.NewService(groupsRepo)
+			groupsH := groups.NewHandler(groupsSvc)
+			groupsH.RegisterRoutes(protected)
+
+			schoolSettingsRepo := schoolsettings.NewRepository(database)
+			schoolSettingsSvc := schoolsettings.NewService(schoolSettingsRepo)
+			schoolSettingsH := schoolsettings.NewHandler(schoolSettingsSvc)
+			schoolSettingsH.RegisterRoutes(protected)
 
 			adminH.RegisterRoutes(protected, adminMiddleware)
 			signaturesGroup := protected.Group("/signatures")

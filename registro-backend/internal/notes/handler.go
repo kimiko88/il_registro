@@ -36,6 +36,18 @@ func (h *Handler) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, note)
 }
 
+func (h *Handler) Approve(c *gin.Context) {
+	actorID := c.GetString("user_id")
+	actorRole := c.GetString("role")
+	noteID := c.Param("id")
+
+	if err := h.service.ApproveNote(c.Request.Context(), actorID, actorRole, noteID); err != nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "note approved successfully"})
+}
+
 func (h *Handler) Update(c *gin.Context) {
 	userID := c.GetString("user_id")
 	if userID == "" {
@@ -117,6 +129,7 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	{
 		group.POST("", h.Create)
 		group.GET("", h.List)
+		group.POST("/:id/approve", h.Approve)
 		group.PATCH("/:id", h.Update)
 		group.DELETE("/:id", h.Delete)
 	}

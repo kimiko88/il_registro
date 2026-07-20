@@ -3,14 +3,17 @@ package scrutiny
 import (
 	"context"
 	"database/sql"
-	"github.com/google/uuid"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Repository interface {
 	SaveRecord(ctx context.Context, record *ScrutinyRecord) error
 	GetRecord(ctx context.Context, studentID, classID string, semester int) (*ScrutinyRecord, error)
 	ListRecordsByClass(ctx context.Context, classID string, semester int) ([]ScrutinyRecord, error)
+	ValidateClassScrutiny(ctx context.Context, classID string, semester int, validatorID string) error
+	UpdateClassScrutinyStatus(ctx context.Context, classID string, semester int, status string) error
 }
 
 type postgresRepository struct {
@@ -28,25 +31,26 @@ func (r *postgresRepository) SaveRecord(ctx context.Context, rec *ScrutinyRecord
 	}
 	defer func() { _ = tx.Rollback() }()
 
-	// 1. Upsert Scrutiny Record
 	if rec.ID == "" {
 		rec.ID = uuid.New().String()
 	}
 	rec.UpdatedAt = time.Now()
+	if rec.Status == "" {
+		rec.Status = "in_progress"
+	}
 
 	query := `
-		INSERT INTO scrutiny_records (id, student_id, class_id, semester, conduct_grade, final_decision, notes, coordinator_id, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		INSERT INTO scrutiny_records (id, student_id, class_id, semester, conduct_grade, final_decision, notes, coordinator_id, status, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 		ON CONFLICT (student_id, class_id, semester) 
-		DO UPDATE SET conduct_grade = EXCLUDED.conduct_grade, final_decision = EXCLUDED.final_decision, notes = EXCLUDED.notes, updated_at = EXCLUDED.updated_at
+		DO UPDATE SET conduct_grade = EXCLUDED.conduct_grade, final_decision = EXCLUDED.final_decision, notes = EXCLUDED.notes, status = EXCLUDED.status, updated_at = EXCLUDED.updated_at
 		RETURNING id
 	`
-	err = tx.QueryRowContext(ctx, query, rec.ID, rec.StudentID, rec.ClassID, rec.Semester, rec.ConductGrade, rec.FinalDecision, rec.Notes, rec.CoordinatorID, rec.UpdatedAt).Scan(&rec.ID)
+	err = tx.QueryRowContext(ctx, query, rec.ID, rec.StudentID, rec.ClassID, rec.Semester, rec.ConductGrade, rec.FinalDecision, rec.Notes, rec.CoordinatorID, rec.Status, rec.UpdatedAt).Scan(&rec.ID)
 	if err != nil {
 		return err
 	}
 
-	// 2. Sync Grades
 	_, err = tx.ExecContext(ctx, "DELETE FROM scrutiny_grades WHERE scrutiny_record_id = $1", rec.ID)
 	if err != nil {
 		return err
@@ -65,12 +69,18 @@ func (r *postgresRepository) SaveRecord(ctx context.Context, rec *ScrutinyRecord
 }
 
 func (r *postgresRepository) GetRecord(ctx context.Context, studentID, classID string, semester int) (*ScrutinyRecord, error) {
-	query := `SELECT id, student_id, class_id, semester, conduct_grade, final_decision, notes, coordinator_id, created_at, updated_at 
-	          FROM scrutiny_records WHERE student_id = $1 AND class_id = $2 AND semester = $3`
-	
+	query := `
+		SELECT id, student_id, class_id, semester, conduct_grade, final_decision, notes, coordinator_id,
+		       COALESCE(status, 'draft'), COALESCE(validated_by, ''), validated_at, created_at, updated_at 
+		FROM scrutiny_records WHERE student_id = $1 AND class_id = $2 AND semester = $3
+	`
 	rec := &ScrutinyRecord{}
+	var valBy sql.NullString
+	var valAt sql.NullTime
+
 	err := r.db.QueryRowContext(ctx, query, studentID, classID, semester).Scan(
-		&rec.ID, &rec.StudentID, &rec.ClassID, &rec.Semester, &rec.ConductGrade, &rec.FinalDecision, &rec.Notes, &rec.CoordinatorID, &rec.CreatedAt, &rec.UpdatedAt,
+		&rec.ID, &rec.StudentID, &rec.ClassID, &rec.Semester, &rec.ConductGrade, &rec.FinalDecision,
+		&rec.Notes, &rec.CoordinatorID, &rec.Status, &valBy, &valAt, &rec.CreatedAt, &rec.UpdatedAt,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -78,8 +88,13 @@ func (r *postgresRepository) GetRecord(ctx context.Context, studentID, classID s
 		}
 		return nil, err
 	}
+	if valBy.Valid {
+		rec.ValidatedBy = valBy.String
+	}
+	if valAt.Valid {
+		rec.ValidatedAt = &valAt.Time
+	}
 
-	// Load grades
 	gRows, err := r.db.QueryContext(ctx, "SELECT id, scrutiny_record_id, subject_id, final_grade, teacher_id FROM scrutiny_grades WHERE scrutiny_record_id = $1", rec.ID)
 	if err != nil {
 		return nil, err
@@ -93,14 +108,19 @@ func (r *postgresRepository) GetRecord(ctx context.Context, studentID, classID s
 		}
 		rec.Grades = append(rec.Grades, g)
 	}
+	if err := gRows.Err(); err != nil {
+		return nil, err
+	}
 
 	return rec, nil
 }
 
 func (r *postgresRepository) ListRecordsByClass(ctx context.Context, classID string, semester int) ([]ScrutinyRecord, error) {
-	query := `SELECT id, student_id, class_id, semester, conduct_grade, final_decision, notes, coordinator_id, created_at, updated_at 
-	          FROM scrutiny_records WHERE class_id = $1 AND semester = $2`
-	
+	query := `
+		SELECT id, student_id, class_id, semester, conduct_grade, final_decision, notes, coordinator_id,
+		       COALESCE(status, 'draft'), COALESCE(validated_by, ''), validated_at, created_at, updated_at 
+		FROM scrutiny_records WHERE class_id = $1 AND semester = $2
+	`
 	rows, err := r.db.QueryContext(ctx, query, classID, semester)
 	if err != nil {
 		return nil, err
@@ -110,10 +130,44 @@ func (r *postgresRepository) ListRecordsByClass(ctx context.Context, classID str
 	var res []ScrutinyRecord
 	for rows.Next() {
 		var rec ScrutinyRecord
-		if err := rows.Scan(&rec.ID, &rec.StudentID, &rec.ClassID, &rec.Semester, &rec.ConductGrade, &rec.FinalDecision, &rec.Notes, &rec.CoordinatorID, &rec.CreatedAt, &rec.UpdatedAt); err != nil {
+		var valBy sql.NullString
+		var valAt sql.NullTime
+		if err := rows.Scan(
+			&rec.ID, &rec.StudentID, &rec.ClassID, &rec.Semester, &rec.ConductGrade, &rec.FinalDecision,
+			&rec.Notes, &rec.CoordinatorID, &rec.Status, &valBy, &valAt, &rec.CreatedAt, &rec.UpdatedAt,
+		); err != nil {
 			return nil, err
+		}
+		if valBy.Valid {
+			rec.ValidatedBy = valBy.String
+		}
+		if valAt.Valid {
+			rec.ValidatedAt = &valAt.Time
 		}
 		res = append(res, rec)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return res, nil
+}
+
+func (r *postgresRepository) ValidateClassScrutiny(ctx context.Context, classID string, semester int, validatorID string) error {
+	query := `
+		UPDATE scrutiny_records
+		SET status = 'validated', validated_by = $1, validated_at = NOW(), updated_at = NOW()
+		WHERE class_id = $2 AND semester = $3
+	`
+	_, err := r.db.ExecContext(ctx, query, validatorID, classID, semester)
+	return err
+}
+
+func (r *postgresRepository) UpdateClassScrutinyStatus(ctx context.Context, classID string, semester int, status string) error {
+	query := `
+		UPDATE scrutiny_records
+		SET status = $1, updated_at = NOW()
+		WHERE class_id = $2 AND semester = $3
+	`
+	_, err := r.db.ExecContext(ctx, query, status, classID, semester)
+	return err
 }

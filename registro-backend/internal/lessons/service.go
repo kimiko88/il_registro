@@ -8,6 +8,7 @@ import (
 type Service interface {
 	CreateLesson(teacherID string, req CreateLessonRequest) (*LessonResponse, error)
 	GetLessons(classID, subjectID string, date string) ([]LessonResponse, error)
+	GetLessonsByGroup(groupID string, date string) ([]LessonResponse, error)
 	CreateHomework(teacherID string, req CreateHomeworkRequest) (*HomeworkResponse, error)
 	GetHomeworks(classID string) ([]HomeworkResponse, error)
 }
@@ -26,16 +27,29 @@ func (s *service) CreateLesson(teacherID string, req CreateLessonRequest) (*Less
 		return nil, fmt.Errorf("invalid date format: %w", err)
 	}
 
+	activityType := req.ActivityType
+	if activityType == "" {
+		if req.IsSubstitution {
+			activityType = "substitution"
+		} else {
+			activityType = "standard"
+		}
+	}
+
 	lesson := &Lesson{
-		ClassID:   req.ClassID,
-		SubjectID: req.SubjectID,
-		TeacherID: teacherID,
-		Date:      date,
-		Hour:      req.Hour,
-		Duration:  req.Duration,
-		Topic:     req.Topic,
-		Type:      req.Type,
-		Notes:     req.Notes,
+		ClassID:              req.ClassID,
+		SubjectID:            req.SubjectID,
+		TeacherID:            teacherID,
+		Date:                 date,
+		Hour:                 req.Hour,
+		Duration:             req.Duration,
+		Topic:                req.Topic,
+		Type:                 req.Type,
+		GroupID:              req.GroupID,
+		IsSubstitution:       req.IsSubstitution,
+		SubstitutedTeacherID: req.SubstitutedTeacherID,
+		ActivityType:         activityType,
+		Notes:                req.Notes,
 	}
 
 	if err := s.repo.CreateLesson(lesson); err != nil {
@@ -55,6 +69,19 @@ func (s *service) GetLessons(classID, subjectID string, date string) ([]LessonRe
 		lessons, err = s.repo.GetLessonsByClass(classID, date)
 	}
 
+	if err != nil {
+		return nil, err
+	}
+
+	var res []LessonResponse
+	for _, l := range lessons {
+		res = append(res, *s.mapLessonResponse(&l))
+	}
+	return res, nil
+}
+
+func (s *service) GetLessonsByGroup(groupID string, date string) ([]LessonResponse, error) {
+	lessons, err := s.repo.GetLessonsByGroup(groupID, date)
 	if err != nil {
 		return nil, err
 	}
@@ -103,17 +130,22 @@ func (s *service) GetHomeworks(classID string) ([]HomeworkResponse, error) {
 
 func (s *service) mapLessonResponse(l *Lesson) *LessonResponse {
 	return &LessonResponse{
-		ID:          l.ID,
-		ClassID:     l.ClassID,
-		TeacherID:   l.TeacherID,
-		TeacherName: l.TeacherName,
-		SubjectID:   l.SubjectID,
-		Date:        l.Date,
-		Hour:        l.Hour,
-		Duration:    l.Duration,
-		Topic:       l.Topic,
-		Type:        l.Type,
-		Notes:       l.Notes,
+		ID:                     l.ID,
+		ClassID:                l.ClassID,
+		TeacherID:              l.TeacherID,
+		TeacherName:            l.TeacherName,
+		SubjectID:              l.SubjectID,
+		Date:                   l.Date,
+		Hour:                   l.Hour,
+		Duration:               l.Duration,
+		Topic:                  l.Topic,
+		Type:                   l.Type,
+		GroupID:                l.GroupID,
+		IsSubstitution:         l.IsSubstitution,
+		SubstitutedTeacherID:   l.SubstitutedTeacherID,
+		SubstitutedTeacherName: l.SubstitutedTeacherName,
+		ActivityType:           l.ActivityType,
+		Notes:                  l.Notes,
 	}
 }
 
