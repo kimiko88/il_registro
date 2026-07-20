@@ -11,6 +11,7 @@ import (
 
 type Repository interface {
 	GetByClass(ctx context.Context, classID string) ([]ClassSchedule, error)
+	GetStudentClassID(ctx context.Context, userID string) (string, error)
 	Update(ctx context.Context, classID string, entries []ScheduleEntry) error
 }
 
@@ -20,6 +21,15 @@ type PostgresRepository struct {
 
 func NewRepository(db *sql.DB) Repository {
 	return &PostgresRepository{db: db}
+}
+
+func (r *PostgresRepository) GetStudentClassID(ctx context.Context, userID string) (string, error) {
+	query := `
+		SELECT class_id FROM students WHERE user_id = $1::uuid OR id = $1::uuid
+	`
+	var classID string
+	err := r.db.QueryRowContext(ctx, query, userID).Scan(&classID)
+	return classID, err
 }
 
 func (r *PostgresRepository) GetByClass(ctx context.Context, classID string) ([]ClassSchedule, error) {

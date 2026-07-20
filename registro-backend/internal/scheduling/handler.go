@@ -15,7 +15,7 @@ func NewHandler(s Service) *Handler {
 }
 
 func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
-	sched := r.Group("/colloqui")
+	sched := r.Group("/scheduling")
 
 	// Teacher
 	sched.POST("/slots", h.CreateSlot)

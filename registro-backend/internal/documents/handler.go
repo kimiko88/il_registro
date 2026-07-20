@@ -28,6 +28,7 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	docs.POST("/upload", h.UploadFile) // multipart file upload with magic-byte validation
 	docs.GET("", h.ListDocuments)
 	docs.GET("/:id", h.GetDocument)
+	docs.GET("/:id/versions", h.GetDocumentVersions)
 	docs.PATCH("/:id", h.UpdateDocument)
 	docs.DELETE("/:id", h.DeleteDocument)
 	docs.POST("/:id/workflow", h.ProcessWorkflow) // Submit
@@ -317,4 +318,14 @@ func (h *Handler) ListTemplates(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, res)
+}
+
+func (h *Handler) GetDocumentVersions(c *gin.Context) {
+	id := c.Param("id")
+	versions, err := h.service.GetDocumentVersions(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, versions)
 }

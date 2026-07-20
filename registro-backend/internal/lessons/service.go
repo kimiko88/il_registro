@@ -12,6 +12,7 @@ type Service interface {
 	DeleteLesson(id string) error
 	GetLessons(classID, subjectID string, date string) ([]LessonResponse, error)
 	GetLessonsByGroup(groupID string, date string) ([]LessonResponse, error)
+	GetTeacherDiary(teacherID string, fromDate, toDate string) ([]LessonResponse, error)
 	CreateHomework(teacherID string, req CreateHomeworkRequest) (*HomeworkResponse, error)
 	UpdateHomework(id string, req UpdateHomeworkRequest) (*HomeworkResponse, error)
 	DeleteHomework(id string) error
@@ -199,4 +200,16 @@ func (s *service) UpdateHomework(id string, req UpdateHomeworkRequest) (*Homewor
 
 func (s *service) DeleteHomework(id string) error {
 	return s.repo.DeleteHomework(id)
+}
+
+func (s *service) GetTeacherDiary(teacherID string, fromDate, toDate string) ([]LessonResponse, error) {
+	lessons, err := s.repo.GetLessonsByTeacher(teacherID, fromDate, toDate)
+	if err != nil {
+		return nil, err
+	}
+	var res []LessonResponse
+	for _, l := range lessons {
+		res = append(res, *s.mapLessonResponse(&l))
+	}
+	return res, nil
 }

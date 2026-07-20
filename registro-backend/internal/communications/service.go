@@ -102,3 +102,7 @@ func (s *Service) MarkAsRead(ctx context.Context, communicationID, userID, ipAdd
 func (s *Service) GetUnreadUsers(ctx context.Context, communicationID string) ([]string, error) {
 	return s.repo.GetUnreadUsers(ctx, communicationID)
 }
+
+func (s *Service) GetUnreadCount(ctx context.Context, userID string) (int, error) {
+	return s.repo.GetUnreadCount(ctx, userID)
+}

@@ -2,6 +2,7 @@ package notes
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -101,6 +102,9 @@ func (h *Handler) List(c *gin.Context) {
 		return
 	}
 
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "50"))
+
 	filter := NoteFilter{
 		StudentID: c.Query("student_id"),
 		ClassID:   c.Query("class_id"),
@@ -110,6 +114,8 @@ func (h *Handler) List(c *gin.Context) {
 		DateTo:    c.Query("date_to"),
 		ActorID:   actorID,
 		ActorRole: actorRole,
+		Page:      page,
+		Limit:     limit,
 	}
 
 	notes, err := h.service.ListNotes(c.Request.Context(), filter)

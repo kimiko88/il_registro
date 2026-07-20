@@ -161,6 +161,11 @@ func (r *PostgresRepository) List(ctx context.Context, filter NoteFilter) ([]Stu
 		args = append(args, filter.DateFrom)
 		argIdx++
 	}
+	if filter.DateTo != "" {
+		query += fmt.Sprintf(" AND n.date <= $%d", argIdx)
+		args = append(args, filter.DateTo)
+		argIdx++
+	}
 
 	// Hide unapproved notes from students and parents
 	if filter.ActorRole == "student" || filter.ActorRole == "parent" {
@@ -168,6 +173,18 @@ func (r *PostgresRepository) List(ctx context.Context, filter NoteFilter) ([]Stu
 	}
 
 	query += " ORDER BY n.date DESC, n.created_at DESC"
+
+	if filter.Limit > 0 {
+		query += fmt.Sprintf(" LIMIT $%d", argIdx)
+		args = append(args, filter.Limit)
+		argIdx++
+	}
+	if filter.Page > 1 && filter.Limit > 0 {
+		offset := (filter.Page - 1) * filter.Limit
+		query += fmt.Sprintf(" OFFSET $%d", argIdx)
+		args = append(args, offset)
+		argIdx++
+	}
 
 	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {

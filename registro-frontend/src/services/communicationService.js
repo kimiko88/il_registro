@@ -20,5 +20,8 @@ export const communicationService = {
     },
     async getUnreadUsers(id) {
         return api.get(`/communications/${id}/unread-users`)
+    },
+    async getUnreadCount() {
+        return api.get('/communications/unread-count')
     }
 }

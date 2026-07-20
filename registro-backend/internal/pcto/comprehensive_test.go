@@ -36,6 +36,7 @@ func (m *MockRepo) VerifyHours(ctx context.Context, h, t string) error          
 func (m *MockRepo) GetCompanies(ctx context.Context, s string) ([]Company, error) { return nil, nil }
 func (m *MockRepo) DeleteProject(ctx context.Context, id string) error { return nil }
 func (m *MockRepo) GetStats(ctx context.Context, schoolID string) (*PCTOStats, error) { return nil, nil }
+func (m *MockRepo) UpdateHourLogStatus(ctx context.Context, logID, status string) error { return nil }
 
 func TestService_CreateProject(t *testing.T) {
 	repo := new(MockRepo)

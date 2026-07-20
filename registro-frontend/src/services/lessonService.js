@@ -8,6 +8,9 @@ export const lessonService = {
     async getLessonsByGroup(groupId, date) {
         return api.get(`/lessons/group/${groupId}`, { params: { date } })
     },
+    async getTeacherDiary(from, to) {
+        return api.get('/lessons/my-diary', { params: { from, to } })
+    },
     async createLesson(data) {
         return api.post('/lessons', data)
     },

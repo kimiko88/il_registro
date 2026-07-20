@@ -58,4 +58,6 @@ type NoteFilter struct {
 	DateTo    string
 	ActorID   string
 	ActorRole string
+	Page      int
+	Limit     int
 }

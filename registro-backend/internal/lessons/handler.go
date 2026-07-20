@@ -19,6 +19,7 @@ func NewHandler(s Service) *Handler {
 func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	lessons := rg.Group("/lessons")
 	{
+		lessons.GET("/my-diary", h.GetMyDiary)
 		lessons.GET("/class/:class_id", h.GetLessons)
 		lessons.GET("/group/:group_id", h.GetLessonsByGroup)
 		lessons.GET("/:id", h.GetLessonByID)
@@ -164,4 +165,17 @@ func (h *Handler) DeleteHomework(c *gin.Context) {
 		return
 	}
 	c.Status(http.StatusNoContent)
+}
+
+func (h *Handler) GetMyDiary(c *gin.Context) {
+	teacherID := c.GetString("user_id")
+	from := c.Query("from")
+	to := c.Query("to")
+
+	res, err := h.service.GetTeacherDiary(teacherID, from, to)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, res)
 }

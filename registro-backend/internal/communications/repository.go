@@ -23,6 +23,7 @@ type Repository interface {
 	Update(ctx context.Context, id string, subject, body string) error
 	MarkAsRead(ctx context.Context, communicationID, userID, ipAddress string) error
 	GetUnreadUsers(ctx context.Context, communicationID string) ([]string, error)
+	GetUnreadCount(ctx context.Context, userID string) (int, error)
 }
 
 type PostgresRepository struct {
@@ -277,4 +278,17 @@ func (r *PostgresRepository) GetUnreadUsers(ctx context.Context, communicationID
 		}
 	}
 	return unread, rows.Err()
+}
+
+func (r *PostgresRepository) GetUnreadCount(ctx context.Context, userID string) (int, error) {
+	query := `
+		SELECT COUNT(*)
+		FROM communications c
+		LEFT JOIN communication_read_receipts crr ON crr.communication_id = c.id AND crr.user_id = $1::uuid
+		WHERE ($1 = ANY(c.receiver_ids) OR ARRAY_LENGTH(c.receiver_ids, 1) IS NULL)
+		  AND crr.read_at IS NULL
+	`
+	var count int
+	err := r.db.QueryRowContext(ctx, query, userID).Scan(&count)
+	return count, err
 }

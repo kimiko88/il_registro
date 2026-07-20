@@ -19,6 +19,7 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	{
 		g.GET("", h.List)
 		g.GET("/bacheca", h.ListBacheca)
+		g.GET("/unread-count", h.GetUnreadCount)
 		g.GET("/:id", h.GetByID)
 		g.PUT("/:id", h.Update)
 		g.POST("", h.Send)
@@ -191,4 +192,18 @@ func (h *Handler) GetUnreadUsers(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, unread)
+}
+
+func (h *Handler) GetUnreadCount(c *gin.Context) {
+	uid := c.GetString("user_id")
+	if uid == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	count, err := h.service.GetUnreadCount(c.Request.Context(), uid)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"unread_count": count})
 }

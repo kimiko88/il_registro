@@ -36,6 +36,7 @@ type Service interface {
 
 	// Status
 	LockDocument(ctx context.Context, id string) error
+	GetDocumentVersions(ctx context.Context, docID string) ([]DocumentVersion, error)
 }
 
 type service struct {
@@ -344,4 +345,8 @@ func convertVersions(vers []DocumentVersion) []VersionSummary {
 		})
 	}
 	return res
+}
+
+func (s *service) GetDocumentVersions(ctx context.Context, docID string) ([]DocumentVersion, error) {
+	return s.repo.GetVersions(docID)
 }

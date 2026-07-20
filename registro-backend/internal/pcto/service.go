@@ -22,6 +22,7 @@ type Service interface {
 	CreateCompany(ctx context.Context, schoolID, actorRole string, c Company) error
 	GetCompanies(ctx context.Context, schoolID string) ([]Company, error)
 	GetStats(ctx context.Context, schoolID string) (*PCTOStats, error)
+	ApproveHours(ctx context.Context, actorID, actorRole, logID string, approved bool) error
 }
 
 type service struct {
@@ -162,4 +163,12 @@ func (s *service) GetCompanies(ctx context.Context, schoolID string) ([]Company,
 
 func (s *service) GetStats(ctx context.Context, schoolID string) (*PCTOStats, error) {
 	return s.repo.GetStats(ctx, schoolID)
+}
+
+func (s *service) ApproveHours(ctx context.Context, actorID, actorRole, logID string, approved bool) error {
+	status := "approved"
+	if !approved {
+		status = "rejected"
+	}
+	return s.repo.UpdateHourLogStatus(ctx, logID, status)
 }

@@ -84,6 +84,11 @@ func (m *MockRepository) GetUnreadUsers(ctx context.Context, communicationID str
 	return args.Get(0).([]string), args.Error(1)
 }
 
+func (m *MockRepository) GetUnreadCount(ctx context.Context, userID string) (int, error) {
+	args := m.Called(ctx, userID)
+	return args.Int(0), args.Error(1)
+}
+
 func TestService_SendMessage(t *testing.T) {
 	mockRepo := new(MockRepository)
 	svc := NewService(mockRepo)

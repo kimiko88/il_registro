@@ -57,6 +57,13 @@ func (m *mockRepository) DeleteHomework(id string) error {
 	return m.errHW
 }
 
+func (m *mockRepository) GetLessonsByTeacher(teacherID string, fromDate, toDate string) ([]Lesson, error) {
+	if m.errLesson != nil {
+		return nil, m.errLesson
+	}
+	return m.lessons, nil
+}
+
 func (m *mockRepository) GetLessonsByClass(classID string, date string) ([]Lesson, error) {
 	if m.errLesson != nil {
 		return nil, m.errLesson

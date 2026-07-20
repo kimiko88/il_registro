@@ -12,6 +12,7 @@ type Repository interface {
 	GetLessonsByClass(classID string, date string) ([]Lesson, error)
 	GetLessonsByClassAndSubject(classID, subjectID string, date string) ([]Lesson, error)
 	GetLessonsByGroup(groupID string, date string) ([]Lesson, error)
+	GetLessonsByTeacher(teacherID string, fromDate, toDate string) ([]Lesson, error)
 
 	CreateHomework(homework *Homework) error
 	UpdateHomework(id string, req UpdateHomeworkRequest) (*Homework, error)
@@ -156,6 +157,24 @@ func (r *repository) scanLessons(query string, args ...interface{}) ([]Lesson, e
 		return nil, err
 	}
 	return lessons, nil
+}
+
+func (r *repository) GetLessonsByTeacher(teacherID string, fromDate, toDate string) ([]Lesson, error) {
+	query := `
+		SELECT cl.id, cl.class_id, cl.teacher_id, COALESCE(u1.first_name || ' ' || u1.last_name, '') AS teacher_name,
+		       cl.subject_id, cl.date, cl.hour, cl.duration, cl.topic, cl.type,
+		       cl.group_id, cl.is_substitution, cl.substituted_teacher_id,
+		       COALESCE(u2.first_name || ' ' || u2.last_name, '') AS substituted_teacher_name,
+		       cl.activity_type, cl.created_at, cl.updated_at
+		FROM class_lessons cl
+		LEFT JOIN users u1 ON cl.teacher_id = u1.id
+		LEFT JOIN users u2 ON cl.substituted_teacher_id = u2.id
+		WHERE cl.teacher_id = $1::uuid
+		  AND ($2 = '' OR cl.date >= $2::date)
+		  AND ($3 = '' OR cl.date <= $3::date)
+		ORDER BY cl.date DESC, cl.hour ASC
+	`
+	return r.scanLessons(query, teacherID, fromDate, toDate)
 }
 
 func (r *repository) CreateHomework(homework *Homework) error {
