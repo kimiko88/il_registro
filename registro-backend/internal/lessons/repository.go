@@ -6,11 +6,16 @@ import (
 
 type Repository interface {
 	CreateLesson(lesson *Lesson) error
+	GetLessonByID(id string) (*Lesson, error)
+	UpdateLesson(id string, req UpdateLessonRequest) (*Lesson, error)
+	DeleteLesson(id string) error
 	GetLessonsByClass(classID string, date string) ([]Lesson, error)
 	GetLessonsByClassAndSubject(classID, subjectID string, date string) ([]Lesson, error)
 	GetLessonsByGroup(groupID string, date string) ([]Lesson, error)
 
 	CreateHomework(homework *Homework) error
+	UpdateHomework(id string, req UpdateHomeworkRequest) (*Homework, error)
+	DeleteHomework(id string) error
 	GetHomeworkByClass(classID string) ([]Homework, error)
 }
 
@@ -200,4 +205,79 @@ func (r *repository) GetHomeworkByClass(classID string) ([]Homework, error) {
 		return nil, err
 	}
 	return homeworks, nil
+}
+
+func (r *repository) GetLessonByID(id string) (*Lesson, error) {
+	query := `
+		SELECT cl.id, cl.class_id, cl.teacher_id, COALESCE(u1.first_name || ' ' || u1.last_name, '') AS teacher_name,
+		       cl.subject_id, cl.date, cl.hour, cl.duration, cl.topic, cl.type,
+		       cl.group_id, cl.is_substitution, cl.substituted_teacher_id,
+		       COALESCE(u2.first_name || ' ' || u2.last_name, '') AS substituted_teacher_name,
+		       cl.activity_type, cl.created_at, cl.updated_at
+		FROM class_lessons cl
+		LEFT JOIN users u1 ON cl.teacher_id = u1.id
+		LEFT JOIN users u2 ON cl.substituted_teacher_id = u2.id
+		WHERE cl.id = $1::uuid
+	`
+	lessons, err := r.scanLessons(query, id)
+	if err != nil {
+		return nil, err
+	}
+	if len(lessons) == 0 {
+		return nil, sql.ErrNoRows
+	}
+	return &lessons[0], nil
+}
+
+func (r *repository) UpdateLesson(id string, req UpdateLessonRequest) (*Lesson, error) {
+	query := `
+		UPDATE class_lessons
+		SET topic = COALESCE(NULLIF($2, ''), topic),
+		    type = COALESCE(NULLIF($3, ''), type),
+		    activity_type = COALESCE(NULLIF($4, ''), activity_type),
+		    updated_at = NOW()
+		WHERE id = $1::uuid
+	`
+	_, err := r.db.Exec(query, id, req.Topic, req.Type, req.ActivityType)
+	if err != nil {
+		return nil, err
+	}
+	return r.GetLessonByID(id)
+}
+
+func (r *repository) DeleteLesson(id string) error {
+	_, err := r.db.Exec("DELETE FROM class_lessons WHERE id = $1::uuid", id)
+	return err
+}
+
+func (r *repository) UpdateHomework(id string, req UpdateHomeworkRequest) (*Homework, error) {
+	query := `
+		UPDATE class_homeworks
+		SET description = COALESCE(NULLIF($2, ''), description),
+		    type = COALESCE(NULLIF($3, ''), type),
+		    updated_at = NOW()
+		WHERE id = $1::uuid
+	`
+	_, err := r.db.Exec(query, id, req.Description, req.Type)
+	if err != nil {
+		return nil, err
+	}
+	queryGet := `SELECT ch.id, ch.lesson_id, ch.class_id, ch.subject_id, ch.teacher_id, COALESCE(u.first_name || ' ' || u.last_name, '') AS teacher_name, ch.due_date, ch.description, COALESCE(ch.type, 'compito'), ch.created_at, ch.updated_at 
+	             FROM class_homeworks ch
+	             LEFT JOIN users u ON ch.teacher_id = u.id
+	             WHERE ch.id = $1::uuid`
+	var h Homework
+	var lessonID sql.NullString
+	if err := r.db.QueryRow(queryGet, id).Scan(&h.ID, &lessonID, &h.ClassID, &h.SubjectID, &h.TeacherID, &h.TeacherName, &h.DueDate, &h.Description, &h.Type, &h.CreatedAt, &h.UpdatedAt); err != nil {
+		return nil, err
+	}
+	if lessonID.Valid {
+		h.LessonID = &lessonID.String
+	}
+	return &h, nil
+}
+
+func (r *repository) DeleteHomework(id string) error {
+	_, err := r.db.Exec("DELETE FROM class_homeworks WHERE id = $1::uuid", id)
+	return err
 }

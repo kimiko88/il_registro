@@ -19,11 +19,15 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	{
 		g.GET("", h.List)
 		g.GET("/bacheca", h.ListBacheca)
+		g.GET("/:id", h.GetByID)
+		g.PUT("/:id", h.Update)
 		g.POST("", h.Send)
 		g.DELETE("/:id", h.Delete)
 		g.POST("/:id/sign", h.Sign)
+		g.POST("/:id/read", h.MarkAsRead)
 		g.GET("/:id/signatures", h.GetSignatures)
 		g.GET("/:id/signature-report", h.GetSignatureReport)
+		g.GET("/:id/unread-users", h.GetUnreadUsers)
 	}
 }
 
@@ -133,4 +137,58 @@ func (h *Handler) GetSignatureReport(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, report)
+}
+
+func (h *Handler) GetByID(c *gin.Context) {
+	id := c.Param("id")
+	msg, err := h.service.GetMessageByID(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, msg)
+}
+
+func (h *Handler) Update(c *gin.Context) {
+	id := c.Param("id")
+	uid := c.GetString("user_id")
+	role := c.GetString("role")
+	var req struct {
+		Subject string `json:"subject"`
+		Body    string `json:"body"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if err := h.service.UpdateMessage(c.Request.Context(), uid, role, id, req.Subject, req.Body); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "updated"})
+}
+
+func (h *Handler) MarkAsRead(c *gin.Context) {
+	id := c.Param("id")
+	uid := c.GetString("user_id")
+	ipAddress := c.ClientIP()
+	if uid == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if err := h.service.MarkAsRead(c.Request.Context(), id, uid, ipAddress); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "marked as read"})
+}
+
+func (h *Handler) GetUnreadUsers(c *gin.Context) {
+	id := c.Param("id")
+	unread, err := h.service.GetUnreadUsers(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, unread)
 }

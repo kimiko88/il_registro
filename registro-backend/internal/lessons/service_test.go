@@ -25,6 +25,38 @@ func (m *mockRepository) CreateLesson(l *Lesson) error {
 	return nil
 }
 
+func (m *mockRepository) GetLessonByID(id string) (*Lesson, error) {
+	if m.errLesson != nil {
+		return nil, m.errLesson
+	}
+	if len(m.lessons) > 0 {
+		return &m.lessons[0], nil
+	}
+	return &Lesson{ID: id, Topic: "Test"}, nil
+}
+
+func (m *mockRepository) UpdateLesson(id string, req UpdateLessonRequest) (*Lesson, error) {
+	if m.errLesson != nil {
+		return nil, m.errLesson
+	}
+	return &Lesson{ID: id, Topic: req.Topic}, nil
+}
+
+func (m *mockRepository) DeleteLesson(id string) error {
+	return m.errLesson
+}
+
+func (m *mockRepository) UpdateHomework(id string, req UpdateHomeworkRequest) (*Homework, error) {
+	if m.errHW != nil {
+		return nil, m.errHW
+	}
+	return &Homework{ID: id, Description: req.Description}, nil
+}
+
+func (m *mockRepository) DeleteHomework(id string) error {
+	return m.errHW
+}
+
 func (m *mockRepository) GetLessonsByClass(classID string, date string) ([]Lesson, error) {
 	if m.errLesson != nil {
 		return nil, m.errLesson

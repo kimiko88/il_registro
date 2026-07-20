@@ -2,7 +2,8 @@
   <q-page class="q-pa-md bg-grey-1">
     <div class="row items-center justify-between q-mb-md">
        <div class="text-h4">Registro Presenze</div>
-       <div class="row q-gutter-md">
+       <div class="row q-gutter-md items-center">
+           <q-btn color="secondary" icon="download" label="Esporta CSV" unelevated @click="exportCSV" />
            <q-input dense outlined v-model="date" type="date" label="Data" bg-color="white" @update:model-value="fetchData" />
            <q-select 
               dense outlined 
@@ -412,5 +413,25 @@ const processJustification = async (id, approved) => {
 const openNoteDialog = (student) => {
     selectedStudentForNote.value = student
     showNoteDialog.value = true
+}
+
+const exportCSV = async () => {
+    if (!selectedClass.value) {
+        $q.notify({ type: 'warning', message: 'Seleziona una classe prima di esportare' })
+        return
+    }
+    try {
+        const classId = typeof selectedClass.value === 'object' ? selectedClass.value.id : selectedClass.value
+        const res = await api.get('/attendance/export', { params: { class_id: classId, date: date.value }, responseType: 'blob' })
+        const url = window.URL.createObjectURL(new Blob([res.data]))
+        const link = document.createElement('a')
+        link.href = url
+        link.setAttribute('download', `presenze_${classId}.csv`)
+        document.body.appendChild(link)
+        link.click()
+        $q.notify({ type: 'positive', message: 'Export CSV completato!' })
+    } catch (err) {
+        $q.notify({ type: 'negative', message: 'Errore durante l\'export CSV' })
+    }
 }
 </script>

@@ -178,6 +178,18 @@ func (s *Service) ValidateScrutiny(ctx context.Context, actorID, actorRole, clas
 	return s.repo.ValidateClassScrutiny(ctx, classID, semester, actorID)
 }
 
+func (s *Service) CloseScrutiny(ctx context.Context, actorID, actorRole, classID string, semester int) error {
+	isCoordinator, isDirigenza, err := s.isDirigenzaOrCoordinator(ctx, actorID, actorRole, classID)
+	if err != nil {
+		return err
+	}
+	if !isCoordinator && !isDirigenza {
+		return ErrUnauthorizedScrutiny
+	}
+
+	return s.repo.UpdateClassScrutinyStatus(ctx, classID, semester, "closed")
+}
+
 func (s *Service) SaveScrutiny(ctx context.Context, coordinatorID, actorRole string, req SaveScrutinyRequest) error {
 	isCoordinator, isDirigenza, err := s.isDirigenzaOrCoordinator(ctx, coordinatorID, actorRole, req.ClassID)
 	if err != nil {
@@ -185,6 +197,14 @@ func (s *Service) SaveScrutiny(ctx context.Context, coordinatorID, actorRole str
 	}
 	if !isCoordinator && !isDirigenza {
 		return ErrUnauthorizedScrutiny
+	}
+
+	// Check if scrutiny is already validated or closed
+	records, err := s.repo.ListRecordsByClass(ctx, req.ClassID, req.Semester)
+	if err == nil && len(records) > 0 {
+		if records[0].Status == "validated" || records[0].Status == "closed" {
+			return errors.New("forbidden: cannot edit a closed or validated scrutiny")
+		}
 	}
 
 	rec := &ScrutinyRecord{

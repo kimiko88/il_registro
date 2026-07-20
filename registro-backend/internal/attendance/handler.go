@@ -1,6 +1,7 @@
 package attendance
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -21,9 +22,11 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	// Teacher
 	att.POST("/mark", h.MarkAttendance)
 	att.POST("/mark-bulk", h.MarkBulk)
+	att.PUT("/:id", h.UpdateAttendance)
 	att.GET("/class/:id", h.GetClassAttendance)
 	att.GET("/pending-justifications", h.GetPendingJustifications)
 	att.POST("/justification/:id/process", h.ProcessJustification)
+	att.GET("/export", h.ExportAttendance)
 
 	// Student/Parent
 	att.GET("/my-attendance", h.GetMyAttendance)
@@ -318,3 +321,46 @@ func (h *Handler) ProcessJustification(c *gin.Context) {
 }
 
 func (h *Handler) GetAttendance(c *gin.Context) { h.GetMyAttendance(c) }
+
+func (h *Handler) UpdateAttendance(c *gin.Context) {
+	id := c.Param("id")
+	teacherID := c.GetString("user_id")
+	schoolID := c.GetString("school_id")
+
+	var req UpdateAttendanceRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.service.UpdateAttendance(c.Request.Context(), teacherID, schoolID, id, req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "attendance updated"})
+}
+
+func (h *Handler) ExportAttendance(c *gin.Context) {
+	classID := c.Query("class_id")
+	date := c.DefaultQuery("date", time.Now().Format("2006-01-02"))
+
+	if classID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "class_id parameter required"})
+		return
+	}
+
+	res, err := h.service.GetClassAttendance(c.Request.Context(), classID, date)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.Header("Content-Type", "text/csv")
+	c.Header("Content-Disposition", "attachment; filename=presenze.csv")
+
+	var csvData string = "StudentID,Status,IsJustified,Notes\n"
+	for _, rec := range res.Records {
+		csvData += fmt.Sprintf("%s,%s,%t,%s\n", rec.StudentID, rec.Status, rec.IsJustified, rec.Notes)
+	}
+	c.String(http.StatusOK, csvData)
+}

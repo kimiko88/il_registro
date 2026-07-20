@@ -19,6 +19,10 @@ type Repository interface {
 	GetSignatures(ctx context.Context, communicationID string) ([]string, error)
 	GetSignatureReport(ctx context.Context, communicationID string) (*SignatureReportResponse, error)
 	Get(ctx context.Context, id string) (*Message, error)
+
+	Update(ctx context.Context, id string, subject, body string) error
+	MarkAsRead(ctx context.Context, communicationID, userID, ipAddress string) error
+	GetUnreadUsers(ctx context.Context, communicationID string) ([]string, error)
 }
 
 type PostgresRepository struct {
@@ -233,4 +237,44 @@ func (r *PostgresRepository) Get(ctx context.Context, id string) (*Message, erro
 	}
 	m.ReceiverIDs = receivers
 	return m, nil
+}
+
+func (r *PostgresRepository) Update(ctx context.Context, id string, subject, body string) error {
+	query := `UPDATE communications SET subject = COALESCE(NULLIF($2, ''), subject), body = COALESCE(NULLIF($3, ''), body) WHERE id = $1::uuid`
+	_, err := r.db.ExecContext(ctx, query, id, subject, body)
+	return err
+}
+
+func (r *PostgresRepository) MarkAsRead(ctx context.Context, communicationID, userID, ipAddress string) error {
+	query := `
+		INSERT INTO communication_read_receipts (communication_id, user_id, read_at, ip_address)
+		VALUES ($1::uuid, $2::uuid, NOW(), $3)
+		ON CONFLICT (communication_id, user_id) DO NOTHING
+	`
+	_, err := r.db.ExecContext(ctx, query, communicationID, userID, ipAddress)
+	return err
+}
+
+func (r *PostgresRepository) GetUnreadUsers(ctx context.Context, communicationID string) ([]string, error) {
+	query := `
+		SELECT u.first_name || ' ' || u.last_name AS unread_name
+		FROM communications c, UNNEST(c.receiver_ids) AS rid(uid)
+		JOIN users u ON u.id = rid.uid
+		LEFT JOIN communication_read_receipts crr ON crr.communication_id = c.id AND crr.user_id = u.id
+		WHERE c.id = $1::uuid AND crr.read_at IS NULL
+	`
+	rows, err := r.db.QueryContext(ctx, query, communicationID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var unread []string
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err == nil {
+			unread = append(unread, name)
+		}
+	}
+	return unread, rows.Err()
 }

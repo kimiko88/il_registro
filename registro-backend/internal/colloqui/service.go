@@ -149,3 +149,19 @@ func (s *Service) UpdateBookingStatus(ctx context.Context, actorID, actorRole, b
 
 	return s.repo.UpdateBookingStatus(ctx, bookingID, req.Status, actorID, req.Reason)
 }
+
+func (s *Service) PatchSlot(ctx context.Context, actorID, actorRole, slotID, startTime, endTime string) error {
+	slot, err := s.repo.GetSlotByID(ctx, slotID)
+	if err != nil {
+		return err
+	}
+	teacherProfileID, _ := s.repo.GetTeacherProfileID(ctx, actorID)
+	if slot.TeacherID != actorID && slot.TeacherID != teacherProfileID && actorRole != "admin" && actorRole != "superadmin" {
+		return ErrUnauthorized
+	}
+	return s.repo.PatchSlot(ctx, slotID, startTime, endTime)
+}
+
+func (s *Service) GetBookingByID(ctx context.Context, bookingID string) (*ColloquioBooking, error) {
+	return s.repo.GetBookingByID(ctx, bookingID)
+}

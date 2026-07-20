@@ -23,6 +23,7 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 		scrutiny.POST("/save", h.Save)
 		scrutiny.POST("/class/:classId/start", h.Start)
 		scrutiny.POST("/class/:classId/validate", h.Validate)
+		scrutiny.POST("/class/:classId/close", h.Close)
 		scrutiny.GET("/export/:studentId/pdf", h.ExportPagellaPDF)
 	}
 }
@@ -112,4 +113,17 @@ func (h *Handler) Validate(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "scrutiny validated successfully"})
+}
+
+func (h *Handler) Close(c *gin.Context) {
+	classID := c.Param("classId")
+	semester, _ := strconv.Atoi(c.DefaultQuery("semester", "1"))
+	actorID := c.GetString("user_id")
+	actorRole := c.GetString("role")
+
+	if err := h.service.CloseScrutiny(c.Request.Context(), actorID, actorRole, classID, semester); err != nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "scrutiny closed successfully"})
 }

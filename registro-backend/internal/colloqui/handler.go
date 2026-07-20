@@ -20,10 +20,12 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	{
 		g.POST("/slots", h.CreateSlot)
 		g.GET("/slots", h.ListSlots)
+		g.PATCH("/slots/:id", h.PatchSlot)
 		g.DELETE("/slots/:id", h.CancelSlot)
 
 		g.POST("/bookings", h.CreateBooking)
 		g.GET("/my-bookings", h.ListMyBookings)
+		g.GET("/bookings/:id", h.GetBookingByID)
 		g.GET("/slots/:id/bookings", h.ListSlotBookings)
 		g.PUT("/bookings/:id/status", h.UpdateBookingStatus)
 	}
@@ -172,4 +174,39 @@ func (h *Handler) UpdateBookingStatus(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "booking status updated"})
+}
+
+func (h *Handler) PatchSlot(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	slotID := c.Param("id")
+
+	var req struct {
+		StartTime string `json:"start_time"`
+		EndTime   string `json:"end_time"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.service.PatchSlot(c.Request.Context(), userID, role, slotID, req.StartTime, req.EndTime); err != nil {
+		if err == ErrUnauthorized {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "slot timing patched"})
+}
+
+func (h *Handler) GetBookingByID(c *gin.Context) {
+	id := c.Param("id")
+	booking, err := h.service.GetBookingByID(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, booking)
 }

@@ -43,6 +43,7 @@ import (
 	"registro-backend/internal/signatures"
 	"registro-backend/internal/subjects"
 	"registro-backend/internal/teachers"
+	"registro-backend/internal/tenants"
 	"registro-backend/internal/textbooks"
 	"registro-backend/internal/timetables"
 	"registro-backend/internal/trips"
@@ -287,6 +288,11 @@ func main() {
 			parentsSvc := parents.NewService(parentsRepo, usersRepo, gradesRepo, attendanceRepo, commsRepo)
 			parentsH := parents.NewHandler(parentsSvc)
 			parentsH.RegisterRoutes(protected)
+
+			tenantsRepo := tenants.NewRepository(database)
+			tenantsSvc := tenants.NewService(tenantsRepo)
+			tenantsH := tenants.NewHandler(tenantsSvc)
+			tenantsH.RegisterRoutes(protected)
 
 			adminH.RegisterRoutes(protected, adminMiddleware)
 			signaturesGroup := protected.Group("/signatures")

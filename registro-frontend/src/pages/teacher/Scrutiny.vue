@@ -6,7 +6,8 @@
         <p class="text-subtitle1 text-slate-500 q-mb-none">Gestione voti finali e deliberazioni del Consiglio di Classe</p>
       </div>
       <div class="col-auto">
-        <div class="row q-gutter-md glass-card q-pa-sm rounded-xl border-slate-200">
+        <div class="row q-gutter-md glass-card q-pa-sm rounded-xl border-slate-200 items-center">
+          <q-btn v-if="selectedClassId" color="negative" icon="lock" label="Chiudi Scrutinio" unelevated @click="closeScrutiny" />
           <q-select
             v-model="selectedClassId"
             :options="classOptions"
@@ -262,6 +263,17 @@ const getGradeClass = (avg) => {
   if (avg < 6) return 'bg-orange-50 text-orange-900'
   if (avg < 8) return 'bg-blue-50 text-blue-900'
   return 'bg-emerald-50 text-emerald-900'
+}
+
+const closeScrutiny = async () => {
+  if (!selectedClassId.value) return
+  try {
+    await scrutinyService.closeScrutiny(selectedClassId.value, semester.value)
+    $q.notify({ type: 'positive', message: 'Scrutinio chiuso ufficialmente e sigillato!' })
+    fetchMatrix()
+  } catch (err) {
+    $q.notify({ type: 'negative', message: 'Errore chiusura scrutinio' })
+  }
 }
 </script>
 

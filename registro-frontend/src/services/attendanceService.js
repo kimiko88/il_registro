@@ -18,5 +18,11 @@ export const attendanceService = {
     },
     async getMyAttendance() {
         return api.get('/attendance/my-attendance')
+    },
+    async updateAttendance(id, data) {
+        return api.put(`/attendance/${id}`, data)
+    },
+    async exportAttendance(classId, date) {
+        return api.get('/attendance/export', { params: { class_id: classId, date }, responseType: 'blob' })
     }
 }

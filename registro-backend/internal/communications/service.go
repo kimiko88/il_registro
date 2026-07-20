@@ -79,3 +79,26 @@ func (s *Service) GetSignatureReport(ctx context.Context, actorRole, communicati
 	}
 	return s.repo.GetSignatureReport(ctx, communicationID)
 }
+
+func (s *Service) GetMessageByID(ctx context.Context, id string) (*Message, error) {
+	return s.repo.Get(ctx, id)
+}
+
+func (s *Service) UpdateMessage(ctx context.Context, actorID, actorRole, id, subject, body string) error {
+	msg, err := s.repo.Get(ctx, id)
+	if err != nil {
+		return err
+	}
+	if msg.SenderID != actorID && actorRole != "admin" && actorRole != "superadmin" {
+		return errors.New("unauthorized: cannot edit message of another user")
+	}
+	return s.repo.Update(ctx, id, subject, body)
+}
+
+func (s *Service) MarkAsRead(ctx context.Context, communicationID, userID, ipAddress string) error {
+	return s.repo.MarkAsRead(ctx, communicationID, userID, ipAddress)
+}
+
+func (s *Service) GetUnreadUsers(ctx context.Context, communicationID string) ([]string, error) {
+	return s.repo.GetUnreadUsers(ctx, communicationID)
+}

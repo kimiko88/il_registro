@@ -30,6 +30,10 @@ func (m *MockRepository) ListSlots(ctx context.Context, filter SlotFilter) ([]*C
 	}
 	return args.Get(0).([]*ColloquioSlot), args.Error(1)
 }
+func (m *MockRepository) PatchSlot(ctx context.Context, slotID string, startTime, endTime string) error {
+	args := m.Called(ctx, slotID, startTime, endTime)
+	return args.Error(0)
+}
 func (m *MockRepository) CancelSlot(ctx context.Context, slotID string) error {
 	args := m.Called(ctx, slotID)
 	return args.Error(0)

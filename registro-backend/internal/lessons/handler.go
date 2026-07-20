@@ -21,12 +21,17 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	{
 		lessons.GET("/class/:class_id", h.GetLessons)
 		lessons.GET("/group/:group_id", h.GetLessonsByGroup)
+		lessons.GET("/:id", h.GetLessonByID)
+		lessons.PUT("/:id", h.UpdateLesson)
+		lessons.DELETE("/:id", h.DeleteLesson)
 		lessons.POST("", h.CreateLesson)
 	}
 
 	homeworks := rg.Group("/homeworks")
 	{
 		homeworks.GET("/class/:class_id", h.GetHomeworks)
+		homeworks.PUT("/:id", h.UpdateHomework)
+		homeworks.DELETE("/:id", h.DeleteHomework)
 		homeworks.POST("", h.CreateHomework)
 	}
 }
@@ -101,4 +106,62 @@ func (h *Handler) CreateHomework(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusCreated, res)
+}
+
+func (h *Handler) GetLessonByID(c *gin.Context) {
+	id := c.Param("id")
+	res, err := h.service.GetLessonByID(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, res)
+}
+
+func (h *Handler) UpdateLesson(c *gin.Context) {
+	id := c.Param("id")
+	var req UpdateLessonRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	res, err := h.service.UpdateLesson(id, req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, res)
+}
+
+func (h *Handler) DeleteLesson(c *gin.Context) {
+	id := c.Param("id")
+	if err := h.service.DeleteLesson(id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.Status(http.StatusNoContent)
+}
+
+func (h *Handler) UpdateHomework(c *gin.Context) {
+	id := c.Param("id")
+	var req UpdateHomeworkRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	res, err := h.service.UpdateHomework(id, req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, res)
+}
+
+func (h *Handler) DeleteHomework(c *gin.Context) {
+	id := c.Param("id")
+	if err := h.service.DeleteHomework(id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.Status(http.StatusNoContent)
 }

@@ -66,6 +66,24 @@ func (m *MockRepository) Get(ctx context.Context, id string) (*Message, error) {
 	return args.Get(0).(*Message), args.Error(1)
 }
 
+func (m *MockRepository) Update(ctx context.Context, id string, subject, body string) error {
+	args := m.Called(ctx, id, subject, body)
+	return args.Error(0)
+}
+
+func (m *MockRepository) MarkAsRead(ctx context.Context, communicationID, userID, ipAddress string) error {
+	args := m.Called(ctx, communicationID, userID, ipAddress)
+	return args.Error(0)
+}
+
+func (m *MockRepository) GetUnreadUsers(ctx context.Context, communicationID string) ([]string, error) {
+	args := m.Called(ctx, communicationID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]string), args.Error(1)
+}
+
 func TestService_SendMessage(t *testing.T) {
 	mockRepo := new(MockRepository)
 	svc := NewService(mockRepo)

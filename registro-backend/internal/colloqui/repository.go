@@ -20,6 +20,7 @@ type Repository interface {
 	CreateSlot(ctx context.Context, slot *ColloquioSlot) error
 	GetSlotByID(ctx context.Context, id string) (*ColloquioSlot, error)
 	ListSlots(ctx context.Context, filter SlotFilter) ([]*ColloquioSlot, error)
+	PatchSlot(ctx context.Context, slotID string, startTime, endTime string) error
 	CancelSlot(ctx context.Context, slotID string) error
 
 	CreateBooking(ctx context.Context, booking *ColloquioBooking) error
@@ -148,6 +149,17 @@ func (r *PostgresRepository) ListSlots(ctx context.Context, filter SlotFilter) (
 		slots = append(slots, s)
 	}
 	return slots, rows.Err()
+}
+
+func (r *PostgresRepository) PatchSlot(ctx context.Context, slotID string, startTime, endTime string) error {
+	query := `
+		UPDATE colloquio_slots
+		SET start_time = COALESCE(NULLIF($2, ''), start_time),
+		    end_time = COALESCE(NULLIF($3, ''), end_time)
+		WHERE id = $1::uuid
+	`
+	_, err := r.db.ExecContext(ctx, query, slotID, startTime, endTime)
+	return err
 }
 
 func (r *PostgresRepository) CancelSlot(ctx context.Context, slotID string) error {

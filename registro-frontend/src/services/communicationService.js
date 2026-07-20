@@ -14,5 +14,11 @@ export const communicationService = {
     },
     async getSignatures(id) {
         return api.get(`/communications/${id}/signatures`)
+    },
+    async markAsRead(id) {
+        return api.post(`/communications/${id}/read`)
+    },
+    async getUnreadUsers(id) {
+        return api.get(`/communications/${id}/unread-users`)
     }
 }

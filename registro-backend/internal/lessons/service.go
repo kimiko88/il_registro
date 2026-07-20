@@ -7,9 +7,14 @@ import (
 
 type Service interface {
 	CreateLesson(teacherID string, req CreateLessonRequest) (*LessonResponse, error)
+	GetLessonByID(id string) (*LessonResponse, error)
+	UpdateLesson(id string, req UpdateLessonRequest) (*LessonResponse, error)
+	DeleteLesson(id string) error
 	GetLessons(classID, subjectID string, date string) ([]LessonResponse, error)
 	GetLessonsByGroup(groupID string, date string) ([]LessonResponse, error)
 	CreateHomework(teacherID string, req CreateHomeworkRequest) (*HomeworkResponse, error)
+	UpdateHomework(id string, req UpdateHomeworkRequest) (*HomeworkResponse, error)
+	DeleteHomework(id string) error
 	GetHomeworks(classID string) ([]HomeworkResponse, error)
 }
 
@@ -162,4 +167,36 @@ func (s *service) mapHomeworkResponse(h *Homework) *HomeworkResponse {
 		Description: h.Description,
 		Type:        h.Type,
 	}
+}
+
+func (s *service) GetLessonByID(id string) (*LessonResponse, error) {
+	l, err := s.repo.GetLessonByID(id)
+	if err != nil {
+		return nil, err
+	}
+	return s.mapLessonResponse(l), nil
+}
+
+func (s *service) UpdateLesson(id string, req UpdateLessonRequest) (*LessonResponse, error) {
+	l, err := s.repo.UpdateLesson(id, req)
+	if err != nil {
+		return nil, err
+	}
+	return s.mapLessonResponse(l), nil
+}
+
+func (s *service) DeleteLesson(id string) error {
+	return s.repo.DeleteLesson(id)
+}
+
+func (s *service) UpdateHomework(id string, req UpdateHomeworkRequest) (*HomeworkResponse, error) {
+	h, err := s.repo.UpdateHomework(id, req)
+	if err != nil {
+		return nil, err
+	}
+	return s.mapHomeworkResponse(h), nil
+}
+
+func (s *service) DeleteHomework(id string) error {
+	return s.repo.DeleteHomework(id)
 }

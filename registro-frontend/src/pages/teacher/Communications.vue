@@ -49,6 +49,7 @@
                     <q-btn flat round icon="arrow_back" class="lt-md" @click="selectedMessage = null" />
                     <q-toolbar-title class="text-subtitle1">{{ selectedMessage.subject }}</q-toolbar-title>
                     <q-space />
+                    <q-btn color="info" flat icon="visibility_off" label="Chi non ha letto" size="sm" @click="fetchUnreadUsers(selectedMessage.id)" />
                     <q-btn flat round icon="reply" color="grey-7"><q-tooltip>Rispondi</q-tooltip></q-btn>
                     <q-btn flat round icon="delete" color="grey-7"><q-tooltip>Elimina</q-tooltip></q-btn>
                 </q-toolbar>
@@ -100,19 +101,55 @@
         </q-card>
     </q-dialog>
 
+    <!-- Unread Users Dialog -->
+    <q-dialog v-model="showUnreadDialog">
+        <q-card style="min-width: 400px">
+            <q-card-section class="row items-center q-pb-none">
+                <div class="text-h6">Destinatari che non hanno letto</div>
+                <q-space />
+                <q-btn icon="close" flat round v-close-popup />
+            </q-card-section>
+            <q-card-section>
+                <q-list separator v-if="unreadUsersList.length > 0">
+                    <q-item v-for="(name, index) in unreadUsersList" :key="index">
+                        <q-item-section avatar><q-icon name="person_off" color="warning" /></q-item-section>
+                        <q-item-section>{{ name }}</q-item-section>
+                    </q-item>
+                </q-list>
+                <div v-else class="text-center text-positive q-pa-md">
+                    <q-icon name="check_circle" size="md" /> Tutti i destinatari hanno letto la comunicazione!
+                </div>
+            </q-card-section>
+        </q-card>
+    </q-dialog>
+
   </q-page>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useCommunicationsStore } from 'src/stores/communications'
+import { communicationService } from '@/services/communicationService'
+import { useQuasar } from 'quasar'
 
-
-
+const $q = useQuasar()
 const store = useCommunicationsStore()
 const showCompose = ref(false)
 const selectedMessage = ref(null)
 const search = ref('')
+
+const showUnreadDialog = ref(false)
+const unreadUsersList = ref([])
+
+const fetchUnreadUsers = async (id) => {
+    try {
+        const res = await communicationService.getUnreadUsers(id)
+        unreadUsersList.value = res.data || []
+        showUnreadDialog.value = true
+    } catch (err) {
+        $q.notify({ type: 'negative', message: 'Errore durante il recupero dei non letti' })
+    }
+}
 
 onMounted(() => {
     store.fetchCommunications()
