@@ -39,4 +39,11 @@ describe('Communication Service', () => {
         await communicationService.getSignatures('msg-1')
         expect(mockApi.get).toHaveBeenCalledWith('/communications/msg-1/signatures')
     })
+
+    it('gets unread communications count', async () => {
+        mockApi.get.mockResolvedValue({ data: { unread_count: 5 } })
+        const res = await communicationService.getUnreadCount()
+        expect(mockApi.get).toHaveBeenCalledWith('/communications/unread-count')
+        expect(res.data.unread_count).toBe(5)
+    })
 })
