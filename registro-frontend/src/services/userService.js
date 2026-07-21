@@ -39,5 +39,8 @@ export const userService = {
     },
     removeGuardian(studentId, guardianId) {
         return api.delete(`/users/${studentId}/guardians/${guardianId}`)
+    },
+    getStudentFascicolo(studentId) {
+        return api.get(`/users/students/${studentId}/fascicolo`)
     }
 }

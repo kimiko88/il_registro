@@ -18,11 +18,16 @@
             class="rounded-lg"
           />
           <q-btn-toggle
-            v-model="semester"
+            v-model="period"
             toggle-color="primary"
             flat
             class="rounded-lg border-slate-200"
-            :options="[{label: '1° Quad', value: 1}, {label: '2° Quad', value: 2}]"
+            :options="[
+              {label: 'Pagellino 1° Q', value: 'infraquadrimestrale_1'},
+              {label: 'Scrutinio 1° Q', value: 'semester_1'},
+              {label: 'Pagellino 2° Q', value: 'infraquadrimestrale_2'},
+              {label: 'Scrutinio Finale', value: 'semester_2'}
+            ]"
           />
         </div>
       </div>
@@ -154,7 +159,7 @@ const classesStore = useClassesStore()
 const authStore = useAuthStore()
 
 const selectedClassId = ref(null)
-const semester = ref(1)
+const period = ref('semester_1')
 const loading = ref(false)
 const saving = ref(false)
 const matrix = ref({})
@@ -189,14 +194,14 @@ onMounted(async () => {
   }
 })
 
-watch([selectedClassId, semester], () => {
+watch([selectedClassId, period], () => {
   if (selectedClassId.value) fetchMatrix()
 })
 
 const fetchMatrix = async () => {
   loading.value = true
   try {
-    const res = await scrutinyService.getMatrix(selectedClassId.value, semester.value)
+    const res = await scrutinyService.getMatrix(selectedClassId.value, period.value)
     
     const newScrutinyData = {}
     const students = res.data.students || []

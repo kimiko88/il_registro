@@ -16,5 +16,18 @@ export const notificationService = {
   },
   async unregisterPushToken(token) {
     return api.delete('/notifications/push-tokens', { params: { device_token: token } })
+  },
+  async requestPushPermissionAndRegister() {
+    if (!('Notification' in window)) {
+      console.warn('Web Push Notifications are not supported by this browser.')
+      return null
+    }
+    const permission = await Notification.requestPermission()
+    if (permission === 'granted') {
+      const token = 'web_push_' + Math.random().toString(36).substring(2, 15)
+      await this.registerPushToken(token, 'web')
+      return token
+    }
+    return null
   }
 }

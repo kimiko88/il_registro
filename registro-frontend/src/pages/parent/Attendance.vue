@@ -47,23 +47,24 @@
         </div>
       </div>
 
-      <!-- Risk badge -->
-      <div v-if="summary.risk_level && summary.risk_level !== 'Normal'" class="q-mb-md">
-        <q-banner
-          :class="summary.risk_level === 'Critical' ? 'bg-negative text-white' : 'bg-warning text-white'"
-          rounded dense
-        >
-          <template v-slot:avatar>
-            <q-icon :name="summary.risk_level === 'Critical' ? 'error' : 'warning'" />
-          </template>
-          <span v-if="summary.risk_level === 'Critical'">
-            ⚠️ Livello assenze critico ({{ summary.absence_rate?.toFixed(1) }}%). Contattare la scuola.
-          </span>
-          <span v-else>
-            Livello assenze elevato ({{ summary.absence_rate?.toFixed(1) }}%). Monitorare la situazione.
-          </span>
-        </q-banner>
-      </div>
+      <!-- Monthly Trend Breakdown -->
+      <q-card v-if="trends.length > 0" class="q-mb-lg shadow-sm" bordered>
+        <q-card-section>
+          <div class="text-subtitle1 text-weight-bold text-slate-800 q-mb-sm">Andamento Mensile Presenze</div>
+          <div class="row q-col-gutter-sm">
+            <div v-for="t in trends" :key="t.month" class="col-6 col-sm-3 col-md-2">
+              <div class="bg-slate-100 p-3 rounded-lg text-center border border-slate-200">
+                <div class="text-xs font-semibold text-slate-600 uppercase">{{ t.month }}</div>
+                <div class="text-lg font-bold text-slate-900 mt-1">{{ t.presence_rate }}%</div>
+                <div class="text-xs text-slate-500 mt-1">
+                  <span class="text-red-600 font-medium">{{ t.absences }} A</span> · 
+                  <span class="text-amber-600 font-medium">{{ t.lates }} R</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </q-card-section>
+      </q-card>
 
       <!-- No events -->
       <q-card v-if="events.length === 0" class="text-center q-pa-xl text-grey-6 shadow-1">
@@ -161,6 +162,7 @@ const justifyReason = ref('Salute')
 const justifyNotes = ref('')
 
 const events = ref([])
+const trends = ref([])
 const summary = ref({
     total_absences: 0,
     total_lates: 0,
@@ -195,9 +197,20 @@ watch(selectedChild, (val) => {
 const fetchAll = async () => {
     loading.value = true
     try {
-        await Promise.all([fetchAttendance(), fetchSummary()])
+        await Promise.all([fetchAttendance(), fetchSummary(), fetchTrends()])
     } finally {
         loading.value = false
+    }
+}
+
+const fetchTrends = async () => {
+    try {
+        const res = await attendanceService.getChildAttendanceTrends(selectedChild.value.id)
+        if (res.data && res.data.trends) {
+            trends.value = res.data.trends
+        }
+    } catch (e) {
+        console.error('Errore caricamento trend mensili:', e)
     }
 }
 

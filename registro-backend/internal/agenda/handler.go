@@ -20,6 +20,7 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	{
 		ag.POST("", h.Create)
 		ag.GET("/calendar", h.GetCalendar)
+		ag.GET("/class/:classID", h.GetClassEvents)
 		ag.GET("/:id", h.GetByID)
 		ag.PUT("/:id", h.Update)
 		ag.DELETE("/:id", h.Delete)
@@ -164,4 +165,28 @@ func (h *Handler) UnmarkComplete(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "unmarked complete"})
+}
+
+func (h *Handler) GetClassEvents(c *gin.Context) {
+	classID := c.Param("classID")
+	userID := c.GetString("user_id")
+	schoolID := c.GetString("school_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	filter := CalendarFilter{
+		ClassID: classID,
+	}
+
+	items, err := h.service.GetCalendar(c.Request.Context(), schoolID, userID, filter)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if items == nil {
+		items = []*AgendaItem{}
+	}
+	c.JSON(http.StatusOK, items)
 }

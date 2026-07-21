@@ -16,6 +16,9 @@ export const attendanceService = {
     async getChildAttendanceSummary(studentId) {
         return api.get(`/attendance/child-attendance/${studentId}/summary`)
     },
+    async getChildAttendanceTrends(studentId) {
+        return api.get(`/attendance/child-attendance/${studentId}/trends`)
+    },
     async getMyAttendance() {
         return api.get('/attendance/my-attendance')
     },

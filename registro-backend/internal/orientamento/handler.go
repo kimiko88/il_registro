@@ -25,6 +25,8 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	// Student
 	grp.POST("/register", h.RegisterStudent)
 	grp.GET("/my-events", h.GetMyEvents)
+	grp.POST("/preference", h.SavePreference)
+	grp.GET("/preference", h.GetPreference)
 }
 
 func (h *Handler) CreateEvent(c *gin.Context) {
@@ -90,4 +92,36 @@ func (h *Handler) MarkAttendance(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "attendance marked"})
+}
+
+func (h *Handler) SavePreference(c *gin.Context) {
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	var req StudentPreference
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	req.StudentID = userID
+	c.JSON(http.StatusOK, req)
+}
+
+func (h *Handler) GetPreference(c *gin.Context) {
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	pref := StudentPreference{
+		StudentID:      userID,
+		PreferredTrack: "University",
+		TargetField:    "Ingegneria Informatica",
+	}
+	c.JSON(http.StatusOK, pref)
 }

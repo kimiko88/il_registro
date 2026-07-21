@@ -16,8 +16,9 @@ type Message struct {
 	RequiresSignature bool       `json:"requires_signature" db:"requires_signature"`
 	SignatureDeadline *time.Time `json:"signature_deadline,omitempty" db:"signature_deadline"`
 	CreatedAt         time.Time  `json:"created_at" db:"created_at"`
-	ReadAt            *time.Time `json:"read_at,omitempty" db:"read_at"`
 	IsSigned          bool       `json:"is_signed"`
+	IsOfficialCircular bool      `json:"is_official_circular"`
+	CircularNumber    *int       `json:"circular_number,omitempty"`
 }
 
 type CommunicationSignature struct {
@@ -49,4 +50,6 @@ type CreateMessageRequest struct {
 	Type              string  `json:"type" binding:"required"` // 'circular', 'notice', 'internal'
 	RequiresSignature bool    `json:"requires_signature"`
 	SignatureDeadline *string `json:"signature_deadline,omitempty"` // YYYY-MM-DD or RFC3339
+	IsOfficialCircular bool   `json:"is_official_circular"`
+	CircularNumber    *int    `json:"circular_number,omitempty"`
 }

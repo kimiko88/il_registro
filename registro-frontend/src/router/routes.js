@@ -84,6 +84,7 @@ export default [
             { path: 'secretary/settings', component: () => import('@/pages/secretary/Settings.vue'), meta: { role: 'secretary' } },
             { path: 'secretary/classes', component: () => import('@/pages/secretary/Classes.vue'), meta: { role: 'secretary' } },
             { path: 'secretary/groups', component: () => import('@/pages/teacher/Groups.vue'), meta: { role: 'secretary' } },
+            { path: 'secretary/students/:id/fascicolo', component: () => import('@/pages/secretary/FascicoloStudente.vue'), meta: { role: 'secretary' } },
 
             // Teacher Routes
             { path: 'teacher', component: () => import('@/pages/teacher/Index.vue'), meta: { role: 'teacher' } },
@@ -100,6 +101,7 @@ export default [
             { path: 'teacher/timetable', component: () => import('@/pages/teacher/Timetable.vue'), meta: { role: 'teacher' } },
             { path: 'teacher/scrutiny', component: () => import('@/pages/teacher/Scrutiny.vue'), meta: { role: 'teacher' } },
             { path: 'teacher/verbali', component: () => import('@/pages/teacher/Verbali.vue'), meta: { role: 'teacher' } },
+            { path: 'teacher/substitutions', component: () => import('@/pages/teacher/Substitutions.vue'), meta: { role: 'teacher' } },
 
             // Student Routes
             { path: 'student', component: () => import('@/pages/student/Index.vue'), meta: { role: 'student' } },
@@ -115,6 +117,7 @@ export default [
             { path: 'student/didactics', component: () => import('@/pages/student/Didactics.vue'), meta: { role: 'student' } },
             { path: 'student/notes', component: () => import('@/pages/student/Notes.vue'), meta: { role: 'student' } },
             { path: 'student/timetable', component: () => import('@/pages/student/Timetable.vue'), meta: { role: 'student' } },
+            { path: 'student/goals', component: () => import('@/pages/student/Goals.vue'), meta: { role: 'student' } },
 
             // Parent Routes
             { path: 'parent', component: () => import('@/pages/parent/Index.vue'), meta: { role: 'parent' } },

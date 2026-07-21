@@ -35,6 +35,20 @@ type BulkImportRequest struct {
 	Semester int `form:"semester" binding:"required"`
 }
 
+type SetWeightConfigRequest struct {
+	SubjectID       string  `json:"subject_id" binding:"required"`
+	WrittenWeight   float64 `json:"written_weight"`
+	OralWeight      float64 `json:"oral_weight"`
+	PracticalWeight float64 `json:"practical_weight"`
+}
+
+type WeightConfigResponse struct {
+	SubjectID       string  `json:"subject_id"`
+	WrittenWeight   float64 `json:"written_weight"`
+	OralWeight      float64 `json:"oral_weight"`
+	PracticalWeight float64 `json:"practical_weight"`
+}
+
 // --- Filters ---
 
 type GradeFilter struct {

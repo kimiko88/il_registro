@@ -27,5 +27,8 @@ export default {
   },
   updateBookingStatus(id, data) {
     return api.put(`/colloqui/bookings/${id}/status`, data)
+  },
+  createAssembly(data) {
+    return api.post('/colloqui/assemblies', data)
   }
 }

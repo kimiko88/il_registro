@@ -39,6 +39,7 @@ import (
 	"registro-backend/internal/schools"
 	"registro-backend/internal/schoolsettings"
 	"registro-backend/internal/scrutiny"
+	"registro-backend/internal/search"
 	"registro-backend/internal/signatures"
 	"registro-backend/internal/student_goals"
 	"registro-backend/internal/subjects"
@@ -213,6 +214,7 @@ func main() {
 				usersGroup.GET("/students/:id/fascicolo", usersH.GetFascicolo)
 			}
 
+			classesH.RegisterRoutes(protected)
 			gradesH.RegisterRoutes(protected)
 			attendanceH.RegisterRoutes(protected)
 			docsH.RegisterRoutes(protected)
@@ -224,6 +226,7 @@ func main() {
 			extraH.RegisterRoutes(protected)
 			notifH.RegisterRoutes(protected)
 			tripsH.RegisterRoutes(protected)
+			notesH.RegisterRoutes(protected)
 
 			pctoH := pcto.NewHandler(pctoSvc)
 			pctoH.RegisterRoutes(protected)

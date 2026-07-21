@@ -30,11 +30,11 @@ type Service interface {
 	GetStudentGradesWithFilter(ctx context.Context, actorID string, actorRole string, studentID string, filter GradeFilter) ([]GradeResponse, error)
 	GetClassGrades(ctx context.Context, actorID string, actorRole string, classID string, filter GradeFilter) (*ClassGradesResponse, error)
 	GetSubjectGrades(ctx context.Context, actorID string, actorRole string, subjectID string, filter GradeFilter) (*SubjectStatsResponse, error)
-	AddGrade(teacherID string, req CreateGradeRequest) error
+	AddGrade(teacherID string, req CreateGradeRequest) (*GradeResponse, error)
 	BatchCreateGrades(teacherID string, grades []*Grade) error
 	BulkImport(teacherID string, r io.Reader, semester int) (*ImportResult, error)
 	Export(teacherID string, filter GradeFilter, format string) ([]byte, string, error)
-	UpdateGrade(teacherID string, gradeID string, req UpdateGradeRequest) error
+	UpdateGrade(teacherID string, gradeID string, req UpdateGradeRequest) (*GradeResponse, error)
 	DeleteGrade(teacherID string, gradeID string) error
 
 	// Student/Parent
@@ -300,17 +300,17 @@ func (s *service) GetSubjectGrades(ctx context.Context, actorID string, actorRol
 	return stat, nil
 }
 
-func (s *service) AddGrade(teacherID string, req CreateGradeRequest) error {
+func (s *service) AddGrade(teacherID string, req CreateGradeRequest) (*GradeResponse, error) {
 	if err := s.validator.ValidateCreateRequest(req, teacherID); err != nil {
-		return fmt.Errorf("validation failed: %w", err)
+		return nil, fmt.Errorf("validation failed: %w", err)
 	}
 
 	teacherUser, err := s.userRepo.GetByID(context.Background(), teacherID)
 	if err != nil {
-		return fmt.Errorf("could not resolve teacher profile: %w", err)
+		return nil, fmt.Errorf("could not resolve teacher profile: %w", err)
 	}
 	if teacherUser.SchoolID == nil {
-		return fmt.Errorf("teacher is not associated with a school")
+		return nil, fmt.Errorf("teacher is not associated with a school")
 	}
 	schoolID := *teacherUser.SchoolID
 
@@ -318,12 +318,12 @@ func (s *service) AddGrade(teacherID string, req CreateGradeRequest) error {
 	if err := s.validator.db.QueryRow(
 		`SELECT id FROM teachers WHERE user_id = $1`, teacherID,
 	).Scan(&teacherProfileID); err != nil {
-		return fmt.Errorf("could not resolve teacher profile ID: %w", err)
+		return nil, fmt.Errorf("could not resolve teacher profile ID: %w", err)
 	}
 
 	date, err := time.Parse("2006-01-02", req.Date)
 	if err != nil {
-		return fmt.Errorf("formato data non valido: %w", err)
+		return nil, fmt.Errorf("formato data non valido: %w", err)
 	}
 
 	var evalType *EvaluationType
@@ -355,14 +355,15 @@ func (s *service) AddGrade(teacherID string, req CreateGradeRequest) error {
 	}
 
 	if err := s.repo.Create(grade); err != nil {
-		return fmt.Errorf("failed to create grade: %w", err)
+		return nil, fmt.Errorf("failed to create grade: %w", err)
 	}
 
+	resp := s.mapSingleResponse(*grade)
 	if s.broadcaster != nil {
-		s.broadcaster.BroadcastToUser(grade.StudentID, "GRADE_ADDED", s.mapSingleResponse(*grade))
+		s.broadcaster.BroadcastToUser(grade.StudentID, "GRADE_ADDED", resp)
 	}
 
-	return nil
+	return &resp, nil
 }
 
 func (s *service) BatchCreateGrades(teacherID string, grades []*Grade) error {
@@ -412,13 +413,13 @@ func (s *service) Export(teacherID string, filter GradeFilter, format string) ([
 	return nil, "", fmt.Errorf("unsupported format: %s", format)
 }
 
-func (s *service) UpdateGrade(teacherID string, gradeID string, req UpdateGradeRequest) error {
+func (s *service) UpdateGrade(teacherID string, gradeID string, req UpdateGradeRequest) (*GradeResponse, error) {
 	grade, err := s.repo.FindByID(gradeID)
 	if err != nil {
-		return fmt.Errorf("failed to fetch grade: %w", err)
+		return nil, fmt.Errorf("failed to fetch grade: %w", err)
 	}
 	if grade == nil {
-		return fmt.Errorf("grade not found")
+		return nil, fmt.Errorf("grade not found")
 	}
 
 	// Resolve the teacher's profile ID (teachers.id) from the user ID (users.id)
@@ -427,15 +428,15 @@ func (s *service) UpdateGrade(teacherID string, gradeID string, req UpdateGradeR
 	if err := s.validator.db.QueryRow(
 		`SELECT id FROM teachers WHERE user_id = $1`, teacherID,
 	).Scan(&teacherProfileID); err != nil {
-		return fmt.Errorf("could not resolve teacher profile: %w", err)
+		return nil, fmt.Errorf("could not resolve teacher profile: %w", err)
 	}
 
 	if grade.TeacherID != teacherProfileID {
-		return fmt.Errorf("unauthorized: can only modify own grades")
+		return nil, fmt.Errorf("unauthorized: can only modify own grades")
 	}
 
 	if err := s.validator.ValidateModification(*grade, req); err != nil {
-		return fmt.Errorf("validation failed: %w", err)
+		return nil, fmt.Errorf("validation failed: %w", err)
 	}
 
 	history := &GradeHistory{
@@ -497,16 +498,18 @@ func (s *service) UpdateGrade(teacherID string, gradeID string, req UpdateGradeR
 	}
 
 	if !changes {
-		return nil
+		resp := s.mapSingleResponse(*grade)
+		return &resp, nil
 	}
 
 	grade.ModifiedBy = &teacherID
 
 	if err := s.repo.Update(grade, history); err != nil {
-		return fmt.Errorf("failed to update grade: %w", err)
+		return nil, fmt.Errorf("failed to update grade: %w", err)
 	}
 
-	return nil
+	resp := s.mapSingleResponse(*grade)
+	return &resp, nil
 }
 
 func (s *service) DeleteGrade(teacherID string, gradeID string) error {
