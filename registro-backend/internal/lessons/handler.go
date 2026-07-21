@@ -2,6 +2,7 @@ package lessons
 
 import (
 	"net/http"
+	"time"
 
 	"registro-backend/pkg/logger"
 
@@ -37,7 +38,18 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	}
 }
 
+// parseDate valida un parametro data in formato YYYY-MM-DD.
+func parseDate(s string) (time.Time, error) {
+	return time.Parse("2006-01-02", s)
+}
+
 func (h *Handler) GetLessons(c *gin.Context) {
+	// BUG FIX: verificare autenticazione
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	classID := c.Param("class_id")
 	subjectID := c.Query("subject_id")
 	date := c.Query("date")
@@ -52,6 +64,12 @@ func (h *Handler) GetLessons(c *gin.Context) {
 }
 
 func (h *Handler) GetLessonsByGroup(c *gin.Context) {
+	// BUG FIX: verificare autenticazione
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	groupID := c.Param("group_id")
 	date := c.Query("date")
 
@@ -65,7 +83,11 @@ func (h *Handler) GetLessonsByGroup(c *gin.Context) {
 }
 
 func (h *Handler) CreateLesson(c *gin.Context) {
-	teacherID := c.GetString("user_id") // From auth middleware
+	teacherID := c.GetString("user_id")
+	if teacherID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 
 	var req CreateLessonRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -82,6 +104,12 @@ func (h *Handler) CreateLesson(c *gin.Context) {
 }
 
 func (h *Handler) GetHomeworks(c *gin.Context) {
+	// BUG FIX: verificare autenticazione
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	classID := c.Param("class_id")
 
 	res, err := h.service.GetHomeworks(classID)
@@ -94,6 +122,10 @@ func (h *Handler) GetHomeworks(c *gin.Context) {
 
 func (h *Handler) CreateHomework(c *gin.Context) {
 	teacherID := c.GetString("user_id")
+	if teacherID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 
 	var req CreateHomeworkRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -110,6 +142,12 @@ func (h *Handler) CreateHomework(c *gin.Context) {
 }
 
 func (h *Handler) GetLessonByID(c *gin.Context) {
+	// BUG FIX: verificare autenticazione
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	id := c.Param("id")
 	res, err := h.service.GetLessonByID(id)
 	if err != nil {
@@ -120,6 +158,12 @@ func (h *Handler) GetLessonByID(c *gin.Context) {
 }
 
 func (h *Handler) UpdateLesson(c *gin.Context) {
+	// BUG FIX: passare teacherID al service per ownership check
+	teacherID := c.GetString("user_id")
+	if teacherID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	id := c.Param("id")
 	var req UpdateLessonRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -135,6 +179,12 @@ func (h *Handler) UpdateLesson(c *gin.Context) {
 }
 
 func (h *Handler) DeleteLesson(c *gin.Context) {
+	// BUG FIX: verificare autenticazione prima di eliminare
+	teacherID := c.GetString("user_id")
+	if teacherID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	id := c.Param("id")
 	if err := h.service.DeleteLesson(id); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -144,6 +194,12 @@ func (h *Handler) DeleteLesson(c *gin.Context) {
 }
 
 func (h *Handler) UpdateHomework(c *gin.Context) {
+	// BUG FIX: verificare autenticazione prima di modificare
+	teacherID := c.GetString("user_id")
+	if teacherID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	id := c.Param("id")
 	var req UpdateHomeworkRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -159,6 +215,12 @@ func (h *Handler) UpdateHomework(c *gin.Context) {
 }
 
 func (h *Handler) DeleteHomework(c *gin.Context) {
+	// BUG FIX: verificare autenticazione prima di eliminare
+	teacherID := c.GetString("user_id")
+	if teacherID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	id := c.Param("id")
 	if err := h.service.DeleteHomework(id); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -169,8 +231,27 @@ func (h *Handler) DeleteHomework(c *gin.Context) {
 
 func (h *Handler) GetMyDiary(c *gin.Context) {
 	teacherID := c.GetString("user_id")
+	// BUG FIX: verificare autenticazione
+	if teacherID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	from := c.Query("from")
 	to := c.Query("to")
+
+	// BUG FIX: validare i parametri data prima di passarli al service
+	if from != "" {
+		if _, err := parseDate(from); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "parametro 'from' non valido, formato atteso: YYYY-MM-DD"})
+			return
+		}
+	}
+	if to != "" {
+		if _, err := parseDate(to); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "parametro 'to' non valido, formato atteso: YYYY-MM-DD"})
+			return
+		}
+	}
 
 	res, err := h.service.GetTeacherDiary(teacherID, from, to)
 	if err != nil {

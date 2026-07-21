@@ -26,6 +26,7 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	att.GET("/class/:id", h.GetClassAttendance)
 	att.GET("/pending-justifications", h.GetPendingJustifications)
 	att.POST("/justification/:id/process", h.ProcessJustification)
+	att.POST("/justification/:id/reject", h.RejectJustification)
 	att.GET("/export", h.ExportAttendance)
 
 	// Student/Parent
@@ -38,7 +39,6 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 
 	// Admin / Secretary
 	att.POST("/justification/:id/approve", h.ApproveJustification)
-	att.DELETE("/justification/:id", h.RejectJustification)
 	att.GET("/analytics", h.GetAnalytics)
 }
 
@@ -53,7 +53,6 @@ func parseWindowParams(c *gin.Context) (from, to time.Time, err error) {
 			return
 		}
 	} else {
-		// Default: inizio anno scolastico (1 settembre dell'anno corrente o precedente).
 		now := time.Now()
 		year := now.Year()
 		if now.Month() < time.September {
@@ -147,6 +146,7 @@ func (h *Handler) ApproveJustification(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "approved"})
 }
 
+// RejectJustification requires teacher or admin role.
 func (h *Handler) RejectJustification(c *gin.Context) {
 	id := c.Param("id")
 	actorID := c.GetString("user_id")
@@ -327,6 +327,12 @@ func (h *Handler) UpdateAttendance(c *gin.Context) {
 	teacherID := c.GetString("user_id")
 	schoolID := c.GetString("school_id")
 
+	// BUG FIX: verificare autenticazione prima di procedere
+	if teacherID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
 	var req UpdateAttendanceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -341,6 +347,18 @@ func (h *Handler) UpdateAttendance(c *gin.Context) {
 }
 
 func (h *Handler) ExportAttendance(c *gin.Context) {
+	// BUG FIX: verificare ruolo prima di esportare dati GDPR-sensibili
+	actorID := c.GetString("user_id")
+	actorRole := c.GetString("role")
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
 	classID := c.Query("class_id")
 	date := c.DefaultQuery("date", time.Now().Format("2006-01-02"))
 

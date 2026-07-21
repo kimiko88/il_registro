@@ -115,7 +115,14 @@ func (h *Handler) Sign(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "signed"})
 }
 
+// GetSignatures returns the list of users who signed a message.
+// BUG FIX: aggiunto controllo autenticazione.
 func (h *Handler) GetSignatures(c *gin.Context) {
+	uid := c.GetString("user_id")
+	if uid == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	id := c.Param("id")
 	names, err := h.service.GetMessageSignatures(c.Request.Context(), id)
 	if err != nil {
@@ -125,7 +132,14 @@ func (h *Handler) GetSignatures(c *gin.Context) {
 	c.JSON(http.StatusOK, names)
 }
 
+// GetSignatureReport returns the full signature report for a message.
+// Restricted to staff roles. BUG FIX: aggiunto controllo user_id esplicito.
 func (h *Handler) GetSignatureReport(c *gin.Context) {
+	uid := c.GetString("user_id")
+	if uid == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	id := c.Param("id")
 	role := c.GetString("role")
 	report, err := h.service.GetSignatureReport(c.Request.Context(), role, id)
@@ -140,7 +154,14 @@ func (h *Handler) GetSignatureReport(c *gin.Context) {
 	c.JSON(http.StatusOK, report)
 }
 
+// GetByID returns a single message by ID.
+// BUG FIX: aggiunto controllo autenticazione.
 func (h *Handler) GetByID(c *gin.Context) {
+	uid := c.GetString("user_id")
+	if uid == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	id := c.Param("id")
 	msg, err := h.service.GetMessageByID(c.Request.Context(), id)
 	if err != nil {
@@ -153,6 +174,10 @@ func (h *Handler) GetByID(c *gin.Context) {
 func (h *Handler) Update(c *gin.Context) {
 	id := c.Param("id")
 	uid := c.GetString("user_id")
+	if uid == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	role := c.GetString("role")
 	var req struct {
 		Subject string `json:"subject"`
@@ -181,10 +206,22 @@ func (h *Handler) MarkAsRead(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "marked as read"})
+	c.JSON(http.StatusOK, gin.H{"message": "read"})
 }
 
+// GetUnreadUsers returns users who have not read a message.
+// BUG FIX: aggiunto controllo auth e role (solo staff).
 func (h *Handler) GetUnreadUsers(c *gin.Context) {
+	uid := c.GetString("user_id")
+	if uid == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	role := c.GetString("role")
+	if role != "teacher" && role != "admin" && role != "superadmin" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
 	id := c.Param("id")
 	unread, err := h.service.GetUnreadUsers(c.Request.Context(), id)
 	if err != nil {
@@ -205,5 +242,5 @@ func (h *Handler) GetUnreadCount(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"unread_count": count})
+	c.JSON(http.StatusOK, gin.H{"count": count})
 }

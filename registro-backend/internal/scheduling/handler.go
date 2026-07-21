@@ -91,7 +91,13 @@ func (h *Handler) GetTeacherBookings(c *gin.Context) {
 }
 
 // GetAvailableSlots returns available colloquio slots, optionally filtered by teacher_id.
+// BUG FIX: aggiunto controllo autenticazione.
 func (h *Handler) GetAvailableSlots(c *gin.Context) {
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	teacherID := c.Query("teacher_id")
 	res, err := h.service.GetAvailableSlots(c.Request.Context(), teacherID)
 	if err != nil {
