@@ -1,4 +1,4 @@
-﻿// Package upload provides utilities for validating file uploads by inspecting
+// Package upload provides utilities for validating file uploads by inspecting
 // the actual file content (magic bytes) rather than relying on the HTTP
 // Content-Type header or file extension, which an attacker can trivially fake.
 package upload
