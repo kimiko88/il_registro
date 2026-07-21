@@ -142,3 +142,37 @@ func TestCancelSlot(t *testing.T) {
 	assert.NoError(t, err)
 	mockRepo.AssertExpectations(t)
 }
+
+func TestGetBookingByIDAuthorization(t *testing.T) {
+	mockRepo := new(MockRepository)
+	svc := NewService(mockRepo)
+
+	parentID := "parent-1"
+	booking := &ColloquioBooking{
+		ID:       "booking-1",
+		SlotID:   "slot-1",
+		ParentID: &parentID,
+	}
+	slot := &ColloquioSlot{
+		ID:        "slot-1",
+		TeacherID: "teacher-1",
+	}
+
+	mockRepo.On("GetBookingByID", mock.Anything, "booking-1").Return(booking, nil)
+	mockRepo.On("GetSlotByID", mock.Anything, "slot-1").Return(slot, nil)
+
+	// Admin access succeeds
+	b, err := svc.GetBookingByID(context.Background(), "admin-1", "admin", "booking-1")
+	assert.NoError(t, err)
+	assert.NotNil(t, b)
+
+	// Parent owner access succeeds
+	b, err = svc.GetBookingByID(context.Background(), "parent-1", "parent", "booking-1")
+	assert.NoError(t, err)
+	assert.NotNil(t, b)
+
+	// Other parent access fails
+	_, err = svc.GetBookingByID(context.Background(), "parent-2", "parent", "booking-1")
+	assert.Error(t, err)
+	assert.Equal(t, ErrUnauthorized, err)
+}

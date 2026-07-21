@@ -57,16 +57,31 @@ func (h *Handler) CreateSlot(c *gin.Context) {
 }
 
 func (h *Handler) ListSlots(c *gin.Context) {
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	schoolID := c.GetString("school_id")
 	teacherID := c.Query("teacher_id")
 	available := c.Query("available") == "true"
 
 	var fromTime, toTime time.Time
 	if fromStr := c.Query("from"); fromStr != "" {
-		fromTime, _ = time.Parse("2006-01-02", fromStr)
+		var err error
+		fromTime, err = time.Parse("2006-01-02", fromStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "parametro 'from' non valido, formato atteso: YYYY-MM-DD"})
+			return
+		}
 	}
 	if toStr := c.Query("to"); toStr != "" {
-		toTime, _ = time.Parse("2006-01-02", toStr)
+		var err error
+		toTime, err = time.Parse("2006-01-02", toStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "parametro 'to' non valido, formato atteso: YYYY-MM-DD"})
+			return
+		}
 	}
 
 	slots, err := h.service.ListSlots(c.Request.Context(), schoolID, teacherID, fromTime, toTime, available)
@@ -202,9 +217,20 @@ func (h *Handler) PatchSlot(c *gin.Context) {
 }
 
 func (h *Handler) GetBookingByID(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
 	id := c.Param("id")
-	booking, err := h.service.GetBookingByID(c.Request.Context(), id)
+	booking, err := h.service.GetBookingByID(c.Request.Context(), userID, role, id)
 	if err != nil {
+		if err == ErrUnauthorized {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}

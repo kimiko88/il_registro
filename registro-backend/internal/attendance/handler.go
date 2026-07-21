@@ -1,6 +1,9 @@
 package attendance
 
 import (
+	"bytes"
+	"encoding/csv"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -67,6 +70,11 @@ func parseWindowParams(c *gin.Context) (from, to time.Time, err error) {
 		}
 	} else {
 		to = time.Now()
+	}
+
+	if to.Sub(from) > 365*24*time.Hour {
+		err = errors.New("range di date troppo ampio (massimo 1 anno consentito)")
+		return
 	}
 	return
 }
@@ -188,9 +196,14 @@ func (h *Handler) MarkAttendance(c *gin.Context) {
 		return
 	}
 	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	schoolID := c.GetString("school_id")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "teacher" && role != "admin" && role != "superadmin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: only teachers or admins can mark attendance"})
 		return
 	}
 	if err := h.service.MarkAttendance(c.Request.Context(), userID, schoolID, req); err != nil {
@@ -207,9 +220,14 @@ func (h *Handler) MarkBulk(c *gin.Context) {
 		return
 	}
 	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	schoolID := c.GetString("school_id")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "teacher" && role != "admin" && role != "superadmin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: only teachers or admins can mark attendance"})
 		return
 	}
 	if err := h.service.MarkBulk(c.Request.Context(), userID, schoolID, req); err != nil {
@@ -285,11 +303,15 @@ func (h *Handler) RequestJustification(c *gin.Context) {
 func (h *Handler) GetPendingJustifications(c *gin.Context) {
 	actorID := c.GetString("user_id")
 	actorRole := c.GetString("role")
-	if actorID == "" || (actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin") {
+	if actorID == "" || (actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary") {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 	classID := c.Query("class_id")
+	if classID == "" && actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "class_id parameter required"})
+		return
+	}
 	res, err := h.service.GetPendingJustifications(c.Request.Context(), classID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -327,7 +349,6 @@ func (h *Handler) UpdateAttendance(c *gin.Context) {
 	teacherID := c.GetString("user_id")
 	schoolID := c.GetString("school_id")
 
-	// BUG FIX: verificare autenticazione prima di procedere
 	if teacherID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
@@ -347,7 +368,6 @@ func (h *Handler) UpdateAttendance(c *gin.Context) {
 }
 
 func (h *Handler) ExportAttendance(c *gin.Context) {
-	// BUG FIX: verificare ruolo prima di esportare dati GDPR-sensibili
 	actorID := c.GetString("user_id")
 	actorRole := c.GetString("role")
 	if actorID == "" {
@@ -373,12 +393,27 @@ func (h *Handler) ExportAttendance(c *gin.Context) {
 		return
 	}
 
-	c.Header("Content-Type", "text/csv")
-	c.Header("Content-Disposition", "attachment; filename=presenze.csv")
+	filename := fmt.Sprintf("presenze_%s_%s.csv", classID, date)
+	c.Header("Content-Type", "text/csv; charset=utf-8")
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
 
-	var csvData string = "StudentID,Status,IsJustified,Notes\n"
+	var buf bytes.Buffer
+	w := csv.NewWriter(&buf)
+	_ = w.Write([]string{"StudentID", "Status", "IsJustified", "Notes"})
+
 	for _, rec := range res.Records {
-		csvData += fmt.Sprintf("%s,%s,%t,%s\n", rec.StudentID, rec.Status, rec.IsJustified, rec.Notes)
+		notes := rec.Notes
+		if len(notes) > 0 && (notes[0] == '=' || notes[0] == '+' || notes[0] == '-' || notes[0] == '@') {
+			notes = "'" + notes
+		}
+		_ = w.Write([]string{
+			rec.StudentID,
+			string(rec.Status),
+			fmt.Sprintf("%t", rec.IsJustified),
+			notes,
+		})
 	}
-	c.String(http.StatusOK, csvData)
+	w.Flush()
+
+	c.String(http.StatusOK, buf.String())
 }

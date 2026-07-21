@@ -80,8 +80,20 @@ func (s *Service) GetSignatureReport(ctx context.Context, actorRole, communicati
 	return s.repo.GetSignatureReport(ctx, communicationID)
 }
 
-func (s *Service) GetMessageByID(ctx context.Context, id string) (*Message, error) {
-	return s.repo.Get(ctx, id)
+func (s *Service) GetMessageByID(ctx context.Context, userID, role, id string) (*Message, error) {
+	msg, err := s.repo.Get(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if role == "admin" || role == "superadmin" || msg.Type == "bacheca" || msg.SenderID == userID {
+		return msg, nil
+	}
+	for _, r := range msg.ReceiverIDs {
+		if r == userID {
+			return msg, nil
+		}
+	}
+	return nil, errors.New("unauthorized: cannot access communication")
 }
 
 func (s *Service) UpdateMessage(ctx context.Context, actorID, actorRole, id, subject, body string) error {

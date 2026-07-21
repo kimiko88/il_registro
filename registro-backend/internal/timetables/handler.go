@@ -15,6 +15,13 @@ func NewHandler(repo Repository) *Handler {
 }
 
 func (h *Handler) GetByClass(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	if userID == "" || role == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
 	classID := c.Param("id")
 	if classID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Class ID is required"})
@@ -31,6 +38,17 @@ func (h *Handler) GetByClass(c *gin.Context) {
 }
 
 func (h *Handler) Update(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: only administrative staff can update class schedules"})
+		return
+	}
+
 	classID := c.Param("id")
 	if classID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Class ID is required"})
@@ -77,5 +95,4 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	r.GET("/classes/:id/schedule", h.GetByClass)
 	r.POST("/classes/:id/schedule", h.Update)
 	r.GET("/timetables/my-schedule", h.GetMySchedule)
-	r.GET("/my-schedule", h.GetMySchedule)
 }

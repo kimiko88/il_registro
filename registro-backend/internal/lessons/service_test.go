@@ -32,25 +32,35 @@ func (m *mockRepository) GetLessonByID(id string) (*Lesson, error) {
 	if len(m.lessons) > 0 {
 		return &m.lessons[0], nil
 	}
-	return &Lesson{ID: id, Topic: "Test"}, nil
+	return &Lesson{ID: id, TeacherID: "teacher-1", Topic: "Test"}, nil
 }
 
 func (m *mockRepository) UpdateLesson(id string, req UpdateLessonRequest) (*Lesson, error) {
 	if m.errLesson != nil {
 		return nil, m.errLesson
 	}
-	return &Lesson{ID: id, Topic: req.Topic}, nil
+	return &Lesson{ID: id, TeacherID: "teacher-1", Topic: req.Topic}, nil
 }
 
 func (m *mockRepository) DeleteLesson(id string) error {
 	return m.errLesson
 }
 
+func (m *mockRepository) GetHomeworkByID(id string) (*Homework, error) {
+	if m.errHW != nil {
+		return nil, m.errHW
+	}
+	if len(m.homeworks) > 0 {
+		return &m.homeworks[0], nil
+	}
+	return &Homework{ID: id, TeacherID: "teacher-1"}, nil
+}
+
 func (m *mockRepository) UpdateHomework(id string, req UpdateHomeworkRequest) (*Homework, error) {
 	if m.errHW != nil {
 		return nil, m.errHW
 	}
-	return &Homework{ID: id, Description: req.Description}, nil
+	return &Homework{ID: id, TeacherID: "teacher-1", Description: req.Description}, nil
 }
 
 func (m *mockRepository) DeleteHomework(id string) error {
@@ -189,4 +199,39 @@ func TestGetLessonsAndHomeworks(t *testing.T) {
 	hws, err := s.GetHomeworks("class-1")
 	assert.NoError(t, err)
 	assert.Len(t, hws, 1)
+}
+
+func TestLessonOwnershipChecks(t *testing.T) {
+	repo := &mockRepository{
+		lessons: []Lesson{
+			{ID: "lesson-1", TeacherID: "teacher-owner"},
+		},
+		homeworks: []Homework{
+			{ID: "hw-1", TeacherID: "teacher-owner"},
+		},
+	}
+	s := NewService(repo)
+
+	// Update lesson - owner succeeds
+	res, err := s.UpdateLesson("teacher-owner", "teacher", "lesson-1", UpdateLessonRequest{Topic: "New Topic"})
+	assert.NoError(t, err)
+	assert.NotNil(t, res)
+
+	// Update lesson - non-owner fails
+	_, err = s.UpdateLesson("other-teacher", "teacher", "lesson-1", UpdateLessonRequest{Topic: "New Topic"})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "unauthorized")
+
+	// Update lesson - admin succeeds even if non-owner
+	_, err = s.UpdateLesson("admin-user", "admin", "lesson-1", UpdateLessonRequest{Topic: "New Topic"})
+	assert.NoError(t, err)
+
+	// Delete lesson - non-owner fails
+	err = s.DeleteLesson("other-teacher", "teacher", "lesson-1")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "unauthorized")
+
+	// Delete lesson - owner succeeds
+	err = s.DeleteLesson("teacher-owner", "teacher", "lesson-1")
+	assert.NoError(t, err)
 }

@@ -1,8 +1,11 @@
 package scrutiny
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
+
 	pkgLogger "registro-backend/pkg/logger"
 
 	"github.com/gin-gonic/gin"
@@ -45,8 +48,9 @@ func (h *Handler) ExportPagellaPDF(c *gin.Context) {
 		return
 	}
 
+	filename := fmt.Sprintf("pagella_%s_semestre%d.pdf", studentID, semester)
 	c.Header("Content-Type", "application/pdf")
-	c.Header("Content-Disposition", "attachment; filename=pagella.pdf")
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
 	c.Data(http.StatusOK, "application/pdf", pdfBytes)
 }
 
@@ -79,8 +83,12 @@ func (h *Handler) Save(c *gin.Context) {
 	coordinatorID := c.GetString("user_id")
 	actorRole := c.GetString("role")
 	if err := h.service.SaveScrutiny(c.Request.Context(), coordinatorID, actorRole, req); err != nil {
-		if err == ErrUnauthorizedScrutiny {
+		if err == ErrUnauthorizedScrutiny || strings.HasPrefix(err.Error(), "unauthorized") {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		if strings.Contains(err.Error(), "closed") || strings.Contains(err.Error(), "validated") {
+			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
 			return
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -96,7 +104,15 @@ func (h *Handler) Start(c *gin.Context) {
 	actorRole := c.GetString("role")
 
 	if err := h.service.StartScrutiny(c.Request.Context(), actorID, actorRole, classID, semester); err != nil {
-		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		if err == ErrUnauthorizedScrutiny || strings.HasPrefix(err.Error(), "unauthorized") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		if strings.Contains(err.Error(), "already") || strings.Contains(err.Error(), "closed") {
+			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "scrutiny started successfully"})
@@ -109,7 +125,15 @@ func (h *Handler) Validate(c *gin.Context) {
 	actorRole := c.GetString("role")
 
 	if err := h.service.ValidateScrutiny(c.Request.Context(), actorID, actorRole, classID, semester); err != nil {
-		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		if err == ErrUnauthorizedScrutiny || strings.HasPrefix(err.Error(), "unauthorized") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		if strings.Contains(err.Error(), "already") || strings.Contains(err.Error(), "closed") {
+			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "scrutiny validated successfully"})
@@ -122,7 +146,15 @@ func (h *Handler) Close(c *gin.Context) {
 	actorRole := c.GetString("role")
 
 	if err := h.service.CloseScrutiny(c.Request.Context(), actorID, actorRole, classID, semester); err != nil {
-		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		if err == ErrUnauthorizedScrutiny || strings.HasPrefix(err.Error(), "unauthorized") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		if strings.Contains(err.Error(), "already") || strings.Contains(err.Error(), "closed") {
+			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "scrutiny closed successfully"})

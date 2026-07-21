@@ -2,6 +2,7 @@ package communications
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -72,6 +73,10 @@ func (h *Handler) Send(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	if len(req.Body) > 64*1024 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "il corpo del messaggio supera il limite massimo consentito (64 KB)"})
+		return
+	}
 	msg, err := h.service.SendMessage(c.Request.Context(), uid, req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -90,8 +95,8 @@ func (h *Handler) Delete(c *gin.Context) {
 	role := c.GetString("role")
 	id := c.Param("id")
 	if err := h.service.DeleteMessage(c.Request.Context(), uid, role, id); err != nil {
-		if err.Error() == "forbidden" {
-			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		if err.Error() == "forbidden" || strings.HasPrefix(err.Error(), "unauthorized") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -116,7 +121,6 @@ func (h *Handler) Sign(c *gin.Context) {
 }
 
 // GetSignatures returns the list of users who signed a message.
-// BUG FIX: aggiunto controllo autenticazione.
 func (h *Handler) GetSignatures(c *gin.Context) {
 	uid := c.GetString("user_id")
 	if uid == "" {
@@ -133,7 +137,6 @@ func (h *Handler) GetSignatures(c *gin.Context) {
 }
 
 // GetSignatureReport returns the full signature report for a message.
-// Restricted to staff roles. BUG FIX: aggiunto controllo user_id esplicito.
 func (h *Handler) GetSignatureReport(c *gin.Context) {
 	uid := c.GetString("user_id")
 	if uid == "" {
@@ -155,16 +158,20 @@ func (h *Handler) GetSignatureReport(c *gin.Context) {
 }
 
 // GetByID returns a single message by ID.
-// BUG FIX: aggiunto controllo autenticazione.
 func (h *Handler) GetByID(c *gin.Context) {
 	uid := c.GetString("user_id")
+	role := c.GetString("role")
 	if uid == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 	id := c.Param("id")
-	msg, err := h.service.GetMessageByID(c.Request.Context(), id)
+	msg, err := h.service.GetMessageByID(c.Request.Context(), uid, role, id)
 	if err != nil {
+		if strings.HasPrefix(err.Error(), "unauthorized") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
@@ -188,6 +195,10 @@ func (h *Handler) Update(c *gin.Context) {
 		return
 	}
 	if err := h.service.UpdateMessage(c.Request.Context(), uid, role, id, req.Subject, req.Body); err != nil {
+		if strings.HasPrefix(err.Error(), "unauthorized") || err.Error() == "forbidden" {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

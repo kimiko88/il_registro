@@ -1,6 +1,7 @@
 package lessons
 
 import (
+	"errors"
 	"fmt"
 	"time"
 )
@@ -8,14 +9,14 @@ import (
 type Service interface {
 	CreateLesson(teacherID string, req CreateLessonRequest) (*LessonResponse, error)
 	GetLessonByID(id string) (*LessonResponse, error)
-	UpdateLesson(id string, req UpdateLessonRequest) (*LessonResponse, error)
-	DeleteLesson(id string) error
+	UpdateLesson(teacherID, role, id string, req UpdateLessonRequest) (*LessonResponse, error)
+	DeleteLesson(teacherID, role, id string) error
 	GetLessons(classID, subjectID string, date string) ([]LessonResponse, error)
 	GetLessonsByGroup(groupID string, date string) ([]LessonResponse, error)
 	GetTeacherDiary(teacherID string, fromDate, toDate string) ([]LessonResponse, error)
 	CreateHomework(teacherID string, req CreateHomeworkRequest) (*HomeworkResponse, error)
-	UpdateHomework(id string, req UpdateHomeworkRequest) (*HomeworkResponse, error)
-	DeleteHomework(id string) error
+	UpdateHomework(teacherID, role, id string, req UpdateHomeworkRequest) (*HomeworkResponse, error)
+	DeleteHomework(teacherID, role, id string) error
 	GetHomeworks(classID string) ([]HomeworkResponse, error)
 }
 
@@ -178,7 +179,15 @@ func (s *service) GetLessonByID(id string) (*LessonResponse, error) {
 	return s.mapLessonResponse(l), nil
 }
 
-func (s *service) UpdateLesson(id string, req UpdateLessonRequest) (*LessonResponse, error) {
+func (s *service) UpdateLesson(teacherID, role, id string, req UpdateLessonRequest) (*LessonResponse, error) {
+	existing, err := s.repo.GetLessonByID(id)
+	if err != nil {
+		return nil, err
+	}
+	if existing.TeacherID != teacherID && role != "admin" && role != "superadmin" {
+		return nil, errors.New("unauthorized: cannot edit another teacher's lesson")
+	}
+
 	l, err := s.repo.UpdateLesson(id, req)
 	if err != nil {
 		return nil, err
@@ -186,11 +195,27 @@ func (s *service) UpdateLesson(id string, req UpdateLessonRequest) (*LessonRespo
 	return s.mapLessonResponse(l), nil
 }
 
-func (s *service) DeleteLesson(id string) error {
+func (s *service) DeleteLesson(teacherID, role, id string) error {
+	existing, err := s.repo.GetLessonByID(id)
+	if err != nil {
+		return err
+	}
+	if existing.TeacherID != teacherID && role != "admin" && role != "superadmin" {
+		return errors.New("unauthorized: cannot delete another teacher's lesson")
+	}
+
 	return s.repo.DeleteLesson(id)
 }
 
-func (s *service) UpdateHomework(id string, req UpdateHomeworkRequest) (*HomeworkResponse, error) {
+func (s *service) UpdateHomework(teacherID, role, id string, req UpdateHomeworkRequest) (*HomeworkResponse, error) {
+	existing, err := s.repo.GetHomeworkByID(id)
+	if err != nil {
+		return nil, err
+	}
+	if existing.TeacherID != teacherID && role != "admin" && role != "superadmin" {
+		return nil, errors.New("unauthorized: cannot edit another teacher's homework")
+	}
+
 	h, err := s.repo.UpdateHomework(id, req)
 	if err != nil {
 		return nil, err
@@ -198,7 +223,15 @@ func (s *service) UpdateHomework(id string, req UpdateHomeworkRequest) (*Homewor
 	return s.mapHomeworkResponse(h), nil
 }
 
-func (s *service) DeleteHomework(id string) error {
+func (s *service) DeleteHomework(teacherID, role, id string) error {
+	existing, err := s.repo.GetHomeworkByID(id)
+	if err != nil {
+		return err
+	}
+	if existing.TeacherID != teacherID && role != "admin" && role != "superadmin" {
+		return errors.New("unauthorized: cannot delete another teacher's homework")
+	}
+
 	return s.repo.DeleteHomework(id)
 }
 

@@ -15,6 +15,7 @@ type Repository interface {
 	GetLessonsByTeacher(teacherID string, fromDate, toDate string) ([]Lesson, error)
 
 	CreateHomework(homework *Homework) error
+	GetHomeworkByID(id string) (*Homework, error)
 	UpdateHomework(id string, req UpdateHomeworkRequest) (*Homework, error)
 	DeleteHomework(id string) error
 	GetHomeworkByClass(classID string) ([]Homework, error)
@@ -281,6 +282,22 @@ func (r *repository) UpdateHomework(id string, req UpdateHomeworkRequest) (*Home
 	if err != nil {
 		return nil, err
 	}
+	queryGet := `SELECT ch.id, ch.lesson_id, ch.class_id, ch.subject_id, ch.teacher_id, COALESCE(u.first_name || ' ' || u.last_name, '') AS teacher_name, ch.due_date, ch.description, COALESCE(ch.type, 'compito'), ch.created_at, ch.updated_at 
+	             FROM class_homeworks ch
+	             LEFT JOIN users u ON ch.teacher_id = u.id
+	             WHERE ch.id = $1::uuid`
+	var h Homework
+	var lessonID sql.NullString
+	if err := r.db.QueryRow(queryGet, id).Scan(&h.ID, &lessonID, &h.ClassID, &h.SubjectID, &h.TeacherID, &h.TeacherName, &h.DueDate, &h.Description, &h.Type, &h.CreatedAt, &h.UpdatedAt); err != nil {
+		return nil, err
+	}
+	if lessonID.Valid {
+		h.LessonID = &lessonID.String
+	}
+	return &h, nil
+}
+
+func (r *repository) GetHomeworkByID(id string) (*Homework, error) {
 	queryGet := `SELECT ch.id, ch.lesson_id, ch.class_id, ch.subject_id, ch.teacher_id, COALESCE(u.first_name || ' ' || u.last_name, '') AS teacher_name, ch.due_date, ch.description, COALESCE(ch.type, 'compito'), ch.created_at, ch.updated_at 
 	             FROM class_homeworks ch
 	             LEFT JOIN users u ON ch.teacher_id = u.id
