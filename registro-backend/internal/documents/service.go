@@ -11,7 +11,8 @@ type Service interface {
 	CreateDocument(ctx context.Context, actorRole, userID, schoolID string, req CreateDocumentRequest) (*DocumentListResponse, error)
 	GetDocument(ctx context.Context, actorRole, schoolID, id string) (*DocumentDetailResponse, error)
 	UpdateDocument(ctx context.Context, actorRole, userID, id string, req UpdateDocumentRequest) error
-	DeleteDocument(ctx context.Context, actorRole, id string) error
+	DeleteDocument(ctx context.Context, actorRole, userID, id string) error
+	AttachFile(ctx context.Context, actorRole, schoolID, docID, fileURL string) error
 
 	// Workflow
 	ProcessWorkflow(ctx context.Context, userID, docID string, req WorkflowActionRequest) error
@@ -36,7 +37,7 @@ type Service interface {
 
 	// Status
 	LockDocument(ctx context.Context, id string) error
-	GetDocumentVersions(ctx context.Context, docID string) ([]DocumentVersion, error)
+	GetDocumentVersions(ctx context.Context, actorRole, schoolID, docID string) ([]DocumentVersion, error)
 }
 
 type service struct {
@@ -162,9 +163,18 @@ func (s *service) UpdateDocument(ctx context.Context, actorRole, userID, id stri
 	return s.repo.Update(doc, content, req.ChangeLog)
 }
 
-func (s *service) DeleteDocument(ctx context.Context, actorRole, id string) error {
+func (s *service) DeleteDocument(ctx context.Context, actorRole, userID, id string) error {
 	if !s.permManager.HasPermission(actorRole, permissions.DocumentDelete) {
 		return errors.New("unauthorized")
+	}
+	doc, err := s.repo.FindByID(id)
+	if err != nil {
+		return err
+	}
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "director" && actorRole != "principal" {
+		if doc.CreatedBy != userID {
+			return errors.New("unauthorized: can only delete own documents")
+		}
 	}
 	return s.repo.Delete(id)
 }
@@ -347,6 +357,39 @@ func convertVersions(vers []DocumentVersion) []VersionSummary {
 	return res
 }
 
-func (s *service) GetDocumentVersions(ctx context.Context, docID string) ([]DocumentVersion, error) {
+func (s *service) GetDocumentVersions(ctx context.Context, actorRole, schoolID, docID string) ([]DocumentVersion, error) {
+	if !s.permManager.HasPermission(actorRole, permissions.DocumentRead) {
+		return nil, errors.New("unauthorized")
+	}
+	doc, err := s.repo.FindByID(docID)
+	if err != nil {
+		return nil, err
+	}
+	if doc.SchoolID != schoolID {
+		return nil, errors.New("unauthorized: cannot access documents of another school")
+	}
 	return s.repo.GetVersions(docID)
+}
+
+func (s *service) AttachFile(ctx context.Context, actorRole, schoolID, docID, fileURL string) error {
+	if !s.permManager.HasPermission(actorRole, permissions.DocumentUpdate) {
+		return errors.New("unauthorized")
+	}
+	doc, err := s.repo.FindByID(docID)
+	if err != nil {
+		return err
+	}
+	if doc.SchoolID != schoolID {
+		return errors.New("unauthorized: cannot access documents of another school")
+	}
+
+	content, _ := s.repo.GetContent(docID, doc.CurrentVersion)
+	updatedContent := content
+	if updatedContent == "" {
+		updatedContent = "Attachment: " + fileURL
+	} else {
+		updatedContent += "\nAttachment: " + fileURL
+	}
+
+	return s.repo.Update(doc, updatedContent, "Attached file: "+fileURL)
 }

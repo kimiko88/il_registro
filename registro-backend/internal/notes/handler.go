@@ -3,6 +3,7 @@ package notes
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -18,8 +19,14 @@ func NewHandler(service *Service) *Handler {
 func (h *Handler) Create(c *gin.Context) {
 	userID := c.GetString("user_id")
 	schoolID := c.GetString("school_id")
+	role := c.GetString("role")
 	if userID == "" || schoolID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	if role != "teacher" && role != "admin" && role != "superadmin" && role != "principal" && role != "vice_principal" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: role cannot create discipline notes"})
 		return
 	}
 
@@ -43,7 +50,16 @@ func (h *Handler) Approve(c *gin.Context) {
 	noteID := c.Param("id")
 
 	if err := h.service.ApproveNote(c.Request.Context(), actorID, actorRole, noteID); err != nil {
-		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		errStr := err.Error()
+		if strings.HasPrefix(errStr, "unauthorized") {
+			c.JSON(http.StatusForbidden, gin.H{"error": errStr})
+			return
+		}
+		if strings.Contains(errStr, "not found") || errStr == "sql: no rows in result set" {
+			c.JSON(http.StatusNotFound, gin.H{"error": "note not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": errStr})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "note approved successfully"})
@@ -102,8 +118,18 @@ func (h *Handler) List(c *gin.Context) {
 		return
 	}
 
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "50"))
+	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	limit, err := strconv.Atoi(c.DefaultQuery("limit", "50"))
+	if err != nil || limit < 1 {
+		limit = 50
+	}
+	if limit > 100 {
+		limit = 100
+	}
 
 	filter := NoteFilter{
 		StudentID: c.Query("student_id"),
@@ -120,7 +146,7 @@ func (h *Handler) List(c *gin.Context) {
 
 	notes, err := h.service.ListNotes(c.Request.Context(), filter)
 	if err != nil {
-		if err.Error() == "unauthorized: not a guardian of this student" || err.Error() == "unauthorized: parent must specify student_id" {
+		if strings.HasPrefix(err.Error(), "unauthorized") {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}

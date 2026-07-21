@@ -52,6 +52,7 @@ import (
 	"registro-backend/internal/ws"
 	"registro-backend/pkg/jwt"
 	"registro-backend/pkg/logger"
+	"registro-backend/pkg/upload"
 )
 
 func main() {
@@ -140,7 +141,8 @@ func main() {
 	classesH := classes.NewHandler(classesSvc)
 	gradesH := grades.NewHandler(gradesSvc, gradesAnalytics)
 	attendanceH := attendance.NewHandler(attendanceSvc)
-	docsH := documents.NewHandler(docsSvc)
+	docsUploader := upload.NewSupabaseUploader(cfg.Supabase.URL, cfg.Supabase.Key, cfg.Supabase.Bucket)
+	docsH := documents.NewHandler(docsSvc, docsUploader)
 	schedH := scheduling.NewHandler(schedSvc)
 	signaturesH := signatures.NewHandler(signaturesSvc)
 

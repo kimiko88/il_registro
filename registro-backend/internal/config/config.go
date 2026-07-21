@@ -34,8 +34,9 @@ type JWTConfig struct {
 }
 
 type SupabaseConfig struct {
-	URL string
-	Key string
+	URL    string
+	Key    string
+	Bucket string
 }
 
 type SPIDConfig struct {
@@ -64,6 +65,7 @@ func LoadConfig() (*Config, error) {
 	viper.SetDefault("SERVER_PORT", "8080")
 	viper.SetDefault("SERVER_MODE", "release")
 	viper.SetDefault("DB_SSLMODE", "require")
+	viper.SetDefault("SUPABASE_STORAGE_BUCKET", "documents")
 
 	config := &Config{
 		Server: ServerConfig{
@@ -82,8 +84,9 @@ func LoadConfig() (*Config, error) {
 			Secret: viper.GetString("JWT_SECRET"),
 		},
 		Supabase: SupabaseConfig{
-			URL: viper.GetString("SUPABASE_URL"),
-			Key: viper.GetString("SUPABASE_KEY"),
+			URL:    viper.GetString("SUPABASE_URL"),
+			Key:    viper.GetString("SUPABASE_KEY"),
+			Bucket: viper.GetString("SUPABASE_STORAGE_BUCKET"),
 		},
 		SPID: SPIDConfig{
 			EntityID:       viper.GetString("SPID_ENTITY_ID"),
