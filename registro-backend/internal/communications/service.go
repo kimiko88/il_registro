@@ -119,3 +119,7 @@ func (s *Service) GetUnreadUsers(ctx context.Context, communicationID string) ([
 func (s *Service) GetUnreadCount(ctx context.Context, userID string) (int, error) {
 	return s.repo.GetUnreadCount(ctx, userID)
 }
+
+func (s *Service) ListCircolari(ctx context.Context, userID, year string) ([]*Message, error) {
+	return s.repo.ListCircolari(ctx, userID, year)
+}

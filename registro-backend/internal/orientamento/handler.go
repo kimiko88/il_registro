@@ -30,12 +30,23 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 }
 
 func (h *Handler) CreateEvent(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "teacher" && role != "admin" && role != "superadmin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
 	var req CreateEventRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	userID := c.GetString("user_id")
+
 	if err := h.service.CreateEvent(c.Request.Context(), userID, req); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -44,6 +55,12 @@ func (h *Handler) CreateEvent(c *gin.Context) {
 }
 
 func (h *Handler) GetEvents(c *gin.Context) {
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
 	res, err := h.service.GetEvents(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -53,6 +70,12 @@ func (h *Handler) GetEvents(c *gin.Context) {
 }
 
 func (h *Handler) RegisterStudent(c *gin.Context) {
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
 	var req struct {
 		EventID string `json:"event_id"`
 	}
@@ -60,7 +83,7 @@ func (h *Handler) RegisterStudent(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	userID := c.GetString("user_id")
+
 	if err := h.service.RegisterStudent(c.Request.Context(), userID, req.EventID); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -70,6 +93,11 @@ func (h *Handler) RegisterStudent(c *gin.Context) {
 
 func (h *Handler) GetMyEvents(c *gin.Context) {
 	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
 	res, err := h.service.GetMyEvents(c.Request.Context(), userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -79,6 +107,17 @@ func (h *Handler) GetMyEvents(c *gin.Context) {
 }
 
 func (h *Handler) MarkAttendance(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "teacher" && role != "admin" && role != "superadmin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
 	id := c.Param("id")
 	var req struct {
 		StudentID string `json:"student_id"`
@@ -107,8 +146,11 @@ func (h *Handler) SavePreference(c *gin.Context) {
 		return
 	}
 
-	req.StudentID = userID
-	c.JSON(http.StatusOK, req)
+	if err := h.service.SavePreference(c.Request.Context(), userID, req); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "preference saved"})
 }
 
 func (h *Handler) GetPreference(c *gin.Context) {
@@ -118,10 +160,10 @@ func (h *Handler) GetPreference(c *gin.Context) {
 		return
 	}
 
-	pref := StudentPreference{
-		StudentID:      userID,
-		PreferredTrack: "University",
-		TargetField:    "Ingegneria Informatica",
+	pref, err := h.service.GetPreference(c.Request.Context(), userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
 	c.JSON(http.StatusOK, pref)
 }

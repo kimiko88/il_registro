@@ -21,6 +21,7 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 		n.PUT("/read-all", h.MarkAllAsRead)
 		n.PUT("/:id/read", h.MarkAsRead)
 		n.POST("/push-tokens", h.RegisterToken)
+		n.POST("/register-device", h.RegisterDevice)
 		n.DELETE("/push-tokens", h.UnregisterToken)
 		n.POST("/send-push", h.SendPush)
 	}
@@ -89,6 +90,33 @@ func (h *Handler) RegisterToken(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "push token registered"})
+}
+
+func (h *Handler) RegisterDevice(c *gin.Context) {
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	var req struct {
+		FCMToken string `json:"fcm_token" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	tokenReq := RegisterTokenRequest{
+		DeviceToken: req.FCMToken,
+		Platform:    "mobile",
+	}
+
+	if err := h.service.RegisterToken(c.Request.Context(), userID, tokenReq); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "device registered"})
 }
 
 func (h *Handler) UnregisterToken(c *gin.Context) {

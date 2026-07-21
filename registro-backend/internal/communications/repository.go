@@ -24,6 +24,7 @@ type Repository interface {
 	MarkAsRead(ctx context.Context, communicationID, userID, ipAddress string) error
 	GetUnreadUsers(ctx context.Context, communicationID string) ([]string, error)
 	GetUnreadCount(ctx context.Context, userID string) (int, error)
+	ListCircolari(ctx context.Context, userID, year string) ([]*Message, error)
 }
 
 type PostgresRepository struct {
@@ -300,4 +301,44 @@ func (r *PostgresRepository) GetUnreadCount(ctx context.Context, userID string) 
 	var count int
 	err := r.db.QueryRowContext(ctx, query, userID).Scan(&count)
 	return count, err
+}
+
+func (r *PostgresRepository) ListCircolari(ctx context.Context, userID, year string) ([]*Message, error) {
+	query := `
+		SELECT c.id, c.school_id, c.sender_id, c.receiver_ids, c.subject, c.body, c.attachment_url, c.type,
+		       COALESCE(c.requires_signature, false), c.signature_deadline, c.created_at,
+		       EXISTS(SELECT 1 FROM communication_signatures cs WHERE cs.communication_id = c.id AND cs.user_id = $1::uuid) AS is_signed
+		FROM communications c
+		WHERE c.type = 'circular'
+		  AND ($2 = '' OR EXTRACT(YEAR FROM c.created_at)::text = $2)
+		ORDER BY c.created_at DESC
+	`
+	rows, err := r.db.QueryContext(ctx, query, userID, year)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var msgs []*Message
+	for rows.Next() {
+		m := &Message{}
+		var receivers []string
+		var schID, attachURL sql.NullString
+		if err := rows.Scan(
+			&m.ID, &schID, &m.SenderID, pq.Array(&receivers), &m.Subject, &m.Body, &attachURL, &m.Type,
+			&m.RequiresSignature, &m.SignatureDeadline, &m.CreatedAt, &m.IsSigned,
+		); err != nil {
+			return nil, err
+		}
+		if schID.Valid {
+			m.SchoolID = &schID.String
+		}
+		if attachURL.Valid {
+			m.AttachmentURL = &attachURL.String
+		}
+		m.ReceiverIDs = receivers
+		m.IsOfficialCircular = true
+		msgs = append(msgs, m)
+	}
+	return msgs, nil
 }

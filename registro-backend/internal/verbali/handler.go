@@ -28,6 +28,7 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 		v.POST("/:id/sign", h.SignVerbale)
 		v.GET("/:id/signatures", h.GetSignatures)
 		v.GET("/:id/pdf", h.ExportPDF)
+		v.GET("/:id/export/pdf", h.ExportPDF)
 	}
 }
 
@@ -198,7 +199,10 @@ func (h *Handler) ExportPDF(c *gin.Context) {
 		return
 	}
 
+	dateStr := verbale.CreatedAt.Format("20060102")
+	filename := "verbale_" + verbale.MeetingID + "_" + dateStr + ".pdf"
+
 	pdfBytes := []byte("%PDF-1.4 Verbale PDF Document\nTitle: " + verbale.Title + "\nContent: " + verbale.Content)
-	c.Header("Content-Disposition", "attachment; filename=verbale_"+id+".pdf")
+	c.Header("Content-Disposition", "attachment; filename="+filename)
 	c.Data(http.StatusOK, "application/pdf", pdfBytes)
 }

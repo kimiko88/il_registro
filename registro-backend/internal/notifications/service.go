@@ -63,6 +63,16 @@ func (s *Service) CreateInAppNotification(ctx context.Context, userID, title, bo
 	if err := s.repo.CreateDBNotification(ctx, n); err != nil {
 		return nil, err
 	}
+
+	// Async FCM / Push dispatch
+	go func() {
+		_, _ = s.SendPushNotification(context.Background(), SendNotificationRequest{
+			UserID: userID,
+			Title:  title,
+			Body:   body,
+		})
+	}()
+
 	return n, nil
 }
 

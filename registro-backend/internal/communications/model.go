@@ -19,6 +19,7 @@ type Message struct {
 	IsSigned          bool       `json:"is_signed"`
 	IsOfficialCircular bool      `json:"is_official_circular"`
 	CircularNumber    *int       `json:"circular_number,omitempty"`
+	NumeroProgressivo *int       `json:"numero_progressivo,omitempty" db:"numero_progressivo"`
 }
 
 type CommunicationSignature struct {

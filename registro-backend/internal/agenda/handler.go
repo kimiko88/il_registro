@@ -65,11 +65,20 @@ func (h *Handler) GetCalendar(c *gin.Context) {
 	agendaType := c.Query("type")
 
 	var fromTime, toTime time.Time
+	var err error
 	if fromStr := c.Query("from"); fromStr != "" {
-		fromTime, _ = time.Parse("2006-01-02", fromStr)
+		fromTime, err = time.Parse("2006-01-02", fromStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid 'from' date format (expected YYYY-MM-DD)"})
+			return
+		}
 	}
 	if toStr := c.Query("to"); toStr != "" {
-		toTime, _ = time.Parse("2006-01-02", toStr)
+		toTime, err = time.Parse("2006-01-02", toStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid 'to' date format (expected YYYY-MM-DD)"})
+			return
+		}
 	}
 
 	filter := CalendarFilter{
@@ -89,6 +98,12 @@ func (h *Handler) GetCalendar(c *gin.Context) {
 }
 
 func (h *Handler) GetByID(c *gin.Context) {
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
 	id := c.Param("id")
 	item, err := h.service.GetAgendaItem(c.Request.Context(), id)
 	if err != nil {

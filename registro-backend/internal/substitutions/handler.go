@@ -20,7 +20,9 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 		g.POST("", h.Create)
 		g.GET("", h.ListBySchool)
 		g.GET("/my", h.ListByTeacher)
+		g.GET("/my-today", h.ListMyToday)
 		g.PUT("/:id/assign", h.AssignSubstitute)
+		g.PATCH("/:id/confirm", h.Confirm)
 	}
 }
 
@@ -79,6 +81,21 @@ func (h *Handler) ListByTeacher(c *gin.Context) {
 	c.JSON(http.StatusOK, subs)
 }
 
+func (h *Handler) ListMyToday(c *gin.Context) {
+	teacherID := c.GetString("user_id")
+	if teacherID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	subs, err := h.service.ListMyToday(c.Request.Context(), teacherID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, subs)
+}
+
 func (h *Handler) AssignSubstitute(c *gin.Context) {
 	role := c.GetString("role")
 	if role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" {
@@ -98,4 +115,19 @@ func (h *Handler) AssignSubstitute(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "substitute assigned"})
+}
+
+func (h *Handler) Confirm(c *gin.Context) {
+	teacherID := c.GetString("user_id")
+	if teacherID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	id := c.Param("id")
+	if err := h.service.ConfirmSubstitution(c.Request.Context(), id, teacherID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "substitution confirmed"})
 }

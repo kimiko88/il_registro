@@ -79,6 +79,17 @@ func (h *Handler) SubmitConsent(c *gin.Context) {
 }
 
 func (h *Handler) ListConsents(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "teacher" && role != "admin" && role != "superadmin" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
 	tripID := c.Param("id")
 	consents, err := h.service.ListConsents(c.Request.Context(), tripID)
 	if err != nil {

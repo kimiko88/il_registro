@@ -2,6 +2,7 @@ package schoolcalendar
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -47,7 +48,7 @@ func (h *Handler) CreateAcademicPeriod(c *gin.Context) {
 
 	period, err := h.service.CreateAcademicPeriod(c.Request.Context(), actorRole, schoolID, req)
 	if err != nil {
-		if err.Error() == "forbidden: solo la segreteria può creare i periodi valutativi" {
+		if strings.Contains(err.Error(), "forbidden") {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
@@ -91,7 +92,7 @@ func (h *Handler) SetYear(c *gin.Context) {
 	}
 	res, err := h.service.SetSchoolYear(c.Request.Context(), actorID, actorRole, schoolID, req)
 	if err != nil {
-		if err.Error() == "forbidden: solo la segreteria può impostare l'anno scolastico" {
+		if strings.Contains(err.Error(), "forbidden") {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
@@ -109,7 +110,7 @@ func (h *Handler) GetYear(c *gin.Context) {
 	}
 	res, err := h.service.GetSchoolYear(c.Request.Context(), schoolID)
 	if err != nil {
-		if err.Error() == "anno scolastico non ancora configurato" {
+		if err.Error() == "anno scolastico non ancora configurato" || strings.Contains(err.Error(), "non ancora configurato") {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
 		}
@@ -134,7 +135,7 @@ func (h *Handler) AddNonTeachingDay(c *gin.Context) {
 	}
 	res, err := h.service.AddNonTeachingDay(c.Request.Context(), actorID, actorRole, schoolID, req)
 	if err != nil {
-		if err.Error() == "forbidden: solo la segreteria può gestire i giorni non didattici" {
+		if strings.Contains(err.Error(), "forbidden") {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
@@ -149,7 +150,7 @@ func (h *Handler) DeleteNonTeachingDay(c *gin.Context) {
 	schoolID := c.GetString("school_id")
 	id := c.Param("id")
 	if err := h.service.DeleteNonTeachingDay(c.Request.Context(), actorRole, schoolID, id); err != nil {
-		if err.Error() == "forbidden: solo la segreteria può gestire i giorni non didattici" {
+		if strings.Contains(err.Error(), "forbidden") {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}

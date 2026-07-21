@@ -11,8 +11,8 @@ import (
 type Service interface {
 	CreateProject(ctx context.Context, schoolID, actorRole, teacherID string, req CreateProjectRequest) error
 	GetProjects(ctx context.Context, schoolID string) ([]Project, error)
-	UpdateProject(ctx context.Context, actorRole, id string, req CreateProjectRequest) error
-	DeleteProject(ctx context.Context, actorRole, id string) error
+	UpdateProject(ctx context.Context, actorID, actorRole, id string, req CreateProjectRequest) error
+	DeleteProject(ctx context.Context, actorID, actorRole, id string) error
 	AssignStudent(ctx context.Context, actorRole, projectID, studentID string) error
 
 	LogHours(ctx context.Context, studentID string, req LogHourRequest) error
@@ -135,14 +135,16 @@ func (s *service) CreateCompany(ctx context.Context, schoolID, actorRole string,
 	return s.repo.CreateCompany(ctx, &c)
 }
 
-func (s *service) UpdateProject(ctx context.Context, actorRole, id string, req CreateProjectRequest) error {
+func (s *service) UpdateProject(ctx context.Context, actorID, actorRole, id string, req CreateProjectRequest) error {
 	if !s.permManager.HasPermission(actorRole, permissions.PCTOUpdate) {
 		return errors.New("unauthorized")
 	}
-	// Simplified update logic
 	p, err := s.repo.GetProjectByID(ctx, id)
 	if err != nil {
 		return err
+	}
+	if p.CreatedBy != actorID && actorRole != "admin" && actorRole != "superadmin" {
+		return errors.New("unauthorized: not the creator of this PCTO project")
 	}
 	p.Title = req.Title
 	p.Description = req.Description
@@ -150,9 +152,16 @@ func (s *service) UpdateProject(ctx context.Context, actorRole, id string, req C
 	return s.repo.UpdateProject(ctx, p)
 }
 
-func (s *service) DeleteProject(ctx context.Context, actorRole, id string) error {
+func (s *service) DeleteProject(ctx context.Context, actorID, actorRole, id string) error {
 	if !s.permManager.HasPermission(actorRole, permissions.PCTODelete) {
 		return errors.New("unauthorized")
+	}
+	p, err := s.repo.GetProjectByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	if p.CreatedBy != actorID && actorRole != "admin" && actorRole != "superadmin" {
+		return errors.New("unauthorized: not the creator of this PCTO project")
 	}
 	return s.repo.DeleteProject(ctx, id)
 }

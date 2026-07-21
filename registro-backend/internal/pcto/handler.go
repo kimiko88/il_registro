@@ -47,6 +47,12 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 }
 
 func (h *Handler) GetStats(c *gin.Context) {
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
 	schoolID := getSchoolID(c)
 	res, err := h.service.GetStats(c.Request.Context(), schoolID)
 	if err != nil {
@@ -73,6 +79,12 @@ func (h *Handler) CreateProject(c *gin.Context) {
 }
 
 func (h *Handler) GetProjects(c *gin.Context) {
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
 	schoolID := getSchoolID(c)
 	res, err := h.service.GetProjects(c.Request.Context(), schoolID)
 	if err != nil {
@@ -160,13 +172,19 @@ func (h *Handler) GetProjectDetails(c *gin.Context) {
 }
 func (h *Handler) UpdateProject(c *gin.Context) {
 	id := c.Param("id")
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
 	var req CreateProjectRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	role := c.GetString("role")
-	if err := h.service.UpdateProject(c.Request.Context(), role, id, req); err != nil {
+	if err := h.service.UpdateProject(c.Request.Context(), userID, role, id, req); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -175,8 +193,14 @@ func (h *Handler) UpdateProject(c *gin.Context) {
 
 func (h *Handler) DeleteProject(c *gin.Context) {
 	id := c.Param("id")
+	userID := c.GetString("user_id")
 	role := c.GetString("role")
-	if err := h.service.DeleteProject(c.Request.Context(), role, id); err != nil {
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	if err := h.service.DeleteProject(c.Request.Context(), userID, role, id); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

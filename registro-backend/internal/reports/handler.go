@@ -1,8 +1,10 @@
 package reports
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -39,7 +41,8 @@ func (h *Handler) ExportGradesExcel(c *gin.Context) {
 		return
 	}
 
+	filename := fmt.Sprintf("matrice_voti_%s_q%d_%s.xlsx", classID, semester, time.Now().Format("20060102_150405"))
 	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-	c.Header("Content-Disposition", "attachment; filename=matrice_voti.xlsx")
+	c.Header("Content-Disposition", "attachment; filename="+filename)
 	c.Data(http.StatusOK, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", excelBytes)
 }

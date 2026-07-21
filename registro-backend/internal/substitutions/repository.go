@@ -14,6 +14,7 @@ type Repository interface {
 	ListBySchool(ctx context.Context, schoolID, date string) ([]*Substitution, error)
 	ListByTeacher(ctx context.Context, teacherID string) ([]*Substitution, error)
 	AssignSubstitute(ctx context.Context, id string, substituteTeacherID string, notes string) error
+	ConfirmSubstitution(ctx context.Context, id string, substituteTeacherID string) error
 }
 
 type PostgresRepository struct {
@@ -138,5 +139,15 @@ func (r *PostgresRepository) AssignSubstitute(ctx context.Context, id string, su
 		WHERE id = $1::uuid
 	`
 	_, err := r.db.ExecContext(ctx, query, id, substituteTeacherID, notes)
+	return err
+}
+
+func (r *PostgresRepository) ConfirmSubstitution(ctx context.Context, id string, substituteTeacherID string) error {
+	query := `
+		UPDATE substitutions
+		SET status = 'confirmed'
+		WHERE id = $1::uuid AND (substitute_teacher_id = $2::uuid OR $2 = '')
+	`
+	_, err := r.db.ExecContext(ctx, query, id, substituteTeacherID)
 	return err
 }

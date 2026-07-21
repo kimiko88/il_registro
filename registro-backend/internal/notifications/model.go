@@ -18,6 +18,10 @@ type RegisterTokenRequest struct {
 	Platform    string `json:"platform"` // 'android', 'ios', 'web'
 }
 
+type RegisterDeviceRequest struct {
+	FCMToken string `json:"fcm_token" binding:"required"`
+}
+
 type SendNotificationRequest struct {
 	UserID  string `json:"user_id" binding:"required"`
 	Title   string `json:"title" binding:"required"`

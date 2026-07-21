@@ -43,6 +43,8 @@ func (h *Handler) RegisterRoutes(router *gin.RouterGroup) {
 		grades.POST("/bulk-import", h.BulkImport)
 		grades.POST("/weight-config", h.SetWeightConfig)
 		grades.GET("/weight-config/:subjectID", h.GetWeightConfig)
+		grades.POST("/weights", h.SetWeightConfig)
+		grades.GET("/weights", h.GetWeightConfig)
 
 		grades.GET("/student/:studentID", h.GetStudentGrades)
 		grades.GET("/class/:classID", h.GetClassGrades)
@@ -831,7 +833,10 @@ func (h *Handler) SetWeightConfig(c *gin.Context) {
 func (h *Handler) GetWeightConfig(c *gin.Context) {
 	subjectID := c.Param("subjectID")
 	if subjectID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "subjectID is required"})
+		subjectID = c.Query("subject_id")
+	}
+	if subjectID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "subject_id is required"})
 		return
 	}
 

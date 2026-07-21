@@ -89,6 +89,14 @@ func (m *MockRepository) GetUnreadCount(ctx context.Context, userID string) (int
 	return args.Int(0), args.Error(1)
 }
 
+func (m *MockRepository) ListCircolari(ctx context.Context, userID, year string) ([]*Message, error) {
+	args := m.Called(ctx, userID, year)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*Message), args.Error(1)
+}
+
 func TestService_SendMessage(t *testing.T) {
 	mockRepo := new(MockRepository)
 	svc := NewService(mockRepo)
