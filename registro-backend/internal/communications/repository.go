@@ -39,15 +39,15 @@ func (r *PostgresRepository) Create(ctx context.Context, msg *Message) error {
 	msg.CreatedAt = time.Now()
 
 	query := `
-		INSERT INTO communications (id, school_id, sender_id, receiver_ids, subject, body, type, requires_signature, signature_deadline, created_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		INSERT INTO communications (id, school_id, sender_id, receiver_ids, subject, body, attachment_url, type, requires_signature, signature_deadline, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 	`
 	var schoolUUID interface{} = nil
 	if msg.SchoolID != nil && *msg.SchoolID != "" {
 		schoolUUID = *msg.SchoolID
 	}
 	_, err := r.db.ExecContext(ctx, query,
-		msg.ID, schoolUUID, msg.SenderID, pq.Array(msg.ReceiverIDs), msg.Subject, msg.Body,
+		msg.ID, schoolUUID, msg.SenderID, pq.Array(msg.ReceiverIDs), msg.Subject, msg.Body, msg.AttachmentURL,
 		msg.Type, msg.RequiresSignature, msg.SignatureDeadline, msg.CreatedAt,
 	)
 	return err
@@ -55,7 +55,7 @@ func (r *PostgresRepository) Create(ctx context.Context, msg *Message) error {
 
 func (r *PostgresRepository) List(ctx context.Context, userID string) ([]*Message, error) {
 	query := `
-		SELECT c.id, c.school_id, c.sender_id, c.receiver_ids, c.subject, c.body, c.type,
+		SELECT c.id, c.school_id, c.sender_id, c.receiver_ids, c.subject, c.body, c.attachment_url, c.type,
 		       COALESCE(c.requires_signature, false), c.signature_deadline, c.created_at,
 		       EXISTS(SELECT 1 FROM communication_signatures cs WHERE cs.communication_id = c.id AND cs.user_id = $1::uuid) AS is_signed
 		FROM communications c
@@ -72,15 +72,18 @@ func (r *PostgresRepository) List(ctx context.Context, userID string) ([]*Messag
 	for rows.Next() {
 		m := &Message{}
 		var receivers []string
-		var schoolID sql.NullString
+		var schoolID, attachURL sql.NullString
 		if err := rows.Scan(
-			&m.ID, &schoolID, &m.SenderID, pq.Array(&receivers), &m.Subject, &m.Body, &m.Type,
+			&m.ID, &schoolID, &m.SenderID, pq.Array(&receivers), &m.Subject, &m.Body, &attachURL, &m.Type,
 			&m.RequiresSignature, &m.SignatureDeadline, &m.CreatedAt, &m.IsSigned,
 		); err != nil {
 			return nil, err
 		}
 		if schoolID.Valid {
 			m.SchoolID = &schoolID.String
+		}
+		if attachURL.Valid {
+			m.AttachmentURL = &attachURL.String
 		}
 		m.ReceiverIDs = receivers
 		msgs = append(msgs, m)
@@ -90,7 +93,7 @@ func (r *PostgresRepository) List(ctx context.Context, userID string) ([]*Messag
 
 func (r *PostgresRepository) ListBacheca(ctx context.Context, schoolID, userID string) ([]*Message, error) {
 	query := `
-		SELECT c.id, c.school_id, c.sender_id, c.receiver_ids, c.subject, c.body, c.type,
+		SELECT c.id, c.school_id, c.sender_id, c.receiver_ids, c.subject, c.body, c.attachment_url, c.type,
 		       COALESCE(c.requires_signature, false), c.signature_deadline, c.created_at,
 		       EXISTS(SELECT 1 FROM communication_signatures cs WHERE cs.communication_id = c.id AND cs.user_id = $2::uuid) AS is_signed
 		FROM communications c
@@ -109,15 +112,18 @@ func (r *PostgresRepository) ListBacheca(ctx context.Context, schoolID, userID s
 	for rows.Next() {
 		m := &Message{}
 		var receivers []string
-		var schID sql.NullString
+		var schID, attachURL sql.NullString
 		if err := rows.Scan(
-			&m.ID, &schID, &m.SenderID, pq.Array(&receivers), &m.Subject, &m.Body, &m.Type,
+			&m.ID, &schID, &m.SenderID, pq.Array(&receivers), &m.Subject, &m.Body, &attachURL, &m.Type,
 			&m.RequiresSignature, &m.SignatureDeadline, &m.CreatedAt, &m.IsSigned,
 		); err != nil {
 			return nil, err
 		}
 		if schID.Valid {
 			m.SchoolID = &schID.String
+		}
+		if attachURL.Valid {
+			m.AttachmentURL = &attachURL.String
 		}
 		m.ReceiverIDs = receivers
 		msgs = append(msgs, m)
@@ -219,15 +225,15 @@ func (r *PostgresRepository) GetSignatureReport(ctx context.Context, communicati
 
 func (r *PostgresRepository) Get(ctx context.Context, id string) (*Message, error) {
 	query := `
-		SELECT id, school_id, sender_id, receiver_ids, subject, body, type, COALESCE(requires_signature, false), signature_deadline, created_at
+		SELECT id, school_id, sender_id, receiver_ids, subject, body, attachment_url, type, COALESCE(requires_signature, false), signature_deadline, created_at
 		FROM communications
 		WHERE id = $1::uuid
 	`
 	m := &Message{}
 	var receivers []string
-	var schID sql.NullString
+	var schID, attachURL sql.NullString
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
-		&m.ID, &schID, &m.SenderID, pq.Array(&receivers), &m.Subject, &m.Body, &m.Type,
+		&m.ID, &schID, &m.SenderID, pq.Array(&receivers), &m.Subject, &m.Body, &attachURL, &m.Type,
 		&m.RequiresSignature, &m.SignatureDeadline, &m.CreatedAt,
 	)
 	if err != nil {
@@ -235,6 +241,9 @@ func (r *PostgresRepository) Get(ctx context.Context, id string) (*Message, erro
 	}
 	if schID.Valid {
 		m.SchoolID = &schID.String
+	}
+	if attachURL.Valid {
+		m.AttachmentURL = &attachURL.String
 	}
 	m.ReceiverIDs = receivers
 	return m, nil

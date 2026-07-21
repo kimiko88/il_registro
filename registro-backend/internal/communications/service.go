@@ -24,6 +24,7 @@ func (s *Service) SendMessage(ctx context.Context, senderID string, req CreateMe
 		ReceiverIDs:       req.Recipients,
 		Subject:           req.Subject,
 		Body:              req.Body,
+		AttachmentURL:     req.AttachmentURL,
 		Type:              req.Type,
 		RequiresSignature: req.RequiresSignature,
 	}

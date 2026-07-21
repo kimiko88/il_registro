@@ -448,3 +448,22 @@ func (h *Handler) RemoveGuardian(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "guardian removed"})
 }
+
+func (h *Handler) GetFascicolo(c *gin.Context) {
+	studentID := c.Param("id")
+	actorID := getActorID(c)
+	actorRole := getActorRole(c)
+
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	fascicolo, err := h.service.GetStudentFascicolo(c.Request.Context(), actorID, actorRole, studentID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, fascicolo)
+}

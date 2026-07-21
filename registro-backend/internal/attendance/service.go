@@ -41,6 +41,7 @@ type Service interface {
 	// Parent Access (with guardianship checks)
 	GetChildAttendance(ctx context.Context, parentID, studentID string, from, to time.Time) ([]AttendanceResponse, error)
 	GetChildSummary(ctx context.Context, parentID, studentID, schoolID string) (*SummaryResponse, error)
+	GetChildAttendanceTrends(ctx context.Context, parentID, studentID string) (*TrendsResponse, error)
 }
 
 type service struct {
@@ -443,4 +444,61 @@ func (s *service) GetChildSummary(ctx context.Context, parentID, studentID, scho
 		return nil, fmt.Errorf("unauthorized: not a guardian of this student")
 	}
 	return s.GetStudentSummary(ctx, studentID, schoolID)
+}
+
+func (s *service) GetChildAttendanceTrends(ctx context.Context, parentID, studentID string) (*TrendsResponse, error) {
+	if s.userRepo == nil {
+		return nil, fmt.Errorf("unauthorized: userRepo is nil")
+	}
+	isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, studentID)
+	if err != nil {
+		return nil, err
+	}
+	if !isGuardian {
+		return nil, fmt.Errorf("unauthorized: not a guardian of this student")
+	}
+
+	from := time.Now().AddDate(-1, 0, 0)
+	to := time.Now()
+	atts, err := s.repo.FindByStudent(studentID, from, to)
+	if err != nil {
+		return nil, err
+	}
+
+	monthlyMap := make(map[string]*MonthlyTrend)
+	var monthKeys []string
+
+	for _, a := range atts {
+		mKey := a.Date.Format("2006-01")
+		tr, exists := monthlyMap[mKey]
+		if !exists {
+			tr = &MonthlyTrend{Month: mKey}
+			monthlyMap[mKey] = tr
+			monthKeys = append(monthKeys, mKey)
+		}
+		switch a.Status {
+		case StatusAbsent:
+			tr.Absences++
+		case StatusLate:
+			tr.Lates++
+		case StatusEarlyExit:
+			tr.EarlyExits++
+		}
+	}
+
+	resp := &TrendsResponse{
+		StudentID: studentID,
+		Trends:    []MonthlyTrend{},
+	}
+	for _, k := range monthKeys {
+		tr := monthlyMap[k]
+		totalEventCount := tr.Absences + tr.Lates + tr.EarlyExits
+		tr.PresenceRate = 100.0 - float64(totalEventCount*5)
+		if tr.PresenceRate < 0 {
+			tr.PresenceRate = 0
+		}
+		resp.Trends = append(resp.Trends, *tr)
+	}
+
+	return resp, nil
 }

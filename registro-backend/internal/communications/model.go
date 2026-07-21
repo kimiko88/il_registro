@@ -11,6 +11,7 @@ type Message struct {
 	ReceiverIDs       []string   `json:"receiver_ids" db:"receiver_ids"`
 	Subject           string     `json:"subject" db:"subject"`
 	Body              string     `json:"body" db:"body"`
+	AttachmentURL     *string    `json:"attachment_url,omitempty" db:"attachment_url"`
 	Type              string     `json:"type" db:"type"` // 'circular', 'notice', 'internal', 'email'
 	RequiresSignature bool       `json:"requires_signature" db:"requires_signature"`
 	SignatureDeadline *time.Time `json:"signature_deadline,omitempty" db:"signature_deadline"`
@@ -44,6 +45,7 @@ type CreateMessageRequest struct {
 	Recipients        []string`json:"recipients"`
 	Subject           string  `json:"subject" binding:"required"`
 	Body              string  `json:"body" binding:"required"`
+	AttachmentURL     *string `json:"attachment_url,omitempty"`
 	Type              string  `json:"type" binding:"required"` // 'circular', 'notice', 'internal'
 	RequiresSignature bool    `json:"requires_signature"`
 	SignatureDeadline *string `json:"signature_deadline,omitempty"` // YYYY-MM-DD or RFC3339

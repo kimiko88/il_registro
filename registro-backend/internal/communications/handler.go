@@ -1,18 +1,27 @@
 package communications
 
 import (
+	"fmt"
 	"net/http"
+	"path/filepath"
+	"registro-backend/pkg/upload"
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type Handler struct {
-	service *Service
+	service  *Service
+	uploader upload.StorageUploader
 }
 
-func NewHandler(s *Service) *Handler {
-	return &Handler{service: s}
+func NewHandler(s *Service, u ...upload.StorageUploader) *Handler {
+	h := &Handler{service: s}
+	if len(u) > 0 {
+		h.uploader = u[0]
+	}
+	return h
 }
 
 func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
@@ -24,6 +33,7 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 		g.GET("/:id", h.GetByID)
 		g.PUT("/:id", h.Update)
 		g.POST("", h.Send)
+		g.POST("/upload", h.UploadAttachment)
 		g.DELETE("/:id", h.Delete)
 		g.POST("/:id/sign", h.Sign)
 		g.POST("/:id/read", h.MarkAsRead)
@@ -254,4 +264,34 @@ func (h *Handler) GetUnreadCount(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"count": count})
+}
+
+func (h *Handler) UploadAttachment(c *gin.Context) {
+	uid := c.GetString("user_id")
+	if uid == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	file, header, err := c.Request.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "allegato mancante"})
+		return
+	}
+	defer file.Close()
+
+	var publicURL string
+	if h.uploader != nil {
+		ext := filepath.Ext(header.Filename)
+		storagePath := fmt.Sprintf("communications/%s%s", uuid.New().String(), ext)
+		publicURL, err = h.uploader.UploadFile(c.Request.Context(), storagePath, header.Header.Get("Content-Type"), file)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+	} else {
+		publicURL = fmt.Sprintf("http://localhost:8080/uploads/communications/%s", filepath.Base(header.Filename))
+	}
+
+	c.JSON(http.StatusOK, gin.H{"attachment_url": publicURL})
 }

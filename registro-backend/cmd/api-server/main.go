@@ -39,9 +39,10 @@ import (
 	"registro-backend/internal/schools"
 	"registro-backend/internal/schoolsettings"
 	"registro-backend/internal/scrutiny"
-	"registro-backend/internal/search"
 	"registro-backend/internal/signatures"
+	"registro-backend/internal/student_goals"
 	"registro-backend/internal/subjects"
+	"registro-backend/internal/substitutions"
 	"registro-backend/internal/teachers"
 	"registro-backend/internal/tenants"
 	"registro-backend/internal/textbooks"
@@ -209,6 +210,7 @@ func main() {
 				usersGroup.POST("/:id/guardians", usersH.AddGuardian)
 				usersGroup.DELETE("/:id/guardians/:guardianId", usersH.RemoveGuardian)
 				usersGroup.POST("/me/switch-child/:studentId", usersH.SwitchChild)
+				usersGroup.GET("/students/:id/fascicolo", usersH.GetFascicolo)
 			}
 
 			gradesH.RegisterRoutes(protected)
@@ -242,7 +244,7 @@ func main() {
 			schoolsH := schools.NewHandler(schoolsSvc)
 			schoolsH.RegisterRoutes(protected)
 
-			commsH := communications.NewHandler(commsSvc)
+			commsH := communications.NewHandler(commsSvc, docsUploader)
 			commsH.RegisterRoutes(protected)
 
 			textbooksRepo := textbooks.NewRepository(database)
@@ -255,13 +257,20 @@ func main() {
 			scrutinyH := scrutiny.NewHandler(scrutinySvc)
 			scrutinyH.RegisterRoutes(protected)
 
-			classesH.RegisterRoutes(protected)
-			notesH.RegisterRoutes(protected)
-
 			subjectsRepo := subjects.NewRepository(database)
 			subjectsSvc := subjects.NewService(subjectsRepo)
 			subjectsH := subjects.NewHandler(subjectsSvc)
 			subjectsH.RegisterRoutes(protected)
+
+			goalsRepo := student_goals.NewRepository(database)
+			goalsSvc := student_goals.NewService(goalsRepo)
+			goalsH := student_goals.NewHandler(goalsSvc)
+			goalsH.RegisterRoutes(protected)
+
+			subsRepo := substitutions.NewRepository(database)
+			subsSvc := substitutions.NewService(subsRepo)
+			subsH := substitutions.NewHandler(subsSvc)
+			subsH.RegisterRoutes(protected)
 
 			teachersSvc := teachers.NewService(teachersRepo)
 			teachersH := teachers.NewHandler(teachersSvc)

@@ -79,3 +79,16 @@ func (a *Attendance) IsValid() bool {
 	}
 	return true
 }
+
+type MonthlyTrend struct {
+	Month        string  `json:"month"`
+	Absences     int     `json:"absences"`
+	Lates        int     `json:"lates"`
+	EarlyExits   int     `json:"early_exits"`
+	PresenceRate float64 `json:"presence_rate"`
+}
+
+type TrendsResponse struct {
+	StudentID string         `json:"student_id"`
+	Trends    []MonthlyTrend `json:"trends"`
+}

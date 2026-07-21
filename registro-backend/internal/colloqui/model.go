@@ -80,3 +80,26 @@ type SlotFilter struct {
 	To        time.Time
 	Available bool
 }
+
+type GeneralAssembly struct {
+	ID          string    `json:"id" db:"id"`
+	SchoolID    string    `json:"school_id" db:"school_id"`
+	ClassID     string    `json:"class_id" db:"class_id"`
+	Title       string    `json:"title" db:"title"`
+	Date        time.Time `json:"date" db:"date"`
+	StartTime   string    `json:"start_time" db:"start_time"`
+	EndTime     string    `json:"end_time" db:"end_time"`
+	Location    string    `json:"location" db:"location"`
+	Description string    `json:"description" db:"description"`
+	CreatedAt   time.Time `json:"created_at" db:"created_at"`
+}
+
+type CreateAssemblyRequest struct {
+	ClassID     string `json:"class_id" binding:"required"`
+	Title       string `json:"title" binding:"required"`
+	Date        string `json:"date" binding:"required"`
+	StartTime   string `json:"start_time" binding:"required"`
+	EndTime     string `json:"end_time" binding:"required"`
+	Location    string `json:"location"`
+	Description string `json:"description"`
+}

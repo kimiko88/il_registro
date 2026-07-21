@@ -1,8 +1,14 @@
 import api from './api'
 
 export default {
-  getVerbali(params) {
-    return api.get('/verbali', { params })
+  listMeetings(params) {
+    return api.get('/verbali/meetings', { params })
+  },
+  createMeeting(data) {
+    return api.post('/verbali/meetings', data)
+  },
+  getVerbali(meetingId) {
+    return api.get(`/verbali/meeting/${meetingId}`)
   },
   getVerbale(id) {
     return api.get(`/verbali/${id}`)
@@ -12,5 +18,8 @@ export default {
   },
   signVerbale(id) {
     return api.post(`/verbali/${id}/sign`)
+  },
+  getSignatures(id) {
+    return api.get(`/verbali/${id}/signatures`)
   }
 }

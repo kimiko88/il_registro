@@ -665,13 +665,15 @@ func (s *service) GetMyAverages(studentID string) (*StudentAveragesResponse, err
 		var totalSub int
 
 		for subID, subGrades := range subMap {
-			avg := s.calculator.CalculateWeightedAverage(subGrades)
+			avg := s.calculator.CalculateAverage(subGrades)
+			weightedAvg := s.calculator.CalculateWeightedAverage(subGrades)
 			subjects = append(subjects, SubjectAverage{
-				Subject:     subID,
-				Average:     avg,
-				TotalGrades: len(subGrades),
+				Subject:         subID,
+				Average:         avg,
+				WeightedAverage: weightedAvg,
+				TotalGrades:     len(subGrades),
 			})
-			totalSum += avg
+			totalSum += weightedAvg
 			totalSub++
 		}
 

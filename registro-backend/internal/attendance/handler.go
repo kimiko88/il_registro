@@ -39,6 +39,7 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 
 	att.GET("/child-attendance/:studentID", h.GetChildAttendance)
 	att.GET("/child-attendance/:studentID/summary", h.GetChildSummary)
+	att.GET("/child-attendance/:studentID/trends", h.GetChildAttendanceTrends)
 
 	// Admin / Secretary
 	att.POST("/justification/:id/approve", h.ApproveJustification)
@@ -127,6 +128,25 @@ func (h *Handler) GetChildSummary(c *gin.Context) {
 	}
 	studentID := c.Param("studentID")
 	res, err := h.service.GetChildSummary(c.Request.Context(), parentID, studentID, schoolID)
+	if err != nil {
+		if err.Error() == "unauthorized: not a guardian of this student" {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, res)
+}
+
+func (h *Handler) GetChildAttendanceTrends(c *gin.Context) {
+	parentID := c.GetString("user_id")
+	if parentID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	studentID := c.Param("studentID")
+	res, err := h.service.GetChildAttendanceTrends(c.Request.Context(), parentID, studentID)
 	if err != nil {
 		if err.Error() == "unauthorized: not a guardian of this student" {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})

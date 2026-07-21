@@ -435,3 +435,26 @@ func (s *Service) ExportUsers(ctx context.Context, actorRole string, filter User
 	}
 	return json.Marshal(users)
 }
+
+func (s *Service) GetStudentFascicolo(ctx context.Context, actorID, actorRole, studentID string) (*StudentFascicolo, error) {
+	student, err := s.repo.GetByID(ctx, studentID)
+	if err != nil {
+		return nil, err
+	}
+
+	guardians, _ := s.repo.GetGuardians(ctx, studentID)
+
+	summary := map[string]interface{}{
+		"status":          "Active",
+		"documents_count": 0,
+		"notes_count":     0,
+		"pcto_hours":      0,
+	}
+
+	return &StudentFascicolo{
+		Student:     student,
+		Guardians:   guardians,
+		Summary:     summary,
+		GeneratedAt: time.Now(),
+	}, nil
+}

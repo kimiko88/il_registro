@@ -23,6 +23,8 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 		g.PATCH("/slots/:id", h.PatchSlot)
 		g.DELETE("/slots/:id", h.CancelSlot)
 
+		g.POST("/assemblies", h.CreateAssembly)
+
 		g.POST("/bookings", h.CreateBooking)
 		g.GET("/my-bookings", h.ListMyBookings)
 		g.GET("/bookings/:id", h.GetBookingByID)
@@ -235,4 +237,29 @@ func (h *Handler) GetBookingByID(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, booking)
+}
+
+func (h *Handler) CreateAssembly(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	schoolID := c.GetString("school_id")
+
+	if userID == "" || (role != "teacher" && role != "admin" && role != "superadmin") {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
+	var req CreateAssemblyRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	slot, err := h.service.CreateAssembly(c.Request.Context(), userID, schoolID, req)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, slot)
 }

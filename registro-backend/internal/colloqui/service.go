@@ -187,3 +187,14 @@ func (s *Service) GetBookingByID(ctx context.Context, actorID, actorRole, bookin
 
 	return nil, ErrUnauthorized
 }
+
+func (s *Service) CreateAssembly(ctx context.Context, teacherID, schoolID string, req CreateAssemblyRequest) (*ColloquioSlot, error) {
+	return s.CreateSlot(ctx, teacherID, schoolID, CreateSlotRequest{
+		Date:        req.Date,
+		StartTime:   req.StartTime,
+		EndTime:     req.EndTime,
+		MaxBookings: 100,
+		Type:        TypeAssembly,
+		Location:    req.Location,
+	})
+}

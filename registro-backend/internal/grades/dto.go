@@ -90,10 +90,11 @@ type SemesterAverageSummary struct {
 }
 
 type SubjectAverage struct {
-	Subject        string  `json:"subject"`
-	Average        float64 `json:"average"`
-	TotalGrades    int     `json:"total_grades"`
-	LastUpdateDate string  `json:"last_update_date"`
+	Subject         string  `json:"subject"`
+	Average         float64 `json:"average"`
+	WeightedAverage float64 `json:"weighted_average"`
+	TotalGrades     int     `json:"total_grades"`
+	LastUpdateDate  string  `json:"last_update_date"`
 }
 
 type TrendResponse struct {
