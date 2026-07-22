@@ -53,6 +53,11 @@ type Service interface {
 	GetUpcomingTestsByClass(classID string) ([]ClassTestResponse, error)
 	DeleteClassTest(teacherID string, testID string) error
 	UpdateClassTest(teacherID string, testID string, req UpdateClassTestRequest) error
+
+	// Weight Config
+	GetWeightConfigs(schoolID, subjectID, classID string) ([]GradeWeightConfig, error)
+	UpsertWeightConfig(actorID, schoolID string, req UpsertWeightConfigRequest) (*GradeWeightConfig, error)
+	DeleteWeightConfig(actorID, configID string) error
 }
 
 type service struct {
@@ -1228,3 +1233,87 @@ func (s *service) UpdateClassTest(teacherID string, testID string, req UpdateCla
 
 	return nil
 }
+
+// --- Grade Weight Config ---
+
+// GetWeightConfigs returns the weight configurations for a given school/subject/class.
+func (s *service) GetWeightConfigs(schoolID, subjectID, classID string) ([]GradeWeightConfig, error) {
+	configs, err := s.repo.GetWeightConfigs(schoolID, subjectID, classID)
+	if err != nil {
+		return nil, fmt.Errorf("GetWeightConfigs: %w", err)
+	}
+	if configs == nil {
+		configs = []GradeWeightConfig{}
+	}
+	return configs, nil
+}
+
+// UpsertWeightConfig creates or updates a weight configuration entry.
+func (s *service) UpsertWeightConfig(actorID, schoolID string, req UpsertWeightConfigRequest) (*GradeWeightConfig, error) {
+	if schoolID == "" {
+		return nil, fmt.Errorf("school_id is required")
+	}
+	validCategories := map[string]bool{"formative": true, "summative": true, "practical": true}
+	if !validCategories[req.GradeCategory] {
+		return nil, fmt.Errorf("invalid grade_category: must be formative, summative, or practical")
+	}
+	if req.EvaluationType != nil {
+		validTypes := map[string]bool{"Written": true, "Oral": true, "Practical": true}
+		if !validTypes[*req.EvaluationType] {
+			return nil, fmt.Errorf("invalid evaluation_type: must be Written, Oral, or Practical")
+		}
+	}
+	cfg := &GradeWeightConfig{
+		SchoolID:       schoolID,
+		SubjectID:      req.SubjectID,
+		ClassID:        req.ClassID,
+		GradeCategory:  req.GradeCategory,
+		EvaluationType: req.EvaluationType,
+		Weight:         req.Weight,
+		CreatedBy:      actorID,
+	}
+	return s.repo.UpsertWeightConfig(cfg)
+}
+
+// DeleteWeightConfig removes a weight configuration entry.
+func (s *service) DeleteWeightConfig(actorID, configID string) error {
+	if configID == "" {
+		return fmt.Errorf("config id required")
+	}
+	return s.repo.DeleteWeightConfig(configID)
+}
+
+// effectiveWeight returns the resolved weight for a grade, applying configured defaults.
+// Priority: grade.Weight (if != 1.0) > matching config > 1.0 default.
+func effectiveWeight(g Grade, configs []GradeWeightConfig) float64 {
+	if g.Weight != 1.0 {
+		return g.Weight
+	}
+	var bestWeight *float64
+	bestScore := -1
+	for _, c := range configs {
+		if string(g.GradeCategory) != c.GradeCategory {
+			continue
+		}
+		if c.EvaluationType != nil && g.EvaluationType != nil && string(*g.EvaluationType) != *c.EvaluationType {
+			continue
+		}
+		score := 0
+		if c.SubjectID != nil && *c.SubjectID == g.SubjectID {
+			score += 2
+		}
+		if c.ClassID != nil {
+			score++
+		}
+		if score > bestScore {
+			bestScore = score
+			w := c.Weight
+			bestWeight = &w
+		}
+	}
+	if bestWeight != nil {
+		return *bestWeight
+	}
+	return 1.0
+}
+

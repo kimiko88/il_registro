@@ -31,21 +31,21 @@ func (s *Service) ExportGradesExcel(ctx context.Context, actorID, actorRole, cla
 	f.SetActiveSheet(index)
 
 	// Headers
-	f.SetCellValue(sheet, "A1", "Studente")
+	_ = f.SetCellValue(sheet, "A1", "Studente")
 	colChar := 'B'
 	for _, sub := range matrix.Subjects {
 		cell := fmt.Sprintf("%c1", colChar)
-		f.SetCellValue(sheet, cell, sub.Name)
+		_ = f.SetCellValue(sheet, cell, sub.Name)
 		colChar++
 	}
-	f.SetCellValue(sheet, fmt.Sprintf("%c1", colChar), "Media Generale")
+	_ = f.SetCellValue(sheet, fmt.Sprintf("%c1", colChar), "Media Generale")
 	colChar++
-	f.SetCellValue(sheet, fmt.Sprintf("%c1", colChar), "Esito")
+	_ = f.SetCellValue(sheet, fmt.Sprintf("%c1", colChar), "Esito")
 
 	// Rows
 	rowNum := 2
 	for _, stu := range matrix.Students {
-		f.SetCellValue(sheet, fmt.Sprintf("A%d", rowNum), stu.StudentName)
+		_ = f.SetCellValue(sheet, fmt.Sprintf("A%d", rowNum), stu.StudentName)
 		colChar = 'B'
 		var sum float64
 		var count int
@@ -53,11 +53,11 @@ func (s *Service) ExportGradesExcel(ctx context.Context, actorID, actorRole, cla
 		for _, sub := range matrix.Subjects {
 			cell := fmt.Sprintf("%c%d", colChar, rowNum)
 			if data, ok := stu.SubjectData[sub.ID]; ok && data.GradeCount > 0 {
-				f.SetCellValue(sheet, cell, data.Proposed)
+				_ = f.SetCellValue(sheet, cell, data.Proposed)
 				sum += data.Proposed
 				count++
 			} else {
-				f.SetCellValue(sheet, cell, "N/D")
+				_ = f.SetCellValue(sheet, cell, "N/D")
 			}
 			colChar++
 		}
@@ -66,14 +66,14 @@ func (s *Service) ExportGradesExcel(ctx context.Context, actorID, actorRole, cla
 		if count > 0 {
 			genAvg = sum / float64(count)
 		}
-		f.SetCellValue(sheet, fmt.Sprintf("%c%d", colChar, rowNum), fmt.Sprintf("%.2f", genAvg))
+		_ = f.SetCellValue(sheet, fmt.Sprintf("%c%d", colChar, rowNum), fmt.Sprintf("%.2f", genAvg))
 		colChar++
 
 		decision := "In Valutazione"
 		if stu.Record != nil && stu.Record.FinalDecision != "" {
 			decision = stu.Record.FinalDecision
 		}
-		f.SetCellValue(sheet, fmt.Sprintf("%c%d", colChar, rowNum), decision)
+		_ = f.SetCellValue(sheet, fmt.Sprintf("%c%d", colChar, rowNum), decision)
 
 		rowNum++
 	}

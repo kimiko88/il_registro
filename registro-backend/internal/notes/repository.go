@@ -183,7 +183,6 @@ func (r *PostgresRepository) List(ctx context.Context, filter NoteFilter) ([]Stu
 		offset := (filter.Page - 1) * filter.Limit
 		query += fmt.Sprintf(" OFFSET $%d", argIdx)
 		args = append(args, offset)
-		argIdx++
 	}
 
 	rows, err := r.db.QueryContext(ctx, query, args...)

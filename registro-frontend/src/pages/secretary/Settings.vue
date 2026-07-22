@@ -68,17 +68,20 @@
                   <q-btn color="primary" unelevated label="Aggiungi Chiusura" icon="add" no-caps class="rounded-lg q-px-md" @click="openHolidayDialog()" />
                 </div>
                 
-                <div class="q-pa-xl bg-slate-50 rounded-2xl q-mb-xl border-slate-200">
-                     <div class="text-subtitle1 text-slate-800 text-weight-bold q-mb-lg">Periodi di Valutazione</div>
-                     <div class="row q-col-gutter-lg items-center">
-                         <div class="col-12 col-sm-6">
-                             <q-input v-model="settings.term1End" type="date" outlined label="Fine I Quadrimestre" stack-label />
-                         </div>
-                         <div class="col-12 col-sm-6">
-                             <q-input v-model="settings.term2End" type="date" outlined label="Fine II Quadrimestre" stack-label />
-                         </div>
-                     </div>
-                </div>
+                 <div class="q-pa-xl bg-slate-50 rounded-2xl q-mb-xl border-slate-200">
+                      <div class="row items-center justify-between q-mb-lg">
+                        <div class="text-subtitle1 text-slate-800 text-weight-bold">Periodi di Valutazione (Quadrimestri / Trimestri)</div>
+                        <q-btn size="sm" color="primary" label="+ Aggiungi Periodo" flat @click="openAddPeriodDialog" />
+                      </div>
+                      <div class="row q-col-gutter-lg items-center">
+                          <div class="col-12 col-sm-6">
+                              <q-input v-model="settings.term1End" type="date" outlined label="Fine I Quadrimestre" stack-label />
+                          </div>
+                          <div class="col-12 col-sm-6">
+                              <q-input v-model="settings.term2End" type="date" outlined label="Fine II Quadrimestre" stack-label />
+                          </div>
+                      </div>
+                 </div>
 
                 <div class="text-subtitle1 text-slate-800 text-weight-bold q-mb-md">Festività & Chiusure</div>
                 <q-list separator class="rounded-xl border-slate-100 overflow-hidden">
@@ -199,6 +202,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import adminService from 'src/services/adminService'
+import api from 'src/services/api'
 
 const $q = useQuasar()
 
@@ -253,6 +257,29 @@ const fetchHolidays = async () => {
   } catch (e) {
     console.error("Error fetching holidays", e)
   }
+}
+
+const openAddPeriodDialog = () => {
+  $q.dialog({
+    title: 'Aggiungi Periodo Valutativo',
+    message: 'Nome periodo (es. 1° Quadrimestre, 1° Trimestre):',
+    prompt: { model: '', type: 'text' },
+    cancel: true, persistent: true
+  }).onOk(async (name) => {
+    if (!name) return
+    try {
+      await api.post('/school-calendar/periods', {
+        name: name,
+        code: name.slice(0, 3).toUpperCase(),
+        start_date: `${new Date().getFullYear()}-09-01`,
+        end_date: `${new Date().getFullYear() + 1}-06-30`,
+        is_current: true
+      })
+      $q.notify({ type: 'positive', message: 'Periodo creato con successo' })
+    } catch (e) {
+      $q.notify({ type: 'negative', message: 'Errore creazione periodo' })
+    }
+  })
 }
 
 const fetchOfficeHours = async () => {

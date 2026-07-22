@@ -44,6 +44,10 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	// Admin / Secretary
 	att.POST("/justification/:id/approve", h.ApproveJustification)
 	att.GET("/analytics", h.GetAnalytics)
+
+	// Monthly Breakdown
+	att.GET("/students/:studentID/monthly-breakdown", h.GetMonthlyBreakdown)
+	att.GET("/child-attendance/:studentID/monthly-breakdown", h.GetChildMonthlyBreakdown)
 }
 
 // parseWindowParams legge i query param from/to; se assenti usa l'intero anno scolastico corrente.
@@ -436,4 +440,44 @@ func (h *Handler) ExportAttendance(c *gin.Context) {
 	w.Flush()
 
 	c.String(http.StatusOK, buf.String())
+}
+
+// GetMonthlyBreakdown returns per-month attendance statistics for a student (teacher/admin view).
+func (h *Handler) GetMonthlyBreakdown(c *gin.Context) {
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	studentID := c.Param("studentID")
+	schoolYear := c.DefaultQuery("school_year", "")
+
+	res, err := h.service.GetMonthlyBreakdown(c.Request.Context(), studentID, schoolYear)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, res)
+}
+
+// GetChildMonthlyBreakdown returns per-month attendance statistics for a parent's child.
+func (h *Handler) GetChildMonthlyBreakdown(c *gin.Context) {
+	parentID := c.GetString("user_id")
+	if parentID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	studentID := c.Param("studentID")
+	schoolYear := c.DefaultQuery("school_year", "")
+
+	res, err := h.service.GetChildMonthlyBreakdown(c.Request.Context(), parentID, studentID, schoolYear)
+	if err != nil {
+		if err.Error() == "access denied: not a guardian of this student" {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, res)
 }

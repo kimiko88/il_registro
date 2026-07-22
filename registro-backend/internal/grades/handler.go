@@ -41,10 +41,15 @@ func (h *Handler) RegisterRoutes(router *gin.RouterGroup) {
 		// Retrieval
 		grades.GET("/export", h.Export)
 		grades.POST("/bulk-import", h.BulkImport)
-		grades.POST("/weight-config", h.SetWeightConfig)
-		grades.GET("/weight-config/:subjectID", h.GetWeightConfig)
-		grades.POST("/weights", h.SetWeightConfig)
-		grades.GET("/weights", h.GetWeightConfig)
+		// Weight Config — configurable per-category weights for weighted averages
+		grades.GET("/weight-configs", h.ListWeightConfigs)
+		grades.PUT("/weight-configs", h.UpsertWeightConfig)
+		grades.DELETE("/weight-configs/:id", h.DeleteWeightConfig)
+		// Legacy aliases kept for backwards compat
+		grades.POST("/weight-config", h.UpsertWeightConfig)
+		grades.GET("/weight-config/:subjectID", h.ListWeightConfigs)
+		grades.POST("/weights", h.UpsertWeightConfig)
+		grades.GET("/weights", h.ListWeightConfigs)
 
 		grades.GET("/student/:studentID", h.GetStudentGrades)
 		grades.GET("/class/:classID", h.GetClassGrades)
@@ -803,48 +808,74 @@ func (h *Handler) UpdateClassTest(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "test and linked grades updated successfully"})
 }
 
-func (h *Handler) SetWeightConfig(c *gin.Context) {
-	teacherID := c.GetString("user_id")
+// ListWeightConfigs returns grade weight configurations for a school/subject/class.
+func (h *Handler) ListWeightConfigs(c *gin.Context) {
+	schoolID := c.GetString("school_id")
+	subjectID := c.Query("subject_id")
+	classID := c.Query("class_id")
+
+	configs, err := h.service.GetWeightConfigs(schoolID, subjectID, classID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, configs)
+}
+
+// UpsertWeightConfig creates or updates a weight config entry.
+func (h *Handler) UpsertWeightConfig(c *gin.Context) {
+	actorID := c.GetString("user_id")
+	schoolID := c.GetString("school_id")
 	role := c.GetString("role")
-	if teacherID == "" {
+	if actorID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "teacher" && role != "admin" && role != "superadmin" {
+	if role != "teacher" && role != "admin" && role != "superadmin" && role != "secretary" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 
-	var req SetWeightConfigRequest
+	var req UpsertWeightConfigRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	res := WeightConfigResponse{
-		SubjectID:       req.SubjectID,
-		WrittenWeight:   req.WrittenWeight,
-		OralWeight:      req.OralWeight,
-		PracticalWeight: req.PracticalWeight,
-	}
-	c.JSON(http.StatusOK, res)
-}
-
-func (h *Handler) GetWeightConfig(c *gin.Context) {
-	subjectID := c.Param("subjectID")
-	if subjectID == "" {
-		subjectID = c.Query("subject_id")
-	}
-	if subjectID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "subject_id is required"})
+	result, err := h.service.UpsertWeightConfig(actorID, schoolID, req)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	c.JSON(http.StatusOK, result)
+}
 
-	res := WeightConfigResponse{
-		SubjectID:       subjectID,
-		WrittenWeight:   1.0,
-		OralWeight:      1.0,
-		PracticalWeight: 1.0,
+// DeleteWeightConfig removes a weight config entry by ID.
+func (h *Handler) DeleteWeightConfig(c *gin.Context) {
+	actorID := c.GetString("user_id")
+	role := c.GetString("role")
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
 	}
-	c.JSON(http.StatusOK, res)
+	if role != "teacher" && role != "admin" && role != "superadmin" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+	configID := c.Param("id")
+	if err := h.service.DeleteWeightConfig(actorID, configID); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.Status(http.StatusNoContent)
+}
+
+// SetWeightConfig is a legacy alias kept for backwards compatibility.
+func (h *Handler) SetWeightConfig(c *gin.Context) {
+	h.UpsertWeightConfig(c)
+}
+
+// GetWeightConfig is a legacy alias kept for backwards compatibility.
+func (h *Handler) GetWeightConfig(c *gin.Context) {
+	h.ListWeightConfigs(c)
 }

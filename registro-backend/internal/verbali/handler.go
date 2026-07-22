@@ -199,10 +199,19 @@ func (h *Handler) ExportPDF(c *gin.Context) {
 		return
 	}
 
-	dateStr := verbale.CreatedAt.Format("20060102")
-	filename := "verbale_" + verbale.MeetingID + "_" + dateStr + ".pdf"
+	// Fetch signatures and meeting info for the PDF
+	sigs, _ := h.service.GetSignatures(c.Request.Context(), id)
+	meeting, _ := h.service.GetMeeting(c.Request.Context(), verbale.MeetingID)
 
-	pdfBytes := []byte("%PDF-1.4 Verbale PDF Document\nTitle: " + verbale.Title + "\nContent: " + verbale.Content)
-	c.Header("Content-Disposition", "attachment; filename="+filename)
+	pdfBytes, err := GenerateVerbale(verbale, meeting, sigs)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "PDF generation failed: " + err.Error()})
+		return
+	}
+
+	dateStr := verbale.CreatedAt.Format("20060102")
+	filename := "verbale_" + verbale.MeetingID[:8] + "_" + dateStr + ".pdf"
+	c.Header("Content-Type", "application/pdf")
+	c.Header("Content-Disposition", "attachment; filename=\""+filename+"\"")
 	c.Data(http.StatusOK, "application/pdf", pdfBytes)
 }

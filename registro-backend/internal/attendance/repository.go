@@ -28,6 +28,9 @@ type Repository interface {
 
 	// Teacher Assignment Check
 	IsTeacherAssignedToClass(ctx context.Context, teacherID, classID string) (bool, error)
+
+	// Monthly Breakdown
+	GetMonthlyBreakdown(ctx context.Context, studentID, schoolYear string) ([]MonthlyBreakdownRow, error)
 }
 
 type repository struct {
@@ -297,4 +300,67 @@ func (r *repository) IsTeacherAssignedToClass(ctx context.Context, teacherID, cl
 	var exists bool
 	err := r.db.QueryRowContext(ctx, query, classID, teacherID).Scan(&exists)
 	return exists, err
+}
+
+// GetMonthlyBreakdown returns per-month attendance counts for a student across a school year.
+// schoolYear format: "2024-2025" → from 2024-09-01 to 2025-08-31.
+func (r *repository) GetMonthlyBreakdown(ctx context.Context, studentID, schoolYear string) ([]MonthlyBreakdownRow, error) {
+	// Parse school year (e.g. "2024-2025")
+	var startYear int
+	if _, err := fmt.Sscanf(schoolYear, "%d-%*d", &startYear); err != nil {
+		// Default to current school year
+		now := time.Now()
+		if now.Month() >= 9 {
+			startYear = now.Year()
+		} else {
+			startYear = now.Year() - 1
+		}
+	}
+
+	query := `
+		SELECT
+			to_char(date, 'YYYY-MM') AS month,
+			COUNT(*) FILTER (WHERE status = 'Absent')              AS absences,
+			COUNT(*) FILTER (WHERE status = 'Late')                AS lates,
+			COUNT(*) FILTER (WHERE status = 'LeftEarly')           AS early_exits,
+			COUNT(*) FILTER (WHERE status = 'Absent' AND justified = true) AS justified_absences,
+			COUNT(*) AS total_school_days
+		FROM attendance
+		WHERE student_id = $1::uuid
+		  AND date >= make_date($2, 9, 1)
+		  AND date < make_date($2 + 1, 9, 1)
+		GROUP BY month
+		ORDER BY month
+	`
+
+	rows, err := r.db.QueryContext(ctx, query, studentID, startYear)
+	if err != nil {
+		return nil, fmt.Errorf("GetMonthlyBreakdown query: %w", err)
+	}
+	defer rows.Close()
+
+	var result []MonthlyBreakdownRow
+	for rows.Next() {
+		var row MonthlyBreakdownRow
+		if err := rows.Scan(
+			&row.Month,
+			&row.Absences,
+			&row.Lates,
+			&row.EarlyExits,
+			&row.JustifiedAbsences,
+			&row.TotalSchoolDays,
+		); err != nil {
+			return nil, fmt.Errorf("GetMonthlyBreakdown scan: %w", err)
+		}
+		// Compute presence rate: days present / total * 100
+		present := row.TotalSchoolDays - row.Absences - row.Lates - row.EarlyExits
+		if row.TotalSchoolDays > 0 {
+			row.PresenceRate = float64(present) / float64(row.TotalSchoolDays) * 100
+		}
+		result = append(result, row)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return result, nil
 }

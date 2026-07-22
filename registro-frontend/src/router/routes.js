@@ -84,6 +84,7 @@ export default [
             { path: 'secretary/settings', component: () => import('@/pages/secretary/Settings.vue'), meta: { role: 'secretary' } },
             { path: 'secretary/classes', component: () => import('@/pages/secretary/Classes.vue'), meta: { role: 'secretary' } },
             { path: 'secretary/groups', component: () => import('@/pages/teacher/Groups.vue'), meta: { role: 'secretary' } },
+            { path: 'secretary/meetings', component: () => import('@/pages/secretary/Meetings.vue'), meta: { role: 'secretary' } },
             { path: 'secretary/students/:id/fascicolo', component: () => import('@/pages/secretary/FascicoloStudente.vue'), meta: { role: 'secretary' } },
 
             // Teacher Routes
@@ -102,6 +103,7 @@ export default [
             { path: 'teacher/scrutiny', component: () => import('@/pages/teacher/Scrutiny.vue'), meta: { role: 'teacher' } },
             { path: 'teacher/verbali', component: () => import('@/pages/teacher/Verbali.vue'), meta: { role: 'teacher' } },
             { path: 'teacher/substitutions', component: () => import('@/pages/teacher/Substitutions.vue'), meta: { role: 'teacher' } },
+            { path: 'teacher/grade-weights', component: () => import('@/pages/teacher/GradeWeights.vue'), meta: { role: 'teacher' } },
 
             // Student Routes
             { path: 'student', component: () => import('@/pages/student/Index.vue'), meta: { role: 'student' } },
@@ -132,6 +134,8 @@ export default [
             { path: 'parent/notes', component: () => import('@/pages/parent/Notes.vue'), meta: { role: 'parent' } },
             { path: 'parent/timetable', component: () => import('@/pages/parent/Timetable.vue'), meta: { role: 'parent' } },
             { path: 'parent/documents', component: () => import('@/pages/parent/Documents.vue'), meta: { role: 'parent' } },
+            { path: 'parent/payments', component: () => import('@/pages/parent/Payments.vue'), meta: { role: 'parent' } },
+            { path: 'parent/meetings', component: () => import('@/pages/parent/Meetings.vue'), meta: { role: 'parent' } },
             { path: 'support', component: () => import('@/pages/Support.vue') }
         ]
     },

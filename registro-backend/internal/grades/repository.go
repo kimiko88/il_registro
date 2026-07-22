@@ -67,6 +67,11 @@ type Repository interface {
 
 	// FindTestByID retrieves a single class test by its ID
 	FindTestByID(id string) (*ClassTest, error)
+
+	// Weight Config
+	GetWeightConfigs(schoolID, subjectID, classID string) ([]GradeWeightConfig, error)
+	UpsertWeightConfig(cfg *GradeWeightConfig) (*GradeWeightConfig, error)
+	DeleteWeightConfig(id string) error
 }
 
 type repository struct {
@@ -628,4 +633,58 @@ func (r *repository) FindTestByID(id string) (*ClassTest, error) {
 		return nil, fmt.Errorf("find test by id error: %w", err)
 	}
 	return &t, nil
+}
+
+// --- Grade Weight Config ---
+
+func (r *repository) GetWeightConfigs(schoolID, subjectID, classID string) ([]GradeWeightConfig, error) {
+	query := `
+		SELECT id, school_id, subject_id, class_id, grade_category, evaluation_type, weight, created_by
+		FROM grade_weight_configs
+		WHERE school_id = $1::uuid
+		  AND ($2 = '' OR subject_id = $2::uuid)
+		  AND ($3 = '' OR class_id = $3::uuid)
+		ORDER BY grade_category, evaluation_type
+	`
+	rows, err := r.db.Query(query, schoolID, subjectID, classID)
+	if err != nil {
+		return nil, fmt.Errorf("GetWeightConfigs: %w", err)
+	}
+	defer rows.Close()
+
+	var results []GradeWeightConfig
+	for rows.Next() {
+		var c GradeWeightConfig
+		if err := rows.Scan(&c.ID, &c.SchoolID, &c.SubjectID, &c.ClassID, &c.GradeCategory, &c.EvaluationType, &c.Weight, &c.CreatedBy); err != nil {
+			return nil, fmt.Errorf("GetWeightConfigs scan: %w", err)
+		}
+		results = append(results, c)
+	}
+	return results, rows.Err()
+}
+
+func (r *repository) UpsertWeightConfig(cfg *GradeWeightConfig) (*GradeWeightConfig, error) {
+	query := `
+		INSERT INTO grade_weight_configs
+			(school_id, subject_id, class_id, grade_category, evaluation_type, weight, created_by)
+		VALUES ($1::uuid, $2, $3, $4, $5, $6, $7::uuid)
+		ON CONFLICT (school_id, subject_id, class_id, grade_category, evaluation_type)
+		DO UPDATE SET weight = EXCLUDED.weight, updated_at = now()
+		RETURNING id, school_id, subject_id, class_id, grade_category, evaluation_type, weight, created_by
+	`
+	row := r.db.QueryRow(query,
+		cfg.SchoolID, cfg.SubjectID, cfg.ClassID,
+		cfg.GradeCategory, cfg.EvaluationType,
+		cfg.Weight, cfg.CreatedBy,
+	)
+	var result GradeWeightConfig
+	if err := row.Scan(&result.ID, &result.SchoolID, &result.SubjectID, &result.ClassID, &result.GradeCategory, &result.EvaluationType, &result.Weight, &result.CreatedBy); err != nil {
+		return nil, fmt.Errorf("UpsertWeightConfig: %w", err)
+	}
+	return &result, nil
+}
+
+func (r *repository) DeleteWeightConfig(id string) error {
+	_, err := r.db.Exec(`DELETE FROM grade_weight_configs WHERE id = $1::uuid`, id)
+	return err
 }

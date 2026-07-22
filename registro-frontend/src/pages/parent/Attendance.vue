@@ -48,19 +48,40 @@
       </div>
 
       <!-- Monthly Trend Breakdown -->
-      <q-card v-if="trends.length > 0" class="q-mb-lg shadow-sm" bordered>
+      <q-card v-if="monthlyBreakdown.length > 0" class="q-mb-lg shadow-sm" bordered>
         <q-card-section>
-          <div class="text-subtitle1 text-weight-bold text-slate-800 q-mb-sm">Andamento Mensile Presenze</div>
-          <div class="row q-col-gutter-sm">
-            <div v-for="t in trends" :key="t.month" class="col-6 col-sm-3 col-md-2">
-              <div class="bg-slate-100 p-3 rounded-lg text-center border border-slate-200">
-                <div class="text-xs font-semibold text-slate-600 uppercase">{{ t.month }}</div>
-                <div class="text-lg font-bold text-slate-900 mt-1">{{ t.presence_rate }}%</div>
-                <div class="text-xs text-slate-500 mt-1">
-                  <span class="text-red-600 font-medium">{{ t.absences }} A</span> · 
-                  <span class="text-amber-600 font-medium">{{ t.lates }} R</span>
+          <div class="row items-center justify-between q-mb-md">
+            <div class="text-subtitle1 text-weight-bold text-slate-800">Breakdown Mensile Dettagliato</div>
+            <q-select
+              v-model="selectedSchoolYear"
+              :options="schoolYearOptions"
+              label="Anno Scolastico"
+              dense outlined
+              style="min-width:130px"
+              @update:model-value="fetchBreakdown"
+            />
+          </div>
+          <div class="row q-col-gutter-md">
+            <div v-for="m in monthlyBreakdown" :key="m.month" class="col-6 col-sm-4 col-md-2">
+              <q-card flat bordered class="text-center q-pa-sm">
+                <div class="text-caption text-weight-bold text-grey-7 q-mb-xs">{{ formatMonth(m.month) }}</div>
+                <div class="text-h6 text-weight-bold" :class="presenceClass(m.presence_rate)">
+                  {{ m.presence_rate.toFixed(0) }}%
                 </div>
-              </div>
+                <!-- mini stacked bar -->
+                <div class="q-mt-xs" style="height:8px; border-radius:4px; overflow:hidden; display:flex">
+                  <div :style="{ width: absencePct(m) + '%', background: '#ef4444' }"></div>
+                  <div :style="{ width: latePct(m) + '%', background: '#f59e0b' }"></div>
+                  <div :style="{ width: earlyPct(m) + '%', background: '#3b82f6' }"></div>
+                  <div :style="{ flex: 1, background: '#22c55e' }"></div>
+                </div>
+                <div class="q-mt-xs text-caption text-left">
+                  <span class="text-negative">■ {{ m.absences }} ass.</span><br>
+                  <span class="text-warning">■ {{ m.lates }} rit.</span><br>
+                  <span class="text-info">■ {{ m.early_exits }} u.ant.</span>
+                  <div v-if="m.justified_absences > 0" class="text-grey-6">{{ m.justified_absences }} giust.</div>
+                </div>
+              </q-card>
             </div>
           </div>
         </q-card-section>
@@ -146,6 +167,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useParentStore } from '@/stores/parent'
+import { useAttendanceStore } from '@/stores/attendance'
 import { storeToRefs } from 'pinia'
 import { useQuasar, date as qdate } from 'quasar'
 import { attendanceService } from 'src/services/attendanceService'
@@ -153,6 +175,7 @@ import { attendanceService } from 'src/services/attendanceService'
 const $q = useQuasar()
 const parentStore = useParentStore()
 const { selectedChild } = storeToRefs(parentStore)
+const attendanceStore = useAttendanceStore()
 
 const loading = ref(false)
 const submitting = ref(false)
@@ -161,8 +184,17 @@ const selectedEvent = ref(null)
 const justifyReason = ref('Salute')
 const justifyNotes = ref('')
 
+// School year options (current + previous)
+const currentYear = new Date().getMonth() >= 8 ? new Date().getFullYear() : new Date().getFullYear() - 1
+const schoolYearOptions = [
+    `${currentYear}-${currentYear + 1}`,
+    `${currentYear - 1}-${currentYear}`
+]
+const selectedSchoolYear = ref(schoolYearOptions[0])
+
 const events = ref([])
 const trends = ref([])
+const monthlyBreakdown = ref([])
 const summary = ref({
     total_absences: 0,
     total_lates: 0,
@@ -197,9 +229,23 @@ watch(selectedChild, (val) => {
 const fetchAll = async () => {
     loading.value = true
     try {
-        await Promise.all([fetchAttendance(), fetchSummary(), fetchTrends()])
+        await Promise.all([fetchAttendance(), fetchSummary(), fetchTrends(), fetchBreakdown()])
     } finally {
         loading.value = false
+    }
+}
+
+const fetchBreakdown = async () => {
+    if (!selectedChild.value?.id) return
+    try {
+        const data = await attendanceStore.fetchMonthlyBreakdown(
+            selectedChild.value.id,
+            selectedSchoolYear.value,
+            true
+        )
+        monthlyBreakdown.value = data?.months || []
+    } catch (e) {
+        console.error('Errore caricamento breakdown mensile:', e)
     }
 }
 
@@ -313,5 +359,32 @@ function getIconColor(status) {
     if (s === 'late') return 'warning'
     if (s === 'leftearly' || s === 'early') return 'blue'
     return 'grey'
+}
+
+// --- Monthly breakdown helpers ---
+function formatMonth(yyyyMM) {
+    if (!yyyyMM) return ''
+    const [y, m] = yyyyMM.split('-')
+    const names = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic']
+    return `${names[parseInt(m, 10) - 1]} ${y}`
+}
+
+function presenceClass(rate) {
+    if (rate >= 90) return 'text-positive'
+    if (rate >= 75) return 'text-warning'
+    return 'text-negative'
+}
+
+function absencePct(m) {
+    if (!m.total_school_days) return 0
+    return Math.min(100, (m.absences / m.total_school_days) * 100)
+}
+function latePct(m) {
+    if (!m.total_school_days) return 0
+    return Math.min(100, (m.lates / m.total_school_days) * 100)
+}
+function earlyPct(m) {
+    if (!m.total_school_days) return 0
+    return Math.min(100, (m.early_exits / m.total_school_days) * 100)
 }
 </script>

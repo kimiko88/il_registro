@@ -42,6 +42,10 @@ type Service interface {
 	GetChildAttendance(ctx context.Context, parentID, studentID string, from, to time.Time) ([]AttendanceResponse, error)
 	GetChildSummary(ctx context.Context, parentID, studentID, schoolID string) (*SummaryResponse, error)
 	GetChildAttendanceTrends(ctx context.Context, parentID, studentID string) (*TrendsResponse, error)
+
+	// Monthly Breakdown
+	GetMonthlyBreakdown(ctx context.Context, studentID, schoolYear string) (*MonthlyBreakdownResponse, error)
+	GetChildMonthlyBreakdown(ctx context.Context, parentID, studentID, schoolYear string) (*MonthlyBreakdownResponse, error)
 }
 
 type service struct {
@@ -501,4 +505,42 @@ func (s *service) GetChildAttendanceTrends(ctx context.Context, parentID, studen
 	}
 
 	return resp, nil
+}
+
+// GetMonthlyBreakdown returns a detailed per-month attendance breakdown for a student.
+func (s *service) GetMonthlyBreakdown(ctx context.Context, studentID, schoolYear string) (*MonthlyBreakdownResponse, error) {
+	if schoolYear == "" {
+		now := time.Now()
+		if now.Month() >= 9 {
+			schoolYear = fmt.Sprintf("%d-%d", now.Year(), now.Year()+1)
+		} else {
+			schoolYear = fmt.Sprintf("%d-%d", now.Year()-1, now.Year())
+		}
+	}
+	months, err := s.repo.GetMonthlyBreakdown(ctx, studentID, schoolYear)
+	if err != nil {
+		return nil, fmt.Errorf("GetMonthlyBreakdown: %w", err)
+	}
+	if months == nil {
+		months = []MonthlyBreakdownRow{}
+	}
+	return &MonthlyBreakdownResponse{
+		StudentID:  studentID,
+		SchoolYear: schoolYear,
+		Months:     months,
+	}, nil
+}
+
+// GetChildMonthlyBreakdown is the parent-facing version with guardianship check.
+func (s *service) GetChildMonthlyBreakdown(ctx context.Context, parentID, studentID, schoolYear string) (*MonthlyBreakdownResponse, error) {
+	// Guardianship check
+	parent, err := s.userRepo.GetByID(ctx, parentID)
+	if err != nil || parent == nil {
+		return nil, fmt.Errorf("parent not found")
+	}
+	isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, studentID)
+	if err != nil || !isGuardian {
+		return nil, fmt.Errorf("access denied: not a guardian of this student")
+	}
+	return s.GetMonthlyBreakdown(ctx, studentID, schoolYear)
 }

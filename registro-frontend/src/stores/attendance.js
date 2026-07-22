@@ -135,6 +135,28 @@ export const useAttendanceStore = defineStore('attendance', {
                 console.error("Error requesting justification:", err);
                 throw err;
             }
+        },
+
+        /**
+         * Fetches the monthly attendance breakdown for a student.
+         * @param {string} studentID - The student UUID
+         * @param {string} [schoolYear] - Format "2024-2025"; defaults to current school year
+         * @param {boolean} [isParent] - If true, uses the parent child-attendance endpoint
+         * @returns {Promise<Object>} MonthlyBreakdownResponse with 'months' array
+         */
+        async fetchMonthlyBreakdown(studentID, schoolYear = '', isParent = false) {
+            try {
+                const params = schoolYear ? { school_year: schoolYear } : {};
+                const url = isParent
+                    ? `/attendance/child-attendance/${studentID}/monthly-breakdown`
+                    : `/attendance/students/${studentID}/monthly-breakdown`;
+                const response = await api.get(url, { params });
+                return response.data;
+            } catch (err) {
+                console.error('Error fetching monthly breakdown:', err);
+                throw err;
+            }
         }
     }
 });
+

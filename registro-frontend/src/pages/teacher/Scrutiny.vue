@@ -22,12 +22,7 @@
             toggle-color="primary"
             flat
             class="rounded-lg border-slate-200"
-            :options="[
-              {label: 'Pagellino 1° Q', value: 'infraquadrimestrale_1'},
-              {label: 'Scrutinio 1° Q', value: 'semester_1'},
-              {label: 'Pagellino 2° Q', value: 'infraquadrimestrale_2'},
-              {label: 'Scrutinio Finale', value: 'semester_2'}
-            ]"
+            :options="periodOptions"
           />
         </div>
       </div>
@@ -153,6 +148,7 @@ import { useQuasar } from 'quasar'
 import { scrutinyService } from 'src/services/scrutinyService'
 import { useClassesStore } from 'src/stores/classes'
 import { useAuthStore } from 'src/stores/auth'
+import api from 'src/services/api'
 
 const $q = useQuasar()
 const classesStore = useClassesStore()
@@ -160,6 +156,12 @@ const authStore = useAuthStore()
 
 const selectedClassId = ref(null)
 const period = ref('semester_1')
+const periodOptions = ref([
+  { label: 'Pagellino 1° Q', value: 'infraquadrimestrale_1' },
+  { label: 'Scrutinio 1° Q', value: 'semester_1' },
+  { label: 'Pagellino 2° Q', value: 'infraquadrimestrale_2' },
+  { label: 'Scrutinio Finale', value: 'semester_2' }
+])
 const loading = ref(false)
 const saving = ref(false)
 const matrix = ref({})
@@ -192,6 +194,17 @@ onMounted(async () => {
   if (classOptions.value.length > 0) {
     selectedClassId.value = classOptions.value[0].value
   }
+
+  // Load dynamic periods if available
+  try {
+    const res = await api.get('/school-calendar/periods')
+    if (res.data && res.data.length > 0) {
+      periodOptions.value = res.data.map(p => ({
+        label: p.name,
+        value: p.code ? p.code.toLowerCase() : p.id
+      }))
+    }
+  } catch { /* fallback to defaults */ }
 })
 
 watch([selectedClassId, period], () => {

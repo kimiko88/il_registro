@@ -99,3 +99,9 @@ func (s *Service) SignVerbale(ctx context.Context, verbaleID, userID, ipAddress 
 func (s *Service) GetSignatures(ctx context.Context, verbaleID string) ([]VerbaleSignature, error) {
 	return s.repo.GetSignatures(ctx, verbaleID)
 }
+
+// GetMeeting retrieves a council meeting by ID (used for PDF generation).
+func (s *Service) GetMeeting(ctx context.Context, meetingID string) (*CouncilMeeting, error) {
+	return s.repo.GetMeetingByID(ctx, meetingID)
+}
+

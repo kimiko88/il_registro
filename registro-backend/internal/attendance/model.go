@@ -92,3 +92,21 @@ type TrendsResponse struct {
 	StudentID string         `json:"student_id"`
 	Trends    []MonthlyTrend `json:"trends"`
 }
+
+// MonthlyBreakdownRow represents attendance statistics for a single month.
+type MonthlyBreakdownRow struct {
+	Month              string  `json:"month"`               // YYYY-MM
+	Absences           int     `json:"absences"`            // StatusAbsent count
+	Lates              int     `json:"lates"`               // StatusLate count
+	EarlyExits         int     `json:"early_exits"`         // StatusEarlyExit count
+	JustifiedAbsences  int     `json:"justified_absences"`  // justified Absent
+	TotalSchoolDays    int     `json:"total_school_days"`   // total records in month
+	PresenceRate       float64 `json:"presence_rate"`       // % presenti
+}
+
+// MonthlyBreakdownResponse is the API response for the monthly breakdown endpoint.
+type MonthlyBreakdownResponse struct {
+	StudentID  string                `json:"student_id"`
+	SchoolYear string                `json:"school_year"`
+	Months     []MonthlyBreakdownRow `json:"months"`
+}

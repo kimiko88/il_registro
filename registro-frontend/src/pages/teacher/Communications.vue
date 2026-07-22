@@ -1,6 +1,16 @@
 <template>
-  <q-page class="q-pa-md" style="height: calc(100vh - 50px);"> <!-- Fill height minus header -->
-    <div class="row q-col-gutter-md full-height">
+  <q-page class="q-pa-md" style="height: calc(100vh - 50px);">
+    <!-- Tab switcher -->
+    <q-tabs v-model="activeTab" dense class="text-primary q-mb-md" align="left">
+      <q-tab name="messaggi" icon="mail" label="Messaggi" />
+      <q-tab name="circolari" icon="campaign" label="Circolari Ufficiali" />
+    </q-tabs>
+    <q-separator class="q-mb-md" />
+
+    <!-- TAB: Messaggi -->
+    <q-tab-panels v-model="activeTab" animated>
+      <q-tab-panel name="messaggi" class="q-pa-none">
+        <div class="row q-col-gutter-md full-height">
         
         <!-- Sidebar List -->
         <div class="col-12 col-md-4 col-lg-3 flex column full-height">
@@ -77,7 +87,68 @@
                 </div>
             </div>
         </div>
-    </div>
+        </div>
+      </q-tab-panel>
+
+      <!-- TAB: Circolari -->
+      <q-tab-panel name="circolari" class="q-pa-none">
+        <div class="row items-center q-mb-md q-pa-md">
+          <div class="text-h6 text-weight-bold">Circolari Ufficiali</div>
+          <q-space />
+          <q-input v-model="circSearch" dense outlined placeholder="Cerca circolare..." style="max-width:250px">
+            <template #append><q-icon name="search" /></template>
+          </q-input>
+        </div>
+
+        <div v-if="loadingCircolari" class="text-center q-pa-xl">
+          <q-spinner-dots color="primary" size="40px" />
+        </div>
+
+        <q-card v-else bordered flat class="q-ma-md">
+          <q-list separator>
+            <q-item v-if="filteredCircolari.length === 0" class="text-grey-6 text-center q-pa-lg">
+              <q-item-section>Nessuna circolare disponibile</q-item-section>
+            </q-item>
+            <q-item v-for="c in filteredCircolari" :key="c.id" clickable v-ripple
+              :class="{'bg-blue-1': !c.is_read}" @click="openCircolare(c)">
+              <q-item-section avatar>
+                <q-avatar :color="c.is_read ? 'grey-4' : 'primary'" text-color="white">
+                  <q-icon name="campaign" />
+                </q-avatar>
+              </q-item-section>
+              <q-item-section>
+                <q-item-label :class="{'text-weight-bold': !c.is_read}">
+                  {{ c.subject || c.title }}
+                </q-item-label>
+                <q-item-label caption>
+                  {{ formatDate(c.created_at) }}
+                  <q-badge v-if="!c.is_read" color="negative" label="Non letta" class="q-ml-sm" />
+                </q-item-label>
+              </q-item-section>
+              <q-item-section side>
+                <q-btn flat round icon="open_in_new" size="sm" color="primary" />
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-card>
+
+        <!-- Circolare detail dialog -->
+        <q-dialog v-model="showCircolare">
+          <q-card style="min-width:500px; max-width:700px">
+            <q-card-section class="bg-primary text-white">
+              <div class="text-h6">{{ selectedCircolare?.subject || selectedCircolare?.title }}</div>
+              <div class="text-caption">{{ formatDate(selectedCircolare?.created_at) }}</div>
+            </q-card-section>
+            <q-card-section>
+              <div style="white-space:pre-wrap">{{ selectedCircolare?.body || selectedCircolare?.content }}</div>
+            </q-card-section>
+            <q-card-actions align="right">
+              <q-btn flat label="Chiudi" v-close-popup />
+            </q-card-actions>
+          </q-card>
+        </q-dialog>
+      </q-tab-panel>
+    </q-tab-panels>
 
     <!-- Compose Dialog -->
     <q-dialog v-model="showCompose">
@@ -130,13 +201,54 @@
 import { ref, computed, onMounted } from 'vue'
 import { useCommunicationsStore } from 'src/stores/communications'
 import { communicationService } from '@/services/communicationService'
-import { useQuasar } from 'quasar'
+import { useQuasar, date as qdate } from 'quasar'
+import api from 'src/services/api'
 
 const $q = useQuasar()
 const store = useCommunicationsStore()
 const showCompose = ref(false)
 const selectedMessage = ref(null)
 const search = ref('')
+const activeTab = ref('messaggi')
+
+// Circolari state
+const circolari = ref([])
+const loadingCircolari = ref(false)
+const circSearch = ref('')
+const showCircolare = ref(false)
+const selectedCircolare = ref(null)
+
+const filteredCircolari = computed(() => {
+    if (!circSearch.value) return circolari.value
+    return circolari.value.filter(c =>
+        (c.subject || c.title || '').toLowerCase().includes(circSearch.value.toLowerCase())
+    )
+})
+
+const formatDate = (d) => d ? qdate.formatDate(new Date(d), 'DD/MM/YYYY HH:mm') : ''
+
+async function fetchCircolari() {
+    loadingCircolari.value = true
+    try {
+        const res = await api.get('/communications/circolari')
+        circolari.value = res.data || []
+    } catch (e) {
+        console.error('Errore circolari:', e)
+    } finally {
+        loadingCircolari.value = false
+    }
+}
+
+async function openCircolare(c) {
+    selectedCircolare.value = c
+    showCircolare.value = true
+    if (!c.is_read) {
+        try {
+            await api.post(`/communications/${c.id}/read`)
+            c.is_read = true
+        } catch { /* ignore */ }
+    }
+}
 
 const showUnreadDialog = ref(false)
 const unreadUsersList = ref([])
@@ -153,6 +265,7 @@ const fetchUnreadUsers = async (id) => {
 
 onMounted(() => {
     store.fetchCommunications()
+    fetchCircolari()
 })
 
 const filteredMessages = computed(() => {

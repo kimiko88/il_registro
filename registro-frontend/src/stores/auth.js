@@ -2,9 +2,9 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
 export const useAuthStore = defineStore('auth', () => {
-    const user = ref(JSON.parse(localStorage.getItem('user')) || null)
-    const token = ref(localStorage.getItem('token') || null)
-    const refreshToken = ref(localStorage.getItem('refreshToken') || null)
+    const user = ref(JSON.parse(sessionStorage.getItem('user') || localStorage.getItem('user')) || null)
+    const token = ref(sessionStorage.getItem('token') || localStorage.getItem('token') || null)
+    const refreshToken = ref(sessionStorage.getItem('refreshToken') || localStorage.getItem('refreshToken') || null)
 
     const isAuthenticated = computed(() => !!token.value)
     const userRole = computed(() => user.value?.role || null)
@@ -13,14 +13,17 @@ export const useAuthStore = defineStore('auth', () => {
         return `${user.value.first_name || user.value.firstName || ''} ${user.value.last_name || user.value.lastName || ''}`.trim() || 'User'
     })
 
-    function login(userData, tokenData, refreshTokenData) {
+    function login(userData, tokenData, refreshTokenData, rememberMe = false) {
         user.value = userData
         token.value = tokenData
         refreshToken.value = refreshTokenData
 
-        localStorage.setItem('user', JSON.stringify(userData))
-        localStorage.setItem('token', tokenData)
-        localStorage.setItem('refreshToken', refreshTokenData)
+        const storage = rememberMe ? localStorage : sessionStorage
+        storage.setItem('user', JSON.stringify(userData))
+        storage.setItem('token', tokenData)
+        if (refreshTokenData) {
+            storage.setItem('refreshToken', refreshTokenData)
+        }
     }
 
     function logout() {
@@ -31,12 +34,22 @@ export const useAuthStore = defineStore('auth', () => {
         localStorage.removeItem('user')
         localStorage.removeItem('token')
         localStorage.removeItem('refreshToken')
-        localStorage.removeItem('selectedChildId') // Clear parent child selection
+        localStorage.removeItem('selectedChildId')
+
+        sessionStorage.removeItem('user')
+        sessionStorage.removeItem('token')
+        sessionStorage.removeItem('refreshToken')
+        sessionStorage.removeItem('selectedChildId')
     }
 
     function updateUser(userData) {
         user.value = userData
-        localStorage.setItem('user', JSON.stringify(userData))
+        if (localStorage.getItem('user')) {
+            localStorage.setItem('user', JSON.stringify(userData))
+        }
+        if (sessionStorage.getItem('user')) {
+            sessionStorage.setItem('user', JSON.stringify(userData))
+        }
     }
 
     return {

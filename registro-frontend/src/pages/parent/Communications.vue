@@ -30,6 +30,12 @@
                   <q-badge color="red" floating v-if="unreadCount">{{ unreadCount }}</q-badge>
                 </div>
               </q-tab>
+              <q-tab name="circolari">
+                <div class="row items-center no-wrap">
+                  <q-icon name="campaign" class="q-mr-sm" />
+                  <div>Circolari</div>
+                </div>
+              </q-tab>
               <q-tab name="archive" icon="archive" label="Archivio" />
             </q-tabs>
             <q-separator />
@@ -186,7 +192,11 @@ const unreadCount = computed(() => messages.value.filter(m => !m.read && !m.arch
 
 const filteredMessages = computed(() => {
   return messages.value.filter(m => {
-    const matchesTab = tab.value === 'inbox' ? !m.archived : m.archived;
+    let matchesTab = false;
+    if (tab.value === 'inbox') matchesTab = !m.archived && m.type !== 'circolare';
+    else if (tab.value === 'circolari') matchesTab = !m.archived && (m.type === 'circolare' || m.is_circolare);
+    else if (tab.value === 'archive') matchesTab = m.archived;
+    
     const matchesSearch = m.subject.toLowerCase().includes(search.value.toLowerCase()) || 
                           m.sender.toLowerCase().includes(search.value.toLowerCase());
     return matchesTab && matchesSearch;

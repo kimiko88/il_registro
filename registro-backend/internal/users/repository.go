@@ -387,7 +387,7 @@ func (r *PostgresRepository) List(ctx context.Context, filter UserFilter) ([]Use
 	}
 
 	// Sort and Paginate
-	sortBy := "u.created_at"
+	var sortBy string
 	switch filter.SortBy {
 	case "last_name":
 		sortBy = "u.last_name"

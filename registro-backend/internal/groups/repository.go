@@ -247,7 +247,7 @@ func (r *repository) AddStudents(ctx context.Context, groupID string, studentIDs
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	stmt, err := tx.PrepareContext(ctx, `INSERT INTO group_students (group_id, student_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`)
 	if err != nil {

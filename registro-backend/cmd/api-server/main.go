@@ -23,6 +23,7 @@ import (
 	"registro-backend/internal/didactic_materials"
 	"registro-backend/internal/documents"
 	"registro-backend/internal/extracurricular"
+	"registro-backend/internal/general_meetings"
 	"registro-backend/internal/grades"
 	"registro-backend/internal/groups"
 	"registro-backend/internal/handler"
@@ -274,6 +275,11 @@ func main() {
 			subsSvc := substitutions.NewService(subsRepo)
 			subsH := substitutions.NewHandler(subsSvc)
 			subsH.RegisterRoutes(protected)
+
+			gmRepo := general_meetings.NewRepository(database)
+			gmSvc := general_meetings.NewService(gmRepo)
+			gmH := general_meetings.NewHandler(gmSvc)
+			gmH.RegisterRoutes(protected)
 
 			teachersSvc := teachers.NewService(teachersRepo)
 			teachersH := teachers.NewHandler(teachersSvc)
