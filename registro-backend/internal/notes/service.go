@@ -7,6 +7,14 @@ import (
 	"registro-backend/internal/users"
 )
 
+var (
+	ErrUnauthorizedEdit    = errors.New("unauthorized: can only edit own notes")
+	ErrUnauthorizedDelete  = errors.New("unauthorized: can only delete own notes")
+	ErrUnauthorizedApprove = errors.New("unauthorized: only dirigenza or admin can approve notes")
+	ErrUnauthorizedParent  = errors.New("unauthorized: parent must specify student_id")
+	ErrNotGuardian         = errors.New("unauthorized: not a guardian of this student")
+)
+
 type Service struct {
 	repo     Repository
 	userRepo users.Repository
@@ -40,7 +48,7 @@ func (s *Service) CreateNote(ctx context.Context, teacherID, schoolID string, re
 
 func (s *Service) ApproveNote(ctx context.Context, actorID, actorRole, noteID string) error {
 	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "vice_principal" {
-		return errors.New("unauthorized: only dirigenza or admin can approve notes")
+		return ErrUnauthorizedApprove
 	}
 	return s.repo.ApproveNote(ctx, noteID, actorID)
 }
@@ -51,7 +59,7 @@ func (s *Service) UpdateNote(ctx context.Context, teacherID, noteID string, req 
 		return nil, err
 	}
 	if n.TeacherID != teacherID {
-		return nil, errors.New("unauthorized: can only edit own notes")
+		return nil, ErrUnauthorizedEdit
 	}
 
 	if req.Type != "" {
@@ -76,7 +84,7 @@ func (s *Service) DeleteNote(ctx context.Context, teacherID, noteID string) erro
 		return err
 	}
 	if n.TeacherID != teacherID {
-		return errors.New("unauthorized: can only delete own notes")
+		return ErrUnauthorizedDelete
 	}
 	return s.repo.Delete(ctx, noteID)
 }
@@ -86,7 +94,7 @@ func (s *Service) ListNotes(ctx context.Context, filter NoteFilter) ([]StudentNo
 		filter.StudentID = filter.ActorID
 	} else if filter.ActorRole == "parent" {
 		if filter.StudentID == "" {
-			return nil, errors.New("unauthorized: parent must specify student_id")
+			return nil, ErrUnauthorizedParent
 		}
 		if s.userRepo != nil {
 			isGuardian, err := s.userRepo.IsGuardian(ctx, filter.ActorID, filter.StudentID)
@@ -94,7 +102,7 @@ func (s *Service) ListNotes(ctx context.Context, filter NoteFilter) ([]StudentNo
 				return nil, err
 			}
 			if !isGuardian {
-				return nil, errors.New("unauthorized: not a guardian of this student")
+				return nil, ErrNotGuardian
 			}
 		}
 	}

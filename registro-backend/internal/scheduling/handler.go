@@ -37,8 +37,9 @@ func (h *Handler) CreateSlot(c *gin.Context) {
 		return
 	}
 	userID := c.GetString("user_id")
-	if userID == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+	role := c.GetString("role")
+	if userID == "" || (role != "teacher" && role != "admin" && role != "superadmin") {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only teachers or admins can create slots"})
 		return
 	}
 	if err := h.service.CreateSlots(c.Request.Context(), userID, req); err != nil {

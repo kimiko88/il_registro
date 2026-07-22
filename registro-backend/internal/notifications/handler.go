@@ -2,6 +2,7 @@ package notifications
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -37,7 +38,18 @@ func (h *Handler) ListNotifications(c *gin.Context) {
 		return
 	}
 	unreadOnly := c.Query("unread_only") == "true"
-	list, err := h.service.ListDBNotifications(c.Request.Context(), userID, unreadOnly, 50, 0)
+	limit, err := strconv.Atoi(c.DefaultQuery("limit", "50"))
+	if err != nil || limit < 1 {
+		limit = 50
+	}
+	if limit > 100 {
+		limit = 100
+	}
+	offset, err := strconv.Atoi(c.DefaultQuery("offset", "0"))
+	if err != nil || offset < 0 {
+		offset = 0
+	}
+	list, err := h.service.ListDBNotifications(c.Request.Context(), userID, unreadOnly, limit, offset)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -135,6 +147,7 @@ func (h *Handler) UnregisterToken(c *gin.Context) {
 }
 
 func (h *Handler) SendPush(c *gin.Context) {
+	userID := c.GetString("user_id")
 	role := c.GetString("role")
 	if role != "admin" && role != "superadmin" && role != "teacher" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
@@ -144,6 +157,12 @@ func (h *Handler) SendPush(c *gin.Context) {
 	var req SendNotificationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Non-admin roles (e.g., teachers) cannot send arbitrary notifications to other users without target verification
+	if role == "teacher" && req.UserID != userID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "teachers can only send push notifications to themselves or authorized recipients"})
 		return
 	}
 

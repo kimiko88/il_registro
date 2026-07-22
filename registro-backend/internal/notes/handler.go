@@ -1,6 +1,7 @@
 package notes
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -50,11 +51,11 @@ func (h *Handler) Approve(c *gin.Context) {
 	noteID := c.Param("id")
 
 	if err := h.service.ApproveNote(c.Request.Context(), actorID, actorRole, noteID); err != nil {
-		errStr := err.Error()
-		if strings.HasPrefix(errStr, "unauthorized") {
-			c.JSON(http.StatusForbidden, gin.H{"error": errStr})
+		if errors.Is(err, ErrUnauthorizedApprove) {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
+		errStr := err.Error()
 		if strings.Contains(errStr, "not found") || errStr == "sql: no rows in result set" {
 			c.JSON(http.StatusNotFound, gin.H{"error": "note not found"})
 			return
@@ -81,7 +82,7 @@ func (h *Handler) Update(c *gin.Context) {
 
 	note, err := h.service.UpdateNote(c.Request.Context(), userID, noteID, req)
 	if err != nil {
-		if err.Error() == "unauthorized: can only edit own notes" {
+		if errors.Is(err, ErrUnauthorizedEdit) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
@@ -100,7 +101,7 @@ func (h *Handler) Delete(c *gin.Context) {
 	noteID := c.Param("id")
 
 	if err := h.service.DeleteNote(c.Request.Context(), userID, noteID); err != nil {
-		if err.Error() == "unauthorized: can only delete own notes" {
+		if errors.Is(err, ErrUnauthorizedDelete) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
@@ -146,7 +147,7 @@ func (h *Handler) List(c *gin.Context) {
 
 	notes, err := h.service.ListNotes(c.Request.Context(), filter)
 	if err != nil {
-		if strings.HasPrefix(err.Error(), "unauthorized") {
+		if errors.Is(err, ErrUnauthorizedParent) || errors.Is(err, ErrNotGuardian) || strings.HasPrefix(err.Error(), "unauthorized") {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}

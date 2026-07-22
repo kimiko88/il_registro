@@ -79,6 +79,7 @@ func TestDBNotification(t *testing.T) {
 	mockRepo := new(MockRepository)
 	svc := NewService(mockRepo)
 
+	mockRepo.On("GetUserTokens", mock.Anything, "user-1").Return([]PushToken{}, nil).Maybe()
 	mockRepo.On("CreateDBNotification", mock.Anything, mock.MatchedBy(func(n *DBNotification) bool {
 		return n.UserID == "user-1" && n.Title == "Nuova Assenza"
 	})).Return(nil).Once()

@@ -47,12 +47,20 @@ func (h *Handler) Create(c *gin.Context) {
 
 func (h *Handler) ListByStudent(c *gin.Context) {
 	uid := c.GetString("user_id")
+	role := c.GetString("role")
 	if uid == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 
 	studentID := c.Param("studentID")
+
+	// Ownership check: students can only access their own goals.
+	if role == "student" && uid != studentID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: cannot view goals of another student"})
+		return
+	}
+
 	goals, err := h.service.ListByStudent(c.Request.Context(), studentID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
