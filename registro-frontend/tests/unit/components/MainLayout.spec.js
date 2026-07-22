@@ -81,11 +81,12 @@ describe('MainLayout Logic', () => {
             setupUserRole('teacher')
             const menuItems = useMenuItems('teacher')
 
-            expect(menuItems).toHaveLength(13)
+            expect(menuItems).toHaveLength(16)
             expect(menuItems.map(i => i.label)).toContain('Dashboard')
             expect(menuItems.map(i => i.label)).toContain('Le Mie Classi')
             expect(menuItems.map(i => i.label)).toContain('Voti')
             expect(menuItems.map(i => i.label)).toContain('Presenze')
+            expect(menuItems.map(i => i.label)).toContain('Agenda')
         })
 
         it('should provide admin menu items', () => {
@@ -103,7 +104,7 @@ describe('MainLayout Logic', () => {
             setupUserRole('student')
             const menuItems = useMenuItems('student')
 
-            expect(menuItems).toHaveLength(12)
+            expect(menuItems).toHaveLength(14)
             expect(menuItems.map(i => i.label)).toContain('Dashboard')
             expect(menuItems.map(i => i.label)).toContain('I Miei Voti')
             expect(menuItems.map(i => i.label)).toContain('Le Mie Presenze')
@@ -114,7 +115,7 @@ describe('MainLayout Logic', () => {
             setupUserRole('parent')
             const menuItems = useMenuItems('parent')
 
-            expect(menuItems).toHaveLength(12)
+            expect(menuItems).toHaveLength(13)
             expect(menuItems.map(i => i.label)).toContain('Dashboard')
             expect(menuItems.map(i => i.label)).toContain('I Miei Figli')
             expect(menuItems.map(i => i.label)).toContain('Colloqui')
@@ -124,7 +125,7 @@ describe('MainLayout Logic', () => {
             setupUserRole('secretary')
             const menuItems = useMenuItems('secretary')
 
-            expect(menuItems).toHaveLength(12)
+            expect(menuItems).toHaveLength(14)
             expect(menuItems.map(i => i.label)).toContain('Dashboard')
             expect(menuItems.map(i => i.label)).toContain('Documenti')
             expect(menuItems.map(i => i.label)).toContain('Studenti')

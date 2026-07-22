@@ -33,6 +33,9 @@ func (r *PostgresRepository) Create(ctx context.Context, n *StudentNote) error {
 	}
 	n.CreatedAt = time.Now()
 	n.UpdatedAt = time.Now()
+	if n.TargetRole == "" {
+		n.TargetRole = "all"
+	}
 
 	encryptedNote, err := crypto.EncryptString(n.Note)
 	if err != nil {
@@ -40,8 +43,8 @@ func (r *PostgresRepository) Create(ctx context.Context, n *StudentNote) error {
 	}
 
 	query := `
-		INSERT INTO student_notes (id, school_id, student_id, teacher_id, class_id, subject_id, type, note, date, is_approved, approved_by, approved_at, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+		INSERT INTO student_notes (id, school_id, student_id, teacher_id, class_id, subject_id, type, note, date, is_reserved, target_role, is_approved, approved_by, approved_at, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
 	`
 	var appBy sql.NullString
 	if n.ApprovedBy != "" {
@@ -50,23 +53,26 @@ func (r *PostgresRepository) Create(ctx context.Context, n *StudentNote) error {
 
 	_, err = r.db.ExecContext(ctx, query,
 		n.ID, n.SchoolID, n.StudentID, n.TeacherID, n.ClassID, n.SubjectID,
-		n.Type, encryptedNote, n.Date, n.IsApproved, appBy, n.ApprovedAt, n.CreatedAt, n.UpdatedAt,
+		n.Type, encryptedNote, n.Date, n.IsReserved, n.TargetRole, n.IsApproved, appBy, n.ApprovedAt, n.CreatedAt, n.UpdatedAt,
 	)
 	return err
 }
 
 func (r *PostgresRepository) Update(ctx context.Context, n *StudentNote) error {
 	n.UpdatedAt = time.Now()
+	if n.TargetRole == "" {
+		n.TargetRole = "all"
+	}
 	encryptedNote, err := crypto.EncryptString(n.Note)
 	if err != nil {
 		return err
 	}
 	query := `
 		UPDATE student_notes 
-		SET type=$1, note=$2, date=$3, subject_id=$4, updated_at=$5
-		WHERE id=$6
+		SET type=$1, note=$2, date=$3, subject_id=$4, is_reserved=$5, target_role=$6, updated_at=$7
+		WHERE id=$8
 	`
-	_, err = r.db.ExecContext(ctx, query, n.Type, encryptedNote, n.Date, n.SubjectID, n.UpdatedAt, n.ID)
+	_, err = r.db.ExecContext(ctx, query, n.Type, encryptedNote, n.Date, n.SubjectID, n.IsReserved, n.TargetRole, n.UpdatedAt, n.ID)
 	return err
 }
 
@@ -88,6 +94,7 @@ func (r *PostgresRepository) ApproveNote(ctx context.Context, id string, approve
 func (r *PostgresRepository) Get(ctx context.Context, id string) (*StudentNote, error) {
 	query := `
 		SELECT id, school_id, student_id, teacher_id, class_id, subject_id, type, note, to_char(date, 'YYYY-MM-DD'),
+		       COALESCE(is_reserved, false), COALESCE(target_role, 'all'),
 		       COALESCE(is_approved, true), COALESCE(approved_by, ''), approved_at, created_at, updated_at
 		FROM student_notes WHERE id=$1
 	`
@@ -98,7 +105,8 @@ func (r *PostgresRepository) Get(ctx context.Context, id string) (*StudentNote, 
 
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
 		&n.ID, &n.SchoolID, &n.StudentID, &n.TeacherID, &n.ClassID, &subjectID,
-		&n.Type, &n.Note, &n.Date, &n.IsApproved, &appBy, &appAt, &n.CreatedAt, &n.UpdatedAt,
+		&n.Type, &n.Note, &n.Date, &n.IsReserved, &n.TargetRole,
+		&n.IsApproved, &appBy, &appAt, &n.CreatedAt, &n.UpdatedAt,
 	)
 	if err != nil {
 		return nil, err
@@ -125,6 +133,7 @@ func (r *PostgresRepository) Get(ctx context.Context, id string) (*StudentNote, 
 func (r *PostgresRepository) List(ctx context.Context, filter NoteFilter) ([]StudentNote, error) {
 	query := `
 		SELECT n.id, n.school_id, n.student_id, n.teacher_id, n.class_id, n.subject_id, n.type, n.note, to_char(n.date, 'YYYY-MM-DD'),
+		       COALESCE(n.is_reserved, false), COALESCE(n.target_role, 'all'),
 		       COALESCE(n.is_approved, true), COALESCE(n.approved_by, ''), n.approved_at, n.created_at, n.updated_at,
 		       u.first_name || ' ' || u.last_name as teacher_name,
 		       s.name as subject_name
@@ -167,9 +176,13 @@ func (r *PostgresRepository) List(ctx context.Context, filter NoteFilter) ([]Stu
 		argIdx++
 	}
 
-	// Hide unapproved notes from students and parents
+	// Reserved notes visibility logic
 	if filter.ActorRole == "student" || filter.ActorRole == "parent" {
-		query += " AND COALESCE(n.is_approved, true) = true"
+		query += " AND COALESCE(n.is_approved, true) = true AND COALESCE(n.is_reserved, false) = false"
+	} else if filter.ActorRole == "teacher" && !filter.IsCoordinator {
+		query += fmt.Sprintf(" AND (COALESCE(n.is_reserved, false) = false OR n.teacher_id = $%d)", argIdx)
+		args = append(args, filter.ActorID)
+		argIdx++
 	}
 
 	query += " ORDER BY n.date DESC, n.created_at DESC"
@@ -201,7 +214,8 @@ func (r *PostgresRepository) List(ctx context.Context, filter NoteFilter) ([]Stu
 
 		if err := rows.Scan(
 			&n.ID, &n.SchoolID, &n.StudentID, &n.TeacherID, &n.ClassID, &subjectID,
-			&n.Type, &n.Note, &n.Date, &n.IsApproved, &appBy, &appAt, &n.CreatedAt, &n.UpdatedAt,
+			&n.Type, &n.Note, &n.Date, &n.IsReserved, &n.TargetRole,
+			&n.IsApproved, &appBy, &appAt, &n.CreatedAt, &n.UpdatedAt,
 			&n.TeacherName, &subjectName,
 		); err != nil {
 			return nil, err

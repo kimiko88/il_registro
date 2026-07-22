@@ -46,6 +46,10 @@ type Service interface {
 	// Monthly Breakdown
 	GetMonthlyBreakdown(ctx context.Context, studentID, schoolYear string) (*MonthlyBreakdownResponse, error)
 	GetChildMonthlyBreakdown(ctx context.Context, parentID, studentID, schoolYear string) (*MonthlyBreakdownResponse, error)
+
+	GetChildUnjustified(ctx context.Context, parentID, studentID string) ([]Attendance, error)
+	JustifyChildAbsence(ctx context.Context, parentID, studentID, attendanceID string, req JustifyAbsenceRequest) error
+	GetChildAttendanceStats(ctx context.Context, parentID, studentID string) (*AttendanceStats, error)
 }
 
 type service struct {
@@ -529,6 +533,45 @@ func (s *service) GetMonthlyBreakdown(ctx context.Context, studentID, schoolYear
 		SchoolYear: schoolYear,
 		Months:     months,
 	}, nil
+}
+
+func (s *service) GetChildUnjustified(ctx context.Context, parentID, studentID string) ([]Attendance, error) {
+	if s.userRepo != nil {
+		isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, studentID)
+		if err != nil {
+			return nil, err
+		}
+		if !isGuardian {
+			return nil, fmt.Errorf("parent is not a guardian of student")
+		}
+	}
+	return s.repo.FindUnjustifiedByStudent(studentID)
+}
+
+func (s *service) JustifyChildAbsence(ctx context.Context, parentID, studentID, attendanceID string, req JustifyAbsenceRequest) error {
+	if s.userRepo != nil {
+		isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, studentID)
+		if err != nil {
+			return err
+		}
+		if !isGuardian {
+			return fmt.Errorf("parent is not a guardian of student")
+		}
+	}
+	return s.repo.JustifyAbsenceByParent(attendanceID, req.Reason, req.Notes)
+}
+
+func (s *service) GetChildAttendanceStats(ctx context.Context, parentID, studentID string) (*AttendanceStats, error) {
+	if s.userRepo != nil {
+		isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, studentID)
+		if err != nil {
+			return nil, err
+		}
+		if !isGuardian {
+			return nil, fmt.Errorf("parent is not a guardian of student")
+		}
+	}
+	return s.repo.GetStudentAttendanceStats(studentID)
 }
 
 // GetChildMonthlyBreakdown is the parent-facing version with guardianship check.

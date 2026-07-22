@@ -41,6 +41,15 @@ func (m *MockAttRepo) IsTeacherAssignedToClass(ctx context.Context, teacherID, c
 func (m *MockAttRepo) GetMonthlyBreakdown(ctx context.Context, studentID, schoolYear string) ([]MonthlyBreakdownRow, error) {
 	return nil, nil
 }
+func (m *MockAttRepo) FindUnjustifiedByStudent(studentID string) ([]Attendance, error) {
+	return nil, nil
+}
+func (m *MockAttRepo) JustifyAbsenceByParent(attendanceID string, reason string, notes string) error {
+	return nil
+}
+func (m *MockAttRepo) GetStudentAttendanceStats(studentID string) (*AttendanceStats, error) {
+	return &AttendanceStats{}, nil
+}
 
 func TestRegression_FutureAttendance(t *testing.T) {
 	repo := &MockAttRepo{}

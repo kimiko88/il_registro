@@ -104,6 +104,15 @@ func (m *MockRepository) GetMonthlyBreakdown(ctx context.Context, studentID, sch
 	}
 	return args.Get(0).([]MonthlyBreakdownRow), args.Error(1)
 }
+func (m *MockRepository) FindUnjustifiedByStudent(studentID string) ([]Attendance, error) {
+	return nil, nil
+}
+func (m *MockRepository) JustifyAbsenceByParent(attendanceID string, reason string, notes string) error {
+	return nil
+}
+func (m *MockRepository) GetStudentAttendanceStats(studentID string) (*AttendanceStats, error) {
+	return &AttendanceStats{}, nil
+}
 
 type MockUserRepo struct {
 	users.Repository

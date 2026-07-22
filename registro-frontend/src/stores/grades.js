@@ -168,6 +168,40 @@ export const useGradesStore = defineStore('grades', {
             } finally {
                 this.loading = false;
             }
+        },
+
+        async fetchSemesterReport(semester = 1) {
+            this.loading = true;
+            this.error = null;
+            try {
+                const response = await api.get(`/grades/my-grades/semester/${semester}`);
+                return response.data;
+            } catch (err) {
+                this.error = err.response?.data?.error || 'Errore durante il recupero della pagella';
+                console.error(err);
+                throw err;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async downloadReportCardPDF(semester = 1) {
+            try {
+                const response = await api.get(`/grades/my-grades/semester/${semester}/pdf`, {
+                    responseType: 'blob'
+                });
+                const blob = new Blob([response.data], { type: 'application/pdf' });
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', `pagella_q${semester}.pdf`);
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+            } catch (err) {
+                console.error("Error downloading report card PDF:", err);
+                throw err;
+            }
         }
     }
 });

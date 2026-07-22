@@ -19,10 +19,12 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	ag := r.Group("/agenda")
 	{
 		ag.POST("", h.Create)
+		ag.GET("", h.GetCalendar)
 		ag.GET("/calendar", h.GetCalendar)
 		ag.GET("/class/:classID", h.GetClassEvents)
 		ag.GET("/:id", h.GetByID)
 		ag.PUT("/:id", h.Update)
+		ag.PATCH("/:id", h.Update)
 		ag.DELETE("/:id", h.Delete)
 		ag.POST("/:id/complete", h.MarkComplete)
 		ag.DELETE("/:id/complete", h.UnmarkComplete)
@@ -61,11 +63,21 @@ func (h *Handler) GetCalendar(c *gin.Context) {
 	}
 
 	classID := c.Query("class_id")
+	if classID == "" {
+		classID = c.Query("classID")
+	}
 	subjectID := c.Query("subject_id")
 	agendaType := c.Query("type")
 
 	var fromTime, toTime time.Time
 	var err error
+
+	if dateStr := c.Query("date"); dateStr != "" && c.Query("from") == "" {
+		if dTime, pErr := time.Parse("2006-01-02", dateStr); pErr == nil {
+			fromTime = dTime
+			toTime = dTime
+		}
+	}
 	if fromStr := c.Query("from"); fromStr != "" {
 		fromTime, err = time.Parse("2006-01-02", fromStr)
 		if err != nil {

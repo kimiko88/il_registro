@@ -41,6 +41,10 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	att.GET("/child-attendance/:studentID/summary", h.GetChildSummary)
 	att.GET("/child-attendance/:studentID/trends", h.GetChildAttendanceTrends)
 
+	att.GET("/child/:studentID/unjustified", h.GetChildUnjustified)
+	att.POST("/child/:studentID/justify/:attendanceID", h.JustifyChildAbsence)
+	att.GET("/child/:studentID/stats", h.GetChildAttendanceStats)
+
 	// Admin / Secretary
 	att.POST("/justification/:id/approve", h.ApproveJustification)
 	att.GET("/analytics", h.GetAnalytics)
@@ -480,4 +484,61 @@ func (h *Handler) GetChildMonthlyBreakdown(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, res)
+}
+
+func (h *Handler) GetChildUnjustified(c *gin.Context) {
+	parentID := c.GetString("user_id")
+	studentID := c.Param("studentID")
+	if parentID == "" || studentID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid parameters"})
+		return
+	}
+
+	result, err := h.service.GetChildUnjustified(c.Request.Context(), parentID, studentID)
+	if err != nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}
+
+func (h *Handler) JustifyChildAbsence(c *gin.Context) {
+	parentID := c.GetString("user_id")
+	studentID := c.Param("studentID")
+	attendanceID := c.Param("attendanceID")
+	if parentID == "" || studentID == "" || attendanceID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid parameters"})
+		return
+	}
+
+	var req JustifyAbsenceRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		req.Reason = "Giustificato da genitore"
+	}
+
+	err := h.service.JustifyChildAbsence(c.Request.Context(), parentID, studentID, attendanceID, req)
+	if err != nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "absence justified successfully"})
+}
+
+func (h *Handler) GetChildAttendanceStats(c *gin.Context) {
+	parentID := c.GetString("user_id")
+	studentID := c.Param("studentID")
+	if parentID == "" || studentID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid parameters"})
+		return
+	}
+
+	stats, err := h.service.GetChildAttendanceStats(c.Request.Context(), parentID, studentID)
+	if err != nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, stats)
 }

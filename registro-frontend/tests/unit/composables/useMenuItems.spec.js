@@ -34,7 +34,7 @@ describe('useMenuItems', () => {
         it('should return secretary menu items', () => {
             const menuItems = useMenuItems('secretary')
 
-            expect(menuItems).toHaveLength(12)
+            expect(menuItems).toHaveLength(14)
             expect(menuItems.map(item => item.label)).toContain('Documenti')
             expect(menuItems.map(item => item.label)).toContain('Studenti')
             expect(menuItems.map(item => item.label)).toContain('Report')
@@ -45,11 +45,12 @@ describe('useMenuItems', () => {
         it('should return teacher menu items', () => {
             const menuItems = useMenuItems('teacher')
 
-            expect(menuItems).toHaveLength(13)
+            expect(menuItems).toHaveLength(16)
             expect(menuItems.map(item => item.label)).toContain('Le Mie Classi')
             expect(menuItems.map(item => item.label)).toContain('Voti')
             expect(menuItems.map(item => item.label)).toContain('Presenze')
             expect(menuItems.map(item => item.label)).toContain('Colloqui')
+            expect(menuItems.map(item => item.label)).toContain('Agenda')
         })
 
         it('should have correct paths for teacher', () => {
@@ -66,7 +67,7 @@ describe('useMenuItems', () => {
         it('should return student menu items', () => {
             const menuItems = useMenuItems('student')
 
-            expect(menuItems).toHaveLength(12)
+            expect(menuItems).toHaveLength(14)
             expect(menuItems.map(item => item.label)).toContain('I Miei Voti')
             expect(menuItems.map(item => item.label)).toContain('Le Mie Presenze')
             expect(menuItems.map(item => item.label)).toContain('PCTO')
@@ -78,7 +79,7 @@ describe('useMenuItems', () => {
         it('should return parent menu items', () => {
             const menuItems = useMenuItems('parent')
 
-            expect(menuItems).toHaveLength(12)
+            expect(menuItems).toHaveLength(13)
             expect(menuItems.map(item => item.label)).toContain('I Miei Figli')
             expect(menuItems.map(item => item.label)).toContain('Colloqui')
             expect(menuItems.map(item => item.label)).toContain('Supporto')

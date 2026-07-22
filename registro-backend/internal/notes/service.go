@@ -29,6 +29,9 @@ func NewService(repo Repository, uRepo ...users.Repository) *Service {
 }
 
 func (s *Service) CreateNote(ctx context.Context, teacherID, schoolID string, req CreateNoteRequest) (*StudentNote, error) {
+	if req.TargetRole == "" {
+		req.TargetRole = "all"
+	}
 	n := &StudentNote{
 		SchoolID:   schoolID,
 		TeacherID:  teacherID,
@@ -38,6 +41,8 @@ func (s *Service) CreateNote(ctx context.Context, teacherID, schoolID string, re
 		Type:       req.Type,
 		Note:       req.Note,
 		Date:       req.Date,
+		IsReserved: req.IsReserved,
+		TargetRole: req.TargetRole,
 		IsApproved: true, // Approved by default unless configured otherwise
 	}
 	if err := s.repo.Create(ctx, n); err != nil {
@@ -67,6 +72,15 @@ func (s *Service) UpdateNote(ctx context.Context, teacherID, noteID string, req 
 	}
 	if req.Note != "" {
 		n.Note = req.Note
+	}
+	if req.Date != "" {
+		n.Date = req.Date
+	}
+	if req.IsReserved != nil {
+		n.IsReserved = *req.IsReserved
+	}
+	if req.TargetRole != "" {
+		n.TargetRole = req.TargetRole
 	}
 	if req.Date != "" {
 		n.Date = req.Date

@@ -467,3 +467,5 @@ func (h *Handler) GetFascicolo(c *gin.Context) {
 
 	c.JSON(http.StatusOK, fascicolo)
 }
+
+

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -24,6 +25,9 @@ type Service interface {
 
 	CreateAcademicPeriod(ctx context.Context, actorRole, schoolID string, req CreateAcademicPeriodRequest) (*AcademicPeriod, error)
 	ListAcademicPeriods(ctx context.Context, schoolID string) ([]AcademicPeriod, error)
+
+	GetCalendarEvents(ctx context.Context, schoolID string, year string, eventType string) ([]CalendarEvent, error)
+	GetStudentCalendarEvents(ctx context.Context, schoolID string, studentID string, year string, month string) ([]CalendarEvent, error)
 }
 
 type service struct {
@@ -178,4 +182,60 @@ func (s *service) CreateAcademicPeriod(ctx context.Context, actorRole, schoolID 
 
 func (s *service) ListAcademicPeriods(ctx context.Context, schoolID string) ([]AcademicPeriod, error) {
 	return s.repo.ListAcademicPeriods(schoolID)
+}
+
+func (s *service) GetCalendarEvents(ctx context.Context, schoolID string, year string, eventType string) ([]CalendarEvent, error) {
+	days, err := s.repo.ListNonTeachingDays(schoolID)
+	if err != nil {
+		days = []NonTeachingDay{}
+	}
+
+	var events []CalendarEvent
+	for _, d := range days {
+		dateStr := d.Date.Format("2006-01-02")
+		if year != "" && !strings.HasPrefix(dateStr, year) {
+			continue
+		}
+		if eventType != "" && eventType != "holiday" {
+			continue
+		}
+		events = append(events, CalendarEvent{
+			ID:          d.ID,
+			Title:       d.Label,
+			Description: "Festività / Giorno non didattico",
+			Date:        dateStr,
+			Type:        "holiday",
+			IsPublic:    true,
+		})
+	}
+	if events == nil {
+		events = []CalendarEvent{}
+	}
+	return events, nil
+}
+
+func (s *service) GetStudentCalendarEvents(ctx context.Context, schoolID string, studentID string, year string, month string) ([]CalendarEvent, error) {
+	events, err := s.GetCalendarEvents(ctx, schoolID, year, "")
+	if err != nil {
+		events = []CalendarEvent{}
+	}
+
+	if month != "" {
+		if len(month) == 1 {
+			month = "0" + month
+		}
+		prefix := year + "-" + month
+		var filtered []CalendarEvent
+		for _, ev := range events {
+			if strings.HasPrefix(ev.Date, prefix) || year == "" {
+				filtered = append(filtered, ev)
+			}
+		}
+		events = filtered
+	}
+
+	if events == nil {
+		events = []CalendarEvent{}
+	}
+	return events, nil
 }

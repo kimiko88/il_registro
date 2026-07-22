@@ -114,6 +114,7 @@ func (h *Handler) Delete(c *gin.Context) {
 func (h *Handler) List(c *gin.Context) {
 	actorID := c.GetString("user_id")
 	actorRole := c.GetString("role")
+	isCoordinator := c.GetBool("is_coordinator") || actorRole == "admin" || actorRole == "superadmin" || actorRole == "principal"
 	if actorID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
@@ -133,16 +134,17 @@ func (h *Handler) List(c *gin.Context) {
 	}
 
 	filter := NoteFilter{
-		StudentID: c.Query("student_id"),
-		ClassID:   c.Query("class_id"),
-		TeacherID: c.Query("teacher_id"),
-		Type:      NoteType(c.Query("type")),
-		DateFrom:  c.Query("date_from"),
-		DateTo:    c.Query("date_to"),
-		ActorID:   actorID,
-		ActorRole: actorRole,
-		Page:      page,
-		Limit:     limit,
+		StudentID:     c.Query("student_id"),
+		ClassID:       c.Query("class_id"),
+		TeacherID:     c.Query("teacher_id"),
+		Type:          NoteType(c.Query("type")),
+		DateFrom:      c.Query("date_from"),
+		DateTo:        c.Query("date_to"),
+		ActorID:       actorID,
+		ActorRole:     actorRole,
+		IsCoordinator: isCoordinator,
+		Page:          page,
+		Limit:         limit,
 	}
 
 	notes, err := h.service.ListNotes(c.Request.Context(), filter)
@@ -157,11 +159,37 @@ func (h *Handler) List(c *gin.Context) {
 	c.JSON(http.StatusOK, notes)
 }
 
+func (h *Handler) GetByStudent(c *gin.Context) {
+	actorID := c.GetString("user_id")
+	actorRole := c.GetString("role")
+	isCoordinator := c.GetBool("is_coordinator") || actorRole == "admin" || actorRole == "superadmin" || actorRole == "principal"
+	studentID := c.Param("studentID")
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	filter := NoteFilter{
+		StudentID:     studentID,
+		ActorID:       actorID,
+		ActorRole:     actorRole,
+		IsCoordinator: isCoordinator,
+	}
+
+	notes, err := h.service.ListNotes(c.Request.Context(), filter)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, notes)
+}
+
 func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	group := rg.Group("/notes")
 	{
 		group.POST("", h.Create)
 		group.GET("", h.List)
+		group.GET("/student/:studentID", h.GetByStudent)
 		group.POST("/:id/approve", h.Approve)
 		group.PATCH("/:id", h.Update)
 		group.DELETE("/:id", h.Delete)

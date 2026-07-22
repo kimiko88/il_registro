@@ -14,7 +14,9 @@ import (
 	"registro-backend/internal/admin"
 	"registro-backend/internal/agenda"
 	"registro-backend/internal/attendance"
+	"registro-backend/internal/auditlog"
 	"registro-backend/internal/auth"
+	"registro-backend/internal/certificates"
 	"registro-backend/internal/classes"
 	"registro-backend/internal/colloqui"
 	"registro-backend/internal/communications"
@@ -36,6 +38,7 @@ import (
 	"registro-backend/internal/pcto"
 	"registro-backend/internal/postgres"
 	"registro-backend/internal/reports"
+	"registro-backend/internal/rubrics"
 	"registro-backend/internal/scheduling"
 	"registro-backend/internal/schools"
 	"registro-backend/internal/schoolsettings"
@@ -109,6 +112,7 @@ func main() {
 	extraRepo := extracurricular.NewRepository(database)
 	notifRepo := notifications.NewRepository(database)
 	tripsRepo := trips.NewRepository(database)
+	rubricsRepo := rubrics.NewRepository(database)
 
 	authMiddleware := auth.NewMiddleware(tokenManager, usersRepo)
 
@@ -137,6 +141,7 @@ func main() {
 	extraSvc := extracurricular.NewService(extraRepo)
 	notifSvc := notifications.NewService(notifRepo)
 	tripsSvc := trips.NewService(tripsRepo)
+	rubricsSvc := rubrics.NewService(rubricsRepo)
 
 	// 7. Setup Handlers
 	authH := auth.NewHandler(authSvc)
@@ -158,6 +163,7 @@ func main() {
 	extraH := extracurricular.NewHandler(extraSvc)
 	notifH := notifications.NewHandler(notifSvc)
 	tripsH := trips.NewHandler(tripsSvc)
+	rubricsH := rubrics.NewHandler(rubricsSvc)
 
 	wsHandler := ws.NewHandler(wsHub)
 
@@ -203,6 +209,7 @@ func main() {
 				usersGroup.POST("/:id/change-password", usersH.ChangePassword)
 				usersGroup.POST("/:id/reset-password", usersH.ForceResetPassword)
 				usersGroup.PATCH("/:id/roles", adminMiddleware.RequireAdminOrSuperAdmin(), usersH.AssignRoles)
+				usersGroup.POST("/bulk-import", usersH.BulkImport)
 				usersGroup.GET("/:id/audit-log", usersH.GetAuditLog)
 				usersGroup.POST("/:id/gdpr-export", usersH.ExportGDPR)
 				usersGroup.DELETE("/:id/gdpr-delete", adminMiddleware.RequireAdminOrSuperAdmin(), usersH.DeleteGDPR)
@@ -228,6 +235,7 @@ func main() {
 			notifH.RegisterRoutes(protected)
 			tripsH.RegisterRoutes(protected)
 			notesH.RegisterRoutes(protected)
+			rubricsH.RegisterRoutes(protected)
 
 			pctoH := pcto.NewHandler(pctoSvc)
 			pctoH.RegisterRoutes(protected)
@@ -313,6 +321,16 @@ func main() {
 			tenantsSvc := tenants.NewService(tenantsRepo)
 			tenantsH := tenants.NewHandler(tenantsSvc)
 			tenantsH.RegisterRoutes(protected)
+
+			certRepo := certificates.NewRepository(database)
+			certSvc := certificates.NewService(certRepo, usersRepo)
+			certH := certificates.NewHandler(certSvc)
+			certH.RegisterRoutes(protected)
+
+			auditRepo := auditlog.NewRepository(database)
+			auditSvc := auditlog.NewService(auditRepo)
+			auditH := auditlog.NewHandler(auditSvc)
+			auditH.RegisterRoutes(protected)
 
 			adminH.RegisterRoutes(protected, adminMiddleware)
 			signaturesGroup := protected.Group("/signatures")

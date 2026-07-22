@@ -22,7 +22,11 @@ func NewHandler(service *Service) *Handler {
 func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	scrutiny := rg.Group("/scrutiny")
 	{
+		scrutiny.GET("/overview", h.GetOverview)
 		scrutiny.GET("/matrix/:classId", h.GetMatrix)
+		scrutiny.GET("/class/:classId/report", h.GetClassReport)
+		scrutiny.POST("/class/:classId/finalize", h.FinalizeClass)
+		scrutiny.GET("/export", h.ExportAll)
 		scrutiny.POST("/save", h.Save)
 		scrutiny.POST("/class/:classId/start", h.Start)
 		scrutiny.POST("/class/:classId/validate", h.Validate)
@@ -158,4 +162,43 @@ func (h *Handler) Close(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "scrutiny closed successfully"})
+}
+
+func (h *Handler) GetOverview(c *gin.Context) {
+	overview, err := h.service.GetOverview(c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, overview)
+}
+
+func (h *Handler) GetClassReport(c *gin.Context) {
+	classID := c.Param("classId")
+	report, err := h.service.GetClassReport(c.Request.Context(), classID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, report)
+}
+
+func (h *Handler) FinalizeClass(c *gin.Context) {
+	classID := c.Param("classId")
+	if err := h.service.FinalizeClass(c.Request.Context(), classID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "scrutiny finalized successfully"})
+}
+
+func (h *Handler) ExportAll(c *gin.Context) {
+	data, err := h.service.ExportAll(c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.Header("Content-Type", "text/csv")
+	c.Header("Content-Disposition", "attachment; filename=\"scrutini_overview.csv\"")
+	c.Data(http.StatusOK, "text/csv", data)
 }

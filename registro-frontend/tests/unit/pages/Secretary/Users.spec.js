@@ -2,7 +2,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createTestingPinia } from '@pinia/testing'
-import { exportFile } from 'quasar'
+import { exportFile, Quasar } from 'quasar'
 import Users from '@/pages/secretary/Users.vue'
 import { userService } from 'src/services/userService'
 import adminService from 'src/services/adminService'
@@ -53,15 +53,18 @@ describe('Secretary Users Page (Users.vue)', () => {
         vi.clearAllMocks()
         wrapper = mount(Users, {
             global: {
-                plugins: [createTestingPinia({
-                    initialState: {
-                        auth: { 
-                            user: { school_id: '1' },
-                            userRole: 'secretary'
-                        }
-                    },
-                    createSpy: vi.fn
-                })],
+                plugins: [
+                    [Quasar, {}],
+                    createTestingPinia({
+                        initialState: {
+                            auth: { 
+                                user: { school_id: '1' },
+                                userRole: 'secretary'
+                            }
+                        },
+                        createSpy: vi.fn
+                    })
+                ],
                 stubs: {
                     'q-page': { template: '<div><slot /></div>' },
                     'q-card': { template: '<div><slot /></div>' },

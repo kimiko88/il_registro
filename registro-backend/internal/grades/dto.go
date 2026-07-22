@@ -132,13 +132,19 @@ type TrendSummary struct {
 }
 
 type SemesterReportResponse struct {
-	Semester       int             `json:"semester"`
-	Period         PeriodDate      `json:"period"`
-	Subjects       []SubjectReport `json:"subjects"`
-	OverallAverage float64         `json:"overall_average"`
-	Promoted       string          `json:"promoted"`
-	Status         string          `json:"status"`
-	LastUpdate     time.Time       `json:"last_update"`
+	Semester         int             `json:"semester"`
+	StudentName      string          `json:"student_name"`
+	ClassName        string          `json:"class_name"`
+	SchoolYear       string          `json:"school_year"`
+	BehaviorGrade    float64         `json:"behavior_grade"`
+	ScholasticCredit float64         `json:"scholastic_credit"`
+	OverallAverage   float64         `json:"overall_average"`
+	TotalAbsenceDays int             `json:"total_absence_days"`
+	Period           PeriodDate      `json:"period"`
+	Subjects         []SubjectReport `json:"subjects"`
+	Promoted         string          `json:"promoted"`
+	Status           string          `json:"status"`
+	LastUpdate       time.Time       `json:"last_update"`
 }
 
 type PeriodDate struct {
@@ -423,9 +429,14 @@ type ScrutinyDate struct {
 
 type SubjectReport struct {
 	Subject        string     `json:"subject"`
+	SubjectID      string     `json:"subject_id"`
 	Teacher        string     `json:"teacher"`
-	Grades         []GradeVal `json:"grades"`
+	FinalGrade     float64    `json:"final_grade"`
 	SubjectAverage float64    `json:"subject_average"`
+	GradeCount     int        `json:"grade_count"`
+	AbsenceDays    int        `json:"absence_days"`
+	Notes          string     `json:"notes"`
+	Grades         []GradeVal `json:"grades"`
 	Passed         bool       `json:"passed"`
 }
 

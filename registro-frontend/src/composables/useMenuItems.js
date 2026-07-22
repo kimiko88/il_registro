@@ -28,6 +28,8 @@ export function useMenuItems(role) {
             { label: 'Classi', icon: 'room', path: '/secretary/classes' },
             { label: 'Gruppi Linguistici', icon: 'groups', path: '/secretary/groups' },
             { label: 'Documenti', icon: 'description', path: '/secretary/documents' },
+            { label: 'Certificati', icon: 'workspace_premium', path: '/secretary/certificates' },
+            { label: 'Audit Log', icon: 'security', path: '/secretary/audit-log' },
             { label: 'Studenti', icon: 'school', path: '/secretary/students' },
             { label: 'Utenti', icon: 'people', path: '/secretary/users' },
             { label: 'Comunicazioni', icon: 'email', path: '/secretary/communications' },
@@ -50,6 +52,9 @@ export function useMenuItems(role) {
             { label: 'Presenze', icon: 'how_to_reg', path: '/teacher/attendance' },
             { label: 'Documenti', icon: 'description', path: '/teacher/documents' },
             { label: 'Colloqui', icon: 'event', path: '/teacher/colloqui' },
+            { label: 'Agenda', icon: 'edit_calendar', path: '/teacher/agenda' },
+            { label: 'Note Disciplinari', icon: 'assignment_late', path: '/teacher/notes' },
+            { label: 'Rubriche Valutative', icon: 'fact_check', path: '/teacher/rubrics' },
             { label: 'Comunicazioni', icon: 'email', path: '/teacher/communications' }
         ],
         student: [
@@ -64,12 +69,15 @@ export function useMenuItems(role) {
             { label: 'PCTO', icon: 'work', path: '/student/pcto' },
             { label: 'Orientamento', icon: 'explore', path: '/student/orientamento' },
             { label: 'Comunicazioni', icon: 'email', path: '/student/communications' },
+            { label: 'Calendario Scolastico', icon: 'calendar_month', path: '/student/school-calendar' },
+            { label: 'Pagella', icon: 'description', path: '/student/report-card' },
             { label: 'Profilo', icon: 'person', path: '/student/profile' }
         ],
         parent: [
             { label: 'Dashboard', icon: 'dashboard', path: '/parent', exact: true },
             { label: 'I Miei Figli', icon: 'family_restroom', path: '/parent/children' },
             { label: 'Voti', icon: 'grade', path: '/parent/grades' },
+            { label: 'Pagella', icon: 'description', path: '/parent/report-card' },
             { label: 'Presenze', icon: 'how_to_reg', path: '/parent/attendance' },
             { label: 'Note Disciplinari', icon: 'assignment_late', path: '/parent/notes' },
             { label: 'Colloqui', icon: 'event', path: '/parent/colloqui' },

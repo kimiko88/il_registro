@@ -156,6 +156,39 @@ export const useAttendanceStore = defineStore('attendance', {
                 console.error('Error fetching monthly breakdown:', err);
                 throw err;
             }
+        },
+
+        async fetchUnjustified(studentID) {
+            try {
+                const response = await api.get(`/attendance/child/${studentID}/unjustified`);
+                return response.data || [];
+            } catch (err) {
+                console.error('Error fetching unjustified absences:', err);
+                return [];
+            }
+        },
+
+        async justifyAbsence(studentID, attendanceID, reason, notes = '') {
+            try {
+                const response = await api.post(`/attendance/child/${studentID}/justify/${attendanceID}`, {
+                    reason,
+                    notes
+                });
+                return response.data;
+            } catch (err) {
+                console.error('Error justifying absence:', err);
+                throw err;
+            }
+        },
+
+        async fetchChildStats(studentID) {
+            try {
+                const response = await api.get(`/attendance/child/${studentID}/stats`);
+                return response.data;
+            } catch (err) {
+                console.error('Error fetching child attendance stats:', err);
+                throw err;
+            }
         }
     }
 });

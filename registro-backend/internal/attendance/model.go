@@ -36,15 +36,41 @@ type Attendance struct {
 	SubjectID *string          `json:"subject_id,omitempty" db:"subject_id"`
 	Status    AttendanceStatus `json:"status" db:"status"`
 
-	Justified   bool       `json:"justified" db:"justified"`
-	JustifiedBy *string    `json:"justified_by,omitempty" db:"justified_by"`
-	JustifiedAt *time.Time `json:"justified_at,omitempty" db:"justified_at"`
-	Notes       string     `json:"notes,omitempty" db:"notes"`
-	EntryTime   *string    `json:"entry_time,omitempty" db:"entry_time"`
-	ExitTime    *string    `json:"exit_time,omitempty" db:"exit_time"`
+	Justified             bool       `json:"justified" db:"justified"`
+	JustifiedBy           *string    `json:"justified_by,omitempty" db:"justified_by"`
+	JustifiedAt           *time.Time `json:"justified_at,omitempty" db:"justified_at"`
+	ParentJustified       bool       `json:"parent_justified" db:"parent_justified"`
+	ParentJustifiedAt     *time.Time `json:"parent_justified_at,omitempty" db:"parent_justified_at"`
+	JustificationReason   string     `json:"justification_reason,omitempty" db:"justification_reason"`
+	Notes                 string     `json:"notes,omitempty" db:"notes"`
+	EntryTime             *string    `json:"entry_time,omitempty" db:"entry_time"`
+	ExitTime              *string    `json:"exit_time,omitempty" db:"exit_time"`
 
 	CreatedAt time.Time  `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time  `json:"updated_at" db:"updated_at"`
+}
+
+type AttendanceStats struct {
+	TotalSchoolDays   int                 `json:"total_school_days"`
+	DaysPresent       int                 `json:"days_present"`
+	DaysAbsent        int                 `json:"days_absent"`
+	LateArrivals      int                 `json:"late_arrivals"`
+	EarlyExits        int                 `json:"early_exits"`
+	Justified         int                 `json:"justified"`
+	Unjustified       int                 `json:"unjustified"`
+	MonthlyBreakdown  []MonthlyAttendance `json:"monthly_breakdown"`
+	AbsencePercentage float64             `json:"absence_percentage"`
+}
+
+type MonthlyAttendance struct {
+	Month   string `json:"month"`
+	Present int    `json:"present"`
+	Absent  int    `json:"absent"`
+}
+
+type JustifyAbsenceRequest struct {
+	Reason string `json:"reason"`
+	Notes  string `json:"notes"`
 }
 
 // Justification represents a request to justify an absence

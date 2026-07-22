@@ -18,6 +18,10 @@ func NewHandler(s Service) *Handler {
 func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	cal := r.Group("/school-calendar")
 
+	// General calendar events endpoint
+	cal.GET("", h.GetCalendarEvents)
+	cal.GET("/student", h.GetStudentCalendarEvents)
+
 	// Anno scolastico (solo segreteria/admin/superadmin)
 	cal.PUT("/year", h.SetYear)
 	cal.GET("/year", h.GetYear)
@@ -172,4 +176,39 @@ func (h *Handler) ListNonTeachingDays(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, res)
+}
+
+func (h *Handler) GetCalendarEvents(c *gin.Context) {
+	schoolID := c.GetString("school_id")
+	if schoolID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "school_id mancante nel token"})
+		return
+	}
+	year := c.Query("year")
+	eventType := c.Query("type")
+
+	events, err := h.service.GetCalendarEvents(c.Request.Context(), schoolID, year, eventType)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, events)
+}
+
+func (h *Handler) GetStudentCalendarEvents(c *gin.Context) {
+	schoolID := c.GetString("school_id")
+	studentID := c.GetString("user_id")
+	if schoolID == "" || studentID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	year := c.Query("year")
+	month := c.Query("month")
+
+	events, err := h.service.GetStudentCalendarEvents(c.Request.Context(), schoolID, studentID, year, month)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, events)
 }

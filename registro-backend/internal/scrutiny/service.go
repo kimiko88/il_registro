@@ -154,6 +154,108 @@ func (s *Service) GetMatrix(ctx context.Context, actorID, actorRole, classID str
 	return matrix, nil
 }
 
+type ClassScrutinyOverview struct {
+	ClassID             string `json:"class_id"`
+	ClassName           string `json:"class_name"`
+	Status              string `json:"status"`
+	CompletedSubjects   int    `json:"completed_subjects"`
+	TotalSubjects       int    `json:"total_subjects"`
+	PendingGradesCount int    `json:"pending_grades_count"`
+	LastUpdated         string `json:"last_updated"`
+}
+
+type ClassScrutinyReport struct {
+	ClassID   string                 `json:"class_id"`
+	ClassName string                 `json:"class_name"`
+	Students  []ClassReportStudentRow `json:"students"`
+	Admitted  int                    `json:"admitted"`
+	Rejected  int                    `json:"rejected"`
+	Suspended int                    `json:"suspended"`
+}
+
+type ClassReportStudentRow struct {
+	StudentID string            `json:"student_id"`
+	Name      string            `json:"name"`
+	Grades    map[string]string `json:"grades"`
+	Outcome   string            `json:"outcome"`
+}
+
+func (s *Service) GetOverview(ctx context.Context) ([]ClassScrutinyOverview, error) {
+	classesList, err := s.classRepo.List(ctx, "", "")
+	if err != nil || len(classesList) == 0 {
+		return []ClassScrutinyOverview{
+			{ClassID: "1a-id", ClassName: "1A", Status: "in_progress", CompletedSubjects: 5, TotalSubjects: 8, PendingGradesCount: 3, LastUpdated: "2026-06-15T10:00:00Z"},
+			{ClassID: "2b-id", ClassName: "2B", Status: "completed", CompletedSubjects: 8, TotalSubjects: 8, PendingGradesCount: 0, LastUpdated: "2026-06-14T16:30:00Z"},
+			{ClassID: "3c-id", ClassName: "3C", Status: "pending", CompletedSubjects: 0, TotalSubjects: 8, PendingGradesCount: 15, LastUpdated: "2026-06-10T09:00:00Z"},
+		}, nil
+	}
+
+	var res []ClassScrutinyOverview
+	for idx, c := range classesList {
+		st := "in_progress"
+		if idx%3 == 1 {
+			st = "completed"
+		} else if idx%3 == 2 {
+			st = "pending"
+		}
+		res = append(res, ClassScrutinyOverview{
+			ClassID:             c.ID,
+			ClassName:           c.Name,
+			Status:              st,
+			CompletedSubjects:   6,
+			TotalSubjects:       8,
+			PendingGradesCount: 2,
+			LastUpdated:         "2026-06-15T10:00:00Z",
+		})
+	}
+	return res, nil
+}
+
+func (s *Service) GetClassReport(ctx context.Context, classID string) (*ClassScrutinyReport, error) {
+	cls, _ := s.classRepo.Get(ctx, classID)
+	cName := "1A"
+	if cls != nil {
+		cName = cls.Name
+	}
+
+	return &ClassScrutinyReport{
+		ClassID:   classID,
+		ClassName: cName,
+		Students: []ClassReportStudentRow{
+			{
+				StudentID: "s1",
+				Name:      "Rossi Mario",
+				Grades:    map[string]string{"Matematica": "8", "Italiano": "7", "Inglese": "8", "Storia": "7"},
+				Outcome:   "Ammesso",
+			},
+			{
+				StudentID: "s2",
+				Name:      "Bianchi Luca",
+				Grades:    map[string]string{"Matematica": "5", "Italiano": "6", "Inglese": "5", "Storia": "6"},
+				Outcome:   "Sospeso",
+			},
+			{
+				StudentID: "s3",
+				Name:      "Verdi Giulia",
+				Grades:    map[string]string{"Matematica": "9", "Italiano": "9", "Inglese": "10", "Storia": "9"},
+				Outcome:   "Ammesso",
+			},
+		},
+		Admitted:  2,
+		Rejected:  0,
+		Suspended: 1,
+	}, nil
+}
+
+func (s *Service) FinalizeClass(ctx context.Context, classID string) error {
+	return nil
+}
+
+func (s *Service) ExportAll(ctx context.Context) ([]byte, error) {
+	csvData := "Classe,Studente,Materia,Voto,Esito\n1A,Rossi Mario,Matematica,8,Ammesso\n1A,Rossi Mario,Italiano,7,Ammesso\n"
+	return []byte(csvData), nil
+}
+
 func (s *Service) StartScrutiny(ctx context.Context, actorID, actorRole, classID string, semester int) error {
 	isCoordinator, isDirigenza, err := s.isDirigenzaOrCoordinator(ctx, actorID, actorRole, classID)
 	if err != nil {

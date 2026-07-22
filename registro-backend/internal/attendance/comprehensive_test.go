@@ -71,6 +71,15 @@ func (m *MockRepo) GetMonthlyBreakdown(ctx context.Context, studentID, schoolYea
 	}
 	return args.Get(0).([]MonthlyBreakdownRow), args.Error(1)
 }
+func (m *MockRepo) FindUnjustifiedByStudent(studentID string) ([]Attendance, error) {
+	return nil, nil
+}
+func (m *MockRepo) JustifyAbsenceByParent(attendanceID string, reason string, notes string) error {
+	return nil
+}
+func (m *MockRepo) GetStudentAttendanceStats(studentID string) (*AttendanceStats, error) {
+	return &AttendanceStats{}, nil
+}
 func (m *MockRepo) FindPendingJustifications(classID string) ([]Justification, error) {
 	args := m.Called(classID)
 	return args.Get(0).([]Justification), args.Error(1)

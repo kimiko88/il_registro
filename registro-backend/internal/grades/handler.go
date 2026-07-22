@@ -68,10 +68,12 @@ func (h *Handler) RegisterRoutes(router *gin.RouterGroup) {
 		grades.GET("/my-grades/average", h.GetMyAverages)
 		grades.GET("/my-grades/trend", h.GetMyTrend)
 		grades.GET("/my-grades/semester/:semester", h.GetSemesterReport)
+		grades.GET("/my-grades/semester/:semester/pdf", h.DownloadSemesterReportPDF)
 
 		// Parent Endpoints
 		grades.GET("/child-grades/:studentID", h.GetChildGrades)
 		grades.GET("/child-grades/:studentID/average", h.GetChildGradesAverage)
+		grades.GET("/child-grades/:studentID/semester/:semester", h.GetChildSemesterReport)
 	}
 }
 
@@ -491,6 +493,31 @@ func (h *Handler) GetSemesterReport(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
+func (h *Handler) DownloadSemesterReportPDF(c *gin.Context) {
+	studentID := c.GetString("user_id")
+	if studentID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	semStr := c.Param("semester")
+	sem, err := strconv.Atoi(semStr)
+	if err != nil || (sem != 1 && sem != 2) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "semester must be 1 or 2"})
+		return
+	}
+
+	pdfData, err := h.service.GenerateSemesterReportPDF(studentID, sem)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	filename := fmt.Sprintf("pagella_q%d_%s.pdf", sem, studentID)
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+	c.Data(http.StatusOK, "application/pdf", pdfData)
+}
+
 // --- Parent Endpoints ---
 
 func (h *Handler) GetChildGrades(c *gin.Context) {
@@ -527,6 +554,34 @@ func (h *Handler) GetChildGradesAverage(c *gin.Context) {
 
 	studentID := c.Param("studentID")
 	resp, err := h.service.GetChildAverages(parentID, studentID)
+	if err != nil {
+		if errors.Is(err, ErrNotGuardian) {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, resp)
+}
+
+func (h *Handler) GetChildSemesterReport(c *gin.Context) {
+	parentID := c.GetString("user_id")
+	if parentID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	studentID := c.Param("studentID")
+	semStr := c.Param("semester")
+	sem, err := strconv.Atoi(semStr)
+	if err != nil || (sem != 1 && sem != 2) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "semester must be 1 or 2"})
+		return
+	}
+
+	resp, err := h.service.GetChildSemesterReport(c.Request.Context(), parentID, studentID, sem)
 	if err != nil {
 		if errors.Is(err, ErrNotGuardian) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})

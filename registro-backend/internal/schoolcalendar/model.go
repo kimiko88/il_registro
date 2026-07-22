@@ -38,3 +38,14 @@ type AcademicPeriod struct {
 	IsCurrent      bool      `json:"is_current" db:"is_current"`
 	CreatedAt      time.Time `json:"created_at" db:"created_at"`
 }
+
+// CalendarEvent rappresenta un evento unico per la vista calendario scolastico
+type CalendarEvent struct {
+	ID          string `json:"id"`
+	Title       string `json:"title"`
+	Description string `json:"description,omitempty"`
+	Date        string `json:"date"` // YYYY-MM-DD
+	Type        string `json:"type"` // "holiday" | "event" | "exam" | "deadline"
+	IsPublic    bool   `json:"is_public"`
+	ClassID     string `json:"class_id,omitempty"`
+}
