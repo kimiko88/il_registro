@@ -135,10 +135,10 @@ func (r *PostgresRepository) List(ctx context.Context, filter NoteFilter) ([]Stu
 		SELECT n.id, n.school_id, n.student_id, n.teacher_id, n.class_id, n.subject_id, n.type, n.note, to_char(n.date, 'YYYY-MM-DD'),
 		       COALESCE(n.is_reserved, false), COALESCE(n.target_role, 'all'),
 		       COALESCE(n.is_approved, true), COALESCE(n.approved_by, ''), n.approved_at, n.created_at, n.updated_at,
-		       u.first_name || ' ' || u.last_name as teacher_name,
+		       COALESCE(u.first_name || ' ' || u.last_name, 'Docente') as teacher_name,
 		       s.name as subject_name
 		FROM student_notes n
-		JOIN users u ON n.teacher_id = u.id
+		LEFT JOIN users u ON n.teacher_id = u.id
 		LEFT JOIN subjects s ON n.subject_id = s.id
 		WHERE 1=1
 	`
@@ -146,9 +146,11 @@ func (r *PostgresRepository) List(ctx context.Context, filter NoteFilter) ([]Stu
 	argIdx := 1
 
 	if filter.StudentID != "" {
-		query += fmt.Sprintf(" AND n.student_id = $%d", argIdx)
-		args = append(args, filter.StudentID)
-		argIdx++
+		if _, err := uuid.Parse(filter.StudentID); err == nil {
+			query += fmt.Sprintf(" AND (n.student_id = $%d::uuid OR n.student_id IN (SELECT user_id FROM students WHERE id = $%d::uuid))", argIdx, argIdx)
+			args = append(args, filter.StudentID)
+			argIdx++
+		}
 	}
 	if filter.ClassID != "" {
 		query += fmt.Sprintf(" AND n.class_id = $%d", argIdx)

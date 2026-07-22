@@ -158,7 +158,7 @@ func main() {
 	adminH := admin.NewHandler(adminSvc)
 	timetablesH := timetables.NewHandler(timetablesRepo)
 	agendaH := agenda.NewHandler(agendaSvc)
-	_ = colloqui.NewHandler(colloquiSvc) // DEPRECATED: Consolidated into scheduling
+	colloquiH := colloqui.NewHandler(colloquiSvc)
 	verbaliH := verbali.NewHandler(verbaliSvc)
 	extraH := extracurricular.NewHandler(extraSvc)
 	notifH := notifications.NewHandler(notifSvc)
@@ -228,7 +228,7 @@ func main() {
 			schedH.RegisterRoutes(protected)
 			timetablesH.RegisterRoutes(protected)
 			agendaH.RegisterRoutes(protected)
-			// colloquiH.RegisterRoutes(protected) -- DEPRECATED: Consolidated into schedH (scheduling)
+			colloquiH.RegisterRoutes(protected)
 			verbaliH.RegisterRoutes(protected)
 			extraH.RegisterRoutes(protected)
 			notifH.RegisterRoutes(protected)
