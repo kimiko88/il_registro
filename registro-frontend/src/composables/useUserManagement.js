@@ -17,7 +17,7 @@ export function useUserManagement() {
         }
     };
 
-    const importUsers = async (file) => {
+    const importUsers = async (_file) => {
         // Mock import
         $q.notify({ type: 'positive', message: 'Import started' });
     };

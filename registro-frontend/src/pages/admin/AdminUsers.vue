@@ -268,7 +268,7 @@ const $q = useQuasar()
 
 // State
 const admins = ref([])
-const schools = ref([])
+const _schools = ref([])
 const loading = ref(false)
 const saving = ref(false)
 const showDialog = ref(false)

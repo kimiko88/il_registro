@@ -270,7 +270,6 @@ const homeworks = ref([])
 
 // Options from the store
 const classOptions = ref([])
-const subjectOptions = ref([])
 
 const newLesson = ref({
   date: date.formatDate(Date.now(), 'YYYY-MM-DD'),

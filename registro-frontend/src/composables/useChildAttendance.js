@@ -9,7 +9,7 @@ export function useChildAttendance() {
 
     const { stats, records, loading } = useMyAttendance();
 
-    const fetchAttendanceForChild = async (studentId) => {
+    const fetchAttendanceForChild = async (_studentId) => {
         // In real app, pass studentId to fetchMyAttendance or a specific fetchChildAttendance
         await attendanceStore.fetchMyAttendance();
     };

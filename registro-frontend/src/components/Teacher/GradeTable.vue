@@ -45,10 +45,9 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
 import { useGradesStore } from 'src/stores/grades';
 
-const props = defineProps({
+defineProps({
   students: Array,
   loading: Boolean
 });

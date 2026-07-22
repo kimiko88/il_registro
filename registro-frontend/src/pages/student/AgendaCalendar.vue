@@ -54,8 +54,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import lessonService from '@/services/lessonService'
+import { ref, computed } from 'vue'
 
 const filterType = ref('all')
 const homeworks = ref([

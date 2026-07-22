@@ -209,7 +209,6 @@ func main() {
 				usersGroup.POST("/:id/change-password", usersH.ChangePassword)
 				usersGroup.POST("/:id/reset-password", usersH.ForceResetPassword)
 				usersGroup.PATCH("/:id/roles", adminMiddleware.RequireAdminOrSuperAdmin(), usersH.AssignRoles)
-				usersGroup.POST("/bulk-import", usersH.BulkImport)
 				usersGroup.GET("/:id/audit-log", usersH.GetAuditLog)
 				usersGroup.POST("/:id/gdpr-export", usersH.ExportGDPR)
 				usersGroup.DELETE("/:id/gdpr-delete", adminMiddleware.RequireAdminOrSuperAdmin(), usersH.DeleteGDPR)

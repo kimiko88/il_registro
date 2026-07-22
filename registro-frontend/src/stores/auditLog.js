@@ -44,29 +44,25 @@ export const useAuditLogStore = defineStore('auditLog', {
         },
 
         async exportLogs(filters = {}) {
-            try {
-                const params = new URLSearchParams();
-                if (filters.actor_id) params.append('actor_id', filters.actor_id);
-                if (filters.action && filters.action !== 'all') params.append('action', filters.action);
-                if (filters.entity_type) params.append('entity_type', filters.entity_type);
-                if (filters.from) params.append('from', filters.from);
-                if (filters.to) params.append('to', filters.to);
+            const params = new URLSearchParams();
+            if (filters.actor_id) params.append('actor_id', filters.actor_id);
+            if (filters.action && filters.action !== 'all') params.append('action', filters.action);
+            if (filters.entity_type) params.append('entity_type', filters.entity_type);
+            if (filters.from) params.append('from', filters.from);
+            if (filters.to) params.append('to', filters.to);
 
-                const response = await api.get(`/audit-log/export?${params.toString()}`, {
-                    responseType: 'blob'
-                });
-                const blob = new Blob([response.data], { type: 'text/csv' });
-                const url = window.URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.setAttribute('download', `audit_logs_${new Date().toISOString().slice(0, 10)}.csv`);
-                document.body.appendChild(link);
-                link.click();
-                link.remove();
-                window.URL.revokeObjectURL(url);
-            } catch (err) {
-                throw err;
-            }
+            const response = await api.get(`/audit-log/export?${params.toString()}`, {
+                responseType: 'blob'
+            });
+            const blob = new Blob([response.data], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `audit_logs_${new Date().toISOString().slice(0, 10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
         }
     }
 });

@@ -149,7 +149,7 @@ import dashboardService from 'src/services/dashboardService'
 import { communicationService } from '@/services/communicationService'
 
 const authStore = useAuthStore()
-const { user, userName, userRole } = storeToRefs(authStore)
+const { user, userRole } = storeToRefs(authStore)
 const router = useRouter()
 const $q = useQuasar()
 

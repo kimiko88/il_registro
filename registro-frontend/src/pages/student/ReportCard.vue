@@ -223,7 +223,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { useGradesStore } from '@/stores/grades'
 import { useAuthStore } from '@/stores/auth'

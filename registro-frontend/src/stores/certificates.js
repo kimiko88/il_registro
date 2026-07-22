@@ -47,31 +47,23 @@ export const useCertificatesStore = defineStore('certificates', {
         },
 
         async downloadPDF(id) {
-            try {
-                const response = await api.get(`/certificates/${id}/pdf`, {
-                    responseType: 'blob'
-                });
-                const blob = new Blob([response.data], { type: 'application/pdf' });
-                const url = window.URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.setAttribute('download', `certificato_${id}.pdf`);
-                document.body.appendChild(link);
-                link.click();
-                link.remove();
-                window.URL.revokeObjectURL(url);
-            } catch (err) {
-                throw err;
-            }
+            const response = await api.get(`/certificates/${id}/pdf`, {
+                responseType: 'blob'
+            });
+            const blob = new Blob([response.data], { type: 'application/pdf' });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `certificato_${id}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
         },
 
         async deleteCertificate(id) {
-            try {
-                await api.delete(`/certificates/${id}`);
-                this.certificates = this.certificates.filter(c => c.id !== id);
-            } catch (err) {
-                throw err;
-            }
+            await api.delete(`/certificates/${id}`);
+            this.certificates = this.certificates.filter(c => c.id !== id);
         }
     }
 });

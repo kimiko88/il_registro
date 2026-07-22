@@ -346,7 +346,7 @@ async function syncQueuedTickets() {
   })
 
   // Send queued tickets
-  for (const t of queuedTickets.value) {
+  for (const _t of queuedTickets.value) {
     try {
       // Simulate API post
       await new Promise(resolve => setTimeout(resolve, 800))
