@@ -38,6 +38,9 @@ func (m *MockAttRepo) DeleteJustification(id string) error { return nil }
 func (m *MockAttRepo) IsTeacherAssignedToClass(ctx context.Context, teacherID, classID string) (bool, error) {
 	return true, nil
 }
+func (m *MockAttRepo) GetMonthlyBreakdown(ctx context.Context, studentID, schoolYear string) ([]MonthlyBreakdownRow, error) {
+	return nil, nil
+}
 
 func TestRegression_FutureAttendance(t *testing.T) {
 	repo := &MockAttRepo{}

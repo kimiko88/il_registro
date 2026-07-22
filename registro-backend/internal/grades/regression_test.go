@@ -101,6 +101,12 @@ func (m *RegressionMockRepo) FindEnrolledSubjects(studentID string, semester int
 	return nil, nil
 }
 
+func (m *RegressionMockRepo) GetWeightConfigs(schoolID, subjectID, classID string) ([]GradeWeightConfig, error) {
+	return nil, nil
+}
+func (m *RegressionMockRepo) UpsertWeightConfig(cfg *GradeWeightConfig) (*GradeWeightConfig, error) { return cfg, nil }
+func (m *RegressionMockRepo) DeleteWeightConfig(id string) error              { return nil }
+
 func TestService_FilterLogicRegex(t *testing.T) {
 	// Setup specific data
 	mockData := []Grade{

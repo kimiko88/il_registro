@@ -1,6 +1,7 @@
 package communications
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"path/filepath"
@@ -197,11 +198,15 @@ func (h *Handler) GetByID(c *gin.Context) {
 	id := c.Param("id")
 	msg, err := h.service.GetMessageByID(c.Request.Context(), uid, role, id)
 	if err != nil {
-		if strings.HasPrefix(err.Error(), "unauthorized") {
+		if errors.Is(err, ErrNotFound) || err.Error() == "communication not found" {
+			c.JSON(http.StatusNotFound, gin.H{"error": "communication not found"})
+			return
+		}
+		if strings.HasPrefix(err.Error(), "unauthorized") || err.Error() == "forbidden" {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, msg)
@@ -224,6 +229,10 @@ func (h *Handler) Update(c *gin.Context) {
 		return
 	}
 	if err := h.service.UpdateMessage(c.Request.Context(), uid, role, id, req.Subject, req.Body); err != nil {
+		if errors.Is(err, ErrNotFound) || err.Error() == "communication not found" {
+			c.JSON(http.StatusNotFound, gin.H{"error": "communication not found"})
+			return
+		}
 		if strings.HasPrefix(err.Error(), "unauthorized") || err.Error() == "forbidden" {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
@@ -299,11 +308,35 @@ func (h *Handler) UploadAttachment(c *gin.Context) {
 	}
 	defer file.Close()
 
+	// Max size check: 10 MB
+	const maxFileSize = 10 * 1024 * 1024
+	if header.Size > maxFileSize {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "la dimensione del file supera il limite massimo consentito (10 MB)"})
+		return
+	}
+
+	// Extension & MIME check
+	ext := strings.ToLower(filepath.Ext(header.Filename))
+	allowedExts := map[string]bool{
+		".pdf": true, ".jpg": true, ".jpeg": true, ".png": true,
+		".gif": true, ".webp": true, ".doc": true, ".docx": true,
+		".xls": true, ".xlsx": true, ".txt": true,
+	}
+	if !allowedExts[ext] {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "estensione file non consentita"})
+		return
+	}
+
+	contentType := header.Header.Get("Content-Type")
+	if contentType != "" && !isValidMIME(contentType) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "tipo MIME non consentito"})
+		return
+	}
+
 	var publicURL string
 	if h.uploader != nil {
-		ext := filepath.Ext(header.Filename)
 		storagePath := fmt.Sprintf("communications/%s%s", uuid.New().String(), ext)
-		publicURL, err = h.uploader.UploadFile(c.Request.Context(), storagePath, header.Header.Get("Content-Type"), file)
+		publicURL, err = h.uploader.UploadFile(c.Request.Context(), storagePath, contentType, file)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -313,4 +346,22 @@ func (h *Handler) UploadAttachment(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"attachment_url": publicURL})
+}
+
+func isValidMIME(contentType string) bool {
+	contentType = strings.ToLower(strings.TrimSpace(strings.Split(contentType, ";")[0]))
+	allowed := map[string]bool{
+		"application/pdf":                                                        true,
+		"image/jpeg":                                                             true,
+		"image/png":                                                              true,
+		"image/gif":                                                              true,
+		"image/webp":                                                             true,
+		"application/msword":                                                     true,
+		"application/vnd.openxmlformats-officedocument.wordprocessingml.document": true,
+		"application/vnd.ms-excel":                                               true,
+		"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":      true,
+		"text/plain":                                                             true,
+		"application/octet-stream":                                               true,
+	}
+	return allowed[contentType]
 }

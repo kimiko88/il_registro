@@ -148,6 +148,10 @@ func (h *Handler) UnregisterToken(c *gin.Context) {
 
 func (h *Handler) SendPush(c *gin.Context) {
 	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	role := c.GetString("role")
 	if role != "admin" && role != "superadmin" && role != "teacher" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
@@ -157,6 +161,11 @@ func (h *Handler) SendPush(c *gin.Context) {
 	var req SendNotificationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if req.UserID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "user_id is required"})
 		return
 	}
 

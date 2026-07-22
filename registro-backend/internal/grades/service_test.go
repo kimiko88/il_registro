@@ -136,6 +136,24 @@ func (m *MockRepository) FindGradesByTestID(testID string) ([]Grade, error) {
 	}
 	return args.Get(0).([]Grade), args.Error(1)
 }
+func (m *MockRepository) GetWeightConfigs(schoolID, subjectID, classID string) ([]GradeWeightConfig, error) {
+	args := m.Called(schoolID, subjectID, classID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]GradeWeightConfig), args.Error(1)
+}
+func (m *MockRepository) UpsertWeightConfig(cfg *GradeWeightConfig) (*GradeWeightConfig, error) {
+	args := m.Called(cfg)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*GradeWeightConfig), args.Error(1)
+}
+func (m *MockRepository) DeleteWeightConfig(id string) error {
+	args := m.Called(id)
+	return args.Error(0)
+}
 
 // MockUserRepo
 type MockUserRepo struct {

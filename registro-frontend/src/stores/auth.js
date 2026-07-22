@@ -13,16 +13,23 @@ export const useAuthStore = defineStore('auth', () => {
         return `${user.value.first_name || user.value.firstName || ''} ${user.value.last_name || user.value.lastName || ''}`.trim() || 'User'
     })
 
-    function login(userData, tokenData, refreshTokenData, rememberMe = false) {
+    function login(userData, tokenData, refreshTokenData, rememberMe = true) {
         user.value = userData
         token.value = tokenData
         refreshToken.value = refreshTokenData
 
-        const storage = rememberMe ? localStorage : sessionStorage
-        storage.setItem('user', JSON.stringify(userData))
-        storage.setItem('token', tokenData)
+        localStorage.setItem('user', JSON.stringify(userData))
+        localStorage.setItem('token', tokenData)
         if (refreshTokenData) {
-            storage.setItem('refreshToken', refreshTokenData)
+            localStorage.setItem('refreshToken', refreshTokenData)
+        }
+
+        if (!rememberMe) {
+            sessionStorage.setItem('user', JSON.stringify(userData))
+            sessionStorage.setItem('token', tokenData)
+            if (refreshTokenData) {
+                sessionStorage.setItem('refreshToken', refreshTokenData)
+            }
         }
     }
 
@@ -44,12 +51,8 @@ export const useAuthStore = defineStore('auth', () => {
 
     function updateUser(userData) {
         user.value = userData
-        if (localStorage.getItem('user')) {
-            localStorage.setItem('user', JSON.stringify(userData))
-        }
-        if (sessionStorage.getItem('user')) {
-            sessionStorage.setItem('user', JSON.stringify(userData))
-        }
+        localStorage.setItem('user', JSON.stringify(userData))
+        sessionStorage.setItem('user', JSON.stringify(userData))
     }
 
     return {

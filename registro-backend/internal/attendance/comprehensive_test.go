@@ -64,6 +64,13 @@ func (m *MockRepo) FindJustificationByID(id string) (*Justification, error) {
 	}
 	return args.Get(0).(*Justification), args.Error(1)
 }
+func (m *MockRepo) GetMonthlyBreakdown(ctx context.Context, studentID, schoolYear string) ([]MonthlyBreakdownRow, error) {
+	args := m.Called(ctx, studentID, schoolYear)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]MonthlyBreakdownRow), args.Error(1)
+}
 func (m *MockRepo) FindPendingJustifications(classID string) ([]Justification, error) {
 	args := m.Called(classID)
 	return args.Get(0).([]Justification), args.Error(1)

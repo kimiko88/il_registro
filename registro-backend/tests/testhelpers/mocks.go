@@ -266,6 +266,24 @@ func (m *MockGradesRepository) FindEnrolledSubjects(studentID string, semester i
 	}
 	return args.Get(0).([]string), args.Error(1)
 }
+func (m *MockGradesRepository) GetWeightConfigs(schoolID, subjectID, classID string) ([]grades.GradeWeightConfig, error) {
+	args := m.Called(schoolID, subjectID, classID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]grades.GradeWeightConfig), args.Error(1)
+}
+func (m *MockGradesRepository) UpsertWeightConfig(cfg *grades.GradeWeightConfig) (*grades.GradeWeightConfig, error) {
+	args := m.Called(cfg)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*grades.GradeWeightConfig), args.Error(1)
+}
+func (m *MockGradesRepository) DeleteWeightConfig(id string) error {
+	args := m.Called(id)
+	return args.Error(0)
+}
 
 // MockUsersRepository mocks users.Repository
 type MockUsersRepository struct {

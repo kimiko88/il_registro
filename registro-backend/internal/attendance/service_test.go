@@ -97,6 +97,13 @@ func (m *MockRepository) IsTeacherAssignedToClass(ctx context.Context, teacherID
 	args := m.Called(ctx, teacherID, classID)
 	return args.Bool(0), args.Error(1)
 }
+func (m *MockRepository) GetMonthlyBreakdown(ctx context.Context, studentID, schoolYear string) ([]MonthlyBreakdownRow, error) {
+	args := m.Called(ctx, studentID, schoolYear)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]MonthlyBreakdownRow), args.Error(1)
+}
 
 type MockUserRepo struct {
 	users.Repository

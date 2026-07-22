@@ -3,6 +3,7 @@ package communications
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -224,6 +225,8 @@ func (r *PostgresRepository) GetSignatureReport(ctx context.Context, communicati
 	return report, nil
 }
 
+var ErrNotFound = errors.New("communication not found")
+
 func (r *PostgresRepository) Get(ctx context.Context, id string) (*Message, error) {
 	query := `
 		SELECT id, school_id, sender_id, receiver_ids, subject, body, attachment_url, type, COALESCE(requires_signature, false), signature_deadline, created_at
@@ -238,6 +241,9 @@ func (r *PostgresRepository) Get(ctx context.Context, id string) (*Message, erro
 		&m.RequiresSignature, &m.SignatureDeadline, &m.CreatedAt,
 	)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNotFound
+		}
 		return nil, err
 	}
 	if schID.Valid {
