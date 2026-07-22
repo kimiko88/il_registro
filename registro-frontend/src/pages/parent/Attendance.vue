@@ -351,7 +351,7 @@ const justifyForm = ref({
 const childOptions = computed(() => {
   return children.value.map(c => ({
     label: `${c.first_name || c.name} ${c.last_name || ''}`,
-    value: c.id
+    value: c.user_id || c.id  // use user_id; attendance.student_id = users.id
   }))
 })
 
@@ -375,7 +375,8 @@ async function fetchChildren() {
     const res = await api.get('/users/me/children')
     children.value = res.data || []
     if (children.value.length > 0) {
-      selectedChildId.value = children.value[0].id
+      // Use user_id for attendance calls since attendance.student_id = users.id
+      selectedChildId.value = children.value[0].user_id || children.value[0].id
     }
   } catch {
     children.value = []

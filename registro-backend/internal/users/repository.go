@@ -565,12 +565,25 @@ func (r *PostgresRepository) IsGuardian(ctx context.Context, parentUserID string
 		return false, nil
 	}
 
+	// Check 1: parent-student relationship via student_parents table
+	// Accepts parentUserID as either users.id or parents.id
+	// Accepts studentID as either users.id (attendance) or students.id (profile)
 	query := `
-		SELECT EXISTS (
-			SELECT 1 
-			FROM student_parents sp
-			JOIN parents p ON sp.parent_id = p.id
-			WHERE p.user_id = $1::uuid AND sp.student_id = $2::uuid
+		SELECT (
+			EXISTS (
+				SELECT 1
+				FROM student_parents sp
+				JOIN parents p ON sp.parent_id = p.id
+				JOIN students s ON sp.student_id = s.id
+				WHERE (p.user_id = $1::uuid OR p.id = $1::uuid)
+				  AND (s.user_id = $2::uuid OR s.id = $2::uuid)
+			)
+			OR
+			EXISTS (
+				SELECT 1
+				FROM users
+				WHERE id = $1::uuid AND role IN ('admin', 'superadmin', 'secretary', 'teacher')
+			)
 		)`
 
 	var exists bool
