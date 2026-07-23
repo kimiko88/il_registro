@@ -158,3 +158,59 @@ Il bottone di download è visibile e cliccabile fin dal primo render, prima che 
 
 🔔 Pattern globale: Notifiche senza position 11. Tutte le $q.notify() del frontend parent mancano di position
 Quasar posiziona i toast in basso a destra per default. Su mobile, questa posizione è coperta dalla barra di navigazione del sistema operativo. Specificare position: 'top' o position: 'top-right' garantisce visibilità su tutti i dispositivi.
+
+S-1. watch(currentRoleFilter) duplicato
+Il watcher su currentRoleFilter è registrato due volte nello stesso file, causando un doppio fetch ad ogni cambio di filtro.
+
+js
+
+// DUPLICATO — appare due volte:
+watch(currentRoleFilter, () => { fetchUsers() })
+S-2. showImport usata da due dialog diversi — conflitto di v-model
+Il flag showImport è usato sia dal vecchio dialog semplice q-file (riga ~110) sia dallo stepper multi-step (riga ~180). Quando uno si apre, entrambi si aprono.
+
+S-3. fetchClasses ignora la scuola in openEdit
+In openEdit, si chiama fetchClasses() senza aggiornare prima userForm.school_id dal valore dell'utente che si sta modificando. Se isSuperAdmin è vero, fetchClasses usa userForm.school_id che potrebbe essere ancora null dal form precedente, restituendo zero classi.
+
+S-4. saveClass usa userForm.school_id invece di classForm.school_id
+Il dialog "Crea Classe" non ha un proprio campo school_id, quindi usa userForm.school_id come fallback. Se il dialog delle classi viene aperto senza aver prima aperto il dialog utente, userForm.school_id è null e la classe viene creata senza school_id.
+
+S-5. openManageSubjects — teachersCache non viene svuotata tra utenti diversi
+js
+
+if (teachersCache.value.length === 0) {
+const tRes = await adminService.getTeachersList(targetSchoolId)
+teachersCache.value = tRes.data || []
+}
+Se il primo docente gestito appartiene alla scuola A, la cache viene popolata. Aprendo poi un docente della scuola B (in modalità SuperAdmin), la cache non viene invalidata e si cerca il docente B nella lista della scuola A, non trovandolo mai.
+
+S-6. onCsvFileSelected — parsing CSV non gestisce campi tra virgolette
+js
+
+const parts = line.split(',')
+Split su , rompe i campi che contengono virgole tra apici (es. "Matematica,Fisica" nel template docenti). Il parsing produce colonne sfalsate.
+
+S-7. Export CSV — nessun escaping dei campi utente
+js
+
+`${u.id},${u.first_name},${u.last_name},${u.email},${u.role},${u.class_name || ''}`
+Nomi con virgole o apici producono CSV malformato.
+
+🔴 Bug Frontend — teacher/Grades.vue (il file più critico, 33KB)
+T-1. Nessun check IsPublished nella lista voti del docente
+Il docente vede tutti i voti nel suo pannello, anche quelli non ancora pubblicati — il che è corretto — ma non c'è alcun indicatore visivo che distingua un voto pubblicato da uno in bozza. Il docente non sa quali voti siano già visibili agli studenti.
+
+T-2. teacher/Attendance.vue — nessuna gestione errore su submit massivo
+Il submit dell'appello giornaliero (bulk save presenze) non ha un blocco try/catch visibile nella struttura del componente. Se il backend risponde con errore parziale (es. alcuni studenti salvati, altri no), la UI mostra successo globale.
+
+T-3. teacher/Scrutiny.vue — voto finale editabile anche dopo la chiusura dello scrutinio
+Nel componente Scrutiny.vue, non c'è alcun blocco readonly o disabled condizionale al campo "Stato Scrutinio". Una volta che lo scrutinio è stato chiuso/pubblicato, i voti finali restano modificabili nel form lato frontend, anche se il backend potrebbe rifiutarli.
+
+T-4. teacher/Colloqui.vue — slot colloquio prenotabile senza verifica disponibilità client-side
+Il form di prenotazione colloquio non verifica lato client se lo slot è già occupato prima di inviare la richiesta. Ogni click sul pulsante "Prenota" invia una nuova richiesta anche se l'utente ha già cliccato, portando a doppio submit in assenza di un flag loading.
+
+T-5. teacher/GradeWeights.vue — pesi non normalizzati a 100%
+La pagina permette di salvare pesi per tipologia di voto (scritto, orale, pratico) senza validare che la somma totale sia uguale a 100. Il backend non impone questo vincolo, quindi la media pesata può risultare matematicamente errata.
+
+T-6. secretary/Classes.vue — sezione classi senza paginazione lato client
+Il componente Classes.vue della segreteria (24KB) carica tutte le classi in una singola request e le renderizza in una tabella senza lazy loading o paginazione. Con centinaia di classi questo blocca il thread principale.

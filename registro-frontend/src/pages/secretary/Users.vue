@@ -544,11 +544,6 @@ const fetchSchools = async () => {
     }
 }
 
-// Watch filter change
-watch(currentRoleFilter, () => {
-    fetchUsers()
-})
-
 const filteredUsers = computed(() => users.value);
 
 const roleOptions = [
@@ -560,26 +555,25 @@ const roleOptions = [
 
 const openCreate = () => {
     isEditing.value = false;
-    // Reset form
-    userForm.id = null;
-    userForm.first_name = '';
-    userForm.last_name = '';
-    userForm.email = '';
-    userForm.role = 'student';
-    userForm.class_id = null;
-    userForm.school_id = isSuperAdmin.value ? null : authStore.user?.school_id;
-    userForm.fiscal_code = '';
-    userForm.password = '';
-    
+    Object.assign(userForm, {
+        id: null,
+        first_name: '',
+        last_name: '',
+        email: '',
+        password: '',
+        role: 'student',
+        class_id: null,
+        school_id: filterSchoolId.value || authStore.user?.school_id || null
+    });
     fetchClasses();
     showUserDialog.value = true;
 };
 
 const openEdit = (user) => {
     isEditing.value = true;
-    Object.assign(userForm, user);
-    if (user.class_id) userForm.class_id = user.class_id;
     if (user.school_id) userForm.school_id = user.school_id;
+    if (user.class_id) userForm.class_id = user.class_id;
+    Object.assign(userForm, user);
     fetchClasses();
     showUserDialog.value = true;
 };
@@ -612,7 +606,7 @@ const saveUser = async () => {
 
 const saveClass = async () => {
     try {
-        const targetSchoolId = isSuperAdmin.value ? userForm.school_id : authStore.user.school_id;
+        const targetSchoolId = classForm.school_id || (isSuperAdmin.value ? (userForm.school_id || filterSchoolId.value) : authStore.user.school_id);
         const payload = {
             name: classForm.name,
             academic_year: classForm.academic_year,

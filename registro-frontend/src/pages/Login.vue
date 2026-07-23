@@ -33,6 +33,7 @@
           bg-color="white"
           class="rounded-input"
           :rules="[val => !!val || 'La password è obbligatoria']"
+          @keyup.enter="onSubmit"
         >
           <template v-slot:prepend>
             <q-icon name="lock" color="primary" />

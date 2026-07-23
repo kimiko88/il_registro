@@ -73,6 +73,7 @@
                                 label="Voto ipotetico"
                                 dense outlined
                                 min="1" max="10" step="0.25"
+                                :rules="[v => (v >= 1 && v <= 10) || 'Inserisci un voto tra 1 e 10']"
                             />
                         </div>
                         <div class="col-6 text-center">
@@ -94,6 +95,8 @@
               :columns="columns"
               row-key="id"
               :pagination="{ rowsPerPage: 10 }"
+              :loading="gradesLoading"
+              loading-label="Caricamento voti..."
               flat bordered
             >
                 <template v-slot:body-cell-value="props">
@@ -118,6 +121,7 @@ import { useStudentStore } from 'src/stores/student'
 
 const $q = useQuasar()
 const studentStore = useStudentStore()
+const gradesLoading = ref(true)
 
 const filters = ref({
     semester: 1,
@@ -187,6 +191,8 @@ const fetchMyGrades = async () => {
         grades.value = all
     } catch (e) {
         console.error(e)
+    } finally {
+        gradesLoading.value = false
     }
 }
 

@@ -256,6 +256,10 @@ async function save() {
     $q.notify({ type: 'warning', message: 'Compila tutti i campi obbligatori' })
     return
   }
+  if (form.value.weight < 0 || form.value.weight > 10) {
+    $q.notify({ type: 'warning', message: 'Il peso deve essere compreso tra 0 e 10' })
+    return
+  }
   saving.value = true
   try {
     const payload = { ...form.value }

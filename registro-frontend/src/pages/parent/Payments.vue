@@ -9,7 +9,18 @@
           Gestione delle quote scolastiche, contributi e ricevute di pagamento
         </div>
       </div>
+      <q-chip color="primary" text-color="white" class="text-weight-bold q-py-md q-px-md shadow-sm">
+        Totale da Pagare: € {{ totalPending }}
+      </q-chip>
     </div>
+
+    <!-- MOCK NOTICE BANNER -->
+    <q-banner class="bg-amber-1 text-amber-10 rounded-xl q-mb-md border border-amber-200">
+      <template v-slot:avatar>
+        <q-icon name="science" color="amber-8" />
+      </template>
+      <strong>Modalità Dimostrativa / Simulazione</strong> — I pagamenti visualizzati in questa sezione sono ad uso dimostrativo. Nessun addebito bancario reale verrà effettuato.
+    </q-banner>
 
     <div class="row q-col-gutter-lg">
       <div class="col-12 col-md-8">
@@ -80,7 +91,7 @@
               I pagamenti avvengono in modo sicuro tramite la piattaforma nazionale PagoPA.
               Le ricevute hanno piena validità fiscale e sono sempre scaricabili dalla sezione Storico.
             </p>
-            <q-btn flat label="Guida PagoPA" color="primary" class="full-width rounded-lg q-mt-xs" no-caps />
+            <q-btn flat label="Guida PagoPA" color="primary" class="full-width rounded-lg q-mt-xs" no-caps @click="openPagoPAGuide" />
           </q-card-section>
         </q-card>
       </div>
@@ -130,13 +141,25 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 
 const $q = useQuasar()
 const tab = ref('pending')
 const showReceiptDialog = ref(false)
 const completedPayment = ref(null)
+
+const totalPending = computed(() => {
+  return pendingItems.value.reduce((acc, item) => acc + Number(item.amount), 0).toFixed(2)
+})
+
+const openPagoPAGuide = () => {
+  $q.dialog({
+    title: 'Guida ai Pagamenti PagoPA',
+    message: 'PagoPA è la piattaforma nazionale che permette di effettuare pagamenti verso la Pubblica Amministrazione in modo semplice e sicuro. Puoi pagare online con carta di credito, conto corrente o app di pagamento, oppure sul territorio presso tabaccherie, ricevitorie e banconote abilitate.',
+    ok: { label: 'Ho Capito', color: 'primary' }
+  })
+}
 
 const pendingItems = ref([
     { id: 1, title: 'Assicurazione Scolastica Integrativa', dueDate: '30/01/2025', amount: '8.50' },
