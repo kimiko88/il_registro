@@ -27,16 +27,21 @@ func getSchoolID(c *gin.Context) string {
 }
 
 func (h *Handler) Create(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	schoolID := getSchoolID(c)
+	if userID == "" || schoolID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "admin" && role != "superadmin" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
 	var req CreateClassRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	// Always use school_id from the JWT context; ignore any school_id in the request body
-	// to prevent IDOR attacks where an admin creates classes in another school.
-	schoolID := getSchoolID(c)
-	if schoolID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "school_id not found in token"})
 		return
 	}
 	class, err := h.service.CreateClass(c.Request.Context(), schoolID, req)
@@ -48,10 +53,10 @@ func (h *Handler) Create(c *gin.Context) {
 }
 
 func (h *Handler) List(c *gin.Context) {
-	// For non-superadmin roles, always scope to the caller's school.
+	userID := c.GetString("user_id")
 	schoolID := getSchoolID(c)
-	if schoolID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "school_id not found in token"})
+	if userID == "" || schoolID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 	academicYear := c.Query("academic_year")
@@ -64,9 +69,20 @@ func (h *Handler) List(c *gin.Context) {
 }
 
 func (h *Handler) Get(c *gin.Context) {
+	userID := c.GetString("user_id")
+	schoolID := getSchoolID(c)
+	if userID == "" || schoolID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
 	class, err := h.service.GetClass(c.Request.Context(), c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if class.SchoolID != schoolID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 	c.JSON(http.StatusOK, class)
@@ -166,6 +182,13 @@ func (h *Handler) AssignSubject(c *gin.Context) {
 }
 
 func (h *Handler) GetClassSubjects(c *gin.Context) {
+	userID := c.GetString("user_id")
+	schoolID := getSchoolID(c)
+	if userID == "" || schoolID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
 	res, err := h.service.GetClassSubjects(c.Request.Context(), c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -175,11 +198,44 @@ func (h *Handler) GetClassSubjects(c *gin.Context) {
 }
 
 func (h *Handler) RemoveSubject(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	schoolID := getSchoolID(c)
+	if userID == "" || schoolID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "admin" && role != "superadmin" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
 	if err := h.service.RemoveSubject(c.Request.Context(), c.Param("assignmentId")); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.Status(http.StatusNoContent)
+}
+
+func (h *Handler) GetClassGuardians(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	schoolID := getSchoolID(c)
+	if userID == "" || schoolID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "admin" && role != "superadmin" && role != "secretary" && role != "teacher" && role != "principal" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
+	guardians, err := h.service.GetClassGuardians(c.Request.Context(), c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, guardians)
 }
 
 func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
@@ -194,6 +250,7 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 		group.POST("/:id/subjects", h.AssignSubject)
 		group.GET("/:id/subjects", h.GetClassSubjects)
 		group.DELETE("/:id/subjects/:assignmentId", h.RemoveSubject)
+		group.GET("/:id/guardians", h.GetClassGuardians)
 	}
 	rg.GET("/teacher/classes", h.GetTeacherClasses)
 }

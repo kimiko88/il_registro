@@ -80,7 +80,8 @@ func (m *RegressionMockRepo) FindBySubject(subjectID string, semester int) ([]Gr
 func (m *RegressionMockRepo) FindByClassAndSubject(classID, subjectID string, semester int) ([]Grade, error) {
 	return nil, nil
 }
-func (m *RegressionMockRepo) FindWithFilter(f GradeFilter) ([]Grade, error)     { return nil, nil }
+func (m *RegressionMockRepo) FindWithFilter(f GradeFilter) ([]Grade, error)                { return nil, nil }
+func (m *RegressionMockRepo) FindWithFilterPaginated(f GradeFilter) ([]Grade, int, error)  { return nil, 0, nil }
 func (m *RegressionMockRepo) BatchCreate(grades []*Grade) error                 { return nil }
 func (m *RegressionMockRepo) GetHistory(gradeID string) ([]GradeHistory, error) { return nil, nil }
 func (m *RegressionMockRepo) FindByTeacher(teacherID string) ([]Grade, error)   { return nil, nil }
@@ -100,6 +101,12 @@ func (m *RegressionMockRepo) FindTestByID(id string) (*ClassTest, error)        
 func (m *RegressionMockRepo) FindEnrolledSubjects(studentID string, semester int) ([]string, error) {
 	return nil, nil
 }
+
+func (m *RegressionMockRepo) GetWeightConfigs(schoolID, subjectID, classID string) ([]GradeWeightConfig, error) {
+	return nil, nil
+}
+func (m *RegressionMockRepo) UpsertWeightConfig(cfg *GradeWeightConfig) (*GradeWeightConfig, error) { return cfg, nil }
+func (m *RegressionMockRepo) DeleteWeightConfig(id string) error              { return nil }
 
 func TestService_FilterLogicRegex(t *testing.T) {
 	// Setup specific data
@@ -149,13 +156,13 @@ func TestCalculator_AverageWithAbsence(t *testing.T) {
 		assert.Equal(t, 7.0, c.CalculateWeightedAverage(grades))
 	})
 
-	t.Run("Average includes 0", func(t *testing.T) {
+	t.Run("Zero grade is unrated and excluded from average", func(t *testing.T) {
 		grades := []Grade{
 			{GradeValue: 8.0, Weight: 1.0},
-			{GradeValue: 0.0, Weight: 1.0}, // Zero grade
+			{GradeValue: 0.0, Weight: 1.0}, // Unrated/unset grade (0)
 			{GradeValue: 6.0, Weight: 1.0},
 		}
-		assert.Equal(t, 4.67, c.CalculateAverage(grades))
-		assert.Equal(t, 4.67, c.CalculateWeightedAverage(grades))
+		assert.Equal(t, 7.0, c.CalculateAverage(grades))
+		assert.Equal(t, 7.0, c.CalculateWeightedAverage(grades))
 	})
 }

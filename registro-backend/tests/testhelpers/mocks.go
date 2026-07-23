@@ -81,6 +81,14 @@ func (m *MockAuthRepository) GetRecentLoginAttempts(ctx context.Context, email, 
 	args := m.Called(ctx, email, ip, since)
 	return args.Int(0), args.Error(1)
 }
+func (m *MockAuthRepository) GetRecentLoginAttemptsByEmail(ctx context.Context, email string, since time.Time) (int, error) {
+	args := m.Called(ctx, email, since)
+	return args.Int(0), args.Error(1)
+}
+func (m *MockAuthRepository) GetRecentPasswordResets(ctx context.Context, userID string, since time.Time) (int, error) {
+	args := m.Called(ctx, userID, since)
+	return args.Int(0), args.Error(1)
+}
 func (m *MockAuthRepository) EnableMFA(ctx context.Context, userID, secret string) error {
 	args := m.Called(ctx, userID, secret)
 	return args.Error(0)
@@ -197,6 +205,13 @@ func (m *MockGradesRepository) FindWithFilter(filter grades.GradeFilter) ([]grad
 	}
 	return args.Get(0).([]grades.Grade), args.Error(1)
 }
+func (m *MockGradesRepository) FindWithFilterPaginated(filter grades.GradeFilter) ([]grades.Grade, int, error) {
+	args := m.Called(filter)
+	if args.Get(0) == nil {
+		return nil, args.Int(1), args.Error(2)
+	}
+	return args.Get(0).([]grades.Grade), args.Int(1), args.Error(2)
+}
 func (m *MockGradesRepository) FindByTeacher(teacherID string) ([]grades.Grade, error) {
 	args := m.Called(teacherID)
 	if args.Get(0) == nil {
@@ -250,6 +265,31 @@ func (m *MockGradesRepository) FindTestByID(id string) (*grades.ClassTest, error
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*grades.ClassTest), args.Error(1)
+}
+func (m *MockGradesRepository) FindEnrolledSubjects(studentID string, semester int) ([]string, error) {
+	args := m.Called(studentID, semester)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]string), args.Error(1)
+}
+func (m *MockGradesRepository) GetWeightConfigs(schoolID, subjectID, classID string) ([]grades.GradeWeightConfig, error) {
+	args := m.Called(schoolID, subjectID, classID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]grades.GradeWeightConfig), args.Error(1)
+}
+func (m *MockGradesRepository) UpsertWeightConfig(cfg *grades.GradeWeightConfig) (*grades.GradeWeightConfig, error) {
+	args := m.Called(cfg)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*grades.GradeWeightConfig), args.Error(1)
+}
+func (m *MockGradesRepository) DeleteWeightConfig(id string) error {
+	args := m.Called(id)
+	return args.Error(0)
 }
 
 // MockUsersRepository mocks users.Repository

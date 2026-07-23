@@ -11,8 +11,8 @@ import (
 type Service interface {
 	CreateProject(ctx context.Context, schoolID, actorRole, teacherID string, req CreateProjectRequest) error
 	GetProjects(ctx context.Context, schoolID string) ([]Project, error)
-	UpdateProject(ctx context.Context, actorRole, id string, req CreateProjectRequest) error
-	DeleteProject(ctx context.Context, actorRole, id string) error
+	UpdateProject(ctx context.Context, actorID, actorRole, id string, req CreateProjectRequest) error
+	DeleteProject(ctx context.Context, actorID, actorRole, id string) error
 	AssignStudent(ctx context.Context, actorRole, projectID, studentID string) error
 
 	LogHours(ctx context.Context, studentID string, req LogHourRequest) error
@@ -22,6 +22,7 @@ type Service interface {
 	CreateCompany(ctx context.Context, schoolID, actorRole string, c Company) error
 	GetCompanies(ctx context.Context, schoolID string) ([]Company, error)
 	GetStats(ctx context.Context, schoolID string) (*PCTOStats, error)
+	ApproveHours(ctx context.Context, actorID, actorRole, logID string, approved bool) error
 }
 
 type service struct {
@@ -134,14 +135,16 @@ func (s *service) CreateCompany(ctx context.Context, schoolID, actorRole string,
 	return s.repo.CreateCompany(ctx, &c)
 }
 
-func (s *service) UpdateProject(ctx context.Context, actorRole, id string, req CreateProjectRequest) error {
+func (s *service) UpdateProject(ctx context.Context, actorID, actorRole, id string, req CreateProjectRequest) error {
 	if !s.permManager.HasPermission(actorRole, permissions.PCTOUpdate) {
 		return errors.New("unauthorized")
 	}
-	// Simplified update logic
 	p, err := s.repo.GetProjectByID(ctx, id)
 	if err != nil {
 		return err
+	}
+	if p.CreatedBy != actorID && actorRole != "admin" && actorRole != "superadmin" {
+		return errors.New("unauthorized: not the creator of this PCTO project")
 	}
 	p.Title = req.Title
 	p.Description = req.Description
@@ -149,9 +152,16 @@ func (s *service) UpdateProject(ctx context.Context, actorRole, id string, req C
 	return s.repo.UpdateProject(ctx, p)
 }
 
-func (s *service) DeleteProject(ctx context.Context, actorRole, id string) error {
+func (s *service) DeleteProject(ctx context.Context, actorID, actorRole, id string) error {
 	if !s.permManager.HasPermission(actorRole, permissions.PCTODelete) {
 		return errors.New("unauthorized")
+	}
+	p, err := s.repo.GetProjectByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	if p.CreatedBy != actorID && actorRole != "admin" && actorRole != "superadmin" {
+		return errors.New("unauthorized: not the creator of this PCTO project")
 	}
 	return s.repo.DeleteProject(ctx, id)
 }
@@ -162,4 +172,12 @@ func (s *service) GetCompanies(ctx context.Context, schoolID string) ([]Company,
 
 func (s *service) GetStats(ctx context.Context, schoolID string) (*PCTOStats, error) {
 	return s.repo.GetStats(ctx, schoolID)
+}
+
+func (s *service) ApproveHours(ctx context.Context, actorID, actorRole, logID string, approved bool) error {
+	status := "approved"
+	if !approved {
+		status = "rejected"
+	}
+	return s.repo.UpdateHourLogStatus(ctx, logID, status)
 }

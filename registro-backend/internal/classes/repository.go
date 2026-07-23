@@ -19,6 +19,7 @@ type Repository interface {
 	AssignSubject(ctx context.Context, classID string, subjectID string, teacherID *string, hours float64) error
 	UnassignSubject(ctx context.Context, assignmentID string) error
 	GetClassSubjects(ctx context.Context, classID string) ([]ClassSubject, error)
+	GetClassGuardians(ctx context.Context, classID string) ([]GuardianInfo, error)
 }
 
 type PostgresRepository struct {
@@ -198,4 +199,39 @@ func (r *PostgresRepository) Update(ctx context.Context, c *Class) error {
 func (r *PostgresRepository) Delete(ctx context.Context, id string) error {
 	_, err := r.db.ExecContext(ctx, "DELETE FROM classes WHERE id = $1", id)
 	return err
+}
+
+func (r *PostgresRepository) GetClassGuardians(ctx context.Context, classID string) ([]GuardianInfo, error) {
+	if _, err := uuid.Parse(classID); err != nil {
+		return []GuardianInfo{}, nil
+	}
+	query := `
+		SELECT u.id, u.first_name, u.last_name, u.email, COALESCE(u.phone_number, ''),
+		       su.id, su.first_name || ' ' || su.last_name AS student_name
+		FROM students st
+		JOIN users su ON su.id = st.user_id
+		JOIN student_parents sp ON (sp.student_id = st.id OR sp.student_id = su.id)
+		JOIN parents p ON (p.id = sp.parent_id OR p.user_id = sp.parent_id)
+		JOIN users u ON u.id = p.user_id
+		WHERE st.class_id = $1::uuid
+		ORDER BY su.last_name, su.first_name, u.last_name
+	`
+	rows, err := r.db.QueryContext(ctx, query, classID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var result []GuardianInfo
+	for rows.Next() {
+		var g GuardianInfo
+		if err := rows.Scan(&g.GuardianID, &g.FirstName, &g.LastName, &g.Email, &g.Phone, &g.StudentID, &g.StudentName); err != nil {
+			return nil, err
+		}
+		result = append(result, g)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return result, nil
 }

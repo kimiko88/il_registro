@@ -1,5 +1,5 @@
 <template>
-  <q-layout view="lHh Lpr lFf" class="bg-slate-50">
+  <q-layout view="hHh Lpr lFf">
     <q-header class="glass-effect text-slate-900 q-py-xs" :class="$q.dark.isActive ? 'bg-dark' : 'bg-white'" role="banner">
       <q-toolbar role="navigation" aria-label="Barra di navigazione principale">
         <q-btn
@@ -22,7 +22,7 @@
         
         <!-- Dark Mode Toggle -->
         <q-btn flat round dense :icon="$q.dark.isActive ? 'light_mode' : 'dark_mode'" @click="$q.dark.toggle()" color="primary" class="q-mr-sm" :key="'dark-toggle'" :aria-label="$q.dark.isActive ? 'Attiva modalità chiara' : 'Attiva modalità scura'">
-           <q-tooltip>Toggle Dark Mode</q-tooltip>
+           <q-tooltip>Attiva/Disattiva Modalità Scura</q-tooltip>
         </q-btn>
 
         <!-- Fullscreen Toggle -->
@@ -38,11 +38,15 @@
           :key="'fullscreen-toggle'"
           :aria-label="$q.fullscreen.isActive ? 'Esci da schermo intero' : 'Vai a schermo intero'"
         >
-           <q-tooltip>Toggle Fullscreen</q-tooltip>
+           <q-tooltip>Attiva/Disattiva Schermo Intero</q-tooltip>
         </q-btn>
 
-        <div class="text-caption text-grey-6 q-mr-sm" aria-hidden="true">v0.0.1</div>
-        <q-btn flat round dense icon="account_circle" color="primary" aria-label="Profilo utente" />
+        <!-- Notifications -->
+        <q-btn flat round dense icon="notifications" color="primary" class="q-mr-sm" aria-label="Notifiche" @click="$router.push('/communications')">
+          <q-tooltip>Notifiche e Comunicazioni</q-tooltip>
+        </q-btn>
+
+        <q-btn flat round dense icon="account_circle" color="primary" aria-label="Profilo utente" @click="$router.push('/profile')" />
       </q-toolbar>
     </q-header>
 
@@ -57,14 +61,14 @@
     >
       <div class="column full-height no-wrap">
         <!-- User Profile Section -->
-        <div class="q-pa-lg bg-gradient-premium text-white relative-position overflow-hidden" v-if="userName" role="region" aria-label="Profilo utente">
+        <div class="q-pa-lg bg-primary text-white relative-position overflow-hidden" v-if="userName" role="region" aria-label="Profilo utente">
           <div class="row items-center q-mb-sm relative-position" style="z-index: 1">
             <q-avatar size="56px" color="white" text-color="primary" class="q-mr-md shadow-soft" aria-hidden="true">
               <q-icon name="person" size="32px" />
             </q-avatar>
             <div class="col">
-              <div class="text-h6 text-weight-bold no-wrap" aria-label="Utente connesso: {{ userName }}">{{ userName }}</div>
-              <div class="text-caption opacity-80 text-uppercase letter-spacing-1" aria-label="Ruolo: {{ roleLabel }}">{{ roleLabel }}</div>
+              <div class="text-h6 text-weight-bold no-wrap" :aria-label="'Utente connesso: ' + userName">{{ userName }}</div>
+              <div class="text-caption opacity-80 text-uppercase letter-spacing-1" :aria-label="'Ruolo: ' + roleLabel">{{ roleLabel }}</div>
             </div>
           </div>
           <!-- Decorative Circle -->
@@ -81,8 +85,8 @@
                 :key="item.path"
                 clickable 
                 :to="item.path"
-                :exact="item.exact"
-                active-class="bg-indigo-50 text-indigo-700 active-menu-item"
+                :exact="item.exact !== undefined ? item.exact : false"
+                active-class="active-menu-item"
                 class="rounded-lg q-mx-sm transition-all"
                 role="menuitem"
                 :aria-label="item.label"
@@ -102,7 +106,7 @@
         <div class="q-pa-md border-t border-slate-100">
           <q-item
             clickable
-            class="rounded-lg bg-red-50 text-negative q-pa-md"
+            class="rounded-lg q-pa-md text-grey-8"
             @click="handleLogout"
             :disable="loggingOut"
             role="button"
@@ -124,20 +128,101 @@
     </q-drawer>
 
     <q-page-container role="main">
-      <router-view />
+      <!-- Dynamic Breadcrumb Navigation Header -->
+      <div v-if="breadcrumbs.length > 0" class="q-px-md q-pt-md">
+        <q-breadcrumbs class="text-caption text-grey-7" active-color="primary">
+          <template v-slot:separator>
+            <q-icon size="1.2em" name="chevron_right" color="grey-5" />
+          </template>
+          <q-breadcrumbs-el icon="home" to="/dashboard" label="Dashboard" />
+          <q-breadcrumbs-el
+            v-for="(crumb, idx) in breadcrumbs"
+            :key="idx"
+            :label="crumb.label"
+            :to="crumb.path"
+            :icon="crumb.icon"
+          />
+        </q-breadcrumbs>
+      </div>
+      <router-view v-slot="{ Component }">
+        <transition name="page-fade" mode="out-in">
+          <component :is="Component" :key="$route.path" />
+        </transition>
+      </router-view>
     </q-page-container>
   </q-layout>
 </template>
 
 <script setup>
 import { ref, computed, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useAuth } from '@/composables/useAuth'
 import { useMenuItems } from '@/composables/useMenuItems'
 import { storeToRefs } from 'pinia'
 import { useQuasar } from 'quasar'
 
+const route = useRoute()
 const $q = useQuasar()
+
+// Dynamic Breadcrumbs
+const breadcrumbs = computed(() => {
+  if (!route.path || route.path === '/dashboard' || route.path === '/') return []
+  const items = []
+  
+  const routeNamesMap = {
+    '/dashboard': { label: 'Dashboard', icon: 'dashboard' },
+    '/profile': { label: 'Profilo Utente', icon: 'person' },
+    '/teacher/grades': { label: 'Gestione Voti', icon: 'grade' },
+    '/teacher/attendance': { label: 'Appello e Presenze', icon: 'how_to_reg' },
+    '/teacher/timetable': { label: 'Orario Lezioni', icon: 'schedule' },
+    '/teacher/didactics': { label: 'Materiale Didattico', icon: 'folder' },
+    '/teacher/coordinator': { label: 'Area Coordinatore', icon: 'star' },
+    '/teacher/groups': { label: 'Gruppi Linguistici', icon: 'groups' },
+    '/teacher/rubrics': { label: 'Rubriche di Valutazione', icon: 'rule' },
+    '/teacher/scrutiny': { label: 'Scrutini', icon: 'assessment' },
+    '/teacher/communications': { label: 'Comunicazioni', icon: 'campaign' },
+    '/teacher/agenda': { label: 'Agenda e Registo', icon: 'event' },
+    '/teacher/classes': { label: 'Le Mie Classi', icon: 'class' },
+    '/teacher/colloqui': { label: 'Colloqui e Incontri', icon: 'people' },
+    '/teacher/documents': { label: 'Documenti', icon: 'description' },
+    '/teacher/grade-weights': { label: 'Pesi Voti', icon: 'balance' },
+    '/teacher/verbali': { label: 'Verbali', icon: 'gavel' },
+    '/teacher/substitutions': { label: 'Sostituzioni', icon: 'swap_horiz' },
+    '/student/grades': { label: 'I Miei Voti', icon: 'grade' },
+    '/student/attendance': { label: 'Le Mie Presenze', icon: 'event_available' },
+    '/student/homework': { label: 'Compiti', icon: 'assignment' },
+    '/student/timetable': { label: 'Orario', icon: 'schedule' },
+    '/parent/grades': { label: 'Voti Figlio', icon: 'grade' },
+    '/parent/attendance': { label: 'Presenze e Giustifiche', icon: 'fact_check' },
+    '/parent/communications': { label: 'Comunicazioni', icon: 'campaign' },
+    '/parent/documents': { label: 'Documentazione', icon: 'folder_shared' },
+    '/parent/payments': { label: 'Pagamenti', icon: 'payments' },
+    '/parent/colloqui': { label: 'Incontri e Colloqui', icon: 'forum' },
+    '/parent/meetings': { label: 'Riunioni', icon: 'groups' },
+    '/parent/notes': { label: 'Note Disciplinari', icon: 'report' },
+    '/parent/report-card': { label: 'Pagella Online', icon: 'assignment' },
+    '/admin/school-settings': { label: 'Impostazioni Scuola', icon: 'settings' },
+    '/admin/users': { label: 'Gestione Utenti', icon: 'people' },
+    '/admin/analytics': { label: 'Analisi e Statistiche', icon: 'analytics' }
+  }
+
+  const current = routeNamesMap[route.path] || { label: route.meta?.title || route.name || 'Pagina', icon: 'chevron_right' }
+
+  if (route.path.startsWith('/teacher/')) {
+    items.push({ label: 'Docente', icon: 'school' })
+  } else if (route.path.startsWith('/student/')) {
+    items.push({ label: 'Studente', icon: 'person' })
+  } else if (route.path.startsWith('/parent/')) {
+    items.push({ label: 'Genitore', icon: 'family_restroom' })
+  } else if (route.path.startsWith('/admin/')) {
+    items.push({ label: 'Amministrazione', icon: 'admin_panel_settings' })
+  }
+
+  items.push(current)
+  return items
+})
+
 const authStore = useAuthStore()
 const { userName, userRole } = storeToRefs(authStore)
 const { logout } = useAuth()
@@ -196,10 +281,6 @@ async function handleLogout() {
 </script>
 
 <style scoped>
-.bg-gradient-premium {
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-}
-
 .opacity-80 {
   opacity: 0.8;
 }
@@ -214,20 +295,5 @@ async function handleLogout() {
 
 .transition-all {
     transition: all 0.3s ease;
-}
-
-.active-menu-item {
-    position: relative;
-    box-shadow: inset 4px 0 0 #4f46e5;
-}
-
-.active-menu-item::after {
-    content: '';
-    position: absolute;
-    right: 8px;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background-color: #4f46e5;
 }
 </style>

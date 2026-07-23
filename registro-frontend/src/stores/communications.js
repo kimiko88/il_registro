@@ -25,11 +25,13 @@ export const useCommunicationsStore = defineStore('communications', {
 
         async sendMessage(payload) {
             this.loading = true;
+            this.error = null;
             try {
                 const response = await api.post('/communications', payload);
                 this.communications.unshift(response.data);
                 return response.data;
             } catch (err) {
+                this.error = err.response?.data?.error || 'Error sending message';
                 console.error('Error sending message:', err);
                 throw err;
             } finally {
@@ -38,8 +40,18 @@ export const useCommunicationsStore = defineStore('communications', {
         },
 
         async deleteCommunication(id) {
-            await api.delete(`/communications/${id}`);
-            this.communications = this.communications.filter(c => c.id !== id);
+            this.loading = true;
+            this.error = null;
+            try {
+                await api.delete(`/communications/${id}`);
+                this.communications = this.communications.filter(c => c.id !== id);
+            } catch (err) {
+                this.error = err.response?.data?.error || 'Error deleting communication';
+                console.error('Error deleting communication:', err);
+                throw err;
+            } finally {
+                this.loading = false;
+            }
         }
     }
 });

@@ -204,6 +204,7 @@ func TestHandler_Logout(t *testing.T) {
 			body, _ := json.Marshal(tt.requestBody)
 			w := httptest.NewRecorder()
 			c, _ := gin.CreateTestContext(w)
+			setupAuthContext(c, "user-123", "user@example.com", "teacher")
 			c.Request = httptest.NewRequest("POST", "/auth/logout", bytes.NewBuffer(body))
 			c.Request.Header.Set("Content-Type", "application/json")
 
@@ -237,6 +238,7 @@ func TestHandler_Login_Integration(t *testing.T) {
 			setupMock: func(m *MockRepository) {
 				schoolID := "school-1"
 				m.On("GetRecentLoginAttempts", mock.Anything, "test@example.com", mock.Anything, mock.Anything).Return(0, nil)
+				m.On("GetRecentLoginAttemptsByEmail", mock.Anything, "test@example.com", mock.Anything).Return(0, nil)
 				m.On("GetUserByEmail", mock.Anything, "test@example.com").Return(&User{
 					ID:            "user-123",
 					Email:         "test@example.com",

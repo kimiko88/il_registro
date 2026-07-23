@@ -21,10 +21,10 @@ export function useMyGrades() {
     const averages = computed(() => {
         const avgs = {};
         for (const subject in gradesBySubject.value) {
-            const grades = gradesBySubject.value[subject].filter(g => g.grade_value >= 0);
+            const grades = gradesBySubject.value[subject].filter(g => g.grade_value > 0);
             if (grades.length > 0) {
                 const sum = grades.reduce((a, b) => a + b.grade_value, 0);
-                avgs[subject] = (sum / grades.length).toFixed(1);
+                avgs[subject] = Math.round((sum / grades.length) * 10) / 10;
             } else {
                 avgs[subject] = '-';
             }
@@ -33,7 +33,7 @@ export function useMyGrades() {
     });
 
     const getTrend = (subject) => {
-        const grades = gradesBySubject.value[subject]?.filter(g => g.grade_value >= 0);
+        const grades = gradesBySubject.value[subject]?.filter(g => g.grade_value > 0);
         if (!grades || grades.length < 2) return 'stable';
         // Simple logic: compare last 2 grades
         // Assuming grades are sorted by date (mock data is, but ideally should sort)

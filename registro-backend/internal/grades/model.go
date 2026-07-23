@@ -169,3 +169,26 @@ type ClassTest struct {
 	CreatedAt      time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt      time.Time `json:"updated_at" db:"updated_at"`
 }
+
+// GradeWeightConfig stores the configurable weight multiplier for a grade category/evaluation type
+// scoped to a school, optionally a subject and class.
+type GradeWeightConfig struct {
+	ID             string  `json:"id" db:"id"`
+	SchoolID       string  `json:"school_id" db:"school_id"`
+	SubjectID      *string `json:"subject_id,omitempty" db:"subject_id"`
+	ClassID        *string `json:"class_id,omitempty" db:"class_id"`
+	GradeCategory  string  `json:"grade_category" db:"grade_category"`
+	EvaluationType *string `json:"evaluation_type,omitempty" db:"evaluation_type"`
+	Weight         float64 `json:"weight" db:"weight"`
+	CreatedBy      string  `json:"created_by" db:"created_by"`
+}
+
+// UpsertWeightConfigRequest is the request body for creating/updating a weight config.
+type UpsertWeightConfigRequest struct {
+	SubjectID      *string `json:"subject_id"`
+	ClassID        *string `json:"class_id"`
+	GradeCategory  string  `json:"grade_category" binding:"required"`
+	EvaluationType *string `json:"evaluation_type"`
+	Weight         float64 `json:"weight" binding:"required,min=0,max=10"`
+}
+

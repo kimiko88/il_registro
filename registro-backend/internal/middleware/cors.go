@@ -29,7 +29,7 @@ func CORSMiddleware() gin.HandlerFunc {
 
 	return func(c *gin.Context) {
 		origin := c.Request.Header.Get("Origin")
-		if originsMap[origin] || gin.Mode() == gin.TestMode {
+		if originsMap[origin] {
 			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
 			c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 		}

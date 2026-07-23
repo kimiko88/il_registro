@@ -80,3 +80,10 @@ type GuardianInfo struct {
 	Email            string `json:"email"`
 	RelationshipType string `json:"relationship_type"`
 }
+
+type StudentFascicolo struct {
+	Student     *User                  `json:"student"`
+	Guardians   []GuardianInfo         `json:"guardians,omitempty"`
+	Summary     map[string]interface{} `json:"summary"`
+	GeneratedAt time.Time              `json:"generated_at"`
+}

@@ -64,9 +64,44 @@ func (m *MockRepo) FindJustificationByID(id string) (*Justification, error) {
 	}
 	return args.Get(0).(*Justification), args.Error(1)
 }
+func (m *MockRepo) GetMonthlyBreakdown(ctx context.Context, studentID, schoolYear string) ([]MonthlyBreakdownRow, error) {
+	args := m.Called(ctx, studentID, schoolYear)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]MonthlyBreakdownRow), args.Error(1)
+}
+func (m *MockRepo) FindUnjustifiedByStudent(studentID string) ([]Attendance, error) {
+	return nil, nil
+}
+func (m *MockRepo) JustifyAbsenceByParent(attendanceID string, reason string, notes string) error {
+	return nil
+}
+func (m *MockRepo) GetStudentAttendanceStats(studentID string) (*AttendanceStats, error) {
+	return &AttendanceStats{}, nil
+}
 func (m *MockRepo) FindPendingJustifications(classID string) ([]Justification, error) {
 	args := m.Called(classID)
 	return args.Get(0).([]Justification), args.Error(1)
+}
+func (m *MockRepo) CountDistinctDays(studentID string) (int, error) {
+	args := m.Called(studentID)
+	return args.Int(0), args.Error(1)
+}
+func (m *MockRepo) GetAnalytics(ctx context.Context, schoolID string) (*AnalyticsResponse, error) {
+	args := m.Called(ctx, schoolID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*AnalyticsResponse), args.Error(1)
+}
+func (m *MockRepo) DeleteJustification(id string) error {
+	args := m.Called(id)
+	return args.Error(0)
+}
+func (m *MockRepo) IsTeacherAssignedToClass(ctx context.Context, teacherID, classID string) (bool, error) {
+	args := m.Called(ctx, teacherID, classID)
+	return args.Bool(0), args.Error(1)
 }
 
 // --- Tests ---
@@ -102,27 +137,31 @@ func TestValidator_ValidateEntry(t *testing.T) {
 
 func TestService_MarkAttendance(t *testing.T) {
 	mockRepo := new(MockRepo)
-	svc := NewService(mockRepo, nil, nil)
+	mockUserRepo := new(MockUserRepo)
+	svc := NewService(mockRepo, mockUserRepo, nil, nil)
 
 	req := CreateAttendanceRequest{
 		StudentID: "S1", ClassID: "C1", Date: time.Now().Format("2006-01-02"), Status: StatusPresent,
 	}
 
+	mockRepo.On("IsTeacherAssignedToClass", mock.Anything, "T1", "C1").Return(true, nil).Maybe()
 	mockRepo.On("Create", mock.Anything).Return(nil)
 
-	err := svc.MarkAttendance(context.Background(), "T1", req)
+	err := svc.MarkAttendance(context.Background(), "T1", "school-1", req)
 	assert.NoError(t, err)
 	mockRepo.AssertExpectations(t)
 }
 
 func TestService_ProcessJustification(t *testing.T) {
 	mockRepo := new(MockRepo)
-	svc := NewService(mockRepo, nil, nil)
+	mockUserRepo := new(MockUserRepo)
+	svc := NewService(mockRepo, mockUserRepo, nil, nil)
 
 	jid := "J1"
 	j := &Justification{ID: jid, Status: JustificationPending}
 
 	mockRepo.On("FindJustificationByID", jid).Return(j, nil)
+	mockRepo.On("FindByStudent", mock.Anything, mock.Anything, mock.Anything).Return([]Attendance{}, nil)
 	mockRepo.On("UpdateJustification", mock.MatchedBy(func(j *Justification) bool {
 		return j.Status == JustificationApproved && j.ApprovedBy != nil
 	})).Return(nil)

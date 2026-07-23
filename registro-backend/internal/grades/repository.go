@@ -37,6 +37,9 @@ type Repository interface {
 	// FindWithFilter generic filter for export/advanced search
 	FindWithFilter(filter GradeFilter) ([]Grade, error)
 
+	// FindWithFilterPaginated returns a page of grades and the total count.
+	FindWithFilterPaginated(filter GradeFilter) ([]Grade, int, error)
+
 	// FindByTeacher retrieves grades assigned by a teacher (optional utility)
 	FindByTeacher(teacherID string) ([]Grade, error)
 
@@ -67,6 +70,11 @@ type Repository interface {
 
 	// FindTestByID retrieves a single class test by its ID
 	FindTestByID(id string) (*ClassTest, error)
+
+	// Weight Config
+	GetWeightConfigs(schoolID, subjectID, classID string) ([]GradeWeightConfig, error)
+	UpsertWeightConfig(cfg *GradeWeightConfig) (*GradeWeightConfig, error)
+	DeleteWeightConfig(id string) error
 }
 
 type repository struct {
@@ -202,10 +210,13 @@ func (r *repository) Update(grade *Grade, history *GradeHistory) error {
 }
 
 func (r *repository) Delete(id string, deletedBy string) error {
-	query := `UPDATE grades SET deleted_at = NOW(), modified_by = $1 WHERE id = $2::uuid`
-	_, err := r.db.Exec(query, deletedBy, id)
+	query := `UPDATE grades SET deleted_at = NOW(), modified_by = $1 WHERE id = $2::uuid AND deleted_at IS NULL`
+	res, err := r.db.Exec(query, deletedBy, id)
 	if err != nil {
 		return fmt.Errorf("delete grade error: %w", err)
+	}
+	if rows, _ := res.RowsAffected(); rows == 0 {
+		return fmt.Errorf("grade not found or already deleted")
 	}
 	return nil
 }
@@ -352,6 +363,11 @@ func (r *repository) FindWithFilter(filter GradeFilter) ([]Grade, error) {
 	var conditions []string
 	argIdx := 1
 
+	if filter.StudentID != "" {
+		conditions = append(conditions, fmt.Sprintf("student_id = $%d::uuid", argIdx))
+		args = append(args, filter.StudentID)
+		argIdx++
+	}
 	if filter.Semester > 0 {
 		conditions = append(conditions, fmt.Sprintf("semester = $%d", argIdx))
 		args = append(args, filter.Semester)
@@ -370,6 +386,7 @@ func (r *repository) FindWithFilter(filter GradeFilter) ([]Grade, error) {
 	if filter.IsPublished != nil {
 		conditions = append(conditions, fmt.Sprintf("is_published = $%d", argIdx))
 		args = append(args, *filter.IsPublished)
+		argIdx++
 	}
 
 	if len(conditions) > 0 {
@@ -379,6 +396,81 @@ func (r *repository) FindWithFilter(filter GradeFilter) ([]Grade, error) {
 	baseQuery += " ORDER BY date DESC"
 
 	return r.scanGrades(baseQuery, args...)
+}
+
+// FindWithFilterPaginated returns a page of grades matching the filter together
+// with the total count of matching rows (before pagination).
+// filter.Page is 1-based; filter.PageSize defaults to 50 when <= 0.
+func (r *repository) FindWithFilterPaginated(filter GradeFilter) ([]Grade, int, error) {
+	baseWhere := `FROM grades WHERE deleted_at IS NULL`
+
+	var args []interface{}
+	var conditions []string
+	argIdx := 1
+
+	if filter.StudentID != "" {
+		conditions = append(conditions, fmt.Sprintf("student_id = $%d::uuid", argIdx))
+		args = append(args, filter.StudentID)
+		argIdx++
+	}
+	if filter.Semester > 0 {
+		conditions = append(conditions, fmt.Sprintf("semester = $%d", argIdx))
+		args = append(args, filter.Semester)
+		argIdx++
+	}
+	if filter.SubjectID != "" {
+		conditions = append(conditions, fmt.Sprintf("subject_id = $%d::uuid", argIdx))
+		args = append(args, filter.SubjectID)
+		argIdx++
+	}
+	if filter.GradeType != "" {
+		conditions = append(conditions, fmt.Sprintf("grade_type = $%d", argIdx))
+		args = append(args, filter.GradeType)
+		argIdx++
+	}
+	if filter.IsPublished != nil {
+		conditions = append(conditions, fmt.Sprintf("is_published = $%d", argIdx))
+		args = append(args, *filter.IsPublished)
+		argIdx++
+	}
+
+	whereSuffix := ""
+	if len(conditions) > 0 {
+		whereSuffix = " AND " + strings.Join(conditions, " AND ")
+	}
+
+	// Count total matching rows
+	var total int
+	countQuery := `SELECT COUNT(*) ` + baseWhere + whereSuffix
+	if err := r.db.QueryRow(countQuery, args...).Scan(&total); err != nil {
+		return nil, 0, fmt.Errorf("count grades error: %w", err)
+	}
+
+	// Pagination defaults
+	pageSize := filter.PageSize
+	if pageSize <= 0 {
+		pageSize = 50
+	}
+	page := filter.Page
+	if page < 1 {
+		page = 1
+	}
+	offset := (page - 1) * pageSize
+
+	// Main SELECT with pagination
+	selectCols := `SELECT id, student_id, school_id, subject_id, teacher_id,
+		grade_value, grade_type, semester, date,
+		description, rubric_id, weight, is_published, published_at,
+		grade_category, evaluation_type, COALESCE(created_by::text, ''), created_at, updated_at, test_id `
+	paginatedQuery := selectCols + baseWhere + whereSuffix +
+		fmt.Sprintf(" ORDER BY date DESC LIMIT $%d OFFSET $%d", argIdx, argIdx+1)
+	args = append(args, pageSize, offset)
+
+	grades, err := r.scanGrades(paginatedQuery, args...)
+	if err != nil {
+		return nil, 0, err
+	}
+	return grades, total, nil
 }
 
 func (r *repository) FindByTeacher(teacherID string) ([]Grade, error) {
@@ -420,6 +512,9 @@ func (r *repository) GetHistory(gradeID string) ([]GradeHistory, error) {
 			return nil, err
 		}
 		history = append(history, h)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return history, nil
 }
@@ -477,6 +572,9 @@ func (r *repository) scanRows(rows *sql.Rows) ([]Grade, error) {
 		}
 		results = append(results, g)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return results, nil
 }
 
@@ -529,6 +627,9 @@ func (r *repository) FindTestsByClassAndSubject(classID string, subjectID string
 		}
 		tests = append(tests, t)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return tests, nil
 }
 
@@ -559,15 +660,21 @@ func (r *repository) FindUpcomingTestsByClass(classID string) ([]ClassTest, erro
 		}
 		tests = append(tests, t)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return tests, nil
 }
 
 // DeleteTest deletes a test (cascade delete will handle grades in DB)
 func (r *repository) DeleteTest(id string) error {
 	query := `DELETE FROM class_tests WHERE id = $1::uuid`
-	_, err := r.db.Exec(query, id)
+	res, err := r.db.Exec(query, id)
 	if err != nil {
 		return fmt.Errorf("delete test error: %w", err)
+	}
+	if rows, _ := res.RowsAffected(); rows == 0 {
+		return fmt.Errorf("test not found")
 	}
 	return nil
 }
@@ -594,7 +701,7 @@ func (r *repository) FindGradesByTestID(testID string) ([]Grade, error) {
 		SELECT id, student_id, school_id, subject_id, teacher_id, 
 			       grade_value, grade_type, semester, date, 
 			       description, rubric_id, weight, is_published, published_at,
-			       grade_category, evaluation_type, created_by, created_at, updated_at, test_id
+			       grade_category, evaluation_type, COALESCE(created_by::text, ''), created_at, updated_at, test_id
 		FROM grades 
 		WHERE test_id = $1::uuid AND deleted_at IS NULL`
 	return r.scanGrades(query, testID)
@@ -616,4 +723,64 @@ func (r *repository) FindTestByID(id string) (*ClassTest, error) {
 		return nil, fmt.Errorf("find test by id error: %w", err)
 	}
 	return &t, nil
+}
+
+// --- Grade Weight Config ---
+
+func (r *repository) GetWeightConfigs(schoolID, subjectID, classID string) ([]GradeWeightConfig, error) {
+	query := `
+		SELECT id, school_id, subject_id, class_id, grade_category, evaluation_type, weight, created_by
+		FROM grade_weight_configs
+		WHERE school_id = $1::uuid
+		  AND ($2 = '' OR subject_id = $2::uuid)
+		  AND ($3 = '' OR class_id = $3::uuid)
+		ORDER BY grade_category, evaluation_type
+	`
+	rows, err := r.db.Query(query, schoolID, subjectID, classID)
+	if err != nil {
+		return nil, fmt.Errorf("GetWeightConfigs: %w", err)
+	}
+	defer rows.Close()
+
+	var results []GradeWeightConfig
+	for rows.Next() {
+		var c GradeWeightConfig
+		if err := rows.Scan(&c.ID, &c.SchoolID, &c.SubjectID, &c.ClassID, &c.GradeCategory, &c.EvaluationType, &c.Weight, &c.CreatedBy); err != nil {
+			return nil, fmt.Errorf("GetWeightConfigs scan: %w", err)
+		}
+		results = append(results, c)
+	}
+	return results, rows.Err()
+}
+
+func (r *repository) UpsertWeightConfig(cfg *GradeWeightConfig) (*GradeWeightConfig, error) {
+	query := `
+		INSERT INTO grade_weight_configs
+			(school_id, subject_id, class_id, grade_category, evaluation_type, weight, created_by)
+		VALUES ($1::uuid, $2, $3, $4, $5, $6, $7::uuid)
+		ON CONFLICT (school_id, subject_id, class_id, grade_category, evaluation_type)
+		DO UPDATE SET weight = EXCLUDED.weight, updated_at = now()
+		RETURNING id, school_id, subject_id, class_id, grade_category, evaluation_type, weight, created_by
+	`
+	row := r.db.QueryRow(query,
+		cfg.SchoolID, cfg.SubjectID, cfg.ClassID,
+		cfg.GradeCategory, cfg.EvaluationType,
+		cfg.Weight, cfg.CreatedBy,
+	)
+	var result GradeWeightConfig
+	if err := row.Scan(&result.ID, &result.SchoolID, &result.SubjectID, &result.ClassID, &result.GradeCategory, &result.EvaluationType, &result.Weight, &result.CreatedBy); err != nil {
+		return nil, fmt.Errorf("UpsertWeightConfig: %w", err)
+	}
+	return &result, nil
+}
+
+func (r *repository) DeleteWeightConfig(id string) error {
+	res, err := r.db.Exec(`DELETE FROM grade_weight_configs WHERE id = $1::uuid`, id)
+	if err != nil {
+		return err
+	}
+	if rows, _ := res.RowsAffected(); rows == 0 {
+		return fmt.Errorf("weight config not found")
+	}
+	return nil
 }

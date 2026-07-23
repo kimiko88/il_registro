@@ -9,7 +9,10 @@
     </div>
 
     <!-- Child Selector Warning -->
-    <q-card v-if="!selectedChild" class="text-center q-pa-lg bg-warning text-white q-mb-md">
+    <q-card v-if="parentStore.children.length === 0" class="text-center q-pa-lg bg-warning text-white q-mb-md">
+      ⚠️ Nessun alunno associato al tuo profilo. Contatta la segreteria.
+    </q-card>
+    <q-card v-else-if="!selectedChild" class="text-center q-pa-lg bg-warning text-white q-mb-md">
       Seleziona un figlio dal menu in alto per visualizzare la situazione voti
     </q-card>
 
@@ -34,11 +37,16 @@
                <q-card-section>
                    <div class="text-h6 text-outfit text-weight-bold q-mb-md">Andamento Medie</div>
                    <div v-for="sub in subjectAverages" :key="sub.name" class="q-mb-sm">
-                       <div class="row justify-between text-caption">
+                       <div class="row justify-between items-center text-caption">
                            <span class="text-weight-medium">{{ sub.name }}</span>
-                           <span :class="{'text-green text-weight-bold': sub.avg>=6, 'text-red text-weight-bold': sub.avg<6 || sub.avg==='-'}">{{ sub.avg }}</span>
+                           <div class="row items-center">
+                               <q-icon :name="getTrendIcon(sub.trend)" :color="getTrendColor(sub.trend)" size="16px" class="q-mr-xs">
+                                   <q-tooltip>Trend: {{ sub.trend === 'up' ? 'In miglioramento' : (sub.trend === 'down' ? 'In calo' : 'Stabile') }}</q-tooltip>
+                               </q-icon>
+                               <span :class="{'text-positive text-weight-bold': Number(sub.avg)>=6, 'text-negative text-weight-bold': Number(sub.avg)<6 || sub.avg==='-'}">{{ sub.avg }}</span>
+                           </div>
                        </div>
-                       <q-linear-progress :value="sub.avg !== '-' ? sub.avg/10 : 0" :color="sub.avg>=6?'green':'red'" />
+                       <q-linear-progress :value="sub.avg !== '-' ? Number(sub.avg)/10 : 0" :color="Number(sub.avg)>=6?'positive':'negative'" class="rounded-borders" />
                    </div>
                </q-card-section>
             </q-card>
@@ -91,7 +99,7 @@
                         </div>
                         <div class="col-6 text-center">
                             <div class="text-caption text-grey">Nuova Media</div>
-                            <div class="text-h6 text-weight-bold" :class="simulatedAverage >= 6 ? 'text-green' : 'text-red'">
+                            <div class="text-h6 text-weight-bold" :class="Number(simulatedAverage) >= 6 ? 'text-green' : 'text-red'">
                                 {{ simulatedAverage }}
                             </div>
                         </div>
@@ -141,6 +149,10 @@ const { selectedChild } = storeToRefs(parentStore)
 
 const period = ref('Primo Quadrimestre')
 
+watch(period, () => {
+    simSubject.value = null
+})
+
 const columns = [
   { name: 'date', label: 'Data', field: 'date', align: 'left', sortable: true },
   { name: 'subject', label: 'Materia', field: 'subject', align: 'left', sortable: true },
@@ -160,14 +172,25 @@ const currentGrades = computed(() => {
     const semData = gradesData.value.semesters.find(s => s.semester === semNum)
     if (!semData || !semData.grades) return []
     
-    return semData.grades.map(g => ({
-        id: g.id,
-        date: g.date.split('T')[0],
-        subject: subjectsMap.value[g.subject_id] || g.subject_id,
-        type: g.grade_type,
-        value: g.grade_value === -1 ? 'A' : g.grade_value,
-        notes: g.description
-    }))
+    return semData.grades.map(g => {
+        let formattedDate = g.date
+        try {
+            const parts = g.date.split('T')[0].split('-')
+            if (parts.length === 3) {
+                formattedDate = `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`
+            }
+        } catch {
+            formattedDate = g.date.split('T')[0]
+        }
+        return {
+            id: g.id,
+            date: formattedDate,
+            subject: subjectsMap.value[g.subject_id] || g.subject_id,
+            type: g.grade_type,
+            value: g.grade_value === -1 ? 'A' : g.grade_value,
+            notes: g.description
+        }
+    })
 })
 
 onMounted(() => {
@@ -177,8 +200,11 @@ onMounted(() => {
     }
 })
 
-watch(selectedChild, (val) => {
-    if (val) fetchGrades()
+watch(selectedChild, (newVal) => {
+    if (newVal) {
+        fetchSubjects()
+        fetchGrades()
+    }
 })
 
 const fetchSubjects = async () => {
@@ -207,6 +233,30 @@ const fetchGrades = async () => {
     }
 }
 
+function getSubjectTrend(subjectName) {
+  const grades = currentGrades.value
+    .filter(g => g.subject === subjectName && g.value !== 'A')
+    .sort((a, b) => new Date(a.date) - new Date(b.date))
+  if (grades.length < 2) return 'flat'
+  const last = Number(grades[grades.length - 1].value)
+  const prev = Number(grades[grades.length - 2].value)
+  if (last > prev) return 'up'
+  if (last < prev) return 'down'
+  return 'flat'
+}
+
+function getTrendIcon(trend) {
+  if (trend === 'up') return 'trending_up'
+  if (trend === 'down') return 'trending_down'
+  return 'trending_flat'
+}
+
+function getTrendColor(trend) {
+  if (trend === 'up') return 'positive'
+  if (trend === 'down') return 'negative'
+  return 'grey-6'
+}
+
 const subjectAverages = computed(() => {
     const sums = {}
     const counts = {}
@@ -218,7 +268,8 @@ const subjectAverages = computed(() => {
     })
     return Object.keys(sums).map(sub => ({
         name: sub,
-        avg: counts[sub] > 0 ? (sums[sub] / counts[sub]).toFixed(1) : '-'
+        avg: counts[sub] > 0 ? (sums[sub] / counts[sub]).toFixed(1) : '-',
+        trend: getSubjectTrend(sub)
     }))
 })
 
@@ -242,8 +293,9 @@ const simulatedAverage = computed(() => {
         }
     })
     
-    if (count === 0) return Number(simGrade.value).toFixed(2)
-    sum += Number(simGrade.value)
+    const clampedGrade = Math.min(10, Math.max(1, Number(simGrade.value)))
+    if (count === 0) return clampedGrade.toFixed(2)
+    sum += clampedGrade
     count++
     
     return (sum / count).toFixed(2)
@@ -275,7 +327,13 @@ function getGradeColor(val) {
   return 'orange';
 }
 
-function downloadReport() {
-  $q.notify({ type: 'info', message: 'Download avviato...' })
+const downloadReport = async () => {
+  try {
+    const semNum = period.value === 'Primo Quadrimestre' ? 1 : 2
+    await gradeService.downloadReportCardPDF(semNum)
+    $q.notify({ type: 'positive', message: 'Report PDF scaricato con successo' })
+  } catch (e) {
+    $q.notify({ type: 'negative', message: 'Errore nel download del report PDF' })
+  }
 }
 </script>

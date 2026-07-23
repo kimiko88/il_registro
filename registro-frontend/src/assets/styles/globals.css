@@ -132,22 +132,25 @@ body {
 .body--dark .bg-amber-50,
 .body--dark .bg-emerald-50,
 .body--dark .bg-orange-50 {
-    background-color: rgba(255, 255, 255, 0.05) !important;
+    background-color: #1e1e2e !important;
     color: var(--text-primary) !important;
 }
 
 .body--dark .bg-slate-100,
 .body--dark .bg-grey-2,
+.body--dark .bg-grey-3,
 .body--dark .bg-indigo-100,
 .body--dark .bg-amber-100,
 .body--dark .bg-emerald-100,
 .body--dark .bg-orange-100 {
-    background-color: rgba(255, 255, 255, 0.1) !important;
+    background-color: #2a2b3d !important;
     color: var(--text-primary) !important;
 }
 
 .body--dark .text-slate-800,
 .body--dark .text-slate-700,
+.body--dark .text-grey-8,
+.body--dark .text-grey-9,
 .body--dark .text-indigo-900,
 .body--dark .text-amber-900,
 .body--dark .text-emerald-900,
@@ -157,13 +160,76 @@ body {
 
 .body--dark .text-slate-500,
 .body--dark .text-slate-400,
+.body--dark .text-grey-6,
+.body--dark .text-grey-7,
 .body--dark .text-indigo-400 {
     color: var(--text-secondary) !important;
 }
 
 .body--dark .border-slate-100,
-.body--dark .border-slate-200 {
+.body--dark .border-slate-200,
+.body--dark .border-grey {
     border-color: var(--border-color) !important;
+}
+
+.body--dark .active-menu-item {
+    background: rgba(99, 102, 241, 0.25) !important;
+    color: #a5b4fc !important;
+    font-weight: 700 !important;
+    border-left: none !important;
+}
+
+.active-menu-item {
+    background: rgba(99, 102, 241, 0.12) !important;
+    color: #4f46e5 !important;
+    font-weight: 700 !important;
+    border-left: none !important;
+}
+
+.active-menu-item::after {
+    display: none !important;
+}
+
+/* Stat card refined hover */
+.stat-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Page Transitions */
+.page-fade-enter-active,
+.page-fade-leave-active {
+    transition: opacity 150ms ease;
+}
+
+.page-fade-enter-from,
+.page-fade-leave-to {
+    opacity: 0;
+}
+
+/* Global Print Styles */
+@media print {
+    .q-drawer,
+    .q-header,
+    .q-footer,
+    .q-page-sticky,
+    .q-breadcrumbs,
+    .no-print {
+        display: none !important;
+    }
+
+    .q-page-container {
+        padding: 0 !important;
+    }
+
+    body, .q-page {
+        background: #ffffff !important;
+        color: #000000 !important;
+    }
 }
 
 /* Utilities */

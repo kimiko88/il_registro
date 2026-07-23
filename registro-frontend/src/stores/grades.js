@@ -11,6 +11,7 @@ export const useGradesStore = defineStore('grades', {
         // Track last fetch context to enable refetch after mutations
         _lastClassId: null,
         _lastSubjectId: null,
+        _requestId: 0,
     }),
 
     getters: {
@@ -25,14 +26,14 @@ export const useGradesStore = defineStore('grades', {
             let count = 0;
             state.grades.students.forEach(s => {
                 s.grades.forEach(g => {
-                    if (typeof g.grade_value === 'number' && g.grade_value >= 0) {
+                    if (typeof g.grade_value === 'number' && g.grade_value > 0) {
                         sum += g.grade_value;
                         count++;
                     }
                 });
             });
             if (count === 0) return 0;
-            return (sum / count).toFixed(1);
+            return Math.round((sum / count) * 10) / 10;
         }
     },
 
@@ -51,14 +52,22 @@ export const useGradesStore = defineStore('grades', {
             this.error = null;
             this._lastClassId = classId;
             this._lastSubjectId = subjectId;
+            const currentReqId = ++this._requestId;
             try {
                 const response = await gradeService.getByClass(classId, subjectId);
-                this.grades = response.data || null;
+                // Ignore stale response if a newer request was dispatched
+                if (currentReqId === this._requestId) {
+                    this.grades = response.data || null;
+                }
             } catch (err) {
-                this.error = err.message;
-                console.error("Error fetching grades:", err);
+                if (currentReqId === this._requestId) {
+                    this.error = err.message;
+                    console.error("Error fetching grades:", err);
+                }
             } finally {
-                this.loading = false;
+                if (currentReqId === this._requestId) {
+                    this.loading = false;
+                }
             }
         },
 
@@ -95,6 +104,7 @@ export const useGradesStore = defineStore('grades', {
         },
 
         async updateGrade(id, updates) {
+            this.loading = true;
             try {
                 const response = await gradeService.updateGrade(id, updates);
                 // Refetch to keep the full class view consistent
@@ -105,10 +115,13 @@ export const useGradesStore = defineStore('grades', {
             } catch (err) {
                 console.error("Error updating grade:", err);
                 throw err;
+            } finally {
+                this.loading = false;
             }
         },
 
         async deleteGrade(id) {
+            this.loading = true;
             try {
                 await gradeService.deleteGrade(id);
                 // Refetch to keep the full class view consistent
@@ -118,6 +131,8 @@ export const useGradesStore = defineStore('grades', {
             } catch (err) {
                 console.error("Error deleting grade:", err);
                 throw err;
+            } finally {
+                this.loading = false;
             }
         },
 
@@ -167,6 +182,48 @@ export const useGradesStore = defineStore('grades', {
                 throw err;
             } finally {
                 this.loading = false;
+            }
+        },
+
+        async fetchSemesterReport(semester = 1) {
+            this.loading = true;
+            this.error = null;
+            try {
+                const response = await api.get(`/grades/my-grades/semester/${semester}`);
+                return response.data;
+            } catch (err) {
+                this.error = err.response?.data?.error || 'Errore durante il recupero della pagella';
+                console.error(err);
+                throw err;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async downloadReportCardPDF(semester = 1) {
+            let url = null;
+            let link = null;
+            try {
+                const response = await api.get(`/grades/my-grades/semester/${semester}/pdf`, {
+                    responseType: 'blob'
+                });
+                const blob = new Blob([response.data], { type: 'application/pdf' });
+                url = window.URL.createObjectURL(blob);
+                link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', `pagella_q${semester}.pdf`);
+                document.body.appendChild(link);
+                link.click();
+            } catch (err) {
+                console.error("Error downloading report card PDF:", err);
+                throw err;
+            } finally {
+                if (link && link.parentNode) {
+                    link.remove();
+                }
+                if (url) {
+                    window.URL.revokeObjectURL(url);
+                }
             }
         }
     }

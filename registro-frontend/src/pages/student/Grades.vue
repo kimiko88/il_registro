@@ -73,6 +73,7 @@
                                 label="Voto ipotetico"
                                 dense outlined
                                 min="1" max="10" step="0.25"
+                                :rules="[v => (v >= 1 && v <= 10) || 'Inserisci un voto tra 1 e 10']"
                             />
                         </div>
                         <div class="col-6 text-center">
@@ -94,6 +95,8 @@
               :columns="columns"
               row-key="id"
               :pagination="{ rowsPerPage: 10 }"
+              :loading="gradesLoading"
+              loading-label="Caricamento voti..."
               flat bordered
             >
                 <template v-slot:body-cell-value="props">
@@ -110,7 +113,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { gradeService } from 'src/services/gradeService'
 import adminService from 'src/services/adminService'
@@ -118,6 +121,7 @@ import { useStudentStore } from 'src/stores/student'
 
 const $q = useQuasar()
 const studentStore = useStudentStore()
+const gradesLoading = ref(true)
 
 const filters = ref({
     semester: 1,
@@ -173,7 +177,7 @@ const fetchMyGrades = async () => {
                        all.push({
                            id: g.id,
                            date: g.date.split('T')[0],
-                           subject: subjectsMap.value[g.subject_id] || g.subject_id,
+                           subject: subjectsMap.value[g.subject_id] || g.subject_name || (g.subject_id && !g.subject_id.includes('-') ? g.subject_id : 'Materia sconosciuta'),
                            evalType: mapEvalType(g.evaluation_type),
                            type: g.grade_type,
                            value: g.grade_value === -1 ? 'A' : g.grade_value,
@@ -187,6 +191,8 @@ const fetchMyGrades = async () => {
         grades.value = all
     } catch (e) {
         console.error(e)
+    } finally {
+        gradesLoading.value = false
     }
 }
 
@@ -195,6 +201,9 @@ const filteredGrades = computed(() => {
     if (filters.value.period === 'Ultimo Mese') {
         const monthAgo = new Date(); monthAgo.setMonth(monthAgo.getMonth() - 1);
         list = list.filter(g => new Date(g.date) >= monthAgo)
+    } else if (filters.value.period === 'Ultima Settimana') {
+        const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
+        list = list.filter(g => new Date(g.date) >= weekAgo)
     }
     return list
 })
@@ -204,8 +213,10 @@ const subjectAverages = computed(() => {
     const counts = {}
     filteredGrades.value.forEach(g => {
         if (g.value === 'A') return;
+        const val = Number(g.value);
+        if (isNaN(val)) return;
         if (!sums[g.subject]) { sums[g.subject] = 0; counts[g.subject] = 0; }
-        sums[g.subject] += g.value;
+        sums[g.subject] += val;
         counts[g.subject]++;
     });
     return Object.keys(sums).map(sub => ({
@@ -229,8 +240,11 @@ const simulatedAverage = computed(() => {
     
     filteredGrades.value.forEach(g => {
         if (g.subject === targetSub && g.value !== 'A') {
-            sum += g.value
-            count++
+            const val = Number(g.value);
+            if (!isNaN(val)) {
+                sum += val
+                count++
+            }
         }
     })
     
@@ -247,8 +261,11 @@ const subjectsBelowSufficiency = computed(() => {
         let count = 0
         filteredGrades.value.forEach(g => {
             if (g.subject === s.name && g.value !== 'A') {
-                sum += g.value
-                count++
+                const val = Number(g.value);
+                if (!isNaN(val)) {
+                    sum += val
+                    count++
+                }
             }
         })
         const needed = 6 * (count + 1) - sum
@@ -260,14 +277,21 @@ const subjectsBelowSufficiency = computed(() => {
     })
 })
 
-const getGradeColor = (val) => {
-    if (val === 'A') return 'grey'
-    if (val >= 8) return 'green'
-    if (val >= 6) return 'orange'
-    return 'red'
-}
+const downloading = ref(false)
 
-const downloadReport = () => {
-    $q.notify({ type: 'positive', message: 'Report PDF scaricato (simulato)' })
+watch(simSubject, () => {
+    simGrade.value = 6
+})
+
+const downloadReport = async () => {
+    downloading.value = true
+    try {
+        await gradeService.downloadReportCardPDF(filters.value.semester)
+        $q.notify({ type: 'positive', message: 'Report PDF scaricato con successo' })
+    } catch (e) {
+        $q.notify({ type: 'negative', message: 'Errore nel download del report PDF' })
+    } finally {
+        downloading.value = false
+    }
 }
 </script>

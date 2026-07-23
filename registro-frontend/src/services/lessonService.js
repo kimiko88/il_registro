@@ -2,8 +2,14 @@ import api from './api'
 
 export const lessonService = {
     // Lessons (Registro di Classe)
-    async getLessons(classId, subjectId) {
-        return api.get(`/lessons/class/${classId}`, { params: { subject_id: subjectId } })
+    async getLessons(classId, subjectId, date) {
+        return api.get(`/lessons/class/${classId}`, { params: { subject_id: subjectId, date } })
+    },
+    async getLessonsByGroup(groupId, date) {
+        return api.get(`/lessons/group/${groupId}`, { params: { date } })
+    },
+    async getTeacherDiary(from, to) {
+        return api.get('/lessons/my-diary', { params: { from, to } })
     },
     async createLesson(data) {
         return api.post('/lessons', data)

@@ -17,7 +17,10 @@
     <!-- Stats Cards -->
     <div class="row q-col-gutter-lg q-mb-xl">
       <div class="col-12 col-sm-6 col-md-3">
-        <q-card class="dashboard-card glass-card bg-indigo-600 text-white shadow-soft overflow-hidden">
+        <q-card
+          class="dashboard-card glass-card bg-indigo-600 text-white shadow-soft overflow-hidden cursor-pointer"
+          @click="$router.push('/teacher/agenda')"
+        >
           <q-card-section>
             <div class="text-caption opacity-80 text-uppercase letter-spacing-1">Prossima Lezione</div>
             <div class="text-h4 text-weight-bold q-mt-sm">{{ nextLesson?.class_name || nextLesson?.class_id || 'Nessuna' }}</div>
@@ -28,7 +31,10 @@
       </div>
 
       <div class="col-12 col-sm-6 col-md-3">
-        <q-card class="dashboard-card glass-card bg-orange-600 text-white shadow-soft overflow-hidden">
+        <q-card
+          class="dashboard-card glass-card bg-orange-600 text-white shadow-soft overflow-hidden cursor-pointer"
+          @click="$router.push('/teacher/attendance')"
+        >
           <q-card-section>
             <div class="text-caption opacity-80 text-uppercase letter-spacing-1">Da Fare</div>
             <div class="text-h4 text-weight-bold q-mt-sm">{{ pendingTasksCount }} Revisioni</div>
@@ -39,7 +45,10 @@
       </div>
 
       <div class="col-12 col-sm-6 col-md-3">
-        <q-card class="dashboard-card glass-card bg-emerald-600 text-white shadow-soft overflow-hidden">
+        <q-card
+          class="dashboard-card glass-card bg-emerald-600 text-white shadow-soft overflow-hidden cursor-pointer"
+          @click="$router.push('/teacher/colloqui')"
+        >
           <q-card-section>
             <div class="text-caption opacity-80 text-uppercase letter-spacing-1">Colloqui</div>
             <div class="text-h4 text-weight-bold q-mt-sm">{{ upcomingColloquiCount }} Prenotazioni</div>
@@ -50,7 +59,10 @@
       </div>
 
       <div class="col-12 col-sm-6 col-md-3">
-        <q-card class="dashboard-card glass-card bg-violet-600 text-white shadow-soft overflow-hidden">
+        <q-card
+          class="dashboard-card glass-card bg-violet-600 text-white shadow-soft overflow-hidden cursor-pointer"
+          @click="$router.push('/teacher/communications')"
+        >
           <q-card-section>
             <div class="text-caption opacity-80 text-uppercase letter-spacing-1">Messaggi</div>
             <div class="text-h4 text-weight-bold q-mt-sm">{{ unreadMessagesCount }} Nuovi</div>
@@ -112,7 +124,13 @@
                 <q-item-label caption>{{ note.message }}</q-item-label>
               </q-item-section>
               <q-item-section side>
-                <q-btn flat round icon="close" size="sm" />
+                <q-btn flat round icon="close" size="sm" @click.stop="teacherStore.dismissNotification?.(note.id)" />
+              </q-item-section>
+            </q-item>
+            <q-item v-if="!teacherStore.notifications || teacherStore.notifications.length === 0">
+              <q-item-section class="text-center text-grey-5 q-py-lg">
+                <q-icon name="notifications_none" size="32px" class="q-mb-sm" />
+                <div>Nessuna notifica recente</div>
               </q-item-section>
             </q-item>
           </q-list>

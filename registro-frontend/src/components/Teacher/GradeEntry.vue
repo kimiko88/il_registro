@@ -391,7 +391,7 @@ const saveAll = async () => {
     }
 };
 
-const focusNext = (index) => {
+const focusNext = (_index) => {
     // Logic to focus next input would ideally use refs map
 };
 

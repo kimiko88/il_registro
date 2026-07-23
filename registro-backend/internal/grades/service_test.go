@@ -89,6 +89,13 @@ func (m *MockRepository) FindWithFilter(filter GradeFilter) ([]Grade, error) {
 	}
 	return args.Get(0).([]Grade), args.Error(1)
 }
+func (m *MockRepository) FindWithFilterPaginated(filter GradeFilter) ([]Grade, int, error) {
+	args := m.Called(filter)
+	if args.Get(0) == nil {
+		return nil, args.Int(1), args.Error(2)
+	}
+	return args.Get(0).([]Grade), args.Int(1), args.Error(2)
+}
 func (m *MockRepository) FindEnrolledSubjects(studentID string, semester int) ([]string, error) {
 	args := m.Called(studentID, semester)
 	if args.Get(0) == nil {
@@ -135,6 +142,24 @@ func (m *MockRepository) FindGradesByTestID(testID string) ([]Grade, error) {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]Grade), args.Error(1)
+}
+func (m *MockRepository) GetWeightConfigs(schoolID, subjectID, classID string) ([]GradeWeightConfig, error) {
+	args := m.Called(schoolID, subjectID, classID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]GradeWeightConfig), args.Error(1)
+}
+func (m *MockRepository) UpsertWeightConfig(cfg *GradeWeightConfig) (*GradeWeightConfig, error) {
+	args := m.Called(cfg)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*GradeWeightConfig), args.Error(1)
+}
+func (m *MockRepository) DeleteWeightConfig(id string) error {
+	args := m.Called(id)
+	return args.Error(0)
 }
 
 // MockUserRepo

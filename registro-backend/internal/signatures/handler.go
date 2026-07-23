@@ -15,15 +15,19 @@ func NewHandler(svc Service) *Handler {
 }
 
 func (h *Handler) SignDocument(c *gin.Context) {
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
 	var req SignRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	userID, _ := c.Get("userID")
-
-	sig, err := h.svc.SignDocument(userID.(string), req)
+	sig, err := h.svc.SignDocument(userID, req)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -33,6 +37,12 @@ func (h *Handler) SignDocument(c *gin.Context) {
 }
 
 func (h *Handler) GetSignatures(c *gin.Context) {
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
 	docID := c.Param("id")
 	if docID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "document id required"})

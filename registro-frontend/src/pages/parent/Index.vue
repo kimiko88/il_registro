@@ -1,10 +1,10 @@
 <template>
-  <q-page class="q-pa-md bg-slate-50" role="main">
+  <q-page class="q-pa-md" role="main">
     <!-- Header with Child Switcher -->
     <div class="row items-center justify-between q-mb-xl">
       <div>
         <h1 class="text-h3 text-weight-bold text-outfit parent-heading q-my-none" style="display: inline-block;">
-          Bentornato, Genitore
+          Bentornato, {{ parentName }}
         </h1>
         <div class="text-subtitle1 text-slate-600 q-mt-sm" aria-live="polite">Panoramica delle attività per i tuoi figli</div>
       </div>
@@ -55,7 +55,7 @@
       <div class="col-12 col-sm-6 col-md-3" role="region" aria-label="Media voti">
         <q-card class="glass-card stat-card shadow-soft full-height overflow-hidden">
           <q-card-section>
-            <div class="text-caption text-slate-600 text-uppercase letter-spacing-1">Media Voti</div>
+            <div class="text-caption text-slate-600 text-uppercase letter-spacing-1" style="font-size: 12px">Media Voti</div>
             <div class="text-h3 text-weight-bold text-indigo-700 q-mt-sm" :aria-label="`Media voti: ${averageGrade}`">{{ averageGrade }}</div>
             <div class="row items-center q-mt-sm">
               <q-icon name="trending_up" color="positive" class="q-mr-xs" aria-hidden="true" />
@@ -69,7 +69,7 @@
       <div class="col-12 col-sm-6 col-md-3" role="region" aria-label="Assenze">
         <q-card class="glass-card stat-card shadow-soft full-height overflow-hidden">
           <q-card-section>
-            <div class="text-caption text-slate-600 text-uppercase letter-spacing-1">Assenze</div>
+            <div class="text-caption text-slate-600 text-uppercase letter-spacing-1" style="font-size: 12px">Assenze</div>
             <div class="text-h3 text-weight-bold text-orange-700 q-mt-sm" :aria-label="`Numero assenze: ${totalAbsences}`">{{ totalAbsences }}</div>
             <div class="row items-center q-mt-sm">
               <span class="text-caption text-slate-600">Anno in corso</span>
@@ -82,7 +82,7 @@
       <div class="col-12 col-sm-6 col-md-3" role="region" aria-label="Prossimo colloquio">
         <q-card class="glass-card stat-card shadow-soft full-height overflow-hidden">
           <q-card-section>
-            <div class="text-caption text-slate-600 text-uppercase letter-spacing-1">Prossimo Colloquio</div>
+            <div class="text-caption text-slate-600 text-uppercase letter-spacing-1" style="font-size: 12px">Prossimo Colloquio</div>
             <div class="text-h5 text-weight-bold text-slate-800 q-mt-sm">Nessuno</div>
             <q-btn flat dense no-caps color="primary" label="Prenota ora" to="/parent/colloqui" class="q-mt-sm rounded-lg" aria-label="Prenota un colloquio" />
           </q-card-section>
@@ -93,8 +93,8 @@
       <div class="col-12 col-sm-6 col-md-3" role="region" aria-label="Avvisi da leggere">
         <q-card class="glass-card stat-card shadow-soft full-height overflow-hidden">
           <q-card-section>
-            <div class="text-caption text-slate-600 text-uppercase letter-spacing-1">Avvisi</div>
-            <div class="text-h3 text-weight-bold text-rose-700 q-mt-sm" aria-label="2 avvisi da leggere">2</div>
+            <div class="text-caption text-slate-600 text-uppercase letter-spacing-1" style="font-size: 12px">Avvisi</div>
+            <div class="text-h3 text-weight-bold text-rose-700 q-mt-sm" :aria-label="`${unreadCount} avvisi da leggere`">{{ unreadCount }}</div>
             <div class="text-caption text-slate-600 q-mt-sm text-weight-medium">Da leggere</div>
           </q-card-section>
           <q-icon name="notifications_active" class="card-bg-icon text-rose-100" aria-hidden="true" />
@@ -112,7 +112,7 @@
           <q-list separator v-if="recentGrades.length > 0" role="list" aria-label="Lista voti recenti">
             <q-item v-for="grade in recentGrades" :key="grade.id" role="listitem">
               <q-item-section>
-                <q-item-label class="text-weight-medium text-slate-800">{{ grade.subject_id }}</q-item-label>
+                <q-item-label class="text-weight-medium text-slate-800">{{ grade.subject_name || grade.subject_id }}</q-item-label>
                 <q-item-label caption class="text-slate-600">{{ grade.grade_type }}</q-item-label>
               </q-item-section>
               <q-item-section side>
@@ -171,9 +171,9 @@
 
     <!-- Quick Actions (FAB on Mobile) -->
     <q-page-sticky position="bottom-right" :offset="[18, 18]" class="lt-md">
-      <q-fab icon="add" direction="up" color="primary">
-        <q-fab-action color="orange" icon="edit_calendar" label="Giustifica" to="/parent/attendance" />
-        <q-fab-action color="secondary" icon="event" label="Colloquio" to="/parent/colloqui" />
+      <q-fab icon="add" direction="up" color="primary" aria-label="Azioni rapide">
+        <q-fab-action color="orange" icon="edit_calendar" label="Giustifica" to="/parent/attendance" aria-label="Giustifica assenza" />
+        <q-fab-action color="secondary" icon="event" label="Colloquio" to="/parent/colloqui" aria-label="Prenota colloquio" />
       </q-fab>
     </q-page-sticky>
 
@@ -181,18 +181,24 @@
 </template>
 
 <script setup>
-import { onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useParentStore } from '@/stores/parent'
+import { useAuthStore } from '@/stores/auth'
 import { storeToRefs } from 'pinia'
 import { gradeService } from 'src/services/gradeService'
 import { attendanceService } from 'src/services/attendanceService'
+import { communicationService } from 'src/services/communicationService'
 
 const parentStore = useParentStore()
+const authStore = useAuthStore()
 const { children, selectedChild, selectedChildId, loading } = storeToRefs(parentStore)
 const { fetchChildren, selectChild } = parentStore
 
+const parentName = computed(() => authStore.user?.first_name || authStore.user?.name || 'Genitore')
+
 const averageGrade = ref('0.0')
 const totalAbsences = ref(0)
+const unreadCount = ref(0)
 const recentGrades = ref([])
 const upcomingTests = ref([])
 const dataLoading = ref(false)
@@ -253,6 +259,15 @@ const fetchChildData = async () => {
             totalAbsences.value = records.filter(r => r.status === 'absent').length
         }
 
+        // Fetch Unread Communications
+        try {
+            const commsRes = await communicationService.getMessages()
+            const messages = commsRes.data || []
+            unreadCount.value = messages.filter(m => !m.is_read).length
+        } catch (e) {
+            unreadCount.value = 0
+        }
+
         // Fetch Upcoming Tests
         const child = selectedChild.value
         if (child && child.class_id) {
@@ -300,13 +315,7 @@ onMounted(async () => {
 
 .stat-card {
   position: relative;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.stat-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 .card-bg-icon {

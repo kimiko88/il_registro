@@ -72,3 +72,7 @@ func (s *Service) RemoveSubject(ctx context.Context, assignmentID string) error 
 func (s *Service) GetClassSubjects(ctx context.Context, classID string) ([]ClassSubject, error) {
 	return s.repo.GetClassSubjects(ctx, classID)
 }
+
+func (s *Service) GetClassGuardians(ctx context.Context, classID string) ([]GuardianInfo, error) {
+	return s.repo.GetClassGuardians(ctx, classID)
+}

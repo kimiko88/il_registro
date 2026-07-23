@@ -1,6 +1,7 @@
 package grades
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"fmt"
@@ -8,6 +9,8 @@ import (
 	"math"
 	"sort"
 	"time"
+
+	"github.com/go-pdf/fpdf"
 
 	"registro-backend/internal/users"
 	"registro-backend/pkg/logger"
@@ -28,13 +31,15 @@ type EventBroadcaster interface {
 type Service interface {
 	GetStudentGrades(studentID string) ([]GradeResponse, error)
 	GetStudentGradesWithFilter(ctx context.Context, actorID string, actorRole string, studentID string, filter GradeFilter) ([]GradeResponse, error)
+	// GetStudentGradesPaged returns a paginated response for list-grades endpoints.
+	GetStudentGradesPaged(ctx context.Context, actorID string, actorRole string, studentID string, filter GradeFilter) (*PaginatedGradesResponse, error)
 	GetClassGrades(ctx context.Context, actorID string, actorRole string, classID string, filter GradeFilter) (*ClassGradesResponse, error)
-	GetSubjectGrades(subjectID string, filter GradeFilter) (*SubjectStatsResponse, error)
-	AddGrade(teacherID string, req CreateGradeRequest) error
+	GetSubjectGrades(ctx context.Context, actorID string, actorRole string, subjectID string, filter GradeFilter) (*SubjectStatsResponse, error)
+	AddGrade(teacherID string, req CreateGradeRequest) (*GradeResponse, error)
 	BatchCreateGrades(teacherID string, grades []*Grade) error
 	BulkImport(teacherID string, r io.Reader, semester int) (*ImportResult, error)
 	Export(teacherID string, filter GradeFilter, format string) ([]byte, string, error)
-	UpdateGrade(teacherID string, gradeID string, req UpdateGradeRequest) error
+	UpdateGrade(teacherID string, gradeID string, req UpdateGradeRequest) (*GradeResponse, error)
 	DeleteGrade(teacherID string, gradeID string) error
 
 	// Student/Parent
@@ -42,10 +47,12 @@ type Service interface {
 	GetMyAverages(studentID string) (*StudentAveragesResponse, error)
 	GetMyTrend(studentID string, subjectID string) (*TrendResponse, error)
 	GetSemesterReport(studentID string, semester int) (*SemesterReportResponse, error)
+	GenerateSemesterReportPDF(studentID string, semester int) ([]byte, error)
 
 	// Parent
 	GetChildGrades(parentID string, studentID string, filter GradeFilter) (*MyGradesResponse, error)
 	GetChildAverages(parentID string, studentID string) (*StudentAveragesResponse, error)
+	GetChildSemesterReport(ctx context.Context, parentID, studentID string, semester int) (*SemesterReportResponse, error)
 
 	// Class Tests
 	CreateTestWithGrades(teacherID string, req CreateClassTestRequest) error
@@ -53,6 +60,11 @@ type Service interface {
 	GetUpcomingTestsByClass(classID string) ([]ClassTestResponse, error)
 	DeleteClassTest(teacherID string, testID string) error
 	UpdateClassTest(teacherID string, testID string, req UpdateClassTestRequest) error
+
+	// Weight Config
+	GetWeightConfigs(schoolID, subjectID, classID string) ([]GradeWeightConfig, error)
+	UpsertWeightConfig(actorID, schoolID string, req UpsertWeightConfigRequest) (*GradeWeightConfig, error)
+	DeleteWeightConfig(actorID, configID string) error
 }
 
 type service struct {
@@ -102,6 +114,9 @@ func (s *service) GetStudentGradesWithFilter(ctx context.Context, actorID string
 
 	var filtered []Grade
 	for _, g := range grades {
+		if g.DeletedAt != nil {
+			continue
+		}
 		if filter.Semester > 0 && int(g.Semester) != filter.Semester {
 			continue
 		}
@@ -118,6 +133,51 @@ func (s *service) GetStudentGradesWithFilter(ctx context.Context, actorID string
 	}
 
 	return s.mapToResponse(filtered), nil
+}
+
+// GetStudentGradesPaged applies the same ownership checks as GetStudentGradesWithFilter
+// then delegates to the paginated repository method.
+func (s *service) GetStudentGradesPaged(ctx context.Context, actorID string, actorRole string, studentID string, filter GradeFilter) (*PaginatedGradesResponse, error) {
+	if actorRole == "student" && actorID != studentID {
+		return nil, ErrUnauthorized
+	}
+	if actorRole == "parent" {
+		isGuardian, err := s.userRepo.IsGuardian(ctx, actorID, studentID)
+		if err != nil {
+			return nil, err
+		}
+		if !isGuardian {
+			return nil, ErrNotGuardian
+		}
+	}
+
+	filter.StudentID = studentID
+	grades, total, err := s.repo.FindWithFilterPaginated(filter)
+	if err != nil {
+		return nil, err
+	}
+
+	pageSize := filter.PageSize
+	if pageSize <= 0 {
+		pageSize = 50
+	}
+	page := filter.Page
+	if page < 1 {
+		page = 1
+	}
+
+	totalPages := 0
+	if total > 0 {
+		totalPages = (total + pageSize - 1) / pageSize
+	}
+
+	return &PaginatedGradesResponse{
+		Data:       s.mapToResponse(grades),
+		Total:      total,
+		Page:       page,
+		PageSize:   pageSize,
+		TotalPages: totalPages,
+	}, nil
 }
 
 func (s *service) GetClassGrades(ctx context.Context, actorID string, actorRole string, classID string, filter GradeFilter) (*ClassGradesResponse, error) {
@@ -211,7 +271,10 @@ func calcSemesterAverages(grades []GradeResponse) (avg1, avg2 float64) {
 	var sum1, sum2 float64
 	var count1, count2 int
 	for _, g := range grades {
-		if g.GradeValue >= 0 {
+		if g.GradeCategory != "" && g.GradeCategory != string(GradeCategorySummative) {
+			continue
+		}
+		if g.GradeValue > 0 {
 			if g.Semester == 1 {
 				sum1 += g.GradeValue
 				count1++
@@ -230,7 +293,28 @@ func calcSemesterAverages(grades []GradeResponse) (avg1, avg2 float64) {
 	return
 }
 
-func (s *service) GetSubjectGrades(subjectID string, filter GradeFilter) (*SubjectStatsResponse, error) {
+func (s *service) GetSubjectGrades(ctx context.Context, actorID string, actorRole string, subjectID string, filter GradeFilter) (*SubjectStatsResponse, error) {
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" {
+		if actorRole != "teacher" {
+			return nil, ErrUnauthorized
+		}
+		var exists bool
+		if err := s.validator.db.QueryRowContext(
+			ctx,
+			`SELECT EXISTS(
+				SELECT 1 FROM class_subjects cs
+				JOIN teachers t ON cs.teacher_id = t.id
+				WHERE cs.subject_id = $1 AND t.user_id = $2
+			)`,
+			subjectID, actorID,
+		).Scan(&exists); err != nil {
+			return nil, fmt.Errorf("authorization check failed: %w", err)
+		}
+		if !exists {
+			return nil, fmt.Errorf("%w: you are not assigned to teach this subject", ErrUnauthorized)
+		}
+	}
+
 	grades, err := s.repo.FindBySubject(subjectID, filter.Semester)
 	if err != nil {
 		return nil, err
@@ -279,17 +363,17 @@ func (s *service) GetSubjectGrades(subjectID string, filter GradeFilter) (*Subje
 	return stat, nil
 }
 
-func (s *service) AddGrade(teacherID string, req CreateGradeRequest) error {
+func (s *service) AddGrade(teacherID string, req CreateGradeRequest) (*GradeResponse, error) {
 	if err := s.validator.ValidateCreateRequest(req, teacherID); err != nil {
-		return fmt.Errorf("validation failed: %w", err)
+		return nil, fmt.Errorf("validation failed: %w", err)
 	}
 
 	teacherUser, err := s.userRepo.GetByID(context.Background(), teacherID)
 	if err != nil {
-		return fmt.Errorf("could not resolve teacher profile: %w", err)
+		return nil, fmt.Errorf("could not resolve teacher profile: %w", err)
 	}
 	if teacherUser.SchoolID == nil {
-		return fmt.Errorf("teacher is not associated with a school")
+		return nil, fmt.Errorf("teacher is not associated with a school")
 	}
 	schoolID := *teacherUser.SchoolID
 
@@ -297,12 +381,12 @@ func (s *service) AddGrade(teacherID string, req CreateGradeRequest) error {
 	if err := s.validator.db.QueryRow(
 		`SELECT id FROM teachers WHERE user_id = $1`, teacherID,
 	).Scan(&teacherProfileID); err != nil {
-		return fmt.Errorf("could not resolve teacher profile ID: %w", err)
+		return nil, fmt.Errorf("could not resolve teacher profile ID: %w", err)
 	}
 
 	date, err := time.Parse("2006-01-02", req.Date)
 	if err != nil {
-		return fmt.Errorf("formato data non valido: %w", err)
+		return nil, fmt.Errorf("formato data non valido: %w", err)
 	}
 
 	var evalType *EvaluationType
@@ -334,14 +418,15 @@ func (s *service) AddGrade(teacherID string, req CreateGradeRequest) error {
 	}
 
 	if err := s.repo.Create(grade); err != nil {
-		return fmt.Errorf("failed to create grade: %w", err)
+		return nil, fmt.Errorf("failed to create grade: %w", err)
 	}
 
+	resp := s.mapSingleResponse(*grade)
 	if s.broadcaster != nil {
-		s.broadcaster.BroadcastToUser(grade.StudentID, "GRADE_ADDED", s.mapSingleResponse(*grade))
+		s.broadcaster.BroadcastToUser(grade.StudentID, "GRADE_ADDED", resp)
 	}
 
-	return nil
+	return &resp, nil
 }
 
 func (s *service) BatchCreateGrades(teacherID string, grades []*Grade) error {
@@ -379,25 +464,31 @@ func (s *service) Export(teacherID string, filter GradeFilter, format string) ([
 	}
 
 	if format == "csv" {
-		out := "StudentID,SubjectID,GradeValue,Date,Semester,TeacherID\n"
-		for _, g := range grades {
-			out += fmt.Sprintf("%s,%s,%.2f,%s,%d,%s\n",
-				g.StudentID, g.SubjectID, g.GradeValue,
-				g.Date.Format("2006-01-02"), g.Semester, g.TeacherID)
+		data, err := ExportToCSV(grades, ExportOptions{Format: "csv"})
+		if err != nil {
+			return nil, "", fmt.Errorf("failed to generate CSV: %w", err)
 		}
-		return []byte(out), "text/csv", nil
+		return data, "text/csv", nil
+	}
+
+	if format == "pdf" {
+		data, err := ExportToPDF(grades, ExportOptions{Format: "pdf"})
+		if err != nil {
+			return nil, "", fmt.Errorf("failed to generate PDF: %w", err)
+		}
+		return data, "application/pdf", nil
 	}
 
 	return nil, "", fmt.Errorf("unsupported format: %s", format)
 }
 
-func (s *service) UpdateGrade(teacherID string, gradeID string, req UpdateGradeRequest) error {
+func (s *service) UpdateGrade(teacherID string, gradeID string, req UpdateGradeRequest) (*GradeResponse, error) {
 	grade, err := s.repo.FindByID(gradeID)
 	if err != nil {
-		return fmt.Errorf("failed to fetch grade: %w", err)
+		return nil, fmt.Errorf("failed to fetch grade: %w", err)
 	}
 	if grade == nil {
-		return fmt.Errorf("grade not found")
+		return nil, fmt.Errorf("grade not found")
 	}
 
 	// Resolve the teacher's profile ID (teachers.id) from the user ID (users.id)
@@ -406,15 +497,15 @@ func (s *service) UpdateGrade(teacherID string, gradeID string, req UpdateGradeR
 	if err := s.validator.db.QueryRow(
 		`SELECT id FROM teachers WHERE user_id = $1`, teacherID,
 	).Scan(&teacherProfileID); err != nil {
-		return fmt.Errorf("could not resolve teacher profile: %w", err)
+		return nil, fmt.Errorf("could not resolve teacher profile: %w", err)
 	}
 
 	if grade.TeacherID != teacherProfileID {
-		return fmt.Errorf("unauthorized: can only modify own grades")
+		return nil, fmt.Errorf("unauthorized: can only modify own grades")
 	}
 
 	if err := s.validator.ValidateModification(*grade, req); err != nil {
-		return fmt.Errorf("validation failed: %w", err)
+		return nil, fmt.Errorf("validation failed: %w", err)
 	}
 
 	history := &GradeHistory{
@@ -469,23 +560,26 @@ func (s *service) UpdateGrade(teacherID string, gradeID string, req UpdateGradeR
 	}
 	if req.Date != nil && *req.Date != "" {
 		parsedDate, parseErr := time.Parse("2006-01-02", *req.Date)
-		if parseErr == nil {
-			grade.Date = parsedDate
-			changes = true
+		if parseErr != nil {
+			return nil, fmt.Errorf("invalid date format: %w", parseErr)
 		}
+		grade.Date = parsedDate
+		changes = true
 	}
 
 	if !changes {
-		return nil
+		resp := s.mapSingleResponse(*grade)
+		return &resp, nil
 	}
 
 	grade.ModifiedBy = &teacherID
 
 	if err := s.repo.Update(grade, history); err != nil {
-		return fmt.Errorf("failed to update grade: %w", err)
+		return nil, fmt.Errorf("failed to update grade: %w", err)
 	}
 
-	return nil
+	resp := s.mapSingleResponse(*grade)
+	return &resp, nil
 }
 
 func (s *service) DeleteGrade(teacherID string, gradeID string) error {
@@ -559,9 +653,6 @@ func (s *service) GetChildAverages(parentID string, studentID string) (*StudentA
 }
 
 func (s *service) GetMyGrades(studentID string, filter GradeFilter) (*MyGradesResponse, error) {
-	published := true
-	filter.IsPublished = &published
-
 	allGrades, err := s.repo.FindByStudent(studentID)
 	if err != nil {
 		return nil, err
@@ -644,13 +735,15 @@ func (s *service) GetMyAverages(studentID string) (*StudentAveragesResponse, err
 		var totalSub int
 
 		for subID, subGrades := range subMap {
-			avg := s.calculator.CalculateWeightedAverage(subGrades)
+			avg := s.calculator.CalculateAverage(subGrades)
+			weightedAvg := s.calculator.CalculateWeightedAverage(subGrades)
 			subjects = append(subjects, SubjectAverage{
-				Subject:     subID,
-				Average:     avg,
-				TotalGrades: len(subGrades),
+				Subject:         subID,
+				Average:         avg,
+				WeightedAverage: weightedAvg,
+				TotalGrades:     len(subGrades),
 			})
-			totalSum += avg
+			totalSum += weightedAvg
 			totalSub++
 		}
 
@@ -703,7 +796,7 @@ func (s *service) GetMyTrend(studentID string, subjectID string) (*TrendResponse
 	classAverage := 0.0
 	var classID string
 	if err := s.validator.db.QueryRow(
-		`SELECT class_id FROM class_students WHERE student_id = $1`, studentID,
+		`SELECT class_id FROM class_students WHERE student_id = $1 ORDER BY created_at DESC LIMIT 1`, studentID,
 	).Scan(&classID); err == nil && classID != "" {
 		_ = s.validator.db.QueryRow(
 			`SELECT COALESCE(AVG(grade_value), 0.0)
@@ -782,6 +875,24 @@ func (s *service) GetSemesterReport(studentID string, semester int) (*SemesterRe
 		return nil, err
 	}
 
+	var studentName, className, schoolYear string
+	if s.validator != nil && s.validator.db != nil {
+		_ = s.validator.db.QueryRow(
+			`SELECT u.first_name || ' ' || u.last_name, COALESCE(c.name, 'N/D')
+			 FROM users u
+			 LEFT JOIN class_students cs ON u.id = cs.student_id
+			 LEFT JOIN classes c ON cs.class_id = c.id
+			 WHERE u.id = $1`, studentID,
+		).Scan(&studentName, &className)
+	}
+	if studentName == "" {
+		studentName = "Studente " + studentID
+	}
+	if className == "" {
+		className = "Classe N/D"
+	}
+	schoolYear = currentSchoolYear()
+
 	var semGrades []Grade
 	for _, g := range grades {
 		if g.Semester == Semester(semester) && g.IsPublished && g.DeletedAt == nil {
@@ -794,8 +905,6 @@ func (s *service) GetSemesterReport(studentID string, semester int) (*SemesterRe
 		subMap[g.SubjectID] = append(subMap[g.SubjectID], g)
 	}
 
-	// Fetch the full list of enrolled subjects for this student so that
-	// subjects with no grades still count toward the promotion check.
 	enrolledSubjects, enrollErr := s.repo.FindEnrolledSubjects(studentID, semester)
 
 	var subjects []SubjectReport
@@ -822,16 +931,26 @@ func (s *service) GetSemesterReport(studentID string, semester int) (*SemesterRe
 			passedCount++
 		}
 
+		finalGrade := math.Round(avg)
+		if finalGrade < 1 {
+			finalGrade = 1
+		}
+
 		subjects = append(subjects, SubjectReport{
 			Subject:        subID,
-			SubjectAverage: avg,
+			SubjectID:      subID,
+			Teacher:        "Docente",
+			FinalGrade:     finalGrade,
+			SubjectAverage: math.Round(avg*100) / 100,
+			GradeCount:     len(gs),
+			AbsenceDays:    0,
+			Notes:          "",
 			Grades:         gVals,
 			Passed:         passed,
 		})
 		processedSubjects[subID] = true
 	}
 
-	// Add subjects that are enrolled but have no grades: they count as failed.
 	if enrollErr == nil {
 		for _, subID := range enrolledSubjects {
 			if processedSubjects[subID] {
@@ -839,7 +958,13 @@ func (s *service) GetSemesterReport(studentID string, semester int) (*SemesterRe
 			}
 			subjects = append(subjects, SubjectReport{
 				Subject:        subID,
+				SubjectID:      subID,
+				Teacher:        "Docente",
+				FinalGrade:     0,
 				SubjectAverage: 0,
+				GradeCount:     0,
+				AbsenceDays:    0,
+				Notes:          "",
 				Grades:         []GradeVal{},
 				Passed:         false,
 			})
@@ -848,23 +973,102 @@ func (s *service) GetSemesterReport(studentID string, semester int) (*SemesterRe
 
 	overall := 0.0
 	if len(subjects) > 0 {
-		overall = totalSum / float64(len(subjects))
+		overall = math.Round((totalSum/float64(len(subjects)))*100) / 100
 	}
 
-	// Promotion requires passing ALL enrolled subjects, not just those with grades.
-	totalSubjectCount := len(subjects)
 	promoted := "NO"
-	if totalSubjectCount > 0 && passedCount == totalSubjectCount {
+	if len(subjects) > 0 && passedCount == len(subjects) {
 		promoted = "SÌ"
 	}
 
 	return &SemesterReportResponse{
-		Semester:       semester,
-		Subjects:       subjects,
-		OverallAverage: overall,
-		Promoted:       promoted,
-		Status:         "OK",
+		Semester:         semester,
+		StudentName:      studentName,
+		ClassName:        className,
+		SchoolYear:       schoolYear,
+		BehaviorGrade:    8.0,
+		ScholasticCredit: 8.0,
+		OverallAverage:   overall,
+		TotalAbsenceDays: 0,
+		Subjects:         subjects,
+		Promoted:         promoted,
+		Status:           "OK",
+		LastUpdate:       time.Now(),
 	}, nil
+}
+
+func (s *service) GetChildSemesterReport(ctx context.Context, parentID, studentID string, semester int) (*SemesterReportResponse, error) {
+	if s.userRepo != nil {
+		isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, studentID)
+		if err != nil {
+			return nil, err
+		}
+		if !isGuardian {
+			return nil, ErrNotGuardian
+		}
+	}
+	return s.GetSemesterReport(studentID, semester)
+}
+
+func (s *service) GenerateSemesterReportPDF(studentID string, semester int) ([]byte, error) {
+	report, err := s.GetSemesterReport(studentID, semester)
+	if err != nil {
+		return nil, err
+	}
+
+	pdf := fpdf.New("P", "mm", "A4", "")
+	pdf.AddPage()
+	pdf.SetFont("Arial", "B", 16)
+
+	pdf.CellFormat(190, 10, "REGISTRO ELETTRONICO - SCHEDA DI VALUTAZIONE", "0", 1, "C", false, 0, "")
+	pdf.SetFont("Arial", "", 12)
+	semText := fmt.Sprintf("%d° Quadrimestre", semester)
+	pdf.CellFormat(190, 8, fmt.Sprintf("Valutazione Finale - %s - A.S. %s", semText, report.SchoolYear), "0", 1, "C", false, 0, "")
+	pdf.Ln(4)
+
+	pdf.SetFont("Arial", "B", 10)
+	pdf.CellFormat(95, 7, fmt.Sprintf("Studente: %s", report.StudentName), "1", 0, "L", false, 0, "")
+	pdf.CellFormat(95, 7, fmt.Sprintf("Classe: %s", report.ClassName), "1", 1, "L", false, 0, "")
+	pdf.CellFormat(95, 7, fmt.Sprintf("Media Generale: %.2f", report.OverallAverage), "1", 0, "L", false, 0, "")
+	pdf.CellFormat(95, 7, fmt.Sprintf("Voto Comportamento: %.0f", report.BehaviorGrade), "1", 1, "L", false, 0, "")
+	pdf.Ln(6)
+
+	pdf.SetFont("Arial", "B", 10)
+	pdf.SetFillColor(230, 230, 230)
+	pdf.CellFormat(60, 8, "Materia", "1", 0, "L", true, 0, "")
+	pdf.CellFormat(40, 8, "Docente", "1", 0, "L", true, 0, "")
+	pdf.CellFormat(30, 8, "Voti (N°)", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(30, 8, "Media", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(30, 8, "Voto Finale", "1", 1, "C", true, 0, "")
+
+	pdf.SetFont("Arial", "", 10)
+	for _, sub := range report.Subjects {
+		subName := sub.Subject
+		if len(subName) > 25 {
+			subName = subName[:22] + "..."
+		}
+		teacherName := sub.Teacher
+		if len(teacherName) > 18 {
+			teacherName = teacherName[:15] + "..."
+		}
+
+		pdf.CellFormat(60, 7, subName, "1", 0, "L", false, 0, "")
+		pdf.CellFormat(40, 7, teacherName, "1", 0, "L", false, 0, "")
+		pdf.CellFormat(30, 7, fmt.Sprintf("%d", sub.GradeCount), "1", 0, "C", false, 0, "")
+		pdf.CellFormat(30, 7, fmt.Sprintf("%.2f", sub.SubjectAverage), "1", 0, "C", false, 0, "")
+
+		finalGradeStr := fmt.Sprintf("%.0f", sub.FinalGrade)
+		if sub.FinalGrade == 0 {
+			finalGradeStr = fmt.Sprintf("%.1f", sub.SubjectAverage)
+		}
+		pdf.CellFormat(30, 7, finalGradeStr, "1", 1, "C", false, 0, "")
+	}
+
+	var buf bytes.Buffer
+	if err := pdf.Output(&buf); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
 }
 
 // Helpers
@@ -914,6 +1118,15 @@ func academicYearDates() (sem1Start, sem1End, sem2Start, sem2End string) {
 	sem2Start = fmt.Sprintf("%d-02-01", nextYear)
 	sem2End = fmt.Sprintf("%d-06-10", nextYear)
 	return
+}
+
+func currentSchoolYear() string {
+	now := time.Now()
+	year := now.Year()
+	if now.Month() < time.September {
+		year--
+	}
+	return fmt.Sprintf("%d/%d", year, year+1)
 }
 
 func (s *service) CreateTestWithGrades(teacherID string, req CreateClassTestRequest) error {
@@ -1004,7 +1217,9 @@ func (s *service) CreateTestWithGrades(teacherID string, req CreateClassTestRequ
 		}
 		if s.broadcaster != nil {
 			for _, g := range gradesList {
-				s.broadcaster.BroadcastToUser(g.StudentID, "GRADE_ADDED", s.mapSingleResponse(*g))
+				if g.IsPublished {
+					s.broadcaster.BroadcastToUser(g.StudentID, "GRADE_ADDED", s.mapSingleResponse(*g))
+				}
 			}
 		}
 	}
@@ -1063,7 +1278,13 @@ func (s *service) DeleteClassTest(teacherID string, testID string) error {
 	if err != nil {
 		return err
 	}
-	if test.TeacherID != teacherID {
+	var teacherProfileID string
+	if s.validator != nil && s.validator.db != nil {
+		_ = s.validator.db.QueryRow(
+			`SELECT id FROM teachers WHERE user_id = $1`, teacherID,
+		).Scan(&teacherProfileID)
+	}
+	if test.TeacherID != teacherID && test.TeacherID != teacherProfileID {
 		return ErrUnauthorized
 	}
 	return s.repo.DeleteTest(testID)
@@ -1095,7 +1316,7 @@ func (s *service) UpdateClassTest(teacherID string, testID string, req UpdateCla
 
 	testDate, err := time.Parse("2006-01-02", req.Date)
 	if err != nil {
-		testDate = time.Now()
+		return fmt.Errorf("invalid test date format '%s': %w", req.Date, err)
 	}
 
 	test := &ClassTest{
@@ -1202,3 +1423,87 @@ func (s *service) UpdateClassTest(teacherID string, testID string, req UpdateCla
 
 	return nil
 }
+
+// --- Grade Weight Config ---
+
+// GetWeightConfigs returns the weight configurations for a given school/subject/class.
+func (s *service) GetWeightConfigs(schoolID, subjectID, classID string) ([]GradeWeightConfig, error) {
+	configs, err := s.repo.GetWeightConfigs(schoolID, subjectID, classID)
+	if err != nil {
+		return nil, fmt.Errorf("GetWeightConfigs: %w", err)
+	}
+	if configs == nil {
+		configs = []GradeWeightConfig{}
+	}
+	return configs, nil
+}
+
+// UpsertWeightConfig creates or updates a weight configuration entry.
+func (s *service) UpsertWeightConfig(actorID, schoolID string, req UpsertWeightConfigRequest) (*GradeWeightConfig, error) {
+	if schoolID == "" {
+		return nil, fmt.Errorf("school_id is required")
+	}
+	validCategories := map[string]bool{"formative": true, "summative": true, "practical": true}
+	if !validCategories[req.GradeCategory] {
+		return nil, fmt.Errorf("invalid grade_category: must be formative, summative, or practical")
+	}
+	if req.EvaluationType != nil {
+		validTypes := map[string]bool{"Written": true, "Oral": true, "Practical": true}
+		if !validTypes[*req.EvaluationType] {
+			return nil, fmt.Errorf("invalid evaluation_type: must be Written, Oral, or Practical")
+		}
+	}
+	cfg := &GradeWeightConfig{
+		SchoolID:       schoolID,
+		SubjectID:      req.SubjectID,
+		ClassID:        req.ClassID,
+		GradeCategory:  req.GradeCategory,
+		EvaluationType: req.EvaluationType,
+		Weight:         req.Weight,
+		CreatedBy:      actorID,
+	}
+	return s.repo.UpsertWeightConfig(cfg)
+}
+
+// DeleteWeightConfig removes a weight configuration entry.
+func (s *service) DeleteWeightConfig(actorID, configID string) error {
+	if configID == "" {
+		return fmt.Errorf("config id required")
+	}
+	return s.repo.DeleteWeightConfig(configID)
+}
+
+// effectiveWeight returns the resolved weight for a grade, applying configured defaults.
+// Priority: grade.Weight (if != 1.0) > matching config > 1.0 default.
+func effectiveWeight(g Grade, configs []GradeWeightConfig) float64 {
+	if g.Weight != 1.0 {
+		return g.Weight
+	}
+	var bestWeight *float64
+	bestScore := -1
+	for _, c := range configs {
+		if string(g.GradeCategory) != c.GradeCategory {
+			continue
+		}
+		if c.EvaluationType != nil && g.EvaluationType != nil && string(*g.EvaluationType) != *c.EvaluationType {
+			continue
+		}
+		score := 0
+		if c.SubjectID != nil && *c.SubjectID == g.SubjectID {
+			score += 2
+		}
+		if c.ClassID != nil {
+			score++
+		}
+		if score > bestScore {
+			bestScore = score
+			w := c.Weight
+			bestWeight = &w
+		}
+	}
+	if bestWeight != nil {
+		return *bestWeight
+	}
+	return 1.0
+}
+

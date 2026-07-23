@@ -18,15 +18,23 @@ type Middleware struct {
 	userRepo     users.Repository
 }
 
-// NewMiddleware creates a new auth middleware
+// NewMiddleware creates a new auth middleware.
+// userRepo must not be nil — it is required to verify that accounts are still
+// active on every request. Passing nil will panic at startup to prevent silent
+// security bypasses where disabled accounts could keep making requests.
 func NewMiddleware(tokenManager *jwt.TokenManager, userRepo users.Repository) *Middleware {
+	if userRepo == nil {
+		panic("auth.NewMiddleware: userRepo must not be nil — required for active-account checks")
+	}
 	return &Middleware{
 		tokenManager: tokenManager,
 		userRepo:     userRepo,
 	}
 }
 
-// Authenticate validates JWT token and sets user context
+// Authenticate validates JWT token and sets user context.
+// It also verifies that the account is still active in the database;
+// a valid JWT for a disabled account is rejected with 403.
 func (m *Middleware) Authenticate() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var token string
@@ -40,8 +48,29 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 			}
 		}
 
+		// 2. Try WebSocket subprotocol header (Sec-WebSocket-Protocol: access_token, <token>)
 		if token == "" {
-			c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "missing authorization header"})
+			secProto := c.GetHeader("Sec-WebSocket-Protocol")
+			if secProto != "" {
+				parts := strings.Split(secProto, ",")
+				for _, p := range parts {
+					p = strings.TrimSpace(p)
+					if p != "" && p != "access_token" && p != "bearer" {
+						token = p
+						c.Header("Sec-WebSocket-Protocol", p)
+						break
+					}
+				}
+			}
+		}
+
+		// 3. Fallback to query parameter (e.g. legacy WebSockets)
+		if token == "" {
+			token = c.Query("token")
+		}
+
+		if token == "" {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "missing authorization token"})
 			c.Abort()
 			return
 		}
@@ -54,19 +83,19 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 			return
 		}
 
-		// Check if user is active in DB (security check for disabled users)
-		if m.userRepo != nil {
-			isActive, err := m.userRepo.IsActive(c.Request.Context(), claims.UserID)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "auth check failed"})
-				c.Abort()
-				return
-			}
-			if !isActive {
-				c.JSON(http.StatusForbidden, ErrorResponse{Error: "account is disabled"})
-				c.Abort()
-				return
-			}
+		// Always verify the account is still active in the DB.
+		// This ensures that disabling a user takes effect within one request,
+		// not just after the JWT expires (up to 15 minutes later).
+		isActive, err := m.userRepo.IsActive(c.Request.Context(), claims.UserID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "auth check failed"})
+			c.Abort()
+			return
+		}
+		if !isActive {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: "account is disabled"})
+			c.Abort()
+			return
 		}
 
 		// Set claims in context
@@ -91,7 +120,7 @@ func (m *Middleware) RequireRole(allowedRoles ...string) gin.HandlerFunc {
 
 		roleStr := role.(string)
 		for _, allowedRole := range allowedRoles {
-			if roleStr == allowedRole || roleStr == "superadmin" {
+			if roleStr == allowedRole {
 				c.Next()
 				return
 			}
@@ -126,7 +155,11 @@ func GetSchoolID(c *gin.Context) (string, bool) {
 	if !exists {
 		return "", false
 	}
-	return schoolID.(string), true
+	s, ok := schoolID.(string)
+	if !ok || s == "" {
+		return "", false
+	}
+	return s, true
 }
 
 // ContextKey type for context keys

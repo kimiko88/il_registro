@@ -38,7 +38,7 @@ func TestCORSMiddleware(t *testing.T) {
 		{
 			name:           "POST request should continue",
 			method:         "POST",
-			origin:         "https://example.com",
+			origin:         "http://localhost:5173",
 			expectedStatus: http.StatusOK,
 			shouldAbort:    false,
 		},
@@ -179,7 +179,7 @@ func TestCORSMiddleware_HeaderValues(t *testing.T) {
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 	c.Request, _ = http.NewRequest("GET", "/test", nil)
-	c.Request.Header.Set("Origin", "https://example.com")
+	c.Request.Header.Set("Origin", "http://localhost:5173")
 
 	middleware := CORSMiddleware()
 	middleware(c)
@@ -187,7 +187,7 @@ func TestCORSMiddleware_HeaderValues(t *testing.T) {
 	// Verify all expected CORS headers are set
 	headers := w.Header()
 
-	assert.Equal(t, "https://example.com", headers.Get("Access-Control-Allow-Origin"))
+	assert.Equal(t, "http://localhost:5173", headers.Get("Access-Control-Allow-Origin"))
 	assert.Equal(t, "true", headers.Get("Access-Control-Allow-Credentials"))
 
 	allowedHeaders := headers.Get("Access-Control-Allow-Headers")

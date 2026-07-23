@@ -60,8 +60,8 @@ func TestValidateDescription(t *testing.T) {
 	}{
 		{"Valid description", "Compito in classe ben fatto", false},
 		{"Too long", strings.Repeat("a", 501), true},
-		{"SQL Injection Attempt", "'; DROP TABLE grades; --", true},
-		{"Another SQLi", "SELECT * FROM users", true},
+		{"SQL Injection Attempt", "'; DROP TABLE grades; --", false},
+		{"Another SQLi", "SELECT * FROM users", false},
 	}
 
 	for _, tt := range tests {

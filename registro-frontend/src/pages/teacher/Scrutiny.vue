@@ -6,7 +6,8 @@
         <p class="text-subtitle1 text-slate-500 q-mb-none">Gestione voti finali e deliberazioni del Consiglio di Classe</p>
       </div>
       <div class="col-auto">
-        <div class="row q-gutter-md glass-card q-pa-sm rounded-xl border-slate-200">
+        <div class="row q-gutter-md glass-card q-pa-sm rounded-xl border-slate-200 items-center">
+          <q-btn v-if="selectedClassId" color="negative" icon="lock" label="Chiudi Scrutinio" unelevated @click="closeScrutiny" />
           <q-select
             v-model="selectedClassId"
             :options="classOptions"
@@ -17,11 +18,11 @@
             class="rounded-lg"
           />
           <q-btn-toggle
-            v-model="semester"
+            v-model="period"
             toggle-color="primary"
             flat
             class="rounded-lg border-slate-200"
-            :options="[{label: '1° Quad', value: 1}, {label: '2° Quad', value: 2}]"
+            :options="periodOptions"
           />
         </div>
       </div>
@@ -147,13 +148,20 @@ import { useQuasar } from 'quasar'
 import { scrutinyService } from 'src/services/scrutinyService'
 import { useClassesStore } from 'src/stores/classes'
 import { useAuthStore } from 'src/stores/auth'
+import api from 'src/services/api'
 
 const $q = useQuasar()
 const classesStore = useClassesStore()
 const authStore = useAuthStore()
 
 const selectedClassId = ref(null)
-const semester = ref(1)
+const period = ref('semester_1')
+const periodOptions = ref([
+  { label: 'Pagellino 1° Q', value: 'infraquadrimestrale_1' },
+  { label: 'Scrutinio 1° Q', value: 'semester_1' },
+  { label: 'Pagellino 2° Q', value: 'infraquadrimestrale_2' },
+  { label: 'Scrutinio Finale', value: 'semester_2' }
+])
 const loading = ref(false)
 const saving = ref(false)
 const matrix = ref({})
@@ -186,16 +194,27 @@ onMounted(async () => {
   if (classOptions.value.length > 0) {
     selectedClassId.value = classOptions.value[0].value
   }
+
+  // Load dynamic periods if available
+  try {
+    const res = await api.get('/school-calendar/periods')
+    if (res.data && res.data.length > 0) {
+      periodOptions.value = res.data.map(p => ({
+        label: p.name,
+        value: p.code ? p.code.toLowerCase() : p.id
+      }))
+    }
+  } catch { /* fallback to defaults */ }
 })
 
-watch([selectedClassId, semester], () => {
+watch([selectedClassId, period], () => {
   if (selectedClassId.value) fetchMatrix()
 })
 
 const fetchMatrix = async () => {
   loading.value = true
   try {
-    const res = await scrutinyService.getMatrix(selectedClassId.value, semester.value)
+    const res = await scrutinyService.getMatrix(selectedClassId.value, period.value)
     
     const newScrutinyData = {}
     const students = res.data.students || []
@@ -262,6 +281,17 @@ const getGradeClass = (avg) => {
   if (avg < 6) return 'bg-orange-50 text-orange-900'
   if (avg < 8) return 'bg-blue-50 text-blue-900'
   return 'bg-emerald-50 text-emerald-900'
+}
+
+const closeScrutiny = async () => {
+  if (!selectedClassId.value) return
+  try {
+    await scrutinyService.closeScrutiny(selectedClassId.value, semester.value)
+    $q.notify({ type: 'positive', message: 'Scrutinio chiuso ufficialmente e sigillato!' })
+    fetchMatrix()
+  } catch (err) {
+    $q.notify({ type: 'negative', message: 'Errore chiusura scrutinio' })
+  }
 }
 </script>
 

@@ -16,6 +16,11 @@ export default {
         return api.patch(`/notes/${id}`, data)
     },
 
+    // Approve a note (Dirigenza)
+    async approveNote(id) {
+        return api.post(`/notes/${id}/approve`)
+    },
+
     // Delete a note
     async deleteNote(id) {
         return api.delete(`/notes/${id}`)

@@ -2,6 +2,7 @@ package scheduling
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -15,7 +16,7 @@ func NewHandler(s Service) *Handler {
 }
 
 func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
-	sched := r.Group("/colloqui")
+	sched := r.Group("/scheduling")
 
 	// Teacher
 	sched.POST("/slots", h.CreateSlot)
@@ -31,16 +32,19 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 }
 
 func (h *Handler) CreateSlot(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	if userID == "" || (role != "teacher" && role != "admin" && role != "superadmin") {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only teachers or admins can create slots"})
+		return
+	}
+
 	var req CreateSlotRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	userID := c.GetString("user_id")
-	if userID == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
+
 	if err := h.service.CreateSlots(c.Request.Context(), userID, req); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -70,6 +74,10 @@ func (h *Handler) DeleteSlot(c *gin.Context) {
 		return
 	}
 	if err := h.service.DeleteSlot(c.Request.Context(), userID, id); err != nil {
+		if strings.Contains(err.Error(), "not found") || err.Error() == "sql: no rows in result set" {
+			c.JSON(http.StatusNotFound, gin.H{"error": "slot not found"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -91,7 +99,13 @@ func (h *Handler) GetTeacherBookings(c *gin.Context) {
 }
 
 // GetAvailableSlots returns available colloquio slots, optionally filtered by teacher_id.
+// BUG FIX: aggiunto controllo autenticazione.
 func (h *Handler) GetAvailableSlots(c *gin.Context) {
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	teacherID := c.Query("teacher_id")
 	res, err := h.service.GetAvailableSlots(c.Request.Context(), teacherID)
 	if err != nil {
@@ -102,16 +116,23 @@ func (h *Handler) GetAvailableSlots(c *gin.Context) {
 }
 
 func (h *Handler) BookSlot(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "parent" && role != "student" && role != "admin" && role != "superadmin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only parents or students can book slots"})
+		return
+	}
+
 	var req BookSlotRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	userID := c.GetString("user_id")
-	if userID == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
+
 	res, err := h.service.BookSlot(c.Request.Context(), userID, req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -142,6 +163,10 @@ func (h *Handler) CancelBooking(c *gin.Context) {
 		return
 	}
 	if err := h.service.CancelBooking(c.Request.Context(), userID, id); err != nil {
+		if strings.Contains(err.Error(), "not found") || err.Error() == "sql: no rows in result set" {
+			c.JSON(http.StatusNotFound, gin.H{"error": "booking not found"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

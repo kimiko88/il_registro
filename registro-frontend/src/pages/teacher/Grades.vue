@@ -46,7 +46,9 @@
              />
              <q-btn icon="assignment" label="Nuova Verifica" color="primary" class="q-mr-sm" @click="openTestDialog" :disable="!selectedClassId || !selectedSubject" />
              <q-btn icon="file_upload" label="Importa CSV" outline color="primary" @click="showImportDialog = true" />
-             <q-btn icon="print" flat round color="grey-8" @click="printReport" />
+             <q-btn icon="print" flat round color="grey-8" aria-label="Stampa registro voti" @click="printReport">
+               <q-tooltip>Stampa Registro Voti</q-tooltip>
+             </q-btn>
         </div>
       </q-card-section>
       <q-separator />
@@ -63,7 +65,6 @@
                 style="min-width: 120px"
              />
              <q-toggle v-model="showRubric" label="Mostra Rubrica" left-label dense />
-             <q-toggle v-model="offlineMode" label="Offline Mode" color="amber" dense />
           </div>
       </q-card-section>
     </q-card>
@@ -92,7 +93,11 @@
                             <q-item><q-item-section><q-item-label>8 - Buono</q-item-label><q-item-label caption>Comprensione buona, esposizione corretta.</q-item-label></q-item-section></q-item>
                             <q-item><q-item-section><q-item-label>7 - Discreto</q-item-label><q-item-label caption>Comprensione essenziale, qualche imprecisione.</q-item-label></q-item-section></q-item>
                             <q-item><q-item-section><q-item-label>6 - Sufficiente</q-item-label><q-item-label caption>Conoscenze basilari raggiunte.</q-item-label></q-item-section></q-item>
-                            <q-item><q-item-section><q-item-label>5 - Insufficiente</q-item-label><q-item-label caption>Conoscenze frammentarie, errori gravi.</q-item-label></q-item-section></q-item>
+                            <q-item><q-item-section><q-item-label>5 - Insufficiente</q-item-label><q-item-label caption>Conoscenze frammentarie, errori rilevanti.</q-item-label></q-item-section></q-item>
+                            <q-item><q-item-section><q-item-label>4 - Gravemente Insufficiente</q-item-label><q-item-label caption>Lacune diffuse, scarsa autonomia.</q-item-label></q-item-section></q-item>
+                            <q-item><q-item-section><q-item-label>3 - Molto Scarso</q-item-label><q-item-label caption>Gravi lacune concettuali non colmate.</q-item-label></q-item-section></q-item>
+                            <q-item><q-item-section><q-item-label>2 - Nullo / Non Svolto</q-item-label><q-item-label caption>Compito non eseguito o nullo.</q-item-label></q-item-section></q-item>
+                            <q-item><q-item-section><q-item-label>1 - Non Classificabile</q-item-label><q-item-label caption>Assenza totale di contenuti o consegna in bianco.</q-item-label></q-item-section></q-item>
                         </q-list>
                      </q-card>
                 </div>
@@ -109,14 +114,17 @@
             <q-card>
                 <q-card-section class="row items-center justify-between">
                     <div class="text-h6 text-primary text-weight-bold">Elenco Verifiche</div>
-                    <q-btn icon="refresh" flat round dense @click="fetchTests" />
+                    <q-btn icon="refresh" flat round dense aria-label="Aggiorna elenco verifiche" @click="fetchTests" />
                 </q-card-section>
                 <q-separator />
                 <q-card-section v-if="loadingTests" class="text-center q-pa-xl">
                     <q-spinner color="primary" size="40px" />
                 </q-card-section>
-                <q-card-section v-else-if="classTests.length === 0" class="text-center text-grey q-pa-xl">
-                    Nessuna verifica registrata per questa materia
+                <q-card-section v-else-if="classTests.length === 0" class="text-center q-pa-xl text-slate-600">
+                    <q-icon name="quiz" size="64px" color="grey-5" class="q-mb-md" />
+                    <div class="text-h6 text-weight-bold">Nessuna verifica trovata</div>
+                    <div class="text-caption text-grey-7 q-mb-md">Non ci sono ancora verifiche o prove registrate per questa materia.</div>
+                    <q-btn icon="add" label="Crea la Prima Verifica" color="primary" unelevated no-caps @click="openTestDialog" />
                 </q-card-section>
                 <q-list separator v-else>
                     <q-item v-for="test in classTests" :key="test.id" class="q-py-md">
@@ -146,14 +154,30 @@
         </div>
 
     </div>
-    <div v-else class="text-center q-pa-xl text-grey-6">
-        <q-icon name="class" size="100px" />
-        <div class="text-h5">Seleziona una classe per iniziare</div>
+    <div v-else class="text-center q-pa-xl column items-center">
+        <q-icon name="school" size="96px" color="primary" class="q-mb-md opacity-80" />
+        <div class="text-h5 text-weight-bold q-mb-xs">Seleziona una classe per iniziare</div>
+        <div class="text-subtitle2 text-grey-7 q-mb-lg" style="max-width: 480px;">
+          Scegli una classe dal menu in alto oppure clicca su uno dei pulsanti qui sotto per accedere direttamente al registro voti:
+        </div>
+        <div class="row q-gutter-sm justify-center" v-if="classesStore.classes && classesStore.classes.length > 0">
+          <q-btn
+            v-for="cls in classesStore.classes"
+            :key="cls.id"
+            unelevated
+            color="primary"
+            outline
+            :label="cls.name"
+            icon="class"
+            class="q-px-md"
+            @click="selectedClassId = cls.id"
+          />
+        </div>
     </div>
 
     <!-- Import Dialog -->
     <q-dialog v-model="showImportDialog">
-        <q-card style="min-width: 400px">
+        <q-card style="width: min(450px, 95vw)">
             <q-card-section class="text-h6">Importa Voti (CSV)</q-card-section>
             <q-card-section>
                <q-file outlined v-model="importFile" label="Seleziona file CSV" accept=".csv" />
@@ -167,8 +191,8 @@
     </q-dialog>
 
     <!-- Create Class Test Dialog -->
-    <q-dialog v-model="showTestDialog" persistent max-width="80vw">
-      <q-card style="width: 1000px; max-width: 90vw;">
+    <q-dialog v-model="showTestDialog" persistent>
+      <q-card style="width: min(1000px, 95vw);">
         <q-card-section class="bg-primary text-white row items-center">
           <div class="text-h6">Crea Nuova Verifica</div>
           <q-space />
@@ -229,12 +253,14 @@
               <div class="col-12 col-md-7">
                 <div class="text-subtitle1 q-mb-md text-weight-bold text-primary row items-center justify-between">
                   <div>Voti Alunni</div>
-                  <div class="text-caption text-grey-8">Inserisci i voti per ciascun alunno (lascia vuoto per assenti)</div>
+                  <div class="row items-center q-gutter-x-xs">
+                    <q-btn icon="block" size="sm" outline color="warning" label="Segna tutti assenti" @click="markAllAbsent(testForm)" />
+                  </div>
                 </div>
                 
                 <q-scroll-area style="height: 350px;" class="border-grey rounded-borders q-pa-sm bg-grey-2">
                   <q-list separator>
-                    <q-item v-for="student in testForm.grades" :key="student.student_id" class="q-py-sm">
+                    <q-item v-for="(student, idx) in testForm.grades" :key="student.student_id" class="q-py-sm">
                       <q-item-section>
                         <q-item-label class="text-weight-bold">{{ student.full_name }}</q-item-label>
                       </q-item-section>
@@ -249,6 +275,8 @@
                             style="width: 100px"
                             :bg-color="getGradeColor(student.grade_value)"
                             placeholder="-"
+                            :ref="el => setGradeInputRef(el, idx)"
+                            @keydown.enter.prevent="focusNextStudent(idx)"
                           />
                           <q-input
                             v-model="student.notes"
@@ -257,6 +285,7 @@
                             dense
                             class="col"
                             placeholder="Note..."
+                            @keydown.enter.prevent="focusNextStudent(idx)"
                           />
                         </div>
                       </q-item-section>
@@ -334,12 +363,14 @@
               <div class="col-12 col-md-7">
                 <div class="text-subtitle1 q-mb-md text-weight-bold text-primary row items-center justify-between">
                   <div>Voti Alunni</div>
-                  <div class="text-caption text-grey-8">Modifica i voti per ciascun alunno (lascia vuoto per assenti/eliminare)</div>
+                  <div class="row items-center q-gutter-x-xs">
+                    <q-btn icon="block" size="sm" outline color="warning" label="Segna tutti assenti" @click="markAllAbsent(editTestForm)" />
+                  </div>
                 </div>
                 
                 <q-scroll-area style="height: 350px;" class="border-grey rounded-borders q-pa-sm bg-grey-2">
                   <q-list separator>
-                    <q-item v-for="student in editTestForm.grades" :key="student.student_id" class="q-py-sm">
+                    <q-item v-for="(student, idx) in editTestForm.grades" :key="student.student_id" class="q-py-sm">
                       <q-item-section>
                         <q-item-label class="text-weight-bold">{{ student.full_name }}</q-item-label>
                       </q-item-section>
@@ -354,6 +385,8 @@
                             style="width: 100px"
                             :bg-color="getGradeColor(student.grade_value)"
                             placeholder="-"
+                            :ref="el => setEditGradeInputRef(el, idx)"
+                            @keydown.enter.prevent="focusNextEditStudent(idx)"
                           />
                           <q-input
                             v-model="student.notes"
@@ -362,6 +395,7 @@
                             dense
                             class="col"
                             placeholder="Note..."
+                            @keydown.enter.prevent="focusNextEditStudent(idx)"
                           />
                         </div>
                       </q-item-section>
@@ -431,11 +465,12 @@ const openTestDialog = () => {
         parentNotes: '',
         grades: gradesStore.grades.students.map(s => ({
             student_id: s.student_id,
-            full_name: s.full_name,
+                            full_name: s.full_name,
             grade_value: null,
             notes: ''
         }))
     };
+    gradeInputRefs.value = [];
     showTestDialog.value = true;
 };
 
@@ -459,13 +494,13 @@ const submitTest = async () => {
                 }))
         };
 
-        await gradesStore.createClassTest(payload);
+        await gradeService.createTestWithGrades(payload);
         $q.notify({
             type: 'positive',
             message: 'Verifica e voti salvati con successo!'
         });
         showTestDialog.value = false;
-        refreshGrades();
+        await refreshGrades();
     } catch (err) {
         console.error(err);
         $q.notify({
@@ -477,16 +512,37 @@ const submitTest = async () => {
     }
 };
 
+let classChangeReqId = 0;
 watch(selectedClassId, async (newVal) => {
+    const currentReq = ++classChangeReqId;
     if (newVal) {
         await gradesStore.fetchClassSubjects(newVal);
-        if (gradesStore.subjects.length > 0) {
+        if (currentReq !== classChangeReqId) return;
+        if (gradesStore.subjects && gradesStore.subjects.length > 0) {
             selectedSubject.value = gradesStore.subjects[0].subject_id;
         } else {
             selectedSubject.value = null;
         }
+        await refreshGrades();
     }
-    refreshGrades();
+});
+
+watch(offlineMode, (val) => {
+    if (val) {
+        $q.notify({
+            type: 'warning',
+            message: 'Modalità Offline attivata: le modifiche verranno salvate in cache locale',
+            icon: 'cloud_off',
+            timeout: 2500
+        });
+    } else {
+        $q.notify({
+            type: 'info',
+            message: 'Modalità Online ripristinata',
+            icon: 'cloud_done',
+            timeout: 2000
+        });
+    }
 });
 
 const refreshGrades = async () => {
@@ -532,7 +588,7 @@ watch(viewMode, (newVal) => {
 const openEditTestDialog = (test) => {
     const studentGrades = gradesStore.grades?.students || [];
     const gradesList = studentGrades.map(s => {
-        const grade = s.grades?.find(g => g.test_id === test.id);
+        const grade = s.grades?.find(g => g.test_id === test.id || g.testId === test.id);
         return {
             student_id: s.student_id,
             full_name: s.full_name,
@@ -551,6 +607,7 @@ const openEditTestDialog = (test) => {
         parentNotes: test.parent_notes || '',
         grades: gradesList
     };
+    editGradeInputRefs.value = [];
     showEditTestDialog.value = true;
 };
 
@@ -563,11 +620,13 @@ const submitEditTest = async () => {
             teacher_notes: editTestForm.value.teacherNotes,
             parent_notes: editTestForm.value.parentNotes,
             evaluation_type: editTestForm.value.evaluationType === 'Scritto' ? 'Written' : (editTestForm.value.evaluationType === 'Orale' ? 'Oral' : 'Practical'),
-            grades: editTestForm.value.grades.map(g => ({
-                student_id: g.student_id,
-                grade_value: (g.grade_value !== null && g.grade_value !== undefined && g.grade_value !== '') ? gradeToNumeric(g.grade_value) : null,
-                notes: g.notes
-            }))
+            grades: editTestForm.value.grades
+                .filter(g => g.grade_value !== null && g.grade_value !== undefined && g.grade_value !== '')
+                .map(g => ({
+                    student_id: g.student_id,
+                    grade_value: gradeToNumeric(g.grade_value),
+                    notes: g.notes
+                }))
         };
 
         await gradesStore.updateClassTest(editTestForm.value.id, payload);
@@ -582,17 +641,58 @@ const submitEditTest = async () => {
     }
 };
 
-const deleteTestConfirm = async (testId) => {
+const gradeInputRefs = ref([]);
+const editGradeInputRefs = ref([]);
+
+const setGradeInputRef = (el, idx) => {
+    if (el) gradeInputRefs.value[idx] = el;
+};
+
+const setEditGradeInputRef = (el, idx) => {
+    if (el) editGradeInputRefs.value[idx] = el;
+};
+
+const focusNextStudent = (idx) => {
+    if (gradeInputRefs.value && gradeInputRefs.value[idx + 1]) {
+        const next = gradeInputRefs.value[idx + 1];
+        if (next.focus) next.focus();
+    }
+};
+
+const focusNextEditStudent = (idx) => {
+    if (editGradeInputRefs.value && editGradeInputRefs.value[idx + 1]) {
+        const next = editGradeInputRefs.value[idx + 1];
+        if (next.focus) next.focus();
+    }
+};
+
+const markAllAbsent = (formObj) => {
+    if (!formObj || !formObj.grades) return;
+    formObj.grades.forEach(g => {
+        g.grade_value = null;
+        g.notes = 'Assente';
+    });
+    $q.notify({ type: 'info', message: 'Tutti gli alunni segnati come assenti', timeout: 1500 });
+};
+
+const deleteTestConfirm = async (testOrId) => {
+    let test = typeof testOrId === 'object' ? testOrId : classTests.value.find(t => t.id === testOrId);
+    const testTitle = test ? (test.title || 'Verifica') : 'questa verifica';
+    const totalGrades = test && test.grade_count ? test.grade_count : (test && test.grades ? test.grades.length : 'tutti i');
+
     $q.dialog({
-        title: 'Elimina Verifica',
-        message: 'Sei sicuro di voler eliminare questa verifica e TUTTI i voti ad essa collegati? L\'operazione non è reversibile.',
-        cancel: true,
+        title: 'Conferma Eliminazione Verifica',
+        message: `Sei sicuro di voler eliminare la verifica "${testTitle}"? Verranno eliminati permanentemente ${totalGrades} voti collegati. L'operazione non è reversibile.`,
+        cancel: { label: 'Annulla', flat: true },
+        ok: { label: 'Elimina', color: 'negative' },
         persistent: true
     }).onOk(async () => {
+        const id = test ? test.id : testOrId;
         try {
-            await gradesStore.deleteClassTest(testId);
+            await gradesStore.deleteClassTest(id);
             $q.notify({ type: 'positive', message: 'Verifica eliminata con successo!' });
             await refreshGrades();
+            if (viewMode.value === 'history') await fetchTests();
         } catch (err) {
             console.error(err);
             $q.notify({ type: 'negative', message: 'Errore durante l\'eliminazione della verifica' });
@@ -603,6 +703,10 @@ const deleteTestConfirm = async (testId) => {
 const formatDate = (dateStr) => {
     if (!dateStr) return '';
     try {
+        const parts = dateStr.split('T')[0].split('-');
+        if (parts.length === 3) {
+            return `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
+        }
         const d = new Date(dateStr);
         const day = String(d.getDate()).padStart(2, '0');
         const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -641,14 +745,29 @@ const printReport = () => {
     window.print();
 };
 
-const processImport = () => {
+const processImport = async () => {
+    if (!importFile.value) {
+        $q.notify({ type: 'warning', message: 'Seleziona un file da importare' });
+        return;
+    }
     $q.loading.show();
-    setTimeout(() => {
-        $q.loading.hide();
+    try {
+        const formData = new FormData();
+        formData.append('file', importFile.value);
+        if (selectedClassId.value) formData.append('class_id', selectedClassId.value);
+        if (selectedSubject.value) formData.append('subject_id', selectedSubject.value);
+
+        await gradeService.bulkImport(formData);
         showImportDialog.value = false;
-        $q.notify({type: 'positive', message: 'Voti importati con successo (simulato)'});
+        importFile.value = null;
+        $q.notify({ type: 'positive', message: 'Voti importati con successo' });
         refreshGrades();
-    }, 1500);
+    } catch (err) {
+        console.error('Error importing grades:', err);
+        $q.notify({ type: 'negative', message: 'Errore durante l\'importazione dei voti' });
+    } finally {
+        $q.loading.hide();
+    }
 };
 
 onMounted(async () => {
@@ -700,8 +819,12 @@ function gradeToNumeric(gradeStr) {
 const getGradeColor = (val) => {
     if (val === undefined || val === null || val === '') return '';
     const numeric = gradeToNumeric(val);
-    if (numeric === -1) return 'bg-red-1';
-    return numeric < 6 ? 'bg-red-1' : 'bg-green-1';
+    if (numeric === -1) return 'bg-red-2 text-red-10';
+    if (numeric >= 8) return 'bg-green-2 text-green-10';
+    if (numeric >= 7) return 'bg-lime-2 text-lime-10';
+    if (numeric >= 6) return 'bg-yellow-2 text-yellow-10';
+    if (numeric >= 5) return 'bg-orange-2 text-orange-10';
+    return 'bg-red-2 text-red-10';
 };
 </script>
 
@@ -712,4 +835,14 @@ const getGradeColor = (val) => {
     z-index: 100;
 }
 .z-top { z-index: 1000; }
+
+@media print {
+  .sticky-header, .q-btn, .q-toggle, .q-tabs {
+    display: none !important;
+  }
+  .q-page {
+    background: white !important;
+    padding: 0 !important;
+  }
+}
 </style>

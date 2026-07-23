@@ -1,6 +1,7 @@
 package users
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -42,6 +43,11 @@ func getActorID(c *gin.Context) string {
 
 // 1. POST /api/v1/users
 func (h *Handler) Create(c *gin.Context) {
+	if getActorID(c) == "" || getActorRole(c) == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
 	var req CreateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -65,8 +71,19 @@ func (h *Handler) Create(c *gin.Context) {
 
 // 2. GET /api/v1/users
 func (h *Handler) List(c *gin.Context) {
+	if getActorID(c) == "" || getActorRole(c) == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
+	if pageSize > 100 {
+		pageSize = 100
+	}
+	if pageSize < 1 {
+		pageSize = 20
+	}
 
 	isActiveStr := c.Query("is_active")
 	var isActive *bool
@@ -204,6 +221,10 @@ func (h *Handler) BulkDelete(c *gin.Context) {
 // 6. POST /api/v1/users/{id}/restore
 func (h *Handler) Restore(c *gin.Context) {
 	if err := h.service.RestoreUser(c.Request.Context(), getActorRole(c), c.Param("id")); err != nil {
+		if errors.Is(err, ErrUnauthorized) || err == ErrUnauthorized {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -296,18 +317,18 @@ func (h *Handler) GetAuditLog(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if actorID != targetID && actorRole != "admin" && actorRole != "superadmin" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
-		return
-	}
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "50"))
 	if pageSize > 100 {
 		pageSize = 100
 	}
 	offset := (page - 1) * pageSize
-	logs, total, err := h.service.repo.GetAuditLogs(c.Request.Context(), targetID, pageSize, offset)
+	logs, total, err := h.service.GetAuditLogs(c.Request.Context(), actorID, actorRole, targetID, pageSize, offset)
 	if err != nil {
+		if err == ErrUnauthorized {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -355,6 +376,25 @@ func (h *Handler) GetMyChildren(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, children)
+}
+
+// 17. POST /api/v1/users/me/switch-child/:studentId
+func (h *Handler) SwitchChild(c *gin.Context) {
+	parentID := getActorID(c)
+	studentID := c.Param("studentId")
+	if parentID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	student, err := h.service.SwitchChildContext(c.Request.Context(), parentID, studentID)
+	if err != nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"active_child": toUserResponse(student),
+		"message":      "switched child context successfully",
+	})
 }
 
 func toUserResponse(u *User) UserResponse {
@@ -424,3 +464,24 @@ func (h *Handler) RemoveGuardian(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "guardian removed"})
 }
+
+func (h *Handler) GetFascicolo(c *gin.Context) {
+	studentID := c.Param("id")
+	actorID := getActorID(c)
+	actorRole := getActorRole(c)
+
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	fascicolo, err := h.service.GetStudentFascicolo(c.Request.Context(), actorID, actorRole, studentID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, fascicolo)
+}
+
+

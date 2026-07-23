@@ -21,6 +21,7 @@ type Repository interface {
 	LogHours(ctx context.Context, h *HourLog) error
 	GetHours(ctx context.Context, participationID string) ([]HourLog, error)
 	VerifyHours(ctx context.Context, hourID, teacherID string) error
+	UpdateHourLogStatus(ctx context.Context, logID, status string) error
 
 	CreateCompany(ctx context.Context, c *Company) error
 	GetCompanies(ctx context.Context, schoolID string) ([]Company, error)
@@ -233,4 +234,10 @@ func (r *repository) GetStats(ctx context.Context, schoolID string) (*PCTOStats,
 	}
 
 	return stats, nil
+}
+
+func (r *repository) UpdateHourLogStatus(ctx context.Context, logID, status string) error {
+	query := `UPDATE pcto_hours SET status = $1, verified = ($1 = 'approved') WHERE id = $2::uuid`
+	_, err := r.db.ExecContext(ctx, query, status, logID)
+	return err
 }

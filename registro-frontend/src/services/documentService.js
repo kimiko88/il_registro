@@ -12,5 +12,8 @@ export default {
     },
     archiveDocument(id) {
         return api.post(`/documents/${id}/archive`);
+    },
+    getDocumentVersions(id) {
+        return api.get(`/documents/${id}/versions`);
     }
 };

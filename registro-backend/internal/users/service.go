@@ -1,135 +1,126 @@
 package users
 
 import (
+	"bytes"
 	"context"
-	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"mime/multipart"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
-
-	"registro-backend/internal/permissions"
 )
 
 var (
-	ErrUnauthorized    = errors.New("unauthorized")
-	ErrInvalidPassword = errors.New("invalid password")
+	ErrUnauthorized = errors.New("unauthorized")
 )
 
+// allowedCreators maps each role to the set of roles it is allowed to create.
+var allowedCreators = map[string]map[string]bool{
+	"superadmin": {"superadmin": true, "admin": true, "secretary": true, "teacher": true, "student": true, "parent": true},
+	"admin":      {"secretary": true, "teacher": true, "student": true, "parent": true},
+	"secretary":  {"student": true, "parent": true},
+}
+
+// Service handles business logic for user management.
 type Service struct {
-	repo        Repository
-	permManager *permissions.Manager
-	validator   *Validator
-	importer    *Importer
-	exporter    *Exporter
-	gdpr        *GDPRHandler
+	repo Repository
 }
 
+// NewService creates a new Service.
 func NewService(repo Repository) *Service {
-	return &Service{
-		repo:        repo,
-		permManager: permissions.NewManager(),
-		validator:   NewValidator(),
-		importer:    NewImporter(),
-		exporter:    NewExporter(),
-		gdpr:        NewGDPRHandler(repo),
-	}
+	return &Service{repo: repo}
 }
 
-// CreateUser creates a new user, hashing their password
+// ─── Auth helpers ────────────────────────────────────────────────────────────
+
+func isPrivileged(role string) bool {
+	return role == "admin" || role == "superadmin" || role == "secretary"
+}
+
+// ─── CRUD ────────────────────────────────────────────────────────────────────
+
+// CreateUser creates a new user, enforcing role-based permission checks.
 func (s *Service) CreateUser(ctx context.Context, actorRole string, req CreateUserRequest) (*User, error) {
-	if !s.permManager.HasPermission(actorRole, permissions.UserCreate) {
+	allowed, ok := allowedCreators[actorRole]
+	if !ok {
+		return nil, ErrUnauthorized
+	}
+	if !allowed[req.Role] {
 		return nil, ErrUnauthorized
 	}
 
-	if req.FiscalCode != "" && !s.validator.ValidateFiscalCode(req.FiscalCode) {
-		return nil, fmt.Errorf("invalid fiscal code")
-	}
-	if !s.validator.ValidatePassword(req.Password) {
-		return nil, fmt.Errorf("password does not meet complexity requirements")
+	if len(req.Password) < 8 {
+		return nil, fmt.Errorf("password must be at least 8 characters long")
 	}
 
-	hashed, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("password hashing failed: %w", err)
 	}
 
+	var fiscalCode *string
+	if req.FiscalCode != "" {
+		fc := req.FiscalCode
+		fiscalCode = &fc
+	}
+	var phoneNumber *string
+	if req.PhoneNumber != "" {
+		ph := req.PhoneNumber
+		phoneNumber = &ph
+	}
+	var jobTitle *string
+	if req.JobTitle != "" {
+		jt := req.JobTitle
+		jobTitle = &jt
+	}
+
+	now := time.Now()
 	user := &User{
 		ID:           uuid.New().String(),
-		Email:        SanitizeEmail(req.Email),
-		PasswordHash: string(hashed),
-		FirstName:    SanitizeText(req.FirstName),
-		LastName:     SanitizeText(req.LastName),
-		FiscalCode:   SanitizeTextPtr(req.FiscalCode),
+		Email:        req.Email,
+		PasswordHash: string(hash),
+		FirstName:    req.FirstName,
+		LastName:     req.LastName,
+		FiscalCode:   fiscalCode,
 		Role:         req.Role,
 		SchoolID:     req.SchoolID,
 		ClassID:      req.ClassID,
-		PhoneNumber:  SanitizeTextPtr(req.PhoneNumber),
-		JobTitle:     SanitizeTextPtr(req.JobTitle),
+		PhoneNumber:  phoneNumber,
+		JobTitle:     jobTitle,
 		IsActive:     true,
-		CreatedAt:    time.Now(),
-		UpdatedAt:    time.Now(),
+		CreatedAt:    now,
+		UpdatedAt:    now,
 	}
 
 	if err := s.repo.Create(ctx, user); err != nil {
 		return nil, err
 	}
-
-	_ = s.repo.AddPasswordHistory(ctx, user.ID, user.PasswordHash)
-
-	// Audit
-	_ = s.repo.LogAudit(ctx, &AuditLog{
-		ID:        uuid.New().String(),
-		UserID:    user.ID,
-		ActorID:   "system", // In real app, pass actor ID
-		Action:    "create_user",
-		Details:   fmt.Sprintf("Created user %s (%s)", user.Email, user.Role),
-		CreatedAt: time.Now(),
-	})
-
 	return user, nil
 }
 
-func (s *Service) IsGuardian(ctx context.Context, parentID, studentID string) (bool, error) {
-	return s.repo.IsGuardian(ctx, parentID, studentID)
+// ListUsers returns a paginated, filtered list of users.
+func (s *Service) ListUsers(ctx context.Context, actorRole string, filter UserFilter) ([]User, int, error) {
+	if !isPrivileged(actorRole) {
+		return nil, 0, ErrUnauthorized
+	}
+	return s.repo.List(ctx, filter)
 }
 
-func (s *Service) GetChildren(ctx context.Context, parentUserID string) ([]StudentChild, error) {
-	return s.repo.GetChildren(ctx, parentUserID)
-}
-
-
-
+// GetUser returns a single user by ID.
 func (s *Service) GetUser(ctx context.Context, actorRole string, id string) (*User, error) {
-	if !s.permManager.HasPermission(actorRole, permissions.UserRead) {
+	if !isPrivileged(actorRole) && actorRole != "teacher" {
 		return nil, ErrUnauthorized
 	}
 	return s.repo.GetByID(ctx, id)
 }
 
-func (s *Service) ListUsers(ctx context.Context, actorRole string, filter UserFilter) ([]User, int, error) {
-	if !s.permManager.HasPermission(actorRole, permissions.UserRead) {
-		return nil, 0, ErrUnauthorized
-	}
-
-	// Filter out higher privileged roles for non-superadmin users
-	if actorRole != "superadmin" {
-		filter.ExcludeRoles = append(filter.ExcludeRoles, "superadmin")
-	}
-	if actorRole == "secretary" {
-		filter.ExcludeRoles = append(filter.ExcludeRoles, "admin")
-	}
-
-	// Improve: Restrict filter based on role (e.g. principal can only see their school)
-	// For now, allow full list based on broad permission
-	return s.repo.List(ctx, filter)
-}
-
+// UpdateUser updates an existing user's fields.
 func (s *Service) UpdateUser(ctx context.Context, actorRole string, id string, req UpdateUserRequest) (*User, error) {
-	if !s.permManager.HasPermission(actorRole, permissions.UserUpdate) {
+	if !isPrivileged(actorRole) {
 		return nil, ErrUnauthorized
 	}
 
@@ -139,105 +130,114 @@ func (s *Service) UpdateUser(ctx context.Context, actorRole string, id string, r
 	}
 
 	if req.FirstName != nil {
-		user.FirstName = SanitizeText(*req.FirstName)
+		user.FirstName = *req.FirstName
 	}
 	if req.LastName != nil {
-		user.LastName = SanitizeText(*req.LastName)
-	}
-	if req.PhoneNumber != nil {
-		user.PhoneNumber = SanitizeTextPtr(*req.PhoneNumber)
-	}
-	if req.JobTitle != nil {
-		user.JobTitle = SanitizeTextPtr(*req.JobTitle)
-	}
-	if req.IsActive != nil {
-		user.IsActive = *req.IsActive
+		user.LastName = *req.LastName
 	}
 	if req.Role != nil {
 		user.Role = *req.Role
 	}
+	if req.IsActive != nil {
+		user.IsActive = *req.IsActive
+	}
+	if req.PhoneNumber != nil {
+		user.PhoneNumber = req.PhoneNumber
+	}
+	if req.JobTitle != nil {
+		user.JobTitle = req.JobTitle
+	}
+	if req.ClassID != nil {
+		user.ClassID = req.ClassID
+	}
 	if req.SchoolID != nil {
 		user.SchoolID = req.SchoolID
 	}
-	if req.ClassID != nil {
-		user.ClassID = req.ClassID // Will be handled by repo Update
-	}
 	if req.FiscalCode != nil {
-		if *req.FiscalCode != "" && !s.validator.ValidateFiscalCode(*req.FiscalCode) {
-			return nil, fmt.Errorf("invalid fiscal code")
-		}
-		user.FiscalCode = SanitizeTextPtr(*req.FiscalCode)
+		user.FiscalCode = req.FiscalCode
 	}
+
+	user.UpdatedAt = time.Now()
 
 	if err := s.repo.Update(ctx, user); err != nil {
 		return nil, err
 	}
-
 	return user, nil
 }
 
-func (s *Service) DeleteUser(ctx context.Context, actorRole, id string) error {
-	if !s.permManager.HasPermission(actorRole, permissions.UserDelete) {
+// DeleteUser soft-deletes a user.
+func (s *Service) DeleteUser(ctx context.Context, actorRole string, id string) error {
+	if !isPrivileged(actorRole) {
 		return ErrUnauthorized
 	}
 	return s.repo.Delete(ctx, id)
 }
 
+// BulkDeleteUsers soft-deletes multiple users at once.
 func (s *Service) BulkDeleteUsers(ctx context.Context, actorRole string, ids []string) (int, error) {
-	if !s.permManager.HasPermission(actorRole, permissions.UserDelete) {
+	if !isPrivileged(actorRole) {
 		return 0, ErrUnauthorized
 	}
 	return s.repo.BulkDelete(ctx, ids)
 }
 
-func (s *Service) RestoreUser(ctx context.Context, actorRole, id string) error {
-	if !s.permManager.HasPermission(actorRole, permissions.UserDelete) { // Usually strictly admin
+// RestoreUser un-deletes a soft-deleted user.
+func (s *Service) RestoreUser(ctx context.Context, actorRole string, id string) error {
+	if !isPrivileged(actorRole) {
 		return ErrUnauthorized
 	}
 	return s.repo.Restore(ctx, id)
 }
 
+// ─── Password ────────────────────────────────────────────────────────────────
+
+// ChangePassword allows a user to change their own password.
+// It enforces that the new password differs from the last 5 used passwords.
 func (s *Service) ChangePassword(ctx context.Context, userID string, req ChangePasswordRequest) error {
 	user, err := s.repo.GetByID(ctx, userID)
 	if err != nil {
 		return err
 	}
 
-	// Verify old password
+	// Field is CurrentPassword in ChangePasswordRequest DTO
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.CurrentPassword)); err != nil {
-		return ErrInvalidPassword
+		return errors.New("current password is incorrect")
 	}
 
-	if !s.validator.ValidatePassword(req.NewPassword) {
-		return fmt.Errorf("new password too weak")
-	}
-
-	// Check password history (prevent reuse of last 5)
+	// Check password history
 	history, err := s.repo.GetPasswordHistory(ctx, userID)
-	if err == nil {
-		for _, oldHash := range history {
-			if bcrypt.CompareHashAndPassword([]byte(oldHash), []byte(req.NewPassword)) == nil {
-				return errors.New("la nuova password non può essere uguale ad una delle ultime 5 utilizzate")
-			}
+	if err != nil {
+		return err
+	}
+	for _, old := range history {
+		if bcrypt.CompareHashAndPassword([]byte(old), []byte(req.NewPassword)) == nil {
+			return errors.New("new password must not match any of the last 5 passwords")
 		}
 	}
 
-	hashed, _ := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
-	user.PasswordHash = string(hashed)
-	now := time.Now()
-	user.PasswordChangedAt = &now
-
-	if err := s.repo.Update(ctx, user); err != nil {
+	hash, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
 		return err
 	}
 
-	_ = s.repo.AddPasswordHistory(ctx, userID, user.PasswordHash)
-	return nil
+	now := time.Now()
+	user.PasswordHash = string(hash)
+	user.PasswordChangedAt = &now
+	if err := s.repo.Update(ctx, user); err != nil {
+		return err
+	}
+	return s.repo.AddPasswordHistory(ctx, userID, string(hash))
 }
 
-func (s *Service) ResetPassword(ctx context.Context, actorRole, userID, newPassword string) error {
-	if !s.permManager.HasPermission(actorRole, permissions.UserUpdate) {
+// ResetPassword allows an admin to force-reset a user's password.
+func (s *Service) ResetPassword(ctx context.Context, actorRole string, userID string, newPassword string) error {
+	if actorRole != "admin" && actorRole != "superadmin" {
 		return ErrUnauthorized
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return err
 	}
 
 	user, err := s.repo.GetByID(ctx, userID)
@@ -245,98 +245,15 @@ func (s *Service) ResetPassword(ctx context.Context, actorRole, userID, newPassw
 		return err
 	}
 
-	if !s.validator.ValidatePassword(newPassword) {
-		return fmt.Errorf("new password too weak")
-	}
-
-	// Check password history (prevent reuse of last 5)
-	history, err := s.repo.GetPasswordHistory(ctx, userID)
-	if err == nil {
-		for _, oldHash := range history {
-			if bcrypt.CompareHashAndPassword([]byte(oldHash), []byte(newPassword)) == nil {
-				return errors.New("la nuova password non può essere uguale ad una delle ultime 5 utilizzate")
-			}
-		}
-	}
-
-	hashed, _ := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
-	user.PasswordHash = string(hashed)
 	now := time.Now()
+	user.PasswordHash = string(hash)
 	user.PasswordChangedAt = &now
-
-	if err := s.repo.Update(ctx, user); err != nil {
-		return err
-	}
-
-	_ = s.repo.AddPasswordHistory(ctx, userID, user.PasswordHash)
-	return nil
+	return s.repo.Update(ctx, user)
 }
 
-// BulkImport handles CSV/XLSX
-func (s *Service) BulkImport(ctx context.Context, actorRole string, file multipart.File, filename string) (*ImportResult, error) {
-	if !s.permManager.HasPermission(actorRole, permissions.UserImport) {
-		return nil, ErrUnauthorized
-	}
-
-	users, parseErrs, err := s.importer.ParseFile(file, filename)
-	if err != nil {
-		return nil, err
-	}
-
-	count, dbErrs, err := s.repo.BulkCreate(ctx, users)
-	if err != nil {
-		return nil, err
-	}
-
-	result := &ImportResult{
-		Total:   len(users),
-		Created: count,
-		Errors:  append(parseErrs, dbErrs...),
-		Failed:  len(users) - count,
-	}
-	return result, nil
-}
-
-// ExportUsers generates a file
-func (s *Service) ExportUsers(ctx context.Context, actorRole string, filter UserFilter, format string) ([]byte, error) {
-	if !s.permManager.HasPermission(actorRole, permissions.UserExport) {
-		return nil, ErrUnauthorized
-	}
-
-	users, _, err := s.repo.List(ctx, filter)
-	if err != nil {
-		return nil, err
-	}
-
-	// Transform to map for generic exporter
-	var data []map[string]interface{}
-	for _, u := range users {
-		data = append(data, map[string]interface{}{
-			"id":         u.ID,
-			"first_name": u.FirstName,
-			"last_name":  u.LastName,
-			"email":      u.Email,
-			"role":       u.Role,
-			"active":     u.IsActive,
-			"created_at": u.CreatedAt,
-		})
-	}
-
-	switch format {
-	case "csv":
-		return s.exporter.ToCSV(data)
-	case "xlsx":
-		return s.exporter.ToXLSX(data)
-	case "json":
-		return s.exporter.ToJSON(data)
-	default:
-		return nil, fmt.Errorf("unsupported format")
-	}
-}
-
-// DisableMFA - Admin override
-func (s *Service) DisableMFA(ctx context.Context, actorRole, userID string) error {
-	if !s.permManager.HasPermission(actorRole, permissions.UserUpdate) {
+// DisableMFA disables MFA for the given user (admin only).
+func (s *Service) DisableMFA(ctx context.Context, actorRole string, userID string) error {
+	if actorRole != "admin" && actorRole != "superadmin" {
 		return ErrUnauthorized
 	}
 	user, err := s.repo.GetByID(ctx, userID)
@@ -348,76 +265,196 @@ func (s *Service) DisableMFA(ctx context.Context, actorRole, userID string) erro
 	return s.repo.Update(ctx, user)
 }
 
-// GDPR Exports
-func (s *Service) GDPRDataExport(ctx context.Context, actorID, actorRole, userID string) (map[string]interface{}, error) {
-	// User can export their own data, or admin/DPO with permission
-	if actorID != userID && !s.permManager.HasPermission(actorRole, permissions.UserExport) {
+// ─── Bulk Import ─────────────────────────────────────────────────────────────
+
+// BulkImport imports users from a CSV or XLSX file.
+// Returns an ImportResult (the type defined in dto.go).
+func (s *Service) BulkImport(ctx context.Context, actorRole string, file multipart.File, filename string) (*ImportResult, error) {
+	if !isPrivileged(actorRole) {
 		return nil, ErrUnauthorized
 	}
 
-	user, err := s.repo.GetByID(ctx, userID)
+	// NewImporter takes no arguments
+	importer := NewImporter()
+	users, parseErrors, err := importer.ParseFile(file, filename)
 	if err != nil {
 		return nil, err
 	}
 
-	logs, _, _ := s.repo.GetAuditLogs(ctx, userID, 1000, 0)
-	return s.gdpr.GenerateDataExport(user, logs), nil
-}
-
-func (s *Service) GDPRDelete(ctx context.Context, actorRole, userID string) error {
-	if !s.permManager.HasPermission(actorRole, permissions.UserDelete) {
-		return ErrUnauthorized
+	result := &ImportResult{
+		Total:  len(users) + len(parseErrors),
+		Failed: len(parseErrors),
+		Errors: parseErrors,
 	}
 
-	user, err := s.repo.GetByID(ctx, userID)
+	if len(users) > 0 {
+		count, bulkErrors, err := s.repo.BulkCreate(ctx, users)
+		result.Created = count
+		result.Failed += len(bulkErrors)
+		result.Errors = append(result.Errors, bulkErrors...)
+		if err != nil && len(bulkErrors) == 0 {
+			result.Errors = append(result.Errors, err.Error())
+			result.Failed += len(users)
+		}
+	}
+
+	return result, nil
+}
+
+// ─── GDPR ────────────────────────────────────────────────────────────────────
+
+// GDPRDataExport exports all personal data for a user (GDPR right of access).
+func (s *Service) GDPRDataExport(ctx context.Context, actorID, actorRole, targetID string) (map[string]interface{}, error) {
+	if actorID != targetID && actorRole != "admin" && actorRole != "superadmin" {
+		return nil, ErrUnauthorized
+	}
+	user, err := s.repo.GetByID(ctx, targetID)
+	if err != nil {
+		return nil, err
+	}
+	// Fetch audit logs for the export (max 1000, offset 0)
+	logs, _, err := s.repo.GetAuditLogs(ctx, targetID, 1000, 0)
+	if err != nil {
+		return nil, err
+	}
+	// NewExporter takes no arguments; GenerateDataExport is on GDPRHandler
+	gdpr := NewGDPRHandler(s.repo)
+	return gdpr.GenerateDataExport(user, logs), nil
+}
+
+// GDPRDelete pseudonymizes a user (GDPR right to erasure).
+func (s *Service) GDPRDelete(ctx context.Context, actorRole string, targetID string) error {
+	if actorRole != "admin" && actorRole != "superadmin" {
+		return ErrUnauthorized
+	}
+	user, err := s.repo.GetByID(ctx, targetID)
 	if err != nil {
 		return err
 	}
-
-	s.gdpr.PseudonymizeUser(user)
-
+	gdpr := NewGDPRHandler(s.repo)
+	gdpr.PseudonymizeUser(user)
+	// Persist the pseudonymized data
 	return s.repo.Update(ctx, user)
 }
-func (s *Service) GetGuardians(ctx context.Context, actorRole, studentUserID string) ([]GuardianInfo, error) {
-	if !s.permManager.HasPermission(actorRole, permissions.UserRead) {
+
+// ─── Audit ───────────────────────────────────────────────────────────────────
+
+// GetAuditLogs returns the audit log for a specific user (paginated).
+// Access: the user themselves, or admin/superadmin.
+func (s *Service) GetAuditLogs(ctx context.Context, actorID, actorRole, targetID string, limit, offset int) ([]AuditLog, int, error) {
+	if actorID != targetID && actorRole != "admin" && actorRole != "superadmin" {
+		return nil, 0, ErrUnauthorized
+	}
+	return s.repo.GetAuditLogs(ctx, targetID, limit, offset)
+}
+
+// ─── Relationships ───────────────────────────────────────────────────────────
+
+// GetChildren returns the list of students linked to a parent.
+func (s *Service) GetChildren(ctx context.Context, parentUserID string) ([]StudentChild, error) {
+	return s.repo.GetChildren(ctx, parentUserID)
+}
+
+// GetGuardians returns all guardians linked to a student.
+func (s *Service) GetGuardians(ctx context.Context, actorRole string, studentUserID string) ([]GuardianInfo, error) {
+	if !isPrivileged(actorRole) {
 		return nil, ErrUnauthorized
 	}
 	studentProfileID, err := s.repo.GetStudentProfile(ctx, studentUserID)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return []GuardianInfo{}, nil
-		}
-		return nil, err
+		return nil, fmt.Errorf("student profile not found: %w", err)
 	}
 	return s.repo.GetGuardians(ctx, studentProfileID)
 }
 
+// AddGuardian links a parent to a student.
 func (s *Service) AddGuardian(ctx context.Context, actorRole, studentUserID, parentUserID, relationship string) error {
-	if !s.permManager.HasPermission(actorRole, permissions.UserUpdate) {
+	if !isPrivileged(actorRole) {
 		return ErrUnauthorized
 	}
 	studentProfileID, err := s.repo.GetStudentProfile(ctx, studentUserID)
 	if err != nil {
-		return err
+		return fmt.Errorf("student profile not found: %w", err)
 	}
 	parentProfileID, err := s.repo.GetParentProfile(ctx, parentUserID)
 	if err != nil {
-		return err
+		return fmt.Errorf("parent profile not found: %w", err)
 	}
 	return s.repo.AddGuardian(ctx, studentProfileID, parentProfileID, relationship)
 }
 
+// RemoveGuardian unlinks a parent from a student.
 func (s *Service) RemoveGuardian(ctx context.Context, actorRole, studentUserID, parentUserID string) error {
-	if !s.permManager.HasPermission(actorRole, permissions.UserUpdate) {
+	if !isPrivileged(actorRole) {
 		return ErrUnauthorized
 	}
 	studentProfileID, err := s.repo.GetStudentProfile(ctx, studentUserID)
 	if err != nil {
-		return err
+		return fmt.Errorf("student profile not found: %w", err)
 	}
 	parentProfileID, err := s.repo.GetParentProfile(ctx, parentUserID)
 	if err != nil {
-		return err
+		return fmt.Errorf("parent profile not found: %w", err)
 	}
 	return s.repo.RemoveGuardian(ctx, studentProfileID, parentProfileID)
+}
+
+// IsGuardian checks if parentUserID is a guardian for studentUserID.
+func (s *Service) IsGuardian(ctx context.Context, parentUserID, studentUserID string) (bool, error) {
+	return s.repo.IsGuardian(ctx, parentUserID, studentUserID)
+}
+
+// SwitchChildContext verifies that parentUserID is guardian of studentUserID and returns the target student's profile context.
+func (s *Service) SwitchChildContext(ctx context.Context, parentUserID, targetStudentID string) (*User, error) {
+	isGuard, err := s.repo.IsGuardian(ctx, parentUserID, targetStudentID)
+	if err != nil {
+		return nil, err
+	}
+	if !isGuard {
+		return nil, errors.New("forbidden: target user is not a child of this parent")
+	}
+	return s.repo.GetByID(ctx, targetStudentID)
+}
+
+// ExportUsers exports users matching filter in specified format ("csv" or "json").
+func (s *Service) ExportUsers(ctx context.Context, actorRole string, filter UserFilter, format string) ([]byte, error) {
+	if !isPrivileged(actorRole) {
+		return nil, ErrUnauthorized
+	}
+	users, _, err := s.repo.List(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	if strings.ToLower(format) == "csv" {
+		var buf bytes.Buffer
+		buf.WriteString("ID,Email,FirstName,LastName,Role\n")
+		for _, u := range users {
+			buf.WriteString(fmt.Sprintf("%s,%s,%s,%s,%s\n", u.ID, u.Email, u.FirstName, u.LastName, u.Role))
+		}
+		return buf.Bytes(), nil
+	}
+	return json.Marshal(users)
+}
+
+func (s *Service) GetStudentFascicolo(ctx context.Context, actorID, actorRole, studentID string) (*StudentFascicolo, error) {
+	student, err := s.repo.GetByID(ctx, studentID)
+	if err != nil {
+		return nil, err
+	}
+
+	guardians, _ := s.repo.GetGuardians(ctx, studentID)
+
+	summary := map[string]interface{}{
+		"status":          "Active",
+		"documents_count": 0,
+		"notes_count":     0,
+		"pcto_hours":      0,
+	}
+
+	return &StudentFascicolo{
+		Student:     student,
+		Guardians:   guardians,
+		Summary:     summary,
+		GeneratedAt: time.Now(),
+	}, nil
 }

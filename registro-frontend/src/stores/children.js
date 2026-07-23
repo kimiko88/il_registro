@@ -5,7 +5,8 @@ export const useChildrenStore = defineStore('children', {
     state: () => ({
         children: [],
         selectedChildId: null,
-        loading: false
+        loading: false,
+        error: null
     }),
 
     getters: {
@@ -16,6 +17,7 @@ export const useChildrenStore = defineStore('children', {
     actions: {
         async fetchChildren() {
             this.loading = true;
+            this.error = null;
             try {
                 const response = await api.get('/users/me/children');
                 this.children = (response.data || []).map(c => ({
@@ -32,6 +34,7 @@ export const useChildrenStore = defineStore('children', {
                     this.selectedChildId = this.children[0].id;
                 }
             } catch (err) {
+                this.error = err.response?.data?.error || err.message || 'Failed to fetch children';
                 console.error("Error fetching children:", err);
             } finally {
                 this.loading = false;

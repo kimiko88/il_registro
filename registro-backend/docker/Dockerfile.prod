@@ -1,34 +1,61 @@
-# Build Stage
-FROM golang:1.24-alpine AS builder
+# =============================================================================
+# IMPORTANT – Build context
+# On Render (and locally) this Dockerfile must be built from the
+# `registro-backend/` directory, NOT from the repository root:
+#
+#   docker build -f docker/Dockerfile.prod .
+#
+# Render setting: "Root Directory" = registro-backend
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# Stage 1: Build
+# Use the Go version required by go.mod (go 1.25.x).
+# Updated from 1.24.x because gin v1.12, excelize v2.11, and golang.org/x/*
+# v0.54+ all declare 'go 1.25' in their own go.mod files, causing
+# `go mod download` to fail with GOTOOLCHAIN=local on Go 1.24.
+# ---------------------------------------------------------------------------
+FROM golang:1.25-alpine3.21 AS builder
 
 WORKDIR /app
 
-# Install build dependencies if needed
 RUN apk add --no-cache git
 
+# Download dependencies first (layer cached until go.mod/go.sum change)
 COPY go.mod go.sum ./
 RUN go mod download
 
+# Verify checksums match go.sum — catches go.mod/go.sum drift early
+RUN go mod verify
+
 COPY . .
 
-# Build the binary
-# CGO_ENABLED=0 ensures a static binary
-RUN CGO_ENABLED=0 GOOS=linux go build -o api-server ./cmd/api-server/
+# Static binary — no libc dependency in the final image
+RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o api-server ./cmd/api-server/
 
-# Production Stage
-FROM alpine:3.19
+# ---------------------------------------------------------------------------
+# Stage 2: Runtime
+# Use a minimal Alpine image; ca-certificates is required for TLS to
+# external services (Supabase, SPID IdP metadata, etc.).
+# ---------------------------------------------------------------------------
+FROM alpine:3.21
 
 WORKDIR /app
 
-# Install runtime dependencies (e.g. ca-certificates for HTTPS)
-RUN apk add --no-cache ca-certificates
+RUN apk add --no-cache ca-certificates tzdata
 
-# Copy binary from builder
 COPY --from=builder /app/api-server .
-COPY .env.example .env
 
-# Expose port
+# NOTE: Do NOT copy .env or .env.example here.
+# All configuration is supplied at runtime via environment variables
+# (Render → Environment tab, Docker → -e / --env-file, k8s → ConfigMap/Secret).
+# Viper reads env vars automatically via AutomaticEnv(); a .env file in the
+# container would override those injected values with the placeholder defaults.
+
 EXPOSE 8080
 
-# Run
+# Native Docker health-check — used by Render, Compose, and k8s liveness probes
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD wget -qO- http://localhost:8080/health || exit 1
+
 CMD ["./api-server"]

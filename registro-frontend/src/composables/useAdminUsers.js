@@ -15,7 +15,7 @@ export function useAdminUsers() {
         });
     };
 
-    const resetPassword = (id) => {
+    const resetPassword = (_id) => {
         // Logic
     };
 

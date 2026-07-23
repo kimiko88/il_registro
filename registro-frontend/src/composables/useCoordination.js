@@ -12,7 +12,7 @@ export function useCoordination() {
         classesStore.classes.filter(c => !!c.coordinator_id)
     );
 
-    const getProblemStudents = (classId) => {
+    const getProblemStudents = (_classId) => {
         // Mock logic: Find students with low grade average or high absences
         // In real app, this would process data from grades/attendance stores or API
         return [

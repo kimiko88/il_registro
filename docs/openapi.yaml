@@ -1,0 +1,126 @@
+openapi: 3.0.3
+info:
+  title: Registro Elettronico V2 API
+  description: API REST per la gestione scolastica (Auth, Utenti, Voti, Presenze, Comunicazioni, Documenti, Colloqui, Agenda).
+  version: 0.3.0
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local Development Server
+paths:
+  /auth/login:
+    post:
+      summary: Autenticazione utente
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login effettuato con successo (restituisce JWT access_token)
+        '401':
+          description: Credenziali non valide
+  /auth/refresh:
+    post:
+      summary: Refresh token di accesso
+      tags:
+        - Auth
+      responses:
+        '200':
+          description: Nuovo access_token generato
+  /auth/register:
+    post:
+      summary: Registrazione nuovo utente (Richiede JWT con ruoli autorizzati)
+      tags:
+        - Auth
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Utente creato
+        '403':
+          description: Permessi insufficienti
+  /grades:
+    post:
+      summary: Inserimento nuovo voto (Docente)
+      tags:
+        - Voti
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Voto creato
+  /grades/student/{studentID}:
+    get:
+      summary: Recupero voti per uno studente
+      tags:
+        - Voti
+      parameters:
+        - name: studentID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: semester
+          in: query
+          schema:
+            type: integer
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Lista voti o risposta paginata
+  /grades/my-grades:
+    get:
+      summary: Voti dello studente loggato
+      tags:
+        - Voti
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Riepilogo voti studente
+  /attendance/entry:
+    post:
+      summary: Registrazione presenza/assenza (Docente)
+      tags:
+        - Presenze
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Presenza registrata
+  /parents/dashboard:
+    get:
+      summary: Dashboard Genitore
+      tags:
+        - Genitori
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Panoramica figli, medie e comunicazioni
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

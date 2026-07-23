@@ -65,6 +65,16 @@ func (m *MockRepository) GetRecentLoginAttempts(ctx context.Context, email, ip s
 	return args.Int(0), args.Error(1)
 }
 
+func (m *MockRepository) GetRecentLoginAttemptsByEmail(ctx context.Context, email string, since time.Time) (int, error) {
+	args := m.Called(ctx, email, since)
+	return args.Int(0), args.Error(1)
+}
+
+func (m *MockRepository) GetRecentPasswordResets(ctx context.Context, userID string, since time.Time) (int, error) {
+	args := m.Called(ctx, userID, since)
+	return args.Int(0), args.Error(1)
+}
+
 func (m *MockRepository) RecordLoginAttempt(ctx context.Context, attempt *LoginAttempt) error {
 	args := m.Called(ctx, attempt)
 	return args.Error(0)
@@ -170,6 +180,8 @@ func setupTest(t *testing.T) (*Service, *MockRepository) {
 	logger.Init("info")
 
 	mockRepo := new(MockRepository)
+	mockRepo.On("GetRecentLoginAttemptsByEmail", mock.Anything, mock.Anything, mock.Anything).Return(0, nil).Maybe()
+	mockRepo.On("GetRecentPasswordResets", mock.Anything, mock.Anything, mock.Anything).Return(0, nil).Maybe()
 
 	// Create a real token manager for testing
 	// Generate keys for token manager
@@ -202,6 +214,7 @@ func TestRegister(t *testing.T) {
 		mockRepo.On("CreateUser", mock.Anything, mock.MatchedBy(func(u *User) bool {
 			return u.Email == req.Email && u.FirstName == req.FirstName
 		})).Return(nil).Once()
+		mockRepo.On("AddPasswordHistory", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
 		user, err := s.Register(context.Background(), req)
 
@@ -352,9 +365,10 @@ func TestRefreshToken(t *testing.T) {
 		}
 
 		user := &User{
-			ID:    userID,
-			Email: "test@example.com",
-			Role:  "student",
+			ID:       userID,
+			Email:    "test@example.com",
+			Role:     "student",
+			IsActive: true,
 		}
 
 		mockRepo.On("GetRefreshToken", mock.Anything, token).Return(rt, nil).Once()
@@ -362,7 +376,7 @@ func TestRefreshToken(t *testing.T) {
 		mockRepo.On("RevokeRefreshToken", mock.Anything, "rt-1").Return(nil).Once()
 		mockRepo.On("CreateRefreshToken", mock.Anything, mock.AnythingOfType("*auth.RefreshToken")).Return(nil).Once()
 
-		pair, err := s.RefreshToken(context.Background(), token)
+		pair, err := s.RefreshToken(context.Background(), token, "127.0.0.1", "TestAgent")
 
 		assert.NoError(t, err)
 		assert.NotNil(t, pair)
@@ -380,7 +394,7 @@ func TestRefreshToken(t *testing.T) {
 
 		mockRepo.On("GetRefreshToken", mock.Anything, token).Return(rt, nil).Once()
 
-		_, err := s.RefreshToken(context.Background(), token)
+		_, err := s.RefreshToken(context.Background(), token, "", "")
 		assert.ErrorIs(t, err, ErrTokenRevoked)
 		mockRepo.AssertExpectations(t)
 	})
@@ -394,7 +408,7 @@ func TestRefreshToken(t *testing.T) {
 
 		mockRepo.On("GetRefreshToken", mock.Anything, token).Return(rt, nil).Once()
 
-		_, err := s.RefreshToken(context.Background(), token)
+		_, err := s.RefreshToken(context.Background(), token, "", "")
 		assert.ErrorIs(t, err, ErrInvalidToken)
 		mockRepo.AssertExpectations(t)
 	})

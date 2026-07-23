@@ -7,7 +7,7 @@ export function useColloquiBooking() {
     const $q = useQuasar();
     const loading = ref(false);
 
-    const fetchAvailableSlots = async (teacherId) => {
+    const fetchAvailableSlots = async (_teacherId) => {
         // Mock fetch
     };
 
@@ -37,6 +37,7 @@ export function useColloquiBooking() {
 
     return {
         bookings: store.bookings, // This should be reactive
+        fetchAvailableSlots,
         bookSlot,
         cancelBooking,
         loading

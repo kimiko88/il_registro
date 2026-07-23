@@ -40,21 +40,19 @@ export const useAttendanceStore = defineStore('attendance', {
             }
         },
 
-        async submitAttendance(classId, date, records, hour = 1, subjectId = '00000000-0000-0000-0000-000000000000') {
+        async submitAttendance(classId, date, records, hour = 1, subjectId = null) {
             this.loading = true;
             try {
                 const payload = {
                     class_id: classId,
                     date: date,
                     hour: hour,
-                    subject_id: subjectId,
+                    subject_id: subjectId || null,
                     statuses: records.map(r => ({
                         student_id: r.studentId,
                         status: r.status,
                         entry_time: r.status === 'Late' ? r.time : null,
-                        exit_time: r.status === 'LeftEarly' ? r.time : null,
-                        hour: hour,
-                        subject_id: subjectId
+                        exit_time: r.status === 'LeftEarly' ? r.time : null
                     }))
                 };
                 const response = await api.post('/attendance/mark-bulk', payload);
@@ -100,7 +98,7 @@ export const useAttendanceStore = defineStore('attendance', {
                     status: r.status,
                     notes: r.notes || '',
                     time: r.entry_time || '',
-                    justificationStatus: r.is_justified ? 'Approved' : 'PendingJustification'
+                    justificationStatus: r.is_justified ? 'Justified' : (r.parent_justified ? 'Pending' : 'Unjustified')
                 }));
             } catch (err) {
                 console.error("Error fetching my attendance:", err);
@@ -135,6 +133,61 @@ export const useAttendanceStore = defineStore('attendance', {
                 console.error("Error requesting justification:", err);
                 throw err;
             }
+        },
+
+        /**
+         * Fetches the monthly attendance breakdown for a student.
+         * @param {string} studentID - The student UUID
+         * @param {string} [schoolYear] - Format "2024-2025"; defaults to current school year
+         * @param {boolean} [isParent] - If true, uses the parent child-attendance endpoint
+         * @returns {Promise<Object>} MonthlyBreakdownResponse with 'months' array
+         */
+        async fetchMonthlyBreakdown(studentID, schoolYear = '', isParent = false) {
+            try {
+                const params = schoolYear ? { school_year: schoolYear } : {};
+                const url = isParent
+                    ? `/attendance/child-attendance/${studentID}/monthly-breakdown`
+                    : `/attendance/students/${studentID}/monthly-breakdown`;
+                const response = await api.get(url, { params });
+                return response.data;
+            } catch (err) {
+                console.error('Error fetching monthly breakdown:', err);
+                throw err;
+            }
+        },
+
+        async fetchUnjustified(studentID) {
+            try {
+                const response = await api.get(`/attendance/child/${studentID}/unjustified`);
+                return response.data || [];
+            } catch (err) {
+                console.error('Error fetching unjustified absences:', err);
+                return [];
+            }
+        },
+
+        async justifyAbsence(studentID, attendanceID, reason, notes = '') {
+            try {
+                const response = await api.post(`/attendance/child/${studentID}/justify/${attendanceID}`, {
+                    reason,
+                    notes
+                });
+                return response.data;
+            } catch (err) {
+                console.error('Error justifying absence:', err);
+                throw err;
+            }
+        },
+
+        async fetchChildStats(studentID) {
+            try {
+                const response = await api.get(`/attendance/child/${studentID}/stats`);
+                return response.data;
+            } catch (err) {
+                console.error('Error fetching child attendance stats:', err);
+                throw err;
+            }
         }
     }
 });
+
