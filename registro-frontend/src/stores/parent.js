@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { api } from '../boot/axios'
+import api from '../services/api'
 import { ref, computed } from 'vue'
 
 export const useParentStore = defineStore('parent', () => {
@@ -7,26 +7,6 @@ export const useParentStore = defineStore('parent', () => {
     const selectedChildId = ref(localStorage.getItem('selectedChildId') || null)
     const loading = ref(false)
     const error = ref(null)
-
-    // Mock data for development if API fails or is empty
-    const mockChildren = [
-        {
-            id: 'student-123',
-            firstName: 'Luigi',
-            lastName: 'Rossi',
-            schoolName: 'Liceo Scientifico "A. Einstein"',
-            class: '3A',
-            avatar: null
-        },
-        {
-            id: 'student-456',
-            firstName: 'Maria',
-            lastName: 'Rossi',
-            schoolName: 'Liceo Scientifico "A. Einstein"',
-            class: '1B',
-            avatar: null
-        }
-    ]
 
     const selectedChild = computed(() => {
         if (!selectedChildId.value) return children.value[0] || null
@@ -37,12 +17,29 @@ export const useParentStore = defineStore('parent', () => {
         loading.value = true
         error.value = null
         try {
-            // Try fetching from API
             const response = await api.get('/users/me/children')
-            children.value = response.data
+            // Normalize API snake_case fields to camelCase only when the raw
+            // API fields are present; preserve already-mapped values otherwise.
+            children.value = (response.data || []).map(c => ({
+                ...c,
+                firstName: c.first_name ?? c.firstName,
+                lastName: c.last_name ?? c.lastName,
+                schoolName: c.school_name ?? c.schoolName,
+                className: c.class ?? c.className
+            }))
 
-            // Select first if none selected
-            if (!selectedChildId.value && children.value.length > 0) {
+            // Validate the stored selectedChildId still belongs to this user's children
+            if (selectedChildId.value) {
+                const stillValid = children.value.find(c => c.id === selectedChildId.value)
+                if (!stillValid) {
+                    selectedChildId.value = children.value[0]?.id || null
+                    if (selectedChildId.value) {
+                        localStorage.setItem('selectedChildId', selectedChildId.value)
+                    } else {
+                        localStorage.removeItem('selectedChildId')
+                    }
+                }
+            } else if (children.value.length > 0) {
                 selectedChildId.value = children.value[0].id
                 localStorage.setItem('selectedChildId', selectedChildId.value)
             }
@@ -62,6 +59,12 @@ export const useParentStore = defineStore('parent', () => {
         }
     }
 
+    function reset() {
+        children.value = []
+        selectedChildId.value = null
+        localStorage.removeItem('selectedChildId')
+    }
+
     return {
         children,
         selectedChildId,
@@ -69,6 +72,7 @@ export const useParentStore = defineStore('parent', () => {
         loading,
         error,
         fetchChildren,
-        selectChild
+        selectChild,
+        reset
     }
 })

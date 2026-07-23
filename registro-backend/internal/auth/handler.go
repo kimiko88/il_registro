@@ -18,7 +18,11 @@ func NewHandler(service *Service) *Handler {
 	}
 }
 
-// Register handles user registration
+// Register handles user registration by an authenticated privileged user.
+// The caller's role is extracted from the JWT (set by Authenticate middleware)
+// and enforced against the role permission matrix in ValidateRegisterRequest.
+// This endpoint is no longer public: it requires a valid JWT.
+//
 // POST /auth/register
 func (h *Handler) Register(c *gin.Context) {
 	var req RegisterRequest
@@ -27,13 +31,30 @@ func (h *Handler) Register(c *gin.Context) {
 		return
 	}
 
+	// callerRole comes from the validated JWT — never trust the request body for this.
+	callerRole, exists := GetUserRole(c)
+	if !exists {
+		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "user not authenticated"})
+		return
+	}
+
+	if err := ValidateRegisterRequest(callerRole, &req); err != nil {
+		statusCode := http.StatusBadRequest
+		switch err {
+		case ErrInsufficientRole:
+			statusCode = http.StatusForbidden
+		case ErrCannotCreateRole:
+			statusCode = http.StatusForbidden
+		}
+		c.JSON(statusCode, ErrorResponse{Error: err.Error()})
+		return
+	}
+
 	user, err := h.service.Register(c.Request.Context(), &req)
 	if err != nil {
 		statusCode := http.StatusInternalServerError
 		if err == ErrEmailAlreadyExists {
 			statusCode = http.StatusConflict
-		} else if err == ErrInvalidEmail || err == ErrPasswordTooShort {
-			statusCode = http.StatusBadRequest
 		}
 		c.JSON(statusCode, ErrorResponse{Error: err.Error()})
 		return
@@ -63,10 +84,6 @@ func (h *Handler) Login(c *gin.Context) {
 	ipAddress := c.ClientIP()
 	userAgent := c.GetHeader("User-Agent")
 
-	// Debug logging
-	// Debug logging
-	// fmt.Printf("DEBUG HANDLER: Login Request: %+v\n", req)
-
 	authResp, err := h.service.Login(c.Request.Context(), &req, ipAddress, userAgent)
 	if err != nil {
 		statusCode := http.StatusUnauthorized
@@ -91,10 +108,11 @@ func (h *Handler) RefreshToken(c *gin.Context) {
 		return
 	}
 
-	tokens, err := h.service.RefreshToken(c.Request.Context(), req.RefreshToken)
+	ipAddress := c.ClientIP()
+	userAgent := c.GetHeader("User-Agent")
+	tokens, err := h.service.RefreshToken(c.Request.Context(), req.RefreshToken, ipAddress, userAgent)
 	if err != nil {
-		statusCode := http.StatusUnauthorized
-		c.JSON(statusCode, ErrorResponse{Error: err.Error()})
+		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: err.Error()})
 		return
 	}
 
@@ -110,7 +128,19 @@ func (h *Handler) Logout(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.Logout(c.Request.Context(), req.RefreshToken); err != nil {
+	// Extract the authenticated user's ID from the JWT (set by Authenticate middleware).
+	// This ensures a user can only revoke their own sessions.
+	callerUserID, exists := GetUserID(c)
+	if !exists {
+		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "user not authenticated"})
+		return
+	}
+
+	if err := h.service.Logout(c.Request.Context(), req.RefreshToken, callerUserID); err != nil {
+		if err == ErrUnauthorized {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: "token does not belong to the authenticated user"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
 		return
 	}
@@ -199,11 +229,7 @@ func (h *Handler) RequestPasswordReset(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.RequestPasswordReset(c.Request.Context(), req.Email); err != nil {
-		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
-		return
-	}
-
+	_ = h.service.RequestPasswordReset(c.Request.Context(), req.Email)
 	c.JSON(http.StatusOK, MessageResponse{Message: "password reset email sent"})
 }
 
@@ -218,10 +244,15 @@ func (h *Handler) ConfirmPasswordReset(c *gin.Context) {
 
 	if err := h.service.ResetPassword(c.Request.Context(), req.Token, req.NewPassword); err != nil {
 		statusCode := http.StatusInternalServerError
-		if err == ErrInvalidToken {
+		switch err {
+		case ErrInvalidToken:
 			statusCode = http.StatusBadRequest
-		} else if err == ErrPasswordTooShort {
+		case ErrPasswordTooShort:
 			statusCode = http.StatusBadRequest
+		case ErrPasswordReused:
+			// 422 Unprocessable Entity: request ben formata ma password
+			// viola la policy di riutilizzo.
+			statusCode = http.StatusUnprocessableEntity
 		}
 		c.JSON(statusCode, ErrorResponse{Error: err.Error()})
 		return
@@ -230,18 +261,22 @@ func (h *Handler) ConfirmPasswordReset(c *gin.Context) {
 	c.JSON(http.StatusOK, MessageResponse{Message: "password reset successfully"})
 }
 
-// RegisterRoutes registers all auth routes
+// RegisterRoutes registers all auth routes.
+//
+// BREAKING CHANGE: POST /auth/register è ora un endpoint PROTETTO.
+// Richiede un JWT valido nel header Authorization: Bearer <token>.
+// Il caller deve avere ruolo superadmin, admin o segreteria.
+// La matrice dei permessi di creazione ruoli è applicata in ValidateRegisterRequest.
 func (h *Handler) RegisterRoutes(router *gin.RouterGroup, middleware *Middleware) {
 	auth := router.Group("/auth")
 	{
-		// Public routes
-		auth.POST("/register", h.Register)
+		// Fully public routes (no JWT required)
 		auth.POST("/login", h.Login)
 		auth.POST("/refresh-token", h.RefreshToken)
 		auth.POST("/password-reset", h.RequestPasswordReset)
 		auth.POST("/password-reset/confirm", h.ConfirmPasswordReset)
 
-		// Protected routes
+		// Protected routes (JWT required)
 		protected := auth.Group("")
 		protected.Use(middleware.Authenticate())
 		{
@@ -249,6 +284,11 @@ func (h *Handler) RegisterRoutes(router *gin.RouterGroup, middleware *Middleware
 			protected.POST("/logout", h.Logout)
 			protected.POST("/mfa/setup", h.SetupMFA)
 			protected.POST("/mfa/verify", h.VerifyMFA)
+
+			// Registration is protected: caller must be superadmin, admin or segreteria.
+			// Role-level permission checks are enforced inside the handler via
+			// ValidateRegisterRequest (validator.go).
+			protected.POST("/register", h.Register)
 		}
 	}
 }

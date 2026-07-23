@@ -9,6 +9,9 @@ type Repository interface {
 	CountUsers(ctx context.Context, schoolID *string) (int64, error)
 	CountUsersByRole(ctx context.Context, role string, schoolID *string) (int64, error)
 	CountActiveUsers24h(ctx context.Context, schoolID *string) (int64, error)
+	CountDocuments(ctx context.Context, schoolID *string) (int64, error)
+	CountPendingDocuments(ctx context.Context, schoolID *string) (int64, error)
+	CountCommunications(ctx context.Context, schoolID *string) (int64, error)
 	GetRecentEvents(ctx context.Context, limit int, schoolID *string) ([]RecentEvent, error)
 	GetSystemHealth(ctx context.Context) (*SystemHealthStatus, error)
 
@@ -22,14 +25,18 @@ type Repository interface {
 
 	// Admin Users
 	ListAdminUsers(ctx context.Context, offset, limit int, schoolFilter *string) ([]AdminUserResponse, int64, error)
+	GetAdminUserByID(ctx context.Context, adminID string) (*AdminUserResponse, error)
 	CreateAdminUser(ctx context.Context, req *CreateAdminRequest) (*AdminUserResponse, error)
 	UpdateAdminUser(ctx context.Context, adminID string, req *UpdateAdminRequest) (*AdminUserResponse, error)
 	DeleteAdminUser(ctx context.Context, adminID string) error
 	UserEmailExists(ctx context.Context, email string) (bool, error)
 
 	// Activity Log
-	// Activity Log
 	GetAdminActivity(ctx context.Context, adminID string, limit int) ([]ActivityLogEntry, error)
 	ListAuditLogs(ctx context.Context, req *AuditLogListRequest, offset int) ([]ActivityLogEntry, int64, error)
 	LogAdminAction(ctx context.Context, adminID, actionType, target string, targetID *string, schoolID *string, details string) error
+
+	// Settings
+	GetSetting(ctx context.Context, schoolID, key string) (string, error)
+	UpdateSetting(ctx context.Context, schoolID, key, value string) error
 }

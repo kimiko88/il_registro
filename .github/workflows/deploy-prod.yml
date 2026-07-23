@@ -9,28 +9,46 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - uses: actions/checkout@v3
-      
+      - uses: actions/checkout@v7
+
       # Frontend Deploy (Netlify Production)
-      - name: Deploy Frontend
-        uses: actions/setup-node@v3
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
-      - run: |
+          node-version: '20'
+
+      - name: Debug Secrets
+        run: |
+          if [ -z "${{ secrets.VITE_API_URL }}" ]; then
+            echo "::warning::secrets.VITE_API_URL is EMPTY"
+          else
+            echo "secrets.VITE_API_URL is configured (length: ${#secret_val})"
+          fi
+          if [ -z "${{ vars.VITE_API_URL }}" ]; then
+            echo "vars.VITE_API_URL is EMPTY"
+          else
+            echo "vars.VITE_API_URL is configured"
+          fi
+        env:
+          secret_val: ${{ secrets.VITE_API_URL }}
+
+      - name: Build Frontend
+        run: |
           cd registro-frontend
+          echo "VITE_API_URL=${{ secrets.VITE_API_URL || vars.VITE_API_URL }}" > .env.production
           npm ci
           npm run build
-      - uses: jsmrcaga/action-netlify-deploy@master
-        with:
+
+      - name: Deploy to Netlify Production
+        run: |
+          npx netlify-cli@latest deploy \
+            --prod \
+            --dir=registro-frontend/dist \
+            --site=$NETLIFY_SITE_ID \
+            --auth=$NETLIFY_AUTH_TOKEN \
+            --message="Production deploy from GitHub Actions"
+        env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-          build_directory: registro-frontend/dist
-          deploy_alias: production
 
-      # Backend Deploy (Dokku)
-      - name: Deploy Backend
-        uses: dokku/github-action@master
-        with:
-          git_remote_url: ssh://dokku@${{ secrets.DOKKU_HOST }}/registro-backend
-          ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
-          branch: main
+

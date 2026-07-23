@@ -47,14 +47,19 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { useQuasar } from 'quasar'
+import { useCommunicationsStore } from 'src/stores/communications'
+import { useClassesStore } from 'src/stores/classes'
 
 const $q = useQuasar()
+const commStore = useCommunicationsStore()
+const classesStore = useClassesStore()
 const emit = defineEmits(['sent', 'cancel'])
 
 const sending = ref(false)
-const classOptions = ['1A', '1B', '2A', '2B', '3A', '3B', '4A', '5A']
+
+const classOptions = computed(() => classesStore.classes.map(c => `${c.name}${c.section}`))
 
 const form = reactive({
     title: '',
@@ -69,19 +74,34 @@ const form = reactive({
     attachments: []
 })
 
-const sendCircular = () => {
+onMounted(async () => {
+    if (classesStore.classes.length === 0) {
+        await classesStore.fetchClasses()
+    }
+})
+
+const sendCircular = async () => {
     if (!form.recipients.teachers && !form.recipients.parents && !form.recipients.students && !form.recipients.staff) {
         $q.notify({ type: 'warning', message: 'Seleziona almeno un gruppo di destinatari' })
         return
     }
 
     sending.value = true
-    // Mock API
-    setTimeout(() => {
-        sending.value = false
+    try {
+        await commStore.sendMessage({
+            title: form.title,
+            content: form.content,
+            recipients: form.recipients,
+            specific_classes: form.specificClasses,
+            type: 'circular'
+        })
         $q.notify({ type: 'positive', message: 'Circolare inviata correttamente' })
-        emit('sent', { ...form, date: new Date().toLocaleDateString() })
-    }, 1500)
+        emit('sent')
+    } catch (err) {
+        $q.notify({ type: 'negative', message: 'Errore durante l\'invio' })
+    } finally {
+        sending.value = false
+    }
 }
 
 defineExpose({

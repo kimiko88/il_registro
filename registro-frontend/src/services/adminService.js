@@ -80,6 +80,14 @@ export default {
         return api.delete(`/classes/${classId}/subjects/${assignmentId}`)
     },
 
+    getClassSchedule(classId) {
+        return api.get(`/classes/${classId}/schedule`)
+    },
+
+    saveClassSchedule(classId, data) {
+        return api.post(`/classes/${classId}/schedule`, data)
+    },
+
     // ========== Subjects Management ==========
 
     getSubjects(schoolId) {
@@ -197,5 +205,15 @@ export default {
 
     getPerformanceTrends(params) {
         return api.get('/admin/analytics/performance', { params })
+    },
+
+    // ========== School Settings ==========
+
+    getSchoolSetting(key) {
+        return api.get(`/admin/settings/${key}`)
+    },
+
+    updateSchoolSetting(key, value) {
+        return api.put(`/admin/settings/${key}`, { value: String(value) })
     }
 }

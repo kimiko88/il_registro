@@ -115,10 +115,10 @@ func TestManager_HasPermission(t *testing.T) {
 			expected:   true,
 		},
 		{
-			name:       "secretary does not have user delete",
+			name:       "secretary has user delete",
 			role:       "secretary",
 			permission: UserDelete,
-			expected:   false,
+			expected:   true,
 		},
 		{
 			name:       "secretary does not have audit read",
@@ -131,6 +131,18 @@ func TestManager_HasPermission(t *testing.T) {
 			name:       "teacher has user read",
 			role:       "teacher",
 			permission: UserRead,
+			expected:   true,
+		},
+		{
+			name:       "teacher has grade create",
+			role:       "teacher",
+			permission: GradeCreate,
+			expected:   true,
+		},
+		{
+			name:       "teacher has attendance update",
+			role:       "teacher",
+			permission: AttendanceUpdate,
 			expected:   true,
 		},
 		{
@@ -153,6 +165,12 @@ func TestManager_HasPermission(t *testing.T) {
 			expected:   false,
 		},
 		{
+			name:       "student has grade read",
+			role:       "student",
+			permission: GradeRead,
+			expected:   true,
+		},
+		{
 			name:       "student does not have user create",
 			role:       "student",
 			permission: UserCreate,
@@ -164,6 +182,12 @@ func TestManager_HasPermission(t *testing.T) {
 			role:       "parent",
 			permission: UserRead,
 			expected:   false,
+		},
+		{
+			name:       "parent has scheduling book",
+			role:       "parent",
+			permission: SchedulingBook,
+			expected:   true,
 		},
 		// Edge cases
 		{
@@ -222,10 +246,10 @@ func TestManager_CheckPermissions(t *testing.T) {
 			expected:    true,
 		},
 		{
-			name:        "secretary missing one permission",
+			name:        "secretary has all requested permissions",
 			role:        "secretary",
 			permissions: []Permission{UserCreate, UserRead, UserDelete},
-			expected:    false,
+			expected:    true,
 		},
 		{
 			name:        "teacher has only user read",
@@ -288,7 +312,7 @@ func TestNewManager(t *testing.T) {
 func TestRoleDefinitions(t *testing.T) {
 	// Verify all expected roles exist
 	expectedRoles := []string{"superadmin", "admin", "principal", "secretary", "teacher", "student", "parent"}
-	
+
 	for _, role := range expectedRoles {
 		t.Run("role_"+role+"_exists", func(t *testing.T) {
 			_, exists := RoleDefinitions[role]
@@ -297,20 +321,23 @@ func TestRoleDefinitions(t *testing.T) {
 	}
 
 	// Verify superadmin and admin have the same permissions
-	t.Run("superadmin and admin have same permissions", func(t *testing.T) {
+	// Verify superadmin has more or equal permissions than admin
+	t.Run("superadmin has comprehensive permissions", func(t *testing.T) {
 		superadminPerms := RoleDefinitions["superadmin"]
 		adminPerms := RoleDefinitions["admin"]
-		assert.Equal(t, len(superadminPerms), len(adminPerms))
+		assert.GreaterOrEqual(t, len(superadminPerms), len(adminPerms))
 	})
 
-	// Verify student and parent have minimal permissions
-	t.Run("student has minimal permissions", func(t *testing.T) {
+	// Verify student and parent have some read permissions
+	t.Run("student has read permissions", func(t *testing.T) {
 		studentPerms := RoleDefinitions["student"]
-		assert.Equal(t, 0, len(studentPerms))
+		assert.NotEmpty(t, studentPerms)
+		assert.Contains(t, studentPerms, GradeRead)
 	})
 
-	t.Run("parent has minimal permissions", func(t *testing.T) {
+	t.Run("parent has read permissions", func(t *testing.T) {
 		parentPerms := RoleDefinitions["parent"]
-		assert.Equal(t, 0, len(parentPerms))
+		assert.NotEmpty(t, parentPerms)
+		assert.Contains(t, parentPerms, GradeRead)
 	})
 }

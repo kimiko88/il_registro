@@ -27,11 +27,11 @@ func (v *Validator) ValidateEntry(a *Attendance) error {
 	// }
 
 	// 3. Status logic
-	if a.Status == StatusLate && a.EntryTime == nil {
-		return errors.New("entry time required for Late status")
+	if a.Status == StatusLate && a.Hour == nil {
+		return errors.New("hour required for Late status")
 	}
-	if a.Status == StatusEarlyExit && a.ExitTime == nil {
-		return errors.New("exit time required for Early Exit")
+	if a.Status == StatusEarlyExit && a.Hour == nil {
+		return errors.New("hour required for Early Exit")
 	}
 
 	return nil

@@ -2,6 +2,31 @@ import { setActivePinia, createPinia } from 'pinia';
 import { useChildrenStore } from 'src/stores/children';
 import { useChildGrades } from 'src/composables/useChildGrades';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { gradeService } from '@/services/gradeService';
+
+vi.mock('@/services/api', () => ({
+    default: {
+        get: vi.fn((url) => {
+            if (url === '/users/me/children') {
+                return Promise.resolve({
+                    data: [
+                        { id: 's1', user_id: 'u1', first_name: 'Mario', last_name: 'Rossi', class: '5A', school_name: 'Liceo Scientifico' },
+                        { id: 's3', user_id: 'u3', first_name: 'Sofia', last_name: 'Rossi', class: '3B', school_name: 'Liceo Classico' }
+                    ]
+                })
+            }
+            return Promise.resolve({ data: [] })
+        })
+    }
+}))
+
+// Mock gradeService
+vi.mock('@/services/gradeService', () => ({
+    gradeService: {
+        getMyGrades: vi.fn().mockResolvedValue({ data: [] }),
+        getByClass: vi.fn().mockResolvedValue({ data: [] })
+    }
+}))
 
 describe('Parent Logic', () => {
     beforeEach(() => {

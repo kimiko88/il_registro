@@ -19,10 +19,20 @@ func getSchoolID(c *gin.Context) string {
 	if !exists {
 		return ""
 	}
-	return res.(string)
+	if s, ok := res.(string); ok {
+		return s
+	}
+	return ""
 }
 
 func (h *Handler) List(c *gin.Context) {
+	userID := c.GetString("user_id")
+	schoolID := getSchoolID(c)
+	if userID == "" || schoolID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
 	// Check content filter
 	subjectID := c.Query("subject_id")
 	if subjectID != "" {
@@ -35,11 +45,6 @@ func (h *Handler) List(c *gin.Context) {
 		return
 	}
 
-	schoolID := getSchoolID(c)
-	if schoolID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "school_id required"})
-		return
-	}
 	teachers, err := h.service.ListTeachers(c.Request.Context(), schoolID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -49,6 +54,13 @@ func (h *Handler) List(c *gin.Context) {
 }
 
 func (h *Handler) Get(c *gin.Context) {
+	userID := c.GetString("user_id")
+	schoolID := getSchoolID(c)
+	if userID == "" || schoolID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
 	teacher, err := h.service.GetTeacher(c.Request.Context(), c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -58,6 +70,13 @@ func (h *Handler) Get(c *gin.Context) {
 }
 
 func (h *Handler) GetSubjects(c *gin.Context) {
+	userID := c.GetString("user_id")
+	schoolID := getSchoolID(c)
+	if userID == "" || schoolID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
 	res, err := h.service.GetTeacherSubjects(c.Request.Context(), c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -67,6 +86,18 @@ func (h *Handler) GetSubjects(c *gin.Context) {
 }
 
 func (h *Handler) AssignSubject(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	schoolID := getSchoolID(c)
+	if userID == "" || schoolID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "admin" && role != "superadmin" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
 	var req AssignSubjectRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -80,6 +111,18 @@ func (h *Handler) AssignSubject(c *gin.Context) {
 }
 
 func (h *Handler) RemoveSubject(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	schoolID := getSchoolID(c)
+	if userID == "" || schoolID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "admin" && role != "superadmin" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
 	if err := h.service.RemoveSubject(c.Request.Context(), c.Param("id"), c.Param("subjectId")); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -87,10 +130,26 @@ func (h *Handler) RemoveSubject(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
+func (h *Handler) GetDashboardStats(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	stats, err := h.service.GetDashboardStats(c.Request.Context(), userID.(string))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, stats)
+}
+
 func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	group := rg.Group("/teachers")
 	{
 		group.GET("", h.List)
+		group.GET("/dashboard/stats", h.GetDashboardStats)
 		group.GET("/:id", h.Get)
 		group.GET("/:id/subjects", h.GetSubjects)
 		group.POST("/:id/subjects", h.AssignSubject)

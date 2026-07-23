@@ -4,6 +4,8 @@ import (
 	"context"
 	"registro-backend/internal/auth"
 	"registro-backend/internal/grades"
+	"registro-backend/internal/schools"
+	"registro-backend/internal/subjects"
 	"registro-backend/internal/users"
 	"time"
 
@@ -17,6 +19,17 @@ type MockAuthRepository struct {
 
 func (m *MockAuthRepository) CreateUser(ctx context.Context, user *auth.User) error {
 	args := m.Called(ctx, user)
+	return args.Error(0)
+}
+func (m *MockAuthRepository) GetPasswordHistory(ctx context.Context, userID string) ([]string, error) {
+	args := m.Called(ctx, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]string), args.Error(1)
+}
+func (m *MockAuthRepository) AddPasswordHistory(ctx context.Context, userID, passwordHash string) error {
+	args := m.Called(ctx, userID, passwordHash)
 	return args.Error(0)
 }
 func (m *MockAuthRepository) GetUserByEmail(ctx context.Context, email string) (*auth.User, error) {
@@ -68,11 +81,27 @@ func (m *MockAuthRepository) GetRecentLoginAttempts(ctx context.Context, email, 
 	args := m.Called(ctx, email, ip, since)
 	return args.Int(0), args.Error(1)
 }
+func (m *MockAuthRepository) GetRecentLoginAttemptsByEmail(ctx context.Context, email string, since time.Time) (int, error) {
+	args := m.Called(ctx, email, since)
+	return args.Int(0), args.Error(1)
+}
+func (m *MockAuthRepository) GetRecentPasswordResets(ctx context.Context, userID string, since time.Time) (int, error) {
+	args := m.Called(ctx, userID, since)
+	return args.Int(0), args.Error(1)
+}
 func (m *MockAuthRepository) EnableMFA(ctx context.Context, userID, secret string) error {
 	args := m.Called(ctx, userID, secret)
 	return args.Error(0)
 }
 func (m *MockAuthRepository) DisableMFA(ctx context.Context, userID string) error {
+	args := m.Called(ctx, userID)
+	return args.Error(0)
+}
+func (m *MockAuthRepository) SaveTempMFASecret(ctx context.Context, userID, secret string) error {
+	args := m.Called(ctx, userID, secret)
+	return args.Error(0)
+}
+func (m *MockAuthRepository) ConfirmMFA(ctx context.Context, userID string) error {
 	args := m.Called(ctx, userID)
 	return args.Error(0)
 }
@@ -176,6 +205,13 @@ func (m *MockGradesRepository) FindWithFilter(filter grades.GradeFilter) ([]grad
 	}
 	return args.Get(0).([]grades.Grade), args.Error(1)
 }
+func (m *MockGradesRepository) FindWithFilterPaginated(filter grades.GradeFilter) ([]grades.Grade, int, error) {
+	args := m.Called(filter)
+	if args.Get(0) == nil {
+		return nil, args.Int(1), args.Error(2)
+	}
+	return args.Get(0).([]grades.Grade), args.Int(1), args.Error(2)
+}
 func (m *MockGradesRepository) FindByTeacher(teacherID string) ([]grades.Grade, error) {
 	args := m.Called(teacherID)
 	if args.Get(0) == nil {
@@ -190,6 +226,71 @@ func (m *MockGradesRepository) GetHistory(gradeID string) ([]grades.GradeHistory
 	}
 	return args.Get(0).([]grades.GradeHistory), args.Error(1)
 }
+func (m *MockGradesRepository) CreateTest(test *grades.ClassTest) error {
+	args := m.Called(test)
+	return args.Error(0)
+}
+func (m *MockGradesRepository) FindTestsByClassAndSubject(classID string, subjectID string) ([]grades.ClassTest, error) {
+	args := m.Called(classID, subjectID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]grades.ClassTest), args.Error(1)
+}
+func (m *MockGradesRepository) FindUpcomingTestsByClass(classID string) ([]grades.ClassTest, error) {
+	args := m.Called(classID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]grades.ClassTest), args.Error(1)
+}
+func (m *MockGradesRepository) DeleteTest(id string) error {
+	args := m.Called(id)
+	return args.Error(0)
+}
+func (m *MockGradesRepository) UpdateTest(test *grades.ClassTest) error {
+	args := m.Called(test)
+	return args.Error(0)
+}
+func (m *MockGradesRepository) FindGradesByTestID(testID string) ([]grades.Grade, error) {
+	args := m.Called(testID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]grades.Grade), args.Error(1)
+}
+func (m *MockGradesRepository) FindTestByID(id string) (*grades.ClassTest, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*grades.ClassTest), args.Error(1)
+}
+func (m *MockGradesRepository) FindEnrolledSubjects(studentID string, semester int) ([]string, error) {
+	args := m.Called(studentID, semester)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]string), args.Error(1)
+}
+func (m *MockGradesRepository) GetWeightConfigs(schoolID, subjectID, classID string) ([]grades.GradeWeightConfig, error) {
+	args := m.Called(schoolID, subjectID, classID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]grades.GradeWeightConfig), args.Error(1)
+}
+func (m *MockGradesRepository) UpsertWeightConfig(cfg *grades.GradeWeightConfig) (*grades.GradeWeightConfig, error) {
+	args := m.Called(cfg)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*grades.GradeWeightConfig), args.Error(1)
+}
+func (m *MockGradesRepository) DeleteWeightConfig(id string) error {
+	args := m.Called(id)
+	return args.Error(0)
+}
 
 // MockUsersRepository mocks users.Repository
 type MockUsersRepository struct {
@@ -198,6 +299,17 @@ type MockUsersRepository struct {
 
 func (m *MockUsersRepository) Create(ctx context.Context, user *users.User) error {
 	args := m.Called(ctx, user)
+	return args.Error(0)
+}
+func (m *MockUsersRepository) GetPasswordHistory(ctx context.Context, userID string) ([]string, error) {
+	args := m.Called(ctx, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]string), args.Error(1)
+}
+func (m *MockUsersRepository) AddPasswordHistory(ctx context.Context, userID, passwordHash string) error {
+	args := m.Called(ctx, userID, passwordHash)
 	return args.Error(0)
 }
 func (m *MockUsersRepository) GetByID(ctx context.Context, id string) (*users.User, error) {
@@ -260,6 +372,10 @@ func (m *MockUsersRepository) BulkCreate(ctx context.Context, usersList []users.
 	}
 	return args.Int(0), errs, args.Error(2)
 }
+func (m *MockUsersRepository) BulkDelete(ctx context.Context, ids []string) (int, error) {
+	args := m.Called(ctx, ids)
+	return args.Int(0), args.Error(1)
+}
 func (m *MockUsersRepository) HardDelete(ctx context.Context, id string) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)
@@ -283,6 +399,31 @@ func (m *MockUsersRepository) GetChildren(ctx context.Context, parentID string) 
 func (m *MockUsersRepository) IsActive(ctx context.Context, id string) (bool, error) {
 	args := m.Called(ctx, id)
 	return args.Bool(0), args.Error(1)
+}
+
+func (m *MockUsersRepository) AddGuardian(ctx context.Context, studentID, parentID, relation string) error {
+	args := m.Called(ctx, studentID, parentID, relation)
+	return args.Error(0)
+}
+func (m *MockUsersRepository) GetStudentsByClass(ctx context.Context, classID string) ([]users.User, error) {
+	args := m.Called(ctx, classID)
+	return args.Get(0).([]users.User), args.Error(1)
+}
+func (m *MockUsersRepository) GetStudentProfile(ctx context.Context, userID string) (string, error) {
+	args := m.Called(ctx, userID)
+	return args.String(0), args.Error(1)
+}
+func (m *MockUsersRepository) GetParentProfile(ctx context.Context, userID string) (string, error) {
+	args := m.Called(ctx, userID)
+	return args.String(0), args.Error(1)
+}
+func (m *MockUsersRepository) RemoveGuardian(ctx context.Context, studentID, parentID string) error {
+	args := m.Called(ctx, studentID, parentID)
+	return args.Error(0)
+}
+func (m *MockUsersRepository) GetGuardians(ctx context.Context, studentID string) ([]users.GuardianInfo, error) {
+	args := m.Called(ctx, studentID)
+	return args.Get(0).([]users.GuardianInfo), args.Error(1)
 }
 
 // MockAnalyticsService mocks grades.AnalyticsService
@@ -325,4 +466,68 @@ func (m *MockAnalyticsService) GetSchoolStatistics(year string) (*grades.SchoolS
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*grades.SchoolStatisticsResponse), args.Error(1)
+}
+
+// MockSchoolsRepository mocks schools.Repository
+type MockSchoolsRepository struct {
+	mock.Mock
+}
+
+func (m *MockSchoolsRepository) Create(ctx context.Context, school *schools.School) error {
+	args := m.Called(ctx, school)
+	return args.Error(0)
+}
+func (m *MockSchoolsRepository) GetByID(ctx context.Context, id string) (*schools.School, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*schools.School), args.Error(1)
+}
+func (m *MockSchoolsRepository) List(ctx context.Context, params *schools.ListParams) ([]*schools.School, int, error) {
+	args := m.Called(ctx, params)
+	if args.Get(0) == nil {
+		return nil, args.Int(1), args.Error(2)
+	}
+	return args.Get(0).([]*schools.School), args.Int(1), args.Error(2)
+}
+func (m *MockSchoolsRepository) Update(ctx context.Context, id string, req *schools.UpdateSchoolRequest) error {
+	args := m.Called(ctx, id, req)
+	return args.Error(0)
+}
+func (m *MockSchoolsRepository) Delete(ctx context.Context, id string) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+// MockSubjectsRepository mocks subjects.Repository
+type MockSubjectsRepository struct {
+	mock.Mock
+}
+
+func (m *MockSubjectsRepository) Create(ctx context.Context, subject *subjects.Subject) error {
+	args := m.Called(ctx, subject)
+	return args.Error(0)
+}
+func (m *MockSubjectsRepository) List(ctx context.Context, schoolID string) ([]subjects.Subject, error) {
+	args := m.Called(ctx, schoolID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]subjects.Subject), args.Error(1)
+}
+func (m *MockSubjectsRepository) Get(ctx context.Context, id string) (*subjects.Subject, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*subjects.Subject), args.Error(1)
+}
+func (m *MockSubjectsRepository) Delete(ctx context.Context, id string) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+func (m *MockSubjectsRepository) Update(ctx context.Context, subject *subjects.Subject) error {
+	args := m.Called(ctx, subject)
+	return args.Error(0)
 }

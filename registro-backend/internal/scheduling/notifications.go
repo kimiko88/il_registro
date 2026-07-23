@@ -1,6 +1,6 @@
 package scheduling
 
-import "fmt"
+import "registro-backend/pkg/logger"
 
 type NotificationService struct{}
 
@@ -10,5 +10,5 @@ func NewNotificationService() *NotificationService {
 
 func (n *NotificationService) NotifyBooking(booking *ColloquioBooking, slot *ColloquioSlot, role string) {
 	// Mock: Send email
-	fmt.Printf("Sending notification for %s to %s\n", booking.ID, role)
+	logger.Log.Infof("Sending notification for %s to %s", booking.ID, role)
 }

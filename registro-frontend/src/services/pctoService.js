@@ -1,4 +1,4 @@
-import { api } from 'src/boot/axios'
+import api from './api'
 
 export const pctoService = {
     async getMyProjects() {
@@ -9,5 +9,8 @@ export const pctoService = {
     },
     async logHours(data) {
         return api.post('/pcto/hours', data)
+    },
+    async approveHours(id, approved) {
+        return api.post(`/pcto/hours/${id}/approve`, { approved })
     }
 }

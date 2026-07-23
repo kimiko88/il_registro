@@ -3,7 +3,6 @@ package users
 import (
 	"regexp"
 	"strings"
-	"unicode"
 )
 
 // Validator handles custom validation rules
@@ -13,34 +12,33 @@ func NewValidator() *Validator {
 	return &Validator{}
 }
 
-// ValidatePassword checks password complexity
+// ValidatePassword checks password complexity (min 10 chars, upper, lower, digit, special char)
 func (v *Validator) ValidatePassword(password string) bool {
-	var (
-		hasMinLen  = false
-		hasUpper   = false
-		hasLower   = false
-		hasNumber  = false
-		hasSpecial = false
-	)
-
-	if len(password) >= 8 {
-		hasMinLen = true
+	if len(password) < 10 {
+		return false
 	}
+
+	var (
+		hasUpper   bool
+		hasLower   bool
+		hasNumber  bool
+		hasSpecial bool
+	)
 
 	for _, char := range password {
 		switch {
-		case unicode.IsUpper(char):
+		case char >= 'A' && char <= 'Z':
 			hasUpper = true
-		case unicode.IsLower(char):
+		case char >= 'a' && char <= 'z':
 			hasLower = true
-		case unicode.IsNumber(char):
+		case char >= '0' && char <= '9':
 			hasNumber = true
-		case unicode.IsPunct(char) || unicode.IsSymbol(char):
+		case strings.ContainsRune("!@#$%^&*()-_=+[]{}|;:',.<>/?~`", char):
 			hasSpecial = true
 		}
 	}
 
-	return hasMinLen && hasUpper && hasLower && hasNumber && hasSpecial
+	return hasUpper && hasLower && hasNumber && hasSpecial
 }
 
 // ValidateFiscalCode checks Italian Codice Fiscale format
@@ -58,4 +56,12 @@ func SanitizeEmail(email string) string {
 
 func SanitizeText(text string) string {
 	return strings.TrimSpace(text)
+}
+
+func SanitizeTextPtr(text string) *string {
+	s := strings.TrimSpace(text)
+	if s == "" {
+		return nil
+	}
+	return &s
 }

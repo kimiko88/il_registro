@@ -1,5 +1,41 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
+
+vi.mock('@/services/api', () => ({
+    default: {
+        get: vi.fn((url, config) => {
+            if (url === '/attendance/pending-justifications') {
+                return Promise.resolve({ data: [{ id: 1, studentName: 'Mario Rossi', date: '2025-01-15', reason: 'Flu', status: 'Pending' }] })
+            }
+            return Promise.resolve({ data: [] })
+        }),
+        post: vi.fn(() => Promise.resolve({ data: {} })),
+        patch: vi.fn(() => Promise.resolve({ data: {} }))
+    }
+}))
+
+vi.mock('src/services/attendanceService', () => ({
+    attendanceService: {
+        getByClass: vi.fn(() => Promise.resolve({
+            data: {
+                records: [
+                    { student_id: 's1', student_name: 'Giuseppe Verdi', status: 'Present', notes: '', entry_time: '' },
+                    { student_id: 's2', student_name: 'Mario Rossi', status: 'Absent', notes: '', entry_time: '' },
+                    { student_id: 's3', student_name: 'Sofia Bianchi', status: 'Late', notes: 'Bus delay', entry_time: '08:15' }
+                ]
+            }
+        })),
+        getMyAttendance: vi.fn(() => Promise.resolve({
+            data: [
+                { date: '2025-01-20', status: 'Present', notes: '', entry_time: '' },
+                { date: '2025-01-19', status: 'Absent', notes: '', entry_time: '' },
+                { date: '2025-01-18', status: 'Late', notes: 'Traffic', entry_time: '08:15' },
+                { date: '2025-01-15', status: 'Present', notes: '', entry_time: '' }
+            ]
+        }))
+    }
+}))
+
 import { useAttendanceStore } from '@/stores/attendance'
 
 describe('Attendance Store', () => {

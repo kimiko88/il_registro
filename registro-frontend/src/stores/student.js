@@ -1,4 +1,18 @@
 import { defineStore } from 'pinia';
+import authService from 'src/services/authService';
+
+// Normalize the user profile from backend (snake_case) to a consistent shape
+function normalizeProfile(data) {
+    if (!data) return null
+    return {
+        ...data,
+        first_name: data.first_name || data.firstName || '',
+        last_name: data.last_name || data.lastName || '',
+        school_id: data.school_id || data.schoolId || null,
+        class_id: data.class_id || data.classId || null,
+        class_name: data.class_name || data.className || '',
+    }
+}
 
 export const useStudentStore = defineStore('student', {
     state: () => ({
@@ -9,8 +23,10 @@ export const useStudentStore = defineStore('student', {
     }),
 
     getters: {
-        fullName: (state) => state.profile ? `${state.profile.firstName} ${state.profile.lastName}` : '',
-        className: (state) => state.profile ? state.profile.className : '',
+        fullName: (state) => state.profile
+            ? `${state.profile.first_name} ${state.profile.last_name}`.trim()
+            : '',
+        className: (state) => state.profile?.class_name || '',
         isAuthenticated: (state) => !!state.profile
     },
 
@@ -18,29 +34,20 @@ export const useStudentStore = defineStore('student', {
         async fetchProfile() {
             this.loading = true;
             try {
-                await new Promise(resolve => setTimeout(resolve, 500));
-                // Mock Data
-                this.profile = {
-                    id: 's1',
-                    firstName: 'Marco',
-                    lastName: 'Rossi',
-                    className: '5A Scientifico',
-                    email: 'marco.rossi@studenti.school.it',
-                    avatar: 'https://cdn.quasar.dev/img/boy-avatar.png'
-                };
+                const userData = await authService.getCurrentUser();
+                this.profile = normalizeProfile(userData);
             } catch (err) {
                 this.error = err.message;
+                console.error("Error fetching profile:", err);
             } finally {
                 this.loading = false;
             }
         },
 
         async fetchNotifications() {
-            // Mock notifications
-            this.notifications = [
-                { id: 1, title: 'New Grade', message: 'Math grade posted', date: '2025-01-20', type: 'info', read: false },
-                { id: 2, title: 'Attendance Alert', message: 'You were marked absent yesterday', date: '2025-01-19', type: 'warning', read: false }
-            ];
+            // Notifications are currently handled via Communications or WebSocket
+            // For now, keep it empty or fetch from communications
+            this.notifications = [];
         }
     }
 });
