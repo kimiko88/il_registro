@@ -10,11 +10,15 @@
 
 # ---------------------------------------------------------------------------
 # Stage 1: Build
-# Pin to the exact toolchain version declared in go.mod (toolchain go1.24.11)
-# to avoid version-mismatch build failures introduced by Go 1.21+ toolchain
-# management.
+# Pin to the exact Go version declared in go.mod (go 1.24.x).
+# GOTOOLCHAIN=local prevents Go from downloading a newer toolchain
+# when the go directive in go.mod is updated by `go get`.
 # ---------------------------------------------------------------------------
 FROM golang:1.24.11-alpine3.21 AS builder
+
+# Prevent auto-toolchain upgrades: if go.mod requires a higher Go version,
+# the build will fail fast with a clear error instead of silently downloading.
+ENV GOTOOLCHAIN=local
 
 WORKDIR /app
 
@@ -22,7 +26,7 @@ RUN apk add --no-cache git
 
 # Download dependencies first (layer cached until go.mod/go.sum change)
 COPY go.mod go.sum ./
-RUN go mod download
+RUN GOTOOLCHAIN=local go mod download
 
 # Verify checksums match go.sum — catches go.mod/go.sum drift early
 RUN go mod verify
