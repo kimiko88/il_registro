@@ -45,6 +45,7 @@
           <q-card-section class="q-pa-sm text-center">
             <q-date
               v-model="selectedDate"
+              :events="eventDates"
               today-btn
               color="primary"
               flat
@@ -88,6 +89,46 @@
               {{ dayEvents.length }} {{ dayEvents.length === 1 ? 'evento' : 'eventi' }}
             </q-badge>
           </q-card-section>
+
+          <!-- Type Filter Toolbar -->
+          <div class="q-px-md q-py-xs bg-slate-50 border-b border-slate-200 row items-center q-gutter-xs">
+            <span class="text-caption text-slate-500 q-mr-xs">Filtra tipo:</span>
+            <q-chip
+              clickable
+              dense
+              :color="selectedTypeFilter === 'tutti' ? 'primary' : 'grey-3'"
+              :text-color="selectedTypeFilter === 'tutti' ? 'white' : 'dark'"
+              @click="selectedTypeFilter = 'tutti'"
+            >Tutti</q-chip>
+            <q-chip
+              clickable
+              dense
+              :color="selectedTypeFilter === 'compito' ? 'info' : 'grey-3'"
+              :text-color="selectedTypeFilter === 'compito' ? 'white' : 'dark'"
+              @click="selectedTypeFilter = 'compito'"
+            >Compiti</q-chip>
+            <q-chip
+              clickable
+              dense
+              :color="selectedTypeFilter === 'verifica' ? 'negative' : 'grey-3'"
+              :text-color="selectedTypeFilter === 'verifica' ? 'white' : 'dark'"
+              @click="selectedTypeFilter = 'verifica'"
+            >Verifiche</q-chip>
+            <q-chip
+              clickable
+              dense
+              :color="selectedTypeFilter === 'avviso' ? 'warning' : 'grey-3'"
+              :text-color="selectedTypeFilter === 'avviso' ? 'white' : 'dark'"
+              @click="selectedTypeFilter = 'avviso'"
+            >Avvisi</q-chip>
+            <q-chip
+              clickable
+              dense
+              :color="selectedTypeFilter === 'evento' ? 'positive' : 'grey-3'"
+              :text-color="selectedTypeFilter === 'evento' ? 'white' : 'dark'"
+              @click="selectedTypeFilter = 'evento'"
+            >Eventi</q-chip>
+          </div>
 
           <!-- Loading State -->
           <div v-if="agendaStore.loading" class="text-center q-pa-xl">
@@ -316,6 +357,8 @@ const form = reactive({
   visible_to_students: true
 })
 
+const selectedTypeFilter = ref('tutti')
+
 const typeOptions = [
   { label: 'Compito per casa', value: 'compito' },
   { label: 'Verifica / Incontro', value: 'verifica' },
@@ -341,13 +384,25 @@ const isoSelectedDate = computed(() => {
   return selectedDate.value.replace(/\//g, '-')
 })
 
+const eventDates = computed(() => {
+  const dates = new Set()
+  agendaStore.events.forEach(ev => {
+    if (ev.date) {
+      const formatted = ev.date.substring(0, 10).replace(/-/g, '/')
+      dates.add(formatted)
+    }
+  })
+  return Array.from(dates)
+})
+
 const dayEvents = computed(() => {
   const sel = isoSelectedDate.value
   return agendaStore.events.filter(ev => {
     const evDate = ev.date ? ev.date.substring(0, 10) : ''
     const matchesDate = evDate === sel
     const matchesClass = !selectedClassFilter.value || ev.class_id === selectedClassFilter.value
-    return matchesDate && matchesClass
+    const matchesType = selectedTypeFilter.value === 'tutti' || ev.type === selectedTypeFilter.value
+    return matchesDate && matchesClass && matchesType
   })
 })
 
@@ -365,7 +420,7 @@ async function loadAgendaEvents() {
 }
 
 function onDateChange() {
-  loadAgendaEvents()
+  // Client-side computed dayEvents handles date filtering without redundant HTTP calls
 }
 
 function openCreateDialog() {
@@ -399,6 +454,11 @@ function openEditDialog(ev) {
 async function saveEvent() {
   if (!form.title || !form.class_id || !form.date) {
     $q.notify({ type: 'warning', message: 'Compila tutti i campi obbligatori' })
+    return
+  }
+
+  if (form.start_time && form.end_time && form.end_time <= form.start_time) {
+    $q.notify({ type: 'warning', message: 'L\'ora di fine deve essere successiva all\'ora di inizio' })
     return
   }
 

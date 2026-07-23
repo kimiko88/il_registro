@@ -52,6 +52,7 @@ func (h *Handler) RegisterRoutes(router *gin.RouterGroup) {
 		grades.GET("/weights", h.ListWeightConfigs)
 
 		grades.GET("/student/:studentID", h.GetStudentGrades)
+		grades.GET("/student/:studentID/paged", h.GetStudentGradesPaged)
 		grades.GET("/class/:classID", h.GetClassGrades)
 		grades.GET("/subject/:subjectID", h.GetSubjectGrades)
 
@@ -107,6 +108,34 @@ func (h *Handler) GetStudentGrades(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, grades)
+}
+
+// GetStudentGradesPaged returns a paginated list of grades for a student.
+// Query params: page (1-based, default 1), page_size (default 50), plus the
+// standard filter params (semester, subject_id, grade_type, published).
+func (h *Handler) GetStudentGradesPaged(c *gin.Context) {
+	studentID := c.Param("studentID")
+	if studentID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "studentID is required"})
+		return
+	}
+
+	actorID := c.GetString("user_id")
+	actorRole := c.GetString("role")
+
+	filter := h.parseFilter(c)
+
+	resp, err := h.service.GetStudentGradesPaged(c.Request.Context(), actorID, actorRole, studentID, filter)
+	if err != nil {
+		if errors.Is(err, ErrUnauthorized) || errors.Is(err, ErrNotGuardian) {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, resp)
 }
 
 func (h *Handler) GetClassGrades(c *gin.Context) {

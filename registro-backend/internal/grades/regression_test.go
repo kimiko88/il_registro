@@ -80,7 +80,8 @@ func (m *RegressionMockRepo) FindBySubject(subjectID string, semester int) ([]Gr
 func (m *RegressionMockRepo) FindByClassAndSubject(classID, subjectID string, semester int) ([]Grade, error) {
 	return nil, nil
 }
-func (m *RegressionMockRepo) FindWithFilter(f GradeFilter) ([]Grade, error)     { return nil, nil }
+func (m *RegressionMockRepo) FindWithFilter(f GradeFilter) ([]Grade, error)                { return nil, nil }
+func (m *RegressionMockRepo) FindWithFilterPaginated(f GradeFilter) ([]Grade, int, error)  { return nil, 0, nil }
 func (m *RegressionMockRepo) BatchCreate(grades []*Grade) error                 { return nil }
 func (m *RegressionMockRepo) GetHistory(gradeID string) ([]GradeHistory, error) { return nil, nil }
 func (m *RegressionMockRepo) FindByTeacher(teacherID string) ([]Grade, error)   { return nil, nil }

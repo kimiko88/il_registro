@@ -76,6 +76,9 @@ func (r *repository) BatchCreate(atts []*Attendance) error {
 		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW(), NOW())
 		ON CONFLICT (student_id, class_id, date, hour) DO UPDATE SET
 			status = EXCLUDED.status,
+			subject_id = COALESCE(EXCLUDED.subject_id, attendance.subject_id),
+			entry_time = EXCLUDED.entry_time,
+			exit_time = EXCLUDED.exit_time,
 			notes = EXCLUDED.notes,
 			updated_at = NOW()
 		RETURNING id
@@ -265,7 +268,7 @@ func (r *repository) FindJustificationByID(id string) (*Justification, error) {
 
 func (r *repository) FindPendingJustifications(classID string) ([]Justification, error) {
 	query := `
-		SELECT j.id, j.student_id, j.start_date, j.end_date, j.reason, j.status 
+		SELECT j.id, j.student_id, COALESCE(s.first_name || ' ' || s.last_name, 'Studente') AS student_name, j.start_date, j.end_date, j.reason, j.status 
 		FROM justifications j
 		JOIN users s ON j.student_id = s.id::uuid
 		WHERE s.class_id = $1::uuid AND j.status = 'pending'`
@@ -279,7 +282,7 @@ func (r *repository) FindPendingJustifications(classID string) ([]Justification,
 	var res []Justification
 	for rows.Next() {
 		var j Justification
-		if err := rows.Scan(&j.ID, &j.StudentID, &j.StartDate, &j.EndDate, &j.Reason, &j.Status); err != nil {
+		if err := rows.Scan(&j.ID, &j.StudentID, &j.StudentName, &j.StartDate, &j.EndDate, &j.Reason, &j.Status); err != nil {
 			return nil, err
 		}
 		res = append(res, j)

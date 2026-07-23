@@ -37,6 +37,9 @@ type Repository interface {
 	// FindWithFilter generic filter for export/advanced search
 	FindWithFilter(filter GradeFilter) ([]Grade, error)
 
+	// FindWithFilterPaginated returns a page of grades and the total count.
+	FindWithFilterPaginated(filter GradeFilter) ([]Grade, int, error)
+
 	// FindByTeacher retrieves grades assigned by a teacher (optional utility)
 	FindByTeacher(teacherID string) ([]Grade, error)
 
@@ -384,6 +387,76 @@ func (r *repository) FindWithFilter(filter GradeFilter) ([]Grade, error) {
 	baseQuery += " ORDER BY date DESC"
 
 	return r.scanGrades(baseQuery, args...)
+}
+
+// FindWithFilterPaginated returns a page of grades matching the filter together
+// with the total count of matching rows (before pagination).
+// filter.Page is 1-based; filter.PageSize defaults to 50 when <= 0.
+func (r *repository) FindWithFilterPaginated(filter GradeFilter) ([]Grade, int, error) {
+	baseWhere := `FROM grades WHERE deleted_at IS NULL`
+
+	var args []interface{}
+	var conditions []string
+	argIdx := 1
+
+	if filter.Semester > 0 {
+		conditions = append(conditions, fmt.Sprintf("semester = $%d", argIdx))
+		args = append(args, filter.Semester)
+		argIdx++
+	}
+	if filter.SubjectID != "" {
+		conditions = append(conditions, fmt.Sprintf("subject_id = $%d::uuid", argIdx))
+		args = append(args, filter.SubjectID)
+		argIdx++
+	}
+	if filter.GradeType != "" {
+		conditions = append(conditions, fmt.Sprintf("grade_type = $%d", argIdx))
+		args = append(args, filter.GradeType)
+		argIdx++
+	}
+	if filter.IsPublished != nil {
+		conditions = append(conditions, fmt.Sprintf("is_published = $%d", argIdx))
+		args = append(args, *filter.IsPublished)
+		argIdx++
+	}
+
+	whereSuffix := ""
+	if len(conditions) > 0 {
+		whereSuffix = " AND " + strings.Join(conditions, " AND ")
+	}
+
+	// Count total matching rows
+	var total int
+	countQuery := `SELECT COUNT(*) ` + baseWhere + whereSuffix
+	if err := r.db.QueryRow(countQuery, args...).Scan(&total); err != nil {
+		return nil, 0, fmt.Errorf("count grades error: %w", err)
+	}
+
+	// Pagination defaults
+	pageSize := filter.PageSize
+	if pageSize <= 0 {
+		pageSize = 50
+	}
+	page := filter.Page
+	if page < 1 {
+		page = 1
+	}
+	offset := (page - 1) * pageSize
+
+	// Main SELECT with pagination
+	selectCols := `SELECT id, student_id, school_id, subject_id, teacher_id,
+		grade_value, grade_type, semester, date,
+		description, rubric_id, weight, is_published, published_at,
+		grade_category, evaluation_type, COALESCE(created_by::text, ''), created_at, updated_at, test_id `
+	paginatedQuery := selectCols + baseWhere + whereSuffix +
+		fmt.Sprintf(" ORDER BY date DESC LIMIT $%d OFFSET $%d", argIdx, argIdx+1)
+	args = append(args, pageSize, offset)
+
+	grades, err := r.scanGrades(paginatedQuery, args...)
+	if err != nil {
+		return nil, 0, err
+	}
+	return grades, total, nil
 }
 
 func (r *repository) FindByTeacher(teacherID string) ([]Grade, error) {

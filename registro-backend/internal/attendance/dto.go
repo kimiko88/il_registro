@@ -44,11 +44,13 @@ type ClassDailyAttendance struct {
 
 // JustificationResponse è la risposta DTO per una giustifica.
 type JustificationResponse struct {
-	ID        string `json:"id"`
-	StudentID string `json:"student_id,omitempty"`
-	Status    string `json:"status"`
-	Reason    string `json:"reason"`
-	DateRange string `json:"date_range"`
+	ID          string `json:"id"`
+	StudentID   string `json:"student_id,omitempty"`
+	StudentName string `json:"student_name,omitempty"`
+	Date        string `json:"date,omitempty"`
+	Status      string `json:"status"`
+	Reason      string `json:"reason"`
+	DateRange   string `json:"date_range"`
 }
 
 // --- Request DTOs ---

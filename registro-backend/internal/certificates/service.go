@@ -33,7 +33,7 @@ func (s *service) GenerateCertificate(ctx context.Context, actorID, schoolID str
 		return nil, nil, fmt.Errorf("student_id required")
 	}
 	if req.AcademicYear == "" {
-		req.AcademicYear = "2025/2026"
+		req.AcademicYear = currentAcademicYear()
 	}
 
 	protoNo, err := s.repo.NextProtocolNo(ctx, schoolID)
@@ -93,4 +93,16 @@ func (s *service) GeneratePDFBytes(ctx context.Context, id string) ([]byte, erro
 		return nil, err
 	}
 	return GenerateCertificatePDF(cert, "Istituto Scolastico Registrov2")
+}
+
+// currentAcademicYear returns the school year label for today's date.
+// Months September-December belong to the year starting in that calendar year;
+// months January-August belong to the year that started in the previous calendar year.
+func currentAcademicYear() string {
+	now := time.Now()
+	year := now.Year()
+	if now.Month() < time.September {
+		year--
+	}
+	return fmt.Sprintf("%d/%d", year, year+1)
 }

@@ -3,6 +3,8 @@ package groups
 import (
 	"context"
 	"errors"
+	"fmt"
+	"time"
 )
 
 var (
@@ -23,7 +25,7 @@ func (s *Service) CreateGroup(ctx context.Context, req CreateGroupRequest) (*Gro
 		return nil, ErrInvalidGroup
 	}
 	if req.AcademicYear == "" {
-		req.AcademicYear = "2025/2026"
+		req.AcademicYear = currentAcademicYear()
 	}
 
 	g := &Group{
@@ -98,4 +100,16 @@ func (s *Service) AddStudentsToGroup(ctx context.Context, groupID string, studen
 
 func (s *Service) RemoveStudentFromGroup(ctx context.Context, groupID, studentID string) error {
 	return s.repo.RemoveStudent(ctx, groupID, studentID)
+}
+
+// currentAcademicYear returns the school year label for today's date.
+// Months September-December belong to the year starting in that calendar year;
+// months January-August belong to the year that started in the previous calendar year.
+func currentAcademicYear() string {
+	now := time.Now()
+	year := now.Year()
+	if now.Month() < time.September {
+		year--
+	}
+	return fmt.Sprintf("%d/%d", year, year+1)
 }

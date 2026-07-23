@@ -57,9 +57,21 @@ type GradeFilter struct {
 	GradeType   string `form:"grade_type"`
 	IsPublished *bool  `form:"published"` // Pointer to distinguish false from missing
 	SortBy      string `form:"sort"`
+	// Pagination (optional — only used by paginated endpoints)
+	Page     int `form:"page"`      // 1-based; 0 means "no pagination"
+	PageSize int `form:"page_size"` // default 50 when Page > 0
 }
 
 // --- Responses ---
+
+// PaginatedGradesResponse wraps a slice of GradeResponse with pagination metadata.
+type PaginatedGradesResponse struct {
+	Data        []GradeResponse `json:"data"`
+	Total       int             `json:"total"`
+	Page        int             `json:"page"`
+	PageSize    int             `json:"page_size"`
+	TotalPages  int             `json:"total_pages"`
+}
 
 type GradeResponse struct {
 	ID            string    `json:"id"`

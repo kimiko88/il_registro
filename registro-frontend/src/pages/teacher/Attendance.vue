@@ -46,6 +46,7 @@
         <div class="col-12 col-md-3">
             <q-card class="bg-green-1">
                 <q-card-section class="text-center">
+                    <q-icon name="check_circle" size="28px" color="green-8" class="q-mb-xs" />
                     <div class="text-caption text-uppercase text-green-9">Presenti</div>
                     <div class="text-h4 text-green-8">{{ stats.present }}</div>
                 </q-card-section>
@@ -54,6 +55,7 @@
         <div class="col-12 col-md-3">
              <q-card class="bg-red-1">
                 <q-card-section class="text-center">
+                    <q-icon name="cancel" size="28px" color="red-8" class="q-mb-xs" />
                     <div class="text-caption text-uppercase text-red-9">Assenti</div>
                     <div class="text-h4 text-red-8">{{ stats.absent }}</div>
                 </q-card-section>
@@ -62,6 +64,7 @@
         <div class="col-12 col-md-3">
              <q-card class="bg-orange-1">
                 <q-card-section class="text-center">
+                    <q-icon name="schedule" size="28px" color="orange-8" class="q-mb-xs" />
                     <div class="text-caption text-uppercase text-orange-9">Ritardi</div>
                     <div class="text-h4 text-orange-8">{{ stats.late }}</div>
                 </q-card-section>
@@ -70,6 +73,7 @@
         <div class="col-12 col-md-3">
              <q-card class="bg-blue-1 cursor-pointer" ripple @click="showJustifications = true">
                 <q-card-section class="text-center">
+                    <q-icon name="assignment_turned_in" size="28px" color="blue-8" class="q-mb-xs" />
                     <div class="text-caption text-uppercase text-blue-9">Da Giustificare</div>
                     <div class="text-h4 text-blue-8">{{ stats.toJustify }}</div>
                 </q-card-section>
@@ -81,7 +85,15 @@
     <!-- Attendance Table -->
     <q-card>
         <q-toolbar class="bg-grey-2 text-grey-8">
-            <q-toolbar-title class="text-subtitle1">Appello - {{ date }}</q-toolbar-title>
+            <q-toolbar-title class="text-subtitle1 row items-center">
+                <span>Appello - {{ date }}</span>
+                <q-chip dense color="primary" text-color="white" class="q-ml-md font-weight-bold">
+                    {{ markedCount }}/{{ students.length }} registrati
+                </q-chip>
+                <q-chip v-if="lastAutosaveTime" dense color="grey-7" text-color="white" icon="cloud_done" class="q-ml-sm text-caption">
+                    Bozza salvata alle {{ lastAutosaveTime }}
+                </q-chip>
+            </q-toolbar-title>
             <q-btn flat dense icon="check_circle" label="Tutti Presenti" color="primary" @click="markAllPresent" :disable="loading" />
         </q-toolbar>
 
@@ -106,7 +118,7 @@
         </div>
 
         <q-list separator v-else>
-            <q-item v-for="student in students" :key="student.id" class="q-py-md">
+            <q-item v-for="student in students" :key="student.id" class="q-py-md transition-bg" :class="getRowClass(student.status)">
                 <q-item-section avatar>
                     <q-avatar size="md" color="grey-3" text-color="black">
                         {{ student.first_name ? student.first_name.charAt(0) : '?' }}
@@ -116,7 +128,13 @@
                 <q-item-section>
                     <div class="row items-center">
                        <div class="col">
-                           <q-item-label class="text-weight-medium">{{ student.last_name }} {{ student.first_name }}</q-item-label>
+                           <q-item-label class="text-weight-medium row items-center">
+                               <q-icon v-if="student.status === 'Present'" name="check_circle" color="positive" size="18px" class="q-mr-xs" />
+                               <q-icon v-else-if="student.status === 'Absent'" name="cancel" color="negative" size="18px" class="q-mr-xs" />
+                               <q-icon v-else-if="student.status === 'Late'" name="schedule" color="warning" size="18px" class="q-mr-xs" />
+                               <q-icon v-else-if="student.status === 'LeftEarly'" name="output" color="purple" size="18px" class="q-mr-xs" />
+                               <span>{{ student.last_name }} {{ student.first_name }}</span>
+                           </q-item-label>
                            <q-item-label caption v-if="student.status === 'Absent'">Assente</q-item-label>
                            <q-item-label caption v-if="student.status === 'Late'">
                                Ritardo ({{ formatLateLabel(student) }})
@@ -133,10 +151,10 @@
                         v-model="student.status"
                         flat dense
                         :options="[
-                            {icon: 'check', value: 'Present', slot: 'present'},
-                            {icon: 'close', value: 'Absent', slot: 'absent'},
-                            {icon: 'schedule', value: 'Late', slot: 'late'},
-                            {icon: 'logout', value: 'LeftEarly', slot: 'early'}
+                            {icon: 'check', value: 'Present', slot: 'present', attrs: { 'aria-label': 'Segna ' + student.first_name + ' ' + student.last_name + ' come Presente' }},
+                            {icon: 'close', value: 'Absent', slot: 'absent', attrs: { 'aria-label': 'Segna ' + student.first_name + ' ' + student.last_name + ' come Assente' }},
+                            {icon: 'schedule', value: 'Late', slot: 'late', attrs: { 'aria-label': 'Segna ' + student.first_name + ' ' + student.last_name + ' in Ritardo' }},
+                            {icon: 'logout', value: 'LeftEarly', slot: 'early', attrs: { 'aria-label': 'Segna ' + student.first_name + ' ' + student.last_name + ' come Uscita Anticipata' }}
                         ]"
                     >
                         <template v-slot:present><q-tooltip>Presente</q-tooltip></template>
@@ -222,7 +240,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { useClassesStore } from '@/stores/classes'
 import { useGradesStore } from '@/stores/grades'
@@ -241,6 +259,7 @@ const justificationRequests = ref([])
 const loading = ref(false)
 const saving = ref(false)
 const showJustifications = ref(false)
+const lastAutosaveTime = ref('')
 
 // Note Dialog State
 const showNoteDialog = ref(false)
@@ -258,12 +277,47 @@ const stats = computed(() => ({
     toJustify: justificationRequests.value.length
 }))
 
+const markedCount = computed(() => students.value.filter(s => s.status).length)
+
+const getRowClass = (status) => {
+    switch (status) {
+        case 'Present': return 'bg-green-1'
+        case 'Absent': return 'bg-red-1'
+        case 'Late': return 'bg-orange-1'
+        case 'LeftEarly': return 'bg-purple-1'
+        default: return ''
+    }
+}
+
+let autosaveInterval = null
+const saveDraftToStorage = () => {
+    if (!selectedClass.value || students.value.length === 0) return
+    const classId = typeof selectedClass.value === 'object' ? selectedClass.value?.id : selectedClass.value
+    const key = `attendance_draft_${classId}_${date.value}_${selectedHour.value}`
+    const draftData = {
+        date: date.value,
+        hour: selectedHour.value,
+        students: students.value,
+        timestamp: new Date().toISOString()
+    }
+    try {
+        localStorage.setItem(key, JSON.stringify(draftData))
+        const now = new Date()
+        lastAutosaveTime.value = now.toLocaleTimeString('it-IT')
+    } catch (e) {}
+}
+
 onMounted(async () => {
     await classesStore.fetchAssignedClasses()
     if (classesStore.classes.length > 0) {
         selectedClass.value = classesStore.classes[0]
         fetchData()
     }
+    autosaveInterval = setInterval(saveDraftToStorage, 60000)
+})
+
+onUnmounted(() => {
+    if (autosaveInterval) clearInterval(autosaveInterval)
 })
 
 const onClassChange = async () => {
@@ -371,22 +425,20 @@ const formatLateLabel = (student) => {
 const saveAttendance = async () => {
     saving.value = true
     try {
+        const classId = typeof selectedClass.value === 'object' ? selectedClass.value?.id : selectedClass.value
         const payload = {
-            class_id: selectedClass.value.id,
+            class_id: classId,
             date: date.value,
             hour: selectedHour.value,
-            subject_id: selectedSubject.value || '00000000-0000-0000-0000-000000000000', 
+            subject_id: selectedSubject.value || null, 
             statuses: students.value.map(s => ({
                 student_id: s.id,
                 status: s.status,
                 entry_time: s.status === 'Late' ? s.entry_time : null,
-                exit_time: s.status === 'LeftEarly' ? s.exit_time : null,
-                hour: selectedHour.value,
-                subject_id: selectedSubject.value || '00000000-0000-0000-0000-000000000000'
+                exit_time: s.status === 'LeftEarly' ? s.exit_time : null
             }))
         }
         
-        // Assuming bulk mark endpoint exists
         await api.post('/attendance/mark-bulk', payload)
         
         $q.notify({ type: 'positive', message: 'Registro salvato con successo' })

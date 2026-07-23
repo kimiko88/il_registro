@@ -340,7 +340,25 @@ func (s *service) ProcessJustification(ctx context.Context, teacherID, justifica
 		j.Status = JustificationRejected
 	}
 
-	return s.repo.UpdateJustification(j)
+	if err := s.repo.UpdateJustification(j); err != nil {
+		return err
+	}
+
+	if s.broadcaster != nil {
+		payload := map[string]interface{}{
+			"id":     j.ID,
+			"status": string(j.Status),
+			"reason": j.Reason,
+		}
+		if j.ParentID != "" {
+			s.broadcaster.BroadcastToUser(j.ParentID, "justification_processed", payload)
+		}
+		if j.StudentID != "" {
+			s.broadcaster.BroadcastToUser(j.StudentID, "justification_processed", payload)
+		}
+	}
+
+	return nil
 }
 
 func (s *service) GetPendingJustifications(ctx context.Context, classID string) ([]JustificationResponse, error) {
@@ -352,10 +370,13 @@ func (s *service) GetPendingJustifications(ctx context.Context, classID string) 
 	var resp []JustificationResponse
 	for _, j := range js {
 		resp = append(resp, JustificationResponse{
-			ID:        j.ID,
-			Status:    string(j.Status),
-			Reason:    j.Reason,
-			DateRange: fmt.Sprintf("%s - %s", j.StartDate.Format("2006-01-02"), j.EndDate.Format("2006-01-02")),
+			ID:          j.ID,
+			StudentID:   j.StudentID,
+			StudentName: j.StudentName,
+			Date:        j.StartDate.Format("2006-01-02"),
+			Status:      string(j.Status),
+			Reason:      j.Reason,
+			DateRange:   fmt.Sprintf("%s - %s", j.StartDate.Format("2006-01-02"), j.EndDate.Format("2006-01-02")),
 		})
 	}
 	return resp, nil

@@ -31,6 +31,8 @@ type EventBroadcaster interface {
 type Service interface {
 	GetStudentGrades(studentID string) ([]GradeResponse, error)
 	GetStudentGradesWithFilter(ctx context.Context, actorID string, actorRole string, studentID string, filter GradeFilter) ([]GradeResponse, error)
+	// GetStudentGradesPaged returns a paginated response for list-grades endpoints.
+	GetStudentGradesPaged(ctx context.Context, actorID string, actorRole string, studentID string, filter GradeFilter) (*PaginatedGradesResponse, error)
 	GetClassGrades(ctx context.Context, actorID string, actorRole string, classID string, filter GradeFilter) (*ClassGradesResponse, error)
 	GetSubjectGrades(ctx context.Context, actorID string, actorRole string, subjectID string, filter GradeFilter) (*SubjectStatsResponse, error)
 	AddGrade(teacherID string, req CreateGradeRequest) (*GradeResponse, error)
@@ -128,6 +130,86 @@ func (s *service) GetStudentGradesWithFilter(ctx context.Context, actorID string
 	}
 
 	return s.mapToResponse(filtered), nil
+}
+
+// GetStudentGradesPaged applies the same ownership checks as GetStudentGradesWithFilter
+// then delegates to the paginated repository method.
+func (s *service) GetStudentGradesPaged(ctx context.Context, actorID string, actorRole string, studentID string, filter GradeFilter) (*PaginatedGradesResponse, error) {
+	if actorRole == "student" && actorID != studentID {
+		return nil, ErrUnauthorized
+	}
+	if actorRole == "parent" {
+		isGuardian, err := s.userRepo.IsGuardian(ctx, actorID, studentID)
+		if err != nil {
+			return nil, err
+		}
+		if !isGuardian {
+			return nil, ErrNotGuardian
+		}
+	}
+
+	// Inject studentID as a filter — FindWithFilterPaginated honours the
+	// existing conditions; we add it via a separate lookup to keep the
+	// generic repo method clean.
+	// For the paginated path we call FindByStudent (already sorted) and
+	// apply in-process pagination so that no schema changes are required.
+	grades, err := s.repo.FindByStudent(studentID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Apply in-memory filters (same logic as GetStudentGradesWithFilter)
+	var filtered []Grade
+	for _, g := range grades {
+		if g.DeletedAt != nil {
+			continue
+		}
+		if filter.Semester > 0 && int(g.Semester) != filter.Semester {
+			continue
+		}
+		if filter.SubjectID != "" && g.SubjectID != filter.SubjectID {
+			continue
+		}
+		if filter.GradeType != "" && string(g.GradeType) != filter.GradeType {
+			continue
+		}
+		if filter.IsPublished != nil && g.IsPublished != *filter.IsPublished {
+			continue
+		}
+		filtered = append(filtered, g)
+	}
+
+	total := len(filtered)
+	pageSize := filter.PageSize
+	if pageSize <= 0 {
+		pageSize = 50
+	}
+	page := filter.Page
+	if page < 1 {
+		page = 1
+	}
+	offset := (page - 1) * pageSize
+	if offset > total {
+		offset = total
+	}
+	end := offset + pageSize
+	if end > total {
+		end = total
+	}
+
+	totalPages := (total + pageSize - 1) / pageSize
+	if total == 0 {
+		totalPages = 0
+	}
+
+	slice := filtered[offset:end]
+	return &PaginatedGradesResponse{
+		Data:       s.mapToResponse(slice),
+		Total:      total,
+		Page:       page,
+		PageSize:   pageSize,
+		TotalPages: totalPages,
+	}, nil
 }
 
 func (s *service) GetClassGrades(ctx context.Context, actorID string, actorRole string, classID string, filter GradeFilter) (*ClassGradesResponse, error) {

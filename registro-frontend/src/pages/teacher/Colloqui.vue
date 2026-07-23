@@ -47,9 +47,21 @@
                                      </q-item-label>
                                  </q-item-section>
                                  <q-item-section side>
-                                     <div class="row q-gutter-xs">
+                                     <div class="row items-center q-gutter-xs">
+                                         <q-btn 
+                                           v-if="meeting.meet_link || settings.meetLink" 
+                                           dense 
+                                           unelevated
+                                           color="primary" 
+                                           icon="videocam" 
+                                           label="Entra nella riunione" 
+                                           no-caps 
+                                           class="q-mr-xs rounded-pill"
+                                           :href="meeting.meet_link || settings.meetLink"
+                                           target="_blank"
+                                         />
                                          <q-badge :color="getStatusColor(meeting.status)" rounded class="q-mr-sm">
-                                           {{ meeting.status }}
+                                           {{ formatStatusLabel(meeting.status) }}
                                          </q-badge>
                                          <q-btn flat round dense color="negative" icon="cancel" @click="confirmCancelBooking(meeting)" />
                                      </div>
@@ -118,6 +130,7 @@
                           rounded
                           class="q-mt-sm bg-white" 
                         />
+                        <q-btn color="indigo" label="Salva Impostazioni" dense icon="save" class="q-mt-md full-width" @click="saveSettings" />
                     </div>
                 </q-card-section>
             </q-card>
@@ -257,7 +270,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import api from 'src/services/api'
 
@@ -265,6 +278,25 @@ const $q = useQuasar()
 const tab = ref('upcoming')
 const showSlotDialog = ref(false)
 const saving = ref(false)
+
+const slotPreviewInfo = computed(() => {
+    const dates = Array.isArray(newSlot.value.dates) ? newSlot.value.dates : (newSlot.value.dates ? [newSlot.value.dates] : [])
+    if (dates.length === 0 || !newSlot.value.start || !newSlot.value.end || !newSlot.value.duration || newSlot.value.duration <= 0) {
+        return null
+    }
+    const [startH, startM] = newSlot.value.start.split(':').map(Number)
+    const [endH, endM] = newSlot.value.end.split(':').map(Number)
+    const startMins = startH * 60 + startM
+    const endMins = endH * 60 + endM
+    if (endMins <= startMins) return null
+    const slotsPerDay = Math.floor((endMins - startMins) / newSlot.value.duration)
+    const totalSlots = slotsPerDay * dates.length
+    return {
+        slotsPerDay,
+        daysCount: dates.length,
+        totalSlots
+    }
+})
 
 const meetings = ref([])
 const slots = ref([])
@@ -370,6 +402,26 @@ const formatDate = (dateStr) => {
   return d.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' })
 }
 
+const formatStatusLabel = (status) => {
+  switch (status) {
+    case 'Confirmed': return 'Confermato'
+    case 'Cancelled': return 'Annullato'
+    case 'Completed': return 'Completato'
+    case 'Pending': return 'In Attesa'
+    case 'Booked': return 'Prenotato'
+    default: return status || 'N/D'
+  }
+}
+
+const saveSettings = () => {
+  try {
+    localStorage.setItem('teacher_colloqui_settings', JSON.stringify(settings.value))
+    $q.notify({ color: 'positive', message: 'Impostazioni salvate con successo' })
+  } catch (e) {
+    $q.notify({ color: 'negative', message: 'Errore durante il salvataggio delle impostazioni' })
+  }
+}
+
 const getStatusColor = (status) => {
   switch (status) {
     case 'Confirmed': return 'green'
@@ -379,7 +431,17 @@ const getStatusColor = (status) => {
   }
 }
 
-onMounted(loadData)
+onMounted(() => {
+  const saved = localStorage.getItem('teacher_colloqui_settings')
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved)
+      settings.value.onlineEnabled = !!parsed.onlineEnabled
+      settings.value.meetLink = parsed.meetLink || ''
+    } catch (e) {}
+  }
+  loadData()
+})
 </script>
 
 <style scoped>
