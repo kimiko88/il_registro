@@ -94,10 +94,16 @@ export const useWebSocketStore = defineStore('websocket', () => {
             return
         }
 
+        if (reconnectAttempts.value >= 30) {
+            console.warn('WebSocket: Reached max reconnect attempts (30), stopping automatic reconnection')
+            disconnect()
+            return
+        }
+
         if (reconnectTimer.value) return
 
         // Exponential backoff with random jitter (1s, 2s, 4s, 8s... up to max 30s)
-        const baseDelay = 1000 * Math.pow(2, reconnectAttempts.value)
+        const baseDelay = 1000 * Math.pow(2, Math.min(reconnectAttempts.value, 5))
         const maxDelay = 30000
         const jitter = Math.random() * 1000
         const delay = Math.min(baseDelay + jitter, maxDelay)

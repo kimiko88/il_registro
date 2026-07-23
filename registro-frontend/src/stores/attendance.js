@@ -52,9 +52,7 @@ export const useAttendanceStore = defineStore('attendance', {
                         student_id: r.studentId,
                         status: r.status,
                         entry_time: r.status === 'Late' ? r.time : null,
-                        exit_time: r.status === 'LeftEarly' ? r.time : null,
-                        hour: hour,
-                        subject_id: subjectId || null
+                        exit_time: r.status === 'LeftEarly' ? r.time : null
                     }))
                 };
                 const response = await api.post('/attendance/mark-bulk', payload);
@@ -100,7 +98,7 @@ export const useAttendanceStore = defineStore('attendance', {
                     status: r.status,
                     notes: r.notes || '',
                     time: r.entry_time || '',
-                    justificationStatus: r.is_justified ? 'Approved' : 'PendingJustification'
+                    justificationStatus: r.is_justified ? 'Justified' : (r.parent_justified ? 'Pending' : 'Unjustified')
                 }));
             } catch (err) {
                 console.error("Error fetching my attendance:", err);

@@ -22,7 +22,7 @@
         
         <!-- Dark Mode Toggle -->
         <q-btn flat round dense :icon="$q.dark.isActive ? 'light_mode' : 'dark_mode'" @click="$q.dark.toggle()" color="primary" class="q-mr-sm" :key="'dark-toggle'" :aria-label="$q.dark.isActive ? 'Attiva modalità chiara' : 'Attiva modalità scura'">
-           <q-tooltip>Toggle Dark Mode</q-tooltip>
+           <q-tooltip>Attiva/Disattiva Modalità Scura</q-tooltip>
         </q-btn>
 
         <!-- Fullscreen Toggle -->
@@ -38,11 +38,11 @@
           :key="'fullscreen-toggle'"
           :aria-label="$q.fullscreen.isActive ? 'Esci da schermo intero' : 'Vai a schermo intero'"
         >
-           <q-tooltip>Toggle Fullscreen</q-tooltip>
+           <q-tooltip>Attiva/Disattiva Schermo Intero</q-tooltip>
         </q-btn>
 
         <div class="text-caption text-grey-6 q-mr-sm" aria-hidden="true">v0.0.1</div>
-        <q-btn flat round dense icon="account_circle" color="primary" aria-label="Profilo utente" />
+        <q-btn flat round dense icon="account_circle" color="primary" aria-label="Profilo utente" @click="$router.push('/profile')" />
       </q-toolbar>
     </q-header>
 
@@ -63,8 +63,8 @@
               <q-icon name="person" size="32px" />
             </q-avatar>
             <div class="col">
-              <div class="text-h6 text-weight-bold no-wrap" aria-label="Utente connesso: {{ userName }}">{{ userName }}</div>
-              <div class="text-caption opacity-80 text-uppercase letter-spacing-1" aria-label="Ruolo: {{ roleLabel }}">{{ roleLabel }}</div>
+              <div class="text-h6 text-weight-bold no-wrap" :aria-label="'Utente connesso: ' + userName">{{ userName }}</div>
+              <div class="text-caption opacity-80 text-uppercase letter-spacing-1" :aria-label="'Ruolo: ' + roleLabel">{{ roleLabel }}</div>
             </div>
           </div>
           <!-- Decorative Circle -->
@@ -124,6 +124,22 @@
     </q-drawer>
 
     <q-page-container role="main">
+      <!-- Dynamic Breadcrumb Navigation Header -->
+      <div v-if="breadcrumbs.length > 0" class="q-px-md q-pt-md">
+        <q-breadcrumbs class="text-caption text-grey-7" active-color="primary">
+          <template v-slot:separator>
+            <q-icon size="1.2em" name="chevron_right" color="grey-5" />
+          </template>
+          <q-breadcrumbs-el icon="home" to="/dashboard" label="Dashboard" />
+          <q-breadcrumbs-el
+            v-for="(crumb, idx) in breadcrumbs"
+            :key="idx"
+            :label="crumb.label"
+            :to="crumb.path"
+            :icon="crumb.icon"
+          />
+        </q-breadcrumbs>
+      </div>
       <router-view />
     </q-page-container>
   </q-layout>
@@ -131,13 +147,56 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useAuth } from '@/composables/useAuth'
 import { useMenuItems } from '@/composables/useMenuItems'
 import { storeToRefs } from 'pinia'
 import { useQuasar } from 'quasar'
 
+const route = useRoute()
 const $q = useQuasar()
+
+// Dynamic Breadcrumbs
+const breadcrumbs = computed(() => {
+  if (!route.path || route.path === '/dashboard' || route.path === '/') return []
+  const items = []
+  
+  const routeNamesMap = {
+    '/teacher/grades': { label: 'Gestione Voti', icon: 'grade' },
+    '/teacher/attendance': { label: 'Appello e Presenze', icon: 'how_to_reg' },
+    '/teacher/timetable': { label: 'Orario Lezioni', icon: 'schedule' },
+    '/teacher/didactics': { label: 'Materiale Didattico', icon: 'folder' },
+    '/teacher/coordinator': { label: 'Area Coordinatore', icon: 'star' },
+    '/teacher/groups': { label: 'Gruppi Linguistici', icon: 'groups' },
+    '/teacher/rubrics': { label: 'Rubriche di Valutazione', icon: 'rule' },
+    '/teacher/scrutiny': { label: 'Scrutini', icon: 'assessment' },
+    '/student/grades': { label: 'I Miei Voti', icon: 'grade' },
+    '/student/attendance': { label: 'Le Mie Presenze', icon: 'event_available' },
+    '/student/homework': { label: 'Compiti', icon: 'assignment' },
+    '/student/timetable': { label: 'Orario', icon: 'schedule' },
+    '/parent/grades': { label: 'Voti Figlio', icon: 'grade' },
+    '/parent/attendance': { label: 'Presenze e Giustifiche', icon: 'fact_check' },
+    '/admin/school-settings': { label: 'Impostazioni Scuola', icon: 'settings' },
+    '/admin/users': { label: 'Gestione Utenti', icon: 'people' }
+  }
+
+  const current = routeNamesMap[route.path] || { label: route.meta?.title || route.name || 'Pagina', icon: 'chevron_right' }
+
+  if (route.path.startsWith('/teacher/')) {
+    items.push({ label: 'Docente', icon: 'school' })
+  } else if (route.path.startsWith('/student/')) {
+    items.push({ label: 'Studente', icon: 'person' })
+  } else if (route.path.startsWith('/parent/')) {
+    items.push({ label: 'Genitore', icon: 'family_restroom' })
+  } else if (route.path.startsWith('/admin/')) {
+    items.push({ label: 'Amministrazione', icon: 'admin_panel_settings' })
+  }
+
+  items.push(current)
+  return items
+})
+
 const authStore = useAuthStore()
 const { userName, userRole } = storeToRefs(authStore)
 const { logout } = useAuth()

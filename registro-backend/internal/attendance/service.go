@@ -330,7 +330,9 @@ func (s *service) ProcessJustification(ctx context.Context, teacherID, justifica
 					atts[i].Justified = true
 					atts[i].JustifiedBy = &teacherID
 					atts[i].JustifiedAt = &now
-					_ = s.repo.Update(&atts[i])
+					if updateErr := s.repo.Update(&atts[i]); updateErr != nil {
+						return fmt.Errorf("failed to update attendance record %s: %w", atts[i].ID, updateErr)
+					}
 				}
 			}
 		}
@@ -501,10 +503,12 @@ func (s *service) GetChildAttendanceTrends(ctx context.Context, parentID, studen
 	for _, k := range monthKeys {
 		tr := monthlyMap[k]
 		totalEventCount := tr.Absences + tr.Lates + tr.EarlyExits
-		tr.PresenceRate = 100.0 - float64(totalEventCount*5)
-		if tr.PresenceRate < 0 {
-			tr.PresenceRate = 0
+		rate := 100.0 - (float64(tr.Absences) * 5.0)
+		if rate < 0 {
+			rate = 0
 		}
+		tr.PresenceRate = rate
+		_ = totalEventCount
 		resp.Trends = append(resp.Trends, *tr)
 	}
 

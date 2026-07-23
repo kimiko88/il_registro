@@ -5,6 +5,7 @@
 [![Node](https://img.shields.io/badge/node-18%2B-brightgreen)](https://nodejs.org/)
 [![Vue](https://img.shields.io/badge/vue-3.x-brightgreen)](https://vuejs.org/)
 [![Quasar](https://img.shields.io/badge/quasar-2.x-blue)](https://quasar.dev/)
+[![Netlify Status](https://api.netlify.com/api/v1/badges/8b606e60-d8dc-494f-808a-15d5ebcc11e0/deploy-status)](https://app.netlify.com/projects/registro-scuola/deploys)
 
 ---
 
@@ -27,19 +28,19 @@
 
 ## Stack tecnologico
 
-| Tecnologia | Versione | Ruolo |
-|---|---|---|
-| [Vue 3](https://vuejs.org/) | ^3.5 | Framework UI (Composition API) |
-| [Quasar](https://quasar.dev/) | ^2.17 | UI component library + PWA + build tooling |
-| [Vite](https://vitejs.dev/) | ^4.4 | Build tool e dev server |
-| [Pinia](https://pinia.vuejs.org/) | ^2.1 | State management |
-| [Vue Router](https://router.vuejs.org/) | ^4.2 | Client-side routing |
-| [Axios](https://axios-http.com/) | ^1.18 | HTTP client |
-| [Chart.js](https://www.chartjs.org/) + vue-chartjs | ^4.5 / ^5.3 | Grafici (voti, trend, presenze) |
-| [Vitest](https://vitest.dev/) | ^0.34 | Unit e component testing |
-| [ESLint](https://eslint.org/) | ^8.57 | Linting |
-| [Sass](https://sass-lang.com/) | ^1.97 | Preprocessore CSS |
-| [vite-plugin-pwa](https://vite-pwa-org.netlify.app/) | ^1.3 | Service Worker e manifest PWA |
+| Tecnologia                                           | Versione    | Ruolo                                      |
+| ---------------------------------------------------- | ----------- | ------------------------------------------ |
+| [Vue 3](https://vuejs.org/)                          | ^3.5        | Framework UI (Composition API)             |
+| [Quasar](https://quasar.dev/)                        | ^2.17       | UI component library + PWA + build tooling |
+| [Vite](https://vitejs.dev/)                          | ^4.4        | Build tool e dev server                    |
+| [Pinia](https://pinia.vuejs.org/)                    | ^2.1        | State management                           |
+| [Vue Router](https://router.vuejs.org/)              | ^4.2        | Client-side routing                        |
+| [Axios](https://axios-http.com/)                     | ^1.18       | HTTP client                                |
+| [Chart.js](https://www.chartjs.org/) + vue-chartjs   | ^4.5 / ^5.3 | Grafici (voti, trend, presenze)            |
+| [Vitest](https://vitest.dev/)                        | ^0.34       | Unit e component testing                   |
+| [ESLint](https://eslint.org/)                        | ^8.57       | Linting                                    |
+| [Sass](https://sass-lang.com/)                       | ^1.97       | Preprocessore CSS                          |
+| [vite-plugin-pwa](https://vite-pwa-org.netlify.app/) | ^1.3        | Service Worker e manifest PWA              |
 
 ---
 
@@ -76,12 +77,12 @@ L'applicazione sarà disponibile su [http://localhost:9000](http://localhost:900
 
 Crea un file `.env` nella cartella `registro-frontend/` (non committarlo — è già nel `.gitignore`).
 
-| Variabile | Descrizione | Default |
-|---|---|---|
-| `VITE_API_URL` | URL base del backend API | `http://localhost:8080` |
-| `VITE_WS_URL` | URL WebSocket per notifiche real-time | `ws://localhost:8080` |
-| `VITE_APP_NAME` | Nome dell'applicazione (titolo tab browser) | `Registro Elettronico` |
-| `VITE_ENV` | Ambiente: `development` o `production` | `development` |
+| Variabile       | Descrizione                                 | Default                 |
+| --------------- | ------------------------------------------- | ----------------------- |
+| `VITE_API_URL`  | URL base del backend API                    | `http://localhost:8080` |
+| `VITE_WS_URL`   | URL WebSocket per notifiche real-time       | `ws://localhost:8080`   |
+| `VITE_APP_NAME` | Nome dell'applicazione (titolo tab browser) | `Registro Elettronico`  |
+| `VITE_ENV`      | Ambiente: `development` o `production`      | `development`           |
 
 > Tutte le variabili devono avere il prefisso `VITE_` per essere esposte al browser da Vite.
 
@@ -102,6 +103,7 @@ npm run lint:fix     # Linting con auto-fix
 ```
 
 Altri comandi via Make:
+
 ```bash
 make dev             # Alias di npm run dev
 make build           # Alias di npm run build
@@ -194,6 +196,7 @@ Il router in `src/router/routes.js` usa **meta-campi** per proteggere le route:
 ```
 
 La navigation guard in `router/index.js` verifica:
+
 1. Se la route richiede autenticazione (`requiresAuth`)
 2. Se l'utente ha un token valido (da `useUserStore`)
 3. Se il ruolo dell'utente è tra quelli ammessi (`meta.roles`)
@@ -205,7 +208,9 @@ Se una verifica fallisce, l'utente viene reindirizzato a `/login` o a `/unauthor
 ## State management (Pinia)
 
 ### `useUserStore`
+
 Gestisce il ciclo di vita della sessione utente:
+
 - `user`: profilo (id, email, ruolo, nome)
 - `accessToken` / `refreshToken`: token JWT
 - `isAuthenticated`: computed
@@ -214,12 +219,14 @@ Gestisce il ciclo di vita della sessione utente:
 - `refreshTokens()`: chiamato automaticamente dall'interceptor Axios alla scadenza
 
 ### `useGradesStore`
+
 - `grades`: lista voti correnti
 - `averages`: medie per materia
 - `fetchMyGrades()`: recupera i voti dell'utente loggato
 - `fetchClassGrades(classId)`: per i docenti
 
 ### `useAttendanceStore`
+
 - `records`: presenze/assenze
 - `fetchAttendance(classId, date)`: carica il registro giornaliero
 - `markPresence(studentId, status)`: aggiorna la presenza
@@ -232,21 +239,23 @@ Ogni service in `src/services/` wrappa le chiamate Axios e gestisce gli errori:
 
 ```js
 // services/gradeService.js — esempio
-import { api } from 'boot/axios'
+import { api } from "boot/axios";
 
 export const gradeService = {
-  getMyGrades: () => api.get('/grades/my-grades'),
+  getMyGrades: () => api.get("/grades/my-grades"),
   getClassGrades: (classId) => api.get(`/grades/class/${classId}`),
-  createGrade: (payload) => api.post('/grades', payload),
+  createGrade: (payload) => api.post("/grades", payload),
   updateGrade: (id, payload) => api.patch(`/grades/${id}`, payload),
   deleteGrade: (id) => api.delete(`/grades/${id}`),
-  bulkImport: (formData) => api.post('/grades/bulk-import', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  }),
-}
+  bulkImport: (formData) =>
+    api.post("/grades/bulk-import", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
+};
 ```
 
 L'istanza `api` in `boot/axios.js` ha:
+
 - `baseURL` da `import.meta.env.VITE_API_URL`
 - **Request interceptor**: aggiunge `Authorization: Bearer <token>` ad ogni richiesta
 - **Response interceptor**: se riceve `401`, chiama `useUserStore().refreshTokens()` e riprova la richiesta originale. Se il refresh fallisce, fa logout.
@@ -283,17 +292,17 @@ tests/
 ### Esempio test store
 
 ```js
-import { setActivePinia, createPinia } from 'pinia'
-import { useUserStore } from 'stores/useUserStore'
+import { setActivePinia, createPinia } from "pinia";
+import { useUserStore } from "stores/useUserStore";
 
-beforeEach(() => setActivePinia(createPinia()))
+beforeEach(() => setActivePinia(createPinia()));
 
-it('salva il token dopo il login', async () => {
-  const store = useUserStore()
-  await store.login({ email: 'test@scuola.it', password: 'password' })
-  expect(store.accessToken).not.toBeNull()
-  expect(store.isAuthenticated).toBe(true)
-})
+it("salva il token dopo il login", async () => {
+  const store = useUserStore();
+  await store.login({ email: "test@scuola.it", password: "password" });
+  expect(store.accessToken).not.toBeNull();
+  expect(store.isAuthenticated).toBe(true);
+});
 ```
 
 ---

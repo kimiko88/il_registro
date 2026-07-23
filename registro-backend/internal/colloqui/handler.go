@@ -21,6 +21,7 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	{
 		g.POST("/slots", h.CreateSlot)
 		g.GET("/slots", h.ListSlots)
+		g.GET("/slots/my", h.ListSlots)
 		g.GET("/available-slots", h.ListSlots)
 		g.GET("/availability/:teacherID", h.GetAvailabilityByTeacher)
 		g.PATCH("/slots/:id", h.PatchSlot)
@@ -30,6 +31,7 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 
 		g.POST("/bookings", h.CreateBooking)
 		g.POST("/book", h.CreateBooking)
+		g.GET("/bookings", h.ListMyBookings)
 		g.GET("/my-bookings", h.ListMyBookings)
 		g.GET("/bookings/:id", h.GetBookingByID)
 		g.GET("/slots/:id/bookings", h.ListSlotBookings)

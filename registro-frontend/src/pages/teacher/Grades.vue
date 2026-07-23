@@ -146,9 +146,25 @@
         </div>
 
     </div>
-    <div v-else class="text-center q-pa-xl text-grey-6">
-        <q-icon name="class" size="100px" />
-        <div class="text-h5">Seleziona una classe per iniziare</div>
+    <div v-else class="text-center q-pa-xl column items-center">
+        <q-icon name="school" size="96px" color="primary" class="q-mb-md opacity-80" />
+        <div class="text-h5 text-weight-bold q-mb-xs">Seleziona una classe per iniziare</div>
+        <div class="text-subtitle2 text-grey-7 q-mb-lg" style="max-width: 480px;">
+          Scegli una classe dal menu in alto oppure clicca su uno dei pulsanti qui sotto per accedere direttamente al registro voti:
+        </div>
+        <div class="row q-gutter-sm justify-center" v-if="classesStore.classes && classesStore.classes.length > 0">
+          <q-btn
+            v-for="cls in classesStore.classes"
+            :key="cls.id"
+            unelevated
+            color="primary"
+            outline
+            :label="cls.name"
+            icon="class"
+            class="q-px-md"
+            @click="selectedClassId = cls.id"
+          />
+        </div>
     </div>
 
     <!-- Import Dialog -->
@@ -229,12 +245,14 @@
               <div class="col-12 col-md-7">
                 <div class="text-subtitle1 q-mb-md text-weight-bold text-primary row items-center justify-between">
                   <div>Voti Alunni</div>
-                  <div class="text-caption text-grey-8">Inserisci i voti per ciascun alunno (lascia vuoto per assenti)</div>
+                  <div class="row items-center q-gutter-x-xs">
+                    <q-btn icon="block" size="sm" outline color="warning" label="Segna tutti assenti" @click="markAllAbsent(testForm)" />
+                  </div>
                 </div>
                 
                 <q-scroll-area style="height: 350px;" class="border-grey rounded-borders q-pa-sm bg-grey-2">
                   <q-list separator>
-                    <q-item v-for="student in testForm.grades" :key="student.student_id" class="q-py-sm">
+                    <q-item v-for="(student, idx) in testForm.grades" :key="student.student_id" class="q-py-sm">
                       <q-item-section>
                         <q-item-label class="text-weight-bold">{{ student.full_name }}</q-item-label>
                       </q-item-section>
@@ -249,6 +267,8 @@
                             style="width: 100px"
                             :bg-color="getGradeColor(student.grade_value)"
                             placeholder="-"
+                            :ref="el => setGradeInputRef(el, idx)"
+                            @keydown.enter.prevent="focusNextStudent(idx)"
                           />
                           <q-input
                             v-model="student.notes"
@@ -257,6 +277,7 @@
                             dense
                             class="col"
                             placeholder="Note..."
+                            @keydown.enter.prevent="focusNextStudent(idx)"
                           />
                         </div>
                       </q-item-section>
@@ -334,12 +355,14 @@
               <div class="col-12 col-md-7">
                 <div class="text-subtitle1 q-mb-md text-weight-bold text-primary row items-center justify-between">
                   <div>Voti Alunni</div>
-                  <div class="text-caption text-grey-8">Modifica i voti per ciascun alunno (lascia vuoto per assenti/eliminare)</div>
+                  <div class="row items-center q-gutter-x-xs">
+                    <q-btn icon="block" size="sm" outline color="warning" label="Segna tutti assenti" @click="markAllAbsent(editTestForm)" />
+                  </div>
                 </div>
                 
                 <q-scroll-area style="height: 350px;" class="border-grey rounded-borders q-pa-sm bg-grey-2">
                   <q-list separator>
-                    <q-item v-for="student in editTestForm.grades" :key="student.student_id" class="q-py-sm">
+                    <q-item v-for="(student, idx) in editTestForm.grades" :key="student.student_id" class="q-py-sm">
                       <q-item-section>
                         <q-item-label class="text-weight-bold">{{ student.full_name }}</q-item-label>
                       </q-item-section>
@@ -354,6 +377,8 @@
                             style="width: 100px"
                             :bg-color="getGradeColor(student.grade_value)"
                             placeholder="-"
+                            :ref="el => setEditGradeInputRef(el, idx)"
+                            @keydown.enter.prevent="focusNextEditStudent(idx)"
                           />
                           <q-input
                             v-model="student.notes"
@@ -362,6 +387,7 @@
                             dense
                             class="col"
                             placeholder="Note..."
+                            @keydown.enter.prevent="focusNextEditStudent(idx)"
                           />
                         </div>
                       </q-item-section>
@@ -480,13 +506,31 @@ const submitTest = async () => {
 watch(selectedClassId, async (newVal) => {
     if (newVal) {
         await gradesStore.fetchClassSubjects(newVal);
-        if (gradesStore.subjects.length > 0) {
+        if (gradesStore.subjects && gradesStore.subjects.length > 0) {
             selectedSubject.value = gradesStore.subjects[0].subject_id;
         } else {
             selectedSubject.value = null;
         }
+        await refreshGrades();
     }
-    refreshGrades();
+});
+
+watch(offlineMode, (val) => {
+    if (val) {
+        $q.notify({
+            type: 'warning',
+            message: 'Modalità Offline attivata: le modifiche verranno salvate in cache locale',
+            icon: 'cloud_off',
+            timeout: 2500
+        });
+    } else {
+        $q.notify({
+            type: 'info',
+            message: 'Modalità Online ripristinata',
+            icon: 'cloud_done',
+            timeout: 2000
+        });
+    }
 });
 
 const refreshGrades = async () => {
@@ -582,17 +626,58 @@ const submitEditTest = async () => {
     }
 };
 
-const deleteTestConfirm = async (testId) => {
+const gradeInputRefs = ref([]);
+const editGradeInputRefs = ref([]);
+
+const setGradeInputRef = (el, idx) => {
+    if (el) gradeInputRefs.value[idx] = el;
+};
+
+const setEditGradeInputRef = (el, idx) => {
+    if (el) editGradeInputRefs.value[idx] = el;
+};
+
+const focusNextStudent = (idx) => {
+    if (gradeInputRefs.value && gradeInputRefs.value[idx + 1]) {
+        const next = gradeInputRefs.value[idx + 1];
+        if (next.focus) next.focus();
+    }
+};
+
+const focusNextEditStudent = (idx) => {
+    if (editGradeInputRefs.value && editGradeInputRefs.value[idx + 1]) {
+        const next = editGradeInputRefs.value[idx + 1];
+        if (next.focus) next.focus();
+    }
+};
+
+const markAllAbsent = (formObj) => {
+    if (!formObj || !formObj.grades) return;
+    formObj.grades.forEach(g => {
+        g.grade_value = null;
+        g.notes = 'Assente';
+    });
+    $q.notify({ type: 'info', message: 'Tutti gli alunni segnati come assenti', timeout: 1500 });
+};
+
+const deleteTestConfirm = async (testOrId) => {
+    let test = typeof testOrId === 'object' ? testOrId : classTests.value.find(t => t.id === testOrId);
+    const testTitle = test ? (test.title || 'Verifica') : 'questa verifica';
+    const totalGrades = test && test.grade_count ? test.grade_count : (test && test.grades ? test.grades.length : 'tutti i');
+
     $q.dialog({
-        title: 'Elimina Verifica',
-        message: 'Sei sicuro di voler eliminare questa verifica e TUTTI i voti ad essa collegati? L\'operazione non è reversibile.',
-        cancel: true,
+        title: 'Conferma Eliminazione Verifica',
+        message: `Sei sicuro di voler eliminare la verifica "${testTitle}"? Verranno eliminati permanentemente ${totalGrades} voti collegati. L'operazione non è reversibile.`,
+        cancel: { label: 'Annulla', flat: true },
+        ok: { label: 'Elimina', color: 'negative' },
         persistent: true
     }).onOk(async () => {
+        const id = test ? test.id : testOrId;
         try {
-            await gradesStore.deleteClassTest(testId);
+            await gradesStore.deleteClassTest(id);
             $q.notify({ type: 'positive', message: 'Verifica eliminata con successo!' });
             await refreshGrades();
+            if (viewMode.value === 'history') await fetchTests();
         } catch (err) {
             console.error(err);
             $q.notify({ type: 'negative', message: 'Errore durante l\'eliminazione della verifica' });

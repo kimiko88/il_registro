@@ -221,6 +221,9 @@ func calcSemesterAverages(grades []GradeResponse) (avg1, avg2 float64) {
 	var sum1, sum2 float64
 	var count1, count2 int
 	for _, g := range grades {
+		if g.GradeCategory != "" && g.GradeCategory != string(GradeCategorySummative) {
+			continue
+		}
 		if g.GradeValue >= 0 {
 			if g.Semester == 1 {
 				sum1 += g.GradeValue
@@ -1259,7 +1262,7 @@ func (s *service) UpdateClassTest(teacherID string, testID string, req UpdateCla
 
 	testDate, err := time.Parse("2006-01-02", req.Date)
 	if err != nil {
-		testDate = time.Now()
+		return fmt.Errorf("invalid test date format '%s': %w", req.Date, err)
 	}
 
 	test := &ClassTest{

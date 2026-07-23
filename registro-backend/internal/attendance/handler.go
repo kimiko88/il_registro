@@ -294,8 +294,13 @@ func (h *Handler) GetClassAttendance(c *gin.Context) {
 
 func (h *Handler) GetMyAttendance(c *gin.Context) {
 	studentID := c.GetString("user_id")
+	role := c.GetString("role")
 	if studentID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "student" && role != "parent" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only students or parents can view my-attendance"})
 		return
 	}
 	from, to, err := parseWindowParams(c)

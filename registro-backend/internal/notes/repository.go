@@ -95,7 +95,7 @@ func (r *PostgresRepository) Get(ctx context.Context, id string) (*StudentNote, 
 	query := `
 		SELECT id, school_id, student_id, teacher_id, class_id, subject_id, type, note, to_char(date, 'YYYY-MM-DD'),
 		       COALESCE(is_reserved, false), COALESCE(target_role, 'all'),
-		       COALESCE(is_approved, true), COALESCE(approved_by, ''), approved_at, created_at, updated_at
+		       COALESCE(is_approved, true), COALESCE(approved_by::text, ''), approved_at, created_at, updated_at
 		FROM student_notes WHERE id=$1
 	`
 	var n StudentNote
@@ -134,7 +134,7 @@ func (r *PostgresRepository) List(ctx context.Context, filter NoteFilter) ([]Stu
 	query := `
 		SELECT n.id, n.school_id, n.student_id, n.teacher_id, n.class_id, n.subject_id, n.type, n.note, to_char(n.date, 'YYYY-MM-DD'),
 		       COALESCE(n.is_reserved, false), COALESCE(n.target_role, 'all'),
-		       COALESCE(n.is_approved, true), COALESCE(n.approved_by, ''), n.approved_at, n.created_at, n.updated_at,
+		       COALESCE(n.is_approved, true), COALESCE(n.approved_by::text, ''), n.approved_at, n.created_at, n.updated_at,
 		       COALESCE(u.first_name || ' ' || u.last_name, 'Docente') as teacher_name,
 		       s.name as subject_name
 		FROM student_notes n

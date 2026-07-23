@@ -116,7 +116,7 @@ func (s *Service) GetMatrix(ctx context.Context, actorID, actorRole, classID str
 			var sum float64
 			var count int
 			for _, g := range gradesList {
-				if g.StudentID == stu.StudentID && g.IsPublished && g.DeletedAt == nil {
+				if g.StudentID == stu.ID && g.IsPublished && g.DeletedAt == nil {
 					sum += g.GradeValue
 					count++
 				}
@@ -139,7 +139,7 @@ func (s *Service) GetMatrix(ctx context.Context, actorID, actorRole, classID str
 			row.Record = full
 		}
 
-		stats, err := s.attRepo.GetStats(stu.StudentID)
+		stats, err := s.attRepo.GetStats(stu.ID)
 		if err == nil && stats != nil {
 			row.AttendanceStats = AttendanceSummary{
 				Absences:   stats.TotalAbsences,
