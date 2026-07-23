@@ -1,5 +1,5 @@
 <template>
-  <q-layout view="lHh Lpr lFf" class="bg-slate-50">
+  <q-layout view="hHh Lpr lFf">
     <q-header class="glass-effect text-slate-900 q-py-xs" :class="$q.dark.isActive ? 'bg-dark' : 'bg-white'" role="banner">
       <q-toolbar role="navigation" aria-label="Barra di navigazione principale">
         <q-btn
@@ -41,7 +41,11 @@
            <q-tooltip>Attiva/Disattiva Schermo Intero</q-tooltip>
         </q-btn>
 
-        <div class="text-caption text-grey-6 q-mr-sm" aria-hidden="true">v0.0.1</div>
+        <!-- Notifications -->
+        <q-btn flat round dense icon="notifications" color="primary" class="q-mr-sm" aria-label="Notifiche" @click="$router.push('/communications')">
+          <q-tooltip>Notifiche e Comunicazioni</q-tooltip>
+        </q-btn>
+
         <q-btn flat round dense icon="account_circle" color="primary" aria-label="Profilo utente" @click="$router.push('/profile')" />
       </q-toolbar>
     </q-header>
@@ -57,7 +61,7 @@
     >
       <div class="column full-height no-wrap">
         <!-- User Profile Section -->
-        <div class="q-pa-lg bg-gradient-premium text-white relative-position overflow-hidden" v-if="userName" role="region" aria-label="Profilo utente">
+        <div class="q-pa-lg bg-primary text-white relative-position overflow-hidden" v-if="userName" role="region" aria-label="Profilo utente">
           <div class="row items-center q-mb-sm relative-position" style="z-index: 1">
             <q-avatar size="56px" color="white" text-color="primary" class="q-mr-md shadow-soft" aria-hidden="true">
               <q-icon name="person" size="32px" />
@@ -81,8 +85,8 @@
                 :key="item.path"
                 clickable 
                 :to="item.path"
-                :exact="item.exact"
-                active-class="bg-indigo-50 text-indigo-700 active-menu-item"
+                :exact="item.exact !== undefined ? item.exact : false"
+                active-class="active-menu-item"
                 class="rounded-lg q-mx-sm transition-all"
                 role="menuitem"
                 :aria-label="item.label"
@@ -102,7 +106,7 @@
         <div class="q-pa-md border-t border-slate-100">
           <q-item
             clickable
-            class="rounded-lg bg-red-50 text-negative q-pa-md"
+            class="rounded-lg q-pa-md text-grey-8"
             @click="handleLogout"
             :disable="loggingOut"
             role="button"
@@ -140,7 +144,11 @@
           />
         </q-breadcrumbs>
       </div>
-      <router-view />
+      <router-view v-slot="{ Component }">
+        <transition name="page-fade" mode="out-in">
+          <component :is="Component" :key="$route.path" />
+        </transition>
+      </router-view>
     </q-page-container>
   </q-layout>
 </template>
@@ -163,6 +171,8 @@ const breadcrumbs = computed(() => {
   const items = []
   
   const routeNamesMap = {
+    '/dashboard': { label: 'Dashboard', icon: 'dashboard' },
+    '/profile': { label: 'Profilo Utente', icon: 'person' },
     '/teacher/grades': { label: 'Gestione Voti', icon: 'grade' },
     '/teacher/attendance': { label: 'Appello e Presenze', icon: 'how_to_reg' },
     '/teacher/timetable': { label: 'Orario Lezioni', icon: 'schedule' },
@@ -171,14 +181,30 @@ const breadcrumbs = computed(() => {
     '/teacher/groups': { label: 'Gruppi Linguistici', icon: 'groups' },
     '/teacher/rubrics': { label: 'Rubriche di Valutazione', icon: 'rule' },
     '/teacher/scrutiny': { label: 'Scrutini', icon: 'assessment' },
+    '/teacher/communications': { label: 'Comunicazioni', icon: 'campaign' },
+    '/teacher/agenda': { label: 'Agenda e Registo', icon: 'event' },
+    '/teacher/classes': { label: 'Le Mie Classi', icon: 'class' },
+    '/teacher/colloqui': { label: 'Colloqui e Incontri', icon: 'people' },
+    '/teacher/documents': { label: 'Documenti', icon: 'description' },
+    '/teacher/grade-weights': { label: 'Pesi Voti', icon: 'balance' },
+    '/teacher/verbali': { label: 'Verbali', icon: 'gavel' },
+    '/teacher/substitutions': { label: 'Sostituzioni', icon: 'swap_horiz' },
     '/student/grades': { label: 'I Miei Voti', icon: 'grade' },
     '/student/attendance': { label: 'Le Mie Presenze', icon: 'event_available' },
     '/student/homework': { label: 'Compiti', icon: 'assignment' },
     '/student/timetable': { label: 'Orario', icon: 'schedule' },
     '/parent/grades': { label: 'Voti Figlio', icon: 'grade' },
     '/parent/attendance': { label: 'Presenze e Giustifiche', icon: 'fact_check' },
+    '/parent/communications': { label: 'Comunicazioni', icon: 'campaign' },
+    '/parent/documents': { label: 'Documentazione', icon: 'folder_shared' },
+    '/parent/payments': { label: 'Pagamenti', icon: 'payments' },
+    '/parent/colloqui': { label: 'Incontri e Colloqui', icon: 'forum' },
+    '/parent/meetings': { label: 'Riunioni', icon: 'groups' },
+    '/parent/notes': { label: 'Note Disciplinari', icon: 'report' },
+    '/parent/report-card': { label: 'Pagella Online', icon: 'assignment' },
     '/admin/school-settings': { label: 'Impostazioni Scuola', icon: 'settings' },
-    '/admin/users': { label: 'Gestione Utenti', icon: 'people' }
+    '/admin/users': { label: 'Gestione Utenti', icon: 'people' },
+    '/admin/analytics': { label: 'Analisi e Statistiche', icon: 'analytics' }
   }
 
   const current = routeNamesMap[route.path] || { label: route.meta?.title || route.name || 'Pagina', icon: 'chevron_right' }
@@ -255,10 +281,6 @@ async function handleLogout() {
 </script>
 
 <style scoped>
-.bg-gradient-premium {
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-}
-
 .opacity-80 {
   opacity: 0.8;
 }
@@ -273,20 +295,5 @@ async function handleLogout() {
 
 .transition-all {
     transition: all 0.3s ease;
-}
-
-.active-menu-item {
-    position: relative;
-    box-shadow: inset 4px 0 0 #4f46e5;
-}
-
-.active-menu-item::after {
-    content: '';
-    position: absolute;
-    right: 8px;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background-color: #4f46e5;
 }
 </style>

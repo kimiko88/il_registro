@@ -3,7 +3,7 @@
     <!-- Hero Section -->
     <div class="row items-center q-mb-xl">
       <div class="col-12 col-md-8">
-        <h1 class="text-h3 text-weight-bold text-outfit q-my-none text-gradient-premium">
+        <h1 class="text-h3 text-weight-bold text-outfit q-my-none text-primary">
           {{ greeting }}, {{ user?.first_name || 'Utente' }}
         </h1>
         <div class="text-subtitle1 text-slate-500 q-mt-sm">
@@ -17,16 +17,23 @@
     </div>
 
     <!-- Quick Stats -->
-    <div class="row q-col-gutter-lg q-mb-xl">
+    <div class="row q-col-gutter-lg q-mb-xl" :aria-busy="loadingData" aria-live="polite">
       <div class="col-12 col-sm-6 col-md-3" v-for="(stat, index) in stats" :key="index">
         <q-card class="glass-card stat-card full-height">
-          <q-card-section class="row items-center no-wrap">
+          <q-card-section class="row items-center no-wrap" v-if="!loadingData">
             <div :class="`bg-${stat.color}-100 text-${stat.color}-700 q-pa-md rounded-xl q-mr-md`">
               <q-icon :name="stat.icon" size="28px" />
             </div>
             <div>
               <div class="text-h5 text-weight-bold text-outfit">{{ stat.value }}</div>
-              <div class="text-caption text-slate-500 text-uppercase letter-spacing-1" style="font-size: 10px">{{ stat.label }}</div>
+              <div class="text-caption text-slate-500 text-uppercase letter-spacing-1" style="font-size: 12px">{{ stat.label }}</div>
+            </div>
+          </q-card-section>
+          <q-card-section class="row items-center no-wrap" v-else>
+            <q-skeleton type="QAvatar" size="48px" class="q-mr-md" />
+            <div class="col">
+              <q-skeleton type="text" width="60%" />
+              <q-skeleton type="text" width="40%" />
             </div>
           </q-card-section>
         </q-card>
@@ -42,7 +49,7 @@
             <div class="text-h6 text-weight-bold text-dark">
               {{ isDashboardAdmin ? 'Attività Recenti' : 'Lezioni di Oggi' }}
             </div>
-            <q-btn flat round dense icon="more_horiz" color="grey-7" />
+            <q-btn flat round dense icon="more_horiz" color="grey-7" aria-label="Opzioni e filtro attività" />
           </q-card-section>
           
           <q-list class="q-px-sm" v-if="isDashboardAdmin">
@@ -95,15 +102,15 @@
 
       <!-- Quick Actions / Notifications -->
       <div class="col-12 col-md-4">
-        <q-card class="no-shadow bg-primary text-white q-mb-md" style="background: linear-gradient(135deg, #4F46E5 0%, #3B82F6 100%);">
+        <q-card class="no-shadow glass-card q-mb-md" style="border-left: 4px solid var(--q-primary);">
           <q-card-section>
-            <div class="text-subtitle2 text-blue-1 q-mb-xs">
+            <div class="text-subtitle2 text-primary q-mb-xs">
               {{ latestAnnouncement ? latestAnnouncement.type.toUpperCase() : 'COMUNICAZIONE' }}
             </div>
-            <div class="text-h6 text-weight-bold q-mb-sm">
+            <div class="text-h6 text-weight-bold text-slate-800 q-mb-sm">
               {{ latestAnnouncement ? latestAnnouncement.subject : 'Benvenuto nel Registro' }}
             </div>
-            <div class="text-body2 text-blue-1 opacity-80">
+            <div class="text-body2 text-slate-600 opacity-80">
               {{ latestAnnouncement ? latestAnnouncement.body : 'Le comunicazioni ufficiali e gli annunci per l\'anno scolastico corrente saranno mostrati in questa sezione.' }}
             </div>
           </q-card-section>
@@ -111,7 +118,7 @@
 
         <q-card class="no-shadow bordered-card">
           <q-card-section>
-            <div class="text-h6 text-weight-bold text-dark q-mb-md">Quick Actions</div>
+            <div class="text-h6 text-weight-bold text-dark q-mb-md">Azioni Rapide</div>
             <div class="row q-col-gutter-sm">
               <div class="col-6" v-for="action in actions" :key="action.label">
                 <q-btn 
@@ -119,6 +126,7 @@
                   class="full-width text-dark" 
                   style="border-color: #e2e8f0; border-radius: 12px; height: 80px"
                   no-caps
+                  :loading="navigatingAction === action.label"
                   @click="handleActionClick(action)"
                 >
                   <div class="column items-center">
@@ -157,9 +165,13 @@ const realStats = ref([])
 const recentEvents = ref([])
 const announcements = ref([])
 const todaySchedule = ref([])
+const loadingData = ref(false)
+const navigatingAction = ref(null)
+
+const currentRole = computed(() => userRole.value || user.value?.role || authStore.userRole || authStore.user?.role || 'student')
 
 const isDashboardAdmin = computed(() => {
-  return userRole.value === 'secretary' || userRole.value === 'admin' || userRole.value === 'superadmin'
+  return currentRole.value === 'secretary' || currentRole.value === 'admin' || currentRole.value === 'superadmin'
 })
 
 const latestAnnouncement = computed(() => {
@@ -217,15 +229,16 @@ const stats = computed(() => {
     ]
   }
   
-  return roleStats[userRole.value] || roleStats.student
+  return roleStats[currentRole.value] || roleStats.student
 })
 
 const fetchDashboardData = async () => {
+    loadingData.value = true
     try {
-        const data = await dashboardService.getDashboardStats(userRole.value)
+        const role = currentRole.value
+        const data = await dashboardService.getDashboardStats(role)
         if (data) {
-            // Map backend stats to the format expected by the component
-            if (userRole.value === 'admin' || userRole.value === 'superadmin') {
+            if (role === 'admin' || role === 'superadmin') {
                 realStats.value = [
                     { label: 'Totale Scuole', value: data.total_schools || '0', icon: 'school', color: 'indigo' },
                     { label: 'Utenti Attivi', value: data.total_users || '0', icon: 'people', color: 'cyan' },
@@ -233,7 +246,7 @@ const fetchDashboardData = async () => {
                     { label: 'Report Pending', value: data.pending_documents_count || '0', icon: 'assignment', color: 'red' }
                 ]
                 recentEvents.value = data.recent_events || []
-            } else if (userRole.value === 'secretary') {
+            } else if (role === 'secretary') {
                 realStats.value = [
                     { label: 'Studenti', value: data.total_students || '0', icon: 'school', color: 'indigo' },
                     { label: 'Docenti', value: data.total_teachers || '0', icon: 'people', color: 'cyan' },
@@ -241,7 +254,7 @@ const fetchDashboardData = async () => {
                     { label: 'Richieste', value: data.pending_documents_count || '0', icon: 'assignment', color: 'red' }
                 ]
                 recentEvents.value = data.recent_events || []
-            } else if (userRole.value === 'teacher') {
+            } else if (role === 'teacher') {
                 realStats.value = [
                     { label: 'Le Mie Classi', value: data.classes_count || '0', icon: 'class', color: 'indigo' },
                     { label: 'Studenti', value: data.students_count || '0', icon: 'school', color: 'cyan' },
@@ -252,6 +265,8 @@ const fetchDashboardData = async () => {
         }
     } catch (e) {
         console.error("Error fetching dashboard data", e)
+    } finally {
+        loadingData.value = false
     }
 }
 
@@ -329,45 +344,50 @@ onMounted(() => {
     fetchTodaySchedule()
 })
 
-const handleActionClick = (action) => {
-    if (action.label === 'Nuovo Evento' || action.label === 'Invia Email') {
-        if (userRole.value === 'teacher') {
-            router.push('/teacher/communications')
-        } else if (userRole.value === 'secretary') {
-            router.push('/secretary/communications')
-        } else if (userRole.value === 'student') {
-            router.push('/student/communications')
-        } else if (userRole.value === 'parent') {
-            router.push('/parent/communications')
-        } else {
-            router.push('/admin/users')
+const handleActionClick = async (action) => {
+    navigatingAction.value = action.label
+    try {
+        if (action.label === 'Comunicazioni' || action.label === 'Invia Email') {
+            if (userRole.value === 'teacher') {
+                await router.push('/teacher/communications')
+            } else if (userRole.value === 'secretary') {
+                await router.push('/secretary/communications')
+            } else if (userRole.value === 'student') {
+                await router.push('/student/communications')
+            } else if (userRole.value === 'parent') {
+                await router.push('/parent/communications')
+            } else {
+                await router.push('/admin/users')
+            }
+        } else if (action.label === 'Impostazioni') {
+            if (userRole.value === 'admin' || userRole.value === 'superadmin') {
+                await router.push('/admin/settings')
+            } else if (userRole.value === 'secretary') {
+                await router.push('/secretary/settings')
+            } else {
+                await router.push(userRole.value === 'teacher' ? '/teacher' : `/${userRole.value}/profile`)
+            }
+        } else if (action.label === 'Stampa Voti') {
+            if (userRole.value === 'teacher') {
+                await router.push('/teacher/grades')
+            } else if (userRole.value === 'student') {
+                await router.push('/student/grades')
+            } else if (userRole.value === 'parent') {
+                await router.push('/parent/grades')
+            } else {
+                $q.notify({
+                    type: 'info',
+                    message: 'Funzionalità disponibile per docenti, studenti e genitori.'
+                })
+            }
         }
-    } else if (action.label === 'Impostazioni') {
-        if (userRole.value === 'admin' || userRole.value === 'superadmin') {
-            router.push('/admin/settings')
-        } else if (userRole.value === 'secretary') {
-            router.push('/secretary/settings')
-        } else {
-            router.push(userRole.value === 'teacher' ? '/teacher' : `/${userRole.value}/profile`)
-        }
-    } else if (action.label === 'Stampa Voti') {
-        if (userRole.value === 'teacher') {
-            router.push('/teacher/grades')
-        } else if (userRole.value === 'student') {
-            router.push('/student/grades')
-        } else if (userRole.value === 'parent') {
-            router.push('/parent/grades')
-        } else {
-            $q.notify({
-                type: 'info',
-                message: 'Funzionalità disponibile per docenti, studenti e genitori.'
-            })
-        }
+    } finally {
+        navigatingAction.value = null
     }
 }
 
 const actions = [
-  { label: 'Nuovo Evento', icon: 'add_circle' },
+  { label: 'Comunicazioni', icon: 'campaign' },
   { label: 'Invia Email', icon: 'mail' },
   { label: 'Stampa Voti', icon: 'print' },
   { label: 'Impostazioni', icon: 'settings' }
@@ -379,18 +399,9 @@ const actions = [
     letter-spacing: 1px;
 }
 
-.stat-card {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.stat-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-}
-
 .bordered-card {
   border: 1px solid rgba(0,0,0,0.05);
-  border-radius: 20px;
+  border-radius: 12px;
 }
 
 .hover-bg-grey:hover {

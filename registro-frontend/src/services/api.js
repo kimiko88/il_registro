@@ -32,8 +32,12 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response,
     (error) => {
+        // Handle network error (e.g. server unreachable)
+        if (!error.response) {
+            error.userMessage = 'Errore di connessione al server. Verifica la tua connessione e riprova.';
+        }
         // Handle 401 Unauthorized globally, but ignore for login requests
-        if (error.response && error.response.status === 401 && !error.config.url.includes('/auth/login')) {
+        else if (error.response.status === 401 && !error.config.url.includes('/auth/login')) {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             localStorage.removeItem('refreshToken');

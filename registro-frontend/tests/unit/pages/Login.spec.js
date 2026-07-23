@@ -53,7 +53,7 @@ describe('Login.vue', () => {
     })
 
     it('renders correctly', () => {
-        expect(wrapper.text()).toContain('Welcome Back')
+        expect(wrapper.text()).toContain('Bentornato')
         expect(wrapper.find('form').exists()).toBe(true)
     })
 

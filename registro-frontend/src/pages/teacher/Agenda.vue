@@ -207,7 +207,7 @@
 
     <!-- Create / Edit Event Dialog -->
     <q-dialog v-model="dialogVisible">
-      <q-card style="min-width: 480px; max-width: 600px" class="rounded-xl overflow-hidden">
+      <q-card style="width: min(600px, 95vw)" class="rounded-xl overflow-hidden">
         <q-card-section class="bg-primary text-white row items-center justify-between q-py-md">
           <div class="text-h6 text-weight-bold">
             <q-icon :name="isEditMode ? 'edit_calendar' : 'event_available'" class="q-mr-xs" />
@@ -216,112 +216,122 @@
           <q-btn icon="close" flat round dense v-close-popup />
         </q-card-section>
 
-        <q-card-section class="q-pa-md space-y-4">
-          <!-- Title Input -->
-          <q-input
-            v-model="form.title"
-            label="Titolo Evento *"
-            outlined
-            dense
-            :rules="[val => !!val || 'Il titolo è obbligatorio']"
-          />
-
-          <!-- Description Input -->
-          <q-input
-            v-model="form.description"
-            label="Descrizione / Dettagli"
-            outlined
-            dense
-            type="textarea"
-            rows="3"
-          />
-
-          <!-- Row 1: Event Type & Class Select -->
-          <div class="row q-col-gutter-sm">
-            <div class="col-12 col-sm-6">
-              <q-select
-                v-model="form.type"
-                :options="typeOptions"
-                label="Tipo Evento *"
-                outlined dense
-                emit-value
-                map-options
-              />
-            </div>
-            <div class="col-12 col-sm-6">
-              <q-select
-                v-model="form.class_id"
-                :options="classOptions"
-                label="Classe Destinataria *"
-                outlined dense
-                emit-value
-                map-options
-                :rules="[val => !!val || 'Seleziona una classe']"
-              />
-            </div>
-          </div>
-
-          <!-- Row 2: Date & Times -->
-          <div class="row q-col-gutter-sm">
-            <div class="col-12 col-sm-4">
-              <q-input
-                v-model="form.date"
-                type="date"
-                label="Data *"
-                outlined dense
-                :rules="[val => !!val || 'Data obbligatoria']"
-              />
-            </div>
-            <div class="col-12 col-sm-4">
-              <q-input
-                v-model="form.start_time"
-                type="time"
-                label="Ora Inizio"
-                outlined dense
-              />
-            </div>
-            <div class="col-12 col-sm-4">
-              <q-input
-                v-model="form.end_time"
-                type="time"
-                label="Ora Fine"
-                outlined dense
-              />
-            </div>
-          </div>
-
-          <!-- Visibility Toggle -->
-          <div class="bg-slate-50 q-pa-sm rounded-lg border border-slate-200">
-            <q-toggle
-              v-model="form.visible_to_students"
-              label="Visibile agli studenti e genitori"
-              color="primary"
+        <q-form ref="formRef" @submit.prevent="saveEvent">
+          <q-card-section class="q-pa-md space-y-4">
+            <!-- Title Input -->
+            <q-input
+              v-model="form.title"
+              label="Titolo Evento *"
+              outlined
+              dense
+              tabindex="1"
+              :rules="[val => !!val || 'Il titolo è obbligatorio']"
             />
-          </div>
-        </q-card-section>
 
-        <q-separator />
+            <!-- Description Input -->
+            <q-input
+              v-model="form.description"
+              label="Descrizione / Dettagli"
+              outlined
+              dense
+              type="textarea"
+              rows="3"
+              tabindex="2"
+            />
 
-        <!-- Card Actions -->
-        <q-card-actions align="right" class="q-pa-md">
-          <q-btn
-            v-if="isEditMode"
-            flat
-            color="negative"
-            icon="delete"
-            label="Elimina"
-            :loading="saving"
-            @click="confirmDelete"
-          />
-          <div class="flex-1"></div>
-          <q-btn flat label="Annulla" v-close-popup />
-          <q-btn
-            color="primary"
-            :label="isEditMode ? 'Salva Modifiche' : 'Crea Evento'"
-            :loading="saving"
-            @click="saveEvent"
-          />
-        </q-card-actions>
+            <!-- Row 1: Event Type & Class Select -->
+            <div class="row q-col-gutter-sm">
+              <div class="col-12 col-sm-6">
+                <q-select
+                  v-model="form.type"
+                  :options="typeOptions"
+                  label="Tipo Evento *"
+                  outlined dense
+                  emit-value
+                  map-options
+                  tabindex="3"
+                />
+              </div>
+              <div class="col-12 col-sm-6">
+                <q-select
+                  v-model="form.class_id"
+                  :options="classOptions"
+                  label="Classe Destinataria *"
+                  outlined dense
+                  emit-value
+                  map-options
+                  tabindex="4"
+                  :rules="[val => !!val || 'Seleziona una classe']"
+                />
+              </div>
+            </div>
+
+            <!-- Row 2: Date & Times -->
+            <div class="row q-col-gutter-sm">
+              <div class="col-12 col-sm-4">
+                <q-input
+                  v-model="form.date"
+                  type="date"
+                  label="Data *"
+                  outlined dense
+                  tabindex="5"
+                  :rules="[val => !!val || 'Data obbligatoria']"
+                />
+              </div>
+              <div class="col-12 col-sm-4">
+                <q-input
+                  v-model="form.start_time"
+                  type="time"
+                  label="Ora Inizio"
+                  outlined dense
+                  tabindex="6"
+                />
+              </div>
+              <div class="col-12 col-sm-4">
+                <q-input
+                  v-model="form.end_time"
+                  type="time"
+                  label="Ora Fine"
+                  outlined dense
+                  tabindex="7"
+                />
+              </div>
+            </div>
+
+            <!-- Visibility Toggle -->
+            <div class="bg-slate-50 q-pa-sm rounded-lg border border-slate-200">
+              <q-toggle
+                v-model="form.visible_to_students"
+                label="Visibile agli studenti e genitori"
+                color="primary"
+                tabindex="8"
+              />
+            </div>
+          </q-card-section>
+
+          <q-separator />
+
+          <!-- Card Actions -->
+          <q-card-actions align="right" class="q-pa-md">
+            <q-btn
+              v-if="isEditMode"
+              flat
+              color="negative"
+              icon="delete"
+              label="Elimina"
+              :loading="saving"
+              @click="confirmDelete"
+            />
+            <div class="flex-1"></div>
+            <q-btn flat label="Annulla" v-close-popup />
+            <q-btn
+              type="submit"
+              color="primary"
+              :label="isEditMode ? 'Salva Modifiche' : 'Crea Evento'"
+              :loading="saving"
+            />
+          </q-card-actions>
+        </q-form>
       </q-card>
     </q-dialog>
   </q-page>
@@ -337,6 +347,7 @@ const $q = useQuasar()
 const agendaStore = useAgendaStore()
 const classesStore = useClassesStore()
 
+const formRef = ref(null)
 const todayStr = qdate.formatDate(new Date(), 'YYYY/MM/DD')
 const selectedDate = ref(todayStr)
 const selectedClassFilter = ref(null)
@@ -494,7 +505,7 @@ async function saveEvent() {
 async function confirmDelete() {
   $q.dialog({
     title: 'Conferma Eliminazione',
-    message: 'Sei sicuro di voler eliminare questo evento dall\'agenda?',
+    message: `Sei sicuro di voler eliminare l'evento "${form.title || 'selezionato'}" dall'agenda?`,
     cancel: true,
     persistent: true
   }).onOk(async () => {

@@ -46,7 +46,9 @@
              />
              <q-btn icon="assignment" label="Nuova Verifica" color="primary" class="q-mr-sm" @click="openTestDialog" :disable="!selectedClassId || !selectedSubject" />
              <q-btn icon="file_upload" label="Importa CSV" outline color="primary" @click="showImportDialog = true" />
-             <q-btn icon="print" flat round color="grey-8" @click="printReport" />
+             <q-btn icon="print" flat round color="grey-8" aria-label="Stampa registro voti" @click="printReport">
+               <q-tooltip>Stampa Registro Voti</q-tooltip>
+             </q-btn>
         </div>
       </q-card-section>
       <q-separator />
@@ -63,7 +65,6 @@
                 style="min-width: 120px"
              />
              <q-toggle v-model="showRubric" label="Mostra Rubrica" left-label dense />
-             <q-toggle v-model="offlineMode" label="Offline Mode" color="amber" dense />
           </div>
       </q-card-section>
     </q-card>
@@ -109,14 +110,17 @@
             <q-card>
                 <q-card-section class="row items-center justify-between">
                     <div class="text-h6 text-primary text-weight-bold">Elenco Verifiche</div>
-                    <q-btn icon="refresh" flat round dense @click="fetchTests" />
+                    <q-btn icon="refresh" flat round dense aria-label="Aggiorna elenco verifiche" @click="fetchTests" />
                 </q-card-section>
                 <q-separator />
                 <q-card-section v-if="loadingTests" class="text-center q-pa-xl">
                     <q-spinner color="primary" size="40px" />
                 </q-card-section>
-                <q-card-section v-else-if="classTests.length === 0" class="text-center text-grey q-pa-xl">
-                    Nessuna verifica registrata per questa materia
+                <q-card-section v-else-if="classTests.length === 0" class="text-center q-pa-xl text-slate-600">
+                    <q-icon name="quiz" size="64px" color="grey-5" class="q-mb-md" />
+                    <div class="text-h6 text-weight-bold">Nessuna verifica trovata</div>
+                    <div class="text-caption text-grey-7 q-mb-md">Non ci sono ancora verifiche o prove registrate per questa materia.</div>
+                    <q-btn icon="add" label="Crea la Prima Verifica" color="primary" unelevated no-caps @click="openTestDialog" />
                 </q-card-section>
                 <q-list separator v-else>
                     <q-item v-for="test in classTests" :key="test.id" class="q-py-md">
@@ -169,7 +173,7 @@
 
     <!-- Import Dialog -->
     <q-dialog v-model="showImportDialog">
-        <q-card style="min-width: 400px">
+        <q-card style="width: min(450px, 95vw)">
             <q-card-section class="text-h6">Importa Voti (CSV)</q-card-section>
             <q-card-section>
                <q-file outlined v-model="importFile" label="Seleziona file CSV" accept=".csv" />
@@ -183,8 +187,8 @@
     </q-dialog>
 
     <!-- Create Class Test Dialog -->
-    <q-dialog v-model="showTestDialog" persistent max-width="80vw">
-      <q-card style="width: 1000px; max-width: 90vw;">
+    <q-dialog v-model="showTestDialog" persistent>
+      <q-card style="width: min(1000px, 95vw);">
         <q-card-section class="bg-primary text-white row items-center">
           <div class="text-h6">Crea Nuova Verifica</div>
           <q-space />

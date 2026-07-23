@@ -1,75 +1,131 @@
 <template>
-  <q-page class="q-pa-md bg-grey-1">
-    <div class="text-h4 q-mb-md">Pagamenti Scolastici</div>
+  <q-page class="q-pa-md" role="main">
+    <div class="row items-center justify-between q-mb-lg">
+      <div>
+        <h1 class="text-h4 text-weight-bold text-slate-800 q-my-none">
+          Pagamenti Scolastici & PagoPA
+        </h1>
+        <div class="text-subtitle1 text-slate-600 q-mt-xs">
+          Gestione delle quote scolastiche, contributi e ricevute di pagamento
+        </div>
+      </div>
+    </div>
 
     <div class="row q-col-gutter-lg">
-        <div class="col-12 col-md-8">
-            <q-card>
-                <q-tabs v-model="tab" dense class="text-grey" active-color="primary" indicator-color="primary" align="justify">
-                    <q-tab name="pending" label="Da Pagare" icon="payment" class="text-orange" />
-                    <q-tab name="history" label="Storico" icon="history" />
-                </q-tabs>
-                <q-separator />
+      <div class="col-12 col-md-8">
+        <q-card flat class="glass-card rounded-xl overflow-hidden">
+          <q-tabs v-model="tab" dense class="text-grey-7 bg-white" active-color="primary" indicator-color="primary" align="justify">
+            <q-tab name="pending" label="Da Pagare" icon="payment" class="text-amber-9" />
+            <q-tab name="history" label="Storico & Ricevute" icon="history" />
+          </q-tabs>
+          <q-separator />
 
-                <q-tab-panels v-model="tab" animated>
-                    <q-tab-panel name="pending">
-                         <q-list separator>
-                             <q-item v-for="item in pendingItems" :key="item.id">
-                                 <q-item-section avatar>
-                                     <q-icon name="receipt" color="orange" />
-                                 </q-item-section>
-                                 <q-item-section>
-                                     <q-item-label class="text-weight-bold">{{ item.title }}</q-item-label>
-                                     <q-item-label caption>Scadenza: {{ item.dueDate }}</q-item-label>
-                                 </q-item-section>
-                                 <q-item-section side>
-                                     <div class="text-h6 text-primary">€ {{ item.amount }}</div>
-                                     <q-btn label="Paga con PagoPA" color="primary" unelevated size="sm" class="q-mt-xs" @click="pay(item)" />
-                                 </q-item-section>
-                             </q-item>
-                             <q-item v-if="pendingItems.length === 0">
-                                 <q-item-section class="text-center text-green q-pa-lg">
-                                     <q-icon name="check_circle" size="48px" />
-                                     <div>Nessun pagamento in sospeso.</div>
-                                 </q-item-section>
-                             </q-item>
-                         </q-list>
-                    </q-tab-panel>
+          <q-tab-panels v-model="tab" animated>
+            <q-tab-panel name="pending" class="q-pa-none">
+              <q-list separator>
+                <q-item v-for="item in pendingItems" :key="item.id" class="q-py-md">
+                  <q-item-section avatar>
+                    <q-avatar color="amber-1" text-color="amber-9" icon="receipt" size="44px" />
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label class="text-weight-bold text-subtitle1 text-slate-800">{{ item.title }}</q-item-label>
+                    <q-item-label caption class="text-slate-600">Scadenza: {{ item.dueDate }}</q-item-label>
+                  </q-item-section>
+                  <q-item-section side>
+                    <div class="text-h6 text-weight-bold text-primary">€ {{ item.amount }}</div>
+                    <q-btn label="Paga con PagoPA" color="primary" unelevated no-caps size="sm" class="q-mt-xs rounded-lg" @click="pay(item)" />
+                  </q-item-section>
+                </q-item>
+                <q-item v-if="pendingItems.length === 0" class="text-center q-pa-xl">
+                  <q-item-section class="text-center text-positive">
+                    <q-icon name="check_circle" size="56px" class="q-mb-sm" />
+                    <div class="text-h6 text-weight-bold">Tutti i pagamenti sono in regola!</div>
+                    <div class="text-caption text-slate-500">Nessun contributo o tassa scolastica in sospeso.</div>
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-tab-panel>
 
-                    <q-tab-panel name="history">
-                         <q-list separator>
-                             <q-item v-for="item in historyItems" :key="item.id">
-                                 <q-item-section avatar>
-                                     <q-icon name="check_circle" color="green" />
-                                 </q-item-section>
-                                 <q-item-section>
-                                     <q-item-label>{{ item.title }}</q-item-label>
-                                     <q-item-label caption>Pagato il: {{ item.paidDate }}</q-item-label>
-                                 </q-item-section>
-                                 <q-item-section side>
-                                     <div class="text-weight-bold">€ {{ item.amount }}</div>
-                                     <q-btn flat round icon="download" color="grey" size="sm" />
-                                 </q-item-section>
-                             </q-item>
-                         </q-list>
-                    </q-tab-panel>
-                </q-tab-panels>
-            </q-card>
-        </div>
+            <q-tab-panel name="history" class="q-pa-none">
+              <q-list separator>
+                <q-item v-for="item in historyItems" :key="item.id" class="q-py-md">
+                  <q-item-section avatar>
+                    <q-avatar color="emerald-1" text-color="emerald-7" icon="verified" size="44px" />
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label class="text-weight-bold text-slate-800">{{ item.title }}</q-item-label>
+                    <q-item-label caption class="text-slate-600">Pagato il: {{ item.paidDate }}</q-item-label>
+                  </q-item-section>
+                  <q-item-section side>
+                    <div class="text-weight-bold text-subtitle1">€ {{ item.amount }}</div>
+                    <q-btn flat round icon="download" color="primary" size="sm" aria-label="Scarica ricevuta" @click="downloadReceipt(item)">
+                      <q-tooltip>Scarica Ricevuta PDF</q-tooltip>
+                    </q-btn>
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-tab-panel>
+          </q-tab-panels>
+        </q-card>
+      </div>
 
-        <div class="col-12 col-md-4">
-            <q-card class="bg-blue-1">
-                <q-card-section>
-                    <div class="text-subtitle1 text-weight-bold">Info Pagamenti</div>
-                    <p class="text-caption q-mt-sm">
-                        I pagamenti avvengono tramite la piattaforma PagoPA.
-                        Le ricevute sono scaricabili dalla sezione Storico ed hanno validità fiscale.
-                    </p>
-                    <q-btn flat label="Guida PagoPA" color="primary" class="full-width" />
-                </q-card-section>
-            </q-card>
-        </div>
+      <div class="col-12 col-md-4">
+        <q-card flat class="glass-card rounded-xl q-pa-md">
+          <q-card-section>
+            <div class="text-subtitle1 text-weight-bold text-slate-800 row items-center">
+              <q-icon name="info" color="primary" class="q-mr-xs" />
+              Info Pagamenti PagoPA
+            </div>
+            <p class="text-body2 text-slate-600 q-mt-sm">
+              I pagamenti avvengono in modo sicuro tramite la piattaforma nazionale PagoPA.
+              Le ricevute hanno piena validità fiscale e sono sempre scaricabili dalla sezione Storico.
+            </p>
+            <q-btn flat label="Guida PagoPA" color="primary" class="full-width rounded-lg q-mt-xs" no-caps />
+          </q-card-section>
+        </q-card>
+      </div>
     </div>
+
+    <!-- Post Payment Summary Dialog -->
+    <q-dialog v-model="showReceiptDialog">
+      <q-card style="width: min(480px, 95vw)" class="rounded-xl overflow-hidden">
+        <q-card-section class="bg-positive text-white text-center q-pa-lg">
+          <q-icon name="check_circle" size="64px" class="q-mb-xs" />
+          <div class="text-h5 text-weight-bold">Pagamento Completato!</div>
+          <div class="text-subtitle2 opacity-90">Operazione registrata con successo</div>
+        </q-card-section>
+
+        <q-card-section class="q-pa-md" v-if="completedPayment">
+          <q-list class="q-gutter-y-xs">
+            <q-item>
+              <q-item-section>
+                <q-item-label caption>Causale / Oggetto</q-item-label>
+                <q-item-label class="text-weight-bold text-subtitle1">{{ completedPayment.title }}</q-item-label>
+              </q-item-section>
+            </q-item>
+            <q-item>
+              <q-item-section>
+                <q-item-label caption>Importo Pagato</q-item-label>
+                <q-item-label class="text-weight-bold text-h6 text-primary">€ {{ completedPayment.amount }}</q-item-label>
+              </q-item-section>
+            </q-item>
+            <q-item>
+              <q-item-section>
+                <q-item-label caption>Data e Ora Transazione</q-item-label>
+                <q-item-label class="text-weight-medium">{{ completedPayment.paidDate }}</q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-card-section>
+
+        <q-separator />
+
+        <q-card-actions align="right" class="q-pa-md">
+          <q-btn flat label="Chiudi" v-close-popup no-caps />
+          <q-btn color="primary" icon="download" label="Scarica Ricevuta" unelevated no-caps class="rounded-lg" @click="downloadReceipt(completedPayment)" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
@@ -79,6 +135,8 @@ import { useQuasar } from 'quasar'
 
 const $q = useQuasar()
 const tab = ref('pending')
+const showReceiptDialog = ref(false)
+const completedPayment = ref(null)
 
 const pendingItems = ref([
     { id: 1, title: 'Assicurazione Scolastica Integrativa', dueDate: '30/01/2025', amount: '8.50' },
@@ -90,12 +148,26 @@ const historyItems = ref([
 ])
 
 const pay = (item) => {
-    $q.loading.show({ message: 'Connessione a PagoPA...' })
+    $q.loading.show({ message: 'Connessione al nodo PagoPA in corso...' })
     setTimeout(() => {
         $q.loading.hide()
-        $q.notify({ type: 'positive', message: 'Pagamento simulato con successo!' })
+        const paidItem = { ...item, paidDate: new Date().toLocaleString('it-IT') }
         pendingItems.value = pendingItems.value.filter(i => i.id !== item.id)
-        historyItems.value.unshift({ ...item, paidDate: 'Oggi' })
-    }, 2000)
+        historyItems.value.unshift(paidItem)
+        completedPayment.value = paidItem
+        showReceiptDialog.value = true
+    }, 1500)
+}
+
+const downloadReceipt = (item) => {
+    $q.notify({
+        type: 'positive',
+        message: `Ricevuta scaricata: ${item.title}.pdf`,
+        icon: 'download',
+        timeout: 2500
+    })
 }
 </script>
+
+<style scoped>
+</style>

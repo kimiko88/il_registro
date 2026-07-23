@@ -34,11 +34,16 @@
                <q-card-section>
                    <div class="text-h6 text-outfit text-weight-bold q-mb-md">Andamento Medie</div>
                    <div v-for="sub in subjectAverages" :key="sub.name" class="q-mb-sm">
-                       <div class="row justify-between text-caption">
+                       <div class="row justify-between items-center text-caption">
                            <span class="text-weight-medium">{{ sub.name }}</span>
-                           <span :class="{'text-green text-weight-bold': sub.avg>=6, 'text-red text-weight-bold': sub.avg<6 || sub.avg==='-'}">{{ sub.avg }}</span>
+                           <div class="row items-center">
+                               <q-icon :name="getTrendIcon(sub.trend)" :color="getTrendColor(sub.trend)" size="16px" class="q-mr-xs">
+                                   <q-tooltip>Trend: {{ sub.trend === 'up' ? 'In miglioramento' : (sub.trend === 'down' ? 'In calo' : 'Stabile') }}</q-tooltip>
+                               </q-icon>
+                               <span :class="{'text-positive text-weight-bold': sub.avg>=6, 'text-negative text-weight-bold': sub.avg<6 || sub.avg==='-'}">{{ sub.avg }}</span>
+                           </div>
                        </div>
-                       <q-linear-progress :value="sub.avg !== '-' ? sub.avg/10 : 0" :color="sub.avg>=6?'green':'red'" />
+                       <q-linear-progress :value="sub.avg !== '-' ? sub.avg/10 : 0" :color="sub.avg>=6?'positive':'negative'" class="rounded-borders" />
                    </div>
                </q-card-section>
             </q-card>
@@ -207,6 +212,30 @@ const fetchGrades = async () => {
     }
 }
 
+function getSubjectTrend(subjectName) {
+  const grades = currentGrades.value
+    .filter(g => g.subject === subjectName && g.value !== 'A')
+    .sort((a, b) => new Date(a.date) - new Date(b.date))
+  if (grades.length < 2) return 'flat'
+  const last = Number(grades[grades.length - 1].value)
+  const prev = Number(grades[grades.length - 2].value)
+  if (last > prev) return 'up'
+  if (last < prev) return 'down'
+  return 'flat'
+}
+
+function getTrendIcon(trend) {
+  if (trend === 'up') return 'trending_up'
+  if (trend === 'down') return 'trending_down'
+  return 'trending_flat'
+}
+
+function getTrendColor(trend) {
+  if (trend === 'up') return 'positive'
+  if (trend === 'down') return 'negative'
+  return 'grey-6'
+}
+
 const subjectAverages = computed(() => {
     const sums = {}
     const counts = {}
@@ -218,7 +247,8 @@ const subjectAverages = computed(() => {
     })
     return Object.keys(sums).map(sub => ({
         name: sub,
-        avg: counts[sub] > 0 ? (sums[sub] / counts[sub]).toFixed(1) : '-'
+        avg: counts[sub] > 0 ? (sums[sub] / counts[sub]).toFixed(1) : '-',
+        trend: getSubjectTrend(sub)
     }))
 })
 

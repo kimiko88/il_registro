@@ -175,7 +175,61 @@ body {
 .body--dark .active-menu-item {
     background: rgba(99, 102, 241, 0.25) !important;
     color: #a5b4fc !important;
-    border-left: 4px solid #818cf8 !important;
+    font-weight: 700 !important;
+    border-left: none !important;
+}
+
+.active-menu-item {
+    background: rgba(99, 102, 241, 0.12) !important;
+    color: #4f46e5 !important;
+    font-weight: 700 !important;
+    border-left: none !important;
+}
+
+.active-menu-item::after {
+    display: none !important;
+}
+
+/* Stat card refined hover */
+.stat-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Page Transitions */
+.page-fade-enter-active,
+.page-fade-leave-active {
+    transition: opacity 150ms ease;
+}
+
+.page-fade-enter-from,
+.page-fade-leave-to {
+    opacity: 0;
+}
+
+/* Global Print Styles */
+@media print {
+    .q-drawer,
+    .q-header,
+    .q-footer,
+    .q-page-sticky,
+    .q-breadcrumbs,
+    .no-print {
+        display: none !important;
+    }
+
+    .q-page-container {
+        padding: 0 !important;
+    }
+
+    body, .q-page {
+        background: #ffffff !important;
+        color: #000000 !important;
+    }
 }
 
 /* Utilities */
