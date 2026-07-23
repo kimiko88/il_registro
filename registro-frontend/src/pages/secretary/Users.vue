@@ -63,7 +63,14 @@
                         </div>
                     </div>
                     <q-input v-model="userForm.email" label="Email Istituzionale" outlined type="email" :rules="[val => !!val || 'Inserire un email valida']" />
-                    <q-input v-model="userForm.fiscal_code" label="Codice Fiscale" outlined maxlength="16" class="uppercase-input" />
+                    <q-input
+                      v-model="userForm.fiscal_code"
+                      label="Codice Fiscale"
+                      outlined
+                      maxlength="16"
+                      class="uppercase-input"
+                      :rules="[val => !val || /^[A-Z]{6}[0-9]{2}[A-Z][0-9]{2}[A-Z][0-9]{3}[A-Z]$/i.test(val) || 'Formato Codice Fiscale non valido']"
+                    />
                     
                     <div>
                         <div class="row q-col-gutter-lg">

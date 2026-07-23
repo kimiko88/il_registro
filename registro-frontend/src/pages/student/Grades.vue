@@ -113,7 +113,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { gradeService } from 'src/services/gradeService'
 import adminService from 'src/services/adminService'
@@ -177,7 +177,7 @@ const fetchMyGrades = async () => {
                        all.push({
                            id: g.id,
                            date: g.date.split('T')[0],
-                           subject: subjectsMap.value[g.subject_id] || g.subject_id,
+                           subject: subjectsMap.value[g.subject_id] || g.subject_name || (g.subject_id && !g.subject_id.includes('-') ? g.subject_id : 'Materia sconosciuta'),
                            evalType: mapEvalType(g.evaluation_type),
                            type: g.grade_type,
                            value: g.grade_value === -1 ? 'A' : g.grade_value,
@@ -277,19 +277,21 @@ const subjectsBelowSufficiency = computed(() => {
     })
 })
 
-const getGradeColor = (val) => {
-    if (val === 'A') return 'grey'
-    if (val >= 8) return 'green'
-    if (val >= 6) return 'orange'
-    return 'red'
-}
+const downloading = ref(false)
+
+watch(simSubject, () => {
+    simGrade.value = 6
+})
 
 const downloadReport = async () => {
+    downloading.value = true
     try {
         await gradeService.downloadReportCardPDF(filters.value.semester)
         $q.notify({ type: 'positive', message: 'Report PDF scaricato con successo' })
     } catch (e) {
         $q.notify({ type: 'negative', message: 'Errore nel download del report PDF' })
+    } finally {
+        downloading.value = false
     }
 }
 </script>

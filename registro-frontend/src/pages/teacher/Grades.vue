@@ -93,7 +93,11 @@
                             <q-item><q-item-section><q-item-label>8 - Buono</q-item-label><q-item-label caption>Comprensione buona, esposizione corretta.</q-item-label></q-item-section></q-item>
                             <q-item><q-item-section><q-item-label>7 - Discreto</q-item-label><q-item-label caption>Comprensione essenziale, qualche imprecisione.</q-item-label></q-item-section></q-item>
                             <q-item><q-item-section><q-item-label>6 - Sufficiente</q-item-label><q-item-label caption>Conoscenze basilari raggiunte.</q-item-label></q-item-section></q-item>
-                            <q-item><q-item-section><q-item-label>5 - Insufficiente</q-item-label><q-item-label caption>Conoscenze frammentarie, errori gravi.</q-item-label></q-item-section></q-item>
+                            <q-item><q-item-section><q-item-label>5 - Insufficiente</q-item-label><q-item-label caption>Conoscenze frammentarie, errori rilevanti.</q-item-label></q-item-section></q-item>
+                            <q-item><q-item-section><q-item-label>4 - Gravemente Insufficiente</q-item-label><q-item-label caption>Lacune diffuse, scarsa autonomia.</q-item-label></q-item-section></q-item>
+                            <q-item><q-item-section><q-item-label>3 - Molto Scarso</q-item-label><q-item-label caption>Gravi lacune concettuali non colmate.</q-item-label></q-item-section></q-item>
+                            <q-item><q-item-section><q-item-label>2 - Nullo / Non Svolto</q-item-label><q-item-label caption>Compito non eseguito o nullo.</q-item-label></q-item-section></q-item>
+                            <q-item><q-item-section><q-item-label>1 - Non Classificabile</q-item-label><q-item-label caption>Assenza totale di contenuti o consegna in bianco.</q-item-label></q-item-section></q-item>
                         </q-list>
                      </q-card>
                 </div>
@@ -815,8 +819,12 @@ function gradeToNumeric(gradeStr) {
 const getGradeColor = (val) => {
     if (val === undefined || val === null || val === '') return '';
     const numeric = gradeToNumeric(val);
-    if (numeric === -1) return 'bg-red-1';
-    return numeric < 6 ? 'bg-red-1' : 'bg-green-1';
+    if (numeric === -1) return 'bg-red-2 text-red-10';
+    if (numeric >= 8) return 'bg-green-2 text-green-10';
+    if (numeric >= 7) return 'bg-lime-2 text-lime-10';
+    if (numeric >= 6) return 'bg-yellow-2 text-yellow-10';
+    if (numeric >= 5) return 'bg-orange-2 text-orange-10';
+    return 'bg-red-2 text-red-10';
 };
 </script>
 
@@ -827,4 +835,14 @@ const getGradeColor = (val) => {
     z-index: 100;
 }
 .z-top { z-index: 1000; }
+
+@media print {
+  .sticky-header, .q-btn, .q-toggle, .q-tabs {
+    display: none !important;
+  }
+  .q-page {
+    background: white !important;
+    padding: 0 !important;
+  }
+}
 </style>

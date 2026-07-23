@@ -17,6 +17,7 @@
           bg-color="white"
           class="rounded-input"
           :rules="[val => !!val || 'L\'email è obbligatoria']"
+          @keyup.enter="() => passwordInputRef?.focus()"
         >
           <template v-slot:prepend>
             <q-icon name="email" color="primary" />
@@ -24,6 +25,7 @@
         </q-input>
 
         <q-input
+          ref="passwordInputRef"
           v-model="password"
           label="Password"
           :type="showPassword ? 'text' : 'password'"
@@ -85,6 +87,7 @@ import { useAuth } from '@/composables/useAuth'
 
 const email = ref('')
 const password = ref('')
+const passwordInputRef = ref(null)
 const showPassword = ref(false)
 const rememberMe = ref(false)
 const loading = ref(false)

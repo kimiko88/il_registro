@@ -404,10 +404,17 @@ const fetchData = async () => {
 }
 
 const markAllPresent = () => {
-    students.value.forEach(s => {
-        s.status = 'Present'
-        s.entry_time = ''
-        s.exit_time = ''
+    $q.dialog({
+        title: 'Conferma Operazione',
+        message: 'Segnare tutti gli studenti come PRESENTI per l\'ora selezionata? Eventuali assenze già digitate verranno sovrascritte.',
+        cancel: true,
+        persistent: true
+    }).onOk(() => {
+        students.value.forEach(s => {
+            s.status = 'Present'
+            s.entry_time = ''
+            s.exit_time = ''
+        })
     })
 }
 
@@ -426,6 +433,14 @@ const formatLateLabel = (student) => {
 }
 
 const saveAttendance = async () => {
+    const unmarked = students.value.filter(s => !s.status)
+    if (unmarked.length > 0) {
+        $q.notify({
+            type: 'warning',
+            message: `Ci sono ${unmarked.length} alunni senza presenza o assenza assegnata.`
+        })
+        return
+    }
     saving.value = true
     try {
         const classId = typeof selectedClass.value === 'object' ? selectedClass.value?.id : selectedClass.value
