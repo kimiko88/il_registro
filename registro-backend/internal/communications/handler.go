@@ -144,6 +144,10 @@ func (h *Handler) Sign(c *gin.Context) {
 	}
 	ipAddress := c.ClientIP()
 	if err := h.service.SignMessageWithIP(c.Request.Context(), id, uid, ipAddress); err != nil {
+		if errors.Is(err, ErrNotFound) || err.Error() == "communication not found" {
+			c.JSON(http.StatusNotFound, gin.H{"error": "communication not found"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -342,7 +346,8 @@ func (h *Handler) UploadAttachment(c *gin.Context) {
 			return
 		}
 	} else {
-		publicURL = fmt.Sprintf("http://localhost:8080/uploads/communications/%s", filepath.Base(header.Filename))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "storage provider not configured"})
+		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"attachment_url": publicURL})

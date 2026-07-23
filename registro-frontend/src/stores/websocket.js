@@ -27,10 +27,19 @@ export const useWebSocketStore = defineStore('websocket', () => {
             baseUrl = rawUrl.endsWith('/') ? `${rawUrl}api/v1` : `${rawUrl}/api/v1`
         }
 
-        // Pass token in query string (or via subprotocols if supported by WS server)
-        const wsUrl = `${baseUrl.replace('http', 'ws')}/ws?token=${token}`
+        let wsUrl = ''
+        if (baseUrl.startsWith('http://') || baseUrl.startsWith('https://')) {
+            wsUrl = `${baseUrl.replace(/^http/, 'ws')}/ws?token=${token}`
+        } else if (baseUrl.startsWith('/')) {
+            const host = window.location.host
+            const wsScheme = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+            wsUrl = `${wsScheme}//${host}${baseUrl}/ws?token=${token}`
+        } else {
+            const wsScheme = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+            wsUrl = `${wsScheme}//${baseUrl}/ws?token=${token}`
+        }
 
-        socket.value = new WebSocket(wsUrl)
+        socket.value = new WebSocket(wsUrl, ['access_token', token])
 
         socket.value.onopen = () => {
             console.log('WebSocket: Connected')

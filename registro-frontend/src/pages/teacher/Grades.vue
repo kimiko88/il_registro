@@ -641,14 +641,29 @@ const printReport = () => {
     window.print();
 };
 
-const processImport = () => {
+const processImport = async () => {
+    if (!importFile.value) {
+        $q.notify({ type: 'warning', message: 'Seleziona un file da importare' });
+        return;
+    }
     $q.loading.show();
-    setTimeout(() => {
-        $q.loading.hide();
+    try {
+        const formData = new FormData();
+        formData.append('file', importFile.value);
+        if (selectedClassId.value) formData.append('class_id', selectedClassId.value);
+        if (selectedSubject.value) formData.append('subject_id', selectedSubject.value);
+
+        await gradeService.bulkImport(formData);
         showImportDialog.value = false;
-        $q.notify({type: 'positive', message: 'Voti importati con successo (simulato)'});
+        importFile.value = null;
+        $q.notify({ type: 'positive', message: 'Voti importati con successo' });
         refreshGrades();
-    }, 1500);
+    } catch (err) {
+        console.error('Error importing grades:', err);
+        $q.notify({ type: 'negative', message: 'Errore durante l\'importazione dei voti' });
+    } finally {
+        $q.loading.hide();
+    }
 };
 
 onMounted(async () => {

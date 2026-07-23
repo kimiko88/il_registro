@@ -40,6 +40,7 @@ import (
 	"registro-backend/internal/reports"
 	"registro-backend/internal/rubrics"
 	"registro-backend/internal/scheduling"
+	"registro-backend/internal/schoolcalendar"
 	"registro-backend/internal/schools"
 	"registro-backend/internal/schoolsettings"
 	"registro-backend/internal/scrutiny"
@@ -113,6 +114,7 @@ func main() {
 	notifRepo := notifications.NewRepository(database)
 	tripsRepo := trips.NewRepository(database)
 	rubricsRepo := rubrics.NewRepository(database)
+	schoolCalendarRepo := schoolcalendar.NewRepository(database)
 
 	authMiddleware := auth.NewMiddleware(tokenManager, usersRepo)
 
@@ -142,6 +144,7 @@ func main() {
 	notifSvc := notifications.NewService(notifRepo)
 	tripsSvc := trips.NewService(tripsRepo)
 	rubricsSvc := rubrics.NewService(rubricsRepo)
+	schoolCalendarSvc := schoolcalendar.NewService(schoolCalendarRepo)
 
 	// 7. Setup Handlers
 	authH := auth.NewHandler(authSvc)
@@ -164,6 +167,7 @@ func main() {
 	notifH := notifications.NewHandler(notifSvc)
 	tripsH := trips.NewHandler(tripsSvc)
 	rubricsH := rubrics.NewHandler(rubricsSvc)
+	schoolCalendarH := schoolcalendar.NewHandler(schoolCalendarSvc)
 
 	wsHandler := ws.NewHandler(wsHub)
 
@@ -172,6 +176,7 @@ func main() {
 
 	// 8. Setup Router
 	r := gin.New()
+	_ = r.SetTrustedProxies([]string{"127.0.0.1", "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"})
 	r.Use(gin.Recovery())
 	r.Use(middleware.LoggerMiddleware())
 	r.Use(middleware.CORSMiddleware())
@@ -235,6 +240,7 @@ func main() {
 			tripsH.RegisterRoutes(protected)
 			notesH.RegisterRoutes(protected)
 			rubricsH.RegisterRoutes(protected)
+			schoolCalendarH.RegisterRoutes(protected)
 
 			pctoH := pcto.NewHandler(pctoSvc)
 			pctoH.RegisterRoutes(protected)

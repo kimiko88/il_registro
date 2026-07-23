@@ -162,7 +162,11 @@ func (h *Handler) GetLessonByID(c *gin.Context) {
 	id := c.Param("id")
 	res, err := h.service.GetLessonByID(id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		if strings.Contains(err.Error(), "not found") || err.Error() == "sql: no rows in result set" {
+			c.JSON(http.StatusNotFound, gin.H{"error": "lesson not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, res)
@@ -264,6 +268,12 @@ func (h *Handler) GetMyDiary(c *gin.Context) {
 	}
 	from := c.Query("from")
 	to := c.Query("to")
+
+	if from == "" && to == "" {
+		now := time.Now()
+		from = now.AddDate(0, 0, -15).Format("2006-01-02")
+		to = now.AddDate(0, 0, 15).Format("2006-01-02")
+	}
 
 	var fromTime, toTime time.Time
 	if from != "" {

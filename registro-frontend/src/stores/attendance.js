@@ -40,21 +40,21 @@ export const useAttendanceStore = defineStore('attendance', {
             }
         },
 
-        async submitAttendance(classId, date, records, hour = 1, subjectId = '00000000-0000-0000-0000-000000000000') {
+        async submitAttendance(classId, date, records, hour = 1, subjectId = null) {
             this.loading = true;
             try {
                 const payload = {
                     class_id: classId,
                     date: date,
                     hour: hour,
-                    subject_id: subjectId,
+                    subject_id: subjectId || null,
                     statuses: records.map(r => ({
                         student_id: r.studentId,
                         status: r.status,
                         entry_time: r.status === 'Late' ? r.time : null,
                         exit_time: r.status === 'LeftEarly' ? r.time : null,
                         hour: hour,
-                        subject_id: subjectId
+                        subject_id: subjectId || null
                     }))
                 };
                 const response = await api.post('/attendance/mark-bulk', payload);

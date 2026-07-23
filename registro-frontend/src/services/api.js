@@ -20,7 +20,7 @@ const api = axios.create({
 
 api.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -35,7 +35,14 @@ api.interceptors.response.use(
         // Handle 401 Unauthorized globally, but ignore for login requests
         if (error.response && error.response.status === 401 && !error.config.url.includes('/auth/login')) {
             localStorage.removeItem('token');
-            window.location.href = '/login';
+            localStorage.removeItem('user');
+            localStorage.removeItem('refreshToken');
+            sessionStorage.removeItem('token');
+            sessionStorage.removeItem('user');
+            sessionStorage.removeItem('refreshToken');
+            if (window.location.pathname !== '/login') {
+                window.location.href = '/login';
+            }
         }
         return Promise.reject(error);
     }

@@ -41,6 +41,10 @@ func (h *Handler) ExportPagellaPDF(c *gin.Context) {
 	semester, _ := strconv.Atoi(c.DefaultQuery("semester", "1"))
 	actorID := c.GetString("user_id")
 	actorRole := c.GetString("role")
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 
 	pdfBytes, err := h.service.ExportPagellaPDF(c.Request.Context(), actorID, actorRole, classID, studentID, semester)
 	if err != nil {
@@ -165,6 +169,17 @@ func (h *Handler) Close(c *gin.Context) {
 }
 
 func (h *Handler) GetOverview(c *gin.Context) {
+	actorID := c.GetString("user_id")
+	actorRole := c.GetString("role")
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: insufficient permissions"})
+		return
+	}
+
 	overview, err := h.service.GetOverview(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -174,6 +189,17 @@ func (h *Handler) GetOverview(c *gin.Context) {
 }
 
 func (h *Handler) GetClassReport(c *gin.Context) {
+	actorID := c.GetString("user_id")
+	actorRole := c.GetString("role")
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "secretary" && actorRole != "teacher" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: insufficient permissions"})
+		return
+	}
+
 	classID := c.Param("classId")
 	report, err := h.service.GetClassReport(c.Request.Context(), classID)
 	if err != nil {
@@ -184,6 +210,17 @@ func (h *Handler) GetClassReport(c *gin.Context) {
 }
 
 func (h *Handler) FinalizeClass(c *gin.Context) {
+	actorID := c.GetString("user_id")
+	actorRole := c.GetString("role")
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: insufficient permissions"})
+		return
+	}
+
 	classID := c.Param("classId")
 	if err := h.service.FinalizeClass(c.Request.Context(), classID); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -193,6 +230,17 @@ func (h *Handler) FinalizeClass(c *gin.Context) {
 }
 
 func (h *Handler) ExportAll(c *gin.Context) {
+	actorID := c.GetString("user_id")
+	actorRole := c.GetString("role")
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: insufficient permissions"})
+		return
+	}
+
 	data, err := h.service.ExportAll(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

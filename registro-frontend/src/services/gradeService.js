@@ -36,5 +36,10 @@ export const gradeService = {
     },
     async getUpcomingTestsForClass(classId) {
         return api.get(`/grades/tests/class/${classId}`)
+    },
+    async bulkImport(formData) {
+        return api.post('/grades/bulk-import', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        })
     }
 }

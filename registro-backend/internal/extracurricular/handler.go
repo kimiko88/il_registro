@@ -52,6 +52,10 @@ func (h *Handler) CreateCourse(c *gin.Context) {
 func (h *Handler) ListCourses(c *gin.Context) {
 	schoolID := c.GetString("school_id")
 	studentID := c.GetString("user_id")
+	if schoolID == "" || studentID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 
 	courses, err := h.service.ListCourses(c.Request.Context(), schoolID, studentID)
 	if err != nil {
@@ -64,6 +68,10 @@ func (h *Handler) ListCourses(c *gin.Context) {
 func (h *Handler) EnrollStudent(c *gin.Context) {
 	courseID := c.Param("id")
 	studentID := c.GetString("user_id")
+	if studentID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 
 	if err := h.service.EnrollStudent(c.Request.Context(), courseID, studentID); err != nil {
 		if err == ErrCourseFull {
@@ -100,6 +108,14 @@ func (h *Handler) ListEnrollments(c *gin.Context) {
 func (h *Handler) MarkAttendance(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "teacher" && role != "admin" && role != "superadmin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
 
 	var req MarkAttendanceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

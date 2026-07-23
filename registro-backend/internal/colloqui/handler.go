@@ -2,6 +2,7 @@ package colloqui
 
 import (
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -20,16 +21,20 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	{
 		g.POST("/slots", h.CreateSlot)
 		g.GET("/slots", h.ListSlots)
+		g.GET("/available-slots", h.ListSlots)
+		g.GET("/availability/:teacherID", h.GetAvailabilityByTeacher)
 		g.PATCH("/slots/:id", h.PatchSlot)
 		g.DELETE("/slots/:id", h.CancelSlot)
 
 		g.POST("/assemblies", h.CreateAssembly)
 
 		g.POST("/bookings", h.CreateBooking)
+		g.POST("/book", h.CreateBooking)
 		g.GET("/my-bookings", h.ListMyBookings)
 		g.GET("/bookings/:id", h.GetBookingByID)
 		g.GET("/slots/:id/bookings", h.ListSlotBookings)
 		g.PUT("/bookings/:id/status", h.UpdateBookingStatus)
+		g.PATCH("/bookings/:id/cancel", h.CancelBookingAlias)
 	}
 }
 
@@ -86,6 +91,11 @@ func (h *Handler) ListSlots(c *gin.Context) {
 		}
 	}
 
+	if !fromTime.IsZero() && !toTime.IsZero() && toTime.Sub(fromTime) > 365*24*time.Hour {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "range di date troppo ampio (massimo 1 anno)"})
+		return
+	}
+
 	slots, err := h.service.ListSlots(c.Request.Context(), schoolID, teacherID, fromTime, toTime, available)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -96,6 +106,10 @@ func (h *Handler) ListSlots(c *gin.Context) {
 
 func (h *Handler) CancelSlot(c *gin.Context) {
 	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	role := c.GetString("role")
 	slotID := c.Param("id")
 
@@ -155,6 +169,10 @@ func (h *Handler) ListMyBookings(c *gin.Context) {
 
 func (h *Handler) ListSlotBookings(c *gin.Context) {
 	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	role := c.GetString("role")
 	slotID := c.Param("id")
 
@@ -172,6 +190,10 @@ func (h *Handler) ListSlotBookings(c *gin.Context) {
 
 func (h *Handler) UpdateBookingStatus(c *gin.Context) {
 	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	role := c.GetString("role")
 	bookingID := c.Param("id")
 
@@ -195,6 +217,10 @@ func (h *Handler) UpdateBookingStatus(c *gin.Context) {
 
 func (h *Handler) PatchSlot(c *gin.Context) {
 	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	role := c.GetString("role")
 	slotID := c.Param("id")
 
@@ -233,7 +259,11 @@ func (h *Handler) GetBookingByID(c *gin.Context) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		if strings.Contains(err.Error(), "not found") || err.Error() == "sql: no rows in result set" {
+			c.JSON(http.StatusNotFound, gin.H{"error": "booking not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, booking)
@@ -262,4 +292,46 @@ func (h *Handler) CreateAssembly(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, slot)
+}
+
+func (h *Handler) GetAvailabilityByTeacher(c *gin.Context) {
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	schoolID := c.GetString("school_id")
+	teacherID := c.Param("teacherID")
+	if teacherID == "" {
+		teacherID = c.Query("teacher_id")
+	}
+
+	var fromTime, toTime time.Time
+	slots, err := h.service.ListSlots(c.Request.Context(), schoolID, teacherID, fromTime, toTime, true)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, slots)
+}
+
+func (h *Handler) CancelBookingAlias(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	bookingID := c.Param("id")
+
+	req := UpdateBookingStatusRequest{
+		Status: StatusCancelled,
+	}
+
+	if err := h.service.UpdateBookingStatus(c.Request.Context(), userID, role, bookingID, req); err != nil {
+		if err == ErrUnauthorized {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "booking status updated"})
 }

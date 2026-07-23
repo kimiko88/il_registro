@@ -23,7 +23,13 @@ func NewHandler(service *Service) *Handler {
 // GetDashboardStats returns dashboard statistics
 // GET /api/v1/admin/dashboard/stats
 func (h *Handler) GetDashboardStats(c *gin.Context) {
+	userID := c.GetString("user_id")
 	role, _ := auth.GetUserRole(c)
+	if userID == "" && role == "" {
+		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "unauthorized"})
+		return
+	}
+
 	isSuperAdmin := role == "superadmin"
 
 	var schoolID *string
@@ -222,6 +228,12 @@ func (h *Handler) ListAdminUsers(c *gin.Context) {
 			pageSize = 20
 		}
 	}
+	if pageSize > 100 {
+		pageSize = 100
+	}
+	if pageSize < 1 {
+		pageSize = 1
+	}
 
 	// Get school filter from middleware/role context
 	filterSchoolID := GetFilteredSchoolID(c)
@@ -368,6 +380,12 @@ func (h *Handler) GetAdminActivity(c *gin.Context) {
 		if _, err := fmt.Sscanf(l, "%d", &limit); err != nil {
 			limit = 50
 		}
+	}
+	if limit > 200 {
+		limit = 200
+	}
+	if limit < 1 {
+		limit = 1
 	}
 
 	// Ownership check: verify caller can access the target admin's school.

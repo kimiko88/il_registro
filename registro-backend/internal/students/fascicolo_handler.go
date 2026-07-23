@@ -60,40 +60,28 @@ func (h *FascicoloHandler) GetFascicolo(c *gin.Context) {
 	}
 
 	var wg sync.WaitGroup
-
 	wg.Add(6)
 
-	// 1. Parallel fetch Voti
 	go func() {
 		defer wg.Done()
 		// Voti section populated
 	}()
-
-	// 2. Parallel fetch Presenze
 	go func() {
 		defer wg.Done()
 		// Presenze section populated
 	}()
-
-	// 3. Parallel fetch Note
 	go func() {
 		defer wg.Done()
 		// Note section populated
 	}()
-
-	// 4. Parallel fetch PCTO
 	go func() {
 		defer wg.Done()
 		// PCTO section populated
 	}()
-
-	// 5. Parallel fetch Compiti
 	go func() {
 		defer wg.Done()
 		// Compiti section populated
 	}()
-
-	// 6. Parallel fetch Documenti
 	go func() {
 		defer wg.Done()
 		// Documenti section populated

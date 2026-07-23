@@ -20,7 +20,6 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	{
 		ag.POST("", h.Create)
 		ag.GET("", h.GetCalendar)
-		ag.GET("/calendar", h.GetCalendar)
 		ag.GET("/class/:classID", h.GetClassEvents)
 		ag.GET("/:id", h.GetByID)
 		ag.PUT("/:id", h.Update)
@@ -93,6 +92,11 @@ func (h *Handler) GetCalendar(c *gin.Context) {
 		}
 	}
 
+	if !fromTime.IsZero() && !toTime.IsZero() && toTime.Sub(fromTime) > 365*24*time.Hour {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "range di date troppo ampio (massimo 1 anno consentito)"})
+		return
+	}
+
 	filter := CalendarFilter{
 		ClassID:   classID,
 		SubjectID: subjectID,
@@ -127,6 +131,10 @@ func (h *Handler) GetByID(c *gin.Context) {
 
 func (h *Handler) Update(c *gin.Context) {
 	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	role := c.GetString("role")
 	id := c.Param("id")
 
@@ -150,6 +158,10 @@ func (h *Handler) Update(c *gin.Context) {
 
 func (h *Handler) Delete(c *gin.Context) {
 	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	role := c.GetString("role")
 	id := c.Param("id")
 

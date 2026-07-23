@@ -30,6 +30,15 @@ func (h *Handler) ExportGradesExcel(c *gin.Context) {
 	actorID := c.GetString("user_id")
 	actorRole := c.GetString("role")
 
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" && actorRole != "teacher" && actorRole != "principal" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
 	if classID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "class_id parameter required"})
 		return
@@ -43,6 +52,6 @@ func (h *Handler) ExportGradesExcel(c *gin.Context) {
 
 	filename := fmt.Sprintf("matrice_voti_%s_q%d_%s.xlsx", classID, semester, time.Now().Format("20060102_150405"))
 	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-	c.Header("Content-Disposition", "attachment; filename="+filename)
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
 	c.Data(http.StatusOK, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", excelBytes)
 }

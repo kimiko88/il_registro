@@ -153,14 +153,18 @@ func (r *PostgresRepository) List(ctx context.Context, filter NoteFilter) ([]Stu
 		}
 	}
 	if filter.ClassID != "" {
-		query += fmt.Sprintf(" AND n.class_id = $%d", argIdx)
-		args = append(args, filter.ClassID)
-		argIdx++
+		if _, err := uuid.Parse(filter.ClassID); err == nil {
+			query += fmt.Sprintf(" AND n.class_id = $%d::uuid", argIdx)
+			args = append(args, filter.ClassID)
+			argIdx++
+		}
 	}
 	if filter.TeacherID != "" {
-		query += fmt.Sprintf(" AND n.teacher_id = $%d", argIdx)
-		args = append(args, filter.TeacherID)
-		argIdx++
+		if _, err := uuid.Parse(filter.TeacherID); err == nil {
+			query += fmt.Sprintf(" AND n.teacher_id = $%d::uuid", argIdx)
+			args = append(args, filter.TeacherID)
+			argIdx++
+		}
 	}
 	if filter.Type != "" {
 		query += fmt.Sprintf(" AND n.type = $%d", argIdx)
@@ -182,9 +186,13 @@ func (r *PostgresRepository) List(ctx context.Context, filter NoteFilter) ([]Stu
 	if filter.ActorRole == "student" || filter.ActorRole == "parent" {
 		query += " AND COALESCE(n.is_approved, true) = true AND COALESCE(n.is_reserved, false) = false"
 	} else if filter.ActorRole == "teacher" && !filter.IsCoordinator {
-		query += fmt.Sprintf(" AND (COALESCE(n.is_reserved, false) = false OR n.teacher_id = $%d)", argIdx)
-		args = append(args, filter.ActorID)
-		argIdx++
+		if _, err := uuid.Parse(filter.ActorID); err == nil {
+			query += fmt.Sprintf(" AND (COALESCE(n.is_reserved, false) = false OR n.teacher_id = $%d::uuid)", argIdx)
+			args = append(args, filter.ActorID)
+			argIdx++
+		} else {
+			query += " AND COALESCE(n.is_reserved, false) = false"
+		}
 	}
 
 	query += " ORDER BY n.date DESC, n.created_at DESC"

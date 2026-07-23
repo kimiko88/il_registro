@@ -229,11 +229,7 @@ func (h *Handler) RequestPasswordReset(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.RequestPasswordReset(c.Request.Context(), req.Email); err != nil {
-		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
-		return
-	}
-
+	_ = h.service.RequestPasswordReset(c.Request.Context(), req.Email)
 	c.JSON(http.StatusOK, MessageResponse{Message: "password reset email sent"})
 }
 

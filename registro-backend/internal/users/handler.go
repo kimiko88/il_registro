@@ -43,6 +43,11 @@ func getActorID(c *gin.Context) string {
 
 // 1. POST /api/v1/users
 func (h *Handler) Create(c *gin.Context) {
+	if getActorID(c) == "" || getActorRole(c) == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
 	var req CreateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -66,8 +71,19 @@ func (h *Handler) Create(c *gin.Context) {
 
 // 2. GET /api/v1/users
 func (h *Handler) List(c *gin.Context) {
+	if getActorID(c) == "" || getActorRole(c) == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
+	if pageSize > 100 {
+		pageSize = 100
+	}
+	if pageSize < 1 {
+		pageSize = 20
+	}
 
 	isActiveStr := c.Query("is_active")
 	var isActive *bool

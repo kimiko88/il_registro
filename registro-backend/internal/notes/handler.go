@@ -48,6 +48,10 @@ func (h *Handler) Create(c *gin.Context) {
 func (h *Handler) Approve(c *gin.Context) {
 	actorID := c.GetString("user_id")
 	actorRole := c.GetString("role")
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	noteID := c.Param("id")
 
 	if err := h.service.ApproveNote(c.Request.Context(), actorID, actorRole, noteID); err != nil {
@@ -86,6 +90,11 @@ func (h *Handler) Update(c *gin.Context) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
+		errStr := err.Error()
+		if strings.Contains(errStr, "not found") || errStr == "sql: no rows in result set" {
+			c.JSON(http.StatusNotFound, gin.H{"error": "note not found"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -103,6 +112,11 @@ func (h *Handler) Delete(c *gin.Context) {
 	if err := h.service.DeleteNote(c.Request.Context(), userID, noteID); err != nil {
 		if errors.Is(err, ErrUnauthorizedDelete) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		errStr := err.Error()
+		if strings.Contains(errStr, "not found") || errStr == "sql: no rows in result set" {
+			c.JSON(http.StatusNotFound, gin.H{"error": "note not found"})
 			return
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -178,6 +192,10 @@ func (h *Handler) GetByStudent(c *gin.Context) {
 
 	notes, err := h.service.ListNotes(c.Request.Context(), filter)
 	if err != nil {
+		if errors.Is(err, ErrUnauthorizedParent) || errors.Is(err, ErrNotGuardian) || strings.HasPrefix(err.Error(), "unauthorized") || strings.Contains(err.Error(), "not a guardian") || strings.Contains(err.Error(), "guardian") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

@@ -3,7 +3,7 @@ export default [
         path: '/',
         component: () => import('@/layouts/MainLayout.vue'),
         children: [
-            { path: '', component: () => import('@/pages/Dashboard.vue') },
+            { path: '', component: () => import('@/pages/Dashboard.vue'), meta: { roles: ['superadmin', 'admin', 'secretary', 'teacher', 'student', 'parent'] } },
 
             // Admin Routes (SuperAdmin + Admin)
             {
@@ -80,14 +80,13 @@ export default [
             { path: 'secretary/reports', component: () => import('@/pages/secretary/Reports.vue'), meta: { role: 'secretary' } },
             { path: 'secretary/pcto', component: () => import('@/pages/secretary/PCTO.vue'), meta: { role: 'secretary' } },
             { path: 'secretary/textbooks', component: () => import('@/pages/secretary/Textbooks.vue'), meta: { role: 'secretary' } },
-            { path: 'secretary/scrutiny', component: () => import('@/pages/teacher/Scrutiny.vue'), meta: { role: 'secretary' } },
             { path: 'secretary/settings', component: () => import('@/pages/secretary/Settings.vue'), meta: { role: 'secretary' } },
             { path: 'secretary/classes', component: () => import('@/pages/secretary/Classes.vue'), meta: { role: 'secretary' } },
             { path: 'secretary/scrutiny', component: () => import('@/pages/secretary/Scrutiny.vue'), meta: { role: 'secretary' } },
             { path: 'secretary/groups', component: () => import('@/pages/teacher/Groups.vue'), meta: { role: 'secretary' } },
             { path: 'secretary/meetings', component: () => import('@/pages/secretary/Meetings.vue'), meta: { role: 'secretary' } },
             { path: 'secretary/certificates', component: () => import('@/pages/secretary/Certificates.vue'), meta: { roles: ['secretary', 'admin', 'superadmin'] } },
-            { path: 'secretary/audit-log', component: () => import('@/pages/secretary/AuditLog.vue'), meta: { roles: ['admin', 'superadmin'] } },
+            { path: 'secretary/audit-log', component: () => import('@/pages/secretary/AuditLog.vue'), meta: { roles: ['secretary', 'admin', 'superadmin'] } },
             { path: 'secretary/students/:id/fascicolo', component: () => import('@/pages/secretary/FascicoloStudente.vue'), meta: { role: 'secretary' } },
 
             // Teacher Routes
@@ -145,7 +144,7 @@ export default [
             { path: 'parent/documents', component: () => import('@/pages/parent/Documents.vue'), meta: { role: 'parent' } },
             { path: 'parent/payments', component: () => import('@/pages/parent/Payments.vue'), meta: { role: 'parent' } },
             { path: 'parent/meetings', component: () => import('@/pages/parent/Meetings.vue'), meta: { role: 'parent' } },
-            { path: 'support', component: () => import('@/pages/Support.vue') }
+            { path: 'support', component: () => import('@/pages/Support.vue'), meta: { roles: ['superadmin', 'admin', 'secretary', 'teacher', 'student', 'parent'] } }
         ]
     },
     {

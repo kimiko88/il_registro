@@ -15,7 +15,7 @@ const (
 	writeWait      = 10 * time.Second
 	pongWait       = 60 * time.Second
 	pingPeriod     = (pongWait * 9) / 10
-	maxMessageSize = 512
+	maxMessageSize = 8192
 )
 
 // allowedOrigins returns the set of permitted WebSocket origins from the

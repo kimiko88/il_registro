@@ -50,6 +50,17 @@ func (h *Handler) ListTenants(c *gin.Context) {
 }
 
 func (h *Handler) GetTenant(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "superadmin" && role != "admin" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
 	id := c.Param("id")
 	tenant, err := h.service.GetTenant(c.Request.Context(), id)
 	if err != nil {

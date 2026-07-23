@@ -51,8 +51,9 @@ func (r *repository) FindByID(ctx context.Context, id string) (*Certificate, err
 		       c.issued_at, c.academic_year, c.notes, c.pdf_url, c.protocol_no, c.is_deleted
 		FROM certificates c
 		LEFT JOIN users u ON c.student_id = u.id
+		LEFT JOIN students s ON s.user_id = u.id
 		LEFT JOIN users ib ON c.issued_by = ib.id
-		LEFT JOIN classes cl ON u.class_id = cl.id
+		LEFT JOIN classes cl ON s.class_id = cl.id
 		WHERE c.id = $1 AND c.is_deleted = false
 	`
 	row := r.db.QueryRowContext(ctx, query, id)
@@ -75,8 +76,9 @@ func (r *repository) List(ctx context.Context, schoolID, studentID string, certT
 		       c.issued_at, c.academic_year, c.notes, c.pdf_url, c.protocol_no, c.is_deleted
 		FROM certificates c
 		LEFT JOIN users u ON c.student_id = u.id
+		LEFT JOIN students s ON s.user_id = u.id
 		LEFT JOIN users ib ON c.issued_by = ib.id
-		LEFT JOIN classes cl ON u.class_id = cl.id
+		LEFT JOIN classes cl ON s.class_id = cl.id
 		WHERE c.is_deleted = false
 	`
 	args := []interface{}{}

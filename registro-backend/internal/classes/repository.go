@@ -202,15 +202,19 @@ func (r *PostgresRepository) Delete(ctx context.Context, id string) error {
 }
 
 func (r *PostgresRepository) GetClassGuardians(ctx context.Context, classID string) ([]GuardianInfo, error) {
+	if _, err := uuid.Parse(classID); err != nil {
+		return []GuardianInfo{}, nil
+	}
 	query := `
-		SELECT u.id, u.first_name, u.last_name, u.email, COALESCE(u.phone, ''),
-		       s.id, s.first_name || ' ' || s.last_name AS student_name
-		FROM users s
-		JOIN student_parents sp ON sp.student_id = s.id
-		JOIN parents p ON p.id = sp.parent_id
+		SELECT u.id, u.first_name, u.last_name, u.email, COALESCE(u.phone_number, ''),
+		       su.id, su.first_name || ' ' || su.last_name AS student_name
+		FROM students st
+		JOIN users su ON su.id = st.user_id
+		JOIN student_parents sp ON (sp.student_id = st.id OR sp.student_id = su.id)
+		JOIN parents p ON (p.id = sp.parent_id OR p.user_id = sp.parent_id)
 		JOIN users u ON u.id = p.user_id
-		WHERE s.class_id = $1
-		ORDER BY s.last_name, s.first_name, u.last_name
+		WHERE st.class_id = $1::uuid
+		ORDER BY su.last_name, su.first_name, u.last_name
 	`
 	rows, err := r.db.QueryContext(ctx, query, classID)
 	if err != nil {

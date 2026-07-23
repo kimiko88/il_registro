@@ -79,6 +79,17 @@ func (h *Handler) Generate(c *gin.Context) {
 }
 
 func (h *Handler) DownloadPDF(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "admin" && role != "secretary" && role != "superadmin" && role != "student" && role != "parent" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
 	id := c.Param("id")
 	pdfBytes, err := h.service.GeneratePDFBytes(c.Request.Context(), id)
 	if err != nil {
@@ -104,5 +115,5 @@ func (h *Handler) Delete(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "certificate cancelled"})
+	c.Status(http.StatusNoContent)
 }

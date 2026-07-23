@@ -2,6 +2,7 @@ package timetables
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,7 +18,8 @@ func NewHandler(repo Repository) *Handler {
 func (h *Handler) GetByClass(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
-	if userID == "" || role == "" {
+	schoolID := c.GetString("school_id")
+	if userID == "" || role == "" || schoolID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
@@ -79,7 +81,11 @@ func (h *Handler) GetMySchedule(c *gin.Context) {
 
 	classID, err := h.repo.GetStudentClassID(c.Request.Context(), uid)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "class not found for student"})
+		if strings.Contains(err.Error(), "not found") || err.Error() == "sql: no rows in result set" {
+			c.JSON(http.StatusNotFound, gin.H{"error": "class not found for student"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 

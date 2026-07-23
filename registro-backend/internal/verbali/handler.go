@@ -28,7 +28,6 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 		v.POST("/:id/sign", h.SignVerbale)
 		v.GET("/:id/signatures", h.GetSignatures)
 		v.GET("/:id/pdf", h.ExportPDF)
-		v.GET("/:id/export/pdf", h.ExportPDF)
 	}
 }
 
@@ -78,6 +77,10 @@ func (h *Handler) ListMeetings(c *gin.Context) {
 func (h *Handler) CreateVerbale(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 
 	var req CreateVerbaleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -210,7 +213,11 @@ func (h *Handler) ExportPDF(c *gin.Context) {
 	}
 
 	dateStr := verbale.CreatedAt.Format("20060102")
-	filename := "verbale_" + verbale.MeetingID[:8] + "_" + dateStr + ".pdf"
+	shortID := verbale.MeetingID
+	if len(shortID) > 8 {
+		shortID = shortID[:8]
+	}
+	filename := "verbale_" + shortID + "_" + dateStr + ".pdf"
 	c.Header("Content-Type", "application/pdf")
 	c.Header("Content-Disposition", "attachment; filename=\""+filename+"\"")
 	c.Data(http.StatusOK, "application/pdf", pdfBytes)

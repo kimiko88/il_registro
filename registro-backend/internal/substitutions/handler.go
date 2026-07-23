@@ -27,6 +27,10 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 }
 
 func (h *Handler) Create(c *gin.Context) {
+	if c.GetString("user_id") == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	role := c.GetString("role")
 	schoolID := c.GetString("school_id")
 	if role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" {
@@ -97,6 +101,10 @@ func (h *Handler) ListMyToday(c *gin.Context) {
 }
 
 func (h *Handler) AssignSubstitute(c *gin.Context) {
+	if c.GetString("user_id") == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	role := c.GetString("role")
 	if role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
@@ -119,8 +127,13 @@ func (h *Handler) AssignSubstitute(c *gin.Context) {
 
 func (h *Handler) Confirm(c *gin.Context) {
 	teacherID := c.GetString("user_id")
+	role := c.GetString("role")
 	if teacherID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "teacher" && role != "admin" && role != "superadmin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 

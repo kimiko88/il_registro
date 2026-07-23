@@ -28,6 +28,13 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 }
 
 func (h *Handler) CreateGroup(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	if userID == "" || (role != "teacher" && role != "admin" && role != "superadmin") {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
 	var req CreateGroupRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request", "message": err.Error()})
@@ -44,6 +51,12 @@ func (h *Handler) CreateGroup(c *gin.Context) {
 }
 
 func (h *Handler) ListGroups(c *gin.Context) {
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
 	schoolID := c.Query("school_id")
 	teacherID := c.Query("teacher_id")
 	studentID := c.Query("student_id")
@@ -71,6 +84,12 @@ func (h *Handler) ListGroups(c *gin.Context) {
 }
 
 func (h *Handler) GetGroup(c *gin.Context) {
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
 	id := c.Param("id")
 	group, err := h.service.GetGroupByID(c.Request.Context(), id)
 	if err != nil {
@@ -82,6 +101,13 @@ func (h *Handler) GetGroup(c *gin.Context) {
 }
 
 func (h *Handler) UpdateGroup(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	if userID == "" || (role != "teacher" && role != "admin" && role != "superadmin") {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
 	id := c.Param("id")
 	var req UpdateGroupRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -99,6 +125,13 @@ func (h *Handler) UpdateGroup(c *gin.Context) {
 }
 
 func (h *Handler) DeleteGroup(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	if userID == "" || (role != "teacher" && role != "admin" && role != "superadmin") {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
 	id := c.Param("id")
 	if err := h.service.DeleteGroup(c.Request.Context(), id); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -109,6 +142,13 @@ func (h *Handler) DeleteGroup(c *gin.Context) {
 }
 
 func (h *Handler) AddStudents(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	if userID == "" || (role != "teacher" && role != "admin" && role != "superadmin") {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
 	id := c.Param("id")
 	var req AddGroupStudentsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -125,6 +165,13 @@ func (h *Handler) AddStudents(c *gin.Context) {
 }
 
 func (h *Handler) RemoveStudent(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	if userID == "" || (role != "teacher" && role != "admin" && role != "superadmin") {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
 	id := c.Param("id")
 	studentID := c.Param("student_id")
 

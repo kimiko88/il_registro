@@ -55,14 +55,19 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 }
 
 func (h *Handler) CreateDocument(c *gin.Context) {
+	userID := c.GetString("user_id")
+	schoolID := c.GetString("school_id")
+	role := c.GetString("role")
+	if userID == "" || role == "" || schoolID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
 	var req CreateDocumentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	userID := c.GetString("user_id")
-	schoolID := c.GetString("school_id")
-	role := c.GetString("role")
 	res, err := h.service.CreateDocument(c.Request.Context(), role, userID, schoolID, req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -113,8 +118,8 @@ func (h *Handler) UploadFile(c *gin.Context) {
 			return
 		}
 	} else {
-		// Fallback URL when no remote uploader is injected
-		publicURL = "https://storage.local/" + storagePath
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "storage provider not configured"})
+		return
 	}
 
 	docID := c.PostForm("document_id")
@@ -156,13 +161,18 @@ func (h *Handler) GetDocument(c *gin.Context) {
 
 func (h *Handler) UpdateDocument(c *gin.Context) {
 	id := c.Param("id")
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	if userID == "" || role == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
 	var req UpdateDocumentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	userID := c.GetString("user_id")
-	role := c.GetString("role")
 	if err := h.service.UpdateDocument(c.Request.Context(), role, userID, id, req); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -172,12 +182,18 @@ func (h *Handler) UpdateDocument(c *gin.Context) {
 
 func (h *Handler) ProcessWorkflow(c *gin.Context) {
 	id := c.Param("id")
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	if userID == "" || role == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
 	var req WorkflowActionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	userID := c.GetString("user_id")
 	if err := h.service.ProcessWorkflow(c.Request.Context(), userID, id, req); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -187,12 +203,22 @@ func (h *Handler) ProcessWorkflow(c *gin.Context) {
 
 func (h *Handler) SignDocument(c *gin.Context) {
 	id := c.Param("id")
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "director" && role != "principal" && role != "admin" && role != "superadmin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: insufficient permissions to sign document"})
+		return
+	}
+
 	var req SignDocumentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	userID := c.GetString("user_id")
 	if err := h.service.SignDocument(c.Request.Context(), userID, id, req); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -345,7 +371,12 @@ func (h *Handler) DeleteDocument(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "deleted"})
 }
 func (h *Handler) ListTemplates(c *gin.Context) {
+	userID := c.GetString("user_id")
 	schoolID := c.GetString("school_id")
+	if userID == "" || schoolID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	res, err := h.service.ListTemplates(c.Request.Context(), schoolID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

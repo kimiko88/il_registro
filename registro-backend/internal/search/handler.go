@@ -45,6 +45,10 @@ func (h *Handler) Search(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "q query parameter is required"})
 		return
 	}
+	if len(q) > 200 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "query string too long (max 200 characters)"})
+		return
+	}
 
 	if !validFilterTypes[filterType] {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid filter type parameter"})

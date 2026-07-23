@@ -198,6 +198,7 @@ export const useGradesStore = defineStore('grades', {
                 document.body.appendChild(link);
                 link.click();
                 link.remove();
+                window.URL.revokeObjectURL(url);
             } catch (err) {
                 console.error("Error downloading report card PDF:", err);
                 throw err;

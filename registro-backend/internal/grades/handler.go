@@ -119,6 +119,10 @@ func (h *Handler) GetClassGrades(c *gin.Context) {
 	filter := h.parseFilter(c)
 	actorID := c.GetString("user_id")
 	actorRole := c.GetString("role")
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 
 	resp, err := h.service.GetClassGrades(c.Request.Context(), actorID, actorRole, classID, filter)
 	if err != nil {
@@ -362,6 +366,7 @@ func (h *Handler) DeleteGrade(c *gin.Context) {
 
 func (h *Handler) GetStudentAverage(c *gin.Context) {
 	userID := c.GetString("user_id")
+	actorRole := c.GetString("role")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
@@ -372,6 +377,11 @@ func (h *Handler) GetStudentAverage(c *gin.Context) {
 
 	if studentID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "studentID is required"})
+		return
+	}
+
+	if actorRole == "student" && userID != studentID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 
@@ -672,6 +682,7 @@ func (h *Handler) GetSubjectAnalysis(c *gin.Context) {
 
 func (h *Handler) GetStudentProfile(c *gin.Context) {
 	userID := c.GetString("user_id")
+	actorRole := c.GetString("role")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
@@ -680,6 +691,11 @@ func (h *Handler) GetStudentProfile(c *gin.Context) {
 	studentID := c.Param("studentID")
 	if studentID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "studentID is required"})
+		return
+	}
+
+	if actorRole == "student" && userID != studentID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 
@@ -865,6 +881,10 @@ func (h *Handler) UpdateClassTest(c *gin.Context) {
 
 // ListWeightConfigs returns grade weight configurations for a school/subject/class.
 func (h *Handler) ListWeightConfigs(c *gin.Context) {
+	if c.GetString("user_id") == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	schoolID := c.GetString("school_id")
 	subjectID := c.Query("subject_id")
 	classID := c.Query("class_id")
@@ -925,12 +945,12 @@ func (h *Handler) DeleteWeightConfig(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
-// SetWeightConfig is a legacy alias kept for backwards compatibility.
+// Deprecated: SetWeightConfig is a legacy alias kept for backwards compatibility.
 func (h *Handler) SetWeightConfig(c *gin.Context) {
 	h.UpsertWeightConfig(c)
 }
 
-// GetWeightConfig is a legacy alias kept for backwards compatibility.
+// Deprecated: GetWeightConfig is a legacy alias kept for backwards compatibility.
 func (h *Handler) GetWeightConfig(c *gin.Context) {
 	h.ListWeightConfigs(c)
 }

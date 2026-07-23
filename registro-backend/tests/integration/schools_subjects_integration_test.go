@@ -45,6 +45,12 @@ func TestSchoolsSubjectsIntegration(t *testing.T) {
 	}
 
 	subjectsGroup := router.Group("/subjects")
+	subjectsGroup.Use(func(c *gin.Context) {
+		c.Set("user_id", "test-user-id")
+		c.Set("role", "superadmin")
+		c.Set("school_id", "school-1")
+		c.Next()
+	})
 	{
 		subjectsGroup.POST("", func(c *gin.Context) {
 			subjectHandler.Create(c)

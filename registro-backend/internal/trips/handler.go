@@ -51,6 +51,10 @@ func (h *Handler) CreateTrip(c *gin.Context) {
 func (h *Handler) ListTrips(c *gin.Context) {
 	schoolID := c.GetString("school_id")
 	studentID := c.GetString("user_id")
+	if schoolID == "" || studentID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 
 	trips, err := h.service.ListTrips(c.Request.Context(), schoolID, studentID)
 	if err != nil {
@@ -64,6 +68,11 @@ func (h *Handler) SubmitConsent(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
 	ipAddress := c.ClientIP()
+
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 
 	var req SubmitConsentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
