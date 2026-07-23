@@ -360,6 +360,11 @@ func (r *repository) FindWithFilter(filter GradeFilter) ([]Grade, error) {
 	var conditions []string
 	argIdx := 1
 
+	if filter.StudentID != "" {
+		conditions = append(conditions, fmt.Sprintf("student_id = $%d::uuid", argIdx))
+		args = append(args, filter.StudentID)
+		argIdx++
+	}
 	if filter.Semester > 0 {
 		conditions = append(conditions, fmt.Sprintf("semester = $%d", argIdx))
 		args = append(args, filter.Semester)
@@ -378,6 +383,7 @@ func (r *repository) FindWithFilter(filter GradeFilter) ([]Grade, error) {
 	if filter.IsPublished != nil {
 		conditions = append(conditions, fmt.Sprintf("is_published = $%d", argIdx))
 		args = append(args, *filter.IsPublished)
+		argIdx++
 	}
 
 	if len(conditions) > 0 {
@@ -399,6 +405,11 @@ func (r *repository) FindWithFilterPaginated(filter GradeFilter) ([]Grade, int, 
 	var conditions []string
 	argIdx := 1
 
+	if filter.StudentID != "" {
+		conditions = append(conditions, fmt.Sprintf("student_id = $%d::uuid", argIdx))
+		args = append(args, filter.StudentID)
+		argIdx++
+	}
 	if filter.Semester > 0 {
 		conditions = append(conditions, fmt.Sprintf("semester = $%d", argIdx))
 		args = append(args, filter.Semester)

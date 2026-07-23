@@ -48,7 +48,23 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 			}
 		}
 
-		// 2. Fallback to query parameter (e.g. for WebSockets)
+		// 2. Try WebSocket subprotocol header (Sec-WebSocket-Protocol: access_token, <token>)
+		if token == "" {
+			secProto := c.GetHeader("Sec-WebSocket-Protocol")
+			if secProto != "" {
+				parts := strings.Split(secProto, ",")
+				for _, p := range parts {
+					p = strings.TrimSpace(p)
+					if p != "" && p != "access_token" && p != "bearer" {
+						token = p
+						c.Header("Sec-WebSocket-Protocol", p)
+						break
+					}
+				}
+			}
+		}
+
+		// 3. Fallback to query parameter (e.g. legacy WebSockets)
 		if token == "" {
 			token = c.Query("token")
 		}

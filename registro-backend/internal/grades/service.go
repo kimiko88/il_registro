@@ -114,6 +114,9 @@ func (s *service) GetStudentGradesWithFilter(ctx context.Context, actorID string
 
 	var filtered []Grade
 	for _, g := range grades {
+		if g.DeletedAt != nil {
+			continue
+		}
 		if filter.Semester > 0 && int(g.Semester) != filter.Semester {
 			continue
 		}
@@ -148,38 +151,12 @@ func (s *service) GetStudentGradesPaged(ctx context.Context, actorID string, act
 		}
 	}
 
-	// Inject studentID as a filter — FindWithFilterPaginated honours the
-	// existing conditions; we add it via a separate lookup to keep the
-	// generic repo method clean.
-	// For the paginated path we call FindByStudent (already sorted) and
-	// apply in-process pagination so that no schema changes are required.
-	grades, err := s.repo.FindByStudent(studentID)
+	filter.StudentID = studentID
+	grades, total, err := s.repo.FindWithFilterPaginated(filter)
 	if err != nil {
 		return nil, err
 	}
 
-	// Apply in-memory filters (same logic as GetStudentGradesWithFilter)
-	var filtered []Grade
-	for _, g := range grades {
-		if g.DeletedAt != nil {
-			continue
-		}
-		if filter.Semester > 0 && int(g.Semester) != filter.Semester {
-			continue
-		}
-		if filter.SubjectID != "" && g.SubjectID != filter.SubjectID {
-			continue
-		}
-		if filter.GradeType != "" && string(g.GradeType) != filter.GradeType {
-			continue
-		}
-		if filter.IsPublished != nil && g.IsPublished != *filter.IsPublished {
-			continue
-		}
-		filtered = append(filtered, g)
-	}
-
-	total := len(filtered)
 	pageSize := filter.PageSize
 	if pageSize <= 0 {
 		pageSize = 50
@@ -188,23 +165,14 @@ func (s *service) GetStudentGradesPaged(ctx context.Context, actorID string, act
 	if page < 1 {
 		page = 1
 	}
-	offset := (page - 1) * pageSize
-	if offset > total {
-		offset = total
-	}
-	end := offset + pageSize
-	if end > total {
-		end = total
+
+	totalPages := 0
+	if total > 0 {
+		totalPages = (total + pageSize - 1) / pageSize
 	}
 
-	totalPages := (total + pageSize - 1) / pageSize
-	if total == 0 {
-		totalPages = 0
-	}
-
-	slice := filtered[offset:end]
 	return &PaginatedGradesResponse{
-		Data:       s.mapToResponse(slice),
+		Data:       s.mapToResponse(grades),
 		Total:      total,
 		Page:       page,
 		PageSize:   pageSize,
@@ -306,7 +274,7 @@ func calcSemesterAverages(grades []GradeResponse) (avg1, avg2 float64) {
 		if g.GradeCategory != "" && g.GradeCategory != string(GradeCategorySummative) {
 			continue
 		}
-		if g.GradeValue >= 0 {
+		if g.GradeValue > 0 {
 			if g.Semester == 1 {
 				sum1 += g.GradeValue
 				count1++
@@ -496,13 +464,19 @@ func (s *service) Export(teacherID string, filter GradeFilter, format string) ([
 	}
 
 	if format == "csv" {
-		out := "StudentID,SubjectID,GradeValue,Date,Semester,TeacherID\n"
-		for _, g := range grades {
-			out += fmt.Sprintf("%s,%s,%.2f,%s,%d,%s\n",
-				g.StudentID, g.SubjectID, g.GradeValue,
-				g.Date.Format("2006-01-02"), g.Semester, g.TeacherID)
+		data, err := ExportToCSV(grades, ExportOptions{Format: "csv"})
+		if err != nil {
+			return nil, "", fmt.Errorf("failed to generate CSV: %w", err)
 		}
-		return []byte(out), "text/csv", nil
+		return data, "text/csv", nil
+	}
+
+	if format == "pdf" {
+		data, err := ExportToPDF(grades, ExportOptions{Format: "pdf"})
+		if err != nil {
+			return nil, "", fmt.Errorf("failed to generate PDF: %w", err)
+		}
+		return data, "application/pdf", nil
 	}
 
 	return nil, "", fmt.Errorf("unsupported format: %s", format)
@@ -822,7 +796,7 @@ func (s *service) GetMyTrend(studentID string, subjectID string) (*TrendResponse
 	classAverage := 0.0
 	var classID string
 	if err := s.validator.db.QueryRow(
-		`SELECT class_id FROM class_students WHERE student_id = $1`, studentID,
+		`SELECT class_id FROM class_students WHERE student_id = $1 ORDER BY created_at DESC LIMIT 1`, studentID,
 	).Scan(&classID); err == nil && classID != "" {
 		_ = s.validator.db.QueryRow(
 			`SELECT COALESCE(AVG(grade_value), 0.0)
@@ -1002,9 +976,8 @@ func (s *service) GetSemesterReport(studentID string, semester int) (*SemesterRe
 		overall = math.Round((totalSum/float64(len(subjects)))*100) / 100
 	}
 
-	totalSubjectCount := len(subjects)
 	promoted := "NO"
-	if enrollErr == nil && len(enrolledSubjects) > 0 && totalSubjectCount > 0 && passedCount == len(enrolledSubjects) && passedCount == totalSubjectCount {
+	if len(subjects) > 0 && passedCount == len(subjects) {
 		promoted = "SÌ"
 	}
 
@@ -1244,7 +1217,9 @@ func (s *service) CreateTestWithGrades(teacherID string, req CreateClassTestRequ
 		}
 		if s.broadcaster != nil {
 			for _, g := range gradesList {
-				s.broadcaster.BroadcastToUser(g.StudentID, "GRADE_ADDED", s.mapSingleResponse(*g))
+				if g.IsPublished {
+					s.broadcaster.BroadcastToUser(g.StudentID, "GRADE_ADDED", s.mapSingleResponse(*g))
+				}
 			}
 		}
 	}

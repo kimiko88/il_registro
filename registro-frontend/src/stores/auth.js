@@ -1,8 +1,17 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
+const parseUser = (val) => {
+    if (!val) return null
+    try {
+        return JSON.parse(val)
+    } catch {
+        return null
+    }
+}
+
 export const useAuthStore = defineStore('auth', () => {
-    const user = ref(JSON.parse(sessionStorage.getItem('user') || localStorage.getItem('user')) || null)
+    const user = ref(parseUser(sessionStorage.getItem('user')) || parseUser(localStorage.getItem('user')) || null)
     const token = ref(sessionStorage.getItem('token') || localStorage.getItem('token') || null)
     const refreshToken = ref(sessionStorage.getItem('refreshToken') || localStorage.getItem('refreshToken') || null)
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 	"time"
 
 	"registro-backend/pkg/crypto"
@@ -103,16 +104,16 @@ func (s *Service) Login(ctx context.Context, req *LoginRequest, ipAddress, userA
 		return nil, ErrInvalidCredentials
 	}
 
+	// Check if user is active before slow bcrypt check to avoid timing attacks
+	if !user.IsActive {
+		return nil, ErrUserInactive
+	}
+
 	// Verify password
 	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password))
 	if err != nil {
 		s.recordFailedAttempt(ctx, req.Email, ipAddress)
 		return nil, ErrInvalidCredentials
-	}
-
-	// Check if user is active
-	if !user.IsActive {
-		return nil, ErrUserInactive
 	}
 
 	// Check if password has expired (90 days for admin/secretary/superadmin)
@@ -454,11 +455,12 @@ func (s *Service) ResetPassword(ctx context.Context, token, newPassword string) 
 
 	// Check password history (prevent reuse of last 5)
 	history, err := s.repo.GetPasswordHistory(ctx, prt.UserID)
-	if err == nil {
-		for _, oldHash := range history {
-			if bcrypt.CompareHashAndPassword([]byte(oldHash), []byte(newPassword)) == nil {
-				return ErrPasswordReused
-			}
+	if err != nil {
+		return fmt.Errorf("failed to fetch password history: %w", err)
+	}
+	for _, oldHash := range history {
+		if bcrypt.CompareHashAndPassword([]byte(oldHash), []byte(newPassword)) == nil {
+			return ErrPasswordReused
 		}
 	}
 

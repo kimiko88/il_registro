@@ -69,7 +69,7 @@ describe('Regression Tests', () => {
         // Average: 7.2
 
         const { averages } = useMyGrades();
-        expect(averages.value['Math']).toBe('7.2');
+        expect(averages.value['Math']).toBe(7.2);
     });
 
     // 3. Attendance Regression: Bulk Marking Safety

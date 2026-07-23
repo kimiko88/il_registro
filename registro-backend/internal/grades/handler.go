@@ -279,9 +279,13 @@ func (h *Handler) Export(c *gin.Context) {
 		return
 	}
 
-	format := c.Query("format")
+	format := strings.ToLower(c.Query("format"))
 	if format == "" {
 		format = "json"
+	}
+	if format != "json" && format != "csv" && format != "pdf" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "unsupported format: " + format})
+		return
 	}
 
 	filter := h.parseFilter(c)

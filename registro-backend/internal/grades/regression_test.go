@@ -156,13 +156,13 @@ func TestCalculator_AverageWithAbsence(t *testing.T) {
 		assert.Equal(t, 7.0, c.CalculateWeightedAverage(grades))
 	})
 
-	t.Run("Average includes 0", func(t *testing.T) {
+	t.Run("Zero grade is unrated and excluded from average", func(t *testing.T) {
 		grades := []Grade{
 			{GradeValue: 8.0, Weight: 1.0},
-			{GradeValue: 0.0, Weight: 1.0}, // Zero grade
+			{GradeValue: 0.0, Weight: 1.0}, // Unrated/unset grade (0)
 			{GradeValue: 6.0, Weight: 1.0},
 		}
-		assert.Equal(t, 4.67, c.CalculateAverage(grades))
-		assert.Equal(t, 4.67, c.CalculateWeightedAverage(grades))
+		assert.Equal(t, 7.0, c.CalculateAverage(grades))
+		assert.Equal(t, 7.0, c.CalculateWeightedAverage(grades))
 	})
 }

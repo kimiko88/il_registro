@@ -29,14 +29,14 @@ export const useWebSocketStore = defineStore('websocket', () => {
 
         let wsUrl = ''
         if (baseUrl.startsWith('http://') || baseUrl.startsWith('https://')) {
-            wsUrl = `${baseUrl.replace(/^http/, 'ws')}/ws?token=${token}`
+            wsUrl = `${baseUrl.replace(/^http/, 'ws')}/ws`
         } else if (baseUrl.startsWith('/')) {
             const host = window.location.host
             const wsScheme = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-            wsUrl = `${wsScheme}//${host}${baseUrl}/ws?token=${token}`
+            wsUrl = `${wsScheme}//${host}${baseUrl}/ws`
         } else {
             const wsScheme = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-            wsUrl = `${wsScheme}//${baseUrl}/ws?token=${token}`
+            wsUrl = `${wsScheme}//${baseUrl}/ws`
         }
 
         socket.value = new WebSocket(wsUrl, ['access_token', token])

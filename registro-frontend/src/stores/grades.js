@@ -11,6 +11,7 @@ export const useGradesStore = defineStore('grades', {
         // Track last fetch context to enable refetch after mutations
         _lastClassId: null,
         _lastSubjectId: null,
+        _requestId: 0,
     }),
 
     getters: {
@@ -25,14 +26,14 @@ export const useGradesStore = defineStore('grades', {
             let count = 0;
             state.grades.students.forEach(s => {
                 s.grades.forEach(g => {
-                    if (typeof g.grade_value === 'number' && g.grade_value >= 0) {
+                    if (typeof g.grade_value === 'number' && g.grade_value > 0) {
                         sum += g.grade_value;
                         count++;
                     }
                 });
             });
             if (count === 0) return 0;
-            return (sum / count).toFixed(1);
+            return Math.round((sum / count) * 10) / 10;
         }
     },
 
@@ -51,14 +52,22 @@ export const useGradesStore = defineStore('grades', {
             this.error = null;
             this._lastClassId = classId;
             this._lastSubjectId = subjectId;
+            const currentReqId = ++this._requestId;
             try {
                 const response = await gradeService.getByClass(classId, subjectId);
-                this.grades = response.data || null;
+                // Ignore stale response if a newer request was dispatched
+                if (currentReqId === this._requestId) {
+                    this.grades = response.data || null;
+                }
             } catch (err) {
-                this.error = err.message;
-                console.error("Error fetching grades:", err);
+                if (currentReqId === this._requestId) {
+                    this.error = err.message;
+                    console.error("Error fetching grades:", err);
+                }
             } finally {
-                this.loading = false;
+                if (currentReqId === this._requestId) {
+                    this.loading = false;
+                }
             }
         },
 

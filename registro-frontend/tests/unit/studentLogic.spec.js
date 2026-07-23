@@ -31,8 +31,8 @@ describe('Student Logic', () => {
         };
 
         const { averages } = useMyGrades();
-        expect(averages.value['Math']).toBe('7.0');
-        expect(averages.value['History']).toBe('9.0');
+        expect(averages.value['Math']).toBe(7);
+        expect(averages.value['History']).toBe(9);
     });
 
     it('calculates attendance stats in useMyAttendance', () => {
