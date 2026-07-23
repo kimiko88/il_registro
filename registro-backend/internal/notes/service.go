@@ -3,27 +3,47 @@ package notes
 import (
 	"context"
 	"errors"
+
+	"registro-backend/internal/users"
+)
+
+var (
+	ErrUnauthorizedEdit    = errors.New("unauthorized: can only edit own notes")
+	ErrUnauthorizedDelete  = errors.New("unauthorized: can only delete own notes")
+	ErrUnauthorizedApprove = errors.New("unauthorized: only dirigenza or admin can approve notes")
+	ErrUnauthorizedParent  = errors.New("unauthorized: parent must specify student_id")
+	ErrNotGuardian         = errors.New("unauthorized: not a guardian of this student")
 )
 
 type Service struct {
-	repo Repository
+	repo     Repository
+	userRepo users.Repository
 }
 
-func NewService(repo Repository) *Service {
-	return &Service{repo: repo}
+func NewService(repo Repository, uRepo ...users.Repository) *Service {
+	var userRepo users.Repository
+	if len(uRepo) > 0 {
+		userRepo = uRepo[0]
+	}
+	return &Service{repo: repo, userRepo: userRepo}
 }
 
 func (s *Service) CreateNote(ctx context.Context, teacherID, schoolID string, req CreateNoteRequest) (*StudentNote, error) {
-	// Validate type? binding already does.
+	if req.TargetRole == "" {
+		req.TargetRole = "all"
+	}
 	n := &StudentNote{
-		SchoolID:  schoolID,
-		TeacherID: teacherID,
-		StudentID: req.StudentID,
-		ClassID:   req.ClassID,
-		SubjectID: req.SubjectID,
-		Type:      req.Type,
-		Note:      req.Note,
-		Date:      req.Date,
+		SchoolID:   schoolID,
+		TeacherID:  teacherID,
+		StudentID:  req.StudentID,
+		ClassID:    req.ClassID,
+		SubjectID:  req.SubjectID,
+		Type:       req.Type,
+		Note:       req.Note,
+		Date:       req.Date,
+		IsReserved: req.IsReserved,
+		TargetRole: req.TargetRole,
+		IsApproved: true, // Approved by default unless configured otherwise
 	}
 	if err := s.repo.Create(ctx, n); err != nil {
 		return nil, err
@@ -31,14 +51,20 @@ func (s *Service) CreateNote(ctx context.Context, teacherID, schoolID string, re
 	return n, nil
 }
 
+func (s *Service) ApproveNote(ctx context.Context, actorID, actorRole, noteID string) error {
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "vice_principal" {
+		return ErrUnauthorizedApprove
+	}
+	return s.repo.ApproveNote(ctx, noteID, actorID)
+}
+
 func (s *Service) UpdateNote(ctx context.Context, teacherID, noteID string, req UpdateNoteRequest) (*StudentNote, error) {
-	// Get note first to check permission
 	n, err := s.repo.Get(ctx, noteID)
 	if err != nil {
 		return nil, err
 	}
 	if n.TeacherID != teacherID {
-		return nil, errors.New("unauthorized: can only edit own notes")
+		return nil, ErrUnauthorizedEdit
 	}
 
 	if req.Type != "" {
@@ -46,6 +72,15 @@ func (s *Service) UpdateNote(ctx context.Context, teacherID, noteID string, req 
 	}
 	if req.Note != "" {
 		n.Note = req.Note
+	}
+	if req.Date != "" {
+		n.Date = req.Date
+	}
+	if req.IsReserved != nil {
+		n.IsReserved = *req.IsReserved
+	}
+	if req.TargetRole != "" {
+		n.TargetRole = req.TargetRole
 	}
 	if req.Date != "" {
 		n.Date = req.Date
@@ -63,11 +98,27 @@ func (s *Service) DeleteNote(ctx context.Context, teacherID, noteID string) erro
 		return err
 	}
 	if n.TeacherID != teacherID {
-		return errors.New("unauthorized: can only delete own notes")
+		return ErrUnauthorizedDelete
 	}
 	return s.repo.Delete(ctx, noteID)
 }
 
 func (s *Service) ListNotes(ctx context.Context, filter NoteFilter) ([]StudentNote, error) {
+	if filter.ActorRole == "student" {
+		filter.StudentID = filter.ActorID
+	} else if filter.ActorRole == "parent" {
+		if filter.StudentID == "" {
+			return nil, ErrUnauthorizedParent
+		}
+		if s.userRepo != nil {
+			isGuardian, err := s.userRepo.IsGuardian(ctx, filter.ActorID, filter.StudentID)
+			if err != nil {
+				return nil, err
+			}
+			if !isGuardian {
+				return nil, ErrNotGuardian
+			}
+		}
+	}
 	return s.repo.List(ctx, filter)
 }

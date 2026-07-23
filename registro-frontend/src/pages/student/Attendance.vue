@@ -105,18 +105,36 @@ onMounted(() => {
     fetchAttendance()
 })
 
+const columns = [
+  { name: 'date', label: 'Data', field: 'date', align: 'left', sortable: true },
+  { name: 'type', label: 'Stato', field: 'type', align: 'center' },
+  { name: 'time', label: 'Dettaglio Orario', field: 'time', align: 'center' },
+  { name: 'justified', label: 'Giustificata', field: 'justified', align: 'center' },
+  { name: 'notes', label: 'Annotazioni', field: 'notes', align: 'left' }
+]
+
 const fetchAttendance = async () => {
     try {
         const res = await attendanceService.getMyAttendance()
         if (res.data) {
              const list = Array.isArray(res.data) ? res.data : (res.data.records || [])
-             attendanceEvents.value = list.map(e => ({
-                 id: e.id,
-                 date: e.date,
-                 type: mapStatus(e.status),
-                 justified: e.is_justified,
-                 notes: e.notes
-             }))
+             attendanceEvents.value = list.map(e => {
+                 let timeDetail = '-'
+                 const s = String(e.status).toLowerCase()
+                 if (s === 'late') {
+                     timeDetail = e.entry_time ? `Ingresso: ${e.entry_time}` : 'Ritardo'
+                 } else if (s === 'leftearly' || s === 'early') {
+                     timeDetail = e.exit_time ? `Uscita: ${e.exit_time}` : 'Uscita anticipata'
+                 }
+                 return {
+                     id: e.id,
+                     date: e.date,
+                     type: mapStatus(e.status),
+                     time: timeDetail,
+                     justified: e.is_justified,
+                     notes: e.notes
+                 }
+             })
         }
     } catch (e) {
         console.error(e)
@@ -124,31 +142,23 @@ const fetchAttendance = async () => {
 }
 
 function mapStatus(status) {
-    if (status === 'absent') return 'Assenza'
-    if (status === 'late') return 'Ritardo'
+    const s = String(status).toLowerCase()
+    if (s === 'absent') return 'Assenza'
+    if (s === 'late') return 'Ritardo'
+    if (s === 'leftearly' || s === 'early') return 'Uscita Anticipata'
+    if (s === 'present') return 'Presente'
     return status
 }
 
 const totalAbsences = computed(() => attendanceEvents.value.filter(e => e.type === 'Assenza').length)
 const totalDelays = computed(() => attendanceEvents.value.filter(e => e.type === 'Ritardo').length)
 
-// Approximated percentage based on 200 days max vs current absences
-// Or standard: (Present / (Present + Absent))?
-// Backend unfortunately doesn't send "Absent" events if not marked? No, it marks "Absent" status.
-// If backend tracks 'present', we can sum them.
-// Let's assume 200 days for now or simplified logic: 100% - (Absences * 0.5%)?
-// Better: (TotalEvents - Absences) / TotalEvents if TotalEvents > 0? No, that depends if we log "Present".
-// Let's stick to the mock logic of 100 days base for MVP to show *some* graph, or use a fixed "Days Passed" if possible.
 const totalDays = 100 
 const attendancePercentage = computed(() => Math.round(((totalDays - totalAbsences.value) / totalDays) * 100))
 
 const unjustifiedAbsences = computed(() => 
     attendanceEvents.value
-        .filter(e => !e.justified &&(e.type === 'Assenza' || e.type === 'Ritardo')) // Also justify Lates? PROMPT implies justify absence.
-        // Actually UI prompt says "Seleziona Assenza", so stick to Assenza?
-        // Code line 122 filtered "Assenza".
-        // Let's keep filter for 'Assenza' unless 'Ritardo' also needs justification (often yes).
-        .filter(e => e.type === 'Assenza')
+        .filter(e => !e.justified && e.type === 'Assenza')
         .map(e => ({ label: `${e.date} - ${e.type}`, value: e.id }))
 )
 
@@ -157,6 +167,7 @@ const justification = ref({ event: null, reason: null, notes: '' })
 const getTypeColor = (type) => {
     if (type === 'Assenza') return 'red';
     if (type === 'Ritardo') return 'orange';
+    if (type === 'Uscita Anticipata') return 'blue';
     return 'grey';
 }
 
@@ -165,13 +176,8 @@ const submitJustification = async () => {
     
     try {
         await attendanceService.justify(justification.value.event.value, {
-             student_id: 'me', // handled by backend auth user
-             start_date: '2025-01-01', // Should fetch from event?
-             // Actually endpoint expects JustificationRequest.
-             // But existing 'attendanceService.justify' was designed for Parent using /parent/... endpoint.
-             // Student self-justification (for 18+) might use different endpoint.
-             // For now, let's assuming Student Justify is NOT ALLOWED (Parent only) or we use the parent endpoint if user is age>=18.
-             // Or fail gracefully.
+             student_id: 'me', 
+             start_date: '2025-01-01', 
         })
         $q.notify({ type: 'positive', message: 'Richiesta inviata' })
     } catch(e) {

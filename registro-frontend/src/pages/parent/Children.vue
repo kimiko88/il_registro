@@ -11,13 +11,13 @@
         <q-card class="shadow-sm rounded-lg overflow-hidden">
           <q-img src="https://cdn.quasar.dev/img/material.png" height="150px">
             <div class="absolute-bottom text-subtitle1">
-              {{ child.firstName }} {{ child.lastName }}
+              {{ child.first_name }} {{ child.last_name }}
             </div>
           </q-img>
 
           <q-card-section>
             <div class="row no-wrap items-center">
-              <div class="col text-h6 ellipsis">{{ child.schoolName }}</div>
+              <div class="col text-h6 ellipsis">{{ child.school_name }}</div>
             </div>
           </q-card-section>
 

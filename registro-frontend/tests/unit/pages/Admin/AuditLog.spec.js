@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
-import AuditLog from '@/pages/Admin/AuditLog.vue'
+import AuditLog from '@/pages/admin/AuditLog.vue'
 import adminService from '@/services/adminService'
 import { createTestingPinia } from '@pinia/testing'
 

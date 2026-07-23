@@ -1,40 +1,31 @@
 package middleware
 
 import (
-	"net/http"
-	"strings"
-
-	"registro-backend/internal/config"
-	"registro-backend/internal/utils"
+	"registro-backend/internal/auth"
+	"registro-backend/internal/users"
+	"registro-backend/pkg/jwt"
 
 	"github.com/gin-gonic/gin"
 )
 
-func AuthMiddleware(cfg config.JWTConfig) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header required"})
-			c.Abort()
-			return
-		}
+// AuthMiddleware wraps internal/auth middleware for convenience in the middleware package.
+type AuthMiddleware struct {
+	inner *auth.Middleware
+}
 
-		parts := strings.Split(authHeader, " ")
-		if len(parts) != 2 || parts[0] != "Bearer" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization header format"})
-			c.Abort()
-			return
-		}
-
-		claims, err := utils.ValidateToken(parts[1], cfg)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
-			c.Abort()
-			return
-		}
-
-		c.Set("userID", claims.UserID)
-		c.Set("role", claims.Role)
-		c.Next()
+// NewAuthMiddleware creates a new JWT authentication middleware instance.
+func NewAuthMiddleware(tokenManager *jwt.TokenManager, userRepo users.Repository) *AuthMiddleware {
+	return &AuthMiddleware{
+		inner: auth.NewMiddleware(tokenManager, userRepo),
 	}
+}
+
+// Authenticate returns the Gin HandlerFunc for JWT authentication.
+func (m *AuthMiddleware) Authenticate() gin.HandlerFunc {
+	return m.inner.Authenticate()
+}
+
+// RequireRole returns the Gin HandlerFunc for role enforcement.
+func (m *AuthMiddleware) RequireRole(allowedRoles ...string) gin.HandlerFunc {
+	return m.inner.RequireRole(allowedRoles...)
 }

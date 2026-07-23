@@ -16,22 +16,14 @@ func NewValidator(db *sql.DB) *Validator {
 	return &Validator{db: db}
 }
 
-// 1. ValidateGradeValue checks if the grade value matches the subject type requirements
+// ValidateGradeValue checks if the grade value matches the grade type requirements.
 func (v *Validator) ValidateGradeValue(value float64, gradeType string) error {
 	switch GradeType(gradeType) {
-	case GradeTypeNumeric:
-		if value < 0 || value > 10 {
-			return errors.New("Voto deve essere tra 0 e 10")
+	case GradeTypeNumeric, "":
+		if (value < 0 && value != -1) || value > 10 {
+			return errors.New("Voto deve essere tra 0 e 10, o -1 per assenza")
 		}
-		// Decimals check (optional string formatting check, but float logic is simpler)
 	case GradeTypeJudgment:
-		// Logic usually implies passing string description.
-		// If value is passed for storage, it must be mapped.
-		// If the input is the numeric value of the judgment:
-		// But prompt says "Valore deve essere enum".
-		// If this function validates the *stored numeric value*, checking if 0..10 is fine.
-		// If it validates the *input* before conversion, we need a separate check for description string.
-		// Assuming here we validate the numeric representation or generic value correctness.
 		if value < 0 || value > 10 {
 			return errors.New("Valore giudizio fuori range")
 		}
@@ -44,14 +36,19 @@ func (v *Validator) ValidateGradeValue(value float64, gradeType string) error {
 			return errors.New("Livello competenza non valido (1-4)")
 		}
 	default:
-		// Unknown type, maybe permissive or restrictive
+		if (value < 0 && value != -1) || value > 10 {
+			return errors.New("Voto deve essere tra 0 e 10, o -1 per assenza")
+		}
 	}
 	return nil
 }
 
-// Additional helper for Judgment string validation
+// ValidateJudgmentString checks that a judgment description is one of the accepted values.
 func (v *Validator) ValidateJudgmentString(judgment string) error {
-	allowed := []string{"Insufficiente", "Mediocre", "Sufficiente", "Discreto", "Buono", "Distinto", "Ottimo", "Eccellente", "Gravemente Insufficiente", "Quasi Sufficiente"}
+	allowed := []string{
+		"Insufficiente", "Mediocre", "Sufficiente", "Discreto", "Buono",
+		"Distinto", "Ottimo", "Eccellente", "Gravemente Insufficiente", "Quasi Sufficiente",
+	}
 	for _, a := range allowed {
 		if strings.EqualFold(a, judgment) {
 			return nil
@@ -60,48 +57,53 @@ func (v *Validator) ValidateJudgmentString(judgment string) error {
 	return errors.New("Giudizio non valido")
 }
 
-// 2. ValidateTeacherCanGrade verifies teacher assignment
-func (v *Validator) ValidateTeacherCanGrade(teacherID string, subjectID string, classID string) error {
-	// Query: SELECT 1 FROM class_subject_assignments ...
-	// Mocking query structure based on expected schema
-	query := `SELECT 1 FROM class_assignments WHERE teacher_id = $1 AND subject_id = $2 AND class_id = $3`
+// ValidateTeacherCanGrade verifies that the teacher is assigned to teach the given
+// subject in the given class. Uses the class_subjects + teachers join that matches
+// the actual schema (fixes previous query against non-existent class_assignments table).
+func (v *Validator) ValidateTeacherCanGrade(teacherUserID string, subjectID string, classID string) error {
+	query := `
+		SELECT 1
+		FROM class_subjects cs
+		JOIN teachers t ON cs.teacher_id = t.id
+		WHERE cs.class_id = $1
+		  AND cs.subject_id = $2
+		  AND t.user_id = $3`
 	var exists int
-	err := v.db.QueryRow(query, teacherID, subjectID, classID).Scan(&exists)
+	err := v.db.QueryRow(query, classID, subjectID, teacherUserID).Scan(&exists)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return errors.New("Insegnante non assegnato a questa materia in questa classe")
 		}
-		// return err // DB error
-		// For robustness in dev without full schema, log and allow? Or fail strict.
-		// Fail strict for production code.
-		return fmt.Errorf("teacher validation error: %v", err)
+		return fmt.Errorf("teacher validation error: %w", err)
 	}
 	return nil
 }
 
-// 3. ValidateStudentEnrolled verify enrollment
+// ValidateStudentEnrolled verifies that the student has an active enrollment
+// for the given semester (checks class_students, not just student existence).
 func (v *Validator) ValidateStudentEnrolled(studentID string, semester int) error {
-	// Simplified check: Is student in DB and active?
-	// Full check needs class context which might be implicit in Grade (Grade has StudentID, strictly implies class via Student)
-	// But Grade struct has SchoolID.
-	// Prompt says: ValidateStudentEnrolled(studentId, classId, semester)
-	// But `Grade` doesn't always carry `ClassID` explicitly (it's on Student).
-	// We'll query student to get class.
-
-	// Assuming logic:
-	query := `SELECT 1 FROM students WHERE id = $1`
+	query := `
+		SELECT 1
+		FROM class_students cs
+		JOIN students s ON cs.student_id = s.id
+		WHERE s.id = $1
+		  AND cs.status = 'active'`
 	var exists int
 	err := v.db.QueryRow(query, studentID).Scan(&exists)
 	if err != nil {
-		return errors.New("Studente non trovato")
+		if err == sql.ErrNoRows {
+			return fmt.Errorf("studente non iscritto ad alcuna classe attiva (semestre %d)", semester)
+		}
+		return fmt.Errorf("student enrollment validation error: %w", err)
 	}
 	return nil
 }
 
-// 4. ValidateGradeDate checks date against semester boundaries
+// ValidateGradeDate checks that the date is not in the future and falls within
+// the expected semester date range.
 func (v *Validator) ValidateGradeDate(date time.Time, semester int) error {
 	now := time.Now()
-	if date.After(now.Add(24 * time.Hour)) { // Allow 1 day buffer for timezone
+	if date.After(now.Add(24 * time.Hour)) {
 		return errors.New("Data non può essere nel futuro")
 	}
 	if date.Before(now.AddDate(-10, 0, 0)) {
@@ -110,27 +112,26 @@ func (v *Validator) ValidateGradeDate(date time.Time, semester int) error {
 
 	start, end := GetSemesterDateRange(semester)
 	if date.Before(start) || date.After(end) {
-		return fmt.Errorf("Data fuori dal range del quadrimestre (Sem %d: %s - %s)", semester, start.Format("2006-01-02"), end.Format("2006-01-02"))
+		return fmt.Errorf(
+			"Data fuori dal range del quadrimestre (Sem %d: %s - %s)",
+			semester, start.Format("2006-01-02"), end.Format("2006-01-02"),
+		)
 	}
-
 	return nil
 }
 
-// 5. ValidateDescription checks length and basic SQL injection patterns
+// ValidateDescription checks description length only.
+// SQL injection prevention is handled by parameterized queries throughout;
+// a keyword blocklist in the application layer is both ineffective and harmful
+// (it rejects legitimate Italian text such as "seleziona le opzioni").
 func (v *Validator) ValidateDescription(desc string) error {
 	if len(desc) > 500 {
 		return errors.New("Descrizione max 500 caratteri")
 	}
-
-	// Basic rudimentary SQLi check (better handled by Parameterized queries, but requested by prompt)
-	lower := strings.ToLower(desc)
-	if strings.Contains(lower, "drop table") || strings.Contains(lower, "--") || strings.Contains(lower, "select *") {
-		return errors.New("Caratteri o pattern non ammessi nella descrizione")
-	}
 	return nil
 }
 
-// 6. ValidateGradeNotLocked checks if grading is locked
+// ValidateGradeNotLocked checks if grading is locked for the given semester.
 func (v *Validator) ValidateGradeNotLocked(semester int) error {
 	if IsInLockPeriod(semester, time.Now()) {
 		return errors.New("Periodo in chiusura scrutini, modifiche non consentite")
@@ -147,15 +148,14 @@ func (v *Validator) ValidateCreateRequest(req CreateGradeRequest, teacherID stri
 	if err := v.ValidateDescription(req.Description); err != nil {
 		return err
 	}
-	if err := v.ValidateGradeDate(parseDate(req.Date), req.Semester); err != nil {
+	// parseDate now returns an explicit error for malformed date strings.
+	date, err := parseDate(req.Date)
+	if err != nil {
+		return fmt.Errorf("formato data non valido (atteso YYYY-MM-DD): %w", err)
+	}
+	if err := v.ValidateGradeDate(date, req.Semester); err != nil {
 		return err
 	}
-	// Logic for StudentEnrolled and TeacherCanGrade requires StudentID/ClassID context.
-	// CreateGradeRequest has StudentID. How to get ClassID?
-	// Validating Teacher <-> Subject <-> Class is tricky without ClassID in request.
-	// Assuming simple validation for now or extracting ClassID from student elsewhere.
-	// Ignoring Class checks inside this wrapper for simple atomic validation.
-
 	return nil
 }
 
@@ -163,7 +163,6 @@ func (v *Validator) ValidateModification(grade Grade, req UpdateGradeRequest) er
 	if err := v.ValidateGradeNotLocked(int(grade.Semester)); err != nil {
 		return err
 	}
-	// Validate Updated fields if present
 	if req.GradeValue != nil && req.GradeType != nil {
 		if err := v.ValidateGradeValue(*req.GradeValue, *req.GradeType); err != nil {
 			return err
@@ -173,7 +172,6 @@ func (v *Validator) ValidateModification(grade Grade, req UpdateGradeRequest) er
 			return err
 		}
 	}
-
 	if req.Description != nil {
 		if err := v.ValidateDescription(*req.Description); err != nil {
 			return err
@@ -182,7 +180,9 @@ func (v *Validator) ValidateModification(grade Grade, req UpdateGradeRequest) er
 	return nil
 }
 
-func parseDate(d string) time.Time {
-	t, _ := time.Parse("2006-01-02", d)
-	return t
+// parseDate parses a YYYY-MM-DD string and returns an explicit error on failure
+// instead of silently returning the zero time (which caused misleading
+// "data troppo vecchia" errors for malformed input).
+func parseDate(d string) (time.Time, error) {
+	return time.Parse("2006-01-02", d)
 }

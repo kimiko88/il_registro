@@ -12,6 +12,8 @@ type Service interface {
 	RegisterStudent(ctx context.Context, studentID, eventID string) error
 	GetMyEvents(ctx context.Context, studentID string) ([]Participation, error)
 	MarkAttendance(ctx context.Context, eventID, studentID string) error
+	SavePreference(ctx context.Context, studentID string, pref StudentPreference) error
+	GetPreference(ctx context.Context, studentID string) (*StudentPreference, error)
 }
 
 type service struct {
@@ -66,4 +68,13 @@ func (s *service) GetMyEvents(ctx context.Context, studentID string) ([]Particip
 
 func (s *service) MarkAttendance(ctx context.Context, eventID, studentID string) error {
 	return s.repo.MarkAttendance(ctx, eventID, studentID, true)
+}
+
+func (s *service) SavePreference(ctx context.Context, studentID string, pref StudentPreference) error {
+	pref.StudentID = studentID
+	return s.repo.SavePreference(ctx, &pref)
+}
+
+func (s *service) GetPreference(ctx context.Context, studentID string) (*StudentPreference, error) {
+	return s.repo.GetPreference(ctx, studentID)
 }

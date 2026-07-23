@@ -1,17 +1,55 @@
+<script setup>
+import { ref, onMounted, computed } from 'vue'
+import { pctoService } from 'src/services/pctoService'
+import { useQuasar } from 'quasar'
+
+const $q = useQuasar()
+const projects = ref([])
+const loading = ref(false)
+
+const totalHours = computed(() => {
+    return projects.value.reduce((acc, p) => acc + (p.hours_done || 0), 0)
+})
+
+const targetHours = 90 // Should probably come from settings/profile
+
+const progressValue = computed(() => {
+    if (targetHours === 0) return 0
+    return Math.min(totalHours.value / targetHours, 1)
+})
+
+const fetchPCTO = async () => {
+    loading.value = true
+    try {
+        const res = await pctoService.getMyProjects()
+        projects.value = res.data || []
+    } catch (e) {
+        $q.notify({ message: 'Errore nel caricamento dei dati PCTO', color: 'negative' })
+        console.error(e)
+    } finally {
+        loading.value = false
+    }
+}
+
+onMounted(() => {
+    fetchPCTO()
+})
+</script>
+
 <template>
   <q-page class="q-pa-md">
     <div class="row items-center justify-between q-mb-lg">
        <div class="text-h4">PCTO - Percorsi Trasversali</div>
-       <q-chip color="orange" text-color="white" icon="timer">Totale: 30 / 90 Ore</q-chip>
+       <q-chip color="orange" text-color="white" icon="timer">Totale: {{ totalHours }} / {{ targetHours }} Ore</q-chip>
     </div>
 
     <!-- Progress Bar -->
     <q-card class="q-mb-lg">
         <q-card-section>
             <div class="text-subtitle1 q-mb-sm">Avanzamento Monte Ore Triennio</div>
-            <q-linear-progress size="25px" :value="0.33" color="primary" stripe rounded>
+            <q-linear-progress size="25px" :value="progressValue" color="primary" stripe rounded>
                 <div class="absolute-full flex flex-center">
-                    <q-badge color="white" text-color="primary" label="33%" />
+                    <q-badge color="white" text-color="primary" :label="Math.round(progressValue * 100) + '%'" />
                 </div>
             </q-linear-progress>
         </q-card-section>
@@ -20,40 +58,41 @@
     <div class="row q-col-gutter-lg">
         <!-- Projects List -->
         <div class="col-12 col-md-8">
-            <div class="text-h5 q-mb-md">Progetti Attivi</div>
-            <q-list bordered class="rounded-borders bg-white">
+            <div class="text-h5 q-mb-md">I Miei Progetti</div>
+            
+            <div v-if="loading" class="flex flex-center q-pa-xl">
+                <q-spinner color="primary" size="3em" />
+            </div>
+
+            <q-list v-else bordered class="rounded-borders bg-white">
                 <q-expansion-item
+                    v-for="project in projects"
+                    :key="project.id"
                     expand-separator
                     icon="business"
-                    label="Stage presso Tech Solutions Srl"
-                    caption="Sviluppo Web - 40 Ore"
+                    :label="project.title"
+                    :caption="`${project.company_name} - ${project.hours_done || 0} / ${project.total_hours} Ore`"
                     header-class="text-primary"
-                    default-opened
                 >
                     <q-card>
                         <q-card-section>
                             <div class="row q-col-gutter-md">
                                 <div class="col-12 col-md-6">
                                     <div class="text-weight-bold">Tutor Aziendale:</div>
-                                    <div>Mario Rossi (m.rossi@tech.it)</div>
+                                    <div>{{ project.tutor_name || 'N/D' }} ({{ project.tutor_email || 'N/D' }})</div>
                                 </div>
                                 <div class="col-12 col-md-6">
                                     <div class="text-weight-bold">Periodo:</div>
-                                    <div>10 Giu 2024 - 30 Giu 2024</div>
+                                    <div>{{ new Date(project.start_date).toLocaleDateString() }} - {{ new Date(project.end_date).toLocaleDateString() }}</div>
                                 </div>
                             </div>
                             
-                            <q-separator class="q-my-md" />
+                            <q-separator class="q-my-md" v-if="project.description" />
                             
-                            <div class="text-h6 q-mb-sm">Diario di Bordo</div>
-                            <q-timeline color="secondary">
-                                <q-timeline-entry title="Inizio Stage" subtitle="10 Giu 2024">
-                                    Accoglienza e assegnazione postazione.
-                                </q-timeline-entry>
-                                <q-timeline-entry title="Primo Task" subtitle="12 Giu 2024">
-                                    Configurazione ambiente di sviluppo Vue.js.
-                                </q-timeline-entry>
-                            </q-timeline>
+                            <div v-if="project.description">
+                                <div class="text-h6 q-mb-sm">Descrizione</div>
+                                <p>{{ project.description }}</p>
+                            </div>
                         </q-card-section>
                         <q-card-actions align="right">
                              <q-btn flat icon="edit" label="Compila Diario" color="primary" />
@@ -62,21 +101,11 @@
                     </q-card>
                 </q-expansion-item>
 
-                <q-expansion-item
-                    expand-separator
-                    icon="school"
-                    label="Corso Sicurezza sul Lavoro"
-                    caption="Formazione Obbligatoria - 8 Ore"
-                >
-                    <q-card>
-                        <q-card-section>
-                            Attestato conseguito il 15 Set 2023.
-                        </q-card-section>
-                         <q-card-actions align="right">
-                             <q-btn flat icon="download" label="Scarica Attestato" color="green" />
-                        </q-card-actions>
-                    </q-card>
-                </q-expansion-item>
+                <q-item v-if="projects.length === 0">
+                    <q-item-section class="text-center text-grey q-pa-xl">
+                        Nessun progetto PCTO assegnato.
+                    </q-item-section>
+                </q-item>
             </q-list>
         </div>
 
@@ -108,6 +137,3 @@
     </div>
   </q-page>
 </template>
-
-<script setup>
-</script>

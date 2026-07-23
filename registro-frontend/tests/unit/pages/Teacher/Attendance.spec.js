@@ -14,8 +14,8 @@ const { mockGetByClass, mockApiGet, mockApiPost } = vi.hoisted(() => ({
 vi.mock('src/services/attendanceService', () => ({
     attendanceService: { getByClass: mockGetByClass }
 }))
-vi.mock('src/boot/axios', () => ({
-    api: { get: mockApiGet, post: mockApiPost }
+vi.mock('@/services/api', () => ({
+    default: { get: mockApiGet, post: mockApiPost }
 }))
 
 // Mock Quasar
@@ -51,7 +51,7 @@ describe('Teacher/Attendance.vue', () => {
         })
 
         mockGetByClass.mockResolvedValue({
-            data: [{ student_id: 's2', status: 'absent' }]
+            data: [{ student_id: 's2', status: 'Absent', hour: 1 }]
         })
 
         wrapper = mount(TeacherAttendance, {
@@ -160,18 +160,18 @@ describe('Teacher/Attendance.vue', () => {
         // We initialized classes in state.
 
         // Check if students populated
-        // s1 (Harry) should be present (default)
+        // s1 (Harry) should be null (unrecorded default)
         // s2 (Hermione) should be absent (mocked attendance)
 
         expect(wrapper.vm.students).toHaveLength(2)
         const harry = wrapper.vm.students.find(s => s.id === 's1')
         const hermione = wrapper.vm.students.find(s => s.id === 's2')
 
-        expect(harry.status).toBe('present')
-        expect(hermione.status).toBe('absent')
+        expect(harry.status).toBeNull()
+        expect(hermione.status).toBe('Absent')
 
         // Stats
-        expect(wrapper.vm.stats.present).toBe(1)
+        expect(wrapper.vm.stats.present).toBe(0)
         expect(wrapper.vm.stats.absent).toBe(1)
     })
 
@@ -192,6 +192,6 @@ describe('Teacher/Attendance.vue', () => {
 
         await wrapper.vm.saveAttendance()
 
-        expect(mockApiPost).toHaveBeenCalledWith('/teacher/attendance/mark-bulk', expect.anything())
+        expect(mockApiPost).toHaveBeenCalledWith('/attendance/mark-bulk', expect.anything())
     })
 })

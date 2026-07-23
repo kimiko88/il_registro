@@ -1,0 +1,109 @@
+package trips
+
+import (
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+)
+
+type Handler struct {
+	service *Service
+}
+
+func NewHandler(s *Service) *Handler {
+	return &Handler{service: s}
+}
+
+func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
+	g := r.Group("/trips")
+	{
+		g.POST("", h.CreateTrip)
+		g.GET("", h.ListTrips)
+		g.POST("/consent", h.SubmitConsent)
+		g.GET("/:id/consents", h.ListConsents)
+	}
+}
+
+func (h *Handler) CreateTrip(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	schoolID := c.GetString("school_id")
+
+	if userID == "" || (role != "teacher" && role != "admin" && role != "superadmin") {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
+	var req CreateTripRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	trip, err := h.service.CreateTrip(c.Request.Context(), userID, schoolID, req)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusCreated, trip)
+}
+
+func (h *Handler) ListTrips(c *gin.Context) {
+	schoolID := c.GetString("school_id")
+	studentID := c.GetString("user_id")
+	if schoolID == "" || studentID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	trips, err := h.service.ListTrips(c.Request.Context(), schoolID, studentID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, trips)
+}
+
+func (h *Handler) SubmitConsent(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	ipAddress := c.ClientIP()
+
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	var req SubmitConsentRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.service.SubmitConsent(c.Request.Context(), userID, role, ipAddress, req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "trip consent submitted successfully"})
+}
+
+func (h *Handler) ListConsents(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "teacher" && role != "admin" && role != "superadmin" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
+	tripID := c.Param("id")
+	consents, err := h.service.ListConsents(c.Request.Context(), tripID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, consents)
+}

@@ -42,6 +42,7 @@ func TestAuthService_Register(t *testing.T) {
 				mockRepo.On("CreateUser", mock.Anything, mock.MatchedBy(func(u *auth.User) bool {
 					return u.Email == "new@test.com"
 				})).Return(nil)
+				mockRepo.On("AddPasswordHistory", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 			},
 			expectedError: nil,
 		},
@@ -100,6 +101,7 @@ func TestAuthService_Login(t *testing.T) {
 			input: auth.LoginRequest{Email: "unknown@test.com", Password: "pass"},
 			setupMock: func() {
 				mockRepo.On("GetRecentLoginAttempts", mock.Anything, "unknown@test.com", mock.Anything, mock.Anything).Return(0, nil)
+				mockRepo.On("GetRecentLoginAttemptsByEmail", mock.Anything, "unknown@test.com", mock.Anything).Return(0, nil)
 				mockRepo.On("GetUserByEmail", mock.Anything, "unknown@test.com").Return(nil, errors.New("not found"))
 				mockRepo.On("RecordLoginAttempt", mock.Anything, mock.Anything).Return(nil)
 			},

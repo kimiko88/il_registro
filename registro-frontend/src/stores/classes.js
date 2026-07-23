@@ -14,7 +14,7 @@ export const useClassesStore = defineStore('classes', {
             this.loading = true;
             try {
                 const response = await api.get('/classes', { params });
-                this.classes = response.data;
+                this.classes = response.data || [];
             } catch (err) {
                 this.error = 'Failed to fetch classes';
                 console.error(err);
@@ -28,7 +28,7 @@ export const useClassesStore = defineStore('classes', {
             try {
                 // Endpoint for classes assigned to the current teacher
                 const response = await api.get('/teacher/classes');
-                this.classes = response.data;
+                this.classes = response.data || [];
             } catch (err) {
                 this.error = 'Failed to fetch assigned classes';
                 console.error(err);

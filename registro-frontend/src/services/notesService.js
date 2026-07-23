@@ -1,4 +1,4 @@
-import { api } from 'src/boot/axios'
+import api from './api'
 
 export default {
     // Create a new note
@@ -14,6 +14,11 @@ export default {
     // Update a note
     async updateNote(id, data) {
         return api.patch(`/notes/${id}`, data)
+    },
+
+    // Approve a note (Dirigenza)
+    async approveNote(id) {
+        return api.post(`/notes/${id}/approve`)
     },
 
     // Delete a note

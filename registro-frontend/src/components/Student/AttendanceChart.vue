@@ -21,5 +21,5 @@
 </template>
 
 <script setup>
-const props = defineProps(['stats']);
+defineProps(['stats']);
 </script>

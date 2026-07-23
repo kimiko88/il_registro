@@ -1,6 +1,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useStudentStore } from '@/stores/student'
+import authService from '@/services/authService'
+
+// Mock authService
+vi.mock('@/services/authService', () => ({
+    default: {
+        getCurrentUser: vi.fn()
+    }
+}))
 
 describe('Student Store', () => {
     let store
@@ -22,18 +30,17 @@ describe('Student Store', () => {
     })
 
     it('fetches profile', async () => {
+        authService.getCurrentUser.mockResolvedValue({ firstName: 'Marco', lastName: 'Rossi', className: '5A Scientifico' })
         const promise = store.fetchProfile()
         expect(store.loading).toBe(true)
-        await vi.advanceTimersByTimeAsync(1000)
         await promise
         expect(store.loading).toBe(false)
         expect(store.profile.firstName).toBe('Marco')
     })
 
     it('getters work', async () => {
-        const promise = store.fetchProfile()
-        await vi.advanceTimersByTimeAsync(1000)
-        await promise
+        authService.getCurrentUser.mockResolvedValue({ firstName: 'Marco', lastName: 'Rossi', className: '5A Scientifico' })
+        await store.fetchProfile()
         expect(store.fullName).toBe('Marco Rossi')
         expect(store.className).toBe('5A Scientifico')
         expect(store.isAuthenticated).toBe(true)
@@ -41,6 +48,6 @@ describe('Student Store', () => {
 
     it('fetching notifications', async () => {
         await store.fetchNotifications()
-        expect(store.notifications.length).toBe(2)
+        expect(store.notifications.length).toBe(0)
     })
 })

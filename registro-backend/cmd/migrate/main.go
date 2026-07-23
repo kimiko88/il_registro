@@ -1,78 +1,176 @@
 package main
 
 import (
+	"bufio"
 	"database/sql"
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
+	"sort"
+	"strings"
 
 	_ "github.com/lib/pq"
 )
 
+func loadEnv() {
+	file, err := os.Open(".env")
+	if err != nil {
+		return
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" || strings.HasPrefix(line, "#") || !strings.Contains(line, "=") {
+			continue
+		}
+		parts := strings.SplitN(line, "=", 2)
+		key := strings.TrimSpace(parts[0])
+		val := strings.TrimSpace(parts[1])
+		val = strings.Trim(val, `"'`)
+		if os.Getenv(key) == "" {
+			os.Setenv(key, val)
+		}
+	}
+}
+
+func findMigrationsDir() string {
+	candidates := []string{"migrations", "../migrations", "../../migrations"}
+	for _, c := range candidates {
+		if info, err := os.Stat(c); err == nil && info.IsDir() {
+			return c
+		}
+	}
+	return "migrations"
+}
+
 func main() {
-	// Connect to database
-	connStr := "postgres://user:password@localhost:5432/registro?sslmode=disable"
+	loadEnv()
+
+	user := getEnvOrDefault("DB_USER", "user")
+	pass := getEnvOrDefault("DB_PASSWORD", "password")
+	host := getEnvOrDefault("DB_HOST", "localhost")
+	port := getEnvOrDefault("DB_PORT", "5432")
+	dbname := getEnvOrDefault("DB_NAME", "registro")
+	sslmode := getEnvOrDefault("DB_SSLMODE", "disable")
+
+	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s", user, pass, host, port, dbname, sslmode)
+	fmt.Printf("Connecting to PostgreSQL at %s:%s/%s...\n", host, port, dbname)
+
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+		log.Fatalf("Failed to open DB connection: %v", err)
 	}
 	defer db.Close()
 
-	// Test connection
 	if err := db.Ping(); err != nil {
-		log.Fatalf("Failed to ping database: %v", err)
+		log.Fatalf("Failed to ping DB: %v", err)
+	}
+	fmt.Println("✓ Connected successfully!")
+
+	// Ensure schema_migrations table exists
+	createTableSQL := `
+	CREATE TABLE IF NOT EXISTS schema_migrations (
+		version VARCHAR(255) PRIMARY KEY,
+		applied_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+	);`
+	if _, err := db.Exec(createTableSQL); err != nil {
+		log.Fatalf("Failed to create schema_migrations table: %v", err)
 	}
 
-	fmt.Println("Connected to database successfully!")
-
-	// Read and execute migration 021
-	migration021, err := os.ReadFile("migrations/021_admin_actions.sql")
+	migrationsDir := findMigrationsDir()
+	files, err := os.ReadDir(migrationsDir)
 	if err != nil {
-		log.Fatalf("Failed to read migration 021: %v", err)
+		log.Fatalf("Failed to read migrations directory '%s': %v", migrationsDir, err)
 	}
 
-	fmt.Println("Applying migration 021_admin_actions.sql...")
-	if _, err := db.Exec(string(migration021)); err != nil {
-		log.Printf("Migration 021 error (may already exist): %v", err)
-	} else {
-		fmt.Println("✓ Migration 021 applied successfully!")
+	var migrationFiles []string
+	for _, f := range files {
+		if !f.IsDir() && strings.HasSuffix(f.Name(), ".sql") {
+			migrationFiles = append(migrationFiles, f.Name())
+		}
+	}
+	sort.Strings(migrationFiles)
+
+	// Single target file execution if argument provided
+	if len(os.Args) >= 2 {
+		targetArg := os.Args[1]
+		targetFile := filepath.Base(targetArg)
+		applyMigrationFile(db, migrationsDir, targetFile)
+		fmt.Println("\n✅ Single migration finished!")
+		return
 	}
 
-	// Read and execute migration 022
-	migration022, err := os.ReadFile("migrations/022_seed_data.sql")
+	fmt.Printf("Found %d migration files in '%s'. Checking pending migrations...\n", len(migrationFiles), migrationsDir)
+
+	appliedCount := 0
+	for _, fileName := range migrationFiles {
+		var exists bool
+		err := db.QueryRow("SELECT EXISTS(SELECT 1 FROM schema_migrations WHERE version = $1)", fileName).Scan(&exists)
+		if err != nil {
+			log.Fatalf("Failed to check migration status for %s: %v", fileName, err)
+		}
+
+		if exists {
+			fmt.Printf("[%s] Already applied (skipping)\n", fileName)
+			continue
+		}
+
+		fmt.Printf("[%s] Applying...", fileName)
+		if applyMigrationFile(db, migrationsDir, fileName) {
+			appliedCount++
+		}
+	}
+
+	fmt.Printf("\n✅ Migrations completed! Applied %d new migration(s).\n", appliedCount)
+}
+
+func applyMigrationFile(db *sql.DB, dir, fileName string) bool {
+	filePath := filepath.Join(dir, fileName)
+	content, err := os.ReadFile(filePath)
 	if err != nil {
-		log.Fatalf("Failed to read migration 022: %v", err)
+		log.Printf("\n  ⚠ Error reading %s: %v\n", filePath, err)
+		return false
 	}
 
-	fmt.Println("Applying migration 022_seed_data.sql...")
-	if _, err := db.Exec(string(migration022)); err != nil {
-		log.Printf("Migration 022 error (may already exist): %v", err)
-	} else {
-		fmt.Println("✓ Migration 022 applied successfully!")
-	}
-
-	// Read and execute migration 023
-	migration023, err := os.ReadFile("migrations/023_user_sessions.sql")
+	tx, err := db.Begin()
 	if err != nil {
-		log.Fatalf("Failed to read migration 023: %v", err)
+		log.Printf("\n  ⚠ Error starting transaction for %s: %v\n", fileName, err)
+		return false
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	if _, err := tx.Exec(string(content)); err != nil {
+		errMsg := err.Error()
+		if strings.Contains(errMsg, "already exists") || strings.Contains(errMsg, "duplicate") {
+			fmt.Printf(" (already applied or table exists — recording version)\n")
+			_, _ = tx.Exec("INSERT INTO schema_migrations (version) VALUES ($1) ON CONFLICT DO NOTHING", fileName)
+			_ = tx.Commit()
+			return true
+		}
+		log.Printf("\n  ⚠ Error executing %s: %v\n", fileName, err)
+		return false
 	}
 
-	fmt.Println("Applying migration 023_user_sessions.sql...")
-	if _, err := db.Exec(string(migration023)); err != nil {
-		log.Printf("Migration 023 error (may already exist): %v", err)
-	} else {
-		fmt.Println("✓ Migration 023 applied successfully!")
+	if _, err := tx.Exec("INSERT INTO schema_migrations (version) VALUES ($1) ON CONFLICT DO NOTHING", fileName); err != nil {
+		log.Printf("\n  ⚠ Error recording version for %s: %v\n", fileName, err)
+		return false
 	}
 
-	fmt.Println("\n✅ All migrations completed!")
-	fmt.Println("\nTest users created (all with password: 'password'):")
-	fmt.Println("  - superadmin@registroelettronico.it (SuperAdmin)")
-	fmt.Println("  - admin@liceogalilei.it (Admin)")
-	fmt.Println("  - segreteria@liceogalilei.it (Secretary)")
-	fmt.Println("  - p.verdi@liceogalilei.it (Teacher)")
-	fmt.Println("  - a.neri@liceogalilei.it (Teacher)")
-	fmt.Println("  - l.rossi@studenti.liceogalilei.it (Student)")
-	fmt.Println("  - g.bianchi@studenti.liceogalilei.it (Student)")
-	fmt.Println("  - m.ferrari@studenti.liceogalilei.it (Student)")
-	fmt.Println("  - famiglia.rossi@gmail.com (Parent)")
+	if err := tx.Commit(); err != nil {
+		log.Printf("\n  ⚠ Error committing transaction for %s: %v\n", fileName, err)
+		return false
+	}
+
+	fmt.Println(" ✓ OK")
+	return true
+}
+
+func getEnvOrDefault(key, fallback string) string {
+	if val := os.Getenv(key); val != "" {
+		return val
+	}
+	return fallback
 }

@@ -21,19 +21,12 @@ func (c *Calculator) CalculateAverage(grades []Grade) float64 {
 	var count int
 
 	for _, g := range grades {
-		// Map judgments if needed (though Model implementation implies GradeValue is already numeric storage)
-		// But if we receive raw judgment strings in GradeValue (impossible as float64) or relying on Type...
-		// Let's assume GradeValue IS the authoritative numeric value.
-		// However, prompt asks: "Voti giudizio convertiti in scala: Insuff=3, Mediocre=4.5..."
-		// If stored GradeValue is 0 for Judgments, we need to convert based on Description or logic?
-		// Usually, "GradeValue" stores the mapped value.
-		// Let's ensure we use ConvertJudgmentToValue logic if applicable or just GradeValue.
-		// Safety: if GradeType is Judgment, and Value is 0, try to map from somewhere?
-		// Assumption: GradeValue is already set correctly on INSERT.
-		// But for "Trend" and special averaging, let's implement the conversion utility.
-
-		if g.GradeValue > 0 {
-			total += g.GradeValue
+		val := g.GradeValue
+		if val == 0 && g.GradeType == GradeTypeJudgment {
+			val = c.ConvertJudgmentToValue(g.Description)
+		}
+		if val > 0 {
+			total += val
 			count++
 		}
 	}
@@ -79,8 +72,12 @@ func (c *Calculator) CalculateWeightedAverage(grades []Grade) float64 {
 	var totalWeights float64
 
 	for _, g := range grades {
-		if g.GradeValue > 0 && g.Weight > 0 {
-			totalWeighted += g.GradeValue * g.Weight
+		val := g.GradeValue
+		if val == 0 && g.GradeType == GradeTypeJudgment {
+			val = c.ConvertJudgmentToValue(g.Description)
+		}
+		if val > 0 && g.Weight > 0 {
+			totalWeighted += val * g.Weight
 			totalWeights += g.Weight
 		}
 	}
@@ -168,22 +165,24 @@ func (c *Calculator) DetectOutliers(grades []Grade) []string {
 	// Returns IDs of outlier grades (outside Mean +/- 2*StdDev)
 	mean := c.CalculateAverage(grades)
 	stdDev := c.CalculateStandardDeviation(grades)
+	if stdDev == 0 {
+		return nil
+	}
 	low := mean - 2*stdDev
 	high := mean + 2*stdDev
 
 	var outliers []string
 	for _, g := range grades {
 		val := g.GradeValue
-		if g.GradeValue == 0 && g.GradeType == GradeTypeJudgment {
-			val = c.ConvertJudgmentToValue(g.Description) // Fallback if GradeValue 0
+		if val == 0 && g.GradeType == GradeTypeJudgment {
+			val = c.ConvertJudgmentToValue(g.Description)
 		}
-		if g.GradeValue > 0 {
-			val = g.GradeValue
-		} // Prefer stored value
+		if val <= 0 {
+			continue // Skip unrated / invalid non-positive grades
+		}
 
 		if val < low || val > high {
-			outliers = append(outliers, g.ID) // OR Student ID? Prompt says "outliers: [{studentId, grade}]"
-			// Returning Grade ID primarily, logic can map to student later.
+			outliers = append(outliers, g.ID)
 		}
 	}
 	return outliers
@@ -193,8 +192,12 @@ func (c *Calculator) DetectOutliers(grades []Grade) []string {
 func (c *Calculator) extractValues(grades []Grade) []float64 {
 	var vals []float64
 	for _, g := range grades {
-		if g.GradeValue > 0 {
-			vals = append(vals, g.GradeValue)
+		val := g.GradeValue
+		if val == 0 && g.GradeType == GradeTypeJudgment {
+			val = c.ConvertJudgmentToValue(g.Description)
+		}
+		if val > 0 {
+			vals = append(vals, val)
 		}
 	}
 	return vals

@@ -109,13 +109,16 @@ type UpdateAdminRequest struct {
 
 // DashboardStatsResponse represents dashboard statistics
 type DashboardStatsResponse struct {
-	TotalSchools   int64               `json:"total_schools"`
-	TotalUsers     int64               `json:"total_users"`
-	TotalStudents  int64               `json:"total_students"`
-	TotalTeachers  int64               `json:"total_teachers"`
-	ActiveUsers24h int64               `json:"active_users_24h"`
-	RecentEvents   []RecentEvent       `json:"recent_events"`
-	HealthStatus   *SystemHealthStatus `json:"health_status,omitempty"` // Only for superadmin
+	TotalSchools          int64               `json:"total_schools"`
+	TotalUsers            int64               `json:"total_users"`
+	TotalStudents         int64               `json:"total_students"`
+	TotalTeachers         int64               `json:"total_teachers"`
+	TotalDocuments        int64               `json:"total_documents"`
+	PendingDocumentsCount int64               `json:"pending_documents_count"`
+	AnnouncementsCount    int64               `json:"announcements_count"`
+	ActiveUsers24h        int64               `json:"active_users_24h"`
+	RecentEvents          []RecentEvent       `json:"recent_events"`
+	HealthStatus          *SystemHealthStatus `json:"health_status,omitempty"` // Only for superadmin
 }
 
 // RecentEvent represents a recent system event

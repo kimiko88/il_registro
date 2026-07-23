@@ -2,8 +2,12 @@ package admin
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
+	"strings"
+
+	"registro-backend/internal/auth"
 )
 
 // Service provides admin business logic
@@ -51,6 +55,26 @@ func (s *Service) GetDashboardStats(ctx context.Context, isSuperAdmin bool, scho
 		return nil, err
 	}
 	stats.TotalTeachers = teacherCount
+
+	// Get document counts
+	docCount, err := s.repo.CountDocuments(ctx, schoolID)
+	if err != nil {
+		return nil, err
+	}
+	stats.TotalDocuments = docCount
+
+	pendingDocCount, err := s.repo.CountPendingDocuments(ctx, schoolID)
+	if err != nil {
+		return nil, err
+	}
+	stats.PendingDocumentsCount = pendingDocCount
+
+	// Get communications count
+	commCount, err := s.repo.CountCommunications(ctx, schoolID)
+	if err != nil {
+		return nil, err
+	}
+	stats.AnnouncementsCount = commCount
 
 	// Get active users in last 24h
 	activeCount, err := s.repo.CountActiveUsers24h(ctx, schoolID)
@@ -194,7 +218,14 @@ func (s *Service) ListAdminUsers(ctx context.Context, page, pageSize int, school
 	}, nil
 }
 
-// CreateAdminUser creates a new admin user (superadmin only)
+// GetAdminUserByID retrieves a single admin user by ID.
+// Used by handlers for ownership checks before mutating admin records.
+func (s *Service) GetAdminUserByID(ctx context.Context, adminID string) (*AdminUserResponse, error) {
+	return s.repo.GetAdminUserByID(ctx, adminID)
+}
+
+// CreateAdminUser creates a new admin user (superadmin only).
+// Validates password strength before persisting.
 func (s *Service) CreateAdminUser(ctx context.Context, req *CreateAdminRequest) (*AdminUserResponse, error) {
 	// Validate that admin role has school_id
 	if req.Role == "admin" && (req.SchoolID == nil || *req.SchoolID == "") {
@@ -204,6 +235,12 @@ func (s *Service) CreateAdminUser(ctx context.Context, req *CreateAdminRequest) 
 	// Validate that superadmin role doesn't have school_id
 	if req.Role == "superadmin" && req.SchoolID != nil {
 		return nil, fmt.Errorf("superadmin role cannot have school_id")
+	}
+
+	// Validate password strength (must meet the same rules as public registration)
+	pv := auth.NewPasswordValidator()
+	if err := pv.Validate(req.Password); err != nil {
+		return nil, err
 	}
 
 	// Check if email already exists
@@ -282,4 +319,29 @@ func (s *Service) ListAuditLogs(ctx context.Context, req *AuditLogListRequest) (
 // LogAdminAction logs an admin action for audit trail
 func (s *Service) LogAdminAction(ctx context.Context, adminID, actionType, target string, targetID *string, schoolID *string, details string) error {
 	return s.repo.LogAdminAction(ctx, adminID, actionType, target, targetID, schoolID, details)
+}
+
+// GetSchoolSetting retrieves a school setting
+func (s *Service) GetSchoolSetting(ctx context.Context, schoolID, key string) (string, error) {
+	return s.repo.GetSetting(ctx, schoolID, key)
+}
+
+var allowedSettingKeys = map[string]bool{
+	"grading_scale":                      true,
+	"semester_count":                     true,
+	"language":                           true,
+	"attendance_threshold":               true,
+	"lock_scrutiny":                      true,
+	"require_principal_approval":         true,
+	"allow_parents_view_grades":          true,
+	"require_mfa":                        true,
+	"enable_substitute_notifications":    true,
+}
+
+// UpdateSchoolSetting updates a school setting with allowlist validation
+func (s *Service) UpdateSchoolSetting(ctx context.Context, schoolID, key, value string) error {
+	if !allowedSettingKeys[strings.ToLower(key)] {
+		return errors.New("invalid or unauthorized setting key")
+	}
+	return s.repo.UpdateSetting(ctx, schoolID, key, value)
 }

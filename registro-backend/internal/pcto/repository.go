@@ -3,6 +3,7 @@ package pcto
 import (
 	"context"
 	"database/sql"
+	"strings"
 )
 
 type Repository interface {
@@ -10,6 +11,7 @@ type Repository interface {
 	GetProjects(ctx context.Context, schoolID string) ([]Project, error)
 	GetProjectByID(ctx context.Context, id string) (*Project, error)
 	UpdateProject(ctx context.Context, p *Project) error
+	DeleteProject(ctx context.Context, id string) error
 
 	AssignStudent(ctx context.Context, participation *Participation) error
 	GetParticipationsByProject(ctx context.Context, projectID string) ([]Participation, error)
@@ -19,9 +21,11 @@ type Repository interface {
 	LogHours(ctx context.Context, h *HourLog) error
 	GetHours(ctx context.Context, participationID string) ([]HourLog, error)
 	VerifyHours(ctx context.Context, hourID, teacherID string) error
+	UpdateHourLogStatus(ctx context.Context, logID, status string) error
 
 	CreateCompany(ctx context.Context, c *Company) error
 	GetCompanies(ctx context.Context, schoolID string) ([]Company, error)
+	GetStats(ctx context.Context, schoolID string) (*PCTOStats, error)
 }
 
 type repository struct {
@@ -71,6 +75,11 @@ func (r *repository) UpdateProject(ctx context.Context, p *Project) error {
 	return err
 }
 
+func (r *repository) DeleteProject(ctx context.Context, id string) error {
+	_, err := r.db.ExecContext(ctx, `DELETE FROM pcto_projects WHERE id=$1`, id)
+	return err
+}
+
 func (r *repository) AssignStudent(ctx context.Context, p *Participation) error {
 	query := `INSERT INTO pcto_participations (project_id, student_id, status) VALUES ($1, $2, 'Active') RETURNING id`
 	return r.db.QueryRowContext(ctx, query, p.ProjectID, p.StudentID).Scan(&p.ID)
@@ -85,7 +94,7 @@ func (r *repository) GetParticipationsByProject(ctx context.Context, projectID s
 	var parts []Participation
 	for rows.Next() {
 		var p Participation
-		rows.Scan(&p.ID, &p.ProjectID, &p.StudentID, &p.Status, &p.HoursCompleted)
+		_ = rows.Scan(&p.ID, &p.ProjectID, &p.StudentID, &p.Status, &p.HoursCompleted)
 		parts = append(parts, p)
 	}
 	return parts, nil
@@ -100,7 +109,7 @@ func (r *repository) GetParticipationsByStudent(ctx context.Context, studentID s
 	var parts []Participation
 	for rows.Next() {
 		var p Participation
-		rows.Scan(&p.ID, &p.ProjectID, &p.StudentID, &p.Status, &p.HoursCompleted)
+		_ = rows.Scan(&p.ID, &p.ProjectID, &p.StudentID, &p.Status, &p.HoursCompleted)
 		parts = append(parts, p)
 	}
 	return parts, nil
@@ -117,7 +126,7 @@ func (r *repository) LogHours(ctx context.Context, h *HourLog) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	// Insert Log
 	err = tx.QueryRowContext(ctx, `INSERT INTO pcto_hours (participation_id, date, hours, activity_description) VALUES ($1, $2, $3, $4) RETURNING id`,
@@ -145,7 +154,7 @@ func (r *repository) GetHours(ctx context.Context, participationID string) ([]Ho
 	for rows.Next() {
 		var h HourLog
 		var verifiedBy sql.NullString
-		rows.Scan(&h.ID, &h.ParticipationID, &h.Date, &h.Hours, &h.Activity, &h.Verified, &verifiedBy)
+		_ = rows.Scan(&h.ID, &h.ParticipationID, &h.Date, &h.Hours, &h.Activity, &h.Verified, &verifiedBy)
 		if verifiedBy.Valid {
 			val := verifiedBy.String
 			h.VerifiedBy = &val
@@ -161,12 +170,24 @@ func (r *repository) VerifyHours(ctx context.Context, hourID, teacherID string) 
 }
 
 func (r *repository) CreateCompany(ctx context.Context, c *Company) error {
-	return r.db.QueryRowContext(ctx, `INSERT INTO pcto_companies (school_id, name, vat_number, address, contact_person, email) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
-		c.SchoolID, c.Name, c.VatNumber, c.Address, c.ContactPerson, c.Email).Scan(&c.ID)
+	if c.ContactPerson == "" && (c.ContactPersonFirstName != "" || c.ContactPersonLastName != "") {
+		c.ContactPerson = strings.TrimSpace(c.ContactPersonFirstName + " " + c.ContactPersonLastName)
+	}
+	query := `
+		INSERT INTO pcto_companies (school_id, name, vat_number, address, contact_person, contact_person_first_name, contact_person_last_name, contact_person_phone, email)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id
+	`
+	return r.db.QueryRowContext(ctx, query,
+		c.SchoolID, c.Name, c.VatNumber, c.Address, c.ContactPerson, c.ContactPersonFirstName, c.ContactPersonLastName, c.ContactPersonPhone, c.Email).Scan(&c.ID)
 }
 
 func (r *repository) GetCompanies(ctx context.Context, schoolID string) ([]Company, error) {
-	rows, err := r.db.QueryContext(ctx, `SELECT id, school_id, name, vat_number, address FROM pcto_companies WHERE school_id=$1`, schoolID)
+	query := `
+		SELECT id, school_id, name, vat_number, address, contact_person, COALESCE(contact_person_first_name, ''), COALESCE(contact_person_last_name, ''), COALESCE(contact_person_phone, ''), email
+		FROM pcto_companies
+		WHERE school_id=$1
+	`
+	rows, err := r.db.QueryContext(ctx, query, schoolID)
 	if err != nil {
 		return nil, err
 	}
@@ -174,8 +195,49 @@ func (r *repository) GetCompanies(ctx context.Context, schoolID string) ([]Compa
 	var comps []Company
 	for rows.Next() {
 		var c Company
-		rows.Scan(&c.ID, &c.SchoolID, &c.Name, &c.VatNumber, &c.Address)
+		err := rows.Scan(
+			&c.ID, &c.SchoolID, &c.Name, &c.VatNumber, &c.Address, &c.ContactPerson, &c.ContactPersonFirstName, &c.ContactPersonLastName, &c.ContactPersonPhone, &c.Email,
+		)
+		if err != nil {
+			return nil, err
+		}
 		comps = append(comps, c)
 	}
 	return comps, nil
+}
+
+func (r *repository) GetStats(ctx context.Context, schoolID string) (*PCTOStats, error) {
+	stats := &PCTOStats{}
+
+	// Total Projects
+	err := r.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM pcto_projects WHERE school_id = $1", schoolID).Scan(&stats.TotalProjects)
+	if err != nil {
+		return nil, err
+	}
+
+	// Total Students Involved
+	err = r.db.QueryRowContext(ctx, "SELECT COUNT(DISTINCT student_id) FROM pcto_participations WHERE project_id IN (SELECT id FROM pcto_projects WHERE school_id = $1)", schoolID).Scan(&stats.TotalStudents)
+	if err != nil {
+		return nil, err
+	}
+
+	// Total Hours Recorded
+	err = r.db.QueryRowContext(ctx, "SELECT COALESCE(SUM(hours), 0) FROM pcto_hours WHERE participation_id IN (SELECT id FROM pcto_participations WHERE project_id IN (SELECT id FROM pcto_projects WHERE school_id = $1))", schoolID).Scan(&stats.TotalHours)
+	if err != nil {
+		return nil, err
+	}
+
+	// Active Companies
+	err = r.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM pcto_companies WHERE school_id = $1", schoolID).Scan(&stats.ActiveCompanies)
+	if err != nil {
+		return nil, err
+	}
+
+	return stats, nil
+}
+
+func (r *repository) UpdateHourLogStatus(ctx context.Context, logID, status string) error {
+	query := `UPDATE pcto_hours SET status = $1, verified = ($1 = 'approved') WHERE id = $2::uuid`
+	_, err := r.db.ExecContext(ctx, query, status, logID)
+	return err
 }

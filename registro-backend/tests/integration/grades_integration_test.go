@@ -8,10 +8,12 @@ import (
 	"time"
 
 	"registro-backend/internal/grades"
+	"registro-backend/internal/users"
 	"registro-backend/tests/testhelpers"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestGradesIntegration_GetMyGrades(t *testing.T) {
@@ -20,8 +22,8 @@ func TestGradesIntegration_GetMyGrades(t *testing.T) {
 	mockUserRepo := new(testhelpers.MockUsersRepository)
 	mockAnalytics := new(testhelpers.MockAnalyticsService)
 
-	// NewService(r Repository, ur users.Repository, db *sql.DB)
-	service := grades.NewService(mockRepo, mockUserRepo, nil)
+	// NewService(r Repository, ur users.Repository, db *sql.DB, b EventBroadcaster)
+	service := grades.NewService(mockRepo, mockUserRepo, nil, nil)
 
 	// NewHandler(s Service, a AnalyticsService)
 	handler := grades.NewHandler(service, mockAnalytics)
@@ -30,7 +32,7 @@ func TestGradesIntegration_GetMyGrades(t *testing.T) {
 	router := gin.Default()
 
 	router.GET("/grades/my", func(c *gin.Context) {
-		c.Set("userID", "student1")
+		c.Set("user_id", "student1")
 		c.Set("role", "student")
 		handler.GetMyGrades(c)
 	})
@@ -61,13 +63,13 @@ func TestGradesIntegration_GetClassGrades(t *testing.T) {
 	mockUserRepo := new(testhelpers.MockUsersRepository)
 	mockAnalytics := new(testhelpers.MockAnalyticsService)
 
-	service := grades.NewService(mockRepo, mockUserRepo, nil)
+	service := grades.NewService(mockRepo, mockUserRepo, nil, nil)
 	handler := grades.NewHandler(service, mockAnalytics)
 
 	router := gin.Default()
 	router.GET("/grades/class/:classID", func(c *gin.Context) {
-		c.Set("userID", "teacher1")
-		c.Set("role", "teacher")
+		c.Set("user_id", "admin1")
+		c.Set("role", "admin")
 		handler.GetClassGrades(c)
 	})
 
@@ -79,6 +81,9 @@ func TestGradesIntegration_GetClassGrades(t *testing.T) {
 		// FindByClassAndSubject signature: (classID, subjectID string, semester int)
 		// handler calls with subjectID="" if not provided in query.
 		mockRepo.On("FindByClassAndSubject", "classA", "", 0).Return(repoGrades, nil)
+		
+		// Mock student lookup for names
+		mockUserRepo.On("GetStudentsByClass", mock.Anything, "classA").Return([]users.User{}, nil)
 
 		req := httptest.NewRequest("GET", "/grades/class/classA", nil)
 		res := httptest.NewRecorder()

@@ -27,9 +27,11 @@ func (h *GDPRHandler) PseudonymizeUser(user *User) {
 	user.FirstName = "Deleted"
 	user.LastName = "User-" + pseudoID
 	user.Email = fmt.Sprintf("deleted-%s@anonymized.local", pseudoID)
-	user.FiscalCode = "ANONYMIZED"
-	user.PhoneNumber = ""
-	user.JobTitle = ""
+	anon := "ANONYMIZED"
+	user.FiscalCode = &anon
+	empty := ""
+	user.PhoneNumber = &empty
+	user.JobTitle = &empty
 	user.PasswordHash = "" // Clear password
 	user.MFASecret = ""
 	user.MFAEnabled = false
