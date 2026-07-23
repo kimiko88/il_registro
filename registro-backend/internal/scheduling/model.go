@@ -40,13 +40,18 @@ type ColloquioSlot struct {
 
 // ColloquioBooking represents a reservation
 type ColloquioBooking struct {
-	ID        string        `json:"id" db:"id"`
-	SlotID    string        `json:"slot_id" db:"slot_id"`
-	ParentID  *string       `json:"parent_id,omitempty" db:"parent_id"`
-	StudentID *string       `json:"student_id,omitempty" db:"student_id"`
-	Status    BookingStatus `json:"status" db:"status"`
-	Notes     string        `json:"notes" db:"notes"`
-	BookedAt  time.Time     `json:"booked_at" db:"booked_at"`
+	ID          string        `json:"id" db:"id"`
+	SlotID      string        `json:"slot_id" db:"slot_id"`
+	ParentID    *string       `json:"parent_id,omitempty" db:"parent_id"`
+	StudentID   *string       `json:"student_id,omitempty" db:"student_id"`
+	Status      BookingStatus `json:"status" db:"status"`
+	Notes       string        `json:"notes" db:"notes"`
+	BookedAt    time.Time     `json:"booked_at" db:"booked_at"`
+	
+	// Hydrated fields
+	Slot        *ColloquioSlot `json:"slot,omitempty" db:"-"`
+	ParentName  string         `json:"parent_name,omitempty" db:"parent_name"`
+	StudentName string         `json:"student_name,omitempty" db:"student_name"`
 }
 
 // ColloquioSettings global config

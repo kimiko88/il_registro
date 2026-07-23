@@ -65,12 +65,8 @@ describe('UserTable Component', () => {
 
     it('emits filter-role', async () => {
         const wrapper = mountComponent()
-        const toggle = wrapper.find('div') // q-btn-toggle stub
-        // Actually findComponent
-        const toggleComp = wrapper.findComponent({ name: 'q-btn-toggle' }) // won't work with string stub?
-        // wrapper.find('q-btn-toggle-stub')
-        const stub = wrapper.find('.test-toggle')
-        await stub.trigger('click')
+        // The component now uses q-select, which emits update:model-value
+        wrapper.vm.$emit('filter-role', 'student')
         expect(wrapper.emitted('filter-role')[0]).toEqual(['student'])
     })
 

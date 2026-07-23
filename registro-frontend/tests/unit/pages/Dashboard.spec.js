@@ -1,13 +1,19 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { mount, flushPromises } from '@vue/test-utils'
 import { createTestingPinia } from '@pinia/testing'
+import { setActivePinia } from 'pinia'
 import { Quasar } from 'quasar'
 import Dashboard from '@/pages/Dashboard.vue'
 import { useAuthStore } from '@/stores/auth'
 
+vi.mock('@/services/dashboardService', () => ({
+    default: {
+        getDashboardStats: vi.fn().mockResolvedValue(null)
+    }
+}))
+
 describe('Dashboard.vue', () => {
     let wrapper
-    let store
 
     beforeEach(() => {
         wrapper = mount(Dashboard, {
@@ -18,7 +24,7 @@ describe('Dashboard.vue', () => {
                         createSpy: vi.fn,
                         initialState: {
                             auth: {
-                                user: { first_name: 'TestUser' },
+                                user: { first_name: 'TestUser', role: 'student' },
                                 userRole: 'student'
                             }
                         }
@@ -38,7 +44,6 @@ describe('Dashboard.vue', () => {
                 }
             }
         })
-        store = useAuthStore()
     })
 
     it('renders greeting with user name', () => {
@@ -51,22 +56,24 @@ describe('Dashboard.vue', () => {
     })
 
     it('renders teacher stats when role is teacher', async () => {
-        // We use createTestingPinia which mocks the store.
-        // userRole is a computed property (getter). getters are writable in mocked stores.
+        const pinia = createTestingPinia({
+            createSpy: vi.fn,
+            initialState: {
+                auth: {
+                    user: { first_name: 'Teacher', role: 'teacher' }
+                }
+            },
+            stubActions: false
+        })
+        setActivePinia(pinia)
+        const store = useAuthStore(pinia)
+        store.userRole = 'teacher'
 
-        wrapper = mount(Dashboard, {
+        const teacherWrapper = mount(Dashboard, {
             global: {
                 plugins: [
                     [Quasar, {}],
-                    createTestingPinia({
-                        createSpy: vi.fn,
-                        initialState: {
-                            auth: {
-                                user: { first_name: 'Teacher' }
-                            }
-                        },
-                        stubActions: false
-                    })
+                    pinia
                 ],
                 stubs: {
                     'q-page': { template: '<div><slot /></div>' },
@@ -83,11 +90,9 @@ describe('Dashboard.vue', () => {
             }
         })
 
-        const store = useAuthStore()
-        store.userRole = 'teacher' // Override the getter value
-        await wrapper.vm.$nextTick()
+        await flushPromises()
 
-        expect(wrapper.text()).toContain('Le Mie Classi')
-        expect(wrapper.text()).toContain('Lezioni Oggi')
+        expect(teacherWrapper.text()).toContain('Le Mie Classi')
+        expect(teacherWrapper.text()).toContain('Lezioni Oggi')
     })
 })

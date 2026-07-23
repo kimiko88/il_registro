@@ -53,7 +53,8 @@ import notesService from '@/services/notesService'
 const props = defineProps({
   modelValue: Boolean,
   student: Object,
-  classId: String
+  classId: String,
+  noteToEdit: Object
 })
 
 const emit = defineEmits(['update:modelValue', 'saved'])
@@ -81,30 +82,46 @@ const visible = computed({
 
 watch(() => props.modelValue, (val) => {
   if (val) {
-    // Reset form on open
-    noteData.type = 'generic'
-    noteData.note = ''
-    noteData.date = new Date().toISOString().split('T')[0]
+    if (props.noteToEdit) {
+      noteData.type = props.noteToEdit.type
+      noteData.note = props.noteToEdit.note
+      noteData.date = props.noteToEdit.date
+    } else {
+      // Reset form on open for new note
+      noteData.type = 'generic'
+      noteData.note = ''
+      noteData.date = new Date().toISOString().split('T')[0]
+    }
   }
 })
 
 const onSubmit = async () => {
   loading.value = true
   try {
-    const payload = {
-      student_id: props.student.id,
-      class_id: props.classId,
-      type: noteData.type,
-      note: noteData.note,
-      date: noteData.date
+    if (props.noteToEdit) {
+      await notesService.updateNote(props.noteToEdit.id, {
+        type: noteData.type,
+        note: noteData.note,
+        date: noteData.date
+      })
+      $q.notify({
+        type: 'positive',
+        message: 'Nota modificata con successo'
+      })
+    } else {
+      const payload = {
+        student_id: props.student ? props.student.id : '',
+        class_id: props.classId,
+        type: noteData.type,
+        note: noteData.note,
+        date: noteData.date
+      }
+      await notesService.createNote(payload)
+      $q.notify({
+        type: 'positive',
+        message: 'Nota salvata con successo'
+      })
     }
-
-    await notesService.createNote(payload)
-    
-    $q.notify({
-      type: 'positive',
-      message: 'Nota salvata con successo'
-    })
     
     emit('saved')
     visible.value = false

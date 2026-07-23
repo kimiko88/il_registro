@@ -64,6 +64,14 @@ func (m *MockRepository) RemoveSubject(ctx context.Context, teacherID, subjectID
 	return args.Error(0)
 }
 
+func (m *MockRepository) GetDashboardStats(ctx context.Context, teacherUserID string) (map[string]interface{}, error) {
+	args := m.Called(ctx, teacherUserID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(map[string]interface{}), args.Error(1)
+}
+
 func TestService_ListTeachers(t *testing.T) {
 	tests := []struct {
 		name     string

@@ -39,5 +39,8 @@ import { useGradesStore } from 'src/stores/grades';
 const gradesStore = useGradesStore();
 
 const average = computed(() => gradesStore.classAverage);
-const totalGrades = computed(() => gradesStore.grades.length);
+const totalGrades = computed(() => {
+    if (!gradesStore.grades || !gradesStore.grades.students) return 0;
+    return gradesStore.grades.students.reduce((acc, s) => acc + s.grades.length, 0);
+});
 </script>

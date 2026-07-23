@@ -11,6 +11,21 @@ vi.mock('quasar', () => ({
     })
 }));
 
+vi.mock('@/services/api', () => ({
+    default: {
+        get: vi.fn(() => Promise.resolve({ data: [] })),
+        post: vi.fn(() => Promise.resolve({ data: {} })),
+        patch: vi.fn(() => Promise.resolve({ data: {} }))
+    }
+}))
+
+vi.mock('src/services/attendanceService', () => ({
+    attendanceService: {
+        getByClass: vi.fn(() => Promise.resolve({ data: { records: [] } })),
+        getMyAttendance: vi.fn(() => Promise.resolve({ data: [] }))
+    }
+}))
+
 describe('useAttendanceMarking', () => {
     let store;
 

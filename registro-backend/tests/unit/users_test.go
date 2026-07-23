@@ -31,6 +31,8 @@ func TestUsersService_CreateUser(t *testing.T) {
 			return u.Email == "newuser@test.com" && u.FirstName == "Test"
 		})).Return(nil)
 
+		mockRepo.On("AddPasswordHistory", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
 		// Audit log mock - Must match signature in repository.go
 		// LogAudit(ctx context.Context, log *AuditLog) error
 		mockRepo.On("LogAudit", mock.Anything, mock.Anything).Return(nil)
