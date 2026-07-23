@@ -139,7 +139,11 @@ func GetSchoolID(c *gin.Context) (string, bool) {
 	if !exists {
 		return "", false
 	}
-	return schoolID.(string), true
+	s, ok := schoolID.(string)
+	if !ok || s == "" {
+		return "", false
+	}
+	return s, true
 }
 
 // ContextKey type for context keys

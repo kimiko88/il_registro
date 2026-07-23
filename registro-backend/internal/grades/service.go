@@ -501,10 +501,11 @@ func (s *service) UpdateGrade(teacherID string, gradeID string, req UpdateGradeR
 	}
 	if req.Date != nil && *req.Date != "" {
 		parsedDate, parseErr := time.Parse("2006-01-02", *req.Date)
-		if parseErr == nil {
-			grade.Date = parsedDate
-			changes = true
+		if parseErr != nil {
+			return nil, fmt.Errorf("invalid date format: %w", parseErr)
 		}
+		grade.Date = parsedDate
+		changes = true
 	}
 
 	if !changes {
@@ -834,7 +835,7 @@ func (s *service) GetSemesterReport(studentID string, semester int) (*SemesterRe
 	if className == "" {
 		className = "Classe N/D"
 	}
-	schoolYear = "2025/2026"
+	schoolYear = currentSchoolYear()
 
 	var semGrades []Grade
 	for _, g := range grades {
@@ -921,7 +922,7 @@ func (s *service) GetSemesterReport(studentID string, semester int) (*SemesterRe
 
 	totalSubjectCount := len(subjects)
 	promoted := "NO"
-	if totalSubjectCount > 0 && passedCount == totalSubjectCount {
+	if enrollErr == nil && len(enrolledSubjects) > 0 && totalSubjectCount > 0 && passedCount == len(enrolledSubjects) && passedCount == totalSubjectCount {
 		promoted = "SÌ"
 	}
 
@@ -1062,6 +1063,15 @@ func academicYearDates() (sem1Start, sem1End, sem2Start, sem2End string) {
 	sem2Start = fmt.Sprintf("%d-02-01", nextYear)
 	sem2End = fmt.Sprintf("%d-06-10", nextYear)
 	return
+}
+
+func currentSchoolYear() string {
+	now := time.Now()
+	year := now.Year()
+	if now.Month() < time.September {
+		year--
+	}
+	return fmt.Sprintf("%d/%d", year, year+1)
 }
 
 func (s *service) CreateTestWithGrades(teacherID string, req CreateClassTestRequest) error {
@@ -1211,7 +1221,13 @@ func (s *service) DeleteClassTest(teacherID string, testID string) error {
 	if err != nil {
 		return err
 	}
-	if test.TeacherID != teacherID {
+	var teacherProfileID string
+	if s.validator != nil && s.validator.db != nil {
+		_ = s.validator.db.QueryRow(
+			`SELECT id FROM teachers WHERE user_id = $1`, teacherID,
+		).Scan(&teacherProfileID)
+	}
+	if test.TeacherID != teacherID && test.TeacherID != teacherProfileID {
 		return ErrUnauthorized
 	}
 	return s.repo.DeleteTest(testID)

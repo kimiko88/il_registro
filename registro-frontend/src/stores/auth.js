@@ -57,8 +57,11 @@ export const useAuthStore = defineStore('auth', () => {
 
     function updateUser(userData) {
         user.value = userData
-        localStorage.setItem('user', JSON.stringify(userData))
-        sessionStorage.setItem('user', JSON.stringify(userData))
+        if (localStorage.getItem('token')) {
+            localStorage.setItem('user', JSON.stringify(userData))
+        } else if (sessionStorage.getItem('token')) {
+            sessionStorage.setItem('user', JSON.stringify(userData))
+        }
     }
 
     return {

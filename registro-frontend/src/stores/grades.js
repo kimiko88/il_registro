@@ -95,6 +95,7 @@ export const useGradesStore = defineStore('grades', {
         },
 
         async updateGrade(id, updates) {
+            this.loading = true;
             try {
                 const response = await gradeService.updateGrade(id, updates);
                 // Refetch to keep the full class view consistent
@@ -105,10 +106,13 @@ export const useGradesStore = defineStore('grades', {
             } catch (err) {
                 console.error("Error updating grade:", err);
                 throw err;
+            } finally {
+                this.loading = false;
             }
         },
 
         async deleteGrade(id) {
+            this.loading = true;
             try {
                 await gradeService.deleteGrade(id);
                 // Refetch to keep the full class view consistent
@@ -118,6 +122,8 @@ export const useGradesStore = defineStore('grades', {
             } catch (err) {
                 console.error("Error deleting grade:", err);
                 throw err;
+            } finally {
+                this.loading = false;
             }
         },
 
@@ -186,22 +192,29 @@ export const useGradesStore = defineStore('grades', {
         },
 
         async downloadReportCardPDF(semester = 1) {
+            let url = null;
+            let link = null;
             try {
                 const response = await api.get(`/grades/my-grades/semester/${semester}/pdf`, {
                     responseType: 'blob'
                 });
                 const blob = new Blob([response.data], { type: 'application/pdf' });
-                const url = window.URL.createObjectURL(blob);
-                const link = document.createElement('a');
+                url = window.URL.createObjectURL(blob);
+                link = document.createElement('a');
                 link.href = url;
                 link.setAttribute('download', `pagella_q${semester}.pdf`);
                 document.body.appendChild(link);
                 link.click();
-                link.remove();
-                window.URL.revokeObjectURL(url);
             } catch (err) {
                 console.error("Error downloading report card PDF:", err);
                 throw err;
+            } finally {
+                if (link && link.parentNode) {
+                    link.remove();
+                }
+                if (url) {
+                    window.URL.revokeObjectURL(url);
+                }
             }
         }
     }

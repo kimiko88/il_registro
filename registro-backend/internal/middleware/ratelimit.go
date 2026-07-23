@@ -97,6 +97,9 @@ func RateLimitMiddleware() gin.HandlerFunc {
 
 	return func(c *gin.Context) {
 		ip := c.ClientIP()
+		if ip == "" {
+			ip = "127.0.0.1"
+		}
 		if !limiter.GetLimiter(ip).Allow() {
 			c.JSON(http.StatusTooManyRequests, gin.H{"error": "Too many requests"})
 			c.Abort()
