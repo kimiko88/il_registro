@@ -250,6 +250,11 @@
                       </div>
                     </q-slide-transition>
                  </div>
+
+                 <div v-if="slotPreviewInfo" class="q-mt-md bg-blue-50 text-blue-900 q-pa-sm rounded-borders text-caption">
+                    <q-icon name="info" size="xs" class="q-mr-xs" />
+                    Verranno creati <strong>{{ slotPreviewInfo.totalSlots }}</strong> slot in totale ({{ slotPreviewInfo.slotsPerDay }} al giorno per {{ slotPreviewInfo.daysCount }} {{ slotPreviewInfo.daysCount === 1 ? 'giorno' : 'giorni' }}).
+                 </div>
             </q-card-section>
 
             <q-card-actions align="right" class="q-pa-md">
@@ -280,16 +285,16 @@ const showSlotDialog = ref(false)
 const saving = ref(false)
 
 const slotPreviewInfo = computed(() => {
-    const dates = Array.isArray(newSlot.value.dates) ? newSlot.value.dates : (newSlot.value.dates ? [newSlot.value.dates] : [])
-    if (dates.length === 0 || !newSlot.value.start || !newSlot.value.end || !newSlot.value.duration || newSlot.value.duration <= 0) {
+    const dates = Array.isArray(newSlot.dates) ? newSlot.dates : (newSlot.dates ? [newSlot.dates] : [])
+    if (dates.length === 0 || !newSlot.start || !newSlot.end || !newSlot.duration || newSlot.duration <= 0) {
         return null
     }
-    const [startH, startM] = newSlot.value.start.split(':').map(Number)
-    const [endH, endM] = newSlot.value.end.split(':').map(Number)
+    const [startH, startM] = newSlot.start.split(':').map(Number)
+    const [endH, endM] = newSlot.end.split(':').map(Number)
     const startMins = startH * 60 + startM
     const endMins = endH * 60 + endM
     if (endMins <= startMins) return null
-    const slotsPerDay = Math.floor((endMins - startMins) / newSlot.value.duration)
+    const slotsPerDay = Math.floor((endMins - startMins) / newSlot.duration)
     const totalSlots = slotsPerDay * dates.length
     return {
         slotsPerDay,
@@ -415,7 +420,7 @@ const formatStatusLabel = (status) => {
 
 const saveSettings = () => {
   try {
-    localStorage.setItem('teacher_colloqui_settings', JSON.stringify(settings.value))
+    localStorage.setItem('teacher_colloqui_settings', JSON.stringify(settings))
     $q.notify({ color: 'positive', message: 'Impostazioni salvate con successo' })
   } catch (e) {
     $q.notify({ color: 'negative', message: 'Errore durante il salvataggio delle impostazioni' })
@@ -436,9 +441,11 @@ onMounted(() => {
   if (saved) {
     try {
       const parsed = JSON.parse(saved)
-      settings.value.onlineEnabled = !!parsed.onlineEnabled
-      settings.value.meetLink = parsed.meetLink || ''
-    } catch (e) {}
+      settings.onlineEnabled = !!parsed.onlineEnabled
+      settings.meetLink = parsed.meetLink || ''
+    } catch (e) {
+      console.warn('Failed to parse saved teacher colloqui settings:', e)
+    }
   }
   loadData()
 })

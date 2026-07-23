@@ -7,12 +7,12 @@ Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/)
 
 ## [Unreleased]
 
-### Da fare
-- Paginazione sugli endpoint di lista voti
-- OpenAPI/Swagger spec autogenerata
-- Graceful shutdown con SIGTERM/SIGINT
-- Implementazione completa di `GetChildGradesAverage`
-- Consolidamento tool di migrazione in un unico sistema versionato
+### Aggiunto
+- Paginazione sugli endpoint di lista voti (`PaginatedGradesResponse` con `page` e `page_size`)
+- Specifica OpenAPI 3.0 in `docs/openapi.yaml` ed endpoint `/api/v1/swagger/doc.json`
+- Graceful shutdown con gestione dei segnali `SIGTERM`/`SIGINT` nel server HTTP backend
+- Calcolo completo e pesato della media in `GetChildGradesAverage`
+- Consolidamento tool di migrazione SQL in un runner versionato unico con tabella `schema_migrations` (`cmd/migrate/main.go`)
 
 ---
 

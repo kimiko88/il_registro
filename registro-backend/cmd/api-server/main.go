@@ -191,6 +191,10 @@ func main() {
 		r.GET("/ready", healthH.Ready)
 		r.GET("/metrics", healthH.Metrics)
 
+		api.GET("/swagger/doc.json", func(c *gin.Context) {
+			c.File("../docs/openapi.yaml")
+		})
+
 		authH.RegisterRoutes(api, authMiddleware)
 
 		api.GET("/ws", authMiddleware.Authenticate(), func(c *gin.Context) {

@@ -304,7 +304,9 @@ const saveDraftToStorage = () => {
         localStorage.setItem(key, JSON.stringify(draftData))
         const now = new Date()
         lastAutosaveTime.value = now.toLocaleTimeString('it-IT')
-    } catch (e) {}
+    } catch (e) {
+        console.warn('Failed to save draft to localStorage', e)
+    }
 }
 
 onMounted(async () => {

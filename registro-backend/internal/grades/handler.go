@@ -94,6 +94,20 @@ func (h *Handler) GetStudentGrades(c *gin.Context) {
 
 	filter := h.parseFilter(c)
 
+	if filter.Page > 0 {
+		resp, err := h.service.GetStudentGradesPaged(c.Request.Context(), actorID, actorRole, studentID, filter)
+		if err != nil {
+			if errors.Is(err, ErrUnauthorized) || errors.Is(err, ErrNotGuardian) {
+				c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+				return
+			}
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, resp)
+		return
+	}
+
 	grades, err := h.service.GetStudentGradesWithFilter(c.Request.Context(), actorID, actorRole, studentID, filter)
 	if err != nil {
 		if errors.Is(err, ErrUnauthorized) || errors.Is(err, ErrNotGuardian) {

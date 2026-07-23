@@ -679,9 +679,6 @@ func (s *service) GetChildAverages(parentID string, studentID string) (*StudentA
 }
 
 func (s *service) GetMyGrades(studentID string, filter GradeFilter) (*MyGradesResponse, error) {
-	published := true
-	filter.IsPublished = &published
-
 	allGrades, err := s.repo.FindByStudent(studentID)
 	if err != nil {
 		return nil, err

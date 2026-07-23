@@ -3,6 +3,7 @@ package parents
 import (
 	"context"
 	"errors"
+	"math"
 	"registro-backend/internal/attendance"
 	"registro-backend/internal/communications"
 	"registro-backend/internal/grades"
@@ -94,17 +95,49 @@ func (s *Service) GetChildGradesAverage(ctx context.Context, parentUserID, stude
 		return 0, err
 	}
 
-	var sum float64
+	var weightedSum float64
+	var totalWeight float64
+	var unweightedSum float64
 	var count int
+
 	for _, g := range gradesList {
-		if g.IsPublished && g.DeletedAt == nil {
-			sum += g.GradeValue
-			count++
+		if !g.IsPublished || g.DeletedAt != nil {
+			continue
+		}
+		// Skip non-summative grades if summative category is specified
+		if g.GradeCategory != "" && g.GradeCategory != grades.GradeCategorySummative {
+			continue
+		}
+
+		w := g.Weight
+		if w <= 0 {
+			w = 1.0
+		}
+		weightedSum += g.GradeValue * w
+		totalWeight += w
+		unweightedSum += g.GradeValue
+		count++
+	}
+
+	// Fallback to all published grades if no summative grades found
+	if count == 0 {
+		for _, g := range gradesList {
+			if g.IsPublished && g.DeletedAt == nil {
+				w := g.Weight
+				if w <= 0 {
+					w = 1.0
+				}
+				weightedSum += g.GradeValue * w
+				totalWeight += w
+				count++
+			}
 		}
 	}
 
-	if count == 0 {
+	if count == 0 || totalWeight == 0 {
 		return 0, nil
 	}
-	return sum / float64(count), nil
+
+	avg := weightedSum / totalWeight
+	return math.Round(avg*100) / 100, nil
 }
