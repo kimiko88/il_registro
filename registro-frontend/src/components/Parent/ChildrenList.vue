@@ -23,5 +23,5 @@
 </template>
 
 <script setup>
-const props = defineProps(['children']);
+defineProps(['children']);
 </script>

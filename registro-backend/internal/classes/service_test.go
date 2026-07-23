@@ -17,8 +17,8 @@ func (m *MockRepository) Create(ctx context.Context, c *Class) error {
 	args := m.Called(ctx, c)
 	return args.Error(0)
 }
-func (m *MockRepository) List(ctx context.Context, schoolID string) ([]Class, error) {
-	args := m.Called(ctx, schoolID)
+func (m *MockRepository) List(ctx context.Context, schoolID string, academicYear string) ([]Class, error) {
+	args := m.Called(ctx, schoolID, academicYear)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -60,6 +60,13 @@ func (m *MockRepository) GetClassSubjects(ctx context.Context, classID string) (
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]ClassSubject), args.Error(1)
+}
+func (m *MockRepository) GetClassGuardians(ctx context.Context, classID string) ([]GuardianInfo, error) {
+	args := m.Called(ctx, classID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]GuardianInfo), args.Error(1)
 }
 
 func TestService_CreateClass(t *testing.T) {
@@ -122,7 +129,7 @@ func TestService_ListClasses(t *testing.T) {
 			name: "successful list",
 			mockFn: func(m *MockRepository) {
 				classes := []Class{{Name: "1A", ID: "c1"}, {Name: "2B", ID: "c2"}}
-				m.On("List", mock.Anything, "school-1").Return(classes, nil)
+				m.On("List", mock.Anything, "school-1", "2024-2025").Return(classes, nil)
 			},
 			wantErr: false,
 			wantLen: 2,
@@ -130,7 +137,7 @@ func TestService_ListClasses(t *testing.T) {
 		{
 			name: "empty list",
 			mockFn: func(m *MockRepository) {
-				m.On("List", mock.Anything, "school-1").Return([]Class{}, nil)
+				m.On("List", mock.Anything, "school-1", "2024-2025").Return([]Class{}, nil)
 			},
 			wantErr: false,
 			wantLen: 0,
@@ -138,7 +145,7 @@ func TestService_ListClasses(t *testing.T) {
 		{
 			name: "repository error",
 			mockFn: func(m *MockRepository) {
-				m.On("List", mock.Anything, "school-1").Return(nil, errors.New("database error"))
+				m.On("List", mock.Anything, "school-1", "2024-2025").Return(nil, errors.New("database error"))
 			},
 			wantErr: true,
 		},
@@ -150,7 +157,7 @@ func TestService_ListClasses(t *testing.T) {
 			tt.mockFn(mockRepo)
 			service := NewService(mockRepo)
 
-			list, err := service.ListClasses(context.Background(), "school-1")
+			list, err := service.ListClasses(context.Background(), "school-1", "2024-2025")
 
 			if tt.wantErr {
 				assert.Error(t, err)

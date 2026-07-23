@@ -38,3 +38,12 @@ type CreateEventRequest struct {
 	Hours        float64 `json:"hours" binding:"required"`
 	MaxAttendees int     `json:"max_attendees"`
 }
+
+type StudentPreference struct {
+	ID             string    `json:"id" db:"id"`
+	StudentID      string    `json:"student_id" db:"student_id"`
+	PreferredTrack string    `json:"preferred_track" db:"preferred_track"`
+	TargetField    string    `json:"target_field" db:"target_field"`
+	Notes          string    `json:"notes" db:"notes"`
+	UpdatedAt      time.Time `json:"updated_at" db:"updated_at"`
+}

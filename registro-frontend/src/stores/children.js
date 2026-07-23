@@ -1,10 +1,12 @@
 import { defineStore } from 'pinia';
+import api from '../services/api';
 
 export const useChildrenStore = defineStore('children', {
     state: () => ({
         children: [],
         selectedChildId: null,
-        loading: false
+        loading: false,
+        error: null
     }),
 
     getters: {
@@ -15,17 +17,25 @@ export const useChildrenStore = defineStore('children', {
     actions: {
         async fetchChildren() {
             this.loading = true;
+            this.error = null;
             try {
-                await new Promise(resolve => setTimeout(resolve, 500));
-                // Mock Data
-                this.children = [
-                    { id: 's1', firstName: 'Mario', lastName: 'Rossi', className: '5A', school: 'Liceo Scientifico', avatar: 'https://cdn.quasar.dev/img/boy-avatar.png' },
-                    { id: 's3', firstName: 'Sofia', lastName: 'Rossi', className: '3B', school: 'Liceo Classico', avatar: 'https://cdn.quasar.dev/img/avatar6.jpg' }
-                ];
+                const response = await api.get('/users/me/children');
+                this.children = (response.data || []).map(c => ({
+                    id: c.id,
+                    userId: c.user_id,
+                    firstName: c.first_name,
+                    lastName: c.last_name,
+                    className: c.class,
+                    school: c.school_name,
+                    avatar: 'https://cdn.quasar.dev/img/boy-avatar.png'
+                }));
                 // Auto-select first if none selected
                 if (!this.selectedChildId && this.children.length > 0) {
                     this.selectedChildId = this.children[0].id;
                 }
+            } catch (err) {
+                this.error = err.response?.data?.error || err.message || 'Failed to fetch children';
+                console.error("Error fetching children:", err);
             } finally {
                 this.loading = false;
             }

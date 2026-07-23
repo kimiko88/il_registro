@@ -1,48 +1,123 @@
-# RegistroV2 - Electronic School Register
+# RegistroV2 — Registro Elettronico Scolastico
 
-RegistroV2 is a comprehensive, modern solution for managing Italian school activities, including grades, attendance, digital documents, and communications.
+> Sistema completo per la gestione digitale delle attività scolastiche italiane.
 
-## 🚀 Key Features
-- **Role-Based Access**: Specialized views for Teachers, Students, Parents, and Administrators.
-- **Advanced Grading**: Supports numeric grades, judgments, credits, and weighted averages.
-- **Real-time Attendance**: Track presence, delays, and justifications.
-- **Digital Class Register**: Seamless management of daily activities.
-- **Documents & Workflows**: Digital signature and circular management.
-- **Secure**: JWT Authentication, MFA, and Audit Logging.
+[![Backend CI](https://github.com/kimiko88/Registrov2/actions/workflows/ci.yml/badge.svg)](https://github.com/kimiko88/Registrov2/actions/workflows/ci.yml)
+[![Go Version](https://img.shields.io/badge/go-1.21%2B-blue)](https://go.dev/)
+[![Vue Version](https://img.shields.io/badge/vue-3.x-brightgreen)](https://vuejs.org/)
+[![License](https://img.shields.io/badge/license-Proprietary-red)](#licenza)
 
-## 📁 Repository Structure
-- **[Back-end](./registro-backend/)**: Go (Golang) API server.
-- **[Front-end](./registro-frontend/)**: Vue 3 + Quasar PWA/SPA.
-- **[Docs](./docs/)**: Detailed project documentation.
+---
 
-## 📚 Documentation
-- **[Architecture & Design](./docs/ARCHITECTURE.md)**: Detailed breakdown of code structure and modules.
-- **[Setup Guide](./docs/SETUP_GUIDE.md)**: Instructions for installation, configuration, and running locally.
-- **[API Documentation]**: (See Postman collection or Swagger if available).
+## Panoramica
 
-## 🛠 Quick Start
+**RegistroV2** è un registro elettronico scolastico full-stack progettato per il contesto scolastico italiano. Gestisce voti, presenze, comunicazioni, orari, scrutini, PCTO e molto altro, con supporto nativo a **SPID** e **CIE** per l'autenticazione degli utenti.
+
+Il progetto è organizzato come **monorepo** con backend Go e frontend Vue 3:
+
+```
+Registrov2/
+├── registro-backend/    # API REST in Go (Gin + PostgreSQL + Redis)
+├── registro-frontend/   # SPA/PWA in Vue 3 + Quasar
+├── docs/                # Documentazione tecnica dettagliata
+├── .github/workflows/   # Pipeline CI/CD
+├── CHANGELOG.md         # Storico delle versioni
+├── CONTRIBUTING.md      # Guida ai contributi
+└── SECURITY.md          # Policy di sicurezza
+```
+
+---
+
+## Funzionalità principali
+
+| Area | Funzionalità |
+|---|---|
+| **Autenticazione** | JWT (access 15min + refresh rotation), MFA TOTP, SPID, CIE, reset password |
+| **Ruoli** | `superadmin`, `admin`, `segreteria`, `teacher`, `student`, `parent` |
+| **Voti** | Inserimento, medie ponderate, trend, analisi statistica, import/export Excel/CSV |
+| **Presenze** | Registro giornaliero, assenze, ritardi, uscite, giustificazioni |
+| **Comunicazioni** | Circolari, comunicazioni scuola-famiglia, notifiche real-time via WebSocket |
+| **Scrutini** | Pagelle, voti di condotta, crediti scolastici |
+| **PCTO** | Tracciamento ore alternanza scuola-lavoro |
+| **Orari** | Gestione orario scolastico e colloqui |
+| **Documenti** | Firma digitale, materiali didattici, libri di testo |
+| **PWA** | Installabile su dispositivi mobili, supporto offline |
+
+---
+
+## Quick Start
+
+### Prerequisiti
+
+- [Go](https://go.dev/) 1.21+
+- [Node.js](https://nodejs.org/) 18+ (LTS)
+- [Docker](https://www.docker.com/) e Docker Compose
+- [Make](https://www.gnu.org/software/make/)
+
+### Avvio con Docker (consigliato)
+
 ```bash
-# 1. Start Backend
+# Clona il repository
+git clone https://github.com/kimiko88/Registrov2.git
+cd Registrov2
+
+# Avvia l'intero stack (backend + frontend + DB + Redis)
+docker compose up --build
+```
+
+- **Backend API**: [http://localhost:8080](http://localhost:8080)
+- **Frontend**: [http://localhost:9000](http://localhost:9000)
+
+### Avvio locale (sviluppo)
+
+```bash
+# Terminal 1 — Backend
 cd registro-backend
-go run cmd/api-server/main.go
+cp .env.example .env   # Configura le variabili d'ambiente
+make docker-db         # Avvia solo PostgreSQL e Redis
+make migrate           # Esegui le migrazioni
+make dev               # Avvia con live reload (Air)
 
-# 2. Start Frontend (in new terminal)
+# Terminal 2 — Frontend
 cd registro-frontend
-npm install && npm run dev
+cp .env.example .env   # Configura VITE_API_URL
+npm install
+npm run dev
 ```
 
-## 🧪 Testing
-We maintain a high level of test coverage (~80%).
+---
 
-**Run Backend Tests:**
-```bash
-cd registro-backend && make test-unit
-```
+## Documentazione
 
-**Run Frontend Tests:**
+| Documento | Descrizione |
+|---|---|
+| [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | Architettura, layer, pattern, diagrammi data flow |
+| [docs/SETUP_GUIDE.md](./docs/SETUP_GUIDE.md) | Installazione locale, Docker, produzione, troubleshooting |
+| [docs/FRONTEND_GUIDE.md](./docs/FRONTEND_GUIDE.md) | Guida sviluppo frontend: componenti, store, routing, testing |
+| [docs/API_REFERENCE.md](./docs/API_REFERENCE.md) | Riferimento API completo con request/response bodies |
+| [registro-backend/README.md](./registro-backend/README.md) | Guida specifica backend Go |
+| [registro-frontend/README.md](./registro-frontend/README.md) | Guida specifica frontend Vue/Quasar |
+| [CHANGELOG.md](./CHANGELOG.md) | Storico versioni e breaking changes |
+| [CONTRIBUTING.md](./CONTRIBUTING.md) | Come contribuire, branch strategy, commit convention |
+| [SECURITY.md](./SECURITY.md) | Segnalazione vulnerabilità, policy GDPR |
+
+---
+
+## Testing
+
 ```bash
+# Backend — tutti i test con race detector
+cd registro-backend && make test
+
+# Frontend — unit test con Vitest
 cd registro-frontend && npm run test:unit
+
+# Frontend — coverage
+cd registro-frontend && npm run test:coverage
 ```
 
-## 📜 License
-Private / Proprietary.
+---
+
+## Licenza
+
+Privato / Proprietario. Tutti i diritti riservati.

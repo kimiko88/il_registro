@@ -13,6 +13,9 @@ var (
 	ErrExpiredToken = errors.New("token has expired")
 )
 
+// jwtAudience is the expected audience for all access tokens issued by this service.
+const jwtAudience = "registro-api"
+
 // Claims represents JWT claims
 type Claims struct {
 	UserID   string `json:"user_id"`
@@ -40,7 +43,9 @@ func NewTokenManager(privateKey *rsa.PrivateKey, publicKey *rsa.PublicKey) *Toke
 	}
 }
 
-// GenerateAccessToken creates a new access token
+// GenerateAccessToken creates a new access token.
+// The token is signed with RS256 and includes Issuer and Audience claims
+// so that ValidateToken can reject tokens issued by other services.
 func (tm *TokenManager) GenerateAccessToken(userID, email, role, schoolID string) (string, error) {
 	now := time.Now()
 	claims := &Claims{
@@ -53,6 +58,8 @@ func (tm *TokenManager) GenerateAccessToken(userID, email, role, schoolID string
 			IssuedAt:  jwt.NewNumericDate(now),
 			NotBefore: jwt.NewNumericDate(now),
 			Issuer:    "registro-backend",
+			// Audience prevents cross-service token reuse.
+			Audience: jwt.ClaimStrings{jwtAudience},
 		},
 	}
 
@@ -60,7 +67,9 @@ func (tm *TokenManager) GenerateAccessToken(userID, email, role, schoolID string
 	return token.SignedString(tm.privateKey)
 }
 
-// GenerateRefreshToken creates a new refresh token
+// GenerateRefreshToken creates a new refresh token.
+// Refresh tokens do not carry an audience — they are only ever validated
+// against the database, not via ValidateToken.
 func (tm *TokenManager) GenerateRefreshToken(userID string) (string, error) {
 	now := time.Now()
 	claims := &Claims{
@@ -76,14 +85,25 @@ func (tm *TokenManager) GenerateRefreshToken(userID string) (string, error) {
 	return token.SignedString(tm.privateKey)
 }
 
-// ValidateToken validates and parses a JWT token
+// ValidateToken validates and parses a JWT access token.
+// It verifies the signing algorithm (RS256), the issuer, and the audience
+// to prevent accepting tokens issued by other services.
 func (tm *TokenManager) ValidateToken(tokenString string) (*Claims, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
-			return nil, ErrInvalidToken
-		}
-		return tm.publicKey, nil
-	})
+	token, err := jwt.ParseWithClaims(
+		tokenString,
+		&Claims{},
+		func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
+				return nil, ErrInvalidToken
+			}
+			return tm.publicKey, nil
+		},
+		// Validate issuer: only accept tokens we signed.
+		jwt.WithIssuer("registro-backend"),
+		// Validate audience: only accept tokens destined for this API.
+		jwt.WithAudience(jwtAudience),
+		jwt.WithExpirationRequired(),
+	)
 
 	if err != nil {
 		if errors.Is(err, jwt.ErrTokenExpired) {

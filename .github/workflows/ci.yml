@@ -1,0 +1,107 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'registro-backend/**'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'registro-backend/**'
+
+defaults:
+  run:
+    working-directory: registro-backend
+
+jobs:
+  test:
+    name: Test & Vet
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: registro_user
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_DB: registro_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'registro-backend/go.mod'
+          cache-dependency-path: 'registro-backend/go.sum'
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Verify dependencies
+        run: go mod verify
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: Run tests
+        env:
+          SERVER_PORT: 8080
+          SERVER_MODE: release
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USER: registro_user
+          DB_PASSWORD: testpassword
+          DB_NAME: registro_test
+          DB_SSLMODE: disable
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+          JWT_SECRET: ci-test-secret-not-used-in-production-64chars-xxxxxxxxxxx
+        run: go test -race -coverprofile=coverage.out ./...
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-report
+          path: registro-backend/coverage.out
+          retention-days: 7
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'registro-backend/go.mod'
+          cache-dependency-path: 'registro-backend/go.sum'
+
+      - name: Build api-server
+        run: go build -v -o /dev/null ./cmd/api-server/...
+
+      - name: Build auth-service
+        run: go build -v -o /dev/null ./cmd/auth-service/...

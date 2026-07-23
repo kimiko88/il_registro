@@ -16,9 +16,11 @@ describe('GradeStatistics.vue', () => {
                         createSpy: vi.fn,
                         initialState: {
                             grades: {
-                                grades: [
-                                    { value: 8 }, { value: 7 }, { value: 9 }
-                                ]
+                                grades: {
+                                    students: [
+                                        { grades: [{ grade_value: 8 }, { grade_value: 7 }, { grade_value: 9 }] }
+                                    ]
+                                }
                             }
                         },
                         // Mock getters if necessary, but pinia-testing usually handles state

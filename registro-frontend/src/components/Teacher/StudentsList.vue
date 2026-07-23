@@ -22,7 +22,7 @@
 </template>
 
 <script setup>
-const props = defineProps({
+defineProps({
     students: { type: Array, default: () => [] }
 });
 

@@ -18,5 +18,5 @@
 </template>
 
 <script setup>
-const props = defineProps(['averages']);
+defineProps(['averages']);
 </script>

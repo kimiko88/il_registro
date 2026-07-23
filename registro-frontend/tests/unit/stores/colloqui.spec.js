@@ -41,7 +41,10 @@ describe('Colloqui Store', () => {
 
     it('deletes slot', async () => {
         store.slots = [{ id: 1 }, { id: 2 }]
-        await store.deleteSlot(1)
+        const promise = store.deleteSlot(1)
+
+        await vi.runAllTimersAsync()
+        await promise
 
         expect(store.slots).toHaveLength(1)
         expect(store.slots[0].id).toBe(2)

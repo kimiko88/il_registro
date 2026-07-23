@@ -11,7 +11,7 @@ import (
 
 type Repository interface {
 	Create(ctx context.Context, class *Class) error
-	List(ctx context.Context, schoolID string) ([]Class, error)
+	List(ctx context.Context, schoolID string, academicYear string) ([]Class, error)
 	Get(ctx context.Context, id string) (*Class, error)
 	Update(ctx context.Context, class *Class) error
 	Delete(ctx context.Context, id string) error
@@ -19,6 +19,7 @@ type Repository interface {
 	AssignSubject(ctx context.Context, classID string, subjectID string, teacherID *string, hours float64) error
 	UnassignSubject(ctx context.Context, assignmentID string) error
 	GetClassSubjects(ctx context.Context, classID string) ([]ClassSubject, error)
+	GetClassGuardians(ctx context.Context, classID string) ([]GuardianInfo, error)
 }
 
 type PostgresRepository struct {
@@ -95,11 +96,11 @@ func (r *PostgresRepository) GetClassSubjects(ctx context.Context, classID strin
 func (r *PostgresRepository) ListByTeacher(ctx context.Context, teacherUserID string) ([]Class, error) {
 	// Combine classes where user is coordinator OR assigned as teacher (via class_subjects)
 	query := `
-		SELECT DISTINCT c.id, c.school_id, c.name, COALESCE(c.section, ''), c.academic_year, c.coordinator_id, c.created_at, c.updated_at
+		SELECT DISTINCT c.id, c.school_id, c.name, COALESCE(c.section, ''), COALESCE(c.articolazione, ''), c.academic_year, c.coordinator_id, c.created_at, c.updated_at
 		FROM classes c
 		LEFT JOIN class_subjects cs ON c.id = cs.class_id
 		LEFT JOIN teachers t ON cs.teacher_id = t.id
-		WHERE t.user_id = $1 OR c.coordinator_id = $1
+		WHERE t.user_id = $1::uuid OR c.coordinator_id = $1::uuid
 		ORDER BY c.name
 	`
 	rows, err := r.db.QueryContext(ctx, query, teacherUserID)
@@ -112,7 +113,7 @@ func (r *PostgresRepository) ListByTeacher(ctx context.Context, teacherUserID st
 	for rows.Next() {
 		var c Class
 		var coord sql.NullString
-		if err := rows.Scan(&c.ID, &c.SchoolID, &c.Name, &c.Section, &c.AcademicYear, &coord, &c.CreatedAt, &c.UpdatedAt); err != nil {
+		if err := rows.Scan(&c.ID, &c.SchoolID, &c.Name, &c.Section, &c.Articolazione, &c.AcademicYear, &coord, &c.CreatedAt, &c.UpdatedAt); err != nil {
 			return nil, err
 		}
 		c.CoordinatorID = coord.String
@@ -126,19 +127,27 @@ func (r *PostgresRepository) Create(ctx context.Context, c *Class) error {
 	c.CreatedAt = time.Now()
 	c.UpdatedAt = time.Now()
 
-	query := `INSERT INTO classes (id, school_id, name, section, academic_year, coordinator_id, created_at, updated_at)
-			  VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
+	query := `INSERT INTO classes (id, school_id, name, section, articolazione, academic_year, coordinator_id, created_at, updated_at)
+			  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`
 	_, err := r.db.ExecContext(ctx, query,
-		c.ID, c.SchoolID, c.Name, c.Section, c.AcademicYear,
+		c.ID, c.SchoolID, c.Name, c.Section, c.Articolazione, c.AcademicYear,
 		sql.NullString{String: c.CoordinatorID, Valid: c.CoordinatorID != ""},
 		c.CreatedAt, c.UpdatedAt)
 	return err
 }
 
-func (r *PostgresRepository) List(ctx context.Context, schoolID string) ([]Class, error) {
-	query := `SELECT id, school_id, name, COALESCE(section, ''), academic_year, coordinator_id, created_at, updated_at 
-	          FROM classes WHERE school_id = $1 ORDER BY name`
-	rows, err := r.db.QueryContext(ctx, query, schoolID)
+func (r *PostgresRepository) List(ctx context.Context, schoolID string, academicYear string) ([]Class, error) {
+	query := `SELECT id, school_id, name, COALESCE(section, ''), COALESCE(articolazione, ''), academic_year, coordinator_id, created_at, updated_at 
+	          FROM classes WHERE school_id = $1`
+	
+	args := []interface{}{schoolID}
+	if academicYear != "" {
+		query += " AND academic_year = $2"
+		args = append(args, academicYear)
+	}
+	query += " ORDER BY name"
+	
+	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -148,7 +157,7 @@ func (r *PostgresRepository) List(ctx context.Context, schoolID string) ([]Class
 	for rows.Next() {
 		var c Class
 		var coord sql.NullString
-		if err := rows.Scan(&c.ID, &c.SchoolID, &c.Name, &c.Section, &c.AcademicYear, &coord, &c.CreatedAt, &c.UpdatedAt); err != nil {
+		if err := rows.Scan(&c.ID, &c.SchoolID, &c.Name, &c.Section, &c.Articolazione, &c.AcademicYear, &coord, &c.CreatedAt, &c.UpdatedAt); err != nil {
 			return nil, err
 		}
 		c.CoordinatorID = coord.String
@@ -158,11 +167,11 @@ func (r *PostgresRepository) List(ctx context.Context, schoolID string) ([]Class
 }
 
 func (r *PostgresRepository) Get(ctx context.Context, id string) (*Class, error) {
-	query := `SELECT id, school_id, name, COALESCE(section, ''), academic_year, coordinator_id, created_at, updated_at 
+	query := `SELECT id, school_id, name, COALESCE(section, ''), COALESCE(articolazione, ''), academic_year, coordinator_id, created_at, updated_at 
 	          FROM classes WHERE id = $1`
 	var c Class
 	var coord sql.NullString
-	err := r.db.QueryRowContext(ctx, query, id).Scan(&c.ID, &c.SchoolID, &c.Name, &c.Section, &c.AcademicYear, &coord, &c.CreatedAt, &c.UpdatedAt)
+	err := r.db.QueryRowContext(ctx, query, id).Scan(&c.ID, &c.SchoolID, &c.Name, &c.Section, &c.Articolazione, &c.AcademicYear, &coord, &c.CreatedAt, &c.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -172,9 +181,9 @@ func (r *PostgresRepository) Get(ctx context.Context, id string) (*Class, error)
 
 func (r *PostgresRepository) Update(ctx context.Context, c *Class) error {
 	c.UpdatedAt = time.Now()
-	query := `UPDATE classes SET name=$1, section=$2, academic_year=$3, coordinator_id=$4, updated_at=$5 WHERE id=$6`
+	query := `UPDATE classes SET name=$1, section=$2, articolazione=$3, academic_year=$4, coordinator_id=$5, updated_at=$6 WHERE id=$7`
 	res, err := r.db.ExecContext(ctx, query,
-		c.Name, c.Section, c.AcademicYear,
+		c.Name, c.Section, c.Articolazione, c.AcademicYear,
 		sql.NullString{String: c.CoordinatorID, Valid: c.CoordinatorID != ""},
 		c.UpdatedAt, c.ID)
 	if err != nil {
@@ -190,4 +199,39 @@ func (r *PostgresRepository) Update(ctx context.Context, c *Class) error {
 func (r *PostgresRepository) Delete(ctx context.Context, id string) error {
 	_, err := r.db.ExecContext(ctx, "DELETE FROM classes WHERE id = $1", id)
 	return err
+}
+
+func (r *PostgresRepository) GetClassGuardians(ctx context.Context, classID string) ([]GuardianInfo, error) {
+	if _, err := uuid.Parse(classID); err != nil {
+		return []GuardianInfo{}, nil
+	}
+	query := `
+		SELECT u.id, u.first_name, u.last_name, u.email, COALESCE(u.phone_number, ''),
+		       su.id, su.first_name || ' ' || su.last_name AS student_name
+		FROM students st
+		JOIN users su ON su.id = st.user_id
+		JOIN student_parents sp ON (sp.student_id = st.id OR sp.student_id = su.id)
+		JOIN parents p ON (p.id = sp.parent_id OR p.user_id = sp.parent_id)
+		JOIN users u ON u.id = p.user_id
+		WHERE st.class_id = $1::uuid
+		ORDER BY su.last_name, su.first_name, u.last_name
+	`
+	rows, err := r.db.QueryContext(ctx, query, classID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var result []GuardianInfo
+	for rows.Next() {
+		var g GuardianInfo
+		if err := rows.Scan(&g.GuardianID, &g.FirstName, &g.LastName, &g.Email, &g.Phone, &g.StudentID, &g.StudentName); err != nil {
+			return nil, err
+		}
+		result = append(result, g)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return result, nil
 }

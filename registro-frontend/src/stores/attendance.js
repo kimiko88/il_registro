@@ -1,4 +1,8 @@
 import { defineStore } from 'pinia';
+import api from '../services/api';
+import { attendanceService } from '../services/attendanceService';
+import { useAuthStore } from './auth';
+import { useChildrenStore } from './children';
 
 export const useAttendanceStore = defineStore('attendance', {
     state: () => ({
@@ -17,65 +21,173 @@ export const useAttendanceStore = defineStore('attendance', {
     actions: {
         async fetchDailyAttendance(classId, date) {
             this.loading = true;
+            this.error = null;
             try {
-                // Mock Data
-                await new Promise(resolve => setTimeout(resolve, 500));
-                // Mocking records based on students in class (usually fetched from backend)
-                this.records = [
-                    { studentId: 's1', name: 'Giuseppe Verdi', status: 'Present', notes: '', time: '' },
-                    { studentId: 's2', name: 'Mario Rossi', status: 'Absent', notes: '', time: '' },
-                    { studentId: 's3', name: 'Sofia Bianchi', status: 'Late', notes: 'Bus delay', time: '08:15' },
-                ];
+                const response = await attendanceService.getByClass(classId, date);
+                const records = response.data?.records || [];
+                this.records = records.map(r => ({
+                    studentId: r.student_id,
+                    name: r.student_name || `Student (${r.student_id})`,
+                    status: r.status,
+                    notes: r.notes || '',
+                    time: r.entry_time || ''
+                }));
             } catch (err) {
                 this.error = err.message;
+                console.error("Error fetching daily attendance:", err);
             } finally {
                 this.loading = false;
             }
         },
 
-        async submitAttendance(classId, date, records) {
-            // Mock API
-            await new Promise(resolve => setTimeout(resolve, 500));
-            this.records = records; // In real app, re-fetch or update local state
+        async submitAttendance(classId, date, records, hour = 1, subjectId = null) {
+            this.loading = true;
+            try {
+                const payload = {
+                    class_id: classId,
+                    date: date,
+                    hour: hour,
+                    subject_id: subjectId || null,
+                    statuses: records.map(r => ({
+                        student_id: r.studentId,
+                        status: r.status,
+                        entry_time: r.status === 'Late' ? r.time : null,
+                        exit_time: r.status === 'LeftEarly' ? r.time : null
+                    }))
+                };
+                const response = await api.post('/attendance/mark-bulk', payload);
+                this.records = records;
+                return response.data;
+            } catch (err) {
+                console.error("Error submitting attendance:", err);
+                throw err;
+            } finally {
+                this.loading = false;
+            }
         },
 
         async fetchPendingJustifications(classId) {
-            // Mock justifications
-            this.justifications = [
-                { id: 1, studentName: 'Mario Rossi', date: '2025-01-15', reason: 'Flu', status: 'Pending' }
-            ];
+            try {
+                const response = await api.get('/attendance/pending-justifications', {
+                    params: { class_id: classId }
+                });
+                this.justifications = response.data || [];
+            } catch (err) {
+                console.error("Error fetching justifications:", err);
+            }
         },
 
         async approveJustification(id) {
-            this.justifications = this.justifications.filter(j => j.id !== id);
+            try {
+                await api.post(`/attendance/justification/${id}/process`, { approve: true });
+                this.justifications = this.justifications.filter(j => j.id !== id);
+            } catch (err) {
+                console.error("Error approving justification:", err);
+                throw err;
+            }
         },
 
         // Student Actions
         async fetchMyAttendance() {
             this.loading = true;
             try {
-                // Mock Data
-                await new Promise(resolve => setTimeout(resolve, 500));
-                // Different structure for personal attendance history
-                this.records = [
-                    { date: '2025-01-20', status: 'Present', notes: '', time: '' },
-                    { date: '2025-01-19', status: 'Absent', notes: '', time: '' },
-                    { date: '2025-01-18', status: 'Late', notes: 'Traffic', time: '08:15' },
-                    { date: '2025-01-15', status: 'Present', notes: '', time: '' }
-                ];
+                const response = await attendanceService.getMyAttendance();
+                const data = response.data || [];
+                this.records = data.map(r => ({
+                    date: r.date,
+                    status: r.status,
+                    notes: r.notes || '',
+                    time: r.entry_time || '',
+                    justificationStatus: r.is_justified ? 'Justified' : (r.parent_justified ? 'Pending' : 'Unjustified')
+                }));
+            } catch (err) {
+                console.error("Error fetching my attendance:", err);
             } finally {
                 this.loading = false;
             }
         },
 
-        async requestJustification(date, reason) {
-            // Mock API
-            await new Promise(resolve => setTimeout(resolve, 400));
-            // In a real app, this would be a separate list of "requests", but for now we just log it
-            console.log('Justification requested', { date, reason });
-            // Update local status mock
-            const record = this.records.find(r => r.date === date);
-            if (record) record.justificationStatus = 'Pending';
+        async requestJustification(date, reason, studentId) {
+            try {
+                const authStore = useAuthStore();
+                const childrenStore = useChildrenStore();
+                
+                let targetStudentId = studentId;
+                if (!targetStudentId && authStore.user) {
+                    targetStudentId = authStore.user.student_id;
+                }
+                if (!targetStudentId) {
+                    targetStudentId = childrenStore.selectedChildId;
+                }
+
+                const payload = {
+                    student_id: targetStudentId,
+                    start_date: date,
+                    end_date: date,
+                    reason: reason
+                };
+                await api.post('/attendance/justify', payload);
+                const record = this.records.find(r => r.date === date);
+                if (record) record.justificationStatus = 'Pending';
+            } catch (err) {
+                console.error("Error requesting justification:", err);
+                throw err;
+            }
+        },
+
+        /**
+         * Fetches the monthly attendance breakdown for a student.
+         * @param {string} studentID - The student UUID
+         * @param {string} [schoolYear] - Format "2024-2025"; defaults to current school year
+         * @param {boolean} [isParent] - If true, uses the parent child-attendance endpoint
+         * @returns {Promise<Object>} MonthlyBreakdownResponse with 'months' array
+         */
+        async fetchMonthlyBreakdown(studentID, schoolYear = '', isParent = false) {
+            try {
+                const params = schoolYear ? { school_year: schoolYear } : {};
+                const url = isParent
+                    ? `/attendance/child-attendance/${studentID}/monthly-breakdown`
+                    : `/attendance/students/${studentID}/monthly-breakdown`;
+                const response = await api.get(url, { params });
+                return response.data;
+            } catch (err) {
+                console.error('Error fetching monthly breakdown:', err);
+                throw err;
+            }
+        },
+
+        async fetchUnjustified(studentID) {
+            try {
+                const response = await api.get(`/attendance/child/${studentID}/unjustified`);
+                return response.data || [];
+            } catch (err) {
+                console.error('Error fetching unjustified absences:', err);
+                return [];
+            }
+        },
+
+        async justifyAbsence(studentID, attendanceID, reason, notes = '') {
+            try {
+                const response = await api.post(`/attendance/child/${studentID}/justify/${attendanceID}`, {
+                    reason,
+                    notes
+                });
+                return response.data;
+            } catch (err) {
+                console.error('Error justifying absence:', err);
+                throw err;
+            }
+        },
+
+        async fetchChildStats(studentID) {
+            try {
+                const response = await api.get(`/attendance/child/${studentID}/stats`);
+                return response.data;
+            } catch (err) {
+                console.error('Error fetching child attendance stats:', err);
+                throw err;
+            }
         }
     }
 });
+

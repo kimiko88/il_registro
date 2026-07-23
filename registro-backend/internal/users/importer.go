@@ -102,7 +102,7 @@ func (i *Importer) processRows(rows [][]string) ([]User, []string, error) {
 			Email:        email,
 			FirstName:    firstName,
 			LastName:     lastName,
-			FiscalCode:   fiscalCode,
+			FiscalCode:   &fiscalCode,
 			Role:         role,
 			PasswordHash: string(hashed),
 			IsActive:     true,

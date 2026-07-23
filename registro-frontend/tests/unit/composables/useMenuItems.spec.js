@@ -6,11 +6,12 @@ describe('useMenuItems', () => {
         it('should return admin menu items', () => {
             const menuItems = useMenuItems('admin')
 
-            expect(menuItems).toHaveLength(4)
+            expect(menuItems).toHaveLength(6)
             expect(menuItems[0].label).toBe('Dashboard')
             expect(menuItems[1].label).toBe('La Mia Scuola')
-            expect(menuItems[2].label).toBe('Analytics')
-            expect(menuItems[3].label).toBe('Impostazioni')
+            expect(menuItems[2].label).toBe('Gestione Utenti')
+            expect(menuItems[3].label).toBe('Feature Flags & Istituto')
+            expect(menuItems[4].label).toBe('Analytics')
         })
 
         it('should have correct paths for admin', () => {
@@ -18,7 +19,8 @@ describe('useMenuItems', () => {
 
             expect(menuItems[0].path).toBe('/')
             expect(menuItems[1].path).toBe('/admin/schools')
-            expect(menuItems[2].path).toBe('/admin/analytics')
+            expect(menuItems[2].path).toBe('/admin/users')
+            expect(menuItems[3].path).toBe('/admin/school-settings')
         })
 
         it('should have exact flag for dashboard', () => {
@@ -32,7 +34,7 @@ describe('useMenuItems', () => {
         it('should return secretary menu items', () => {
             const menuItems = useMenuItems('secretary')
 
-            expect(menuItems).toHaveLength(8)
+            expect(menuItems).toHaveLength(14)
             expect(menuItems.map(item => item.label)).toContain('Documenti')
             expect(menuItems.map(item => item.label)).toContain('Studenti')
             expect(menuItems.map(item => item.label)).toContain('Report')
@@ -43,11 +45,12 @@ describe('useMenuItems', () => {
         it('should return teacher menu items', () => {
             const menuItems = useMenuItems('teacher')
 
-            expect(menuItems).toHaveLength(7)
+            expect(menuItems).toHaveLength(16)
             expect(menuItems.map(item => item.label)).toContain('Le Mie Classi')
             expect(menuItems.map(item => item.label)).toContain('Voti')
             expect(menuItems.map(item => item.label)).toContain('Presenze')
             expect(menuItems.map(item => item.label)).toContain('Colloqui')
+            expect(menuItems.map(item => item.label)).toContain('Agenda')
         })
 
         it('should have correct paths for teacher', () => {
@@ -64,7 +67,7 @@ describe('useMenuItems', () => {
         it('should return student menu items', () => {
             const menuItems = useMenuItems('student')
 
-            expect(menuItems).toHaveLength(8)
+            expect(menuItems).toHaveLength(14)
             expect(menuItems.map(item => item.label)).toContain('I Miei Voti')
             expect(menuItems.map(item => item.label)).toContain('Le Mie Presenze')
             expect(menuItems.map(item => item.label)).toContain('PCTO')
@@ -76,7 +79,7 @@ describe('useMenuItems', () => {
         it('should return parent menu items', () => {
             const menuItems = useMenuItems('parent')
 
-            expect(menuItems).toHaveLength(9)
+            expect(menuItems).toHaveLength(13)
             expect(menuItems.map(item => item.label)).toContain('I Miei Figli')
             expect(menuItems.map(item => item.label)).toContain('Colloqui')
             expect(menuItems.map(item => item.label)).toContain('Supporto')

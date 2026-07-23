@@ -1,0 +1,100 @@
+package notifications
+
+import (
+	"context"
+	"errors"
+	"fmt"
+)
+
+type Service struct {
+	repo Repository
+}
+
+func NewService(repo Repository) *Service {
+	if repo == nil {
+		panic("notifications.NewService: repo must not be nil")
+	}
+	return &Service{repo: repo}
+}
+
+func (s *Service) RegisterToken(ctx context.Context, userID string, req RegisterTokenRequest) error {
+	if userID == "" {
+		return errors.New("unauthorized")
+	}
+	token := &PushToken{
+		UserID:      userID,
+		DeviceToken: req.DeviceToken,
+		Platform:    req.Platform,
+	}
+	return s.repo.SaveToken(ctx, token)
+}
+
+func (s *Service) UnregisterToken(ctx context.Context, userID, deviceToken string) error {
+	return s.repo.DeleteToken(ctx, userID, deviceToken)
+}
+
+func (s *Service) SendPushNotification(ctx context.Context, req SendNotificationRequest) (int, error) {
+	tokens, err := s.repo.GetUserTokens(ctx, req.UserID)
+	if err != nil {
+		return 0, err
+	}
+	if len(tokens) == 0 {
+		return 0, nil
+	}
+
+	// Dispatch notification to each registered device token
+	sentCount := 0
+	for _, t := range tokens {
+		// Mock FCM / APNs dispatch logic
+		fmt.Printf("[Push Notification] Dispatched to %s (%s): %s - %s\n", t.DeviceToken, t.Platform, req.Title, req.Body)
+		sentCount++
+	}
+	return sentCount, nil
+}
+
+func (s *Service) CreateInAppNotification(ctx context.Context, userID, title, body, notifType string, payload map[string]interface{}) (*DBNotification, error) {
+	n := &DBNotification{
+		UserID:  userID,
+		Title:   title,
+		Body:    body,
+		Type:    notifType,
+		Payload: payload,
+	}
+	if err := s.repo.CreateDBNotification(ctx, n); err != nil {
+		return nil, err
+	}
+
+	// Async FCM / Push dispatch
+	go func() {
+		_, _ = s.SendPushNotification(context.Background(), SendNotificationRequest{
+			UserID: userID,
+			Title:  title,
+			Body:   body,
+		})
+	}()
+
+	return n, nil
+}
+
+func (s *Service) ListDBNotifications(ctx context.Context, userID string, unreadOnly bool, limit, offset int) ([]DBNotification, error) {
+	return s.repo.ListDBNotifications(ctx, userID, unreadOnly, limit, offset)
+}
+
+func (s *Service) MarkAsRead(ctx context.Context, userID, notificationID string) error {
+	return s.repo.MarkAsRead(ctx, userID, notificationID)
+}
+
+func (s *Service) MarkAllAsRead(ctx context.Context, userID string) error {
+	return s.repo.MarkAllAsRead(ctx, userID)
+}
+
+func (s *Service) GetPWAManifest() PWAConfig {
+	return PWAConfig{
+		Name:       "Registro Elettronico Scolastico",
+		ShortName:  "Registro",
+		StartURL:   "/",
+		Display:    "standalone",
+		ThemeColor: "#1e3a8a",
+		BGColor:    "#ffffff",
+	}
+}

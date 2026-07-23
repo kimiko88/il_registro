@@ -11,7 +11,7 @@ describe('useCoordination', () => {
 
     it('identifies coordinator status', () => {
         const teacherStore = useTeacherStore();
-        teacherStore.profile = { isCoordinator: true };
+        teacherStore.profile = { is_coordinator: true };
 
         const { isCoordinator } = useCoordination();
         expect(isCoordinator.value).toBe(true);
@@ -20,8 +20,8 @@ describe('useCoordination', () => {
     it('filters coordinated classes', () => {
         const classesStore = useClassesStore();
         classesStore.classes = [
-            { id: '1A', coordinator: false },
-            { id: '2B', coordinator: true }
+            { id: '1A', coordinator_id: null },
+            { id: '2B', coordinator_id: 'teacher123' }
         ];
 
         const { coordinatedClasses } = useCoordination();

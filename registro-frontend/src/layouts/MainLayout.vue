@@ -1,26 +1,28 @@
 <template>
-  <q-layout view="lHh Lpr lFf" class="bg-slate-50">
-    <q-header class="glass-effect text-slate-900 q-py-xs" :class="$q.dark.isActive ? 'bg-dark' : 'bg-white'">
-      <q-toolbar>
+  <q-layout view="hHh Lpr lFf">
+    <q-header class="glass-effect text-slate-900 q-py-xs" :class="$q.dark.isActive ? 'bg-dark' : 'bg-white'" role="banner">
+      <q-toolbar role="navigation" aria-label="Barra di navigazione principale">
         <q-btn
           flat
           dense
           round
           icon="menu"
-          aria-label="Menu"
+          aria-label="Apri/chiudi menu di navigazione"
+          :aria-expanded="leftDrawerOpen"
           color="primary"
           @click="toggleLeftDrawer"
+          :key="'drawer-toggle'"
         />
 
         <q-toolbar-title class="text-weight-bold text-primary">
-          Registro Elettronico
+          <span role="heading" aria-level="1">Registro Elettronico</span>
         </q-toolbar-title>
 
         <q-space />
         
         <!-- Dark Mode Toggle -->
-        <q-btn flat round dense :icon="$q.dark.isActive ? 'light_mode' : 'dark_mode'" @click="$q.dark.toggle()" color="primary" class="q-mr-sm">
-           <q-tooltip>Toggle Dark Mode</q-tooltip>
+        <q-btn flat round dense :icon="$q.dark.isActive ? 'light_mode' : 'dark_mode'" @click="$q.dark.toggle()" color="primary" class="q-mr-sm" :key="'dark-toggle'" :aria-label="$q.dark.isActive ? 'Attiva modalità chiara' : 'Attiva modalità scura'">
+           <q-tooltip>Attiva/Disattiva Modalità Scura</q-tooltip>
         </q-btn>
 
         <!-- Fullscreen Toggle -->
@@ -33,12 +35,18 @@
           @click="$q.fullscreen.toggle()" 
           color="primary" 
           class="q-mr-sm"
+          :key="'fullscreen-toggle'"
+          :aria-label="$q.fullscreen.isActive ? 'Esci da schermo intero' : 'Vai a schermo intero'"
         >
-           <q-tooltip>Toggle Fullscreen</q-tooltip>
+           <q-tooltip>Attiva/Disattiva Schermo Intero</q-tooltip>
         </q-btn>
 
-        <div class="text-caption text-grey-6 q-mr-sm">v0.0.1</div>
-        <q-btn flat round dense icon="account_circle" color="primary" />
+        <!-- Notifications -->
+        <q-btn flat round dense icon="notifications" color="primary" class="q-mr-sm" aria-label="Notifiche" @click="$router.push('/communications')">
+          <q-tooltip>Notifiche e Comunicazioni</q-tooltip>
+        </q-btn>
+
+        <q-btn flat round dense icon="account_circle" color="primary" aria-label="Profilo utente" @click="$router.push('/profile')" />
       </q-toolbar>
     </q-header>
 
@@ -48,73 +56,173 @@
       bordered
       :class="$q.dark.isActive ? 'bg-dark' : 'bg-white'"
       :width="260"
+      role="navigation"
+      aria-label="Menu laterale di navigazione"
     >
-      <!-- User Profile Section -->
-      <div class="q-pa-md bg-gradient-primary text-white" v-if="userName">
-        <div class="row items-center q-mb-sm">
-          <q-avatar size="48px" color="white" text-color="primary" class="q-mr-md">
-            <q-icon name="person" size="28px" />
-          </q-avatar>
-          <div class="col">
-            <div class="text-weight-bold">{{ userName }}</div>
-            <div class="text-caption opacity-80">{{ roleLabel }}</div>
+      <div class="column full-height no-wrap">
+        <!-- User Profile Section -->
+        <div class="q-pa-lg bg-primary text-white relative-position overflow-hidden" v-if="userName" role="region" aria-label="Profilo utente">
+          <div class="row items-center q-mb-sm relative-position" style="z-index: 1">
+            <q-avatar size="56px" color="white" text-color="primary" class="q-mr-md shadow-soft" aria-hidden="true">
+              <q-icon name="person" size="32px" />
+            </q-avatar>
+            <div class="col">
+              <div class="text-h6 text-weight-bold no-wrap" :aria-label="'Utente connesso: ' + userName">{{ userName }}</div>
+              <div class="text-caption opacity-80 text-uppercase letter-spacing-1" :aria-label="'Ruolo: ' + roleLabel">{{ roleLabel }}</div>
+            </div>
           </div>
+          <!-- Decorative Circle -->
+          <div class="absolute-bottom-right q-mr-n-lg q-mb-n-lg" style="width: 120px; height: 120px; border-radius: 50%; background: rgba(255,255,255,0.1)" aria-hidden="true"></div>
         </div>
-      </div>
 
-      <!-- Menu Items -->
-      <div class="q-pa-md">
-        <div class="text-overline text-grey-6 q-mb-sm">MENU</div>
-        <q-list padding class="rounded-borders">
-          <q-item 
-            v-for="item in menuItems"
-            :key="item.path"
-            clickable 
-            v-ripple
-            :to="item.path"
-            :exact="item.exact"
-            active-class="bg-primary text-white rounded-lg shadow-soft"
+        <!-- Menu Items -->
+        <q-scroll-area class="col">
+          <div class="q-pa-md">
+            <div class="text-overline text-grey-5 q-px-md q-mb-sm letter-spacing-2" aria-hidden="true">MENU PRINCIPALE</div>
+            <q-list padding class="q-gutter-y-xs" role="menubar" aria-label="Navigazione principale">
+              <q-item 
+                v-for="item in menuItems"
+                :key="item.path"
+                clickable 
+                :to="item.path"
+                :exact="item.exact !== undefined ? item.exact : false"
+                active-class="active-menu-item"
+                class="rounded-lg q-mx-sm transition-all"
+                role="menuitem"
+                :aria-label="item.label"
+              >
+                <q-item-section avatar>
+                  <q-icon :name="item.icon" size="22px" aria-hidden="true" />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label class="text-weight-bold">{{ item.label }}</q-item-label>
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </div>
+        </q-scroll-area>
+
+        <!-- Logout Button at Bottom -->
+        <div class="q-pa-md border-t border-slate-100">
+          <q-item
+            clickable
+            class="rounded-lg q-pa-md text-grey-8"
+            @click="handleLogout"
+            :disable="loggingOut"
+            role="button"
+            aria-label="Esci dall'applicazione"
+            :aria-busy="loggingOut"
           >
             <q-item-section avatar>
-              <q-icon :name="item.icon" />
+              <q-icon name="logout" size="20px" aria-hidden="true" />
             </q-item-section>
-            <q-item-section>
-              <q-item-label class="text-weight-medium">{{ item.label }}</q-item-label>
+            <q-item-section class="text-weight-bold">
+              Esci
+            </q-item-section>
+            <q-item-section side v-if="loggingOut">
+              <q-spinner size="20px" />
             </q-item-section>
           </q-item>
-        </q-list>
-      </div>
-
-      <!-- Logout Button at Bottom -->
-      <div class="absolute-bottom q-pa-md">
-        <q-btn
-          outline
-          color="negative"
-          icon="logout"
-          label="Esci"
-          class="full-width"
-          @click="handleLogout"
-          :loading="loggingOut"
-          no-caps
-        />
+        </div>
       </div>
     </q-drawer>
 
-    <q-page-container>
-      <router-view />
+    <q-page-container role="main">
+      <!-- Dynamic Breadcrumb Navigation Header -->
+      <div v-if="breadcrumbs.length > 0" class="q-px-md q-pt-md">
+        <q-breadcrumbs class="text-caption text-grey-7" active-color="primary">
+          <template v-slot:separator>
+            <q-icon size="1.2em" name="chevron_right" color="grey-5" />
+          </template>
+          <q-breadcrumbs-el icon="home" to="/dashboard" label="Dashboard" />
+          <q-breadcrumbs-el
+            v-for="(crumb, idx) in breadcrumbs"
+            :key="idx"
+            :label="crumb.label"
+            :to="crumb.path"
+            :icon="crumb.icon"
+          />
+        </q-breadcrumbs>
+      </div>
+      <router-view v-slot="{ Component }">
+        <transition name="page-fade" mode="out-in">
+          <component :is="Component" :key="$route.path" />
+        </transition>
+      </router-view>
     </q-page-container>
   </q-layout>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useAuth } from '@/composables/useAuth'
 import { useMenuItems } from '@/composables/useMenuItems'
 import { storeToRefs } from 'pinia'
 import { useQuasar } from 'quasar'
 
+const route = useRoute()
 const $q = useQuasar()
+
+// Dynamic Breadcrumbs
+const breadcrumbs = computed(() => {
+  if (!route.path || route.path === '/dashboard' || route.path === '/') return []
+  const items = []
+  
+  const routeNamesMap = {
+    '/dashboard': { label: 'Dashboard', icon: 'dashboard' },
+    '/profile': { label: 'Profilo Utente', icon: 'person' },
+    '/teacher/grades': { label: 'Gestione Voti', icon: 'grade' },
+    '/teacher/attendance': { label: 'Appello e Presenze', icon: 'how_to_reg' },
+    '/teacher/timetable': { label: 'Orario Lezioni', icon: 'schedule' },
+    '/teacher/didactics': { label: 'Materiale Didattico', icon: 'folder' },
+    '/teacher/coordinator': { label: 'Area Coordinatore', icon: 'star' },
+    '/teacher/groups': { label: 'Gruppi Linguistici', icon: 'groups' },
+    '/teacher/rubrics': { label: 'Rubriche di Valutazione', icon: 'rule' },
+    '/teacher/scrutiny': { label: 'Scrutini', icon: 'assessment' },
+    '/teacher/communications': { label: 'Comunicazioni', icon: 'campaign' },
+    '/teacher/agenda': { label: 'Agenda e Registo', icon: 'event' },
+    '/teacher/classes': { label: 'Le Mie Classi', icon: 'class' },
+    '/teacher/colloqui': { label: 'Colloqui e Incontri', icon: 'people' },
+    '/teacher/documents': { label: 'Documenti', icon: 'description' },
+    '/teacher/grade-weights': { label: 'Pesi Voti', icon: 'balance' },
+    '/teacher/verbali': { label: 'Verbali', icon: 'gavel' },
+    '/teacher/substitutions': { label: 'Sostituzioni', icon: 'swap_horiz' },
+    '/student/grades': { label: 'I Miei Voti', icon: 'grade' },
+    '/student/attendance': { label: 'Le Mie Presenze', icon: 'event_available' },
+    '/student/homework': { label: 'Compiti', icon: 'assignment' },
+    '/student/timetable': { label: 'Orario', icon: 'schedule' },
+    '/parent/grades': { label: 'Voti Figlio', icon: 'grade' },
+    '/parent/attendance': { label: 'Presenze e Giustifiche', icon: 'fact_check' },
+    '/parent/communications': { label: 'Comunicazioni', icon: 'campaign' },
+    '/parent/documents': { label: 'Documentazione', icon: 'folder_shared' },
+    '/parent/payments': { label: 'Pagamenti', icon: 'payments' },
+    '/parent/colloqui': { label: 'Incontri e Colloqui', icon: 'forum' },
+    '/parent/meetings': { label: 'Riunioni', icon: 'groups' },
+    '/parent/notes': { label: 'Note Disciplinari', icon: 'report' },
+    '/parent/report-card': { label: 'Pagella Online', icon: 'assignment' },
+    '/admin/school-settings': { label: 'Impostazioni Scuola', icon: 'settings' },
+    '/admin/users': { label: 'Gestione Utenti', icon: 'people' },
+    '/admin/analytics': { label: 'Analisi e Statistiche', icon: 'analytics' }
+  }
+
+  const current = routeNamesMap[route.path] || { label: route.meta?.title || route.name || 'Pagina', icon: 'chevron_right' }
+
+  if (route.path.startsWith('/teacher/')) {
+    items.push({ label: 'Docente', icon: 'school' })
+  } else if (route.path.startsWith('/student/')) {
+    items.push({ label: 'Studente', icon: 'person' })
+  } else if (route.path.startsWith('/parent/')) {
+    items.push({ label: 'Genitore', icon: 'family_restroom' })
+  } else if (route.path.startsWith('/admin/')) {
+    items.push({ label: 'Amministrazione', icon: 'admin_panel_settings' })
+  }
+
+  items.push(current)
+  return items
+})
+
 const authStore = useAuthStore()
 const { userName, userRole } = storeToRefs(authStore)
 const { logout } = useAuth()
@@ -136,10 +244,14 @@ const roleLabel = computed(() => {
 })
 
 // Get menu items based on role
-const menuItems = computed(() => {
-  if (!userRole.value) return []
-  return useMenuItems(userRole.value)
-})
+const menuItems = ref([])
+watch(userRole, (newRole) => {
+  if (newRole) {
+    menuItems.value = useMenuItems(newRole)
+  } else {
+    menuItems.value = []
+  }
+}, { immediate: true })
 
 function toggleLeftDrawer() {
   leftDrawerOpen.value = !leftDrawerOpen.value
@@ -169,11 +281,19 @@ async function handleLogout() {
 </script>
 
 <style scoped>
-.bg-gradient-primary {
-  background: linear-gradient(135deg, #4F46E5 0%, #3B82F6 100%);
-}
-
 .opacity-80 {
   opacity: 0.8;
+}
+
+.letter-spacing-1 {
+    letter-spacing: 1px;
+}
+
+.letter-spacing-2 {
+    letter-spacing: 2px;
+}
+
+.transition-all {
+    transition: all 0.3s ease;
 }
 </style>

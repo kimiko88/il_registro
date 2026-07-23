@@ -23,7 +23,13 @@ func NewHandler(service *Service) *Handler {
 // GetDashboardStats returns dashboard statistics
 // GET /api/v1/admin/dashboard/stats
 func (h *Handler) GetDashboardStats(c *gin.Context) {
+	userID := c.GetString("user_id")
 	role, _ := auth.GetUserRole(c)
+	if userID == "" && role == "" {
+		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "unauthorized"})
+		return
+	}
+
 	isSuperAdmin := role == "superadmin"
 
 	var schoolID *string
@@ -181,6 +187,15 @@ func (h *Handler) UpdateSchool(c *gin.Context) {
 func (h *Handler) DeleteSchool(c *gin.Context) {
 	schoolID := c.Param("id")
 
+	// Check access permission
+	if !CanAccessSchool(c, schoolID) {
+		c.JSON(http.StatusForbidden, ErrorResponse{
+			Error:   "forbidden",
+			Message: "you don't have access to this school",
+		})
+		return
+	}
+
 	err := h.service.DeleteSchool(c.Request.Context(), schoolID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, ErrorResponse{
@@ -213,8 +228,22 @@ func (h *Handler) ListAdminUsers(c *gin.Context) {
 			pageSize = 20
 		}
 	}
+	if pageSize > 100 {
+		pageSize = 100
+	}
+	if pageSize < 1 {
+		pageSize = 1
+	}
 
+	// Get school filter from middleware/role context
+	filterSchoolID := GetFilteredSchoolID(c)
 	schoolFilter := c.Query("school_id")
+
+	if filterSchoolID != "" {
+		// Non-superadmin: force their own school_id
+		schoolFilter = filterSchoolID
+	}
+
 	var schoolPtr *string
 	if schoolFilter != "" {
 		schoolPtr = &schoolFilter
@@ -268,6 +297,9 @@ func (h *Handler) CreateAdminUser(c *gin.Context) {
 
 // UpdateAdminUser updates an existing admin user
 // PUT /api/v1/admin/users/admins/:id
+// Only a superadmin may call this endpoint (enforced by RequireSuperAdmin middleware).
+// We additionally verify that the target admin belongs to a school the caller
+// can access, preventing cross-school privilege escalation.
 func (h *Handler) UpdateAdminUser(c *gin.Context) {
 	adminID := c.Param("id")
 
@@ -276,6 +308,20 @@ func (h *Handler) UpdateAdminUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, ErrorResponse{
 			Error:   "invalid request",
 			Message: err.Error(),
+		})
+		return
+	}
+
+	// Fetch target admin via service to verify school ownership before mutating.
+	target, err := h.service.GetAdminUserByID(c.Request.Context(), adminID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, ErrorResponse{Error: "admin user not found"})
+		return
+	}
+	if target.SchoolID != nil && !CanAccessSchool(c, *target.SchoolID) {
+		c.JSON(http.StatusForbidden, ErrorResponse{
+			Error:   "forbidden",
+			Message: "you don't have access to this admin's school",
 		})
 		return
 	}
@@ -325,6 +371,7 @@ func (h *Handler) DeleteAdminUser(c *gin.Context) {
 
 // GetAdminActivity returns activity log for an admin user
 // GET /api/v1/admin/users/admins/:id/activity
+// Verifies that the requesting superadmin can access the target admin's school.
 func (h *Handler) GetAdminActivity(c *gin.Context) {
 	adminID := c.Param("id")
 	limit := 50
@@ -333,6 +380,26 @@ func (h *Handler) GetAdminActivity(c *gin.Context) {
 		if _, err := fmt.Sscanf(l, "%d", &limit); err != nil {
 			limit = 50
 		}
+	}
+	if limit > 200 {
+		limit = 200
+	}
+	if limit < 1 {
+		limit = 1
+	}
+
+	// Ownership check: verify caller can access the target admin's school.
+	target, err := h.service.GetAdminUserByID(c.Request.Context(), adminID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, ErrorResponse{Error: "admin user not found"})
+		return
+	}
+	if target.SchoolID != nil && !CanAccessSchool(c, *target.SchoolID) {
+		c.JSON(http.StatusForbidden, ErrorResponse{
+			Error:   "forbidden",
+			Message: "you don't have access to this admin's school",
+		})
+		return
 	}
 
 	activity, err := h.service.GetAdminActivity(c.Request.Context(), adminID, limit)
@@ -352,38 +419,44 @@ func (h *Handler) GetAdminActivity(c *gin.Context) {
 
 // RegisterRoutes registers all admin routes
 func (h *Handler) RegisterRoutes(router *gin.RouterGroup, middleware *Middleware) {
-	admin := router.Group("/admin")
-	admin.Use(middleware.RequireAdminOrSuperAdmin())
+	adminGroup := router.Group("/admin")
 	{
-		// Dashboard (both admin and superadmin)
-		admin.GET("/dashboard/stats", middleware.SetSchoolFilter(), h.GetDashboardStats)
+		// Dashboard stats (accessible to admin, superadmin, and secretary)
+		adminGroup.GET("/dashboard/stats", middleware.RequireStaff(), middleware.SetSchoolFilter(), h.GetDashboardStats)
+		adminGroup.GET("/settings/:key", middleware.RequireStaff(), middleware.SetSchoolFilter(), h.GetSchoolSetting)
+		adminGroup.PUT("/settings/:key", middleware.RequireStaff(), middleware.SetSchoolFilter(), h.UpdateSchoolSetting)
 
-		// Schools (with role-based access)
-		schools := admin.Group("/schools")
-		schools.Use(middleware.SetSchoolFilter())
+		// Restricted admin routes (admin and superadmin only)
+		restricted := adminGroup.Group("/")
+		restricted.Use(middleware.RequireAdminOrSuperAdmin())
 		{
-			schools.GET("", h.ListSchools)
-			schools.GET("/:id", h.GetSchool)
-			schools.PUT("/:id", h.UpdateSchool)
+			// Schools (with role-based access)
+			schools := restricted.Group("/schools")
+			schools.Use(middleware.SetSchoolFilter())
+			{
+				schools.GET("", h.ListSchools)
+				schools.GET("/:id", h.GetSchool)
+				schools.PUT("/:id", h.UpdateSchool)
 
-			// Superadmin only
-			schools.POST("", middleware.RequireSuperAdmin(), h.CreateSchool)
-			schools.DELETE("/:id", middleware.RequireSuperAdmin(), h.DeleteSchool)
+				// Superadmin only
+				schools.POST("", middleware.RequireSuperAdmin(), h.CreateSchool)
+				schools.DELETE("/:id", middleware.RequireSuperAdmin(), h.DeleteSchool)
+			}
+
+			// Admin users (superadmin only)
+			admins := restricted.Group("/users/admins")
+			admins.Use(middleware.RequireSuperAdmin())
+			{
+				admins.GET("", h.ListAdminUsers)
+				admins.POST("", h.CreateAdminUser)
+				admins.PUT("/:id", h.UpdateAdminUser)
+				admins.DELETE("/:id", h.DeleteAdminUser)
+				admins.GET("/:id/activity", h.GetAdminActivity)
+			}
+
+			// Audit Logs (SuperAdmin only)
+			restricted.GET("/audit-logs", middleware.RequireSuperAdmin(), h.ListAuditLogs)
 		}
-
-		// Admin users (superadmin only)
-		admins := admin.Group("/users/admins")
-		admins.Use(middleware.RequireSuperAdmin())
-		{
-			admins.GET("", h.ListAdminUsers)
-			admins.POST("", h.CreateAdminUser)
-			admins.PUT("/:id", h.UpdateAdminUser)
-			admins.DELETE("/:id", h.DeleteAdminUser)
-			admins.GET("/:id/activity", h.GetAdminActivity)
-		}
-
-		// Audit Logs (SuperAdmin only)
-		admin.GET("/audit-logs", middleware.RequireSuperAdmin(), h.ListAuditLogs)
 	}
 }
 
@@ -409,4 +482,51 @@ func (h *Handler) ListAuditLogs(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, logs)
+}
+
+// GetSchoolSetting returns a school setting
+// GET /api/v1/admin/settings/:key
+func (h *Handler) GetSchoolSetting(c *gin.Context) {
+	key := c.Param("key")
+	schoolID := GetFilteredSchoolID(c)
+
+	if schoolID == "" {
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "school_id required"})
+		return
+	}
+
+	value, err := h.service.GetSchoolSetting(c.Request.Context(), schoolID, key)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"key": key, "value": value})
+}
+
+// UpdateSchoolSetting updates a school setting
+// PUT /api/v1/admin/settings/:key
+func (h *Handler) UpdateSchoolSetting(c *gin.Context) {
+	key := c.Param("key")
+	schoolID := GetFilteredSchoolID(c)
+
+	if schoolID == "" {
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "school_id required"})
+		return
+	}
+
+	var body struct {
+		Value string `json:"value" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	if err := h.service.UpdateSchoolSetting(c.Request.Context(), schoolID, key, body.Value); err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, MessageResponse{Message: "setting updated successfully"})
 }

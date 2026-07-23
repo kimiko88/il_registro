@@ -13,6 +13,8 @@ type Repository interface {
 	GetAvailableSlots(ctx context.Context, schoolID, teacherID string, from, to time.Time) ([]ColloquioSlot, error)
 	GetSlotByID(ctx context.Context, id string) (*ColloquioSlot, error)
 	UpdateSlot(ctx context.Context, slot *ColloquioSlot) error
+	DeleteSlot(ctx context.Context, id string) error
+	CreateSlotsBatch(ctx context.Context, slots []ColloquioSlot) error
 
 	CreateBooking(ctx context.Context, booking *ColloquioBooking) error
 	GetBooking(ctx context.Context, id string) (*ColloquioBooking, error)
@@ -29,6 +31,9 @@ type Repository interface {
 
 	// Analytics
 	GetAnalytics(ctx context.Context, schoolID string) (*AnalyticsResponse, error)
+
+	// User to Profile resolver
+	ResolveParentUserID(ctx context.Context, userID string) (string, error)
 }
 
 type repository struct {
@@ -82,8 +87,44 @@ func (r *repository) GetSlotByID(ctx context.Context, id string) (*ColloquioSlot
 }
 
 func (r *repository) UpdateSlot(ctx context.Context, s *ColloquioSlot) error {
-	_, err := r.db.ExecContext(ctx, `UPDATE colloquio_slots SET location=$1, is_cancelled=$2 WHERE id=$3`, s.Location, s.IsCancelled, s.ID)
+	_, err := r.db.ExecContext(ctx, `UPDATE colloquio_slots SET location=$1, is_cancelled=$2, booking_count=$3 WHERE id=$4`, s.Location, s.IsCancelled, s.BookingCount, s.ID)
 	return err
+}
+
+func (r *repository) DeleteSlot(ctx context.Context, id string) error {
+	_, err := r.db.ExecContext(ctx, `DELETE FROM colloquio_slots WHERE id=$1`, id)
+	return err
+}
+
+func (r *repository) CreateSlotsBatch(ctx context.Context, slots []ColloquioSlot) error {
+	if len(slots) == 0 {
+		return nil
+	}
+
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	query := `
+		INSERT INTO colloquio_slots (teacher_id, school_id, date, start_time, end_time, max_bookings, type, location)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
+
+	stmt, err := tx.PrepareContext(ctx, query)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	for _, s := range slots {
+		_, err := stmt.ExecContext(ctx, s.TeacherID, s.SchoolID, s.Date, s.StartTime, s.EndTime, s.MaxBookings, s.Type, s.Location)
+		if err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit()
 }
 
 func (r *repository) CreateBooking(ctx context.Context, b *ColloquioBooking) error {
@@ -91,7 +132,7 @@ func (r *repository) CreateBooking(ctx context.Context, b *ColloquioBooking) err
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	// 1. Lock Slot row to prevent race condition
 	var current, max int
@@ -121,23 +162,66 @@ func (r *repository) CreateBooking(ctx context.Context, b *ColloquioBooking) err
 }
 
 func (r *repository) GetBooking(ctx context.Context, id string) (*ColloquioBooking, error) {
+	query := `
+		SELECT b.id, b.slot_id, b.parent_id, b.student_id, b.status, b.notes, b.booked_at,
+		       COALESCE(up.last_name || ' ' || up.first_name, '') as parent_name,
+		       COALESCE(us.last_name || ' ' || us.first_name, '') as student_name
+		FROM colloquio_bookings b
+		LEFT JOIN parents p ON b.parent_id = p.id
+		LEFT JOIN users up ON p.user_id = up.id
+		LEFT JOIN students st ON b.student_id = st.id
+		LEFT JOIN users us ON st.user_id = us.id
+		WHERE b.id=$1`
+	
 	var b ColloquioBooking
-	err := r.db.QueryRowContext(ctx, `SELECT id, slot_id, parent_id, student_id, status, notes, booked_at FROM colloquio_bookings WHERE id=$1`, id).Scan(
+	err := r.db.QueryRowContext(ctx, query, id).Scan(
 		&b.ID, &b.SlotID, &b.ParentID, &b.StudentID, &b.Status, &b.Notes, &b.BookedAt,
+		&b.ParentName, &b.StudentName,
 	)
-	return &b, err
+	if err != nil {
+		return nil, err
+	}
+	return &b, nil
 }
-func (r *repository) GetBookingsByParent(ctx context.Context, parentID string) ([]ColloquioBooking, error) {
-	return r.queryBookings(ctx, `SELECT id, slot_id, parent_id, student_id, status, notes, booked_at FROM colloquio_bookings WHERE parent_id=$1 ORDER BY booked_at DESC`, parentID)
+func (r *repository) GetBookingsByParent(ctx context.Context, parentUserID string) ([]ColloquioBooking, error) {
+	parentProfileID, err := r.ResolveParentUserID(ctx, parentUserID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	query := `
+		SELECT b.id, b.slot_id, b.parent_id, b.student_id, b.status, b.notes, b.booked_at,
+		       s.date, s.start_time, s.end_time, s.location, s.type,
+		       COALESCE(up.last_name || ' ' || up.first_name, '') as parent_name,
+		       COALESCE(us.last_name || ' ' || us.first_name, '') as student_name
+		FROM colloquio_bookings b
+		JOIN colloquio_slots s ON b.slot_id = s.id
+		LEFT JOIN parents p ON b.parent_id = p.id
+		LEFT JOIN users up ON p.user_id = up.id
+		LEFT JOIN students st ON b.student_id = st.id
+		LEFT JOIN users us ON st.user_id = us.id
+		WHERE b.parent_id=$1 
+		ORDER BY s.date DESC, s.start_time DESC`
+	return r.queryBookings(ctx, query, parentProfileID)
 }
 
 func (r *repository) GetBookingsByTeacher(ctx context.Context, teacherID string) ([]ColloquioBooking, error) {
-	// Join with slots to filter by teacher
 	query := `
-		SELECT b.id, b.slot_id, b.parent_id, b.student_id, b.status, b.notes, b.booked_at 
+		SELECT b.id, b.slot_id, b.parent_id, b.student_id, b.status, b.notes, b.booked_at,
+		       s.date, s.start_time, s.end_time, s.location, s.type,
+		       COALESCE(up.last_name || ' ' || up.first_name, '') as parent_name,
+		       COALESCE(us.last_name || ' ' || us.first_name, '') as student_name
 		FROM colloquio_bookings b
 		JOIN colloquio_slots s ON b.slot_id = s.id
-		WHERE s.teacher_id = $1 ORDER BY s.date, s.start_time`
+		LEFT JOIN parents p ON b.parent_id = p.id
+		LEFT JOIN users up ON p.user_id = up.id
+		LEFT JOIN students st ON b.student_id = st.id
+		LEFT JOIN users us ON st.user_id = us.id
+		WHERE s.teacher_id = $1 
+		ORDER BY s.date, s.start_time`
 	return r.queryBookings(ctx, query, teacherID)
 }
 
@@ -151,7 +235,15 @@ func (r *repository) UpdateBooking(ctx context.Context, b *ColloquioBooking) err
 	return err
 }
 
-func (r *repository) CountBookingsForParent(ctx context.Context, parentID string, date time.Time, start, end time.Time) (int, error) {
+func (r *repository) CountBookingsForParent(ctx context.Context, parentUserID string, date time.Time, start, end time.Time) (int, error) {
+	parentProfileID, err := r.ResolveParentUserID(ctx, parentUserID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return 0, nil
+		}
+		return 0, err
+	}
+
 	// Check overlap
 	query := `
 		SELECT COUNT(*) 
@@ -163,11 +255,8 @@ func (r *repository) CountBookingsForParent(ctx context.Context, parentID string
 		AND (
 			(s.start_time < $4 AND s.end_time > $3) -- Overlap logic
 		)`
-	// Time comparison in SQL might need casting if passing Go Time objects for TIME columns.
-	// Assuming driver handles it or we cast.
-	// Postgres TIME type is time of day.
 	var count int
-	err := r.db.QueryRowContext(ctx, query, parentID, date, start, end).Scan(&count)
+	err = r.db.QueryRowContext(ctx, query, parentProfileID, date, start, end).Scan(&count)
 	return count, err
 }
 
@@ -229,10 +318,22 @@ func (r *repository) queryBookings(ctx context.Context, query string, args ...in
 	var bookings []ColloquioBooking
 	for rows.Next() {
 		var b ColloquioBooking
-		if err := rows.Scan(&b.ID, &b.SlotID, &b.ParentID, &b.StudentID, &b.Status, &b.Notes, &b.BookedAt); err != nil {
+		var s ColloquioSlot
+		if err := rows.Scan(
+			&b.ID, &b.SlotID, &b.ParentID, &b.StudentID, &b.Status, &b.Notes, &b.BookedAt,
+			&s.Date, &s.StartTime, &s.EndTime, &s.Location, &s.Type,
+			&b.ParentName, &b.StudentName,
+		); err != nil {
 			return nil, err
 		}
+		b.Slot = &s
 		bookings = append(bookings, b)
 	}
 	return bookings, nil
+}
+
+func (r *repository) ResolveParentUserID(ctx context.Context, userID string) (string, error) {
+	var id string
+	err := r.db.QueryRowContext(ctx, "SELECT id FROM parents WHERE user_id = $1", userID).Scan(&id)
+	return id, err
 }
