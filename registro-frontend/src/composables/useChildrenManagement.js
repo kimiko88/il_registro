@@ -6,13 +6,13 @@ export function useChildrenManagement() {
     const store = useChildrenStore();
     const $q = useQuasar();
 
-    const addChild = async (childData) => {
+    const addChild = async (_childData) => {
         // Mock Add
         $q.notify({ type: 'positive', message: 'Child added successfully' });
         // In real app, would call store action
     };
 
-    const removeChild = async (childId) => {
+    const removeChild = async (_childId) => {
         $q.dialog({
             title: 'Confirm',
             message: 'Are you sure you want to remove this child from your profile?',

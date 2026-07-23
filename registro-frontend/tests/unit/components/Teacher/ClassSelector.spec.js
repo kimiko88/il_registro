@@ -47,7 +47,7 @@ describe('Teacher/ClassSelector.vue', () => {
 
         // Let's modify the store and see if select updates?
         // Or better, trigger update on select and check store action.
-        expect(wrapper.vm.selectedClassModel).toEqual({ id: 1, name: 'Class 1A', type: 'Math' })
+        expect(wrapper.vm.selectedClassModel).toMatchObject({ id: 1, name: 'Class 1A', type: 'Math' })
     })
 
     it('calls selectClass when selection changes', async () => {

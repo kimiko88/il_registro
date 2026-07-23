@@ -11,6 +11,8 @@ type Repository interface {
 	RegisterStudent(ctx context.Context, p *Participation) error
 	GetParticipations(ctx context.Context, studentID string) ([]Participation, error)
 	MarkAttendance(ctx context.Context, eventID, studentID string, attended bool) error
+	SavePreference(ctx context.Context, p *StudentPreference) error
+	GetPreference(ctx context.Context, studentID string) (*StudentPreference, error)
 }
 
 type repository struct {
@@ -38,7 +40,7 @@ func (r *repository) GetEvents(ctx context.Context, schoolID string) ([]Event, e
 	var events []Event
 	for rows.Next() {
 		var e Event
-		rows.Scan(&e.ID, &e.SchoolID, &e.Title, &e.Description, &e.Category, &e.Date, &e.EndDate, &e.Location, &e.Hours, &e.MaxAttendees, &e.CreatedBy)
+		_ = rows.Scan(&e.ID, &e.SchoolID, &e.Title, &e.Description, &e.Category, &e.Date, &e.EndDate, &e.Location, &e.Hours, &e.MaxAttendees, &e.CreatedBy)
 		events = append(events, e)
 	}
 	return events, nil
@@ -58,7 +60,7 @@ func (r *repository) GetParticipations(ctx context.Context, studentID string) ([
 	var parts []Participation
 	for rows.Next() {
 		var p Participation
-		rows.Scan(&p.ID, &p.EventID, &p.StudentID, &p.Status, &p.Attended, &p.RegisteredAt)
+		_ = rows.Scan(&p.ID, &p.EventID, &p.StudentID, &p.Status, &p.Attended, &p.RegisteredAt)
 		parts = append(parts, p)
 	}
 	return parts, nil
@@ -71,4 +73,30 @@ func (r *repository) MarkAttendance(ctx context.Context, eventID, studentID stri
 	}
 	_, err := r.db.ExecContext(ctx, `UPDATE orientamento_participations SET attended=$1, status=$2 WHERE event_id=$3 AND student_id=$4`, attended, status, eventID, studentID)
 	return err
+}
+
+func (r *repository) SavePreference(ctx context.Context, p *StudentPreference) error {
+	query := `
+		INSERT INTO orientamento_preferences (student_id, preferred_track, target_field, notes, updated_at)
+		VALUES ($1, $2, $3, $4, NOW())
+		ON CONFLICT (student_id) DO UPDATE SET
+			preferred_track = EXCLUDED.preferred_track,
+			target_field = EXCLUDED.target_field,
+			notes = EXCLUDED.notes,
+			updated_at = NOW()`
+	_, err := r.db.ExecContext(ctx, query, p.StudentID, p.PreferredTrack, p.TargetField, p.Notes)
+	return err
+}
+
+func (r *repository) GetPreference(ctx context.Context, studentID string) (*StudentPreference, error) {
+	var p StudentPreference
+	query := `SELECT id, student_id, preferred_track, target_field, notes, updated_at FROM orientamento_preferences WHERE student_id = $1`
+	err := r.db.QueryRowContext(ctx, query, studentID).Scan(&p.ID, &p.StudentID, &p.PreferredTrack, &p.TargetField, &p.Notes, &p.UpdatedAt)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return &StudentPreference{StudentID: studentID, PreferredTrack: "University", TargetField: "Ingegneria Informatica"}, nil
+		}
+		return nil, err
+	}
+	return &p, nil
 }

@@ -9,8 +9,8 @@ const mockApi = vi.hoisted(() => ({
     delete: vi.fn()
 }))
 
-vi.mock('src/boot/axios', () => ({
-    api: mockApi
+vi.mock('@/services/api', () => ({
+    default: mockApi
 }))
 
 describe('Grade Service', () => {
@@ -21,12 +21,12 @@ describe('Grade Service', () => {
     it('fetches my grades', async () => {
         mockApi.get.mockResolvedValue({ data: [] })
         await gradeService.getMyGrades()
-        expect(mockApi.get).toHaveBeenCalledWith('/student/grades')
+        expect(mockApi.get).toHaveBeenCalledWith('/grades/my-grades')
     })
 
     it('saves a grade', async () => {
         const payload = { value: 8 }
         await gradeService.saveGrade(payload)
-        expect(mockApi.post).toHaveBeenCalledWith('/teacher/grades', payload)
+        expect(mockApi.post).toHaveBeenCalledWith('/grades', payload)
     })
 })

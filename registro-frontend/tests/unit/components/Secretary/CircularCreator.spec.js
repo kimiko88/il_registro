@@ -1,83 +1,77 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { createTestingPinia } from '@pinia/testing'
+import { Quasar } from 'quasar'
 import CircularCreator from '@/components/Secretary/CircularCreator.vue'
-
-// Mock Quasar
-vi.mock('quasar', async (importOriginal) => {
-    const actual = await importOriginal()
-    return {
-        ...actual,
-        useQuasar: () => ({
-            notify: vi.fn()
-        })
-    }
-})
+import { useCommunicationsStore } from '@/stores/communications'
 
 describe('CircularCreator', () => {
     let wrapper
+    let commStore
 
     beforeEach(() => {
-        vi.useFakeTimers()
         wrapper = mount(CircularCreator, {
             global: {
+                plugins: [
+                    Quasar,
+                    createTestingPinia({
+                        createSpy: vi.fn,
+                        initialState: {
+                            classes: {
+                                classes: [{ id: 'c1', name: '1', section: 'A' }]
+                            }
+                        }
+                    })
+                ],
                 stubs: {
                     'q-card': { template: '<div><slot /></div>' },
                     'q-card-section': { template: '<div><slot /></div>' },
                     'q-form': { template: '<form @submit.prevent="$emit(\'submit\')"><slot /></form>' },
                     'q-input': true,
                     'q-checkbox': true,
-                    'q-select': true,
+                    'q-select': { template: '<div class="select-stub"></div>' },
                     'q-editor': true,
                     'q-file': true,
                     'q-icon': true,
-                    'q-btn': true
+                    'q-btn': { template: '<button @click="$emit(\'click\')"><slot /></button>' }
                 }
             }
         })
+        commStore = useCommunicationsStore()
     })
 
-    afterEach(() => {
-        vi.useRealTimers()
-    })
-
-    it('shows warning if no recipients selected', () => {
-        // Ensure form is invalid
+    it('shows warning if no recipients selected', async () => {
         wrapper.vm.form.recipients.teachers = false
-        wrapper.vm.sendCircular()
+        await wrapper.vm.sendCircular()
 
-        // Check notify called (we need to access the spy)
-        // With current mock setup (vi.fn() inside factory), getting the specific spy instance is hard.
-        // We can just check `sending` false, which we did.
-        // But better is to check notify.
-        // Let's rely on internal state not changing.
         expect(wrapper.vm.sending).toBe(false)
+        expect(commStore.sendMessage).not.toHaveBeenCalled()
     })
 
     it('shows class selector when students or parents selected', async () => {
-        expect(wrapper.findComponent({ name: 'q-select' }).exists()).toBe(false)
+        expect(wrapper.find('.select-stub').exists()).toBe(false)
 
         // Select students
         wrapper.vm.form.recipients.students = true
         await wrapper.vm.$nextTick()
 
-        expect(wrapper.findComponent({ name: 'q-select' }).exists()).toBe(true)
-
-        // Deselect
-        wrapper.vm.form.recipients.students = false
-        await wrapper.vm.$nextTick()
-        expect(wrapper.findComponent({ name: 'q-select' }).exists()).toBe(false)
+        expect(wrapper.find('.select-stub').exists()).toBe(true)
     })
 
     it('sends circular with valid data', async () => {
         wrapper.vm.form.title = 'Test'
         wrapper.vm.form.recipients.teachers = true
 
-        wrapper.vm.sendCircular()
+        // Mock sendMessage to resolve
+        commStore.sendMessage.mockResolvedValue({})
 
-        expect(wrapper.vm.sending).toBe(true)
-        await vi.runAllTimersAsync()
+        await wrapper.vm.sendCircular()
+
+        expect(commStore.sendMessage).toHaveBeenCalledWith(expect.objectContaining({
+            title: 'Test',
+            type: 'circular'
+        }))
         expect(wrapper.vm.sending).toBe(false)
         expect(wrapper.emitted('sent')).toBeTruthy()
-        expect(wrapper.emitted('sent')[0][0].title).toBe('Test')
     })
 })

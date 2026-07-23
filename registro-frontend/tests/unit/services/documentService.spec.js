@@ -33,4 +33,9 @@ describe('documentService', () => {
         documentService.archiveDocument('1')
         expect(api.post).toHaveBeenCalledWith('/documents/1/archive')
     })
+
+    it('getDocumentVersions calls api.get', () => {
+        documentService.getDocumentVersions('1')
+        expect(api.get).toHaveBeenCalledWith('/documents/1/versions')
+    })
 })

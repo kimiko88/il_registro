@@ -20,10 +20,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { onMounted } from 'vue'
 import { useApi } from '@/composables/useApi'
 
-const { data: grades, loading, fetch } = useApi('/grades')
+const { data: grades, loading } = useApi('/grades')
 
 const columns = [
   { name: 'subject', label: 'Subject', field: row => row.subject.name, sortable: true },

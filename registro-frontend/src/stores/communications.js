@@ -1,23 +1,23 @@
 import { defineStore } from 'pinia';
-import { api } from '../boot/axios';
+import api from '../services/api';
 
 export const useCommunicationsStore = defineStore('communications', {
     state: () => ({
-        messages: [],
+        communications: [],
         loading: false,
         error: null,
     }),
 
     actions: {
-        async fetchMessages() {
+        async fetchCommunications() {
             this.loading = true;
             this.error = null;
             try {
                 const response = await api.get('/communications');
-                this.messages = response.data;
+                this.communications = response.data || [];
             } catch (err) {
-                this.error = err.response?.data?.error || 'Failed to fetch messages';
-                console.error('Error fetching messages:', err);
+                this.error = err.response?.data?.error || 'Failed to fetch communications';
+                console.error('Error fetching communications:', err);
             } finally {
                 this.loading = false;
             }
@@ -25,12 +25,29 @@ export const useCommunicationsStore = defineStore('communications', {
 
         async sendMessage(payload) {
             this.loading = true;
+            this.error = null;
             try {
                 const response = await api.post('/communications', payload);
-                this.messages.unshift(response.data);
+                this.communications.unshift(response.data);
                 return response.data;
             } catch (err) {
+                this.error = err.response?.data?.error || 'Error sending message';
                 console.error('Error sending message:', err);
+                throw err;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async deleteCommunication(id) {
+            this.loading = true;
+            this.error = null;
+            try {
+                await api.delete(`/communications/${id}`);
+                this.communications = this.communications.filter(c => c.id !== id);
+            } catch (err) {
+                this.error = err.response?.data?.error || 'Error deleting communication';
+                console.error('Error deleting communication:', err);
                 throw err;
             } finally {
                 this.loading = false;

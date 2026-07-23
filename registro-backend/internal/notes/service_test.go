@@ -45,6 +45,11 @@ func (m *MockRepository) List(ctx context.Context, filter NoteFilter) ([]Student
 	return args.Get(0).([]StudentNote), args.Error(1)
 }
 
+func (m *MockRepository) ApproveNote(ctx context.Context, id string, approverID string) error {
+	args := m.Called(ctx, id, approverID)
+	return args.Error(0)
+}
+
 func TestService_CreateNote(t *testing.T) {
 	subjectID := "subject-123"
 

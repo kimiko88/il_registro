@@ -7,42 +7,72 @@ import "time"
 type CreateGradeRequest struct {
 	StudentID     string  `json:"student_id" binding:"required"`
 	SubjectID     string  `json:"subject_id" binding:"required"`
-	GradeValue    float64 `json:"grade_value" binding:"required"`
+	GradeValue    float64 `json:"grade_value" binding:"required,min=-1,max=10"`
 	GradeType     string  `json:"grade_type" binding:"required"`
-	Semester      int     `json:"semester" binding:"required"` // 1 or 2
+	Semester      int     `json:"semester" binding:"required,min=1,max=2"` // 1 or 2
 	Description   string  `json:"description"`
 	RubricID      *string `json:"rubric_id"`
 	Weight        float64 `json:"weight"`
 	IsPublished   bool    `json:"is_published"`
-	GradeCategory string  `json:"grade_category"`          // formative/summative/practical
-	Date          string  `json:"date" binding:"required"` // ISO date string preferred for input
+	GradeCategory  string  `json:"grade_category"`          // formative/summative/practical
+	EvaluationType *string `json:"evaluation_type"`         // Written/Oral/Practical
+	Date           string  `json:"date" binding:"required"` // ISO date string preferred for input
 }
 
 type UpdateGradeRequest struct {
-	GradeValue    *float64 `json:"grade_value"`
-	GradeType     *string  `json:"grade_type"`
-	Description   *string  `json:"description"`
-	Weight        *float64 `json:"weight"`
-	IsPublished   *bool    `json:"is_published"`
-	GradeCategory *string  `json:"grade_category"`
-	Reason        string   `json:"reason" binding:"required"` // Reason is mandatory for updates
+	GradeValue     *float64 `json:"grade_value"`
+	GradeType      *string  `json:"grade_type"`
+	Description    *string  `json:"description"`
+	Date           *string  `json:"date"` // YYYY-MM-DD
+	Weight         *float64 `json:"weight"`
+	IsPublished    *bool    `json:"is_published"`
+	GradeCategory  *string  `json:"grade_category"`
+	EvaluationType *string  `json:"evaluation_type"`
+	Reason         string   `json:"reason" binding:"required"` // Reason is mandatory for updates
 }
 
 type BulkImportRequest struct {
 	Semester int `form:"semester" binding:"required"`
 }
 
+type SetWeightConfigRequest struct {
+	SubjectID       string  `json:"subject_id" binding:"required"`
+	WrittenWeight   float64 `json:"written_weight"`
+	OralWeight      float64 `json:"oral_weight"`
+	PracticalWeight float64 `json:"practical_weight"`
+}
+
+type WeightConfigResponse struct {
+	SubjectID       string  `json:"subject_id"`
+	WrittenWeight   float64 `json:"written_weight"`
+	OralWeight      float64 `json:"oral_weight"`
+	PracticalWeight float64 `json:"practical_weight"`
+}
+
 // --- Filters ---
 
 type GradeFilter struct {
+	StudentID   string `form:"student_id"`
 	Semester    int    `form:"semester"`
 	SubjectID   string `form:"subject_id"`
 	GradeType   string `form:"grade_type"`
 	IsPublished *bool  `form:"published"` // Pointer to distinguish false from missing
 	SortBy      string `form:"sort"`
+	// Pagination (optional — only used by paginated endpoints)
+	Page     int `form:"page"`      // 1-based; 0 means "no pagination"
+	PageSize int `form:"page_size"` // default 50 when Page > 0
 }
 
 // --- Responses ---
+
+// PaginatedGradesResponse wraps a slice of GradeResponse with pagination metadata.
+type PaginatedGradesResponse struct {
+	Data        []GradeResponse `json:"data"`
+	Total       int             `json:"total"`
+	Page        int             `json:"page"`
+	PageSize    int             `json:"page_size"`
+	TotalPages  int             `json:"total_pages"`
+}
 
 type GradeResponse struct {
 	ID            string    `json:"id"`
@@ -53,9 +83,11 @@ type GradeResponse struct {
 	GradeType     string    `json:"grade_type"`
 	Semester      int       `json:"semester"`
 	Description   string    `json:"description"`
-	Date          time.Time `json:"date"`
-	GradeCategory string    `json:"grade_category"`
-	IsPublished   bool      `json:"is_published"`
+	Date           time.Time `json:"date"`
+	GradeCategory  string    `json:"grade_category"`
+	EvaluationType *string   `json:"evaluation_type,omitempty"`
+	IsPublished    bool      `json:"is_published"`
+	TestID         *string   `json:"test_id,omitempty"`
 }
 
 // --- Student/Parent Specific Responses ---
@@ -85,10 +117,11 @@ type SemesterAverageSummary struct {
 }
 
 type SubjectAverage struct {
-	Subject        string  `json:"subject"`
-	Average        float64 `json:"average"`
-	TotalGrades    int     `json:"total_grades"`
-	LastUpdateDate string  `json:"last_update_date"`
+	Subject         string  `json:"subject"`
+	Average         float64 `json:"average"`
+	WeightedAverage float64 `json:"weighted_average"`
+	TotalGrades     int     `json:"total_grades"`
+	LastUpdateDate  string  `json:"last_update_date"`
 }
 
 type TrendResponse struct {
@@ -112,13 +145,19 @@ type TrendSummary struct {
 }
 
 type SemesterReportResponse struct {
-	Semester       int             `json:"semester"`
-	Period         PeriodDate      `json:"period"`
-	Subjects       []SubjectReport `json:"subjects"`
-	OverallAverage float64         `json:"overall_average"`
-	Promoted       string          `json:"promoted"`
-	Status         string          `json:"status"`
-	LastUpdate     time.Time       `json:"last_update"`
+	Semester         int             `json:"semester"`
+	StudentName      string          `json:"student_name"`
+	ClassName        string          `json:"class_name"`
+	SchoolYear       string          `json:"school_year"`
+	BehaviorGrade    float64         `json:"behavior_grade"`
+	ScholasticCredit float64         `json:"scholastic_credit"`
+	OverallAverage   float64         `json:"overall_average"`
+	TotalAbsenceDays int             `json:"total_absence_days"`
+	Period           PeriodDate      `json:"period"`
+	Subjects         []SubjectReport `json:"subjects"`
+	Promoted         string          `json:"promoted"`
+	Status           string          `json:"status"`
+	LastUpdate       time.Time       `json:"last_update"`
 }
 
 type PeriodDate struct {
@@ -403,9 +442,14 @@ type ScrutinyDate struct {
 
 type SubjectReport struct {
 	Subject        string     `json:"subject"`
+	SubjectID      string     `json:"subject_id"`
 	Teacher        string     `json:"teacher"`
-	Grades         []GradeVal `json:"grades"`
+	FinalGrade     float64    `json:"final_grade"`
 	SubjectAverage float64    `json:"subject_average"`
+	GradeCount     int        `json:"grade_count"`
+	AbsenceDays    int        `json:"absence_days"`
+	Notes          string     `json:"notes"`
+	Grades         []GradeVal `json:"grades"`
 	Passed         bool       `json:"passed"`
 }
 
@@ -476,4 +520,50 @@ type ImportResult struct {
 type ImportError struct {
 	Row   int    `json:"row"`
 	Error string `json:"error"`
+}
+
+type CreateClassTestRequest struct {
+	ClassID        string              `json:"class_id" binding:"required"`
+	SubjectID      string              `json:"subject_id" binding:"required"`
+	Title          string              `json:"title" binding:"required"`
+	Date           string              `json:"date" binding:"required"`
+	TeacherNotes   string              `json:"teacher_notes"`
+	ParentNotes    string              `json:"parent_notes"`
+	EvaluationType string              `json:"evaluation_type" binding:"required"` // Written/Oral/Practical
+	Semester       int                 `json:"semester"`
+	Grades         []StudentGradeInput `json:"grades"`
+}
+
+type StudentGradeInput struct {
+	StudentID  string   `json:"student_id" binding:"required"`
+	GradeValue *float64 `json:"grade_value" binding:"required"`
+	Notes      string   `json:"notes"`
+}
+
+type ClassTestResponse struct {
+	ID             string `json:"id"`
+	ClassID        string `json:"class_id"`
+	SubjectID      string `json:"subject_id"`
+	TeacherID      string `json:"teacher_id"`
+	Title          string `json:"title"`
+	Date           string `json:"date"`
+	TeacherNotes   string `json:"teacher_notes,omitempty"`
+	ParentNotes    string `json:"parent_notes,omitempty"`
+	EvaluationType string `json:"evaluation_type"`
+}
+
+type UpdateClassTestRequest struct {
+	Title          string                    `json:"title" binding:"required"`
+	Date           string                    `json:"date" binding:"required"`
+	TeacherNotes   string                    `json:"teacher_notes"`
+	ParentNotes    string                    `json:"parent_notes"`
+	EvaluationType string                    `json:"evaluation_type" binding:"required"`
+	Semester       int                       `json:"semester"`
+	Grades         []UpdateStudentGradeInput `json:"grades"`
+}
+
+type UpdateStudentGradeInput struct {
+	StudentID  string   `json:"student_id" binding:"required"`
+	GradeValue *float64 `json:"grade_value"`
+	Notes      string   `json:"notes"`
 }

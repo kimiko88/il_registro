@@ -16,12 +16,31 @@ export const userService = {
     delete(id) {
         return api.delete(`/users/${id}`)
     },
-    resetPassword(id) {
-        return api.post(`/users/${id}/reset-password`, { new_password: 'Password123!' }) // Mock pwd or ask prompt
-        // TODO: UI should probably prompt for new password OR logic should be "send reset link" (which usually doesn't need new pwd here, but handler might expect it or it's a "Force" reset)
-        // Handler ForceResetPassword expects JSON { new_password }
+    forceResetPassword(id, newPassword) {
+        return api.post(`/users/${id}/reset-password`, { new_password: newPassword })
+    },
+    bulkDelete(userIds) {
+        return api.post('/users/bulk-delete', { user_ids: userIds })
+    },
+    bulkImport(file) {
+        const formData = new FormData()
+        formData.append('file', file)
+        return api.post('/users/bulk-import', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        })
+    },
+    getGuardians(studentId) {
+        return api.get(`/users/${studentId}/guardians`)
+    },
+    addGuardian(studentId, data) {
+        return api.post(`/users/${studentId}/guardians`, data)
+    },
+    removeGuardian(studentId, guardianId) {
+        return api.delete(`/users/${studentId}/guardians/${guardianId}`)
+    },
+    getStudentFascicolo(studentId) {
+        return api.get(`/users/students/${studentId}/fascicolo`)
     }
-    // NOTE: adminService used /admin/users/admins/... for admins.
-    // For standard users, we might need a specific endpoint or use the admin one if permissible.
-    // I will assume generic endpoint or skip implementation detail for now.
 }

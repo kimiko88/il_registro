@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { useSchoolStore } from '../stores/schools';
 import { useQuasar } from 'quasar';
 

@@ -21,6 +21,12 @@ func (m *ValidationMockRepo) GetParticipations(ctx context.Context, s string) ([
 func (m *ValidationMockRepo) MarkAttendance(ctx context.Context, e, s string, a bool) error {
 	return nil
 }
+func (m *ValidationMockRepo) SavePreference(ctx context.Context, p *StudentPreference) error {
+	return nil
+}
+func (m *ValidationMockRepo) GetPreference(ctx context.Context, s string) (*StudentPreference, error) {
+	return &StudentPreference{StudentID: s}, nil
+}
 
 func TestRegression_CreateEvent_Validation(t *testing.T) {
 	repo := new(ValidationMockRepo)
