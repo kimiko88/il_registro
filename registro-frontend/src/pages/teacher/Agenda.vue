@@ -201,7 +201,7 @@
     </div>
 
     <!-- Floating Action Button for Mobile / Quick Create -->
-    <q-page-sticky position="bottom-right" :offset="[18, 18]">
+    <q-page-sticky position="bottom-right" :offset="[18, 18]" class="lt-md">
       <q-btn round color="primary" icon="add" size="lg" class="shadow-lg" @click="openCreateDialog" />
     </q-page-sticky>
 
@@ -266,7 +266,7 @@
               </div>
             </div>
 
-            <!-- Row 2: Date & Times -->
+            <!-- Row 2: Date & Time Inputs -->
             <div class="row q-col-gutter-sm">
               <div class="col-12 col-sm-4">
                 <q-input
@@ -275,10 +275,10 @@
                   label="Data *"
                   outlined dense
                   tabindex="5"
-                  :rules="[val => !!val || 'Data obbligatoria']"
+                  :rules="[val => !!val || 'La data è obbligatoria']"
                 />
               </div>
-              <div class="col-12 col-sm-4">
+              <div class="col-6 col-sm-4">
                 <q-input
                   v-model="form.start_time"
                   type="time"
@@ -287,7 +287,7 @@
                   tabindex="6"
                 />
               </div>
-              <div class="col-12 col-sm-4">
+              <div class="col-6 col-sm-4">
                 <q-input
                   v-model="form.end_time"
                   type="time"
@@ -298,38 +298,39 @@
               </div>
             </div>
 
-            <!-- Visibility Toggle -->
-            <div class="bg-slate-50 q-pa-sm rounded-lg border border-slate-200">
-              <q-toggle
-                v-model="form.visible_to_students"
-                label="Visibile agli studenti e genitori"
-                color="primary"
-                tabindex="8"
-              />
+            <!-- Toggle: Visible to Students -->
+            <div class="row items-center justify-between bg-slate-50 q-pa-sm rounded-lg border border-slate-200">
+              <div>
+                <div class="text-subtitle2 text-slate-700">Visibile agli Studenti & Genitori</div>
+                <div class="text-caption text-slate-500">Se disattivato, l'evento sarà visibile solo ai docenti</div>
+              </div>
+              <q-toggle v-model="form.visible_to_students" color="primary" />
             </div>
           </q-card-section>
 
-          <q-separator />
-
-          <!-- Card Actions -->
-          <q-card-actions align="right" class="q-pa-md">
+          <q-card-actions align="between" class="q-pa-md bg-slate-50 border-t border-slate-100">
             <q-btn
               v-if="isEditMode"
-              flat
               color="negative"
+              flat
               icon="delete"
               label="Elimina"
-              :loading="saving"
+              no-caps
               @click="confirmDelete"
             />
-            <div class="flex-1"></div>
-            <q-btn flat label="Annulla" v-close-popup />
-            <q-btn
-              type="submit"
-              color="primary"
-              :label="isEditMode ? 'Salva Modifiche' : 'Crea Evento'"
-              :loading="saving"
-            />
+            <div v-else />
+
+            <div class="row q-gutter-sm">
+              <q-btn flat label="Annulla" no-caps v-close-popup />
+              <q-btn
+                type="submit"
+                color="primary"
+                unelevated
+                :label="isEditMode ? 'Salva Modifiche' : 'Crea Evento'"
+                :loading="saving"
+                no-caps
+              />
+            </div>
           </q-card-actions>
         </q-form>
       </q-card>
@@ -348,14 +349,13 @@ const agendaStore = useAgendaStore()
 const classesStore = useClassesStore()
 
 const formRef = ref(null)
-const todayStr = qdate.formatDate(new Date(), 'YYYY/MM/DD')
-const selectedDate = ref(todayStr)
-const selectedClassFilter = ref(null)
-
 const dialogVisible = ref(false)
 const isEditMode = ref(false)
 const editId = ref(null)
 const saving = ref(false)
+
+const selectedDate = ref(qdate.formatDate(new Date(), 'YYYY/MM/DD'))
+const selectedClassFilter = ref(null)
 
 const form = reactive({
   title: '',
@@ -386,8 +386,11 @@ const classOptions = computed(() => {
 
 const formattedSelectedDate = computed(() => {
   if (!selectedDate.value) return ''
-  const normalized = selectedDate.value.replace(/\//g, '-')
-  return qdate.formatDate(new Date(normalized), 'DD/MM/YYYY')
+  const parts = selectedDate.value.split('/')
+  if (parts.length === 3) {
+    return `${parts[2]}/${parts[1]}/${parts[0]}`
+  }
+  return selectedDate.value
 })
 
 const isoSelectedDate = computed(() => {
@@ -430,9 +433,7 @@ async function loadAgendaEvents() {
   await agendaStore.fetchAgenda(params).catch(() => {})
 }
 
-function onDateChange() {
-  // Client-side computed dayEvents handles date filtering without redundant HTTP calls
-}
+function onDateChange() {}
 
 function openCreateDialog() {
   isEditMode.value = false
@@ -468,7 +469,12 @@ async function saveEvent() {
     return
   }
 
-  if (form.start_time && form.end_time && form.end_time <= form.start_time) {
+  if (!form.start_time || !form.end_time) {
+    $q.notify({ type: 'warning', message: 'Inserisci sia l\'ora di inizio che l\'ora di fine' })
+    return
+  }
+
+  if (form.end_time <= form.start_time) {
     $q.notify({ type: 'warning', message: 'L\'ora di fine deve essere successiva all\'ora di inizio' })
     return
   }
@@ -538,7 +544,7 @@ function getEventTimelineColor(type) {
     case 'compito': return 'blue'
     case 'verifica': return 'red'
     case 'avviso': return 'amber'
-    case 'evento': return 'emerald'
+    case 'evento': return 'positive'
     default: return 'primary'
   }
 }

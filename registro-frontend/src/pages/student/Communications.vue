@@ -290,10 +290,15 @@ const filteredMessages = computed(() => {
   })
 })
 
-function selectMessage(msg) {
+async function selectMessage(msg) {
   selectedMessage.value = msg
   if (!msg.read) {
     msg.read = true
+    try {
+      await communicationService.markAsRead(msg.id)
+    } catch {
+      msg.read = false
+    }
   }
 }
 

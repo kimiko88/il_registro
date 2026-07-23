@@ -195,6 +195,9 @@ const filteredGrades = computed(() => {
     if (filters.value.period === 'Ultimo Mese') {
         const monthAgo = new Date(); monthAgo.setMonth(monthAgo.getMonth() - 1);
         list = list.filter(g => new Date(g.date) >= monthAgo)
+    } else if (filters.value.period === 'Ultima Settimana') {
+        const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
+        list = list.filter(g => new Date(g.date) >= weekAgo)
     }
     return list
 })
@@ -204,8 +207,10 @@ const subjectAverages = computed(() => {
     const counts = {}
     filteredGrades.value.forEach(g => {
         if (g.value === 'A') return;
+        const val = Number(g.value);
+        if (isNaN(val)) return;
         if (!sums[g.subject]) { sums[g.subject] = 0; counts[g.subject] = 0; }
-        sums[g.subject] += g.value;
+        sums[g.subject] += val;
         counts[g.subject]++;
     });
     return Object.keys(sums).map(sub => ({
@@ -229,8 +234,11 @@ const simulatedAverage = computed(() => {
     
     filteredGrades.value.forEach(g => {
         if (g.subject === targetSub && g.value !== 'A') {
-            sum += g.value
-            count++
+            const val = Number(g.value);
+            if (!isNaN(val)) {
+                sum += val
+                count++
+            }
         }
     })
     
@@ -247,8 +255,11 @@ const subjectsBelowSufficiency = computed(() => {
         let count = 0
         filteredGrades.value.forEach(g => {
             if (g.subject === s.name && g.value !== 'A') {
-                sum += g.value
-                count++
+                const val = Number(g.value);
+                if (!isNaN(val)) {
+                    sum += val
+                    count++
+                }
             }
         })
         const needed = 6 * (count + 1) - sum
@@ -267,7 +278,12 @@ const getGradeColor = (val) => {
     return 'red'
 }
 
-const downloadReport = () => {
-    $q.notify({ type: 'positive', message: 'Report PDF scaricato (simulato)' })
+const downloadReport = async () => {
+    try {
+        await gradeService.downloadReportCardPDF(filters.value.semester)
+        $q.notify({ type: 'positive', message: 'Report PDF scaricato con successo' })
+    } catch (e) {
+        $q.notify({ type: 'negative', message: 'Errore nel download del report PDF' })
+    }
 }
 </script>

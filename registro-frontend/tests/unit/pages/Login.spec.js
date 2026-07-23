@@ -69,10 +69,10 @@ describe('Login.vue', () => {
         // Submit form
         await wrapper.find('form').trigger('submit')
 
-        expect(mockLogin).toHaveBeenCalledWith('test@example.com', 'password123')
+        expect(mockLogin).toHaveBeenCalledWith('test@example.com', 'password123', false)
     })
 
-    it('shows notification on login error', async () => {
+    it('shows inline error alert on login error', async () => {
         mockLogin.mockResolvedValue('Invalid credentials')
 
         const inputs = wrapper.findAll('input')
@@ -84,9 +84,6 @@ describe('Login.vue', () => {
         // Wait for async login to complete
         await new Promise(resolve => setTimeout(resolve, 0))
 
-        expect(Notify.create).toHaveBeenCalledWith(expect.objectContaining({
-            type: 'negative',
-            message: 'Invalid credentials'
-        }))
+        expect(wrapper.text()).toContain('Invalid credentials')
     })
 })

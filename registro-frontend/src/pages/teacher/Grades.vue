@@ -461,11 +461,12 @@ const openTestDialog = () => {
         parentNotes: '',
         grades: gradesStore.grades.students.map(s => ({
             student_id: s.student_id,
-            full_name: s.full_name,
+                            full_name: s.full_name,
             grade_value: null,
             notes: ''
         }))
     };
+    gradeInputRefs.value = [];
     showTestDialog.value = true;
 };
 
@@ -489,13 +490,13 @@ const submitTest = async () => {
                 }))
         };
 
-        await gradesStore.createClassTest(payload);
+        await gradeService.createTestWithGrades(payload);
         $q.notify({
             type: 'positive',
             message: 'Verifica e voti salvati con successo!'
         });
         showTestDialog.value = false;
-        refreshGrades();
+        await refreshGrades();
     } catch (err) {
         console.error(err);
         $q.notify({
@@ -507,9 +508,12 @@ const submitTest = async () => {
     }
 };
 
+let classChangeReqId = 0;
 watch(selectedClassId, async (newVal) => {
+    const currentReq = ++classChangeReqId;
     if (newVal) {
         await gradesStore.fetchClassSubjects(newVal);
+        if (currentReq !== classChangeReqId) return;
         if (gradesStore.subjects && gradesStore.subjects.length > 0) {
             selectedSubject.value = gradesStore.subjects[0].subject_id;
         } else {
@@ -580,7 +584,7 @@ watch(viewMode, (newVal) => {
 const openEditTestDialog = (test) => {
     const studentGrades = gradesStore.grades?.students || [];
     const gradesList = studentGrades.map(s => {
-        const grade = s.grades?.find(g => g.test_id === test.id);
+        const grade = s.grades?.find(g => g.test_id === test.id || g.testId === test.id);
         return {
             student_id: s.student_id,
             full_name: s.full_name,
@@ -599,6 +603,7 @@ const openEditTestDialog = (test) => {
         parentNotes: test.parent_notes || '',
         grades: gradesList
     };
+    editGradeInputRefs.value = [];
     showEditTestDialog.value = true;
 };
 
@@ -611,11 +616,13 @@ const submitEditTest = async () => {
             teacher_notes: editTestForm.value.teacherNotes,
             parent_notes: editTestForm.value.parentNotes,
             evaluation_type: editTestForm.value.evaluationType === 'Scritto' ? 'Written' : (editTestForm.value.evaluationType === 'Orale' ? 'Oral' : 'Practical'),
-            grades: editTestForm.value.grades.map(g => ({
-                student_id: g.student_id,
-                grade_value: (g.grade_value !== null && g.grade_value !== undefined && g.grade_value !== '') ? gradeToNumeric(g.grade_value) : null,
-                notes: g.notes
-            }))
+            grades: editTestForm.value.grades
+                .filter(g => g.grade_value !== null && g.grade_value !== undefined && g.grade_value !== '')
+                .map(g => ({
+                    student_id: g.student_id,
+                    grade_value: gradeToNumeric(g.grade_value),
+                    notes: g.notes
+                }))
         };
 
         await gradesStore.updateClassTest(editTestForm.value.id, payload);
@@ -692,6 +699,10 @@ const deleteTestConfirm = async (testOrId) => {
 const formatDate = (dateStr) => {
     if (!dateStr) return '';
     try {
+        const parts = dateStr.split('T')[0].split('-');
+        if (parts.length === 3) {
+            return `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
+        }
         const d = new Date(dateStr);
         const day = String(d.getDate()).padStart(2, '0');
         const month = String(d.getMonth() + 1).padStart(2, '0');

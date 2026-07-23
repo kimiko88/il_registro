@@ -326,15 +326,16 @@ async function onDialogClassChange() {
   }
 }
 
-function openDialog() {
+async function openDialog() {
   form.class_id = selectedClassId.value || classOptions.value[0]?.value || ''
   form.type = 'generic'
   form.note = ''
   form.date = new Date().toISOString().substring(0, 10)
   form.is_reserved = false
   form.target_role = 'all'
+  form.student_id = ''
   dialogVisible.value = true
-  onDialogClassChange()
+  await onDialogClassChange()
 }
 
 async function saveNote() {

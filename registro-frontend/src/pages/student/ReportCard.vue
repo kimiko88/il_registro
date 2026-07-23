@@ -201,17 +201,17 @@
               <div class="row items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-200 q-mb-sm">
                 <span class="text-weight-bold text-slate-700">Voto di Comportamento:</span>
                 <q-chip color="primary" text-color="white" class="text-weight-bold">
-                  {{ reportData?.behavior_grade || 8 }} / 10
+                  {{ reportData?.behavior_grade ?? '—' }} / 10
                 </q-chip>
               </div>
 
               <div class="row items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-200">
                 <span class="text-weight-bold text-slate-700">Esito Periodo:</span>
                 <q-badge
-                  :color="reportData?.promoted === 'SÌ' || reportData?.overall_average >= 6 ? 'positive' : 'warning'"
+                  :color="(reportData?.promoted === 'SÌ' || reportData?.promoted === true) ? 'positive' : 'warning'"
                   class="text-weight-bold q-px-md q-py-xs"
                 >
-                  {{ reportData?.promoted === 'SÌ' || reportData?.overall_average >= 6 ? 'PROMOSSO / REGOLARE' : 'CON GIUDIZIO SOSPESO' }}
+                  {{ (reportData?.promoted === 'SÌ' || reportData?.promoted === true) ? 'PROMOSSO / REGOLARE' : 'CON GIUDIZIO SOSPESO' }}
                 </q-badge>
               </div>
             </q-card-section>
@@ -261,6 +261,7 @@ async function loadReport() {
     reportData.value = await gradesStore.fetchSemesterReport(selectedSemester.value)
   } catch (e) {
     reportData.value = null
+    $q.notify({ type: 'negative', message: 'Errore nel caricamento della pagella' })
   }
 }
 

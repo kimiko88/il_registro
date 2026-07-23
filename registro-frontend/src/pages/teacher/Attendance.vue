@@ -306,6 +306,7 @@ const saveDraftToStorage = () => {
         lastAutosaveTime.value = now.toLocaleTimeString('it-IT')
     } catch (e) {
         console.warn('Failed to save draft to localStorage', e)
+        $q.notify({ type: 'warning', message: 'Impossibile salvare la bozza in memoria locale' })
     }
 }
 
@@ -313,8 +314,8 @@ onMounted(async () => {
     await classesStore.fetchAssignedClasses()
     if (classesStore.classes.length > 0) {
         selectedClass.value = classesStore.classes[0]
-        fetchData()
     }
+    fetchData()
     autosaveInterval = setInterval(saveDraftToStorage, 60000)
 })
 
@@ -376,7 +377,7 @@ const fetchData = async () => {
                 id: s.id,
                 first_name: s.first_name,
                 last_name: s.last_name,
-                status: existing ? existing.status : 'Present', // Default Present
+                status: existing ? existing.status : null, // Default null for unrecorded students
                 entry_time: existing ? existing.entry_time : '',
                 exit_time: existing ? existing.exit_time : '',
             }
@@ -436,8 +437,8 @@ const saveAttendance = async () => {
             statuses: students.value.map(s => ({
                 student_id: s.id,
                 status: s.status,
-                entry_time: s.status === 'Late' ? s.entry_time : null,
-                exit_time: s.status === 'LeftEarly' ? s.exit_time : null
+                entry_time: (s.status === 'Late' && s.entry_time && s.entry_time.trim() !== '') ? s.entry_time : null,
+                exit_time: (s.status === 'LeftEarly' && s.exit_time && s.exit_time.trim() !== '') ? s.exit_time : null
             }))
         }
         

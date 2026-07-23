@@ -160,18 +160,18 @@ describe('Teacher/Attendance.vue', () => {
         // We initialized classes in state.
 
         // Check if students populated
-        // s1 (Harry) should be present (default)
+        // s1 (Harry) should be null (unrecorded default)
         // s2 (Hermione) should be absent (mocked attendance)
 
         expect(wrapper.vm.students).toHaveLength(2)
         const harry = wrapper.vm.students.find(s => s.id === 's1')
         const hermione = wrapper.vm.students.find(s => s.id === 's2')
 
-        expect(harry.status).toBe('Present')
+        expect(harry.status).toBeNull()
         expect(hermione.status).toBe('Absent')
 
         // Stats
-        expect(wrapper.vm.stats.present).toBe(1)
+        expect(wrapper.vm.stats.present).toBe(0)
         expect(wrapper.vm.stats.absent).toBe(1)
     })
 

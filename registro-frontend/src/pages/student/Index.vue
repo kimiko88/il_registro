@@ -259,10 +259,10 @@ const fetchDashboardData = async () => {
                 if(s.grades) allGrades.push(...s.grades)
             })
         }
-        // Calculate Average
-        const validGrades = allGrades.filter(g => g.grade_value >= 0)
+        // Calculate Average (Exclude 0 unrated values)
+        const validGrades = allGrades.filter(g => g.grade_value > 0)
         if (validGrades.length > 0) {
-            const sum = validGrades.reduce((acc, g) => acc + g.grade_value, 0)
+            const sum = validGrades.reduce((acc, g) => acc + Number(g.grade_value), 0)
             averageGrade.value = (sum / validGrades.length).toFixed(1)
         } else {
             averageGrade.value = '-'

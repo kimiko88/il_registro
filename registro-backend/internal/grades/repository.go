@@ -210,10 +210,13 @@ func (r *repository) Update(grade *Grade, history *GradeHistory) error {
 }
 
 func (r *repository) Delete(id string, deletedBy string) error {
-	query := `UPDATE grades SET deleted_at = NOW(), modified_by = $1 WHERE id = $2::uuid`
-	_, err := r.db.Exec(query, deletedBy, id)
+	query := `UPDATE grades SET deleted_at = NOW(), modified_by = $1 WHERE id = $2::uuid AND deleted_at IS NULL`
+	res, err := r.db.Exec(query, deletedBy, id)
 	if err != nil {
 		return fmt.Errorf("delete grade error: %w", err)
+	}
+	if rows, _ := res.RowsAffected(); rows == 0 {
+		return fmt.Errorf("grade not found or already deleted")
 	}
 	return nil
 }
@@ -666,9 +669,12 @@ func (r *repository) FindUpcomingTestsByClass(classID string) ([]ClassTest, erro
 // DeleteTest deletes a test (cascade delete will handle grades in DB)
 func (r *repository) DeleteTest(id string) error {
 	query := `DELETE FROM class_tests WHERE id = $1::uuid`
-	_, err := r.db.Exec(query, id)
+	res, err := r.db.Exec(query, id)
 	if err != nil {
 		return fmt.Errorf("delete test error: %w", err)
+	}
+	if rows, _ := res.RowsAffected(); rows == 0 {
+		return fmt.Errorf("test not found")
 	}
 	return nil
 }
@@ -695,7 +701,7 @@ func (r *repository) FindGradesByTestID(testID string) ([]Grade, error) {
 		SELECT id, student_id, school_id, subject_id, teacher_id, 
 			       grade_value, grade_type, semester, date, 
 			       description, rubric_id, weight, is_published, published_at,
-			       grade_category, evaluation_type, created_by, created_at, updated_at, test_id
+			       grade_category, evaluation_type, COALESCE(created_by::text, ''), created_at, updated_at, test_id
 		FROM grades 
 		WHERE test_id = $1::uuid AND deleted_at IS NULL`
 	return r.scanGrades(query, testID)
@@ -769,6 +775,12 @@ func (r *repository) UpsertWeightConfig(cfg *GradeWeightConfig) (*GradeWeightCon
 }
 
 func (r *repository) DeleteWeightConfig(id string) error {
-	_, err := r.db.Exec(`DELETE FROM grade_weight_configs WHERE id = $1::uuid`, id)
-	return err
+	res, err := r.db.Exec(`DELETE FROM grade_weight_configs WHERE id = $1::uuid`, id)
+	if err != nil {
+		return err
+	}
+	if rows, _ := res.RowsAffected(); rows == 0 {
+		return fmt.Errorf("weight config not found")
+	}
+	return nil
 }

@@ -1,40 +1,33 @@
 <template>
-  <q-page class="q-pa-md">
-    <div class="row items-center justify-between q-mb-md">
-       <div class="text-h4 font-bold text-slate-800">Incontri Scuola-Famiglia</div>
-       <q-btn 
-         unelevated 
-         rounded 
-         color="primary" 
-         icon="add" 
-         label="Nuova Disponibilità" 
-         @click="showSlotDialog = true" 
-       />
+  <q-page padding class="bg-slate-50">
+    <!-- Header -->
+    <div class="row items-center justify-between q-mb-lg">
+      <div>
+        <h1 class="text-h4 font-bold text-slate-800 q-my-none">Gestione Colloqui</h1>
+        <p class="text-subtitle1 text-slate-500 q-mt-xs q-mb-none">
+          Pianifica le tue disponibilità ed accetta le prenotazioni dei genitori
+        </p>
+      </div>
+      <q-btn color="indigo" icon="add" label="Nuova Disponibilità" rounded @click="showSlotDialog = true" />
     </div>
 
+    <!-- Main Content -->
     <div class="row q-col-gutter-lg">
-        <!-- Calendar/Slots View -->
         <div class="col-12 col-md-8">
             <q-card flat bordered class="rounded-xl shadow-sm overflow-hidden">
-                <q-tabs 
-                  v-model="tab" 
-                  class="bg-white text-primary" 
-                  active-color="primary" 
-                  indicator-color="primary" 
-                  align="left"
-                  narrow-indicator
-                >
-                    <q-tab name="upcoming" label="Prossimi Incontri" />
-                    <q-tab name="slots" label="Le Mie Disponibilità" />
+                <q-tabs v-model="tab" class="text-indigo bg-indigo-50/50" active-color="indigo" indicator-color="indigo" align="left">
+                    <q-tab name="meetings" label="Incontri Programmati" icon="event" />
+                    <q-tab name="slots" label="Le tue Disponibilità" icon="schedule" />
                 </q-tabs>
+
                 <q-separator />
-                
-                <q-tab-panels v-model="tab" animated class="bg-slate-50/30">
-                    <q-tab-panel name="upcoming" class="q-pa-none">
+
+                <q-tab-panels v-model="tab" animated>
+                    <q-tab-panel name="meetings" class="q-pa-none">
                          <q-list separator>
                              <q-item v-for="meeting in meetings" :key="meeting.id" class="q-py-md">
                                  <q-item-section avatar>
-                                     <q-avatar color="primary" text-color="white" icon="event" />
+                                     <q-avatar color="indigo-1" text-color="indigo" icon="person" />
                                  </q-item-section>
                                  <q-item-section>
                                      <q-item-label class="text-weight-bold text-slate-700">
@@ -48,6 +41,17 @@
                                  </q-item-section>
                                  <q-item-section side>
                                      <div class="row items-center q-gutter-xs">
+                                         <q-btn 
+                                           v-if="meeting.status === 'Pending'" 
+                                           dense 
+                                           unelevated
+                                           color="positive" 
+                                           icon="check" 
+                                           label="Conferma" 
+                                           no-caps 
+                                           class="q-mr-xs rounded-pill"
+                                           @click="confirmMeeting(meeting)" 
+                                         />
                                          <q-btn 
                                            v-if="meeting.meet_link || settings.meetLink" 
                                            dense 
@@ -84,7 +88,7 @@
                                        {{ formatDate(slot.date) }} - {{ slot.time_range }}
                                      </q-item-label>
                                      <q-item-label caption>
-                                       Tipo: {{ slot.type }} • Disponibile: {{ slot.available ? 'Sì' : 'No' }}
+                                       Tipo: {{ getSlotTypeLabel(slot.type) }} • Prenotazioni: {{ slot.current_bookings || (slot.available ? 0 : 1) }}/{{ slot.max_bookings || 1 }}
                                      </q-item-label>
                                  </q-item-section>
                                  <q-item-section side>
@@ -216,11 +220,17 @@
                    <div class="col-6">
                       <q-select 
                         v-model="newSlot.type" 
-                        :options="['Individual', 'General', 'Assembly']" 
+                        :options="[
+                          { label: 'Individuale', value: 'Individual' },
+                          { label: 'Generale', value: 'General' },
+                          { label: 'Assemblea', value: 'Assembly' }
+                        ]" 
                         label="Tipo" 
                         outlined 
                         dense 
                         rounded
+                        emit-value
+                        map-options
                       />
                    </div>
                  </div>
@@ -250,77 +260,55 @@
                       </div>
                     </q-slide-transition>
                  </div>
-
-                 <div v-if="slotPreviewInfo" class="q-mt-md bg-blue-50 text-blue-900 q-pa-sm rounded-borders text-caption">
-                    <q-icon name="info" size="xs" class="q-mr-xs" />
-                    Verranno creati <strong>{{ slotPreviewInfo.totalSlots }}</strong> slot in totale ({{ slotPreviewInfo.slotsPerDay }} al giorno per {{ slotPreviewInfo.daysCount }} {{ slotPreviewInfo.daysCount === 1 ? 'giorno' : 'giorni' }}).
-                 </div>
             </q-card-section>
 
             <q-card-actions align="right" class="q-pa-md">
-                <q-btn flat label="Annulla" v-close-popup class="rounded-pill" />
-                <q-btn 
-                  unelevated 
-                  color="primary" 
-                  label="Crea Disponibilità" 
-                  @click="saveSlots" 
-                  :loading="saving"
-                  class="rounded-pill q-px-md"
-                />
+                <q-btn flat label="Annulla" v-close-popup rounded />
+                <q-btn color="indigo" label="Genera Disponibilità" rounded @click="saveSlots" :loading="savingSlots" />
             </q-card-actions>
         </q-card>
     </q-dialog>
-
   </q-page>
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import api from 'src/services/api'
 
 const $q = useQuasar()
-const tab = ref('upcoming')
-const showSlotDialog = ref(false)
-const saving = ref(false)
 
-const slotPreviewInfo = computed(() => {
-    const dates = Array.isArray(newSlot.dates) ? newSlot.dates : (newSlot.dates ? [newSlot.dates] : [])
-    if (dates.length === 0 || !newSlot.start || !newSlot.end || !newSlot.duration || newSlot.duration <= 0) {
-        return null
-    }
-    const [startH, startM] = newSlot.start.split(':').map(Number)
-    const [endH, endM] = newSlot.end.split(':').map(Number)
-    const startMins = startH * 60 + startM
-    const endMins = endH * 60 + endM
-    if (endMins <= startMins) return null
-    const slotsPerDay = Math.floor((endMins - startMins) / newSlot.duration)
-    const totalSlots = slotsPerDay * dates.length
-    return {
-        slotsPerDay,
-        daysCount: dates.length,
-        totalSlots
-    }
+const tab = ref('meetings')
+const showSlotDialog = ref(false)
+const savingSlots = ref(false)
+
+const settings = reactive({
+    onlineEnabled: false,
+    meetLink: ''
+})
+
+const newSlot = reactive({
+    dates: [],
+    start: '09:00',
+    end: '12:00',
+    duration: 15,
+    type: 'Individual',
+    location: '',
+    isRecurring: false,
+    recurringUntil: ''
 })
 
 const meetings = ref([])
 const slots = ref([])
 
-const settings = reactive({
-    onlineEnabled: true,
-    meetLink: ''
-})
-
-const newSlot = reactive({ 
-  dates: [], 
-  start: '15:00', 
-  end: '17:00', 
-  duration: 15,
-  type: 'Individual',
-  location: '',
-  isRecurring: false,
-  recurringUntil: ''
-})
+const getSlotTypeLabel = (type) => {
+  switch (type) {
+    case 'Individual': return 'Individuale'
+    case 'General': return 'Generale'
+    case 'Assembly': return 'Assemblea'
+    default: return type || 'Individuale'
+  }
+}
 
 const loadData = async () => {
     try {
@@ -336,15 +324,25 @@ const loadData = async () => {
     }
 }
 
+const confirmMeeting = async (meeting) => {
+  try {
+    await api.patch(`/colloqui/bookings/${meeting.id}/confirm`)
+    $q.notify({ color: 'positive', message: 'Incontro confermato' })
+    loadData()
+  } catch (err) {
+    $q.notify({ color: 'negative', message: 'Errore durante la conferma' })
+  }
+}
+
 const saveSlots = async () => {
     if (!newSlot.dates || newSlot.dates.length === 0) {
-        $q.notify({ color: 'warning', message: 'Seleziona almeno una data' })
+        $q.notify({ color: 'warning', message: 'Seleziona almeno un giorno' })
         return
     }
-
-    saving.value = true
+    
+    savingSlots.value = true
     try {
-        await api.post('/colloqui/slots', {
+        const payload = {
             dates: newSlot.dates,
             start_time: newSlot.start,
             end_time: newSlot.end,
@@ -352,31 +350,43 @@ const saveSlots = async () => {
             type: newSlot.type,
             location: newSlot.location,
             is_recurring: newSlot.isRecurring,
-            recurring_until: newSlot.recurringUntil,
-            max_bookings: 1
-        })
-        $q.notify({ color: 'positive', message: 'Disponibilità create con successo' })
+            recurring_until: newSlot.isRecurring ? newSlot.recurringUntil : null
+        }
+
+        await api.post('/colloqui/slots', payload)
+        $q.notify({ color: 'positive', message: 'Disponibilità generate con successo' })
         showSlotDialog.value = false
-        // Reset
+        
+        // Reset form
         newSlot.dates = []
+        newSlot.start = '09:00'
+        newSlot.end = '12:00'
+        newSlot.duration = 15
+        newSlot.type = 'Individual'
+        newSlot.location = ''
+        newSlot.isRecurring = false
+        newSlot.recurringUntil = ''
+
         loadData()
     } catch (err) {
-        $q.notify({ color: 'negative', message: 'Errore durante la creazione' })
+        $q.notify({ color: 'negative', message: 'Errore durante la generazione delle disponibilità' })
     } finally {
-        saving.value = false
+        savingSlots.value = false
     }
 }
 
-const handleDeleteSlot = (slot) => {
+const handleDeleteSlot = async (slot) => {
     $q.dialog({
-        title: 'Conferma eliminazione',
-        message: 'Sei sicuro di voler rimuovere questa disponibilità? Se ci sono prenotazioni, verrà solo annullata.',
+        title: 'Elimina Disponibilità',
+        message: slot.available 
+            ? 'Vuoi eliminare questa disponibilità?' 
+            : 'Questa disponibilità ha già una prenotazione. Verrà annullata e il genitore notificato. Continuare?',
         cancel: true,
         persistent: true
     }).onOk(async () => {
         try {
             await api.delete(`/colloqui/slots/${slot.id}`)
-            $q.notify({ color: 'positive', message: 'Operazione completata' })
+            $q.notify({ color: 'positive', message: 'Disponibilità eliminata' })
             loadData()
         } catch (err) {
             $q.notify({ color: 'negative', message: 'Errore durante l\'eliminazione' })
@@ -403,8 +413,12 @@ const confirmCancelBooking = (meeting) => {
 
 const formatDate = (dateStr) => {
   if (!dateStr) return ''
-  const d = new Date(dateStr)
-  return d.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' })
+  try {
+    const d = new Date(dateStr)
+    return d.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' })
+  } catch {
+    return dateStr
+  }
 }
 
 const formatStatusLabel = (status) => {
@@ -418,21 +432,22 @@ const formatStatusLabel = (status) => {
   }
 }
 
+const getStatusColor = (status) => {
+  switch (status) {
+    case 'Confirmed': return 'green'
+    case 'Pending': return 'amber'
+    case 'Cancelled': return 'red'
+    case 'Completed': return 'blue'
+    default: return 'grey'
+  }
+}
+
 const saveSettings = () => {
   try {
     localStorage.setItem('teacher_colloqui_settings', JSON.stringify(settings))
     $q.notify({ color: 'positive', message: 'Impostazioni salvate con successo' })
   } catch (e) {
-    $q.notify({ color: 'negative', message: 'Errore durante il salvataggio delle impostazioni' })
-  }
-}
-
-const getStatusColor = (status) => {
-  switch (status) {
-    case 'Confirmed': return 'green'
-    case 'Cancelled': return 'red'
-    case 'Completed': return 'blue'
-    default: return 'grey'
+    $q.notify({ color: 'negative', message: 'Errore durante il salvataggio' })
   }
 }
 
@@ -444,7 +459,7 @@ onMounted(() => {
       settings.onlineEnabled = !!parsed.onlineEnabled
       settings.meetLink = parsed.meetLink || ''
     } catch (e) {
-      console.warn('Failed to parse saved teacher colloqui settings:', e)
+      console.warn('Failed to parse settings:', e)
     }
   }
   loadData()

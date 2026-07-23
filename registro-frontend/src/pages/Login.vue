@@ -11,6 +11,7 @@
           v-model="email"
           label="Indirizzo Email"
           type="email"
+          autocomplete="email"
           outlined
           dense
           bg-color="white"
@@ -26,6 +27,7 @@
           v-model="password"
           label="Password"
           :type="showPassword ? 'text' : 'password'"
+          autocomplete="current-password"
           outlined
           dense
           bg-color="white"
@@ -76,9 +78,9 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
-import { Notify } from 'quasar'
 
 const email = ref('')
 const password = ref('')
@@ -87,21 +89,26 @@ const rememberMe = ref(false)
 const loading = ref(false)
 const errorMessage = ref('')
 const { login } = useAuth()
+const route = useRoute()
+
+onMounted(() => {
+  try {
+    if (route && route.query && route.query.reason === 'session_expired') {
+      errorMessage.value = 'Sessione scaduta. Effettua nuovamente l\'accesso.'
+    }
+  } catch (e) {
+    // Route not initialized in test environment
+  }
+})
 
 async function onSubmit() {
   errorMessage.value = ''
   loading.value = true
-  const error = await login(email.value, password.value)
+  const error = await login(email.value, password.value, rememberMe.value)
   loading.value = false
   
   if (error) {
     errorMessage.value = error
-    Notify.create({
-      type: 'negative',
-      message: error,
-      position: 'top',
-      timeout: 3000
-    })
   }
 }
 </script>
