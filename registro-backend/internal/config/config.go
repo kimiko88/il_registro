@@ -2,6 +2,7 @@ package config
 
 import (
 	"log"
+	"strings"
 
 	"github.com/spf13/viper"
 )
@@ -73,7 +74,7 @@ func LoadConfig() (*Config, error) {
 			Mode: viper.GetString("SERVER_MODE"),
 		},
 		Database: DatabaseConfig{
-			Host:     viper.GetString("DB_HOST"),
+			Host:     strings.TrimPrefix(strings.TrimPrefix(viper.GetString("DB_HOST"), "https://"), "http://"),
 			Port:     viper.GetString("DB_PORT"),
 			User:     viper.GetString("DB_USER"),
 			Password: viper.GetString("DB_PASSWORD"),

@@ -3,6 +3,8 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"os"
+	"strings"
 	"time"
 
 	"registro-backend/internal/config"
@@ -12,8 +14,12 @@ import (
 )
 
 func Connect(cfg config.DatabaseConfig) (*sql.DB, error) {
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.Name, cfg.SSLMode)
+	dsn := os.Getenv("DATABASE_URL")
+	if dsn == "" {
+		host := strings.TrimPrefix(strings.TrimPrefix(cfg.Host, "https://"), "http://")
+		dsn = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+			host, cfg.Port, cfg.User, cfg.Password, cfg.Name, cfg.SSLMode)
+	}
 
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {

@@ -94,13 +94,16 @@ func (r *PostgresRepository) GetClassSubjects(ctx context.Context, classID strin
 // ... existing methods ...
 
 func (r *PostgresRepository) ListByTeacher(ctx context.Context, teacherUserID string) ([]Class, error) {
+	if teacherUserID == "" {
+		return []Class{}, nil
+	}
 	// Combine classes where user is coordinator OR assigned as teacher (via class_subjects)
 	query := `
-		SELECT DISTINCT c.id, c.school_id, c.name, COALESCE(c.section, ''), COALESCE(c.articolazione, ''), c.academic_year, c.coordinator_id, c.created_at, c.updated_at
+		SELECT DISTINCT c.id, c.school_id, c.name, COALESCE(c.section, ''), COALESCE(c.articolazione, ''), c.academic_year, COALESCE(c.coordinator_id::text, ''), c.created_at, c.updated_at
 		FROM classes c
 		LEFT JOIN class_subjects cs ON c.id = cs.class_id
-		LEFT JOIN teachers t ON cs.teacher_id = t.id
-		WHERE t.user_id = $1::uuid OR c.coordinator_id = $1::uuid
+		LEFT JOIN teachers t ON (cs.teacher_id = t.id OR cs.teacher_id = t.user_id)
+		WHERE (NULLIF($1, '') IS NOT NULL AND (t.user_id = NULLIF($1, '')::uuid OR cs.teacher_id = NULLIF($1, '')::uuid OR c.coordinator_id = NULLIF($1, '')::uuid))
 		ORDER BY c.name
 	`
 	rows, err := r.db.QueryContext(ctx, query, teacherUserID)
@@ -121,6 +124,9 @@ func (r *PostgresRepository) ListByTeacher(ctx context.Context, teacherUserID st
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
+	}
+	if classes == nil {
+		classes = []Class{}
 	}
 	return classes, nil
 }

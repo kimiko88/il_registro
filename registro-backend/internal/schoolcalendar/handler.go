@@ -65,7 +65,7 @@ func (h *Handler) CreateAcademicPeriod(c *gin.Context) {
 func (h *Handler) ListAcademicPeriods(c *gin.Context) {
 	schoolID := c.GetString("school_id")
 	if schoolID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "school_id mancante nel token"})
+		c.JSON(http.StatusOK, []AcademicPeriod{})
 		return
 	}
 
@@ -73,6 +73,9 @@ func (h *Handler) ListAcademicPeriods(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
+	}
+	if periods == nil {
+		periods = []AcademicPeriod{}
 	}
 	c.JSON(http.StatusOK, periods)
 }

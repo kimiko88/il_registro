@@ -99,10 +99,18 @@ func (r *PostgresRepository) ListBySchool(ctx context.Context, schoolID, date st
 }
 
 func (r *PostgresRepository) ListByTeacher(ctx context.Context, teacherID string) ([]*Substitution, error) {
+	if teacherID == "" {
+		return []*Substitution{}, nil
+	}
 	query := `
 		SELECT id, school_id, class_id, absent_teacher_id, substitute_teacher_id, date, hour, subject_id, notes, status, created_at
 		FROM substitutions
-		WHERE absent_teacher_id = $1::uuid OR substitute_teacher_id = $1::uuid
+		WHERE (NULLIF($1, '') IS NOT NULL AND (
+			absent_teacher_id = NULLIF($1, '')::uuid 
+			OR substitute_teacher_id = NULLIF($1, '')::uuid
+			OR absent_teacher_id IN (SELECT id FROM teachers WHERE user_id = NULLIF($1, '')::uuid)
+			OR substitute_teacher_id IN (SELECT id FROM teachers WHERE user_id = NULLIF($1, '')::uuid)
+		))
 		ORDER BY date DESC, hour ASC
 	`
 	rows, err := r.db.QueryContext(ctx, query, teacherID)
@@ -128,6 +136,9 @@ func (r *PostgresRepository) ListByTeacher(ctx context.Context, teacherID string
 			s.SubjectID = subj.String
 		}
 		list = append(list, s)
+	}
+	if list == nil {
+		list = []*Substitution{}
 	}
 	return list, nil
 }

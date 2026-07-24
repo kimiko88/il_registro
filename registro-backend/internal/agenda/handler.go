@@ -92,9 +92,15 @@ func (h *Handler) GetCalendar(c *gin.Context) {
 		}
 	}
 
-	if !fromTime.IsZero() && !toTime.IsZero() && toTime.Sub(fromTime) > 365*24*time.Hour {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "range di date troppo ampio (massimo 1 anno consentito)"})
-		return
+	if !fromTime.IsZero() && !toTime.IsZero() {
+		if toTime.Before(fromTime) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "la data di fine non può essere precedente alla data di inizio"})
+			return
+		}
+		if toTime.Sub(fromTime) > 366*24*time.Hour {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "range di date troppo ampio (massimo 1 anno consentito)"})
+			return
+		}
 	}
 
 	filter := CalendarFilter{

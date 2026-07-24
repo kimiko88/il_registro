@@ -73,6 +73,9 @@ func (h *Handler) ListSlots(c *gin.Context) {
 	}
 	schoolID := c.GetString("school_id")
 	teacherID := c.Query("teacher_id")
+	if teacherID == "" && (strings.HasSuffix(c.Request.URL.Path, "/slots/my") || strings.HasSuffix(c.FullPath(), "/slots/my")) {
+		teacherID = userID
+	}
 	available := c.Query("available") == "true"
 
 	var fromTime, toTime time.Time
@@ -93,9 +96,15 @@ func (h *Handler) ListSlots(c *gin.Context) {
 		}
 	}
 
-	if !fromTime.IsZero() && !toTime.IsZero() && toTime.Sub(fromTime) > 365*24*time.Hour {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "range di date troppo ampio (massimo 1 anno)"})
-		return
+	if !fromTime.IsZero() && !toTime.IsZero() {
+		if toTime.Before(fromTime) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "la data di fine non può essere precedente alla data di inizio"})
+			return
+		}
+		if toTime.Sub(fromTime) > 366*24*time.Hour {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "range di date troppo ampio (massimo 1 anno)"})
+			return
+		}
 	}
 
 	slots, err := h.service.ListSlots(c.Request.Context(), schoolID, teacherID, fromTime, toTime, available)
