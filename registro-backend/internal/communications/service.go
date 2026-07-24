@@ -34,6 +34,8 @@ func (s *Service) SendMessage(ctx context.Context, senderID string, req CreateMe
 			msg.SignatureDeadline = &d
 		} else if d, err := time.Parse(time.RFC3339, *req.SignatureDeadline); err == nil {
 			msg.SignatureDeadline = &d
+		} else {
+			return nil, errors.New("formato data scadenza firma non valido (richiesto YYYY-MM-DD o RFC3339)")
 		}
 	}
 
@@ -110,6 +112,10 @@ func (s *Service) UpdateMessage(ctx context.Context, actorID, actorRole, schoolI
 	}
 	if actorRole != "superadmin" && msg.SchoolID != nil && schoolID != "" && *msg.SchoolID != schoolID {
 		return errors.New("unauthorized: cannot edit message of another school")
+	}
+	sigs, err := s.repo.GetSignatures(ctx, id)
+	if err == nil && len(sigs) > 0 {
+		return errors.New("impossibile modificare un messaggio che contiene già firme digitali")
 	}
 	return s.repo.Update(ctx, id, subject, body)
 }

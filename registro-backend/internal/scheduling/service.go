@@ -130,6 +130,26 @@ func (s *service) CreateSlots(ctx context.Context, userID string, req CreateSlot
 		return errors.New("no slots generated")
 	}
 
+	// Overlap check: verify new slots do not overlap with existing slots for teacher
+	if len(allSlots) > 0 {
+		minDate := allSlots[0].Date
+		maxDate := allSlots[len(allSlots)-1].Date
+		existingSlots, _ := s.repo.GetSlots(ctx, teacher.ID, minDate, maxDate)
+		for _, newSlot := range allSlots {
+			for _, ex := range existingSlots {
+				if ex.Date.Equal(newSlot.Date) && !ex.IsCancelled {
+					if newSlot.StartTime.Before(ex.EndTime) && newSlot.EndTime.After(ex.StartTime) {
+						return fmt.Errorf("sovrapposizione oraria rilevata per il giorno %s (%s - %s)",
+							newSlot.Date.Format("2006-01-02"),
+							newSlot.StartTime.Format("15:04"),
+							newSlot.EndTime.Format("15:04"),
+						)
+					}
+				}
+			}
+		}
+	}
+
 	return s.repo.CreateSlotsBatch(ctx, allSlots)
 }
 
@@ -139,8 +159,9 @@ func (s *service) GetMySlots(ctx context.Context, userID string) ([]SlotResponse
 		return nil, err
 	}
 
-	// next 60 days
-	from := time.Now().Truncate(24 * time.Hour)
+	// next 60 days (timezone-safe local midnight)
+	now := time.Now()
+	from := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 	to := from.AddDate(0, 0, 60)
 	slots, err := s.repo.GetSlots(ctx, teacher.ID, from, to)
 	if err != nil {

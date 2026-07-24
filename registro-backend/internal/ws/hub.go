@@ -8,12 +8,19 @@ import (
 )
 
 type Client struct {
-	Hub      *Hub
-	Conn     *websocket.Conn
-	Send     chan []byte
-	UserID   string
-	SchoolID string
-	Role     string
+	Hub       *Hub
+	Conn      *websocket.Conn
+	Send      chan []byte
+	UserID    string
+	SchoolID  string
+	Role      string
+	closeOnce sync.Once
+}
+
+func (c *Client) CloseSend() {
+	c.closeOnce.Do(func() {
+		close(c.Send)
+	})
 }
 
 type Hub struct {
@@ -34,9 +41,9 @@ type Message struct {
 
 func NewHub() *Hub {
 	return &Hub{
-		broadcast:  make(chan Message),
-		register:   make(chan *Client),
-		unregister: make(chan *Client),
+		broadcast:  make(chan Message, 256),
+		register:   make(chan *Client, 64),
+		unregister: make(chan *Client, 64),
 		clients:    make(map[string]map[*Client]bool),
 	}
 }
@@ -69,7 +76,7 @@ func (h *Hub) Run() {
 			if userClients, ok := h.clients[client.UserID]; ok {
 				if _, ok := userClients[client]; ok {
 					delete(userClients, client)
-					close(client.Send)
+					client.CloseSend()
 					if len(userClients) == 0 {
 						delete(h.clients, client.UserID)
 					}
@@ -88,24 +95,30 @@ func (h *Hub) Run() {
 							select {
 							case client.Send <- bytes:
 							default:
-								close(client.Send)
+								client.CloseSend()
 								delete(clients, client)
 							}
 						}
 					}
+					if len(clients) == 0 {
+						delete(h.clients, message.Recipient)
+					}
 				}
 			} else if message.SchoolID != "" {
 				bytes, _ := json.Marshal(message)
-				for _, clients := range h.clients {
+				for userID, clients := range h.clients {
 					for client := range clients {
 						if client.SchoolID == message.SchoolID && isRoleAllowed(client.Role, message.AllowedRoles) {
 							select {
 							case client.Send <- bytes:
 							default:
-								close(client.Send)
+								client.CloseSend()
 								delete(clients, client)
 							}
 						}
+					}
+					if len(clients) == 0 {
+						delete(h.clients, userID)
 					}
 				}
 			}

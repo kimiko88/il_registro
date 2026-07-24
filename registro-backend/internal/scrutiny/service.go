@@ -1,8 +1,10 @@
 package scrutiny
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"math"
 	"registro-backend/internal/attendance"
 	"registro-backend/internal/classes"
@@ -107,16 +109,14 @@ func (s *Service) GetMatrix(ctx context.Context, actorID, actorRole, classID str
 			SubjectData: make(map[string]SubjectAverages),
 		}
 
-		for _, sub := range subjects {
-			gradesList, err := s.gradeRepo.FindByClassAndSubject(classID, sub.SubjectID, semester)
-			if err != nil {
-				continue
-			}
+		// Fetch all grades for class once to avoid N+1 queries (N students * M subjects)
+		allClassGrades, _ := s.gradeRepo.FindByClass(classID, semester)
 
+		for _, sub := range subjects {
 			var sum float64
 			var count int
-			for _, g := range gradesList {
-				if g.StudentID == stu.ID && g.IsPublished && g.DeletedAt == nil {
+			for _, g := range allClassGrades {
+				if g.StudentID == stu.ID && g.SubjectID == sub.SubjectID && g.IsPublished && g.DeletedAt == nil {
 					sum += g.GradeValue
 					count++
 				}
@@ -182,78 +182,116 @@ type ClassReportStudentRow struct {
 
 func (s *Service) GetOverview(ctx context.Context) ([]ClassScrutinyOverview, error) {
 	classesList, err := s.classRepo.List(ctx, "", "")
-	if err != nil || len(classesList) == 0 {
-		return []ClassScrutinyOverview{
-			{ClassID: "1a-id", ClassName: "1A", Status: "in_progress", CompletedSubjects: 5, TotalSubjects: 8, PendingGradesCount: 3, LastUpdated: "2026-06-15T10:00:00Z"},
-			{ClassID: "2b-id", ClassName: "2B", Status: "completed", CompletedSubjects: 8, TotalSubjects: 8, PendingGradesCount: 0, LastUpdated: "2026-06-14T16:30:00Z"},
-			{ClassID: "3c-id", ClassName: "3C", Status: "pending", CompletedSubjects: 0, TotalSubjects: 8, PendingGradesCount: 15, LastUpdated: "2026-06-10T09:00:00Z"},
-		}, nil
+	if err != nil {
+		return nil, err
 	}
 
 	var res []ClassScrutinyOverview
-	for idx, c := range classesList {
-		st := "in_progress"
-		if idx%3 == 1 {
-			st = "completed"
-		} else if idx%3 == 2 {
-			st = "pending"
+	for _, c := range classesList {
+		subjects, _ := s.classRepo.GetClassSubjects(ctx, c.ID)
+		records, _ := s.repo.ListRecordsByClass(ctx, c.ID, 2)
+
+		st := "pending"
+		lastUpdated := "N/A"
+		if len(records) > 0 {
+			st = records[0].Status
+			if st == "" {
+				st = "in_progress"
+			}
+			lastUpdated = records[0].UpdatedAt.Format("2006-01-02T15:04:05Z")
 		}
+
 		res = append(res, ClassScrutinyOverview{
 			ClassID:             c.ID,
 			ClassName:           c.Name,
 			Status:              st,
-			CompletedSubjects:   6,
-			TotalSubjects:       8,
-			PendingGradesCount: 2,
-			LastUpdated:         "2026-06-15T10:00:00Z",
+			CompletedSubjects:   len(subjects),
+			TotalSubjects:       len(subjects),
+			PendingGradesCount: 0,
+			LastUpdated:         lastUpdated,
 		})
 	}
 	return res, nil
 }
 
 func (s *Service) GetClassReport(ctx context.Context, classID string) (*ClassScrutinyReport, error) {
-	cls, _ := s.classRepo.Get(ctx, classID)
-	cName := "1A"
-	if cls != nil {
-		cName = cls.Name
+	cls, err := s.classRepo.Get(ctx, classID)
+	if err != nil {
+		return nil, err
 	}
 
-	return &ClassScrutinyReport{
+	students, err := s.userRepo.GetStudentsByClass(ctx, classID)
+	if err != nil {
+		return nil, err
+	}
+
+	records, _ := s.repo.ListRecordsByClass(ctx, classID, 2)
+	recMap := make(map[string]ScrutinyRecord)
+	for _, r := range records {
+		recMap[r.StudentID] = r
+	}
+
+	report := &ClassScrutinyReport{
 		ClassID:   classID,
-		ClassName: cName,
-		Students: []ClassReportStudentRow{
-			{
-				StudentID: "s1",
-				Name:      "Rossi Mario",
-				Grades:    map[string]string{"Matematica": "8", "Italiano": "7", "Inglese": "8", "Storia": "7"},
-				Outcome:   "Ammesso",
-			},
-			{
-				StudentID: "s2",
-				Name:      "Bianchi Luca",
-				Grades:    map[string]string{"Matematica": "5", "Italiano": "6", "Inglese": "5", "Storia": "6"},
-				Outcome:   "Sospeso",
-			},
-			{
-				StudentID: "s3",
-				Name:      "Verdi Giulia",
-				Grades:    map[string]string{"Matematica": "9", "Italiano": "9", "Inglese": "10", "Storia": "9"},
-				Outcome:   "Ammesso",
-			},
-		},
-		Admitted:  2,
-		Rejected:  0,
-		Suspended: 1,
-	}, nil
+		ClassName: cls.Name,
+		Students:  make([]ClassReportStudentRow, 0, len(students)),
+	}
+
+	for _, stu := range students {
+		outcome := "In corso"
+		gradesMap := make(map[string]string)
+
+		if rec, ok := recMap[stu.ID]; ok {
+			outcome = rec.FinalDecision
+			if outcome == "" {
+				outcome = "In corso"
+			}
+			for _, g := range rec.Grades {
+				gradesMap[g.SubjectID] = fmt.Sprintf("%.0f", g.FinalGrade)
+			}
+		}
+
+		switch outcome {
+		case "Ammesso", "Promosso":
+			report.Admitted++
+		case "Non Ammesso", "Bocciato":
+			report.Rejected++
+		case "Sospeso", "Giudizio Sospeso":
+			report.Suspended++
+		}
+
+		report.Students = append(report.Students, ClassReportStudentRow{
+			StudentID: stu.ID,
+			Name:      stu.LastName + " " + stu.FirstName,
+			Grades:    gradesMap,
+			Outcome:   outcome,
+		})
+	}
+
+	return report, nil
 }
 
 func (s *Service) FinalizeClass(ctx context.Context, classID string) error {
-	return nil
+	return s.repo.UpdateClassScrutinyStatus(ctx, classID, 2, "closed")
 }
 
 func (s *Service) ExportAll(ctx context.Context) ([]byte, error) {
-	csvData := "Classe,Studente,Materia,Voto,Esito\n1A,Rossi Mario,Matematica,8,Ammesso\n1A,Rossi Mario,Italiano,7,Ammesso\n"
-	return []byte(csvData), nil
+	classesList, err := s.classRepo.List(ctx, "", "")
+	if err != nil {
+		return nil, err
+	}
+
+	var buf bytes.Buffer
+	buf.WriteString("Classe,Studente,Materia,Voto,Esito\n")
+	for _, c := range classesList {
+		records, _ := s.repo.ListRecordsByClass(ctx, c.ID, 2)
+		for _, r := range records {
+			for _, g := range r.Grades {
+				buf.WriteString(fmt.Sprintf("%s,%s,%s,%.0f,%s\n", c.Name, r.StudentID, g.SubjectID, g.FinalGrade, r.FinalDecision))
+			}
+		}
+	}
+	return buf.Bytes(), nil
 }
 
 func (s *Service) StartScrutiny(ctx context.Context, actorID, actorRole, classID string, semester int) error {
@@ -301,11 +339,13 @@ func (s *Service) SaveScrutiny(ctx context.Context, coordinatorID, actorRole str
 		return ErrUnauthorizedScrutiny
 	}
 
-	// Check if scrutiny is already validated or closed
+	// Check if any record in the scrutiny for this class/semester is already validated or closed
 	records, err := s.repo.ListRecordsByClass(ctx, req.ClassID, req.Semester)
-	if err == nil && len(records) > 0 {
-		if records[0].Status == "validated" || records[0].Status == "closed" {
-			return errors.New("forbidden: cannot edit a closed or validated scrutiny")
+	if err == nil {
+		for _, r := range records {
+			if r.Status == "validated" || r.Status == "closed" {
+				return errors.New("forbidden: cannot edit a closed or validated scrutiny")
+			}
 		}
 	}
 

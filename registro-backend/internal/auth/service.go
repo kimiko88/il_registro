@@ -125,9 +125,11 @@ func (s *Service) Login(ctx context.Context, req *LoginRequest, ipAddress, userA
 	if user.Role == RoleSuperAdmin || user.Role == RoleAdmin || user.Role == RoleSegreteria || user.Role == RoleTeacher {
 		if user.PasswordChangedAt != nil {
 			if time.Since(*user.PasswordChangedAt) > 90*24*time.Hour {
+				s.recordFailedAttempt(ctx, req.Email, ipAddress)
 				return nil, ErrPasswordExpired
 			}
 		} else if !user.CreatedAt.IsZero() && time.Since(user.CreatedAt) > 90*24*time.Hour {
+			s.recordFailedAttempt(ctx, req.Email, ipAddress)
 			return nil, ErrPasswordExpired
 		}
 	}
@@ -298,7 +300,6 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken, ipAddress, use
 func (s *Service) Logout(ctx context.Context, refreshToken string, callerUserID string) error {
 	rt, err := s.repo.GetRefreshToken(ctx, refreshToken)
 	if err != nil {
-		// Token not found or already revoked — still a valid logout intent.
 		return nil
 	}
 	// Ownership check: refuse to revoke another user's sessions.
@@ -336,24 +337,7 @@ func (s *Service) SetupMFA(ctx context.Context, userID string) (*MFASetupRespons
 	// Generate QR code URL using the plaintext secret
 	qrURL := s.mfaService.GenerateQRCodeURL(user.Email, secret)
 
-	// Generate recovery codes (plaintext — shown once to the user)
-	plainRecoveryCodes, err := s.mfaService.GenerateRecoveryCodes(10)
-	if err != nil {
-		return nil, err
-	}
-
-	// Hash each recovery code before persisting.
-	// bcrypt is used so that a DB compromise does not leak usable codes.
-	hashedCodes := make([]string, len(plainRecoveryCodes))
-	for i, code := range plainRecoveryCodes {
-		h, err := bcrypt.GenerateFromPassword([]byte(code), s.bcryptCost)
-		if err != nil {
-			return nil, err
-		}
-		hashedCodes[i] = string(h)
-	}
-	// Encrypt and store the TOTP secret FIRST, before saving recovery codes.
-	// This prevents orphan recovery codes if secret encryption or saving fails.
+	// Encrypt and store the TOTP secret.
 	encryptedSecret, err := crypto.EncryptString(secret)
 	if err != nil {
 		return nil, err
@@ -362,19 +346,14 @@ func (s *Service) SetupMFA(ctx context.Context, userID string) (*MFASetupRespons
 		return nil, err
 	}
 
-	if err := s.repo.CreateRecoveryCodes(ctx, userID, hashedCodes); err != nil {
-		return nil, err
-	}
-
 	return &MFASetupResponse{
-		Secret:        secret,             // plaintext shown once to the user for manual entry
-		QRCodeURL:     qrURL,
-		RecoveryCodes: plainRecoveryCodes, // shown once; hashed copy already in DB
+		Secret:    secret, // plaintext shown once to the user for manual entry
+		QRCodeURL: qrURL,
 	}, nil
 }
 
 // VerifyMFA verifies MFA token and enables it on successful confirmation.
-// The stored encrypted secret is decrypted before TOTP validation.
+// Recovery codes are generated and stored ONLY after TOTP secret is confirmed.
 func (s *Service) VerifyMFA(ctx context.Context, userID, token string) error {
 	encryptedSecret, err := s.repo.GetMFASecret(ctx, userID)
 	if err != nil {
@@ -388,6 +367,19 @@ func (s *Service) VerifyMFA(ctx context.Context, userID, token string) error {
 
 	if !s.mfaService.VerifyTOTPUser(userID, secret, token) {
 		return ErrInvalidMFAToken
+	}
+
+	// Generate and store recovery codes after successful verification
+	plainRecoveryCodes, err := s.mfaService.GenerateRecoveryCodes(10)
+	if err == nil {
+		hashedCodes := make([]string, len(plainRecoveryCodes))
+		for i, code := range plainRecoveryCodes {
+			h, err := bcrypt.GenerateFromPassword([]byte(code), s.bcryptCost)
+			if err == nil {
+				hashedCodes[i] = string(h)
+			}
+		}
+		_ = s.repo.CreateRecoveryCodes(ctx, userID, hashedCodes)
 	}
 
 	// Token is correct, enable MFA officially
@@ -480,13 +472,13 @@ func (s *Service) ResetPassword(ctx context.Context, token, newPassword string) 
 		return err
 	}
 
-	// Mark token as used FIRST to prevent race conditions or double execution
-	if err := s.repo.UsePasswordResetToken(ctx, prt.ID); err != nil {
+	// Update password FIRST before burning the reset token
+	if err := s.repo.UpdatePassword(ctx, prt.UserID, string(passwordHash)); err != nil {
 		return err
 	}
 
-	// Update password
-	if err := s.repo.UpdatePassword(ctx, prt.UserID, string(passwordHash)); err != nil {
+	// Mark token as used after successful password update
+	if err := s.repo.UsePasswordResetToken(ctx, prt.ID); err != nil {
 		return err
 	}
 

@@ -41,6 +41,14 @@ func (s *service) CreateLesson(teacherID string, req CreateLessonRequest) (*Less
 		return nil, fmt.Errorf("invalid date format: %w", err)
 	}
 
+	// Duplicate check: verify no conflicting lesson exists for the same class & hour on that date
+	existing, _ := s.repo.GetLessonsByClass(req.ClassID, req.Date)
+	for _, l := range existing {
+		if l.Hour == req.Hour {
+			return nil, errors.New("esiste già una lezione programmata per questa classe in questa ora")
+		}
+	}
+
 	activityType := req.ActivityType
 	if activityType == "" {
 		if req.IsSubstitution {
@@ -113,7 +121,8 @@ func (s *service) CreateHomework(teacherID string, req CreateHomeworkRequest) (*
 		return nil, fmt.Errorf("invalid due_date format: %w", err)
 	}
 
-	today := time.Now().Truncate(24 * time.Hour)
+	now := time.Now()
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
 	if dueDate.Before(today) {
 		return nil, errors.New("due_date non può essere nel passato")
 	}

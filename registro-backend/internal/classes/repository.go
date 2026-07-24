@@ -119,6 +119,9 @@ func (r *PostgresRepository) ListByTeacher(ctx context.Context, teacherUserID st
 		c.CoordinatorID = coord.String
 		classes = append(classes, c)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return classes, nil
 }
 
@@ -163,6 +166,9 @@ func (r *PostgresRepository) List(ctx context.Context, schoolID string, academic
 		c.CoordinatorID = coord.String
 		classes = append(classes, c)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return classes, nil
 }
 
@@ -206,7 +212,7 @@ func (r *PostgresRepository) GetClassGuardians(ctx context.Context, classID stri
 		return []GuardianInfo{}, nil
 	}
 	query := `
-		SELECT u.id, u.first_name, u.last_name, u.email, COALESCE(u.phone_number, ''),
+		SELECT DISTINCT u.id, u.first_name, u.last_name, u.email, COALESCE(u.phone_number, ''),
 		       su.id, su.first_name || ' ' || su.last_name AS student_name
 		FROM students st
 		JOIN users su ON su.id = st.user_id

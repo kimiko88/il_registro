@@ -332,6 +332,10 @@ func (s *service) ProcessJustification(ctx context.Context, teacherID, justifica
 		return err
 	}
 
+	if j.Status != JustificationPending {
+		return fmt.Errorf("la giustifica %s è già stata elaborata (stato attuale: %s)", justificationID, j.Status)
+	}
+
 	if approve {
 		j.Status = JustificationApproved
 		now := time.Now()
@@ -452,7 +456,10 @@ func (s *service) GetStudentSummary(ctx context.Context, studentID, schoolID str
 	}
 	if totalDays == 0 {
 		// Fallback: conta i giorni distinti presenti nel DB per questo studente.
-		totalDays, err = s.repo.CountDistinctDays(studentID)
+		fallbackDays, countErr := s.repo.CountDistinctDays(studentID)
+		if countErr == nil {
+			totalDays = fallbackDays
+		}
 	}
 
 	if totalDays > 0 {
@@ -524,6 +531,8 @@ func (s *service) GetChildAttendanceTrends(ctx context.Context, parentID, studen
 	}
 
 	monthlyMap := make(map[string]*MonthlyTrend)
+	monthlyTotalMap := make(map[string]int)
+	monthlyPresentMap := make(map[string]int)
 	var monthKeys []string
 
 	for _, a := range atts {
@@ -533,6 +542,10 @@ func (s *service) GetChildAttendanceTrends(ctx context.Context, parentID, studen
 			tr = &MonthlyTrend{Month: mKey}
 			monthlyMap[mKey] = tr
 			monthKeys = append(monthKeys, mKey)
+		}
+		monthlyTotalMap[mKey]++
+		if a.Status == StatusPresent || a.Status == StatusLate || a.Status == StatusEarlyExit {
+			monthlyPresentMap[mKey]++
 		}
 		switch a.Status {
 		case StatusAbsent:
@@ -550,16 +563,8 @@ func (s *service) GetChildAttendanceTrends(ctx context.Context, parentID, studen
 	}
 	for _, k := range monthKeys {
 		tr := monthlyMap[k]
-		totalEntries := 0
-		presentCount := 0
-		for _, a := range atts {
-			if a.Date.Format("2006-01") == k {
-				totalEntries++
-				if a.Status == StatusPresent || a.Status == StatusLate || a.Status == StatusEarlyExit {
-					presentCount++
-				}
-			}
-		}
+		totalEntries := monthlyTotalMap[k]
+		presentCount := monthlyPresentMap[k]
 		rate := 100.0
 		if totalEntries > 0 {
 			rate = (float64(presentCount) / float64(totalEntries)) * 100.0

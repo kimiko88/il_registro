@@ -56,9 +56,12 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 				for _, p := range parts {
 					p = strings.TrimSpace(p)
 					if p != "" && p != "access_token" && p != "bearer" {
-						token = p
-						c.Header("Sec-WebSocket-Protocol", p)
-						break
+						// Verify p is a 3-part JWT token (header.payload.signature)
+						if strings.Count(p, ".") == 2 {
+							token = p
+							c.Header("Sec-WebSocket-Protocol", p)
+							break
+						}
 					}
 				}
 			}
@@ -113,7 +116,12 @@ func (m *Middleware) RequireRole(allowedRoles ...string) gin.HandlerFunc {
 			return
 		}
 
-		roleStr := role.(string)
+		roleStr, ok := role.(string)
+		if !ok {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: "invalid role format in context"})
+			c.Abort()
+			return
+		}
 		for _, allowedRole := range allowedRoles {
 			if roleStr == allowedRole {
 				c.Next()

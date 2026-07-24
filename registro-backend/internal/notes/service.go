@@ -32,6 +32,10 @@ func (s *Service) CreateNote(ctx context.Context, teacherID, schoolID string, re
 	if req.TargetRole == "" {
 		req.TargetRole = "all"
 	}
+	isApproved := true
+	if req.Type == "disciplinary" {
+		isApproved = false // Disciplinary notes require principal/admin approval before being published
+	}
 	n := &StudentNote{
 		SchoolID:   schoolID,
 		TeacherID:  teacherID,
@@ -43,7 +47,7 @@ func (s *Service) CreateNote(ctx context.Context, teacherID, schoolID string, re
 		Date:       req.Date,
 		IsReserved: req.IsReserved,
 		TargetRole: req.TargetRole,
-		IsApproved: true, // Approved by default unless configured otherwise
+		IsApproved: isApproved,
 	}
 	if err := s.repo.Create(ctx, n); err != nil {
 		return nil, err
@@ -81,9 +85,6 @@ func (s *Service) UpdateNote(ctx context.Context, teacherID, noteID string, req 
 	}
 	if req.TargetRole != "" {
 		n.TargetRole = req.TargetRole
-	}
-	if req.Date != "" {
-		n.Date = req.Date
 	}
 
 	if err := s.repo.Update(ctx, n); err != nil {

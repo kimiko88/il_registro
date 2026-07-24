@@ -284,7 +284,7 @@ func (r *repository) GetRefreshToken(ctx context.Context, token string) (*Refres
 	query := `
 		SELECT id, user_id, token, expires_at, created_at, revoked, ip_address, user_agent
 		FROM refresh_tokens
-		WHERE token = $1 AND revoked = false AND expires_at > NOW()
+		WHERE token = $1
 	`
 	rt := &RefreshToken{}
 	hashed := hashToken(token)
@@ -435,7 +435,7 @@ func (r *repository) GetPasswordHistory(ctx context.Context, userID string) ([]s
 		}
 		history = append(history, h)
 	}
-	return history, nil
+	return history, rows.Err()
 }
 
 func (r *repository) AddPasswordHistory(ctx context.Context, userID, passwordHash string) error {
