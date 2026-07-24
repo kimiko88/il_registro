@@ -2,10 +2,28 @@ package agenda
 
 import (
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 )
+
+func parseFlexibleDate(s string) time.Time {
+	s = strings.TrimSpace(s)
+	if s == "" || s == "undefined" || s == "null" {
+		return time.Time{}
+	}
+	if len(s) >= 10 {
+		sDate := s[:10]
+		if t, err := time.Parse("2006-01-02", sDate); err == nil {
+			return t
+		}
+	}
+	if t, err := time.Parse(time.RFC3339, s); err == nil {
+		return t
+	}
+	return time.Time{}
+}
 
 type Handler struct {
 	service *Service
@@ -69,27 +87,19 @@ func (h *Handler) GetCalendar(c *gin.Context) {
 	agendaType := c.Query("type")
 
 	var fromTime, toTime time.Time
-	var err error
 
 	if dateStr := c.Query("date"); dateStr != "" && c.Query("from") == "" {
-		if dTime, pErr := time.Parse("2006-01-02", dateStr); pErr == nil {
+		dTime := parseFlexibleDate(dateStr)
+		if !dTime.IsZero() {
 			fromTime = dTime
 			toTime = dTime
 		}
 	}
 	if fromStr := c.Query("from"); fromStr != "" {
-		fromTime, err = time.Parse("2006-01-02", fromStr)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid 'from' date format (expected YYYY-MM-DD)"})
-			return
-		}
+		fromTime = parseFlexibleDate(fromStr)
 	}
 	if toStr := c.Query("to"); toStr != "" {
-		toTime, err = time.Parse("2006-01-02", toStr)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid 'to' date format (expected YYYY-MM-DD)"})
-			return
-		}
+		toTime = parseFlexibleDate(toStr)
 	}
 
 	if !fromTime.IsZero() && !toTime.IsZero() {

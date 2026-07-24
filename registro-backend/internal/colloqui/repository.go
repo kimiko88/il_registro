@@ -123,7 +123,7 @@ func (r *PostgresRepository) ListSlots(ctx context.Context, filter SlotFilter) (
 		FROM colloquio_slots s
 		LEFT JOIN teachers t ON s.teacher_id = t.id
 		LEFT JOIN users u ON t.user_id = u.id OR s.teacher_id = u.id
-		WHERE s.school_id = $1::uuid
+		WHERE ($1 = '' OR s.school_id = NULLIF($1, '')::uuid)
 		  AND s.is_cancelled = false
 		  AND ($2 = '' OR s.teacher_id = NULLIF($2, '')::uuid OR t.user_id = NULLIF($2, '')::uuid)
 		  AND ($3 = false OR s.booking_count < s.max_bookings)

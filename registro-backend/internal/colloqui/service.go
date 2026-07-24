@@ -58,9 +58,6 @@ func (s *Service) CreateSlot(ctx context.Context, teacherUserID, schoolID string
 }
 
 func (s *Service) ListSlots(ctx context.Context, schoolID, teacherID string, from, to time.Time, availableOnly bool) ([]*ColloquioSlot, error) {
-	if schoolID == "" {
-		return nil, fmt.Errorf("school_id required")
-	}
 	if from.IsZero() {
 		from = time.Now().AddDate(0, 0, -1)
 	}

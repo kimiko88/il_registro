@@ -231,7 +231,7 @@ func (h *Handler) SignDocument(c *gin.Context) {
 
 func (h *Handler) GetInbox(c *gin.Context) {
 	role := c.GetString("role")
-	if role != "segreteria" && role != "admin" && role != "superadmin" {
+	if role != "secretary" && role != "segreteria" && role != "teacher" && role != "admin" && role != "superadmin" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: insufficient permissions"})
 		return
 	}
@@ -241,12 +241,15 @@ func (h *Handler) GetInbox(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	if res == nil {
+		res = []DocumentListResponse{}
+	}
 	c.JSON(http.StatusOK, res)
 }
 
 func (h *Handler) GetReviewQueue(c *gin.Context) {
 	role := c.GetString("role")
-	if role != "admin" && role != "superadmin" {
+	if role != "secretary" && role != "segreteria" && role != "teacher" && role != "admin" && role != "superadmin" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: insufficient permissions"})
 		return
 	}
@@ -255,6 +258,9 @@ func (h *Handler) GetReviewQueue(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
+	}
+	if res == nil {
+		res = []DocumentListResponse{}
 	}
 	c.JSON(http.StatusOK, res)
 }
@@ -266,7 +272,7 @@ func (h *Handler) CreateTemplate(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "admin" && role != "superadmin" && role != "segreteria" {
+	if role != "admin" && role != "superadmin" && role != "secretary" && role != "segreteria" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: insufficient permissions to manage templates"})
 		return
 	}
@@ -291,7 +297,7 @@ func (h *Handler) UpdateTemplate(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "admin" && role != "superadmin" && role != "segreteria" {
+	if role != "admin" && role != "superadmin" && role != "secretary" && role != "segreteria" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: insufficient permissions to manage templates"})
 		return
 	}
@@ -320,7 +326,7 @@ func (h *Handler) DeleteTemplate(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "admin" && role != "superadmin" && role != "segreteria" {
+	if role != "admin" && role != "superadmin" && role != "secretary" && role != "segreteria" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: insufficient permissions to manage templates"})
 		return
 	}

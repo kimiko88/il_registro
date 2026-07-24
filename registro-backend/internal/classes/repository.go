@@ -97,13 +97,16 @@ func (r *PostgresRepository) ListByTeacher(ctx context.Context, teacherUserID st
 	if teacherUserID == "" {
 		return []Class{}, nil
 	}
+	if _, err := uuid.Parse(teacherUserID); err != nil {
+		return []Class{}, nil
+	}
 	// Combine classes where user is coordinator OR assigned as teacher (via class_subjects)
 	query := `
-		SELECT DISTINCT c.id, c.school_id, c.name, COALESCE(c.section, ''), COALESCE(c.articolazione, ''), c.academic_year, COALESCE(c.coordinator_id::text, ''), c.created_at, c.updated_at
+		SELECT DISTINCT c.id, c.school_id, c.name, c.section, c.articolazione, c.academic_year, c.coordinator_id, c.created_at, c.updated_at
 		FROM classes c
 		LEFT JOIN class_subjects cs ON c.id = cs.class_id
 		LEFT JOIN teachers t ON (cs.teacher_id = t.id OR cs.teacher_id = t.user_id)
-		WHERE (NULLIF($1, '') IS NOT NULL AND (t.user_id = NULLIF($1, '')::uuid OR cs.teacher_id = NULLIF($1, '')::uuid OR c.coordinator_id = NULLIF($1, '')::uuid))
+		WHERE (t.user_id = $1::uuid OR cs.teacher_id = $1::uuid OR c.coordinator_id = $1::uuid)
 		ORDER BY c.name
 	`
 	rows, err := r.db.QueryContext(ctx, query, teacherUserID)
@@ -115,10 +118,12 @@ func (r *PostgresRepository) ListByTeacher(ctx context.Context, teacherUserID st
 	var classes []Class
 	for rows.Next() {
 		var c Class
-		var coord sql.NullString
-		if err := rows.Scan(&c.ID, &c.SchoolID, &c.Name, &c.Section, &c.Articolazione, &c.AcademicYear, &coord, &c.CreatedAt, &c.UpdatedAt); err != nil {
+		var sec, art, coord sql.NullString
+		if err := rows.Scan(&c.ID, &c.SchoolID, &c.Name, &sec, &art, &c.AcademicYear, &coord, &c.CreatedAt, &c.UpdatedAt); err != nil {
 			return nil, err
 		}
+		c.Section = sec.String
+		c.Articolazione = art.String
 		c.CoordinatorID = coord.String
 		classes = append(classes, c)
 	}
@@ -146,8 +151,13 @@ func (r *PostgresRepository) Create(ctx context.Context, c *Class) error {
 }
 
 func (r *PostgresRepository) List(ctx context.Context, schoolID string, academicYear string) ([]Class, error) {
-	query := `SELECT id, school_id, name, COALESCE(section, ''), COALESCE(articolazione, ''), academic_year, coordinator_id, created_at, updated_at 
-	          FROM classes WHERE school_id = $1`
+	if schoolID != "" {
+		if _, err := uuid.Parse(schoolID); err != nil {
+			return []Class{}, nil
+		}
+	}
+	query := `SELECT id, school_id, name, section, articolazione, academic_year, coordinator_id, created_at, updated_at 
+	          FROM classes WHERE ($1 = '' OR school_id = NULLIF($1, '')::uuid)`
 	
 	args := []interface{}{schoolID}
 	if academicYear != "" {
@@ -165,28 +175,35 @@ func (r *PostgresRepository) List(ctx context.Context, schoolID string, academic
 	var classes []Class
 	for rows.Next() {
 		var c Class
-		var coord sql.NullString
-		if err := rows.Scan(&c.ID, &c.SchoolID, &c.Name, &c.Section, &c.Articolazione, &c.AcademicYear, &coord, &c.CreatedAt, &c.UpdatedAt); err != nil {
+		var sec, art, coord sql.NullString
+		if err := rows.Scan(&c.ID, &c.SchoolID, &c.Name, &sec, &art, &c.AcademicYear, &coord, &c.CreatedAt, &c.UpdatedAt); err != nil {
 			return nil, err
 		}
+		c.Section = sec.String
+		c.Articolazione = art.String
 		c.CoordinatorID = coord.String
 		classes = append(classes, c)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
+	if classes == nil {
+		classes = []Class{}
+	}
 	return classes, nil
 }
 
 func (r *PostgresRepository) Get(ctx context.Context, id string) (*Class, error) {
-	query := `SELECT id, school_id, name, COALESCE(section, ''), COALESCE(articolazione, ''), academic_year, coordinator_id, created_at, updated_at 
+	query := `SELECT id, school_id, name, section, articolazione, academic_year, coordinator_id, created_at, updated_at 
 	          FROM classes WHERE id = $1`
 	var c Class
-	var coord sql.NullString
-	err := r.db.QueryRowContext(ctx, query, id).Scan(&c.ID, &c.SchoolID, &c.Name, &c.Section, &c.Articolazione, &c.AcademicYear, &coord, &c.CreatedAt, &c.UpdatedAt)
+	var sec, art, coord sql.NullString
+	err := r.db.QueryRowContext(ctx, query, id).Scan(&c.ID, &c.SchoolID, &c.Name, &sec, &art, &c.AcademicYear, &coord, &c.CreatedAt, &c.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
+	c.Section = sec.String
+	c.Articolazione = art.String
 	c.CoordinatorID = coord.String
 	return &c, nil
 }

@@ -42,8 +42,7 @@ export function useMenuItems(role) {
                     { label: 'Documenti', icon: 'description', path: '/secretary/documents' },
                     { label: 'Certificati', icon: 'workspace_premium', path: '/secretary/certificates' },
                     { label: 'Libri di Testo', icon: 'auto_stories', path: '/secretary/textbooks' },
-                    { label: 'Riunioni', icon: 'groups', path: '/secretary/meetings' },
-                    { label: 'Audit Log', icon: 'security', path: '/secretary/audit-log' }
+                    { label: 'Riunioni', icon: 'groups', path: '/secretary/meetings' }
                 ]
             },
             {
@@ -71,7 +70,7 @@ export function useMenuItems(role) {
                     { label: 'Didattica', icon: 'folder_shared', path: '/teacher/didactics' },
                     { label: 'Scrutinio', icon: 'analytics', path: '/teacher/scrutiny' },
                     { label: 'Rubriche Valutative', icon: 'fact_check', path: '/teacher/rubrics' },
-                    { label: 'Coordinamento', icon: 'co_present', path: '/teacher/coordinator' }
+                    { label: 'Coordinamento', icon: 'co_present', path: '/teacher/coordinator', coordinatorOnly: true }
                 ]
             },
             {

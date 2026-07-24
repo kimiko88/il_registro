@@ -8,6 +8,23 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func parseFlexibleDate(s string) time.Time {
+	s = strings.TrimSpace(s)
+	if s == "" || s == "undefined" || s == "null" {
+		return time.Time{}
+	}
+	if len(s) >= 10 {
+		sDate := s[:10]
+		if t, err := time.Parse("2006-01-02", sDate); err == nil {
+			return t
+		}
+	}
+	if t, err := time.Parse(time.RFC3339, s); err == nil {
+		return t
+	}
+	return time.Time{}
+}
+
 type Handler struct {
 	service *Service
 }
@@ -42,13 +59,11 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 
 func (h *Handler) CreateSlot(c *gin.Context) {
 	userID := c.GetString("user_id")
-	role := c.GetString("role")
-	schoolID := c.GetString("school_id")
-
-	if userID == "" || (role != "teacher" && role != "admin" && role != "superadmin") {
-		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
+	schoolID := c.GetString("school_id")
 
 	var req CreateSlotRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -80,20 +95,10 @@ func (h *Handler) ListSlots(c *gin.Context) {
 
 	var fromTime, toTime time.Time
 	if fromStr := c.Query("from"); fromStr != "" {
-		var err error
-		fromTime, err = time.Parse("2006-01-02", fromStr)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "parametro 'from' non valido, formato atteso: YYYY-MM-DD"})
-			return
-		}
+		fromTime = parseFlexibleDate(fromStr)
 	}
 	if toStr := c.Query("to"); toStr != "" {
-		var err error
-		toTime, err = time.Parse("2006-01-02", toStr)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "parametro 'to' non valido, formato atteso: YYYY-MM-DD"})
-			return
-		}
+		toTime = parseFlexibleDate(toStr)
 	}
 
 	if !fromTime.IsZero() && !toTime.IsZero() {

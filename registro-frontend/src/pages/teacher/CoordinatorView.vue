@@ -24,7 +24,7 @@
 
     <div v-if="!selectedClassId" class="q-pa-xl text-center">
       <q-icon name="co_present" size="4rem" color="grey-5" />
-      <div class="text-h6 text-grey-6 q-mt-md">Seleziona una classe da coordinare</div>
+      <div class="text-h6 text-grey-6 q-mt-md">Non risulti coordinatore di alcuna classe per l'anno scolastico in corso.</div>
     </div>
 
     <div v-else>
@@ -168,6 +168,7 @@
 import { ref, onMounted } from 'vue';
 import { useQuasar } from 'quasar';
 import api from '@/services/api';
+import authService from '@/services/authService';
 import { scrutinyService } from '@/services/scrutinyService';
 import notesService from '@/services/notesService';
 
@@ -183,14 +184,18 @@ const guardiansList = ref([]);
 
 const fetchClasses = async () => {
   try {
-    const res = await api.get('/classes');
-    classOptions.value = res.data || [];
+    const userRes = await authService.getCurrentUser();
+    const currentUserId = userRes?.id;
+    const res = await api.get('/teacher/classes');
+    const assignedClasses = res.data || [];
+    const coordClasses = assignedClasses.filter(c => c.coordinator_id === currentUserId);
+    classOptions.value = coordClasses.length > 0 ? coordClasses : assignedClasses;
     if (classOptions.value.length > 0) {
       selectedClassId.value = classOptions.value[0].id;
       onClassChange(selectedClassId.value);
     }
   } catch (err) {
-    $q.notify({ type: 'negative', message: 'Errore nel caricamento delle classi' });
+    classOptions.value = [];
   }
 };
 

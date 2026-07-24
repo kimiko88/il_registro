@@ -193,7 +193,19 @@ func (r *PostgresRepository) RemoveSubject(ctx context.Context, teacherID, subje
 }
 
 func (r *PostgresRepository) GetDashboardStats(ctx context.Context, teacherUserID string) (map[string]interface{}, error) {
-	stats := make(map[string]interface{})
+	stats := map[string]interface{}{
+		"classes_count":        int64(0),
+		"students_count":       int64(0),
+		"lessons_today_count":  int64(0),
+		"grades_pending_count": int64(0),
+	}
+
+	if teacherUserID == "" {
+		return stats, nil
+	}
+	if _, err := uuid.Parse(teacherUserID); err != nil {
+		return stats, nil
+	}
 
 	// 1. Classes Count
 	var classesCount int64
@@ -201,18 +213,16 @@ func (r *PostgresRepository) GetDashboardStats(ctx context.Context, teacherUserI
 		SELECT COUNT(DISTINCT class_id) FROM (
 			SELECT cs.class_id 
 			FROM class_subjects cs
-			JOIN teachers t ON cs.teacher_id = t.id
-			WHERE t.user_id = $1::uuid
+			LEFT JOIN teachers t ON (cs.teacher_id = t.id OR cs.teacher_id = t.user_id)
+			WHERE t.user_id = NULLIF($1, '')::uuid OR cs.teacher_id = NULLIF($1, '')::uuid
 			UNION
 			SELECT id AS class_id
 			FROM classes 
-			WHERE coordinator_id = $1::uuid
+			WHERE coordinator_id = NULLIF($1, '')::uuid
 		) AS temp`
-	err := r.db.QueryRowContext(ctx, classesQuery, teacherUserID).Scan(&classesCount)
-	if err != nil {
-		return nil, err
+	if err := r.db.QueryRowContext(ctx, classesQuery, teacherUserID).Scan(&classesCount); err == nil {
+		stats["classes_count"] = classesCount
 	}
-	stats["classes_count"] = classesCount
 
 	// 2. Students Count
 	var studentsCount int64
@@ -222,18 +232,16 @@ func (r *PostgresRepository) GetDashboardStats(ctx context.Context, teacherUserI
 		WHERE s.class_id IN (
 			SELECT cs.class_id 
 			FROM class_subjects cs
-			JOIN teachers t ON cs.teacher_id = t.id
-			WHERE t.user_id = $1::uuid
+			LEFT JOIN teachers t ON (cs.teacher_id = t.id OR cs.teacher_id = t.user_id)
+			WHERE t.user_id = NULLIF($1, '')::uuid OR cs.teacher_id = NULLIF($1, '')::uuid
 			UNION
 			SELECT id 
 			FROM classes 
-			WHERE coordinator_id = $1::uuid
+			WHERE coordinator_id = NULLIF($1, '')::uuid
 		)`
-	err = r.db.QueryRowContext(ctx, studentsQuery, teacherUserID).Scan(&studentsCount)
-	if err != nil {
-		return nil, err
+	if err := r.db.QueryRowContext(ctx, studentsQuery, teacherUserID).Scan(&studentsCount); err == nil {
+		stats["students_count"] = studentsCount
 	}
-	stats["students_count"] = studentsCount
 
 	// 3. Lessons Today Count
 	var lessonsTodayCount int64
@@ -244,12 +252,11 @@ func (r *PostgresRepository) GetDashboardStats(ctx context.Context, teacherUserI
 	lessonsQuery := `
 		SELECT COUNT(*)
 		FROM class_schedules
-		WHERE teacher_id = $1::uuid AND day_of_week = $2`
-	err = r.db.QueryRowContext(ctx, lessonsQuery, teacherUserID, weekday).Scan(&lessonsTodayCount)
-	if err != nil {
-		return nil, err
+		WHERE (teacher_id = NULLIF($1, '')::uuid OR teacher_id IN (SELECT id FROM teachers WHERE user_id = NULLIF($1, '')::uuid))
+		  AND day_of_week = $2`
+	if err := r.db.QueryRowContext(ctx, lessonsQuery, teacherUserID, weekday).Scan(&lessonsTodayCount); err == nil {
+		stats["lessons_today_count"] = lessonsTodayCount
 	}
-	stats["lessons_today_count"] = lessonsTodayCount
 
 	// 4. Grades Pending Count (Voti da inserire)
 	var gradesPendingCount int64
@@ -258,12 +265,11 @@ func (r *PostgresRepository) GetDashboardStats(ctx context.Context, teacherUserI
 		FROM class_tests ct
 		JOIN students s ON ct.class_id = s.class_id
 		LEFT JOIN grades g ON g.test_id = ct.id AND g.student_id = s.id AND g.deleted_at IS NULL
-		WHERE ct.teacher_id = $1::uuid AND ct.date <= CURRENT_DATE AND g.id IS NULL`
-	err = r.db.QueryRowContext(ctx, gradesQuery, teacherUserID).Scan(&gradesPendingCount)
-	if err != nil {
-		return nil, err
+		WHERE (ct.teacher_id = NULLIF($1, '')::uuid OR ct.teacher_id IN (SELECT id FROM teachers WHERE user_id = NULLIF($1, '')::uuid))
+		  AND ct.date <= CURRENT_DATE AND g.id IS NULL`
+	if err := r.db.QueryRowContext(ctx, gradesQuery, teacherUserID).Scan(&gradesPendingCount); err == nil {
+		stats["grades_pending_count"] = gradesPendingCount
 	}
-	stats["grades_pending_count"] = gradesPendingCount
 
 	return stats, nil
 }

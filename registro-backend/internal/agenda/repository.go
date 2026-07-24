@@ -94,7 +94,7 @@ func (r *PostgresRepository) ListCalendar(ctx context.Context, schoolID string, 
 		FROM agenda_items a
 		LEFT JOIN subjects s ON a.subject_id = s.id
 		LEFT JOIN users u ON a.teacher_id = u.id
-		WHERE a.school_id = $1::uuid
+		WHERE ($1 = '' OR a.school_id = NULLIF($1, '')::uuid)
 		  AND ($3 = '' OR a.class_id = NULLIF($3, '')::uuid)
 		  AND ($4 = '' OR a.subject_id = NULLIF($4, '')::uuid)
 		  AND ($5 = '' OR a.type = $5)

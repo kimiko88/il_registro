@@ -191,6 +191,8 @@
 import { ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useTeacherStore } from '@/stores/teacher'
+import { useClassesStore } from '@/stores/classes'
 import { useAuth } from '@/composables/useAuth'
 import { useMenuItems } from '@/composables/useMenuItems'
 import { storeToRefs } from 'pinia'
@@ -258,7 +260,7 @@ const breadcrumbs = computed(() => {
 })
 
 const authStore = useAuthStore()
-const { userName, userRole } = storeToRefs(authStore)
+const { user, userName, userRole } = storeToRefs(authStore)
 const { logout } = useAuth()
 
 const leftDrawerOpen = ref(false)
@@ -277,13 +279,42 @@ const roleLabel = computed(() => {
   return roleLabels[userRole.value] || userRole.value
 })
 
+const teacherStore = useTeacherStore()
+const classesStore = useClassesStore()
+
+const isTeacherCoordinator = computed(() => {
+  if (userRole.value !== 'teacher') return true
+  if (teacherStore.isCoordinator) return true
+  const currentUserId = user.value?.id
+  if (currentUserId && classesStore.classes.some(c => c.coordinator_id === currentUserId)) {
+    return true
+  }
+  return false
+})
+
 // Get menu items based on role
 const menuItems = ref([])
-watch(userRole, (newRole) => {
-  if (newRole) {
-    menuItems.value = useMenuItems(newRole)
-  } else {
+watch([userRole, isTeacherCoordinator], ([newRole, isCoord]) => {
+  if (!newRole) {
     menuItems.value = []
+    return
+  }
+  let items = useMenuItems(newRole)
+  if (newRole === 'teacher' && !isCoord) {
+    items = items.map(cat => {
+      if (!cat.children) return cat
+      return {
+        ...cat,
+        children: cat.children.filter(child => !child.coordinatorOnly)
+      }
+    }).filter(cat => !cat.children || cat.children.length > 0)
+  }
+  menuItems.value = items
+}, { immediate: true })
+
+watch(userRole, (newRole) => {
+  if (newRole === 'teacher') {
+    classesStore.fetchAssignedClasses()
   }
 }, { immediate: true })
 

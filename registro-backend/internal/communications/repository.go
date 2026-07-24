@@ -56,12 +56,18 @@ func (r *PostgresRepository) Create(ctx context.Context, msg *Message) error {
 }
 
 func (r *PostgresRepository) List(ctx context.Context, userID string) ([]*Message, error) {
+	if userID == "" {
+		return []*Message{}, nil
+	}
+	if _, err := uuid.Parse(userID); err != nil {
+		return []*Message{}, nil
+	}
 	query := `
 		SELECT c.id, c.school_id, c.sender_id, c.receiver_ids, c.subject, c.body, c.attachment_url, c.type,
 		       COALESCE(c.requires_signature, false), c.signature_deadline, c.created_at,
-		       EXISTS(SELECT 1 FROM communication_signatures cs WHERE cs.communication_id = c.id AND cs.user_id = $1::uuid) AS is_signed
+		       EXISTS(SELECT 1 FROM communication_signatures cs WHERE cs.communication_id = c.id AND cs.user_id = NULLIF($1, '')::uuid) AS is_signed
 		FROM communications c
-		WHERE c.sender_id = $1::uuid OR $1::text = ANY(c.receiver_ids)
+		WHERE c.sender_id = NULLIF($1, '')::uuid OR $1::text = ANY(c.receiver_ids)
 		ORDER BY c.created_at DESC
 	`
 	rows, err := r.db.QueryContext(ctx, query, userID)
@@ -90,18 +96,31 @@ func (r *PostgresRepository) List(ctx context.Context, userID string) ([]*Messag
 		m.ReceiverIDs = receivers
 		msgs = append(msgs, m)
 	}
+	if msgs == nil {
+		msgs = []*Message{}
+	}
 	return msgs, nil
 }
 
 func (r *PostgresRepository) ListBacheca(ctx context.Context, schoolID, userID string) ([]*Message, error) {
+	if userID != "" {
+		if _, err := uuid.Parse(userID); err != nil {
+			userID = ""
+		}
+	}
+	if schoolID != "" {
+		if _, err := uuid.Parse(schoolID); err != nil {
+			schoolID = ""
+		}
+	}
 	query := `
 		SELECT c.id, c.school_id, c.sender_id, c.receiver_ids, c.subject, c.body, c.attachment_url, c.type,
 		       COALESCE(c.requires_signature, false), c.signature_deadline, c.created_at,
-		       EXISTS(SELECT 1 FROM communication_signatures cs WHERE cs.communication_id = c.id AND cs.user_id = $2::uuid) AS is_signed
+		       EXISTS(SELECT 1 FROM communication_signatures cs WHERE cs.communication_id = c.id AND cs.user_id = NULLIF($2, '')::uuid) AS is_signed
 		FROM communications c
 		WHERE (c.type IN ('circular', 'notice', 'bacheca'))
 		  AND ($1 = '' OR c.school_id IS NULL OR c.school_id = NULLIF($1, '')::uuid)
-		  AND (array_length(c.receiver_ids, 1) IS NULL OR array_length(c.receiver_ids, 1) = 0 OR $2::text = ANY(c.receiver_ids) OR c.sender_id = $2::uuid)
+		  AND (array_length(c.receiver_ids, 1) IS NULL OR array_length(c.receiver_ids, 1) = 0 OR $2::text = ANY(c.receiver_ids) OR c.sender_id = NULLIF($2, '')::uuid)
 		ORDER BY c.created_at DESC
 	`
 	rows, err := r.db.QueryContext(ctx, query, schoolID, userID)
@@ -129,6 +148,9 @@ func (r *PostgresRepository) ListBacheca(ctx context.Context, schoolID, userID s
 		}
 		m.ReceiverIDs = receivers
 		msgs = append(msgs, m)
+	}
+	if msgs == nil {
+		msgs = []*Message{}
 	}
 	return msgs, nil
 }

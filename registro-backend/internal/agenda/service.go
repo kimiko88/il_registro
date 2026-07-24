@@ -98,10 +98,6 @@ func (s *Service) DeleteAgendaItem(ctx context.Context, actorID, actorRole, id s
 }
 
 func (s *Service) GetCalendar(ctx context.Context, schoolID, userID, role string, filter CalendarFilter) ([]*AgendaItem, error) {
-	if schoolID == "" {
-		return nil, fmt.Errorf("school_id required")
-	}
-
 	// Default date range: current month +/- 1 month if not specified
 	if filter.From.IsZero() {
 		now := time.Now()

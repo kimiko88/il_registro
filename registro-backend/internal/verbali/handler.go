@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type Handler struct {
@@ -129,6 +130,15 @@ func (h *Handler) ListVerbali(c *gin.Context) {
 	userID := c.GetString("user_id")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	if meetingID == "" || meetingID == "undefined" || meetingID == "null" {
+		c.JSON(http.StatusOK, []*MeetingVerbale{})
+		return
+	}
+	if _, err := uuid.Parse(meetingID); err != nil {
+		c.JSON(http.StatusOK, []*MeetingVerbale{})
 		return
 	}
 
