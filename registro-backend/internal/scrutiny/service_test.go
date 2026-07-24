@@ -66,6 +66,12 @@ func TestScrutinyMatrix_Structure(t *testing.T) {
 		},
 	}
 
+	if matrix.ClassID != "class-1" {
+		t.Errorf("expected ClassID 'class-1', got '%s'", matrix.ClassID)
+	}
+	if matrix.Semester != 1 {
+		t.Errorf("expected Semester 1, got %d", matrix.Semester)
+	}
 	if len(matrix.Subjects) != 2 {
 		t.Errorf("expected 2 subjects, got %d", len(matrix.Subjects))
 	}
@@ -126,6 +132,9 @@ func TestSaveScrutinyRequest_GradesSlice(t *testing.T) {
 		},
 	}
 
+	if req.StudentID != "stu-1" || req.ClassID != "cls-1" || req.Semester != 1 || req.ConductGrade != 8 || req.FinalDecision != "admitted" {
+		t.Errorf("request fields mismatch: %+v", req)
+	}
 	if len(req.Grades) != 2 {
 		t.Errorf("expected 2 grades in request, got %d", len(req.Grades))
 	}
