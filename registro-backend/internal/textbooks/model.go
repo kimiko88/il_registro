@@ -7,6 +7,7 @@ type Textbook struct {
 	SchoolID  string    `json:"school_id" db:"school_id"`
 	Title     string    `json:"title" db:"title"`
 	Author    string    `json:"author" db:"author"`
+	Subject   string    `json:"subject" db:"subject"`
 	ISBN      string    `json:"isbn" db:"isbn"`
 	Publisher string    `json:"publisher" db:"publisher"`
 	Price     float64   `json:"price" db:"price"`
@@ -29,6 +30,7 @@ type ClassTextbook struct {
 type CreateTextbookRequest struct {
 	Title     string  `json:"title" binding:"required"`
 	Author    string  `json:"author"`
+	Subject   string  `json:"subject"`
 	ISBN      string  `json:"isbn"`
 	Publisher string  `json:"publisher"`
 	Price     float64 `json:"price"`

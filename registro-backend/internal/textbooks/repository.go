@@ -26,13 +26,13 @@ func NewRepository(db *sql.DB) Repository {
 
 func (r *postgresRepository) Create(ctx context.Context, t *Textbook) error {
 	t.ID = uuid.New().String()
-	query := `INSERT INTO textbooks (id, school_id, title, author, isbn, publisher, price) VALUES ($1, $2, $3, $4, $5, $6, $7)`
-	_, err := r.db.ExecContext(ctx, query, t.ID, t.SchoolID, t.Title, t.Author, t.ISBN, t.Publisher, t.Price)
+	query := `INSERT INTO textbooks (id, school_id, title, author, subject, isbn, publisher, price) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
+	_, err := r.db.ExecContext(ctx, query, t.ID, t.SchoolID, t.Title, t.Author, t.Subject, t.ISBN, t.Publisher, t.Price)
 	return err
 }
 
 func (r *postgresRepository) List(ctx context.Context, schoolID string) ([]Textbook, error) {
-	query := `SELECT id, school_id, title, author, isbn, publisher, price, created_at FROM textbooks WHERE school_id = $1 ORDER BY title`
+	query := `SELECT id, school_id, title, COALESCE(author, ''), COALESCE(subject, ''), COALESCE(isbn, ''), COALESCE(publisher, ''), COALESCE(price, 0), created_at FROM textbooks WHERE school_id = $1 ORDER BY title`
 	rows, err := r.db.QueryContext(ctx, query, schoolID)
 	if err != nil {
 		return nil, err
@@ -42,7 +42,7 @@ func (r *postgresRepository) List(ctx context.Context, schoolID string) ([]Textb
 	var res []Textbook
 	for rows.Next() {
 		var t Textbook
-		if err := rows.Scan(&t.ID, &t.SchoolID, &t.Title, &t.Author, &t.ISBN, &t.Publisher, &t.Price, &t.CreatedAt); err != nil {
+		if err := rows.Scan(&t.ID, &t.SchoolID, &t.Title, &t.Author, &t.Subject, &t.ISBN, &t.Publisher, &t.Price, &t.CreatedAt); err != nil {
 			return nil, err
 		}
 		res = append(res, t)

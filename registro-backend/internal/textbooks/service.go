@@ -17,6 +17,7 @@ func (s *Service) CreateTextbook(ctx context.Context, schoolID string, req Creat
 		SchoolID:  schoolID,
 		Title:     req.Title,
 		Author:    req.Author,
+		Subject:   req.Subject,
 		ISBN:      req.ISBN,
 		Publisher: req.Publisher,
 		Price:     req.Price,

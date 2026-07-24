@@ -100,14 +100,20 @@
                 <q-input v-model="form.author" label="Autore" outlined placeholder="Nome dell'autore" />
               </div>
               <div class="col-12 col-md-6">
-                <q-input v-model="form.publisher" label="Editore" outlined placeholder="Casa editrice" />
+                <q-input v-model="form.subject" label="Materia Scolastica" outlined placeholder="es. Matematica, Italiano..." />
               </div>
             </div>
 
             <div class="row q-col-gutter-md">
-              <div class="col-12 col-md-8">
+              <div class="col-12 col-md-6">
+                <q-input v-model="form.publisher" label="Editore" outlined placeholder="Casa editrice" />
+              </div>
+              <div class="col-12 col-md-6">
                 <q-input v-model="form.isbn" label="ISBN" outlined placeholder="Codice ISBN-13" />
               </div>
+            </div>
+
+            <div class="row q-col-gutter-md">
               <div class="col-12 col-md-4">
                 <q-input v-model.number="form.price" label="Prezzo (€)" type="number" step="0.01" outlined />
               </div>
@@ -146,6 +152,7 @@ const selectedId = ref(null)
 const form = reactive({
   title: '',
   author: '',
+  subject: '',
   isbn: '',
   publisher: '',
   price: 0
@@ -153,6 +160,7 @@ const form = reactive({
 
 const columns = [
   { name: 'title', label: 'Titolo', field: 'title', align: 'left', sortable: true },
+  { name: 'subject', label: 'Materia', field: 'subject', align: 'left', sortable: true },
   { name: 'author', label: 'Autore', field: 'author', align: 'left', sortable: true },
   { name: 'isbn', label: 'ISBN', field: 'isbn', align: 'left' },
   { name: 'publisher', label: 'Editore', field: 'publisher', align: 'left', sortable: true },
@@ -177,7 +185,7 @@ async function fetchTextbooks() {
 function openCreateDialog() {
   isEdit.value = false
   selectedId.value = null
-  Object.assign(form, { title: '', author: '', isbn: '', publisher: '', price: 0 })
+  Object.assign(form, { title: '', author: '', subject: '', isbn: '', publisher: '', price: 0 })
   showDialog.value = true
 }
 
@@ -186,7 +194,8 @@ function openEditDialog(row) {
   selectedId.value = row.id
   Object.assign(form, { 
     title: row.title, 
-    author: row.author, 
+    author: row.author,
+    subject: row.subject || '',
     isbn: row.isbn, 
     publisher: row.publisher, 
     price: row.price 
