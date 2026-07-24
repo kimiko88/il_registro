@@ -25,10 +25,11 @@ type Hub struct {
 }
 
 type Message struct {
-	Type      string      `json:"type"`
-	Payload   interface{} `json:"payload"`
-	Recipient string      `json:"recipient,omitempty"`
-	SchoolID  string      `json:"school_id,omitempty"`
+	Type         string      `json:"type"`
+	Payload      interface{} `json:"payload"`
+	Recipient    string      `json:"recipient,omitempty"`
+	SchoolID     string      `json:"school_id,omitempty"`
+	AllowedRoles []string    `json:"allowed_roles,omitempty"`
 }
 
 func NewHub() *Hub {
@@ -38,6 +39,18 @@ func NewHub() *Hub {
 		unregister: make(chan *Client),
 		clients:    make(map[string]map[*Client]bool),
 	}
+}
+
+func isRoleAllowed(role string, allowed []string) bool {
+	if len(allowed) == 0 {
+		return true
+	}
+	for _, r := range allowed {
+		if r == role {
+			return true
+		}
+	}
+	return false
 }
 
 func (h *Hub) Run() {
@@ -71,11 +84,13 @@ func (h *Hub) Run() {
 				if clients, ok := h.clients[message.Recipient]; ok {
 					bytes, _ := json.Marshal(message)
 					for client := range clients {
-						select {
-						case client.Send <- bytes:
-						default:
-							close(client.Send)
-							delete(clients, client)
+						if isRoleAllowed(client.Role, message.AllowedRoles) {
+							select {
+							case client.Send <- bytes:
+							default:
+								close(client.Send)
+								delete(clients, client)
+							}
 						}
 					}
 				}
@@ -83,7 +98,7 @@ func (h *Hub) Run() {
 				bytes, _ := json.Marshal(message)
 				for _, clients := range h.clients {
 					for client := range clients {
-						if client.SchoolID == message.SchoolID {
+						if client.SchoolID == message.SchoolID && isRoleAllowed(client.Role, message.AllowedRoles) {
 							select {
 							case client.Send <- bytes:
 							default:
@@ -112,5 +127,14 @@ func (h *Hub) BroadcastToSchool(schoolID string, msgType string, payload interfa
 		Type:     msgType,
 		Payload:  payload,
 		SchoolID: schoolID,
+	}
+}
+
+func (h *Hub) BroadcastToSchoolRoles(schoolID string, allowedRoles []string, msgType string, payload interface{}) {
+	h.broadcast <- Message{
+		Type:         msgType,
+		Payload:      payload,
+		SchoolID:     schoolID,
+		AllowedRoles: allowedRoles,
 	}
 }

@@ -10,6 +10,8 @@
 .env.*.local
 
 # Backend (Go)
+go.work
+go.work.sum
 /registro-backend/bin/
 /registro-backend/vendor/
 /registro-backend/tmp/

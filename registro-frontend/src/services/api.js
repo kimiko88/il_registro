@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { useAuthStore } from '@/stores/auth';
 
 const getBaseURL = () => {
     const rawUrl = import.meta.env.VITE_API_URL;
@@ -20,7 +21,16 @@ const api = axios.create({
 
 api.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+        let token = null;
+        try {
+            const authStore = useAuthStore();
+            token = authStore.token;
+        } catch {
+            // fallback if store not ready
+        }
+        if (!token) {
+            token = localStorage.getItem('token') || sessionStorage.getItem('token');
+        }
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -29,23 +39,111 @@ api.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+    failedQueue.forEach((prom) => {
+        if (error) {
+            prom.reject(error);
+        } else {
+            prom.resolve(token);
+        }
+    });
+    failedQueue = [];
+};
+
 api.interceptors.response.use(
     (response) => response,
-    (error) => {
-        // Handle network error (e.g. server unreachable)
+    async (error) => {
+        const originalRequest = error?.config;
+
         if (!error.response) {
             error.userMessage = 'Errore di connessione al server. Verifica la tua connessione e riprova.';
+            return Promise.reject(error);
         }
-        // Handle 401 Unauthorized globally, but ignore for login requests
-        else if (error.response.status === 401 && !error.config.url.includes('/auth/login')) {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            localStorage.removeItem('refreshToken');
-            sessionStorage.removeItem('token');
-            sessionStorage.removeItem('user');
-            sessionStorage.removeItem('refreshToken');
-            if (window.location.pathname !== '/login') {
-                window.location.href = '/login';
+
+        if (
+            error.response.status === 401 &&
+            originalRequest &&
+            !originalRequest.url.includes('/auth/login') &&
+            !originalRequest.url.includes('/auth/refresh')
+        ) {
+            if (!originalRequest._retry) {
+                originalRequest._retry = true;
+                let authStore = null;
+                try {
+                    authStore = useAuthStore();
+                } catch {
+                    // Store not initialized
+                }
+
+                const refreshToken = authStore?.refreshToken || localStorage.getItem('refreshToken') || sessionStorage.getItem('refreshToken');
+
+                if (refreshToken) {
+                    if (isRefreshing) {
+                        return new Promise((resolve, reject) => {
+                            failedQueue.push({ resolve, reject });
+                        })
+                            .then((token) => {
+                                originalRequest.headers.Authorization = `Bearer ${token}`;
+                                return api(originalRequest);
+                            })
+                            .catch((err) => Promise.reject(err));
+                    }
+
+                    isRefreshing = true;
+
+                    try {
+                        const refreshResponse = await axios.post(`${getBaseURL()}/auth/refresh`, {
+                            refresh_token: refreshToken,
+                        });
+                        const access_token = refreshResponse.data?.access_token;
+                        const newRefreshToken = refreshResponse.data?.refresh_token;
+
+                        if (authStore) {
+                            authStore.token = access_token;
+                            if (newRefreshToken) authStore.refreshToken = newRefreshToken;
+                        }
+
+                        if (localStorage.getItem('token')) {
+                            localStorage.setItem('token', access_token);
+                            if (newRefreshToken) localStorage.setItem('refreshToken', newRefreshToken);
+                        } else if (sessionStorage.getItem('token')) {
+                            sessionStorage.setItem('token', access_token);
+                            if (newRefreshToken) sessionStorage.setItem('refreshToken', newRefreshToken);
+                        }
+
+                        processQueue(null, access_token);
+                        isRefreshing = false;
+
+                        originalRequest.headers.Authorization = `Bearer ${access_token}`;
+                        return api(originalRequest);
+                    } catch (refreshErr) {
+                        processQueue(refreshErr, null);
+                        isRefreshing = false;
+                        if (authStore) {
+                            authStore.logout();
+                        } else {
+                            localStorage.clear();
+                            sessionStorage.clear();
+                        }
+                        if (window.location.pathname !== '/login') {
+                            window.location.href = '/login?reason=session_expired';
+                        }
+                        return Promise.reject(refreshErr);
+                    }
+                } else {
+                    if (authStore) {
+                        authStore.logout();
+                    } else {
+                        localStorage.clear();
+                        sessionStorage.clear();
+                    }
+                    if (window.location.pathname !== '/login') {
+                        window.location.href = '/login?reason=session_expired';
+                    }
+                }
             }
         }
         return Promise.reject(error);

@@ -118,6 +118,7 @@ func TestBookSlot(t *testing.T) {
 		Status:   StatusConfirmed,
 	}
 
+	mockRepo.On("GetSlotByID", mock.Anything, "slot-1").Return(&ColloquioSlot{ID: "slot-1", MaxBookings: 10, BookingCount: 0}, nil).Once()
 	mockRepo.On("CreateBooking", mock.Anything, mock.MatchedBy(func(b *ColloquioBooking) bool {
 		return b.SlotID == "slot-1"
 	})).Return(nil).Once()

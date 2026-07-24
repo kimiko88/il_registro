@@ -163,7 +163,8 @@ func (h *Handler) UpdateDocument(c *gin.Context) {
 	id := c.Param("id")
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
-	if userID == "" || role == "" {
+	schoolID := c.GetString("school_id")
+	if userID == "" || role == "" || schoolID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
@@ -173,7 +174,7 @@ func (h *Handler) UpdateDocument(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	if err := h.service.UpdateDocument(c.Request.Context(), role, userID, id, req); err != nil {
+	if err := h.service.UpdateDocument(c.Request.Context(), role, schoolID, userID, id, req); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -184,7 +185,8 @@ func (h *Handler) ProcessWorkflow(c *gin.Context) {
 	id := c.Param("id")
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
-	if userID == "" || role == "" {
+	schoolID := c.GetString("school_id")
+	if userID == "" || role == "" || schoolID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
@@ -194,7 +196,7 @@ func (h *Handler) ProcessWorkflow(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	if err := h.service.ProcessWorkflow(c.Request.Context(), userID, id, req); err != nil {
+	if err := h.service.ProcessWorkflow(c.Request.Context(), role, schoolID, userID, id, req); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -205,11 +207,12 @@ func (h *Handler) SignDocument(c *gin.Context) {
 	id := c.Param("id")
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
-	if userID == "" {
+	schoolID := c.GetString("school_id")
+	if userID == "" || schoolID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "director" && role != "principal" && role != "admin" && role != "superadmin" {
+	if role != "admin" && role != "superadmin" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: insufficient permissions to sign document"})
 		return
 	}
@@ -219,7 +222,7 @@ func (h *Handler) SignDocument(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	if err := h.service.SignDocument(c.Request.Context(), userID, id, req); err != nil {
+	if err := h.service.SignDocument(c.Request.Context(), role, schoolID, userID, id, req); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -228,7 +231,7 @@ func (h *Handler) SignDocument(c *gin.Context) {
 
 func (h *Handler) GetInbox(c *gin.Context) {
 	role := c.GetString("role")
-	if role != "secretary" && role != "admin" && role != "superadmin" && role != "director" && role != "principal" {
+	if role != "segreteria" && role != "admin" && role != "superadmin" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: insufficient permissions"})
 		return
 	}
@@ -243,7 +246,7 @@ func (h *Handler) GetInbox(c *gin.Context) {
 
 func (h *Handler) GetReviewQueue(c *gin.Context) {
 	role := c.GetString("role")
-	if role != "director" && role != "principal" && role != "admin" && role != "superadmin" {
+	if role != "admin" && role != "superadmin" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: insufficient permissions"})
 		return
 	}
@@ -257,14 +260,20 @@ func (h *Handler) GetReviewQueue(c *gin.Context) {
 }
 
 func (h *Handler) CreateTemplate(c *gin.Context) {
+	role := c.GetString("role")
+	schoolID := c.GetString("school_id")
+	if schoolID == "" || role == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "admin" && role != "superadmin" && role != "segreteria" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: insufficient permissions to manage templates"})
+		return
+	}
+
 	var req TemplateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	schoolID := c.GetString("school_id")
-	if schoolID == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 	if err := h.service.CreateTemplate(c.Request.Context(), schoolID, req); err != nil {
@@ -276,9 +285,14 @@ func (h *Handler) CreateTemplate(c *gin.Context) {
 
 func (h *Handler) UpdateTemplate(c *gin.Context) {
 	id := c.Param("id")
+	role := c.GetString("role")
 	schoolID := c.GetString("school_id")
-	if schoolID == "" {
+	if schoolID == "" || role == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "admin" && role != "superadmin" && role != "segreteria" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: insufficient permissions to manage templates"})
 		return
 	}
 
@@ -300,9 +314,14 @@ func (h *Handler) UpdateTemplate(c *gin.Context) {
 
 func (h *Handler) DeleteTemplate(c *gin.Context) {
 	id := c.Param("id")
+	role := c.GetString("role")
 	schoolID := c.GetString("school_id")
-	if schoolID == "" {
+	if schoolID == "" || role == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "admin" && role != "superadmin" && role != "segreteria" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: insufficient permissions to manage templates"})
 		return
 	}
 

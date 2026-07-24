@@ -326,7 +326,8 @@ func (h *Handler) UpdateAdminUser(c *gin.Context) {
 		return
 	}
 
-	admin, err := h.service.UpdateAdminUser(c.Request.Context(), adminID, &req)
+	callerRole, _ := auth.GetUserRole(c)
+	admin, err := h.service.UpdateAdminUser(c.Request.Context(), callerRole, adminID, &req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, ErrorResponse{
 			Error:   "failed to update admin user",

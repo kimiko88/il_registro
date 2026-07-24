@@ -89,8 +89,8 @@ func (m *MockRepository) GetUnreadCount(ctx context.Context, userID string) (int
 	return args.Int(0), args.Error(1)
 }
 
-func (m *MockRepository) ListCircolari(ctx context.Context, userID, year string) ([]*Message, error) {
-	args := m.Called(ctx, userID, year)
+func (m *MockRepository) ListCircolari(ctx context.Context, schoolID, userID, year string) ([]*Message, error) {
+	args := m.Called(ctx, schoolID, userID, year)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}

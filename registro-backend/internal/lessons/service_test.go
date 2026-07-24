@@ -166,7 +166,7 @@ func TestCreateHomework(t *testing.T) {
 	assert.Error(t, err)
 
 	// Test successful creation
-	req.DueDate = "2026-07-15"
+	req.DueDate = time.Now().AddDate(0, 0, 7).Format("2006-01-02")
 	resp, err = s.CreateHomework("teacher-1", req)
 	assert.NoError(t, err)
 	assert.NotNil(t, resp)

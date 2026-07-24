@@ -261,7 +261,11 @@ func (s *Service) CreateAdminUser(ctx context.Context, req *CreateAdminRequest) 
 }
 
 // UpdateAdminUser updates an existing admin user (superadmin only)
-func (s *Service) UpdateAdminUser(ctx context.Context, adminID string, req *UpdateAdminRequest) (*AdminUserResponse, error) {
+func (s *Service) UpdateAdminUser(ctx context.Context, callerRole, adminID string, req *UpdateAdminRequest) (*AdminUserResponse, error) {
+	if callerRole != "superadmin" {
+		return nil, errors.New("unauthorized: only superadmin can update admin users")
+	}
+
 	admin, err := s.repo.UpdateAdminUser(ctx, adminID, req)
 	if err != nil {
 		return nil, err

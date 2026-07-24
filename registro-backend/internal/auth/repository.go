@@ -2,12 +2,19 @@ package auth
 
 import (
 	"context"
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
 	"time"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
+
+func hashToken(token string) string {
+	h := sha256.Sum256([]byte(token))
+	return hex.EncodeToString(h[:])
+}
 
 // Repository handles auth-related database operations
 type Repository interface {
@@ -265,8 +272,9 @@ func (r *repository) CreateRefreshToken(ctx context.Context, token *RefreshToken
 	token.CreatedAt = time.Now()
 	token.Revoked = false
 
+	hashed := hashToken(token.Token)
 	_, err := r.db.ExecContext(ctx, query,
-		token.ID, token.UserID, token.Token, token.ExpiresAt,
+		token.ID, token.UserID, hashed, token.ExpiresAt,
 		token.CreatedAt, token.Revoked, token.IPAddress, token.UserAgent,
 	)
 	return err
@@ -276,10 +284,11 @@ func (r *repository) GetRefreshToken(ctx context.Context, token string) (*Refres
 	query := `
 		SELECT id, user_id, token, expires_at, created_at, revoked, ip_address, user_agent
 		FROM refresh_tokens
-		WHERE token = $1
+		WHERE token = $1 AND revoked = false AND expires_at > NOW()
 	`
 	rt := &RefreshToken{}
-	err := r.db.QueryRowContext(ctx, query, token).Scan(
+	hashed := hashToken(token)
+	err := r.db.QueryRowContext(ctx, query, hashed).Scan(
 		&rt.ID, &rt.UserID, &rt.Token, &rt.ExpiresAt,
 		&rt.CreatedAt, &rt.Revoked, &rt.IPAddress, &rt.UserAgent,
 	)
@@ -310,8 +319,9 @@ func (r *repository) CreatePasswordResetToken(ctx context.Context, token *Passwo
 	token.CreatedAt = time.Now()
 	token.Used = false
 
+	hashed := hashToken(token.Token)
 	_, err := r.db.ExecContext(ctx, query,
-		token.ID, token.UserID, token.Token, token.ExpiresAt, token.CreatedAt,
+		token.ID, token.UserID, hashed, token.ExpiresAt, token.CreatedAt,
 	)
 	return err
 }
@@ -323,7 +333,8 @@ func (r *repository) GetPasswordResetToken(ctx context.Context, token string) (*
 		WHERE token = $1
 	`
 	prt := &PasswordResetToken{}
-	err := r.db.QueryRowContext(ctx, query, token).Scan(
+	hashed := hashToken(token)
+	err := r.db.QueryRowContext(ctx, query, hashed).Scan(
 		&prt.ID, &prt.UserID, &prt.Token, &prt.ExpiresAt, &prt.Used, &prt.CreatedAt,
 	)
 	if err == sql.ErrNoRows {
@@ -333,9 +344,19 @@ func (r *repository) GetPasswordResetToken(ctx context.Context, token string) (*
 }
 
 func (r *repository) UsePasswordResetToken(ctx context.Context, tokenID string) error {
-	query := `UPDATE password_reset_tokens SET used = true WHERE id = $1`
-	_, err := r.db.ExecContext(ctx, query, tokenID)
-	return err
+	query := `UPDATE password_reset_tokens SET used = true WHERE id = $1 AND used = false`
+	res, err := r.db.ExecContext(ctx, query, tokenID)
+	if err != nil {
+		return err
+	}
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return ErrInvalidToken
+	}
+	return nil
 }
 
 func (r *repository) UpdatePassword(ctx context.Context, userID, passwordHash string) error {
@@ -418,10 +439,24 @@ func (r *repository) GetPasswordHistory(ctx context.Context, userID string) ([]s
 }
 
 func (r *repository) AddPasswordHistory(ctx context.Context, userID, passwordHash string) error {
-	query := `
-		INSERT INTO user_password_history (user_id, password_hash)
-		VALUES ($1, $2)
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	query := `INSERT INTO user_password_history (user_id, password_hash) VALUES ($1, $2)`
+	if _, err := tx.ExecContext(ctx, query, userID, passwordHash); err != nil {
+		return err
+	}
+
+	pruneQuery := `
+		DELETE FROM user_password_history
+		WHERE user_id = $1 AND id NOT IN (
+			SELECT id FROM user_password_history
+			WHERE user_id = $1 ORDER BY created_at DESC LIMIT 5
+		)
 	`
-	_, err := r.db.ExecContext(ctx, query, userID, passwordHash)
-	return err
+	_, _ = tx.ExecContext(ctx, pruneQuery, userID)
+	return tx.Commit()
 }

@@ -105,7 +105,8 @@ func (h *Handler) GetCalendar(c *gin.Context) {
 		To:        toTime,
 	}
 
-	items, err := h.service.GetCalendar(c.Request.Context(), schoolID, userID, filter)
+	role := c.GetString("role")
+	items, err := h.service.GetCalendar(c.Request.Context(), schoolID, userID, role, filter)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -219,7 +220,8 @@ func (h *Handler) GetClassEvents(c *gin.Context) {
 		ClassID: classID,
 	}
 
-	items, err := h.service.GetCalendar(c.Request.Context(), schoolID, userID, filter)
+	role := c.GetString("role")
+	items, err := h.service.GetCalendar(c.Request.Context(), schoolID, userID, role, filter)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

@@ -85,6 +85,7 @@ func (s *service) GetSchoolYear(ctx context.Context, schoolID string) (*SchoolYe
 func (s *service) buildYearResponse(ctx context.Context, settings *SchoolYearSettings) (*SchoolYearResponse, error) {
 	teachingDays, err := s.repo.CountTeachingDays(settings.SchoolID, settings.StartDate, settings.EndDate)
 	if err != nil {
+		fmt.Printf("[SchoolCalendar Error] CountTeachingDays failed for school %s: %v\n", settings.SchoolID, err)
 		teachingDays = 0
 	}
 	return &SchoolYearResponse{
@@ -163,6 +164,9 @@ func (s *service) CreateAcademicPeriod(ctx context.Context, actorRole, schoolID 
 	if err != nil {
 		return nil, fmt.Errorf("end_date non valida: %w", err)
 	}
+	if !end.After(start) {
+		return nil, errors.New("end_date deve essere successiva a start_date")
+	}
 
 	p := &AcademicPeriod{
 		SchoolID:       schoolID,
@@ -224,11 +228,18 @@ func (s *service) GetStudentCalendarEvents(ctx context.Context, schoolID string,
 		if len(month) == 1 {
 			month = "0" + month
 		}
-		prefix := year + "-" + month
 		var filtered []CalendarEvent
 		for _, ev := range events {
-			if strings.HasPrefix(ev.Date, prefix) || year == "" {
-				filtered = append(filtered, ev)
+			if year != "" {
+				prefix := year + "-" + month
+				if strings.HasPrefix(ev.Date, prefix) {
+					filtered = append(filtered, ev)
+				}
+			} else {
+				parts := strings.Split(ev.Date, "-")
+				if len(parts) >= 2 && parts[1] == month {
+					filtered = append(filtered, ev)
+				}
 			}
 		}
 		events = filtered

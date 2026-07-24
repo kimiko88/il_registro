@@ -55,17 +55,29 @@ func (s *service) CreateSlots(ctx context.Context, userID string, req CreateSlot
 		return fmt.Errorf("failed to resolve teacher profile: %w", err)
 	}
 
-	start, _ := time.Parse("15:04", req.StartTime)
-	end, _ := time.Parse("15:04", req.EndTime)
+	start, err := time.Parse("15:04", req.StartTime)
+	if err != nil {
+		return fmt.Errorf("ora inizio non valida '%s': usa HH:MM: %w", req.StartTime, err)
+	}
+	end, err := time.Parse("15:04", req.EndTime)
+	if err != nil {
+		return fmt.Errorf("ora fine non valida '%s': usa HH:MM: %w", req.EndTime, err)
+	}
 
 	var allSlots []ColloquioSlot
 
 	for _, dateStr := range req.Dates {
-		firstDate, _ := time.Parse("2006-01-02", dateStr)
+		firstDate, err := time.Parse("2006-01-02", dateStr)
+		if err != nil {
+			return fmt.Errorf("data non valida '%s': usa YYYY-MM-DD: %w", dateStr, err)
+		}
 		
 		targetDates := []time.Time{firstDate}
 		if req.IsRecurring && req.RecurringUntil != "" {
-			untilDate, _ := time.Parse("2006-01-02", req.RecurringUntil)
+			untilDate, err := time.Parse("2006-01-02", req.RecurringUntil)
+			if err != nil {
+				return fmt.Errorf("data ricorrenza non valida '%s': usa YYYY-MM-DD: %w", req.RecurringUntil, err)
+			}
 			current := firstDate.AddDate(0, 0, 7)
 			for !current.After(untilDate) {
 				targetDates = append(targetDates, current)
@@ -161,9 +173,16 @@ func (s *service) DeleteSlot(ctx context.Context, userID, slotID string) error {
 }
 
 func (s *service) GetAvailableSlots(ctx context.Context, teacherID string) ([]SlotResponse, error) {
+	schoolID := ""
+	if s.teacherRepo != nil {
+		teacher, err := s.teacherRepo.GetByUserID(ctx, teacherID)
+		if err == nil && teacher != nil {
+			schoolID = teacher.SchoolID
+		}
+	}
 	from := time.Now()
 	to := from.AddDate(0, 0, 14) // default window
-	slots, err := s.repo.GetAvailableSlots(ctx, "default-school", teacherID, from, to)
+	slots, err := s.repo.GetAvailableSlots(ctx, schoolID, teacherID, from, to)
 	if err != nil {
 		return nil, err
 	}
@@ -253,15 +272,21 @@ func (s *service) CancelBooking(ctx context.Context, userID, bookingID string) e
 	// Try to resolve parent profile ID to match parent ownership check
 	parentProfileID, _ := s.repo.ResolveParentUserID(ctx, userID)
 
-	isParent := b.ParentID != nil && parentProfileID != "" && *b.ParentID == parentProfileID
+	isParent := b.ParentID != nil && ((parentProfileID != "" && *b.ParentID == parentProfileID) || *b.ParentID == userID)
 
 	if !isParent {
-		// Check if it's the teacher
+		// Check if it's the teacher (by userID or resolved teacher profile ID)
 		slot, err := s.repo.GetSlotByID(ctx, b.SlotID)
 		if err != nil {
 			return err
 		}
-		if slot.TeacherID != userID {
+		teacherProfileID := userID
+		if s.teacherRepo != nil {
+			if t, err := s.teacherRepo.GetByUserID(ctx, userID); err == nil && t != nil {
+				teacherProfileID = t.ID
+			}
+		}
+		if slot.TeacherID != userID && slot.TeacherID != teacherProfileID {
 			return errors.New("unauthorized: you cannot cancel this booking")
 		}
 	}

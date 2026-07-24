@@ -3,12 +3,14 @@ package users
 import (
 	"bytes"
 	"context"
+	"encoding/csv"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"mime/multipart"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -135,7 +137,11 @@ func (s *Service) UpdateUser(ctx context.Context, actorRole string, id string, r
 	if req.LastName != nil {
 		user.LastName = *req.LastName
 	}
-	if req.Role != nil {
+	if req.Role != nil && *req.Role != user.Role {
+		allowed, ok := allowedCreators[actorRole]
+		if !ok || !allowed[*req.Role] {
+			return nil, ErrUnauthorized
+		}
 		user.Role = *req.Role
 	}
 	if req.IsActive != nil {
@@ -229,10 +235,49 @@ func (s *Service) ChangePassword(ctx context.Context, userID string, req ChangeP
 	return s.repo.AddPasswordHistory(ctx, userID, string(hash))
 }
 
+func validatePasswordComplexity(password string) error {
+	if len(password) < 8 {
+		return errors.New("password must be at least 8 characters long")
+	}
+	if len(password) > 128 {
+		return errors.New("password is too long (max 128 characters)")
+	}
+	var hasUpper, hasLower, hasDigit, hasSpecial bool
+	for _, char := range password {
+		switch {
+		case unicode.IsUpper(char):
+			hasUpper = true
+		case unicode.IsLower(char):
+			hasLower = true
+		case unicode.IsDigit(char):
+			hasDigit = true
+		case unicode.IsPunct(char) || unicode.IsSymbol(char):
+			hasSpecial = true
+		}
+	}
+	if !hasUpper || !hasLower || !hasDigit || !hasSpecial {
+		return errors.New("password must contain at least one uppercase letter, one lowercase letter, one number, and one special character")
+	}
+	return nil
+}
+
 // ResetPassword allows an admin to force-reset a user's password.
 func (s *Service) ResetPassword(ctx context.Context, actorRole string, userID string, newPassword string) error {
 	if actorRole != "admin" && actorRole != "superadmin" {
 		return ErrUnauthorized
+	}
+
+	if err := validatePasswordComplexity(newPassword); err != nil {
+		return err
+	}
+
+	history, err := s.repo.GetPasswordHistory(ctx, userID)
+	if err == nil {
+		for _, old := range history {
+			if bcrypt.CompareHashAndPassword([]byte(old), []byte(newPassword)) == nil {
+				return errors.New("new password must not match any of the last 5 passwords")
+			}
+		}
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
@@ -248,7 +293,10 @@ func (s *Service) ResetPassword(ctx context.Context, actorRole string, userID st
 	now := time.Now()
 	user.PasswordHash = string(hash)
 	user.PasswordChangedAt = &now
-	return s.repo.Update(ctx, user)
+	if err := s.repo.Update(ctx, user); err != nil {
+		return err
+	}
+	return s.repo.AddPasswordHistory(ctx, userID, string(hash))
 }
 
 // DisableMFA disables MFA for the given user (admin only).
@@ -416,6 +464,13 @@ func (s *Service) SwitchChildContext(ctx context.Context, parentUserID, targetSt
 	return s.repo.GetByID(ctx, targetStudentID)
 }
 
+func sanitizeCSV(s string) string {
+	if len(s) > 0 && (s[0] == '=' || s[0] == '+' || s[0] == '-' || s[0] == '@' || s[0] == '\t' || s[0] == '\r') {
+		return "'" + s
+	}
+	return s
+}
+
 // ExportUsers exports users matching filter in specified format ("csv" or "json").
 func (s *Service) ExportUsers(ctx context.Context, actorRole string, filter UserFilter, format string) ([]byte, error) {
 	if !isPrivileged(actorRole) {
@@ -427,16 +482,35 @@ func (s *Service) ExportUsers(ctx context.Context, actorRole string, filter User
 	}
 	if strings.ToLower(format) == "csv" {
 		var buf bytes.Buffer
-		buf.WriteString("ID,Email,FirstName,LastName,Role\n")
+		w := csv.NewWriter(&buf)
+		_ = w.Write([]string{"ID", "Email", "FirstName", "LastName", "Role"})
 		for _, u := range users {
-			buf.WriteString(fmt.Sprintf("%s,%s,%s,%s,%s\n", u.ID, u.Email, u.FirstName, u.LastName, u.Role))
+			_ = w.Write([]string{
+				sanitizeCSV(u.ID),
+				sanitizeCSV(u.Email),
+				sanitizeCSV(u.FirstName),
+				sanitizeCSV(u.LastName),
+				sanitizeCSV(u.Role),
+			})
 		}
+		w.Flush()
 		return buf.Bytes(), nil
 	}
 	return json.Marshal(users)
 }
 
 func (s *Service) GetStudentFascicolo(ctx context.Context, actorID, actorRole, studentID string) (*StudentFascicolo, error) {
+	if !isPrivileged(actorRole) {
+		if actorRole == "parent" {
+			isGuard, err := s.repo.IsGuardian(ctx, actorID, studentID)
+			if err != nil || !isGuard {
+				return nil, ErrUnauthorized
+			}
+		} else if actorID != studentID {
+			return nil, ErrUnauthorized
+		}
+	}
+
 	student, err := s.repo.GetByID(ctx, studentID)
 	if err != nil {
 		return nil, err

@@ -3,6 +3,8 @@ package documents
 import (
 	"context"
 	"errors"
+	"fmt"
+	"strings"
 
 	"registro-backend/internal/permissions"
 )
@@ -10,15 +12,15 @@ import (
 type Service interface {
 	CreateDocument(ctx context.Context, actorRole, userID, schoolID string, req CreateDocumentRequest) (*DocumentListResponse, error)
 	GetDocument(ctx context.Context, actorRole, schoolID, id string) (*DocumentDetailResponse, error)
-	UpdateDocument(ctx context.Context, actorRole, userID, id string, req UpdateDocumentRequest) error
+	UpdateDocument(ctx context.Context, actorRole, schoolID, userID, id string, req UpdateDocumentRequest) error
 	DeleteDocument(ctx context.Context, actorRole, userID, id string) error
 	AttachFile(ctx context.Context, actorRole, schoolID, docID, fileURL string) error
 
 	// Workflow
-	ProcessWorkflow(ctx context.Context, userID, docID string, req WorkflowActionRequest) error
+	ProcessWorkflow(ctx context.Context, actorRole, schoolID, userID, docID string, req WorkflowActionRequest) error
 
 	// Sign
-	SignDocument(ctx context.Context, userID, docID string, req SignDocumentRequest) error
+	SignDocument(ctx context.Context, actorRole, schoolID, userID, docID string, req SignDocumentRequest) error
 
 	// Lists
 	GetInbox(ctx context.Context, schoolID string) ([]DocumentListResponse, error)
@@ -132,13 +134,16 @@ func (s *service) GetDocument(ctx context.Context, actorRole, schoolID, id strin
 	}, nil
 }
 
-func (s *service) UpdateDocument(ctx context.Context, actorRole, userID, id string, req UpdateDocumentRequest) error {
+func (s *service) UpdateDocument(ctx context.Context, actorRole, schoolID, userID, id string, req UpdateDocumentRequest) error {
 	if !s.permManager.HasPermission(actorRole, permissions.DocumentUpdate) {
 		return errors.New("unauthorized")
 	}
 	doc, err := s.repo.FindByID(id)
 	if err != nil {
 		return err
+	}
+	if doc.SchoolID != schoolID {
+		return errors.New("unauthorized: cannot edit document of another school")
 	}
 
 	if doc.Status != StatusDraft && doc.Status != StatusRejected {
@@ -153,8 +158,6 @@ func (s *service) UpdateDocument(ctx context.Context, actorRole, userID, id stri
 		content = *req.Content
 	}
 
-	// Assuming content is always needed for version update or we fetch old?
-	// Simplified: Update requires content
 	if content == "" {
 		c, _ := s.repo.GetContent(id, doc.CurrentVersion)
 		content = c
@@ -171,7 +174,7 @@ func (s *service) DeleteDocument(ctx context.Context, actorRole, userID, id stri
 	if err != nil {
 		return err
 	}
-	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "director" && actorRole != "principal" {
+	if actorRole != "admin" && actorRole != "superadmin" {
 		if doc.CreatedBy != userID {
 			return errors.New("unauthorized: can only delete own documents")
 		}
@@ -179,10 +182,35 @@ func (s *service) DeleteDocument(ctx context.Context, actorRole, userID, id stri
 	return s.repo.Delete(id)
 }
 
-func (s *service) ProcessWorkflow(ctx context.Context, userID, docID string, req WorkflowActionRequest) error {
+func (s *service) ProcessWorkflow(ctx context.Context, actorRole, schoolID, userID, docID string, req WorkflowActionRequest) error {
 	doc, err := s.repo.FindByID(docID)
 	if err != nil {
 		return err
+	}
+	if doc.SchoolID != schoolID {
+		return errors.New("unauthorized: cannot process document of another school")
+	}
+
+	// RBAC check per workflow action
+	switch req.Action {
+	case "submit":
+		if doc.CreatedBy != userID && actorRole != "admin" && actorRole != "superadmin" {
+			return errors.New("unauthorized: only document creator or admin can submit")
+		}
+	case "approve_secretary":
+		if actorRole != "segreteria" && actorRole != "admin" && actorRole != "superadmin" {
+			return errors.New("unauthorized: insufficient permissions for secretary approval")
+		}
+	case "approve_director":
+		if actorRole != "admin" && actorRole != "superadmin" {
+			return errors.New("unauthorized: insufficient permissions for director approval")
+		}
+	case "reject":
+		if actorRole != "segreteria" && actorRole != "admin" && actorRole != "superadmin" {
+			return errors.New("unauthorized: insufficient permissions to reject")
+		}
+	default:
+		return errors.New("unknown action")
 	}
 
 	// Determine next status
@@ -195,9 +223,7 @@ func (s *service) ProcessWorkflow(ctx context.Context, userID, docID string, req
 	case "approve_director":
 		next = StatusApproved
 	case "reject":
-		next = StatusRejected // or Draft
-	default:
-		return errors.New("unknown action")
+		next = StatusRejected
 	}
 
 	if err := s.workflow.CanTransition(doc.Status, next); err != nil {
@@ -212,29 +238,40 @@ func (s *service) LockDocument(ctx context.Context, id string) error {
 	return s.repo.UpdateStatus(id, StatusSigned)
 }
 
-func (s *service) SignDocument(ctx context.Context, userID, docID string, req SignDocumentRequest) error {
+func (s *service) SignDocument(ctx context.Context, actorRole, schoolID, userID, docID string, req SignDocumentRequest) error {
+	if actorRole != "admin" && actorRole != "superadmin" {
+		return errors.New("unauthorized: insufficient permissions to sign document")
+	}
 	doc, err := s.repo.FindByID(docID)
 	if err != nil {
 		return err
+	}
+	if doc.SchoolID != schoolID {
+		return errors.New("unauthorized: cannot sign document of another school")
 	}
 
 	if doc.Status != StatusApproved {
 		return errors.New("document not valid for signing")
 	}
 
-	if err := s.signer.Verify(docID, req.SignatureData, req.CertificateData); err != nil {
+	// Fetch current content for cryptographic signature verification
+	content, err := s.repo.GetContent(docID, doc.CurrentVersion)
+	if err != nil {
+		return fmt.Errorf("failed to fetch document content for verification: %w", err)
+	}
+
+	if err := s.signer.Verify(content, req.SignatureData, req.CertificateData); err != nil {
 		return err
 	}
 
 	sig := &DocumentSignature{
 		DocumentID:    docID,
-		VersionID:     "latest", // Needs fetch version ID logic
+		VersionID:     "latest",
 		SignerID:      userID,
 		SignatureData: req.SignatureData,
 		Certificate:   req.CertificateData,
 	}
-	// Fetch version ID for current
-	// Omitted for brevity, assume "GetVersions" gives IDs
+
 	vers, _ := s.repo.GetVersions(docID)
 	if len(vers) > 0 {
 		sig.VersionID = vers[0].ID
@@ -383,13 +420,17 @@ func (s *service) AttachFile(ctx context.Context, actorRole, schoolID, docID, fi
 		return errors.New("unauthorized: cannot access documents of another school")
 	}
 
+	// Sanitize fileURL to prevent CRLF injection or control characters in content
+	cleanURL := strings.ReplaceAll(fileURL, "\r", "")
+	cleanURL = strings.ReplaceAll(cleanURL, "\n", "")
+
 	content, _ := s.repo.GetContent(docID, doc.CurrentVersion)
 	updatedContent := content
 	if updatedContent == "" {
-		updatedContent = "Attachment: " + fileURL
+		updatedContent = "Attachment: " + cleanURL
 	} else {
-		updatedContent += "\nAttachment: " + fileURL
+		updatedContent += "\nAttachment: " + cleanURL
 	}
 
-	return s.repo.Update(doc, updatedContent, "Attached file: "+fileURL)
+	return s.repo.Update(doc, updatedContent, "Attached file: "+cleanURL)
 }

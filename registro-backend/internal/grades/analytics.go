@@ -1,5 +1,9 @@
 package grades
 
+import (
+	"time"
+)
+
 type AnalyticsService interface {
 	GetStudentAverage(studentID string, subjectID string) (float64, error)
 	GetClassAverage(classID string, subjectID string) (float64, error)
@@ -212,10 +216,15 @@ func (a *analyticsService) GetClassAnalysis(classID string, semester int) (*Anal
 		}
 	}
 
+	className := "Class " + classID
+	if len(classID) >= 4 {
+		className = "Class " + classID[:4]
+	}
+
 	return &AnalyticsClassResponse{
-		Class:        ClassInfo{ID: classID, Name: "Class " + classID[:4]},
+		Class:        ClassInfo{ID: classID, Name: className},
 		Semester:     semester,
-		AnalysisDate: "2026-01-31",
+		AnalysisDate: time.Now().Format("2006-01-02"),
 		StudentStats: StudentStats{
 			Total:     len(stuMap),
 			Present:   len(stuMap), // simple assumption
@@ -244,34 +253,30 @@ func (a *analyticsService) GetSubjectAnalysis(subjectID string, semester int) (*
 
 	// Summative only for key metrics
 	var summative []Grade
+	passCount := 0
 	for _, g := range grades {
 		if g.IsPublished && g.DeletedAt == nil && g.GradeCategory == GradeCategorySummative {
 			summative = append(summative, g)
+			if g.GradeValue >= 6.0 {
+				passCount++
+			}
 		}
 	}
 
 	avg := a.calculator.CalculateAverage(summative)
-
-	// Group by Class?
-	// Need to query `FindByClassAndSubject` for each known class or if `FindBySubject` returned class info (it didn't).
-	// But `FindBySubject` sorts by... ???
-	// The prompt implies "Performance By Class". `FindBySubject` returns grades.
-	// Without ClassID in Grades, we can't group easily unless we fetched with JOIN.
-	// I'll assume current MVP limitation: returns global stats or placeholder for class grouping.
-	// Actually, earlier I said "Repo `FindBySubject` usually returns just grades...".
-	// For analytics, I really should have `class_id` in the grade struct joined.
-	// But I won't refactor Repository JOIN now.
-	// I'll return Aggregated only correctly.
+	passRate := 0.0
+	if len(summative) > 0 {
+		passRate = (float64(passCount) / float64(len(summative))) * 100.0
+	}
 
 	return &AnalyticsSubjectResponse{
 		Subject:  SubjectMeta{ID: subjectID, Name: "Subject"},
 		Semester: semester,
 		Aggregated: SubjectAggregated{
-			TotalGrades: len(grades),
+			TotalGrades: len(summative),
 			AvgGrade:    avg,
-			PassRate:    85.0, // Mock
+			PassRate:    passRate,
 		},
-		// Empty ByClass for now or single aggregate
 	}, nil
 }
 
@@ -334,18 +339,21 @@ func (a *analyticsService) GetStudentProfile(studentID string, semester int) (*A
 }
 
 func (a *analyticsService) GetSchoolStatistics(year string) (*SchoolStatisticsResponse, error) {
-	// This normally requires massive aggregation.
-	// MVP: Fetch "all" via some method or use dummy stats if dataset too large?
-	// `FindWithFilter` with no filter = ALL GRADES.
-	// Dangerous for prod, but local is fine.
-	grades, err := a.repo.FindWithFilter(GradeFilter{})
+	allGrades, err := a.repo.FindWithFilter(GradeFilter{})
 	if err != nil {
 		return nil, err
 	}
 
+	var grades []Grade
+	for _, g := range allGrades {
+		if g.IsPublished && g.DeletedAt == nil {
+			grades = append(grades, g)
+		}
+	}
+
 	vol := DataVolume{
 		TotalGrades:   len(grades),
-		TotalStudents: 0, // Need accurate count
+		TotalStudents: 0,
 	}
 
 	var summative []Grade
@@ -361,7 +369,7 @@ func (a *analyticsService) GetSchoolStatistics(year string) (*SchoolStatisticsRe
 	avg := a.calculator.CalculateAverage(summative)
 
 	return &SchoolStatisticsResponse{
-		ReportDate: "2026-01-31",
+		ReportDate: time.Now().Format("2006-01-02"),
 		DataVolume: vol,
 		Overall: GradeAnalysis{
 			Average: avg,

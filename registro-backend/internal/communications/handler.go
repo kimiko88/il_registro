@@ -76,12 +76,13 @@ func (h *Handler) ListBacheca(c *gin.Context) {
 
 func (h *Handler) ListCircolari(c *gin.Context) {
 	uid := c.GetString("user_id")
+	schoolID := c.GetString("school_id")
 	if uid == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 	year := c.Query("year")
-	msgs, err := h.service.ListCircolari(c.Request.Context(), uid, year)
+	msgs, err := h.service.ListCircolari(c.Request.Context(), schoolID, uid, year)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -115,7 +116,7 @@ func (h *Handler) Send(c *gin.Context) {
 	c.JSON(http.StatusCreated, msg)
 }
 
-// Delete verifies that the caller is the author of the message before deleting.
+// Delete verifies that the caller is the author or authorized admin of the message before deleting.
 func (h *Handler) Delete(c *gin.Context) {
 	uid := c.GetString("user_id")
 	if uid == "" {
@@ -123,8 +124,9 @@ func (h *Handler) Delete(c *gin.Context) {
 		return
 	}
 	role := c.GetString("role")
+	schoolID := c.GetString("school_id")
 	id := c.Param("id")
-	if err := h.service.DeleteMessage(c.Request.Context(), uid, role, id); err != nil {
+	if err := h.service.DeleteMessage(c.Request.Context(), uid, role, schoolID, id); err != nil {
 		if err.Error() == "forbidden" || strings.HasPrefix(err.Error(), "unauthorized") {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
@@ -224,6 +226,7 @@ func (h *Handler) Update(c *gin.Context) {
 		return
 	}
 	role := c.GetString("role")
+	schoolID := c.GetString("school_id")
 	var req struct {
 		Subject string `json:"subject"`
 		Body    string `json:"body"`
@@ -232,7 +235,7 @@ func (h *Handler) Update(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	if err := h.service.UpdateMessage(c.Request.Context(), uid, role, id, req.Subject, req.Body); err != nil {
+	if err := h.service.UpdateMessage(c.Request.Context(), uid, role, schoolID, id, req.Subject, req.Body); err != nil {
 		if errors.Is(err, ErrNotFound) || err.Error() == "communication not found" {
 			c.JSON(http.StatusNotFound, gin.H{"error": "communication not found"})
 			return

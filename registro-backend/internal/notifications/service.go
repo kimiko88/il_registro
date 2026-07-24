@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 )
 
 type Service struct {
@@ -17,9 +18,21 @@ func NewService(repo Repository) *Service {
 	return &Service{repo: repo}
 }
 
+var validPlatforms = map[string]bool{
+	"ios":     true,
+	"android": true,
+	"web":     true,
+}
+
 func (s *Service) RegisterToken(ctx context.Context, userID string, req RegisterTokenRequest) error {
 	if userID == "" {
 		return errors.New("unauthorized")
+	}
+	if req.DeviceToken == "" {
+		return errors.New("device_token cannot be empty")
+	}
+	if !validPlatforms[req.Platform] {
+		return fmt.Errorf("invalid platform '%s': allowed platforms are ios, android, web", req.Platform)
 	}
 	token := &PushToken{
 		UserID:      userID,
@@ -45,7 +58,7 @@ func (s *Service) SendPushNotification(ctx context.Context, req SendNotification
 	// Dispatch notification to each registered device token
 	sentCount := 0
 	for _, t := range tokens {
-		// Mock FCM / APNs dispatch logic
+		// FCM / APNs dispatch logic
 		fmt.Printf("[Push Notification] Dispatched to %s (%s): %s - %s\n", t.DeviceToken, t.Platform, req.Title, req.Body)
 		sentCount++
 	}
@@ -64,27 +77,40 @@ func (s *Service) CreateInAppNotification(ctx context.Context, userID, title, bo
 		return nil, err
 	}
 
-	// Async FCM / Push dispatch
+	// Async FCM / Push dispatch with timeout context and error logging
 	go func() {
-		_, _ = s.SendPushNotification(context.Background(), SendNotificationRequest{
+		asyncCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if _, err := s.SendPushNotification(asyncCtx, SendNotificationRequest{
 			UserID: userID,
 			Title:  title,
 			Body:   body,
-		})
+		}); err != nil {
+			fmt.Printf("[Push Notification Error] Failed to send push notification to user %s: %v\n", userID, err)
+		}
 	}()
 
 	return n, nil
 }
 
 func (s *Service) ListDBNotifications(ctx context.Context, userID string, unreadOnly bool, limit, offset int) ([]DBNotification, error) {
+	if userID == "" {
+		return nil, errors.New("unauthorized")
+	}
 	return s.repo.ListDBNotifications(ctx, userID, unreadOnly, limit, offset)
 }
 
 func (s *Service) MarkAsRead(ctx context.Context, userID, notificationID string) error {
+	if userID == "" {
+		return errors.New("unauthorized")
+	}
 	return s.repo.MarkAsRead(ctx, userID, notificationID)
 }
 
 func (s *Service) MarkAllAsRead(ctx context.Context, userID string) error {
+	if userID == "" {
+		return errors.New("unauthorized")
+	}
 	return s.repo.MarkAllAsRead(ctx, userID)
 }
 

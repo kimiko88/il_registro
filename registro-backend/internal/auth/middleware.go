@@ -64,11 +64,6 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 			}
 		}
 
-		// 3. Fallback to query parameter (e.g. legacy WebSockets)
-		if token == "" {
-			token = c.Query("token")
-		}
-
 		if token == "" {
 			c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "missing authorization token"})
 			c.Abort()

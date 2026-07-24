@@ -29,6 +29,13 @@ func NewService(r Repository) Service {
 }
 
 func (s *service) CreateLesson(teacherID string, req CreateLessonRequest) (*LessonResponse, error) {
+	if req.Duration <= 0 {
+		return nil, errors.New("duration must be greater than 0")
+	}
+	if req.Hour <= 0 {
+		return nil, errors.New("hour must be greater than 0")
+	}
+
 	date, err := time.Parse("2006-01-02", req.Date)
 	if err != nil {
 		return nil, fmt.Errorf("invalid date format: %w", err)
@@ -104,6 +111,11 @@ func (s *service) CreateHomework(teacherID string, req CreateHomeworkRequest) (*
 	dueDate, err := time.Parse("2006-01-02", req.DueDate)
 	if err != nil {
 		return nil, fmt.Errorf("invalid due_date format: %w", err)
+	}
+
+	today := time.Now().Truncate(24 * time.Hour)
+	if dueDate.Before(today) {
+		return nil, errors.New("due_date non può essere nel passato")
 	}
 
 	hw := &Homework{
@@ -184,7 +196,7 @@ func (s *service) UpdateLesson(teacherID, role, id string, req UpdateLessonReque
 	if err != nil {
 		return nil, err
 	}
-	if existing.TeacherID != teacherID && role != "admin" && role != "superadmin" {
+	if existing.TeacherID != teacherID && role != "admin" && role != "superadmin" && role != "secretary" && role != "segreteria" {
 		return nil, errors.New("unauthorized: cannot edit another teacher's lesson")
 	}
 
@@ -200,7 +212,7 @@ func (s *service) DeleteLesson(teacherID, role, id string) error {
 	if err != nil {
 		return err
 	}
-	if existing.TeacherID != teacherID && role != "admin" && role != "superadmin" {
+	if existing.TeacherID != teacherID && role != "admin" && role != "superadmin" && role != "secretary" && role != "segreteria" {
 		return errors.New("unauthorized: cannot delete another teacher's lesson")
 	}
 
@@ -212,7 +224,7 @@ func (s *service) UpdateHomework(teacherID, role, id string, req UpdateHomeworkR
 	if err != nil {
 		return nil, err
 	}
-	if existing.TeacherID != teacherID && role != "admin" && role != "superadmin" {
+	if existing.TeacherID != teacherID && role != "admin" && role != "superadmin" && role != "secretary" && role != "segreteria" {
 		return nil, errors.New("unauthorized: cannot edit another teacher's homework")
 	}
 
@@ -228,7 +240,7 @@ func (s *service) DeleteHomework(teacherID, role, id string) error {
 	if err != nil {
 		return err
 	}
-	if existing.TeacherID != teacherID && role != "admin" && role != "superadmin" {
+	if existing.TeacherID != teacherID && role != "admin" && role != "superadmin" && role != "secretary" && role != "segreteria" {
 		return errors.New("unauthorized: cannot delete another teacher's homework")
 	}
 
@@ -236,6 +248,13 @@ func (s *service) DeleteHomework(teacherID, role, id string) error {
 }
 
 func (s *service) GetTeacherDiary(teacherID string, fromDate, toDate string) ([]LessonResponse, error) {
+	if fromDate != "" && toDate != "" {
+		from, err1 := time.Parse("2006-01-02", fromDate)
+		to, err2 := time.Parse("2006-01-02", toDate)
+		if err1 == nil && err2 == nil && from.After(to) {
+			return nil, errors.New("fromDate cannot be after toDate")
+		}
+	}
 	lessons, err := s.repo.GetLessonsByTeacher(teacherID, fromDate, toDate)
 	if err != nil {
 		return nil, err

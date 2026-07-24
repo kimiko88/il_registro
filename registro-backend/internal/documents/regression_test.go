@@ -58,14 +58,15 @@ func TestVideoRegression_UpdatesOnApprovedDoc(t *testing.T) {
 
 	// Scenario: Trying to update an Approved document
 	doc := &Document{
-		ID:     "doc-123",
-		Status: StatusApproved,
-		Title:  "Approved Doc",
+		ID:       "doc-123",
+		SchoolID: "school-1",
+		Status:   StatusApproved,
+		Title:    "Approved Doc",
 	}
 
 	repo.On("FindByID", "doc-123").Return(doc, nil)
 
-	err := svc.UpdateDocument(ctx, "secretary", "user-1", "doc-123", UpdateDocumentRequest{})
+	err := svc.UpdateDocument(ctx, "secretary", "school-1", "user-1", "doc-123", UpdateDocumentRequest{})
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "cannot edit non-draft document")
 }
@@ -77,12 +78,13 @@ func TestVideoRegression_IllegalWorkflowTransition(t *testing.T) {
 
 	// Scenario: Trying to approve a Draft document directly (skipping Submit)
 	doc := &Document{
-		ID:     "doc-draft",
-		Status: StatusDraft,
+		ID:       "doc-draft",
+		SchoolID: "school-1",
+		Status:   StatusDraft,
 	}
 
 	repo.On("FindByID", "doc-draft").Return(doc, nil)
 
-	err := svc.ProcessWorkflow(ctx, "director", "doc-draft", WorkflowActionRequest{Action: "approve_director"})
+	err := svc.ProcessWorkflow(ctx, "admin", "school-1", "user-1", "doc-draft", WorkflowActionRequest{Action: "approve_director"})
 	assert.Error(t, err)
 }

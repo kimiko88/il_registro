@@ -51,13 +51,16 @@ func (s *Service) ListBacheca(ctx context.Context, schoolID, userID string) ([]*
 	return s.repo.ListBacheca(ctx, schoolID, userID)
 }
 
-func (s *Service) DeleteMessage(ctx context.Context, actorID string, actorRole string, id string) error {
+func (s *Service) DeleteMessage(ctx context.Context, actorID, actorRole, schoolID, id string) error {
 	msg, err := s.repo.Get(ctx, id)
 	if err != nil {
 		return err
 	}
 	if msg.SenderID != actorID && actorRole != "admin" && actorRole != "superadmin" {
 		return errors.New("unauthorized: cannot delete message of another user")
+	}
+	if actorRole != "superadmin" && msg.SchoolID != nil && schoolID != "" && *msg.SchoolID != schoolID {
+		return errors.New("unauthorized: cannot delete message of another school")
 	}
 	return s.repo.Delete(ctx, id)
 }
@@ -97,13 +100,16 @@ func (s *Service) GetMessageByID(ctx context.Context, userID, role, id string) (
 	return nil, errors.New("unauthorized: cannot access communication")
 }
 
-func (s *Service) UpdateMessage(ctx context.Context, actorID, actorRole, id, subject, body string) error {
+func (s *Service) UpdateMessage(ctx context.Context, actorID, actorRole, schoolID, id, subject, body string) error {
 	msg, err := s.repo.Get(ctx, id)
 	if err != nil {
 		return err
 	}
 	if msg.SenderID != actorID && actorRole != "admin" && actorRole != "superadmin" {
 		return errors.New("unauthorized: cannot edit message of another user")
+	}
+	if actorRole != "superadmin" && msg.SchoolID != nil && schoolID != "" && *msg.SchoolID != schoolID {
+		return errors.New("unauthorized: cannot edit message of another school")
 	}
 	return s.repo.Update(ctx, id, subject, body)
 }
@@ -120,6 +126,6 @@ func (s *Service) GetUnreadCount(ctx context.Context, userID string) (int, error
 	return s.repo.GetUnreadCount(ctx, userID)
 }
 
-func (s *Service) ListCircolari(ctx context.Context, userID, year string) ([]*Message, error) {
-	return s.repo.ListCircolari(ctx, userID, year)
+func (s *Service) ListCircolari(ctx context.Context, schoolID, userID, year string) ([]*Message, error) {
+	return s.repo.ListCircolari(ctx, schoolID, userID, year)
 }

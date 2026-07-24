@@ -33,7 +33,7 @@ func (s *Service) CreateSlot(ctx context.Context, teacherUserID, schoolID string
 	}
 
 	teacherProfileID, err := s.repo.GetTeacherProfileID(ctx, teacherUserID)
-	if err != nil {
+	if err != nil || teacherProfileID == "" {
 		teacherProfileID = teacherUserID
 	}
 
@@ -91,8 +91,20 @@ func (s *Service) CancelSlot(ctx context.Context, actorID, actorRole, slotID str
 }
 
 func (s *Service) BookSlot(ctx context.Context, parentUserID string, req CreateBookingRequest) (*ColloquioBooking, error) {
-	parentProfileID, err := s.repo.GetParentProfileID(ctx, parentUserID)
+	slot, err := s.repo.GetSlotByID(ctx, req.SlotID)
 	if err != nil {
+		return nil, fmt.Errorf("slot non trovato: %w", err)
+	}
+
+	if slot.IsCancelled {
+		return nil, errors.New("slot non disponibile per la prenotazione (cancellato)")
+	}
+	if slot.BookingCount >= slot.MaxBookings {
+		return nil, errors.New("slot esaurito: capienza massima raggiunta")
+	}
+
+	parentProfileID, err := s.repo.GetParentProfileID(ctx, parentUserID)
+	if err != nil || parentProfileID == "" {
 		parentProfileID = parentUserID
 	}
 
@@ -103,7 +115,7 @@ func (s *Service) BookSlot(ctx context.Context, parentUserID string, req CreateB
 	}
 	if req.StudentID != nil && *req.StudentID != "" {
 		stdProfileID, err := s.repo.GetStudentProfileID(ctx, *req.StudentID)
-		if err != nil {
+		if err != nil || stdProfileID == "" {
 			stdProfileID = *req.StudentID
 		}
 		booking.StudentID = &stdProfileID
@@ -143,8 +155,21 @@ func (s *Service) UpdateBookingStatus(ctx context.Context, actorID, actorRole, b
 	parentProfileID, _ := s.repo.GetParentProfileID(ctx, actorID)
 	isOwner := (booking.ParentID != nil && (*booking.ParentID == actorID || *booking.ParentID == parentProfileID))
 
-	if !isOwner && actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin" {
-		return ErrUnauthorized
+	if !isOwner {
+		if actorRole != "admin" && actorRole != "superadmin" {
+			if actorRole != "teacher" {
+				return ErrUnauthorized
+			}
+			// For teachers: verify ownership of the underlying slot
+			slot, err := s.repo.GetSlotByID(ctx, booking.SlotID)
+			if err != nil {
+				return err
+			}
+			teacherProfileID, _ := s.repo.GetTeacherProfileID(ctx, actorID)
+			if slot.TeacherID != actorID && slot.TeacherID != teacherProfileID {
+				return ErrUnauthorized
+			}
+		}
 	}
 
 	return s.repo.UpdateBookingStatus(ctx, bookingID, req.Status, actorID, req.Reason)
@@ -154,6 +179,9 @@ func (s *Service) PatchSlot(ctx context.Context, actorID, actorRole, slotID, sta
 	slot, err := s.repo.GetSlotByID(ctx, slotID)
 	if err != nil {
 		return err
+	}
+	if slot.BookingCount > 0 {
+		return errors.New("impossibile modificare l'orario di uno slot con prenotazioni attive")
 	}
 	teacherProfileID, _ := s.repo.GetTeacherProfileID(ctx, actorID)
 	if slot.TeacherID != actorID && slot.TeacherID != teacherProfileID && actorRole != "admin" && actorRole != "superadmin" {

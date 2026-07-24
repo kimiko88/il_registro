@@ -32,12 +32,15 @@ func NewService(repo Repository, tokenManager *jwt.TokenManager, mfaService *MFA
 	}
 }
 
+// Pre-computed dummy bcrypt hash (cost 12) used to normalize timing when user email does not exist.
+const dummyBcryptHash = "$2a$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeg6Lruj3vjPGga31lW"
+
 // Register creates a new user account.
 // Input validation and RBAC checks are performed by the handler layer
 // (ValidateRegisterRequest in validator.go) before this method is called.
 func (s *Service) Register(ctx context.Context, req *RegisterRequest) (*User, error) {
-	if len(req.Password) < 8 {
-		return nil, ErrPasswordTooShort
+	if err := NewPasswordValidator().Validate(req.Password); err != nil {
+		return nil, err
 	}
 
 	// Check if email already exists
@@ -100,25 +103,31 @@ func (s *Service) Login(ctx context.Context, req *LoginRequest, ipAddress, userA
 	// Get user
 	user, err := s.repo.GetUserByEmail(ctx, req.Email)
 	if err != nil {
+		// Run bcrypt against dummy hash to prevent timing attacks that enumerate valid user accounts
+		_ = bcrypt.CompareHashAndPassword([]byte(dummyBcryptHash), []byte(req.Password))
 		s.recordFailedAttempt(ctx, req.Email, ipAddress)
 		return nil, ErrInvalidCredentials
 	}
 
-	// Check if user is active before slow bcrypt check to avoid timing attacks
+	// Verify password BEFORE active check to maintain constant response timing
+	bcryptErr := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password))
+	if bcryptErr != nil {
+		s.recordFailedAttempt(ctx, req.Email, ipAddress)
+		return nil, ErrInvalidCredentials
+	}
+
 	if !user.IsActive {
+		s.recordFailedAttempt(ctx, req.Email, ipAddress)
 		return nil, ErrUserInactive
 	}
 
-	// Verify password
-	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password))
-	if err != nil {
-		s.recordFailedAttempt(ctx, req.Email, ipAddress)
-		return nil, ErrInvalidCredentials
-	}
-
-	// Check if password has expired (90 days for admin/secretary/superadmin)
-	if user.Role == "admin" || user.Role == "superadmin" || user.Role == "secretary" {
-		if user.PasswordChangedAt != nil && time.Since(*user.PasswordChangedAt) > 90*24*time.Hour {
+	// Check if password has expired (90 days for privileged roles: superadmin, admin, segreteria, teacher)
+	if user.Role == RoleSuperAdmin || user.Role == RoleAdmin || user.Role == RoleSegreteria || user.Role == RoleTeacher {
+		if user.PasswordChangedAt != nil {
+			if time.Since(*user.PasswordChangedAt) > 90*24*time.Hour {
+				return nil, ErrPasswordExpired
+			}
+		} else if !user.CreatedAt.IsZero() && time.Since(user.CreatedAt) > 90*24*time.Hour {
 			return nil, ErrPasswordExpired
 		}
 	}
@@ -136,7 +145,7 @@ func (s *Service) Login(ctx context.Context, req *LoginRequest, ipAddress, userA
 		if err != nil {
 			return nil, err
 		}
-		if !s.mfaService.VerifyTOTP(secret, req.MFAToken) {
+		if !s.mfaService.VerifyTOTPUser(user.ID, secret, req.MFAToken) {
 			return nil, ErrInvalidMFAToken
 		}
 	}
@@ -377,7 +386,7 @@ func (s *Service) VerifyMFA(ctx context.Context, userID, token string) error {
 		return err
 	}
 
-	if !s.mfaService.VerifyTOTP(secret, token) {
+	if !s.mfaService.VerifyTOTPUser(userID, secret, token) {
 		return ErrInvalidMFAToken
 	}
 
@@ -402,6 +411,7 @@ func (s *Service) RequestPasswordReset(ctx context.Context, email string) error 
 		return err
 	}
 	if recentResets >= 3 {
+		logger.Log.Warnf("SECURITY AUDIT: Password reset rate limit hit for email %s (user %s)", email, user.ID)
 		// Silently drop the request — do not reveal the throttle to the caller.
 		return nil
 	}
@@ -470,6 +480,11 @@ func (s *Service) ResetPassword(ctx context.Context, token, newPassword string) 
 		return err
 	}
 
+	// Mark token as used FIRST to prevent race conditions or double execution
+	if err := s.repo.UsePasswordResetToken(ctx, prt.ID); err != nil {
+		return err
+	}
+
 	// Update password
 	if err := s.repo.UpdatePassword(ctx, prt.UserID, string(passwordHash)); err != nil {
 		return err
@@ -477,11 +492,6 @@ func (s *Service) ResetPassword(ctx context.Context, token, newPassword string) 
 
 	// Add to password history
 	_ = s.repo.AddPasswordHistory(ctx, prt.UserID, string(passwordHash))
-
-	// Mark token as used
-	if err := s.repo.UsePasswordResetToken(ctx, prt.ID); err != nil {
-		return err
-	}
 
 	// Revoke all refresh tokens for security
 	_ = s.repo.RevokeAllUserTokens(ctx, prt.UserID)

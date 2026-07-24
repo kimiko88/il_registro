@@ -8,11 +8,11 @@ export function useAuth() {
     const router = useRouter()
     const { user, isAuthenticated, refreshToken } = storeToRefs(authStore)
 
-    async function login(email, password) {
+    async function login(email, password, rememberMe = false) {
         try {
             const response = await authService.login(email, password)
             const { user: userData, access_token: token, refresh_token: refreshTokenValue } = response
-            authStore.login(userData, token, refreshTokenValue)
+            authStore.login(userData, token, refreshTokenValue, rememberMe)
 
             // Redirect based on role
             switch (userData.role) {

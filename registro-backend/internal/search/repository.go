@@ -18,7 +18,20 @@ func NewRepository(db *sql.DB) Repository {
 	return &PostgresRepository{db: db}
 }
 
+var validSearchFilterTypes = map[string]bool{
+	"":               true,
+	"users":          true,
+	"students":       true,
+	"teachers":       true,
+	"communications": true,
+	"lessons":        true,
+}
+
 func (r *PostgresRepository) GlobalSearch(ctx context.Context, schoolID, q, filterType string) ([]SearchResultItem, error) {
+	if !validSearchFilterTypes[filterType] {
+		return nil, fmt.Errorf("invalid search filter_type: %s", filterType)
+	}
+
 	var results []SearchResultItem
 	searchPattern := "%" + q + "%"
 
@@ -79,15 +92,17 @@ func (r *PostgresRepository) GlobalSearch(ctx context.Context, schoolID, q, filt
 		}
 	}
 
-	// 3. Search Lessons
+	// 3. Search Lessons (enforce school_id tenant isolation via JOIN on classes)
 	if filterType == "" || filterType == "lessons" {
 		lessonQuery := `
-			SELECT id::text, topic, COALESCE(notes, ''), type
-			FROM class_lessons
-			WHERE topic ILIKE $1 OR notes ILIKE $1
+			SELECT cl.id::text, cl.topic, COALESCE(cl.notes, ''), cl.type
+			FROM class_lessons cl
+			JOIN classes c ON cl.class_id = c.id
+			WHERE (c.school_id = $1::uuid OR $1 = '')
+			  AND (cl.topic ILIKE $2 OR cl.notes ILIKE $2)
 			LIMIT 20
 		`
-		rows, err := r.db.QueryContext(ctx, lessonQuery, searchPattern)
+		rows, err := r.db.QueryContext(ctx, lessonQuery, schoolID, searchPattern)
 		if err == nil {
 			defer rows.Close()
 			for rows.Next() {

@@ -38,11 +38,22 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 	CheckOrigin: func(r *http.Request) bool {
 		origin := r.Header.Get("Origin")
-		if origin == "" {
-			// No Origin header: same-origin request or non-browser client
+		allowed := allowedOrigins()
+		if len(allowed) == 0 {
+			// Default local dev fallback: match request host if origin is present
+			if origin == "" {
+				return true
+			}
+			return strings.Contains(origin, r.Host)
+		}
+		if allowed["*"] {
 			return true
 		}
-		return allowedOrigins()[origin]
+		if origin == "" {
+			// Reject missing Origin header when restrictive allowed origins are configured
+			return false
+		}
+		return allowed[origin]
 	},
 }
 

@@ -2,7 +2,17 @@ package documents
 
 import (
 	"context"
+	"crypto"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/sha256"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/base64"
+	"encoding/pem"
+	"math/big"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -107,14 +117,34 @@ func TestService_SignDocument(t *testing.T) {
 	svc := NewService(mockRepo)
 
 	docID := "doc-1"
-	doc := &Document{ID: docID, Status: StatusApproved, CurrentVersion: 1}
+	doc := &Document{ID: docID, SchoolID: "school-1", Status: StatusApproved, CurrentVersion: 1}
 
 	mockRepo.On("FindByID", docID).Return(doc, nil)
+	mockRepo.On("GetContent", docID, 1).Return("sample document content", nil)
 	mockRepo.On("GetVersions", docID).Return([]DocumentVersion{{ID: "v1"}}, nil)
 	mockRepo.On("AddSignature", mock.Anything).Return(nil)
 
-	req := SignDocumentRequest{CertificateData: "cert", SignatureData: "sig"}
-	err := svc.SignDocument(context.Background(), "user1", docID, req)
+	// Generate a valid RSA key and self-signed certificate for real crypto verification test
+	priv, err := rsa.GenerateKey(rand.Reader, 2048)
+	assert.NoError(t, err)
+
+	tmpl := x509.Certificate{
+		SerialNumber: big.NewInt(1),
+		Subject:      pkix.Name{CommonName: "Test Signer"},
+		NotBefore:    time.Now().Add(-1 * time.Hour),
+		NotAfter:     time.Now().Add(24 * time.Hour),
+	}
+	certBytes, err := x509.CreateCertificate(rand.Reader, &tmpl, &tmpl, &priv.PublicKey, priv)
+	assert.NoError(t, err)
+
+	pemCert := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: certBytes})
+
+	digest := sha256.Sum256([]byte("sample document content"))
+	sig, err := rsa.SignPKCS1v15(rand.Reader, priv, crypto.SHA256, digest[:])
+	assert.NoError(t, err)
+
+	req := SignDocumentRequest{CertificateData: string(pemCert), SignatureData: base64.StdEncoding.EncodeToString(sig)}
+	err = svc.SignDocument(context.Background(), "admin", "school-1", "user1", docID, req)
 	assert.NoError(t, err)
 }
 

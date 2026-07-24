@@ -86,11 +86,14 @@ func (h *Handler) Login(c *gin.Context) {
 
 	authResp, err := h.service.Login(c.Request.Context(), &req, ipAddress, userAgent)
 	if err != nil {
-		statusCode := http.StatusUnauthorized
-		if err == ErrTooManyAttempts {
+		var statusCode int
+		switch err {
+		case ErrTooManyAttempts:
 			statusCode = http.StatusTooManyRequests
-		} else if err == ErrMFARequired {
+		case ErrMFARequired:
 			statusCode = http.StatusPreconditionRequired
+		default:
+			statusCode = http.StatusUnauthorized
 		}
 		c.JSON(statusCode, ErrorResponse{Error: err.Error()})
 		return

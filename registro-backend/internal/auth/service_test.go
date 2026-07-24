@@ -176,6 +176,8 @@ func (m *MockRepository) RevokeAllUserTokens(ctx context.Context, userID string)
 
 // Helper to create service with mocks
 func setupTest(t *testing.T) (*Service, *MockRepository) {
+	t.Helper()
+
 	// Initialize logger to avoid nil panics
 	logger.Init("info")
 
@@ -322,6 +324,9 @@ func TestLogin(t *testing.T) {
 
 		mockRepo.On("GetRecentLoginAttempts", mock.Anything, req.Email, mock.Anything, mock.Anything).Return(0, nil).Once()
 		mockRepo.On("GetUserByEmail", mock.Anything, req.Email).Return(inactiveUser, nil).Once()
+		mockRepo.On("RecordLoginAttempt", mock.Anything, mock.MatchedBy(func(a *LoginAttempt) bool {
+			return a.Success == false
+		})).Return(nil).Once()
 
 		resp, err := s.Login(context.Background(), req, "127.0.0.1", "test-agent")
 

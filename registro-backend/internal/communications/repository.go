@@ -25,7 +25,7 @@ type Repository interface {
 	MarkAsRead(ctx context.Context, communicationID, userID, ipAddress string) error
 	GetUnreadUsers(ctx context.Context, communicationID string) ([]string, error)
 	GetUnreadCount(ctx context.Context, userID string) (int, error)
-	ListCircolari(ctx context.Context, userID, year string) ([]*Message, error)
+	ListCircolari(ctx context.Context, schoolID, userID, year string) ([]*Message, error)
 }
 
 type PostgresRepository struct {
@@ -211,6 +211,8 @@ func (r *PostgresRepository) GetSignatureReport(ctx context.Context, communicati
 		if err := rows.Scan(&sig.ID, &sig.CommunicationID, &sig.UserID, &sig.SignedAt, &sig.IPAddress, &sig.UserName, &sig.UserRole); err != nil {
 			return nil, err
 		}
+		// SEC-31: Redact personal IP address telemetry from API reports
+		sig.IPAddress = ""
 		report.Signatures = append(report.Signatures, sig)
 	}
 
@@ -309,17 +311,18 @@ func (r *PostgresRepository) GetUnreadCount(ctx context.Context, userID string) 
 	return count, err
 }
 
-func (r *PostgresRepository) ListCircolari(ctx context.Context, userID, year string) ([]*Message, error) {
+func (r *PostgresRepository) ListCircolari(ctx context.Context, schoolID, userID, year string) ([]*Message, error) {
 	query := `
 		SELECT c.id, c.school_id, c.sender_id, c.receiver_ids, c.subject, c.body, c.attachment_url, c.type,
 		       COALESCE(c.requires_signature, false), c.signature_deadline, c.created_at,
-		       EXISTS(SELECT 1 FROM communication_signatures cs WHERE cs.communication_id = c.id AND cs.user_id = $1::uuid) AS is_signed
+		       EXISTS(SELECT 1 FROM communication_signatures cs WHERE cs.communication_id = c.id AND cs.user_id = $2::uuid) AS is_signed
 		FROM communications c
 		WHERE c.type = 'circular'
-		  AND ($2 = '' OR EXTRACT(YEAR FROM c.created_at)::text = $2)
+		  AND ($1 = '' OR c.school_id IS NULL OR c.school_id = $1::uuid)
+		  AND ($3 = '' OR EXTRACT(YEAR FROM c.created_at)::text = $3)
 		ORDER BY c.created_at DESC
 	`
-	rows, err := r.db.QueryContext(ctx, query, userID, year)
+	rows, err := r.db.QueryContext(ctx, query, schoolID, userID, year)
 	if err != nil {
 		return nil, err
 	}

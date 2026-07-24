@@ -35,14 +35,12 @@ export const authGuard = (to, from, next) => {
 
     // Role-based access control
     if (to.meta) {
-        if (to.meta.roles && Array.isArray(to.meta.roles)) {
-            if (!to.meta.roles.includes(currentRole)) {
-                console.warn(`Access denied: role '${currentRole}' is not allowed for path '${to.path}'`)
-                next(getUserDashboard(currentRole))
-                return
-            }
-        } else if (to.meta.role && to.meta.role !== currentRole) {
-            console.warn(`Access denied: role '${currentRole}' does not match required role '${to.meta.role}'`)
+        const requiredRoles = Array.isArray(to.meta.roles)
+            ? to.meta.roles
+            : (to.meta.role ? [to.meta.role] : null)
+
+        if (requiredRoles && !requiredRoles.includes(currentRole)) {
+            console.warn(`Access denied: role '${currentRole}' is not allowed for path '${to.path}'`)
             next(getUserDashboard(currentRole))
             return
         }

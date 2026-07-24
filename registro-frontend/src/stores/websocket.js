@@ -119,8 +119,17 @@ export const useWebSocketStore = defineStore('websocket', () => {
         }, delay)
     }
 
+const escapeHtml = (str) => {
+    if (!str) return ''
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;')
+}
+
     function handleMessage(message) {
-        console.log('WS Message:', message)
         if (!message || !message.type) return
 
         const payload = message.payload || {}
@@ -128,7 +137,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
         switch (message.type) {
             case 'GRADE_ADDED':
                 Notify.create({
-                    message: `Nuovo voto registrato: ${payload.grade_value || ''} (${payload.subject_name || 'Materia'})`,
+                    message: `Nuovo voto registrato: ${escapeHtml(payload.grade_value)} (${escapeHtml(payload.subject_name || 'Materia')})`,
                     color: 'info',
                     icon: 'school',
                     position: 'top-right'
@@ -137,7 +146,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
             case 'ATTENDANCE_LATE':
             case 'ATTENDANCE_ABSENT':
                 Notify.create({
-                    message: `Aggiornamento presenze: ${payload.status || 'Presenza registrata'}`,
+                    message: `Aggiornamento presenze: ${escapeHtml(payload.status || 'Presenza registrata')}`,
                     color: 'warning',
                     icon: 'warning',
                     position: 'top-right'
@@ -146,7 +155,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
             case 'NEW_COMMUNICATION':
             case 'COMMUNICATION_PUBLISHED':
                 Notify.create({
-                    message: `Nuova comunicazione: ${payload.title || 'Circolare scolastica'}`,
+                    message: `Nuova comunicazione: ${escapeHtml(payload.title || 'Circolare scolastica')}`,
                     color: 'primary',
                     icon: 'mail',
                     position: 'top-right'
@@ -154,7 +163,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
                 break
             case 'NOTE_ADDED':
                 Notify.create({
-                    message: `Nuova nota disciplinare registrata: ${payload.title || ''}`,
+                    message: `Nuova nota disciplinare registrata: ${escapeHtml(payload.title)}`,
                     color: 'negative',
                     icon: 'report_problem',
                     position: 'top-right'
@@ -162,7 +171,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
                 break
             case 'SCRUTINY_PUBLISHED':
                 Notify.create({
-                    message: `Esito scrutinio pubblicato per ${payload.student_name || 'lo studente'}`,
+                    message: `Esito scrutinio pubblicato per ${escapeHtml(payload.student_name || 'lo studente')}`,
                     color: 'positive',
                     icon: 'assignment_turned_in',
                     position: 'top-right'
@@ -170,7 +179,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
                 break
             case 'GOAL_UPDATED':
                 Notify.create({
-                    message: `Obiettivo aggiornato: ${payload.title || ''}`,
+                    message: `Obiettivo aggiornato: ${escapeHtml(payload.title)}`,
                     color: 'secondary',
                     icon: 'star',
                     position: 'top-right'
@@ -179,7 +188,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
             case 'SLOT_BOOKED':
             case 'SLOT_CANCELLED':
                 Notify.create({
-                    message: `Aggiornamento colloquio: ${payload.message || message.type}`,
+                    message: `Aggiornamento colloquio: ${escapeHtml(payload.message || message.type)}`,
                     color: 'accent',
                     icon: 'event',
                     position: 'top-right'
@@ -188,7 +197,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
             default:
                 if (payload.title || payload.body) {
                     Notify.create({
-                        message: payload.title ? `${payload.title}: ${payload.body || ''}` : payload.body,
+                        message: payload.title ? `${escapeHtml(payload.title)}: ${escapeHtml(payload.body)}` : escapeHtml(payload.body),
                         color: 'info',
                         icon: 'notifications',
                         position: 'top-right'

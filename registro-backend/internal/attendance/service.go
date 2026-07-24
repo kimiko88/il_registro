@@ -2,6 +2,7 @@ package attendance
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -80,15 +81,17 @@ func (s *service) MarkAttendance(ctx context.Context, teacherID, schoolID string
 	if schoolID == "" {
 		return fmt.Errorf("school_id mancante nel token")
 	}
-	if teacherID != "" {
-		isAssigned, err := s.repo.IsTeacherAssignedToClass(ctx, teacherID, req.ClassID)
-		if err != nil {
-			return fmt.Errorf("errore verifica docente per classe: %w", err)
-		}
-		if !isAssigned {
-			return fmt.Errorf("forbidden: docente non assegnato alla classe")
-		}
+	if teacherID == "" {
+		return fmt.Errorf("forbidden: teacherID mancante")
 	}
+	isAssigned, err := s.repo.IsTeacherAssignedToClass(ctx, teacherID, req.ClassID)
+	if err != nil {
+		return fmt.Errorf("errore verifica docente per classe: %w", err)
+	}
+	if !isAssigned {
+		return fmt.Errorf("forbidden: docente non assegnato alla classe")
+	}
+
 	date, err := time.Parse("2006-01-02", req.Date)
 	if err != nil {
 		return fmt.Errorf("data non valida '%s': usa il formato YYYY-MM-DD", req.Date)
@@ -131,15 +134,17 @@ func (s *service) MarkBulk(ctx context.Context, teacherID, schoolID string, req 
 	if schoolID == "" {
 		return fmt.Errorf("school_id mancante nel token")
 	}
-	if teacherID != "" {
-		isAssigned, err := s.repo.IsTeacherAssignedToClass(ctx, teacherID, req.ClassID)
-		if err != nil {
-			return fmt.Errorf("errore verifica docente per classe: %w", err)
-		}
-		if !isAssigned {
-			return fmt.Errorf("forbidden: docente non assegnato alla classe")
-		}
+	if teacherID == "" {
+		return fmt.Errorf("forbidden: teacherID mancante")
 	}
+	isAssigned, err := s.repo.IsTeacherAssignedToClass(ctx, teacherID, req.ClassID)
+	if err != nil {
+		return fmt.Errorf("errore verifica docente per classe: %w", err)
+	}
+	if !isAssigned {
+		return fmt.Errorf("forbidden: docente non assegnato alla classe")
+	}
+
 	date, err := time.Parse("2006-01-02", req.Date)
 	if err != nil {
 		return fmt.Errorf("data non valida '%s': usa il formato YYYY-MM-DD", req.Date)
@@ -178,9 +183,16 @@ func (s *service) UpdateAttendance(ctx context.Context, teacherID, schoolID, id 
 		return err
 	}
 
-	// Ownership check: il docente deve appartenere alla stessa scuola del record.
+	// Ownership check: il docente deve appartenere alla stessa scuola ed essere assegnato alla classe del record.
 	if att.SchoolID != schoolID {
 		return fmt.Errorf("forbidden: impossibile modificare presenze di un'altra scuola")
+	}
+	if teacherID == "" {
+		return fmt.Errorf("forbidden: teacherID mancante")
+	}
+	isAssigned, err := s.repo.IsTeacherAssignedToClass(ctx, teacherID, att.ClassID)
+	if err != nil || !isAssigned {
+		return fmt.Errorf("forbidden: docente non assegnato alla classe del record di presenza")
 	}
 
 	if req.Status != nil {
@@ -282,6 +294,13 @@ func (s *service) GetStudentAttendance(ctx context.Context, studentID string, fr
 // Justifications
 
 func (s *service) RequestJustification(ctx context.Context, parentID string, req JustificationRequest) error {
+	if s.userRepo != nil {
+		isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, req.StudentID)
+		if err != nil || !isGuardian {
+			return fmt.Errorf("unauthorized: parent is not a guardian of this student")
+		}
+	}
+
 	start, err := time.Parse("2006-01-02", req.StartDate)
 	if err != nil {
 		return fmt.Errorf("start_date non valida '%s': usa il formato YYYY-MM-DD", req.StartDate)
@@ -384,16 +403,23 @@ func (s *service) GetPendingJustifications(ctx context.Context, classID string) 
 
 // DeleteJustification elimina fisicamente la giustifica previa verifica dell'autorizzazione dell'actorID.
 func (s *service) DeleteJustification(ctx context.Context, actorID string, justificationID string) error {
+	if actorID == "" {
+		return errors.New("unauthorized: actorID non fornito")
+	}
+
 	j, err := s.repo.FindJustificationByID(justificationID)
 	if err != nil {
 		return fmt.Errorf("giustifica non trovata: %w", err)
 	}
 
-	if actorID != "" && actorID != j.ParentID && actorID != j.StudentID {
+	if actorID != j.ParentID && actorID != j.StudentID {
 		if s.userRepo != nil {
 			actorUser, err := s.userRepo.GetByID(ctx, actorID)
 			if err != nil {
 				return fmt.Errorf("unauthorized: impossibile verificare permessi dell'utente: %w", err)
+			}
+			if actorUser.Role == "teacher" {
+				return fmt.Errorf("forbidden: i docenti non possono eliminare le giustifiche create dai genitori")
 			}
 			studentUser, err := s.userRepo.GetByID(ctx, j.StudentID)
 			if err != nil {
@@ -427,12 +453,13 @@ func (s *service) GetStudentSummary(ctx context.Context, studentID, schoolID str
 	if totalDays == 0 {
 		// Fallback: conta i giorni distinti presenti nel DB per questo studente.
 		totalDays, err = s.repo.CountDistinctDays(studentID)
-		if err != nil || totalDays == 0 {
-			totalDays = 1 // Evita divisione per zero.
-		}
 	}
 
-	stats.AbsenceRate = (float64(stats.TotalAbsences) / float64(totalDays)) * 100
+	if totalDays > 0 {
+		stats.AbsenceRate = (float64(stats.TotalAbsences) / float64(totalDays)) * 100
+	} else {
+		stats.AbsenceRate = 0
+	}
 
 	if stats.AbsenceRate > 25.0 {
 		stats.RiskLevel = "Critical"
@@ -523,13 +550,21 @@ func (s *service) GetChildAttendanceTrends(ctx context.Context, parentID, studen
 	}
 	for _, k := range monthKeys {
 		tr := monthlyMap[k]
-		totalEventCount := tr.Absences + tr.Lates + tr.EarlyExits
-		rate := 100.0 - (float64(tr.Absences) * 5.0)
-		if rate < 0 {
-			rate = 0
+		totalEntries := 0
+		presentCount := 0
+		for _, a := range atts {
+			if a.Date.Format("2006-01") == k {
+				totalEntries++
+				if a.Status == StatusPresent || a.Status == StatusLate || a.Status == StatusEarlyExit {
+					presentCount++
+				}
+			}
+		}
+		rate := 100.0
+		if totalEntries > 0 {
+			rate = (float64(presentCount) / float64(totalEntries)) * 100.0
 		}
 		tr.PresenceRate = rate
-		_ = totalEventCount
 		resp.Trends = append(resp.Trends, *tr)
 	}
 

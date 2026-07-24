@@ -116,7 +116,7 @@ func (c *Calculator) CalculateStandardDeviation(grades []Grade) float64 {
 	for _, v := range vals {
 		varianceSum += math.Pow(v-mean, 2)
 	}
-	return math.Sqrt(varianceSum / float64(len(vals)))
+	return math.Sqrt(varianceSum / float64(len(vals)-1))
 }
 
 func (c *Calculator) CalculateBellCurve(grades []Grade) (mean, stdDev, skewness, kurtosis float64) {

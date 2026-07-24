@@ -97,7 +97,7 @@ func (s *Service) DeleteAgendaItem(ctx context.Context, actorID, actorRole, id s
 	return s.repo.Delete(ctx, id)
 }
 
-func (s *Service) GetCalendar(ctx context.Context, schoolID, userID string, filter CalendarFilter) ([]*AgendaItem, error) {
+func (s *Service) GetCalendar(ctx context.Context, schoolID, userID, role string, filter CalendarFilter) ([]*AgendaItem, error) {
 	if schoolID == "" {
 		return nil, fmt.Errorf("school_id required")
 	}
@@ -111,11 +111,18 @@ func (s *Service) GetCalendar(ctx context.Context, schoolID, userID string, filt
 		filter.To = filter.From.AddDate(0, 3, 0)
 	}
 
-	filter.StudentID = userID
+	if role == "student" || role == "parent" {
+		if filter.StudentID == "" {
+			filter.StudentID = userID
+		}
+	}
 	return s.repo.ListCalendar(ctx, schoolID, filter)
 }
 
 func (s *Service) SetTaskCompletion(ctx context.Context, studentID, itemID string, completed bool) error {
+	if studentID == "" {
+		return errors.New("unauthorized: studentID required")
+	}
 	_, err := s.repo.GetByID(ctx, itemID)
 	if err != nil {
 		return err

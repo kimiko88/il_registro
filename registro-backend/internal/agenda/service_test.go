@@ -98,7 +98,7 @@ func TestCalendarQuery(t *testing.T) {
 
 	mockRepo.On("ListCalendar", mock.Anything, "school-1", mock.Anything).Return(expectedItems, nil).Once()
 
-	items, err := svc.GetCalendar(context.Background(), "school-1", "user-1", CalendarFilter{
+	items, err := svc.GetCalendar(context.Background(), "school-1", "user-1", "student", CalendarFilter{
 		From: time.Now(),
 		To:   time.Now().AddDate(0, 1, 0),
 	})

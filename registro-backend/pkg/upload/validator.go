@@ -41,14 +41,15 @@ var allowedMIMETypes = map[string]bool{
 // It reads the first 512 bytes to detect the magic number, then seeks back to the
 // beginning so the caller can still read the full file content.
 func ValidateUpload(file multipart.File, header *multipart.FileHeader) error {
-	// 1. Size check
-	if header.Size > MaxUploadSize {
+	// 1. Size check from header (fast rejection if header states oversized)
+	if header != nil && header.Size > MaxUploadSize {
 		return ErrFileTooLarge
 	}
 
-	// 2. Read the first 512 bytes to detect the real MIME type from magic bytes.
+	// 2. Read the first 512 bytes using LimitReader to ensure actual payload doesn't bypass limit
+	limitedReader := io.LimitReader(file, MaxUploadSize+1)
 	head := make([]byte, 512)
-	n, err := file.Read(head)
+	n, err := limitedReader.Read(head)
 	if err != nil && err != io.EOF {
 		return errors.New("errore nella lettura del file")
 	}

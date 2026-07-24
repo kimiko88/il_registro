@@ -24,7 +24,10 @@ export const notificationService = {
     }
     const permission = await Notification.requestPermission()
     if (permission === 'granted') {
-      const token = 'web_push_' + Math.random().toString(36).substring(2, 15)
+      const uuid = (typeof crypto !== 'undefined' && crypto.randomUUID)
+        ? crypto.randomUUID()
+        : Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, '0')).join('')
+      const token = 'web_push_' + uuid
       await this.registerPushToken(token, 'web')
       return token
     }

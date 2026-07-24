@@ -141,13 +141,24 @@ func (r *PostgresRepository) Update(ctx context.Context, id string, req *UpdateS
 	if req.Email != nil {
 		query += fmt.Sprintf(", email = $%d", argIndex)
 		args = append(args, *req.Email)
+		argIndex++
 	}
 
-	query += fmt.Sprintf(" WHERE id = $%d", argIndex)
+	query += fmt.Sprintf(" WHERE id = $%d AND deleted_at IS NULL", argIndex)
 	args = append(args, id)
 
-	_, err := r.db.ExecContext(ctx, query, args...)
-	return err
+	res, err := r.db.ExecContext(ctx, query, args...)
+	if err != nil {
+		return err
+	}
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return fmt.Errorf("school not found")
+	}
+	return nil
 }
 
 // Delete soft-deletes a school

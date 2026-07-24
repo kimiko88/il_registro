@@ -660,6 +660,15 @@ const openResetPwd = (user) => {
 };
 
 const handleResetPwd = async () => {
+    if (!newPassword.value || newPassword.value.length < 8) {
+        $q.notify({ type: 'warning', message: 'La password deve contenere almeno 8 caratteri' });
+        return;
+    }
+    const pwdRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+    if (!pwdRegex.test(newPassword.value)) {
+        $q.notify({ type: 'warning', message: 'La password deve contenere una maiuscola, una minuscola e un numero' });
+        return;
+    }
     try {
         await userService.forceResetPassword(resetTargetId.value, newPassword.value);
         $q.notify({ type: 'positive', message: 'Password resettata con successo' });
@@ -765,11 +774,27 @@ const closeImportModal = () => {
     fetchUsers();
 };
 
+const sanitizeCSVCell = (val) => {
+    if (val === null || val === undefined) return '""';
+    let str = String(val);
+    if (/^[=+\-@\t\r]/.test(str)) {
+        str = "'" + str;
+    }
+    return `"${str.replace(/"/g, '""')}"`;
+};
+
 const exportUsers = () => {
-    const content = [
-        'ID,Nome,Cognome,Email,Ruolo,Classe',
-        ...filteredUsers.value.map(u => `${u.id},${u.first_name},${u.last_name},${u.email},${u.role},${u.class_name || ''}`)
-    ].join('\r\n');
+    const header = ['ID', 'Nome', 'Cognome', 'Email', 'Ruolo', 'Classe'].map(sanitizeCSVCell).join(',');
+    const rows = filteredUsers.value.map(u => [
+        u.id,
+        u.first_name,
+        u.last_name,
+        u.email,
+        u.role,
+        u.class_name || ''
+    ].map(sanitizeCSVCell).join(','));
+
+    const content = [header, ...rows].join('\r\n');
 
     const status = exportFile(
         'utenti_esportazione.csv',

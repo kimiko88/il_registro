@@ -136,11 +136,14 @@ func (r *repository) Delete(docID string) error {
 
 func (r *repository) ListAll(schoolID string, docType *DocType) ([]Document, error) {
 	query := `SELECT id, school_id, title, type, student_id, class_id, status, current_version, is_signed, signed_by, signed_at, created_by, created_at, updated_at, deleted_at FROM documents_enhanced WHERE school_id = $1 AND deleted_at IS NULL`
+	args := []interface{}{schoolID}
+
 	if docType != nil {
-		query += ` AND type = '` + string(*docType) + `'`
+		query += ` AND type = $2`
+		args = append(args, string(*docType))
 	}
 	query += ` ORDER BY updated_at DESC`
-	return r.queryDocs(query, schoolID)
+	return r.queryDocs(query, args...)
 }
 
 func (r *repository) FindByID(id string) (*Document, error) {

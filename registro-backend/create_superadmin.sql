@@ -1,9 +1,13 @@
 -- Create SuperAdmin User
+-- ⚠️ ATTENZIONE SICUREZZA:
+-- Sostituisci SOSTITUISCI_CON_PASSWORD_HASH_BCRYPT con un hash bcrypt generato per una password forte prima di eseguire questo script!
+-- Esempio per generare un hash:
+--   go run ./cmd/genhash -password "LaTuaPasswordSicura123!"
 INSERT INTO users (id, email, password_hash, first_name, last_name, role, email_verified, is_active, created_at, updated_at)
 VALUES (
     '00000000-0000-0000-0000-000000000000',
     'superadmin@school.it',
-    '$2a$10$QqzPU.dKZ.t3CTvqS3SaeuHRpYL1JcbiaIxu2jcUJb4H63DMQmib.', -- "password"
+    'SOSTITUISCI_CON_PASSWORD_HASH_BCRYPT',
     'Super',
     'Admin',
     'superadmin',
