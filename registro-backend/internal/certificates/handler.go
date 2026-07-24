@@ -81,6 +81,7 @@ func (h *Handler) Generate(c *gin.Context) {
 func (h *Handler) DownloadPDF(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
+	schoolID := c.GetString("school_id")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
@@ -91,9 +92,23 @@ func (h *Handler) DownloadPDF(c *gin.Context) {
 	}
 
 	id := c.Param("id")
+	cert, err := h.service.GetCertificateByID(c.Request.Context(), id)
+	if err != nil || cert == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "certificate not found"})
+		return
+	}
+	if role != "superadmin" && schoolID != "" && cert.SchoolID != schoolID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: certificate belongs to another school"})
+		return
+	}
+	if role == "student" && cert.StudentID != userID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: cannot access certificate of another student"})
+		return
+	}
+
 	pdfBytes, err := h.service.GeneratePDFBytes(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "certificate or PDF not found"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 

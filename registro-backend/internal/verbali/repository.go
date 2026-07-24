@@ -46,7 +46,7 @@ func (r *PostgresRepository) ListMeetings(ctx context.Context, schoolID, classID
 	query := `
 		SELECT id, school_id, class_id, title, date, start_time, end_time, COALESCE(agenda, ''), created_by, created_at
 		FROM council_meetings
-		WHERE school_id = $1::uuid AND ($2 = '' OR class_id = $2::uuid)
+		WHERE school_id = $1::uuid AND ($2 = '' OR class_id = NULLIF($2, '')::uuid)
 		ORDER BY date DESC, start_time DESC
 	`
 	rows, err := r.db.QueryContext(ctx, query, schoolID, classID)

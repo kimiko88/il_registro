@@ -121,5 +121,11 @@ func sanitize(s string) string {
 	s = strings.ReplaceAll(s, "ì", "i'")
 	s = strings.ReplaceAll(s, "ò", "o'")
 	s = strings.ReplaceAll(s, "ù", "u'")
+	s = strings.ReplaceAll(s, "À", "A'")
+	s = strings.ReplaceAll(s, "È", "E'")
+	s = strings.ReplaceAll(s, "É", "E'")
+	s = strings.ReplaceAll(s, "Ì", "I'")
+	s = strings.ReplaceAll(s, "Ò", "O'")
+	s = strings.ReplaceAll(s, "Ù", "U'")
 	return s
 }

@@ -2,6 +2,7 @@ package classes
 
 import (
 	"context"
+	"fmt"
 )
 
 type Service struct {
@@ -39,10 +40,13 @@ func (s *Service) GetClass(ctx context.Context, id string) (*Class, error) {
 	return s.repo.Get(ctx, id)
 }
 
-func (s *Service) UpdateClass(ctx context.Context, id string, req CreateClassRequest) (*Class, error) {
+func (s *Service) UpdateClass(ctx context.Context, schoolID, id string, req CreateClassRequest) (*Class, error) {
 	c, err := s.repo.Get(ctx, id)
 	if err != nil {
 		return nil, err
+	}
+	if c.SchoolID != schoolID {
+		return nil, fmt.Errorf("forbidden: class belongs to another school")
 	}
 
 	c.Name = req.Name

@@ -213,7 +213,7 @@ func (r *PostgresRepository) GetClassGuardians(ctx context.Context, classID stri
 	}
 	query := `
 		SELECT DISTINCT u.id, u.first_name, u.last_name, u.email, COALESCE(u.phone_number, ''),
-		       su.id, su.first_name || ' ' || su.last_name AS student_name
+		       su.id, su.first_name || ' ' || su.last_name AS student_name, su.last_name AS s_last, su.first_name AS s_first
 		FROM students st
 		JOIN users su ON su.id = st.user_id
 		JOIN student_parents sp ON (sp.student_id = st.id OR sp.student_id = su.id)
@@ -231,7 +231,8 @@ func (r *PostgresRepository) GetClassGuardians(ctx context.Context, classID stri
 	var result []GuardianInfo
 	for rows.Next() {
 		var g GuardianInfo
-		if err := rows.Scan(&g.GuardianID, &g.FirstName, &g.LastName, &g.Email, &g.Phone, &g.StudentID, &g.StudentName); err != nil {
+		var sLast, sFirst string
+		if err := rows.Scan(&g.GuardianID, &g.FirstName, &g.LastName, &g.Email, &g.Phone, &g.StudentID, &g.StudentName, &sLast, &sFirst); err != nil {
 			return nil, err
 		}
 		result = append(result, g)

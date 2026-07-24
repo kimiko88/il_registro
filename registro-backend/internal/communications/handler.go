@@ -197,12 +197,13 @@ func (h *Handler) GetSignatureReport(c *gin.Context) {
 func (h *Handler) GetByID(c *gin.Context) {
 	uid := c.GetString("user_id")
 	role := c.GetString("role")
+	schoolID := c.GetString("school_id")
 	if uid == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 	id := c.Param("id")
-	msg, err := h.service.GetMessageByID(c.Request.Context(), uid, role, id)
+	msg, err := h.service.GetMessageByID(c.Request.Context(), uid, role, schoolID, id)
 	if err != nil {
 		if errors.Is(err, ErrNotFound) || err.Error() == "communication not found" {
 			c.JSON(http.StatusNotFound, gin.H{"error": "communication not found"})

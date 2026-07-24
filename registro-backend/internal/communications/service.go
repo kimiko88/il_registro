@@ -18,6 +18,10 @@ func NewService(repo Repository) *Service {
 }
 
 func (s *Service) SendMessage(ctx context.Context, senderID string, req CreateMessageRequest) (*Message, error) {
+	if req.Subject == "" || req.Body == "" {
+		return nil, errors.New("subject and body are required")
+	}
+
 	msg := &Message{
 		SchoolID:          req.SchoolID,
 		SenderID:          senderID,
@@ -86,10 +90,13 @@ func (s *Service) GetSignatureReport(ctx context.Context, actorRole, communicati
 	return s.repo.GetSignatureReport(ctx, communicationID)
 }
 
-func (s *Service) GetMessageByID(ctx context.Context, userID, role, id string) (*Message, error) {
+func (s *Service) GetMessageByID(ctx context.Context, userID, role, schoolID, id string) (*Message, error) {
 	msg, err := s.repo.Get(ctx, id)
 	if err != nil {
 		return nil, err
+	}
+	if role != "superadmin" && msg.SchoolID != nil && schoolID != "" && *msg.SchoolID != schoolID {
+		return nil, errors.New("unauthorized: cannot access message of another school")
 	}
 	if role == "admin" || role == "superadmin" || msg.Type == "bacheca" || msg.SenderID == userID {
 		return msg, nil
@@ -103,6 +110,9 @@ func (s *Service) GetMessageByID(ctx context.Context, userID, role, id string) (
 }
 
 func (s *Service) UpdateMessage(ctx context.Context, actorID, actorRole, schoolID, id, subject, body string) error {
+	if subject == "" || body == "" {
+		return errors.New("subject and body are required")
+	}
 	msg, err := s.repo.Get(ctx, id)
 	if err != nil {
 		return err

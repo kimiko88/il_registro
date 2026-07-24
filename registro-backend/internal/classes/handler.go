@@ -100,17 +100,12 @@ func (h *Handler) Update(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	existing, err := h.service.GetClass(c.Request.Context(), c.Param("id"))
+	class, err := h.service.UpdateClass(c.Request.Context(), schoolID, c.Param("id"), req)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "class not found"})
-		return
-	}
-	if existing.SchoolID != schoolID {
-		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
-		return
-	}
-	class, err := h.service.UpdateClass(c.Request.Context(), c.Param("id"), req)
-	if err != nil {
+		if err.Error() == "forbidden: class belongs to another school" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -186,6 +181,16 @@ func (h *Handler) GetClassSubjects(c *gin.Context) {
 	schoolID := getSchoolID(c)
 	if userID == "" || schoolID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	class, err := h.service.GetClass(c.Request.Context(), c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "class not found"})
+		return
+	}
+	if class.SchoolID != schoolID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 

@@ -119,7 +119,10 @@ func (s *Service) GetCalendar(ctx context.Context, schoolID, userID, role string
 	return s.repo.ListCalendar(ctx, schoolID, filter)
 }
 
-func (s *Service) SetTaskCompletion(ctx context.Context, studentID, itemID string, completed bool) error {
+func (s *Service) SetTaskCompletion(ctx context.Context, studentID, role, itemID string, completed bool) error {
+	if role != "student" {
+		return errors.New("unauthorized: task completion can only be updated by a student")
+	}
 	if studentID == "" {
 		return errors.New("unauthorized: studentID required")
 	}

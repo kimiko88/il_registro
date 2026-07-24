@@ -20,11 +20,11 @@ func (v *Validator) ValidateEntry(a *Attendance) error {
 		return errors.New("cannot mark attendance in future")
 	}
 
-	// 2. Retroactive Limit (e.g. 3 days) - Configurable?
-	// limit := now.AddDate(0, 0, -3)
-	// if date.Before(limit) {
-	// 	return errors.New("cannot edit attendance older than 3 days")
-	// }
+	// 2. Retroactive Limit (30 days limit for regular modifications)
+	limit := now.AddDate(0, 0, -30)
+	if date.Before(limit) {
+		return errors.New("cannot edit attendance older than 30 days")
+	}
 
 	// 3. Status logic
 	if a.Status == StatusLate && a.Hour == nil {

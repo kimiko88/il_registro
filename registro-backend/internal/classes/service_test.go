@@ -271,7 +271,7 @@ func TestService_UpdateClass(t *testing.T) {
 		{
 			name: "successful update",
 			mockFn: func(m *MockRepository) {
-				existing := &Class{ID: "class-123", Name: "1A"}
+				existing := &Class{ID: "class-123", SchoolID: "school-1", Name: "1A"}
 				m.On("Get", mock.Anything, "class-123").Return(existing, nil)
 				m.On("Update", mock.Anything, mock.AnythingOfType("*classes.Class")).Return(nil)
 			},
@@ -287,7 +287,7 @@ func TestService_UpdateClass(t *testing.T) {
 		{
 			name: "update error",
 			mockFn: func(m *MockRepository) {
-				existing := &Class{ID: "class-123", Name: "1A"}
+				existing := &Class{ID: "class-123", SchoolID: "school-1", Name: "1A"}
 				m.On("Get", mock.Anything, "class-123").Return(existing, nil)
 				m.On("Update", mock.Anything, mock.AnythingOfType("*classes.Class")).Return(errors.New("update failed"))
 			},
@@ -306,7 +306,7 @@ func TestService_UpdateClass(t *testing.T) {
 			if tt.name == "class not found" {
 				classID = "class-999"
 			}
-			class, err := service.UpdateClass(context.Background(), classID, req)
+			class, err := service.UpdateClass(context.Background(), "school-1", classID, req)
 
 			if tt.wantErr {
 				assert.Error(t, err)

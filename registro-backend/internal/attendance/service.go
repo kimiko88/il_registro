@@ -336,34 +336,7 @@ func (s *service) ProcessJustification(ctx context.Context, teacherID, justifica
 		return fmt.Errorf("la giustifica %s è già stata elaborata (stato attuale: %s)", justificationID, j.Status)
 	}
 
-	if approve {
-		j.Status = JustificationApproved
-		now := time.Now()
-		j.ApprovedBy = &teacherID
-		j.ApprovedAt = &now
-
-		// Auto-update: marca come giustificate tutte le assenze nel range di date.
-		for d := j.StartDate; !d.After(j.EndDate); d = d.AddDate(0, 0, 1) {
-			atts, findErr := s.repo.FindByStudent(j.StudentID, d, d)
-			if findErr != nil {
-				continue
-			}
-			for i := range atts {
-				if atts[i].Status == StatusAbsent && !atts[i].Justified {
-					atts[i].Justified = true
-					atts[i].JustifiedBy = &teacherID
-					atts[i].JustifiedAt = &now
-					if updateErr := s.repo.Update(&atts[i]); updateErr != nil {
-						return fmt.Errorf("failed to update attendance record %s: %w", atts[i].ID, updateErr)
-					}
-				}
-			}
-		}
-	} else {
-		j.Status = JustificationRejected
-	}
-
-	if err := s.repo.UpdateJustification(j); err != nil {
+	if err := s.repo.ProcessJustificationTx(ctx, j, teacherID, approve); err != nil {
 		return err
 	}
 
@@ -457,9 +430,10 @@ func (s *service) GetStudentSummary(ctx context.Context, studentID, schoolID str
 	if totalDays == 0 {
 		// Fallback: conta i giorni distinti presenti nel DB per questo studente.
 		fallbackDays, countErr := s.repo.CountDistinctDays(studentID)
-		if countErr == nil {
-			totalDays = fallbackDays
+		if countErr != nil {
+			return nil, fmt.Errorf("failed to count distinct teaching days for student %s: %w", studentID, countErr)
 		}
+		totalDays = fallbackDays
 	}
 
 	if totalDays > 0 {

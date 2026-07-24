@@ -266,6 +266,13 @@ func (s *Service) UpdateAdminUser(ctx context.Context, callerRole, adminID strin
 		return nil, errors.New("unauthorized: only superadmin can update admin users")
 	}
 
+	if req.Password != nil && *req.Password != "" {
+		pv := auth.NewPasswordValidator()
+		if err := pv.Validate(*req.Password); err != nil {
+			return nil, err
+		}
+	}
+
 	admin, err := s.repo.UpdateAdminUser(ctx, adminID, req)
 	if err != nil {
 		return nil, err
@@ -279,6 +286,14 @@ func (s *Service) DeleteAdminUser(ctx context.Context, adminID, currentUserID st
 	// Prevent self-deletion
 	if adminID == currentUserID {
 		return ErrCannotDeleteSelf
+	}
+
+	target, err := s.repo.GetAdminUserByID(ctx, adminID)
+	if err != nil {
+		return fmt.Errorf("admin user not found: %w", err)
+	}
+	if target.Role != "admin" && target.Role != "superadmin" {
+		return errors.New("unauthorized: target user is not an admin user")
 	}
 
 	return s.repo.DeleteAdminUser(ctx, adminID)

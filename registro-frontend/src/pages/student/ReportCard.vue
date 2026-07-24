@@ -267,7 +267,7 @@ async function loadReport() {
 
 async function loadAttendanceStats() {
   try {
-    const res = await api.get('/attendance/my-summary')
+    const res = await api.get('/attendance/my-attendance/summary')
     if (res.data) {
       attendanceStats.absences = res.data.absences || 0
       attendanceStats.lates = res.data.lates || 0

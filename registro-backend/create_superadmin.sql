@@ -7,7 +7,7 @@ INSERT INTO users (id, email, password_hash, first_name, last_name, role, email_
 VALUES (
     '00000000-0000-0000-0000-000000000000',
     'superadmin@school.it',
-    'SOSTITUISCI_CON_PASSWORD_HASH_BCRYPT',
+    '$2a$10$QqzPU.dKZ.t3CTvqS3SaeuHRpYL1JcbiaIxu2jcUJb4H63DMQmib.', -- "password"
     'Super',
     'Admin',
     'superadmin',

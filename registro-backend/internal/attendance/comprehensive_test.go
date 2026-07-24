@@ -27,6 +27,10 @@ func (m *MockRepo) Update(a *Attendance) error {
 	args := m.Called(a)
 	return args.Error(0)
 }
+func (m *MockRepo) ProcessJustificationTx(ctx context.Context, j *Justification, teacherID string, approve bool) error {
+	args := m.Called(ctx, j, teacherID, approve)
+	return args.Error(0)
+}
 func (m *MockRepo) FindByID(id string) (*Attendance, error) {
 	args := m.Called(id)
 	if args.Get(0) == nil {
@@ -161,10 +165,7 @@ func TestService_ProcessJustification(t *testing.T) {
 	j := &Justification{ID: jid, Status: JustificationPending}
 
 	mockRepo.On("FindJustificationByID", jid).Return(j, nil)
-	mockRepo.On("FindByStudent", mock.Anything, mock.Anything, mock.Anything).Return([]Attendance{}, nil)
-	mockRepo.On("UpdateJustification", mock.MatchedBy(func(j *Justification) bool {
-		return j.Status == JustificationApproved && j.ApprovedBy != nil
-	})).Return(nil)
+	mockRepo.On("ProcessJustificationTx", mock.Anything, j, "T1", true).Return(nil)
 
 	err := svc.ProcessJustification(context.Background(), "T1", jid, true)
 	assert.NoError(t, err)

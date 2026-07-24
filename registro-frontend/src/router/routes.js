@@ -48,7 +48,7 @@ export default [
             {
                 path: 'admin/settings',
                 component: () => import('@/pages/admin/Settings.vue'),
-                meta: { roles: ['superadmin'] }
+                meta: { roles: ['superadmin', 'admin'] }
             },
             {
                 path: 'admin/scheduler',

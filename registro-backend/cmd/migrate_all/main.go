@@ -67,6 +67,9 @@ func main() {
 		sslmode = os.Getenv("DB_SSLMODE")
 	}
 
+	host = strings.TrimPrefix(host, "https://")
+	host = strings.TrimPrefix(host, "http://")
+
 	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s", user, pass, host, port, dbname, sslmode)
 
 	fmt.Printf("Connecting to %s:%s/%s...\n", host, port, dbname)

@@ -732,8 +732,8 @@ func (r *repository) GetWeightConfigs(schoolID, subjectID, classID string) ([]Gr
 		SELECT id, school_id, subject_id, class_id, grade_category, evaluation_type, weight, created_by
 		FROM grade_weight_configs
 		WHERE school_id = $1::uuid
-		  AND ($2 = '' OR subject_id = $2::uuid)
-		  AND ($3 = '' OR class_id = $3::uuid)
+		  AND ($2 = '' OR subject_id = NULLIF($2, '')::uuid)
+		  AND ($3 = '' OR class_id = NULLIF($3, '')::uuid)
 		ORDER BY grade_category, evaluation_type
 	`
 	rows, err := r.db.Query(query, schoolID, subjectID, classID)

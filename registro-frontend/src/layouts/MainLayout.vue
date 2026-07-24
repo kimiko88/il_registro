@@ -61,43 +61,77 @@
     >
       <div class="column full-height no-wrap">
         <!-- User Profile Section -->
-        <div class="q-pa-lg bg-primary text-white relative-position overflow-hidden" v-if="userName" role="region" aria-label="Profilo utente">
-          <div class="row items-center q-mb-sm relative-position" style="z-index: 1">
-            <q-avatar size="56px" color="white" text-color="primary" class="q-mr-md shadow-soft" aria-hidden="true">
-              <q-icon name="person" size="32px" />
+        <div class="q-pa-md bg-primary text-white relative-position overflow-hidden" v-if="userName" role="region" aria-label="Profilo utente">
+          <div class="row items-center relative-position" style="z-index: 1">
+            <q-avatar size="42px" color="white" text-color="primary" class="q-mr-md shadow-soft" aria-hidden="true">
+              <q-icon name="person" size="24px" />
             </q-avatar>
             <div class="col">
-              <div class="text-h6 text-weight-bold no-wrap" :aria-label="'Utente connesso: ' + userName">{{ userName }}</div>
+              <div class="text-subtitle1 text-weight-bold no-wrap ellipsis" :aria-label="'Utente connesso: ' + userName">{{ userName }}</div>
               <div class="text-caption opacity-80 text-uppercase letter-spacing-1" :aria-label="'Ruolo: ' + roleLabel">{{ roleLabel }}</div>
             </div>
           </div>
           <!-- Decorative Circle -->
-          <div class="absolute-bottom-right q-mr-n-lg q-mb-n-lg" style="width: 120px; height: 120px; border-radius: 50%; background: rgba(255,255,255,0.1)" aria-hidden="true"></div>
+          <div class="absolute-bottom-right q-mr-n-lg q-mb-n-lg" style="width: 90px; height: 90px; border-radius: 50%; background: rgba(255,255,255,0.1)" aria-hidden="true"></div>
         </div>
 
         <!-- Menu Items -->
         <q-scroll-area class="col">
-          <div class="q-pa-md">
-            <div class="text-overline text-grey-5 q-px-md q-mb-sm letter-spacing-2" aria-hidden="true">MENU PRINCIPALE</div>
-            <q-list padding class="q-gutter-y-xs" role="menubar" aria-label="Navigazione principale">
-              <q-item 
-                v-for="item in menuItems"
-                :key="item.path"
-                clickable 
-                :to="item.path"
-                :exact="item.exact !== undefined ? item.exact : false"
-                active-class="active-menu-item"
-                class="rounded-lg q-mx-sm transition-all"
-                role="menuitem"
-                :aria-label="item.label"
-              >
-                <q-item-section avatar>
-                  <q-icon :name="item.icon" size="22px" aria-hidden="true" />
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label class="text-weight-bold">{{ item.label }}</q-item-label>
-                </q-item-section>
-              </q-item>
+          <div class="q-pa-sm">
+            <div class="text-overline text-grey-5 q-px-sm q-mb-xs letter-spacing-2" aria-hidden="true">MENU PRINCIPALE</div>
+            <q-list dense padding class="q-gutter-y-xs" role="menubar" aria-label="Navigazione principale">
+              <template v-for="(item, idx) in menuItems" :key="item.path || item.category || idx">
+                <!-- Group Category with children -->
+                <q-expansion-item
+                  v-if="item.children"
+                  group="menu-group"
+                  :icon="item.icon"
+                  :label="item.category"
+                  dense
+                  header-class="text-weight-bold text-slate-700 rounded-lg"
+                  :default-opened="isCategoryActive(item)"
+                >
+                  <q-list dense class="q-pl-sm q-gutter-y-xs">
+                    <q-item
+                      v-for="child in item.children"
+                      :key="child.path"
+                      clickable
+                      :to="child.path"
+                      :exact="child.exact !== undefined ? child.exact : false"
+                      active-class="active-menu-item"
+                      class="rounded-lg transition-all"
+                      role="menuitem"
+                      :aria-label="child.label"
+                    >
+                      <q-item-section avatar min-width="32px">
+                        <q-icon :name="child.icon" size="18px" aria-hidden="true" />
+                      </q-item-section>
+                      <q-item-section>
+                        <q-item-label class="text-weight-medium">{{ child.label }}</q-item-label>
+                      </q-item-section>
+                    </q-item>
+                  </q-list>
+                </q-expansion-item>
+
+                <!-- Single Item -->
+                <q-item
+                  v-else
+                  clickable
+                  :to="item.path"
+                  :exact="item.exact !== undefined ? item.exact : false"
+                  active-class="active-menu-item"
+                  class="rounded-lg transition-all"
+                  role="menuitem"
+                  :aria-label="item.label"
+                >
+                  <q-item-section avatar min-width="32px">
+                    <q-icon :name="item.icon" size="20px" aria-hidden="true" />
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label class="text-weight-bold">{{ item.label }}</q-item-label>
+                  </q-item-section>
+                </q-item>
+              </template>
             </q-list>
           </div>
         </q-scroll-area>
@@ -252,6 +286,11 @@ watch(userRole, (newRole) => {
     menuItems.value = []
   }
 }, { immediate: true })
+
+const isCategoryActive = (category) => {
+  if (!category || !category.children) return false
+  return category.children.some(child => route.path === child.path || (child.path !== '/' && route.path.startsWith(child.path)))
+}
 
 function toggleLeftDrawer() {
   leftDrawerOpen.value = !leftDrawerOpen.value

@@ -103,6 +103,7 @@ type CreateAdminRequest struct {
 type UpdateAdminRequest struct {
 	FirstName string  `json:"first_name" binding:"omitempty,min=2,max=100"`
 	LastName  string  `json:"last_name" binding:"omitempty,min=2,max=100"`
+	Password  *string `json:"password" binding:"omitempty,min=8"`
 	SchoolID  *string `json:"school_id"`
 	IsActive  *bool   `json:"is_active"`
 }

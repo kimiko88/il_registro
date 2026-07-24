@@ -40,11 +40,11 @@ var upgrader = websocket.Upgrader{
 		origin := r.Header.Get("Origin")
 		allowed := allowedOrigins()
 		if len(allowed) == 0 {
-			// Default local dev fallback: match request host if origin is present
+			// Default local dev fallback: allow localhost / 127.0.0.1 origins or matching host
 			if origin == "" {
 				return true
 			}
-			return strings.Contains(origin, r.Host)
+			return strings.Contains(origin, "localhost") || strings.Contains(origin, "127.0.0.1") || strings.Contains(origin, r.Host)
 		}
 		if allowed["*"] {
 			return true
@@ -147,7 +147,12 @@ func (h *Handler) Listen(c *gin.Context) {
 		}
 	}
 
-	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+	var responseHeader http.Header
+	if secProto := c.Writer.Header().Get("Sec-WebSocket-Protocol"); secProto != "" {
+		responseHeader = http.Header{"Sec-WebSocket-Protocol": []string{secProto}}
+	}
+
+	conn, err := upgrader.Upgrade(c.Writer, c.Request, responseHeader)
 	if err != nil {
 		log.Println("ws upgrade error:", err)
 		return

@@ -22,6 +22,7 @@ type Repository interface {
 	// Justifications
 	CreateJustification(j *Justification) error
 	UpdateJustification(j *Justification) error
+	ProcessJustificationTx(ctx context.Context, j *Justification, teacherID string, approve bool) error
 	FindJustificationByID(id string) (*Justification, error)
 	FindPendingJustifications(classID string) ([]Justification, error)
 	DeleteJustification(id string) error
@@ -254,6 +255,43 @@ func (r *repository) UpdateJustification(j *Justification) error {
 	query := `UPDATE justifications SET status=$1, approved_by=$2::uuid, approved_at=$3, updated_at=NOW() WHERE id=$4::uuid`
 	_, err := r.db.Exec(query, j.Status, j.ApprovedBy, j.ApprovedAt, j.ID)
 	return err
+}
+
+func (r *repository) ProcessJustificationTx(ctx context.Context, j *Justification, teacherID string, approve bool) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	now := time.Now()
+	if approve {
+		j.Status = JustificationApproved
+		j.ApprovedBy = &teacherID
+		j.ApprovedAt = &now
+
+		queryJust := `UPDATE justifications SET status=$1, approved_by=$2::uuid, approved_at=$3, updated_at=NOW() WHERE id=$4::uuid`
+		if _, err := tx.ExecContext(ctx, queryJust, j.Status, j.ApprovedBy, j.ApprovedAt, j.ID); err != nil {
+			return fmt.Errorf("failed to update justification: %w", err)
+		}
+
+		queryAtt := `
+			UPDATE attendance 
+			SET justified = true, justified_by = $1::uuid, justified_at = $2, updated_at = NOW() 
+			WHERE student_id = $3::uuid AND date >= $4 AND date <= $5 AND status = 'Absent'
+		`
+		if _, err := tx.ExecContext(ctx, queryAtt, teacherID, now, j.StudentID, j.StartDate, j.EndDate); err != nil {
+			return fmt.Errorf("failed to update attendance records: %w", err)
+		}
+	} else {
+		j.Status = JustificationRejected
+		queryJust := `UPDATE justifications SET status=$1, updated_at=NOW() WHERE id=$2::uuid`
+		if _, err := tx.ExecContext(ctx, queryJust, j.Status, j.ID); err != nil {
+			return fmt.Errorf("failed to update justification: %w", err)
+		}
+	}
+
+	return tx.Commit()
 }
 
 func (r *repository) FindJustificationByID(id string) (*Justification, error) {

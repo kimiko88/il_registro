@@ -100,7 +100,7 @@ func (r *PostgresRepository) ListBacheca(ctx context.Context, schoolID, userID s
 		       EXISTS(SELECT 1 FROM communication_signatures cs WHERE cs.communication_id = c.id AND cs.user_id = $2::uuid) AS is_signed
 		FROM communications c
 		WHERE (c.type IN ('circular', 'notice', 'bacheca'))
-		  AND ($1 = '' OR c.school_id IS NULL OR c.school_id = $1::uuid)
+		  AND ($1 = '' OR c.school_id IS NULL OR c.school_id = NULLIF($1, '')::uuid)
 		  AND (array_length(c.receiver_ids, 1) IS NULL OR array_length(c.receiver_ids, 1) = 0 OR $2::text = ANY(c.receiver_ids) OR c.sender_id = $2::uuid)
 		ORDER BY c.created_at DESC
 	`
@@ -318,7 +318,7 @@ func (r *PostgresRepository) ListCircolari(ctx context.Context, schoolID, userID
 		       EXISTS(SELECT 1 FROM communication_signatures cs WHERE cs.communication_id = c.id AND cs.user_id = $2::uuid) AS is_signed
 		FROM communications c
 		WHERE c.type = 'circular'
-		  AND ($1 = '' OR c.school_id IS NULL OR c.school_id = $1::uuid)
+		  AND ($1 = '' OR c.school_id IS NULL OR c.school_id = NULLIF($1, '')::uuid)
 		  AND ($3 = '' OR EXTRACT(YEAR FROM c.created_at)::text = $3)
 		ORDER BY c.created_at DESC
 	`

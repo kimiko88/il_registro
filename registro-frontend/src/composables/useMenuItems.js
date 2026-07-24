@@ -25,37 +25,76 @@ export function useMenuItems(role) {
         ],
         secretary: [
             { label: 'Dashboard', icon: 'dashboard', path: '/', exact: true },
-            { label: 'Classi', icon: 'room', path: '/secretary/classes' },
-            { label: 'Gruppi Linguistici', icon: 'groups', path: '/secretary/groups' },
-            { label: 'Documenti', icon: 'description', path: '/secretary/documents' },
-            { label: 'Certificati', icon: 'workspace_premium', path: '/secretary/certificates' },
-            { label: 'Audit Log', icon: 'security', path: '/secretary/audit-log' },
-            { label: 'Studenti', icon: 'school', path: '/secretary/students' },
-            { label: 'Utenti', icon: 'people', path: '/secretary/users' },
-            { label: 'Comunicazioni', icon: 'email', path: '/secretary/communications' },
-            { label: 'Report', icon: 'assessment', path: '/secretary/reports' },
-            { label: 'PCTO', icon: 'work', path: '/secretary/pcto' },
-            { label: 'Libri di Testo', icon: 'auto_stories', path: '/secretary/textbooks' },
-            { label: 'Scrutinio', icon: 'analytics', path: '/secretary/scrutiny' },
-            { label: 'Impostazioni', icon: 'settings', path: '/secretary/settings' }
+            {
+                category: 'Anagrafiche & Classi',
+                icon: 'school',
+                children: [
+                    { label: 'Studenti', icon: 'school', path: '/secretary/students' },
+                    { label: 'Utenti', icon: 'people', path: '/secretary/users' },
+                    { label: 'Classi', icon: 'room', path: '/secretary/classes' },
+                    { label: 'Gruppi Linguistici', icon: 'groups', path: '/secretary/groups' }
+                ]
+            },
+            {
+                category: 'Atti & Certificati',
+                icon: 'folder_shared',
+                children: [
+                    { label: 'Documenti', icon: 'description', path: '/secretary/documents' },
+                    { label: 'Certificati', icon: 'workspace_premium', path: '/secretary/certificates' },
+                    { label: 'Libri di Testo', icon: 'auto_stories', path: '/secretary/textbooks' },
+                    { label: 'Riunioni', icon: 'groups', path: '/secretary/meetings' },
+                    { label: 'Audit Log', icon: 'security', path: '/secretary/audit-log' }
+                ]
+            },
+            {
+                category: 'Servizi & Report',
+                icon: 'manage_accounts',
+                children: [
+                    { label: 'Comunicazioni', icon: 'email', path: '/secretary/communications' },
+                    { label: 'Report', icon: 'assessment', path: '/secretary/reports' },
+                    { label: 'PCTO', icon: 'work', path: '/secretary/pcto' },
+                    { label: 'Scrutinio', icon: 'analytics', path: '/secretary/scrutiny' },
+                    { label: 'Impostazioni', icon: 'settings', path: '/secretary/settings' }
+                ]
+            }
         ],
         teacher: [
             { label: 'Dashboard', icon: 'dashboard', path: '/', exact: true },
-            { label: 'Le Mie Classi', icon: 'class', path: '/teacher/classes' },
-            { label: 'Gruppi Linguistici', icon: 'groups', path: '/teacher/groups' },
-            { label: 'Coordinamento', icon: 'co_present', path: '/teacher/coordinator' },
-            { label: 'Voti', icon: 'grade', path: '/teacher/grades' },
-            { label: 'Registro Classe', icon: 'menu_book', path: '/teacher/lessons' },
-            { label: 'Didattica', icon: 'folder_shared', path: '/teacher/didactics' },
-            { label: 'Orario Lezioni', icon: 'schedule', path: '/teacher/timetable' },
-            { label: 'Scrutinio', icon: 'analytics', path: '/teacher/scrutiny' },
-            { label: 'Presenze', icon: 'how_to_reg', path: '/teacher/attendance' },
-            { label: 'Documenti', icon: 'description', path: '/teacher/documents' },
-            { label: 'Colloqui', icon: 'event', path: '/teacher/colloqui' },
-            { label: 'Agenda', icon: 'edit_calendar', path: '/teacher/agenda' },
-            { label: 'Note Disciplinari', icon: 'assignment_late', path: '/teacher/notes' },
-            { label: 'Rubriche Valutative', icon: 'fact_check', path: '/teacher/rubrics' },
-            { label: 'Comunicazioni', icon: 'email', path: '/teacher/communications' }
+            {
+                category: 'Didattica & Valutazione',
+                icon: 'menu_book',
+                children: [
+                    { label: 'Le Mie Classi', icon: 'class', path: '/teacher/classes' },
+                    { label: 'Registro Classe', icon: 'menu_book', path: '/teacher/lessons' },
+                    { label: 'Voti', icon: 'grade', path: '/teacher/grades' },
+                    { label: 'Presenze', icon: 'how_to_reg', path: '/teacher/attendance' },
+                    { label: 'Didattica', icon: 'folder_shared', path: '/teacher/didactics' },
+                    { label: 'Scrutinio', icon: 'analytics', path: '/teacher/scrutiny' },
+                    { label: 'Rubriche Valutative', icon: 'fact_check', path: '/teacher/rubrics' },
+                    { label: 'Coordinamento', icon: 'co_present', path: '/teacher/coordinator' }
+                ]
+            },
+            {
+                category: 'Organizzazione & Orario',
+                icon: 'event',
+                children: [
+                    { label: 'Orario Lezioni', icon: 'schedule', path: '/teacher/timetable' },
+                    { label: 'Agenda', icon: 'edit_calendar', path: '/teacher/agenda' },
+                    { label: 'Colloqui', icon: 'event', path: '/teacher/colloqui' },
+                    { label: 'Sostituzioni', icon: 'swap_horiz', path: '/teacher/substitutions' },
+                    { label: 'Gruppi Linguistici', icon: 'groups', path: '/teacher/groups' },
+                    { label: 'Verbali', icon: 'gavel', path: '/teacher/verbali' }
+                ]
+            },
+            {
+                category: 'Comunicazioni & Atti',
+                icon: 'campaign',
+                children: [
+                    { label: 'Comunicazioni', icon: 'email', path: '/teacher/communications' },
+                    { label: 'Documenti', icon: 'description', path: '/teacher/documents' },
+                    { label: 'Note Disciplinari', icon: 'assignment_late', path: '/teacher/notes' }
+                ]
+            }
         ],
         student: [
             { label: 'Dashboard', icon: 'dashboard', path: '/', exact: true },

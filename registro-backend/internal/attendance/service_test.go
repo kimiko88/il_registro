@@ -28,6 +28,10 @@ func (m *MockRepository) Update(att *Attendance) error {
 	args := m.Called(att)
 	return args.Error(0)
 }
+func (m *MockRepository) ProcessJustificationTx(ctx context.Context, j *Justification, teacherID string, approve bool) error {
+	args := m.Called(ctx, j, teacherID, approve)
+	return args.Error(0)
+}
 func (m *MockRepository) FindByID(id string) (*Attendance, error) {
 	args := m.Called(id)
 	if args.Get(0) == nil {
@@ -135,11 +139,14 @@ func TestMarkAttendance(t *testing.T) {
 	teacherID := "t1"
 	mockRepo.On("IsTeacherAssignedToClass", mock.Anything, teacherID, "c1").Return(true, nil).Maybe()
 
+	todayStr := time.Now().Format("2006-01-02")
+	hourVal := 1
+
 	t.Run("MarkSingle_Success", func(t *testing.T) {
 		req := CreateAttendanceRequest{
 			StudentID: "s1",
 			ClassID:   "c1",
-			Date:      "2025-10-10",
+			Date:      todayStr,
 			Status:    StatusPresent,
 		}
 
@@ -155,8 +162,9 @@ func TestMarkAttendance(t *testing.T) {
 		req := CreateAttendanceRequest{
 			StudentID: "s1",
 			ClassID:   "c1",
-			Date:      "2025-10-10",
+			Date:      todayStr,
 			Status:    StatusLate,
+			Hour:      hourVal,
 			EntryTime: "08:30",
 			ExitTime:  "13:00",
 		}
@@ -172,7 +180,7 @@ func TestMarkAttendance(t *testing.T) {
 	t.Run("MarkBulk_Success", func(t *testing.T) {
 		req := BulkAttendanceRequest{
 			ClassID: "c1",
-			Date:    "2025-10-10",
+			Date:    todayStr,
 			Statuses: []StudentStatusRequest{
 				{StudentID: "s1", Status: StatusPresent},
 				{StudentID: "s2", Status: StatusAbsent},
@@ -234,10 +242,7 @@ func TestJustificationFlow(t *testing.T) {
 		jPending := &Justification{ID: jID, Status: JustificationPending}
 
 		mockRepo.On("FindJustificationByID", jID).Return(jPending, nil).Once()
-		mockRepo.On("FindByStudent", mock.Anything, mock.Anything, mock.Anything).Return([]Attendance{}, nil).Once()
-		mockRepo.On("UpdateJustification", mock.MatchedBy(func(j *Justification) bool {
-			return j.Status == JustificationApproved && j.ApprovedBy != nil
-		})).Return(nil).Once()
+		mockRepo.On("ProcessJustificationTx", mock.Anything, jPending, "t1", true).Return(nil).Once()
 
 		err := service.ProcessJustification(ctx, "t1", jID, true)
 		assert.NoError(t, err)

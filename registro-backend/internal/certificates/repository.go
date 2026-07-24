@@ -46,7 +46,7 @@ func (r *repository) Create(ctx context.Context, cert *Certificate) error {
 func (r *repository) FindByID(ctx context.Context, id string) (*Certificate, error) {
 	query := `
 		SELECT c.id, c.school_id, c.student_id, COALESCE(u.last_name || ' ' || u.first_name, '') as student_name,
-		       COALESCE(cl.name || cl.section, '') as class_name, c.type, c.issued_by,
+		       COALESCE(cl.name || ' ' || cl.section, '') as class_name, c.type, c.issued_by,
 		       COALESCE(ib.last_name || ' ' || ib.first_name, '') as issued_by_name,
 		       c.issued_at, c.academic_year, c.notes, c.pdf_url, c.protocol_no, c.is_deleted
 		FROM certificates c
@@ -71,7 +71,7 @@ func (r *repository) FindByID(ctx context.Context, id string) (*Certificate, err
 func (r *repository) List(ctx context.Context, schoolID, studentID string, certType CertificateType, year string) ([]Certificate, error) {
 	query := `
 		SELECT c.id, c.school_id, c.student_id, COALESCE(u.last_name || ' ' || u.first_name, '') as student_name,
-		       COALESCE(cl.name || cl.section, '') as class_name, c.type, c.issued_by,
+		       COALESCE(cl.name || ' ' || cl.section, '') as class_name, c.type, c.issued_by,
 		       COALESCE(ib.last_name || ' ' || ib.first_name, '') as issued_by_name,
 		       c.issued_at, c.academic_year, c.notes, c.pdf_url, c.protocol_no, c.is_deleted
 		FROM certificates c
@@ -85,12 +85,18 @@ func (r *repository) List(ctx context.Context, schoolID, studentID string, certT
 	argID := 1
 
 	if schoolID != "" {
-		query += fmt.Sprintf(" AND c.school_id = $%d", argID)
+		if _, err := uuid.Parse(schoolID); err != nil {
+			return []Certificate{}, nil
+		}
+		query += fmt.Sprintf(" AND c.school_id = $%d::uuid", argID)
 		args = append(args, schoolID)
 		argID++
 	}
 	if studentID != "" {
-		query += fmt.Sprintf(" AND c.student_id = $%d", argID)
+		if _, err := uuid.Parse(studentID); err != nil {
+			return []Certificate{}, nil
+		}
+		query += fmt.Sprintf(" AND c.student_id = $%d::uuid", argID)
 		args = append(args, studentID)
 		argID++
 	}

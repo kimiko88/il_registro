@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bufio"
 	"database/sql"
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	_ "github.com/lib/pq"
 	"golang.org/x/crypto/bcrypt"
@@ -16,9 +18,62 @@ import (
 // Cost 10: $2a$10$X7.1.j.... (I don't have a generator handy in my head).
 // Better: Use the `golang.org/x/crypto/bcrypt` in the script to generate it.
 
+func loadEnv() {
+	file, err := os.Open(".env")
+	if err != nil {
+		return
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" || strings.HasPrefix(line, "#") || !strings.Contains(line, "=") {
+			continue
+		}
+		parts := strings.SplitN(line, "=", 2)
+		key := strings.TrimSpace(parts[0])
+		val := strings.TrimSpace(parts[1])
+		val = strings.Trim(val, `"'`)
+		if os.Getenv(key) == "" {
+			os.Setenv(key, val)
+		}
+	}
+}
+
 func main() {
-	// Connection string - Adjust if needed or take from Env
-	connStr := "postgres://postgres:password@localhost:5432/registro?sslmode=disable"
+	loadEnv()
+
+	user := "postgres"
+	pass := "password"
+	host := "localhost"
+	port := "5432"
+	dbname := "postgres"
+	sslmode := "disable"
+
+	if os.Getenv("DB_USER") != "" {
+		user = os.Getenv("DB_USER")
+	}
+	if os.Getenv("DB_PASSWORD") != "" {
+		pass = os.Getenv("DB_PASSWORD")
+	}
+	if os.Getenv("DB_HOST") != "" {
+		host = os.Getenv("DB_HOST")
+	}
+	if os.Getenv("DB_PORT") != "" {
+		port = os.Getenv("DB_PORT")
+	}
+	if os.Getenv("DB_NAME") != "" {
+		dbname = os.Getenv("DB_NAME")
+	}
+	if os.Getenv("DB_SSLMODE") != "" {
+		sslmode = os.Getenv("DB_SSLMODE")
+	}
+
+	host = strings.TrimPrefix(host, "https://")
+	host = strings.TrimPrefix(host, "http://")
+
+	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s", user, pass, host, port, dbname, sslmode)
 	if os.Getenv("DATABASE_URL") != "" {
 		connStr = os.Getenv("DATABASE_URL")
 	}

@@ -90,23 +90,19 @@ func (r *PostgresRepository) ListCalendar(ctx context.Context, schoolID string, 
 		       a.type, a.date, a.created_at, a.updated_at,
 		       COALESCE(s.name, '') AS subject_name,
 		       COALESCE(u.first_name || ' ' || u.last_name, '') AS teacher_name,
-		       EXISTS(SELECT 1 FROM student_agenda_completions sac WHERE sac.agenda_item_id = a.id AND sac.student_id = $2::uuid) AS is_completed
+		       CASE WHEN $2 = '' THEN false ELSE EXISTS(SELECT 1 FROM student_agenda_completions sac WHERE sac.agenda_item_id = a.id AND sac.student_id = NULLIF($2, '')::uuid) END AS is_completed
 		FROM agenda_items a
 		LEFT JOIN subjects s ON a.subject_id = s.id
 		LEFT JOIN users u ON a.teacher_id = u.id
 		WHERE a.school_id = $1::uuid
-		  AND ($3 = '' OR a.class_id = $3::uuid)
-		  AND ($4 = '' OR a.subject_id = $4::uuid)
+		  AND ($3 = '' OR a.class_id = NULLIF($3, '')::uuid)
+		  AND ($4 = '' OR a.subject_id = NULLIF($4, '')::uuid)
 		  AND ($5 = '' OR a.type = $5)
 		  AND a.date >= $6 AND a.date <= $7
 		ORDER BY a.date ASC, a.created_at ASC
 	`
-	studentUUID := filter.StudentID
-	if studentUUID == "" {
-		studentUUID = "00000000-0000-0000-0000-000000000000"
-	}
 
-	rows, err := r.db.QueryContext(ctx, query, schoolID, studentUUID, filter.ClassID, filter.SubjectID, filter.Type, filter.From, filter.To)
+	rows, err := r.db.QueryContext(ctx, query, schoolID, filter.StudentID, filter.ClassID, filter.SubjectID, filter.Type, filter.From, filter.To)
 	if err != nil {
 		return nil, err
 	}

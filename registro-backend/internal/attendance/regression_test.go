@@ -26,6 +26,9 @@ func (m *MockAttRepo) FindByStudent(studentID string, start, end time.Time) ([]A
 func (m *MockAttRepo) CreateJustification(j *Justification) error              { return nil }
 func (m *MockAttRepo) FindJustificationByID(id string) (*Justification, error) { return nil, nil }
 func (m *MockAttRepo) UpdateJustification(j *Justification) error              { return nil }
+func (m *MockAttRepo) ProcessJustificationTx(ctx context.Context, j *Justification, teacherID string, approve bool) error {
+	return m.Called(ctx, j, teacherID, approve).Error(0)
+}
 func (m *MockAttRepo) FindPendingJustifications(classID string) ([]Justification, error) {
 	return nil, nil
 }

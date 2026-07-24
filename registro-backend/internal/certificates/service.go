@@ -50,7 +50,7 @@ func (s *service) GenerateCertificate(ctx context.Context, actorID, schoolID str
 		AcademicYear: req.AcademicYear,
 		Notes:        req.Notes,
 		ProtocolNo:   protoNo,
-		PDFUrl:       fmt.Sprintf("/api/v1/certificates/download/temp"),
+		PDFUrl:       "/api/v1/certificates/download/temp",
 	}
 
 	if s.userRepo != nil {
@@ -91,6 +91,12 @@ func (s *service) GeneratePDFBytes(ctx context.Context, id string) ([]byte, erro
 	cert, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		return nil, err
+	}
+	if (cert.StudentName == "" || cert.StudentName == "[Studente]") && s.userRepo != nil {
+		std, err := s.userRepo.GetByID(ctx, cert.StudentID)
+		if err == nil && std != nil {
+			cert.StudentName = fmt.Sprintf("%s %s", std.LastName, std.FirstName)
+		}
 	}
 	return GenerateCertificatePDF(cert, "Istituto Scolastico Registrov2")
 }

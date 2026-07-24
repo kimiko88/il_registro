@@ -31,6 +31,9 @@ func (s *Service) CreateSlot(ctx context.Context, teacherUserID, schoolID string
 	if err != nil {
 		return nil, ErrInvalidDate
 	}
+	if req.StartTime != "" && req.EndTime != "" && req.EndTime <= req.StartTime {
+		return nil, errors.New("l'orario di fine deve essere successivo all'orario di inizio")
+	}
 
 	teacherProfileID, err := s.repo.GetTeacherProfileID(ctx, teacherUserID)
 	if err != nil || teacherProfileID == "" {

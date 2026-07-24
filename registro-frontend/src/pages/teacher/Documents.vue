@@ -112,8 +112,6 @@
         </q-card>
     </q-dialog>
 
-  </q-page>
-
   <!-- Signing Dialog -->
   <q-dialog v-model="showSignDialog">
       <q-card style="min-width: 350px">
@@ -135,6 +133,7 @@
           </q-card-actions>
       </q-card>
   </q-dialog>
+  </q-page>
 </template>
 
 <script setup>

@@ -179,13 +179,14 @@ func (h *Handler) Delete(c *gin.Context) {
 
 func (h *Handler) MarkComplete(c *gin.Context) {
 	studentID := c.GetString("user_id")
+	role := c.GetString("role")
 	id := c.Param("id")
 	if studentID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 
-	if err := h.service.SetTaskCompletion(c.Request.Context(), studentID, id, true); err != nil {
+	if err := h.service.SetTaskCompletion(c.Request.Context(), studentID, role, id, true); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -194,13 +195,14 @@ func (h *Handler) MarkComplete(c *gin.Context) {
 
 func (h *Handler) UnmarkComplete(c *gin.Context) {
 	studentID := c.GetString("user_id")
+	role := c.GetString("role")
 	id := c.Param("id")
 	if studentID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 
-	if err := h.service.SetTaskCompletion(c.Request.Context(), studentID, id, false); err != nil {
+	if err := h.service.SetTaskCompletion(c.Request.Context(), studentID, role, id, false); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
