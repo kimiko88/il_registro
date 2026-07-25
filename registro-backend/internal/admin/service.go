@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"registro-backend/internal/auth"
+	"registro-backend/pkg/logger"
 )
 
 // Service provides admin business logic
@@ -94,6 +95,7 @@ func (s *Service) GetDashboardStats(ctx context.Context, isSuperAdmin bool, scho
 	if isSuperAdmin {
 		health, err := s.repo.GetSystemHealth(ctx)
 		if err != nil {
+			logger.Log.Errorf("GetDashboardStats health check error: %v", err)
 			// Don't fail the whole request if health check fails
 			health = &SystemHealthStatus{
 				OverallStatus: "unknown",
@@ -282,7 +284,11 @@ func (s *Service) UpdateAdminUser(ctx context.Context, callerRole, adminID strin
 }
 
 // DeleteAdminUser deletes an admin user (superadmin only)
-func (s *Service) DeleteAdminUser(ctx context.Context, adminID, currentUserID string) error {
+func (s *Service) DeleteAdminUser(ctx context.Context, callerRole, adminID, currentUserID string) error {
+	if callerRole != "superadmin" {
+		return errors.New("unauthorized: only superadmin can delete admin users")
+	}
+
 	// Prevent self-deletion
 	if adminID == currentUserID {
 		return ErrCannotDeleteSelf
@@ -346,20 +352,21 @@ func (s *Service) GetSchoolSetting(ctx context.Context, schoolID, key string) (s
 }
 
 var allowedSettingKeys = map[string]bool{
-	"grading_scale":                      true,
-	"semester_count":                     true,
-	"language":                           true,
-	"attendance_threshold":               true,
-	"lock_scrutiny":                      true,
-	"require_principal_approval":         true,
-	"allow_parents_view_grades":          true,
-	"require_mfa":                        true,
-	"enable_substitute_notifications":    true,
+	"grading_scale":                   true,
+	"semester_count":                  true,
+	"language":                        true,
+	"attendance_threshold":            true,
+	"lock_scrutiny":                   true,
+	"require_principal_approval":      true,
+	"allow_parents_view_grades":       true,
+	"require_mfa":                     true,
+	"enable_substitute_notifications": true,
 }
 
 // UpdateSchoolSetting updates a school setting with allowlist validation
 func (s *Service) UpdateSchoolSetting(ctx context.Context, schoolID, key, value string) error {
-	if !allowedSettingKeys[strings.ToLower(key)] {
+	key = strings.ToLower(key)
+	if !allowedSettingKeys[key] {
 		return errors.New("invalid or unauthorized setting key")
 	}
 	return s.repo.UpdateSetting(ctx, schoolID, key, value)

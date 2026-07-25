@@ -78,7 +78,10 @@ func (s *service) AssignStudent(ctx context.Context, actorRole, projectID, stude
 	if !s.permManager.HasPermission(actorRole, permissions.PCTOUpdate) {
 		return errors.New("unauthorized")
 	}
-	// Check existing?
+	existing, err := s.repo.GetParticipation(ctx, projectID, studentID)
+	if err == nil && existing != nil {
+		return errors.New("student is already assigned to this project")
+	}
 	part := &Participation{ProjectID: projectID, StudentID: studentID}
 	return s.repo.AssignStudent(ctx, part)
 }
@@ -90,7 +93,10 @@ func (s *service) LogHours(ctx context.Context, studentID string, req LogHourReq
 		return errors.New("student not assigned to project")
 	}
 
-	date, _ := time.Parse("2006-01-02", req.Date)
+	date, err := time.Parse("2006-01-02", req.Date)
+	if err != nil {
+		return errors.New("invalid date format (expected YYYY-MM-DD)")
+	}
 
 	log := &HourLog{
 		ParticipationID: part.ID,
@@ -175,6 +181,9 @@ func (s *service) GetStats(ctx context.Context, schoolID string) (*PCTOStats, er
 }
 
 func (s *service) ApproveHours(ctx context.Context, actorID, actorRole, logID string, approved bool) error {
+	if !s.permManager.HasPermission(actorRole, permissions.PCTOUpdate) && actorRole != "teacher" && actorRole != "tutor" && actorRole != "admin" && actorRole != "superadmin" {
+		return errors.New("unauthorized")
+	}
 	status := "approved"
 	if !approved {
 		status = "rejected"

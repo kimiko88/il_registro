@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"time"
 
 	"registro-backend/internal/users"
@@ -150,6 +151,13 @@ func (s *service) MarkBulk(ctx context.Context, teacherID, schoolID string, req 
 		return fmt.Errorf("data non valida '%s': usa il formato YYYY-MM-DD", req.Date)
 	}
 
+	if len(req.Statuses) == 0 {
+		return fmt.Errorf("nessun record di presenza fornito")
+	}
+	if len(req.Statuses) > 500 {
+		return fmt.Errorf("numero massimo di presenze registrabili in blocco superato (max 500)")
+	}
+
 	var atts []*Attendance
 	for _, r := range req.Statuses {
 		att := &Attendance{
@@ -294,11 +302,9 @@ func (s *service) GetStudentAttendance(ctx context.Context, studentID string, fr
 // Justifications
 
 func (s *service) RequestJustification(ctx context.Context, parentID string, req JustificationRequest) error {
-	if s.userRepo != nil {
-		isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, req.StudentID)
-		if err != nil || !isGuardian {
-			return fmt.Errorf("unauthorized: parent is not a guardian of this student")
-		}
+	isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, req.StudentID)
+	if err != nil || !isGuardian {
+		return fmt.Errorf("unauthorized: parent is not a guardian of this student")
 	}
 
 	start, err := time.Parse("2006-01-02", req.StartDate)
@@ -338,6 +344,12 @@ func (s *service) ProcessJustification(ctx context.Context, teacherID, justifica
 
 	if err := s.repo.ProcessJustificationTx(ctx, j, teacherID, approve); err != nil {
 		return err
+	}
+
+	if approve {
+		j.Status = JustificationApproved
+	} else {
+		j.Status = JustificationRejected
 	}
 
 	if s.broadcaster != nil {
@@ -531,6 +543,8 @@ func (s *service) GetChildAttendanceTrends(ctx context.Context, parentID, studen
 		}
 	}
 
+	sort.Strings(monthKeys)
+
 	resp := &TrendsResponse{
 		StudentID: studentID,
 		Trends:    []MonthlyTrend{},
@@ -575,40 +589,34 @@ func (s *service) GetMonthlyBreakdown(ctx context.Context, studentID, schoolYear
 }
 
 func (s *service) GetChildUnjustified(ctx context.Context, parentID, studentID string) ([]Attendance, error) {
-	if s.userRepo != nil {
-		isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, studentID)
-		if err != nil {
-			return nil, err
-		}
-		if !isGuardian {
-			return nil, fmt.Errorf("parent is not a guardian of student")
-		}
+	isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, studentID)
+	if err != nil {
+		return nil, err
+	}
+	if !isGuardian {
+		return nil, fmt.Errorf("parent is not a guardian of student")
 	}
 	return s.repo.FindUnjustifiedByStudent(studentID)
 }
 
 func (s *service) JustifyChildAbsence(ctx context.Context, parentID, studentID, attendanceID string, req JustifyAbsenceRequest) error {
-	if s.userRepo != nil {
-		isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, studentID)
-		if err != nil {
-			return err
-		}
-		if !isGuardian {
-			return fmt.Errorf("parent is not a guardian of student")
-		}
+	isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, studentID)
+	if err != nil {
+		return err
+	}
+	if !isGuardian {
+		return fmt.Errorf("parent is not a guardian of student")
 	}
 	return s.repo.JustifyAbsenceByParent(attendanceID, req.Reason, req.Notes)
 }
 
 func (s *service) GetChildAttendanceStats(ctx context.Context, parentID, studentID string) (*AttendanceStats, error) {
-	if s.userRepo != nil {
-		isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, studentID)
-		if err != nil {
-			return nil, err
-		}
-		if !isGuardian {
-			return nil, fmt.Errorf("parent is not a guardian of student")
-		}
+	isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, studentID)
+	if err != nil {
+		return nil, err
+	}
+	if !isGuardian {
+		return nil, fmt.Errorf("parent is not a guardian of student")
 	}
 	return s.repo.GetStudentAttendanceStats(studentID)
 }

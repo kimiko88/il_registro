@@ -686,11 +686,14 @@ func (r *repository) UpdateTest(test *ClassTest) error {
 		SET title = $1, date = $2, teacher_notes = $3, parent_notes = $4, evaluation_type = $5, updated_at = NOW()
 		WHERE id = $6::uuid`
 
-	_, err := r.db.Exec(query,
+	res, err := r.db.Exec(query,
 		test.Title, test.Date, test.TeacherNotes, test.ParentNotes, test.EvaluationType, test.ID,
 	)
 	if err != nil {
 		return fmt.Errorf("update test error: %w", err)
+	}
+	if rows, _ := res.RowsAffected(); rows == 0 {
+		return fmt.Errorf("test not found")
 	}
 	return nil
 }
@@ -732,8 +735,8 @@ func (r *repository) GetWeightConfigs(schoolID, subjectID, classID string) ([]Gr
 		SELECT id, school_id, subject_id, class_id, grade_category, evaluation_type, weight, created_by
 		FROM grade_weight_configs
 		WHERE school_id = $1::uuid
-		  AND ($2 = '' OR subject_id = NULLIF($2, '')::uuid)
-		  AND ($3 = '' OR class_id = NULLIF($3, '')::uuid)
+		  AND ($2 = '' OR subject_id IS NULL OR subject_id = NULLIF($2, '')::uuid)
+		  AND ($3 = '' OR class_id IS NULL OR class_id = NULLIF($3, '')::uuid)
 		ORDER BY grade_category, evaluation_type
 	`
 	rows, err := r.db.Query(query, schoolID, subjectID, classID)

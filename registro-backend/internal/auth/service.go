@@ -117,7 +117,6 @@ func (s *Service) Login(ctx context.Context, req *LoginRequest, ipAddress, userA
 	}
 
 	if !user.IsActive {
-		s.recordFailedAttempt(ctx, req.Email, ipAddress)
 		return nil, ErrUserInactive
 	}
 
@@ -125,11 +124,9 @@ func (s *Service) Login(ctx context.Context, req *LoginRequest, ipAddress, userA
 	if user.Role == RoleSuperAdmin || user.Role == RoleAdmin || user.Role == RoleSegreteria || user.Role == RoleTeacher {
 		if user.PasswordChangedAt != nil {
 			if time.Since(*user.PasswordChangedAt) > 90*24*time.Hour {
-				s.recordFailedAttempt(ctx, req.Email, ipAddress)
 				return nil, ErrPasswordExpired
 			}
 		} else if !user.CreatedAt.IsZero() && time.Since(user.CreatedAt) > 90*24*time.Hour {
-			s.recordFailedAttempt(ctx, req.Email, ipAddress)
 			return nil, ErrPasswordExpired
 		}
 	}
@@ -238,6 +235,18 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken, ipAddress, use
 		// Revoke the refresh token so it cannot be retried.
 		_ = s.repo.RevokeRefreshToken(ctx, rt.ID)
 		return nil, ErrUserInactive
+	}
+
+	if user.Role == RoleSuperAdmin || user.Role == RoleAdmin || user.Role == RoleSegreteria || user.Role == RoleTeacher {
+		if user.PasswordChangedAt != nil {
+			if time.Since(*user.PasswordChangedAt) > 90*24*time.Hour {
+				_ = s.repo.RevokeRefreshToken(ctx, rt.ID)
+				return nil, ErrPasswordExpired
+			}
+		} else if !user.CreatedAt.IsZero() && time.Since(user.CreatedAt) > 90*24*time.Hour {
+			_ = s.repo.RevokeRefreshToken(ctx, rt.ID)
+			return nil, ErrPasswordExpired
+		}
 	}
 
 	// Generate new access token
@@ -354,36 +363,41 @@ func (s *Service) SetupMFA(ctx context.Context, userID string) (*MFASetupRespons
 
 // VerifyMFA verifies MFA token and enables it on successful confirmation.
 // Recovery codes are generated and stored ONLY after TOTP secret is confirmed.
-func (s *Service) VerifyMFA(ctx context.Context, userID, token string) error {
+func (s *Service) VerifyMFA(ctx context.Context, userID, token string) ([]string, error) {
 	encryptedSecret, err := s.repo.GetMFASecret(ctx, userID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	secret, err := crypto.DecryptString(encryptedSecret)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if !s.mfaService.VerifyTOTPUser(userID, secret, token) {
-		return ErrInvalidMFAToken
+		return nil, ErrInvalidMFAToken
 	}
 
 	// Generate and store recovery codes after successful verification
 	plainRecoveryCodes, err := s.mfaService.GenerateRecoveryCodes(10)
+	var validHashed []string
 	if err == nil {
-		hashedCodes := make([]string, len(plainRecoveryCodes))
-		for i, code := range plainRecoveryCodes {
+		for _, code := range plainRecoveryCodes {
 			h, err := bcrypt.GenerateFromPassword([]byte(code), s.bcryptCost)
 			if err == nil {
-				hashedCodes[i] = string(h)
+				validHashed = append(validHashed, string(h))
 			}
 		}
-		_ = s.repo.CreateRecoveryCodes(ctx, userID, hashedCodes)
+		if len(validHashed) > 0 {
+			_ = s.repo.CreateRecoveryCodes(ctx, userID, validHashed)
+		}
 	}
 
 	// Token is correct, enable MFA officially
-	return s.repo.ConfirmMFA(ctx, userID)
+	if err := s.repo.ConfirmMFA(ctx, userID); err != nil {
+		return nil, err
+	}
+	return plainRecoveryCodes, nil
 }
 
 // RequestPasswordReset creates a password reset token.
@@ -443,6 +457,11 @@ func (s *Service) ResetPassword(ctx context.Context, token, newPassword string) 
 	prt, err := s.repo.GetPasswordResetToken(ctx, token)
 	if err != nil {
 		return err
+	}
+
+	user, err := s.repo.GetUserByID(ctx, prt.UserID)
+	if err != nil || !user.IsActive {
+		return ErrUserInactive
 	}
 
 	// Check if already used

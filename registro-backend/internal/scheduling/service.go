@@ -20,8 +20,8 @@ type Service interface {
 	CancelBooking(ctx context.Context, userID, bookingID string) error
 
 	// Admin
-	UpdateSettings(ctx context.Context, req GeneralScheduleRequest) error
-	GetAnalytics(ctx context.Context) (*AnalyticsResponse, error)
+	UpdateSettings(ctx context.Context, schoolID string, req GeneralScheduleRequest) error
+	GetAnalytics(ctx context.Context, schoolID string) (*AnalyticsResponse, error)
 	ValidateSchedule(ctx context.Context, slots []Slot) ([]Conflict, error)
 	GenerateSchedule(ctx context.Context, req GenerationRequest) ([]Slot, error)
 }
@@ -133,7 +133,15 @@ func (s *service) CreateSlots(ctx context.Context, userID string, req CreateSlot
 	// Overlap check: verify new slots do not overlap with existing slots for teacher
 	if len(allSlots) > 0 {
 		minDate := allSlots[0].Date
-		maxDate := allSlots[len(allSlots)-1].Date
+		maxDate := allSlots[0].Date
+		for _, sl := range allSlots {
+			if sl.Date.Before(minDate) {
+				minDate = sl.Date
+			}
+			if sl.Date.After(maxDate) {
+				maxDate = sl.Date
+			}
+		}
 		existingSlots, _ := s.repo.GetSlots(ctx, teacher.ID, minDate, maxDate)
 		for _, newSlot := range allSlots {
 			for _, ex := range existingSlots {
@@ -316,7 +324,7 @@ func (s *service) CancelBooking(ctx context.Context, userID, bookingID string) e
 	return s.repo.UpdateBooking(ctx, b)
 }
 
-func (s *service) UpdateSettings(ctx context.Context, req GeneralScheduleRequest) error {
+func (s *service) UpdateSettings(ctx context.Context, schoolID string, req GeneralScheduleRequest) error {
 	start, err := time.Parse("2006-01-02", req.StartDate)
 	if err != nil {
 		return fmt.Errorf("invalid start date: %w", err)
@@ -326,8 +334,12 @@ func (s *service) UpdateSettings(ctx context.Context, req GeneralScheduleRequest
 		return fmt.Errorf("invalid end date: %w", err)
 	}
 
+	if schoolID == "" {
+		schoolID = "default-school"
+	}
+
 	settings := &ColloquioSettings{
-		SchoolID:           "default-school", // Temporary default
+		SchoolID:           schoolID,
 		BookingWindowDays:  14,
 		BookingBufferHours: 24,
 		GeneralWindowStart: &start,
@@ -337,8 +349,11 @@ func (s *service) UpdateSettings(ctx context.Context, req GeneralScheduleRequest
 	return s.repo.UpdateSettings(ctx, settings)
 }
 
-func (s *service) GetAnalytics(ctx context.Context) (*AnalyticsResponse, error) {
-	return s.analytics.GetStats("default-school"), nil
+func (s *service) GetAnalytics(ctx context.Context, schoolID string) (*AnalyticsResponse, error) {
+	if schoolID == "" {
+		schoolID = "default-school"
+	}
+	return s.analytics.GetStats(schoolID), nil
 }
 
 func (s *service) ValidateSchedule(ctx context.Context, slots []Slot) ([]Conflict, error) {

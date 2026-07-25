@@ -3,6 +3,7 @@ package scrutiny
 import (
 	"bytes"
 	"context"
+	"encoding/csv"
 	"errors"
 	"fmt"
 	"math"
@@ -102,15 +103,15 @@ func (s *Service) GetMatrix(ctx context.Context, actorID, actorRole, classID str
 		matrix.Subjects = append(matrix.Subjects, SubjectInfo{ID: sub.SubjectID, Name: sub.SubjectName})
 	}
 
+	// Fetch all grades for class once to avoid N+1 queries (N students * M subjects)
+	allClassGrades, _ := s.gradeRepo.FindByClass(classID, semester)
+
 	for _, stu := range allStudents {
 		row := StudentScrutinyRow{
 			StudentID:   stu.ID,
 			StudentName: stu.LastName + " " + stu.FirstName,
 			SubjectData: make(map[string]SubjectAverages),
 		}
-
-		// Fetch all grades for class once to avoid N+1 queries (N students * M subjects)
-		allClassGrades, _ := s.gradeRepo.FindByClass(classID, semester)
 
 		for _, sub := range subjects {
 			var sum float64
@@ -282,15 +283,31 @@ func (s *Service) ExportAll(ctx context.Context) ([]byte, error) {
 	}
 
 	var buf bytes.Buffer
-	buf.WriteString("Classe,Studente,Materia,Voto,Esito\n")
+	w := csv.NewWriter(&buf)
+	_ = w.Write([]string{"Classe", "Studente", "Materia", "Voto", "Esito"})
+
 	for _, c := range classesList {
-		records, _ := s.repo.ListRecordsByClass(ctx, c.ID, 2)
+		records, err := s.repo.ListRecordsByClass(ctx, c.ID, 2)
+		if err != nil {
+			continue
+		}
 		for _, r := range records {
+			studentName := r.StudentID
+			if u, err := s.userRepo.GetByID(ctx, r.StudentID); err == nil && u != nil {
+				studentName = u.LastName + " " + u.FirstName
+			}
 			for _, g := range r.Grades {
-				buf.WriteString(fmt.Sprintf("%s,%s,%s,%.0f,%s\n", c.Name, r.StudentID, g.SubjectID, g.FinalGrade, r.FinalDecision))
+				_ = w.Write([]string{
+					c.Name,
+					studentName,
+					g.SubjectID,
+					fmt.Sprintf("%.0f", g.FinalGrade),
+					r.FinalDecision,
+				})
 			}
 		}
 	}
+	w.Flush()
 	return buf.Bytes(), nil
 }
 
@@ -361,10 +378,14 @@ func (s *Service) SaveScrutiny(ctx context.Context, coordinatorID, actorRole str
 	}
 
 	for _, g := range req.Grades {
+		tID := g.TeacherID
+		if tID == "" {
+			tID = coordinatorID
+		}
 		rec.Grades = append(rec.Grades, ScrutinyGrade{
 			SubjectID:  g.SubjectID,
 			FinalGrade: g.FinalGrade,
-			TeacherID:  coordinatorID,
+			TeacherID:  tID,
 		})
 	}
 

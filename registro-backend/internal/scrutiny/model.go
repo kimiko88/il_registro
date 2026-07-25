@@ -79,4 +79,5 @@ type SaveScrutinyRequest struct {
 type SaveScrutinyGradeRequest struct {
 	SubjectID  string  `json:"subject_id" binding:"required"`
 	FinalGrade float64 `json:"final_grade" binding:"required"`
+	TeacherID  string  `json:"teacher_id"`
 }

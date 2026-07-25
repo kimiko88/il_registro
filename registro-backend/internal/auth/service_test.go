@@ -324,9 +324,6 @@ func TestLogin(t *testing.T) {
 
 		mockRepo.On("GetRecentLoginAttempts", mock.Anything, req.Email, mock.Anything, mock.Anything).Return(0, nil).Once()
 		mockRepo.On("GetUserByEmail", mock.Anything, req.Email).Return(inactiveUser, nil).Once()
-		mockRepo.On("RecordLoginAttempt", mock.Anything, mock.MatchedBy(func(a *LoginAttempt) bool {
-			return a.Success == false
-		})).Return(nil).Once()
 
 		resp, err := s.Login(context.Background(), req, "127.0.0.1", "test-agent")
 
@@ -435,8 +432,8 @@ func TestPasswordReset(t *testing.T) {
 	})
 
 	t.Run("ResetSuccess", func(t *testing.T) {
-		token := "reset-token"
-		newPass := "NewPassword123!"
+		token := "valid-reset-token"
+		newPass := "NewPass123!Safe"
 
 		prt := &PasswordResetToken{
 			ID:        "prt-1",
@@ -447,6 +444,7 @@ func TestPasswordReset(t *testing.T) {
 		}
 
 		mockRepo.On("GetPasswordResetToken", mock.Anything, token).Return(prt, nil).Once()
+		mockRepo.On("GetUserByID", mock.Anything, "user-123").Return(&User{ID: "user-123", IsActive: true}, nil).Once()
 		mockRepo.On("GetPasswordHistory", mock.Anything, "user-123").Return([]string{}, nil).Once()
 		mockRepo.On("UpdatePassword", mock.Anything, "user-123", mock.Anything).Return(nil).Once()
 		mockRepo.On("AddPasswordHistory", mock.Anything, "user-123", mock.Anything).Return(nil).Once()

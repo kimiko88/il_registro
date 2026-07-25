@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-pdf/fpdf"
@@ -15,6 +16,13 @@ import (
 type ExportOptions struct {
 	Format     string // csv, json, pdf
 	IncludeAll bool   // if true export even unpublished?
+}
+
+func sanitizeCSVField(s string) string {
+	if strings.HasPrefix(s, "=") || strings.HasPrefix(s, "+") || strings.HasPrefix(s, "-") || strings.HasPrefix(s, "@") {
+		return "'" + s
+	}
+	return s
 }
 
 // 1. ExportToCSV
@@ -33,15 +41,15 @@ func ExportToCSV(grades []Grade, options ExportOptions) ([]byte, error) {
 
 	for _, g := range grades {
 		records = append(records, []string{
-			g.StudentID,
-			g.SubjectID,
+			sanitizeCSVField(g.StudentID),
+			sanitizeCSVField(g.SubjectID),
 			fmt.Sprintf("%.2f", g.GradeValue),
 			string(g.GradeType),
 			g.Date.Format("2006-01-02"),
 			strconv.Itoa(int(g.Semester)),
-			g.TeacherID,
+			sanitizeCSVField(g.TeacherID),
 			string(g.GradeCategory),
-			g.Description,
+			sanitizeCSVField(g.Description),
 		})
 	}
 
@@ -114,8 +122,17 @@ func ExportToPDF(grades []Grade, options ExportOptions) ([]byte, error) {
 			pdf.SetTextColor(0, 128, 0) // Green
 		}
 
-		pdf.CellFormat(30, 6, g.StudentID, "1", 0, "", false, 0, "")
-		pdf.CellFormat(30, 6, g.SubjectID, "1", 0, "", false, 0, "") // Truncate if needed
+		sID := g.StudentID
+		if len(sID) > 12 {
+			sID = sID[:12] + "..."
+		}
+		subID := g.SubjectID
+		if len(subID) > 12 {
+			subID = subID[:12] + "..."
+		}
+
+		pdf.CellFormat(30, 6, sID, "1", 0, "", false, 0, "")
+		pdf.CellFormat(30, 6, subID, "1", 0, "", false, 0, "")
 		pdf.CellFormat(25, 6, g.Date.Format("02/01/06"), "1", 0, "", false, 0, "")
 
 		valStr := fmt.Sprintf("%.1f", g.GradeValue)
@@ -123,13 +140,18 @@ func ExportToPDF(grades []Grade, options ExportOptions) ([]byte, error) {
 			valStr = ConvertNumericToJudgment(g.GradeValue)
 			if len(valStr) > 3 {
 				valStr = valStr[:3] + "."
-			} // Abbrev
+			}
 		}
 		pdf.CellFormat(15, 6, valStr, "1", 0, "C", false, 0, "")
 
+		desc := g.Description
+		if len(desc) > 35 {
+			desc = desc[:32] + "..."
+		}
+
 		pdf.SetTextColor(0, 0, 0) // Reset for text
 		pdf.CellFormat(25, 6, string(g.GradeCategory), "1", 0, "", false, 0, "")
-		pdf.CellFormat(65, 6, g.Description, "1", 0, "", false, 0, "")
+		pdf.CellFormat(65, 6, desc, "1", 0, "", false, 0, "")
 		pdf.Ln(-1)
 	}
 

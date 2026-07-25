@@ -170,6 +170,10 @@ func (h *Handler) GetClassGrades(c *gin.Context) {
 	resp, err := h.service.GetClassGrades(c.Request.Context(), actorID, actorRole, classID, filter)
 	if err != nil {
 		logger.Log.Errorf("GetClassGrades error: %v", err)
+		if errors.Is(err, ErrUnauthorized) || strings.Contains(err.Error(), "unauthorized") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -301,7 +305,7 @@ func (h *Handler) Export(c *gin.Context) {
 	}
 
 	filename := fmt.Sprintf("grades_export_%s.%s", time.Now().Format("20060102_150405"), format)
-	c.Header("Content-Disposition", "attachment; filename="+filename)
+	c.Header("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, filename))
 	c.Data(http.StatusOK, contentType, data)
 }
 

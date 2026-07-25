@@ -41,11 +41,17 @@ func (s *service) CreateLesson(teacherID string, req CreateLessonRequest) (*Less
 		return nil, fmt.Errorf("invalid date format: %w", err)
 	}
 
-	// Duplicate check: verify no conflicting lesson exists for the same class & hour on that date
-	existing, _ := s.repo.GetLessonsByClass(req.ClassID, req.Date)
-	for _, l := range existing {
-		if l.Hour == req.Hour {
-			return nil, errors.New("esiste già una lezione programmata per questa classe in questa ora")
+	// Duplicate check: verify no conflicting lesson exists for the same class/group & hour on that date
+	existing, err := s.repo.GetLessonsByClass(req.ClassID, req.Date)
+	if err == nil {
+		for _, l := range existing {
+			if l.Hour == req.Hour {
+				sameGroup := (l.GroupID == nil && req.GroupID == nil) ||
+					(l.GroupID != nil && req.GroupID != nil && *l.GroupID == *req.GroupID)
+				if sameGroup {
+					return nil, errors.New("esiste già una lezione programmata per questa classe/gruppo in questa ora")
+				}
+			}
 		}
 	}
 
@@ -122,7 +128,7 @@ func (s *service) CreateHomework(teacherID string, req CreateHomeworkRequest) (*
 	}
 
 	now := time.Now()
-	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 	if dueDate.Before(today) {
 		return nil, errors.New("due_date non può essere nel passato")
 	}

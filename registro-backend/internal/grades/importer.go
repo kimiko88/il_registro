@@ -2,8 +2,10 @@ package grades
 
 import (
 	"encoding/csv"
+	"fmt"
 	"io"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/xuri/excelize/v2"
@@ -13,6 +15,7 @@ type ImportRequest struct {
 	StudentID     string
 	SubjectID     string
 	SchoolID      string
+	TeacherID     string
 	GradeValue    float64
 	GradeType     GradeType
 	Date          time.Time
@@ -22,11 +25,7 @@ type ImportRequest struct {
 	Semester      int
 }
 
-// ImportResult and ImportError are defined in dto.go
-
 // ParseCSVGrades parses a CSV file into ImportRequest slice.
-// The semester parameter is applied to every row so the caller controls
-// which academic period the imported grades belong to.
 func ParseCSVGrades(r io.Reader, semester int) ([]ImportRequest, error) {
 	reader := csv.NewReader(r)
 	reader.FieldsPerRecord = -1 // Allow variable fields
@@ -43,30 +42,37 @@ func ParseCSVGrades(r io.Reader, semester int) ([]ImportRequest, error) {
 	// Expect Header: StudentID, SubjectID, Value, Date, Category...
 	for i, row := range rows {
 		if i == 0 {
-			continue
-		} // Skip header
-		if len(row) < 4 {
+			continue // Skip header
+		}
+		if len(row) < 3 {
 			continue
 		}
 
-		val, _ := strconv.ParseFloat(row[2], 64)
-		date, _ := time.Parse("2006-01-02", row[3])
+		val, _ := strconv.ParseFloat(strings.TrimSpace(row[2]), 64)
+
+		var date time.Time
+		if len(row) > 3 {
+			d, err := time.Parse("2006-01-02", strings.TrimSpace(row[3]))
+			if err == nil {
+				date = d
+			}
+		}
 
 		cat := GradeCategorySummative
-		if len(row) > 4 {
-			cat = GradeCategory(row[4])
+		if len(row) > 4 && strings.TrimSpace(row[4]) != "" {
+			cat = GradeCategory(strings.TrimSpace(row[4]))
 		}
 
 		desc := ""
 		if len(row) > 5 {
-			desc = row[5]
+			desc = strings.TrimSpace(row[5])
 		}
 
 		requests = append(requests, ImportRequest{
-			StudentID:     row[0],
-			SubjectID:     row[1],
+			StudentID:     strings.TrimSpace(row[0]),
+			SubjectID:     strings.TrimSpace(row[1]),
 			GradeValue:    val,
-			GradeType:     GradeTypeNumeric, // Default
+			GradeType:     GradeTypeNumeric,
 			Date:          date,
 			GradeCategory: cat,
 			Description:   desc,
@@ -78,9 +84,6 @@ func ParseCSVGrades(r io.Reader, semester int) ([]ImportRequest, error) {
 }
 
 // ParseXLSXGrades parses an XLSX file into ImportRequest slice.
-// The semester parameter is applied to every row so the caller controls
-// which academic period the imported grades belong to.
-// fix: semester era precedentemente hardcodato a 1, ignorando il valore reale.
 func ParseXLSXGrades(r io.Reader, semester int) ([]ImportRequest, error) {
 	if semester != 1 && semester != 2 {
 		semester = 1 // safe default
@@ -94,7 +97,6 @@ func ParseXLSXGrades(r io.Reader, semester int) ([]ImportRequest, error) {
 
 	rows, err := f.GetRows("Grades")
 	if err != nil {
-		// Try first sheet if Grades not found
 		sheets := f.GetSheetList()
 		if len(sheets) > 0 {
 			rows, err = f.GetRows(sheets[0])
@@ -109,26 +111,33 @@ func ParseXLSXGrades(r io.Reader, semester int) ([]ImportRequest, error) {
 		if i == 0 {
 			continue
 		}
-		if len(row) < 4 {
+		if len(row) < 3 {
 			continue
 		}
 
-		val, _ := strconv.ParseFloat(row[2], 64)
-		date, _ := time.Parse("2006-01-02", row[3])
+		val, _ := strconv.ParseFloat(strings.TrimSpace(row[2]), 64)
+
+		var date time.Time
+		if len(row) > 3 {
+			d, err := time.Parse("2006-01-02", strings.TrimSpace(row[3]))
+			if err == nil {
+				date = d
+			}
+		}
 
 		cat := GradeCategorySummative
-		if len(row) > 4 {
-			cat = GradeCategory(row[4])
+		if len(row) > 4 && strings.TrimSpace(row[4]) != "" {
+			cat = GradeCategory(strings.TrimSpace(row[4]))
 		}
 
 		desc := ""
 		if len(row) > 5 {
-			desc = row[5]
+			desc = strings.TrimSpace(row[5])
 		}
 
 		requests = append(requests, ImportRequest{
-			StudentID:     row[0],
-			SubjectID:     row[1],
+			StudentID:     strings.TrimSpace(row[0]),
+			SubjectID:     strings.TrimSpace(row[1]),
 			GradeValue:    val,
 			GradeType:     GradeTypeNumeric,
 			Date:          date,
@@ -142,22 +151,31 @@ func ParseXLSXGrades(r io.Reader, semester int) ([]ImportRequest, error) {
 }
 
 // ProcessBulkImport inserts the parsed ImportRequests via the repository.
-// teacherID is used as both TeacherID and CreatedBy on each Grade.
-// fix: SchoolID e CreatedBy erano assenti causando potenziali constraint
-// violation su colonne NOT NULL nel database.
-func ProcessBulkImport(repo Repository, reqs []ImportRequest, teacherID string) (ImportResult, error) {
+func ProcessBulkImport(repo Repository, reqs []ImportRequest, teacherID string, teacherProfileID string, schoolID string) (ImportResult, error) {
 	res := ImportResult{}
 
 	var grades []*Grade
 	for _, req := range reqs {
+		sID := req.SchoolID
+		if sID == "" {
+			sID = schoolID
+		}
+		tID := req.TeacherID
+		if tID == "" {
+			tID = teacherProfileID
+		}
+		if tID == "" {
+			tID = teacherID
+		}
+
 		grades = append(grades, &Grade{
 			StudentID:     req.StudentID,
-			SchoolID:      req.SchoolID,
+			SchoolID:      sID,
 			SubjectID:     req.SubjectID,
 			GradeValue:    req.GradeValue,
 			GradeType:     req.GradeType,
 			Date:          req.Date,
-			TeacherID:     teacherID,
+			TeacherID:     tID,
 			CreatedBy:     teacherID,
 			Semester:      Semester(req.Semester),
 			GradeCategory: req.GradeCategory,
@@ -170,7 +188,7 @@ func ProcessBulkImport(repo Repository, reqs []ImportRequest, teacherID string) 
 	if len(grades) > 0 {
 		err := repo.BatchCreate(grades)
 		if err != nil {
-			return res, err
+			return res, fmt.Errorf("failed to import grades batch: %w", err)
 		}
 		res.Imported = len(grades)
 	}

@@ -348,8 +348,9 @@ func (h *Handler) UpdateAdminUser(c *gin.Context) {
 func (h *Handler) DeleteAdminUser(c *gin.Context) {
 	adminID := c.Param("id")
 	currentUserID, _ := auth.GetUserID(c)
+	callerRole, _ := auth.GetUserRole(c)
 
-	err := h.service.DeleteAdminUser(c.Request.Context(), adminID, currentUserID)
+	err := h.service.DeleteAdminUser(c.Request.Context(), callerRole, adminID, currentUserID)
 	if err != nil {
 		if err == ErrCannotDeleteSelf {
 			c.JSON(http.StatusBadRequest, ErrorResponse{

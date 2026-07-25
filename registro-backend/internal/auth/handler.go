@@ -215,12 +215,16 @@ func (h *Handler) VerifyMFA(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.VerifyMFA(c.Request.Context(), userID, req.Token); err != nil {
+	codes, err := h.service.VerifyMFA(c.Request.Context(), userID, req.Token)
+	if err != nil {
 		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, MessageResponse{Message: "MFA verified successfully"})
+	c.JSON(http.StatusOK, gin.H{
+		"message":        "MFA verified successfully",
+		"recovery_codes": codes,
+	})
 }
 
 // RequestPasswordReset handles password reset request

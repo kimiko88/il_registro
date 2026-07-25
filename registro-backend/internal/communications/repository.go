@@ -281,9 +281,21 @@ func (r *PostgresRepository) Get(ctx context.Context, id string) (*Message, erro
 }
 
 func (r *PostgresRepository) Update(ctx context.Context, id string, subject, body string) error {
-	query := `UPDATE communications SET subject = COALESCE(NULLIF($2, ''), subject), body = COALESCE(NULLIF($3, ''), body) WHERE id = $1::uuid`
-	_, err := r.db.ExecContext(ctx, query, id, subject, body)
-	return err
+	query := `
+		UPDATE communications 
+		SET subject = COALESCE(NULLIF($2, ''), subject), body = COALESCE(NULLIF($3, ''), body) 
+		WHERE id = $1::uuid 
+		  AND NOT EXISTS (SELECT 1 FROM communication_signatures WHERE communication_id = $1::uuid)
+	`
+	res, err := r.db.ExecContext(ctx, query, id, subject, body)
+	if err != nil {
+		return err
+	}
+	rows, _ := res.RowsAffected()
+	if rows == 0 {
+		return errors.New("impossibile modificare un messaggio inesistente o che contiene già firme digitali")
+	}
+	return nil
 }
 
 func (r *PostgresRepository) MarkAsRead(ctx context.Context, communicationID, userID, ipAddress string) error {

@@ -55,8 +55,8 @@ func (s *Service) CreateUser(ctx context.Context, actorRole string, req CreateUs
 		return nil, ErrUnauthorized
 	}
 
-	if len(req.Password) < 8 {
-		return nil, fmt.Errorf("password must be at least 8 characters long")
+	if err := validatePasswordComplexity(req.Password); err != nil {
+		return nil, err
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
@@ -471,6 +471,17 @@ func sanitizeCSV(s string) string {
 	return s
 }
 
+type UserExportDTO struct {
+	ID        string    `json:"id"`
+	Email     string    `json:"email"`
+	FirstName string    `json:"first_name"`
+	LastName  string    `json:"last_name"`
+	Role      string    `json:"role"`
+	SchoolID  *string   `json:"school_id,omitempty"`
+	IsActive  bool      `json:"is_active"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
 // ExportUsers exports users matching filter in specified format ("csv" or "json").
 func (s *Service) ExportUsers(ctx context.Context, actorRole string, filter UserFilter, format string) ([]byte, error) {
 	if !isPrivileged(actorRole) {
@@ -496,7 +507,21 @@ func (s *Service) ExportUsers(ctx context.Context, actorRole string, filter User
 		w.Flush()
 		return buf.Bytes(), nil
 	}
-	return json.Marshal(users)
+
+	var dtos []UserExportDTO
+	for _, u := range users {
+		dtos = append(dtos, UserExportDTO{
+			ID:        u.ID,
+			Email:     u.Email,
+			FirstName: u.FirstName,
+			LastName:  u.LastName,
+			Role:      u.Role,
+			SchoolID:  u.SchoolID,
+			IsActive:  u.IsActive,
+			CreatedAt: u.CreatedAt,
+		})
+	}
+	return json.Marshal(dtos)
 }
 
 func (s *Service) GetStudentFascicolo(ctx context.Context, actorID, actorRole, studentID string) (*StudentFascicolo, error) {
@@ -516,7 +541,10 @@ func (s *Service) GetStudentFascicolo(ctx context.Context, actorID, actorRole, s
 		return nil, err
 	}
 
-	guardians, _ := s.repo.GetGuardians(ctx, studentID)
+	var guardians []GuardianInfo
+	if studentProfileID, err := s.repo.GetStudentProfile(ctx, studentID); err == nil && studentProfileID != "" {
+		guardians, _ = s.repo.GetGuardians(ctx, studentProfileID)
+	}
 
 	summary := map[string]interface{}{
 		"status":          "Active",

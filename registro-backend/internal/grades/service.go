@@ -228,7 +228,10 @@ func (s *service) GetClassGrades(ctx context.Context, actorID string, actorRole 
 	}
 
 	resp := &ClassGradesResponse{ClassID: classID}
-	studentUsers, _ := s.userRepo.GetStudentsByClass(ctx, classID)
+	studentUsers, err := s.userRepo.GetStudentsByClass(ctx, classID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch class students: %w", err)
+	}
 	addedStudents := make(map[string]bool)
 
 	for _, u := range studentUsers {
@@ -329,7 +332,12 @@ func (s *service) GetSubjectGrades(ctx context.Context, actorID string, actorRol
 	dist := make(map[string]int)
 	seenStudents := make(map[string]bool)
 
+	var validGrades []Grade
 	for _, g := range grades {
+		if g.DeletedAt != nil {
+			continue
+		}
+		validGrades = append(validGrades, g)
 		if !seenStudents[g.StudentID] {
 			seenStudents[g.StudentID] = true
 			totalStudents++
@@ -348,8 +356,8 @@ func (s *service) GetSubjectGrades(ctx context.Context, actorID string, actorRol
 	}
 
 	var avg float64
-	if len(grades) > 0 {
-		avg = sum / float64(len(grades))
+	if len(validGrades) > 0 {
+		avg = sum / float64(len(validGrades))
 	}
 
 	stat.Classes = append(stat.Classes, ClassStat{
@@ -441,7 +449,21 @@ func (s *service) BulkImport(teacherID string, file io.Reader, semester int) (*I
 		return nil, err
 	}
 
-	res, err := ProcessBulkImport(s.repo, reqs, teacherID)
+	teacherUser, _ := s.userRepo.GetByID(context.Background(), teacherID)
+	var schoolID string
+	if teacherUser != nil && teacherUser.SchoolID != nil {
+		schoolID = *teacherUser.SchoolID
+	}
+
+	var teacherProfileID string
+	if s.validator != nil && s.validator.db != nil {
+		_ = s.validator.db.QueryRow(`SELECT id FROM teachers WHERE user_id = $1`, teacherID).Scan(&teacherProfileID)
+	}
+	if teacherProfileID == "" {
+		teacherProfileID = teacherID
+	}
+
+	res, err := ProcessBulkImport(s.repo, reqs, teacherID, teacherProfileID, schoolID)
 	if err != nil {
 		return nil, err
 	}
@@ -882,7 +904,8 @@ func (s *service) GetSemesterReport(studentID string, semester int) (*SemesterRe
 			 FROM users u
 			 LEFT JOIN class_students cs ON u.id = cs.student_id
 			 LEFT JOIN classes c ON cs.class_id = c.id
-			 WHERE u.id = $1`, studentID,
+			 WHERE u.id = $1
+			 ORDER BY cs.created_at DESC LIMIT 1`, studentID,
 		).Scan(&studentName, &className)
 	}
 	if studentName == "" {
@@ -971,13 +994,14 @@ func (s *service) GetSemesterReport(studentID string, semester int) (*SemesterRe
 		}
 	}
 
+	gradedCount := len(subMap)
 	overall := 0.0
-	if len(subjects) > 0 {
-		overall = math.Round((totalSum/float64(len(subjects)))*100) / 100
+	if gradedCount > 0 {
+		overall = math.Round((totalSum/float64(gradedCount))*100) / 100
 	}
 
 	promoted := "NO"
-	if len(subjects) > 0 && passedCount == len(subjects) {
+	if gradedCount > 0 && passedCount == gradedCount {
 		promoted = "SÌ"
 	}
 
@@ -1284,7 +1308,7 @@ func (s *service) DeleteClassTest(teacherID string, testID string) error {
 			`SELECT id FROM teachers WHERE user_id = $1`, teacherID,
 		).Scan(&teacherProfileID)
 	}
-	if test.TeacherID != teacherID && test.TeacherID != teacherProfileID {
+	if test.TeacherID != teacherID && (teacherProfileID == "" || test.TeacherID != teacherProfileID) {
 		return ErrUnauthorized
 	}
 	return s.repo.DeleteTest(testID)
@@ -1307,11 +1331,13 @@ func (s *service) UpdateClassTest(teacherID string, testID string, req UpdateCla
 		return fmt.Errorf("could not resolve teacher profile ID: %w", err)
 	}
 
-	var classID, subjectID string
-	if err := s.validator.db.QueryRow(
-		`SELECT class_id, subject_id FROM class_tests WHERE id = $1`, testID,
-	).Scan(&classID, &subjectID); err != nil {
+	test, err := s.repo.FindTestByID(testID)
+	if err != nil {
 		return fmt.Errorf("could not resolve test details: %w", err)
+	}
+
+	if test.TeacherID != teacherID && (teacherProfileID == "" || test.TeacherID != teacherProfileID) {
+		return ErrUnauthorized
 	}
 
 	testDate, err := time.Parse("2006-01-02", req.Date)
@@ -1319,17 +1345,11 @@ func (s *service) UpdateClassTest(teacherID string, testID string, req UpdateCla
 		return fmt.Errorf("invalid test date format '%s': %w", req.Date, err)
 	}
 
-	test := &ClassTest{
-		ID:             testID,
-		ClassID:        classID,
-		SubjectID:      subjectID,
-		TeacherID:      teacherID,
-		Title:          req.Title,
-		Date:           testDate,
-		TeacherNotes:   req.TeacherNotes,
-		ParentNotes:    req.ParentNotes,
-		EvaluationType: req.EvaluationType,
-	}
+	test.Title = req.Title
+	test.Date = testDate
+	test.TeacherNotes = req.TeacherNotes
+	test.ParentNotes = req.ParentNotes
+	test.EvaluationType = req.EvaluationType
 
 	if err := s.repo.UpdateTest(test); err != nil {
 		return fmt.Errorf("failed to update test metadata: %w", err)
@@ -1400,7 +1420,7 @@ func (s *service) UpdateClassTest(teacherID string, testID string, req UpdateCla
 		} else {
 			grade := &Grade{
 				StudentID:      gInput.StudentID,
-				SubjectID:      subjectID,
+				SubjectID:      test.SubjectID,
 				TeacherID:      teacherProfileID,
 				SchoolID:       schoolID,
 				GradeValue:     *gInput.GradeValue,

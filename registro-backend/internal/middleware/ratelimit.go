@@ -60,24 +60,10 @@ func NewIPRateLimiter(r rate.Limit, b int) *IPRateLimiter {
 
 // GetLimiter returns (or creates) the rate limiter for the given IP, updating its lastSeen.
 func (i *IPRateLimiter) GetLimiter(ip string) *rate.Limiter {
-	// Fast path: read lock
-	i.mu.RLock()
-	entry, exists := i.ips[ip]
-	i.mu.RUnlock()
-
-	if exists {
-		i.mu.Lock()
-		entry.lastSeen = time.Now()
-		i.mu.Unlock()
-		return entry.limiter
-	}
-
-	// Slow path: create new entry
 	i.mu.Lock()
 	defer i.mu.Unlock()
 
-	// Double-check after acquiring write lock
-	if entry, exists = i.ips[ip]; exists {
+	if entry, exists := i.ips[ip]; exists {
 		entry.lastSeen = time.Now()
 		return entry.limiter
 	}

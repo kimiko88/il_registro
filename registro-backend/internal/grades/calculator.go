@@ -52,9 +52,9 @@ func (c *Calculator) ConvertJudgmentToValue(judgment string) float64 {
 	case "Sufficiente":
 		return 6.0
 	case "Mediocre", "Quasi Sufficiente":
-		return 5.0 // Or 4.5
+		return 5.0
 	case "Insufficiente":
-		return 4.0 // Or 3.0
+		return 4.0
 	case "Gravemente Insufficiente":
 		return 3.0
 	default:
@@ -111,7 +111,12 @@ func (c *Calculator) CalculateStandardDeviation(grades []Grade) float64 {
 		return 0
 	}
 
-	mean := c.CalculateAverage(grades)
+	var sum float64
+	for _, v := range vals {
+		sum += v
+	}
+	mean := sum / float64(len(vals))
+
 	var varianceSum float64
 	for _, v := range vals {
 		varianceSum += math.Pow(v-mean, 2)
@@ -125,7 +130,11 @@ func (c *Calculator) CalculateBellCurve(grades []Grade) (mean, stdDev, skewness,
 		return 0, 0, 0, 0
 	}
 
-	mean = c.CalculateAverage(grades)
+	var sum float64
+	for _, v := range vals {
+		sum += v
+	}
+	mean = sum / float64(len(vals))
 	stdDev = c.CalculateStandardDeviation(grades)
 
 	if stdDev == 0 {
@@ -152,13 +161,16 @@ func (c *Calculator) CalculatePercentile(grades []Grade, score float64) float64 
 	}
 
 	countBelow := 0
+	countEqual := 0
 	for _, v := range vals {
 		if v < score {
 			countBelow++
+		} else if v == score {
+			countEqual++
 		}
 	}
 
-	return (float64(countBelow) / float64(len(vals))) * 100
+	return ((float64(countBelow) + 0.5*float64(countEqual)) / float64(len(vals))) * 100
 }
 
 func (c *Calculator) DetectOutliers(grades []Grade) []string {

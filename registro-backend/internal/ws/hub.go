@@ -168,45 +168,36 @@ func (h *Hub) deliverLocally(msg Message) {
 		return
 	}
 
-	h.mu.Lock()
-	defer h.mu.Unlock()
-
+	var targetClients []*Client
+	h.mu.RLock()
 	if msg.Recipient != "" {
-		// Unicast: solo al destinatario specifico
-		clients, ok := h.clients[msg.Recipient]
-		if !ok {
-			return
-		}
-		for client := range clients {
-			if isRoleAllowed(client.Role, msg.AllowedRoles) {
-				h.sendToClient(client, clients, bytes)
-			}
-		}
-		if len(clients) == 0 {
-			delete(h.clients, msg.Recipient)
-		}
-	} else if msg.SchoolID != "" {
-		// Broadcast per scuola (con filtro opzionale per ruolo)
-		for userID, clients := range h.clients {
+		if clients, ok := h.clients[msg.Recipient]; ok {
 			for client := range clients {
-				if client.SchoolID == msg.SchoolID && isRoleAllowed(client.Role, msg.AllowedRoles) {
-					h.sendToClient(client, clients, bytes)
+				if isRoleAllowed(client.Role, msg.AllowedRoles) {
+					targetClients = append(targetClients, client)
 				}
 			}
-			if len(clients) == 0 {
-				delete(h.clients, userID)
+		}
+	} else if msg.SchoolID != "" {
+		for _, clients := range h.clients {
+			for client := range clients {
+				if client.SchoolID == msg.SchoolID && isRoleAllowed(client.Role, msg.AllowedRoles) {
+					targetClients = append(targetClients, client)
+				}
 			}
 		}
 	}
-}
+	h.mu.RUnlock()
 
-// sendToClient invia bytes al client; se il canale è pieno, chiude il client.
-func (h *Hub) sendToClient(c *Client, siblings map[*Client]bool, bytes []byte) {
-	select {
-	case c.Send <- bytes:
-	default:
-		c.CloseSend()
-		delete(siblings, c)
+	for _, client := range targetClients {
+		select {
+		case client.Send <- bytes:
+		default:
+			select {
+			case h.unregister <- client:
+			default:
+			}
+		}
 	}
 }
 
@@ -224,16 +215,24 @@ func (h *Hub) publishToRedis(ctx context.Context, msg Message) {
 
 // --- API pubblica ---
 
+func (h *Hub) sendBroadcast(msg Message) {
+	select {
+	case h.localBroadcast <- msg:
+	default:
+		log.Printf("ws.Hub: localBroadcast channel full, message dropped: %s", msg.Type)
+	}
+}
+
 func (h *Hub) BroadcastToUser(userID, msgType string, payload interface{}) {
-	h.localBroadcast <- Message{Type: msgType, Payload: payload, Recipient: userID}
+	h.sendBroadcast(Message{Type: msgType, Payload: payload, Recipient: userID})
 }
 
 func (h *Hub) BroadcastToSchool(schoolID, msgType string, payload interface{}) {
-	h.localBroadcast <- Message{Type: msgType, Payload: payload, SchoolID: schoolID}
+	h.sendBroadcast(Message{Type: msgType, Payload: payload, SchoolID: schoolID})
 }
 
 func (h *Hub) BroadcastToSchoolRoles(schoolID string, allowedRoles []string, msgType string, payload interface{}) {
-	h.localBroadcast <- Message{Type: msgType, Payload: payload, SchoolID: schoolID, AllowedRoles: allowedRoles}
+	h.sendBroadcast(Message{Type: msgType, Payload: payload, SchoolID: schoolID, AllowedRoles: allowedRoles})
 }
 
 func isRoleAllowed(role string, allowed []string) bool {
