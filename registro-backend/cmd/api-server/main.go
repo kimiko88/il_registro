@@ -63,6 +63,9 @@ import (
 )
 
 func main() {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
 	// 1. Load Config
 	cfg, err := config.LoadConfig()
 	if err != nil {
@@ -88,8 +91,8 @@ func main() {
 
 	tokenManager := jwt.NewTokenManager(privateKey, publicKey)
 	mfaService := auth.NewMFAService("RegistroElettronico")
-	wsHub := ws.NewHub()
-	go wsHub.Run()
+	wsHub := ws.NewHub(os.Getenv("REDIS_URL"))
+	go wsHub.Run(ctx)
 
 	// 5. Setup Repositories
 	authRepo := auth.NewRepository(database)
@@ -353,9 +356,6 @@ func main() {
 		Addr:    ":" + cfg.Server.Port,
 		Handler: r,
 	}
-
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
 
 	go func() {
 		logger.Log.Infof("Server starting on port %s", cfg.Server.Port)

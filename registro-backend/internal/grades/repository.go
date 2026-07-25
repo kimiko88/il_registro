@@ -463,7 +463,7 @@ func (r *repository) FindWithFilterPaginated(filter GradeFilter) ([]Grade, int, 
 		description, rubric_id, weight, is_published, published_at,
 		grade_category, evaluation_type, COALESCE(created_by::text, ''), created_at, updated_at, test_id `
 	paginatedQuery := selectCols + baseWhere + whereSuffix +
-		fmt.Sprintf(" ORDER BY date DESC LIMIT $%d OFFSET $%d", argIdx, argIdx+1)
+		fmt.Sprintf(" ORDER BY date DESC, created_at DESC LIMIT $%d OFFSET $%d", argIdx, argIdx+1)
 	args = append(args, pageSize, offset)
 
 	grades, err := r.scanGrades(paginatedQuery, args...)

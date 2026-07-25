@@ -1,6 +1,7 @@
 package ws
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 	"time"
@@ -9,8 +10,11 @@ import (
 )
 
 func TestHub_Run_RegisterUnregister(t *testing.T) {
-	hub := NewHub()
-	go hub.Run()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	hub := NewHub("")
+	go hub.Run(ctx)
 
 	client := &Client{
 		Hub:      hub,
@@ -44,8 +48,11 @@ func TestHub_Run_RegisterUnregister(t *testing.T) {
 }
 
 func TestHub_Broadcast(t *testing.T) {
-	hub := NewHub()
-	go hub.Run()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	hub := NewHub("")
+	go hub.Run(ctx)
 
 	client := &Client{
 		Hub:      hub,
@@ -63,7 +70,7 @@ func TestHub_Broadcast(t *testing.T) {
 		Recipient: "user-1",
 	}
 
-	hub.broadcast <- msg
+	hub.localBroadcast <- msg
 	time.Sleep(10 * time.Millisecond)
 
 	select {
