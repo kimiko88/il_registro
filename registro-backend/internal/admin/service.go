@@ -7,6 +7,8 @@ import (
 	"math"
 	"strings"
 
+	"golang.org/x/crypto/bcrypt"
+
 	"registro-backend/internal/auth"
 	"registro-backend/pkg/logger"
 )
@@ -188,7 +190,10 @@ func (s *Service) UpdateSchool(ctx context.Context, schoolID string, req *Update
 }
 
 // DeleteSchool deletes a school (superadmin only)
-func (s *Service) DeleteSchool(ctx context.Context, schoolID string) error {
+func (s *Service) DeleteSchool(ctx context.Context, callerRole, schoolID string) error {
+	if callerRole != "superadmin" {
+		return ErrUnauthorized
+	}
 	return s.repo.DeleteSchool(ctx, schoolID)
 }
 
@@ -227,7 +232,7 @@ func (s *Service) GetAdminUserByID(ctx context.Context, adminID string) (*AdminU
 }
 
 // CreateAdminUser creates a new admin user (superadmin only).
-// Validates password strength before persisting.
+// Validates password strength and hashes password before persisting.
 func (s *Service) CreateAdminUser(ctx context.Context, req *CreateAdminRequest) (*AdminUserResponse, error) {
 	// Validate that admin role has school_id
 	if req.Role == "admin" && (req.SchoolID == nil || *req.SchoolID == "") {
@@ -254,7 +259,15 @@ func (s *Service) CreateAdminUser(ctx context.Context, req *CreateAdminRequest) 
 		return nil, ErrAdminExists
 	}
 
-	admin, err := s.repo.CreateAdminUser(ctx, req)
+	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, fmt.Errorf("password hashing failed: %w", err)
+	}
+
+	reqCopy := *req
+	reqCopy.Password = string(hash)
+
+	admin, err := s.repo.CreateAdminUser(ctx, &reqCopy)
 	if err != nil {
 		return nil, err
 	}

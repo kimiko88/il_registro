@@ -329,6 +329,7 @@ func TestService_DeleteClass(t *testing.T) {
 		{
 			name: "successful delete",
 			mockFn: func(m *MockRepository) {
+				m.On("Get", mock.Anything, "class-123").Return(&Class{ID: "class-123", SchoolID: "school-1"}, nil)
 				m.On("Delete", mock.Anything, "class-123").Return(nil)
 			},
 			wantErr: false,
@@ -336,6 +337,7 @@ func TestService_DeleteClass(t *testing.T) {
 		{
 			name: "repository error",
 			mockFn: func(m *MockRepository) {
+				m.On("Get", mock.Anything, "class-123").Return(&Class{ID: "class-123", SchoolID: "school-1"}, nil)
 				m.On("Delete", mock.Anything, "class-123").Return(errors.New("delete failed"))
 			},
 			wantErr: true,
@@ -348,7 +350,7 @@ func TestService_DeleteClass(t *testing.T) {
 			tt.mockFn(mockRepo)
 			service := NewService(mockRepo)
 
-			err := service.DeleteClass(context.Background(), "class-123")
+			err := service.DeleteClass(context.Background(), "school-1", "class-123")
 
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -378,6 +380,7 @@ func TestService_AssignSubject(t *testing.T) {
 				HoursPerWeek: 4.0,
 			},
 			mockFn: func(m *MockRepository) {
+				m.On("Get", mock.Anything, "class-123").Return(&Class{ID: "class-123", SchoolID: "school-1"}, nil)
 				m.On("AssignSubject", mock.Anything, "class-123", "subject-456", &teacherID, 4.0).Return(nil)
 			},
 			wantErr: false,
@@ -391,6 +394,7 @@ func TestService_AssignSubject(t *testing.T) {
 			},
 			mockFn: func(m *MockRepository) {
 				var nilTeacher *string
+				m.On("Get", mock.Anything, "class-123").Return(&Class{ID: "class-123", SchoolID: "school-1"}, nil)
 				m.On("AssignSubject", mock.Anything, "class-123", "subject-789", nilTeacher, 3.0).Return(nil)
 			},
 			wantErr: false,
@@ -403,6 +407,7 @@ func TestService_AssignSubject(t *testing.T) {
 			},
 			mockFn: func(m *MockRepository) {
 				var nilTeacher *string
+				m.On("Get", mock.Anything, "class-123").Return(&Class{ID: "class-123", SchoolID: "school-1"}, nil)
 				m.On("AssignSubject", mock.Anything, "class-123", "subject-456", nilTeacher, 4.0).Return(errors.New("assignment failed"))
 			},
 			wantErr: true,
@@ -415,7 +420,7 @@ func TestService_AssignSubject(t *testing.T) {
 			tt.mockFn(mockRepo)
 			service := NewService(mockRepo)
 
-			err := service.AssignSubject(context.Background(), "class-123", tt.req)
+			err := service.AssignSubject(context.Background(), "school-1", "class-123", tt.req)
 
 			if tt.wantErr {
 				assert.Error(t, err)

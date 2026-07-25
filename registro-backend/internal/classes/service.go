@@ -14,6 +14,13 @@ func NewService(repo Repository) *Service {
 }
 
 func (s *Service) CreateClass(ctx context.Context, schoolID string, req CreateClassRequest) (*Class, error) {
+	if req.Name == "" {
+		return nil, fmt.Errorf("class name is required")
+	}
+	if req.AcademicYear == "" {
+		return nil, fmt.Errorf("academic year is required")
+	}
+
 	c := &Class{
 		SchoolID:      schoolID,
 		Name:          req.Name,
@@ -49,6 +56,10 @@ func (s *Service) UpdateClass(ctx context.Context, schoolID, id string, req Crea
 		return nil, fmt.Errorf("forbidden: class belongs to another school")
 	}
 
+	if req.Name == "" {
+		return nil, fmt.Errorf("class name is required")
+	}
+
 	c.Name = req.Name
 	c.Section = req.Section
 	c.Articolazione = req.Articolazione
@@ -61,11 +72,25 @@ func (s *Service) UpdateClass(ctx context.Context, schoolID, id string, req Crea
 	return c, nil
 }
 
-func (s *Service) DeleteClass(ctx context.Context, id string) error {
+func (s *Service) DeleteClass(ctx context.Context, schoolID, id string) error {
+	c, err := s.repo.Get(ctx, id)
+	if err != nil {
+		return err
+	}
+	if c.SchoolID != schoolID {
+		return fmt.Errorf("forbidden: class belongs to another school")
+	}
 	return s.repo.Delete(ctx, id)
 }
 
-func (s *Service) AssignSubject(ctx context.Context, classID string, req AssignSubjectRequest) error {
+func (s *Service) AssignSubject(ctx context.Context, schoolID, classID string, req AssignSubjectRequest) error {
+	c, err := s.repo.Get(ctx, classID)
+	if err != nil {
+		return err
+	}
+	if c.SchoolID != schoolID {
+		return fmt.Errorf("forbidden: class belongs to another school")
+	}
 	return s.repo.AssignSubject(ctx, classID, req.SubjectID, req.TeacherID, req.HoursPerWeek)
 }
 

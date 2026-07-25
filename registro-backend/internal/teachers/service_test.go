@@ -165,7 +165,7 @@ func TestService_GetTeacher(t *testing.T) {
 			tt.mockFn(mockRepo)
 
 			service := NewService(mockRepo)
-			teacher, err := service.GetTeacher(context.Background(), tt.id)
+			teacher, err := service.GetTeacher(context.Background(), "", tt.id)
 
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -337,7 +337,7 @@ func TestService_AssignSubject(t *testing.T) {
 			tt.mockFn(mockRepo)
 
 			service := NewService(mockRepo)
-			err := service.AssignSubject(context.Background(), tt.teacherID, tt.subjectID)
+			err := service.AssignSubject(context.Background(), "admin", "", tt.teacherID, tt.subjectID)
 
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -384,7 +384,7 @@ func TestService_RemoveSubject(t *testing.T) {
 			tt.mockFn(mockRepo)
 
 			service := NewService(mockRepo)
-			err := service.RemoveSubject(context.Background(), tt.teacherID, tt.subjectID)
+			err := service.RemoveSubject(context.Background(), "admin", "", tt.teacherID, tt.subjectID)
 
 			if tt.wantErr {
 				assert.Error(t, err)

@@ -61,7 +61,7 @@ func (h *Handler) Get(c *gin.Context) {
 		return
 	}
 
-	teacher, err := h.service.GetTeacher(c.Request.Context(), c.Param("id"))
+	teacher, err := h.service.GetTeacher(c.Request.Context(), schoolID, c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -93,17 +93,13 @@ func (h *Handler) AssignSubject(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "admin" && role != "superadmin" && role != "secretary" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
-		return
-	}
 
 	var req AssignSubjectRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	if err := h.service.AssignSubject(c.Request.Context(), c.Param("id"), req.SubjectID); err != nil {
+	if err := h.service.AssignSubject(c.Request.Context(), role, schoolID, c.Param("id"), req.SubjectID); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -118,12 +114,8 @@ func (h *Handler) RemoveSubject(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "admin" && role != "superadmin" && role != "secretary" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
-		return
-	}
 
-	if err := h.service.RemoveSubject(c.Request.Context(), c.Param("id"), c.Param("subjectId")); err != nil {
+	if err := h.service.RemoveSubject(c.Request.Context(), role, schoolID, c.Param("id"), c.Param("subjectId")); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -131,13 +123,14 @@ func (h *Handler) RemoveSubject(c *gin.Context) {
 }
 
 func (h *Handler) GetDashboardStats(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 
-	stats, err := h.service.GetDashboardStats(c.Request.Context(), userID.(string))
+	stats, err := h.service.GetDashboardStats(c.Request.Context(), userID, userID, role)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

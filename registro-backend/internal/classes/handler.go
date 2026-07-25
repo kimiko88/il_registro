@@ -128,7 +128,7 @@ func (h *Handler) Delete(c *gin.Context) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
-	if err := h.service.DeleteClass(c.Request.Context(), c.Param("id")); err != nil {
+	if err := h.service.DeleteClass(c.Request.Context(), schoolID, c.Param("id")); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -169,7 +169,7 @@ func (h *Handler) AssignSubject(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	if err := h.service.AssignSubject(c.Request.Context(), c.Param("id"), req); err != nil {
+	if err := h.service.AssignSubject(c.Request.Context(), schoolID, c.Param("id"), req); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

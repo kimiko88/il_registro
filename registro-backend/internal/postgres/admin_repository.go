@@ -584,8 +584,6 @@ func (r *AdminRepository) GetAdminUserByID(ctx context.Context, adminID string) 
 
 // CreateAdminUser creates a new admin user
 func (r *AdminRepository) CreateAdminUser(ctx context.Context, req *admin.CreateAdminRequest) (*admin.AdminUserResponse, error) {
-	defaultHash := "$2a$10$i/ZZOUG0J0m5YaNUYQszo.Cj9k7Ok3MgR7ue31A.U.2dJxQ5BHhp6"
-
 	query := `
 		INSERT INTO users (email, password_hash, first_name, last_name, role, school_id, email_verified)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -597,7 +595,7 @@ func (r *AdminRepository) CreateAdminUser(ctx context.Context, req *admin.Create
 
 	err := r.db.QueryRowContext(ctx, query,
 		req.Email,
-		defaultHash,
+		req.Password,
 		req.FirstName,
 		req.LastName,
 		req.Role,

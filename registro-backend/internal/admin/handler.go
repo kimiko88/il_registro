@@ -196,7 +196,8 @@ func (h *Handler) DeleteSchool(c *gin.Context) {
 		return
 	}
 
-	err := h.service.DeleteSchool(c.Request.Context(), schoolID)
+	callerRole, _ := auth.GetUserRole(c)
+	err := h.service.DeleteSchool(c.Request.Context(), callerRole, schoolID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, ErrorResponse{
 			Error:   "failed to delete school",
