@@ -324,6 +324,7 @@ func TestLogin(t *testing.T) {
 
 		mockRepo.On("GetRecentLoginAttempts", mock.Anything, req.Email, mock.Anything, mock.Anything).Return(0, nil).Once()
 		mockRepo.On("GetUserByEmail", mock.Anything, req.Email).Return(inactiveUser, nil).Once()
+		mockRepo.On("RecordLoginAttempt", mock.Anything, mock.Anything).Return(nil).Once()
 
 		resp, err := s.Login(context.Background(), req, "127.0.0.1", "test-agent")
 

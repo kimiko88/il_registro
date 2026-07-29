@@ -41,6 +41,18 @@ func getActorID(c *gin.Context) string {
 	return v
 }
 
+func getSchoolID(c *gin.Context) string {
+	schoolID, exists := c.Get("school_id")
+	if !exists {
+		return ""
+	}
+	v, ok := schoolID.(string)
+	if !ok {
+		return ""
+	}
+	return v
+}
+
 // 1. POST /api/v1/users
 func (h *Handler) Create(c *gin.Context) {
 	if getActorID(c) == "" || getActorRole(c) == "" {
@@ -122,7 +134,7 @@ func (h *Handler) List(c *gin.Context) {
 		ClassID:   c.Query("class_id"),
 	}
 
-	users, total, err := h.service.ListUsers(c.Request.Context(), getActorRole(c), filter)
+	users, total, err := h.service.ListUsers(c.Request.Context(), getActorRole(c), getSchoolID(c), filter)
 	if err != nil {
 		if err == ErrUnauthorized {
 			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
@@ -162,7 +174,7 @@ func (h *Handler) Update(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	user, err := h.service.UpdateUser(c.Request.Context(), getActorRole(c), c.Param("id"), req)
+	user, err := h.service.UpdateUser(c.Request.Context(), getActorRole(c), getSchoolID(c), c.Param("id"), req)
 	if err != nil {
 		if err == ErrUnauthorized {
 			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
@@ -184,7 +196,7 @@ func (h *Handler) Update(c *gin.Context) {
 
 // 5. DELETE /api/v1/users/{id}
 func (h *Handler) Delete(c *gin.Context) {
-	if err := h.service.DeleteUser(c.Request.Context(), getActorRole(c), c.Param("id")); err != nil {
+	if err := h.service.DeleteUser(c.Request.Context(), getActorRole(c), getSchoolID(c), c.Param("id")); err != nil {
 		if err == ErrUnauthorized {
 			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 			return
@@ -283,7 +295,7 @@ func (h *Handler) ForceResetPassword(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	if err := h.service.ResetPassword(c.Request.Context(), getActorRole(c), c.Param("id"), body.NewPassword); err != nil {
+	if err := h.service.ResetPassword(c.Request.Context(), getActorRole(c), getSchoolID(c), c.Param("id"), body.NewPassword); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -297,7 +309,7 @@ func (h *Handler) AssignRoles(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	user, err := h.service.UpdateUser(c.Request.Context(), getActorRole(c), c.Param("id"), UpdateUserRequest{
+	user, err := h.service.UpdateUser(c.Request.Context(), getActorRole(c), getSchoolID(c), c.Param("id"), UpdateUserRequest{
 		Role: &req.Role,
 	})
 	if err != nil {
@@ -366,11 +378,12 @@ func (h *Handler) DisableMFA(c *gin.Context) {
 // 16. GET /api/v1/users/me/children
 func (h *Handler) GetMyChildren(c *gin.Context) {
 	actorID := getActorID(c)
+	actorRole := getActorRole(c)
 	if actorID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	children, err := h.service.GetChildren(c.Request.Context(), actorID)
+	children, err := h.service.GetChildren(c.Request.Context(), actorRole, actorID, actorID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

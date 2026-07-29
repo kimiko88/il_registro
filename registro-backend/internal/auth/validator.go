@@ -17,7 +17,7 @@ const (
 const (
 	RoleSuperAdmin = "superadmin"
 	RoleAdmin      = "admin"
-	RoleSegreteria = "segreteria"
+	RoleSecretary  = "secretary"
 	RoleTeacher    = "teacher"
 	RoleStudent    = "student"
 	RoleParent     = "parent"
@@ -27,44 +27,34 @@ const (
 var allRoles = map[string]bool{
 	RoleSuperAdmin: true,
 	RoleAdmin:      true,
-	RoleSegreteria: true,
+	RoleSecretary:  true,
 	RoleTeacher:    true,
 	RoleStudent:    true,
 	RoleParent:     true,
 }
 
 // creatableRoles defines which roles each caller role is allowed to create.
-//
-// Permission matrix:
-//
-//	superadmin → can create any role
-//	admin      → can create admin, segreteria, teacher, student, parent
-//	             (cannot create superadmin)
-//	segreteria → can create segreteria, teacher, student, parent
-//	             (cannot create superadmin or admin)
-//
-// Any role not listed here (teacher, student, parent) cannot register other users.
 var creatableRoles = map[string]map[string]bool{
 	RoleSuperAdmin: {
 		RoleSuperAdmin: true,
 		RoleAdmin:      true,
-		RoleSegreteria: true,
+		RoleSecretary:  true,
 		RoleTeacher:    true,
 		RoleStudent:    true,
 		RoleParent:     true,
 	},
 	RoleAdmin: {
-		RoleAdmin:      true,
-		RoleSegreteria: true,
-		RoleTeacher:    true,
-		RoleStudent:    true,
-		RoleParent:     true,
+		RoleAdmin:     true,
+		RoleSecretary: true,
+		RoleTeacher:   true,
+		RoleStudent:   true,
+		RoleParent:    true,
 	},
-	RoleSegreteria: {
-		RoleSegreteria: true,
-		RoleTeacher:    true,
-		RoleStudent:    true,
-		RoleParent:     true,
+	RoleSecretary: {
+		RoleSecretary: true,
+		RoleTeacher:   true,
+		RoleStudent:   true,
+		RoleParent:    true,
 	},
 }
 

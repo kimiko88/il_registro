@@ -136,20 +136,28 @@ func (m *Middleware) RequireRole(allowedRoles ...string) gin.HandlerFunc {
 
 // GetUserID extracts user ID from context
 func GetUserID(c *gin.Context) (string, bool) {
-	userID, exists := c.Get("user_id")
+	val, exists := c.Get("user_id")
 	if !exists {
 		return "", false
 	}
-	return userID.(string), true
+	s, ok := val.(string)
+	if !ok || s == "" {
+		return "", false
+	}
+	return s, true
 }
 
 // GetUserRole extracts user role from context
 func GetUserRole(c *gin.Context) (string, bool) {
-	role, exists := c.Get("role")
+	val, exists := c.Get("role")
 	if !exists {
 		return "", false
 	}
-	return role.(string), true
+	s, ok := val.(string)
+	if !ok || s == "" {
+		return "", false
+	}
+	return s, true
 }
 
 // GetSchoolID extracts school ID from context

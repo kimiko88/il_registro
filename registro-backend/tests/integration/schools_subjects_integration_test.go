@@ -35,6 +35,11 @@ func TestSchoolsSubjectsIntegration(t *testing.T) {
 
 	// Register Routes
 	schoolsGroup := router.Group("/schools")
+	schoolsGroup.Use(func(c *gin.Context) {
+		c.Set("user_id", "test-user-id")
+		c.Set("role", "superadmin")
+		c.Next()
+	})
 	{
 		schoolsGroup.POST("", func(c *gin.Context) {
 			schoolHandler.Create(c)

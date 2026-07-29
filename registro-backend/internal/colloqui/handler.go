@@ -122,6 +122,7 @@ func (h *Handler) ListSlots(c *gin.Context) {
 
 func (h *Handler) CancelSlot(c *gin.Context) {
 	userID := c.GetString("user_id")
+	schoolID := c.GetString("school_id")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
@@ -129,7 +130,7 @@ func (h *Handler) CancelSlot(c *gin.Context) {
 	role := c.GetString("role")
 	slotID := c.Param("id")
 
-	if err := h.service.CancelSlot(c.Request.Context(), userID, role, slotID); err != nil {
+	if err := h.service.CancelSlot(c.Request.Context(), userID, role, schoolID, slotID); err != nil {
 		if err == ErrUnauthorized {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
@@ -142,6 +143,7 @@ func (h *Handler) CancelSlot(c *gin.Context) {
 
 func (h *Handler) CreateBooking(c *gin.Context) {
 	userID := c.GetString("user_id")
+	schoolID := c.GetString("school_id")
 	role := c.GetString("role")
 
 	if userID == "" || (role != "parent" && role != "student" && role != "admin" && role != "superadmin") {
@@ -155,7 +157,7 @@ func (h *Handler) CreateBooking(c *gin.Context) {
 		return
 	}
 
-	booking, err := h.service.BookSlot(c.Request.Context(), userID, req)
+	booking, err := h.service.BookSlot(c.Request.Context(), userID, schoolID, req)
 	if err != nil {
 		if err == ErrSlotFull || err == ErrAlreadyBooked || err == ErrSlotCancelled {
 			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
@@ -234,6 +236,7 @@ func (h *Handler) UpdateBookingStatus(c *gin.Context) {
 
 func (h *Handler) PatchSlot(c *gin.Context) {
 	userID := c.GetString("user_id")
+	schoolID := c.GetString("school_id")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
@@ -250,7 +253,7 @@ func (h *Handler) PatchSlot(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.PatchSlot(c.Request.Context(), userID, role, slotID, req.StartTime, req.EndTime); err != nil {
+	if err := h.service.PatchSlot(c.Request.Context(), userID, role, schoolID, slotID, req.StartTime, req.EndTime); err != nil {
 		if err == ErrUnauthorized {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
@@ -291,8 +294,8 @@ func (h *Handler) CreateAssembly(c *gin.Context) {
 	role := c.GetString("role")
 	schoolID := c.GetString("school_id")
 
-	if userID == "" || (role != "teacher" && role != "admin" && role != "superadmin") {
-		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+	if userID == "" || (role != "admin" && role != "superadmin" && role != "principal" && role != "vice_principal") {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: solo amministratori o dirigenti possono creare assemblee"})
 		return
 	}
 
@@ -302,7 +305,7 @@ func (h *Handler) CreateAssembly(c *gin.Context) {
 		return
 	}
 
-	slot, err := h.service.CreateAssembly(c.Request.Context(), userID, schoolID, req)
+	slot, err := h.service.CreateAssembly(c.Request.Context(), role, userID, schoolID, req)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

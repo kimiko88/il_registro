@@ -5,6 +5,8 @@ import (
 	"errors"
 	"testing"
 
+	"registro-backend/internal/users"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -48,6 +50,26 @@ func (m *MockRepository) List(ctx context.Context, filter NoteFilter) ([]Student
 func (m *MockRepository) ApproveNote(ctx context.Context, id string, approverID string) error {
 	args := m.Called(ctx, id, approverID)
 	return args.Error(0)
+}
+
+func (m *MockRepository) IsTeacherAssignedToClass(ctx context.Context, teacherID, classID string) (bool, error) {
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "IsTeacherAssignedToClass" {
+			args := m.Called(ctx, teacherID, classID)
+			return args.Bool(0), args.Error(1)
+		}
+	}
+	return true, nil
+}
+
+type MockUserRepo struct {
+	mock.Mock
+	users.Repository
+}
+
+func (m *MockUserRepo) IsGuardian(ctx context.Context, parentID, studentID string) (bool, error) {
+	args := m.Called(ctx, parentID, studentID)
+	return args.Bool(0), args.Error(1)
 }
 
 func TestService_CreateNote(t *testing.T) {
@@ -128,7 +150,7 @@ func TestService_CreateNote(t *testing.T) {
 			mockRepo := new(MockRepository)
 			tt.mockFn(mockRepo)
 
-			service := NewService(mockRepo)
+			service := NewService(mockRepo, new(MockUserRepo))
 			note, err := service.CreateNote(context.Background(), "teacher-789", "school-123", tt.req)
 
 			if tt.wantErr {
@@ -236,7 +258,7 @@ func TestService_UpdateNote(t *testing.T) {
 			mockRepo := new(MockRepository)
 			tt.mockFn(mockRepo)
 
-			service := NewService(mockRepo)
+			service := NewService(mockRepo, new(MockUserRepo))
 			note, err := service.UpdateNote(context.Background(), tt.teacherID, tt.noteID, tt.req)
 
 			if tt.wantErr {
@@ -307,7 +329,7 @@ func TestService_DeleteNote(t *testing.T) {
 			mockRepo := new(MockRepository)
 			tt.mockFn(mockRepo)
 
-			service := NewService(mockRepo)
+			service := NewService(mockRepo, new(MockUserRepo))
 			err := service.DeleteNote(context.Background(), tt.teacherID, tt.noteID)
 
 			if tt.wantErr {
@@ -392,7 +414,7 @@ func TestService_ListNotes(t *testing.T) {
 			mockRepo := new(MockRepository)
 			tt.mockFn(mockRepo)
 
-			service := NewService(mockRepo)
+			service := NewService(mockRepo, new(MockUserRepo))
 			notes, err := service.ListNotes(context.Background(), tt.filter)
 
 			if tt.wantErr {
@@ -409,7 +431,8 @@ func TestService_ListNotes(t *testing.T) {
 
 func TestNewService(t *testing.T) {
 	mockRepo := new(MockRepository)
-	service := NewService(mockRepo)
+	mockUserRepo := new(MockUserRepo)
+	service := NewService(mockRepo, mockUserRepo)
 
 	assert.NotNil(t, service)
 	assert.Equal(t, mockRepo, service.repo)

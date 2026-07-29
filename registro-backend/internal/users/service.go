@@ -105,9 +105,12 @@ func (s *Service) CreateUser(ctx context.Context, actorRole string, req CreateUs
 }
 
 // ListUsers returns a paginated, filtered list of users.
-func (s *Service) ListUsers(ctx context.Context, actorRole string, filter UserFilter) ([]User, int, error) {
+func (s *Service) ListUsers(ctx context.Context, actorRole, actorSchoolID string, filter UserFilter) ([]User, int, error) {
 	if !isPrivileged(actorRole) {
 		return nil, 0, ErrUnauthorized
+	}
+	if actorRole != "superadmin" && actorSchoolID != "" {
+		filter.SchoolID = &actorSchoolID
 	}
 	return s.repo.List(ctx, filter)
 }
@@ -121,7 +124,7 @@ func (s *Service) GetUser(ctx context.Context, actorRole string, id string) (*Us
 }
 
 // UpdateUser updates an existing user's fields.
-func (s *Service) UpdateUser(ctx context.Context, actorRole string, id string, req UpdateUserRequest) (*User, error) {
+func (s *Service) UpdateUser(ctx context.Context, actorRole, actorSchoolID, id string, req UpdateUserRequest) (*User, error) {
 	if !isPrivileged(actorRole) {
 		return nil, ErrUnauthorized
 	}
@@ -129,6 +132,10 @@ func (s *Service) UpdateUser(ctx context.Context, actorRole string, id string, r
 	user, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
+	}
+
+	if actorRole != "superadmin" && actorSchoolID != "" && user.SchoolID != nil && *user.SchoolID != actorSchoolID {
+		return nil, ErrUnauthorized
 	}
 
 	if req.FirstName != nil {
@@ -172,8 +179,15 @@ func (s *Service) UpdateUser(ctx context.Context, actorRole string, id string, r
 }
 
 // DeleteUser soft-deletes a user.
-func (s *Service) DeleteUser(ctx context.Context, actorRole string, id string) error {
+func (s *Service) DeleteUser(ctx context.Context, actorRole, actorSchoolID, id string) error {
 	if !isPrivileged(actorRole) {
+		return ErrUnauthorized
+	}
+	user, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	if actorRole != "superadmin" && actorSchoolID != "" && user.SchoolID != nil && *user.SchoolID != actorSchoolID {
 		return ErrUnauthorized
 	}
 	return s.repo.Delete(ctx, id)
@@ -183,6 +197,21 @@ func (s *Service) DeleteUser(ctx context.Context, actorRole string, id string) e
 func (s *Service) BulkDeleteUsers(ctx context.Context, actorRole string, ids []string) (int, error) {
 	if !isPrivileged(actorRole) {
 		return 0, ErrUnauthorized
+	}
+	if actorRole == "admin" || actorRole == "secretary" {
+		targetUsers, err := s.repo.ListByIDs(ctx, ids)
+		if err == nil {
+			var safeIDs []string
+			for _, tu := range targetUsers {
+				if tu.Role != "admin" && tu.Role != "superadmin" {
+					safeIDs = append(safeIDs, tu.ID)
+				}
+			}
+			ids = safeIDs
+		}
+	}
+	if len(ids) == 0 {
+		return 0, nil
 	}
 	return s.repo.BulkDelete(ctx, ids)
 }
@@ -202,6 +231,10 @@ func (s *Service) RestoreUser(ctx context.Context, actorRole string, id string) 
 func (s *Service) ChangePassword(ctx context.Context, userID string, req ChangePasswordRequest) error {
 	user, err := s.repo.GetByID(ctx, userID)
 	if err != nil {
+		return err
+	}
+
+	if err := validatePasswordComplexity(req.NewPassword); err != nil {
 		return err
 	}
 
@@ -262,8 +295,16 @@ func validatePasswordComplexity(password string) error {
 }
 
 // ResetPassword allows an admin to force-reset a user's password.
-func (s *Service) ResetPassword(ctx context.Context, actorRole string, userID string, newPassword string) error {
+func (s *Service) ResetPassword(ctx context.Context, actorRole, actorSchoolID, userID, newPassword string) error {
 	if actorRole != "admin" && actorRole != "superadmin" {
+		return ErrUnauthorized
+	}
+
+	user, err := s.repo.GetByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+	if actorRole != "superadmin" && actorSchoolID != "" && user.SchoolID != nil && *user.SchoolID != actorSchoolID {
 		return ErrUnauthorized
 	}
 
@@ -281,11 +322,6 @@ func (s *Service) ResetPassword(ctx context.Context, actorRole string, userID st
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
-	if err != nil {
-		return err
-	}
-
-	user, err := s.repo.GetByID(ctx, userID)
 	if err != nil {
 		return err
 	}
@@ -399,7 +435,10 @@ func (s *Service) GetAuditLogs(ctx context.Context, actorID, actorRole, targetID
 // ─── Relationships ───────────────────────────────────────────────────────────
 
 // GetChildren returns the list of students linked to a parent.
-func (s *Service) GetChildren(ctx context.Context, parentUserID string) ([]StudentChild, error) {
+func (s *Service) GetChildren(ctx context.Context, actorRole, actorID, parentUserID string) ([]StudentChild, error) {
+	if actorID != parentUserID && !isPrivileged(actorRole) {
+		return nil, ErrUnauthorized
+	}
 	return s.repo.GetChildren(ctx, parentUserID)
 }
 

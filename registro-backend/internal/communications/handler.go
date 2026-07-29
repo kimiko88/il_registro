@@ -95,6 +95,8 @@ func (h *Handler) ListCircolari(c *gin.Context) {
 
 func (h *Handler) Send(c *gin.Context) {
 	uid := c.GetString("user_id")
+	role := c.GetString("role")
+	schoolID := c.GetString("school_id")
 	if uid == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
@@ -108,9 +110,13 @@ func (h *Handler) Send(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "il corpo del messaggio supera il limite massimo consentito (64 KB)"})
 		return
 	}
-	msg, err := h.service.SendMessage(c.Request.Context(), uid, req)
+	msg, err := h.service.SendMessage(c.Request.Context(), role, schoolID, uid, req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		if strings.HasPrefix(err.Error(), "unauthorized") || strings.HasPrefix(err.Error(), "forbidden") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusCreated, msg)

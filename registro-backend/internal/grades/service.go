@@ -36,9 +36,9 @@ type Service interface {
 	GetClassGrades(ctx context.Context, actorID string, actorRole string, classID string, filter GradeFilter) (*ClassGradesResponse, error)
 	GetSubjectGrades(ctx context.Context, actorID string, actorRole string, subjectID string, filter GradeFilter) (*SubjectStatsResponse, error)
 	AddGrade(teacherID string, req CreateGradeRequest) (*GradeResponse, error)
-	BatchCreateGrades(teacherID string, grades []*Grade) error
+	BatchCreateGrades(teacherID, actorRole, schoolID string, grades []*Grade) error
 	BulkImport(teacherID string, r io.Reader, semester int) (*ImportResult, error)
-	Export(teacherID string, filter GradeFilter, format string) ([]byte, string, error)
+	Export(teacherID, schoolID string, filter GradeFilter, format string) ([]byte, string, error)
 	UpdateGrade(teacherID string, gradeID string, req UpdateGradeRequest) (*GradeResponse, error)
 	DeleteGrade(teacherID string, gradeID string) error
 
@@ -63,8 +63,8 @@ type Service interface {
 
 	// Weight Config
 	GetWeightConfigs(schoolID, subjectID, classID string) ([]GradeWeightConfig, error)
-	UpsertWeightConfig(actorID, schoolID string, req UpsertWeightConfigRequest) (*GradeWeightConfig, error)
-	DeleteWeightConfig(actorID, configID string) error
+	UpsertWeightConfig(actorID, actorRole, schoolID string, req UpsertWeightConfigRequest) (*GradeWeightConfig, error)
+	DeleteWeightConfig(actorID, actorRole, schoolID, configID string) error
 }
 
 type service struct {
@@ -182,7 +182,7 @@ func (s *service) GetStudentGradesPaged(ctx context.Context, actorID string, act
 
 func (s *service) GetClassGrades(ctx context.Context, actorID string, actorRole string, classID string, filter GradeFilter) (*ClassGradesResponse, error) {
 	// Permission check
-	if actorRole != "admin" && actorRole != "secretary" {
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" {
 		var coordID sql.NullString
 		if err := s.validator.db.QueryRow(
 			`SELECT coordinator_id FROM classes WHERE id = $1`, classID,
@@ -334,7 +334,14 @@ func (s *service) GetSubjectGrades(ctx context.Context, actorID string, actorRol
 
 	var validGrades []Grade
 	for _, g := range grades {
-		if g.DeletedAt != nil {
+		if g.DeletedAt != nil || !g.IsPublished {
+			continue
+		}
+		val := g.GradeValue
+		if val == 0 && g.GradeType == GradeTypeJudgment {
+			val = s.calculator.ConvertJudgmentToValue(g.Description)
+		}
+		if val <= 0 && g.GradeType != GradeTypeNumeric {
 			continue
 		}
 		validGrades = append(validGrades, g)
@@ -342,13 +349,13 @@ func (s *service) GetSubjectGrades(ctx context.Context, actorID string, actorRol
 			seenStudents[g.StudentID] = true
 			totalStudents++
 		}
-		sum += g.GradeValue
+		sum += val
 		switch {
-		case g.GradeValue < 4:
+		case val < 4:
 			dist["0-3"]++
-		case g.GradeValue < 7:
+		case val < 7:
 			dist["4-6"]++
-		case g.GradeValue < 9:
+		case val < 9:
 			dist["7-8"]++
 		default:
 			dist["9-10"]++
@@ -437,8 +444,30 @@ func (s *service) AddGrade(teacherID string, req CreateGradeRequest) (*GradeResp
 	return &resp, nil
 }
 
-func (s *service) BatchCreateGrades(teacherID string, grades []*Grade) error {
-	return s.repo.BatchCreate(grades)
+func (s *service) BatchCreateGrades(teacherID, actorRole, schoolID string, grades []*Grade) error {
+	if actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin" {
+		return ErrUnauthorized
+	}
+	if len(grades) == 0 {
+		return nil
+	}
+	seen := make(map[string]bool)
+	var deduped []*Grade
+	for _, g := range grades {
+		if g == nil {
+			continue
+		}
+		if actorRole != "superadmin" && schoolID != "" && g.SchoolID != "" && g.SchoolID != schoolID {
+			return fmt.Errorf("unauthorized: cannot create grades for another school")
+		}
+		key := fmt.Sprintf("%s_%s_%s_%.2f", g.StudentID, g.SubjectID, g.Date.Format("2006-01-02"), g.GradeValue)
+		if seen[key] {
+			continue
+		}
+		seen[key] = true
+		deduped = append(deduped, g)
+	}
+	return s.repo.BatchCreate(deduped)
 }
 
 func (s *service) BulkImport(teacherID string, file io.Reader, semester int) (*ImportResult, error) {
@@ -471,7 +500,16 @@ func (s *service) BulkImport(teacherID string, file io.Reader, semester int) (*I
 	return &res, nil
 }
 
-func (s *service) Export(teacherID string, filter GradeFilter, format string) ([]byte, string, error) {
+func (s *service) Export(teacherID, schoolID string, filter GradeFilter, format string) ([]byte, string, error) {
+	if teacherID == "" {
+		return nil, "", ErrUnauthorized
+	}
+	if filter.TeacherID == "" {
+		filter.TeacherID = teacherID
+	}
+	if schoolID != "" {
+		filter.SchoolID = schoolID
+	}
 	grades, err := s.repo.FindWithFilter(filter)
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to fetch grades for export: %w", err)
@@ -994,10 +1032,10 @@ func (s *service) GetSemesterReport(studentID string, semester int) (*SemesterRe
 		}
 	}
 
-	gradedCount := len(subMap)
+	gradedCount := len(subjects)
 	overall := 0.0
-	if gradedCount > 0 {
-		overall = math.Round((totalSum/float64(gradedCount))*100) / 100
+	if len(subMap) > 0 {
+		overall = math.Round((totalSum/float64(len(subMap)))*100) / 100
 	}
 
 	promoted := "NO"
@@ -1005,13 +1043,28 @@ func (s *service) GetSemesterReport(studentID string, semester int) (*SemesterRe
 		promoted = "SÌ"
 	}
 
+	behaviorGrade := 8.0
+	scholasticCredit := 8.0
+	if s.validator != nil && s.validator.db != nil {
+		var bg, sc sql.NullFloat64
+		_ = s.validator.db.QueryRow(
+			`SELECT behavior_grade, scholastic_credit FROM semester_reports WHERE student_id = $1 AND semester = $2`, studentID, semester,
+		).Scan(&bg, &sc)
+		if bg.Valid {
+			behaviorGrade = bg.Float64
+		}
+		if sc.Valid {
+			scholasticCredit = sc.Float64
+		}
+	}
+
 	return &SemesterReportResponse{
 		Semester:         semester,
 		StudentName:      studentName,
 		ClassName:        className,
 		SchoolYear:       schoolYear,
-		BehaviorGrade:    8.0,
-		ScholasticCredit: 8.0,
+		BehaviorGrade:    behaviorGrade,
+		ScholasticCredit: scholasticCredit,
 		OverallAverage:   overall,
 		TotalAbsenceDays: 0,
 		Subjects:         subjects,
@@ -1459,7 +1512,10 @@ func (s *service) GetWeightConfigs(schoolID, subjectID, classID string) ([]Grade
 }
 
 // UpsertWeightConfig creates or updates a weight configuration entry.
-func (s *service) UpsertWeightConfig(actorID, schoolID string, req UpsertWeightConfigRequest) (*GradeWeightConfig, error) {
+func (s *service) UpsertWeightConfig(actorID, actorRole, schoolID string, req UpsertWeightConfigRequest) (*GradeWeightConfig, error) {
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" {
+		return nil, ErrUnauthorized
+	}
 	if schoolID == "" {
 		return nil, fmt.Errorf("school_id is required")
 	}
@@ -1486,7 +1542,10 @@ func (s *service) UpsertWeightConfig(actorID, schoolID string, req UpsertWeightC
 }
 
 // DeleteWeightConfig removes a weight configuration entry.
-func (s *service) DeleteWeightConfig(actorID, configID string) error {
+func (s *service) DeleteWeightConfig(actorID, actorRole, schoolID, configID string) error {
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" {
+		return ErrUnauthorized
+	}
 	if configID == "" {
 		return fmt.Errorf("config id required")
 	}

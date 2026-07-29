@@ -214,7 +214,7 @@ func TestService_ListUsers(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mockSetup()
-			_, _, err := service.ListUsers(context.Background(), tt.actorRole, UserFilter{})
+			_, _, err := service.ListUsers(context.Background(), tt.actorRole, "", UserFilter{})
 			if tt.wantErr {
 				// We expect ErrUnauthorized
 				assert.Error(t, err)
@@ -317,7 +317,7 @@ func TestService_UpdateUser(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mockSetup()
-			_, err := service.UpdateUser(context.Background(), tt.actorRole, tt.userID, tt.req)
+			_, err := service.UpdateUser(context.Background(), tt.actorRole, "", tt.userID, tt.req)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
@@ -343,6 +343,7 @@ func TestService_DeleteUser(t *testing.T) {
 			actorRole: "admin",
 			userID:    "user-123",
 			mockSetup: func() {
+				mockRepo.On("GetByID", mock.Anything, "user-123").Return(&User{ID: "user-123"}, nil)
 				mockRepo.On("Delete", mock.Anything, "user-123").Return(nil)
 			},
 			wantErr: false,
@@ -359,7 +360,7 @@ func TestService_DeleteUser(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mockSetup()
-			err := service.DeleteUser(context.Background(), tt.actorRole, tt.userID)
+			err := service.DeleteUser(context.Background(), tt.actorRole, "", tt.userID)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
@@ -595,7 +596,7 @@ func TestService_GetChildren(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mockFn()
-			_, err := service.GetChildren(context.Background(), tt.parentID)
+			_, err := service.GetChildren(context.Background(), "parent", tt.parentID, tt.parentID)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {

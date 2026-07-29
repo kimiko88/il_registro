@@ -8,18 +8,22 @@ import (
 )
 
 type Handler struct {
-	repo Repository
+	service Service
 }
 
 func NewHandler(repo Repository) *Handler {
-	return &Handler{repo: repo}
+	return &Handler{service: NewService(repo)}
+}
+
+func NewHandlerWithService(service Service) *Handler {
+	return &Handler{service: service}
 }
 
 func (h *Handler) GetByClass(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
 	schoolID := c.GetString("school_id")
-	if userID == "" || role == "" || schoolID == "" {
+	if userID == "" || role == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
@@ -30,8 +34,12 @@ func (h *Handler) GetByClass(c *gin.Context) {
 		return
 	}
 
-	schedule, err := h.repo.GetByClass(c.Request.Context(), classID)
+	schedule, err := h.service.GetByClass(c.Request.Context(), userID, role, schoolID, classID)
 	if err != nil {
+		if strings.HasPrefix(err.Error(), "forbidden") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -42,12 +50,9 @@ func (h *Handler) GetByClass(c *gin.Context) {
 func (h *Handler) Update(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
+	schoolID := c.GetString("school_id")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
-	if role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: only administrative staff can update class schedules"})
 		return
 	}
 
@@ -63,8 +68,12 @@ func (h *Handler) Update(c *gin.Context) {
 		return
 	}
 
-	err := h.repo.Update(c.Request.Context(), classID, req.Entries)
+	err := h.service.Update(c.Request.Context(), userID, role, schoolID, classID, req.Entries)
 	if err != nil {
+		if strings.HasPrefix(err.Error(), "forbidden") || strings.HasPrefix(err.Error(), "unauthorized") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -74,23 +83,17 @@ func (h *Handler) Update(c *gin.Context) {
 
 func (h *Handler) GetMySchedule(c *gin.Context) {
 	uid := c.GetString("user_id")
-	if uid == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
-
-	classID, err := h.repo.GetStudentClassID(c.Request.Context(), uid)
+	role := c.GetString("role")
+	schedule, err := h.service.GetMySchedule(c.Request.Context(), uid, role)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found") || err.Error() == "sql: no rows in result set" {
-			c.JSON(http.StatusNotFound, gin.H{"error": "class not found for student"})
+		if strings.HasPrefix(err.Error(), "forbidden") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	schedule, err := h.repo.GetByClass(c.Request.Context(), classID)
-	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -100,5 +103,7 @@ func (h *Handler) GetMySchedule(c *gin.Context) {
 func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	r.GET("/classes/:id/schedule", h.GetByClass)
 	r.POST("/classes/:id/schedule", h.Update)
+	r.PUT("/classes/:id/schedule", h.Update)
+	r.PATCH("/classes/:id/schedule", h.Update)
 	r.GET("/timetables/my-schedule", h.GetMySchedule)
 }

@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"time"
+
+	"registro-backend/internal/users"
 )
 
 var (
@@ -14,17 +15,25 @@ var (
 )
 
 type Service struct {
-	repo Repository
+	repo     Repository
+	userRepo users.Repository
 }
 
-func NewService(repo Repository) *Service {
+func NewService(repo Repository, uRepo ...users.Repository) *Service {
 	if repo == nil {
 		panic("extracurricular.NewService: repo must not be nil")
 	}
-	return &Service{repo: repo}
+	var userRepo users.Repository
+	if len(uRepo) > 0 {
+		userRepo = uRepo[0]
+	}
+	return &Service{repo: repo, userRepo: userRepo}
 }
 
-func (s *Service) CreateCourse(ctx context.Context, teacherID, schoolID string, req CreateCourseRequest) (*Course, error) {
+func (s *Service) CreateCourse(ctx context.Context, actorRole, teacherID, schoolID string, req CreateCourseRequest) (*Course, error) {
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" && actorRole != "teacher" {
+		return nil, ErrUnauthorized
+	}
 	if schoolID == "" {
 		return nil, fmt.Errorf("school_id required")
 	}
@@ -35,6 +44,9 @@ func (s *Service) CreateCourse(ctx context.Context, teacherID, schoolID string, 
 	et, err := time.Parse("2006-01-02", req.EndDate)
 	if err != nil {
 		return nil, fmt.Errorf("invalid end_date format: YYYY-MM-DD")
+	}
+	if !et.After(st) {
+		return nil, fmt.Errorf("end_date must be after start_date")
 	}
 
 	c := &Course{
@@ -57,10 +69,6 @@ func (s *Service) ListCourses(ctx context.Context, schoolID, studentID string) (
 	return s.repo.ListCourses(ctx, schoolID, studentID)
 }
 
-// EnrollStudent enrolls a student in a course.
-// Bug 115: the race condition (enrolled_count >= max_participants) requires an atomic
-// DB-level check (WHERE enrolled_count < max_participants in the UPDATE).
-// The check below is a best-effort application-level guard and is not atomic.
 func (s *Service) EnrollStudent(ctx context.Context, courseID, studentID string) error {
 	course, err := s.repo.GetCourseByID(ctx, courseID)
 	if err != nil {
@@ -71,13 +79,15 @@ func (s *Service) EnrollStudent(ctx context.Context, courseID, studentID string)
 		return ErrCourseFull
 	}
 
-	// Bug 116: cross-school enrollment prevention.
-	// NOTE: The repository EnrollStudent(ctx, courseID, studentID) does not receive the
-	// student's schoolID directly. The authoritative enforcement must be done at DB level
-	// (e.g., CHECK constraint or trigger verifying student.school_id == course.school_id).
-	// Service-level check is omitted here because we have no userRepo dependency; callers
-	// must enforce school isolation before invoking this method.
-	_ = log.Printf // suppress unused import lint
+	if s.userRepo != nil {
+		student, err := s.userRepo.GetByID(ctx, studentID)
+		if err != nil || student == nil {
+			return fmt.Errorf("student non trovato")
+		}
+		if student.SchoolID != nil && *student.SchoolID != course.SchoolID {
+			return fmt.Errorf("unauthorized: lo studente appartiene ad un'altra scuola")
+		}
+	}
 
 	return s.repo.EnrollStudent(ctx, courseID, studentID)
 }
@@ -86,8 +96,6 @@ func (s *Service) ListEnrollments(ctx context.Context, courseID string) ([]*Enro
 	return s.repo.ListEnrollments(ctx, courseID)
 }
 
-// MarkAttendance registers attendance for a student in an extracurricular course.
-// Bug 117: verifies that the teacher is the one responsible for the specific course.
 func (s *Service) MarkAttendance(ctx context.Context, teacherID, actorRole string, req MarkAttendanceRequest) error {
 	if actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin" {
 		return ErrUnauthorized
@@ -96,7 +104,6 @@ func (s *Service) MarkAttendance(ctx context.Context, teacherID, actorRole strin
 	if err != nil {
 		return err
 	}
-	// Bug 117: verify that the teacher is assigned to this specific course
 	if actorRole == "teacher" && course.TeacherID != teacherID {
 		return errors.New("unauthorized: non sei il docente responsabile di questo corso")
 	}

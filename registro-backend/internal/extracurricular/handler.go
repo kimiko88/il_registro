@@ -41,7 +41,7 @@ func (h *Handler) CreateCourse(c *gin.Context) {
 		return
 	}
 
-	course, err := h.service.CreateCourse(c.Request.Context(), userID, schoolID, req)
+	course, err := h.service.CreateCourse(c.Request.Context(), role, userID, schoolID, req)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

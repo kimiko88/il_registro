@@ -103,7 +103,11 @@ func (h *Handler) CreateLesson(c *gin.Context) {
 
 	res, err := h.service.CreateLesson(teacherID, req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		if strings.HasPrefix(err.Error(), "forbidden") || strings.HasPrefix(err.Error(), "unauthorized") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusCreated, res)
@@ -146,7 +150,11 @@ func (h *Handler) CreateHomework(c *gin.Context) {
 
 	res, err := h.service.CreateHomework(teacherID, req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		if strings.HasPrefix(err.Error(), "forbidden") || strings.HasPrefix(err.Error(), "unauthorized") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusCreated, res)
@@ -204,6 +212,10 @@ func (h *Handler) DeleteLesson(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
+	if role != "teacher" && role != "admin" && role != "superadmin" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: solo docenti, dirigenti o segreteria possono eliminare le lezioni"})
+		return
+	}
 	id := c.Param("id")
 	if err := h.service.DeleteLesson(teacherID, role, id); err != nil {
 		if strings.HasPrefix(err.Error(), "unauthorized") {
@@ -221,6 +233,10 @@ func (h *Handler) UpdateHomework(c *gin.Context) {
 	role := c.GetString("role")
 	if teacherID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "teacher" && role != "admin" && role != "superadmin" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: solo docenti, dirigenti o segreteria possono modificare i compiti"})
 		return
 	}
 	id := c.Param("id")
@@ -246,6 +262,10 @@ func (h *Handler) DeleteHomework(c *gin.Context) {
 	role := c.GetString("role")
 	if teacherID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "teacher" && role != "admin" && role != "superadmin" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: solo docenti, dirigenti o segreteria possono eliminare i compiti"})
 		return
 	}
 	id := c.Param("id")

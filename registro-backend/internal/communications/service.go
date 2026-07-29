@@ -5,22 +5,52 @@ import (
 	"errors"
 	"fmt"
 	"time"
+
+	"registro-backend/internal/users"
 )
 
 type Service struct {
-	repo Repository
+	repo     Repository
+	userRepo users.Repository
 }
 
-func NewService(repo Repository) *Service {
+func NewService(repo Repository, uRepo ...users.Repository) *Service {
 	if repo == nil {
 		panic("communications.NewService: repo must not be nil")
 	}
-	return &Service{repo: repo}
+	var userRepo users.Repository
+	if len(uRepo) > 0 {
+		userRepo = uRepo[0]
+	}
+	return &Service{repo: repo, userRepo: userRepo}
 }
 
-func (s *Service) SendMessage(ctx context.Context, senderID string, req CreateMessageRequest) (*Message, error) {
+func (s *Service) SendMessage(ctx context.Context, actorRole, schoolID, senderID string, req CreateMessageRequest) (*Message, error) {
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "teacher" && actorRole != "secretary" && actorRole != "principal" && actorRole != "vice_principal" {
+		return nil, errors.New("unauthorized: non hai i permessi per inviare comunicazioni")
+	}
 	if req.Subject == "" || req.Body == "" {
 		return nil, errors.New("subject and body are required")
+	}
+	if req.Type != "bacheca" && len(req.Recipients) == 0 {
+		return nil, errors.New("recipients are required for targeted messages")
+	}
+
+	targetSchoolID := schoolID
+	if req.SchoolID != nil && *req.SchoolID != "" {
+		if actorRole != "superadmin" && *req.SchoolID != schoolID {
+			return nil, errors.New("unauthorized: non puoi inviare messaggi a nome di un'altra scuola")
+		}
+		targetSchoolID = *req.SchoolID
+	}
+
+	if s.userRepo != nil && len(req.Recipients) > 0 && targetSchoolID != "" {
+		for _, recipientID := range req.Recipients {
+			u, err := s.userRepo.GetByID(ctx, recipientID)
+			if err != nil || u == nil || u.SchoolID == nil || *u.SchoolID != targetSchoolID {
+				return nil, fmt.Errorf("unauthorized: destinatario %s non appartiene alla scuola", recipientID)
+			}
+		}
 	}
 
 	msg := &Message{
@@ -66,32 +96,29 @@ func (s *Service) DeleteMessage(ctx context.Context, actorID, actorRole, schoolI
 	if msg.SenderID != actorID && actorRole != "admin" && actorRole != "superadmin" {
 		return errors.New("unauthorized: cannot delete message of another user")
 	}
-	if actorRole != "superadmin" && msg.SchoolID != nil && schoolID != "" && *msg.SchoolID != schoolID {
-		return errors.New("unauthorized: cannot delete message of another school")
+	if actorRole != "superadmin" {
+		if msg.SchoolID == nil || schoolID == "" || *msg.SchoolID != schoolID {
+			return errors.New("unauthorized: cannot delete message of another school")
+		}
 	}
 	return s.repo.Delete(ctx, id)
 }
 
-// SignMessage firma un messaggio verificando che l'utente sia un destinatario o il mittente.
-// Bug 111: verifica che l'utente che firma sia un destinatario autorizzato o il mittente.
 func (s *Service) SignMessage(ctx context.Context, userID, messageID, ipAddress string) error {
 	msg, err := s.repo.Get(ctx, messageID)
 	if err != nil {
 		return fmt.Errorf("messaggio non trovato: %w", err)
 	}
 
-	// Verifica che l'utente sia il mittente o un destinatario
-	isAuthorized := msg.SenderID == userID
-	if !isAuthorized {
-		for _, rid := range msg.ReceiverIDs {
-			if rid == userID {
-				isAuthorized = true
-				break
-			}
+	isRecipient := false
+	for _, rid := range msg.ReceiverIDs {
+		if rid == userID {
+			isRecipient = true
+			break
 		}
 	}
-	if !isAuthorized {
-		return errors.New("unauthorized: non sei un destinatario di questo messaggio")
+	if !isRecipient {
+		return errors.New("unauthorized: solo i destinatari possono firmare questo messaggio")
 	}
 
 	return s.repo.SignWithIP(ctx, messageID, userID, ipAddress)
@@ -161,8 +188,10 @@ func (s *Service) UpdateMessage(ctx context.Context, actorID, actorRole, schoolI
 	if msg.SenderID != actorID && actorRole != "admin" && actorRole != "superadmin" {
 		return errors.New("unauthorized: cannot edit message of another user")
 	}
-	if actorRole != "superadmin" && msg.SchoolID != nil && schoolID != "" && *msg.SchoolID != schoolID {
-		return errors.New("unauthorized: cannot edit message of another school")
+	if actorRole != "superadmin" {
+		if msg.SchoolID == nil || schoolID == "" || *msg.SchoolID != schoolID {
+			return errors.New("unauthorized: cannot edit message of another school")
+		}
 	}
 	sigs, err := s.repo.GetSignatures(ctx, id)
 	if err == nil && len(sigs) > 0 {
@@ -177,6 +206,10 @@ func (s *Service) MarkAsRead(ctx context.Context, communicationID, userID, ipAdd
 	msg, err := s.repo.Get(ctx, communicationID)
 	if err != nil {
 		return fmt.Errorf("messaggio non trovato: %w", err)
+	}
+
+	if msg.Type == "bacheca" && len(msg.ReceiverIDs) == 0 {
+		return s.repo.MarkAsRead(ctx, communicationID, userID, ipAddress)
 	}
 
 	for _, rid := range msg.ReceiverIDs {

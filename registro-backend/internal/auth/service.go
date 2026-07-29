@@ -14,11 +14,16 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+type EmailSender interface {
+	SendPasswordReset(ctx context.Context, email, token string) error
+}
+
 // Service handles authentication business logic
 type Service struct {
 	repo         Repository
 	tokenManager *jwt.TokenManager
 	mfaService   *MFAService
+	emailSender  EmailSender
 	bcryptCost   int
 }
 
@@ -32,6 +37,10 @@ func NewService(repo Repository, tokenManager *jwt.TokenManager, mfaService *MFA
 	}
 }
 
+func (s *Service) SetEmailSender(sender EmailSender) {
+	s.emailSender = sender
+}
+
 // Pre-computed dummy bcrypt hash (cost 12) used to normalize timing when user email does not exist.
 const dummyBcryptHash = "$2a$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeg6Lruj3vjPGga31lW"
 
@@ -39,6 +48,9 @@ const dummyBcryptHash = "$2a$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeg6Lruj3vjPGg
 // Input validation and RBAC checks are performed by the handler layer
 // (ValidateRegisterRequest in validator.go) before this method is called.
 func (s *Service) Register(ctx context.Context, req *RegisterRequest) (*User, error) {
+	if req.Role == RoleSuperAdmin {
+		return nil, fmt.Errorf("forbidden: cannot register superadmin role")
+	}
 	if err := NewPasswordValidator().Validate(req.Password); err != nil {
 		return nil, err
 	}
@@ -117,11 +129,12 @@ func (s *Service) Login(ctx context.Context, req *LoginRequest, ipAddress, userA
 	}
 
 	if !user.IsActive {
+		s.recordFailedAttempt(ctx, req.Email, ipAddress)
 		return nil, ErrUserInactive
 	}
 
-	// Check if password has expired (90 days for privileged roles: superadmin, admin, segreteria, teacher)
-	if user.Role == RoleSuperAdmin || user.Role == RoleAdmin || user.Role == RoleSegreteria || user.Role == RoleTeacher {
+	// Check if password has expired (90 days for privileged roles: superadmin, admin, secretary, teacher)
+	if user.Role == RoleSuperAdmin || user.Role == RoleAdmin || user.Role == RoleSecretary || user.Role == RoleTeacher {
 		if user.PasswordChangedAt != nil {
 			if time.Since(*user.PasswordChangedAt) > 90*24*time.Hour {
 				return nil, ErrPasswordExpired
@@ -237,7 +250,7 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken, ipAddress, use
 		return nil, ErrUserInactive
 	}
 
-	if user.Role == RoleSuperAdmin || user.Role == RoleAdmin || user.Role == RoleSegreteria || user.Role == RoleTeacher {
+	if user.Role == RoleSuperAdmin || user.Role == RoleAdmin || user.Role == RoleSecretary || user.Role == RoleTeacher {
 		if user.PasswordChangedAt != nil {
 			if time.Since(*user.PasswordChangedAt) > 90*24*time.Hour {
 				_ = s.repo.RevokeRefreshToken(ctx, rt.ID)
@@ -380,17 +393,19 @@ func (s *Service) VerifyMFA(ctx context.Context, userID, token string) ([]string
 
 	// Generate and store recovery codes after successful verification
 	plainRecoveryCodes, err := s.mfaService.GenerateRecoveryCodes(10)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate recovery codes: %w", err)
+	}
 	var validHashed []string
-	if err == nil {
-		for _, code := range plainRecoveryCodes {
-			h, err := bcrypt.GenerateFromPassword([]byte(code), s.bcryptCost)
-			if err == nil {
-				validHashed = append(validHashed, string(h))
-			}
+	for _, code := range plainRecoveryCodes {
+		h, err := bcrypt.GenerateFromPassword([]byte(code), s.bcryptCost)
+		if err != nil {
+			return nil, fmt.Errorf("failed to hash recovery code: %w", err)
 		}
-		if len(validHashed) > 0 {
-			_ = s.repo.CreateRecoveryCodes(ctx, userID, validHashed)
-		}
+		validHashed = append(validHashed, string(h))
+	}
+	if err := s.repo.CreateRecoveryCodes(ctx, userID, validHashed); err != nil {
+		return nil, fmt.Errorf("failed to save recovery codes: %w", err)
 	}
 
 	// Token is correct, enable MFA officially
@@ -441,6 +456,12 @@ func (s *Service) RequestPasswordReset(ctx context.Context, email string) error 
 
 	// Log the reset request (no sensitive data in log)
 	logger.Log.Infof("PASSWORD RESET REQUEST for user %s", user.ID)
+
+	if s.emailSender != nil {
+		if err := s.emailSender.SendPasswordReset(ctx, user.Email, token); err != nil {
+			logger.Log.Errorf("failed to send password reset email to %s: %v", user.Email, err)
+		}
+	}
 
 	return nil
 }

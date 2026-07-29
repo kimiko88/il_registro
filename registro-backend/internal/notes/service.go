@@ -20,15 +20,23 @@ type Service struct {
 	userRepo users.Repository
 }
 
-func NewService(repo Repository, uRepo ...users.Repository) *Service {
-	var userRepo users.Repository
-	if len(uRepo) > 0 {
-		userRepo = uRepo[0]
+func NewService(repo Repository, uRepo users.Repository) *Service {
+	if repo == nil {
+		panic("notes.NewService: repo must not be nil")
 	}
-	return &Service{repo: repo, userRepo: userRepo}
+	if uRepo == nil {
+		panic("notes.NewService: userRepo must not be nil — required for access and guardianship checks")
+	}
+	return &Service{repo: repo, userRepo: uRepo}
 }
 
 func (s *Service) CreateNote(ctx context.Context, teacherID, schoolID string, req CreateNoteRequest) (*StudentNote, error) {
+	if req.ClassID != "" {
+		isAssigned, err := s.repo.IsTeacherAssignedToClass(ctx, teacherID, req.ClassID)
+		if err == nil && !isAssigned {
+			return nil, errors.New("forbidden: docente non assegnato alla classe dello studente")
+		}
+	}
 	if req.TargetRole == "" {
 		req.TargetRole = "all"
 	}
@@ -59,6 +67,13 @@ func (s *Service) ApproveNote(ctx context.Context, actorID, actorRole, noteID st
 	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "vice_principal" {
 		return ErrUnauthorizedApprove
 	}
+	n, err := s.repo.Get(ctx, noteID)
+	if err != nil {
+		return err
+	}
+	if n.IsApproved {
+		return errors.New("note is already approved")
+	}
 	return s.repo.ApproveNote(ctx, noteID, actorID)
 }
 
@@ -72,6 +87,9 @@ func (s *Service) UpdateNote(ctx context.Context, teacherID, noteID string, req 
 	}
 
 	if req.Type != "" {
+		if req.Type != n.Type {
+			n.IsApproved = (req.Type != "disciplinary")
+		}
 		n.Type = req.Type
 	}
 	if req.Note != "" {

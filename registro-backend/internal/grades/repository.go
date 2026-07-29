@@ -368,6 +368,11 @@ func (r *repository) FindWithFilter(filter GradeFilter) ([]Grade, error) {
 		args = append(args, filter.StudentID)
 		argIdx++
 	}
+	if filter.TeacherID != "" {
+		conditions = append(conditions, fmt.Sprintf("(teacher_id = $%d::uuid OR created_by = $%d::uuid)", argIdx, argIdx))
+		args = append(args, filter.TeacherID)
+		argIdx++
+	}
 	if filter.Semester > 0 {
 		conditions = append(conditions, fmt.Sprintf("semester = $%d", argIdx))
 		args = append(args, filter.Semester)

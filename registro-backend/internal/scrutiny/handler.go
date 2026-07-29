@@ -202,7 +202,7 @@ func (h *Handler) GetClassReport(c *gin.Context) {
 	}
 
 	classID := c.Param("classId")
-	report, err := h.service.GetClassReport(c.Request.Context(), classID)
+	report, err := h.service.GetClassReport(c.Request.Context(), actorID, actorRole, classID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

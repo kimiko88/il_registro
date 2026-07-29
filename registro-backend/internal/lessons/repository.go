@@ -19,6 +19,7 @@ type Repository interface {
 	UpdateHomework(id string, req UpdateHomeworkRequest) (*Homework, error)
 	DeleteHomework(id string) error
 	GetHomeworkByClass(classID string) ([]Homework, error)
+	IsTeacherAssignedToClass(teacherID, classID string) (bool, error)
 }
 
 type repository struct {
@@ -316,4 +317,21 @@ func (r *repository) GetHomeworkByID(id string) (*Homework, error) {
 func (r *repository) DeleteHomework(id string) error {
 	_, err := r.db.Exec("DELETE FROM class_homeworks WHERE id = $1::uuid", id)
 	return err
+}
+
+func (r *repository) IsTeacherAssignedToClass(teacherID, classID string) (bool, error) {
+	if teacherID == "" || classID == "" {
+		return false, nil
+	}
+	query := `
+		SELECT EXISTS (
+			SELECT 1 FROM class_subjects cs
+			JOIN teachers t ON cs.teacher_id = t.id
+			WHERE (t.user_id = $1::uuid OR t.id = $1::uuid) AND cs.class_id = $2::uuid
+		) OR EXISTS (
+			SELECT 1 FROM classes WHERE (coordinator_id = $1::uuid OR coordinator_id IN (SELECT user_id FROM teachers WHERE id = $1::uuid)) AND id = $2::uuid
+		)`
+	var exists bool
+	err := r.db.QueryRow(query, teacherID, classID).Scan(&exists)
+	return exists, err
 }

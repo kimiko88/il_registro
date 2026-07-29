@@ -53,6 +53,8 @@ type WeightConfigResponse struct {
 
 type GradeFilter struct {
 	StudentID   string `form:"student_id"`
+	TeacherID   string `form:"teacher_id"`
+	SchoolID    string `form:"school_id"`
 	Semester    int    `form:"semester"`
 	SubjectID   string `form:"subject_id"`
 	GradeType   string `form:"grade_type"`

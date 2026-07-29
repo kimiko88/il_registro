@@ -133,7 +133,7 @@ func TestBookSlot(t *testing.T) {
 	})).Return(nil).Once()
 	mockRepo.On("GetBookingByID", mock.Anything, mock.Anything).Return(expectedBooking, nil).Once()
 
-	booking, err := svc.BookSlot(context.Background(), "p-1", req)
+	booking, err := svc.BookSlot(context.Background(), "p-1", "school-1", req)
 	assert.NoError(t, err)
 	assert.NotNil(t, booking)
 	assert.Equal(t, StatusConfirmed, booking.Status)
@@ -148,7 +148,7 @@ func TestCancelSlot(t *testing.T) {
 	mockRepo.On("GetSlotByID", mock.Anything, "slot-1").Return(slot, nil).Once()
 	mockRepo.On("CancelSlot", mock.Anything, "slot-1").Return(nil).Once()
 
-	err := svc.CancelSlot(context.Background(), "t-1", "teacher", "slot-1")
+	err := svc.CancelSlot(context.Background(), "t-1", "teacher", "school-1", "slot-1")
 	assert.NoError(t, err)
 	mockRepo.AssertExpectations(t)
 }

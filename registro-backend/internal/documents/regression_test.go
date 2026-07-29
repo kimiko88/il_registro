@@ -58,10 +58,11 @@ func TestVideoRegression_UpdatesOnApprovedDoc(t *testing.T) {
 
 	// Scenario: Trying to update an Approved document
 	doc := &Document{
-		ID:       "doc-123",
-		SchoolID: "school-1",
-		Status:   StatusApproved,
-		Title:    "Approved Doc",
+		ID:        "doc-123",
+		SchoolID:  "school-1",
+		CreatedBy: "user-1",
+		Status:    StatusApproved,
+		Title:     "Approved Doc",
 	}
 
 	repo.On("FindByID", "doc-123").Return(doc, nil)

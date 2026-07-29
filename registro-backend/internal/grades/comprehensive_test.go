@@ -137,11 +137,11 @@ func TestConvertNumericToJudgment(t *testing.T) {
 		want string
 	}{
 		{3.0, "Insufficiente"},
-		{5.0, "Sufficiente"}, // Prompt: 4-6 -> Sufficiente
-		{6.5, "Discreto"},    // Prompt: 6-8 -> Discreto
-		{7.5, "Discreto"},    // < 8
-		{8.5, "Buono"},       // Prompt: 8-10 -> Buono
-		{9.5, "Distinto"},    // My code: 9-10 -> Distinto/Ottimo logic
+		{5.0, "Mediocre"},
+		{6.5, "Sufficiente"},
+		{7.5, "Discreto"},
+		{8.5, "Buono"},
+		{9.5, "Distinto"},
 	}
 
 	for _, tt := range tests {

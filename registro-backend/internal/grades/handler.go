@@ -278,6 +278,7 @@ func (h *Handler) BulkImport(c *gin.Context) {
 
 func (h *Handler) Export(c *gin.Context) {
 	teacherID := c.GetString("user_id")
+	schoolID := c.GetString("school_id")
 	if teacherID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
@@ -294,7 +295,7 @@ func (h *Handler) Export(c *gin.Context) {
 
 	filter := h.parseFilter(c)
 
-	data, contentType, err := h.service.Export(teacherID, filter, format)
+	data, contentType, err := h.service.Export(teacherID, schoolID, filter, format)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -968,7 +969,7 @@ func (h *Handler) UpsertWeightConfig(c *gin.Context) {
 		return
 	}
 
-	result, err := h.service.UpsertWeightConfig(actorID, schoolID, req)
+	result, err := h.service.UpsertWeightConfig(actorID, role, schoolID, req)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -979,6 +980,7 @@ func (h *Handler) UpsertWeightConfig(c *gin.Context) {
 // DeleteWeightConfig removes a weight config entry by ID.
 func (h *Handler) DeleteWeightConfig(c *gin.Context) {
 	actorID := c.GetString("user_id")
+	schoolID := c.GetString("school_id")
 	role := c.GetString("role")
 	if actorID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
@@ -989,7 +991,7 @@ func (h *Handler) DeleteWeightConfig(c *gin.Context) {
 		return
 	}
 	configID := c.Param("id")
-	if err := h.service.DeleteWeightConfig(actorID, configID); err != nil {
+	if err := h.service.DeleteWeightConfig(actorID, role, schoolID, configID); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}

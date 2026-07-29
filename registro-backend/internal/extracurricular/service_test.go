@@ -70,7 +70,7 @@ func TestCreateAndEnrollCourse(t *testing.T) {
 		return c.Title == "Laboratorio di Robottica"
 	})).Return(nil).Once()
 
-	c, err := svc.CreateCourse(context.Background(), "t-1", "school-1", req)
+	c, err := svc.CreateCourse(context.Background(), "teacher", "t-1", "school-1", req)
 	assert.NoError(t, err)
 	assert.NotNil(t, c)
 

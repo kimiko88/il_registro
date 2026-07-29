@@ -17,6 +17,7 @@ type Repository interface {
 	Get(ctx context.Context, id string) (*StudentNote, error)
 	List(ctx context.Context, filter NoteFilter) ([]StudentNote, error)
 	ApproveNote(ctx context.Context, id string, approverID string) error
+	IsTeacherAssignedToClass(ctx context.Context, teacherID, classID string) (bool, error)
 }
 
 type PostgresRepository struct {
@@ -145,6 +146,13 @@ func (r *PostgresRepository) List(ctx context.Context, filter NoteFilter) ([]Stu
 	args := []interface{}{}
 	argIdx := 1
 
+	if filter.SchoolID != "" {
+		if _, err := uuid.Parse(filter.SchoolID); err == nil {
+			query += fmt.Sprintf(" AND n.school_id = $%d::uuid", argIdx)
+			args = append(args, filter.SchoolID)
+			argIdx++
+		}
+	}
 	if filter.StudentID != "" {
 		if _, err := uuid.Parse(filter.StudentID); err == nil {
 			query += fmt.Sprintf(" AND (n.student_id = $%d::uuid OR n.student_id IN (SELECT user_id FROM students WHERE id = $%d::uuid))", argIdx, argIdx)
@@ -255,4 +263,24 @@ func (r *PostgresRepository) List(ctx context.Context, filter NoteFilter) ([]Stu
 		return nil, err
 	}
 	return notes, nil
+}
+
+func (r *PostgresRepository) IsTeacherAssignedToClass(ctx context.Context, teacherID, classID string) (bool, error) {
+	if _, err := uuid.Parse(teacherID); err != nil {
+		return false, nil
+	}
+	if _, err := uuid.Parse(classID); err != nil {
+		return false, nil
+	}
+	query := `
+		SELECT EXISTS (
+			SELECT 1 FROM class_subjects cs
+			JOIN teachers t ON cs.teacher_id = t.id
+			WHERE (t.user_id = $1::uuid OR t.id = $1::uuid) AND cs.class_id = $2::uuid
+		) OR EXISTS (
+			SELECT 1 FROM classes WHERE (coordinator_id = $1::uuid OR coordinator_id IN (SELECT user_id FROM teachers WHERE id = $1::uuid)) AND id = $2::uuid
+		)`
+	var exists bool
+	err := r.db.QueryRowContext(ctx, query, teacherID, classID).Scan(&exists)
+	return exists, err
 }

@@ -270,6 +270,7 @@ func (h *Handler) MarkBulk(c *gin.Context) {
 func (h *Handler) GetClassAttendance(c *gin.Context) {
 	actorID := c.GetString("user_id")
 	actorRole := c.GetString("role")
+	schoolID := c.GetString("school_id")
 	if actorID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
@@ -284,7 +285,7 @@ func (h *Handler) GetClassAttendance(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "date required"})
 		return
 	}
-	res, err := h.service.GetClassAttendance(c.Request.Context(), classID, date)
+	res, err := h.service.GetClassAttendance(c.Request.Context(), actorID, actorRole, schoolID, classID, date)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -295,6 +296,7 @@ func (h *Handler) GetClassAttendance(c *gin.Context) {
 func (h *Handler) GetMyAttendance(c *gin.Context) {
 	studentID := c.GetString("user_id")
 	role := c.GetString("role")
+	schoolID := c.GetString("school_id")
 	if studentID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
@@ -308,7 +310,7 @@ func (h *Handler) GetMyAttendance(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "parametro data non valido: " + err.Error()})
 		return
 	}
-	res, err := h.service.GetStudentAttendance(c.Request.Context(), studentID, from, to)
+	res, err := h.service.GetStudentAttendance(c.Request.Context(), studentID, role, schoolID, studentID, from, to)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -409,6 +411,7 @@ func (h *Handler) UpdateAttendance(c *gin.Context) {
 func (h *Handler) ExportAttendance(c *gin.Context) {
 	actorID := c.GetString("user_id")
 	actorRole := c.GetString("role")
+	schoolID := c.GetString("school_id")
 	if actorID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
@@ -426,7 +429,7 @@ func (h *Handler) ExportAttendance(c *gin.Context) {
 		return
 	}
 
-	res, err := h.service.GetClassAttendance(c.Request.Context(), classID, date)
+	res, err := h.service.GetClassAttendance(c.Request.Context(), actorID, actorRole, schoolID, classID, date)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

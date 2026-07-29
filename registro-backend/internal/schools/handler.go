@@ -19,6 +19,12 @@ func NewHandler(service *Service) *Handler {
 // Create handles school creation
 // POST /schools
 func (h *Handler) Create(c *gin.Context) {
+	role := c.GetString("role")
+	if role != "superadmin" && role != "admin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only administrative staff can create schools"})
+		return
+	}
+
 	var req CreateSchoolRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -38,6 +44,10 @@ func (h *Handler) Create(c *gin.Context) {
 // GET /schools/:id
 func (h *Handler) Get(c *gin.Context) {
 	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "school ID is required"})
+		return
+	}
 	school, err := h.service.GetByID(c.Request.Context(), id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -75,7 +85,16 @@ func (h *Handler) List(c *gin.Context) {
 // Update handles updating a school
 // PATCH /schools/:id
 func (h *Handler) Update(c *gin.Context) {
+	role := c.GetString("role")
+	if role != "superadmin" && role != "admin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only administrative staff can update schools"})
+		return
+	}
 	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "school ID is required"})
+		return
+	}
 	var req UpdateSchoolRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -93,7 +112,16 @@ func (h *Handler) Update(c *gin.Context) {
 // Delete handles deleting a school
 // DELETE /schools/:id
 func (h *Handler) Delete(c *gin.Context) {
+	role := c.GetString("role")
+	if role != "superadmin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only superadmin can delete schools"})
+		return
+	}
 	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "school ID is required"})
+		return
+	}
 	if err := h.service.Delete(c.Request.Context(), id); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

@@ -212,9 +212,10 @@ func TestGetClassAttendance(t *testing.T) {
 			{ID: "3", StudentID: "s3", Status: StatusLate, Date: date},
 		}
 
+		mockRepo.On("IsTeacherAssignedToClass", mock.Anything, "teacher-1", "c1").Return(true, nil).Maybe()
 		mockRepo.On("FindByClassAndDate", "c1", date).Return(atts, nil).Once()
 
-		resp, err := service.GetClassAttendance(ctx, "c1", dateStr)
+		resp, err := service.GetClassAttendance(ctx, "teacher-1", "teacher", "school-1", "c1", dateStr)
 		assert.NoError(t, err)
 		assert.Equal(t, 1, resp.Summary.Present)
 		assert.Equal(t, 1, resp.Summary.Absent)

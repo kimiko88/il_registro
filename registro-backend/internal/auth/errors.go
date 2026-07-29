@@ -19,7 +19,7 @@ var (
 	ErrInvalidRole           = errors.New("invalid role")
 	// ErrInsufficientRole is returned when the caller's role does not have
 	// permission to create users at all (e.g. a teacher trying to register someone).
-	ErrInsufficientRole      = errors.New("only superadmin, admin and segreteria can register new users")
+	ErrInsufficientRole      = errors.New("only superadmin, admin and secretary can register new users")
 	// ErrCannotCreateRole is returned when the caller is allowed to register users
 	// but is trying to assign a role that exceeds their own privileges.
 	ErrCannotCreateRole      = errors.New("you do not have permission to create a user with this role")

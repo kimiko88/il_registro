@@ -71,6 +71,10 @@ func (s *service) CreateSlots(ctx context.Context, userID string, req CreateSlot
 		if err != nil {
 			return fmt.Errorf("data non valida '%s': usa YYYY-MM-DD: %w", dateStr, err)
 		}
+		today := time.Now().Truncate(24 * time.Hour)
+		if firstDate.Before(today) {
+			return fmt.Errorf("la data dello slot non può essere nel passato (%s)", dateStr)
+		}
 		
 		targetDates := []time.Time{firstDate}
 		if req.IsRecurring && req.RecurringUntil != "" {
@@ -325,6 +329,9 @@ func (s *service) CancelBooking(ctx context.Context, userID, bookingID string) e
 }
 
 func (s *service) UpdateSettings(ctx context.Context, schoolID string, req GeneralScheduleRequest) error {
+	if schoolID == "" {
+		return errors.New("schoolID is required")
+	}
 	start, err := time.Parse("2006-01-02", req.StartDate)
 	if err != nil {
 		return fmt.Errorf("invalid start date: %w", err)
@@ -332,10 +339,6 @@ func (s *service) UpdateSettings(ctx context.Context, schoolID string, req Gener
 	end, err := time.Parse("2006-01-02", req.EndDate)
 	if err != nil {
 		return fmt.Errorf("invalid end date: %w", err)
-	}
-
-	if schoolID == "" {
-		schoolID = "default-school"
 	}
 
 	settings := &ColloquioSettings{

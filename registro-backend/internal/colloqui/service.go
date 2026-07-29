@@ -98,10 +98,14 @@ func (s *Service) ListSlots(ctx context.Context, schoolID, teacherID string, fro
 	return s.repo.ListSlots(ctx, filter)
 }
 
-func (s *Service) CancelSlot(ctx context.Context, actorID, actorRole, slotID string) error {
+func (s *Service) CancelSlot(ctx context.Context, actorID, actorRole, actorSchoolID, slotID string) error {
 	slot, err := s.repo.GetSlotByID(ctx, slotID)
 	if err != nil {
 		return err
+	}
+
+	if actorRole == "admin" && actorSchoolID != "" && slot.SchoolID != actorSchoolID {
+		return ErrUnauthorized
 	}
 
 	teacherProfileID, _ := s.repo.GetTeacherProfileID(ctx, actorID)
@@ -112,10 +116,14 @@ func (s *Service) CancelSlot(ctx context.Context, actorID, actorRole, slotID str
 	return s.repo.CancelSlot(ctx, slotID)
 }
 
-func (s *Service) BookSlot(ctx context.Context, parentUserID string, req CreateBookingRequest) (*ColloquioBooking, error) {
+func (s *Service) BookSlot(ctx context.Context, parentUserID, parentSchoolID string, req CreateBookingRequest) (*ColloquioBooking, error) {
 	slot, err := s.repo.GetSlotByID(ctx, req.SlotID)
 	if err != nil {
 		return nil, fmt.Errorf("slot non trovato: %w", err)
+	}
+
+	if parentSchoolID != "" && slot.SchoolID != "" && slot.SchoolID != parentSchoolID {
+		return nil, errors.New("unauthorized: non puoi prenotare uno slot di un'altra scuola")
 	}
 
 	if slot.IsCancelled {
@@ -187,6 +195,10 @@ func (s *Service) UpdateBookingStatus(ctx context.Context, actorID, actorRole, b
 	parentProfileID, _ := s.repo.GetParentProfileID(ctx, actorID)
 	isOwner := (booking.ParentID != nil && (*booking.ParentID == actorID || *booking.ParentID == parentProfileID))
 
+	if isOwner && req.Status != "cancelled" && req.Status != StatusCancelled {
+		return errors.New("unauthorized: i genitori possono solo cancellare le proprie prenotazioni")
+	}
+
 	if !isOwner {
 		if actorRole != "admin" && actorRole != "superadmin" {
 			if actorRole != "teacher" {
@@ -207,13 +219,16 @@ func (s *Service) UpdateBookingStatus(ctx context.Context, actorID, actorRole, b
 	return s.repo.UpdateBookingStatus(ctx, bookingID, req.Status, actorID, req.Reason)
 }
 
-func (s *Service) PatchSlot(ctx context.Context, actorID, actorRole, slotID, startTime, endTime string) error {
+func (s *Service) PatchSlot(ctx context.Context, actorID, actorRole, actorSchoolID, slotID, startTime, endTime string) error {
 	slot, err := s.repo.GetSlotByID(ctx, slotID)
 	if err != nil {
 		return err
 	}
 	if slot.BookingCount > 0 {
 		return errors.New("impossibile modificare l'orario di uno slot con prenotazioni attive")
+	}
+	if actorRole == "admin" && actorSchoolID != "" && slot.SchoolID != actorSchoolID {
+		return ErrUnauthorized
 	}
 	teacherProfileID, _ := s.repo.GetTeacherProfileID(ctx, actorID)
 	if slot.TeacherID != actorID && slot.TeacherID != teacherProfileID && actorRole != "admin" && actorRole != "superadmin" {
@@ -248,7 +263,10 @@ func (s *Service) GetBookingByID(ctx context.Context, actorID, actorRole, bookin
 	return nil, ErrUnauthorized
 }
 
-func (s *Service) CreateAssembly(ctx context.Context, teacherID, schoolID string, req CreateAssemblyRequest) (*ColloquioSlot, error) {
+func (s *Service) CreateAssembly(ctx context.Context, actorRole, teacherID, schoolID string, req CreateAssemblyRequest) (*ColloquioSlot, error) {
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "vice_principal" {
+		return nil, ErrUnauthorized
+	}
 	return s.CreateSlot(ctx, teacherID, schoolID, CreateSlotRequest{
 		Date:        req.Date,
 		StartTime:   req.StartTime,

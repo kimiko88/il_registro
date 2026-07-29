@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"time"
+
+	"registro-backend/internal/users"
 )
 
 var (
@@ -14,14 +16,19 @@ var (
 )
 
 type Service struct {
-	repo Repository
+	repo     Repository
+	userRepo users.Repository
 }
 
-func NewService(repo Repository) *Service {
+func NewService(repo Repository, uRepo ...users.Repository) *Service {
 	if repo == nil {
 		panic("agenda.NewService: repo must not be nil")
 	}
-	return &Service{repo: repo}
+	var userRepo users.Repository
+	if len(uRepo) > 0 {
+		userRepo = uRepo[0]
+	}
+	return &Service{repo: repo, userRepo: userRepo}
 }
 
 func (s *Service) CreateAgendaItem(ctx context.Context, teacherID, schoolID string, req CreateAgendaItemRequest) (*AgendaItem, error) {
@@ -32,10 +39,6 @@ func (s *Service) CreateAgendaItem(ctx context.Context, teacherID, schoolID stri
 	if err != nil {
 		return nil, ErrInvalidDate
 	}
-
-	// Bug 107: TODO — per verificare che req.ClassID appartenga a schoolID occorre aggiungere
-	// ClassBelongsToSchool(ctx, classID, schoolID) al Repository. Al momento l'handler
-	// usa schoolID dal token JWT che è vincolato all'utente autenticato.
 
 	item := &AgendaItem{
 		SchoolID:    schoolID,
@@ -63,13 +66,11 @@ func (s *Service) UpdateAgendaItem(ctx context.Context, actorID, actorRole, acto
 	if err != nil {
 		return nil, err
 	}
-	// Bug 109: un admin può modificare solo item della propria scuola
-	if item.TeacherID != actorID && actorRole != "superadmin" {
-		if actorRole == "admin" {
-			if actorSchoolID != "" && item.SchoolID != actorSchoolID {
-				return nil, ErrUnauthorized
-			}
-		} else {
+	if actorRole != "superadmin" {
+		if actorSchoolID == "" || item.SchoolID != actorSchoolID {
+			return nil, ErrUnauthorized
+		}
+		if actorRole != "admin" && item.TeacherID != actorID {
 			return nil, ErrUnauthorized
 		}
 	}
@@ -102,13 +103,11 @@ func (s *Service) DeleteAgendaItem(ctx context.Context, actorID, actorRole, acto
 	if err != nil {
 		return err
 	}
-	// Bug 109: un admin può eliminare solo item della propria scuola
-	if item.TeacherID != actorID && actorRole != "superadmin" {
-		if actorRole == "admin" {
-			if actorSchoolID != "" && item.SchoolID != actorSchoolID {
-				return ErrUnauthorized
-			}
-		} else {
+	if actorRole != "superadmin" {
+		if actorSchoolID == "" || item.SchoolID != actorSchoolID {
+			return ErrUnauthorized
+		}
+		if actorRole != "admin" && item.TeacherID != actorID {
 			return ErrUnauthorized
 		}
 	}
@@ -116,7 +115,6 @@ func (s *Service) DeleteAgendaItem(ctx context.Context, actorID, actorRole, acto
 }
 
 func (s *Service) GetCalendar(ctx context.Context, schoolID, userID, role string, filter CalendarFilter) ([]*AgendaItem, error) {
-	// Default date range: current month +/- 1 month if not specified
 	if filter.From.IsZero() {
 		now := time.Now()
 		filter.From = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC).AddDate(0, -1, 0)
@@ -126,18 +124,16 @@ func (s *Service) GetCalendar(ctx context.Context, schoolID, userID, role string
 	}
 
 	if role == "student" {
-		// Usa l'userID dello studente come filtro diretto
 		if filter.StudentID == "" {
 			filter.StudentID = userID
 		}
 	} else if role == "parent" {
-		// Bug 106: il genitore non è uno studente — non usare il suo userID come StudentID.
-		// Se il chiamante non ha specificato filter.StudentID, il genitore deve fornirlo
-		// esplicitamente (es. passando l'ID del figlio come query param).
-		// Lasciamo filter.StudentID vuoto se non specificato: il repository restituirà
-		// gli eventi della scuola non filtrati per studente (bacheca del genitore).
-		// Il genitore può passare ?student_id=<childID> per vedere il calendario del figlio.
-		_ = userID // non usare come StudentID
+		if filter.StudentID != "" && s.userRepo != nil {
+			isGuardian, err := s.userRepo.IsGuardian(ctx, userID, filter.StudentID)
+			if err != nil || !isGuardian {
+				return nil, ErrUnauthorized
+			}
+		}
 	}
 	return s.repo.ListCalendar(ctx, schoolID, filter)
 }

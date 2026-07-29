@@ -97,9 +97,10 @@ var RoleDefinitions = map[string][]Permission{
 	"admin": {
 		UserCreate, UserRead, UserUpdate, UserDelete, UserImport, UserExport, UserAudit,
 		AuditRead,
-		GradeRead, GradeUpdate,
+		GradeRead, GradeCreate, GradeUpdate, GradeDelete,
 		AttendanceRead, AttendanceUpdate,
 		SchedulingRead, SchedulingCreate,
+		DocumentRead, DocumentCreate, DocumentUpdate, DocumentDelete,
 	},
 	"principal": {
 		UserRead, UserExport, UserAudit,
@@ -107,6 +108,7 @@ var RoleDefinitions = map[string][]Permission{
 		GradeRead,
 		AttendanceRead,
 		SchedulingRead,
+		DocumentRead,
 	},
 	"secretary": {
 		UserRead, UserCreate, UserUpdate, UserDelete,
@@ -120,6 +122,7 @@ var RoleDefinitions = map[string][]Permission{
 		GradeCreate, GradeRead, GradeUpdate,
 		AttendanceCreate, AttendanceRead, AttendanceUpdate,
 		SchedulingRead, SchedulingCreate, // Teachers create slots
+		DocumentRead,
 	},
 	"student": {
 		// Minimal self-access is usually handled by logic, not generic permissions
@@ -132,15 +135,34 @@ var RoleDefinitions = map[string][]Permission{
 }
 
 // Manager handles permission checks
-type Manager struct{}
+type Manager struct {
+	fastMap map[string]map[Permission]bool
+}
 
 func NewManager() *Manager {
-	return &Manager{}
+	fm := make(map[string]map[Permission]bool)
+	for role, perms := range RoleDefinitions {
+		r := strings.ToLower(role)
+		if fm[r] == nil {
+			fm[r] = make(map[Permission]bool)
+		}
+		for _, p := range perms {
+			fm[r][p] = true
+		}
+	}
+	return &Manager{fastMap: fm}
 }
 
 // HasPermission checks if a role has the required permission
 func (m *Manager) HasPermission(role string, required Permission) bool {
-	perms, ok := RoleDefinitions[strings.ToLower(role)]
+	r := strings.ToLower(role)
+	if m != nil && m.fastMap != nil {
+		if perms, ok := m.fastMap[r]; ok {
+			return perms[required]
+		}
+		return false
+	}
+	perms, ok := RoleDefinitions[r]
 	if !ok {
 		return false
 	}

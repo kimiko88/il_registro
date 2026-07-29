@@ -56,6 +56,7 @@ type UpdateNoteRequest struct {
 }
 
 type NoteFilter struct {
+	SchoolID      string
 	StudentID     string
 	ClassID       string
 	TeacherID     string

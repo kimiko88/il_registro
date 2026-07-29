@@ -28,8 +28,8 @@ type Service interface {
 	MarkBulk(ctx context.Context, teacherID, schoolID string, req BulkAttendanceRequest) error
 	UpdateAttendance(ctx context.Context, teacherID, schoolID, id string, req UpdateAttendanceRequest) error
 
-	GetClassAttendance(ctx context.Context, classID string, date string) (*ClassDailyAttendance, error)
-	GetStudentAttendance(ctx context.Context, studentID string, from, to time.Time) ([]AttendanceResponse, error)
+	GetClassAttendance(ctx context.Context, actorID, actorRole, schoolID, classID string, date string) (*ClassDailyAttendance, error)
+	GetStudentAttendance(ctx context.Context, actorID, actorRole, schoolID, studentID string, from, to time.Time) ([]AttendanceResponse, error)
 
 	// Justifications
 	RequestJustification(ctx context.Context, parentID string, req JustificationRequest) error
@@ -167,8 +167,15 @@ func (s *service) MarkBulk(ctx context.Context, teacherID, schoolID string, req 
 		return fmt.Errorf("numero massimo di presenze registrabili in blocco superato (max 500)")
 	}
 
+	seen := make(map[string]bool)
 	var atts []*Attendance
 	for _, r := range req.Statuses {
+		key := fmt.Sprintf("%s_%s_%d", r.StudentID, date.Format("2006-01-02"), req.Hour)
+		if seen[key] {
+			continue
+		}
+		seen[key] = true
+
 		att := &Attendance{
 			SchoolID:  schoolID,
 			StudentID: r.StudentID,
@@ -228,7 +235,19 @@ func (s *service) UpdateAttendance(ctx context.Context, teacherID, schoolID, id 
 	return s.repo.Update(att)
 }
 
-func (s *service) GetClassAttendance(ctx context.Context, classID string, dateStr string) (*ClassDailyAttendance, error) {
+func (s *service) GetClassAttendance(ctx context.Context, actorID, actorRole, schoolID, classID string, dateStr string) (*ClassDailyAttendance, error) {
+	if actorRole == "" {
+		return nil, fmt.Errorf("unauthorized: missing actorRole")
+	}
+	if actorRole == "teacher" {
+		isAssigned, err := s.repo.IsTeacherAssignedToClass(ctx, actorID, classID)
+		if err != nil || !isAssigned {
+			return nil, fmt.Errorf("forbidden: docente non assegnato alla classe")
+		}
+	} else if actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" && actorRole != "principal" && actorRole != "vice_principal" {
+		return nil, fmt.Errorf("forbidden: ruolo non autorizzato alla lettura delle presenze di classe")
+	}
+
 	date, err := time.Parse("2006-01-02", dateStr)
 	if err != nil {
 		return nil, fmt.Errorf("data non valida '%s': usa il formato YYYY-MM-DD", dateStr)
@@ -281,10 +300,20 @@ func (s *service) GetClassAttendance(ctx context.Context, classID string, dateSt
 	return resp, nil
 }
 
-func (s *service) GetStudentAttendance(ctx context.Context, studentID string, from, to time.Time) ([]AttendanceResponse, error) {
-	// Bug 103: questo metodo è usato internamente (GetChildAttendance esegue il check tutela).
-	// Se esposto direttamente tramite handler, l'handler deve verificare actorRole.
-	// Note: internal callers (GetChildAttendance) already guard with IsGuardian.
+func (s *service) GetStudentAttendance(ctx context.Context, actorID, actorRole, schoolID, studentID string, from, to time.Time) ([]AttendanceResponse, error) {
+	if actorRole == "student" && actorID != studentID {
+		return nil, fmt.Errorf("unauthorized: uno studente può leggere solo le proprie presenze")
+	}
+	if actorRole == "parent" {
+		if s.userRepo == nil {
+			return nil, fmt.Errorf("unauthorized: userRepo is missing")
+		}
+		isGuardian, err := s.userRepo.IsGuardian(ctx, actorID, studentID)
+		if err != nil || !isGuardian {
+			return nil, fmt.Errorf("unauthorized: not a guardian of this student")
+		}
+	}
+
 	atts, err := s.repo.FindByStudent(studentID, from, to)
 	if err != nil {
 		return nil, err
@@ -328,6 +357,10 @@ func (s *service) RequestJustification(ctx context.Context, parentID string, req
 		return fmt.Errorf("end_date non valida '%s': usa il formato YYYY-MM-DD", req.EndDate)
 	}
 
+	if end.Before(start) {
+		return fmt.Errorf("end_date (%s) non può essere precedente a start_date (%s)", req.EndDate, req.StartDate)
+	}
+
 	j := &Justification{
 		StudentID: req.StudentID,
 		ParentID:  parentID,
@@ -352,6 +385,16 @@ func (s *service) ProcessJustification(ctx context.Context, teacherID, justifica
 
 	if j.Status != JustificationPending {
 		return fmt.Errorf("la giustifica %s è già stata elaborata (stato attuale: %s)", justificationID, j.Status)
+	}
+
+	if s.userRepo != nil {
+		studentUser, err := s.userRepo.GetByID(ctx, j.StudentID)
+		if err == nil && studentUser != nil && studentUser.ClassID != nil && *studentUser.ClassID != "" {
+			isAssigned, err := s.repo.IsTeacherAssignedToClass(ctx, teacherID, *studentUser.ClassID)
+			if err != nil || !isAssigned {
+				return fmt.Errorf("forbidden: docente non assegnato alla classe dello studente")
+			}
+		}
 	}
 
 	if err := s.repo.ProcessJustificationTx(ctx, j, teacherID, approve); err != nil {
@@ -414,27 +457,28 @@ func (s *service) DeleteJustification(ctx context.Context, actorID string, justi
 	}
 
 	if actorID != j.ParentID && actorID != j.StudentID {
-		if s.userRepo != nil {
-			actorUser, err := s.userRepo.GetByID(ctx, actorID)
-			if err != nil {
-				return fmt.Errorf("unauthorized: impossibile verificare permessi dell'utente: %w", err)
+		if s.userRepo == nil {
+			return errors.New("unauthorized: userRepo non configurato per il controllo permessi")
+		}
+		actorUser, err := s.userRepo.GetByID(ctx, actorID)
+		if err != nil {
+			return fmt.Errorf("unauthorized: impossibile verificare permessi dell'utente: %w", err)
+		}
+		if actorUser.Role == "teacher" {
+			return fmt.Errorf("forbidden: i docenti non possono eliminare le giustifiche create dai genitori")
+		}
+		studentUser, err := s.userRepo.GetByID(ctx, j.StudentID)
+		if err != nil {
+			return fmt.Errorf("unauthorized: impossibile verificare lo studente della giustifica: %w", err)
+		}
+		if actorUser.Role != "superadmin" {
+			// Bug 104: fix nil-SchoolID bypass — verifica esplicita dei puntatori prima di dereferenziare
+			if actorUser.SchoolID == nil || studentUser.SchoolID == nil {
+				// Se uno dei due SchoolID mancano non possiamo garantire la co-appartenenza
+				return fmt.Errorf("forbidden: impossibile verificare appartenenza scolastica (schoolID mancante)")
 			}
-			if actorUser.Role == "teacher" {
-				return fmt.Errorf("forbidden: i docenti non possono eliminare le giustifiche create dai genitori")
-			}
-			studentUser, err := s.userRepo.GetByID(ctx, j.StudentID)
-			if err != nil {
-				return fmt.Errorf("unauthorized: impossibile verificare lo studente della giustifica: %w", err)
-			}
-			if actorUser.Role != "superadmin" {
-				// Bug 104: fix nil-SchoolID bypass — verifica esplicita dei puntatori prima di dereferenziare
-				if actorUser.SchoolID == nil || studentUser.SchoolID == nil {
-					// Se uno dei due SchoolID mancano non possiamo garantire la co-appartenenza
-					return fmt.Errorf("forbidden: impossibile verificare appartenenza scolastica (schoolID mancante)")
-				}
-				if *actorUser.SchoolID != *studentUser.SchoolID {
-					return fmt.Errorf("forbidden: impossibile eliminare giustifiche di un'altra scuola")
-				}
+			if *actorUser.SchoolID != *studentUser.SchoolID {
+				return fmt.Errorf("forbidden: impossibile eliminare giustifiche di un'altra scuola")
 			}
 		}
 	}
@@ -502,7 +546,7 @@ func (s *service) GetChildAttendance(ctx context.Context, parentID, studentID st
 	if !isGuardian {
 		return nil, fmt.Errorf("unauthorized: not a guardian of this student")
 	}
-	return s.GetStudentAttendance(ctx, studentID, from, to)
+	return s.GetStudentAttendance(ctx, parentID, "parent", "", studentID, from, to)
 }
 
 func (s *service) GetChildSummary(ctx context.Context, parentID, studentID, schoolID string) (*SummaryResponse, error) {

@@ -114,7 +114,7 @@ func TestService_SendMessage(t *testing.T) {
 		return m.SenderID == senderID && m.Subject == "Circolare N.12" && m.RequiresSignature == true
 	})).Return(nil)
 
-	msg, err := svc.SendMessage(context.Background(), senderID, req)
+	msg, err := svc.SendMessage(context.Background(), "teacher", "school-1", senderID, req)
 	assert.NoError(t, err)
 	assert.NotNil(t, msg)
 	assert.Equal(t, senderID, msg.SenderID)
@@ -142,7 +142,7 @@ func TestService_SignMessageWithIP(t *testing.T) {
 	mockRepo := new(MockRepository)
 	svc := NewService(mockRepo)
 
-	mockRepo.On("Get", mock.Anything, "msg-1").Return(&Message{ID: "msg-1", SenderID: "user-1"}, nil)
+	mockRepo.On("Get", mock.Anything, "msg-1").Return(&Message{ID: "msg-1", SenderID: "user-2", ReceiverIDs: []string{"user-1"}}, nil)
 	mockRepo.On("SignWithIP", mock.Anything, "msg-1", "user-1", "192.168.1.50").Return(nil)
 
 	err := svc.SignMessageWithIP(context.Background(), "msg-1", "user-1", "192.168.1.50")

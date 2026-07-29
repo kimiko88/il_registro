@@ -9,13 +9,14 @@ import (
 	"time"
 
 	"registro-backend/internal/permissions"
+	"registro-backend/internal/users"
 )
 
 type Service interface {
 	CreateDocument(ctx context.Context, actorRole, userID, schoolID string, req CreateDocumentRequest) (*DocumentListResponse, error)
 	GetDocument(ctx context.Context, actorRole, schoolID, id string) (*DocumentDetailResponse, error)
 	UpdateDocument(ctx context.Context, actorRole, schoolID, userID, id string, req UpdateDocumentRequest) error
-	DeleteDocument(ctx context.Context, actorRole, userID, id string) error
+	DeleteDocument(ctx context.Context, actorRole, schoolID, userID, id string) error
 	AttachFile(ctx context.Context, actorRole, schoolID, docID, fileURL string) error
 
 	// Workflow
@@ -27,7 +28,7 @@ type Service interface {
 	// Lists
 	GetInbox(ctx context.Context, schoolID string) ([]DocumentListResponse, error)
 	GetReviewQueue(ctx context.Context, schoolID string) ([]DocumentListResponse, error)
-	GetMyDocuments(ctx context.Context, userID string) ([]DocumentListResponse, error)
+	GetMyDocuments(ctx context.Context, schoolID, userID string) ([]DocumentListResponse, error)
 	ListDocuments(ctx context.Context, actorRole, schoolID string, docType *DocType) ([]DocumentListResponse, error)
 
 	// Templates
@@ -46,6 +47,7 @@ type Service interface {
 
 type service struct {
 	repo        Repository
+	userRepo    users.Repository
 	validator   *Validator
 	workflow    *WorkflowEngine
 	tpl         *TemplateEngine
@@ -54,9 +56,14 @@ type service struct {
 	permManager *permissions.Manager
 }
 
-func NewService(repo Repository) Service {
+func NewService(repo Repository, uRepo ...users.Repository) Service {
+	var userRepo users.Repository
+	if len(uRepo) > 0 {
+		userRepo = uRepo[0]
+	}
 	return &service{
 		repo:        repo,
+		userRepo:    userRepo,
 		validator:   NewValidator(),
 		workflow:    NewWorkflowEngine(),
 		tpl:         NewTemplateEngine(),
@@ -78,7 +85,12 @@ func (s *service) CreateDocument(ctx context.Context, actorRole, userID, schoolI
 		if err == nil {
 			studentName := ""
 			if req.StudentID != nil {
-				studentName = *req.StudentID // callers can enrich this; use ID as fallback
+				studentName = *req.StudentID
+				if s.userRepo != nil {
+					if u, err := s.userRepo.GetByID(ctx, *req.StudentID); err == nil && u != nil {
+						studentName = fmt.Sprintf("%s %s", u.FirstName, u.LastName)
+					}
+				}
 			}
 			data := map[string]string{
 				"student_name": studentName,
@@ -156,6 +168,9 @@ func (s *service) UpdateDocument(ctx context.Context, actorRole, schoolID, userI
 	if doc.SchoolID != schoolID {
 		return errors.New("unauthorized: cannot edit document of another school")
 	}
+	if doc.CreatedBy != userID && actorRole != "admin" && actorRole != "superadmin" {
+		return errors.New("forbidden: non puoi modificare i documenti altrui")
+	}
 
 	if doc.Status != StatusDraft && doc.Status != StatusRejected {
 		return errors.New("cannot edit non-draft document")
@@ -177,13 +192,16 @@ func (s *service) UpdateDocument(ctx context.Context, actorRole, schoolID, userI
 	return s.repo.Update(doc, content, req.ChangeLog)
 }
 
-func (s *service) DeleteDocument(ctx context.Context, actorRole, userID, id string) error {
+func (s *service) DeleteDocument(ctx context.Context, actorRole, schoolID, userID, id string) error {
 	if !s.permManager.HasPermission(actorRole, permissions.DocumentDelete) {
 		return errors.New("unauthorized")
 	}
 	doc, err := s.repo.FindByID(id)
 	if err != nil {
 		return err
+	}
+	if actorRole != "superadmin" && doc.SchoolID != schoolID {
+		return errors.New("unauthorized: cannot delete document of another school")
 	}
 	if actorRole != "admin" && actorRole != "superadmin" {
 		if doc.CreatedBy != userID {
@@ -209,7 +227,7 @@ func (s *service) ProcessWorkflow(ctx context.Context, actorRole, schoolID, user
 			return errors.New("unauthorized: only document creator or admin can submit")
 		}
 	case "approve_secretary":
-		if actorRole != "segreteria" && actorRole != "admin" && actorRole != "superadmin" {
+		if actorRole != "secretary" && actorRole != "admin" && actorRole != "superadmin" {
 			return errors.New("unauthorized: insufficient permissions for secretary approval")
 		}
 	case "approve_director":
@@ -217,7 +235,7 @@ func (s *service) ProcessWorkflow(ctx context.Context, actorRole, schoolID, user
 			return errors.New("unauthorized: insufficient permissions for director approval")
 		}
 	case "reject":
-		if actorRole != "segreteria" && actorRole != "admin" && actorRole != "superadmin" {
+		if actorRole != "secretary" && actorRole != "admin" && actorRole != "superadmin" {
 			return errors.New("unauthorized: insufficient permissions to reject")
 		}
 	default:
@@ -252,7 +270,7 @@ func (s *service) LockDocument(ctx context.Context, id string) error {
 }
 
 func (s *service) SignDocument(ctx context.Context, actorRole, schoolID, userID, docID string, req SignDocumentRequest) error {
-	if actorRole != "admin" && actorRole != "superadmin" {
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "teacher" && actorRole != "principal" && actorRole != "vice_principal" {
 		return errors.New("unauthorized: insufficient permissions to sign document")
 	}
 	doc, err := s.repo.FindByID(docID)
@@ -314,11 +332,11 @@ func (s *service) GetReviewQueue(ctx context.Context, schoolID string) ([]Docume
 	return convertList(docs), nil
 }
 
-func (s *service) GetMyDocuments(ctx context.Context, userID string) ([]DocumentListResponse, error) {
-	// Bug 91: implementato — carica i documenti creati dall'utente (ruolo teacher/segreteria)
-	// oppure associati allo studente (ruolo student).
-	// Il filtro sul ruolo avviene nel handler tramite i parametri passati.
-	docs, err := s.repo.ListAll("", nil) // schoolID="" = tutti (filtrato da FindByStudent)
+func (s *service) GetMyDocuments(ctx context.Context, schoolID, userID string) ([]DocumentListResponse, error) {
+	if schoolID == "" {
+		return nil, errors.New("school_id non fornito")
+	}
+	docs, err := s.repo.ListAll(schoolID, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -460,8 +478,8 @@ func (s *service) AttachFile(ctx context.Context, actorRole, schoolID, docID, fi
 	cleanURL = strings.TrimSpace(cleanURL)
 
 	parsedURL, err := url.Parse(cleanURL)
-	if err != nil || (parsedURL.Scheme != "https" && parsedURL.Scheme != "http") {
-		return errors.New("fileURL non valido: sono accettati solo URL con schema http o https")
+	if err != nil || parsedURL.Scheme != "https" {
+		return errors.New("fileURL non valido: sono accettati solo URL HTTPS per i documenti ufficiali")
 	}
 	if parsedURL.Host == "" {
 		return errors.New("fileURL non valido: host mancante")

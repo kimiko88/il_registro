@@ -46,6 +46,10 @@ func (m *mockRepository) DeleteLesson(id string) error {
 	return m.errLesson
 }
 
+func (m *mockRepository) IsTeacherAssignedToClass(teacherID, classID string) (bool, error) {
+	return true, nil
+}
+
 func (m *mockRepository) GetHomeworkByID(id string) (*Homework, error) {
 	if m.errHW != nil {
 		return nil, m.errHW

@@ -7,6 +7,8 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"time"
+
 	"registro-backend/internal/attendance"
 	"registro-backend/internal/classes"
 	"registro-backend/internal/grades"
@@ -198,10 +200,16 @@ func (s *Service) GetOverview(ctx context.Context, actorID, actorRole, schoolID 
 		return nil, err
 	}
 
+	sem := 2
+	now := time.Now()
+	if now.Month() >= time.September || now.Month() <= time.January {
+		sem = 1
+	}
+
 	var res []ClassScrutinyOverview
 	for _, c := range classesList {
 		subjects, _ := s.classRepo.GetClassSubjects(ctx, c.ID)
-		records, _ := s.repo.ListRecordsByClass(ctx, c.ID, 2)
+		records, _ := s.repo.ListRecordsByClass(ctx, c.ID, sem)
 
 		st := "pending"
 		lastUpdated := "N/A"
@@ -226,7 +234,10 @@ func (s *Service) GetOverview(ctx context.Context, actorID, actorRole, schoolID 
 	return res, nil
 }
 
-func (s *Service) GetClassReport(ctx context.Context, classID string) (*ClassScrutinyReport, error) {
+func (s *Service) GetClassReport(ctx context.Context, actorID, actorRole, classID string) (*ClassScrutinyReport, error) {
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "vice_principal" && actorRole != "secretary" && actorRole != "teacher" {
+		return nil, errors.New("unauthorized: insufficient permissions to view class scrutiny report")
+	}
 	cls, err := s.classRepo.Get(ctx, classID)
 	if err != nil {
 		return nil, err
