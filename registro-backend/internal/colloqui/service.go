@@ -8,8 +8,11 @@ import (
 )
 
 var (
-	ErrUnauthorized = errors.New("unauthorized action on colloquio")
-	ErrInvalidDate  = errors.New("invalid date or time format")
+	ErrUnauthorized      = errors.New("unauthorized action on colloquio")
+	ErrInvalidDate       = errors.New("invalid date or time format")
+	ErrPastDate          = errors.New("la data dello slot non può essere nel passato")
+	ErrOverlappingSlot   = errors.New("esiste già uno slot sovrapposto per questo docente in questa fascia oraria")
+	ErrNotGuardian       = errors.New("il genitore non è tutore legale dello studente indicato")
 )
 
 type Service struct {
@@ -31,6 +34,13 @@ func (s *Service) CreateSlot(ctx context.Context, teacherUserID, schoolID string
 	if err != nil {
 		return nil, ErrInvalidDate
 	}
+
+	// Bug 99/130: rifiuta date nel passato (consentiamo solo oggi o futuro)
+	today := time.Now().Truncate(24 * time.Hour)
+	if d.Before(today) {
+		return nil, ErrPastDate
+	}
+
 	if req.StartTime != "" && req.EndTime != "" {
 		st, err1 := time.Parse("15:04", req.StartTime)
 		et, err2 := time.Parse("15:04", req.EndTime)
@@ -42,6 +52,14 @@ func (s *Service) CreateSlot(ctx context.Context, teacherUserID, schoolID string
 	teacherProfileID, err := s.repo.GetTeacherProfileID(ctx, teacherUserID)
 	if err != nil || teacherProfileID == "" {
 		teacherProfileID = teacherUserID
+	}
+
+	// Bug 98: verifica slot sovrapposti per lo stesso docente
+	if req.StartTime != "" && req.EndTime != "" {
+		overlaps, err := s.repo.ExistsOverlappingSlot(ctx, teacherProfileID, req.Date, req.StartTime, req.EndTime)
+		if err == nil && overlaps {
+			return nil, ErrOverlappingSlot
+		}
 	}
 
 	slot := &ColloquioSlot{
@@ -118,6 +136,15 @@ func (s *Service) BookSlot(ctx context.Context, parentUserID string, req CreateB
 		Notes:    req.Notes,
 	}
 	if req.StudentID != nil && *req.StudentID != "" {
+		// Bug 97/129: verifica guardianship prima di associare lo studente
+		isGuardian, err := s.repo.IsGuardian(ctx, parentUserID, *req.StudentID)
+		if err != nil {
+			return nil, fmt.Errorf("errore verifica tutela: %w", err)
+		}
+		if !isGuardian {
+			return nil, ErrNotGuardian
+		}
+
 		stdProfileID, err := s.repo.GetStudentProfileID(ctx, *req.StudentID)
 		if err != nil || stdProfileID == "" {
 			stdProfileID = *req.StudentID
@@ -132,8 +159,9 @@ func (s *Service) BookSlot(ctx context.Context, parentUserID string, req CreateB
 	return s.repo.GetBookingByID(ctx, booking.ID)
 }
 
-func (s *Service) ListMyBookings(ctx context.Context, userID string) ([]*ColloquioBooking, error) {
-	return s.repo.ListUserBookings(ctx, userID)
+// ListMyBookings restituisce le prenotazioni dell'utente filtrate per scuola (Bug 100).
+func (s *Service) ListMyBookings(ctx context.Context, userID, schoolID string) ([]*ColloquioBooking, error) {
+	return s.repo.ListUserBookings(ctx, userID, schoolID)
 }
 
 func (s *Service) ListSlotBookings(ctx context.Context, actorID, actorRole, slotID string) ([]*ColloquioBooking, error) {
@@ -230,3 +258,4 @@ func (s *Service) CreateAssembly(ctx context.Context, teacherID, schoolID string
 		Location:    req.Location,
 	})
 }
+

@@ -38,14 +38,18 @@ func NewService(repo Repository, gr grades.Repository, cr classes.Repository, ur
 }
 
 func (s *Service) isDirigenzaOrCoordinator(ctx context.Context, actorID, actorRole, classID string) (bool, bool, error) {
-	isDirigenza := actorRole == "principal" || actorRole == "vice_principal" || actorRole == "admin" || actorRole == "superadmin"
-	
+	// Bug 127: admin is NOT dirigenza for scrutiny validation purposes.
+	// Only principal and vice_principal can validate (sign off) scrutiny.
+	// admin/superadmin can coordinate (start, save, export) but not formally validate.
+	isDirigenza := actorRole == "principal" || actorRole == "vice_principal"
+	isAdmin := actorRole == "admin" || actorRole == "superadmin"
+
 	cls, err := s.classRepo.Get(ctx, classID)
 	if err != nil {
 		return false, false, err
 	}
 
-	isCoordinator := (cls.CoordinatorID == actorID) || isDirigenza
+	isCoordinator := (cls.CoordinatorID == actorID) || isDirigenza || isAdmin
 	return isCoordinator, isDirigenza, nil
 }
 
@@ -181,8 +185,15 @@ type ClassReportStudentRow struct {
 	Outcome   string            `json:"outcome"`
 }
 
-func (s *Service) GetOverview(ctx context.Context) ([]ClassScrutinyOverview, error) {
-	classesList, err := s.classRepo.List(ctx, "", "")
+// GetOverview returns a summary of scrutiny status for all classes in the actor's school.
+// Bug 126: requires actorID, actorRole, schoolID; restricts to coordinator/dirigenza/admin;
+// filters classes by schoolID to prevent cross-tenant data leaks.
+func (s *Service) GetOverview(ctx context.Context, actorID, actorRole, schoolID string) ([]ClassScrutinyOverview, error) {
+	if actorRole != "principal" && actorRole != "vice_principal" &&
+		actorRole != "admin" && actorRole != "superadmin" && actorRole != "coordinator" {
+		return nil, errors.New("unauthorized: solo coordinatori, dirigenza e admin possono vedere l'overview dello scrutinio")
+	}
+	classesList, err := s.classRepo.List(ctx, schoolID, "")
 	if err != nil {
 		return nil, err
 	}
@@ -203,13 +214,13 @@ func (s *Service) GetOverview(ctx context.Context) ([]ClassScrutinyOverview, err
 		}
 
 		res = append(res, ClassScrutinyOverview{
-			ClassID:             c.ID,
-			ClassName:           c.Name,
-			Status:              st,
-			CompletedSubjects:   len(subjects),
-			TotalSubjects:       len(subjects),
+			ClassID:           c.ID,
+			ClassName:         c.Name,
+			Status:            st,
+			CompletedSubjects: len(subjects),
+			TotalSubjects:     len(subjects),
 			PendingGradesCount: 0,
-			LastUpdated:         lastUpdated,
+			LastUpdated:       lastUpdated,
 		})
 	}
 	return res, nil
@@ -276,8 +287,14 @@ func (s *Service) FinalizeClass(ctx context.Context, classID string) error {
 	return s.repo.UpdateClassScrutinyStatus(ctx, classID, 2, "closed")
 }
 
-func (s *Service) ExportAll(ctx context.Context) ([]byte, error) {
-	classesList, err := s.classRepo.List(ctx, "", "")
+// ExportAll exports scrutiny data for all classes in the actor's school as CSV.
+// Bug 128: requires actorID, actorRole, schoolID; restricts to admin+/superadmin;
+// filters classes by schoolID to prevent cross-tenant data leaks.
+func (s *Service) ExportAll(ctx context.Context, actorID, actorRole, schoolID string) ([]byte, error) {
+	if actorRole != "admin" && actorRole != "superadmin" {
+		return nil, errors.New("unauthorized: solo admin e superadmin possono esportare tutti gli scrutini")
+	}
+	classesList, err := s.classRepo.List(ctx, schoolID, "")
 	if err != nil {
 		return nil, err
 	}

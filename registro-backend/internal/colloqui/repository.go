@@ -25,13 +25,18 @@ type Repository interface {
 
 	CreateBooking(ctx context.Context, booking *ColloquioBooking) error
 	GetBookingByID(ctx context.Context, id string) (*ColloquioBooking, error)
-	ListUserBookings(ctx context.Context, userID string) ([]*ColloquioBooking, error)
+	ListUserBookings(ctx context.Context, userID, schoolID string) ([]*ColloquioBooking, error)
 	ListSlotBookings(ctx context.Context, slotID string) ([]*ColloquioBooking, error)
 	UpdateBookingStatus(ctx context.Context, bookingID string, status BookingStatus, changedBy string, reason string) error
 
 	GetTeacherProfileID(ctx context.Context, userID string) (string, error)
 	GetParentProfileID(ctx context.Context, userID string) (string, error)
 	GetStudentProfileID(ctx context.Context, userID string) (string, error)
+
+	// Bug 97/129: verifica che il genitore sia tutore legale dello studente
+	IsGuardian(ctx context.Context, parentUserID, studentUserID string) (bool, error)
+	// Bug 98: verifica slot sovrapposti per lo stesso docente
+	ExistsOverlappingSlot(ctx context.Context, teacherID string, date, startTime, endTime string) (bool, error)
 }
 
 type PostgresRepository struct {
@@ -258,20 +263,22 @@ func (r *PostgresRepository) GetBookingByID(ctx context.Context, id string) (*Co
 	return b, nil
 }
 
-func (r *PostgresRepository) ListUserBookings(ctx context.Context, userID string) ([]*ColloquioBooking, error) {
+func (r *PostgresRepository) ListUserBookings(ctx context.Context, userID, schoolID string) ([]*ColloquioBooking, error) {
 	query := `
 		SELECT b.id, b.slot_id, b.parent_id, b.student_id, b.status, COALESCE(b.notes, ''), b.booked_at,
 		       COALESCE(pu.first_name || ' ' || pu.last_name, '') AS parent_name,
 		       COALESCE(su.first_name || ' ' || su.last_name, '') AS student_name
 		FROM colloquio_bookings b
+		JOIN colloquio_slots sl ON b.slot_id = sl.id
 		LEFT JOIN parents p ON b.parent_id = p.id
 		LEFT JOIN users pu ON p.user_id = pu.id OR b.parent_id = pu.id
 		LEFT JOIN students s ON b.student_id = s.id
 		LEFT JOIN users su ON s.user_id = su.id OR b.student_id = su.id
-		WHERE b.parent_id = $1::uuid OR p.user_id = $1::uuid OR b.student_id = $1::uuid OR s.user_id = $1::uuid
+		WHERE (b.parent_id = $1::uuid OR p.user_id = $1::uuid OR b.student_id = $1::uuid OR s.user_id = $1::uuid)
+		  AND ($2 = '' OR sl.school_id = $2::uuid)
 		ORDER BY b.booked_at DESC
 	`
-	rows, err := r.db.QueryContext(ctx, query, userID)
+	rows, err := r.db.QueryContext(ctx, query, userID, schoolID)
 	if err != nil {
 		return nil, err
 	}
@@ -382,4 +389,38 @@ func (r *PostgresRepository) UpdateBookingStatus(ctx context.Context, bookingID 
 	_, _ = tx.ExecContext(ctx, historyQuery, bookingID, string(status), changedByUUID, reason)
 
 	return tx.Commit()
+}
+
+// IsGuardian verifica che parentUserID sia tutore legale di studentUserID tramite la
+// tabella parent_students (Bug 97/129).
+func (r *PostgresRepository) IsGuardian(ctx context.Context, parentUserID, studentUserID string) (bool, error) {
+	query := `
+		SELECT EXISTS (
+			SELECT 1 FROM parent_students ps
+			JOIN parents p ON ps.parent_id = p.id
+			JOIN students s ON ps.student_id = s.id
+			WHERE (p.user_id = $1::uuid OR ps.parent_id = $1::uuid)
+			  AND (s.user_id = $2::uuid OR ps.student_id = $2::uuid)
+		)
+	`
+	var ok bool
+	err := r.db.QueryRowContext(ctx, query, parentUserID, studentUserID).Scan(&ok)
+	return ok, err
+}
+
+// ExistsOverlappingSlot controlla se esiste già uno slot per il docente in quella data e fascia oraria (Bug 98).
+func (r *PostgresRepository) ExistsOverlappingSlot(ctx context.Context, teacherID, date, startTime, endTime string) (bool, error) {
+	query := `
+		SELECT EXISTS (
+			SELECT 1 FROM colloquio_slots
+			WHERE teacher_id = $1::uuid
+			  AND date = $2::date
+			  AND is_cancelled = false
+			  AND start_time < $4
+			  AND end_time > $3
+		)
+	`
+	var exists bool
+	err := r.db.QueryRowContext(ctx, query, teacherID, date, startTime, endTime).Scan(&exists)
+	return exists, err
 }

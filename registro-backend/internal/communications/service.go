@@ -3,6 +3,7 @@ package communications
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 )
 
@@ -71,12 +72,33 @@ func (s *Service) DeleteMessage(ctx context.Context, actorID, actorRole, schoolI
 	return s.repo.Delete(ctx, id)
 }
 
-func (s *Service) SignMessage(ctx context.Context, communicationID string, userID string) error {
-	return s.repo.Sign(ctx, communicationID, userID)
+// SignMessage firma un messaggio verificando che l'utente sia un destinatario o il mittente.
+// Bug 111: verifica che l'utente che firma sia un destinatario autorizzato o il mittente.
+func (s *Service) SignMessage(ctx context.Context, userID, messageID, ipAddress string) error {
+	msg, err := s.repo.Get(ctx, messageID)
+	if err != nil {
+		return fmt.Errorf("messaggio non trovato: %w", err)
+	}
+
+	// Verifica che l'utente sia il mittente o un destinatario
+	isAuthorized := msg.SenderID == userID
+	if !isAuthorized {
+		for _, rid := range msg.ReceiverIDs {
+			if rid == userID {
+				isAuthorized = true
+				break
+			}
+		}
+	}
+	if !isAuthorized {
+		return errors.New("unauthorized: non sei un destinatario di questo messaggio")
+	}
+
+	return s.repo.SignWithIP(ctx, messageID, userID, ipAddress)
 }
 
-func (s *Service) SignMessageWithIP(ctx context.Context, communicationID string, userID string, ipAddress string) error {
-	return s.repo.SignWithIP(ctx, communicationID, userID, ipAddress)
+func (s *Service) SignMessageWithIP(ctx context.Context, messageID, userID, ipAddress string) error {
+	return s.SignMessage(ctx, userID, messageID, ipAddress)
 }
 
 func (s *Service) GetMessageSignatures(ctx context.Context, communicationID string) ([]string, error) {
@@ -90,25 +112,44 @@ func (s *Service) GetSignatureReport(ctx context.Context, actorRole, communicati
 	return s.repo.GetSignatureReport(ctx, communicationID)
 }
 
-func (s *Service) GetMessageByID(ctx context.Context, userID, role, schoolID, id string) (*Message, error) {
-	msg, err := s.repo.Get(ctx, id)
+// GetMessageByID recupera un messaggio verificando i permessi di accesso.
+// Bug 112: la verifica schoolID è obbligatoria indipendentemente dal tipo di messaggio.
+func (s *Service) GetMessageByID(ctx context.Context, userID, schoolID, userRole, messageID string) (*Message, error) {
+	msg, err := s.repo.Get(ctx, messageID)
 	if err != nil {
 		return nil, err
 	}
-	if role != "superadmin" && msg.SchoolID != nil && schoolID != "" && *msg.SchoolID != schoolID {
-		return nil, errors.New("unauthorized: cannot access message of another school")
+
+	// Verifica appartenenza alla scuola per TUTTI i tipi di messaggio (incluso bacheca)
+	if msg.SchoolID != nil && *msg.SchoolID != "" && *msg.SchoolID != schoolID && userRole != "superadmin" {
+		return nil, errors.New("unauthorized: messaggio non appartiene alla tua scuola")
 	}
-	if role == "admin" || role == "superadmin" || msg.Type == "bacheca" || msg.SenderID == userID {
+
+	// Admin e superadmin possono vedere tutti i messaggi della loro scuola
+	if userRole == "admin" || userRole == "superadmin" {
 		return msg, nil
 	}
-	for _, r := range msg.ReceiverIDs {
-		if r == userID {
+
+	// Verifica accesso individuale: deve essere il mittente o un destinatario
+	if msg.SenderID == userID {
+		return msg, nil
+	}
+	for _, rid := range msg.ReceiverIDs {
+		if rid == userID {
 			return msg, nil
 		}
 	}
-	return nil, errors.New("unauthorized: cannot access communication")
+
+	// Per messaggi di tipo bacheca senza destinatari specifici, controlla schoolID (già verificato sopra)
+	if msg.Type == "bacheca" && len(msg.ReceiverIDs) == 0 {
+		return msg, nil
+	}
+
+	return nil, errors.New("unauthorized: non hai accesso a questo messaggio")
 }
 
+// Bug 113: UpdateMessage già blocca i messaggi firmati.
+// NOTA: il cambio di tipo di messaggio dopo la consegna non è bloccato a livello di servizio.
 func (s *Service) UpdateMessage(ctx context.Context, actorID, actorRole, schoolID, id, subject, body string) error {
 	if subject == "" || body == "" {
 		return errors.New("subject and body are required")
@@ -130,8 +171,20 @@ func (s *Service) UpdateMessage(ctx context.Context, actorID, actorRole, schoolI
 	return s.repo.Update(ctx, id, subject, body)
 }
 
+// MarkAsRead marca un messaggio come letto.
+// Bug 114: verifica che l'utente sia un destinatario prima di aggiornare lo stato.
 func (s *Service) MarkAsRead(ctx context.Context, communicationID, userID, ipAddress string) error {
-	return s.repo.MarkAsRead(ctx, communicationID, userID, ipAddress)
+	msg, err := s.repo.Get(ctx, communicationID)
+	if err != nil {
+		return fmt.Errorf("messaggio non trovato: %w", err)
+	}
+
+	for _, rid := range msg.ReceiverIDs {
+		if rid == userID {
+			return s.repo.MarkAsRead(ctx, communicationID, userID, ipAddress)
+		}
+	}
+	return errors.New("unauthorized: non sei un destinatario di questo messaggio")
 }
 
 func (s *Service) GetUnreadUsers(ctx context.Context, communicationID string) ([]string, error) {

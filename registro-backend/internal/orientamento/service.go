@@ -6,9 +6,11 @@ import (
 	"time"
 )
 
+// Service defines the orientamento domain service interface.
+// Bug 145: CreateEvent and GetEvents now accept schoolID to replace the hardcoded "default-school" literal.
 type Service interface {
-	CreateEvent(ctx context.Context, teacherID string, req CreateEventRequest) error
-	GetEvents(ctx context.Context) ([]Event, error)
+	CreateEvent(ctx context.Context, teacherID, schoolID string, req CreateEventRequest) error
+	GetEvents(ctx context.Context, schoolID string) ([]Event, error)
 	RegisterStudent(ctx context.Context, studentID, eventID string) error
 	GetMyEvents(ctx context.Context, studentID string) ([]Participation, error)
 	MarkAttendance(ctx context.Context, eventID, studentID string) error
@@ -24,7 +26,12 @@ func NewService(repo Repository) Service {
 	return &service{repo: repo}
 }
 
-func (s *service) CreateEvent(ctx context.Context, teacherID string, req CreateEventRequest) error {
+// CreateEvent creates a new orientamento event.
+// Bug 145: schoolID is now a parameter instead of the hardcoded literal "default-school".
+func (s *service) CreateEvent(ctx context.Context, teacherID, schoolID string, req CreateEventRequest) error {
+	if schoolID == "" {
+		return errors.New("school_id required")
+	}
 	date, err := time.Parse(time.RFC3339, req.Date)
 	if err != nil {
 		return errors.New("invalid date format (expected RFC3339)")
@@ -39,7 +46,7 @@ func (s *service) CreateEvent(ctx context.Context, teacherID string, req CreateE
 	}
 
 	e := &Event{
-		SchoolID:     "default-school",
+		SchoolID:     schoolID,
 		Title:        req.Title,
 		Description:  req.Description,
 		Category:     req.Category,
@@ -53,11 +60,27 @@ func (s *service) CreateEvent(ctx context.Context, teacherID string, req CreateE
 	return s.repo.CreateEvent(ctx, e)
 }
 
-func (s *service) GetEvents(ctx context.Context) ([]Event, error) {
-	return s.repo.GetEvents(ctx, "default-school")
+// GetEvents returns events for a specific school.
+// Bug 145: schoolID is now a parameter instead of the hardcoded literal "default-school".
+func (s *service) GetEvents(ctx context.Context, schoolID string) ([]Event, error) {
+	if schoolID == "" {
+		return nil, errors.New("school_id required")
+	}
+	return s.repo.GetEvents(ctx, schoolID)
 }
 
+// RegisterStudent registers a student for an orientamento event.
+// Bug 146: checks for duplicate enrollment before inserting.
 func (s *service) RegisterStudent(ctx context.Context, studentID, eventID string) error {
+	// Bug 146: check for existing participation to prevent duplicate enrollment
+	existing, err := s.repo.GetParticipations(ctx, studentID)
+	if err == nil {
+		for _, p := range existing {
+			if p.EventID == eventID {
+				return errors.New("studente già iscritto a questo evento di orientamento")
+			}
+		}
+	}
 	p := &Participation{EventID: eventID, StudentID: studentID}
 	return s.repo.RegisterStudent(ctx, p)
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"sort"
 	"time"
 
@@ -97,6 +98,10 @@ func (s *service) MarkAttendance(ctx context.Context, teacherID, schoolID string
 	if err != nil {
 		return fmt.Errorf("data non valida '%s': usa il formato YYYY-MM-DD", req.Date)
 	}
+	// Bug 101: le presenze non possono essere registrate per date future
+	if date.After(time.Now().Truncate(24 * time.Hour)) {
+		return fmt.Errorf("impossibile registrare presenze per date future (%s)", req.Date)
+	}
 
 	att := &Attendance{
 		SchoolID:  schoolID,
@@ -149,6 +154,10 @@ func (s *service) MarkBulk(ctx context.Context, teacherID, schoolID string, req 
 	date, err := time.Parse("2006-01-02", req.Date)
 	if err != nil {
 		return fmt.Errorf("data non valida '%s': usa il formato YYYY-MM-DD", req.Date)
+	}
+	// Bug 101: le presenze bulk non possono essere registrate per date future
+	if date.After(time.Now().Truncate(24 * time.Hour)) {
+		return fmt.Errorf("impossibile registrare presenze per date future (%s)", req.Date)
 	}
 
 	if len(req.Statuses) == 0 {
@@ -273,6 +282,9 @@ func (s *service) GetClassAttendance(ctx context.Context, classID string, dateSt
 }
 
 func (s *service) GetStudentAttendance(ctx context.Context, studentID string, from, to time.Time) ([]AttendanceResponse, error) {
+	// Bug 103: questo metodo è usato internamente (GetChildAttendance esegue il check tutela).
+	// Se esposto direttamente tramite handler, l'handler deve verificare actorRole.
+	// Note: internal callers (GetChildAttendance) already guard with IsGuardian.
 	atts, err := s.repo.FindByStudent(studentID, from, to)
 	if err != nil {
 		return nil, err
@@ -415,7 +427,12 @@ func (s *service) DeleteJustification(ctx context.Context, actorID string, justi
 				return fmt.Errorf("unauthorized: impossibile verificare lo studente della giustifica: %w", err)
 			}
 			if actorUser.Role != "superadmin" {
-				if actorUser.SchoolID == nil || studentUser.SchoolID == nil || *actorUser.SchoolID != *studentUser.SchoolID {
+				// Bug 104: fix nil-SchoolID bypass — verifica esplicita dei puntatori prima di dereferenziare
+				if actorUser.SchoolID == nil || studentUser.SchoolID == nil {
+					// Se uno dei due SchoolID mancano non possiamo garantire la co-appartenenza
+					return fmt.Errorf("forbidden: impossibile verificare appartenenza scolastica (schoolID mancante)")
+				}
+				if *actorUser.SchoolID != *studentUser.SchoolID {
 					return fmt.Errorf("forbidden: impossibile eliminare giustifiche di un'altra scuola")
 				}
 			}
@@ -441,6 +458,11 @@ func (s *service) GetStudentSummary(ctx context.Context, studentID, schoolID str
 	}
 	if totalDays == 0 {
 		// Fallback: conta i giorni distinti presenti nel DB per questo studente.
+		// Bug 105: WARN — questo fallback usa giorni con registrazioni, non giorni scolastici totali,
+		// il che può gonfiare AbsenceRate se lo studente ha poche righe di presenza nel DB.
+		// Soluzione corretta: configurare CalendarService nel server principale.
+		log.Printf("[WARN] attendance.GetStudentSummary: CalendarService non disponibile per scuola '%s',"+
+			" utilizzo fallback CountDistinctDays che può gonfiare AbsenceRate per lo studente %s", schoolID, studentID)
 		fallbackDays, countErr := s.repo.CountDistinctDays(studentID)
 		if countErr != nil {
 			return nil, fmt.Errorf("failed to count distinct teaching days for student %s: %w", studentID, countErr)

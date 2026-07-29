@@ -118,7 +118,7 @@ func (h *Handler) AssignSubstitute(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.AssignSubstitute(c.Request.Context(), id, req); err != nil {
+	if err := h.service.AssignSubstitute(c.Request.Context(), id, role, req); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

@@ -32,6 +32,7 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 func (h *Handler) CreateEvent(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
+	schoolID := c.GetString("school_id")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
@@ -47,7 +48,7 @@ func (h *Handler) CreateEvent(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.CreateEvent(c.Request.Context(), userID, req); err != nil {
+	if err := h.service.CreateEvent(c.Request.Context(), userID, schoolID, req); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -56,12 +57,13 @@ func (h *Handler) CreateEvent(c *gin.Context) {
 
 func (h *Handler) GetEvents(c *gin.Context) {
 	userID := c.GetString("user_id")
+	schoolID := c.GetString("school_id")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 
-	res, err := h.service.GetEvents(c.Request.Context())
+	res, err := h.service.GetEvents(c.Request.Context(), schoolID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

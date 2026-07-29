@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"log"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/redis/go-redis/v9"
@@ -141,22 +142,51 @@ func (h *Hub) Run(ctx context.Context) {
 
 // redisListener riceve tutti i messaggi dal canale Redis e li consegna
 // ai client WebSocket connessi a questa istanza.
+// Bug 89: se il canale Redis si chiude inaspettatamente (restart, network blip),
+// tentiamo la riconnessione con backoff esponenziale invece di uscire silenziosamente.
 func (h *Hub) redisListener(ctx context.Context) {
-	ch := h.pubsub.Channel()
+	backoff := 500 * time.Millisecond
+	const maxBackoff = 30 * time.Second
+
 	for {
+		ch := h.pubsub.Channel()
+		running := true
+		for running {
+			select {
+			case <-ctx.Done():
+				return
+			case redisMsg, ok := <-ch:
+				if !ok {
+					// Bug 89: canale chiuso — prova a riconnettersi
+					log.Printf("ws.Hub: redis pubsub channel closed, reconnecting in %v...", backoff)
+					running = false
+				} else {
+					backoff = 500 * time.Millisecond // reset on success
+					var msg Message
+					if err := json.Unmarshal([]byte(redisMsg.Payload), &msg); err != nil {
+						log.Printf("ws.Hub: failed to unmarshal redis message: %v", err)
+						continue
+					}
+					h.deliverLocally(msg)
+				}
+			}
+		}
+
+		// Wait before reconnect
 		select {
 		case <-ctx.Done():
 			return
-		case redisMsg, ok := <-ch:
-			if !ok {
-				return
-			}
-			var msg Message
-			if err := json.Unmarshal([]byte(redisMsg.Payload), &msg); err != nil {
-				log.Printf("ws.Hub: failed to unmarshal redis message: %v", err)
-				continue
-			}
-			h.deliverLocally(msg)
+		case <-time.After(backoff):
+		}
+
+		// Re-subscribe
+		_ = h.pubsub.Close()
+		h.pubsub = h.rdb.Subscribe(ctx, redisPubSubChannel)
+
+		// Increase backoff (capped)
+		backoff *= 2
+		if backoff > maxBackoff {
+			backoff = maxBackoff
 		}
 	}
 }
@@ -173,6 +203,11 @@ func (h *Hub) deliverLocally(msg Message) {
 	if msg.Recipient != "" {
 		if clients, ok := h.clients[msg.Recipient]; ok {
 			for client := range clients {
+				// Bug 87: verifica SchoolID quando il messaggio ha un contesto scolastico,
+				// per prevenire consegne cross-tenant se gli UserID non fossero globalmente unici.
+				if msg.SchoolID != "" && client.SchoolID != msg.SchoolID {
+					continue
+				}
 				if isRoleAllowed(client.Role, msg.AllowedRoles) {
 					targetClients = append(targetClients, client)
 				}
@@ -219,7 +254,11 @@ func (h *Hub) sendBroadcast(msg Message) {
 	select {
 	case h.localBroadcast <- msg:
 	default:
-		log.Printf("ws.Hub: localBroadcast channel full, message dropped: %s", msg.Type)
+		// Bug 88: log dettagliato per facilitare il debugging in produzione.
+		// NOTA: per garantire zero drop su messaggi critici (GRADE_ADDED, ABSENCE_RECORDED)
+		// è necessario un message broker persistente (es. Redis Streams o DB inbox).
+		log.Printf("[WARN] ws.Hub: localBroadcast channel full — message DROPPED (type=%s recipient=%q schoolID=%q)",
+			msg.Type, msg.Recipient, msg.SchoolID)
 	}
 }
 

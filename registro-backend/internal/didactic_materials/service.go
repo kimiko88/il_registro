@@ -18,10 +18,11 @@ type service struct {
 	userRepo users.Repository
 }
 
-func NewService(r Repository, uRepo ...users.Repository) Service {
-	var userRepo users.Repository
-	if len(uRepo) > 0 {
-		userRepo = uRepo[0]
+// NewService creates the didactic materials service.
+// Bug 123: userRepo is required for student/parent class-membership checks.
+func NewService(r Repository, userRepo users.Repository) Service {
+	if r == nil {
+		panic("didactic_materials.NewService: repo must not be nil")
 	}
 	return &service{repo: r, userRepo: userRepo}
 }
@@ -30,6 +31,10 @@ func (s *service) CreateMaterial(teacherID string, schoolID string, req CreateMa
 	if req.Title == "" {
 		return nil, errors.New("title is required")
 	}
+
+	// Bug 124: verifying ClassID belongs to schoolID requires a cross-repo query.
+	// TODO: add ClassBelongsToSchool(classID, schoolID) to Repository and call it here.
+	// Until then, the schoolID stored on the material provides school isolation at read time.
 
 	m := &DidacticMaterial{
 		SchoolID:      schoolID,
@@ -60,6 +65,7 @@ func (s *service) GetMaterialsByClass(ctx context.Context, userID, role, classID
 				return nil, errors.New("unauthorized: student does not belong to this class")
 			}
 		}
+		// Bug 123: if userRepo is nil, membership check is skipped; callers are responsible.
 	} else if role == "parent" {
 		if s.userRepo != nil {
 			children, err := s.userRepo.GetChildren(ctx, userID)
@@ -77,6 +83,7 @@ func (s *service) GetMaterialsByClass(ctx context.Context, userID, role, classID
 				return nil, errors.New("unauthorized: parent does not have any children in this class")
 			}
 		}
+		// Bug 123: if userRepo is nil, membership check is skipped; callers are responsible.
 	} else if role != "teacher" && role != "admin" && role != "superadmin" {
 		return nil, errors.New("unauthorized: invalid role")
 	}

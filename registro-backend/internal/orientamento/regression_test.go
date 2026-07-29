@@ -38,7 +38,7 @@ func TestRegression_CreateEvent_Validation(t *testing.T) {
 			Date:    "2025-01-01T10:00:00Z",
 			EndDate: "2024-12-31T10:00:00Z",
 		}
-		err := svc.CreateEvent(context.Background(), "t1", req)
+		err := svc.CreateEvent(context.Background(), "t1", "school-1", req)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "end_date cannot be before")
 	})

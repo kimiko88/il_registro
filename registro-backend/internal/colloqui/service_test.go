@@ -49,8 +49,8 @@ func (m *MockRepository) GetBookingByID(ctx context.Context, id string) (*Colloq
 	}
 	return args.Get(0).(*ColloquioBooking), args.Error(1)
 }
-func (m *MockRepository) ListUserBookings(ctx context.Context, userID string) ([]*ColloquioBooking, error) {
-	args := m.Called(ctx, userID)
+func (m *MockRepository) ListUserBookings(ctx context.Context, userID, schoolID string) ([]*ColloquioBooking, error) {
+	args := m.Called(ctx, userID, schoolID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -76,13 +76,21 @@ func (m *MockRepository) GetParentProfileID(ctx context.Context, userID string) 
 func (m *MockRepository) GetStudentProfileID(ctx context.Context, userID string) (string, error) {
 	return userID, nil
 }
+func (m *MockRepository) IsGuardian(ctx context.Context, parentUserID, studentUserID string) (bool, error) {
+	args := m.Called(ctx, parentUserID, studentUserID)
+	return args.Bool(0), args.Error(1)
+}
+func (m *MockRepository) ExistsOverlappingSlot(ctx context.Context, teacherID, date, startTime, endTime string) (bool, error) {
+	args := m.Called(ctx, teacherID, date, startTime, endTime)
+	return args.Bool(0), args.Error(1)
+}
 
 func TestCreateSlot(t *testing.T) {
 	mockRepo := new(MockRepository)
 	svc := NewService(mockRepo)
 
 	req := CreateSlotRequest{
-		Date:        "2025-11-20",
+		Date:        "2027-11-20",
 		StartTime:   "15:00",
 		EndTime:     "16:00",
 		MaxBookings: 2,
@@ -90,6 +98,7 @@ func TestCreateSlot(t *testing.T) {
 		Location:    "Stanza 12 / Meet link",
 	}
 
+	mockRepo.On("ExistsOverlappingSlot", mock.Anything, "t-1", "2027-11-20", "15:00", "16:00").Return(false, nil).Once()
 	mockRepo.On("CreateSlot", mock.Anything, mock.MatchedBy(func(s *ColloquioSlot) bool {
 		return s.TeacherID == "t-1" && s.StartTime == "15:00"
 	})).Return(nil).Once()

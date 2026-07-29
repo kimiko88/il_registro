@@ -90,10 +90,24 @@ func (s *Service) ListMyToday(ctx context.Context, teacherID string) ([]*Substit
 	return filtered, nil
 }
 
-func (s *Service) AssignSubstitute(ctx context.Context, id string, req AssignSubstituteRequest) error {
+// AssignSubstitute assigns a substitute teacher to a substitution.
+// Bug 142: restricted to admin, superadmin, and coordinator roles.
+func (s *Service) AssignSubstitute(ctx context.Context, id, actorRole string, req AssignSubstituteRequest) error {
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "coordinator" {
+		return fmt.Errorf("unauthorized: solo admin, superadmin e coordinatori possono assegnare sostituzioni")
+	}
 	return s.repo.AssignSubstitute(ctx, id, req.SubstituteTeacherID, req.Notes)
 }
 
+// ConfirmSubstitution allows the assigned substitute teacher to confirm they accept the substitution.
+// Bug 141: verifies that the actor is the assigned substitute teacher for this substitution.
 func (s *Service) ConfirmSubstitution(ctx context.Context, id string, teacherID string) error {
+	sub, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return fmt.Errorf("sostituzione non trovata: %w", err)
+	}
+	if sub.SubstituteTeacherID == nil || *sub.SubstituteTeacherID != teacherID {
+		return fmt.Errorf("unauthorized: non sei il docente sostituto assegnato a questa sostituzione")
+	}
 	return s.repo.ConfirmSubstitution(ctx, id, teacherID)
 }

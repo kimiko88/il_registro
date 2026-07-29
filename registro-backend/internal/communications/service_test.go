@@ -142,6 +142,7 @@ func TestService_SignMessageWithIP(t *testing.T) {
 	mockRepo := new(MockRepository)
 	svc := NewService(mockRepo)
 
+	mockRepo.On("Get", mock.Anything, "msg-1").Return(&Message{ID: "msg-1", SenderID: "user-1"}, nil)
 	mockRepo.On("SignWithIP", mock.Anything, "msg-1", "user-1", "192.168.1.50").Return(nil)
 
 	err := svc.SignMessageWithIP(context.Background(), "msg-1", "user-1", "192.168.1.50")

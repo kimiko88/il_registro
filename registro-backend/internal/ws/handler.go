@@ -3,6 +3,7 @@ package ws
 import (
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -40,11 +41,17 @@ var upgrader = websocket.Upgrader{
 		origin := r.Header.Get("Origin")
 		allowed := allowedOrigins()
 		if len(allowed) == 0 {
-			// Default local dev fallback: allow localhost / 127.0.0.1 origins or matching host
+			// Default local dev fallback: allow only exact localhost/127.0.0.1 hosts.
+			// We parse the origin URL and compare the host exactly — no substring match.
 			if origin == "" {
 				return true
 			}
-			return strings.Contains(origin, "localhost") || strings.Contains(origin, "127.0.0.1") || strings.Contains(origin, r.Host)
+			parsed, err := url.Parse(origin)
+			if err != nil {
+				return false
+			}
+			host := parsed.Hostname() // strips port
+			return host == "localhost" || host == "127.0.0.1"
 		}
 		if allowed["*"] {
 			return true

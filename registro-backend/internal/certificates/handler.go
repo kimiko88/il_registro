@@ -118,6 +118,7 @@ func (h *Handler) DownloadPDF(c *gin.Context) {
 }
 
 func (h *Handler) Delete(c *gin.Context) {
+	actorID := c.GetString("user_id")
 	role := c.GetString("role")
 	if role != "admin" && role != "secretary" && role != "superadmin" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "insufficient permissions"})
@@ -125,7 +126,7 @@ func (h *Handler) Delete(c *gin.Context) {
 	}
 
 	id := c.Param("id")
-	if err := h.service.DeleteCertificate(c.Request.Context(), id); err != nil {
+	if err := h.service.DeleteCertificate(c.Request.Context(), id, actorID, role); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

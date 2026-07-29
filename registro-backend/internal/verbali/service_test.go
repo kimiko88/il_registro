@@ -101,7 +101,8 @@ func TestSignVerbale(t *testing.T) {
 	mockRepo := new(MockRepository)
 	svc := NewService(mockRepo)
 
-	verbale := &MeetingVerbale{ID: "v-1", IsPublished: true}
+	secID := "u-1"
+	verbale := &MeetingVerbale{ID: "v-1", SecretaryID: &secID, IsPublished: true}
 	mockRepo.On("GetVerbaleByID", mock.Anything, "v-1", "u-1").Return(verbale, nil).Once()
 	mockRepo.On("SignVerbale", mock.Anything, "v-1", "u-1", "10.0.0.1").Return(nil).Once()
 

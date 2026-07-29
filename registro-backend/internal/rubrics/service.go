@@ -71,12 +71,18 @@ func (s *Service) ListRubrics(ctx context.Context, schoolID, teacherID string) (
 	return s.repo.ListRubrics(ctx, schoolID, teacherID)
 }
 
-func (s *Service) UpdateRubric(ctx context.Context, actorID, actorRole, id string, req CreateRubricRequest) (*Rubric, error) {
+// UpdateRubric updates a rubric, verifying ownership or admin school membership.
+// Bug 138: admin can only update rubrics belonging to their own school.
+func (s *Service) UpdateRubric(ctx context.Context, actorID, actorRole, actorSchoolID, id string, req CreateRubricRequest) (*Rubric, error) {
 	rub, err := s.repo.GetRubricByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 	if rub.TeacherID != actorID && actorRole != "admin" && actorRole != "superadmin" {
+		return nil, ErrUnauthorized
+	}
+	// Bug 138: admin can only edit rubrics within their own school
+	if actorRole == "admin" && actorSchoolID != "" && rub.SchoolID != actorSchoolID {
 		return nil, ErrUnauthorized
 	}
 
@@ -90,7 +96,9 @@ func (s *Service) UpdateRubric(ctx context.Context, actorID, actorRole, id strin
 	return rub, nil
 }
 
-func (s *Service) DeleteRubric(ctx context.Context, actorID, actorRole, id string) error {
+// DeleteRubric deletes a rubric, verifying ownership or admin school membership.
+// Bug 138: admin can only delete rubrics belonging to their own school.
+func (s *Service) DeleteRubric(ctx context.Context, actorID, actorRole, actorSchoolID, id string) error {
 	rub, err := s.repo.GetRubricByID(ctx, id)
 	if err != nil {
 		return err
@@ -98,9 +106,16 @@ func (s *Service) DeleteRubric(ctx context.Context, actorID, actorRole, id strin
 	if rub.TeacherID != actorID && actorRole != "admin" && actorRole != "superadmin" {
 		return ErrUnauthorized
 	}
+	// Bug 138: admin can only delete rubrics within their own school
+	if actorRole == "admin" && actorSchoolID != "" && rub.SchoolID != actorSchoolID {
+		return ErrUnauthorized
+	}
 	return s.repo.DeleteRubric(ctx, id)
 }
 
+// AssessStudent creates a rubric assessment for a student.
+// Bug 137: verifying teacher-class assignment requires a classRepo or teacherRepo dependency.
+// TODO: add IsTeacherAssignedToClass(ctx, teacherID, classID) to the Repository and call it here.
 func (s *Service) AssessStudent(ctx context.Context, teacherID, rubricID string, req CreateAssessmentRequest) (*RubricAssessment, error) {
 	var totalScore float64
 	for _, cs := range req.Scores {

@@ -174,8 +174,9 @@ func (h *Handler) ListMyBookings(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
+	schoolID := c.GetString("school_id") // Bug 100: pass schoolID for tenant isolation
 
-	bookings, err := h.service.ListMyBookings(c.Request.Context(), userID)
+	bookings, err := h.service.ListMyBookings(c.Request.Context(), userID, schoolID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

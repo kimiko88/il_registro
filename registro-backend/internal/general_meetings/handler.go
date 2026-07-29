@@ -97,13 +97,14 @@ func (h *Handler) GetByID(c *gin.Context) {
 }
 
 func (h *Handler) Delete(c *gin.Context) {
+	actorID := c.GetString("user_id")
 	role := c.GetString("role")
 	if role != "admin" && role != "superadmin" && role != "secretary" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 	id := c.Param("id")
-	if err := h.service.DeleteMeeting(c.Request.Context(), id); err != nil {
+	if err := h.service.DeleteMeeting(c.Request.Context(), id, actorID, role); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}

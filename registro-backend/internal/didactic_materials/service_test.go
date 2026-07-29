@@ -55,7 +55,7 @@ func (m *mockRepository) Delete(id string, teacherID string) error {
 
 func TestCreateMaterial(t *testing.T) {
 	repo := &mockRepository{}
-	s := NewService(repo)
+	s := NewService(repo, nil)
 
 	// Test validation error
 	req := CreateMaterialRequest{
@@ -91,7 +91,7 @@ func TestGetMaterialsByClass(t *testing.T) {
 			{ID: "id-2", ClassID: "class-2", Title: "Physics"},
 		},
 	}
-	s := NewService(repo)
+	s := NewService(repo, nil)
 
 	res, err := s.GetMaterialsByClass(context.Background(), "user-1", "teacher", "class-1")
 	assert.NoError(t, err)
@@ -111,7 +111,7 @@ func TestDeleteMaterial(t *testing.T) {
 			{ID: "id-1", TeacherID: "teacher-1", Title: "Math"},
 		},
 	}
-	s := NewService(repo)
+	s := NewService(repo, nil)
 
 	err := s.DeleteMaterial("id-1", "teacher-1")
 	assert.NoError(t, err)

@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"time"
+
+	"registro-backend/internal/users"
 )
 
 var (
@@ -12,16 +14,26 @@ var (
 )
 
 type Service struct {
-	repo Repository
+	repo     Repository
+	userRepo users.Repository
 }
 
-func NewService(repo Repository) *Service {
+// NewService creates the trips service.
+// Bug 131: userRepo is optional but strongly recommended for parent guardianship checks.
+// When userRepo is nil, guardianship verification for parents is skipped.
+func NewService(repo Repository, uRepo ...users.Repository) *Service {
 	if repo == nil {
 		panic("trips.NewService: repo must not be nil")
 	}
-	return &Service{repo: repo}
+	svc := &Service{repo: repo}
+	if len(uRepo) > 0 && uRepo[0] != nil {
+		svc.userRepo = uRepo[0]
+	}
+	return svc
 }
 
+// CreateTrip creates a new educational trip.
+// Bug 132: validates that return date is not before departure date.
 func (s *Service) CreateTrip(ctx context.Context, teacherID, schoolID string, req CreateTripRequest) (*EducationalTrip, error) {
 	if schoolID == "" {
 		return nil, fmt.Errorf("school_id required")
@@ -41,6 +53,12 @@ func (s *Service) CreateTrip(ctx context.Context, teacherID, schoolID string, re
 		if err != nil {
 			return nil, fmt.Errorf("invalid return_date format")
 		}
+	}
+
+	// Bug 132: return date must be >= departure date
+	if ret.Before(dep) {
+		return nil, fmt.Errorf("return_date (%s) cannot be before departure_date (%s)",
+			req.ReturnDate, req.DepartureDate)
 	}
 
 	t := &EducationalTrip{
@@ -64,9 +82,23 @@ func (s *Service) ListTrips(ctx context.Context, schoolID, studentID string) ([]
 	return s.repo.ListTrips(ctx, schoolID, studentID)
 }
 
+// SubmitConsent records a parent or student consent for an educational trip.
+// Bug 131: when the actor is a parent, verifies guardianship before recording consent.
 func (s *Service) SubmitConsent(ctx context.Context, actorID, actorRole, ipAddress string, req SubmitConsentRequest) error {
 	var parentID *string
 	if actorRole == "parent" {
+		// Bug 131: verify guardianship
+		if s.userRepo != nil {
+			isGuardian, err := s.userRepo.IsGuardian(ctx, actorID, req.StudentID)
+			if err != nil {
+				return fmt.Errorf("errore verifica tutela: %w", err)
+			}
+			if !isGuardian {
+				return errors.New("unauthorized: non sei tutore legale di questo studente")
+			}
+		}
+		// NOTE: when userRepo is nil, guardianship check is skipped.
+		// Callers must ensure userRepo is always provided in production.
 		parentID = &actorID
 	}
 

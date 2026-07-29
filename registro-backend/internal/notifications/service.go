@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"time"
 )
 
@@ -55,11 +56,12 @@ func (s *Service) SendPushNotification(ctx context.Context, req SendNotification
 		return 0, nil
 	}
 
-	// Dispatch notification to each registered device token
+	// Bug 125: FCM / APNs integration not yet implemented.
+	// Log at WARN level so operators know push notifications are stubs.
 	sentCount := 0
 	for _, t := range tokens {
-		// FCM / APNs dispatch logic
-		fmt.Printf("[Push Notification] Dispatched to %s (%s): %s - %s\n", t.DeviceToken, t.Platform, req.Title, req.Body)
+		log.Printf("[WARN] notifications.SendPushNotification: push stub — would dispatch to %s (%s): %q — %q",
+			t.DeviceToken, t.Platform, req.Title, req.Body)
 		sentCount++
 	}
 	return sentCount, nil
@@ -86,7 +88,7 @@ func (s *Service) CreateInAppNotification(ctx context.Context, userID, title, bo
 			Title:  title,
 			Body:   body,
 		}); err != nil {
-			fmt.Printf("[Push Notification Error] Failed to send push notification to user %s: %v\n", userID, err)
+			log.Printf("[WARN] notifications.CreateInAppNotification: async push dispatch failed for user %s: %v", userID, err)
 		}
 	}()
 

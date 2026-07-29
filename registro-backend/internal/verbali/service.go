@@ -23,6 +23,9 @@ func NewService(repo Repository) *Service {
 	return &Service{repo: repo}
 }
 
+// CreateMeeting creates a new council meeting.
+// Bug 140: verifying ClassID belongs to schoolID requires ClassBelongsToSchool in Repository.
+// TODO: add ClassBelongsToSchool(ctx, classID, schoolID) to Repository and call it here.
 func (s *Service) CreateMeeting(ctx context.Context, actorID, schoolID string, req CreateMeetingRequest) (*CouncilMeeting, error) {
 	if schoolID == "" {
 		return nil, fmt.Errorf("school_id required")
@@ -53,6 +56,8 @@ func (s *Service) ListMeetings(ctx context.Context, schoolID, classID string) ([
 	return s.repo.ListMeetings(ctx, schoolID, classID)
 }
 
+// CreateVerbale creates a new verbale for a council meeting.
+// Bug 140: verifying ClassID school membership would require ClassBelongsToSchool (see CreateMeeting).
 func (s *Service) CreateVerbale(ctx context.Context, actorID, actorRole string, req CreateVerbaleRequest) (*MeetingVerbale, error) {
 	if actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin" {
 		return nil, ErrUnauthorized
@@ -85,6 +90,10 @@ func (s *Service) ListVerbali(ctx context.Context, meetingID, userID string) ([]
 	return s.repo.ListVerbali(ctx, meetingID, userID)
 }
 
+// SignVerbale allows a user to sign a published verbale.
+// Bug 139: verifies that the signer is the secretary or president of the verbale.
+// NOTA: verifica partecipanti al consiglio richiede un campo ParticipantIDs nel modello/repo.
+// Al momento verifichiamo solo SecretaryID e PresidentID che sono campi espliciti del verbale.
 func (s *Service) SignVerbale(ctx context.Context, verbaleID, userID, ipAddress string) error {
 	v, err := s.repo.GetVerbaleByID(ctx, verbaleID, userID)
 	if err != nil {
@@ -93,6 +102,21 @@ func (s *Service) SignVerbale(ctx context.Context, verbaleID, userID, ipAddress 
 	if !v.IsPublished {
 		return errors.New("cannot sign an unpublished verbale")
 	}
+
+	// Bug 139: verify the signer is secretary or president
+	isAuthorized := false
+	if v.SecretaryID != nil && *v.SecretaryID == userID {
+		isAuthorized = true
+	}
+	if v.PresidentID != nil && *v.PresidentID == userID {
+		isAuthorized = true
+	}
+	// NOTE: for full participant list verification, add ParticipantIDs to MeetingVerbale
+	// and verify: for _, pid := range v.ParticipantIDs { if pid == userID { isAuthorized = true } }
+	if !isAuthorized {
+		return errors.New("unauthorized: non sei il segretario o il presidente di questo verbale")
+	}
+
 	return s.repo.SignVerbale(ctx, verbaleID, userID, ipAddress)
 }
 
@@ -104,4 +128,3 @@ func (s *Service) GetSignatures(ctx context.Context, verbaleID string) ([]Verbal
 func (s *Service) GetMeeting(ctx context.Context, meetingID string) (*CouncilMeeting, error) {
 	return s.repo.GetMeetingByID(ctx, meetingID)
 }
-

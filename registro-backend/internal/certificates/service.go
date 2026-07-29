@@ -12,7 +12,7 @@ type Service interface {
 	GenerateCertificate(ctx context.Context, actorID, schoolID string, req GenerateCertificateRequest) (*Certificate, []byte, error)
 	GetCertificateByID(ctx context.Context, id string) (*Certificate, error)
 	ListCertificates(ctx context.Context, schoolID, studentID string, certType CertificateType, year string) ([]Certificate, error)
-	DeleteCertificate(ctx context.Context, id string) error
+	DeleteCertificate(ctx context.Context, id, actorID, actorRole string) error
 	GeneratePDFBytes(ctx context.Context, id string) ([]byte, error)
 }
 
@@ -36,6 +36,19 @@ func (s *service) GenerateCertificate(ctx context.Context, actorID, schoolID str
 		req.AcademicYear = currentAcademicYear()
 	}
 
+	var studentName string
+	if s.userRepo != nil {
+		std, err := s.userRepo.GetByID(ctx, req.StudentID)
+		if err != nil {
+			return nil, nil, fmt.Errorf("studente non trovato: %w", err)
+		}
+		// Bug 118: verify student belongs to the issuing school
+		if std.SchoolID == nil || *std.SchoolID != schoolID {
+			return nil, nil, fmt.Errorf("unauthorized: lo studente non appartiene alla scuola del certificatore")
+		}
+		studentName = fmt.Sprintf("%s %s", std.LastName, std.FirstName)
+	}
+
 	protoNo, err := s.repo.NextProtocolNo(ctx, schoolID)
 	if err != nil {
 		protoNo = fmt.Sprintf("CERT-%d-00001", time.Now().Year())
@@ -44,6 +57,7 @@ func (s *service) GenerateCertificate(ctx context.Context, actorID, schoolID str
 	cert := &Certificate{
 		SchoolID:     schoolID,
 		StudentID:    req.StudentID,
+		StudentName:  studentName,
 		Type:         req.Type,
 		IssuedBy:     actorID,
 		IssuedAt:     time.Now(),
@@ -51,13 +65,6 @@ func (s *service) GenerateCertificate(ctx context.Context, actorID, schoolID str
 		Notes:        req.Notes,
 		ProtocolNo:   protoNo,
 		PDFUrl:       "/api/v1/certificates/download/temp",
-	}
-
-	if s.userRepo != nil {
-		std, err := s.userRepo.GetByID(ctx, req.StudentID)
-		if err == nil && std != nil {
-			cert.StudentName = fmt.Sprintf("%s %s", std.LastName, std.FirstName)
-		}
 	}
 
 	pdfBytes, err := GenerateCertificatePDF(cert, "Istituto Scolastico Registrov2")
@@ -83,7 +90,12 @@ func (s *service) ListCertificates(ctx context.Context, schoolID, studentID stri
 	return s.repo.List(ctx, schoolID, studentID, certType, year)
 }
 
-func (s *service) DeleteCertificate(ctx context.Context, id string) error {
+// DeleteCertificate soft-deletes a certificate.
+// Bug 119: restricted to admin and superadmin roles only.
+func (s *service) DeleteCertificate(ctx context.Context, id, actorID, actorRole string) error {
+	if actorRole != "admin" && actorRole != "superadmin" {
+		return fmt.Errorf("unauthorized: solo admin e superadmin possono eliminare i certificati")
+	}
 	return s.repo.SoftDelete(ctx, id)
 }
 

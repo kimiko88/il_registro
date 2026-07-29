@@ -1,6 +1,12 @@
 package schools
 
-import "context"
+import (
+	"context"
+	"errors"
+	"fmt"
+	"net/mail"
+	"strings"
+)
 
 // Repository defines the interface for school storage
 type Repository interface {
@@ -11,7 +17,12 @@ type Repository interface {
 	Delete(ctx context.Context, id string) error
 }
 
-// Service handles business logic for schools
+// Service handles business logic for schools.
+//
+// DEPRECATION NOTE (Bug 96): questo Service è un layer di basso livello senza
+// validazione RBAC completa né check di duplicazione codice meccanografico.
+// Per operazioni amministrative multi-tenant usare internal/admin.Service che
+// implementa CreateSchool/UpdateSchool/DeleteSchool con audit log e RBAC completo.
 type Service struct {
 	repo Repository
 }
@@ -22,7 +33,22 @@ func NewService(repo Repository) *Service {
 }
 
 // Create creates a new school
+// Bug 95: validates required fields and email format before persisting.
 func (s *Service) Create(ctx context.Context, req *CreateSchoolRequest) (*School, error) {
+	// Required field validation
+	if strings.TrimSpace(req.Name) == "" {
+		return nil, errors.New("name is required")
+	}
+	if strings.TrimSpace(req.Code) == "" {
+		return nil, errors.New("code (codice meccanografico) is required")
+	}
+	// Email format validation (optional field, but must be valid if provided)
+	if req.Email != "" {
+		if _, err := mail.ParseAddress(req.Email); err != nil {
+			return nil, fmt.Errorf("email format not valid: %w", err)
+		}
+	}
+
 	school := &School{
 		Name:    req.Name,
 		Code:    req.Code,
@@ -56,3 +82,4 @@ func (s *Service) Update(ctx context.Context, id string, req *UpdateSchoolReques
 func (s *Service) Delete(ctx context.Context, id string) error {
 	return s.repo.Delete(ctx, id)
 }
+

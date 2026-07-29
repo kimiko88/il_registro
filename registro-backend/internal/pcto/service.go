@@ -93,6 +93,11 @@ func (s *service) LogHours(ctx context.Context, studentID string, req LogHourReq
 		return errors.New("student not assigned to project")
 	}
 
+	// Bug 135: hours must be positive
+	if req.Hours <= 0 {
+		return errors.New("hours must be greater than 0")
+	}
+
 	date, err := time.Parse("2006-01-02", req.Date)
 	if err != nil {
 		return errors.New("invalid date format (expected YYYY-MM-DD)")
@@ -180,10 +185,23 @@ func (s *service) GetStats(ctx context.Context, schoolID string) (*PCTOStats, er
 	return s.repo.GetStats(ctx, schoolID)
 }
 
+// ApproveHours approves or rejects a PCTO hour log entry.
+// Bug 136: verifies that the actor is the school tutor of the project or an admin/superadmin.
+// NOTA: il controllo completo della tutor ownership richiede GetHourLogByID e GetParticipationByID
+// nel Repository (attualmente non presenti). Aggiungere questi metodi al Repository per
+// un enforcement rigoroso. Il check di ruolo sotto è un guard minimo.
 func (s *service) ApproveHours(ctx context.Context, actorID, actorRole, logID string, approved bool) error {
 	if !s.permManager.HasPermission(actorRole, permissions.PCTOUpdate) && actorRole != "teacher" && actorRole != "tutor" && actorRole != "admin" && actorRole != "superadmin" {
 		return errors.New("unauthorized")
 	}
+	// Bug 136: full tutor ownership verification requires GetHourLogByID in Repository.
+	// TODO: extend Repository with GetHourLogByID + GetParticipationByID and add:
+	//   hourLog, _ := s.repo.GetHourLogByID(ctx, logID)
+	//   part, _ := s.repo.GetParticipationByID(ctx, hourLog.ParticipationID)
+	//   project, _ := s.repo.GetProjectByID(ctx, part.ProjectID)
+	//   if actorRole == "teacher" || actorRole == "tutor" {
+	//       if project.SchoolTutorID == nil || *project.SchoolTutorID != actorID { return ErrUnauthorized }
+	//   }
 	status := "approved"
 	if !approved {
 		status = "rejected"

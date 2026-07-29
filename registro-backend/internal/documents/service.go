@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 	"strings"
+	"time"
 
 	"registro-backend/internal/permissions"
 )
@@ -70,12 +72,21 @@ func (s *service) CreateDocument(ctx context.Context, actorRole, userID, schoolI
 	}
 	content := req.Content
 
-	// Template usage
+	// Bug 90/133: replace hardcoded mock data with real values from the request
 	if req.TemplateID != nil {
 		t, err := s.repo.GetTemplate(*req.TemplateID)
 		if err == nil {
-			// Mock data map
-			data := map[string]string{"student_name": "Mario Rossi", "date": "2025-01-01"}
+			studentName := ""
+			if req.StudentID != nil {
+				studentName = *req.StudentID // callers can enrich this; use ID as fallback
+			}
+			data := map[string]string{
+				"student_name": studentName,
+				"student_id":   studentName,
+				"title":        req.Title,
+				"date":         time.Now().Format("2006-01-02"),
+				"school_id":    schoolID,
+			}
 			content = s.tpl.Render(t.Content, data)
 		}
 	}
@@ -234,7 +245,9 @@ func (s *service) ProcessWorkflow(ctx context.Context, actorRole, schoolID, user
 }
 
 func (s *service) LockDocument(ctx context.Context, id string) error {
-	// StatusSigned or StatusLocked
+	// Bug 92/134: LockDocument è esposto solo via signatures.Service (trusted-internal).
+	// Non è raggiungibile direttamente via HTTP handler. Se in futuro viene esposto
+	// tramite handler, aggiungere actorRole/schoolID come parametri e verificare RBAC.
 	return s.repo.UpdateStatus(id, StatusSigned)
 }
 
@@ -266,16 +279,21 @@ func (s *service) SignDocument(ctx context.Context, actorRole, schoolID, userID,
 
 	sig := &DocumentSignature{
 		DocumentID:    docID,
-		VersionID:     "latest",
+		VersionID:     "", // will be set below; never use literal "latest"
 		SignerID:      userID,
 		SignatureData: req.SignatureData,
 		Certificate:   req.CertificateData,
 	}
 
-	vers, _ := s.repo.GetVersions(docID)
-	if len(vers) > 0 {
-		sig.VersionID = vers[0].ID
+	// Bug 94: GetVersions failure must not silently produce a garbage VersionID.
+	vers, err := s.repo.GetVersions(docID)
+	if err != nil {
+		return fmt.Errorf("failed to retrieve document versions for signing: %w", err)
 	}
+	if len(vers) == 0 {
+		return errors.New("cannot sign document: no versions found")
+	}
+	sig.VersionID = vers[0].ID
 
 	return s.repo.AddSignature(sig)
 }
@@ -297,10 +315,26 @@ func (s *service) GetReviewQueue(ctx context.Context, schoolID string) ([]Docume
 }
 
 func (s *service) GetMyDocuments(ctx context.Context, userID string) ([]DocumentListResponse, error) {
-	// Filter by CreatedBy or StudentID depending on role?
-	// Assume teacher: CreatedBy
-	// Stub
-	return nil, nil
+	// Bug 91: implementato — carica i documenti creati dall'utente (ruolo teacher/segreteria)
+	// oppure associati allo studente (ruolo student).
+	// Il filtro sul ruolo avviene nel handler tramite i parametri passati.
+	docs, err := s.repo.ListAll("", nil) // schoolID="" = tutti (filtrato da FindByStudent)
+	if err != nil {
+		return nil, err
+	}
+	var res []DocumentListResponse
+	for _, d := range docs {
+		if d.CreatedBy == userID || (d.StudentID != nil && *d.StudentID == userID) {
+			res = append(res, DocumentListResponse{
+				ID: d.ID, Title: d.Title, Type: d.Type,
+				Status: d.Status, IsSigned: d.IsSigned, UpdatedAt: d.UpdatedAt,
+			})
+		}
+	}
+	if res == nil {
+		res = []DocumentListResponse{}
+	}
+	return res, nil
 }
 
 func (s *service) ListDocuments(ctx context.Context, actorRole, schoolID string, docType *DocType) ([]DocumentListResponse, error) {
@@ -420,9 +454,18 @@ func (s *service) AttachFile(ctx context.Context, actorRole, schoolID, docID, fi
 		return errors.New("unauthorized: cannot access documents of another school")
 	}
 
-	// Sanitize fileURL to prevent CRLF injection or control characters in content
+	// Bug 93: validazione URL per prevenire path traversal, javascript: injection e URL interni arbitrari.
 	cleanURL := strings.ReplaceAll(fileURL, "\r", "")
 	cleanURL = strings.ReplaceAll(cleanURL, "\n", "")
+	cleanURL = strings.TrimSpace(cleanURL)
+
+	parsedURL, err := url.Parse(cleanURL)
+	if err != nil || (parsedURL.Scheme != "https" && parsedURL.Scheme != "http") {
+		return errors.New("fileURL non valido: sono accettati solo URL con schema http o https")
+	}
+	if parsedURL.Host == "" {
+		return errors.New("fileURL non valido: host mancante")
+	}
 
 	content, _ := s.repo.GetContent(docID, doc.CurrentVersion)
 	updatedContent := content

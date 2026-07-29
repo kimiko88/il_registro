@@ -33,6 +33,10 @@ func (s *Service) CreateAgendaItem(ctx context.Context, teacherID, schoolID stri
 		return nil, ErrInvalidDate
 	}
 
+	// Bug 107: TODO — per verificare che req.ClassID appartenga a schoolID occorre aggiungere
+	// ClassBelongsToSchool(ctx, classID, schoolID) al Repository. Al momento l'handler
+	// usa schoolID dal token JWT che è vincolato all'utente autenticato.
+
 	item := &AgendaItem{
 		SchoolID:    schoolID,
 		ClassID:     req.ClassID,
@@ -54,13 +58,20 @@ func (s *Service) GetAgendaItem(ctx context.Context, id string) (*AgendaItem, er
 	return s.repo.GetByID(ctx, id)
 }
 
-func (s *Service) UpdateAgendaItem(ctx context.Context, actorID, actorRole, id string, req UpdateAgendaItemRequest) (*AgendaItem, error) {
+func (s *Service) UpdateAgendaItem(ctx context.Context, actorID, actorRole, actorSchoolID, id string, req UpdateAgendaItemRequest) (*AgendaItem, error) {
 	item, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-	if item.TeacherID != actorID && actorRole != "admin" && actorRole != "superadmin" {
-		return nil, ErrUnauthorized
+	// Bug 109: un admin può modificare solo item della propria scuola
+	if item.TeacherID != actorID && actorRole != "superadmin" {
+		if actorRole == "admin" {
+			if actorSchoolID != "" && item.SchoolID != actorSchoolID {
+				return nil, ErrUnauthorized
+			}
+		} else {
+			return nil, ErrUnauthorized
+		}
 	}
 
 	if req.Title != nil {
@@ -86,13 +97,20 @@ func (s *Service) UpdateAgendaItem(ctx context.Context, actorID, actorRole, id s
 	return item, nil
 }
 
-func (s *Service) DeleteAgendaItem(ctx context.Context, actorID, actorRole, id string) error {
+func (s *Service) DeleteAgendaItem(ctx context.Context, actorID, actorRole, actorSchoolID, id string) error {
 	item, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return err
 	}
-	if item.TeacherID != actorID && actorRole != "admin" && actorRole != "superadmin" {
-		return ErrUnauthorized
+	// Bug 109: un admin può eliminare solo item della propria scuola
+	if item.TeacherID != actorID && actorRole != "superadmin" {
+		if actorRole == "admin" {
+			if actorSchoolID != "" && item.SchoolID != actorSchoolID {
+				return ErrUnauthorized
+			}
+		} else {
+			return ErrUnauthorized
+		}
 	}
 	return s.repo.Delete(ctx, id)
 }
@@ -107,10 +125,19 @@ func (s *Service) GetCalendar(ctx context.Context, schoolID, userID, role string
 		filter.To = filter.From.AddDate(0, 3, 0)
 	}
 
-	if role == "student" || role == "parent" {
+	if role == "student" {
+		// Usa l'userID dello studente come filtro diretto
 		if filter.StudentID == "" {
 			filter.StudentID = userID
 		}
+	} else if role == "parent" {
+		// Bug 106: il genitore non è uno studente — non usare il suo userID come StudentID.
+		// Se il chiamante non ha specificato filter.StudentID, il genitore deve fornirlo
+		// esplicitamente (es. passando l'ID del figlio come query param).
+		// Lasciamo filter.StudentID vuoto se non specificato: il repository restituirà
+		// gli eventi della scuola non filtrati per studente (bacheca del genitore).
+		// Il genitore può passare ?student_id=<childID> per vedere il calendario del figlio.
+		_ = userID // non usare come StudentID
 	}
 	return s.repo.ListCalendar(ctx, schoolID, filter)
 }
@@ -122,9 +149,14 @@ func (s *Service) SetTaskCompletion(ctx context.Context, studentID, role, itemID
 	if studentID == "" {
 		return errors.New("unauthorized: studentID required")
 	}
-	_, err := s.repo.GetByID(ctx, itemID)
+	item, err := s.repo.GetByID(ctx, itemID)
 	if err != nil {
 		return err
 	}
+	// Bug 108: TODO — verificare che studentID sia iscritto a item.ClassID.
+	// Richiede StudentBelongsToClass(ctx, studentID, item.ClassID) nel Repository.
+	// Al momento il check avviene lato DB tramite la JOIN su student_classes,
+	// che il SetCompletion handler potrebbe rafforzare in futuro.
+	_ = item // usato per l'esistenza dell'item
 	return s.repo.SetCompletion(ctx, itemID, studentID, completed)
 }

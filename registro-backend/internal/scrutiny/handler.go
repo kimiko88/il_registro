@@ -171,6 +171,7 @@ func (h *Handler) Close(c *gin.Context) {
 func (h *Handler) GetOverview(c *gin.Context) {
 	actorID := c.GetString("user_id")
 	actorRole := c.GetString("role")
+	schoolID := c.GetString("school_id")
 	if actorID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
@@ -180,7 +181,7 @@ func (h *Handler) GetOverview(c *gin.Context) {
 		return
 	}
 
-	overview, err := h.service.GetOverview(c.Request.Context())
+	overview, err := h.service.GetOverview(c.Request.Context(), actorID, actorRole, schoolID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -232,6 +233,7 @@ func (h *Handler) FinalizeClass(c *gin.Context) {
 func (h *Handler) ExportAll(c *gin.Context) {
 	actorID := c.GetString("user_id")
 	actorRole := c.GetString("role")
+	schoolID := c.GetString("school_id")
 	if actorID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
@@ -241,7 +243,7 @@ func (h *Handler) ExportAll(c *gin.Context) {
 		return
 	}
 
-	data, err := h.service.ExportAll(c.Request.Context())
+	data, err := h.service.ExportAll(c.Request.Context(), actorID, actorRole, schoolID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

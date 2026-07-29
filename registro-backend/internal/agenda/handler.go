@@ -161,7 +161,8 @@ func (h *Handler) Update(c *gin.Context) {
 		return
 	}
 
-	item, err := h.service.UpdateAgendaItem(c.Request.Context(), userID, role, id, req)
+	schoolID := c.GetString("school_id") // Bug 109: pass schoolID for admin scope check
+	item, err := h.service.UpdateAgendaItem(c.Request.Context(), userID, role, schoolID, id, req)
 	if err != nil {
 		if err == ErrUnauthorized {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
@@ -182,7 +183,8 @@ func (h *Handler) Delete(c *gin.Context) {
 	role := c.GetString("role")
 	id := c.Param("id")
 
-	if err := h.service.DeleteAgendaItem(c.Request.Context(), userID, role, id); err != nil {
+	schoolID := c.GetString("school_id") // Bug 109: pass schoolID for admin scope check
+	if err := h.service.DeleteAgendaItem(c.Request.Context(), userID, role, schoolID, id); err != nil {
 		if err == ErrUnauthorized {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
