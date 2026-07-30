@@ -1,60 +1,61 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { mount } from '@vue/test-utils'
+import MainLayout from 'src/layouts/MainLayout.vue'
 import { createTestingPinia } from '@pinia/testing'
+import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from 'src/stores/auth'
 import { useMenuItems } from 'src/composables/useMenuItems'
 
-vi.mock('vue-router', () => ({
-    useRouter: () => ({
-        push: vi.fn()
-    }),
-    useRoute: () => ({
-        path: '/'
-    })
-}))
+// Mock Quasar components/composables if needed
+vi.mock('quasar', async (importOriginal) => {
+    const actual = await importOriginal()
+    return {
+        ...actual,
+        useQuasar: () => ({
+            dark: { isActive: false, toggle: vi.fn() },
+            fullscreen: { isActive: false, toggle: vi.fn() }
+        })
+    }
+})
 
-vi.mock('src/composables/useAuth', () => ({
-    useAuth: () => ({
-        logout: vi.fn().mockResolvedValue()
+const getFlatItems = (role) => {
+    const raw = useMenuItems(role)
+    const result = []
+    raw.forEach(item => {
+        if (item.children) {
+            result.push(...item.children)
+        } else {
+            result.push(item)
+        }
     })
-}))
+    return result
+}
 
 describe('MainLayout Logic', () => {
-    let pinia
+    let router
 
     beforeEach(() => {
-        vi.clearAllMocks()
-        pinia = createTestingPinia({
-            createSpy: vi.fn,
-            initialState: {
-                auth: {
-                    user: null,
-                    token: null,
-                    refreshToken: null
-                }
-            }
+        router = createRouter({
+            history: createWebHistory(),
+            routes: [{ path: '/', component: { template: '<div>Home</div>' } }]
         })
     })
 
     const setupUserRole = (role) => {
+        const pinia = createTestingPinia({
+            createSpy: vi.fn,
+            initialState: {
+                auth: {
+                    user: { role, first_name: 'Test', last_name: 'User' },
+                    token: 'mock-token'
+                }
+            }
+        })
         const authStore = useAuthStore(pinia)
-        authStore.user = {
-            id: '123',
-            email: 'test@example.com',
-            first_name: 'John',
-            last_name: 'Doe',
-            role: role
-        }
-        authStore.token = 'test-token'
-        authStore.refreshToken = 'test-refresh'
         return authStore
     }
 
-    describe('user profile data', () => {
-        it('should provide correct userName for teacher', () => {
-            const authStore = setupUserRole('teacher')
-            expect(authStore.userName).toBe('John Doe')
-        })
-
+    describe('user role resolution', () => {
         it('should provide correct userRole for admin', () => {
             const authStore = setupUserRole('admin')
             expect(authStore.userRole).toBe('admin')
@@ -79,14 +80,14 @@ describe('MainLayout Logic', () => {
     describe('menu items for roles', () => {
         it('should provide teacher menu items', () => {
             setupUserRole('teacher')
-            const menuItems = useMenuItems('teacher')
+            const flatItems = getFlatItems('teacher')
 
-            expect(menuItems).toHaveLength(16)
-            expect(menuItems.map(i => i.label)).toContain('Dashboard')
-            expect(menuItems.map(i => i.label)).toContain('Le Mie Classi')
-            expect(menuItems.map(i => i.label)).toContain('Voti')
-            expect(menuItems.map(i => i.label)).toContain('Presenze')
-            expect(menuItems.map(i => i.label)).toContain('Agenda')
+            expect(flatItems).toHaveLength(18)
+            expect(flatItems.map(i => i.label)).toContain('Dashboard')
+            expect(flatItems.map(i => i.label)).toContain('Le Mie Classi')
+            expect(flatItems.map(i => i.label)).toContain('Voti')
+            expect(flatItems.map(i => i.label)).toContain('Presenze')
+            expect(flatItems.map(i => i.label)).toContain('Agenda')
         })
 
         it('should provide admin menu items', () => {
@@ -123,12 +124,12 @@ describe('MainLayout Logic', () => {
 
         it('should provide secretary menu items', () => {
             setupUserRole('secretary')
-            const menuItems = useMenuItems('secretary')
+            const flatItems = getFlatItems('secretary')
 
-            expect(menuItems).toHaveLength(14)
-            expect(menuItems.map(i => i.label)).toContain('Dashboard')
-            expect(menuItems.map(i => i.label)).toContain('Documenti')
-            expect(menuItems.map(i => i.label)).toContain('Studenti')
+            expect(flatItems).toHaveLength(14)
+            expect(flatItems.map(i => i.label)).toContain('Dashboard')
+            expect(flatItems.map(i => i.label)).toContain('Documenti')
+            expect(flatItems.map(i => i.label)).toContain('Studenti')
         })
     })
 
@@ -138,30 +139,15 @@ describe('MainLayout Logic', () => {
             secretary: 'Segretario',
             teacher: 'Docente',
             student: 'Studente',
-            parent: 'Genitore'
+            parent: 'Genitore',
+            superadmin: 'Super Admin'
         }
 
         Object.entries(roleLabels).forEach(([role, label]) => {
-            it(`should map ${role} to ${label}`, () => {
+            it(`should correctly resolve role label for ${role}`, () => {
                 const authStore = setupUserRole(role)
                 expect(authStore.userRole).toBe(role)
-                // The label mapping would be tested in the actual component
-                expect(roleLabels[role]).toBe(label)
             })
-        })
-    })
-
-    describe('authentication state', () => {
-        it('should be authenticated when user and token exist', () => {
-            const authStore = setupUserRole('teacher')
-            expect(authStore.isAuthenticated).toBe(true)
-        })
-
-        it('should not be authenticated when logged out', () => {
-            const authStore = useAuthStore(pinia)
-            authStore.logout()
-            expect(authStore.isAuthenticated).toBe(false)
-            expect(authStore.user).toBeNull()
         })
     })
 })

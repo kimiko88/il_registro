@@ -1,6 +1,19 @@
 import { useMenuItems } from 'src/composables/useMenuItems'
 import { describe, it, expect } from 'vitest'
 
+const getFlatItems = (role) => {
+    const raw = useMenuItems(role)
+    const result = []
+    raw.forEach(item => {
+        if (item.children) {
+            result.push(...item.children)
+        } else {
+            result.push(item)
+        }
+    })
+    return result
+}
+
 describe('useMenuItems', () => {
     describe('admin role', () => {
         it('should return admin menu items', () => {
@@ -32,30 +45,30 @@ describe('useMenuItems', () => {
 
     describe('secretary role', () => {
         it('should return secretary menu items', () => {
-            const menuItems = useMenuItems('secretary')
+            const flatItems = getFlatItems('secretary')
 
-            expect(menuItems).toHaveLength(14)
-            expect(menuItems.map(item => item.label)).toContain('Documenti')
-            expect(menuItems.map(item => item.label)).toContain('Studenti')
-            expect(menuItems.map(item => item.label)).toContain('Report')
+            expect(flatItems).toHaveLength(14)
+            expect(flatItems.map(item => item.label)).toContain('Documenti')
+            expect(flatItems.map(item => item.label)).toContain('Studenti')
+            expect(flatItems.map(item => item.label)).toContain('Report')
         })
     })
 
     describe('teacher role', () => {
         it('should return teacher menu items', () => {
-            const menuItems = useMenuItems('teacher')
+            const flatItems = getFlatItems('teacher')
 
-            expect(menuItems).toHaveLength(16)
-            expect(menuItems.map(item => item.label)).toContain('Le Mie Classi')
-            expect(menuItems.map(item => item.label)).toContain('Voti')
-            expect(menuItems.map(item => item.label)).toContain('Presenze')
-            expect(menuItems.map(item => item.label)).toContain('Colloqui')
-            expect(menuItems.map(item => item.label)).toContain('Agenda')
+            expect(flatItems).toHaveLength(18)
+            expect(flatItems.map(item => item.label)).toContain('Le Mie Classi')
+            expect(flatItems.map(item => item.label)).toContain('Voti')
+            expect(flatItems.map(item => item.label)).toContain('Presenze')
+            expect(flatItems.map(item => item.label)).toContain('Colloqui')
+            expect(flatItems.map(item => item.label)).toContain('Agenda')
         })
 
         it('should have correct paths for teacher', () => {
-            const menuItems = useMenuItems('teacher')
-            const paths = menuItems.map(item => item.path)
+            const flatItems = getFlatItems('teacher')
+            const paths = flatItems.map(item => item.path)
 
             expect(paths).toContain('/teacher/classes')
             expect(paths).toContain('/teacher/grades')
@@ -91,8 +104,8 @@ describe('useMenuItems', () => {
             const roles = ['admin', 'teacher', 'student', 'parent', 'secretary']
 
             roles.forEach(role => {
-                const menuItems = useMenuItems(role)
-                menuItems.forEach(item => {
+                const flatItems = getFlatItems(role)
+                flatItems.forEach(item => {
                     expect(item.icon).toBeDefined()
                     expect(typeof item.icon).toBe('string')
                 })
@@ -119,8 +132,8 @@ describe('useMenuItems', () => {
             const roles = ['admin', 'teacher', 'student', 'parent', 'secretary']
 
             roles.forEach(role => {
-                const menuItems = useMenuItems(role)
-                menuItems.forEach(item => {
+                const flatItems = getFlatItems(role)
+                flatItems.forEach(item => {
                     expect(item).toHaveProperty('label')
                     expect(item).toHaveProperty('icon')
                     expect(item).toHaveProperty('path')
@@ -132,12 +145,12 @@ describe('useMenuItems', () => {
             const roles = ['admin', 'teacher', 'student', 'parent', 'secretary']
 
             roles.forEach(role => {
-                const menuItems = useMenuItems(role)
-                expect(menuItems[0].label).toBe('Dashboard')
+                const flatItems = getFlatItems(role)
+                expect(flatItems[0].label).toBe('Dashboard')
                 if (role === 'parent') {
-                    expect(menuItems[0].path).toBe('/parent')
+                    expect(flatItems[0].path).toBe('/parent')
                 } else {
-                    expect(menuItems[0].path).toBe('/')
+                    expect(flatItems[0].path).toBe('/')
                 }
             })
         })
