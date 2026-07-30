@@ -84,8 +84,10 @@ func (s *service) CreateDocument(ctx context.Context, actorRole, userID, schoolI
 		t, err := s.repo.GetTemplate(*req.TemplateID)
 		if err == nil {
 			studentName := ""
+			studentIDStr := ""
 			if req.StudentID != nil {
-				studentName = *req.StudentID
+				studentIDStr = *req.StudentID
+				studentName = studentIDStr
 				if s.userRepo != nil {
 					if u, err := s.userRepo.GetByID(ctx, *req.StudentID); err == nil && u != nil {
 						studentName = fmt.Sprintf("%s %s", u.FirstName, u.LastName)
@@ -94,7 +96,7 @@ func (s *service) CreateDocument(ctx context.Context, actorRole, userID, schoolI
 			}
 			data := map[string]string{
 				"student_name": studentName,
-				"student_id":   studentName,
+				"student_id":   studentIDStr,
 				"title":        req.Title,
 				"date":         time.Now().Format("2006-01-02"),
 				"school_id":    schoolID,
