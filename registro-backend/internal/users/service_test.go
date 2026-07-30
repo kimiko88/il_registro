@@ -128,6 +128,14 @@ func (m *MockRepository) GetGuardians(ctx context.Context, studentProfileID stri
 	return args.Get(0).([]GuardianInfo), args.Error(1)
 }
 
+func (m *MockRepository) GetFascicoloSummary(ctx context.Context, studentID string, isActive bool) (map[string]interface{}, error) {
+	args := m.Called(ctx, studentID, isActive)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(map[string]interface{}), args.Error(1)
+}
+
 func TestService_CreateUser(t *testing.T) {
 	mockRepo := new(MockRepository)
 	service := NewService(mockRepo)

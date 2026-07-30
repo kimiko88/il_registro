@@ -20,29 +20,29 @@ type EmailSender interface {
 
 // Service handles authentication business logic
 type Service struct {
-	repo         Repository
-	tokenManager *jwt.TokenManager
-	mfaService   *MFAService
-	emailSender  EmailSender
-	bcryptCost   int
+	repo            Repository
+	tokenManager    *jwt.TokenManager
+	mfaService      *MFAService
+	emailSender     EmailSender
+	bcryptCost      int
+	dummyBcryptHash string
 }
 
 // NewService creates a new auth service
 func NewService(repo Repository, tokenManager *jwt.TokenManager, mfaService *MFAService) *Service {
+	cost := 12
+	dummyHash := "$2a$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeg6Lruj3vjPGga31lW"
+	if h, err := bcrypt.GenerateFromPassword([]byte("dummy_password_for_timing_protection"), cost); err == nil {
+		dummyHash = string(h)
+	}
 	return &Service{
-		repo:         repo,
-		tokenManager: tokenManager,
-		mfaService:   mfaService,
-		bcryptCost:   12,
+		repo:            repo,
+		tokenManager:    tokenManager,
+		mfaService:      mfaService,
+		bcryptCost:      cost,
+		dummyBcryptHash: dummyHash,
 	}
 }
-
-func (s *Service) SetEmailSender(sender EmailSender) {
-	s.emailSender = sender
-}
-
-// Pre-computed dummy bcrypt hash (cost 12) used to normalize timing when user email does not exist.
-const dummyBcryptHash = "$2a$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeg6Lruj3vjPGga31lW"
 
 // Register creates a new user account.
 // Input validation and RBAC checks are performed by the handler layer
@@ -116,7 +116,7 @@ func (s *Service) Login(ctx context.Context, req *LoginRequest, ipAddress, userA
 	user, err := s.repo.GetUserByEmail(ctx, req.Email)
 	if err != nil {
 		// Run bcrypt against dummy hash to prevent timing attacks that enumerate valid user accounts
-		_ = bcrypt.CompareHashAndPassword([]byte(dummyBcryptHash), []byte(req.Password))
+		_ = bcrypt.CompareHashAndPassword([]byte(s.dummyBcryptHash), []byte(req.Password))
 		s.recordFailedAttempt(ctx, req.Email, ipAddress)
 		return nil, ErrInvalidCredentials
 	}

@@ -51,6 +51,7 @@ type Repository interface {
 	AddGuardian(ctx context.Context, studentProfileID, parentProfileID, relationship string) error
 	RemoveGuardian(ctx context.Context, studentProfileID, parentProfileID string) error
 	GetGuardians(ctx context.Context, studentProfileID string) ([]GuardianInfo, error)
+	GetFascicoloSummary(ctx context.Context, studentID string, isActive bool) (map[string]interface{}, error)
 
 	// Guardianship
 	IsActive(ctx context.Context, id string) (bool, error)
@@ -708,4 +709,27 @@ func (r *PostgresRepository) AddPasswordHistory(ctx context.Context, userID, pas
 	`
 	_, err := r.db.ExecContext(ctx, query, userID, passwordHash)
 	return err
+}
+
+func (r *PostgresRepository) GetFascicoloSummary(ctx context.Context, studentID string, isActive bool) (map[string]interface{}, error) {
+	status := "Inactive"
+	if isActive {
+		status = "Active"
+	}
+
+	docCount := 0
+	_ = r.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM student_documents WHERE student_id = $1`, studentID).Scan(&docCount)
+
+	notesCount := 0
+	_ = r.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM disciplinary_notes WHERE student_id = $1`, studentID).Scan(&notesCount)
+
+	pctoHours := 0
+	_ = r.db.QueryRowContext(ctx, `SELECT COALESCE(SUM(hours), 0) FROM pcto_activities WHERE student_id = $1`, studentID).Scan(&pctoHours)
+
+	return map[string]interface{}{
+		"status":          status,
+		"documents_count": docCount,
+		"notes_count":     notesCount,
+		"pcto_hours":      pctoHours,
+	}, nil
 }

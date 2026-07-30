@@ -935,16 +935,16 @@ func (s *service) GetSemesterReport(studentID string, semester int) (*SemesterRe
 		return nil, err
 	}
 
-	var studentName, className, schoolYear string
+	var studentName, className, classID, schoolYear string
 	if s.validator != nil && s.validator.db != nil {
 		_ = s.validator.db.QueryRow(
-			`SELECT u.first_name || ' ' || u.last_name, COALESCE(c.name, 'N/D')
+			`SELECT u.first_name || ' ' || u.last_name, COALESCE(c.name, 'N/D'), COALESCE(c.id, '')
 			 FROM users u
 			 LEFT JOIN class_students cs ON u.id = cs.student_id
 			 LEFT JOIN classes c ON cs.class_id = c.id
 			 WHERE u.id = $1
 			 ORDER BY cs.created_at DESC LIMIT 1`, studentID,
-		).Scan(&studentName, &className)
+		).Scan(&studentName, &className, &classID)
 	}
 	if studentName == "" {
 		studentName = "Studente " + studentID
@@ -967,6 +967,27 @@ func (s *service) GetSemesterReport(studentID string, semester int) (*SemesterRe
 	}
 
 	enrolledSubjects, enrollErr := s.repo.FindEnrolledSubjects(studentID, semester)
+
+	// Query teacher names for subjects in student's class
+	teacherMap := make(map[string]string)
+	if s.validator != nil && s.validator.db != nil && classID != "" {
+		tRows, tErr := s.validator.db.Query(
+			`SELECT cs.subject_id, u.first_name || ' ' || u.last_name
+			 FROM class_subjects cs
+			 JOIN teachers t ON cs.teacher_id = t.id
+			 JOIN users u ON t.user_id = u.id
+			 WHERE cs.class_id = $1`, classID,
+		)
+		if tErr == nil {
+			defer tRows.Close()
+			for tRows.Next() {
+				var subID, tName string
+				if tRows.Scan(&subID, &tName) == nil {
+					teacherMap[subID] = tName
+				}
+			}
+		}
+	}
 
 	var subjects []SubjectReport
 	totalSum := 0.0
@@ -997,10 +1018,15 @@ func (s *service) GetSemesterReport(studentID string, semester int) (*SemesterRe
 			finalGrade = 1
 		}
 
+		tName := teacherMap[subID]
+		if tName == "" {
+			tName = "Docente"
+		}
+
 		subjects = append(subjects, SubjectReport{
 			Subject:        subID,
 			SubjectID:      subID,
-			Teacher:        "Docente",
+			Teacher:        tName,
 			FinalGrade:     finalGrade,
 			SubjectAverage: math.Round(avg*100) / 100,
 			GradeCount:     len(gs),
@@ -1017,10 +1043,14 @@ func (s *service) GetSemesterReport(studentID string, semester int) (*SemesterRe
 			if processedSubjects[subID] {
 				continue
 			}
+			tName := teacherMap[subID]
+			if tName == "" {
+				tName = "Docente"
+			}
 			subjects = append(subjects, SubjectReport{
 				Subject:        subID,
 				SubjectID:      subID,
-				Teacher:        "Docente",
+				Teacher:        tName,
 				FinalGrade:     0,
 				SubjectAverage: 0,
 				GradeCount:     0,
@@ -1045,17 +1075,33 @@ func (s *service) GetSemesterReport(studentID string, semester int) (*SemesterRe
 
 	behaviorGrade := 8.0
 	scholasticCredit := 8.0
+	totalAbsenceDays := 0
+
 	if s.validator != nil && s.validator.db != nil {
 		var bg, sc sql.NullFloat64
 		_ = s.validator.db.QueryRow(
-			`SELECT behavior_grade, scholastic_credit FROM semester_reports WHERE student_id = $1 AND semester = $2`, studentID, semester,
+			`SELECT conduct_grade, scholastic_credit FROM scrutiny_records WHERE student_id = $1 AND semester = $2`, studentID, semester,
 		).Scan(&bg, &sc)
 		if bg.Valid {
 			behaviorGrade = bg.Float64
 		}
 		if sc.Valid {
 			scholasticCredit = sc.Float64
+		} else {
+			_ = s.validator.db.QueryRow(
+				`SELECT behavior_grade, scholastic_credit FROM semester_reports WHERE student_id = $1 AND semester = $2`, studentID, semester,
+			).Scan(&bg, &sc)
+			if bg.Valid {
+				behaviorGrade = bg.Float64
+			}
+			if sc.Valid {
+				scholasticCredit = sc.Float64
+			}
 		}
+
+		_ = s.validator.db.QueryRow(
+			`SELECT COUNT(DISTINCT date) FROM attendance WHERE student_id = $1 AND status = 'absent'`, studentID,
+		).Scan(&totalAbsenceDays)
 	}
 
 	return &SemesterReportResponse{
@@ -1066,7 +1112,7 @@ func (s *service) GetSemesterReport(studentID string, semester int) (*SemesterRe
 		BehaviorGrade:    behaviorGrade,
 		ScholasticCredit: scholasticCredit,
 		OverallAverage:   overall,
-		TotalAbsenceDays: 0,
+		TotalAbsenceDays: totalAbsenceDays,
 		Subjects:         subjects,
 		Promoted:         promoted,
 		Status:           "OK",

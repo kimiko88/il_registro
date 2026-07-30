@@ -110,7 +110,10 @@ func (s *Service) GetMatrix(ctx context.Context, actorID, actorRole, classID str
 	}
 
 	// Fetch all grades for class once to avoid N+1 queries (N students * M subjects)
-	allClassGrades, _ := s.gradeRepo.FindByClass(classID, semester)
+	allClassGrades, err := s.gradeRepo.FindByClass(classID, semester)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load grades for class %s: %w", classID, err)
+	}
 
 	for _, stu := range allStudents {
 		row := StudentScrutinyRow{
@@ -202,7 +205,7 @@ func (s *Service) GetOverview(ctx context.Context, actorID, actorRole, schoolID 
 
 	sem := 2
 	now := time.Now()
-	if now.Month() >= time.September || now.Month() <= time.January {
+	if now.Month() >= time.September {
 		sem = 1
 	}
 
@@ -210,6 +213,21 @@ func (s *Service) GetOverview(ctx context.Context, actorID, actorRole, schoolID 
 	for _, c := range classesList {
 		subjects, _ := s.classRepo.GetClassSubjects(ctx, c.ID)
 		records, _ := s.repo.ListRecordsByClass(ctx, c.ID, sem)
+		allGrades, _ := s.gradeRepo.FindByClass(c.ID, sem)
+
+		gradedSubjects := make(map[string]bool)
+		for _, g := range allGrades {
+			if g.IsPublished && g.DeletedAt == nil {
+				gradedSubjects[g.SubjectID] = true
+			}
+		}
+
+		completedCount := len(gradedSubjects)
+		totalSubjects := len(subjects)
+		pendingCount := totalSubjects - completedCount
+		if pendingCount < 0 {
+			pendingCount = 0
+		}
 
 		st := "pending"
 		lastUpdated := "N/A"
@@ -222,21 +240,24 @@ func (s *Service) GetOverview(ctx context.Context, actorID, actorRole, schoolID 
 		}
 
 		res = append(res, ClassScrutinyOverview{
-			ClassID:           c.ID,
-			ClassName:         c.Name,
-			Status:            st,
-			CompletedSubjects: len(subjects),
-			TotalSubjects:     len(subjects),
-			PendingGradesCount: 0,
-			LastUpdated:       lastUpdated,
+			ClassID:            c.ID,
+			ClassName:          c.Name,
+			Status:             st,
+			CompletedSubjects:  completedCount,
+			TotalSubjects:      totalSubjects,
+			PendingGradesCount: pendingCount,
+			LastUpdated:        lastUpdated,
 		})
 	}
 	return res, nil
 }
 
-func (s *Service) GetClassReport(ctx context.Context, actorID, actorRole, classID string) (*ClassScrutinyReport, error) {
+func (s *Service) GetClassReport(ctx context.Context, actorID, actorRole, classID string, semester int) (*ClassScrutinyReport, error) {
 	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "vice_principal" && actorRole != "secretary" && actorRole != "teacher" {
 		return nil, errors.New("unauthorized: insufficient permissions to view class scrutiny report")
+	}
+	if semester <= 0 {
+		semester = 1
 	}
 	cls, err := s.classRepo.Get(ctx, classID)
 	if err != nil {
@@ -248,7 +269,10 @@ func (s *Service) GetClassReport(ctx context.Context, actorID, actorRole, classI
 		return nil, err
 	}
 
-	records, _ := s.repo.ListRecordsByClass(ctx, classID, 2)
+	records, err := s.repo.ListRecordsByClass(ctx, classID, semester)
+	if err != nil {
+		records = []ScrutinyRecord{}
+	}
 	recMap := make(map[string]ScrutinyRecord)
 	for _, r := range records {
 		recMap[r.StudentID] = r
@@ -294,16 +318,24 @@ func (s *Service) GetClassReport(ctx context.Context, actorID, actorRole, classI
 	return report, nil
 }
 
-func (s *Service) FinalizeClass(ctx context.Context, classID string) error {
-	return s.repo.UpdateClassScrutinyStatus(ctx, classID, 2, "closed")
+func (s *Service) FinalizeClass(ctx context.Context, actorID, actorRole, classID string, semester int) error {
+	isCoordinator, isDirigenza, err := s.isDirigenzaOrCoordinator(ctx, actorID, actorRole, classID)
+	if err != nil {
+		return err
+	}
+	if !isCoordinator && !isDirigenza {
+		return ErrUnauthorizedScrutiny
+	}
+	if semester <= 0 {
+		semester = 2
+	}
+	return s.repo.UpdateClassScrutinyStatus(ctx, classID, semester, "closed")
 }
 
 // ExportAll exports scrutiny data for all classes in the actor's school as CSV.
-// Bug 128: requires actorID, actorRole, schoolID; restricts to admin+/superadmin;
-// filters classes by schoolID to prevent cross-tenant data leaks.
 func (s *Service) ExportAll(ctx context.Context, actorID, actorRole, schoolID string) ([]byte, error) {
-	if actorRole != "admin" && actorRole != "superadmin" {
-		return nil, errors.New("unauthorized: solo admin e superadmin possono esportare tutti gli scrutini")
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "vice_principal" {
+		return nil, errors.New("unauthorized: solo dirigenza e admin possono esportare tutti gli scrutini")
 	}
 	classesList, err := s.classRepo.List(ctx, schoolID, "")
 	if err != nil {
@@ -315,6 +347,11 @@ func (s *Service) ExportAll(ctx context.Context, actorID, actorRole, schoolID st
 	_ = w.Write([]string{"Classe", "Studente", "Materia", "Voto", "Esito"})
 
 	for _, c := range classesList {
+		subs, _ := s.classRepo.GetClassSubjects(ctx, c.ID)
+		subNameMap := make(map[string]string)
+		for _, sb := range subs {
+			subNameMap[sb.SubjectID] = sb.SubjectName
+		}
 		records, err := s.repo.ListRecordsByClass(ctx, c.ID, 2)
 		if err != nil {
 			continue
@@ -325,10 +362,14 @@ func (s *Service) ExportAll(ctx context.Context, actorID, actorRole, schoolID st
 				studentName = u.LastName + " " + u.FirstName
 			}
 			for _, g := range r.Grades {
+				subName := subNameMap[g.SubjectID]
+				if subName == "" {
+					subName = g.SubjectID
+				}
 				_ = w.Write([]string{
 					c.Name,
 					studentName,
-					g.SubjectID,
+					subName,
 					fmt.Sprintf("%.0f", g.FinalGrade),
 					r.FinalDecision,
 				})
@@ -408,7 +449,17 @@ func (s *Service) SaveScrutiny(ctx context.Context, coordinatorID, actorRole str
 	for _, g := range req.Grades {
 		tID := g.TeacherID
 		if tID == "" {
-			tID = coordinatorID
+			if clsSubs, err := s.classRepo.GetClassSubjects(ctx, req.ClassID); err == nil {
+				for _, cs := range clsSubs {
+					if cs.SubjectID == g.SubjectID && cs.TeacherID != nil && *cs.TeacherID != "" {
+						tID = *cs.TeacherID
+						break
+					}
+				}
+			}
+			if tID == "" {
+				tID = coordinatorID
+			}
 		}
 		rec.Grades = append(rec.Grades, ScrutinyGrade{
 			SubjectID:  g.SubjectID,

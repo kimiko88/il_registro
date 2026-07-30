@@ -202,7 +202,8 @@ func (h *Handler) GetClassReport(c *gin.Context) {
 	}
 
 	classID := c.Param("classId")
-	report, err := h.service.GetClassReport(c.Request.Context(), actorID, actorRole, classID)
+	semester, _ := strconv.Atoi(c.DefaultQuery("semester", "1"))
+	report, err := h.service.GetClassReport(c.Request.Context(), actorID, actorRole, classID, semester)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -223,7 +224,8 @@ func (h *Handler) FinalizeClass(c *gin.Context) {
 	}
 
 	classID := c.Param("classId")
-	if err := h.service.FinalizeClass(c.Request.Context(), classID); err != nil {
+	semester, _ := strconv.Atoi(c.DefaultQuery("semester", "2"))
+	if err := h.service.FinalizeClass(c.Request.Context(), actorID, actorRole, classID, semester); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

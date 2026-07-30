@@ -585,11 +585,18 @@ func (s *Service) GetStudentFascicolo(ctx context.Context, actorID, actorRole, s
 		guardians, _ = s.repo.GetGuardians(ctx, studentProfileID)
 	}
 
-	summary := map[string]interface{}{
-		"status":          "Active",
-		"documents_count": 0,
-		"notes_count":     0,
-		"pcto_hours":      0,
+	summary, err := s.repo.GetFascicoloSummary(ctx, studentID, student.IsActive)
+	if err != nil {
+		statusStr := "Inactive"
+		if student.IsActive {
+			statusStr = "Active"
+		}
+		summary = map[string]interface{}{
+			"status":          statusStr,
+			"documents_count": 0,
+			"notes_count":     0,
+			"pcto_hours":      0,
+		}
 	}
 
 	return &StudentFascicolo{

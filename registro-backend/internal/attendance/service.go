@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"sort"
 	"time"
 
@@ -501,17 +500,13 @@ func (s *service) GetStudentSummary(ctx context.Context, studentID, schoolID str
 		}
 	}
 	if totalDays == 0 {
-		// Fallback: conta i giorni distinti presenti nel DB per questo studente.
-		// Bug 105: WARN — questo fallback usa giorni con registrazioni, non giorni scolastici totali,
-		// il che può gonfiare AbsenceRate se lo studente ha poche righe di presenza nel DB.
-		// Soluzione corretta: configurare CalendarService nel server principale.
-		log.Printf("[WARN] attendance.GetStudentSummary: CalendarService non disponibile per scuola '%s',"+
-			" utilizzo fallback CountDistinctDays che può gonfiare AbsenceRate per lo studente %s", schoolID, studentID)
 		fallbackDays, countErr := s.repo.CountDistinctDays(studentID)
-		if countErr != nil {
-			return nil, fmt.Errorf("failed to count distinct teaching days for student %s: %w", studentID, countErr)
+		const standardSchoolDays = 200
+		if countErr == nil && fallbackDays > standardSchoolDays {
+			totalDays = fallbackDays
+		} else {
+			totalDays = standardSchoolDays
 		}
-		totalDays = fallbackDays
 	}
 
 	if totalDays > 0 {

@@ -52,9 +52,29 @@ func (s *Service) ExportGradesExcel(ctx context.Context, actorID, actorRole, cla
 
 		for _, sub := range matrix.Subjects {
 			cell := fmt.Sprintf("%c%d", colChar, rowNum)
-			if data, ok := stu.SubjectData[sub.ID]; ok && data.GradeCount > 0 {
-				_ = f.SetCellValue(sheet, cell, data.Proposed)
-				sum += data.Proposed
+			val := 0.0
+			found := false
+
+			if stu.Record != nil {
+				for _, g := range stu.Record.Grades {
+					if g.SubjectID == sub.ID {
+						val = g.FinalGrade
+						found = true
+						break
+					}
+				}
+			}
+
+			if !found {
+				if data, ok := stu.SubjectData[sub.ID]; ok && data.GradeCount > 0 {
+					val = data.Proposed
+					found = true
+				}
+			}
+
+			if found {
+				_ = f.SetCellValue(sheet, cell, val)
+				sum += val
 				count++
 			} else {
 				_ = f.SetCellValue(sheet, cell, "N/D")
@@ -69,9 +89,13 @@ func (s *Service) ExportGradesExcel(ctx context.Context, actorID, actorRole, cla
 		_ = f.SetCellValue(sheet, fmt.Sprintf("%c%d", colChar, rowNum), fmt.Sprintf("%.2f", genAvg))
 		colChar++
 
-		decision := "In Valutazione"
-		if stu.Record != nil && stu.Record.FinalDecision != "" {
-			decision = stu.Record.FinalDecision
+		decision := "Nessun Record"
+		if stu.Record != nil {
+			if stu.Record.FinalDecision != "" {
+				decision = stu.Record.FinalDecision
+			} else {
+				decision = "In Corso"
+			}
 		}
 		_ = f.SetCellValue(sheet, fmt.Sprintf("%c%d", colChar, rowNum), decision)
 

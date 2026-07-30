@@ -2,6 +2,7 @@ import { setActivePinia, createPinia } from 'pinia';
 import { useCoordination } from 'src/composables/useCoordination';
 import { useTeacherStore } from 'src/stores/teacher';
 import { useClassesStore } from 'src/stores/classes';
+import { useAuthStore } from 'src/stores/auth';
 import { describe, it, expect, beforeEach } from 'vitest';
 
 describe('useCoordination', () => {
@@ -18,6 +19,9 @@ describe('useCoordination', () => {
     });
 
     it('filters coordinated classes', () => {
+        const authStore = useAuthStore();
+        authStore.user = { id: 'teacher123' };
+
         const classesStore = useClassesStore();
         classesStore.classes = [
             { id: '1A', coordinator_id: null },
