@@ -47,6 +47,7 @@ import (
 	"registro-backend/internal/search"
 	"registro-backend/internal/signatures"
 	"registro-backend/internal/student_goals"
+	"registro-backend/internal/students"
 	"registro-backend/internal/subjects"
 	"registro-backend/internal/substitutions"
 	"registro-backend/internal/teachers"
@@ -290,6 +291,9 @@ func main() {
 			goalsSvc := student_goals.NewService(goalsRepo)
 			goalsH := student_goals.NewHandler(goalsSvc)
 			goalsH.RegisterRoutes(protected)
+
+			studentsFascicoloH := students.NewFascicoloHandler(database.DB)
+			studentsFascicoloH.RegisterRoutes(protected)
 
 			subsRepo := substitutions.NewRepository(database)
 			subsSvc := substitutions.NewService(subsRepo)
