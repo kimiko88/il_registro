@@ -4,6 +4,8 @@ export default [
         component: () => import('@/layouts/MainLayout.vue'),
         children: [
             { path: '', component: () => import('@/pages/Dashboard.vue'), meta: { roles: ['superadmin', 'admin', 'secretary', 'teacher', 'student', 'parent'] } },
+            { path: 'dashboard', redirect: '/' },
+
 
             // Admin Routes (SuperAdmin + Admin)
             {
@@ -144,6 +146,37 @@ export default [
             { path: 'parent/documents', component: () => import('@/pages/parent/Documents.vue'), meta: { roles: ['parent'] } },
             { path: 'parent/payments', component: () => import('@/pages/parent/Payments.vue'), meta: { roles: ['parent'] } },
             { path: 'parent/meetings', component: () => import('@/pages/parent/Meetings.vue'), meta: { roles: ['parent'] } },
+            {
+                path: 'communications',
+                redirect: () => {
+                    let role = ''
+                    try {
+                        const raw = localStorage.getItem('user')
+                        if (raw) role = JSON.parse(raw).role
+                    } catch (e) {}
+                    if (role === 'teacher') return '/teacher/communications'
+                    if (role === 'student') return '/student/communications'
+                    if (role === 'parent') return '/parent/communications'
+                    return '/secretary/communications'
+                },
+                meta: { roles: ['superadmin', 'admin', 'secretary', 'teacher', 'student', 'parent'] }
+            },
+            {
+                path: 'profile',
+                redirect: () => {
+                    let role = ''
+                    try {
+                        const raw = localStorage.getItem('user')
+                        if (raw) role = JSON.parse(raw).role
+                    } catch (e) {}
+                    if (role === 'student') return '/student/profile'
+                    if (role === 'parent') return '/parent/profile'
+                    if (role === 'admin' || role === 'superadmin') return '/admin/settings'
+                    if (role === 'secretary') return '/secretary/settings'
+                    return '/dashboard'
+                },
+                meta: { roles: ['superadmin', 'admin', 'secretary', 'teacher', 'student', 'parent'] }
+            },
             { path: 'support', component: () => import('@/pages/Support.vue'), meta: { roles: ['superadmin', 'admin', 'secretary', 'teacher', 'student', 'parent'] } }
         ]
     },

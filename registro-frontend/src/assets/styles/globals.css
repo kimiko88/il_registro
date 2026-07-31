@@ -1,5 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
+
 
 :root {
     --bg-primary: #f1f5f9;
@@ -113,9 +115,179 @@ body {
 [data-theme="cyber"] {
     --bg-primary: #0f172a;
     --bg-secondary: #1e293b;
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --border-color: #334155;
+}
+
+[data-theme="cyber"] body,
+[data-theme="cyber"] .q-card,
+[data-theme="cyber"] .q-table,
+[data-theme="cyber"] .q-table th,
+[data-theme="cyber"] .q-table td,
+[data-theme="cyber"] .q-item,
+[data-theme="cyber"] .q-field__native,
+[data-theme="cyber"] .q-field__prefix,
+[data-theme="cyber"] .q-field__suffix,
+[data-theme="cyber"] .q-field__input,
+[data-theme="cyber"] .q-field__label,
+[data-theme="cyber"] .text-slate-900,
+[data-theme="cyber"] .text-slate-800,
+[data-theme="cyber"] .text-slate-700,
+[data-theme="cyber"] .text-slate-600,
+[data-theme="cyber"] .text-grey-8,
+[data-theme="cyber"] .text-grey-9 {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="cyber"] .text-slate-500,
+[data-theme="cyber"] .text-grey-7,
+[data-theme="cyber"] .text-grey-6 {
+    color: var(--text-secondary) !important;
+}
+
+
+/* Youthful Gamified Themes (UI/UX Modifications) */
+
+/* 1. Arcade Gamer 🎮 */
+[data-theme="arcade"] {
+    --bg-primary: #f5f3ff;
+    --bg-secondary: #ffffff;
+}
+
+[data-theme="arcade"] body {
+    font-family: 'Fredoka', 'Outfit', sans-serif !important;
+}
+
+[data-theme="arcade"] .q-card,
+[data-theme="arcade"] .glass-card {
+    border-radius: 22px !important;
+    border: 2px solid #8b5cf6 !important;
+    box-shadow: 0 8px 0 #6d28d9, 0 12px 25px rgba(139, 92, 246, 0.15) !important;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease !important;
+}
+
+[data-theme="arcade"] .q-card:hover {
+    transform: translateY(-4px) scale(1.01) !important;
+    box-shadow: 0 12px 0 #6d28d9, 0 18px 30px rgba(139, 92, 246, 0.25) !important;
+}
+
+[data-theme="arcade"] .q-btn {
+    border-radius: 16px !important;
+    font-family: 'Fredoka', sans-serif !important;
+    font-weight: 600 !important;
+    transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+[data-theme="arcade"] .q-btn:hover {
+    transform: scale(1.05) !important;
+}
+
+[data-theme="arcade"] .bg-gradient-primary,
+[data-theme="arcade"] .bg-gradient-premium {
+    background: linear-gradient(135deg, #8b5cf6 0%, #10b981 100%) !important;
+}
+
+/* 2. Cosmic Explorer 🚀 */
+[data-theme="cosmic"] {
+    --bg-primary: #070a12;
+    --bg-secondary: #0f172a;
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --border-color: rgba(6, 182, 212, 0.3);
+    --glass-bg: rgba(15, 23, 42, 0.7);
+    --glass-card-bg: rgba(15, 23, 42, 0.9);
+}
+
+[data-theme="cosmic"] body,
+[data-theme="cosmic"] .q-card,
+[data-theme="cosmic"] .q-table,
+[data-theme="cosmic"] .q-table th,
+[data-theme="cosmic"] .q-table td,
+[data-theme="cosmic"] .q-item,
+[data-theme="cosmic"] .q-field__native,
+[data-theme="cosmic"] .q-field__prefix,
+[data-theme="cosmic"] .q-field__suffix,
+[data-theme="cosmic"] .q-field__input,
+[data-theme="cosmic"] .q-field__label,
+[data-theme="cosmic"] .text-slate-900,
+[data-theme="cosmic"] .text-slate-800,
+[data-theme="cosmic"] .text-slate-700,
+[data-theme="cosmic"] .text-slate-600,
+[data-theme="cosmic"] .text-grey-8,
+[data-theme="cosmic"] .text-grey-9,
+[data-theme="cosmic"] .text-h6,
+[data-theme="cosmic"] .text-h5,
+[data-theme="cosmic"] .text-subtitle1 {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="cosmic"] .text-slate-500,
+[data-theme="cosmic"] .text-grey-7,
+[data-theme="cosmic"] .text-grey-6 {
+    color: var(--text-secondary) !important;
+}
+
+[data-theme="cosmic"] body {
+    font-family: 'Poppins', sans-serif !important;
+    background-image: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+}
+
+[data-theme="cosmic"] .q-card,
+[data-theme="cosmic"] .glass-card {
+    background: rgba(15, 23, 42, 0.85) !important;
+    backdrop-filter: blur(20px) !important;
+    border-radius: 20px !important;
+    border: 1px solid rgba(6, 182, 212, 0.4) !important;
+    box-shadow: 0 0 20px rgba(6, 182, 212, 0.15), inset 0 0 15px rgba(6, 182, 212, 0.05) !important;
+    transition: box-shadow 0.3s ease, border-color 0.3s ease !important;
+}
+
+[data-theme="cosmic"] .q-card:hover {
+    border-color: rgba(6, 182, 212, 0.8) !important;
+    box-shadow: 0 0 35px rgba(6, 182, 212, 0.35) !important;
+}
+
+[data-theme="cosmic"] .bg-gradient-primary,
+[data-theme="cosmic"] .bg-gradient-premium {
+    background: linear-gradient(135deg, #06b6d4 0%, #6366f1 100%) !important;
+}
+
+
+/* 3. Candy Bubble Pop 🍬 */
+[data-theme="bubblepop"] {
+    --bg-primary: #fdf2f8;
+    --bg-secondary: #ffffff;
+}
+
+[data-theme="bubblepop"] body {
+    font-family: 'Fredoka', sans-serif !important;
+}
+
+[data-theme="bubblepop"] .q-card,
+[data-theme="bubblepop"] .glass-card {
+    border-radius: 28px !important;
+    border: 3px solid #f97316 !important;
+    box-shadow: 0 10px 25px rgba(236, 72, 153, 0.18) !important;
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+[data-theme="bubblepop"] .q-card:hover {
+    transform: translateY(-5px) rotate(-0.5deg) scale(1.015) !important;
+}
+
+[data-theme="bubblepop"] .q-btn {
+    border-radius: 24px !important;
+    font-family: 'Fredoka', sans-serif !important;
+}
+
+[data-theme="bubblepop"] .bg-gradient-primary,
+[data-theme="bubblepop"] .bg-gradient-premium {
+    background: linear-gradient(135deg, #ec4899 0%, #f97316 100%) !important;
 }
 
 [data-theme="emerald"] .bg-gradient-primary,
+
 [data-theme="emerald"] .bg-gradient-premium {
     background: linear-gradient(135deg, #059669 0%, #0d9488 100%) !important;
 }

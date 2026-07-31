@@ -101,11 +101,13 @@
         </q-btn>
 
         <!-- Notifications -->
-        <q-btn flat round dense icon="notifications" color="primary" class="q-mr-sm" aria-label="Notifiche" @click="$router.push('/communications')">
+        <q-btn flat round dense icon="notifications" color="primary" class="q-mr-sm" aria-label="Notifiche" @click="navigateToNotifications">
           <q-tooltip>Notifiche e Comunicazioni</q-tooltip>
         </q-btn>
 
-        <q-btn flat round dense icon="account_circle" color="primary" aria-label="Profilo utente" @click="$router.push('/profile')" />
+
+        <q-btn flat round dense icon="account_circle" color="primary" aria-label="Profilo utente" @click="navigateToProfile" />
+
       </q-toolbar>
     </q-header>
 
@@ -248,7 +250,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useTeacherStore } from '@/stores/teacher'
 import { useClassesStore } from '@/stores/classes'
@@ -259,12 +261,43 @@ import { storeToRefs } from 'pinia'
 import { useQuasar } from 'quasar'
 
 const route = useRoute()
+const router = useRouter()
 const $q = useQuasar()
 const themeStore = useThemeStore()
+
+const navigateToNotifications = () => {
+  const role = userRole.value
+  if (role === 'teacher') {
+    router.push('/teacher/communications')
+  } else if (role === 'student') {
+    router.push('/student/communications')
+  } else if (role === 'parent') {
+    router.push('/parent/communications')
+  } else {
+    router.push('/secretary/communications')
+  }
+}
+
+const navigateToProfile = () => {
+  const role = userRole.value
+  if (role === 'student') {
+    router.push('/student/profile')
+  } else if (role === 'parent') {
+    router.push('/parent/profile')
+  } else if (role === 'admin' || role === 'superadmin') {
+    router.push('/admin/settings')
+  } else if (role === 'secretary') {
+    router.push('/secretary/settings')
+  } else {
+    router.push('/dashboard')
+  }
+}
+
 
 onMounted(() => {
   themeStore.initTheme()
 })
+
 
 
 // Dynamic Breadcrumbs

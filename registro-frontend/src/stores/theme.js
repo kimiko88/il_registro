@@ -14,6 +14,39 @@ export const THEMES = [
         icon: 'palette'
     },
     {
+        id: 'arcade',
+        name: 'Arcade Gamer 🎮',
+        description: 'Layout gaming 3D tactile con font Fredoka e pop animato',
+        recommendedRole: 'Ragazzi / Gaming',
+        badgeColor: 'deep-purple',
+        primary: '#8b5cf6',
+        gradientStart: '#8b5cf6',
+        gradientEnd: '#10b981',
+        icon: 'sports_esports'
+    },
+    {
+        id: 'cosmic',
+        name: 'Cosmic Explorer 🚀',
+        description: 'Vetro galattico, bordi neon e font futuristico Poppins',
+        recommendedRole: 'Ragazzi / Space',
+        badgeColor: 'cyan',
+        primary: '#06b6d4',
+        gradientStart: '#06b6d4',
+        gradientEnd: '#6366f1',
+        icon: 'rocket_launch'
+    },
+    {
+        id: 'bubblepop',
+        name: 'Candy Bubble Pop 🍬',
+        description: 'Super curve 28px, colori caramella ed effetto rimbalzo',
+        recommendedRole: 'Ragazzi / Fun',
+        badgeColor: 'pink',
+        primary: '#ec4899',
+        gradientStart: '#ec4899',
+        gradientEnd: '#f97316',
+        icon: 'attractions'
+    },
+    {
         id: 'emerald',
         name: 'Emerald School',
         description: 'Tonalità fresche ed energetiche verde/smeraldo',

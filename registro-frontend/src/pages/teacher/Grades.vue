@@ -1,8 +1,9 @@
 <template>
   <q-page class="q-pa-md bg-grey-1">
     <!-- Sticky Header for Context -->
-    <q-card class="sticky-header q-mb-md shadow-2 z-top">
-      <q-card-section class="row items-center q-pb-none">
+    <q-card class="sticky-header q-mb-md shadow-2">
+      <q-card-section class="row items-center justify-between wrap q-gutter-sm q-pb-none">
+
         <div class="text-h6 q-mr-md">Gestione Voti</div>
         <q-select
           v-model="selectedClassId"
@@ -831,10 +832,10 @@ const getGradeColor = (val) => {
 <style scoped>
 .sticky-header {
     position: sticky;
-    top: 50px; /* Adjust based on navbar height */
-    z-index: 100;
+    top: 50px;
+    z-index: 10;
 }
-.z-top { z-index: 1000; }
+
 
 @media print {
   .sticky-header, .q-btn, .q-toggle, .q-tabs {
