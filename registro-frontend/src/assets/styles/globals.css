@@ -120,6 +120,33 @@ body {
     --border-color: #334155;
 }
 
+[data-theme="cyber"] .bg-white,
+[data-theme="cyber"] .bg-grey-1,
+[data-theme="cyber"] .bg-grey-2,
+[data-theme="cyber"] .bg-slate-50,
+[data-theme="cyber"] .bg-slate-100,
+[data-theme="cyber"] .bg-indigo-50,
+[data-theme="cyber"] .q-drawer,
+[data-theme="cyber"] .q-header,
+[data-theme="cyber"] .q-card,
+[data-theme="cyber"] .q-menu,
+[data-theme="cyber"] .q-dialog .q-card {
+    background-color: #1e293b !important;
+    background: #1e293b !important;
+    color: #f8fafc !important;
+}
+
+[data-theme="cyber"] .q-menu {
+    border: 1px solid #334155 !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6) !important;
+}
+
+[data-theme="cyber"] .q-menu .q-item,
+[data-theme="cyber"] .q-menu .q-item-label,
+[data-theme="cyber"] .q-menu .q-item-section {
+    color: #f8fafc !important;
+}
+
 [data-theme="cyber"] body,
 [data-theme="cyber"] .q-card,
 [data-theme="cyber"] .q-table,
@@ -199,7 +226,43 @@ body {
     --glass-card-bg: rgba(15, 23, 42, 0.9);
 }
 
+[data-theme="cosmic"] .bg-white,
+[data-theme="cosmic"] .bg-grey-1,
+[data-theme="cosmic"] .bg-grey-2,
+[data-theme="cosmic"] .bg-slate-50,
+[data-theme="cosmic"] .bg-slate-100,
+[data-theme="cosmic"] .bg-indigo-50,
+[data-theme="cosmic"] .q-drawer,
+[data-theme="cosmic"] .q-header,
+[data-theme="cosmic"] .q-card,
+[data-theme="cosmic"] .q-menu,
+[data-theme="cosmic"] .q-dialog .q-card {
+    background-color: #0f172a !important;
+    background: #0f172a !important;
+    color: #f8fafc !important;
+}
+
+[data-theme="cosmic"] .q-menu {
+    border: 1px solid rgba(6, 182, 212, 0.5) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6) !important;
+}
+
+[data-theme="cosmic"] .q-menu .q-item,
+[data-theme="cosmic"] .q-menu .q-item-label,
+[data-theme="cosmic"] .q-menu .q-item-section {
+    color: #f8fafc !important;
+}
+
+[data-theme="cosmic"] .q-menu .q-item:hover,
+[data-theme="cosmic"] .q-menu .q-item--active,
+[data-theme="cosmic"] .q-item.bg-indigo-50 {
+    background-color: rgba(6, 182, 212, 0.2) !important;
+    background: rgba(6, 182, 212, 0.2) !important;
+    color: #06b6d4 !important;
+}
+
 [data-theme="cosmic"] body,
+[data-theme="cosmic"] .q-page,
 [data-theme="cosmic"] .q-card,
 [data-theme="cosmic"] .q-table,
 [data-theme="cosmic"] .q-table th,
@@ -218,7 +281,8 @@ body {
 [data-theme="cosmic"] .text-grey-9,
 [data-theme="cosmic"] .text-h6,
 [data-theme="cosmic"] .text-h5,
-[data-theme="cosmic"] .text-subtitle1 {
+[data-theme="cosmic"] .text-subtitle1,
+[data-theme="cosmic"] .text-subtitle2 {
     color: var(--text-primary) !important;
 }
 
@@ -232,6 +296,7 @@ body {
     font-family: 'Poppins', sans-serif !important;
     background-image: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
 }
+
 
 [data-theme="cosmic"] .q-card,
 [data-theme="cosmic"] .glass-card {
