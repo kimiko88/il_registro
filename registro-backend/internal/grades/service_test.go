@@ -226,6 +226,11 @@ func (m *MockUserRepo) GetPasswordHistory(ctx context.Context, userID string) ([
 func (m *MockUserRepo) AddPasswordHistory(ctx context.Context, userID, passwordHash string) error {
 	return nil
 }
+func (m *MockUserRepo) GetFascicoloSummary(ctx context.Context, studentID string, isActive bool) (map[string]interface{}, error) {
+	return nil, nil
+}
+
+
 
 func TestAddGrade(t *testing.T) {
 	mockRepo := new(MockRepository)

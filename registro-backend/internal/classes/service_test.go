@@ -68,6 +68,21 @@ func (m *MockRepository) GetClassGuardians(ctx context.Context, classID string) 
 	}
 	return args.Get(0).([]GuardianInfo), args.Error(1)
 }
+func (m *MockRepository) GetLessonTopics(ctx context.Context, classID string) ([]LessonTopic, error) {
+	args := m.Called(ctx, classID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]LessonTopic), args.Error(1)
+}
+func (m *MockRepository) GetDisciplinaryNotes(ctx context.Context, classID string) ([]DisciplinaryNoteReport, error) {
+	args := m.Called(ctx, classID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]DisciplinaryNoteReport), args.Error(1)
+}
+
 
 func TestService_CreateClass(t *testing.T) {
 	tests := []struct {

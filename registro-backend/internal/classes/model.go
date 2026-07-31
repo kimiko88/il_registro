@@ -48,3 +48,24 @@ type GuardianInfo struct {
 	StudentID   string `json:"student_id"`
 	StudentName string `json:"student_name"`
 }
+
+type LessonTopic struct {
+	ID               string    `json:"id"`
+	Date             time.Time `json:"date"`
+	SubjectName      string    `json:"subject_name"`
+	Topic            string    `json:"topic"`
+	TeacherFirstName string    `json:"teacher_first_name"`
+	TeacherLastName  string    `json:"teacher_last_name"`
+}
+
+type DisciplinaryNoteReport struct {
+	ID               string    `json:"id"`
+	Date             time.Time `json:"date"`
+	StudentFirstName string    `json:"student_first_name"`
+	StudentLastName  string    `json:"student_last_name"`
+	NoteType         string    `json:"note_type"`
+	Description      string    `json:"description"`
+	TeacherFirstName string    `json:"teacher_first_name"`
+	TeacherLastName  string    `json:"teacher_last_name"`
+}
+

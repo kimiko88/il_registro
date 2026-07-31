@@ -105,3 +105,12 @@ func (s *Service) GetClassSubjects(ctx context.Context, classID string) ([]Class
 func (s *Service) GetClassGuardians(ctx context.Context, classID string) ([]GuardianInfo, error) {
 	return s.repo.GetClassGuardians(ctx, classID)
 }
+
+func (s *Service) GetLessonTopics(ctx context.Context, classID string) ([]LessonTopic, error) {
+	return s.repo.GetLessonTopics(ctx, classID)
+}
+
+func (s *Service) GetDisciplinaryNotes(ctx context.Context, classID string) ([]DisciplinaryNoteReport, error) {
+	return s.repo.GetDisciplinaryNotes(ctx, classID)
+}
+

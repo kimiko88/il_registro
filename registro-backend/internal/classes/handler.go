@@ -243,6 +243,36 @@ func (h *Handler) GetClassGuardians(c *gin.Context) {
 	c.JSON(http.StatusOK, guardians)
 }
 
+func (h *Handler) GetLessonTopics(c *gin.Context) {
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	topics, err := h.service.GetLessonTopics(c.Request.Context(), c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, topics)
+}
+
+func (h *Handler) GetDisciplinaryNotes(c *gin.Context) {
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	notes, err := h.service.GetDisciplinaryNotes(c.Request.Context(), c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, notes)
+}
+
 func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	group := rg.Group("/classes")
 	{
@@ -256,6 +286,9 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 		group.GET("/:id/subjects", h.GetClassSubjects)
 		group.DELETE("/:id/subjects/:assignmentId", h.RemoveSubject)
 		group.GET("/:id/guardians", h.GetClassGuardians)
+		group.GET("/:id/lesson-topics", h.GetLessonTopics)
+		group.GET("/:id/disciplinary-notes", h.GetDisciplinaryNotes)
 	}
 	rg.GET("/teacher/classes", h.GetTeacherClasses)
 }
+

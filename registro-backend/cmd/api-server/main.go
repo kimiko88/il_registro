@@ -292,7 +292,7 @@ func main() {
 			goalsH := student_goals.NewHandler(goalsSvc)
 			goalsH.RegisterRoutes(protected)
 
-			studentsFascicoloH := students.NewFascicoloHandler(database.DB)
+			studentsFascicoloH := students.NewFascicoloHandler(database)
 			studentsFascicoloH.RegisterRoutes(protected)
 
 			subsRepo := substitutions.NewRepository(database)

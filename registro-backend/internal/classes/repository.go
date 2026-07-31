@@ -20,6 +20,8 @@ type Repository interface {
 	UnassignSubject(ctx context.Context, assignmentID string) error
 	GetClassSubjects(ctx context.Context, classID string) ([]ClassSubject, error)
 	GetClassGuardians(ctx context.Context, classID string) ([]GuardianInfo, error)
+	GetLessonTopics(ctx context.Context, classID string) ([]LessonTopic, error)
+	GetDisciplinaryNotes(ctx context.Context, classID string) ([]DisciplinaryNoteReport, error)
 }
 
 type PostgresRepository struct {
@@ -265,3 +267,74 @@ func (r *PostgresRepository) GetClassGuardians(ctx context.Context, classID stri
 	}
 	return result, nil
 }
+
+func (r *PostgresRepository) GetLessonTopics(ctx context.Context, classID string) ([]LessonTopic, error) {
+	if _, err := uuid.Parse(classID); err != nil {
+		return []LessonTopic{}, nil
+	}
+	query := `
+		SELECT cl.id::text, cl.date, COALESCE(s.name, ''), COALESCE(cl.topic, ''), COALESCE(u.first_name, ''), COALESCE(u.last_name, '')
+		FROM class_lessons cl
+		LEFT JOIN subjects s ON cl.subject_id = s.id
+		LEFT JOIN users u ON cl.teacher_id = u.id
+		WHERE cl.class_id = $1::uuid
+		ORDER BY cl.date DESC
+	`
+	rows, err := r.db.QueryContext(ctx, query, classID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var topics []LessonTopic
+	for rows.Next() {
+		var lt LessonTopic
+		if err := rows.Scan(&lt.ID, &lt.Date, &lt.SubjectName, &lt.Topic, &lt.TeacherFirstName, &lt.TeacherLastName); err != nil {
+			return nil, err
+		}
+		topics = append(topics, lt)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	if topics == nil {
+		topics = []LessonTopic{}
+	}
+	return topics, nil
+}
+
+func (r *PostgresRepository) GetDisciplinaryNotes(ctx context.Context, classID string) ([]DisciplinaryNoteReport, error) {
+	if _, err := uuid.Parse(classID); err != nil {
+		return []DisciplinaryNoteReport{}, nil
+	}
+	query := `
+		SELECT sn.id::text, sn.date, COALESCE(su.first_name, ''), COALESCE(su.last_name, ''), sn.type::text, COALESCE(sn.note, ''), COALESCE(tu.first_name, ''), COALESCE(tu.last_name, '')
+		FROM student_notes sn
+		LEFT JOIN users su ON sn.student_id = su.id
+		LEFT JOIN users tu ON sn.teacher_id = tu.id
+		WHERE sn.class_id = $1::uuid
+		ORDER BY sn.date DESC
+	`
+	rows, err := r.db.QueryContext(ctx, query, classID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var notes []DisciplinaryNoteReport
+	for rows.Next() {
+		var dnr DisciplinaryNoteReport
+		if err := rows.Scan(&dnr.ID, &dnr.Date, &dnr.StudentFirstName, &dnr.StudentLastName, &dnr.NoteType, &dnr.Description, &dnr.TeacherFirstName, &dnr.TeacherLastName); err != nil {
+			return nil, err
+		}
+		notes = append(notes, dnr)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	if notes == nil {
+		notes = []DisciplinaryNoteReport{}
+	}
+	return notes, nil
+}
+
