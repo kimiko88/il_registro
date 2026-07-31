@@ -186,10 +186,12 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useParentStore } from '@/stores/parent'
 import { useAuthStore } from '@/stores/auth'
 import { storeToRefs } from 'pinia'
-import { gradeService } from 'src/services/gradeService'
-import { attendanceService } from 'src/services/attendanceService'
-import { communicationService } from 'src/services/communicationService'
-import { colloquiService } from 'src/services/colloquiService'
+import { gradeService } from '@/services/gradeService'
+import { attendanceService } from '@/services/attendanceService'
+import { communicationService } from '@/services/communicationService'
+import { colloquiService } from '@/services/colloquiService'
+
+
 
 const parentStore = useParentStore()
 const authStore = useAuthStore()

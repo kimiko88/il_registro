@@ -86,10 +86,108 @@ Creazione di una nuova classe.
 
 **Ruoli ammessi**: `superadmin`, `admin`, `secretary`
 
+### `GET /api/v1/classes/:id/lesson-topics`
+Recupero degli argomenti delle lezioni svolte per una specifica classe.
+
+**Ruoli ammessi**: `superadmin`, `admin`, `secretary`, `teacher`
+
+**Response `200 OK`:**
+```json
+[
+  {
+    "id": "uuid-lezione",
+    "date": "2026-07-31T00:00:00Z",
+    "subject_name": "Matematica",
+    "topic": "Equazioni di secondo grado",
+    "teacher_first_name": "Mario",
+    "teacher_last_name": "Rossi"
+  }
+]
+```
+
+### `GET /api/v1/classes/:id/disciplinary-notes`
+Recupero delle note disciplinari per gli studenti di una classe.
+
+**Ruoli ammessi**: `superadmin`, `admin`, `secretary`, `teacher`
+
+**Response `200 OK`:**
+```json
+[
+  {
+    "id": "uuid-nota",
+    "date": "2026-07-31T00:00:00Z",
+    "student_first_name": "Giuseppe",
+    "student_last_name": "Verdi",
+    "note_type": "disciplinary",
+    "description": "Disturbo durante la spiegazione",
+    "teacher_first_name": "Mario",
+    "teacher_last_name": "Rossi"
+  }
+]
+```
+
 ### `POST /api/v1/subjects`
 Creazione di una nuova materia scolastica.
 
 **Ruoli ammessi**: `superadmin`, `admin`, `secretary`
+
+---
+
+## Analytics, Monitoring & Reporting
+
+### `GET /api/v1/admin/system/metrics`
+Recupero delle metriche prestazionali di sistema in tempo reale per la dashboard Analytics.
+
+**Ruoli ammessi**: `superadmin`, `admin`
+
+**Response `200 OK`:**
+```json
+{
+  "api_success_rate": 99.8,
+  "db_cpu_percent": 12.5,
+  "cache_hit_rate": 95.4,
+  "goroutines": 42,
+  "memory_alloc_mb": 18.5,
+  "uptime_seconds": 3600
+}
+```
+
+### `GET /api/v1/admin/system/health`
+Recupero dello stato di salute dei microservizi e delle risorse di sistema.
+
+**Ruoli ammessi**: `superadmin`, `admin`
+
+**Response `200 OK`:**
+```json
+{
+  "status": "healthy",
+  "services": {
+    "api": "healthy",
+    "database": "healthy",
+    "redis": "healthy",
+    "storage": "healthy",
+    "db_ping_ms": 2,
+    "redis_ping_ms": 1
+  },
+  "metrics": {
+    "cpu_percent": 12,
+    "memory_percent": 35,
+    "disk_percent": 28,
+    "api_latency_ms": 14
+  },
+  "api_version": "1.0.0",
+  "db_version": "PostgreSQL 15",
+  "environment": "production",
+  "uptime": "0d 1h 0m",
+  "last_deploy": "2026-07-31T15:45:00Z"
+}
+```
+
+### `GET /api/v1/reports/grades/excel?class_id=<id>&semester=<1|2>`
+Esportazione in formato foglio di calcolo Excel (`.xlsx`) della matrice dei voti della classe per trimestre/quadrimestre.
+
+**Ruoli ammessi**: `superadmin`, `admin`, `secretary`, `teacher`, `principal`
+
 
 ---
 

@@ -212,4 +212,29 @@ Registrov2/
 5. **Aggiungi i Test**: Crea i test Vitest in `tests/unit/` per testare lo store ed i comportamenti di UI/UX.
 
 ---
+
+## 9. Infrastruttura di Monitoring & System Metrics 📊
+
+Il backend esporta due endpoint di telemetria fondamentali:
+- **`GET /api/v1/admin/system/metrics`**: Fornisce le metriche prestazionali (API success rate, carico CPU DB, cache hit rate Redis, goroutines attive, memoria allocata in MB, uptime in secondi). Utilizzato da `Analytics.vue`.
+- **`GET /api/v1/admin/system/health`**: Fornisce lo stato dei microservizi (API, PostgreSQL, Redis, Storage), latenza di ping ed informazioni su versione ed ambiente. Utilizzato da `Monitoring.vue`.
+
+---
+
+## 10. Best Practices & Troubleshooting per Sviluppatori 🛠️
+
+### A. backend (Go / Gin)
+- **Modifiche alle Interfacce Repository**: Quando aggiungi un metodo a un'interfaccia `Repository` (es. `classes.Repository` o `users.Repository`), ricordati di implementare il metodo sia in `PostgresRepository` che in tutti i mock utilizzati nei test (`service_test.go` e `tests/testhelpers/mocks.go`).
+- **Verifica Compilazione Server**: Prima di committare, verifica sempre che il server principale compili correttamente con:
+  ```bash
+  go build -o bin/api-server.exe ./cmd/api-server
+  ```
+- **Confronto UUID e NullString**: Nella scrittura di query SQL con Gin e PostgreSQL, per id opzionali o nullable utilizza `COALESCE` o `NULLIF($1, '')::uuid` per prevenire errori di sintassi postgres `invalid input syntax for type uuid: ""`.
+
+### B. Frontend (Vue 3 / Vitest)
+- **Test Asincroni nei Componenti**: Quando testi componenti Vue che effettuano chiamate API su `onMounted`, ricordati di invocare `await flushPromises()` da `@vue/test-utils` dopo il mounting prima di fare asserzioni sul DOM renderizzato.
+- **Mock dei Servizi e di Pinia**: Utilizza `createTestingPinia` da `@pinia/testing` e `vi.mock('@/services/...')` per isolare il componente ed evitare chiamate di rete reali durante i test unitari.
+
+---
 *Wiki creato per supportare lo sviluppo, la manutenzione e l'onboarding di nuovi sviluppatori su RegistroV2.*
+

@@ -89,6 +89,53 @@ body {
     background-clip: text;
 }
 
+/* Theme Custom Properties & Gradients */
+[data-theme="indigo"] {
+    --bg-primary: #f8fafc;
+    --bg-secondary: #ffffff;
+}
+
+[data-theme="emerald"] {
+    --bg-primary: #f0fdf4;
+    --bg-secondary: #ffffff;
+}
+
+[data-theme="sunset"] {
+    --bg-primary: #faf5ff;
+    --bg-secondary: #ffffff;
+}
+
+[data-theme="amber"] {
+    --bg-primary: #fffbeb;
+    --bg-secondary: #ffffff;
+}
+
+[data-theme="cyber"] {
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+}
+
+[data-theme="emerald"] .bg-gradient-primary,
+[data-theme="emerald"] .bg-gradient-premium {
+    background: linear-gradient(135deg, #059669 0%, #0d9488 100%) !important;
+}
+
+[data-theme="sunset"] .bg-gradient-primary,
+[data-theme="sunset"] .bg-gradient-premium {
+    background: linear-gradient(135deg, #7c3aed 0%, #e11d48 100%) !important;
+}
+
+[data-theme="amber"] .bg-gradient-primary,
+[data-theme="amber"] .bg-gradient-premium {
+    background: linear-gradient(135deg, #d97706 0%, #ea580c 100%) !important;
+}
+
+[data-theme="cyber"] .bg-gradient-primary,
+[data-theme="cyber"] .bg-gradient-premium {
+    background: linear-gradient(135deg, #06b6d4 0%, #6366f1 100%) !important;
+}
+
+
 /* Premium Dialog Styling */
 .premium-dialog .q-card {
     border-radius: 24px;

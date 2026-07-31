@@ -1,6 +1,6 @@
 import api from './api'
 
-export default {
+export const colloquiService = {
   getSlots(params) {
     return api.get('/colloqui/slots', { params })
   },
@@ -32,3 +32,6 @@ export default {
     return api.post('/colloqui/assemblies', data)
   }
 }
+
+export default colloquiService
+

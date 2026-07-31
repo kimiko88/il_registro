@@ -20,10 +20,69 @@
 
         <q-space />
         
+        <!-- Theme Selector Menu -->
+        <q-btn-dropdown
+          flat
+          round
+          dense
+          icon="palette"
+          color="primary"
+          class="q-mr-sm"
+          key="theme-toggle"
+          aria-label="Scegli il Tema Visivo"
+        >
+          <q-tooltip>Seleziona Tema Visivo</q-tooltip>
+          <q-list style="min-width: 280px" class="q-py-xs">
+            <q-item-label header class="text-weight-bold text-uppercase text-caption letter-spacing-1">
+              Temi e Palette Visive
+            </q-item-label>
+
+            <q-item
+              v-for="themeOption in THEMES"
+              :key="themeOption.id"
+              clickable
+              v-close-popup
+              @click="themeStore.setTheme(themeOption.id)"
+              :active="themeStore.currentTheme === themeOption.id"
+              active-class="bg-indigo-50 text-primary text-weight-bold"
+              class="rounded-lg q-mx-xs q-mb-xs"
+            >
+              <q-item-section avatar>
+                <q-avatar size="32px" :color="themeOption.badgeColor" text-color="white">
+                  <q-icon :name="themeOption.icon" size="18px" />
+                </q-avatar>
+              </q-item-section>
+
+              <q-item-section>
+                <q-item-label class="text-weight-bold row items-center justify-between">
+                  <span>{{ themeOption.name }}</span>
+                  <q-chip
+                    dense
+                    size="xs"
+                    color="grey-3"
+                    text-color="grey-9"
+                    class="text-weight-medium"
+                  >
+                    {{ themeOption.recommendedRole }}
+                  </q-chip>
+                </q-item-label>
+                <q-item-label caption class="text-grey-7">
+                  {{ themeOption.description }}
+                </q-item-label>
+              </q-item-section>
+
+              <q-item-section side v-if="themeStore.currentTheme === themeOption.id">
+                <q-icon name="check_circle" color="primary" size="20px" />
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-btn-dropdown>
+
         <!-- Dark Mode Toggle -->
         <q-btn flat round dense :icon="$q.dark.isActive ? 'light_mode' : 'dark_mode'" @click="$q.dark.toggle()" color="primary" class="q-mr-sm" :key="'dark-toggle'" :aria-label="$q.dark.isActive ? 'Attiva modalità chiara' : 'Attiva modalità scura'">
            <q-tooltip>Attiva/Disattiva Modalità Scura</q-tooltip>
         </q-btn>
+
 
         <!-- Fullscreen Toggle -->
         <q-btn 
@@ -188,11 +247,12 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useTeacherStore } from '@/stores/teacher'
 import { useClassesStore } from '@/stores/classes'
+import { useThemeStore, THEMES } from '@/stores/theme'
 import { useAuth } from '@/composables/useAuth'
 import { useMenuItems } from '@/composables/useMenuItems'
 import { storeToRefs } from 'pinia'
@@ -200,6 +260,12 @@ import { useQuasar } from 'quasar'
 
 const route = useRoute()
 const $q = useQuasar()
+const themeStore = useThemeStore()
+
+onMounted(() => {
+  themeStore.initTheme()
+})
+
 
 // Dynamic Breadcrumbs
 const breadcrumbs = computed(() => {
