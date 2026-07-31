@@ -83,7 +83,8 @@
         <q-card class="glass-card stat-card shadow-soft full-height overflow-hidden">
           <q-card-section>
             <div class="text-caption text-slate-600 text-uppercase letter-spacing-1" style="font-size: 12px">Prossimo Colloquio</div>
-            <div class="text-h5 text-weight-bold text-slate-800 q-mt-sm">Nessuno</div>
+            <div v-if="nextColloquio" class="text-h6 text-weight-bold text-slate-800 q-mt-sm">{{ formatDate(nextColloquio.date) }}</div>
+            <div v-else class="text-h6 text-weight-bold text-slate-500 q-mt-sm">Nessuno</div>
             <q-btn flat dense no-caps color="primary" label="Prenota ora" to="/parent/colloqui" class="q-mt-sm rounded-lg" aria-label="Prenota un colloquio" />
           </q-card-section>
           <q-icon name="event" class="card-bg-icon text-slate-100" aria-hidden="true" />
@@ -101,7 +102,7 @@
         </q-card>
       </div>
 
-      <!-- Recent Activities / Grades -->
+      <!-- Recent Grades -->
       <div class="col-12 col-md-8">
         <q-card class="shadow-sm rounded-lg" role="region" aria-label="Ultimi voti">
           <q-card-section class="row items-center justify-between">
@@ -188,6 +189,7 @@ import { storeToRefs } from 'pinia'
 import { gradeService } from 'src/services/gradeService'
 import { attendanceService } from 'src/services/attendanceService'
 import { communicationService } from 'src/services/communicationService'
+import { colloquiService } from 'src/services/colloquiService'
 
 const parentStore = useParentStore()
 const authStore = useAuthStore()
@@ -196,11 +198,12 @@ const { fetchChildren, selectChild } = parentStore
 
 const parentName = computed(() => authStore.user?.first_name || authStore.user?.name || 'Genitore')
 
-const averageGrade = ref('0.0')
+const averageGrade = ref('-')
 const totalAbsences = ref(0)
 const unreadCount = ref(0)
 const recentGrades = ref([])
 const upcomingTests = ref([])
+const nextColloquio = ref(null)
 const dataLoading = ref(false)
 
 const formatDate = (dateStr) => {
@@ -266,6 +269,19 @@ const fetchChildData = async () => {
             unreadCount.value = messages.filter(m => !m.is_read).length
         } catch (e) {
             unreadCount.value = 0
+        }
+
+        // Fetch next colloquio
+        try {
+            const colloquiRes = await colloquiService.getBookedSlots()
+            const slots = Array.isArray(colloquiRes.data) ? colloquiRes.data : (colloquiRes.data?.items || [])
+            const now = new Date()
+            const upcoming = slots
+                .filter(s => new Date(s.date) > now)
+                .sort((a, b) => new Date(a.date) - new Date(b.date))
+            nextColloquio.value = upcoming[0] || null
+        } catch (e) {
+            nextColloquio.value = null
         }
 
         // Fetch Upcoming Tests

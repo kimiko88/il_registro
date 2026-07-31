@@ -4,7 +4,7 @@
     <div class="row items-center q-mb-md justify-between">
       <div>
         <h1 class="text-h4 q-my-none">Bentornato, {{ studentStore.profile?.first_name }}</h1>
-        <div class="text-subtitle1 text-grey-8">{{ studentStore.className || 'Classe 5A' }}</div>
+        <div class="text-subtitle1 text-grey-8">{{ studentStore.className }}</div>
       </div>
       <q-btn round flat icon="notifications" color="grey-8">
         <q-badge color="red" floating v-if="studentStore.notifications.length">{{ studentStore.notifications.length }}</q-badge>
@@ -12,10 +12,10 @@
              <q-list style="min-width: 300px">
                  <q-item-label header>Notifiche</q-item-label>
                  <q-item v-for="n in studentStore.notifications" :key="n.id" clickable v-close-popup>
-                     <q-item-section avatar><q-icon :name="n.icon" :color="n.color" /></q-item-section>
+                     <q-item-section avatar><q-icon :name="n.icon || 'notifications'" :color="n.color || 'primary'" /></q-item-section>
                      <q-item-section>
                          <q-item-label>{{ n.title }}</q-item-label>
-                         <q-item-label caption>{{ n.time }}</q-item-label>
+                         <q-item-label caption>{{ n.time || n.created_at }}</q-item-label>
                      </q-item-section>
                  </q-item>
                  <q-item v-if="!studentStore.notifications.length">
@@ -26,7 +26,7 @@
       </q-btn>
     </div>
 
-    <!-- Quick Stats Cards with Trends -->
+    <!-- Quick Stats Cards -->
     <div class="row q-col-gutter-lg q-mb-xl">
       <!-- Average Grade -->
       <div class="col-12 col-sm-6 col-md-3">
@@ -109,7 +109,7 @@
 
     <!-- Main Content Area -->
     <div class="row q-col-gutter-lg">
-      <!-- Recent Activity / Grades -->
+      <!-- Recent Grades -->
       <div class="col-12 col-md-8">
         <q-card class="glass-card shadow-soft q-mb-lg overflow-hidden">
           <q-card-section class="row items-center justify-between q-pa-lg">
@@ -137,21 +137,24 @@
           </q-list>
         </q-card>
         
-        <!-- Agenda/Upcoming -->
+        <!-- Upcoming Events from Agenda -->
         <q-card>
             <q-card-section class="text-h6">In Arrivo</q-card-section>
             <q-list>
                 <q-item v-for="event in upcomingEvents" :key="event.id">
                     <q-item-section avatar>
-                        <q-icon :name="event.icon" :color="event.color" />
+                        <q-icon :name="event.icon || 'event'" :color="event.color || 'primary'" />
                     </q-item-section>
                     <q-item-section>
                         <q-item-label>{{ event.title }}</q-item-label>
-                        <q-item-label caption>{{ event.date }} {{ event.time }}</q-item-label>
+                        <q-item-label caption>{{ formatEventDate(event.start_date || event.date) }} {{ event.start_time || event.time || '' }}</q-item-label>
                     </q-item-section>
-                    <q-item-section side>
-                        <q-chip :color="event.color" text-color="white" size="sm">{{ event.tag }}</q-chip>
+                    <q-item-section side v-if="event.type">
+                        <q-chip :color="event.color || 'primary'" text-color="white" size="sm">{{ event.type }}</q-chip>
                     </q-item-section>
+                </q-item>
+                <q-item v-if="!upcomingEvents.length">
+                    <q-item-section class="text-center text-grey q-py-lg">Nessun evento in arrivo</q-item-section>
                 </q-item>
             </q-list>
         </q-card>
@@ -178,8 +181,7 @@
             </q-card-section>
         </q-card>
 
-        <!-- Profile/System Status -->
-         <q-card>
+        <q-card>
              <q-card-section>
                  <div class="text-subtitle1">Stato Sistema</div>
                  <q-item>
@@ -204,11 +206,11 @@ import { attendanceService } from 'src/services/attendanceService'
 import { pctoService } from 'src/services/pctoService'
 import { communicationService } from 'src/services/communicationService'
 import adminService from 'src/services/adminService'
+import api from 'src/services/api'
 
 const studentStore = useStudentStore();
 
-// Initial values
-const averageGrade = ref('0.0')
+const averageGrade = ref('-')
 const attendanceRate = ref(100)
 const pctoHours = ref(0)
 const unreadMessages = ref(0)
@@ -223,6 +225,11 @@ const getGradeColor = (val) => {
     if (v >= 8) return 'green-6';
     if (v >= 6) return 'orange-6';
     return 'red-6';
+}
+
+const formatEventDate = (dateStr) => {
+    if (!dateStr) return ''
+    return new Date(dateStr).toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })
 }
 
 const getSubjectName = (id) => {
@@ -245,7 +252,7 @@ const fetchSubjects = async () => {
             subjects.value = res.data || []
         }
     } catch (e) {
-        console.error("Error fetching subjects", e)
+        console.error('Error fetching subjects', e)
     }
 }
 
@@ -256,10 +263,9 @@ const fetchDashboardData = async () => {
         const allGrades = []
         if (gradesRes.data && gradesRes.data.semesters) {
             gradesRes.data.semesters.forEach(s => {
-                if(s.grades) allGrades.push(...s.grades)
+                if (s.grades) allGrades.push(...s.grades)
             })
         }
-        // Calculate Average (Exclude 0 unrated values)
         const validGrades = allGrades.filter(g => g.grade_value > 0)
         if (validGrades.length > 0) {
             const sum = validGrades.reduce((acc, g) => acc + Number(g.grade_value), 0)
@@ -268,8 +274,7 @@ const fetchDashboardData = async () => {
             averageGrade.value = '-'
         }
         
-        // Recent Grades (Last 5)
-        allGrades.sort((a,b) => new Date(b.date) - new Date(a.date))
+        allGrades.sort((a, b) => new Date(b.date) - new Date(a.date))
         recentGrades.value = allGrades.slice(0, 5).map(g => ({
             id: g.id,
             subject: getSubjectName(g.subject_id),
@@ -307,8 +312,21 @@ const fetchDashboardData = async () => {
             unreadMessages.value = commsRes.data.filter(m => !m.read && !m.archived).length
         }
 
+        // Upcoming agenda events
+        try {
+            const agendaRes = await api.get('/agenda/events', {
+                params: { from: new Date().toISOString().split('T')[0], limit: 5 }
+            })
+            upcomingEvents.value = Array.isArray(agendaRes.data)
+                ? agendaRes.data
+                : (agendaRes.data?.items || [])
+        } catch (e) {
+            console.warn('Could not fetch agenda events:', e)
+            upcomingEvents.value = []
+        }
+
     } catch (e) {
-        console.error("Dashboard fetch error", e)
+        console.error('Dashboard fetch error', e)
     }
 }
 </script>

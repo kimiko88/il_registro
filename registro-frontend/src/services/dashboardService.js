@@ -18,13 +18,14 @@ export default {
             const response = await api.get('/teachers/dashboard/stats')
             return response.data
         }
-        
-        // For other roles, this could be expanded later
-        // For now, return empty or mock that will be handled in the component
-        return {
-            stats: [],
-            schedule: [],
-            announcements: []
+        if (role === 'student') {
+            const response = await api.get('/students/dashboard/stats')
+            return response.data
         }
+        if (role === 'parent') {
+            const response = await api.get('/parents/dashboard/stats')
+            return response.data
+        }
+        return {}
     }
 }

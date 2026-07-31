@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import authService from 'src/services/authService';
+import api from '../services/api';
 
 // Normalize the user profile from backend (snake_case) to a consistent shape
 function normalizeProfile(data) {
@@ -38,16 +39,20 @@ export const useStudentStore = defineStore('student', {
                 this.profile = normalizeProfile(userData);
             } catch (err) {
                 this.error = err.message;
-                console.error("Error fetching profile:", err);
+                console.error('Error fetching profile:', err);
             } finally {
                 this.loading = false;
             }
         },
 
         async fetchNotifications() {
-            // Notifications are currently handled via Communications or WebSocket
-            // For now, keep it empty or fetch from communications
-            this.notifications = [];
+            try {
+                const response = await api.get('/users/me/notifications')
+                this.notifications = response.data || []
+            } catch (err) {
+                console.error('Error fetching notifications:', err)
+                this.notifications = []
+            }
         }
     }
 });

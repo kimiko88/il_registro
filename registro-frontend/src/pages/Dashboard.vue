@@ -86,8 +86,8 @@
                 </q-item-label>
               </q-item-section>
               <q-item-section side>
-                <q-chip size="sm" color="grey-3" text-color="grey-8">
-                  Pianificata
+                <q-chip size="sm" :color="getLessonStatusColor(entry)" :text-color="getLessonStatusTextColor(entry)">
+                  {{ getLessonStatus(entry) }}
                 </q-chip>
               </q-item-section>
             </q-item>
@@ -181,7 +181,6 @@ const latestAnnouncement = computed(() => {
   return null
 })
 
-// Greeting based on time of day
 const greeting = computed(() => {
   const hour = new Date().getHours()
   if (hour < 12) return 'Buongiorno'
@@ -189,48 +188,40 @@ const greeting = computed(() => {
   return 'Buonasera'
 })
 
-// Role-specific stats
 const stats = computed(() => {
   if (realStats.value && realStats.value.length > 0) {
-      return realStats.value
+    return realStats.value
   }
-
-  // Fallback to placeholders if no real data
-  const roleStats = {
-    admin: [
-      { label: 'Totale Scuole', value: '12', icon: 'school', color: 'indigo' },
-      { label: 'Utenti Attivi', value: '1,245', icon: 'people', color: 'cyan' },
-      { label: 'Eventi Oggi', value: '4', icon: 'event', color: 'amber' },
-      { label: 'Report Pending', value: '12', icon: 'assignment', color: 'red' }
-    ],
-    teacher: [
-      { label: 'Le Mie Classi', value: '5', icon: 'class', color: 'indigo' },
-      { label: 'Studenti', value: '120', icon: 'school', color: 'cyan' },
-      { label: 'Lezioni Oggi', value: '4', icon: 'event', color: 'amber' },
-      { label: 'Voti da inserire', value: '8', icon: 'grade', color: 'red' }
-    ],
-    student: [
-      { label: 'Media Voti', value: '7.5', icon: 'grade', color: 'indigo' },
-      { label: 'Presenze', value: '95%', icon: 'how_to_reg', color: 'cyan' },
-      { label: 'Compiti', value: '3', icon: 'assignment', color: 'amber' },
-      { label: 'Documenti', value: '12', icon: 'description', color: 'purple' }
-    ],
-    parent: [
-      { label: 'I Miei Figli', value: '2', icon: 'family_restroom', color: 'indigo' },
-      { label: 'Colloqui', value: '1', icon: 'event', color: 'cyan' },
-      { label: 'Comunicazioni', value: '3', icon: 'email', color: 'amber' },
-      { label: 'Documenti', value: '8', icon: 'description', color: 'purple' }
-    ],
-    secretary: [
-      { label: 'Studenti', value: '450', icon: 'school', color: 'indigo' },
-      { label: 'Docenti', value: '45', icon: 'people', color: 'cyan' },
-      { label: 'Documenti', value: '24', icon: 'description', color: 'amber' },
-      { label: 'Richieste', value: '7', icon: 'assignment', color: 'red' }
-    ]
-  }
-  
-  return roleStats[currentRole.value] || roleStats.student
+  // Nessun dato disponibile — mostra zeri invece di valori inventati
+  return [
+    { label: 'Dati', value: '-', icon: 'info', color: 'grey' }
+  ]
 })
+
+const getLessonStatus = (entry) => {
+  const now = new Date()
+  const currentMinutes = now.getHours() * 60 + now.getMinutes()
+  // Assumiamo che ogni ora scolastica duri 60 min e inizi alle 8:00
+  const startMinutes = (7 * 60) + (entry.hour_index * 60)
+  const endMinutes = startMinutes + 60
+  if (currentMinutes >= endMinutes) return 'Completata'
+  if (currentMinutes >= startMinutes) return 'In corso'
+  return 'Pianificata'
+}
+
+const getLessonStatusColor = (entry) => {
+  const status = getLessonStatus(entry)
+  if (status === 'Completata') return 'grey-3'
+  if (status === 'In corso') return 'positive'
+  return 'blue-1'
+}
+
+const getLessonStatusTextColor = (entry) => {
+  const status = getLessonStatus(entry)
+  if (status === 'Completata') return 'grey-7'
+  if (status === 'In corso') return 'white'
+  return 'primary'
+}
 
 const fetchDashboardData = async () => {
     loadingData.value = true
@@ -240,31 +231,46 @@ const fetchDashboardData = async () => {
         if (data) {
             if (role === 'admin' || role === 'superadmin') {
                 realStats.value = [
-                    { label: 'Totale Scuole', value: data.total_schools || '0', icon: 'school', color: 'indigo' },
-                    { label: 'Utenti Attivi', value: data.total_users || '0', icon: 'people', color: 'cyan' },
-                    { label: 'Eventi Oggi', value: data.active_users_24h || '0', icon: 'event', color: 'amber' },
-                    { label: 'Report Pending', value: data.pending_documents_count || '0', icon: 'assignment', color: 'red' }
+                    { label: 'Totale Scuole', value: data.total_schools ?? '0', icon: 'school', color: 'indigo' },
+                    { label: 'Utenti Attivi', value: data.total_users ?? '0', icon: 'people', color: 'cyan' },
+                    { label: 'Attivi 24h', value: data.active_users_24h ?? '0', icon: 'event', color: 'amber' },
+                    { label: 'Doc. Pending', value: data.pending_documents_count ?? '0', icon: 'assignment', color: 'red' }
                 ]
                 recentEvents.value = data.recent_events || []
             } else if (role === 'secretary') {
                 realStats.value = [
-                    { label: 'Studenti', value: data.total_students || '0', icon: 'school', color: 'indigo' },
-                    { label: 'Docenti', value: data.total_teachers || '0', icon: 'people', color: 'cyan' },
-                    { label: 'Documenti', value: data.total_documents || '0', icon: 'description', color: 'amber' },
-                    { label: 'Richieste', value: data.pending_documents_count || '0', icon: 'assignment', color: 'red' }
+                    { label: 'Studenti', value: data.total_students ?? '0', icon: 'school', color: 'indigo' },
+                    { label: 'Docenti', value: data.total_teachers ?? '0', icon: 'people', color: 'cyan' },
+                    { label: 'Documenti', value: data.total_documents ?? '0', icon: 'description', color: 'amber' },
+                    { label: 'Richieste', value: data.pending_documents_count ?? '0', icon: 'assignment', color: 'red' }
                 ]
                 recentEvents.value = data.recent_events || []
             } else if (role === 'teacher') {
                 realStats.value = [
-                    { label: 'Le Mie Classi', value: data.classes_count || '0', icon: 'class', color: 'indigo' },
-                    { label: 'Studenti', value: data.students_count || '0', icon: 'school', color: 'cyan' },
-                    { label: 'Lezioni Oggi', value: data.lessons_today_count || '0', icon: 'event', color: 'amber' },
-                    { label: 'Voti da inserire', value: data.grades_pending_count || '0', icon: 'grade', color: 'red' }
+                    { label: 'Le Mie Classi', value: data.classes_count ?? '0', icon: 'class', color: 'indigo' },
+                    { label: 'Studenti', value: data.students_count ?? '0', icon: 'school', color: 'cyan' },
+                    { label: 'Lezioni Oggi', value: data.lessons_today_count ?? '0', icon: 'event', color: 'amber' },
+                    { label: 'Voti da inserire', value: data.grades_pending_count ?? '0', icon: 'grade', color: 'red' }
+                ]
+            } else if (role === 'student') {
+                realStats.value = [
+                    { label: 'Media Voti', value: data.average_grade ?? '-', icon: 'grade', color: 'indigo' },
+                    { label: 'Presenze', value: data.attendance_rate != null ? data.attendance_rate + '%' : '-', icon: 'how_to_reg', color: 'cyan' },
+                    { label: 'Compiti', value: data.homework_count ?? '0', icon: 'assignment', color: 'amber' },
+                    { label: 'Documenti', value: data.documents_count ?? '0', icon: 'description', color: 'purple' }
+                ]
+            } else if (role === 'parent') {
+                realStats.value = [
+                    { label: 'I Miei Figli', value: data.children_count ?? '0', icon: 'family_restroom', color: 'indigo' },
+                    { label: 'Colloqui', value: data.upcoming_colloqui ?? '0', icon: 'event', color: 'cyan' },
+                    { label: 'Comunicazioni', value: data.unread_communications ?? '0', icon: 'email', color: 'amber' },
+                    { label: 'Documenti', value: data.documents_count ?? '0', icon: 'description', color: 'purple' }
                 ]
             }
         }
     } catch (e) {
-        console.error("Error fetching dashboard data", e)
+        console.error('Error fetching dashboard data', e)
+        realStats.value = []
     } finally {
         loadingData.value = false
     }
@@ -293,7 +299,7 @@ const fetchAnnouncements = async () => {
         const response = await communicationService.getMessages()
         announcements.value = response.data || []
     } catch (e) {
-        console.error("Error fetching announcements:", e)
+        console.error('Error fetching announcements:', e)
     }
 }
 
@@ -325,8 +331,8 @@ const fetchTodaySchedule = async () => {
             const res = await adminService.getClassSchedule(classId)
             const allEntries = res.data || []
 
-            const todayDay = new Date().getDay() // 0 = Sunday, 1 = Monday, ...
-            const targetDay = todayDay === 0 ? 1 : todayDay // Fallback to Monday if Sunday
+            const todayDay = new Date().getDay()
+            const targetDay = todayDay === 0 ? 1 : todayDay
 
             const filtered = allEntries.filter(e => e.day_of_week === targetDay)
             filtered.sort((a, b) => a.hour_index - b.hour_index)

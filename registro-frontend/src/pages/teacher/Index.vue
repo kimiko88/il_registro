@@ -37,7 +37,7 @@
         >
           <q-card-section>
             <div class="text-caption opacity-80 text-uppercase letter-spacing-1">Da Fare</div>
-            <div class="text-h4 text-weight-bold q-mt-sm">{{ pendingTasksCount }} Revisioni</div>
+            <div class="text-h4 text-weight-bold q-mt-sm">{{ teacherStore.pendingJustifications }} Revisioni</div>
             <div class="text-caption q-mt-xs">Giustificazioni in sospeso</div>
           </q-card-section>
           <q-icon name="pending_actions" class="card-bg-icon" />
@@ -51,7 +51,7 @@
         >
           <q-card-section>
             <div class="text-caption opacity-80 text-uppercase letter-spacing-1">Colloqui</div>
-            <div class="text-h4 text-weight-bold q-mt-sm">{{ upcomingColloquiCount }} Prenotazioni</div>
+            <div class="text-h4 text-weight-bold q-mt-sm">{{ teacherStore.upcomingColloqui }} Prenotazioni</div>
             <div class="text-caption q-mt-xs">Controlla l'agenda</div>
           </q-card-section>
           <q-icon name="people" class="card-bg-icon" />
@@ -109,7 +109,7 @@
           </q-card-section>
         </q-card>
 
-        <!-- Recent Activity / Notifications -->
+        <!-- Notifications -->
         <q-card>
           <q-card-section>
             <div class="text-h6">Notifiche & Attività</div>
@@ -137,7 +137,7 @@
         </q-card>
       </div>
 
-      <!-- Side Panel: Class List Shortcut -->
+      <!-- Side Panel: Class List -->
       <div class="col-12 col-md-4">
         <q-card class="full-height">
           <q-card-section class="bg-grey-2">
@@ -174,14 +174,14 @@ const classesStore = useClassesStore();
 const todayDate = computed(() => new Date().toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' }));
 
 const nextLesson = computed(() => teacherStore.profile?.next_lesson || null);
-const pendingTasksCount = computed(() => teacherStore.notifications.filter(n => n.type === 'action').length);
-const upcomingColloquiCount = computed(() => teacherStore.profile?.colloqui_count || 0);
 const unreadMessagesCount = computed(() => teacherStore.notifications.filter(n => !n.read).length);
 
 onMounted(async () => {
   await Promise.all([
     teacherStore.fetchProfile(),
     teacherStore.fetchNotifications(),
+    teacherStore.fetchPendingJustifications(),
+    teacherStore.fetchUpcomingColloqui(),
     classesStore.fetchAssignedClasses()
   ]);
 });
