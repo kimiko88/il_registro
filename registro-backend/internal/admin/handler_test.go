@@ -477,3 +477,42 @@ func TestHandler_ListAdminUsers(t *testing.T) {
 		})
 	}
 }
+
+func TestHandler_GetSystemMetrics(t *testing.T) {
+	handler, _ := setupTestHandler()
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest("GET", "/admin/system/metrics", nil)
+
+	handler.GetSystemMetrics(c)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	var resp map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &resp)
+	assert.NoError(t, err)
+	assert.Contains(t, resp, "api_success_rate")
+	assert.Contains(t, resp, "db_cpu_percent")
+	assert.Contains(t, resp, "cache_hit_rate")
+	assert.Contains(t, resp, "goroutines")
+	assert.Contains(t, resp, "memory_alloc_mb")
+}
+
+func TestHandler_GetSystemHealth(t *testing.T) {
+	handler, _ := setupTestHandler()
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest("GET", "/admin/system/health", nil)
+
+	handler.GetSystemHealth(c)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	var resp map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &resp)
+	assert.NoError(t, err)
+	assert.Equal(t, "healthy", resp["status"])
+	assert.Contains(t, resp, "services")
+	assert.Contains(t, resp, "metrics")
+}
+

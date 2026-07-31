@@ -552,3 +552,34 @@ func TestNewService(t *testing.T) {
 	assert.NotNil(t, service)
 	assert.Equal(t, mockRepo, service.repo)
 }
+
+func TestService_GetLessonTopics(t *testing.T) {
+	mockRepo := new(MockRepository)
+	expected := []LessonTopic{
+		{ID: "lt-1", Topic: "Algebra"},
+	}
+	mockRepo.On("GetLessonTopics", mock.Anything, "class-1").Return(expected, nil)
+
+	service := NewService(mockRepo)
+	topics, err := service.GetLessonTopics(context.Background(), "class-1")
+
+	assert.NoError(t, err)
+	assert.Equal(t, expected, topics)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestService_GetDisciplinaryNotes(t *testing.T) {
+	mockRepo := new(MockRepository)
+	expected := []DisciplinaryNoteReport{
+		{ID: "dn-1", Description: "Disturbo in classe"},
+	}
+	mockRepo.On("GetDisciplinaryNotes", mock.Anything, "class-1").Return(expected, nil)
+
+	service := NewService(mockRepo)
+	notes, err := service.GetDisciplinaryNotes(context.Background(), "class-1")
+
+	assert.NoError(t, err)
+	assert.Equal(t, expected, notes)
+	mockRepo.AssertExpectations(t)
+}
+

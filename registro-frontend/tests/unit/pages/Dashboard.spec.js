@@ -8,7 +8,22 @@ import { useAuthStore } from '@/stores/auth'
 
 vi.mock('@/services/dashboardService', () => ({
     default: {
-        getDashboardStats: vi.fn().mockResolvedValue(null)
+        getDashboardStats: vi.fn().mockImplementation((role) => {
+            if (role === 'teacher') {
+                return Promise.resolve({
+                    classes_count: 3,
+                    students_count: 75,
+                    lessons_today_count: 2,
+                    grades_pending_count: 5
+                })
+            }
+            return Promise.resolve({
+                average_grade: 8.2,
+                attendance_rate: 96,
+                homework_count: 3,
+                documents_count: 1
+            })
+        })
     }
 }))
 
@@ -50,10 +65,12 @@ describe('Dashboard.vue', () => {
         expect(wrapper.text()).toContain('TestUser')
     })
 
-    it('renders student stats by default', () => {
+    it('renders student stats by default', async () => {
+        await flushPromises()
         expect(wrapper.text()).toContain('Media Voti')
         expect(wrapper.text()).toContain('Presenze')
     })
+
 
     it('renders teacher stats when role is teacher', async () => {
         const pinia = createTestingPinia({
