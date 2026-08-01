@@ -35,10 +35,21 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	}
 }
 
+func parseSemester(semStr string) int {
+	if s, err := strconv.Atoi(semStr); err == nil && s > 0 {
+		return s
+	}
+	semLower := strings.ToLower(semStr)
+	if strings.Contains(semLower, "2") || strings.Contains(semLower, "second") {
+		return 2
+	}
+	return 1
+}
+
 func (h *Handler) ExportPagellaPDF(c *gin.Context) {
 	studentID := c.Param("studentId")
 	classID := c.Query("class_id")
-	semester, _ := strconv.Atoi(c.DefaultQuery("semester", "1"))
+	semester := parseSemester(c.DefaultQuery("semester", "1"))
 	actorID := c.GetString("user_id")
 	actorRole := c.GetString("role")
 	if actorID == "" {
@@ -63,7 +74,7 @@ func (h *Handler) ExportPagellaPDF(c *gin.Context) {
 }
 
 func (h *Handler) GetMatrix(c *gin.Context) {
-	semester, _ := strconv.Atoi(c.DefaultQuery("semester", "1"))
+	semester := parseSemester(c.DefaultQuery("semester", "1"))
 	classID := c.Param("classId")
 	actorID := c.GetString("user_id")
 	actorRole := c.GetString("role")
@@ -107,7 +118,7 @@ func (h *Handler) Save(c *gin.Context) {
 
 func (h *Handler) Start(c *gin.Context) {
 	classID := c.Param("classId")
-	semester, _ := strconv.Atoi(c.DefaultQuery("semester", "1"))
+	semester := parseSemester(c.DefaultQuery("semester", "1"))
 	actorID := c.GetString("user_id")
 	actorRole := c.GetString("role")
 
@@ -128,7 +139,7 @@ func (h *Handler) Start(c *gin.Context) {
 
 func (h *Handler) Validate(c *gin.Context) {
 	classID := c.Param("classId")
-	semester, _ := strconv.Atoi(c.DefaultQuery("semester", "1"))
+	semester := parseSemester(c.DefaultQuery("semester", "1"))
 	actorID := c.GetString("user_id")
 	actorRole := c.GetString("role")
 
@@ -149,7 +160,7 @@ func (h *Handler) Validate(c *gin.Context) {
 
 func (h *Handler) Close(c *gin.Context) {
 	classID := c.Param("classId")
-	semester, _ := strconv.Atoi(c.DefaultQuery("semester", "1"))
+	semester := parseSemester(c.DefaultQuery("semester", "1"))
 	actorID := c.GetString("user_id")
 	actorRole := c.GetString("role")
 

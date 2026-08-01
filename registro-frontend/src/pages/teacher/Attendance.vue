@@ -30,12 +30,12 @@
            <q-select 
               dense outlined 
               v-model="selectedClass" 
-              :options="classesStore.classes" 
-              option-label="name"
+              :options="classOptions" 
+              option-label="label"
               option-value="id"
               label="Classe" 
               bg-color="white" 
-              style="min-width: 150px"
+              style="min-width: 200px"
               @update:model-value="onClassChange"
            />
        </div>
@@ -258,6 +258,22 @@ const gradesStore = useGradesStore()
 const date = ref(new Date().toISOString().split('T')[0])
 const selectedClass = ref(null)
 const students = ref([])
+
+const classOptions = computed(() => {
+  return classesStore.classes.map(c => {
+    let nameText = c.name || `Classe ${c.id}`
+    if (c.section && !nameText.endsWith(c.section)) {
+      nameText += c.section
+    }
+    if (c.articolazione) {
+      nameText += ` - ${c.articolazione}`
+    }
+    return {
+      ...c,
+      label: nameText
+    }
+  })
+})
 const justificationRequests = ref([])
 const loading = ref(false)
 const saving = ref(false)

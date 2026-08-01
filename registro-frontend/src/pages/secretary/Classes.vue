@@ -285,12 +285,12 @@
     <!-- Schedule Dialog -->
     <q-dialog v-model="showScheduleDialog">
       <q-card style="width: min(1200px, 95vw); max-height: 90vh;" class="rounded-xl overflow-hidden shadow-24 bg-white column no-wrap">
-        <q-card-section class="bg-gradient-warning text-white row items-center q-pa-md shrink-0">
+        <q-card-section class="bg-primary text-white row items-center q-pa-md shrink-0">
           <div class="row items-center">
             <q-avatar color="white-20" text-color="white" icon="calendar_today" class="q-mr-sm" size="36px" />
             <div>
               <div class="text-h6 text-weight-bold">Orario Settimanale - Classe {{ currentClass?.name }}{{ currentClass?.section }}</div>
-              <div class="text-subtitle2 opacity-80">{{ currentClass?.academic_year }}</div>
+              <div class="text-subtitle2 text-white/80">{{ currentClass?.academic_year }}</div>
             </div>
           </div>
           <q-space />

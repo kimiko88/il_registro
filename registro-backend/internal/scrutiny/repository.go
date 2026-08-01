@@ -69,10 +69,13 @@ func (r *postgresRepository) SaveRecord(ctx context.Context, rec *ScrutinyRecord
 }
 
 func (r *postgresRepository) GetRecord(ctx context.Context, studentID, classID string, semester int) (*ScrutinyRecord, error) {
+	if studentID == "" || classID == "" {
+		return nil, nil
+	}
 	query := `
 		SELECT id, student_id, class_id, semester, conduct_grade, final_decision, notes, coordinator_id,
 		       COALESCE(status, 'draft'), COALESCE(validated_by, ''), validated_at, created_at, updated_at 
-		FROM scrutiny_records WHERE student_id = $1 AND class_id = $2 AND semester = $3
+		FROM scrutiny_records WHERE student_id::text = $1 AND class_id::text = $2 AND semester = $3
 	`
 	rec := &ScrutinyRecord{}
 	var valBy sql.NullString
@@ -95,7 +98,7 @@ func (r *postgresRepository) GetRecord(ctx context.Context, studentID, classID s
 		rec.ValidatedAt = &valAt.Time
 	}
 
-	gRows, err := r.db.QueryContext(ctx, "SELECT id, scrutiny_record_id, subject_id, final_grade, teacher_id FROM scrutiny_grades WHERE scrutiny_record_id = $1", rec.ID)
+	gRows, err := r.db.QueryContext(ctx, "SELECT id, scrutiny_record_id, subject_id, final_grade, teacher_id FROM scrutiny_grades WHERE scrutiny_record_id::text = $1", rec.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -116,10 +119,13 @@ func (r *postgresRepository) GetRecord(ctx context.Context, studentID, classID s
 }
 
 func (r *postgresRepository) ListRecordsByClass(ctx context.Context, classID string, semester int) ([]ScrutinyRecord, error) {
+	if classID == "" {
+		return []ScrutinyRecord{}, nil
+	}
 	query := `
 		SELECT id, student_id, class_id, semester, conduct_grade, final_decision, notes, coordinator_id,
 		       COALESCE(status, 'draft'), COALESCE(validated_by, ''), validated_at, created_at, updated_at 
-		FROM scrutiny_records WHERE class_id = $1 AND semester = $2
+		FROM scrutiny_records WHERE class_id::text = $1 AND semester = $2
 	`
 	rows, err := r.db.QueryContext(ctx, query, classID, semester)
 	if err != nil {

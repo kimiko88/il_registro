@@ -6,11 +6,11 @@
         v-model="selectedClassId"
         :options="classOptions"
         option-value="id"
-        option-label="name"
+        option-label="label"
         emit-value map-options
         label="Classe"
         dense outlined
-        style="min-width: 140px"
+        style="min-width: 220px"
       />
       <q-input v-model="dateVal" type="date" label="Data" dense outlined style="max-width: 160px" />
       <q-space />
@@ -156,7 +156,7 @@ const columns = [
 
 onMounted(async () => {
   await classesStore.fetchAssignedClasses()
-  classOptions.value = classesStore.classes || []
+  classOptions.value = classesStore.classOptions || []
   if (classOptions.value.length > 0) {
     selectedClassId.value = classOptions.value[0].id
   }

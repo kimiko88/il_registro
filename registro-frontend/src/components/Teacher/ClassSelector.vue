@@ -5,8 +5,8 @@
       v-model="selectedClassModel"
       :options="classesStore.classes"
       option-value="id"
-      option-label="name"
-      label="Current Class"
+      option-label="label"
+      label="Classe Attuale"
       dense
       outlined
       options-dense
@@ -18,7 +18,7 @@
       <template v-slot:option="scope">
         <q-item v-bind="scope.itemProps">
           <q-item-section>
-            <q-item-label>{{ scope.opt.name }}</q-item-label>
+            <q-item-label>{{ scope.opt.label || scope.opt.displayName || scope.opt.name }}</q-item-label>
             <q-item-label caption>{{ scope.opt.type }}</q-item-label>
           </q-item-section>
           <q-item-section side v-if="scope.opt.coordinator">

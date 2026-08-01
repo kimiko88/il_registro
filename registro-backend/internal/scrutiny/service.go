@@ -56,14 +56,17 @@ func (s *Service) isDirigenzaOrCoordinator(ctx context.Context, actorID, actorRo
 }
 
 func (s *Service) GetMatrix(ctx context.Context, actorID, actorRole, classID string, semester int) (*ScrutinyMatrix, error) {
+	fmt.Printf("[DEBUG SCRUTINY] GetMatrix start classID=%s actorID=%s actorRole=%s semester=%d\n", classID, actorID, actorRole, semester)
 	isCoordinator, isDirigenza, err := s.isDirigenzaOrCoordinator(ctx, actorID, actorRole, classID)
 	if err != nil {
+		fmt.Printf("[DEBUG SCRUTINY] isDirigenzaOrCoordinator ERR: %v\n", err)
 		return nil, err
 	}
 
 	// 1. Get Existing Records
 	records, err := s.repo.ListRecordsByClass(ctx, classID, semester)
 	if err != nil {
+		fmt.Printf("[DEBUG SCRUTINY] ListRecordsByClass ERR: %v\n", err)
 		return nil, err
 	}
 
@@ -85,12 +88,14 @@ func (s *Service) GetMatrix(ctx context.Context, actorID, actorRole, classID str
 	// 2. Get Class Subjects
 	subjects, err := s.classRepo.GetClassSubjects(ctx, classID)
 	if err != nil {
+		fmt.Printf("[DEBUG SCRUTINY] GetClassSubjects ERR: %v\n", err)
 		return nil, err
 	}
 
 	// 3. Get Students in Class
 	allStudents, err := s.userRepo.GetStudentsByClass(ctx, classID)
 	if err != nil {
+		fmt.Printf("[DEBUG SCRUTINY] GetStudentsByClass ERR: %v\n", err)
 		return nil, err
 	}
 	logger.Log.Debugf("Found %d students for class %s", len(allStudents), classID)
@@ -112,10 +117,11 @@ func (s *Service) GetMatrix(ctx context.Context, actorID, actorRole, classID str
 	// Fetch all grades for class once to avoid N+1 queries (N students * M subjects)
 	allClassGrades, err := s.gradeRepo.FindByClass(classID, semester)
 	if err != nil {
+		fmt.Printf("[DEBUG SCRUTINY] FindByClass ERR: %v\n", err)
 		return nil, fmt.Errorf("failed to load grades for class %s: %w", classID, err)
 	}
 
-	for _, stu := range allStudents {
+	for i, stu := range allStudents {
 		row := StudentScrutinyRow{
 			StudentID:   stu.ID,
 			StudentName: stu.LastName + " " + stu.FirstName,
@@ -145,12 +151,18 @@ func (s *Service) GetMatrix(ctx context.Context, actorID, actorRole, classID str
 		}
 
 		if _, ok := recordMap[stu.ID]; ok {
-			full, _ := s.repo.GetRecord(ctx, stu.ID, classID, semester)
+			full, getRecErr := s.repo.GetRecord(ctx, stu.ID, classID, semester)
+			if getRecErr != nil {
+				fmt.Printf("[DEBUG SCRUTINY] GetRecord[%d] stu.ID=%s ERR: %v\n", i, stu.ID, getRecErr)
+			}
 			row.Record = full
 		}
 
-		stats, err := s.attRepo.GetStats(stu.ID)
-		if err == nil && stats != nil {
+		stats, attErr := s.attRepo.GetStats(stu.ID)
+		if attErr != nil {
+			fmt.Printf("[DEBUG SCRUTINY] GetStats[%d] stu.ID=%s ERR: %v\n", i, stu.ID, attErr)
+		}
+		if attErr == nil && stats != nil {
 			row.AttendanceStats = AttendanceSummary{
 				Absences:   stats.TotalAbsences,
 				Lates:      stats.TotalLates,

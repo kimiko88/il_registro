@@ -38,7 +38,7 @@
             v-model="filterClassId"
             :options="classOptions"
             option-value="id"
-            option-label="name"
+            option-label="label"
             emit-value map-options
             label="Filtra per Classe"
             dense outlined clearable

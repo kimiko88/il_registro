@@ -60,13 +60,16 @@ func (r *PostgresRepository) UnassignSubject(ctx context.Context, assignmentID s
 }
 
 func (r *PostgresRepository) GetClassSubjects(ctx context.Context, classID string) ([]ClassSubject, error) {
+	if classID == "" {
+		return []ClassSubject{}, nil
+	}
 	query := `
-		SELECT cs.id, cs.class_id, cs.subject_id, s.name, cs.teacher_id, u.last_name, u.first_name, cs.hours_per_week
+		SELECT cs.id, cs.class_id, cs.subject_id, s.name, COALESCE(cs.teacher_id::text, ''), COALESCE(u.last_name, ''), COALESCE(u.first_name, ''), COALESCE(cs.hours_per_week, 0)
 		FROM class_subjects cs
-		JOIN subjects s ON cs.subject_id = s.id
-		LEFT JOIN teachers t ON cs.teacher_id = t.id
-		LEFT JOIN users u ON t.user_id = u.id
-		WHERE cs.class_id = $1
+		JOIN subjects s ON cs.subject_id::text = s.id::text
+		LEFT JOIN teachers t ON (NULLIF(cs.teacher_id::text, '') = t.id::text OR NULLIF(cs.teacher_id::text, '') = t.user_id::text)
+		LEFT JOIN users u ON t.user_id::text = u.id::text
+		WHERE cs.class_id::text = $1
 		ORDER BY s.name
 	`
 	rows, err := r.db.QueryContext(ctx, query, classID)
@@ -106,9 +109,9 @@ func (r *PostgresRepository) ListByTeacher(ctx context.Context, teacherUserID st
 	query := `
 		SELECT DISTINCT c.id, c.school_id, c.name, c.section, c.articolazione, c.academic_year, c.coordinator_id, c.created_at, c.updated_at
 		FROM classes c
-		LEFT JOIN class_subjects cs ON c.id = cs.class_id
-		LEFT JOIN teachers t ON (cs.teacher_id = t.id OR cs.teacher_id = t.user_id)
-		WHERE (t.user_id = $1::uuid OR cs.teacher_id = $1::uuid OR c.coordinator_id = $1::uuid)
+		LEFT JOIN class_subjects cs ON c.id::text = cs.class_id::text
+		LEFT JOIN teachers t ON (NULLIF(cs.teacher_id::text, '') = t.id::text OR NULLIF(cs.teacher_id::text, '') = t.user_id::text)
+		WHERE (t.user_id::text = $1 OR cs.teacher_id::text = $1 OR c.coordinator_id::text = $1)
 		ORDER BY c.name
 	`
 	rows, err := r.db.QueryContext(ctx, query, teacherUserID)

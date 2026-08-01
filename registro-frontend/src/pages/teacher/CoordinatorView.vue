@@ -11,13 +11,13 @@
         v-model="selectedClassId"
         :options="classOptions"
         option-value="id"
-        option-label="name"
+        option-label="label"
         emit-value
         map-options
         label="Seleziona Classe Coordinata"
         outlined
         dense
-        style="min-width: 220px"
+        style="min-width: 250px"
         @update:model-value="onClassChange"
       />
     </div>

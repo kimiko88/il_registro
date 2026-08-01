@@ -600,10 +600,13 @@ func (r *PostgresRepository) IsActive(ctx context.Context, id string) (bool, err
 	return isActive, nil
 }
 func (r *PostgresRepository) GetStudentsByClass(ctx context.Context, classID string) ([]User, error) {
+	if classID == "" {
+		return []User{}, nil
+	}
 	query := `SELECT u.id, u.email, u.first_name, u.last_name, u.fiscal_code, u.role, u.school_id, u.is_active, u.created_at, u.updated_at, s.id as student_id
 	          FROM users u
 	          JOIN students s ON u.id = s.user_id
-	          WHERE s.class_id = $1::uuid AND u.role = 'student' AND u.deleted_at IS NULL 
+	          WHERE s.class_id::text = $1 AND u.role = 'student' AND u.deleted_at IS NULL 
 	          ORDER BY u.last_name, u.first_name`
 	rows, err := r.db.QueryContext(ctx, query, classID)
 	if err != nil {

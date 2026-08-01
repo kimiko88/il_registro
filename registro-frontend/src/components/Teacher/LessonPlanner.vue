@@ -15,13 +15,13 @@
       <q-card-section class="row items-center q-gutter-md q-py-sm">
         <q-select
           v-model="selectedClass"
-          :options="classOptions"
+          :options="classesStore.classOptions"
           option-value="id"
-          option-label="name"
+          option-label="label"
           emit-value map-options
           label="Classe"
           dense outlined
-          style="min-width:140px"
+          style="min-width:220px"
         />
         <q-select
           v-model="selectedSubject"
@@ -291,7 +291,7 @@ const newHomework = ref({
 
 onMounted(async () => {
   await classesStore.fetchAssignedClasses()
-  classOptions.value = classesStore.classes || []
+  classOptions.value = classesStore.classOptions || []
   if (classOptions.value.length > 0) {
     selectedClass.value = classOptions.value[0].id
   }

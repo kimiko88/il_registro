@@ -238,7 +238,7 @@ const typeOptions = [
 
 const classOptions = computed(() => {
   return classesStore.classes.map(c => ({
-    label: c.name || `Classe ${c.id}`,
+    label: c.label || c.displayName || c.name || `Classe ${c.id}`,
     value: c.id
   }))
 })

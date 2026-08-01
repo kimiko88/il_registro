@@ -19,11 +19,11 @@
           v-model="selectedClass"
           :options="classOptions"
           option-value="id"
-          option-label="name"
+          option-label="label"
           emit-value map-options
           label="Classe"
           dense outlined
-          style="min-width:140px"
+          style="min-width:180px"
         />
         <q-select
           v-model="selectedSubject"

@@ -106,7 +106,7 @@ func (s *Service) CreateUser(ctx context.Context, actorRole string, req CreateUs
 
 // ListUsers returns a paginated, filtered list of users.
 func (s *Service) ListUsers(ctx context.Context, actorRole, actorSchoolID string, filter UserFilter) ([]User, int, error) {
-	if !isPrivileged(actorRole) {
+	if !isPrivileged(actorRole) && actorRole != "teacher" && actorRole != "principal" && actorRole != "vice_principal" {
 		return nil, 0, ErrUnauthorized
 	}
 	if actorRole != "superadmin" && actorSchoolID != "" {

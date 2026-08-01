@@ -155,12 +155,10 @@ const classesStore = useClassesStore()
 const authStore = useAuthStore()
 
 const selectedClassId = ref(null)
-const period = ref('semester_1')
+const period = ref(1)
 const periodOptions = ref([
-  { label: 'Pagellino 1° Q', value: 'infraquadrimestrale_1' },
-  { label: 'Scrutinio 1° Q', value: 'semester_1' },
-  { label: 'Pagellino 2° Q', value: 'infraquadrimestrale_2' },
-  { label: 'Scrutinio Finale', value: 'semester_2' }
+  { label: 'Scrutinio 1° Semestre', value: 1 },
+  { label: 'Scrutinio 2° Semestre / Finale', value: 2 }
 ])
 const loading = ref(false)
 const saving = ref(false)
@@ -199,10 +197,15 @@ onMounted(async () => {
   try {
     const res = await api.get('/school-calendar/periods')
     if (res.data && res.data.length > 0) {
-      periodOptions.value = res.data.map(p => ({
-        label: p.name,
-        value: p.code ? p.code.toLowerCase() : p.id
-      }))
+      periodOptions.value = res.data.map(p => {
+        let val = 1
+        const code = String(p.code || p.id || '').toLowerCase()
+        if (code.includes('2') || code.includes('second')) val = 2
+        return {
+          label: p.name,
+          value: val
+        }
+      })
     }
   } catch { /* fallback to defaults */ }
 })

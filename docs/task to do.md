@@ -36,3 +36,8 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
 - **Backend Test**: `go test ./...` tutti i package passati
 
 - [x] Aggiungi nei campi dei libri di testo la materia scolastica
+
+scrutinyService.js:12 GET http://localhost:5173/api/v1/scrutiny/matrix/162737ff-081f-436c-8874-11cd57bc60f1?semester=1 500 (Internal Server Error)
+error
+:
+"pq: invalid input syntax for type uuid: \"\" at position 3:60 (22P02)"

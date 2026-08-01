@@ -177,6 +177,9 @@ func (r *repository) FindByStudent(studentID string, startDate, endDate time.Tim
 }
 
 func (r *repository) GetStats(studentID string) (*SummaryResponse, error) {
+	if studentID == "" {
+		return &SummaryResponse{}, nil
+	}
 	query := `
 		SELECT 
 			COUNT(*) FILTER (WHERE status = 'Absent') as absences,
@@ -184,7 +187,7 @@ func (r *repository) GetStats(studentID string) (*SummaryResponse, error) {
 			COUNT(*) FILTER (WHERE status = 'LeftEarly') as early_exits,
 			COUNT(*) FILTER (WHERE justified = true) as justified
 		FROM attendance
-		WHERE student_id = $1::uuid`
+		WHERE student_id::text = $1`
 
 	var s SummaryResponse
 	err := r.db.QueryRow(query, studentID).Scan(&s.TotalAbsences, &s.TotalLates, &s.TotalEarlyExits, &s.JustifiedCount)

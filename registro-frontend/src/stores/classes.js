@@ -1,6 +1,27 @@
 import { defineStore } from 'pinia';
 import api from '../services/api';
 
+function formatClassItem(c) {
+    if (!c) return c;
+    let nameText = c.name || `Classe ${c.id}`;
+    if (c.section && !nameText.endsWith(c.section)) {
+        nameText += c.section;
+    }
+    let parts = [nameText];
+    if (c.articolazione) {
+        parts.push(c.articolazione);
+    }
+    let fullLabel = parts.join(' - ');
+    if (c.academic_year) {
+        fullLabel += ` (${c.academic_year})`;
+    }
+    return {
+        ...c,
+        label: fullLabel,
+        displayName: fullLabel
+    };
+}
+
 export const useClassesStore = defineStore('classes', {
     state: () => ({
         classes: [],
@@ -9,12 +30,34 @@ export const useClassesStore = defineStore('classes', {
         error: null
     }),
 
+    getters: {
+        classOptions: (state) => {
+            return state.classes.map(c => ({
+                ...c,
+                label: c.label || c.displayName || c.name,
+                value: c.id
+            }));
+        },
+        formatClassLabel: () => (c) => {
+            if (!c) return '';
+            let label = c.name || '';
+            if (c.section && !label.endsWith(c.section)) {
+                label += c.section;
+            }
+            if (c.articolazione) {
+                label += ` - ${c.articolazione}`;
+            }
+            return label;
+        }
+    },
+
     actions: {
         async fetchClasses(params = {}) {
             this.loading = true;
             try {
                 const response = await api.get('/classes', { params });
-                this.classes = response.data || [];
+                const raw = response.data || [];
+                this.classes = raw.map(formatClassItem);
             } catch (err) {
                 this.error = 'Failed to fetch classes';
                 console.error(err);
@@ -26,9 +69,9 @@ export const useClassesStore = defineStore('classes', {
         async fetchAssignedClasses() {
             this.loading = true;
             try {
-                // Endpoint for classes assigned to the current teacher
                 const response = await api.get('/teacher/classes');
-                this.classes = response.data || [];
+                const raw = response.data || [];
+                this.classes = raw.map(formatClassItem);
             } catch (err) {
                 this.error = 'Failed to fetch assigned classes';
                 console.error(err);

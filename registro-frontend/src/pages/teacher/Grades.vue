@@ -9,12 +9,12 @@
           v-model="selectedClassId"
           :options="classesStore.classes"
           option-value="id"
-          option-label="name"
+          option-label="label"
           label="Classe"
           dense outlined
           options-dense
           class="q-mr-md"
-          style="min-width: 150px"
+          style="min-width: 200px"
           emit-value
           map-options
           :loading="classesStore.loading"

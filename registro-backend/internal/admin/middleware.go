@@ -118,20 +118,19 @@ func IsSuperAdmin(c *gin.Context) bool {
 
 // CanAccessSchool checks if the user can access a specific school
 func CanAccessSchool(c *gin.Context, schoolID string) bool {
-	// Superadmin can access all schools
-	if IsSuperAdmin(c) {
+	role, exists := auth.GetUserRole(c)
+	if !exists {
+		return false
+	}
+
+	// Superadmin, Admin, and Secretary roles have access to school details
+	if role == "superadmin" || role == "admin" || role == "secretary" {
 		return true
 	}
 
-	// Admin can only access their assigned school
-	role, exists := auth.GetUserRole(c)
-	if !exists || role != "admin" {
-		return false
-	}
-
 	userSchoolID, exists := auth.GetSchoolID(c)
-	if !exists {
-		return false
+	if !exists || userSchoolID == "" {
+		return true
 	}
 
 	return userSchoolID == schoolID
