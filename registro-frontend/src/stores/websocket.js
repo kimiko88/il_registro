@@ -3,6 +3,16 @@ import { ref } from 'vue'
 import { useAuthStore } from './auth'
 import { Notify } from 'quasar'
 
+const escapeHtml = (str) => {
+    if (!str) return ''
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;')
+}
+
 export const useWebSocketStore = defineStore('websocket', () => {
     const socket = ref(null)
     const isConnected = ref(false)
@@ -15,9 +25,8 @@ export const useWebSocketStore = defineStore('websocket', () => {
             return
         }
 
-        const token = authStore.token
-        if (!token) {
-            console.warn('WebSocket: No token available, skipping connection')
+        if (!authStore.isAuthenticated) {
+            console.warn('WebSocket: Token expired or missing, skipping connection')
             return
         }
 
@@ -118,16 +127,6 @@ export const useWebSocketStore = defineStore('websocket', () => {
             }
         }, delay)
     }
-
-const escapeHtml = (str) => {
-    if (!str) return ''
-    return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;')
-}
 
     function handleMessage(message) {
         if (!message || !message.type) return

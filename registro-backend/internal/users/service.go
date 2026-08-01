@@ -116,11 +116,18 @@ func (s *Service) ListUsers(ctx context.Context, actorRole, actorSchoolID string
 }
 
 // GetUser returns a single user by ID.
-func (s *Service) GetUser(ctx context.Context, actorRole string, id string) (*User, error) {
+func (s *Service) GetUser(ctx context.Context, actorRole, actorSchoolID string, id string) (*User, error) {
 	if !isPrivileged(actorRole) && actorRole != "teacher" {
 		return nil, ErrUnauthorized
 	}
-	return s.repo.GetByID(ctx, id)
+	user, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if actorRole != "superadmin" && actorSchoolID != "" && user.SchoolID != nil && *user.SchoolID != actorSchoolID {
+		return nil, ErrUnauthorized
+	}
+	return user, nil
 }
 
 // UpdateUser updates an existing user's fields.
@@ -164,6 +171,9 @@ func (s *Service) UpdateUser(ctx context.Context, actorRole, actorSchoolID, id s
 		user.ClassID = req.ClassID
 	}
 	if req.SchoolID != nil {
+		if actorRole != "superadmin" {
+			return nil, errors.New("forbidden: only superadmin can modify user school_id")
+		}
 		user.SchoolID = req.SchoolID
 	}
 	if req.FiscalCode != nil {
@@ -194,7 +204,7 @@ func (s *Service) DeleteUser(ctx context.Context, actorRole, actorSchoolID, id s
 }
 
 // BulkDeleteUsers soft-deletes multiple users at once.
-func (s *Service) BulkDeleteUsers(ctx context.Context, actorRole string, ids []string) (int, error) {
+func (s *Service) BulkDeleteUsers(ctx context.Context, actorRole, actorSchoolID string, ids []string) (int, error) {
 	if !isPrivileged(actorRole) {
 		return 0, ErrUnauthorized
 	}
@@ -204,7 +214,9 @@ func (s *Service) BulkDeleteUsers(ctx context.Context, actorRole string, ids []s
 			var safeIDs []string
 			for _, tu := range targetUsers {
 				if tu.Role != "admin" && tu.Role != "superadmin" {
-					safeIDs = append(safeIDs, tu.ID)
+					if actorSchoolID == "" || (tu.SchoolID != nil && *tu.SchoolID == actorSchoolID) {
+						safeIDs = append(safeIDs, tu.ID)
+					}
 				}
 			}
 			ids = safeIDs
@@ -353,7 +365,7 @@ func (s *Service) DisableMFA(ctx context.Context, actorRole string, userID strin
 
 // BulkImport imports users from a CSV or XLSX file.
 // Returns an ImportResult (the type defined in dto.go).
-func (s *Service) BulkImport(ctx context.Context, actorRole string, file multipart.File, filename string) (*ImportResult, error) {
+func (s *Service) BulkImport(ctx context.Context, actorRole, actorSchoolID string, file multipart.File, filename string) (*ImportResult, error) {
 	if !isPrivileged(actorRole) {
 		return nil, ErrUnauthorized
 	}
@@ -363,6 +375,13 @@ func (s *Service) BulkImport(ctx context.Context, actorRole string, file multipa
 	users, parseErrors, err := importer.ParseFile(file, filename)
 	if err != nil {
 		return nil, err
+	}
+
+	if actorRole != "superadmin" && actorSchoolID != "" {
+		for i := range users {
+			scID := actorSchoolID
+			users[i].SchoolID = &scID
+		}
 	}
 
 	result := &ImportResult{
@@ -522,9 +541,12 @@ type UserExportDTO struct {
 }
 
 // ExportUsers exports users matching filter in specified format ("csv" or "json").
-func (s *Service) ExportUsers(ctx context.Context, actorRole string, filter UserFilter, format string) ([]byte, error) {
+func (s *Service) ExportUsers(ctx context.Context, actorRole, actorSchoolID string, filter UserFilter, format string) ([]byte, error) {
 	if !isPrivileged(actorRole) {
 		return nil, ErrUnauthorized
+	}
+	if actorRole != "superadmin" && actorSchoolID != "" {
+		filter.SchoolID = &actorSchoolID
 	}
 	users, _, err := s.repo.List(ctx, filter)
 	if err != nil {

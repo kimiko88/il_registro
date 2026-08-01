@@ -44,7 +44,7 @@ func (h *Handler) Create(c *gin.Context) {
 		return
 	}
 
-	sub, err := h.service.CreateSubstitution(c.Request.Context(), schoolID, req)
+	sub, err := h.service.CreateSubstitution(c.Request.Context(), role, schoolID, req)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

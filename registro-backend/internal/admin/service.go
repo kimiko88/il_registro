@@ -281,14 +281,21 @@ func (s *Service) UpdateAdminUser(ctx context.Context, callerRole, adminID strin
 		return nil, errors.New("unauthorized: only superadmin can update admin users")
 	}
 
+	reqCopy := *req
 	if req.Password != nil && *req.Password != "" {
 		pv := auth.NewPasswordValidator()
 		if err := pv.Validate(*req.Password); err != nil {
 			return nil, err
 		}
+		hash, err := bcrypt.GenerateFromPassword([]byte(*req.Password), bcrypt.DefaultCost)
+		if err != nil {
+			return nil, fmt.Errorf("password hashing failed: %w", err)
+		}
+		hashedStr := string(hash)
+		reqCopy.Password = &hashedStr
 	}
 
-	admin, err := s.repo.UpdateAdminUser(ctx, adminID, req)
+	admin, err := s.repo.UpdateAdminUser(ctx, adminID, &reqCopy)
 	if err != nil {
 		return nil, err
 	}

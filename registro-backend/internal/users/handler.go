@@ -155,8 +155,12 @@ func (h *Handler) List(c *gin.Context) {
 
 // 3. GET /api/v1/users/{id}
 func (h *Handler) Get(c *gin.Context) {
-	user, err := h.service.GetUser(c.Request.Context(), getActorRole(c), c.Param("id"))
+	user, err := h.service.GetUser(c.Request.Context(), getActorRole(c), getSchoolID(c), c.Param("id"))
 	if err != nil {
+		if err == ErrUnauthorized {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+			return
+		}
 		if err == ErrUserNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
 			return
@@ -218,7 +222,7 @@ func (h *Handler) BulkDelete(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	count, err := h.service.BulkDeleteUsers(c.Request.Context(), getActorRole(c), req.UserIDs)
+	count, err := h.service.BulkDeleteUsers(c.Request.Context(), getActorRole(c), getSchoolID(c), req.UserIDs)
 	if err != nil {
 		if err == ErrUnauthorized {
 			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
@@ -251,7 +255,7 @@ func (h *Handler) BulkImport(c *gin.Context) {
 		return
 	}
 	defer file.Close()
-	res, err := h.service.BulkImport(c.Request.Context(), getActorRole(c), file, header.Filename)
+	res, err := h.service.BulkImport(c.Request.Context(), getActorRole(c), getSchoolID(c), file, header.Filename)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

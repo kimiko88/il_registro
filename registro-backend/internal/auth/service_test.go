@@ -193,7 +193,7 @@ func setupTest(t *testing.T) (*Service, *MockRepository) {
 	// MFA Service also struct dependency
 	mfaService := NewMFAService("TestIssuer")
 
-	service := NewService(mockRepo, tokenManager, mfaService)
+	service := NewService(mockRepo, tokenManager, mfaService, nil)
 	// Lower bcrypt cost for faster tests
 	service.bcryptCost = bcrypt.MinCost
 

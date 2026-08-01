@@ -43,7 +43,24 @@ func (s *Service) GetTeacherClasses(ctx context.Context, teacherID string) ([]Cl
 	return s.repo.ListByTeacher(ctx, teacherID)
 }
 
-func (s *Service) GetClass(ctx context.Context, id string) (*Class, error) {
+func (s *Service) checkClassSchool(ctx context.Context, schoolID, classID string) error {
+	if schoolID == "" {
+		return nil
+	}
+	c, err := s.repo.Get(ctx, classID)
+	if err != nil {
+		return err
+	}
+	if c.SchoolID != schoolID {
+		return fmt.Errorf("forbidden: class belongs to another school")
+	}
+	return nil
+}
+
+func (s *Service) GetClass(ctx context.Context, schoolID, id string) (*Class, error) {
+	if err := s.checkClassSchool(ctx, schoolID, id); err != nil {
+		return nil, err
+	}
 	return s.repo.Get(ctx, id)
 }
 
@@ -98,19 +115,31 @@ func (s *Service) RemoveSubject(ctx context.Context, assignmentID string) error 
 	return s.repo.UnassignSubject(ctx, assignmentID)
 }
 
-func (s *Service) GetClassSubjects(ctx context.Context, classID string) ([]ClassSubject, error) {
+func (s *Service) GetClassSubjects(ctx context.Context, schoolID, classID string) ([]ClassSubject, error) {
+	if err := s.checkClassSchool(ctx, schoolID, classID); err != nil {
+		return nil, err
+	}
 	return s.repo.GetClassSubjects(ctx, classID)
 }
 
-func (s *Service) GetClassGuardians(ctx context.Context, classID string) ([]GuardianInfo, error) {
+func (s *Service) GetClassGuardians(ctx context.Context, schoolID, classID string) ([]GuardianInfo, error) {
+	if err := s.checkClassSchool(ctx, schoolID, classID); err != nil {
+		return nil, err
+	}
 	return s.repo.GetClassGuardians(ctx, classID)
 }
 
-func (s *Service) GetLessonTopics(ctx context.Context, classID string) ([]LessonTopic, error) {
+func (s *Service) GetLessonTopics(ctx context.Context, schoolID, classID string) ([]LessonTopic, error) {
+	if err := s.checkClassSchool(ctx, schoolID, classID); err != nil {
+		return nil, err
+	}
 	return s.repo.GetLessonTopics(ctx, classID)
 }
 
-func (s *Service) GetDisciplinaryNotes(ctx context.Context, classID string) ([]DisciplinaryNoteReport, error) {
+func (s *Service) GetDisciplinaryNotes(ctx context.Context, schoolID, classID string) ([]DisciplinaryNoteReport, error) {
+	if err := s.checkClassSchool(ctx, schoolID, classID); err != nil {
+		return nil, err
+	}
 	return s.repo.GetDisciplinaryNotes(ctx, classID)
 }
 

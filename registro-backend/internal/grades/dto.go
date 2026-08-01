@@ -77,15 +77,16 @@ type PaginatedGradesResponse struct {
 }
 
 type GradeResponse struct {
-	ID            string    `json:"id"`
-	StudentID     string    `json:"student_id"`
-	SubjectID     string    `json:"subject_id"`
-	TeacherID     string    `json:"teacher_id"`
-	GradeValue    float64   `json:"grade_value"`
-	GradeType     string    `json:"grade_type"`
-	Semester      int       `json:"semester"`
-	Description   string    `json:"description"`
+	ID             string    `json:"id"`
+	StudentID      string    `json:"student_id"`
+	SubjectID      string    `json:"subject_id"`
+	TeacherID      string    `json:"teacher_id"`
+	GradeValue     float64   `json:"grade_value"`
+	GradeType      string    `json:"grade_type"`
+	Semester       int       `json:"semester"`
+	Description    string    `json:"description"`
 	Date           time.Time `json:"date"`
+	Weight         float64   `json:"weight"`
 	GradeCategory  string    `json:"grade_category"`
 	EvaluationType *string   `json:"evaluation_type,omitempty"`
 	IsPublished    bool      `json:"is_published"`

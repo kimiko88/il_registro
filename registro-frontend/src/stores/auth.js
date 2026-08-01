@@ -24,13 +24,22 @@ const isTokenExpired = (tokenStr) => {
         }
         return false
     } catch {
-        return false
+        return true // Corrupted or invalid JWT token should be treated as expired
     }
 }
 
 const sanitizeUserData = (userData) => {
     if (!userData) return null
-    return { ...userData }
+    const {
+        password_hash: _password_hash,
+        mfa_secret: _mfa_secret,
+        temp_mfa_secret: _temp_mfa_secret,
+        recovery_codes: _recovery_codes,
+        ssn: _ssn,
+        tax_id: _tax_id,
+        ...safeData
+    } = userData
+    return safeData
 }
 
 const getRoleFromToken = (tokenStr) => {

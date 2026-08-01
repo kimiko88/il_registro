@@ -56,7 +56,7 @@ func TestRefreshTokenHashing_Consistency(t *testing.T) {
 
 func TestPasswordResetRateLimit_Protection(t *testing.T) {
 	mockRepo := new(MockRepository)
-	service := NewService(mockRepo, nil, nil)
+	service := NewService(mockRepo, nil, nil, nil)
 
 	user := &User{
 		ID:        "user-rate-limit",

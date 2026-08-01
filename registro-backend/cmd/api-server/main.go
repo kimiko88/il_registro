@@ -30,6 +30,7 @@ import (
 	"registro-backend/internal/groups"
 	"registro-backend/internal/handler"
 	"registro-backend/internal/lessons"
+	"registro-backend/internal/mailer"
 	"registro-backend/internal/middleware"
 	"registro-backend/internal/notes"
 	"registro-backend/internal/notifications"
@@ -123,14 +124,26 @@ func main() {
 	authMiddleware := auth.NewMiddleware(tokenManager, usersRepo)
 
 	// 6. Setup Services
-	authSvc := auth.NewService(authRepo, tokenManager, mfaService)
+	mailerCfg := mailer.MailConfig{
+		Host:     cfg.Mail.Host,
+		Port:     cfg.Mail.Port,
+		Username: cfg.Mail.Username,
+		Password: cfg.Mail.Password,
+		From:     cfg.Mail.From,
+	}
+	smsCfg := mailer.SMSConfig{
+		Provider: "mock",
+	}
+	mailerSvc := mailer.NewService(mailerCfg, smsCfg)
+	schoolCalendarSvc := schoolcalendar.NewService(schoolCalendarRepo)
+
+	authSvc := auth.NewService(authRepo, tokenManager, mfaService, mailerSvc)
 	usersSvc := users.NewService(usersRepo)
 	classesSvc := classes.NewService(classesRepo)
 	gradesSvc := grades.NewService(gradesRepo, usersRepo, database, wsHub)
 	gradesAnalytics := grades.NewAnalyticsService(gradesRepo)
 	// wsHub satisfies attendance.EventBroadcaster (BroadcastToUser + BroadcastToSchool).
-	// CalendarService is nil: the attendance service falls back to CountDistinctDays.
-	attendanceSvc := attendance.NewService(attendanceRepo, usersRepo, wsHub, nil)
+	attendanceSvc := attendance.NewService(attendanceRepo, usersRepo, wsHub, schoolCalendarSvc)
 	docsSvc := documents.NewService(docsRepo)
 	schedSvc := scheduling.NewService(schedRepo, teachersRepo)
 	pctoSvc := pcto.NewService(pctoRepo)
@@ -148,7 +161,6 @@ func main() {
 	notifSvc := notifications.NewService(notifRepo)
 	tripsSvc := trips.NewService(tripsRepo)
 	rubricsSvc := rubrics.NewService(rubricsRepo)
-	schoolCalendarSvc := schoolcalendar.NewService(schoolCalendarRepo)
 
 	// 7. Setup Handlers
 	authH := auth.NewHandler(authSvc)

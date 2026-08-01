@@ -137,9 +137,15 @@ func (h *Handler) GetByID(c *gin.Context) {
 		return
 	}
 
+	role := c.GetString("role")
+	schoolID := c.GetString("school_id")
 	id := c.Param("id")
-	item, err := h.service.GetAgendaItem(c.Request.Context(), id)
+	item, err := h.service.GetAgendaItem(c.Request.Context(), role, schoolID, id)
 	if err != nil {
+		if err == ErrUnauthorized {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+			return
+		}
 		c.JSON(http.StatusNotFound, gin.H{"error": "agenda item not found"})
 		return
 	}

@@ -29,7 +29,7 @@ type EventBroadcaster interface {
 }
 
 type Service interface {
-	GetStudentGrades(studentID string) ([]GradeResponse, error)
+	GetStudentGrades(ctx context.Context, actorID string, actorRole string, studentID string) ([]GradeResponse, error)
 	GetStudentGradesWithFilter(ctx context.Context, actorID string, actorRole string, studentID string, filter GradeFilter) ([]GradeResponse, error)
 	// GetStudentGradesPaged returns a paginated response for list-grades endpoints.
 	GetStudentGradesPaged(ctx context.Context, actorID string, actorRole string, studentID string, filter GradeFilter) (*PaginatedGradesResponse, error)
@@ -45,13 +45,13 @@ type Service interface {
 	// Student/Parent
 	GetMyGrades(studentID string, filter GradeFilter) (*MyGradesResponse, error)
 	GetMyAverages(studentID string) (*StudentAveragesResponse, error)
-	GetMyTrend(studentID string, subjectID string) (*TrendResponse, error)
+	GetMyTrend(ctx context.Context, actorID string, actorRole string, studentID string, subjectID string) (*TrendResponse, error)
 	GetSemesterReport(studentID string, semester int) (*SemesterReportResponse, error)
 	GenerateSemesterReportPDF(studentID string, semester int) ([]byte, error)
 
 	// Parent
-	GetChildGrades(parentID string, studentID string, filter GradeFilter) (*MyGradesResponse, error)
-	GetChildAverages(parentID string, studentID string) (*StudentAveragesResponse, error)
+	GetChildGrades(ctx context.Context, parentID string, studentID string, filter GradeFilter) (*MyGradesResponse, error)
+	GetChildAverages(ctx context.Context, parentID string, studentID string) (*StudentAveragesResponse, error)
 	GetChildSemesterReport(ctx context.Context, parentID, studentID string, semester int) (*SemesterReportResponse, error)
 
 	// Class Tests
@@ -85,12 +85,8 @@ func NewService(r Repository, ur users.Repository, db *sql.DB, b EventBroadcaste
 	}
 }
 
-func (s *service) GetStudentGrades(studentID string) ([]GradeResponse, error) {
-	grades, err := s.repo.FindByStudent(studentID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch student grades: %w", err)
-	}
-	return s.mapToResponse(grades), nil
+func (s *service) GetStudentGrades(ctx context.Context, actorID, actorRole, studentID string) ([]GradeResponse, error) {
+	return s.GetStudentGradesWithFilter(ctx, actorID, actorRole, studentID, GradeFilter{})
 }
 
 func (s *service) GetStudentGradesWithFilter(ctx context.Context, actorID string, actorRole string, studentID string, filter GradeFilter) ([]GradeResponse, error) {
@@ -190,7 +186,7 @@ func (s *service) GetClassGrades(ctx context.Context, actorID string, actorRole 
 			return nil, fmt.Errorf("class not found")
 		}
 
-		if !coordID.Valid || coordID.String != actorID {
+		if actorRole != "teacher" || !coordID.Valid || coordID.String != actorID {
 			if filter.SubjectID == "" {
 				return nil, fmt.Errorf("unauthorized: only coordinators can see full class matrix")
 			}
@@ -274,7 +270,7 @@ func calcSemesterAverages(grades []GradeResponse) (avg1, avg2 float64) {
 	var sum1, sum2 float64
 	var count1, count2 int
 	for _, g := range grades {
-		if g.GradeCategory != "" && g.GradeCategory != string(GradeCategorySummative) {
+		if g.GradeCategory == "" || g.GradeCategory != string(GradeCategorySummative) {
 			continue
 		}
 		if g.GradeValue > 0 {
@@ -478,18 +474,24 @@ func (s *service) BulkImport(teacherID string, file io.Reader, semester int) (*I
 		return nil, err
 	}
 
-	teacherUser, _ := s.userRepo.GetByID(context.Background(), teacherID)
+	ctx := context.Background()
+	teacherUser, err := s.userRepo.GetByID(ctx, teacherID)
+	if err != nil || teacherUser == nil {
+		return nil, fmt.Errorf("teacher user not found: %w", err)
+	}
 	var schoolID string
-	if teacherUser != nil && teacherUser.SchoolID != nil {
+	if teacherUser.SchoolID != nil {
 		schoolID = *teacherUser.SchoolID
 	}
 
 	var teacherProfileID string
 	if s.validator != nil && s.validator.db != nil {
-		_ = s.validator.db.QueryRow(`SELECT id FROM teachers WHERE user_id = $1`, teacherID).Scan(&teacherProfileID)
+		if err := s.validator.db.QueryRow(`SELECT id FROM teachers WHERE user_id = $1`, teacherID).Scan(&teacherProfileID); err != nil {
+			return nil, fmt.Errorf("could not resolve teacher profile for user %s: %w", teacherID, err)
+		}
 	}
 	if teacherProfileID == "" {
-		teacherProfileID = teacherID
+		return nil, fmt.Errorf("teacher profile ID is required for bulk import")
 	}
 
 	res, err := ProcessBulkImport(s.repo, reqs, teacherID, teacherProfileID, schoolID)
@@ -675,8 +677,7 @@ func (s *service) DeleteGrade(teacherID string, gradeID string) error {
 
 // --- Student / Parent ---
 
-func (s *service) GetChildGrades(parentID string, studentID string, filter GradeFilter) (*MyGradesResponse, error) {
-	ctx := context.Background()
+func (s *service) GetChildGrades(ctx context.Context, parentID string, studentID string, filter GradeFilter) (*MyGradesResponse, error) {
 	logger.Log.Debugf("GetChildGrades requested by parent")
 
 	if parentID == "" || studentID == "" {
@@ -695,8 +696,7 @@ func (s *service) GetChildGrades(parentID string, studentID string, filter Grade
 	return s.GetMyGrades(studentID, filter)
 }
 
-func (s *service) GetChildAverages(parentID string, studentID string) (*StudentAveragesResponse, error) {
-	ctx := context.Background()
+func (s *service) GetChildAverages(ctx context.Context, parentID string, studentID string) (*StudentAveragesResponse, error) {
 	if parentID == "" || studentID == "" {
 		return nil, ErrNotGuardian
 	}
@@ -832,7 +832,16 @@ func (s *service) GetMyAverages(studentID string) (*StudentAveragesResponse, err
 	}, nil
 }
 
-func (s *service) GetMyTrend(studentID string, subjectID string) (*TrendResponse, error) {
+func (s *service) GetMyTrend(ctx context.Context, actorID string, actorRole string, studentID string, subjectID string) (*TrendResponse, error) {
+	if actorRole == "student" && actorID != studentID {
+		return nil, ErrUnauthorized
+	}
+	if actorRole == "parent" {
+		isGuardian, err := s.userRepo.IsGuardian(ctx, actorID, studentID)
+		if err != nil || !isGuardian {
+			return nil, ErrNotGuardian
+		}
+	}
 	grades, err := s.repo.FindByStudent(studentID)
 	if err != nil {
 		return nil, err
@@ -979,13 +988,16 @@ func (s *service) GetSemesterReport(studentID string, semester int) (*SemesterRe
 			 WHERE cs.class_id = $1`, classID,
 		)
 		if tErr == nil {
-			defer tRows.Close()
 			for tRows.Next() {
 				var subID, tName string
-				if tRows.Scan(&subID, &tName) == nil {
+				if scanErr := tRows.Scan(&subID, &tName); scanErr == nil {
 					teacherMap[subID] = tName
 				}
 			}
+			if err := tRows.Err(); err != nil {
+				logger.Log.Warnf("GetSemesterReport: error iterating teacher rows: %v", err)
+			}
+			tRows.Close()
 		}
 	}
 
@@ -1062,14 +1074,14 @@ func (s *service) GetSemesterReport(studentID string, semester int) (*SemesterRe
 		}
 	}
 
-	gradedCount := len(subjects)
+	gradedCount := len(subMap)
 	overall := 0.0
-	if len(subMap) > 0 {
-		overall = math.Round((totalSum/float64(len(subMap)))*100) / 100
+	if gradedCount > 0 {
+		overall = math.Round((totalSum/float64(gradedCount))*100) / 100
 	}
 
 	promoted := "NO"
-	if gradedCount > 0 && passedCount == gradedCount {
+	if gradedCount > 0 && passedCount == gradedCount && overall >= 6.0 {
 		promoted = "SÌ"
 	}
 
@@ -1222,6 +1234,7 @@ func (s *service) mapSingleResponse(g Grade) GradeResponse {
 		Date:           g.Date,
 		GradeCategory:  string(g.GradeCategory),
 		EvaluationType: evalType,
+		Weight:         g.Weight,
 		IsPublished:    g.IsPublished,
 		TestID:         g.TestID,
 	}
@@ -1271,7 +1284,7 @@ func (s *service) CreateTestWithGrades(teacherID string, req CreateClassTestRequ
 
 	testDate, err := time.Parse("2006-01-02", req.Date)
 	if err != nil {
-		testDate = time.Now()
+		return fmt.Errorf("invalid test date format '%s': %w", req.Date, err)
 	}
 
 	test := &ClassTest{

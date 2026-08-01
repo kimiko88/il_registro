@@ -3,7 +3,7 @@ import { setActivePinia, createPinia } from 'pinia'
 
 vi.mock('@/services/api', () => ({
     default: {
-        get: vi.fn((url, config) => {
+        get: vi.fn((url, _config) => {
             if (url === '/attendance/pending-justifications') {
                 return Promise.resolve({ data: [{ id: 1, studentName: 'Mario Rossi', date: '2025-01-15', reason: 'Flu', status: 'Pending' }] })
             }
@@ -37,6 +37,7 @@ vi.mock('src/services/attendanceService', () => ({
 }))
 
 import { useAttendanceStore } from '@/stores/attendance'
+import { useAuthStore } from '@/stores/auth'
 
 describe('Attendance Store', () => {
     let store
@@ -97,6 +98,8 @@ describe('Attendance Store', () => {
     })
 
     it('requests justification', async () => {
+        const authStore = useAuthStore()
+        authStore.user = { id: 'user-1', student_id: 'student-1' }
         store.records = [{ date: '2025-01-20', justificationStatus: null }]
         const promise = store.requestJustification('2025-01-20', 'Reason')
 

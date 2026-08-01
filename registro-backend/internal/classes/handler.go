@@ -76,13 +76,9 @@ func (h *Handler) Get(c *gin.Context) {
 		return
 	}
 
-	class, err := h.service.GetClass(c.Request.Context(), c.Param("id"))
+	class, err := h.service.GetClass(c.Request.Context(), schoolID, c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	if class.SchoolID != schoolID {
-		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 	c.JSON(http.StatusOK, class)
@@ -119,7 +115,7 @@ func (h *Handler) Delete(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	existing, err := h.service.GetClass(c.Request.Context(), c.Param("id"))
+	existing, err := h.service.GetClass(c.Request.Context(), schoolID, c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "class not found"})
 		return
@@ -155,7 +151,7 @@ func (h *Handler) AssignSubject(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	existing, err := h.service.GetClass(c.Request.Context(), c.Param("id"))
+	existing, err := h.service.GetClass(c.Request.Context(), schoolID, c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "class not found"})
 		return
@@ -184,17 +180,7 @@ func (h *Handler) GetClassSubjects(c *gin.Context) {
 		return
 	}
 
-	class, err := h.service.GetClass(c.Request.Context(), c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "class not found"})
-		return
-	}
-	if class.SchoolID != schoolID {
-		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
-		return
-	}
-
-	res, err := h.service.GetClassSubjects(c.Request.Context(), c.Param("id"))
+	res, err := h.service.GetClassSubjects(c.Request.Context(), schoolID, c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -235,7 +221,7 @@ func (h *Handler) GetClassGuardians(c *gin.Context) {
 		return
 	}
 
-	guardians, err := h.service.GetClassGuardians(c.Request.Context(), c.Param("id"))
+	guardians, err := h.service.GetClassGuardians(c.Request.Context(), schoolID, c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -250,7 +236,7 @@ func (h *Handler) GetLessonTopics(c *gin.Context) {
 		return
 	}
 
-	topics, err := h.service.GetLessonTopics(c.Request.Context(), c.Param("id"))
+	topics, err := h.service.GetLessonTopics(c.Request.Context(), getSchoolID(c), c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -265,7 +251,7 @@ func (h *Handler) GetDisciplinaryNotes(c *gin.Context) {
 		return
 	}
 
-	notes, err := h.service.GetDisciplinaryNotes(c.Request.Context(), c.Param("id"))
+	notes, err := h.service.GetDisciplinaryNotes(c.Request.Context(), getSchoolID(c), c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

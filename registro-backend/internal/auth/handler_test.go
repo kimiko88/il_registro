@@ -24,7 +24,7 @@ func setupTestHandler() (*Handler, *MockRepository, *jwt.TokenManager) {
 	tokenManager := jwt.NewTokenManager(privateKey, &privateKey.PublicKey)
 	mfaService := NewMFAService("Test")
 
-	service := NewService(mockRepo, tokenManager, mfaService)
+	service := NewService(mockRepo, tokenManager, mfaService, nil)
 	handler := NewHandler(service)
 
 	return handler, mockRepo, tokenManager

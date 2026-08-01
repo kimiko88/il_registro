@@ -259,7 +259,7 @@ func TestService_UpdateNote(t *testing.T) {
 			tt.mockFn(mockRepo)
 
 			service := NewService(mockRepo, new(MockUserRepo))
-			note, err := service.UpdateNote(context.Background(), tt.teacherID, tt.noteID, tt.req)
+			note, err := service.UpdateNote(context.Background(), tt.teacherID, "teacher", tt.noteID, tt.req)
 
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -330,7 +330,7 @@ func TestService_DeleteNote(t *testing.T) {
 			tt.mockFn(mockRepo)
 
 			service := NewService(mockRepo, new(MockUserRepo))
-			err := service.DeleteNote(context.Background(), tt.teacherID, tt.noteID)
+			err := service.DeleteNote(context.Background(), tt.teacherID, "teacher", tt.noteID)
 
 			if tt.wantErr {
 				assert.Error(t, err)

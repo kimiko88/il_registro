@@ -35,6 +35,12 @@ func (s *Service) CreateAgendaItem(ctx context.Context, teacherID, schoolID stri
 	if schoolID == "" {
 		return nil, fmt.Errorf("school_id required")
 	}
+	if req.Title == "" {
+		return nil, errors.New("title is required")
+	}
+	if req.Type == "" {
+		return nil, errors.New("type is required")
+	}
 	d, err := time.Parse("2006-01-02", req.Date)
 	if err != nil {
 		return nil, ErrInvalidDate
@@ -57,8 +63,15 @@ func (s *Service) CreateAgendaItem(ctx context.Context, teacherID, schoolID stri
 	return item, nil
 }
 
-func (s *Service) GetAgendaItem(ctx context.Context, id string) (*AgendaItem, error) {
-	return s.repo.GetByID(ctx, id)
+func (s *Service) GetAgendaItem(ctx context.Context, actorRole, actorSchoolID, id string) (*AgendaItem, error) {
+	item, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if actorRole != "superadmin" && actorSchoolID != "" && item.SchoolID != actorSchoolID {
+		return nil, ErrUnauthorized
+	}
+	return item, nil
 }
 
 func (s *Service) UpdateAgendaItem(ctx context.Context, actorID, actorRole, actorSchoolID, id string, req UpdateAgendaItemRequest) (*AgendaItem, error) {

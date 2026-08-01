@@ -24,7 +24,10 @@ func (s *Service) SetNotificationService(ns *notifications.Service) {
 	s.notifSvc = ns
 }
 
-func (s *Service) CreateSubstitution(ctx context.Context, schoolID string, req CreateSubstitutionRequest) (*Substitution, error) {
+func (s *Service) CreateSubstitution(ctx context.Context, actorRole, schoolID string, req CreateSubstitutionRequest) (*Substitution, error) {
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" && actorRole != "principal" && actorRole != "vice_principal" && actorRole != "coordinator" {
+		return nil, fmt.Errorf("unauthorized: insufficient permissions to create substitution")
+	}
 	d, err := time.Parse("2006-01-02", req.Date)
 	if err != nil {
 		return nil, fmt.Errorf("invalid date format: %w", err)

@@ -41,5 +41,11 @@ export const gradeService = {
         return api.post('/grades/bulk-import', formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
         })
+    },
+    async getSemesterReport(semester = 1) {
+        return api.get(`/grades/my-grades/semester/${semester}`)
+    },
+    async downloadReportCardPDF(semester = 1) {
+        return api.get(`/grades/my-grades/semester/${semester}/pdf`, { responseType: 'blob' })
     }
 }

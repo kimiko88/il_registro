@@ -140,7 +140,7 @@
         <q-scroll-area class="col">
           <div class="q-pa-sm">
             <div class="text-overline text-grey-5 q-px-sm q-mb-xs letter-spacing-2" aria-hidden="true">MENU PRINCIPALE</div>
-            <q-list dense padding class="q-gutter-y-xs" role="menubar" aria-label="Navigazione principale">
+            <q-list dense padding class="q-gutter-y-xs" aria-label="Navigazione principale">
               <template v-for="(item, idx) in menuItems" :key="item.path || item.category || idx">
                 <!-- Group Category with children -->
                 <q-expansion-item
@@ -161,7 +161,6 @@
                       :exact="child.exact !== undefined ? child.exact : false"
                       active-class="active-menu-item"
                       class="rounded-lg transition-all"
-                      role="menuitem"
                       :aria-label="child.label"
                     >
                       <q-item-section avatar min-width="32px">
@@ -182,7 +181,6 @@
                   :exact="item.exact !== undefined ? item.exact : false"
                   active-class="active-menu-item"
                   class="rounded-lg transition-all"
-                  role="menuitem"
                   :aria-label="item.label"
                 >
                   <q-item-section avatar min-width="32px">
@@ -222,7 +220,7 @@
       </div>
     </q-drawer>
 
-    <q-page-container role="main">
+    <q-page-container role="main" id="main-content">
       <!-- Dynamic Breadcrumb Navigation Header -->
       <div v-if="breadcrumbs.length > 0" class="q-px-md q-pt-md">
         <q-breadcrumbs class="text-caption text-grey-7" active-color="primary">

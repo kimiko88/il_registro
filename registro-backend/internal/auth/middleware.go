@@ -59,7 +59,7 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 						// Verify p is a 3-part JWT token (header.payload.signature)
 						if strings.Count(p, ".") == 2 {
 							token = p
-							c.Header("Sec-WebSocket-Protocol", p)
+							c.Header("Sec-WebSocket-Protocol", "access_token")
 							break
 						}
 					}
@@ -101,6 +101,9 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 		c.Set("email", claims.Email)
 		c.Set("role", claims.Role)
 		c.Set("school_id", claims.SchoolID)
+
+		// Synchronize with stdlib request context
+		c.Request = c.Request.WithContext(SetUserContext(c.Request.Context(), claims.UserID, claims.Email, claims.Role, claims.SchoolID))
 
 		c.Next()
 	}

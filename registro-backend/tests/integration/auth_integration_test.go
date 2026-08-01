@@ -23,7 +23,7 @@ func TestAuthIntegration_Login(t *testing.T) {
 		priv, pub := testhelpers.GenerateRSAKeys()
 		tokenManager := jwt.NewTokenManager(priv, pub)
 		mfaService := auth.NewMFAService("test")
-		service := auth.NewService(mockRepo, tokenManager, mfaService)
+		service := auth.NewService(mockRepo, tokenManager, mfaService, nil)
 		handler := auth.NewHandler(service)
 
 		gin.SetMode(gin.TestMode)
@@ -56,7 +56,7 @@ func TestAuthIntegration_Login(t *testing.T) {
 		priv, pub := testhelpers.GenerateRSAKeys()
 		tokenManager := jwt.NewTokenManager(priv, pub)
 		mfaService := auth.NewMFAService("test")
-		service := auth.NewService(mockRepo, tokenManager, mfaService)
+		service := auth.NewService(mockRepo, tokenManager, mfaService, nil)
 		handler := auth.NewHandler(service)
 
 		gin.SetMode(gin.TestMode)

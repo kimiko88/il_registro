@@ -276,7 +276,7 @@ func TestService_GetUser(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mockSetup()
-			_, err := service.GetUser(context.Background(), tt.actorRole, tt.userID)
+			_, err := service.GetUser(context.Background(), tt.actorRole, "", tt.userID)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
@@ -648,7 +648,7 @@ func TestService_ExportUsers(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mockSetup()
-			data, err := service.ExportUsers(context.Background(), tt.actorRole, UserFilter{}, tt.format)
+			data, err := service.ExportUsers(context.Background(), tt.actorRole, "", UserFilter{}, tt.format)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {

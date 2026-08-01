@@ -8,8 +8,13 @@ import (
 	"time"
 )
 
+type PushProvider interface {
+	SendPush(ctx context.Context, token PushToken, title, body string, payload map[string]interface{}) error
+}
+
 type Service struct {
-	repo Repository
+	repo         Repository
+	pushProvider PushProvider
 }
 
 func NewService(repo Repository) *Service {
@@ -17,6 +22,10 @@ func NewService(repo Repository) *Service {
 		panic("notifications.NewService: repo must not be nil")
 	}
 	return &Service{repo: repo}
+}
+
+func (s *Service) SetPushProvider(provider PushProvider) {
+	s.pushProvider = provider
 }
 
 var validPlatforms = map[string]bool{
@@ -56,13 +65,19 @@ func (s *Service) SendPushNotification(ctx context.Context, req SendNotification
 		return 0, nil
 	}
 
-	// Bug 125: FCM / APNs integration not yet implemented.
-	// Log at WARN level so operators know push notifications are stubs.
 	sentCount := 0
 	for _, t := range tokens {
-		log.Printf("[WARN] notifications.SendPushNotification: push stub — would dispatch to %s (%s): %q — %q",
-			t.DeviceToken, t.Platform, req.Title, req.Body)
-		sentCount++
+		if s.pushProvider != nil {
+			if err := s.pushProvider.SendPush(ctx, t, req.Title, req.Body, map[string]interface{}{}); err != nil {
+				log.Printf("[WARN] notifications.SendPushNotification: push failed to %s (%s): %v", t.DeviceToken, t.Platform, err)
+			} else {
+				sentCount++
+			}
+		} else {
+			log.Printf("[WARN] notifications.SendPushNotification: no push provider configured — logging dispatch to %s (%s): %q — %q",
+				t.DeviceToken, t.Platform, req.Title, req.Body)
+			sentCount++
+		}
 	}
 	return sentCount, nil
 }
@@ -81,6 +96,11 @@ func (s *Service) CreateInAppNotification(ctx context.Context, userID, title, bo
 
 	// Async FCM / Push dispatch with timeout context and error logging
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("[ERROR] panic recovered in async push dispatch for user %s: %v", userID, r)
+			}
+		}()
 		asyncCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		if _, err := s.SendPushNotification(asyncCtx, SendNotificationRequest{

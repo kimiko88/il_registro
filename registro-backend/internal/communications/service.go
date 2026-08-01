@@ -35,6 +35,9 @@ func (s *Service) SendMessage(ctx context.Context, actorRole, schoolID, senderID
 	if req.Type != "bacheca" && len(req.Recipients) == 0 {
 		return nil, errors.New("recipients are required for targeted messages")
 	}
+	if req.Type == "bacheca" && req.RequiresSignature && len(req.Recipients) == 0 {
+		return nil, errors.New("cannot set RequiresSignature on a board message without specific recipients")
+	}
 
 	targetSchoolID := schoolID
 	if req.SchoolID != nil && *req.SchoolID != "" {
@@ -148,8 +151,10 @@ func (s *Service) GetMessageByID(ctx context.Context, userID, schoolID, userRole
 	}
 
 	// Verifica appartenenza alla scuola per TUTTI i tipi di messaggio (incluso bacheca)
-	if msg.SchoolID != nil && *msg.SchoolID != "" && *msg.SchoolID != schoolID && userRole != "superadmin" {
-		return nil, errors.New("unauthorized: messaggio non appartiene alla tua scuola")
+	if userRole != "superadmin" {
+		if msg.SchoolID == nil || *msg.SchoolID == "" || *msg.SchoolID != schoolID {
+			return nil, errors.New("unauthorized: messaggio non appartiene alla tua scuola")
+		}
 	}
 
 	// Admin e superadmin possono vedere tutti i messaggi della loro scuola

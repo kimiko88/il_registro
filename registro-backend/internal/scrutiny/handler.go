@@ -236,6 +236,7 @@ func (h *Handler) ExportAll(c *gin.Context) {
 	actorID := c.GetString("user_id")
 	actorRole := c.GetString("role")
 	schoolID := c.GetString("school_id")
+	semester, _ := strconv.Atoi(c.DefaultQuery("semester", "2"))
 	if actorID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
@@ -245,7 +246,7 @@ func (h *Handler) ExportAll(c *gin.Context) {
 		return
 	}
 
-	data, err := h.service.ExportAll(c.Request.Context(), actorID, actorRole, schoolID)
+	data, err := h.service.ExportAll(c.Request.Context(), actorID, actorRole, schoolID, semester)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

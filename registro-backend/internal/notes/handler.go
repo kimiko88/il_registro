@@ -72,6 +72,7 @@ func (h *Handler) Approve(c *gin.Context) {
 
 func (h *Handler) Update(c *gin.Context) {
 	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
@@ -84,7 +85,7 @@ func (h *Handler) Update(c *gin.Context) {
 		return
 	}
 
-	note, err := h.service.UpdateNote(c.Request.Context(), userID, noteID, req)
+	note, err := h.service.UpdateNote(c.Request.Context(), userID, role, noteID, req)
 	if err != nil {
 		if errors.Is(err, ErrUnauthorizedEdit) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
@@ -103,13 +104,14 @@ func (h *Handler) Update(c *gin.Context) {
 
 func (h *Handler) Delete(c *gin.Context) {
 	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 	noteID := c.Param("id")
 
-	if err := h.service.DeleteNote(c.Request.Context(), userID, noteID); err != nil {
+	if err := h.service.DeleteNote(c.Request.Context(), userID, role, noteID); err != nil {
 		if errors.Is(err, ErrUnauthorizedDelete) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return

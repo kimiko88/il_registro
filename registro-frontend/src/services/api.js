@@ -63,16 +63,7 @@ api.interceptors.response.use(
             return Promise.reject(error);
         }
 
-        if (error.response.status === 404) {
-            return Promise.resolve({
-                data: null,
-                status: 404,
-                statusText: 'Not Found',
-                headers: error.response.headers,
-                config: error.config,
-                isNotFound: true
-            });
-        }
+
 
 
         if (

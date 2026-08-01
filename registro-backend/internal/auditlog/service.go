@@ -3,7 +3,6 @@ package auditlog
 import (
 	"context"
 	"fmt"
-	"log"
 	"math"
 	"strings"
 )
@@ -81,13 +80,10 @@ func (s *service) ExportCSV(ctx context.Context, p FilterParams) ([]byte, error)
 		return nil, err
 	}
 
-	// Bug 122: warn operators when results are truncated
-	if total > truncationLimit {
-		log.Printf("[WARN] auditlog.ExportCSV: result set truncated — returning %d of %d total entries. "+
-			"Narrow your filter range or increase the export limit.", truncationLimit, total)
-	}
-
 	var sb strings.Builder
+	if total > truncationLimit {
+		sb.WriteString(fmt.Sprintf("# WARNING: Export truncated to %d records (total matching: %d). Narrow filter criteria for more records.\n", truncationLimit, total))
+	}
 	sb.WriteString("ID,Data/Ora,Utente,Ruolo,Azione,Tipo Entita,ID Entita,IP,Dettagli\n")
 	for _, ev := range data {
 		// Bug 121: sanitize all CSV fields to prevent formula injection

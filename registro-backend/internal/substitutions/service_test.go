@@ -80,7 +80,7 @@ func TestCreateSubstitution_ValidRequest(t *testing.T) {
 	repo := &mockSubstitutionRepo{}
 	svc := NewService(repo)
 
-	sub, err := svc.CreateSubstitution(context.Background(), "school-1", CreateSubstitutionRequest{
+	sub, err := svc.CreateSubstitution(context.Background(), "admin", "school-1", CreateSubstitutionRequest{
 		ClassID:         "class-1",
 		AbsentTeacherID: "teacher-1",
 		Date:            "2026-01-15",
@@ -103,7 +103,7 @@ func TestCreateSubstitution_WithSubstituteSetStatusAssigned(t *testing.T) {
 	svc := NewService(repo)
 
 	subTeacher := "teacher-2"
-	sub, err := svc.CreateSubstitution(context.Background(), "school-1", CreateSubstitutionRequest{
+	sub, err := svc.CreateSubstitution(context.Background(), "admin", "school-1", CreateSubstitutionRequest{
 		ClassID:             "class-1",
 		AbsentTeacherID:     "teacher-1",
 		SubstituteTeacherID: &subTeacher,
@@ -122,7 +122,7 @@ func TestCreateSubstitution_InvalidDate(t *testing.T) {
 	repo := &mockSubstitutionRepo{}
 	svc := NewService(repo)
 
-	_, err := svc.CreateSubstitution(context.Background(), "school-1", CreateSubstitutionRequest{
+	_, err := svc.CreateSubstitution(context.Background(), "admin", "school-1", CreateSubstitutionRequest{
 		ClassID:         "class-1",
 		AbsentTeacherID: "teacher-1",
 		Date:            "not-a-date",
@@ -137,7 +137,7 @@ func TestCreateSubstitution_SlotFallbackToHour(t *testing.T) {
 	svc := NewService(repo)
 
 	// When Slot=0 but Hour=4, Hour should be used
-	sub, err := svc.CreateSubstitution(context.Background(), "school-1", CreateSubstitutionRequest{
+	sub, err := svc.CreateSubstitution(context.Background(), "admin", "school-1", CreateSubstitutionRequest{
 		ClassID:         "class-1",
 		AbsentTeacherID: "teacher-1",
 		Date:            "2026-01-15",
@@ -156,7 +156,7 @@ func TestCreateSubstitution_PropagatesRepositoryError(t *testing.T) {
 	repo := &mockSubstitutionRepo{saveErr: errors.New("db failure")}
 	svc := NewService(repo)
 
-	_, err := svc.CreateSubstitution(context.Background(), "school-1", CreateSubstitutionRequest{
+	_, err := svc.CreateSubstitution(context.Background(), "admin", "school-1", CreateSubstitutionRequest{
 		ClassID:         "class-1",
 		AbsentTeacherID: "teacher-1",
 		Date:            "2026-01-15",

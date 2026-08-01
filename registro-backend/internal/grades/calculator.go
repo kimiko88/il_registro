@@ -126,7 +126,8 @@ func (c *Calculator) CalculateStandardDeviation(grades []Grade) float64 {
 
 func (c *Calculator) CalculateBellCurve(grades []Grade) (mean, stdDev, skewness, kurtosis float64) {
 	vals := c.extractValues(grades)
-	if len(vals) == 0 {
+	n := float64(len(vals))
+	if n < 2 {
 		return 0, 0, 0, 0
 	}
 
@@ -134,10 +135,10 @@ func (c *Calculator) CalculateBellCurve(grades []Grade) (mean, stdDev, skewness,
 	for _, v := range vals {
 		sum += v
 	}
-	mean = sum / float64(len(vals))
+	mean = sum / n
 	stdDev = c.CalculateStandardDeviation(grades)
 
-	if stdDev == 0 {
+	if stdDev == 0 || n < 3 {
 		return mean, stdDev, 0, 0
 	}
 
@@ -147,9 +148,16 @@ func (c *Calculator) CalculateBellCurve(grades []Grade) (mean, stdDev, skewness,
 		skewSum += math.Pow(z, 3)
 		kurtSum += math.Pow(z, 4)
 	}
-	n := float64(len(vals))
-	skewness = skewSum / n
-	kurtosis = (kurtSum / n) - 3 // Excess kurtosis
+
+	// Adjusted sample skewness (Fisher-Pearson coefficient)
+	skewness = (n / ((n - 1) * (n - 2))) * skewSum
+
+	// Adjusted sample excess kurtosis
+	if n > 3 {
+		kurtosis = ((n * (n + 1)) / ((n - 1) * (n - 2) * (n - 3))) * kurtSum - ((3 * math.Pow(n-1, 2)) / ((n - 2) * (n - 3)))
+	} else {
+		kurtosis = (kurtSum / n) - 3
+	}
 
 	return
 }

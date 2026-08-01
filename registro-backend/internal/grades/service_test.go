@@ -270,7 +270,7 @@ func TestAddGrade(t *testing.T) {
 			{ID: "g1", GradeValue: 8, IsPublished: true},
 		}, nil).Once()
 
-		res, err := s.GetStudentGrades(sid)
+		res, err := s.GetStudentGrades(context.Background(), sid, "student", sid)
 		assert.NoError(t, err)
 		assert.Len(t, res, 1)
 		assert.Equal(t, 8.0, res[0].GradeValue)
@@ -303,7 +303,7 @@ func TestAddGrade(t *testing.T) {
 		mockUserRepo.On("IsGuardian", mock.Anything, pid, sid).Return(true, nil).Once()
 		mockRepo.On("FindByStudent", sid).Return([]Grade{}, nil).Once()
 
-		_, err := s.GetChildGrades(pid, sid, GradeFilter{})
+		_, err := s.GetChildGrades(context.Background(), pid, sid, GradeFilter{})
 		assert.NoError(t, err)
 	})
 
@@ -313,7 +313,7 @@ func TestAddGrade(t *testing.T) {
 
 		mockUserRepo.On("IsGuardian", mock.Anything, pid, sid).Return(false, nil).Once()
 
-		_, err := s.GetChildGrades(pid, sid, GradeFilter{})
+		_, err := s.GetChildGrades(context.Background(), pid, sid, GradeFilter{})
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "not a guardian")
 	})

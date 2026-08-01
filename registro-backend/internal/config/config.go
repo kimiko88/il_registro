@@ -14,6 +14,15 @@ type Config struct {
 	Supabase SupabaseConfig
 	SPID     SPIDConfig
 	CIE      CIEConfig
+	Mail     MailConfig
+}
+
+type MailConfig struct {
+	Host     string
+	Port     int
+	Username string
+	Password string
+	From     string
 }
 
 type ServerConfig struct {
@@ -100,6 +109,13 @@ func LoadConfig() (*Config, error) {
 			CertPath:       viper.GetString("CIE_CERT_PATH"),
 			KeyPath:        viper.GetString("CIE_KEY_PATH"),
 			IDPMetadataURL: viper.GetString("CIE_IDP_METADATA_URL"),
+		},
+		Mail: MailConfig{
+			Host:     viper.GetString("SMTP_HOST"),
+			Port:     viper.GetInt("SMTP_PORT"),
+			Username: viper.GetString("SMTP_USERNAME"),
+			Password: viper.GetString("SMTP_PASSWORD"),
+			From:     viper.GetString("SMTP_FROM"),
 		},
 	}
 

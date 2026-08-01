@@ -57,7 +57,7 @@ func TestSecurity_CSVFormulaInjectionProtection(t *testing.T) {
 
 	mockRepo.On("List", mock.Anything, mock.Anything).Return([]users.User{*maliciousUser}, 1, nil)
 
-	data, err := service.ExportUsers(context.Background(), "admin", users.UserFilter{}, "csv")
+	data, err := service.ExportUsers(context.Background(), "admin", "", users.UserFilter{}, "csv")
 	assert.NoError(t, err)
 
 	output := string(data)

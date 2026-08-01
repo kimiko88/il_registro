@@ -25,7 +25,7 @@ export const useParentStore = defineStore('parent', () => {
                 firstName: c.first_name ?? c.firstName,
                 lastName: c.last_name ?? c.lastName,
                 schoolName: c.school_name ?? c.schoolName,
-                className: c.class ?? c.className
+                className: c['class'] ?? c.className
             }))
 
             // Validate the stored selectedChildId still belongs to this user's children

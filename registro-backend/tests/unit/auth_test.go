@@ -20,7 +20,7 @@ func TestAuthService_Register(t *testing.T) {
 	tokenManager := jwt.NewTokenManager(priv, pub)
 
 	mfaService := auth.NewMFAService("issuer")
-	service := auth.NewService(mockRepo, tokenManager, mfaService)
+	service := auth.NewService(mockRepo, tokenManager, mfaService, nil)
 
 	tests := []struct {
 		name          string
@@ -68,7 +68,7 @@ func TestAuthService_Register(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockRepo = new(testhelpers.MockAuthRepository)
-			service = auth.NewService(mockRepo, tokenManager, mfaService)
+			service = auth.NewService(mockRepo, tokenManager, mfaService, nil)
 			tt.setupMock()
 
 			_, err := service.Register(context.Background(), &tt.input)
@@ -88,7 +88,7 @@ func TestAuthService_Login(t *testing.T) {
 	tokenManager := jwt.NewTokenManager(priv, pub)
 
 	mfaService := auth.NewMFAService("issuer")
-	service := auth.NewService(mockRepo, tokenManager, mfaService)
+	service := auth.NewService(mockRepo, tokenManager, mfaService, nil)
 
 	tests := []struct {
 		name          string
@@ -112,7 +112,7 @@ func TestAuthService_Login(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockRepo = new(testhelpers.MockAuthRepository)
-			service = auth.NewService(mockRepo, tokenManager, mfaService)
+			service = auth.NewService(mockRepo, tokenManager, mfaService, nil)
 			tt.setupMock()
 
 			_, err := service.Login(context.Background(), &tt.input, "127.0.0.1", "agent")

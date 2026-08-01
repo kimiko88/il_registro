@@ -83,6 +83,9 @@ func (s *service) CreateDocument(ctx context.Context, actorRole, userID, schoolI
 	if req.TemplateID != nil {
 		t, err := s.repo.GetTemplate(*req.TemplateID)
 		if err == nil {
+			if t.SchoolID != "" && t.SchoolID != schoolID {
+				return nil, errors.New("unauthorized: template belongs to another school")
+			}
 			studentName := ""
 			studentIDStr := ""
 			if req.StudentID != nil {
@@ -497,3 +500,5 @@ func (s *service) AttachFile(ctx context.Context, actorRole, schoolID, docID, fi
 
 	return s.repo.Update(doc, updatedContent, "Attached file: "+cleanURL)
 }
+
+

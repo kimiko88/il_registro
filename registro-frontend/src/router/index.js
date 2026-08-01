@@ -10,19 +10,27 @@ const router = createRouter({
 router.beforeEach(authGuard)
 
 router.afterEach((to) => {
-    let title = 'Registro Elettronico'
-    if (to.path.startsWith('/admin')) {
-        title = 'Registro Elettronico - Admin'
-    } else if (to.path.startsWith('/teacher')) {
-        title = 'Registro Elettronico - Docente'
-    } else if (to.path.startsWith('/student')) {
-        title = 'Registro Elettronico - Studente'
-    } else if (to.path.startsWith('/parent')) {
-        title = 'Registro Elettronico - Famiglie'
-    } else if (to.path.startsWith('/secretary')) {
-        title = 'Registro Elettronico - Segreteria'
+    const base = 'Registro Elettronico'
+    const pageTitle = to.meta?.title
+    if (pageTitle) {
+        document.title = `${pageTitle} — ${base}`
+        return
     }
-    document.title = title
+
+    let section = ''
+    if (to.path.startsWith('/admin')) {
+        section = 'Admin'
+    } else if (to.path.startsWith('/teacher')) {
+        section = 'Docente'
+    } else if (to.path.startsWith('/student')) {
+        section = 'Studente'
+    } else if (to.path.startsWith('/parent')) {
+        section = 'Famiglie'
+    } else if (to.path.startsWith('/secretary')) {
+        section = 'Segreteria'
+    }
+    
+    document.title = section ? `${section} — ${base}` : base
 })
 
 export default router

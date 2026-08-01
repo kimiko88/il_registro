@@ -266,6 +266,10 @@ func (h *Hub) BroadcastToUser(userID, msgType string, payload interface{}) {
 	h.sendBroadcast(Message{Type: msgType, Payload: payload, Recipient: userID})
 }
 
+func (h *Hub) BroadcastToUserInSchool(userID, schoolID, msgType string, payload interface{}) {
+	h.sendBroadcast(Message{Type: msgType, Payload: payload, Recipient: userID, SchoolID: schoolID})
+}
+
 func (h *Hub) BroadcastToSchool(schoolID, msgType string, payload interface{}) {
 	h.sendBroadcast(Message{Type: msgType, Payload: payload, SchoolID: schoolID})
 }

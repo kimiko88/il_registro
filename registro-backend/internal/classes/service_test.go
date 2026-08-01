@@ -217,7 +217,7 @@ func TestService_GetClass(t *testing.T) {
 			tt.mockFn(mockRepo)
 			service := NewService(mockRepo)
 
-			class, err := service.GetClass(context.Background(), tt.classID)
+			class, err := service.GetClass(context.Background(), "", tt.classID)
 
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -531,7 +531,7 @@ func TestService_GetClassSubjects(t *testing.T) {
 			tt.mockFn(mockRepo)
 			service := NewService(mockRepo)
 
-			subjects, err := service.GetClassSubjects(context.Background(), "class-123")
+			subjects, err := service.GetClassSubjects(context.Background(), "", "class-123")
 
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -561,7 +561,7 @@ func TestService_GetLessonTopics(t *testing.T) {
 	mockRepo.On("GetLessonTopics", mock.Anything, "class-1").Return(expected, nil)
 
 	service := NewService(mockRepo)
-	topics, err := service.GetLessonTopics(context.Background(), "class-1")
+	topics, err := service.GetLessonTopics(context.Background(), "", "class-1")
 
 	assert.NoError(t, err)
 	assert.Equal(t, expected, topics)
@@ -576,7 +576,7 @@ func TestService_GetDisciplinaryNotes(t *testing.T) {
 	mockRepo.On("GetDisciplinaryNotes", mock.Anything, "class-1").Return(expected, nil)
 
 	service := NewService(mockRepo)
-	notes, err := service.GetDisciplinaryNotes(context.Background(), "class-1")
+	notes, err := service.GetDisciplinaryNotes(context.Background(), "", "class-1")
 
 	assert.NoError(t, err)
 	assert.Equal(t, expected, notes)

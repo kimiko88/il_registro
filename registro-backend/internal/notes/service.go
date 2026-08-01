@@ -33,7 +33,10 @@ func NewService(repo Repository, uRepo users.Repository) *Service {
 func (s *Service) CreateNote(ctx context.Context, teacherID, schoolID string, req CreateNoteRequest) (*StudentNote, error) {
 	if req.ClassID != "" {
 		isAssigned, err := s.repo.IsTeacherAssignedToClass(ctx, teacherID, req.ClassID)
-		if err == nil && !isAssigned {
+		if err != nil {
+			return nil, err
+		}
+		if !isAssigned {
 			return nil, errors.New("forbidden: docente non assegnato alla classe dello studente")
 		}
 	}
@@ -77,12 +80,14 @@ func (s *Service) ApproveNote(ctx context.Context, actorID, actorRole, noteID st
 	return s.repo.ApproveNote(ctx, noteID, actorID)
 }
 
-func (s *Service) UpdateNote(ctx context.Context, teacherID, noteID string, req UpdateNoteRequest) (*StudentNote, error) {
+func (s *Service) UpdateNote(ctx context.Context, actorID, actorRole, noteID string, req UpdateNoteRequest) (*StudentNote, error) {
 	n, err := s.repo.Get(ctx, noteID)
 	if err != nil {
 		return nil, err
 	}
-	if n.TeacherID != teacherID {
+	isOwner := n.TeacherID == actorID
+	isAdmin := actorRole == "admin" || actorRole == "superadmin" || actorRole == "principal" || actorRole == "vice_principal"
+	if !isOwner && !isAdmin {
 		return nil, ErrUnauthorizedEdit
 	}
 
@@ -111,12 +116,14 @@ func (s *Service) UpdateNote(ctx context.Context, teacherID, noteID string, req 
 	return n, nil
 }
 
-func (s *Service) DeleteNote(ctx context.Context, teacherID, noteID string) error {
+func (s *Service) DeleteNote(ctx context.Context, actorID, actorRole, noteID string) error {
 	n, err := s.repo.Get(ctx, noteID)
 	if err != nil {
 		return err
 	}
-	if n.TeacherID != teacherID {
+	isOwner := n.TeacherID == actorID
+	isAdmin := actorRole == "admin" || actorRole == "superadmin" || actorRole == "principal" || actorRole == "vice_principal"
+	if !isOwner && !isAdmin {
 		return ErrUnauthorizedDelete
 	}
 	return s.repo.Delete(ctx, noteID)
@@ -139,5 +146,20 @@ func (s *Service) ListNotes(ctx context.Context, filter NoteFilter) ([]StudentNo
 			}
 		}
 	}
-	return s.repo.List(ctx, filter)
+	notes, err := s.repo.List(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	if filter.ActorRole == "student" || filter.ActorRole == "parent" {
+		var safeNotes []StudentNote
+		for _, n := range notes {
+			if !n.IsReserved {
+				safeNotes = append(safeNotes, n)
+			}
+		}
+		notes = safeNotes
+	}
+
+	return notes, nil
 }

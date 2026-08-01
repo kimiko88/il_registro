@@ -65,18 +65,20 @@ func GetSemesterDateRange(semester int) (time.Time, time.Time) {
 		yearStart--
 	}
 
-	if semester == 1 {
+	switch semester {
+	case 1:
 		// Sept 1 to Jan 31
 		start := time.Date(yearStart, time.September, 1, 0, 0, 0, 0, time.UTC)
 		end := time.Date(yearStart+1, time.January, 31, 23, 59, 59, 0, time.UTC)
 		return start, end
-	} else if semester == 2 {
+	case 2:
 		// Feb 1 to June 30
 		start := time.Date(yearStart+1, time.February, 1, 0, 0, 0, 0, time.UTC)
 		end := time.Date(yearStart+1, time.June, 30, 23, 59, 59, 0, time.UTC)
 		return start, end
+	default:
+		return time.Time{}, time.Time{}
 	}
-	return time.Time{}, time.Time{}
 }
 
 // 5. IsInLockPeriod checks if the current date falls within a lock period for the semester
@@ -85,13 +87,14 @@ func IsInLockPeriod(semester int, date time.Time) bool {
 
 	var start, end time.Time
 
-	if semester == 1 {
+	switch semester {
+	case 1:
 		start = time.Date(year, time.January, 28, 0, 0, 0, 0, time.UTC)
 		end = time.Date(year, time.February, 15, 23, 59, 59, 0, time.UTC)
-	} else if semester == 2 {
+	case 2:
 		start = time.Date(year, time.June, 25, 0, 0, 0, 0, time.UTC)
 		end = time.Date(year, time.July, 15, 23, 59, 59, 0, time.UTC)
-	} else {
+	default:
 		return false
 	}
 

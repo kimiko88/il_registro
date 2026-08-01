@@ -516,6 +516,7 @@ func (h *Handler) GetMyAverages(c *gin.Context) {
 
 func (h *Handler) GetMyTrend(c *gin.Context) {
 	studentID := c.GetString("user_id")
+	role := c.GetString("role")
 	if studentID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
@@ -523,7 +524,7 @@ func (h *Handler) GetMyTrend(c *gin.Context) {
 
 	subjectID := c.Query("subject_id")
 
-	resp, err := h.service.GetMyTrend(studentID, subjectID)
+	resp, err := h.service.GetMyTrend(c.Request.Context(), studentID, role, studentID, subjectID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -593,7 +594,7 @@ func (h *Handler) GetChildGrades(c *gin.Context) {
 	logger.Log.Debug("GetChildGrades requested by parent")
 	filter := h.parseFilter(c)
 
-	resp, err := h.service.GetChildGrades(parentID, studentID, filter)
+	resp, err := h.service.GetChildGrades(c.Request.Context(), parentID, studentID, filter)
 	if err != nil {
 		logger.Log.Errorf("GetChildGrades error: %v", err)
 		if errors.Is(err, ErrNotGuardian) {
@@ -615,7 +616,7 @@ func (h *Handler) GetChildGradesAverage(c *gin.Context) {
 	}
 
 	studentID := c.Param("studentID")
-	resp, err := h.service.GetChildAverages(parentID, studentID)
+	resp, err := h.service.GetChildAverages(c.Request.Context(), parentID, studentID)
 	if err != nil {
 		if errors.Is(err, ErrNotGuardian) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})

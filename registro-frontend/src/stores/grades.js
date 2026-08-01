@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia';
-import api from '../services/api';
-import { gradeService } from 'src/services/gradeService';
+import { gradeService } from '../services/gradeService';
 
 export const useGradesStore = defineStore('grades', {
     state: () => ({
@@ -61,7 +60,10 @@ export const useGradesStore = defineStore('grades', {
                 }
             } catch (err) {
                 if (currentReqId === this._requestId) {
-                    this.error = err.message;
+                    this.error = {
+                        message: err.response?.data?.error || err.message,
+                        status: err.response?.status || 500
+                    };
                     console.error("Error fetching grades:", err);
                 }
             } finally {
@@ -189,7 +191,7 @@ export const useGradesStore = defineStore('grades', {
             this.loading = true;
             this.error = null;
             try {
-                const response = await api.get(`/grades/my-grades/semester/${semester}`);
+                const response = await gradeService.getSemesterReport(semester);
                 return response.data;
             } catch (err) {
                 this.error = err.response?.data?.error || 'Errore durante il recupero della pagella';
@@ -204,9 +206,7 @@ export const useGradesStore = defineStore('grades', {
             let url = null;
             let link = null;
             try {
-                const response = await api.get(`/grades/my-grades/semester/${semester}/pdf`, {
-                    responseType: 'blob'
-                });
+                const response = await gradeService.downloadReportCardPDF(semester);
                 const blob = new Blob([response.data], { type: 'application/pdf' });
                 url = window.URL.createObjectURL(blob);
                 link = document.createElement('a');

@@ -69,3 +69,9 @@ func (s *Service) SendSMS(ctx context.Context, phoneNumber, message string) erro
 	logger.Log.Infof("[SMS Gateway] Dispatched SMS via %s", s.smsCfg.Provider)
 	return nil
 }
+
+func (s *Service) SendPasswordReset(ctx context.Context, email, token string) error {
+	subject := "Reset Password - Registro Nuvola"
+	body := fmt.Sprintf("<p>Hai richiesto il reset della password. Il tuo token di reset è: <strong>%s</strong></p>", token)
+	return s.SendEmail(ctx, email, subject, body)
+}

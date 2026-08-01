@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"time"
 
@@ -29,7 +30,7 @@ type Service struct {
 }
 
 // NewService creates a new auth service
-func NewService(repo Repository, tokenManager *jwt.TokenManager, mfaService *MFAService) *Service {
+func NewService(repo Repository, tokenManager *jwt.TokenManager, mfaService *MFAService, emailSender EmailSender) *Service {
 	cost := 12
 	dummyHash := "$2a$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeg6Lruj3vjPGga31lW"
 	if h, err := bcrypt.GenerateFromPassword([]byte("dummy_password_for_timing_protection"), cost); err == nil {
@@ -39,9 +40,15 @@ func NewService(repo Repository, tokenManager *jwt.TokenManager, mfaService *MFA
 		repo:            repo,
 		tokenManager:    tokenManager,
 		mfaService:      mfaService,
+		emailSender:     emailSender,
 		bcryptCost:      cost,
 		dummyBcryptHash: dummyHash,
 	}
+}
+
+// SetEmailSender sets the EmailSender for password reset emails
+func (s *Service) SetEmailSender(sender EmailSender) {
+	s.emailSender = sender
 }
 
 // Register creates a new user account.
@@ -322,6 +329,12 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken, ipAddress, use
 func (s *Service) Logout(ctx context.Context, refreshToken string, callerUserID string) error {
 	rt, err := s.repo.GetRefreshToken(ctx, refreshToken)
 	if err != nil {
+		// Silent exit if token is invalid or not found to avoid user enumeration,
+		// but log any database connection or context error.
+		if errors.Is(err, ErrInvalidToken) {
+			return nil
+		}
+		logger.Log.Warnf("Logout: error retrieving refresh token from DB: %v", err)
 		return nil
 	}
 	// Ownership check: refuse to revoke another user's sessions.
@@ -480,11 +493,6 @@ func (s *Service) ResetPassword(ctx context.Context, token, newPassword string) 
 		return err
 	}
 
-	user, err := s.repo.GetUserByID(ctx, prt.UserID)
-	if err != nil || !user.IsActive {
-		return ErrUserInactive
-	}
-
 	// Check if already used
 	if prt.Used {
 		return ErrInvalidToken
@@ -493,6 +501,11 @@ func (s *Service) ResetPassword(ctx context.Context, token, newPassword string) 
 	// Check if expired
 	if time.Now().After(prt.ExpiresAt) {
 		return ErrInvalidToken
+	}
+
+	user, err := s.repo.GetUserByID(ctx, prt.UserID)
+	if err != nil || !user.IsActive {
+		return ErrUserInactive
 	}
 
 	// Check password history (prevent reuse of last 5)

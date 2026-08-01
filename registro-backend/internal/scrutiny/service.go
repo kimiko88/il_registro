@@ -333,9 +333,12 @@ func (s *Service) FinalizeClass(ctx context.Context, actorID, actorRole, classID
 }
 
 // ExportAll exports scrutiny data for all classes in the actor's school as CSV.
-func (s *Service) ExportAll(ctx context.Context, actorID, actorRole, schoolID string) ([]byte, error) {
-	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "vice_principal" {
+func (s *Service) ExportAll(ctx context.Context, actorID, actorRole, schoolID string, semester int) ([]byte, error) {
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "vice_principal" && actorRole != "secretary" {
 		return nil, errors.New("unauthorized: solo dirigenza e admin possono esportare tutti gli scrutini")
+	}
+	if semester <= 0 {
+		semester = 2
 	}
 	classesList, err := s.classRepo.List(ctx, schoolID, "")
 	if err != nil {
@@ -352,7 +355,7 @@ func (s *Service) ExportAll(ctx context.Context, actorID, actorRole, schoolID st
 		for _, sb := range subs {
 			subNameMap[sb.SubjectID] = sb.SubjectName
 		}
-		records, err := s.repo.ListRecordsByClass(ctx, c.ID, 2)
+		records, err := s.repo.ListRecordsByClass(ctx, c.ID, semester)
 		if err != nil {
 			continue
 		}

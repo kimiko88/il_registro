@@ -120,6 +120,10 @@ export const useAttendanceStore = defineStore('attendance', {
                     targetStudentId = childrenStore.selectedChildId;
                 }
 
+                if (!targetStudentId) {
+                    throw new Error("Impossibile determinare lo studente per la richiesta di giustificazione");
+                }
+
                 const payload = {
                     student_id: targetStudentId,
                     start_date: date,

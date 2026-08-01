@@ -19,7 +19,7 @@ type EventBroadcaster interface {
 // CalendarService is used to calculate real school days for absence rate.
 type CalendarService interface {
 	CountTeachingDays(ctx context.Context, schoolID string, from, to time.Time) (int, error)
-	GetSchoolYear(ctx context.Context, schoolID string) (start, end time.Time, err error)
+	GetSchoolYearDates(ctx context.Context, schoolID string) (start, end time.Time, err error)
 }
 
 type Service interface {
@@ -197,7 +197,17 @@ func (s *service) MarkBulk(ctx context.Context, teacherID, schoolID string, req 
 		atts = append(atts, att)
 	}
 
-	return s.repo.BatchCreate(atts)
+	if err := s.repo.BatchCreate(atts); err != nil {
+		return err
+	}
+
+	if s.broadcaster != nil {
+		for _, att := range atts {
+			s.broadcaster.BroadcastToUser(att.StudentID, "ATTENDANCE_"+string(att.Status), att)
+		}
+	}
+
+	return nil
 }
 
 func (s *service) UpdateAttendance(ctx context.Context, teacherID, schoolID, id string, req UpdateAttendanceRequest) error {
@@ -494,7 +504,7 @@ func (s *service) GetStudentSummary(ctx context.Context, studentID, schoolID str
 	// Calcolo totalDays dal calendario scolastico reale.
 	totalDays := 0
 	if s.calendar != nil && schoolID != "" {
-		yearStart, yearEnd, calErr := s.calendar.GetSchoolYear(ctx, schoolID)
+		yearStart, yearEnd, calErr := s.calendar.GetSchoolYearDates(ctx, schoolID)
 		if calErr == nil {
 			totalDays, _ = s.calendar.CountTeachingDays(ctx, schoolID, yearStart, yearEnd)
 		}
@@ -541,7 +551,12 @@ func (s *service) GetChildAttendance(ctx context.Context, parentID, studentID st
 	if !isGuardian {
 		return nil, fmt.Errorf("unauthorized: not a guardian of this student")
 	}
-	return s.GetStudentAttendance(ctx, parentID, "parent", "", studentID, from, to)
+	parentUser, err := s.userRepo.GetByID(ctx, parentID)
+	schoolID := ""
+	if err == nil && parentUser != nil && parentUser.SchoolID != nil {
+		schoolID = *parentUser.SchoolID
+	}
+	return s.GetStudentAttendance(ctx, parentID, "parent", schoolID, studentID, from, to)
 }
 
 func (s *service) GetChildSummary(ctx context.Context, parentID, studentID, schoolID string) (*SummaryResponse, error) {

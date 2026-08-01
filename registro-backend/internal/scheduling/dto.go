@@ -32,8 +32,10 @@ type UpdateBookingRequest struct {
 }
 
 type GeneralScheduleRequest struct {
-	StartDate string `json:"start_date" binding:"required"`
-	EndDate   string `json:"end_date" binding:"required"`
+	StartDate          string `json:"start_date" binding:"required"`
+	EndDate            string `json:"end_date" binding:"required"`
+	BookingWindowDays  int    `json:"booking_window_days"`
+	BookingBufferHours int    `json:"booking_buffer_hours"`
 }
 
 // Responses

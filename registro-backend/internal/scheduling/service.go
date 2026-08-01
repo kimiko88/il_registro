@@ -209,9 +209,10 @@ func (s *service) GetAvailableSlots(ctx context.Context, teacherID string) ([]Sl
 	schoolID := ""
 	if s.teacherRepo != nil {
 		teacher, err := s.teacherRepo.GetByUserID(ctx, teacherID)
-		if err == nil && teacher != nil {
-			schoolID = teacher.SchoolID
+		if err != nil || teacher == nil {
+			return nil, fmt.Errorf("could not resolve teacher profile for slot lookup: %w", err)
 		}
+		schoolID = teacher.SchoolID
 	}
 	from := time.Now()
 	to := from.AddDate(0, 0, 14) // default window
@@ -268,16 +269,6 @@ func (s *service) BookSlot(ctx context.Context, parentID string, req BookSlotReq
 		ID:       booking.ID,
 		Status:   booking.Status,
 		BookedAt: booking.BookedAt,
-		Notes:    booking.Notes,
-		SlotInfo: SlotResponse{
-			ID:        slot.ID,
-			Date:      slot.Date.Format("2006-01-02"),
-			TimeRange: fmt.Sprintf("%s - %s", slot.StartTime.Format("15:04"), slot.EndTime.Format("15:04")),
-			Type:      slot.Type,
-			Location:  slot.Location,
-		},
-		ParentName:  booking.ParentName,
-		StudentName: booking.StudentName,
 	}, nil
 }
 
@@ -292,46 +283,33 @@ func (s *service) GetMyBookings(ctx context.Context, userID, role string) ([]Boo
 	if err != nil {
 		return nil, err
 	}
-
 	return convertBookings(bookings), nil
 }
 
 func (s *service) CancelBooking(ctx context.Context, userID, bookingID string) error {
-	b, err := s.repo.GetBooking(ctx, bookingID)
+	booking, err := s.repo.GetBooking(ctx, bookingID)
 	if err != nil {
 		return err
 	}
 
-	// Try to resolve parent profile ID to match parent ownership check
-	parentProfileID, _ := s.repo.ResolveParentUserID(ctx, userID)
-
-	isParent := b.ParentID != nil && ((parentProfileID != "" && *b.ParentID == parentProfileID) || *b.ParentID == userID)
-
-	if !isParent {
-		// Check if it's the teacher (by userID or resolved teacher profile ID)
-		slot, err := s.repo.GetSlotByID(ctx, b.SlotID)
-		if err != nil {
-			return err
-		}
-		teacherProfileID := userID
-		if s.teacherRepo != nil {
-			if t, err := s.teacherRepo.GetByUserID(ctx, userID); err == nil && t != nil {
-				teacherProfileID = t.ID
-			}
-		}
-		if slot.TeacherID != userID && slot.TeacherID != teacherProfileID {
-			return errors.New("unauthorized: you cannot cancel this booking")
+	isParent := booking.ParentID != nil && *booking.ParentID != "" && *booking.ParentID == userID
+	isTeacher := false
+	if booking.Slot != nil && booking.Slot.TeacherID != "" {
+		teacher, err := s.teacherRepo.GetByUserID(ctx, userID)
+		if err == nil && teacher != nil && teacher.ID == booking.Slot.TeacherID {
+			isTeacher = true
 		}
 	}
 
-	b.Status = StatusCancelled
-	return s.repo.UpdateBooking(ctx, b)
+	if !isParent && !isTeacher {
+		return errors.New("unauthorized: cannot cancel this booking")
+	}
+
+	booking.Status = StatusCancelled
+	return s.repo.UpdateBooking(ctx, booking)
 }
 
 func (s *service) UpdateSettings(ctx context.Context, schoolID string, req GeneralScheduleRequest) error {
-	if schoolID == "" {
-		return errors.New("schoolID is required")
-	}
 	start, err := time.Parse("2006-01-02", req.StartDate)
 	if err != nil {
 		return fmt.Errorf("invalid start date: %w", err)
@@ -341,10 +319,19 @@ func (s *service) UpdateSettings(ctx context.Context, schoolID string, req Gener
 		return fmt.Errorf("invalid end date: %w", err)
 	}
 
+	bookingWindow := req.BookingWindowDays
+	if bookingWindow <= 0 {
+		bookingWindow = 14
+	}
+	bookingBuffer := req.BookingBufferHours
+	if bookingBuffer <= 0 {
+		bookingBuffer = 24
+	}
+
 	settings := &ColloquioSettings{
 		SchoolID:           schoolID,
-		BookingWindowDays:  14,
-		BookingBufferHours: 24,
+		BookingWindowDays:  bookingWindow,
+		BookingBufferHours: bookingBuffer,
 		GeneralWindowStart: &start,
 		GeneralWindowEnd:   &end,
 	}
@@ -354,7 +341,7 @@ func (s *service) UpdateSettings(ctx context.Context, schoolID string, req Gener
 
 func (s *service) GetAnalytics(ctx context.Context, schoolID string) (*AnalyticsResponse, error) {
 	if schoolID == "" {
-		schoolID = "default-school"
+		return nil, fmt.Errorf("school_id is required")
 	}
 	return s.analytics.GetStats(schoolID), nil
 }

@@ -34,7 +34,10 @@ func (s *service) CreateLesson(teacherID string, req CreateLessonRequest) (*Less
 		return nil, errors.New("class_id is required")
 	}
 	isAssigned, err := s.repo.IsTeacherAssignedToClass(teacherID, req.ClassID)
-	if err == nil && !isAssigned {
+	if err != nil {
+		return nil, fmt.Errorf("failed to check teacher assignment: %w", err)
+	}
+	if !isAssigned {
 		return nil, errors.New("forbidden: docente non assegnato alla classe")
 	}
 
@@ -140,11 +143,15 @@ func (s *service) GetLessonsByGroup(groupID string, date string) ([]LessonRespon
 }
 
 func (s *service) CreateHomework(teacherID string, req CreateHomeworkRequest) (*HomeworkResponse, error) {
-	if req.ClassID != "" {
-		isAssigned, err := s.repo.IsTeacherAssignedToClass(teacherID, req.ClassID)
-		if err == nil && !isAssigned {
-			return nil, errors.New("forbidden: docente non assegnato alla classe")
-		}
+	if req.ClassID == "" {
+		return nil, errors.New("class_id is required")
+	}
+	isAssigned, err := s.repo.IsTeacherAssignedToClass(teacherID, req.ClassID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check teacher assignment: %w", err)
+	}
+	if !isAssigned {
+		return nil, errors.New("forbidden: docente non assegnato alla classe")
 	}
 	dueDate, err := time.Parse("2006-01-02", req.DueDate)
 	if err != nil {
