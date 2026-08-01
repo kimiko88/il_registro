@@ -39,6 +39,7 @@
                 v-model="viewMode"
                 toggle-color="primary"
                 flat
+                aria-label="Modalità visualizzazione"
                 :options="[
                     {label: 'Registro', value: 'table'},
                     {label: 'Statistiche', value: 'stats'},
@@ -193,7 +194,7 @@
 
     <!-- Create Class Test Dialog -->
     <q-dialog v-model="showTestDialog" persistent>
-      <q-card style="width: min(1000px, 95vw);">
+      <q-card style="width: min(1000px, 95vw); max-height: 90vh; overflow-y: auto;">
         <q-card-section class="bg-primary text-white row items-center">
           <div class="text-h6">Crea Nuova Verifica</div>
           <q-space />
@@ -252,14 +253,15 @@
 
               <!-- Student Grades -->
               <div class="col-12 col-md-7">
-                <div class="text-subtitle1 q-mb-md text-weight-bold text-primary row items-center justify-between">
-                  <div>Voti Alunni</div>
+                <div class="text-subtitle1 q-mb-xs text-weight-bold text-primary row items-center justify-between">
+                  <div>Voti Alunni ({{ filledTestGradesCount }}/{{ testForm.grades.length }} inseriti)</div>
                   <div class="row items-center q-gutter-x-xs">
                     <q-btn icon="block" size="sm" outline color="warning" label="Segna tutti assenti" @click="markAllAbsent(testForm)" />
                   </div>
                 </div>
+                <q-linear-progress :value="testForm.grades.length ? filledTestGradesCount / testForm.grades.length : 0" color="primary" class="q-mb-sm" />
                 
-                <q-scroll-area style="height: 350px;" class="border-grey rounded-borders q-pa-sm bg-grey-2">
+                <q-scroll-area style="height: 350px;" tabindex="0" aria-label="Lista inserimento voti alunni" class="border-grey rounded-borders q-pa-sm bg-grey-2">
                   <q-list separator>
                     <q-item v-for="(student, idx) in testForm.grades" :key="student.student_id" class="q-py-sm">
                       <q-item-section>
@@ -307,7 +309,7 @@
 
     <!-- Edit Class Test Dialog (Bulk) -->
     <q-dialog v-model="showEditTestDialog" persistent max-width="80vw">
-      <q-card style="width: 1000px; max-width: 90vw;">
+      <q-card style="width: 1000px; max-width: 90vw; max-height: 90vh; overflow-y: auto;">
         <q-card-section class="bg-primary text-white row items-center">
           <div class="text-h6 text-weight-bold">Modifica Verifica in Blocco</div>
           <q-space />
@@ -362,14 +364,15 @@
 
               <!-- Student Grades -->
               <div class="col-12 col-md-7">
-                <div class="text-subtitle1 q-mb-md text-weight-bold text-primary row items-center justify-between">
-                  <div>Voti Alunni</div>
+                <div class="text-subtitle1 q-mb-xs text-weight-bold text-primary row items-center justify-between">
+                  <div>Voti Alunni ({{ filledEditTestGradesCount }}/{{ editTestForm.grades.length }} inseriti)</div>
                   <div class="row items-center q-gutter-x-xs">
                     <q-btn icon="block" size="sm" outline color="warning" label="Segna tutti assenti" @click="markAllAbsent(editTestForm)" />
                   </div>
                 </div>
+                <q-linear-progress :value="editTestForm.grades.length ? filledEditTestGradesCount / editTestForm.grades.length : 0" color="primary" class="q-mb-sm" />
                 
-                <q-scroll-area style="height: 350px;" class="border-grey rounded-borders q-pa-sm bg-grey-2">
+                <q-scroll-area style="height: 350px;" tabindex="0" aria-label="Lista modifica voti alunni" class="border-grey rounded-borders q-pa-sm bg-grey-2">
                   <q-list separator>
                     <q-item v-for="(student, idx) in editTestForm.grades" :key="student.student_id" class="q-py-sm">
                       <q-item-section>
@@ -419,7 +422,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 import { useClassesStore } from 'src/stores/classes';
 import { useGradesStore } from 'src/stores/grades';
 import GradeEntry from 'src/components/Teacher/GradeEntry.vue';
@@ -437,7 +440,6 @@ const viewMode = ref('table');
 const filterDate = ref(date.formatDate(Date.now(), 'YYYY-MM-DD'));
 const gradeType = ref('Orale');
 const showRubric = ref(false);
-const offlineMode = ref(false);
 
 const showImportDialog = ref(false);
 const importFile = ref(null);
@@ -453,6 +455,16 @@ const testForm = ref({
     grades: []
 });
 
+const filledTestGradesCount = computed(() => {
+    if (!testForm.value || !testForm.value.grades) return 0;
+    return testForm.value.grades.filter(g => g.grade_value !== null && g.grade_value !== undefined && g.grade_value !== '').length;
+});
+
+const filledEditTestGradesCount = computed(() => {
+    if (!editTestForm.value || !editTestForm.value.grades) return 0;
+    return editTestForm.value.grades.filter(g => g.grade_value !== null && g.grade_value !== undefined && g.grade_value !== '').length;
+});
+
 const openTestDialog = () => {
     if (!gradesStore.grades || !gradesStore.grades.students || gradesStore.grades.students.length === 0) {
         $q.notify({ type: 'warning', message: 'Nessun alunno caricato per questa classe' });
@@ -466,7 +478,7 @@ const openTestDialog = () => {
         parentNotes: '',
         grades: gradesStore.grades.students.map(s => ({
             student_id: s.student_id,
-                            full_name: s.full_name,
+            full_name: s.full_name,
             grade_value: null,
             notes: ''
         }))
@@ -516,6 +528,7 @@ const submitTest = async () => {
 let classChangeReqId = 0;
 watch(selectedClassId, async (newVal) => {
     const currentReq = ++classChangeReqId;
+    selectedSubject.value = null;
     if (newVal) {
         await gradesStore.fetchClassSubjects(newVal);
         if (currentReq !== classChangeReqId) return;
@@ -525,24 +538,6 @@ watch(selectedClassId, async (newVal) => {
             selectedSubject.value = null;
         }
         await refreshGrades();
-    }
-});
-
-watch(offlineMode, (val) => {
-    if (val) {
-        $q.notify({
-            type: 'warning',
-            message: 'Modalità Offline attivata: le modifiche verranno salvate in cache locale',
-            icon: 'cloud_off',
-            timeout: 2500
-        });
-    } else {
-        $q.notify({
-            type: 'info',
-            message: 'Modalità Online ripristinata',
-            icon: 'cloud_done',
-            timeout: 2000
-        });
     }
 });
 
@@ -625,6 +620,7 @@ const submitEditTest = async () => {
                 .filter(g => g.grade_value !== null && g.grade_value !== undefined && g.grade_value !== '')
                 .map(g => ({
                     student_id: g.student_id,
+                    grade_id: g.grade_id ?? null,
                     grade_value: gradeToNumeric(g.grade_value),
                     notes: g.notes
                 }))
@@ -787,34 +783,34 @@ function gradeToNumeric(gradeStr) {
     const clean = String(gradeStr).trim().toUpperCase();
     if (clean === 'A') return -1;
     
+    let res = null;
     if (clean.includes('/')) {
         const parts = clean.split('/');
         if (parts.length === 2) {
             const n1 = parseFloat(parts[0]);
             const n2 = parseFloat(parts[1]);
             if (!isNaN(n1) && !isNaN(n2)) {
-                return (n1 + n2) / 2;
+                res = (n1 + n2) / 2;
             }
         }
-    }
-    
-    if (clean.endsWith('1/2') || clean.endsWith('½')) {
+    } else if (clean.endsWith('1/2') || clean.endsWith('½')) {
         const base = parseFloat(clean.replace('1/2', '').replace('½', '').trim());
-        if (!isNaN(base)) return base + 0.5;
-    }
-    
-    if (clean.endsWith('+')) {
+        if (!isNaN(base)) res = base + 0.5;
+    } else if (clean.endsWith('+')) {
         const base = parseFloat(clean.slice(0, -1).trim());
-        if (!isNaN(base)) return base + 0.25;
-    }
-    
-    if (clean.endsWith('-')) {
+        if (!isNaN(base)) res = base + 0.25;
+    } else if (clean.endsWith('-')) {
         const base = parseFloat(clean.slice(0, -1).trim());
-        if (!isNaN(base)) return base - 0.25;
+        if (!isNaN(base)) res = base - 0.5;
     }
-    
-    const val = parseFloat(clean.replace(',', '.'));
-    return isNaN(val) ? 0 : val;
+
+    if (res === null) {
+        const val = parseFloat(clean.replace(',', '.'));
+        res = isNaN(val) ? 0 : val;
+    }
+
+    if (res === -1) return -1;
+    return Math.min(10, Math.max(-1, res));
 }
 
 const getGradeColor = (val) => {
@@ -832,7 +828,7 @@ const getGradeColor = (val) => {
 <style scoped>
 .sticky-header {
     position: sticky;
-    top: 50px;
+    top: var(--header-height, 52px);
     z-index: 10;
 }
 

@@ -104,7 +104,7 @@ describe('Auth Store', () => {
 
             expect(localStorage.getItem('user')).toBe(JSON.stringify(mockUser))
             expect(localStorage.getItem('token')).toBe('access-token')
-            expect(localStorage.getItem('refreshToken')).toBe('refresh-token')
+            expect(sessionStorage.getItem('refreshToken')).toBe('refresh-token')
         })
     })
 

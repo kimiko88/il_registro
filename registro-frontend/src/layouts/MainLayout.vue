@@ -223,7 +223,7 @@
     <q-page-container role="main" id="main-content">
       <!-- Dynamic Breadcrumb Navigation Header -->
       <div v-if="breadcrumbs.length > 0" class="q-px-md q-pt-md">
-        <q-breadcrumbs class="text-caption text-grey-7" active-color="primary">
+        <q-breadcrumbs aria-label="Percorso di navigazione corrente" class="text-caption text-grey-7" active-color="primary">
           <template v-slot:separator>
             <q-icon size="1.2em" name="chevron_right" color="grey-5" />
           </template>
@@ -271,6 +271,8 @@ const navigateToNotifications = () => {
     router.push('/student/communications')
   } else if (role === 'parent') {
     router.push('/parent/communications')
+  } else if (role === 'admin' || role === 'superadmin') {
+    router.push('/admin/users')
   } else {
     router.push('/secretary/communications')
   }
@@ -296,7 +298,9 @@ onMounted(() => {
   themeStore.initTheme()
 })
 
-
+watch(() => route.path, () => {
+  if ($q.screen.lt.md) leftDrawerOpen.value = false
+})
 
 // Dynamic Breadcrumbs
 const breadcrumbs = computed(() => {
@@ -315,7 +319,7 @@ const breadcrumbs = computed(() => {
     '/teacher/rubrics': { label: 'Rubriche di Valutazione', icon: 'rule' },
     '/teacher/scrutiny': { label: 'Scrutini', icon: 'assessment' },
     '/teacher/communications': { label: 'Comunicazioni', icon: 'campaign' },
-    '/teacher/agenda': { label: 'Agenda e Registo', icon: 'event' },
+    '/teacher/agenda': { label: 'Agenda e Registro', icon: 'event' },
     '/teacher/classes': { label: 'Le Mie Classi', icon: 'class' },
     '/teacher/colloqui': { label: 'Colloqui e Incontri', icon: 'people' },
     '/teacher/documents': { label: 'Documenti', icon: 'description' },
@@ -350,6 +354,8 @@ const breadcrumbs = computed(() => {
     items.push({ label: 'Genitore', icon: 'family_restroom' })
   } else if (route.path.startsWith('/admin/')) {
     items.push({ label: 'Amministrazione', icon: 'admin_panel_settings' })
+  } else if (route.path.startsWith('/secretary/')) {
+    items.push({ label: 'Segreteria', icon: 'badge' })
   }
 
   items.push(current)
@@ -368,6 +374,7 @@ const roleLabel = computed(() => {
   if (!userRole.value) return 'Utente'
   const roleLabels = {
     admin: 'Amministratore',
+    superadmin: 'Super Amministratore',
     secretary: 'Segretario',
     teacher: 'Docente',
     student: 'Studente',

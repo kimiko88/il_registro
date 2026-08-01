@@ -85,12 +85,12 @@ export const useAuthStore = defineStore('auth', () => {
         if (rememberMe) {
             localStorage.setItem('user', JSON.stringify(sanitized))
             localStorage.setItem('token', tokenData)
+            localStorage.removeItem('refreshToken')
             if (refreshTokenData) {
-                localStorage.setItem('refreshToken', refreshTokenData)
+                sessionStorage.setItem('refreshToken', refreshTokenData)
             }
             sessionStorage.removeItem('user')
             sessionStorage.removeItem('token')
-            sessionStorage.removeItem('refreshToken')
         } else {
             sessionStorage.setItem('user', JSON.stringify(sanitized))
             sessionStorage.setItem('token', tokenData)

@@ -2,7 +2,7 @@
   <q-page class="q-pa-md">
     <div class="row items-center justify-between q-mb-md">
        <div class="text-h4">I Miei Voti</div>
-       <q-btn icon="download" label="Scarica Report" color="primary" @click="downloadReport" />
+       <q-btn icon="download" label="Scarica Report" color="primary" :loading="downloading" @click="downloadReport" />
     </div>
 
     <div class="row q-col-gutter-lg">
@@ -22,9 +22,9 @@
                    <div v-for="sub in subjectAverages" :key="sub.name" class="q-mb-sm">
                        <div class="row justify-between text-caption">
                            <span class="text-weight-medium">{{ sub.name }}</span>
-                           <span :class="{'text-green text-weight-bold': sub.avg>=6, 'text-red text-weight-bold': sub.avg<6 || sub.avg==='-'}">{{ sub.avg }}</span>
+                           <span :class="{'text-green text-weight-bold': sub.avg !== '-' && Number(sub.avg) >= 6, 'text-red text-weight-bold': sub.avg === '-' || Number(sub.avg) < 6}">{{ sub.avg }}</span>
                        </div>
-                       <q-linear-progress :value="sub.avg !== '-' ? sub.avg/10 : 0" :color="sub.avg>=6?'green':'red'" />
+                       <q-linear-progress :value="sub.avg !== '-' ? Number(sub.avg)/10 : 0" :color="sub.avg !== '-' && Number(sub.avg) >= 6 ? 'green' : 'red'" />
                    </div>
                </q-card-section>
             </q-card>
@@ -73,12 +73,13 @@
                                 label="Voto ipotetico"
                                 dense outlined
                                 min="1" max="10" step="0.25"
+                                aria-describedby="simulated-avg-output"
                                 :rules="[v => (v >= 1 && v <= 10) || 'Inserisci un voto tra 1 e 10']"
                             />
                         </div>
                         <div class="col-6 text-center">
                             <div class="text-caption text-grey">Nuova Media</div>
-                            <div class="text-h6 text-weight-bold" :class="simulatedAverage >= 6 ? 'text-green' : 'text-red'">
+                            <div id="simulated-avg-output" class="text-h6 text-weight-bold" :class="simulatedAverage >= 6 ? 'text-green' : 'text-red'">
                                 {{ simulatedAverage }}
                             </div>
                         </div>

@@ -2,11 +2,11 @@
   <q-page class="flex flex-center">
     <div class="glass-card q-pa-xl" style="width: 100%; max-width: 420px">
       <div class="text-center q-mb-lg">
-        <div class="text-h4 text-weight-bold text-primary q-mb-xs" style="letter-spacing: -1px">Bentornato</div>
+        <h1 class="text-h4 text-weight-bold text-primary q-mb-xs" style="letter-spacing: -1px">Bentornato</h1>
         <div class="text-grey-7">Accedi per entrare nel Registro Elettronico</div>
       </div>
 
-      <q-form @submit="onSubmit" class="q-gutter-y-md">
+      <q-form aria-label="Modulo di accesso" @submit="onSubmit" class="q-gutter-y-md">
         <q-input
           v-model="email"
           label="Indirizzo Email"
@@ -41,21 +41,23 @@
             <q-icon name="lock" color="primary" />
           </template>
           <template v-slot:append>
-            <q-icon
-              :name="showPassword ? 'visibility_off' : 'visibility'"
-              class="cursor-pointer"
+            <q-btn
+              flat
+              round
+              dense
+              :icon="showPassword ? 'visibility_off' : 'visibility'"
+              :aria-label="showPassword ? 'Nascondi password' : 'Mostra password'"
               @click="showPassword = !showPassword"
-              aria-label="Mostra o nascondi password"
             />
           </template>
         </q-input>
         
         <div class="row justify-between items-center q-mt-sm">
-          <q-checkbox v-model="rememberMe" label="Ricordami" dense size="sm" color="primary" />
+          <q-checkbox id="remember-me" v-model="rememberMe" label="Ricordami" dense size="sm" color="primary" />
         </div>
 
         <!-- Inline Error Alert -->
-        <div v-if="errorMessage" class="q-mt-sm bg-red-1 text-negative q-pa-sm rounded-lg text-caption text-center row items-center justify-center">
+        <div v-if="errorMessage" role="alert" aria-live="assertive" class="q-mt-sm bg-red-1 text-negative q-pa-sm rounded-lg text-caption text-center row items-center justify-center">
           <q-icon name="error_outline" size="18px" class="q-mr-xs" />
           <span>{{ errorMessage }}</span>
         </div>
@@ -96,6 +98,7 @@ const { login } = useAuth()
 const route = useRoute()
 
 onMounted(() => {
+  document.title = 'Accedi — Registro Elettronico'
   try {
     if (route && route.query && route.query.reason === 'session_expired') {
       errorMessage.value = 'Sessione scaduta. Effettua nuovamente l\'accesso.'

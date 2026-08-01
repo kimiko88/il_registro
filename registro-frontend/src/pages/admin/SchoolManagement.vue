@@ -39,7 +39,7 @@
           label="Nuova Scuola"
           unelevated
           class="rounded-lg shadow-soft q-px-lg"
-          @click="showCreateDialog = true"
+          @click="openCreate"
         />
       </div>
     </div>
@@ -85,7 +85,7 @@
               label="Aggiorna"
               @click="fetchSchools"
               :loading="loading"
-              class="full-width rounded-lg h-full"
+              class="full-width rounded-lg"
               style="height: 56px"
             />
           </div>
@@ -152,6 +152,7 @@
                 dense
                 round
                 icon="visibility"
+                aria-label="Visualizza scuola"
                 @click="viewSchool(props.row)"
               >
                 <q-tooltip>Visualizza</q-tooltip>
@@ -162,6 +163,7 @@
                 dense
                 round
                 icon="edit"
+                aria-label="Modifica scuola"
                 @click="editSchool(props.row)"
               >
                 <q-tooltip>Modifica</q-tooltip>
@@ -173,6 +175,7 @@
                 round
                 icon="delete"
                 color="negative"
+                aria-label="Elimina scuola"
                 @click="confirmDelete(props.row)"
               >
                 <q-tooltip>Elimina</q-tooltip>
@@ -445,17 +448,32 @@ const deleteSelected = () => {
         persistent: true,
         ok: { color: 'negative', label: 'Elimina Tutti' }
     }).onOk(async () => {
-        // Mock bulk delete - iterate one by one for now
+        let successCount = 0
+        let failCount = 0
+        const failedNames = []
+
         for (const s of selected.value) {
             try {
                 await adminService.deleteSchool(s.id)
+                successCount++
             } catch (e) {
                 console.error('Error removing school', s.name, e)
+                failCount++
+                failedNames.push(s.name)
             }
         }
         selected.value = []
         fetchSchools()
-        $q.notify({ type: 'positive', message: 'Elementi eliminati' })
+        if (failCount === 0) {
+            $q.notify({ type: 'positive', message: `${successCount} scuole eliminate con successo` })
+        } else if (successCount > 0) {
+            $q.notify({
+                type: 'warning',
+                message: `${successCount} scuole eliminate, ${failCount} non eliminate (${failedNames.join(', ')})`
+            })
+        } else {
+            $q.notify({ type: 'negative', message: `Impossibile eliminare le scuole selezionate (${failedNames.join(', ')})` })
+        }
     })
 }
 

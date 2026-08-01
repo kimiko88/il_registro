@@ -130,7 +130,9 @@
               </div>
 
               <div v-else class="relative-position q-py-md">
-                <svg viewBox="0 0 500 200" class="full-width" style="overflow: visible;">
+                <svg viewBox="0 0 500 200" class="full-width" style="overflow: visible;" role="img" aria-labelledby="chart-title chart-desc">
+                  <title id="chart-title">Crescita Utenti Registrati</title>
+                  <desc id="chart-desc">Andamento semestrale delle registrazioni degli utenti in piattaforma</desc>
                   <defs>
                     <linearGradient id="chartLineGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stop-color="#4F46E5" stop-opacity="0.25"/>
@@ -327,9 +329,14 @@ const hoveredDonut = ref(null)
 
 // ── Fetch stats ──────────────────────────────────────────────
 const fetchStats = async () => {
-  const response = await adminService.getDashboardStats()
-  stats.value = response.data
-  recentAuditEvents.value = response.data?.recent_events || []
+  try {
+    const response = await adminService.getDashboardStats()
+    stats.value = response.data
+    recentAuditEvents.value = response.data?.recent_events || []
+  } catch (e) {
+    console.warn('Dashboard stats failed:', e)
+    $q.notify({ type: 'warning', message: 'Impossibile caricare le statistiche generali' })
+  }
 }
 
 // ── Fetch system metrics (latency, CPU, cache) ────────────────
@@ -405,11 +412,11 @@ const linePath = computed(() => {
 })
 
 const areaPath = computed(() => {
-  if (!chartPoints.value.length) return ''
+  if (chartPoints.value.length < 2) return ''
   const first = chartPoints.value[0]
   const last = chartPoints.value[chartPoints.value.length - 1]
-  const points = chartPoints.value.map(pt => `${pt.x},${pt.y}`).join(' ')
-  return `M ${first.x} 170 L ${points} L ${last.x} 170 Z`
+  const points = chartPoints.value.map(pt => `${pt.x},${pt.y}`).join(' L ')
+  return `M ${first.x},170 L ${points} L ${last.x},170 Z`
 })
 
 const latencyColor = computed(() => {

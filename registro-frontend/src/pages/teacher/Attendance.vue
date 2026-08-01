@@ -44,7 +44,7 @@
     <!-- Summary Cards -->
     <div class="row q-col-gutter-md q-mb-md">
         <div class="col-12 col-md-3">
-            <q-card class="bg-green-1">
+            <q-card class="bg-green-1" :aria-label="`Presenti: ${stats.present} studenti`">
                 <q-card-section class="text-center">
                     <q-icon name="check_circle" size="28px" color="green-8" class="q-mb-xs" />
                     <div class="text-caption text-uppercase text-green-9">Presenti</div>
@@ -53,7 +53,7 @@
             </q-card>
         </div>
         <div class="col-12 col-md-3">
-             <q-card class="bg-red-1">
+             <q-card class="bg-red-1" :aria-label="`Assenti: ${stats.absent} studenti`">
                 <q-card-section class="text-center">
                     <q-icon name="cancel" size="28px" color="red-8" class="q-mb-xs" />
                     <div class="text-caption text-uppercase text-red-9">Assenti</div>
@@ -62,7 +62,7 @@
             </q-card>
         </div>
         <div class="col-12 col-md-3">
-             <q-card class="bg-orange-1">
+             <q-card class="bg-orange-1" :aria-label="`Ritardi: ${stats.late} studenti`">
                 <q-card-section class="text-center">
                     <q-icon name="schedule" size="28px" color="orange-8" class="q-mb-xs" />
                     <div class="text-caption text-uppercase text-orange-9">Ritardi</div>
@@ -71,7 +71,7 @@
             </q-card>
         </div>
         <div class="col-12 col-md-3">
-             <q-card class="bg-blue-1 cursor-pointer" ripple @click="showJustifications = true">
+             <q-card class="bg-blue-1 cursor-pointer" ripple @click="showJustifications = true" :aria-label="`Da Giustificare: ${stats.toJustify} richieste`">
                 <q-card-section class="text-center">
                     <q-icon name="assignment_turned_in" size="28px" color="blue-8" class="q-mb-xs" />
                     <div class="text-caption text-uppercase text-blue-9">Da Giustificare</div>
@@ -87,14 +87,14 @@
         <q-toolbar class="bg-grey-2 text-grey-8">
             <q-toolbar-title class="text-subtitle1 row items-center">
                 <span>Appello - {{ date }}</span>
-                <q-chip dense color="primary" text-color="white" class="q-ml-md font-weight-bold">
+                <q-chip dense :color="markedCountChipColor" text-color="white" class="q-ml-md font-weight-bold">
                     {{ markedCount }}/{{ students.length }} registrati
                 </q-chip>
                 <q-chip v-if="lastAutosaveTime" dense color="grey-7" text-color="white" icon="cloud_done" class="q-ml-sm text-caption">
                     Bozza salvata alle {{ lastAutosaveTime }}
                 </q-chip>
             </q-toolbar-title>
-            <q-btn flat dense icon="check_circle" label="Tutti Presenti" color="primary" @click="markAllPresent" :disable="loading" />
+            <q-btn flat dense icon="check_circle" label="Tutti Presenti" color="primary" aria-label="Segna tutti gli studenti come presenti per il giorno e l'ora selezionati" @click="markAllPresent" :disable="loading" />
         </q-toolbar>
 
         <!-- Daily Timeline (Previous Hours) -->
@@ -105,12 +105,15 @@
                     <q-chip dense outline color="blue-7" text-color="white" icon="history">
                         Ora {{ l.hour }}: {{ l.topic }}
                         <q-tooltip>
-                            Materia: {{ l.subject_id }}<br>
+                            Materia: {{ getSubjectName(l.subject_id) }}<br>
                             Tipo: {{ l.type }}
                         </q-tooltip>
                     </q-chip>
                 </div>
             </div>
+        </div>
+        <div v-else class="q-px-md q-py-xs text-caption text-grey-6 bg-blue-50">
+            Nessuna attività registrata per oggi
         </div>
         
         <div v-if="loading" class="row justify-center q-pa-lg">
@@ -128,21 +131,21 @@
                 <q-item-section>
                     <div class="row items-center">
                        <div class="col">
-                           <q-item-label class="text-weight-medium row items-center">
+                            <q-item-label class="text-weight-medium row items-center">
                                <q-icon v-if="student.status === 'Present'" name="check_circle" color="positive" size="18px" class="q-mr-xs" />
                                <q-icon v-else-if="student.status === 'Absent'" name="cancel" color="negative" size="18px" class="q-mr-xs" />
                                <q-icon v-else-if="student.status === 'Late'" name="schedule" color="warning" size="18px" class="q-mr-xs" />
                                <q-icon v-else-if="student.status === 'LeftEarly'" name="output" color="purple" size="18px" class="q-mr-xs" />
                                <span>{{ student.last_name }} {{ student.first_name }}</span>
-                           </q-item-label>
-                           <q-item-label caption v-if="student.status === 'Absent'">Assente</q-item-label>
-                           <q-item-label caption v-if="student.status === 'Late'">
-                               Ritardo ({{ formatLateLabel(student) }})
-                           </q-item-label>
-                           <q-item-label caption v-if="student.status === 'LeftEarly'">
-                               Uscita Anticipata ({{ formatEarlyExitLabel(student) }})
-                           </q-item-label>
-                        </div>
+                            </q-item-label>
+                            <q-item-label caption v-if="student.status === 'Absent'">Assente</q-item-label>
+                            <q-item-label caption v-if="student.status === 'Late'">
+                                Ritardo ({{ formatLateLabel(student) }})
+                            </q-item-label>
+                            <q-item-label caption v-if="student.status === 'LeftEarly'">
+                                Uscita Anticipata ({{ formatEarlyExitLabel(student) }})
+                            </q-item-label>
+                         </div>
                     </div>
                 </q-item-section>
 
@@ -205,8 +208,8 @@
 
     <!-- Justification Dialog -->
     <q-dialog v-model="showJustifications">
-        <q-card style="min-width: 600px">
-            <q-card-section class="text-h6">Gestione Giustificazioni</q-card-section>
+        <q-card role="dialog" aria-labelledby="dialog-justification-title" style="min-width: 600px">
+            <q-card-section id="dialog-justification-title" class="text-h6">Gestione Giustificazioni</q-card-section>
             <q-list separator>
                 <q-item v-for="req in justificationRequests" :key="req.id">
                     <q-item-section>
@@ -215,8 +218,8 @@
                     </q-item-section>
                     <q-item-section side>
                         <div class="row q-gutter-sm">
-                            <q-btn flat round color="green" icon="check" @click="processJustification(req.id, true)" />
-                            <q-btn flat round color="red" icon="close" @click="processJustification(req.id, false)" />
+                            <q-btn flat round color="green" icon="check" :aria-label="'Approva giustificazione di ' + req.student_name" @click="processJustification(req.id, true)" />
+                            <q-btn flat round color="red" icon="close" :aria-label="'Rifiuta giustificazione di ' + req.student_name" @click="processJustification(req.id, false)" />
                         </div>
                     </q-item-section>
                 </q-item>
@@ -233,8 +236,8 @@
         v-if="selectedClass" 
         v-model="showNoteDialog"
         :student="selectedStudentForNote"
-        :class-id="String(selectedClass.id)" 
-    />
+        :class-id="String(typeof selectedClass === 'object' ? selectedClass.id : selectedClass)" 
+    />>
 
   </q-page>
 </template>
@@ -278,6 +281,17 @@ const stats = computed(() => ({
 }))
 
 const markedCount = computed(() => students.value.filter(s => s.status).length)
+const markedCountChipColor = computed(() => {
+    if (markedCount.value === 0) return 'negative'
+    if (markedCount.value < students.value.length) return 'warning'
+    return 'positive'
+})
+
+const getSubjectName = (subjectId) => {
+    if (!subjectId) return 'Materia non specificata'
+    const found = gradesStore.subjects.find(s => String(s.subject_id) === String(subjectId) || String(s.id) === String(subjectId))
+    return found ? found.subject_name : subjectId
+}
 
 const getRowClass = (status) => {
     switch (status) {
@@ -310,7 +324,29 @@ const saveDraftToStorage = () => {
     }
 }
 
+const cleanOldDrafts = () => {
+    try {
+        const now = Date.now()
+        const maxAge = 7 * 24 * 60 * 60 * 1000
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i)
+            if (key && key.startsWith('attendance_draft_')) {
+                const item = localStorage.getItem(key)
+                if (item) {
+                    const parsed = JSON.parse(item)
+                    if (parsed.timestamp && (now - new Date(parsed.timestamp).getTime()) > maxAge) {
+                        localStorage.removeItem(key)
+                    }
+                }
+            }
+        }
+    } catch (e) {
+        console.warn('Error cleaning old drafts', e)
+    }
+}
+
 onMounted(async () => {
+    cleanOldDrafts()
     await classesStore.fetchAssignedClasses()
     if (classesStore.classes.length > 0) {
         selectedClass.value = classesStore.classes[0]
@@ -499,9 +535,17 @@ const exportCSV = async () => {
         link.setAttribute('download', `presenze_${classId}.csv`)
         document.body.appendChild(link)
         link.click()
+        link.remove()
+        window.URL.revokeObjectURL(url)
         $q.notify({ type: 'positive', message: 'Export CSV completato!' })
     } catch (err) {
         $q.notify({ type: 'negative', message: 'Errore durante l\'export CSV' })
     }
 }
 </script>
+
+<style scoped>
+.transition-bg {
+    transition: background-color 0.3s ease;
+}
+</style>

@@ -48,6 +48,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
             wsUrl = `${wsScheme}//${baseUrl}/ws`
         }
 
+        const token = authStore.token
         socket.value = new WebSocket(wsUrl, ['access_token', token])
 
         socket.value.onopen = () => {
@@ -139,7 +140,8 @@ export const useWebSocketStore = defineStore('websocket', () => {
                     message: `Nuovo voto registrato: ${escapeHtml(payload.grade_value)} (${escapeHtml(payload.subject_name || 'Materia')})`,
                     color: 'info',
                     icon: 'school',
-                    position: 'top-right'
+                    position: 'top-right',
+                    attrs: { role: 'alert' }
                 })
                 break
             case 'ATTENDANCE_LATE':
@@ -148,7 +150,8 @@ export const useWebSocketStore = defineStore('websocket', () => {
                     message: `Aggiornamento presenze: ${escapeHtml(payload.status || 'Presenza registrata')}`,
                     color: 'warning',
                     icon: 'warning',
-                    position: 'top-right'
+                    position: 'top-right',
+                    attrs: { role: 'alert' }
                 })
                 break
             case 'NEW_COMMUNICATION':
@@ -157,7 +160,8 @@ export const useWebSocketStore = defineStore('websocket', () => {
                     message: `Nuova comunicazione: ${escapeHtml(payload.title || 'Circolare scolastica')}`,
                     color: 'primary',
                     icon: 'mail',
-                    position: 'top-right'
+                    position: 'top-right',
+                    attrs: { role: 'alert' }
                 })
                 break
             case 'NOTE_ADDED':
@@ -165,7 +169,8 @@ export const useWebSocketStore = defineStore('websocket', () => {
                     message: `Nuova nota disciplinare registrata: ${escapeHtml(payload.title)}`,
                     color: 'negative',
                     icon: 'report_problem',
-                    position: 'top-right'
+                    position: 'top-right',
+                    attrs: { role: 'alert' }
                 })
                 break
             case 'SCRUTINY_PUBLISHED':
@@ -173,7 +178,8 @@ export const useWebSocketStore = defineStore('websocket', () => {
                     message: `Esito scrutinio pubblicato per ${escapeHtml(payload.student_name || 'lo studente')}`,
                     color: 'positive',
                     icon: 'assignment_turned_in',
-                    position: 'top-right'
+                    position: 'top-right',
+                    attrs: { role: 'alert' }
                 })
                 break
             case 'GOAL_UPDATED':
@@ -181,7 +187,8 @@ export const useWebSocketStore = defineStore('websocket', () => {
                     message: `Obiettivo aggiornato: ${escapeHtml(payload.title)}`,
                     color: 'secondary',
                     icon: 'star',
-                    position: 'top-right'
+                    position: 'top-right',
+                    attrs: { role: 'alert' }
                 })
                 break
             case 'SLOT_BOOKED':
@@ -190,7 +197,8 @@ export const useWebSocketStore = defineStore('websocket', () => {
                     message: `Aggiornamento colloquio: ${escapeHtml(payload.message || message.type)}`,
                     color: 'accent',
                     icon: 'event',
-                    position: 'top-right'
+                    position: 'top-right',
+                    attrs: { role: 'alert' }
                 })
                 break
             default:
@@ -199,7 +207,8 @@ export const useWebSocketStore = defineStore('websocket', () => {
                         message: payload.title ? `${escapeHtml(payload.title)}: ${escapeHtml(payload.body)}` : escapeHtml(payload.body),
                         color: 'info',
                         icon: 'notifications',
-                        position: 'top-right'
+                        position: 'top-right',
+                        attrs: { role: 'alert' }
                     })
                 }
                 break

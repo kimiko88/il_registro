@@ -54,6 +54,8 @@
     <!-- 75% PRESENCE RISK WARNING BANNER -->
     <q-banner
       v-if="statsData && statsData.absence_percentage > 25"
+      role="alert"
+      aria-live="assertive"
       class="bg-negative text-white rounded-xl q-mb-md shadow-md"
     >
       <template v-slot:avatar>
@@ -80,7 +82,7 @@
         <div class="col-12 col-sm-3">
           <q-card flat bordered class="bg-red-50 border-red-200 text-negative rounded-xl shadow-soft">
             <q-card-section class="text-center">
-              <div class="text-h4 text-weight-bold">{{ summary.total_absences || 0 }}</div>
+              <div class="text-h4 text-weight-bold">{{ summary.total_absences ?? 0 }}</div>
               <div class="text-caption text-slate-600">Assenze Totali</div>
             </q-card-section>
           </q-card>
@@ -88,7 +90,7 @@
         <div class="col-12 col-sm-3">
           <q-card flat bordered class="bg-amber-50 border-amber-200 text-warning rounded-xl shadow-soft">
             <q-card-section class="text-center">
-              <div class="text-h4 text-weight-bold">{{ summary.total_lates || 0 }}</div>
+              <div class="text-h4 text-weight-bold">{{ summary.total_lates ?? 0 }}</div>
               <div class="text-caption text-slate-600">Ritardi</div>
             </q-card-section>
           </q-card>
@@ -199,20 +201,20 @@
         <div class="col-6 col-md-3">
           <q-card flat bordered class="bg-white rounded-xl shadow-soft text-center q-pa-sm">
             <div class="text-caption text-slate-400">Presenti</div>
-            <div class="text-h4 text-weight-bold text-positive">{{ statsData?.days_present || 130 }}</div>
+            <div class="text-h4 text-weight-bold text-positive">{{ statsData?.days_present ?? 0 }}</div>
           </q-card>
         </div>
         <div class="col-6 col-md-3">
           <q-card flat bordered class="bg-white rounded-xl shadow-soft text-center q-pa-sm">
             <div class="text-caption text-slate-400">Assenti</div>
-            <div class="text-h4 text-weight-bold text-negative">{{ statsData?.days_absent || 20 }}</div>
+            <div class="text-h4 text-weight-bold text-negative">{{ statsData?.days_absent ?? 0 }}</div>
           </q-card>
         </div>
         <div class="col-6 col-md-3">
           <q-card flat bordered class="bg-white rounded-xl shadow-soft text-center q-pa-sm">
             <div class="text-caption text-slate-400">% Presenza</div>
             <div class="text-h4 text-weight-bold" :class="getPresenceColorClass(statsPresencePercentage)">
-              {{ (100 - (statsData?.absence_percentage || 13.3)).toFixed(1) }}%
+              {{ (100 - (statsData?.absence_percentage ?? 0)).toFixed(1) }}%
             </div>
           </q-card>
         </div>
@@ -229,28 +231,28 @@
               <q-circular-progress
                 show-value
                 font-size="16px"
-                :value="100 - (statsData?.absence_percentage || 13.3)"
+                :value="100 - (statsData?.absence_percentage ?? 0)"
                 size="160px"
                 :thickness="0.2"
                 color="positive"
                 track-color="red-2"
                 class="text-weight-bold text-slate-800"
               >
-                {{ (100 - (statsData?.absence_percentage || 13.3)).toFixed(1) }}%
+                {{ (100 - (statsData?.absence_percentage ?? 0)).toFixed(1) }}%
               </q-circular-progress>
 
               <div class="w-full space-y-2 q-mt-md">
                 <div class="row items-center justify-between text-body2">
                   <span class="row items-center"><div class="w-3 h-3 rounded bg-positive q-mr-xs" /> Presenti</span>
-                  <span class="text-weight-bold">{{ statsData?.days_present || 130 }} giorni</span>
+                  <span class="text-weight-bold">{{ statsData?.days_present ?? 0 }} giorni</span>
                 </div>
                 <div class="row items-center justify-between text-body2">
                   <span class="row items-center"><div class="w-3 h-3 rounded bg-blue-500 q-mr-xs" /> Assenti Giustificate</span>
-                  <span class="text-weight-bold">{{ statsData?.justified || 18 }} giorni</span>
+                  <span class="text-weight-bold">{{ statsData?.justified ?? 0 }} giorni</span>
                 </div>
                 <div class="row items-center justify-between text-body2">
                   <span class="row items-center"><div class="w-3 h-3 rounded bg-negative q-mr-xs" /> Assenti Non Giustificate</span>
-                  <span class="text-weight-bold">{{ statsData?.unjustified || 2 }} giorni</span>
+                  <span class="text-weight-bold">{{ statsData?.unjustified ?? 0 }} giorni</span>
                 </div>
               </div>
             </div>
@@ -268,7 +270,7 @@
                   <span>{{ m.month }}</span>
                   <span>{{ m.present }} Pres. / {{ m.absent }} Ass.</span>
                 </div>
-                <div class="w-full bg-slate-100 rounded-full h-4 overflow-hidden flex">
+                <div class="w-full bg-slate-100 rounded-full h-4 overflow-hidden flex" :title="`Mese ${m.month}: ${m.present} presenti, ${m.absent} assenti`" :aria-label="`Mese ${m.month}: ${m.present} presenti, ${m.absent} assenti`">
                   <div class="bg-positive h-full" :style="{ width: ((m.present / (m.present + m.absent || 1)) * 100) + '%' }" />
                   <div class="bg-negative h-full" :style="{ width: ((m.absent / (m.present + m.absent || 1)) * 100) + '%' }" />
                 </div>

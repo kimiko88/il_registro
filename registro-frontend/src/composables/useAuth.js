@@ -16,6 +16,7 @@ export function useAuth() {
 
             // Redirect based on role
             switch (userData.role) {
+                case 'superadmin':
                 case 'admin':
                     router.push('/admin')
                     break

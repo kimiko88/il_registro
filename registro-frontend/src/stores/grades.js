@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia';
+import api from '../services/api';
 import { gradeService } from '../services/gradeService';
 
 export const useGradesStore = defineStore('grades', {
@@ -203,6 +204,7 @@ export const useGradesStore = defineStore('grades', {
         },
 
         async downloadReportCardPDF(semester = 1) {
+            this.loading = true;
             let url = null;
             let link = null;
             try {
@@ -224,6 +226,7 @@ export const useGradesStore = defineStore('grades', {
                 if (url) {
                     window.URL.revokeObjectURL(url);
                 }
+                this.loading = false;
             }
         }
     }

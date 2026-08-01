@@ -244,6 +244,7 @@
             :rows="activityLogs"
             :columns="activityColumns"
             row-key="id"
+            aria-label="Log attività amministratore"
             flat
           >
              <template v-slot:body-cell-created_at="props">
@@ -268,7 +269,6 @@ const $q = useQuasar()
 
 // State
 const admins = ref([])
-const _schools = ref([])
 const loading = ref(false)
 const saving = ref(false)
 const showDialog = ref(false)

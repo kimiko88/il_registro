@@ -5,7 +5,7 @@
         <q-icon name="assignment" color="orange" class="q-mr-sm" />
         Agenda e Compiti
       </div>
-      <q-tabs v-model="tab" dense class="text-grey" active-color="primary" indicator-color="primary" align="justify" narrow-indicator>
+      <q-tabs v-model="tab" dense class="text-grey" active-color="primary" indicator-color="primary" align="justify" narrow-indicator aria-label="Sezioni agenda e compiti">
         <q-tab name="compiti" label="Lista Compiti" icon="list" />
         <q-tab name="agenda" label="Agenda & Lezioni" icon="calendar_month" />
       </q-tabs>

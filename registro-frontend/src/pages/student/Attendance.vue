@@ -36,7 +36,7 @@
                 </div>
             </q-card>
 
-            <q-card class="q-mt-md bg-orange-1">
+            <q-card v-if="attendancePercentage < 85" class="q-mt-md bg-orange-1">
                 <q-card-section>
                     <div class="text-subtitle2"><q-icon name="warning" /> Attenzione</div>
                     <div class="text-caption">Hai raggiunto il 15% di assenze consentite. Mettiti in regola per evitare problemi con l'anno scolastico.</div>
@@ -60,8 +60,8 @@
                 </template>
                 <template v-slot:body-cell-justified="props">
                     <q-td :props="props">
-                        <q-icon v-if="props.value" name="check_circle" color="green" />
-                        <q-icon v-else name="cancel" color="red" />
+                        <q-icon v-if="props.value" name="check_circle" color="green" role="img" aria-label="Giustificata" />
+                        <q-icon v-else name="cancel" color="red" role="img" aria-label="Non giustificata" />
                     </q-td>
                 </template>
             </q-table>
@@ -96,8 +96,10 @@
 import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { attendanceService } from 'src/services/attendanceService'
+import { useAuthStore } from 'src/stores/auth'
 
 const $q = useQuasar()
+const authStore = useAuthStore()
 const showJustifyDialog = ref(false)
 const attendanceEvents = ref([])
 
@@ -153,13 +155,13 @@ function mapStatus(status) {
 const totalAbsences = computed(() => attendanceEvents.value.filter(e => e.type === 'Assenza').length)
 const totalDelays = computed(() => attendanceEvents.value.filter(e => e.type === 'Ritardo').length)
 
-const totalDays = 100 
-const attendancePercentage = computed(() => Math.round(((totalDays - totalAbsences.value) / totalDays) * 100))
+const totalDays = computed(() => Math.max(attendanceEvents.value.length, 1))
+const attendancePercentage = computed(() => Math.round(((totalDays.value - totalAbsences.value) / totalDays.value) * 100))
 
 const unjustifiedAbsences = computed(() => 
     attendanceEvents.value
         .filter(e => !e.justified && e.type === 'Assenza')
-        .map(e => ({ label: `${e.date} - ${e.type}`, value: e.id }))
+        .map(e => ({ label: `${e.date} - ${e.type}`, value: e.id, date: e.date }))
 )
 
 const justification = ref({ event: null, reason: null, notes: '' })
@@ -173,11 +175,13 @@ const getTypeColor = (type) => {
 
 const submitJustification = async () => {
     if (!justification.value.event) return
-    
+    const eventObj = justification.value.event
     try {
-        await attendanceService.justify(justification.value.event.value, {
-             student_id: 'me', 
-             start_date: '2025-01-01', 
+        await attendanceService.justify(eventObj.value, {
+             student_id: authStore.user?.id || 'me', 
+             start_date: eventObj.date || new Date().toISOString().split('T')[0],
+             reason: justification.value.reason || 'Assenza',
+             notes: justification.value.notes || ''
         })
         $q.notify({ type: 'positive', message: 'Richiesta inviata' })
     } catch(e) {

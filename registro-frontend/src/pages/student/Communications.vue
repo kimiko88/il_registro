@@ -137,7 +137,7 @@
               >
                 <q-item-section avatar>
                   <q-avatar :color="msg.read ? 'grey-3' : 'blue'" text-color="white" size="md">
-                    {{ msg.sender[0] }}
+                    {{ (msg.sender?.[0] ?? '?').toUpperCase() }}
                   </q-avatar>
                 </q-item-section>
                 <q-item-section>
@@ -253,7 +253,7 @@ async function fetchMessages() {
       sender: m.sender_name || 'Sistema',
       email: m.sender_email || '',
       subject: m.subject,
-      preview: (m.body || '').substring(0, 50) + '...',
+      preview: (m.body || '').length > 50 ? (m.body || '').substring(0, 50) + '...' : (m.body || ''),
       body: m.body,
       date: new Date(m.created_at).toLocaleDateString('it-IT'),
       fullDate: new Date(m.created_at).toLocaleString('it-IT'),

@@ -27,7 +27,7 @@
                 unelevated
                 icon="dashboard"
                 label="Torna alla Dashboard"
-                to="/dashboard"
+                to="/"
                 no-caps
                 class="full-width rounded-lg q-px-lg"
               />
@@ -38,7 +38,7 @@
                 color="primary"
                 icon="arrow_back"
                 label="Pagina Precedente"
-                @click="$router.back()"
+                @click="goBack"
                 no-caps
                 class="full-width rounded-lg q-px-lg"
               />
@@ -51,6 +51,17 @@
 </template>
 
 <script setup>
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
+const goBack = () => {
+  if (window.history.length > 1) {
+    router.back()
+  } else {
+    router.push('/')
+  }
+}
 </script>
 
 <style scoped>

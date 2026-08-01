@@ -3,7 +3,7 @@
     <!-- Hero Section -->
     <div class="row items-center q-mb-xl">
       <div class="col-12 col-md-8">
-        <h1 class="text-h3 text-weight-bold text-outfit q-my-none text-primary">
+        <h1 class="text-h4 text-sm-h3 text-weight-bold text-outfit q-my-none text-primary">
           {{ greeting }}, {{ user?.first_name || 'Utente' }}
         </h1>
         <div class="text-subtitle1 text-slate-500 q-mt-sm">
@@ -12,14 +12,14 @@
       </div>
       <div class="col-12 col-md-4 text-right gt-sm">
         <div class="text-caption text-slate-400 text-uppercase letter-spacing-1">Data Odierna</div>
-        <div class="text-h6 text-outfit text-weight-bold text-slate-700">{{ new Date().toLocaleDateString('it-IT', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) }}</div>
+        <div class="text-h6 text-outfit text-weight-bold text-slate-700">{{ today }}</div>
       </div>
     </div>
 
     <!-- Quick Stats -->
     <div class="row q-col-gutter-lg q-mb-xl" :aria-busy="loadingData" aria-live="polite">
       <div class="col-12 col-sm-6 col-md-3" v-for="(stat, index) in stats" :key="index">
-        <q-card class="glass-card stat-card full-height">
+        <q-card :aria-label="`${stat.label}: ${stat.value}`" class="glass-card stat-card full-height">
           <q-card-section class="row items-center no-wrap" v-if="!loadingData">
             <div :class="`bg-${stat.color}-100 text-${stat.color}-700 q-pa-md rounded-xl q-mr-md`">
               <q-icon :name="stat.icon" size="28px" />
@@ -104,15 +104,18 @@
       <div class="col-12 col-md-4">
         <q-card class="no-shadow glass-card q-mb-md" style="border-left: 4px solid var(--q-primary);">
           <q-card-section>
-            <div class="text-subtitle2 text-primary q-mb-xs">
-              {{ latestAnnouncement ? latestAnnouncement.type.toUpperCase() : 'COMUNICAZIONE' }}
-            </div>
-            <div class="text-h6 text-weight-bold text-slate-800 q-mb-sm">
-              {{ latestAnnouncement ? latestAnnouncement.subject : 'Benvenuto nel Registro' }}
-            </div>
-            <div class="text-body2 text-slate-600 opacity-80">
-              {{ latestAnnouncement ? latestAnnouncement.body : 'Le comunicazioni ufficiali e gli annunci per l\'anno scolastico corrente saranno mostrati in questa sezione.' }}
-            </div>
+            <q-skeleton v-if="loadingAnnouncements" type="text" :lines="3" />
+            <template v-else>
+              <div class="text-subtitle2 text-primary q-mb-xs">
+                {{ latestAnnouncement ? latestAnnouncement.type.toUpperCase() : 'COMUNICAZIONE' }}
+              </div>
+              <div class="text-h6 text-weight-bold text-slate-800 q-mb-sm">
+                {{ latestAnnouncement ? latestAnnouncement.subject : 'Benvenuto nel Registro' }}
+              </div>
+              <div class="text-body2 text-slate-600 opacity-80">
+                {{ latestAnnouncement ? latestAnnouncement.body : 'Le comunicazioni ufficiali e gli annunci per l\'anno scolastico corrente saranno mostrati in questa sezione.' }}
+              </div>
+            </template>
           </q-card-section>
         </q-card>
 
@@ -120,13 +123,13 @@
           <q-card-section>
             <div class="text-h6 text-weight-bold text-dark q-mb-md">Azioni Rapide</div>
             <div class="row q-col-gutter-sm">
-              <div class="col-6" v-for="action in actions" :key="action.label">
+              <div class="col-6" v-for="action in actions" :key="action.key">
                 <q-btn 
                   outline 
                   class="full-width text-dark" 
                   style="border-color: #e2e8f0; border-radius: 12px; height: 80px"
                   no-caps
-                  :loading="navigatingAction === action.label"
+                  :loading="navigatingAction === action.key"
                   @click="handleActionClick(action)"
                 >
                   <div class="column items-center">
@@ -166,9 +169,14 @@ const recentEvents = ref([])
 const announcements = ref([])
 const todaySchedule = ref([])
 const loadingData = ref(false)
+const loadingAnnouncements = ref(false)
 const navigatingAction = ref(null)
 
 const currentRole = computed(() => userRole.value || user.value?.role || authStore.userRole || authStore.user?.role || 'student')
+
+const today = computed(() =>
+  new Date().toLocaleDateString('it-IT', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+)
 
 const isDashboardAdmin = computed(() => {
   return currentRole.value === 'secretary' || currentRole.value === 'admin' || currentRole.value === 'superadmin'
@@ -201,8 +209,9 @@ const stats = computed(() => {
 const getLessonStatus = (entry) => {
   const now = new Date()
   const currentMinutes = now.getHours() * 60 + now.getMinutes()
-  // Assumiamo che ogni ora scolastica duri 60 min e inizi alle 8:00
-  const startMinutes = (7 * 60) + (entry.hour_index * 60)
+  const hourIndex = Math.max(1, entry?.hour_index || 1)
+  // Assumiamo che la 1ª ora scolastica inizi alle 8:00
+  const startMinutes = (8 * 60) + ((hourIndex - 1) * 60)
   const endMinutes = startMinutes + 60
   if (currentMinutes >= endMinutes) return 'Completata'
   if (currentMinutes >= startMinutes) return 'In corso'
@@ -295,11 +304,14 @@ const formatDate = (dateString) => {
 }
 
 const fetchAnnouncements = async () => {
+    loadingAnnouncements.value = true
     try {
         const response = await communicationService.getMessages()
         announcements.value = response.data || []
     } catch (e) {
         console.error('Error fetching announcements:', e)
+    } finally {
+        loadingAnnouncements.value = false
     }
 }
 
@@ -351,9 +363,9 @@ onMounted(() => {
 })
 
 const handleActionClick = async (action) => {
-    navigatingAction.value = action.label
+    navigatingAction.value = action.key
     try {
-        if (action.label === 'Comunicazioni' || action.label === 'Invia Email') {
+        if (action.key === 'communications' || action.key === 'email') {
             if (userRole.value === 'teacher') {
                 await router.push('/teacher/communications')
             } else if (userRole.value === 'secretary') {
@@ -365,7 +377,7 @@ const handleActionClick = async (action) => {
             } else {
                 await router.push('/admin/users')
             }
-        } else if (action.label === 'Impostazioni') {
+        } else if (action.key === 'settings') {
             if (userRole.value === 'admin' || userRole.value === 'superadmin') {
                 await router.push('/admin/settings')
             } else if (userRole.value === 'secretary') {
@@ -373,7 +385,7 @@ const handleActionClick = async (action) => {
             } else {
                 await router.push(userRole.value === 'teacher' ? '/teacher' : `/${userRole.value}/profile`)
             }
-        } else if (action.label === 'Stampa Voti') {
+        } else if (action.key === 'grades') {
             if (userRole.value === 'teacher') {
                 await router.push('/teacher/grades')
             } else if (userRole.value === 'student') {
@@ -392,12 +404,16 @@ const handleActionClick = async (action) => {
     }
 }
 
-const actions = [
-  { label: 'Comunicazioni', icon: 'campaign' },
-  { label: 'Invia Email', icon: 'mail' },
-  { label: 'Stampa Voti', icon: 'print' },
-  { label: 'Impostazioni', icon: 'settings' }
+const allActions = [
+  { label: 'Comunicazioni', icon: 'campaign', key: 'communications', roles: ['teacher', 'secretary', 'student', 'parent', 'admin', 'superadmin'] },
+  { label: 'Invia Email', icon: 'mail', key: 'email', roles: ['teacher', 'secretary', 'admin', 'superadmin'] },
+  { label: 'Stampa Voti', icon: 'print', key: 'grades', roles: ['teacher', 'student', 'parent'] },
+  { label: 'Impostazioni', icon: 'settings', key: 'settings', roles: ['teacher', 'secretary', 'student', 'parent', 'admin', 'superadmin'] }
 ]
+
+const actions = computed(() => {
+  return allActions.filter(a => !a.roles || a.roles.includes(currentRole.value))
+})
 </script>
 
 <style scoped>
