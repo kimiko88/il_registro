@@ -13,7 +13,12 @@ export default defineConfig({
   },
   plugins: [
     vue({
-      template: { transformAssetUrls }
+      template: {
+        transformAssetUrls,
+        compilerOptions: {
+          hoistStatic: false
+        }
+      }
     }),
 
     quasar({

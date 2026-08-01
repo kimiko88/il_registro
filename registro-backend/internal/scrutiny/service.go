@@ -195,8 +195,8 @@ type ClassReportStudentRow struct {
 // filters classes by schoolID to prevent cross-tenant data leaks.
 func (s *Service) GetOverview(ctx context.Context, actorID, actorRole, schoolID string) ([]ClassScrutinyOverview, error) {
 	if actorRole != "principal" && actorRole != "vice_principal" &&
-		actorRole != "admin" && actorRole != "superadmin" && actorRole != "coordinator" {
-		return nil, errors.New("unauthorized: solo coordinatori, dirigenza e admin possono vedere l'overview dello scrutinio")
+		actorRole != "admin" && actorRole != "superadmin" && actorRole != "coordinator" && actorRole != "secretary" {
+		return nil, errors.New("unauthorized: solo coordinatori, dirigenza, segreteria e admin possono vedere l'overview dello scrutinio")
 	}
 	classesList, err := s.classRepo.List(ctx, schoolID, "")
 	if err != nil {

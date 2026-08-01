@@ -36,6 +36,10 @@ export default {
         return api.get('/classes', { params: { school_id: schoolId } })
     },
 
+    getClasses(schoolId) {
+        return this.getSchoolClasses(schoolId)
+    },
+
     getSchoolUsers(schoolId, role = null) {
         const params = { school_id: schoolId }
         if (role) params.role = role

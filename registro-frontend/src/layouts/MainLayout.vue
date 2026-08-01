@@ -223,10 +223,7 @@
     <q-page-container role="main" id="main-content">
       <!-- Dynamic Breadcrumb Navigation Header -->
       <div v-if="breadcrumbs.length > 0" class="q-px-md q-pt-md">
-        <q-breadcrumbs aria-label="Percorso di navigazione corrente" class="text-caption text-grey-7" active-color="primary">
-          <template v-slot:separator>
-            <q-icon size="1.2em" name="chevron_right" color="grey-5" />
-          </template>
+        <q-breadcrumbs aria-label="Percorso di navigazione corrente" class="text-caption text-grey-7" active-color="primary" separator="chevron_right" separator-color="grey-5">
           <q-breadcrumbs-el icon="home" to="/dashboard" label="Dashboard" />
           <q-breadcrumbs-el
             v-for="(crumb, idx) in breadcrumbs"

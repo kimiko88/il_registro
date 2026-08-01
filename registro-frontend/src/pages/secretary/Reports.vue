@@ -6,22 +6,70 @@
       <div class="col-12 col-md-6">
         <div class="text-h6 q-mb-sm text-primary">Didattica & Voti</div>
         <div class="row q-gutter-md">
-          <ReportCard title="Pagelle / Scrutini" icon="grading" description="Genera pagelle di fine quadrimestre o tabelloni scrutini." @click="openReport('grades')" />
-          <ReportCard title="Registro Attività" icon="menu_book" description="Riepilogo argomenti svolti per classe." @click="openReport('topics')" />
+          <q-card class="col-12 col-sm-5 cursor-pointer hover-shadow rounded-xl border border-slate-100 shadow-soft" @click="openReport('grades')">
+            <q-card-section>
+              <div class="row items-center no-wrap">
+                <q-icon name="grading" size="md" color="primary" class="q-mr-md" />
+                <div class="text-subtitle1 text-weight-bold text-slate-800">Pagelle / Scrutini</div>
+              </div>
+              <div class="text-caption text-slate-500 q-mt-sm">Genera pagelle di fine quadrimestre o tabelloni scrutini.</div>
+            </q-card-section>
+          </q-card>
+          <q-card class="col-12 col-sm-5 cursor-pointer hover-shadow rounded-xl border border-slate-100 shadow-soft" @click="openReport('topics')">
+            <q-card-section>
+              <div class="row items-center no-wrap">
+                <q-icon name="menu_book" size="md" color="primary" class="q-mr-md" />
+                <div class="text-subtitle1 text-weight-bold text-slate-800">Registro Attività</div>
+              </div>
+              <div class="text-caption text-slate-500 q-mt-sm">Riepilogo argomenti svolti per classe.</div>
+            </q-card-section>
+          </q-card>
         </div>
       </div>
       <div class="col-12 col-md-6">
         <div class="text-h6 q-mb-sm text-secondary">Presenze & Note</div>
         <div class="row q-gutter-md">
-          <ReportCard title="Assenze Mensili" icon="event_busy" description="Statistiche assenze per classe o studente." @click="openReport('attendance')" />
-          <ReportCard title="Note Disciplinari" icon="warning" description="Elenco sanzioni e note disciplinari." @click="openReport('notes')" />
+          <q-card class="col-12 col-sm-5 cursor-pointer hover-shadow rounded-xl border border-slate-100 shadow-soft" @click="openReport('attendance')">
+            <q-card-section>
+              <div class="row items-center no-wrap">
+                <q-icon name="event_busy" size="md" color="primary" class="q-mr-md" />
+                <div class="text-subtitle1 text-weight-bold text-slate-800">Assenze Mensili</div>
+              </div>
+              <div class="text-caption text-slate-500 q-mt-sm">Statistiche assenze per classe o studente.</div>
+            </q-card-section>
+          </q-card>
+          <q-card class="col-12 col-sm-5 cursor-pointer hover-shadow rounded-xl border border-slate-100 shadow-soft" @click="openReport('notes')">
+            <q-card-section>
+              <div class="row items-center no-wrap">
+                <q-icon name="warning" size="md" color="primary" class="q-mr-md" />
+                <div class="text-subtitle1 text-weight-bold text-slate-800">Note Disciplinari</div>
+              </div>
+              <div class="text-caption text-slate-500 q-mt-sm">Elenco sanzioni e note disciplinari.</div>
+            </q-card-section>
+          </q-card>
         </div>
       </div>
       <div class="col-12 col-md-6">
         <div class="text-h6 q-mb-sm text-accent">Amministrazione</div>
         <div class="row q-gutter-md">
-          <ReportCard title="Elenco Iscritti" icon="people_alt" description="Lista completa studenti per classe con dati anagrafici." @click="openReport('students')" />
-          <ReportCard title="Certificati" icon="verified" description="Certificati di frequenza e iscrizione." @click="openReport('certificates')" />
+          <q-card class="col-12 col-sm-5 cursor-pointer hover-shadow rounded-xl border border-slate-100 shadow-soft" @click="openReport('students')">
+            <q-card-section>
+              <div class="row items-center no-wrap">
+                <q-icon name="people_alt" size="md" color="primary" class="q-mr-md" />
+                <div class="text-subtitle1 text-weight-bold text-slate-800">Elenco Iscritti</div>
+              </div>
+              <div class="text-caption text-slate-500 q-mt-sm">Lista completa studenti per classe con dati anagrafici.</div>
+            </q-card-section>
+          </q-card>
+          <q-card class="col-12 col-sm-5 cursor-pointer hover-shadow rounded-xl border border-slate-100 shadow-soft" @click="openReport('certificates')">
+            <q-card-section>
+              <div class="row items-center no-wrap">
+                <q-icon name="verified" size="md" color="primary" class="q-mr-md" />
+                <div class="text-subtitle1 text-weight-bold text-slate-800">Certificati</div>
+              </div>
+              <div class="text-caption text-slate-500 q-mt-sm">Certificati di frequenza e iscrizione.</div>
+            </q-card-section>
+          </q-card>
         </div>
       </div>
     </div>
@@ -136,8 +184,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useQuasar, exportFile } from 'quasar'
-import { h } from 'vue'
-import { QCard, QCardSection, QIcon } from 'quasar'
 import { useAuthStore } from '@/stores/auth'
 import adminService from 'src/services/adminService'
 import { gradeService } from 'src/services/gradeService'
@@ -149,22 +195,6 @@ const authStore = useAuthStore()
 
 // ── School name from auth store (not hardcoded) ───────────────
 const schoolName = computed(() => authStore.user?.school_name || authStore.user?.schoolName || 'Istituto Scolastico')
-
-// ── Inline ReportCard component ───────────────────────────────
-const ReportCard = (props, { emit }) => {
-  return h(QCard, {
-    class: 'col-12 col-sm-5 cursor-pointer hover-shadow rounded-xl border border-slate-100 shadow-soft',
-    onClick: () => emit('click')
-  }, () => [
-    h(QCardSection, {}, () => [
-      h('div', { class: 'row items-center no-wrap' }, [
-        h(QIcon, { name: props.icon, size: 'md', color: 'primary', class: 'q-mr-md' }),
-        h('div', {}, [h('div', { class: 'text-subtitle1 text-weight-bold text-slate-800' }, props.title)])
-      ]),
-      h('div', { class: 'text-caption text-slate-500 q-mt-sm' }, props.description)
-    ])
-  ])
-}
 
 // ── State ─────────────────────────────────────────────────────
 const showDialog    = ref(false)
@@ -363,7 +393,7 @@ const printReport = () => {
       @page { size: auto; margin: 20mm; }
     </style></head>
     <body><div style="max-width:800px;margin:0 auto">${htmlContent}</div>
-    <script>window.onload=function(){window.print();setTimeout(function(){window.close()},500)}<\/script>
+    <script>window.onload=function(){window.print();setTimeout(function(){window.close()},500)}</${'script'}>
     </body></html>
   `)
   printWindow.document.close()
@@ -393,7 +423,7 @@ const downloadCSV = () => {
   }
 }
 
-defineExpose({ openReport, currentReport, showDialog, showPreview, info, ReportCard })
+defineExpose({ openReport, currentReport, showDialog, showPreview, info })
 </script>
 
 <style scoped>

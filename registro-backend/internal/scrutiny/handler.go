@@ -183,6 +183,10 @@ func (h *Handler) GetOverview(c *gin.Context) {
 
 	overview, err := h.service.GetOverview(c.Request.Context(), actorID, actorRole, schoolID)
 	if err != nil {
+		if strings.HasPrefix(err.Error(), "unauthorized") || strings.HasPrefix(err.Error(), "forbidden") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
