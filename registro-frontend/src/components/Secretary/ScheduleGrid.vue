@@ -1,102 +1,135 @@
 <template>
   <div class="schedule-grid-container">
-    <div class="row q-col-gutter-md q-mb-lg">
-      <div class="col-12 col-md-8">
-        <div class="grid-scroll">
-          <table class="timetable-grid">
-            <thead>
-              <tr>
-                <th class="hour-col">Ora</th>
-                <th v-for="day in days" :key="day.value" class="day-col">
-                  {{ day.label }}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="hour in 8" :key="hour">
-                <td class="hour-cell text-weight-bold">{{ hour }}ª</td>
-                <td 
-                  v-for="day in 6" 
-                  :key="day" 
-                  class="schedule-cell"
-                  :class="{ 'has-content': getCell(day, hour) }"
-                  @click="editCell(day, hour)"
-                >
-                  <div v-if="getCell(day, hour)" class="cell-content">
-                    <div class="text-caption text-weight-bold text-primary">{{ getCell(day, hour).subject_name }}</div>
-                    <div class="text-caption opacity-70">{{ getCell(day, hour).teacher_name }}</div>
-                    <q-btn 
-                      flat round dense icon="close" 
-                      size="xs" 
-                      class="remove-btn" 
-                      @click.stop="removeCell(day, hour)" 
-                    />
-                  </div>
-                  <div v-else class="add-placeholder">
-                    <q-icon name="add" size="xs" color="grey-4" />
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+    <!-- Top summary & Save Action Bar -->
+    <div class="row items-center justify-between bg-slate-100 p-3 rounded-xl border border-slate-300 q-mb-md gap-2">
+      <div class="row items-center gap-2">
+        <q-icon name="schedule" color="primary" size="22px" />
+        <span class="text-subtitle2 text-slate-800 font-bold">Riepilogo Ore Settimanali:</span>
+        <q-badge color="primary" class="text-bold q-px-sm">{{ totalHours }} ore/settimana</q-badge>
       </div>
-
-      <div class="col-12 col-md-4">
-        <q-card flat class="rounded-2xl border-slate-200 bg-slate-50 q-pa-lg sticky-top">
-          <div class="text-subtitle1 text-weight-bold q-mb-md">
-            {{ editingCell ? `Modifica: ${days[editingCell.day-1].label}, ${editingCell.hour}ª ora` : 'Seleziona una cella' }}
-          </div>
-          
-          <div v-if="editingCell">
-            <q-select
-              v-model="selectedAssignment"
-              :options="assignmentOptions"
-              label="Materia & Docente"
-              outlined
-              dense
-              class="q-mb-md bg-white"
-              clearable
-            />
-            
-            <q-input
-              v-model="room"
-              label="Aula (opzionale)"
-              outlined
-              dense
-              class="q-mb-lg bg-white"
-            />
-
-            <div class="row q-gutter-sm">
-              <q-btn label="Applica" color="primary" class="col rounded-lg" @click="applyCell" />
-              <q-btn label="Chiudi" flat color="slate-400" class="col" @click="editingCell = null" />
-            </div>
-          </div>
-          <div v-else class="text-center q-pa-xl opacity-50">
-            <q-icon name="touch_app" size="md" class="q-mb-md" />
-            <p>Clicca su una cella della griglia per assegnare una materia</p>
-          </div>
-
-          <q-separator class="q-my-xl" />
-
-          <div class="row justify-between items-center q-mb-md">
-            <div class="text-weight-bold">Riepilogo Ore</div>
-            <q-badge color="indigo">{{ totalHours }} ore/sett</q-badge>
-          </div>
-          
-          <div class="row justify-end q-mt-xl">
-            <q-btn 
-              label="Salva Orario" 
-              color="primary" 
-              class="full-width q-py-md rounded-xl shadow-soft" 
-              icon="save" 
-              :loading="loading"
-              @click="$emit('save', gridEntries)" 
-            />
-          </div>
-        </q-card>
-      </div>
+      <q-btn
+        label="Salva Orario Settimanale"
+        color="primary"
+        unelevated
+        icon="save"
+        class="rounded-lg q-px-md shadow-xs"
+        no-caps
+        :loading="loading"
+        @click="$emit('save', gridEntries)"
+      />
     </div>
+
+    <!-- Timetable Grid Table -->
+    <div class="grid-scroll border-2 border-slate-400 rounded-xl overflow-hidden shadow-xs bg-white">
+      <table class="timetable-grid">
+        <thead>
+          <tr class="bg-slate-100 border-b-2 border-slate-400">
+            <th class="hour-col border-r-2 border-slate-400 py-3 text-xs font-bold text-slate-700">Ora</th>
+            <th
+              v-for="day in days"
+              :key="day.value"
+              class="day-col border-r border-slate-300 py-3 text-xs font-bold text-slate-700 uppercase tracking-wider"
+            >
+              {{ day.label }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="hour in 8"
+            :key="hour"
+            class="border-b border-slate-300"
+          >
+            <td class="hour-cell font-bold bg-slate-100 border-r-2 border-slate-400 text-center text-slate-700 text-xs">
+              {{ hour }}ª ora
+            </td>
+            <td
+              v-for="day in 6"
+              :key="day"
+              class="schedule-cell border-r border-slate-300 relative p-1 cursor-pointer transition-colors"
+              :class="{
+                'bg-blue-50/80 hover:bg-blue-100/90': getCell(day, hour),
+                'bg-white hover:bg-slate-100': !getCell(day, hour)
+              }"
+              @click="editCell(day, hour)"
+            >
+              <div v-if="getCell(day, hour)" class="cell-content p-2 rounded-lg bg-white border border-blue-300 shadow-2xs row items-center justify-between">
+                <div>
+                  <div class="text-caption font-bold text-blue-900 leading-tight">{{ getCell(day, hour).subject_name }}</div>
+                  <div class="text-[10px] text-slate-600 truncate mt-0.5">{{ getCell(day, hour).teacher_name || 'Docente N/D' }}</div>
+                  <div v-if="getCell(day, hour).room" class="text-[10px] text-slate-500 font-semibold mt-0.5">Aula: {{ getCell(day, hour).room }}</div>
+                </div>
+                <q-btn
+                  flat round dense icon="close"
+                  size="xs"
+                  color="negative"
+                  @click.stop="removeCell(day, hour)"
+                />
+              </div>
+              <div v-else class="add-placeholder flex items-center justify-center h-full min-h-[46px] text-slate-400 hover:text-primary transition-colors">
+                <span class="text-caption italic font-medium">+ Assegna</span>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Cell Edit Dialog Pop-up -->
+    <q-dialog v-model="cellDialogVisible">
+      <q-card style="width: min(450px, 90vw)" class="rounded-xl overflow-hidden shadow-24 border-slate-300">
+        <q-card-section class="bg-primary text-white row items-center justify-between q-py-md">
+          <div class="text-subtitle1 font-bold">
+            <q-icon name="edit_calendar" class="q-mr-xs" />
+            {{ editingCell ? `${days[editingCell.day - 1].label} - ${editingCell.hour}ª Ora` : 'Assegna Ora' }}
+          </div>
+          <q-btn icon="close" flat round dense v-close-popup />
+        </q-card-section>
+
+        <q-card-section class="q-pa-md space-y-3">
+          <div v-if="assignmentOptions.length === 0" class="bg-amber-50 border border-amber-300 p-3 rounded-lg text-amber-900 text-caption">
+            ⚠️ Nessuna materia/cattedra assegnata a questa classe. Per poter comporre l'orario, prima aggiungi le materie e i docenti nella sezione <strong>Cattedre</strong>.
+          </div>
+
+          <q-select
+            v-model="selectedAssignment"
+            :options="assignmentOptions"
+            label="Materia & Docente *"
+            outlined
+            dense
+            emit-value
+            map-options
+            class="bg-white"
+          />
+
+          <q-input
+            v-model="room"
+            label="Aula (opzionale)"
+            outlined
+            dense
+            placeholder="Es. Lab Informatica, Aula 1B"
+            class="bg-white"
+          />
+        </q-card-section>
+
+        <q-card-actions align="between" class="q-pa-md bg-slate-50 border-t border-slate-100">
+          <q-btn
+            v-if="editingCell && getCell(editingCell.day, editingCell.hour)"
+            label="Rimuovi"
+            color="negative"
+            flat
+            no-caps
+            @click="removeCell(editingCell.day, editingCell.hour); cellDialogVisible = false"
+          />
+          <div v-else />
+
+          <div class="row q-gutter-sm">
+            <q-btn label="Annulla" flat no-caps v-close-popup />
+            <q-btn label="Conferma" color="primary" unelevated class="rounded-lg q-px-md" no-caps @click="applyCell" />
+          </div>
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </div>
 </template>
 
@@ -109,7 +142,6 @@ const props = defineProps({
   loading: { type: Boolean, default: false }
 })
 
-// eslint-disable-next-line no-unused-vars
 const emit = defineEmits(['save'])
 
 const days = [
@@ -125,23 +157,26 @@ const gridEntries = ref([])
 const editingCell = ref(null)
 const selectedAssignment = ref(null)
 const room = ref('')
+const cellDialogVisible = ref(false)
 
 // Initialize grid from props
 watch(() => props.initialSchedule, (val) => {
-  gridEntries.value = val.map(e => ({
-    day_of_week: e.day_of_week,
-    hour_index: e.hour_index,
-    subject_id: e.subject_id,
-    subject_name: e.subject_name,
-    teacher_id: e.teacher_id,
-    teacher_name: e.teacher_name,
-    room: e.room || ''
-  }))
+  if (Array.isArray(val)) {
+    gridEntries.value = val.map(e => ({
+      day_of_week: e.day_of_week,
+      hour_index: e.hour_index,
+      subject_id: e.subject_id,
+      subject_name: e.subject_name,
+      teacher_id: e.teacher_id,
+      teacher_name: e.teacher_name,
+      room: e.room || ''
+    }))
+  }
 }, { immediate: true })
 
 const assignmentOptions = computed(() => {
   return props.assignments.map(a => ({
-    label: `${a.subject_name} (${a.teacher_name || 'N/A'})`,
+    label: `${a.subject_name} (${a.teacher_name || 'Docente N/D'})`,
     value: a.id,
     subject_id: a.subject_id,
     subject_name: a.subject_name,
@@ -158,35 +193,40 @@ const editCell = (day, hour) => {
   editingCell.value = { day, hour }
   const existing = getCell(day, hour)
   if (existing) {
-    selectedAssignment.value = assignmentOptions.value.find(o => o.subject_id === existing.subject_id && o.teacher_id === existing.teacher_id)
-    room.value = existing.room
+    const match = assignmentOptions.value.find(o => o.subject_id === existing.subject_id && o.teacher_id === existing.teacher_id)
+    selectedAssignment.value = match ? match.value : null
+    room.value = existing.room || ''
   } else {
-    selectedAssignment.value = null
+    selectedAssignment.value = assignmentOptions.value[0]?.value || null
     room.value = ''
   }
+  cellDialogVisible.value = true
 }
 
 const applyCell = () => {
   if (!editingCell.value) return
-  
-  // Remove existing
+
+  // Remove existing entry for this cell
   gridEntries.value = gridEntries.value.filter(e => 
     !(e.day_of_week === editingCell.value.day && e.hour_index === editingCell.value.hour)
   )
 
   if (selectedAssignment.value) {
-    gridEntries.value.push({
-      day_of_week: editingCell.value.day,
-      hour_index: editingCell.value.hour,
-      subject_id: selectedAssignment.value.subject_id,
-      subject_name: selectedAssignment.value.subject_name,
-      teacher_id: selectedAssignment.value.teacher_id,
-      teacher_name: selectedAssignment.value.teacher_name,
-      room: room.value
-    })
+    const selectedOption = assignmentOptions.value.find(o => o.value === selectedAssignment.value)
+    if (selectedOption) {
+      gridEntries.value.push({
+        day_of_week: editingCell.value.day,
+        hour_index: editingCell.value.hour,
+        subject_id: selectedOption.subject_id,
+        subject_name: selectedOption.subject_name,
+        teacher_id: selectedOption.teacher_id,
+        teacher_name: selectedOption.teacher_name,
+        room: room.value
+      })
+    }
   }
   
-  editingCell.value = null
+  cellDialogVisible.value = false
 }
 
 const removeCell = (day, hour) => {
@@ -196,7 +236,6 @@ const removeCell = (day, hour) => {
 }
 
 const totalHours = computed(() => gridEntries.value.length)
-
 </script>
 
 <style scoped>
@@ -206,92 +245,18 @@ const totalHours = computed(() => gridEntries.value.length)
 
 .grid-scroll {
   overflow-x: auto;
-  background: white;
-  border-radius: 1rem;
-  border: 1px solid #f1f5f9;
 }
 
 .timetable-grid {
   width: 100%;
   border-collapse: collapse;
-  min-width: 800px;
+  min-width: 750px;
 }
 
-.timetable-grid th, .timetable-grid td {
-  border: 1px solid #f1f5f9;
-  padding: 0.75rem;
-  text-align: center;
-}
-
-.timetable-grid thead th {
-  background: #f8fafc;
-  color: #64748b;
-  font-weight: 700;
-  text-transform: uppercase;
-  font-size: 0.75rem;
-  letter-spacing: 0.05em;
-}
-
-.hour-col { width: 60px; }
-.day-col { width: calc((100% - 60px) / 6); }
+.hour-col { width: 70px; }
+.day-col { width: calc((100% - 70px) / 6); }
 
 .schedule-cell {
-  height: 80px;
-  cursor: pointer;
-  transition: all 0.2s;
-  position: relative;
-}
-
-.schedule-cell:hover {
-  background-color: #f1f5f9;
-}
-
-.schedule-cell.has-content {
-  background-color: #f0f7ff;
-}
-
-.cell-content {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-}
-
-.remove-btn {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-
-.schedule-cell:hover .remove-btn {
-  opacity: 1;
-}
-
-.add-placeholder {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-  opacity: 0;
-}
-
-.schedule-cell:hover .add-placeholder {
-  opacity: 1;
-}
-
-.sticky-top {
-  position: sticky;
-  top: 20px;
-}
-
-.shadow-soft {
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-}
-
-.rounded-2xl {
-  border-radius: 1.5rem;
+  height: 64px;
 }
 </style>

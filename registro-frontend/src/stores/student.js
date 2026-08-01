@@ -47,7 +47,7 @@ export const useStudentStore = defineStore('student', {
 
         async fetchNotifications() {
             try {
-                const response = await api.get('/users/me/notifications')
+                const response = await api.get('/notifications')
                 this.notifications = response.data || []
             } catch (err) {
                 console.error('Error fetching notifications:', err)

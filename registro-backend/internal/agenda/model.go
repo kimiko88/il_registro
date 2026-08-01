@@ -9,8 +9,10 @@ type AgendaType string
 const (
 	TypeHomework AgendaType = "compito"
 	TypeTest     AgendaType = "verifica"
+	TypeOralTest AgendaType = "interrogazione"
 	TypeNotice   AgendaType = "avviso"
 	TypeEvent    AgendaType = "evento"
+	TypeOther    AgendaType = "altro"
 )
 
 type AgendaItem struct {
@@ -22,6 +24,9 @@ type AgendaItem struct {
 	Title       string     `json:"title" db:"title"`
 	Description string     `json:"description,omitempty" db:"description"`
 	Type        AgendaType `json:"type" db:"type"`
+	AllDay      bool       `json:"all_day" db:"all_day"`
+	StartTime   string     `json:"start_time" db:"start_time"`
+	EndTime     string     `json:"end_time" db:"end_time"`
 	Date        time.Time  `json:"date" db:"date"`
 	CreatedAt   time.Time  `json:"created_at" db:"created_at"`
 	UpdatedAt   time.Time  `json:"updated_at" db:"updated_at"`
@@ -44,7 +49,10 @@ type CreateAgendaItemRequest struct {
 	SubjectID   *string    `json:"subject_id,omitempty"`
 	Title       string     `json:"title" binding:"required"`
 	Description string     `json:"description"`
-	Type        AgendaType `json:"type" binding:"required"` // compito, verifica, avviso, evento
+	Type        AgendaType `json:"type" binding:"required"` // compito, verifica, interrogazione, avviso, evento, altro
+	AllDay      bool       `json:"all_day"`
+	StartTime   string     `json:"start_time"`
+	EndTime     string     `json:"end_time"`
 	Date        string     `json:"date" binding:"required"` // YYYY-MM-DD
 }
 
@@ -52,6 +60,9 @@ type UpdateAgendaItemRequest struct {
 	Title       *string     `json:"title,omitempty"`
 	Description *string     `json:"description,omitempty"`
 	Type        *AgendaType `json:"type,omitempty"`
+	AllDay      *bool       `json:"all_day,omitempty"`
+	StartTime   *string     `json:"start_time,omitempty"`
+	EndTime     *string     `json:"end_time,omitempty"`
 	Date        *string     `json:"date,omitempty"`
 }
 

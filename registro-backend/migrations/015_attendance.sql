@@ -1,22 +1,27 @@
 -- Migration: 015_attendance
--- Description: Create tables for student attendance and justifications
+-- Description: Create tables for student attendance and justifications (Idempotent)
 
--- Enums for Statuses
-CREATE TYPE attendance_status AS ENUM (
-    'present',      -- P: Presente
-    'absent',       -- A: Assente
-    'late',         -- R: Ritardo
-    'early_exit',   -- U: Uscita Anticipata
-    'sick',         -- M: Malattia
-    'justified',    -- G: Giustificato (generico)
-    'family_reason' -- AG: Assente Giustificato (motivi familiari)
-);
-
-CREATE TYPE justification_status AS ENUM (
-    'pending',
-    'approved',
-    'rejected'
-);
+DO $$ 
+BEGIN 
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'attendance_status') THEN 
+        CREATE TYPE attendance_status AS ENUM (
+            'present',      -- P: Presente
+            'absent',       -- A: Assente
+            'late',         -- R: Ritardo
+            'early_exit',   -- U: Uscita Anticipata
+            'sick',         -- M: Malattia
+            'justified',    -- G: Giustificato (generico)
+            'family_reason' -- AG: Assente Giustificato (motivi familiari)
+        );
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'justification_status') THEN 
+        CREATE TYPE justification_status AS ENUM (
+            'pending',
+            'approved',
+            'rejected'
+        );
+    END IF;
+END $$;
 
 -- Attendance Table
 CREATE TABLE IF NOT EXISTS attendance (
@@ -46,6 +51,14 @@ CREATE TABLE IF NOT EXISTS attendance (
     CONSTRAINT unique_daily_student_attendance UNIQUE (student_id, date)
 );
 
+-- Ensure columns exist if table was created in an earlier migration without them
+ALTER TABLE attendance ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE attendance ADD COLUMN IF NOT EXISTS entry_time TIME;
+ALTER TABLE attendance ADD COLUMN IF NOT EXISTS exit_time TIME;
+ALTER TABLE attendance ADD COLUMN IF NOT EXISTS minutes_late INT DEFAULT 0;
+ALTER TABLE attendance ADD COLUMN IF NOT EXISTS is_justified BOOLEAN DEFAULT FALSE;
+ALTER TABLE attendance ADD COLUMN IF NOT EXISTS notes TEXT;
+
 CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_daily_student_attendance ON attendance (student_id, date) WHERE deleted_at IS NULL;
 
 -- Justifications Table
@@ -68,6 +81,6 @@ CREATE TABLE IF NOT EXISTS justifications (
 );
 
 -- Indices
-CREATE INDEX idx_attendance_student_date ON attendance(student_id, date);
-CREATE INDEX idx_attendance_class_date ON attendance(class_id, date);
-CREATE INDEX idx_justifications_student ON justifications(student_id);
+CREATE INDEX IF NOT EXISTS idx_attendance_student_date ON attendance(student_id, date);
+CREATE INDEX IF NOT EXISTS idx_attendance_class_date ON attendance(class_id, date);
+CREATE INDEX IF NOT EXISTS idx_justifications_student ON justifications(student_id);

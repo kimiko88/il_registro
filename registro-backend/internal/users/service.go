@@ -171,10 +171,11 @@ func (s *Service) UpdateUser(ctx context.Context, actorRole, actorSchoolID, id s
 		user.ClassID = req.ClassID
 	}
 	if req.SchoolID != nil {
-		if actorRole != "superadmin" {
+		if actorRole == "superadmin" || (actorSchoolID != "" && *req.SchoolID == actorSchoolID) || (user.SchoolID != nil && *req.SchoolID == *user.SchoolID) {
+			user.SchoolID = req.SchoolID
+		} else {
 			return nil, errors.New("forbidden: only superadmin can modify user school_id")
 		}
-		user.SchoolID = req.SchoolID
 	}
 	if req.FiscalCode != nil {
 		user.FiscalCode = req.FiscalCode

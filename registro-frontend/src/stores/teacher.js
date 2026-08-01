@@ -47,7 +47,7 @@ export const useTeacherStore = defineStore('teacher', {
 
         async fetchNotifications() {
             try {
-                const response = await api.get('/users/me/notifications')
+                const response = await api.get('/notifications')
                 this.notifications = response.data || []
             } catch (err) {
                 console.error('Error fetching notifications:', err)
@@ -57,7 +57,7 @@ export const useTeacherStore = defineStore('teacher', {
 
         async fetchPendingJustifications() {
             try {
-                const response = await api.get('/attendance/justifications/pending')
+                const response = await api.get('/attendance/pending-justifications')
                 const items = Array.isArray(response.data)
                     ? response.data
                     : (response.data?.items || [])
@@ -70,7 +70,7 @@ export const useTeacherStore = defineStore('teacher', {
 
         async fetchUpcomingColloqui() {
             try {
-                const response = await api.get('/colloqui/my-slots?upcoming=true')
+                const response = await api.get('/colloqui/slots/my?upcoming=true')
                 const items = Array.isArray(response.data)
                     ? response.data
                     : (response.data?.items || [])

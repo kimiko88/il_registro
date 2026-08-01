@@ -10,8 +10,10 @@
         toggle-color="primary"
         :options="[
           { label: 'Tutti', value: 'all' },
-          { label: 'Compiti', value: 'compito' },
-          { label: 'Verifiche', value: 'verifica' }
+          { label: 'Compiti a casa', value: 'compito' },
+          { label: 'Compiti in classe', value: 'verifica' },
+          { label: 'Interrogazioni', value: 'interrogazione' },
+          { label: 'Altro', value: 'altro' }
         ]"
       />
     </div>

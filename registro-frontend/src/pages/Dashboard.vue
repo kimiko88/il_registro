@@ -150,7 +150,6 @@
 import { useAuthStore } from '@/stores/auth'
 import { storeToRefs } from 'pinia'
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useStudentStore } from 'src/stores/student'
 import { useParentStore } from 'src/stores/parent'
@@ -161,7 +160,6 @@ import { communicationService } from '@/services/communicationService'
 
 const authStore = useAuthStore()
 const { user, userRole } = storeToRefs(authStore)
-const router = useRouter()
 const $q = useQuasar()
 
 const realStats = ref([])

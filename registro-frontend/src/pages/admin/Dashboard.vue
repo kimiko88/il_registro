@@ -202,12 +202,10 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { usePermissions } from '@/composables/usePermissions'
 import adminService from '@/services/adminService'
 
-const router = useRouter()
 const $q = useQuasar()
 const { isSuperAdmin } = usePermissions()
 

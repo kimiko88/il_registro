@@ -40,8 +40,8 @@ func (h *Handler) Create(c *gin.Context) {
 	}
 
 	schoolID := getSchoolID(c)
-	if req.SchoolID != "" { // Admin override: only if superadmin
-		if role == "superadmin" {
+	if req.SchoolID != "" {
+		if role == "superadmin" || req.SchoolID == schoolID {
 			schoolID = req.SchoolID
 		} else {
 			c.JSON(http.StatusForbidden, gin.H{"error": "only superadmin can specify custom school_id"})

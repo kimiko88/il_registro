@@ -306,10 +306,11 @@ func (r *repository) FindJustificationByID(id string) (*Justification, error) {
 
 func (r *repository) FindPendingJustifications(classID string) ([]Justification, error) {
 	query := `
-		SELECT j.id, j.student_id, COALESCE(s.first_name || ' ' || s.last_name, 'Studente') AS student_name, j.start_date, j.end_date, j.reason, j.status 
+		SELECT j.id, j.student_id, COALESCE(u.first_name || ' ' || u.last_name, 'Studente') AS student_name, j.start_date, j.end_date, j.reason, j.status 
 		FROM justifications j
-		JOIN users s ON j.student_id = s.id::uuid
-		WHERE s.class_id = $1::uuid AND j.status = 'pending'`
+		JOIN users u ON j.student_id = u.id::uuid
+		LEFT JOIN students s ON s.user_id = u.id::uuid
+		WHERE ($1::text = '' OR s.class_id::text = $1::text) AND j.status = 'pending'`
 
 	rows, err := r.db.Query(query, classID)
 	if err != nil {

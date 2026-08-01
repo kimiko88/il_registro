@@ -46,6 +46,13 @@ func (s *Service) CreateAgendaItem(ctx context.Context, teacherID, schoolID stri
 		return nil, ErrInvalidDate
 	}
 
+	if req.StartTime == "" {
+		req.StartTime = "09:00"
+	}
+	if req.EndTime == "" {
+		req.EndTime = "10:00"
+	}
+
 	item := &AgendaItem{
 		SchoolID:    schoolID,
 		ClassID:     req.ClassID,
@@ -54,6 +61,9 @@ func (s *Service) CreateAgendaItem(ctx context.Context, teacherID, schoolID stri
 		Title:       req.Title,
 		Description: req.Description,
 		Type:        req.Type,
+		AllDay:      req.AllDay,
+		StartTime:   req.StartTime,
+		EndTime:     req.EndTime,
 		Date:        d,
 	}
 
@@ -96,6 +106,15 @@ func (s *Service) UpdateAgendaItem(ctx context.Context, actorID, actorRole, acto
 	}
 	if req.Type != nil {
 		item.Type = *req.Type
+	}
+	if req.AllDay != nil {
+		item.AllDay = *req.AllDay
+	}
+	if req.StartTime != nil {
+		item.StartTime = *req.StartTime
+	}
+	if req.EndTime != nil {
+		item.EndTime = *req.EndTime
 	}
 	if req.Date != nil {
 		d, err := time.Parse("2006-01-02", *req.Date)

@@ -29,6 +29,7 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 
 	// PWA Manifest and SW static/configuration endpoints
 	r.GET("/manifest.json", h.GetManifest)
+	r.GET("/users/me/notifications", h.ListNotifications)
 }
 
 func (h *Handler) ListNotifications(c *gin.Context) {

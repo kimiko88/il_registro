@@ -32,12 +32,12 @@ func (r *PostgresRepository) Create(ctx context.Context, item *AgendaItem) error
 	item.UpdatedAt = time.Now()
 
 	query := `
-		INSERT INTO agenda_items (id, school_id, class_id, subject_id, teacher_id, title, description, type, date, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+		INSERT INTO agenda_items (id, school_id, class_id, subject_id, teacher_id, title, description, type, all_day, start_time, end_time, date, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
 	`
 	_, err := r.db.ExecContext(ctx, query,
 		item.ID, item.SchoolID, item.ClassID, item.SubjectID, item.TeacherID,
-		item.Title, item.Description, item.Type, item.Date, item.CreatedAt, item.UpdatedAt,
+		item.Title, item.Description, item.Type, item.AllDay, item.StartTime, item.EndTime, item.Date, item.CreatedAt, item.UpdatedAt,
 	)
 	return err
 }
@@ -45,7 +45,8 @@ func (r *PostgresRepository) Create(ctx context.Context, item *AgendaItem) error
 func (r *PostgresRepository) GetByID(ctx context.Context, id string) (*AgendaItem, error) {
 	query := `
 		SELECT a.id, a.school_id, a.class_id, a.subject_id, a.teacher_id, a.title, COALESCE(a.description, ''),
-		       a.type, a.date, a.created_at, a.updated_at,
+		       a.type, COALESCE(a.all_day, false), COALESCE(a.start_time, '09:00'), COALESCE(a.end_time, '10:00'),
+		       a.date, a.created_at, a.updated_at,
 		       COALESCE(s.name, '') AS subject_name,
 		       COALESCE(u.first_name || ' ' || u.last_name, '') AS teacher_name
 		FROM agenda_items a
@@ -57,7 +58,7 @@ func (r *PostgresRepository) GetByID(ctx context.Context, id string) (*AgendaIte
 	var subjID sql.NullString
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
 		&item.ID, &item.SchoolID, &item.ClassID, &subjID, &item.TeacherID, &item.Title, &item.Description,
-		&item.Type, &item.Date, &item.CreatedAt, &item.UpdatedAt, &item.SubjectName, &item.TeacherName,
+		&item.Type, &item.AllDay, &item.StartTime, &item.EndTime, &item.Date, &item.CreatedAt, &item.UpdatedAt, &item.SubjectName, &item.TeacherName,
 	)
 	if err != nil {
 		return nil, err
@@ -72,10 +73,10 @@ func (r *PostgresRepository) Update(ctx context.Context, item *AgendaItem) error
 	item.UpdatedAt = time.Now()
 	query := `
 		UPDATE agenda_items 
-		SET title = $1, description = $2, type = $3, date = $4, updated_at = $5
-		WHERE id = $6::uuid
+		SET title = $1, description = $2, type = $3, all_day = $4, start_time = $5, end_time = $6, date = $7, updated_at = $8
+		WHERE id = $9::uuid
 	`
-	_, err := r.db.ExecContext(ctx, query, item.Title, item.Description, item.Type, item.Date, item.UpdatedAt, item.ID)
+	_, err := r.db.ExecContext(ctx, query, item.Title, item.Description, item.Type, item.AllDay, item.StartTime, item.EndTime, item.Date, item.UpdatedAt, item.ID)
 	return err
 }
 
@@ -87,7 +88,8 @@ func (r *PostgresRepository) Delete(ctx context.Context, id string) error {
 func (r *PostgresRepository) ListCalendar(ctx context.Context, schoolID string, filter CalendarFilter) ([]*AgendaItem, error) {
 	query := `
 		SELECT a.id, a.school_id, a.class_id, a.subject_id, a.teacher_id, a.title, COALESCE(a.description, ''),
-		       a.type, a.date, a.created_at, a.updated_at,
+		       a.type, COALESCE(a.all_day, false), COALESCE(a.start_time, '09:00'), COALESCE(a.end_time, '10:00'),
+		       a.date, a.created_at, a.updated_at,
 		       COALESCE(s.name, '') AS subject_name,
 		       COALESCE(u.first_name || ' ' || u.last_name, '') AS teacher_name,
 		       CASE WHEN $2 = '' THEN false ELSE EXISTS(SELECT 1 FROM student_agenda_completions sac WHERE sac.agenda_item_id = a.id AND sac.student_id = NULLIF($2, '')::uuid) END AS is_completed
@@ -114,7 +116,7 @@ func (r *PostgresRepository) ListCalendar(ctx context.Context, schoolID string, 
 		var subjID sql.NullString
 		if err := rows.Scan(
 			&item.ID, &item.SchoolID, &item.ClassID, &subjID, &item.TeacherID, &item.Title, &item.Description,
-			&item.Type, &item.Date, &item.CreatedAt, &item.UpdatedAt, &item.SubjectName, &item.TeacherName, &item.IsCompleted,
+			&item.Type, &item.AllDay, &item.StartTime, &item.EndTime, &item.Date, &item.CreatedAt, &item.UpdatedAt, &item.SubjectName, &item.TeacherName, &item.IsCompleted,
 		); err != nil {
 			return nil, err
 		}

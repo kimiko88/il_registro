@@ -39,6 +39,7 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 		g.POST("/slots", h.CreateSlot)
 		g.GET("/slots", h.ListSlots)
 		g.GET("/slots/my", h.ListSlots)
+		g.GET("/my-slots", h.ListSlots)
 		g.GET("/available-slots", h.ListSlots)
 		g.GET("/availability/:teacherID", h.GetAvailabilityByTeacher)
 		g.PATCH("/slots/:id", h.PatchSlot)
@@ -88,7 +89,7 @@ func (h *Handler) ListSlots(c *gin.Context) {
 	}
 	schoolID := c.GetString("school_id")
 	teacherID := c.Query("teacher_id")
-	if teacherID == "" && (strings.HasSuffix(c.Request.URL.Path, "/slots/my") || strings.HasSuffix(c.FullPath(), "/slots/my")) {
+	if teacherID == "" && (strings.HasSuffix(c.Request.URL.Path, "/slots/my") || strings.Contains(c.Request.URL.Path, "my-slots")) {
 		teacherID = userID
 	}
 	available := c.Query("available") == "true"

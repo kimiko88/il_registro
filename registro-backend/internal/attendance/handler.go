@@ -29,6 +29,7 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	att.PUT("/:id", h.UpdateAttendance)
 	att.GET("/class/:id", h.GetClassAttendance)
 	att.GET("/pending-justifications", h.GetPendingJustifications)
+	att.GET("/justifications/pending", h.GetPendingJustifications)
 	att.POST("/justification/:id/process", h.ProcessJustification)
 	att.POST("/justification/:id/reject", h.RejectJustification)
 	att.GET("/export", h.ExportAttendance)
@@ -344,10 +345,6 @@ func (h *Handler) GetPendingJustifications(c *gin.Context) {
 		return
 	}
 	classID := c.Query("class_id")
-	if classID == "" && actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "class_id parameter required"})
-		return
-	}
 	res, err := h.service.GetPendingJustifications(c.Request.Context(), classID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

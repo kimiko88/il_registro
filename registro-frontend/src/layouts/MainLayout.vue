@@ -223,14 +223,14 @@
     <q-page-container role="main" id="main-content">
       <!-- Dynamic Breadcrumb Navigation Header -->
       <div v-if="breadcrumbs.length > 0" class="q-px-md q-pt-md">
-        <q-breadcrumbs aria-label="Percorso di navigazione corrente" class="text-caption text-grey-7" active-color="primary" separator="chevron_right" separator-color="grey-5">
+        <q-breadcrumbs aria-label="Percorso di navigazione corrente" class="text-caption text-grey-7" active-color="primary" separator-icon="chevron_right" separator-color="grey-5">
           <q-breadcrumbs-el icon="home" to="/dashboard" label="Dashboard" />
           <q-breadcrumbs-el
             v-for="(crumb, idx) in breadcrumbs"
             :key="idx"
             :label="crumb.label"
             :to="crumb.path"
-            :icon="crumb.icon"
+            :icon="crumb.icon && crumb.icon !== 'chevron_right' ? crumb.icon : undefined"
           />
         </q-breadcrumbs>
       </div>
@@ -307,6 +307,8 @@ const breadcrumbs = computed(() => {
   const routeNamesMap = {
     '/dashboard': { label: 'Dashboard', icon: 'dashboard' },
     '/profile': { label: 'Profilo Utente', icon: 'person' },
+    // Teacher
+    '/teacher': { label: 'Pannello Docente', icon: 'school' },
     '/teacher/grades': { label: 'Gestione Voti', icon: 'grade' },
     '/teacher/attendance': { label: 'Appello e Presenze', icon: 'how_to_reg' },
     '/teacher/timetable': { label: 'Orario Lezioni', icon: 'schedule' },
@@ -316,17 +318,35 @@ const breadcrumbs = computed(() => {
     '/teacher/rubrics': { label: 'Rubriche di Valutazione', icon: 'rule' },
     '/teacher/scrutiny': { label: 'Scrutini', icon: 'assessment' },
     '/teacher/communications': { label: 'Comunicazioni', icon: 'campaign' },
-    '/teacher/agenda': { label: 'Agenda e Registro', icon: 'event' },
+    '/teacher/agenda': { label: 'Agenda di Classe', icon: 'event' },
+    '/teacher/lessons': { label: 'Registro Lezioni', icon: 'book' },
     '/teacher/classes': { label: 'Le Mie Classi', icon: 'class' },
     '/teacher/colloqui': { label: 'Colloqui e Incontri', icon: 'people' },
     '/teacher/documents': { label: 'Documenti', icon: 'description' },
     '/teacher/grade-weights': { label: 'Pesi Voti', icon: 'balance' },
     '/teacher/verbali': { label: 'Verbali', icon: 'gavel' },
     '/teacher/substitutions': { label: 'Sostituzioni', icon: 'swap_horiz' },
+    '/teacher/notes': { label: 'Note & Richiami', icon: 'report_problem' },
+    // Student
+    '/student': { label: 'Pannello Studente', icon: 'person' },
     '/student/grades': { label: 'I Miei Voti', icon: 'grade' },
     '/student/attendance': { label: 'Le Mie Presenze', icon: 'event_available' },
     '/student/homework': { label: 'Compiti', icon: 'assignment' },
     '/student/timetable': { label: 'Orario', icon: 'schedule' },
+    '/student/documents': { label: 'Documenti Studente', icon: 'folder' },
+    '/student/profile': { label: 'Profilo Studente', icon: 'person' },
+    '/student/pcto': { label: 'Percorsi PCTO', icon: 'work' },
+    '/student/orientamento': { label: 'Orientamento', icon: 'explore' },
+    '/student/communications': { label: 'Comunicati Scolastici', icon: 'campaign' },
+    '/student/agenda': { label: 'Calendario Agenda', icon: 'event' },
+    '/student/didactics': { label: 'Materiali Didattici', icon: 'folder' },
+    '/student/notes': { label: 'Note Disciplinari', icon: 'report' },
+    '/student/goals': { label: 'Obiettivi di Apprendimento', icon: 'flag' },
+    '/student/school-calendar': { label: 'Calendario Scolastico', icon: 'calendar_month' },
+    '/student/report-card': { label: 'Pagella Online', icon: 'assignment' },
+    // Parent
+    '/parent': { label: 'Pannello Famiglie', icon: 'family_restroom' },
+    '/parent/children': { label: 'Figli Associati', icon: 'child_care' },
     '/parent/grades': { label: 'Voti Figlio', icon: 'grade' },
     '/parent/attendance': { label: 'Presenze e Giustifiche', icon: 'fact_check' },
     '/parent/communications': { label: 'Comunicazioni', icon: 'campaign' },
@@ -336,23 +356,56 @@ const breadcrumbs = computed(() => {
     '/parent/meetings': { label: 'Riunioni', icon: 'groups' },
     '/parent/notes': { label: 'Note Disciplinari', icon: 'report' },
     '/parent/report-card': { label: 'Pagella Online', icon: 'assignment' },
+    '/parent/trips': { label: 'Uscite e Viaggi', icon: 'directions_bus' },
+    '/parent/profile': { label: 'Profilo Genitore', icon: 'person' },
+    '/parent/didactics': { label: 'Didattica & Compiti', icon: 'folder' },
+    '/parent/timetable': { label: 'Orario Scolastico', icon: 'schedule' },
+    // Secretary
+    '/secretary': { label: 'Pannello Segreteria', icon: 'badge' },
+    '/secretary/documents': { label: 'Gestione Documenti', icon: 'description' },
+    '/secretary/users': { label: 'Anagrafica Utenti', icon: 'people' },
+    '/secretary/students': { label: 'Anagrafica Studenti', icon: 'school' },
+    '/secretary/communications': { label: 'Circolari & Comunicazioni', icon: 'campaign' },
+    '/secretary/reports': { label: 'Reportistica Scolastica', icon: 'assessment' },
+    '/secretary/pcto': { label: 'Gestione PCTO', icon: 'work' },
+    '/secretary/textbooks': { label: 'Adozione Libri di Testo', icon: 'menu_book' },
+    '/secretary/settings': { label: 'Impostazioni Segreteria', icon: 'settings' },
+    '/secretary/classes': { label: 'Gestione Classi', icon: 'class' },
+    '/secretary/scrutiny': { label: 'Scrutini Scolastici', icon: 'fact_check' },
+    '/secretary/groups': { label: 'Gruppi di Studio', icon: 'groups' },
+    '/secretary/meetings': { label: 'Organizzazione Riunioni', icon: 'event' },
+    '/secretary/certificates': { label: 'Certificati & Attestati', icon: 'card_membership' },
+    '/secretary/audit-log': { label: 'Audit Log Segreteria', icon: 'history' },
+    // Admin
+    '/admin': { label: 'Pannello Amministrazione', icon: 'admin_panel_settings' },
+    '/admin/dashboard': { label: 'Dashboard Amministratore', icon: 'dashboard' },
+    '/admin/schools': { label: 'Gestione Scuole', icon: 'domain' },
+    '/admin/admins': { label: 'Gestione Amministratori', icon: 'manage_accounts' },
+    '/admin/monitoring': { label: 'Monitoraggio Sistema', icon: 'monitor_heart' },
     '/admin/school-settings': { label: 'Impostazioni Scuola', icon: 'settings' },
     '/admin/users': { label: 'Gestione Utenti', icon: 'people' },
-    '/admin/analytics': { label: 'Analisi e Statistiche', icon: 'analytics' }
+    '/admin/analytics': { label: 'Analisi e Statistiche', icon: 'analytics' },
+    '/admin/settings': { label: 'Impostazioni di Sistema', icon: 'tune' },
+    '/admin/scheduler': { label: 'Pianificazione Task', icon: 'schedule_send' },
+    '/admin/audit-logs': { label: 'Registro Eventi & Audit', icon: 'security' },
+    '/admin/tenants': { label: 'Gestione Multi-Tenant', icon: 'business' }
   }
 
-  const current = routeNamesMap[route.path] || { label: route.meta?.title || route.name || 'Pagina', icon: 'chevron_right' }
+  const currentMatch = routeNamesMap[route.path]
+  const current = currentMatch
+    ? { ...currentMatch, path: route.path }
+    : { label: route.meta?.title || route.name || 'Pagina', icon: undefined, path: route.path }
 
-  if (route.path.startsWith('/teacher/')) {
-    items.push({ label: 'Docente', icon: 'school' })
-  } else if (route.path.startsWith('/student/')) {
-    items.push({ label: 'Studente', icon: 'person' })
-  } else if (route.path.startsWith('/parent/')) {
-    items.push({ label: 'Genitore', icon: 'family_restroom' })
-  } else if (route.path.startsWith('/admin/')) {
-    items.push({ label: 'Amministrazione', icon: 'admin_panel_settings' })
-  } else if (route.path.startsWith('/secretary/')) {
-    items.push({ label: 'Segreteria', icon: 'badge' })
+  if (route.path.startsWith('/teacher/') && route.path !== '/teacher') {
+    items.push({ label: 'Docente', icon: 'school', path: '/teacher' })
+  } else if (route.path.startsWith('/student/') && route.path !== '/student') {
+    items.push({ label: 'Studente', icon: 'person', path: '/student' })
+  } else if (route.path.startsWith('/parent/') && route.path !== '/parent') {
+    items.push({ label: 'Genitore', icon: 'family_restroom', path: '/parent' })
+  } else if (route.path.startsWith('/admin/') && route.path !== '/admin' && route.path !== '/admin/dashboard') {
+    items.push({ label: 'Amministrazione', icon: 'admin_panel_settings', path: '/admin/dashboard' })
+  } else if (route.path.startsWith('/secretary/') && route.path !== '/secretary') {
+    items.push({ label: 'Segreteria', icon: 'badge', path: '/secretary' })
   }
 
   items.push(current)
