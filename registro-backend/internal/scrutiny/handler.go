@@ -79,6 +79,11 @@ func (h *Handler) GetMatrix(c *gin.Context) {
 	actorID := c.GetString("user_id")
 	actorRole := c.GetString("role")
 
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
 	matrix, err := h.service.GetMatrix(c.Request.Context(), actorID, actorRole, classID, semester)
 	if err != nil {
 		if err == ErrScrutinyNotValidated {
