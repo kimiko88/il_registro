@@ -244,7 +244,7 @@ func (h *Handler) FinalizeClass(c *gin.Context) {
 	}
 
 	classID := c.Param("classId")
-	semester, _ := strconv.Atoi(c.DefaultQuery("semester", "2"))
+	semester, _ := strconv.Atoi(c.DefaultQuery("semester", "1"))
 	if err := h.service.FinalizeClass(c.Request.Context(), actorID, actorRole, classID, semester); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

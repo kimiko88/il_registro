@@ -652,10 +652,12 @@ const selectedTypeFilter = ref('tutti')
 
 // Real-Time Current Time Indicator
 const redLineTop = ref(0)
+const nowTime = ref(new Date())
 let timerInterval = null
 
 function updateCurrentTime() {
-  const now = new Date()
+  nowTime.value = new Date()
+  const now = nowTime.value
   const currentHour = now.getHours()
   const currentMinute = now.getMinutes()
 
@@ -674,14 +676,14 @@ function updateCurrentTime() {
 }
 
 const formattedCurrentTime = computed(() => {
-  const now = new Date()
+  const now = nowTime.value
   const h = String(now.getHours()).padStart(2, '0')
   const m = String(now.getMinutes()).padStart(2, '0')
   return `${h}:${m}`
 })
 
 const isCurrentTimeVisible = computed(() => {
-  const todayStr = formatYMD(new Date())
+  const todayStr = formatYMD(nowTime.value)
   if (viewMode.value === 'giorno') {
     return isoSelectedDate.value === todayStr
   }
@@ -759,7 +761,7 @@ const isCurrentAuthor = computed(() => {
   if (!isEditMode.value) return true // Creating new event
   const currentUserId = authStore.user?.id
   const eventTeacherId = currentEventTeacherId.value
-  if (!eventTeacherId || !currentUserId) return true
+  if (!eventTeacherId || !currentUserId) return false
   return eventTeacherId === currentUserId
 })
 
@@ -768,7 +770,64 @@ const isoSelectedDate = computed(() => {
   return selectedDate.value.replace(/\//g, '-')
 })
 
-const isTodayIso = computed(() => formatYMD(new Date()))
+const isTodayIso = computed(() => formatYMD(nowTime.value))
+
+const filteredEvents = computed(() => {
+  return agendaStore.events.filter(ev => {
+    const matchesClass = !selectedClassFilter.value || ev.class_id === selectedClassFilter.value
+    const matchesType = selectedTypeFilter.value === 'tutti' || ev.type === selectedTypeFilter.value
+    return matchesClass && matchesType
+  })
+})
+
+const eventsByDateMap = computed(() => {
+  const map = {}
+  for (const ev of filteredEvents.value) {
+    const dateStr = ev.date ? ev.date.substring(0, 10) : ''
+    if (!dateStr) continue
+    if (!map[dateStr]) {
+      map[dateStr] = { allDay: [], timed: [], byHour: {} }
+    }
+    if (ev.all_day) {
+      map[dateStr].allDay.push(ev)
+    } else {
+      map[dateStr].timed.push(ev)
+      const startTime = ev.start_time || '09:00'
+      const hourNum = parseInt(startTime.split(':')[0], 10)
+      if (!map[dateStr].byHour[hourNum]) {
+        map[dateStr].byHour[hourNum] = []
+      }
+      map[dateStr].byHour[hourNum].push(ev)
+    }
+  }
+  return map
+})
+
+function getAllDayEventsForDay(dayIso) {
+  return eventsByDateMap.value[dayIso]?.allDay || []
+}
+
+function getEventsForDay(dayIso) {
+  return eventsByDateMap.value[dayIso]?.timed || []
+}
+
+function getEventsForDayAndHour(dayIso, hourStr) {
+  const hourNum = parseInt(hourStr.split(':')[0], 10)
+  return eventsByDateMap.value[dayIso]?.byHour[hourNum] || []
+}
+
+function scrollToCurrentTime() {
+  nextTick(() => {
+    updateCurrentTime()
+    const scrollPos = Math.max(0, redLineTop.value - 220)
+    if (weekScrollContainer.value) {
+      weekScrollContainer.value.scrollTop = scrollPos
+    }
+    if (dayScrollContainer.value) {
+      dayScrollContainer.value.scrollTop = scrollPos
+    }
+  })
+}
 
 const currentMonthTitle = computed(() => {
   if (!selectedDate.value) return ''
@@ -899,21 +958,6 @@ onUnmounted(() => {
   if (timerInterval) clearInterval(timerInterval)
 })
 
-function scrollToCurrentTime() {
-  nextTick(() => {
-    setTimeout(() => {
-      updateCurrentTime()
-      const scrollPos = Math.max(0, redLineTop.value - 220)
-      if (weekScrollContainer.value) {
-        weekScrollContainer.value.scrollTop = scrollPos
-      }
-      if (dayScrollContainer.value) {
-        dayScrollContainer.value.scrollTop = scrollPos
-      }
-    }, 60)
-  })
-}
-
 function onViewModeChange(mode) {
   if (mode === 'settimana' || mode === 'giorno') {
     scrollToCurrentTime()
@@ -980,44 +1024,6 @@ function prevDay() {
 function today() {
   selectedDate.value = qdate.formatDate(new Date(), 'YYYY/MM/DD')
   scrollToCurrentTime()
-}
-
-function getAllDayEventsForDay(dayIso) {
-  return agendaStore.events.filter(ev => {
-    const evDate = ev.date ? ev.date.substring(0, 10) : ''
-    const matchesDate = evDate === dayIso
-    const matchesClass = !selectedClassFilter.value || ev.class_id === selectedClassFilter.value
-    const matchesType = selectedTypeFilter.value === 'tutti' || ev.type === selectedTypeFilter.value
-    return matchesDate && matchesClass && matchesType && !!ev.all_day
-  })
-}
-
-function getEventsForDay(dayIso) {
-  return agendaStore.events.filter(ev => {
-    if (ev.all_day) return false
-    const evDate = ev.date ? ev.date.substring(0, 10) : ''
-    const matchesDate = evDate === dayIso
-    const matchesClass = !selectedClassFilter.value || ev.class_id === selectedClassFilter.value
-    const matchesType = selectedTypeFilter.value === 'tutti' || ev.type === selectedTypeFilter.value
-    return matchesDate && matchesClass && matchesType
-  })
-}
-
-function getEventsForDayAndHour(dayIso, hourStr) {
-  const hourNum = parseInt(hourStr.split(':')[0], 10)
-  return agendaStore.events.filter(ev => {
-    if (ev.all_day) return false
-    const evDate = ev.date ? ev.date.substring(0, 10) : ''
-    const matchesDate = evDate === dayIso
-    const matchesClass = !selectedClassFilter.value || ev.class_id === selectedClassFilter.value
-    const matchesType = selectedTypeFilter.value === 'tutti' || ev.type === selectedTypeFilter.value
-    
-    if (!matchesDate || !matchesClass || !matchesType) return false
-
-    const startTime = ev.start_time || '09:00'
-    const evStartHour = parseInt(startTime.split(':')[0], 10)
-    return evStartHour === hourNum
-  })
 }
 
 function openCreateDialog(isoDate, hourStr) {

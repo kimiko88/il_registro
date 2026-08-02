@@ -32,12 +32,14 @@ export default {
         return api.delete(`/admin/schools/${id}`)
     },
 
-    getSchoolClasses(schoolId) {
-        return api.get('/classes', { params: { school_id: schoolId } })
+    getSchoolClasses(schoolId, academicYear = null) {
+        const params = { school_id: schoolId }
+        if (academicYear) params.academic_year = academicYear
+        return api.get('/classes', { params })
     },
 
-    getClasses(schoolId) {
-        return this.getSchoolClasses(schoolId)
+    getClasses(schoolId, academicYear = null) {
+        return this.getSchoolClasses(schoolId, academicYear)
     },
 
     getSchoolUsers(schoolId, role = null) {

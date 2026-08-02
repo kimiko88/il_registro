@@ -262,10 +262,38 @@ func (h *Handler) GetDisciplinaryNotes(c *gin.Context) {
 	c.JSON(http.StatusOK, notes)
 }
 
+func (h *Handler) BulkMigrateStudents(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	schoolID := getSchoolID(c)
+	if userID == "" || schoolID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "admin" && role != "superadmin" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
+	var req BulkStudentMigrationRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.service.BulkMigrateStudents(c.Request.Context(), schoolID, req); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "migration completed successfully"})
+}
+
 func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	group := rg.Group("/classes")
 	{
 		group.POST("", h.Create)
+		group.POST("/migrate-students", h.BulkMigrateStudents)
 		group.GET("", h.List)
 		group.GET("/:id", h.Get)
 		group.PUT("/:id", h.Update)

@@ -28,11 +28,13 @@ export const useScrutinyStore = defineStore('scrutiny', {
 
     async fetchClassReport(classID) {
       this.loading = true
+      this.error = null
       try {
         const response = await api.get(`/scrutiny/class/${classID}/report`)
         this.currentReport = response.data
         return response.data
       } catch (err) {
+        this.error = err.response?.data?.error || 'Errore caricamento report classe'
         console.error(err)
         throw err
       } finally {
@@ -52,10 +54,11 @@ export const useScrutinyStore = defineStore('scrutiny', {
     },
 
     async exportAll() {
+      let url = null
       try {
         const response = await api.get('/scrutiny/export', { responseType: 'blob' })
         const blob = new Blob([response.data], { type: 'text/csv' })
-        const url = window.URL.createObjectURL(blob)
+        url = window.URL.createObjectURL(blob)
         const link = document.createElement('a')
         link.href = url
         link.setAttribute('download', 'scrutini_supervisione.csv')
@@ -65,6 +68,10 @@ export const useScrutinyStore = defineStore('scrutiny', {
       } catch (err) {
         console.error(err)
         throw err
+      } finally {
+        if (url) {
+          window.URL.revokeObjectURL(url)
+        }
       }
     }
   }

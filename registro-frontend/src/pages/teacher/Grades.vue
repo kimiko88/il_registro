@@ -739,7 +739,12 @@ function formatGrade(val) {
 }
 
 const printReport = () => {
-    window.print();
+    showTestDialog.value = false;
+    showEditTestDialog.value = false;
+    showImportDialog.value = false;
+    setTimeout(() => {
+        window.print();
+    }, 100);
 };
 
 const processImport = async () => {
@@ -801,7 +806,7 @@ function gradeToNumeric(gradeStr) {
         if (!isNaN(base)) res = base + 0.25;
     } else if (clean.endsWith('-')) {
         const base = parseFloat(clean.slice(0, -1).trim());
-        if (!isNaN(base)) res = base - 0.5;
+        if (!isNaN(base)) res = base - 0.25;
     }
 
     if (res === null) {
@@ -816,12 +821,12 @@ function gradeToNumeric(gradeStr) {
 const getGradeColor = (val) => {
     if (val === undefined || val === null || val === '') return '';
     const numeric = gradeToNumeric(val);
-    if (numeric === -1) return 'bg-red-2 text-red-10';
-    if (numeric >= 8) return 'bg-green-2 text-green-10';
-    if (numeric >= 7) return 'bg-lime-2 text-lime-10';
-    if (numeric >= 6) return 'bg-yellow-2 text-yellow-10';
-    if (numeric >= 5) return 'bg-orange-2 text-orange-10';
-    return 'bg-red-2 text-red-10';
+    if (numeric === -1) return 'red-2';
+    if (numeric >= 8) return 'green-2';
+    if (numeric >= 7) return 'lime-2';
+    if (numeric >= 6) return 'yellow-2';
+    if (numeric >= 5) return 'orange-2';
+    return 'red-2';
 };
 </script>
 
@@ -834,7 +839,7 @@ const getGradeColor = (val) => {
 
 
 @media print {
-  .sticky-header, .q-btn, .q-toggle, .q-tabs {
+  .sticky-header, .q-btn, .q-toggle, .q-tabs, .q-dialog, .q-dialog__inner {
     display: none !important;
   }
   .q-page {

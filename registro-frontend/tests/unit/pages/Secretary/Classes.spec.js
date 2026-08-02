@@ -6,6 +6,8 @@ import { useClassesStore } from '@/stores/classes'
 import { useAuthStore } from '@/stores/auth'
 import adminService from '@/services/adminService'
 
+import { Quasar } from 'quasar'
+
 // Mock Quasar
 vi.mock('quasar', async () => {
     const actual = await vi.importActual('quasar')
@@ -46,6 +48,7 @@ describe('Classes Page', () => {
         wrapper = mount(Classes, {
             global: {
                 plugins: [
+                    Quasar,
                     createTestingPinia({
                         createSpy: vi.fn,
                         initialState: {

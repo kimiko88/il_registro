@@ -83,7 +83,10 @@ export const useGradesStore = defineStore('grades', {
                 // Map the complex semesters response if needed, or store as is
                 this.grades = response.data;
             } catch (err) {
-                this.error = err.message;
+                this.error = {
+                    message: err.response?.data?.error || err.message,
+                    status: err.response?.status || 500
+                };
             } finally {
                 this.loading = false;
             }

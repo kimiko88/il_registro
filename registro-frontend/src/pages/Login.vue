@@ -99,12 +99,8 @@ const route = useRoute()
 
 onMounted(() => {
   document.title = 'Accedi — Registro Elettronico'
-  try {
-    if (route && route.query && route.query.reason === 'session_expired') {
-      errorMessage.value = 'Sessione scaduta. Effettua nuovamente l\'accesso.'
-    }
-  } catch (e) {
-    // Route not initialized in test environment
+  if (route?.query?.reason === 'session_expired') {
+    errorMessage.value = 'Sessione scaduta. Effettua nuovamente l\'accesso.'
   }
 })
 

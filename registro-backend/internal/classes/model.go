@@ -10,6 +10,7 @@ type Class struct {
 	Articolazione string    `json:"articolazione"` // e.g., "Informatica" (Optional)
 	AcademicYear  string    `json:"academic_year"` // e.g., "2024/2025"
 	CoordinatorID string    `json:"coordinator_id,omitempty"`
+	StudentsCount int       `json:"students_count"`
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
 }
@@ -67,5 +68,18 @@ type DisciplinaryNoteReport struct {
 	Description      string    `json:"description"`
 	TeacherFirstName string    `json:"teacher_first_name"`
 	TeacherLastName  string    `json:"teacher_last_name"`
+}
+
+type StudentMigrationItem struct {
+	StudentID     string `json:"student_id" binding:"required"`
+	Action        string `json:"action" binding:"required"` // "promoted", "repeater", "graduated", "left"
+	TargetClassID string `json:"target_class_id"`            // nullable if graduated or left
+}
+
+type BulkStudentMigrationRequest struct {
+	SchoolID           string                 `json:"school_id"`
+	SourceAcademicYear string                 `json:"source_academic_year" binding:"required"`
+	TargetAcademicYear string                 `json:"target_academic_year" binding:"required"`
+	Migrations         []StudentMigrationItem `json:"migrations" binding:"required"`
 }
 

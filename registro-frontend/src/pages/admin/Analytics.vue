@@ -312,11 +312,13 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useQuasar } from 'quasar'
 import { usePermissions } from '@/composables/usePermissions'
 import adminService from '@/services/adminService'
 import api from '@/services/api'
 
+const $q = useQuasar()
 const { isSuperAdmin } = usePermissions()
 
 const loading = ref(false)
@@ -326,6 +328,8 @@ const userGrowthHistory = ref([])   // [{ label: 'Gen', value: 120 }, ...]
 const recentAuditEvents = ref([])
 const hoveredIndex = ref(null)
 const hoveredDonut = ref(null)
+const autoRefresh = ref(false)
+let refreshInterval = null
 
 // ── Fetch stats ──────────────────────────────────────────────
 const fetchStats = async () => {
@@ -364,15 +368,34 @@ const fetchUserGrowth = async () => {
 const fetchAll = async () => {
   loading.value = true
   try {
-    await Promise.all([fetchStats(), fetchSystemMetrics(), fetchUserGrowth()])
+    await Promise.allSettled([fetchStats(), fetchSystemMetrics(), fetchUserGrowth()])
   } catch (err) {
     console.error('Error loading analytics:', err)
+    $q.notify({ type: 'negative', message: 'Errore nel caricamento delle metriche' })
   } finally {
     loading.value = false
   }
 }
 
-onMounted(fetchAll)
+const toggleAutoRefresh = () => {
+  autoRefresh.value = !autoRefresh.value
+  if (autoRefresh.value) {
+    refreshInterval = setInterval(fetchAll, 30000)
+    $q.notify({ type: 'info', message: 'Aggiornamento automatico attivato (ogni 30s)', timeout: 2000 })
+  } else {
+    if (refreshInterval) clearInterval(refreshInterval)
+    refreshInterval = null
+    $q.notify({ type: 'info', message: 'Aggiornamento automatico disattivato', timeout: 2000 })
+  }
+}
+
+onMounted(() => {
+  fetchAll()
+})
+
+onUnmounted(() => {
+  if (refreshInterval) clearInterval(refreshInterval)
+})
 
 // ── Chart computed ────────────────────────────────────────────
 const chartYMax = computed(() => {
@@ -405,18 +428,35 @@ const chartPoints = computed(() => {
   }))
 })
 
+// Smooth cubic Bezier curve calculation
+const smoothPath = (pts) => {
+  if (!pts || !pts.length) return ''
+  if (pts.length === 1) return `M ${pts[0].x} ${pts[0].y}`
+  let d = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i === 0 ? i : i - 1]
+    const p1 = pts[i]
+    const p2 = pts[i + 1]
+    const p3 = pts[i + 2 < pts.length ? i + 2 : i + 1]
+    const cp1x = p1.x + (p2.x - p0.x) / 6
+    const cp1y = p1.y + (p2.y - p0.y) / 6
+    const cp2x = p2.x - (p3.x - p1.x) / 6
+    const cp2y = p2.y - (p3.y - p1.y) / 6
+    d += ` C ${cp1x.toFixed(1)},${cp1y.toFixed(1)} ${cp2x.toFixed(1)},${cp2y.toFixed(1)} ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`
+  }
+  return d
+}
+
 const linePath = computed(() => {
-  if (!chartPoints.value.length) return ''
-  return chartPoints.value.reduce((acc, pt, idx) =>
-    idx === 0 ? `M ${pt.x} ${pt.y}` : `${acc} L ${pt.x} ${pt.y}`, '')
+  return smoothPath(chartPoints.value)
 })
 
 const areaPath = computed(() => {
   if (chartPoints.value.length < 2) return ''
   const first = chartPoints.value[0]
   const last = chartPoints.value[chartPoints.value.length - 1]
-  const points = chartPoints.value.map(pt => `${pt.x},${pt.y}`).join(' L ')
-  return `M ${first.x},170 L ${points} L ${last.x},170 Z`
+  const curve = smoothPath(chartPoints.value)
+  return `${curve} L ${last.x.toFixed(1)},170 L ${first.x.toFixed(1)},170 Z`
 })
 
 const latencyColor = computed(() => {

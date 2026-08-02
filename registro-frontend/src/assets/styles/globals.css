@@ -569,20 +569,33 @@ body {
 /* Skip-to-content link for keyboard users */
 .skip-to-content {
     position: absolute;
-    top: -40px;
-    left: 0;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
     background: #312e81;
     color: #ffffff;
-    padding: 8px 16px;
-    z-index: 99999;
-    border-radius: 0 0 8px 0;
     font-weight: 600;
     text-decoration: none;
-    transition: top 0.2s ease;
+    border-radius: 0 0 8px 0;
+    z-index: 99999;
 }
 
 .skip-to-content:focus {
+    position: fixed;
+    width: auto;
+    height: auto;
+    padding: 8px 16px;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
     top: 0;
+    left: 0;
 }
 
 /* Ensure all interactive elements have a visible focus ring */

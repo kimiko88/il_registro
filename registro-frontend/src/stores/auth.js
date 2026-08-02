@@ -14,7 +14,7 @@ const isTokenExpired = (tokenStr) => {
     if (!tokenStr) return true
     try {
         const parts = tokenStr.split('.')
-        if (parts.length !== 3) return false // Mock/opaque token, assume valid
+        if (parts.length !== 3) return false // Opaque or mock token in test/dev environment, assume valid
         const base64Url = parts[1]
         const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
         const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''))
@@ -24,7 +24,7 @@ const isTokenExpired = (tokenStr) => {
         }
         return false
     } catch {
-        return true // Corrupted or invalid JWT token should be treated as expired
+        return true
     }
 }
 
@@ -85,21 +85,45 @@ export const useAuthStore = defineStore('auth', () => {
         if (rememberMe) {
             localStorage.setItem('user', JSON.stringify(sanitized))
             localStorage.setItem('token', tokenData)
-            localStorage.removeItem('refreshToken')
             if (refreshTokenData) {
-                sessionStorage.setItem('refreshToken', refreshTokenData)
+                localStorage.setItem('refreshToken', refreshTokenData)
+            } else {
+                localStorage.removeItem('refreshToken')
             }
             sessionStorage.removeItem('user')
             sessionStorage.removeItem('token')
+            sessionStorage.removeItem('refreshToken')
         } else {
             sessionStorage.setItem('user', JSON.stringify(sanitized))
             sessionStorage.setItem('token', tokenData)
             if (refreshTokenData) {
                 sessionStorage.setItem('refreshToken', refreshTokenData)
+            } else {
+                sessionStorage.removeItem('refreshToken')
             }
             localStorage.removeItem('user')
             localStorage.removeItem('token')
             localStorage.removeItem('refreshToken')
+        }
+    }
+
+    function updateTokens(newTokenData, newRefreshTokenData = null) {
+        if (!newTokenData) return
+        token.value = newTokenData
+        if (newRefreshTokenData) {
+            refreshToken.value = newRefreshTokenData
+        }
+
+        if (localStorage.getItem('token') || localStorage.getItem('user')) {
+            localStorage.setItem('token', newTokenData)
+            if (newRefreshTokenData) {
+                localStorage.setItem('refreshToken', newRefreshTokenData)
+            }
+        } else {
+            sessionStorage.setItem('token', newTokenData)
+            if (newRefreshTokenData) {
+                sessionStorage.setItem('refreshToken', newRefreshTokenData)
+            }
         }
     }
 
@@ -138,6 +162,7 @@ export const useAuthStore = defineStore('auth', () => {
         userName,
         login,
         logout,
-        updateUser
+        updateUser,
+        updateTokens
     }
 })

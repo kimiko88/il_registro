@@ -143,3 +143,13 @@ func (s *Service) GetDisciplinaryNotes(ctx context.Context, schoolID, classID st
 	return s.repo.GetDisciplinaryNotes(ctx, classID)
 }
 
+func (s *Service) BulkMigrateStudents(ctx context.Context, schoolID string, req BulkStudentMigrationRequest) error {
+	if req.SourceAcademicYear == "" || req.TargetAcademicYear == "" {
+		return fmt.Errorf("source and target academic years are required")
+	}
+	if len(req.Migrations) == 0 {
+		return fmt.Errorf("no student migrations provided")
+	}
+	return s.repo.BulkMigrateStudents(ctx, req.Migrations)
+}
+

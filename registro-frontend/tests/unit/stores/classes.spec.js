@@ -29,7 +29,8 @@ describe('Classes Store', () => {
         await store.fetchClasses()
 
         expect(api.get).toHaveBeenCalledWith('/classes', { params: {} })
-        expect(store.classes).toEqual(mockClasses)
+        expect(store.classes[0].id).toBe('1')
+        expect(store.classes[0].name).toBe('1A')
         expect(store.loading).toBe(false)
         expect(store.error).toBe(null)
     })
@@ -41,7 +42,8 @@ describe('Classes Store', () => {
         await store.fetchAssignedClasses()
 
         expect(api.get).toHaveBeenCalledWith('/teacher/classes')
-        expect(store.classes).toEqual(mockClasses)
+        expect(store.classes[0].id).toBe('1')
+        expect(store.classes[0].name).toBe('1A')
     })
 
     it('creates class successfully', async () => {

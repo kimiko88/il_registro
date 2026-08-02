@@ -652,4 +652,8 @@ func (m *MockClassesRepository) GetDisciplinaryNotes(ctx context.Context, classI
 	}
 	return args.Get(0).([]classes.DisciplinaryNoteReport), args.Error(1)
 }
+func (m *MockClassesRepository) BulkMigrateStudents(ctx context.Context, migrations []classes.StudentMigrationItem) error {
+	args := m.Called(ctx, migrations)
+	return args.Error(0)
+}
 

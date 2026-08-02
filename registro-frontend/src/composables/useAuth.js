@@ -37,8 +37,33 @@ export function useAuth() {
             }
             return null
         } catch (error) {
-            return error.response?.data?.error || 'Login failed'
+            return translateLoginError(error)
         }
+    }
+
+    function translateLoginError(err) {
+        if (!err) return 'Errore durante l\'accesso. Riprova.'
+        const raw = String(err.response?.data?.error || err.message || err).toLowerCase()
+
+        if (raw.includes('invalid credentials') || raw.includes('invalid email') || raw.includes('password')) {
+            return 'Email o password non corrette'
+        }
+        if (raw.includes('too many') || raw.includes('rate limit') || raw.includes('429')) {
+            return 'Troppi tentativi di accesso. Riprova tra qualche minuto.'
+        }
+        if (raw.includes('unauthorized')) {
+            return 'Credenziali non autorizzate'
+        }
+        if (raw.includes('not found')) {
+            return 'Utente non trovato'
+        }
+        if (raw.includes('disabled') || raw.includes('suspended') || raw.includes('blocked')) {
+            return 'Account disabilitato o sospeso. Contatta la Segreteria.'
+        }
+        if (raw.includes('network') || raw.includes('failed to fetch') || raw.includes('timeout')) {
+            return 'Impossibile connettersi al server. Verifica la connessione di rete.'
+        }
+        return err.response?.data?.error || 'Errore durante l\'accesso. Riprova.'
     }
 
     async function logout() {

@@ -82,7 +82,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useQuasar, date } from 'quasar'
 import { useStudentStore } from 'src/stores/student'
 import didacticService from 'src/services/didacticService'
-import adminService from 'src/services/adminService'
+import api from 'src/services/api'
 
 const $q = useQuasar()
 const studentStore = useStudentStore()
@@ -104,14 +104,14 @@ onMounted(async () => {
 
 const fetchSubjects = async () => {
   try {
-    const schoolId = studentStore.profile?.school_id || studentStore.profile?.schoolId
-    if (!schoolId) return
-    const res = await adminService.getSubjects(schoolId)
+    const classId = studentStore.profile?.class_id
+    if (!classId) return
+    const res = await api.get(`/classes/${classId}/subjects`)
     if (res.data) {
       subjectsOptions.value = res.data
       const map = {}
       res.data.forEach(s => {
-        map[s.id] = s.name
+        map[s.id || s.subject_id] = s.name || s.subject_name
       })
       subjectsMap.value = map
     }
@@ -138,10 +138,27 @@ const filteredMaterials = computed(() => {
 })
 
 const openLink = (url) => {
-  if (url) window.open(url, '_blank')
+  if (!url) return
+  try {
+    const parsed = new URL(url, window.location.origin)
+    if (['http:', 'https:', 'blob:'].includes(parsed.protocol) || url.startsWith('/')) {
+      window.open(url, '_blank', 'noopener,noreferrer')
+    } else {
+      console.warn('Blocked unsafe URL execution:', url)
+    }
+  } catch {
+    if (url.startsWith('/')) {
+      window.open(url, '_blank', 'noopener,noreferrer')
+    }
+  }
 }
 
-const formatDate = (d) => date.formatDate(new Date(d), 'DD/MM/YYYY')
+const formatDate = (d) => {
+  if (!d) return '-'
+  const dt = new Date(d)
+  if (isNaN(dt.getTime())) return '-'
+  return date.formatDate(dt, 'DD/MM/YYYY')
+}
 </script>
 
 <style scoped>

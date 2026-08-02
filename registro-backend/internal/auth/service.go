@@ -283,11 +283,6 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken, ipAddress, use
 		return nil, err
 	}
 
-	// Revoke the old refresh token
-	if err := s.repo.RevokeRefreshToken(ctx, rt.ID); err != nil {
-		return nil, err
-	}
-
 	// Generate a new refresh token
 	newRefreshToken, err := s.tokenManager.GenerateRefreshToken(user.ID)
 	if err != nil {
@@ -314,6 +309,11 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken, ipAddress, use
 	}
 	if err := s.repo.CreateRefreshToken(ctx, newRt); err != nil {
 		return nil, err
+	}
+
+	// Revoke the old refresh token after new token is safely stored
+	if err := s.repo.RevokeRefreshToken(ctx, rt.ID); err != nil {
+		logger.Log.Warnf("Failed to revoke old refresh token %s: %v", rt.ID, err)
 	}
 
 	return &TokenPair{

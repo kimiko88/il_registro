@@ -22,6 +22,7 @@ type Repository interface {
 	GetClassGuardians(ctx context.Context, classID string) ([]GuardianInfo, error)
 	GetLessonTopics(ctx context.Context, classID string) ([]LessonTopic, error)
 	GetDisciplinaryNotes(ctx context.Context, classID string) ([]DisciplinaryNoteReport, error)
+	BulkMigrateStudents(ctx context.Context, migrations []StudentMigrationItem) error
 }
 
 type PostgresRepository struct {
@@ -107,7 +108,9 @@ func (r *PostgresRepository) ListByTeacher(ctx context.Context, teacherUserID st
 	}
 	// Combine classes where user is coordinator OR assigned as teacher (via class_subjects)
 	query := `
-		SELECT DISTINCT c.id, c.school_id, c.name, c.section, c.articolazione, c.academic_year, c.coordinator_id, c.created_at, c.updated_at
+		SELECT DISTINCT c.id, c.school_id, c.name, c.section, c.articolazione, c.academic_year, c.coordinator_id,
+		       (SELECT COUNT(*) FROM students s WHERE s.class_id = c.id) AS students_count,
+		       c.created_at, c.updated_at
 		FROM classes c
 		LEFT JOIN class_subjects cs ON c.id::text = cs.class_id::text
 		LEFT JOIN teachers t ON (NULLIF(cs.teacher_id::text, '') = t.id::text OR NULLIF(cs.teacher_id::text, '') = t.user_id::text)
@@ -124,7 +127,7 @@ func (r *PostgresRepository) ListByTeacher(ctx context.Context, teacherUserID st
 	for rows.Next() {
 		var c Class
 		var sec, art, coord sql.NullString
-		if err := rows.Scan(&c.ID, &c.SchoolID, &c.Name, &sec, &art, &c.AcademicYear, &coord, &c.CreatedAt, &c.UpdatedAt); err != nil {
+		if err := rows.Scan(&c.ID, &c.SchoolID, &c.Name, &sec, &art, &c.AcademicYear, &coord, &c.StudentsCount, &c.CreatedAt, &c.UpdatedAt); err != nil {
 			return nil, err
 		}
 		c.Section = sec.String
@@ -161,15 +164,17 @@ func (r *PostgresRepository) List(ctx context.Context, schoolID string, academic
 			return []Class{}, nil
 		}
 	}
-	query := `SELECT id, school_id, name, section, articolazione, academic_year, coordinator_id, created_at, updated_at 
-	          FROM classes WHERE ($1 = '' OR school_id = NULLIF($1, '')::uuid)`
+	query := `SELECT c.id, c.school_id, c.name, c.section, c.articolazione, c.academic_year, c.coordinator_id,
+	                 (SELECT COUNT(*) FROM students s WHERE s.class_id = c.id) AS students_count,
+	                 c.created_at, c.updated_at 
+	          FROM classes c WHERE ($1 = '' OR c.school_id = NULLIF($1, '')::uuid)`
 	
 	args := []interface{}{schoolID}
 	if academicYear != "" {
-		query += " AND academic_year = $2"
+		query += " AND c.academic_year = $2"
 		args = append(args, academicYear)
 	}
-	query += " ORDER BY name"
+	query += " ORDER BY c.name"
 	
 	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
@@ -181,7 +186,7 @@ func (r *PostgresRepository) List(ctx context.Context, schoolID string, academic
 	for rows.Next() {
 		var c Class
 		var sec, art, coord sql.NullString
-		if err := rows.Scan(&c.ID, &c.SchoolID, &c.Name, &sec, &art, &c.AcademicYear, &coord, &c.CreatedAt, &c.UpdatedAt); err != nil {
+		if err := rows.Scan(&c.ID, &c.SchoolID, &c.Name, &sec, &art, &c.AcademicYear, &coord, &c.StudentsCount, &c.CreatedAt, &c.UpdatedAt); err != nil {
 			return nil, err
 		}
 		c.Section = sec.String
@@ -199,11 +204,13 @@ func (r *PostgresRepository) List(ctx context.Context, schoolID string, academic
 }
 
 func (r *PostgresRepository) Get(ctx context.Context, id string) (*Class, error) {
-	query := `SELECT id, school_id, name, section, articolazione, academic_year, coordinator_id, created_at, updated_at 
-	          FROM classes WHERE id = $1`
+	query := `SELECT c.id, c.school_id, c.name, c.section, c.articolazione, c.academic_year, c.coordinator_id,
+	                 (SELECT COUNT(*) FROM students s WHERE s.class_id = c.id) AS students_count,
+	                 c.created_at, c.updated_at 
+	          FROM classes c WHERE c.id = $1`
 	var c Class
 	var sec, art, coord sql.NullString
-	err := r.db.QueryRowContext(ctx, query, id).Scan(&c.ID, &c.SchoolID, &c.Name, &sec, &art, &c.AcademicYear, &coord, &c.CreatedAt, &c.UpdatedAt)
+	err := r.db.QueryRowContext(ctx, query, id).Scan(&c.ID, &c.SchoolID, &c.Name, &sec, &art, &c.AcademicYear, &coord, &c.StudentsCount, &c.CreatedAt, &c.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -339,5 +346,53 @@ func (r *PostgresRepository) GetDisciplinaryNotes(ctx context.Context, classID s
 		notes = []DisciplinaryNoteReport{}
 	}
 	return notes, nil
+}
+
+func (r *PostgresRepository) BulkMigrateStudents(ctx context.Context, migrations []StudentMigrationItem) error {
+	if len(migrations) == 0 {
+		return nil
+	}
+
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	stmtUpdateClass, err := tx.PrepareContext(ctx, `
+		UPDATE students
+		SET class_id = $1::uuid, updated_at = NOW()
+		WHERE id = $2::uuid OR user_id = $2::uuid
+	`)
+	if err != nil {
+		return err
+	}
+	defer stmtUpdateClass.Close()
+
+	stmtUnassignClass, err := tx.PrepareContext(ctx, `
+		UPDATE students
+		SET class_id = NULL, updated_at = NOW()
+		WHERE id = $1::uuid OR user_id = $1::uuid
+	`)
+	if err != nil {
+		return err
+	}
+	defer stmtUnassignClass.Close()
+
+	for _, item := range migrations {
+		if item.Action == "promoted" || item.Action == "repeater" {
+			if item.TargetClassID != "" {
+				if _, err := stmtUpdateClass.ExecContext(ctx, item.TargetClassID, item.StudentID); err != nil {
+					return err
+				}
+			}
+		} else if item.Action == "graduated" || item.Action == "left" {
+			if _, err := stmtUnassignClass.ExecContext(ctx, item.StudentID); err != nil {
+				return err
+			}
+		}
+	}
+
+	return tx.Commit()
 }
 

@@ -158,7 +158,18 @@
               <q-input v-model="rubricForm.title" label="Titolo Rubrica *" outlined dense :rules="[val => !!val || 'Titolo obbligatorio']" />
             </div>
             <div class="col-12 col-sm-4">
-              <q-input v-model="rubricForm.subject_id" label="Materia *" outlined dense :rules="[val => !!val || 'Materia obbligatoria']" />
+              <q-select
+                v-model="rubricForm.subject_id"
+                :options="subjectOptions"
+                option-value="value"
+                option-label="label"
+                emit-value
+                map-options
+                label="Materia *"
+                outlined
+                dense
+                :rules="[val => !!val || 'Materia obbligatoria']"
+              />
             </div>
           </div>
 
@@ -250,24 +261,34 @@
             </div>
           </div>
 
-          <!-- Dynamic Criteria Assessment Toggles -->
-          <div v-for="crit in targetRubric?.criteria" :key="crit.id" class="border border-slate-200 rounded-xl q-pa-md bg-slate-50">
-            <div class="text-subtitle1 text-weight-bold text-slate-800 q-mb-xs">{{ crit.name }}</div>
-            <div class="text-caption text-slate-500 q-mb-sm" v-if="crit.description">{{ crit.description }}</div>
-
-            <div class="row q-gutter-xs">
-              <q-btn
-                v-for="lvl in crit.levels" :key="lvl.id"
-                :unelevated="getSelectedLevelId(crit.id) === lvl.id"
-                :outline="getSelectedLevelId(crit.id) !== lvl.id"
-                :color="getLevelBtnColor(lvl.score, crit.max_score)"
-                no-caps size="sm" class="q-px-sm"
-                @click="selectCriterionLevel(crit.id, lvl.id, lvl.score)"
-              >
-                {{ lvl.label }} ({{ lvl.score }} pt)
-              </q-btn>
-            </div>
+          <!-- Loading indicator -->
+          <div v-if="loadingRubricDetails" class="text-center q-pa-lg">
+            <q-spinner-dots color="positive" size="40px" />
           </div>
+
+          <!-- Dynamic Criteria Assessment Toggles -->
+          <template v-else>
+            <div v-for="crit in targetRubric?.criteria" :key="crit.id" class="border border-slate-200 rounded-xl q-pa-md bg-slate-50">
+              <div class="text-subtitle1 text-weight-bold text-slate-800 q-mb-xs">{{ crit.name }}</div>
+              <div class="text-caption text-slate-500 q-mb-sm" v-if="crit.description">{{ crit.description }}</div>
+
+              <div v-if="!crit.levels || crit.levels.length === 0" class="text-caption text-amber-900 bg-amber-100 q-pa-sm rounded-lg">
+                ⚠️ Nessun livello di valutazione definito per questo criterio.
+              </div>
+              <div v-else class="row q-gutter-xs">
+                <q-btn
+                  v-for="lvl in crit.levels" :key="lvl.id"
+                  :unelevated="getSelectedLevelId(crit.id) === lvl.id"
+                  :outline="getSelectedLevelId(crit.id) !== lvl.id"
+                  :color="getLevelBtnColor(lvl.score, crit.max_score)"
+                  no-caps size="sm" class="q-px-sm"
+                  @click="selectCriterionLevel(crit.id, lvl.id, lvl.score)"
+                >
+                  {{ lvl.label }} ({{ lvl.score }} pt)
+                </q-btn>
+              </div>
+            </div>
+          </template>
 
           <!-- Total Score Summary Banner -->
           <div class="bg-green-50 border border-green-200 rounded-xl q-pa-md row items-center justify-between">
@@ -293,25 +314,29 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useQuasar, date as qdate } from 'quasar'
 import { useRubricsStore } from '@/stores/rubrics'
 import { useClassesStore } from '@/stores/classes'
+import { useGradesStore } from '@/stores/grades'
 import api from 'src/services/api'
 
 const $q = useQuasar()
 const rubricsStore = useRubricsStore()
 const classesStore = useClassesStore()
+const gradesStore = useGradesStore()
 
 const activeTab = ref('rubrics')
 const createRubricDialog = ref(false)
 const assessmentDialog = ref(false)
 const savingRubric = ref(false)
 const savingAssessment = ref(false)
+const loadingRubricDetails = ref(false)
 
 const historyClassId = ref(null)
 const targetRubric = ref(null)
 const assessmentStudents = ref([])
+const subjectsList = ref([])
 
 const rubricForm = reactive({
   title: '',
-  subject_id: 'MAT',
+  subject_id: '',
   description: '',
   criteria: []
 })
@@ -331,6 +356,15 @@ const classOptions = computed(() => {
   }))
 })
 
+const subjectOptions = computed(() => {
+  const storeSubjects = gradesStore.subjects || []
+  const list = storeSubjects.length > 0 ? storeSubjects : subjectsList.value
+  return list.map(s => ({
+    label: s.name || s.subject_name || s.code || s.id,
+    value: s.subject_id || s.id || s.code
+  }))
+})
+
 const assessmentStudentOptions = computed(() => {
   return assessmentStudents.value.map(s => ({
     label: `${s.first_name || s.name} ${s.last_name || ''}`,
@@ -346,6 +380,12 @@ const formatDate = (d) => d ? qdate.formatDate(new Date(d), 'DD/MM/YYYY') : ''
 
 onMounted(async () => {
   await classesStore.fetchAssignedClasses().catch(() => classesStore.fetchClasses())
+  try {
+    const res = await api.get('/subjects')
+    subjectsList.value = res.data || []
+  } catch (e) {
+    console.warn('Could not load subjects list for rubrics', e)
+  }
   await loadRubrics()
 })
 
@@ -361,7 +401,7 @@ async function loadAssessments() {
 
 function openCreateRubricDialog() {
   rubricForm.title = ''
-  rubricForm.subject_id = 'MAT'
+  rubricForm.subject_id = subjectOptions.value[0]?.value || 'MAT'
   rubricForm.description = ''
   rubricForm.criteria = [
     {
@@ -438,16 +478,22 @@ async function confirmDeleteRubric(id) {
 }
 
 async function openAssessmentDialog(rubric) {
-  try {
-    targetRubric.value = await rubricsStore.getRubric(rubric.id)
-  } catch {
-    targetRubric.value = rubric
-  }
+  targetRubric.value = null
+  loadingRubricDetails.value = true
   assessmentForm.class_id = classOptions.value[0]?.value || ''
   assessmentForm.student_id = ''
   assessmentForm.scores = {}
   assessmentForm.notes = ''
   assessmentDialog.value = true
+
+  try {
+    targetRubric.value = await rubricsStore.getRubric(rubric.id)
+  } catch {
+    targetRubric.value = rubric
+  } finally {
+    loadingRubricDetails.value = false
+  }
+
   await onAssessmentClassChange()
 }
 

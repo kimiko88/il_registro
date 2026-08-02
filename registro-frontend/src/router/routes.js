@@ -1,3 +1,5 @@
+import { useAuthStore } from '@/stores/auth'
+
 export default [
     {
         path: '/',
@@ -150,10 +152,10 @@ export default [
                 redirect: () => {
                     let role = ''
                     try {
-                        const raw = localStorage.getItem('user')
-                        if (raw) role = JSON.parse(raw).role
-                    } catch (e) {
-                        // ignore storage/JSON parse errors
+                        const authStore = useAuthStore()
+                        role = authStore.userRole || authStore.user?.role || ''
+                    } catch {
+                        // store fallback
                     }
                     if (role === 'teacher') return '/teacher/communications'
                     if (role === 'student') return '/student/communications'
@@ -167,16 +169,16 @@ export default [
                 redirect: () => {
                     let role = ''
                     try {
-                        const raw = localStorage.getItem('user')
-                        if (raw) role = JSON.parse(raw).role
-                    } catch (e) {
-                        // ignore storage/JSON parse errors
+                        const authStore = useAuthStore()
+                        role = authStore.userRole || authStore.user?.role || ''
+                    } catch {
+                        // store fallback
                     }
                     if (role === 'student') return '/student/profile'
                     if (role === 'parent') return '/parent/profile'
                     if (role === 'admin' || role === 'superadmin') return '/admin/settings'
                     if (role === 'secretary') return '/secretary/settings'
-                    return '/dashboard'
+                    return '/'
                 },
                 meta: { title: 'Profilo Utente', roles: ['superadmin', 'admin', 'secretary', 'teacher', 'student', 'parent'] }
             },
@@ -188,6 +190,20 @@ export default [
         component: () => import('@/layouts/LoginLayout.vue'),
         children: [
             { path: '', component: () => import('@/pages/Login.vue'), meta: { title: 'Accesso al Sistema' } }
+        ]
+    },
+    {
+        path: '/register',
+        component: () => import('@/layouts/LoginLayout.vue'),
+        children: [
+            { path: '', component: () => import('@/pages/Login.vue'), meta: { title: 'Registrazione' } }
+        ]
+    },
+    {
+        path: '/forgot-password',
+        component: () => import('@/layouts/LoginLayout.vue'),
+        children: [
+            { path: '', component: () => import('@/pages/Login.vue'), meta: { title: 'Recupero Password' } }
         ]
     },
     {

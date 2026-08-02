@@ -144,7 +144,7 @@ func (r *PostgresRepository) Create(ctx context.Context, user *User) error {
 	if user.SchoolID != nil {
 		switch user.Role {
 		case "student":
-			studentQuery := `INSERT INTO students (user_id, school_id, class_id) VALUES ($1, $2, $3)`
+			studentQuery := `INSERT INTO students (user_id, school_id, class_id) VALUES ($1::uuid, $2::uuid, NULLIF($3, '')::uuid)`
 			_, err = tx.ExecContext(ctx, studentQuery, user.ID, *user.SchoolID, user.ClassID)
 		case "parent":
 			parentQuery := `INSERT INTO parents (user_id, school_id) VALUES ($1, $2)`
@@ -240,9 +240,9 @@ func (r *PostgresRepository) Update(ctx context.Context, user *User) error {
 		case "student":
 			studentQuery := `
 				INSERT INTO students (user_id, school_id, class_id, updated_at)
-				VALUES ($1::uuid, $2::uuid, $3::uuid, NOW())
+				VALUES ($1::uuid, $2::uuid, NULLIF($3, '')::uuid, NOW())
 				ON CONFLICT (user_id, school_id) 
-				DO UPDATE SET class_id = $3::uuid, updated_at = NOW()
+				DO UPDATE SET class_id = NULLIF($3, '')::uuid, updated_at = NOW()
 			`
 			_, err = tx.ExecContext(ctx, studentQuery, user.ID, *user.SchoolID, user.ClassID)
 		case "teacher":

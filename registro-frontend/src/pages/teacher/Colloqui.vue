@@ -328,7 +328,7 @@ const confirmMeeting = async (meeting) => {
   try {
     await api.patch(`/colloqui/bookings/${meeting.id}/confirm`)
     $q.notify({ color: 'positive', message: 'Incontro confermato' })
-    loadData()
+    await loadData()
   } catch (err) {
     $q.notify({ color: 'negative', message: 'Errore durante la conferma' })
   }
@@ -338,6 +338,23 @@ const saveSlots = async () => {
     if (!newSlot.dates || newSlot.dates.length === 0) {
         $q.notify({ color: 'warning', message: 'Seleziona almeno un giorno' })
         return
+    }
+
+    if (newSlot.start && newSlot.end && newSlot.start >= newSlot.end) {
+        $q.notify({ color: 'warning', message: 'L\'ora di inizio deve essere precedente all\'ora di fine' })
+        return
+    }
+
+    if (newSlot.isRecurring) {
+        if (!newSlot.recurringUntil) {
+            $q.notify({ color: 'warning', message: 'Specifica una data di fine per la ricorrenza' })
+            return
+        }
+        const todayStr = new Date().toISOString().split('T')[0]
+        if (newSlot.recurringUntil < todayStr) {
+            $q.notify({ color: 'warning', message: 'La data di fine ricorrenza non può essere nel passato' })
+            return
+        }
     }
     
     savingSlots.value = true
@@ -367,9 +384,10 @@ const saveSlots = async () => {
         newSlot.isRecurring = false
         newSlot.recurringUntil = ''
 
-        loadData()
+        await loadData()
     } catch (err) {
-        $q.notify({ color: 'negative', message: 'Errore durante la generazione delle disponibilità' })
+        const msg = err.response?.data?.error || 'Errore durante la generazione delle disponibilità'
+        $q.notify({ color: 'negative', message: msg })
     } finally {
         savingSlots.value = false
     }
@@ -387,9 +405,10 @@ const handleDeleteSlot = async (slot) => {
         try {
             await api.delete(`/colloqui/slots/${slot.id}`)
             $q.notify({ color: 'positive', message: 'Disponibilità eliminata' })
-            loadData()
+            await loadData()
         } catch (err) {
-            $q.notify({ color: 'negative', message: 'Errore durante l\'eliminazione' })
+            const msg = err.response?.data?.error || 'Impossibile eliminare lo slot (già annullato o inesistente)'
+            $q.notify({ color: 'negative', message: msg })
         }
     })
 }
@@ -404,7 +423,7 @@ const confirmCancelBooking = (meeting) => {
         try {
             await api.patch(`/colloqui/bookings/${meeting.id}/cancel`)
             $q.notify({ color: 'positive', message: 'Incontro annullato' })
-            loadData()
+            await loadData()
         } catch (err) {
             $q.notify({ color: 'negative', message: 'Errore durante l\'annullamento' })
         }
@@ -444,7 +463,7 @@ const getStatusColor = (status) => {
 
 const saveSettings = () => {
   try {
-    localStorage.setItem('teacher_colloqui_settings', JSON.stringify(settings))
+    localStorage.setItem('teacher_colloqui_settings', JSON.stringify({ onlineEnabled: settings.onlineEnabled }))
     $q.notify({ color: 'positive', message: 'Impostazioni salvate con successo' })
   } catch (e) {
     $q.notify({ color: 'negative', message: 'Errore durante il salvataggio' })

@@ -49,7 +49,9 @@ export const useWebSocketStore = defineStore('websocket', () => {
         }
 
         const token = authStore.token
-        socket.value = new WebSocket(wsUrl, ['access_token', token])
+        const sep = wsUrl.includes('?') ? '&' : '?'
+        const finalWsUrl = `${wsUrl}${sep}token=${encodeURIComponent(token)}`
+        socket.value = new WebSocket(finalWsUrl)
 
         socket.value.onopen = () => {
             console.log('WebSocket: Connected')

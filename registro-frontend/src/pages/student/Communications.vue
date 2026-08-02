@@ -271,7 +271,12 @@ async function signBachecaMessage(id) {
   try {
     await api.post(`/communications/${id}/sign`)
     $q.notify({ type: 'positive', message: 'Firma per presa visione registrata' })
-    await fetchBacheca()
+    const found = bachecaMessages.value.find(m => m.id === id)
+    if (found) {
+      found.is_signed = true
+      found.signed_at = new Date().toISOString()
+      bachecaMessages.value = [...bachecaMessages.value]
+    }
   } catch {
     $q.notify({ type: 'negative', message: 'Errore durante la registrazione della firma' })
   } finally {
@@ -294,10 +299,12 @@ async function selectMessage(msg) {
   selectedMessage.value = msg
   if (!msg.read) {
     msg.read = true
+    messages.value = [...messages.value]
     try {
       await communicationService.markAsRead(msg.id)
     } catch {
       msg.read = false
+      messages.value = [...messages.value]
     }
   }
 }
@@ -306,6 +313,7 @@ async function signReceipt(msg) {
   try {
     await communicationService.signMessage(msg.id)
     msg.is_signed = true
+    messages.value = [...messages.value]
     $q.notify({ type: 'positive', message: 'Presa visione registrata con successo' })
   } catch {
     $q.notify({ type: 'negative', message: 'Errore nella registrazione della firma' })

@@ -113,11 +113,17 @@ export const useAttendanceStore = defineStore('attendance', {
                 const childrenStore = useChildrenStore();
                 
                 let targetStudentId = studentId;
-                if (!targetStudentId && authStore.user) {
-                    targetStudentId = authStore.user.student_id;
-                }
-                if (!targetStudentId) {
-                    targetStudentId = childrenStore.selectedChildId;
+
+                if (authStore.userRole === 'parent') {
+                    const validChildIds = (childrenStore.children || []).map(c => c.id || c.student_id).filter(Boolean);
+                    if (targetStudentId && validChildIds.length > 0 && !validChildIds.includes(targetStudentId)) {
+                        throw new Error("Impossibile richiedere giustificazione per uno studente non associato");
+                    }
+                    if (!targetStudentId) {
+                        targetStudentId = childrenStore.selectedChildId || validChildIds[0];
+                    }
+                } else if (!targetStudentId) {
+                    targetStudentId = authStore.user?.student_id;
                 }
 
                 if (!targetStudentId) {

@@ -32,7 +32,9 @@
         <q-card class="glass-card text-center q-pa-xl rounded-2xl border-slate-100 shadow-soft">
             <q-icon name="rocket_launch" size="80px" color="primary" class="q-mb-md opacity-80" />
             <div class="text-h4 text-weight-bold text-slate-800">Consiglio di Classe</div>
-            <div class="text-subtitle1 text-slate-500 q-mt-sm">Seleziona una classe per iniziare il processo di scrutinio.</div>
+            <div class="text-subtitle1 text-slate-500 q-mt-sm">
+              {{ classOptions.length === 0 ? "Non risulti coordinatore di alcuna classe per lo scrutinio." : "Seleziona una classe per iniziare il processo di scrutinio." }}
+            </div>
         </q-card>
     </div>
 
@@ -184,7 +186,13 @@ onMounted(async () => {
     await classesStore.fetchAssignedClasses()
   }
   
-  classOptions.value = classesStore.classes.map(c => ({
+  let availableClasses = classesStore.classes || []
+  if (authStore.userRole === 'teacher') {
+    const currentUserId = authStore.user?.id
+    availableClasses = availableClasses.filter(c => c.coordinator_id === currentUserId)
+  }
+
+  classOptions.value = availableClasses.map(c => ({
     label: `${c.name}${c.section} - ${c.academic_year}`,
     value: c.id
   }))

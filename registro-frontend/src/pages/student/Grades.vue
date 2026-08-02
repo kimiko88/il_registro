@@ -117,7 +117,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { gradeService } from 'src/services/gradeService'
-import adminService from 'src/services/adminService'
+import api from 'src/services/api'
 import { useStudentStore } from 'src/stores/student'
 
 const $q = useQuasar()
@@ -149,12 +149,12 @@ onMounted(async () => {
 
 const fetchSubjects = async () => {
     try {
-        const schoolId = studentStore.profile?.school_id
-        if (!schoolId) return
-        const { data } = await adminService.getSubjects(schoolId)
+        const classId = studentStore.profile?.class_id
+        if (!classId) return
+        const { data } = await api.get(`/classes/${classId}/subjects`)
         if (data) {
             const map = {}
-            data.forEach(s => map[s.id] = s.name)
+            data.forEach(s => map[s.id || s.subject_id] = s.name || s.subject_name)
             subjectsMap.value = map
         }
     } catch (e) {

@@ -91,6 +91,10 @@ func (h *Handler) GetStudentGrades(c *gin.Context) {
 
 	actorID := c.GetString("user_id")
 	actorRole := c.GetString("role")
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 
 	filter := h.parseFilter(c)
 

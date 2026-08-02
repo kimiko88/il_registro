@@ -2,7 +2,8 @@
   <q-page class="q-pa-md">
     <div class="row items-center justify-between q-mb-md">
        <div class="text-h4">Presenze e Assenze</div>
-       <q-btn icon="fact_check" label="Richiedi Giustificazione" color="primary" @click="showJustifyDialog = true" />
+       <q-btn v-if="isParentUser" icon="fact_check" label="Richiedi Giustificazione" color="primary" @click="showJustifyDialog = true" />
+       <q-badge v-else color="grey-6" class="q-pa-xs">Giustificazioni gestite dai Genitori</q-badge>
     </div>
 
     <div class="row q-col-gutter-lg">
@@ -152,11 +153,19 @@ function mapStatus(status) {
     return status
 }
 
+const isParentUser = computed(() => {
+    const role = authStore.userRole || authStore.user?.role
+    return role === 'parent'
+})
+
 const totalAbsences = computed(() => attendanceEvents.value.filter(e => e.type === 'Assenza').length)
 const totalDelays = computed(() => attendanceEvents.value.filter(e => e.type === 'Ritardo').length)
 
-const totalDays = computed(() => Math.max(attendanceEvents.value.length, 1))
-const attendancePercentage = computed(() => Math.round(((totalDays.value - totalAbsences.value) / totalDays.value) * 100))
+const attendancePercentage = computed(() => {
+    if (attendanceEvents.value.length === 0) return 100
+    const presentsCount = attendanceEvents.value.filter(e => e.type === 'Presente' || e.type === 'Ritardo' || e.type === 'Uscita Anticipata').length
+    return Math.round((presentsCount / attendanceEvents.value.length) * 100)
+})
 
 const unjustifiedAbsences = computed(() => 
     attendanceEvents.value
@@ -174,18 +183,21 @@ const getTypeColor = (type) => {
 }
 
 const submitJustification = async () => {
+    if (!isParentUser.value) {
+        $q.notify({ type: 'warning', message: 'Le giustificazioni devono essere inviate dal genitore' })
+        return
+    }
     if (!justification.value.event) return
     const eventObj = justification.value.event
     try {
         await attendanceService.justify(eventObj.value, {
-             student_id: authStore.user?.id || 'me', 
              start_date: eventObj.date || new Date().toISOString().split('T')[0],
              reason: justification.value.reason || 'Assenza',
              notes: justification.value.notes || ''
         })
-        $q.notify({ type: 'positive', message: 'Richiesta inviata' })
+        $q.notify({ type: 'positive', message: 'Richiesta inviata con successo' })
     } catch(e) {
-        $q.notify({ type: 'warning', message: 'Funzionalità limitata ai genitori' }) 
+        $q.notify({ type: 'negative', message: 'Errore durante l\'invio della giustificazione' }) 
     }
 }
 </script>

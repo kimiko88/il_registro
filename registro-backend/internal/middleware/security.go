@@ -11,13 +11,12 @@ import (
 )
 
 // generateNonce creates a cryptographically secure random nonce (16 bytes → 24-char base64).
-func generateNonce() string {
+func generateNonce() (string, error) {
 	b := make([]byte, 16)
 	if _, err := rand.Read(b); err != nil {
-		// Fallback: should never happen, but prevents nil panic
-		return "fallback-nonce-replace-me"
+		return "", err
 	}
-	return base64.StdEncoding.EncodeToString(b)
+	return base64.StdEncoding.EncodeToString(b), nil
 }
 
 // backendURL returns the backend origin used in connect-src.
@@ -44,7 +43,12 @@ func backendWSURL() string {
 
 func SecurityHeadersMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		nonce := generateNonce()
+		nonce, err := generateNonce()
+		if err != nil {
+			c.JSON(500, gin.H{"error": "internal security error"})
+			c.Abort()
+			return
+		}
 
 		// Store the nonce so templates / other middleware can reference it
 		c.Set("csp_nonce", nonce)
@@ -72,12 +76,11 @@ func SecurityHeadersMiddleware() gin.HandlerFunc {
 		c.Writer.Header().Set("Permissions-Policy",
 			"camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=()")
 
-		// Content Security Policy — nonce-based, no unsafe-inline / unsafe-eval
-		// Specific backend URL and WebSocket origins are allowed rather than un-scoped wildcard ws:/wss:
+		// Content Security Policy — nonce-based with 'unsafe-inline' fallback for SPA bundles
 		csp := fmt.Sprintf(
 			"default-src 'self'; "+
-				"script-src 'self' 'nonce-%s'; "+
-				"style-src 'self' 'nonce-%s' https://fonts.googleapis.com; "+
+				"script-src 'self' 'nonce-%s' 'unsafe-inline'; "+
+				"style-src 'self' 'nonce-%s' 'unsafe-inline' https://fonts.googleapis.com; "+
 				"font-src 'self' https://fonts.gstatic.com; "+
 				"img-src 'self' data: blob: https://cdn.quasar.dev; "+
 				"connect-src 'self' %s %s; "+

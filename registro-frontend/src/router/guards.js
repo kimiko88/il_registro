@@ -40,7 +40,9 @@ export const authGuard = (to, from, next) => {
             : (to.meta.role ? [to.meta.role] : null)
 
         if (requiredRoles && !requiredRoles.includes(currentRole)) {
-            console.warn(`Access denied: role '${currentRole}' is not allowed for path '${to.path}'`)
+            if (import.meta.env.DEV) {
+                console.warn(`Access denied: role '${currentRole}' is not allowed for path '${to.path}'`)
+            }
             next(getUserDashboard(currentRole))
             return
         }

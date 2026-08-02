@@ -150,6 +150,7 @@
 import { useAuthStore } from '@/stores/auth'
 import { storeToRefs } from 'pinia'
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useStudentStore } from 'src/stores/student'
 import { useParentStore } from 'src/stores/parent'
@@ -157,7 +158,9 @@ import { useClassesStore } from 'src/stores/classes'
 import adminService from 'src/services/adminService'
 import dashboardService from 'src/services/dashboardService'
 import { communicationService } from '@/services/communicationService'
+import api from '@/services/api'
 
+const router = useRouter()
 const authStore = useAuthStore()
 const { user, userRole } = storeToRefs(authStore)
 const $q = useQuasar()
@@ -317,6 +320,21 @@ const fetchTodaySchedule = async () => {
     if (isDashboardAdmin.value) return
 
     try {
+        const todayDay = new Date().getDay()
+        if (todayDay === 0) {
+            todaySchedule.value = []
+            return
+        }
+
+        if (userRole.value === 'teacher') {
+            const res = await api.get('/timetables/my-schedule')
+            const allEntries = res.data || []
+            const filtered = allEntries.filter(e => e.day_of_week === todayDay)
+            filtered.sort((a, b) => a.hour_index - b.hour_index)
+            todaySchedule.value = filtered
+            return
+        }
+
         let classId = null
 
         if (userRole.value === 'student') {
@@ -329,22 +347,13 @@ const fetchTodaySchedule = async () => {
             if (parentStore.children && parentStore.children.length > 0) {
                 classId = parentStore.children[0].class_id
             }
-        } else if (userRole.value === 'teacher') {
-            const classesStore = useClassesStore()
-            await classesStore.fetchAssignedClasses()
-            if (classesStore.classes && classesStore.classes.length > 0) {
-                classId = classesStore.classes[0].id
-            }
         }
 
         if (classId) {
             const res = await adminService.getClassSchedule(classId)
             const allEntries = res.data || []
 
-            const todayDay = new Date().getDay()
-            const targetDay = todayDay === 0 ? 1 : todayDay
-
-            const filtered = allEntries.filter(e => e.day_of_week === targetDay)
+            const filtered = allEntries.filter(e => e.day_of_week === todayDay)
             filtered.sort((a, b) => a.hour_index - b.hour_index)
 
             todaySchedule.value = filtered

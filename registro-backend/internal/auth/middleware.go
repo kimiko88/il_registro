@@ -67,6 +67,15 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 			}
 		}
 
+		// 3. Try Query parameter (e.g., ?token=... or ?access_token=...)
+		if token == "" {
+			if qToken := c.Query("token"); qToken != "" {
+				token = qToken
+			} else if qToken := c.Query("access_token"); qToken != "" {
+				token = qToken
+			}
+		}
+
 		if token == "" {
 			c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "missing authorization token"})
 			c.Abort()

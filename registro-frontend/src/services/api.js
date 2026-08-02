@@ -14,6 +14,7 @@ const getBaseURL = () => {
 
 const api = axios.create({
     baseURL: getBaseURL(),
+    timeout: 15000,
     headers: {
         'Content-Type': 'application/json',
     },
@@ -63,8 +64,11 @@ api.interceptors.response.use(
             return Promise.reject(error);
         }
 
-
-
+        if (error.response.status === 403) {
+            error.userMessage = 'Non disponi dei permessi necessari per completare questa operazione.';
+        } else if (error.response.status >= 500) {
+            error.userMessage = 'Si è verificato un errore sul server. Riprova più tardi.';
+        }
 
         if (
             error.response.status === 401 &&
@@ -98,33 +102,32 @@ api.interceptors.response.use(
                     isRefreshing = true;
 
                     try {
-                        const refreshResponse = await axios.post(`${getBaseURL()}/auth/refresh`, {
+                        const refreshResponse = await axios.post(`${getBaseURL()}/auth/refresh-token`, {
                             refresh_token: refreshToken,
                         });
                         const access_token = refreshResponse.data?.access_token;
                         const newRefreshToken = refreshResponse.data?.refresh_token;
 
-                        if (authStore) {
-                            authStore.token = access_token;
-                            if (newRefreshToken) authStore.refreshToken = newRefreshToken;
+                        if (authStore && authStore.updateTokens) {
+                            authStore.updateTokens(access_token, newRefreshToken);
+                        } else {
+                            if (localStorage.getItem('token')) {
+                                localStorage.setItem('token', access_token);
+                                if (newRefreshToken) localStorage.setItem('refreshToken', newRefreshToken);
+                            } else if (sessionStorage.getItem('token')) {
+                                sessionStorage.setItem('token', access_token);
+                                if (newRefreshToken) sessionStorage.setItem('refreshToken', newRefreshToken);
+                            }
                         }
 
-                        if (localStorage.getItem('token')) {
-                            localStorage.setItem('token', access_token);
-                            if (newRefreshToken) localStorage.setItem('refreshToken', newRefreshToken);
-                        } else if (sessionStorage.getItem('token')) {
-                            sessionStorage.setItem('token', access_token);
-                            if (newRefreshToken) sessionStorage.setItem('refreshToken', newRefreshToken);
-                        }
-
-                        processQueue(null, access_token);
                         isRefreshing = false;
+                        processQueue(null, access_token);
 
                         originalRequest.headers.Authorization = `Bearer ${access_token}`;
                         return api(originalRequest);
                     } catch (refreshErr) {
-                        processQueue(refreshErr, null);
                         isRefreshing = false;
+                        processQueue(refreshErr, null);
                         if (authStore) {
                             authStore.logout();
                         } else {
@@ -146,6 +149,7 @@ api.interceptors.response.use(
                     if (window.location.pathname !== '/login') {
                         window.location.href = '/login?reason=session_expired';
                     }
+                    return Promise.reject(error);
                 }
             }
         }

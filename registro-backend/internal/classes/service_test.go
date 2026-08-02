@@ -82,6 +82,10 @@ func (m *MockRepository) GetDisciplinaryNotes(ctx context.Context, classID strin
 	}
 	return args.Get(0).([]DisciplinaryNoteReport), args.Error(1)
 }
+func (m *MockRepository) BulkMigrateStudents(ctx context.Context, migrations []StudentMigrationItem) error {
+	args := m.Called(ctx, migrations)
+	return args.Error(0)
+}
 
 
 func TestService_CreateClass(t *testing.T) {
@@ -580,6 +584,26 @@ func TestService_GetDisciplinaryNotes(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, expected, notes)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestService_BulkMigrateStudents(t *testing.T) {
+	mockRepo := new(MockRepository)
+	req := BulkStudentMigrationRequest{
+		SourceAcademicYear: "2024/2025",
+		TargetAcademicYear: "2025/2026",
+		Migrations: []StudentMigrationItem{
+			{StudentID: "st-1", Action: "promoted", TargetClassID: "class-2a"},
+			{StudentID: "st-2", Action: "repeater", TargetClassID: "class-1a"},
+			{StudentID: "st-3", Action: "graduated"},
+		},
+	}
+	mockRepo.On("BulkMigrateStudents", mock.Anything, req.Migrations).Return(nil)
+
+	service := NewService(mockRepo)
+	err := service.BulkMigrateStudents(context.Background(), "school-1", req)
+
+	assert.NoError(t, err)
 	mockRepo.AssertExpectations(t)
 }
 

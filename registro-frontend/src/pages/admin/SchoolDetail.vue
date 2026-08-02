@@ -99,15 +99,24 @@
                     <q-tab name="classes" label="Classi" />
                     <q-tab name="users" label="Utenti" />
                 </q-tabs>
-                <q-btn 
-                    v-if="tab === 'classes'"
-                    color="primary" 
-                    icon="add" 
-                    label="Nuova Classe" 
-                    size="sm" 
-                    unelevated 
-                    @click="openClassDialog"
-                />
+                <div v-if="tab === 'classes'" class="row items-center q-gutter-sm">
+                    <q-select
+                        v-model="selectedAcademicYear"
+                        :options="academicYearOptions"
+                        label="Anno Scolastico"
+                        outlined
+                        dense
+                        style="min-width: 160px"
+                    />
+                    <q-btn 
+                        color="primary" 
+                        icon="add" 
+                        label="Nuova Classe" 
+                        size="sm" 
+                        unelevated 
+                        @click="openClassDialog"
+                    />
+                </div>
              </div>
 
            <q-separator />
@@ -306,13 +315,34 @@ const school = ref(null)
 const loading = ref(true)
 const tab = ref('classes')
 
+const getCurrentAcademicYear = () => {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = now.getMonth() + 1
+  if (month >= 9) {
+    return `${year}/${year + 1}`
+  } else {
+    return `${year - 1}/${year}`
+  }
+}
+
+const currentYearStr = getCurrentAcademicYear()
+const selectedAcademicYear = ref(currentYearStr)
+const currentStart = parseInt(currentYearStr.split('/')[0])
+const academicYearOptions = [
+  'Tutti gli anni',
+  `${currentStart - 1}/${currentStart}`,
+  currentYearStr,
+  `${currentStart + 1}/${currentStart + 2}`
+]
+
 // Classes Data
 const classes = ref([])
 const loadingClasses = ref(false)
 const classColumns = [
-    { name: 'section', label: 'Classe', field: 'section', align: 'left', sortable: true },
+    { name: 'section', label: 'Classe', field: row => `${row.name || ''}${row.section || ''}`, align: 'left', sortable: true },
     { name: 'year', label: 'Anno', field: 'academic_year', align: 'left', sortable: true },
-    { name: 'students', label: 'Studenti', field: val => val.students_count || 0, align: 'center' },
+    { name: 'students', label: 'Studenti', field: row => row.students_count ?? 0, align: 'center', sortable: true },
     { name: 'actions', label: 'Azioni', align: 'center' }
 ]
 
@@ -459,8 +489,10 @@ const fetchSchool = async () => {
 const fetchClasses = async (schoolId) => {
     loadingClasses.value = true
     try {
-        const response = await adminService.getSchoolClasses(schoolId || school.value.id)
-        classes.value = response.data
+        const id = schoolId && typeof schoolId === 'string' ? schoolId : school.value?.id
+        const yearParam = (!selectedAcademicYear.value || selectedAcademicYear.value === 'Tutti gli anni') ? null : selectedAcademicYear.value
+        const response = await adminService.getSchoolClasses(id, yearParam)
+        classes.value = response.data || []
     } catch (e) {
         console.error("Error fetching classes", e)
     } finally {
@@ -482,9 +514,13 @@ const fetchUsers = async (schoolId) => {
     }
 }
 
-// Watch role filter to refresh users
+// Watch filters to refresh data
 watch(userRoleFilter, () => {
     if (school.value) fetchUsers(school.value.id)
+})
+
+watch(selectedAcademicYear, () => {
+    if (school.value) fetchClasses(school.value.id)
 })
 
 onMounted(() => {

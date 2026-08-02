@@ -202,7 +202,7 @@ func (h *Handler) RejectJustification(c *gin.Context) {
 
 func (h *Handler) GetAnalytics(c *gin.Context) {
 	role := c.GetString("role")
-	if role != "admin" && role != "superadmin" && role != "secretary" {
+	if role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && role != "teacher" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -326,8 +326,13 @@ func (h *Handler) RequestJustification(c *gin.Context) {
 		return
 	}
 	parentID := c.GetString("user_id")
+	role := c.GetString("role")
 	if parentID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "parent" && role != "admin" && role != "superadmin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "solo i genitori possono richiedere giustificazioni"})
 		return
 	}
 	if err := h.service.RequestJustification(c.Request.Context(), parentID, req); err != nil {
@@ -437,6 +442,7 @@ func (h *Handler) ExportAttendance(c *gin.Context) {
 	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
 
 	var buf bytes.Buffer
+	buf.Write([]byte{0xEF, 0xBB, 0xBF})
 	w := csv.NewWriter(&buf)
 	_ = w.Write([]string{"StudentID", "Status", "IsJustified", "Notes"})
 
@@ -468,7 +474,7 @@ func (h *Handler) GetMonthlyBreakdown(c *gin.Context) {
 	studentID := c.Param("studentID")
 	schoolYear := c.DefaultQuery("school_year", "")
 
-	if role != "teacher" && role != "admin" && role != "superadmin" && role != "secretary" && userID != studentID {
+	if role != "teacher" && role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && role != "student" && role != "parent" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}

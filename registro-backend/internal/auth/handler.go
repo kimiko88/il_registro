@@ -99,6 +99,10 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
+	if authResp != nil && authResp.RefreshToken != "" {
+		c.SetCookie("refreshToken", authResp.RefreshToken, 604800, "/", "", false, true)
+	}
+
 	c.JSON(http.StatusOK, authResp)
 }
 
@@ -106,17 +110,30 @@ func (h *Handler) Login(c *gin.Context) {
 // POST /auth/refresh-token
 func (h *Handler) RefreshToken(c *gin.Context) {
 	var req RefreshTokenRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "invalid request", Message: err.Error()})
+	_ = c.ShouldBindJSON(&req)
+
+	rt := req.RefreshToken
+	if rt == "" {
+		if cookieToken, err := c.Cookie("refreshToken"); err == nil && cookieToken != "" {
+			rt = cookieToken
+		}
+	}
+
+	if rt == "" {
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "missing refresh_token"})
 		return
 	}
 
 	ipAddress := c.ClientIP()
 	userAgent := c.GetHeader("User-Agent")
-	tokens, err := h.service.RefreshToken(c.Request.Context(), req.RefreshToken, ipAddress, userAgent)
+	tokens, err := h.service.RefreshToken(c.Request.Context(), rt, ipAddress, userAgent)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: err.Error()})
 		return
+	}
+
+	if tokens != nil && tokens.RefreshToken != "" {
+		c.SetCookie("refreshToken", tokens.RefreshToken, 604800, "/", "", false, true)
 	}
 
 	c.JSON(http.StatusOK, tokens)
@@ -126,10 +143,16 @@ func (h *Handler) RefreshToken(c *gin.Context) {
 // POST /auth/logout
 func (h *Handler) Logout(c *gin.Context) {
 	var req RefreshTokenRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "invalid request", Message: err.Error()})
-		return
+	_ = c.ShouldBindJSON(&req)
+
+	rt := req.RefreshToken
+	if rt == "" {
+		if cookieToken, err := c.Cookie("refreshToken"); err == nil && cookieToken != "" {
+			rt = cookieToken
+		}
 	}
+
+	c.SetCookie("refreshToken", "", -1, "/", "", false, true)
 
 	// Extract the authenticated user's ID from the JWT (set by Authenticate middleware).
 	// This ensures a user can only revoke their own sessions.
@@ -139,13 +162,11 @@ func (h *Handler) Logout(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.Logout(c.Request.Context(), req.RefreshToken, callerUserID); err != nil {
+	if err := h.service.Logout(c.Request.Context(), rt, callerUserID); err != nil {
 		if err == ErrUnauthorized {
 			c.JSON(http.StatusForbidden, ErrorResponse{Error: "token does not belong to the authenticated user"})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
-		return
 	}
 
 	c.JSON(http.StatusOK, MessageResponse{Message: "logged out successfully"})
@@ -280,6 +301,7 @@ func (h *Handler) RegisterRoutes(router *gin.RouterGroup, middleware *Middleware
 		// Fully public routes (no JWT required)
 		auth.POST("/login", h.Login)
 		auth.POST("/refresh-token", h.RefreshToken)
+		auth.POST("/refresh", h.RefreshToken)
 		auth.POST("/password-reset", h.RequestPasswordReset)
 		auth.POST("/password-reset/confirm", h.ConfirmPasswordReset)
 

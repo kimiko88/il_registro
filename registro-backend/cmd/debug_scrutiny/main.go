@@ -8,7 +8,11 @@ import (
 	"os"
 
 	_ "github.com/lib/pq"
+	"registro-backend/internal/attendance"
+	"registro-backend/internal/classes"
+	"registro-backend/internal/grades"
 	"registro-backend/internal/scrutiny"
+	"registro-backend/internal/users"
 )
 
 func main() {
@@ -27,7 +31,13 @@ func main() {
 		log.Fatalf("DB ping error: %v", err)
 	}
 
-	service := scrutiny.NewService(db)
+	scrutinyRepo := scrutiny.NewRepository(db)
+	gradesRepo := grades.NewRepository(db)
+	classesRepo := classes.NewRepository(db)
+	usersRepo := users.NewRepository(db)
+	attendanceRepo := attendance.NewRepository(db)
+
+	service := scrutiny.NewService(scrutinyRepo, gradesRepo, classesRepo, usersRepo, attendanceRepo)
 
 	classID := "162737ff-081f-436c-8874-11cd57bc60f1"
 	actorID := "550e8400-e29b-41d4-a716-446655440001"

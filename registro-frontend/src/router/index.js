@@ -33,4 +33,15 @@ router.afterEach((to) => {
     document.title = section ? `${section} — ${base}` : base
 })
 
+router.onError((error, to) => {
+    if (error.message && /loading chunk|failed to fetch dynamically imported module/i.test(error.message)) {
+        console.error('Lazy-load chunk failure detected:', error)
+        if (to?.fullPath) {
+            window.location.assign(to.fullPath)
+        } else {
+            window.location.reload()
+        }
+    }
+})
+
 export default router

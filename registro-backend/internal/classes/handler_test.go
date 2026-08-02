@@ -43,6 +43,7 @@ func TestHandler_GetLessonTopics(t *testing.T) {
 			name:   "successful get lesson topics",
 			userID: "user-123",
 			setupMock: func(m *MockRepository) {
+				m.On("Get", mock.Anything, "class-1").Maybe().Return(&Class{ID: "class-1", SchoolID: "162737ff-081f-436c-8874-11cd57bc60f1"}, nil)
 				m.On("GetLessonTopics", mock.Anything, "class-1").Return([]LessonTopic{
 					{
 						ID:               "lt-1",
@@ -67,6 +68,7 @@ func TestHandler_GetLessonTopics(t *testing.T) {
 			name:   "repository error",
 			userID: "user-123",
 			setupMock: func(m *MockRepository) {
+				m.On("Get", mock.Anything, "class-1").Maybe().Return(&Class{ID: "class-1", SchoolID: "162737ff-081f-436c-8874-11cd57bc60f1"}, nil)
 				m.On("GetLessonTopics", mock.Anything, "class-1").Return(nil, errors.New("db failure"))
 			},
 			expectedStatus: http.StatusInternalServerError,
@@ -118,6 +120,7 @@ func TestHandler_GetDisciplinaryNotes(t *testing.T) {
 			name:   "successful get disciplinary notes",
 			userID: "user-123",
 			setupMock: func(m *MockRepository) {
+				m.On("Get", mock.Anything, "class-1").Maybe().Return(&Class{ID: "class-1", SchoolID: "162737ff-081f-436c-8874-11cd57bc60f1"}, nil)
 				m.On("GetDisciplinaryNotes", mock.Anything, "class-1").Return([]DisciplinaryNoteReport{
 					{
 						ID:               "dn-1",

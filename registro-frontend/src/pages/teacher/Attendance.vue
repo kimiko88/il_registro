@@ -237,7 +237,7 @@
         v-model="showNoteDialog"
         :student="selectedStudentForNote"
         :class-id="String(typeof selectedClass === 'object' ? selectedClass.id : selectedClass)" 
-    />>
+    />
 
   </q-page>
 </template>
@@ -327,7 +327,12 @@ const saveDraftToStorage = () => {
     const draftData = {
         date: date.value,
         hour: selectedHour.value,
-        students: students.value,
+        statuses: students.value.map(s => ({
+            id: s.id,
+            status: s.status,
+            entry_time: s.entry_time,
+            exit_time: s.exit_time
+        })),
         timestamp: new Date().toISOString()
     }
     try {
@@ -344,18 +349,24 @@ const cleanOldDrafts = () => {
     try {
         const now = Date.now()
         const maxAge = 7 * 24 * 60 * 60 * 1000
+        const keysToRemove = []
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i)
             if (key && key.startsWith('attendance_draft_')) {
                 const item = localStorage.getItem(key)
                 if (item) {
-                    const parsed = JSON.parse(item)
-                    if (parsed.timestamp && (now - new Date(parsed.timestamp).getTime()) > maxAge) {
-                        localStorage.removeItem(key)
+                    try {
+                        const parsed = JSON.parse(item)
+                        if (parsed.timestamp && (now - new Date(parsed.timestamp).getTime()) > maxAge) {
+                            keysToRemove.push(key)
+                        }
+                    } catch {
+                        keysToRemove.push(key)
                     }
                 }
             }
         }
+        keysToRemove.forEach(k => localStorage.removeItem(k))
     } catch (e) {
         console.warn('Error cleaning old drafts', e)
     }
@@ -398,7 +409,7 @@ const fetchData = async () => {
             params: { 
                 class_id: selectedClass.value.id,
                 role: 'student',
-                page_size: 100 // Ensure we get all students, usually classes are small
+                page_size: 500
             }
         })
         const studentList = usersRes.data.users || []

@@ -68,7 +68,7 @@ export function useMenuItems(role) {
                     { label: 'Voti', icon: 'grade', path: '/teacher/grades' },
                     { label: 'Presenze', icon: 'how_to_reg', path: '/teacher/attendance' },
                     { label: 'Didattica', icon: 'folder_shared', path: '/teacher/didactics' },
-                    { label: 'Scrutinio', icon: 'analytics', path: '/teacher/scrutiny' },
+                    { label: 'Scrutinio', icon: 'analytics', path: '/teacher/scrutiny', coordinatorOnly: true },
                     { label: 'Rubriche Valutative', icon: 'fact_check', path: '/teacher/rubrics' },
                     { label: 'Coordinamento', icon: 'co_present', path: '/teacher/coordinator', coordinatorOnly: true }
                 ]
