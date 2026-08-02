@@ -1,6 +1,7 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import { Quasar, Notify, Dialog, Loading } from 'quasar'
+import quasarLangIt from 'quasar/lang/it'
 import router from './router'
 import App from './App.vue'
 
@@ -21,6 +22,7 @@ app.use(Quasar, {
         Dialog,
         Loading
     },
+    lang: quasarLangIt,
     config: {
         brand: {
             primary: '#4F46E5',  // Indigo 600
