@@ -18,14 +18,14 @@
     "@quasar/extras": "^1.16.4",
     "axios": "^1.18.1",
     "chart.js": "^4.5.1",
-    "pinia": "^3.0.4",
+    "pinia": "^4.0.2",
     "quasar": "^2.17.1",
     "vue": "^3.5.12",
     "vue-chartjs": "^5.3.3",
     "vue-router": "^4.2.5"
   },
   "devDependencies": {
-    "@pinia/testing": "^1.0.3",
+    "@pinia/testing": "^2.0.1",
     "@quasar/vite-plugin": "^1.6.0",
     "@vitejs/plugin-vue": "^6.0.3",
     "@vitest/coverage-v8": "^4.0.16",
@@ -44,7 +44,7 @@
     "@sinclair/typebox": "^0.34.0"
   },
   "engines": {
-    "node": "^18 || ^20 || ^22",
+    "node": "^18 || ^20 || ^22 || ^24",
     "npm": ">= 6.13.4",
     "yarn": ">= 1.21.1"
   }
