@@ -25,7 +25,7 @@
     "vue-router": "^4.2.5"
   },
   "devDependencies": {
-    "@pinia/testing": "^1.0.3",
+    "@pinia/testing": "^2.0.1",
     "@quasar/vite-plugin": "^1.6.0",
     "@vitejs/plugin-vue": "^6.0.3",
     "@vitest/coverage-v8": "^4.0.16",
