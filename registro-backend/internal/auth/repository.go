@@ -52,6 +52,7 @@ type Repository interface {
 	GetPasswordResetToken(ctx context.Context, token string) (*PasswordResetToken, error)
 	UsePasswordResetToken(ctx context.Context, tokenID string) error
 	UpdatePassword(ctx context.Context, userID, passwordHash string) error
+	ResetPasswordTx(ctx context.Context, userID, passwordHash, tokenID string) error
 	// GetRecentPasswordResets counts how many reset tokens have been created for
 	// userID since the given time. Used to rate-limit reset emails.
 	GetRecentPasswordResets(ctx context.Context, userID string, since time.Time) (int, error)
@@ -363,6 +364,41 @@ func (r *repository) UpdatePassword(ctx context.Context, userID, passwordHash st
 	query := `UPDATE users SET password_hash = $1, updated_at = $2, password_changed_at = $2 WHERE id = $3`
 	_, err := r.db.ExecContext(ctx, query, passwordHash, time.Now(), userID)
 	return err
+}
+
+func (r *repository) ResetPasswordTx(ctx context.Context, userID, passwordHash, tokenID string) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	now := time.Now()
+
+	updatePassQuery := `UPDATE users SET password_hash = $1, updated_at = $2, password_changed_at = $2 WHERE id = $3`
+	if _, err := tx.ExecContext(ctx, updatePassQuery, passwordHash, now, userID); err != nil {
+		return err
+	}
+
+	useTokenQuery := `UPDATE password_reset_tokens SET used = true, used_at = $1 WHERE id = $2 AND used = false`
+	res, err := tx.ExecContext(ctx, useTokenQuery, now, tokenID)
+	if err != nil {
+		return err
+	}
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return ErrInvalidToken
+	}
+
+	addHistoryQuery := `INSERT INTO password_history (id, user_id, password_hash, created_at) VALUES ($1, $2, $3, $4)`
+	if _, err := tx.ExecContext(ctx, addHistoryQuery, uuid.New().String(), userID, passwordHash, now); err != nil {
+		return err
+	}
+
+	return tx.Commit()
 }
 
 // GetRecentPasswordResets counts password_reset_tokens created for userID after `since`.

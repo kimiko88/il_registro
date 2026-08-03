@@ -20,6 +20,32 @@ export const useWebSocketStore = defineStore('websocket', () => {
     const reconnectAttempts = ref(0)
     const authStore = useAuthStore()
 
+    const heartbeatTimer = ref(null)
+
+    function startHeartbeat() {
+        stopHeartbeat()
+        heartbeatTimer.value = setInterval(() => {
+            if (socket.value && socket.value.readyState === WebSocket.OPEN) {
+                try {
+                    socket.value.send(JSON.stringify({ type: 'PING' }))
+                } catch (e) {
+                    console.error('WebSocket: Heartbeat send error, closing socket', e)
+                    socket.value.close()
+                }
+            } else if (socket.value && socket.value.readyState !== WebSocket.CONNECTING) {
+                console.warn('WebSocket: Half-open / silent dead connection detected, closing socket')
+                socket.value.close()
+            }
+        }, 25000)
+    }
+
+    function stopHeartbeat() {
+        if (heartbeatTimer.value) {
+            clearInterval(heartbeatTimer.value)
+            heartbeatTimer.value = null
+        }
+    }
+
     function connect() {
         if (socket.value && (socket.value.readyState === WebSocket.OPEN || socket.value.readyState === WebSocket.CONNECTING)) {
             return
@@ -49,9 +75,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
         }
 
         const token = authStore.token
-        const sep = wsUrl.includes('?') ? '&' : '?'
-        const finalWsUrl = `${wsUrl}${sep}token=${encodeURIComponent(token)}`
-        socket.value = new WebSocket(finalWsUrl)
+        socket.value = new WebSocket(wsUrl, ['access_token', token])
 
         socket.value.onopen = () => {
             console.log('WebSocket: Connected')
@@ -61,11 +85,13 @@ export const useWebSocketStore = defineStore('websocket', () => {
                 clearTimeout(reconnectTimer.value)
                 reconnectTimer.value = null
             }
+            startHeartbeat()
         }
 
         socket.value.onmessage = (event) => {
             try {
                 const message = JSON.parse(event.data)
+                if (message && message.type === 'PONG') return
                 handleMessage(message)
             } catch (e) {
                 console.error('WebSocket: Failed to parse message', e)
@@ -76,11 +102,13 @@ export const useWebSocketStore = defineStore('websocket', () => {
             console.log('WebSocket: Closed', event)
             isConnected.value = false
             socket.value = null
+            stopHeartbeat()
             attemptReconnect()
         }
 
         socket.value.onerror = (error) => {
             console.error('WebSocket: Error', error)
+            stopHeartbeat()
             if (socket.value) {
                 socket.value.close()
             }
@@ -88,6 +116,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
     }
 
     function disconnect() {
+        stopHeartbeat()
         if (socket.value) {
             socket.value.close()
             socket.value = null

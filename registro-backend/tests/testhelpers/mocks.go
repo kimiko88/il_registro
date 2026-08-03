@@ -152,6 +152,10 @@ func (m *MockAuthRepository) UpdatePassword(ctx context.Context, userID, passwor
 	args := m.Called(ctx, userID, passwordHash)
 	return args.Error(0)
 }
+func (m *MockAuthRepository) ResetPasswordTx(ctx context.Context, userID, passwordHash, tokenID string) error {
+	args := m.Called(ctx, userID, passwordHash, tokenID)
+	return args.Error(0)
+}
 
 // MockUsersRepository mocks users.Repository
 type MockUsersRepository struct {

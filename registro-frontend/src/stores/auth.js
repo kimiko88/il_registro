@@ -14,7 +14,13 @@ const isTokenExpired = (tokenStr) => {
     if (!tokenStr) return true
     try {
         const parts = tokenStr.split('.')
-        if (parts.length !== 3) return false // Opaque or mock token in test/dev environment, assume valid
+        if (parts.length !== 3) {
+            // Allow mock tokens in test environment
+            if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.MODE === 'test') {
+                return false
+            }
+            return true
+        }
         const base64Url = parts[1]
         const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
         const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''))

@@ -94,6 +94,7 @@ export const useGradesStore = defineStore('grades', {
 
         async addGrade(gradeData) {
             this.loading = true;
+            this.error = null;
             try {
                 const response = await gradeService.saveGrade(gradeData);
                 // Refetch to keep the full class view consistent
@@ -102,6 +103,7 @@ export const useGradesStore = defineStore('grades', {
                 }
                 return response.data;
             } catch (err) {
+                this.error = err.response?.data?.error || err.message || 'Errore durante la registrazione del voto';
                 console.error("Error adding grade:", err);
                 throw err;
             } finally {
@@ -111,6 +113,7 @@ export const useGradesStore = defineStore('grades', {
 
         async updateGrade(id, updates) {
             this.loading = true;
+            this.error = null;
             try {
                 const response = await gradeService.updateGrade(id, updates);
                 // Refetch to keep the full class view consistent
@@ -119,6 +122,7 @@ export const useGradesStore = defineStore('grades', {
                 }
                 return response.data;
             } catch (err) {
+                this.error = err.response?.data?.error || err.message || 'Errore durante la modifica del voto';
                 console.error("Error updating grade:", err);
                 throw err;
             } finally {
@@ -128,6 +132,7 @@ export const useGradesStore = defineStore('grades', {
 
         async deleteGrade(id) {
             this.loading = true;
+            this.error = null;
             try {
                 await gradeService.deleteGrade(id);
                 // Refetch to keep the full class view consistent
@@ -135,6 +140,7 @@ export const useGradesStore = defineStore('grades', {
                     await this.fetchGrades(this._lastClassId, this._lastSubjectId);
                 }
             } catch (err) {
+                this.error = err.response?.data?.error || err.message || 'Errore durante l\'eliminazione del voto';
                 console.error("Error deleting grade:", err);
                 throw err;
             } finally {
@@ -144,6 +150,7 @@ export const useGradesStore = defineStore('grades', {
 
         async createClassTest(testData) {
             this.loading = true;
+            this.error = null;
             try {
                 const response = await gradeService.createClassTest(testData);
                 // Refetch grades to show the new grades in the register
@@ -152,6 +159,7 @@ export const useGradesStore = defineStore('grades', {
                 }
                 return response.data;
             } catch (err) {
+                this.error = err.response?.data?.error || err.message || 'Errore durante la creazione della verifica';
                 console.error("Error creating class test:", err);
                 throw err;
             } finally {
@@ -161,6 +169,7 @@ export const useGradesStore = defineStore('grades', {
 
         async updateClassTest(id, testData) {
             this.loading = true;
+            this.error = null;
             try {
                 const response = await gradeService.updateClassTest(id, testData);
                 if (this._lastClassId) {
@@ -168,6 +177,7 @@ export const useGradesStore = defineStore('grades', {
                 }
                 return response.data;
             } catch (err) {
+                this.error = err.response?.data?.error || err.message || 'Errore durante la modifica della verifica';
                 console.error("Error updating class test:", err);
                 throw err;
             } finally {
@@ -177,6 +187,7 @@ export const useGradesStore = defineStore('grades', {
 
         async deleteClassTest(id) {
             this.loading = true;
+            this.error = null;
             try {
                 const response = await gradeService.deleteClassTest(id);
                 if (this._lastClassId) {
@@ -184,6 +195,7 @@ export const useGradesStore = defineStore('grades', {
                 }
                 return response.data;
             } catch (err) {
+                this.error = err.response?.data?.error || err.message || 'Errore durante l\'eliminazione della verifica';
                 console.error("Error deleting class test:", err);
                 throw err;
             } finally {
@@ -208,6 +220,7 @@ export const useGradesStore = defineStore('grades', {
 
         async downloadReportCardPDF(semester = 1) {
             this.loading = true;
+            this.error = null;
             let url = null;
             let link = null;
             try {
@@ -220,6 +233,7 @@ export const useGradesStore = defineStore('grades', {
                 document.body.appendChild(link);
                 link.click();
             } catch (err) {
+                this.error = err.response?.data?.error || err.message || 'Errore durante il download del PDF della pagella';
                 console.error("Error downloading report card PDF:", err);
                 throw err;
             } finally {

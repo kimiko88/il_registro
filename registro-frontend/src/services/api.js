@@ -131,8 +131,12 @@ api.interceptors.response.use(
                         if (authStore) {
                             authStore.logout();
                         } else {
-                            localStorage.clear();
-                            sessionStorage.clear();
+                            localStorage.removeItem('user');
+                            localStorage.removeItem('token');
+                            localStorage.removeItem('refreshToken');
+                            sessionStorage.removeItem('user');
+                            sessionStorage.removeItem('token');
+                            sessionStorage.removeItem('refreshToken');
                         }
                         if (window.location.pathname !== '/login') {
                             window.location.href = '/login?reason=session_expired';
@@ -143,8 +147,12 @@ api.interceptors.response.use(
                     if (authStore) {
                         authStore.logout();
                     } else {
-                        localStorage.clear();
-                        sessionStorage.clear();
+                        localStorage.removeItem('user');
+                        localStorage.removeItem('token');
+                        localStorage.removeItem('refreshToken');
+                        sessionStorage.removeItem('user');
+                        sessionStorage.removeItem('token');
+                        sessionStorage.removeItem('refreshToken');
                     }
                     if (window.location.pathname !== '/login') {
                         window.location.href = '/login?reason=session_expired';

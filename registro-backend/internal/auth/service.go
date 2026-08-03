@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"crypto/rand"
+	"database/sql"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -330,12 +331,12 @@ func (s *Service) Logout(ctx context.Context, refreshToken string, callerUserID 
 	rt, err := s.repo.GetRefreshToken(ctx, refreshToken)
 	if err != nil {
 		// Silent exit if token is invalid or not found to avoid user enumeration,
-		// but log any database connection or context error.
-		if errors.Is(err, ErrInvalidToken) {
+		// but return any real database connection or context error.
+		if errors.Is(err, ErrInvalidToken) || errors.Is(err, sql.ErrNoRows) {
 			return nil
 		}
-		logger.Log.Warnf("Logout: error retrieving refresh token from DB: %v", err)
-		return nil
+		logger.Log.Errorf("Logout: database error retrieving refresh token: %v", err)
+		return fmt.Errorf("failed to retrieve refresh token: %w", err)
 	}
 	// Ownership check: refuse to revoke another user's sessions.
 	if rt.UserID != callerUserID {
@@ -504,7 +505,10 @@ func (s *Service) ResetPassword(ctx context.Context, token, newPassword string) 
 	}
 
 	user, err := s.repo.GetUserByID(ctx, prt.UserID)
-	if err != nil || !user.IsActive {
+	if err != nil {
+		return err
+	}
+	if !user.IsActive {
 		return ErrUserInactive
 	}
 
@@ -525,18 +529,10 @@ func (s *Service) ResetPassword(ctx context.Context, token, newPassword string) 
 		return err
 	}
 
-	// Update password FIRST before burning the reset token
-	if err := s.repo.UpdatePassword(ctx, prt.UserID, string(passwordHash)); err != nil {
+	// Atomically update password, burn reset token, and add to password history in a single DB transaction
+	if err := s.repo.ResetPasswordTx(ctx, prt.UserID, string(passwordHash), prt.ID); err != nil {
 		return err
 	}
-
-	// Mark token as used after successful password update
-	if err := s.repo.UsePasswordResetToken(ctx, prt.ID); err != nil {
-		return err
-	}
-
-	// Add to password history
-	_ = s.repo.AddPasswordHistory(ctx, prt.UserID, string(passwordHash))
 
 	// Revoke all refresh tokens for security
 	_ = s.repo.RevokeAllUserTokens(ctx, prt.UserID)

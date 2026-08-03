@@ -46,6 +46,6 @@ export const gradeService = {
         return api.get(`/grades/my-grades/semester/${semester}`)
     },
     async downloadReportCardPDF(semester = 1) {
-        return api.get(`/grades/my-grades/semester/${semester}/pdf`, { responseType: 'blob' })
+        return api.get(`/grades/my-grades/semester/${semester}/pdf`, { responseType: 'blob', timeout: 30000 })
     }
 }
