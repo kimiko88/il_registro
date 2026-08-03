@@ -49,3 +49,39 @@ Crea un esempio di scuola (dal nome "scuola di prova") con almeno due classi (e.
 Analytics.vue:360
 GET http://localhost:5173/api/v1/admin/analytics/user-growth 404 (Not Found)
 Analytics.vue:363 User growth endpoint not available: 404
+
+Per i docenti fai scegliere in alto a destra l'anno scolastico e poi mostra tutto relativo all'anno scolastico scelto, di default inserisci l'anno scolastico attuale!
+
+![Segnala 0 studenti quando ce ne sono 20 in ogni classe](image.png)
+
+:5173/api/v1/attendance/mark-bulk:1
+Failed to load resource: the server responded with a status of 400 (Bad Request)
+
+Rubrics.vue:417 [Vue warn]: Failed setting prop "size" on <input>: value xs is invalid. IndexSizeError: Failed to set the 'size' property on 'HTMLInputElement': The value provided is 0, which is an invalid size.
+
+at <QInput modelValue=2 onUpdate:modelValue=fn<onUpdate:modelValue> modelModifiers=
+{number: true}
+... >
+at <QCardSection class="q-pa-md space-y-4 max-h-70vh overflow-y-auto" >
+at <QCard style=
+{min-width: '600px', max-width: '800px'}
+class="rounded-xl overflow-hidden" >
+at <BaseTransition appear=true persisted=false mode=undefined ... >
+at <Transition appear=true enterFromClass="q-transition--scale-enter-from" enterActiveClass="q-transition--scale-enter-active" ... >
+at <QPortal>
+at <QDialog modelValue=true onUpdate:modelValue=fn >
+at <QPage padding="" class="bg-slate-50" >
+at <Rubrics onVnodeUnmounted=fn<onVnodeUnmounted> ref=Ref<
+Proxy(Object) {\_\_v_skip: true}
+
+> key="/teacher/rubrics" >
+> at <BaseTransition mode="out-in" appear=false persisted=false ... >
+> at <Transition name="page-fade" mode="out-in" >
+> at <RouterView>
+> at <QPageContainer role="main" id="main-content" >
+> at <QLayout view="hHh Lpr lFf" >
+> at <MainLayout onVnodeUnmounted=fn<onVnodeUnmounted> ref=Ref<
+> Proxy(Object) {\_\_v_skip: true}
+>
+> > at <RouterView>
+> > at <App>
