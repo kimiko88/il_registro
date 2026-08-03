@@ -8,6 +8,7 @@ Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/)
 ## [Unreleased]
 
 ### Aggiunto
+
 - Paginazione sugli endpoint di lista voti (`PaginatedGradesResponse` con `page` e `page_size`)
 - Specifica OpenAPI 3.0 in `docs/openapi.yaml` ed endpoint `/api/v1/swagger/doc.json`
 - Graceful shutdown con gestione dei segnali `SIGTERM`/`SIGINT` nel server HTTP backend
@@ -19,16 +20,18 @@ Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/)
 ## [0.3.0] — 2026-07-18
 
 ### ⚠️ Breaking Changes
+
 - `POST /auth/register` non è più un endpoint pubblico. Richiede un JWT valido.
-  Il caller deve avere ruolo `superadmin`, `admin` o `segreteria`.
+  Il caller deve avere ruolo `superadmin`, `admin` o `secretary`.
   Aggiornare tutti i client e i test di integrazione che usano questo endpoint.
 
 ### Sicurezza
+
 - Protetta la registrazione utenti con autenticazione JWT obbligatoria
 - Introdotta matrice RBAC per la creazione di ruoli:
   - `superadmin` può creare qualsiasi ruolo
   - `admin` può creare tutti tranne `superadmin`
-  - `segreteria` può creare solo `teacher`, `student`, `parent`
+  - `secretary` può creare solo `teacher`, `student`, `parent`
 - Rimossi tutti i `fmt.Printf("DEBUG...")` che stampavano user ID su stdout
 - Corretta gestione `ErrPasswordReused`: ora restituisce `422` invece di `500`
 - Aggiunti `ErrInsufficientRole` e `ErrCannotCreateRole` come errori distinti
@@ -36,6 +39,7 @@ Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/)
 - Aggiunto `SECURITY.md` con policy di vulnerability disclosure e riferimenti GDPR
 
 ### Bug fix
+
 - **BulkImport**: corretto bug critico per cui il semestre letto dal form veniva
   silenziosamente scartato (`_ = c.PostForm("semester")`); tutti i voti
   finivano sempre nel semestre 1 indipendentemente dal parametro inviato
@@ -47,6 +51,7 @@ Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/)
 ## [0.2.0] — 2026-07-17
 
 ### Aggiunto
+
 - Modulo `grades` con handler, service e repository completi
 - Analytics voti: medie per studente/classe/materia, trend, profilo studente
 - Endpoint per verifiche di classe (`/grades/tests`)
@@ -55,6 +60,7 @@ Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/)
 - Middleware `RequireRole` per autorizzazione RBAC
 
 ### Sicurezza
+
 - Aggiunto ownership check in `Logout`: un utente non può revocare sessioni altrui
 - Verifica account attivo (`IsActive`) ad ogni request nel middleware JWT
 
@@ -63,6 +69,7 @@ Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/)
 ## [0.1.0] — 2026-07-01
 
 ### Aggiunto
+
 - Setup iniziale progetto Go con Gin
 - Modulo `auth` completo:
   - Registrazione, login, refresh token, logout

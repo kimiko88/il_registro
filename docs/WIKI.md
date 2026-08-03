@@ -22,7 +22,8 @@ Benvenuto nel Wiki di **RegistroV2**. Questa guida completa è pensata per svilu
 **RegistroV2** è un registro elettronico scolastico di nuova generazione, multi-tenant e multi-ruolo, progettato per garantire elevate prestazioni, sicurezza ed un'esperienza utente moderna e reattiva.
 
 ### Backend 🐹
-- **Linguaggio**: Go (v1.21+)
+
+- **Linguaggio**: Go (v1.25+)
 - **Framework Web**: [Gin Gonic](https://github.com/gin-gonic/gin)
 - **Database**: PostgreSQL (v15+)
 - **Autenticazione**: JWT (RSA SHA256 / HMAC) con Refresh Token e MFA (TOTP)
@@ -30,6 +31,7 @@ Benvenuto nel Wiki di **RegistroV2**. Questa guida completa è pensata per svilu
 - **Test**: Standard Go `testing`, `testify/assert`, `testify/mock`
 
 ### Frontend ⚡
+
 - **Framework**: Vue 3 (Composition API `<script setup>`)
 - **UI Framework**: [Quasar Framework](https://quasar.dev)
 - **State Management**: [Pinia](https://pinia.vuejs.org) (v3+)
@@ -44,7 +46,7 @@ Benvenuto nel Wiki di **RegistroV2**. Questa guida completa è pensata per svilu
 graph TD
     Client[Browser / Client Vue 3 App] -->|HTTPS REST / JSON| Gateway[Gin Web Router API v1]
     Client -->|WebSocket| WS[WebSocket Hub]
-    
+
     subgraph Backend Go API Server
         Gateway --> AuthMw[JWT Auth & RBAC Middleware]
         AuthMw --> Handlers[API Handlers]
@@ -92,44 +94,48 @@ erDiagram
 
 ## 4. Matrice di Sicurezza e Permessi (RBAC)
 
-| Risorsa / Endpoint | Superadmin | Admin (Scuola) | Segreteria | Docente | Studente | Genitore |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| `POST /schools` | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| `POST /users` | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| `POST /classes` | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| `POST /subjects` | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| `POST /lessons` | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ |
-| `POST /homeworks` | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ |
-| `POST /grades` | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ |
-| `POST /attendance/mark` | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ |
-| `GET /grades/my-grades` | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ |
-| `GET /grades/child-grades` | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ (figli propri) |
+| Risorsa / Endpoint         | Superadmin | Admin (Scuola) | Segreteria | Docente | Studente |     Genitore      |
+| :------------------------- | :--------: | :------------: | :--------: | :-----: | :------: | :---------------: |
+| `POST /schools`            |     ✅     |       ✅       |     ❌     |   ❌    |    ❌    |        ❌         |
+| `POST /users`              |     ✅     |       ✅       |     ✅     |   ❌    |    ❌    |        ❌         |
+| `POST /classes`            |     ✅     |       ✅       |     ✅     |   ❌    |    ❌    |        ❌         |
+| `POST /subjects`           |     ✅     |       ✅       |     ✅     |   ❌    |    ❌    |        ❌         |
+| `POST /lessons`            |     ✅     |       ✅       |     ❌     |   ✅    |    ❌    |        ❌         |
+| `POST /homeworks`          |     ✅     |       ✅       |     ❌     |   ✅    |    ❌    |        ❌         |
+| `POST /grades`             |     ✅     |       ✅       |     ❌     |   ✅    |    ❌    |        ❌         |
+| `POST /attendance/mark`    |     ✅     |       ✅       |     ❌     |   ✅    |    ❌    |        ❌         |
+| `GET /grades/my-grades`    |     ❌     |       ❌       |     ❌     |   ❌    |    ✅    |        ❌         |
+| `GET /grades/child-grades` |     ❌     |       ❌       |     ❌     |   ❌    |    ❌    | ✅ (figli propri) |
 
 ---
 
 ## 5. Flussi di Lavoro Principali
 
 ### A. Onboarding Scuola e Utenti
+
 1. Il **Superadmin** crea la scuola tramite `POST /api/v1/schools`.
 2. Il Superadmin o l'**Admin** crea l'account **Segreteria** via `POST /api/v1/users`.
 3. La Segreteria registra la classe (`POST /api/v1/classes`), i docenti, lo studente ed il genitore, collegando il genitore allo studente tramite `POST /api/v1/users/:id/guardians`.
 
 ### B. Gestione Lezioni, Sostituzioni ed Agenda
+
 1. Il docente titolare o il docente in sostituzione apre la lezione tramite `POST /api/v1/lessons`.
 2. Se si tratta di una **sostituzione**, vengono popolati i campi `is_substitution: true`, `substituted_teacher_id` e `substituted_teacher_name`.
 3. Il docente assegna i compiti in agenda con `POST /api/v1/homeworks`.
-4. Lo studente ed il genitore visualizzano immediatamente la lezione (con il badge *Sostituzione*) ed i compiti assegnati nelle rispettive dashboard ed agende.
+4. Lo studente ed il genitore visualizzano immediatamente la lezione (con il badge _Sostituzione_) ed i compiti assegnati nelle rispettive dashboard ed agende.
 
 ---
 
 ## 6. Guida allo Sviluppo Locale e Test
 
 ### Requisiti
-- Go v1.21+
+
+- Go v1.25+
 - Node.js v18+ e npm
 - PostgreSQL v15+ (opzionale se si usano i mock di integrazione)
 
 ### Comandi Backend
+
 ```bash
 cd registro-backend
 
@@ -141,6 +147,7 @@ go test -v ./...
 ```
 
 ### Comandi Frontend
+
 ```bash
 cd registro-frontend
 
@@ -197,6 +204,7 @@ Registrov2/
 ## 8. Guida all'Estensione del Codice
 
 ### Come Aggiungere un Nuovo Endpoint / Modulo Backend
+
 1. **Definisci i Modelli**: Crea un file `model.go` ed i DTO in `dto.go` all'interno di `internal/<modulo>`.
 2. **Definisci il Repository**: Crea `repository.go` con le query SQL o l'interfaccia di persistenza.
 3. **Implementa il Service**: Crea `service.go` contenente la logica di business e la validazione dei ruoli.
@@ -205,6 +213,7 @@ Registrov2/
 6. **Aggiungi i Test**: Crea i test di integrazione in `tests/integration/` per verificare sia il caso di successo che le restrizioni RBAC.
 
 ### Come Aggiungere una Nuova Pagina / Store Frontend
+
 1. **Crea il Service API**: Aggiungi il metodo di chiamata HTTP in `src/services/<modulo>Service.js`.
 2. **Crea il Pinia Store**: Definisci lo stato, i getter e le action async in `src/stores/<modulo>.js`.
 3. **Crea la Vista Componente**: Crea la pagina in `src/pages/<ruolo>/<Feature>.vue` utilizzando Quasar e i token stilistici di progetto.
@@ -216,6 +225,7 @@ Registrov2/
 ## 9. Infrastruttura di Monitoring & System Metrics 📊
 
 Il backend esporta due endpoint di telemetria fondamentali:
+
 - **`GET /api/v1/admin/system/metrics`**: Fornisce le metriche prestazionali (API success rate, carico CPU DB, cache hit rate Redis, goroutines attive, memoria allocata in MB, uptime in secondi). Utilizzato da `Analytics.vue`.
 - **`GET /api/v1/admin/system/health`**: Fornisce lo stato dei microservizi (API, PostgreSQL, Redis, Storage), latenza di ping ed informazioni su versione ed ambiente. Utilizzato da `Monitoring.vue`.
 
@@ -224,6 +234,7 @@ Il backend esporta due endpoint di telemetria fondamentali:
 ## 10. Best Practices & Troubleshooting per Sviluppatori 🛠️
 
 ### A. backend (Go / Gin)
+
 - **Modifiche alle Interfacce Repository**: Quando aggiungi un metodo a un'interfaccia `Repository` (es. `classes.Repository` o `users.Repository`), ricordati di implementare il metodo sia in `PostgresRepository` che in tutti i mock utilizzati nei test (`service_test.go` e `tests/testhelpers/mocks.go`).
 - **Verifica Compilazione Server**: Prima di committare, verifica sempre che il server principale compili correttamente con:
   ```bash
@@ -232,9 +243,10 @@ Il backend esporta due endpoint di telemetria fondamentali:
 - **Confronto UUID e NullString**: Nella scrittura di query SQL con Gin e PostgreSQL, per id opzionali o nullable utilizza `COALESCE` o `NULLIF($1, '')::uuid` per prevenire errori di sintassi postgres `invalid input syntax for type uuid: ""`.
 
 ### B. Frontend (Vue 3 / Vitest)
+
 - **Test Asincroni nei Componenti**: Quando testi componenti Vue che effettuano chiamate API su `onMounted`, ricordati di invocare `await flushPromises()` da `@vue/test-utils` dopo il mounting prima di fare asserzioni sul DOM renderizzato.
 - **Mock dei Servizi e di Pinia**: Utilizza `createTestingPinia` da `@pinia/testing` e `vi.mock('@/services/...')` per isolare il componente ed evitare chiamate di rete reali durante i test unitari.
 
 ---
-*Wiki creato per supportare lo sviluppo, la manutenzione e l'onboarding di nuovi sviluppatori su RegistroV2.*
 
+_Wiki creato per supportare lo sviluppo, la manutenzione e l'onboarding di nuovi sviluppatori su RegistroV2._

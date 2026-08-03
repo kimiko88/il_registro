@@ -3,7 +3,7 @@
 > Sistema completo per la gestione digitale delle attività scolastiche italiane.
 
 [![Backend CI](https://github.com/kimiko88/Registrov2/actions/workflows/ci.yml/badge.svg)](https://github.com/kimiko88/Registrov2/actions/workflows/ci.yml)
-[![Go Version](https://img.shields.io/badge/go-1.21%2B-blue)](https://go.dev/)
+[![Go Version](https://img.shields.io/badge/go-1.25%2B-blue)](https://go.dev/)
 [![Vue Version](https://img.shields.io/badge/vue-3.x-brightgreen)](https://vuejs.org/)
 [![License](https://img.shields.io/badge/license-Proprietary-red)](#licenza)
 
@@ -30,18 +30,18 @@ Registrov2/
 
 ## Funzionalità principali
 
-| Area | Funzionalità |
-|---|---|
-| **Autenticazione** | JWT (access 15min + refresh rotation), MFA TOTP, SPID, CIE, reset password |
-| **Ruoli** | `superadmin`, `admin`, `segreteria`, `teacher`, `student`, `parent` |
-| **Voti** | Inserimento, medie ponderate, trend, analisi statistica, import/export Excel/CSV |
-| **Presenze** | Registro giornaliero, assenze, ritardi, uscite, giustificazioni |
-| **Comunicazioni** | Circolari, comunicazioni scuola-famiglia, notifiche real-time via WebSocket |
-| **Scrutini** | Pagelle, voti di condotta, crediti scolastici |
-| **PCTO** | Tracciamento ore alternanza scuola-lavoro |
-| **Orari** | Gestione orario scolastico e colloqui |
-| **Documenti** | Firma digitale, materiali didattici, libri di testo |
-| **PWA** | Installabile su dispositivi mobili, supporto offline |
+| Area               | Funzionalità                                                                     |
+| ------------------ | -------------------------------------------------------------------------------- |
+| **Autenticazione** | JWT (access 15min + refresh rotation), MFA TOTP, SPID, CIE, reset password       |
+| **Ruoli**          | `superadmin`, `admin`, `secretary`, `teacher`, `student`, `parent`               |
+| **Voti**           | Inserimento, medie ponderate, trend, analisi statistica, import/export Excel/CSV |
+| **Presenze**       | Registro giornaliero, assenze, ritardi, uscite, giustificazioni                  |
+| **Comunicazioni**  | Circolari, comunicazioni scuola-famiglia, notifiche real-time via WebSocket      |
+| **Scrutini**       | Pagelle, voti di condotta, crediti scolastici                                    |
+| **PCTO**           | Tracciamento ore alternanza scuola-lavoro                                        |
+| **Orari**          | Gestione orario scolastico e colloqui                                            |
+| **Documenti**      | Firma digitale, materiali didattici, libri di testo                              |
+| **PWA**            | Installabile su dispositivi mobili, supporto offline                             |
 
 ---
 
@@ -49,7 +49,7 @@ Registrov2/
 
 ### Prerequisiti
 
-- [Go](https://go.dev/) 1.21+
+- [Go](https://go.dev/) 1.25+
 - [Node.js](https://nodejs.org/) 18+ (LTS)
 - [Docker](https://www.docker.com/) e Docker Compose
 - [Make](https://www.gnu.org/software/make/)
@@ -89,17 +89,17 @@ npm run dev
 
 ## Documentazione
 
-| Documento | Descrizione |
-|---|---|
-| [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | Architettura, layer, pattern, diagrammi data flow |
-| [docs/SETUP_GUIDE.md](./docs/SETUP_GUIDE.md) | Installazione locale, Docker, produzione, troubleshooting |
-| [docs/FRONTEND_GUIDE.md](./docs/FRONTEND_GUIDE.md) | Guida sviluppo frontend: componenti, store, routing, testing |
-| [docs/API_REFERENCE.md](./docs/API_REFERENCE.md) | Riferimento API completo con request/response bodies |
-| [registro-backend/README.md](./registro-backend/README.md) | Guida specifica backend Go |
-| [registro-frontend/README.md](./registro-frontend/README.md) | Guida specifica frontend Vue/Quasar |
-| [CHANGELOG.md](./CHANGELOG.md) | Storico versioni e breaking changes |
-| [CONTRIBUTING.md](./CONTRIBUTING.md) | Come contribuire, branch strategy, commit convention |
-| [SECURITY.md](./SECURITY.md) | Segnalazione vulnerabilità, policy GDPR |
+| Documento                                                    | Descrizione                                                  |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)               | Architettura, layer, pattern, diagrammi data flow            |
+| [docs/SETUP_GUIDE.md](./docs/SETUP_GUIDE.md)                 | Installazione locale, Docker, produzione, troubleshooting    |
+| [docs/FRONTEND_GUIDE.md](./docs/FRONTEND_GUIDE.md)           | Guida sviluppo frontend: componenti, store, routing, testing |
+| [docs/API_REFERENCE.md](./docs/API_REFERENCE.md)             | Riferimento API completo con request/response bodies         |
+| [registro-backend/README.md](./registro-backend/README.md)   | Guida specifica backend Go                                   |
+| [registro-frontend/README.md](./registro-frontend/README.md) | Guida specifica frontend Vue/Quasar                          |
+| [CHANGELOG.md](./CHANGELOG.md)                               | Storico versioni e breaking changes                          |
+| [CONTRIBUTING.md](./CONTRIBUTING.md)                         | Come contribuire, branch strategy, commit convention         |
+| [SECURITY.md](./SECURITY.md)                                 | Segnalazione vulnerabilità, policy GDPR                      |
 
 ---
 

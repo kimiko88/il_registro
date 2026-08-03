@@ -8,11 +8,11 @@ Questo documento riguarda il progetto **Registrov2** — un registro elettronico
 
 ## Versioni supportate
 
-| Versione | Supportata |
-| -------- | ---------- |
-| `main`   | ✅ Sì      |
+| Versione                 | Supportata     |
+| ------------------------ | -------------- |
+| `main`                   | ✅ Sì          |
 | Qualsiasi tag di release | ✅ Sì (ultima) |
-| Versioni precedenti | ❌ No |
+| Versioni precedenti      | ❌ No          |
 
 Solo l'ultima versione del branch `main` riceve patch di sicurezza.
 
@@ -44,13 +44,13 @@ Per velocizzare la valutazione e la correzione, includi:
 
 ## Processo di risposta
 
-| Fase | Tempistica obiettivo |
-| ---- | -------------------- |
-| Conferma ricezione | 48 ore |
-| Valutazione severità | 5 giorni lavorativi |
-| Patch rilasciata (critica/alta) | 14 giorni |
-| Patch rilasciata (media/bassa) | 30 giorni |
-| Divulgazione pubblica | Dopo il rilascio della patch, concordata con il ricercatore |
+| Fase                            | Tempistica obiettivo                                        |
+| ------------------------------- | ----------------------------------------------------------- |
+| Conferma ricezione              | 48 ore                                                      |
+| Valutazione severità            | 5 giorni lavorativi                                         |
+| Patch rilasciata (critica/alta) | 14 giorni                                                   |
+| Patch rilasciata (media/bassa)  | 30 giorni                                                   |
+| Divulgazione pubblica           | Dopo il rilascio della patch, concordata con il ricercatore |
 
 Se la vulnerabilità è critica (dati di minori, bypass auth completo, RCE), la patch ha priorità assoluta.
 
@@ -61,6 +61,7 @@ Se la vulnerabilità è critica (dati di minori, bypass auth completo, RCE), la 
 Il progetto adotta le seguenti misure di sicurezza:
 
 ### Autenticazione
+
 - JWT con access token a breve scadenza (15 min) e refresh token a rotazione
 - MFA TOTP opzionale con segreto cifrato AES-256-GCM nel database
 - Recovery codes MFA hashati con bcrypt prima della persistenza
@@ -68,12 +69,14 @@ Il progetto adotta le seguenti misure di sicurezza:
 - Verifica attività account ad ogni request (JWT valido per account disabilitato = 403)
 
 ### Autorizzazione
-- Modello RBAC con 6 ruoli: `superadmin`, `admin`, `segreteria`, `teacher`, `student`, `parent`
-- La registrazione di nuovi utenti è riservata a `superadmin`, `admin` e `segreteria`
+
+- Modello RBAC con 6 ruoli: `superadmin`, `admin`, `secretary`, `teacher`, `student`, `parent`
+- La registrazione di nuovi utenti è riservata a `superadmin`, `admin` e `secretary`
 - Matrice dei permessi di creazione ruoli applicata lato server (non solo lato client)
 - Ownership check su tutti gli endpoint sensibili per dati di singoli utenti
 
 ### Protezione dati
+
 - Password hashate con bcrypt (cost factor 12)
 - Storico password (ultimi 5 hash) per prevenire il riutilizzo
 - Scadenza password configurabile
@@ -81,6 +84,7 @@ Il progetto adotta le seguenti misure di sicurezza:
 - Log strutturati: nessun dato personale nei log (no debug `fmt.Printf` in produzione)
 
 ### Trasporto
+
 - L'applicazione è progettata per essere esposta esclusivamente tramite HTTPS
 - Header `Authorization: Bearer <token>` — mai parametri query per i token
 

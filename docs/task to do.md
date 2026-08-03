@@ -85,3 +85,14 @@ Proxy(Object) {\_\_v_skip: true}
 >
 > > at <RouterView>
 > > at <App>
+
+2026/08/03 12:04:27 Warning: error reading config file: open .env: no such file or directory
+--- FAIL: TestScuolaDiProvaWorkflow (0.03s)
+scuola_prova_workflow_test.go:64:
+Error Trace: /home/runner/work/Registrov2/Registrov2/registro-backend/tests/integration/scuola_prova_workflow_test.go:64
+Error: Received unexpected error:
+pq: relation "schools" does not exist at column 16 (42P01)
+Test: TestScuolaDiProvaWorkflow
+Messages: Scuola di Prova must exist in DB
+
+Crea un about per github, revisiona la documentazione presente in modo che si capisca la logica con le librerie esterne e il funzionamento generale, aggiungi informazioni sui test. E sistema eventuali refusi o cambiamenti

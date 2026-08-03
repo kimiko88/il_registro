@@ -18,16 +18,16 @@ Questa guida descrive come configurare l'ambiente di sviluppo e produzione per R
 
 ## Prerequisiti
 
-| Strumento | Versione minima | Verifica |
-|---|---|---|
-| Go | 1.21 | `go version` |
-| Node.js | 18 (LTS) | `node --version` |
-| npm | 6.13.4 | `npm --version` |
-| PostgreSQL | 15 | `psql --version` |
-| Redis | 7 | `redis-server --version` |
-| Docker | 24 | `docker --version` |
-| Docker Compose | v2 | `docker compose version` |
-| Make | qualsiasi | `make --version` |
+| Strumento      | Versione minima | Verifica                 |
+| -------------- | --------------- | ------------------------ |
+| Go             | 1.25            | `go version`             |
+| Node.js        | 18 (LTS)        | `node --version`         |
+| npm            | 6.13.4          | `npm --version`          |
+| PostgreSQL     | 15              | `psql --version`         |
+| Redis          | 7               | `redis-server --version` |
+| Docker         | 24              | `docker --version`       |
+| Docker Compose | v2              | `docker compose version` |
+| Make           | qualsiasi       | `make --version`         |
 
 ---
 
@@ -66,6 +66,7 @@ npm run dev
 ## Esecuzione Test
 
 ### Test Backend Go
+
 ```bash
 cd registro-backend
 
@@ -77,6 +78,7 @@ go test -v ./tests/integration/...
 ```
 
 ### Test Frontend Vitest
+
 ```bash
 cd registro-frontend
 
