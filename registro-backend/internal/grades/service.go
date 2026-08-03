@@ -997,7 +997,9 @@ func (s *service) GetSemesterReport(studentID string, semester int) (*SemesterRe
 			if err := tRows.Err(); err != nil {
 				logger.Log.Warnf("GetSemesterReport: error iterating teacher rows: %v", err)
 			}
-			tRows.Close()
+			if err := tRows.Close(); err != nil {
+				logger.Log.Warnf("GetSemesterReport: error closing teacher rows: %v", err)
+			}
 		}
 	}
 
@@ -1338,7 +1340,7 @@ func (s *service) CreateTestWithGrades(teacherID string, req CreateClassTestRequ
 			Date:           testDate,
 			Description:    desc,
 			Weight:         1.0,
-			IsPublished:    false, // drafts: teacher must explicitly publish
+			IsPublished:    false,
 			GradeCategory:  "summative",
 			EvaluationType: evalType,
 			CreatedBy:      teacherID,
@@ -1610,38 +1612,3 @@ func (s *service) DeleteWeightConfig(actorID, actorRole, schoolID, configID stri
 	}
 	return s.repo.DeleteWeightConfig(configID)
 }
-
-// effectiveWeight returns the resolved weight for a grade, applying configured defaults.
-// Priority: grade.Weight (if != 1.0) > matching config > 1.0 default.
-func effectiveWeight(g Grade, configs []GradeWeightConfig) float64 {
-	if g.Weight != 1.0 {
-		return g.Weight
-	}
-	var bestWeight *float64
-	bestScore := -1
-	for _, c := range configs {
-		if string(g.GradeCategory) != c.GradeCategory {
-			continue
-		}
-		if c.EvaluationType != nil && g.EvaluationType != nil && string(*g.EvaluationType) != *c.EvaluationType {
-			continue
-		}
-		score := 0
-		if c.SubjectID != nil && *c.SubjectID == g.SubjectID {
-			score += 2
-		}
-		if c.ClassID != nil {
-			score++
-		}
-		if score > bestScore {
-			bestScore = score
-			w := c.Weight
-			bestWeight = &w
-		}
-	}
-	if bestWeight != nil {
-		return *bestWeight
-	}
-	return 1.0
-}
-
