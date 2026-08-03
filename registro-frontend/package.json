@@ -26,7 +26,7 @@
   },
   "devDependencies": {
     "@pinia/testing": "^1.0.3",
-    "@quasar/vite-plugin": "^1.6.0",
+    "@quasar/vite-plugin": "^1.12.0",
     "@vitejs/plugin-vue": "^6.0.3",
     "@vitest/coverage-v8": "^4.0.16",
     "@vue/test-utils": "^2.4.1",
