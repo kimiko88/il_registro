@@ -236,3 +236,7 @@ func (s *Service) GetUnreadCount(ctx context.Context, userID string) (int, error
 func (s *Service) ListCircolari(ctx context.Context, schoolID, userID, year string) ([]*Message, error) {
 	return s.repo.ListCircolari(ctx, schoolID, userID, year)
 }
+
+func (s *Service) AckMessage(ctx context.Context, communicationID, userID string) error {
+	return s.repo.Ack(ctx, communicationID, userID)
+}

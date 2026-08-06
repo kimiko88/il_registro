@@ -12,6 +12,8 @@ import (
 type Repository interface {
 	GetByClass(ctx context.Context, classID string) ([]ClassSchedule, error)
 	GetStudentClassID(ctx context.Context, userID string) (string, error)
+	GetParentStudentClassID(ctx context.Context, userID string) (string, error)
+	GetTeacherSchedule(ctx context.Context, userID string) ([]ClassSchedule, error)
 	Update(ctx context.Context, classID string, entries []ScheduleEntry) error
 }
 
@@ -30,6 +32,55 @@ func (r *PostgresRepository) GetStudentClassID(ctx context.Context, userID strin
 	var classID string
 	err := r.db.QueryRowContext(ctx, query, userID).Scan(&classID)
 	return classID, err
+}
+
+func (r *PostgresRepository) GetParentStudentClassID(ctx context.Context, userID string) (string, error) {
+	query := `
+		SELECT s.class_id
+		FROM parent_student ps
+		JOIN students s ON ps.student_id = s.id
+		WHERE ps.parent_id = $1::uuid OR ps.parent_id IN (SELECT id FROM parents WHERE user_id = $1::uuid)
+		LIMIT 1
+	`
+	var classID string
+	err := r.db.QueryRowContext(ctx, query, userID).Scan(&classID)
+	return classID, err
+}
+
+func (r *PostgresRepository) GetTeacherSchedule(ctx context.Context, userID string) ([]ClassSchedule, error) {
+	query := `
+		SELECT cs.id, cs.class_id, cs.day_of_week, cs.hour_index, cs.subject_id, s.name, 
+		       cs.teacher_id, u.last_name, u.first_name, COALESCE(cs.room, ''), cs.created_at, cs.updated_at
+		FROM class_schedules cs
+		JOIN subjects s ON cs.subject_id = s.id
+		LEFT JOIN users u ON cs.teacher_id = u.id
+		LEFT JOIN teachers t ON t.id = cs.teacher_id OR t.user_id = cs.teacher_id
+		WHERE cs.teacher_id = $1::uuid OR t.user_id = $1::uuid OR t.id = $1::uuid
+		ORDER BY cs.day_of_week, cs.hour_index
+	`
+	rows, err := r.db.QueryContext(ctx, query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []ClassSchedule
+	for rows.Next() {
+		var cs ClassSchedule
+		var tLast, tFirst sql.NullString
+		err := rows.Scan(
+			&cs.ID, &cs.ClassID, &cs.DayOfWeek, &cs.HourIndex, &cs.SubjectID, &cs.SubjectName,
+			&cs.TeacherID, &tLast, &tFirst, &cs.Room, &cs.CreatedAt, &cs.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		if tLast.Valid {
+			cs.TeacherName = tLast.String + " " + tFirst.String
+		}
+		results = append(results, cs)
+	}
+	return results, nil
 }
 
 func (r *PostgresRepository) GetByClass(ctx context.Context, classID string) ([]ClassSchedule, error) {

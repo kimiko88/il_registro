@@ -21,6 +21,7 @@ export function useMenuItems(role) {
             { label: 'Gestione Utenti', icon: 'people', path: '/admin/users' },
             { label: 'Feature Flags & Istituto', icon: 'toggle_on', path: '/admin/school-settings' },
             { label: 'Analytics', icon: 'analytics', path: '/admin/analytics' },
+            { label: 'Google & Teams E-Learning', icon: 'hub', path: '/admin/elearning' },
             { label: 'Impostazioni', icon: 'settings', path: '/admin/settings' }
         ],
         secretary: [
@@ -69,6 +70,7 @@ export function useMenuItems(role) {
                     { label: 'Presenze', icon: 'how_to_reg', path: '/teacher/attendance' },
                     { label: 'Didattica', icon: 'folder_shared', path: '/teacher/didactics' },
                     { label: 'Scrutinio', icon: 'analytics', path: '/teacher/scrutiny', coordinatorOnly: true },
+                    { label: 'Piani PDP / PEI', icon: 'accessibility_new', path: '/teacher/pdp' },
                     { label: 'Rubriche Valutative', icon: 'fact_check', path: '/teacher/rubrics' },
                     { label: 'Coordinamento', icon: 'co_present', path: '/teacher/coordinator', coordinatorOnly: true }
                 ]
@@ -116,6 +118,7 @@ export function useMenuItems(role) {
             { label: 'I Miei Figli', icon: 'family_restroom', path: '/parent/children' },
             { label: 'Voti', icon: 'grade', path: '/parent/grades' },
             { label: 'Pagella', icon: 'description', path: '/parent/report-card' },
+            { label: 'Piano PDP / PEI', icon: 'accessibility_new', path: '/parent/pdp' },
             { label: 'Presenze', icon: 'how_to_reg', path: '/parent/attendance' },
             { label: 'Note Disciplinari', icon: 'assignment_late', path: '/parent/notes' },
             { label: 'Colloqui', icon: 'event', path: '/parent/colloqui' },

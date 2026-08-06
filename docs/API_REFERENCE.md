@@ -304,6 +304,45 @@ Inserimento di un nuovo libro di testo nel catalogo con materia scolastica.
 
 ---
 
+## Piani Didattici Personalizzati (PDP / PEI)
+
+### `GET /api/v1/pdp`
+Restituisce i piani PDP/PEI per studente o per classe.
+*Nota per genitori*: I genitori vedono solo i piani con `shared_with_family = true` e la diagnosi medica viene automaticamente oscurata (`[RISERVATO AI DOCENTI]`).
+
+**Ruoli ammessi**: `teacher`, `admin`, `parent`
+
+### `POST /api/v1/pdp`
+Crea un nuovo Piano Didattico Personalizzato con misure compensative/dispensative.
+
+**Ruoli ammessi**: `teacher`, `admin`, `superadmin`
+
+### `POST /api/v1/pdp/:id/approve`
+Sottoscrizione/Approvazione digitale del PDP da parte della famiglia.
+
+**Ruoli ammessi**: `parent`
+
+---
+
+## Comunicazioni & Presa d'Atto
+
+### `POST /api/v1/communications/:id/ack`
+Registra la presa d'atto obbligatoria del genitore/studente per circolari o comunicazioni urgenti della bacheca.
+
+**Ruoli ammessi**: `parent`, `student`
+
+---
+
+## Piattaforme E-Learning & SSO
+
+### `GET /api/v1/elearning/providers`
+Stato delle integrazioni attive (Google Classroom, Microsoft Teams).
+
+### `POST /api/v1/elearning/:provider/sync-courses`
+Avvia la sincronizzazione automatica dei corsi e delle classi con Google/Teams.
+
+---
+
 ## Codici di errore
 
 Tutti gli errori hanno questo formato:

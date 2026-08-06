@@ -39,6 +39,7 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 		g.DELETE("/:id", h.Delete)
 		g.POST("/:id/sign", h.Sign)
 		g.POST("/:id/read", h.MarkAsRead)
+		g.POST("/:id/ack", h.Ack)
 		g.GET("/:id/signatures", h.GetSignatures)
 		g.GET("/:id/signature-report", h.GetSignatureReport)
 		g.GET("/:id/unread-users", h.GetUnreadUsers)
@@ -380,3 +381,23 @@ func isValidMIME(contentType string) bool {
 	}
 	return allowed[contentType]
 }
+
+func (h *Handler) Ack(c *gin.Context) {
+	uid := c.GetString("user_id")
+	if uid == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	commID := c.Param("id")
+	if commID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "communication id required"})
+		return
+	}
+
+	if err := h.service.AckMessage(c.Request.Context(), commID, uid); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Presa d'atto registrata con successo"})
+}
+

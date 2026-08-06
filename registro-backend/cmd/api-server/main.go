@@ -24,6 +24,7 @@ import (
 	"registro-backend/internal/db"
 	"registro-backend/internal/didactic_materials"
 	"registro-backend/internal/documents"
+	"registro-backend/internal/elearning"
 	"registro-backend/internal/extracurricular"
 	"registro-backend/internal/general_meetings"
 	"registro-backend/internal/grades"
@@ -37,6 +38,7 @@ import (
 	"registro-backend/internal/orientamento"
 	"registro-backend/internal/parents"
 	"registro-backend/internal/pcto"
+	"registro-backend/internal/pdp"
 	"registro-backend/internal/postgres"
 	"registro-backend/internal/reports"
 	"registro-backend/internal/rubrics"
@@ -185,6 +187,9 @@ func main() {
 	rubricsH := rubrics.NewHandler(rubricsSvc)
 	schoolCalendarH := schoolcalendar.NewHandler(schoolCalendarSvc)
 
+	elearningSvc := elearning.NewService(cfg.Elearning)
+	elearningH := elearning.NewHandler(elearningSvc)
+
 	wsHandler := ws.NewHandler(wsHub)
 
 	adminMiddleware := admin.NewMiddleware()
@@ -261,6 +266,11 @@ func main() {
 			notesH.RegisterRoutes(protected)
 			rubricsH.RegisterRoutes(protected)
 			schoolCalendarH.RegisterRoutes(protected)
+
+			pdpRepo := pdp.NewRepository(database)
+			pdpSvc := pdp.NewService(pdpRepo)
+			pdpH := pdp.NewHandler(pdpSvc)
+			pdpH.RegisterRoutes(protected)
 
 			pctoH := pcto.NewHandler(pctoSvc)
 			pctoH.RegisterRoutes(protected)
@@ -359,6 +369,8 @@ func main() {
 			auditSvc := auditlog.NewService(auditRepo)
 			auditH := auditlog.NewHandler(auditSvc)
 			auditH.RegisterRoutes(protected)
+
+			elearningH.RegisterRoutes(protected)
 
 			adminH.RegisterRoutes(protected, adminMiddleware)
 			signaturesGroup := protected.Group("/signatures")

@@ -94,7 +94,9 @@ export const THEMES = [
 
 export const useThemeStore = defineStore('theme', {
     state: () => ({
-        currentTheme: localStorage.getItem('registrov2_theme') || 'indigo'
+        currentTheme: localStorage.getItem('registrov2_theme') || 'indigo',
+        dsaFont: localStorage.getItem('registrov2_dsa_font') === 'true',
+        highContrast: localStorage.getItem('registrov2_high_contrast') === 'true'
     }),
     getters: {
         activeThemeObj: (state) => {
@@ -117,6 +119,23 @@ export const useThemeStore = defineStore('theme', {
                 setCssVar('primary', themeObj.primary)
             } catch (e) {
                 // Ignore if Quasar context is not available during unit tests
+            }
+            this.applyAccessibility()
+        },
+        toggleDsaFont(enabled) {
+            this.dsaFont = enabled !== undefined ? enabled : !this.dsaFont
+            localStorage.setItem('registrov2_dsa_font', this.dsaFont)
+            this.applyAccessibility()
+        },
+        toggleHighContrast(enabled) {
+            this.highContrast = enabled !== undefined ? enabled : !this.highContrast
+            localStorage.setItem('registrov2_high_contrast', this.highContrast)
+            this.applyAccessibility()
+        },
+        applyAccessibility() {
+            if (typeof document !== 'undefined') {
+                document.body.classList.toggle('dsa-font-active', this.dsaFont)
+                document.body.classList.toggle('high-contrast-active', this.highContrast)
             }
         },
         initTheme() {

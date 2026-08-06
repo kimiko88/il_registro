@@ -97,6 +97,12 @@ func (m *MockRepository) ListCircolari(ctx context.Context, schoolID, userID, ye
 	return args.Get(0).([]*Message), args.Error(1)
 }
 
+func (m *MockRepository) Ack(ctx context.Context, communicationID, userID string) error {
+	args := m.Called(ctx, communicationID, userID)
+	return args.Error(0)
+}
+
+
 func TestService_SendMessage(t *testing.T) {
 	mockRepo := new(MockRepository)
 	svc := NewService(mockRepo)
@@ -168,3 +174,15 @@ func TestService_SignatureReport(t *testing.T) {
 	assert.Equal(t, 25, report.SignedCount)
 	assert.Equal(t, 5, report.PendingCount)
 }
+
+func TestService_AckMessage(t *testing.T) {
+	mockRepo := new(MockRepository)
+	svc := NewService(mockRepo)
+
+	mockRepo.On("Ack", mock.Anything, "comm-123", "user-456").Return(nil).Once()
+
+	err := svc.AckMessage(context.Background(), "comm-123", "user-456")
+	assert.NoError(t, err)
+	mockRepo.AssertExpectations(t)
+}
+

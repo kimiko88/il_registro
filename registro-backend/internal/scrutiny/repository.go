@@ -74,7 +74,7 @@ func (r *postgresRepository) GetRecord(ctx context.Context, studentID, classID s
 	}
 	query := `
 		SELECT id, student_id, class_id, semester, conduct_grade, final_decision, notes, coordinator_id,
-		       COALESCE(status, 'draft'), COALESCE(validated_by::text, ''), validated_at, created_at, updated_at 
+		       COALESCE(status, 'draft'), validated_by::text, validated_at, created_at, updated_at 
 		FROM scrutiny_records WHERE student_id::text = $1 AND class_id::text = $2 AND semester = $3
 	`
 	rec := &ScrutinyRecord{}
@@ -124,7 +124,7 @@ func (r *postgresRepository) ListRecordsByClass(ctx context.Context, classID str
 	}
 	query := `
 		SELECT id, student_id, class_id, semester, conduct_grade, final_decision, notes, coordinator_id,
-		       COALESCE(status, 'draft'), COALESCE(validated_by::text, ''), validated_at, created_at, updated_at 
+		       COALESCE(status, 'draft'), validated_by::text, validated_at, created_at, updated_at 
 		FROM scrutiny_records WHERE class_id::text = $1 AND semester = $2
 	`
 	rows, err := r.db.QueryContext(ctx, query, classID, semester)

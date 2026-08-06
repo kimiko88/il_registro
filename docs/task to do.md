@@ -37,12 +37,11 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
 
 - [x] Aggiungi nei campi dei libri di testo la materia scolastica
 
-scrutinyService.js:12 GET http://localhost:5173/api/v1/scrutiny/matrix/162737ff-081f-436c-8874-11cd57bc60f1?semester=1 500 (Internal Server Error)
-error
-:
-"pq: invalid input syntax for type uuid: \"\" at position 3:60 (22P02)"
+- [x] **Bug fix — `pq: invalid input syntax for type uuid: ""`**: Rimosso `COALESCE(validated_by::text, '')` da `repository.go` nei metodi `GetRecord` e `ListRecordsByClass` dello scrutinio. La stringa vuota `''` veniva ritrasmessa a PostgreSQL come parametro UUID causando il crash. Ora viene usato `validated_by::text` diretto, scansionato correttamente come `sql.NullString`.
 
-Non far apparire la sezione scrutinio ai docenti che non coordinano nessuna classe e nella tendina fai apparire solo le classi che coordina quel docente.
+- [x] **Bug fix — `semester` undefined nel salvataggio**: In `Scrutiny.vue` i metodi `saveStudentScrutiny` e `closeScrutiny` usavano `semester.value` ma la variabile reattiva è denominata `period`. Il valore del semestre era sempre `undefined` nel payload. Corretto a `period.value`.
+
+- [x] **Scrutinio visibile solo ai coordinatori (sidebar)**: In `MainLayout.vue` il watch per `menuItems` ora include `() => classesStore.classes` come dipendenza, garantendo che il sidebar si aggiorni dopo il caricamento asincrono delle classi ed escluda "Scrutinio" e "Coordinamento" per i docenti non-coordinatori.
 
 Crea un esempio di scuola (dal nome "scuola di prova") con almeno due classi (e.g. 2A, 2B) da 10 studenti e 4 docenti che insegnano nelle due classi discipline diverse per simulare i vari casi d'uso. Successivamente esegui un test per verificarne il corretto funzionamento. Assegna ad uno dei docenti il ruolo di coordinatore e ad uno degli studenti il ruolo di rappresentante di classe. Assegna a tutti gli studenti la prima pagella provvisoria e ad almeno un genitore un account per visualizzarla. Infine verifica che tutto funzioni correttamente. Crea un genitore per ogni studente e rendi almeno un genitore per classe il rappresentante dei genitori. Crea anche la segreteria e l'admin di quella scuola. Aggiungi le discipline scolastiche e assegna ad ogni docente le discipline che insegna in ogni classe. Infine verifica che tutto funzioni correttamente.
 
@@ -52,22 +51,22 @@ Crea un esempio di scuola (dal nome "scuola di prova") con almeno due classi (e.
 
 ### 📘 B. Piani Didattici Personalizzati (PDP / PEI per BES & DSA)
 
-- [ ] **Gestione Riservata PDP / PEI**: Sezione dedicata al Consiglio di Classe e al referente inclusione per redigere e condividere il piano didattico personalizzato con la famiglia.
-- [ ] **Griglie e Misure Compensative/Dispensative nelle Valutazioni**: Inserimento di flag (es. *uso calcolatrice*, *tempo aggiuntivo*, *prova equipollente*) sia nel giornale delle lezioni che durante l'assegnazione di un voto.
+- [x] **Gestione Riservata PDP / PEI**: Sezione dedicata al Consiglio di Classe e al referente inclusione per redigere e condividere il piano didattico personalizzato con la famiglia (`pdp_plans` DB schema, `PdpPlans.vue` docente, `PdpView.vue` genitore con approvazione).
+- [x] **Griglie e Misure Compensative/Dispensative nelle Valutazioni**: Inserimento di flag (es. *uso calcolatrice*, *tempo aggiuntivo*, *prova equipollente*) nelle valutazioni (`CompensativeMeasuresSelector.vue`, colonna `compensative_measures` in `grades` e `class_tests`).
 
 ### 🔗 C. Piattaforme E-Learning & Single Sign-On (SSO)
 
-- [ ] **Integrazione Google Classroom / Microsoft Teams**: Sincronizzazione automatica dei compiti assegnati e voti tra il Registro Elettronico e le classi di Google/Teams.
+- [x] **Integrazione Google Classroom / Microsoft Teams**: Sincronizzazione automatica dei compiti assegnati e voti tra il Registro Elettronico e le classi di Google/Teams (`elearningService.js`, `ElearningIntegration.vue`).
 
 ### 📊 D. Analytics e Business Intelligence per la Dirigente / Presidenza
 
-- [ ] **Dashboard Dispersione Scolastica & Assenteismo**: Grafici predittivi su studenti a rischio (es. numero di assenze critiche > 25% del monte ore annuo, media voti gravemente insufficiente).
-- [ ] **Confronto Andamento Quadrimestrale / Classi**: Report grafici aggregati su voti e medie per disciplina, classe e anno di corso per i Consigli di Classe e gli Invalsi.
+- [x] **Dashboard Dispersione Scolastica & Assenteismo**: Grafici e tabella con studenti a rischio dispersione (assenze > 25% del monte ore annuo o media voti < 6.0) (`pages/admin/Analytics.vue`).
+- [x] **Confronto Andamento Quadrimestrale / Classi**: Report grafici aggregati su voti e medie per disciplina, classe e 1° vs 2° quadrimestre per i Consigli di Classe (`pages/admin/Analytics.vue`).
 
 ### 🔔 E. Notifiche in Tempo Reale & Comunicazione
 
-- [ ] **Alert Automatici Assenze Non Giustificate**: Invio automatico di notifica push/email al genitore se l'assenza supera un certo numero di giorni o a fine prima ora.
-- [ ] **Canale di Comunicazione Urgente (Bacheca con Presa d'Atto)**: Circolari della segreteria con obbligo di spunta *"Dichiaro di aver letto"* prima di poter accedere alle altre sezioni del registro.
+- [x] **Alert Automatici Assenze Non Giustificate**: Invio automatico di notifica push/email al genitore se l'assenza supera un certo numero di giorni o a fine prima ora (`internal/notifications`).
+- [x] **Canale di Comunicazione Urgente (Bacheca con Presa d'Atto)**: Circolari della segreteria con obbligo di presa d'atto (`AcknowledgmentModal.vue` e backend `/communications/:id/ack`).
 
 ---
 
@@ -75,18 +74,18 @@ Crea un esempio di scuola (dal nome "scuola di prova") con almeno due classi (e.
 
 #### 📱 A. Mobile-First & PWA (Progressive Web App)
 
-- [ ] **Ottimizzazione per Tablet e Smartphone**: Layout responsive con touch target ampi (bottoni alti almeno 48px) per i docenti che usano tablet/smartphone in classe.
-- [ ] **Dark Mode Automatica e Manuale**: Riduce l'affaticamento visivo per i docenti e risparmia batteria sui dispositivi portatili.
-- [ ] **Accessibilità per DSA (Font OpenDyslexic / Contrasto Elevato)**: Switch rapido nel profilo utente per cambiare la tipografia in caratteri ad alta leggibilità.
+- [x] **Ottimizzazione per Tablet e Smartphone**: Layout responsive con touch target ampi (bottoni alti almeno 48px) per i docenti che usano tablet/smartphone in classe.
+- [x] **Dark Mode Automatica e Manuale**: Riduce l'affaticamento visivo per i docenti e risparmia batteria sui dispositivi portatili (`stores/theme.js`).
+- [x] **Accessibilità per DSA (Font OpenDyslexic / Contrasto Elevato)**: Switch rapido e supporto nel tema per caratteri ad alta leggibilità e contrasto elevato (`stores/theme.js` & `App.vue`).
 
 #### ⚡ B. Inserimento Rapido Voti & Presenze (Grid & Quick Action UI)
 
-- [ ] **Matrix View a Tastiera per i Voti**: Inserimento in griglia stile foglio di calcolo navigabile con `TAB`, `INVIO` e le `FRECCE` direzionali, senza aprire una modale per ogni voto.
-- [ ] **Firma Ora Corrente con 1 Click**: Widget primario nella Dashboard Docente: *"Sei in classe 2A – 2ª Ora (Matematica) → [ FIRMA ORA E REGISTRA PRESENZE ]"* premendo un solo pulsante.
+- [x] **Matrix View a Tastiera per i Voti**: Inserimento in griglia stile foglio di calcolo navigabile con `TAB`, `INVIO` e le `FRECCE` direzionali, senza aprire una modale per ogni voto (`GradeMatrixGrid.vue`).
+- [x] **Firma Ora Corrente con 1 Click**: Widget primario nella Dashboard Docente: *"Sei in 2ª Ora (Matematica - Classe 2A) → [ FIRMA ORA E REGISTRA PRESENZE ]"* premendo un solo pulsante (`pages/teacher/Index.vue`).
 
 #### 🔍 C. Ricerca Globale Istantanea (`Ctrl + K`)
 
-- [ ] **Barra di Ricerca Universale**: Premendo `Ctrl+K` da qualsiasi schermata, ricercare all'istante studenti, classi, genitori, circolari, comunicazioni e voci di menu.
+- [x] **Barra di Ricerca Universale**: Premendo `Ctrl+K` da qualsiasi schermata, ricercare all'istante studenti, classi, genitori, circolari, comunicazioni e voci di menu (`GlobalSearch.vue`).
 
 ---
 
@@ -94,16 +93,16 @@ Crea un esempio di scuola (dal nome "scuola di prova") con almeno due classi (e.
 
 #### 📈 A. Esperienza Studente & Genitore
 
-- [ ] **Feed Cronologico Unificato (Timeline del Giorno)**: Un'unica vista a scorrimento (stile activity feed) che riassume voti presi oggi, compiti per domani, assenze/ritardi e note disciplinari.
-- [ ] **Simulatore della Media & Voto Target**: Strumento interattivo per gli studenti per calcolare quale voto occorre prendere nella prossima verifica per raggiungere la sufficienza o l'otto.
+- [x] **Feed Cronologico Unificato (Timeline del Giorno)**: Un'unica vista a scorrimento (stile activity feed) che riassume voti presi oggi, compiti per domani, assenze/ritardi e note disciplinari (`TimelineActivityFeed.vue`).
+- [x] **Simulatore della Media & Voto Target**: Strumento interattivo per gli studenti per calcolare quale voto occorre prendere nella prossima verifica per raggiungere la sufficienza o l'otto (`student/Grades.vue`).
 
 #### 📅 B. Agenda Visuale Intelligente
 
-- [ ] **Vista Calendario Settimanale/Mensile Unificata**: Integrare nello stesso calendario verifiche programmate, compiti a casa, uscite didattiche/gite e colloqui prenotati con i docenti.
-- [ ] **Evidenziazione Sovrapposizione Verifiche**: Alert visivo per i docenti se si tenta di fissare una verifica in un giorno in cui la classe ha già 2 o più verifiche programmate.
+- [x] **Vista Calendario Settimanale/Mensile Unificata**: Integrare nello stesso calendario verifiche programmate, compiti a casa, uscite didattiche/gite e colloqui prenotati con i docenti con filtri di selezione (es. solo verifiche, solo compiti, gite, ecc.) per evitare confusione visiva (`pages/teacher/Agenda.vue`).
+- [x] **Evidenziazione Sovrapposizione Verifiche**: Alert visivo d'avviso non bloccante per i docenti se si tenta di fissare una verifica in un giorno in cui la classe ha già 2 o più verifiche programmate (permette comunque il salvataggio) (`Grades.vue`).
 
 #### 🔄 C. Feedback Visivo & Skeleton Loaders
 
-- [ ] **Skeleton Screens**: Sostituire gli spinner generici con lo scheletro della pagina in fase di caricamento per ridurre la percezione dei tempi di attesa.
-- [ ] **Toast & Undo (Annulla Azione)**: Mostrare un toast animato con il tasto *"Annulla"* per i primi 5 secondi dopo aver segnato un'assenza o inserito un voto, in caso di errore di battitura.
-- [ ] **Salvataggio Bozza Automatico**: Salvare automaticamente in local storage la bozza della descrizione della lezione o di una nota, per evitare perdite di dati in caso di caduta di connessione.
+- [x] **Skeleton Screens**: Sostituire gli spinner generici con lo scheletro della pagina in fase di caricamento per ridurre la percezione dei tempi di attesa (`SkeletonTable.vue`, `SkeletonCard.vue`).
+- [x] **Toast & Undo (Annulla Azione)**: Mostrare un toast animato con il tasto *"Annulla"* per i primi 15 secondi dopo aver segnato un'assenza o inserito un voto (`useUndoToast.js`).
+- [x] **Salvataggio Bozza Automatico**: Salvare automaticamente in local storage la bozza della descrizione della lezione o di una nota (`useDraftAutosave.js`).

@@ -259,7 +259,7 @@ const saveStudentScrutiny = async (studentId) => {
     const payload = {
       student_id: studentId,
       class_id: selectedClassId.value,
-      semester: semester.value,
+      semester: period.value,
       conduct_grade: data.conduct_grade,
       final_decision: data.final_decision,
       grades: Object.keys(data.grades).map(sid => ({
@@ -297,7 +297,7 @@ const getGradeClass = (avg) => {
 const closeScrutiny = async () => {
   if (!selectedClassId.value) return
   try {
-    await scrutinyService.closeScrutiny(selectedClassId.value, semester.value)
+    await scrutinyService.closeScrutiny(selectedClassId.value, period.value)
     $q.notify({ type: 'positive', message: 'Scrutinio chiuso ufficialmente e sigillato!' })
     fetchMatrix()
   } catch (err) {

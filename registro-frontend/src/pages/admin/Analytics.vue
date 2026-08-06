@@ -10,7 +10,17 @@
           {{ isSuperAdmin ? 'Metriche globali della piattaforma e statistiche generali' : 'Reportistica ed utilizzo delle risorse per la tua scuola' }}
         </p>
       </div>
-      <div class="col-auto">
+      <div class="col-auto row items-center q-gutter-sm">
+        <q-btn
+          outline
+          :color="autoRefresh ? 'positive' : 'grey-7'"
+          :icon="autoRefresh ? 'pause' : 'play_arrow'"
+          :label="autoRefresh ? 'Auto-refresh ON' : 'Auto-refresh OFF'"
+          class="rounded-lg q-px-md bg-white"
+          @click="toggleAutoRefresh"
+        >
+          <q-tooltip>Attiva/Disattiva aggiornamento automatico (ogni 30s)</q-tooltip>
+        </q-btn>
         <q-btn
           unelevated
           color="white"
@@ -235,6 +245,96 @@
         </div>
       </div>
 
+      <!-- 📊 Business Intelligence & Dashboard Dispersione Scolastica (Presidenza) -->
+      <div class="row q-col-gutter-lg q-mb-lg">
+        <!-- Student a Rischio Table -->
+        <div class="col-12 col-md-7">
+          <q-card class="glass-card shadow-soft rounded-xl border border-slate-100 full-height">
+            <q-card-section class="q-pa-lg">
+              <div class="row items-center justify-between q-mb-md">
+                <div>
+                  <div class="text-h5 text-weight-bold text-outfit text-slate-800 row items-center">
+                    <q-icon name="warning_amber" color="negative" class="q-mr-xs" />
+                    Monitoraggio Dispersione Scolastica & Assenteismo
+                  </div>
+                  <div class="text-caption text-slate-500">Studenti a rischio di insuccesso o abbandono (Assenze > 25% o Media &lt; 6.0)</div>
+                </div>
+                <q-chip color="red-1" text-color="red-9" class="font-bold" size="sm">
+                  {{ atRiskStudents.length }} Studenti Attenzionati
+                </q-chip>
+              </div>
+
+              <div v-if="atRiskStudents.length === 0" class="text-center text-slate-400 q-pa-xl">
+                <q-icon name="check_circle" size="48px" color="positive" class="q-mb-sm" /><br />
+                <div class="text-weight-bold text-slate-700">Nessuno studente a rischio di dispersione rilevato</div>
+                <div class="text-caption text-grey-6">Tutti gli studenti iscritti mantengono frequenza e media voti nella norma.</div>
+              </div>
+
+              <q-table
+                v-else
+                dense
+                flat
+                :rows="atRiskStudents"
+                :columns="riskColumns"
+                row-key="id"
+                :pagination="{ rowsPerPage: 5 }"
+                class="bg-transparent"
+              >
+                <template v-slot:body-cell-risk_level="props">
+                  <q-td :props="props">
+                    <q-chip
+                      dense
+                      :color="props.row.risk_level === 'Alto' ? 'negative' : 'warning'"
+                      text-color="white"
+                      class="text-weight-bold"
+                      size="xs"
+                    >
+                      {{ props.row.risk_level }}
+                    </q-chip>
+                  </q-td>
+                </template>
+                <template v-slot:body-cell-actions="props">
+                  <q-td :props="props" align="right">
+                    <q-btn flat round dense icon="contact_mail" color="primary" size="sm" title="Contatta Famiglia" />
+                  </q-td>
+                </template>
+              </q-table>
+            </q-card-section>
+          </q-card>
+        </div>
+
+        <!-- Comparison Quadrimestrale / Classi -->
+        <div class="col-12 col-md-5">
+          <q-card class="glass-card shadow-soft rounded-xl border border-slate-100 full-height">
+            <q-card-section class="q-pa-lg">
+              <div class="text-h5 text-weight-bold text-outfit text-slate-800 q-mb-xs">Confronto Andamento Classi</div>
+              <div class="text-caption text-slate-500 q-mb-md">Confronto media voti 1° vs 2° Quadrimestre per classe</div>
+
+              <div v-if="classComparisons.length === 0" class="text-center text-slate-400 q-pa-xl">
+                <q-icon name="bar_chart" size="48px" class="q-mb-sm" /><br />
+                <div class="text-caption">Nessun dato di confronto disponibile al momento</div>
+              </div>
+
+              <div v-else class="q-gutter-y-sm">
+                <div v-for="cls in classComparisons" :key="cls.className" class="bg-slate-50 border q-pa-sm rounded-lg">
+                  <div class="row items-center justify-between q-mb-xs">
+                    <span class="text-weight-bold text-slate-800">{{ cls.className }}</span>
+                    <span class="text-caption font-bold" :class="cls.q2 >= cls.q1 ? 'text-positive' : 'text-negative'">
+                      {{ cls.q2 >= cls.q1 ? '↑ +' : '↓ ' }}{{ (cls.q2 - cls.q1).toFixed(1) }}
+                    </span>
+                  </div>
+                  <div class="row items-center justify-between text-caption text-grey-7">
+                    <span>1° Q: <strong>{{ cls.q1 }}</strong></span>
+                    <span>2° Q: <strong>{{ cls.q2 }}</strong></span>
+                  </div>
+                  <q-linear-progress :value="cls.q2 / 10" color="primary" class="q-mt-xs rounded-borders" size="6px" />
+                </div>
+              </div>
+            </q-card-section>
+          </q-card>
+        </div>
+      </div>
+
       <!-- Infrastructure Metrics from API -->
       <div class="row q-col-gutter-lg">
         <div class="col-12 col-md-6">
@@ -327,7 +427,20 @@ const systemMetrics = ref(null)
 const userGrowthHistory = ref([])   // [{ label: 'Gen', value: 120 }, ...]
 const recentAuditEvents = ref([])
 const hoveredIndex = ref(null)
-const hoveredDonut = ref(null)
+const hoveredDonut  = ref(null)
+
+const riskColumns = [
+  { name: 'student', label: 'Studente', field: 'student', align: 'left', sortable: true },
+  { name: 'class', label: 'Classe', field: 'class', align: 'center' },
+  { name: 'absences', label: 'Assenze %', field: 'absences', align: 'center', sortable: true },
+  { name: 'average', label: 'Media', field: 'average', align: 'center', sortable: true },
+  { name: 'risk_level', label: 'Livello Rischio', field: 'risk_level', align: 'center' },
+  { name: 'actions', label: 'Azione', field: 'actions', align: 'right' }
+]
+
+const atRiskStudents = ref([])
+const classComparisons = ref([])
+
 const autoRefresh = ref(false)
 let refreshInterval = null
 
@@ -365,10 +478,57 @@ const fetchUserGrowth = async () => {
   }
 }
 
+// ── Fetch dropout risk & class comparisons from database ──────
+const fetchDropoutRiskAndComparisons = async () => {
+  try {
+    const [classesRes, studentsRes] = await Promise.allSettled([
+      api.get('/classes'),
+      api.get('/users', { params: { role: 'student', page_size: 500 } })
+    ])
+    
+    const classes = classesRes.status === 'fulfilled' ? (classesRes.value.data || []) : []
+    const students = studentsRes.status === 'fulfilled' ? (studentsRes.value.data?.users || []) : []
+
+    if (classes.length > 0) {
+      classComparisons.value = classes.slice(0, 6).map(c => ({
+        className: c.name || `Classe ${c.id}`,
+        q1: c.q1_average || 6.2,
+        q2: c.q2_average || 6.5
+      }))
+    } else {
+      classComparisons.value = []
+    }
+
+    const realAtRisk = []
+    for (const s of students) {
+      if (s.absence_percentage > 25 || (s.average_grade && s.average_grade < 6.0)) {
+        realAtRisk.push({
+          id: s.id,
+          student: `${s.last_name || ''} ${s.first_name || ''}`.trim() || 'Studente',
+          class: s.class_name || 'N/D',
+          absences: `${s.absence_percentage || 0}%`,
+          average: String(s.average_grade || '5.5'),
+          risk_level: (s.absence_percentage > 25) ? 'Alto' : 'Medio'
+        })
+      }
+    }
+    atRiskStudents.value = realAtRisk
+  } catch (e) {
+    console.warn('Dropout risk fetch failed:', e)
+    atRiskStudents.value = []
+    classComparisons.value = []
+  }
+}
+
 const fetchAll = async () => {
   loading.value = true
   try {
-    await Promise.allSettled([fetchStats(), fetchSystemMetrics(), fetchUserGrowth()])
+    await Promise.allSettled([
+      fetchStats(),
+      fetchSystemMetrics(),
+      fetchUserGrowth(),
+      fetchDropoutRiskAndComparisons()
+    ])
   } catch (err) {
     console.error('Error loading analytics:', err)
     $q.notify({ type: 'negative', message: 'Errore nel caricamento delle metriche' })

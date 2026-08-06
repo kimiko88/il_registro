@@ -116,8 +116,8 @@
             Nessuna attività registrata per oggi
         </div>
         
-        <div v-if="loading" class="row justify-center q-pa-lg">
-            <q-spinner color="primary" size="3em" />
+        <div v-if="loading" class="q-pa-md">
+            <SkeletonTable :rows="8" :cols="4" />
         </div>
 
         <q-list separator v-else>
@@ -250,8 +250,11 @@ import { useGradesStore } from '@/stores/grades'
 import { attendanceService } from 'src/services/attendanceService'
 import api from '@/services/api'
 import NoteDialog from 'src/components/Teacher/NoteDialog.vue'
+import SkeletonTable from '@/components/Common/SkeletonTable.vue'
+import { useUndoToast } from '@/composables/useUndoToast'
 
 const $q = useQuasar()
+const { notifyWithUndo } = useUndoToast()
 const classesStore = useClassesStore()
 const gradesStore = useGradesStore()
 
@@ -520,9 +523,34 @@ const saveAttendance = async () => {
             }))
         }
         
+        // Snapshot for undo
+        const snapshot = students.value.map(s => ({ ...s }))
+
         await api.post('/attendance/mark-bulk', payload)
-        
-        $q.notify({ type: 'positive', message: 'Registro salvato con successo' })
+
+        // Clear autosave draft
+        const classId2 = typeof selectedClass.value === 'object' ? selectedClass.value?.id : selectedClass.value
+        localStorage.removeItem(`attendance_draft_${classId2}_${date.value}_${selectedHour.value}`)
+        lastAutosaveTime.value = ''
+
+        const undone = await notifyWithUndo(
+            `✓ Registro salvato — ${students.value.length} alunni`,
+            async () => {
+                // Undo: restore previous statuses via API
+                const undoPayload = {
+                    ...payload,
+                    statuses: snapshot.map(s => ({
+                        student_id: s.id,
+                        status: s.status,
+                        entry_time: s.entry_time || null,
+                        exit_time: s.exit_time || null
+                    }))
+                }
+                await api.post('/attendance/mark-bulk', undoPayload)
+                students.value = snapshot
+            }
+        )
+        if (undone) return  // user clicked Undo, no further action
     } catch (error) {
         $q.notify({ type: 'negative', message: 'Errore salvataggio' })
     } finally {

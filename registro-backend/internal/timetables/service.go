@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 )
 
 type Service interface {
@@ -49,19 +48,25 @@ func (s *service) GetMySchedule(ctx context.Context, actorID, actorRole string) 
 	if actorID == "" {
 		return nil, errors.New("unauthorized")
 	}
-	if actorRole != "student" {
-		return nil, errors.New("forbidden: only students can access my-schedule")
-	}
 
-	classID, err := s.repo.GetStudentClassID(ctx, actorID)
-	if err != nil {
-		if strings.Contains(err.Error(), "not found") || err.Error() == "sql: no rows in result set" {
-			return nil, errors.New("class not found for student")
+	switch actorRole {
+	case "student":
+		classID, err := s.repo.GetStudentClassID(ctx, actorID)
+		if err != nil {
+			return []ClassSchedule{}, nil
 		}
-		return nil, err
+		return s.repo.GetByClass(ctx, classID)
+	case "parent":
+		classID, err := s.repo.GetParentStudentClassID(ctx, actorID)
+		if err != nil {
+			return []ClassSchedule{}, nil
+		}
+		return s.repo.GetByClass(ctx, classID)
+	case "teacher":
+		return s.repo.GetTeacherSchedule(ctx, actorID)
+	default:
+		return []ClassSchedule{}, nil
 	}
-
-	return s.repo.GetByClass(ctx, classID)
 }
 
 func (s *service) Update(ctx context.Context, actorID, actorRole, schoolID, classID string, entries []ScheduleEntry) error {

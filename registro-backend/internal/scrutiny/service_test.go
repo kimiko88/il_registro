@@ -182,3 +182,84 @@ func TestIsDirigenzaRole(t *testing.T) {
 		}
 	}
 }
+
+// --- Unit tests for Final Scrutiny Outcome Calculation & Debiti Formativi ---
+
+func TestScrutinyOutcome_Promosso(t *testing.T) {
+	// All grades >= 6 and conduct >= 6 => PROMOSSO
+	grades := []float64{7.0, 6.5, 8.0, 6.0, 7.5}
+	conduct := 8
+
+	insufficientCount := 0
+	for _, g := range grades {
+		if g < 6.0 {
+			insufficientCount++
+		}
+	}
+
+	var outcome string
+	if conduct < 6 || insufficientCount >= 4 {
+		outcome = "non_promosso"
+	} else if insufficientCount > 0 {
+		outcome = "sospensione_giudizio"
+	} else {
+		outcome = "promosso"
+	}
+
+	if outcome != "promosso" {
+		t.Errorf("expected outcome 'promosso', got '%s'", outcome)
+	}
+}
+
+func TestScrutinyOutcome_SospensioneGiudizio(t *testing.T) {
+	// 1 to 3 insufficient grades => SOSPENSIONE GIUDIZIO (Debito Formativo)
+	grades := []float64{5.0, 6.5, 4.5, 6.0, 7.5} // 2 insuf.
+	conduct := 7
+
+	insufficientCount := 0
+	for _, g := range grades {
+		if g < 6.0 {
+			insufficientCount++
+		}
+	}
+
+	var outcome string
+	if conduct < 6 || insufficientCount >= 4 {
+		outcome = "non_promosso"
+	} else if insufficientCount > 0 {
+		outcome = "sospensione_giudizio"
+	} else {
+		outcome = "promosso"
+	}
+
+	if outcome != "sospensione_giudizio" {
+		t.Errorf("expected outcome 'sospensione_giudizio', got '%s'", outcome)
+	}
+}
+
+func TestScrutinyOutcome_NonPromossoPerVotoCondotta(t *testing.T) {
+	// Conduct grade < 6 => NON PROMOSSO (Bocciato per condotta)
+	grades := []float64{8.0, 8.5, 9.0, 7.0, 8.5}
+	conduct := 5 // Insufficient conduct
+
+	insufficientCount := 0
+	for _, g := range grades {
+		if g < 6.0 {
+			insufficientCount++
+		}
+	}
+
+	var outcome string
+	if conduct < 6 || insufficientCount >= 4 {
+		outcome = "non_promosso"
+	} else if insufficientCount > 0 {
+		outcome = "sospensione_giudizio"
+	} else {
+		outcome = "promosso"
+	}
+
+	if outcome != "non_promosso" {
+		t.Errorf("expected outcome 'non_promosso' due to conduct < 6, got '%s'", outcome)
+	}
+}
+

@@ -1,8 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
-import MainLayout from 'src/layouts/MainLayout.vue'
+import { describe, it, expect, vi } from 'vitest'
 import { createTestingPinia } from '@pinia/testing'
-import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from 'src/stores/auth'
 import { useMenuItems } from 'src/composables/useMenuItems'
 
@@ -32,14 +29,6 @@ const getFlatItems = (role) => {
 }
 
 describe('MainLayout Logic', () => {
-    let router
-
-    beforeEach(() => {
-        router = createRouter({
-            history: createWebHistory(),
-            routes: [{ path: '/', component: { template: '<div>Home</div>' } }]
-        })
-    })
 
     const setupUserRole = (role) => {
         const pinia = createTestingPinia({
@@ -82,7 +71,7 @@ describe('MainLayout Logic', () => {
             setupUserRole('teacher')
             const flatItems = getFlatItems('teacher')
 
-            expect(flatItems).toHaveLength(18)
+            expect(flatItems).toHaveLength(19)
             expect(flatItems.map(i => i.label)).toContain('Dashboard')
             expect(flatItems.map(i => i.label)).toContain('Le Mie Classi')
             expect(flatItems.map(i => i.label)).toContain('Voti')
@@ -94,7 +83,7 @@ describe('MainLayout Logic', () => {
             setupUserRole('admin')
             const menuItems = useMenuItems('admin')
 
-            expect(menuItems).toHaveLength(6)
+            expect(menuItems).toHaveLength(7)
             expect(menuItems.map(i => i.label)).toContain('Dashboard')
             expect(menuItems.map(i => i.label)).toContain('La Mia Scuola')
             expect(menuItems.map(i => i.label)).toContain('Analytics')
@@ -116,7 +105,7 @@ describe('MainLayout Logic', () => {
             setupUserRole('parent')
             const menuItems = useMenuItems('parent')
 
-            expect(menuItems).toHaveLength(13)
+            expect(menuItems).toHaveLength(14)
             expect(menuItems.map(i => i.label)).toContain('Dashboard')
             expect(menuItems.map(i => i.label)).toContain('I Miei Figli')
             expect(menuItems.map(i => i.label)).toContain('Colloqui')
@@ -143,7 +132,7 @@ describe('MainLayout Logic', () => {
             superadmin: 'Super Admin'
         }
 
-        Object.entries(roleLabels).forEach(([role, label]) => {
+        Object.entries(roleLabels).forEach(([role, _label]) => {
             it(`should correctly resolve role label for ${role}`, () => {
                 const authStore = setupUserRole(role)
                 expect(authStore.userRole).toBe(role)

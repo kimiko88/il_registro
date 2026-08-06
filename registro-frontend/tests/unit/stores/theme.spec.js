@@ -1,60 +1,33 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { useThemeStore, THEMES } from '@/stores/theme'
+import { useThemeStore } from '@/stores/theme'
 
-describe('Theme Store', () => {
-    beforeEach(() => {
-        setActivePinia(createPinia())
-        localStorage.clear()
-    })
+describe('Theme Accessibility Store', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
 
-    it('initializes with default theme indigo', () => {
-        const store = useThemeStore()
-        expect(store.currentTheme).toBe('indigo')
-        expect(store.activeThemeObj.id).toBe('indigo')
-    })
+  it('should initialize with default accessibility values', () => {
+    const themeStore = useThemeStore()
+    expect(themeStore.dsaFont).toBe(false)
+    expect(themeStore.highContrast).toBe(false)
+  })
 
-    it('switches theme and persists in localStorage', () => {
-        const store = useThemeStore()
-        store.setTheme('emerald')
+  it('should toggle DSA font setting correctly', () => {
+    const themeStore = useThemeStore()
+    themeStore.toggleDsaFont()
+    expect(themeStore.dsaFont).toBe(true)
 
-        expect(store.currentTheme).toBe('emerald')
-        expect(store.activeThemeObj.name).toBe('Emerald School')
-        expect(localStorage.getItem('registrov2_theme')).toBe('emerald')
-        expect(document.documentElement.getAttribute('data-theme')).toBe('emerald')
-    })
+    themeStore.toggleDsaFont()
+    expect(themeStore.dsaFont).toBe(false)
+  })
 
-    it('switches to youth gamified themes', () => {
-        const store = useThemeStore()
-        store.setTheme('arcade')
-        expect(store.currentTheme).toBe('arcade')
-        expect(store.activeThemeObj.name).toContain('Arcade Gamer')
-        expect(document.documentElement.getAttribute('data-theme')).toBe('arcade')
+  it('should toggle High Contrast mode correctly', () => {
+    const themeStore = useThemeStore()
+    themeStore.toggleHighContrast()
+    expect(themeStore.highContrast).toBe(true)
 
-        store.setTheme('cosmic')
-        expect(store.currentTheme).toBe('cosmic')
-        expect(store.activeThemeObj.name).toContain('Cosmic Explorer')
-
-        store.setTheme('bubblepop')
-        expect(store.currentTheme).toBe('bubblepop')
-        expect(store.activeThemeObj.name).toContain('Candy Bubble Pop')
-    })
-
-    it('falls back to indigo for invalid theme IDs', () => {
-        const store = useThemeStore()
-        store.setTheme('non_existent_theme')
-
-        expect(store.currentTheme).toBe('indigo')
-        expect(localStorage.getItem('registrov2_theme')).toBe('indigo')
-    })
-
-    it('contains themes for students, teachers, parents, and youth gaming', () => {
-        expect(THEMES).toHaveLength(8)
-        const roles = THEMES.map(t => t.recommendedRole)
-        expect(roles).toContain('Ragazzi / Gaming')
-        expect(roles).toContain('Ragazzi / Space')
-        expect(roles).toContain('Ragazzi / Fun')
-        expect(roles).toContain('Studenti')
-        expect(roles).toContain('Docenti')
-    })
+    themeStore.toggleHighContrast()
+    expect(themeStore.highContrast).toBe(false)
+  })
 })

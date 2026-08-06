@@ -119,8 +119,8 @@
                     <q-btn icon="refresh" flat round dense aria-label="Aggiorna elenco verifiche" @click="fetchTests" />
                 </q-card-section>
                 <q-separator />
-                <q-card-section v-if="loadingTests" class="text-center q-pa-xl">
-                    <q-spinner color="primary" size="40px" />
+                <q-card-section v-if="loadingTests" class="q-pa-md">
+                    <SkeletonTable :rows="6" :cols="4" />
                 </q-card-section>
                 <q-card-section v-else-if="classTests.length === 0" class="text-center q-pa-xl text-slate-600">
                     <q-icon name="quiz" size="64px" color="grey-5" class="q-mb-md" />
@@ -223,6 +223,14 @@
                   dense
                   class="q-mb-sm"
                 />
+
+                <!-- Overlapping Test Alert -->
+                <q-banner v-if="overlappingTestsCount >= 2" rounded dense class="bg-amber-1 text-amber-9 border border-amber-3 q-mb-sm">
+                  <template v-slot:avatar>
+                    <q-icon name="warning" color="amber-9" />
+                  </template>
+                  Attenzione: La classe ha già <strong>{{ overlappingTestsCount }} verifiche</strong> in programma il {{ testForm.date }}! (Max raccomandato: 2)
+                </q-banner>
                 <q-select
                   v-model="testForm.evaluationType"
                   :options="['Scritto', 'Orale', 'Pratico']"
@@ -429,8 +437,11 @@ import GradeEntry from 'src/components/Teacher/GradeEntry.vue';
 import GradeStatistics from 'src/components/Teacher/GradeStatistics.vue';
 import { gradeService } from 'src/services/gradeService';
 import { useQuasar, date } from 'quasar';
+import SkeletonTable from '@/components/Common/SkeletonTable.vue';
+import { useUndoToast } from '@/composables/useUndoToast';
 
 const $q = useQuasar();
+const { notifyWithUndo } = useUndoToast();
 const classesStore = useClassesStore();
 const gradesStore = useGradesStore();
 
@@ -463,6 +474,11 @@ const filledTestGradesCount = computed(() => {
 const filledEditTestGradesCount = computed(() => {
     if (!editTestForm.value || !editTestForm.value.grades) return 0;
     return editTestForm.value.grades.filter(g => g.grade_value !== null && g.grade_value !== undefined && g.grade_value !== '').length;
+});
+
+const overlappingTestsCount = computed(() => {
+    if (!testForm.value?.date || !classTests.value) return 0;
+    return classTests.value.filter(t => t.date && t.date.startsWith(testForm.value.date)).length;
 });
 
 const openTestDialog = () => {
@@ -508,12 +524,22 @@ const submitTest = async () => {
         };
 
         await gradeService.createTestWithGrades(payload);
-        $q.notify({
-            type: 'positive',
-            message: 'Verifica e voti salvati con successo!'
-        });
         showTestDialog.value = false;
         await refreshGrades();
+        // Get the last created test ID for potential undo
+        const lastTests = await gradeService.getTestsByClass(selectedClassId.value, selectedSubject.value)
+        const lastTestId = lastTests?.data?.[0]?.id
+        if (lastTestId) {
+            await notifyWithUndo(
+                `✓ Verifica "${testForm.value.title}" salvata — ${payload.grades.length} voti inseriti`,
+                async () => {
+                    await gradeService.deleteTest(lastTestId)
+                    await refreshGrades()
+                }
+            )
+        } else {
+            $q.notify({ type: 'positive', message: 'Verifica e voti salvati con successo!' })
+        }
     } catch (err) {
         console.error(err);
         $q.notify({

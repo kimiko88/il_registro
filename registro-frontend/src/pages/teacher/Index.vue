@@ -14,6 +14,39 @@
       </div>
     </div>
 
+    <!-- ⚡ Quick Sign Banner (Firma Ora Corrente con 1 Click) -->
+    <q-card class="q-mb-xl shadow-lg rounded-xl overflow-hidden text-white" style="background: linear-gradient(135deg, #1e1b4b 0%, #3730a3 100%); border: 1px solid rgba(255,255,255,0.15)">
+      <q-card-section class="q-pa-lg">
+        <div class="row items-center justify-between wrap gap-y-3">
+          <div class="row items-center q-gutter-x-md">
+            <q-avatar size="52px" color="white" text-color="indigo-9" class="shadow-soft">
+              <q-icon name="edit_calendar" size="28px" />
+            </q-avatar>
+            <div>
+              <div class="text-caption opacity-80 text-uppercase letter-spacing-1 text-weight-bold">
+                Lezione in Corso — {{ currentHourLabel }}
+              </div>
+              <div class="text-h5 text-weight-bold">
+                {{ activeLesson ? `${activeLesson.class_name} — ${activeLesson.subject_name}` : 'Seleziona una classe per firmare l\'appello' }}
+              </div>
+            </div>
+          </div>
+
+          <div class="row items-center q-gutter-x-sm">
+            <q-btn
+              color="positive"
+              icon="draw"
+              label="FIRMA ORA E REGISTRA PRESENZE"
+              size="lg"
+              unelevated
+              class="rounded-lg text-weight-bolder shadow-md"
+              @click="quickSignLesson"
+            />
+          </div>
+        </div>
+      </q-card-section>
+    </q-card>
+
     <!-- Stats Cards -->
     <div class="row q-col-gutter-lg q-mb-xl">
       <div class="col-12 col-sm-6 col-md-3">
@@ -165,9 +198,11 @@
 
 <script setup>
 import { onMounted, computed } from 'vue';
+import { useRouter } from 'vue-router';
 import { useTeacherStore } from 'src/stores/teacher';
 import { useClassesStore } from 'src/stores/classes';
 
+const router = useRouter();
 const teacherStore = useTeacherStore();
 const classesStore = useClassesStore();
 
@@ -175,6 +210,51 @@ const todayDate = computed(() => new Date().toLocaleDateString('it-IT', { day: '
 
 const nextLesson = computed(() => teacherStore.profile?.next_lesson || null);
 const unreadMessagesCount = computed(() => teacherStore.notifications.filter(n => !n.read).length);
+
+// Calculate current hour based on local time
+const currentHourNumber = computed(() => {
+  const hour = new Date().getHours();
+  if (hour < 9) return 1;
+  if (hour === 9) return 2;
+  if (hour === 10) return 3;
+  if (hour === 11) return 4;
+  if (hour === 12) return 5;
+  if (hour === 13) return 6;
+  return 1;
+});
+
+const currentHourLabel = computed(() => `${currentHourNumber.value}ª Ora (${new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })})`);
+
+const activeLesson = computed(() => {
+  if (nextLesson.value) {
+    return {
+      class_id: nextLesson.value.class_id,
+      class_name: nextLesson.value.class_name || `Classe ${nextLesson.value.class_id}`,
+      subject_name: nextLesson.value.subject_name || 'Materia'
+    };
+  }
+  if (classesStore.classes.length > 0) {
+    const firstCls = classesStore.classes[0];
+    return {
+      class_id: firstCls.id,
+      class_name: firstCls.name || `Classe ${firstCls.id}`,
+      subject_name: 'Lezione In Corso'
+    };
+  }
+  return null;
+});
+
+function quickSignLesson() {
+  const classId = activeLesson.value?.class_id || classesStore.classes[0]?.id;
+  if (classId) {
+    router.push({
+      path: '/teacher/attendance',
+      query: { class_id: classId, hour: currentHourNumber.value }
+    });
+  } else {
+    router.push('/teacher/attendance');
+  }
+}
 
 onMounted(async () => {
   await Promise.all([

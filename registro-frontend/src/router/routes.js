@@ -49,6 +49,11 @@ export default [
                 meta: { title: 'Statistiche e Analytics', roles: ['superadmin', 'admin'] }
             },
             {
+                path: 'admin/elearning',
+                component: () => import('@/pages/admin/ElearningIntegration.vue'),
+                meta: { title: 'Google Classroom & Teams', roles: ['superadmin', 'admin'] }
+            },
+            {
                 path: 'admin/settings',
                 component: () => import('@/pages/admin/Settings.vue'),
                 meta: { title: 'Impostazioni di Sistema', roles: ['superadmin', 'admin'] }
@@ -112,6 +117,7 @@ export default [
             { path: 'teacher/agenda', component: () => import('@/pages/teacher/Agenda.vue'), meta: { title: 'Agenda di Classe', roles: ['teacher'] } },
             { path: 'teacher/notes', component: () => import('@/pages/teacher/Notes.vue'), meta: { title: 'Note & Richiami', roles: ['teacher'] } },
             { path: 'teacher/rubrics', component: () => import('@/pages/teacher/Rubrics.vue'), meta: { title: 'Rubriche Valutative', roles: ['teacher'] } },
+            { path: 'teacher/pdp', component: () => import('@/pages/teacher/PdpPlans.vue'), meta: { title: 'Piani PDP / PEI', roles: ['teacher'] } },
 
             // Student Routes
             { path: 'student', component: () => import('@/pages/student/Index.vue'), meta: { title: 'Pannello Studente', roles: ['student'] } },
@@ -143,7 +149,8 @@ export default [
             { path: 'parent/profile', component: () => import('@/pages/parent/Profile.vue'), meta: { title: 'Profilo Genitore', roles: ['parent'] } },
             { path: 'parent/didactics', component: () => import('@/pages/parent/Didactics.vue'), meta: { title: 'Didattica & Compiti', roles: ['parent'] } },
             { path: 'parent/notes', component: () => import('@/pages/parent/Notes.vue'), meta: { title: 'Note & Sanzioni', roles: ['parent'] } },
-            { path: 'parent/timetable', component: () => import('@/pages/parent/Timetable.vue'), meta: { title: 'Orario Scolastico', roles: ['parent'] } },
+            { path: 'parent/timetable', component: () => import('@/pages/parent/Timetable.vue'), meta: { title: 'Orario Lezioni', roles: ['parent'] } },
+            { path: 'parent/pdp', component: () => import('@/pages/parent/PdpView.vue'), meta: { title: 'Piano PDP / PEI', roles: ['parent'] } },
             { path: 'parent/documents', component: () => import('@/pages/parent/Documents.vue'), meta: { title: 'Documentazione & Moduli', roles: ['parent'] } },
             { path: 'parent/payments', component: () => import('@/pages/parent/Payments.vue'), meta: { title: 'Pagamenti Scolastici', roles: ['parent'] } },
             { path: 'parent/meetings', component: () => import('@/pages/parent/Meetings.vue'), meta: { title: 'Assemblee & Riunioni', roles: ['parent'] } },

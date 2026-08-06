@@ -11,6 +11,14 @@ const { mockGetByClass, mockApiGet, mockApiPost } = vi.hoisted(() => ({
     mockApiPost: vi.fn()
 }))
 
+vi.mock('@/composables/useUndoToast', () => ({
+    useUndoToast: () => ({
+        notifyWithUndo: vi.fn(async (msg, action) => {
+            if (action) await action()
+            return false
+        })
+    })
+}))
 vi.mock('src/services/attendanceService', () => ({
     attendanceService: { getByClass: mockGetByClass }
 }))
@@ -176,17 +184,7 @@ describe('Teacher/Attendance.vue', () => {
     })
 
     it('saves attendance', async () => {
-        // Mount with logic (copy from above or use describe/beforeEach better)
-        // Reusing wrapper from beforeEach but need to make sure state was right?
-        // beforeEach uses stubActions: false. 
-        // And component calls classesStore.fetchAssignedClasses.
-        // If we want reliable test, better to mock store action or use store state + manual trigger.
-
-        // Let's rely on wrapper from previous test block structure?
-        // No, I overwrote wrapper in the test 'loads students...'.
-        // Let's stick to valid Setup.
-
-        // Just verifying save call
+        mockApiPost.mockResolvedValue({ data: { success: true } })
         wrapper.vm.selectedClass = { id: 'c1' }
         wrapper.vm.students = [{ id: 's1', status: 'present' }]
 

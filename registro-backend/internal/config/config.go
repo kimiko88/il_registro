@@ -15,7 +15,19 @@ type Config struct {
 	SPID     SPIDConfig
 	CIE      CIEConfig
 	Mail     MailConfig
+	Elearning ElearningConfig
 }
+
+type ElearningConfig struct {
+	GoogleClientID        string
+	GoogleClientSecret    string
+	GoogleRedirectURI     string
+	MicrosoftClientID     string
+	MicrosoftClientSecret string
+	MicrosoftTenantID     string
+	MicrosoftRedirectURI  string
+}
+
 
 type MailConfig struct {
 	Host     string
@@ -116,6 +128,15 @@ func LoadConfig() (*Config, error) {
 			Username: viper.GetString("SMTP_USERNAME"),
 			Password: viper.GetString("SMTP_PASSWORD"),
 			From:     viper.GetString("SMTP_FROM"),
+		},
+		Elearning: ElearningConfig{
+			GoogleClientID:        viper.GetString("GOOGLE_CLIENT_ID"),
+			GoogleClientSecret:    viper.GetString("GOOGLE_CLIENT_SECRET"),
+			GoogleRedirectURI:     viper.GetString("GOOGLE_REDIRECT_URI"),
+			MicrosoftClientID:     viper.GetString("MICROSOFT_CLIENT_ID"),
+			MicrosoftClientSecret: viper.GetString("MICROSOFT_CLIENT_SECRET"),
+			MicrosoftTenantID:     viper.GetString("MICROSOFT_TENANT_ID"),
+			MicrosoftRedirectURI:  viper.GetString("MICROSOFT_REDIRECT_URI"),
 		},
 	}
 

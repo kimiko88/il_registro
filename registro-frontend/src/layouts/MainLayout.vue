@@ -120,6 +120,21 @@
            <q-tooltip>Attiva/Disattiva Schermo Intero</q-tooltip>
         </q-btn>
 
+        <!-- Global Search Ctrl+K -->
+        <q-btn
+          flat
+          dense
+          color="primary"
+          icon="search"
+          class="q-mr-sm search-shortcut-btn"
+          aria-label="Ricerca globale (Ctrl+K)"
+          @click="globalSearchRef?.open()"
+          key="global-search-btn"
+        >
+          <q-tooltip>Ricerca Globale (Ctrl+K)</q-tooltip>
+          <q-badge floating transparent class="search-kbd-badge">K</q-badge>
+        </q-btn>
+
         <!-- Notifications -->
         <q-btn flat round dense icon="notifications" color="primary" class="q-mr-sm" aria-label="Notifiche" @click="navigateToNotifications">
           <q-tooltip>Notifiche e Comunicazioni</q-tooltip>
@@ -240,6 +255,9 @@
       </div>
     </q-drawer>
 
+    <!-- Global Search Modal (Ctrl+K) -->
+    <GlobalSearch ref="globalSearchRef" />
+
     <q-page-container role="main" id="main-content">
       <!-- Dynamic Breadcrumb Navigation Header -->
       <div v-if="breadcrumbs.length > 0" class="q-px-md q-pt-md">
@@ -275,6 +293,9 @@ import { useAuth } from '@/composables/useAuth'
 import { useMenuItems } from '@/composables/useMenuItems'
 import { storeToRefs } from 'pinia'
 import { useQuasar } from 'quasar'
+import GlobalSearch from '@/components/Common/GlobalSearch.vue'
+
+const globalSearchRef = ref(null)
 
 const route = useRoute()
 const router = useRouter()
@@ -474,7 +495,7 @@ const isTeacherCoordinator = computed(() => {
 
 // Get menu items based on role
 const menuItems = ref([])
-watch([userRole, isTeacherCoordinator], ([newRole, isCoord]) => {
+watch([userRole, isTeacherCoordinator, () => classesStore.classes], ([newRole, isCoord]) => {
   if (!newRole) {
     menuItems.value = []
     return
@@ -545,5 +566,23 @@ async function handleLogout() {
 
 .transition-all {
     transition: all 0.3s ease;
+}
+
+.search-shortcut-btn {
+  position: relative;
+}
+
+.search-kbd-badge {
+  font-size: 9px;
+  font-weight: 700;
+  background: rgba(99, 102, 241, 0.15) !important;
+  color: #6366f1 !important;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 4px;
+  padding: 0 3px;
+  line-height: 14px;
+  height: 14px;
+  top: 2px;
+  right: 2px;
 }
 </style>

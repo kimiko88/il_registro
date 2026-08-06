@@ -5,15 +5,30 @@ Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/)
 
 ---
 
-## [Unreleased]
+## [0.4.0] — 2026-08-06
 
 ### Aggiunto
 
-- Paginazione sugli endpoint di lista voti (`PaginatedGradesResponse` con `page` e `page_size`)
-- Specifica OpenAPI 3.0 in `docs/openapi.yaml` ed endpoint `/api/v1/swagger/doc.json`
-- Graceful shutdown con gestione dei segnali `SIGTERM`/`SIGINT` nel server HTTP backend
-- Calcolo completo e pesato della media in `GetChildGradesAverage`
-- Consolidamento tool di migrazione SQL in un runner versionato unico con tabella `schema_migrations` (`cmd/migrate/main.go`)
+- **Piani Didattici Personalizzati (PDP/PEI per BES & DSA)**:
+  - Package backend `internal/pdp` con tabelle `pdp_plans` e `compensative_measures`.
+  - Redazione docente (`PdpPlans.vue`) con misure compensative/dispensative.
+  - Approvazione/Firma digitale genitore (`PdpView.vue`) con oscuramento automatico della diagnosi medica clinica riservata ai docenti.
+- **Piattaforme E-Learning & SSO**:
+  - Integrazione Single Sign-On e sincronizzazione automatica compiti/voti per **Google Classroom** e **Microsoft Teams** (`elearningService.js`, `ElearningIntegration.vue`).
+- **Business Intelligence & Dispersione Scolastica**:
+  - Dashboard reale in `Analytics.vue` per il monitoraggio degli studenti a rischio dispersione (assenze > 25% o media < 6.0) e report di confronto andamento quadrimestrale per la dirigenza.
+- **Inserimento Rapido Voti in Griglia (Matrix View)**:
+  - Componente `GradeMatrixGrid.vue` navigabile da tastiera con `TAB`, `INVIO` e le `FRECCE` direzionali.
+- **Firma Ora 1-Click**:
+  - Widget primario nella Dashboard Docente per firmare l'ora corrente ed avviare l'appello con un solo pulsante.
+- **Bacheca con Presa d'Atto**:
+  - Modale bloccante per comunicazioni urgenti con obbligo di presa d'atto (`AcknowledgmentModal.vue` ed endpoint `/communications/:id/ack`).
+- **Accessibilità & UX**:
+  - Supporto per il font per DSA **OpenDyslexic** e modalità **Alto Contrasto** (`stores/theme.js`).
+  - **Ricerca Globale `Ctrl+K`** (`GlobalSearch.vue`).
+  - Toast animato revocabile con **Undo di 15 secondi** (`useUndoToast.js`).
+  - Scheletri di caricamento in fase di attesa (`SkeletonTable.vue`, `SkeletonCard.vue`).
+  - Feed Cronologico Unificato della Giornata (`TimelineActivityFeed.vue`).
 
 ---
 

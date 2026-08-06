@@ -19,7 +19,7 @@ describe('useMenuItems', () => {
         it('should return admin menu items', () => {
             const menuItems = useMenuItems('admin')
 
-            expect(menuItems).toHaveLength(6)
+            expect(menuItems).toHaveLength(7)
             expect(menuItems[0].label).toBe('Dashboard')
             expect(menuItems[1].label).toBe('La Mia Scuola')
             expect(menuItems[2].label).toBe('Gestione Utenti')
@@ -58,7 +58,7 @@ describe('useMenuItems', () => {
         it('should return teacher menu items', () => {
             const flatItems = getFlatItems('teacher')
 
-            expect(flatItems).toHaveLength(18)
+            expect(flatItems).toHaveLength(19)
             expect(flatItems.map(item => item.label)).toContain('Le Mie Classi')
             expect(flatItems.map(item => item.label)).toContain('Voti')
             expect(flatItems.map(item => item.label)).toContain('Presenze')
@@ -92,7 +92,7 @@ describe('useMenuItems', () => {
         it('should return parent menu items', () => {
             const menuItems = useMenuItems('parent')
 
-            expect(menuItems).toHaveLength(13)
+            expect(menuItems).toHaveLength(14)
             expect(menuItems.map(item => item.label)).toContain('I Miei Figli')
             expect(menuItems.map(item => item.label)).toContain('Colloqui')
             expect(menuItems.map(item => item.label)).toContain('Supporto')

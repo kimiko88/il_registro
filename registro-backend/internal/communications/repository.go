@@ -26,6 +26,7 @@ type Repository interface {
 	GetUnreadUsers(ctx context.Context, communicationID string) ([]string, error)
 	GetUnreadCount(ctx context.Context, userID string) (int, error)
 	ListCircolari(ctx context.Context, schoolID, userID, year string) ([]*Message, error)
+	Ack(ctx context.Context, communicationID, userID string) error
 }
 
 type PostgresRepository struct {
@@ -384,4 +385,14 @@ func (r *PostgresRepository) ListCircolari(ctx context.Context, schoolID, userID
 		msgs = append(msgs, m)
 	}
 	return msgs, nil
+}
+
+func (r *PostgresRepository) Ack(ctx context.Context, communicationID, userID string) error {
+	query := `
+		INSERT INTO communication_acks (communication_id, user_id)
+		VALUES ($1, $2)
+		ON CONFLICT (communication_id, user_id) DO NOTHING
+	`
+	_, err := r.db.ExecContext(ctx, query, communicationID, userID)
+	return err
 }

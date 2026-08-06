@@ -30,18 +30,20 @@ Registrov2/
 
 ## Funzionalità principali
 
-| Area               | Funzionalità                                                                     |
-| ------------------ | -------------------------------------------------------------------------------- |
-| **Autenticazione** | JWT (access 15min + refresh rotation), MFA TOTP, SPID, CIE, reset password       |
-| **Ruoli**          | `superadmin`, `admin`, `secretary`, `teacher`, `student`, `parent`               |
-| **Voti**           | Inserimento, medie ponderate, trend, analisi statistica, import/export Excel/CSV |
-| **Presenze**       | Registro giornaliero, assenze, ritardi, uscite, giustificazioni                  |
-| **Comunicazioni**  | Circolari, comunicazioni scuola-famiglia, notifiche real-time via WebSocket      |
-| **Scrutini**       | Pagelle, voti di condotta, crediti scolastici                                    |
-| **PCTO**           | Tracciamento ore alternanza scuola-lavoro                                        |
-| **Orari**          | Gestione orario scolastico e colloqui                                            |
-| **Documenti**      | Firma digitale, materiali didattici, libri di testo                              |
-| **PWA**            | Installabile su dispositivi mobili, supporto offline                             |
+| Area | Funzionalità |
+| --- | --- |
+| **Autenticazione & SSO** | JWT (access 15min + refresh rotation), MFA TOTP, SPID, CIE, **Google Workspace & MS Teams SSO** |
+| **Ruoli** | `superadmin`, `admin`, `secretary`, `teacher`, `student`, `parent` |
+| **Voti & Valutazioni** | Inserimento rapido, **Matrix View a Tastiera**, medie ponderate, simulatore voto target, misure compensative BES/DSA |
+| **Presenze & Lezioni** | Registro giornaliero, **Firma Ora 1-Click**, assenze, ritardi, giustificazioni, alert assenteismo |
+| **PDP / PEI (BES & DSA)** | **Gestione Piani Didattici Personalizzati**, misure compensative/dispensative, firma/approvazione digitale genitore e protezione diagnosi |
+| **Business Intelligence** | **Dashboard Dispersione Scolastica & Assenteismo**, report andamento 1° vs 2° Quadrimestre per la dirigenza |
+| **E-Learning Sync** | **Google Classroom & Microsoft Teams**: sincronizzazione automatica compiti, voti e classi |
+| **Comunicazioni** | Circolari, comunicazioni urgenti con **Presa d'Atto obbligatoria**, notifiche real-time WebSocket |
+| **Accessibilità & UX** | **Font DSA OpenDyslexic**, alto contrasto, **Ricerca Globale `Ctrl+K`**, **Toast & Undo (15s)**, Timeline del Giorno, Skeleton screens |
+| **Scrutini** | Pagelle, voti di condotta, crediti scolastici |
+| **PCTO & Orari** | Tracciamento ore alternanza scuola-lavoro, orario scolastico e gestione colloqui |
+| **PWA & Mobile** | Installabile su dispositivi mobili, supporto offline |
 
 ---
 
