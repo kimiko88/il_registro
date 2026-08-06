@@ -341,9 +341,16 @@ func (r *repository) IsTeacherAssignedToClass(ctx context.Context, teacherID, cl
 	query := `
 		SELECT EXISTS (
 			SELECT 1 FROM classes c
-			LEFT JOIN class_subjects cs ON c.id = cs.class_id
-			LEFT JOIN teachers t ON cs.teacher_id = t.id
-			WHERE c.id = $1::uuid AND (t.user_id = $2::uuid OR c.coordinator_id = $2::uuid)
+			LEFT JOIN class_subjects cs ON c.id::text = cs.class_id::text
+			LEFT JOIN teachers t ON (cs.teacher_id::text = t.id::text OR cs.teacher_id::text = t.user_id::text)
+			LEFT JOIN users u ON u.id::text = $2::text
+			WHERE c.id::text = $1::text AND (
+				t.user_id::text = $2::text OR
+				t.id::text = $2::text OR
+				cs.teacher_id::text = $2::text OR
+				c.coordinator_id::text = $2::text OR
+				u.role IN ('admin', 'superadmin', 'secretary')
+			)
 		)
 	`
 	var exists bool

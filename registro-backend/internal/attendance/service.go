@@ -154,8 +154,9 @@ func (s *service) MarkBulk(ctx context.Context, teacherID, schoolID string, req 
 	if err != nil {
 		return fmt.Errorf("data non valida '%s': usa il formato YYYY-MM-DD", req.Date)
 	}
-	// Bug 101: le presenze bulk non possono essere registrate per date future
-	if date.After(time.Now().Truncate(24 * time.Hour)) {
+	now := time.Now()
+	todayEnd := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 999999999, now.Location())
+	if date.After(todayEnd) {
 		return fmt.Errorf("impossibile registrare presenze per date future (%s)", req.Date)
 	}
 

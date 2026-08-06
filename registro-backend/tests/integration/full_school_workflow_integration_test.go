@@ -146,7 +146,17 @@ func TestFullSchoolWorkflowIntegration(t *testing.T) {
 			Type:        "Frontale",
 			Notes:       "Spiegazione ed esercizi alla lavagna",
 		}
+		assert.Equal(t, "lesson-1", regularLesson.ID)
 		assert.Equal(t, "class-1a", regularLesson.ClassID)
+		assert.Equal(t, "teacher-math", regularLesson.TeacherID)
+		assert.Equal(t, "Giuseppe Verdi", regularLesson.TeacherName)
+		assert.Equal(t, "subj-math", regularLesson.SubjectID)
+		assert.Equal(t, today, regularLesson.Date)
+		assert.Equal(t, 1, regularLesson.Hour)
+		assert.Equal(t, 1, regularLesson.Duration)
+		assert.Equal(t, "Equazioni di secondo grado", regularLesson.Topic)
+		assert.Equal(t, "Frontale", regularLesson.Type)
+		assert.Equal(t, "Spiegazione ed esercizi alla lavagna", regularLesson.Notes)
 		assert.False(t, regularLesson.IsSubstitution)
 
 		// 2. Substitution Lesson
@@ -169,8 +179,21 @@ func TestFullSchoolWorkflowIntegration(t *testing.T) {
 			ActivityType:           "substitution",
 			Notes:                  "Sostituzione del prof. Verdi in 1A",
 		}
+		assert.Equal(t, "lesson-2", substitutionLesson.ID)
+		assert.Equal(t, "class-1a", substitutionLesson.ClassID)
+		assert.Equal(t, "teacher-italian", substitutionLesson.TeacherID)
+		assert.Equal(t, "Anna Neri", substitutionLesson.TeacherName)
+		assert.Equal(t, "subj-italian", substitutionLesson.SubjectID)
+		assert.Equal(t, today, substitutionLesson.Date)
+		assert.Equal(t, 2, substitutionLesson.Hour)
+		assert.Equal(t, 1, substitutionLesson.Duration)
+		assert.Equal(t, "Sostituzione: Lettura e commento dei Promessi Sposi", substitutionLesson.Topic)
+		assert.Equal(t, "Sostituzione", substitutionLesson.Type)
 		assert.True(t, substitutionLesson.IsSubstitution)
+		assert.Equal(t, &subTeacherID, substitutionLesson.SubstitutedTeacherID)
 		assert.Equal(t, "Giuseppe Verdi", substitutionLesson.SubstitutedTeacherName)
+		assert.Equal(t, "substitution", substitutionLesson.ActivityType)
+		assert.Equal(t, "Sostituzione del prof. Verdi in 1A", substitutionLesson.Notes)
 
 		// 3. Attendance Entry
 		attRecord := attendance.Attendance{
@@ -180,6 +203,10 @@ func TestFullSchoolWorkflowIntegration(t *testing.T) {
 			Date:      today,
 			Status:    attendance.StatusPresent,
 		}
+		assert.Equal(t, "att-1", attRecord.ID)
+		assert.Equal(t, "student-1", attRecord.StudentID)
+		assert.Equal(t, "class-1a", attRecord.ClassID)
+		assert.Equal(t, today, attRecord.Date)
 		assert.Equal(t, attendance.StatusPresent, attRecord.Status)
 
 		// 4. Grade Entry
@@ -194,7 +221,15 @@ func TestFullSchoolWorkflowIntegration(t *testing.T) {
 			Date:        today,
 			Description: "Ottima prova scritta di matematica",
 		}
+		assert.Equal(t, "grade-1", gradeRecord.ID)
+		assert.Equal(t, "student-1", gradeRecord.StudentID)
+		assert.Equal(t, "subj-math", gradeRecord.SubjectID)
+		assert.Equal(t, "teacher-math", gradeRecord.TeacherID)
 		assert.Equal(t, 8.5, gradeRecord.GradeValue)
+		assert.Equal(t, grades.GradeTypeNumeric, gradeRecord.GradeType)
+		assert.Equal(t, 1.0, gradeRecord.Weight)
+		assert.Equal(t, today, gradeRecord.Date)
+		assert.Equal(t, "Ottima prova scritta di matematica", gradeRecord.Description)
 
 		// 5. Homework Assignment in Agenda
 		homeworkRecord := lessons.Homework{
@@ -207,6 +242,12 @@ func TestFullSchoolWorkflowIntegration(t *testing.T) {
 			Description: "Esercizi pag. 140 n. 1-10 su equazioni",
 			Type:        "compito",
 		}
+		assert.Equal(t, "hw-1", homeworkRecord.ID)
+		assert.Equal(t, "class-1a", homeworkRecord.ClassID)
+		assert.Equal(t, "subj-math", homeworkRecord.SubjectID)
+		assert.Equal(t, "teacher-math", homeworkRecord.TeacherID)
+		assert.Equal(t, "Giuseppe Verdi", homeworkRecord.TeacherName)
+		assert.Equal(t, today.AddDate(0, 0, 2), homeworkRecord.DueDate)
 		assert.Equal(t, "compito", homeworkRecord.Type)
 		assert.Contains(t, homeworkRecord.Description, "equazioni")
 	})

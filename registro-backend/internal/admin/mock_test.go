@@ -175,3 +175,12 @@ func (m *MockRepository) UpdateSetting(ctx context.Context, schoolID, key, value
 	args := m.Called(ctx, schoolID, key, value)
 	return args.Error(0)
 }
+
+func (m *MockRepository) GetUserGrowth(ctx context.Context, schoolID *string) ([]UserGrowthPoint, error) {
+	args := m.Called(ctx, schoolID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]UserGrowthPoint), args.Error(1)
+}
+

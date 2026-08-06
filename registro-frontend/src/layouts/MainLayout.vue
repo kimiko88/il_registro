@@ -20,7 +20,27 @@
 
         <q-space />
         
+        <!-- School Year Selector for Teachers -->
+        <div v-if="isTeacherRole" class="q-mr-sm row items-center" key="school-year-container">
+          <q-select
+            v-model="schoolYearStore.selectedSchoolYear"
+            :options="schoolYearStore.availableSchoolYears"
+            dense
+            outlined
+            options-dense
+            bg-color="white"
+            style="min-width: 140px"
+            label="Anno Scolastico"
+            key="school-year-select"
+          >
+            <template v-slot:prepend>
+              <q-icon name="event" color="primary" size="18px" />
+            </template>
+          </q-select>
+        </div>
+
         <!-- Theme Selector Menu -->
+
         <q-btn-dropdown
           flat
           round
@@ -250,6 +270,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useTeacherStore } from '@/stores/teacher'
 import { useClassesStore } from '@/stores/classes'
 import { useThemeStore, THEMES } from '@/stores/theme'
+import { useSchoolYearStore } from '@/stores/schoolYear'
 import { useAuth } from '@/composables/useAuth'
 import { useMenuItems } from '@/composables/useMenuItems'
 import { storeToRefs } from 'pinia'
@@ -259,6 +280,8 @@ const route = useRoute()
 const router = useRouter()
 const $q = useQuasar()
 const themeStore = useThemeStore()
+const schoolYearStore = useSchoolYearStore()
+
 
 const navigateToNotifications = () => {
   const role = userRole.value
@@ -432,6 +455,9 @@ const roleLabel = computed(() => {
   }
   return roleLabels[userRole.value] || userRole.value
 })
+
+const isTeacherRole = computed(() => userRole.value === 'teacher' || userRole.value === 'docente')
+
 
 const teacherStore = useTeacherStore()
 const classesStore = useClassesStore()

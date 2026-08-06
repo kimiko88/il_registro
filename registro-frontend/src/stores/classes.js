@@ -15,8 +15,11 @@ function formatClassItem(c) {
     if (c.academic_year) {
         fullLabel += ` (${c.academic_year})`;
     }
+    const studentCount = c.students ?? c.students_count ?? 0;
     return {
         ...c,
+        students: studentCount,
+        students_count: studentCount,
         label: fullLabel,
         displayName: fullLabel
     };

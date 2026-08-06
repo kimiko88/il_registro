@@ -205,10 +205,10 @@
                 </div>
                 <div v-for="(lvl, lIdx) in crit.levels" :key="lIdx" class="row q-col-gutter-xs items-center">
                   <div class="col-5">
-                    <q-input v-model="lvl.label" label="Label (es. Avanzato)" dense outlined size="xs" />
+                    <q-input v-model="lvl.label" label="Label (es. Avanzato)" dense outlined />
                   </div>
                   <div class="col-4">
-                    <q-input v-model.number="lvl.score" type="number" label="Punti" dense outlined size="xs" />
+                    <q-input v-model.number="lvl.score" type="number" label="Punti" dense outlined />
                   </div>
                   <div class="col-3 text-right">
                     <q-btn flat dense icon="close" color="grey" size="xs" @click="removeLevel(cIdx, lIdx)" v-if="crit.levels.length > 1" />

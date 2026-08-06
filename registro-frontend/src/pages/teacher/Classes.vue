@@ -49,7 +49,7 @@
             </q-item-section>
             <q-item-section>
               <q-item-label>{{ getClassLabel(cls) }}</q-item-label>
-              <q-item-label caption>{{ cls.students || 0 }} Studenti</q-item-label>
+              <q-item-label caption>{{ cls.students ?? cls.students_count ?? 0 }} Studenti</q-item-label>
             </q-item-section>
             <q-item-section side v-if="cls.isCoordinator">
               <q-icon name="star" color="orange"><q-tooltip>Coordinatore</q-tooltip></q-icon>

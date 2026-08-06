@@ -14,6 +14,7 @@ type Repository interface {
 	CountCommunications(ctx context.Context, schoolID *string) (int64, error)
 	GetRecentEvents(ctx context.Context, limit int, schoolID *string) ([]RecentEvent, error)
 	GetSystemHealth(ctx context.Context) (*SystemHealthStatus, error)
+	GetUserGrowth(ctx context.Context, schoolID *string) ([]UserGrowthPoint, error)
 
 	// Schools
 	ListSchools(ctx context.Context, req *SchoolListRequest, offset int, schoolID *string) ([]SchoolResponse, int64, error)

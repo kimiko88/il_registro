@@ -91,6 +91,7 @@ npm run dev
 
 | Documento                                                    | Descrizione                                                  |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| [docs/ABOUT.md](./docs/ABOUT.md)                             | Panoramica, logica librerie esterne, stack e test            |
 | [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)               | Architettura, layer, pattern, diagrammi data flow            |
 | [docs/SETUP_GUIDE.md](./docs/SETUP_GUIDE.md)                 | Installazione locale, Docker, produzione, troubleshooting    |
 | [docs/FRONTEND_GUIDE.md](./docs/FRONTEND_GUIDE.md)           | Guida sviluppo frontend: componenti, store, routing, testing |
@@ -103,18 +104,34 @@ npm run dev
 
 ---
 
-## Testing
+## 🧪 Testing & Qualità
 
+Il progetto include una suite completa di test automatizzati per il backend (Go) e il frontend (Vue/Quasar):
+
+### Backend Testing (Go)
 ```bash
-# Backend — tutti i test con race detector
-cd registro-backend && make test
+# Esegui tutti i test del backend
+cd registro-backend && go test ./...
 
-# Frontend — unit test con Vitest
+# Esegui i test con rilevatore di race condition
+cd registro-backend && go test -race ./...
+
+# Esegui la suite di integrazione
+cd registro-backend && go test -v ./tests/integration/...
+```
+
+### Frontend Testing (Vitest & Playwright)
+```bash
+# Unit & Component test con Vitest
 cd registro-frontend && npm run test:unit
 
-# Frontend — coverage
+# Report di copertura dei test
 cd registro-frontend && npm run test:coverage
+
+# End-to-End test con Playwright
+cd registro-frontend && npx playwright test
 ```
+
 
 ---
 

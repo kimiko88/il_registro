@@ -391,3 +391,9 @@ func (s *Service) UpdateSchoolSetting(ctx context.Context, schoolID, key, value 
 	}
 	return s.repo.UpdateSetting(ctx, schoolID, key, value)
 }
+
+// GetUserGrowth retrieves user growth data points
+func (s *Service) GetUserGrowth(ctx context.Context, schoolID *string) ([]UserGrowthPoint, error) {
+	return s.repo.GetUserGrowth(ctx, schoolID)
+}
+

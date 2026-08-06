@@ -184,8 +184,15 @@ type AuditLogListResponse struct {
 	TotalPages int                `json:"total_pages"`
 }
 
+// UserGrowthPoint represents a single data point in user growth analytics
+type UserGrowthPoint struct {
+	Label string `json:"label"`
+	Value int64  `json:"value"`
+}
+
 // ErrorResponse represents an error response
 type ErrorResponse struct {
 	Error   string `json:"error"`
 	Message string `json:"message,omitempty"`
 }
+

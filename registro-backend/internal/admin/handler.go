@@ -435,6 +435,7 @@ func (h *Handler) RegisterRoutes(router *gin.RouterGroup, middleware *Middleware
 		adminGroup.PUT("/settings/:key", middleware.RequireStaff(), middleware.SetSchoolFilter(), h.UpdateSchoolSetting)
 		adminGroup.GET("/system/metrics", middleware.RequireAdminOrSuperAdmin(), h.GetSystemMetrics)
 		adminGroup.GET("/system/health", middleware.RequireAdminOrSuperAdmin(), h.GetSystemHealth)
+		adminGroup.GET("/analytics/user-growth", middleware.RequireAdminOrSuperAdmin(), middleware.SetSchoolFilter(), h.GetUserGrowth)
 
 
 		// Restricted admin routes (admin and superadmin only)
@@ -600,4 +601,26 @@ func (h *Handler) GetSystemHealth(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, health)
 }
+
+// GetUserGrowth returns user growth data history
+// GET /api/v1/admin/analytics/user-growth
+func (h *Handler) GetUserGrowth(c *gin.Context) {
+	filterSchoolID := GetFilteredSchoolID(c)
+	var schoolFilter *string
+	if filterSchoolID != "" {
+		schoolFilter = &filterSchoolID
+	}
+
+	growth, err := h.service.GetUserGrowth(c.Request.Context(), schoolFilter)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error:   "failed to get user growth",
+			Message: err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, growth)
+}
+
 
