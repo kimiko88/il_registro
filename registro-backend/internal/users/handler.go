@@ -415,12 +415,17 @@ func (h *Handler) SwitchChild(c *gin.Context) {
 }
 
 func toUserResponse(u *User) UserResponse {
+	var dob *string
+	if u.DateOfBirth != nil {
+		s := u.DateOfBirth.Format("2006-01-02")
+		dob = &s
+	}
 	return UserResponse{
 		ID: u.ID, Email: u.Email, FirstName: u.FirstName, LastName: u.LastName,
 		FiscalCode: u.FiscalCode, Role: u.Role, SchoolID: u.SchoolID,
 		ClassID: u.ClassID, ClassName: u.ClassName,
 		IsActive: u.IsActive, EmailVerified: u.EmailVerified, MFAEnabled: u.MFAEnabled,
-		PhoneNumber: u.PhoneNumber, JobTitle: u.JobTitle,
+		PhoneNumber: u.PhoneNumber, JobTitle: u.JobTitle, DateOfBirth: dob,
 		CreatedAt: u.CreatedAt, LastLogin: u.LastLogin, DeletedAt: u.DeletedAt, PseudonymizedAt: u.PseudonymizedAt,
 	}
 }

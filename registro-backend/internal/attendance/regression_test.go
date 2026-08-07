@@ -13,10 +13,15 @@ type MockAttRepo struct {
 	mock.Mock
 }
 
+var _ Repository = (*MockAttRepo)(nil)
+
 func (m *MockAttRepo) Create(a *Attendance) error              { return m.Called(a).Error(0) }
 func (m *MockAttRepo) BatchCreate(atts []*Attendance) error    { return m.Called(atts).Error(0) }
 func (m *MockAttRepo) FindByID(id string) (*Attendance, error) { return nil, nil }
 func (m *MockAttRepo) Update(a *Attendance) error              { return nil }
+func (m *MockAttRepo) DeleteByClassDateHour(classID string, date time.Time, hour int) error {
+	return nil
+}
 func (m *MockAttRepo) FindByClassAndDate(classID string, date time.Time) ([]Attendance, error) {
 	return nil, nil
 }

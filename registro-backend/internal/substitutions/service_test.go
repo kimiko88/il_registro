@@ -48,12 +48,15 @@ func (m *mockSubstitutionRepo) ListBySchool(ctx context.Context, schoolID, date 
 	return result, nil
 }
 
-func (m *mockSubstitutionRepo) ListByTeacher(ctx context.Context, teacherID string) ([]*Substitution, error) {
+func (m *mockSubstitutionRepo) ListByTeacher(ctx context.Context, teacherID string, date string) ([]*Substitution, error) {
 	if m.getErr != nil {
 		return nil, m.getErr
 	}
 	var result []*Substitution
 	for _, s := range m.subs {
+		if date != "" && s.Date.Format("2006-01-02") != date {
+			continue
+		}
 		if s.AbsentTeacherID == teacherID {
 			result = append(result, s)
 		}
@@ -70,6 +73,17 @@ func (m *mockSubstitutionRepo) AssignSubstitute(ctx context.Context, id string, 
 
 func (m *mockSubstitutionRepo) ConfirmSubstitution(ctx context.Context, id string, substituteTeacherID string) error {
 	return m.saveErr
+}
+
+func (m *mockSubstitutionRepo) SignRegister(ctx context.Context, id string, sigHash string, notes string) error {
+	return m.saveErr
+}
+
+func (m *mockSubstitutionRepo) GetAvailableTeachers(ctx context.Context, schoolID string) ([]TeacherCandidate, error) {
+	return []TeacherCandidate{
+		{TeacherID: "t-1", UserID: "u-1", TeacherName: "Docente 1"},
+		{TeacherID: "t-2", UserID: "u-2", TeacherName: "Docente 2"},
+	}, nil
 }
 
 var _ Repository = (*mockSubstitutionRepo)(nil)

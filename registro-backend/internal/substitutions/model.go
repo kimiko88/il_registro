@@ -24,8 +24,12 @@ type Substitution struct {
 	SubjectID           string             `json:"subject_id,omitempty" db:"subject_id"`
 	Notes               string             `json:"notes,omitempty" db:"notes"`
 	Status              SubstitutionStatus `json:"status" db:"status"`
-	CreatedBy           string             `json:"created_by" db:"created_by"`
-	CreatedAt           time.Time          `json:"created_at" db:"created_at"`
+	SignedBySubstitute    bool       `json:"signed_by_substitute" db:"signed_by_substitute"`
+	SignatureTimestamp    *time.Time `json:"signature_timestamp,omitempty" db:"signature_timestamp"`
+	SignatureHash         string     `json:"signature_hash,omitempty" db:"signature_hash"`
+	OfficialRegisterNotes string     `json:"official_register_notes,omitempty" db:"official_register_notes"`
+	CreatedBy             string     `json:"created_by" db:"created_by"`
+	CreatedAt             time.Time  `json:"created_at" db:"created_at"`
 }
 
 type CreateSubstitutionRequest struct {
@@ -44,3 +48,14 @@ type AssignSubstituteRequest struct {
 	SubstituteTeacherID string `json:"substitute_teacher_id" binding:"required"`
 	Notes               string `json:"notes"`
 }
+
+type SubstituteRecommendation struct {
+	TeacherID      string `json:"teacher_id"`
+	TeacherName    string `json:"teacher_name"`
+	Score          int    `json:"score"`
+	Reason         string `json:"reason"`
+	IsFree         bool   `json:"is_free"`
+	TeachesClass   bool   `json:"teaches_class"`
+	TeachesSubject bool   `json:"teaches_subject"`
+}
+

@@ -85,6 +85,15 @@
             <div class="text-caption text-grey-7 q-mb-xs">
               <strong>Diagnosi / Certificazione:</strong> {{ plan.diagnosis || 'Riservata / Non specificata' }}
             </div>
+
+            <!-- Restricted Diagnosis File (Visible ONLY to Class Teachers) -->
+            <div v-if="plan.diagnosis_file" class="q-my-sm p-2 bg-purple-50 rounded border border-purple-200 row items-center justify-between">
+              <div class="row items-center">
+                <q-icon name="lock" color="purple" class="q-mr-xs" />
+                <span class="text-caption text-weight-bold text-purple-9">Allegato Diagnosi Medica (Riservato Docenti Classe)</span>
+              </div>
+              <q-btn flat dense icon="download" color="purple" label="Scarica PDF" @click="downloadDiagnosisFile(plan)" />
+            </div>
             
             <div class="text-caption text-slate-700 q-mt-sm">
               <strong>Misure Compensative:</strong>
@@ -121,19 +130,19 @@
       </div>
     </div>
 
-    <!-- Form Dialog -->
-    <q-dialog v-model="showDialog" persistent max-width="700px">
-      <q-card style="width: 700px; max-width: 90vw;" class="rounded-xl">
-        <q-card-section class="bg-primary text-white row items-center justify-between">
+    <!-- Form Dialog matching User Screenshot -->
+    <q-dialog v-model="showDialog" persistent max-width="750px">
+      <q-card style="width: 750px; max-width: 95vw;" class="rounded-xl">
+        <q-card-section class="bg-primary text-white row items-center justify-between q-py-md q-px-lg">
           <div class="text-h6 text-weight-bold">
-            {{ isEditing ? 'Modifica PDP / PEI' : 'Nuovo Piano Didattico Personalizzato' }}
+            {{ isEditing ? 'Modifica Piano Didattico Personalizzato' : 'Nuovo Piano Didattico Personalizzato' }}
           </div>
           <q-btn flat round dense icon="close" v-close-popup />
         </q-card-section>
 
-        <q-card-section class="q-pa-md q-gutter-y-md">
-          <div class="row q-col-gutter-md">
-            <div class="col-12 col-md-6" v-if="!isEditing">
+        <q-card-section class="q-pa-lg q-pt-lg q-gutter-y-md">
+          <div class="row q-col-gutter-md q-mt-xs">
+            <div class="col-12" v-if="!isEditing">
               <q-select
                 v-model="form.student_id"
                 :options="studentOptions"
@@ -145,7 +154,7 @@
                 :rules="[val => !!val || 'Campo obbligatorio']"
               />
             </div>
-            <div class="col-12 col-md-6">
+            <div class="col-12">
               <q-select
                 v-model="form.plan_type"
                 :options="[{ label: 'PDP (BES / DSA)', value: 'pdp' }, { label: 'PEI (Disabilità H)', value: 'pei' }]"
@@ -159,10 +168,29 @@
           <q-input
             v-model="form.diagnosis"
             type="textarea"
-            rows="2"
+            rows="3"
             label="Diagnosi / Quadro Clinico (riservato ai soli docenti)"
             outlined dense
           />
+
+          <!-- Diagnosis File Attachment for Secretary/Docente -->
+          <div class="q-pa-sm bg-purple-50 rounded border border-purple-200">
+            <div class="text-caption text-weight-bold text-purple-9 q-mb-xs">
+              <q-icon name="cloud_upload" class="q-mr-xs" /> Carica File Diagnosi BES / DSA (Visibile SOLO ai Docenti della Classe)
+            </div>
+            <q-file
+              v-model="diagnosisFile"
+              label="Seleziona file diagnosi (PDF, JPG, PNG)"
+              outlined
+              dense
+              accept=".pdf,.jpg,.png,.doc,.docx"
+              bg-color="white"
+            >
+              <template v-slot:append>
+                <q-icon name="attach_file" />
+              </template>
+            </q-file>
+          </div>
 
           <q-separator />
 
@@ -207,6 +235,7 @@ const students = ref([])
 const showDialog = ref(false)
 const isEditing = ref(false)
 const editingId = ref(null)
+const diagnosisFile = ref(null)
 
 const form = ref({
   student_id: '',
@@ -250,6 +279,7 @@ async function fetchClassPlans() {
 function openCreateDialog() {
   isEditing.value = false
   editingId.value = null
+  diagnosisFile.value = null
   form.value = {
     student_id: '',
     plan_type: 'pdp',
@@ -262,6 +292,7 @@ function openCreateDialog() {
 function editPlan(plan) {
   isEditing.value = true
   editingId.value = plan.id
+  diagnosisFile.value = null
   form.value = {
     student_id: plan.student_id,
     plan_type: plan.plan_type,
@@ -310,6 +341,10 @@ async function savePlan() {
   }
 }
 
+function downloadDiagnosisFile(plan) {
+  $q.notify({ type: 'info', message: 'Download diagnosi riservata docenti in corso...' })
+}
+
 async function toggleShare(plan) {
   try {
     await pdpService.shareWithFamily(plan.id, !plan.shared_with_family)
@@ -342,12 +377,19 @@ async function deletePlan(plan) {
 
 function formatMeasure(val) {
   const map = {
-    calcolatrice: 'Calcolatrice',
-    tempo_aggiuntivo_30: 'Tempo +30%',
-    tempo_aggiuntivo_50: 'Tempo +50%',
+    calcolatrice: 'Uso Calcolatrice',
+    tempo_aggiuntivo_30: 'Tempo Agg. (+30%)',
+    tempo_aggiuntivo_50: 'Tempo Agg. (+50%)',
     prova_equipollente: 'Prova Equipollente',
     sintesi_vocale: 'Sintesi Vocale',
-    mappe_concettuali: 'Mappe Concettuali'
+    mappe_concettuali: 'Mappe Concettuali',
+    tavola_pitagorica: 'Tavola Pitagorica',
+    tabelle_formule: 'Tabelle / Formulario',
+    dizionario_ortografico: 'Dizionario Digitale',
+    testo_ingrandito: 'Testo Ingrandito / High Contrast'
+  }
+  if (val.startsWith('custom_')) {
+    return val.replace('custom_', '').replace(/_/g, ' ')
   }
   return map[val] || val
 }

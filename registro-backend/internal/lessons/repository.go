@@ -33,8 +33,8 @@ func NewRepository(db *sql.DB) Repository {
 func (r *repository) CreateLesson(lesson *Lesson) error {
 	query := `
 		WITH inserted AS (
-			INSERT INTO class_lessons (class_id, teacher_id, subject_id, date, hour, duration, topic, type, group_id, is_substitution, substituted_teacher_id, activity_type, created_at, updated_at)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), NOW())
+			INSERT INTO class_lessons (class_id, teacher_id, subject_id, date, hour, duration, topic, type, group_id, is_substitution, substituted_teacher_id, activity_type, is_co_teaching, created_at, updated_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW(), NOW())
 			RETURNING id, teacher_id, substituted_teacher_id
 		)
 		SELECT inserted.id,
@@ -58,17 +58,20 @@ func (r *repository) CreateLesson(lesson *Lesson) error {
 	return r.db.QueryRow(query,
 		lesson.ClassID, lesson.TeacherID, lesson.SubjectID, lesson.Date,
 		lesson.Hour, lesson.Duration, lesson.Topic, lesson.Type,
-		groupID, lesson.IsSubstitution, subTeacherID, lesson.ActivityType,
+		groupID, lesson.IsSubstitution, subTeacherID, lesson.ActivityType, lesson.IsCoTeaching,
 	).Scan(&lesson.ID, &lesson.TeacherName, &lesson.SubstitutedTeacherName)
 }
 
 func (r *repository) GetLessonsByClass(classID string, date string) ([]Lesson, error) {
 	query := `
 		SELECT cl.id, cl.class_id, cl.teacher_id, COALESCE(u1.first_name || ' ' || u1.last_name, '') AS teacher_name,
-		       cl.subject_id, cl.date, cl.hour, cl.duration, cl.topic, cl.type,
-		       cl.group_id, cl.is_substitution, cl.substituted_teacher_id,
+		       cl.subject_id, cl.date, COALESCE(cl.hour, 1) AS hour, COALESCE(cl.duration, 1) AS duration,
+		       cl.topic, cl.type, cl.group_id, cl.is_substitution, cl.substituted_teacher_id,
 		       COALESCE(u2.first_name || ' ' || u2.last_name, '') AS substituted_teacher_name,
-		       cl.activity_type, cl.created_at, cl.updated_at
+		       COALESCE(cl.activity_type, 'standard') AS activity_type,
+		       COALESCE(cl.is_co_teaching, FALSE) AS is_co_teaching,
+		       COALESCE(cl.notes, '') AS notes,
+		       cl.created_at, cl.updated_at
 		FROM class_lessons cl
 		LEFT JOIN users u1 ON cl.teacher_id = u1.id
 		LEFT JOIN users u2 ON cl.substituted_teacher_id = u2.id
@@ -79,7 +82,7 @@ func (r *repository) GetLessonsByClass(classID string, date string) ([]Lesson, e
 		query += " AND cl.date = $2"
 		args = append(args, date)
 	}
-	query += " ORDER BY cl.date DESC, cl.hour DESC"
+	query += " ORDER BY cl.date DESC, cl.hour ASC, cl.created_at ASC"
 
 	return r.scanLessons(query, args...)
 }
@@ -87,10 +90,13 @@ func (r *repository) GetLessonsByClass(classID string, date string) ([]Lesson, e
 func (r *repository) GetLessonsByClassAndSubject(classID, subjectID string, date string) ([]Lesson, error) {
 	query := `
 		SELECT cl.id, cl.class_id, cl.teacher_id, COALESCE(u1.first_name || ' ' || u1.last_name, '') AS teacher_name,
-		       cl.subject_id, cl.date, cl.hour, cl.duration, cl.topic, cl.type,
-		       cl.group_id, cl.is_substitution, cl.substituted_teacher_id,
+		       cl.subject_id, cl.date, COALESCE(cl.hour, 1) AS hour, COALESCE(cl.duration, 1) AS duration,
+		       cl.topic, cl.type, cl.group_id, cl.is_substitution, cl.substituted_teacher_id,
 		       COALESCE(u2.first_name || ' ' || u2.last_name, '') AS substituted_teacher_name,
-		       cl.activity_type, cl.created_at, cl.updated_at
+		       COALESCE(cl.activity_type, 'standard') AS activity_type,
+		       COALESCE(cl.is_co_teaching, FALSE) AS is_co_teaching,
+		       COALESCE(cl.notes, '') AS notes,
+		       cl.created_at, cl.updated_at
 		FROM class_lessons cl
 		LEFT JOIN users u1 ON cl.teacher_id = u1.id
 		LEFT JOIN users u2 ON cl.substituted_teacher_id = u2.id
@@ -101,7 +107,7 @@ func (r *repository) GetLessonsByClassAndSubject(classID, subjectID string, date
 		query += " AND cl.date = $3"
 		args = append(args, date)
 	}
-	query += " ORDER BY cl.date DESC, cl.hour DESC"
+	query += " ORDER BY cl.date DESC, cl.hour ASC, cl.created_at ASC"
 
 	return r.scanLessons(query, args...)
 }
@@ -109,10 +115,13 @@ func (r *repository) GetLessonsByClassAndSubject(classID, subjectID string, date
 func (r *repository) GetLessonsByGroup(groupID string, date string) ([]Lesson, error) {
 	query := `
 		SELECT cl.id, cl.class_id, cl.teacher_id, COALESCE(u1.first_name || ' ' || u1.last_name, '') AS teacher_name,
-		       cl.subject_id, cl.date, cl.hour, cl.duration, cl.topic, cl.type,
-		       cl.group_id, cl.is_substitution, cl.substituted_teacher_id,
+		       cl.subject_id, cl.date, COALESCE(cl.hour, 1) AS hour, COALESCE(cl.duration, 1) AS duration,
+		       cl.topic, cl.type, cl.group_id, cl.is_substitution, cl.substituted_teacher_id,
 		       COALESCE(u2.first_name || ' ' || u2.last_name, '') AS substituted_teacher_name,
-		       cl.activity_type, cl.created_at, cl.updated_at
+		       COALESCE(cl.activity_type, 'standard') AS activity_type,
+		       COALESCE(cl.is_co_teaching, FALSE) AS is_co_teaching,
+		       COALESCE(cl.notes, '') AS notes,
+		       cl.created_at, cl.updated_at
 		FROM class_lessons cl
 		LEFT JOIN users u1 ON cl.teacher_id = u1.id
 		LEFT JOIN users u2 ON cl.substituted_teacher_id = u2.id
@@ -123,7 +132,7 @@ func (r *repository) GetLessonsByGroup(groupID string, date string) ([]Lesson, e
 		query += " AND cl.date = $2"
 		args = append(args, date)
 	}
-	query += " ORDER BY cl.date DESC, cl.hour DESC"
+	query += " ORDER BY cl.date DESC, cl.hour ASC, cl.created_at ASC"
 
 	return r.scanLessons(query, args...)
 }
@@ -138,20 +147,36 @@ func (r *repository) scanLessons(query string, args ...interface{}) ([]Lesson, e
 	var lessons []Lesson
 	for rows.Next() {
 		var l Lesson
-		var groupID, subTeacherID sql.NullString
+		var groupID, subTeacherID, notes sql.NullString
+		var hour, duration sql.NullInt64
 		if err := rows.Scan(
 			&l.ID, &l.ClassID, &l.TeacherID, &l.TeacherName,
-			&l.SubjectID, &l.Date, &l.Hour, &l.Duration, &l.Topic, &l.Type,
+			&l.SubjectID, &l.Date, &hour, &duration, &l.Topic, &l.Type,
 			&groupID, &l.IsSubstitution, &subTeacherID,
-			&l.SubstitutedTeacherName, &l.ActivityType, &l.CreatedAt, &l.UpdatedAt,
+			&l.SubstitutedTeacherName, &l.ActivityType, &l.IsCoTeaching, &notes, &l.CreatedAt, &l.UpdatedAt,
 		); err != nil {
 			return nil, err
+		}
+		if hour.Valid {
+			l.Hour = int(hour.Int64)
+		} else {
+			l.Hour = 1
+		}
+		if duration.Valid {
+			l.Duration = int(duration.Int64)
+		} else {
+			l.Duration = 1
 		}
 		if groupID.Valid {
 			l.GroupID = &groupID.String
 		}
 		if subTeacherID.Valid {
 			l.SubstitutedTeacherID = &subTeacherID.String
+		}
+		if notes.Valid {
+			l.Notes = notes.String
+		} else {
+			l.Notes = ""
 		}
 		lessons = append(lessons, l)
 	}
@@ -164,10 +189,13 @@ func (r *repository) scanLessons(query string, args ...interface{}) ([]Lesson, e
 func (r *repository) GetLessonsByTeacher(teacherID string, fromDate, toDate string) ([]Lesson, error) {
 	query := `
 		SELECT cl.id, cl.class_id, cl.teacher_id, COALESCE(u1.first_name || ' ' || u1.last_name, '') AS teacher_name,
-		       cl.subject_id, cl.date, cl.hour, cl.duration, cl.topic, cl.type,
-		       cl.group_id, cl.is_substitution, cl.substituted_teacher_id,
+		       cl.subject_id, cl.date, COALESCE(cl.hour, 1) AS hour, COALESCE(cl.duration, 1) AS duration,
+		       cl.topic, cl.type, cl.group_id, cl.is_substitution, cl.substituted_teacher_id,
 		       COALESCE(u2.first_name || ' ' || u2.last_name, '') AS substituted_teacher_name,
-		       cl.activity_type, cl.created_at, cl.updated_at
+		       COALESCE(cl.activity_type, 'standard') AS activity_type,
+		       COALESCE(cl.is_co_teaching, FALSE) AS is_co_teaching,
+		       COALESCE(cl.notes, '') AS notes,
+		       cl.created_at, cl.updated_at
 		FROM class_lessons cl
 		LEFT JOIN users u1 ON cl.teacher_id = u1.id
 		LEFT JOIN users u2 ON cl.substituted_teacher_id = u2.id
@@ -231,10 +259,13 @@ func (r *repository) GetHomeworkByClass(classID string) ([]Homework, error) {
 func (r *repository) GetLessonByID(id string) (*Lesson, error) {
 	query := `
 		SELECT cl.id, cl.class_id, cl.teacher_id, COALESCE(u1.first_name || ' ' || u1.last_name, '') AS teacher_name,
-		       cl.subject_id, cl.date, cl.hour, cl.duration, cl.topic, cl.type,
-		       cl.group_id, cl.is_substitution, cl.substituted_teacher_id,
+		       cl.subject_id, cl.date, COALESCE(cl.hour, 1) AS hour, COALESCE(cl.duration, 1) AS duration,
+		       cl.topic, cl.type, cl.group_id, cl.is_substitution, cl.substituted_teacher_id,
 		       COALESCE(u2.first_name || ' ' || u2.last_name, '') AS substituted_teacher_name,
-		       cl.activity_type, cl.created_at, cl.updated_at
+		       COALESCE(cl.activity_type, 'standard') AS activity_type,
+		       COALESCE(cl.is_co_teaching, FALSE) AS is_co_teaching,
+		       COALESCE(cl.notes, '') AS notes,
+		       cl.created_at, cl.updated_at
 		FROM class_lessons cl
 		LEFT JOIN users u1 ON cl.teacher_id = u1.id
 		LEFT JOIN users u2 ON cl.substituted_teacher_id = u2.id

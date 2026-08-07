@@ -28,6 +28,7 @@ function formatClassItem(c) {
 export const useClassesStore = defineStore('classes', {
     state: () => ({
         classes: [],
+        allSchoolClassesAndGroups: [],
         selectedClassId: null,
         loading: false,
         error: null
@@ -78,6 +79,37 @@ export const useClassesStore = defineStore('classes', {
             } catch (err) {
                 this.error = 'Failed to fetch assigned classes';
                 console.error(err);
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async fetchAllSchoolClassesAndGroups() {
+            this.loading = true;
+            try {
+                const [cRes, gRes] = await Promise.all([
+                    api.get('/classes').catch(() => ({ data: [] })),
+                    api.get('/groups').catch(() => ({ data: [] }))
+                ]);
+                const rawClasses = cRes.data?.classes || cRes.data || [];
+                const rawGroups = gRes.data?.groups || gRes.data || [];
+
+                const formattedClasses = rawClasses.map(formatClassItem);
+                const formattedGroups = rawGroups.map(g => ({
+                    id: g.id,
+                    name: g.name,
+                    section: g.name,
+                    articolazione: 'Gruppo Linguistico / Articolazione',
+                    label: `Gruppo Linguistico: ${g.name}`,
+                    isGroup: true
+                }));
+
+                const combined = [...formattedClasses, ...formattedGroups];
+                this.allSchoolClassesAndGroups = combined;
+                return combined;
+            } catch (err) {
+                console.error('Failed to fetch all school classes and groups:', err);
+                return [];
             } finally {
                 this.loading = false;
             }

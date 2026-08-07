@@ -33,7 +33,7 @@ export function useMenuItems(role) {
                     { label: 'Studenti', icon: 'school', path: '/secretary/students' },
                     { label: 'Utenti', icon: 'people', path: '/secretary/users' },
                     { label: 'Classi', icon: 'room', path: '/secretary/classes' },
-                    { label: 'Gruppi Linguistici', icon: 'groups', path: '/secretary/groups' }
+                    { label: 'Gruppi Linguistici / Articolati', icon: 'groups', path: '/secretary/groups' }
                 ]
             },
             {
@@ -66,6 +66,8 @@ export function useMenuItems(role) {
                 children: [
                     { label: 'Le Mie Classi', icon: 'class', path: '/teacher/classes' },
                     { label: 'Registro Classe', icon: 'menu_book', path: '/teacher/lessons' },
+                    { label: 'Programmazione UdA', icon: 'auto_stories', path: '/teacher/uda' },
+                    { label: 'Valutazione Competenze', icon: 'stars', path: '/teacher/competencies' },
                     { label: 'Voti', icon: 'grade', path: '/teacher/grades' },
                     { label: 'Presenze', icon: 'how_to_reg', path: '/teacher/attendance' },
                     { label: 'Didattica', icon: 'folder_shared', path: '/teacher/didactics' },
@@ -83,7 +85,6 @@ export function useMenuItems(role) {
                     { label: 'Agenda', icon: 'edit_calendar', path: '/teacher/agenda' },
                     { label: 'Colloqui', icon: 'event', path: '/teacher/colloqui' },
                     { label: 'Sostituzioni', icon: 'swap_horiz', path: '/teacher/substitutions' },
-                    { label: 'Gruppi Linguistici', icon: 'groups', path: '/teacher/groups' },
                     { label: 'Verbali', icon: 'gavel', path: '/teacher/verbali' }
                 ]
             },

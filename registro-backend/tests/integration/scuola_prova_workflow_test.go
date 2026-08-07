@@ -15,6 +15,7 @@ import (
 	"registro-backend/internal/attendance"
 	"registro-backend/internal/classes"
 	"registro-backend/internal/config"
+	dbPkg "registro-backend/internal/db"
 	"registro-backend/internal/grades"
 	"registro-backend/internal/scrutiny"
 	"registro-backend/internal/users"
@@ -71,10 +72,15 @@ func TestScuolaDiProvaWorkflow(t *testing.T) {
 	defer db.Close()
 	ctx := context.Background()
 
+	// Seed / Update Scuola di Prova data
+	err := dbPkg.SeedScuolaDiProva(ctx, db)
+	require.NoError(t, err, "Seeding Scuola di Prova must succeed")
+
 	// 1. Verify "Scuola di Prova"
 	var schoolID string
-	err := db.QueryRowContext(ctx, `SELECT id FROM schools WHERE name = $1`, "Scuola di Prova").Scan(&schoolID)
+	err = db.QueryRowContext(ctx, `SELECT id FROM schools WHERE name = $1`, "Scuola di Prova").Scan(&schoolID)
 	require.NoError(t, err, "Scuola di Prova must exist in DB")
+
 	assert.NotEmpty(t, schoolID)
 
 	// 2. Verify Admin and Segreteria
@@ -179,5 +185,70 @@ func TestScuolaDiProvaWorkflow(t *testing.T) {
 	require.NotNil(t, scRec, "Child should have a scrutiny record for 1° Semestre")
 	assert.GreaterOrEqual(t, len(scRec.Grades), 4, "Child should have provisional report card grades for all subjects")
 
+	// 10. Verify BES / DSA Certificates and PDP Plans
+	var certCount int
+	err = db.QueryRowContext(ctx, `SELECT COUNT(*) FROM certificates WHERE school_id = $1`, schoolID).Scan(&certCount)
+	require.NoError(t, err)
+	assert.GreaterOrEqual(t, certCount, 2, "Should have at least 2 BES/DSA certificates in Scuola di Prova")
+
+	var pdpCount int
+	err = db.QueryRowContext(ctx, `SELECT COUNT(*) FROM pdp_plans WHERE school_id = $1 AND shared_with_family = TRUE`, schoolID).Scan(&pdpCount)
+	require.NoError(t, err)
+	assert.GreaterOrEqual(t, pdpCount, 1, "Should have at least 1 shared PDP plan in Scuola di Prova")
+
+	// 11. Verify Class Lessons
+	var lessonCount int
+	err = db.QueryRowContext(ctx, `SELECT COUNT(*) FROM class_lessons WHERE class_id IN ($1, $2)`, class2AID, class2BID).Scan(&lessonCount)
+	require.NoError(t, err)
+	assert.GreaterOrEqual(t, lessonCount, 6, "Should have at least 6 class lessons recorded")
+
+	// 12. Verify Attendance & Justifications
+	var attCount, justCount int
+	err = db.QueryRowContext(ctx, `SELECT COUNT(*) FROM attendance WHERE school_id = $1`, schoolID).Scan(&attCount)
+	require.NoError(t, err)
+	assert.GreaterOrEqual(t, attCount, 2, "Should have attendance records")
+
+	err = db.QueryRowContext(ctx, `
+		SELECT COUNT(*) FROM justifications j 
+		JOIN users u ON j.student_id = u.id 
+		WHERE u.school_id = $1 AND j.status = 'approved'
+	`, schoolID).Scan(&justCount)
+	require.NoError(t, err)
+	assert.GreaterOrEqual(t, justCount, 1, "Should have at least 1 approved justification")
+
+	// 13. Verify Agenda Items & Student Completions
+	var agendaCount, completionCount int
+	err = db.QueryRowContext(ctx, `SELECT COUNT(*) FROM agenda_items WHERE school_id = $1`, schoolID).Scan(&agendaCount)
+	require.NoError(t, err)
+	assert.GreaterOrEqual(t, agendaCount, 4, "Should have at least 4 agenda items")
+
+	err = db.QueryRowContext(ctx, `
+		SELECT COUNT(*) FROM student_agenda_completions sac
+		JOIN agenda_items ai ON sac.agenda_item_id = ai.id
+		WHERE ai.school_id = $1
+	`, schoolID).Scan(&completionCount)
+	require.NoError(t, err)
+	assert.GreaterOrEqual(t, completionCount, 1, "Should have at least 1 student agenda completion")
+
+	// 14. Verify Communications & Acknowledgments (Bacheca)
+	var commCount, ackCount int
+	err = db.QueryRowContext(ctx, `
+		SELECT COUNT(*) FROM communications c
+		JOIN users u ON c.sender_id = u.id
+		WHERE u.school_id = $1
+	`, schoolID).Scan(&commCount)
+	require.NoError(t, err)
+	assert.GreaterOrEqual(t, commCount, 2, "Should have at least 2 bacheca/circolare communications")
+
+	err = db.QueryRowContext(ctx, `
+		SELECT COUNT(*) FROM communication_acks ca
+		JOIN communications c ON ca.communication_id = c.id
+		JOIN users u ON c.sender_id = u.id
+		WHERE u.school_id = $1
+	`, schoolID).Scan(&ackCount)
+	require.NoError(t, err)
+	assert.GreaterOrEqual(t, ackCount, 2, "Should have at least 2 communication acknowledgments (presa d'atto)")
+
 	fmt.Println("=== ALL INTEGRATION CHECKS PASSED PERFECTLY ===")
 }
+

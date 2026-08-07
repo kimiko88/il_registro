@@ -11,8 +11,17 @@ export const lessonService = {
     async getTeacherDiary(from, to) {
         return api.get('/lessons/my-diary', { params: { from, to } })
     },
+    async getLessonById(id) {
+        return api.get(`/lessons/${id}`)
+    },
     async createLesson(data) {
         return api.post('/lessons', data)
+    },
+    async updateLesson(id, data) {
+        return api.put(`/lessons/${id}`, data)
+    },
+    async deleteLesson(id) {
+        return api.delete(`/lessons/${id}`)
     },
 
     // Homework (Compiti)
@@ -21,6 +30,12 @@ export const lessonService = {
     },
     async createHomework(data) {
         return api.post('/homeworks', data)
+    },
+    async updateHomework(id, data) {
+        return api.put(`/homeworks/${id}`, data)
+    },
+    async deleteHomework(id) {
+        return api.delete(`/homeworks/${id}`)
     },
 
     // Student & Parent access to homeworks

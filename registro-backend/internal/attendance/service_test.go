@@ -16,6 +16,8 @@ type MockRepository struct {
 	mock.Mock
 }
 
+var _ Repository = (*MockRepository)(nil)
+
 func (m *MockRepository) Create(att *Attendance) error {
 	args := m.Called(att)
 	return args.Error(0)
@@ -26,6 +28,10 @@ func (m *MockRepository) BatchCreate(atts []*Attendance) error {
 }
 func (m *MockRepository) Update(att *Attendance) error {
 	args := m.Called(att)
+	return args.Error(0)
+}
+func (m *MockRepository) DeleteByClassDateHour(classID string, date time.Time, hour int) error {
+	args := m.Called(classID, date, hour)
 	return args.Error(0)
 }
 func (m *MockRepository) ProcessJustificationTx(ctx context.Context, j *Justification, teacherID string, approve bool) error {

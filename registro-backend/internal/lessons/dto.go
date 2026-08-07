@@ -14,16 +14,20 @@ type CreateLessonRequest struct {
 	IsSubstitution       bool    `json:"is_substitution"`
 	SubstitutedTeacherID *string `json:"substituted_teacher_id"`
 	ActivityType         string  `json:"activity_type"` // e.g. standard, substitution, ptof, project, assembly, trip, lab, other
+	IsCoTeaching         bool    `json:"is_co_teaching"`
 	Notes                string  `json:"notes"`
 }
 
 type UpdateLessonRequest struct {
 	Topic                string  `json:"topic"`
 	Type                 string  `json:"type"`
+	Hour                 *int    `json:"hour"`
+	Duration             *int    `json:"duration"`
 	GroupID              *string `json:"group_id"`
 	IsSubstitution       *bool   `json:"is_substitution"`
 	SubstitutedTeacherID *string `json:"substituted_teacher_id"`
 	ActivityType         string  `json:"activity_type"`
+	IsCoTeaching         *bool   `json:"is_co_teaching"`
 	Notes                string  `json:"notes"`
 }
 
@@ -58,6 +62,7 @@ type LessonResponse struct {
 	SubstitutedTeacherID   *string   `json:"substituted_teacher_id,omitempty"`
 	SubstitutedTeacherName string    `json:"substituted_teacher_name,omitempty"`
 	ActivityType           string    `json:"activity_type"`
+	IsCoTeaching           bool      `json:"is_co_teaching"`
 	Notes                  string    `json:"notes"`
 }
 

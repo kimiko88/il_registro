@@ -166,7 +166,7 @@ func (r *PostgresRepository) GetByID(ctx context.Context, id string) (*User, err
 		SELECT u.id, u.email, u.password_hash, u.first_name, u.last_name, COALESCE(u.fiscal_code, ''),
 		       u.role, u.school_id, u.is_active, u.email_verified, u.mfa_enabled, COALESCE(u.mfa_secret, ''), COALESCE(u.phone_number, ''), COALESCE(u.job_title, ''),
 		       u.created_at, u.updated_at, u.last_login, u.deleted_at, u.pseudonymized_at, u.password_changed_at,
-		       s.class_id, c.name, c.section
+		       s.class_id, c.name, c.section, u.date_of_birth
 		FROM users u
 		LEFT JOIN students s ON u.id = s.user_id
 		LEFT JOIN classes c ON s.class_id = c.id
@@ -178,7 +178,7 @@ func (r *PostgresRepository) GetByID(ctx context.Context, id string) (*User, err
 		&u.ID, &u.Email, &u.PasswordHash, &u.FirstName, &u.LastName, &u.FiscalCode,
 		&u.Role, &u.SchoolID, &u.IsActive, &u.EmailVerified, &u.MFAEnabled, &u.MFASecret, &u.PhoneNumber, &u.JobTitle,
 		&u.CreatedAt, &u.UpdatedAt, &u.LastLogin, &u.DeletedAt, &u.PseudonymizedAt, &u.PasswordChangedAt,
-		&classID, &className, &classSection,
+		&classID, &className, &classSection, &u.DateOfBirth,
 	)
 	if err == sql.ErrNoRows {
 		return nil, ErrUserNotFound

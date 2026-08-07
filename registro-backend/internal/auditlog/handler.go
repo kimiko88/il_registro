@@ -21,6 +21,7 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	{
 		group.GET("", h.List)
 		group.GET("/export", h.ExportCSV)
+		group.GET("/immutability-chain", h.GetImmutabilityChain)
 	}
 }
 
@@ -79,4 +80,19 @@ func (h *Handler) ExportCSV(c *gin.Context) {
 	c.Header("Content-Type", "text/csv")
 	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"audit_logs_%s.csv\"", c.GetString("school_id")))
 	c.Data(http.StatusOK, "text/csv", csvBytes)
+}
+
+func (h *Handler) GetImmutabilityChain(c *gin.Context) {
+	role := c.GetString("role")
+	if role != "admin" && role != "superadmin" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
+	report, err := VerifyChainIntegrity(c.Request.Context(), nil)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, report)
 }

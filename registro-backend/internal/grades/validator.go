@@ -64,10 +64,10 @@ func (v *Validator) ValidateTeacherCanGrade(teacherUserID string, subjectID stri
 	query := `
 		SELECT 1
 		FROM class_subjects cs
-		JOIN teachers t ON cs.teacher_id = t.id
-		WHERE cs.class_id = $1
-		  AND cs.subject_id = $2
-		  AND t.user_id = $3`
+		LEFT JOIN teachers t ON cs.teacher_id = t.id OR cs.teacher_id = t.user_id
+		WHERE cs.class_id::text = $1
+		  AND cs.subject_id::text = $2
+		  AND (cs.teacher_id::text = $3 OR t.user_id::text = $3)`
 	var exists int
 	err := v.db.QueryRow(query, classID, subjectID, teacherUserID).Scan(&exists)
 	if err != nil {

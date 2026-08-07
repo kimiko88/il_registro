@@ -15,6 +15,7 @@ type CreateUserRequest struct {
 	PhoneNumber string  `json:"phone_number"`
 	JobTitle    string  `json:"job_title"`
 	ClassID     *string `json:"class_id"` // For students
+	DateOfBirth string  `json:"date_of_birth"` // Format: YYYY-MM-DD
 }
 
 type UpdateUserRequest struct {
@@ -27,6 +28,7 @@ type UpdateUserRequest struct {
 	Role        *string `json:"role"`
 	SchoolID    *string `json:"school_id"`
 	ClassID     *string `json:"class_id"` // For students
+	DateOfBirth *string `json:"date_of_birth"` // Format: YYYY-MM-DD
 }
 
 type ChangePasswordRequest struct {
@@ -53,6 +55,7 @@ type UserResponse struct {
 	MFAEnabled      bool       `json:"mfa_enabled"`
 	PhoneNumber     *string    `json:"phone_number,omitempty"`
 	JobTitle        *string    `json:"job_title,omitempty"`
+	DateOfBirth     *string    `json:"date_of_birth,omitempty"` // YYYY-MM-DD string for easy display
 	CreatedAt       time.Time  `json:"created_at"`
 	LastLogin       *time.Time `json:"last_login,omitempty"`
 	DeletedAt       *time.Time `json:"deleted_at,omitempty"`

@@ -2,6 +2,7 @@ package substitutions
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -23,6 +24,8 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 		g.GET("/my-today", h.ListMyToday)
 		g.PUT("/:id/assign", h.AssignSubstitute)
 		g.PATCH("/:id/confirm", h.Confirm)
+		g.POST("/:id/sign-register", h.SignRegister)
+		g.GET("/recommend-substitutes", h.RecommendSubstitutes)
 	}
 }
 
@@ -76,8 +79,9 @@ func (h *Handler) ListByTeacher(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
+	date := c.Query("date")
 
-	subs, err := h.service.ListByTeacher(c.Request.Context(), teacherID)
+	subs, err := h.service.ListByTeacher(c.Request.Context(), teacherID, date)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -143,4 +147,40 @@ func (h *Handler) Confirm(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "substitution confirmed"})
+}
+
+func (h *Handler) SignRegister(c *gin.Context) {
+	teacherID := c.GetString("user_id")
+	if teacherID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	id := c.Param("id")
+	var body struct {
+		Notes string `json:"notes"`
+	}
+	_ = c.ShouldBindJSON(&body)
+
+	if err := h.service.SignRegister(c.Request.Context(), id, teacherID, body.Notes); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "registro supplenze firmato con successo"})
+}
+
+func (h *Handler) RecommendSubstitutes(c *gin.Context) {
+	schoolID := c.GetString("school_id")
+	classID := c.Query("class_id")
+	subjectID := c.Query("subject_id")
+	date := c.Query("date")
+	hourStr := c.Query("hour")
+	hour, _ := strconv.Atoi(hourStr)
+
+	recs, err := h.service.RecommendSubstitutes(c.Request.Context(), schoolID, classID, subjectID, date, hour)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, recs)
 }

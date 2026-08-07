@@ -1,243 +1,559 @@
 <template>
   <q-page class="q-pa-md bg-grey-1">
+    <!-- Header -->
     <div class="row items-center justify-between q-mb-md">
-       <div class="text-h4">Registro Presenze</div>
-       <div class="row q-gutter-md items-center">
-           <q-btn color="secondary" icon="download" label="Esporta CSV" unelevated @click="exportCSV" />
-           <q-input dense outlined v-model="date" type="date" label="Data" bg-color="white" @update:model-value="fetchData" />
-           <q-select 
-              dense outlined 
-              v-model="selectedHour" 
-              :options="[1,2,3,4,5,6,7,8]" 
-              label="Ora" 
-              bg-color="white" 
-              style="min-width: 80px"
-              @update:model-value="fetchData"
+       <div class="row items-center q-gutter-sm">
+         <div class="text-h5 text-weight-bold text-slate-800">Registro di Classe &amp; Presenze</div>
+         <q-chip v-if="isSubstitutionMode" color="deep-orange" text-color="white" dense class="text-weight-bold">
+           <q-icon name="swap_horiz" class="q-mr-xs" />Supplenza
+         </q-chip>
+       </div>
+       <div class="row q-gutter-sm items-center">
+           <q-btn
+             :color="isSubstitutionMode ? 'deep-orange' : 'primary'"
+             :icon="isSubstitutionMode ? 'swap_horiz' : 'school'"
+             :label="isSubstitutionMode ? 'Torna alle Mie Classi' : 'Supplenza in Altre Classi'"
+             unelevated dense
+             class="rounded-lg text-weight-bold"
+             @click="toggleSubstitutionMode"
            />
-           <q-select 
-              dense outlined 
-              v-model="selectedSubject" 
-              :options="gradesStore.subjects" 
-              option-label="subject_name"
-              option-value="subject_id"
-              emit-value
-              map-options
-              label="Materia" 
-              bg-color="white" 
-              style="min-width: 150px"
-              @update:model-value="fetchData"
-           />
-           <q-select 
-              dense outlined 
-              v-model="selectedClass" 
-              :options="classOptions" 
-              option-label="label"
-              option-value="id"
-              label="Classe" 
-              bg-color="white" 
-              style="min-width: 200px"
-              @update:model-value="onClassChange"
-           />
+           <q-btn color="secondary" icon="download" label="Esporta CSV" unelevated dense @click="exportCSV" />
        </div>
     </div>
 
-    <!-- Summary Cards -->
-    <div class="row q-col-gutter-md q-mb-md">
-        <div class="col-12 col-md-3">
-            <q-card class="bg-green-1" :aria-label="`Presenti: ${stats.present} studenti`">
-                <q-card-section class="text-center">
-                    <q-icon name="check_circle" size="28px" color="green-8" class="q-mb-xs" />
-                    <div class="text-caption text-uppercase text-green-9">Presenti</div>
-                    <div class="text-h4 text-green-8">{{ stats.present }}</div>
+    <!-- Filters Row -->
+    <div class="row q-col-gutter-sm q-mb-md items-center">
+      <div class="col-12 col-sm-auto">
+        <q-input dense outlined v-model="date" type="date" label="Data" bg-color="white" style="min-width: 150px" @update:model-value="fetchData" />
+      </div>
+      <div class="col-12 col-sm-auto">
+        <q-select
+           dense outlined
+           v-model="selectedHour"
+           :options="[1,2,3,4,5,6,7,8]"
+           label="Ora Lezione"
+           bg-color="white"
+           style="min-width: 100px"
+           @update:model-value="fetchData"
+        />
+      </div>
+      <div class="col-12 col-sm">
+        <q-select
+           dense outlined
+           v-model="selectedClass"
+           :options="availableClassOptions"
+           option-label="label"
+           option-value="id"
+           label="Classe / Gruppo"
+           bg-color="white"
+           style="min-width: 240px"
+           @update:model-value="onClassChange"
+        />
+      </div>
+    </div>
+
+    <!-- Substitution Banner -->
+    <q-banner v-if="isSubstitutionMode" class="bg-amber-1 text-amber-10 rounded-xl border border-amber-300 q-mb-md shadow-soft">
+      <template v-slot:avatar>
+        <q-icon name="swap_horiz" color="amber-9" size="24px" />
+      </template>
+      <div class="text-weight-bold">Modalità Supplenza — {{ selectedClass?.label || 'Seleziona Classe' }}</div>
+      <div class="text-caption">Firma come supplente. Non è richiesta una materia specifica. Voti non accessibili.</div>
+    </q-banner>
+
+    <!-- Read-Only Banner: another teacher has signed this hour -->
+    <q-banner v-if="isReadOnly && !isSubstitutionMode" class="bg-blue-grey-1 text-blue-grey-9 rounded-xl border border-blue-grey-3 q-mb-md shadow-soft">
+      <template v-slot:avatar>
+        <q-icon name="lock" color="blue-grey-7" size="24px" />
+      </template>
+      <div class="text-weight-bold">Ora {{ selectedHour }}ª — già firmata da {{ signedByTeacherName }}</div>
+      <div class="text-caption">Puoi visualizzare le presenze ma non modificarle. Solo il docente che ha firmato può modificare questa ora.</div>
+    </q-banner>
+
+    <!-- Summary Cards (compact) -->
+    <div class="row q-col-gutter-sm q-mb-md">
+        <div class="col-6 col-sm-3">
+            <q-card flat bordered class="bg-green-1">
+                <q-card-section class="q-pa-sm text-center row items-center justify-center q-gutter-xs">
+                    <q-icon name="check_circle" size="20px" color="green-8" />
+                    <span class="text-caption text-green-9 text-weight-bold">Presenti</span>
+                    <span class="text-h6 text-green-8 text-weight-bolder">{{ stats.present }}</span>
+                    <q-badge v-if="unjustifiedCount > 0" color="negative" class="q-ml-xs" floating>!</q-badge>
                 </q-card-section>
             </q-card>
         </div>
-        <div class="col-12 col-md-3">
-             <q-card class="bg-red-1" :aria-label="`Assenti: ${stats.absent} studenti`">
-                <q-card-section class="text-center">
-                    <q-icon name="cancel" size="28px" color="red-8" class="q-mb-xs" />
-                    <div class="text-caption text-uppercase text-red-9">Assenti</div>
-                    <div class="text-h4 text-red-8">{{ stats.absent }}</div>
+        <div class="col-6 col-sm-3">
+             <q-card flat bordered class="bg-red-1">
+                <q-card-section class="q-pa-sm text-center row items-center justify-center q-gutter-xs">
+                    <q-icon name="cancel" size="20px" color="red-8" />
+                    <span class="text-caption text-red-9 text-weight-bold">Assenti</span>
+                    <span class="text-h6 text-red-8 text-weight-bolder">{{ stats.absent }}</span>
                 </q-card-section>
             </q-card>
         </div>
-        <div class="col-12 col-md-3">
-             <q-card class="bg-orange-1" :aria-label="`Ritardi: ${stats.late} studenti`">
-                <q-card-section class="text-center">
-                    <q-icon name="schedule" size="28px" color="orange-8" class="q-mb-xs" />
-                    <div class="text-caption text-uppercase text-orange-9">Ritardi</div>
-                    <div class="text-h4 text-orange-8">{{ stats.late }}</div>
+        <div class="col-6 col-sm-3">
+             <q-card flat bordered class="bg-orange-1">
+                <q-card-section class="q-pa-sm text-center row items-center justify-center q-gutter-xs">
+                    <q-icon name="schedule" size="20px" color="orange-8" />
+                    <span class="text-caption text-orange-9 text-weight-bold">Ritardi</span>
+                    <span class="text-h6 text-orange-8 text-weight-bolder">{{ stats.late }}</span>
                 </q-card-section>
             </q-card>
         </div>
-        <div class="col-12 col-md-3">
-             <q-card class="bg-blue-1 cursor-pointer" ripple @click="showJustifications = true" :aria-label="`Da Giustificare: ${stats.toJustify} richieste`">
-                <q-card-section class="text-center">
-                    <q-icon name="assignment_turned_in" size="28px" color="blue-8" class="q-mb-xs" />
-                    <div class="text-caption text-uppercase text-blue-9">Da Giustificare</div>
-                    <div class="text-h4 text-blue-8">{{ stats.toJustify }}</div>
+        <div class="col-6 col-sm-3">
+             <q-card flat bordered class="bg-purple-1">
+                <q-card-section class="q-pa-sm text-center row items-center justify-center q-gutter-xs">
+                    <q-icon name="output" size="20px" color="purple-8" />
+                    <span class="text-caption text-purple-9 text-weight-bold">Uscite Anticip.</span>
+                    <span class="text-h6 text-purple-8 text-weight-bolder">{{ stats.early }}</span>
                 </q-card-section>
-                <q-tooltip>Clicca per gestire</q-tooltip>
             </q-card>
         </div>
     </div>
 
-    <!-- Attendance Table -->
-    <q-card>
-        <q-toolbar class="bg-grey-2 text-grey-8">
-            <q-toolbar-title class="text-subtitle1 row items-center">
-                <span>Appello - {{ date }}</span>
-                <q-chip dense :color="markedCountChipColor" text-color="white" class="q-ml-md font-weight-bold">
-                    {{ markedCount }}/{{ students.length }} registrati
-                </q-chip>
-                <q-chip v-if="lastAutosaveTime" dense color="grey-7" text-color="white" icon="cloud_done" class="q-ml-sm text-caption">
-                    Bozza salvata alle {{ lastAutosaveTime }}
-                </q-chip>
-            </q-toolbar-title>
-            <q-btn flat dense icon="check_circle" label="Tutti Presenti" color="primary" aria-label="Segna tutti gli studenti come presenti per il giorno e l'ora selezionati" @click="markAllPresent" :disable="loading" />
-        </q-toolbar>
+    <!-- Unjustified Warning Banner -->
+    <q-banner v-if="unjustifiedStudents.length > 0" class="bg-red-1 text-red-9 rounded-xl border border-red-3 q-mb-md" dense>
+      <template v-slot:avatar><q-icon name="warning" color="negative" size="22px" /></template>
+      <div class="text-weight-bold text-caption">
+        {{ unjustifiedStudents.length }} aluno/i con assenze/ritardi NON GIUSTIFICATI:
+        <span v-for="(s, i) in unjustifiedStudents" :key="s.id">{{ s.last_name }} {{ s.first_name }}<span v-if="i < unjustifiedStudents.length - 1">, </span></span>
+      </div>
+    </q-banner>
 
-        <!-- Daily Timeline (Previous Hours) -->
-        <div v-if="dailyLessons.length > 0" class="q-px-md q-py-sm bg-blue-50 border-b">
-            <div class="text-caption text-weight-bold text-blue-9 q-mb-xs">ATTIVITÀ DEL GIORNO</div>
-            <div class="row q-gutter-xs">
+    <!-- Section 1: Firma Lezione & Registro Lezioni svolte -->
+    <q-card class="q-mb-md shadow-2 rounded-xl">
+        <q-card-section class="bg-slate-800 text-white row items-center justify-between q-py-sm">
+            <div class="text-subtitle2 text-weight-bold row items-center">
+                <q-icon name="edit_note" class="q-mr-sm" size="20px" />
+                Firma Lezione — {{ selectedHour }}ª Ora ({{ date }})
+            </div>
+            <div class="row items-center q-gutter-xs">
+                <q-btn
+                    v-if="canDeleteCurrentSignature"
+                    unelevated
+                    dense
+                    color="negative"
+                    text-color="white"
+                    icon="delete_forever"
+                    label="Cancella Firma"
+                    class="text-weight-bold q-mr-sm q-px-sm rounded-md"
+                    @click="deleteUnifiedRecord"
+                    :loading="saving"
+                >
+                    <q-tooltip>Cancella la firma della lezione e tutte le presenze per questa ora</q-tooltip>
+                </q-btn>
+                <q-badge color="primary" class="text-weight-bold">
+                    {{ isSubstitutionMode ? 'Supplenza' : getSubjectName(lessonSubjectId) }}
+                </q-badge>
+            </div>
+        </q-card-section>
+
+        <q-card-section class="q-pa-md">
+            <div class="row q-col-gutter-md">
+                <!-- Hour selector inside the card -->
+                <div class="col-12 col-md-2">
+                    <q-select
+                        v-model="selectedHour"
+                        :options="[1,2,3,4,5,6,7,8]"
+                        label="Ora da Firmare"
+                        outlined
+                        dense
+                        @update:model-value="fetchData"
+                    >
+                        <template v-slot:prepend>
+                            <q-icon name="schedule" />
+                        </template>
+                    </q-select>
+                </div>
+                <!-- Subject selector inside the lesson card (not in top header) -->
+                <div v-if="!isSubstitutionMode" class="col-12 col-md-3">
+                    <q-select
+                        v-model="lessonSubjectId"
+                        :options="gradesStore.subjects"
+                        option-label="subject_name"
+                        option-value="subject_id"
+                        emit-value
+                        map-options
+                        label="Materia *"
+                        outlined
+                        dense
+                    />
+                </div>
+                <div class="col-12" :class="isSubstitutionMode ? '' : 'col-md-6'">
+                    <q-input
+                        v-model="lessonTopic"
+                        label="Argomento della Lezione"
+                        outlined
+                        dense
+                        placeholder="Descrivi brevemente l'argomento trattato"
+                        :readonly="isReadOnly"
+                        :bg-color="isReadOnly ? 'grey-2' : 'white'"
+                    />
+                </div>
+                <div class="col-12 col-md-3">
+                    <q-select
+                        v-model="lessonType"
+                        :options="lessonTypeOptions"
+                        label="Tipo Lezione"
+                        outlined
+                        dense
+                    />
+                </div>
+                <div class="col-12 col-md-3 row items-center">
+                    <q-toggle v-model="isCoTeaching" label="Compresenza" color="deep-purple" dense />
+                </div>
+                <div class="col-12">
+                    <q-input v-model="lessonNotes" label="Note interne docente" outlined dense autogrow placeholder="(Opzionale)" />
+                </div>
+            </div>
+
+            <!-- Homework Accordion -->
+            <div class="q-mt-sm">
+                <q-toggle v-model="assignHomework" label="Assegna compiti per questa lezione" color="orange" dense />
+                <div v-if="assignHomework" class="row q-col-gutter-md q-mt-xs">
+                    <div class="col-12 col-md-8">
+                        <q-input v-model="homeworkDesc" label="Descrizione Compito *" outlined dense autogrow placeholder="Es. Esercizi pag. 140 n. 1-10" />
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <q-input v-model="homeworkDue" type="date" label="Data Consegna *" outlined dense />
+                    </div>
+                </div>
+            </div>
+        </q-card-section>
+
+        <!-- Daily Lessons Timeline -->
+        <q-separator />
+        <div class="q-pa-sm bg-slate-50">
+            <div class="text-caption text-weight-bold text-slate-700 q-mb-xs q-px-sm">LEZIONI REGISTRATE OGGI PER QUESTA CLASSE</div>
+            <div v-if="dailyLessons.length > 0" class="row q-gutter-xs q-px-sm">
                 <div v-for="l in dailyLessons" :key="l.id" class="col-auto">
-                    <q-chip dense outline color="blue-7" text-color="white" icon="history">
-                        Ora {{ l.hour }}: {{ l.topic }}
+                    <q-chip dense outline :color="String(l.hour) === String(selectedHour) ? 'indigo-9' : 'indigo-5'" icon="event_note" class="bg-white">
+                        Ora {{ l.hour }}: {{ l.topic || '—' }}
                         <q-tooltip>
+                            Docente: {{ l.teacher_name || 'Docente' }}<br>
                             Materia: {{ getSubjectName(l.subject_id) }}<br>
                             Tipo: {{ l.type }}
                         </q-tooltip>
                     </q-chip>
                 </div>
             </div>
+            <div v-else class="q-px-sm text-caption text-grey-6">Nessuna lezione registrata in precedenza per la giornata odierna.</div>
         </div>
-        <div v-else class="q-px-md q-py-xs text-caption text-grey-6 bg-blue-50">
-            Nessuna attività registrata per oggi
-        </div>
-        
+    </q-card>
+
+    <!-- Section 2: Attendance Table with Hourly Timeline Column -->
+    <q-card class="shadow-2 rounded-xl">
+        <q-toolbar class="bg-grey-2 text-grey-9">
+            <q-toolbar-title class="text-subtitle2 row items-center">
+                <q-icon name="how_to_reg" class="q-mr-xs" color="primary" />
+                <span>Appello &amp; Orari — Ora {{ selectedHour }}</span>
+                <q-chip dense :color="markedCountChipColor" text-color="white" class="q-ml-sm">
+                    {{ markedCount }}/{{ students.length }}
+                </q-chip>
+                <q-chip v-if="lastAutosaveTime" dense color="grey-7" text-color="white" icon="cloud_done" class="q-ml-sm text-caption">
+                    Bozza {{ lastAutosaveTime }}
+                </q-chip>
+            </q-toolbar-title>
+            <q-btn flat dense icon="check_circle" label="Tutti Presenti" color="primary" @click="markAllPresent" :disable="loading || isReadOnly" />
+        </q-toolbar>
+
         <div v-if="loading" class="q-pa-md">
             <SkeletonTable :rows="8" :cols="4" />
         </div>
 
         <q-list separator v-else>
-            <q-item v-for="student in students" :key="student.id" class="q-py-md transition-bg" :class="getRowClass(student.status)">
-                <q-item-section avatar>
-                    <q-avatar size="md" color="grey-3" text-color="black">
+            <q-item v-for="student in students" :key="student.id" class="q-py-sm transition-bg" :class="getRowClass(student.status)">
+                <q-item-section avatar style="min-width: 42px">
+                    <q-avatar
+                        size="38px"
+                        color="indigo-1"
+                        text-color="indigo-9"
+                        class="text-weight-bold shadow-soft cursor-pointer"
+                        @click="openStudentPanel(student)"
+                    >
                         {{ student.first_name ? student.first_name.charAt(0) : '?' }}
+                        <q-tooltip>Visualizza scheda studente</q-tooltip>
                     </q-avatar>
                 </q-item-section>
-                
-                <q-item-section>
-                    <div class="row items-center">
-                       <div class="col">
-                            <q-item-label class="text-weight-medium row items-center">
-                               <q-icon v-if="student.status === 'Present'" name="check_circle" color="positive" size="18px" class="q-mr-xs" />
-                               <q-icon v-else-if="student.status === 'Absent'" name="cancel" color="negative" size="18px" class="q-mr-xs" />
-                               <q-icon v-else-if="student.status === 'Late'" name="schedule" color="warning" size="18px" class="q-mr-xs" />
-                               <q-icon v-else-if="student.status === 'LeftEarly'" name="output" color="purple" size="18px" class="q-mr-xs" />
-                               <span>{{ student.last_name }} {{ student.first_name }}</span>
-                            </q-item-label>
-                            <q-item-label caption v-if="student.status === 'Absent'">Assente</q-item-label>
-                            <q-item-label caption v-if="student.status === 'Late'">
-                                Ritardo ({{ formatLateLabel(student) }})
-                            </q-item-label>
-                            <q-item-label caption v-if="student.status === 'LeftEarly'">
-                                Uscita Anticipata ({{ formatEarlyExitLabel(student) }})
-                            </q-item-label>
-                         </div>
+
+                <!-- Name + badges column -->
+                <q-item-section style="min-width: 160px">
+                    <q-item-label class="text-weight-bold text-body2">
+                        {{ student.last_name }} {{ student.first_name }}
+                        <q-icon
+                          v-if="student.hasUnjustified"
+                          name="warning"
+                          color="negative"
+                          size="16px"
+                          class="q-ml-xs"
+                        >
+                          <q-tooltip>Ha assenze/ritardi non giustificati</q-tooltip>
+                        </q-icon>
+                    </q-item-label>
+                    <!-- Hourly presence indicator (mini timeline) -->
+                    <div class="row items-center q-gutter-xs q-mt-xs">
+                        <q-badge
+                          v-for="h in 8"
+                          :key="h"
+                          :color="getHourBadgeColor(student, h)"
+                          :label="String(h)"
+                          class="text-weight-bold"
+                          style="min-width: 18px; font-size: 10px; padding: 2px 4px"
+                        >
+                          <q-tooltip>{{ getHourLabel(student, h) }}</q-tooltip>
+                        </q-badge>
+                    </div>
+                    <!-- Status / time badges -->
+                    <div class="row items-center q-gutter-xs q-mt-xs">
+                        <q-badge v-if="student.status === 'Present'" color="positive" class="q-px-sm q-py-xs">
+                            <q-icon name="check_circle" class="q-mr-xs" size="12px" /> Presente
+                        </q-badge>
+                        <q-badge v-else-if="student.status === 'OutOfClass'" color="teal" class="q-px-sm q-py-xs">
+                            <q-icon name="meeting_room" class="q-mr-xs" size="12px" /> Fuori Aula
+                        </q-badge>
+                        <q-badge v-else-if="student.status === 'Absent'" color="negative" class="q-px-sm q-py-xs">
+                            <q-icon name="cancel" class="q-mr-xs" size="12px" /> Assente
+                        </q-badge>
+                        <q-badge v-else-if="student.status === 'Late'" color="warning" text-color="black" class="q-px-sm q-py-xs text-weight-bold">
+                            <q-icon name="schedule" class="q-mr-xs" size="12px" />
+                            {{ student.entry_time ? `Ingresso ore ${student.entry_time}` : 'Ritardo (inserire ora)' }}
+                        </q-badge>
+                        <q-badge v-else-if="student.status === 'LeftEarly'" color="purple" class="q-px-sm q-py-xs text-weight-bold">
+                            <q-icon name="output" class="q-mr-xs" size="12px" />
+                            {{ student.exit_time ? `Uscita ore ${student.exit_time}` : 'Uscita Anticipata (inserire ora)' }}
+                        </q-badge>
                     </div>
                 </q-item-section>
 
+                <!-- Status toggle -->
                 <q-item-section>
                     <q-btn-toggle
                         v-model="student.status"
-                        flat dense
+                        flat dense no-caps
+                        :disable="isReadOnly"
                         :options="[
-                            {icon: 'check', value: 'Present', slot: 'present', attrs: { 'aria-label': 'Segna ' + student.first_name + ' ' + student.last_name + ' come Presente' }},
-                            {icon: 'close', value: 'Absent', slot: 'absent', attrs: { 'aria-label': 'Segna ' + student.first_name + ' ' + student.last_name + ' come Assente' }},
-                            {icon: 'schedule', value: 'Late', slot: 'late', attrs: { 'aria-label': 'Segna ' + student.first_name + ' ' + student.last_name + ' in Ritardo' }},
-                            {icon: 'logout', value: 'LeftEarly', slot: 'early', attrs: { 'aria-label': 'Segna ' + student.first_name + ' ' + student.last_name + ' come Uscita Anticipata' }}
+                            {icon: 'check', value: 'Present', slot: 'present'},
+                            {icon: 'meeting_room', value: 'OutOfClass', slot: 'outofclass'},
+                            {icon: 'close', value: 'Absent', slot: 'absent'},
+                            {icon: 'schedule', value: 'Late', slot: 'late'},
+                            {icon: 'logout', value: 'LeftEarly', slot: 'early'}
                         ]"
                     >
                         <template v-slot:present><q-tooltip>Presente</q-tooltip></template>
+                        <template v-slot:outofclass><q-tooltip>Fuori Aula (Presente ma fuori dalla classe)</q-tooltip></template>
                         <template v-slot:absent><q-tooltip>Assente</q-tooltip></template>
                         <template v-slot:late><q-tooltip>Ritardo</q-tooltip></template>
                         <template v-slot:early><q-tooltip>Uscita Anticipata</q-tooltip></template>
                     </q-btn-toggle>
                 </q-item-section>
 
-                <!-- Late Time Input -->
-                <q-item-section v-if="student.status === 'Late'" side style="min-width: 120px">
-                     <q-input 
-                        v-model="student.entry_time" 
-                        type="time" 
-                        dense outlined 
-                        label="Ora Ingresso" 
-                        :rules="[val => !!val || 'Richiesto']"
+                <!-- Late Entry Time -->
+                <q-item-section v-if="student.status === 'Late'" side style="min-width: 130px">
+                     <q-input
+                        v-model="student.entry_time"
+                        type="time"
+                        dense outlined
+                        label="Ora Ingresso"
+                        bg-color="white"
                      />
                 </q-item-section>
 
-                <!-- Early Exit Time Input -->
-                <q-item-section v-if="student.status === 'LeftEarly'" side style="min-width: 120px">
-                     <q-input 
-                        v-model="student.exit_time" 
-                        type="time" 
-                        dense outlined 
-                        label="Ora Uscita" 
-                        :rules="[val => !!val || 'Richiesto']"
+                <!-- Early Exit Time -->
+                <q-item-section v-if="student.status === 'LeftEarly'" side style="min-width: 130px">
+                     <q-input
+                        v-model="student.exit_time"
+                        type="time"
+                        dense outlined
+                        label="Ora Uscita"
+                        bg-color="white"
                      />
                 </q-item-section>
-                
+
                 <q-item-section side>
                     <q-btn round flat icon="note_add" color="grey-7" @click="openNoteDialog(student)">
-                        <q-tooltip>Aggiungi Nota</q-tooltip>
+                        <q-tooltip>Aggiungi Nota Disciplinare</q-tooltip>
                     </q-btn>
                 </q-item-section>
             </q-item>
 
             <q-item v-if="students.length === 0" class="text-center text-grey">
-                <q-item-section>Nessuno studente in questa classe (o seleziona una classe)</q-item-section>
+                <q-item-section>Nessuno studente trovato. Seleziona una classe.</q-item-section>
             </q-item>
         </q-list>
-        
-        <q-card-actions align="right" class="bg-grey-1 q-pa-md">
-            <q-btn label="Salva Registro" color="primary" size="lg" icon="save" @click="saveAttendance" :loading="saving" :disable="!selectedClass" />
+
+        <q-card-actions align="between" class="bg-grey-1 q-pa-md">
+            <div>
+                <q-btn
+                    v-if="canDeleteCurrentSignature"
+                    label="Cancella Firma e Presenze"
+                    color="negative"
+                    unelevated
+                    icon="delete_outline"
+                    class="rounded-lg text-weight-bold"
+                    @click="deleteUnifiedRecord"
+                    :loading="saving"
+                />
+            </div>
+            <div>
+                <q-btn
+                  :label="isReadOnly ? 'Sola lettura — Ora già firmata da altro docente' : (currentHourLesson ? 'Aggiorna Firma Lezione e Appello' : 'Salva Firma Lezione e Appello')"
+                  :color="isReadOnly ? 'grey-6' : isSubstitutionMode ? 'deep-orange' : 'primary'"
+                  size="md"
+                  :icon="isReadOnly ? 'lock' : 'cloud_done'"
+                  class="rounded-lg text-weight-bold shadow-soft"
+                  @click="saveUnifiedRecord"
+                  :loading="saving"
+                  :disable="!selectedClass || isReadOnly"
+                />
+            </div>
         </q-card-actions>
     </q-card>
 
-    <!-- Justification Dialog -->
-    <q-dialog v-model="showJustifications">
-        <q-card role="dialog" aria-labelledby="dialog-justification-title" style="min-width: 600px">
-            <q-card-section id="dialog-justification-title" class="text-h6">Gestione Giustificazioni</q-card-section>
-            <q-list separator>
-                <q-item v-for="req in justificationRequests" :key="req.id">
-                    <q-item-section>
-                        <q-item-label>{{ req.student_name }}</q-item-label>
-                        <q-item-label caption>Assenza del {{ req.date }} - {{ req.reason }}</q-item-label>
-                    </q-item-section>
-                    <q-item-section side>
-                        <div class="row q-gutter-sm">
-                            <q-btn flat round color="green" icon="check" :aria-label="'Approva giustificazione di ' + req.student_name" @click="processJustification(req.id, true)" />
-                            <q-btn flat round color="red" icon="close" :aria-label="'Rifiuta giustificazione di ' + req.student_name" @click="processJustification(req.id, false)" />
-                        </div>
-                    </q-item-section>
-                </q-item>
-                <q-item v-if="justificationRequests.length === 0">
-                    <q-item-section class="text-center text-grey">Nessuna richiesta in sospeso</q-item-section>
-                </q-item>
-            </q-list>
-            <q-card-actions align="right"><q-btn flat label="Chiudi" v-close-popup /></q-card-actions>
-        </q-card>
-    </q-dialog>
-
     <!-- Note Dialog -->
     <NoteDialog
-        v-if="selectedClass" 
+        v-if="selectedClass"
         v-model="showNoteDialog"
         :student="selectedStudentForNote"
-        :class-id="String(typeof selectedClass === 'object' ? selectedClass.id : selectedClass)" 
+        :class-id="String(typeof selectedClass === 'object' ? selectedClass.id : selectedClass)"
     />
+
+    <!-- Student Detail Dialog -->
+    <q-dialog v-model="showStudentPanel" maximized-if-mobile>
+        <q-card style="min-width: 340px; max-width: 520px; width: 100%">
+            <q-bar class="bg-indigo-8 text-white">
+                <q-icon name="person" class="q-mr-sm" />
+                <span class="text-subtitle2 text-weight-bold">
+                    {{ panelStudent?.last_name }} {{ panelStudent?.first_name }}
+                </span>
+                <q-space />
+                <q-btn flat round dense icon="close" v-close-popup />
+            </q-bar>
+
+            <q-card-section class="q-pa-md">
+                <!-- Loading -->
+                <div v-if="panelLoading" class="row justify-center q-pa-lg">
+                    <q-spinner color="primary" size="40px" />
+                </div>
+
+                <template v-else>
+                    <!-- Personal Info -->
+                    <div class="text-caption text-weight-bold text-grey-6 q-mb-xs text-uppercase letter-spacing-wide">Dati Anagrafici</div>
+                    <q-list bordered separator rounded class="q-mb-md">
+                        <q-item dense>
+                            <q-item-section avatar><q-icon name="badge" color="indigo" /></q-item-section>
+                            <q-item-section>
+                                <q-item-label caption>Nome completo</q-item-label>
+                                <q-item-label>{{ panelStudentInfo?.last_name }} {{ panelStudentInfo?.first_name }}</q-item-label>
+                            </q-item-section>
+                        </q-item>
+                        <q-item dense v-if="panelStudentInfo?.fiscal_code">
+                            <q-item-section avatar><q-icon name="fingerprint" color="indigo" /></q-item-section>
+                            <q-item-section>
+                                <q-item-label caption>Codice Fiscale</q-item-label>
+                                <q-item-label class="text-mono">{{ panelStudentInfo.fiscal_code }}</q-item-label>
+                            </q-item-section>
+                        </q-item>
+                        <q-item dense v-if="panelStudentInfo?.class_name">
+                            <q-item-section avatar><q-icon name="class" color="indigo" /></q-item-section>
+                            <q-item-section>
+                                <q-item-label caption>Classe</q-item-label>
+                                <q-item-label>{{ panelStudentInfo.class_name }}</q-item-label>
+                            </q-item-section>
+                        </q-item>
+                        <q-item dense v-if="panelStudentInfo?.email">
+                            <q-item-section avatar><q-icon name="email" color="indigo" /></q-item-section>
+                            <q-item-section>
+                                <q-item-label caption>Email</q-item-label>
+                                <q-item-label>{{ panelStudentInfo.email }}</q-item-label>
+                            </q-item-section>
+                        </q-item>
+                        <q-item dense v-if="panelStudentInfo?.phone_number">
+                            <q-item-section avatar><q-icon name="phone" color="indigo" /></q-item-section>
+                            <q-item-section>
+                                <q-item-label caption>Telefono</q-item-label>
+                                <q-item-label>{{ panelStudentInfo.phone_number }}</q-item-label>
+                            </q-item-section>
+                        </q-item>
+                        <q-item dense v-if="panelStudentInfo?.date_of_birth">
+                            <q-item-section avatar><q-icon name="cake" color="indigo" /></q-item-section>
+                            <q-item-section>
+                                <q-item-label caption>Data di Nascita</q-item-label>
+                                <q-item-label>{{ formatDate(panelStudentInfo.date_of_birth) }}</q-item-label>
+                            </q-item-section>
+                        </q-item>
+                    </q-list>
+
+                    <!-- Attendance Summary -->
+                    <div class="text-caption text-weight-bold text-grey-6 q-mb-xs text-uppercase">Riepilogo Presenze</div>
+                    <div class="row q-col-gutter-sm q-mb-md">
+                        <div class="col-6">
+                            <q-card flat bordered class="text-center q-pa-sm">
+                                <div class="text-h5 text-negative text-weight-bold">{{ panelSummary?.total_absences ?? '—' }}</div>
+                                <div class="text-caption text-grey-7">Assenze Totali</div>
+                            </q-card>
+                        </div>
+                        <div class="col-6">
+                            <q-card flat bordered class="text-center q-pa-sm">
+                                <div class="text-h5 text-warning text-weight-bold">{{ panelSummary?.total_lates ?? '—' }}</div>
+                                <div class="text-caption text-grey-7">Ritardi</div>
+                            </q-card>
+                        </div>
+                        <div class="col-6">
+                            <q-card flat bordered class="text-center q-pa-sm">
+                                <div class="text-h5 text-purple text-weight-bold">{{ panelSummary?.total_early_exits ?? '—' }}</div>
+                                <div class="text-caption text-grey-7">Uscite Anticipate</div>
+                            </q-card>
+                        </div>
+                        <div class="col-6">
+                            <q-card flat bordered class="text-center q-pa-sm">
+                                <div class="text-h5 text-positive text-weight-bold">{{ panelSummary?.justified_count ?? '—' }}</div>
+                                <div class="text-caption text-grey-7">Giustificate</div>
+                            </q-card>
+                        </div>
+                    </div>
+
+                    <!-- Absence Rate + Risk -->
+                    <div v-if="panelSummary" class="q-mb-sm">
+                        <div class="row items-center justify-between q-mb-xs">
+                            <span class="text-caption text-grey-7">Tasso assenza</span>
+                            <span class="text-caption text-weight-bold" :class="panelSummary.absence_rate > 25 ? 'text-negative' : panelSummary.absence_rate > 10 ? 'text-warning' : 'text-positive'">
+                                {{ panelSummary.absence_rate?.toFixed(1) }}%
+                            </span>
+                        </div>
+                        <q-linear-progress
+                            :value="(panelSummary.absence_rate || 0) / 100"
+                            :color="panelSummary.absence_rate > 25 ? 'negative' : panelSummary.absence_rate > 10 ? 'warning' : 'positive'"
+                            rounded
+                            size="8px"
+                            class="q-mb-xs"
+                        />
+                        <q-chip
+                            dense
+                            :color="panelSummary.risk_level === 'high' ? 'negative' : panelSummary.risk_level === 'medium' ? 'warning' : 'positive'"
+                            text-color="white"
+                            :icon="panelSummary.risk_level === 'high' ? 'warning' : panelSummary.risk_level === 'medium' ? 'info' : 'check_circle'"
+                        >
+                            Rischio: {{ panelSummary.risk_level === 'high' ? 'ALTO' : panelSummary.risk_level === 'medium' ? 'MEDIO' : 'BASSO' }}
+                        </q-chip>
+                    </div>
+
+                    <!-- Today's attendance for this student -->
+                    <div class="text-caption text-weight-bold text-grey-6 q-mt-md q-mb-xs text-uppercase">Presenze Oggi per Ora</div>
+                    <div class="row q-gutter-xs">
+                        <q-badge
+                            v-for="h in 8" :key="h"
+                            :color="getHourBadgeColor(panelStudent, h)"
+                            :label="String(h) + 'ª'"
+                            class="text-weight-bold"
+                            style="font-size: 11px; padding: 4px 8px"
+                        >
+                            <q-tooltip>{{ getHourLabel(panelStudent, h) }}</q-tooltip>
+                        </q-badge>
+                    </div>
+                </template>
+            </q-card-section>
+        </q-card>
+    </q-dialog>
 
   </q-page>
 </template>
@@ -247,56 +563,132 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { useClassesStore } from '@/stores/classes'
 import { useGradesStore } from '@/stores/grades'
+import { useAuthStore } from '@/stores/auth'
 import { attendanceService } from 'src/services/attendanceService'
+import { lessonService } from 'src/services/lessonService'
 import api from '@/services/api'
 import NoteDialog from 'src/components/Teacher/NoteDialog.vue'
 import SkeletonTable from '@/components/Common/SkeletonTable.vue'
-import { useUndoToast } from '@/composables/useUndoToast'
 
 const $q = useQuasar()
-const { notifyWithUndo } = useUndoToast()
 const classesStore = useClassesStore()
 const gradesStore = useGradesStore()
+const authStore = useAuthStore()
+
+// Current teacher ID from auth token
+const currentTeacherId = computed(() => authStore.user?.id || null)
 
 const date = ref(new Date().toISOString().split('T')[0])
 const selectedClass = ref(null)
 const students = ref([])
+const isSubstitutionMode = ref(false)
+const allSchoolClasses = ref([])
 
-const classOptions = computed(() => {
-  return classesStore.classes.map(c => {
+// Lesson Form State
+const lessonTopic = ref('')
+const lessonType = ref('Frontale')
+const lessonSubjectId = ref(null)
+const isCoTeaching = ref(false)
+const lessonNotes = ref('')
+const assignHomework = ref(false)
+const homeworkDesc = ref('')
+const homeworkDue = ref('')
+
+// All attendance records for this class today (all hours) for timeline
+const allTodayAttendance = ref([])
+
+const lessonTypeOptions = ['Frontale', 'Supplenza', 'Laboratorio', 'Verifica', 'Discussione', 'Lavoro di gruppo', 'Interrogazione', 'Altro']
+
+const availableClassOptions = computed(() => {
+  const source = isSubstitutionMode.value ? allSchoolClasses.value : classesStore.classes
+  return source.map(c => {
     let nameText = c.name || `Classe ${c.id}`
-    if (c.section && !nameText.endsWith(c.section)) {
-      nameText += c.section
-    }
-    if (c.articolazione) {
-      nameText += ` - ${c.articolazione}`
-    }
-    return {
-      ...c,
-      label: nameText
-    }
+    if (c.section && !nameText.endsWith(c.section)) nameText += c.section
+    if (c.articolazione) nameText += ` - ${c.articolazione}`
+    return { ...c, label: c.label || nameText }
   })
 })
-const justificationRequests = ref([])
+
 const loading = ref(false)
 const saving = ref(false)
-const showJustifications = ref(false)
 const lastAutosaveTime = ref('')
 
 // Note Dialog State
 const showNoteDialog = ref(false)
 const selectedStudentForNote = ref(null)
 
+// ── Student Detail Panel ──────────────────────────────────────
+const showStudentPanel = ref(false)
+const panelStudent = ref(null)
+const panelStudentInfo = ref(null)
+const panelSummary = ref(null)
+const panelLoading = ref(false)
+
+async function openStudentPanel(student) {
+    panelStudent.value = student
+    panelStudentInfo.value = null
+    panelSummary.value = null
+    panelLoading.value = true
+    showStudentPanel.value = true
+    try {
+        const [infoRes, summaryRes] = await Promise.allSettled([
+            api.get(`/users/${student.id}`),
+            attendanceService.getStudentSummary(student.id)
+        ])
+        if (infoRes.status === 'fulfilled') panelStudentInfo.value = infoRes.value.data
+        if (summaryRes.status === 'fulfilled') panelSummary.value = summaryRes.value
+    } catch (e) {
+        // individual errors handled above via allSettled
+    } finally {
+        panelLoading.value = false
+    }
+}
+// ─────────────────────────────────────────────────────────────
+
+// Formatta una data ISO (YYYY-MM-DD) in formato italiano (dd/mm/yyyy)
+function formatDate(isoDate) {
+    if (!isoDate) return ''
+    const [y, m, d] = isoDate.split('-')
+    return `${d}/${m}/${y}`
+}
+
 const selectedHour = ref(1)
-const selectedSubject = ref(null)
 
 const dailyLessons = ref([])
 
+// The lesson signed for the currently selected hour (if any)
+const currentHourLesson = computed(() =>
+    dailyLessons.value.find(l => String(l.hour) === String(selectedHour.value)) || null
+)
+
+// Read-only if another teacher has signed this hour (and it's not substitution mode)
+const isReadOnly = computed(() => {
+    if (isSubstitutionMode.value) return false
+    if (!currentHourLesson.value) return false
+    return currentHourLesson.value.teacher_id !== currentTeacherId.value
+})
+
+const signedByTeacherName = computed(() => currentHourLesson.value?.teacher_name || 'altro docente')
+
+const hasCurrentHourAttendance = computed(() => {
+    return allTodayAttendance.value.some(r => String(r.hour) === String(selectedHour.value))
+})
+
+const canDeleteCurrentSignature = computed(() => {
+    if (!selectedClass.value || isReadOnly.value) return false
+    return !!currentHourLesson.value || hasCurrentHourAttendance.value
+})
+
+const unjustifiedStudents = computed(() =>
+  students.value.filter(s => s.hasUnjustified)
+)
+const unjustifiedCount = computed(() => unjustifiedStudents.value.length)
+
 const stats = computed(() => ({
-    present: students.value.filter(s => s.status === 'Present').length,
+    present: students.value.filter(s => s.status === 'Present' || s.status === 'OutOfClass').length,
     absent: students.value.filter(s => s.status === 'Absent').length,
     late: students.value.filter(s => s.status === 'Late').length,
-    toJustify: justificationRequests.value.length
+    early: students.value.filter(s => s.status === 'LeftEarly').length,
 }))
 
 const markedCount = computed(() => students.value.filter(s => s.status).length)
@@ -306,8 +698,56 @@ const markedCountChipColor = computed(() => {
     return 'positive'
 })
 
+// Hourly timeline helpers
+const getHourBadgeColor = (student, hour) => {
+    const rec = allTodayAttendance.value.find(r =>
+        r.student_id === student.id && String(r.hour) === String(hour)
+    )
+    if (!rec) return 'grey-3'
+    switch (rec.status) {
+        case 'Present': return 'positive'
+        case 'OutOfClass': return 'teal'
+        case 'Absent': return 'negative'
+        case 'Late': return 'warning'
+        case 'LeftEarly': return 'purple'
+        default: return 'grey-3'
+    }
+}
+
+const getHourLabel = (student, hour) => {
+    const rec = allTodayAttendance.value.find(r =>
+        r.student_id === student.id && String(r.hour) === String(hour)
+    )
+    if (!rec) return `Ora ${hour}: non registrata`
+    const statusLabels = {
+        Present: 'Presente', OutOfClass: 'Fuori Aula', Absent: 'Assente',
+        Late: `Ritardo${rec.entry_time ? ' ore ' + rec.entry_time : ''}`,
+        LeftEarly: `Uscita anticipata${rec.exit_time ? ' ore ' + rec.exit_time : ''}`
+    }
+    return `Ora ${hour}: ${statusLabels[rec.status] || rec.status}`
+}
+
+const toggleSubstitutionMode = async () => {
+  isSubstitutionMode.value = !isSubstitutionMode.value
+  if (isSubstitutionMode.value) {
+    allSchoolClasses.value = await classesStore.fetchAllSchoolClassesAndGroups()
+    if (allSchoolClasses.value.length > 0) selectedClass.value = allSchoolClasses.value[0]
+    lessonSubjectId.value = null
+    lessonType.value = 'Supplenza'
+    lessonTopic.value = ''
+    $q.notify({ type: 'info', message: 'Modalità Supplenza attivata', timeout: 2500 })
+  } else {
+    await classesStore.fetchAssignedClasses()
+    if (classesStore.classes.length > 0) selectedClass.value = classesStore.classes[0]
+    lessonType.value = 'Frontale'
+    lessonTopic.value = ''
+    await onClassChange()
+  }
+  fetchData()
+}
+
 const getSubjectName = (subjectId) => {
-    if (!subjectId) return 'Materia non specificata'
+    if (!subjectId || subjectId === 'supplenza') return 'Supplenza'
     const found = gradesStore.subjects.find(s => String(s.subject_id) === String(subjectId) || String(s.id) === String(subjectId))
     return found ? found.subject_name : subjectId
 }
@@ -315,6 +755,7 @@ const getSubjectName = (subjectId) => {
 const getRowClass = (status) => {
     switch (status) {
         case 'Present': return 'bg-green-1'
+        case 'OutOfClass': return 'bg-teal-1'
         case 'Absent': return 'bg-red-1'
         case 'Late': return 'bg-orange-1'
         case 'LeftEarly': return 'bg-purple-1'
@@ -327,61 +768,20 @@ const saveDraftToStorage = () => {
     if (!selectedClass.value || students.value.length === 0) return
     const classId = typeof selectedClass.value === 'object' ? selectedClass.value?.id : selectedClass.value
     const key = `attendance_draft_${classId}_${date.value}_${selectedHour.value}`
-    const draftData = {
-        date: date.value,
-        hour: selectedHour.value,
-        statuses: students.value.map(s => ({
-            id: s.id,
-            status: s.status,
-            entry_time: s.entry_time,
-            exit_time: s.exit_time
-        })),
-        timestamp: new Date().toISOString()
-    }
     try {
-        localStorage.setItem(key, JSON.stringify(draftData))
-        const now = new Date()
-        lastAutosaveTime.value = now.toLocaleTimeString('it-IT')
-    } catch (e) {
-        console.warn('Failed to save draft to localStorage', e)
-        $q.notify({ type: 'warning', message: 'Impossibile salvare la bozza in memoria locale' })
-    }
-}
-
-const cleanOldDrafts = () => {
-    try {
-        const now = Date.now()
-        const maxAge = 7 * 24 * 60 * 60 * 1000
-        const keysToRemove = []
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i)
-            if (key && key.startsWith('attendance_draft_')) {
-                const item = localStorage.getItem(key)
-                if (item) {
-                    try {
-                        const parsed = JSON.parse(item)
-                        if (parsed.timestamp && (now - new Date(parsed.timestamp).getTime()) > maxAge) {
-                            keysToRemove.push(key)
-                        }
-                    } catch {
-                        keysToRemove.push(key)
-                    }
-                }
-            }
-        }
-        keysToRemove.forEach(k => localStorage.removeItem(k))
-    } catch (e) {
-        console.warn('Error cleaning old drafts', e)
-    }
+        localStorage.setItem(key, JSON.stringify({
+            date: date.value, hour: selectedHour.value,
+            statuses: students.value.map(s => ({ id: s.id, status: s.status, entry_time: s.entry_time, exit_time: s.exit_time })),
+            timestamp: new Date().toISOString()
+        }))
+        lastAutosaveTime.value = new Date().toLocaleTimeString('it-IT')
+    } catch (e) { /* ignore */ }
 }
 
 onMounted(async () => {
-    cleanOldDrafts()
     await classesStore.fetchAssignedClasses()
-    if (classesStore.classes.length > 0) {
-        selectedClass.value = classesStore.classes[0]
-    }
-    fetchData()
+    if (classesStore.classes.length > 0) selectedClass.value = classesStore.classes[0]
+    await onClassChange()
     autosaveInterval = setInterval(saveDraftToStorage, 60000)
 })
 
@@ -390,79 +790,124 @@ onUnmounted(() => {
 })
 
 const onClassChange = async () => {
-    if (selectedClass.value) {
-        await gradesStore.fetchClassSubjects(selectedClass.value.id)
-        if (gradesStore.subjects.length > 0) {
-            selectedSubject.value = gradesStore.subjects[0].subject_id
-        } else {
-            selectedSubject.value = null
-        }
+    if (selectedClass.value && !isSubstitutionMode.value) {
+        const classId = typeof selectedClass.value === 'object' ? selectedClass.value.id : selectedClass.value
+        await gradesStore.fetchClassSubjects(classId)
+        lessonSubjectId.value = gradesStore.subjects.length > 0 ? gradesStore.subjects[0].subject_id : null
+    } else if (isSubstitutionMode.value) {
+        lessonSubjectId.value = null
     }
     fetchData()
 }
 
 const fetchData = async () => {
     if (!selectedClass.value) return
-    
+
     loading.value = true
     try {
+        const classId = typeof selectedClass.value === 'object' ? selectedClass.value.id : selectedClass.value
         // 1. Fetch Students
-        // Using users endpoint filtered by class
-        const usersRes = await api.get('/users', { 
-            params: { 
-                class_id: selectedClass.value.id,
-                role: 'student',
-                page_size: 500
+        const usersRes = await api.get('/users', { params: { class_id: classId, role: 'student', page_size: 500 } })
+        const studentList = usersRes.data.users || usersRes.data || []
+
+        // 2. Fetch ALL attendance for this class today (all hours for timeline)
+        let attendanceAll = []
+        try {
+            const attRes = await attendanceService.getByClass(classId, date.value)
+            attendanceAll = Array.isArray(attRes.data) ? attRes.data : (attRes.data?.records || [])
+        } catch (e) { /* none yet */ }
+        allTodayAttendance.value = attendanceAll
+
+        // 3. Fetch unjustified per student
+        const unjustifiedSet = new Set()
+        try {
+            const ujRes = await api.get('/attendance/pending-justifications', { params: { class_id: classId } })
+            const pending = ujRes.data || []
+            pending.forEach(j => unjustifiedSet.add(j.student_id))
+        } catch (e) { /* ignore */ }
+
+        // 4. Build attendance map for current hour
+        const attendanceMap = {}
+        attendanceAll.forEach(r => {
+            if (String(r.hour) === String(selectedHour.value)) {
+                attendanceMap[r.student_id] = r
             }
         })
-        const studentList = usersRes.data.users || []
-        
-        // 2. Fetch Existing Attendance
-        // attendanceService.getByClass likely returns list of records
-        let attendanceMap = {}
-        try {
-            const attRes = await attendanceService.getByClass(selectedClass.value.id, date.value)
-            // Filter attendance by selected hour
-            if (Array.isArray(attRes.data)) {
-                attRes.data.forEach(r => {
-                    // Check if record hour matches selectedHour
-                    // Backend returns hour as int
-                    if (String(r.hour) === String(selectedHour.value)) {
-                        attendanceMap[r.student_id] = r
-                    }
-                })
-            }
-        } catch (e) {
-            console.warn("No attendance found or error", e)
-        }
 
-        // Merge
+        // Merge students
         students.value = studentList.map(s => {
             const existing = attendanceMap[s.id]
             return {
                 id: s.id,
                 first_name: s.first_name,
                 last_name: s.last_name,
-                status: existing ? existing.status : null, // Default null for unrecorded students
-                entry_time: existing ? existing.entry_time : '',
-                exit_time: existing ? existing.exit_time : '',
+                status: existing ? existing.status : null,
+                entry_time: existing?.entry_time || '',
+                exit_time: existing?.exit_time || '',
+                hasUnjustified: unjustifiedSet.has(s.id),
             }
         })
 
-        // 3. Fetch Justifications
-        const justRes = await api.get('/attendance/pending-justifications', {
-             params: { class_id: selectedClass.value.id }
-        })
-        justificationRequests.value = justRes.data || []
+        // 5. Fetch Daily Lessons for Timeline
+        try {
+            const lessonRes = await api.get(`/lessons/class/${classId}`, { params: { date: date.value } })
+            dailyLessons.value = lessonRes.data || []
+        } catch (e) { dailyLessons.value = [] }
 
-        // 4. Fetch Daily Lessons for Timeline
-        const lessonRes = await api.get(`/lessons/class/${selectedClass.value.id}`, {
-            params: { date: date.value }
-        })
-        dailyLessons.value = lessonRes.data || []
+        // Pre-fill lesson topic from existing lesson for this hour
+        // Only populate editable fields if the lesson belongs to the current teacher
+        const existingLesson = dailyLessons.value.find(l => String(l.hour) === String(selectedHour.value))
+        if (existingLesson && existingLesson.teacher_id === currentTeacherId.value) {
+            // Own lesson: pre-fill all fields
+            lessonTopic.value = existingLesson.topic || ''
+            lessonType.value = existingLesson.type || 'Frontale'
+            isCoTeaching.value = !!existingLesson.is_co_teaching
+            lessonNotes.value = existingLesson.notes || ''
+            if (existingLesson.subject_id) lessonSubjectId.value = existingLesson.subject_id
+        } else if (existingLesson) {
+            // Another teacher's lesson: show read-only but clear form fields for display
+            lessonTopic.value = existingLesson.topic || ''
+            lessonType.value = existingLesson.type || 'Frontale'
+            isCoTeaching.value = false
+            lessonNotes.value = ''
+        } else {
+            // No lesson for this hour: clear topic, keep other defaults
+            lessonTopic.value = ''
+            lessonNotes.value = ''
+            if (!isSubstitutionMode.value) {
+                lessonType.value = 'Frontale'
+                isCoTeaching.value = false
+            }
+        }
+
+        // Pre-fill student statuses from the PREVIOUS hour if current hour has no records
+        const hasCurrentHourRecords = Object.keys(attendanceMap).length > 0
+        if (!hasCurrentHourRecords && selectedHour.value > 1) {
+            const prevHour = selectedHour.value - 1
+            const prevHourMap = {}
+            attendanceAll.forEach(r => {
+                if (String(r.hour) === String(prevHour)) {
+                    prevHourMap[r.student_id] = r
+                }
+            })
+            if (Object.keys(prevHourMap).length > 0) {
+                students.value = students.value.map(s => {
+                    const prev = prevHourMap[s.id]
+                    if (!prev) return s
+                    // Present/OutOfClass/Late → Present (they arrived)
+                    // Absent/LeftEarly → Absent (they're not in class)
+                    let inheritedStatus
+                    if (prev.status === 'Absent' || prev.status === 'LeftEarly') {
+                        inheritedStatus = 'Absent'
+                    } else {
+                        inheritedStatus = 'Present'
+                    }
+                    return { ...s, status: inheritedStatus, entry_time: '', exit_time: '' }
+                })
+            }
+        }
 
     } catch (error) {
-        $q.notify({ type: 'negative', message: 'Errore caricamento dati' })
         console.error(error)
     } finally {
         loading.value = false
@@ -471,104 +916,133 @@ const fetchData = async () => {
 
 const markAllPresent = () => {
     $q.dialog({
-        title: 'Conferma Operazione',
-        message: 'Segnare tutti gli studenti come PRESENTI per l\'ora selezionata? Eventuali assenze già digitate verranno sovrascritte.',
+        title: 'Conferma',
+        message: 'Segnare tutti gli studenti come PRESENTI per questa ora?',
         cancel: true,
         persistent: true
     }).onOk(() => {
-        students.value.forEach(s => {
-            s.status = 'Present'
-            s.entry_time = ''
-            s.exit_time = ''
-        })
+        students.value.forEach(s => { s.status = 'Present'; s.entry_time = ''; s.exit_time = '' })
     })
 }
 
-const formatEarlyExitLabel = (student) => {
-    if (student.exit_time) {
-        return `Uscita: ${student.exit_time}`
-    }
-    return 'Inserisci orario'
-}
-
-const formatLateLabel = (student) => {
-    if (student.entry_time) {
-        return `Ingresso: ${student.entry_time}`
-    }
-    return 'Inserisci orario'
-}
-
-const saveAttendance = async () => {
+const saveUnifiedRecord = async () => {
     const unmarked = students.value.filter(s => !s.status)
     if (unmarked.length > 0) {
-        $q.notify({
-            type: 'warning',
-            message: `Ci sono ${unmarked.length} alunni senza presenza o assenza assegnata.`
-        })
+        $q.notify({ type: 'warning', message: `${unmarked.length} alunni senza presenza assegnata.` })
         return
     }
     saving.value = true
     try {
         const classId = typeof selectedClass.value === 'object' ? selectedClass.value?.id : selectedClass.value
-        const payload = {
+
+        // Effective subject ID: only pass a valid UUID, never empty string
+        const effectiveSubjectId = (!isSubstitutionMode.value && lessonSubjectId.value) ? lessonSubjectId.value : ''
+
+        // 1. Save Attendance Record
+        await api.post('/attendance/mark-bulk', {
             class_id: classId,
             date: date.value,
             hour: selectedHour.value,
-            subject_id: selectedSubject.value || null, 
+            subject_id: effectiveSubjectId,
+            is_substitution: isSubstitutionMode.value,
             statuses: students.value.map(s => ({
                 student_id: s.id,
                 status: s.status,
-                entry_time: (s.status === 'Late' && s.entry_time && s.entry_time.trim() !== '') ? s.entry_time : null,
-                exit_time: (s.status === 'LeftEarly' && s.exit_time && s.exit_time.trim() !== '') ? s.exit_time : null
+                entry_time: (s.status === 'Late' && s.entry_time?.trim()) ? s.entry_time : null,
+                exit_time: (s.status === 'LeftEarly' && s.exit_time?.trim()) ? s.exit_time : null
             }))
+        })
+
+        // 2. Save Lesson Signature if topic specified
+        if (lessonTopic.value?.trim()) {
+            const lessonPayload = {
+                class_id: classId,
+                subject_id: effectiveSubjectId || null,
+                date: date.value,
+                hour: selectedHour.value,
+                duration: 1,
+                topic: lessonTopic.value,
+                type: isSubstitutionMode.value ? 'Supplenza' : lessonType.value,
+                is_co_teaching: isCoTeaching.value,
+                notes: lessonNotes.value
+            }
+            
+            let lessonId = currentHourLesson.value?.id
+            if (currentHourLesson.value && !isReadOnly.value) {
+                await lessonService.updateLesson(lessonId, lessonPayload)
+            } else {
+                const lessonRes = await lessonService.createLesson(lessonPayload)
+                lessonId = lessonRes.data?.id
+            }
+
+            // 3. Save Homework if checked
+            if (assignHomework.value && homeworkDesc.value && lessonId) {
+                await lessonService.createHomework({
+                    class_id: classId,
+                    subject_id: effectiveSubjectId || null,
+                    lesson_id: lessonId,
+                    due_date: homeworkDue.value || date.value,
+                    description: homeworkDesc.value
+                })
+            }
         }
-        
-        // Snapshot for undo
-        const snapshot = students.value.map(s => ({ ...s }))
 
-        await api.post('/attendance/mark-bulk', payload)
-
-        // Clear autosave draft
-        const classId2 = typeof selectedClass.value === 'object' ? selectedClass.value?.id : selectedClass.value
-        localStorage.removeItem(`attendance_draft_${classId2}_${date.value}_${selectedHour.value}`)
+        localStorage.removeItem(`attendance_draft_${classId}_${date.value}_${selectedHour.value}`)
         lastAutosaveTime.value = ''
 
-        const undone = await notifyWithUndo(
-            `✓ Registro salvato — ${students.value.length} alunni`,
-            async () => {
-                // Undo: restore previous statuses via API
-                const undoPayload = {
-                    ...payload,
-                    statuses: snapshot.map(s => ({
-                        student_id: s.id,
-                        status: s.status,
-                        entry_time: s.entry_time || null,
-                        exit_time: s.exit_time || null
-                    }))
-                }
-                await api.post('/attendance/mark-bulk', undoPayload)
-                students.value = snapshot
-            }
-        )
-        if (undone) return  // user clicked Undo, no further action
+        $q.notify({ type: 'positive', message: `✓ Registro e Firma Lezione salvati — Ora ${selectedHour.value}` })
+        fetchData()
+
     } catch (error) {
-        $q.notify({ type: 'negative', message: 'Errore salvataggio' })
+        $q.notify({ type: 'negative', message: 'Errore durante il salvataggio' })
     } finally {
         saving.value = false
     }
 }
 
-const processJustification = async (id, approved) => {
-    try {
-        await api.post(`/attendance/justification/${id}/process`, { approve: approved })
-        justificationRequests.value = justificationRequests.value.filter(r => r.id !== id)
-        $q.notify({ 
-            message: approved ? 'Giustificazione accettata' : 'Giustificazione respinta', 
-            color: approved ? 'green' : 'orange' 
-        })
-    } catch (error) {
-        $q.notify({ type: 'negative', message: 'Errore elaborazione' })
-    }
+const deleteUnifiedRecord = () => {
+    $q.dialog({
+        title: 'Cancella Firma e Presenze',
+        message: `Sei sicuro di voler cancellare la firma della lezione e tutte le presenze per la ${selectedHour.value}ª ora del ${date.value}?`,
+        cancel: true,
+        persistent: true,
+        ok: {
+            label: 'Elimina',
+            color: 'negative'
+        }
+    }).onOk(async () => {
+        saving.value = true
+        try {
+            const classId = typeof selectedClass.value === 'object' ? selectedClass.value?.id : selectedClass.value
+
+            // 1. Delete lesson if it exists
+            if (currentHourLesson.value) {
+                await lessonService.deleteLesson(currentHourLesson.value.id)
+            }
+
+            // 2. Delete attendance records for this hour
+            await attendanceService.deleteHour(classId, date.value, selectedHour.value)
+
+            // 3. Clean local draft if any
+            localStorage.removeItem(`attendance_draft_${classId}_${date.value}_${selectedHour.value}`)
+            lastAutosaveTime.value = ''
+
+            // 4. Reset form fields for lesson
+            lessonTopic.value = ''
+            lessonNotes.value = ''
+            assignHomework.value = false
+            homeworkDesc.value = ''
+            homeworkDue.value = ''
+
+            $q.notify({ type: 'positive', message: `✓ Firma e presenze cancellate per l'Ora ${selectedHour.value}` })
+            await fetchData()
+        } catch (error) {
+            console.error(error)
+            $q.notify({ type: 'negative', message: 'Errore durante la cancellazione della firma e presenze' })
+        } finally {
+            saving.value = false
+        }
+    })
 }
 
 const openNoteDialog = (student) => {
@@ -594,7 +1068,7 @@ const exportCSV = async () => {
         window.URL.revokeObjectURL(url)
         $q.notify({ type: 'positive', message: 'Export CSV completato!' })
     } catch (err) {
-        $q.notify({ type: 'negative', message: 'Errore durante l\'export CSV' })
+        $q.notify({ type: 'negative', message: "Errore durante l'export CSV" })
     }
 }
 </script>
@@ -602,5 +1076,8 @@ const exportCSV = async () => {
 <style scoped>
 .transition-bg {
     transition: background-color 0.3s ease;
+}
+.shadow-soft {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 </style>

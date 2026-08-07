@@ -60,15 +60,25 @@ func (s *service) CreateLesson(teacherID string, req CreateLessonRequest) (*Less
 		return nil, fmt.Errorf("la data della lezione (%s) è fuori dall'intervallo consentito", req.Date)
 	}
 
-	// Duplicate check: verify no conflicting lesson exists for the same class/group, hour, and subject on that date
+	// Overlap / Compresenza check: verify no conflicting lesson exists for the same class, hour, and duration on that date
 	existing, err := s.repo.GetLessonsByClass(req.ClassID, req.Date)
 	if err == nil {
+		reqDuration := req.Duration
+		if reqDuration <= 0 {
+			reqDuration = 1
+		}
+		newStart, newEnd := req.Hour, req.Hour+reqDuration
+
 		for _, l := range existing {
-			if l.Hour == req.Hour && l.SubjectID == req.SubjectID {
-				sameGroup := (l.GroupID == nil && req.GroupID == nil) ||
-					(l.GroupID != nil && req.GroupID != nil && *l.GroupID == *req.GroupID)
-				if sameGroup {
-					return nil, errors.New("esiste già una lezione programmata per questa classe/gruppo in questa ora per questa materia")
+			lDur := l.Duration
+			if lDur <= 0 {
+				lDur = 1
+			}
+			exStart, exEnd := l.Hour, l.Hour+lDur
+
+			if newStart < exEnd && exStart < newEnd {
+				if !(l.IsCoTeaching && req.IsCoTeaching) {
+					return nil, fmt.Errorf("impossibile inserire più lezioni nella stessa ora (%dª ora) per questa classe a meno che non sia spuntata la voce 'Compresenza'", req.Hour)
 				}
 			}
 		}
@@ -98,6 +108,7 @@ func (s *service) CreateLesson(teacherID string, req CreateLessonRequest) (*Less
 		IsSubstitution:       req.IsSubstitution,
 		SubstitutedTeacherID: req.SubstitutedTeacherID,
 		ActivityType:         activityType,
+		IsCoTeaching:         req.IsCoTeaching,
 		Notes:                req.Notes,
 	}
 
@@ -211,6 +222,7 @@ func (s *service) mapLessonResponse(l *Lesson) *LessonResponse {
 		SubstitutedTeacherID:   l.SubstitutedTeacherID,
 		SubstitutedTeacherName: l.SubstitutedTeacherName,
 		ActivityType:           l.ActivityType,
+		IsCoTeaching:           l.IsCoTeaching,
 		Notes:                  l.Notes,
 	}
 }
@@ -247,6 +259,40 @@ func (s *service) UpdateLesson(teacherID, role, id string, req UpdateLessonReque
 	}
 	if existing.TeacherID != teacherID && role != "admin" && role != "superadmin" && role != "secretary" {
 		return nil, errors.New("unauthorized: cannot edit another teacher's lesson")
+	}
+
+	targetHour := existing.Hour
+	if req.Hour != nil && *req.Hour > 0 {
+		targetHour = *req.Hour
+	}
+	targetDuration := existing.Duration
+	if req.Duration != nil && *req.Duration > 0 {
+		targetDuration = *req.Duration
+	}
+	targetCoTeaching := existing.IsCoTeaching
+	if req.IsCoTeaching != nil {
+		targetCoTeaching = *req.IsCoTeaching
+	}
+
+	dateStr := existing.Date.Format("2006-01-02")
+	classLessons, err := s.repo.GetLessonsByClass(existing.ClassID, dateStr)
+	if err == nil {
+		newStart, newEnd := targetHour, targetHour+targetDuration
+		for _, l := range classLessons {
+			if l.ID == id {
+				continue
+			}
+			lDur := l.Duration
+			if lDur <= 0 {
+				lDur = 1
+			}
+			exStart, exEnd := l.Hour, l.Hour+lDur
+			if newStart < exEnd && exStart < newEnd {
+				if !(l.IsCoTeaching && targetCoTeaching) {
+					return nil, fmt.Errorf("impossibile registrare più lezioni nella stessa ora (%dª ora) per questa classe senza la spunta 'Compresenza'", targetHour)
+				}
+			}
+		}
 	}
 
 	l, err := s.repo.UpdateLesson(id, req)

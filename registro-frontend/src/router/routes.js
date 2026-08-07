@@ -91,7 +91,7 @@ export default [
             { path: 'secretary/settings', component: () => import('@/pages/secretary/Settings.vue'), meta: { title: 'Impostazioni Segreteria', roles: ['secretary'] } },
             { path: 'secretary/classes', component: () => import('@/pages/secretary/Classes.vue'), meta: { title: 'Gestione Classi', roles: ['secretary'] } },
             { path: 'secretary/scrutiny', component: () => import('@/pages/secretary/Scrutiny.vue'), meta: { title: 'Scrutini Scolastici', roles: ['secretary'] } },
-            { path: 'secretary/groups', component: () => import('@/pages/teacher/Groups.vue'), meta: { title: 'Gruppi di Studio', roles: ['secretary'] } },
+            { path: 'secretary/groups', component: () => import('@/pages/secretary/Groups.vue'), meta: { title: 'Gruppi Linguistici / Articolati', roles: ['secretary'] } },
             { path: 'secretary/meetings', component: () => import('@/pages/secretary/Meetings.vue'), meta: { title: 'Organizzazione Riunioni', roles: ['secretary'] } },
             { path: 'secretary/certificates', component: () => import('@/pages/secretary/Certificates.vue'), meta: { title: 'Certificati & Attestati', roles: ['secretary', 'admin', 'superadmin'] } },
             { path: 'secretary/audit-log', component: () => import('@/pages/secretary/AuditLog.vue'), meta: { title: 'Audit Log Segreteria', roles: ['secretary', 'admin', 'superadmin'] } },
@@ -118,6 +118,8 @@ export default [
             { path: 'teacher/notes', component: () => import('@/pages/teacher/Notes.vue'), meta: { title: 'Note & Richiami', roles: ['teacher'] } },
             { path: 'teacher/rubrics', component: () => import('@/pages/teacher/Rubrics.vue'), meta: { title: 'Rubriche Valutative', roles: ['teacher'] } },
             { path: 'teacher/pdp', component: () => import('@/pages/teacher/PdpPlans.vue'), meta: { title: 'Piani PDP / PEI', roles: ['teacher'] } },
+            { path: 'teacher/uda', component: () => import('@/pages/teacher/UdaPlanner.vue'), meta: { title: 'Programmazione Didattica UdA', roles: ['teacher'] } },
+            { path: 'teacher/competencies', component: () => import('@/pages/teacher/Competencies.vue'), meta: { title: 'Valutazione per Competenze', roles: ['teacher'] } },
 
             // Student Routes
             { path: 'student', component: () => import('@/pages/student/Index.vue'), meta: { title: 'Pannello Studente', roles: ['student'] } },

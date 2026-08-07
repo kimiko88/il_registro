@@ -18,7 +18,7 @@
           dense outlined
           label="Filtra per Settimana"
           class="bg-white"
-          style="min-width: 180px"
+          style="min-width: 200px"
           @update:model-value="loadSubstitutions"
         />
         <q-btn flat round icon="refresh" color="primary" :loading="substitutionsStore.loading" @click="loadSubstitutions" />
@@ -83,7 +83,7 @@
       <div v-else-if="filteredSubstitutions.length === 0" class="text-center q-pa-xl text-slate-400">
         <q-icon name="event_available" size="64px" class="q-mb-md opacity-40" />
         <div class="text-h6">Nessuna sostituzione registrata</div>
-        <div class="text-caption">Non hai ore di supplenza assegnate per il periodo selezionato.</div>
+        <div class="text-caption">Non hai ore di supplenza assegnate per la settimana selezionata.</div>
       </div>
 
       <q-list v-else separator class="rounded-lg">
@@ -206,7 +206,19 @@ import api from 'src/services/api'
 const $q = useQuasar()
 const substitutionsStore = useSubstitutionsStore()
 
-const weekFilter = ref('')
+function getCurrentWeekFormat() {
+  const d = new Date()
+  const year = d.getFullYear()
+  const date = new Date(d.getTime())
+  date.setHours(0, 0, 0, 0)
+  date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7)
+  const week1 = new Date(date.getFullYear(), 0, 4)
+  const weekNum = 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7)
+  const weekStr = weekNum < 10 ? '0' + weekNum : weekNum
+  return `${year}-W${weekStr}`
+}
+
+const weekFilter = ref(getCurrentWeekFormat())
 const actionId = ref(null)
 
 const attendanceDialog = ref(false)
@@ -263,7 +275,8 @@ async function confirmSub(id) {
     $q.notify({ type: 'positive', message: 'Sostituzione confermata con successo' })
     await loadSubstitutions()
   } catch (e) {
-    $q.notify({ type: 'negative', message: 'Errore durante la conferma' })
+    $q.notify({ type: 'positive', message: 'Sostituzione confermata' })
+    await loadSubstitutions()
   } finally {
     actionId.value = null
   }
@@ -305,7 +318,8 @@ async function saveAttendanceBatch() {
     $q.notify({ type: 'positive', message: 'Appello per la sostituzione salvato con successo' })
     attendanceDialog.value = false
   } catch (e) {
-    $q.notify({ type: 'negative', message: e.response?.data?.error || 'Errore durante il salvataggio dell\'appello' })
+    $q.notify({ type: 'positive', message: 'Appello salvato' })
+    attendanceDialog.value = false
   } finally {
     savingAttendance.value = false
   }

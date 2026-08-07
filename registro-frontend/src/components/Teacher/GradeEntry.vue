@@ -1,6 +1,15 @@
 <template>
   <q-card>
+    <q-banner v-if="readOnly" class="bg-amber-1 text-amber-10 border-b q-pa-md">
+      <template v-slot:avatar>
+        <q-icon name="lock" color="amber-9" size="24px" />
+      </template>
+      <div class="text-weight-bold">Modalità Supplenza - Consultazione Voti Disabilitata</div>
+      <div class="text-caption">L'inserimento e la visualizzazione del registro voti è riservata ai docenti titolari di materia della classe.</div>
+    </q-banner>
+
     <q-table
+       v-else
        :rows="studentsWithGrades"
        :columns="columns"
        row-key="student_id"
@@ -194,7 +203,14 @@ import { useGradesStore } from 'src/stores/grades';
 import { useQuasar } from 'quasar';
 import { gradeService } from 'src/services/gradeService';
 
-const props = defineProps(['classId', 'subject', 'date', 'type']);
+const props = defineProps({
+  classId: String,
+  subject: String,
+  date: String,
+  type: String,
+  readOnly: { type: Boolean, default: false }
+});
+
 const emit = defineEmits(['refresh']);
 const $q = useQuasar();
 const gradesStore = useGradesStore();
@@ -205,6 +221,7 @@ const entryData = ref({});
 const initialSnapshot = ref({});
 
 const studentsWithGrades = computed(() => {
+    if (props.readOnly) return [];
     if (gradesStore.grades && gradesStore.grades.students) {
         return gradesStore.grades.students.map(s => {
             let sum = 0;
@@ -341,6 +358,7 @@ const getAverageClass = (val) => {
 };
 
 const saveLine = async (id) => {
+    if (props.readOnly) return;
     const data = entryData.value[id];
     if (data.value === null || data.value === undefined || data.value === '') return;
 
@@ -359,7 +377,7 @@ const saveLine = async (id) => {
             subject_id: props.subject,
             grade_value: gradeToNumeric(data.value),
             grade_type: payloadType,
-            semester: 1, // Defaulting to 1 for MVP
+            semester: 1,
             description: data.notes,
             date: props.date,
             is_published: true,
@@ -376,6 +394,7 @@ const saveLine = async (id) => {
 };
 
 const saveAll = async () => {
+    if (props.readOnly) return;
     loading.value = true;
     try {
         for (const s of studentsWithGrades.value) {
@@ -391,9 +410,7 @@ const saveAll = async () => {
     }
 };
 
-const focusNext = (_index) => {
-    // Logic to focus next input would ideally use refs map
-};
+const focusNext = (_index) => {};
 
 const handleOnline = () => { isOnline.value = true };
 const handleOffline = () => { isOnline.value = false };
@@ -407,7 +424,6 @@ onUnmounted(() => {
 });
 
 onMounted(() => {
-    // Initialize if data already present
     initData();
 });
 const getGradesByType = (grades, type) => {
@@ -443,15 +459,14 @@ const editGradeForm = ref({
 });
 
 const editGradeDialog = (grade, student) => {
+    if (props.readOnly) return;
     selectedStudentName.value = student.full_name;
-    // Format date for <input type="date"> as YYYY-MM-DD
     let rawDate = '';
     if (grade.date) {
         try {
             rawDate = new Date(grade.date).toISOString().split('T')[0];
         } catch (e) { rawDate = ''; }
     }
-    // Map backend type to Italian label
     const typeMap = { 'Written': 'Scritto', 'Oral': 'Orale', 'Practical': 'Pratico' };
     editGradeForm.value = {
         id: grade.id,
@@ -464,8 +479,8 @@ const editGradeDialog = (grade, student) => {
 };
 
 const saveIndividualGradeEdit = async () => {
+    if (props.readOnly) return;
     const valNumeric = gradeToNumeric(editGradeForm.value.value);
-    // Map Italian label back to backend enum
     const typeMap = { 'Scritto': 'Written', 'Orale': 'Oral', 'Pratico': 'Practical' };
     const evalType = typeMap[editGradeForm.value.evaluationType] || editGradeForm.value.evaluationType;
     const desc = editGradeForm.value.notes;
@@ -486,6 +501,7 @@ const saveIndividualGradeEdit = async () => {
 };
 
 const deleteGradeConfirm = async () => {
+    if (props.readOnly) return;
     $q.dialog({
         title: 'Conferma Eliminazione',
         message: 'Sei sicuro di voler eliminare questo voto permanentemente?',

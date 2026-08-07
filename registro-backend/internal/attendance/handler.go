@@ -28,6 +28,7 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	att.POST("/mark-bulk", h.MarkBulk)
 	att.PUT("/:id", h.UpdateAttendance)
 	att.GET("/class/:id", h.GetClassAttendance)
+	att.DELETE("/class/:id/hour/:hour", h.DeleteClassAttendanceHour)
 	att.GET("/pending-justifications", h.GetPendingJustifications)
 	att.GET("/justifications/pending", h.GetPendingJustifications)
 	att.POST("/justification/:id/process", h.ProcessJustification)
@@ -54,6 +55,9 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	// Monthly Breakdown
 	att.GET("/students/:studentID/monthly-breakdown", h.GetMonthlyBreakdown)
 	att.GET("/child-attendance/:studentID/monthly-breakdown", h.GetChildMonthlyBreakdown)
+
+	// Teacher: student summary
+	att.GET("/students/:studentID/summary", h.GetStudentSummaryForTeacher)
 }
 
 // parseWindowParams legge i query param from/to; se assenti usa l'intero anno scolastico corrente.
@@ -143,6 +147,23 @@ func (h *Handler) GetChildSummary(c *gin.Context) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, res)
+}
+
+// GetStudentSummaryForTeacher allows a teacher to fetch the attendance summary of
+// any student (no parent-guardian check required).
+func (h *Handler) GetStudentSummaryForTeacher(c *gin.Context) {
+	schoolID := c.GetString("school_id")
+	studentID := c.Param("studentID")
+	if studentID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "studentID mancante"})
+		return
+	}
+	res, err := h.service.GetStudentSummary(c.Request.Context(), studentID, schoolID)
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -576,4 +597,46 @@ func (h *Handler) GetChildAttendanceStats(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, stats)
+}
+
+func (h *Handler) DeleteClassAttendanceHour(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "teacher" && role != "admin" && role != "superadmin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
+	classID := c.Param("id")
+	hourStr := c.Param("hour")
+	dateStr := c.Query("date")
+	if dateStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "date parameter required"})
+		return
+	}
+
+	hour, err := time.ParseDuration(hourStr)
+	var hourInt int
+	if err == nil {
+		hourInt = int(hour.Hours())
+	} else {
+		// Atoi
+		var convErr error
+		_, convErr = fmt.Sscanf(hourStr, "%d", &hourInt)
+		if convErr != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid hour parameter"})
+			return
+		}
+	}
+
+	if err := h.service.DeleteClassAttendanceHour(c.Request.Context(), classID, dateStr, hourInt); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "attendance for hour deleted"})
 }

@@ -46,8 +46,8 @@
                     {label: 'Storico', value: 'history'}
                 ]"
              />
-             <q-btn icon="assignment" label="Nuova Verifica" color="primary" class="q-mr-sm" @click="openTestDialog" :disable="!selectedClassId || !selectedSubject" />
-             <q-btn icon="file_upload" label="Importa CSV" outline color="primary" @click="showImportDialog = true" />
+             <q-btn icon="assignment" label="Nuova Verifica" color="primary" class="q-mr-sm" @click="openTestDialog" :disable="!selectedClassId || !selectedSubject || !isAssignedClass" />
+             <q-btn icon="file_upload" label="Importa CSV" outline color="primary" @click="showImportDialog = true" :disable="!isAssignedClass" />
              <q-btn icon="print" flat round color="grey-8" aria-label="Stampa registro voti" @click="printReport">
                <q-tooltip>Stampa Registro Voti</q-tooltip>
              </q-btn>
@@ -71,6 +71,17 @@
       </q-card-section>
     </q-card>
 
+    <!-- Substitution Non-Titolare Warning Banner -->
+    <q-banner v-if="selectedClassId && !isAssignedClass" class="bg-amber-1 text-amber-10 rounded-xl border border-amber-300 q-mb-md shadow-soft">
+      <template v-slot:avatar>
+        <q-icon name="lock" color="amber-9" size="28px" />
+      </template>
+      <div class="text-weight-bold text-subtitle1">🔒 Modalità Supplenza - Consultazione ed Inserimento Voti Disabilitati</div>
+      <div class="text-caption">
+        Questa classe non rientra tra le tue cattedre titolari. In qualità di docente supplente puoi firmare l'ora nel <strong>Registro Presenze</strong> ed appuntare presenze e note disciplinari, mentre l'inserimento ed la visione dei voti è riservata ai docenti titolari.
+      </div>
+    </q-banner>
+
     <!-- Main Content Area -->
     <div v-if="selectedClassId">
         
@@ -83,10 +94,11 @@
                         :subject="selectedSubject"
                         :date="filterDate"
                         :type="gradeType"
+                        :read-only="!isAssignedClass"
                         @refresh="refreshGrades"
                      />
                 </div>
-                <div class="col-12 col-md-3" v-if="showRubric">
+                <div class="col-12 col-md-3" v-if="showRubric && isAssignedClass">
                      <q-card class="bg-white">
                         <q-card-section class="bg-primary text-white text-subtitle2">Rubrica Valutazione</q-card-section>
                         <q-list separator dense>
@@ -108,12 +120,13 @@
 
         <!-- Stats View -->
         <div v-show="viewMode === 'stats'">
-             <GradeStatistics :class-id="selectedClassId" :subject="selectedSubject" />
+             <GradeStatistics v-if="isAssignedClass" :class-id="selectedClassId" :subject="selectedSubject" />
+             <div v-else class="text-center q-pa-xl text-grey-7">Le statistiche voti sono riservate ai docenti titolari.</div>
         </div>
 
         <!-- History / Verifiche View -->
         <div v-show="viewMode === 'history'">
-            <q-card>
+            <q-card v-if="isAssignedClass">
                 <q-card-section class="row items-center justify-between">
                     <div class="text-h6 text-primary text-weight-bold">Elenco Verifiche</div>
                     <q-btn icon="refresh" flat round dense aria-label="Aggiorna elenco verifiche" @click="fetchTests" />
@@ -153,6 +166,7 @@
                     </q-item>
                 </q-list>
             </q-card>
+            <div v-else class="text-center q-pa-xl text-grey-7">La cronologia verifiche è riservata ai docenti titolari.</div>
         </div>
 
     </div>
@@ -160,7 +174,7 @@
         <q-icon name="school" size="96px" color="primary" class="q-mb-md opacity-80" />
         <div class="text-h5 text-weight-bold q-mb-xs">Seleziona una classe per iniziare</div>
         <div class="text-subtitle2 text-grey-7 q-mb-lg" style="max-width: 480px;">
-          Scegli una classe dal menu in alto oppure clicca su uno dei pulsanti qui sotto per accedere direttamente al registro voti:
+          Scegli una classe dal menu in alto per accedere al registro:
         </div>
         <div class="row q-gutter-sm justify-center" v-if="classesStore.classes && classesStore.classes.length > 0">
           <q-btn
@@ -452,6 +466,11 @@ const filterDate = ref(date.formatDate(Date.now(), 'YYYY-MM-DD'));
 const gradeType = ref('Orale');
 const showRubric = ref(false);
 
+const isAssignedClass = computed(() => {
+  if (!selectedClassId.value) return false;
+  return classesStore.classes.some(c => String(c.id) === String(selectedClassId.value));
+});
+
 const showImportDialog = ref(false);
 const importFile = ref(null);
 
@@ -482,6 +501,10 @@ const overlappingTestsCount = computed(() => {
 });
 
 const openTestDialog = () => {
+    if (!isAssignedClass.value) {
+        $q.notify({ type: 'warning', message: 'Non hai i permessi per inserire verifiche in una classe non tua' });
+        return;
+    }
     if (!gradesStore.grades || !gradesStore.grades.students || gradesStore.grades.students.length === 0) {
         $q.notify({ type: 'warning', message: 'Nessun alunno caricato per questa classe' });
         return;
@@ -504,6 +527,7 @@ const openTestDialog = () => {
 };
 
 const submitTest = async () => {
+    if (!isAssignedClass.value) return;
     loading.value = true;
     try {
         const payload = {
@@ -526,7 +550,6 @@ const submitTest = async () => {
         await gradeService.createTestWithGrades(payload);
         showTestDialog.value = false;
         await refreshGrades();
-        // Get the last created test ID for potential undo
         const lastTests = await gradeService.getTestsByClass(selectedClassId.value, selectedSubject.value)
         const lastTestId = lastTests?.data?.[0]?.id
         if (lastTestId) {
@@ -568,7 +591,7 @@ watch(selectedClassId, async (newVal) => {
 });
 
 const refreshGrades = async () => {
-    if (!selectedClassId.value) return;
+    if (!selectedClassId.value || !isAssignedClass.value) return;
     await gradesStore.fetchGrades(selectedClassId.value, selectedSubject.value);
     if (viewMode.value === 'history') {
         await fetchTests();
@@ -589,7 +612,7 @@ const editTestForm = ref({
 });
 
 const fetchTests = async () => {
-    if (!selectedClassId.value || !selectedSubject.value) return;
+    if (!selectedClassId.value || !selectedSubject.value || !isAssignedClass.value) return;
     loadingTests.value = true;
     try {
         const response = await gradeService.getClassTests(selectedClassId.value, selectedSubject.value);
@@ -608,6 +631,7 @@ watch(viewMode, (newVal) => {
 });
 
 const openEditTestDialog = (test) => {
+    if (!isAssignedClass.value) return;
     const studentGrades = gradesStore.grades?.students || [];
     const gradesList = studentGrades.map(s => {
         const grade = s.grades?.find(g => g.test_id === test.id || g.testId === test.id);
@@ -634,6 +658,7 @@ const openEditTestDialog = (test) => {
 };
 
 const submitEditTest = async () => {
+    if (!isAssignedClass.value) return;
     loading.value = true;
     try {
         const payload = {
@@ -699,6 +724,7 @@ const markAllAbsent = (formObj) => {
 };
 
 const deleteTestConfirm = async (testOrId) => {
+    if (!isAssignedClass.value) return;
     let test = typeof testOrId === 'object' ? testOrId : classTests.value.find(t => t.id === testOrId);
     const testTitle = test ? (test.title || 'Verifica') : 'questa verifica';
     const totalGrades = test && test.grade_count ? test.grade_count : (test && test.grades ? test.grades.length : 'tutti i');
@@ -774,6 +800,7 @@ const printReport = () => {
 };
 
 const processImport = async () => {
+    if (!isAssignedClass.value) return;
     if (!importFile.value) {
         $q.notify({ type: 'warning', message: 'Seleziona un file da importare' });
         return;
@@ -798,79 +825,7 @@ const processImport = async () => {
     }
 };
 
-onMounted(async () => {
-    await classesStore.fetchAssignedClasses();
-    if (classesStore.classes.length > 0) {
-        selectedClassId.value = classesStore.classes[0].id;
-    }
+onMounted(() => {
+    classesStore.fetchAssignedClasses();
 });
-const gradeOptions = [
-  'A',
-  '10', '10-', '9½', '9+', '9', '9-', '8½', '8+', '8', '8-', '7½', '7+', '7', '7-', '6½', '6+', '6', '6-', '5½', '5+', '5', '5-', '4½', '4+', '4', '4-', '3½', '3+', '3', '3-', '2½', '2+', '2', '2-', '1½', '1+', '1', '1-', '0½', '0'
-];
-
-function gradeToNumeric(gradeStr) {
-    if (gradeStr === undefined || gradeStr === null || gradeStr === '') return null;
-    const clean = String(gradeStr).trim().toUpperCase();
-    if (clean === 'A') return -1;
-    
-    let res = null;
-    if (clean.includes('/')) {
-        const parts = clean.split('/');
-        if (parts.length === 2) {
-            const n1 = parseFloat(parts[0]);
-            const n2 = parseFloat(parts[1]);
-            if (!isNaN(n1) && !isNaN(n2)) {
-                res = (n1 + n2) / 2;
-            }
-        }
-    } else if (clean.endsWith('1/2') || clean.endsWith('½')) {
-        const base = parseFloat(clean.replace('1/2', '').replace('½', '').trim());
-        if (!isNaN(base)) res = base + 0.5;
-    } else if (clean.endsWith('+')) {
-        const base = parseFloat(clean.slice(0, -1).trim());
-        if (!isNaN(base)) res = base + 0.25;
-    } else if (clean.endsWith('-')) {
-        const base = parseFloat(clean.slice(0, -1).trim());
-        if (!isNaN(base)) res = base - 0.25;
-    }
-
-    if (res === null) {
-        const val = parseFloat(clean.replace(',', '.'));
-        res = isNaN(val) ? 0 : val;
-    }
-
-    if (res === -1) return -1;
-    return Math.min(10, Math.max(-1, res));
-}
-
-const getGradeColor = (val) => {
-    if (val === undefined || val === null || val === '') return '';
-    const numeric = gradeToNumeric(val);
-    if (numeric === -1) return 'red-2';
-    if (numeric >= 8) return 'green-2';
-    if (numeric >= 7) return 'lime-2';
-    if (numeric >= 6) return 'yellow-2';
-    if (numeric >= 5) return 'orange-2';
-    return 'red-2';
-};
 </script>
-
-<style scoped>
-.sticky-header {
-    position: sticky;
-    top: var(--header-height, 52px);
-    z-index: 10;
-}
-
-
-@media print {
-  .sticky-header, .q-btn, .q-toggle, .q-tabs, .q-dialog, .q-dialog__inner {
-    display: none !important;
-  }
-  .q-page {
-    background: white !important;
-    padding: 0 !important;
-  }
-}
-</style>

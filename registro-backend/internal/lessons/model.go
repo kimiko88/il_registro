@@ -19,6 +19,7 @@ type Lesson struct {
 	SubstitutedTeacherID   *string   `json:"substituted_teacher_id,omitempty" db:"substituted_teacher_id"`
 	SubstitutedTeacherName string    `json:"substituted_teacher_name,omitempty" db:"substituted_teacher_name"`
 	ActivityType           string    `json:"activity_type" db:"activity_type"` // e.g. standard, substitution, ptof, project, assembly, trip, lab, other
+	IsCoTeaching           bool      `json:"is_co_teaching" db:"is_co_teaching"`
 	Notes                  string    `json:"notes" db:"notes"`
 	CreatedAt              time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt              time.Time `json:"updated_at" db:"updated_at"`

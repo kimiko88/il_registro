@@ -71,8 +71,12 @@ func (h *Handler) ListGroups(c *gin.Context) {
 	} else if studentID != "" {
 		groups, err = h.service.ListGroupsByStudent(c.Request.Context(), studentID)
 	} else {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "school_id, teacher_id, or student_id required"})
-		return
+		sID := c.GetString("school_id")
+		if sID != "" {
+			groups, err = h.service.ListGroupsBySchool(c.Request.Context(), sID)
+		} else {
+			groups = []Group{}
+		}
 	}
 
 	if err != nil {

@@ -19,8 +19,9 @@ type User struct {
 	EmailVerified bool    `json:"email_verified" db:"email_verified"`
 	MFAEnabled    bool    `json:"mfa_enabled" db:"mfa_enabled"`
 	MFASecret     string  `json:"-" db:"mfa_secret"`
-	PhoneNumber   *string `json:"phone_number,omitempty" db:"phone_number"`
-	JobTitle      *string `json:"job_title,omitempty" db:"job_title"`
+	PhoneNumber   *string    `json:"phone_number,omitempty" db:"phone_number"`
+	JobTitle      *string    `json:"job_title,omitempty" db:"job_title"`
+	DateOfBirth   *time.Time `json:"date_of_birth,omitempty" db:"date_of_birth"`
 
 	// Student specific (populated via joins)
 	ClassID   *string `json:"class_id,omitempty" db:"class_id"`

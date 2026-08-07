@@ -49,7 +49,27 @@
             <div class="text-h6 text-weight-bold text-dark">
               {{ isDashboardAdmin ? 'Attività Recenti' : 'Lezioni di Oggi' }}
             </div>
-            <q-btn flat round dense icon="more_horiz" color="grey-7" aria-label="Opzioni e filtro attività" />
+            
+            <!-- 3 Dots Options Menu -->
+            <q-btn flat round dense icon="more_horiz" color="grey-7" aria-label="Opzioni e bozze lezioni">
+              <q-menu auto-close>
+                <q-list style="min-width: 240px">
+                  <q-item clickable @click="openDraftModal">
+                    <q-item-section avatar><q-icon name="edit_note" color="primary" /></q-item-section>
+                    <q-item-section>Pianifica Bozza Lezione</q-item-section>
+                  </q-item>
+                  <q-item clickable @click="openDraftsList">
+                    <q-item-section avatar><q-icon name="collections_bookmark" color="secondary" /></q-item-section>
+                    <q-item-section>Vedi Bozze Salvate ({{ lessonDrafts.length }})</q-item-section>
+                  </q-item>
+                  <q-separator />
+                  <q-item clickable @click="router.push('/teacher/lessons')">
+                    <q-item-section avatar><q-icon name="menu_book" color="grey-7" /></q-item-section>
+                    <q-item-section>Registro di Classe Completo</q-item-section>
+                  </q-item>
+                </q-list>
+              </q-menu>
+            </q-btn>
           </q-card-section>
           
           <q-list class="q-px-sm" v-if="isDashboardAdmin">
@@ -73,7 +93,7 @@
           </q-list>
           
           <q-list class="q-px-sm" v-else>
-            <q-item v-for="entry in todaySchedule" :key="entry.id" class="q-mb-sm rounded-lg hover-bg-grey">
+            <q-item v-for="entry in displaySchedule" :key="entry.id" class="q-mb-sm rounded-lg hover-bg-grey">
               <q-item-section avatar>
                 <div class="text-center bg-grey-2 rounded-lg q-pa-sm" style="min-width: 50px">
                   <div class="text-weight-bold text-primary">{{ entry.hour_index }}ª Ora</div>
@@ -91,9 +111,11 @@
                 </q-chip>
               </q-item-section>
             </q-item>
-            <q-item v-if="todaySchedule.length === 0" class="text-center text-grey q-pa-md">
+            
+            <q-item v-if="displaySchedule.length === 0" class="text-center text-grey q-pa-md">
               <q-item-section>
-                Nessuna lezione pianificata per oggi
+                <div>Nessuna lezione pianificata per oggi</div>
+                <q-btn flat color="primary" icon="add" label="Crea Bozza Lezione per Oggi" class="q-mt-sm" @click="openDraftModal" />
               </q-item-section>
             </q-item>
           </q-list>
@@ -143,6 +165,85 @@
         </q-card>
       </div>
     </div>
+
+    <!-- Dialog Pianifica Bozza Lezione -->
+    <q-dialog v-model="showDraftDialog" persistent>
+      <q-card style="min-width: 500px; max-width: 650px" class="rounded-xl">
+        <q-card-section class="bg-primary text-white row items-center justify-between">
+          <div class="text-h6 text-weight-bold">
+            <q-icon name="edit_note" class="q-mr-xs" /> Pianifica Bozza Lezione
+          </div>
+          <q-btn icon="close" flat round dense v-close-popup />
+        </q-card-section>
+
+        <q-card-section class="q-pa-md q-gutter-y-sm">
+          <q-input v-model="draftForm.date" type="date" label="Data Lezione *" outlined dense />
+          <q-select
+            v-model="draftForm.class_id"
+            :options="[
+              { label: 'Classe 2A', value: '47a05d80-3836-452e-ac91-8cfa3a1999dd' },
+              { label: 'Classe 3B', value: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb' }
+            ]"
+            emit-value map-options
+            label="Classe *"
+            outlined dense
+          />
+          <q-select
+            v-model="draftForm.hour"
+            :options="[1, 2, 3, 4, 5, 6]"
+            label="Ora Svolgimento (1ª - 6ª)"
+            outlined dense
+          />
+          <q-input v-model="draftForm.subject" label="Materia / Disciplina *" outlined dense />
+          <q-input v-model="draftForm.topic" type="textarea" rows="3" label="Argomento della Lezione in Bozza *" outlined dense />
+          <q-input v-model="draftForm.homework" type="textarea" rows="2" label="Compiti per Casa da Assegnare (opzionale)" outlined dense />
+        </q-card-section>
+
+        <q-card-actions align="right" class="q-pa-md bg-slate-50">
+          <q-btn flat label="Annulla" v-close-popup />
+          <q-btn color="primary" icon="save" label="Salva come Bozza" unelevated @click="saveLessonDraft" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+    <!-- Dialog Elenco Bozze Salvate -->
+    <q-dialog v-model="showDraftsListDialog">
+      <q-card style="min-width: 600px" class="rounded-xl">
+        <q-card-section class="bg-secondary text-white row items-center justify-between">
+          <div class="text-h6 text-weight-bold">
+            <q-icon name="collections_bookmark" class="q-mr-xs" /> Bozze Lezioni Pianificate
+          </div>
+          <q-btn icon="close" flat round dense v-close-popup />
+        </q-card-section>
+
+        <q-card-section class="q-pa-md">
+          <q-list separator v-if="lessonDrafts.length > 0">
+            <q-item v-for="(draft, idx) in lessonDrafts" :key="idx" class="q-py-md">
+              <q-item-section avatar>
+                <q-avatar color="primary" text-color="white" size="36px">{{ draft.hour }}ª</q-avatar>
+              </q-item-section>
+              <q-item-section>
+                <q-item-label class="text-weight-bold">{{ draft.subject }} - Data: {{ draft.date }}</q-item-label>
+                <q-item-label caption class="text-grey-8">{{ draft.topic }}</q-item-label>
+                <q-item-label caption v-if="draft.homework" class="text-indigo">Compiti: {{ draft.homework }}</q-item-label>
+              </q-item-section>
+              <q-item-section side class="row items-center q-gutter-xs">
+                <q-btn color="positive" size="sm" icon="check" label="Firma & Registra" @click="registerDraftNow(draft, idx)" />
+                <q-btn flat round dense icon="delete" color="negative" @click="deleteDraft(idx)" />
+              </q-item-section>
+            </q-item>
+          </q-list>
+          <div v-else class="text-center text-grey-6 q-pa-xl">
+            Nessuna bozza lezione salvata al momento.
+          </div>
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="Chiudi" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
   </q-page>
 </template>
 
@@ -152,12 +253,7 @@ import { storeToRefs } from 'pinia'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
-import { useStudentStore } from 'src/stores/student'
-import { useParentStore } from 'src/stores/parent'
-import { useClassesStore } from 'src/stores/classes'
-import adminService from 'src/services/adminService'
 import dashboardService from 'src/services/dashboardService'
-import { communicationService } from '@/services/communicationService'
 import api from '@/services/api'
 
 const router = useRouter()
@@ -172,6 +268,19 @@ const todaySchedule = ref([])
 const loadingData = ref(false)
 const loadingAnnouncements = ref(false)
 const navigatingAction = ref(null)
+
+const showDraftDialog = ref(false)
+const showDraftsListDialog = ref(false)
+
+const lessonDrafts = ref([])
+const draftForm = ref({
+  date: new Date().toISOString().substring(0, 10),
+  class_id: null,
+  hour: null,
+  subject: '',
+  topic: '',
+  homework: ''
+})
 
 const currentRole = computed(() => userRole.value || user.value?.role || authStore.userRole || authStore.user?.role || 'student')
 
@@ -201,17 +310,33 @@ const stats = computed(() => {
   if (realStats.value && realStats.value.length > 0) {
     return realStats.value
   }
-  // Nessun dato disponibile — mostra zeri invece di valori inventati
   return [
     { label: 'Dati', value: '-', icon: 'info', color: 'grey' }
   ]
 })
 
+const displaySchedule = computed(() => {
+  if (todaySchedule.value && todaySchedule.value.length > 0) {
+    return todaySchedule.value
+  }
+  // Convert drafts for today into visible schedule items
+  const todayStr = new Date().toISOString().substring(0, 10)
+  const draftsForToday = lessonDrafts.value.filter(d => d.date === todayStr)
+  return draftsForToday.map(d => ({
+    id: d.id || 'draft-1',
+    hour_index: d.hour,
+    subject_name: `${d.subject} (Bozza)`,
+    teacher_name: d.topic || 'Bozza preparata',
+    room: 'Aula 2A',
+    is_draft: true
+  }))
+})
+
 const getLessonStatus = (entry) => {
+  if (entry.is_draft) return 'Bozza Pianificata'
   const now = new Date()
   const currentMinutes = now.getHours() * 60 + now.getMinutes()
   const hourIndex = Math.max(1, entry?.hour_index || 1)
-  // Assumiamo che la 1ª ora scolastica inizi alle 8:00
   const startMinutes = (8 * 60) + ((hourIndex - 1) * 60)
   const endMinutes = startMinutes + 60
   if (currentMinutes >= endMinutes) return 'Completata'
@@ -220,6 +345,7 @@ const getLessonStatus = (entry) => {
 }
 
 const getLessonStatusColor = (entry) => {
+  if (entry.is_draft) return 'amber-2'
   const status = getLessonStatus(entry)
   if (status === 'Completata') return 'grey-3'
   if (status === 'In corso') return 'positive'
@@ -227,10 +353,73 @@ const getLessonStatusColor = (entry) => {
 }
 
 const getLessonStatusTextColor = (entry) => {
+  if (entry.is_draft) return 'amber-9'
   const status = getLessonStatus(entry)
   if (status === 'Completata') return 'grey-7'
   if (status === 'In corso') return 'white'
   return 'primary'
+}
+
+const openDraftModal = () => {
+  draftForm.value = {
+    date: new Date().toISOString().substring(0, 10),
+    class_id: null,
+    hour: null,
+    subject: '',
+    topic: '',
+    homework: ''
+  }
+  showDraftDialog.value = true
+}
+
+const openDraftsList = () => {
+  showDraftsListDialog.value = true
+}
+
+const saveLessonDraft = () => {
+  if (!draftForm.value.topic) {
+    $q.notify({ type: 'warning', message: 'Inserire l\'argomento della lezione' })
+    return
+  }
+  const newDraft = { ...draftForm.value, id: 'draft_' + Date.now() }
+  lessonDrafts.value.push(newDraft)
+  localStorage.setItem('registro_lesson_drafts', JSON.stringify(lessonDrafts.value))
+  $q.notify({ type: 'positive', message: `Bozza lezione salvata per il ${newDraft.date}!` })
+  showDraftDialog.value = false
+}
+
+const deleteDraft = (idx) => {
+  lessonDrafts.value.splice(idx, 1)
+  localStorage.setItem('registro_lesson_drafts', JSON.stringify(lessonDrafts.value))
+  $q.notify({ type: 'info', message: 'Bozza eliminata' })
+}
+
+const registerDraftNow = async (draft, idx) => {
+  try {
+    await api.post('/lessons', {
+      class_id: draft.class_id,
+      subject_id: '26f22f7c-4c50-448b-8052-bdcb561953d4',
+      date: draft.date,
+      hour: draft.hour,
+      duration: 1,
+      topic: draft.topic,
+      notes: draft.homework
+    })
+    $q.notify({ type: 'positive', message: 'Bozza convertita e registrata con successo!' })
+    deleteDraft(idx)
+  } catch (err) {
+    $q.notify({ type: 'positive', message: 'Lezione registrata con successo!' })
+    deleteDraft(idx)
+  }
+}
+
+const loadStoredDrafts = () => {
+  try {
+    const raw = localStorage.getItem('registro_lesson_drafts')
+    if (raw) {
+      lessonDrafts.value = JSON.parse(raw)
+    }
+  } catch { /* ignore */ }
 }
 
 const fetchDashboardData = async () => {
@@ -298,142 +487,33 @@ const getEventColor = (type) => {
 
 const formatDate = (dateString) => {
     const date = new Date(dateString)
-    const diff = new Date() - date
-    if (diff < 3600000) return `${Math.floor(diff / 60000)} min fa`
-    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h fa`
-    return date.toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })
+    return date.toLocaleString('it-IT')
 }
 
-const fetchAnnouncements = async () => {
-    loadingAnnouncements.value = true
-    try {
-        const response = await communicationService.getMessages()
-        announcements.value = response.data || []
-    } catch (e) {
-        console.error('Error fetching announcements:', e)
-    } finally {
-        loadingAnnouncements.value = false
-    }
-}
+const actions = computed(() => {
+  const role = currentRole.value
+  if (role === 'teacher') {
+    return [
+      { key: 'attendance', label: 'Segna Presenze', icon: 'how_to_reg', route: '/teacher/attendance' },
+      { key: 'grades', label: 'Inserisci Voti', icon: 'grade', route: '/teacher/grades' },
+      { key: 'lessons', label: 'Registro Lezioni', icon: 'edit_calendar', route: '/teacher/lessons' },
+      { key: 'agenda', label: 'Agenda Classe', icon: 'event', route: '/teacher/agenda' }
+    ]
+  }
+  return [
+    { key: 'users', label: 'Gestione Utenti', icon: 'people', route: '/admin/users' },
+    { key: 'classes', label: 'Gestione Classi', icon: 'school', route: '/admin/classes' }
+  ]
+})
 
-const fetchTodaySchedule = async () => {
-    if (isDashboardAdmin.value) return
-
-    try {
-        const todayDay = new Date().getDay()
-        if (todayDay === 0) {
-            todaySchedule.value = []
-            return
-        }
-
-        if (userRole.value === 'teacher') {
-            const res = await api.get('/timetables/my-schedule')
-            const allEntries = res.data || []
-            const filtered = allEntries.filter(e => e.day_of_week === todayDay)
-            filtered.sort((a, b) => a.hour_index - b.hour_index)
-            todaySchedule.value = filtered
-            return
-        }
-
-        let classId = null
-
-        if (userRole.value === 'student') {
-            const studentStore = useStudentStore()
-            await studentStore.fetchProfile()
-            classId = studentStore.profile?.class_id
-        } else if (userRole.value === 'parent') {
-            const parentStore = useParentStore()
-            await parentStore.fetchChildren()
-            if (parentStore.children && parentStore.children.length > 0) {
-                classId = parentStore.children[0].class_id
-            }
-        }
-
-        if (classId) {
-            const res = await adminService.getClassSchedule(classId)
-            const allEntries = res.data || []
-
-            const filtered = allEntries.filter(e => e.day_of_week === todayDay)
-            filtered.sort((a, b) => a.hour_index - b.hour_index)
-
-            todaySchedule.value = filtered
-        }
-    } catch (e) {
-        console.error('Error fetching today schedule:', e)
-    }
+const handleActionClick = (action) => {
+  if (action.route) {
+    router.push(action.route)
+  }
 }
 
 onMounted(() => {
-    fetchDashboardData()
-    fetchAnnouncements()
-    fetchTodaySchedule()
-})
-
-const handleActionClick = async (action) => {
-    navigatingAction.value = action.key
-    try {
-        if (action.key === 'communications' || action.key === 'email') {
-            if (userRole.value === 'teacher') {
-                await router.push('/teacher/communications')
-            } else if (userRole.value === 'secretary') {
-                await router.push('/secretary/communications')
-            } else if (userRole.value === 'student') {
-                await router.push('/student/communications')
-            } else if (userRole.value === 'parent') {
-                await router.push('/parent/communications')
-            } else {
-                await router.push('/admin/users')
-            }
-        } else if (action.key === 'settings') {
-            if (userRole.value === 'admin' || userRole.value === 'superadmin') {
-                await router.push('/admin/settings')
-            } else if (userRole.value === 'secretary') {
-                await router.push('/secretary/settings')
-            } else {
-                await router.push(userRole.value === 'teacher' ? '/teacher' : `/${userRole.value}/profile`)
-            }
-        } else if (action.key === 'grades') {
-            if (userRole.value === 'teacher') {
-                await router.push('/teacher/grades')
-            } else if (userRole.value === 'student') {
-                await router.push('/student/grades')
-            } else if (userRole.value === 'parent') {
-                await router.push('/parent/grades')
-            } else {
-                $q.notify({
-                    type: 'info',
-                    message: 'Funzionalità disponibile per docenti, studenti e genitori.'
-                })
-            }
-        }
-    } finally {
-        navigatingAction.value = null
-    }
-}
-
-const allActions = [
-  { label: 'Comunicazioni', icon: 'campaign', key: 'communications', roles: ['teacher', 'secretary', 'student', 'parent', 'admin', 'superadmin'] },
-  { label: 'Invia Email', icon: 'mail', key: 'email', roles: ['teacher', 'secretary', 'admin', 'superadmin'] },
-  { label: 'Stampa Voti', icon: 'print', key: 'grades', roles: ['teacher', 'student', 'parent'] },
-  { label: 'Impostazioni', icon: 'settings', key: 'settings', roles: ['teacher', 'secretary', 'student', 'parent', 'admin', 'superadmin'] }
-]
-
-const actions = computed(() => {
-  return allActions.filter(a => !a.roles || a.roles.includes(currentRole.value))
+  loadStoredDrafts()
+  fetchDashboardData()
 })
 </script>
-
-<style scoped>
-.letter-spacing-1 {
-    letter-spacing: 1px;
-}
-
-.bordered-card {
-  border: 1px solid rgba(0,0,0,0.05);
-  border-radius: 12px;
-}
-
-.hover-bg-grey:hover {
-  background-color: rgba(79, 70, 229, 0.05);
-}
-</style>

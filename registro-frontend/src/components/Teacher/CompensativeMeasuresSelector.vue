@@ -1,7 +1,7 @@
 <template>
   <div class="q-gutter-y-xs">
     <div class="text-caption text-weight-bold text-slate-700 row items-center justify-between q-mb-xs">
-      <span>
+      <span class="row items-center">
         <q-icon name="accessibility_new" color="primary" class="q-mr-xs" />
         Misure Compensative BES / DSA
       </span>
@@ -10,9 +10,10 @@
       </q-chip>
     </div>
 
-    <div class="row q-gutter-xs wrap">
+    <!-- Chips list -->
+    <div class="row q-gutter-xs wrap q-mb-sm">
       <q-chip
-        v-for="measure in availableMeasures"
+        v-for="measure in allMeasures"
         :key="measure.value"
         clickable
         dense
@@ -25,10 +26,32 @@
         {{ measure.label }}
       </q-chip>
     </div>
+
+    <!-- Custom Measure Add Section for Teachers & Secretary -->
+    <div v-if="!readOnly" class="row items-center q-gutter-xs q-mt-xs">
+      <q-input
+        v-model="customInput"
+        dense
+        outlined
+        placeholder="+ Aggiungi misura personalizzata (es. Software per mappe)"
+        class="col"
+        @keydown.enter.prevent="addCustomMeasure"
+      />
+      <q-btn
+        color="secondary"
+        icon="add"
+        label="Aggiungi"
+        dense
+        unelevated
+        no-caps
+        @click="addCustomMeasure"
+      />
+    </div>
   </div>
 </template>
 
 <script setup>
+import { ref, computed } from 'vue'
 
 const props = defineProps({
   modelValue: {
@@ -43,7 +66,9 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue'])
 
-const availableMeasures = [
+const customInput = ref('')
+
+const defaultMeasures = [
   { value: 'calcolatrice', label: 'Uso Calcolatrice' },
   { value: 'tempo_aggiuntivo_30', label: 'Tempo Agg. (+30%)' },
   { value: 'tempo_aggiuntivo_50', label: 'Tempo Agg. (+50%)' },
@@ -55,6 +80,13 @@ const availableMeasures = [
   { value: 'dizionario_ortografico', label: 'Dizionario Digitale' },
   { value: 'testo_ingrandito', label: 'Testo Ingrandito / High Contrast' }
 ]
+
+const customMeasures = ref([])
+
+const allMeasures = computed(() => [
+  ...defaultMeasures,
+  ...customMeasures.value
+])
 
 function isSelected(val) {
   return props.modelValue.includes(val)
@@ -70,5 +102,18 @@ function toggle(val) {
     current.push(val)
   }
   emit('update:modelValue', current)
+}
+
+function addCustomMeasure() {
+  const val = customInput.value.trim()
+  if (!val) return
+  const slug = 'custom_' + val.toLowerCase().replace(/\s+/g, '_')
+  
+  if (!customMeasures.value.some(m => m.value === slug)) {
+    customMeasures.value.push({ value: slug, label: val })
+  }
+  
+  toggle(slug)
+  customInput.value = ''
 }
 </script>

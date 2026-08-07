@@ -20,6 +20,7 @@ import (
 	"registro-backend/internal/classes"
 	"registro-backend/internal/colloqui"
 	"registro-backend/internal/communications"
+	"registro-backend/internal/competencies"
 	"registro-backend/internal/config"
 	"registro-backend/internal/db"
 	"registro-backend/internal/didactic_materials"
@@ -38,6 +39,7 @@ import (
 	"registro-backend/internal/orientamento"
 	"registro-backend/internal/parents"
 	"registro-backend/internal/pcto"
+	"registro-backend/internal/uda"
 	"registro-backend/internal/pdp"
 	"registro-backend/internal/postgres"
 	"registro-backend/internal/reports"
@@ -370,12 +372,20 @@ func main() {
 			auditH := auditlog.NewHandler(auditSvc)
 			auditH.RegisterRoutes(protected)
 
+			udaRepo := uda.NewRepository(database)
+			udaSvc := uda.NewService(udaRepo)
+			udaH := uda.NewHandler(udaSvc)
+			udaH.RegisterRoutes(protected)
+
+			compRepo := competencies.NewRepository(database)
+			compSvc := competencies.NewService(compRepo)
+			compH := competencies.NewHandler(compSvc)
+			compH.RegisterRoutes(protected)
+
 			elearningH.RegisterRoutes(protected)
+			signaturesH.RegisterRoutes(protected)
 
 			adminH.RegisterRoutes(protected, adminMiddleware)
-			signaturesGroup := protected.Group("/signatures")
-			signaturesGroup.POST("/", signaturesH.SignDocument)
-			signaturesGroup.GET("/:id", signaturesH.GetSignatures)
 		}
 	}
 

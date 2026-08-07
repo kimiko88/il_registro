@@ -25,7 +25,14 @@ export const attendanceService = {
     async updateAttendance(id, data) {
         return api.put(`/attendance/${id}`, data)
     },
+    async deleteHour(classId, date, hour) {
+        return api.delete(`/attendance/class/${classId}/hour/${hour}`, { params: { date } })
+    },
     async exportAttendance(classId, date) {
         return api.get('/attendance/export', { params: { class_id: classId, date }, responseType: 'blob' })
+    },
+    async getStudentSummary(studentId) {
+        const res = await api.get(`/attendance/students/${studentId}/summary`)
+        return res.data
     }
 }

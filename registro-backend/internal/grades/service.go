@@ -196,8 +196,8 @@ func (s *service) GetClassGrades(ctx context.Context, actorID string, actorRole 
 			if err := s.validator.db.QueryRow(
 				`SELECT EXISTS(
 					SELECT 1 FROM class_subjects cs
-					JOIN teachers t ON cs.teacher_id = t.id
-					WHERE cs.class_id = $1 AND cs.subject_id = $2 AND t.user_id = $3
+					LEFT JOIN teachers t ON cs.teacher_id = t.id OR cs.teacher_id = t.user_id
+					WHERE cs.class_id::text = $1 AND cs.subject_id::text = $2 AND (cs.teacher_id::text = $3 OR t.user_id::text = $3)
 				)`,
 				classID, filter.SubjectID, actorID,
 			).Scan(&exists); err != nil {
@@ -302,8 +302,8 @@ func (s *service) GetSubjectGrades(ctx context.Context, actorID string, actorRol
 			ctx,
 			`SELECT EXISTS(
 				SELECT 1 FROM class_subjects cs
-				JOIN teachers t ON cs.teacher_id = t.id
-				WHERE cs.subject_id = $1 AND t.user_id = $2
+				LEFT JOIN teachers t ON cs.teacher_id = t.id OR cs.teacher_id = t.user_id
+				WHERE cs.subject_id::text = $1 AND (cs.teacher_id::text = $2 OR t.user_id::text = $2)
 			)`,
 			subjectID, actorID,
 		).Scan(&exists); err != nil {
@@ -981,11 +981,11 @@ func (s *service) GetSemesterReport(studentID string, semester int) (*SemesterRe
 	teacherMap := make(map[string]string)
 	if s.validator != nil && s.validator.db != nil && classID != "" {
 		tRows, tErr := s.validator.db.Query(
-			`SELECT cs.subject_id, u.first_name || ' ' || u.last_name
+			`SELECT cs.subject_id, COALESCE(u.first_name || ' ' || u.last_name, '')
 			 FROM class_subjects cs
-			 JOIN teachers t ON cs.teacher_id = t.id
-			 JOIN users u ON t.user_id = u.id
-			 WHERE cs.class_id = $1`, classID,
+			 LEFT JOIN teachers t ON cs.teacher_id = t.id OR cs.teacher_id = t.user_id
+			 LEFT JOIN users u ON t.user_id = u.id OR cs.teacher_id = u.id
+			 WHERE cs.class_id::text = $1`, classID,
 		)
 		if tErr == nil {
 			for tRows.Next() {

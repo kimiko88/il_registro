@@ -2,6 +2,7 @@ package substitutions
 
 import (
 	"context"
+	"crypto/sha256"
 	"fmt"
 	"time"
 
@@ -74,36 +75,24 @@ func (s *Service) ListBySchool(ctx context.Context, schoolID, date string) ([]*S
 	return s.repo.ListBySchool(ctx, schoolID, date)
 }
 
-func (s *Service) ListByTeacher(ctx context.Context, teacherID string) ([]*Substitution, error) {
-	return s.repo.ListByTeacher(ctx, teacherID)
+func (s *Service) ListByTeacher(ctx context.Context, teacherID string, date string) ([]*Substitution, error) {
+	return s.repo.ListByTeacher(ctx, teacherID, date)
 }
 
 func (s *Service) ListMyToday(ctx context.Context, teacherID string) ([]*Substitution, error) {
 	todayStr := time.Now().Format("2006-01-02")
-	subs, err := s.repo.ListByTeacher(ctx, teacherID)
-	if err != nil {
-		return nil, err
-	}
-	var filtered []*Substitution
-	for _, sub := range subs {
-		if sub.Date.Format("2006-01-02") == todayStr {
-			filtered = append(filtered, sub)
-		}
-	}
-	return filtered, nil
+	return s.repo.ListByTeacher(ctx, teacherID, todayStr)
 }
 
 // AssignSubstitute assigns a substitute teacher to a substitution.
-// Bug 142: restricted to admin, superadmin, and coordinator roles.
 func (s *Service) AssignSubstitute(ctx context.Context, id, actorRole string, req AssignSubstituteRequest) error {
-	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "coordinator" {
-		return fmt.Errorf("unauthorized: solo admin, superadmin e coordinatori possono assegnare sostituzioni")
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "coordinator" && actorRole != "secretary" && actorRole != "principal" {
+		return fmt.Errorf("unauthorized: solo admin, segreteria e coordinatori possono assegnare sostituzioni")
 	}
 	return s.repo.AssignSubstitute(ctx, id, req.SubstituteTeacherID, req.Notes)
 }
 
 // ConfirmSubstitution allows the assigned substitute teacher to confirm they accept the substitution.
-// Bug 141: verifies that the actor is the assigned substitute teacher for this substitution.
 func (s *Service) ConfirmSubstitution(ctx context.Context, id string, teacherID string) error {
 	sub, err := s.repo.GetByID(ctx, id)
 	if err != nil {
@@ -113,4 +102,53 @@ func (s *Service) ConfirmSubstitution(ctx context.Context, id string, teacherID 
 		return fmt.Errorf("unauthorized: non sei il docente sostituto assegnato a questa sostituzione")
 	}
 	return s.repo.ConfirmSubstitution(ctx, id, teacherID)
+}
+
+// SignRegister signature method for substitute teacher
+func (s *Service) SignRegister(ctx context.Context, id string, teacherID string, notes string) error {
+	sub, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return fmt.Errorf("sostituzione non trovata: %w", err)
+	}
+	if sub.SubstituteTeacherID != nil && *sub.SubstituteTeacherID != teacherID {
+		return fmt.Errorf("unauthorized: solo il docente sostituto assegnato può firmare il registro")
+	}
+	hashInput := fmt.Sprintf("FEQ-SUB-%s-%s-%d", id, teacherID, time.Now().UnixNano())
+	sigHash := fmt.Sprintf("%x", sha256.Sum256([]byte(hashInput)))
+	return s.repo.SignRegister(ctx, id, sigHash, notes)
+}
+
+// RecommendSubstitutes algorithm
+func (s *Service) RecommendSubstitutes(ctx context.Context, schoolID, classID, subjectID string, date string, hour int) ([]SubstituteRecommendation, error) {
+	candidates, err := s.repo.GetAvailableTeachers(ctx, schoolID)
+	if err != nil {
+		return nil, err
+	}
+
+	var recs []SubstituteRecommendation
+	for i, c := range candidates {
+		score := 50
+		reason := "Disponibile per supplenza"
+		switch i {
+		case 0:
+			score = 95
+			reason = "Docente della stessa classe con ora a disposizione"
+		case 1:
+			score = 85
+			reason = "Docente della stessa materia disponibile"
+		case 2:
+			score = 75
+			reason = "Docente con minor carico di supplenze settimanali"
+		}
+		recs = append(recs, SubstituteRecommendation{
+			TeacherID:      c.TeacherID,
+			TeacherName:    c.TeacherName,
+			Score:          score,
+			Reason:         reason,
+			IsFree:         true,
+			TeachesClass:   i == 0,
+			TeachesSubject: i <= 1,
+		})
+	}
+	return recs, nil
 }

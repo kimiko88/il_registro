@@ -14,14 +14,14 @@ export const useSubstitutionsStore = defineStore('substitutions', {
       this.loading = true
       this.error = null
       try {
-        const params = weekDate ? { date: weekDate } : {}
+        const params = (weekDate && typeof weekDate === 'string' && weekDate.length === 10) ? { date: weekDate } : {}
         const response = await api.get('/substitutions/my', { params })
         this.mySubstitutions = response.data || []
         return this.mySubstitutions
       } catch (err) {
         this.error = err.response?.data?.error || 'Errore durante il recupero delle sostituzioni'
         console.error(err)
-        throw err
+        return []
       } finally {
         this.loading = false
       }
@@ -35,7 +35,7 @@ export const useSubstitutionsStore = defineStore('substitutions', {
         return this.todaySubstitutions
       } catch (err) {
         console.error(err)
-        throw err
+        return []
       } finally {
         this.loading = false
       }

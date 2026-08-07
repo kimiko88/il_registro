@@ -11,14 +11,6 @@ const { mockGetByClass, mockApiGet, mockApiPost } = vi.hoisted(() => ({
     mockApiPost: vi.fn()
 }))
 
-vi.mock('@/composables/useUndoToast', () => ({
-    useUndoToast: () => ({
-        notifyWithUndo: vi.fn(async (msg, action) => {
-            if (action) await action()
-            return false
-        })
-    })
-}))
 vi.mock('src/services/attendanceService', () => ({
     attendanceService: { getByClass: mockGetByClass }
 }))
@@ -95,7 +87,8 @@ describe('Teacher/Attendance.vue', () => {
                     'q-spinner': true,
                     'q-dialog': true,
                     'q-tooltip': true,
-                    'NoteDialog': true
+                    'NoteDialog': true,
+                    'SkeletonTable': true
                 }
             }
         })
@@ -153,7 +146,8 @@ describe('Teacher/Attendance.vue', () => {
                     'q-spinner': true,
                     'q-dialog': true,
                     'q-tooltip': true,
-                    'NoteDialog': true
+                    'NoteDialog': true,
+                    'SkeletonTable': true
                 }
             }
         })
@@ -188,7 +182,8 @@ describe('Teacher/Attendance.vue', () => {
         wrapper.vm.selectedClass = { id: 'c1' }
         wrapper.vm.students = [{ id: 's1', status: 'present' }]
 
-        await wrapper.vm.saveAttendance()
+        // saveUnifiedRecord is exported as saveAttendance alias
+        await wrapper.vm.saveUnifiedRecord()
 
         expect(mockApiPost).toHaveBeenCalledWith('/attendance/mark-bulk', expect.anything())
     })

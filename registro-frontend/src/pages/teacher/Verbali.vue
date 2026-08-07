@@ -41,8 +41,8 @@
 
         <q-card-section>
           <q-form @submit="createVerbale" class="q-gutter-md">
-            <q-input v-model="form.class_id" label="ID Classe" outlined dense rules="[val => !!val || 'Campo obbligatorio']" />
-            <q-input v-model="form.title" label="Titolo Verbale" outlined dense rules="[val => !!val || 'Campo obbligatorio']" />
+            <q-input v-model="form.class_id" label="ID Classe" outlined dense :rules="[val => !!val || 'Campo obbligatorio']" />
+            <q-input v-model="form.title" label="Titolo Verbale" outlined dense :rules="[val => !!val || 'Campo obbligatorio']" />
             <q-input v-model="form.content" type="textarea" label="Contenuto / OdG" outlined dense rows="5" />
 
             <div class="row justify-end q-mt-md">
