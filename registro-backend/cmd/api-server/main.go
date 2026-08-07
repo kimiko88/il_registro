@@ -89,7 +89,6 @@ func main() {
 	defer database.Close()
 
 	// 4. Setup Authentication (Keys & Managers)
-	// Keys are saved to disk to persist sessions across restarts
 	privateKey, publicKey, err := jwt.GetOrGenerateKeys("private_key.pem", "public_key.pem")
 	if err != nil {
 		log.Fatalf("Failed to load/generate RSA keys: %v", err)
@@ -125,6 +124,9 @@ func main() {
 	rubricsRepo := rubrics.NewRepository(database)
 	schoolCalendarRepo := schoolcalendar.NewRepository(database)
 
+	// Repository FEQ — firma qualificata con valore legale (CAD art. 21 / eIDAS)
+	feqRepo := signatures.NewFEQRepository(database)
+
 	authMiddleware := auth.NewMiddleware(tokenManager, usersRepo)
 
 	// 6. Setup Services
@@ -146,14 +148,21 @@ func main() {
 	classesSvc := classes.NewService(classesRepo)
 	gradesSvc := grades.NewService(gradesRepo, usersRepo, database, wsHub)
 	gradesAnalytics := grades.NewAnalyticsService(gradesRepo)
-	// wsHub satisfies attendance.EventBroadcaster (BroadcastToUser + BroadcastToSchool).
 	attendanceSvc := attendance.NewService(attendanceRepo, usersRepo, wsHub, schoolCalendarSvc)
 	docsSvc := documents.NewService(docsRepo)
 	schedSvc := scheduling.NewService(schedRepo, teachersRepo)
 	pctoSvc := pcto.NewService(pctoRepo)
 	orientSvc := orientamento.NewService(orientRepo)
 	schoolsSvc := schools.NewService(schoolsRepo)
+
+	// Firma FEA base (legacy)
 	signaturesSvc := signatures.NewService(signatures.NewRepository(database), docsSvc, usersRepo)
+
+	// Firma FEQ/FES con valore legale — D.Lgs. 82/2005 (CAD) + eIDAS Reg. UE 910/2014
+	feqSvc := signatures.NewQualifiedService(database, feqRepo, usersRepo)
+
+	// Export SIDI/MIUR — scrutini, presenze, certificazioni DM 742/2017
+	sidiSvc := signatures.NewSidiExportService()
 
 	commsSvc := communications.NewService(commsRepo)
 	notesSvc := notes.NewService(notesRepo, usersRepo)
@@ -175,7 +184,9 @@ func main() {
 	docsUploader := upload.NewSupabaseUploader(cfg.Supabase.URL, cfg.Supabase.Key, cfg.Supabase.Bucket)
 	docsH := documents.NewHandler(docsSvc, docsUploader)
 	schedH := scheduling.NewHandler(schedSvc)
-	signaturesH := signatures.NewHandler(signaturesSvc)
+
+	// Handler firme: FEA base + FEQ/FES qualificata + SIDI export + CAD preservation
+	signaturesH := signatures.NewHandler(signaturesSvc, feqSvc, sidiSvc)
 
 	notesH := notes.NewHandler(notesSvc)
 	adminH := admin.NewHandler(adminSvc)
@@ -383,6 +394,8 @@ func main() {
 			compH.RegisterRoutes(protected)
 
 			elearningH.RegisterRoutes(protected)
+
+			// Firme qualificate FEQ/FES + SIDI export + CAD preservation
 			signaturesH.RegisterRoutes(protected)
 
 			adminH.RegisterRoutes(protected, adminMiddleware)
