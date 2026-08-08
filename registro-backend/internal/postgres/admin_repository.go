@@ -762,7 +762,7 @@ func (r *AdminRepository) ListAuditLogs(ctx context.Context, req *admin.AuditLog
 		LEFT JOIN schools s ON aa.school_id = s.id
 		WHERE 1=1
 	`
-	countQuery := "SELECT COUNT(*) FROM admin_actions aa WHERE 1=1"
+	countQuery := "SELECT COUNT(*) FROM admin_actions aa JOIN users u ON aa.admin_id = u.id WHERE 1=1"
 
 	args := []interface{}{}
 	argCount := 1
@@ -785,6 +785,13 @@ func (r *AdminRepository) ListAuditLogs(ctx context.Context, req *admin.AuditLog
 		query += fmt.Sprintf(" AND aa.created_at >= $%d", argCount)
 		countQuery += fmt.Sprintf(" AND aa.created_at >= $%d", argCount)
 		args = append(args, req.FromDate)
+		argCount++
+	}
+
+	if req.ToDate != "" {
+		query += fmt.Sprintf(" AND aa.created_at <= $%d", argCount)
+		countQuery += fmt.Sprintf(" AND aa.created_at <= $%d", argCount)
+		args = append(args, req.ToDate)
 		argCount++
 	}
 

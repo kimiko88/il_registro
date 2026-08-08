@@ -20,17 +20,16 @@ linters:
         - (net/http.ResponseBody).Close
 
 issues:
-  exclusions:
-    rules:
-      # cmd/ tools are debug/migration utilities — Close errors there are ignorable.
-      - path: cmd/
-        linters:
-          - errcheck
-      # os.Setenv errors in env-loading helpers are non-fatal by design.
-      - text: "Error return value of `os.Setenv` is not checked"
-        linters:
-          - errcheck
-      # resp.Body.Close in deferred calls — body is already consumed.
-      - text: "Error return value of `resp.Body.Close` is not checked"
-        linters:
-          - errcheck
+  exclude-rules:
+    # cmd/ tools are debug/migration utilities — Close errors there are ignorable.
+    - path: cmd/
+      linters:
+        - errcheck
+    # os.Setenv errors in env-loading helpers are non-fatal by design.
+    - text: "Error return value of `os.Setenv` is not checked"
+      linters:
+        - errcheck
+    # resp.Body.Close in deferred calls — body is already consumed.
+    - text: "Error return value of `resp.Body.Close` is not checked"
+      linters:
+        - errcheck

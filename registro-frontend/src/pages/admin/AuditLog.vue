@@ -43,11 +43,11 @@
     <!-- Logs Table -->
     <q-card>
       <q-table
+        v-model:pagination="pagination"
         :rows="logs"
         :columns="columns"
         row-key="id"
         :loading="loading"
-        :pagination="pagination"
         @request="onRequest"
       >
         <template v-slot:body="props">
@@ -139,7 +139,8 @@ const fetchLogs = async () => {
     }
     const response = await adminService.getAuditLogs(params)
     logs.value = response.data.items || []
-    pagination.value.rowsNumber = response.data.total
+    const totalCount = response.data.total !== undefined ? Number(response.data.total) : logs.value.length
+    pagination.value.rowsNumber = totalCount
   } catch (error) {
     $q.notify({
       type: 'negative',
@@ -152,7 +153,9 @@ const fetchLogs = async () => {
 }
 
 const onRequest = (props) => {
-  pagination.value = props.pagination
+  const { page, rowsPerPage } = props.pagination
+  pagination.value.page = page
+  pagination.value.rowsPerPage = rowsPerPage
   fetchLogs()
 }
 
