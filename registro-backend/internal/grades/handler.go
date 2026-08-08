@@ -340,7 +340,7 @@ func (h *Handler) AddGrade(c *gin.Context) {
 		return
 	}
 
-	res, err := h.service.AddGrade(teacherID, req)
+	res, err := h.service.AddGrade(c.Request.Context(), teacherID, req)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -374,7 +374,7 @@ func (h *Handler) UpdateGrade(c *gin.Context) {
 		return
 	}
 
-	res, err := h.service.UpdateGrade(teacherID, gradeID, req)
+	res, err := h.service.UpdateGrade(c.Request.Context(), teacherID, gradeID, req)
 	if err != nil {
 		if errors.Is(err, ErrUnauthorized) || strings.Contains(err.Error(), "unauthorized") {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
@@ -406,7 +406,7 @@ func (h *Handler) DeleteGrade(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.DeleteGrade(teacherID, gradeID); err != nil {
+	if err := h.service.DeleteGrade(c.Request.Context(), teacherID, gradeID); err != nil {
 		if errors.Is(err, ErrUnauthorized) || strings.Contains(err.Error(), "unauthorized") {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
@@ -493,7 +493,7 @@ func (h *Handler) GetMyGrades(c *gin.Context) {
 
 	filter := h.parseFilter(c)
 
-	resp, err := h.service.GetMyGrades(studentID, filter)
+	resp, err := h.service.GetMyGrades(c.Request.Context(), studentID, filter)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -509,7 +509,7 @@ func (h *Handler) GetMyAverages(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.service.GetMyAverages(studentID)
+	resp, err := h.service.GetMyAverages(c.Request.Context(), studentID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -551,7 +551,7 @@ func (h *Handler) GetSemesterReport(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.service.GetSemesterReport(studentID, sem)
+	resp, err := h.service.GetSemesterReport(c.Request.Context(), studentID, sem)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

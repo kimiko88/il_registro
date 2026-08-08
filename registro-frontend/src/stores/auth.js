@@ -118,17 +118,23 @@ export const useAuthStore = defineStore('auth', () => {
         token.value = newTokenData
         if (newRefreshTokenData) {
             refreshToken.value = newRefreshTokenData
+        } else {
+            refreshToken.value = null
         }
 
         if (localStorage.getItem('token') || localStorage.getItem('user')) {
             localStorage.setItem('token', newTokenData)
             if (newRefreshTokenData) {
                 localStorage.setItem('refreshToken', newRefreshTokenData)
+            } else {
+                localStorage.removeItem('refreshToken')
             }
         } else {
             sessionStorage.setItem('token', newTokenData)
             if (newRefreshTokenData) {
                 sessionStorage.setItem('refreshToken', newRefreshTokenData)
+            } else {
+                sessionStorage.removeItem('refreshToken')
             }
         }
     }

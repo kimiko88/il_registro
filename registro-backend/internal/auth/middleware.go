@@ -103,6 +103,12 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 		c.Set("role", claims.Role)
 		c.Set("school_id", claims.SchoolID)
 
+		acceptLang := c.GetHeader("Accept-Language")
+		if acceptLang == "" {
+			acceptLang = "it-IT"
+		}
+		c.Set("locale", acceptLang)
+
 		// Synchronize with stdlib request context
 		c.Request = c.Request.WithContext(SetUserContext(c.Request.Context(), claims.UserID, claims.Email, claims.Role, claims.SchoolID))
 

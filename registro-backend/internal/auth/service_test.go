@@ -459,4 +459,37 @@ func TestPasswordReset(t *testing.T) {
 		assert.NoError(t, err)
 		mockRepo.AssertExpectations(t)
 	})
+
+	t.Run("ChangePasswordSuccess", func(t *testing.T) {
+		userID := "user-change-123"
+		currentPass := "OldPass123!Valid"
+		newPass := "NewSuperPass123!"
+
+		hashedCurrent, _ := bcrypt.GenerateFromPassword([]byte(currentPass), bcrypt.MinCost)
+		user := &User{ID: userID, IsActive: true, PasswordHash: string(hashedCurrent)}
+
+		mockRepo.On("GetUserByID", mock.Anything, userID).Return(user, nil).Once()
+		mockRepo.On("GetPasswordHistory", mock.Anything, userID).Return([]string{}, nil).Once()
+		mockRepo.On("UpdatePassword", mock.Anything, userID, mock.Anything).Return(nil).Once()
+		mockRepo.On("AddPasswordHistory", mock.Anything, userID, mock.Anything).Return(nil).Once()
+
+		err := s.ChangePassword(context.Background(), userID, currentPass, newPass)
+		assert.NoError(t, err)
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("ChangePasswordInvalidCurrent", func(t *testing.T) {
+		userID := "user-change-123"
+		currentPass := "WrongOldPass123!"
+		newPass := "NewSuperPass123!"
+
+		hashedCurrent, _ := bcrypt.GenerateFromPassword([]byte("ActualOldPass123!"), bcrypt.MinCost)
+		user := &User{ID: userID, IsActive: true, PasswordHash: string(hashedCurrent)}
+
+		mockRepo.On("GetUserByID", mock.Anything, userID).Return(user, nil).Once()
+
+		err := s.ChangePassword(context.Background(), userID, currentPass, newPass)
+		assert.ErrorIs(t, err, ErrInvalidCredentials)
+		mockRepo.AssertExpectations(t)
+	})
 }

@@ -1,11 +1,14 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import routes from './routes'
 import { authGuard } from './guards'
+import { setApiRouter } from '@/services/api'
 
 const router = createRouter({
     history: createWebHistory(),
     routes
 })
+
+setApiRouter(router)
 
 router.beforeEach(authGuard)
 

@@ -3,9 +3,9 @@
     <div class="row items-center q-mb-xl">
       <div class="col">
         <h1 class="text-h3 text-weight-bold text-outfit q-my-none text-gradient-premium">
-          Impostazioni Sistema
+          {{ t('settings.title') }}
         </h1>
-        <div class="text-subtitle1 text-slate-500 q-mt-sm">Configura le preferenze generali, di sicurezza e notifiche del sistema</div>
+        <div class="text-subtitle1 text-slate-500 q-mt-sm">{{ t('settings.subtitle') }}</div>
       </div>
     </div>
     
@@ -21,11 +21,11 @@
             </div>
           </q-item-section>
           <q-item-section>
-            <q-item-label class="text-weight-bold text-slate-700">Lingua / Language</q-item-label>
+            <q-item-label class="text-weight-bold text-slate-700">{{ t('settings.languageLabel') }}</q-item-label>
             <q-item-label caption>{{ currentLanguageLabel }}</q-item-label>
           </q-item-section>
           <q-item-section side>
-            <q-badge color="primary" label="Piano i18n" class="q-mr-sm" />
+            <q-badge color="primary" label="Attivo" class="q-mr-sm" />
             <q-icon name="chevron_right" color="slate-300" />
           </q-item-section>
         </q-item>
@@ -38,11 +38,11 @@
             </div>
           </q-item-section>
           <q-item-section>
-            <q-item-label class="text-weight-bold text-slate-700">Sicurezza & Autenticazione</q-item-label>
-            <q-item-label caption>Policy password, 2FA/MFA e timeout sessione</q-item-label>
+            <q-item-label class="text-weight-bold text-slate-700">{{ t('settings.securityLabel') }}</q-item-label>
+            <q-item-label caption>{{ t('settings.securitySub') }}</q-item-label>
           </q-item-section>
           <q-item-section side>
-            <q-badge :color="securitySettings.require_mfa ? 'positive' : 'warning'" :label="securitySettings.require_mfa ? 'MFA Attivo' : 'MFA Opzionale'" class="q-mr-sm" />
+            <q-badge :color="securitySettings.require_mfa ? 'positive' : 'warning'" :label="securitySettings.require_mfa ? t('settings.mfaActive') : t('settings.mfaOptional')" class="q-mr-sm" />
             <q-icon name="chevron_right" color="slate-300" />
           </q-item-section>
         </q-item>
@@ -55,8 +55,8 @@
             </div>
           </q-item-section>
           <q-item-section>
-            <q-item-label class="text-weight-bold text-slate-700">Notifiche & Alert</q-item-label>
-            <q-item-label caption>Preferenze email, push e notifiche supplenze</q-item-label>
+            <q-item-label class="text-weight-bold text-slate-700">{{ t('settings.notificationsLabel') }}</q-item-label>
+            <q-item-label caption>{{ t('settings.notificationsSub') }}</q-item-label>
           </q-item-section>
           <q-item-section side>
             <q-badge color="info" :label="activeNotificationsCount + ' attive'" class="q-mr-sm" />
@@ -81,8 +81,8 @@
           <q-list separator>
             <q-item tag="label" v-ripple>
               <q-item-section>
-                <q-item-label class="text-weight-bold">Obbligo 2FA / MFA</q-item-label>
-                <q-item-label caption>Richiedi l'autenticazione a due fattori con codice TOTP per tutti gli utenti staff ed amministratori.</q-item-label>
+                <q-item-label class="text-weight-bold">{{ t('settings.mfaTitle') }}</q-item-label>
+                <q-item-label caption>{{ t('settings.mfaCaption') }}</q-item-label>
               </q-item-section>
               <q-item-section side>
                 <q-toggle v-model="securitySettings.require_mfa" color="primary" />
@@ -91,7 +91,7 @@
 
             <q-item class="q-py-md">
               <q-item-section>
-                <q-item-label class="text-weight-bold">Lunghezza Minima Password</q-item-label>
+                <q-item-label class="text-weight-bold">{{ t('settings.minPasswordLength') }}</q-item-label>
                 <q-item-label caption>Numero minimo di caratteri richiesti per la creazione o modifica delle password.</q-item-label>
               </q-item-section>
               <q-item-section side style="width: 140px;">
@@ -101,7 +101,7 @@
 
             <q-item class="q-py-md">
               <q-item-section>
-                <q-item-label class="text-weight-bold">Timeout Inattività Sessione</q-item-label>
+                <q-item-label class="text-weight-bold">{{ t('settings.sessionTimeout') }}</q-item-label>
                 <q-item-label caption>Tempo trascorso il quale la sessione utente inattiva viene disconnessa automaticamente.</q-item-label>
               </q-item-section>
               <q-item-section side style="width: 140px;">
@@ -111,7 +111,7 @@
 
             <q-item class="q-py-md">
               <q-item-section>
-                <q-item-label class="text-weight-bold">Tentativi Falliti prima del Blocco</q-item-label>
+                <q-item-label class="text-weight-bold">{{ t('settings.maxLoginAttempts') }}</q-item-label>
                 <q-item-label caption>Soglia di errori di login oltre la quale l'account viene temporaneamente sospeso.</q-item-label>
               </q-item-section>
               <q-item-section side style="width: 140px;">
@@ -122,8 +122,8 @@
         </q-card-section>
 
         <q-card-actions align="right" class="q-pa-md bg-grey-1">
-          <q-btn flat label="Annulla" color="grey-7" v-close-popup />
-          <q-btn color="primary" label="Salva Sicurezza" icon="save" :loading="savingSecurity" @click="saveSecuritySettings" />
+          <q-btn flat :label="t('common.cancel')" color="grey-7" v-close-popup />
+          <q-btn color="primary" :label="t('common.save')" icon="save" :loading="savingSecurity" @click="saveSecuritySettings" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -184,13 +184,13 @@
         </q-card-section>
 
         <q-card-actions align="right" class="q-pa-md bg-grey-1">
-          <q-btn flat label="Annulla" color="grey-7" v-close-popup />
-          <q-btn color="amber-9" text-color="white" label="Salva Notifiche" icon="save" :loading="savingNotifications" @click="saveNotificationSettings" />
+          <q-btn flat :label="t('common.cancel')" color="grey-7" v-close-popup />
+          <q-btn color="amber-9" text-color="white" :label="t('common.save')" icon="save" :loading="savingNotifications" @click="saveNotificationSettings" />
         </q-card-actions>
       </q-card>
     </q-dialog>
 
-    <!-- Dialog Lingua / Piano i18n -->
+    <!-- Dialog Lingua / i18n -->
     <q-dialog v-model="languageDialog">
       <q-card style="min-width: 450px; max-width: 550px;" class="rounded-xl">
         <q-card-section class="bg-indigo text-white row items-center">
@@ -224,15 +224,15 @@
 
           <q-banner rounded class="bg-indigo-1 text-indigo-9 border-indigo">
             <template v-slot:avatar>
-              <q-icon name="info" color="indigo" />
+              <q-icon name="check_circle" color="indigo" />
             </template>
-            <strong>Piano di Implementazione Internazionalizzazione (i18n)</strong><br />
-            L'infrastruttura per il supporto multilingua (Italiano / English / Deutsch) è stata definita nell'<strong>Implementation Plan</strong> dedicato. È possibile confermare la lingua desiderata.
+            <strong>Multilingua Attivo (i18n)</strong><br />
+            Selezionando una lingua, l'intera interfaccia utente ed i messaggi di risposta del server si aggiorneranno istantaneamente.
           </q-banner>
         </q-card-section>
 
         <q-card-actions align="right" class="q-pa-md bg-grey-1">
-          <q-btn flat label="Chiudi" color="grey-7" v-close-popup />
+          <q-btn flat :label="t('common.close')" color="grey-7" v-close-popup />
           <q-btn color="indigo" label="Applica Lingua" icon="check" @click="saveLanguage" />
         </q-card-actions>
       </q-card>
@@ -243,8 +243,10 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
+import { useI18n } from 'vue-i18n'
 
 const $q = useQuasar()
+const { locale, t } = useI18n()
 
 // Dialog states
 const securityDialog = ref(false)
@@ -255,15 +257,21 @@ const savingSecurity = ref(false)
 const savingNotifications = ref(false)
 
 // Lingua
-const selectedLanguage = ref('it-IT')
+const selectedLanguage = ref(locale.value || 'it-IT')
 const languageOptions = [
   { label: 'Italiano (Italia)', value: 'it-IT', icon: 'flag' },
   { label: 'English (United States)', value: 'en-US', icon: 'language' },
-  { label: 'Deutsch (Deutschland)', value: 'de-DE', icon: 'language' }
+  { label: 'Deutsch (Deutschland)', value: 'de-DE', icon: 'language' },
+  { label: 'Français (France)', value: 'fr-FR', icon: 'language' },
+  { label: 'Español (España)', value: 'es-ES', icon: 'language' },
+  { label: 'Русский (Россия)', value: 'ru-RU', icon: 'language' },
+  { label: 'Українська (Україна)', value: 'uk-UA', icon: 'language' },
+  { label: 'العربية (السعودية)', value: 'ar-SA', icon: 'language' },
+  { label: '中文 (简体)', value: 'zh-CN', icon: 'language' }
 ]
 
 const currentLanguageLabel = computed(() => {
-  const opt = languageOptions.find(o => o.value === selectedLanguage.value)
+  const opt = languageOptions.find(o => o.value === locale.value)
   return opt ? opt.label : 'Italiano (Italia)'
 })
 
@@ -321,7 +329,10 @@ const loadSettings = () => {
     if (savedNotif) Object.assign(notificationSettings, JSON.parse(savedNotif))
 
     const savedLang = localStorage.getItem('superadmin_language')
-    if (savedLang) selectedLanguage.value = savedLang
+    if (savedLang) {
+      selectedLanguage.value = savedLang
+      locale.value = savedLang
+    }
   } catch (e) {
     console.warn('Errore lettura impostazioni salvate:', e)
   }
@@ -380,6 +391,7 @@ const saveNotificationSettings = async () => {
 }
 
 const saveLanguage = () => {
+  locale.value = selectedLanguage.value
   localStorage.setItem('superadmin_language', selectedLanguage.value)
   $q.notify({
     type: 'positive',
@@ -397,5 +409,8 @@ onMounted(() => {
 <style scoped>
 .letter-spacing-1 {
     letter-spacing: 1px;
+}
+.border-indigo {
+    border: 1px solid #c7d2fe;
 }
 </style>

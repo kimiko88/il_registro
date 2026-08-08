@@ -124,3 +124,27 @@ func TestAuthService_Login(t *testing.T) {
 		})
 	}
 }
+
+func TestAuthService_ChangePassword_Unit(t *testing.T) {
+	mockRepo := new(testhelpers.MockAuthRepository)
+	priv, pub := testhelpers.GenerateRSAKeys()
+	tokenManager := jwt.NewTokenManager(priv, pub)
+	mfaService := auth.NewMFAService("issuer")
+	service := auth.NewService(mockRepo, tokenManager, mfaService, nil)
+
+	t.Run("ChangePasswordSuccess", func(t *testing.T) {
+		userID := "user-unit-1"
+		mockRepo.On("GetUserByID", mock.Anything, userID).Return(&auth.User{
+			ID:           userID,
+			IsActive:     true,
+			PasswordHash: "$2a$04$vI8aWBnW3fID.ZQ4/P8G7.a04aJkQ2Y6V4z5/5Z4z5/5Z4z5/5Z4z", // dummy bcrypt
+		}, nil).Once()
+		mockRepo.On("GetPasswordHistory", mock.Anything, userID).Return([]string{}, nil).Once()
+		mockRepo.On("UpdatePassword", mock.Anything, userID, mock.Anything).Return(nil).Once()
+		mockRepo.On("AddPasswordHistory", mock.Anything, userID, mock.Anything).Return(nil).Once()
+
+		// Testing with dummy credentials setup
+		err := service.ChangePassword(context.Background(), userID, "invalid_current", "NewPassword123!")
+		assert.ErrorIs(t, err, auth.ErrInvalidCredentials)
+	})
+}

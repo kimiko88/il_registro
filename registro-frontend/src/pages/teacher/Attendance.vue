@@ -559,7 +559,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { useClassesStore } from '@/stores/classes'
 import { useGradesStore } from '@/stores/grades'
@@ -569,11 +569,13 @@ import { lessonService } from 'src/services/lessonService'
 import api from '@/services/api'
 import NoteDialog from 'src/components/Teacher/NoteDialog.vue'
 import SkeletonTable from '@/components/Common/SkeletonTable.vue'
+import { useSchoolYearStore } from '@/stores/schoolYear'
 
 const $q = useQuasar()
 const classesStore = useClassesStore()
 const gradesStore = useGradesStore()
 const authStore = useAuthStore()
+const schoolYearStore = useSchoolYearStore()
 
 // Current teacher ID from auth token
 const currentTeacherId = computed(() => authStore.user?.id || null)
@@ -779,10 +781,20 @@ const saveDraftToStorage = () => {
 }
 
 onMounted(async () => {
-    await classesStore.fetchAssignedClasses()
+    await classesStore.fetchAssignedClasses(schoolYearStore.selectedSchoolYear)
     if (classesStore.classes.length > 0) selectedClass.value = classesStore.classes[0]
     await onClassChange()
     autosaveInterval = setInterval(saveDraftToStorage, 60000)
+})
+
+watch(() => schoolYearStore.selectedSchoolYear, async (newSY) => {
+    await classesStore.fetchAssignedClasses(newSY)
+    if (classesStore.classes.length > 0) {
+        selectedClass.value = classesStore.classes[0]
+    } else {
+        selectedClass.value = null
+    }
+    await onClassChange()
 })
 
 onUnmounted(() => {

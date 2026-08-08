@@ -289,6 +289,41 @@ func (h *Handler) ConfirmPasswordReset(c *gin.Context) {
 	c.JSON(http.StatusOK, MessageResponse{Message: "password reset successfully"})
 }
 
+type ChangePasswordRequest struct {
+	CurrentPassword string `json:"current_password" binding:"required"`
+	NewPassword     string `json:"new_password" binding:"required"`
+}
+
+func (h *Handler) ChangePassword(c *gin.Context) {
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "unauthorized"})
+		return
+	}
+
+	var req ChangePasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "invalid request", Message: err.Error()})
+		return
+	}
+
+	if err := h.service.ChangePassword(c.Request.Context(), userID, req.CurrentPassword, req.NewPassword); err != nil {
+		statusCode := http.StatusInternalServerError
+		switch err {
+		case ErrInvalidCredentials:
+			statusCode = http.StatusUnauthorized
+		case ErrPasswordTooShort, ErrPasswordTooLong, ErrPasswordNoUppercase, ErrPasswordNoLowercase, ErrPasswordNoNumber, ErrPasswordNoSpecial:
+			statusCode = http.StatusBadRequest
+		case ErrPasswordReused:
+			statusCode = http.StatusUnprocessableEntity
+		}
+		c.JSON(statusCode, ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, MessageResponse{Message: "password changed successfully"})
+}
+
 // RegisterRoutes registers all auth routes.
 //
 // BREAKING CHANGE: POST /auth/register è ora un endpoint PROTETTO.
@@ -311,6 +346,7 @@ func (h *Handler) RegisterRoutes(router *gin.RouterGroup, middleware *Middleware
 		{
 			protected.GET("/me", h.GetCurrentUser)
 			protected.POST("/logout", h.Logout)
+			protected.POST("/change-password", h.ChangePassword)
 			protected.POST("/mfa/setup", h.SetupMFA)
 			protected.POST("/mfa/verify", h.VerifyMFA)
 

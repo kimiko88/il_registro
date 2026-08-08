@@ -8,9 +8,9 @@ Questa guida descrive come configurare l'ambiente di sviluppo e produzione per R
 
 - [Prerequisiti](#prerequisiti)
 - [Setup locale (sviluppo)](#setup-locale-sviluppo)
-- [Esecuzione Test](#esecuzione-test)
+- [Esecuzione Migrazioni Database](#esecuzione-migrazioni-database)
+- [Esecuzione Test & Build](#esecuzione-test--build)
 - [Setup con Docker](#setup-con-docker)
-- [Setup produzione](#setup-produzione)
 - [Primo avvio: creare il superadmin](#primo-avvio-creare-il-superadmin)
 - [Troubleshooting](#troubleshooting)
 
@@ -21,13 +21,12 @@ Questa guida descrive come configurare l'ambiente di sviluppo e produzione per R
 | Strumento      | Versione minima | Verifica                 |
 | -------------- | --------------- | ------------------------ |
 | Go             | 1.25            | `go version`             |
-| Node.js        | 18 (LTS)        | `node --version`         |
-| npm            | 6.13.4          | `npm --version`          |
-| PostgreSQL     | 15              | `psql --version`         |
-| Redis          | 7               | `redis-server --version` |
-| Docker         | 24              | `docker --version`       |
-| Docker Compose | v2              | `docker compose version` |
-| Make           | qualsiasi       | `make --version`         |
+| Node.js        | 20+ (LTS / 24)  | `node --version`         |
+| npm            | 10+             | `npm --version`          |
+| PostgreSQL     | 16+             | `psql --version`         |
+| Redis          | 7+              | `redis-server --version` |
+| Docker         | 24+             | `docker --version`       |
+| Docker Compose | v2+             | `docker compose version` |
 
 ---
 
@@ -63,7 +62,23 @@ npm run dev
 
 ---
 
-## Esecuzione Test
+## Esecuzione Migrazioni Database
+
+Per eseguire le migrazioni SQL (inclusa la `082_add_soft_delete_partial_indexes.sql`):
+
+```bash
+cd registro-backend
+
+# Esecuzione migrazione singola
+go run cmd/run_migration/main.go ./migrations/082_add_soft_delete_partial_indexes.sql
+
+# Oppure esecuzione di tutte le migrazioni pendenti
+go run cmd/migrate_all/main.go
+```
+
+---
+
+## Esecuzione Test & Build
 
 ### Test Backend Go
 
@@ -77,15 +92,15 @@ go test -v ./...
 go test -v ./tests/integration/...
 ```
 
-### Test Frontend Vitest
+### Test & Build Frontend
 
 ```bash
 cd registro-frontend
 
-# Esegui tutti i test Vitest (unitari, e2e, sicurezza)
+# Esegui tutti i test unitari Vitest
 npm run test:unit
 
-# Esegui la build di produzione per validare l'applicazione
+# Esegui la build di produzione Vite
 npm run build
 ```
 
@@ -101,7 +116,7 @@ openssl rand -hex 64  # Copia l'output in .env come JWT_SECRET
 
 ### Errore: `CORS policy blocked`
 
-Verifica che `VITE_API_URL` nel frontend punti alla porta corretta del backend e che il middleware CORS del backend includa `http://localhost:9000` nelle origini ammesse.
+Verifica che `VITE_API_URL` nel frontend punti alla porta corretta del backend e che il middleware CORS del backend includa `http://localhost:9000` o `http://localhost:5173` nelle origini ammesse.
 
 ### Porta 8080 già in uso
 

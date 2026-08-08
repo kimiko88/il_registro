@@ -52,5 +52,19 @@ export default {
     async register(userData) {
         const response = await api.post('/auth/register', userData)
         return response.data
+    },
+
+    /**
+     * Change user password
+     * @param {string} currentPassword - Current password
+     * @param {string} newPassword - New password
+     * @returns {Promise} Response data
+     */
+    async changePassword(currentPassword, newPassword) {
+        const response = await api.post('/auth/change-password', {
+            current_password: currentPassword,
+            new_password: newPassword
+        })
+        return response.data
     }
 }

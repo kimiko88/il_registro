@@ -1,23 +1,22 @@
-version: "2"
-
 linters:
   enable:
     - errcheck
     - ineffassign
     - staticcheck
     - unused
-  settings:
-    errcheck:
-      # Ignore error returns from Close/Rollback in defer where the error
-      # is genuinely unactionable (deferred cleanup after the main operation
-      # already succeeded or failed).
-      exclude-functions:
-        - (io.Closer).Close
-        - (*database/sql.Rows).Close
-        - (*database/sql.Stmt).Close
-        - (*database/sql.Tx).Rollback
-        - (*github.com/gorilla/websocket.Conn).Close
-        - (net/http.ResponseBody).Close
+
+linters-settings:
+  errcheck:
+    # Ignore error returns from Close/Rollback in defer where the error
+    # is genuinely unactionable (deferred cleanup after the main operation
+    # already succeeded or failed).
+    exclude-functions:
+      - (io.Closer).Close
+      - (*database/sql.Rows).Close
+      - (*database/sql.Stmt).Close
+      - (*database/sql.Tx).Rollback
+      - (*github.com/gorilla/websocket.Conn).Close
+      - (net/http.ResponseBody).Close
 
 issues:
   exclude-rules:

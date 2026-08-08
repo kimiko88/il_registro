@@ -180,8 +180,12 @@ func (h *Hub) redisListener(ctx context.Context) {
 		}
 
 		// Re-subscribe
-		_ = h.pubsub.Close()
+		h.mu.Lock()
+		if h.pubsub != nil {
+			_ = h.pubsub.Close()
+		}
 		h.pubsub = h.rdb.Subscribe(ctx, redisPubSubChannel)
+		h.mu.Unlock()
 
 		// Increase backoff (capped)
 		backoff *= 2
@@ -254,11 +258,13 @@ func (h *Hub) sendBroadcast(msg Message) {
 	select {
 	case h.localBroadcast <- msg:
 	default:
-		// Bug 88: log dettagliato per facilitare il debugging in produzione.
-		// NOTA: per garantire zero drop su messaggi critici (GRADE_ADDED, ABSENCE_RECORDED)
-		// è necessario un message broker persistente (es. Redis Streams o DB inbox).
-		log.Printf("[WARN] ws.Hub: localBroadcast channel full — message DROPPED (type=%s recipient=%q schoolID=%q)",
-			msg.Type, msg.Recipient, msg.SchoolID)
+		// Attempt a short retry delay to absorb transient channel buffer spikes
+		select {
+		case h.localBroadcast <- msg:
+		case <-time.After(100 * time.Millisecond):
+			log.Printf("[WARN] ws.Hub: localBroadcast channel full after retry timeout — message DROPPED (type=%s recipient=%q schoolID=%q)",
+				msg.Type, msg.Recipient, msg.SchoolID)
+		}
 	}
 }
 

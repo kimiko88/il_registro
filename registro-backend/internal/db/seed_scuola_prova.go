@@ -31,10 +31,12 @@ func SeedScuolaDiProva(ctx context.Context, dbConn *sql.DB) error {
 		_, err = dbConn.ExecContext(ctx, `
 			INSERT INTO schools (id, name, address, city, zip_code, type, code, created_at, updated_at)
 			VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
+			ON CONFLICT (code) DO UPDATE SET name = EXCLUDED.name
 		`, schoolID, "Scuola di Prova", "Via delle Prove 10", "Roma", "00100", "Istituto Superiore", "PROVA123")
 		if err != nil {
 			return fmt.Errorf("failed to create school: %w", err)
 		}
+		_ = dbConn.QueryRowContext(ctx, `SELECT id FROM schools WHERE code = $1`, "PROVA123").Scan(&schoolID)
 		fmt.Printf("[SEED] School created: %s (%s)\n", "Scuola di Prova", schoolID)
 	}
 

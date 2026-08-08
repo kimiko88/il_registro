@@ -1,22 +1,56 @@
 <template>
   <q-page class="flex flex-center">
-    <div class="glass-card q-pa-xl" style="width: 100%; max-width: 420px">
-      <div class="text-center q-mb-lg">
-        <h1 class="text-h4 text-weight-bold text-primary q-mb-xs" style="letter-spacing: -1px">Bentornato</h1>
-        <div class="text-grey-7">Accedi per entrare nel Registro Elettronico</div>
+    <div class="glass-card q-pa-xl relative-position" style="width: 100%; max-width: 420px">
+      <!-- Language Selector in Top Right -->
+      <div class="absolute-top-right q-pa-md">
+        <q-btn-dropdown
+          flat
+          dense
+          no-caps
+          color="primary"
+          icon="language"
+          :label="currentLangCode"
+          class="rounded-lg text-weight-bold"
+        >
+          <q-list style="min-width: 150px">
+            <q-item
+              v-for="lang in languageOptions"
+              :key="lang.value"
+              clickable
+              v-close-popup
+              @click="changeLanguage(lang.value)"
+              :active="locale === lang.value"
+              active-class="bg-indigo-50 text-primary"
+            >
+              <q-item-section avatar style="min-width: 32px">
+                <q-icon :name="lang.icon" size="18px" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>{{ lang.label }}</q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-btn-dropdown>
+      </div>
+
+      <div class="text-center q-mb-lg q-mt-sm">
+        <h1 class="text-h4 text-weight-bold text-primary q-mb-xs" style="letter-spacing: -1px">
+          {{ t('login.welcomeBack') }}
+        </h1>
+        <div class="text-grey-7">{{ t('login.subtitle') }}</div>
       </div>
 
       <q-form aria-label="Modulo di accesso" @submit="onSubmit" class="q-gutter-y-md">
         <q-input
           v-model="email"
-          label="Indirizzo Email"
+          :label="t('login.emailLabel')"
           type="email"
           autocomplete="email"
           outlined
           dense
           bg-color="white"
           class="rounded-input"
-          :rules="[val => !!val || 'L\'email è obbligatoria']"
+          :rules="[val => !!val || t('login.emailRequired')]"
           @keyup.enter="() => passwordInputRef?.focus()"
         >
           <template v-slot:prepend>
@@ -27,14 +61,14 @@
         <q-input
           ref="passwordInputRef"
           v-model="password"
-          label="Password"
+          :label="t('login.passwordLabel')"
           :type="showPassword ? 'text' : 'password'"
           autocomplete="current-password"
           outlined
           dense
           bg-color="white"
           class="rounded-input"
-          :rules="[val => !!val || 'La password è obbligatoria']"
+          :rules="[val => !!val || t('login.passwordRequired')]"
           @keyup.enter="onSubmit"
         >
           <template v-slot:prepend>
@@ -46,14 +80,14 @@
               round
               dense
               :icon="showPassword ? 'visibility_off' : 'visibility'"
-              :aria-label="showPassword ? 'Nascondi password' : 'Mostra password'"
+              :aria-label="showPassword ? t('login.hidePassword') : t('login.showPassword')"
               @click="showPassword = !showPassword"
             />
           </template>
         </q-input>
         
         <div class="row justify-between items-center q-mt-sm">
-          <q-checkbox id="remember-me" v-model="rememberMe" label="Ricordami" dense size="sm" color="primary" />
+          <q-checkbox id="remember-me" v-model="rememberMe" :label="t('login.rememberMe')" dense size="sm" color="primary" />
         </div>
 
         <!-- Inline Error Alert -->
@@ -64,7 +98,7 @@
 
         <div class="q-mt-lg">
           <q-btn 
-            label="Accedi" 
+            :label="t('login.submit')" 
             type="submit" 
             color="primary" 
             class="full-width q-py-sm shadow-soft" 
@@ -76,7 +110,7 @@
       </q-form>
       
       <div class="text-center q-mt-lg text-caption text-grey-6">
-        Non hai un account? <span class="text-primary text-weight-bold cursor-pointer hover-underline" @click="openContactSecretary">Contatta la Segreteria</span>
+        {{ t('login.noAccount') }} <span class="text-primary text-weight-bold cursor-pointer hover-underline" @click="openContactSecretary">{{ t('login.contactSecretary') }}</span>
       </div>
     </div>
 
@@ -85,21 +119,21 @@
       <q-card style="min-width: 420px; max-width: 550px;" class="rounded-xl">
         <q-card-section class="bg-primary text-white row items-center justify-between">
           <div class="text-h6 text-weight-bold row items-center">
-            <q-icon name="contact_support" class="q-mr-sm" size="24px" /> Contatta la Segreteria
+            <q-icon name="contact_support" class="q-mr-sm" size="24px" /> {{ t('login.contactTitle') }}
           </div>
           <q-btn icon="close" flat round dense v-close-popup />
         </q-card-section>
 
         <q-card-section class="q-pa-lg">
           <div class="text-subtitle2 text-grey-8 q-mb-md">
-            Seleziona la tua scuola dal menu a tendina per visualizzare l'indirizzo email ed i recapiti della Segreteria Didattica.
+            {{ t('login.contactSubtitle') }}
           </div>
 
           <q-select
             v-model="selectedSchool"
             :options="schools"
             option-label="name"
-            label="Seleziona la tua Scuola / Istituto *"
+            :label="t('login.selectSchool') + ' *'"
             outlined
             dense
             clearable
@@ -108,7 +142,7 @@
           >
             <template v-slot:no-option>
               <q-item>
-                <q-item-section class="text-grey">Nessuna scuola trovata</q-item-section>
+                <q-item-section class="text-grey">{{ t('login.noSchoolFound') }}</q-item-section>
               </q-item>
             </template>
             <template v-slot:option="scope">
@@ -136,7 +170,7 @@
             <div class="q-gutter-y-xs text-body2">
               <div class="row items-center">
                 <q-icon name="email" color="indigo-8" size="18px" class="q-mr-sm" />
-                <span class="text-weight-medium q-mr-xs">Email Segreteria:</span>
+                <span class="text-weight-medium q-mr-xs">{{ t('login.emailSegreteria') }}:</span>
                 <a :href="'mailto:' + selectedSchool.email" class="text-primary text-weight-bold text-decoration-none">
                   {{ selectedSchool.email }}
                 </a>
@@ -144,7 +178,7 @@
 
               <div v-if="selectedSchool.phone" class="row items-center q-mt-xs">
                 <q-icon name="phone" color="indigo-8" size="18px" class="q-mr-sm" />
-                <span class="text-weight-medium q-mr-xs">Telefono:</span>
+                <span class="text-weight-medium q-mr-xs">{{ t('login.phone') }}:</span>
                 <a :href="'tel:' + selectedSchool.phone" class="text-slate-700 text-decoration-none">
                   {{ selectedSchool.phone }}
                 </a>
@@ -160,7 +194,7 @@
               <q-btn
                 color="primary"
                 icon="send"
-                label="Invia Email"
+                :label="t('login.sendEmail')"
                 no-caps
                 unelevated
                 type="a"
@@ -172,7 +206,7 @@
                 outline
                 color="primary"
                 icon="content_copy"
-                label="Copia Email"
+                :label="t('login.copyEmail')"
                 no-caps
                 @click="copyEmail(selectedSchool.email)"
                 class="col"
@@ -182,12 +216,12 @@
 
           <div v-else-if="!loadingSchools" class="text-center text-grey-6 q-py-md">
             <q-icon name="arrow_upward" size="24px" class="q-mb-xs" /><br />
-            Scegli un istituto dal menu in alto per visualizzare i dettagli di contatto della Segreteria.
+            {{ t('login.chooseSchoolPrompt') }}
           </div>
         </q-card-section>
 
         <q-card-actions align="right" class="q-pa-md bg-grey-1">
-          <q-btn flat label="Chiudi" color="grey-7" v-close-popup />
+          <q-btn flat :label="t('common.close')" color="grey-7" v-close-popup />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -195,13 +229,15 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
+import { useI18n } from 'vue-i18n'
 import { useAuth } from '@/composables/useAuth'
 import api from '@/services/api'
 
 const $q = useQuasar()
+const { locale, t } = useI18n()
 const email = ref('')
 const password = ref('')
 const passwordInputRef = ref(null)
@@ -217,6 +253,28 @@ const loadingSchools = ref(false)
 const selectedSchool = ref(null)
 const schools = ref([])
 
+const languageOptions = [
+  { label: 'Italiano', value: 'it-IT', code: 'IT', icon: 'flag' },
+  { label: 'English', value: 'en-US', code: 'EN', icon: 'language' },
+  { label: 'Deutsch', value: 'de-DE', code: 'DE', icon: 'language' },
+  { label: 'Français', value: 'fr-FR', code: 'FR', icon: 'language' },
+  { label: 'Español', value: 'es-ES', code: 'ES', icon: 'language' },
+  { label: 'Русский', value: 'ru-RU', code: 'RU', icon: 'language' },
+  { label: 'Українська', value: 'uk-UA', code: 'UK', icon: 'language' },
+  { label: 'العربية', value: 'ar-SA', code: 'AR', icon: 'language' },
+  { label: '中文 (简体)', value: 'zh-CN', code: 'ZH', icon: 'language' }
+]
+
+const currentLangCode = computed(() => {
+  const opt = languageOptions.find(o => o.value === locale.value)
+  return opt ? opt.code : 'IT'
+})
+
+function changeLanguage(langKey) {
+  locale.value = langKey
+  localStorage.setItem('superadmin_language', langKey)
+}
+
 const defaultSchools = [
   { id: '1', name: 'Liceo Scientifico Statale Galileo Galilei', code: 'RMPS010001', email: 'rmps010001@istruzione.it', phone: '+39 06 12345678', city: 'Roma', address: 'Via delle Fornaci 200' },
   { id: '2', name: 'Liceo Ginnasio Statale Ennio Quirino Visconti', code: 'RMPC080007', email: 'rmpc080007@istruzione.it', phone: '+39 06 6793508', city: 'Roma', address: 'Piazza del Collegio Romano 4' },
@@ -228,7 +286,7 @@ const defaultSchools = [
 onMounted(() => {
   document.title = 'Accedi — Registro Elettronico'
   if (route?.query?.reason === 'session_expired') {
-    errorMessage.value = 'Sessione scaduta. Effettua nuovamente l\'accesso.'
+    errorMessage.value = t('login.sessionExpired')
   }
 })
 
@@ -262,7 +320,7 @@ function copyEmail(emailStr) {
   $q.notify({
     type: 'positive',
     icon: 'content_copy',
-    message: 'Indirizzo email copiato negli appunti!'
+    message: t('login.emailCopied')
   })
 }
 

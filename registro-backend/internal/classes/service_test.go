@@ -39,8 +39,8 @@ func (m *MockRepository) Delete(ctx context.Context, id string) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)
 }
-func (m *MockRepository) ListByTeacher(ctx context.Context, teacherUserID string) ([]Class, error) {
-	args := m.Called(ctx, teacherUserID)
+func (m *MockRepository) ListByTeacher(ctx context.Context, teacherUserID string, schoolYear string) ([]Class, error) {
+	args := m.Called(ctx, teacherUserID, schoolYear)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -247,7 +247,7 @@ func TestService_GetTeacherClasses(t *testing.T) {
 			name: "successful get teacher classes",
 			mockFn: func(m *MockRepository) {
 				classes := []Class{{ID: "c1", Name: "1A"}, {ID: "c2", Name: "2B"}}
-				m.On("ListByTeacher", mock.Anything, "teacher-123").Return(classes, nil)
+				m.On("ListByTeacher", mock.Anything, "teacher-123", "").Return(classes, nil)
 			},
 			wantErr: false,
 			wantLen: 2,
@@ -255,7 +255,7 @@ func TestService_GetTeacherClasses(t *testing.T) {
 		{
 			name: "repository error",
 			mockFn: func(m *MockRepository) {
-				m.On("ListByTeacher", mock.Anything, "teacher-123").Return(nil, errors.New("database error"))
+				m.On("ListByTeacher", mock.Anything, "teacher-123", "").Return(nil, errors.New("database error"))
 			},
 			wantErr: true,
 		},
@@ -267,7 +267,7 @@ func TestService_GetTeacherClasses(t *testing.T) {
 			tt.mockFn(mockRepo)
 			service := NewService(mockRepo)
 
-			classes, err := service.GetTeacherClasses(context.Background(), "teacher-123")
+			classes, err := service.GetTeacherClasses(context.Background(), "teacher-123", "")
 
 			if tt.wantErr {
 				assert.Error(t, err)

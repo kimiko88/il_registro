@@ -1,6 +1,7 @@
 package unit
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -24,7 +25,7 @@ func TestGradesService_GetMyGrades(t *testing.T) {
 			{ID: "2", GradeValue: 7.0, Semester: 2, IsPublished: true, Date: time.Now()},
 		}, nil)
 
-		resp, err := service.GetMyGrades("student1", grades.GradeFilter{})
+		resp, err := service.GetMyGrades(context.Background(), "student1", grades.GradeFilter{})
 
 		assert.NoError(t, err)
 		assert.NotNil(t, resp)
@@ -42,7 +43,7 @@ func TestGradesService_GetMyGrades(t *testing.T) {
 			{ID: "1", GradeValue: 9.0, IsPublished: false},
 		}, nil)
 
-		resp, err := service2.GetMyGrades("student1", grades.GradeFilter{})
+		resp, err := service2.GetMyGrades(context.Background(), "student1", grades.GradeFilter{})
 		assert.NoError(t, err)
 		assert.Empty(t, resp.Semesters)
 	})

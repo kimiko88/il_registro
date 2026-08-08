@@ -10,7 +10,7 @@ export const authGuard = (to, from, next) => {
         if (role === 'teacher') return '/teacher'
         if (role === 'student') return '/student'
         if (role === 'parent') return '/parent'
-        if (role === 'secretary') return '/secretary'
+        if (role === 'secretary' || role === 'principal' || role === 'vice_principal') return '/secretary'
         return '/'
     }
 

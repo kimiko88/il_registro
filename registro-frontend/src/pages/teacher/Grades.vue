@@ -453,11 +453,13 @@ import { gradeService } from 'src/services/gradeService';
 import { useQuasar, date } from 'quasar';
 import SkeletonTable from '@/components/Common/SkeletonTable.vue';
 import { useUndoToast } from '@/composables/useUndoToast';
+import { useSchoolYearStore } from '@/stores/schoolYear';
 
 const $q = useQuasar();
 const { notifyWithUndo } = useUndoToast();
 const classesStore = useClassesStore();
 const gradesStore = useGradesStore();
+const schoolYearStore = useSchoolYearStore();
 
 const selectedClassId = ref(null);
 const selectedSubject = ref(null); 
@@ -573,6 +575,16 @@ const submitTest = async () => {
         loading.value = false;
     }
 };
+
+watch(() => schoolYearStore.selectedSchoolYear, async (newSY) => {
+    await classesStore.fetchAssignedClasses(newSY);
+    if (classesStore.classes.length > 0) {
+        selectedClassId.value = classesStore.classes[0].id;
+    } else {
+        selectedClassId.value = null;
+        selectedSubject.value = null;
+    }
+}, { immediate: true });
 
 let classChangeReqId = 0;
 watch(selectedClassId, async (newVal) => {
@@ -772,6 +784,7 @@ function formatGrade(val) {
     if (isNaN(num)) return val;
     if (num === -1) return 'A';
     
+    const sep = localStorage.getItem('user_decimal_separator') || ',';
     const integerPart = Math.floor(num);
     const decimalPart = num - integerPart;
     
@@ -787,7 +800,7 @@ function formatGrade(val) {
     if (Math.abs(decimalPart) < 0.01) {
         return `${integerPart}`;
     }
-    return String(num).replace('.', ',');
+    return String(num).replace('.', sep);
 }
 
 const printReport = () => {

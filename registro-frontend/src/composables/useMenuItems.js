@@ -94,7 +94,8 @@ export function useMenuItems(role) {
                 children: [
                     { label: 'Comunicazioni', icon: 'email', path: '/teacher/communications' },
                     { label: 'Documenti', icon: 'description', path: '/teacher/documents' },
-                    { label: 'Note Disciplinari', icon: 'assignment_late', path: '/teacher/notes' }
+                    { label: 'Note Disciplinari', icon: 'assignment_late', path: '/teacher/notes' },
+                    { label: 'Impostazioni', icon: 'settings', path: '/teacher/settings' }
                 ]
             }
         ],

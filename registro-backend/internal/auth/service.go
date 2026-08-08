@@ -540,6 +540,52 @@ func (s *Service) ResetPassword(ctx context.Context, token, newPassword string) 
 	return nil
 }
 
+// ChangePassword changes password for an authenticated user
+func (s *Service) ChangePassword(ctx context.Context, userID, currentPassword, newPassword string) error {
+	user, err := s.repo.GetUserByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+	if !user.IsActive {
+		return ErrUserInactive
+	}
+
+	// Verify current password
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(currentPassword)); err != nil {
+		return ErrInvalidCredentials
+	}
+
+	// Validate new password policy
+	passwordValidator := NewPasswordValidator()
+	if err := passwordValidator.Validate(newPassword); err != nil {
+		return err
+	}
+
+	// Check password history (prevent reuse of last 5)
+	history, err := s.repo.GetPasswordHistory(ctx, userID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch password history: %w", err)
+	}
+	for _, oldHash := range history {
+		if bcrypt.CompareHashAndPassword([]byte(oldHash), []byte(newPassword)) == nil {
+			return ErrPasswordReused
+		}
+	}
+
+	// Hash new password
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(newPassword), s.bcryptCost)
+	if err != nil {
+		return err
+	}
+
+	if err := s.repo.UpdatePassword(ctx, userID, string(passwordHash)); err != nil {
+		return err
+	}
+
+	_ = s.repo.AddPasswordHistory(ctx, userID, string(passwordHash))
+	return nil
+}
+
 func (s *Service) recordFailedAttempt(ctx context.Context, email, ipAddress string) {
 	attempt := &LoginAttempt{
 		Email:       email,

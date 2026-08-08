@@ -179,11 +179,15 @@ const columns = [
 
 const scrutinyData = reactive({})
 
-onMounted(async () => {
+import { useSchoolYearStore } from '@/stores/schoolYear'
+
+const schoolYearStore = useSchoolYearStore()
+
+const loadClasses = async () => {
   if (authStore.userRole === 'admin' || authStore.userRole === 'secretary') {
     await classesStore.fetchClasses()
   } else {
-    await classesStore.fetchAssignedClasses()
+    await classesStore.fetchAssignedClasses(schoolYearStore.selectedSchoolYear)
   }
   
   let availableClasses = classesStore.classes || []
@@ -193,13 +197,19 @@ onMounted(async () => {
   }
 
   classOptions.value = availableClasses.map(c => ({
-    label: `${c.name}${c.section} - ${c.academic_year}`,
+    label: `${c.name}${c.section} - ${c.academic_year || schoolYearStore.selectedSchoolYear}`,
     value: c.id
   }))
   
   if (classOptions.value.length > 0) {
     selectedClassId.value = classOptions.value[0].value
+  } else {
+    selectedClassId.value = null
   }
+}
+
+onMounted(async () => {
+  await loadClasses()
 
   // Load dynamic periods if available
   try {
@@ -216,6 +226,10 @@ onMounted(async () => {
       })
     }
   } catch { /* fallback to defaults */ }
+})
+
+watch(() => schoolYearStore.selectedSchoolYear, () => {
+  loadClasses()
 })
 
 watch([selectedClassId, period], () => {

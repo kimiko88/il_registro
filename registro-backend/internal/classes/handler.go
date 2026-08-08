@@ -140,7 +140,12 @@ func (h *Handler) GetTeacherClasses(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	classes, err := h.service.GetTeacherClasses(c.Request.Context(), userID)
+	schoolYear := c.Query("school_year")
+	if schoolYear == "" {
+		schoolYear = c.Query("academic_year")
+	}
+
+	classes, err := h.service.GetTeacherClasses(c.Request.Context(), userID, schoolYear)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
