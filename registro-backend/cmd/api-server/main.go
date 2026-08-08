@@ -178,6 +178,7 @@ func main() {
 	// 7. Setup Handlers
 	authH := auth.NewHandler(authSvc)
 	usersH := users.NewHandler(usersSvc)
+	schoolsH := schools.NewHandler(schoolsSvc)
 	classesH := classes.NewHandler(classesSvc)
 	gradesH := grades.NewHandler(gradesSvc, gradesAnalytics)
 	attendanceH := attendance.NewHandler(attendanceSvc)
@@ -230,6 +231,7 @@ func main() {
 		})
 
 		authH.RegisterRoutes(api, authMiddleware)
+		api.GET("/public/schools", schoolsH.ListPublic)
 
 		api.GET("/ws", authMiddleware.Authenticate(), func(c *gin.Context) {
 			wsHandler.Listen(c)
@@ -301,7 +303,6 @@ func main() {
 			orientH := orientamento.NewHandler(orientSvc)
 			orientH.RegisterRoutes(protected)
 
-			schoolsH := schools.NewHandler(schoolsSvc)
 			schoolsH.RegisterRoutes(protected)
 
 			commsH := communications.NewHandler(commsSvc, docsUploader)

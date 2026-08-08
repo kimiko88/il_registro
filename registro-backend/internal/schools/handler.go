@@ -2,6 +2,7 @@ package schools
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -127,6 +128,49 @@ func (h *Handler) Delete(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "school deleted"})
+}
+
+// ListPublic returns a list of public school contacts for unauthenticated users (e.g. login contact secretary dialog)
+// GET /public/schools
+func (h *Handler) ListPublic(c *gin.Context) {
+	params := ListParams{Page: 1, PageSize: 100}
+	schools, _, err := h.service.List(c.Request.Context(), &params)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	type PublicSchoolInfo struct {
+		ID      string `json:"id"`
+		Name    string `json:"name"`
+		Code    string `json:"code"`
+		Email   string `json:"email"`
+		Phone   string `json:"phone"`
+		City    string `json:"city"`
+		Address string `json:"address"`
+	}
+
+	var list []PublicSchoolInfo
+	for _, s := range schools {
+		if s == nil {
+			continue
+		}
+		email := s.Email
+		if email == "" {
+			email = "segreteria@" + strings.ToLower(strings.ReplaceAll(s.Name, " ", "")) + ".it"
+		}
+		list = append(list, PublicSchoolInfo{
+			ID:      s.ID,
+			Name:    s.Name,
+			Code:    s.Code,
+			Email:   email,
+			Phone:   s.Phone,
+			City:    s.City,
+			Address: s.Address,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{"items": list})
 }
 
 // RegisterRoutes registers all school routes
