@@ -68,7 +68,7 @@ func (m *MockSchedRepo) ResolveParentUserID(ctx context.Context, userID string) 
 
 func TestRegression_DoubleBooking(t *testing.T) {
 	repo := &MockSchedRepo{}
-	svc := NewService(repo, new(MockTeacherRepo))
+	svc := NewService(repo, new(MockTeacherRepo), nil, nil, nil)
 	ctx := context.Background()
 
 	// 2 days in future -> Inside 14d window, Outside 24h buffer

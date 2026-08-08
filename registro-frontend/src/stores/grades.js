@@ -68,9 +68,11 @@ export const useGradesStore = defineStore('grades', {
         // Teacher Actions
         async fetchGrades(classId, subjectId, force = false, isBackgroundRefresh = false) {
             const cacheKey = `${classId}:${subjectId || 'all'}`;
+            const cached = this._cacheMap[cacheKey];
+            const CACHE_TTL = 120000; // 2 minutes TTL
 
-            if (!force && !isBackgroundRefresh && this._cacheMap[cacheKey]) {
-                this.grades = this._cacheMap[cacheKey];
+            if (!force && !isBackgroundRefresh && cached && (Date.now() - cached.timestamp < CACHE_TTL)) {
+                this.grades = cached.data;
                 this._lastClassId = classId;
                 this._lastSubjectId = subjectId;
                 return;
@@ -90,7 +92,7 @@ export const useGradesStore = defineStore('grades', {
                     const data = response.data || null;
                     this.grades = data;
                     if (data) {
-                        this._cacheMap[cacheKey] = data;
+                        this._cacheMap[cacheKey] = { data, timestamp: Date.now() };
                     }
                 }
             } catch (err) {
@@ -159,11 +161,11 @@ export const useGradesStore = defineStore('grades', {
             this.loading = true;
             this.error = null;
             try {
-                await gradeService.deleteGrade(id);
-                // Refetch to keep the full class view consistent
+                const response = await gradeService.deleteGrade(id);
                 if (this._lastClassId) {
                     await this.fetchGrades(this._lastClassId, this._lastSubjectId, true, true);
                 }
+                return response.data;
             } catch (err) {
                 this.error = err.response?.data?.error || err.message || 'Errore durante l\'eliminazione del voto';
                 console.error("Error deleting grade:", err);
@@ -178,7 +180,6 @@ export const useGradesStore = defineStore('grades', {
             this.error = null;
             try {
                 const response = await gradeService.createClassTest(testData);
-                // Refetch grades to show the new grades in the register (with force=true)
                 if (this._lastClassId) {
                     await this.fetchGrades(this._lastClassId, this._lastSubjectId, true, true);
                 }
@@ -266,9 +267,7 @@ export const useGradesStore = defineStore('grades', {
                     link.remove();
                 }
                 if (url) {
-                    setTimeout(() => {
-                        window.URL.revokeObjectURL(url);
-                    }, 200);
+                    window.URL.revokeObjectURL(url);
                 }
                 this.loading = false;
             }

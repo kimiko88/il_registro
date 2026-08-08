@@ -60,7 +60,9 @@ func TestRegisterAndSendPush(t *testing.T) {
 	mockRepo := new(MockRepository)
 	mockProvider := new(MockPushProvider)
 	svc := NewService(mockRepo)
-	svc.SetPushProvider(mockProvider)
+	if impl, ok := svc.(*serviceImpl); ok {
+		impl.SetPushProvider(mockProvider)
+	}
 
 	mockRepo.On("SaveToken", mock.Anything, mock.MatchedBy(func(t *PushToken) bool {
 		return t.UserID == "user-1" && t.DeviceToken == "token-123"

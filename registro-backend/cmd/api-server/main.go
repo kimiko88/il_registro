@@ -150,7 +150,7 @@ func main() {
 	gradesAnalytics := grades.NewAnalyticsService(gradesRepo)
 	attendanceSvc := attendance.NewService(attendanceRepo, usersRepo, wsHub, schoolCalendarSvc)
 	docsSvc := documents.NewService(docsRepo)
-	schedSvc := scheduling.NewService(schedRepo, teachersRepo)
+	schedSvc := scheduling.NewService(schedRepo, teachersRepo, nil, nil, nil)
 	pctoSvc := pcto.NewService(pctoRepo)
 	orientSvc := orientamento.NewService(orientRepo)
 	schoolsSvc := schools.NewService(schoolsRepo)

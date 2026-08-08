@@ -12,19 +12,30 @@ type PushProvider interface {
 	SendPush(ctx context.Context, token PushToken, title, body string, payload map[string]interface{}) error
 }
 
-type Service struct {
+type Service interface {
+	RegisterToken(ctx context.Context, userID string, req RegisterTokenRequest) error
+	UnregisterToken(ctx context.Context, userID, deviceToken string) error
+	SendPushNotification(ctx context.Context, req SendNotificationRequest) (int, error)
+	CreateInAppNotification(ctx context.Context, userID, title, body, notifType string, payload map[string]interface{}) (*DBNotification, error)
+	ListDBNotifications(ctx context.Context, userID string, unreadOnly bool, limit, offset int) ([]DBNotification, error)
+	MarkAsRead(ctx context.Context, userID, notificationID string) error
+	MarkAllAsRead(ctx context.Context, userID string) error
+	GetPWAManifest() PWAConfig
+}
+
+type serviceImpl struct {
 	repo         Repository
 	pushProvider PushProvider
 }
 
-func NewService(repo Repository) *Service {
+func NewService(repo Repository) Service {
 	if repo == nil {
 		panic("notifications.NewService: repo must not be nil")
 	}
-	return &Service{repo: repo}
+	return &serviceImpl{repo: repo}
 }
 
-func (s *Service) SetPushProvider(provider PushProvider) {
+func (s *serviceImpl) SetPushProvider(provider PushProvider) {
 	s.pushProvider = provider
 }
 
@@ -34,7 +45,7 @@ var validPlatforms = map[string]bool{
 	"web":     true,
 }
 
-func (s *Service) RegisterToken(ctx context.Context, userID string, req RegisterTokenRequest) error {
+func (s *serviceImpl) RegisterToken(ctx context.Context, userID string, req RegisterTokenRequest) error {
 	if userID == "" {
 		return errors.New("unauthorized")
 	}
@@ -52,11 +63,11 @@ func (s *Service) RegisterToken(ctx context.Context, userID string, req Register
 	return s.repo.SaveToken(ctx, token)
 }
 
-func (s *Service) UnregisterToken(ctx context.Context, userID, deviceToken string) error {
+func (s *serviceImpl) UnregisterToken(ctx context.Context, userID, deviceToken string) error {
 	return s.repo.DeleteToken(ctx, userID, deviceToken)
 }
 
-func (s *Service) SendPushNotification(ctx context.Context, req SendNotificationRequest) (int, error) {
+func (s *serviceImpl) SendPushNotification(ctx context.Context, req SendNotificationRequest) (int, error) {
 	tokens, err := s.repo.GetUserTokens(ctx, req.UserID)
 	if err != nil {
 		return 0, err
@@ -65,10 +76,15 @@ func (s *Service) SendPushNotification(ctx context.Context, req SendNotification
 		return 0, nil
 	}
 
+	payload := req.Data
+	if payload == nil {
+		payload = map[string]interface{}{}
+	}
+
 	sentCount := 0
 	for _, t := range tokens {
 		if s.pushProvider != nil {
-			if err := s.pushProvider.SendPush(ctx, t, req.Title, req.Body, map[string]interface{}{}); err != nil {
+			if err := s.pushProvider.SendPush(ctx, t, req.Title, req.Body, payload); err != nil {
 				log.Printf("[WARN] notifications.SendPushNotification: push failed to %s (%s): %v", t.DeviceToken, t.Platform, err)
 			} else {
 				sentCount++
@@ -81,7 +97,7 @@ func (s *Service) SendPushNotification(ctx context.Context, req SendNotification
 	return sentCount, nil
 }
 
-func (s *Service) CreateInAppNotification(ctx context.Context, userID, title, body, notifType string, payload map[string]interface{}) (*DBNotification, error) {
+func (s *serviceImpl) CreateInAppNotification(ctx context.Context, userID, title, body, notifType string, payload map[string]interface{}) (*DBNotification, error) {
 	n := &DBNotification{
 		UserID:  userID,
 		Title:   title,
@@ -106,6 +122,7 @@ func (s *Service) CreateInAppNotification(ctx context.Context, userID, title, bo
 			UserID: userID,
 			Title:  title,
 			Body:   body,
+			Data:   payload,
 		}
 		var err error
 		for attempt := 1; attempt <= 2; attempt++ {
@@ -121,28 +138,28 @@ func (s *Service) CreateInAppNotification(ctx context.Context, userID, title, bo
 	return n, nil
 }
 
-func (s *Service) ListDBNotifications(ctx context.Context, userID string, unreadOnly bool, limit, offset int) ([]DBNotification, error) {
+func (s *serviceImpl) ListDBNotifications(ctx context.Context, userID string, unreadOnly bool, limit, offset int) ([]DBNotification, error) {
 	if userID == "" {
 		return nil, errors.New("unauthorized")
 	}
 	return s.repo.ListDBNotifications(ctx, userID, unreadOnly, limit, offset)
 }
 
-func (s *Service) MarkAsRead(ctx context.Context, userID, notificationID string) error {
+func (s *serviceImpl) MarkAsRead(ctx context.Context, userID, notificationID string) error {
 	if userID == "" {
 		return errors.New("unauthorized")
 	}
 	return s.repo.MarkAsRead(ctx, userID, notificationID)
 }
 
-func (s *Service) MarkAllAsRead(ctx context.Context, userID string) error {
+func (s *serviceImpl) MarkAllAsRead(ctx context.Context, userID string) error {
 	if userID == "" {
 		return errors.New("unauthorized")
 	}
 	return s.repo.MarkAllAsRead(ctx, userID)
 }
 
-func (s *Service) GetPWAManifest() PWAConfig {
+func (s *serviceImpl) GetPWAManifest() PWAConfig {
 	return PWAConfig{
 		Name:       "Registro Elettronico Scolastico",
 		ShortName:  "Registro",

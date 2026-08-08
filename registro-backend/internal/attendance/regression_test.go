@@ -58,6 +58,12 @@ func (m *MockAttRepo) JustifyAbsenceByParent(attendanceID string, reason string,
 func (m *MockAttRepo) GetStudentAttendanceStats(studentID string) (*AttendanceStats, error) {
 	return &AttendanceStats{}, nil
 }
+func (m *MockAttRepo) IsTeacherSubstitute(ctx context.Context, teacherID, classID string, date time.Time, hour int) (bool, error) {
+	return false, nil
+}
+func (m *MockAttRepo) HasOverlappingJustification(ctx context.Context, studentID string, startDate, endDate time.Time) (bool, error) {
+	return false, nil
+}
 
 func TestRegression_FutureAttendance(t *testing.T) {
 	repo := &MockAttRepo{}

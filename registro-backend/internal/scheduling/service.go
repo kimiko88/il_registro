@@ -8,6 +8,18 @@ import (
 	"time"
 )
 
+type NotificationSender interface {
+	NotifyBooking(booking *ColloquioBooking, slot *ColloquioSlot, role string)
+}
+
+type CalendarExporter interface {
+	GenerateICS(slots []ColloquioSlot, bookings []ColloquioBooking) string
+}
+
+type AnalyticsTracker interface {
+	GetStats(ctx context.Context, schoolID string) *AnalyticsResponse
+}
+
 type Service interface {
 	CreateSlots(ctx context.Context, teacherID string, req CreateSlotRequest) error
 	GetMySlots(ctx context.Context, teacherID string) ([]SlotResponse, error)
@@ -31,20 +43,32 @@ type service struct {
 	teacherRepo teachers.Repository
 	validator   *Validator
 	generator   *Generator
-	notif       *NotificationService
-	calendar    *CalendarService
-	analytics   *AnalyticsService
+	notif       NotificationSender
+	calendar    CalendarExporter
+	analytics   AnalyticsTracker
 }
 
-func NewService(repo Repository, teacherRepo teachers.Repository) Service {
+func NewService(repo Repository, teacherRepo teachers.Repository, notif NotificationSender, calendar CalendarExporter, analytics AnalyticsTracker) Service {
+	var n NotificationSender = notif
+	if n == nil {
+		n = NewNotificationService()
+	}
+	var c CalendarExporter = calendar
+	if c == nil {
+		c = NewCalendarService()
+	}
+	var a AnalyticsTracker = analytics
+	if a == nil {
+		a = NewAnalyticsService(repo)
+	}
 	return &service{
 		repo:        repo,
 		teacherRepo: teacherRepo,
 		validator:   NewValidator(),
 		generator:   NewGenerator(),
-		notif:       NewNotificationService(),
-		calendar:    NewCalendarService(),
-		analytics:   NewAnalyticsService(repo),
+		notif:       n,
+		calendar:    c,
+		analytics:   a,
 	}
 }
 

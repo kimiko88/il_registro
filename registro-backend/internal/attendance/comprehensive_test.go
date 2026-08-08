@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"registro-backend/internal/users"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -113,6 +115,12 @@ func (m *MockRepo) IsTeacherAssignedToClass(ctx context.Context, teacherID, clas
 	args := m.Called(ctx, teacherID, classID)
 	return args.Bool(0), args.Error(1)
 }
+func (m *MockRepo) IsTeacherSubstitute(ctx context.Context, teacherID, classID string, date time.Time, hour int) (bool, error) {
+	return false, nil
+}
+func (m *MockRepo) HasOverlappingJustification(ctx context.Context, studentID string, startDate, endDate time.Time) (bool, error) {
+	return false, nil
+}
 
 // --- Tests ---
 
@@ -168,8 +176,11 @@ func TestService_ProcessJustification(t *testing.T) {
 	svc := NewService(mockRepo, mockUserRepo, nil, nil)
 
 	jid := "J1"
-	j := &Justification{ID: jid, Status: JustificationPending}
+	j := &Justification{ID: jid, StudentID: "S1", Status: JustificationPending}
+	classID := "C1"
 
+	mockUserRepo.On("GetByID", mock.Anything, "S1").Return(&users.User{ID: "S1", ClassID: &classID}, nil).Maybe()
+	mockRepo.On("IsTeacherAssignedToClass", mock.Anything, "T1", "C1").Return(true, nil).Maybe()
 	mockRepo.On("FindJustificationByID", jid).Return(j, nil)
 	mockRepo.On("ProcessJustificationTx", mock.Anything, j, "T1", true).Return(nil)
 

@@ -89,7 +89,7 @@ func (m *MockRepo) ResolveParentUserID(ctx context.Context, userID string) (stri
 
 func TestService_CreateSlot(t *testing.T) {
 	repo := new(MockRepo)
-	svc := NewService(repo, new(MockTeacherRepo))
+	svc := NewService(repo, new(MockTeacherRepo), nil, nil, nil)
 
 	req := CreateSlotRequest{
 		Dates:      []string{time.Now().AddDate(0, 0, 1).Format("2006-01-02")}, // Future
@@ -103,7 +103,7 @@ func TestService_CreateSlot(t *testing.T) {
 
 func TestService_BookSlot(t *testing.T) {
 	repo := new(MockRepo)
-	svc := NewService(repo, new(MockTeacherRepo))
+	svc := NewService(repo, new(MockTeacherRepo), nil, nil, nil)
 
 	slotID := "slot-1"
 	slotDate := time.Now().AddDate(0, 0, 2)
@@ -131,7 +131,7 @@ func TestValidator_ValidateSlot(t *testing.T) {
 
 func TestService_CancelBooking_Ownership(t *testing.T) {
 	repo := new(MockRepo)
-	svc := NewService(repo, new(MockTeacherRepo))
+	svc := NewService(repo, new(MockTeacherRepo), nil, nil, nil)
 	ctx := context.Background()
 
 	bookingID := "booking-1"
@@ -166,7 +166,7 @@ func TestService_CancelBooking_Ownership(t *testing.T) {
 
 func TestService_BookSlot_Past(t *testing.T) {
 	repo := new(MockRepo)
-	svc := NewService(repo, new(MockTeacherRepo))
+	svc := NewService(repo, new(MockTeacherRepo), nil, nil, nil)
 	ctx := context.Background()
 
 	slotID := "slot-past"

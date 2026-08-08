@@ -5,157 +5,111 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
-	"sort"
-	"strconv"
-	"strings"
-	"time"
 
 	"github.com/go-pdf/fpdf"
 )
 
-type ExportOptions struct {
-	Format     string // csv, json, pdf
-	IncludeAll bool   // if true export even unpublished?
+type ReportCardPDFExporter interface {
+	ExportReportCard(report *SemesterReportResponse, semester int) ([]byte, error)
 }
 
-func sanitizeCSVField(s string) string {
-	if strings.HasPrefix(s, "=") || strings.HasPrefix(s, "+") || strings.HasPrefix(s, "-") || strings.HasPrefix(s, "@") {
-		return "'" + s
+type pdfExporter struct{}
+
+func NewReportCardPDFExporter() ReportCardPDFExporter {
+	return &pdfExporter{}
+}
+
+func (e *pdfExporter) ExportReportCard(report *SemesterReportResponse, semester int) ([]byte, error) {
+	if report == nil {
+		return nil, fmt.Errorf("report is nil")
 	}
-	return s
-}
 
-// 1. ExportToCSV
-func ExportToCSV(grades []Grade, options ExportOptions) ([]byte, error) {
-	// Sort
-	sort.Slice(grades, func(i, j int) bool {
-		if grades[i].StudentID != grades[j].StudentID {
-			return grades[i].StudentID < grades[j].StudentID
+	pdf := fpdf.New("P", "mm", "A4", "")
+	pdf.AddPage()
+	pdf.SetFont("Arial", "B", 16)
+
+	pdf.CellFormat(190, 10, "REGISTRO ELETTRONICO - SCHEDA DI VALUTAZIONE", "0", 1, "C", false, 0, "")
+	pdf.SetFont("Arial", "", 12)
+	semText := fmt.Sprintf("%d° Quadrimestre", semester)
+	pdf.CellFormat(190, 8, fmt.Sprintf("Valutazione Finale - %s - A.S. %s", semText, report.SchoolYear), "0", 1, "C", false, 0, "")
+	pdf.Ln(4)
+
+	pdf.SetFont("Arial", "B", 10)
+	pdf.CellFormat(95, 7, fmt.Sprintf("Studente: %s", report.StudentName), "1", 0, "L", false, 0, "")
+	pdf.CellFormat(95, 7, fmt.Sprintf("Classe: %s", report.ClassName), "1", 1, "L", false, 0, "")
+	pdf.CellFormat(95, 7, fmt.Sprintf("Media Generale: %.2f", report.OverallAverage), "1", 0, "L", false, 0, "")
+	pdf.CellFormat(95, 7, fmt.Sprintf("Voto Comportamento: %.0f", report.BehaviorGrade), "1", 1, "L", false, 0, "")
+	pdf.Ln(6)
+
+	pdf.SetFont("Arial", "B", 10)
+	pdf.SetFillColor(230, 230, 230)
+	pdf.CellFormat(60, 8, "Materia", "1", 0, "L", true, 0, "")
+	pdf.CellFormat(40, 8, "Docente", "1", 0, "L", true, 0, "")
+	pdf.CellFormat(30, 8, "Voti (N°)", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(30, 8, "Media", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(30, 8, "Voto Finale", "1", 1, "C", true, 0, "")
+
+	pdf.SetFont("Arial", "", 10)
+	for _, sub := range report.Subjects {
+		subName := sub.Subject
+		if len(subName) > 25 {
+			subName = subName[:22] + "..."
 		}
-		return grades[i].Date.Before(grades[j].Date)
-	})
+		teacherName := sub.Teacher
+		if len(teacherName) > 18 {
+			teacherName = teacherName[:15] + "..."
+		}
 
-	records := [][]string{
-		{"StudentID", "SubjectID", "GradeValue", "GradeType", "Date", "Semester", "TeacherID", "Category", "Description"},
-	}
+		pdf.CellFormat(60, 7, subName, "1", 0, "L", false, 0, "")
+		pdf.CellFormat(40, 7, teacherName, "1", 0, "L", false, 0, "")
+		pdf.CellFormat(30, 7, fmt.Sprintf("%d", sub.GradeCount), "1", 0, "C", false, 0, "")
+		pdf.CellFormat(30, 7, fmt.Sprintf("%.2f", sub.SubjectAverage), "1", 0, "C", false, 0, "")
 
-	for _, g := range grades {
-		records = append(records, []string{
-			sanitizeCSVField(g.StudentID),
-			sanitizeCSVField(g.SubjectID),
-			fmt.Sprintf("%.2f", g.GradeValue),
-			string(g.GradeType),
-			g.Date.Format("2006-01-02"),
-			strconv.Itoa(int(g.Semester)),
-			sanitizeCSVField(g.TeacherID),
-			string(g.GradeCategory),
-			sanitizeCSVField(g.Description),
-		})
+		finalGradeStr := fmt.Sprintf("%.0f", sub.FinalGrade)
+		if sub.FinalGrade == 0 {
+			finalGradeStr = fmt.Sprintf("%.1f", sub.SubjectAverage)
+		}
+		pdf.CellFormat(30, 7, finalGradeStr, "1", 1, "C", false, 0, "")
 	}
 
 	var buf bytes.Buffer
-	w := csv.NewWriter(&buf)
-	if err := w.WriteAll(records); err != nil {
+	if err := pdf.Output(&buf); err != nil {
 		return nil, err
 	}
 	return buf.Bytes(), nil
 }
 
-// 2. ExportToJSON
-type JSONExport struct {
-	Metadata ExportMetadata `json:"metadata"`
-	Grades   []Grade        `json:"grades"`
-}
-
-type ExportMetadata struct {
-	ExportDate string `json:"exportDate"`
-	Count      int    `json:"count"`
+type ExportOptions struct {
+	Format string
 }
 
 func ExportToJSON(grades []Grade) ([]byte, error) {
-	export := JSONExport{
-		Metadata: ExportMetadata{
-			ExportDate: time.Now().Format(time.RFC3339),
-			Count:      len(grades),
-		},
-		Grades: grades,
-	}
-	return json.MarshalIndent(export, "", "  ") // Indented for readability as requested
+	return json.Marshal(grades)
 }
 
-// 3. ExportToPDF
-func ExportToPDF(grades []Grade, options ExportOptions) ([]byte, error) {
+func ExportToCSV(grades []Grade, opts ExportOptions) ([]byte, error) {
+	var buf bytes.Buffer
+	w := csv.NewWriter(&buf)
+	_ = w.Write([]string{"ID", "StudentID", "SubjectID", "GradeValue", "GradeType", "Date", "Description"})
+	for _, g := range grades {
+		_ = w.Write([]string{g.ID, g.StudentID, g.SubjectID, fmt.Sprintf("%.2f", g.GradeValue), string(g.GradeType), g.Date.Format("2006-01-02"), g.Description})
+	}
+	w.Flush()
+	return buf.Bytes(), nil
+}
+
+func ExportToPDF(grades []Grade, opts ExportOptions) ([]byte, error) {
 	pdf := fpdf.New("P", "mm", "A4", "")
 	pdf.AddPage()
-
-	// Header
-	pdf.SetFont("Arial", "B", 16)
-	pdf.SetTextColor(0, 0, 128) // Navy Blue
-	pdf.Cell(40, 10, "Registro Elettronico - Report Voti")
-	pdf.Ln(12)
-
+	pdf.SetFont("Arial", "B", 14)
+	pdf.CellFormat(190, 10, "EXPORT VOTI", "0", 1, "C", false, 0, "")
 	pdf.SetFont("Arial", "", 10)
-	pdf.SetTextColor(0, 0, 0)
-	pdf.Cell(0, 10, fmt.Sprintf("Data Export: %s", time.Now().Format("2006-01-02 15:04")))
-	pdf.Ln(10)
-
-	// Table Header
-	pdf.SetFillColor(240, 240, 240)
-	pdf.SetFont("Arial", "B", 10)
-	pdf.CellFormat(30, 7, "Studente", "1", 0, "", true, 0, "")
-	pdf.CellFormat(30, 7, "Materia", "1", 0, "", true, 0, "")
-	pdf.CellFormat(25, 7, "Data", "1", 0, "", true, 0, "")
-	pdf.CellFormat(15, 7, "Voto", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(25, 7, "Categoria", "1", 0, "", true, 0, "")
-	pdf.CellFormat(65, 7, "Descrizione", "1", 0, "", true, 0, "")
-	pdf.Ln(-1)
-
-	pdf.SetFont("Arial", "", 9)
-
 	for _, g := range grades {
-		// Color coding for grade
-		if g.GradeValue < 6.0 {
-			pdf.SetTextColor(200, 0, 0) // Red
-		} else if g.GradeValue < 7.0 {
-			pdf.SetTextColor(200, 165, 0) // Orange/Yellowish
-		} else {
-			pdf.SetTextColor(0, 128, 0) // Green
-		}
-
-		sID := g.StudentID
-		if len(sID) > 12 {
-			sID = sID[:12] + "..."
-		}
-		subID := g.SubjectID
-		if len(subID) > 12 {
-			subID = subID[:12] + "..."
-		}
-
-		pdf.CellFormat(30, 6, sID, "1", 0, "", false, 0, "")
-		pdf.CellFormat(30, 6, subID, "1", 0, "", false, 0, "")
-		pdf.CellFormat(25, 6, g.Date.Format("02/01/06"), "1", 0, "", false, 0, "")
-
-		valStr := fmt.Sprintf("%.1f", g.GradeValue)
-		if g.GradeType == GradeTypeJudgment {
-			valStr = ConvertNumericToJudgment(g.GradeValue)
-			if len(valStr) > 3 {
-				valStr = valStr[:3] + "."
-			}
-		}
-		pdf.CellFormat(15, 6, valStr, "1", 0, "C", false, 0, "")
-
-		desc := g.Description
-		if len(desc) > 35 {
-			desc = desc[:32] + "..."
-		}
-
-		pdf.SetTextColor(0, 0, 0) // Reset for text
-		pdf.CellFormat(25, 6, string(g.GradeCategory), "1", 0, "", false, 0, "")
-		pdf.CellFormat(65, 6, desc, "1", 0, "", false, 0, "")
-		pdf.Ln(-1)
+		pdf.CellFormat(190, 6, fmt.Sprintf("Data: %s | Studente: %s | Voto: %.2f | Tipo: %s", g.Date.Format("2006-01-02"), g.StudentID, g.GradeValue, string(g.GradeType)), "0", 1, "L", false, 0, "")
 	}
-
 	var buf bytes.Buffer
-	err := pdf.Output(&buf)
-	return buf.Bytes(), err
+	if err := pdf.Output(&buf); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
 }

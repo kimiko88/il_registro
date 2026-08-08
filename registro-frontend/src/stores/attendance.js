@@ -13,10 +13,10 @@ export const useAttendanceStore = defineStore('attendance', {
     }),
 
     getters: {
-        presentCount: (state) => state.records.filter(r => r.status === 'Present').length,
-        absentCount: (state) => state.records.filter(r => r.status === 'Absent').length,
-        lateCount: (state) => state.records.filter(r => r.status === 'Late').length,
-        unjustifiedCount: (state) => state.records.filter(r => r.status === 'Absent' && (!r.justificationStatus || r.justificationStatus === 'Unjustified')).length,
+        presentCount: (state) => state.records.filter(r => (r.status || '').toLowerCase() === 'present').length,
+        absentCount: (state) => state.records.filter(r => (r.status || '').toLowerCase() === 'absent').length,
+        lateCount: (state) => state.records.filter(r => (r.status || '').toLowerCase() === 'late').length,
+        unjustifiedCount: (state) => state.records.filter(r => (r.status || '').toLowerCase() === 'absent' && (!r.justificationStatus || (r.justificationStatus || '').toLowerCase() === 'unjustified')).length,
     },
 
     actions: {
@@ -34,7 +34,7 @@ export const useAttendanceStore = defineStore('attendance', {
                     time: r.entry_time || ''
                 }));
             } catch (err) {
-                this.error = err.message;
+                this.error = err.response?.data?.error || err.message || 'Errore durante il recupero delle presenze';
                 console.error("Error fetching daily attendance:", err);
             } finally {
                 this.loading = false;
@@ -96,6 +96,7 @@ export const useAttendanceStore = defineStore('attendance', {
         // Student Actions
         async fetchMyAttendance() {
             this.loading = true;
+            this.error = null;
             try {
                 const response = await attendanceService.getMyAttendance();
                 const data = response.data || [];
@@ -107,6 +108,7 @@ export const useAttendanceStore = defineStore('attendance', {
                     justificationStatus: r.is_justified ? 'Justified' : (r.parent_justified ? 'PendingApproval' : 'Unjustified')
                 }));
             } catch (err) {
+                this.error = err.response?.data?.error || err.message || 'Errore durante il recupero delle mie presenze';
                 console.error("Error fetching my attendance:", err);
             } finally {
                 this.loading = false;
@@ -145,6 +147,7 @@ export const useAttendanceStore = defineStore('attendance', {
                 await api.post('/attendance/justify', payload);
                 const record = this.records.find(r => r.date === date);
                 if (record) record.justificationStatus = 'Pending';
+                await this.fetchMyAttendance();
             } catch (err) {
                 console.error("Error requesting justification:", err);
                 throw err;

@@ -30,6 +30,8 @@ type Repository interface {
 
 	// Teacher Assignment Check
 	IsTeacherAssignedToClass(ctx context.Context, teacherID, classID string) (bool, error)
+	IsTeacherSubstitute(ctx context.Context, teacherID, classID string, date time.Time, hour int) (bool, error)
+	HasOverlappingJustification(ctx context.Context, studentID string, startDate, endDate time.Time) (bool, error)
 
 	// Monthly Breakdown
 	GetMonthlyBreakdown(ctx context.Context, studentID, schoolYear string) ([]MonthlyBreakdownRow, error)
@@ -561,4 +563,40 @@ func (r *repository) GetStudentAttendanceStats(studentID string) (*AttendanceSta
 	}
 
 	return stats, nil
+}
+
+func (r *repository) IsTeacherSubstitute(ctx context.Context, teacherID, classID string, date time.Time, hour int) (bool, error) {
+	query := `
+		SELECT EXISTS (
+			SELECT 1 FROM substitutions
+			WHERE (teacher_id = $1::uuid OR substitute_teacher_id = $1::uuid)
+			  AND class_id = $2::uuid
+			  AND date = $3::date
+			  AND (hour = $4 OR hour IS NULL)
+		)
+	`
+	var exists bool
+	err := r.db.QueryRowContext(ctx, query, teacherID, classID, date, hour).Scan(&exists)
+	if err != nil {
+		return false, nil
+	}
+	return exists, nil
+}
+
+func (r *repository) HasOverlappingJustification(ctx context.Context, studentID string, startDate, endDate time.Time) (bool, error) {
+	query := `
+		SELECT EXISTS (
+			SELECT 1 FROM justifications
+			WHERE student_id = $1::uuid
+			  AND status != 'Rejected'
+			  AND start_date <= $3::date
+			  AND end_date >= $2::date
+		)
+	`
+	var exists bool
+	err := r.db.QueryRowContext(ctx, query, studentID, startDate, endDate).Scan(&exists)
+	if err != nil {
+		return false, nil
+	}
+	return exists, nil
 }

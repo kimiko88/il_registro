@@ -23,10 +23,11 @@ type RegisterDeviceRequest struct {
 }
 
 type SendNotificationRequest struct {
-	UserID  string `json:"user_id" binding:"required"`
-	Title   string `json:"title" binding:"required"`
-	Body    string `json:"body" binding:"required"`
-	Payload map[string]string `json:"payload,omitempty"`
+	UserID  string                 `json:"user_id" binding:"required"`
+	Title   string                 `json:"title" binding:"required"`
+	Body    string                 `json:"body" binding:"required"`
+	Payload map[string]string      `json:"payload,omitempty"`
+	Data    map[string]interface{} `json:"data,omitempty"`
 }
 
 type PWAConfig struct {

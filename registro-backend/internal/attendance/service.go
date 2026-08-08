@@ -94,12 +94,16 @@ func (s *service) MarkAttendance(ctx context.Context, teacherID, schoolID string
 		return fmt.Errorf("forbidden: docente non assegnato alla classe")
 	}
 
-	now := time.Now()
-	date, err := time.ParseInLocation("2006-01-02", req.Date, now.Location())
+	loc, err := time.LoadLocation("Europe/Rome")
+	if err != nil {
+		loc = time.Local
+	}
+	now := time.Now().In(loc)
+	date, err := time.ParseInLocation("2006-01-02", req.Date, loc)
 	if err != nil {
 		return fmt.Errorf("data non valida '%s': usa il formato YYYY-MM-DD", req.Date)
 	}
-	todayEnd := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 999999999, now.Location())
+	todayEnd := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 999999999, loc)
 	if date.After(todayEnd) {
 		return fmt.Errorf("impossibile registrare presenze per date future (%s)", req.Date)
 	}
@@ -147,22 +151,36 @@ func (s *service) MarkBulk(ctx context.Context, teacherID, schoolID string, req 
 	if teacherID == "" {
 		return fmt.Errorf("forbidden: teacherID mancante")
 	}
-	// In substitution mode the teacher is not formally assigned to the class;
-	// skip the assignment check.
-	isAssigned, err := s.repo.IsTeacherAssignedToClass(ctx, teacherID, req.ClassID)
-	if err != nil {
-		return fmt.Errorf("errore verifica docente per classe: %w", err)
-	}
-	if !isAssigned {
-		return fmt.Errorf("forbidden: docente non autorizzato per la classe")
+	if !req.IsSubstitution {
+		isAssigned, err := s.repo.IsTeacherAssignedToClass(ctx, teacherID, req.ClassID)
+		if err != nil {
+			return fmt.Errorf("errore verifica docente per classe: %w", err)
+		}
+		if !isAssigned {
+			return fmt.Errorf("forbidden: docente non autorizzato per la classe")
+		}
+	} else {
+		loc, _ := time.LoadLocation("Europe/Rome")
+		dateParsed, _ := time.ParseInLocation("2006-01-02", req.Date, loc)
+		isSub, err := s.repo.IsTeacherSubstitute(ctx, teacherID, req.ClassID, dateParsed, req.Hour)
+		if err != nil || !isSub {
+			isAssigned, _ := s.repo.IsTeacherAssignedToClass(ctx, teacherID, req.ClassID)
+			if !isAssigned {
+				return fmt.Errorf("forbidden: docente non assegnato e non registrato come supplente per questa classe/ora")
+			}
+		}
 	}
 
-	date, err := time.Parse("2006-01-02", req.Date)
+	loc, err := time.LoadLocation("Europe/Rome")
+	if err != nil {
+		loc = time.Local
+	}
+	now := time.Now().In(loc)
+	date, err := time.ParseInLocation("2006-01-02", req.Date, loc)
 	if err != nil {
 		return fmt.Errorf("data non valida '%s': usa il formato YYYY-MM-DD", req.Date)
 	}
-	now := time.Now()
-	todayEnd := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 999999999, now.Location())
+	todayEnd := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 999999999, loc)
 	if date.After(todayEnd) {
 		return fmt.Errorf("impossibile registrare presenze per date future (%s)", req.Date)
 	}
@@ -226,6 +244,10 @@ func (s *service) UpdateAttendance(ctx context.Context, teacherID, schoolID, id 
 	att, err := s.repo.FindByID(id)
 	if err != nil {
 		return err
+	}
+
+	if att.Justified {
+		return fmt.Errorf("impossibile modificare la presenza: il record è già stato giustificato")
 	}
 
 	// Ownership check: il docente deve appartenere alla stessa scuola ed essere assegnato alla classe del record.
@@ -391,6 +413,14 @@ func (s *service) RequestJustification(ctx context.Context, parentID string, req
 		return fmt.Errorf("end_date (%s) non può essere precedente a start_date (%s)", req.EndDate, req.StartDate)
 	}
 
+	hasOverlap, err := s.repo.HasOverlappingJustification(ctx, req.StudentID, start, end)
+	if err != nil {
+		return fmt.Errorf("failed to check existing justifications: %w", err)
+	}
+	if hasOverlap {
+		return fmt.Errorf("esiste già una richiesta di giustificazione per questo periodo")
+	}
+
 	j := &Justification{
 		StudentID: req.StudentID,
 		ParentID:  parentID,
@@ -422,11 +452,12 @@ func (s *service) ProcessJustification(ctx context.Context, teacherID, justifica
 		if err != nil || studentUser == nil {
 			return fmt.Errorf("student not found or error fetching student: %w", err)
 		}
-		if studentUser.ClassID != nil && *studentUser.ClassID != "" {
-			isAssigned, err := s.repo.IsTeacherAssignedToClass(ctx, teacherID, *studentUser.ClassID)
-			if err != nil || !isAssigned {
-				return fmt.Errorf("forbidden: docente non assegnato alla classe dello studente")
-			}
+		if studentUser.ClassID == nil || *studentUser.ClassID == "" {
+			return fmt.Errorf("impossibile processare giustifica: studente non assegnato a nessuna classe")
+		}
+		isAssigned, err := s.repo.IsTeacherAssignedToClass(ctx, teacherID, *studentUser.ClassID)
+		if err != nil || !isAssigned {
+			return fmt.Errorf("forbidden: docente non assegnato alla classe dello studente")
 		}
 	}
 
@@ -493,7 +524,13 @@ func (s *service) DeleteJustification(ctx context.Context, actorID string, justi
 		return fmt.Errorf("impossibile eliminare una giustifica già elaborata (stato attuale: %s)", j.Status)
 	}
 
-	if actorID != j.ParentID && actorID != j.StudentID {
+	isGuardian := false
+	if s.userRepo != nil && j.StudentID != "" {
+		g, _ := s.userRepo.IsGuardian(ctx, actorID, j.StudentID)
+		isGuardian = g
+	}
+
+	if actorID != j.ParentID && actorID != j.StudentID && !isGuardian {
 		if s.userRepo == nil {
 			return errors.New("unauthorized: userRepo non configurato per il controllo permessi")
 		}
@@ -526,24 +563,25 @@ func (s *service) DeleteJustification(ctx context.Context, actorID string, justi
 func (s *service) GetStudentSummary(ctx context.Context, studentID, schoolID string) (*SummaryResponse, error) {
 	stats, err := s.repo.GetStats(studentID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get stats: %w", err)
 	}
 
-	// Calcolo totalDays dal calendario scolastico reale.
-	totalDays := 0
-	if s.calendar != nil && schoolID != "" {
-		yearStart, yearEnd, calErr := s.calendar.GetSchoolYearDates(ctx, schoolID)
-		if calErr == nil {
-			totalDays, _ = s.calendar.CountTeachingDays(ctx, schoolID, yearStart, yearEnd)
-		}
+	now := time.Now()
+	startYear := now.Year()
+	if now.Month() < time.September {
+		startYear--
 	}
-	if totalDays == 0 {
-		fallbackDays, countErr := s.repo.CountDistinctDays(studentID)
-		const standardSchoolDays = 200
-		if countErr == nil && fallbackDays > 0 {
-			totalDays = fallbackDays
-		} else {
-			totalDays = standardSchoolDays
+	startOfSchoolYear := time.Date(startYear, time.September, 1, 0, 0, 0, 0, now.Location())
+	elapsedDays := int(now.Sub(startOfSchoolYear).Hours() / 24)
+	if elapsedDays <= 0 {
+		elapsedDays = 1
+	}
+
+	totalDays := elapsedDays
+	if s.calendar != nil && schoolID != "" {
+		count, err := s.calendar.CountTeachingDays(ctx, schoolID, startOfSchoolYear, now)
+		if err == nil && count > 0 {
+			totalDays = count
 		}
 	}
 
@@ -616,8 +654,13 @@ func (s *service) GetChildAttendanceTrends(ctx context.Context, parentID, studen
 		return nil, fmt.Errorf("unauthorized: not a guardian of this student")
 	}
 
-	from := time.Now().AddDate(-1, 0, 0)
-	to := time.Now()
+	now := time.Now()
+	startYear := now.Year()
+	if now.Month() < time.September {
+		startYear--
+	}
+	from := time.Date(startYear, time.September, 1, 0, 0, 0, 0, now.Location())
+	to := now
 	atts, err := s.repo.FindByStudent(studentID, from, to)
 	if err != nil {
 		return nil, err
@@ -730,11 +773,6 @@ func (s *service) GetChildAttendanceStats(ctx context.Context, parentID, student
 
 // GetChildMonthlyBreakdown is the parent-facing version with guardianship check.
 func (s *service) GetChildMonthlyBreakdown(ctx context.Context, parentID, studentID, schoolYear string) (*MonthlyBreakdownResponse, error) {
-	// Guardianship check
-	parent, err := s.userRepo.GetByID(ctx, parentID)
-	if err != nil || parent == nil {
-		return nil, fmt.Errorf("parent not found")
-	}
 	isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, studentID)
 	if err != nil || !isGuardian {
 		return nil, fmt.Errorf("access denied: not a guardian of this student")

@@ -1,17 +1,19 @@
 package notifications
 
 import (
+	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
 type Handler struct {
-	service *Service
+	service Service
 }
 
-func NewHandler(s *Service) *Handler {
+func NewHandler(s Service) *Handler {
 	return &Handler{service: s}
 }
 
@@ -27,7 +29,7 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 		n.POST("/send-push", h.SendPush)
 	}
 
-	// PWA Manifest and SW static/configuration endpoints
+	// PWA Manifest endpoint
 	r.GET("/manifest.json", h.GetManifest)
 	r.GET("/users/me/notifications", h.ListNotifications)
 }
@@ -52,7 +54,8 @@ func (h *Handler) ListNotifications(c *gin.Context) {
 	}
 	list, err := h.service.ListDBNotifications(c.Request.Context(), userID, unreadOnly, limit, offset)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		log.Printf("[ERROR] notifications.ListNotifications: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
 	c.JSON(http.StatusOK, list)
@@ -66,7 +69,8 @@ func (h *Handler) MarkAsRead(c *gin.Context) {
 		return
 	}
 	if err := h.service.MarkAsRead(c.Request.Context(), userID, id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		log.Printf("[ERROR] notifications.MarkAsRead: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "marked as read"})
@@ -79,7 +83,8 @@ func (h *Handler) MarkAllAsRead(c *gin.Context) {
 		return
 	}
 	if err := h.service.MarkAllAsRead(c.Request.Context(), userID); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		log.Printf("[ERROR] notifications.MarkAllAsRead: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "all marked as read"})
@@ -114,15 +119,28 @@ func (h *Handler) RegisterDevice(c *gin.Context) {
 
 	var req struct {
 		FCMToken string `json:"fcm_token" binding:"required"`
+		Platform string `json:"platform"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
+	platform := strings.ToLower(req.Platform)
+	if platform != "ios" && platform != "android" && platform != "web" {
+		ua := strings.ToLower(c.GetHeader("User-Agent"))
+		if strings.Contains(ua, "iphone") || strings.Contains(ua, "ipad") {
+			platform = "ios"
+		} else if strings.Contains(ua, "android") {
+			platform = "android"
+		} else {
+			platform = "web"
+		}
+	}
+
 	tokenReq := RegisterTokenRequest{
 		DeviceToken: req.FCMToken,
-		Platform:    "mobile",
+		Platform:    platform,
 	}
 
 	if err := h.service.RegisterToken(c.Request.Context(), userID, tokenReq); err != nil {
@@ -134,9 +152,27 @@ func (h *Handler) RegisterDevice(c *gin.Context) {
 
 func (h *Handler) UnregisterToken(c *gin.Context) {
 	userID := c.GetString("user_id")
-	deviceToken := c.Query("device_token")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	deviceToken := c.Query("device_token")
+	if deviceToken == "" {
+		deviceToken = c.GetHeader("X-Device-Token")
+	}
+	if deviceToken == "" {
+		var req struct {
+			DeviceToken string `json:"device_token"`
+		}
+		_ = c.ShouldBindJSON(&req)
+		if req.DeviceToken != "" {
+			deviceToken = req.DeviceToken
+		}
+	}
+
+	if deviceToken == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "device_token is required"})
 		return
 	}
 
@@ -154,8 +190,8 @@ func (h *Handler) SendPush(c *gin.Context) {
 		return
 	}
 	role := c.GetString("role")
-	if role != "admin" && role != "superadmin" && role != "teacher" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+	if role != "admin" && role != "superadmin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: push notifications restricted to administrative staff"})
 		return
 	}
 
@@ -170,15 +206,10 @@ func (h *Handler) SendPush(c *gin.Context) {
 		return
 	}
 
-	// Non-admin roles (e.g., teachers) cannot send arbitrary notifications to other users without target verification
-	if role == "teacher" && req.UserID != userID {
-		c.JSON(http.StatusForbidden, gin.H{"error": "teachers can only send push notifications to themselves or authorized recipients"})
-		return
-	}
-
 	sent, err := h.service.SendPushNotification(c.Request.Context(), req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		log.Printf("[ERROR] notifications.SendPush: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "notification dispatched", "dispatched_count": sent})

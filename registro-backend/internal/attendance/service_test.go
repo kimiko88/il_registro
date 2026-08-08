@@ -11,247 +11,252 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// MockRepository
-type MockRepository struct {
+type MockAttendanceRepo struct {
 	mock.Mock
 }
 
-var _ Repository = (*MockRepository)(nil)
-
-func (m *MockRepository) Create(att *Attendance) error {
+func (m *MockAttendanceRepo) Create(att *Attendance) error {
 	args := m.Called(att)
+	att.ID = "att-1"
 	return args.Error(0)
 }
-func (m *MockRepository) BatchCreate(atts []*Attendance) error {
+func (m *MockAttendanceRepo) BatchCreate(atts []*Attendance) error {
 	args := m.Called(atts)
 	return args.Error(0)
 }
-func (m *MockRepository) Update(att *Attendance) error {
+func (m *MockAttendanceRepo) Update(att *Attendance) error {
 	args := m.Called(att)
 	return args.Error(0)
 }
-func (m *MockRepository) DeleteByClassDateHour(classID string, date time.Time, hour int) error {
+func (m *MockAttendanceRepo) DeleteByClassDateHour(classID string, date time.Time, hour int) error {
 	args := m.Called(classID, date, hour)
 	return args.Error(0)
 }
-func (m *MockRepository) ProcessJustificationTx(ctx context.Context, j *Justification, teacherID string, approve bool) error {
-	args := m.Called(ctx, j, teacherID, approve)
-	return args.Error(0)
-}
-func (m *MockRepository) FindByID(id string) (*Attendance, error) {
+func (m *MockAttendanceRepo) FindByID(id string) (*Attendance, error) {
 	args := m.Called(id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*Attendance), args.Error(1)
 }
-func (m *MockRepository) FindByClassAndDate(classID string, date time.Time) ([]Attendance, error) {
+func (m *MockAttendanceRepo) FindByClassAndDate(classID string, date time.Time) ([]Attendance, error) {
 	args := m.Called(classID, date)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]Attendance), args.Error(1)
 }
-func (m *MockRepository) FindByStudent(studentID string, startDate, endDate time.Time) ([]Attendance, error) {
+func (m *MockAttendanceRepo) FindByStudent(studentID string, startDate, endDate time.Time) ([]Attendance, error) {
 	args := m.Called(studentID, startDate, endDate)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]Attendance), args.Error(1)
 }
-func (m *MockRepository) GetStats(studentID string) (*SummaryResponse, error) {
+func (m *MockAttendanceRepo) GetStats(studentID string) (*SummaryResponse, error) {
 	args := m.Called(studentID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*SummaryResponse), args.Error(1)
 }
-func (m *MockRepository) CreateJustification(j *Justification) error {
-	args := m.Called(j)
-	return args.Error(0)
-}
-func (m *MockRepository) UpdateJustification(j *Justification) error {
-	args := m.Called(j)
-	return args.Error(0)
-}
-func (m *MockRepository) FindJustificationByID(id string) (*Justification, error) {
-	args := m.Called(id)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*Justification), args.Error(1)
-}
-func (m *MockRepository) FindPendingJustifications(classID string) ([]Justification, error) {
-	args := m.Called(classID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]Justification), args.Error(1)
-}
-func (m *MockRepository) CountDistinctDays(studentID string) (int, error) {
+func (m *MockAttendanceRepo) CountDistinctDays(studentID string) (int, error) {
 	args := m.Called(studentID)
 	return args.Int(0), args.Error(1)
 }
-func (m *MockRepository) GetAnalytics(ctx context.Context, schoolID string) (*AnalyticsResponse, error) {
+func (m *MockAttendanceRepo) GetAnalytics(ctx context.Context, schoolID string) (*AnalyticsResponse, error) {
 	args := m.Called(ctx, schoolID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*AnalyticsResponse), args.Error(1)
 }
-func (m *MockRepository) DeleteJustification(id string) error {
+func (m *MockAttendanceRepo) CreateJustification(j *Justification) error {
+	args := m.Called(j)
+	j.ID = "just-1"
+	return args.Error(0)
+}
+func (m *MockAttendanceRepo) UpdateJustification(j *Justification) error {
+	args := m.Called(j)
+	return args.Error(0)
+}
+func (m *MockAttendanceRepo) ProcessJustificationTx(ctx context.Context, j *Justification, teacherID string, approve bool) error {
+	args := m.Called(ctx, j, teacherID, approve)
+	return args.Error(0)
+}
+func (m *MockAttendanceRepo) FindJustificationByID(id string) (*Justification, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*Justification), args.Error(1)
+}
+func (m *MockAttendanceRepo) FindPendingJustifications(classID string) ([]Justification, error) {
+	args := m.Called(classID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]Justification), args.Error(1)
+}
+func (m *MockAttendanceRepo) DeleteJustification(id string) error {
 	args := m.Called(id)
 	return args.Error(0)
 }
-func (m *MockRepository) IsTeacherAssignedToClass(ctx context.Context, teacherID, classID string) (bool, error) {
+func (m *MockAttendanceRepo) IsTeacherAssignedToClass(ctx context.Context, teacherID, classID string) (bool, error) {
 	args := m.Called(ctx, teacherID, classID)
 	return args.Bool(0), args.Error(1)
 }
-func (m *MockRepository) GetMonthlyBreakdown(ctx context.Context, studentID, schoolYear string) ([]MonthlyBreakdownRow, error) {
+func (m *MockAttendanceRepo) IsTeacherSubstitute(ctx context.Context, teacherID, classID string, date time.Time, hour int) (bool, error) {
+	args := m.Called(ctx, teacherID, classID, date, hour)
+	return args.Bool(0), args.Error(1)
+}
+func (m *MockAttendanceRepo) HasOverlappingJustification(ctx context.Context, studentID string, startDate, endDate time.Time) (bool, error) {
+	args := m.Called(ctx, studentID, startDate, endDate)
+	return args.Bool(0), args.Error(1)
+}
+func (m *MockAttendanceRepo) GetMonthlyBreakdown(ctx context.Context, studentID, schoolYear string) ([]MonthlyBreakdownRow, error) {
 	args := m.Called(ctx, studentID, schoolYear)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]MonthlyBreakdownRow), args.Error(1)
 }
-func (m *MockRepository) FindUnjustifiedByStudent(studentID string) ([]Attendance, error) {
-	return nil, nil
+func (m *MockAttendanceRepo) FindUnjustifiedByStudent(studentID string) ([]Attendance, error) {
+	args := m.Called(studentID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]Attendance), args.Error(1)
 }
-func (m *MockRepository) JustifyAbsenceByParent(attendanceID string, reason string, notes string) error {
-	return nil
+func (m *MockAttendanceRepo) JustifyAbsenceByParent(attendanceID string, reason string, notes string) error {
+	args := m.Called(attendanceID, reason, notes)
+	return args.Error(0)
 }
-func (m *MockRepository) GetStudentAttendanceStats(studentID string) (*AttendanceStats, error) {
-	return &AttendanceStats{}, nil
+func (m *MockAttendanceRepo) GetStudentAttendanceStats(studentID string) (*AttendanceStats, error) {
+	args := m.Called(studentID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*AttendanceStats), args.Error(1)
 }
 
 type MockUserRepo struct {
-	users.Repository
+	mock.Mock
 }
 
+func (m *MockUserRepo) Create(ctx context.Context, user *users.User) error          { return nil }
+func (m *MockUserRepo) GetByID(ctx context.Context, id string) (*users.User, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*users.User), args.Error(1)
+}
+func (m *MockUserRepo) GetByEmail(ctx context.Context, email string) (*users.User, error) { return nil, nil }
+func (m *MockUserRepo) Update(ctx context.Context, user *users.User) error          { return nil }
+func (m *MockUserRepo) Delete(ctx context.Context, id string) error                  { return nil }
+func (m *MockUserRepo) Restore(ctx context.Context, id string) error                 { return nil }
+func (m *MockUserRepo) List(ctx context.Context, filter users.UserFilter) ([]users.User, int, error) {
+	return nil, 0, nil
+}
+func (m *MockUserRepo) ListByIDs(ctx context.Context, ids []string) ([]users.User, error) {
+	return nil, nil
+}
+func (m *MockUserRepo) LogAudit(ctx context.Context, log *users.AuditLog) error { return nil }
+func (m *MockUserRepo) GetAuditLogs(ctx context.Context, userID string, limit, offset int) ([]users.AuditLog, int, error) {
+	return nil, 0, nil
+}
+func (m *MockUserRepo) BulkCreate(ctx context.Context, users []users.User) (int, []string, error) {
+	return 0, nil, nil
+}
+func (m *MockUserRepo) HardDelete(ctx context.Context, id string) error { return nil }
+func (m *MockUserRepo) RevokeAllUserTokens(ctx context.Context, userID string) error { return nil }
 func (m *MockUserRepo) IsGuardian(ctx context.Context, parentID, studentID string) (bool, error) {
+	args := m.Called(ctx, parentID, studentID)
+	return args.Bool(0), args.Error(1)
+}
+func (m *MockUserRepo) AddGuardian(ctx context.Context, studentID, parentID, relation string) error {
+	return nil
+}
+func (m *MockUserRepo) AddPasswordHistory(ctx context.Context, userID, passwordHash string) error {
+	return nil
+}
+func (m *MockUserRepo) BulkDelete(ctx context.Context, ids []string) (int, error) {
+	return len(ids), nil
+}
+func (m *MockUserRepo) GetChildren(ctx context.Context, parentID string) ([]users.StudentChild, error) {
+	return nil, nil
+}
+func (m *MockUserRepo) GetPasswordHistory(ctx context.Context, userID string) ([]string, error) {
+	return nil, nil
+}
+func (m *MockUserRepo) GetStudentsByClass(ctx context.Context, classID string) ([]users.User, error) {
+	return nil, nil
+}
+func (m *MockUserRepo) GetStudentProfile(ctx context.Context, userID string) (string, error) {
+	return "", nil
+}
+func (m *MockUserRepo) GetParentProfile(ctx context.Context, userID string) (string, error) {
+	return "", nil
+}
+func (m *MockUserRepo) RemoveGuardian(ctx context.Context, studentProfileID, parentProfileID string) error {
+	return nil
+}
+func (m *MockUserRepo) GetGuardians(ctx context.Context, studentProfileID string) ([]users.GuardianInfo, error) {
+	return nil, nil
+}
+func (m *MockUserRepo) GetFascicoloSummary(ctx context.Context, studentID string, isActive bool) (map[string]interface{}, error) {
+	return nil, nil
+}
+func (m *MockUserRepo) IsActive(ctx context.Context, id string) (bool, error) {
 	return true, nil
 }
 
-func (m *MockUserRepo) GetByID(ctx context.Context, id string) (*users.User, error) {
-	return &users.User{ID: id, Role: "teacher"}, nil
-}
-
-func TestMarkAttendance(t *testing.T) {
-	mockRepo := new(MockRepository)
+func TestAttendanceService_MarkAttendance(t *testing.T) {
+	mockRepo := new(MockAttendanceRepo)
 	mockUserRepo := new(MockUserRepo)
-	service := NewService(mockRepo, mockUserRepo, nil, nil)
+	svc := NewService(mockRepo, mockUserRepo, nil, nil)
 
 	ctx := context.Background()
-	teacherID := "t1"
-	mockRepo.On("IsTeacherAssignedToClass", mock.Anything, teacherID, "c1").Return(true, nil).Maybe()
+	teacherID := "teacher-1"
+	schoolID := "school-1"
+	classID := "class-1"
+	today := time.Now().Format("2006-01-02")
 
-	todayStr := time.Now().Format("2006-01-02")
-	hourVal := 1
+	mockRepo.On("IsTeacherAssignedToClass", ctx, teacherID, classID).Return(true, nil).Once()
+	mockRepo.On("Create", mock.Anything).Return(nil).Once()
 
-	t.Run("MarkSingle_Success", func(t *testing.T) {
-		req := CreateAttendanceRequest{
-			StudentID: "s1",
-			ClassID:   "c1",
-			Date:      todayStr,
-			Status:    StatusPresent,
-		}
-
-		mockRepo.On("Create", mock.MatchedBy(func(a *Attendance) bool {
-			return a.StudentID == "s1" && a.Status == StatusPresent
-		})).Return(nil).Once()
-
-		err := service.MarkAttendance(ctx, teacherID, "school-1", req)
-		assert.NoError(t, err)
+	err := svc.MarkAttendance(ctx, teacherID, schoolID, CreateAttendanceRequest{
+		StudentID: "student-1",
+		ClassID:   classID,
+		Date:      today,
+		Hour:      1,
+		Status:    StatusPresent,
 	})
 
-	t.Run("MarkSingle_WithTimes_Success", func(t *testing.T) {
-		req := CreateAttendanceRequest{
-			StudentID: "s1",
-			ClassID:   "c1",
-			Date:      todayStr,
-			Status:    StatusLate,
-			Hour:      hourVal,
-			EntryTime: "08:30",
-			ExitTime:  "13:00",
-		}
-
-		mockRepo.On("Create", mock.MatchedBy(func(a *Attendance) bool {
-			return a.StudentID == "s1" && a.Status == StatusLate && a.EntryTime != nil && *a.EntryTime == "08:30" && a.ExitTime != nil && *a.ExitTime == "13:00"
-		})).Return(nil).Once()
-
-		err := service.MarkAttendance(ctx, teacherID, "school-1", req)
-		assert.NoError(t, err)
-	})
-
-	t.Run("MarkBulk_Success", func(t *testing.T) {
-		req := BulkAttendanceRequest{
-			ClassID: "c1",
-			Date:    todayStr,
-			Statuses: []StudentStatusRequest{
-				{StudentID: "s1", Status: StatusPresent},
-				{StudentID: "s2", Status: StatusAbsent},
-			},
-		}
-
-		mockRepo.On("BatchCreate", mock.MatchedBy(func(atts []*Attendance) bool {
-			return len(atts) == 2
-		})).Return(nil).Once()
-
-		err := service.MarkBulk(ctx, teacherID, "school-1", req)
-		assert.NoError(t, err)
-	})
+	assert.NoError(t, err)
+	mockRepo.AssertExpectations(t)
 }
 
-func TestGetClassAttendance(t *testing.T) {
-	mockRepo := new(MockRepository)
+func TestAttendanceService_UpdateJustifiedRejection(t *testing.T) {
+	mockRepo := new(MockAttendanceRepo)
 	mockUserRepo := new(MockUserRepo)
-	service := NewService(mockRepo, mockUserRepo, nil, nil)
+	svc := NewService(mockRepo, mockUserRepo, nil, nil)
+
 	ctx := context.Background()
+	attID := "att-1"
+	mockRepo.On("FindByID", attID).Return(&Attendance{
+		ID:        attID,
+		SchoolID:  "school-1",
+		ClassID:   "class-1",
+		Justified: true,
+	}, nil).Once()
 
-	t.Run("ReturnsSummary", func(t *testing.T) {
-		dateStr := "2025-10-10"
-		date, _ := time.Parse("2006-01-02", dateStr)
-
-		atts := []Attendance{
-			{ID: "1", StudentID: "s1", Status: StatusPresent, Date: date},
-			{ID: "2", StudentID: "s2", Status: StatusAbsent, Date: date},
-			{ID: "3", StudentID: "s3", Status: StatusLate, Date: date},
-		}
-
-		mockRepo.On("IsTeacherAssignedToClass", mock.Anything, "teacher-1", "c1").Return(true, nil).Maybe()
-		mockRepo.On("FindByClassAndDate", "c1", date).Return(atts, nil).Once()
-
-		resp, err := service.GetClassAttendance(ctx, "teacher-1", "teacher", "school-1", "c1", dateStr)
-		assert.NoError(t, err)
-		assert.Equal(t, 1, resp.Summary.Present)
-		assert.Equal(t, 1, resp.Summary.Absent)
-		assert.Equal(t, 1, resp.Summary.Late)
-	})
-}
-
-func TestJustificationFlow(t *testing.T) {
-	mockRepo := new(MockRepository)
-	mockUserRepo := new(MockUserRepo)
-	service := NewService(mockRepo, mockUserRepo, nil, nil)
-	ctx := context.Background()
-
-	t.Run("RequestJustification", func(t *testing.T) {
-		mockRepo.On("CreateJustification", mock.Anything).Return(nil).Once()
-
-		err := service.RequestJustification(ctx, "p1", JustificationRequest{
-			StudentID: "s1", StartDate: "2025-10-10", EndDate: "2025-10-11", Reason: "Sick",
-		})
-		assert.NoError(t, err)
+	newStatus := StatusPresent
+	err := svc.UpdateAttendance(ctx, "teacher-1", "school-1", attID, UpdateAttendanceRequest{
+		Status: &newStatus,
 	})
 
-	t.Run("ApproveJustification", func(t *testing.T) {
-		jID := "j1"
-		jPending := &Justification{ID: jID, Status: JustificationPending}
-
-		mockRepo.On("FindJustificationByID", jID).Return(jPending, nil).Once()
-		mockRepo.On("ProcessJustificationTx", mock.Anything, jPending, "t1", true).Return(nil).Once()
-
-		err := service.ProcessJustification(ctx, "t1", jID, true)
-		assert.NoError(t, err)
-	})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "già stato giustificato")
 }
