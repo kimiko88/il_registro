@@ -256,7 +256,13 @@ const schools = ref([])
 const languageOptions = [
   { label: 'Italiano', value: 'it-IT', code: 'IT', icon: 'flag' },
   { label: 'English', value: 'en-US', code: 'EN', icon: 'language' },
-  { label: 'Deutsch', value: 'de-DE', code: 'DE', icon: 'language' }
+  { label: 'Deutsch', value: 'de-DE', code: 'DE', icon: 'language' },
+  { label: 'Français', value: 'fr-FR', code: 'FR', icon: 'language' },
+  { label: 'Español', value: 'es-ES', code: 'ES', icon: 'language' },
+  { label: 'Русский', value: 'ru-RU', code: 'RU', icon: 'language' },
+  { label: 'Українська', value: 'uk-UA', code: 'UK', icon: 'language' },
+  { label: 'العربية', value: 'ar-SA', code: 'AR', icon: 'language' },
+  { label: '中文 (简体)', value: 'zh-CN', code: 'ZH', icon: 'language' }
 ]
 
 const currentLangCode = computed(() => {

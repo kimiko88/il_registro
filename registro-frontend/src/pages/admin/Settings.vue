@@ -261,7 +261,13 @@ const selectedLanguage = ref(locale.value || 'it-IT')
 const languageOptions = [
   { label: 'Italiano (Italia)', value: 'it-IT', icon: 'flag' },
   { label: 'English (United States)', value: 'en-US', icon: 'language' },
-  { label: 'Deutsch (Deutschland)', value: 'de-DE', icon: 'language' }
+  { label: 'Deutsch (Deutschland)', value: 'de-DE', icon: 'language' },
+  { label: 'Français (France)', value: 'fr-FR', icon: 'language' },
+  { label: 'Español (España)', value: 'es-ES', icon: 'language' },
+  { label: 'Русский (Россия)', value: 'ru-RU', icon: 'language' },
+  { label: 'Українська (Україна)', value: 'uk-UA', icon: 'language' },
+  { label: 'العربية (السعودية)', value: 'ar-SA', icon: 'language' },
+  { label: '中文 (简体)', value: 'zh-CN', icon: 'language' }
 ]
 
 const currentLanguageLabel = computed(() => {

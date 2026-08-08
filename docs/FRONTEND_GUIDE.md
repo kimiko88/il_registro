@@ -84,7 +84,7 @@ Lo store `useWebSocketStore` espone ref reattivi per lo stato della connessione 
 
 ## Internazionalizzazione & Accessibilità (a11y)
 
-1. **i18n Multi-Lingua**: i file `src/i18n/it-IT`, `en-US`, `de-DE`, `es-ES`, `fr-FR` coprono tutti i menu, notifiche, ruoli e messaggi di errore.
+1. **i18n Multi-Lingua**: i file `src/i18n/` coprono 9 lingue distinte: Italiano (`it-IT`), Inglese (`en-US`), Tedesco (`de-DE`), Francese (`fr-FR`), Spagnolo (`es-ES`), Russo (`ru-RU`), Ucraino (`uk-UA`), Arabo (`ar-SA`) e Cinese Semplificato (`zh-CN`).
 2. **WAI-ARIA**: inclusione obbligatoria di `role="alert"`, `role="navigation"`, `role="banner"`, `aria-expanded` e Skip Links (*Salta al contenuto principale* `#main-content`).
 
 ---

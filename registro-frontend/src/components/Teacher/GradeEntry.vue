@@ -319,6 +319,7 @@ function formatGrade(val) {
     if (isNaN(num)) return val;
     if (num === -1) return 'A';
     
+    const sep = localStorage.getItem('user_decimal_separator') || ',';
     const integerPart = Math.floor(num);
     const decimalPart = num - integerPart;
     
@@ -334,7 +335,7 @@ function formatGrade(val) {
     if (Math.abs(decimalPart) < 0.01) {
         return `${integerPart}`;
     }
-    return String(num).replace('.', ',');
+    return String(num).replace('.', sep);
 }
 
 const getBadgeColor = (val) => {

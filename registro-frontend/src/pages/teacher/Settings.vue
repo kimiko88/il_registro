@@ -358,7 +358,7 @@
                 <q-select
                   v-model="registerSettings.gradeFormat"
                   :options="[
-                    { label: 'Decimali Standard (Es. 7.5)', value: 'decimal' },
+                    { label: 'Decimali Standard (Es. 7,5 o 7.5)', value: 'decimal' },
                     { label: 'Simboli e Frazioni (Es. 7+, 7½, 8-)', value: 'fractional' },
                     { label: 'Centesimi (Es. 75/100)', value: 'centesimal' }
                   ]"
@@ -368,6 +368,38 @@
                   dense
                   class="rounded-lg q-mb-md"
                 />
+
+                <div class="text-subtitle2 text-weight-bold text-slate-700 q-mb-sm">Separatore dei Decimali</div>
+                <q-select
+                  v-model="registerSettings.decimalSeparator"
+                  :options="[
+                    { label: 'Virgola ( , ) — Standard Italiano (es. 7,5)', value: ',' },
+                    { label: 'Punto ( . ) — Standard Internazionale (es. 7.5)', value: '.' }
+                  ]"
+                  emit-value
+                  map-options
+                  outlined
+                  dense
+                  class="rounded-lg q-mb-md"
+                />
+
+                <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs">
+                  <div class="text-weight-bold text-slate-700 q-mb-xs">Anteprima Visualizzazione Voti Live:</div>
+                  <div class="row q-col-gutter-xs">
+                    <div class="col-4 text-center">
+                      <span class="text-caption text-grey-7">Voto 7.5:</span><br>
+                      <q-badge color="indigo" class="text-subtitle2 px-2 py-1">{{ sampleFormattedGrade(7.5) }}</q-badge>
+                    </div>
+                    <div class="col-4 text-center">
+                      <span class="text-caption text-grey-7">Voto 6.25:</span><br>
+                      <q-badge color="teal" class="text-subtitle2 px-2 py-1">{{ sampleFormattedGrade(6.25) }}</q-badge>
+                    </div>
+                    <div class="col-4 text-center">
+                      <span class="text-caption text-grey-7">Media 8.42:</span><br>
+                      <q-badge color="purple" class="text-subtitle2 px-2 py-1">{{ sampleFormattedAverage(8.4166) }}</q-badge>
+                    </div>
+                  </div>
+                </div>
               </q-card>
             </div>
 
@@ -459,7 +491,11 @@ const localeOptions = [
   { label: 'English', value: 'en', flag: '🇬🇧' },
   { label: 'Español', value: 'es', flag: '🇪🇸' },
   { label: 'Français', value: 'fr', flag: '🇫🇷' },
-  { label: 'Deutsch', value: 'de', flag: '🇩🇪' }
+  { label: 'Deutsch', value: 'de', flag: '🇩🇪' },
+  { label: 'Русский', value: 'ru', flag: '🇷🇺' },
+  { label: 'Українська', value: 'uk', flag: '🇺🇦' },
+  { label: 'العربية', value: 'ar', flag: '🇸🇦' },
+  { label: '中文 (简体)', value: 'zh', flag: '🇨🇳' }
 ]
 
 const generalSettings = reactive({
@@ -562,9 +598,29 @@ const notificationSettings = reactive({
 const registerSettings = reactive({
   defaultLanding: '/teacher',
   gradeFormat: 'decimal',
+  decimalSeparator: ',',
   compactGrid: false,
   showStudentPhotos: true
 })
+
+const sampleFormattedGrade = (val) => {
+  const sep = registerSettings.decimalSeparator || ','
+  const fmt = registerSettings.gradeFormat || 'decimal'
+  if (fmt === 'fractional') {
+    if (val === 7.5) return '7½'
+    if (val === 6.25) return '6+'
+    return String(val)
+  }
+  if (fmt === 'centesimal') {
+    return `${(val * 10).toFixed(0)}/100`
+  }
+  return String(val).replace('.', sep)
+}
+
+const sampleFormattedAverage = (val) => {
+  const sep = registerSettings.decimalSeparator || ','
+  return Number(val).toFixed(2).replace('.', sep)
+}
 
 // PIN
 const pinValue = ref('')
@@ -595,6 +651,10 @@ onMounted(() => {
   if (savedReg) {
     try { Object.assign(registerSettings, JSON.parse(savedReg)) } catch {}
   }
+  const savedSep = localStorage.getItem('user_decimal_separator')
+  if (savedSep) {
+    registerSettings.decimalSeparator = savedSep
+  }
 
   const savedPin = localStorage.getItem('teacher_quick_pin')
   if (savedPin) pinValue.value = savedPin
@@ -606,6 +666,7 @@ const saveAllPreferences = () => {
     localStorage.setItem('teacher_notification_settings', JSON.stringify(notificationSettings))
     localStorage.setItem('teacher_register_settings', JSON.stringify(registerSettings))
     localStorage.setItem('teacher_general_settings', JSON.stringify(generalSettings))
+    localStorage.setItem('user_decimal_separator', registerSettings.decimalSeparator || ',')
     $q.notify({
       type: 'positive',
       message: 'Tutte le preferenze sono state salvate con successo!',
