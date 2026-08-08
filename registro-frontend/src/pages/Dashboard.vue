@@ -51,9 +51,52 @@
             </div>
             
             <!-- 3 Dots Options Menu -->
-            <q-btn flat round dense icon="more_horiz" color="grey-7" aria-label="Opzioni e bozze lezioni">
+            <q-btn flat round dense icon="more_horiz" color="grey-7" aria-label="Opzioni e scorciatoie">
               <q-menu auto-close>
-                <q-list style="min-width: 240px">
+                <!-- Menu per SuperAdmin / Admin -->
+                <q-list style="min-width: 240px" v-if="currentRole === 'admin' || currentRole === 'superadmin'">
+                  <q-item clickable @click="router.push('/admin/audit-logs')">
+                    <q-item-section avatar><q-icon name="fact_check" color="primary" /></q-item-section>
+                    <q-item-section>Registro Eventi & Audit Log</q-item-section>
+                  </q-item>
+                  <q-item clickable @click="router.push('/admin/users')">
+                    <q-item-section avatar><q-icon name="people" color="secondary" /></q-item-section>
+                    <q-item-section>Gestione Utenti Sistema</q-item-section>
+                  </q-item>
+                  <q-item clickable @click="router.push('/admin/schools')">
+                    <q-item-section avatar><q-icon name="school" color="indigo" /></q-item-section>
+                    <q-item-section>Gestione Istituti</q-item-section>
+                  </q-item>
+                  <q-separator />
+                  <q-item clickable @click="fetchDashboardData">
+                    <q-item-section avatar><q-icon name="refresh" color="grey-7" /></q-item-section>
+                    <q-item-section>Aggiorna Attività</q-item-section>
+                  </q-item>
+                </q-list>
+
+                <!-- Menu per Segreteria -->
+                <q-list style="min-width: 240px" v-else-if="currentRole === 'secretary'">
+                  <q-item clickable @click="router.push('/secretary/audit-log')">
+                    <q-item-section avatar><q-icon name="fact_check" color="primary" /></q-item-section>
+                    <q-item-section>Audit Log Segreteria</q-item-section>
+                  </q-item>
+                  <q-item clickable @click="router.push('/secretary/users')">
+                    <q-item-section avatar><q-icon name="people" color="secondary" /></q-item-section>
+                    <q-item-section>Anagrafica Utenti</q-item-section>
+                  </q-item>
+                  <q-item clickable @click="router.push('/secretary/documents')">
+                    <q-item-section avatar><q-icon name="folder" color="amber-9" /></q-item-section>
+                    <q-item-section>Gestione Documenti & Atti</q-item-section>
+                  </q-item>
+                  <q-separator />
+                  <q-item clickable @click="fetchDashboardData">
+                    <q-item-section avatar><q-icon name="refresh" color="grey-7" /></q-item-section>
+                    <q-item-section>Aggiorna Attività</q-item-section>
+                  </q-item>
+                </q-list>
+
+                <!-- Menu per Docente (Teacher) -->
+                <q-list style="min-width: 240px" v-else-if="currentRole === 'teacher'">
                   <q-item clickable @click="openDraftModal">
                     <q-item-section avatar><q-icon name="edit_note" color="primary" /></q-item-section>
                     <q-item-section>Pianifica Bozza Lezione</q-item-section>
@@ -66,6 +109,14 @@
                   <q-item clickable @click="router.push('/teacher/lessons')">
                     <q-item-section avatar><q-icon name="menu_book" color="grey-7" /></q-item-section>
                     <q-item-section>Registro di Classe Completo</q-item-section>
+                  </q-item>
+                </q-list>
+
+                <!-- Menu Generico (Student / Parent) -->
+                <q-list style="min-width: 240px" v-else>
+                  <q-item clickable @click="fetchDashboardData">
+                    <q-item-section avatar><q-icon name="refresh" color="primary" /></q-item-section>
+                    <q-item-section>Aggiorna Attività</q-item-section>
                   </q-item>
                 </q-list>
               </q-menu>
