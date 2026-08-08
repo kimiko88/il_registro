@@ -2,11 +2,14 @@ package signatures
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	"registro-backend/internal/users"
 )
 
@@ -39,6 +42,11 @@ func (m *MockFEQRepo) FindQualifiedByDocumentID(_ context.Context, docID string)
 	return args.Get(0).([]QualifiedSignature), args.Error(1)
 }
 
+func (m *MockFEQRepo) RevokeQualified(_ context.Context, id string, reason string) error {
+	args := m.Called(id, reason)
+	return args.Error(0)
+}
+
 // ── Mock UserLookup ───────────────────────────────────────────────────────
 
 type MockFEQUserRepo struct {
@@ -67,7 +75,7 @@ func TestFEQService_SignQualified_FES_NoMFA(t *testing.T) {
 	userRepo := new(MockFEQUserRepo)
 	svc := NewQualifiedService(nil, repo, userRepo)
 
-	user := &users.User{ID: "u-1", Name: "Mario Rossi", MFAEnabled: false}
+	user := &users.User{ID: "u-1", FirstName: "Mario", LastName: "Rossi", MFAEnabled: false}
 	userRepo.On("GetByID", mock.Anything, "u-1").Return(user, nil).Once()
 	repo.On("CreateQualified", mock.AnythingOfType("*signatures.QualifiedSignature")).Return(nil).Once()
 
@@ -94,7 +102,7 @@ func TestFEQService_SignQualified_FEQ_RequiresMFA(t *testing.T) {
 	userRepo := new(MockFEQUserRepo)
 	svc := NewQualifiedService(nil, repo, userRepo)
 
-	user := &users.User{ID: "u-2", Name: "Luigi Verdi", MFAEnabled: false}
+	user := &users.User{ID: "u-2", FirstName: "Luigi", LastName: "Verdi", MFAEnabled: false}
 	userRepo.On("GetByID", mock.Anything, "u-2").Return(user, nil).Once()
 
 	req := QualifiedSignRequest{
@@ -115,7 +123,7 @@ func TestFEQService_SignQualified_FEQ_InvalidTOTP(t *testing.T) {
 	userRepo := new(MockFEQUserRepo)
 	svc := NewQualifiedService(nil, repo, userRepo)
 
-	user := &users.User{ID: "u-3", Name: "Anna Bianchi", MFAEnabled: true, MFASecret: "JBSWY3DPEHPK3PXP"}
+	user := &users.User{ID: "u-3", FirstName: "Anna", LastName: "Bianchi", MFAEnabled: true, MFASecret: "JBSWY3DPEHPK3PXP"}
 	userRepo.On("GetByID", mock.Anything, "u-3").Return(user, nil).Once()
 
 	req := QualifiedSignRequest{
@@ -136,20 +144,29 @@ func TestFEQService_VerifyQualified_Valid(t *testing.T) {
 	userRepo := new(MockFEQUserRepo)
 	svc := NewQualifiedService(nil, repo, userRepo)
 
+	qscd := &SoftwareQSCD{}
+	docHash := sha256.Sum256([]byte("Documento di test per firma FEQ"))
+	docHashHex := hex.EncodeToString(docHash[:])
+	sigBytes, pubKeyPEM, certDN, certSerial, err := qscd.Sign(context.Background(), docHash[:])
+	require.NoError(t, err)
+	sigHex := hex.EncodeToString(sigBytes)
+
 	now := time.Now().UTC()
 	qSig := &QualifiedSignature{
-		ID:             "qsig-verify-1",
-		DocumentID:     "doc-001",
-		SignerID:       "u-1",
-		Level:          SignatureLevelFEQ,
-		DocumentHash:   "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
-		SignatureValue: "deadbeef",
-		TimestampToken: "cafebabe1234",
-		CertificateDN:  "CN=Mario Rossi, O=RegistroV2, C=IT",
-		SignedAt:       now,
-		TimestampAt:    now,
-		IsValid:        true,
-		RevokedAt:      nil,
+		ID:                "qsig-verify-1",
+		DocumentID:        "doc-001",
+		SignerID:          "u-1",
+		Level:             SignatureLevelFEQ,
+		DocumentHash:      docHashHex,
+		SignatureValue:    sigHex,
+		PublicKeyPEM:      string(pubKeyPEM),
+		CertificateSerial: certSerial,
+		CertificateDN:     certDN,
+		TimestampToken:    "cafebabe1234",
+		SignedAt:          now,
+		TimestampAt:       now,
+		IsValid:           true,
+		RevokedAt:         nil,
 	}
 	repo.On("FindQualifiedByID", "qsig-verify-1").Return(qSig, nil).Once()
 

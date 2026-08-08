@@ -21,7 +21,6 @@ import (
 	"time"
 
 	"github.com/pquerna/otp/totp"
-	"registro-backend/internal/users"
 )
 
 // ── Interfacce ──────────────────────────────────────────────────────────────
@@ -87,6 +86,9 @@ func (q *SoftwareQSCD) Sign(_ context.Context, digest []byte) ([]byte, []byte, s
 		// x509.ExtKeyUsageEmailProtection rimosso — non corretto per firma documenti.
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageCodeSigning}, // placeholder per DocumentSigning
 		BasicConstraintsValid: true,
+	}
+	if _, err := x509.CreateCertificate(rand.Reader, certTemplate, certTemplate, &privKey.PublicKey, privKey); err != nil {
+		return nil, nil, "", "", fmt.Errorf("SoftwareQSCD: errore creazione certificato: %w", err)
 	}
 	certDN := fmt.Sprintf("CN=%s, O=RegistroV2, C=IT", certTemplate.Subject.CommonName)
 	return sigBytes, pubKeyPEM, certDN, serial.String(), nil
@@ -345,7 +347,7 @@ func (s *feqService) VerifyQualified(ctxRaw interface{}, signatureID string) (*V
 					rsaErr := rsa.VerifyPKCS1v15(rsaPub, crypto.SHA256, hashBytes, sigBytes)
 					if rsaErr == nil {
 						cryptoValid = true
-						verifyMsg = "Firma RSA PKCS1v15 verificata crittograficamente"
+						verifyMsg = "Firma RSA PKCS1v15 valida e verificata crittograficamente"
 					} else {
 						verifyMsg = fmt.Sprintf("Verifica RSA fallita: %v", rsaErr)
 					}

@@ -1,6 +1,9 @@
 package signatures
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 // SignatureLevel rappresenta il livello di firma elettronica secondo eIDAS e CAD italiano.
 type SignatureLevel string
@@ -123,6 +126,3 @@ type QualifiedService interface {
 	VerifyQualified(ctx interface{}, signatureID string) (*VerifyResult, error)
 	GetQualifiedByDocument(ctx interface{}, documentID string) ([]QualifiedSignature, error)
 }
-
-// import per fmt usato in SidiRejectionError
-import "fmt"
