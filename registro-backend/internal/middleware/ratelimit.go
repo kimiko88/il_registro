@@ -93,12 +93,12 @@ func RateLimitMiddleware() gin.HandlerFunc {
 	limiter := NewIPRateLimiter(5, 10)
 
 	return func(c *gin.Context) {
-		ip := c.RemoteIP()
-		if ip == "" || ip == "127.0.0.1" || ip == "::1" {
-			ip = c.ClientIP()
+		ip := c.ClientIP()
+		if ip == "" {
+			ip = c.RemoteIP()
 		}
 		if ip == "" {
-			ip = "127.0.0.1"
+			ip = "unknown"
 		}
 		if !limiter.GetLimiter(ip).Allow() {
 			c.JSON(http.StatusTooManyRequests, gin.H{"error": "Too many requests"})
@@ -115,12 +115,12 @@ func AuthRateLimitMiddleware() gin.HandlerFunc {
 	limiter := NewIPRateLimiter(rate.Every(12*time.Second), 5)
 
 	return func(c *gin.Context) {
-		ip := c.RemoteIP()
-		if ip == "" || ip == "127.0.0.1" || ip == "::1" {
-			ip = c.ClientIP()
+		ip := c.ClientIP()
+		if ip == "" {
+			ip = c.RemoteIP()
 		}
 		if ip == "" {
-			ip = "127.0.0.1"
+			ip = "unknown"
 		}
 		if !limiter.GetLimiter(ip).Allow() {
 			c.JSON(http.StatusTooManyRequests, gin.H{

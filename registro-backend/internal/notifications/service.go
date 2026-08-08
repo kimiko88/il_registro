@@ -76,7 +76,6 @@ func (s *Service) SendPushNotification(ctx context.Context, req SendNotification
 		} else {
 			log.Printf("[WARN] notifications.SendPushNotification: no push provider configured — logging dispatch to %s (%s): %q — %q",
 				t.DeviceToken, t.Platform, req.Title, req.Body)
-			sentCount++
 		}
 	}
 	return sentCount, nil

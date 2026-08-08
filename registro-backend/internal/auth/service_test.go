@@ -472,6 +472,7 @@ func TestPasswordReset(t *testing.T) {
 		mockRepo.On("GetPasswordHistory", mock.Anything, userID).Return([]string{}, nil).Once()
 		mockRepo.On("UpdatePassword", mock.Anything, userID, mock.Anything).Return(nil).Once()
 		mockRepo.On("AddPasswordHistory", mock.Anything, userID, mock.Anything).Return(nil).Once()
+		mockRepo.On("RevokeAllUserTokens", mock.Anything, userID).Return(nil).Once()
 
 		err := s.ChangePassword(context.Background(), userID, currentPass, newPass)
 		assert.NoError(t, err)

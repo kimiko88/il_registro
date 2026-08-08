@@ -77,8 +77,13 @@ export const useWebSocketStore = defineStore('websocket', () => {
         }
 
         const token = authStore.token
-        const tokenQueryUrl = `${wsUrl}?token=${encodeURIComponent(token)}`
-        socket.value = new WebSocket(tokenQueryUrl, ['access_token', token])
+        try {
+            socket.value = new WebSocket(wsUrl, ['access_token', token])
+        } catch (e) {
+            console.error('WebSocket connection error:', e)
+            attemptReconnect()
+            return
+        }
 
         socket.value.onopen = () => {
             console.log('WebSocket: Connected')
@@ -176,8 +181,9 @@ export const useWebSocketStore = defineStore('websocket', () => {
 
         switch (message.type) {
             case 'GRADE_ADDED':
+            case 'GRADE_UPDATED':
                 Notify.create({
-                    message: `Nuovo voto registrato: ${escapeHtml(payload.grade_value)} (${escapeHtml(payload.subject_name || 'Materia')})`,
+                    message: `Aggiornamento voto: ${escapeHtml(payload.grade_value || '')} (${escapeHtml(payload.subject_name || 'Materia')})`,
                     color: 'info',
                     icon: 'school',
                     position: 'top-right',
@@ -186,10 +192,29 @@ export const useWebSocketStore = defineStore('websocket', () => {
                 break
             case 'ATTENDANCE_LATE':
             case 'ATTENDANCE_ABSENT':
+            case 'ATTENDANCE_PRESENT':
                 Notify.create({
                     message: `Aggiornamento presenze: ${escapeHtml(payload.status || 'Presenza registrata')}`,
                     color: 'warning',
                     icon: 'warning',
+                    position: 'top-right',
+                    attrs: { role: 'alert' }
+                })
+                break
+            case 'JUSTIFICATION_APPROVED':
+                Notify.create({
+                    message: `Giustifica approvata: ${escapeHtml(payload.reason || '')}`,
+                    color: 'positive',
+                    icon: 'check_circle',
+                    position: 'top-right',
+                    attrs: { role: 'alert' }
+                })
+                break
+            case 'JUSTIFICATION_REJECTED':
+                Notify.create({
+                    message: `Giustifica non approvata: ${escapeHtml(payload.reason || '')}`,
+                    color: 'negative',
+                    icon: 'cancel',
                     position: 'top-right',
                     attrs: { role: 'alert' }
                 })

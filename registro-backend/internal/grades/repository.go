@@ -270,8 +270,8 @@ func (r *repository) FindByClassAndSubject(classID string, subjectID string, sem
 			       g.description, g.rubric_id, g.weight, g.is_published, g.published_at,
 			       g.grade_category, COALESCE(g.evaluation_type, 'Written'), COALESCE(g.created_by::text, ''), g.created_at, g.updated_at, g.test_id
 			FROM grades g
-			JOIN students s ON (g.student_id::text = s.id::text OR g.student_id::text = s.user_id::text)
-			WHERE s.class_id::text = $1 AND g.subject_id::text = $2 AND g.semester = $3 AND g.deleted_at IS NULL
+			JOIN students s ON (g.student_id = s.id OR g.student_id = s.user_id)
+			WHERE s.class_id = $1::uuid AND g.subject_id = $2::uuid AND g.semester = $3 AND g.deleted_at IS NULL
 			ORDER BY g.date DESC`
 		args = []interface{}{classID, subjectID, semester}
 	} else {
@@ -281,8 +281,8 @@ func (r *repository) FindByClassAndSubject(classID string, subjectID string, sem
 			       g.description, g.rubric_id, g.weight, g.is_published, g.published_at,
 			       g.grade_category, COALESCE(g.evaluation_type, 'Written'), COALESCE(g.created_by::text, ''), g.created_at, g.updated_at, g.test_id
 			FROM grades g
-			JOIN students s ON (g.student_id::text = s.id::text OR g.student_id::text = s.user_id::text)
-			WHERE s.class_id::text = $1 AND g.subject_id::text = $2 AND g.deleted_at IS NULL
+			JOIN students s ON (g.student_id = s.id OR g.student_id = s.user_id)
+			WHERE s.class_id = $1::uuid AND g.subject_id = $2::uuid AND g.deleted_at IS NULL
 			ORDER BY g.date DESC`
 		args = []interface{}{classID, subjectID}
 	}
@@ -301,8 +301,8 @@ func (r *repository) FindByClass(classID string, semester int) ([]Grade, error) 
 			       g.description, g.rubric_id, g.weight, g.is_published, g.published_at,
 			       g.grade_category, COALESCE(g.evaluation_type, 'Written'), COALESCE(g.created_by::text, ''), g.created_at, g.updated_at, g.test_id
 			FROM grades g
-			JOIN students s ON (g.student_id::text = s.id::text OR g.student_id::text = s.user_id::text)
-			WHERE s.class_id::text = $1 AND g.semester = $2 AND g.deleted_at IS NULL
+			JOIN students s ON (g.student_id = s.id OR g.student_id = s.user_id)
+			WHERE s.class_id = $1::uuid AND g.semester = $2 AND g.deleted_at IS NULL
 			ORDER BY g.date DESC`
 		args = []interface{}{classID, semester}
 	} else {
@@ -312,8 +312,8 @@ func (r *repository) FindByClass(classID string, semester int) ([]Grade, error) 
 			       g.description, g.rubric_id, g.weight, g.is_published, g.published_at,
 			       g.grade_category, COALESCE(g.evaluation_type, 'Written'), COALESCE(g.created_by::text, ''), g.created_at, g.updated_at, g.test_id
 			FROM grades g
-			JOIN students s ON (g.student_id::text = s.id::text OR g.student_id::text = s.user_id::text)
-			WHERE s.class_id::text = $1 AND g.deleted_at IS NULL
+			JOIN students s ON (g.student_id = s.id OR g.student_id = s.user_id)
+			WHERE s.class_id = $1::uuid AND g.deleted_at IS NULL
 			ORDER BY g.date DESC`
 		args = []interface{}{classID}
 	}
@@ -369,7 +369,7 @@ func (r *repository) FindWithFilter(filter GradeFilter) ([]Grade, error) {
 		argIdx++
 	}
 	if filter.TeacherID != "" {
-		conditions = append(conditions, fmt.Sprintf("(teacher_id = $%d::uuid OR created_by = $%d::uuid)", argIdx, argIdx))
+		conditions = append(conditions, fmt.Sprintf("teacher_id = $%d::uuid", argIdx))
 		args = append(args, filter.TeacherID)
 		argIdx++
 	}

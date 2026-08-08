@@ -16,6 +16,7 @@ export const useAttendanceStore = defineStore('attendance', {
         presentCount: (state) => state.records.filter(r => r.status === 'Present').length,
         absentCount: (state) => state.records.filter(r => r.status === 'Absent').length,
         lateCount: (state) => state.records.filter(r => r.status === 'Late').length,
+        unjustifiedCount: (state) => state.records.filter(r => r.status === 'Absent' && (!r.justificationStatus || r.justificationStatus === 'Unjustified')).length,
     },
 
     actions: {
@@ -56,7 +57,11 @@ export const useAttendanceStore = defineStore('attendance', {
                     }))
                 };
                 const response = await api.post('/attendance/mark-bulk', payload);
-                this.records = records;
+                if (response.data && Array.isArray(response.data.records)) {
+                    this.records = response.data.records;
+                } else {
+                    this.records = records;
+                }
                 return response.data;
             } catch (err) {
                 console.error("Error submitting attendance:", err);
@@ -81,6 +86,7 @@ export const useAttendanceStore = defineStore('attendance', {
             try {
                 await api.post(`/attendance/justification/${id}/process`, { approve: true });
                 this.justifications = this.justifications.filter(j => j.id !== id);
+                await this.fetchMyAttendance();
             } catch (err) {
                 console.error("Error approving justification:", err);
                 throw err;
@@ -98,7 +104,7 @@ export const useAttendanceStore = defineStore('attendance', {
                     status: r.status,
                     notes: r.notes || '',
                     time: r.entry_time || '',
-                    justificationStatus: r.is_justified ? 'Justified' : (r.parent_justified ? 'Pending' : 'Unjustified')
+                    justificationStatus: r.is_justified ? 'Justified' : (r.parent_justified ? 'PendingApproval' : 'Unjustified')
                 }));
             } catch (err) {
                 console.error("Error fetching my attendance:", err);

@@ -149,14 +149,12 @@ func (s *service) MarkBulk(ctx context.Context, teacherID, schoolID string, req 
 	}
 	// In substitution mode the teacher is not formally assigned to the class;
 	// skip the assignment check.
-	if !req.IsSubstitution {
-		isAssigned, err := s.repo.IsTeacherAssignedToClass(ctx, teacherID, req.ClassID)
-		if err != nil {
-			return fmt.Errorf("errore verifica docente per classe: %w", err)
-		}
-		if !isAssigned {
-			return fmt.Errorf("forbidden: docente non assegnato alla classe")
-		}
+	isAssigned, err := s.repo.IsTeacherAssignedToClass(ctx, teacherID, req.ClassID)
+	if err != nil {
+		return fmt.Errorf("errore verifica docente per classe: %w", err)
+	}
+	if !isAssigned {
+		return fmt.Errorf("forbidden: docente non autorizzato per la classe")
 	}
 
 	date, err := time.Parse("2006-01-02", req.Date)
@@ -421,7 +419,10 @@ func (s *service) ProcessJustification(ctx context.Context, teacherID, justifica
 
 	if s.userRepo != nil {
 		studentUser, err := s.userRepo.GetByID(ctx, j.StudentID)
-		if err == nil && studentUser != nil && studentUser.ClassID != nil && *studentUser.ClassID != "" {
+		if err != nil || studentUser == nil {
+			return fmt.Errorf("student not found or error fetching student: %w", err)
+		}
+		if studentUser.ClassID != nil && *studentUser.ClassID != "" {
 			isAssigned, err := s.repo.IsTeacherAssignedToClass(ctx, teacherID, *studentUser.ClassID)
 			if err != nil || !isAssigned {
 				return fmt.Errorf("forbidden: docente non assegnato alla classe dello studente")
@@ -539,7 +540,7 @@ func (s *service) GetStudentSummary(ctx context.Context, studentID, schoolID str
 	if totalDays == 0 {
 		fallbackDays, countErr := s.repo.CountDistinctDays(studentID)
 		const standardSchoolDays = 200
-		if countErr == nil && fallbackDays > standardSchoolDays {
+		if countErr == nil && fallbackDays > 0 {
 			totalDays = fallbackDays
 		} else {
 			totalDays = standardSchoolDays

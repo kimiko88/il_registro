@@ -138,23 +138,22 @@ func (s *Service) GetMatrix(ctx context.Context, actorID, actorRole, classID str
 			}
 
 			avg := 0.0
+			proposed := 0.0
 			if count > 0 {
 				avg = sum / float64(count)
+				proposed = math.Round(avg)
 			}
 
 			row.SubjectData[sub.SubjectID] = SubjectAverages{
 				Average:    avg,
 				GradeCount: count,
-				Proposed:   math.Round(avg),
+				Proposed:   proposed,
 			}
 		}
 
-		if _, ok := recordMap[stu.ID]; ok {
-			full, getRecErr := s.repo.GetRecord(ctx, stu.ID, classID, semester)
-			if getRecErr != nil {
-				logger.Log.Errorf("scrutiny GetRecord stu.ID=%s error: %v", stu.ID, getRecErr)
-			}
-			row.Record = full
+		if rec, ok := recordMap[stu.ID]; ok {
+			fullRec := rec
+			row.Record = &fullRec
 		}
 
 		stats, attErr := s.attRepo.GetStats(stu.ID)
@@ -219,15 +218,24 @@ func (s *Service) GetOverview(ctx context.Context, actorID, actorRole, schoolID 
 
 	sem := 2
 	now := time.Now()
-	if now.Month() >= time.September {
+	if now.Month() >= time.September || now.Month() <= time.January {
 		sem = 1
 	}
 
 	var res []ClassScrutinyOverview
 	for _, c := range classesList {
-		subjects, _ := s.classRepo.GetClassSubjects(ctx, c.ID)
-		records, _ := s.repo.ListRecordsByClass(ctx, c.ID, sem)
-		allGrades, _ := s.gradeRepo.FindByClass(c.ID, sem)
+		subjects, subErr := s.classRepo.GetClassSubjects(ctx, c.ID)
+		if subErr != nil {
+			logger.Log.Warnf("GetOverview: error fetching class subjects for %s: %v", c.ID, subErr)
+		}
+		records, recErr := s.repo.ListRecordsByClass(ctx, c.ID, sem)
+		if recErr != nil {
+			logger.Log.Warnf("GetOverview: error fetching scrutiny records for %s: %v", c.ID, recErr)
+		}
+		allGrades, grErr := s.gradeRepo.FindByClass(c.ID, sem)
+		if grErr != nil {
+			logger.Log.Warnf("GetOverview: error fetching grades for class %s: %v", c.ID, grErr)
+		}
 
 		gradedSubjects := make(map[string]bool)
 		for _, g := range allGrades {
@@ -269,6 +277,12 @@ func (s *Service) GetOverview(ctx context.Context, actorID, actorRole, schoolID 
 func (s *Service) GetClassReport(ctx context.Context, actorID, actorRole, classID string, semester int) (*ClassScrutinyReport, error) {
 	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "vice_principal" && actorRole != "secretary" && actorRole != "teacher" {
 		return nil, errors.New("unauthorized: insufficient permissions to view class scrutiny report")
+	}
+	if actorRole == "teacher" {
+		isCoordinator, _, err := s.isDirigenzaOrCoordinator(ctx, actorID, actorRole, classID)
+		if err != nil || !isCoordinator {
+			return nil, errors.New("unauthorized: solo il coordinatore di classe o la dirigenza possono accedere al report di scrutinio")
+		}
 	}
 	if semester <= 0 {
 		semester = 1
@@ -369,14 +383,20 @@ func (s *Service) ExportAll(ctx context.Context, actorID, actorRole, schoolID st
 		for _, sb := range subs {
 			subNameMap[sb.SubjectID] = sb.SubjectName
 		}
+		students, _ := s.userRepo.GetStudentsByClass(ctx, c.ID)
+		studentMap := make(map[string]string)
+		for _, st := range students {
+			studentMap[st.ID] = st.LastName + " " + st.FirstName
+		}
+
 		records, err := s.repo.ListRecordsByClass(ctx, c.ID, semester)
 		if err != nil {
 			continue
 		}
 		for _, r := range records {
-			studentName := r.StudentID
-			if u, err := s.userRepo.GetByID(ctx, r.StudentID); err == nil && u != nil {
-				studentName = u.LastName + " " + u.FirstName
+			studentName := studentMap[r.StudentID]
+			if studentName == "" {
+				studentName = r.StudentID
 			}
 			for _, g := range r.Grades {
 				subName := subNameMap[g.SubjectID]

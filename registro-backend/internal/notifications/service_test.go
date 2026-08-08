@@ -47,9 +47,20 @@ func (m *MockRepository) MarkAllAsRead(ctx context.Context, userID string) error
 	return args.Error(0)
 }
 
+type MockPushProvider struct {
+	mock.Mock
+}
+
+func (m *MockPushProvider) SendPush(ctx context.Context, token PushToken, title, body string, payload map[string]interface{}) error {
+	args := m.Called(ctx, token, title, body, payload)
+	return args.Error(0)
+}
+
 func TestRegisterAndSendPush(t *testing.T) {
 	mockRepo := new(MockRepository)
+	mockProvider := new(MockPushProvider)
 	svc := NewService(mockRepo)
+	svc.SetPushProvider(mockProvider)
 
 	mockRepo.On("SaveToken", mock.Anything, mock.MatchedBy(func(t *PushToken) bool {
 		return t.UserID == "user-1" && t.DeviceToken == "token-123"
@@ -65,6 +76,8 @@ func TestRegisterAndSendPush(t *testing.T) {
 		{ID: "1", UserID: "user-1", DeviceToken: "token-123", Platform: "android"},
 	}, nil).Once()
 
+	mockProvider.On("SendPush", mock.Anything, mock.Anything, "Nuovo Voto", "Hai ricevuto 8 in Matematica", mock.Anything).Return(nil).Once()
+
 	count, err := svc.SendPushNotification(context.Background(), SendNotificationRequest{
 		UserID: "user-1",
 		Title:  "Nuovo Voto",
@@ -73,6 +86,7 @@ func TestRegisterAndSendPush(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 1, count)
 	mockRepo.AssertExpectations(t)
+	mockProvider.AssertExpectations(t)
 }
 
 func TestDBNotification(t *testing.T) {

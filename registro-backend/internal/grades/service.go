@@ -240,6 +240,10 @@ func (s *service) GetClassGrades(ctx context.Context, actorID string, actorRole 
 		})
 	}
 
+	sort.Slice(resp.Students, func(i, j int) bool {
+		return resp.Students[i].FullName < resp.Students[j].FullName
+	})
+
 	return resp, nil
 }
 
@@ -315,7 +319,7 @@ func (s *service) GetSubjectGrades(ctx context.Context, actorID string, actorRol
 		if val == 0 && g.GradeType == GradeTypeJudgment {
 			val = s.calculator.ConvertJudgmentToValue(g.Description)
 		}
-		if val <= 0 && g.GradeType != GradeTypeNumeric {
+		if val <= 0 {
 			continue
 		}
 		validGrades = append(validGrades, g)
@@ -466,14 +470,9 @@ func (s *service) BulkImport(teacherID string, file io.Reader, semester int) (*I
 		schoolID = *teacherUser.SchoolID
 	}
 
-	var teacherProfileID string
-	if s.validator != nil && s.validator.db != nil {
-		if err := s.validator.db.QueryRow(`SELECT id FROM teachers WHERE user_id = $1`, teacherID).Scan(&teacherProfileID); err != nil {
-			return nil, fmt.Errorf("could not resolve teacher profile for user %s: %w", teacherID, err)
-		}
-	}
-	if teacherProfileID == "" {
-		return nil, fmt.Errorf("teacher profile ID is required for bulk import")
+	teacherProfileID, err := s.resolveTeacherProfileID(ctx, teacherID)
+	if err != nil {
+		return nil, fmt.Errorf("teacher profile ID is required for bulk import: %w", err)
 	}
 
 	res, err := ProcessBulkImport(s.repo, reqs, teacherID, teacherProfileID, schoolID)
@@ -725,6 +724,9 @@ func (s *service) GetMyGrades(ctx context.Context, studentID string, filter Grad
 
 	sem1Start, sem1End, sem2Start, sem2End := academicYearDates()
 	if gr, ok := semestersMap[1]; ok {
+		sort.Slice(gr, func(i, j int) bool {
+			return gr[i].Date.Before(gr[j].Date)
+		})
 		response.Semesters = append(response.Semesters, SemesterGradesSummary{
 			Semester:  1,
 			StartDate: sem1Start,
@@ -733,6 +735,9 @@ func (s *service) GetMyGrades(ctx context.Context, studentID string, filter Grad
 		})
 	}
 	if gr, ok := semestersMap[2]; ok {
+		sort.Slice(gr, func(i, j int) bool {
+			return gr[i].Date.Before(gr[j].Date)
+		})
 		response.Semesters = append(response.Semesters, SemesterGradesSummary{
 			Semester:  2,
 			StartDate: sem2Start,
@@ -794,11 +799,11 @@ func (s *service) GetMyAverages(ctx context.Context, studentID string) (*Student
 			overall = math.Round((totalSum/float64(totalSub))*100) / 100
 		}
 
-		cond := "OK"
+		cond := "OTTIMO"
 		if overall < 6.0 {
-			cond = "ALERT"
+			cond = "ATTENZIONE"
 		} else if overall < 6.5 {
-			cond = "MONITOR"
+			cond = "MONITORARE"
 		}
 
 		return SemesterAverageSummary{
@@ -985,6 +990,20 @@ func (s *service) GetSemesterReport(ctx context.Context, studentID string, semes
 		}
 	}
 
+	subjectNameMap := make(map[string]string)
+	if s.validator != nil && s.validator.db != nil {
+		sRows, sErr := s.validator.db.QueryContext(ctx, `SELECT id::text, name FROM subjects`)
+		if sErr == nil {
+			for sRows.Next() {
+				var id, name string
+				if scanErr := sRows.Scan(&id, &name); scanErr == nil {
+					subjectNameMap[id] = name
+				}
+			}
+			_ = sRows.Close()
+		}
+	}
+
 	var subjects []SubjectReport
 	totalSum := 0.0
 	passedCount := 0
@@ -1019,8 +1038,13 @@ func (s *service) GetSemesterReport(ctx context.Context, studentID string, semes
 			tName = "Docente"
 		}
 
+		subName := subjectNameMap[subID]
+		if subName == "" {
+			subName = subID
+		}
+
 		subjects = append(subjects, SubjectReport{
-			Subject:        subID,
+			Subject:        subName,
 			SubjectID:      subID,
 			Teacher:        tName,
 			FinalGrade:     finalGrade,
@@ -1043,8 +1067,12 @@ func (s *service) GetSemesterReport(ctx context.Context, studentID string, semes
 			if tName == "" {
 				tName = "Docente"
 			}
+			subName := subjectNameMap[subID]
+			if subName == "" {
+				subName = subID
+			}
 			subjects = append(subjects, SubjectReport{
-				Subject:        subID,
+				Subject:        subName,
 				SubjectID:      subID,
 				Teacher:        tName,
 				FinalGrade:     0,
@@ -1595,4 +1623,16 @@ func (s *service) DeleteWeightConfig(actorID, actorRole, schoolID, configID stri
 		return fmt.Errorf("config id required")
 	}
 	return s.repo.DeleteWeightConfig(configID)
+}
+
+func (s *service) resolveTeacherProfileID(ctx context.Context, userID string) (string, error) {
+	if s.validator == nil || s.validator.db == nil {
+		return "", fmt.Errorf("database connection unavailable")
+	}
+	var teacherProfileID string
+	err := s.validator.db.QueryRowContext(ctx, `SELECT id FROM teachers WHERE user_id = $1`, userID).Scan(&teacherProfileID)
+	if err != nil {
+		return "", fmt.Errorf("teacher profile not found for user %s: %w", userID, err)
+	}
+	return teacherProfileID, nil
 }

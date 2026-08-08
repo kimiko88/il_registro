@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"registro-backend/pkg/crypto"
@@ -63,8 +64,10 @@ func (s *Service) Register(ctx context.Context, req *RegisterRequest) (*User, er
 		return nil, err
 	}
 
+	normalizedEmail := strings.ToLower(strings.TrimSpace(req.Email))
+
 	// Check if email already exists
-	_, err := s.repo.GetUserByEmail(ctx, req.Email)
+	_, err := s.repo.GetUserByEmail(ctx, normalizedEmail)
 	if err == nil {
 		return nil, ErrEmailAlreadyExists
 	}
@@ -77,7 +80,7 @@ func (s *Service) Register(ctx context.Context, req *RegisterRequest) (*User, er
 
 	// Create user
 	user := &User{
-		Email:        req.Email,
+		Email:        normalizedEmail,
 		PasswordHash: string(passwordHash),
 		FirstName:    req.FirstName,
 		LastName:     req.LastName,
@@ -242,6 +245,11 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken, ipAddress, use
 	// Check if expired
 	if time.Now().After(rt.ExpiresAt) {
 		return nil, ErrInvalidToken
+	}
+
+	// Soft anomaly check: log warning if refresh token IP differs from original IP
+	if rt.IPAddress != "" && ipAddress != "" && rt.IPAddress != ipAddress {
+		logger.Log.Warnf("Refresh token IP mismatch for user %s: issued at %s, used from %s", rt.UserID, rt.IPAddress, ipAddress)
 	}
 
 	// Get user
@@ -583,6 +591,7 @@ func (s *Service) ChangePassword(ctx context.Context, userID, currentPassword, n
 	}
 
 	_ = s.repo.AddPasswordHistory(ctx, userID, string(passwordHash))
+	_ = s.repo.RevokeAllUserTokens(ctx, userID)
 	return nil
 }
 
