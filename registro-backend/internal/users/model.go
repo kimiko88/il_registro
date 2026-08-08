@@ -22,6 +22,7 @@ type User struct {
 	PhoneNumber   *string    `json:"phone_number,omitempty" db:"phone_number"`
 	JobTitle      *string    `json:"job_title,omitempty" db:"job_title"`
 	DateOfBirth   *time.Time `json:"date_of_birth,omitempty" db:"date_of_birth"`
+	Locale        string     `json:"locale" db:"locale"`
 
 	// Student specific (populated via joins)
 	ClassID   *string `json:"class_id,omitempty" db:"class_id"`

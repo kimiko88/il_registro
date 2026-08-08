@@ -1,9 +1,11 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
+import { createI18n } from 'vue-i18n'
 import { Quasar, Notify, Dialog, Loading } from 'quasar'
 import quasarLangIt from 'quasar/lang/it'
 import router from './router'
 import App from './App.vue'
+import messages from './i18n'
 
 // Import Quasar css
 import '@quasar/extras/material-icons/material-icons.css'
@@ -12,10 +14,20 @@ import 'quasar/src/css/index.sass'
 // Global styles
 import './assets/styles/globals.css'
 
+const savedLang = localStorage.getItem('superadmin_language') || 'it-IT'
+
+export const i18n = createI18n({
+  locale: savedLang,
+  fallbackLocale: 'it-IT',
+  legacy: false,
+  messages
+})
+
 const app = createApp(App)
 
 app.use(createPinia())
 app.use(router)
+app.use(i18n)
 app.use(Quasar, {
     plugins: {
         Notify,

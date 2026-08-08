@@ -1,36 +1,34 @@
-version: "2"
-
 linters:
   enable:
     - errcheck
     - ineffassign
     - staticcheck
     - unused
-  settings:
-    errcheck:
-      # Ignore error returns from Close/Rollback in defer where the error
-      # is genuinely unactionable (deferred cleanup after the main operation
-      # already succeeded or failed).
-      exclude-functions:
-        - (io.Closer).Close
-        - (*database/sql.Rows).Close
-        - (*database/sql.Stmt).Close
-        - (*database/sql.Tx).Rollback
-        - (*github.com/gorilla/websocket.Conn).Close
-        - (net/http.ResponseBody).Close
+
+linters-settings:
+  errcheck:
+    # Ignore error returns from Close/Rollback in defer where the error
+    # is genuinely unactionable (deferred cleanup after the main operation
+    # already succeeded or failed).
+    exclude-functions:
+      - (io.Closer).Close
+      - (*database/sql.Rows).Close
+      - (*database/sql.Stmt).Close
+      - (*database/sql.Tx).Rollback
+      - (*github.com/gorilla/websocket.Conn).Close
+      - (net/http.ResponseBody).Close
 
 issues:
-  exclusions:
-    rules:
-      # cmd/ tools are debug/migration utilities — Close errors there are ignorable.
-      - path: cmd/
-        linters:
-          - errcheck
-      # os.Setenv errors in env-loading helpers are non-fatal by design.
-      - text: "Error return value of `os.Setenv` is not checked"
-        linters:
-          - errcheck
-      # resp.Body.Close in deferred calls — body is already consumed.
-      - text: "Error return value of `resp.Body.Close` is not checked"
-        linters:
-          - errcheck
+  exclude-rules:
+    # cmd/ tools are debug/migration utilities — Close errors there are ignorable.
+    - path: cmd/
+      linters:
+        - errcheck
+    # os.Setenv errors in env-loading helpers are non-fatal by design.
+    - text: "Error return value of `os.Setenv` is not checked"
+      linters:
+        - errcheck
+    # resp.Body.Close in deferred calls — body is already consumed.
+    - text: "Error return value of `resp.Body.Close` is not checked"
+      linters:
+        - errcheck
