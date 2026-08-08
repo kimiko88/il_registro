@@ -14,6 +14,7 @@ type Repository interface {
 	GetStudentClassID(ctx context.Context, userID string) (string, error)
 	GetParentStudentClassID(ctx context.Context, userID string) (string, error)
 	GetTeacherSchedule(ctx context.Context, userID string) ([]ClassSchedule, error)
+	GetClassSchoolID(ctx context.Context, classID string) (string, error)
 	Update(ctx context.Context, classID string, entries []ScheduleEntry) error
 }
 
@@ -45,6 +46,13 @@ func (r *PostgresRepository) GetParentStudentClassID(ctx context.Context, userID
 	var classID string
 	err := r.db.QueryRowContext(ctx, query, userID).Scan(&classID)
 	return classID, err
+}
+
+func (r *PostgresRepository) GetClassSchoolID(ctx context.Context, classID string) (string, error) {
+	query := `SELECT school_id FROM classes WHERE id = $1::uuid`
+	var schoolID string
+	err := r.db.QueryRowContext(ctx, query, classID).Scan(&schoolID)
+	return schoolID, err
 }
 
 func (r *PostgresRepository) GetTeacherSchedule(ctx context.Context, userID string) ([]ClassSchedule, error) {

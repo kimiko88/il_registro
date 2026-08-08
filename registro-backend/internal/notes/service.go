@@ -90,6 +90,9 @@ func (s *Service) UpdateNote(ctx context.Context, actorID, actorRole, noteID str
 	if !isOwner && !isAdmin {
 		return nil, ErrUnauthorizedEdit
 	}
+	if !isAdmin && isOwner && n.IsApproved {
+		return nil, errors.New("forbidden: note già approvata dall'admin, non più modificabile dal docente")
+	}
 
 	if req.Type != "" {
 		if req.Type != n.Type {
@@ -126,6 +129,9 @@ func (s *Service) DeleteNote(ctx context.Context, actorID, actorRole, noteID str
 	if !isOwner && !isAdmin {
 		return ErrUnauthorizedDelete
 	}
+	if !isAdmin && isOwner && n.IsApproved {
+		return errors.New("forbidden: note già approvata dall'admin, non più eliminabile dal docente")
+	}
 	return s.repo.Delete(ctx, noteID)
 }
 
@@ -154,7 +160,7 @@ func (s *Service) ListNotes(ctx context.Context, filter NoteFilter) ([]StudentNo
 	if filter.ActorRole == "student" || filter.ActorRole == "parent" {
 		var safeNotes []StudentNote
 		for _, n := range notes {
-			if !n.IsReserved {
+			if !n.IsReserved && n.IsApproved {
 				safeNotes = append(safeNotes, n)
 			}
 		}

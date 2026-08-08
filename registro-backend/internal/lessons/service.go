@@ -26,6 +26,9 @@ type service struct {
 }
 
 func NewService(r Repository) Service {
+	if r == nil {
+		panic("lessons.NewService: repo must not be nil")
+	}
 	return &service{repo: r}
 }
 
@@ -77,8 +80,8 @@ func (s *service) CreateLesson(teacherID string, req CreateLessonRequest) (*Less
 			exStart, exEnd := l.Hour, l.Hour+lDur
 
 			if newStart < exEnd && exStart < newEnd {
-				if !(l.IsCoTeaching && req.IsCoTeaching) {
-					return nil, fmt.Errorf("impossibile inserire più lezioni nella stessa ora (%dª ora) per questa classe a meno che non sia spuntata la voce 'Compresenza'", req.Hour)
+				if !((l.IsCoTeaching && req.IsCoTeaching) || l.IsSubstitution || req.IsSubstitution) {
+					return nil, fmt.Errorf("impossibile inserire più lezioni nella stessa ora (%dª ora) per questa classe a meno che non sia spuntata la voce 'Compresenza' o 'Sostituzione'", req.Hour)
 				}
 			}
 		}
@@ -288,8 +291,9 @@ func (s *service) UpdateLesson(teacherID, role, id string, req UpdateLessonReque
 			}
 			exStart, exEnd := l.Hour, l.Hour+lDur
 			if newStart < exEnd && exStart < newEnd {
-				if !(l.IsCoTeaching && targetCoTeaching) {
-					return nil, fmt.Errorf("impossibile registrare più lezioni nella stessa ora (%dª ora) per questa classe senza la spunta 'Compresenza'", targetHour)
+				targetSub := (req.IsSubstitution != nil && *req.IsSubstitution) || existing.IsSubstitution
+				if !((l.IsCoTeaching && targetCoTeaching) || l.IsSubstitution || targetSub) {
+					return nil, fmt.Errorf("impossibile registrare più lezioni nella stessa ora (%dª ora) per questa classe senza la spunta 'Compresenza' o 'Sostituzione'", targetHour)
 				}
 			}
 		}
@@ -355,8 +359,13 @@ func (s *service) GetTeacherDiary(teacherID string, fromDate, toDate string) ([]
 	if fromDate != "" && toDate != "" {
 		from, err1 := time.Parse("2006-01-02", fromDate)
 		to, err2 := time.Parse("2006-01-02", toDate)
-		if err1 == nil && err2 == nil && from.After(to) {
-			return nil, errors.New("fromDate cannot be after toDate")
+		if err1 == nil && err2 == nil {
+			if from.After(to) {
+				return nil, errors.New("fromDate cannot be after toDate")
+			}
+			if to.Sub(from) > 90*24*time.Hour {
+				return nil, errors.New("date range cannot exceed 90 days")
+			}
 		}
 	}
 	lessons, err := s.repo.GetLessonsByTeacher(teacherID, fromDate, toDate)

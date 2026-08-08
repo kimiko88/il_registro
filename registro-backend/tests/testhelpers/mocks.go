@@ -211,6 +211,10 @@ func (m *MockUsersRepository) HardDelete(ctx context.Context, id string) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)
 }
+func (m *MockUsersRepository) RevokeAllUserTokens(ctx context.Context, userID string) error {
+	args := m.Called(ctx, userID)
+	return args.Error(0)
+}
 func (m *MockUsersRepository) Restore(ctx context.Context, id string) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)

@@ -35,8 +35,8 @@ func (s *Service) SendMessage(ctx context.Context, actorRole, schoolID, senderID
 	if req.Type != "bacheca" && len(req.Recipients) == 0 {
 		return nil, errors.New("recipients are required for targeted messages")
 	}
-	if req.Type == "bacheca" && req.RequiresSignature && len(req.Recipients) == 0 {
-		return nil, errors.New("cannot set RequiresSignature on a board message without specific recipients")
+	if req.Type == "bacheca" && req.RequiresSignature {
+		return nil, errors.New("cannot set RequiresSignature on a board message")
 	}
 
 	targetSchoolID := schoolID
@@ -48,9 +48,17 @@ func (s *Service) SendMessage(ctx context.Context, actorRole, schoolID, senderID
 	}
 
 	if s.userRepo != nil && len(req.Recipients) > 0 && targetSchoolID != "" {
+		recipientUsers, err := s.userRepo.ListByIDs(ctx, req.Recipients)
+		if err != nil {
+			return nil, fmt.Errorf("failed to verify recipients: %w", err)
+		}
+		userMap := make(map[string]*users.User)
+		for i := range recipientUsers {
+			userMap[recipientUsers[i].ID] = &recipientUsers[i]
+		}
 		for _, recipientID := range req.Recipients {
-			u, err := s.userRepo.GetByID(ctx, recipientID)
-			if err != nil || u == nil || u.SchoolID == nil || *u.SchoolID != targetSchoolID {
+			u := userMap[recipientID]
+			if u == nil || u.SchoolID == nil || *u.SchoolID != targetSchoolID {
 				return nil, fmt.Errorf("unauthorized: destinatario %s non appartiene alla scuola", recipientID)
 			}
 		}
@@ -83,7 +91,7 @@ func (s *Service) SendMessage(ctx context.Context, actorRole, schoolID, senderID
 	return msg, nil
 }
 
-func (s *Service) ListMessages(ctx context.Context, userID string) ([]*Message, error) {
+func (s *Service) ListMessages(ctx context.Context, userID, schoolID string) ([]*Message, error) {
 	return s.repo.List(ctx, userID)
 }
 
@@ -135,9 +143,19 @@ func (s *Service) GetMessageSignatures(ctx context.Context, communicationID stri
 	return s.repo.GetSignatures(ctx, communicationID)
 }
 
-func (s *Service) GetSignatureReport(ctx context.Context, actorRole, communicationID string) (*SignatureReportResponse, error) {
+func (s *Service) GetSignatureReport(ctx context.Context, actorID, actorRole, schoolID, communicationID string) (*SignatureReportResponse, error) {
 	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "teacher" {
 		return nil, errors.New("forbidden: signature reports are restricted to staff")
+	}
+	msg, err := s.repo.Get(ctx, communicationID)
+	if err != nil {
+		return nil, err
+	}
+	if actorRole != "admin" && actorRole != "superadmin" && msg.SenderID != actorID {
+		return nil, errors.New("forbidden: signature reports are restricted to admins and message sender")
+	}
+	if actorRole != "superadmin" && msg.SchoolID != nil && schoolID != "" && *msg.SchoolID != schoolID {
+		return nil, errors.New("forbidden: communication belongs to another school")
 	}
 	return s.repo.GetSignatureReport(ctx, communicationID)
 }

@@ -197,6 +197,7 @@ func (m *MockUserRepo) BulkCreate(ctx context.Context, users []users.User) (int,
 	return 0, nil, nil
 }
 func (m *MockUserRepo) HardDelete(ctx context.Context, id string) error { return nil }
+func (m *MockUserRepo) RevokeAllUserTokens(ctx context.Context, userID string) error { return nil }
 func (m *MockUserRepo) GetChildren(ctx context.Context, parentID string) ([]users.StudentChild, error) {
 	return nil, nil
 }

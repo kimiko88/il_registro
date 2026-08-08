@@ -35,6 +35,24 @@ export const useGradesStore = defineStore('grades', {
             });
             if (count === 0) return 0;
             return Math.round((sum / count) * 10) / 10;
+        },
+        classAverageForSemester: (state) => (semester = 0) => {
+            if (!state.grades || !state.grades.students) return 0;
+            let sum = 0;
+            let count = 0;
+            state.grades.students.forEach(s => {
+                s.grades.forEach(g => {
+                    if (semester > 0 && g.semester && Number(g.semester) !== Number(semester)) {
+                        return;
+                    }
+                    if (typeof g.grade_value === 'number' && g.grade_value > 0) {
+                        sum += g.grade_value;
+                        count++;
+                    }
+                });
+            });
+            if (count === 0) return 0;
+            return Math.round((sum / count) * 10) / 10;
         }
     },
 

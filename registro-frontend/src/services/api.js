@@ -63,6 +63,11 @@ export const setApiRouter = (router) => {
     appRouter = router;
 };
 
+export const resetApiState = () => {
+    isRefreshing = false;
+    failedQueue = [];
+};
+
 const handleSessionExpired = () => {
     if (appRouter && typeof appRouter.push === 'function') {
         if (appRouter.currentRoute?.value?.path !== '/login') {

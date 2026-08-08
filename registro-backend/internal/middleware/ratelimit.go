@@ -25,37 +25,52 @@ type ipEntry struct {
 // implementation using the go-redis/redis_rate package:
 //   https://github.com/go-redis/redis_rate
 type IPRateLimiter struct {
-	ips map[string]*ipEntry
-	mu  sync.RWMutex
-	r   rate.Limit
-	b   int
+	ips      map[string]*ipEntry
+	mu       sync.RWMutex
+	r        rate.Limit
+	b        int
+	stopChan chan struct{}
 }
 
 func NewIPRateLimiter(r rate.Limit, b int) *IPRateLimiter {
 	i := &IPRateLimiter{
-		ips: make(map[string]*ipEntry),
-		r:   r,
-		b:   b,
+		ips:      make(map[string]*ipEntry),
+		r:        r,
+		b:        b,
+		stopChan: make(chan struct{}),
 	}
 
 	// Cleanup goroutine: every 5 minutes, evict IPs not seen in the last 10 minutes.
-	// This prevents unbounded map growth under scanner/bot traffic.
+	// Stops cleanly when Close() is called.
 	go func() {
 		ticker := time.NewTicker(5 * time.Minute)
 		defer ticker.Stop()
-		for range ticker.C {
-			i.mu.Lock()
-			cutoff := time.Now().Add(-10 * time.Minute)
-			for ip, entry := range i.ips {
-				if entry.lastSeen.Before(cutoff) {
-					delete(i.ips, ip)
+		for {
+			select {
+			case <-ticker.C:
+				i.mu.Lock()
+				cutoff := time.Now().Add(-10 * time.Minute)
+				for ip, entry := range i.ips {
+					if entry.lastSeen.Before(cutoff) {
+						delete(i.ips, ip)
+					}
 				}
+				i.mu.Unlock()
+			case <-i.stopChan:
+				return
 			}
-			i.mu.Unlock()
 		}
 	}()
 
 	return i
+}
+
+func (i *IPRateLimiter) Close() {
+	select {
+	case <-i.stopChan:
+	default:
+		close(i.stopChan)
+	}
 }
 
 // GetLimiter returns (or creates) the rate limiter for the given IP, updating its lastSeen.

@@ -48,11 +48,12 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 
 func (h *Handler) List(c *gin.Context) {
 	uid := c.GetString("user_id")
+	schoolID := c.GetString("school_id")
 	if uid == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	msgs, err := h.service.ListMessages(c.Request.Context(), uid)
+	msgs, err := h.service.ListMessages(c.Request.Context(), uid, schoolID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -182,13 +183,14 @@ func (h *Handler) GetSignatures(c *gin.Context) {
 // GetSignatureReport returns the full signature report for a message.
 func (h *Handler) GetSignatureReport(c *gin.Context) {
 	uid := c.GetString("user_id")
+	schoolID := c.GetString("school_id")
 	if uid == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 	id := c.Param("id")
 	role := c.GetString("role")
-	report, err := h.service.GetSignatureReport(c.Request.Context(), role, id)
+	report, err := h.service.GetSignatureReport(c.Request.Context(), uid, role, schoolID, id)
 	if err != nil {
 		if err.Error() == "forbidden: signature reports are restricted to staff" {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})

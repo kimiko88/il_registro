@@ -82,6 +82,10 @@ func (s *service) CreateSlots(ctx context.Context, userID string, req CreateSlot
 			if err != nil {
 				return fmt.Errorf("data ricorrenza non valida '%s': usa YYYY-MM-DD: %w", req.RecurringUntil, err)
 			}
+			maxUntil := firstDate.AddDate(1, 0, 0)
+			if untilDate.After(maxUntil) {
+				untilDate = maxUntil
+			}
 			current := firstDate.AddDate(0, 0, 7)
 			for !current.After(untilDate) {
 				targetDates = append(targetDates, current)
@@ -292,7 +296,8 @@ func (s *service) CancelBooking(ctx context.Context, userID, bookingID string) e
 		return err
 	}
 
-	isParent := booking.ParentID != nil && *booking.ParentID != "" && *booking.ParentID == userID
+	parentProfileID, _ := s.repo.ResolveParentUserID(ctx, userID)
+	isParent := booking.ParentID != nil && *booking.ParentID != "" && (*booking.ParentID == userID || *booking.ParentID == parentProfileID)
 	isTeacher := false
 	if booking.Slot != nil && booking.Slot.TeacherID != "" {
 		teacher, err := s.teacherRepo.GetByUserID(ctx, userID)
@@ -343,7 +348,7 @@ func (s *service) GetAnalytics(ctx context.Context, schoolID string) (*Analytics
 	if schoolID == "" {
 		return nil, fmt.Errorf("school_id is required")
 	}
-	return s.analytics.GetStats(schoolID), nil
+	return s.analytics.GetStats(ctx, schoolID), nil
 }
 
 func (s *service) ValidateSchedule(ctx context.Context, slots []Slot) ([]Conflict, error) {

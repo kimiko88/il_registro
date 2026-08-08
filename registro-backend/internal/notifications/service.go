@@ -100,14 +100,21 @@ func (s *Service) CreateInAppNotification(ctx context.Context, userID, title, bo
 				log.Printf("[ERROR] panic recovered in async push dispatch for user %s: %v", userID, r)
 			}
 		}()
-		asyncCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		asyncCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
-		if _, err := s.SendPushNotification(asyncCtx, SendNotificationRequest{
+		req := SendNotificationRequest{
 			UserID: userID,
 			Title:  title,
 			Body:   body,
-		}); err != nil {
-			log.Printf("[WARN] notifications.CreateInAppNotification: async push dispatch failed for user %s: %v", userID, err)
+		}
+		var err error
+		for attempt := 1; attempt <= 2; attempt++ {
+			_, err = s.SendPushNotification(asyncCtx, req)
+			if err == nil {
+				break
+			}
+			log.Printf("[WARN] notifications.CreateInAppNotification: attempt %d push dispatch failed for user %s: %v", attempt, userID, err)
+			time.Sleep(200 * time.Millisecond)
 		}
 	}()
 

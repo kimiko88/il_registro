@@ -16,11 +16,12 @@ export const useScrutinyStore = defineStore('scrutiny', {
   },
 
   actions: {
-    async fetchOverview() {
+    async fetchOverview(schoolID = null) {
       this.loading = true
       this.error = null
       try {
-        const response = await api.get('/scrutiny/overview')
+        const params = schoolID ? { school_id: schoolID } : {}
+        const response = await api.get('/scrutiny/overview', { params })
         this.overview = response.data || []
         return this.overview
       } catch (err) {
@@ -48,12 +49,12 @@ export const useScrutinyStore = defineStore('scrutiny', {
       }
     },
 
-    async finalizeScrutiny(classID) {
+    async finalizeScrutiny(classID, schoolID = null) {
       this.loading = true
       this.error = null
       try {
         const response = await api.post(`/scrutiny/class/${classID}/finalize`)
-        await this.fetchOverview()
+        await this.fetchOverview(schoolID)
         return response.data
       } catch (err) {
         this.error = err.response?.data?.error || 'Errore finalizzazione dello scrutinio'
@@ -80,11 +81,13 @@ export const useScrutinyStore = defineStore('scrutiny', {
         console.error(err)
         throw err
       } finally {
-        if (url) {
-          window.URL.revokeObjectURL(url)
-        }
         if (link && link.parentNode) {
           link.remove()
+        }
+        if (url) {
+          setTimeout(() => {
+            window.URL.revokeObjectURL(url)
+          }, 100)
         }
       }
     }

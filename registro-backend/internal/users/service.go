@@ -211,17 +211,18 @@ func (s *Service) BulkDeleteUsers(ctx context.Context, actorRole, actorSchoolID 
 	}
 	if actorRole == "admin" || actorRole == "secretary" {
 		targetUsers, err := s.repo.ListByIDs(ctx, ids)
-		if err == nil {
-			var safeIDs []string
-			for _, tu := range targetUsers {
-				if tu.Role != "admin" && tu.Role != "superadmin" {
-					if actorSchoolID == "" || (tu.SchoolID != nil && *tu.SchoolID == actorSchoolID) {
-						safeIDs = append(safeIDs, tu.ID)
-					}
+		if err != nil {
+			return 0, fmt.Errorf("failed to verify target users: %w", err)
+		}
+		var safeIDs []string
+		for _, tu := range targetUsers {
+			if tu.Role != "admin" && tu.Role != "superadmin" {
+				if actorSchoolID == "" || (tu.SchoolID != nil && *tu.SchoolID == actorSchoolID) {
+					safeIDs = append(safeIDs, tu.ID)
 				}
 			}
-			ids = safeIDs
 		}
+		ids = safeIDs
 	}
 	if len(ids) == 0 {
 		return 0, nil
@@ -438,7 +439,11 @@ func (s *Service) GDPRDelete(ctx context.Context, actorRole string, targetID str
 	gdpr := NewGDPRHandler(s.repo)
 	gdpr.PseudonymizeUser(user)
 	// Persist the pseudonymized data
-	return s.repo.Update(ctx, user)
+	if err := s.repo.Update(ctx, user); err != nil {
+		return err
+	}
+	_ = s.repo.RevokeAllUserTokens(ctx, targetID)
+	return nil
 }
 
 // ─── Audit ───────────────────────────────────────────────────────────────────

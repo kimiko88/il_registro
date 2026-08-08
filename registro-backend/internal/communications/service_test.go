@@ -138,7 +138,7 @@ func TestService_ListMessages(t *testing.T) {
 
 	mockRepo.On("List", mock.Anything, userID).Return(expected, nil)
 
-	msgs, err := svc.ListMessages(context.Background(), userID)
+	msgs, err := svc.ListMessages(context.Background(), userID, "school-1")
 	assert.NoError(t, err)
 	assert.Len(t, msgs, 1)
 	assert.Equal(t, "Hi", msgs[0].Subject)
@@ -167,9 +167,10 @@ func TestService_SignatureReport(t *testing.T) {
 		PendingCount:    5,
 	}
 
+	mockRepo.On("Get", mock.Anything, "msg-1").Return(&Message{ID: "msg-1", SenderID: "admin-1"}, nil)
 	mockRepo.On("GetSignatureReport", mock.Anything, "msg-1").Return(expectedReport, nil).Once()
 
-	report, err := svc.GetSignatureReport(context.Background(), "admin", "msg-1")
+	report, err := svc.GetSignatureReport(context.Background(), "admin-1", "admin", "school-1", "msg-1")
 	assert.NoError(t, err)
 	assert.Equal(t, 25, report.SignedCount)
 	assert.Equal(t, 5, report.PendingCount)

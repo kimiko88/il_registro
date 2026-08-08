@@ -233,7 +233,7 @@ func (s *service) GetClassGrades(ctx context.Context, actorID string, actorRole 
 		avg1, avg2 := calcSemesterAverages(gList)
 		resp.Students = append(resp.Students, StudentGradeSummary{
 			StudentID:    sID,
-			FullName:     "Student (" + sID + ")",
+			FullName:     "Studente sconosciuto",
 			AvgSemester1: avg1,
 			AvgSemester2: avg2,
 			Grades:       gList,
@@ -851,6 +851,10 @@ func (s *service) GetMyTrend(ctx context.Context, actorID string, actorRole stri
 
 	classAverage := 0.0
 	var classID string
+	currentSem := 1
+	if len(relevant) > 0 && relevant[len(relevant)-1].Semester > 0 {
+		currentSem = int(relevant[len(relevant)-1].Semester)
+	}
 	if err := s.validator.db.QueryRow(
 		`SELECT class_id FROM class_students WHERE student_id = $1 ORDER BY created_at DESC LIMIT 1`, studentID,
 	).Scan(&classID); err == nil && classID != "" {
@@ -858,9 +862,9 @@ func (s *service) GetMyTrend(ctx context.Context, actorID string, actorRole stri
 			`SELECT COALESCE(AVG(grade_value), 0.0)
 			 FROM grades g
 			 JOIN class_students cs ON g.student_id = cs.student_id
-			 WHERE cs.class_id = $1 AND g.subject_id = $2
+			 WHERE cs.class_id = $1 AND g.subject_id = $2 AND g.semester = $3
 			   AND g.is_published = true AND g.deleted_at IS NULL`,
-			classID, subjectID,
+			classID, subjectID, currentSem,
 		).Scan(&classAverage)
 		classAverage = math.Round(classAverage*100) / 100
 	}

@@ -9,11 +9,13 @@ export const useCommunicationsStore = defineStore('communications', {
     }),
 
     actions: {
-        async fetchCommunications() {
+        async fetchCommunications(schoolID = null) {
             this.loading = true;
             this.error = null;
             try {
-                const response = await api.get('/communications');
+                const response = schoolID
+                    ? await api.get('/communications', { params: { school_id: schoolID } })
+                    : await api.get('/communications');
                 this.communications = response.data || [];
             } catch (err) {
                 this.error = err.response?.data?.error || 'Failed to fetch communications';

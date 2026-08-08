@@ -53,10 +53,13 @@ export const useParentStore = defineStore('parent', () => {
     }
 
     function selectChild(id) {
-        if (children.value.find(c => c.id === id)) {
-            selectedChildId.value = id
-            localStorage.setItem('selectedChildId', id)
+        if (!id) return
+        if (children.value.length > 0) {
+            const exists = children.value.find(c => c.id === id)
+            if (!exists) return
         }
+        selectedChildId.value = id
+        localStorage.setItem('selectedChildId', id)
     }
 
     function reset() {

@@ -41,6 +41,7 @@ type Repository interface {
 
 	// GDPR
 	HardDelete(ctx context.Context, id string) error // Actual DB delete
+	RevokeAllUserTokens(ctx context.Context, userID string) error
 
 	// Relationships
 	IsGuardian(ctx context.Context, parentUserID string, studentUserID string) (bool, error)
@@ -711,6 +712,12 @@ func (r *PostgresRepository) AddPasswordHistory(ctx context.Context, userID, pas
 		VALUES ($1::uuid, $2)
 	`
 	_, err := r.db.ExecContext(ctx, query, userID, passwordHash)
+	return err
+}
+
+func (r *PostgresRepository) RevokeAllUserTokens(ctx context.Context, userID string) error {
+	query := `UPDATE refresh_tokens SET revoked = true, revoked_at = NOW() WHERE user_id = $1::uuid AND revoked = false`
+	_, err := r.db.ExecContext(ctx, query, userID)
 	return err
 }
 

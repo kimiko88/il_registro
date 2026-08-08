@@ -83,6 +83,10 @@ func (m *MockRepository) HardDelete(ctx context.Context, id string) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)
 }
+func (m *MockRepository) RevokeAllUserTokens(ctx context.Context, userID string) error {
+	args := m.Called(ctx, userID)
+	return args.Error(0)
+}
 func (m *MockRepository) IsGuardian(ctx context.Context, parentID, studentID string) (bool, error) {
 	args := m.Called(ctx, parentID, studentID)
 	return args.Bool(0), args.Error(1)
@@ -685,6 +689,7 @@ func TestService_GDPRConvert(t *testing.T) {
 		mockRepo.On("Update", mock.Anything, mock.MatchedBy(func(u *User) bool {
 			return u.Email != "del@e.com" // Basic check that it changed
 		})).Return(nil).Once()
+		mockRepo.On("RevokeAllUserTokens", mock.Anything, "user-del").Return(nil).Once()
 
 		err := service.GDPRDelete(context.Background(), "admin", "user-del")
 		assert.NoError(t, err)

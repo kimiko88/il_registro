@@ -26,10 +26,13 @@ type StudentNote struct {
 	IsReserved  bool       `json:"is_reserved"`
 	TargetRole  string     `json:"target_role"` // "coordinator" | "admin" | "all"
 	IsApproved  bool       `json:"is_approved"`
-	ApprovedBy  string     `json:"approved_by,omitempty"`
-	ApprovedAt  *time.Time `json:"approved_at,omitempty"`
-	CreatedAt   time.Time  `json:"created_at"`
-	UpdatedAt   time.Time  `json:"updated_at"`
+	ApprovedBy       string     `json:"approved_by,omitempty"`
+	ApprovedAt       *time.Time `json:"approved_at,omitempty"`
+	DeletionReason   string     `json:"deletion_reason,omitempty"`
+	IsViewedByParent bool       `json:"is_viewed_by_parent"`
+	ParentViewedAt   *time.Time `json:"parent_viewed_at,omitempty"`
+	CreatedAt        time.Time  `json:"created_at"`
+	UpdatedAt        time.Time  `json:"updated_at"`
 
 	// Joined fields for display
 	TeacherName string `json:"teacher_name,omitempty"`

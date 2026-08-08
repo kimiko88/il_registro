@@ -31,13 +31,21 @@ func (s *service) GetByClass(ctx context.Context, actorID, actorRole, schoolID, 
 		return nil, errors.New("class_id is required")
 	}
 
-	if actorRole == "student" || actorRole == "parent" {
+	if actorRole == "student" {
 		studentClassID, err := s.repo.GetStudentClassID(ctx, actorID)
 		if err != nil {
-			return nil, fmt.Errorf("impossibile verificare la classe dell'utente: %w", err)
+			return nil, fmt.Errorf("impossibile verificare la classe dello studente: %w", err)
 		}
 		if studentClassID != classID {
 			return nil, errors.New("forbidden: non puoi visualizzare l'orario di un'altra classe")
+		}
+	} else if actorRole == "parent" {
+		parentClassID, err := s.repo.GetParentStudentClassID(ctx, actorID)
+		if err != nil {
+			return nil, fmt.Errorf("impossibile verificare la classe del figlio: %w", err)
+		}
+		if parentClassID != classID {
+			return nil, errors.New("forbidden: non puoi visualizzare l'orario di una classe diversa da quella di tuo figlio")
 		}
 	}
 
@@ -78,6 +86,16 @@ func (s *service) Update(ctx context.Context, actorID, actorRole, schoolID, clas
 	}
 	if classID == "" {
 		return errors.New("class_id is required")
+	}
+
+	if actorRole != "superadmin" && schoolID != "" {
+		classSchoolID, err := s.repo.GetClassSchoolID(ctx, classID)
+		if err != nil {
+			return fmt.Errorf("impossibile verificare la scuola della classe: %w", err)
+		}
+		if classSchoolID != schoolID {
+			return errors.New("forbidden: la classe appartiene a un'altra scuola")
+		}
 	}
 
 	return s.repo.Update(ctx, classID, entries)
