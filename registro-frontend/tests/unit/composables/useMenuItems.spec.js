@@ -58,7 +58,7 @@ describe('useMenuItems', () => {
         it('should return teacher menu items', () => {
             const flatItems = getFlatItems('teacher')
 
-            expect(flatItems).toHaveLength(20)
+            expect(flatItems).toHaveLength(21)
             expect(flatItems.map(item => item.label)).toContain('Le Mie Classi')
             expect(flatItems.map(item => item.label)).toContain('Voti')
             expect(flatItems.map(item => item.label)).toContain('Presenze')

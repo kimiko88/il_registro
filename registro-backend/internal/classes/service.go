@@ -39,8 +39,8 @@ func (s *Service) ListClasses(ctx context.Context, schoolID string, academicYear
 	return s.repo.List(ctx, schoolID, academicYear)
 }
 
-func (s *Service) GetTeacherClasses(ctx context.Context, teacherID string) ([]Class, error) {
-	return s.repo.ListByTeacher(ctx, teacherID)
+func (s *Service) GetTeacherClasses(ctx context.Context, teacherID string, schoolYear string) ([]Class, error) {
+	return s.repo.ListByTeacher(ctx, teacherID, schoolYear)
 }
 
 func (s *Service) checkClassSchool(ctx context.Context, schoolID, classID string) error {

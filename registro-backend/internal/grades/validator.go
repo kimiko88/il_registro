@@ -186,3 +186,28 @@ func (v *Validator) ValidateModification(grade Grade, req UpdateGradeRequest) er
 func parseDate(d string) (time.Time, error) {
 	return time.Parse("2006-01-02", d)
 }
+
+// IsClassCoordinator checks if a teacher is the coordinator for the specified class.
+func (v *Validator) IsClassCoordinator(teacherID string, classID string) (bool, error) {
+	var coordID sql.NullString
+	err := v.db.QueryRow(`SELECT coordinator_id FROM classes WHERE id::text = $1`, classID).Scan(&coordID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return false, fmt.Errorf("class not found")
+		}
+		return false, err
+	}
+	return coordID.Valid && coordID.String == teacherID, nil
+}
+
+// IsTeacherAssignedToSubject checks if a teacher is assigned to a class subject.
+func (v *Validator) IsTeacherAssignedToSubject(teacherID string, subjectID string, classID string) (bool, error) {
+	query := `SELECT EXISTS(
+		SELECT 1 FROM class_subjects cs
+		LEFT JOIN teachers t ON cs.teacher_id = t.id OR cs.teacher_id = t.user_id
+		WHERE cs.class_id::text = $1 AND cs.subject_id::text = $2 AND (cs.teacher_id::text = $3 OR t.user_id::text = $3)
+	)`
+	var exists bool
+	err := v.db.QueryRow(query, classID, subjectID, teacherID).Scan(&exists)
+	return exists, err
+}

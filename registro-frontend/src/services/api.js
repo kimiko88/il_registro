@@ -57,6 +57,22 @@ const processQueue = (error, token = null) => {
     failedQueue = [];
 };
 
+let appRouter = null;
+
+export const setApiRouter = (router) => {
+    appRouter = router;
+};
+
+const handleSessionExpired = () => {
+    if (appRouter && typeof appRouter.push === 'function') {
+        if (appRouter.currentRoute?.value?.path !== '/login') {
+            appRouter.push('/login?reason=session_expired');
+        }
+    } else if (window.location.pathname !== '/login') {
+        window.location.href = '/login?reason=session_expired';
+    }
+};
+
 api.interceptors.response.use(
     (response) => response,
     async (error) => {
@@ -123,13 +139,10 @@ api.interceptors.response.use(
                             }
                         }
 
-                        isRefreshing = false;
                         processQueue(null, access_token);
-
                         originalRequest.headers.Authorization = `Bearer ${access_token}`;
                         return api(originalRequest);
                     } catch (refreshErr) {
-                        isRefreshing = false;
                         processQueue(refreshErr, null);
                         if (authStore) {
                             authStore.logout();
@@ -141,10 +154,10 @@ api.interceptors.response.use(
                             sessionStorage.removeItem('token');
                             sessionStorage.removeItem('refreshToken');
                         }
-                        if (window.location.pathname !== '/login') {
-                            window.location.href = '/login?reason=session_expired';
-                        }
+                        handleSessionExpired();
                         return Promise.reject(refreshErr);
+                    } finally {
+                        isRefreshing = false;
                     }
                 } else {
                     if (authStore) {
@@ -157,9 +170,7 @@ api.interceptors.response.use(
                         sessionStorage.removeItem('token');
                         sessionStorage.removeItem('refreshToken');
                     }
-                    if (window.location.pathname !== '/login') {
-                        window.location.href = '/login?reason=session_expired';
-                    }
+                    handleSessionExpired();
                     return Promise.reject(error);
                 }
             }

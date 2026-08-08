@@ -286,7 +286,7 @@ func TestAddGrade(t *testing.T) {
 
 		mockRepo.On("FindByStudent", sid).Return(grades, nil).Once()
 
-		res, err := s.GetMyAverages(sid)
+		res, err := s.GetMyAverages(context.Background(), sid)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
 

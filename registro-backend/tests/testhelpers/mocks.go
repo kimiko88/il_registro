@@ -613,8 +613,8 @@ func (m *MockClassesRepository) Delete(ctx context.Context, id string) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)
 }
-func (m *MockClassesRepository) ListByTeacher(ctx context.Context, teacherUserID string) ([]classes.Class, error) {
-	args := m.Called(ctx, teacherUserID)
+func (m *MockClassesRepository) ListByTeacher(ctx context.Context, teacherUserID string, schoolYear string) ([]classes.Class, error) {
+	args := m.Called(ctx, teacherUserID, schoolYear)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}

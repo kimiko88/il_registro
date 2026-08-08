@@ -165,14 +165,16 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useQuasar } from 'quasar';
 import api from '@/services/api';
 import authService from '@/services/authService';
 import { scrutinyService } from '@/services/scrutinyService';
 import notesService from '@/services/notesService';
+import { useSchoolYearStore } from '@/stores/schoolYear';
 
 const $q = useQuasar();
+const schoolYearStore = useSchoolYearStore();
 const activeTab = ref('academic');
 const selectedClassId = ref(null);
 const classOptions = ref([]);
@@ -186,18 +188,26 @@ const fetchClasses = async () => {
   try {
     const userRes = await authService.getCurrentUser();
     const currentUserId = userRes?.id;
-    const res = await api.get('/teacher/classes');
+    const res = await api.get('/teacher/classes', {
+      params: { school_year: schoolYearStore.selectedSchoolYear }
+    });
     const assignedClasses = res.data || [];
     const coordClasses = assignedClasses.filter(c => c.coordinator_id === currentUserId);
     classOptions.value = coordClasses.length > 0 ? coordClasses : assignedClasses;
     if (classOptions.value.length > 0) {
       selectedClassId.value = classOptions.value[0].id;
       onClassChange(selectedClassId.value);
+    } else {
+      selectedClassId.value = null;
     }
   } catch (err) {
     classOptions.value = [];
   }
 };
+
+watch(() => schoolYearStore.selectedSchoolYear, () => {
+  fetchClasses();
+});
 
 const onClassChange = async (classId) => {
   if (!classId) return;

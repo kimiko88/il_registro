@@ -80,8 +80,35 @@ func (m *RegressionMockRepo) FindBySubject(subjectID string, semester int) ([]Gr
 func (m *RegressionMockRepo) FindByClassAndSubject(classID, subjectID string, semester int) ([]Grade, error) {
 	return nil, nil
 }
-func (m *RegressionMockRepo) FindWithFilter(f GradeFilter) ([]Grade, error)                { return nil, nil }
-func (m *RegressionMockRepo) FindWithFilterPaginated(f GradeFilter) ([]Grade, int, error)  { return nil, 0, nil }
+func (m *RegressionMockRepo) FindWithFilter(f GradeFilter) ([]Grade, error) {
+	var filtered []Grade
+	for _, g := range m.data {
+		if g.DeletedAt != nil {
+			continue
+		}
+		if f.StudentID != "" && g.StudentID != f.StudentID {
+			continue
+		}
+		if f.Semester > 0 && int(g.Semester) != f.Semester {
+			continue
+		}
+		if f.SubjectID != "" && g.SubjectID != f.SubjectID {
+			continue
+		}
+		if f.GradeType != "" && string(g.GradeType) != f.GradeType {
+			continue
+		}
+		if f.IsPublished != nil && g.IsPublished != *f.IsPublished {
+			continue
+		}
+		filtered = append(filtered, g)
+	}
+	return filtered, nil
+}
+func (m *RegressionMockRepo) FindWithFilterPaginated(f GradeFilter) ([]Grade, int, error) {
+	res, err := m.FindWithFilter(f)
+	return res, len(res), err
+}
 func (m *RegressionMockRepo) BatchCreate(grades []*Grade) error                 { return nil }
 func (m *RegressionMockRepo) GetHistory(gradeID string) ([]GradeHistory, error) { return nil, nil }
 func (m *RegressionMockRepo) FindByTeacher(teacherID string) ([]Grade, error)   { return nil, nil }

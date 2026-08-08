@@ -98,8 +98,9 @@ func (s *service) MarkAttendance(ctx context.Context, teacherID, schoolID string
 	if err != nil {
 		return fmt.Errorf("data non valida '%s': usa il formato YYYY-MM-DD", req.Date)
 	}
-	// Bug 101: le presenze non possono essere registrate per date future
-	if date.After(time.Now().Truncate(24 * time.Hour)) {
+	now := time.Now()
+	todayEnd := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 999999999, now.Location())
+	if date.After(todayEnd) {
 		return fmt.Errorf("impossibile registrare presenze per date future (%s)", req.Date)
 	}
 
@@ -271,13 +272,9 @@ func (s *service) GetClassAttendance(ctx context.Context, actorID, actorRole, sc
 	}
 	if actorRole == "teacher" {
 		isAssigned, err := s.repo.IsTeacherAssignedToClass(ctx, actorID, classID)
-		if err != nil {
-			// If the assignment check itself errors (e.g. class is a group, not in assignments table),
-			// still allow reading — a teacher should at minimum be able to see the attendance they recorded.
-			_ = err
+		if err != nil || !isAssigned {
+			return nil, fmt.Errorf("forbidden: docente non assegnato alla classe")
 		}
-		_ = isAssigned
-		// Note: write access (MarkBulk) already enforces assignment; here we allow read for any teacher.
 	} else if actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" && actorRole != "principal" && actorRole != "vice_principal" {
 		return nil, fmt.Errorf("forbidden: ruolo non autorizzato alla lettura delle presenze di classe")
 	}
@@ -491,6 +488,10 @@ func (s *service) DeleteJustification(ctx context.Context, actorID string, justi
 		return fmt.Errorf("giustifica non trovata: %w", err)
 	}
 
+	if j.Status != JustificationPending {
+		return fmt.Errorf("impossibile eliminare una giustifica già elaborata (stato attuale: %s)", j.Status)
+	}
+
 	if actorID != j.ParentID && actorID != j.StudentID {
 		if s.userRepo == nil {
 			return errors.New("unauthorized: userRepo non configurato per il controllo permessi")
@@ -577,10 +578,10 @@ func (s *service) GetChildAttendance(ctx context.Context, parentID, studentID st
 	if !isGuardian {
 		return nil, fmt.Errorf("unauthorized: not a guardian of this student")
 	}
-	parentUser, err := s.userRepo.GetByID(ctx, parentID)
+	studentUser, err := s.userRepo.GetByID(ctx, studentID)
 	schoolID := ""
-	if err == nil && parentUser != nil && parentUser.SchoolID != nil {
-		schoolID = *parentUser.SchoolID
+	if err == nil && studentUser != nil && studentUser.SchoolID != nil {
+		schoolID = *studentUser.SchoolID
 	}
 	return s.GetStudentAttendance(ctx, parentID, "parent", schoolID, studentID, from, to)
 }

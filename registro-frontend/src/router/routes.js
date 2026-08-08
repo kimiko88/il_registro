@@ -120,6 +120,7 @@ export default [
             { path: 'teacher/pdp', component: () => import('@/pages/teacher/PdpPlans.vue'), meta: { title: 'Piani PDP / PEI', roles: ['teacher'] } },
             { path: 'teacher/uda', component: () => import('@/pages/teacher/UdaPlanner.vue'), meta: { title: 'Programmazione Didattica UdA', roles: ['teacher'] } },
             { path: 'teacher/competencies', component: () => import('@/pages/teacher/Competencies.vue'), meta: { title: 'Valutazione per Competenze', roles: ['teacher'] } },
+            { path: 'teacher/settings', component: () => import('@/pages/teacher/Settings.vue'), meta: { title: 'Impostazioni Docente', roles: ['teacher'] } },
 
             // Student Routes
             { path: 'student', component: () => import('@/pages/student/Index.vue'), meta: { title: 'Pannello Studente', roles: ['student'] } },

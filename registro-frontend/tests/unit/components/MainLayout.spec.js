@@ -71,7 +71,7 @@ describe('MainLayout Logic', () => {
             setupUserRole('teacher')
             const flatItems = getFlatItems('teacher')
 
-            expect(flatItems).toHaveLength(20)
+            expect(flatItems).toHaveLength(21)
             expect(flatItems.map(i => i.label)).toContain('Dashboard')
             expect(flatItems.map(i => i.label)).toContain('Le Mie Classi')
             expect(flatItems.map(i => i.label)).toContain('Voti')

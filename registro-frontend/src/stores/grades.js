@@ -8,6 +8,7 @@ export const useGradesStore = defineStore('grades', {
         loading: false,
         error: null,
         subjects: [],      // [{ id, name, teacher_id, ... }]
+        _cacheMap: {},     // In-memory cache by `${classId}:${subjectId}`
         // Track last fetch context to enable refetch after mutations
         _lastClassId: null,
         _lastSubjectId: null,
@@ -47,8 +48,19 @@ export const useGradesStore = defineStore('grades', {
             }
         },
         // Teacher Actions
-        async fetchGrades(classId, subjectId) {
-            this.loading = true;
+        async fetchGrades(classId, subjectId, force = false, isBackgroundRefresh = false) {
+            const cacheKey = `${classId}:${subjectId || 'all'}`;
+
+            if (!force && !isBackgroundRefresh && this._cacheMap[cacheKey]) {
+                this.grades = this._cacheMap[cacheKey];
+                this._lastClassId = classId;
+                this._lastSubjectId = subjectId;
+                return;
+            }
+
+            if (!isBackgroundRefresh) {
+                this.loading = true;
+            }
             this.error = null;
             this._lastClassId = classId;
             this._lastSubjectId = subjectId;
@@ -57,18 +69,19 @@ export const useGradesStore = defineStore('grades', {
                 const response = await gradeService.getByClass(classId, subjectId);
                 // Ignore stale response if a newer request was dispatched
                 if (currentReqId === this._requestId) {
-                    this.grades = response.data || null;
+                    const data = response.data || null;
+                    this.grades = data;
+                    if (data) {
+                        this._cacheMap[cacheKey] = data;
+                    }
                 }
             } catch (err) {
                 if (currentReqId === this._requestId) {
-                    this.error = {
-                        message: err.response?.data?.error || err.message,
-                        status: err.response?.status || 500
-                    };
+                    this.error = err.response?.data?.error || err.message || 'Errore durante il recupero dei voti';
                     console.error("Error fetching grades:", err);
                 }
             } finally {
-                if (currentReqId === this._requestId) {
+                if (currentReqId === this._requestId && !isBackgroundRefresh) {
                     this.loading = false;
                 }
             }
@@ -80,13 +93,9 @@ export const useGradesStore = defineStore('grades', {
             this.error = null;
             try {
                 const response = await gradeService.getMyGrades();
-                // Map the complex semesters response if needed, or store as is
                 this.grades = response.data;
             } catch (err) {
-                this.error = {
-                    message: err.response?.data?.error || err.message,
-                    status: err.response?.status || 500
-                };
+                this.error = err.response?.data?.error || err.message || 'Errore durante il recupero dei voti';
             } finally {
                 this.loading = false;
             }
@@ -97,9 +106,8 @@ export const useGradesStore = defineStore('grades', {
             this.error = null;
             try {
                 const response = await gradeService.saveGrade(gradeData);
-                // Refetch to keep the full class view consistent
                 if (this._lastClassId) {
-                    await this.fetchGrades(this._lastClassId, this._lastSubjectId);
+                    await this.fetchGrades(this._lastClassId, this._lastSubjectId, true, true);
                 }
                 return response.data;
             } catch (err) {
@@ -116,9 +124,8 @@ export const useGradesStore = defineStore('grades', {
             this.error = null;
             try {
                 const response = await gradeService.updateGrade(id, updates);
-                // Refetch to keep the full class view consistent
                 if (this._lastClassId) {
-                    await this.fetchGrades(this._lastClassId, this._lastSubjectId);
+                    await this.fetchGrades(this._lastClassId, this._lastSubjectId, true, true);
                 }
                 return response.data;
             } catch (err) {
@@ -137,7 +144,7 @@ export const useGradesStore = defineStore('grades', {
                 await gradeService.deleteGrade(id);
                 // Refetch to keep the full class view consistent
                 if (this._lastClassId) {
-                    await this.fetchGrades(this._lastClassId, this._lastSubjectId);
+                    await this.fetchGrades(this._lastClassId, this._lastSubjectId, true, true);
                 }
             } catch (err) {
                 this.error = err.response?.data?.error || err.message || 'Errore durante l\'eliminazione del voto';

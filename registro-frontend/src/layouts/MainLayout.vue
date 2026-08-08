@@ -1,5 +1,10 @@
 <template>
   <q-layout view="hHh Lpr lFf">
+    <!-- Skip to main content link for Accessibility (a11y) -->
+    <a href="#main-content" class="sr-only focus:not-sr-only q-pa-sm bg-primary text-white text-weight-bold shadow-2" style="position: absolute; top: 4px; left: 4px; z-index: 9999; border-radius: 8px;">
+      Salta al contenuto principale
+    </a>
+
     <q-header class="glass-effect text-slate-900 q-py-xs" :class="$q.dark.isActive ? 'bg-dark' : 'bg-white'" role="banner">
       <q-toolbar role="navigation" aria-label="Barra di navigazione principale">
         <q-btn
@@ -7,7 +12,7 @@
           dense
           round
           icon="menu"
-          aria-label="Apri/chiudi menu di navigazione"
+          aria-label="Apri o chiudi menu di navigazione laterale"
           :aria-expanded="leftDrawerOpen"
           color="primary"
           @click="toggleLeftDrawer"
@@ -32,6 +37,7 @@
             style="min-width: 140px"
             label="Anno Scolastico"
             key="school-year-select"
+            aria-label="Seleziona Anno Scolastico"
           >
             <template v-slot:prepend>
               <q-icon name="event" color="primary" size="18px" />
@@ -40,7 +46,6 @@
         </div>
 
         <!-- Theme Selector Menu -->
-
         <q-btn-dropdown
           flat
           round
@@ -49,7 +54,7 @@
           color="primary"
           class="q-mr-sm"
           key="theme-toggle"
-          aria-label="Scegli il Tema Visivo"
+          aria-label="Scegli il Tema Visivo dell'Interfaccia"
         >
           <q-tooltip>Seleziona Tema Visivo</q-tooltip>
           <q-list style="min-width: 280px" class="q-py-xs">
@@ -66,6 +71,8 @@
               :active="themeStore.currentTheme === themeOption.id"
               active-class="bg-indigo-50 text-primary text-weight-bold"
               class="rounded-lg q-mx-xs q-mb-xs"
+              role="option"
+              :aria-selected="themeStore.currentTheme === themeOption.id"
             >
               <q-item-section avatar>
                 <q-avatar size="32px" :color="themeOption.badgeColor" text-color="white">
@@ -100,9 +107,8 @@
 
         <!-- Dark Mode Toggle -->
         <q-btn flat round dense :icon="$q.dark.isActive ? 'light_mode' : 'dark_mode'" @click="$q.dark.toggle()" color="primary" class="q-mr-sm" :key="'dark-toggle'" :aria-label="$q.dark.isActive ? 'Attiva modalità chiara' : 'Attiva modalità scura'">
-           <q-tooltip>Attiva/Disattiva Modalità Scura</q-tooltip>
+           <q-tooltip>{{ $q.dark.isActive ? 'Modalità Chiara' : 'Modalità Scura' }}</q-tooltip>
         </q-btn>
-
 
         <!-- Fullscreen Toggle -->
         <q-btn 
@@ -117,7 +123,7 @@
           :key="'fullscreen-toggle'"
           :aria-label="$q.fullscreen.isActive ? 'Esci da schermo intero' : 'Vai a schermo intero'"
         >
-           <q-tooltip>Attiva/Disattiva Schermo Intero</q-tooltip>
+           <q-tooltip>{{ $q.fullscreen.isActive ? 'Esci da Schermo Intero' : 'Schermo Intero' }}</q-tooltip>
         </q-btn>
 
         <!-- Global Search Ctrl+K -->
@@ -127,21 +133,20 @@
           color="primary"
           icon="search"
           class="q-mr-sm search-shortcut-btn"
-          aria-label="Ricerca globale (Ctrl+K)"
+          :aria-label="t('common.search')"
           @click="globalSearchRef?.open()"
           key="global-search-btn"
         >
-          <q-tooltip>Ricerca Globale (Ctrl+K)</q-tooltip>
+          <q-tooltip>{{ t('common.search') }}</q-tooltip>
           <q-badge floating transparent class="search-kbd-badge">K</q-badge>
         </q-btn>
 
         <!-- Notifications -->
-        <q-btn flat round dense icon="notifications" color="primary" class="q-mr-sm" aria-label="Notifiche" @click="navigateToNotifications">
-          <q-tooltip>Notifiche e Comunicazioni</q-tooltip>
+        <q-btn flat round dense icon="notifications" color="primary" class="q-mr-sm" :aria-label="t('notifications.title')" @click="navigateToNotifications">
+          <q-tooltip>{{ t('notifications.title') }}</q-tooltip>
         </q-btn>
 
-
-        <q-btn flat round dense icon="account_circle" color="primary" aria-label="Profilo utente" @click="navigateToProfile" />
+        <q-btn flat round dense icon="account_circle" color="primary" :aria-label="t('nav.profile')" @click="navigateToProfile" />
 
       </q-toolbar>
     </q-header>
@@ -157,7 +162,7 @@
     >
       <div class="column full-height no-wrap">
         <!-- User Profile Section -->
-        <div class="q-pa-md bg-primary text-white relative-position overflow-hidden" v-if="userName" role="region" aria-label="Profilo utente">
+        <div class="q-pa-md bg-primary text-white relative-position overflow-hidden" v-if="userName" role="region" aria-label="Profilo utente connesso">
           <div class="row items-center relative-position" style="z-index: 1">
             <q-avatar size="42px" color="white" text-color="primary" class="q-mr-md shadow-soft" aria-hidden="true">
               <q-icon name="person" size="24px" />
@@ -167,25 +172,25 @@
               <div class="text-caption opacity-80 text-uppercase letter-spacing-1" :aria-label="'Ruolo: ' + roleLabel">{{ roleLabel }}</div>
             </div>
           </div>
-          <!-- Decorative Circle -->
           <div class="absolute-bottom-right q-mr-n-lg q-mb-n-lg" style="width: 90px; height: 90px; border-radius: 50%; background: rgba(255,255,255,0.1)" aria-hidden="true"></div>
         </div>
 
         <!-- Menu Items -->
         <q-scroll-area class="col">
           <div class="q-pa-sm">
-            <div class="text-overline text-grey-5 q-px-sm q-mb-xs letter-spacing-2" aria-hidden="true">MENU PRINCIPALE</div>
-            <q-list dense padding class="q-gutter-y-xs" aria-label="Navigazione principale">
+            <div class="text-overline text-grey-5 q-px-sm q-mb-xs letter-spacing-2" aria-hidden="true">{{ t('common.mainMenu') }}</div>
+            <q-list dense padding class="q-gutter-y-xs" aria-label="Navigazione principale" role="menu">
               <template v-for="(item, idx) in menuItems" :key="item.path || item.category || idx">
                 <!-- Group Category with children -->
                 <q-expansion-item
                   v-if="item.children"
                   group="menu-group"
                   :icon="item.icon"
-                  :label="item.category"
+                  :label="translateCategory(item.category)"
                   dense
                   header-class="text-weight-bold text-slate-700 rounded-lg"
                   :default-opened="isCategoryActive(item)"
+                  role="menuitem"
                 >
                   <q-list dense class="q-pl-sm q-gutter-y-xs">
                     <q-item
@@ -196,13 +201,14 @@
                       :exact="child.exact !== undefined ? child.exact : false"
                       active-class="active-menu-item"
                       class="rounded-lg transition-all"
-                      :aria-label="child.label"
+                      :aria-label="translateMenuLabel(child.label)"
+                      role="menuitem"
                     >
                       <q-item-section avatar min-width="32px">
                         <q-icon :name="child.icon" size="18px" aria-hidden="true" />
                       </q-item-section>
                       <q-item-section>
-                        <q-item-label class="text-weight-medium">{{ child.label }}</q-item-label>
+                        <q-item-label class="text-weight-medium">{{ translateMenuLabel(child.label) }}</q-item-label>
                       </q-item-section>
                     </q-item>
                   </q-list>
@@ -216,13 +222,14 @@
                   :exact="item.exact !== undefined ? item.exact : false"
                   active-class="active-menu-item"
                   class="rounded-lg transition-all"
-                  :aria-label="item.label"
+                  :aria-label="translateMenuLabel(item.label)"
+                  role="menuitem"
                 >
                   <q-item-section avatar min-width="32px">
                     <q-icon :name="item.icon" size="20px" aria-hidden="true" />
                   </q-item-section>
                   <q-item-section>
-                    <q-item-label class="text-weight-bold">{{ item.label }}</q-item-label>
+                    <q-item-label class="text-weight-bold">{{ translateMenuLabel(item.label) }}</q-item-label>
                   </q-item-section>
                 </q-item>
               </template>
@@ -238,14 +245,14 @@
             @click="handleLogout"
             :disable="loggingOut"
             role="button"
-            aria-label="Esci dall'applicazione"
+            :aria-label="t('common.logout')"
             :aria-busy="loggingOut"
           >
             <q-item-section avatar>
               <q-icon name="logout" size="20px" aria-hidden="true" />
             </q-item-section>
             <q-item-section class="text-weight-bold">
-              Esci
+              {{ t('common.logout') }}
             </q-item-section>
             <q-item-section side v-if="loggingOut">
               <q-spinner size="20px" />
@@ -258,11 +265,11 @@
     <!-- Global Search Modal (Ctrl+K) -->
     <GlobalSearch ref="globalSearchRef" />
 
-    <q-page-container role="main" id="main-content">
+    <q-page-container role="main" id="main-content" tabindex="-1">
       <!-- Dynamic Breadcrumb Navigation Header -->
       <div v-if="breadcrumbs.length > 0" class="q-px-md q-pt-md">
         <q-breadcrumbs aria-label="Percorso di navigazione corrente" class="text-caption text-grey-7" active-color="primary" separator-icon="chevron_right" separator-color="grey-5">
-          <q-breadcrumbs-el icon="home" to="/dashboard" label="Dashboard" />
+          <q-breadcrumbs-el icon="home" to="/dashboard" :label="t('nav.dashboard')" />
           <q-breadcrumbs-el
             v-for="(crumb, idx) in breadcrumbs"
             :key="idx"
@@ -293,6 +300,7 @@ import { useAuth } from '@/composables/useAuth'
 import { useMenuItems } from '@/composables/useMenuItems'
 import { storeToRefs } from 'pinia'
 import { useQuasar } from 'quasar'
+import { useI18n } from 'vue-i18n'
 import GlobalSearch from '@/components/Common/GlobalSearch.vue'
 
 const globalSearchRef = ref(null)
@@ -300,9 +308,87 @@ const globalSearchRef = ref(null)
 const route = useRoute()
 const router = useRouter()
 const $q = useQuasar()
+const { t, te } = useI18n()
 const themeStore = useThemeStore()
 const schoolYearStore = useSchoolYearStore()
 
+const menuLabelToKeyMap = {
+  'Dashboard': 'dashboard',
+  'Gestione Scuole': 'schools',
+  'La Mia Scuola': 'mySchool',
+  'Gestione Utenti': 'users',
+  'Gestione Admin': 'admins',
+  'Monitoraggio Sistema': 'monitoring',
+  'Analytics Globali': 'analytics',
+  'Analytics': 'analytics',
+  'Audit Logs': 'auditLogs',
+  'Impostazioni': 'settings',
+  'Supporto': 'support',
+  'Feature Flags & Istituto': 'featureFlags',
+  'Google & Teams E-Learning': 'elearning',
+  'Studenti': 'students',
+  'Utenti': 'users',
+  'Classi': 'classes',
+  'Gruppi Linguistici / Articolati': 'groups',
+  'Documenti': 'documents',
+  'Certificati': 'certificates',
+  'Libri di Testo': 'textbooks',
+  'Riunioni': 'meetings',
+  'Comunicazioni': 'communications',
+  'Report': 'reports',
+  'PCTO': 'pcto',
+  'Scrutinio': 'scrutiny',
+  'Le Mie Classi': 'myClasses',
+  'Registro Classe': 'classRegister',
+  'Programmazione UdA': 'uda',
+  'Valutazione Competenze': 'competencies',
+  'Voti': 'grades',
+  'Presenze': 'attendance',
+  'Didattica': 'didactics',
+  'Piani PDP / PEI': 'pdp',
+  'Rubriche Valutative': 'rubrics',
+  'Coordinamento': 'coordination',
+  'Orario Lezioni': 'timetable',
+  'Agenda': 'agenda',
+  'Colloqui': 'colloqui',
+  'Sostituzioni': 'substitutions',
+  'Verbali': 'verbali',
+  'Note Disciplinari': 'notes',
+  'I Miei Voti': 'myGrades',
+  'Le Mie Presenze': 'myAttendance',
+  'Compiti': 'homework',
+  'Materiale Didattico': 'didactics',
+  'Orientamento': 'orientamento',
+  'Calendario Scolastico': 'calendar',
+  'Pagella': 'reportCard',
+  'Profilo': 'profile',
+  'I Miei Figli': 'myChildren'
+}
+
+const categoryToKeyMap = {
+  'Anagrafiche & Classi': 'anagraficheClassi',
+  'Atti & Certificati': 'attiCertificati',
+  'Servizi & Report': 'serviziReport',
+  'Didattica & Valutazione': 'didatticaValutazione',
+  'Organizzazione & Orario': 'organizzazioneOrario',
+  'Comunicazioni & Atti': 'comunicazioniAtti'
+}
+
+function translateMenuLabel(label) {
+  const key = menuLabelToKeyMap[label]
+  if (key && te('nav.' + key)) {
+    return t('nav.' + key)
+  }
+  return label
+}
+
+function translateCategory(cat) {
+  const key = categoryToKeyMap[cat]
+  if (key && te('categories.' + key)) {
+    return t('categories.' + key)
+  }
+  return cat
+}
 
 const navigateToNotifications = () => {
   const role = userRole.value
@@ -334,7 +420,6 @@ const navigateToProfile = () => {
   }
 }
 
-
 onMounted(() => {
   themeStore.initTheme()
 })
@@ -348,108 +433,19 @@ const breadcrumbs = computed(() => {
   if (!route.path || route.path === '/dashboard' || route.path === '/') return []
   const items = []
   
-  const routeNamesMap = {
-    '/dashboard': { label: 'Dashboard', icon: 'dashboard' },
-    '/profile': { label: 'Profilo Utente', icon: 'person' },
-    // Teacher
-    '/teacher': { label: 'Pannello Docente', icon: 'school' },
-    '/teacher/grades': { label: 'Gestione Voti', icon: 'grade' },
-    '/teacher/attendance': { label: 'Appello e Presenze', icon: 'how_to_reg' },
-    '/teacher/timetable': { label: 'Orario Lezioni', icon: 'schedule' },
-    '/teacher/didactics': { label: 'Materiale Didattico', icon: 'folder' },
-    '/teacher/coordinator': { label: 'Area Coordinatore', icon: 'star' },
-    '/teacher/groups': { label: 'Gruppi Linguistici', icon: 'groups' },
-    '/teacher/rubrics': { label: 'Rubriche di Valutazione', icon: 'rule' },
-    '/teacher/scrutiny': { label: 'Scrutini', icon: 'assessment' },
-    '/teacher/communications': { label: 'Comunicazioni', icon: 'campaign' },
-    '/teacher/agenda': { label: 'Agenda di Classe', icon: 'event' },
-    '/teacher/lessons': { label: 'Registro Lezioni', icon: 'book' },
-    '/teacher/classes': { label: 'Le Mie Classi', icon: 'class' },
-    '/teacher/colloqui': { label: 'Colloqui e Incontri', icon: 'people' },
-    '/teacher/documents': { label: 'Documenti', icon: 'description' },
-    '/teacher/grade-weights': { label: 'Pesi Voti', icon: 'balance' },
-    '/teacher/verbali': { label: 'Verbali', icon: 'gavel' },
-    '/teacher/substitutions': { label: 'Sostituzioni', icon: 'swap_horiz' },
-    '/teacher/notes': { label: 'Note & Richiami', icon: 'report_problem' },
-    // Student
-    '/student': { label: 'Pannello Studente', icon: 'person' },
-    '/student/grades': { label: 'I Miei Voti', icon: 'grade' },
-    '/student/attendance': { label: 'Le Mie Presenze', icon: 'event_available' },
-    '/student/homework': { label: 'Compiti', icon: 'assignment' },
-    '/student/timetable': { label: 'Orario', icon: 'schedule' },
-    '/student/documents': { label: 'Documenti Studente', icon: 'folder' },
-    '/student/profile': { label: 'Profilo Studente', icon: 'person' },
-    '/student/pcto': { label: 'Percorsi PCTO', icon: 'work' },
-    '/student/orientamento': { label: 'Orientamento', icon: 'explore' },
-    '/student/communications': { label: 'Comunicati Scolastici', icon: 'campaign' },
-    '/student/agenda': { label: 'Calendario Agenda', icon: 'event' },
-    '/student/didactics': { label: 'Materiali Didattici', icon: 'folder' },
-    '/student/notes': { label: 'Note Disciplinari', icon: 'report' },
-    '/student/goals': { label: 'Obiettivi di Apprendimento', icon: 'flag' },
-    '/student/school-calendar': { label: 'Calendario Scolastico', icon: 'calendar_month' },
-    '/student/report-card': { label: 'Pagella Online', icon: 'assignment' },
-    // Parent
-    '/parent': { label: 'Pannello Famiglie', icon: 'family_restroom' },
-    '/parent/children': { label: 'Figli Associati', icon: 'child_care' },
-    '/parent/grades': { label: 'Voti Figlio', icon: 'grade' },
-    '/parent/attendance': { label: 'Presenze e Giustifiche', icon: 'fact_check' },
-    '/parent/communications': { label: 'Comunicazioni', icon: 'campaign' },
-    '/parent/documents': { label: 'Documentazione', icon: 'folder_shared' },
-    '/parent/payments': { label: 'Pagamenti', icon: 'payments' },
-    '/parent/colloqui': { label: 'Incontri e Colloqui', icon: 'forum' },
-    '/parent/meetings': { label: 'Riunioni', icon: 'groups' },
-    '/parent/notes': { label: 'Note Disciplinari', icon: 'report' },
-    '/parent/report-card': { label: 'Pagella Online', icon: 'assignment' },
-    '/parent/trips': { label: 'Uscite e Viaggi', icon: 'directions_bus' },
-    '/parent/profile': { label: 'Profilo Genitore', icon: 'person' },
-    '/parent/didactics': { label: 'Didattica & Compiti', icon: 'folder' },
-    '/parent/timetable': { label: 'Orario Scolastico', icon: 'schedule' },
-    // Secretary
-    '/secretary': { label: 'Pannello Segreteria', icon: 'badge' },
-    '/secretary/documents': { label: 'Gestione Documenti', icon: 'description' },
-    '/secretary/users': { label: 'Anagrafica Utenti', icon: 'people' },
-    '/secretary/students': { label: 'Anagrafica Studenti', icon: 'school' },
-    '/secretary/communications': { label: 'Circolari & Comunicazioni', icon: 'campaign' },
-    '/secretary/reports': { label: 'Reportistica Scolastica', icon: 'assessment' },
-    '/secretary/pcto': { label: 'Gestione PCTO', icon: 'work' },
-    '/secretary/textbooks': { label: 'Adozione Libri di Testo', icon: 'menu_book' },
-    '/secretary/settings': { label: 'Impostazioni Segreteria', icon: 'settings' },
-    '/secretary/classes': { label: 'Gestione Classi', icon: 'class' },
-    '/secretary/scrutiny': { label: 'Scrutini Scolastici', icon: 'fact_check' },
-    '/secretary/groups': { label: 'Gruppi di Studio', icon: 'groups' },
-    '/secretary/meetings': { label: 'Organizzazione Riunioni', icon: 'event' },
-    '/secretary/certificates': { label: 'Certificati & Attestati', icon: 'card_membership' },
-    '/secretary/audit-log': { label: 'Audit Log Segreteria', icon: 'history' },
-    // Admin
-    '/admin': { label: 'Pannello Amministrazione', icon: 'admin_panel_settings' },
-    '/admin/dashboard': { label: 'Dashboard Amministratore', icon: 'dashboard' },
-    '/admin/schools': { label: 'Gestione Scuole', icon: 'domain' },
-    '/admin/admins': { label: 'Gestione Amministratori', icon: 'manage_accounts' },
-    '/admin/monitoring': { label: 'Monitoraggio Sistema', icon: 'monitor_heart' },
-    '/admin/school-settings': { label: 'Impostazioni Scuola', icon: 'settings' },
-    '/admin/users': { label: 'Gestione Utenti', icon: 'people' },
-    '/admin/analytics': { label: 'Analisi e Statistiche', icon: 'analytics' },
-    '/admin/settings': { label: 'Impostazioni di Sistema', icon: 'tune' },
-    '/admin/scheduler': { label: 'Pianificazione Task', icon: 'schedule_send' },
-    '/admin/audit-logs': { label: 'Registro Eventi & Audit', icon: 'security' },
-    '/admin/tenants': { label: 'Gestione Multi-Tenant', icon: 'business' }
-  }
-
-  const currentMatch = routeNamesMap[route.path]
-  const current = currentMatch
-    ? { ...currentMatch, path: route.path }
-    : { label: route.meta?.title || route.name || 'Pagina', icon: undefined, path: route.path }
+  const currentMatch = route.meta?.title || route.name || 'Pagina'
+  const current = { label: currentMatch, icon: undefined, path: route.path }
 
   if (route.path.startsWith('/teacher/') && route.path !== '/teacher') {
-    items.push({ label: 'Docente', icon: 'school', path: '/teacher' })
+    items.push({ label: t('roles.teacher'), icon: 'school', path: '/teacher' })
   } else if (route.path.startsWith('/student/') && route.path !== '/student') {
-    items.push({ label: 'Studente', icon: 'person', path: '/student' })
+    items.push({ label: t('roles.student'), icon: 'person', path: '/student' })
   } else if (route.path.startsWith('/parent/') && route.path !== '/parent') {
-    items.push({ label: 'Genitore', icon: 'family_restroom', path: '/parent' })
+    items.push({ label: t('roles.parent'), icon: 'family_restroom', path: '/parent' })
   } else if (route.path.startsWith('/admin/') && route.path !== '/admin' && route.path !== '/admin/dashboard') {
-    items.push({ label: 'Amministrazione', icon: 'admin_panel_settings', path: '/admin/dashboard' })
+    items.push({ label: t('roles.admin'), icon: 'admin_panel_settings', path: '/admin/dashboard' })
   } else if (route.path.startsWith('/secretary/') && route.path !== '/secretary') {
-    items.push({ label: 'Segreteria', icon: 'badge', path: '/secretary' })
+    items.push({ label: t('roles.secretary'), icon: 'badge', path: '/secretary' })
   }
 
   items.push(current)
@@ -465,20 +461,15 @@ const loggingOut = ref(false)
 
 // Get role label for display
 const roleLabel = computed(() => {
-  if (!userRole.value) return 'Utente'
-  const roleLabels = {
-    admin: 'Amministratore',
-    superadmin: 'Super Amministratore',
-    secretary: 'Segretario',
-    teacher: 'Docente',
-    student: 'Studente',
-    parent: 'Genitore'
+  if (!userRole.value) return t('roles.user')
+  const roleKey = userRole.value.toLowerCase()
+  if (te('roles.' + roleKey)) {
+    return t('roles.' + roleKey)
   }
-  return roleLabels[userRole.value] || userRole.value
+  return userRole.value
 })
 
 const isTeacherRole = computed(() => userRole.value === 'teacher' || userRole.value === 'docente')
-
 
 const teacherStore = useTeacherStore()
 const classesStore = useClassesStore()
@@ -513,9 +504,15 @@ watch([userRole, isTeacherCoordinator, () => classesStore.classes], ([newRole, i
   menuItems.value = items
 }, { immediate: true })
 
-watch(userRole, (newRole) => {
+watch(() => authStore.user, (user) => {
+  if (user) {
+    schoolYearStore.initializeForUser(user)
+  }
+}, { immediate: true })
+
+watch([userRole, () => schoolYearStore.selectedSchoolYear], ([newRole, newSY]) => {
   if (newRole === 'teacher') {
-    classesStore.fetchAssignedClasses()
+    classesStore.fetchAssignedClasses(newSY)
   }
 }, { immediate: true })
 
@@ -534,14 +531,14 @@ async function handleLogout() {
     await logout()
     $q.notify({
       type: 'positive',
-      message: 'Logout effettuato con successo',
+      message: t('notifications.logoutSuccess'),
       position: 'top',
       timeout: 2000
     })
   } catch (error) {
     $q.notify({
       type: 'negative',
-      message: 'Errore durante il logout',
+      message: t('notifications.logoutError'),
       position: 'top',
       timeout: 3000
     })
@@ -552,6 +549,24 @@ async function handleLogout() {
 </script>
 
 <style scoped>
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+.sr-only:focus {
+  position: absolute;
+  width: auto;
+  height: auto;
+  clip: auto;
+  white-space: normal;
+}
 .opacity-80 {
   opacity: 0.8;
 }

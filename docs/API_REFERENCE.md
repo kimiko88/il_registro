@@ -1,6 +1,6 @@
 # API Reference — RegistroV2 Backend
 
-Questo documento descrive gli endpoint REST del backend RegistroV2.
+Questo documento descrive gli endpoint REST e le connessioni WebSocket del backend RegistroV2.
 
 **Base URL**: `http://localhost:8080` (sviluppo) — `https://api.tuascuola.it` (produzione)
 
@@ -12,7 +12,7 @@ Questo documento descrive gli endpoint REST del backend RegistroV2.
 
 ## Indice
 
-- [Autenticazione](#autenticazione)
+- [Autenticazione & Endpoint Pubblici](#autenticazione--endpoint-pubblici)
 - [Scuole](#scuole)
 - [Classi e Materie](#classi-e-materie)
 - [Utenti](#utenti)
@@ -22,15 +22,16 @@ Questo documento descrive gli endpoint REST del backend RegistroV2.
 - [Presenze](#presenze)
 - [Libri di Testo](#libri-di-testo)
 - [Scrutinio](#scrutinio)
-- [Codici di errore](#codici-di-errore)
-- [Struttura risposte](#struttura-risposte)
+- [WebSocket Notifiche](#websocket-notifiche)
+- [Codici di Errore Strutturati](#codici-di-errore-strutturati)
+- [Struttura Risposte](#struttura-risposte)
 
 ---
 
-## Autenticazione
+## Autenticazione & Endpoint Pubblici
 
 ### `POST /auth/login`
-Login con email e password. Non richiede autenticazione.
+Login con email e password. Applicato rate limiting dedicato di **5 tentativi/minuto** per IP.
 
 **Request body:**
 ```json
@@ -56,6 +57,27 @@ Login con email e password. Non richiede autenticazione.
 }
 ```
 
+### `POST /auth/change-password`
+Modifica password per l'utente autenticato.
+
+**Request Body:**
+```json
+{
+  "current_password": "VecchiaPassword123!",
+  "new_password": "NuovaPassword123!"
+}
+```
+
+**Response `200 OK`:**
+```json
+{
+  "message": "password changed successfully"
+}
+```
+
+### `GET /api/v1/public/schools`
+Recupero elenco pubblico delle scuole registrate con i dettagli dei contatti della segreteria (email, telefono, indirizzo). Non richiede autenticazione.
+
 ---
 
 ## Scuole
@@ -64,18 +86,6 @@ Login con email e password. Non richiede autenticazione.
 Creazione di un nuovo istituto scolastico.
 
 **Ruoli ammessi**: `superadmin`, `admin`
-
-**Request Body:**
-```json
-{
-  "name": "Liceo Scientifico Galileo",
-  "code": "LSG001",
-  "address": "Via Roma 1",
-  "city": "Milano",
-  "phone": "02123456",
-  "email": "info@galileo.edu"
-}
-```
 
 ---
 
@@ -91,279 +101,41 @@ Recupero degli argomenti delle lezioni svolte per una specifica classe.
 
 **Ruoli ammessi**: `superadmin`, `admin`, `secretary`, `teacher`
 
-**Response `200 OK`:**
-```json
-[
-  {
-    "id": "uuid-lezione",
-    "date": "2026-07-31T00:00:00Z",
-    "subject_name": "Matematica",
-    "topic": "Equazioni di secondo grado",
-    "teacher_first_name": "Mario",
-    "teacher_last_name": "Rossi"
-  }
-]
-```
+---
 
-### `GET /api/v1/classes/:id/disciplinary-notes`
-Recupero delle note disciplinari per gli studenti di una classe.
+## WebSocket Notifiche
 
-**Ruoli ammessi**: `superadmin`, `admin`, `secretary`, `teacher`
+### `GET /api/v1/ws`
+Connessione WebSocket in tempo reale per notifiche su voti, presenze, circolari e sostituzioni.
 
-**Response `200 OK`:**
-```json
-[
-  {
-    "id": "uuid-nota",
-    "date": "2026-07-31T00:00:00Z",
-    "student_first_name": "Giuseppe",
-    "student_last_name": "Verdi",
-    "note_type": "disciplinary",
-    "description": "Disturbo durante la spiegazione",
-    "teacher_first_name": "Mario",
-    "teacher_last_name": "Rossi"
-  }
-]
-```
-
-### `POST /api/v1/subjects`
-Creazione di una nuova materia scolastica.
-
-**Ruoli ammessi**: `superadmin`, `admin`, `secretary`
+**Autenticazione**: Query parameter `?token=<access_token>` oppure subprotocol `access_token`.
 
 ---
 
-## Analytics, Monitoring & Reporting
+## Codici di Errore Strutturati
 
-### `GET /api/v1/admin/system/metrics`
-Recupero delle metriche prestazionali di sistema in tempo reale per la dashboard Analytics.
+Tutti gli errori lato API contengono un formato JSON arricchito con codici strutturati:
 
-**Ruoli ammessi**: `superadmin`, `admin`
-
-**Response `200 OK`:**
 ```json
 {
-  "api_success_rate": 99.8,
-  "db_cpu_percent": 12.5,
-  "cache_hit_rate": 95.4,
-  "goroutines": 42,
-  "memory_alloc_mb": 18.5,
-  "uptime_seconds": 3600
+  "code": "AUTH_RATE_LIMIT_EXCEEDED",
+  "error": "Troppi tentativi di accesso. Riprova tra un minuto."
 }
 ```
 
-### `GET /api/v1/admin/system/health`
-Recupero dello stato di salute dei microservizi e delle risorse di sistema.
-
-**Ruoli ammessi**: `superadmin`, `admin`
-
-**Response `200 OK`:**
-```json
-{
-  "status": "healthy",
-  "services": {
-    "api": "healthy",
-    "database": "healthy",
-    "redis": "healthy",
-    "storage": "healthy",
-    "db_ping_ms": 2,
-    "redis_ping_ms": 1
-  },
-  "metrics": {
-    "cpu_percent": 12,
-    "memory_percent": 35,
-    "disk_percent": 28,
-    "api_latency_ms": 14
-  },
-  "api_version": "1.0.0",
-  "db_version": "PostgreSQL 15",
-  "environment": "production",
-  "uptime": "0d 1h 0m",
-  "last_deploy": "2026-07-31T15:45:00Z"
-}
-```
-
-### `GET /api/v1/reports/grades/excel?class_id=<id>&semester=<1|2>`
-Esportazione in formato foglio di calcolo Excel (`.xlsx`) della matrice dei voti della classe per trimestre/quadrimestre.
-
-**Ruoli ammessi**: `superadmin`, `admin`, `secretary`, `teacher`, `principal`
-
-
----
-
-## Utenti
-
-### `POST /api/v1/users`
-Registrazione di un nuovo utente.
-
-**Ruoli ammessi**: `superadmin`, `admin`, `secretary`
-
-### `POST /api/v1/users/:id/guardians`
-Associazione di un genitore ad uno studente.
-
-**Ruoli ammessi**: `superadmin`, `admin`, `secretary`
-
----
-
-## Lezioni e Agenda
-
-### `POST /api/v1/lessons`
-Registrazione di una lezione nel registro di classe.
-
-**Ruoli ammessi**: `teacher`, `admin`, `superadmin`
-
-**Request Body (Lezione Ordinaria):**
-```json
-{
-  "class_id": "class-1a",
-  "subject_id": "subj-math",
-  "date": "2026-07-30",
-  "hour": 1,
-  "topic": "Equazioni di secondo grado",
-  "type": "Frontale"
-}
-```
-
-**Request Body (Lezione di Sostituzione):**
-```json
-{
-  "class_id": "class-1a",
-  "subject_id": "subj-italian",
-  "date": "2026-07-30",
-  "hour": 2,
-  "topic": "Sostituzione: Lettura Promessi Sposi",
-  "is_substitution": true,
-  "substituted_teacher_id": "teacher-math-uuid",
-  "activity_type": "substitution"
-}
-```
-
-### `POST /api/v1/homeworks`
-Assegnazione compiti ed esercizi in agenda.
-
-**Ruoli ammessi**: `teacher`, `admin`, `superadmin`
-
----
-
-## Sostituzioni Docenti
-
-### `GET /api/v1/substitutions/my-today`
-Recupero delle sostituzioni assegnate al docente in data odierna.
-
-**Ruoli ammessi**: `teacher`
-
----
-
-## Voti
-
-### `POST /api/v1/grades`
-Creazione di una valutazione.
-
-**Ruoli ammessi**: `teacher`, `admin`, `superadmin`
-
-**Request Body:**
-```json
-{
-  "student_id": "student-uuid",
-  "subject_id": "subject-uuid",
-  "grade_value": 8.5,
-  "grade_type": "numeric",
-  "weight": 1.0,
-  "date": "2026-07-30",
-  "description": "Prova scritta di matematica"
-}
-```
-
-### `GET /api/v1/grades/my-grades`
-Recupero voti dello studente autenticato.
-
-**Ruoli ammessi**: `student`
-
-### `GET /api/v1/grades/child-grades/:studentID`
-Recupero voti del figlio da parte del genitore.
-
-**Ruoli ammessi**: `parent` (verificato che sia tutore del figlio)
-
----
-
-## Presenze
-
-### `POST /api/v1/attendance/mark-bulk`
-Inserimento presenze/assenze/ritardi per una classe.
-
-**Ruoli ammessi**: `teacher`, `admin`, `superadmin`
-
----
-
-## Libri di Testo
-
-### `POST /api/v1/textbooks`
-Inserimento di un nuovo libro di testo nel catalogo con materia scolastica.
-
-**Ruoli ammessi**: `secretary`, `admin`, `superadmin`
-
----
-
-## Piani Didattici Personalizzati (PDP / PEI)
-
-### `GET /api/v1/pdp`
-Restituisce i piani PDP/PEI per studente o per classe.
-*Nota per genitori*: I genitori vedono solo i piani con `shared_with_family = true` e la diagnosi medica viene automaticamente oscurata (`[RISERVATO AI DOCENTI]`).
-
-**Ruoli ammessi**: `teacher`, `admin`, `parent`
-
-### `POST /api/v1/pdp`
-Crea un nuovo Piano Didattico Personalizzato con misure compensative/dispensative.
-
-**Ruoli ammessi**: `teacher`, `admin`, `superadmin`
-
-### `POST /api/v1/pdp/:id/approve`
-Sottoscrizione/Approvazione digitale del PDP da parte della famiglia.
-
-**Ruoli ammessi**: `parent`
-
----
-
-## Comunicazioni & Presa d'Atto
-
-### `POST /api/v1/communications/:id/ack`
-Registra la presa d'atto obbligatoria del genitore/studente per circolari o comunicazioni urgenti della bacheca.
-
-**Ruoli ammessi**: `parent`, `student`
-
----
-
-## Piattaforme E-Learning & SSO
-
-### `GET /api/v1/elearning/providers`
-Stato delle integrazioni attive (Google Classroom, Microsoft Teams).
-
-### `POST /api/v1/elearning/:provider/sync-courses`
-Avvia la sincronizzazione automatica dei corsi e delle classi con Google/Teams.
-
----
-
-## Codici di errore
-
-Tutti gli errori hanno questo formato:
-
-```json
-{ "error": "descrizione leggibile dell'errore" }
-```
-
-| HTTP Status | Significato | Causa tipica |
+| HTTP Status | Codice Errore (`code`) | Significato / Causa tipica |
 |---|---|---|
-| `400 Bad Request` | Input non valido | Campo mancante, formato errato, voto fuori range |
-| `401 Unauthorized` | Non autenticato | Token mancante, scaduto o non valido |
-| `403 Forbidden` | Non autorizzato | Ruolo insufficiente (es. studente che chiama API docente) |
-| `404 Not Found` | Risorsa non trovata | ID non esiste nel DB |
-| `409 Conflict` | Conflitto | Email duplicata, codice materia già presente |
-| `429 Too Many Requests` | Rate limit superato | Troppi login falliti per IP o email |
-| `500 Internal Server Error` | Errore server | Bug non gestito — segnalare con log |
+| `400 Bad Request` | `VALIDATION_ERROR` | Campo mancante, formato data non valido |
+| `401 Unauthorized` | `UNAUTHORIZED` | Token mancante, scaduto o non valido |
+| `403 Forbidden` | `FORBIDDEN` | Ruolo insufficiente o assenza di associazione docente/classe |
+| `404 Not Found` | `NOT_FOUND` | Risorsa o entità non esistente |
+| `409 Conflict` | `DUPLICATE_ENTRY` | Email o codice scuola già presente |
+| `429 Too Many Requests` | `AUTH_RATE_LIMIT_EXCEEDED` | Più di 5 tentativi di login/refresh al minuto per lo stesso IP |
+| `500 Internal Server Error` | `INTERNAL_ERROR` | Errore inaspettato del database o del server |
 
 ---
 
-## Struttura risposte
+## Struttura Risposte
 
 ### Successo
 
@@ -374,5 +146,8 @@ Tutti gli errori hanno questo formato:
 ### Errore
 
 ```json
-{ "error": "descrizione dell'errore" }
+{
+  "code": "UNAUTHORIZED",
+  "error": "Accesso non autorizzato"
+}
 ```

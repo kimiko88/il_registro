@@ -93,12 +93,40 @@ func RateLimitMiddleware() gin.HandlerFunc {
 	limiter := NewIPRateLimiter(5, 10)
 
 	return func(c *gin.Context) {
-		ip := c.ClientIP()
+		ip := c.RemoteIP()
+		if ip == "" || ip == "127.0.0.1" || ip == "::1" {
+			ip = c.ClientIP()
+		}
 		if ip == "" {
 			ip = "127.0.0.1"
 		}
 		if !limiter.GetLimiter(ip).Allow() {
 			c.JSON(http.StatusTooManyRequests, gin.H{"error": "Too many requests"})
+			c.Abort()
+			return
+		}
+		c.Next()
+	}
+}
+
+// AuthRateLimitMiddleware applies stricter rate limits specifically for authentication endpoints
+// (5 requests per minute, burst of 5) to prevent brute-force attacks on login and refresh tokens.
+func AuthRateLimitMiddleware() gin.HandlerFunc {
+	limiter := NewIPRateLimiter(rate.Every(12*time.Second), 5)
+
+	return func(c *gin.Context) {
+		ip := c.RemoteIP()
+		if ip == "" || ip == "127.0.0.1" || ip == "::1" {
+			ip = c.ClientIP()
+		}
+		if ip == "" {
+			ip = "127.0.0.1"
+		}
+		if !limiter.GetLimiter(ip).Allow() {
+			c.JSON(http.StatusTooManyRequests, gin.H{
+				"code":  "AUTH_RATE_LIMIT_EXCEEDED",
+				"error": "Troppi tentativi di accesso. Riprova tra un minuto.",
+			})
 			c.Abort()
 			return
 		}

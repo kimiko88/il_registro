@@ -15,7 +15,7 @@ type Repository interface {
 	Get(ctx context.Context, id string) (*Class, error)
 	Update(ctx context.Context, class *Class) error
 	Delete(ctx context.Context, id string) error
-	ListByTeacher(ctx context.Context, teacherUserID string) ([]Class, error)
+	ListByTeacher(ctx context.Context, teacherUserID string, schoolYear string) ([]Class, error)
 	AssignSubject(ctx context.Context, classID string, subjectID string, teacherID *string, hours float64) error
 	UnassignSubject(ctx context.Context, assignmentID string) error
 	GetClassSubjects(ctx context.Context, classID string) ([]ClassSubject, error)
@@ -99,7 +99,7 @@ func (r *PostgresRepository) GetClassSubjects(ctx context.Context, classID strin
 
 // ... existing methods ...
 
-func (r *PostgresRepository) ListByTeacher(ctx context.Context, teacherUserID string) ([]Class, error) {
+func (r *PostgresRepository) ListByTeacher(ctx context.Context, teacherUserID string, schoolYear string) ([]Class, error) {
 	if teacherUserID == "" {
 		return []Class{}, nil
 	}
@@ -107,17 +107,36 @@ func (r *PostgresRepository) ListByTeacher(ctx context.Context, teacherUserID st
 		return []Class{}, nil
 	}
 	// Combine classes where user is coordinator OR assigned as teacher (via class_subjects)
-	query := `
-		SELECT DISTINCT c.id, c.school_id, c.name, c.section, c.articolazione, c.academic_year, c.coordinator_id,
-		       (SELECT COUNT(*) FROM students s WHERE s.class_id = c.id) AS students_count,
-		       c.created_at, c.updated_at
-		FROM classes c
-		LEFT JOIN class_subjects cs ON c.id::text = cs.class_id::text
-		LEFT JOIN teachers t ON (NULLIF(cs.teacher_id::text, '') = t.id::text OR NULLIF(cs.teacher_id::text, '') = t.user_id::text)
-		WHERE (t.user_id::text = $1 OR cs.teacher_id::text = $1 OR c.coordinator_id::text = $1)
-		ORDER BY c.name
-	`
-	rows, err := r.db.QueryContext(ctx, query, teacherUserID)
+	var query string
+	var args []interface{}
+	args = append(args, teacherUserID)
+
+	if schoolYear != "" {
+		query = `
+			SELECT DISTINCT c.id, c.school_id, c.name, c.section, c.articolazione, c.academic_year, c.coordinator_id,
+			       (SELECT COUNT(*) FROM students s WHERE s.class_id = c.id) AS students_count,
+			       c.created_at, c.updated_at
+			FROM classes c
+			LEFT JOIN class_subjects cs ON c.id::text = cs.class_id::text
+			LEFT JOIN teachers t ON (NULLIF(cs.teacher_id::text, '') = t.id::text OR NULLIF(cs.teacher_id::text, '') = t.user_id::text)
+			WHERE (t.user_id::text = $1 OR cs.teacher_id::text = $1 OR c.coordinator_id::text = $1)
+			  AND (c.academic_year IS NULL OR c.academic_year = '' OR REPLACE(c.academic_year, '-', '/') = REPLACE($2, '-', '/'))
+			ORDER BY c.name
+		`
+		args = append(args, schoolYear)
+	} else {
+		query = `
+			SELECT DISTINCT c.id, c.school_id, c.name, c.section, c.articolazione, c.academic_year, c.coordinator_id,
+			       (SELECT COUNT(*) FROM students s WHERE s.class_id = c.id) AS students_count,
+			       c.created_at, c.updated_at
+			FROM classes c
+			LEFT JOIN class_subjects cs ON c.id::text = cs.class_id::text
+			LEFT JOIN teachers t ON (NULLIF(cs.teacher_id::text, '') = t.id::text OR NULLIF(cs.teacher_id::text, '') = t.user_id::text)
+			WHERE (t.user_id::text = $1 OR cs.teacher_id::text = $1 OR c.coordinator_id::text = $1)
+			ORDER BY c.name
+		`
+	}
+	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}

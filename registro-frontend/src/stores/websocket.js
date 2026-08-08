@@ -18,6 +18,8 @@ export const useWebSocketStore = defineStore('websocket', () => {
     const isConnected = ref(false)
     const reconnectTimer = ref(null)
     const reconnectAttempts = ref(0)
+    const hasFailedPermanently = ref(false)
+    const lastError = ref(null)
     const authStore = useAuthStore()
 
     const heartbeatTimer = ref(null)
@@ -75,7 +77,8 @@ export const useWebSocketStore = defineStore('websocket', () => {
         }
 
         const token = authStore.token
-        socket.value = new WebSocket(wsUrl, ['access_token', token])
+        const tokenQueryUrl = `${wsUrl}?token=${encodeURIComponent(token)}`
+        socket.value = new WebSocket(tokenQueryUrl, ['access_token', token])
 
         socket.value.onopen = () => {
             console.log('WebSocket: Connected')
@@ -123,6 +126,8 @@ export const useWebSocketStore = defineStore('websocket', () => {
         }
         isConnected.value = false
         reconnectAttempts.value = 0
+        hasFailedPermanently.value = false
+        lastError.value = null
         if (reconnectTimer.value) {
             clearTimeout(reconnectTimer.value)
             reconnectTimer.value = null
@@ -137,6 +142,8 @@ export const useWebSocketStore = defineStore('websocket', () => {
 
         if (reconnectAttempts.value >= 30) {
             console.warn('WebSocket: Reached max reconnect attempts (30), stopping automatic reconnection')
+            hasFailedPermanently.value = true
+            lastError.value = 'Connessione WebSocket non disponibile dopo tentativi ripetuti.'
             disconnect()
             return
         }
@@ -156,6 +163,8 @@ export const useWebSocketStore = defineStore('websocket', () => {
             reconnectTimer.value = null
             if (authStore.isAuthenticated) {
                 connect()
+            } else {
+                disconnect()
             }
         }, delay)
     }
@@ -249,6 +258,9 @@ export const useWebSocketStore = defineStore('websocket', () => {
     return {
         connect,
         disconnect,
-        isConnected
+        isConnected,
+        reconnectAttempts,
+        hasFailedPermanently,
+        lastError
     }
 })

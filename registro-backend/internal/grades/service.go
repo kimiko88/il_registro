@@ -35,18 +35,18 @@ type Service interface {
 	GetStudentGradesPaged(ctx context.Context, actorID string, actorRole string, studentID string, filter GradeFilter) (*PaginatedGradesResponse, error)
 	GetClassGrades(ctx context.Context, actorID string, actorRole string, classID string, filter GradeFilter) (*ClassGradesResponse, error)
 	GetSubjectGrades(ctx context.Context, actorID string, actorRole string, subjectID string, filter GradeFilter) (*SubjectStatsResponse, error)
-	AddGrade(teacherID string, req CreateGradeRequest) (*GradeResponse, error)
+	AddGrade(ctx context.Context, teacherID string, req CreateGradeRequest) (*GradeResponse, error)
 	BatchCreateGrades(teacherID, actorRole, schoolID string, grades []*Grade) error
 	BulkImport(teacherID string, r io.Reader, semester int) (*ImportResult, error)
 	Export(teacherID, schoolID string, filter GradeFilter, format string) ([]byte, string, error)
-	UpdateGrade(teacherID string, gradeID string, req UpdateGradeRequest) (*GradeResponse, error)
-	DeleteGrade(teacherID string, gradeID string) error
+	UpdateGrade(ctx context.Context, teacherID string, gradeID string, req UpdateGradeRequest) (*GradeResponse, error)
+	DeleteGrade(ctx context.Context, teacherID string, gradeID string) error
 
 	// Student/Parent
-	GetMyGrades(studentID string, filter GradeFilter) (*MyGradesResponse, error)
-	GetMyAverages(studentID string) (*StudentAveragesResponse, error)
+	GetMyGrades(ctx context.Context, studentID string, filter GradeFilter) (*MyGradesResponse, error)
+	GetMyAverages(ctx context.Context, studentID string) (*StudentAveragesResponse, error)
 	GetMyTrend(ctx context.Context, actorID string, actorRole string, studentID string, subjectID string) (*TrendResponse, error)
-	GetSemesterReport(studentID string, semester int) (*SemesterReportResponse, error)
+	GetSemesterReport(ctx context.Context, studentID string, semester int) (*SemesterReportResponse, error)
 	GenerateSemesterReportPDF(studentID string, semester int) ([]byte, error)
 
 	// Parent
@@ -103,32 +103,21 @@ func (s *service) GetStudentGradesWithFilter(ctx context.Context, actorID string
 		}
 	}
 
-	grades, err := s.repo.FindByStudent(studentID)
+	if filter.Semester == 0 && filter.SubjectID == "" && filter.GradeType == "" && filter.IsPublished == nil {
+		grades, err := s.repo.FindByStudent(studentID)
+		if err != nil {
+			return nil, err
+		}
+		return s.mapToResponse(grades), nil
+	}
+
+	filter.StudentID = studentID
+	grades, err := s.repo.FindWithFilter(filter)
 	if err != nil {
 		return nil, err
 	}
 
-	var filtered []Grade
-	for _, g := range grades {
-		if g.DeletedAt != nil {
-			continue
-		}
-		if filter.Semester > 0 && int(g.Semester) != filter.Semester {
-			continue
-		}
-		if filter.SubjectID != "" && g.SubjectID != filter.SubjectID {
-			continue
-		}
-		if filter.GradeType != "" && string(g.GradeType) != filter.GradeType {
-			continue
-		}
-		if filter.IsPublished != nil && g.IsPublished != *filter.IsPublished {
-			continue
-		}
-		filtered = append(filtered, g)
-	}
-
-	return s.mapToResponse(filtered), nil
+	return s.mapToResponse(grades), nil
 }
 
 // GetStudentGradesPaged applies the same ownership checks as GetStudentGradesWithFilter
@@ -179,31 +168,20 @@ func (s *service) GetStudentGradesPaged(ctx context.Context, actorID string, act
 func (s *service) GetClassGrades(ctx context.Context, actorID string, actorRole string, classID string, filter GradeFilter) (*ClassGradesResponse, error) {
 	// Permission check
 	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" {
-		var coordID sql.NullString
-		if err := s.validator.db.QueryRow(
-			`SELECT coordinator_id FROM classes WHERE id = $1`, classID,
-		).Scan(&coordID); err != nil {
-			return nil, fmt.Errorf("class not found")
+		isCoord, err := s.validator.IsClassCoordinator(actorID, classID)
+		if err != nil {
+			return nil, fmt.Errorf("class authorization check failed: %w", err)
 		}
 
-		if actorRole != "teacher" || !coordID.Valid || coordID.String != actorID {
+		if actorRole != "teacher" || !isCoord {
 			if filter.SubjectID == "" {
 				return nil, fmt.Errorf("unauthorized: only coordinators can see full class matrix")
 			}
-			// If a specific subject is requested, verify the actor teaches it.
-			// Propagate any DB error instead of silently treating it as "not found".
-			var exists bool
-			if err := s.validator.db.QueryRow(
-				`SELECT EXISTS(
-					SELECT 1 FROM class_subjects cs
-					LEFT JOIN teachers t ON cs.teacher_id = t.id OR cs.teacher_id = t.user_id
-					WHERE cs.class_id::text = $1 AND cs.subject_id::text = $2 AND (cs.teacher_id::text = $3 OR t.user_id::text = $3)
-				)`,
-				classID, filter.SubjectID, actorID,
-			).Scan(&exists); err != nil {
+			assigned, err := s.validator.IsTeacherAssignedToSubject(actorID, filter.SubjectID, classID)
+			if err != nil {
 				return nil, fmt.Errorf("authorization check failed: %w", err)
 			}
-			if !exists {
+			if !assigned {
 				return nil, fmt.Errorf("unauthorized: you do not teach this subject in this class")
 			}
 		}
@@ -374,12 +352,12 @@ func (s *service) GetSubjectGrades(ctx context.Context, actorID string, actorRol
 	return stat, nil
 }
 
-func (s *service) AddGrade(teacherID string, req CreateGradeRequest) (*GradeResponse, error) {
+func (s *service) AddGrade(ctx context.Context, teacherID string, req CreateGradeRequest) (*GradeResponse, error) {
 	if err := s.validator.ValidateCreateRequest(req, teacherID); err != nil {
 		return nil, fmt.Errorf("validation failed: %w", err)
 	}
 
-	teacherUser, err := s.userRepo.GetByID(context.Background(), teacherID)
+	teacherUser, err := s.userRepo.GetByID(ctx, teacherID)
 	if err != nil {
 		return nil, fmt.Errorf("could not resolve teacher profile: %w", err)
 	}
@@ -544,7 +522,7 @@ func (s *service) Export(teacherID, schoolID string, filter GradeFilter, format 
 	return nil, "", fmt.Errorf("unsupported format: %s", format)
 }
 
-func (s *service) UpdateGrade(teacherID string, gradeID string, req UpdateGradeRequest) (*GradeResponse, error) {
+func (s *service) UpdateGrade(ctx context.Context, teacherID string, gradeID string, req UpdateGradeRequest) (*GradeResponse, error) {
 	grade, err := s.repo.FindByID(gradeID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch grade: %w", err)
@@ -644,7 +622,7 @@ func (s *service) UpdateGrade(teacherID string, gradeID string, req UpdateGradeR
 	return &resp, nil
 }
 
-func (s *service) DeleteGrade(teacherID string, gradeID string) error {
+func (s *service) DeleteGrade(ctx context.Context, teacherID string, gradeID string) error {
 	grade, err := s.repo.FindByID(gradeID)
 	if err != nil {
 		return fmt.Errorf("failed to fetch grade: %w", err)
@@ -693,7 +671,7 @@ func (s *service) GetChildGrades(ctx context.Context, parentID string, studentID
 		return nil, ErrNotGuardian
 	}
 
-	return s.GetMyGrades(studentID, filter)
+	return s.GetMyGrades(ctx, studentID, filter)
 }
 
 func (s *service) GetChildAverages(ctx context.Context, parentID string, studentID string) (*StudentAveragesResponse, error) {
@@ -709,10 +687,10 @@ func (s *service) GetChildAverages(ctx context.Context, parentID string, student
 		return nil, ErrNotGuardian
 	}
 
-	return s.GetMyAverages(studentID)
+	return s.GetMyAverages(ctx, studentID)
 }
 
-func (s *service) GetMyGrades(studentID string, filter GradeFilter) (*MyGradesResponse, error) {
+func (s *service) GetMyGrades(ctx context.Context, studentID string, filter GradeFilter) (*MyGradesResponse, error) {
 	allGrades, err := s.repo.FindByStudent(studentID)
 	if err != nil {
 		return nil, err
@@ -762,7 +740,7 @@ func (s *service) GetMyGrades(studentID string, filter GradeFilter) (*MyGradesRe
 	return response, nil
 }
 
-func (s *service) GetMyAverages(studentID string) (*StudentAveragesResponse, error) {
+func (s *service) GetMyAverages(ctx context.Context, studentID string) (*StudentAveragesResponse, error) {
 	grades, err := s.repo.FindByStudent(studentID)
 	if err != nil {
 		return nil, err
@@ -938,7 +916,7 @@ func (s *service) GetMyTrend(ctx context.Context, actorID string, actorRole stri
 	}, nil
 }
 
-func (s *service) GetSemesterReport(studentID string, semester int) (*SemesterReportResponse, error) {
+func (s *service) GetSemesterReport(ctx context.Context, studentID string, semester int) (*SemesterReportResponse, error) {
 	grades, err := s.repo.FindByStudent(studentID)
 	if err != nil {
 		return nil, err
@@ -1144,11 +1122,11 @@ func (s *service) GetChildSemesterReport(ctx context.Context, parentID, studentI
 			return nil, ErrNotGuardian
 		}
 	}
-	return s.GetSemesterReport(studentID, semester)
+	return s.GetSemesterReport(ctx, studentID, semester)
 }
 
 func (s *service) GenerateSemesterReportPDF(studentID string, semester int) ([]byte, error) {
-	report, err := s.GetSemesterReport(studentID, semester)
+	report, err := s.GetSemesterReport(context.Background(), studentID, semester)
 	if err != nil {
 		return nil, err
 	}

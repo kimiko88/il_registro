@@ -195,7 +195,10 @@ import { useClassesStore } from '@/stores/classes'
 import notesService from '@/services/notesService'
 import api from '@/services/api'
 
+import { useSchoolYearStore } from '@/stores/schoolYear'
+
 const classesStore = useClassesStore()
+const schoolYearStore = useSchoolYearStore()
 const $q = useQuasar()
 
 function getClassLabel(cls) {
@@ -227,9 +230,18 @@ const loadingNotes = ref(false)
 const filterNoteType = ref('')
 
 onMounted(async () => {
-  await classesStore.fetchAssignedClasses()
+  await classesStore.fetchAssignedClasses(schoolYearStore.selectedSchoolYear)
   if (classesStore.classes.length > 0) {
     selectClass(classesStore.classes[0])
+  }
+})
+
+watch(() => schoolYearStore.selectedSchoolYear, async (newYear) => {
+  await classesStore.fetchAssignedClasses(newYear)
+  if (classesStore.classes.length > 0) {
+    selectClass(classesStore.classes[0])
+  } else {
+    selectedClass.value = null
   }
 })
 

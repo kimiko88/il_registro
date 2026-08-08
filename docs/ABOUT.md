@@ -6,9 +6,9 @@
 
 ## 📌 GitHub Metadata / About Info
 
-- **Tagline**: Sistema di Registro Elettronico Scolastico moderno per le scuole italiane (Go, Vue 3, Quasar, PostgreSQL, PWA).
+- **Tagline**: Sistema di Registro Elettronico Scolastico moderno per le scuole italiane (Go 1.25, Vue 3, Quasar, PostgreSQL 16+, PWA, i18n, WAI-ARIA).
 - **Topics / Tags**:
-  `registro-elettronico` `scuola-italiana` `go` `golang` `vue3` `quasar-framework` `pinia` `postgresql` `spid` `cie` `pwa` `education` `school-management` `rest-api`
+  `registro-elettronico` `scuola-italiana` `go` `golang` `vue3` `quasar-framework` `pinia` `postgresql` `spid` `cie` `pwa` `education` `school-management` `rest-api` `i18n` `accessibility`
 
 ---
 
@@ -25,7 +25,7 @@ Registrov2/
 
 ### Backend (Go 1.25+)
 - **[Gin Gonic](https://github.com/gin-gonic/gin)** (`github.com/gin-gonic/gin`): Framework HTTP ad alte prestazioni per il routing REST, middleware di sicurezza e gestione delle richieste JSON.
-- **[lib/pq](https://github.com/lib/pq)** (`github.com/lib/pq`): Driver nativo PostgreSQL per la connessione al database relazionale.
+- **[lib/pq](https://github.com/lib/pq)** (`github.com/lib/pq`): Driver nativo PostgreSQL con supporto ad indici parziali `WHERE deleted_at IS NULL` per velocizzare il soft delete.
 - **[golang-jwt](https://github.com/golang-jwt/jwt)** (`github.com/golang-jwt/jwt/v5`): Gestione sicura di JWT Access Tokens (15 min) e Refresh Tokens con rotazione automatica.
 - **[Gorilla WebSocket](https://github.com/gorilla/websocket)** (`github.com/gorilla/websocket`): Server WebSocket per il push delle notifiche in tempo reale (presenze, comunicazioni, sostituzioni).
 - **[Viper](https://github.com/spf13/viper)** (`github.com/spf13/viper`): Configurazione gerarchica multi-ambiente via `.env`, variabili di sistema e file YAML.
@@ -34,10 +34,24 @@ Registrov2/
 
 ### Frontend (Vue 3 + Quasar)
 - **[Vue 3](https://vuejs.org/)**: Framework UI reattivo con Composition API e sintassi `<script setup>`.
-- **[Quasar Framework v2](https://quasar.dev/)**: Design system completo per interfacce responsive, supporto PWA, dialoghi e tabelle ad alte prestazioni.
-- **[Pinia](https://pinia.vuejs.org/)**: Store di stato centralizzato modulare (`auth`, `classes`, `attendance`, `grades`, `schoolYear`, `theme`, `websocket`).
+- **[Quasar Framework v2](https://quasar.dev/)**: Design system completo per interfacce responsive, supporto PWA, dialoghi e tabelle ad alte prestazioni con piena accessibilità WAI-ARIA.
+- **[Pinia](https://pinia.vuejs.org/)**: Store di stato centralizzato modulare (`auth`, `classes`, `attendance`, `grades`, `schoolYear`, `theme`, `websocket`, `error`).
 - **[Vue Router](https://router.vuejs.org/)**: SPA Routing con Navigation Guards per il controllo degli accessi basato sui ruoli (`superadmin`, `admin`, `secretary`, `teacher`, `student`, `parent`).
-- **[Axios](https://axios-http.com/)**: Client HTTP con interceptor per l'iniezione automatica dell'header `Authorization: Bearer <token>` e per il refresh trasparente in caso di 401.
+- **[Axios](https://axios-http.com/)**: Client HTTP con interceptor per l'iniezione automatica dell'header `Authorization: Bearer <token>`, refresh trasparente in caso di 401 e reindirizzamento SPA senza ricaricamento pagina via Vue Router.
+- **[Vue I18n](https://vue-i18n.intlify.dev/)**: Internazionalizzazione completa con dizionari `it-IT`, `en-US`, `de-DE` per menu, notifiche, form e errori.
+
+---
+
+## ⚡ Caratteristiche Tecniche e Ottimizzazioni Recenti
+
+1. **Indici Parziali PostgreSQL (Soft Delete):** Indici B-tree parziali `WHERE deleted_at IS NULL` per tabelle `grades`, `attendance`, `users`, `classes`, `documents` e `communications`.
+2. **Propagazione del Context (`context.Context`):** Propagazione del contesto lungo tutti i service layer per il tracing distribuito e l'interruzione di query SQL annullate dai client.
+3. **Rate Limiter Dedicato per Autenticazione:** Limite stringente (5 req/min) su `/auth/login` e `/auth/refresh-token` per prevenire attacchi di forza bruta.
+4. **Error Codes Strutturati nel Backend:** Risposte di errore JSON uniformi con attributi `code` (es. `AUTH_RATE_LIMIT_EXCEEDED`, `INVALID_DATE`) e `error`.
+5. **Reindirizzamento SPA senza Full Reload:** Interceptor Axios integrato con Vue Router per il reindirizzamento fluido alla schermata di login su sessione scaduta.
+6. **Stato Errori WebSocket Esposto:** Expose di `reconnectAttempts`, `hasFailedPermanently` e `lastError` nello store WebSocket per banner di stato in tempo reale.
+7. **Store Globale degli Errori & Composable `useErrorHandler`:** Gestione centralizzata degli errori di rete e toast notification coerenti.
+8. **Caching in-memory nei Voti:** Caching a memoria per `fetchGrades(classId, subjectId)` per evitare refetch inutili durante la navigazione tra tab.
 
 ---
 
@@ -63,11 +77,9 @@ go test ./... -v
    - `tests/unit/pages/Teacher/Attendance.spec.js`
    - `tests/unit/pages/Admin/Analytics.spec.js`
    - `tests/unit/stores/attendance.spec.js`
-   - Mock di Quasar, Vue Router e Axios per test rapidi ed esaustivi sui componenti.
 2. **End-to-End Testing (Playwright)**:
    - `tests/e2e/teacher-workflow.spec.js`
    - `tests/e2e/parent-workflow.spec.js`
-   - Simulazione completa dei flussi utente nel browser.
 
 Esecuzione dei test frontend:
 ```bash

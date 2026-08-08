@@ -23,7 +23,10 @@ func CORSMiddleware() gin.HandlerFunc {
 
 	originsMap := make(map[string]bool)
 	for _, o := range allowedOrigins {
-		originsMap[strings.TrimSpace(o)] = true
+		trimmed := strings.TrimSpace(o)
+		if trimmed != "" && trimmed != "*" {
+			originsMap[trimmed] = true
+		}
 	}
 
 	return func(c *gin.Context) {
