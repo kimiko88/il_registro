@@ -1,5 +1,3 @@
-import { ref } from 'vue'
-
 /**
  * Composable per la formattazione dei voti e dei numeri decimali
  * in base al separatore decimali scelto dall'utente (virgola ',' o punto '.')

@@ -2,6 +2,16 @@ import { config } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, vi } from 'vitest'
 
+const mockIconSet = {
+    name: 'material-icons',
+    type: { positive: 'check', negative: 'warning', info: 'info', warning: 'priority_high' },
+    arrow: { dropdown: 'arrow_drop_down', expand: 'arrow_drop_down', down: 'arrow_drop_down', up: 'arrow_drop_up' },
+    chevron: { left: 'chevron_left', right: 'chevron_right' },
+    table: { arrow: 'arrow_upward', select: 'arrow_drop_down' },
+    editor: {},
+    tree: {}
+}
+
 // Mock Quasar module globally
 vi.mock('quasar', async () => {
     const actual = await vi.importActual('quasar')
@@ -17,7 +27,8 @@ vi.mock('quasar', async () => {
                 onDismiss: vi.fn()
             })),
             screen: { lt: { md: false }, gt: { xs: true } },
-            lang: { current: 'it' }
+            lang: { current: 'it' },
+            iconSet: mockIconSet
         })
     }
 })
@@ -33,7 +44,8 @@ const mockQ = {
         onDismiss: vi.fn()
     })),
     screen: { lt: { md: false }, gt: { xs: true } },
-    lang: { current: 'it' }
+    lang: { current: 'it' },
+    iconSet: mockIconSet
 }
 
 config.global.provide = {

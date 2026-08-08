@@ -444,7 +444,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, computed } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { useClassesStore } from 'src/stores/classes';
 import { useGradesStore } from 'src/stores/grades';
 import GradeEntry from 'src/components/Teacher/GradeEntry.vue';
@@ -778,16 +778,21 @@ const formatDate = (dateStr) => {
     }
 };
 
+const userDecimalSeparator = computed(() => localStorage.getItem('user_decimal_separator') || ',');
+
 function formatGrade(val) {
-    if (val === undefined || val === null || val === '-') return null;
+    if (val === undefined || val === null || val === '' || val === '-') return '-';
+    if (typeof val === 'string' && isNaN(Number(val))) {
+        return val.replace('.', userDecimalSeparator.value);
+    }
     const num = Number(val);
     if (isNaN(num)) return val;
     if (num === -1) return 'A';
-    
-    const sep = localStorage.getItem('user_decimal_separator') || ',';
+
+    const sep = userDecimalSeparator.value;
     const integerPart = Math.floor(num);
     const decimalPart = num - integerPart;
-    
+
     if (Math.abs(decimalPart - 0.5) < 0.01) {
         return `${integerPart}½`;
     }
@@ -837,8 +842,4 @@ const processImport = async () => {
         $q.loading.hide();
     }
 };
-
-onMounted(() => {
-    classesStore.fetchAssignedClasses();
-});
 </script>

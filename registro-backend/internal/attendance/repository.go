@@ -65,41 +65,59 @@ func (r *repository) Create(a *Attendance) error {
 }
 
 func (r *repository) BatchCreate(atts []*Attendance) error {
-	tx, err := r.db.Begin()
-	if err != nil {
-		return err
+	if len(atts) == 0 {
+		return nil
 	}
-	defer func() { _ = tx.Rollback() }()
+	// Batch processing in chunks of 100 to avoid lock escalation
+	chunkSize := 100
+	for i := 0; i < len(atts); i += chunkSize {
+		end := i + chunkSize
+		if end > len(atts) {
+			end = len(atts)
+		}
+		chunk := atts[i:end]
 
-	stmt, err := tx.Prepare(`
-		INSERT INTO attendance (
-			school_id, student_id, class_id, date, hour, subject_id, status, 
-			justified, justified_by, justified_at, notes, entry_time, exit_time, created_at, updated_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW(), NOW())
-		ON CONFLICT (student_id, class_id, date, hour) DO UPDATE SET
-			status = EXCLUDED.status,
-			subject_id = COALESCE(EXCLUDED.subject_id, attendance.subject_id),
-			entry_time = EXCLUDED.entry_time,
-			exit_time = EXCLUDED.exit_time,
-			notes = EXCLUDED.notes,
-			updated_at = NOW()
-		RETURNING id
-	`)
-	if err != nil {
-		return err
-	}
-	defer stmt.Close()
-
-	for _, a := range atts {
-		err := stmt.QueryRow(
-			a.SchoolID, a.StudentID, a.ClassID, a.Date, a.Hour, a.SubjectID, a.Status,
-			a.Justified, a.JustifiedBy, a.JustifiedAt, a.Notes, a.EntryTime, a.ExitTime,
-		).Scan(&a.ID)
+		tx, err := r.db.Begin()
 		if err != nil {
-			return fmt.Errorf("batch insert error: %w", err)
+			return err
+		}
+
+		stmt, err := tx.Prepare(`
+			INSERT INTO attendance (
+				school_id, student_id, class_id, date, hour, subject_id, status, 
+				justified, justified_by, justified_at, notes, entry_time, exit_time, created_at, updated_at
+			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW(), NOW())
+			ON CONFLICT (student_id, class_id, date, hour, school_id) DO UPDATE SET
+				status = EXCLUDED.status,
+				subject_id = COALESCE(EXCLUDED.subject_id, attendance.subject_id),
+				entry_time = EXCLUDED.entry_time,
+				exit_time = EXCLUDED.exit_time,
+				notes = EXCLUDED.notes,
+				updated_at = NOW()
+			RETURNING id
+		`)
+		if err != nil {
+			_ = tx.Rollback()
+			return err
+		}
+
+		for _, a := range chunk {
+			err := stmt.QueryRow(
+				a.SchoolID, a.StudentID, a.ClassID, a.Date, a.Hour, a.SubjectID, a.Status,
+				a.Justified, a.JustifiedBy, a.JustifiedAt, a.Notes, a.EntryTime, a.ExitTime,
+			).Scan(&a.ID)
+			if err != nil {
+				stmt.Close()
+				_ = tx.Rollback()
+				return fmt.Errorf("batch insert error: %w", err)
+			}
+		}
+		stmt.Close()
+		if err := tx.Commit(); err != nil {
+			return err
 		}
 	}
-	return tx.Commit()
+	return nil
 }
 
 func (r *repository) Update(a *Attendance) error {
@@ -196,7 +214,7 @@ func (r *repository) GetStats(studentID string) (*SummaryResponse, error) {
 			COUNT(*) FILTER (WHERE status = 'LeftEarly') as early_exits,
 			COUNT(*) FILTER (WHERE justified = true) as justified
 		FROM attendance
-		WHERE student_id::text = $1`
+		WHERE student_id = $1::uuid`
 
 	var s SummaryResponse
 	err := r.db.QueryRow(query, studentID).Scan(&s.TotalAbsences, &s.TotalLates, &s.TotalEarlyExits, &s.JustifiedCount)
@@ -276,6 +294,15 @@ func (r *repository) ProcessJustificationTx(ctx context.Context, j *Justificatio
 	}
 	defer func() { _ = tx.Rollback() }()
 
+	// Lock the justification row FOR UPDATE inside the transaction to prevent race conditions
+	var currentStatus JustificationStatus
+	if err := tx.QueryRowContext(ctx, `SELECT status FROM justifications WHERE id=$1::uuid FOR UPDATE`, j.ID).Scan(&currentStatus); err != nil {
+		return fmt.Errorf("la giustifica %s non esiste: %w", j.ID, err)
+	}
+	if currentStatus != JustificationPending {
+		return fmt.Errorf("la giustifica %s è già stata elaborata (stato attuale: %s)", j.ID, currentStatus)
+	}
+
 	now := time.Now()
 	if approve {
 		j.Status = JustificationApproved
@@ -308,8 +335,8 @@ func (r *repository) ProcessJustificationTx(ctx context.Context, j *Justificatio
 
 func (r *repository) FindJustificationByID(id string) (*Justification, error) {
 	var j Justification
-	query := `SELECT id, student_id, parent_id, start_date, end_date, reason, status, approved_by FROM justifications WHERE id=$1::uuid`
-	err := r.db.QueryRow(query, id).Scan(&j.ID, &j.StudentID, &j.ParentID, &j.StartDate, &j.EndDate, &j.Reason, &j.Status, &j.ApprovedBy)
+	query := `SELECT id, student_id, parent_id, start_date, end_date, reason, status, approved_by, approved_at FROM justifications WHERE id=$1::uuid`
+	err := r.db.QueryRow(query, id).Scan(&j.ID, &j.StudentID, &j.ParentID, &j.StartDate, &j.EndDate, &j.Reason, &j.Status, &j.ApprovedBy, &j.ApprovedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -358,7 +385,7 @@ func (r *repository) IsTeacherAssignedToClass(ctx context.Context, teacherID, cl
 				t.id::text = $2::text OR
 				cs.teacher_id::text = $2::text OR
 				c.coordinator_id::text = $2::text OR
-				u.role IN ('admin', 'superadmin', 'secretary')
+				(u.role IN ('admin', 'superadmin', 'secretary') AND c.school_id = u.school_id)
 			)
 		)
 	`
@@ -389,7 +416,7 @@ func (r *repository) GetMonthlyBreakdown(ctx context.Context, studentID, schoolY
 			COUNT(*) FILTER (WHERE status = 'Late')                AS lates,
 			COUNT(*) FILTER (WHERE status = 'LeftEarly')           AS early_exits,
 			COUNT(*) FILTER (WHERE status = 'Absent' AND justified = true) AS justified_absences,
-			COUNT(*) AS total_school_days
+			COUNT(DISTINCT date) AS total_school_days
 		FROM attendance
 		WHERE student_id = $1::uuid
 		  AND date >= make_date($2, 9, 1)

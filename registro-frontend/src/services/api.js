@@ -123,7 +123,7 @@ api.interceptors.response.use(
                     try {
                         const refreshResponse = await axios.post(`${getBaseURL()}/auth/refresh-token`, {
                             refresh_token: refreshToken,
-                        });
+                        }, { timeout: 15000 });
                         const access_token = refreshResponse.data?.access_token;
                         const newRefreshToken = refreshResponse.data?.refresh_token;
 

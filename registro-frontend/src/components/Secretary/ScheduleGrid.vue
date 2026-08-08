@@ -142,7 +142,7 @@ const props = defineProps({
   loading: { type: Boolean, default: false }
 })
 
-const emit = defineEmits(['save'])
+defineEmits(['save'])
 
 const days = [
   { label: 'Lunedì', value: 1 },

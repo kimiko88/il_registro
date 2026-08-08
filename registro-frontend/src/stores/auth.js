@@ -113,29 +113,29 @@ export const useAuthStore = defineStore('auth', () => {
         }
     }
 
-    function updateTokens(newTokenData, newRefreshTokenData = null) {
+    function updateTokens(newTokenData, newRefreshTokenData = undefined, newUserData = null) {
         if (!newTokenData) return
         token.value = newTokenData
-        if (newRefreshTokenData) {
+        if (newRefreshTokenData !== undefined) {
             refreshToken.value = newRefreshTokenData
-        } else {
-            refreshToken.value = null
+        }
+        if (newUserData) {
+            user.value = sanitizeUserData(newUserData)
         }
 
-        if (localStorage.getItem('token') || localStorage.getItem('user')) {
-            localStorage.setItem('token', newTokenData)
+        const isLocal = !!(localStorage.getItem('token') || localStorage.getItem('user'))
+        const storage = isLocal ? localStorage : sessionStorage
+
+        storage.setItem('token', newTokenData)
+        if (newRefreshTokenData !== undefined) {
             if (newRefreshTokenData) {
-                localStorage.setItem('refreshToken', newRefreshTokenData)
+                storage.setItem('refreshToken', newRefreshTokenData)
             } else {
-                localStorage.removeItem('refreshToken')
+                storage.removeItem('refreshToken')
             }
-        } else {
-            sessionStorage.setItem('token', newTokenData)
-            if (newRefreshTokenData) {
-                sessionStorage.setItem('refreshToken', newRefreshTokenData)
-            } else {
-                sessionStorage.removeItem('refreshToken')
-            }
+        }
+        if (newUserData && user.value) {
+            storage.setItem('user', JSON.stringify(user.value))
         }
     }
 

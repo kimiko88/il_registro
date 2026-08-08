@@ -1,8 +1,22 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createTestingPinia } from '@pinia/testing'
-import { Quasar, Notify } from 'quasar'
+import { Quasar } from 'quasar'
+import { createI18n } from 'vue-i18n'
+import messages from '@/i18n'
 import Login from '@/pages/Login.vue'
+
+vi.mock('vue-router', () => ({
+    useRoute: () => ({ query: {} }),
+    useRouter: () => ({ push: vi.fn() })
+}))
+
+const i18n = createI18n({
+    legacy: false,
+    locale: 'it-IT',
+    fallbackLocale: 'it-IT',
+    messages
+})
 
 // Mock useAuth
 const mockLogin = vi.fn()
@@ -12,17 +26,6 @@ vi.mock('@/composables/useAuth', () => ({
     })
 }))
 
-// Mock Quasar Notify
-vi.mock('quasar', async (importOriginal) => {
-    const actual = await importOriginal()
-    return {
-        ...actual,
-        Notify: {
-            create: vi.fn()
-        }
-    }
-})
-
 describe('Login.vue', () => {
     let wrapper
 
@@ -31,7 +34,8 @@ describe('Login.vue', () => {
         wrapper = mount(Login, {
             global: {
                 plugins: [
-                    [Quasar, {}],
+                    i18n,
+                    Quasar,
                     createTestingPinia({
                         createSpy: vi.fn,
                     })
@@ -44,9 +48,23 @@ describe('Login.vue', () => {
                         template: '<input :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
                         props: ['modelValue']
                     },
+                    'q-select': {
+                        template: '<select :value="modelValue" @change="$emit(\'update:modelValue\', $event.target.value)"><slot /></select>',
+                        props: ['modelValue', 'options']
+                    },
+                    'q-btn-dropdown': { template: '<div><slot /></div>' },
                     'q-icon': true,
                     'q-checkbox': true,
-                    'q-btn': { template: '<button type="submit"></button>' }
+                    'q-btn': { template: '<button type="submit"></button>' },
+                    'q-dialog': { template: '<div><slot /></div>' },
+                    'q-card': { template: '<div><slot /></div>' },
+                    'q-card-section': { template: '<div><slot /></div>' },
+                    'q-card-actions': { template: '<div><slot /></div>' },
+                    'q-item': { template: '<div><slot /></div>' },
+                    'q-item-section': { template: '<div><slot /></div>' },
+                    'q-item-label': { template: '<div><slot /></div>' },
+                    'q-menu': { template: '<div><slot /></div>' },
+                    'q-list': { template: '<div><slot /></div>' }
                 }
             }
         })

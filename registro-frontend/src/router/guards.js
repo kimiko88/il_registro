@@ -14,7 +14,7 @@ export const authGuard = (to, from, next) => {
         return '/'
     }
 
-    const currentRole = authStore.userRole || authStore.user?.role
+    const currentRole = authStore.userRole
 
     // If route is public
     if (publicRoutes.includes(to.path)) {
@@ -39,7 +39,7 @@ export const authGuard = (to, from, next) => {
             ? to.meta.roles
             : (to.meta.role ? [to.meta.role] : null)
 
-        if (requiredRoles && !requiredRoles.includes(currentRole)) {
+        if (requiredRoles && requiredRoles.length > 0 && !requiredRoles.includes(currentRole)) {
             if (import.meta.env.DEV) {
                 console.warn(`Access denied: role '${currentRole}' is not allowed for path '${to.path}'`)
             }

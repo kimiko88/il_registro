@@ -1306,7 +1306,7 @@ const setSmartMigrationDefaults = () => {
   })
 }
 
-const getTargetClassOptions = (st) => {
+const getTargetClassOptions = (_st) => {
   return targetYearClasses.value.map(c => ({
     label: `${c.name}${c.section}${c.articolazione ? ' ('+c.articolazione+')' : ''}`,
     value: c.id

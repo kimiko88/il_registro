@@ -644,12 +644,12 @@ onMounted(() => {
 
   const savedNotif = localStorage.getItem('teacher_notification_settings')
   if (savedNotif) {
-    try { Object.assign(notificationSettings, JSON.parse(savedNotif)) } catch {}
+    try { Object.assign(notificationSettings, JSON.parse(savedNotif)) } catch (e) { console.warn('Could not parse notification settings', e) }
   }
 
   const savedReg = localStorage.getItem('teacher_register_settings')
   if (savedReg) {
-    try { Object.assign(registerSettings, JSON.parse(savedReg)) } catch {}
+    try { Object.assign(registerSettings, JSON.parse(savedReg)) } catch (e) { console.warn('Could not parse register settings', e) }
   }
   const savedSep = localStorage.getItem('user_decimal_separator')
   if (savedSep) {

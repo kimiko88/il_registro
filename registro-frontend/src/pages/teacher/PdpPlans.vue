@@ -341,7 +341,7 @@ async function savePlan() {
   }
 }
 
-function downloadDiagnosisFile(plan) {
+function downloadDiagnosisFile(_plan) {
   $q.notify({ type: 'info', message: 'Download diagnosi riservata docenti in corso...' })
 }
 

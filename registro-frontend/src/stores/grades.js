@@ -160,9 +160,9 @@ export const useGradesStore = defineStore('grades', {
             this.error = null;
             try {
                 const response = await gradeService.createClassTest(testData);
-                // Refetch grades to show the new grades in the register
+                // Refetch grades to show the new grades in the register (with force=true)
                 if (this._lastClassId) {
-                    await this.fetchGrades(this._lastClassId, this._lastSubjectId);
+                    await this.fetchGrades(this._lastClassId, this._lastSubjectId, true, true);
                 }
                 return response.data;
             } catch (err) {
@@ -180,7 +180,7 @@ export const useGradesStore = defineStore('grades', {
             try {
                 const response = await gradeService.updateClassTest(id, testData);
                 if (this._lastClassId) {
-                    await this.fetchGrades(this._lastClassId, this._lastSubjectId);
+                    await this.fetchGrades(this._lastClassId, this._lastSubjectId, true, true);
                 }
                 return response.data;
             } catch (err) {
@@ -198,7 +198,7 @@ export const useGradesStore = defineStore('grades', {
             try {
                 const response = await gradeService.deleteClassTest(id);
                 if (this._lastClassId) {
-                    await this.fetchGrades(this._lastClassId, this._lastSubjectId);
+                    await this.fetchGrades(this._lastClassId, this._lastSubjectId, true, true);
                 }
                 return response.data;
             } catch (err) {
@@ -248,10 +248,19 @@ export const useGradesStore = defineStore('grades', {
                     link.remove();
                 }
                 if (url) {
-                    window.URL.revokeObjectURL(url);
+                    setTimeout(() => {
+                        window.URL.revokeObjectURL(url);
+                    }, 200);
                 }
                 this.loading = false;
             }
+        },
+
+        clearCache() {
+            this._cacheMap = {};
+            this.grades = null;
+            this._lastClassId = null;
+            this._lastSubjectId = null;
         }
     }
 });

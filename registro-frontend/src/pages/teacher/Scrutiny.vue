@@ -184,7 +184,7 @@ import { useSchoolYearStore } from '@/stores/schoolYear'
 const schoolYearStore = useSchoolYearStore()
 
 const loadClasses = async () => {
-  if (authStore.userRole === 'admin' || authStore.userRole === 'secretary') {
+  if (['admin', 'secretary', 'principal', 'vice_principal'].includes(authStore.userRole)) {
     await classesStore.fetchClasses()
   } else {
     await classesStore.fetchAssignedClasses(schoolYearStore.selectedSchoolYear)
@@ -215,15 +215,10 @@ onMounted(async () => {
   try {
     const res = await api.get('/school-calendar/periods')
     if (res.data && res.data.length > 0) {
-      periodOptions.value = res.data.map(p => {
-        let val = 1
-        const code = String(p.code || p.id || '').toLowerCase()
-        if (code.includes('2') || code.includes('second')) val = 2
-        return {
-          label: p.name,
-          value: val
-        }
-      })
+      periodOptions.value = res.data.map((p, index) => ({
+        label: p.name,
+        value: p.period || p.value || (index + 1)
+      }))
     }
   } catch { /* fallback to defaults */ }
 })
@@ -247,7 +242,7 @@ const fetchMatrix = async () => {
 
     students.forEach(s => {
       newScrutinyData[s.student_id] = {
-        conduct_grade: s.record?.conduct_grade || 8,
+        conduct_grade: s.record?.conduct_grade ?? null,
         final_decision: s.record?.final_decision || 'Ammesso',
         grades: {}
       }
@@ -267,9 +262,15 @@ const fetchMatrix = async () => {
   }
 }
 
-const saveStudentScrutiny = async (studentId) => {
+const saveStudentScrutiny = async (studentId, silent = false) => {
   try {
     const data = scrutinyData[studentId]
+    if (data.conduct_grade == null || data.conduct_grade <= 0) {
+      if (!silent) {
+        $q.notify({ type: 'warning', message: 'Impostare il voto di condotta prima di salvare.' })
+      }
+      return false
+    }
     const payload = {
       student_id: studentId,
       class_id: selectedClassId.value,
@@ -282,19 +283,34 @@ const saveStudentScrutiny = async (studentId) => {
       }))
     }
     await scrutinyService.save(payload)
-    $q.notify({ type: 'positive', message: 'Dati salvati con successo', position: 'top' })
+    if (!silent) {
+      $q.notify({ type: 'positive', message: 'Dati salvati con successo', position: 'top' })
+    }
+    return true
   } catch (e) {
-    $q.notify({ type: 'negative', message: 'Errore durante il salvataggio' })
+    if (!silent) {
+      $q.notify({ type: 'negative', message: 'Errore durante il salvataggio' })
+    }
+    return false
   }
 }
 
 const saveAll = async () => {
   saving.value = true
+  let successCount = 0
+  let totalCount = 0
   try {
-    for (const sid of Object.keys(scrutinyData)) {
-      await saveStudentScrutiny(sid)
+    const studentIds = Object.keys(scrutinyData)
+    totalCount = studentIds.length
+    for (const sid of studentIds) {
+      const ok = await saveStudentScrutiny(sid, true)
+      if (ok) successCount++
     }
-    $q.notify({ type: 'positive', message: 'Scrutinio salvato correttamente' })
+    if (successCount === totalCount && totalCount > 0) {
+      $q.notify({ type: 'positive', message: 'Scrutinio salvato correttamente' })
+    } else {
+      $q.notify({ type: 'warning', message: `Salvataggio parziale: salvati ${successCount} su ${totalCount} studenti. Verificare la condotta.` })
+    }
   } finally {
     saving.value = false
   }
@@ -308,15 +324,22 @@ const getGradeClass = (avg) => {
   return 'bg-emerald-50 text-emerald-900'
 }
 
-const closeScrutiny = async () => {
+const closeScrutiny = () => {
   if (!selectedClassId.value) return
-  try {
-    await scrutinyService.closeScrutiny(selectedClassId.value, period.value)
-    $q.notify({ type: 'positive', message: 'Scrutinio chiuso ufficialmente e sigillato!' })
-    fetchMatrix()
-  } catch (err) {
-    $q.notify({ type: 'negative', message: 'Errore chiusura scrutinio' })
-  }
+  $q.dialog({
+    title: 'Conferma Chiusura Scrutinio',
+    message: 'Sei sicuro di voler chiudere e sigillare lo scrutinio per la classe selezionata? L\'operazione è definitiva.',
+    cancel: true,
+    persistent: true
+  }).onOk(async () => {
+    try {
+      await scrutinyService.closeScrutiny(selectedClassId.value, period.value)
+      $q.notify({ type: 'positive', message: 'Scrutinio chiuso ufficialmente e sigillato!' })
+      fetchMatrix()
+    } catch {
+      $q.notify({ type: 'negative', message: 'Errore durante la chiusura dello scrutinio' })
+    }
+  })
 }
 </script>
 

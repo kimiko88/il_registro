@@ -248,7 +248,7 @@ func calcSemesterAverages(grades []GradeResponse) (avg1, avg2 float64) {
 	var sum1, sum2 float64
 	var count1, count2 int
 	for _, g := range grades {
-		if g.GradeCategory == "" || g.GradeCategory != string(GradeCategorySummative) {
+		if g.GradeCategory != "" && g.GradeCategory != string(GradeCategorySummative) {
 			continue
 		}
 		if g.GradeValue > 0 {
@@ -434,7 +434,11 @@ func (s *service) BatchCreateGrades(teacherID, actorRole, schoolID string, grade
 		if actorRole != "superadmin" && schoolID != "" && g.SchoolID != "" && g.SchoolID != schoolID {
 			return fmt.Errorf("unauthorized: cannot create grades for another school")
 		}
-		key := fmt.Sprintf("%s_%s_%s_%.2f", g.StudentID, g.SubjectID, g.Date.Format("2006-01-02"), g.GradeValue)
+		evalTypeStr := ""
+		if g.EvaluationType != nil {
+			evalTypeStr = string(*g.EvaluationType)
+		}
+		key := fmt.Sprintf("%s_%s_%s_%s_%s_%.2f", g.StudentID, g.SubjectID, g.Date.Format("2006-01-02"), g.GradeType, evalTypeStr, g.GradeValue)
 		if seen[key] {
 			continue
 		}
@@ -1055,18 +1059,20 @@ func (s *service) GetSemesterReport(ctx context.Context, studentID string, semes
 	}
 
 	gradedCount := len(subMap)
+	totalEnrolled := len(enrolledSubjects)
 	overall := 0.0
 	if gradedCount > 0 {
 		overall = math.Round((totalSum/float64(gradedCount))*100) / 100
 	}
 
 	promoted := "NO"
-	if gradedCount > 0 && passedCount == gradedCount && overall >= 6.0 {
+	// Promoted only if all enrolled subjects are evaluated and passed
+	if gradedCount > 0 && passedCount == gradedCount && (totalEnrolled == 0 || len(processedSubjects) >= totalEnrolled) && overall >= 6.0 {
 		promoted = "SÌ"
 	}
 
-	behaviorGrade := 8.0
-	scholasticCredit := 8.0
+	behaviorGrade := 0.0
+	scholasticCredit := 0.0
 	totalAbsenceDays := 0
 
 	if s.validator != nil && s.validator.db != nil {
@@ -1092,7 +1098,7 @@ func (s *service) GetSemesterReport(ctx context.Context, studentID string, semes
 		}
 
 		_ = s.validator.db.QueryRow(
-			`SELECT COUNT(DISTINCT date) FROM attendance WHERE student_id = $1 AND status = 'absent'`, studentID,
+			`SELECT COUNT(DISTINCT date) FROM attendance WHERE student_id = $1 AND (status = 'Absent' OR status = 'absent')`, studentID,
 		).Scan(&totalAbsenceDays)
 	}
 

@@ -94,11 +94,11 @@ func (s *service) MarkAttendance(ctx context.Context, teacherID, schoolID string
 		return fmt.Errorf("forbidden: docente non assegnato alla classe")
 	}
 
-	date, err := time.Parse("2006-01-02", req.Date)
+	now := time.Now()
+	date, err := time.ParseInLocation("2006-01-02", req.Date, now.Location())
 	if err != nil {
 		return fmt.Errorf("data non valida '%s': usa il formato YYYY-MM-DD", req.Date)
 	}
-	now := time.Now()
 	todayEnd := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 999999999, now.Location())
 	if date.After(todayEnd) {
 		return fmt.Errorf("impossibile registrare presenze per date future (%s)", req.Date)
@@ -579,10 +579,13 @@ func (s *service) GetChildAttendance(ctx context.Context, parentID, studentID st
 		return nil, fmt.Errorf("unauthorized: not a guardian of this student")
 	}
 	studentUser, err := s.userRepo.GetByID(ctx, studentID)
-	schoolID := ""
-	if err == nil && studentUser != nil && studentUser.SchoolID != nil {
-		schoolID = *studentUser.SchoolID
+	if err != nil {
+		return nil, fmt.Errorf("impossibile recuperare lo studente: %w", err)
 	}
+	if studentUser == nil || studentUser.SchoolID == nil {
+		return nil, fmt.Errorf("lo studente %s non ha una scuola associata", studentID)
+	}
+	schoolID := *studentUser.SchoolID
 	return s.GetStudentAttendance(ctx, parentID, "parent", schoolID, studentID, from, to)
 }
 
