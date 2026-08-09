@@ -115,6 +115,16 @@
                             bg-color="white"
                          />
                     </div>
+
+                    <div v-if="userForm.role === 'teacher'" class="bg-amber-50/80 q-px-lg q-py-md rounded-xl border border-amber-200">
+                         <div class="row items-center justify-between">
+                            <div class="col">
+                               <div class="text-subtitle2 text-amber-900 text-weight-bold">Poteri di Staff / Vicepresidenza</div>
+                               <div class="text-caption text-amber-800">Consente di gestire sostituzioni/supplenze ed accedere a presenze, ritardi ed uscite anticipate per tutte le classi.</div>
+                            </div>
+                            <q-toggle v-model="userForm.is_staff" color="amber-9" size="lg" />
+                         </div>
+                    </div>
                     
                      <q-input
                          v-if="!isEditing"
@@ -461,6 +471,7 @@ const userForm = reactive({
     last_name: '',
     email: '',
     role: 'student',
+    is_staff: false,
     class_id: null,
     school_id: null,
     fiscal_code: '',
@@ -468,21 +479,19 @@ const userForm = reactive({
 });
 
 const getCurrentAcademicYear = () => {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth() + 1; // 1-12
-  if (month >= 9) { 
-    return `${year}/${year + 1}`;
-  } else {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1; // 1-12
+    if (month >= 8) {
+        return `${year}-${year + 1}`;
+    }
     return `${year - 1}/${year}`;
-  }
-}
+};
 
 const currentYearStr = getCurrentAcademicYear();
 
 const classForm = reactive({
     name: '',
-    section: '',
     academic_year: currentYearStr
 });
 
@@ -569,6 +578,7 @@ const openCreate = () => {
         email: '',
         password: '',
         role: 'student',
+        is_staff: false,
         class_id: null,
         school_id: filterSchoolId.value || authStore.user?.school_id || null
     });

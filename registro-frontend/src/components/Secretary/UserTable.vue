@@ -71,9 +71,14 @@
       <!-- Custom Body -->
       <template v-slot:body-cell-role="props">
         <q-td :props="props">
-          <q-chip :color="getRoleColor(props.value) + '-50'" :text-color="getRoleColor(props.value) + '-700'" size="sm" class="text-weight-bold rounded-md">
-            {{ getRoleLabel(props.value) }}
-          </q-chip>
+          <div class="row items-center justify-center q-gutter-xs">
+            <q-chip :color="getRoleColor(props.value) + '-50'" :text-color="getRoleColor(props.value) + '-700'" size="sm" class="text-weight-bold rounded-md">
+              {{ getRoleLabel(props.value) }}
+            </q-chip>
+            <q-chip v-if="props.row.is_staff" color="amber-1" text-color="amber-10" icon="shield" size="xs" class="text-weight-bold rounded-md">
+              Staff
+            </q-chip>
+          </div>
         </q-td>
       </template>
 

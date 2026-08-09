@@ -139,6 +139,7 @@ export default [
             { path: 'student/goals', component: () => import('@/pages/student/Goals.vue'), meta: { title: 'Obiettivi di Apprendimento', roles: ['student'] } },
             { path: 'student/school-calendar', component: () => import('@/pages/student/SchoolCalendar.vue'), meta: { title: 'Calendario Scolastico', roles: ['student'] } },
             { path: 'student/report-card', component: () => import('@/pages/student/ReportCard.vue'), meta: { title: 'Pagella Online', roles: ['student'] } },
+            { path: 'student/settings', component: () => import('@/pages/student/Settings.vue'), meta: { title: 'Impostazioni Studente', roles: ['student'] } },
 
             // Parent Routes
             { path: 'parent', component: () => import('@/pages/parent/Index.vue'), meta: { title: 'Pannello Famiglie', roles: ['parent'] } },
@@ -157,6 +158,7 @@ export default [
             { path: 'parent/documents', component: () => import('@/pages/parent/Documents.vue'), meta: { title: 'Documentazione & Moduli', roles: ['parent'] } },
             { path: 'parent/payments', component: () => import('@/pages/parent/Payments.vue'), meta: { title: 'Pagamenti Scolastici', roles: ['parent'] } },
             { path: 'parent/meetings', component: () => import('@/pages/parent/Meetings.vue'), meta: { title: 'Assemblee & Riunioni', roles: ['parent'] } },
+            { path: 'parent/settings', component: () => import('@/pages/parent/Settings.vue'), meta: { title: 'Impostazioni Genitore', roles: ['parent'] } },
             {
                 path: 'communications',
                 redirect: () => {

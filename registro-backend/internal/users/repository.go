@@ -175,7 +175,7 @@ func (r *PostgresRepository) GetByID(ctx context.Context, id string) (*User, err
 		FROM users u
 		LEFT JOIN students s ON u.id = s.user_id
 		LEFT JOIN classes c ON s.class_id = c.id
-		WHERE u.id = $1::uuid
+		WHERE u.id = $1::uuid OR s.id = $1::uuid
 	`
 	var u User
 	var classID, className, classSection *string

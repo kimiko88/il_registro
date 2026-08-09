@@ -48,7 +48,12 @@ func (h *Handler) Create(c *gin.Context) {
 		return
 	}
 
-	sub, err := h.service.CreateSubstitution(c.Request.Context(), role, schoolID, req)
+	effectiveRole := role
+	if isStaff {
+		effectiveRole = "staff"
+	}
+
+	sub, err := h.service.CreateSubstitution(c.Request.Context(), effectiveRole, schoolID, req)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -124,7 +129,12 @@ func (h *Handler) AssignSubstitute(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.AssignSubstitute(c.Request.Context(), id, role, req); err != nil {
+	effectiveRole := role
+	if isStaff {
+		effectiveRole = "staff"
+	}
+
+	if err := h.service.AssignSubstitute(c.Request.Context(), id, effectiveRole, req); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

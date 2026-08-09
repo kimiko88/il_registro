@@ -96,6 +96,8 @@ export const useThemeStore = defineStore('theme', {
     state: () => ({
         currentTheme: localStorage.getItem('registrov2_theme') || 'indigo',
         dsaFont: localStorage.getItem('registrov2_dsa_font') === 'true',
+        fontFamily: localStorage.getItem('registrov2_font_family') || 'default',
+        fontSize: localStorage.getItem('registrov2_font_size') || 'normal',
         highContrast: localStorage.getItem('registrov2_high_contrast') === 'true'
     }),
     getters: {
@@ -109,6 +111,23 @@ export const useThemeStore = defineStore('theme', {
             this.currentTheme = targetTheme
             localStorage.setItem('registrov2_theme', targetTheme)
             this.applyTheme(targetTheme)
+        },
+        setFontFamily(family) {
+            this.fontFamily = family || 'default'
+            localStorage.setItem('registrov2_font_family', this.fontFamily)
+            if (this.fontFamily === 'opendyslexic') {
+                this.dsaFont = true
+                localStorage.setItem('registrov2_dsa_font', 'true')
+            } else {
+                this.dsaFont = false
+                localStorage.setItem('registrov2_dsa_font', 'false')
+            }
+            this.applyAccessibility()
+        },
+        setFontSize(size) {
+            this.fontSize = size || 'normal'
+            localStorage.setItem('registrov2_font_size', this.fontSize)
+            this.applyAccessibility()
         },
         applyTheme(themeId = this.currentTheme) {
             const themeObj = THEMES.find(t => t.id === themeId) || THEMES[0]
@@ -125,6 +144,8 @@ export const useThemeStore = defineStore('theme', {
         toggleDsaFont(enabled) {
             this.dsaFont = enabled !== undefined ? enabled : !this.dsaFont
             localStorage.setItem('registrov2_dsa_font', this.dsaFont)
+            this.fontFamily = this.dsaFont ? 'opendyslexic' : 'default'
+            localStorage.setItem('registrov2_font_family', this.fontFamily)
             this.applyAccessibility()
         },
         toggleHighContrast(enabled) {
@@ -134,8 +155,19 @@ export const useThemeStore = defineStore('theme', {
         },
         applyAccessibility() {
             if (typeof document !== 'undefined') {
-                document.body.classList.toggle('dsa-font-active', this.dsaFont)
+                document.body.classList.toggle('dsa-font-active', this.dsaFont || this.fontFamily === 'opendyslexic')
                 document.body.classList.toggle('high-contrast-active', this.highContrast)
+                
+                // Remove previous font family classes
+                document.body.classList.remove('font-family-lexend', 'font-family-fredoka', 'font-family-roboto')
+                if (this.fontFamily === 'lexend') document.body.classList.add('font-family-lexend')
+                if (this.fontFamily === 'fredoka') document.body.classList.add('font-family-fredoka')
+                if (this.fontFamily === 'roboto') document.body.classList.add('font-family-roboto')
+
+                // Remove previous font size classes
+                document.body.classList.remove('font-size-large', 'font-size-xlarge')
+                if (this.fontSize === 'large') document.body.classList.add('font-size-large')
+                if (this.fontSize === 'xlarge') document.body.classList.add('font-size-xlarge')
             }
         },
         initTheme() {

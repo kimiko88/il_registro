@@ -101,35 +101,78 @@ export function useMenuItems(role) {
         ],
         student: [
             { label: 'Dashboard', icon: 'dashboard', path: '/', exact: true },
-            { label: 'I Miei Voti', icon: 'grade', path: '/student/grades' },
-            { label: 'Le Mie Presenze', icon: 'how_to_reg', path: '/student/attendance' },
-            { label: 'Note Disciplinari', icon: 'assignment_late', path: '/student/notes' },
-            { label: 'Compiti', icon: 'assignment', path: '/student/homework' },
-            { label: 'Materiale Didattico', icon: 'folder_shared', path: '/student/didactics' },
-            { label: 'Orario Lezioni', icon: 'schedule', path: '/student/timetable' },
-            { label: 'Documenti', icon: 'description', path: '/student/documents' },
-            { label: 'PCTO', icon: 'work', path: '/student/pcto' },
-            { label: 'Orientamento', icon: 'explore', path: '/student/orientamento' },
-            { label: 'Comunicazioni', icon: 'email', path: '/student/communications' },
-            { label: 'Calendario Scolastico', icon: 'calendar_month', path: '/student/school-calendar' },
-            { label: 'Pagella', icon: 'description', path: '/student/report-card' },
-            { label: 'Profilo', icon: 'person', path: '/student/profile' }
+            {
+                category: 'Didattica & Valutazione',
+                icon: 'school',
+                children: [
+                    { label: 'I Miei Voti', icon: 'grade', path: '/student/grades' },
+                    { label: 'Le Mie Presenze', icon: 'how_to_reg', path: '/student/attendance' },
+                    { label: 'Note Disciplinari', icon: 'assignment_late', path: '/student/notes' },
+                    { label: 'Compiti', icon: 'assignment', path: '/student/homework' },
+                    { label: 'Materiale Didattico', icon: 'folder_shared', path: '/student/didactics' },
+                    { label: 'Pagella', icon: 'description', path: '/student/report-card' }
+                ]
+            },
+            {
+                category: 'Organizzazione & Orario',
+                icon: 'event',
+                children: [
+                    { label: 'Orario Lezioni', icon: 'schedule', path: '/student/timetable' },
+                    { label: 'Agenda', icon: 'edit_calendar', path: '/student/agenda' },
+                    { label: 'Calendario Scolastico', icon: 'calendar_month', path: '/student/school-calendar' },
+                    { label: 'Obiettivi', icon: 'flag', path: '/student/goals' }
+                ]
+            },
+            {
+                category: 'Percorsi & Comunicazioni',
+                icon: 'campaign',
+                children: [
+                    { label: 'PCTO', icon: 'work', path: '/student/pcto' },
+                    { label: 'Orientamento', icon: 'explore', path: '/student/orientamento' },
+                    { label: 'Comunicazioni', icon: 'email', path: '/student/communications' },
+                    { label: 'Documenti', icon: 'description', path: '/student/documents' },
+                    { label: 'Impostazioni', icon: 'settings', path: '/student/settings' },
+                    { label: 'Profilo', icon: 'person', path: '/student/profile' }
+                ]
+            }
         ],
         parent: [
             { label: 'Dashboard', icon: 'dashboard', path: '/parent', exact: true },
-            { label: 'I Miei Figli', icon: 'family_restroom', path: '/parent/children' },
-            { label: 'Voti', icon: 'grade', path: '/parent/grades' },
-            { label: 'Pagella', icon: 'description', path: '/parent/report-card' },
-            { label: 'Piano PDP / PEI', icon: 'accessibility_new', path: '/parent/pdp' },
-            { label: 'Presenze', icon: 'how_to_reg', path: '/parent/attendance' },
-            { label: 'Note Disciplinari', icon: 'assignment_late', path: '/parent/notes' },
-            { label: 'Colloqui', icon: 'event', path: '/parent/colloqui' },
-            { label: 'Documenti', icon: 'description', path: '/parent/documents' },
-            { label: 'Materiale Didattico', icon: 'folder_shared', path: '/parent/didactics' },
-            { label: 'Orario Lezioni', icon: 'schedule', path: '/parent/timetable' },
-            { label: 'Comunicazioni', icon: 'email', path: '/parent/communications' },
-            { label: 'Profilo', icon: 'person', path: '/parent/profile' },
-            { label: 'Supporto', icon: 'help', path: '/support' }
+            {
+                category: 'Valutazione & Didattica',
+                icon: 'school',
+                children: [
+                    { label: 'I Miei Figli', icon: 'family_restroom', path: '/parent/children' },
+                    { label: 'Voti', icon: 'grade', path: '/parent/grades' },
+                    { label: 'Pagella', icon: 'description', path: '/parent/report-card' },
+                    { label: 'Presenze', icon: 'how_to_reg', path: '/parent/attendance' },
+                    { label: 'Note Disciplinari', icon: 'assignment_late', path: '/parent/notes' },
+                    { label: 'Didattica', icon: 'folder_shared', path: '/parent/didactics' },
+                    { label: 'Piano PDP / PEI', icon: 'accessibility_new', path: '/parent/pdp' }
+                ]
+            },
+            {
+                category: 'Servizi & Orari',
+                icon: 'event',
+                children: [
+                    { label: 'Orario Lezioni', icon: 'schedule', path: '/parent/timetable' },
+                    { label: 'Colloqui', icon: 'event', path: '/parent/colloqui' },
+                    { label: 'Uscite & Viaggi', icon: 'card_travel', path: '/parent/trips' },
+                    { label: 'Pagamenti', icon: 'payments', path: '/parent/payments' },
+                    { label: 'Assemblee & Riunioni', icon: 'groups', path: '/parent/meetings' }
+                ]
+            },
+            {
+                category: 'Comunicazioni & Account',
+                icon: 'manage_accounts',
+                children: [
+                    { label: 'Comunicazioni', icon: 'email', path: '/parent/communications' },
+                    { label: 'Documenti', icon: 'description', path: '/parent/documents' },
+                    { label: 'Impostazioni', icon: 'settings', path: '/parent/settings' },
+                    { label: 'Profilo', icon: 'person', path: '/parent/profile' },
+                    { label: 'Supporto', icon: 'help', path: '/support' }
+                ]
+            }
         ]
     }
 

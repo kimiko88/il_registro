@@ -362,6 +362,10 @@ func (r *repository) IsTeacherAssignedToClass(teacherID, classID string) (bool, 
 			WHERE (t.user_id = $1::uuid OR t.id = $1::uuid) AND cs.class_id = $2::uuid
 		) OR EXISTS (
 			SELECT 1 FROM classes WHERE (coordinator_id = $1::uuid OR coordinator_id IN (SELECT user_id FROM teachers WHERE id = $1::uuid)) AND id = $2::uuid
+		) OR EXISTS (
+			SELECT 1 FROM users u
+			JOIN classes c ON c.id = $2::uuid AND c.school_id = u.school_id
+			WHERE (u.id = $1::uuid OR u.id IN (SELECT user_id FROM teachers WHERE id = $1::uuid)) AND COALESCE(u.is_staff, false) = true
 		)`
 	var exists bool
 	err := r.db.QueryRow(query, teacherID, classID).Scan(&exists)

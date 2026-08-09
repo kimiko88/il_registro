@@ -29,7 +29,7 @@ watch(() => authStore.isAuthenticated, (val) => {
 </script>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&family=Fredoka:wght@400;600;700&family=Lexend:wght@300;400;500;600;700&family=Roboto:wght@400;500;700&display=swap');
 
 @font-face {
   font-family: 'OpenDyslexic';
@@ -51,6 +51,31 @@ body.dsa-font-active * {
   letter-spacing: 0.05em !important;
   word-spacing: 0.12em !important;
   line-height: 1.65 !important;
+}
+
+/* Additional Font Families */
+body.font-family-lexend,
+body.font-family-lexend * {
+  font-family: 'Lexend', sans-serif !important;
+}
+
+body.font-family-fredoka,
+body.font-family-fredoka * {
+  font-family: 'Fredoka', cursive, sans-serif !important;
+}
+
+body.font-family-roboto,
+body.font-family-roboto * {
+  font-family: 'Roboto', sans-serif !important;
+}
+
+/* Font Size Scaling */
+body.font-size-large {
+  font-size: 110% !important;
+}
+
+body.font-size-xlarge {
+  font-size: 122% !important;
 }
 
 /* High Contrast Mode */

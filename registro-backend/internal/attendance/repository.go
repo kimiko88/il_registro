@@ -183,7 +183,11 @@ func (r *repository) FindByStudent(studentID string, startDate, endDate time.Tim
 	query := `
 		SELECT id, school_id, student_id, class_id, date, hour, subject_id, status, justified, justified_by, justified_at, COALESCE(notes, ''), entry_time, exit_time
 		FROM attendance 
-		WHERE student_id=$1::uuid AND date BETWEEN $2 AND $3
+		WHERE (
+			student_id = $1::uuid OR
+			student_id = (SELECT user_id FROM students WHERE id = $1::uuid) OR
+			student_id = (SELECT id FROM students WHERE user_id = $1::uuid)
+		) AND date BETWEEN $2 AND $3
 		ORDER BY date DESC`
 
 	rows, err := r.db.Query(query, studentID, startDate, endDate)
@@ -420,7 +424,8 @@ func (r *repository) IsTeacherAssignedToClass(ctx context.Context, teacherID, cl
 				t.id::text = $2::text OR
 				cs.teacher_id::text = $2::text OR
 				c.coordinator_id::text = $2::text OR
-				(u.role IN ('admin', 'superadmin', 'secretary') AND c.school_id = u.school_id)
+				(u.role IN ('admin', 'superadmin', 'secretary') AND c.school_id = u.school_id) OR
+				(COALESCE(u.is_staff, false) = true AND c.school_id = u.school_id)
 			)
 		)
 	`

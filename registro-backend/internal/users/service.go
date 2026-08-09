@@ -94,6 +94,7 @@ func (s *Service) CreateUser(ctx context.Context, actorRole string, req CreateUs
 		PhoneNumber:  phoneNumber,
 		JobTitle:     jobTitle,
 		IsActive:     true,
+		IsStaff:      req.IsStaff != nil && *req.IsStaff,
 		CreatedAt:    now,
 		UpdatedAt:    now,
 	}
@@ -160,6 +161,9 @@ func (s *Service) UpdateUser(ctx context.Context, actorRole, actorSchoolID, id s
 	}
 	if req.IsActive != nil {
 		user.IsActive = *req.IsActive
+	}
+	if req.IsStaff != nil {
+		user.IsStaff = *req.IsStaff
 	}
 	if req.PhoneNumber != nil {
 		user.PhoneNumber = req.PhoneNumber
