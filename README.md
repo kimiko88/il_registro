@@ -1,8 +1,9 @@
 # RegistroV2 — Registro Elettronico Scolastico
 
 > Sistema completo per la gestione digitale delle attività scolastiche italiane.
-> **Online Demo**: [https://registro-scuola.netlify.app](https://registro-scuola.netlify.app)
-> Demo accounts & passwords: [example_accounts.md](./example_accounts.md)
+
+**Online Demo**: [https://registro-scuola.netlify.app](https://registro-scuola.netlify.app)
+**Demo accounts & passwords**: [example_accounts.md](./example_accounts.md)
 
 [![Backend CI](https://github.com/kimiko88/Registrov2/actions/workflows/ci.yml/badge.svg)](https://github.com/kimiko88/Registrov2/actions/workflows/ci.yml)
 [![Go Version](https://img.shields.io/badge/go-1.25%2B-blue)](https://go.dev/)
