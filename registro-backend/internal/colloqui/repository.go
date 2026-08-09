@@ -161,10 +161,17 @@ func (r *PostgresRepository) PatchSlot(ctx context.Context, slotID string, start
 		UPDATE colloquio_slots
 		SET start_time = COALESCE(NULLIF($2, ''), start_time),
 		    end_time = COALESCE(NULLIF($3, ''), end_time)
-		WHERE id = $1::uuid
+		WHERE id = $1::uuid AND booking_count = 0 AND NOT EXISTS (SELECT 1 FROM colloquio_bookings WHERE slot_id = $1::uuid AND status != 'Cancelled')
 	`
-	_, err := r.db.ExecContext(ctx, query, slotID, startTime, endTime)
-	return err
+	res, err := r.db.ExecContext(ctx, query, slotID, startTime, endTime)
+	if err != nil {
+		return err
+	}
+	rows, err := res.RowsAffected()
+	if err == nil && rows == 0 {
+		return errors.New("impossibile modificare l'orario di uno slot con prenotazioni attive")
+	}
+	return nil
 }
 
 func (r *PostgresRepository) CancelSlot(ctx context.Context, slotID string) error {

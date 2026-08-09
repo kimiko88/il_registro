@@ -1,6 +1,10 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { useAuthStore } from './auth'
+import { useGradesStore } from './grades'
+import { useAttendanceStore } from './attendance'
+import { useCommunicationsStore } from './communications'
+import { useScrutinyStore } from './scrutiny'
 import { Notify } from 'quasar'
 
 const escapeHtml = (str) => {
@@ -182,6 +186,12 @@ export const useWebSocketStore = defineStore('websocket', () => {
         switch (message.type) {
             case 'GRADE_ADDED':
             case 'GRADE_UPDATED':
+                try {
+                    const gradesStore = useGradesStore()
+                    if (payload.class_id) gradesStore.fetchGrades(payload.class_id, payload.subject_id, true)
+                } catch (err) {
+                    console.debug('Failed to refresh grades store:', err)
+                }
                 Notify.create({
                     message: `Aggiornamento voto: ${escapeHtml(payload.grade_value || '')} (${escapeHtml(payload.subject_name || 'Materia')})`,
                     color: 'info',
@@ -193,6 +203,12 @@ export const useWebSocketStore = defineStore('websocket', () => {
             case 'ATTENDANCE_LATE':
             case 'ATTENDANCE_ABSENT':
             case 'ATTENDANCE_PRESENT':
+                try {
+                    const attendanceStore = useAttendanceStore()
+                    attendanceStore.fetchMyAttendance()
+                } catch (err) {
+                    console.debug('Failed to refresh attendance store:', err)
+                }
                 Notify.create({
                     message: `Aggiornamento presenze: ${escapeHtml(payload.status || 'Presenza registrata')}`,
                     color: 'warning',
@@ -202,6 +218,12 @@ export const useWebSocketStore = defineStore('websocket', () => {
                 })
                 break
             case 'JUSTIFICATION_APPROVED':
+                try {
+                    const attendanceStore = useAttendanceStore()
+                    attendanceStore.fetchMyAttendance()
+                } catch (err) {
+                    console.debug('Failed to refresh attendance store:', err)
+                }
                 Notify.create({
                     message: `Giustifica approvata: ${escapeHtml(payload.reason || '')}`,
                     color: 'positive',
@@ -211,6 +233,12 @@ export const useWebSocketStore = defineStore('websocket', () => {
                 })
                 break
             case 'JUSTIFICATION_REJECTED':
+                try {
+                    const attendanceStore = useAttendanceStore()
+                    attendanceStore.fetchMyAttendance()
+                } catch (err) {
+                    console.debug('Failed to refresh attendance store:', err)
+                }
                 Notify.create({
                     message: `Giustifica non approvata: ${escapeHtml(payload.reason || '')}`,
                     color: 'negative',
@@ -221,6 +249,12 @@ export const useWebSocketStore = defineStore('websocket', () => {
                 break
             case 'NEW_COMMUNICATION':
             case 'COMMUNICATION_PUBLISHED':
+                try {
+                    const commsStore = useCommunicationsStore()
+                    commsStore.fetchCommunications()
+                } catch (err) {
+                    console.debug('Failed to refresh communications store:', err)
+                }
                 Notify.create({
                     message: `Nuova comunicazione: ${escapeHtml(payload.title || 'Circolare scolastica')}`,
                     color: 'primary',
@@ -239,6 +273,12 @@ export const useWebSocketStore = defineStore('websocket', () => {
                 })
                 break
             case 'SCRUTINY_PUBLISHED':
+                try {
+                    const scrutinyStore = useScrutinyStore()
+                    scrutinyStore.fetchOverview()
+                } catch (err) {
+                    console.debug('Failed to refresh scrutiny store:', err)
+                }
                 Notify.create({
                     message: `Esito scrutinio pubblicato per ${escapeHtml(payload.student_name || 'lo studente')}`,
                     color: 'positive',

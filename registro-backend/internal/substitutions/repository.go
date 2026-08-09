@@ -18,6 +18,10 @@ type Repository interface {
 	ConfirmSubstitution(ctx context.Context, id string, substituteTeacherID string) error
 	SignRegister(ctx context.Context, id string, sigHash string, notes string) error
 	GetAvailableTeachers(ctx context.Context, schoolID string) ([]TeacherCandidate, error)
+	GetTeacherProfileID(ctx context.Context, userID string) (string, error)
+	IsTeacherAssignedToClass(ctx context.Context, teacherID, classID string) (bool, error)
+	IsTeacherAssignedToSubject(ctx context.Context, teacherID, subjectID string) (bool, error)
+	GetWeeklySubstitutionCount(ctx context.Context, teacherID string) (int, error)
 }
 
 type TeacherCandidate struct {
@@ -238,4 +242,65 @@ func (r *PostgresRepository) GetAvailableTeachers(ctx context.Context, schoolID 
 		}
 	}
 	return list, rows.Err()
+}
+
+func (r *PostgresRepository) GetTeacherProfileID(ctx context.Context, userID string) (string, error) {
+	if _, err := uuid.Parse(userID); err != nil {
+		return userID, nil
+	}
+	query := `SELECT id FROM teachers WHERE user_id = $1::uuid OR id = $1::uuid LIMIT 1`
+	var id string
+	err := r.db.QueryRowContext(ctx, query, userID).Scan(&id)
+	if err == sql.ErrNoRows {
+		return userID, nil
+	}
+	return id, err
+}
+
+func (r *PostgresRepository) IsTeacherAssignedToClass(ctx context.Context, teacherID, classID string) (bool, error) {
+	if teacherID == "" || classID == "" {
+		return false, nil
+	}
+	query := `
+		SELECT EXISTS (
+			SELECT 1 FROM class_subjects cs
+			JOIN teachers t ON cs.teacher_id = t.id
+			WHERE (t.id = $1::uuid OR t.user_id = $1::uuid) AND cs.class_id = $2::uuid
+		) OR EXISTS (
+			SELECT 1 FROM classes
+			WHERE (coordinator_id = $1::uuid OR coordinator_id IN (SELECT user_id FROM teachers WHERE id = $1::uuid))
+			  AND id = $2::uuid
+		)`
+	var exists bool
+	err := r.db.QueryRowContext(ctx, query, teacherID, classID).Scan(&exists)
+	return exists, err
+}
+
+func (r *PostgresRepository) IsTeacherAssignedToSubject(ctx context.Context, teacherID, subjectID string) (bool, error) {
+	if teacherID == "" || subjectID == "" {
+		return false, nil
+	}
+	query := `
+		SELECT EXISTS (
+			SELECT 1 FROM class_subjects cs
+			JOIN teachers t ON cs.teacher_id = t.id
+			WHERE (t.id = $1::uuid OR t.user_id = $1::uuid) AND cs.subject_id = $2::uuid
+		)`
+	var exists bool
+	err := r.db.QueryRowContext(ctx, query, teacherID, subjectID).Scan(&exists)
+	return exists, err
+}
+
+func (r *PostgresRepository) GetWeeklySubstitutionCount(ctx context.Context, teacherID string) (int, error) {
+	if teacherID == "" {
+		return 0, nil
+	}
+	query := `
+		SELECT COUNT(*)
+		FROM substitutions
+		WHERE (substitute_teacher_id = $1::uuid OR substitute_teacher_id IN (SELECT id FROM teachers WHERE user_id = $1::uuid))
+		  AND date >= CURRENT_DATE - INTERVAL '7 days'`
+	var count int
+	err := r.db.QueryRowContext(ctx, query, teacherID).Scan(&count)
+	return count, err
 }

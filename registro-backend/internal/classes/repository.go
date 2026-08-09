@@ -168,10 +168,10 @@ func (r *PostgresRepository) Create(ctx context.Context, c *Class) error {
 	c.CreatedAt = time.Now()
 	c.UpdatedAt = time.Now()
 
-	query := `INSERT INTO classes (id, school_id, name, section, articolazione, academic_year, coordinator_id, created_at, updated_at)
-			  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`
+	query := `INSERT INTO classes (id, school_id, name, section, articolazione, location, academic_year, coordinator_id, created_at, updated_at)
+			  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`
 	_, err := r.db.ExecContext(ctx, query,
-		c.ID, c.SchoolID, c.Name, c.Section, c.Articolazione, c.AcademicYear,
+		c.ID, c.SchoolID, c.Name, c.Section, c.Articolazione, c.Location, c.AcademicYear,
 		sql.NullString{String: c.CoordinatorID, Valid: c.CoordinatorID != ""},
 		c.CreatedAt, c.UpdatedAt)
 	return err
@@ -183,18 +183,18 @@ func (r *PostgresRepository) List(ctx context.Context, schoolID string, academic
 			return []Class{}, nil
 		}
 	}
-	query := `SELECT c.id, c.school_id, c.name, c.section, c.articolazione, c.academic_year, c.coordinator_id,
+	query := `SELECT c.id, c.school_id, c.name, c.section, c.articolazione, COALESCE(c.location, ''), c.academic_year, c.coordinator_id,
 	                 (SELECT COUNT(*) FROM students s WHERE s.class_id = c.id) AS students_count,
 	                 c.created_at, c.updated_at 
 	          FROM classes c WHERE ($1 = '' OR c.school_id = NULLIF($1, '')::uuid)`
-	
+
 	args := []interface{}{schoolID}
 	if academicYear != "" {
 		query += " AND c.academic_year = $2"
 		args = append(args, academicYear)
 	}
 	query += " ORDER BY c.name"
-	
+
 	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
@@ -204,12 +204,13 @@ func (r *PostgresRepository) List(ctx context.Context, schoolID string, academic
 	var classes []Class
 	for rows.Next() {
 		var c Class
-		var sec, art, coord sql.NullString
-		if err := rows.Scan(&c.ID, &c.SchoolID, &c.Name, &sec, &art, &c.AcademicYear, &coord, &c.StudentsCount, &c.CreatedAt, &c.UpdatedAt); err != nil {
+		var sec, art, loc, coord sql.NullString
+		if err := rows.Scan(&c.ID, &c.SchoolID, &c.Name, &sec, &art, &loc, &c.AcademicYear, &coord, &c.StudentsCount, &c.CreatedAt, &c.UpdatedAt); err != nil {
 			return nil, err
 		}
 		c.Section = sec.String
 		c.Articolazione = art.String
+		c.Location = loc.String
 		c.CoordinatorID = coord.String
 		classes = append(classes, c)
 	}
@@ -223,27 +224,30 @@ func (r *PostgresRepository) List(ctx context.Context, schoolID string, academic
 }
 
 func (r *PostgresRepository) Get(ctx context.Context, id string) (*Class, error) {
-	query := `SELECT c.id, c.school_id, c.name, c.section, c.articolazione, c.academic_year, c.coordinator_id,
+	query := `SELECT c.id, c.school_id, c.name, c.section, c.articolazione, COALESCE(c.location, ''), c.academic_year, c.coordinator_id,
 	                 (SELECT COUNT(*) FROM students s WHERE s.class_id = c.id) AS students_count,
 	                 c.created_at, c.updated_at 
 	          FROM classes c WHERE c.id = $1`
 	var c Class
-	var sec, art, coord sql.NullString
-	err := r.db.QueryRowContext(ctx, query, id).Scan(&c.ID, &c.SchoolID, &c.Name, &sec, &art, &c.AcademicYear, &coord, &c.StudentsCount, &c.CreatedAt, &c.UpdatedAt)
+	var sec, art, loc, coord sql.NullString
+	err := r.db.QueryRowContext(ctx, query, id).Scan(&c.ID, &c.SchoolID, &c.Name, &sec, &art, &loc, &c.AcademicYear, &coord, &c.StudentsCount, &c.CreatedAt, &c.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
 	c.Section = sec.String
 	c.Articolazione = art.String
+	c.Location = loc.String
 	c.CoordinatorID = coord.String
 	return &c, nil
 }
 
 func (r *PostgresRepository) Update(ctx context.Context, c *Class) error {
 	c.UpdatedAt = time.Now()
-	query := `UPDATE classes SET name=$1, section=$2, articolazione=$3, academic_year=$4, coordinator_id=$5, updated_at=$6 WHERE id=$7`
+	query := `UPDATE classes 
+			  SET name = $1, section = $2, articolazione = $3, location = $4, academic_year = $5, coordinator_id = $6, updated_at = $7
+			  WHERE id = $8`
 	res, err := r.db.ExecContext(ctx, query,
-		c.Name, c.Section, c.Articolazione, c.AcademicYear,
+		c.Name, c.Section, c.Articolazione, c.Location, c.AcademicYear,
 		sql.NullString{String: c.CoordinatorID, Valid: c.CoordinatorID != ""},
 		c.UpdatedAt, c.ID)
 	if err != nil {
@@ -399,13 +403,14 @@ func (r *PostgresRepository) BulkMigrateStudents(ctx context.Context, migrations
 	defer stmtUnassignClass.Close()
 
 	for _, item := range migrations {
-		if item.Action == "promoted" || item.Action == "repeater" {
+		switch item.Action {
+		case "promoted", "repeater":
 			if item.TargetClassID != "" {
 				if _, err := stmtUpdateClass.ExecContext(ctx, item.TargetClassID, item.StudentID); err != nil {
 					return err
 				}
 			}
-		} else if item.Action == "graduated" || item.Action == "left" {
+		case "graduated", "left":
 			if _, err := stmtUnassignClass.ExecContext(ctx, item.StudentID); err != nil {
 				return err
 			}

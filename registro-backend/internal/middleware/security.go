@@ -60,8 +60,8 @@ func SecurityHeadersMiddleware() gin.HandlerFunc {
 		c.Writer.Header().Set("X-Content-Type-Options", "nosniff")
 
 		// Enforce HTTPS (HSTS) — 2 years, include subdomains, preload-ready
-		// Only set HSTS header on HTTPS connections or when running in release mode
-		isHTTPS := c.Request.TLS != nil || c.GetHeader("X-Forwarded-Proto") == "https" || gin.Mode() == gin.ReleaseMode || os.Getenv("SERVER_MODE") == "release"
+		// Only set HSTS header on HTTPS connections or when running behind a TLS proxy
+		isHTTPS := c.Request.TLS != nil || c.GetHeader("X-Forwarded-Proto") == "https"
 		if isHTTPS {
 			c.Writer.Header().Set("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload")
 		}
@@ -76,10 +76,10 @@ func SecurityHeadersMiddleware() gin.HandlerFunc {
 		c.Writer.Header().Set("Permissions-Policy",
 			"camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=()")
 
-		// Content Security Policy — nonce-based with 'unsafe-inline' fallback for SPA bundles
+		// Content Security Policy — nonce-based without 'unsafe-inline' for scripts
 		csp := fmt.Sprintf(
 			"default-src 'self'; "+
-				"script-src 'self' 'nonce-%s' 'unsafe-inline'; "+
+				"script-src 'self' 'nonce-%s'; "+
 				"style-src 'self' 'nonce-%s' 'unsafe-inline' https://fonts.googleapis.com; "+
 				"font-src 'self' https://fonts.gstatic.com; "+
 				"img-src 'self' data: blob: https://cdn.quasar.dev; "+

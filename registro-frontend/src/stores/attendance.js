@@ -10,6 +10,7 @@ export const useAttendanceStore = defineStore('attendance', {
         loading: false,
         error: null,
         justifications: [], // Pending justification requests
+        _requestId: 0,
     }),
 
     getters: {
@@ -23,21 +24,28 @@ export const useAttendanceStore = defineStore('attendance', {
         async fetchDailyAttendance(classId, date) {
             this.loading = true;
             this.error = null;
+            const currentReqId = ++this._requestId;
             try {
                 const response = await attendanceService.getByClass(classId, date);
-                const records = response.data?.records || [];
-                this.records = records.map(r => ({
-                    studentId: r.student_id,
-                    name: r.student_name || `Student (${r.student_id})`,
-                    status: r.status,
-                    notes: r.notes || '',
-                    time: r.entry_time || ''
-                }));
+                if (currentReqId === this._requestId) {
+                    const records = response.data?.records || [];
+                    this.records = records.map(r => ({
+                        studentId: r.student_id,
+                        name: r.student_name || `Student (${r.student_id})`,
+                        status: r.status,
+                        notes: r.notes || '',
+                        time: r.entry_time || ''
+                    }));
+                }
             } catch (err) {
-                this.error = err.response?.data?.error || err.message || 'Errore durante il recupero delle presenze';
-                console.error("Error fetching daily attendance:", err);
+                if (currentReqId === this._requestId) {
+                    this.error = err.response?.data?.error || err.message || 'Errore durante il recupero delle presenze';
+                    console.error("Error fetching daily attendance:", err);
+                }
             } finally {
-                this.loading = false;
+                if (currentReqId === this._requestId) {
+                    this.loading = false;
+                }
             }
         },
 

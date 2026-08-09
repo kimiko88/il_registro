@@ -9,23 +9,39 @@ import (
 	"registro-backend/internal/notifications"
 )
 
-type Service struct {
+type Service interface {
+	CreateSubstitution(ctx context.Context, actorRole, schoolID string, req CreateSubstitutionRequest) (*Substitution, error)
+	ListBySchool(ctx context.Context, schoolID, date string) ([]*Substitution, error)
+	ListByTeacher(ctx context.Context, teacherID string, date string) ([]*Substitution, error)
+	ListMyToday(ctx context.Context, teacherID string) ([]*Substitution, error)
+	AssignSubstitute(ctx context.Context, id, actorRole string, req AssignSubstituteRequest) error
+	ConfirmSubstitution(ctx context.Context, id string, teacherID string) error
+	SignRegister(ctx context.Context, id string, teacherID string, notes string) error
+	RecommendSubstitutes(ctx context.Context, schoolID, classID, subjectID string, date string, hour int) ([]SubstituteRecommendation, error)
+	SetNotificationService(ns notifications.Service)
+}
+
+type serviceImpl struct {
 	repo     Repository
 	notifSvc notifications.Service
 }
 
-func NewService(repo Repository) *Service {
+func NewService(repo Repository, notifSvc ...notifications.Service) Service {
 	if repo == nil {
 		panic("substitutions.NewService: repo must not be nil")
 	}
-	return &Service{repo: repo}
+	s := &serviceImpl{repo: repo}
+	if len(notifSvc) > 0 {
+		s.notifSvc = notifSvc[0]
+	}
+	return s
 }
 
-func (s *Service) SetNotificationService(ns notifications.Service) {
+func (s *serviceImpl) SetNotificationService(ns notifications.Service) {
 	s.notifSvc = ns
 }
 
-func (s *Service) CreateSubstitution(ctx context.Context, actorRole, schoolID string, req CreateSubstitutionRequest) (*Substitution, error) {
+func (s *serviceImpl) CreateSubstitution(ctx context.Context, actorRole, schoolID string, req CreateSubstitutionRequest) (*Substitution, error) {
 	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" && actorRole != "principal" && actorRole != "vice_principal" && actorRole != "coordinator" {
 		return nil, fmt.Errorf("unauthorized: insufficient permissions to create substitution")
 	}
@@ -71,21 +87,21 @@ func (s *Service) CreateSubstitution(ctx context.Context, actorRole, schoolID st
 	return sub, nil
 }
 
-func (s *Service) ListBySchool(ctx context.Context, schoolID, date string) ([]*Substitution, error) {
+func (s *serviceImpl) ListBySchool(ctx context.Context, schoolID, date string) ([]*Substitution, error) {
 	return s.repo.ListBySchool(ctx, schoolID, date)
 }
 
-func (s *Service) ListByTeacher(ctx context.Context, teacherID string, date string) ([]*Substitution, error) {
+func (s *serviceImpl) ListByTeacher(ctx context.Context, teacherID string, date string) ([]*Substitution, error) {
 	return s.repo.ListByTeacher(ctx, teacherID, date)
 }
 
-func (s *Service) ListMyToday(ctx context.Context, teacherID string) ([]*Substitution, error) {
+func (s *serviceImpl) ListMyToday(ctx context.Context, teacherID string) ([]*Substitution, error) {
 	todayStr := time.Now().Format("2006-01-02")
 	return s.repo.ListByTeacher(ctx, teacherID, todayStr)
 }
 
 // AssignSubstitute assigns a substitute teacher to a substitution.
-func (s *Service) AssignSubstitute(ctx context.Context, id, actorRole string, req AssignSubstituteRequest) error {
+func (s *serviceImpl) AssignSubstitute(ctx context.Context, id, actorRole string, req AssignSubstituteRequest) error {
 	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "coordinator" && actorRole != "secretary" && actorRole != "principal" {
 		return fmt.Errorf("unauthorized: solo admin, segreteria e coordinatori possono assegnare sostituzioni")
 	}
@@ -93,24 +109,26 @@ func (s *Service) AssignSubstitute(ctx context.Context, id, actorRole string, re
 }
 
 // ConfirmSubstitution allows the assigned substitute teacher to confirm they accept the substitution.
-func (s *Service) ConfirmSubstitution(ctx context.Context, id string, teacherID string) error {
+func (s *serviceImpl) ConfirmSubstitution(ctx context.Context, id string, teacherID string) error {
 	sub, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return fmt.Errorf("sostituzione non trovata: %w", err)
 	}
-	if sub.SubstituteTeacherID == nil || *sub.SubstituteTeacherID != teacherID {
+	teacherProfileID, _ := s.repo.GetTeacherProfileID(ctx, teacherID)
+	if sub.SubstituteTeacherID == nil || (*sub.SubstituteTeacherID != teacherID && *sub.SubstituteTeacherID != teacherProfileID) {
 		return fmt.Errorf("unauthorized: non sei il docente sostituto assegnato a questa sostituzione")
 	}
 	return s.repo.ConfirmSubstitution(ctx, id, teacherID)
 }
 
 // SignRegister signature method for substitute teacher
-func (s *Service) SignRegister(ctx context.Context, id string, teacherID string, notes string) error {
+func (s *serviceImpl) SignRegister(ctx context.Context, id string, teacherID string, notes string) error {
 	sub, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return fmt.Errorf("sostituzione non trovata: %w", err)
 	}
-	if sub.SubstituteTeacherID != nil && *sub.SubstituteTeacherID != teacherID {
+	teacherProfileID, _ := s.repo.GetTeacherProfileID(ctx, teacherID)
+	if sub.SubstituteTeacherID == nil || (*sub.SubstituteTeacherID != teacherID && *sub.SubstituteTeacherID != teacherProfileID) {
 		return fmt.Errorf("unauthorized: solo il docente sostituto assegnato può firmare il registro")
 	}
 	hashInput := fmt.Sprintf("FEQ-SUB-%s-%s-%d", id, teacherID, time.Now().UnixNano())
@@ -118,36 +136,59 @@ func (s *Service) SignRegister(ctx context.Context, id string, teacherID string,
 	return s.repo.SignRegister(ctx, id, sigHash, notes)
 }
 
-// RecommendSubstitutes algorithm
-func (s *Service) RecommendSubstitutes(ctx context.Context, schoolID, classID, subjectID string, date string, hour int) ([]SubstituteRecommendation, error) {
+// RecommendSubstitutes algorithm — Bug 149 real scoring calculation
+func (s *serviceImpl) RecommendSubstitutes(ctx context.Context, schoolID, classID, subjectID string, date string, hour int) ([]SubstituteRecommendation, error) {
 	candidates, err := s.repo.GetAvailableTeachers(ctx, schoolID)
 	if err != nil {
 		return nil, err
 	}
 
 	var recs []SubstituteRecommendation
-	for i, c := range candidates {
+	for _, c := range candidates {
 		score := 50
-		reason := "Disponibile per supplenza"
-		switch i {
-		case 0:
-			score = 95
-			reason = "Docente della stessa classe con ora a disposizione"
-		case 1:
-			score = 85
-			reason = "Docente della stessa materia disponibile"
-		case 2:
-			score = 75
-			reason = "Docente con minor carico di supplenze settimanali"
+		var reasons []string
+
+		teachesClass, _ := s.repo.IsTeacherAssignedToClass(ctx, c.TeacherID, classID)
+		if teachesClass {
+			score += 25
+			reasons = append(reasons, "Docente della stessa classe")
 		}
+
+		teachesSubject, _ := s.repo.IsTeacherAssignedToSubject(ctx, c.TeacherID, subjectID)
+		if teachesSubject {
+			score += 15
+			reasons = append(reasons, "Insegna la stessa materia")
+		}
+
+		subCount, _ := s.repo.GetWeeklySubstitutionCount(ctx, c.TeacherID)
+		if subCount == 0 {
+			score += 10
+			reasons = append(reasons, "Nessuna supplenza svolta negli ultimi 7 giorni")
+		} else if subCount <= 2 {
+			score += 5
+			reasons = append(reasons, fmt.Sprintf("Basso carico supplenze (%d questa settimana)", subCount))
+		}
+
+		if score > 95 {
+			score = 95
+		}
+
+		reason := "Disponibile per supplenza"
+		if len(reasons) > 0 {
+			reason = fmt.Sprintf("%s", reasons[0])
+			if len(reasons) > 1 {
+				reason += fmt.Sprintf(" • %s", reasons[1])
+			}
+		}
+
 		recs = append(recs, SubstituteRecommendation{
 			TeacherID:      c.TeacherID,
 			TeacherName:    c.TeacherName,
 			Score:          score,
 			Reason:         reason,
 			IsFree:         true,
-			TeachesClass:   i == 0,
-			TeachesSubject: i <= 1,
+			TeachesClass:   teachesClass,
+			TeachesSubject: teachesSubject,
 		})
 	}
 	return recs, nil

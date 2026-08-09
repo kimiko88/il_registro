@@ -60,6 +60,9 @@ func (m *MockAttendanceRepo) GetStats(studentID string) (*SummaryResponse, error
 	}
 	return args.Get(0).(*SummaryResponse), args.Error(1)
 }
+func (m *MockAttendanceRepo) GetStatsBatch(ctx context.Context, studentIDs []string) (map[string]*SummaryResponse, error) {
+	return make(map[string]*SummaryResponse), nil
+}
 func (m *MockAttendanceRepo) CountDistinctDays(studentID string) (int, error) {
 	args := m.Called(studentID)
 	return args.Int(0), args.Error(1)

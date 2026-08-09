@@ -5,7 +5,7 @@
 [![Backend CI](https://github.com/kimiko88/Registrov2/actions/workflows/ci.yml/badge.svg)](https://github.com/kimiko88/Registrov2/actions/workflows/ci.yml)
 [![Go Version](https://img.shields.io/badge/go-1.25%2B-blue)](https://go.dev/)
 [![Vue Version](https://img.shields.io/badge/vue-3.x-brightgreen)](https://vuejs.org/)
-[![License](https://img.shields.io/badge/license-Proprietary-red)](#licenza)
+[![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-blue.svg)](./LICENSE)
 
 ---
 
@@ -139,4 +139,5 @@ cd registro-frontend && npx playwright test
 
 ## Licenza
 
-Privato / Proprietario. Tutti i diritti riservati.
+Questo progetto è rilasciato sotto licenza **[PolyForm Noncommercial 1.0.0](file:///c:/Users/chimi/Desktop/Programmazione/Registrov2/LICENSE)**.
+L'utilizzo per scuole pubbliche, università, enti di ricerca ed istituzioni pubbliche è gratuito e consentito senza limitazioni. Per utilizzi commerciali da parte di aziende ed Enti privati è richiesta una licenza commerciale separata.

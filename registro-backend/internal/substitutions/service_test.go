@@ -86,6 +86,22 @@ func (m *mockSubstitutionRepo) GetAvailableTeachers(ctx context.Context, schoolI
 	}, nil
 }
 
+func (m *mockSubstitutionRepo) GetTeacherProfileID(ctx context.Context, userID string) (string, error) {
+	return userID, nil
+}
+
+func (m *mockSubstitutionRepo) IsTeacherAssignedToClass(ctx context.Context, teacherID, classID string) (bool, error) {
+	return teacherID == "t-1", nil
+}
+
+func (m *mockSubstitutionRepo) IsTeacherAssignedToSubject(ctx context.Context, teacherID, subjectID string) (bool, error) {
+	return teacherID == "t-1", nil
+}
+
+func (m *mockSubstitutionRepo) GetWeeklySubstitutionCount(ctx context.Context, teacherID string) (int, error) {
+	return 0, nil
+}
+
 var _ Repository = (*mockSubstitutionRepo)(nil)
 
 // --- CreateSubstitution tests ---

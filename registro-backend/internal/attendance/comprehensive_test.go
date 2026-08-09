@@ -19,6 +19,14 @@ type MockRepo struct {
 
 var _ Repository = (*MockRepo)(nil)
 
+func (m *MockRepo) GetStatsBatch(ctx context.Context, studentIDs []string) (map[string]*SummaryResponse, error) {
+	args := m.Called(ctx, studentIDs)
+	if res, ok := args.Get(0).(map[string]*SummaryResponse); ok {
+		return res, args.Error(1)
+	}
+	return nil, args.Error(1)
+}
+
 func (m *MockRepo) Create(a *Attendance) error {
 	args := m.Called(a)
 	return args.Error(0)

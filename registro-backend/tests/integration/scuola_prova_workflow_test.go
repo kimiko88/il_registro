@@ -60,6 +60,7 @@ func getTestDB(t *testing.T) *sql.DB {
 		return nil
 	}
 
+	_, _ = db.Exec("ALTER TABLE classes ADD COLUMN IF NOT EXISTS location VARCHAR(150) DEFAULT ''")
 	_, _ = db.Exec("ALTER TABLE grades ADD COLUMN IF NOT EXISTS evaluation_type VARCHAR(20) DEFAULT 'Written'")
 	_, _ = db.Exec("ALTER TABLE grades ADD COLUMN IF NOT EXISTS test_id UUID")
 	_, _ = db.Exec("ALTER TABLE grades ADD COLUMN IF NOT EXISTS compensative_measures JSONB DEFAULT '[]'::jsonb")

@@ -129,6 +129,7 @@ export const useGradesStore = defineStore('grades', {
             this.error = null;
             try {
                 const response = await gradeService.saveGrade(gradeData);
+                this._cacheMap = {};
                 if (this._lastClassId) {
                     await this.fetchGrades(this._lastClassId, this._lastSubjectId, true, true);
                 }
@@ -147,6 +148,7 @@ export const useGradesStore = defineStore('grades', {
             this.error = null;
             try {
                 const response = await gradeService.updateGrade(id, updates);
+                this._cacheMap = {};
                 if (this._lastClassId) {
                     await this.fetchGrades(this._lastClassId, this._lastSubjectId, true, true);
                 }
@@ -165,6 +167,7 @@ export const useGradesStore = defineStore('grades', {
             this.error = null;
             try {
                 const response = await gradeService.deleteGrade(id);
+                this._cacheMap = {};
                 if (this._lastClassId) {
                     await this.fetchGrades(this._lastClassId, this._lastSubjectId, true, true);
                 }

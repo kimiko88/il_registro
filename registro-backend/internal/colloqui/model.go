@@ -100,6 +100,7 @@ type CreateAssemblyRequest struct {
 	Date        string `json:"date" binding:"required"`
 	StartTime   string `json:"start_time" binding:"required"`
 	EndTime     string `json:"end_time" binding:"required"`
+	MaxBookings int    `json:"max_bookings" binding:"required,gt=0"`
 	Location    string `json:"location"`
 	Description string `json:"description"`
 }

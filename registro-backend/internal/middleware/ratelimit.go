@@ -102,19 +102,27 @@ func (i *IPRateLimiter) GetLimiter(ip string) *rate.Limiter {
 	return limiter
 }
 
+func resolveClientIP(c *gin.Context) string {
+	ip := c.ClientIP()
+	if ip == "" || ip == "127.0.0.1" || ip == "::1" {
+		remote := c.RemoteIP()
+		if remote != "" {
+			ip = remote
+		}
+	}
+	if ip == "" {
+		ip = "unknown"
+	}
+	return ip
+}
+
 func RateLimitMiddleware() gin.HandlerFunc {
 	// 5 requests per second, burst of 10.
 	// See IPRateLimiter doc comment for multi-instance limitations.
 	limiter := NewIPRateLimiter(5, 10)
 
 	return func(c *gin.Context) {
-		ip := c.ClientIP()
-		if ip == "" {
-			ip = c.RemoteIP()
-		}
-		if ip == "" {
-			ip = "unknown"
-		}
+		ip := resolveClientIP(c)
 		if !limiter.GetLimiter(ip).Allow() {
 			c.JSON(http.StatusTooManyRequests, gin.H{"error": "Too many requests"})
 			c.Abort()
@@ -130,13 +138,7 @@ func AuthRateLimitMiddleware() gin.HandlerFunc {
 	limiter := NewIPRateLimiter(rate.Every(12*time.Second), 5)
 
 	return func(c *gin.Context) {
-		ip := c.ClientIP()
-		if ip == "" {
-			ip = c.RemoteIP()
-		}
-		if ip == "" {
-			ip = "unknown"
-		}
+		ip := resolveClientIP(c)
 		if !limiter.GetLimiter(ip).Allow() {
 			c.JSON(http.StatusTooManyRequests, gin.H{
 				"code":  "AUTH_RATE_LIMIT_EXCEEDED",

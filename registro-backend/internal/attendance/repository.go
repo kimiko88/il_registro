@@ -17,6 +17,7 @@ type Repository interface {
 	FindByClassAndDate(classID string, date time.Time) ([]Attendance, error)
 	FindByStudent(studentID string, startDate, endDate time.Time) ([]Attendance, error)
 	GetStats(studentID string) (*SummaryResponse, error)
+	GetStatsBatch(ctx context.Context, studentIDs []string) (map[string]*SummaryResponse, error)
 	CountDistinctDays(studentID string) (int, error)
 	GetAnalytics(ctx context.Context, schoolID string) (*AnalyticsResponse, error)
 
@@ -224,6 +225,38 @@ func (r *repository) GetStats(studentID string) (*SummaryResponse, error) {
 		return nil, err
 	}
 	return &s, nil
+}
+
+func (r *repository) GetStatsBatch(ctx context.Context, studentIDs []string) (map[string]*SummaryResponse, error) {
+	result := make(map[string]*SummaryResponse)
+	if len(studentIDs) == 0 {
+		return result, nil
+	}
+	query := `
+		SELECT 
+			student_id::text,
+			COUNT(*) FILTER (WHERE status = 'Absent' OR status = 'absent') as absences,
+			COUNT(*) FILTER (WHERE status = 'Late' OR status = 'late') as lates,
+			COUNT(*) FILTER (WHERE status = 'LeftEarly' OR status = 'left_early') as early_exits,
+			COUNT(*) FILTER (WHERE justified = true) as justified
+		FROM attendance
+		WHERE student_id = ANY($1::uuid[])
+		GROUP BY student_id`
+
+	rows, err := r.db.QueryContext(ctx, query, studentIDs)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var sID string
+		var s SummaryResponse
+		if err := rows.Scan(&sID, &s.TotalAbsences, &s.TotalLates, &s.TotalEarlyExits, &s.JustifiedCount); err == nil {
+			result[sID] = &s
+		}
+	}
+	return result, rows.Err()
 }
 
 func (r *repository) CountDistinctDays(studentID string) (int, error) {

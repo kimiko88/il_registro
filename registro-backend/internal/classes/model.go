@@ -8,6 +8,7 @@ type Class struct {
 	Name          string    `json:"name"`          // e.g., "1A", "5B"
 	Section       string    `json:"section"`       // e.g., "A", "B"
 	Articolazione string    `json:"articolazione"` // e.g., "Informatica" (Optional)
+	Location      string    `json:"location"`      // e.g., "Sede Centrale", "Succursale"
 	AcademicYear  string    `json:"academic_year"` // e.g., "2024/2025"
 	CoordinatorID string    `json:"coordinator_id,omitempty"`
 	StudentsCount int       `json:"students_count"`
@@ -20,6 +21,7 @@ type CreateClassRequest struct {
 	SchoolID      string `json:"school_id"`
 	Section       string `json:"section"`
 	Articolazione string `json:"articolazione"`
+	Location      string `json:"location"`
 	AcademicYear  string `json:"academic_year" binding:"required"`
 	CoordinatorID string `json:"coordinator_id"`
 }

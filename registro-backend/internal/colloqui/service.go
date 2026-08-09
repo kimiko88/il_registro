@@ -15,18 +15,31 @@ var (
 	ErrNotGuardian       = errors.New("il genitore non è tutore legale dello studente indicato")
 )
 
-type Service struct {
+type Service interface {
+	CreateSlot(ctx context.Context, teacherUserID, schoolID string, req CreateSlotRequest) (*ColloquioSlot, error)
+	ListSlots(ctx context.Context, schoolID, teacherID string, from, to time.Time, availableOnly bool) ([]*ColloquioSlot, error)
+	CancelSlot(ctx context.Context, actorID, actorRole, actorSchoolID, slotID string) error
+	BookSlot(ctx context.Context, parentUserID, parentSchoolID string, req CreateBookingRequest) (*ColloquioBooking, error)
+	ListMyBookings(ctx context.Context, userID, schoolID string) ([]*ColloquioBooking, error)
+	ListSlotBookings(ctx context.Context, actorID, actorRole, slotID string) ([]*ColloquioBooking, error)
+	UpdateBookingStatus(ctx context.Context, actorID, actorRole, bookingID string, req UpdateBookingStatusRequest) error
+	PatchSlot(ctx context.Context, actorID, actorRole, actorSchoolID, slotID, startTime, endTime string) error
+	GetBookingByID(ctx context.Context, actorID, actorRole, bookingID string) (*ColloquioBooking, error)
+	CreateAssembly(ctx context.Context, actorRole, teacherID, schoolID string, req CreateAssemblyRequest) (*ColloquioSlot, error)
+}
+
+type serviceImpl struct {
 	repo Repository
 }
 
-func NewService(repo Repository) *Service {
+func NewService(repo Repository) Service {
 	if repo == nil {
 		panic("colloqui.NewService: repo must not be nil")
 	}
-	return &Service{repo: repo}
+	return &serviceImpl{repo: repo}
 }
 
-func (s *Service) CreateSlot(ctx context.Context, teacherUserID, schoolID string, req CreateSlotRequest) (*ColloquioSlot, error) {
+func (s *serviceImpl) CreateSlot(ctx context.Context, teacherUserID, schoolID string, req CreateSlotRequest) (*ColloquioSlot, error) {
 	if schoolID == "" {
 		return nil, fmt.Errorf("school_id required")
 	}
@@ -35,9 +48,9 @@ func (s *Service) CreateSlot(ctx context.Context, teacherUserID, schoolID string
 		return nil, ErrInvalidDate
 	}
 
-	// Bug 99/130: rifiuta date nel passato (consentiamo solo oggi o futuro)
-	today := time.Now().Truncate(24 * time.Hour)
-	if d.Before(today) {
+	// Bug 146: confronto data con timezone locale della scuola/server
+	todayStr := time.Now().In(time.Local).Format("2006-01-02")
+	if req.Date < todayStr {
 		return nil, ErrPastDate
 	}
 
@@ -79,7 +92,7 @@ func (s *Service) CreateSlot(ctx context.Context, teacherUserID, schoolID string
 	return slot, nil
 }
 
-func (s *Service) ListSlots(ctx context.Context, schoolID, teacherID string, from, to time.Time, availableOnly bool) ([]*ColloquioSlot, error) {
+func (s *serviceImpl) ListSlots(ctx context.Context, schoolID, teacherID string, from, to time.Time, availableOnly bool) ([]*ColloquioSlot, error) {
 	if from.IsZero() {
 		from = time.Now().Truncate(24 * time.Hour)
 	}
@@ -98,7 +111,7 @@ func (s *Service) ListSlots(ctx context.Context, schoolID, teacherID string, fro
 	return s.repo.ListSlots(ctx, filter)
 }
 
-func (s *Service) CancelSlot(ctx context.Context, actorID, actorRole, actorSchoolID, slotID string) error {
+func (s *serviceImpl) CancelSlot(ctx context.Context, actorID, actorRole, actorSchoolID, slotID string) error {
 	slot, err := s.repo.GetSlotByID(ctx, slotID)
 	if err != nil {
 		return err
@@ -116,7 +129,7 @@ func (s *Service) CancelSlot(ctx context.Context, actorID, actorRole, actorSchoo
 	return s.repo.CancelSlot(ctx, slotID)
 }
 
-func (s *Service) BookSlot(ctx context.Context, parentUserID, parentSchoolID string, req CreateBookingRequest) (*ColloquioBooking, error) {
+func (s *serviceImpl) BookSlot(ctx context.Context, parentUserID, parentSchoolID string, req CreateBookingRequest) (*ColloquioBooking, error) {
 	slot, err := s.repo.GetSlotByID(ctx, req.SlotID)
 	if err != nil {
 		return nil, fmt.Errorf("slot non trovato: %w", err)
@@ -168,11 +181,11 @@ func (s *Service) BookSlot(ctx context.Context, parentUserID, parentSchoolID str
 }
 
 // ListMyBookings restituisce le prenotazioni dell'utente filtrate per scuola (Bug 100).
-func (s *Service) ListMyBookings(ctx context.Context, userID, schoolID string) ([]*ColloquioBooking, error) {
+func (s *serviceImpl) ListMyBookings(ctx context.Context, userID, schoolID string) ([]*ColloquioBooking, error) {
 	return s.repo.ListUserBookings(ctx, userID, schoolID)
 }
 
-func (s *Service) ListSlotBookings(ctx context.Context, actorID, actorRole, slotID string) ([]*ColloquioBooking, error) {
+func (s *serviceImpl) ListSlotBookings(ctx context.Context, actorID, actorRole, slotID string) ([]*ColloquioBooking, error) {
 	slot, err := s.repo.GetSlotByID(ctx, slotID)
 	if err != nil {
 		return nil, err
@@ -186,7 +199,7 @@ func (s *Service) ListSlotBookings(ctx context.Context, actorID, actorRole, slot
 	return s.repo.ListSlotBookings(ctx, slotID)
 }
 
-func (s *Service) UpdateBookingStatus(ctx context.Context, actorID, actorRole, bookingID string, req UpdateBookingStatusRequest) error {
+func (s *serviceImpl) UpdateBookingStatus(ctx context.Context, actorID, actorRole, bookingID string, req UpdateBookingStatusRequest) error {
 	booking, err := s.repo.GetBookingByID(ctx, bookingID)
 	if err != nil {
 		return err
@@ -219,7 +232,7 @@ func (s *Service) UpdateBookingStatus(ctx context.Context, actorID, actorRole, b
 	return s.repo.UpdateBookingStatus(ctx, bookingID, req.Status, actorID, req.Reason)
 }
 
-func (s *Service) PatchSlot(ctx context.Context, actorID, actorRole, actorSchoolID, slotID, startTime, endTime string) error {
+func (s *serviceImpl) PatchSlot(ctx context.Context, actorID, actorRole, actorSchoolID, slotID, startTime, endTime string) error {
 	slot, err := s.repo.GetSlotByID(ctx, slotID)
 	if err != nil {
 		return err
@@ -237,7 +250,7 @@ func (s *Service) PatchSlot(ctx context.Context, actorID, actorRole, actorSchool
 	return s.repo.PatchSlot(ctx, slotID, startTime, endTime)
 }
 
-func (s *Service) GetBookingByID(ctx context.Context, actorID, actorRole, bookingID string) (*ColloquioBooking, error) {
+func (s *serviceImpl) GetBookingByID(ctx context.Context, actorID, actorRole, bookingID string) (*ColloquioBooking, error) {
 	booking, err := s.repo.GetBookingByID(ctx, bookingID)
 	if err != nil {
 		return nil, err
@@ -263,15 +276,19 @@ func (s *Service) GetBookingByID(ctx context.Context, actorID, actorRole, bookin
 	return nil, ErrUnauthorized
 }
 
-func (s *Service) CreateAssembly(ctx context.Context, actorRole, teacherID, schoolID string, req CreateAssemblyRequest) (*ColloquioSlot, error) {
+func (s *serviceImpl) CreateAssembly(ctx context.Context, actorRole, teacherID, schoolID string, req CreateAssemblyRequest) (*ColloquioSlot, error) {
 	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "vice_principal" {
 		return nil, ErrUnauthorized
+	}
+	maxBookings := req.MaxBookings
+	if maxBookings <= 0 {
+		maxBookings = 100
 	}
 	return s.CreateSlot(ctx, teacherID, schoolID, CreateSlotRequest{
 		Date:        req.Date,
 		StartTime:   req.StartTime,
 		EndTime:     req.EndTime,
-		MaxBookings: 100,
+		MaxBookings: maxBookings,
 		Type:        TypeAssembly,
 		Location:    req.Location,
 	})

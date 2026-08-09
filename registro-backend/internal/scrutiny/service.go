@@ -120,6 +120,12 @@ func (s *Service) GetMatrix(ctx context.Context, actorID, actorRole, classID str
 		return nil, fmt.Errorf("failed to load grades for class %s: %w", classID, err)
 	}
 
+	studentIDs := make([]string, len(allStudents))
+	for i, stu := range allStudents {
+		studentIDs[i] = stu.ID
+	}
+	statsMap, _ := s.attRepo.GetStatsBatch(ctx, studentIDs)
+
 	for _, stu := range allStudents {
 		row := StudentScrutinyRow{
 			StudentID:   stu.ID,
@@ -156,15 +162,13 @@ func (s *Service) GetMatrix(ctx context.Context, actorID, actorRole, classID str
 			row.Record = &fullRec
 		}
 
-		stats, attErr := s.attRepo.GetStats(stu.ID)
-		if attErr != nil {
-			logger.Log.Errorf("scrutiny GetStats stu.ID=%s error: %v", stu.ID, attErr)
-		}
-		if attErr == nil && stats != nil {
-			row.AttendanceStats = AttendanceSummary{
-				Absences:   stats.TotalAbsences,
-				Lates:      stats.TotalLates,
-				EarlyExits: stats.TotalEarlyExits,
+		if statsMap != nil {
+			if stats, ok := statsMap[stu.ID]; ok && stats != nil {
+				row.AttendanceStats = AttendanceSummary{
+					Absences:   stats.TotalAbsences,
+					Lates:      stats.TotalLates,
+					EarlyExits: stats.TotalEarlyExits,
+				}
 			}
 		}
 
@@ -203,7 +207,7 @@ type ClassReportStudentRow struct {
 // GetOverview returns a summary of scrutiny status for all classes in the actor's school.
 // Bug 126: requires actorID, actorRole, schoolID; restricts to coordinator/dirigenza/admin;
 // filters classes by schoolID to prevent cross-tenant data leaks.
-func (s *Service) GetOverview(ctx context.Context, actorID, actorRole, schoolID string) ([]ClassScrutinyOverview, error) {
+func (s *Service) GetOverview(ctx context.Context, actorID, actorRole, schoolID string, semester ...int) ([]ClassScrutinyOverview, error) {
 	if actorRole != "principal" && actorRole != "vice_principal" &&
 		actorRole != "admin" && actorRole != "superadmin" && actorRole != "coordinator" && actorRole != "secretary" {
 		return nil, errors.New("unauthorized: solo coordinatori, dirigenza, segreteria e admin possono vedere l'overview dello scrutinio")
@@ -216,10 +220,16 @@ func (s *Service) GetOverview(ctx context.Context, actorID, actorRole, schoolID 
 		return nil, err
 	}
 
-	sem := 2
-	now := time.Now()
-	if now.Month() >= time.September || now.Month() <= time.January {
-		sem = 1
+	sem := 0
+	if len(semester) > 0 && semester[0] > 0 {
+		sem = semester[0]
+	}
+	if sem == 0 {
+		sem = 2
+		now := time.Now()
+		if now.Month() >= time.September || now.Month() <= time.January {
+			sem = 1
+		}
 	}
 
 	var res []ClassScrutinyOverview
@@ -278,18 +288,23 @@ func (s *Service) GetClassReport(ctx context.Context, actorID, actorRole, classI
 	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "vice_principal" && actorRole != "secretary" && actorRole != "teacher" {
 		return nil, errors.New("unauthorized: insufficient permissions to view class scrutiny report")
 	}
+	cls, err := s.classRepo.Get(ctx, classID)
+	if err != nil {
+		return nil, err
+	}
 	if actorRole == "teacher" {
 		isCoordinator, _, err := s.isDirigenzaOrCoordinator(ctx, actorID, actorRole, classID)
 		if err != nil || !isCoordinator {
 			return nil, errors.New("unauthorized: solo il coordinatore di classe o la dirigenza possono accedere al report di scrutinio")
 		}
+		if s.userRepo != nil {
+			if user, err := s.userRepo.GetByID(ctx, actorID); err == nil && user != nil && user.SchoolID != nil && *user.SchoolID != "" && cls.SchoolID != "" && cls.SchoolID != *user.SchoolID {
+				return nil, errors.New("unauthorized: classe appartenente a un'altra scuola")
+			}
+		}
 	}
 	if semester <= 0 {
 		semester = 1
-	}
-	cls, err := s.classRepo.Get(ctx, classID)
-	if err != nil {
-		return nil, err
 	}
 
 	students, err := s.userRepo.GetStudentsByClass(ctx, classID)

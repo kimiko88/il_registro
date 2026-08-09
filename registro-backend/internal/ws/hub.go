@@ -99,12 +99,14 @@ func (h *Hub) Run(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
+			h.mu.Lock()
 			if h.pubsub != nil {
 				_ = h.pubsub.Close()
 			}
 			if h.rdb != nil {
 				_ = h.rdb.Close()
 			}
+			h.mu.Unlock()
 			return
 
 		case client := <-h.register:
@@ -221,6 +223,15 @@ func (h *Hub) deliverLocally(msg Message) {
 		for _, clients := range h.clients {
 			for client := range clients {
 				if client.SchoolID == msg.SchoolID && isRoleAllowed(client.Role, msg.AllowedRoles) {
+					targetClients = append(targetClients, client)
+				}
+			}
+		}
+	} else {
+		// Bug 164: Global broadcast for system messages without specific recipient or school
+		for _, clients := range h.clients {
+			for client := range clients {
+				if isRoleAllowed(client.Role, msg.AllowedRoles) {
 					targetClients = append(targetClients, client)
 				}
 			}

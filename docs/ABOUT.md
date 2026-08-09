@@ -6,7 +6,8 @@
 
 ## 📌 GitHub Metadata / About Info
 
-- **Tagline**: Sistema di Registro Elettronico Scolastico moderno per le scuole italiane (Go 1.25, Vue 3, Quasar, PostgreSQL 16+, PWA, i18n, WAI-ARIA).
+- **Tagline**: Sistema di Registro Elettronico Scolastico moderno e completo per le scuole italiane (Go 1.25, Vue 3, Quasar, PostgreSQL 16+, PWA, i18n, WAI-ARIA).
+- **Licenza**: [PolyForm Noncommercial 1.0.0](file:///c:/Users/chimi/Desktop/Programmazione/Registrov2/LICENSE) — Gratuita e libera per scuole pubbliche, università, enti ed istituzioni pubbliche.
 - **Topics / Tags**:
   `registro-elettronico` `scuola-italiana` `go` `golang` `vue3` `quasar-framework` `pinia` `postgresql` `spid` `cie` `pwa` `education` `school-management` `rest-api` `i18n` `accessibility`
 
@@ -44,14 +45,37 @@ Registrov2/
 
 ## ⚡ Caratteristiche Tecniche e Ottimizzazioni Recenti
 
-1. **Indici Parziali PostgreSQL (Soft Delete):** Indici B-tree parziali `WHERE deleted_at IS NULL` per tabelle `grades`, `attendance`, `users`, `classes`, `documents` e `communications`.
-2. **Propagazione del Context (`context.Context`):** Propagazione del contesto lungo tutti i service layer per il tracing distribuito e l'interruzione di query SQL annullate dai client.
-3. **Rate Limiter Dedicato per Autenticazione:** Limite stringente (5 req/min) su `/auth/login` e `/auth/refresh-token` per prevenire attacchi di forza bruta.
-4. **Error Codes Strutturati nel Backend:** Risposte di errore JSON uniformi con attributi `code` (es. `AUTH_RATE_LIMIT_EXCEEDED`, `INVALID_DATE`) e `error`.
-5. **Reindirizzamento SPA senza Full Reload:** Interceptor Axios integrato con Vue Router per il reindirizzamento fluido alla schermata di login su sessione scaduta.
-6. **Stato Errori WebSocket Esposto:** Expose di `reconnectAttempts`, `hasFailedPermanently` e `lastError` nello store WebSocket per banner di stato in tempo reale.
-7. **Store Globale degli Errori & Composable `useErrorHandler`:** Gestione centralizzata degli errori di rete e toast notification coerenti.
-8. **Caching in-memory nei Voti:** Caching a memoria per `fetchGrades(classId, subjectId)` per evitare refetch inutili durante la navigazione tra tab.
+1. **Gestione Multi-Sede delle Classi:** Supporto completo per l'organizzazione delle classi su differenti plessi/sedi (es. Sede Centrale, Succursale).
+2. **Algoritmo di Raccomandazione Supplenze:** Calcolo automatico dello score di idoneità (0-95) dei supplenti basato su assegnazione classe, materia e carico settimanale.
+3. **Controllo Concorrenza Prenotazioni (Race Condition Zero):** Blocco atomico in DB via `SELECT ... FOR UPDATE` per le prenotazioni dei colloqui e modifiche agli slot.
+4. **Scrutini Ottimizzati in Batch:** Caricamento aggregato delle statistiche di presenza tramite `GetStatsBatch` per eliminare le query N+1 nella matrice di scrutinio.
+5. **Indici Parziali PostgreSQL (Soft Delete):** Indici B-tree parziali `WHERE deleted_at IS NULL` per tabelle `grades`, `attendance`, `users`, `classes`, `documents` e `communications`.
+6. **Rate Limiter con Client IP Resolution:** Validazione stringente IP con `resolveClientIP` e blocco degli IP spoofing tramite `X-Forwarded-For`.
+7. **Reattività WebSockets & Stores Pinia:** Sincronizzazione automatica ed immediata dello stato locale (`grades`, `attendance`, `scrutiny`, `communications`) alla ricezione di messaggi real-time.
+8. **Accessibilità & Font DSA OpenDyslexic:** Toggle rapido del font ad alta leggibilità per studenti con dislessia e DSA.
+
+---
+
+## 📸 Galleria Screenshot Consigliati per il Repository
+
+Per valorizzare il progetto su GitHub e nella documentazione commerciale/istituzionale, si raccomanda di catturare ed includere i seguenti screenshot (salvati nella cartella `docs/images/`):
+
+1. **`01_dashboard_teacher.png` — Dashboard Docente & Timeline**
+   - *Descrizione*: Vista principale del docente con lezioni del giorno, accessi rapidi ai registri di classe, circolari e notifiche in tempo reale.
+2. **`02_grade_matrix_input.png` — Registro Voti & Tastiera Rapida**
+   - *Descrizione*: Tabella dei voti con navigazione da tastiera, simulatore voto target e visualizzazione delle misure compensative BES/DSA.
+3. **`03_attendance_1click.png` — Registro Presenze & Firma Ora 1-Click**
+   - *Descrizione*: Interfaccia di rilevamento presenze/assenze/ritardi con pulsante di firma rapida della lezione.
+4. **`04_scrutiny_matrix.png` — Matrice di Scrutinio & Pagelle**
+   - *Descrizione*: Tabella riepilogativa dello scrutinio di classe con medie per materia, proposte voto e statistiche assenze aggregate.
+5. **`05_classes_multisite.png` — Gestione Classi Multi-Sede**
+   - *Descrizione*: Pagina di gestione segreteria con la visualizzazione della Sede scolastica (es. Sede Centrale, Succursale) per ciascuna classe.
+6. **`06_substitutions_recommendation.png` — Suggerimento Automatico Supplenze**
+   - *Descrizione*: Algoritmo di calcolo dello score supplenti con i dettagli di materia, classe e carico orario settimanale.
+7. **`07_parent_portal_mobile.png` — Portale Genitori & PWA Mobile**
+   - *Descrizione*: Vista responsive mobile del portale genitori con presa visione circolari, giustifica assenze e libretto voti.
+8. **`08_accessibility_opendyslexic.png` — Accessibilità & Font DSA**
+   - *Descrizione*: Dettaglio dell'interfaccia con font OpenDyslexic attivo e modalità ad alto contrasto.
 
 ---
 
@@ -59,7 +83,7 @@ Registrov2/
 
 ### Backend Testing (Go)
 1. **Unit Tests**:
-   - `internal/auth/handler_test.go`, `internal/classes/service_test.go`, `internal/grades/handler_test.go`, `internal/attendance/service_test.go`
+   - `internal/auth/handler_test.go`, `internal/classes/service_test.go`, `internal/grades/handler_test.go`, `internal/attendance/service_test.go`, `internal/substitutions/service_test.go`
    - Test dei singoli moduli isolati mediante mock repository (pacchetto `tests/testhelpers`).
 2. **Integration Tests**:
    - `tests/integration/scuola_prova_workflow_test.go`

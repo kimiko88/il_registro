@@ -99,6 +99,7 @@
             </div>
             
             <q-input v-model="form.articolazione" label="Articolazione (es. Informatica, Telecomunicazioni - Opzionale)" outlined />
+            <q-input v-model="form.location" label="Sede della Scuola (es. Sede Centrale, Succursale - Opzionale)" outlined />
             
             <q-select
               v-model="form.academic_year"
@@ -860,12 +861,14 @@ const form = reactive({
   name: '',
   section: '',
   articolazione: '',
+  location: '',
   academic_year: currentYearStr,
   coordinator_id: ''
 })
 
 const columns = [
   { name: 'name', label: 'Classe', align: 'left', field: row => `${row.name || ''}${row.section || ''}${row.articolazione ? ' - ' + row.articolazione : ''}`, sortable: true },
+  { name: 'location', label: 'Sede', align: 'center', field: row => row.location || 'Sede Centrale', sortable: true },
   { name: 'academic_year', label: 'Anno Accademico', align: 'center', field: 'academic_year', sortable: true },
   { name: 'actions', label: 'Azioni', align: 'right' }
 ]
@@ -950,6 +953,7 @@ const openDialog = (row = null) => {
       name: '',
       section: '',
       articolazione: '',
+      location: '',
       academic_year: selectedYear.value,
       coordinator_id: ''
     })
