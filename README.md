@@ -12,6 +12,51 @@
 
 ---
 
+## 📸 Galleria Screenshot
+
+<a href="./docs/images/01_dashboard_teacher.png"><img src="./docs/images/01_dashboard_teacher.png" width="49.5%"/></a>
+
+1. **`01_dashboard_teacher.png` — Dashboard Docente & Timeline**
+   - _Descrizione_: Vista principale del docente con lezioni del giorno, accessi rapidi ai registri di classe, circolari e notifiche in tempo reale.
+
+<a href="./docs/images/02_grade_matrix_input.png"><img src="./docs/images/02_grade_matrix_input.png" width="49.5%"/></a>
+
+2. **`02_grade_matrix_input.png` — Registro Voti & Tastiera Rapida**
+   - _Descrizione_: Tabella dei voti con navigazione da tastiera, simulatore voto target e visualizzazione delle misure compensative BES/DSA.
+
+<a href="./docs/images/03_attendance_1click.png"><img src="./docs/images/03_attendance_1click.png" width="49.5%"/></a>
+
+3. **`03_attendance_1click.png` — Registro Presenze & Firma Ora 1-Click**
+   - _Descrizione_: Interfaccia di rilevamento presenze/assenze/ritardi con pulsante di firma rapida della lezione.
+
+<a href="./docs/images/04_scrutiny_matrix.png"><img src="./docs/images/04_scrutiny_matrix.png" width="49.5%"/></a>
+
+4. **`04_scrutiny_matrix.png` — Matrice di Scrutinio & Pagelle**
+   - _Descrizione_: Tabella riepilogativa dello scrutinio di classe con medie per materia, proposte voto e statistiche assenze aggregate.
+
+<a href="./docs/images/05_classes_multisite.png"><img src="./docs/images/05_classes_multisite.png" width="49.5%"/></a>
+
+5. **`05_classes_multisite.png` — Gestione Classi Multi-Sede**
+   - _Descrizione_: Pagina di gestione segreteria con la visualizzazione della Sede scolastica (es. Sede Centrale, Succursale) per ciascuna classe.
+
+<a href="./docs/images/06_substitutions_recommendation.png"><img src="./docs/images/06_substitutions_recommendation.png" width="49.5%"/></a>
+
+6. **`06_substitutions_recommendation.png` — Suggerimento Automatico Supplenze**
+   - _Descrizione_: Algoritmo di calcolo dello score supplenti con i dettagli di materia, classe e carico orario settimanale.
+
+<a href="./docs/images/07_parent_portal_mobile.png"><img src="./docs/images/07_parent_portal_mobile.png" width="49.5%"/></a>
+
+7. **`07_parent_portal_mobile.png` — Portale Genitori & PWA Mobile**
+   - _Descrizione_: Vista responsive mobile del portale genitori con presa visione circolari, giustifica assenze e libretto voti.
+
+<a href="./docs/images/08_accessibility_opendyslexic.png"><img src="./docs/images/08_accessibility_opendyslexic.png" width="49.5%"/></a>
+
+8. **`08_accessibility_opendyslexic.png` — Accessibilità & Font DSA**
+
+- _Descrizione_: Dettaglio dell'interfaccia con font OpenDyslexic attivo e modalità ad alto contrasto.
+
+---
+
 ## Panoramica
 
 **RegistroV2** è un registro elettronico scolastico full-stack progettato per il contesto scolastico italiano. Gestisce voti, presenze, comunicazioni, orari, scrutini, PCTO e molto altro, con supporto nativo a **SPID** e **CIE** per l'autenticazione degli utenti.
