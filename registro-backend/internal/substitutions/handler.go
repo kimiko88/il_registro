@@ -36,7 +36,8 @@ func (h *Handler) Create(c *gin.Context) {
 	}
 	role := c.GetString("role")
 	schoolID := c.GetString("school_id")
-	if role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" {
+	isStaff := c.GetBool("is_staff")
+	if role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && !isStaff {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -110,7 +111,8 @@ func (h *Handler) AssignSubstitute(c *gin.Context) {
 		return
 	}
 	role := c.GetString("role")
-	if role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" {
+	isStaff := c.GetBool("is_staff")
+	if role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && !isStaff {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}

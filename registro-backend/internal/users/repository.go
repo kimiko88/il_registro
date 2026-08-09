@@ -100,6 +100,10 @@ func (r *PostgresRepository) GetChildren(ctx context.Context, parentUserID strin
 }
 
 func NewRepository(db *sql.DB) Repository {
+	_, _ = db.Exec(`
+		ALTER TABLE users ADD COLUMN IF NOT EXISTS is_staff BOOLEAN DEFAULT false;
+		ALTER TABLE teachers ADD COLUMN IF NOT EXISTS is_staff BOOLEAN DEFAULT false;
+	`)
 	return &PostgresRepository{db: db}
 }
 
@@ -113,17 +117,17 @@ func (r *PostgresRepository) Create(ctx context.Context, user *User) error {
 	query := `
 		INSERT INTO users (
 			id, email, password_hash, first_name, last_name, fiscal_code,
-			role, school_id, is_active, email_verified, mfa_enabled, mfa_secret,
+			role, school_id, is_active, is_staff, email_verified, mfa_enabled, mfa_secret,
 			phone_number, job_title, created_at, updated_at
 		) VALUES (
 			$1, $2, $3, $4, $5, $6,
-			$7, $8, $9, $10, $11, $12,
-			$13, $14, $15, $16
+			$7, $8, $9, $10, $11, $12, $13,
+			$14, $15, $16, $17
 		)
 	`
 	_, err = tx.ExecContext(ctx, query,
 		user.ID, user.Email, user.PasswordHash, user.FirstName, user.LastName, user.FiscalCode,
-		user.Role, user.SchoolID, user.IsActive, user.EmailVerified, user.MFAEnabled, user.MFASecret,
+		user.Role, user.SchoolID, user.IsActive, user.IsStaff, user.EmailVerified, user.MFAEnabled, user.MFASecret,
 		user.PhoneNumber, user.JobTitle, user.CreatedAt, user.UpdatedAt,
 	)
 
@@ -151,8 +155,8 @@ func (r *PostgresRepository) Create(ctx context.Context, user *User) error {
 			parentQuery := `INSERT INTO parents (user_id, school_id) VALUES ($1, $2)`
 			_, err = tx.ExecContext(ctx, parentQuery, user.ID, *user.SchoolID)
 		case "teacher":
-			teacherQuery := `INSERT INTO teachers (user_id, school_id) VALUES ($1, $2)`
-			_, err = tx.ExecContext(ctx, teacherQuery, user.ID, *user.SchoolID)
+			teacherQuery := `INSERT INTO teachers (user_id, school_id, is_staff) VALUES ($1, $2, $3)`
+			_, err = tx.ExecContext(ctx, teacherQuery, user.ID, *user.SchoolID, user.IsStaff)
 		}
 		if err != nil {
 			return err
@@ -165,7 +169,7 @@ func (r *PostgresRepository) Create(ctx context.Context, user *User) error {
 func (r *PostgresRepository) GetByID(ctx context.Context, id string) (*User, error) {
 	query := `
 		SELECT u.id, u.email, u.password_hash, u.first_name, u.last_name, COALESCE(u.fiscal_code, ''),
-		       u.role, u.school_id, u.is_active, u.email_verified, u.mfa_enabled, COALESCE(u.mfa_secret, ''), COALESCE(u.phone_number, ''), COALESCE(u.job_title, ''),
+		       u.role, u.school_id, u.is_active, COALESCE(u.is_staff, false), u.email_verified, u.mfa_enabled, COALESCE(u.mfa_secret, ''), COALESCE(u.phone_number, ''), COALESCE(u.job_title, ''),
 		       u.created_at, u.updated_at, u.last_login, u.deleted_at, u.pseudonymized_at, u.password_changed_at,
 		       s.class_id, c.name, c.section, u.date_of_birth
 		FROM users u
@@ -177,7 +181,7 @@ func (r *PostgresRepository) GetByID(ctx context.Context, id string) (*User, err
 	var classID, className, classSection *string
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
 		&u.ID, &u.Email, &u.PasswordHash, &u.FirstName, &u.LastName, &u.FiscalCode,
-		&u.Role, &u.SchoolID, &u.IsActive, &u.EmailVerified, &u.MFAEnabled, &u.MFASecret, &u.PhoneNumber, &u.JobTitle,
+		&u.Role, &u.SchoolID, &u.IsActive, &u.IsStaff, &u.EmailVerified, &u.MFAEnabled, &u.MFASecret, &u.PhoneNumber, &u.JobTitle,
 		&u.CreatedAt, &u.UpdatedAt, &u.LastLogin, &u.DeletedAt, &u.PseudonymizedAt, &u.PasswordChangedAt,
 		&classID, &className, &classSection, &u.DateOfBirth,
 	)
@@ -192,10 +196,10 @@ func (r *PostgresRepository) GetByID(ctx context.Context, id string) (*User, err
 }
 
 func (r *PostgresRepository) GetByEmail(ctx context.Context, email string) (*User, error) {
-	query := `SELECT id, email, password_hash, role, is_active, mfa_enabled, school_id, password_changed_at FROM users WHERE email = $1`
+	query := `SELECT id, email, password_hash, role, is_active, COALESCE(is_staff, false), mfa_enabled, school_id, password_changed_at FROM users WHERE email = $1`
 	var u User
 	err := r.db.QueryRowContext(ctx, query, email).Scan(
-		&u.ID, &u.Email, &u.PasswordHash, &u.Role, &u.IsActive, &u.MFAEnabled, &u.SchoolID, &u.PasswordChangedAt,
+		&u.ID, &u.Email, &u.PasswordHash, &u.Role, &u.IsActive, &u.IsStaff, &u.MFAEnabled, &u.SchoolID, &u.PasswordChangedAt,
 	)
 	if err == sql.ErrNoRows {
 		return nil, ErrUserNotFound
@@ -216,8 +220,9 @@ func (r *PostgresRepository) Update(ctx context.Context, user *User) error {
 			is_active = $5, role = $6, school_id = $7, updated_at = $8,
 			password_hash = $9, mfa_enabled = $10,
 			fiscal_code = COALESCE(NULLIF($11, ''), fiscal_code),
-			password_changed_at = COALESCE($12, password_changed_at)
-		WHERE id = $13::uuid
+			password_changed_at = COALESCE($12, password_changed_at),
+			is_staff = $13
+		WHERE id = $14::uuid
 	`
 	res, err := tx.ExecContext(ctx, query,
 		user.FirstName, user.LastName, user.PhoneNumber, user.JobTitle,
@@ -225,6 +230,7 @@ func (r *PostgresRepository) Update(ctx context.Context, user *User) error {
 		user.PasswordHash, user.MFAEnabled,
 		user.FiscalCode,
 		user.PasswordChangedAt,
+		user.IsStaff,
 		user.ID,
 	)
 	if err != nil {
@@ -234,6 +240,9 @@ func (r *PostgresRepository) Update(ctx context.Context, user *User) error {
 	if rows == 0 {
 		return ErrUserNotFound
 	}
+
+	// Sync is_staff to teachers table if teacher profile exists
+	_, _ = tx.ExecContext(ctx, `UPDATE teachers SET is_staff = $1 WHERE user_id = $2::uuid OR id = $2::uuid`, user.IsStaff, user.ID)
 
 	// Role-Specific Profile Upsert
 	if user.SchoolID != nil {
@@ -248,11 +257,11 @@ func (r *PostgresRepository) Update(ctx context.Context, user *User) error {
 			_, err = tx.ExecContext(ctx, studentQuery, user.ID, *user.SchoolID, user.ClassID)
 		case "teacher":
 			teacherQuery := `
-				INSERT INTO teachers (user_id, school_id, updated_at)
-				VALUES ($1::uuid, $2::uuid, NOW())
-				ON CONFLICT (user_id, school_id) DO UPDATE SET updated_at = NOW()
+				INSERT INTO teachers (user_id, school_id, is_staff, updated_at)
+				VALUES ($1::uuid, $2::uuid, $3, NOW())
+				ON CONFLICT (user_id, school_id) DO UPDATE SET is_staff = $3, updated_at = NOW()
 			`
-			_, err = tx.ExecContext(ctx, teacherQuery, user.ID, *user.SchoolID)
+			_, err = tx.ExecContext(ctx, teacherQuery, user.ID, *user.SchoolID, user.IsStaff)
 		case "parent":
 			parentQuery := `
 				INSERT INTO parents (user_id, school_id, created_at)
@@ -322,7 +331,7 @@ func (r *PostgresRepository) Restore(ctx context.Context, id string) error {
 
 func (r *PostgresRepository) List(ctx context.Context, filter UserFilter) ([]User, int, error) {
 	baseQuery := `
-		SELECT u.id, u.email, u.first_name, u.last_name, u.role, u.school_id, u.is_active, u.created_at, u.deleted_at, u.pseudonymized_at,
+		SELECT u.id, u.email, u.first_name, u.last_name, u.role, u.school_id, u.is_active, COALESCE(u.is_staff, false), u.created_at, u.deleted_at, u.pseudonymized_at,
 		       s.class_id, c.name, c.section
 		FROM users u
 		LEFT JOIN students s ON u.id = s.user_id
@@ -424,7 +433,7 @@ func (r *PostgresRepository) List(ctx context.Context, filter UserFilter) ([]Use
 		var classID, className, classSection *string
 
 		if err := rows.Scan(
-			&u.ID, &u.Email, &u.FirstName, &u.LastName, &u.Role, &u.SchoolID, &u.IsActive, &u.CreatedAt, &u.DeletedAt, &u.PseudonymizedAt,
+			&u.ID, &u.Email, &u.FirstName, &u.LastName, &u.Role, &u.SchoolID, &u.IsActive, &u.IsStaff, &u.CreatedAt, &u.DeletedAt, &u.PseudonymizedAt,
 			&classID, &className, &classSection,
 		); err != nil {
 			return nil, 0, err

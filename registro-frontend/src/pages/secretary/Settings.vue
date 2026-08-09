@@ -23,6 +23,7 @@
             <q-tab name="general" label="Generale" icon="settings" class="q-px-xl py-4" />
             <q-tab name="calendar" label="Calendario Scolastico" icon="calendar_today" class="q-px-xl py-4" />
             <q-tab name="hours" label="Orari Ricevimento" icon="schedule" class="q-px-xl py-4" />
+            <q-tab name="accessibility" label="Accessibilità Visiva" icon="accessibility_new" class="q-px-xl py-4" />
         </q-tabs>
 
         <q-tab-panels v-model="tab" animated class="bg-transparent">
@@ -159,7 +160,70 @@
                  <div class="q-mt-xl row">
                      <q-btn color="primary" label="Salva Orari" size="lg" padding="md xl" no-caps class="rounded-lg shadow-sm" @click="saveOfficeHours" :loading="savingHours" />
                  </div>
-            </q-tab-panel>
+             </q-tab-panel>
+
+             <!-- Accessibility Tab -->
+             <q-tab-panel name="accessibility" class="q-pa-xl">
+                 <div class="row items-center q-mb-xl">
+                   <q-avatar color="indigo-50" text-color="indigo-700" icon="accessibility_new" size="48px" class="q-mr-md" />
+                   <div>
+                     <div class="text-h5 text-weight-bold text-slate-800">Accessibilità Visiva &amp; Modalità di Lettura</div>
+                     <div class="text-caption text-slate-500">Impostazioni generali per la leggibilità e l'accessibilità visiva (DSA / WCAG 2.1 AAA)</div>
+                   </div>
+                 </div>
+
+                 <div class="row q-col-gutter-lg">
+                   <!-- Font OpenDyslexic (DSA) -->
+                   <div class="col-12 col-md-6">
+                     <q-card flat bordered class="q-pa-md rounded-xl bg-white full-height shadow-sm">
+                       <div class="row items-center justify-between q-mb-sm">
+                         <div class="row items-center">
+                           <q-avatar color="indigo-50" text-color="indigo-700" icon="spellcheck" size="44px" class="q-mr-sm" />
+                           <div>
+                             <div class="text-subtitle1 text-weight-bold text-slate-800">Font OpenDyslexic (Alta Leggibilità DSA)</div>
+                             <div class="text-caption text-slate-500">Attiva il carattere specifico per la dislessia e la facilitazione di lettura</div>
+                           </div>
+                         </div>
+                         <q-toggle
+                           v-model="themeStore.dsaFont"
+                           color="indigo"
+                           size="lg"
+                           @update:model-value="themeStore.toggleDsaFont"
+                         />
+                       </div>
+                       <q-separator class="q-my-sm" />
+                       <div class="q-pa-md bg-slate-50 rounded-lg text-slate-700 text-body2 q-mt-sm border border-slate-100" :class="{ 'dsa-font-active': themeStore.dsaFont }">
+                         <span class="text-weight-bold">Anteprima Testo:</span> Piattaforma scolastica istituzionale con supporto all'accessibilità visiva ed inclusione digitale.
+                       </div>
+                     </q-card>
+                   </div>
+
+                   <!-- Contrasto Elevato -->
+                   <div class="col-12 col-md-6">
+                     <q-card flat bordered class="q-pa-md rounded-xl bg-white full-height shadow-sm">
+                       <div class="row items-center justify-between q-mb-sm">
+                         <div class="row items-center">
+                           <q-avatar color="amber-50" text-color="amber-9" icon="contrast" size="44px" class="q-mr-sm" />
+                           <div>
+                             <div class="text-subtitle1 text-weight-bold text-slate-800">Modalità Contrasto Elevato</div>
+                             <div class="text-caption text-slate-500">Definizione netta dei bordi delle componenti e contrasto aumentato</div>
+                           </div>
+                         </div>
+                         <q-toggle
+                           v-model="themeStore.highContrast"
+                           color="amber-9"
+                           size="lg"
+                           @update:model-value="themeStore.toggleHighContrast"
+                         />
+                       </div>
+                       <q-separator class="q-my-sm" />
+                       <div class="q-pa-md bg-slate-50 rounded-lg text-slate-700 text-body2 q-mt-sm border border-slate-100" :class="{ 'high-contrast-active': themeStore.highContrast }">
+                         <span class="text-weight-bold">Anteprima Contrasto:</span> Modalità attiva per l'incremento di nitidezza della grafica e dei controlli.
+                       </div>
+                     </q-card>
+                   </div>
+                 </div>
+             </q-tab-panel>
         </q-tab-panels>
     </q-card>
 
@@ -201,10 +265,12 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
+import { useThemeStore } from 'src/stores/theme'
 import adminService from 'src/services/adminService'
 import api from 'src/services/api'
 
 const $q = useQuasar()
+const themeStore = useThemeStore()
 
 const getCurrentAcademicYear = () => {
   const now = new Date();

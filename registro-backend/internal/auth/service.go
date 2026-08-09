@@ -218,6 +218,7 @@ func (s *Service) Login(ctx context.Context, req *LoginRequest, ipAddress, userA
 			LastName:      user.LastName,
 			Role:          user.Role,
 			SchoolID:      user.SchoolID,
+			IsStaff:       user.IsStaff,
 			EmailVerified: user.EmailVerified,
 			MFAEnabled:    user.MFAEnabled,
 		},

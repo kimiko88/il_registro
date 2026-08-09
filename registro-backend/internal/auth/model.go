@@ -14,6 +14,7 @@ type User struct {
 	Role          string     `json:"role"`
 	SchoolID      *string    `json:"school_id,omitempty"`
 	IsActive      bool       `json:"is_active"`
+	IsStaff       bool       `json:"is_staff"`
 	EmailVerified bool       `json:"email_verified"`
 	MFAEnabled    bool       `json:"mfa_enabled"`
 	MFASecret     string     `json:"-"`

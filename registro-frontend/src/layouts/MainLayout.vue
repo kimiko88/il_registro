@@ -105,6 +105,67 @@
           </q-list>
         </q-btn-dropdown>
 
+        <!-- Accessibility Quick Toggle Menu -->
+        <q-btn-dropdown
+          flat
+          round
+          dense
+          icon="accessibility_new"
+          color="primary"
+          class="q-mr-sm"
+          key="accessibility-toggle"
+          aria-label="Opzioni di Accessibilità Visiva (OpenDyslexic e Contrasto)"
+        >
+          <q-tooltip>Accessibilità Visiva (DSA & Contrasto)</q-tooltip>
+          <q-list style="min-width: 300px" class="q-py-xs">
+            <q-item-label header class="text-weight-bold text-uppercase text-caption letter-spacing-1">
+              Accessibilità Visiva (A11y)
+            </q-item-label>
+
+            <!-- Font OpenDyslexic (DSA) -->
+            <q-item clickable class="rounded-lg q-mx-xs q-mb-xs">
+              <q-item-section avatar>
+                <q-avatar size="32px" color="indigo-50" text-color="indigo-700">
+                  <q-icon name="spellcheck" size="18px" />
+                </q-avatar>
+              </q-item-section>
+              <q-item-section>
+                <q-item-label class="text-weight-bold">Font OpenDyslexic (DSA)</q-item-label>
+                <q-item-label caption class="text-grey-7">Alta leggibilità dislessia/BES</q-item-label>
+              </q-item-section>
+              <q-item-section side>
+                <q-toggle
+                  v-model="themeStore.dsaFont"
+                  color="indigo"
+                  dense
+                  @update:model-value="themeStore.toggleDsaFont"
+                />
+              </q-item-section>
+            </q-item>
+
+            <!-- Contrasto Elevato -->
+            <q-item clickable class="rounded-lg q-mx-xs">
+              <q-item-section avatar>
+                <q-avatar size="32px" color="amber-50" text-color="amber-9">
+                  <q-icon name="contrast" size="18px" />
+                </q-avatar>
+              </q-item-section>
+              <q-item-section>
+                <q-item-label class="text-weight-bold">Contrasto Elevato</q-item-label>
+                <q-item-label caption class="text-grey-7">Nitidezza e bordi netti 2px</q-item-label>
+              </q-item-section>
+              <q-item-section side>
+                <q-toggle
+                  v-model="themeStore.highContrast"
+                  color="amber-9"
+                  dense
+                  @update:model-value="themeStore.toggleHighContrast"
+                />
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-btn-dropdown>
+
         <!-- Dark Mode Toggle -->
         <q-btn flat round dense :icon="$q.dark.isActive ? 'light_mode' : 'dark_mode'" @click="$q.dark.toggle()" color="primary" class="q-mr-sm" :key="'dark-toggle'" :aria-label="$q.dark.isActive ? 'Attiva modalità chiara' : 'Attiva modalità scura'">
            <q-tooltip>{{ $q.dark.isActive ? 'Modalità Chiara' : 'Modalità Scura' }}</q-tooltip>

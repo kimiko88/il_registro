@@ -166,22 +166,22 @@ func (s *service) GetStudentGradesPaged(ctx context.Context, actorID string, act
 
 func (s *service) GetClassGrades(ctx context.Context, actorID string, actorRole string, classID string, filter GradeFilter) (*ClassGradesResponse, error) {
 	// Permission check
-	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" {
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" && actorRole != "principal" && actorRole != "vice_principal" {
 		isCoord, err := s.validator.IsClassCoordinator(actorID, classID)
 		if err != nil {
 			return nil, fmt.Errorf("class authorization check failed: %w", err)
 		}
 
-		if actorRole != "teacher" || !isCoord {
+		if (actorRole != "teacher" && actorRole != "coordinator") || !isCoord {
 			if filter.SubjectID == "" {
-				return nil, fmt.Errorf("unauthorized: only coordinators can see full class matrix")
+				return nil, fmt.Errorf("unauthorized: solo il coordinatore di classe o la dirigenza possono accedere al quadro completo della classe")
 			}
 			assigned, err := s.validator.IsTeacherAssignedToSubject(actorID, filter.SubjectID, classID)
 			if err != nil {
 				return nil, fmt.Errorf("authorization check failed: %w", err)
 			}
 			if !assigned {
-				return nil, fmt.Errorf("unauthorized: you do not teach this subject in this class")
+				return nil, fmt.Errorf("unauthorized: non sei assegnato a questa materia per la classe indicata")
 			}
 		}
 	}

@@ -194,6 +194,7 @@ func (h *Handler) GetCurrentUser(c *gin.Context) {
 		LastName:      user.LastName,
 		Role:          user.Role,
 		SchoolID:      user.SchoolID,
+		IsStaff:       user.IsStaff,
 		EmailVerified: user.EmailVerified,
 		MFAEnabled:    user.MFAEnabled,
 	})

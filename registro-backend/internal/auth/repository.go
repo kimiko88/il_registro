@@ -102,7 +102,7 @@ func (r *repository) CreateUser(ctx context.Context, user *User) error {
 func (r *repository) GetUserByEmail(ctx context.Context, email string) (*User, error) {
 	query := `
 		SELECT id, email, password_hash, first_name, last_name, role, school_id, 
-		       is_active, email_verified, mfa_enabled, mfa_secret, created_at, updated_at, last_login, password_changed_at
+		       is_active, COALESCE(is_staff, false), email_verified, mfa_enabled, mfa_secret, created_at, updated_at, last_login, password_changed_at
 		FROM users
 		WHERE email = $1 AND deleted_at IS NULL
 	`
@@ -110,7 +110,7 @@ func (r *repository) GetUserByEmail(ctx context.Context, email string) (*User, e
 	var mfaSecret sql.NullString
 	err := r.db.QueryRowContext(ctx, query, email).Scan(
 		&user.ID, &user.Email, &user.PasswordHash, &user.FirstName, &user.LastName,
-		&user.Role, &user.SchoolID, &user.IsActive, &user.EmailVerified,
+		&user.Role, &user.SchoolID, &user.IsActive, &user.IsStaff, &user.EmailVerified,
 		&user.MFAEnabled, &mfaSecret, &user.CreatedAt, &user.UpdatedAt, &user.LastLogin, &user.PasswordChangedAt,
 	)
 	if err == sql.ErrNoRows {
@@ -126,7 +126,7 @@ func (r *repository) GetUserByEmail(ctx context.Context, email string) (*User, e
 func (r *repository) GetUserByID(ctx context.Context, id string) (*User, error) {
 	query := `
 		SELECT id, email, password_hash, first_name, last_name, role, school_id,
-		       is_active, email_verified, mfa_enabled, mfa_secret, created_at, updated_at, last_login, password_changed_at
+		       is_active, COALESCE(is_staff, false), email_verified, mfa_enabled, mfa_secret, created_at, updated_at, last_login, password_changed_at
 		FROM users
 		WHERE id = $1 AND deleted_at IS NULL
 	`
@@ -134,7 +134,7 @@ func (r *repository) GetUserByID(ctx context.Context, id string) (*User, error) 
 	var mfaSecret sql.NullString
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
 		&user.ID, &user.Email, &user.PasswordHash, &user.FirstName, &user.LastName,
-		&user.Role, &user.SchoolID, &user.IsActive, &user.EmailVerified,
+		&user.Role, &user.SchoolID, &user.IsActive, &user.IsStaff, &user.EmailVerified,
 		&user.MFAEnabled, &mfaSecret, &user.CreatedAt, &user.UpdatedAt, &user.LastLogin, &user.PasswordChangedAt,
 	)
 	if err == sql.ErrNoRows {

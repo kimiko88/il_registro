@@ -58,23 +58,14 @@ func (v *Validator) ValidateJudgmentString(judgment string) error {
 }
 
 // ValidateTeacherCanGrade verifies that the teacher is assigned to teach the given
-// subject in the given class. Uses the class_subjects + teachers join that matches
-// the actual schema (fixes previous query against non-existent class_assignments table).
+// subject in the given class.
 func (v *Validator) ValidateTeacherCanGrade(teacherUserID string, subjectID string, classID string) error {
-	query := `
-		SELECT 1
-		FROM class_subjects cs
-		LEFT JOIN teachers t ON cs.teacher_id = t.id OR cs.teacher_id = t.user_id
-		WHERE cs.class_id::text = $1
-		  AND cs.subject_id::text = $2
-		  AND (cs.teacher_id::text = $3 OR t.user_id::text = $3)`
-	var exists int
-	err := v.db.QueryRow(query, classID, subjectID, teacherUserID).Scan(&exists)
+	assigned, err := v.IsTeacherAssignedToSubject(teacherUserID, subjectID, classID)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return errors.New("Insegnante non assegnato a questa materia in questa classe")
-		}
 		return fmt.Errorf("teacher validation error: %w", err)
+	}
+	if !assigned {
+		return errors.New("Insegnante non assegnato a questa materia in questa classe")
 	}
 	return nil
 }
@@ -121,9 +112,6 @@ func (v *Validator) ValidateGradeDate(date time.Time, semester int) error {
 }
 
 // ValidateDescription checks description length only.
-// SQL injection prevention is handled by parameterized queries throughout;
-// a keyword blocklist in the application layer is both ineffective and harmful
-// (it rejects legitimate Italian text such as "seleziona le opzioni").
 func (v *Validator) ValidateDescription(desc string) error {
 	if len(desc) > 500 {
 		return errors.New("Descrizione max 500 caratteri")
@@ -148,7 +136,6 @@ func (v *Validator) ValidateCreateRequest(req CreateGradeRequest, teacherID stri
 	if err := v.ValidateDescription(req.Description); err != nil {
 		return err
 	}
-	// parseDate now returns an explicit error for malformed date strings.
 	date, err := parseDate(req.Date)
 	if err != nil {
 		return fmt.Errorf("formato data non valido (atteso YYYY-MM-DD): %w", err)
@@ -180,34 +167,70 @@ func (v *Validator) ValidateModification(grade Grade, req UpdateGradeRequest) er
 	return nil
 }
 
-// parseDate parses a YYYY-MM-DD string and returns an explicit error on failure
-// instead of silently returning the zero time (which caused misleading
-// "data troppo vecchia" errors for malformed input).
 func parseDate(d string) (time.Time, error) {
 	return time.Parse("2006-01-02", d)
 }
 
 // IsClassCoordinator checks if a teacher is the coordinator for the specified class.
 func (v *Validator) IsClassCoordinator(teacherID string, classID string) (bool, error) {
-	var coordID sql.NullString
-	err := v.db.QueryRow(`SELECT coordinator_id FROM classes WHERE id::text = $1`, classID).Scan(&coordID)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return false, fmt.Errorf("class not found")
-		}
-		return false, err
+	if teacherID == "" || classID == "" {
+		return false, nil
 	}
-	return coordID.Valid && coordID.String == teacherID, nil
+	var exists bool
+	query := `
+		SELECT EXISTS(
+			SELECT 1 FROM classes c
+			LEFT JOIN teachers t ON (NULLIF(c.coordinator_id::text, '') = t.id::text OR NULLIF(c.coordinator_id::text, '') = t.user_id::text)
+			WHERE c.id::text = $1 AND (c.coordinator_id::text = $2 OR t.id::text = $2 OR t.user_id::text = $2)
+		)`
+	err := v.db.QueryRow(query, classID, teacherID).Scan(&exists)
+	return exists, err
 }
 
 // IsTeacherAssignedToSubject checks if a teacher is assigned to a class subject.
+// Checks direct class_subjects assignment, class coordinator status, registered class lessons,
+// active approved substitutions, or unassigned subjects in the same school.
 func (v *Validator) IsTeacherAssignedToSubject(teacherID string, subjectID string, classID string) (bool, error) {
-	query := `SELECT EXISTS(
-		SELECT 1 FROM class_subjects cs
-		LEFT JOIN teachers t ON cs.teacher_id = t.id OR cs.teacher_id = t.user_id
-		WHERE cs.class_id::text = $1 AND cs.subject_id::text = $2 AND (cs.teacher_id::text = $3 OR t.user_id::text = $3)
-	)`
+	if teacherID == "" || classID == "" || subjectID == "" {
+		return false, nil
+	}
 	var exists bool
+	query := `
+		SELECT EXISTS(
+			SELECT 1 FROM class_subjects cs
+			LEFT JOIN teachers t ON (NULLIF(cs.teacher_id::text, '') = t.id::text OR NULLIF(cs.teacher_id::text, '') = t.user_id::text)
+			WHERE cs.class_id::text = $1 AND cs.subject_id::text = $2 
+			  AND (NULLIF(cs.teacher_id::text, '') = $3 OR t.id::text = $3 OR t.user_id::text = $3)
+
+			UNION ALL
+
+			SELECT 1 FROM classes c
+			LEFT JOIN teachers t ON (NULLIF(c.coordinator_id::text, '') = t.id::text OR NULLIF(c.coordinator_id::text, '') = t.user_id::text)
+			WHERE c.id::text = $1 AND (c.coordinator_id::text = $3 OR t.id::text = $3 OR t.user_id::text = $3)
+
+			UNION ALL
+
+			SELECT 1 FROM class_lessons cl
+			LEFT JOIN teachers t ON (NULLIF(cl.teacher_id::text, '') = t.id::text OR NULLIF(cl.teacher_id::text, '') = t.user_id::text)
+			WHERE cl.class_id::text = $1 AND cl.subject_id::text = $2
+			  AND (NULLIF(cl.teacher_id::text, '') = $3 OR t.id::text = $3 OR t.user_id::text = $3)
+
+			UNION ALL
+
+			SELECT 1 FROM substitutions s
+			LEFT JOIN teachers t ON (NULLIF(s.substitute_teacher_id::text, '') = t.id::text OR NULLIF(s.substitute_teacher_id::text, '') = t.user_id::text)
+			WHERE s.class_id::text = $1 AND s.subject_id::text = $2 
+			  AND (NULLIF(s.substitute_teacher_id::text, '') = $3 OR t.id::text = $3 OR t.user_id::text = $3)
+			  AND s.status IN ('assigned', 'confirmed')
+
+			UNION ALL
+
+			SELECT 1 FROM class_subjects cs
+			JOIN classes c ON cs.class_id = c.id
+			JOIN teachers t ON (t.id::text = $3 OR t.user_id::text = $3) AND t.school_id = c.school_id
+			WHERE cs.class_id::text = $1 AND cs.subject_id::text = $2
+			  AND (cs.teacher_id IS NULL OR cs.teacher_id::text = '')
+		)`
 	err := v.db.QueryRow(query, classID, subjectID, teacherID).Scan(&exists)
 	return exists, err
 }

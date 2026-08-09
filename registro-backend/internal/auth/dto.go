@@ -59,6 +59,7 @@ type UserResponse struct {
 	LastName      string  `json:"last_name"`
 	Role          string  `json:"role"`
 	SchoolID      *string `json:"school_id,omitempty"`
+	IsStaff       bool    `json:"is_staff"`
 	EmailVerified bool    `json:"email_verified"`
 	MFAEnabled    bool    `json:"mfa_enabled"`
 }

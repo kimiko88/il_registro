@@ -25,14 +25,26 @@ export const gradeService = {
     async createClassTest(testData) {
         return api.post('/grades/tests', testData)
     },
+    async createTestWithGrades(testData) {
+        return this.createClassTest(testData)
+    },
     async getClassTests(classId, subjectId) {
         return api.get('/grades/tests', { params: { class_id: classId, subject_id: subjectId } })
+    },
+    async getTestsByClass(classId, subjectId) {
+        return this.getClassTests(classId, subjectId)
     },
     async deleteClassTest(id) {
         return api.delete(`/grades/tests/${id}`)
     },
+    async deleteTest(id) {
+        return this.deleteClassTest(id)
+    },
     async updateClassTest(id, testData) {
         return api.patch(`/grades/tests/${id}`, testData)
+    },
+    async updateTestWithGrades(id, testData) {
+        return this.updateClassTest(id, testData)
     },
     async getUpcomingTestsForClass(classId) {
         return api.get(`/grades/tests/class/${classId}`)

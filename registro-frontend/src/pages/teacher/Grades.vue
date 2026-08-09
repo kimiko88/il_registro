@@ -206,20 +206,20 @@
         </q-card>
     </q-dialog>
 
-    <!-- Create Class Test Dialog -->
-    <q-dialog v-model="showTestDialog" persistent>
-      <q-card style="width: min(1000px, 95vw); max-height: 90vh; overflow-y: auto;">
+    <!-- Create Class Test Dialog (Bulk) -->
+    <q-dialog v-model="showTestDialog" persistent max-width="96vw">
+      <q-card style="width: 1200px; max-width: 96vw; max-height: 92vh; overflow-y: auto;">
         <q-card-section class="bg-primary text-white row items-center">
-          <div class="text-h6">Crea Nuova Verifica</div>
+          <div class="text-h6 text-weight-bold">Crea Nuova Verifica</div>
           <q-space />
           <q-btn icon="close" flat round dense v-close-popup />
         </q-card-section>
 
         <q-card-section class="q-pa-md">
           <q-form @submit.prevent="submitTest">
-            <div class="row q-col-gutter-md">
+            <div class="row q-col-gutter-lg">
               <!-- Test Details -->
-              <div class="col-12 col-md-5">
+              <div class="col-12 col-md-4">
                 <div class="text-subtitle1 q-mb-md text-weight-bold text-primary">Dettagli Verifica</div>
                 <q-input
                   v-model="testForm.title"
@@ -274,7 +274,7 @@
               </div>
 
               <!-- Student Grades -->
-              <div class="col-12 col-md-7">
+              <div class="col-12 col-md-8">
                 <div class="text-subtitle1 q-mb-xs text-weight-bold text-primary row items-center justify-between">
                   <div>Voti Alunni ({{ filledTestGradesCount }}/{{ testForm.grades.length }} inseriti)</div>
                   <div class="row items-center q-gutter-x-xs">
@@ -283,21 +283,23 @@
                 </div>
                 <q-linear-progress :value="testForm.grades.length ? filledTestGradesCount / testForm.grades.length : 0" color="primary" class="q-mb-sm" />
                 
-                <q-scroll-area style="height: 350px;" tabindex="0" aria-label="Lista inserimento voti alunni" class="border-grey rounded-borders q-pa-sm bg-grey-2">
+                <q-scroll-area style="height: 420px;" tabindex="0" aria-label="Lista inserimento voti alunni" class="border-grey rounded-borders q-pa-sm bg-grey-2">
                   <q-list separator>
                     <q-item v-for="(student, idx) in testForm.grades" :key="student.student_id" class="q-py-sm">
                       <q-item-section>
                         <q-item-label class="text-weight-bold">{{ student.full_name }}</q-item-label>
                       </q-item-section>
-                      <q-item-section side style="width: 320px">
+                      <q-item-section side style="width: 390px">
                         <div class="row items-center q-gutter-sm no-wrap">
                           <q-select
                             v-model="student.grade_value"
                             :options="gradeOptions"
+                            emit-value
+                            map-options
                             label="Voto"
                             outlined
                             dense
-                            style="width: 100px"
+                            style="width: 110px"
                             :bg-color="getGradeColor(student.grade_value)"
                             placeholder="-"
                             :ref="el => setGradeInputRef(el, idx)"
@@ -330,8 +332,8 @@
     </q-dialog>
 
     <!-- Edit Class Test Dialog (Bulk) -->
-    <q-dialog v-model="showEditTestDialog" persistent max-width="80vw">
-      <q-card style="width: 1000px; max-width: 90vw; max-height: 90vh; overflow-y: auto;">
+    <q-dialog v-model="showEditTestDialog" persistent max-width="96vw">
+      <q-card style="width: 1200px; max-width: 96vw; max-height: 92vh; overflow-y: auto;">
         <q-card-section class="bg-primary text-white row items-center">
           <div class="text-h6 text-weight-bold">Modifica Verifica in Blocco</div>
           <q-space />
@@ -340,9 +342,9 @@
 
         <q-card-section class="q-pa-md">
           <q-form @submit.prevent="submitEditTest">
-            <div class="row q-col-gutter-md">
+            <div class="row q-col-gutter-lg">
               <!-- Test Details -->
-              <div class="col-12 col-md-5 q-gutter-y-md">
+              <div class="col-12 col-md-4 q-gutter-y-md">
                 <q-input
                   v-model="editTestForm.title"
                   label="Titolo Verifica"
@@ -385,7 +387,7 @@
               </div>
 
               <!-- Student Grades -->
-              <div class="col-12 col-md-7">
+              <div class="col-12 col-md-8">
                 <div class="text-subtitle1 q-mb-xs text-weight-bold text-primary row items-center justify-between">
                   <div>Voti Alunni ({{ filledEditTestGradesCount }}/{{ editTestForm.grades.length }} inseriti)</div>
                   <div class="row items-center q-gutter-x-xs">
@@ -394,21 +396,23 @@
                 </div>
                 <q-linear-progress :value="editTestForm.grades.length ? filledEditTestGradesCount / editTestForm.grades.length : 0" color="primary" class="q-mb-sm" />
                 
-                <q-scroll-area style="height: 350px;" tabindex="0" aria-label="Lista modifica voti alunni" class="border-grey rounded-borders q-pa-sm bg-grey-2">
+                <q-scroll-area style="height: 420px;" tabindex="0" aria-label="Lista modifica voti alunni" class="border-grey rounded-borders q-pa-sm bg-grey-2">
                   <q-list separator>
                     <q-item v-for="(student, idx) in editTestForm.grades" :key="student.student_id" class="q-py-sm">
                       <q-item-section>
                         <q-item-label class="text-weight-bold">{{ student.full_name }}</q-item-label>
                       </q-item-section>
-                      <q-item-section side style="width: 320px">
+                      <q-item-section side style="width: 390px">
                         <div class="row items-center q-gutter-sm no-wrap">
                           <q-select
                             v-model="student.grade_value"
                             :options="gradeOptions"
+                            emit-value
+                            map-options
                             label="Voto"
                             outlined
                             dense
-                            style="width: 100px"
+                            style="width: 110px"
                             :bg-color="getGradeColor(student.grade_value)"
                             placeholder="-"
                             :ref="el => setEditGradeInputRef(el, idx)"
@@ -454,6 +458,7 @@ import { useQuasar, date } from 'quasar';
 import SkeletonTable from '@/components/Common/SkeletonTable.vue';
 import { useUndoToast } from '@/composables/useUndoToast';
 import { useSchoolYearStore } from '@/stores/schoolYear';
+import { ITALIAN_GRADE_OPTIONS, gradeToNumeric, formatGrade, getGradeColor } from '@/utils/gradeUtils';
 
 const $q = useQuasar();
 const { notifyWithUndo } = useUndoToast();
@@ -467,6 +472,8 @@ const viewMode = ref('table');
 const filterDate = ref(date.formatDate(Date.now(), 'YYYY-MM-DD'));
 const gradeType = ref('Orale');
 const showRubric = ref(false);
+
+const gradeOptions = ITALIAN_GRADE_OPTIONS;
 
 const isAssignedClass = computed(() => {
   if (!selectedClassId.value) return false;
@@ -529,7 +536,7 @@ const openTestDialog = () => {
 };
 
 const submitTest = async () => {
-    if (!isAssignedClass.value) return;
+    if (!isAssignedClass.value || loading.value) return;
     loading.value = true;
     try {
         const payload = {
@@ -552,19 +559,13 @@ const submitTest = async () => {
         await gradeService.createTestWithGrades(payload);
         showTestDialog.value = false;
         await refreshGrades();
-        const lastTests = await gradeService.getTestsByClass(selectedClassId.value, selectedSubject.value)
-        const lastTestId = lastTests?.data?.[0]?.id
-        if (lastTestId) {
-            await notifyWithUndo(
-                `✓ Verifica "${testForm.value.title}" salvata — ${payload.grades.length} voti inseriti`,
-                async () => {
-                    await gradeService.deleteTest(lastTestId)
-                    await refreshGrades()
-                }
-            )
-        } else {
-            $q.notify({ type: 'positive', message: 'Verifica e voti salvati con successo!' })
-        }
+        
+        $q.notify({
+            type: 'positive',
+            message: `✓ Verifica "${testForm.value.title}" e ${payload.grades.length} voti salvati con successo!`,
+            icon: 'check_circle',
+            position: 'bottom-right'
+        });
     } catch (err) {
         console.error(err);
         $q.notify({
@@ -778,35 +779,7 @@ const formatDate = (dateStr) => {
     }
 };
 
-const userDecimalSeparator = computed(() => localStorage.getItem('user_decimal_separator') || ',');
 
-function formatGrade(val) {
-    if (val === undefined || val === null || val === '' || val === '-') return '-';
-    if (typeof val === 'string' && isNaN(Number(val))) {
-        return val.replace('.', userDecimalSeparator.value);
-    }
-    const num = Number(val);
-    if (isNaN(num)) return val;
-    if (num === -1) return 'A';
-
-    const sep = userDecimalSeparator.value;
-    const integerPart = Math.floor(num);
-    const decimalPart = num - integerPart;
-
-    if (Math.abs(decimalPart - 0.5) < 0.01) {
-        return `${integerPart}½`;
-    }
-    if (Math.abs(decimalPart - 0.25) < 0.01) {
-        return `${integerPart}+`;
-    }
-    if (Math.abs(decimalPart - 0.75) < 0.01) {
-        return `${integerPart + 1}-`;
-    }
-    if (Math.abs(decimalPart) < 0.01) {
-        return `${integerPart}`;
-    }
-    return String(num).replace('.', sep);
-}
 
 const printReport = () => {
     showTestDialog.value = false;

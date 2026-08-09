@@ -16,6 +16,7 @@ type User struct {
 	SchoolID      *string `json:"school_id,omitempty" db:"school_id"`
 	StudentID     string  `json:"student_id,omitempty" db:"student_id"` // Profile ID
 	IsActive      bool    `json:"is_active" db:"is_active"`
+	IsStaff       bool    `json:"is_staff" db:"is_staff"`
 	EmailVerified bool    `json:"email_verified" db:"email_verified"`
 	MFAEnabled    bool    `json:"mfa_enabled" db:"mfa_enabled"`
 	MFASecret     string  `json:"-" db:"mfa_secret"`

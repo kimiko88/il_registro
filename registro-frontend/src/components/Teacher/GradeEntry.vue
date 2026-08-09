@@ -202,6 +202,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useGradesStore } from 'src/stores/grades';
 import { useQuasar } from 'quasar';
 import { gradeService } from 'src/services/gradeService';
+import { ITALIAN_GRADE_OPTIONS, gradeToNumeric, formatGrade, getGradeColor } from '@/utils/gradeUtils';
 
 const props = defineProps({
   classId: String,
@@ -273,82 +274,12 @@ const isDirty = (id) => {
     return JSON.stringify(entryData.value[id]) !== JSON.stringify(initialSnapshot.value[id]);
 };
 
-const gradeOptions = [
-  'A',
-  '10', '10-', '9½', '9+', '9', '9-', '8½', '8+', '8', '8-', '7½', '7+', '7', '7-', '6½', '6+', '6', '6-', '5½', '5+', '5', '5-', '4½', '4+', '4', '4-', '3½', '3+', '3', '3-', '2½', '2+', '2', '2-', '1½', '1+', '1', '1-', '0½', '0'
-];
-
-function gradeToNumeric(gradeStr) {
-    if (gradeStr === undefined || gradeStr === null || gradeStr === '') return null;
-    const clean = String(gradeStr).trim().toUpperCase();
-    if (clean === 'A') return -1;
-    
-    if (clean.includes('/')) {
-        const parts = clean.split('/');
-        if (parts.length === 2) {
-            const n1 = parseFloat(parts[0]);
-            const n2 = parseFloat(parts[1]);
-            if (!isNaN(n1) && !isNaN(n2)) {
-                return (n1 + n2) / 2;
-            }
-        }
-    }
-    
-    if (clean.endsWith('1/2') || clean.endsWith('½')) {
-        const base = parseFloat(clean.replace('1/2', '').replace('½', '').trim());
-        if (!isNaN(base)) return base + 0.5;
-    }
-    
-    if (clean.endsWith('+')) {
-        const base = parseFloat(clean.slice(0, -1).trim());
-        if (!isNaN(base)) return base + 0.25;
-    }
-    
-    if (clean.endsWith('-')) {
-        const base = parseFloat(clean.slice(0, -1).trim());
-        if (!isNaN(base)) return base - 0.25;
-    }
-    
-    const val = parseFloat(clean.replace(',', '.'));
-    return isNaN(val) ? 0 : val;
-}
-
-function formatGrade(val) {
-    if (val === undefined || val === null || val === '-') return '-';
-    const num = Number(val);
-    if (isNaN(num)) return val;
-    if (num === -1) return 'A';
-    
-    const sep = localStorage.getItem('user_decimal_separator') || ',';
-    const integerPart = Math.floor(num);
-    const decimalPart = num - integerPart;
-    
-    if (Math.abs(decimalPart - 0.5) < 0.01) {
-        return `${integerPart}½`;
-    }
-    if (Math.abs(decimalPart - 0.25) < 0.01) {
-        return `${integerPart}+`;
-    }
-    if (Math.abs(decimalPart - 0.75) < 0.01) {
-        return `${integerPart + 1}-`;
-    }
-    if (Math.abs(decimalPart) < 0.01) {
-        return `${integerPart}`;
-    }
-    return String(num).replace('.', sep);
-}
+const gradeOptions = ITALIAN_GRADE_OPTIONS;
 
 const getBadgeColor = (val) => {
     const numeric = typeof val === 'string' ? gradeToNumeric(val) : val;
     if (numeric === null || numeric === undefined || numeric === -1) return 'grey';
     return numeric < 6 ? 'red' : 'green';
-};
-
-const getGradeColor = (val) => {
-    if (val === undefined || val === null || val === '') return '';
-    const numeric = gradeToNumeric(val);
-    if (numeric === -1) return 'bg-red-1';
-    return numeric < 6 ? 'bg-red-1' : 'bg-green-1';
 };
 
 const getAverageClass = (val) => {
