@@ -3,6 +3,8 @@ package notes
 import (
 	"context"
 	"errors"
+	"strings"
+	"time"
 
 	"registro-backend/internal/users"
 )
@@ -119,7 +121,7 @@ func (s *Service) UpdateNote(ctx context.Context, actorID, actorRole, noteID str
 	return n, nil
 }
 
-func (s *Service) DeleteNote(ctx context.Context, actorID, actorRole, noteID string) error {
+func (s *Service) DeleteNote(ctx context.Context, actorID, actorRole, noteID string, reason string) error {
 	n, err := s.repo.Get(ctx, noteID)
 	if err != nil {
 		return err
@@ -132,7 +134,10 @@ func (s *Service) DeleteNote(ctx context.Context, actorID, actorRole, noteID str
 	if !isAdmin && isOwner && n.IsApproved {
 		return errors.New("forbidden: note già approvata dall'admin, non più eliminabile dal docente")
 	}
-	return s.repo.Delete(ctx, noteID)
+	if isAdmin && n.Type == NoteTypeDisciplinary && strings.TrimSpace(reason) == "" {
+		return errors.New("bad request: la cancellazione di una nota disciplinare da parte dell'admin richiede una motivazione")
+	}
+	return s.repo.DeleteWithReason(ctx, noteID, reason)
 }
 
 func (s *Service) ListNotes(ctx context.Context, filter NoteFilter) ([]StudentNote, error) {
@@ -165,6 +170,17 @@ func (s *Service) ListNotes(ctx context.Context, filter NoteFilter) ([]StudentNo
 			}
 		}
 		notes = safeNotes
+	}
+
+	if filter.ActorRole == "parent" {
+		for i := range notes {
+			if !notes[i].IsViewedByParent {
+				_ = s.repo.MarkAsViewedByParent(ctx, notes[i].ID)
+				notes[i].IsViewedByParent = true
+				now := time.Now()
+				notes[i].ParentViewedAt = &now
+			}
+		}
 	}
 
 	return notes, nil

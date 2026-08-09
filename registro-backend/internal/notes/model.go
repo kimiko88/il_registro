@@ -58,6 +58,10 @@ type UpdateNoteRequest struct {
 	TargetRole string   `json:"target_role,omitempty"`
 }
 
+type DeleteNoteRequest struct {
+	Reason string `json:"reason"`
+}
+
 type NoteFilter struct {
 	SchoolID      string
 	StudentID     string

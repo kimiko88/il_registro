@@ -65,6 +65,9 @@ func (m *MockSchedRepo) GetAnalytics(ctx context.Context, schoolID string) (*Ana
 func (m *MockSchedRepo) ResolveParentUserID(ctx context.Context, userID string) (string, error) {
 	return userID, nil
 }
+func (m *MockSchedRepo) IsGuardian(ctx context.Context, parentUserID, studentID string) (bool, error) {
+	return true, nil
+}
 
 func TestRegression_DoubleBooking(t *testing.T) {
 	repo := &MockSchedRepo{}

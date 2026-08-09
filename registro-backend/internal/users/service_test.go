@@ -84,8 +84,13 @@ func (m *MockRepository) HardDelete(ctx context.Context, id string) error {
 	return args.Error(0)
 }
 func (m *MockRepository) RevokeAllUserTokens(ctx context.Context, userID string) error {
-	args := m.Called(ctx, userID)
-	return args.Error(0)
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "RevokeAllUserTokens" {
+			args := m.Called(ctx, userID)
+			return args.Error(0)
+		}
+	}
+	return nil
 }
 func (m *MockRepository) IsGuardian(ctx context.Context, parentID, studentID string) (bool, error) {
 	args := m.Called(ctx, parentID, studentID)

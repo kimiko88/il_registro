@@ -41,7 +41,19 @@ func (s *service) CreateLesson(teacherID string, req CreateLessonRequest) (*Less
 		return nil, fmt.Errorf("failed to check teacher assignment: %w", err)
 	}
 	if !isAssigned {
-		return nil, errors.New("forbidden: docente non assegnato alla classe")
+		if req.IsSubstitution {
+			hasSub, subErr := s.repo.HasApprovedSubstitution(teacherID, req.ClassID, req.Date, req.Hour)
+			if subErr != nil || !hasSub {
+				return nil, errors.New("forbidden: docente non assegnato alla classe e nessuna sostituzione approvata trovata")
+			}
+		} else {
+			return nil, errors.New("forbidden: docente non assegnato alla classe")
+		}
+	} else if req.IsSubstitution {
+		hasSub, subErr := s.repo.HasApprovedSubstitution(teacherID, req.ClassID, req.Date, req.Hour)
+		if subErr == nil && !hasSub {
+			return nil, errors.New("forbidden: nessuna sostituzione approvata trovata per la data e ora indicate")
+		}
 	}
 
 	if req.Duration <= 0 {

@@ -36,11 +36,26 @@
 import { computed } from 'vue';
 import { useGradesStore } from 'src/stores/grades';
 
+const props = defineProps({
+  selectedSemester: {
+    type: Number,
+    default: 0
+  }
+});
+
 const gradesStore = useGradesStore();
 
-const average = computed(() => gradesStore.classAverage);
+const average = computed(() => {
+    const avgFn = gradesStore.classAverage;
+    return typeof avgFn === 'function' ? avgFn(props.selectedSemester) : avgFn;
+});
 const totalGrades = computed(() => {
     if (!gradesStore.grades || !gradesStore.grades.students) return 0;
-    return gradesStore.grades.students.reduce((acc, s) => acc + s.grades.length, 0);
+    return gradesStore.grades.students.reduce((acc, s) => {
+        const filtered = props.selectedSemester > 0
+            ? s.grades.filter(g => !g.semester || Number(g.semester) === Number(props.selectedSemester))
+            : s.grades;
+        return acc + filtered.length;
+    }, 0);
 });
 </script>

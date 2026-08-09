@@ -273,6 +273,13 @@ func (s *service) BookSlot(ctx context.Context, parentID string, req BookSlotReq
 		return nil, errors.New("conflict: you already have a booking at this time")
 	}
 
+	if req.StudentID != nil && *req.StudentID != "" {
+		isGuardian, err := s.repo.IsGuardian(ctx, parentID, *req.StudentID)
+		if err != nil || !isGuardian {
+			return nil, errors.New("unauthorized: parent is not a guardian of this student")
+		}
+	}
+
 	booking := &ColloquioBooking{
 		SlotID:    req.SlotID,
 		ParentID:  &parentProfileID,

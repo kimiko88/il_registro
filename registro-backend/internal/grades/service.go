@@ -369,10 +369,8 @@ func (s *service) AddGrade(ctx context.Context, teacherID string, req CreateGrad
 	}
 	schoolID := *teacherUser.SchoolID
 
-	var teacherProfileID string
-	if err := s.validator.db.QueryRow(
-		`SELECT id FROM teachers WHERE user_id = $1`, teacherID,
-	).Scan(&teacherProfileID); err != nil {
+	teacherProfileID, err := s.resolveTeacherProfileID(ctx, teacherID)
+	if err != nil {
 		return nil, fmt.Errorf("could not resolve teacher profile ID: %w", err)
 	}
 
@@ -441,7 +439,10 @@ func (s *service) BatchCreateGrades(teacherID, actorRole, schoolID string, grade
 		if g.EvaluationType != nil {
 			evalTypeStr = string(*g.EvaluationType)
 		}
-		key := fmt.Sprintf("%s_%s_%s_%s_%s_%.2f", g.StudentID, g.SubjectID, g.Date.Format("2006-01-02"), g.GradeType, evalTypeStr, g.GradeValue)
+		key := g.ID
+		if key == "" {
+			key = fmt.Sprintf("%s_%s_%s_%s_%s_%.2f", g.StudentID, g.SubjectID, g.Date.Format("2006-01-02"), g.GradeType, evalTypeStr, g.GradeValue)
+		}
 		if seen[key] {
 			continue
 		}
@@ -535,10 +536,8 @@ func (s *service) UpdateGrade(ctx context.Context, teacherID string, gradeID str
 
 	// Resolve the teacher's profile ID (teachers.id) from the user ID (users.id)
 	// so we compare the same domain — grade.TeacherID references teachers.id.
-	var teacherProfileID string
-	if err := s.validator.db.QueryRow(
-		`SELECT id FROM teachers WHERE user_id = $1`, teacherID,
-	).Scan(&teacherProfileID); err != nil {
+	teacherProfileID, err := s.resolveTeacherProfileID(ctx, teacherID)
+	if err != nil {
 		return nil, fmt.Errorf("could not resolve teacher profile: %w", err)
 	}
 
@@ -634,10 +633,8 @@ func (s *service) DeleteGrade(ctx context.Context, teacherID string, gradeID str
 	}
 
 	// Resolve teacher profile ID for correct ownership comparison.
-	var teacherProfileID string
-	if err := s.validator.db.QueryRow(
-		`SELECT id FROM teachers WHERE user_id = $1`, teacherID,
-	).Scan(&teacherProfileID); err != nil {
+	teacherProfileID, err := s.resolveTeacherProfileID(ctx, teacherID)
+	if err != nil {
 		return fmt.Errorf("could not resolve teacher profile: %w", err)
 	}
 
@@ -1128,8 +1125,17 @@ func (s *service) GetSemesterReport(ctx context.Context, studentID string, semes
 			}
 		}
 
-		_ = s.validator.db.QueryRow(
-			`SELECT COUNT(DISTINCT date) FROM attendance WHERE student_id = $1 AND (status = 'Absent' OR status = 'absent')`, studentID,
+		sem1Start, sem1End, sem2Start, sem2End := academicYearDates()
+		var startD, endD string
+		if semester == 1 {
+			startD, endD = sem1Start, sem1End
+		} else {
+			startD, endD = sem2Start, sem2End
+		}
+		_ = s.validator.db.QueryRowContext(
+			ctx,
+			`SELECT COUNT(DISTINCT date) FROM attendance WHERE student_id = $1 AND (status = 'Absent' OR status = 'absent') AND date >= $2 AND date <= $3`,
+			studentID, startD, endD,
 		).Scan(&totalAbsenceDays)
 	}
 
@@ -1381,12 +1387,7 @@ func (s *service) DeleteClassTest(teacherID string, testID string) error {
 	if err != nil {
 		return err
 	}
-	var teacherProfileID string
-	if s.validator != nil && s.validator.db != nil {
-		_ = s.validator.db.QueryRow(
-			`SELECT id FROM teachers WHERE user_id = $1`, teacherID,
-		).Scan(&teacherProfileID)
-	}
+	teacherProfileID, _ := s.resolveTeacherProfileID(context.Background(), teacherID)
 	if test.TeacherID != teacherID && (teacherProfileID == "" || test.TeacherID != teacherProfileID) {
 		return ErrUnauthorized
 	}

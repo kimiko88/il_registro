@@ -86,6 +86,9 @@ func (m *MockRepo) GetAnalytics(ctx context.Context, sID string) (*AnalyticsResp
 func (m *MockRepo) ResolveParentUserID(ctx context.Context, userID string) (string, error) {
 	return userID, nil
 }
+func (m *MockRepo) IsGuardian(ctx context.Context, parentUserID, studentID string) (bool, error) {
+	return true, nil
+}
 
 func TestService_CreateSlot(t *testing.T) {
 	repo := new(MockRepo)

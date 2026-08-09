@@ -20,6 +20,7 @@ type Repository interface {
 	DeleteHomework(id string) error
 	GetHomeworkByClass(classID string) ([]Homework, error)
 	IsTeacherAssignedToClass(teacherID, classID string) (bool, error)
+	HasApprovedSubstitution(teacherID, classID, date string, hour int) (bool, error)
 }
 
 type repository struct {
@@ -366,3 +367,23 @@ func (r *repository) IsTeacherAssignedToClass(teacherID, classID string) (bool, 
 	err := r.db.QueryRow(query, teacherID, classID).Scan(&exists)
 	return exists, err
 }
+
+func (r *repository) HasApprovedSubstitution(teacherID, classID, date string, hour int) (bool, error) {
+	if teacherID == "" || classID == "" {
+		return false, nil
+	}
+	query := `
+		SELECT EXISTS (
+			SELECT 1 FROM substitutions s
+			LEFT JOIN teachers t ON s.substitute_teacher_id = t.id OR s.substitute_teacher_id = t.user_id
+			WHERE (s.substitute_teacher_id = $1::uuid OR t.user_id = $1::uuid OR s.absent_teacher_id = $1::uuid)
+			  AND s.class_id = $2::uuid
+			  AND s.date = $3::date
+			  AND (s.hour = $4 OR s.hour IS NULL)
+			  AND (s.status = 'approved' OR s.status = 'confirmed' OR s.status = 'assigned' OR s.status IS NULL)
+		)`
+	var exists bool
+	err := r.db.QueryRow(query, teacherID, classID, date, hour).Scan(&exists)
+	return exists, err
+}
+

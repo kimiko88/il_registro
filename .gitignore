@@ -31,3 +31,5 @@ go.work.sum
 /registro-frontend/tests/unit/coverage
 /registro-frontend/coverage/*
 
+docs/promotion.md
+docs/task to do.md

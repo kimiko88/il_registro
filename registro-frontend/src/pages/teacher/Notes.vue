@@ -85,6 +85,25 @@
               </div>
               <div class="row items-center q-gutter-xs">
                 <q-chip
+                  v-if="n.type === 'disciplinary'"
+                  size="xs"
+                  :color="n.is_approved ? 'positive' : 'warning'"
+                  text-color="white"
+                  class="text-weight-bold"
+                  :icon="n.is_approved ? 'check_circle' : 'hourglass_empty'"
+                >
+                  {{ n.is_approved ? 'Approvata Admin' : 'In attesa di approvazione Admin' }}
+                </q-chip>
+                <q-chip
+                  size="xs"
+                  :color="n.is_viewed_by_parent ? 'info' : 'grey-5'"
+                  text-color="white"
+                  class="text-weight-bold"
+                  :icon="n.is_viewed_by_parent ? 'visibility' : 'visibility_off'"
+                >
+                  {{ n.is_viewed_by_parent ? 'Letta dal genitore' : 'Non ancora letta' }}
+                </q-chip>
+                <q-chip
                   size="xs"
                   :color="n.is_reserved ? 'negative' : 'grey-7'"
                   text-color="white"

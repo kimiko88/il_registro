@@ -14,9 +14,11 @@ type Repository interface {
 	Create(ctx context.Context, note *StudentNote) error
 	Update(ctx context.Context, note *StudentNote) error
 	Delete(ctx context.Context, id string) error
+	DeleteWithReason(ctx context.Context, id string, reason string) error
 	Get(ctx context.Context, id string) (*StudentNote, error)
 	List(ctx context.Context, filter NoteFilter) ([]StudentNote, error)
 	ApproveNote(ctx context.Context, id string, approverID string) error
+	MarkAsViewedByParent(ctx context.Context, id string) error
 	IsTeacherAssignedToClass(ctx context.Context, teacherID, classID string) (bool, error)
 }
 
@@ -25,6 +27,11 @@ type PostgresRepository struct {
 }
 
 func NewRepository(db *sql.DB) Repository {
+	_, _ = db.Exec(`
+		ALTER TABLE student_notes ADD COLUMN IF NOT EXISTS deletion_reason TEXT DEFAULT '';
+		ALTER TABLE student_notes ADD COLUMN IF NOT EXISTS is_viewed_by_parent BOOLEAN DEFAULT false;
+		ALTER TABLE student_notes ADD COLUMN IF NOT EXISTS parent_viewed_at TIMESTAMP WITH TIME ZONE NULL;
+	`)
 	return &PostgresRepository{db: db}
 }
 
@@ -82,6 +89,14 @@ func (r *PostgresRepository) Delete(ctx context.Context, id string) error {
 	return err
 }
 
+func (r *PostgresRepository) DeleteWithReason(ctx context.Context, id string, reason string) error {
+	if reason != "" {
+		_, _ = r.db.ExecContext(ctx, "UPDATE student_notes SET deletion_reason = $1 WHERE id = $2", reason, id)
+	}
+	_, err := r.db.ExecContext(ctx, "DELETE FROM student_notes WHERE id=$1", id)
+	return err
+}
+
 func (r *PostgresRepository) ApproveNote(ctx context.Context, id string, approverID string) error {
 	query := `
 		UPDATE student_notes
@@ -89,6 +104,16 @@ func (r *PostgresRepository) ApproveNote(ctx context.Context, id string, approve
 		WHERE id = $2
 	`
 	_, err := r.db.ExecContext(ctx, query, approverID, id)
+	return err
+}
+
+func (r *PostgresRepository) MarkAsViewedByParent(ctx context.Context, id string) error {
+	query := `
+		UPDATE student_notes
+		SET is_viewed_by_parent = true, parent_viewed_at = NOW()
+		WHERE id = $1 AND COALESCE(is_viewed_by_parent, false) = false
+	`
+	_, err := r.db.ExecContext(ctx, query, id)
 	return err
 }
 

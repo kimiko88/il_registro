@@ -111,9 +111,20 @@ func (h *Handler) Delete(c *gin.Context) {
 	}
 	noteID := c.Param("id")
 
-	if err := h.service.DeleteNote(c.Request.Context(), userID, role, noteID); err != nil {
-		if errors.Is(err, ErrUnauthorizedDelete) {
+	var req DeleteNoteRequest
+	_ = c.ShouldBindJSON(&req)
+	reason := req.Reason
+	if reason == "" {
+		reason = c.Query("reason")
+	}
+
+	if err := h.service.DeleteNote(c.Request.Context(), userID, role, noteID, reason); err != nil {
+		if errors.Is(err, ErrUnauthorizedDelete) || strings.HasPrefix(err.Error(), "forbidden") {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		if strings.HasPrefix(err.Error(), "bad request") {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 		errStr := err.Error()

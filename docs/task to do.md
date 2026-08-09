@@ -148,10 +148,300 @@ Crea un esempio di scuola (dal nome "scuola di prova") con almeno due classi (e.
 - [x] **35. Supporto Esteso Multi-Lingua (9 Lingue)**: Aggiunte le traduzioni complete in **Francese (`fr-FR`)**, **Spagnolo (`es-ES`)**, **Russo (`ru-RU`)**, **Ucraino (`uk-UA`)**, **Arabo (`ar-SA`)** e **Cinese Semplificato (`zh-CN`)**, in aggiunta ad Italiano, Inglese e Tedesco. Aggiornati i selettori di lingua in `Login.vue`, `Settings.vue` docente e `Settings.vue` admin.
 - [x] **25. Riorganizzazione Store (`stores/`)**: Spostati i composable (come `useSettingsStore`, `useNotificationStore`, `useWebSocketStore`) all'interno della cartella `stores/`. Corretto ogni file che li importava in `src/frontend/`.
 
-Assegna al progetto la licenza 1. PolyForm Noncommercial 1.0.0 ✅ (la più adatta)
-È una licenza standardizzata che include esplicitamente nel testo la definizione di "scopo non-commerciale" e contiene questa clausola letterale:
-polyformproject
+145. BookSlot: race condition — nessuna transazione atomica tra check capienza e insert
 
-"Use by any charitable organization, educational institution, public research organization, public safety or health organization, environmental protection organization, or government institution is use for a permitted purpose regardless of the source of funding."
+go
 
-In pratica: scuole pubbliche, Comuni, USR, MIUR, università → gratuita e libera per legge del contratto. Aziende private, software house, EdTech → devono acquistare la licenza commerciale.
+if slot.BookingCount >= slot.MaxBookings {
+return nil, errors.New("slot esaurito")
+}
+// ... più avanti ...
+if err := s.repo.CreateBooking(ctx, booking); err != nil { ... }
+La lettura di BookingCount e la scrittura della prenotazione avvengono in due query separate senza SELECT ... FOR UPDATE. Se due genitori prenotano lo stesso slot simultaneamente, entrambi superano il controllo di capienza e vengono inseriti, portando lo slot oltre il MaxBookings. Serve una transazione serializzabile o un INSERT ... WHERE booking_count < max_bookings con RETURNING.
+
+146. CreateSlot: data confrontata con time.Now().Truncate(24h) senza timezone della scuola (stesso bug #131)
+
+go
+
+today := time.Now().Truncate(24 \* time.Hour)
+if d.Before(today) { return nil, ErrPastDate }
+time.Now() su un server UTC restituisce UTC. Truncate(24h) alle 23:30 CEST (= 21:30 UTC) tronca a 21:30 del giorno corrente UTC, non alla mezzanotte italiana. Un docente italiano che vuole creare uno slot per domani alle 23:45 italiane potrebbe ricevere ErrPastDate per errore.
+
+147. CreateAssembly: MaxBookings hardcoded a 100 — non configurabile e non legato alla capienza reale della sede
+
+go
+
+MaxBookings: 100,
+Un'assemblea di genitori per una classe da 25 studenti viene creata con capienza 100, mentre un istituto con 500 famiglie iscritte ha la stessa capienza di 100. Il valore dovrebbe venire dal schoolSettings o essere obbligatorio nel CreateAssemblyRequest. Rendilo impostabile e obbligatorio per l'admin.
+
+148. PatchSlot: check BookingCount > 0 usa il valore letto in precedenza, non aggiornato
+
+go
+
+slot, err := s.repo.GetSlotByID(ctx, slotID)
+if slot.BookingCount > 0 {
+return errors.New("impossibile modificare...")
+}
+// ...
+return s.repo.PatchSlot(ctx, slotID, startTime, endTime)
+BookingCount viene letto nel GetSlotByID iniziale, ma tra quella lettura e il PatchSlot finale un altro utente potrebbe prenotare lo slot. Il check non è atomico: stessa race condition del bug #145.
+
+🔴 Bug critici — substitutions/service.go 149. RecommendSubstitutes: l'algoritmo di raccomandazione usa la posizione nell'array (i) come proxy della qualità — non usa i parametri passati
+
+go
+
+for i, c := range candidates {
+score := 50
+switch i {
+case 0: score = 95; reason = "Docente della stessa classe..."
+case 1: score = 85; reason = "Docente della stessa materia..."
+// ...
+}
+}
+Il primo candidato nel risultato di GetAvailableTeachers riceve sempre un punteggio di 95 e la label "Docente della stessa classe", indipendentemente da se lo insegna davvero. I parametri classID, subjectID, hour passati alla funzione non vengono mai usati nel calcolo. È un algoritmo completamente fittizio che mostra label fuorvianti all'amministratore.
+
+150. SignRegister: se SubstituteTeacherID è nil, qualsiasi docente può firmare il registro
+
+go
+
+if sub.SubstituteTeacherID != nil && *sub.SubstituteTeacherID != teacherID {
+return fmt.Errorf("unauthorized: ...")
+}
+Il check è != nil && .... Se SubstituteTeacherID è nil (sostituzione senza docente assegnato), la condizione è false e il blocco di return non viene mai eseguito — qualsiasi docente autenticato può firmare il registro di una sostituzione non ancora assegnata. Dovrebbe essere if sub.SubstituteTeacherID == nil || *sub.SubstituteTeacherID != teacherID.
+
+151. ConfirmSubstitution: confronto diretto \*sub.SubstituteTeacherID != teacherID — stesso problema ID/profileID
+
+go
+
+if sub.SubstituteTeacherID == nil || \*sub.SubstituteTeacherID != teacherID {
+return fmt.Errorf("unauthorized")
+}
+sub.SubstituteTeacherID è un teacherProfileID (da tabella teacher_profiles), mentre teacherID arriva dal JWT claim come userID. Se non coincidono (pattern già visto in #126, #134), il docente sostituto non può mai confermare la propria sostituzione.
+
+🟡 Errori logici — middleware/ratelimit.go 152. RateLimitMiddleware: localhost viene reindirizzato a ClientIP() invece di essere escluso dal rate limit
+
+go
+
+if ip == "" || ip == "127.0.0.1" || ip == "::1" {
+ip = c.ClientIP()
+}
+c.ClientIP() legge X-Forwarded-For. Se il reverse proxy (nginx/caddy) è su localhost e forwarda tutte le richieste con RemoteAddr = 127.0.0.1, allora il middleware usa X-Forwarded-For come chiave — ma se il proxy non sanitizza l'header, un client malevolo può impostare X-Forwarded-For: <IP vittima> e far rate-limitare un IP legittimo. Il proxy dovrebbe essere in una allowlist e X-Real-IP / X-Forwarded-For andrebbero accettati solo da IP noti del proxy.
+
+153. IPRateLimiter: la goroutine di cleanup non può essere fermata (nessun canale di stop)
+
+go
+
+go func() {
+ticker := time.NewTicker(5 \* time.Minute)
+defer ticker.Stop()
+for range ticker.C { ... }
+}()
+La goroutine vive per sempre anche se il server fa graceful shutdown. In test, ogni NewIPRateLimiter(...) crea una goroutine zombie. Serve un context di cancellazione: go func(ctx context.Context) { for { select { case <-ctx.Done(): return; case <-ticker.C: ... } } }(ctx).
+
+🟡 Errori logici — middleware/security.go 154. CSP include 'unsafe-inline' per script-src — il nonce diventa inutile
+
+go
+
+"script-src 'self' 'nonce-%s' 'unsafe-inline'; "
+Il nonce nella CSP serve esattamente ad eliminare 'unsafe-inline': se entrambi sono presenti, i browser ignorano il nonce e rispettano solo 'unsafe-inline', vanificando completamente la protezione XSS. Devi rimuovere 'unsafe-inline' da script-src e assicurarti che tutti gli script inline del frontend usino l'attributo nonce.
+
+155. HSTS applicato anche in gin.ReleaseMode locale senza TLS reale
+
+go
+
+isHTTPS := c.Request.TLS != nil || ... || gin.Mode() == gin.ReleaseMode
+if isHTTPS {
+c.Writer.Header().Set("Strict-Transport-Security", ...)
+}
+Se qualcuno testa in locale con GIN_MODE=release ma senza TLS, il browser riceve HSTS con max-age=63072000 (2 anni) su http://localhost. Da quel momento il browser rifiuterà connessioni HTTP a localhost per 2 anni. Il flag gin.ReleaseMode non è un proxy affidabile per "il server ha TLS attivo".
+
+🔵 Miglioramenti architetturali — nuovi moduli 156. substitutions/service.go: SetNotificationService è un setter mutabile su una struct — race condition in init
+
+go
+
+func (s *Service) SetNotificationService(ns *notifications.Service) {
+s.notifSvc = ns
+}
+Se SetNotificationService venisse chiamata dopo che il server ha già iniziato a servire richieste (es. in un test o in un init asincrono), si avrebbe una scrittura concorrente su s.notifSvc senza lock. Il pattern corretto è iniettare notifSvc nel costruttore NewService(repo, notifSvc).
+
+157. colloqui/service.go: Service è struct concreta (come notifications) — stessa mancanza di interfaccia
+
+go
+
+type Service struct { repo Repository }
+Tutti i moduli critici (grades, attendance, scheduling) espongono un'interfaccia; colloqui e substitutions no. Impossibile mockare nei test degli handler che li usano come dipendenze.
+
+Permetti di poter gestire anche classi presenti su più sedi della scuola. Quindi di poter inserire classi con differenti sedi.
+
+🔴 Bug critici — scrutiny/service.go 158. GetMatrix: N+1 query su attRepo.GetStats(stu.ID) — una query per studente nel loop
+
+go
+
+for \_, stu := range allStudents {
+// ...
+stats, attErr := s.attRepo.GetStats(stu.ID) // ← una query per studente!
+// ...
+}
+Le FindByClass per i voti sono già ottimizzate con un batch fetch, ma le statistiche di presenza vengono recuperate individualmente con N chiamate al DB, una per ogni studente della classe. Una classe da 30 studenti genera 30 query separate solo per le presenze. Serve un metodo GetStatsBatch([]string studentIDs) map[string]\*Stats.
+
+159. GetMatrix: GetRecord(ctx, stu.ID, classID, semester) nel loop — secondo N+1 aggiuntivo
+
+go
+
+if \_, ok := recordMap[stu.ID]; ok {
+full, getRecErr := s.repo.GetRecord(ctx, stu.ID, classID, semester)
+}
+I record di scrutinio sono già caricati con ListRecordsByClass e inseriti in recordMap, ma per ogni studente che ha un record viene eseguita una seconda query GetRecord per recuperare i dettagli completi con i voti. Questo azzera il vantaggio di ListRecordsByClass. Serve che ListRecordsByClass restituisca già i record completi con i voti inclusi.
+
+160. GetOverview: triplo N+1 — GetClassSubjects, ListRecordsByClass, FindByClass eseguiti per ogni classe
+
+go
+
+for _, c := range classesList {
+subjects, _ := s.classRepo.GetClassSubjects(ctx, c.ID) // N query
+records, _ := s.repo.ListRecordsByClass(ctx, c.ID, sem) // N query
+allGrades, _ := s.gradeRepo.FindByClass(c.ID, sem) // N query
+}
+Per una scuola con 20 classi, GetOverview esegue 60+ query DB. Tutti e tre i risultati vengono ignorati in caso di errore (con \_), ma i risultati parziali vengono comunque usati silenziosamente. Serve un batch load per classi multiple.
+
+161. GetOverview: il semestre è determinato dalla data del server, non dall'anno scolastico dell'utente
+
+go
+
+sem := 2
+now := time.Now()
+if now.Month() >= time.September {
+sem = 1
+}
+Se a settembre il nuovo anno scolastico non è ancora stato aperto e l'admin vuole rivedere lo scrutinio del secondo quadrimestre precedente, non c'è modo di farlo: il semestre viene sempre sovrascritto in base al mese corrente. Il semestre dovrebbe essere un parametro esplicito della richiesta.
+
+162. ExportAll: N+1 query su userRepo.GetByID(ctx, r.StudentID) per ogni record nell'export CSV
+
+go
+
+for \_, r := range records {
+if u, err := s.userRepo.GetByID(ctx, r.StudentID); err == nil && u != nil {
+studentName = u.LastName + " " + u.FirstName
+}
+Per ogni record di scrutinio (N studenti × M classi), viene eseguita una query separata per il nome dello studente. Su un export di tutto l'istituto questo può generare centinaia di query. I nomi dovrebbero essere inclusi nei record o pre-caricati con GetStudentsByClass già disponibile.
+
+163. GetClassReport: nessun check sul schoolID — un teacher può vedere il report di qualsiasi classe di qualsiasi scuola
+
+go
+
+func (s \*Service) GetClassReport(ctx context.Context, actorID, actorRole, classID string, ...) {
+if actorRole != "admin" && actorRole != "superadmin" && ... && actorRole != "teacher" {
+return nil, errors.New("unauthorized")
+}
+// Nessuna verifica che classID appartenga alla scuola dell'attore
+Il ruolo teacher è sufficiente per accedere al report di scrutinio di qualsiasi classe. Non viene verificato né che il docente insegni in quella classe, né che la classe appartenga alla stessa scuola del docente. Cross-tenant data leak.
+
+🔴 Bug critici — ws/hub.go 164. deliverLocally: messaggi senza Recipient e senza SchoolID vengono silenziosamente ignorati
+
+go
+
+if msg.Recipient != "" {
+// consegna a utente specifico
+} else if msg.SchoolID != "" {
+// consegna alla scuola
+}
+// Nessun else: messaggio global broadcast silenziosamente droppato
+Se viene chiamato BroadcastToUser(userID, ...) con userID vuoto per errore, o se viene inviato un messaggio di broadcast globale senza SchoolID, il messaggio viene perso senza nessun log di warning. Il caso else dovrebbe almeno loggare un warning e opzionalmente supportare il broadcast globale per i messaggi di sistema.
+
+165. redisListener: alla riconnessione h.pubsub è aggiornato sotto h.mu.Lock() ma usato senza lock nel Run() loop
+
+go
+
+// In redisListener (goroutine separata):
+h.mu.Lock()
+h.pubsub = h.rdb.Subscribe(ctx, redisPubSubChannel) // ← scrittura sotto lock
+h.mu.Unlock()
+
+// In Run() loop (goroutine principale):
+case <-ctx.Done():
+if h.pubsub != nil { // ← lettura SENZA lock
+\_ = h.pubsub.Close()
+}
+h.pubsub è letto nel Run() loop al momento dello shutdown senza acquisire h.mu. Se la goroutine redisListener sta aggiornando h.pubsub simultaneamente, si ha una data race su h.pubsub.
+
+🔴 Bug critici — websocket.js store 166. Il token JWT viene passato come query string ?token=... — visibile nei log del server e nella cronologia del browser
+
+js
+
+const tokenQueryUrl = `${wsUrl}?token=${encodeURIComponent(token)}`
+socket.value = new WebSocket(tokenQueryUrl, ['access_token', token])
+Il token viene passato sia come query parameter che come subprotocol WebSocket. La query string è visibile nei log di nginx/caddy (access.log), nella tab Network dei DevTools, e potenzialmente in proxy intermedi. Il metodo sicuro è inviare il token come primo messaggio WebSocket dopo la connessione (pattern "auth message"), oppure usare un token monouso a breve durata generato per la connessione WS.
+
+167. attemptReconnect: il counter reconnectAttempts viene incrementato PRIMA del timer — se il server è down 30 volte si perde la connessione permanentemente anche dopo recovery
+
+js
+
+reconnectAttempts.value++ // incremento prima del tentativo
+reconnectTimer.value = setTimeout(() => {
+reconnectTimer.value = null
+if (authStore.isAuthenticated) {
+connect() // il tentativo avviene qui
+}
+}, delay)
+Il counter viene incrementato quando viene schedulato il retry, non quando il tentativo fallisce effettivamente. Se la connessione ha successo nel connect(), reconnectAttempts viene azzerato correttamente in onopen. Ma se connect() viene chiamato e la connessione fallisce immediatamente (es. onerror→onclose), il counter è già stato incrementato prima, portando il limite di 30 tentativi a essere raggiunto più velocemente del previsto durante burst di errori.
+
+168. handleMessage: nessun invalidamento della cache Pinia sugli eventi WebSocket
+
+js
+
+case 'GRADE_ADDED':
+Notify.create({ message: `Nuovo voto registrato: ...` })
+break
+Quando il backend invia GRADE_ADDED, il frontend mostra solo una notifica toast ma non aggiorna la cache dello store grades. L'utente vede la notifica ma la tabella dei voti mostra dati vecchi fino al prossimo reload manuale. Lo stesso problema vale per ATTENDANCE_LATE/ABSENT (non aggiorna attendanceStore) e SCRUTINY_PUBLISHED (non aggiorna scrutinyStore).
+
+🟡 Errori logici — grades.js store 169. \_cacheMap non ha TTL — dati obsoleti sopravvivono indefinitamente in sessione
+
+js
+
+\_cacheMap: {}, // In-memory cache by `${classId}:${subjectId}`
+La cache dei voti non ha alcun meccanismo di scadenza. Se un docente apre il registro di una classe e poi un collega aggiunge un voto dalla propria sessione, il primo docente continuerà a vedere i dati vecchi dalla cache per tutta la sessione. Serve almeno un timestamp per voce e un TTL (es. 60 secondi).
+
+170. addGrade/updateGrade/deleteGrade: this.loading = true durante il background refresh crea una falsa UI "caricamento"
+
+js
+
+async addGrade(gradeData) {
+this.loading = true // ← mostra spinner
+// ...
+await this.fetchGrades(..., true, true) // isBackgroundRefresh=true
+// ma loading è già true per la UI!
+}
+Dopo il salvataggio, il fetchGrades con isBackgroundRefresh=true è pensato per non mostrare il loading indicator. Ma this.loading è già true per la chiamata di salvataggio, e viene messo a false solo nel finally di addGrade, DOPO il fetchGrades. Durante il background refresh l'UI mostra il loading, contraddendo la logica isBackgroundRefresh.
+
+171. downloadReportCardPDF: il link.remove() nel finally avviene prima di URL.revokeObjectURL — se il remove fallisce, il blob URL rimane in memoria
+
+js
+
+finally {
+if (link && link.parentNode) { link.remove() }
+if (url) { window.URL.revokeObjectURL(url) }
+this.loading = false
+}
+L'ordine è corretto ma il blocco manca di gestione degli errori del download stesso: se il browser blocca il download (es. popup blocker), link.click() non lancia eccezioni ma il download silenziosamente non avviene. Non c'è feedback all'utente in questo caso.
+
+🟡 Errori logici — attendance.js store 172. submitAttendance: in caso di errore API, this.records non viene ripristinato — stato store inconsistente
+
+js
+
+async submitAttendance(classId, date, records, ...) {
+// ...
+const response = await api.post('/attendance/mark-bulk', payload)
+this.records = records // ← aggiornamento ottimistico DOPO la chiamata
+return response.data
+} catch (err) {
+// this.records non viene ripristinato
+throw err
+}
+Il pattern è quasi corretto (aggiornamento dopo la risposta), ma in caso di eccezione lo store rimane nello stato precedente mentre la UI che ha già localmente modificato la visualizzazione potrebbe essere fuori sync. Meglio applicare un pattern optimistic update esplicito con rollback.
+
+173. fetchMyAttendance: justificationStatus calcolato con logica incompleta — parent_justified non corrisponde a un campo documentato nel backend
+
+js
+
+justificationStatus: r.is_justified ? 'Justified' : (r.parent_justified ? 'Pending' : 'Unjustified')
+Il campo parent_justified non compare nella definizione del modello AttendanceRecord nel backend. Se l'API non lo restituisce, tutti i record non giustificati vengono mostrati come 'Unjustified' anche se una richiesta di giustificazione è pendente. La condizione Pending non viene mai mostrata.

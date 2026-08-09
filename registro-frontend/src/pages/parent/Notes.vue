@@ -40,6 +40,12 @@
                   <q-chip dense :color="getNoteColor(note.type)" text-color="white" class="text-weight-bold">
                     {{ formatNoteType(note.type) }}
                   </q-chip>
+                  <q-chip v-if="note.type === 'disciplinary'" dense color="positive" text-color="white" icon="verified">
+                    Approvata Dirigenza
+                  </q-chip>
+                  <q-chip dense color="info" text-color="white" icon="visibility">
+                    Letta
+                  </q-chip>
                   <div class="text-caption text-grey">Docente: {{ note.teacher_name }}</div>
                 </div>
                 <div class="text-caption text-grey">{{ formatDate(note.date) }}</div>

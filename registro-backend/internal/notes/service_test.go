@@ -39,6 +39,26 @@ func (m *MockRepository) Delete(ctx context.Context, id string) error {
 	return args.Error(0)
 }
 
+func (m *MockRepository) DeleteWithReason(ctx context.Context, id string, reason string) error {
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "DeleteWithReason" {
+			args := m.Called(ctx, id, reason)
+			return args.Error(0)
+		}
+	}
+	return m.Delete(ctx, id)
+}
+
+func (m *MockRepository) MarkAsViewedByParent(ctx context.Context, id string) error {
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "MarkAsViewedByParent" {
+			args := m.Called(ctx, id)
+			return args.Error(0)
+		}
+	}
+	return nil
+}
+
 func (m *MockRepository) List(ctx context.Context, filter NoteFilter) ([]StudentNote, error) {
 	args := m.Called(ctx, filter)
 	if args.Get(0) == nil {
@@ -330,7 +350,7 @@ func TestService_DeleteNote(t *testing.T) {
 			tt.mockFn(mockRepo)
 
 			service := NewService(mockRepo, new(MockUserRepo))
-			err := service.DeleteNote(context.Background(), tt.teacherID, "teacher", tt.noteID)
+			err := service.DeleteNote(context.Background(), tt.teacherID, "teacher", tt.noteID, "")
 
 			if tt.wantErr {
 				assert.Error(t, err)

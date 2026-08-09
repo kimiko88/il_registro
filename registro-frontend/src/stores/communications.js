@@ -8,6 +8,18 @@ export const useCommunicationsStore = defineStore('communications', {
         error: null,
     }),
 
+    getters: {
+        boardMessages: (state) => state.communications.filter(c => c.type === 'bacheca'),
+        sentMessages: (state) => (userID) => {
+            if (!userID) return state.communications.filter(c => c.type !== 'bacheca');
+            return state.communications.filter(c => c.sender_id === userID);
+        },
+        receivedMessages: (state) => (userID) => {
+            if (!userID) return state.communications;
+            return state.communications.filter(c => c.sender_id !== userID);
+        }
+    },
+
     actions: {
         async fetchCommunications(schoolID = null) {
             this.loading = true;

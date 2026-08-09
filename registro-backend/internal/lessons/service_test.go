@@ -50,6 +50,10 @@ func (m *mockRepository) IsTeacherAssignedToClass(teacherID, classID string) (bo
 	return true, nil
 }
 
+func (m *mockRepository) HasApprovedSubstitution(teacherID, classID, date string, hour int) (bool, error) {
+	return true, nil
+}
+
 func (m *mockRepository) GetHomeworkByID(id string) (*Homework, error) {
 	if m.errHW != nil {
 		return nil, m.errHW

@@ -279,7 +279,11 @@ func (s *Service) ChangePassword(ctx context.Context, userID string, req ChangeP
 	if err := s.repo.Update(ctx, user); err != nil {
 		return err
 	}
-	return s.repo.AddPasswordHistory(ctx, userID, string(hash))
+	if err := s.repo.AddPasswordHistory(ctx, userID, string(hash)); err != nil {
+		return err
+	}
+	_ = s.repo.RevokeAllUserTokens(ctx, userID)
+	return nil
 }
 
 func validatePasswordComplexity(password string) error {

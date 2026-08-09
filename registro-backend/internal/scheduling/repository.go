@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 )
 
@@ -34,6 +35,7 @@ type Repository interface {
 
 	// User to Profile resolver
 	ResolveParentUserID(ctx context.Context, userID string) (string, error)
+	IsGuardian(ctx context.Context, parentUserID, studentID string) (bool, error)
 }
 
 type repository struct {
@@ -118,6 +120,21 @@ func (r *repository) CreateSlotsBatch(ctx context.Context, slots []ColloquioSlot
 	defer stmt.Close()
 
 	for _, s := range slots {
+		var overlapCount int
+		_ = tx.QueryRowContext(ctx, `
+			SELECT COUNT(*) FROM colloquio_slots
+			WHERE teacher_id = $1 AND date = $2 AND is_cancelled = false
+			  AND start_time < $4 AND end_time > $3
+			FOR UPDATE
+		`, s.TeacherID, s.Date, s.StartTime, s.EndTime).Scan(&overlapCount)
+		if overlapCount > 0 {
+			return fmt.Errorf("sovrapposizione oraria rilevata per il giorno %s (%s - %s)",
+				s.Date.Format("2006-01-02"),
+				s.StartTime.Format("15:04"),
+				s.EndTime.Format("15:04"),
+			)
+		}
+
 		_, err := stmt.ExecContext(ctx, s.TeacherID, s.SchoolID, s.Date, s.StartTime, s.EndTime, s.MaxBookings, s.Type, s.Location)
 		if err != nil {
 			return err
@@ -337,3 +354,21 @@ func (r *repository) ResolveParentUserID(ctx context.Context, userID string) (st
 	err := r.db.QueryRowContext(ctx, "SELECT id FROM parents WHERE user_id = $1", userID).Scan(&id)
 	return id, err
 }
+
+func (r *repository) IsGuardian(ctx context.Context, parentUserID, studentID string) (bool, error) {
+	if parentUserID == "" || studentID == "" {
+		return false, nil
+	}
+	query := `
+		SELECT EXISTS (
+			SELECT 1 FROM parent_students ps
+			JOIN parents p ON ps.parent_id = p.id
+			LEFT JOIN students s ON ps.student_id = s.id OR ps.student_id = s.user_id
+			WHERE (p.user_id = $1::uuid OR p.id = $1::uuid)
+			  AND (ps.student_id = $2::uuid OR s.user_id = $2::uuid OR s.id = $2::uuid)
+		)`
+	var exists bool
+	err := r.db.QueryRowContext(ctx, query, parentUserID, studentID).Scan(&exists)
+	return exists, err
+}
+

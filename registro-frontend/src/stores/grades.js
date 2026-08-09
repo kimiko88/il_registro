@@ -21,12 +21,15 @@ export const useGradesStore = defineStore('grades', {
             const student = state.grades.students.find(s => s.student_id === studentId);
             return student ? student.grades : [];
         },
-        classAverage: (state) => {
+        classAverage: (state) => (semester = 0) => {
             if (!state.grades || !state.grades.students) return 0;
             let sum = 0;
             let count = 0;
             state.grades.students.forEach(s => {
                 s.grades.forEach(g => {
+                    if (semester > 0 && g.semester && Number(g.semester) !== Number(semester)) {
+                        return;
+                    }
                     if (typeof g.grade_value === 'number' && g.grade_value > 0) {
                         sum += g.grade_value;
                         count++;
