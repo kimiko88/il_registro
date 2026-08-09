@@ -1,6 +1,8 @@
 # RegistroV2 — Registro Elettronico Scolastico
 
 > Sistema completo per la gestione digitale delle attività scolastiche italiane.
+> **Online Demo**: [https://registro-scuola.netlify.app](https://registro-scuola.netlify.app)
+> Demo accounts & passwords: [example_accounts.md](./example_accounts.md)
 
 [![Backend CI](https://github.com/kimiko88/Registrov2/actions/workflows/ci.yml/badge.svg)](https://github.com/kimiko88/Registrov2/actions/workflows/ci.yml)
 [![Go Version](https://img.shields.io/badge/go-1.25%2B-blue)](https://go.dev/)
@@ -30,20 +32,20 @@ Registrov2/
 
 ## Funzionalità principali
 
-| Area | Funzionalità |
-| --- | --- |
-| **Autenticazione & SSO** | JWT (access 15min + refresh rotation), MFA TOTP, SPID, CIE, **Google Workspace & MS Teams SSO** |
-| **Ruoli** | `superadmin`, `admin`, `secretary`, `teacher`, `student`, `parent` |
-| **Voti & Valutazioni** | Inserimento rapido, **Matrix View a Tastiera**, medie ponderate, simulatore voto target, misure compensative BES/DSA |
-| **Presenze & Lezioni** | Registro giornaliero, **Firma Ora 1-Click**, assenze, ritardi, giustificazioni, alert assenteismo |
+| Area                      | Funzionalità                                                                                                                              |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| **Autenticazione & SSO**  | JWT (access 15min + refresh rotation), MFA TOTP, SPID, CIE, **Google Workspace & MS Teams SSO**                                           |
+| **Ruoli**                 | `superadmin`, `admin`, `secretary`, `teacher`, `student`, `parent`                                                                        |
+| **Voti & Valutazioni**    | Inserimento rapido, **Matrix View a Tastiera**, medie ponderate, simulatore voto target, misure compensative BES/DSA                      |
+| **Presenze & Lezioni**    | Registro giornaliero, **Firma Ora 1-Click**, assenze, ritardi, giustificazioni, alert assenteismo                                         |
 | **PDP / PEI (BES & DSA)** | **Gestione Piani Didattici Personalizzati**, misure compensative/dispensative, firma/approvazione digitale genitore e protezione diagnosi |
-| **Business Intelligence** | **Dashboard Dispersione Scolastica & Assenteismo**, report andamento 1° vs 2° Quadrimestre per la dirigenza |
-| **E-Learning Sync** | **Google Classroom & Microsoft Teams**: sincronizzazione automatica compiti, voti e classi |
-| **Comunicazioni** | Circolari, comunicazioni urgenti con **Presa d'Atto obbligatoria**, notifiche real-time WebSocket |
-| **Accessibilità & UX** | **Font DSA OpenDyslexic**, alto contrasto, **Ricerca Globale `Ctrl+K`**, **Toast & Undo (15s)**, Timeline del Giorno, Skeleton screens |
-| **Scrutini** | Pagelle, voti di condotta, crediti scolastici |
-| **PCTO & Orari** | Tracciamento ore alternanza scuola-lavoro, orario scolastico e gestione colloqui |
-| **PWA & Mobile** | Installabile su dispositivi mobili, supporto offline |
+| **Business Intelligence** | **Dashboard Dispersione Scolastica & Assenteismo**, report andamento 1° vs 2° Quadrimestre per la dirigenza                               |
+| **E-Learning Sync**       | **Google Classroom & Microsoft Teams**: sincronizzazione automatica compiti, voti e classi                                                |
+| **Comunicazioni**         | Circolari, comunicazioni urgenti con **Presa d'Atto obbligatoria**, notifiche real-time WebSocket                                         |
+| **Accessibilità & UX**    | **Font DSA OpenDyslexic**, alto contrasto, **Ricerca Globale `Ctrl+K`**, **Toast & Undo (15s)**, Timeline del Giorno, Skeleton screens    |
+| **Scrutini**              | Pagelle, voti di condotta, crediti scolastici                                                                                             |
+| **PCTO & Orari**          | Tracciamento ore alternanza scuola-lavoro, orario scolastico e gestione colloqui                                                          |
+| **PWA & Mobile**          | Installabile su dispositivi mobili, supporto offline                                                                                      |
 
 ---
 
@@ -111,6 +113,7 @@ npm run dev
 Il progetto include una suite completa di test automatizzati per il backend (Go) e il frontend (Vue/Quasar):
 
 ### Backend Testing (Go)
+
 ```bash
 # Esegui tutti i test del backend
 cd registro-backend && go test ./...
@@ -123,6 +126,7 @@ cd registro-backend && go test -v ./tests/integration/...
 ```
 
 ### Frontend Testing (Vitest & Playwright)
+
 ```bash
 # Unit & Component test con Vitest
 cd registro-frontend && npm run test:unit
@@ -133,7 +137,6 @@ cd registro-frontend && npm run test:coverage
 # End-to-End test con Playwright
 cd registro-frontend && npx playwright test
 ```
-
 
 ---
 
