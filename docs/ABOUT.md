@@ -25,6 +25,7 @@ Registrov2/
 ```
 
 ### Backend (Go 1.25+)
+
 - **[Gin Gonic](https://github.com/gin-gonic/gin)** (`github.com/gin-gonic/gin`): Framework HTTP ad alte prestazioni per il routing REST, middleware di sicurezza e gestione delle richieste JSON.
 - **[lib/pq](https://github.com/lib/pq)** (`github.com/lib/pq`): Driver nativo PostgreSQL con supporto ad indici parziali `WHERE deleted_at IS NULL` per velocizzare il soft delete.
 - **[golang-jwt](https://github.com/golang-jwt/jwt)** (`github.com/golang-jwt/jwt/v5`): Gestione sicura di JWT Access Tokens (15 min) e Refresh Tokens con rotazione automatica.
@@ -34,6 +35,7 @@ Registrov2/
 - **[Testify](https://github.com/stretchr/testify)** (`github.com/stretchr/testify`): Testing framework per asserzioni, suite e mock nelle unit/integration test.
 
 ### Frontend (Vue 3 + Quasar)
+
 - **[Vue 3](https://vuejs.org/)**: Framework UI reattivo con Composition API e sintassi `<script setup>`.
 - **[Quasar Framework v2](https://quasar.dev/)**: Design system completo per interfacce responsive, supporto PWA, dialoghi e tabelle ad alte prestazioni con piena accessibilità WAI-ARIA.
 - **[Pinia](https://pinia.vuejs.org/)**: Store di stato centralizzato modulare (`auth`, `classes`, `attendance`, `grades`, `schoolYear`, `theme`, `websocket`, `error`).
@@ -56,32 +58,55 @@ Registrov2/
 
 ---
 
-## 📸 Galleria Screenshot Consigliati per il Repository
+## 📸 Galleria Screenshot
 
-Per valorizzare il progetto su GitHub e nella documentazione commerciale/istituzionale, si raccomanda di catturare ed includere i seguenti screenshot (salvati nella cartella `docs/images/`):
+<a href="./images/01_dashboard_teacher.png"><img src="./images/01_dashboard_teacher.png" width="49.5%"/></a>
 
 1. **`01_dashboard_teacher.png` — Dashboard Docente & Timeline**
-   - *Descrizione*: Vista principale del docente con lezioni del giorno, accessi rapidi ai registri di classe, circolari e notifiche in tempo reale.
+   - _Descrizione_: Vista principale del docente con lezioni del giorno, accessi rapidi ai registri di classe, circolari e notifiche in tempo reale.
+
+<a href="./images/02_grade_matrix_input.png"><img src="./images/02_grade_matrix_input.png" width="49.5%"/></a>
+
 2. **`02_grade_matrix_input.png` — Registro Voti & Tastiera Rapida**
-   - *Descrizione*: Tabella dei voti con navigazione da tastiera, simulatore voto target e visualizzazione delle misure compensative BES/DSA.
+   - _Descrizione_: Tabella dei voti con navigazione da tastiera, simulatore voto target e visualizzazione delle misure compensative BES/DSA.
+
+<a href="./images/03_attendance_1click.png"><img src="./images/03_attendance_1click.png" width="49.5%"/></a>
+
 3. **`03_attendance_1click.png` — Registro Presenze & Firma Ora 1-Click**
-   - *Descrizione*: Interfaccia di rilevamento presenze/assenze/ritardi con pulsante di firma rapida della lezione.
+   - _Descrizione_: Interfaccia di rilevamento presenze/assenze/ritardi con pulsante di firma rapida della lezione.
+
+<a href="./images/04_scrutiny_matrix.png"><img src="./images/04_scrutiny_matrix.png" width="49.5%"/></a>
+
 4. **`04_scrutiny_matrix.png` — Matrice di Scrutinio & Pagelle**
-   - *Descrizione*: Tabella riepilogativa dello scrutinio di classe con medie per materia, proposte voto e statistiche assenze aggregate.
+   - _Descrizione_: Tabella riepilogativa dello scrutinio di classe con medie per materia, proposte voto e statistiche assenze aggregate.
+
+<a href="./images/05_classes_multisite.png"><img src="./images/05_classes_multisite.png" width="49.5%"/></a>
+
 5. **`05_classes_multisite.png` — Gestione Classi Multi-Sede**
-   - *Descrizione*: Pagina di gestione segreteria con la visualizzazione della Sede scolastica (es. Sede Centrale, Succursale) per ciascuna classe.
+   - _Descrizione_: Pagina di gestione segreteria con la visualizzazione della Sede scolastica (es. Sede Centrale, Succursale) per ciascuna classe.
+
+<a href="./images/06_substitutions_recommendation.png"><img src="./images/06_substitutions_recommendation.png" width="49.5%"/></a>
+
 6. **`06_substitutions_recommendation.png` — Suggerimento Automatico Supplenze**
-   - *Descrizione*: Algoritmo di calcolo dello score supplenti con i dettagli di materia, classe e carico orario settimanale.
+   - _Descrizione_: Algoritmo di calcolo dello score supplenti con i dettagli di materia, classe e carico orario settimanale.
+
+<a href="./images/07_parent_portal_mobile.png"><img src="./images/07_parent_portal_mobile.png" width="49.5%"/></a>
+
 7. **`07_parent_portal_mobile.png` — Portale Genitori & PWA Mobile**
-   - *Descrizione*: Vista responsive mobile del portale genitori con presa visione circolari, giustifica assenze e libretto voti.
+   - _Descrizione_: Vista responsive mobile del portale genitori con presa visione circolari, giustifica assenze e libretto voti.
+
+<a href="./images/08_accessibility_opendyslexic.png"><img src="./images/08_accessibility_opendyslexic.png" width="49.5%"/></a>
+
 8. **`08_accessibility_opendyslexic.png` — Accessibilità & Font DSA**
-   - *Descrizione*: Dettaglio dell'interfaccia con font OpenDyslexic attivo e modalità ad alto contrasto.
+
+- _Descrizione_: Dettaglio dell'interfaccia con font OpenDyslexic attivo e modalità ad alto contrasto.
 
 ---
 
 ## 🧪 Architettura dei Test
 
 ### Backend Testing (Go)
+
 1. **Unit Tests**:
    - `internal/auth/handler_test.go`, `internal/classes/service_test.go`, `internal/grades/handler_test.go`, `internal/attendance/service_test.go`, `internal/substitutions/service_test.go`
    - Test dei singoli moduli isolati mediante mock repository (pacchetto `tests/testhelpers`).
@@ -91,12 +116,14 @@ Per valorizzare il progetto su GitHub e nella documentazione commerciale/istituz
    - Test di integrazione del database e dei workflow completi multi-ruolo (Scuola di Prova, coordinamento docenti, RLS).
 
 Esecuzione dei test backend:
+
 ```bash
 cd registro-backend
 go test ./... -v
 ```
 
 ### Frontend Testing (Vue 3 / JavaScript)
+
 1. **Unit & Component Testing (Vitest)**:
    - `tests/unit/pages/Teacher/Attendance.spec.js`
    - `tests/unit/pages/Admin/Analytics.spec.js`
@@ -106,6 +133,7 @@ go test ./... -v
    - `tests/e2e/parent-workflow.spec.js`
 
 Esecuzione dei test frontend:
+
 ```bash
 cd registro-frontend
 npm run test:unit
