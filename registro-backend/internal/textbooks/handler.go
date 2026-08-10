@@ -17,6 +17,7 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	textbooks := rg.Group("/textbooks")
 	{
 		textbooks.POST("", h.Create)
+		textbooks.PUT("/:id", h.Update)
 		textbooks.GET("", h.List)
 		textbooks.DELETE("/:id", h.Delete)
 		textbooks.GET("/class/:classId", h.ListByClass)
@@ -48,6 +49,31 @@ func (h *Handler) Create(c *gin.Context) {
 		return
 	}
 	c.Status(http.StatusCreated)
+}
+
+func (h *Handler) Update(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "teacher" && role != "admin" && role != "superadmin" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
+	id := c.Param("id")
+	var req CreateTextbookRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if err := h.service.UpdateTextbook(c.Request.Context(), id, req); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.Status(http.StatusOK)
 }
 
 func (h *Handler) List(c *gin.Context) {

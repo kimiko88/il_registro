@@ -566,7 +566,10 @@ const roleOptions = [
     { label: 'Studente', value: 'student' },
     { label: 'Docente', value: 'teacher' },
     { label: 'Genitore', value: 'parent' },
-    { label: 'Personale ATA', value: 'staff' }
+    { label: 'Segreteria', value: 'secretary' },
+    { label: 'Vicepreside / Staff', value: 'vice_principal' },
+    { label: 'Preside / Dirigente', value: 'principal' },
+    { label: 'Amministratore', value: 'admin' }
 ];
 
 const openCreate = () => {

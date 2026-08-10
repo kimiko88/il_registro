@@ -7,6 +7,9 @@ export const textbookService = {
     create(data) {
         return api.post('/textbooks', data)
     },
+    update(id, data) {
+        return api.put(`/textbooks/${id}`, data)
+    },
     delete(id) {
         return api.delete(`/textbooks/${id}`)
     },

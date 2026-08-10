@@ -23,6 +23,9 @@ export const lessonService = {
     async deleteLesson(id) {
         return api.delete(`/lessons/${id}`)
     },
+    async getActivityHours(classId) {
+        return api.get(`/lessons/class/${classId}/activity-hours`)
+    },
 
     // Homework (Compiti)
     async getHomeworks(classId) {

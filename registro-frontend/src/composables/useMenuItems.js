@@ -19,6 +19,7 @@ export function useMenuItems(role) {
             { label: 'Dashboard', icon: 'dashboard', path: '/', exact: true },
             { label: 'La Mia Scuola', icon: 'school', path: '/admin/schools' },
             { label: 'Gestione Utenti', icon: 'people', path: '/admin/users' },
+            { label: 'Gestione Sostituzioni', icon: 'swap_horiz', path: '/secretary/substitutions' },
             { label: 'Feature Flags & Istituto', icon: 'toggle_on', path: '/admin/school-settings' },
             { label: 'Analytics', icon: 'analytics', path: '/admin/analytics' },
             { label: 'Google & Teams E-Learning', icon: 'hub', path: '/admin/elearning' },
@@ -50,6 +51,7 @@ export function useMenuItems(role) {
                 category: 'Servizi & Report',
                 icon: 'manage_accounts',
                 children: [
+                    { label: 'Gestione Sostituzioni', icon: 'swap_horiz', path: '/secretary/substitutions' },
                     { label: 'Comunicazioni', icon: 'email', path: '/secretary/communications' },
                     { label: 'Report', icon: 'assessment', path: '/secretary/reports' },
                     { label: 'PCTO', icon: 'work', path: '/secretary/pcto' },

@@ -7,7 +7,18 @@
           <q-icon name="schedule" color="primary" class="q-mr-sm" />
           Orario Scolastico
         </div>
-        <div class="text-caption text-grey">Seleziona una classe per visualizzare il suo orario delle lezioni</div>
+        <div class="text-caption text-grey">Seleziona una classe per visualizzare e gestire l'orario delle lezioni</div>
+      </div>
+      <div v-if="selectedClass" class="row items-center gap-2">
+        <q-btn
+          :label="isEditing ? 'Vista Lettura' : 'Modifica Orario'"
+          :icon="isEditing ? 'visibility' : 'edit'"
+          :color="isEditing ? 'secondary' : 'primary'"
+          outline
+          no-caps
+          class="rounded-lg"
+          @click="isEditing = !isEditing"
+        />
       </div>
     </div>
 
@@ -27,7 +38,7 @@
       </q-card-section>
     </q-card>
 
-    <!-- Timetable Grid -->
+    <!-- Timetable Grid / Editor -->
     <q-card v-if="loading" class="text-center q-pa-xl shadow-1">
       <q-spinner-dots color="primary" size="60px" />
     </q-card>
@@ -36,13 +47,23 @@
       <q-card v-if="!selectedClass" class="text-center q-pa-xl text-grey shadow-1">
         <q-icon name="touch_app" size="80px" class="q-mb-md" />
         <div class="text-h6">Seleziona una classe</div>
-        <div class="text-caption">Scegli una classe dall'elenco per visualizzare l'orario delle lezioni.</div>
+        <div class="text-caption">Scegli una classe dall'elenco per visualizzare o inserire l'orario delle lezioni.</div>
       </q-card>
+
+      <div v-else-if="isEditing">
+        <ScheduleGrid
+          :assignments="classAssignments"
+          :initial-schedule="scheduleEntries"
+          :loading="saving"
+          @save="onSaveSchedule"
+        />
+      </div>
 
       <q-card v-else-if="scheduleEntries.length === 0" class="text-center q-pa-xl text-grey-6 shadow-1">
         <q-icon name="event_busy" size="80px" class="q-mb-md" />
         <div class="text-h6">Orario non ancora configurato</div>
-        <div class="text-caption">La segreteria non ha ancora configurato l'orario per questa classe.</div>
+        <div class="text-caption q-mb-md">Non risulta un orario scolastico salvato per questa classe. Puoi inserirlo ora.</div>
+        <q-btn label="Configura Orario Ora" color="primary" icon="edit_calendar" no-caps class="rounded-lg" @click="isEditing = true" />
       </q-card>
 
       <q-card v-else class="shadow-soft overflow-hidden">
@@ -88,14 +109,18 @@ import { ref, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { useClassesStore } from 'src/stores/classes'
 import adminService from 'src/services/adminService'
+import ScheduleGrid from 'src/components/Secretary/ScheduleGrid.vue'
 
 const $q = useQuasar()
 const classesStore = useClassesStore()
 
 const loading = ref(false)
+const saving = ref(false)
+const isEditing = ref(false)
 const selectedClass = ref(null)
 const classOptions = ref([])
 const scheduleEntries = ref([])
+const classAssignments = ref([])
 
 const days = [
   { label: 'Lunedì', value: 1 },
@@ -117,10 +142,11 @@ onMounted(async () => {
 watch(selectedClass, async (newVal) => {
   if (newVal) {
     loading.value = true
-    await fetchSchedule()
+    await Promise.all([fetchSchedule(), fetchAssignments()])
     loading.value = false
   } else {
     scheduleEntries.value = []
+    classAssignments.value = []
   }
 })
 
@@ -131,6 +157,38 @@ const fetchSchedule = async () => {
   } catch (e) {
     console.error(e)
     $q.notify({ type: 'negative', message: 'Impossibile caricare l\'orario scolastico' })
+  }
+}
+
+const fetchAssignments = async () => {
+  try {
+    const res = await adminService.getClassSubjects(selectedClass.value)
+    classAssignments.value = res.data || []
+  } catch (e) {
+    console.error(e)
+    classAssignments.value = []
+  }
+}
+
+const onSaveSchedule = async (entries) => {
+  saving.value = true
+  try {
+    const formattedEntries = entries.map(e => ({
+      day_of_week: e.day_of_week,
+      hour_index: e.hour_index,
+      subject_id: e.subject_id,
+      teacher_id: e.teacher_id || null,
+      room: e.room || ''
+    }))
+    await adminService.saveClassSchedule(selectedClass.value, { entries: formattedEntries })
+    $q.notify({ type: 'positive', message: 'Orario scolastico salvato con successo' })
+    await fetchSchedule()
+    isEditing.value = false
+  } catch (e) {
+    console.error(e)
+    $q.notify({ type: 'negative', message: e.response?.data?.error || 'Errore durante il salvataggio dell\'orario' })
+  } finally {
+    saving.value = false
   }
 }
 

@@ -5,15 +5,15 @@ import "time"
 // --- Requests ---
 
 type CreateGradeRequest struct {
-	StudentID     string  `json:"student_id" binding:"required"`
-	SubjectID     string  `json:"subject_id" binding:"required"`
-	GradeValue    float64 `json:"grade_value" binding:"required,min=-1,max=10"`
-	GradeType     string  `json:"grade_type" binding:"required"`
-	Semester      int     `json:"semester" binding:"required,min=1,max=2"` // 1 or 2
-	Description   string  `json:"description"`
-	RubricID      *string `json:"rubric_id"`
-	Weight        float64 `json:"weight"`
-	IsPublished   bool    `json:"is_published"`
+	StudentID      string  `json:"student_id" binding:"required"`
+	SubjectID      string  `json:"subject_id" binding:"required"`
+	GradeValue     float64 `json:"grade_value" binding:"required,min=-1,max=10"`
+	GradeType      string  `json:"grade_type" binding:"required"`
+	Semester       int     `json:"semester" binding:"required,min=1,max=2"` // 1 or 2
+	Description    string  `json:"description"`
+	RubricID       *string `json:"rubric_id"`
+	Weight         float64 `json:"weight"`
+	IsPublished    bool    `json:"is_published"`
 	GradeCategory  string  `json:"grade_category"`          // formative/summative/practical
 	EvaluationType *string `json:"evaluation_type"`         // Written/Oral/Practical
 	Date           string  `json:"date" binding:"required"` // ISO date string preferred for input
@@ -69,11 +69,11 @@ type GradeFilter struct {
 
 // PaginatedGradesResponse wraps a slice of GradeResponse with pagination metadata.
 type PaginatedGradesResponse struct {
-	Data        []GradeResponse `json:"data"`
-	Total       int             `json:"total"`
-	Page        int             `json:"page"`
-	PageSize    int             `json:"page_size"`
-	TotalPages  int             `json:"total_pages"`
+	Data       []GradeResponse `json:"data"`
+	Total      int             `json:"total"`
+	Page       int             `json:"page"`
+	PageSize   int             `json:"page_size"`
+	TotalPages int             `json:"total_pages"`
 }
 
 type GradeResponse struct {

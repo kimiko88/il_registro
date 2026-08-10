@@ -126,6 +126,27 @@ func (r *PostgresRepository) GetByClass(ctx context.Context, classID string) ([]
 	return results, nil
 }
 
+func (r *PostgresRepository) normalizeTeacherID(ctx context.Context, teacherID *string) *string {
+	if teacherID == nil {
+		return nil
+	}
+	tid := strings.TrimSpace(*teacherID)
+	if tid == "" || tid == "null" || tid == "undefined" {
+		return nil
+	}
+	var userExists bool
+	err := r.db.QueryRowContext(ctx, "SELECT EXISTS(SELECT 1 FROM users WHERE id = $1::uuid)", tid).Scan(&userExists)
+	if err == nil && userExists {
+		return &tid
+	}
+	var userID string
+	err = r.db.QueryRowContext(ctx, "SELECT user_id::text FROM teachers WHERE id = $1::uuid OR user_id = $1::uuid LIMIT 1", tid).Scan(&userID)
+	if err == nil && userID != "" {
+		return &userID
+	}
+	return nil
+}
+
 func (r *PostgresRepository) Update(ctx context.Context, classID string, entries []ScheduleEntry) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -147,12 +168,12 @@ func (r *PostgresRepository) Update(ctx context.Context, classID string, entries
 
 		for _, e := range entries {
 			id := uuid.New().String()
+			normTeacherID := r.normalizeTeacherID(ctx, e.TeacherID)
 			values = append(values, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d, $%d)", 
 				argIdx, argIdx+1, argIdx+2, argIdx+3, argIdx+4, argIdx+5, argIdx+6))
-			args = append(args, id, classID, e.DayOfWeek, e.HourIndex, e.SubjectID, e.TeacherID, e.Room)
+			args = append(args, id, classID, e.DayOfWeek, e.HourIndex, e.SubjectID, normTeacherID, e.Room)
 			argIdx += 7
 		}
-		_ = argIdx
 
 		query := fmt.Sprintf(`
 			INSERT INTO class_schedules (id, class_id, day_of_week, hour_index, subject_id, teacher_id, room)

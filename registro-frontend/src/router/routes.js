@@ -94,7 +94,7 @@ export default [
             { path: 'secretary/groups', component: () => import('@/pages/secretary/Groups.vue'), meta: { title: 'Gruppi Linguistici / Articolati', roles: ['secretary'] } },
             { path: 'secretary/meetings', component: () => import('@/pages/secretary/Meetings.vue'), meta: { title: 'Organizzazione Riunioni', roles: ['secretary'] } },
             { path: 'secretary/certificates', component: () => import('@/pages/secretary/Certificates.vue'), meta: { title: 'Certificati & Attestati', roles: ['secretary', 'admin', 'superadmin'] } },
-            { path: 'secretary/audit-log', component: () => import('@/pages/secretary/AuditLog.vue'), meta: { title: 'Audit Log Segreteria', roles: ['secretary', 'admin', 'superadmin'] } },
+            { path: 'secretary/substitutions', component: () => import('@/pages/secretary/Substitutions.vue'), meta: { title: 'Gestione Sostituzioni Docenti', roles: ['secretary', 'admin', 'superadmin'] } },
             { path: 'secretary/students/:id/fascicolo', component: () => import('@/pages/secretary/FascicoloStudente.vue'), meta: { title: 'Fascicolo Studente', roles: ['secretary'] } },
 
             // Teacher Routes

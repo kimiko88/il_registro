@@ -80,6 +80,38 @@
       </q-card-section>
     </q-card>
 
+    <!-- PCTO & Orientamento Hour Counters -->
+    <div v-if="selectedClass && (activityHours.pcto > 0 || activityHours.orientamento > 0 || true)" class="row q-col-gutter-sm q-mb-md">
+      <div class="col-12 col-sm-6">
+        <q-card class="bg-deep-purple-1 shadow-1">
+          <q-card-section class="row items-center q-py-sm">
+            <q-icon name="work" color="deep-purple" class="q-mr-sm" size="28px" />
+            <div>
+              <div class="text-caption text-grey-7 text-weight-bold">Ore PCTO Svolte</div>
+              <div class="text-h5 text-weight-bold text-deep-purple">
+                {{ activityHours.pcto }}
+                <span class="text-caption text-grey-7">ore</span>
+              </div>
+            </div>
+          </q-card-section>
+        </q-card>
+      </div>
+      <div class="col-12 col-sm-6">
+        <q-card class="bg-teal-1 shadow-1">
+          <q-card-section class="row items-center q-py-sm">
+            <q-icon name="explore" color="teal" class="q-mr-sm" size="28px" />
+            <div>
+              <div class="text-caption text-grey-7 text-weight-bold">Ore Orientamento Svolte</div>
+              <div class="text-h5 text-weight-bold text-teal">
+                {{ activityHours.orientamento }}
+                <span class="text-caption text-grey-7">ore</span>
+              </div>
+            </div>
+          </q-card-section>
+        </q-card>
+      </div>
+    </div>
+
     <!-- Lessons List -->
     <div v-if="activeTab === 'lessons'">
       <q-card v-if="sortedLessons.length === 0" class="text-center q-pa-xl text-grey-6 shadow-1">
@@ -91,7 +123,7 @@
         <q-list separator>
           <q-item v-for="lesson in sortedLessons" :key="lesson.id" class="q-py-md">
             <q-item-section avatar>
-              <q-avatar color="primary" text-color="white" icon="menu_book" />
+              <q-avatar :color="getActivityTypeColor(lesson.activity_type)" text-color="white" :icon="getActivityTypeIcon(lesson.activity_type)" />
             </q-item-section>
             <q-item-section>
               <div class="row items-center q-gutter-xs q-mb-xs">
@@ -99,6 +131,9 @@
                   {{ lesson.hour || 1 }}ª Ora ({{ lesson.duration || 1 }}h)
                 </q-badge>
                 <q-badge outline :color="getLessonTypeColor(lesson.type)">{{ lesson.type }}</q-badge>
+                <q-badge v-if="lesson.activity_type && lesson.activity_type !== 'standard'" :color="getActivityTypeColor(lesson.activity_type)">
+                  <q-icon :name="getActivityTypeIcon(lesson.activity_type)" size="14px" class="q-mr-xs" />{{ getActivityTypeLabel(lesson.activity_type) }}
+                </q-badge>
                 <q-badge v-if="lesson.is_co_teaching" color="deep-purple" outline>
                   <q-icon name="people" size="14px" class="q-mr-xs"/>Compresenza
                 </q-badge>
@@ -279,6 +314,35 @@
             outlined dense
             :rules="[v => !!v || 'Campo obbligatorio']"
           />
+          <q-select
+            v-model="newLesson.activity_type"
+            :options="activityTypeOptions"
+            option-value="value"
+            option-label="label"
+            emit-value map-options
+            label="Tipologia Attività"
+            outlined dense
+          >
+            <template v-slot:option="scope">
+              <q-item v-bind="scope.itemProps">
+                <q-item-section avatar>
+                  <q-icon :name="scope.opt.icon" :color="scope.opt.color" />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label>{{ scope.opt.label }}</q-item-label>
+                  <q-item-label caption>{{ scope.opt.caption }}</q-item-label>
+                </q-item-section>
+              </q-item>
+            </template>
+          </q-select>
+          <q-banner
+            v-if="newLesson.activity_type === 'pcto' || newLesson.activity_type === 'orientamento'"
+            class="bg-blue-1 text-blue-9 rounded-borders q-mt-xs"
+            dense
+          >
+            <template v-slot:avatar><q-icon name="info" color="blue-7" /></template>
+            Per le attività {{ getActivityTypeLabel(newLesson.activity_type) }} non è possibile inserire valutazioni agli studenti.
+          </q-banner>
           <q-toggle
             v-model="newLesson.is_co_teaching"
             label="Compresenza (docente co-presente in classe)"
@@ -294,7 +358,7 @@
             placeholder="(Opzionale)"
           />
           <q-toggle
-            v-if="!isEditingLesson"
+            v-if="!isEditingLesson && !isPctoOrOrientamento"
             v-model="assignHomeworkToo"
             label="Assegna anche un compito per questa lezione"
             color="orange"

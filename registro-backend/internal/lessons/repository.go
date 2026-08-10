@@ -390,4 +390,3 @@ func (r *repository) HasApprovedSubstitution(teacherID, classID, date string, ho
 	err := r.db.QueryRow(query, teacherID, classID, date, hour).Scan(&exists)
 	return exists, err
 }
-

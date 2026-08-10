@@ -81,8 +81,8 @@ func (s *service) Update(ctx context.Context, actorID, actorRole, schoolID, clas
 	if actorID == "" {
 		return errors.New("unauthorized")
 	}
-	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" && actorRole != "principal" {
-		return errors.New("forbidden: only administrative staff can update class schedules")
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" && actorRole != "principal" && actorRole != "teacher" {
+		return errors.New("forbidden: only administrative staff or teachers can update class schedules")
 	}
 	if classID == "" {
 		return errors.New("class_id is required")

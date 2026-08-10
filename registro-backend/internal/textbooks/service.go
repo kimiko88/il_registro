@@ -25,6 +25,19 @@ func (s *Service) CreateTextbook(ctx context.Context, schoolID string, req Creat
 	return s.repo.Create(ctx, t)
 }
 
+func (s *Service) UpdateTextbook(ctx context.Context, id string, req CreateTextbookRequest) error {
+	t := &Textbook{
+		ID:        id,
+		Title:     req.Title,
+		Author:    req.Author,
+		Subject:   req.Subject,
+		ISBN:      req.ISBN,
+		Publisher: req.Publisher,
+		Price:     req.Price,
+	}
+	return s.repo.Update(ctx, t)
+}
+
 func (s *Service) ListTextbooks(ctx context.Context, schoolID string) ([]Textbook, error) {
 	return s.repo.List(ctx, schoolID)
 }
