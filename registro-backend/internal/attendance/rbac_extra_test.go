@@ -248,7 +248,7 @@ func TestProcessJustification_PrincipalAndSecretary_Pass(t *testing.T) {
 			}
 			userRepo := &mockUserRepo{
 				users: map[string]*users.User{
-					"stu1": {ID: "stu1", Role: "student", ClassID: &classID},
+					"stu1":   {ID: "stu1", Role: "student", ClassID: &classID},
 					"actor1": {ID: "actor1", Role: role},
 				},
 			}

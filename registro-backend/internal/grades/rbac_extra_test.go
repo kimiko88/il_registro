@@ -29,11 +29,11 @@ func TestCreateGrade_RoleEnforcement(t *testing.T) {
 			repo.On("Create", mock.Anything).Return(nil).Once()
 
 			err := svc.CreateGrade("actor", role, schoolID, CreateGradeRequest{
-				StudentID:   "s1",
-				Subject:     "math",
-				GradeValue:  8,
-				GradeType:   "numeric",
-				SchoolID:    schoolID,
+				StudentID:    "s1",
+				Subject:      "math",
+				GradeValue:   8,
+				GradeType:    "numeric",
+				SchoolID:     schoolID,
 				AcademicYear: "2024-2025",
 			})
 			assert.NoError(t, err, "role %s should be able to create grades", role)
@@ -49,11 +49,11 @@ func TestCreateGrade_RoleEnforcement(t *testing.T) {
 			svc := newTestService(repo, userRepo)
 
 			err := svc.CreateGrade("actor", role, schoolID, CreateGradeRequest{
-				StudentID:   "s1",
-				Subject:     "math",
-				GradeValue:  8,
-				GradeType:   "numeric",
-				SchoolID:    schoolID,
+				StudentID:    "s1",
+				Subject:      "math",
+				GradeValue:   8,
+				GradeType:    "numeric",
+				SchoolID:     schoolID,
 				AcademicYear: "2024-2025",
 			})
 			assert.ErrorIs(t, err, ErrUnauthorized,
