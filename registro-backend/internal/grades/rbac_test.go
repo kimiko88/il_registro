@@ -32,13 +32,13 @@ func TestGetStudentGradesWithFilter_RoleMatrix(t *testing.T) {
 	const parentID = "parent-1"
 
 	cases := []struct {
-		name      string
-		actorID   string
-		actorRole string
-		studentID string
-		guardianOK bool // only relevant when actorRole == "parent"
+		name        string
+		actorID     string
+		actorRole   string
+		studentID   string
+		guardianOK  bool // only relevant when actorRole == "parent"
 		guardianErr error
-		wantErr   bool
+		wantErr     bool
 		errContains string
 	}{
 		// student can access own grades
@@ -154,7 +154,7 @@ func TestBatchCreateGrades_RoleEnforcement(t *testing.T) {
 	const schoolID = "school-1"
 
 	allowedRoles := []string{"teacher", "admin", "superadmin"}
-	deniedRoles  := []string{"student", "parent", "principal", "secretary", "coordinator"}
+	deniedRoles := []string{"student", "parent", "principal", "secretary", "coordinator"}
 
 	for _, role := range allowedRoles {
 		t.Run("allowed_"+role, func(t *testing.T) {
@@ -221,7 +221,7 @@ func TestUpsertWeightConfig_RoleEnforcement(t *testing.T) {
 	}
 
 	allowedRoles := []string{"admin", "superadmin", "secretary"}
-	deniedRoles  := []string{"teacher", "student", "parent", "principal", "coordinator"}
+	deniedRoles := []string{"teacher", "student", "parent", "principal", "coordinator"}
 
 	for _, role := range allowedRoles {
 		t.Run("allowed_"+role, func(t *testing.T) {
@@ -256,7 +256,7 @@ func TestUpsertWeightConfig_RoleEnforcement(t *testing.T) {
 
 func TestDeleteWeightConfig_RoleEnforcement(t *testing.T) {
 	allowedRoles := []string{"admin", "superadmin", "secretary"}
-	deniedRoles  := []string{"teacher", "student", "parent", "principal"}
+	deniedRoles := []string{"teacher", "student", "parent", "principal"}
 
 	for _, role := range allowedRoles {
 		t.Run("allowed_"+role, func(t *testing.T) {
@@ -350,7 +350,7 @@ func TestGetChildAverages_GuardianCheck(t *testing.T) {
 	userRepo := new(MockUserRepo)
 	svc := newTestService(repo, userRepo)
 
-	const parentID = "parent-1"
+	const parentID = "student-owner"
 	const studentID = "student-1"
 
 	// Denied path

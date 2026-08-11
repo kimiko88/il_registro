@@ -30,7 +30,7 @@
                 <q-item-label>Font &amp; Leggibilità</q-item-label>
                 <q-item-label caption>Scelta dei font e temi</q-item-label>
               </q-item-section>
-            </q-item
+            </q-item>
 
             <q-item
               clickable
@@ -46,7 +46,7 @@
                 <q-item-label>Notifiche Figli</q-item-label>
                 <q-item-label caption>Avvisi presenze e voti</q-item-label>
               </q-item-section>
-            </q-item
+            </q-item>
 
             <q-item
               clickable

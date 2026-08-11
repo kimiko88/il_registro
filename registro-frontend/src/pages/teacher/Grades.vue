@@ -461,7 +461,7 @@ import { useSchoolYearStore } from '@/stores/schoolYear';
 import { ITALIAN_GRADE_OPTIONS, gradeToNumeric, formatGrade, getGradeColor } from '@/utils/gradeUtils';
 
 const $q = useQuasar();
-const { notifyWithUndo } = useUndoToast();
+useUndoToast();
 const classesStore = useClassesStore();
 const gradesStore = useGradesStore();
 const schoolYearStore = useSchoolYearStore();
@@ -778,8 +778,6 @@ const formatDate = (dateStr) => {
         return dateStr;
     }
 };
-
-
 
 const printReport = () => {
     showTestDialog.value = false;
