@@ -15,6 +15,12 @@ vi.mock('quasar', async (importOriginal) => {
     }
 })
 
+/**
+ * Flatten a menu config returned by useMenuItems into leaf items.
+ * Top-level items without children are included as-is; items with
+ * children contribute only their children (the category wrapper is
+ * not itself a navigable leaf).
+ */
 const getFlatItems = (role) => {
     const raw = useMenuItems(role)
     const result = []
@@ -71,6 +77,7 @@ describe('MainLayout Logic', () => {
             setupUserRole('teacher')
             const flatItems = getFlatItems('teacher')
 
+            // 1 dashboard + 11 Didattica + 5 Organizzazione + 4 Comunicazioni = 21
             expect(flatItems).toHaveLength(21)
             expect(flatItems.map(i => i.label)).toContain('Dashboard')
             expect(flatItems.map(i => i.label)).toContain('Le Mie Classi')
@@ -83,7 +90,8 @@ describe('MainLayout Logic', () => {
             setupUserRole('admin')
             const menuItems = useMenuItems('admin')
 
-            expect(menuItems).toHaveLength(7)
+            // admin config has 8 top-level flat items (no nested children)
+            expect(menuItems).toHaveLength(8)
             expect(menuItems.map(i => i.label)).toContain('Dashboard')
             expect(menuItems.map(i => i.label)).toContain('La Mia Scuola')
             expect(menuItems.map(i => i.label)).toContain('Analytics')
@@ -92,30 +100,35 @@ describe('MainLayout Logic', () => {
 
         it('should provide student menu items', () => {
             setupUserRole('student')
-            const menuItems = useMenuItems('student')
+            // student uses nested categories — use getFlatItems to count leaves
+            const flatItems = getFlatItems('student')
 
-            expect(menuItems).toHaveLength(14)
-            expect(menuItems.map(i => i.label)).toContain('Dashboard')
-            expect(menuItems.map(i => i.label)).toContain('I Miei Voti')
-            expect(menuItems.map(i => i.label)).toContain('Le Mie Presenze')
-            expect(menuItems.map(i => i.label)).toContain('PCTO')
+            // 1 dashboard + 6 Didattica + 4 Organizzazione + 6 Percorsi = 17
+            expect(flatItems).toHaveLength(17)
+            expect(flatItems.map(i => i.label)).toContain('Dashboard')
+            expect(flatItems.map(i => i.label)).toContain('I Miei Voti')
+            expect(flatItems.map(i => i.label)).toContain('Le Mie Presenze')
+            expect(flatItems.map(i => i.label)).toContain('PCTO')
         })
 
         it('should provide parent menu items', () => {
             setupUserRole('parent')
-            const menuItems = useMenuItems('parent')
+            // parent uses nested categories — use getFlatItems to count leaves
+            const flatItems = getFlatItems('parent')
 
-            expect(menuItems).toHaveLength(14)
-            expect(menuItems.map(i => i.label)).toContain('Dashboard')
-            expect(menuItems.map(i => i.label)).toContain('I Miei Figli')
-            expect(menuItems.map(i => i.label)).toContain('Colloqui')
+            // 1 dashboard + 7 Valutazione + 5 Servizi + 5 Comunicazioni = 18
+            expect(flatItems).toHaveLength(18)
+            expect(flatItems.map(i => i.label)).toContain('Dashboard')
+            expect(flatItems.map(i => i.label)).toContain('I Miei Figli')
+            expect(flatItems.map(i => i.label)).toContain('Colloqui')
         })
 
         it('should provide secretary menu items', () => {
             setupUserRole('secretary')
             const flatItems = getFlatItems('secretary')
 
-            expect(flatItems).toHaveLength(14)
+            // 1 dashboard + 4 Anagrafiche + 4 Atti + 6 Servizi = 15
+            expect(flatItems).toHaveLength(15)
             expect(flatItems.map(i => i.label)).toContain('Dashboard')
             expect(flatItems.map(i => i.label)).toContain('Documenti')
             expect(flatItems.map(i => i.label)).toContain('Studenti')
