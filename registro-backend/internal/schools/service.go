@@ -82,4 +82,3 @@ func (s *Service) Update(ctx context.Context, id string, req *UpdateSchoolReques
 func (s *Service) Delete(ctx context.Context, id string) error {
 	return s.repo.Delete(ctx, id)
 }
-

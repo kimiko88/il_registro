@@ -124,9 +124,9 @@ func (m *mockUserRepo) GetByID(_ context.Context, id string) (*users.User, error
 }
 
 // Implement remaining users.Repository methods as no-ops.
-func (m *mockUserRepo) Create(_ *users.User) error                            { return nil }
-func (m *mockUserRepo) Update(_ *users.User) error                            { return nil }
-func (m *mockUserRepo) Delete(_ string) error                                 { return nil }
+func (m *mockUserRepo) Create(_ *users.User) error { return nil }
+func (m *mockUserRepo) Update(_ *users.User) error { return nil }
+func (m *mockUserRepo) Delete(_ string) error      { return nil }
 func (m *mockUserRepo) FindByEmail(_ context.Context, _ string) (*users.User, error) {
 	return nil, nil
 }

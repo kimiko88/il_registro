@@ -9,12 +9,12 @@ import (
 
 // Structural XML models for SIDI / MPI export
 type SidiFlussoAnagrafe struct {
-	XMLName      xml.Name      `xml:"FlussoAnagrafeSIDI"`
-	CodiceScuola string        `xml:"CodiceScuola"`
-	AnnoScolastico string      `xml:"AnnoScolastico"`
-	DataExport   string        `xml:"DataExport"`
-	ClassID      string        `xml:"ClassID"`
-	Alunni       []SidiAlunno  `xml:"Alunni>Alunno"`
+	XMLName        xml.Name     `xml:"FlussoAnagrafeSIDI"`
+	CodiceScuola   string       `xml:"CodiceScuola"`
+	AnnoScolastico string       `xml:"AnnoScolastico"`
+	DataExport     string       `xml:"DataExport"`
+	ClassID        string       `xml:"ClassID"`
+	Alunni         []SidiAlunno `xml:"Alunni>Alunno"`
 }
 
 type SidiAlunno struct {
@@ -30,18 +30,18 @@ type SidiAlunno struct {
 }
 
 type SidiFlussoScrutino struct {
-	XMLName        xml.Name         `xml:"FlussoScrutiniSIDI"`
-	CodiceScuola   string           `xml:"CodiceScuola"`
-	AnnoScolastico string           `xml:"AnnoScolastico"`
-	Quadrimestre   int              `xml:"Quadrimestre"`
+	XMLName        xml.Name          `xml:"FlussoScrutiniSIDI"`
+	CodiceScuola   string            `xml:"CodiceScuola"`
+	AnnoScolastico string            `xml:"AnnoScolastico"`
+	Quadrimestre   int               `xml:"Quadrimestre"`
 	Valutazioni    []SidiValutazione `xml:"Valutazioni>Valutazione"`
 }
 
 type SidiValutazione struct {
-	CodiceFiscale string `xml:"CodiceFiscale"`
-	Materia       string `xml:"Materia"`
+	CodiceFiscale string  `xml:"CodiceFiscale"`
+	Materia       string  `xml:"Materia"`
 	VotoVoto      float64 `xml:"Voto"`
-	Esito         string `xml:"Esito"`
+	Esito         string  `xml:"Esito"`
 }
 
 func (s *Service) ExportSidiStudentsXML(ctx context.Context, classID string) ([]byte, error) {

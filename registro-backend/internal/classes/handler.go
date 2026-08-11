@@ -313,4 +313,3 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	}
 	rg.GET("/teacher/classes", h.GetTeacherClasses)
 }
-

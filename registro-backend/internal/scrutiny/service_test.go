@@ -262,4 +262,3 @@ func TestScrutinyOutcome_NonPromossoPerVotoCondotta(t *testing.T) {
 		t.Errorf("expected outcome 'non_promosso' due to conduct < 6, got '%s'", outcome)
 	}
 }
-

@@ -152,4 +152,3 @@ func (s *Service) BulkMigrateStudents(ctx context.Context, schoolID string, req 
 	}
 	return s.repo.BulkMigrateStudents(ctx, req.Migrations)
 }
-

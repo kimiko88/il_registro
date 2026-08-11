@@ -252,4 +252,3 @@ func TestScuolaDiProvaWorkflow(t *testing.T) {
 
 	fmt.Println("=== ALL INTEGRATION CHECKS PASSED PERFECTLY ===")
 }
-

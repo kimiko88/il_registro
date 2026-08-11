@@ -39,7 +39,7 @@ func (r *PostgresRepository) CreateTenant(ctx context.Context, t *Tenant) error 
 func (r *PostgresRepository) GetTenantByID(ctx context.Context, id string) (*Tenant, error) {
 	query := `SELECT id, name, COALESCE(code, ''), created_at FROM schools WHERE id = $1::uuid`
 	t := &Tenant{
-		Quota: TenantQuota{MaxStudents: 1000, MaxTeachers: 100, MaxStorageMB: 10240},
+		Quota:  TenantQuota{MaxStudents: 1000, MaxTeachers: 100, MaxStorageMB: 10240},
 		Status: "active",
 	}
 	err := r.db.QueryRowContext(ctx, query, id).Scan(&t.ID, &t.Name, &t.Code, &t.CreatedAt)
@@ -60,7 +60,7 @@ func (r *PostgresRepository) ListTenants(ctx context.Context) ([]*Tenant, error)
 	var list []*Tenant
 	for rows.Next() {
 		t := &Tenant{
-			Quota: TenantQuota{MaxStudents: 1000, MaxTeachers: 100, MaxStorageMB: 10240},
+			Quota:  TenantQuota{MaxStudents: 1000, MaxTeachers: 100, MaxStorageMB: 10240},
 			Status: "active",
 		}
 		if err := rows.Scan(&t.ID, &t.Name, &t.Code, &t.CreatedAt); err != nil {

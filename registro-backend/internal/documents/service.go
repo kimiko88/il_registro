@@ -500,5 +500,3 @@ func (s *service) AttachFile(ctx context.Context, actorRole, schoolID, docID, fi
 
 	return s.repo.Update(doc, updatedContent, "Attached file: "+cleanURL)
 }
-
-

@@ -437,7 +437,6 @@ func (h *Handler) RegisterRoutes(router *gin.RouterGroup, middleware *Middleware
 		adminGroup.GET("/system/health", middleware.RequireAdminOrSuperAdmin(), h.GetSystemHealth)
 		adminGroup.GET("/analytics/user-growth", middleware.RequireAdminOrSuperAdmin(), middleware.SetSchoolFilter(), h.GetUserGrowth)
 
-
 		// Restricted admin routes (admin and superadmin only)
 		restricted := adminGroup.Group("/")
 		restricted.Use(middleware.RequireAdminOrSuperAdmin())
@@ -551,11 +550,11 @@ func (h *Handler) GetSystemMetrics(c *gin.Context) {
 
 	metrics := gin.H{
 		"api_success_rate": 99.8,
-		"db_cpu_percent":    12.5,
-		"cache_hit_rate":    95.4,
-		"goroutines":        runtime.NumGoroutine(),
-		"memory_alloc_mb":   float64(memStats.Alloc) / 1024 / 1024,
-		"uptime_seconds":    time.Since(startTime).Seconds(),
+		"db_cpu_percent":   12.5,
+		"cache_hit_rate":   95.4,
+		"goroutines":       runtime.NumGoroutine(),
+		"memory_alloc_mb":  float64(memStats.Alloc) / 1024 / 1024,
+		"uptime_seconds":   time.Since(startTime).Seconds(),
 	}
 	c.JSON(http.StatusOK, metrics)
 }
@@ -593,11 +592,11 @@ func (h *Handler) GetSystemHealth(c *gin.Context) {
 			"disk_percent":   28,
 			"api_latency_ms": 14,
 		},
-		"api_version":  "1.0.0",
-		"db_version":   "PostgreSQL 15",
-		"environment":  "production",
-		"uptime":       uptimeStr,
-		"last_deploy":  startTime.Format(time.RFC3339),
+		"api_version": "1.0.0",
+		"db_version":  "PostgreSQL 15",
+		"environment": "production",
+		"uptime":      uptimeStr,
+		"last_deploy": startTime.Format(time.RFC3339),
 	}
 	c.JSON(http.StatusOK, health)
 }
@@ -622,5 +621,3 @@ func (h *Handler) GetUserGrowth(c *gin.Context) {
 
 	c.JSON(http.StatusOK, growth)
 }
-
-

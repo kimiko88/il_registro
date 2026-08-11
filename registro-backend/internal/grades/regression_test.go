@@ -116,7 +116,7 @@ func (m *RegressionMockRepo) CreateTest(test *ClassTest) error                  
 func (m *RegressionMockRepo) FindTestsByClassAndSubject(classID string, subjectID string) ([]ClassTest, error) {
 	return nil, nil
 }
-func (m *RegressionMockRepo) DeleteTest(id string) error { return nil }
+func (m *RegressionMockRepo) DeleteTest(id string) error       { return nil }
 func (m *RegressionMockRepo) UpdateTest(test *ClassTest) error { return nil }
 func (m *RegressionMockRepo) FindUpcomingTestsByClass(classID string) ([]ClassTest, error) {
 	return nil, nil
@@ -132,8 +132,10 @@ func (m *RegressionMockRepo) FindEnrolledSubjects(studentID string, semester int
 func (m *RegressionMockRepo) GetWeightConfigs(schoolID, subjectID, classID string) ([]GradeWeightConfig, error) {
 	return nil, nil
 }
-func (m *RegressionMockRepo) UpsertWeightConfig(cfg *GradeWeightConfig) (*GradeWeightConfig, error) { return cfg, nil }
-func (m *RegressionMockRepo) DeleteWeightConfig(id string) error              { return nil }
+func (m *RegressionMockRepo) UpsertWeightConfig(cfg *GradeWeightConfig) (*GradeWeightConfig, error) {
+	return cfg, nil
+}
+func (m *RegressionMockRepo) DeleteWeightConfig(id string) error { return nil }
 
 func TestService_FilterLogicRegex(t *testing.T) {
 	// Setup specific data

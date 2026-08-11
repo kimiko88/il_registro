@@ -147,7 +147,7 @@ type MockUserRepo struct {
 	mock.Mock
 }
 
-func (m *MockUserRepo) Create(ctx context.Context, user *users.User) error          { return nil }
+func (m *MockUserRepo) Create(ctx context.Context, user *users.User) error { return nil }
 func (m *MockUserRepo) GetByID(ctx context.Context, id string) (*users.User, error) {
 	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
@@ -155,10 +155,12 @@ func (m *MockUserRepo) GetByID(ctx context.Context, id string) (*users.User, err
 	}
 	return args.Get(0).(*users.User), args.Error(1)
 }
-func (m *MockUserRepo) GetByEmail(ctx context.Context, email string) (*users.User, error) { return nil, nil }
-func (m *MockUserRepo) Update(ctx context.Context, user *users.User) error          { return nil }
-func (m *MockUserRepo) Delete(ctx context.Context, id string) error                  { return nil }
-func (m *MockUserRepo) Restore(ctx context.Context, id string) error                 { return nil }
+func (m *MockUserRepo) GetByEmail(ctx context.Context, email string) (*users.User, error) {
+	return nil, nil
+}
+func (m *MockUserRepo) Update(ctx context.Context, user *users.User) error { return nil }
+func (m *MockUserRepo) Delete(ctx context.Context, id string) error        { return nil }
+func (m *MockUserRepo) Restore(ctx context.Context, id string) error       { return nil }
 func (m *MockUserRepo) List(ctx context.Context, filter users.UserFilter) ([]users.User, int, error) {
 	return nil, 0, nil
 }
@@ -172,7 +174,7 @@ func (m *MockUserRepo) GetAuditLogs(ctx context.Context, userID string, limit, o
 func (m *MockUserRepo) BulkCreate(ctx context.Context, users []users.User) (int, []string, error) {
 	return 0, nil, nil
 }
-func (m *MockUserRepo) HardDelete(ctx context.Context, id string) error { return nil }
+func (m *MockUserRepo) HardDelete(ctx context.Context, id string) error              { return nil }
 func (m *MockUserRepo) RevokeAllUserTokens(ctx context.Context, userID string) error { return nil }
 func (m *MockUserRepo) IsGuardian(ctx context.Context, parentID, studentID string) (bool, error) {
 	args := m.Called(ctx, parentID, studentID)

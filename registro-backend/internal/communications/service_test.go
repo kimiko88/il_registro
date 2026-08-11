@@ -102,7 +102,6 @@ func (m *MockRepository) Ack(ctx context.Context, communicationID, userID string
 	return args.Error(0)
 }
 
-
 func TestService_SendMessage(t *testing.T) {
 	mockRepo := new(MockRepository)
 	svc := NewService(mockRepo)
@@ -186,4 +185,3 @@ func TestService_AckMessage(t *testing.T) {
 	assert.NoError(t, err)
 	mockRepo.AssertExpectations(t)
 }
-

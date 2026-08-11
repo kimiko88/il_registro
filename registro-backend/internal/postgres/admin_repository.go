@@ -974,4 +974,3 @@ func (r *AdminRepository) GetUserGrowth(ctx context.Context, schoolID *string) (
 	}
 	return points, nil
 }
-

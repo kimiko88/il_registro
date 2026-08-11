@@ -7,10 +7,10 @@ import (
 )
 
 var (
-	ErrPlanNotFound     = errors.New("pdp plan not found")
-	ErrNotSharedYet     = errors.New("pdp plan has not been shared with the family yet")
-	ErrAlreadyApproved  = errors.New("pdp plan already approved by the family")
-	ErrUnauthorized     = errors.New("unauthorized: insufficient role for this pdp operation")
+	ErrPlanNotFound    = errors.New("pdp plan not found")
+	ErrNotSharedYet    = errors.New("pdp plan has not been shared with the family yet")
+	ErrAlreadyApproved = errors.New("pdp plan already approved by the family")
+	ErrUnauthorized    = errors.New("unauthorized: insufficient role for this pdp operation")
 )
 
 // Service defines the business logic for PDP/PEI plans.

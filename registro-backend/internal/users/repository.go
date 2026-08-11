@@ -58,8 +58,6 @@ type Repository interface {
 	IsActive(ctx context.Context, id string) (bool, error)
 }
 
-
-
 type PostgresRepository struct {
 	db *sql.DB
 }
@@ -295,23 +293,23 @@ func (r *PostgresRepository) BulkDelete(ctx context.Context, ids []string) (int,
 	if len(ids) == 0 {
 		return 0, nil
 	}
-	
+
 	placeholders := make([]string, len(ids))
 	args := make([]interface{}, len(ids)+1)
 	args[0] = time.Now()
-	
+
 	for i, id := range ids {
 		placeholders[i] = fmt.Sprintf("$%d::uuid", i+2)
 		args[i+1] = id
 	}
-	
+
 	query := fmt.Sprintf("UPDATE users SET deleted_at = $1 WHERE id IN (%s)", strings.Join(placeholders, ","))
-	
+
 	res, err := r.db.ExecContext(ctx, query, args...)
 	if err != nil {
 		return 0, err
 	}
-	
+
 	rows, _ := res.RowsAffected()
 	return int(rows), nil
 }

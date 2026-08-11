@@ -6,20 +6,20 @@ import (
 
 // User represents the full user entity for management
 type User struct {
-	ID            string  `json:"id" db:"id"`
-	Email         string  `json:"email" db:"email"`
-	PasswordHash  string  `json:"-" db:"password_hash"`
-	FirstName     string  `json:"first_name" db:"first_name"`
-	LastName      string  `json:"last_name" db:"last_name"`
-	FiscalCode    *string `json:"fiscal_code,omitempty" db:"fiscal_code"` // Codice Fiscale
-	Role          string  `json:"role" db:"role"`
-	SchoolID      *string `json:"school_id,omitempty" db:"school_id"`
-	StudentID     string  `json:"student_id,omitempty" db:"student_id"` // Profile ID
-	IsActive      bool    `json:"is_active" db:"is_active"`
-	IsStaff       bool    `json:"is_staff" db:"is_staff"`
-	EmailVerified bool    `json:"email_verified" db:"email_verified"`
-	MFAEnabled    bool    `json:"mfa_enabled" db:"mfa_enabled"`
-	MFASecret     string  `json:"-" db:"mfa_secret"`
+	ID            string     `json:"id" db:"id"`
+	Email         string     `json:"email" db:"email"`
+	PasswordHash  string     `json:"-" db:"password_hash"`
+	FirstName     string     `json:"first_name" db:"first_name"`
+	LastName      string     `json:"last_name" db:"last_name"`
+	FiscalCode    *string    `json:"fiscal_code,omitempty" db:"fiscal_code"` // Codice Fiscale
+	Role          string     `json:"role" db:"role"`
+	SchoolID      *string    `json:"school_id,omitempty" db:"school_id"`
+	StudentID     string     `json:"student_id,omitempty" db:"student_id"` // Profile ID
+	IsActive      bool       `json:"is_active" db:"is_active"`
+	IsStaff       bool       `json:"is_staff" db:"is_staff"`
+	EmailVerified bool       `json:"email_verified" db:"email_verified"`
+	MFAEnabled    bool       `json:"mfa_enabled" db:"mfa_enabled"`
+	MFASecret     string     `json:"-" db:"mfa_secret"`
 	PhoneNumber   *string    `json:"phone_number,omitempty" db:"phone_number"`
 	JobTitle      *string    `json:"job_title,omitempty" db:"job_title"`
 	DateOfBirth   *time.Time `json:"date_of_birth,omitempty" db:"date_of_birth"`
@@ -36,7 +36,7 @@ type User struct {
 	DeletedAt *time.Time `json:"deleted_at,omitempty" db:"deleted_at"` // Soft Delete
 
 	// GDPR
-	PseudonymizedAt *time.Time `json:"pseudonymized_at,omitempty" db:"pseudonymized_at"`
+	PseudonymizedAt   *time.Time `json:"pseudonymized_at,omitempty" db:"pseudonymized_at"`
 	PasswordChangedAt *time.Time `json:"password_changed_at,omitempty" db:"password_changed_at"`
 }
 

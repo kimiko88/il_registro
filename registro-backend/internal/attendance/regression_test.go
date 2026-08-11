@@ -41,7 +41,7 @@ func (m *MockAttRepo) GetStats(studentID string) (*SummaryResponse, error) { ret
 func (m *MockAttRepo) GetStatsBatch(ctx context.Context, studentIDs []string) (map[string]*SummaryResponse, error) {
 	return make(map[string]*SummaryResponse), nil
 }
-func (m *MockAttRepo) CountDistinctDays(studentID string) (int, error)     { return 0, nil }
+func (m *MockAttRepo) CountDistinctDays(studentID string) (int, error) { return 0, nil }
 func (m *MockAttRepo) GetAnalytics(ctx context.Context, schoolID string) (*AnalyticsResponse, error) {
 	return nil, nil
 }

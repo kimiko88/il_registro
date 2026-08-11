@@ -8,11 +8,11 @@ import (
 )
 
 type ChildOverview struct {
-	Student          users.StudentChild        `json:"student"`
-	Grades           []grades.Grade            `json:"grades"`
-	AverageGrade     float64                   `json:"average_grade"`
+	Student          users.StudentChild          `json:"student"`
+	Grades           []grades.Grade              `json:"grades"`
+	AverageGrade     float64                     `json:"average_grade"`
 	AttendanceStats  *attendance.SummaryResponse `json:"attendance_stats,omitempty"`
-	PendingCirculars []*communications.Message `json:"pending_circulars,omitempty"`
+	PendingCirculars []*communications.Message   `json:"pending_circulars,omitempty"`
 }
 
 type ParentDashboardResponse struct {

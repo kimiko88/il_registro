@@ -14,7 +14,7 @@ type CreateUserRequest struct {
 	SchoolID    *string `json:"school_id"`
 	PhoneNumber string  `json:"phone_number"`
 	JobTitle    string  `json:"job_title"`
-	ClassID     *string `json:"class_id"` // For students
+	ClassID     *string `json:"class_id"`      // For students
 	DateOfBirth string  `json:"date_of_birth"` // Format: YYYY-MM-DD
 	IsStaff     *bool   `json:"is_staff"`
 }
@@ -29,7 +29,7 @@ type UpdateUserRequest struct {
 	IsStaff     *bool   `json:"is_staff"`
 	Role        *string `json:"role"`
 	SchoolID    *string `json:"school_id"`
-	ClassID     *string `json:"class_id"` // For students
+	ClassID     *string `json:"class_id"`      // For students
 	DateOfBirth *string `json:"date_of_birth"` // Format: YYYY-MM-DD
 }
 

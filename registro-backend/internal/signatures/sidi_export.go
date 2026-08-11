@@ -91,27 +91,27 @@ type SidiPresenzaItem struct {
 
 // SidiCertItem con firma del dirigente scolastico (FIX DM742 #2 — DM 742 art. 3 co. 3)
 type SidiCertItem struct {
-	CodiceFiscale   string           `xml:"CodiceFiscaleStudente"`
-	DM742           string           `xml:"RiferimentoNormativo"`
-	Competenze      []SidiCompetenza `xml:"Competenze>Competenza"`
+	CodiceFiscale string           `xml:"CodiceFiscaleStudente"`
+	DM742         string           `xml:"RiferimentoNormativo"`
+	Competenze    []SidiCompetenza `xml:"Competenze>Competenza"`
 	// FIX DM742 #2: firma del Dirigente Scolastico obbligatoria per validità DM 742 art. 3 co. 3
-	FirmaDirigente  SidiDirigenteSign `xml:"FirmaDirigente"`
+	FirmaDirigente SidiDirigenteSign `xml:"FirmaDirigente"`
 }
 
 // SidiDirigenteSign contiene i dati della firma del Dirigente Scolastico.
 type SidiDirigenteSign struct {
-	CodiceFiscaleDS  string `xml:"CodiceFiscaleDS"`     // CF del Dirigente Scolastico
-	NominativoDS     string `xml:"NominativoDS"`        // Nome e Cognome DS
-	DataFirma        string `xml:"DataFirma"`           // ISO 8601
-	SignatureID      string `xml:"FirmaQualificataID"` // ID della QualifiedSignature del DS
+	CodiceFiscaleDS string `xml:"CodiceFiscaleDS"`    // CF del Dirigente Scolastico
+	NominativoDS    string `xml:"NominativoDS"`       // Nome e Cognome DS
+	DataFirma       string `xml:"DataFirma"`          // ISO 8601
+	SignatureID     string `xml:"FirmaQualificataID"` // ID della QualifiedSignature del DS
 }
 
 // SidiCompetenza con codici e livelli ufficiali DM 742/2017 (FIX DM742 #1 e #3)
 type SidiCompetenza struct {
-	Codice      string `xml:"Codice"`      // FIX: codici CK-1..CK-8 da Racc. UE 2018/C 189/01
+	Codice      string `xml:"Codice"` // FIX: codici CK-1..CK-8 da Racc. UE 2018/C 189/01
 	Descrizione string `xml:"Descrizione"`
 	// FIX DM742 #3: livelli ufficiali DM 742 (non più A/B/C/D ma Avanzato/Intermedio/Base/Iniziale)
-	Livello     string `xml:"Livello"`
+	Livello string `xml:"Livello"`
 }
 
 // ── SidiDataProvider — interfaccia per dati reali dal DB (FIX SIDI #1) ─────

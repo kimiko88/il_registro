@@ -183,4 +183,3 @@ func (m *MockRepository) GetUserGrowth(ctx context.Context, schoolID *string) ([
 	}
 	return args.Get(0).([]UserGrowthPoint), args.Error(1)
 }
-

@@ -157,7 +157,7 @@ func (c *Calculator) CalculateBellCurve(grades []Grade) (mean, stdDev, skewness,
 	// in the correction term). Return 0 rather than mixing population and
 	// sample estimators, which was the previous inconsistency.
 	if n > 3 {
-		kurtosis = ((n * (n + 1)) / ((n - 1) * (n - 2) * (n - 3))) * kurtSum - ((3 * math.Pow(n-1, 2)) / ((n - 2) * (n - 3)))
+		kurtosis = ((n*(n+1))/((n-1)*(n-2)*(n-3)))*kurtSum - ((3 * math.Pow(n-1, 2)) / ((n - 2) * (n - 3)))
 	} else {
 		// n == 3: insufficient degrees of freedom for the sample excess kurtosis.
 		kurtosis = 0

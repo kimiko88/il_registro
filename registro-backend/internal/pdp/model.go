@@ -15,24 +15,24 @@ const (
 
 // PdpContent is the structured content stored as JSONB.
 type PdpContent struct {
-	Objectives       []string `json:"objectives"`        // Obiettivi didattici
-	Compensative     []string `json:"compensative"`      // Misure compensative
-	Dispensative     []string `json:"dispensative"`      // Misure dispensative
-	EvaluationTools  []string `json:"evaluation_tools"`  // Strumenti di valutazione
-	Notes            string   `json:"notes"`             // Note aggiuntive
-	ReviewDate       string   `json:"review_date"`       // Data revisione (YYYY-MM-DD)
+	Objectives      []string `json:"objectives"`       // Obiettivi didattici
+	Compensative    []string `json:"compensative"`     // Misure compensative
+	Dispensative    []string `json:"dispensative"`     // Misure dispensative
+	EvaluationTools []string `json:"evaluation_tools"` // Strumenti di valutazione
+	Notes           string   `json:"notes"`            // Note aggiuntive
+	ReviewDate      string   `json:"review_date"`      // Data revisione (YYYY-MM-DD)
 }
 
 // PdpPlan is the main domain model for a PDP or PEI plan.
 type PdpPlan struct {
-	ID           string    `json:"id"            db:"id"`
-	StudentID    string    `json:"student_id"    db:"student_id"`
-	ClassID      string    `json:"class_id"      db:"class_id"`
-	SchoolID     string    `json:"school_id"     db:"school_id"`
-	AcademicYear string    `json:"academic_year" db:"academic_year"`
+	ID           string `json:"id"            db:"id"`
+	StudentID    string `json:"student_id"    db:"student_id"`
+	ClassID      string `json:"class_id"      db:"class_id"`
+	SchoolID     string `json:"school_id"     db:"school_id"`
+	AcademicYear string `json:"academic_year" db:"academic_year"`
 
 	PlanType  PlanType   `json:"plan_type"  db:"plan_type"`
-	Diagnosis string     `json:"diagnosis"  db:"diagnosis"`  // Riservato ai docenti
+	Diagnosis string     `json:"diagnosis"  db:"diagnosis"` // Riservato ai docenti
 	Content   PdpContent `json:"content"    db:"content"`
 
 	CoordinatorID *string `json:"coordinator_id,omitempty" db:"coordinator_id"`
@@ -54,23 +54,23 @@ type PdpPlan struct {
 
 // CreatePdpRequest is the request body for creating a new plan.
 type CreatePdpRequest struct {
-	StudentID    string     `json:"student_id"    binding:"required"`
-	ClassID      string     `json:"class_id"      binding:"required"`
-	AcademicYear string     `json:"academic_year" binding:"required"`
-	PlanType     PlanType   `json:"plan_type"`
-	Diagnosis    string     `json:"diagnosis"`
-	Content      PdpContent `json:"content"`
-	CoordinatorID *string   `json:"coordinator_id"`
-	ReferenteID   *string   `json:"referente_id"`
+	StudentID     string     `json:"student_id"    binding:"required"`
+	ClassID       string     `json:"class_id"      binding:"required"`
+	AcademicYear  string     `json:"academic_year" binding:"required"`
+	PlanType      PlanType   `json:"plan_type"`
+	Diagnosis     string     `json:"diagnosis"`
+	Content       PdpContent `json:"content"`
+	CoordinatorID *string    `json:"coordinator_id"`
+	ReferenteID   *string    `json:"referente_id"`
 }
 
 // UpdatePdpRequest is the request body for updating an existing plan.
 type UpdatePdpRequest struct {
-	PlanType     *PlanType  `json:"plan_type"`
-	Diagnosis    *string    `json:"diagnosis"`
-	Content      *PdpContent `json:"content"`
-	CoordinatorID *string   `json:"coordinator_id"`
-	ReferenteID   *string   `json:"referente_id"`
+	PlanType      *PlanType   `json:"plan_type"`
+	Diagnosis     *string     `json:"diagnosis"`
+	Content       *PdpContent `json:"content"`
+	CoordinatorID *string     `json:"coordinator_id"`
+	ReferenteID   *string     `json:"referente_id"`
 }
 
 // ShareWithFamilyRequest controls the family sharing flag.

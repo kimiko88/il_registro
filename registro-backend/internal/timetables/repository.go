@@ -169,7 +169,7 @@ func (r *PostgresRepository) Update(ctx context.Context, classID string, entries
 		for _, e := range entries {
 			id := uuid.New().String()
 			normTeacherID := r.normalizeTeacherID(ctx, e.TeacherID)
-			values = append(values, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d, $%d)", 
+			values = append(values, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d, $%d)",
 				argIdx, argIdx+1, argIdx+2, argIdx+3, argIdx+4, argIdx+5, argIdx+6))
 			args = append(args, id, classID, e.DayOfWeek, e.HourIndex, e.SubjectID, normTeacherID, e.Room)
 			argIdx += 7

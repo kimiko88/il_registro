@@ -9,8 +9,8 @@ import (
 
 // mockSubstitutionRepo implements Repository for unit tests.
 type mockSubstitutionRepo struct {
-	subs   []*Substitution
-	getErr error
+	subs    []*Substitution
+	getErr  error
 	saveErr error
 }
 

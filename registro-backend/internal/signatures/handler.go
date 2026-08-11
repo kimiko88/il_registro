@@ -9,9 +9,9 @@ import (
 )
 
 type Handler struct {
-	svc      Service
-	feqSvc   QualifiedService
-	sidiSvc  *SidiExportService
+	svc     Service
+	feqSvc  QualifiedService
+	sidiSvc *SidiExportService
 }
 
 func NewHandler(svc Service, feqSvc QualifiedService, sidiSvc *SidiExportService) *Handler {

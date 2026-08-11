@@ -664,4 +664,3 @@ func (m *MockClassesRepository) BulkMigrateStudents(ctx context.Context, migrati
 	args := m.Called(ctx, migrations)
 	return args.Error(0)
 }
-

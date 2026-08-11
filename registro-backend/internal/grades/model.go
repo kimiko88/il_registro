@@ -191,4 +191,3 @@ type UpsertWeightConfigRequest struct {
 	EvaluationType *string `json:"evaluation_type"`
 	Weight         float64 `json:"weight" binding:"required,min=0,max=10"`
 }
-

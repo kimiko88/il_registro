@@ -11,7 +11,7 @@ type Repository interface {
 	Update(ctx context.Context, t *Textbook) error
 	List(ctx context.Context, schoolID string) ([]Textbook, error)
 	Delete(ctx context.Context, id string) error
-	
+
 	AssignToClass(ctx context.Context, classID string, subjectID string, textbookID string, optional bool) error
 	RemoveFromClass(ctx context.Context, assignmentID string) error
 	ListByClass(ctx context.Context, classID string) ([]ClassTextbook, error)
@@ -45,7 +45,7 @@ func (r *postgresRepository) List(ctx context.Context, schoolID string) ([]Textb
 		return nil, err
 	}
 	defer rows.Close()
-	
+
 	var res []Textbook
 	for rows.Next() {
 		var t Textbook
@@ -87,7 +87,7 @@ func (r *postgresRepository) ListByClass(ctx context.Context, classID string) ([
 		return nil, err
 	}
 	defer rows.Close()
-	
+
 	var res []ClassTextbook
 	for rows.Next() {
 		var ct ClassTextbook

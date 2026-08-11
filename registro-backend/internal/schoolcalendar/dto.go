@@ -34,8 +34,8 @@ type NonTeachingDayResponse struct {
 
 type CreateAcademicPeriodRequest struct {
 	AcademicYearID *string `json:"academic_year_id,omitempty"`
-	Name           string  `json:"name" binding:"required"` // '1° Quadrimestre', '2° Quadrimestre'
-	Code           string  `json:"code"`                    // 'Q1', 'Q2'
+	Name           string  `json:"name" binding:"required"`       // '1° Quadrimestre', '2° Quadrimestre'
+	Code           string  `json:"code"`                          // 'Q1', 'Q2'
 	StartDate      string  `json:"start_date" binding:"required"` // YYYY-MM-DD
 	EndDate        string  `json:"end_date" binding:"required"`   // YYYY-MM-DD
 	IsCurrent      bool    `json:"is_current"`

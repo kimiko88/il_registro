@@ -16,9 +16,9 @@ type Course struct {
 	CreatedAt       time.Time `json:"created_at" db:"created_at"`
 
 	// Joined fields
-	TeacherName     string `json:"teacher_name,omitempty"`
-	EnrolledCount   int    `json:"enrolled_count"`
-	IsStudentEnrolled bool `json:"is_student_enrolled"`
+	TeacherName       string `json:"teacher_name,omitempty"`
+	EnrolledCount     int    `json:"enrolled_count"`
+	IsStudentEnrolled bool   `json:"is_student_enrolled"`
 }
 
 type Enrollment struct {
@@ -56,7 +56,7 @@ type CreateCourseRequest struct {
 type MarkAttendanceRequest struct {
 	CourseID  string  `json:"course_id" binding:"required"`
 	StudentID string  `json:"student_id" binding:"required"`
-	Date      string  `json:"date" binding:"required"` // YYYY-MM-DD
+	Date      string  `json:"date" binding:"required"`   // YYYY-MM-DD
 	Status    string  `json:"status" binding:"required"` // 'present', 'absent', 'excused'
 	Hours     float64 `json:"hours"`
 }

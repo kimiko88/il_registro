@@ -25,8 +25,8 @@ func (s *Service) CreateTenant(ctx context.Context, actorRole string, req Create
 		Name: req.Name,
 		Code: req.Code,
 		Quota: TenantQuota{
-			MaxStudents: req.MaxStudents,
-			MaxTeachers: req.MaxTeachers,
+			MaxStudents:  req.MaxStudents,
+			MaxTeachers:  req.MaxTeachers,
 			MaxStorageMB: req.MaxStorageMB,
 		},
 	}

@@ -396,4 +396,3 @@ func (s *Service) UpdateSchoolSetting(ctx context.Context, schoolID, key, value 
 func (s *Service) GetUserGrowth(ctx context.Context, schoolID *string) ([]UserGrowthPoint, error) {
 	return s.repo.GetUserGrowth(ctx, schoolID)
 }
-

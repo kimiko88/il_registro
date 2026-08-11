@@ -156,5 +156,6 @@ func (r *repository) ListRegistrations(ctx context.Context, meetingID string) ([
 	}
 	return res, rows.Err()
 }
+
 // Ensure time is used
 var _ = time.Now

@@ -67,7 +67,6 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 			}
 		}
 
-
 		if token == "" {
 			c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "missing authorization token"})
 			c.Abort()

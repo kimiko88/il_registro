@@ -515,4 +515,3 @@ func TestHandler_GetSystemHealth(t *testing.T) {
 	assert.Contains(t, resp, "services")
 	assert.Contains(t, resp, "metrics")
 }
-
