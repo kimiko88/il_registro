@@ -32,7 +32,9 @@ func (m *mockAttRepo) BatchCreate(atts []*attendance.Attendance) error {
 	return args.Error(0)
 }
 func (m *mockAttRepo) Update(att *attendance.Attendance) error { return nil }
-func (m *mockAttRepo) DeleteByClassDateHour(classID string, date time.Time, hour int) error { return nil }
+func (m *mockAttRepo) DeleteByClassDateHour(classID string, date time.Time, hour int) error {
+	return nil
+}
 func (m *mockAttRepo) FindByID(id string) (*attendance.Attendance, error) { return nil, nil }
 func (m *mockAttRepo) FindByClassAndDate(classID string, date time.Time) ([]attendance.Attendance, error) {
 	return nil, nil

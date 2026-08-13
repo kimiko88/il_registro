@@ -45,7 +45,7 @@ func (h *Handler) Create(c *gin.Context) {
 	}
 	schoolID := c.GetString("school_id")
 	if err := h.service.CreateTextbook(c.Request.Context(), schoolID, req); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	c.Status(http.StatusCreated)
@@ -70,7 +70,7 @@ func (h *Handler) Update(c *gin.Context) {
 		return
 	}
 	if err := h.service.UpdateTextbook(c.Request.Context(), id, req); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	c.Status(http.StatusOK)

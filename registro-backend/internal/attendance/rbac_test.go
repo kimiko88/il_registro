@@ -135,29 +135,47 @@ func (m *mockUserRepo) GetByID(_ context.Context, id string) (*users.User, error
 	}
 	return nil, fmt.Errorf("user not found: %s", id)
 }
-func (m *mockUserRepo) Create(_ context.Context, _ *users.User) error { return nil }
+func (m *mockUserRepo) Create(_ context.Context, _ *users.User) error               { return nil }
 func (m *mockUserRepo) GetByEmail(_ context.Context, _ string) (*users.User, error) { return nil, nil }
-func (m *mockUserRepo) Update(_ context.Context, _ *users.User) error { return nil }
-func (m *mockUserRepo) GetPasswordHistory(_ context.Context, _ string) ([]string, error) { return nil, nil }
+func (m *mockUserRepo) Update(_ context.Context, _ *users.User) error               { return nil }
+func (m *mockUserRepo) GetPasswordHistory(_ context.Context, _ string) ([]string, error) {
+	return nil, nil
+}
 func (m *mockUserRepo) AddPasswordHistory(_ context.Context, _, _ string) error { return nil }
-func (m *mockUserRepo) Delete(_ context.Context, _ string) error { return nil }
-func (m *mockUserRepo) Restore(_ context.Context, _ string) error { return nil }
-func (m *mockUserRepo) List(_ context.Context, _ users.UserFilter) ([]users.User, int, error) { return nil, 0, nil }
-func (m *mockUserRepo) ListByIDs(_ context.Context, _ []string) ([]users.User, error) { return nil, nil }
+func (m *mockUserRepo) Delete(_ context.Context, _ string) error                { return nil }
+func (m *mockUserRepo) Restore(_ context.Context, _ string) error               { return nil }
+func (m *mockUserRepo) List(_ context.Context, _ users.UserFilter) ([]users.User, int, error) {
+	return nil, 0, nil
+}
+func (m *mockUserRepo) ListByIDs(_ context.Context, _ []string) ([]users.User, error) {
+	return nil, nil
+}
 func (m *mockUserRepo) LogAudit(_ context.Context, _ *users.AuditLog) error { return nil }
-func (m *mockUserRepo) GetAuditLogs(_ context.Context, _ string, _, _ int) ([]users.AuditLog, int, error) { return nil, 0, nil }
-func (m *mockUserRepo) BulkCreate(_ context.Context, _ []users.User) (int, []string, error) { return 0, nil, nil }
+func (m *mockUserRepo) GetAuditLogs(_ context.Context, _ string, _, _ int) ([]users.AuditLog, int, error) {
+	return nil, 0, nil
+}
+func (m *mockUserRepo) BulkCreate(_ context.Context, _ []users.User) (int, []string, error) {
+	return 0, nil, nil
+}
 func (m *mockUserRepo) BulkDelete(_ context.Context, _ []string) (int, error) { return 0, nil }
-func (m *mockUserRepo) HardDelete(_ context.Context, _ string) error { return nil }
+func (m *mockUserRepo) HardDelete(_ context.Context, _ string) error          { return nil }
 func (m *mockUserRepo) RevokeAllUserTokens(_ context.Context, _ string) error { return nil }
-func (m *mockUserRepo) AddGuardian(_ context.Context, _, _, _ string) error { return nil }
-func (m *mockUserRepo) GetChildren(_ context.Context, _ string) ([]users.StudentChild, error) { return nil, nil }
-func (m *mockUserRepo) GetStudentsByClass(_ context.Context, _ string) ([]users.User, error) { return nil, nil }
+func (m *mockUserRepo) AddGuardian(_ context.Context, _, _, _ string) error   { return nil }
+func (m *mockUserRepo) GetChildren(_ context.Context, _ string) ([]users.StudentChild, error) {
+	return nil, nil
+}
+func (m *mockUserRepo) GetStudentsByClass(_ context.Context, _ string) ([]users.User, error) {
+	return nil, nil
+}
 func (m *mockUserRepo) GetStudentProfile(_ context.Context, _ string) (string, error) { return "", nil }
-func (m *mockUserRepo) GetParentProfile(_ context.Context, _ string) (string, error) { return "", nil }
-func (m *mockUserRepo) RemoveGuardian(_ context.Context, _, _ string) error { return nil }
-func (m *mockUserRepo) GetGuardians(_ context.Context, _ string) ([]users.GuardianInfo, error) { return nil, nil }
-func (m *mockUserRepo) GetFascicoloSummary(_ context.Context, _ string, _ bool) (map[string]interface{}, error) { return nil, nil }
+func (m *mockUserRepo) GetParentProfile(_ context.Context, _ string) (string, error)  { return "", nil }
+func (m *mockUserRepo) RemoveGuardian(_ context.Context, _, _ string) error           { return nil }
+func (m *mockUserRepo) GetGuardians(_ context.Context, _ string) ([]users.GuardianInfo, error) {
+	return nil, nil
+}
+func (m *mockUserRepo) GetFascicoloSummary(_ context.Context, _ string, _ bool) (map[string]interface{}, error) {
+	return nil, nil
+}
 func (m *mockUserRepo) IsActive(_ context.Context, _ string) (bool, error) { return true, nil }
 
 // ---------------------------------------------------------------------------
