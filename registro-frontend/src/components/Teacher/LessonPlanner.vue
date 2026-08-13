@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <q-page class="q-pa-md bg-grey-1">
 
     <!-- Header -->
@@ -8,7 +8,7 @@
           <span>Registro di Classe</span>
           <q-chip v-if="isSubstitutionMode" color="deep-orange" text-color="white" class="q-ml-sm text-weight-bold">
             <q-icon name="swap_horiz" class="q-mr-xs" />
-            Modalità Supplenza
+            ModalitÃ  Supplenza
           </q-chip>
         </div>
         <div class="text-caption text-grey">Firma il registro, inserisci l'argomento e assegna i compiti</div>
@@ -22,7 +22,16 @@
           class="rounded-lg text-weight-bold"
           @click="toggleSubstitutionMode"
         />
-        <q-btn icon="add" label="Nuova Lezione" color="primary" @click="openNewLesson" />
+        <q-btn
+          v-if="activeTab === 'lessons'"
+          icon="add" label="Nuova Lezione" color="primary"
+          @click="openNewLesson"
+        />
+        <q-btn
+          v-if="activeTab === 'free'"
+          icon="add" label="Nuova AttivitÃ " color="teal"
+          @click="openNewFreeActivity"
+        />
       </div>
     </div>
 
@@ -31,9 +40,9 @@
       <template v-slot:avatar>
         <q-icon name="swap_horiz" color="amber-9" size="28px" />
       </template>
-      <div class="text-weight-bold text-subtitle1">Modalità Supplenza Occasionale nel Registro di Classe — {{ selectedClassLabel }}</div>
+      <div class="text-weight-bold text-subtitle1">ModalitÃ  Supplenza Occasionale nel Registro di Classe â€” {{ selectedClassLabel }}</div>
       <div class="text-caption">
-        Stai registrando la firma di lezione nel Registro di Classe per una classe/gruppo della scuola in qualità di docente supplente.
+        Stai registrando la firma di lezione nel Registro di Classe per una classe/gruppo della scuola in qualitÃ  di docente supplente.
         Puoi firmare l'ora come <strong>Supplenza</strong>, specificare l'argomento trattato ed annotare eventuali compiti o note per gli alunni.
       </div>
     </q-banner>
@@ -42,6 +51,7 @@
     <q-card class="q-mb-md shadow-1">
       <q-card-section class="row items-center q-gutter-md q-py-sm">
         <q-select
+          v-if="activeTab !== 'free'"
           v-model="selectedClass"
           :options="availableClassOptions"
           option-value="id"
@@ -59,6 +69,7 @@
           style="min-width:170px"
         />
         <q-select
+          v-if="activeTab === 'lessons'"
           v-model="selectedSubject"
           :options="availableSubjectOptions"
           option-value="subject_id"
@@ -75,13 +86,17 @@
           v-model="activeTab"
           toggle-color="primary"
           flat
-          :options="[{label:'Lezioni', value:'lessons'},{label:'Compiti', value:'homework'}]"
+          :options="[
+            {label:'Lezioni', value:'lessons', icon:'menu_book'},
+            {label:'Compiti', value:'homework', icon:'assignment'},
+            {label:'Ore Libere', value:'free', icon:'event_busy'}
+          ]"
         />
       </q-card-section>
     </q-card>
 
-    <!-- PCTO & Orientamento Hour Counters -->
-    <div v-if="selectedClass && (activityHours.pcto > 0 || activityHours.orientamento > 0 || true)" class="row q-col-gutter-sm q-mb-md">
+    <!-- PCTO & Orientamento Hour Counters (solo tab lezioni) -->
+    <div v-if="activeTab === 'lessons' && selectedClass" class="row q-col-gutter-sm q-mb-md">
       <div class="col-12 col-sm-6">
         <q-card class="bg-deep-purple-1 shadow-1">
           <q-card-section class="row items-center q-py-sm">
@@ -128,7 +143,7 @@
             <q-item-section>
               <div class="row items-center q-gutter-xs q-mb-xs">
                 <q-badge color="indigo" class="text-weight-bold text-caption">
-                  {{ lesson.hour || 1 }}ª Ora ({{ lesson.duration || 1 }}h)
+                  {{ lesson.hour || 1 }}Âª Ora ({{ lesson.duration || 1 }}h)
                 </q-badge>
                 <q-badge outline :color="getLessonTypeColor(lesson.type)">{{ lesson.type }}</q-badge>
                 <q-badge v-if="lesson.activity_type && lesson.activity_type !== 'standard'" :color="getActivityTypeColor(lesson.activity_type)">
@@ -210,6 +225,64 @@
       </q-card>
     </div>
 
+    <!-- â”€â”€â”€ AttivitÃ  Libere Tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <div v-if="activeTab === 'free'">
+      <q-banner class="bg-teal-1 text-teal-9 rounded-xl border border-teal-3 q-mb-md" dense>
+        <template v-slot:avatar><q-icon name="event_busy" color="teal-8" size="22px" /></template>
+        <div class="text-weight-bold">Ore a Disposizione / AttivitÃ  Non in Classe</div>
+        <div class="text-caption">
+          Registra qui le tue ore quando la classe Ã¨ in gita, sei in riunione, formazione, disponibilitÃ , etc.
+          Queste attivitÃ  non sono collegate ad una classe specifica.
+        </div>
+      </q-banner>
+
+      <q-card v-if="freeActivities.length === 0" class="text-center q-pa-xl text-grey-6 shadow-1">
+        <q-icon name="event_busy" size="80px" class="q-mb-md" />
+        <div class="text-h6">Nessuna attivitÃ  libera registrata</div>
+        <div class="text-caption">Aggiungi un'attivitÃ  per il giorno {{ formatDate(selectedDate) }}</div>
+        <q-btn label="Aggiungi AttivitÃ " color="teal" @click="openNewFreeActivity" class="q-mt-md" />
+      </q-card>
+      <q-card v-else class="shadow-1">
+        <q-card-section class="row justify-end q-pb-none">
+          <q-btn flat icon="add" label="Aggiungi AttivitÃ " color="teal" @click="openNewFreeActivity" />
+        </q-card-section>
+        <q-list separator>
+          <q-item v-for="act in freeActivities" :key="act.id" class="q-py-md">
+            <q-item-section avatar>
+              <q-avatar :color="getFreeActivityColor(act.activity_type)" text-color="white" :icon="getFreeActivityIcon(act.activity_type)" />
+            </q-item-section>
+            <q-item-section>
+              <div class="row items-center q-gutter-xs q-mb-xs">
+                <q-badge color="teal-8" class="text-weight-bold text-caption">
+                  {{ act.start_hour }}Âª Ora ({{ act.duration }}h)
+                </q-badge>
+                <q-badge :color="getFreeActivityColor(act.activity_type)" outline>
+                  {{ getFreeActivityLabel(act.activity_type) }}
+                </q-badge>
+              </div>
+              <q-item-label class="text-weight-bold text-subtitle1">{{ act.description }}</q-item-label>
+              <q-item-label caption class="text-grey-8">
+                <strong>Data:</strong> {{ formatDate(act.date) }}
+              </q-item-label>
+              <q-item-label caption class="text-grey-7 q-mt-xs" v-if="act.notes">
+                <em>Note: {{ act.notes }}</em>
+              </q-item-label>
+            </q-item-section>
+            <q-item-section side>
+              <div class="row items-center q-gutter-xs">
+                <q-btn flat round dense icon="edit" color="teal" size="sm" @click="openEditFreeActivity(act)">
+                  <q-tooltip>Modifica</q-tooltip>
+                </q-btn>
+                <q-btn flat round dense icon="delete" color="negative" size="sm" @click="confirmDeleteFreeActivity(act)">
+                  <q-tooltip>Elimina</q-tooltip>
+                </q-btn>
+              </div>
+            </q-item-section>
+          </q-item>
+        </q-list>
+      </q-card>
+    </div>
+
     <!-- Lesson Details Dialog -->
     <q-dialog v-model="detailsDialog">
       <q-card style="min-width: 460px">
@@ -223,7 +296,7 @@
         <q-card-section class="q-gutter-sm" v-if="selectedLesson">
           <div class="text-subtitle1 text-weight-bold text-primary">{{ selectedLesson.topic }}</div>
           <div><strong>Data:</strong> {{ formatDate(selectedLesson.date) }}</div>
-          <div><strong>Ora lezione:</strong> {{ selectedLesson.hour || 1 }}ª Ora (Durata: {{ selectedLesson.duration || 1 }}h)</div>
+          <div><strong>Ora lezione:</strong> {{ selectedLesson.hour || 1 }}Âª Ora (Durata: {{ selectedLesson.duration || 1 }}h)</div>
           <div><strong>Docente:</strong> {{ selectedLesson.teacher_name || '-' }}</div>
           <div>
             <strong>Tipologia:</strong>
@@ -320,7 +393,7 @@
             option-value="value"
             option-label="label"
             emit-value map-options
-            label="Tipologia Attività"
+            label="Tipologia AttivitÃ "
             outlined dense
           >
             <template v-slot:option="scope">
@@ -336,12 +409,12 @@
             </template>
           </q-select>
           <q-banner
-            v-if="newLesson.activity_type === 'pcto' || newLesson.activity_type === 'orientamento'"
+            v-if="isPctoOrOrientamento"
             class="bg-blue-1 text-blue-9 rounded-borders q-mt-xs"
             dense
           >
             <template v-slot:avatar><q-icon name="info" color="blue-7" /></template>
-            Per le attività {{ getActivityTypeLabel(newLesson.activity_type) }} non è possibile inserire valutazioni agli studenti.
+            Per le attivitÃ  {{ getActivityTypeLabel(newLesson.activity_type) }} non Ã¨ possibile inserire valutazioni agli studenti.
           </q-banner>
           <q-toggle
             v-model="newLesson.is_co_teaching"
@@ -430,6 +503,104 @@
       </q-card>
     </q-dialog>
 
+    <!-- New / Edit Free Activity Dialog -->
+    <q-dialog v-model="freeActivityDialog" persistent>
+      <q-card style="min-width: 480px; max-width: 600px">
+        <q-card-section class="bg-teal-8 text-white row items-center">
+          <q-icon name="event_busy" class="q-mr-sm" size="24px" />
+          <span class="text-h6">{{ isEditingFreeActivity ? 'Modifica AttivitÃ  Libera' : 'Nuova AttivitÃ  Libera' }}</span>
+          <q-space />
+          <q-btn flat round dense icon="close" v-close-popup />
+        </q-card-section>
+        <q-card-section class="q-gutter-md q-pt-md">
+          <q-banner class="bg-teal-1 text-teal-9 rounded-borders" dense>
+            <template v-slot:avatar><q-icon name="info" color="teal-7" /></template>
+            Usa questo form per registrare ore in cui non sei in classe:
+            classe in gita, disponibilitÃ , riunione, formazione, etc.
+          </q-banner>
+          <q-input
+            v-model="newFreeActivity.date"
+            type="date"
+            label="Data *"
+            outlined dense
+            :rules="[v => !!v || 'Campo obbligatorio']"
+          />
+          <div class="row q-col-gutter-sm">
+            <div class="col-12 col-md-6">
+              <q-select
+                v-model="newFreeActivity.start_hour"
+                :options="[1,2,3,4,5,6,7,8]"
+                label="Ora di Inizio *"
+                outlined dense
+                :rules="[v => !!v || 'Campo obbligatorio']"
+              >
+                <template v-slot:prepend><q-icon name="schedule" /></template>
+              </q-select>
+            </div>
+            <div class="col-12 col-md-6">
+              <q-select
+                v-model="newFreeActivity.duration"
+                :options="[1,2,3,4,5,6]"
+                label="Durata (ore) *"
+                outlined dense
+                :rules="[v => !!v || 'Campo obbligatorio']"
+              >
+                <template v-slot:prepend><q-icon name="timelapse" /></template>
+              </q-select>
+            </div>
+          </div>
+          <q-select
+            v-model="newFreeActivity.activity_type"
+            :options="freeActivityTypeOptions"
+            option-value="value"
+            option-label="label"
+            emit-value map-options
+            label="Tipo di AttivitÃ  *"
+            outlined dense
+          >
+            <template v-slot:option="scope">
+              <q-item v-bind="scope.itemProps">
+                <q-item-section avatar>
+                  <q-icon :name="scope.opt.icon" :color="scope.opt.color" />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label>{{ scope.opt.label }}</q-item-label>
+                  <q-item-label caption>{{ scope.opt.caption }}</q-item-label>
+                </q-item-section>
+              </q-item>
+            </template>
+          </q-select>
+          <q-input
+            v-model="newFreeActivity.description"
+            label="Descrizione *"
+            outlined dense
+            autogrow
+            placeholder="Es: Classe in gita a Roma â€” ore a disposizione, riunione dipartimento, etc."
+            :rules="[v => !!v || 'Campo obbligatorio']"
+          />
+          <q-input
+            v-model="newFreeActivity.notes"
+            label="Note aggiuntive"
+            type="textarea"
+            outlined dense
+            autogrow
+            placeholder="(Opzionale)"
+          />
+        </q-card-section>
+        <q-card-actions align="right" class="q-pa-md">
+          <q-btn flat label="Annulla" v-close-popup />
+          <q-btn
+            color="teal"
+            text-color="white"
+            :label="isEditingFreeActivity ? 'Aggiorna' : 'Salva AttivitÃ '"
+            :loading="saving"
+            icon="save"
+            @click="saveFreeActivity"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
   </q-page>
 </template>
 
@@ -440,6 +611,7 @@ import { useClassesStore } from 'src/stores/classes'
 import { useGradesStore } from 'src/stores/grades'
 import { useAuthStore } from 'src/stores/auth'
 import { lessonService } from 'src/services/lessonService'
+import { teacherActivityService } from 'src/services/teacherActivityService'
 
 const $q = useQuasar()
 const classesStore = useClassesStore()
@@ -466,6 +638,182 @@ const assignHomeworkToo = ref(false)
 
 const lessons = ref([])
 const homeworks = ref([])
+
+// â”€â”€ AttivitÃ  Libere State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const freeActivities = ref([])
+const freeActivityDialog = ref(false)
+const isEditingFreeActivity = ref(false)
+const editingFreeActivityId = ref(null)
+
+const newFreeActivity = ref({
+  date: date.formatDate(Date.now(), 'YYYY-MM-DD'),
+  start_hour: 1,
+  duration: 1,
+  activity_type: 'disponibilita',
+  description: '',
+  notes: ''
+})
+
+/** Opzioni per il tipo di attivitÃ  libera docente */
+const freeActivityTypeOptions = [
+  { value: 'disponibilita', label: 'DisponibilitÃ  / Classe in gita', icon: 'event_busy', color: 'teal', caption: 'Classe in gita o ore a disposizione' },
+  { value: 'riunione',      label: 'Riunione / Consiglio di Classe', icon: 'groups',      color: 'indigo', caption: 'Riunione di dipartimento, consigli, etc.' },
+  { value: 'formazione',    label: 'Formazione / Aggiornamento',     icon: 'school',      color: 'blue', caption: 'Corsi di aggiornamento professionale' },
+  { value: 'ptof',          label: 'AttivitÃ  PTOF',                  icon: 'auto_stories', color: 'purple', caption: 'AttivitÃ  rientranti nel PTOF scolastico' },
+  { value: 'gita',          label: 'Gita / Uscita didattica',        icon: 'luggage',     color: 'orange', caption: 'Accompagnamento in gita o uscita didattica' },
+  { value: 'altro',         label: 'Altro',                          icon: 'more_horiz',  color: 'grey', caption: 'Altra attivitÃ  non categorizzata' }
+]
+
+const getFreeActivityLabel = (type) => {
+  const opt = freeActivityTypeOptions.find(o => o.value === type)
+  return opt ? opt.label : type
+}
+const getFreeActivityIcon = (type) => {
+  const opt = freeActivityTypeOptions.find(o => o.value === type)
+  return opt ? opt.icon : 'event_busy'
+}
+const getFreeActivityColor = (type) => {
+  const opt = freeActivityTypeOptions.find(o => o.value === type)
+  return opt ? opt.color : 'grey'
+}
+
+const openNewFreeActivity = () => {
+  isEditingFreeActivity.value = false
+  editingFreeActivityId.value = null
+  newFreeActivity.value = {
+    date: selectedDate.value || date.formatDate(Date.now(), 'YYYY-MM-DD'),
+    start_hour: 1,
+    duration: 1,
+    activity_type: 'disponibilita',
+    description: '',
+    notes: ''
+  }
+  freeActivityDialog.value = true
+}
+
+const openEditFreeActivity = (act) => {
+  isEditingFreeActivity.value = true
+  editingFreeActivityId.value = act.id
+  newFreeActivity.value = {
+    date: date.formatDate(new Date(act.date), 'YYYY-MM-DD'),
+    start_hour: act.start_hour,
+    duration: act.duration,
+    activity_type: act.activity_type,
+    description: act.description,
+    notes: act.notes || ''
+  }
+  freeActivityDialog.value = true
+}
+
+const saveFreeActivity = async () => {
+  if (!newFreeActivity.value.description || !newFreeActivity.value.date) {
+    $q.notify({ type: 'warning', message: 'Compila tutti i campi obbligatori' })
+    return
+  }
+  saving.value = true
+  try {
+    const payload = {
+      date: newFreeActivity.value.date,
+      start_hour: newFreeActivity.value.start_hour,
+      duration: newFreeActivity.value.duration,
+      activity_type: newFreeActivity.value.activity_type || 'disponibilita',
+      description: newFreeActivity.value.description,
+      notes: newFreeActivity.value.notes || ''
+    }
+    if (isEditingFreeActivity.value && editingFreeActivityId.value) {
+      await teacherActivityService.update(editingFreeActivityId.value, payload)
+      $q.notify({ type: 'positive', message: 'AttivitÃ  aggiornata con successo' })
+    } else {
+      await teacherActivityService.create(payload)
+      $q.notify({ type: 'positive', message: 'AttivitÃ  registrata con successo' })
+    }
+    freeActivityDialog.value = false
+    await fetchFreeActivities()
+  } catch (e) {
+    $q.notify({ type: 'negative', message: `Errore: ${e.response?.data?.error || e.message}` })
+  } finally {
+    saving.value = false
+  }
+}
+
+const confirmDeleteFreeActivity = (act) => {
+  $q.dialog({
+    title: 'Elimina AttivitÃ ',
+    message: `Sei sicuro di voler eliminare "${act.description}"?`,
+    cancel: true,
+    persistent: true,
+    ok: { label: 'Elimina', color: 'negative' }
+  }).onOk(async () => {
+    try {
+      await teacherActivityService.delete(act.id)
+      $q.notify({ type: 'positive', message: 'AttivitÃ  eliminata' })
+      await fetchFreeActivities()
+    } catch (e) {
+      $q.notify({ type: 'negative', message: `Errore: ${e.response?.data?.error || e.message}` })
+    }
+  })
+}
+
+const fetchFreeActivities = async () => {
+  try {
+    const from = selectedDate.value
+    const to = selectedDate.value
+    const res = await teacherActivityService.list(from, to)
+    freeActivities.value = res.data || []
+  } catch (e) {
+    freeActivities.value = []
+    console.error('fetchFreeActivities error:', e)
+  }
+}
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+// â”€â”€ Activity Hours (PCTO / Orientamento counters) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const activityHours = ref({ pcto: 0, orientamento: 0 })
+
+const fetchActivityHours = async () => {
+  if (!selectedClass.value) return
+  try {
+    const res = await lessonService.getActivityHours(selectedClass.value)
+    const data = res.data || {}
+    activityHours.value = {
+      pcto: data.pcto || 0,
+      orientamento: data.orientamento || 0
+    }
+  } catch (e) {
+    activityHours.value = { pcto: 0, orientamento: 0 }
+  }
+}
+
+/** Opzioni per il tipo di attivitÃ  *lezione* (collegata a classe) */
+const activityTypeOptions = [
+  { value: 'standard',      label: 'Standard',       icon: 'menu_book',    color: 'primary',     caption: 'Lezione curricolare ordinaria' },
+  { value: 'substitution',  label: 'Supplenza',       icon: 'swap_horiz',   color: 'deep-orange', caption: 'Supplenza di un collega assente' },
+  { value: 'pcto',          label: 'PCTO',            icon: 'work',         color: 'deep-purple', caption: 'Ore di Alternanza Scuola-Lavoro' },
+  { value: 'orientamento',  label: 'Orientamento',    icon: 'explore',      color: 'teal',        caption: 'AttivitÃ  di orientamento' },
+  { value: 'ptof',          label: 'PTOF',            icon: 'auto_stories', color: 'purple',      caption: 'AttivitÃ  rientranti nel PTOF' },
+  { value: 'project',       label: 'Progetto',        icon: 'science',      color: 'indigo',      caption: 'Progetto didattico specifico' },
+  { value: 'assembly',      label: 'Assemblea',       icon: 'groups',       color: 'blue',        caption: 'Assemblea di istituto o di classe' },
+  { value: 'trip',          label: 'Gita',            icon: 'luggage',      color: 'orange',      caption: 'Uscita didattica o gita scolastica' },
+  { value: 'lab',           label: 'Laboratorio',     icon: 'biotech',      color: 'green',       caption: 'AttivitÃ  di laboratorio' },
+  { value: 'other',         label: 'Altro',           icon: 'more_horiz',   color: 'grey',        caption: 'Altra tipologia non categorizzata' }
+]
+
+const getActivityTypeColor = (type) => {
+  const opt = activityTypeOptions.find(o => o.value === type)
+  return opt ? opt.color : 'grey'
+}
+const getActivityTypeIcon = (type) => {
+  const opt = activityTypeOptions.find(o => o.value === type)
+  return opt ? opt.icon : 'menu_book'
+}
+const getActivityTypeLabel = (type) => {
+  const opt = activityTypeOptions.find(o => o.value === type)
+  return opt ? opt.label : type
+}
+const isPctoOrOrientamento = computed(() =>
+  newLesson.value.activity_type === 'pcto' || newLesson.value.activity_type === 'orientamento'
+)
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const availableClassOptions = computed(() => {
   const source = isSubstitutionMode.value ? allSchoolClasses.value : classesStore.classes
@@ -504,7 +852,7 @@ const toggleSubstitutionMode = async () => {
       selectedClass.value = allSchoolClasses.value[0].id
     }
     selectedSubject.value = 'supplenza'
-    $q.notify({ type: 'info', message: 'Modalità Supplenza attivata nel Registro di Classe', timeout: 3000 })
+    $q.notify({ type: 'info', message: 'ModalitÃ  Supplenza attivata nel Registro di Classe', timeout: 3000 })
   } else {
     await classesStore.fetchAssignedClasses()
     if (classesStore.classes.length > 0) {
@@ -540,6 +888,7 @@ const newLesson = ref({
   duration: 1,
   topic: '',
   type: 'Frontale',
+  activity_type: 'standard',
   is_co_teaching: false,
   notes: '',
   subject_id: null,
@@ -576,8 +925,14 @@ watch(selectedSubject, () => {
   if (activeTab.value === 'lessons') fetchLessons()
 })
 
+// Quando si passa alla tab "free", aggiorna le attivitÃ  libere
+watch(activeTab, (newTab) => {
+  if (newTab === 'free') fetchFreeActivities()
+})
+
 const fetchData = async () => {
-  await Promise.all([fetchLessons(), fetchHomeworks()])
+  await Promise.all([fetchLessons(), fetchHomeworks(), fetchActivityHours()])
+  if (activeTab.value === 'free') fetchFreeActivities()
 }
 
 const fetchLessons = async () => {
@@ -621,6 +976,7 @@ const openNewLesson = () => {
     duration: 1,
     topic: isSubstitutionMode.value ? 'Supplenza docente assente' : '',
     type: isSubstitutionMode.value ? 'Supplenza' : 'Frontale',
+    activity_type: isSubstitutionMode.value ? 'substitution' : 'standard',
     is_co_teaching: false,
     notes: '',
     subject_id: isSubstitutionMode.value ? 'supplenza' : selectedSubject.value,
@@ -644,6 +1000,7 @@ const openEditLesson = (lesson) => {
     duration: lesson.duration || 1,
     topic: lesson.topic || '',
     type: lesson.type || 'Frontale',
+    activity_type: lesson.activity_type || 'standard',
     is_co_teaching: !!lesson.is_co_teaching,
     notes: lesson.notes || '',
     subject_id: lesson.subject_id || selectedSubject.value,
@@ -712,6 +1069,7 @@ const saveLesson = async () => {
       duration: newLesson.value.duration,
       topic: newLesson.value.topic,
       type: newLesson.value.type,
+      activity_type: newLesson.value.activity_type || 'standard',
       is_co_teaching: newLesson.value.is_co_teaching,
       notes: newLesson.value.notes
     }

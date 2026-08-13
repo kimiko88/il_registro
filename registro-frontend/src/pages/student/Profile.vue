@@ -61,24 +61,21 @@
 
                     <q-tab-panel name="security">
                         <div class="text-h6 q-mb-md">Gestione Password</div>
-                        <q-btn outline color="primary" label="Cambia Password" icon="lock" @click="changePasswordDialog = true" class="q-mb-lg" />
-                        
-                        <q-separator class="q-mb-md" />
-                        
-                        <div class="text-h6 q-mb-md">Sessioni Attive</div>
-                        <q-list class="q-mb-lg">
-                            <q-item>
-                                <q-item-section avatar><q-icon name="smartphone" /></q-item-section>
-                                <q-item-section>
-                                    <q-item-label>iPhone 13</q-item-label>
-                                    <q-item-label caption>Milano, IT - Attivo ora</q-item-label>
-                                </q-item-section>
-                            </q-item>
-                        </q-list>
+                        <q-banner class="bg-blue-1 text-blue-9 rounded-borders q-mb-md" dense>
+                          <template v-slot:avatar><q-icon name="info" color="blue-7" /></template>
+                          Per cambiare la password vai nelle <strong>Impostazioni</strong> del tuo account.
+                        </q-banner>
+                        <q-btn
+                          outline color="primary"
+                          label="Vai alle Impostazioni"
+                          icon="settings"
+                          to="/student/settings"
+                          class="q-mb-lg"
+                        />
 
                         <q-separator class="q-mb-md" />
-                        
-                        <div class="text-h6 q-mb-md text-red">Zona Pericolo</div>
+
+                        <div class="text-h6 q-mb-md">Zona Pericolo</div>
                         <p>Richiedi una copia dei tuoi dati (GDPR) o gestisci la privacy.</p>
                         <div class="row q-gutter-md">
                             <q-btn outline color="primary" label="Export Dati (GDPR)" icon="archive" />
@@ -98,7 +95,6 @@ import { useStudentStore } from 'src/stores/student'
 
 const studentStore = useStudentStore()
 const tab = ref('info')
-const changePasswordDialog = ref(false)
 
 onMounted(() => {
     studentStore.fetchProfile()

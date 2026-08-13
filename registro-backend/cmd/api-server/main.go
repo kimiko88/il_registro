@@ -55,6 +55,7 @@ import (
 	"registro-backend/internal/subjects"
 	"registro-backend/internal/substitutions"
 	"registro-backend/internal/teachers"
+	"registro-backend/internal/teacher_activities"
 	"registro-backend/internal/tenants"
 	"registro-backend/internal/textbooks"
 	"registro-backend/internal/timetables"
@@ -393,6 +394,12 @@ func main() {
 			compSvc := competencies.NewService(compRepo)
 			compH := competencies.NewHandler(compSvc)
 			compH.RegisterRoutes(protected)
+
+			// Attività libere docente (ore a disposizione, riunioni, gita, formazione, etc.)
+			teacherActRepo := teacher_activities.NewRepository(database)
+			teacherActSvc := teacher_activities.NewService(teacherActRepo)
+			teacherActH := teacher_activities.NewHandler(teacherActSvc)
+			teacherActH.RegisterRoutes(protected)
 
 			elearningH.RegisterRoutes(protected)
 
