@@ -100,13 +100,17 @@ describe('Attendance Store', () => {
     it('requests justification', async () => {
         const authStore = useAuthStore()
         authStore.user = { id: 'user-1', student_id: 'student-1' }
+        const { attendanceService } = await import('src/services/attendanceService')
+        attendanceService.getMyAttendance.mockResolvedValueOnce({
+            data: [{ date: '2025-01-20', status: 'Absent', notes: '', entry_time: '', parent_justified: true }]
+        })
         store.records = [{ date: '2025-01-20', justificationStatus: null }]
         const promise = store.requestJustification('2025-01-20', 'Reason')
 
         await vi.runAllTimersAsync()
         await promise
 
-        expect(store.records[0].justificationStatus).toBe('Pending')
+        expect(store.records[0].justificationStatus).toBe('PendingApproval')
     })
 
     it('handles fetch error', async () => {

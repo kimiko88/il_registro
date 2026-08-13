@@ -2,6 +2,8 @@ package textbooks
 
 import (
 	"context"
+	"errors"
+	"strings"
 )
 
 type Service struct {
@@ -13,26 +15,38 @@ func NewService(repo Repository) *Service {
 }
 
 func (s *Service) CreateTextbook(ctx context.Context, schoolID string, req CreateTextbookRequest) error {
+	if strings.TrimSpace(req.Title) == "" {
+		return errors.New("title is required")
+	}
+	if req.Price < 0 {
+		return errors.New("price cannot be negative")
+	}
 	t := &Textbook{
 		SchoolID:  schoolID,
-		Title:     req.Title,
-		Author:    req.Author,
-		Subject:   req.Subject,
-		ISBN:      req.ISBN,
-		Publisher: req.Publisher,
+		Title:     strings.TrimSpace(req.Title),
+		Author:    strings.TrimSpace(req.Author),
+		Subject:   strings.TrimSpace(req.Subject),
+		ISBN:      strings.TrimSpace(req.ISBN),
+		Publisher: strings.TrimSpace(req.Publisher),
 		Price:     req.Price,
 	}
 	return s.repo.Create(ctx, t)
 }
 
 func (s *Service) UpdateTextbook(ctx context.Context, id string, req CreateTextbookRequest) error {
+	if strings.TrimSpace(req.Title) == "" {
+		return errors.New("title is required")
+	}
+	if req.Price < 0 {
+		return errors.New("price cannot be negative")
+	}
 	t := &Textbook{
 		ID:        id,
-		Title:     req.Title,
-		Author:    req.Author,
-		Subject:   req.Subject,
-		ISBN:      req.ISBN,
-		Publisher: req.Publisher,
+		Title:     strings.TrimSpace(req.Title),
+		Author:    strings.TrimSpace(req.Author),
+		Subject:   strings.TrimSpace(req.Subject),
+		ISBN:      strings.TrimSpace(req.ISBN),
+		Publisher: strings.TrimSpace(req.Publisher),
 		Price:     req.Price,
 	}
 	return s.repo.Update(ctx, t)

@@ -419,4 +419,3 @@ func (r *PostgresRepository) BulkMigrateStudents(ctx context.Context, migrations
 
 	return tx.Commit()
 }
-

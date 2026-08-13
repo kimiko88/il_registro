@@ -16,8 +16,8 @@ func (g *CertificateGenerator) GenerateCertificate(project *Project, studentName
 			<h3>%s</h3>
 			<p>Periodo: %s - %s</p>
 		</body>
-		</html>`, 
-		studentName, project.Title, 
+		</html>`,
+		studentName, project.Title,
 		project.StartDate.Format("02/01/2006"), project.EndDate.Format("02/01/2006"),
 	)
 	return []byte(html), nil

@@ -76,7 +76,7 @@
 
     <!-- Dialog Create/Edit Textbook -->
     <q-dialog v-model="showDialog" persistent class="premium-dialog">
-      <q-card style="min-width: 500px" class="glass-card overflow-hidden">
+      <q-card style="display: flex; flex-direction: column; width: 550px; max-width: 95vw; max-height: 90vh;" class="glass-card overflow-hidden bg-white">
         <q-card-section class="bg-gradient-primary text-white q-pa-lg row items-center">
           <div class="text-h5 text-weight-bold text-outfit">
             {{ isEdit ? 'Modifica Libro' : 'Nuovo Libro di Testo' }}
@@ -85,7 +85,8 @@
           <q-btn icon="close" flat round dense v-close-popup />
         </q-card-section>
 
-        <q-card-section class="q-pa-xl">
+        <q-card-section class="q-pa-xl scroll" style="flex: 1; overflow-y: auto;">
+
           <q-form @submit="saveTextbook" class="q-gutter-y-lg">
             <q-input 
               v-model="form.title" 
@@ -133,6 +134,7 @@
         </q-card-section>
       </q-card>
     </q-dialog>
+
   </q-page>
 </template>
 

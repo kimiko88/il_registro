@@ -122,8 +122,15 @@ export default {
     connectionError: '服务器连接错误，请检查您的网络。',
     forbidden: '您没有权限执行此操作。',
     serverError: '服务器发生错误，请稍后再试。',
-    unauthorized: '登录会话无效或已过期。'
+    unauthorized: '登录会话无效或已过期。',
+    ERR_CURRENT_PASSWORD_INCORRECT: '当前密码不正确。',
+    ERR_PASSWORD_COMPLEXITY: '密码必须包含至少一个大写字母、一个小写字母、一个数字和一个特殊字符。',
+    ERR_PASSWORD_TOO_SHORT: '密码长度至少为10个字符。',
+    ERR_PASSWORD_TOO_LONG: '密码过长（最多128个字符）。',
+    ERR_PASSWORD_RECENTLY_USED: '新密码不能与最近使用的5个密码相同。',
+    ERR_REQUIRED_FIELDS: '请填写所有必填的密码字段。'
   },
+
   settings: {
     title: '系统设置',
     subtitle: '配置常规偏好、安全与通知选项',

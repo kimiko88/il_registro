@@ -28,24 +28,24 @@ type CadManifest struct {
 
 // CadDocumentoItem è la voce di indice per ogni documento conservato.
 type CadDocumentoItem struct {
-	ID                 string `xml:"ID"`
-	Tipologia          string `xml:"Tipologia"`
-	Oggetto            string `xml:"Oggetto"`
-	ImprontaHash       string `xml:"ImprontaHashSHA256"`
-	AlgoritmoHash      string `xml:"AlgoritmoHash"`
-	DataSottoscrizione string `xml:"DataSottoscrizione"`
+	ID                  string `xml:"ID"`
+	Tipologia           string `xml:"Tipologia"`
+	Oggetto             string `xml:"Oggetto"`
+	ImprontaHash        string `xml:"ImprontaHashSHA256"`
+	AlgoritmoHash       string `xml:"AlgoritmoHash"`
+	DataSottoscrizione  string `xml:"DataSottoscrizione"`
 	FirmatoDigitalmente bool   `xml:"FirmatoDigitalmente"`
-	TimestampRFC3161   string `xml:"TimestampRFC3161,omitempty"`
+	TimestampRFC3161    string `xml:"TimestampRFC3161,omitempty"`
 }
 
 // cadDocument è un documento in memoria da includere nel pacchetto.
 type cadDocument struct {
-	ID       string
-	Tipo     string
-	Oggetto  string
-	Content  []byte
-	Firmato  bool
-	TSToken  string
+	ID      string
+	Tipo    string
+	Oggetto string
+	Content []byte
+	Firmato bool
+	TSToken string
 }
 
 // GenerateCadPreservationPackage genera il pacchetto di conservazione sostitutiva
@@ -91,14 +91,14 @@ func GenerateCadPreservationPackage(ctx context.Context, schoolID string, year s
 	for _, d := range docs {
 		h := sha256.Sum256(d.Content)
 		docItems = append(docItems, CadDocumentoItem{
-			ID:                 d.ID,
-			Tipologia:          d.Tipo,
-			Oggetto:            d.Oggetto,
-			ImprontaHash:       hex.EncodeToString(h[:]),
-			AlgoritmoHash:      "SHA-256",
-			DataSottoscrizione: now.Format(time.RFC3339),
+			ID:                  d.ID,
+			Tipologia:           d.Tipo,
+			Oggetto:             d.Oggetto,
+			ImprontaHash:        hex.EncodeToString(h[:]),
+			AlgoritmoHash:       "SHA-256",
+			DataSottoscrizione:  now.Format(time.RFC3339),
 			FirmatoDigitalmente: d.Firmato,
-			TimestampRFC3161:   d.TSToken,
+			TimestampRFC3161:    d.TSToken,
 		})
 	}
 

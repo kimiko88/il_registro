@@ -22,11 +22,11 @@ var (
 )
 
 type Service struct {
-	repo       Repository
-	gradeRepo  grades.Repository
-	classRepo  classes.Repository
-	userRepo   users.Repository
-	attRepo    attendance.Repository
+	repo      Repository
+	gradeRepo grades.Repository
+	classRepo classes.Repository
+	userRepo  users.Repository
+	attRepo   attendance.Repository
 }
 
 func NewService(repo Repository, gr grades.Repository, cr classes.Repository, ur users.Repository, ar attendance.Repository) *Service {
@@ -179,22 +179,22 @@ func (s *Service) GetMatrix(ctx context.Context, actorID, actorRole, classID str
 }
 
 type ClassScrutinyOverview struct {
-	ClassID             string `json:"class_id"`
-	ClassName           string `json:"class_name"`
-	Status              string `json:"status"`
-	CompletedSubjects   int    `json:"completed_subjects"`
-	TotalSubjects       int    `json:"total_subjects"`
+	ClassID            string `json:"class_id"`
+	ClassName          string `json:"class_name"`
+	Status             string `json:"status"`
+	CompletedSubjects  int    `json:"completed_subjects"`
+	TotalSubjects      int    `json:"total_subjects"`
 	PendingGradesCount int    `json:"pending_grades_count"`
-	LastUpdated         string `json:"last_updated"`
+	LastUpdated        string `json:"last_updated"`
 }
 
 type ClassScrutinyReport struct {
-	ClassID   string                 `json:"class_id"`
-	ClassName string                 `json:"class_name"`
+	ClassID   string                  `json:"class_id"`
+	ClassName string                  `json:"class_name"`
 	Students  []ClassReportStudentRow `json:"students"`
-	Admitted  int                    `json:"admitted"`
-	Rejected  int                    `json:"rejected"`
-	Suspended int                    `json:"suspended"`
+	Admitted  int                     `json:"admitted"`
+	Rejected  int                     `json:"rejected"`
+	Suspended int                     `json:"suspended"`
 }
 
 type ClassReportStudentRow struct {

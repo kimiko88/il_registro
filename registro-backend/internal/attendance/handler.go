@@ -633,7 +633,11 @@ func (h *Handler) DeleteClassAttendanceHour(c *gin.Context) {
 		}
 	}
 
-	if err := h.service.DeleteClassAttendanceHour(c.Request.Context(), classID, dateStr, hourInt); err != nil {
+	actorID := c.GetString("user_id")
+	actorRole := c.GetString("role")
+	schoolID := c.GetString("school_id")
+
+	if err := h.service.DeleteClassAttendanceHour(c.Request.Context(), actorID, actorRole, schoolID, classID, dateStr, hourInt); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

@@ -14,18 +14,18 @@ const (
 )
 
 type StudentNote struct {
-	ID          string     `json:"id"`
-	SchoolID    string     `json:"school_id"`
-	StudentID   string     `json:"student_id"`
-	TeacherID   string     `json:"teacher_id"`
-	ClassID     string     `json:"class_id"`
-	SubjectID   *string    `json:"subject_id,omitempty"` // Nullable
-	Type        NoteType   `json:"type"`
-	Note        string     `json:"note"`
-	Date        string     `json:"date"` // YYYY-MM-DD
-	IsReserved  bool       `json:"is_reserved"`
-	TargetRole  string     `json:"target_role"` // "coordinator" | "admin" | "all"
-	IsApproved  bool       `json:"is_approved"`
+	ID               string     `json:"id"`
+	SchoolID         string     `json:"school_id"`
+	StudentID        string     `json:"student_id"`
+	TeacherID        string     `json:"teacher_id"`
+	ClassID          string     `json:"class_id"`
+	SubjectID        *string    `json:"subject_id,omitempty"` // Nullable
+	Type             NoteType   `json:"type"`
+	Note             string     `json:"note"`
+	Date             string     `json:"date"` // YYYY-MM-DD
+	IsReserved       bool       `json:"is_reserved"`
+	TargetRole       string     `json:"target_role"` // "coordinator" | "admin" | "all"
+	IsApproved       bool       `json:"is_approved"`
 	ApprovedBy       string     `json:"approved_by,omitempty"`
 	ApprovedAt       *time.Time `json:"approved_at,omitempty"`
 	DeletionReason   string     `json:"deletion_reason,omitempty"`

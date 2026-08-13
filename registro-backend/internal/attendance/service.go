@@ -26,7 +26,7 @@ type Service interface {
 	MarkAttendance(ctx context.Context, teacherID, schoolID string, req CreateAttendanceRequest) error
 	MarkBulk(ctx context.Context, teacherID, schoolID string, req BulkAttendanceRequest) error
 	UpdateAttendance(ctx context.Context, teacherID, schoolID, id string, req UpdateAttendanceRequest) error
-	DeleteClassAttendanceHour(ctx context.Context, classID, dateStr string, hour int) error
+	DeleteClassAttendanceHour(ctx context.Context, actorID, actorRole, schoolID, classID, dateStr string, hour int) error
 
 	GetClassAttendance(ctx context.Context, actorID, actorRole, schoolID, classID string, date string) (*ClassDailyAttendance, error)
 	GetStudentAttendance(ctx context.Context, actorID, actorRole, schoolID, studentID string, from, to time.Time) ([]AttendanceResponse, error)
@@ -160,11 +160,23 @@ func (s *service) MarkBulk(ctx context.Context, teacherID, schoolID string, req 
 			return fmt.Errorf("forbidden: docente non autorizzato per la classe")
 		}
 	} else {
-		loc, _ := time.LoadLocation("Europe/Rome")
-		dateParsed, _ := time.ParseInLocation("2006-01-02", req.Date, loc)
-		isSub, err := s.repo.IsTeacherSubstitute(ctx, teacherID, req.ClassID, dateParsed, req.Hour)
-		if err != nil || !isSub {
-			isAssigned, _ := s.repo.IsTeacherAssignedToClass(ctx, teacherID, req.ClassID)
+		// FIX: handle parse errors explicitly; a malformed date must not produce
+		// a zero-value time that silently passes the substitute check.
+		loc, err := time.LoadLocation("Europe/Rome")
+		if err != nil {
+			loc = time.Local
+		}
+		dateParsed, err := time.ParseInLocation("2006-01-02", req.Date, loc)
+		if err != nil {
+			return fmt.Errorf("data non valida '%s': usa il formato YYYY-MM-DD", req.Date)
+		}
+		isSub, subErr := s.repo.IsTeacherSubstitute(ctx, teacherID, req.ClassID, dateParsed, req.Hour)
+		// FIX: check IsTeacherAssignedToClass error; a DB failure must not silently grant access.
+		if subErr != nil || !isSub {
+			isAssigned, assignErr := s.repo.IsTeacherAssignedToClass(ctx, teacherID, req.ClassID)
+			if assignErr != nil {
+				return fmt.Errorf("errore verifica docente per classe: %w", assignErr)
+			}
 			if !isAssigned {
 				return fmt.Errorf("forbidden: docente non assegnato e non registrato come supplente per questa classe/ora")
 			}
@@ -210,7 +222,6 @@ func (s *service) MarkBulk(ctx context.Context, teacherID, schoolID string, req 
 			Status:    r.Status,
 			Notes:     r.Notes,
 		}
-		// Only set SubjectID if a valid non-empty UUID string is provided.
 		if req.SubjectID != "" {
 			subjectIDCopy := req.SubjectID
 			att.SubjectID = &subjectIDCopy
@@ -250,7 +261,6 @@ func (s *service) UpdateAttendance(ctx context.Context, teacherID, schoolID, id 
 		return fmt.Errorf("impossibile modificare la presenza: il record è già stato giustificato")
 	}
 
-	// Ownership check: il docente deve appartenere alla stessa scuola ed essere assegnato alla classe del record.
 	if att.SchoolID != schoolID {
 		return fmt.Errorf("forbidden: impossibile modificare presenze di un'altra scuola")
 	}
@@ -278,7 +288,25 @@ func (s *service) UpdateAttendance(ctx context.Context, teacherID, schoolID, id 
 	return s.repo.Update(att)
 }
 
-func (s *service) DeleteClassAttendanceHour(ctx context.Context, classID, dateStr string, hour int) error {
+// DeleteClassAttendanceHour deletes all attendance records for a given class/date/hour.
+// FIX: added actorID, actorRole, schoolID parameters so only authorised roles
+// (admin, superadmin, secretary, principal, vice_principal, or the assigned teacher)
+// can perform this destructive operation.
+func (s *service) DeleteClassAttendanceHour(ctx context.Context, actorID, actorRole, schoolID, classID, dateStr string, hour int) error {
+	switch actorRole {
+	case "admin", "superadmin", "secretary", "principal", "vice_principal":
+		// authorised unconditionally within their school
+	case "teacher":
+		isAssigned, err := s.repo.IsTeacherAssignedToClass(ctx, actorID, classID)
+		if err != nil {
+			return fmt.Errorf("errore verifica docente per classe: %w", err)
+		}
+		if !isAssigned {
+			return fmt.Errorf("forbidden: docente non assegnato alla classe")
+		}
+	default:
+		return fmt.Errorf("forbidden: ruolo non autorizzato all'eliminazione delle presenze di classe")
+	}
 	date, err := time.Parse("2006-01-02", dateStr)
 	if err != nil {
 		return fmt.Errorf("data non valida '%s': usa il formato YYYY-MM-DD", dateStr)
@@ -363,6 +391,19 @@ func (s *service) GetStudentAttendance(ctx context.Context, actorID, actorRole, 
 		isGuardian, err := s.userRepo.IsGuardian(ctx, actorID, studentID)
 		if err != nil || !isGuardian {
 			return nil, fmt.Errorf("unauthorized: not a guardian of this student")
+		}
+	}
+	// FIX: teachers must belong to the same school as the student.
+	if actorRole == "teacher" {
+		if schoolID == "" {
+			return nil, fmt.Errorf("unauthorized: schoolID mancante per la verifica del docente")
+		}
+		teacherUser, err := s.userRepo.GetByID(ctx, actorID)
+		if err != nil || teacherUser == nil {
+			return nil, fmt.Errorf("unauthorized: impossibile verificare il profilo del docente")
+		}
+		if teacherUser.SchoolID == nil || *teacherUser.SchoolID != schoolID {
+			return nil, fmt.Errorf("forbidden: il docente non appartiene alla stessa scuola dello studente")
 		}
 	}
 
@@ -465,6 +506,8 @@ func (s *service) ProcessJustification(ctx context.Context, teacherID, justifica
 		return err
 	}
 
+	// FIX: update in-memory status BEFORE building the broadcaster payload,
+	// so the notification reflects the actual persisted state.
 	if approve {
 		j.Status = JustificationApproved
 	} else {
@@ -546,9 +589,7 @@ func (s *service) DeleteJustification(ctx context.Context, actorID string, justi
 			return fmt.Errorf("unauthorized: impossibile verificare lo studente della giustifica: %w", err)
 		}
 		if actorUser.Role != "superadmin" {
-			// Bug 104: fix nil-SchoolID bypass — verifica esplicita dei puntatori prima di dereferenziare
 			if actorUser.SchoolID == nil || studentUser.SchoolID == nil {
-				// Se uno dei due SchoolID mancano non possiamo garantire la co-appartenenza
 				return fmt.Errorf("forbidden: impossibile verificare appartenenza scolastica (schoolID mancante)")
 			}
 			if *actorUser.SchoolID != *studentUser.SchoolID {
@@ -772,10 +813,16 @@ func (s *service) GetChildAttendanceStats(ctx context.Context, parentID, student
 }
 
 // GetChildMonthlyBreakdown is the parent-facing version with guardianship check.
+// FIX: DB errors from IsGuardian are now propagated distinctly instead of being
+// masked as a generic 'access denied', which made DB-level failures indistinguishable
+// from actual authorization failures in logs and client responses.
 func (s *service) GetChildMonthlyBreakdown(ctx context.Context, parentID, studentID, schoolYear string) (*MonthlyBreakdownResponse, error) {
 	isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, studentID)
-	if err != nil || !isGuardian {
-		return nil, fmt.Errorf("access denied: not a guardian of this student")
+	if err != nil {
+		return nil, fmt.Errorf("errore nel controllo tutela genitore-studente: %w", err)
+	}
+	if !isGuardian {
+		return nil, fmt.Errorf("forbidden: non sei il tutore di questo studente")
 	}
 	return s.GetMonthlyBreakdown(ctx, studentID, schoolYear)
 }

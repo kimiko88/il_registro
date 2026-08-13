@@ -31,12 +31,12 @@ type SendNotificationRequest struct {
 }
 
 type PWAConfig struct {
-	Name        string `json:"name"`
-	ShortName   string `json:"short_name"`
-	StartURL    string `json:"start_url"`
-	Display     string `json:"display"`
-	ThemeColor  string `json:"theme_color"`
-	BGColor     string `json:"background_color"`
+	Name       string `json:"name"`
+	ShortName  string `json:"short_name"`
+	StartURL   string `json:"start_url"`
+	Display    string `json:"display"`
+	ThemeColor string `json:"theme_color"`
+	BGColor    string `json:"background_color"`
 }
 
 type DBNotification struct {

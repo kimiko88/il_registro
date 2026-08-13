@@ -23,7 +23,8 @@ type ipEntry struct {
 // round-robin requests across replicas and multiply the effective rate limit by N.
 // To fix this for multi-instance deployments, replace this struct with a Redis-backed
 // implementation using the go-redis/redis_rate package:
-//   https://github.com/go-redis/redis_rate
+//
+//	https://github.com/go-redis/redis_rate
 type IPRateLimiter struct {
 	ips      map[string]*ipEntry
 	mu       sync.RWMutex

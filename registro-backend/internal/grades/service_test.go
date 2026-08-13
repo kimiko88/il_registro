@@ -196,7 +196,7 @@ func (m *MockUserRepo) GetAuditLogs(ctx context.Context, userID string, limit, o
 func (m *MockUserRepo) BulkCreate(ctx context.Context, users []users.User) (int, []string, error) {
 	return 0, nil, nil
 }
-func (m *MockUserRepo) HardDelete(ctx context.Context, id string) error { return nil }
+func (m *MockUserRepo) HardDelete(ctx context.Context, id string) error              { return nil }
 func (m *MockUserRepo) RevokeAllUserTokens(ctx context.Context, userID string) error { return nil }
 func (m *MockUserRepo) GetChildren(ctx context.Context, parentID string) ([]users.StudentChild, error) {
 	return nil, nil
@@ -230,8 +230,6 @@ func (m *MockUserRepo) AddPasswordHistory(ctx context.Context, userID, passwordH
 func (m *MockUserRepo) GetFascicoloSummary(ctx context.Context, studentID string, isActive bool) (map[string]interface{}, error) {
 	return nil, nil
 }
-
-
 
 func TestAddGrade(t *testing.T) {
 	mockRepo := new(MockRepository)

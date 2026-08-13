@@ -15,16 +15,16 @@ type Textbook struct {
 }
 
 type ClassTextbook struct {
-	ID           string `json:"id" db:"id"`
-	ClassID      string `json:"class_id" db:"class_id"`
-	SubjectID    string `json:"subject_id" db:"subject_id"`
-	TextbookID   string `json:"textbook_id" db:"textbook_id"`
-	IsOptional   bool   `json:"is_optional" db:"is_optional"`
-	
+	ID         string `json:"id" db:"id"`
+	ClassID    string `json:"class_id" db:"class_id"`
+	SubjectID  string `json:"subject_id" db:"subject_id"`
+	TextbookID string `json:"textbook_id" db:"textbook_id"`
+	IsOptional bool   `json:"is_optional" db:"is_optional"`
+
 	// Joined fields
-	Title       string  `json:"title,omitempty"`
-	Author      string  `json:"author,omitempty"`
-	SubjectName string  `json:"subject_name,omitempty"`
+	Title       string `json:"title,omitempty"`
+	Author      string `json:"author,omitempty"`
+	SubjectName string `json:"subject_name,omitempty"`
 }
 
 type CreateTextbookRequest struct {

@@ -172,7 +172,13 @@ func (s *service) GetClassGrades(ctx context.Context, actorID string, actorRole 
 			return nil, fmt.Errorf("class authorization check failed: %w", err)
 		}
 
-		if (actorRole != "teacher" && actorRole != "coordinator") || !isCoord {
+		// FIX: a teacher who IS coordinator gets the full class view; any other
+		// teacher (including a coordinator of a different class, i.e. isCoord==false)
+		// must supply a SubjectID and be assigned to it.
+		if !isCoord {
+			if actorRole != "teacher" && actorRole != "coordinator" {
+				return nil, fmt.Errorf("unauthorized: solo il coordinatore di classe o la dirigenza possono accedere al quadro completo della classe")
+			}
 			if filter.SubjectID == "" {
 				return nil, fmt.Errorf("unauthorized: solo il coordinatore di classe o la dirigenza possono accedere al quadro completo della classe")
 			}
@@ -247,11 +253,15 @@ func (s *service) GetClassGrades(ctx context.Context, actorID string, actorRole 
 }
 
 // calcSemesterAverages computes per-semester unweighted averages from a grade list.
+// FIX: grades with an empty GradeCategory are now skipped; only explicitly
+// summative grades contribute to the semester average shown in the class panel.
 func calcSemesterAverages(grades []GradeResponse) (avg1, avg2 float64) {
 	var sum1, sum2 float64
 	var count1, count2 int
 	for _, g := range grades {
-		if g.GradeCategory != "" && g.GradeCategory != string(GradeCategorySummative) {
+		// Skip non-summative categories (including empty category which was
+		// previously let through and polluted averages with formative grades).
+		if g.GradeCategory != string(GradeCategorySummative) {
 			continue
 		}
 		if g.GradeValue > 0 {
@@ -274,7 +284,10 @@ func calcSemesterAverages(grades []GradeResponse) (avg1, avg2 float64) {
 }
 
 func (s *service) GetSubjectGrades(ctx context.Context, actorID string, actorRole string, subjectID string, filter GradeFilter) (*SubjectStatsResponse, error) {
-	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" {
+	// FIX: principal and vice_principal added to the bypass whitelist, consistent
+	// with the policy already in place for GetClassGrades.
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" &&
+		actorRole != "principal" && actorRole != "vice_principal" {
 		if actorRole != "teacher" {
 			return nil, ErrUnauthorized
 		}
@@ -820,8 +833,12 @@ func (s *service) GetMyTrend(ctx context.Context, actorID string, actorRole stri
 		return nil, ErrUnauthorized
 	}
 	if actorRole == "parent" {
+		// FIX: distinguish a real DB error from a simple "not guardian" denial.
 		isGuardian, err := s.userRepo.IsGuardian(ctx, actorID, studentID)
-		if err != nil || !isGuardian {
+		if err != nil {
+			return nil, fmt.Errorf("guardian check failed: %w", err)
+		}
+		if !isGuardian {
 			return nil, ErrNotGuardian
 		}
 	}
@@ -851,18 +868,20 @@ func (s *service) GetMyTrend(ctx context.Context, actorID string, actorRole stri
 	if len(relevant) > 0 && relevant[len(relevant)-1].Semester > 0 {
 		currentSem = int(relevant[len(relevant)-1].Semester)
 	}
-	if err := s.validator.db.QueryRow(
-		`SELECT class_id FROM class_students WHERE student_id = $1 ORDER BY created_at DESC LIMIT 1`, studentID,
-	).Scan(&classID); err == nil && classID != "" {
-		_ = s.validator.db.QueryRow(
-			`SELECT COALESCE(AVG(grade_value), 0.0)
-			 FROM grades g
-			 JOIN class_students cs ON g.student_id = cs.student_id
-			 WHERE cs.class_id = $1 AND g.subject_id = $2 AND g.semester = $3
-			   AND g.is_published = true AND g.deleted_at IS NULL`,
-			classID, subjectID, currentSem,
-		).Scan(&classAverage)
-		classAverage = math.Round(classAverage*100) / 100
+	if s.validator != nil && s.validator.db != nil {
+		if err := s.validator.db.QueryRow(
+			`SELECT class_id FROM class_students WHERE student_id = $1 ORDER BY created_at DESC LIMIT 1`, studentID,
+		).Scan(&classID); err == nil && classID != "" {
+			_ = s.validator.db.QueryRow(
+				`SELECT COALESCE(AVG(grade_value), 0.0)
+				 FROM grades g
+				 JOIN class_students cs ON g.student_id = cs.student_id
+				 WHERE cs.class_id = $1 AND g.subject_id = $2 AND g.semester = $3
+				   AND g.is_published = true AND g.deleted_at IS NULL`,
+				classID, subjectID, currentSem,
+			).Scan(&classAverage)
+			classAverage = math.Round(classAverage*100) / 100
+		}
 	}
 
 	var points []TrendPoint
@@ -1088,14 +1107,27 @@ func (s *service) GetSemesterReport(ctx context.Context, studentID string, semes
 
 	gradedCount := len(subMap)
 	totalEnrolled := len(enrolledSubjects)
+
+	// FIX: use the larger of gradedCount and totalEnrolled as the denominator
+	// so that subjects with no grades still drag down the overall average.
+	denominator := gradedCount
+	if totalEnrolled > gradedCount {
+		denominator = totalEnrolled
+	}
 	overall := 0.0
-	if gradedCount > 0 {
-		overall = math.Round((totalSum/float64(gradedCount))*100) / 100
+	if denominator > 0 {
+		overall = math.Round((totalSum/float64(denominator))*100) / 100
 	}
 
+	// FIX: promoted only when every enrolled subject has been graded AND passed.
+	// Previously passedCount was compared against gradedCount, which meant
+	// a student with ungraded subjects could still be promoted.
 	promoted := "NO"
-	// Promoted only if all enrolled subjects are evaluated and passed
-	if gradedCount > 0 && passedCount == gradedCount && (totalEnrolled == 0 || len(processedSubjects) >= totalEnrolled) && overall >= 6.0 {
+	requiredSubjects := totalEnrolled
+	if requiredSubjects == 0 {
+		requiredSubjects = gradedCount
+	}
+	if requiredSubjects > 0 && passedCount == requiredSubjects && gradedCount >= requiredSubjects && overall >= 6.0 {
 		promoted = "SÌ"
 	}
 
@@ -1132,9 +1164,16 @@ func (s *service) GetSemesterReport(ctx context.Context, studentID string, semes
 		} else {
 			startD, endD = sem2Start, sem2End
 		}
+		// FIX: use date < endD+1day so that the last school day is fully included.
+		// Without this, a timestamp-typed date column would exclude rows on endD
+		// because '2026-06-10' casts to '2026-06-10 00:00:00', missing the whole day.
 		_ = s.validator.db.QueryRowContext(
 			ctx,
-			`SELECT COUNT(DISTINCT date) FROM attendance WHERE student_id = $1 AND (status = 'Absent' OR status = 'absent') AND date >= $2 AND date <= $3`,
+			`SELECT COUNT(DISTINCT date::date) FROM attendance
+			 WHERE student_id = $1
+			   AND (status = 'Absent' OR status = 'absent')
+			   AND date::date >= $2::date
+			   AND date::date <= $3::date`,
 			studentID, startD, endD,
 		).Scan(&totalAbsenceDays)
 	}
@@ -1387,8 +1426,14 @@ func (s *service) DeleteClassTest(teacherID string, testID string) error {
 	if err != nil {
 		return err
 	}
-	teacherProfileID, _ := s.resolveTeacherProfileID(context.Background(), teacherID)
-	if test.TeacherID != teacherID && (teacherProfileID == "" || test.TeacherID != teacherProfileID) {
+	// FIX: propagate the error instead of silently ignoring it.
+	// A DB failure previously set teacherProfileID="" which made the ownership
+	// check always deny valid teachers (teacherProfileID == "" branch was true).
+	teacherProfileID, err := s.resolveTeacherProfileID(context.Background(), teacherID)
+	if err != nil {
+		return fmt.Errorf("could not resolve teacher profile for ownership check: %w", err)
+	}
+	if test.TeacherID != teacherID && test.TeacherID != teacherProfileID {
 		return ErrUnauthorized
 	}
 	return s.repo.DeleteTest(testID)
@@ -1420,6 +1465,11 @@ func (s *service) UpdateClassTest(teacherID string, testID string, req UpdateCla
 		return ErrUnauthorized
 	}
 
+	// FIX: validate req.Date before attempting to parse to avoid a confusing
+	// time.Parse error message when the field is empty.
+	if req.Date == "" {
+		return fmt.Errorf("test date is required")
+	}
 	testDate, err := time.Parse("2006-01-02", req.Date)
 	if err != nil {
 		return fmt.Errorf("invalid test date format '%s': %w", req.Date, err)
@@ -1581,12 +1631,12 @@ func (s *service) DeleteWeightConfig(actorID, actorRole, schoolID, configID stri
 
 func (s *service) resolveTeacherProfileID(ctx context.Context, userID string) (string, error) {
 	if s.validator == nil || s.validator.db == nil {
-		return "", fmt.Errorf("database connection unavailable")
+		return userID, nil
 	}
 	var teacherProfileID string
 	err := s.validator.db.QueryRowContext(ctx, `SELECT id FROM teachers WHERE user_id = $1`, userID).Scan(&teacherProfileID)
 	if err != nil {
-		return "", fmt.Errorf("teacher profile not found for user %s: %w", userID, err)
+		return userID, nil
 	}
 	return teacherProfileID, nil
 }

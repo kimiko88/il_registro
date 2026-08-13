@@ -430,7 +430,6 @@ func SeedScuolaDiProva(ctx context.Context, dbConn *sql.DB) error {
 			}
 		}
 
-
 		if p2A2_UserID != "" {
 			var justID string
 			err = dbConn.QueryRowContext(ctx, `SELECT id FROM justifications WHERE student_id = $1 AND start_date = '2024-10-10'::date`, st2A2_UserID).Scan(&justID)
@@ -445,8 +444,6 @@ func SeedScuolaDiProva(ctx context.Context, dbConn *sql.DB) error {
 			}
 		}
 	}
-
-
 
 	fmt.Println("[SEED] Attendance and Justifications created.")
 

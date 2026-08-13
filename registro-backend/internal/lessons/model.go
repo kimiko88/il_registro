@@ -4,16 +4,16 @@ import "time"
 
 // Lesson represents a class register entry (argomento della lezione)
 type Lesson struct {
-	ID          string    `json:"id" db:"id"`
-	ClassID     string    `json:"class_id" db:"class_id"`
-	TeacherID   string    `json:"teacher_id" db:"teacher_id"`
-	TeacherName string    `json:"teacher_name" db:"teacher_name"`
-	SubjectID   string    `json:"subject_id" db:"subject_id"`
-	Date        time.Time `json:"date" db:"date"`
-	Hour        int       `json:"hour" db:"hour"`         // Quale ora
-	Duration    int       `json:"duration" db:"duration"` // Per quante ore
-	Topic       string    `json:"topic" db:"topic"`       // Argomento
-	Type        string    `json:"type" db:"type"`         // Frontale, Laboratorio, Verifica
+	ID                     string    `json:"id" db:"id"`
+	ClassID                string    `json:"class_id" db:"class_id"`
+	TeacherID              string    `json:"teacher_id" db:"teacher_id"`
+	TeacherName            string    `json:"teacher_name" db:"teacher_name"`
+	SubjectID              string    `json:"subject_id" db:"subject_id"`
+	Date                   time.Time `json:"date" db:"date"`
+	Hour                   int       `json:"hour" db:"hour"`         // Quale ora
+	Duration               int       `json:"duration" db:"duration"` // Per quante ore
+	Topic                  string    `json:"topic" db:"topic"`       // Argomento
+	Type                   string    `json:"type" db:"type"`         // Frontale, Laboratorio, Verifica
 	GroupID                *string   `json:"group_id,omitempty" db:"group_id"`
 	IsSubstitution         bool      `json:"is_substitution" db:"is_substitution"`
 	SubstitutedTeacherID   *string   `json:"substituted_teacher_id,omitempty" db:"substituted_teacher_id"`

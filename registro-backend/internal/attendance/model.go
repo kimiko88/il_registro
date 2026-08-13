@@ -37,18 +37,18 @@ type Attendance struct {
 	SubjectID *string          `json:"subject_id,omitempty" db:"subject_id"`
 	Status    AttendanceStatus `json:"status" db:"status"`
 
-	Justified             bool       `json:"justified" db:"justified"`
-	JustifiedBy           *string    `json:"justified_by,omitempty" db:"justified_by"`
-	JustifiedAt           *time.Time `json:"justified_at,omitempty" db:"justified_at"`
-	ParentJustified       bool       `json:"parent_justified" db:"parent_justified"`
-	ParentJustifiedAt     *time.Time `json:"parent_justified_at,omitempty" db:"parent_justified_at"`
-	JustificationReason   string     `json:"justification_reason,omitempty" db:"justification_reason"`
-	Notes                 string     `json:"notes,omitempty" db:"notes"`
-	EntryTime             *string    `json:"entry_time,omitempty" db:"entry_time"`
-	ExitTime              *string    `json:"exit_time,omitempty" db:"exit_time"`
+	Justified           bool       `json:"justified" db:"justified"`
+	JustifiedBy         *string    `json:"justified_by,omitempty" db:"justified_by"`
+	JustifiedAt         *time.Time `json:"justified_at,omitempty" db:"justified_at"`
+	ParentJustified     bool       `json:"parent_justified" db:"parent_justified"`
+	ParentJustifiedAt   *time.Time `json:"parent_justified_at,omitempty" db:"parent_justified_at"`
+	JustificationReason string     `json:"justification_reason,omitempty" db:"justification_reason"`
+	Notes               string     `json:"notes,omitempty" db:"notes"`
+	EntryTime           *string    `json:"entry_time,omitempty" db:"entry_time"`
+	ExitTime            *string    `json:"exit_time,omitempty" db:"exit_time"`
 
-	CreatedAt time.Time  `json:"created_at" db:"created_at"`
-	UpdatedAt time.Time  `json:"updated_at" db:"updated_at"`
+	CreatedAt time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 }
 
 type AttendanceStats struct {
@@ -123,13 +123,13 @@ type TrendsResponse struct {
 
 // MonthlyBreakdownRow represents attendance statistics for a single month.
 type MonthlyBreakdownRow struct {
-	Month              string  `json:"month"`               // YYYY-MM
-	Absences           int     `json:"absences"`            // StatusAbsent count
-	Lates              int     `json:"lates"`               // StatusLate count
-	EarlyExits         int     `json:"early_exits"`         // StatusEarlyExit count
-	JustifiedAbsences  int     `json:"justified_absences"`  // justified Absent
-	TotalSchoolDays    int     `json:"total_school_days"`   // total records in month
-	PresenceRate       float64 `json:"presence_rate"`       // % presenti
+	Month             string  `json:"month"`              // YYYY-MM
+	Absences          int     `json:"absences"`           // StatusAbsent count
+	Lates             int     `json:"lates"`              // StatusLate count
+	EarlyExits        int     `json:"early_exits"`        // StatusEarlyExit count
+	JustifiedAbsences int     `json:"justified_absences"` // justified Absent
+	TotalSchoolDays   int     `json:"total_school_days"`  // total records in month
+	PresenceRate      float64 `json:"presence_rate"`      // % presenti
 }
 
 // MonthlyBreakdownResponse is the API response for the monthly breakdown endpoint.

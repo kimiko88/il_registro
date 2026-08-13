@@ -75,7 +75,7 @@ type DisciplinaryNoteReport struct {
 type StudentMigrationItem struct {
 	StudentID     string `json:"student_id" binding:"required"`
 	Action        string `json:"action" binding:"required"` // "promoted", "repeater", "graduated", "left"
-	TargetClassID string `json:"target_class_id"`            // nullable if graduated or left
+	TargetClassID string `json:"target_class_id"`           // nullable if graduated or left
 }
 
 type BulkStudentMigrationRequest struct {
@@ -84,4 +84,3 @@ type BulkStudentMigrationRequest struct {
 	TargetAcademicYear string                 `json:"target_academic_year" binding:"required"`
 	Migrations         []StudentMigrationItem `json:"migrations" binding:"required"`
 }
-

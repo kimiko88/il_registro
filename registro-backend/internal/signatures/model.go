@@ -27,49 +27,49 @@ type Signature struct {
 
 // QualifiedSignature rappresenta una firma FEQ/FES con pieno valore legale (CAD art. 21).
 type QualifiedSignature struct {
-	ID                string         `json:"id" db:"id"`
-	DocumentID        string         `json:"document_id" db:"document_id"`
-	SignerID          string         `json:"signer_id" db:"signer_id"`
-	Level             SignatureLevel  `json:"level" db:"level"`
-	DocumentHash      string         `json:"document_hash" db:"document_hash"`
-	SignatureValue    string         `json:"signature_value" db:"signature_value"`
+	ID             string         `json:"id" db:"id"`
+	DocumentID     string         `json:"document_id" db:"document_id"`
+	SignerID       string         `json:"signer_id" db:"signer_id"`
+	Level          SignatureLevel `json:"level" db:"level"`
+	DocumentHash   string         `json:"document_hash" db:"document_hash"`
+	SignatureValue string         `json:"signature_value" db:"signature_value"`
 	// FIX #1: chiave pubblica persistita in PEM per verifica RSA futura (non più effimera)
-	PublicKeyPEM      string         `json:"public_key_pem" db:"public_key_pem"`
-	CertificateSerial string         `json:"certificate_serial" db:"certificate_serial"`
-	CertificateDN     string         `json:"certificate_dn" db:"certificate_dn"`
+	PublicKeyPEM      string `json:"public_key_pem" db:"public_key_pem"`
+	CertificateSerial string `json:"certificate_serial" db:"certificate_serial"`
+	CertificateDN     string `json:"certificate_dn" db:"certificate_dn"`
 	// FIX #2: token RFC 3161 reale (DER hex) da TSA AgID accreditata
-	TimestampToken    string         `json:"timestamp_token" db:"timestamp_token"`
-	TimestampAt       time.Time      `json:"timestamp_at" db:"timestamp_at"`
-	SignedAt          time.Time      `json:"signed_at" db:"signed_at"`
+	TimestampToken string    `json:"timestamp_token" db:"timestamp_token"`
+	TimestampAt    time.Time `json:"timestamp_at" db:"timestamp_at"`
+	SignedAt       time.Time `json:"signed_at" db:"signed_at"`
 	// FIX #4: revoca con reason code RFC 5280
-	RevokedAt         *time.Time     `json:"revoked_at,omitempty" db:"revoked_at"`
-	RevocationReason  string         `json:"revocation_reason,omitempty" db:"revocation_reason"`
-	IsValid           bool           `json:"is_valid" db:"is_valid"`
-	IPAddress         string         `json:"ip_address" db:"ip_address"`
-	SchoolID          string         `json:"school_id" db:"school_id"`
+	RevokedAt        *time.Time `json:"revoked_at,omitempty" db:"revoked_at"`
+	RevocationReason string     `json:"revocation_reason,omitempty" db:"revocation_reason"`
+	IsValid          bool       `json:"is_valid" db:"is_valid"`
+	IPAddress        string     `json:"ip_address" db:"ip_address"`
+	SchoolID         string     `json:"school_id" db:"school_id"`
 	// FIX #5: envelope XAdES-BES/T (eIDAS art. 37 + Decisione 2015/1506/UE)
-	XAdESEnvelope     string         `json:"xades_envelope,omitempty" db:"xades_envelope"`
+	XAdESEnvelope string `json:"xades_envelope,omitempty" db:"xades_envelope"`
 }
 
 // QualifiedSignRequest è la richiesta per apporre una firma FEQ/FES.
 type QualifiedSignRequest struct {
 	DocumentID      string         `json:"document_id" binding:"required"`
 	DocumentContent string         `json:"document_content" binding:"required"`
-	Level           SignatureLevel  `json:"level" binding:"required"`
+	Level           SignatureLevel `json:"level" binding:"required"`
 	Pin             string         `json:"pin" binding:"required"`
 }
 
 // VerifyResult è il risultato della verifica crittografica di una firma.
 type VerifyResult struct {
-	SignatureID    string         `json:"signature_id"`
-	IsValid        bool           `json:"is_valid"`
-	Level          SignatureLevel  `json:"level"`
-	SignerID       string         `json:"signer_id"`
-	CertificateDN  string         `json:"certificate_dn"`
-	SignedAt       time.Time      `json:"signed_at"`
-	TimestampAt    time.Time      `json:"timestamp_at"`
-	VerifiedAt     time.Time      `json:"verified_at"`
-	Message        string         `json:"message"`
+	SignatureID   string         `json:"signature_id"`
+	IsValid       bool           `json:"is_valid"`
+	Level         SignatureLevel `json:"level"`
+	SignerID      string         `json:"signer_id"`
+	CertificateDN string         `json:"certificate_dn"`
+	SignedAt      time.Time      `json:"signed_at"`
+	TimestampAt   time.Time      `json:"timestamp_at"`
+	VerifiedAt    time.Time      `json:"verified_at"`
+	Message       string         `json:"message"`
 }
 
 // SidiExportRecord è un record per l'export SIDI/MIUR.
@@ -81,7 +81,7 @@ type SidiExportRecord struct {
 	HashIntegrità        string `json:"hash_integrita"`
 	StatoTrasmissione    string `json:"stato_trasmissione"`
 	// FIX SIDI #2: codice ricevuta restituito dal portale MIUR dopo trasmissione
-	CodiceRicevuta       string `json:"codice_ricevuta,omitempty"`
+	CodiceRicevuta string `json:"codice_ricevuta,omitempty"`
 }
 
 // SidiRejectionError rappresenta un errore di rigetto dal portale SIDI (FIX SIDI #4).

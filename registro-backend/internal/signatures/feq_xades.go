@@ -21,14 +21,14 @@ import (
 // XAdESSignature è la struttura XML dell'envelope XAdES-BES conforme
 // a ETSI EN 319 132-1 (XAdES Baseline Profile — livello B-B e B-T).
 type XAdESSignature struct {
-	XMLName       xml.Name             `xml:"Signature"`
-	Xmlns         string               `xml:"xmlns,attr"`
-	XmlnsXades    string               `xml:"xmlns:xades,attr"`
-	ID            string               `xml:"Id,attr"`
-	SignedInfo    XAdESSignedInfo      `xml:"SignedInfo"`
+	XMLName        xml.Name            `xml:"Signature"`
+	Xmlns          string              `xml:"xmlns,attr"`
+	XmlnsXades     string              `xml:"xmlns:xades,attr"`
+	ID             string              `xml:"Id,attr"`
+	SignedInfo     XAdESSignedInfo     `xml:"SignedInfo"`
 	SignatureValue XAdESSignatureValue `xml:"SignatureValue"`
-	KeyInfo       XAdESKeyInfo         `xml:"KeyInfo"`
-	Object        XAdESObject          `xml:"Object"`
+	KeyInfo        XAdESKeyInfo        `xml:"KeyInfo"`
+	Object         XAdESObject         `xml:"Object"`
 }
 
 type XAdESSignedInfo struct {
@@ -57,7 +57,7 @@ type XAdESKeyInfo struct {
 }
 
 type XAdESX509Data struct {
-	X509SubjectName string `xml:"X509SubjectName"`
+	X509SubjectName  string            `xml:"X509SubjectName"`
 	X509IssuerSerial XAdESIssuerSerial `xml:"X509IssuerSerial"`
 }
 
@@ -71,20 +71,20 @@ type XAdESObject struct {
 }
 
 type XAdESQualifyingProps struct {
-	Target                 string                    `xml:"Target,attr"`
-	SignedProperties       XAdESSignedProps          `xml:"xades:SignedProperties"`
-	UnsignedProperties     *XAdESUnsignedProps       `xml:"xades:UnsignedProperties,omitempty"`
+	Target             string              `xml:"Target,attr"`
+	SignedProperties   XAdESSignedProps    `xml:"xades:SignedProperties"`
+	UnsignedProperties *XAdESUnsignedProps `xml:"xades:UnsignedProperties,omitempty"`
 }
 
 type XAdESSignedProps struct {
-	ID                      string                    `xml:"Id,attr"`
-	SignedSignatureProps    XAdESSignedSigProps       `xml:"xades:SignedSignatureProperties"`
+	ID                   string              `xml:"Id,attr"`
+	SignedSignatureProps XAdESSignedSigProps `xml:"xades:SignedSignatureProperties"`
 }
 
 type XAdESSignedSigProps struct {
-	SigningTime             string                    `xml:"xades:SigningTime"`
-	SigningCertificate      XAdESSigningCert          `xml:"xades:SigningCertificate"`
-	SignaturePolicyIdentifier XAdESPolicyIdentifier   `xml:"xades:SignaturePolicyIdentifier"`
+	SigningTime               string                `xml:"xades:SigningTime"`
+	SigningCertificate        XAdESSigningCert      `xml:"xades:SigningCertificate"`
+	SignaturePolicyIdentifier XAdESPolicyIdentifier `xml:"xades:SignaturePolicyIdentifier"`
 }
 
 type XAdESSigningCert struct {
@@ -92,7 +92,7 @@ type XAdESSigningCert struct {
 }
 
 type XAdESCert struct {
-	CertDigest   XAdESDigest `xml:"xades:CertDigest"`
+	CertDigest   XAdESDigest       `xml:"xades:CertDigest"`
 	IssuerSerial XAdESIssuerSerial `xml:"xades:IssuerSerial"`
 }
 

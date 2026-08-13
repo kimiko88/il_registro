@@ -122,8 +122,15 @@ export default {
     connectionError: 'Serververbindungsfehler. Bitte überprüfen Sie Ihre Internetverbindung.',
     forbidden: 'Sie verfügen nicht über die erforderlichen Berechtigungen.',
     serverError: 'Ein interner Serverfehler ist aufgetreten.',
-    unauthorized: 'Ungültige oder abgelaufene Sitzung.'
+    unauthorized: 'Ungültige oder abgelaufene Sitzung.',
+    ERR_CURRENT_PASSWORD_INCORRECT: 'Das aktuelle Passwort ist falsch.',
+    ERR_PASSWORD_COMPLEXITY: 'Das Passwort muss mindestens einen Großbuchstaben, einen Kleinbuchstaben, eine Zahl und ein Sonderzeichen enthalten.',
+    ERR_PASSWORD_TOO_SHORT: 'Das Passwort muss mindestens 10 Zeichen lang sein.',
+    ERR_PASSWORD_TOO_LONG: 'Das Passwort ist zu lang (maximal 128 Zeichen).',
+    ERR_PASSWORD_RECENTLY_USED: 'Das neue Passwort darf keinem der letzten 5 Passwörter entsprechen.',
+    ERR_REQUIRED_FIELDS: 'Bitte füllen Sie alle erforderlichen Passwortfelder aus.'
   },
+
   settings: {
     title: 'Systemeinstellungen',
     subtitle: 'Konfigurieren Sie globale Einstellungen, Sicherheitsrichtlinien und Benachrichtigungen',

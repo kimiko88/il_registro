@@ -242,7 +242,15 @@ func (s *Service) RestoreUser(ctx context.Context, actorRole string, id string) 
 	return s.repo.Restore(ctx, id)
 }
 
-// ─── Password ────────────────────────────────────────────────────────────────
+// ─── Password Error Keys ──────────────────────────────────────────────────────
+
+var (
+	ErrCurrentPasswordIncorrect = errors.New("ERR_CURRENT_PASSWORD_INCORRECT")
+	ErrPasswordComplexity       = errors.New("ERR_PASSWORD_COMPLEXITY")
+	ErrPasswordTooShort         = errors.New("ERR_PASSWORD_TOO_SHORT")
+	ErrPasswordTooLong          = errors.New("ERR_PASSWORD_TOO_LONG")
+	ErrPasswordRecentlyUsed     = errors.New("ERR_PASSWORD_RECENTLY_USED")
+)
 
 // ChangePassword allows a user to change their own password.
 // It enforces that the new password differs from the last 5 used passwords.
@@ -258,7 +266,7 @@ func (s *Service) ChangePassword(ctx context.Context, userID string, req ChangeP
 
 	// Field is CurrentPassword in ChangePasswordRequest DTO
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.CurrentPassword)); err != nil {
-		return errors.New("current password is incorrect")
+		return ErrCurrentPasswordIncorrect
 	}
 
 	// Check password history
@@ -268,7 +276,7 @@ func (s *Service) ChangePassword(ctx context.Context, userID string, req ChangeP
 	}
 	for _, old := range history {
 		if bcrypt.CompareHashAndPassword([]byte(old), []byte(req.NewPassword)) == nil {
-			return errors.New("new password must not match any of the last 5 passwords")
+			return ErrPasswordRecentlyUsed
 		}
 	}
 
@@ -291,11 +299,11 @@ func (s *Service) ChangePassword(ctx context.Context, userID string, req ChangeP
 }
 
 func validatePasswordComplexity(password string) error {
-	if len(password) < 8 {
-		return errors.New("password must be at least 8 characters long")
+	if len(password) < 10 {
+		return ErrPasswordTooShort
 	}
 	if len(password) > 128 {
-		return errors.New("password is too long (max 128 characters)")
+		return ErrPasswordTooLong
 	}
 	var hasUpper, hasLower, hasDigit, hasSpecial bool
 	for _, char := range password {
@@ -311,14 +319,16 @@ func validatePasswordComplexity(password string) error {
 		}
 	}
 	if !hasUpper || !hasLower || !hasDigit || !hasSpecial {
-		return errors.New("password must contain at least one uppercase letter, one lowercase letter, one number, and one special character")
+		return ErrPasswordComplexity
 	}
 	return nil
 }
 
-// ResetPassword allows an admin to force-reset a user's password.
+
+// ResetPassword allows an admin, superadmin, or secretary to force-reset a user's password.
+// Secretary is strictly limited to resetting passwords for teachers, students, and parents.
 func (s *Service) ResetPassword(ctx context.Context, actorRole, actorSchoolID, userID, newPassword string) error {
-	if actorRole != "admin" && actorRole != "superadmin" {
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" {
 		return ErrUnauthorized
 	}
 
@@ -326,6 +336,13 @@ func (s *Service) ResetPassword(ctx context.Context, actorRole, actorSchoolID, u
 	if err != nil {
 		return err
 	}
+
+	if actorRole == "secretary" {
+		if user.Role != "teacher" && user.Role != "student" && user.Role != "parent" {
+			return errors.New("forbidden: la segreteria può resettare solo le password di docenti, studenti e genitori")
+		}
+	}
+
 	if actorRole != "superadmin" && actorSchoolID != "" && user.SchoolID != nil && *user.SchoolID != actorSchoolID {
 		return ErrUnauthorized
 	}
@@ -338,10 +355,11 @@ func (s *Service) ResetPassword(ctx context.Context, actorRole, actorSchoolID, u
 	if err == nil {
 		for _, old := range history {
 			if bcrypt.CompareHashAndPassword([]byte(old), []byte(newPassword)) == nil {
-				return errors.New("new password must not match any of the last 5 passwords")
+				return errors.New("la nuova password non può essere uguale a una delle ultime 5 password utilizzate")
 			}
 		}
 	}
+
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
 	if err != nil {

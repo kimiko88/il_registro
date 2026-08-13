@@ -443,12 +443,149 @@ func TestService_ChangePassword(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			name:   "Password missing uppercase character",
+			userID: "user-123",
+			req: ChangePasswordRequest{
+				CurrentPassword: "OldPassword123!",
+				NewPassword:     "newpassword123!",
+			},
+			mockSetup: func() {
+				user := &User{ID: "user-123", PasswordHash: string(oldHashedPassword)}
+				mockRepo.On("GetByID", mock.Anything, "user-123").Return(user, nil)
+			},
+			wantErr: true,
+		},
+		{
+			name:   "Password missing special character",
+			userID: "user-123",
+			req: ChangePasswordRequest{
+				CurrentPassword: "OldPassword123!",
+				NewPassword:     "NewPassword1234",
+			},
+			mockSetup: func() {
+				user := &User{ID: "user-123", PasswordHash: string(oldHashedPassword)}
+				mockRepo.On("GetByID", mock.Anything, "user-123").Return(user, nil)
+			},
+			wantErr: true,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mockSetup()
 			err := service.ChangePassword(context.Background(), tt.userID, tt.req)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestService_ResetPassword_SecretaryPermissions(t *testing.T) {
+	mockRepo := new(MockRepository)
+	service := NewService(mockRepo)
+
+	schoolID := "school-1"
+
+	tests := []struct {
+		name        string
+		actorRole   string
+		targetRole  string
+		targetID    string
+		newPassword string
+		mockSetup   func(targetID, targetRole string)
+		wantErr     bool
+	}{
+		{
+			name:        "Secretary resets teacher password -> Allowed",
+			actorRole:   "secretary",
+			targetRole:  "teacher",
+			targetID:    "teacher-1",
+			newPassword: "NewTeacherPass123!",
+			mockSetup: func(tid, role string) {
+				user := &User{ID: tid, Role: role, SchoolID: &schoolID}
+				mockRepo.On("GetByID", mock.Anything, tid).Return(user, nil)
+				mockRepo.On("GetPasswordHistory", mock.Anything, tid).Return([]string{}, nil)
+				mockRepo.On("Update", mock.Anything, mock.AnythingOfType("*users.User")).Return(nil)
+				mockRepo.On("AddPasswordHistory", mock.Anything, tid, mock.Anything).Return(nil)
+			},
+			wantErr: false,
+		},
+		{
+			name:        "Secretary resets student password -> Allowed",
+			actorRole:   "secretary",
+			targetRole:  "student",
+			targetID:    "student-1",
+			newPassword: "NewStudentPass123!",
+			mockSetup: func(tid, role string) {
+				user := &User{ID: tid, Role: role, SchoolID: &schoolID}
+				mockRepo.On("GetByID", mock.Anything, tid).Return(user, nil)
+				mockRepo.On("GetPasswordHistory", mock.Anything, tid).Return([]string{}, nil)
+				mockRepo.On("Update", mock.Anything, mock.AnythingOfType("*users.User")).Return(nil)
+				mockRepo.On("AddPasswordHistory", mock.Anything, tid, mock.Anything).Return(nil)
+			},
+			wantErr: false,
+		},
+		{
+			name:        "Secretary resets parent password -> Allowed",
+			actorRole:   "secretary",
+			targetRole:  "parent",
+			targetID:    "parent-1",
+			newPassword: "NewParentPass123!",
+			mockSetup: func(tid, role string) {
+				user := &User{ID: tid, Role: role, SchoolID: &schoolID}
+				mockRepo.On("GetByID", mock.Anything, tid).Return(user, nil)
+				mockRepo.On("GetPasswordHistory", mock.Anything, tid).Return([]string{}, nil)
+				mockRepo.On("Update", mock.Anything, mock.AnythingOfType("*users.User")).Return(nil)
+				mockRepo.On("AddPasswordHistory", mock.Anything, tid, mock.Anything).Return(nil)
+			},
+			wantErr: false,
+		},
+		{
+			name:        "Secretary attempts to reset admin password -> Forbidden",
+			actorRole:   "secretary",
+			targetRole:  "admin",
+			targetID:    "admin-1",
+			newPassword: "NewAdminPass123!",
+			mockSetup: func(tid, role string) {
+				user := &User{ID: tid, Role: role, SchoolID: &schoolID}
+				mockRepo.On("GetByID", mock.Anything, tid).Return(user, nil)
+			},
+			wantErr: true,
+		},
+		{
+			name:        "Secretary attempts to reset superadmin password -> Forbidden",
+			actorRole:   "secretary",
+			targetRole:  "superadmin",
+			targetID:    "superadmin-1",
+			newPassword: "NewSuperAdminPass123!",
+			mockSetup: func(tid, role string) {
+				user := &User{ID: tid, Role: role}
+				mockRepo.On("GetByID", mock.Anything, tid).Return(user, nil)
+			},
+			wantErr: true,
+		},
+		{
+			name:        "Secretary attempts to reset another secretary password -> Forbidden",
+			actorRole:   "secretary",
+			targetRole:  "secretary",
+			targetID:    "secretary-2",
+			newPassword: "NewSecretaryPass123!",
+			mockSetup: func(tid, role string) {
+				user := &User{ID: tid, Role: role, SchoolID: &schoolID}
+				mockRepo.On("GetByID", mock.Anything, tid).Return(user, nil)
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockSetup(tt.targetID, tt.targetRole)
+			err := service.ResetPassword(context.Background(), tt.actorRole, schoolID, tt.targetID, tt.newPassword)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {

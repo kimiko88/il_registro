@@ -24,6 +24,7 @@
             <q-tab name="calendar" label="Calendario Scolastico" icon="calendar_today" class="q-px-xl py-4" />
             <q-tab name="hours" label="Orari Ricevimento" icon="schedule" class="q-px-xl py-4" />
             <q-tab name="accessibility" label="Accessibilità Visiva" icon="accessibility_new" class="q-px-xl py-4" />
+            <q-tab name="account" label="Account / Password" icon="lock" class="q-px-xl py-4" />
         </q-tabs>
 
         <q-tab-panels v-model="tab" animated class="bg-transparent">
@@ -223,7 +224,72 @@
                      </q-card>
                    </div>
                  </div>
+              </q-tab-panel>
+
+             <!-- Account / Password Tab -->
+             <q-tab-panel name="account" class="q-pa-xl">
+                 <div class="row items-center q-mb-xl">
+                   <q-avatar color="green-50" text-color="green-800" icon="lock" size="48px" class="q-mr-md" />
+                   <div>
+                     <div class="text-h5 text-weight-bold text-slate-800">Account e Sicurezza</div>
+                     <div class="text-caption text-slate-500">Modifica la password del tuo account</div>
+                   </div>
+                 </div>
+
+                 <div class="row q-col-gutter-lg">
+                   <div class="col-12 col-md-6">
+                     <q-card flat bordered class="q-pa-lg rounded-xl bg-white shadow-sm">
+                       <div class="text-subtitle1 text-weight-bold text-slate-800 q-mb-md row items-center">
+                         <q-icon name="lock_reset" class="q-mr-sm" color="primary" /> Cambia Password
+                       </div>
+                       <q-form @submit.prevent="changeSecretaryPassword" class="q-gutter-md">
+                         <q-input
+                           v-model="pwdForm.current"
+                           label="Password Attuale *"
+                           :type="showCurrentPwd ? 'text' : 'password'"
+                           outlined dense
+                           :rules="[v => !!v || 'Campo obbligatorio']"
+                         >
+                           <template v-slot:append>
+                             <q-icon :name="showCurrentPwd ? 'visibility_off' : 'visibility'" class="cursor-pointer" @click="showCurrentPwd = !showCurrentPwd" />
+                           </template>
+                         </q-input>
+                         <q-input
+                           v-model="pwdForm.newPwd"
+                           label="Nuova Password * (min. 10 caratteri)"
+                           :type="showNewPwd ? 'text' : 'password'"
+                           outlined dense
+                           :rules="[v => !!v || 'Campo obbligatorio', v => v.length >= 10 || 'Minimo 10 caratteri']"
+                         >
+                           <template v-slot:append>
+                             <q-icon :name="showNewPwd ? 'visibility_off' : 'visibility'" class="cursor-pointer" @click="showNewPwd = !showNewPwd" />
+                           </template>
+                         </q-input>
+                         <q-input
+                           v-model="pwdForm.confirm"
+                           label="Conferma Nuova Password *"
+                           :type="showNewPwd ? 'text' : 'password'"
+                           outlined dense
+                           :rules="[v => !!v || 'Campo obbligatorio', v => v === pwdForm.newPwd || 'Le password non coincidono']"
+                         />
+                         <div class="q-mt-md">
+                           <q-btn
+                             type="submit"
+                             color="primary"
+                             label="Aggiorna Password"
+                             icon="lock_reset"
+                             :loading="changingPwd"
+                             no-caps
+                             class="rounded-lg shadow-sm"
+                             padding="sm xl"
+                           />
+                         </div>
+                       </q-form>
+                     </q-card>
+                   </div>
+                 </div>
              </q-tab-panel>
+
         </q-tab-panels>
     </q-card>
 
@@ -266,11 +332,17 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { useThemeStore } from 'src/stores/theme'
+import { useAuthStore } from 'src/stores/auth'
+import { userService } from 'src/services/userService'
 import adminService from 'src/services/adminService'
 import api from 'src/services/api'
 
+import { useI18n } from 'vue-i18n'
+
 const $q = useQuasar()
+const { t, te } = useI18n()
 const themeStore = useThemeStore()
+const authStore = useAuthStore()
 
 const getCurrentAcademicYear = () => {
   const now = new Date();
@@ -288,6 +360,38 @@ const tab = ref('general')
 const loading = ref(false)
 const savingHolidays = ref(false)
 const savingHours = ref(false)
+const changingPwd = ref(false)
+const showCurrentPwd = ref(false)
+const showNewPwd = ref(false)
+const pwdForm = reactive({ current: '', newPwd: '', confirm: '' })
+
+const changeSecretaryPassword = async () => {
+  if (pwdForm.newPwd !== pwdForm.confirm) {
+    $q.notify({ type: 'negative', message: 'Le password non coincidono' })
+    return
+  }
+  const userId = authStore.user?.id
+  if (!userId) {
+    $q.notify({ type: 'negative', message: 'Sessione non valida' })
+    return
+  }
+  changingPwd.value = true
+  try {
+    await userService.changePassword(userId, pwdForm.current, pwdForm.newPwd)
+    $q.notify({ type: 'positive', message: 'Password aggiornata con successo!' })
+    pwdForm.current = ''
+    pwdForm.newPwd = ''
+    pwdForm.confirm = ''
+  } catch (err) {
+    const errData = err.response?.data
+    const code = errData?.code || errData?.error
+    const msg = code && te(`errors.${code}`) ? t(`errors.${code}`) : (errData?.message || errData?.error || t('errors.serverError'))
+    $q.notify({ type: 'negative', message: msg })
+  } finally {
+    changingPwd.value = false
+  }
+}
+
 
 const settings = reactive({
     schoolName: 'Istituto Comprensivo "Alessandro Volta"',

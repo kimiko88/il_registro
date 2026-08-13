@@ -134,6 +134,8 @@ describe('adminService', () => {
         it('getTeacherSubjects', () => { adminService.getTeacherSubjects('1'); expect(api.get).toHaveBeenCalledWith('/teachers/1/subjects') })
         it('assignSubjectToTeacher', () => { adminService.assignSubjectToTeacher('1', 'sub1'); expect(api.post).toHaveBeenCalledWith('/teachers/1/subjects', { subject_id: 'sub1' }) })
         it('removeTeacherSubject', () => { adminService.removeTeacherSubject('1', 'sub1'); expect(api.delete).toHaveBeenCalledWith('/teachers/1/subjects/sub1') })
+        it('getTeacherSchedule', () => { adminService.getTeacherSchedule('1'); expect(api.get).toHaveBeenCalledWith('/teachers/1/schedule') })
+        it('saveTeacherSchedule', () => { adminService.saveTeacherSchedule('1', { entries: [] }); expect(api.post).toHaveBeenCalledWith('/teachers/1/schedule', { entries: [] }) })
     })
 
     describe('Admin Users', () => {

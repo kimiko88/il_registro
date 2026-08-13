@@ -94,11 +94,11 @@ export const THEMES = [
 
 export const useThemeStore = defineStore('theme', {
     state: () => ({
-        currentTheme: localStorage.getItem('registrov2_theme') || 'indigo',
-        dsaFont: localStorage.getItem('registrov2_dsa_font') === 'true',
-        fontFamily: localStorage.getItem('registrov2_font_family') || 'default',
-        fontSize: localStorage.getItem('registrov2_font_size') || 'normal',
-        highContrast: localStorage.getItem('registrov2_high_contrast') === 'true'
+        currentTheme: localStorage.getItem('il_registro_theme') || 'indigo',
+        dsaFont: localStorage.getItem('il_registro_dsa_font') === 'true',
+        fontFamily: localStorage.getItem('il_registro_font_family') || 'default',
+        fontSize: localStorage.getItem('il_registro_font_size') || 'normal',
+        highContrast: localStorage.getItem('il_registro_high_contrast') === 'true'
     }),
     getters: {
         activeThemeObj: (state) => {
@@ -109,24 +109,24 @@ export const useThemeStore = defineStore('theme', {
         setTheme(themeId) {
             const targetTheme = THEMES.find(t => t.id === themeId) ? themeId : 'indigo'
             this.currentTheme = targetTheme
-            localStorage.setItem('registrov2_theme', targetTheme)
+            localStorage.setItem('il_registro_theme', targetTheme)
             this.applyTheme(targetTheme)
         },
         setFontFamily(family) {
             this.fontFamily = family || 'default'
-            localStorage.setItem('registrov2_font_family', this.fontFamily)
+            localStorage.setItem('il_registro_font_family', this.fontFamily)
             if (this.fontFamily === 'opendyslexic') {
                 this.dsaFont = true
-                localStorage.setItem('registrov2_dsa_font', 'true')
+                localStorage.setItem('il_registro_dsa_font', 'true')
             } else {
                 this.dsaFont = false
-                localStorage.setItem('registrov2_dsa_font', 'false')
+                localStorage.setItem('il_registro_dsa_font', 'false')
             }
             this.applyAccessibility()
         },
         setFontSize(size) {
             this.fontSize = size || 'normal'
-            localStorage.setItem('registrov2_font_size', this.fontSize)
+            localStorage.setItem('il_registro_font_size', this.fontSize)
             this.applyAccessibility()
         },
         applyTheme(themeId = this.currentTheme) {
@@ -143,14 +143,14 @@ export const useThemeStore = defineStore('theme', {
         },
         toggleDsaFont(enabled) {
             this.dsaFont = enabled !== undefined ? enabled : !this.dsaFont
-            localStorage.setItem('registrov2_dsa_font', this.dsaFont)
+            localStorage.setItem('il_registro_dsa_font', this.dsaFont)
             this.fontFamily = this.dsaFont ? 'opendyslexic' : 'default'
-            localStorage.setItem('registrov2_font_family', this.fontFamily)
+            localStorage.setItem('il_registro_font_family', this.fontFamily)
             this.applyAccessibility()
         },
         toggleHighContrast(enabled) {
             this.highContrast = enabled !== undefined ? enabled : !this.highContrast
-            localStorage.setItem('registrov2_high_contrast', this.highContrast)
+            localStorage.setItem('il_registro_high_contrast', this.highContrast)
             this.applyAccessibility()
         },
         applyAccessibility() {

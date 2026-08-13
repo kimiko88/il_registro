@@ -37,14 +37,14 @@ func (r *repository) GetBySchoolID(ctx context.Context, schoolID string) (*Schoo
 		if err == sql.ErrNoRows {
 			// Return default settings if not explicitly saved yet
 			return &SchoolSettings{
-				SchoolID:                         schoolID,
-				RequirePrincipalApprovalForNotes: false,
-				AllowParentsViewGrades:           true,
-				AllowStudentsViewClassAverages:   true,
-				RequireMFAForStaff:               false,
+				SchoolID:                           schoolID,
+				RequirePrincipalApprovalForNotes:   false,
+				AllowParentsViewGrades:             true,
+				AllowStudentsViewClassAverages:     true,
+				RequireMFAForStaff:                 false,
 				LockScrutinyEditingAfterValidation: true,
-				EnableSubstituteNotifications:    true,
-				UpdatedAt:                        time.Now(),
+				EnableSubstituteNotifications:      true,
+				UpdatedAt:                          time.Now(),
 			}, nil
 		}
 		return nil, err

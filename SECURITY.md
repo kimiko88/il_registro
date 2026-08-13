@@ -2,7 +2,7 @@
 
 ## Scope
 
-Questo documento riguarda il progetto **Registrov2** — un registro elettronico scolastico che tratta dati personali di minori (studenti), genitori, insegnanti e personale amministrativo. La sicurezza di questi dati è una priorità assoluta.
+Questo documento riguarda il progetto **il_registro** — un registro elettronico scolastico che tratta dati personali di minori (studenti), genitori, insegnanti e personale amministrativo. La sicurezza di questi dati è una priorità assoluta.
 
 ---
 
@@ -25,7 +25,7 @@ Le issue pubbliche espongono il problema prima che sia risolto, mettendo a risch
 
 ### Canale preferito
 
-Invia una segnalazione **privata** tramite la funzione [GitHub Private Security Advisory](https://github.com/kimiko88/Registrov2/security/advisories/new).
+Invia una segnalazione **privata** tramite la funzione [GitHub Private Security Advisory](https://github.com/kimiko88/il_registro/security/advisories/new).
 
 In alternativa, contatta il maintainer direttamente via email all'indirizzo indicato nel profilo GitHub.
 

@@ -1,14 +1,18 @@
-# RegistroV2 — Registro Elettronico Scolastico
+# il_registro — Registro Elettronico Scolastico
 
-> Sistema completo per la gestione digitale delle attività scolastiche italiane.
+> 🏛️ Un registro elettronico **pubblico, aperto e gratuito** per la scuola italiana — perché i dati degli studenti appartengono alla res pubblica, non alle aziende private.
 
 **Online Demo**: [https://registro-scuola.netlify.app](https://registro-scuola.netlify.app)
 **Demo accounts & passwords**: [example_accounts.md](./example_accounts.md)
+_**Nota bene**_: alcune password, come quella per l'account superadmin, potrebbero essere state modificate per motivi di sicurezza.
 
-[![Backend CI](https://github.com/kimiko88/Registrov2/actions/workflows/ci.yml/badge.svg)](https://github.com/kimiko88/Registrov2/actions/workflows/ci.yml)
+[![Backend CI](https://github.com/kimiko88/il_registro/actions/workflows/ci.yml/badge.svg)](https://github.com/kimiko88/il_registro/actions/workflows/ci.yml)
 [![Go Version](https://img.shields.io/badge/go-1.25%2B-blue)](https://go.dev/)
 [![Vue Version](https://img.shields.io/badge/vue-3.x-brightgreen)](https://vuejs.org/)
 [![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-blue.svg)](./LICENSE)
+[![Google Antigravity](https://img.shields.io/badge/IDE-Google%20Antigravity-4285F4?logo=google&logoColor=white)](https://antigravity.google)
+[![Google Gemini](https://img.shields.io/badge/AI-Google%20Gemini-4285F4?logo=google&logoColor=white)](https://gemini.google.com)
+[![Anthropic Claude](https://img.shields.io/badge/AI-Anthropic%20Claude-D97757?logo=anthropic&logoColor=white)](https://anthropic.com)
 
 ---
 
@@ -41,8 +45,8 @@
 
 <a href="./docs/images/06_substitutions_recommendation.png"><img src="./docs/images/06_substitutions_recommendation.png" width="49.5%"/></a>
 
-6. **`06_substitutions_recommendation.png` — Suggerimento Automatico Supplenze**
-   - _Descrizione_: Algoritmo di calcolo dello score supplenti con i dettagli di materia, classe e carico orario settimanale.
+6. **`06_substitutions_recommendation.png` — Gestione Supplenze**
+   - _Descrizione_: Gestione delle supplenze con materia e classe (anche con un algoritmo automatico che suggerisce i supplenti).
 
 <a href="./docs/images/07_parent_portal_mobile.png"><img src="./docs/images/07_parent_portal_mobile.png" width="49.5%"/></a>
 
@@ -57,14 +61,33 @@
 
 ---
 
+## 🏛️ Perché il_registro?
+
+Il sistema scolastico italiano è oggi **dipendente da piattaforme proprietarie e a pagamento** per la gestione del registro elettronico. Questo comporta:
+
+- **Costi ricorrenti** a carico delle scuole pubbliche (e quindi dei contribuenti)
+- **Dati sensibili degli studenti** gestiti da soggetti privati, fuori dal controllo pubblico
+- **Lock-in tecnologico** che rende difficile cambiare fornitore o personalizzare il sistema
+
+**il_registro nasce come risposta civica a questo problema.**
+
+L'obiettivo è fornire alla _res pubblica_ — scuole, comuni, Stato — uno strumento **migliore di quelli esistenti in commercio**, completamente open-source, che garantisca:
+
+- ✅ **Sovranità del dato**: i dati degli studenti restano in mano pubblica, su infrastrutture controllate dalle istituzioni
+- ✅ **Costo zero**: nessuna licenza da pagare, nessun canone annuo, nessun vendor lock-in
+- ✅ **Trasparenza**: il codice è pubblico, verificabile e migliorabile dalla comunità
+- ✅ **Qualità**: funzionalità avanzate (SPID/CIE, BES/DSA, BI, PWA) tipicamente riservate ai prodotti commerciali
+
+> _"La scuola pubblica merita strumenti pubblici."_
+
 ## Panoramica
 
-**RegistroV2** è un registro elettronico scolastico full-stack progettato per il contesto scolastico italiano. Gestisce voti, presenze, comunicazioni, orari, scrutini, PCTO e molto altro, con supporto nativo a **SPID** e **CIE** per l'autenticazione degli utenti.
+**il_registro** è un registro elettronico scolastico full-stack progettato per il contesto scolastico italiano. Gestisce voti, presenze, comunicazioni, orari, scrutini, PCTO e molto altro, con supporto nativo a **SPID** e **CIE** per l'autenticazione degli utenti.
 
 Il progetto è organizzato come **monorepo** con backend Go e frontend Vue 3:
 
 ```
-Registrov2/
+il_registro/
 ├── registro-backend/    # API REST in Go (Gin + PostgreSQL + Redis)
 ├── registro-frontend/   # SPA/PWA in Vue 3 + Quasar
 ├── docs/                # Documentazione tecnica dettagliata
@@ -73,6 +96,10 @@ Registrov2/
 ├── CONTRIBUTING.md      # Guida ai contributi
 └── SECURITY.md          # Policy di sicurezza
 ```
+
+il_registro è pensato per essere **auto-ospitato da scuole, Comuni, Regioni o dal Ministero stesso**, abbattendo i costi e riportando la gestione dei dati scolastici sotto controllo istituzionale pubblico.
+
+> 🤖 Questo progetto è stato sviluppato con il supporto di strumenti di intelligenza artificiale (LLM) come ausilio alla scrittura del codice e della documentazione.
 
 ---
 
@@ -108,8 +135,8 @@ Registrov2/
 
 ```bash
 # Clona il repository
-git clone https://github.com/kimiko88/Registrov2.git
-cd Registrov2
+git clone https://github.com/kimiko88/il_registro.git
+cd il_registro
 
 # Avvia l'intero stack (backend + frontend + DB + Redis)
 docker compose up --build
@@ -188,5 +215,10 @@ cd registro-frontend && npx playwright test
 
 ## Licenza
 
-Questo progetto è rilasciato sotto licenza **[PolyForm Noncommercial 1.0.0](file:///c:/Users/chimi/Desktop/Programmazione/Registrov2/LICENSE)**.
-L'utilizzo per scuole pubbliche, università, enti di ricerca ed istituzioni pubbliche è gratuito e consentito senza limitazioni. Per utilizzi commerciali da parte di aziende ed Enti privati è richiesta una licenza commerciale separata.
+## Licenza
+
+Questo progetto è rilasciato sotto licenza **[PolyForm Noncommercial 1.0.0](./LICENSE)**.
+
+**L'utilizzo per scuole pubbliche, Comuni, Regioni, università, enti di ricerca e istituzioni pubbliche è gratuito e senza limitazioni** — perché crediamo che i dati degli studenti e gli strumenti per gestirli debbano rimanere in mano pubblica.
+
+Per utilizzi commerciali da parte di aziende ed enti privati è richiesta una licenza separata.

@@ -13,9 +13,31 @@
         style="min-width: 220px"
       />
       <q-input v-model="dateVal" type="date" label="Data" dense outlined style="max-width: 160px" />
+      <q-select
+        v-model="lessonType"
+        :options="[
+          { label: 'Lezione Standard', value: 'standard', icon: 'school' },
+          { label: 'Attività PCTO', value: 'pcto', icon: 'work' },
+          { label: 'Orientamento', value: 'orientamento', icon: 'explore' }
+        ]"
+        emit-value map-options
+        label="Tipo Attività"
+        dense outlined
+        style="min-width: 180px"
+      />
       <q-space />
       <q-btn color="primary" icon="save" label="Salva Presenze" :loading="saving" @click="saveAll" :disable="!hasChanges" />
     </div>
+
+    <q-banner v-if="selectedClassId && lessonType !== 'standard'" class="bg-indigo-1 text-indigo-10 rounded-xl q-mb-md border border-indigo-200">
+      <template #avatar><q-icon :name="lessonType === 'pcto' ? 'work' : 'explore'" color="indigo" size="24px" /></template>
+      <div class="text-weight-bold">
+        Attività di {{ lessonType === 'pcto' ? 'PCTO (Percorsi per le Competenze Trasversali e l\'Orientamento)' : 'Orientamento Scolastico' }}
+      </div>
+      <div class="text-caption">
+        Le ore firmate per questa attività vengono accumulate nel contatore di classe. In queste attività non è previsto l'inserimento di valutazioni numeriche.
+      </div>
+    </q-banner>
 
     <q-banner v-if="!selectedClassId" class="bg-blue-1 q-mb-md">
       <template #avatar><q-icon name="info" color="primary" /></template>
@@ -132,6 +154,7 @@ const classesStore = useClassesStore()
 const selectedClassId = ref(null)
 const today = date.formatDate(Date.now(), 'YYYY-MM-DD')
 const dateVal = ref(today)
+const lessonType = ref('standard')
 
 const saving = ref(false)
 const loading = ref(false)

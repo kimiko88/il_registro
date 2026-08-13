@@ -1,8 +1,8 @@
 package attendance
 
 import (
-	"testing"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestAttendanceValidity_Within75PercentThreshold(t *testing.T) {

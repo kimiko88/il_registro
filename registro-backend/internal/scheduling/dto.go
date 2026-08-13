@@ -5,11 +5,11 @@ import "time"
 // Requests
 
 type CreateSlotRequest struct {
-	Dates       []string `json:"dates" binding:"required"`      // YYYY-MM-DD
-	StartTime   string   `json:"start_time" binding:"required"` // HH:MM
-	EndTime     string   `json:"end_time" binding:"required"`
-	Duration    int      `json:"duration"`     // Minutes per slot, if > 0 split range
-	MaxBookings int      `json:"max_bookings"` // Default 1
+	Dates          []string `json:"dates" binding:"required"`      // YYYY-MM-DD
+	StartTime      string   `json:"start_time" binding:"required"` // HH:MM
+	EndTime        string   `json:"end_time" binding:"required"`
+	Duration       int      `json:"duration"`     // Minutes per slot, if > 0 split range
+	MaxBookings    int      `json:"max_bookings"` // Default 1
 	Type           SlotType `json:"type" binding:"required"`
 	Location       string   `json:"location"`
 	IsRecurring    bool     `json:"is_recurring"`

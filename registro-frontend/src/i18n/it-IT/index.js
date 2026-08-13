@@ -122,8 +122,15 @@ export default {
     connectionError: 'Errore di connessione al server. Verifica la tua connessione e riprova.',
     forbidden: 'Non disponi dei permessi necessari per completare questa operazione.',
     serverError: 'Si è verificato un errore sul server. Riprova più tardi.',
-    unauthorized: 'Sessione non valida o scaduta.'
+    unauthorized: 'Sessione non valida o scaduta.',
+    ERR_CURRENT_PASSWORD_INCORRECT: 'La password attuale non è corretta.',
+    ERR_PASSWORD_COMPLEXITY: 'La password deve contenere almeno una lettera maiuscola, una minuscola, un numero e un carattere speciale.',
+    ERR_PASSWORD_TOO_SHORT: 'La password deve contenere almeno 10 caratteri.',
+    ERR_PASSWORD_TOO_LONG: 'La password è troppo lunga (massimo 128 caratteri).',
+    ERR_PASSWORD_RECENTLY_USED: 'La nuova password non può essere uguale a una delle ultime 5 password utilizzate.',
+    ERR_REQUIRED_FIELDS: 'Compilare tutti i campi obbligatori per la password.'
   },
+
   settings: {
     title: 'Impostazioni Sistema',
     subtitle: 'Configura le preferenze generali, di sicurezza e notifiche del sistema',

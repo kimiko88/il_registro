@@ -1,6 +1,6 @@
-# RegistroV2 — Architettura del Sistema
+# il_registro — Architettura del Sistema
 
-Questo documento descrive l'architettura tecnica di RegistroV2: struttura dei layer, pattern di design, moduli principali e flusso dei dati.
+Questo documento descrive l'architettura tecnica di il_registro: struttura dei layer, pattern di design, moduli principali e flusso dei dati.
 
 ---
 
@@ -20,7 +20,7 @@ Questo documento descrive l'architettura tecnica di RegistroV2: struttura dei la
 ## Struttura monorepo
 
 ```
-Registrov2/
+il_registro/
 ├── .github/
 │   └── workflows/
 │       └── ci.yml           # Pipeline CI (test, vet, build)
@@ -133,13 +133,15 @@ Middleware Go:
 
 ## Pattern architetturali
 
-| Pattern | Dove usato | Scopo |
-|---|---|---|
-| **Handler/Service/Repository** | Backend, ogni modulo | Separazione delle responsabilità |
-| **Context Propagation** | Backend, firme Service (`ctx`) | Tracing distribuito e cancellazione query |
-| **Partial B-Tree Indexing** | PostgreSQL, migrazioni | Lookup rapido con filtro `WHERE deleted_at IS NULL` |
-| **Dedicated Auth Rate Limiting** | Backend, middleware | Protezione da attacchi di forza bruta |
-| **Composition API & Composables** | Frontend, `composables/` | Logica riutilizzabile e gestione errori con `useErrorHandler` |
-| **In-Memory Store Caching** | Frontend, `useGradesStore` | Evita refetch inutili durante la navigazione |
-| **Pinia Global Error Bus** | Frontend, `stores/error.js` | Raccolta e notifica centralizzata di eccezioni |
-| **Router-Integrated Interceptor** | Frontend, `services/api.js` | Reindirizzamento SPA senza ricaricamento pagina su 401 |
+| Pattern                           | Dove usato                     | Scopo                                                         |
+| --------------------------------- | ------------------------------ | ------------------------------------------------------------- |
+| **Handler/Service/Repository**    | Backend, ogni modulo           | Separazione delle responsabilità                              |
+| **Single Source Timetable Sync**  | Backend, `timetables`          | `class_schedules` come unica fonte di verità: modificando l'orario della classe o del docente, la tabella si aggiorna sincronizzando in tempo reale entrambe le viste |
+| **Role-Bounded Password Reset**   | Backend, `users.ResetPassword` | Limitazione di ruolo: la Segreteria può resettare solo password di docenti, studenti e genitori, bloccando admin/superadmin |
+| **Context Propagation**           | Backend, firme Service (`ctx`) | Tracing distribuito e cancellazione query                     |
+| **Partial B-Tree Indexing**       | PostgreSQL, migrazioni         | Lookup rapido con filtro `WHERE deleted_at IS NULL`           |
+| **Dedicated Auth Rate Limiting**  | Backend, middleware            | Protezione da attacchi di forza bruta                         |
+| **Composition API & Composables** | Frontend, `composables/`       | Logica riutilizzabile e gestione errori con `useErrorHandler` |
+| **In-Memory Store Caching**       | Frontend, `useGradesStore`     | Evita refetch inutili durante la navigazione                  |
+| **Pinia Global Error Bus**        | Frontend, `stores/error.js`    | Raccolta e notifica centralizzata di eccezioni                |
+| **Router-Integrated Interceptor** | Frontend, `services/api.js`    | Reindirizzamento SPA senza ricaricamento pagina su 401        |

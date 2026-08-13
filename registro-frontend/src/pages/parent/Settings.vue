@@ -30,7 +30,7 @@
                 <q-item-label>Font &amp; Leggibilità</q-item-label>
                 <q-item-label caption>Scelta dei font e temi</q-item-label>
               </q-item-section>
-            </q-item
+            </q-item>
 
             <q-item
               clickable
@@ -46,7 +46,7 @@
                 <q-item-label>Notifiche Figli</q-item-label>
                 <q-item-label caption>Avvisi presenze e voti</q-item-label>
               </q-item-section>
-            </q-item
+            </q-item>
 
             <q-item
               clickable
@@ -330,9 +330,15 @@
 import { ref } from 'vue'
 import { useThemeStore, THEMES } from 'src/stores/theme'
 import { useQuasar } from 'quasar'
+import { userService } from 'src/services/userService'
+import { useAuthStore } from 'src/stores/auth'
+
+import { useI18n } from 'vue-i18n'
 
 const $q = useQuasar()
+const { t, te } = useI18n()
 const themeStore = useThemeStore()
+const authStore = useAuthStore()
 
 const activeSection = ref('appearance')
 
@@ -359,7 +365,7 @@ const pwdNew = ref('')
 const pwdConfirm = ref('')
 const savingPwd = ref(false)
 
-function changePassword() {
+async function changePassword() {
   if (!pwdCurrent.value || !pwdNew.value) {
     $q.notify({ type: 'warning', message: 'Compilare i campi della password' })
     return
@@ -368,13 +374,25 @@ function changePassword() {
     $q.notify({ type: 'negative', message: 'Le nuove password non coincidono' })
     return
   }
+  const userId = authStore.user?.id
+  if (!userId) {
+    $q.notify({ type: 'negative', message: 'Sessione non valida, effettua nuovamente il login' })
+    return
+  }
   savingPwd.value = true
-  setTimeout(() => {
-    savingPwd.value = false
+  try {
+    await userService.changePassword(userId, pwdCurrent.value, pwdNew.value)
     pwdCurrent.value = ''
     pwdNew.value = ''
     pwdConfirm.value = ''
     $q.notify({ type: 'positive', message: 'Password aggiornata con successo' })
-  }, 600)
+  } catch (err) {
+    const errData = err.response?.data
+    const code = errData?.code || errData?.error
+    const msg = code && te(`errors.${code}`) ? t(`errors.${code}`) : (errData?.message || errData?.error || t('errors.serverError'))
+    $q.notify({ type: 'negative', message: msg })
+  } finally {
+    savingPwd.value = false
+  }
 }
 </script>

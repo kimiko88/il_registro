@@ -99,7 +99,7 @@ func (s *service) CreateSlots(ctx context.Context, userID string, req CreateSlot
 		if firstDate.Before(today) {
 			return fmt.Errorf("la data dello slot non può essere nel passato (%s)", dateStr)
 		}
-		
+
 		targetDates := []time.Time{firstDate}
 		if req.IsRecurring && req.RecurringUntil != "" {
 			untilDate, err := time.Parse("2006-01-02", req.RecurringUntil)
@@ -121,7 +121,7 @@ func (s *service) CreateSlots(ctx context.Context, userID string, req CreateSlot
 			if req.Duration > 0 {
 				// Split range into slots
 				current := start
-				for current.Add(time.Duration(req.Duration) * time.Minute).Before(end) || current.Add(time.Duration(req.Duration)*time.Minute).Equal(end) {
+				for current.Add(time.Duration(req.Duration)*time.Minute).Before(end) || current.Add(time.Duration(req.Duration)*time.Minute).Equal(end) {
 					slot := ColloquioSlot{
 						TeacherID:   teacher.ID,
 						SchoolID:    teacher.SchoolID,

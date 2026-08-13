@@ -19,6 +19,13 @@ export const userService = {
     forceResetPassword(id, newPassword) {
         return api.post(`/users/${id}/reset-password`, { new_password: newPassword })
     },
+    changePassword(userId, currentPassword, newPassword) {
+        return api.post(`/users/${userId}/change-password`, {
+            current_password: currentPassword,
+            new_password: newPassword
+        })
+    },
+
     bulkDelete(userIds) {
         return api.post('/users/bulk-delete', { user_ids: userIds })
     },

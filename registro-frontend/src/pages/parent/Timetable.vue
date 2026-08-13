@@ -131,18 +131,20 @@ const getCell = (day, hour) => {
 
 <style scoped>
 .grid-scroll {
+  width: 100%;
   overflow-x: auto;
 }
 .timetable-grid {
   width: 100%;
   border-collapse: collapse;
   background-color: white;
-  min-width: 800px;
+  min-width: 750px;
 }
 .timetable-grid th, .timetable-grid td {
   border: 1px solid rgba(0,0,0,0.06);
   padding: 12px;
   text-align: center;
+  vertical-align: middle;
 }
 .timetable-grid th {
   background-color: var(--q-primary);
@@ -151,17 +153,21 @@ const getCell = (day, hour) => {
 }
 .hour-col {
   width: 80px;
+  min-width: 80px;
 }
 .day-col {
-  width: 15%;
+  width: calc((100% - 80px) / 6);
+  min-width: 110px;
 }
 .hour-cell {
   background-color: #f8fafc;
   color: #64748b;
-  font-size: 1.1rem;
+  font-size: 1rem;
+  width: 80px;
+  min-width: 80px;
 }
 .schedule-cell {
-  height: 90px;
+  height: 80px;
   vertical-align: middle;
   transition: background-color 0.2s;
 }

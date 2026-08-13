@@ -203,4 +203,3 @@ func TestCORSMiddleware_HeaderValues(t *testing.T) {
 	assert.Contains(t, allowedMethods, "PATCH")
 	assert.Contains(t, allowedMethods, "OPTIONS")
 }
-

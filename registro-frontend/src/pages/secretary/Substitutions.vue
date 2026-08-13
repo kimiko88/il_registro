@@ -117,6 +117,24 @@
                 class="rounded-lg"
                 @click="openAssignDialog(props.row)"
               />
+              <q-btn
+                color="secondary"
+                size="sm"
+                icon="edit"
+                flat round dense
+                @click="openEditDialog(props.row)"
+              >
+                <q-tooltip>Modifica Sostituzione</q-tooltip>
+              </q-btn>
+              <q-btn
+                color="negative"
+                size="sm"
+                icon="delete"
+                flat round dense
+                @click="confirmDeleteSub(props.row)"
+              >
+                <q-tooltip>Elimina Sostituzione</q-tooltip>
+              </q-btn>
             </div>
           </q-td>
         </template>
@@ -131,19 +149,19 @@
       </q-table>
     </q-card>
 
-    <!-- Create Substitution Dialog -->
+    <!-- Create / Edit Substitution Dialog -->
     <q-dialog v-model="showCreateDialog" persistent>
       <q-card style="min-width: 500px" class="rounded-xl overflow-hidden shadow-24 bg-white">
         <q-card-section class="bg-primary text-white q-pa-lg row items-center justify-between">
           <div class="text-h6 text-weight-bold">
-            <q-icon name="add_circle" class="q-mr-xs" />
-            Nuova Richiesta Sostituzione
+            <q-icon :name="isEditingSub ? 'edit' : 'add_circle'" class="q-mr-xs" />
+            {{ isEditingSub ? 'Modifica Richiesta Sostituzione' : 'Nuova Richiesta Sostituzione' }}
           </div>
           <q-btn icon="close" flat round dense v-close-popup />
         </q-card-section>
 
         <q-card-section class="q-pa-lg space-y-4">
-          <q-form @submit="createSubstitution" class="q-gutter-y-md">
+          <q-form @submit="saveSubstitution" class="q-gutter-y-md">
             <q-select
               v-model="createForm.absent_teacher_id"
               :options="teacherOptions"
@@ -203,7 +221,7 @@
 
             <div class="row justify-end q-mt-lg q-gutter-sm">
               <q-btn flat label="Annulla" v-close-popup no-caps />
-              <q-btn type="submit" label="Crea Sostituzione" color="primary" class="rounded-lg q-px-lg" no-caps :loading="saving" />
+              <q-btn type="submit" :label="isEditingSub ? 'Aggiorna Sostituzione' : 'Crea Sostituzione'" color="primary" class="rounded-lg q-px-lg" no-caps :loading="saving" />
             </div>
           </q-form>
         </q-card-section>
@@ -217,7 +235,7 @@
           <div>
             <div class="text-h6 text-weight-bold">Assegna Docente Sostituto</div>
             <div class="text-caption" v-if="selectedSub">
-              Ora {{ selectedSub.hour }}ª · Classe {{ selectedSub.class_name || selectedSub.class_id }} · Data {{ selectedSub.date ? selectedSub.date.substring(0, 10) : '' }}
+              Ora {{ selectedSub.hour || selectedSub.hour_index || 1 }}ª · Classe {{ getClassName(selectedSub) }} · Data {{ selectedSub.date ? selectedSub.date.substring(0, 10) : '' }}
             </div>
           </div>
           <q-btn icon="close" flat round dense v-close-popup />
@@ -309,6 +327,9 @@ const selectedSub = ref(null)
 const selectedSubstituteId = ref(null)
 const recommendedTeachers = ref([])
 
+const isEditingSub = ref(false)
+const editingSubId = ref(null)
+
 const createForm = reactive({
   absent_teacher_id: null,
   date: new Date().toISOString().substring(0, 10),
@@ -318,13 +339,42 @@ const createForm = reactive({
   notes: ''
 })
 
+const getClassName = (row) => {
+  if (!row) return ''
+  if (row.class_name) return row.class_name
+  const found = classes.value.find(c => c.id === row.class_id)
+  return found ? (found.label || `${found.name || ''}${found.section || ''}`) : (row.class_id ? `Classe ${row.class_id.substring(0,4)}` : 'N/A')
+}
+
+const getSubjectName = (row) => {
+  if (!row) return ''
+  if (row.subject_name) return row.subject_name
+  const found = subjects.value.find(s => s.id === row.subject_id)
+  return found ? found.name : (row.subject_id ? `Materia ${row.subject_id.substring(0,4)}` : 'N/A')
+}
+
+const getAbsentTeacherName = (row) => {
+  if (!row) return ''
+  if (row.absent_teacher_name) return row.absent_teacher_name
+  const found = teachers.value.find(t => t.id === row.absent_teacher_id || t.user_id === row.absent_teacher_id)
+  return found ? `${found.last_name || ''} ${found.first_name || found.name || ''}`.trim() : (row.absent_teacher_id ? `Docente` : 'N/A')
+}
+
+const getSubstituteTeacherName = (row) => {
+  if (!row) return ''
+  if (row.substitute_teacher_name) return row.substitute_teacher_name
+  if (!row.substitute_teacher_id) return 'Nessuno'
+  const found = teachers.value.find(t => t.id === row.substitute_teacher_id || t.user_id === row.substitute_teacher_id)
+  return found ? `${found.last_name || ''} ${found.first_name || found.name || ''}`.trim() : 'Docente Assegnato'
+}
+
 const columns = [
   { name: 'hour', label: 'Ora', field: row => row.hour || row.hour_index || 1, align: 'center', sortable: true },
   { name: 'date', label: 'Data', field: row => row.date ? row.date.substring(0, 10) : '', align: 'left' },
-  { name: 'class', label: 'Classe', field: row => row.class_name || row.class_id, align: 'left', sortable: true },
-  { name: 'subject', label: 'Materia', field: row => row.subject_name || row.subject_id, align: 'left' },
-  { name: 'absent_teacher', label: 'Docente Assente', field: row => row.absent_teacher_name || row.absent_teacher_id, align: 'left' },
-  { name: 'substitute_teacher', label: 'Sostituto Assegnato', field: row => row.substitute_teacher_name || row.substitute_teacher_id || 'Nessuno', align: 'left' },
+  { name: 'class', label: 'Classe', field: row => getClassName(row), align: 'left', sortable: true },
+  { name: 'subject', label: 'Materia', field: row => getSubjectName(row), align: 'left' },
+  { name: 'absent_teacher', label: 'Docente Assente', field: row => getAbsentTeacherName(row), align: 'left' },
+  { name: 'substitute_teacher', label: 'Sostituto Assegnato', field: row => getSubstituteTeacherName(row), align: 'left' },
   { name: 'status', label: 'Stato', field: 'status', align: 'center', sortable: true },
   { name: 'actions', label: 'Azioni', align: 'center' }
 ]
@@ -333,7 +383,7 @@ const unassignedCount = computed(() => substitutions.value.filter(s => s.status 
 const assignedCount = computed(() => substitutions.value.filter(s => s.status === 'assigned' || s.status === 'confirmed' || s.status === 'completed').length)
 
 const teacherOptions = computed(() => teachers.value.map(t => ({ label: `${t.last_name || ''} ${t.first_name || t.name || ''}`, value: t.id })))
-const classOptions = computed(() => classes.value.map(c => ({ label: c.label || c.name || `Classe ${c.id.substring(0,6)}`, value: c.id })))
+const classOptions = computed(() => classes.value.map(c => ({ label: c.label || `${c.name || ''}${c.section || ''}` || `Classe ${c.id.substring(0,6)}`, value: c.id })))
 const subjectOptions = computed(() => subjects.value.map(s => ({ label: s.name, value: s.id })))
 
 onMounted(async () => {
@@ -386,6 +436,8 @@ async function fetchSubjects() {
 }
 
 function openCreateDialog() {
+  isEditingSub.value = false
+  editingSubId.value = null
   Object.assign(createForm, {
     absent_teacher_id: teacherOptions.value[0]?.value || null,
     date: selectedDate.value,
@@ -397,26 +449,65 @@ function openCreateDialog() {
   showCreateDialog.value = true
 }
 
-async function createSubstitution() {
+function openEditDialog(row) {
+  isEditingSub.value = true
+  editingSubId.value = row.id
+  Object.assign(createForm, {
+    absent_teacher_id: row.absent_teacher_id,
+    date: row.date ? row.date.substring(0, 10) : selectedDate.value,
+    hour_index: row.hour || row.hour_index || 1,
+    class_id: row.class_id,
+    subject_id: row.subject_id,
+    notes: row.notes || ''
+  })
+  showCreateDialog.value = true
+}
+
+async function saveSubstitution() {
   saving.value = true
   try {
-    await substitutionService.create({
+    const payload = {
       absent_teacher_id: createForm.absent_teacher_id,
       date: createForm.date,
       hour: parseInt(createForm.hour_index),
       class_id: createForm.class_id,
       subject_id: createForm.subject_id,
       notes: createForm.notes
-    })
-    $q.notify({ type: 'positive', message: 'Richiesta di sostituzione creata' })
+    }
+    if (isEditingSub.value && editingSubId.value) {
+      await substitutionService.update(editingSubId.value, payload)
+      $q.notify({ type: 'positive', message: 'Sostituzione aggiornata' })
+    } else {
+      await substitutionService.create(payload)
+      $q.notify({ type: 'positive', message: 'Richiesta di sostituzione creata' })
+    }
     showCreateDialog.value = false
     await fetchSubstitutions()
   } catch (err) {
     console.error(err)
-    $q.notify({ type: 'negative', message: err.response?.data?.error || 'Errore creazione sostituzione' })
+    $q.notify({ type: 'negative', message: err.response?.data?.error || 'Errore salvataggio sostituzione' })
   } finally {
     saving.value = false
   }
+}
+
+function confirmDeleteSub(row) {
+  $q.dialog({
+    title: 'Conferma Eliminazione',
+    message: `Sei sicuro di voler eliminare la sostituzione per la classe ${getClassName(row)} (${getSubjectName(row)})?`,
+    cancel: true,
+    persistent: true,
+    ok: { color: 'negative', label: 'Elimina' }
+  }).onOk(async () => {
+    try {
+      await substitutionService.delete(row.id)
+      $q.notify({ type: 'positive', message: 'Sostituzione eliminata' })
+      await fetchSubstitutions()
+    } catch (err) {
+      console.error(err)
+      $q.notify({ type: 'negative', message: 'Errore eliminazione sostituzione' })
+    }
+  })
 }
 
 async function openAssignDialog(row) {

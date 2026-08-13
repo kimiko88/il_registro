@@ -2,9 +2,9 @@ package scheduling
 
 import (
 	"context"
+	"registro-backend/internal/teachers"
 	"testing"
 	"time"
-	"registro-backend/internal/teachers"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -19,19 +19,30 @@ type MockTeacherRepo struct {
 	mock.Mock
 }
 
-func (m *MockTeacherRepo) List(ctx context.Context, schoolID string) ([]teachers.Teacher, error) { return nil, nil }
-func (m *MockTeacherRepo) Get(ctx context.Context, id string) (*teachers.Teacher, error) { return nil, nil }
+func (m *MockTeacherRepo) List(ctx context.Context, schoolID string) ([]teachers.Teacher, error) {
+	return nil, nil
+}
+func (m *MockTeacherRepo) Get(ctx context.Context, id string) (*teachers.Teacher, error) {
+	return nil, nil
+}
 func (m *MockTeacherRepo) GetByUserID(ctx context.Context, userID string) (*teachers.Teacher, error) {
 	return &teachers.Teacher{ID: "teacher1", UserID: userID, SchoolID: "school1"}, nil
 }
-func (m *MockTeacherRepo) GetBySubject(ctx context.Context, subjectID string) ([]teachers.Teacher, error) { return nil, nil }
-func (m *MockTeacherRepo) GetSubjects(ctx context.Context, teacherID string) ([]teachers.TeacherSubject, error) { return nil, nil }
-func (m *MockTeacherRepo) AssignSubject(ctx context.Context, teacherID, subjectID string) error { return nil }
-func (m *MockTeacherRepo) RemoveSubject(ctx context.Context, teacherID, subjectID string) error { return nil }
+func (m *MockTeacherRepo) GetBySubject(ctx context.Context, subjectID string) ([]teachers.Teacher, error) {
+	return nil, nil
+}
+func (m *MockTeacherRepo) GetSubjects(ctx context.Context, teacherID string) ([]teachers.TeacherSubject, error) {
+	return nil, nil
+}
+func (m *MockTeacherRepo) AssignSubject(ctx context.Context, teacherID, subjectID string) error {
+	return nil
+}
+func (m *MockTeacherRepo) RemoveSubject(ctx context.Context, teacherID, subjectID string) error {
+	return nil
+}
 func (m *MockTeacherRepo) GetDashboardStats(ctx context.Context, teacherUserID string) (map[string]interface{}, error) {
 	return nil, nil
 }
-
 
 func (m *MockRepo) CreateSlot(ctx context.Context, s *ColloquioSlot) error {
 	s.ID = "new-id"
@@ -95,7 +106,7 @@ func TestService_CreateSlot(t *testing.T) {
 	svc := NewService(repo, new(MockTeacherRepo), nil, nil, nil)
 
 	req := CreateSlotRequest{
-		Dates:      []string{time.Now().AddDate(0, 0, 1).Format("2006-01-02")}, // Future
+		Dates:     []string{time.Now().AddDate(0, 0, 1).Format("2006-01-02")}, // Future
 		StartTime: "10:00", EndTime: "11:00",
 		Type: SlotIndividual,
 	}

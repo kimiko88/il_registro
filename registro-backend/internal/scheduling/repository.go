@@ -189,7 +189,7 @@ func (r *repository) GetBooking(ctx context.Context, id string) (*ColloquioBooki
 		LEFT JOIN students st ON b.student_id = st.id
 		LEFT JOIN users us ON st.user_id = us.id
 		WHERE b.id=$1`
-	
+
 	var b ColloquioBooking
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
 		&b.ID, &b.SlotID, &b.ParentID, &b.StudentID, &b.Status, &b.Notes, &b.BookedAt,
@@ -371,4 +371,3 @@ func (r *repository) IsGuardian(ctx context.Context, parentUserID, studentID str
 	err := r.db.QueryRowContext(ctx, query, parentUserID, studentID).Scan(&exists)
 	return exists, err
 }
-

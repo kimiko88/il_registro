@@ -34,7 +34,9 @@ export function useMenuItems(role) {
                     { label: 'Studenti', icon: 'school', path: '/secretary/students' },
                     { label: 'Utenti', icon: 'people', path: '/secretary/users' },
                     { label: 'Classi', icon: 'room', path: '/secretary/classes' },
+                    { label: 'Orario Scolastico', icon: 'schedule', path: '/secretary/timetable' },
                     { label: 'Gruppi Linguistici / Articolati', icon: 'groups', path: '/secretary/groups' }
+
                 ]
             },
             {

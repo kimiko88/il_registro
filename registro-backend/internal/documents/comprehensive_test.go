@@ -59,11 +59,11 @@ func (m *MockRepo) GetSignatures(id string) ([]DocumentSignature, error) {
 }
 
 // Stubs for others
-func (m *MockRepo) GetTemplate(id string) (*DocumentTemplate, error)           { return nil, nil }
-func (m *MockRepo) GetTemplates(id string) ([]DocumentTemplate, error)         { return nil, nil }
-func (m *MockRepo) CreateTemplate(t *DocumentTemplate) error                   { return nil }
-func (m *MockRepo) UpdateTemplate(t *DocumentTemplate) error                   { return nil }
-func (m *MockRepo) DeleteTemplate(id string) error                             { return nil }
+func (m *MockRepo) GetTemplate(id string) (*DocumentTemplate, error)   { return nil, nil }
+func (m *MockRepo) GetTemplates(id string) ([]DocumentTemplate, error) { return nil, nil }
+func (m *MockRepo) CreateTemplate(t *DocumentTemplate) error           { return nil }
+func (m *MockRepo) UpdateTemplate(t *DocumentTemplate) error           { return nil }
+func (m *MockRepo) DeleteTemplate(id string) error                     { return nil }
 func (m *MockRepo) FindByClass(c string) ([]Document, error)           { return nil, nil }
 func (m *MockRepo) FindByStudent(s string) ([]Document, error)         { return nil, nil }
 func (m *MockRepo) GetInbox(s string) ([]Document, error) {

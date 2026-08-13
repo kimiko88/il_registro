@@ -1,6 +1,6 @@
-# 📚 WIKI — RegistroV2 Developer & Architecture Guide
+# 📚 WIKI — il_registro Developer & Architecture Guide
 
-Benvenuto nel Wiki di **RegistroV2**. Questa guida completa è pensata per sviluppatori, architetti e maintainer del progetto. Fornisce una visione approfondita dell'architettura del sistema, dei modelli dati, delle regole di sicurezza RBAC, dei flussi applicativi e delle linee guida per l'estensione del codice.
+Benvenuto nel Wiki di **il_registro**. Questa guida completa è pensata per sviluppatori, architetti e maintainer del progetto. Fornisce una visione approfondita dell'architettura del sistema, dei modelli dati, delle regole di sicurezza RBAC, dei flussi applicativi e delle linee guida per l'estensione del codice.
 
 ---
 
@@ -21,7 +21,7 @@ Benvenuto nel Wiki di **RegistroV2**. Questa guida completa è pensata per svilu
 
 ## 1. Visione Generale e Stack Tecnologico
 
-**RegistroV2** è un registro elettronico scolastico di nuova generazione, multi-tenant e multi-ruolo, progettato per garantire elevate prestazioni, sicurezza ed un'esperienza utente moderna e reattiva.
+**il_registro** è un registro elettronico scolastico di nuova generazione, multi-tenant e multi-ruolo, progettato per garantire elevate prestazioni, sicurezza ed un'esperienza utente moderna e reattiva.
 
 ### Backend 🐹
 
@@ -80,6 +80,23 @@ graph TD
 
 ---
 
+### C. Matrice di Sicurezza & Permessi Password (RBAC)
+
+- **Cambio Password Self-Service** (`/auth/change-password`, `/users/:id/change-password`): consentito a qualsiasi utente autenticato solo per il proprio account (`actorID == targetID`). Richiede l'inserimento della password attuale e verifica la complessità della nuova password (minimo 10 caratteri, maiuscola, minuscola, numero, carattere speciale, controllo storico 5 password).
+- **Reset Forzato Password** (`/users/:id/reset-password`):
+  - `superadmin`: consentito su qualsiasi account.
+  - `admin`: consentito su tutti gli account del proprio istituto scolastico.
+  - `secretary`: consentito **esclusivamente** su account con ruolo `teacher`, `student` o `parent`. I tentativi su account `admin`, `superadmin` o altra `secretary` vengono bloccati con errore `HTTP 403 Forbidden`.
+
+### D. Architettura e Sincronizzazione Orario Scolastico
+
+L'orario scolastico si basa sulla tabella `class_schedules` in PostgreSQL come unica fonte di verità.
+- **Vista Classe (`ScheduleGrid.vue`)**: organizza l'orario per ora (1ª-8ª) e giorno (Lunedì-Sabato), abbinando materia, docente ed aula.
+- **Vista Docente (`TeacherScheduleGrid.vue`)**: ricava l'orario individuale del docente unendo `class_schedules` con `classes` (`JOIN classes c ON cs.class_id = c.id`).
+- **Sincronizzazione Bidirezionale**: quando la Segreteria o un docente modifica l'orario settimanale del docente, le modifiche si riflettono istantaneamente sulle classi coinvolte e viceversa, mantenendo una consistenza atomica dei dati.
+
+---
+
 ## 10. Best Practices & Troubleshooting 🛠️
 
 ### A. Backend (Go / Gin)
@@ -93,3 +110,4 @@ graph TD
 ### B. Frontend (Vue 3 / Vitest)
 
 - **Gestione Router negli Interceptor**: Usa `setApiRouter(router)` in `src/router/index.js` anziché `window.location.href` per mantenere la navigazione SPA fluida ed evitare perdite di stato client su sessione scaduta.
+- **Test Unitari dei Componenti**: Esegui i test unitari con `npm run test:unit` o `npx vitest run` per verificare sia le chiamate API di `adminService` sia l'integrità grafica dei componenti di griglia.

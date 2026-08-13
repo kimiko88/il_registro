@@ -369,17 +369,17 @@ func (h *Handler) UploadAttachment(c *gin.Context) {
 func isValidMIME(contentType string) bool {
 	contentType = strings.ToLower(strings.TrimSpace(strings.Split(contentType, ";")[0]))
 	allowed := map[string]bool{
-		"application/pdf":                                                        true,
-		"image/jpeg":                                                             true,
-		"image/png":                                                              true,
-		"image/gif":                                                              true,
-		"image/webp":                                                             true,
-		"application/msword":                                                     true,
+		"application/pdf":    true,
+		"image/jpeg":         true,
+		"image/png":          true,
+		"image/gif":          true,
+		"image/webp":         true,
+		"application/msword": true,
 		"application/vnd.openxmlformats-officedocument.wordprocessingml.document": true,
-		"application/vnd.ms-excel":                                               true,
-		"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":      true,
-		"text/plain":                                                             true,
-		"application/octet-stream":                                               true,
+		"application/vnd.ms-excel": true,
+		"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": true,
+		"text/plain":               true,
+		"application/octet-stream": true,
 	}
 	return allowed[contentType]
 }
@@ -402,4 +402,3 @@ func (h *Handler) Ack(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Presa d'atto registrata con successo"})
 }
-

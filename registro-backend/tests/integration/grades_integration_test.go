@@ -81,7 +81,7 @@ func TestGradesIntegration_GetClassGrades(t *testing.T) {
 		// FindByClassAndSubject signature: (classID, subjectID string, semester int)
 		// handler calls with subjectID="" if not provided in query.
 		mockRepo.On("FindByClassAndSubject", "classA", "", 0).Return(repoGrades, nil)
-		
+
 		// Mock student lookup for names
 		mockUserRepo.On("GetStudentsByClass", mock.Anything, "classA").Return([]users.User{}, nil)
 

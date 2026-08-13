@@ -9,8 +9,8 @@ import (
 
 // mockGoalRepo implements Repository for unit tests.
 type mockGoalRepo struct {
-	goals  []*StudentGoal
-	getErr error
+	goals   []*StudentGoal
+	getErr  error
 	saveErr error
 }
 

@@ -94,9 +94,9 @@ describe('Grades Store', () => {
     })
 
     it('calculates class average', () => {
-        expect(store.classAverage).toBe(0)
+        expect(store.classAverage()).toBe(0)
         store.grades = { students: [{ grades: [{ grade_value: 6 }, { grade_value: 8 }] }] }
-        expect(store.classAverage).toBe(7)
+        expect(store.classAverage()).toBe(7)
     })
 
     it('gets grades by student', () => {

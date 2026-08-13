@@ -22,6 +22,7 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	lessons := rg.Group("/lessons")
 	{
 		lessons.GET("/my-diary", h.GetMyDiary)
+		lessons.GET("/class/:class_id/activity-hours", h.GetActivityHours)
 		lessons.GET("/class/:class_id", h.GetLessons)
 		lessons.GET("/group/:group_id", h.GetLessonsByGroup)
 		lessons.GET("/:id", h.GetLessonByID)
@@ -322,4 +323,52 @@ func (h *Handler) GetMyDiary(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, res)
+}
+
+// GetActivityHours restituisce il conteggio delle ore suddivise per tipo di attività
+// per una data classe. Usato dal LessonPlanner per mostrare i contatori PCTO/Orientamento.
+func (h *Handler) GetActivityHours(c *gin.Context) {
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	classID := c.Param("class_id")
+
+	// Recupera tutte le lezioni della classe (senza filtro data per avere il totale)
+	lessons, err := h.service.GetLessons(classID, "", "")
+	if err != nil {
+		logger.Log.Errorf("GetActivityHours error: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Conta le ore per tipo di attività
+	counters := map[string]int{
+		"pcto":         0,
+		"orientamento": 0,
+		"ptof":         0,
+		"assembly":     0,
+		"trip":         0,
+		"project":      0,
+		"lab":          0,
+		"standard":     0,
+		"other":        0,
+	}
+	for _, l := range lessons {
+		key := l.ActivityType
+		if key == "" {
+			key = "standard"
+		}
+		dur := l.Duration
+		if dur <= 0 {
+			dur = 1
+		}
+		if _, ok := counters[key]; ok {
+			counters[key] += dur
+		} else {
+			counters["other"] += dur
+		}
+	}
+	c.JSON(http.StatusOK, counters)
 }

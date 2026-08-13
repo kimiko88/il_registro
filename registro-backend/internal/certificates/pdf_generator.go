@@ -104,7 +104,7 @@ func GenerateCertificatePDF(cert *Certificate, schoolName string) ([]byte, error
 	pdf.SetY(260)
 	pdf.SetFont("Arial", "I", 8)
 	pdf.SetTextColor(120, 120, 120)
-	pdf.CellFormat(0, 5, fmt.Sprintf("Documento emesso digitalmente il %s — RegistroV2 Certifications", cert.IssuedAt.Format("02/01/2006 15:04")), "", 1, "C", false, 0, "")
+	pdf.CellFormat(0, 5, fmt.Sprintf("Documento emesso digitalmente il %s — il_registro Certifications", cert.IssuedAt.Format("02/01/2006 15:04")), "", 1, "C", false, 0, "")
 
 	var buf bytes.Buffer
 	err := pdf.Output(&buf)

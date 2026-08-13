@@ -8,11 +8,11 @@ import (
 )
 
 var (
-	ErrUnauthorized      = errors.New("unauthorized action on colloquio")
-	ErrInvalidDate       = errors.New("invalid date or time format")
-	ErrPastDate          = errors.New("la data dello slot non può essere nel passato")
-	ErrOverlappingSlot   = errors.New("esiste già uno slot sovrapposto per questo docente in questa fascia oraria")
-	ErrNotGuardian       = errors.New("il genitore non è tutore legale dello studente indicato")
+	ErrUnauthorized    = errors.New("unauthorized action on colloquio")
+	ErrInvalidDate     = errors.New("invalid date or time format")
+	ErrPastDate        = errors.New("la data dello slot non può essere nel passato")
+	ErrOverlappingSlot = errors.New("esiste già uno slot sovrapposto per questo docente in questa fascia oraria")
+	ErrNotGuardian     = errors.New("il genitore non è tutore legale dello studente indicato")
 )
 
 type Service interface {
@@ -293,4 +293,3 @@ func (s *serviceImpl) CreateAssembly(ctx context.Context, actorRole, teacherID, 
 		Location:    req.Location,
 	})
 }
-

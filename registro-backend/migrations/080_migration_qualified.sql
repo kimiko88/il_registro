@@ -50,7 +50,8 @@ ALTER TABLE qualified_signatures ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS qs_insert_only ON qualified_signatures;
 CREATE POLICY qs_insert_only ON qualified_signatures
-    AS PERMISSIVE FOR INSERT TO PUBLIC WITH CHECK (TRUE);
+    AS PERMISSIVE FOR INSERT TO authenticated, service_role
+    WITH CHECK (signer_id IS NOT NULL AND document_id IS NOT NULL);
 
 DROP POLICY IF EXISTS qs_select_all ON qualified_signatures;
 CREATE POLICY qs_select_all ON qualified_signatures

@@ -8,13 +8,13 @@ import (
 )
 
 type Config struct {
-	Server   ServerConfig
-	Database DatabaseConfig
-	JWT      JWTConfig
-	Supabase SupabaseConfig
-	SPID     SPIDConfig
-	CIE      CIEConfig
-	Mail     MailConfig
+	Server    ServerConfig
+	Database  DatabaseConfig
+	JWT       JWTConfig
+	Supabase  SupabaseConfig
+	SPID      SPIDConfig
+	CIE       CIEConfig
+	Mail      MailConfig
 	Elearning ElearningConfig
 }
 
@@ -27,7 +27,6 @@ type ElearningConfig struct {
 	MicrosoftTenantID     string
 	MicrosoftRedirectURI  string
 }
-
 
 type MailConfig struct {
 	Host     string

@@ -87,7 +87,6 @@ func (m *MockRepository) BulkMigrateStudents(ctx context.Context, migrations []S
 	return args.Error(0)
 }
 
-
 func TestService_CreateClass(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -606,4 +605,3 @@ func TestService_BulkMigrateStudents(t *testing.T) {
 	assert.NoError(t, err)
 	mockRepo.AssertExpectations(t)
 }
-
