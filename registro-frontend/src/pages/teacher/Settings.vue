@@ -540,7 +540,7 @@ import { userService } from '@/services/userService'
 import { useAuthStore } from '@/stores/auth'
 
 const $q = useQuasar()
-const { t, locale } = useI18n()
+const { t, te, locale } = useI18n()
 const themeStore = useThemeStore()
 const authStore = useAuthStore()
 
@@ -646,8 +646,10 @@ const changePassword = async () => {
     pwdForm.newPassword = ''
     pwdForm.confirmPassword = ''
   } catch (err) {
-    const errorMsg = err.response?.data?.error || err.response?.data?.message || 'Errore durante la modifica della password'
-    $q.notify({ type: 'negative', message: errorMsg })
+    const errData = err.response?.data
+    const code = errData?.code || errData?.error
+    const msg = code && te(`errors.${code}`) ? t(`errors.${code}`) : (errData?.message || errData?.error || t('errors.serverError'))
+    $q.notify({ type: 'negative', message: msg })
   } finally {
     updatingPassword.value = false
   }

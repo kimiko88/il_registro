@@ -242,7 +242,15 @@ func (s *Service) RestoreUser(ctx context.Context, actorRole string, id string) 
 	return s.repo.Restore(ctx, id)
 }
 
-// ─── Password ────────────────────────────────────────────────────────────────
+// ─── Password Error Keys ──────────────────────────────────────────────────────
+
+var (
+	ErrCurrentPasswordIncorrect = errors.New("ERR_CURRENT_PASSWORD_INCORRECT")
+	ErrPasswordComplexity       = errors.New("ERR_PASSWORD_COMPLEXITY")
+	ErrPasswordTooShort         = errors.New("ERR_PASSWORD_TOO_SHORT")
+	ErrPasswordTooLong          = errors.New("ERR_PASSWORD_TOO_LONG")
+	ErrPasswordRecentlyUsed     = errors.New("ERR_PASSWORD_RECENTLY_USED")
+)
 
 // ChangePassword allows a user to change their own password.
 // It enforces that the new password differs from the last 5 used passwords.
@@ -258,7 +266,7 @@ func (s *Service) ChangePassword(ctx context.Context, userID string, req ChangeP
 
 	// Field is CurrentPassword in ChangePasswordRequest DTO
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.CurrentPassword)); err != nil {
-		return errors.New("la password attuale non è corretta")
+		return ErrCurrentPasswordIncorrect
 	}
 
 	// Check password history
@@ -268,7 +276,7 @@ func (s *Service) ChangePassword(ctx context.Context, userID string, req ChangeP
 	}
 	for _, old := range history {
 		if bcrypt.CompareHashAndPassword([]byte(old), []byte(req.NewPassword)) == nil {
-			return errors.New("la nuova password non può essere uguale a una delle ultime 5 password utilizzate")
+			return ErrPasswordRecentlyUsed
 		}
 	}
 
@@ -292,10 +300,10 @@ func (s *Service) ChangePassword(ctx context.Context, userID string, req ChangeP
 
 func validatePasswordComplexity(password string) error {
 	if len(password) < 10 {
-		return errors.New("la password deve contenere almeno 10 caratteri")
+		return ErrPasswordTooShort
 	}
 	if len(password) > 128 {
-		return errors.New("la password è troppo lunga (massimo 128 caratteri)")
+		return ErrPasswordTooLong
 	}
 	var hasUpper, hasLower, hasDigit, hasSpecial bool
 	for _, char := range password {
@@ -311,10 +319,11 @@ func validatePasswordComplexity(password string) error {
 		}
 	}
 	if !hasUpper || !hasLower || !hasDigit || !hasSpecial {
-		return errors.New("la password deve contenere almeno una lettera maiuscola, una minuscola, un numero e un carattere speciale")
+		return ErrPasswordComplexity
 	}
 	return nil
 }
+
 
 // ResetPassword allows an admin to force-reset a user's password.
 func (s *Service) ResetPassword(ctx context.Context, actorRole, actorSchoolID, userID, newPassword string) error {

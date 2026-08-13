@@ -333,7 +333,10 @@ import { useQuasar } from 'quasar'
 import { userService } from 'src/services/userService'
 import { useAuthStore } from 'src/stores/auth'
 
+import { useI18n } from 'vue-i18n'
+
 const $q = useQuasar()
+const { t, te } = useI18n()
 const themeStore = useThemeStore()
 const authStore = useAuthStore()
 
@@ -384,7 +387,9 @@ async function changePassword() {
     pwdConfirm.value = ''
     $q.notify({ type: 'positive', message: 'Password aggiornata con successo' })
   } catch (err) {
-    const msg = err.response?.data?.error || 'Errore durante la modifica della password'
+    const errData = err.response?.data
+    const code = errData?.code || errData?.error
+    const msg = code && te(`errors.${code}`) ? t(`errors.${code}`) : (errData?.message || errData?.error || t('errors.serverError'))
     $q.notify({ type: 'negative', message: msg })
   } finally {
     savingPwd.value = false

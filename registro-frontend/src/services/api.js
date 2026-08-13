@@ -78,21 +78,24 @@ const handleSessionExpired = () => {
     }
 };
 
+import { i18n } from '@/main';
+
 api.interceptors.response.use(
     (response) => response,
     async (error) => {
         const originalRequest = error?.config;
 
         if (!error.response) {
-            error.userMessage = 'Errore di connessione al server. Verifica la tua connessione e riprova.';
+            error.userMessage = i18n?.global?.t ? i18n.global.t('errors.connectionError') : 'Errore di connessione al server. Verifica la tua connessione e riprova.';
             return Promise.reject(error);
         }
 
         if (error.response.status === 403) {
-            error.userMessage = 'Non disponi dei permessi necessari per completare questa operazione.';
+            error.userMessage = i18n?.global?.t ? i18n.global.t('errors.forbidden') : 'Non disponi dei permessi necessari per completare questa operazione.';
         } else if (error.response.status >= 500) {
-            error.userMessage = 'Si è verificato un errore sul server. Riprova più tardi.';
+            error.userMessage = i18n?.global?.t ? i18n.global.t('errors.serverError') : 'Si è verificato un errore sul server. Riprova più tardi.';
         }
+
 
         if (
             error.response.status === 401 &&

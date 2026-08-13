@@ -269,26 +269,66 @@ func (h *Handler) BulkImport(c *gin.Context) {
 func (h *Handler) ChangePassword(c *gin.Context) {
 	var req ChangePasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Compilare tutti i campi obbligatori (la nuova password deve contenere almeno 10 caratteri)"})
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "ERR_REQUIRED_FIELDS",
+			"code":    "ERR_REQUIRED_FIELDS",
+			"message": "Compilare tutti i campi obbligatori (la nuova password deve contenere almeno 10 caratteri)",
+		})
 		return
 	}
 	targetID := c.Param("id")
 	actorID := getActorID(c)
 	if actorID == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Non autorizzato"})
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error":   "ERR_UNAUTHORIZED",
+			"code":    "ERR_UNAUTHORIZED",
+			"message": "Non autorizzato",
+		})
 		return
 	}
 	// Strictly self-service: no admin bypass allowed here.
 	if targetID != actorID {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Puoi modificare solo la tua password"})
+		c.JSON(http.StatusForbidden, gin.H{
+			"error":   "ERR_FORBIDDEN",
+			"code":    "ERR_FORBIDDEN",
+			"message": "Puoi modificare solo la tua password",
+		})
 		return
 	}
 	if err := h.service.ChangePassword(c.Request.Context(), targetID, req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		errCode := err.Error()
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   errCode,
+			"code":    errCode,
+			"message": getPasswordErrorMessage(errCode),
+		})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "Password aggiornata con successo"})
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Password aggiornata con successo",
+		"code":    "SUCCESS",
+	})
 }
+
+func getPasswordErrorMessage(code string) string {
+	switch code {
+	case "ERR_CURRENT_PASSWORD_INCORRECT":
+		return "La password attuale non è corretta"
+	case "ERR_PASSWORD_COMPLEXITY":
+		return "La password deve contenere almeno una lettera maiuscola, una minuscola, un numero e un carattere speciale"
+	case "ERR_PASSWORD_TOO_SHORT":
+		return "La password deve contenere almeno 10 caratteri"
+	case "ERR_PASSWORD_TOO_LONG":
+		return "La password è troppo lunga (massimo 128 caratteri)"
+	case "ERR_PASSWORD_RECENTLY_USED":
+		return "La nuova password non può essere uguale a una delle ultime 5 password utilizzate"
+	case "ERR_REQUIRED_FIELDS":
+		return "Compilare tutti i campi obbligatori"
+	default:
+		return code
+	}
+}
+
 
 
 // 9. POST /api/v1/users/{id}/reset-password - Force reset (admin only)

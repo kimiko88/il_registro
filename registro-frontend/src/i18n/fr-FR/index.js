@@ -122,8 +122,15 @@ export default {
     connectionError: 'Erreur de connexion au serveur. Vérifiez votre connexion.',
     forbidden: 'Vous n\'avez pas les permissions nécessaires.',
     serverError: 'Une erreur s\'est produite sur le serveur.',
-    unauthorized: 'Session invalide ou expirée.'
+    unauthorized: 'Session invalide ou expirée.',
+    ERR_CURRENT_PASSWORD_INCORRECT: 'Le mot de passe actuel est incorrect.',
+    ERR_PASSWORD_COMPLEXITY: 'Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial.',
+    ERR_PASSWORD_TOO_SHORT: 'Le mot de passe doit comporter au moins 10 caractères.',
+    ERR_PASSWORD_TOO_LONG: 'Le mot de passe est trop long (maximum 128 caractères).',
+    ERR_PASSWORD_RECENTLY_USED: 'Le nouveau mot de passe ne doit pas correspondre aux 5 derniers mots de passe utilisés.',
+    ERR_REQUIRED_FIELDS: 'Veuillez remplir tous les champs obligatoires.'
   },
+
   settings: {
     title: 'Paramètres du système',
     subtitle: 'Configurez les préférences générales, de sécurité et de notifications',

@@ -122,8 +122,15 @@ export default {
     connectionError: 'Server connection error. Please check your internet connection and try again.',
     forbidden: 'You do not have the required permissions to perform this action.',
     serverError: 'An internal server error occurred. Please try again later.',
-    unauthorized: 'Invalid or expired session.'
+    unauthorized: 'Invalid or expired session.',
+    ERR_CURRENT_PASSWORD_INCORRECT: 'Current password is incorrect.',
+    ERR_PASSWORD_COMPLEXITY: 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.',
+    ERR_PASSWORD_TOO_SHORT: 'Password must be at least 10 characters long.',
+    ERR_PASSWORD_TOO_LONG: 'Password is too long (maximum 128 characters).',
+    ERR_PASSWORD_RECENTLY_USED: 'New password must not match any of the last 5 used passwords.',
+    ERR_REQUIRED_FIELDS: 'Please fill in all required password fields.'
   },
+
   settings: {
     title: 'System Settings',
     subtitle: 'Configure global system preferences, security policies, and notification alerts',

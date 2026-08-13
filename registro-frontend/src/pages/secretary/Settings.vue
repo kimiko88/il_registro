@@ -337,7 +337,10 @@ import { userService } from 'src/services/userService'
 import adminService from 'src/services/adminService'
 import api from 'src/services/api'
 
+import { useI18n } from 'vue-i18n'
+
 const $q = useQuasar()
+const { t, te } = useI18n()
 const themeStore = useThemeStore()
 const authStore = useAuthStore()
 
@@ -380,7 +383,9 @@ const changeSecretaryPassword = async () => {
     pwdForm.newPwd = ''
     pwdForm.confirm = ''
   } catch (err) {
-    const msg = err.response?.data?.error || 'Errore durante la modifica della password'
+    const errData = err.response?.data
+    const code = errData?.code || errData?.error
+    const msg = code && te(`errors.${code}`) ? t(`errors.${code}`) : (errData?.message || errData?.error || t('errors.serverError'))
     $q.notify({ type: 'negative', message: msg })
   } finally {
     changingPwd.value = false
