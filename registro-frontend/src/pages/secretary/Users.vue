@@ -116,13 +116,29 @@
                          />
                     </div>
 
-                    <div v-if="userForm.role === 'teacher'" class="bg-amber-50/80 q-px-lg q-py-md rounded-xl border border-amber-200">
+                    <div v-if="userForm.role === 'teacher' || userForm.role === 'admin' || userForm.role === 'secretary'" class="bg-amber-50/80 q-px-lg q-py-md rounded-xl border border-amber-200 space-y-2">
                          <div class="row items-center justify-between">
                             <div class="col">
-                               <div class="text-subtitle2 text-amber-900 text-weight-bold">Poteri di Staff / Vicepresidenza</div>
-                               <div class="text-caption text-amber-800">Consente di gestire sostituzioni/supplenze ed accedere a presenze, ritardi ed uscite anticipate per tutte le classi.</div>
+                               <div class="text-subtitle2 text-amber-900 text-weight-bold">Poteri di Staff di Dirigenza</div>
+                               <div class="text-caption text-amber-800">Consente di gestire sostituzioni/supplenze ed accedere alle presenze di tutte le classi.</div>
                             </div>
-                            <q-toggle v-model="userForm.is_staff" color="amber-9" size="lg" />
+                            <q-toggle v-model="userForm.is_staff" color="amber-9" size="md" />
+                         </div>
+                         <q-separator class="q-my-xs opacity-40" />
+                         <div class="row items-center justify-between">
+                            <div class="col">
+                               <div class="text-subtitle2 text-purple-900 text-weight-bold">Incarico Vicepreside</div>
+                               <div class="text-caption text-purple-800">Qualifica il docente come Vicepreside dell'Istituto.</div>
+                            </div>
+                            <q-toggle v-model="userForm.is_vice_principal" color="purple" size="md" />
+                         </div>
+                         <q-separator class="q-my-xs opacity-40" />
+                         <div class="row items-center justify-between">
+                            <div class="col">
+                               <div class="text-subtitle2 text-deep-purple-900 text-weight-bold">Incarico Preside / Dirigente</div>
+                               <div class="text-caption text-deep-purple-800">Qualifica l'utente come Preside / Dirigente Scolastico.</div>
+                            </div>
+                            <q-toggle v-model="userForm.is_principal" color="deep-purple" size="md" />
                          </div>
                     </div>
                     
@@ -582,6 +598,8 @@ const openCreate = () => {
         password: '',
         role: 'student',
         is_staff: false,
+        is_vice_principal: false,
+        is_principal: false,
         class_id: null,
         school_id: filterSchoolId.value || authStore.user?.school_id || null
     });
@@ -593,7 +611,12 @@ const openEdit = (user) => {
     isEditing.value = true;
     if (user.school_id) userForm.school_id = user.school_id;
     if (user.class_id) userForm.class_id = user.class_id;
-    Object.assign(userForm, user);
+    Object.assign(userForm, {
+        ...user,
+        is_staff: !!user.is_staff,
+        is_vice_principal: !!user.is_vice_principal,
+        is_principal: !!user.is_principal
+    });
     fetchClasses();
     showUserDialog.value = true;
 };

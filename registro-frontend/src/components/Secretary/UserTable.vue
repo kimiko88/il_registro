@@ -75,8 +75,14 @@
             <q-chip :color="getRoleColor(props.value) + '-50'" :text-color="getRoleColor(props.value) + '-700'" size="sm" class="text-weight-bold rounded-md">
               {{ getRoleLabel(props.value) }}
             </q-chip>
-            <q-chip v-if="props.row.is_staff" color="amber-1" text-color="amber-10" icon="shield" size="xs" class="text-weight-bold rounded-md">
+            <q-chip v-if="props.row?.is_staff" color="amber-1" text-color="amber-10" icon="shield" size="xs" class="text-weight-bold rounded-md">
               Staff
+            </q-chip>
+            <q-chip v-if="props.row?.is_vice_principal" color="purple-1" text-color="purple-10" icon="stars" size="xs" class="text-weight-bold rounded-md">
+              Vicepreside
+            </q-chip>
+            <q-chip v-if="props.row?.is_principal" color="deep-purple-1" text-color="deep-purple-10" icon="workspace_premium" size="xs" class="text-weight-bold rounded-md">
+              Preside
             </q-chip>
           </div>
         </q-td>

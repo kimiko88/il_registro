@@ -200,6 +200,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useGradesStore } from 'src/stores/grades';
+import { useAuthStore } from 'src/stores/auth';
 import { useQuasar } from 'quasar';
 import { gradeService } from 'src/services/gradeService';
 import { ITALIAN_GRADE_OPTIONS, gradeToNumeric, formatGrade, getGradeColor } from '@/utils/gradeUtils';
@@ -215,6 +216,7 @@ const props = defineProps({
 const emit = defineEmits(['refresh']);
 const $q = useQuasar();
 const gradesStore = useGradesStore();
+const authStore = useAuthStore();
 
 const loading = ref(false);
 const isOnline = ref(navigator.onLine);
@@ -392,6 +394,15 @@ const editGradeForm = ref({
 
 const editGradeDialog = (grade, student) => {
     if (props.readOnly) return;
+    const currentUserId = authStore.user?.id;
+    if (currentUserId && grade.teacher_id && grade.teacher_id !== currentUserId && grade.created_by && grade.created_by !== currentUserId) {
+        $q.notify({
+            type: 'warning',
+            message: `Impossibile modificare il voto: è stato inserito da un altro docente (${grade.teacher_name || grade.created_by_name || 'Altro Docente'})`,
+            caption: 'Nei voti condivisi puoi modificare solo le valutazioni inserite da te.'
+        });
+        return;
+    }
     selectedStudentName.value = student.full_name;
     let rawDate = '';
     if (grade.date) {

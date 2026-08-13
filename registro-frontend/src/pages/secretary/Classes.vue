@@ -262,7 +262,10 @@
             
             <div class="col-12 col-md-5">
               <q-card flat class="rounded-xl bg-slate-50 q-pa-md border-slate-200">
-                <div class="text-subtitle1 text-weight-bold text-slate-800 q-mb-md">Adotta Libro</div>
+                <div class="row items-center justify-between q-mb-md">
+                  <div class="text-subtitle1 text-weight-bold text-slate-800">Adotta Libro</div>
+                  <q-btn flat dense icon="add" label="Nuovo Libro" color="primary" no-caps @click="openCreateTextbook" />
+                </div>
                 <q-form @submit="addTextbookToClass" class="q-gutter-y-md">
                   <q-select
                     v-model="textbookForm.textbook_id"
@@ -273,7 +276,16 @@
                     emit-value
                     map-options
                     :rules="[val => !!val || 'Seleziona libro']"
-                  />
+                  >
+                    <template #no-option>
+                      <q-item>
+                        <q-item-section class="text-grey">Nessun libro in catalogo</q-item-section>
+                      </q-item>
+                      <q-item clickable @click="openCreateTextbook">
+                        <q-item-section class="text-primary text-weight-bold">CREA NUOVO LIBRO</q-item-section>
+                      </q-item>
+                    </template>
+                  </q-select>
                   <q-select
                     v-model="textbookForm.subject_id"
                     :options="subjectOptions"
@@ -471,6 +483,49 @@
           <q-btn flat label="Annulla" v-close-popup color="slate-400" />
           <q-btn label="Crea" color="primary" class="rounded-lg q-px-lg" @click="createSubject" />
         </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+    <!-- Create Textbook Dialog -->
+    <q-dialog v-model="showCreateTextbookDialog">
+      <q-card style="width: min(500px, 90vw)" class="rounded-xl shadow-24 bg-white">
+        <q-card-section class="bg-primary text-white row items-center justify-between q-pa-md">
+          <div class="text-subtitle1 font-bold">
+            <q-icon name="menu_book" class="q-mr-xs" />
+            Nuovo Libro Scolastico (Catalogo)
+          </div>
+          <q-btn icon="close" flat round dense v-close-popup />
+        </q-card-section>
+
+        <q-card-section class="q-pa-md">
+          <q-form @submit="createTextbookInCatalog" class="q-gutter-y-md">
+            <q-input v-model="newTextbook.title" label="Titolo del Libro *" outlined dense :rules="[val => !!val || 'Obbligatorio']" />
+            <q-input v-model="newTextbook.author" label="Autore / Autori *" outlined dense :rules="[val => !!val || 'Obbligatorio']" />
+            <q-input v-model="newTextbook.publisher" label="Casa Editrice *" outlined dense :rules="[val => !!val || 'Obbligatorio']" />
+            <q-input v-model="newTextbook.isbn" label="Codice ISBN *" outlined dense :rules="[val => !!val || 'Obbligatorio']" />
+            
+            <q-select
+              v-model="newTextbook.subject_id"
+              :options="subjectOptions"
+              label="Materia associata"
+              outlined dense emit-value map-options clearable
+            />
+            
+            <div class="row q-col-gutter-md">
+              <div class="col-6">
+                <q-input v-model.number="newTextbook.price" label="Prezzo (€)" type="number" step="0.01" outlined dense />
+              </div>
+              <div class="col-6">
+                <q-input v-model="newTextbook.volume" label="Volume (es. 1, Unico)" outlined dense />
+              </div>
+            </div>
+
+            <div class="row justify-end q-gutter-sm q-mt-md">
+              <q-btn flat label="Annulla" v-close-popup no-caps />
+              <q-btn type="submit" label="Salva Libro" color="primary" class="rounded-lg q-px-md" no-caps :loading="savingTextbook" />
+            </div>
+          </q-form>
+        </q-card-section>
       </q-card>
     </q-dialog>
 
@@ -848,12 +903,23 @@ const assignForm = reactive({
 })
 
 const showTextbooksDialog = ref(false)
+const showCreateTextbookDialog = ref(false)
+const savingTextbook = ref(false)
 const classTextbooks = ref([])
 const allTextbooks = ref([])
 const textbookForm = reactive({
     textbook_id: null,
     subject_id: null,
     is_optional: false
+})
+const newTextbook = reactive({
+    title: '',
+    author: '',
+    publisher: '',
+    isbn: '',
+    subject_id: null,
+    price: null,
+    volume: ''
 })
 
 const form = reactive({
@@ -1090,6 +1156,42 @@ const removeTextbook = async (row) => {
         fetchClassTextbooks(currentClass.value.id)
     } catch(e) {
         $q.notify({ type: 'negative', message: 'Errore rimozione' })
+    }
+}
+
+const openCreateTextbook = () => {
+    Object.assign(newTextbook, {
+        title: '',
+        author: '',
+        publisher: '',
+        isbn: '',
+        subject_id: textbookForm.subject_id || null,
+        price: null,
+        volume: ''
+    })
+    showCreateTextbookDialog.value = true
+}
+
+const createTextbookInCatalog = async () => {
+    savingTextbook.value = true
+    try {
+        const payload = {
+            ...newTextbook,
+            school_id: authStore.user.school_id
+        }
+        const res = await textbookService.create(payload)
+        $q.notify({ type: 'positive', message: 'Nuovo libro creato nel catalogo' })
+        showCreateTextbookDialog.value = false
+        await fetchSchoolData()
+        const createdId = res.data?.id || res.data?.data?.id
+        if (createdId) {
+            textbookForm.textbook_id = createdId
+        }
+    } catch (e) {
+        console.error('Error creating textbook', e)
+        $q.notify({ type: 'negative', message: 'Errore durante la creazione del libro' })
+    } finally {
+        savingTextbook.value = false
     }
 }
 

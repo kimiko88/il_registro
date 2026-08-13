@@ -63,8 +63,14 @@ func (m *mockRepo) FindByID(id string) (*Attendance, error) {
 		Status:   StatusPresent,
 	}, m.findByIDErr
 }
-func (m *mockRepo) FindByClassAndDate(_ string, _ time.Time) ([]*Attendance, error) {
-	return m.findByClassResult, nil
+func (m *mockRepo) FindByClassAndDate(_ string, _ time.Time) ([]Attendance, error) {
+	var res []Attendance
+	for _, r := range m.findByClassResult {
+		if r != nil {
+			res = append(res, *r)
+		}
+	}
+	return res, nil
 }
 func (m *mockRepo) FindByStudent(_ string, _, _ time.Time) ([]Attendance, error) {
 	return m.findByStudResult, nil
@@ -75,6 +81,12 @@ func (m *mockRepo) FindUnjustifiedByStudent(_ string) ([]Attendance, error) {
 func (m *mockRepo) JustifyAbsenceByParent(_, _, _ string) error { return nil }
 func (m *mockRepo) GetStats(_ string) (*SummaryResponse, error) {
 	return &SummaryResponse{}, nil
+}
+func (m *mockRepo) GetStatsBatch(_ context.Context, _ []string) (map[string]*SummaryResponse, error) {
+	return map[string]*SummaryResponse{}, nil
+}
+func (m *mockRepo) CountDistinctDays(_ string) (int, error) {
+	return 10, nil
 }
 func (m *mockRepo) GetAnalytics(_ context.Context, _ string) (*AnalyticsResponse, error) {
 	return &AnalyticsResponse{}, nil
@@ -87,10 +99,11 @@ func (m *mockRepo) FindJustificationByID(_ string) (*Justification, error) {
 	return nil, m.justificationErr
 }
 func (m *mockRepo) CreateJustification(_ *Justification) error { return m.createErr }
+func (m *mockRepo) UpdateJustification(_ *Justification) error { return nil }
 func (m *mockRepo) HasOverlappingJustification(_ context.Context, _ string, _, _ time.Time) (bool, error) {
 	return m.hasOverlap, m.hasOverlapErr
 }
-func (m *mockRepo) FindPendingJustifications(_ string) ([]*Justification, error) {
+func (m *mockRepo) FindPendingJustifications(_ string) ([]Justification, error) {
 	return nil, nil
 }
 func (m *mockRepo) DeleteJustification(_ string) error { return m.deleteErr }
@@ -120,19 +133,32 @@ func (m *mockUserRepo) GetByID(_ context.Context, id string) (*users.User, error
 			return u, nil
 		}
 	}
-	return nil, fmt.Errorf("user %s not found", id)
+	return nil, fmt.Errorf("user not found: %s", id)
 }
-
-// Implement remaining users.Repository methods as no-ops.
-func (m *mockUserRepo) Create(_ *users.User) error { return nil }
-func (m *mockUserRepo) Update(_ *users.User) error { return nil }
-func (m *mockUserRepo) Delete(_ string) error      { return nil }
-func (m *mockUserRepo) FindByEmail(_ context.Context, _ string) (*users.User, error) {
-	return nil, nil
-}
-func (m *mockUserRepo) List(_ context.Context, _ users.ListFilter) ([]*users.User, error) {
-	return nil, nil
-}
+func (m *mockUserRepo) Create(_ context.Context, _ *users.User) error { return nil }
+func (m *mockUserRepo) GetByEmail(_ context.Context, _ string) (*users.User, error) { return nil, nil }
+func (m *mockUserRepo) Update(_ context.Context, _ *users.User) error { return nil }
+func (m *mockUserRepo) GetPasswordHistory(_ context.Context, _ string) ([]string, error) { return nil, nil }
+func (m *mockUserRepo) AddPasswordHistory(_ context.Context, _, _ string) error { return nil }
+func (m *mockUserRepo) Delete(_ context.Context, _ string) error { return nil }
+func (m *mockUserRepo) Restore(_ context.Context, _ string) error { return nil }
+func (m *mockUserRepo) List(_ context.Context, _ users.UserFilter) ([]users.User, int, error) { return nil, 0, nil }
+func (m *mockUserRepo) ListByIDs(_ context.Context, _ []string) ([]users.User, error) { return nil, nil }
+func (m *mockUserRepo) LogAudit(_ context.Context, _ *users.AuditLog) error { return nil }
+func (m *mockUserRepo) GetAuditLogs(_ context.Context, _ string, _, _ int) ([]users.AuditLog, int, error) { return nil, 0, nil }
+func (m *mockUserRepo) BulkCreate(_ context.Context, _ []users.User) (int, []string, error) { return 0, nil, nil }
+func (m *mockUserRepo) BulkDelete(_ context.Context, _ []string) (int, error) { return 0, nil }
+func (m *mockUserRepo) HardDelete(_ context.Context, _ string) error { return nil }
+func (m *mockUserRepo) RevokeAllUserTokens(_ context.Context, _ string) error { return nil }
+func (m *mockUserRepo) AddGuardian(_ context.Context, _, _, _ string) error { return nil }
+func (m *mockUserRepo) GetChildren(_ context.Context, _ string) ([]users.StudentChild, error) { return nil, nil }
+func (m *mockUserRepo) GetStudentsByClass(_ context.Context, _ string) ([]users.User, error) { return nil, nil }
+func (m *mockUserRepo) GetStudentProfile(_ context.Context, _ string) (string, error) { return "", nil }
+func (m *mockUserRepo) GetParentProfile(_ context.Context, _ string) (string, error) { return "", nil }
+func (m *mockUserRepo) RemoveGuardian(_ context.Context, _, _ string) error { return nil }
+func (m *mockUserRepo) GetGuardians(_ context.Context, _ string) ([]users.GuardianInfo, error) { return nil, nil }
+func (m *mockUserRepo) GetFascicoloSummary(_ context.Context, _ string, _ bool) (map[string]interface{}, error) { return nil, nil }
+func (m *mockUserRepo) IsActive(_ context.Context, _ string) (bool, error) { return true, nil }
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -196,7 +222,7 @@ func TestMarkBulk_MissingTeacherID_Forbidden(t *testing.T) {
 		ClassID: "class1",
 		Date:    time.Now().Format("2006-01-02"),
 		Hour:    1,
-		Statuses: []BulkStudentStatus{
+		Statuses: []StudentStatusRequest{
 			{StudentID: "stu1", Status: StatusPresent},
 		},
 	})
@@ -210,7 +236,7 @@ func TestMarkBulk_TeacherNotAssigned_Forbidden(t *testing.T) {
 		ClassID: "class1",
 		Date:    time.Now().Format("2006-01-02"),
 		Hour:    1,
-		Statuses: []BulkStudentStatus{
+		Statuses: []StudentStatusRequest{
 			{StudentID: "stu1", Status: StatusPresent},
 		},
 	})
@@ -226,7 +252,7 @@ func TestMarkBulk_Substitution_MalformedDate_ReturnsError(t *testing.T) {
 		Date:           "NOT-A-DATE",
 		Hour:           1,
 		IsSubstitution: true,
-		Statuses: []BulkStudentStatus{
+		Statuses: []StudentStatusRequest{
 			{StudentID: "stu1", Status: StatusPresent},
 		},
 	})
@@ -248,7 +274,7 @@ func TestMarkBulk_Substitution_DBErrorOnAssignment_Propagates(t *testing.T) {
 		Date:           time.Now().Format("2006-01-02"),
 		Hour:           1,
 		IsSubstitution: true,
-		Statuses: []BulkStudentStatus{
+		Statuses: []StudentStatusRequest{
 			{StudentID: "stu1", Status: StatusPresent},
 		},
 	})

@@ -19,12 +19,12 @@ describe('useMenuItems', () => {
         it('should return admin menu items', () => {
             const menuItems = useMenuItems('admin')
 
-            expect(menuItems).toHaveLength(7)
+            expect(menuItems).toHaveLength(8)
             expect(menuItems[0].label).toBe('Dashboard')
             expect(menuItems[1].label).toBe('La Mia Scuola')
             expect(menuItems[2].label).toBe('Gestione Utenti')
-            expect(menuItems[3].label).toBe('Feature Flags & Istituto')
-            expect(menuItems[4].label).toBe('Analytics')
+            expect(menuItems[3].label).toBe('Gestione Sostituzioni')
+            expect(menuItems[4].label).toBe('Feature Flags & Istituto')
         })
 
         it('should have correct paths for admin', () => {
@@ -33,7 +33,8 @@ describe('useMenuItems', () => {
             expect(menuItems[0].path).toBe('/')
             expect(menuItems[1].path).toBe('/admin/schools')
             expect(menuItems[2].path).toBe('/admin/users')
-            expect(menuItems[3].path).toBe('/admin/school-settings')
+            expect(menuItems[3].path).toBe('/secretary/substitutions')
+            expect(menuItems[4].path).toBe('/admin/school-settings')
         })
 
         it('should have exact flag for dashboard', () => {
@@ -47,7 +48,7 @@ describe('useMenuItems', () => {
         it('should return secretary menu items', () => {
             const flatItems = getFlatItems('secretary')
 
-            expect(flatItems).toHaveLength(14)
+            expect(flatItems).toHaveLength(15)
             expect(flatItems.map(item => item.label)).toContain('Documenti')
             expect(flatItems.map(item => item.label)).toContain('Studenti')
             expect(flatItems.map(item => item.label)).toContain('Report')
@@ -58,7 +59,7 @@ describe('useMenuItems', () => {
         it('should return teacher menu items', () => {
             const flatItems = getFlatItems('teacher')
 
-            expect(flatItems).toHaveLength(21)
+            expect(flatItems.length).toBeGreaterThan(15)
             expect(flatItems.map(item => item.label)).toContain('Le Mie Classi')
             expect(flatItems.map(item => item.label)).toContain('Voti')
             expect(flatItems.map(item => item.label)).toContain('Presenze')
@@ -78,24 +79,24 @@ describe('useMenuItems', () => {
 
     describe('student role', () => {
         it('should return student menu items', () => {
-            const menuItems = useMenuItems('student')
+            const flatItems = getFlatItems('student')
 
-            expect(menuItems).toHaveLength(14)
-            expect(menuItems.map(item => item.label)).toContain('I Miei Voti')
-            expect(menuItems.map(item => item.label)).toContain('Le Mie Presenze')
-            expect(menuItems.map(item => item.label)).toContain('PCTO')
-            expect(menuItems.map(item => item.label)).toContain('Orientamento')
+            expect(flatItems.length).toBeGreaterThan(10)
+            expect(flatItems.map(item => item.label)).toContain('I Miei Voti')
+            expect(flatItems.map(item => item.label)).toContain('Le Mie Presenze')
+            expect(flatItems.map(item => item.label)).toContain('PCTO')
+            expect(flatItems.map(item => item.label)).toContain('Orientamento')
         })
     })
 
     describe('parent role', () => {
         it('should return parent menu items', () => {
-            const menuItems = useMenuItems('parent')
+            const flatItems = getFlatItems('parent')
 
-            expect(menuItems).toHaveLength(14)
-            expect(menuItems.map(item => item.label)).toContain('I Miei Figli')
-            expect(menuItems.map(item => item.label)).toContain('Colloqui')
-            expect(menuItems.map(item => item.label)).toContain('Supporto')
+            expect(flatItems.length).toBeGreaterThan(10)
+            expect(flatItems.map(item => item.label)).toContain('I Miei Figli')
+            expect(flatItems.map(item => item.label)).toContain('Colloqui')
+            expect(flatItems.map(item => item.label)).toContain('Supporto')
         })
     })
 

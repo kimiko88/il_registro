@@ -134,6 +134,9 @@ func (r *PostgresRepository) normalizeTeacherID(ctx context.Context, teacherID *
 	if tid == "" || tid == "null" || tid == "undefined" {
 		return nil
 	}
+	if _, err := uuid.Parse(tid); err != nil {
+		return nil
+	}
 	var userExists bool
 	err := r.db.QueryRowContext(ctx, "SELECT EXISTS(SELECT 1 FROM users WHERE id = $1::uuid)", tid).Scan(&userExists)
 	if err == nil && userExists {
@@ -141,8 +144,10 @@ func (r *PostgresRepository) normalizeTeacherID(ctx context.Context, teacherID *
 	}
 	var userID string
 	err = r.db.QueryRowContext(ctx, "SELECT user_id::text FROM teachers WHERE id = $1::uuid OR user_id = $1::uuid LIMIT 1", tid).Scan(&userID)
-	if err == nil && userID != "" {
-		return &userID
+	if err == nil && userID != "" && userID != "<nil>" {
+		if _, err := uuid.Parse(userID); err == nil {
+			return &userID
+		}
 	}
 	return nil
 }
