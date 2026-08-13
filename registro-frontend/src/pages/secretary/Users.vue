@@ -44,13 +44,14 @@
 
     <!-- Create/Edit User Dialog -->
     <q-dialog v-model="showUserDialog" class="premium-dialog">
-        <q-card style="min-width: 600px" class="rounded-xl overflow-hidden shadow-24 bg-white">
+        <q-card style="display: flex; flex-direction: column; width: 650px; max-width: 95vw; max-height: 90vh;" class="rounded-xl overflow-hidden shadow-24 bg-white">
             <q-card-section class="bg-gradient-primary text-white q-pa-lg row items-center justify-between">
                 <div class="text-h5 text-weight-bold">{{ isEditing ? 'Modifica Profilo' : 'Crea Nuovo Profilo' }}</div>
                 <q-btn icon="close" flat round dense v-close-popup />
             </q-card-section>
             
-            <q-card-section class="q-pa-xl">
+            <q-card-section class="q-pa-xl scroll" style="flex: 1; overflow-y: auto;">
+
                 <q-form @submit="saveUser" class="q-gutter-y-lg">
                     <div>
                         <div class="row q-col-gutter-lg">
@@ -160,6 +161,7 @@
             </q-card-section>
         </q-card>
     </q-dialog>
+
 
     <!-- Create Class Dialog -->
     <q-dialog v-model="showClassDialog" class="premium-dialog">

@@ -244,6 +244,7 @@ const totalHours = computed(() => gridEntries.value.length)
 }
 
 .grid-scroll {
+  width: 100%;
   overflow-x: auto;
 }
 
@@ -253,8 +254,8 @@ const totalHours = computed(() => gridEntries.value.length)
   min-width: 750px;
 }
 
-.hour-col { width: 70px; }
-.day-col { width: calc((100% - 70px) / 6); }
+.hour-col { width: 80px; min-width: 80px; }
+.day-col { width: calc((100% - 80px) / 6); min-width: 110px; }
 
 .schedule-cell {
   height: 64px;

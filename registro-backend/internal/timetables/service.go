@@ -9,7 +9,9 @@ import (
 type Service interface {
 	GetByClass(ctx context.Context, actorID, actorRole, schoolID, classID string) ([]ClassSchedule, error)
 	GetMySchedule(ctx context.Context, actorID, actorRole string) ([]ClassSchedule, error)
+	GetByTeacher(ctx context.Context, actorID, actorRole, schoolID, teacherID string) ([]ClassSchedule, error)
 	Update(ctx context.Context, actorID, actorRole, schoolID, classID string, entries []ScheduleEntry) error
+	UpdateTeacher(ctx context.Context, actorID, actorRole, schoolID, teacherID string, entries []TeacherScheduleEntry) error
 }
 
 type service struct {
@@ -77,6 +79,16 @@ func (s *service) GetMySchedule(ctx context.Context, actorID, actorRole string) 
 	}
 }
 
+func (s *service) GetByTeacher(ctx context.Context, actorID, actorRole, schoolID, teacherID string) ([]ClassSchedule, error) {
+	if actorID == "" || actorRole == "" {
+		return nil, errors.New("unauthorized: missing actor context")
+	}
+	if teacherID == "" {
+		return nil, errors.New("teacher_id is required")
+	}
+	return s.repo.GetTeacherSchedule(ctx, teacherID)
+}
+
 func (s *service) Update(ctx context.Context, actorID, actorRole, schoolID, classID string, entries []ScheduleEntry) error {
 	if actorID == "" {
 		return errors.New("unauthorized")
@@ -99,4 +111,18 @@ func (s *service) Update(ctx context.Context, actorID, actorRole, schoolID, clas
 	}
 
 	return s.repo.Update(ctx, classID, entries)
+}
+
+func (s *service) UpdateTeacher(ctx context.Context, actorID, actorRole, schoolID, teacherID string, entries []TeacherScheduleEntry) error {
+	if actorID == "" {
+		return errors.New("unauthorized")
+	}
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" && actorRole != "principal" {
+		return errors.New("forbidden: only administrative staff can update teacher schedules")
+	}
+	if teacherID == "" {
+		return errors.New("teacher_id is required")
+	}
+
+	return s.repo.UpdateTeacher(ctx, teacherID, entries)
 }

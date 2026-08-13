@@ -1,6 +1,6 @@
 # Guida alla Contribuzione
 
-Grazie per l'interesse nel contribuire a **Registrov2**! Questa guida descrive il processo per segnalare bug, proporre funzionalità e inviare Pull Request.
+Grazie per l'interesse nel contribuire a **il_registro**! Questa guida descrive il processo per segnalare bug, proporre funzionalità e inviare Pull Request.
 
 ---
 
@@ -19,7 +19,7 @@ Grazie per l'interesse nel contribuire a **Registrov2**! Questa guida descrive i
 
 ## Segnalare un bug
 
-1. Verifica che il bug non sia già stato segnalato nelle [Issues](https://github.com/kimiko88/Registrov2/issues).
+1. Verifica che il bug non sia già stato segnalato nelle [Issues](https://github.com/kimiko88/il_registro/issues).
 2. Apri una nuova issue usando il template **Bug Report**.
 3. Includi:
    - Versione Go e sistema operativo
@@ -49,8 +49,8 @@ Grazie per l'interesse nel contribuire a **Registrov2**! Questa guida descrive i
 # - Docker e Docker Compose
 # - Make
 
-git clone https://github.com/kimiko88/Registrov2.git
-cd Registrov2/registro-backend
+git clone https://github.com/kimiko88/il_registro.git
+cd il_registro/registro-backend
 
 cp .env.example .env
 # Modifica .env con le credenziali locali

@@ -48,14 +48,15 @@
 
     <!-- Enrollment / Edit Dialog -->
     <q-dialog v-model="showUserDialog" persistent>
-      <q-card style="min-width: 500px" class="rounded-xl shadow-2xl">
-        <q-card-section class="row items-center q-pb-none">
+      <q-card style="display: flex; flex-direction: column; width: 550px; max-width: 95vw; max-height: 90vh;" class="rounded-xl shadow-22 bg-white">
+        <q-card-section class="row items-center q-pa-lg border-b border-slate-100">
           <div class="text-h6 text-weight-bold">{{ isEditing ? 'Modifica Studente' : 'Nuova Iscrizione' }}</div>
           <q-space />
           <q-btn icon="close" flat round dense v-close-popup />
         </q-card-section>
 
-        <q-card-section class="q-pt-md">
+        <q-card-section class="q-pa-lg scroll" style="flex: 1; overflow-y: auto;">
+
           <q-form @submit="saveStudent" class="q-gutter-md">
             <div class="row q-col-gutter-sm">
               <div class="col-6">
@@ -97,6 +98,7 @@
         </q-card-section>
       </q-card>
     </q-dialog>
+
 
     <!-- Guardians Management Dialog -->
     <q-dialog v-model="showGuardiansDialog">

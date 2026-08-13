@@ -47,6 +47,23 @@
           </q-item-section>
         </q-item>
 
+        <!-- Cambio Password -->
+        <q-item clickable v-ripple class="q-py-md" @click="openPasswordDialog">
+          <q-item-section avatar>
+            <div class="bg-blue-50 text-blue-600 q-pa-sm rounded-lg">
+              <q-icon name="key" size="24px" />
+            </div>
+          </q-item-section>
+          <q-item-section>
+            <q-item-label class="text-weight-bold text-slate-700">Cambio Password Personale</q-item-label>
+            <q-item-label caption>Modifica la tua password di accesso al sistema</q-item-label>
+          </q-item-section>
+          <q-item-section side>
+            <q-badge color="primary" label="Sicuro" class="q-mr-sm" />
+            <q-icon name="chevron_right" color="slate-300" />
+          </q-item-section>
+        </q-item>
+
         <!-- Notifiche -->
         <q-item clickable v-ripple class="q-py-md" @click="openNotificationsDialog">
           <q-item-section avatar>
@@ -66,9 +83,85 @@
       </q-list>
     </q-card>
 
+    <!-- Dialog Cambio Password -->
+    <q-dialog v-model="passwordDialog" persistent>
+      <q-card style="width: min(500px, 95vw); max-width: 95vw;" class="rounded-xl overflow-hidden shadow-24">
+        <q-card-section class="bg-primary text-white row items-center">
+          <div class="text-h6"><q-icon name="key" class="q-mr-sm" />Cambio Password Personale</div>
+          <q-space />
+          <q-btn icon="close" flat round dense v-close-popup />
+        </q-card-section>
+
+        <q-form @submit="savePassword">
+          <q-card-section class="q-pa-lg space-y-4">
+            <div class="text-subtitle2 text-slate-600 q-mb-md">Inserisci la tua password attuale e la nuova password desiderata (almeno 10 caratteri).</div>
+
+            <q-input
+              v-model="passwordForm.current_password"
+              label="Password Attuale *"
+              :type="showCurrentPassword ? 'text' : 'password'"
+              outlined dense bg-color="white"
+              :rules="[val => !!val || 'Campo obbligatorio']"
+            >
+              <template v-slot:append>
+                <q-icon
+                  :name="showCurrentPassword ? 'visibility' : 'visibility_off'"
+                  class="cursor-pointer"
+                  @click="showCurrentPassword = !showCurrentPassword"
+                />
+              </template>
+            </q-input>
+
+            <q-input
+              v-model="passwordForm.new_password"
+              label="Nuova Password *"
+              :type="showNewPassword ? 'text' : 'password'"
+              outlined dense bg-color="white"
+              :rules="[
+                val => !!val || 'Campo obbligatorio',
+                val => val.length >= 10 || 'Almeno 10 caratteri'
+              ]"
+            >
+              <template v-slot:append>
+                <q-icon
+                  :name="showNewPassword ? 'visibility' : 'visibility_off'"
+                  class="cursor-pointer"
+                  @click="showNewPassword = !showNewPassword"
+                />
+              </template>
+            </q-input>
+
+            <q-input
+              v-model="passwordForm.confirm_password"
+              label="Conferma Nuova Password *"
+              :type="showConfirmPassword ? 'text' : 'password'"
+              outlined dense bg-color="white"
+              :rules="[
+                val => !!val || 'Campo obbligatorio',
+                val => val === passwordForm.new_password || 'Le password non coincidono'
+              ]"
+            >
+              <template v-slot:append>
+                <q-icon
+                  :name="showConfirmPassword ? 'visibility' : 'visibility_off'"
+                  class="cursor-pointer"
+                  @click="showConfirmPassword = !showConfirmPassword"
+                />
+              </template>
+            </q-input>
+          </q-card-section>
+
+          <q-card-actions align="right" class="q-pa-md bg-slate-50 border-t border-slate-100">
+            <q-btn flat label="Annulla" color="slate-6" v-close-popup no-caps />
+            <q-btn type="submit" color="primary" label="Aggiorna Password" icon="save" :loading="savingPassword" unelevated class="rounded-lg shadow-xs font-bold" no-caps />
+          </q-card-actions>
+        </q-form>
+      </q-card>
+    </q-dialog>
+
     <!-- Dialog Sicurezza -->
     <q-dialog v-model="securityDialog" persistent>
-      <q-card style="min-width: 450px; max-width: 600px;" class="rounded-xl">
+      <q-card style="width: min(680px, 95vw); max-width: 95vw;" class="rounded-xl overflow-hidden">
         <q-card-section class="bg-primary text-white row items-center">
           <div class="text-h6"><q-icon name="security" class="q-mr-sm" />Configurazione Sicurezza</div>
           <q-space />
@@ -94,8 +187,8 @@
                 <q-item-label class="text-weight-bold">{{ t('settings.minPasswordLength') }}</q-item-label>
                 <q-item-label caption>Numero minimo di caratteri richiesti per la creazione o modifica delle password.</q-item-label>
               </q-item-section>
-              <q-item-section side style="width: 140px;">
-                <q-select v-model="securitySettings.min_password_length" :options="passwordLengthOptions" dense outlined emit-value map-options />
+              <q-item-section side style="min-width: 240px;" class="col-auto">
+                <q-select v-model="securitySettings.min_password_length" :options="passwordLengthOptions" dense outlined emit-value map-options class="full-width" />
               </q-item-section>
             </q-item>
 
@@ -104,8 +197,8 @@
                 <q-item-label class="text-weight-bold">{{ t('settings.sessionTimeout') }}</q-item-label>
                 <q-item-label caption>Tempo trascorso il quale la sessione utente inattiva viene disconnessa automaticamente.</q-item-label>
               </q-item-section>
-              <q-item-section side style="width: 140px;">
-                <q-select v-model="securitySettings.session_timeout_hours" :options="sessionTimeoutOptions" dense outlined emit-value map-options />
+              <q-item-section side style="min-width: 240px;" class="col-auto">
+                <q-select v-model="securitySettings.session_timeout_hours" :options="sessionTimeoutOptions" dense outlined emit-value map-options class="full-width" />
               </q-item-section>
             </q-item>
 
@@ -114,8 +207,8 @@
                 <q-item-label class="text-weight-bold">{{ t('settings.maxLoginAttempts') }}</q-item-label>
                 <q-item-label caption>Soglia di errori di login oltre la quale l'account viene temporaneamente sospeso.</q-item-label>
               </q-item-section>
-              <q-item-section side style="width: 140px;">
-                <q-select v-model="securitySettings.max_login_attempts" :options="loginAttemptsOptions" dense outlined emit-value map-options />
+              <q-item-section side style="min-width: 240px;" class="col-auto">
+                <q-select v-model="securitySettings.max_login_attempts" :options="loginAttemptsOptions" dense outlined emit-value map-options class="full-width" />
               </q-item-section>
             </q-item>
           </q-list>
@@ -130,7 +223,7 @@
 
     <!-- Dialog Notifiche -->
     <q-dialog v-model="notificationsDialog" persistent>
-      <q-card style="min-width: 450px; max-width: 600px;" class="rounded-xl">
+      <q-card style="width: min(650px, 95vw); max-width: 95vw;" class="rounded-xl overflow-hidden">
         <q-card-section class="bg-amber-8 text-white row items-center">
           <div class="text-h6"><q-icon name="notifications" class="q-mr-sm" />Preferenze Notifiche & Alert</div>
           <q-space />
@@ -192,7 +285,7 @@
 
     <!-- Dialog Lingua / i18n -->
     <q-dialog v-model="languageDialog">
-      <q-card style="min-width: 450px; max-width: 550px;" class="rounded-xl">
+      <q-card style="width: min(600px, 95vw); max-width: 95vw;" class="rounded-xl overflow-hidden">
         <q-card-section class="bg-indigo text-white row items-center">
           <div class="text-h6"><q-icon name="language" class="q-mr-sm" />Impostazioni Lingua (i18n)</div>
           <q-space />
@@ -244,6 +337,8 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { useI18n } from 'vue-i18n'
+import api from 'src/services/api'
+import { useAuthStore } from 'src/stores/auth'
 
 const $q = useQuasar()
 const { locale, t } = useI18n()
@@ -252,9 +347,21 @@ const { locale, t } = useI18n()
 const securityDialog = ref(false)
 const notificationsDialog = ref(false)
 const languageDialog = ref(false)
+const passwordDialog = ref(false)
 
 const savingSecurity = ref(false)
 const savingNotifications = ref(false)
+const savingPassword = ref(false)
+
+const showCurrentPassword = ref(false)
+const showNewPassword = ref(false)
+const showConfirmPassword = ref(false)
+
+const passwordForm = reactive({
+  current_password: '',
+  new_password: '',
+  confirm_password: ''
+})
 
 // Lingua
 const selectedLanguage = ref(locale.value || 'it-IT')
@@ -348,6 +455,47 @@ const openNotificationsDialog = () => {
 
 const openLanguageDialog = () => {
   languageDialog.value = true
+}
+
+const openPasswordDialog = () => {
+  passwordForm.current_password = ''
+  passwordForm.new_password = ''
+  passwordForm.confirm_password = ''
+  passwordDialog.value = true
+}
+
+const savePassword = async () => {
+  if (passwordForm.new_password !== passwordForm.confirm_password) {
+    $q.notify({ type: 'negative', message: 'Le password non coincidono' })
+    return
+  }
+  savingPassword.value = true
+  try {
+    const authStore = useAuthStore()
+    const targetId = authStore.user?.id
+    if (targetId) {
+      await api.post(`/users/${targetId}/change-password`, {
+        current_password: passwordForm.current_password,
+        new_password: passwordForm.new_password
+      })
+    } else {
+      await api.post('/auth/change-password', {
+        current_password: passwordForm.current_password,
+        new_password: passwordForm.new_password
+      })
+    }
+    $q.notify({
+      type: 'positive',
+      icon: 'key',
+      message: 'Password cambiata con successo!'
+    })
+    passwordDialog.value = false
+  } catch (e) {
+    const msg = e.response?.data?.message || e.response?.data?.error || 'Errore durante la modifica della password'
+    $q.notify({ type: 'negative', message: msg })
+  } finally {
+    savingPassword.value = false
+  }
 }
 
 const saveSecuritySettings = async () => {

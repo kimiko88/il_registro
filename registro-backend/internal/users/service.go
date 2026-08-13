@@ -325,9 +325,10 @@ func validatePasswordComplexity(password string) error {
 }
 
 
-// ResetPassword allows an admin to force-reset a user's password.
+// ResetPassword allows an admin, superadmin, or secretary to force-reset a user's password.
+// Secretary is strictly limited to resetting passwords for teachers, students, and parents.
 func (s *Service) ResetPassword(ctx context.Context, actorRole, actorSchoolID, userID, newPassword string) error {
-	if actorRole != "admin" && actorRole != "superadmin" {
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" {
 		return ErrUnauthorized
 	}
 
@@ -335,6 +336,13 @@ func (s *Service) ResetPassword(ctx context.Context, actorRole, actorSchoolID, u
 	if err != nil {
 		return err
 	}
+
+	if actorRole == "secretary" {
+		if user.Role != "teacher" && user.Role != "student" && user.Role != "parent" {
+			return errors.New("forbidden: la segreteria può resettare solo le password di docenti, studenti e genitori")
+		}
+	}
+
 	if actorRole != "superadmin" && actorSchoolID != "" && user.SchoolID != nil && *user.SchoolID != actorSchoolID {
 		return ErrUnauthorized
 	}

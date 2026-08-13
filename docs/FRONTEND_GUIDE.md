@@ -1,6 +1,6 @@
 # Guida allo sviluppo Frontend
 
-Questa guida è rivolta agli sviluppatori che contribuiscono al frontend di RegistroV2. Copre le convenzioni di codice, i pattern architetturali, la gestione dello stato e le best practice per Vue 3 + Quasar.
+Questa guida è rivolta agli sviluppatori che contribuiscono al frontend di il_registro. Copre le convenzioni di codice, i pattern architetturali, la gestione dello stato e le best practice per Vue 3 + Quasar.
 
 ---
 
@@ -35,14 +35,14 @@ Questa guida è rivolta agli sviluppatori che contribuiscono al frontend di Regi
 Utilizza il composables `useErrorHandler` per intercettare e gestire gli errori nei componenti:
 
 ```js
-import { useErrorHandler } from '@/composables/useErrorHandler'
+import { useErrorHandler } from "@/composables/useErrorHandler";
 
-const { handleError } = useErrorHandler()
+const { handleError } = useErrorHandler();
 
 try {
-  await gradeService.updateGrade(id, payload)
+  await gradeService.updateGrade(id, payload);
 } catch (err) {
-  handleError(err, 'Impossibile aggiornare il voto selezionato.')
+  handleError(err, "Impossibile aggiornare il voto selezionato.");
 }
 ```
 
@@ -55,13 +55,13 @@ try {
 Per velocizzare la navigazione del docente tra tab senza rieseguire fetch HTTP superflui:
 
 ```js
-const gradesStore = useGradesStore()
+const gradesStore = useGradesStore();
 
 // Utilizza i dati in cache se disponibili per la coppia (classId, subjectId)
-await gradesStore.fetchGrades(classId, subjectId)
+await gradesStore.fetchGrades(classId, subjectId);
 
 // Forzo il refetch (es. dopo mutazione o su pull-to-refresh)
-await gradesStore.fetchGrades(classId, subjectId, true)
+await gradesStore.fetchGrades(classId, subjectId, true);
 ```
 
 ---
@@ -75,6 +75,7 @@ Gli errori di rete transitori (500, timeout, rate-limit) vengono raccolti dallo 
 ## WebSocket & Real-time Error Exposure
 
 Lo store `useWebSocketStore` espone ref reattivi per lo stato della connessione in tempo reale:
+
 - `isConnected`: boolean reattivo
 - `reconnectAttempts`: numero di tentativi effettuati
 - `hasFailedPermanently`: true se sono stati superati 30 tentativi falliti
@@ -85,7 +86,7 @@ Lo store `useWebSocketStore` espone ref reattivi per lo stato della connessione 
 ## Internazionalizzazione & Accessibilità (a11y)
 
 1. **i18n Multi-Lingua**: i file `src/i18n/` coprono 9 lingue distinte: Italiano (`it-IT`), Inglese (`en-US`), Tedesco (`de-DE`), Francese (`fr-FR`), Spagnolo (`es-ES`), Russo (`ru-RU`), Ucraino (`uk-UA`), Arabo (`ar-SA`) e Cinese Semplificato (`zh-CN`).
-2. **WAI-ARIA**: inclusione obbligatoria di `role="alert"`, `role="navigation"`, `role="banner"`, `aria-expanded` e Skip Links (*Salta al contenuto principale* `#main-content`).
+2. **WAI-ARIA**: inclusione obbligatoria di `role="alert"`, `role="navigation"`, `role="banner"`, `aria-expanded` e Skip Links (_Salta al contenuto principale_ `#main-content`).
 
 ---
 
@@ -97,3 +98,13 @@ Lo store `useWebSocketStore` espone ref reattivi per lo stato della connessione 
 2. **Filtraggio Dinamico per Anno Scolastico (`src/stores/schoolYear.js`)**:
    - Genera gli anni scolastici disponibili a partire dall'anno di registrazione del docente (`user.created_at`) fino all'anno attivo.
    - Trasmette reattivamente l'anno scelto a `Classes.vue`, `Grades.vue`, `Attendance.vue`, `CoordinatorView.vue` e `Scrutiny.vue`.
+
+---
+
+## Unit Testing dei Componenti & Servizi 🧪
+
+I test unitari del frontend sono eseguiti con **Vitest** e **Vue Test Utils**.
+
+- **Esecuzione**: `npm run test:unit` oppure `npx vitest run`
+- **Suite Componenti Orario**: `tests/unit/components/Secretary/TimetableManagement.spec.js` (verifica rendering `ScheduleGrid.vue`, `TeacherScheduleGrid.vue`, calcolo ore settimanali ed eventi `save`).
+- **Suite Servizi Admin**: `tests/unit/services/adminService.spec.js` (verifica chiamate API `/teachers/:id/schedule` e risposte).

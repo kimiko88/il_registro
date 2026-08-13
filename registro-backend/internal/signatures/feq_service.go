@@ -73,8 +73,8 @@ func (q *SoftwareQSCD) Sign(_ context.Context, digest []byte) ([]byte, []byte, s
 	certTemplate := &x509.Certificate{
 		SerialNumber: serial,
 		Subject: pkix.Name{
-			CommonName:   "RegistroV2-SoftwareQSCD",
-			Organization: []string{"RegistroV2"},
+			CommonName:   "il_registro-SoftwareQSCD",
+			Organization: []string{"il_registro"},
 			Country:      []string{"IT"},
 		},
 		NotBefore: time.Now().Add(-time.Minute),
@@ -90,7 +90,7 @@ func (q *SoftwareQSCD) Sign(_ context.Context, digest []byte) ([]byte, []byte, s
 	if _, err := x509.CreateCertificate(rand.Reader, certTemplate, certTemplate, &privKey.PublicKey, privKey); err != nil {
 		return nil, nil, "", "", fmt.Errorf("SoftwareQSCD: errore creazione certificato: %w", err)
 	}
-	certDN := fmt.Sprintf("CN=%s, O=RegistroV2, C=IT", certTemplate.Subject.CommonName)
+	certDN := fmt.Sprintf("CN=%s, O=il_registro, C=IT", certTemplate.Subject.CommonName)
 	return sigBytes, pubKeyPEM, certDN, serial.String(), nil
 }
 

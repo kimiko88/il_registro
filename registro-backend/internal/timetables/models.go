@@ -7,6 +7,7 @@ import (
 type ClassSchedule struct {
 	ID          string    `json:"id"`
 	ClassID     string    `json:"class_id"`
+	ClassName   string    `json:"class_name,omitempty"`
 	DayOfWeek   int       `json:"day_of_week"` // 1-7
 	HourIndex   int       `json:"hour_index"`  // 1-12
 	SubjectID   string    `json:"subject_id"`
@@ -28,4 +29,16 @@ type ScheduleEntry struct {
 	SubjectID string  `json:"subject_id"`
 	TeacherID *string `json:"teacher_id"`
 	Room      string  `json:"room"`
+}
+
+type UpdateTeacherScheduleRequest struct {
+	Entries []TeacherScheduleEntry `json:"entries"`
+}
+
+type TeacherScheduleEntry struct {
+	DayOfWeek int    `json:"day_of_week"`
+	HourIndex int    `json:"hour_index"`
+	ClassID   string `json:"class_id"`
+	SubjectID string `json:"subject_id"`
+	Room      string `json:"room"`
 }

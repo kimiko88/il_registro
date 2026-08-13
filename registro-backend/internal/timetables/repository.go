@@ -16,6 +16,7 @@ type Repository interface {
 	GetTeacherSchedule(ctx context.Context, userID string) ([]ClassSchedule, error)
 	GetClassSchoolID(ctx context.Context, classID string) (string, error)
 	Update(ctx context.Context, classID string, entries []ScheduleEntry) error
+	UpdateTeacher(ctx context.Context, teacherID string, entries []TeacherScheduleEntry) error
 }
 
 type PostgresRepository struct {
@@ -57,10 +58,11 @@ func (r *PostgresRepository) GetClassSchoolID(ctx context.Context, classID strin
 
 func (r *PostgresRepository) GetTeacherSchedule(ctx context.Context, userID string) ([]ClassSchedule, error) {
 	query := `
-		SELECT cs.id, cs.class_id, cs.day_of_week, cs.hour_index, cs.subject_id, s.name, 
+		SELECT cs.id, cs.class_id, COALESCE(c.name || c.section, c.name, ''), cs.day_of_week, cs.hour_index, cs.subject_id, s.name, 
 		       cs.teacher_id, u.last_name, u.first_name, COALESCE(cs.room, ''), cs.created_at, cs.updated_at
 		FROM class_schedules cs
 		JOIN subjects s ON cs.subject_id = s.id
+		JOIN classes c ON cs.class_id = c.id
 		LEFT JOIN users u ON cs.teacher_id = u.id
 		LEFT JOIN teachers t ON t.id = cs.teacher_id OR t.user_id = cs.teacher_id
 		WHERE cs.teacher_id = $1::uuid OR t.user_id = $1::uuid OR t.id = $1::uuid
@@ -77,7 +79,7 @@ func (r *PostgresRepository) GetTeacherSchedule(ctx context.Context, userID stri
 		var cs ClassSchedule
 		var tLast, tFirst sql.NullString
 		err := rows.Scan(
-			&cs.ID, &cs.ClassID, &cs.DayOfWeek, &cs.HourIndex, &cs.SubjectID, &cs.SubjectName,
+			&cs.ID, &cs.ClassID, &cs.ClassName, &cs.DayOfWeek, &cs.HourIndex, &cs.SubjectID, &cs.SubjectName,
 			&cs.TeacherID, &tLast, &tFirst, &cs.Room, &cs.CreatedAt, &cs.UpdatedAt,
 		)
 		if err != nil {
@@ -188,6 +190,63 @@ func (r *PostgresRepository) Update(ctx context.Context, classID string, entries
 		_, err = tx.ExecContext(ctx, query, args...)
 		if err != nil {
 			return err
+		}
+	}
+
+	return tx.Commit()
+}
+
+func (r *PostgresRepository) UpdateTeacher(ctx context.Context, teacherID string, entries []TeacherScheduleEntry) error {
+	normTeacherIDPtr := r.normalizeTeacherID(ctx, &teacherID)
+	if normTeacherIDPtr == nil {
+		return fmt.Errorf("teacher_id non valido o docente non trovato: %s", teacherID)
+	}
+	normTeacherID := *normTeacherIDPtr
+
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	// 1. Clear teacher_id from existing slots assigned to this teacher
+	_, err = tx.ExecContext(ctx, "UPDATE class_schedules SET teacher_id = NULL WHERE teacher_id = $1::uuid", normTeacherID)
+	if err != nil {
+		return err
+	}
+
+	// 2. Process new entries for this teacher
+	for _, e := range entries {
+		if strings.TrimSpace(e.ClassID) == "" || strings.TrimSpace(e.SubjectID) == "" {
+			continue
+		}
+		// Check if a slot already exists for this class, day, and hour
+		var existingID string
+		err := tx.QueryRowContext(ctx,
+			"SELECT id FROM class_schedules WHERE class_id = $1::uuid AND day_of_week = $2 AND hour_index = $3",
+			e.ClassID, e.DayOfWeek, e.HourIndex,
+		).Scan(&existingID)
+
+		if err == nil && existingID != "" {
+			// Update existing slot with teacher_id, subject_id, room
+			_, err = tx.ExecContext(ctx, `
+				UPDATE class_schedules 
+				SET teacher_id = $1::uuid, subject_id = $2::uuid, room = $3, updated_at = NOW()
+				WHERE id = $4::uuid
+			`, normTeacherID, e.SubjectID, e.Room, existingID)
+			if err != nil {
+				return err
+			}
+		} else {
+			// Insert new slot for this class
+			id := uuid.New().String()
+			_, err = tx.ExecContext(ctx, `
+				INSERT INTO class_schedules (id, class_id, day_of_week, hour_index, subject_id, teacher_id, room)
+				VALUES ($1::uuid, $2::uuid, $3, $4, $5::uuid, $6::uuid, $7)
+			`, id, e.ClassID, e.DayOfWeek, e.HourIndex, e.SubjectID, normTeacherID, e.Room)
+			if err != nil {
+				return err
+			}
 		}
 	}
 

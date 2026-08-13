@@ -90,7 +90,9 @@ export default [
             { path: 'secretary/textbooks', component: () => import('@/pages/secretary/Textbooks.vue'), meta: { title: 'Adozione Libri di Testo', roles: ['secretary'] } },
             { path: 'secretary/settings', component: () => import('@/pages/secretary/Settings.vue'), meta: { title: 'Impostazioni Segreteria', roles: ['secretary'] } },
             { path: 'secretary/classes', component: () => import('@/pages/secretary/Classes.vue'), meta: { title: 'Gestione Classi', roles: ['secretary'] } },
+            { path: 'secretary/timetable', component: () => import('@/pages/secretary/Timetable.vue'), meta: { title: 'Orario Scolastico & Cattedre', roles: ['secretary', 'admin', 'superadmin'] } },
             { path: 'secretary/scrutiny', component: () => import('@/pages/secretary/Scrutiny.vue'), meta: { title: 'Scrutini Scolastici', roles: ['secretary'] } },
+
             { path: 'secretary/groups', component: () => import('@/pages/secretary/Groups.vue'), meta: { title: 'Gruppi Linguistici / Articolati', roles: ['secretary'] } },
             { path: 'secretary/meetings', component: () => import('@/pages/secretary/Meetings.vue'), meta: { title: 'Organizzazione Riunioni', roles: ['secretary'] } },
             { path: 'secretary/certificates', component: () => import('@/pages/secretary/Certificates.vue'), meta: { title: 'Certificati & Attestati', roles: ['secretary', 'admin', 'superadmin'] } },

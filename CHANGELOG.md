@@ -3,6 +3,26 @@
 Tutte le modifiche rilevanti a questo progetto sono documentate in questo file.
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/).
 
+## [0.5.0] — 2026-08-13
+
+### Aggiunto & Modificato
+
+- **Rebranding Ufficiale `il_registro`**:
+  - Aggiornamento della documentazione, repository GitHub e mission civica: registro elettronico libero, aperto e a costo zero per la scuola pubblica italiana.
+- **Sincronizzazione Bidirezionale Orario Scolastico**:
+  - Implementato `TeacherScheduleGrid.vue` per l'editing dell'orario docente da parte della Segreteria.
+  - Sincronizzazione automatica ed atomica su DB (`class_schedules`) tra l'orario della classe e l'orario del docente.
+  - Corretti problemi di ritaglio layout orizzontale della colonna "Ora" per tutte le viste (docente, studente, genitore, segreteria).
+- **Cambio Password Self-Service Admin & SuperAdmin**:
+  - Nuova funzionalità ed interfaccia modale in `Settings.vue` per modificare la propria password di accesso con controlli di complessità e conferma.
+- **Sicurezza & Permessi Reset Password Segreteria**:
+  - Limitato il reset forzato password da parte della Segreteria ai soli ruoli `teacher`, `student` e `parent`. Bloccati tentativi di reset su `admin`, `superadmin` ed altre `secretary` con HTTP 403.
+- **Test Automation Unitari (Go & Vitest)**:
+  - Suite `TestService_ResetPassword_SecretaryPermissions` e asserzioni di complessità password in Go backend (`service_test.go`).
+  - Suite `TimetableManagement.spec.js` e test per `adminService.js` in Vitest frontend.
+- **Fix UI & Modali Responsive**:
+  - Risolto il ritaglio del testo nei dropdown `q-select` e rimosse le barre di scorrimento orizzontali nelle modali di configurazione sicurezza.
+
 ---
 
 ## [0.4.0] — 2026-08-06

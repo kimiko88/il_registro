@@ -133,6 +133,14 @@ export default {
         return api.delete(`/teachers/${teacherId}/subjects/${subjectId}`)
     },
 
+    getTeacherSchedule(teacherId) {
+        return api.get(`/teachers/${teacherId}/schedule`)
+    },
+
+    saveTeacherSchedule(teacherId, data) {
+        return api.post(`/teachers/${teacherId}/schedule`, data)
+    },
+
     // ========== Admin Users Management (SuperAdmin only) ==========
 
     getAdmins(params) {

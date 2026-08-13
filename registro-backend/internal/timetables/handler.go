@@ -100,10 +100,78 @@ func (h *Handler) GetMySchedule(c *gin.Context) {
 	c.JSON(http.StatusOK, schedule)
 }
 
+func (h *Handler) GetByTeacher(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	schoolID := c.GetString("school_id")
+	if userID == "" || role == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	teacherID := c.Param("id")
+	if teacherID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Teacher ID is required"})
+		return
+	}
+
+	schedule, err := h.service.GetByTeacher(c.Request.Context(), userID, role, schoolID, teacherID)
+	if err != nil {
+		if strings.HasPrefix(err.Error(), "forbidden") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, schedule)
+}
+
+func (h *Handler) UpdateTeacher(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	schoolID := c.GetString("school_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	teacherID := c.Param("id")
+	if teacherID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Teacher ID is required"})
+		return
+	}
+
+	var req UpdateTeacherScheduleRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	err := h.service.UpdateTeacher(c.Request.Context(), userID, role, schoolID, teacherID, req.Entries)
+	if err != nil {
+		if strings.HasPrefix(err.Error(), "forbidden") || strings.HasPrefix(err.Error(), "unauthorized") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Teacher schedule updated successfully"})
+}
+
 func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	r.GET("/classes/:id/schedule", h.GetByClass)
 	r.POST("/classes/:id/schedule", h.Update)
 	r.PUT("/classes/:id/schedule", h.Update)
 	r.PATCH("/classes/:id/schedule", h.Update)
 	r.GET("/timetables/my-schedule", h.GetMySchedule)
+	r.GET("/timetables/teacher/:id", h.GetByTeacher)
+	r.POST("/timetables/teacher/:id", h.UpdateTeacher)
+	r.PUT("/timetables/teacher/:id", h.UpdateTeacher)
+	r.GET("/teachers/:id/schedule", h.GetByTeacher)
+	r.POST("/teachers/:id/schedule", h.UpdateTeacher)
+	r.PUT("/teachers/:id/schedule", h.UpdateTeacher)
 }

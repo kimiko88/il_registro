@@ -1,13 +1,13 @@
-# RegistroV2 — About & Project Overview
+# il_registro — About & Project Overview
 
-> **RegistroV2** è un sistema web full-stack per la gestione del Registro Elettronico Scolastico nelle scuole primarie e secondarie italiane.
+> **il_registro** è un sistema web full-stack per la gestione del Registro Elettronico Scolastico nelle scuole primarie e secondarie italiane.
 
 ---
 
 ## 📌 GitHub Metadata / About Info
 
 - **Tagline**: Sistema di Registro Elettronico Scolastico moderno e completo per le scuole italiane (Go 1.25, Vue 3, Quasar, PostgreSQL 16+, PWA, i18n, WAI-ARIA).
-- **Licenza**: [PolyForm Noncommercial 1.0.0](file:///c:/Users/chimi/Desktop/Programmazione/Registrov2/LICENSE) — Gratuita e libera per scuole pubbliche, università, enti ed istituzioni pubbliche.
+- **Licenza**: [PolyForm Noncommercial 1.0.0](../LICENSE) — Gratuita e libera per scuole pubbliche, università, enti ed istituzioni pubbliche.
 - **Topics / Tags**:
   `registro-elettronico` `scuola-italiana` `go` `golang` `vue3` `quasar-framework` `pinia` `postgresql` `spid` `cie` `pwa` `education` `school-management` `rest-api` `i18n` `accessibility`
 
@@ -15,10 +15,10 @@
 
 ## 🛠️ Architettura e Logica delle Librerie Esterne
 
-RegistroV2 è strutturato come **monorepo decoupled**:
+il_registro è strutturato come **monorepo decoupled**:
 
 ```
-Registrov2/
+il_registro/
 ├── registro-backend/   # Service Layer REST API in Go
 ├── registro-frontend/  # Web Application SPA/PWA in Vue 3 + Quasar
 └── docs/               # Documentazione tecnica e guide per sviluppatori
@@ -48,13 +48,15 @@ Registrov2/
 ## ⚡ Caratteristiche Tecniche e Ottimizzazioni Recenti
 
 1. **Gestione Multi-Sede delle Classi:** Supporto completo per l'organizzazione delle classi su differenti plessi/sedi (es. Sede Centrale, Succursale).
-2. **Algoritmo di Raccomandazione Supplenze:** Calcolo automatico dello score di idoneità (0-95) dei supplenti basato su assegnazione classe, materia e carico settimanale.
-3. **Controllo Concorrenza Prenotazioni (Race Condition Zero):** Blocco atomico in DB via `SELECT ... FOR UPDATE` per le prenotazioni dei colloqui e modifiche agli slot.
-4. **Scrutini Ottimizzati in Batch:** Caricamento aggregato delle statistiche di presenza tramite `GetStatsBatch` per eliminare le query N+1 nella matrice di scrutinio.
-5. **Indici Parziali PostgreSQL (Soft Delete):** Indici B-tree parziali `WHERE deleted_at IS NULL` per tabelle `grades`, `attendance`, `users`, `classes`, `documents` e `communications`.
-6. **Rate Limiter con Client IP Resolution:** Validazione stringente IP con `resolveClientIP` e blocco degli IP spoofing tramite `X-Forwarded-For`.
-7. **Reattività WebSockets & Stores Pinia:** Sincronizzazione automatica ed immediata dello stato locale (`grades`, `attendance`, `scrutiny`, `communications`) alla ricezione di messaggi real-time.
-8. **Accessibilità & Font DSA OpenDyslexic:** Toggle rapido del font ad alta leggibilità per studenti con dislessia e DSA.
+2. **Sincronizzazione Bidirezionale Orario Scolastico:** Single source of truth su `class_schedules` per la gestione dell'orario di classe e docente con aggiornamento atomico bidirezionale in tempo reale.
+3. **Sicurezza Password Self-Service & Role-Bounded Reset:** Cambio password personalizzato per Admin/SuperAdmin nelle Impostazioni e restrizione del reset password della Segreteria ai soli ruoli docenti, studenti e genitori.
+4. **Algoritmo di Raccomandazione Supplenze:** Calcolo automatico dello score di idoneità (0-95) dei supplenti basato su assegnazione classe, materia e carico settimanale.
+5. **Controllo Concorrenza Prenotazioni (Race Condition Zero):** Blocco atomico in DB via `SELECT ... FOR UPDATE` per le prenotazioni dei colloqui e modifiche agli slot.
+6. **Scrutini Ottimizzati in Batch:** Caricamento aggregato delle statistiche di presenza tramite `GetStatsBatch` per eliminare le query N+1 nella matrice di scrutinio.
+7. **Indici Parziali PostgreSQL (Soft Delete):** Indici B-tree parziali `WHERE deleted_at IS NULL` per tabelle `grades`, `attendance`, `users`, `classes`, `documents` e `communications`.
+8. **Rate Limiter con Client IP Resolution:** Validazione stringente IP con `resolveClientIP` e blocco degli IP spoofing tramite `X-Forwarded-For`.
+9. **Reattività WebSockets & Stores Pinia:** Sincronizzazione automatica ed immediata dello stato locale (`grades`, `attendance`, `scrutiny`, `communications`) alla ricezione di messaggi real-time.
+10. **Accessibilità & Font DSA OpenDyslexic:** Toggle rapido del font ad alta leggibilità per studenti con dislessia e DSA.
 
 ---
 

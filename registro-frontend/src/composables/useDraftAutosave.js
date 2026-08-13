@@ -32,7 +32,7 @@ import { watch, onBeforeUnmount } from 'vue'
  */
 import { ref } from 'vue'
 
-const DRAFT_PREFIX = 'registrov2_draft_'
+const DRAFT_PREFIX = 'il_registro_draft_'
 
 export function useDraftAutosave(storageKey, dataRef, debounceMs = 1500) {
     const key = DRAFT_PREFIX + storageKey

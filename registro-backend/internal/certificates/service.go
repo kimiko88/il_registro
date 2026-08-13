@@ -67,7 +67,7 @@ func (s *service) GenerateCertificate(ctx context.Context, actorID, schoolID str
 		PDFUrl:       "/api/v1/certificates/download/temp",
 	}
 
-	pdfBytes, err := GenerateCertificatePDF(cert, "Istituto Scolastico Registrov2")
+	pdfBytes, err := GenerateCertificatePDF(cert, "Istituto Scolastico il_registro")
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to generate PDF: %w", err)
 	}
@@ -110,7 +110,7 @@ func (s *service) GeneratePDFBytes(ctx context.Context, id string) ([]byte, erro
 			cert.StudentName = fmt.Sprintf("%s %s", std.LastName, std.FirstName)
 		}
 	}
-	return GenerateCertificatePDF(cert, "Istituto Scolastico Registrov2")
+	return GenerateCertificatePDF(cert, "Istituto Scolastico il_registro")
 }
 
 // currentAcademicYear returns the school year label for today's date.

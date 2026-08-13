@@ -1,6 +1,6 @@
 # Guida all'installazione e configurazione
 
-Questa guida descrive come configurare l'ambiente di sviluppo e produzione per RegistroV2.
+Questa guida descrive come configurare l'ambiente di sviluppo e produzione per il_registro.
 
 ---
 
@@ -35,8 +35,8 @@ Questa guida descrive come configurare l'ambiente di sviluppo e produzione per R
 ### 1. Clona il repository
 
 ```bash
-git clone https://github.com/kimiko88/Registrov2.git
-cd Registrov2
+git clone https://github.com/kimiko88/il_registro.git
+cd il_registro
 ```
 
 ### 2. Configura il backend

@@ -488,7 +488,7 @@
 
     <!-- Create Textbook Dialog -->
     <q-dialog v-model="showCreateTextbookDialog">
-      <q-card style="width: min(500px, 90vw)" class="rounded-xl shadow-24 bg-white">
+      <q-card style="display: flex; flex-direction: column; width: min(550px, 95vw); max-height: 90vh;" class="rounded-xl shadow-24 bg-white">
         <q-card-section class="bg-primary text-white row items-center justify-between q-pa-md">
           <div class="text-subtitle1 font-bold">
             <q-icon name="menu_book" class="q-mr-xs" />
@@ -497,7 +497,8 @@
           <q-btn icon="close" flat round dense v-close-popup />
         </q-card-section>
 
-        <q-card-section class="q-pa-md">
+        <q-card-section class="q-pa-md scroll" style="flex: 1; overflow-y: auto;">
+
           <q-form @submit="createTextbookInCatalog" class="q-gutter-y-md">
             <q-input v-model="newTextbook.title" label="Titolo del Libro *" outlined dense :rules="[val => !!val || 'Obbligatorio']" />
             <q-input v-model="newTextbook.author" label="Autore / Autori *" outlined dense :rules="[val => !!val || 'Obbligatorio']" />
@@ -528,6 +529,7 @@
         </q-card-section>
       </q-card>
     </q-dialog>
+
 
     <!-- Academic Year Migration Wizard Dialog -->
     <q-dialog v-model="showMigrationDialog" persistent class="premium-dialog">

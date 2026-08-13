@@ -1,8 +1,8 @@
-# Registrov2 — Backend
+# il_registro — Backend
 
 > Registro elettronico scolastico — API REST in Go
 
-[![CI](https://github.com/kimiko88/Registrov2/actions/workflows/ci.yml/badge.svg)](https://github.com/kimiko88/Registrov2/actions/workflows/ci.yml)
+[![CI](https://github.com/kimiko88/il_registro/actions/workflows/ci.yml/badge.svg)](https://github.com/kimiko88/il_registro/actions/workflows/ci.yml)
 [![Go Version](https://img.shields.io/badge/go-1.25%2B-blue)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-MIT-green)](../LICENSE)
 
@@ -152,8 +152,8 @@ Il sistema usa un modello **RBAC** con 6 ruoli. La registrazione di nuovi utenti
 
 ```bash
 # 1. Clona il repository
-git clone https://github.com/kimiko88/Registrov2.git
-cd Registrov2/registro-backend
+git clone https://github.com/kimiko88/il_registro.git
+cd il_registro/registro-backend
 
 # 2. Copia e configura le variabili d'ambiente
 cp .env.example .env
