@@ -48,7 +48,7 @@ describe('useMenuItems', () => {
         it('should return secretary menu items', () => {
             const flatItems = getFlatItems('secretary')
 
-            expect(flatItems).toHaveLength(15)
+            expect(flatItems).toHaveLength(16)
             expect(flatItems.map(item => item.label)).toContain('Documenti')
             expect(flatItems.map(item => item.label)).toContain('Studenti')
             expect(flatItems.map(item => item.label)).toContain('Report')
