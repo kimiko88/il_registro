@@ -8,7 +8,9 @@ const router = createRouter({
     routes
 })
 
-setApiRouter(router)
+if (typeof setApiRouter === 'function') {
+    setApiRouter(router)
+}
 
 router.beforeEach(authGuard)
 

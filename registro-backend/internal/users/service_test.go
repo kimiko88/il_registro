@@ -837,3 +837,28 @@ func TestService_GDPRConvert(t *testing.T) {
 		assert.NoError(t, err)
 	})
 }
+
+func TestService_DeleteUser_SchoolIDIsolation(t *testing.T) {
+	mockRepo := new(MockRepository)
+	service := NewService(mockRepo)
+
+	t.Run("Admin deleting user in another school -> Unauthorized", func(t *testing.T) {
+		otherSchool := "school-B"
+		user := &User{ID: "target-1", SchoolID: &otherSchool}
+		mockRepo.On("GetByID", mock.Anything, "target-1").Return(user, nil).Once()
+
+		err := service.DeleteUser(context.Background(), "admin", "school-A", "target-1")
+		assert.ErrorIs(t, err, ErrUnauthorized)
+	})
+
+	t.Run("SuperAdmin deleting user in another school -> Allowed", func(t *testing.T) {
+		otherSchool := "school-B"
+		user := &User{ID: "target-2", SchoolID: &otherSchool}
+		mockRepo.On("GetByID", mock.Anything, "target-2").Return(user, nil).Once()
+		mockRepo.On("Delete", mock.Anything, "target-2").Return(nil).Once()
+
+		err := service.DeleteUser(context.Background(), "superadmin", "school-A", "target-2")
+		assert.NoError(t, err)
+	})
+}
+

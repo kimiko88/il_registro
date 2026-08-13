@@ -6,6 +6,7 @@ import quasarLangIt from 'quasar/lang/it'
 import router from './router'
 import App from './App.vue'
 import messages from './i18n'
+import { setApiI18n } from './services/api'
 
 // Import Quasar css
 import '@quasar/extras/material-icons/material-icons.css'
@@ -22,6 +23,8 @@ export const i18n = createI18n({
   legacy: false,
   messages
 })
+
+setApiI18n(i18n)
 
 const app = createApp(App)
 
