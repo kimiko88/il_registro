@@ -41,8 +41,8 @@
 
 <a href="./docs/images/06_substitutions_recommendation.png"><img src="./docs/images/06_substitutions_recommendation.png" width="49.5%"/></a>
 
-6. **`06_substitutions_recommendation.png` — Suggerimento Automatico Supplenze**
-   - _Descrizione_: Algoritmo di calcolo dello score supplenti con i dettagli di materia, classe e carico orario settimanale.
+6. **`06_substitutions_recommendation.png` — Gestione Supplenze**
+   - _Descrizione_: Gestione delle supplenze con materia e classe (anche con un algoritmo automatico che suggerisce i supplenti).
 
 <a href="./docs/images/07_parent_portal_mobile.png"><img src="./docs/images/07_parent_portal_mobile.png" width="49.5%"/></a>
 
