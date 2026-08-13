@@ -258,7 +258,7 @@ func (s *Service) ChangePassword(ctx context.Context, userID string, req ChangeP
 
 	// Field is CurrentPassword in ChangePasswordRequest DTO
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.CurrentPassword)); err != nil {
-		return errors.New("current password is incorrect")
+		return errors.New("la password attuale non è corretta")
 	}
 
 	// Check password history
@@ -268,7 +268,7 @@ func (s *Service) ChangePassword(ctx context.Context, userID string, req ChangeP
 	}
 	for _, old := range history {
 		if bcrypt.CompareHashAndPassword([]byte(old), []byte(req.NewPassword)) == nil {
-			return errors.New("new password must not match any of the last 5 passwords")
+			return errors.New("la nuova password non può essere uguale a una delle ultime 5 password utilizzate")
 		}
 	}
 
@@ -291,11 +291,11 @@ func (s *Service) ChangePassword(ctx context.Context, userID string, req ChangeP
 }
 
 func validatePasswordComplexity(password string) error {
-	if len(password) < 8 {
-		return errors.New("password must be at least 8 characters long")
+	if len(password) < 10 {
+		return errors.New("la password deve contenere almeno 10 caratteri")
 	}
 	if len(password) > 128 {
-		return errors.New("password is too long (max 128 characters)")
+		return errors.New("la password è troppo lunga (massimo 128 caratteri)")
 	}
 	var hasUpper, hasLower, hasDigit, hasSpecial bool
 	for _, char := range password {
@@ -311,7 +311,7 @@ func validatePasswordComplexity(password string) error {
 		}
 	}
 	if !hasUpper || !hasLower || !hasDigit || !hasSpecial {
-		return errors.New("password must contain at least one uppercase letter, one lowercase letter, one number, and one special character")
+		return errors.New("la password deve contenere almeno una lettera maiuscola, una minuscola, un numero e un carattere speciale")
 	}
 	return nil
 }
@@ -338,10 +338,11 @@ func (s *Service) ResetPassword(ctx context.Context, actorRole, actorSchoolID, u
 	if err == nil {
 		for _, old := range history {
 			if bcrypt.CompareHashAndPassword([]byte(old), []byte(newPassword)) == nil {
-				return errors.New("new password must not match any of the last 5 passwords")
+				return errors.New("la nuova password non può essere uguale a una delle ultime 5 password utilizzate")
 			}
 		}
 	}
+
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
 	if err != nil {

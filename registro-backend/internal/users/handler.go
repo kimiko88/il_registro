@@ -269,26 +269,27 @@ func (h *Handler) BulkImport(c *gin.Context) {
 func (h *Handler) ChangePassword(c *gin.Context) {
 	var req ChangePasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Compilare tutti i campi obbligatori (la nuova password deve contenere almeno 10 caratteri)"})
 		return
 	}
 	targetID := c.Param("id")
 	actorID := getActorID(c)
 	if actorID == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Non autorizzato"})
 		return
 	}
 	// Strictly self-service: no admin bypass allowed here.
 	if targetID != actorID {
-		c.JSON(http.StatusForbidden, gin.H{"error": "can only change own password; admins must use force-reset"})
+		c.JSON(http.StatusForbidden, gin.H{"error": "Puoi modificare solo la tua password"})
 		return
 	}
 	if err := h.service.ChangePassword(c.Request.Context(), targetID, req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "password changed"})
+	c.JSON(http.StatusOK, gin.H{"message": "Password aggiornata con successo"})
 }
+
 
 // 9. POST /api/v1/users/{id}/reset-password - Force reset (admin only)
 func (h *Handler) ForceResetPassword(c *gin.Context) {

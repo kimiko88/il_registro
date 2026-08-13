@@ -202,7 +202,7 @@ func (r *PostgresRepository) ConfirmSubstitution(ctx context.Context, id string,
 	query := `
 		UPDATE substitutions
 		SET status = 'confirmed'
-		WHERE id = $1::uuid AND (substitute_teacher_id = $2::uuid OR $2 = '')
+		WHERE id = $1::uuid AND (substitute_teacher_id = NULLIF($2, '')::uuid OR NULLIF($2, '') IS NULL)
 	`
 	_, err := r.db.ExecContext(ctx, query, id, substituteTeacherID)
 	return err
@@ -227,7 +227,7 @@ func (r *PostgresRepository) GetAvailableTeachers(ctx context.Context, schoolID 
 		SELECT t.id, t.user_id, COALESCE(u.first_name || ' ' || u.last_name, '') AS teacher_name
 		FROM teachers t
 		JOIN users u ON t.user_id = u.id
-		WHERE t.school_id = $1::uuid OR $1 = ''`
+		WHERE NULLIF($1, '') IS NULL OR t.school_id = NULLIF($1, '')::uuid`
 	rows, err := r.db.QueryContext(ctx, query, schoolID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch teachers: %w", err)
