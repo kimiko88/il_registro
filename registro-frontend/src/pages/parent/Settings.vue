@@ -330,9 +330,12 @@
 import { ref } from 'vue'
 import { useThemeStore, THEMES } from 'src/stores/theme'
 import { useQuasar } from 'quasar'
+import { userService } from 'src/services/userService'
+import { useAuthStore } from 'src/stores/auth'
 
 const $q = useQuasar()
 const themeStore = useThemeStore()
+const authStore = useAuthStore()
 
 const activeSection = ref('appearance')
 
@@ -359,7 +362,7 @@ const pwdNew = ref('')
 const pwdConfirm = ref('')
 const savingPwd = ref(false)
 
-function changePassword() {
+async function changePassword() {
   if (!pwdCurrent.value || !pwdNew.value) {
     $q.notify({ type: 'warning', message: 'Compilare i campi della password' })
     return
@@ -368,13 +371,23 @@ function changePassword() {
     $q.notify({ type: 'negative', message: 'Le nuove password non coincidono' })
     return
   }
+  const userId = authStore.user?.id
+  if (!userId) {
+    $q.notify({ type: 'negative', message: 'Sessione non valida, effettua nuovamente il login' })
+    return
+  }
   savingPwd.value = true
-  setTimeout(() => {
-    savingPwd.value = false
+  try {
+    await userService.changePassword(userId, pwdCurrent.value, pwdNew.value)
     pwdCurrent.value = ''
     pwdNew.value = ''
     pwdConfirm.value = ''
     $q.notify({ type: 'positive', message: 'Password aggiornata con successo' })
-  }, 600)
+  } catch (err) {
+    const msg = err.response?.data?.error || 'Errore durante la modifica della password'
+    $q.notify({ type: 'negative', message: msg })
+  } finally {
+    savingPwd.value = false
+  }
 }
 </script>

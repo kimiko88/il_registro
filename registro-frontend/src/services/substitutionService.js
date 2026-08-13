@@ -18,5 +18,9 @@ export const substitutionService = {
   },
   assign(id, data) {
     return api.put(`/substitutions/${id}/assign`, data)
+  },
+  recommendSubstitutes(params) {
+    return api.get('/substitutions/recommend-substitutes', { params })
   }
 }
+
