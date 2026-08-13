@@ -32,6 +32,12 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 		scrutiny.POST("/class/:classId/validate", h.Validate)
 		scrutiny.POST("/class/:classId/close", h.Close)
 		scrutiny.GET("/export/:studentId/pdf", h.ExportPagellaPDF)
+
+		// Deficiencies & Deferred Scrutiny Routes
+		scrutiny.POST("/deficiencies", h.SaveDeficiency)
+		scrutiny.GET("/deficiencies/student/:studentId", h.GetStudentDeficiencies)
+		scrutiny.GET("/deficiencies/class/:classId", h.GetClassDeficiencies)
+		scrutiny.POST("/deferred", h.SaveDeferredScrutiny)
 	}
 }
 
@@ -275,3 +281,83 @@ func (h *Handler) ExportAll(c *gin.Context) {
 	c.Header("Content-Disposition", "attachment; filename=\"scrutini_overview.csv\"")
 	c.Data(http.StatusOK, "text/csv", data)
 }
+
+func (h *Handler) SaveDeficiency(c *gin.Context) {
+	actorID := c.GetString("user_id")
+	actorRole := c.GetString("role")
+	schoolID := c.GetString("school_id")
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	var req SaveDeficiencyRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if req.SchoolID == "" {
+		req.SchoolID = schoolID
+	}
+
+	if err := h.service.SaveDeficiency(c.Request.Context(), actorID, actorRole, &req); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "deficiency saved successfully"})
+}
+
+func (h *Handler) GetStudentDeficiencies(c *gin.Context) {
+	studentID := c.Param("studentId")
+	actorID := c.GetString("user_id")
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	deficiencies, err := h.service.GetStudentDeficiencies(c.Request.Context(), studentID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, deficiencies)
+}
+
+func (h *Handler) GetClassDeficiencies(c *gin.Context) {
+	classID := c.Param("classId")
+	semester, _ := strconv.Atoi(c.DefaultQuery("semester", "0"))
+	actorID := c.GetString("user_id")
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	deficiencies, err := h.service.GetClassDeficiencies(c.Request.Context(), classID, semester)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, deficiencies)
+}
+
+func (h *Handler) SaveDeferredScrutiny(c *gin.Context) {
+	actorID := c.GetString("user_id")
+	actorRole := c.GetString("role")
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	var req SaveDeferredScrutinyRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.service.SaveDeferredScrutiny(c.Request.Context(), actorID, actorRole, &req); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "deferred scrutiny saved successfully"})
+}
+

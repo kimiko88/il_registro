@@ -25,5 +25,19 @@ export const scrutinyService = {
     },
     exportPagellaPDF(studentId, classId, semester = 1) {
         return api.get(`/scrutiny/export/${studentId}/pdf`, { params: { class_id: classId, semester: cleanSem(semester) }, responseType: 'blob' })
+    },
+
+    // Deficiency & Deferred Scrutiny API helpers
+    saveDeficiency(data) {
+        return api.post('/scrutiny/deficiencies', data)
+    },
+    getStudentDeficiencies(studentId) {
+        return api.get(`/scrutiny/deficiencies/student/${studentId}`)
+    },
+    getClassDeficiencies(classId, semester = 0) {
+        return api.get(`/scrutiny/deficiencies/class/${classId}`, { params: { semester } })
+    },
+    saveDeferredScrutiny(data) {
+        return api.post('/scrutiny/deferred', data)
     }
 }

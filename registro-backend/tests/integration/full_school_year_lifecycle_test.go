@@ -106,6 +106,18 @@ func (m *mockScrutinyRepo) ValidateClassScrutiny(ctx context.Context, classID st
 func (m *mockScrutinyRepo) UpdateClassScrutinyStatus(ctx context.Context, classID string, semester int, status string) error {
 	return nil
 }
+func (m *mockScrutinyRepo) SaveDeficiency(ctx context.Context, def *scrutiny.StudentDeficiency) error {
+	return nil
+}
+func (m *mockScrutinyRepo) GetDeficienciesByStudent(ctx context.Context, studentID string) ([]scrutiny.StudentDeficiency, error) {
+	return nil, nil
+}
+func (m *mockScrutinyRepo) GetDeficienciesByClass(ctx context.Context, classID string, semester int) ([]scrutiny.StudentDeficiency, error) {
+	return nil, nil
+}
+func (m *mockScrutinyRepo) SaveDeferredScrutiny(ctx context.Context, req *scrutiny.SaveDeferredScrutinyRequest) error {
+	return nil
+}
 
 func TestFullSchoolYearLifecycle(t *testing.T) {
 	gin.SetMode(gin.TestMode)

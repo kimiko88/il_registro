@@ -164,6 +164,31 @@ npm run dev
 
 ---
 
+## ⚙️ Perché Go e Vue.js? (oltre al gusto personale di chi vi scrive)
+
+### Backend — Go
+
+Go è stato scelto per il backend per ragioni che vanno oltre la moda tecnologica:
+
+- **Performance nativa**: Go compila in binari statici con garbage collector a bassa latenza,
+  ideale per gestire centinaia di richieste concorrenti (WebSocket, notifiche real-time)
+  senza il overhead di una JVM o di un runtime interpretato
+- **Semplicità operativa**: un singolo binario da deployare, senza dipendenze runtime —
+  perfetto per scuole con infrastruttura IT limitata o per self-hosting su hardware modesto
+- **Concorrenza strutturale**: le goroutine rendono naturale gestire operazioni parallele
+  (sincronizzazione Google Classroom + notifiche + API) senza la complessità dei thread tradizionali
+- **Ecosistema stabile**: a differenza di Node.js o Python, Go ha una compatibilità
+  backward garantita — il codice scritto oggi funzionerà tra 10 anni
+
+### Frontend — Vue 3 + Quasar
+
+- **Curva di apprendimento gentile**: Vue è il framework più adottabile da sviluppatori
+  scolastici e contributori occasionali, abbassando la barriera ai contributi della community
+- **Quasar Framework**: genera nativamente PWA, SPA e app mobile da un'unica codebase —
+  fondamentale per supportare dispositivi datati tipici delle scuole pubbliche
+- **Reattività granulare**: la Composition API di Vue 3 permette componenti complessi
+  (matrix dei voti, scrutinio) senza sacrificare la leggibilità del codice
+
 ## Documentazione
 
 | Documento                                                    | Descrizione                                                  |

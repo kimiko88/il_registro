@@ -530,3 +530,52 @@ func (s *Service) ExportPagellaPDF(ctx context.Context, actorID, actorRole, clas
 	}
 	return GeneratePagellaPDF(matrix, studentID)
 }
+
+func (s *Service) SaveDeficiency(ctx context.Context, actorID, actorRole string, req *SaveDeficiencyRequest) error {
+	if req.StudentID == "" || req.ClassID == "" || req.SubjectID == "" {
+		return errors.New("student_id, class_id, and subject_id are required")
+	}
+
+	def := &StudentDeficiency{
+		ID:            req.ID,
+		SchoolID:      req.SchoolID,
+		StudentID:     req.StudentID,
+		ClassID:       req.ClassID,
+		SubjectID:     req.SubjectID,
+		Semester:      req.Semester,
+		PeriodType:    req.PeriodType,
+		Topics:        req.Topics,
+		RecoveryMode:  req.RecoveryMode,
+		Status:        req.Status,
+		RecoveryGrade: req.RecoveryGrade,
+		Notes:         req.Notes,
+	}
+	if req.RecoveryDate != nil && *req.RecoveryDate != "" {
+		if t, err := time.Parse("2006-01-02", *req.RecoveryDate); err == nil {
+			def.RecoveryDate = &t
+		}
+	}
+	return s.repo.SaveDeficiency(ctx, def)
+}
+
+func (s *Service) GetStudentDeficiencies(ctx context.Context, studentID string) ([]StudentDeficiency, error) {
+	if studentID == "" {
+		return []StudentDeficiency{}, nil
+	}
+	return s.repo.GetDeficienciesByStudent(ctx, studentID)
+}
+
+func (s *Service) GetClassDeficiencies(ctx context.Context, classID string, semester int) ([]StudentDeficiency, error) {
+	if classID == "" {
+		return []StudentDeficiency{}, nil
+	}
+	return s.repo.GetDeficienciesByClass(ctx, classID, semester)
+}
+
+func (s *Service) SaveDeferredScrutiny(ctx context.Context, actorID, actorRole string, req *SaveDeferredScrutinyRequest) error {
+	if req.StudentID == "" || req.ClassID == "" {
+		return errors.New("student_id and class_id are required")
+	}
+	return s.repo.SaveDeferredScrutiny(ctx, req)
+}
+

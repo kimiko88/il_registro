@@ -58,29 +58,13 @@
     <!-- Signature Required Banner (No Print) -->
     <q-banner v-if="requiresSignature && !isSigned" class="bg-amber-1 border border-amber-300 rounded-xl q-mb-lg no-print">
       <template v-slot:avatar>
-        <q-icon name="warning" color="warning" size="md" />
+        <q-icon name="drive_file_rename_outline" color="amber-9" size="32px" />
       </template>
-      <div class="text-weight-bold text-slate-800 text-subtitle1">Firma Pagella Richiesta</div>
-      <div class="text-caption text-slate-600">La scuola ha pubblicato la pagella finale. Firma per presa visione ufficiale.</div>
+      <div class="text-subtitle1 text-weight-bold text-amber-9">Presa Visione Richiesta</div>
+      <div class="text-body2 text-slate-700">È richiesta la firma digitale dei genitori per conferma di presa visione della pagella.</div>
       <template v-slot:action>
-        <q-btn
-          color="warning"
-          unelevated
-          icon="draw"
-          label="Firma per Presa Visione"
-          :loading="signing"
-          no-caps
-          @click="signReportCard"
-        />
+        <q-btn color="amber-9" unelevated label="Firma per Presa Visione" class="rounded-lg" :loading="signing" @click="signReportCard" />
       </template>
-    </q-banner>
-
-    <q-banner v-else-if="isSigned" class="bg-green-1 border border-green-300 rounded-xl q-mb-lg no-print">
-      <template v-slot:avatar>
-        <q-icon name="check_circle" color="positive" size="md" />
-      </template>
-      <div class="text-weight-bold text-positive">Pagella Firmata per Presa Visione</div>
-      <div class="text-caption text-slate-600">Hai già confermato la presa visione di questo documento.</div>
     </q-banner>
 
     <!-- Printable Report Card Paper Document -->
@@ -102,127 +86,122 @@
           </div>
         </div>
 
-        <div class="row q-col-gutter-md text-body2">
-          <div class="col-12 col-sm-4">
-            <span class="text-slate-400">Studente:</span>
-            <div class="text-weight-bold text-slate-800 text-subtitle1">
-              {{ reportData?.student_name || 'Studente' }}
+        <div class="row q-col-gutter-md">
+          <div class="col-12 col-md-6">
+            <div class="text-subtitle2 text-slate-500">Studente/ssa (Figlio/a)</div>
+            <div class="text-h6 text-weight-bold text-slate-800">
+              {{ reportData?.student_name || 'Nome Studente' }}
             </div>
+            <div class="text-caption text-slate-500">Codice Fiscale: {{ reportData?.fiscal_code || 'N/D' }}</div>
           </div>
-          <div class="col-12 col-sm-4">
-            <span class="text-slate-400">Classe:</span>
-            <div class="text-weight-bold text-slate-800 text-subtitle1">
-              {{ reportData?.class_name || 'N/D' }}
+          <div class="col-12 col-md-6 text-md-right">
+            <div class="text-subtitle2 text-slate-500">Classe Frequentata</div>
+            <div class="text-h6 text-weight-bold text-slate-800">
+              {{ reportData?.class_name || 'Classe N/A' }}
             </div>
-          </div>
-          <div class="col-12 col-sm-4">
-            <span class="text-slate-400">Media Generale:</span>
-            <div class="text-weight-bold text-subtitle1" :class="getAverageClass(reportData?.overall_average)">
-              {{ reportData?.overall_average ? reportData.overall_average.toFixed(2) : '0.00' }} / 10
-            </div>
+            <div class="text-caption text-slate-500">Coordinatore: {{ reportData?.coordinator_name || 'Docente Coordinatore' }}</div>
           </div>
         </div>
       </q-card>
 
-      <!-- Grades Table Card -->
+      <!-- Grades Table -->
       <q-card flat bordered class="rounded-xl bg-white shadow-soft overflow-hidden">
-        <q-card-section class="bg-slate-100 border-b border-slate-200 row items-center justify-between q-py-sm q-px-md">
-          <div class="text-subtitle1 text-weight-bold text-slate-800">Valutazioni per Materia</div>
+        <q-card-section class="q-pa-none">
+          <q-table
+            :rows="reportData?.subject_grades || []"
+            :columns="columns"
+            row-key="subject"
+            flat
+            hide-bottom
+            :pagination="{ rowsPerPage: 0 }"
+            class="bg-transparent"
+          >
+            <template v-slot:body-cell-average="props">
+              <q-td :props="props" align="center" :class="getAverageClass(props.row.subject_average)">
+                {{ props.row.subject_average ? props.row.subject_average.toFixed(2) : '-' }}
+              </q-td>
+            </template>
+
+            <template v-slot:body-cell-final_grade="props">
+              <q-td :props="props" align="center">
+                <q-chip
+                  :color="props.row.final_grade >= 6 ? 'positive' : 'negative'"
+                  text-color="white"
+                  class="text-weight-bold"
+                >
+                  {{ props.row.final_grade ?? '-' }}
+                </q-chip>
+              </q-td>
+            </template>
+          </q-table>
         </q-card-section>
-
-        <div v-if="loading" class="text-center q-pa-xl">
-          <q-spinner-dots color="primary" size="40px" />
-        </div>
-
-        <q-table
-          v-else
-          flat
-          dense
-          :rows="reportData?.subjects || []"
-          :columns="columns"
-          row-key="subject_id"
-          hide-pagination
-          :pagination="{ rowsPerPage: 0 }"
-          class="no-shadow"
-        >
-          <!-- Subject Column -->
-          <template v-slot:body-cell-subject="props">
-            <q-td :props="props" class="text-weight-bold text-slate-800">
-              {{ props.row.subject }}
-            </q-td>
-          </template>
-
-          <!-- Teacher Column -->
-          <template v-slot:body-cell-teacher="props">
-            <q-td :props="props" class="text-slate-600">
-              {{ props.row.teacher || 'Docente' }}
-            </q-td>
-          </template>
-
-          <!-- Period Grades Column -->
-          <template v-slot:body-cell-grades="props">
-            <q-td :props="props">
-              <span class="text-caption text-slate-500">
-                {{ props.row.grade_count || (props.row.grades ? props.row.grades.length : 0) }} voti registrati
-              </span>
-            </q-td>
-          </template>
-
-          <!-- Average Column -->
-          <template v-slot:body-cell-average="props">
-            <q-td :props="props" class="text-weight-bold" :class="getAverageClass(props.row.subject_average)">
-              {{ props.row.subject_average ? props.row.subject_average.toFixed(2) : '-' }}
-            </q-td>
-          </template>
-
-          <!-- Final Grade Column -->
-          <template v-slot:body-cell-final_grade="props">
-            <q-td :props="props">
-              <q-badge
-                size="md"
-                :color="props.row.passed || props.row.subject_average >= 6 ? 'positive' : 'negative'"
-                class="text-weight-bold text-subtitle2 q-px-sm"
-              >
-                {{ props.row.final_grade || Math.round(props.row.subject_average) || '-' }}
-              </q-badge>
-            </q-td>
-          </template>
-
-          <!-- Notes Column -->
-          <template v-slot:body-cell-notes="props">
-            <q-td :props="props" class="text-caption text-slate-500">
-              {{ props.row.notes || '-' }}
-            </q-td>
-          </template>
-        </q-table>
       </q-card>
 
-      <!-- Summary Section -->
+      <!-- Section: Carenze Formative & Argomenti da Recuperare per i Genitori -->
+      <q-card v-if="deficiencies.length > 0" flat bordered class="rounded-xl bg-amber-50/50 border-amber-200 shadow-soft q-pa-md">
+        <div class="row items-center q-mb-md">
+          <q-icon name="warning" color="warning" size="28px" class="q-mr-sm" />
+          <div class="text-h6 text-weight-bold text-amber-900">Carenze Formative & Argomenti da Recuperare (Figlio/a)</div>
+        </div>
+
+        <div class="space-y-3">
+          <div v-for="def in deficiencies" :key="def.id" class="bg-white p-3 rounded-lg border border-amber-200 shadow-sm">
+            <div class="row items-center justify-between">
+              <div class="text-subtitle1 text-weight-bold text-slate-800">{{ def.subject_name || 'Materia' }}</div>
+              <q-badge :color="def.status === 'recuperato' ? 'positive' : 'warning'" class="q-px-sm q-py-xs text-weight-bold">
+                {{ def.status === 'recuperato' ? 'RECUPERATO' : 'DA RECUPERARE' }}
+              </q-badge>
+            </div>
+            <div class="text-body2 text-slate-700 q-mt-xs">
+              <strong>Argomenti della carenza:</strong> {{ def.topics }}
+            </div>
+            <div class="row items-center justify-between text-caption text-slate-500 q-mt-xs">
+              <span>Modalità: {{ def.recovery_mode }}</span>
+              <span v-if="def.recovery_grade">Voto prova recupero: <strong>{{ def.recovery_grade }}</strong></span>
+            </div>
+          </div>
+        </div>
+      </q-card>
+
+      <!-- Final Evaluation Summary -->
       <div class="row q-col-gutter-md">
-        <div class="col-12 col-sm-6">
+        <div class="col-12 col-md-6">
           <q-card flat bordered class="rounded-xl bg-white shadow-soft h-full">
             <q-card-section>
-              <div class="text-subtitle1 text-weight-bold text-slate-800 q-mb-xs">Riepilogo Presenze</div>
-              <div class="text-caption text-slate-500 q-mb-md">Assenze cumulate nel quadrimestre</div>
-              <div class="text-h4 text-weight-bold text-slate-800">
-                {{ reportData?.total_absence_days || 0 }} Giorni Assenza
+              <div class="text-subtitle1 text-weight-bold text-slate-800 q-mb-sm">Esito e Giudizio Finale</div>
+              
+              <div class="row items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-200 q-mb-sm">
+                <span class="text-weight-bold text-slate-700">Voto di Comportamento:</span>
+                <q-chip color="primary" text-color="white" class="text-weight-bold">
+                  {{ reportData?.behavior_grade ?? '—' }} / 10
+                </q-chip>
+              </div>
+
+              <div class="row items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-200">
+                <span class="text-weight-bold text-slate-700">Esito Periodo:</span>
+                <q-badge
+                  :color="(reportData?.promoted === 'SÌ' || reportData?.promoted === true) ? 'positive' : 'warning'"
+                  class="text-weight-bold q-px-md q-py-xs"
+                >
+                  {{ (reportData?.promoted === 'SÌ' || reportData?.promoted === true) ? 'PROMOSSO / REGOLARE' : 'CON GIUDIZIO SOSPESO' }}
+                </q-badge>
               </div>
             </q-card-section>
           </q-card>
         </div>
 
-        <div class="col-12 col-sm-6">
-          <q-card flat bordered class="rounded-xl bg-white shadow-soft h-full">
-            <q-card-section>
-              <div class="text-subtitle1 text-weight-bold text-slate-800 q-mb-xs">Esito & Comportamento</div>
-              <div class="text-caption text-slate-500 q-mb-md">Valutazione finale condotta</div>
-              <div class="row items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-200">
-                <span class="text-weight-bold text-slate-700">Comportamento:</span>
-                <q-chip color="primary" text-color="white" class="text-weight-bold">
-                  {{ reportData?.behavior_grade || 8 }} / 10
-                </q-chip>
-              </div>
-            </q-card-section>
+        <div class="col-12 col-md-6">
+          <q-card flat bordered class="rounded-xl bg-white shadow-soft h-full flex flex-center text-center p-4">
+            <div v-if="isSigned">
+              <q-icon name="verified" color="positive" size="40px" />
+              <div class="text-subtitle1 text-weight-bold text-positive q-mt-xs">Presa Visione Registrata</div>
+              <div class="text-caption text-slate-500">Pagella firmata digitalmente dal genitore.</div>
+            </div>
+            <div v-else>
+              <q-icon name="pending" color="warning" size="40px" />
+              <div class="text-subtitle1 text-weight-bold text-amber-8 q-mt-xs">Firma In Attesa</div>
+              <div class="text-caption text-slate-500">In attesa di presa visione da parte del genitore.</div>
+            </div>
           </q-card>
         </div>
       </div>
@@ -233,19 +212,20 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
+import { scrutinyService } from 'src/services/scrutinyService'
 import api from 'src/services/api'
 
 const $q = useQuasar()
 
-const selectedStudentId = ref(null)
 const selectedSemester = ref(1)
+const selectedStudentId = ref(null)
 const children = ref([])
 const reportData = ref(null)
+const deficiencies = ref([])
 const loading = ref(false)
-
-const requiresSignature = ref(true)
-const isSigned = ref(false)
 const signing = ref(false)
+const isSigned = ref(false)
+const requiresSignature = ref(true)
 
 const childOptions = computed(() => {
   return children.value.map(c => ({
@@ -286,10 +266,21 @@ async function loadReport() {
   try {
     const res = await api.get(`/grades/child-grades/${selectedStudentId.value}/semester/${selectedSemester.value}`)
     reportData.value = res.data
-  } catch (e) {
+    await loadDeficiencies()
+  } catch {
     reportData.value = null
   } finally {
     loading.value = false
+  }
+}
+
+async function loadDeficiencies() {
+  if (!selectedStudentId.value) return
+  try {
+    const res = await scrutinyService.getStudentDeficiencies(selectedStudentId.value)
+    deficiencies.value = res.data || []
+  } catch {
+    deficiencies.value = []
   }
 }
 
