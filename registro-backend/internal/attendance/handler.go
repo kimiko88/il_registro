@@ -153,10 +153,21 @@ func (h *Handler) GetChildSummary(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-// GetStudentSummaryForTeacher allows a teacher to fetch the attendance summary of
-// any student (no parent-guardian check required).
+// GetStudentSummaryForTeacher allows a teacher or staff member to fetch the attendance summary of
+// a student in their school.
 func (h *Handler) GetStudentSummaryForTeacher(c *gin.Context) {
+	actorID := c.GetString("user_id")
+	actorRole := c.GetString("role")
 	schoolID := c.GetString("school_id")
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
 	studentID := c.Param("studentID")
 	if studentID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "studentID mancante"})
@@ -485,6 +496,7 @@ func (h *Handler) ExportAttendance(c *gin.Context) {
 }
 
 // GetMonthlyBreakdown returns per-month attendance statistics for a student (teacher/admin view).
+// GetMonthlyBreakdown returns per-month attendance statistics for a student.
 func (h *Handler) GetMonthlyBreakdown(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
@@ -497,6 +509,25 @@ func (h *Handler) GetMonthlyBreakdown(c *gin.Context) {
 
 	if role != "teacher" && role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && role != "student" && role != "parent" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
+	if role == "student" && userID != studentID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: student can only access own monthly breakdown"})
+		return
+	}
+
+	if role == "parent" {
+		res, err := h.service.GetChildMonthlyBreakdown(c.Request.Context(), userID, studentID, schoolYear)
+		if err != nil {
+			if strings.Contains(err.Error(), "guardian") || strings.Contains(err.Error(), "access denied") {
+				c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+				return
+			}
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, res)
 		return
 	}
 
@@ -520,7 +551,7 @@ func (h *Handler) GetChildMonthlyBreakdown(c *gin.Context) {
 
 	res, err := h.service.GetChildMonthlyBreakdown(c.Request.Context(), parentID, studentID, schoolYear)
 	if err != nil {
-		if err.Error() == "access denied: not a guardian of this student" {
+		if strings.Contains(err.Error(), "guardian") || strings.Contains(err.Error(), "access denied") {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
@@ -600,13 +631,13 @@ func (h *Handler) GetChildAttendanceStats(c *gin.Context) {
 }
 
 func (h *Handler) DeleteClassAttendanceHour(c *gin.Context) {
-	userID := c.GetString("user_id")
-	role := c.GetString("role")
-	if userID == "" {
+	actorID := c.GetString("user_id")
+	actorRole := c.GetString("role")
+	if actorID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "teacher" && role != "admin" && role != "superadmin" {
+	if actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -619,22 +650,16 @@ func (h *Handler) DeleteClassAttendanceHour(c *gin.Context) {
 		return
 	}
 
-	hour, err := time.ParseDuration(hourStr)
 	var hourInt int
-	if err == nil {
+	if hour, err := time.ParseDuration(hourStr); err == nil {
 		hourInt = int(hour.Hours())
 	} else {
-		// Atoi
-		var convErr error
-		_, convErr = fmt.Sscanf(hourStr, "%d", &hourInt)
-		if convErr != nil {
+		if _, convErr := fmt.Sscanf(hourStr, "%d", &hourInt); convErr != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid hour parameter"})
 			return
 		}
 	}
 
-	actorID := c.GetString("user_id")
-	actorRole := c.GetString("role")
 	schoolID := c.GetString("school_id")
 
 	if err := h.service.DeleteClassAttendanceHour(c.Request.Context(), actorID, actorRole, schoolID, classID, dateStr, hourInt); err != nil {

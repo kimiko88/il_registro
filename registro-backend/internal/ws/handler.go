@@ -153,6 +153,10 @@ func (h *Handler) Listen(c *gin.Context) {
 			schoolID = s
 		}
 	}
+	if role != "superadmin" && schoolID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "school_id required for websocket connection"})
+		return
+	}
 
 	var responseHeader http.Header
 	if secProto := c.Writer.Header().Get("Sec-WebSocket-Protocol"); secProto != "" {

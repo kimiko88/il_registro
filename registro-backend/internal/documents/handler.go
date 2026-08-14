@@ -80,9 +80,10 @@ func (h *Handler) CreateDocument(c *gin.Context) {
 // POST /documents/upload
 // Form fields: file (required), document_id (optional, to associate with an existing document)
 func (h *Handler) UploadFile(c *gin.Context) {
+	userID := c.GetString("user_id")
 	role := c.GetString("role")
 	schoolID := c.GetString("school_id")
-	if role == "" || schoolID == "" {
+	if userID == "" || role == "" || schoolID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
@@ -131,10 +132,11 @@ func (h *Handler) UploadFile(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message":    "File caricato con successo",
-		"filename":   header.Filename,
-		"size_bytes": header.Size,
-		"url":        publicURL,
+		"message":     "File caricato con successo",
+		"filename":    header.Filename,
+		"size_bytes":  header.Size,
+		"url":         publicURL,
+		"uploaded_by": userID,
 	})
 }
 
@@ -230,12 +232,17 @@ func (h *Handler) SignDocument(c *gin.Context) {
 }
 
 func (h *Handler) GetInbox(c *gin.Context) {
+	userID := c.GetString("user_id")
 	role := c.GetString("role")
+	schoolID := c.GetString("school_id")
+	if userID == "" || schoolID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	if role != "secretary" && role != "teacher" && role != "admin" && role != "superadmin" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: insufficient permissions"})
 		return
 	}
-	schoolID := c.GetString("school_id")
 	res, err := h.service.GetInbox(c.Request.Context(), schoolID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -344,7 +351,15 @@ func (h *Handler) DeleteTemplate(c *gin.Context) {
 
 func (h *Handler) ExportDocument(c *gin.Context) {
 	id := c.Param("id")
-	format := c.Query("format") // pdf, docx
+	format := strings.ToLower(c.Query("format"))
+	if format == "" {
+		format = "pdf"
+	}
+	allowedFormats := map[string]bool{"pdf": true, "docx": true, "txt": true, "csv": true, "xlsx": true}
+	if !allowedFormats[format] {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "formato di esportazione non valido"})
+		return
+	}
 	role := c.GetString("role")
 	schoolID := c.GetString("school_id")
 	if role == "" || schoolID == "" {
@@ -366,8 +381,13 @@ func (h *Handler) ListDocuments(c *gin.Context) {
 		val := DocType(docType)
 		dt = &val
 	}
+	userID := c.GetString("user_id")
 	role := c.GetString("role")
 	schoolID := c.GetString("school_id")
+	if userID == "" || role == "" || schoolID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	res, err := h.service.ListDocuments(c.Request.Context(), role, schoolID, dt)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

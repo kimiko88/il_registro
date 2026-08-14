@@ -6,6 +6,7 @@
 **Demo accounts & passwords**: [example_accounts.md](./example_accounts.md)
 _**Nota bene**_: alcune password, come quella per l'account superadmin, potrebbero essere state modificate per motivi di sicurezza.
 
+[![Discord Members](https://img.shields.io/discord/426912293134270465.svg?label=Discord&logo=discord)](https://discord.gg/Qh5XjQxwb)
 [![Backend CI](https://github.com/kimiko88/il_registro/actions/workflows/ci.yml/badge.svg)](https://github.com/kimiko88/il_registro/actions/workflows/ci.yml)
 [![Go Version](https://img.shields.io/badge/go-1.25%2B-blue)](https://go.dev/)
 [![Vue Version](https://img.shields.io/badge/vue-3.x-brightgreen)](https://vuejs.org/)

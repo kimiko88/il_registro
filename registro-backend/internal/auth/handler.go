@@ -72,6 +72,20 @@ func (h *Handler) Register(c *gin.Context) {
 	})
 }
 
+func setRefreshTokenCookie(c *gin.Context, token string, maxAge int) {
+	isSecure := c.Request.TLS != nil || c.GetHeader("X-Forwarded-Proto") == "https"
+	http.SetCookie(c.Writer, &http.Cookie{
+		Name:     "refreshToken",
+		Value:    token,
+		MaxAge:   maxAge,
+		Path:     "/",
+		Domain:   "",
+		Secure:   isSecure,
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+	})
+}
+
 // Login handles user login
 // POST /auth/login
 func (h *Handler) Login(c *gin.Context) {
@@ -100,7 +114,7 @@ func (h *Handler) Login(c *gin.Context) {
 	}
 
 	if authResp != nil && authResp.RefreshToken != "" {
-		c.SetCookie("refreshToken", authResp.RefreshToken, 604800, "/", "", false, true)
+		setRefreshTokenCookie(c, authResp.RefreshToken, 604800)
 	}
 
 	c.JSON(http.StatusOK, authResp)
@@ -133,7 +147,7 @@ func (h *Handler) RefreshToken(c *gin.Context) {
 	}
 
 	if tokens != nil && tokens.RefreshToken != "" {
-		c.SetCookie("refreshToken", tokens.RefreshToken, 604800, "/", "", false, true)
+		setRefreshTokenCookie(c, tokens.RefreshToken, 604800)
 	}
 
 	c.JSON(http.StatusOK, tokens)
@@ -152,7 +166,7 @@ func (h *Handler) Logout(c *gin.Context) {
 		}
 	}
 
-	c.SetCookie("refreshToken", "", -1, "/", "", false, true)
+	setRefreshTokenCookie(c, "", -1)
 
 	// Extract the authenticated user's ID from the JWT (set by Authenticate middleware).
 	// This ensures a user can only revoke their own sessions.
@@ -167,6 +181,8 @@ func (h *Handler) Logout(c *gin.Context) {
 			c.JSON(http.StatusForbidden, ErrorResponse{Error: "token does not belong to the authenticated user"})
 			return
 		}
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+		return
 	}
 
 	c.JSON(http.StatusOK, MessageResponse{Message: "logged out successfully"})

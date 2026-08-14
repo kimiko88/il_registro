@@ -74,19 +74,8 @@ func (i *IPRateLimiter) Close() {
 	}
 }
 
-// GetLimiter returns (or creates) the rate limiter for the given IP, updating its lastSeen.
+// GetLimiter returns (or creates) the rate limiter for the given IP, updating its lastSeen atomically under write lock.
 func (i *IPRateLimiter) GetLimiter(ip string) *rate.Limiter {
-	i.mu.RLock()
-	entry, exists := i.ips[ip]
-	i.mu.RUnlock()
-
-	if exists {
-		i.mu.Lock()
-		entry.lastSeen = time.Now()
-		i.mu.Unlock()
-		return entry.limiter
-	}
-
 	i.mu.Lock()
 	defer i.mu.Unlock()
 
@@ -105,12 +94,6 @@ func (i *IPRateLimiter) GetLimiter(ip string) *rate.Limiter {
 
 func resolveClientIP(c *gin.Context) string {
 	ip := c.ClientIP()
-	if ip == "" || ip == "127.0.0.1" || ip == "::1" {
-		remote := c.RemoteIP()
-		if remote != "" {
-			ip = remote
-		}
-	}
 	if ip == "" {
 		ip = "unknown"
 	}

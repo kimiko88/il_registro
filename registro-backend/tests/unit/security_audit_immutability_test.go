@@ -72,9 +72,7 @@ func TestSecurity_AuditLogChainImmutability(t *testing.T) {
 
 		// Tampered block where action was modified after creation
 		tamperedBlock := auditlog.CertifiedChainBlock{
-			ID:           "b1",
 			Action:       "DELETE_ALL_DATA", // Tampered action string
-			ActorName:    "Mario Rossi",
 			ResourceType: "user",
 			ResourceID:   "u-001",
 			PrevHash:     prevHash0,

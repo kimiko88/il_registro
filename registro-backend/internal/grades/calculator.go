@@ -11,6 +11,25 @@ func NewCalculator() *Calculator {
 	return &Calculator{}
 }
 
+// isVotableGrade determines if a grade entry represents a valid evaluable score.
+// Numeric grade 0.0 (GradeTypeNumeric) is a valid grade in Italian schools.
+// Unset/unrated grades (GradeType == "" and GradeValue == 0.0) or absences (< 0) are excluded.
+func isVotableGrade(g Grade, val float64) bool {
+	if val < 0 {
+		return false
+	}
+	if g.GradeType == GradeTypeNumeric && val >= 0 {
+		return true
+	}
+	if g.GradeType == GradeTypeJudgment && val > 0 {
+		return true
+	}
+	if val > 0 {
+		return true
+	}
+	return false
+}
+
 // CalculateAverage computes the arithmetic mean
 func (c *Calculator) CalculateAverage(grades []Grade) float64 {
 	if len(grades) == 0 {
@@ -25,7 +44,7 @@ func (c *Calculator) CalculateAverage(grades []Grade) float64 {
 		if val == 0 && g.GradeType == GradeTypeJudgment {
 			val = c.ConvertJudgmentToValue(g.Description)
 		}
-		if val > 0 {
+		if isVotableGrade(g, val) {
 			total += val
 			count++
 		}
@@ -76,7 +95,7 @@ func (c *Calculator) CalculateWeightedAverage(grades []Grade) float64 {
 		if val == 0 && g.GradeType == GradeTypeJudgment {
 			val = c.ConvertJudgmentToValue(g.Description)
 		}
-		if val > 0 && g.Weight > 0 {
+		if isVotableGrade(g, val) && g.Weight > 0 {
 			totalWeighted += val * g.Weight
 			totalWeights += g.Weight
 		}
@@ -201,8 +220,8 @@ func (c *Calculator) DetectOutliers(grades []Grade) []string {
 		if val == 0 && g.GradeType == GradeTypeJudgment {
 			val = c.ConvertJudgmentToValue(g.Description)
 		}
-		if val <= 0 {
-			continue // Skip unrated / invalid non-positive grades
+		if !isVotableGrade(g, val) {
+			continue
 		}
 
 		if val < low || val > high {
@@ -212,7 +231,7 @@ func (c *Calculator) DetectOutliers(grades []Grade) []string {
 	return outliers
 }
 
-// Helper to extract non-zero values
+// Helper to extract non-negative values
 func (c *Calculator) extractValues(grades []Grade) []float64 {
 	var vals []float64
 	for _, g := range grades {
@@ -220,7 +239,7 @@ func (c *Calculator) extractValues(grades []Grade) []float64 {
 		if val == 0 && g.GradeType == GradeTypeJudgment {
 			val = c.ConvertJudgmentToValue(g.Description)
 		}
-		if val > 0 {
+		if isVotableGrade(g, val) {
 			vals = append(vals, val)
 		}
 	}

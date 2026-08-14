@@ -456,8 +456,13 @@ func (h *Handler) GetStudentAverage(c *gin.Context) {
 
 func (h *Handler) GetClassAverage(c *gin.Context) {
 	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "teacher" && role != "admin" && role != "superadmin" && role != "principal" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 
@@ -756,6 +761,19 @@ func (h *Handler) GetStudentProfile(c *gin.Context) {
 		return
 	}
 
+	if actorRole == "parent" {
+		// Verify guardian relationship before exposing analytical student profile
+		_, err := h.service.GetChildGrades(c.Request.Context(), userID, studentID, GradeFilter{})
+		if err != nil {
+			if errors.Is(err, ErrNotGuardian) || strings.Contains(err.Error(), "guardian") {
+				c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+				return
+			}
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+	}
+
 	sem := 0
 	semStr := c.Query("semester")
 	if semStr != "" {
@@ -825,8 +843,13 @@ func (h *Handler) CreateTestWithGrades(c *gin.Context) {
 
 func (h *Handler) GetClassTestsList(c *gin.Context) {
 	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "teacher" && role != "admin" && role != "superadmin" && role != "principal" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 
@@ -851,8 +874,13 @@ func (h *Handler) GetClassTestsList(c *gin.Context) {
 
 func (h *Handler) GetUpcomingClassTests(c *gin.Context) {
 	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "teacher" && role != "admin" && role != "superadmin" && role != "principal" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 

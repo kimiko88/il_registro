@@ -19,11 +19,21 @@ func generateNonce() (string, error) {
 	return base64.StdEncoding.EncodeToString(b), nil
 }
 
+// sanitizeCSPOrigin strips any control characters, newlines, semicolons, or quotes
+// to prevent header/CSP injection via environment variables.
+func sanitizeCSPOrigin(raw string) string {
+	cleaned := strings.TrimSpace(raw)
+	cleaned = strings.ReplaceAll(cleaned, "\n", "")
+	cleaned = strings.ReplaceAll(cleaned, "\r", "")
+	cleaned = strings.ReplaceAll(cleaned, ";", "")
+	cleaned = strings.ReplaceAll(cleaned, "'", "")
+	cleaned = strings.ReplaceAll(cleaned, "\"", "")
+	return cleaned
+}
+
 // backendURL returns the backend origin used in connect-src.
-// It is read from the BACKEND_URL environment variable so that the production
-// URL is never hardcoded in source code. Falls back to localhost for local dev.
 func backendURL() string {
-	if url := strings.TrimSpace(os.Getenv("BACKEND_URL")); url != "" {
+	if url := sanitizeCSPOrigin(os.Getenv("BACKEND_URL")); url != "" {
 		return url
 	}
 	return "http://localhost:8080"
@@ -31,7 +41,7 @@ func backendURL() string {
 
 // backendWSURL returns the WebSocket origin derived from BACKEND_WS_URL or BACKEND_URL.
 func backendWSURL() string {
-	if ws := strings.TrimSpace(os.Getenv("BACKEND_WS_URL")); ws != "" {
+	if ws := sanitizeCSPOrigin(os.Getenv("BACKEND_WS_URL")); ws != "" {
 		return ws
 	}
 	bURL := backendURL()
@@ -76,11 +86,11 @@ func SecurityHeadersMiddleware() gin.HandlerFunc {
 		c.Writer.Header().Set("Permissions-Policy",
 			"camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=()")
 
-		// Content Security Policy — nonce-based without 'unsafe-inline' for scripts
+		// Content Security Policy — strict nonce-based CSP without 'unsafe-inline'
 		csp := fmt.Sprintf(
 			"default-src 'self'; "+
 				"script-src 'self' 'nonce-%s'; "+
-				"style-src 'self' 'nonce-%s' 'unsafe-inline' https://fonts.googleapis.com; "+
+				"style-src 'self' 'nonce-%s' https://fonts.googleapis.com; "+
 				"font-src 'self' https://fonts.gstatic.com; "+
 				"img-src 'self' data: blob: https://cdn.quasar.dev; "+
 				"connect-src 'self' %s %s; "+
