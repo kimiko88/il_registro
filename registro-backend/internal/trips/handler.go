@@ -50,13 +50,19 @@ func (h *Handler) CreateTrip(c *gin.Context) {
 
 func (h *Handler) ListTrips(c *gin.Context) {
 	schoolID := c.GetString("school_id")
-	studentID := c.GetString("user_id")
-	if schoolID == "" || studentID == "" {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	if schoolID == "" || userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 
-	trips, err := h.service.ListTrips(c.Request.Context(), schoolID, studentID)
+	targetStudentID := userID
+	if role == "teacher" || role == "admin" || role == "superadmin" || role == "secretary" || role == "principal" || role == "vice_principal" {
+		targetStudentID = "" // Staff sees all school trips
+	}
+
+	trips, err := h.service.ListTrips(c.Request.Context(), schoolID, targetStudentID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -71,6 +77,10 @@ func (h *Handler) SubmitConsent(c *gin.Context) {
 
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "parent" && role != "student" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: trip consent submission is restricted to parents and students"})
 		return
 	}
 
@@ -90,16 +100,26 @@ func (h *Handler) SubmitConsent(c *gin.Context) {
 func (h *Handler) ListConsents(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
+	schoolID := c.GetString("school_id")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "teacher" && role != "admin" && role != "superadmin" && role != "secretary" {
+	if role != "teacher" && role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && role != "vice_principal" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 
 	tripID := c.Param("id")
+	if schoolID != "" {
+		// Verify trip belongs to caller's school
+		trip, err := h.service.GetTripByID(c.Request.Context(), tripID)
+		if err == nil && trip != nil && role != "superadmin" && trip.SchoolID != schoolID {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: trip belongs to another school"})
+			return
+		}
+	}
+
 	consents, err := h.service.ListConsents(c.Request.Context(), tripID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

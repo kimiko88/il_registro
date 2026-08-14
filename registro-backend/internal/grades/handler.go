@@ -140,6 +140,10 @@ func (h *Handler) GetStudentGradesPaged(c *gin.Context) {
 
 	actorID := c.GetString("user_id")
 	actorRole := c.GetString("role")
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 
 	filter := h.parseFilter(c)
 
@@ -282,9 +286,14 @@ func (h *Handler) BulkImport(c *gin.Context) {
 
 func (h *Handler) Export(c *gin.Context) {
 	teacherID := c.GetString("user_id")
+	role := c.GetString("role")
 	schoolID := c.GetString("school_id")
 	if teacherID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "teacher" && role != "admin" && role != "superadmin" && role != "principal" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: export reserved to staff"})
 		return
 	}
 

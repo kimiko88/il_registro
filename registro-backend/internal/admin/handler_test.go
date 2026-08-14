@@ -94,6 +94,7 @@ func TestHandler_GetDashboardStats(t *testing.T) {
 		{
 			name: "successful dashboard stats for superadmin",
 			setupContext: func(c *gin.Context) {
+				c.Set("user_id", "admin-1")
 				c.Set("role", "superadmin")
 			},
 			setupMock: func(m *MockRepository) {
@@ -244,8 +245,12 @@ func TestHandler_CreateSchool(t *testing.T) {
 			expectedStatus: http.StatusCreated,
 		},
 		{
-			name:           "invalid request body",
-			requestBody:    "invalid json",
+			name:        "invalid request body",
+			requestBody: "invalid json",
+			setupContext: func(c *gin.Context) {
+				c.Set("user_id", "1")
+				c.Set("role", "superadmin")
+			},
 			expectedStatus: http.StatusBadRequest,
 			setupMock:      func(m *MockRepository) {},
 		},

@@ -96,7 +96,7 @@ func TestPDPService_CreatePlan(t *testing.T) {
 
 		mockRepo.On("Create", ctx, mock.AnythingOfType("*pdp.PdpPlan")).Return(expectedPlan, nil).Once()
 
-		plan, err := svc.CreatePlan(ctx, "teacher-1", "teacher", &req)
+		plan, err := svc.CreatePlan(ctx, "teacher-1", "teacher", "school-1", &req)
 		assert.NoError(t, err)
 		assert.NotNil(t, plan)
 		assert.Equal(t, "student-1", plan.StudentID)
@@ -110,7 +110,7 @@ func TestPDPService_CreatePlan(t *testing.T) {
 			StudentID: "student-1",
 			ClassID:   "class-1",
 		}
-		plan, err := svc.CreatePlan(ctx, "student-1", "student", &req)
+		plan, err := svc.CreatePlan(ctx, "student-1", "student", "school-1", &req)
 		assert.Error(t, err)
 		assert.Nil(t, plan)
 		assert.Equal(t, ErrUnauthorized, err)

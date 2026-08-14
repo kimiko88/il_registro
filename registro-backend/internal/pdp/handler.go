@@ -57,6 +57,11 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 // ── Handlers ──────────────────────────────────────────────────────────────────
 
 func (h *Handler) GetByStudent(c *gin.Context) {
+	actorID := c.GetString(ContextKeyUserID)
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	actorRole := getRole(c)
 	studentID := c.Param("studentId")
 	year := c.DefaultQuery("year", "")
@@ -69,6 +74,11 @@ func (h *Handler) GetByStudent(c *gin.Context) {
 }
 
 func (h *Handler) GetByClass(c *gin.Context) {
+	actorID := c.GetString(ContextKeyUserID)
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	actorRole := getRole(c)
 	classID := c.Param("classId")
 	year := c.DefaultQuery("year", "")
@@ -81,6 +91,11 @@ func (h *Handler) GetByClass(c *gin.Context) {
 }
 
 func (h *Handler) GetByID(c *gin.Context) {
+	actorID := c.GetString(ContextKeyUserID)
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	actorRole := getRole(c)
 	plan, err := h.svc.GetByID(c.Request.Context(), actorRole, c.Param("id"))
 	if handleErr(c, err) {
@@ -91,6 +106,10 @@ func (h *Handler) GetByID(c *gin.Context) {
 
 func (h *Handler) Create(c *gin.Context) {
 	actorID := c.GetString(ContextKeyUserID)
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	actorRole := getRole(c)
 	schoolID := c.GetString(ContextKeySchoolID)
 
@@ -100,15 +119,19 @@ func (h *Handler) Create(c *gin.Context) {
 		return
 	}
 
-	plan, err := h.svc.CreatePlan(c.Request.Context(), actorID, actorRole, &req)
+	plan, err := h.svc.CreatePlan(c.Request.Context(), actorID, actorRole, schoolID, &req)
 	if handleErr(c, err) {
 		return
 	}
-	plan.SchoolID = schoolID
 	c.JSON(http.StatusCreated, plan)
 }
 
 func (h *Handler) Update(c *gin.Context) {
+	actorID := c.GetString(ContextKeyUserID)
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	actorRole := getRole(c)
 	var req UpdatePdpRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -123,6 +146,11 @@ func (h *Handler) Update(c *gin.Context) {
 }
 
 func (h *Handler) Delete(c *gin.Context) {
+	actorID := c.GetString(ContextKeyUserID)
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	actorRole := getRole(c)
 	if err := h.svc.DeletePlan(c.Request.Context(), actorRole, c.Param("id")); handleErr(c, err) {
 		return
@@ -131,6 +159,11 @@ func (h *Handler) Delete(c *gin.Context) {
 }
 
 func (h *Handler) Share(c *gin.Context) {
+	actorID := c.GetString(ContextKeyUserID)
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	actorRole := getRole(c)
 	var req ShareWithFamilyRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -146,6 +179,10 @@ func (h *Handler) Share(c *gin.Context) {
 
 func (h *Handler) ApproveByFamily(c *gin.Context) {
 	actorID := c.GetString(ContextKeyUserID)
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	actorRole := getRole(c)
 	if err := h.svc.ApproveByFamily(c.Request.Context(), actorRole, actorID, c.Param("id")); handleErr(c, err) {
 		return
@@ -154,10 +191,20 @@ func (h *Handler) ApproveByFamily(c *gin.Context) {
 }
 
 func (h *Handler) ListCompensative(c *gin.Context) {
+	actorID := c.GetString(ContextKeyUserID)
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	c.JSON(http.StatusOK, gin.H{"measures": StandardCompensativeMeasures})
 }
 
 func (h *Handler) ListDispensative(c *gin.Context) {
+	actorID := c.GetString(ContextKeyUserID)
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	c.JSON(http.StatusOK, gin.H{"measures": StandardDispensativeMeasures})
 }
 

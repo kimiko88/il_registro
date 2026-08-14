@@ -167,8 +167,13 @@ func (h *Handler) Sign(c *gin.Context) {
 // GetSignatures returns the list of users who signed a message.
 func (h *Handler) GetSignatures(c *gin.Context) {
 	uid := c.GetString("user_id")
+	role := c.GetString("role")
 	if uid == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "teacher" && role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && role != "vice_principal" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 	id := c.Param("id")
@@ -378,8 +383,7 @@ func isValidMIME(contentType string) bool {
 		"application/vnd.openxmlformats-officedocument.wordprocessingml.document": true,
 		"application/vnd.ms-excel": true,
 		"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": true,
-		"text/plain":               true,
-		"application/octet-stream": true,
+		"text/plain": true,
 	}
 	return allowed[contentType]
 }

@@ -41,6 +41,14 @@ func CORSMiddleware() gin.HandlerFunc {
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE, PATCH")
 
 		if c.Request.Method == "OPTIONS" {
+			reqMethod := c.Request.Header.Get("Access-Control-Request-Method")
+			if reqMethod != "" {
+				allowedMethods := map[string]bool{"GET": true, "POST": true, "PUT": true, "DELETE": true, "PATCH": true, "OPTIONS": true}
+				if !allowedMethods[strings.ToUpper(reqMethod)] {
+					c.AbortWithStatus(405)
+					return
+				}
+			}
 			c.AbortWithStatus(204)
 			return
 		}

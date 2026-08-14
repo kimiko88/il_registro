@@ -128,14 +128,8 @@ func (h *Handler) RegisterDevice(c *gin.Context) {
 
 	platform := strings.ToLower(req.Platform)
 	if platform != "ios" && platform != "android" && platform != "web" {
-		ua := strings.ToLower(c.GetHeader("User-Agent"))
-		if strings.Contains(ua, "iphone") || strings.Contains(ua, "ipad") {
-			platform = "ios"
-		} else if strings.Contains(ua, "android") {
-			platform = "android"
-		} else {
-			platform = "web"
-		}
+		c.JSON(http.StatusBadRequest, gin.H{"error": "platform must be 'ios', 'android', or 'web'"})
+		return
 	}
 
 	tokenReq := RegisterTokenRequest{
@@ -157,10 +151,7 @@ func (h *Handler) UnregisterToken(c *gin.Context) {
 		return
 	}
 
-	deviceToken := c.Query("device_token")
-	if deviceToken == "" {
-		deviceToken = c.GetHeader("X-Device-Token")
-	}
+	deviceToken := c.GetHeader("X-Device-Token")
 	if deviceToken == "" {
 		var req struct {
 			DeviceToken string `json:"device_token"`

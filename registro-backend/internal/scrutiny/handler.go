@@ -42,7 +42,7 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 }
 
 func parseSemester(semStr string) int {
-	if s, err := strconv.Atoi(semStr); err == nil && s > 0 {
+	if s, err := strconv.Atoi(semStr); err == nil && (s == 1 || s == 2) {
 		return s
 	}
 	semLower := strings.ToLower(semStr)
@@ -58,6 +58,7 @@ func (h *Handler) ExportPagellaPDF(c *gin.Context) {
 	semester := parseSemester(c.DefaultQuery("semester", "1"))
 	actorID := c.GetString("user_id")
 	actorRole := c.GetString("role")
+
 	if actorID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
@@ -112,6 +113,11 @@ func (h *Handler) Save(c *gin.Context) {
 
 	coordinatorID := c.GetString("user_id")
 	actorRole := c.GetString("role")
+	if coordinatorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
 	if err := h.service.SaveScrutiny(c.Request.Context(), coordinatorID, actorRole, req); err != nil {
 		if err == ErrUnauthorizedScrutiny || strings.HasPrefix(err.Error(), "unauthorized") {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
@@ -132,6 +138,10 @@ func (h *Handler) Start(c *gin.Context) {
 	semester := parseSemester(c.DefaultQuery("semester", "1"))
 	actorID := c.GetString("user_id")
 	actorRole := c.GetString("role")
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 
 	if err := h.service.StartScrutiny(c.Request.Context(), actorID, actorRole, classID, semester); err != nil {
 		if err == ErrUnauthorizedScrutiny || strings.HasPrefix(err.Error(), "unauthorized") {
@@ -153,6 +163,10 @@ func (h *Handler) Validate(c *gin.Context) {
 	semester := parseSemester(c.DefaultQuery("semester", "1"))
 	actorID := c.GetString("user_id")
 	actorRole := c.GetString("role")
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 
 	if err := h.service.ValidateScrutiny(c.Request.Context(), actorID, actorRole, classID, semester); err != nil {
 		if err == ErrUnauthorizedScrutiny || strings.HasPrefix(err.Error(), "unauthorized") {
@@ -174,6 +188,10 @@ func (h *Handler) Close(c *gin.Context) {
 	semester := parseSemester(c.DefaultQuery("semester", "1"))
 	actorID := c.GetString("user_id")
 	actorRole := c.GetString("role")
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 
 	if err := h.service.CloseScrutiny(c.Request.Context(), actorID, actorRole, classID, semester); err != nil {
 		if err == ErrUnauthorizedScrutiny || strings.HasPrefix(err.Error(), "unauthorized") {

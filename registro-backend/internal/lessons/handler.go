@@ -188,6 +188,10 @@ func (h *Handler) UpdateLesson(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
+	if role != "teacher" && role != "admin" && role != "superadmin" && role != "principal" && role != "vice_principal" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only teachers or staff can update lessons"})
+		return
+	}
 	id := c.Param("id")
 	var req UpdateLessonRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

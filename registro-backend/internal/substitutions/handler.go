@@ -67,6 +67,12 @@ func (h *Handler) ListBySchool(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
+	role := c.GetString("role")
+	isStaff := c.GetBool("is_staff")
+	if role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && role != "vice_principal" && role != "teacher" && !isStaff {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
 
 	schoolID := c.GetString("school_id")
 	date := c.Query("date")
@@ -117,7 +123,7 @@ func (h *Handler) AssignSubstitute(c *gin.Context) {
 	}
 	role := c.GetString("role")
 	isStaff := c.GetBool("is_staff")
-	if role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && !isStaff {
+	if role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && role != "vice_principal" && !isStaff {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -148,7 +154,7 @@ func (h *Handler) Confirm(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "teacher" && role != "admin" && role != "superadmin" {
+	if role != "teacher" && role != "admin" && role != "superadmin" && role != "principal" && role != "vice_principal" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -163,8 +169,13 @@ func (h *Handler) Confirm(c *gin.Context) {
 
 func (h *Handler) SignRegister(c *gin.Context) {
 	teacherID := c.GetString("user_id")
+	role := c.GetString("role")
 	if teacherID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "teacher" && role != "admin" && role != "superadmin" && role != "principal" && role != "vice_principal" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 
@@ -182,6 +193,18 @@ func (h *Handler) SignRegister(c *gin.Context) {
 }
 
 func (h *Handler) RecommendSubstitutes(c *gin.Context) {
+	uid := c.GetString("user_id")
+	role := c.GetString("role")
+	isStaff := c.GetBool("is_staff")
+	if uid == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "teacher" && role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && role != "vice_principal" && !isStaff {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
 	schoolID := c.GetString("school_id")
 	classID := c.Query("class_id")
 	subjectID := c.Query("subject_id")

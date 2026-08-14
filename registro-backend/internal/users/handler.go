@@ -155,6 +155,10 @@ func (h *Handler) List(c *gin.Context) {
 
 // 3. GET /api/v1/users/{id}
 func (h *Handler) Get(c *gin.Context) {
+	if getActorID(c) == "" || getActorRole(c) == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	user, err := h.service.GetUser(c.Request.Context(), getActorRole(c), getSchoolID(c), c.Param("id"))
 	if err != nil {
 		if err == ErrUnauthorized {
@@ -173,6 +177,10 @@ func (h *Handler) Get(c *gin.Context) {
 
 // 4. PATCH /api/v1/users/{id}
 func (h *Handler) Update(c *gin.Context) {
+	if getActorID(c) == "" || getActorRole(c) == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	var req UpdateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -200,6 +208,10 @@ func (h *Handler) Update(c *gin.Context) {
 
 // 5. DELETE /api/v1/users/{id}
 func (h *Handler) Delete(c *gin.Context) {
+	if getActorID(c) == "" || getActorRole(c) == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	if err := h.service.DeleteUser(c.Request.Context(), getActorRole(c), getSchoolID(c), c.Param("id")); err != nil {
 		if err == ErrUnauthorized {
 			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
@@ -217,6 +229,10 @@ func (h *Handler) Delete(c *gin.Context) {
 
 // POST /api/v1/users/bulk-delete
 func (h *Handler) BulkDelete(c *gin.Context) {
+	if getActorID(c) == "" || getActorRole(c) == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	var req BulkDeleteRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -236,6 +252,10 @@ func (h *Handler) BulkDelete(c *gin.Context) {
 
 // 6. POST /api/v1/users/{id}/restore
 func (h *Handler) Restore(c *gin.Context) {
+	if getActorID(c) == "" || getActorRole(c) == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	if err := h.service.RestoreUser(c.Request.Context(), getActorRole(c), c.Param("id")); err != nil {
 		if errors.Is(err, ErrUnauthorized) || err == ErrUnauthorized {
 			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
@@ -249,12 +269,20 @@ func (h *Handler) Restore(c *gin.Context) {
 
 // 7. POST /api/v1/users/bulk-import
 func (h *Handler) BulkImport(c *gin.Context) {
+	if getActorID(c) == "" || getActorRole(c) == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	file, header, err := c.Request.FormFile("file")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "file required"})
 		return
 	}
 	defer file.Close()
+	if header.Size > 10*1024*1024 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "file size exceeds 10MB limit"})
+		return
+	}
 	res, err := h.service.BulkImport(c.Request.Context(), getActorRole(c), getSchoolID(c), file, header.Filename)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -333,6 +361,16 @@ func getPasswordErrorMessage(code string) string {
 
 // 9. POST /api/v1/users/{id}/reset-password - Force reset (admin only)
 func (h *Handler) ForceResetPassword(c *gin.Context) {
+	actorID := getActorID(c)
+	role := getActorRole(c)
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "admin" && role != "superadmin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only admins can force reset passwords"})
+		return
+	}
 	var body struct {
 		NewPassword string `json:"new_password" binding:"required"`
 	}
@@ -340,7 +378,7 @@ func (h *Handler) ForceResetPassword(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	if err := h.service.ResetPassword(c.Request.Context(), getActorRole(c), getSchoolID(c), c.Param("id"), body.NewPassword); err != nil {
+	if err := h.service.ResetPassword(c.Request.Context(), role, getSchoolID(c), c.Param("id"), body.NewPassword); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -349,12 +387,22 @@ func (h *Handler) ForceResetPassword(c *gin.Context) {
 
 // 10. PATCH /api/v1/users/{id}/roles
 func (h *Handler) AssignRoles(c *gin.Context) {
+	actorID := getActorID(c)
+	role := getActorRole(c)
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "admin" && role != "superadmin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only admins can assign roles"})
+		return
+	}
 	var req AssignRolesRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	user, err := h.service.UpdateUser(c.Request.Context(), getActorRole(c), getSchoolID(c), c.Param("id"), UpdateUserRequest{
+	user, err := h.service.UpdateUser(c.Request.Context(), role, getSchoolID(c), c.Param("id"), UpdateUserRequest{
 		Role: &req.Role,
 	})
 	if err != nil {
@@ -394,7 +442,12 @@ func (h *Handler) GetAuditLog(c *gin.Context) {
 
 // 12. POST /api/v1/users/{id}/gdpr-export
 func (h *Handler) ExportGDPR(c *gin.Context) {
-	data, err := h.service.GDPRDataExport(c.Request.Context(), getActorID(c), getActorRole(c), c.Param("id"))
+	actorID := getActorID(c)
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	data, err := h.service.GDPRDataExport(c.Request.Context(), actorID, getActorRole(c), c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -404,7 +457,17 @@ func (h *Handler) ExportGDPR(c *gin.Context) {
 
 // 13. DELETE /api/v1/users/{id}/gdpr-delete
 func (h *Handler) DeleteGDPR(c *gin.Context) {
-	if err := h.service.GDPRDelete(c.Request.Context(), getActorRole(c), c.Param("id")); err != nil {
+	actorID := getActorID(c)
+	role := getActorRole(c)
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "admin" && role != "superadmin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only admins can perform GDPR deletion"})
+		return
+	}
+	if err := h.service.GDPRDelete(c.Request.Context(), role, c.Param("id")); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -413,7 +476,17 @@ func (h *Handler) DeleteGDPR(c *gin.Context) {
 
 // 15. PATCH /api/v1/users/{id}/disable-mfa
 func (h *Handler) DisableMFA(c *gin.Context) {
-	if err := h.service.DisableMFA(c.Request.Context(), getActorRole(c), c.Param("id")); err != nil {
+	actorID := getActorID(c)
+	role := getActorRole(c)
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "admin" && role != "superadmin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only admins can disable MFA"})
+		return
+	}
+	if err := h.service.DisableMFA(c.Request.Context(), role, c.Param("id")); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -540,6 +613,10 @@ func (h *Handler) GetFascicolo(c *gin.Context) {
 
 	fascicolo, err := h.service.GetStudentFascicolo(c.Request.Context(), actorID, actorRole, studentID)
 	if err != nil {
+		if errors.Is(err, ErrUnauthorized) || strings.Contains(err.Error(), "unauthorized") || strings.Contains(err.Error(), "forbidden") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

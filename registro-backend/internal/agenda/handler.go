@@ -209,6 +209,10 @@ func (h *Handler) MarkComplete(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
+	if role != "student" && role != "parent" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: completing tasks is restricted to students and parents"})
+		return
+	}
 
 	if err := h.service.SetTaskCompletion(c.Request.Context(), studentID, role, id, true); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -223,6 +227,10 @@ func (h *Handler) UnmarkComplete(c *gin.Context) {
 	id := c.Param("id")
 	if studentID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "student" && role != "parent" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: completing tasks is restricted to students and parents"})
 		return
 	}
 

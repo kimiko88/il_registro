@@ -96,9 +96,14 @@ func parseWindowParams(c *gin.Context) (from, to time.Time, err error) {
 
 func (h *Handler) GetMySummary(c *gin.Context) {
 	studentID := c.GetString("user_id")
+	role := c.GetString("role")
 	schoolID := c.GetString("school_id")
 	if studentID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "student" && role != "parent" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only students or parents can access my-summary"})
 		return
 	}
 	res, err := h.service.GetStudentSummary(c.Request.Context(), studentID, schoolID)
@@ -479,13 +484,21 @@ func (h *Handler) ExportAttendance(c *gin.Context) {
 	_ = w.Write([]string{"StudentID", "Status", "IsJustified", "Notes"})
 
 	for _, rec := range res.Records {
+		studentID := rec.StudentID
+		if len(studentID) > 0 && (studentID[0] == '=' || studentID[0] == '+' || studentID[0] == '-' || studentID[0] == '@') {
+			studentID = "'" + studentID
+		}
+		statusStr := string(rec.Status)
+		if len(statusStr) > 0 && (statusStr[0] == '=' || statusStr[0] == '+' || statusStr[0] == '-' || statusStr[0] == '@') {
+			statusStr = "'" + statusStr
+		}
 		notes := rec.Notes
 		if len(notes) > 0 && (notes[0] == '=' || notes[0] == '+' || notes[0] == '-' || notes[0] == '@') {
 			notes = "'" + notes
 		}
 		_ = w.Write([]string{
-			rec.StudentID,
-			string(rec.Status),
+			studentID,
+			statusStr,
 			fmt.Sprintf("%t", rec.IsJustified),
 			notes,
 		})
@@ -495,7 +508,6 @@ func (h *Handler) ExportAttendance(c *gin.Context) {
 	c.Data(http.StatusOK, "text/csv; charset=utf-8", buf.Bytes())
 }
 
-// GetMonthlyBreakdown returns per-month attendance statistics for a student (teacher/admin view).
 // GetMonthlyBreakdown returns per-month attendance statistics for a student.
 func (h *Handler) GetMonthlyBreakdown(c *gin.Context) {
 	userID := c.GetString("user_id")
@@ -651,13 +663,9 @@ func (h *Handler) DeleteClassAttendanceHour(c *gin.Context) {
 	}
 
 	var hourInt int
-	if hour, err := time.ParseDuration(hourStr); err == nil {
-		hourInt = int(hour.Hours())
-	} else {
-		if _, convErr := fmt.Sscanf(hourStr, "%d", &hourInt); convErr != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid hour parameter"})
-			return
-		}
+	if _, convErr := fmt.Sscanf(hourStr, "%d", &hourInt); convErr != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid hour parameter"})
+		return
 	}
 
 	schoolID := c.GetString("school_id")

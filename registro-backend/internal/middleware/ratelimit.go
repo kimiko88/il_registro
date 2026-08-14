@@ -108,6 +108,7 @@ func RateLimitMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ip := resolveClientIP(c)
 		if !limiter.GetLimiter(ip).Allow() {
+			c.Header("Retry-After", "1")
 			c.JSON(http.StatusTooManyRequests, gin.H{"error": "Too many requests"})
 			c.Abort()
 			return
@@ -124,6 +125,7 @@ func AuthRateLimitMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ip := resolveClientIP(c)
 		if !limiter.GetLimiter(ip).Allow() {
+			c.Header("Retry-After", "60")
 			c.JSON(http.StatusTooManyRequests, gin.H{
 				"code":  "AUTH_RATE_LIMIT_EXCEEDED",
 				"error": "Troppi tentativi di accesso. Riprova tra un minuto.",

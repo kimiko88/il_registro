@@ -25,7 +25,7 @@ func NewService(repo Repository) *Service {
 
 // CreatePlan creates a new PDP/PEI plan.
 // Only coordinators, referenti or dirigenza may create plans.
-func (s *Service) CreatePlan(ctx context.Context, actorID, actorRole string, req *CreatePdpRequest) (*PdpPlan, error) {
+func (s *Service) CreatePlan(ctx context.Context, actorID, actorRole, schoolID string, req *CreatePdpRequest) (*PdpPlan, error) {
 	if !canManagePDP(actorRole) {
 		return nil, ErrUnauthorized
 	}
@@ -36,6 +36,7 @@ func (s *Service) CreatePlan(ctx context.Context, actorID, actorRole string, req
 	plan := &PdpPlan{
 		StudentID:     req.StudentID,
 		ClassID:       req.ClassID,
+		SchoolID:      schoolID,
 		AcademicYear:  req.AcademicYear,
 		PlanType:      req.PlanType,
 		Diagnosis:     req.Diagnosis,

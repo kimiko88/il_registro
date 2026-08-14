@@ -2,6 +2,7 @@ package auth
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 )
@@ -74,6 +75,9 @@ func (h *Handler) Register(c *gin.Context) {
 
 func setRefreshTokenCookie(c *gin.Context, token string, maxAge int) {
 	isSecure := c.Request.TLS != nil || c.GetHeader("X-Forwarded-Proto") == "https"
+	if os.Getenv("COOKIE_SECURE") == "true" {
+		isSecure = true
+	}
 	http.SetCookie(c.Writer, &http.Cookie{
 		Name:     "refreshToken",
 		Value:    token,
@@ -82,7 +86,7 @@ func setRefreshTokenCookie(c *gin.Context, token string, maxAge int) {
 		Domain:   "",
 		Secure:   isSecure,
 		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode,
+		SameSite: http.SameSiteStrictMode,
 	})
 }
 

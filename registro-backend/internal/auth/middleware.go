@@ -56,8 +56,8 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 				for _, p := range parts {
 					p = strings.TrimSpace(p)
 					if p != "" && p != "access_token" && p != "bearer" {
-						// Verify p is a 3-part JWT token (header.payload.signature)
-						if strings.Count(p, ".") == 2 {
+						// Verify p is a valid 3-part JWT token (header.payload.signature) with reasonable length
+						if strings.Count(p, ".") == 2 && len(p) >= 20 {
 							token = p
 							c.Header("Sec-WebSocket-Protocol", "access_token")
 							break

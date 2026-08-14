@@ -30,7 +30,7 @@ func NewHandler(service *Service) *Handler {
 func (h *Handler) GetDashboardStats(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role, _ := auth.GetUserRole(c)
-	if userID == "" && role == "" {
+	if userID == "" || role == "" {
 		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "unauthorized"})
 		return
 	}
@@ -123,6 +123,15 @@ func (h *Handler) GetSchool(c *gin.Context) {
 // CreateSchool creates a new school
 // POST /api/v1/admin/schools
 func (h *Handler) CreateSchool(c *gin.Context) {
+	callerRole, _ := auth.GetUserRole(c)
+	if callerRole != "superadmin" {
+		c.JSON(http.StatusForbidden, ErrorResponse{
+			Error:   "forbidden",
+			Message: "creating a school requires superadmin role",
+		})
+		return
+	}
+
 	var req CreateSchoolRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse{
@@ -270,6 +279,15 @@ func (h *Handler) ListAdminUsers(c *gin.Context) {
 // CreateAdminUser creates a new admin user
 // POST /api/v1/admin/users/admins
 func (h *Handler) CreateAdminUser(c *gin.Context) {
+	callerRole, _ := auth.GetUserRole(c)
+	if callerRole != "superadmin" {
+		c.JSON(http.StatusForbidden, ErrorResponse{
+			Error:   "forbidden",
+			Message: "creating an admin user requires superadmin role",
+		})
+		return
+	}
+
 	var req CreateAdminRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse{
@@ -389,8 +407,8 @@ func (h *Handler) GetAdminActivity(c *gin.Context) {
 			limit = 50
 		}
 	}
-	if limit > 200 {
-		limit = 200
+	if limit > 100 {
+		limit = 100
 	}
 	if limit < 1 {
 		limit = 1
