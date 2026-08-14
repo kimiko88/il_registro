@@ -113,9 +113,13 @@ func (h *Handler) UploadFile(c *gin.Context) {
 
 	var publicURL string
 	if h.uploader != nil {
-		publicURL, err = h.uploader.UploadFile(c.Request.Context(), storagePath, header.Header.Get("Content-Type"), file)
+		detectedMIME, errMIME := upload.DetectMIME(file)
+		if errMIME != nil {
+			detectedMIME = header.Header.Get("Content-Type")
+		}
+		publicURL, err = h.uploader.UploadFile(c.Request.Context(), storagePath, detectedMIME, file)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Errore caricamento storage: " + err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Errore caricamento storage"})
 			return
 		}
 	} else {
@@ -259,15 +263,20 @@ func (h *Handler) GetInbox(c *gin.Context) {
 }
 
 func (h *Handler) GetReviewQueue(c *gin.Context) {
+	userID := c.GetString("user_id")
 	role := c.GetString("role")
+	schoolID := c.GetString("school_id")
+	if userID == "" || schoolID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	if role != "secretary" && role != "teacher" && role != "admin" && role != "superadmin" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: insufficient permissions"})
 		return
 	}
-	schoolID := c.GetString("school_id")
 	res, err := h.service.GetReviewQueue(c.Request.Context(), schoolID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
 	if res == nil {

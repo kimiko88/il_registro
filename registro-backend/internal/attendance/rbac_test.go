@@ -160,6 +160,7 @@ func (m *mockUserRepo) BulkCreate(_ context.Context, _ []users.User) (int, []str
 func (m *mockUserRepo) BulkDelete(_ context.Context, _ []string) (int, error) { return 0, nil }
 func (m *mockUserRepo) HardDelete(_ context.Context, _ string) error          { return nil }
 func (m *mockUserRepo) RevokeAllUserTokens(_ context.Context, _ string) error { return nil }
+func (m *mockUserRepo) ClearTempMFASecret(_ context.Context, _ string) error  { return nil }
 func (m *mockUserRepo) AddGuardian(_ context.Context, _, _, _ string) error   { return nil }
 func (m *mockUserRepo) GetChildren(_ context.Context, _ string) ([]users.StudentChild, error) {
 	return nil, nil

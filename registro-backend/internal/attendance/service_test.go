@@ -176,6 +176,7 @@ func (m *MockUserRepo) BulkCreate(ctx context.Context, users []users.User) (int,
 }
 func (m *MockUserRepo) HardDelete(ctx context.Context, id string) error              { return nil }
 func (m *MockUserRepo) RevokeAllUserTokens(ctx context.Context, userID string) error { return nil }
+func (m *MockUserRepo) ClearTempMFASecret(ctx context.Context, userID string) error  { return nil }
 func (m *MockUserRepo) IsGuardian(ctx context.Context, parentID, studentID string) (bool, error) {
 	args := m.Called(ctx, parentID, studentID)
 	return args.Bool(0), args.Error(1)

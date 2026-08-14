@@ -17,7 +17,15 @@ export const useAttendanceStore = defineStore('attendance', {
         presentCount: (state) => state.records.filter(r => (r.status || '').toLowerCase() === 'present').length,
         absentCount: (state) => state.records.filter(r => (r.status || '').toLowerCase() === 'absent').length,
         lateCount: (state) => state.records.filter(r => (r.status || '').toLowerCase() === 'late').length,
-        unjustifiedCount: (state) => state.records.filter(r => (r.status || '').toLowerCase() === 'absent' && (!r.justificationStatus || (r.justificationStatus || '').toLowerCase() === 'unjustified')).length,
+        unjustifiedCount: (state) => state.records.filter(r => {
+            const status = (r.status || '').toLowerCase();
+            const jStatus = (r.justificationStatus || r.justification_status || '').toLowerCase();
+            const isJustifiedFlag = r.is_justified || r.isJustified || r.justified;
+            if (status !== 'absent') return false;
+            if (isJustifiedFlag) return false;
+            if (jStatus === 'justified' || jStatus === 'pending' || jStatus === 'pendingapproval' || jStatus === 'pending_approval') return false;
+            return true;
+        }).length,
     },
 
     actions: {
@@ -94,7 +102,10 @@ export const useAttendanceStore = defineStore('attendance', {
             try {
                 await api.post(`/attendance/justification/${id}/process`, { approve: true });
                 this.justifications = this.justifications.filter(j => j.id !== id);
-                await this.fetchMyAttendance();
+                const authStore = useAuthStore();
+                if (authStore.userRole === 'student' || authStore.userRole === 'parent') {
+                    await this.fetchMyAttendance();
+                }
             } catch (err) {
                 console.error("Error approving justification:", err);
                 throw err;

@@ -100,10 +100,30 @@ func resolveClientIP(c *gin.Context) string {
 	return ip
 }
 
+var (
+	globalLimiter     *IPRateLimiter
+	globalLimiterOnce sync.Once
+
+	authLimiter     *IPRateLimiter
+	authLimiterOnce sync.Once
+)
+
+func getGlobalLimiter() *IPRateLimiter {
+	globalLimiterOnce.Do(func() {
+		globalLimiter = NewIPRateLimiter(5, 10)
+	})
+	return globalLimiter
+}
+
+func getAuthLimiter() *IPRateLimiter {
+	authLimiterOnce.Do(func() {
+		authLimiter = NewIPRateLimiter(rate.Every(12*time.Second), 5)
+	})
+	return authLimiter
+}
+
 func RateLimitMiddleware() gin.HandlerFunc {
-	// 5 requests per second, burst of 10.
-	// See IPRateLimiter doc comment for multi-instance limitations.
-	limiter := NewIPRateLimiter(5, 10)
+	limiter := getGlobalLimiter()
 
 	return func(c *gin.Context) {
 		ip := resolveClientIP(c)
@@ -120,7 +140,7 @@ func RateLimitMiddleware() gin.HandlerFunc {
 // AuthRateLimitMiddleware applies stricter rate limits specifically for authentication endpoints
 // (5 requests per minute, burst of 5) to prevent brute-force attacks on login and refresh tokens.
 func AuthRateLimitMiddleware() gin.HandlerFunc {
-	limiter := NewIPRateLimiter(rate.Every(12*time.Second), 5)
+	limiter := getAuthLimiter()
 
 	return func(c *gin.Context) {
 		ip := resolveClientIP(c)

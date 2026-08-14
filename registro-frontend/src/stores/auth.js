@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { resetApiState, clearLocalSession } from '../services/api'
 
 const parseUser = (val) => {
     if (!val) return null
@@ -15,8 +16,8 @@ const isTokenExpired = (tokenStr) => {
     try {
         const parts = tokenStr.split('.')
         if (parts.length !== 3) {
-            // Allow mock tokens in test environment
-            if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.MODE === 'test') {
+            // Only allow non-JWT mock strings in test environment if explicitly prefixed
+            if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.MODE === 'test' && tokenStr.startsWith('mock-')) {
                 return false
             }
             return true
@@ -82,13 +83,17 @@ export const useAuthStore = defineStore('auth', () => {
         return `${user.value.first_name || user.value.firstName || ''} ${user.value.last_name || user.value.lastName || ''}`.trim() || 'User'
     })
 
-    function login(userData, tokenData, refreshTokenData, rememberMe = true) {
+    function login(userData, tokenData, refreshTokenData, rememberMe = false) {
         const sanitized = sanitizeUserData(userData)
         user.value = sanitized
         token.value = tokenData
         refreshToken.value = refreshTokenData
 
-        if (rememberMe) {
+        const role = sanitized?.role
+        const isPrivileged = role === 'admin' || role === 'superadmin' || role === 'teacher' || role === 'secretary' || role === 'principal' || role === 'vice_principal'
+        const shouldRemember = rememberMe && !isPrivileged
+
+        if (shouldRemember) {
             localStorage.setItem('user', JSON.stringify(sanitized))
             localStorage.setItem('token', tokenData)
             if (refreshTokenData) {
@@ -144,15 +149,8 @@ export const useAuthStore = defineStore('auth', () => {
         token.value = null
         refreshToken.value = null
 
-        localStorage.removeItem('user')
-        localStorage.removeItem('token')
-        localStorage.removeItem('refreshToken')
-        localStorage.removeItem('selectedChildId')
-
-        sessionStorage.removeItem('user')
-        sessionStorage.removeItem('token')
-        sessionStorage.removeItem('refreshToken')
-        sessionStorage.removeItem('selectedChildId')
+        clearLocalSession()
+        resetApiState()
     }
 
     function updateUser(userData) {

@@ -207,6 +207,10 @@ func (h *Handler) GetSubjectGrades(c *gin.Context) {
 	filter := h.parseFilter(c)
 	actorID := c.GetString("user_id")
 	actorRole := c.GetString("role")
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 
 	resp, err := h.service.GetSubjectGrades(c.Request.Context(), actorID, actorRole, subjectID, filter)
 	if err != nil {
@@ -265,6 +269,9 @@ func (h *Handler) BulkImport(c *gin.Context) {
 
 	semester := 1 // default
 	semStr := c.PostForm("semester")
+	if semStr == "" {
+		semStr = c.Query("semester")
+	}
 	if semStr != "" {
 		if semStr != "1" && semStr != "2" {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "semester must be 1 or 2"})
@@ -455,6 +462,12 @@ func (h *Handler) GetStudentAverage(c *gin.Context) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
+	if actorRole == "parent" {
+		if err := h.service.ValidateParentGuardian(c.Request.Context(), userID, studentID); err != nil {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: not a guardian of this student"})
+			return
+		}
+	}
 
 	avg, err := h.analytics.GetStudentAverage(studentID, subjectID)
 	if err != nil {
@@ -582,9 +595,19 @@ func (h *Handler) GetSemesterReport(c *gin.Context) {
 
 func (h *Handler) DownloadSemesterReportPDF(c *gin.Context) {
 	studentID := c.GetString("user_id")
+	role := c.GetString("role")
 	if studentID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
+	}
+	if role != "student" && role != "parent" && role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && role != "vice_principal" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
+	targetStudentID := studentID
+	if (role == "admin" || role == "superadmin" || role == "secretary" || role == "principal" || role == "vice_principal" || role == "teacher") && c.Query("student_id") != "" {
+		targetStudentID = c.Query("student_id")
 	}
 
 	semStr := c.Param("semester")
@@ -594,13 +617,13 @@ func (h *Handler) DownloadSemesterReportPDF(c *gin.Context) {
 		return
 	}
 
-	pdfData, err := h.service.GenerateSemesterReportPDF(studentID, sem)
+	pdfData, err := h.service.GenerateSemesterReportPDF(targetStudentID, sem)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	filename := fmt.Sprintf("pagella_q%d_%s.pdf", sem, studentID)
+	filename := fmt.Sprintf("pagella_q%d_%s.pdf", sem, targetStudentID)
 	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
 	c.Data(http.StatusOK, "application/pdf", pdfData)
 }

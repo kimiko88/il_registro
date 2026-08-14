@@ -4,10 +4,10 @@ import "time"
 
 // CreateTeacherActivityRequest è il payload per creare una nuova attività libera.
 type CreateTeacherActivityRequest struct {
-	Date         string `json:"date" binding:"required"`          // YYYY-MM-DD
-	StartHour    int    `json:"start_hour" binding:"required"`    // 1–10
-	Duration     int    `json:"duration" binding:"required"`      // >= 1
-	ActivityType string `json:"activity_type"`                    // vedi valori validi in service.go
+	Date         string `json:"date" binding:"required"`       // YYYY-MM-DD
+	StartHour    int    `json:"start_hour" binding:"required"` // 1–10
+	Duration     int    `json:"duration" binding:"required"`   // >= 1
+	ActivityType string `json:"activity_type"`                 // vedi valori validi in service.go
 	Description  string `json:"description" binding:"required"`
 	Notes        string `json:"notes"`
 }

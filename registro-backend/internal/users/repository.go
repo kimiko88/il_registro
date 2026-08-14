@@ -42,6 +42,7 @@ type Repository interface {
 	// GDPR
 	HardDelete(ctx context.Context, id string) error // Actual DB delete
 	RevokeAllUserTokens(ctx context.Context, userID string) error
+	ClearTempMFASecret(ctx context.Context, userID string) error
 
 	// Relationships
 	IsGuardian(ctx context.Context, parentUserID string, studentUserID string) (bool, error)
@@ -723,7 +724,13 @@ func (r *PostgresRepository) AddPasswordHistory(ctx context.Context, userID, pas
 }
 
 func (r *PostgresRepository) RevokeAllUserTokens(ctx context.Context, userID string) error {
-	query := `UPDATE refresh_tokens SET revoked = true, revoked_at = NOW() WHERE user_id = $1::uuid AND revoked = false`
+	query := `UPDATE refresh_tokens SET revoked = true WHERE user_id = $1::uuid`
+	_, err := r.db.ExecContext(ctx, query, userID)
+	return err
+}
+
+func (r *PostgresRepository) ClearTempMFASecret(ctx context.Context, userID string) error {
+	query := `UPDATE users SET temp_mfa_secret = NULL WHERE id = $1::uuid`
 	_, err := r.db.ExecContext(ctx, query, userID)
 	return err
 }

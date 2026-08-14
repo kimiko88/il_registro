@@ -47,6 +47,7 @@ type Service interface {
 	GenerateSemesterReportPDF(studentID string, semester int) ([]byte, error)
 
 	// Parent
+	ValidateParentGuardian(ctx context.Context, parentID, studentID string) error
 	GetChildGrades(ctx context.Context, parentID string, studentID string, filter GradeFilter) (*MyGradesResponse, error)
 	GetChildAverages(ctx context.Context, parentID string, studentID string) (*StudentAveragesResponse, error)
 	GetChildSemesterReport(ctx context.Context, parentID, studentID string, semester int) (*SemesterReportResponse, error)
@@ -99,6 +100,15 @@ func (s *service) GetStudentGradesWithFilter(ctx context.Context, actorID string
 		}
 		if !isGuardian {
 			return nil, ErrNotGuardian
+		}
+	}
+	if actorRole == "teacher" {
+		isAssigned, err := s.validator.IsTeacherAssignedToStudent(ctx, actorID, studentID)
+		if err != nil {
+			return nil, err
+		}
+		if !isAssigned {
+			return nil, ErrUnauthorized
 		}
 	}
 
@@ -667,6 +677,20 @@ func (s *service) DeleteGrade(ctx context.Context, teacherID string, gradeID str
 
 // --- Student / Parent ---
 
+func (s *service) ValidateParentGuardian(ctx context.Context, parentID, studentID string) error {
+	if parentID == "" || studentID == "" {
+		return ErrNotGuardian
+	}
+	isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, studentID)
+	if err != nil {
+		return err
+	}
+	if !isGuardian {
+		return ErrNotGuardian
+	}
+	return nil
+}
+
 func (s *service) GetChildGrades(ctx context.Context, parentID string, studentID string, filter GradeFilter) (*MyGradesResponse, error) {
 	logger.Log.Debugf("GetChildGrades requested by parent")
 
@@ -869,7 +893,7 @@ func (s *service) GetMyTrend(ctx context.Context, actorID string, actorRole stri
 		currentSem = int(relevant[len(relevant)-1].Semester)
 	}
 	if s.validator != nil && s.validator.db != nil {
-		if err := s.validator.db.QueryRow(
+		if err := s.validator.db.QueryRowContext(ctx,
 			`SELECT class_id FROM class_students WHERE student_id = $1 ORDER BY created_at DESC LIMIT 1`, studentID,
 		).Scan(&classID); err == nil && classID != "" {
 			_ = s.validator.db.QueryRow(
@@ -986,12 +1010,13 @@ func (s *service) GetSemesterReport(ctx context.Context, studentID string, semes
 	// Query teacher names for subjects in student's class
 	teacherMap := make(map[string]string)
 	if s.validator != nil && s.validator.db != nil && classID != "" {
-		tRows, tErr := s.validator.db.Query(
-			`SELECT cs.subject_id, COALESCE(u.first_name || ' ' || u.last_name, '')
+		tRows, tErr := s.validator.db.QueryContext(ctx,
+			`SELECT DISTINCT ON (cs.subject_id) cs.subject_id, COALESCE(u.first_name || ' ' || u.last_name, '')
 			 FROM class_subjects cs
-			 LEFT JOIN teachers t ON cs.teacher_id = t.id OR cs.teacher_id = t.user_id
+			 LEFT JOIN teachers t ON (NULLIF(cs.teacher_id::text, '') = t.id::text OR NULLIF(cs.teacher_id::text, '') = t.user_id::text)
 			 LEFT JOIN users u ON t.user_id = u.id OR cs.teacher_id = u.id
-			 WHERE cs.class_id::text = $1`, classID,
+			 WHERE cs.class_id::text = $1 AND u.first_name IS NOT NULL
+			 ORDER BY cs.subject_id, cs.created_at DESC`, classID,
 		)
 		if tErr == nil {
 			for tRows.Next() {

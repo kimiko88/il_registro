@@ -115,7 +115,9 @@ export const useWebSocketStore = defineStore('websocket', () => {
             isConnected.value = false
             socket.value = null
             stopHeartbeat()
-            attemptReconnect()
+            if (!event.wasClean && event.code !== 1000 && !hasFailedPermanently.value) {
+                attemptReconnect()
+            }
         }
 
         socket.value.onerror = (error) => {
@@ -127,7 +129,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
         }
     }
 
-    function disconnect() {
+    function disconnect(resetPermanentFlag = false) {
         stopHeartbeat()
         if (socket.value) {
             socket.value.close()
@@ -135,8 +137,10 @@ export const useWebSocketStore = defineStore('websocket', () => {
         }
         isConnected.value = false
         reconnectAttempts.value = 0
-        hasFailedPermanently.value = false
-        lastError.value = null
+        if (resetPermanentFlag) {
+            hasFailedPermanently.value = false
+            lastError.value = null
+        }
         if (reconnectTimer.value) {
             clearTimeout(reconnectTimer.value)
             reconnectTimer.value = null
@@ -170,7 +174,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
 
         reconnectTimer.value = setTimeout(() => {
             reconnectTimer.value = null
-            if (authStore.isAuthenticated) {
+            if (authStore.isAuthenticated && authStore.token) {
                 connect()
             } else {
                 disconnect()
@@ -186,6 +190,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
         switch (message.type) {
             case 'GRADE_ADDED':
             case 'GRADE_UPDATED':
+            case 'GRADE_DELETED':
                 try {
                     const gradesStore = useGradesStore()
                     if (payload.class_id) gradesStore.fetchGrades(payload.class_id, payload.subject_id, true)
@@ -193,7 +198,9 @@ export const useWebSocketStore = defineStore('websocket', () => {
                     console.debug('Failed to refresh grades store:', err)
                 }
                 Notify.create({
-                    message: `Aggiornamento voto: ${escapeHtml(payload.grade_value || '')} (${escapeHtml(payload.subject_name || 'Materia')})`,
+                    message: message.type === 'GRADE_DELETED'
+                        ? `Voto eliminato per ${escapeHtml(payload.subject_name || 'Materia')}`
+                        : `Aggiornamento voto: ${escapeHtml(payload.grade_value || '')} (${escapeHtml(payload.subject_name || 'Materia')})`,
                     color: 'info',
                     icon: 'school',
                     position: 'top-right',

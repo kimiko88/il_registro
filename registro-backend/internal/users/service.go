@@ -59,7 +59,9 @@ func (s *Service) CreateUser(ctx context.Context, actorRole string, req CreateUs
 		return nil, err
 	}
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	const bcryptCost = 12
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcryptCost)
 	if err != nil {
 		return nil, fmt.Errorf("password hashing failed: %w", err)
 	}
@@ -235,8 +237,15 @@ func (s *Service) BulkDeleteUsers(ctx context.Context, actorRole, actorSchoolID 
 }
 
 // RestoreUser un-deletes a soft-deleted user.
-func (s *Service) RestoreUser(ctx context.Context, actorRole string, id string) error {
+func (s *Service) RestoreUser(ctx context.Context, actorRole, actorSchoolID string, id string) error {
 	if !isPrivileged(actorRole) {
+		return ErrUnauthorized
+	}
+	user, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	if actorRole != "superadmin" && actorSchoolID != "" && user.SchoolID != nil && *user.SchoolID != actorSchoolID {
 		return ErrUnauthorized
 	}
 	return s.repo.Restore(ctx, id)
@@ -324,7 +333,6 @@ func validatePasswordComplexity(password string) error {
 	return nil
 }
 
-
 // ResetPassword allows an admin, superadmin, or secretary to force-reset a user's password.
 // Secretary is strictly limited to resetting passwords for teachers, students, and parents.
 func (s *Service) ResetPassword(ctx context.Context, actorRole, actorSchoolID, userID, newPassword string) error {
@@ -360,7 +368,6 @@ func (s *Service) ResetPassword(ctx context.Context, actorRole, actorSchoolID, u
 		}
 	}
 
-
 	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
 	if err != nil {
 		return err
@@ -372,6 +379,7 @@ func (s *Service) ResetPassword(ctx context.Context, actorRole, actorSchoolID, u
 	if err := s.repo.Update(ctx, user); err != nil {
 		return err
 	}
+	_ = s.repo.RevokeAllUserTokens(ctx, userID)
 	return s.repo.AddPasswordHistory(ctx, userID, string(hash))
 }
 
@@ -386,6 +394,7 @@ func (s *Service) DisableMFA(ctx context.Context, actorRole string, userID strin
 	}
 	user.MFAEnabled = false
 	user.MFASecret = ""
+	_ = s.repo.ClearTempMFASecret(ctx, userID)
 	return s.repo.Update(ctx, user)
 }
 
@@ -418,14 +427,33 @@ func (s *Service) BulkImport(ctx context.Context, actorRole, actorSchoolID strin
 		Errors: parseErrors,
 	}
 
-	if len(users) > 0 {
-		count, bulkErrors, err := s.repo.BulkCreate(ctx, users)
+	var validUsers []User
+	for _, u := range users {
+		if !strings.HasPrefix(u.PasswordHash, "$2a$") && !strings.HasPrefix(u.PasswordHash, "$2b$") {
+			if err := validatePasswordComplexity(u.PasswordHash); err != nil {
+				result.Failed++
+				result.Errors = append(result.Errors, fmt.Sprintf("utente %s: password non conforme (%v)", u.Email, err))
+				continue
+			}
+			hash, err := bcrypt.GenerateFromPassword([]byte(u.PasswordHash), bcrypt.DefaultCost)
+			if err != nil {
+				result.Failed++
+				result.Errors = append(result.Errors, fmt.Sprintf("utente %s: errore hashing password", u.Email))
+				continue
+			}
+			u.PasswordHash = string(hash)
+		}
+		validUsers = append(validUsers, u)
+	}
+
+	if len(validUsers) > 0 {
+		count, bulkErrors, err := s.repo.BulkCreate(ctx, validUsers)
 		result.Created = count
 		result.Failed += len(bulkErrors)
 		result.Errors = append(result.Errors, bulkErrors...)
 		if err != nil && len(bulkErrors) == 0 {
 			result.Errors = append(result.Errors, err.Error())
-			result.Failed += len(users)
+			result.Failed += len(validUsers)
 		}
 	}
 

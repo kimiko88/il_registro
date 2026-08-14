@@ -121,6 +121,18 @@ func (h *Handler) List(c *gin.Context) {
 		schoolIDPtr = &schoolID
 	}
 
+	sortBy := strings.ToLower(c.Query("sort_by"))
+	switch sortBy {
+	case "id", "first_name", "last_name", "email", "created_at", "role", "school_id", "updated_at":
+		// valid column name
+	default:
+		sortBy = "created_at"
+	}
+	sortOrder := strings.ToUpper(c.Query("sort_order"))
+	if sortOrder != "ASC" && sortOrder != "DESC" {
+		sortOrder = "DESC"
+	}
+
 	filter := UserFilter{
 		Query:     c.Query("q"),
 		Role:      c.Query("role"),
@@ -129,8 +141,8 @@ func (h *Handler) List(c *gin.Context) {
 		IsDeleted: includeDeleted,
 		Page:      page,
 		PageSize:  pageSize,
-		SortBy:    c.Query("sort_by"),
-		SortOrder: c.Query("sort_order"),
+		SortBy:    sortBy,
+		SortOrder: sortOrder,
 		ClassID:   c.Query("class_id"),
 	}
 
@@ -256,7 +268,7 @@ func (h *Handler) Restore(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if err := h.service.RestoreUser(c.Request.Context(), getActorRole(c), c.Param("id")); err != nil {
+	if err := h.service.RestoreUser(c.Request.Context(), getActorRole(c), getSchoolID(c), c.Param("id")); err != nil {
 		if errors.Is(err, ErrUnauthorized) || err == ErrUnauthorized {
 			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 			return
@@ -357,9 +369,7 @@ func getPasswordErrorMessage(code string) string {
 	}
 }
 
-
-
-// 9. POST /api/v1/users/{id}/reset-password - Force reset (admin only)
+// 9. POST /api/v1/users/{id}/reset-password - Force reset (admin, superadmin, secretary)
 func (h *Handler) ForceResetPassword(c *gin.Context) {
 	actorID := getActorID(c)
 	role := getActorRole(c)
@@ -367,8 +377,8 @@ func (h *Handler) ForceResetPassword(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "admin" && role != "superadmin" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only admins can force reset passwords"})
+	if role != "admin" && role != "superadmin" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only privileged roles can force reset passwords"})
 		return
 	}
 	var body struct {
@@ -379,6 +389,10 @@ func (h *Handler) ForceResetPassword(c *gin.Context) {
 		return
 	}
 	if err := h.service.ResetPassword(c.Request.Context(), role, getSchoolID(c), c.Param("id"), body.NewPassword); err != nil {
+		if errors.Is(err, ErrUnauthorized) || err == ErrUnauthorized {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -455,6 +469,14 @@ func (h *Handler) ExportGDPR(c *gin.Context) {
 	}
 	data, err := h.service.GDPRDataExport(c.Request.Context(), actorID, role, targetID)
 	if err != nil {
+		if errors.Is(err, ErrUnauthorized) || err == ErrUnauthorized {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+			return
+		}
+		if errors.Is(err, ErrUserNotFound) || err == ErrUserNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

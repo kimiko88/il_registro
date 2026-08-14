@@ -17,7 +17,9 @@ type mockDeficiencyRepo struct {
 	mock.Mock
 }
 
-func (m *mockDeficiencyRepo) SaveRecord(ctx context.Context, record *ScrutinyRecord) error { return nil }
+func (m *mockDeficiencyRepo) SaveRecord(ctx context.Context, record *ScrutinyRecord) error {
+	return nil
+}
 func (m *mockDeficiencyRepo) GetRecord(ctx context.Context, studentID, classID string, semester int) (*ScrutinyRecord, error) {
 	return nil, nil
 }
@@ -139,4 +141,44 @@ func TestHandler_SaveDeficiency_MissingParams(t *testing.T) {
 	r.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestHandler_SaveDeficiency_ForbiddenForStudent(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	svc := NewService(nil, nil, nil, nil, nil)
+	h := NewHandler(svc)
+
+	r.POST("/api/v1/scrutiny/deficiencies", func(c *gin.Context) {
+		c.Set("user_id", "stud-1")
+		c.Set("role", "student")
+		h.SaveDeficiency(c)
+	})
+
+	body, _ := json.Marshal(SaveDeficiencyRequest{StudentID: "stud-1", ClassID: "c1", SubjectID: "s1"})
+	req := httptest.NewRequest("POST", "/api/v1/scrutiny/deficiencies", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusForbidden, w.Code)
+}
+
+func TestHandler_GetStudentDeficiencies_ForbiddenForOtherStudent(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	svc := NewService(nil, nil, nil, nil, nil)
+	h := NewHandler(svc)
+
+	r.GET("/api/v1/scrutiny/deficiencies/student/:studentId", func(c *gin.Context) {
+		c.Set("user_id", "stud-1")
+		c.Set("role", "student")
+		h.GetStudentDeficiencies(c)
+	})
+
+	req := httptest.NewRequest("GET", "/api/v1/scrutiny/deficiencies/student/stud-other", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusForbidden, w.Code)
 }

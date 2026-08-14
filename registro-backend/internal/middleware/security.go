@@ -92,12 +92,14 @@ func SecurityHeadersMiddleware() gin.HandlerFunc {
 				"script-src 'self' 'nonce-%s'; "+
 				"style-src 'self' 'nonce-%s' https://fonts.googleapis.com; "+
 				"font-src 'self' https://fonts.gstatic.com; "+
-				"img-src 'self' data: blob: https://cdn.quasar.dev; "+
+				"img-src 'self' data: https://cdn.quasar.dev; "+
 				"connect-src 'self' %s %s; "+
 				"object-src 'none'; "+
+				"frame-src 'none'; "+
 				"base-uri 'self'; "+
 				"form-action 'self'; "+
-				"frame-ancestors 'none';",
+				"frame-ancestors 'none'; "+
+				"upgrade-insecure-requests;",
 			nonce, nonce, backendURL(), backendWSURL(),
 		)
 		c.Writer.Header().Set("Content-Security-Policy", csp)

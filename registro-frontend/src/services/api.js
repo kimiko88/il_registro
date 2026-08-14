@@ -30,13 +30,24 @@ api.interceptors.request.use(
             // fallback if store not ready
         }
         if (!token) {
-            token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            const rawToken = localStorage.getItem('token') || sessionStorage.getItem('token');
+            if (rawToken) {
+                try {
+                    const payload = JSON.parse(atob(rawToken.split('.')[1]));
+                    if (payload.exp && payload.exp * 1000 > Date.now()) {
+                        token = rawToken;
+                    }
+                } catch {
+                    // Invalid token format in storage
+                }
+            }
         }
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
         const lang = localStorage.getItem('superadmin_language') || 'it-IT';
-        config.headers['Accept-Language'] = lang;
+        const sanitizedLang = /^[a-zA-Z0-9_-]{2,10}$/.test(lang) ? lang : 'it-IT';
+        config.headers['Accept-Language'] = sanitizedLang;
 
         return config;
     },
@@ -66,6 +77,17 @@ export const setApiRouter = (router) => {
 export const resetApiState = () => {
     isRefreshing = false;
     failedQueue = [];
+};
+
+export const clearLocalSession = () => {
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('selectedChildId');
+    sessionStorage.removeItem('user');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('refreshToken');
+    sessionStorage.removeItem('selectedChildId');
 };
 
 const handleSessionExpired = () => {
@@ -161,12 +183,7 @@ api.interceptors.response.use(
                         if (authStore) {
                             authStore.logout();
                         } else {
-                            localStorage.removeItem('user');
-                            localStorage.removeItem('token');
-                            localStorage.removeItem('refreshToken');
-                            sessionStorage.removeItem('user');
-                            sessionStorage.removeItem('token');
-                            sessionStorage.removeItem('refreshToken');
+                            clearLocalSession();
                         }
                         handleSessionExpired();
                         return Promise.reject(refreshErr);
@@ -177,12 +194,7 @@ api.interceptors.response.use(
                     if (authStore) {
                         authStore.logout();
                     } else {
-                        localStorage.removeItem('user');
-                        localStorage.removeItem('token');
-                        localStorage.removeItem('refreshToken');
-                        sessionStorage.removeItem('user');
-                        sessionStorage.removeItem('token');
-                        sessionStorage.removeItem('refreshToken');
+                        clearLocalSession();
                     }
                     handleSessionExpired();
                     return Promise.reject(error);

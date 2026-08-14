@@ -554,8 +554,13 @@ func (h *Handler) GetMonthlyBreakdown(c *gin.Context) {
 // GetChildMonthlyBreakdown returns per-month attendance statistics for a parent's child.
 func (h *Handler) GetChildMonthlyBreakdown(c *gin.Context) {
 	parentID := c.GetString("user_id")
+	role := c.GetString("role")
 	if parentID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "parent" && role != "admin" && role != "superadmin" && role != "principal" && role != "vice_principal" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: solo i genitori o il personale autorizzato possono accedere alle presenze del figlio"})
 		return
 	}
 	studentID := c.Param("studentID")

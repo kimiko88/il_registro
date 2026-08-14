@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
-import Scrutiny from '@/pages/Teacher/Scrutiny.vue'
+import Scrutiny from '@/pages/teacher/Scrutiny.vue'
 import { createPinia, setActivePinia } from 'pinia'
 
 vi.mock('@/services/scrutinyService', () => ({

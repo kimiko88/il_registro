@@ -95,7 +95,9 @@ func (s *Service) Register(ctx context.Context, req *RegisterRequest) (*User, er
 	}
 
 	// Seed password history so ResetPassword can detect immediate re-use.
-	_ = s.repo.AddPasswordHistory(ctx, user.ID, string(passwordHash))
+	if err := s.repo.AddPasswordHistory(ctx, user.ID, string(passwordHash)); err != nil {
+		logger.Log.Warnf("Register: failed to seed initial password history for user %s: %v", user.ID, err)
+	}
 
 	return user, nil
 }
@@ -145,19 +147,15 @@ func (s *Service) Login(ctx context.Context, req *LoginRequest, ipAddress, userA
 	}
 
 	// Check if password has expired (90 days for privileged roles: superadmin, admin, secretary, teacher)
-	if user.Role == RoleSuperAdmin || user.Role == RoleAdmin || user.Role == RoleSecretary || user.Role == RoleTeacher {
-		if user.PasswordChangedAt != nil {
-			if time.Since(*user.PasswordChangedAt) > 90*24*time.Hour {
-				return nil, ErrPasswordExpired
-			}
-		} else if !user.CreatedAt.IsZero() && time.Since(user.CreatedAt) > 90*24*time.Hour {
-			return nil, ErrPasswordExpired
-		}
+	if isPasswordExpired(user) {
+		s.recordFailedAttempt(ctx, req.Email, ipAddress)
+		return nil, ErrPasswordExpired
 	}
 
 	// Check MFA — decrypt stored secret before verifying the TOTP code.
 	if user.MFAEnabled {
 		if req.MFAToken == "" {
+			s.recordFailedAttempt(ctx, req.Email, ipAddress)
 			return nil, ErrMFARequired
 		}
 		encryptedSecret, err := s.repo.GetMFASecret(ctx, user.ID)
@@ -169,6 +167,7 @@ func (s *Service) Login(ctx context.Context, req *LoginRequest, ipAddress, userA
 			return nil, err
 		}
 		if !s.mfaService.VerifyTOTPUser(user.ID, secret, req.MFAToken) {
+			s.recordFailedAttempt(ctx, req.Email, ipAddress)
 			return nil, ErrInvalidMFAToken
 		}
 	}
@@ -267,16 +266,9 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken, ipAddress, use
 		return nil, ErrUserInactive
 	}
 
-	if user.Role == RoleSuperAdmin || user.Role == RoleAdmin || user.Role == RoleSecretary || user.Role == RoleTeacher {
-		if user.PasswordChangedAt != nil {
-			if time.Since(*user.PasswordChangedAt) > 90*24*time.Hour {
-				_ = s.repo.RevokeRefreshToken(ctx, rt.ID)
-				return nil, ErrPasswordExpired
-			}
-		} else if !user.CreatedAt.IsZero() && time.Since(user.CreatedAt) > 90*24*time.Hour {
-			_ = s.repo.RevokeRefreshToken(ctx, rt.ID)
-			return nil, ErrPasswordExpired
-		}
+	if isPasswordExpired(user) {
+		_ = s.repo.RevokeRefreshToken(ctx, rt.ID)
+		return nil, ErrPasswordExpired
 	}
 
 	// Generate new access token
@@ -544,9 +536,27 @@ func (s *Service) ResetPassword(ctx context.Context, token, newPassword string) 
 	}
 
 	// Revoke all refresh tokens for security
-	_ = s.repo.RevokeAllUserTokens(ctx, prt.UserID)
+	if err := s.repo.RevokeAllUserTokens(ctx, prt.UserID); err != nil {
+		logger.Log.Warnf("ResetPassword: failed to revoke user tokens for user %s: %v", prt.UserID, err)
+	}
 
 	return nil
+}
+
+// isPasswordExpired checks if a user's password has expired (90 days for privileged roles).
+func isPasswordExpired(user *User) bool {
+	if user == nil {
+		return false
+	}
+	if user.Role == RoleSuperAdmin || user.Role == RoleAdmin || user.Role == RoleSecretary || user.Role == RoleTeacher {
+		if user.PasswordChangedAt != nil {
+			return time.Since(*user.PasswordChangedAt) > 90*24*time.Hour
+		}
+		if !user.CreatedAt.IsZero() {
+			return time.Since(user.CreatedAt) > 90*24*time.Hour
+		}
+	}
+	return false
 }
 
 // ChangePassword changes password for an authenticated user
@@ -591,8 +601,12 @@ func (s *Service) ChangePassword(ctx context.Context, userID, currentPassword, n
 		return err
 	}
 
-	_ = s.repo.AddPasswordHistory(ctx, userID, string(passwordHash))
-	_ = s.repo.RevokeAllUserTokens(ctx, userID)
+	if err := s.repo.AddPasswordHistory(ctx, userID, string(passwordHash)); err != nil {
+		logger.Log.Warnf("ChangePassword: failed to add password history for user %s: %v", userID, err)
+	}
+	if err := s.repo.RevokeAllUserTokens(ctx, userID); err != nil {
+		logger.Log.Warnf("ChangePassword: failed to revoke user tokens for user %s: %v", userID, err)
+	}
 	return nil
 }
 

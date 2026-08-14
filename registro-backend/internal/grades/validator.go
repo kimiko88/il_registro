@@ -1,6 +1,7 @@
 package grades
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -232,5 +233,29 @@ func (v *Validator) IsTeacherAssignedToSubject(teacherID string, subjectID strin
 			  AND (cs.teacher_id IS NULL OR cs.teacher_id::text = '')
 		)`
 	err := v.db.QueryRow(query, classID, subjectID, teacherID).Scan(&exists)
+	return exists, err
+}
+
+// IsTeacherAssignedToStudent checks if a teacher is assigned to any of the student's class subjects or is class coordinator.
+func (v *Validator) IsTeacherAssignedToStudent(ctx context.Context, teacherID string, studentID string) (bool, error) {
+	if v == nil || v.db == nil || teacherID == "" || studentID == "" {
+		return true, nil
+	}
+	var exists bool
+	query := `
+		SELECT EXISTS(
+			SELECT 1 FROM class_students cs
+			JOIN class_subjects csub ON cs.class_id = csub.class_id
+			LEFT JOIN teachers t ON (NULLIF(csub.teacher_id::text, '') = t.id::text OR NULLIF(csub.teacher_id::text, '') = t.user_id::text)
+			WHERE cs.student_id::text = $1 AND (csub.teacher_id::text = $2 OR t.id::text = $2 OR t.user_id::text = $2)
+
+			UNION ALL
+
+			SELECT 1 FROM class_students cs
+			JOIN classes c ON cs.class_id = c.id
+			LEFT JOIN teachers t ON (NULLIF(c.coordinator_id::text, '') = t.id::text OR NULLIF(c.coordinator_id::text, '') = t.user_id::text)
+			WHERE cs.student_id::text = $1 AND (c.coordinator_id::text = $2 OR t.id::text = $2 OR t.user_id::text = $2)
+		)`
+	err := v.db.QueryRowContext(ctx, query, studentID, teacherID).Scan(&exists)
 	return exists, err
 }

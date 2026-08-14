@@ -21,23 +21,8 @@ export const useGradesStore = defineStore('grades', {
             const student = state.grades.students.find(s => s.student_id === studentId);
             return student ? student.grades : [];
         },
-        classAverage: (state) => (semester = 0) => {
-            if (!state.grades || !state.grades.students) return 0;
-            let sum = 0;
-            let count = 0;
-            state.grades.students.forEach(s => {
-                s.grades.forEach(g => {
-                    if (semester > 0 && g.semester && Number(g.semester) !== Number(semester)) {
-                        return;
-                    }
-                    if (typeof g.grade_value === 'number' && g.grade_value > 0) {
-                        sum += g.grade_value;
-                        count++;
-                    }
-                });
-            });
-            if (count === 0) return 0;
-            return Math.round((sum / count) * 10) / 10;
+        classAverage: (state, getters) => (semester = 0) => {
+            return getters.classAverageForSemester(semester);
         },
         classAverageForSemester: (state) => (semester = 0) => {
             if (!state.grades || !state.grades.students) return 0;
@@ -129,7 +114,8 @@ export const useGradesStore = defineStore('grades', {
             this.error = null;
             try {
                 const response = await gradeService.saveGrade(gradeData);
-                this._cacheMap = {};
+                const targetKey = `${this._lastClassId}:${this._lastSubjectId || 'all'}`;
+                delete this._cacheMap[targetKey];
                 if (this._lastClassId) {
                     await this.fetchGrades(this._lastClassId, this._lastSubjectId, true, true);
                 }
@@ -148,7 +134,8 @@ export const useGradesStore = defineStore('grades', {
             this.error = null;
             try {
                 const response = await gradeService.updateGrade(id, updates);
-                this._cacheMap = {};
+                const targetKey = `${this._lastClassId}:${this._lastSubjectId || 'all'}`;
+                delete this._cacheMap[targetKey];
                 if (this._lastClassId) {
                     await this.fetchGrades(this._lastClassId, this._lastSubjectId, true, true);
                 }
@@ -167,7 +154,8 @@ export const useGradesStore = defineStore('grades', {
             this.error = null;
             try {
                 const response = await gradeService.deleteGrade(id);
-                this._cacheMap = {};
+                const targetKey = `${this._lastClassId}:${this._lastSubjectId || 'all'}`;
+                delete this._cacheMap[targetKey];
                 if (this._lastClassId) {
                     await this.fetchGrades(this._lastClassId, this._lastSubjectId, true, true);
                 }

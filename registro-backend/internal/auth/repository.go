@@ -312,6 +312,9 @@ func (r *repository) RevokeAllUserTokens(ctx context.Context, userID string) err
 }
 
 func (r *repository) CreatePasswordResetToken(ctx context.Context, token *PasswordResetToken) error {
+	// Invalidate any existing active reset tokens for this user before creating a new one
+	_, _ = r.db.ExecContext(ctx, `UPDATE password_reset_tokens SET used = true WHERE user_id = $1 AND used = false`, token.UserID)
+
 	query := `
 		INSERT INTO password_reset_tokens (id, user_id, token, expires_at, used, created_at)
 		VALUES ($1, $2, $3, $4, false, $5)

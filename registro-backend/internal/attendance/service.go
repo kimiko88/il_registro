@@ -268,7 +268,10 @@ func (s *service) UpdateAttendance(ctx context.Context, teacherID, schoolID, id 
 		return fmt.Errorf("forbidden: teacherID mancante")
 	}
 	isAssigned, err := s.repo.IsTeacherAssignedToClass(ctx, teacherID, att.ClassID)
-	if err != nil || !isAssigned {
+	if err != nil {
+		return fmt.Errorf("errore verifica permessi docente: %w", err)
+	}
+	if !isAssigned {
 		return fmt.Errorf("forbidden: docente non assegnato alla classe del record di presenza")
 	}
 

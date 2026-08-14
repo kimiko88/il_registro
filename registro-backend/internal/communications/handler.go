@@ -103,13 +103,10 @@ func (h *Handler) Send(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 64*1024)
 	var req CreateMessageRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	if len(req.Body) > 64*1024 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "il corpo del messaggio supera il limite massimo consentito (64 KB)"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "il corpo del messaggio supera il limite massimo consentito (64 KB) o formato JSON non valido"})
 		return
 	}
 	msg, err := h.service.SendMessage(c.Request.Context(), role, schoolID, uid, req)
@@ -337,12 +334,15 @@ func (h *Handler) UploadAttachment(c *gin.Context) {
 	}
 
 	ext := filepath.Ext(header.Filename)
-	contentType := header.Header.Get("Content-Type")
+	detectedMIME, errMIME := upload.DetectMIME(file)
+	if errMIME != nil {
+		detectedMIME = header.Header.Get("Content-Type")
+	}
 
 	var publicURL string
 	if h.uploader != nil {
 		storagePath := fmt.Sprintf("communications/%s%s", uuid.New().String(), ext)
-		publicURL, err = h.uploader.UploadFile(c.Request.Context(), storagePath, contentType, file)
+		publicURL, err = h.uploader.UploadFile(c.Request.Context(), storagePath, detectedMIME, file)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return

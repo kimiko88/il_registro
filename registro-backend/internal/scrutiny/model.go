@@ -121,10 +121,10 @@ type SaveDeficiencyRequest struct {
 }
 
 type SaveDeferredScrutinyRequest struct {
-	StudentID     string                            `json:"student_id" binding:"required"`
-	ClassID       string                            `json:"class_id" binding:"required"`
-	FinalDecision string                            `json:"final_decision" binding:"required"` // promosso_con_debiti_saldati, non_promosso
-	Notes         string                            `json:"notes"`
+	StudentID     string                          `json:"student_id" binding:"required"`
+	ClassID       string                          `json:"class_id" binding:"required"`
+	FinalDecision string                          `json:"final_decision" binding:"required"` // promosso_con_debiti_saldati, non_promosso
+	Notes         string                          `json:"notes"`
 	Deficiencies  []SaveDeferredDeficiencyItemReq `json:"deficiencies"`
 }
 

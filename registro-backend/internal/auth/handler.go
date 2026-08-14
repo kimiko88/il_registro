@@ -78,12 +78,13 @@ func setRefreshTokenCookie(c *gin.Context, token string, maxAge int) {
 	if os.Getenv("COOKIE_SECURE") == "true" {
 		isSecure = true
 	}
+	domain := os.Getenv("COOKIE_DOMAIN")
 	http.SetCookie(c.Writer, &http.Cookie{
 		Name:     "refreshToken",
 		Value:    token,
 		MaxAge:   maxAge,
 		Path:     "/",
-		Domain:   "",
+		Domain:   domain,
 		Secure:   isSecure,
 		HttpOnly: true,
 		SameSite: http.SameSiteStrictMode,

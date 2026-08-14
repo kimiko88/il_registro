@@ -48,25 +48,6 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 			}
 		}
 
-		// 2. Try WebSocket subprotocol header (Sec-WebSocket-Protocol: access_token, <token>)
-		if token == "" {
-			secProto := c.GetHeader("Sec-WebSocket-Protocol")
-			if secProto != "" {
-				parts := strings.Split(secProto, ",")
-				for _, p := range parts {
-					p = strings.TrimSpace(p)
-					if p != "" && p != "access_token" && p != "bearer" {
-						// Verify p is a valid 3-part JWT token (header.payload.signature) with reasonable length
-						if strings.Count(p, ".") == 2 && len(p) >= 20 {
-							token = p
-							c.Header("Sec-WebSocket-Protocol", "access_token")
-							break
-						}
-					}
-				}
-			}
-		}
-
 		if token == "" {
 			c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "missing authorization token"})
 			c.Abort()
@@ -104,11 +85,7 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 		isStaff := claims.Role == RoleTeacher || claims.Role == RoleAdmin || claims.Role == RoleSuperAdmin || claims.Role == RoleSecretary || claims.Role == RolePrincipal || claims.Role == RoleVicePrincipal
 		c.Set("is_staff", isStaff)
 
-		acceptLang := c.GetHeader("Accept-Language")
-		if acceptLang == "" {
-			acceptLang = "it-IT"
-		}
-		c.Set("locale", acceptLang)
+		c.Set("locale", parseAcceptLanguage(c.GetHeader("Accept-Language")))
 
 		// Synchronize with stdlib request context
 		c.Request = c.Request.WithContext(SetUserContext(c.Request.Context(), claims.UserID, claims.Email, claims.Role, claims.SchoolID))
@@ -156,6 +133,30 @@ func GetUserID(c *gin.Context) (string, bool) {
 		return "", false
 	}
 	return s, true
+}
+
+// parseAcceptLanguage normalizes Accept-Language header value into a safe BCP-47 locale.
+func parseAcceptLanguage(raw string) string {
+	if raw == "" {
+		return "it-IT"
+	}
+	first := strings.Split(raw, ",")[0]
+	first = strings.TrimSpace(strings.Split(first, ";")[0])
+	first = strings.ReplaceAll(first, "_", "-")
+
+	if len(first) >= 2 && len(first) <= 10 {
+		valid := true
+		for _, ch := range first {
+			if !(ch >= 'a' && ch <= 'z') && !(ch >= 'A' && ch <= 'Z') && !(ch >= '0' && ch <= '9') && ch != '-' {
+				valid = false
+				break
+			}
+		}
+		if valid {
+			return first
+		}
+	}
+	return "it-IT"
 }
 
 // GetUserRole extracts user role from context

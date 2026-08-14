@@ -228,10 +228,15 @@ func (h *Hub) deliverLocally(msg Message) {
 			}
 		}
 	} else {
-		// Bug 164: Global broadcast for system messages without specific recipient or school
+		// Global system broadcast for system messages without specific recipient or school.
+		// Restrict delivery to global system roles (e.g., superadmin) unless AllowedRoles is explicitly specified.
 		for _, clients := range h.clients {
 			for client := range clients {
-				if isRoleAllowed(client.Role, msg.AllowedRoles) {
+				if len(msg.AllowedRoles) > 0 {
+					if isRoleAllowed(client.Role, msg.AllowedRoles) {
+						targetClients = append(targetClients, client)
+					}
+				} else if client.Role == "superadmin" || client.Role == "system_auditor" {
 					targetClients = append(targetClients, client)
 				}
 			}

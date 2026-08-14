@@ -1,6 +1,7 @@
 package scrutiny
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -66,8 +67,8 @@ func (h *Handler) ExportPagellaPDF(c *gin.Context) {
 
 	pdfBytes, err := h.service.ExportPagellaPDF(c.Request.Context(), actorID, actorRole, classID, studentID, semester)
 	if err != nil {
-		if err == ErrScrutinyNotValidated {
-			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		if errors.Is(err, ErrScrutinyNotValidated) || err == ErrScrutinyNotValidated {
+			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
 			return
 		}
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -93,8 +94,8 @@ func (h *Handler) GetMatrix(c *gin.Context) {
 
 	matrix, err := h.service.GetMatrix(c.Request.Context(), actorID, actorRole, classID, semester)
 	if err != nil {
-		if err == ErrScrutinyNotValidated {
-			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		if errors.Is(err, ErrScrutinyNotValidated) || err == ErrScrutinyNotValidated {
+			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
 			return
 		}
 		pkgLogger.Log.Error("failed to get scrutiny matrix", "error", err, "classId", classID)
@@ -308,6 +309,10 @@ func (h *Handler) SaveDeficiency(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
+	if actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: insufficient permissions"})
+		return
+	}
 
 	var req SaveDeficiencyRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -328,8 +333,13 @@ func (h *Handler) SaveDeficiency(c *gin.Context) {
 func (h *Handler) GetStudentDeficiencies(c *gin.Context) {
 	studentID := c.Param("studentId")
 	actorID := c.GetString("user_id")
+	actorRole := c.GetString("role")
 	if actorID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if actorRole == "student" && actorID != studentID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: student can only access own deficiencies"})
 		return
 	}
 
@@ -345,8 +355,13 @@ func (h *Handler) GetClassDeficiencies(c *gin.Context) {
 	classID := c.Param("classId")
 	semester, _ := strconv.Atoi(c.DefaultQuery("semester", "0"))
 	actorID := c.GetString("user_id")
+	actorRole := c.GetString("role")
 	if actorID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: insufficient permissions"})
 		return
 	}
 
@@ -378,4 +393,3 @@ func (h *Handler) SaveDeferredScrutiny(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "deferred scrutiny saved successfully"})
 }
-

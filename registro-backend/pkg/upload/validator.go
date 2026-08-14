@@ -72,3 +72,23 @@ func ValidateUpload(file multipart.File, header *multipart.FileHeader) error {
 
 	return nil
 }
+
+// DetectMIME inspects the first 512 bytes of file to detect real MIME type using magic bytes, then seeks back.
+func DetectMIME(file multipart.File) (string, error) {
+	if file == nil {
+		return "", errors.New("file is nil")
+	}
+	head := make([]byte, 512)
+	n, err := file.Read(head)
+	if err != nil && err != io.EOF {
+		return "", err
+	}
+	head = head[:n]
+
+	if seeker, ok := file.(io.Seeker); ok {
+		_, _ = seeker.Seek(0, io.SeekStart)
+	}
+
+	mtype := mimetype.Detect(head)
+	return mtype.String(), nil
+}

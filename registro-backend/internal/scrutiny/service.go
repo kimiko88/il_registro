@@ -578,4 +578,3 @@ func (s *Service) SaveDeferredScrutiny(ctx context.Context, actorID, actorRole s
 	}
 	return s.repo.SaveDeferredScrutiny(ctx, req)
 }
-

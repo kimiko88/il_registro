@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -19,19 +20,26 @@ const (
 	maxMessageSize = 8192
 )
 
+var (
+	allowedOriginsOnce   sync.Once
+	cachedAllowedOrigins map[string]bool
+)
+
 // allowedOrigins returns the set of permitted WebSocket origins from the
 // ALLOWED_ORIGINS environment variable (comma-separated). Falls back to
 // rejecting all cross-origin requests if the variable is not set.
 func allowedOrigins() map[string]bool {
-	raw := os.Getenv("ALLOWED_ORIGINS")
-	set := make(map[string]bool)
-	for _, o := range strings.Split(raw, ",") {
-		o = strings.TrimSpace(o)
-		if o != "" {
-			set[o] = true
+	allowedOriginsOnce.Do(func() {
+		raw := os.Getenv("ALLOWED_ORIGINS")
+		cachedAllowedOrigins = make(map[string]bool)
+		for _, o := range strings.Split(raw, ",") {
+			o = strings.TrimSpace(o)
+			if o != "" {
+				cachedAllowedOrigins[o] = true
+			}
 		}
-	}
-	return set
+	})
+	return cachedAllowedOrigins
 }
 
 var upgrader = websocket.Upgrader{
@@ -81,12 +89,16 @@ func (c *Client) readPump() {
 		return nil
 	})
 	for {
-		_, _, err := c.Conn.ReadMessage()
+		_, msg, err := c.Conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Printf("ws error: %v", err)
 			}
 			break
+		}
+		if strings.Contains(string(msg), `"PING"`) {
+			_ = c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
+			_ = c.Conn.WriteMessage(websocket.TextMessage, []byte(`{"type":"PONG"}`))
 		}
 	}
 }
@@ -158,14 +170,14 @@ func (h *Handler) Listen(c *gin.Context) {
 			schoolID = s
 		}
 	}
-	if role != "superadmin" && schoolID == "" {
+	if role != "superadmin" && role != "system_auditor" && schoolID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "school_id required for websocket connection"})
 		return
 	}
 
 	var responseHeader http.Header
-	if secProto := c.Writer.Header().Get("Sec-WebSocket-Protocol"); secProto != "" {
-		responseHeader = http.Header{"Sec-WebSocket-Protocol": []string{secProto}}
+	if secProto := c.Request.Header.Get("Sec-WebSocket-Protocol"); secProto != "" {
+		responseHeader = http.Header{"Sec-WebSocket-Protocol": []string{"access_token"}}
 	}
 
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, responseHeader)
