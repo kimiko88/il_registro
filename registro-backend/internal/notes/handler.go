@@ -116,7 +116,10 @@ func (h *Handler) Delete(c *gin.Context) {
 	noteID := c.Param("id")
 
 	var req DeleteNoteRequest
-	_ = c.ShouldBindJSON(&req)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "motivo cancellazione obbligatorio: " + err.Error()})
+		return
+	}
 	reason := req.Reason
 
 	if err := h.service.DeleteNote(c.Request.Context(), userID, role, noteID, reason); err != nil {

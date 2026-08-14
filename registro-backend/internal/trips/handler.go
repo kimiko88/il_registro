@@ -111,13 +111,10 @@ func (h *Handler) ListConsents(c *gin.Context) {
 	}
 
 	tripID := c.Param("id")
-	if schoolID != "" {
-		// Verify trip belongs to caller's school
-		trip, err := h.service.GetTripByID(c.Request.Context(), tripID)
-		if err == nil && trip != nil && role != "superadmin" && trip.SchoolID != schoolID {
-			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: trip belongs to another school"})
-			return
-		}
+	trip, err := h.service.GetTripByID(c.Request.Context(), tripID)
+	if err == nil && trip != nil && role != "superadmin" && schoolID != "" && trip.SchoolID != schoolID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: trip belongs to another school"})
+		return
 	}
 
 	consents, err := h.service.ListConsents(c.Request.Context(), tripID)

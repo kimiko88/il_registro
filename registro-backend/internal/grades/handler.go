@@ -314,8 +314,14 @@ func (h *Handler) Export(c *gin.Context) {
 		return
 	}
 
-	if format == "json" {
-		contentType = "application/json"
+	if format == "json" || contentType == "" {
+		if format == "json" {
+			contentType = "application/json"
+		} else if format == "csv" {
+			contentType = "text/csv"
+		} else if format == "pdf" {
+			contentType = "application/pdf"
+		}
 	}
 
 	filename := fmt.Sprintf("grades_export_%s.%s", time.Now().Format("20060102_150405"), format)

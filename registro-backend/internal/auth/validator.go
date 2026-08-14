@@ -61,7 +61,6 @@ var creatableRoles = map[string]map[string]bool{
 	RoleSecretary: {
 		RolePrincipal:     true,
 		RoleVicePrincipal: true,
-		RoleSecretary:     true,
 		RoleTeacher:       true,
 		RoleStudent:       true,
 		RoleParent:        true,

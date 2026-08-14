@@ -15,18 +15,12 @@ func NewHandler(service *Service) *Handler {
 }
 
 func getSchoolID(c *gin.Context) string {
-	if q := c.Query("school_id"); q != "" {
-		return q
-	}
-	if h := c.GetHeader("X-School-ID"); h != "" {
-		return h
-	}
 	if res, exists := c.Get("school_id"); exists {
 		if s, ok := res.(string); ok && s != "" {
 			return s
 		}
 	}
-	return "162737ff-081f-436c-8874-11cd57bc60f1"
+	return c.Query("school_id")
 }
 
 func (h *Handler) Create(c *gin.Context) {
@@ -89,9 +83,15 @@ func (h *Handler) Get(c *gin.Context) {
 
 // Update verifies the class belongs to the caller's school before updating.
 func (h *Handler) Update(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	schoolID := getSchoolID(c)
-	if schoolID == "" {
+	if userID == "" || schoolID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "admin" && role != "superadmin" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 	var req CreateClassRequest
@@ -113,9 +113,15 @@ func (h *Handler) Update(c *gin.Context) {
 
 // Delete verifies the class belongs to the caller's school before deleting.
 func (h *Handler) Delete(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	schoolID := getSchoolID(c)
-	if schoolID == "" {
+	if userID == "" || schoolID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "admin" && role != "superadmin" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 	existing, err := h.service.GetClass(c.Request.Context(), schoolID, c.Param("id"))
@@ -154,9 +160,15 @@ func (h *Handler) GetTeacherClasses(c *gin.Context) {
 }
 
 func (h *Handler) AssignSubject(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	schoolID := getSchoolID(c)
-	if schoolID == "" {
+	if userID == "" || schoolID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "admin" && role != "superadmin" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 	existing, err := h.service.GetClass(c.Request.Context(), schoolID, c.Param("id"))
@@ -239,8 +251,13 @@ func (h *Handler) GetClassGuardians(c *gin.Context) {
 
 func (h *Handler) GetLessonTopics(c *gin.Context) {
 	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "teacher" && role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && role != "vice_principal" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 
@@ -254,8 +271,13 @@ func (h *Handler) GetLessonTopics(c *gin.Context) {
 
 func (h *Handler) GetDisciplinaryNotes(c *gin.Context) {
 	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "teacher" && role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && role != "vice_principal" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 

@@ -101,6 +101,8 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 		c.Set("email", claims.Email)
 		c.Set("role", claims.Role)
 		c.Set("school_id", claims.SchoolID)
+		isStaff := claims.Role == RoleTeacher || claims.Role == RoleAdmin || claims.Role == RoleSuperAdmin || claims.Role == RoleSecretary || claims.Role == RolePrincipal || claims.Role == RoleVicePrincipal
+		c.Set("is_staff", isStaff)
 
 		acceptLang := c.GetHeader("Accept-Language")
 		if acceptLang == "" {

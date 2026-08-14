@@ -316,8 +316,8 @@ type ChangePasswordRequest struct {
 }
 
 func (h *Handler) ChangePassword(c *gin.Context) {
-	userID := c.GetString("user_id")
-	if userID == "" {
+	userID, exists := GetUserID(c)
+	if !exists || userID == "" {
 		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "unauthorized"})
 		return
 	}

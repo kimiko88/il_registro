@@ -102,8 +102,8 @@ func (h *Handler) GetMySummary(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "student" && role != "parent" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only students or parents can access my-summary"})
+	if role != "student" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only students can access my-summary (parents must use /attendance/students/:studentID/summary)"})
 		return
 	}
 	res, err := h.service.GetStudentSummary(c.Request.Context(), studentID, schoolID)

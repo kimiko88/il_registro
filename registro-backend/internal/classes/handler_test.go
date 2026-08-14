@@ -86,6 +86,7 @@ func TestHandler_GetLessonTopics(t *testing.T) {
 			c, _ := gin.CreateTestContext(w)
 			if tt.userID != "" {
 				c.Set("user_id", tt.userID)
+				c.Set("role", "teacher")
 			}
 			c.Params = gin.Params{{Key: "id", Value: "class-1"}}
 			c.Request = httptest.NewRequest("GET", "/classes/class-1/lesson-topics", nil)
@@ -156,6 +157,7 @@ func TestHandler_GetDisciplinaryNotes(t *testing.T) {
 			c, _ := gin.CreateTestContext(w)
 			if tt.userID != "" {
 				c.Set("user_id", tt.userID)
+				c.Set("role", "teacher")
 			}
 			c.Params = gin.Params{{Key: "id", Value: "class-1"}}
 			c.Request = httptest.NewRequest("GET", "/classes/class-1/disciplinary-notes", nil)

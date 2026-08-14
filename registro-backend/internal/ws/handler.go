@@ -54,6 +54,11 @@ var upgrader = websocket.Upgrader{
 			return host == "localhost" || host == "127.0.0.1"
 		}
 		if allowed["*"] {
+			isProd := os.Getenv("GIN_MODE") == "release" || os.Getenv("APP_ENV") == "production"
+			if isProd {
+				log.Println("WARNING: Wildcard '*' in ALLOWED_ORIGINS is forbidden in production environment; rejecting WebSocket connection")
+				return false
+			}
 			return true
 		}
 		if origin == "" {

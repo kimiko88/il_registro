@@ -328,6 +328,17 @@ func (h *Handler) GetAvailabilityByTeacher(c *gin.Context) {
 	}
 
 	var fromTime, toTime time.Time
+	if fromStr := c.Query("from"); fromStr != "" {
+		fromTime = parseFlexibleDate(fromStr)
+	} else {
+		fromTime = time.Now()
+	}
+	if toStr := c.Query("to"); toStr != "" {
+		toTime = parseFlexibleDate(toStr)
+	} else {
+		toTime = fromTime.AddDate(0, 3, 0)
+	}
+
 	slots, err := h.service.ListSlots(c.Request.Context(), schoolID, teacherID, fromTime, toTime, true)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -338,6 +349,10 @@ func (h *Handler) GetAvailabilityByTeacher(c *gin.Context) {
 
 func (h *Handler) CancelBookingAlias(c *gin.Context) {
 	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	role := c.GetString("role")
 	bookingID := c.Param("id")
 

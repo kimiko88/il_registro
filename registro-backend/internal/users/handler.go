@@ -443,11 +443,17 @@ func (h *Handler) GetAuditLog(c *gin.Context) {
 // 12. POST /api/v1/users/{id}/gdpr-export
 func (h *Handler) ExportGDPR(c *gin.Context) {
 	actorID := getActorID(c)
+	role := getActorRole(c)
+	targetID := c.Param("id")
 	if actorID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	data, err := h.service.GDPRDataExport(c.Request.Context(), actorID, getActorRole(c), c.Param("id"))
+	if actorID != targetID && role != "admin" && role != "superadmin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: can only export your own GDPR data or require admin role"})
+		return
+	}
+	data, err := h.service.GDPRDataExport(c.Request.Context(), actorID, role, targetID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -553,6 +559,10 @@ func toUserResponses(users []User) []UserResponse {
 }
 
 func (h *Handler) GetGuardians(c *gin.Context) {
+	if getActorID(c) == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	studentID := c.Param("id")
 	guardians, err := h.service.GetGuardians(c.Request.Context(), getActorRole(c), studentID)
 	if err != nil {
@@ -567,6 +577,15 @@ func (h *Handler) GetGuardians(c *gin.Context) {
 }
 
 func (h *Handler) AddGuardian(c *gin.Context) {
+	if getActorID(c) == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	role := getActorRole(c)
+	if role != "admin" && role != "superadmin" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only admins and secretary can add guardians"})
+		return
+	}
 	studentID := c.Param("id")
 	var req struct {
 		ParentUserID     string `json:"parent_user_id" binding:"required"`
@@ -576,7 +595,7 @@ func (h *Handler) AddGuardian(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	if err := h.service.AddGuardian(c.Request.Context(), getActorRole(c), studentID, req.ParentUserID, req.RelationshipType); err != nil {
+	if err := h.service.AddGuardian(c.Request.Context(), role, studentID, req.ParentUserID, req.RelationshipType); err != nil {
 		if err == ErrUnauthorized {
 			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 			return
@@ -588,9 +607,18 @@ func (h *Handler) AddGuardian(c *gin.Context) {
 }
 
 func (h *Handler) RemoveGuardian(c *gin.Context) {
+	if getActorID(c) == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	role := getActorRole(c)
+	if role != "admin" && role != "superadmin" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only admins and secretary can remove guardians"})
+		return
+	}
 	studentID := c.Param("id")
 	parentID := c.Param("guardianId")
-	if err := h.service.RemoveGuardian(c.Request.Context(), getActorRole(c), studentID, parentID); err != nil {
+	if err := h.service.RemoveGuardian(c.Request.Context(), role, studentID, parentID); err != nil {
 		if err == ErrUnauthorized {
 			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 			return

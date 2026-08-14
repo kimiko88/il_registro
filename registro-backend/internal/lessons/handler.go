@@ -287,8 +287,13 @@ func (h *Handler) DeleteHomework(c *gin.Context) {
 
 func (h *Handler) GetMyDiary(c *gin.Context) {
 	teacherID := c.GetString("user_id")
+	role := c.GetString("role")
 	if teacherID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "teacher" && role != "admin" && role != "superadmin" && role != "principal" && role != "vice_principal" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only staff can access my-diary"})
 		return
 	}
 	from := c.Query("from")

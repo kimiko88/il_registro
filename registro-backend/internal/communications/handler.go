@@ -330,30 +330,14 @@ func (h *Handler) UploadAttachment(c *gin.Context) {
 	}
 	defer file.Close()
 
-	// Max size check: 10 MB
-	const maxFileSize = 10 * 1024 * 1024
-	if header.Size > maxFileSize {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "la dimensione del file supera il limite massimo consentito (10 MB)"})
+	// Validate size + magic bytes Content-Type check
+	if err := upload.ValidateUpload(file, header); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Extension & MIME check
-	ext := strings.ToLower(filepath.Ext(header.Filename))
-	allowedExts := map[string]bool{
-		".pdf": true, ".jpg": true, ".jpeg": true, ".png": true,
-		".gif": true, ".webp": true, ".doc": true, ".docx": true,
-		".xls": true, ".xlsx": true, ".txt": true,
-	}
-	if !allowedExts[ext] {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "estensione file non consentita"})
-		return
-	}
-
+	ext := filepath.Ext(header.Filename)
 	contentType := header.Header.Get("Content-Type")
-	if contentType != "" && !isValidMIME(contentType) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "tipo MIME non consentito"})
-		return
-	}
 
 	var publicURL string
 	if h.uploader != nil {

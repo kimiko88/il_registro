@@ -471,6 +471,8 @@ func TestHandler_ListAdminUsers(t *testing.T) {
 				url += tt.queryParams
 			}
 			c.Request = httptest.NewRequest("GET", url, nil)
+			c.Set("user_id", "admin-123")
+			c.Set("role", "superadmin")
 
 			handler.ListAdminUsers(c)
 

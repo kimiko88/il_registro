@@ -15,10 +15,7 @@ const (
 )
 
 func getRole(c *gin.Context) string {
-	if r := c.GetString(ContextKeyUserRole); r != "" {
-		return r
-	}
-	return c.GetString("user_role")
+	return c.GetString(ContextKeyUserRole)
 }
 
 // Handler exposes PDP/PEI HTTP endpoints.

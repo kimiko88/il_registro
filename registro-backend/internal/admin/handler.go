@@ -230,6 +230,10 @@ func (h *Handler) DeleteSchool(c *gin.Context) {
 // ListAdminUsers returns a list of admin users
 // GET /api/v1/admin/users/admins
 func (h *Handler) ListAdminUsers(c *gin.Context) {
+	if userID, _ := auth.GetUserID(c); userID == "" {
+		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "unauthorized"})
+		return
+	}
 	page := 1
 	pageSize := 20
 
