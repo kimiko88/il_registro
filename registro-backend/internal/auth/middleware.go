@@ -49,6 +49,17 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 		}
 
 		if token == "" {
+			// 2. Fallback for WebSocket upgrade requests — browsers cannot set the
+			//    Authorization header during a WS handshake, so we accept the
+			//    short-lived access token via the ?token= query parameter ONLY when
+			//    the request is a WebSocket upgrade (Connection: Upgrade + Upgrade: websocket).
+			//    This replaces the deprecated Sec-WebSocket-Protocol token delivery mechanism.
+			if strings.EqualFold(c.GetHeader("Upgrade"), "websocket") {
+				token = c.Query("token")
+			}
+		}
+
+		if token == "" {
 			c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "missing authorization token"})
 			c.Abort()
 			return

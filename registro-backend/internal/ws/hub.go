@@ -151,7 +151,17 @@ func (h *Hub) redisListener(ctx context.Context) {
 	const maxBackoff = 30 * time.Second
 
 	for {
-		ch := h.pubsub.Channel()
+		// Snapshot the pubsub pointer under a read lock to avoid a data race with
+		// Run()'s ctx.Done() case, which closes and nils h.pubsub under a write lock.
+		// When Run() closes the subscription the snapshotted channel will close
+		// naturally, and redisListener will detect !ok and then return via ctx.Done().
+		h.mu.RLock()
+		ps := h.pubsub
+		h.mu.RUnlock()
+		if ps == nil {
+			return // shutdown already in progress
+		}
+		ch := ps.Channel()
 		running := true
 		for running {
 			select {

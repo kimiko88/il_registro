@@ -82,6 +82,10 @@ func main() {
 	// 2. Init Logger
 	logger.Init(cfg.Server.Mode)
 
+	// 2a. Init rate limiter backend (Redis-backed if REDIS_URL is set, in-memory otherwise).
+	// Must be called before the first request, so we do it right after logging is up.
+	middleware.InitRateLimiter(os.Getenv("REDIS_URL"))
+
 	// 3. Connect DB
 	database, err := db.Connect(cfg.Database)
 	if err != nil {

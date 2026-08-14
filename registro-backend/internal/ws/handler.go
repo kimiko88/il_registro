@@ -1,6 +1,7 @@
 package ws
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"net/url"
@@ -96,11 +97,35 @@ func (c *Client) readPump() {
 			}
 			break
 		}
-		if strings.Contains(string(msg), `"PING"`) {
+		// Use strict JSON matching so that only {"type":"PING"} triggers a PONG,
+		// not any payload that happens to contain the substring "PING".
+		var cm wsClientMsg
+		if err := json.Unmarshal(msg, &cm); err == nil && cm.Type == "PING" {
 			_ = c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
 			_ = c.Conn.WriteMessage(websocket.TextMessage, []byte(`{"type":"PONG"}`))
 		}
 	}
+}
+
+// wsClientMsg is the minimal shape of messages sent by the browser client.
+type wsClientMsg struct {
+	Type string `json:"type"`
+}
+
+// writeSingleMessage sends data as its own WebSocket text frame.
+// Using a dedicated NextWriter/Close pair per message guarantees that each
+// JSON object is delivered as a separate frame, preventing concatenation bugs
+// like {"type":"A"}{"type":"B"} that break client-side JSON.parse().
+func (c *Client) writeSingleMessage(data []byte) error {
+	w, err := c.Conn.NextWriter(websocket.TextMessage)
+	if err != nil {
+		return err
+	}
+	if _, err = w.Write(data); err != nil {
+		_ = w.Close()
+		return err
+	}
+	return w.Close()
 }
 
 func (c *Client) writePump() {
@@ -117,17 +142,15 @@ func (c *Client) writePump() {
 				_ = c.Conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
-			w, err := c.Conn.NextWriter(websocket.TextMessage)
-			if err != nil {
+			if err := c.writeSingleMessage(message); err != nil {
 				return
 			}
-			_, _ = w.Write(message)
+			// Drain any additionally queued messages — each as its own frame.
 			n := len(c.Send)
 			for i := 0; i < n; i++ {
-				_, _ = w.Write(<-c.Send)
-			}
-			if err := w.Close(); err != nil {
-				return
+				if err := c.writeSingleMessage(<-c.Send); err != nil {
+					return
+				}
 			}
 		case <-ticker.C:
 			_ = c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
@@ -175,12 +198,10 @@ func (h *Handler) Listen(c *gin.Context) {
 		return
 	}
 
-	var responseHeader http.Header
-	if secProto := c.Request.Header.Get("Sec-WebSocket-Protocol"); secProto != "" {
-		responseHeader = http.Header{"Sec-WebSocket-Protocol": []string{"access_token"}}
-	}
-
-	conn, err := upgrader.Upgrade(c.Writer, c.Request, responseHeader)
+	// The auth middleware handles token validation before this point.
+	// We no longer negotiate Sec-WebSocket-Protocol for token delivery;
+	// the token is passed via Bearer header or ?token= query param instead.
+	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		log.Println("ws upgrade error:", err)
 		return
