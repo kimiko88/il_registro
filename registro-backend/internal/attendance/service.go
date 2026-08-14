@@ -34,7 +34,7 @@ type Service interface {
 	// Justifications
 	RequestJustification(ctx context.Context, parentID string, req JustificationRequest) error
 	ProcessJustification(ctx context.Context, teacherID, justificationID string, approve bool) error
-	GetPendingJustifications(ctx context.Context, classID string) ([]JustificationResponse, error)
+	GetPendingJustifications(ctx context.Context, classID, schoolID string) ([]JustificationResponse, error)
 	DeleteJustification(ctx context.Context, actorID string, justificationID string) error
 
 	// Analytics & Summaries
@@ -534,7 +534,7 @@ func (s *service) ProcessJustification(ctx context.Context, teacherID, justifica
 	return nil
 }
 
-func (s *service) GetPendingJustifications(ctx context.Context, classID string) ([]JustificationResponse, error) {
+func (s *service) GetPendingJustifications(ctx context.Context, classID, schoolID string) ([]JustificationResponse, error) {
 	js, err := s.repo.FindPendingJustifications(classID)
 	if err != nil {
 		return nil, err
@@ -542,6 +542,9 @@ func (s *service) GetPendingJustifications(ctx context.Context, classID string) 
 
 	var resp []JustificationResponse
 	for _, j := range js {
+		if schoolID != "" && j.SchoolID != "" && j.SchoolID != schoolID {
+			continue
+		}
 		resp = append(resp, JustificationResponse{
 			ID:          j.ID,
 			StudentID:   j.StudentID,

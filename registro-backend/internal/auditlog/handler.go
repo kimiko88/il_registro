@@ -1,8 +1,10 @@
 package auditlog
 
 import (
+	"database/sql"
 	"fmt"
 	"net/http"
+	"registro-backend/pkg/logger"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -10,10 +12,15 @@ import (
 
 type Handler struct {
 	service Service
+	db      *sql.DB
 }
 
-func NewHandler(service Service) *Handler {
-	return &Handler{service: service}
+func NewHandler(service Service, db ...*sql.DB) *Handler {
+	h := &Handler{service: service}
+	if len(db) > 0 {
+		h.db = db[0]
+	}
+	return h
 }
 
 func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
@@ -48,7 +55,8 @@ func (h *Handler) List(c *gin.Context) {
 
 	result, err := h.service.List(c.Request.Context(), params)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		logger.Log.Errorf("Audit log list error: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "errore interno del server durante il recupero dei log di audit"})
 		return
 	}
 
@@ -73,7 +81,8 @@ func (h *Handler) ExportCSV(c *gin.Context) {
 
 	csvBytes, err := h.service.ExportCSV(c.Request.Context(), params)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		logger.Log.Errorf("Audit log export error: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "errore interno del server durante l'esportazione del registro di audit"})
 		return
 	}
 
@@ -89,9 +98,10 @@ func (h *Handler) GetImmutabilityChain(c *gin.Context) {
 		return
 	}
 
-	report, err := VerifyChainIntegrity(c.Request.Context(), nil)
+	report, err := VerifyChainIntegrity(c.Request.Context(), h.db)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		logger.Log.Errorf("Immutability chain verification error: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "errore interno durante la verifica della catena di immutabilità"})
 		return
 	}
 	c.JSON(http.StatusOK, report)

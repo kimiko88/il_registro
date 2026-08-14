@@ -18,10 +18,23 @@ import (
 type Handler struct {
 	service   Service
 	analytics AnalyticsService
+	validator *Validator
 }
 
-func NewHandler(s Service, a AnalyticsService) *Handler {
-	return &Handler{service: s, analytics: a}
+func NewHandler(s Service, a AnalyticsService, v ...*Validator) *Handler {
+	h := &Handler{service: s, analytics: a}
+	if len(v) > 0 {
+		h.validator = v[0]
+	}
+	return h
+}
+
+func (h *Handler) legacyWeightConfig(handler gin.HandlerFunc) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Header("Deprecation", "true")
+		c.Header("Link", `</api/v1/grades/weight-configs>; rel="successor-version"`)
+		handler(c)
+	}
 }
 
 // RegisterRoutes sets up the routes for the grades module
@@ -46,11 +59,11 @@ func (h *Handler) RegisterRoutes(router *gin.RouterGroup) {
 		grades.GET("/weight-configs", h.ListWeightConfigs)
 		grades.PUT("/weight-configs", h.UpsertWeightConfig)
 		grades.DELETE("/weight-configs/:id", h.DeleteWeightConfig)
-		// Legacy aliases kept for backwards compat
-		grades.POST("/weight-config", h.UpsertWeightConfig)
-		grades.GET("/weight-config/:subjectID", h.ListWeightConfigs)
-		grades.POST("/weights", h.UpsertWeightConfig)
-		grades.GET("/weights", h.ListWeightConfigs)
+		// Legacy aliases kept for backwards compat with Deprecation header
+		grades.POST("/weight-config", h.legacyWeightConfig(h.UpsertWeightConfig))
+		grades.GET("/weight-config/:subjectID", h.legacyWeightConfig(h.ListWeightConfigs))
+		grades.POST("/weights", h.legacyWeightConfig(h.UpsertWeightConfig))
+		grades.GET("/weights", h.legacyWeightConfig(h.ListWeightConfigs))
 
 		grades.GET("/student/:studentID", h.GetStudentGrades)
 		grades.GET("/student/:studentID/paged", h.GetStudentGradesPaged)
@@ -273,6 +286,7 @@ func (h *Handler) BulkImport(c *gin.Context) {
 		return
 	}
 
+	// In multipart/form-data, the form field takes explicit precedence over query parameter
 	semester := 1 // default
 	semStr := c.PostForm("semester")
 	if semStr == "" {
@@ -559,16 +573,21 @@ func (h *Handler) GetMyAverages(c *gin.Context) {
 }
 
 func (h *Handler) GetMyTrend(c *gin.Context) {
-	studentID := c.GetString("user_id")
+	actorID := c.GetString("user_id")
 	role := c.GetString("role")
-	if studentID == "" {
+	if actorID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 
+	targetStudentID := actorID
+	if (role == "admin" || role == "superadmin" || role == "secretary" || role == "teacher" || role == "parent") && c.Query("student_id") != "" {
+		targetStudentID = c.Query("student_id")
+	}
+
 	subjectID := c.Query("subject_id")
 
-	resp, err := h.service.GetMyTrend(c.Request.Context(), studentID, role, studentID, subjectID)
+	resp, err := h.service.GetMyTrend(c.Request.Context(), actorID, role, targetStudentID, subjectID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -607,7 +626,7 @@ func (h *Handler) DownloadSemesterReportPDF(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "student" && role != "parent" && role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && role != "vice_principal" {
+	if role != "student" && role != "parent" && role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && role != "vice_principal" && role != "teacher" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -615,6 +634,14 @@ func (h *Handler) DownloadSemesterReportPDF(c *gin.Context) {
 	targetStudentID := studentID
 	if (role == "admin" || role == "superadmin" || role == "secretary" || role == "principal" || role == "vice_principal" || role == "teacher") && c.Query("student_id") != "" {
 		targetStudentID = c.Query("student_id")
+	}
+
+	if role == "teacher" && targetStudentID != studentID {
+		assigned, err := h.validator.IsTeacherAssignedToStudent(c.Request.Context(), studentID, targetStudentID)
+		if err != nil || !assigned {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: teacher is not assigned to this student"})
+			return
+		}
 	}
 
 	semStr := c.Param("semester")
@@ -851,8 +878,9 @@ func (h *Handler) GetSchoolStatistics(c *gin.Context) {
 		return
 	}
 
+	schoolID := c.GetString("school_id")
 	year := c.Query("year")
-	resp, err := h.analytics.GetSchoolStatistics(year)
+	resp, err := h.analytics.GetSchoolStatistics(year, schoolID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

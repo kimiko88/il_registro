@@ -13,6 +13,8 @@ var (
 	ErrPastDate        = errors.New("la data dello slot non può essere nel passato")
 	ErrOverlappingSlot = errors.New("esiste già uno slot sovrapposto per questo docente in questa fascia oraria")
 	ErrNotGuardian     = errors.New("il genitore non è tutore legale dello studente indicato")
+	ErrBookingNotFound = errors.New("booking not found")
+	ErrSlotNotFound    = errors.New("slot not found")
 )
 
 type Service interface {

@@ -60,6 +60,7 @@ type Repository interface {
 	// Password history
 	GetPasswordHistory(ctx context.Context, userID string) ([]string, error)
 	AddPasswordHistory(ctx context.Context, userID, passwordHash string) error
+	ChangePasswordTx(ctx context.Context, userID, passwordHash string) error
 
 	// Rate limiting
 	RecordLoginAttempt(ctx context.Context, attempt *LoginAttempt) error
@@ -178,7 +179,7 @@ func (r *repository) DisableMFA(ctx context.Context, userID string) error {
 }
 
 func (r *repository) GetMFASecret(ctx context.Context, userID string) (string, error) {
-	query := `SELECT mfa_secret FROM users WHERE id = $1`
+	query := `SELECT mfa_secret FROM users WHERE id = $1 AND deleted_at IS NULL`
 	var secret sql.NullString
 	err := r.db.QueryRowContext(ctx, query, userID).Scan(&secret)
 	if err == sql.ErrNoRows || !secret.Valid || secret.String == "" {
@@ -188,13 +189,13 @@ func (r *repository) GetMFASecret(ctx context.Context, userID string) (string, e
 }
 
 func (r *repository) SaveTempMFASecret(ctx context.Context, userID, secret string) error {
-	query := `UPDATE users SET mfa_enabled = false, mfa_secret = $1 WHERE id = $2`
+	query := `UPDATE users SET mfa_enabled = false, mfa_secret = $1 WHERE id = $2 AND deleted_at IS NULL`
 	_, err := r.db.ExecContext(ctx, query, secret, userID)
 	return err
 }
 
 func (r *repository) ConfirmMFA(ctx context.Context, userID string) error {
-	query := `UPDATE users SET mfa_enabled = true WHERE id = $1`
+	query := `UPDATE users SET mfa_enabled = true WHERE id = $1 AND deleted_at IS NULL`
 	_, err := r.db.ExecContext(ctx, query, userID)
 	return err
 }
@@ -499,3 +500,34 @@ func (r *repository) AddPasswordHistory(ctx context.Context, userID, passwordHas
 	_, _ = tx.ExecContext(ctx, pruneQuery, userID)
 	return tx.Commit()
 }
+
+func (r *repository) ChangePasswordTx(ctx context.Context, userID, passwordHash string) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	now := time.Now()
+	updateQuery := `UPDATE users SET password_hash = $1, password_changed_at = $2 WHERE id = $3 AND deleted_at IS NULL`
+	if _, err := tx.ExecContext(ctx, updateQuery, passwordHash, now, userID); err != nil {
+		return err
+	}
+
+	histQuery := `INSERT INTO user_password_history (user_id, password_hash) VALUES ($1, $2)`
+	if _, err := tx.ExecContext(ctx, histQuery, userID, passwordHash); err != nil {
+		return err
+	}
+
+	pruneQuery := `
+		DELETE FROM user_password_history
+		WHERE user_id = $1 AND id NOT IN (
+			SELECT id FROM user_password_history
+			WHERE user_id = $1 ORDER BY created_at DESC LIMIT 5
+		)
+	`
+	_, _ = tx.ExecContext(ctx, pruneQuery, userID)
+
+	return tx.Commit()
+}
+

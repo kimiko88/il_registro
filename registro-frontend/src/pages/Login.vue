@@ -288,6 +288,9 @@ onMounted(() => {
   if (route?.query?.reason === 'session_expired') {
     errorMessage.value = t('login.sessionExpired')
   }
+  if (route?.path === '/register' || route?.path === '/forgot-password') {
+    openContactSecretary()
+  }
 })
 
 async function fetchSchools() {

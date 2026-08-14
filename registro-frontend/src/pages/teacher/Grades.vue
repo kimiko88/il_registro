@@ -21,7 +21,7 @@
         />
         <q-select
           v-model="selectedSubject"
-          :options="gradesStore.subjects"
+          :options="availableSubjectOptions"
           option-label="subject_name"
           option-value="subject_id"
           emit-value
@@ -451,6 +451,7 @@
 import { ref, watch, computed } from 'vue';
 import { useClassesStore } from 'src/stores/classes';
 import { useGradesStore } from 'src/stores/grades';
+import { useAuthStore } from 'src/stores/auth';
 import GradeEntry from 'src/components/Teacher/GradeEntry.vue';
 import GradeStatistics from 'src/components/Teacher/GradeStatistics.vue';
 import { gradeService } from 'src/services/gradeService';
@@ -464,10 +465,53 @@ const $q = useQuasar();
 useUndoToast();
 const classesStore = useClassesStore();
 const gradesStore = useGradesStore();
+const authStore = useAuthStore();
 const schoolYearStore = useSchoolYearStore();
 
 const selectedClassId = ref(null);
-const selectedSubject = ref(null); 
+const selectedSubject = ref(null);
+
+const isCivicaSubject = (s) => {
+  const name = (s.subject_name || s.name || '').toLowerCase();
+  return name.includes('civica') || name.includes('educazione civica') || name.includes('ed. civica');
+};
+
+const isAssignedToCurrentTeacher = (s, user) => {
+  if (!user) return false;
+  const currentUserId = String(user.id || '');
+  const teacherId = user.teacher_id ? String(user.teacher_id) : '';
+  const sTeacherId = s.teacher_id ? String(s.teacher_id) : '';
+  const sTeacherUserId = s.teacher_user_id ? String(s.teacher_user_id) : '';
+
+  if (sTeacherId && (sTeacherId === currentUserId || (teacherId && sTeacherId === teacherId))) {
+    return true;
+  }
+  if (sTeacherUserId && (sTeacherUserId === currentUserId || (teacherId && sTeacherUserId === teacherId))) {
+    return true;
+  }
+  if (s.teacher_name && user.last_name) {
+    const tName = s.teacher_name.toLowerCase();
+    const uLast = user.last_name.toLowerCase();
+    const uFirst = (user.first_name || '').toLowerCase();
+    if (tName.includes(uLast) && (!uFirst || tName.includes(uFirst))) {
+      return true;
+    }
+  }
+  return false;
+};
+
+const availableSubjectOptions = computed(() => {
+  const allSubjects = gradesStore.subjects || [];
+  const user = authStore.user;
+  if (!user || ['admin', 'superadmin', 'secretary'].includes(user.role)) {
+    return allSubjects;
+  }
+
+  // Mostra ESCLUSIVAMENTE le materie assegnate dalla segreteria al docente loggato + Educazione Civica
+  return allSubjects.filter(s => {
+    return isAssignedToCurrentTeacher(s, user) || isCivicaSubject(s);
+  });
+});
 const viewMode = ref('table');
 const filterDate = ref(date.formatDate(Date.now(), 'YYYY-MM-DD'));
 const gradeType = ref('Orale');
@@ -594,8 +638,8 @@ watch(selectedClassId, async (newVal) => {
     if (newVal) {
         await gradesStore.fetchClassSubjects(newVal);
         if (currentReq !== classChangeReqId) return;
-        if (gradesStore.subjects && gradesStore.subjects.length > 0) {
-            selectedSubject.value = gradesStore.subjects[0].subject_id;
+        if (availableSubjectOptions.value && availableSubjectOptions.value.length > 0) {
+            selectedSubject.value = availableSubjectOptions.value[0].subject_id;
         } else {
             selectedSubject.value = null;
         }

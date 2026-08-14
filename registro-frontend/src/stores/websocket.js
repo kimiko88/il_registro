@@ -53,6 +53,11 @@ export const useWebSocketStore = defineStore('websocket', () => {
     }
 
     function connect() {
+        if (reconnectTimer.value) {
+            clearTimeout(reconnectTimer.value)
+            reconnectTimer.value = null
+        }
+
         if (socket.value && (socket.value.readyState === WebSocket.OPEN || socket.value.readyState === WebSocket.CONNECTING)) {
             return
         }
@@ -81,8 +86,9 @@ export const useWebSocketStore = defineStore('websocket', () => {
         }
 
         const token = authStore.token
+        const finalWsUrl = token ? `${wsUrl}?token=${encodeURIComponent(token)}` : wsUrl
         try {
-            socket.value = new WebSocket(wsUrl, ['access_token', token])
+            socket.value = new WebSocket(finalWsUrl)
         } catch (e) {
             console.error('WebSocket connection error:', e)
             attemptReconnect()
@@ -101,12 +107,15 @@ export const useWebSocketStore = defineStore('websocket', () => {
         }
 
         socket.value.onmessage = (event) => {
-            try {
-                const message = JSON.parse(event.data)
-                if (message && message.type === 'PONG') return
-                handleMessage(message)
-            } catch (e) {
-                console.error('WebSocket: Failed to parse message', e)
+            const lines = (event.data || '').split('\n').filter(line => line.trim().length > 0)
+            for (const line of lines) {
+                try {
+                    const message = JSON.parse(line)
+                    if (message && message.type === 'PONG') continue
+                    handleMessage(message)
+                } catch (e) {
+                    console.error('WebSocket: Failed to parse message line', e)
+                }
             }
         }
 
@@ -169,12 +178,11 @@ export const useWebSocketStore = defineStore('websocket', () => {
         const jitter = Math.random() * 1000
         const delay = Math.min(baseDelay + jitter, maxDelay)
 
-        reconnectAttempts.value++
-        console.log(`WebSocket: Attempting reconnect in ${(delay / 1000).toFixed(1)}s (attempt ${reconnectAttempts.value})`)
-
         reconnectTimer.value = setTimeout(() => {
             reconnectTimer.value = null
             if (authStore.isAuthenticated && authStore.token) {
+                reconnectAttempts.value++
+                console.log(`WebSocket: Executing reconnect attempt ${reconnectAttempts.value}`)
                 connect()
             } else {
                 disconnect()

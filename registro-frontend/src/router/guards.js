@@ -7,6 +7,7 @@ export const authGuard = (to, from, next) => {
 
     const getUserDashboard = (role) => {
         if (role === 'admin' || role === 'superadmin') return '/admin/dashboard'
+        if (role === 'system_auditor') return '/admin/audit-log'
         if (role === 'teacher' || role === 'coordinator') return '/teacher'
         if (role === 'student') return '/student'
         if (role === 'parent') return '/parent'

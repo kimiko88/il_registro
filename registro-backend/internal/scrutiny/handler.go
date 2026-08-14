@@ -338,13 +338,13 @@ func (h *Handler) GetStudentDeficiencies(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if actorRole == "student" && actorID != studentID {
-		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: student can only access own deficiencies"})
-		return
-	}
 
-	deficiencies, err := h.service.GetStudentDeficiencies(c.Request.Context(), studentID)
+	deficiencies, err := h.service.GetStudentDeficiencies(c.Request.Context(), actorID, actorRole, studentID)
 	if err != nil {
+		if strings.HasPrefix(err.Error(), "forbidden") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

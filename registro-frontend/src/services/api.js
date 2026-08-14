@@ -28,21 +28,11 @@ api.interceptors.request.use(
             const authStore = useAuthStore();
             token = authStore.token;
         } catch {
-            // fallback if store not ready
+            // Store not ready yet
         }
-        if (!token) {
-            const rawToken = localStorage.getItem('token') || sessionStorage.getItem('token');
-            if (rawToken) {
-                try {
-                    const payload = JSON.parse(atob(rawToken.split('.')[1]));
-                    if (payload.exp && payload.exp * 1000 > Date.now()) {
-                        token = rawToken;
-                    }
-                } catch {
-                    // Invalid token format in storage
-                }
-            }
-        }
+        // Note: Tokens are stored exclusively in Pinia memory to prevent XSS.
+        // Any client-side decoding is used strictly for UX optimization (e.g. routing/UI state);
+        // cryptographical signature verification and authorization are strictly enforced server-side.
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -141,64 +131,46 @@ api.interceptors.response.use(
                     // Store not initialized
                 }
 
-                const refreshToken = authStore?.refreshToken;
-
-                if (refreshToken || document.cookie.includes('refreshToken')) {
-                    if (isRefreshing) {
-                        return new Promise((resolve, reject) => {
-                            failedQueue.push({ resolve, reject });
+                if (isRefreshing) {
+                    return new Promise((resolve, reject) => {
+                        failedQueue.push({ resolve, reject });
+                    })
+                        .then((token) => {
+                            originalRequest.headers.Authorization = `Bearer ${token}`;
+                            return api(originalRequest);
                         })
-                            .then((token) => {
-                                originalRequest.headers.Authorization = `Bearer ${token}`;
-                                return api(originalRequest);
-                            })
-                            .catch((err) => Promise.reject(err));
+                        .catch((err) => Promise.reject(err));
+                }
+
+                isRefreshing = true;
+
+                try {
+                    const refreshResponse = await axios.post(
+                        `${getBaseURL()}/auth/refresh-token`,
+                        authStore?.refreshToken ? { refresh_token: authStore.refreshToken } : {},
+                        { timeout: 15000, withCredentials: true }
+                    );
+                    const access_token = refreshResponse.data?.access_token;
+                    const newRefreshToken = refreshResponse.data?.refresh_token;
+
+                    if (authStore && authStore.updateTokens) {
+                        authStore.updateTokens(access_token, newRefreshToken);
                     }
 
-                    isRefreshing = true;
-
-                    try {
-                        const refreshResponse = await axios.post(`${getBaseURL()}/auth/refresh-token`, {
-                            refresh_token: refreshToken,
-                        }, { timeout: 15000 });
-                        const access_token = refreshResponse.data?.access_token;
-                        const newRefreshToken = refreshResponse.data?.refresh_token;
-
-                        if (authStore && authStore.updateTokens) {
-                            authStore.updateTokens(access_token, newRefreshToken);
-                        } else {
-                            if (localStorage.getItem('token')) {
-                                localStorage.setItem('token', access_token);
-                                if (newRefreshToken) localStorage.setItem('refreshToken', newRefreshToken);
-                            } else if (sessionStorage.getItem('token')) {
-                                sessionStorage.setItem('token', access_token);
-                                if (newRefreshToken) sessionStorage.setItem('refreshToken', newRefreshToken);
-                            }
-                        }
-
-                        processQueue(null, access_token);
-                        originalRequest.headers.Authorization = `Bearer ${access_token}`;
-                        return api(originalRequest);
-                    } catch (refreshErr) {
-                        processQueue(refreshErr, null);
-                        if (authStore) {
-                            authStore.logout();
-                        } else {
-                            clearLocalSession();
-                        }
-                        handleSessionExpired();
-                        return Promise.reject(refreshErr);
-                    } finally {
-                        isRefreshing = false;
-                    }
-                } else {
+                    processQueue(null, access_token);
+                    originalRequest.headers.Authorization = `Bearer ${access_token}`;
+                    return api(originalRequest);
+                } catch (refreshErr) {
+                    processQueue(refreshErr, null);
                     if (authStore) {
                         authStore.logout();
                     } else {
                         clearLocalSession();
                     }
                     handleSessionExpired();
-                    return Promise.reject(error);
+                    return Promise.reject(refreshErr);
+                } finally {
+                    isRefreshing = false;
                 }
             }
         }

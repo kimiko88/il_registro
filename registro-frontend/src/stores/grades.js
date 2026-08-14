@@ -71,6 +71,11 @@ export const useGradesStore = defineStore('grades', {
                 return;
             }
 
+            // Debounce rapid background refresh notifications (5s TTL)
+            if (!force && isBackgroundRefresh && cached && (Date.now() - cached.timestamp < 5000)) {
+                return;
+            }
+
             if (!isBackgroundRefresh) {
                 this.loading = true;
             }

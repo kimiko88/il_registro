@@ -2,13 +2,13 @@ package ws
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
-	"sync"
 	"time"
+
+	"registro-backend/pkg/logger"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -21,26 +21,19 @@ const (
 	maxMessageSize = 8192
 )
 
-var (
-	allowedOriginsOnce   sync.Once
-	cachedAllowedOrigins map[string]bool
-)
-
 // allowedOrigins returns the set of permitted WebSocket origins from the
 // ALLOWED_ORIGINS environment variable (comma-separated). Falls back to
 // rejecting all cross-origin requests if the variable is not set.
 func allowedOrigins() map[string]bool {
-	allowedOriginsOnce.Do(func() {
-		raw := os.Getenv("ALLOWED_ORIGINS")
-		cachedAllowedOrigins = make(map[string]bool)
-		for _, o := range strings.Split(raw, ",") {
-			o = strings.TrimSpace(o)
-			if o != "" {
-				cachedAllowedOrigins[o] = true
-			}
+	raw := os.Getenv("ALLOWED_ORIGINS")
+	origins := make(map[string]bool)
+	for _, o := range strings.Split(raw, ",") {
+		o = strings.TrimSpace(o)
+		if o != "" {
+			origins[o] = true
 		}
-	})
-	return cachedAllowedOrigins
+	}
+	return origins
 }
 
 var upgrader = websocket.Upgrader{
@@ -65,7 +58,7 @@ var upgrader = websocket.Upgrader{
 		if allowed["*"] {
 			isProd := os.Getenv("GIN_MODE") == "release" || os.Getenv("APP_ENV") == "production"
 			if isProd {
-				log.Println("WARNING: Wildcard '*' in ALLOWED_ORIGINS is forbidden in production environment; rejecting WebSocket connection")
+				logger.Log.Warn("WARNING: Wildcard '*' in ALLOWED_ORIGINS is forbidden in production environment; rejecting WebSocket connection")
 				return false
 			}
 			return true
@@ -93,7 +86,7 @@ func (c *Client) readPump() {
 		_, msg, err := c.Conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("ws error: %v", err)
+				logger.Log.Warnf("ws read error: %v", err)
 			}
 			break
 		}
@@ -198,12 +191,15 @@ func (h *Handler) Listen(c *gin.Context) {
 		return
 	}
 
-	// The auth middleware handles token validation before this point.
-	// We no longer negotiate Sec-WebSocket-Protocol for token delivery;
-	// the token is passed via Bearer header or ?token= query param instead.
-	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+	// Negotiate Sec-WebSocket-Protocol only if client sent "access_token"
+	var responseHeader http.Header
+	if secProto := c.Request.Header.Get("Sec-WebSocket-Protocol"); strings.Contains(secProto, "access_token") {
+		responseHeader = http.Header{"Sec-WebSocket-Protocol": []string{"access_token"}}
+	}
+
+	conn, err := upgrader.Upgrade(c.Writer, c.Request, responseHeader)
 	if err != nil {
-		log.Println("ws upgrade error:", err)
+		logger.Log.Warnf("ws upgrade error: %v", err)
 		return
 	}
 

@@ -156,6 +156,10 @@ func (m *MockAuthRepository) ResetPasswordTx(ctx context.Context, userID, passwo
 	args := m.Called(ctx, userID, passwordHash, tokenID)
 	return args.Error(0)
 }
+func (m *MockAuthRepository) ChangePasswordTx(ctx context.Context, userID, passwordHash string) error {
+	args := m.Called(ctx, userID, passwordHash)
+	return args.Error(0)
+}
 
 // MockUsersRepository mocks users.Repository
 type MockUsersRepository struct {
@@ -518,8 +522,12 @@ func (m *MockAnalyticsService) GetStudentProfile(studentID string, semester int)
 	}
 	return args.Get(0).(*grades.AnalyticsStudentResponse), args.Error(1)
 }
-func (m *MockAnalyticsService) GetSchoolStatistics(year string) (*grades.SchoolStatisticsResponse, error) {
-	args := m.Called(year)
+func (m *MockAnalyticsService) GetSchoolStatistics(year string, schoolID ...string) (*grades.SchoolStatisticsResponse, error) {
+	var sid string
+	if len(schoolID) > 0 {
+		sid = schoolID[0]
+	}
+	args := m.Called(year, sid)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}

@@ -338,6 +338,10 @@ func (h *Handler) UploadAttachment(c *gin.Context) {
 	if errMIME != nil {
 		detectedMIME = header.Header.Get("Content-Type")
 	}
+	if !isAllowedMIMEType(detectedMIME) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "tipo di allegato non consentito"})
+		return
+	}
 
 	var publicURL string
 	if h.uploader != nil {
@@ -355,7 +359,10 @@ func (h *Handler) UploadAttachment(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"attachment_url": publicURL})
 }
 
-func isValidMIME(contentType string) bool {
+// isAllowedMIMEType validates that the MIME type is in the allowed allowlist.
+// IMPORTANT: contentType MUST be derived from magic-byte detection (upload.DetectMIME),
+// NOT from the client-supplied Content-Type header, to prevent MIME-spoofing attacks.
+func isAllowedMIMEType(contentType string) bool {
 	contentType = strings.ToLower(strings.TrimSpace(strings.Split(contentType, ";")[0]))
 	allowed := map[string]bool{
 		"application/pdf":    true,

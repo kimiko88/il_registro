@@ -22,7 +22,7 @@ describe('Auth Store', () => {
             expect(store.isAuthenticated).toBe(false)
         })
 
-        it('should load user and token from localStorage', () => {
+        it('should load user from storage while keeping token in memory', () => {
             const mockUser = {
                 id: '123',
                 email: 'test@example.com',
@@ -32,15 +32,12 @@ describe('Auth Store', () => {
             }
 
             localStorage.setItem('user', JSON.stringify(mockUser))
-            localStorage.setItem('token', 'access-token')
-            localStorage.setItem('refreshToken', 'refresh-token')
 
             const store = useAuthStore()
 
             expect(store.user).toEqual(mockUser)
-            expect(store.token).toBe('access-token')
-            expect(store.refreshToken).toBe('refresh-token')
-            expect(store.isAuthenticated).toBe(true)
+            expect(store.token).toBeNull()
+            expect(store.refreshToken).toBeNull()
         })
     })
 
@@ -90,7 +87,7 @@ describe('Auth Store', () => {
             expect(store.isAuthenticated).toBe(true)
         })
 
-        it('should persist data to localStorage', () => {
+        it('should persist user profile to localStorage while keeping tokens in memory', () => {
             const store = useAuthStore()
             const mockUser = {
                 id: '123',
@@ -103,8 +100,8 @@ describe('Auth Store', () => {
             store.login(mockUser, 'access-token', 'refresh-token')
 
             expect(localStorage.getItem('user')).toBe(JSON.stringify(mockUser))
-            expect(localStorage.getItem('token')).toBe('access-token')
-            expect(localStorage.getItem('refreshToken')).toBe('refresh-token')
+            expect(localStorage.getItem('token')).toBeNull()
+            expect(localStorage.getItem('refreshToken')).toBeNull()
         })
     })
 

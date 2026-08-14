@@ -102,7 +102,7 @@ func (s *service) GetStudentGradesWithFilter(ctx context.Context, actorID string
 			return nil, ErrNotGuardian
 		}
 	}
-	if actorRole == "teacher" {
+	if actorRole == "teacher" && s.validator != nil {
 		isAssigned, err := s.validator.IsTeacherAssignedToStudent(ctx, actorID, studentID)
 		if err != nil {
 			return nil, err
@@ -142,6 +142,15 @@ func (s *service) GetStudentGradesPaged(ctx context.Context, actorID string, act
 		}
 		if !isGuardian {
 			return nil, ErrNotGuardian
+		}
+	}
+	if actorRole == "teacher" && s.validator != nil {
+		isAssigned, err := s.validator.IsTeacherAssignedToStudent(ctx, actorID, studentID)
+		if err != nil {
+			return nil, err
+		}
+		if !isAssigned {
+			return nil, ErrUnauthorized
 		}
 	}
 
@@ -238,21 +247,6 @@ func (s *service) GetClassGrades(ctx context.Context, actorID string, actorRole 
 			Grades:       gList,
 		})
 		addedStudents[sID] = true
-	}
-
-	// Fallback for students who have grades but are not in GetStudentsByClass result
-	for sID, gList := range studentMap {
-		if addedStudents[sID] {
-			continue
-		}
-		avg1, avg2 := calcSemesterAverages(gList)
-		resp.Students = append(resp.Students, StudentGradeSummary{
-			StudentID:    sID,
-			FullName:     "Studente sconosciuto",
-			AvgSemester1: avg1,
-			AvgSemester2: avg2,
-			Grades:       gList,
-		})
 	}
 
 	sort.Slice(resp.Students, func(i, j int) bool {

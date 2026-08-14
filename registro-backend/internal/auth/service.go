@@ -142,20 +142,17 @@ func (s *Service) Login(ctx context.Context, req *LoginRequest, ipAddress, userA
 	}
 
 	if !user.IsActive {
-		s.recordFailedAttempt(ctx, req.Email, ipAddress)
 		return nil, ErrUserInactive
 	}
 
 	// Check if password has expired (90 days for privileged roles: superadmin, admin, secretary, teacher)
 	if isPasswordExpired(user) {
-		s.recordFailedAttempt(ctx, req.Email, ipAddress)
 		return nil, ErrPasswordExpired
 	}
 
 	// Check MFA — decrypt stored secret before verifying the TOTP code.
 	if user.MFAEnabled {
 		if req.MFAToken == "" {
-			s.recordFailedAttempt(ctx, req.Email, ipAddress)
 			return nil, ErrMFARequired
 		}
 		encryptedSecret, err := s.repo.GetMFASecret(ctx, user.ID)
@@ -597,13 +594,10 @@ func (s *Service) ChangePassword(ctx context.Context, userID, currentPassword, n
 		return err
 	}
 
-	if err := s.repo.UpdatePassword(ctx, userID, string(passwordHash)); err != nil {
+	if err := s.repo.ChangePasswordTx(ctx, userID, string(passwordHash)); err != nil {
 		return err
 	}
 
-	if err := s.repo.AddPasswordHistory(ctx, userID, string(passwordHash)); err != nil {
-		logger.Log.Warnf("ChangePassword: failed to add password history for user %s: %v", userID, err)
-	}
 	if err := s.repo.RevokeAllUserTokens(ctx, userID); err != nil {
 		logger.Log.Warnf("ChangePassword: failed to revoke user tokens for user %s: %v", userID, err)
 	}

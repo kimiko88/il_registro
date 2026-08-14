@@ -146,7 +146,11 @@ func (h *Handler) GetByID(c *gin.Context) {
 			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 			return
 		}
-		c.JSON(http.StatusNotFound, gin.H{"error": "agenda item not found"})
+		if err == ErrNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "agenda item not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
 	c.JSON(http.StatusOK, item)
@@ -202,10 +206,10 @@ func (h *Handler) Delete(c *gin.Context) {
 }
 
 func (h *Handler) MarkComplete(c *gin.Context) {
-	studentID := c.GetString("user_id")
+	actorID := c.GetString("user_id")
 	role := c.GetString("role")
 	id := c.Param("id")
-	if studentID == "" {
+	if actorID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
@@ -214,7 +218,23 @@ func (h *Handler) MarkComplete(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.SetTaskCompletion(c.Request.Context(), studentID, role, id, true); err != nil {
+	// For parent role, accept an explicit student_id to target the child.
+	// The service will validate the guardianship relationship.
+	targetStudentID := actorID
+	if role == "parent" {
+		if sid := c.Query("student_id"); sid != "" {
+			targetStudentID = sid
+		} else {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "student_id richiesto per il ruolo parent"})
+			return
+		}
+	}
+
+	if err := h.service.SetTaskCompletion(c.Request.Context(), actorID, role, targetStudentID, id, true); err != nil {
+		if err == ErrUnauthorized {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+			return
+		}
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -222,10 +242,10 @@ func (h *Handler) MarkComplete(c *gin.Context) {
 }
 
 func (h *Handler) UnmarkComplete(c *gin.Context) {
-	studentID := c.GetString("user_id")
+	actorID := c.GetString("user_id")
 	role := c.GetString("role")
 	id := c.Param("id")
-	if studentID == "" {
+	if actorID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
@@ -234,7 +254,22 @@ func (h *Handler) UnmarkComplete(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.SetTaskCompletion(c.Request.Context(), studentID, role, id, false); err != nil {
+	// For parent role, accept an explicit student_id to target the child.
+	targetStudentID := actorID
+	if role == "parent" {
+		if sid := c.Query("student_id"); sid != "" {
+			targetStudentID = sid
+		} else {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "student_id richiesto per il ruolo parent"})
+			return
+		}
+	}
+
+	if err := h.service.SetTaskCompletion(c.Request.Context(), actorID, role, targetStudentID, id, false); err != nil {
+		if err == ErrUnauthorized {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+			return
+		}
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}

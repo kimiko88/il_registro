@@ -97,23 +97,22 @@ describe('Role-Based Authentication Flows', () => {
             expect(authStore.userName).toBe('Giovanni Bianchi')
         })
 
-        it('should maintain teacher session across page reload', () => {
+        it('should maintain user profile across page reload while keeping token in memory', () => {
             const authStore = useAuthStore()
 
             // Simulate login
             authStore.login(teacherUser, 'token', 'refresh')
 
-            // Verify localStorage
+            // Verify localStorage (user profile persisted, token kept in memory)
             expect(localStorage.getItem('user')).toBe(JSON.stringify(teacherUser))
-            expect(localStorage.getItem('token')).toBe('token')
+            expect(localStorage.getItem('token')).toBeNull()
 
             // Simulate page reload by creating new store
             setActivePinia(createPinia())
             const newAuthStore = useAuthStore()
 
-            // Store should load from localStorage
+            // Store should load user profile from localStorage
             expect(newAuthStore.user).toEqual(teacherUser)
-            expect(newAuthStore.isAuthenticated).toBe(true)
         })
     })
 

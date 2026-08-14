@@ -169,7 +169,7 @@
                 <div v-if="!isSubstitutionMode" class="col-12 col-md-3">
                     <q-select
                         v-model="lessonSubjectId"
-                        :options="gradesStore.subjects"
+                        :options="availableSubjectOptions"
                         option-label="subject_name"
                         option-value="subject_id"
                         emit-value
@@ -179,7 +179,7 @@
                         dense
                     />
                 </div>
-                <div class="col-12" :class="isSubstitutionMode ? '' : 'col-md-6'">
+                <div class="col-12" :class="isSubstitutionMode ? 'col-md-10' : 'col-md-7'">
                     <q-input
                         v-model="lessonTopic"
                         label="Argomento della Lezione"
@@ -197,19 +197,52 @@
                         label="Tipo Lezione"
                         outlined
                         dense
+                        :readonly="isReadOnly"
                     />
                 </div>
-                <div class="col-12 col-md-3 row items-center">
-                    <q-toggle v-model="isCoTeaching" label="Compresenza" color="deep-purple" dense />
+                <div class="col-12 col-md-4">
+                    <q-select
+                        v-model="activityType"
+                        :options="activityTypeOptions"
+                        option-value="value"
+                        option-label="label"
+                        emit-value
+                        map-options
+                        label="Tipologia Attività"
+                        outlined
+                        dense
+                        :readonly="isReadOnly"
+                    >
+                        <template v-slot:option="scope">
+                            <q-item v-bind="scope.itemProps">
+                                <q-item-section avatar>
+                                    <q-icon :name="scope.opt.icon" :color="scope.opt.color" />
+                                </q-item-section>
+                                <q-item-section>
+                                    <q-item-label>{{ scope.opt.label }}</q-item-label>
+                                    <q-item-label caption>{{ scope.opt.caption }}</q-item-label>
+                                </q-item-section>
+                            </q-item>
+                        </template>
+                    </q-select>
                 </div>
-                <div class="col-12">
-                    <q-input v-model="lessonNotes" label="Note interne docente" outlined dense autogrow placeholder="(Opzionale)" />
+                <div class="col-12 col-md-2 row items-center">
+                    <q-toggle v-model="isCoTeaching" label="Compresenza" color="deep-purple" dense :disable="isReadOnly" />
+                </div>
+                <div class="col-12 col-md-3">
+                    <q-input v-model="lessonNotes" label="Note interne docente" outlined dense autogrow placeholder="(Opzionale)" :readonly="isReadOnly" />
+                </div>
+                <div v-if="isPctoOrOrientamento" class="col-12">
+                    <q-banner class="bg-blue-1 text-blue-9 rounded-borders" dense>
+                        <template v-slot:avatar><q-icon name="info" color="blue-7" /></template>
+                        Per le attività {{ getActivityTypeLabel(activityType) }} non è possibile inserire valutazioni agli studenti.
+                    </q-banner>
                 </div>
             </div>
 
             <!-- Homework Accordion -->
             <div class="q-mt-sm">
-                <q-toggle v-model="assignHomework" label="Assegna compiti per questa lezione" color="orange" dense />
+                <q-toggle v-model="assignHomework" label="Assegna compiti per questa lezione" color="orange" dense :disable="isReadOnly" />
                 <div v-if="assignHomework" class="row q-col-gutter-md q-mt-xs">
                     <div class="col-12 col-md-8">
                         <q-input v-model="homeworkDesc" label="Descrizione Compito *" outlined dense autogrow placeholder="Es. Esercizi pag. 140 n. 1-10" />
@@ -229,10 +262,14 @@
                 <div v-for="l in dailyLessons" :key="l.id" class="col-auto">
                     <q-chip dense outline :color="String(l.hour) === String(selectedHour) ? 'indigo-9' : 'indigo-5'" icon="event_note" class="bg-white">
                         Ora {{ l.hour }}: {{ l.topic || '—' }}
+                        <q-badge v-if="l.activity_type && l.activity_type !== 'standard'" :color="getActivityTypeColor(l.activity_type)" class="q-ml-xs text-caption">
+                            {{ getActivityTypeLabel(l.activity_type) }}
+                        </q-badge>
                         <q-tooltip>
                             Docente: {{ l.teacher_name || 'Docente' }}<br>
                             Materia: {{ getSubjectName(l.subject_id) }}<br>
-                            Tipo: {{ l.type }}
+                            Tipo: {{ l.type }}<br>
+                            Attività: {{ getActivityTypeLabel(l.activity_type || 'standard') }}
                         </q-tooltip>
                     </q-chip>
                 </div>
@@ -589,6 +626,7 @@ const allSchoolClasses = ref([])
 // Lesson Form State
 const lessonTopic = ref('')
 const lessonType = ref('Frontale')
+const activityType = ref('standard')
 const lessonSubjectId = ref(null)
 const isCoTeaching = ref(false)
 const lessonNotes = ref('')
@@ -601,6 +639,39 @@ const allTodayAttendance = ref([])
 
 const lessonTypeOptions = ['Frontale', 'Supplenza', 'Laboratorio', 'Verifica', 'Discussione', 'Lavoro di gruppo', 'Interrogazione', 'Altro']
 
+/** Opzioni per la tipologia di attività */
+const activityTypeOptions = [
+  { value: 'standard',          label: 'Standard (Lezione curricolare)', icon: 'menu_book',   color: 'primary',     caption: 'Normale attività didattica in classe' },
+  { value: 'substitution',      label: 'Supplenza',                      icon: 'swap_horiz',   color: 'deep-orange', caption: 'Supplenza di un collega assente' },
+  { value: 'pcto',              label: 'PCTO',                           icon: 'work',         color: 'deep-purple', caption: 'Ore di Alternanza Scuola-Lavoro (PCTO)' },
+  { value: 'orientamento',      label: 'Orientamento',                   icon: 'explore',      color: 'teal',        caption: 'Attività di orientamento formativo' },
+  { value: 'pcto_orientamento', label: 'PCTO - Orientamento',             icon: 'hub',          color: 'indigo-8',    caption: 'Attività congiunta PCTO e Orientamento (max 15h ciascuno)' },
+  { value: 'ptof',              label: 'PTOF',                           icon: 'auto_stories', color: 'purple',      caption: 'Attività rientranti nel PTOF' },
+  { value: 'project',           label: 'Progetto',                       icon: 'science',      color: 'indigo',      caption: 'Progetto didattico specifico' },
+  { value: 'assembly',          label: 'Assemblea',                      icon: 'groups',       color: 'blue',        caption: 'Assemblea di istituto o di classe' },
+  { value: 'trip',              label: 'Gita',                           icon: 'luggage',      color: 'orange',      caption: 'Uscita didattica o gita scolastica' },
+  { value: 'lab',               label: 'Laboratorio',                    icon: 'biotech',      color: 'green',       caption: 'Attività di laboratorio' },
+  { value: 'other',             label: 'Altro',                          icon: 'more_horiz',   color: 'grey',        caption: 'Altra tipologia non categorizzata' }
+]
+
+const getActivityTypeColor = (type) => {
+  const opt = activityTypeOptions.find(o => o.value === type)
+  return opt ? opt.color : 'grey'
+}
+const getActivityTypeIcon = (type) => {
+  const opt = activityTypeOptions.find(o => o.value === type)
+  return opt ? opt.icon : 'menu_book'
+}
+const getActivityTypeLabel = (type) => {
+  const opt = activityTypeOptions.find(o => o.value === type)
+  return opt ? opt.label : (type || 'Standard')
+}
+const isPctoOrOrientamento = computed(() =>
+  activityType.value === 'pcto' ||
+  activityType.value === 'orientamento' ||
+  activityType.value === 'pcto_orientamento'
+)
+
 const availableClassOptions = computed(() => {
   const source = isSubstitutionMode.value ? allSchoolClasses.value : classesStore.classes
   return source.map(c => {
@@ -608,6 +679,51 @@ const availableClassOptions = computed(() => {
     if (c.section && !nameText.endsWith(c.section)) nameText += c.section
     if (c.articolazione) nameText += ` - ${c.articolazione}`
     return { ...c, label: c.label || nameText }
+  })
+})
+
+const isCivicaSubject = (s) => {
+  const name = (s.subject_name || s.name || '').toLowerCase()
+  return name.includes('civica') || name.includes('educazione civica') || name.includes('ed. civica')
+}
+
+const isAssignedToCurrentTeacher = (s, user) => {
+  if (!user) return false
+  const currentUserId = String(user.id || '')
+  const teacherId = user.teacher_id ? String(user.teacher_id) : ''
+  const sTeacherId = s.teacher_id ? String(s.teacher_id) : ''
+  const sTeacherUserId = s.teacher_user_id ? String(s.teacher_user_id) : ''
+
+  if (sTeacherId && (sTeacherId === currentUserId || (teacherId && sTeacherId === teacherId))) {
+    return true
+  }
+  if (sTeacherUserId && (sTeacherUserId === currentUserId || (teacherId && sTeacherUserId === teacherId))) {
+    return true
+  }
+  if (s.teacher_name && user.last_name) {
+    const tName = s.teacher_name.toLowerCase()
+    const uLast = user.last_name.toLowerCase()
+    const uFirst = (user.first_name || '').toLowerCase()
+    if (tName.includes(uLast) && (!uFirst || tName.includes(uFirst))) {
+      return true
+    }
+  }
+  return false
+}
+
+const availableSubjectOptions = computed(() => {
+  if (isSubstitutionMode.value) {
+    return [{ subject_name: 'Supplenza / Compresenza', subject_id: 'supplenza' }]
+  }
+  const allSubjects = gradesStore.subjects || []
+  const user = authStore.user
+  if (!user || ['admin', 'superadmin', 'secretary'].includes(user.role)) {
+    return allSubjects
+  }
+
+  // Mostra ESCLUSIVAMENTE le materie assegnate dalla segreteria al docente loggato + Educazione Civica
+  return allSubjects.filter(s => {
+    return isAssignedToCurrentTeacher(s, user) || isCivicaSubject(s)
   })
 })
 
@@ -736,12 +852,14 @@ const toggleSubstitutionMode = async () => {
     if (allSchoolClasses.value.length > 0) selectedClass.value = allSchoolClasses.value[0]
     lessonSubjectId.value = null
     lessonType.value = 'Supplenza'
+    activityType.value = 'substitution'
     lessonTopic.value = ''
     $q.notify({ type: 'info', message: 'Modalità Supplenza attivata', timeout: 2500 })
   } else {
     await classesStore.fetchAssignedClasses()
     if (classesStore.classes.length > 0) selectedClass.value = classesStore.classes[0]
     lessonType.value = 'Frontale'
+    activityType.value = 'standard'
     lessonTopic.value = ''
     await onClassChange()
   }
@@ -805,7 +923,14 @@ const onClassChange = async () => {
     if (selectedClass.value && !isSubstitutionMode.value) {
         const classId = typeof selectedClass.value === 'object' ? selectedClass.value.id : selectedClass.value
         await gradesStore.fetchClassSubjects(classId)
-        lessonSubjectId.value = gradesStore.subjects.length > 0 ? gradesStore.subjects[0].subject_id : null
+        if (availableSubjectOptions.value.length > 0) {
+            const isSelectedAvailable = availableSubjectOptions.value.some(s => s.subject_id === lessonSubjectId.value)
+            if (!lessonSubjectId.value || !isSelectedAvailable) {
+                lessonSubjectId.value = availableSubjectOptions.value[0].subject_id
+            }
+        } else {
+            lessonSubjectId.value = null
+        }
     } else if (isSubstitutionMode.value) {
         lessonSubjectId.value = null
     }
@@ -873,6 +998,7 @@ const fetchData = async () => {
             // Own lesson: pre-fill all fields
             lessonTopic.value = existingLesson.topic || ''
             lessonType.value = existingLesson.type || 'Frontale'
+            activityType.value = existingLesson.activity_type || 'standard'
             isCoTeaching.value = !!existingLesson.is_co_teaching
             lessonNotes.value = existingLesson.notes || ''
             if (existingLesson.subject_id) lessonSubjectId.value = existingLesson.subject_id
@@ -880,6 +1006,7 @@ const fetchData = async () => {
             // Another teacher's lesson: show read-only but clear form fields for display
             lessonTopic.value = existingLesson.topic || ''
             lessonType.value = existingLesson.type || 'Frontale'
+            activityType.value = existingLesson.activity_type || 'standard'
             isCoTeaching.value = false
             lessonNotes.value = ''
         } else {
@@ -888,6 +1015,7 @@ const fetchData = async () => {
             lessonNotes.value = ''
             if (!isSubstitutionMode.value) {
                 lessonType.value = 'Frontale'
+                activityType.value = 'standard'
                 isCoTeaching.value = false
             }
         }
@@ -975,6 +1103,7 @@ const saveUnifiedRecord = async () => {
                 duration: 1,
                 topic: lessonTopic.value,
                 type: isSubstitutionMode.value ? 'Supplenza' : lessonType.value,
+                activity_type: activityType.value || 'standard',
                 is_co_teaching: isCoTeaching.value,
                 notes: lessonNotes.value
             }

@@ -239,7 +239,7 @@ func (v *Validator) IsTeacherAssignedToSubject(teacherID string, subjectID strin
 // IsTeacherAssignedToStudent checks if a teacher is assigned to any of the student's class subjects or is class coordinator.
 func (v *Validator) IsTeacherAssignedToStudent(ctx context.Context, teacherID string, studentID string) (bool, error) {
 	if v == nil || v.db == nil || teacherID == "" || studentID == "" {
-		return true, nil
+		return false, nil
 	}
 	var exists bool
 	query := `

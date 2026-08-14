@@ -558,9 +558,18 @@ func (s *Service) SaveDeficiency(ctx context.Context, actorID, actorRole string,
 	return s.repo.SaveDeficiency(ctx, def)
 }
 
-func (s *Service) GetStudentDeficiencies(ctx context.Context, studentID string) ([]StudentDeficiency, error) {
+func (s *Service) GetStudentDeficiencies(ctx context.Context, actorID, actorRole, studentID string) ([]StudentDeficiency, error) {
 	if studentID == "" {
 		return []StudentDeficiency{}, nil
+	}
+	if actorRole == "student" && actorID != studentID {
+		return nil, errors.New("forbidden: student can only access own deficiencies")
+	}
+	if actorRole == "parent" {
+		isGuardian, err := s.userRepo.IsGuardian(ctx, actorID, studentID)
+		if err != nil || !isGuardian {
+			return nil, errors.New("forbidden: parent is not a guardian of this student")
+		}
 	}
 	return s.repo.GetDeficienciesByStudent(ctx, studentID)
 }

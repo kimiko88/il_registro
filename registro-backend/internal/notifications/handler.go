@@ -5,12 +5,17 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
+	"time"
+
+	"golang.org/x/time/rate"
 
 	"github.com/gin-gonic/gin"
 )
 
 type Handler struct {
 	service Service
+	pushLimiters sync.Map
 }
 
 func NewHandler(s Service) *Handler {
@@ -152,14 +157,15 @@ func (h *Handler) UnregisterToken(c *gin.Context) {
 	}
 
 	deviceToken := c.GetHeader("X-Device-Token")
-	if deviceToken == "" {
+	if deviceToken == "" && c.Request.Body != nil && c.Request.ContentLength > 0 {
 		var req struct {
 			DeviceToken string `json:"device_token"`
 		}
-		_ = c.ShouldBindJSON(&req)
-		if req.DeviceToken != "" {
-			deviceToken = req.DeviceToken
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid JSON payload: " + err.Error()})
+			return
 		}
+		deviceToken = req.DeviceToken
 	}
 
 	if deviceToken == "" {
@@ -183,6 +189,14 @@ func (h *Handler) SendPush(c *gin.Context) {
 	role := c.GetString("role")
 	if role != "admin" && role != "superadmin" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: push notifications restricted to administrative staff"})
+		return
+	}
+
+	// Rate limit: max 10 requests per minute per admin caller
+	limiterVal, _ := h.pushLimiters.LoadOrStore(userID, rate.NewLimiter(rate.Every(6*time.Second), 5))
+	limiter := limiterVal.(*rate.Limiter)
+	if !limiter.Allow() {
+		c.JSON(http.StatusTooManyRequests, gin.H{"error": "troppi invii di notifiche push, riprova tra qualche istante"})
 		return
 	}
 

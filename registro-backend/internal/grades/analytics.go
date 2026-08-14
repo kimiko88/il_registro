@@ -12,7 +12,7 @@ type AnalyticsService interface {
 	GetClassAnalysis(classID string, semester int) (*AnalyticsClassResponse, error)
 	GetSubjectAnalysis(subjectID string, semester int) (*AnalyticsSubjectResponse, error)
 	GetStudentProfile(studentID string, semester int) (*AnalyticsStudentResponse, error)
-	GetSchoolStatistics(year string) (*SchoolStatisticsResponse, error)
+	GetSchoolStatistics(year string, schoolID ...string) (*SchoolStatisticsResponse, error)
 }
 
 type analyticsService struct {
@@ -338,8 +338,12 @@ func (a *analyticsService) GetStudentProfile(studentID string, semester int) (*A
 	}, nil
 }
 
-func (a *analyticsService) GetSchoolStatistics(year string) (*SchoolStatisticsResponse, error) {
-	allGrades, err := a.repo.FindWithFilter(GradeFilter{})
+func (a *analyticsService) GetSchoolStatistics(year string, schoolID ...string) (*SchoolStatisticsResponse, error) {
+	filter := GradeFilter{}
+	if len(schoolID) > 0 && schoolID[0] != "" {
+		filter.SchoolID = schoolID[0]
+	}
+	allGrades, err := a.repo.FindWithFilter(filter)
 	if err != nil {
 		return nil, err
 	}

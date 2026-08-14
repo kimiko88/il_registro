@@ -237,6 +237,11 @@ func (h *Handler) RejectJustification(c *gin.Context) {
 }
 
 func (h *Handler) GetAnalytics(c *gin.Context) {
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	role := c.GetString("role")
 	if role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && role != "teacher" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
@@ -249,7 +254,7 @@ func (h *Handler) GetAnalytics(c *gin.Context) {
 	}
 	res, err := h.service.GetSchoolAnalytics(c.Request.Context(), schoolID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
 	c.JSON(http.StatusOK, res)
@@ -338,8 +343,8 @@ func (h *Handler) GetMyAttendance(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "student" && role != "parent" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only students or parents can view my-attendance"})
+	if role != "student" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only students can view my-attendance (parents must use /child-attendance/:studentID)"})
 		return
 	}
 	from, to, err := parseWindowParams(c)
@@ -381,12 +386,13 @@ func (h *Handler) RequestJustification(c *gin.Context) {
 func (h *Handler) GetPendingJustifications(c *gin.Context) {
 	actorID := c.GetString("user_id")
 	actorRole := c.GetString("role")
+	schoolID := c.GetString("school_id")
 	if actorID == "" || (actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary") {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 	classID := c.Query("class_id")
-	res, err := h.service.GetPendingJustifications(c.Request.Context(), classID)
+	res, err := h.service.GetPendingJustifications(c.Request.Context(), classID, schoolID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -473,7 +479,14 @@ func (h *Handler) ExportAttendance(c *gin.Context) {
 		return
 	}
 
-	filename := fmt.Sprintf("presenze_%s_%s.csv", classID, date)
+	// Sanitize classID to prevent header injection: strip quotes, CR, LF, semicolons.
+	safeClassID := strings.Map(func(r rune) rune {
+		if r == '"' || r == '\r' || r == '\n' || r == ';' || r == '\\' {
+			return '_'
+		}
+		return r
+	}, classID)
+	filename := fmt.Sprintf("presenze_%s_%s.csv", safeClassID, date)
 	c.Header("Content-Type", "text/csv; charset=utf-8")
 	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
 
@@ -579,9 +592,14 @@ func (h *Handler) GetChildMonthlyBreakdown(c *gin.Context) {
 
 func (h *Handler) GetChildUnjustified(c *gin.Context) {
 	parentID := c.GetString("user_id")
+	role := c.GetString("role")
 	studentID := c.Param("studentID")
 	if parentID == "" || studentID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid parameters"})
+		return
+	}
+	if role != "parent" && role != "admin" && role != "superadmin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: solo i genitori o gli amministratori possono accedere a questa funzione"})
 		return
 	}
 
@@ -600,16 +618,22 @@ func (h *Handler) GetChildUnjustified(c *gin.Context) {
 
 func (h *Handler) JustifyChildAbsence(c *gin.Context) {
 	parentID := c.GetString("user_id")
+	role := c.GetString("role")
 	studentID := c.Param("studentID")
 	attendanceID := c.Param("attendanceID")
 	if parentID == "" || studentID == "" || attendanceID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid parameters"})
 		return
 	}
+	if role != "parent" && role != "admin" && role != "superadmin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: solo i genitori o gli amministratori possono giustificare le assenze del figlio"})
+		return
+	}
 
 	var req JustifyAbsenceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		req.Reason = "Giustificato da genitore"
+		c.JSON(http.StatusBadRequest, gin.H{"error": "corpo della richiesta non valido: " + err.Error()})
+		return
 	}
 
 	err := h.service.JustifyChildAbsence(c.Request.Context(), parentID, studentID, attendanceID, req)
@@ -627,9 +651,14 @@ func (h *Handler) JustifyChildAbsence(c *gin.Context) {
 
 func (h *Handler) GetChildAttendanceStats(c *gin.Context) {
 	parentID := c.GetString("user_id")
+	role := c.GetString("role")
 	studentID := c.Param("studentID")
 	if parentID == "" || studentID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid parameters"})
+		return
+	}
+	if role != "parent" && role != "admin" && role != "superadmin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: solo i genitori o gli amministratori possono accedere alle statistiche del figlio"})
 		return
 	}
 

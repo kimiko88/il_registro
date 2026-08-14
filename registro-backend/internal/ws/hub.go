@@ -156,12 +156,12 @@ func (h *Hub) redisListener(ctx context.Context) {
 		// When Run() closes the subscription the snapshotted channel will close
 		// naturally, and redisListener will detect !ok and then return via ctx.Done().
 		h.mu.RLock()
-		ps := h.pubsub
-		h.mu.RUnlock()
-		if ps == nil {
+		if h.pubsub == nil {
+			h.mu.RUnlock()
 			return // shutdown already in progress
 		}
-		ch := ps.Channel()
+		ch := h.pubsub.Channel()
+		h.mu.RUnlock()
 		running := true
 		for running {
 			select {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 
@@ -208,7 +209,12 @@ func (m *memoryBackend) allowAuth(_ context.Context, ip string) bool {
 // ---------------------------------------------------------------------------
 
 func resolveClientIP(c *gin.Context) string {
-	ip := c.ClientIP()
+	var ip string
+	if os.Getenv("TRUST_PROXY_HEADERS") == "true" {
+		ip = c.ClientIP()
+	} else {
+		ip = c.RemoteIP()
+	}
 	if ip == "" {
 		ip = "unknown"
 	}

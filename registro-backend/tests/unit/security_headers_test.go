@@ -34,6 +34,7 @@ func TestSecurity_SecurityHeadersMiddleware(t *testing.T) {
 	})
 
 	t.Run("Sets HSTS header on HTTPS requests", func(t *testing.T) {
+		t.Setenv("TRUST_PROXY_HEADERS", "true")
 		r := gin.New()
 		r.Use(middleware.SecurityHeadersMiddleware())
 		r.GET("/api/v1/ping", func(c *gin.Context) {

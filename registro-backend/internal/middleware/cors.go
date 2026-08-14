@@ -32,15 +32,21 @@ func CORSMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		origin := c.Request.Header.Get("Origin")
 		c.Writer.Header().Add("Vary", "Origin")
-		if originsMap[origin] {
+
+		isAllowed := originsMap[origin]
+		if isAllowed {
 			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
 			c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
-			c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With, Sec-WebSocket-Protocol")
+			c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
 			c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE, PATCH")
 			c.Writer.Header().Set("Access-Control-Max-Age", "86400")
 		}
 
 		if c.Request.Method == "OPTIONS" {
+			if origin != "" && !isAllowed {
+				c.AbortWithStatus(403)
+				return
+			}
 			reqMethod := c.Request.Header.Get("Access-Control-Request-Method")
 			if reqMethod != "" {
 				allowedMethods := map[string]bool{"GET": true, "POST": true, "PUT": true, "DELETE": true, "PATCH": true, "OPTIONS": true}

@@ -176,11 +176,15 @@ func (h *Handler) Share(c *gin.Context) {
 
 func (h *Handler) ApproveByFamily(c *gin.Context) {
 	actorID := c.GetString(ContextKeyUserID)
+	actorRole := getRole(c)
 	if actorID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	actorRole := getRole(c)
+	if actorRole != "parent" && actorRole != "admin" && actorRole != "superadmin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: solo i genitori o gli amministratori possono approvare i piani PDP"})
+		return
+	}
 	if err := h.svc.ApproveByFamily(c.Request.Context(), actorRole, actorID, c.Param("id")); handleErr(c, err) {
 		return
 	}

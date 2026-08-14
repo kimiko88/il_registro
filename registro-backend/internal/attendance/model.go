@@ -77,6 +77,7 @@ type JustifyAbsenceRequest struct {
 // Justification represents a request to justify an absence
 type Justification struct {
 	ID          string `json:"id" db:"id"`
+	SchoolID    string `json:"school_id,omitempty" db:"school_id"`
 	StudentID   string `json:"student_id" db:"student_id"`
 	StudentName string `json:"student_name,omitempty"`
 	ParentID    string `json:"parent_id,omitempty" db:"parent_id"`

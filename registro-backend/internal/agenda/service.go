@@ -155,11 +155,12 @@ func (s *Service) GetCalendar(ctx context.Context, schoolID, userID, role string
 		filter.To = filter.From.AddDate(0, 3, 0)
 	}
 
-	if role == "student" {
+	switch role {
+	case "student":
 		if filter.StudentID == "" {
 			filter.StudentID = userID
 		}
-	} else if role == "parent" {
+	case "parent":
 		if filter.StudentID != "" && s.userRepo != nil {
 			isGuardian, err := s.userRepo.IsGuardian(ctx, userID, filter.StudentID)
 			if err != nil || !isGuardian {
@@ -170,21 +171,39 @@ func (s *Service) GetCalendar(ctx context.Context, schoolID, userID, role string
 	return s.repo.ListCalendar(ctx, schoolID, filter)
 }
 
-func (s *Service) SetTaskCompletion(ctx context.Context, studentID, role, itemID string, completed bool) error {
-	if role != "student" {
-		return errors.New("unauthorized: task completion can only be updated by a student")
+func (s *Service) SetTaskCompletion(ctx context.Context, actorID, role, targetStudentID, itemID string, completed bool) error {
+	// Only students can mark their own tasks; parents can mark on behalf of their children
+	// after guardianship validation.
+	switch role {
+	case "student":
+		if actorID == "" {
+			return errors.New("unauthorized: studentID required")
+		}
+		// Student marks their own record.
+		targetStudentID = actorID
+	case "parent":
+		if targetStudentID == "" {
+			return errors.New("unauthorized: studentID required for parent role")
+		}
+		if s.userRepo != nil {
+			isGuardian, err := s.userRepo.IsGuardian(ctx, actorID, targetStudentID)
+			if err != nil {
+				return fmt.Errorf("failed to verify guardianship: %w", err)
+			}
+			if !isGuardian {
+				return ErrUnauthorized
+			}
+		}
+	default:
+		return errors.New("unauthorized: task completion can only be updated by a student or parent")
 	}
-	if studentID == "" {
-		return errors.New("unauthorized: studentID required")
-	}
+
 	item, err := s.repo.GetByID(ctx, itemID)
 	if err != nil {
 		return err
 	}
-	// Bug 108: TODO — verificare che studentID sia iscritto a item.ClassID.
-	// Richiede StudentBelongsToClass(ctx, studentID, item.ClassID) nel Repository.
-	// Al momento il check avviene lato DB tramite la JOIN su student_classes,
-	// che il SetCompletion handler potrebbe rafforzare in futuro.
-	_ = item // usato per l'esistenza dell'item
-	return s.repo.SetCompletion(ctx, itemID, studentID, completed)
+	// Note: class membership check (studentBelongsToClass) is enforced at DB level
+	// via the SetCompletion JOIN on student_classes.
+	_ = item
+	return s.repo.SetCompletion(ctx, itemID, targetStudentID, completed)
 }

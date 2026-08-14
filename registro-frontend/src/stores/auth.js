@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { resetApiState, clearLocalSession } from '../services/api'
+import { useWebSocketStore } from './websocket'
 
 const parseUser = (val) => {
     if (!val) return null
@@ -16,20 +17,17 @@ const isTokenExpired = (tokenStr) => {
     try {
         const parts = tokenStr.split('.')
         if (parts.length !== 3) {
-            // Allow mock tokens in test environment
-            if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.MODE === 'test') {
-                return false
-            }
-            return true
+            return false
         }
         const base64Url = parts[1]
         const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
         const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''))
         const payload = JSON.parse(jsonPayload)
-        if (payload && payload.exp) {
+        if (payload && typeof payload.exp === 'number') {
             return Date.now() >= payload.exp * 1000
         }
-        return false
+        // Tokens missing 'exp' field are treated as invalid/expired
+        return true
     } catch {
         return true
     }
@@ -66,13 +64,16 @@ const getRoleFromToken = (tokenStr) => {
 
 export const useAuthStore = defineStore('auth', () => {
     const user = ref(parseUser(sessionStorage.getItem('user')) || parseUser(localStorage.getItem('user')) || null)
-    const token = ref(sessionStorage.getItem('token') || localStorage.getItem('token') || null)
-    const refreshToken = ref(sessionStorage.getItem('refreshToken') || localStorage.getItem('refreshToken') || null)
+    // SECURITY: Access token & Refresh token are kept strictly in memory (Pinia ref)
+    // to prevent token theft via XSS. Refresh tokens are stored exclusively in HttpOnly cookies by backend.
+    const token = ref(null)
+    const refreshToken = ref(null)
 
     const isAuthenticated = computed(() => {
         if (!token.value) return false
         return !isTokenExpired(token.value)
     })
+
     const userRole = computed(() => {
         const jwtRole = getRoleFromToken(token.value)
         if (jwtRole) return jwtRole
@@ -83,34 +84,24 @@ export const useAuthStore = defineStore('auth', () => {
         return `${user.value.first_name || user.value.firstName || ''} ${user.value.last_name || user.value.lastName || ''}`.trim() || 'User'
     })
 
-    function login(userData, tokenData, refreshTokenData, rememberMe = true) {
+    function login(userData, tokenData, refreshTokenData = null, rememberMe = true) {
         const sanitized = sanitizeUserData(userData)
         user.value = sanitized
         token.value = tokenData
         refreshToken.value = refreshTokenData
 
+        // Clear legacy token items from storage if any exist
+        localStorage.removeItem('token')
+        localStorage.removeItem('refreshToken')
+        sessionStorage.removeItem('token')
+        sessionStorage.removeItem('refreshToken')
+
         if (rememberMe) {
             localStorage.setItem('user', JSON.stringify(sanitized))
-            localStorage.setItem('token', tokenData)
-            if (refreshTokenData) {
-                localStorage.setItem('refreshToken', refreshTokenData)
-            } else {
-                localStorage.removeItem('refreshToken')
-            }
             sessionStorage.removeItem('user')
-            sessionStorage.removeItem('token')
-            sessionStorage.removeItem('refreshToken')
         } else {
             sessionStorage.setItem('user', JSON.stringify(sanitized))
-            sessionStorage.setItem('token', tokenData)
-            if (refreshTokenData) {
-                sessionStorage.setItem('refreshToken', refreshTokenData)
-            } else {
-                sessionStorage.removeItem('refreshToken')
-            }
             localStorage.removeItem('user')
-            localStorage.removeItem('token')
-            localStorage.removeItem('refreshToken')
         }
     }
 
@@ -124,18 +115,15 @@ export const useAuthStore = defineStore('auth', () => {
             user.value = sanitizeUserData(newUserData)
         }
 
-        const isLocal = !!(localStorage.getItem('token') || localStorage.getItem('user'))
-        const storage = isLocal ? localStorage : sessionStorage
+        // Ensure legacy tokens are removed from storage
+        localStorage.removeItem('token')
+        localStorage.removeItem('refreshToken')
+        sessionStorage.removeItem('token')
+        sessionStorage.removeItem('refreshToken')
 
-        storage.setItem('token', newTokenData)
-        if (newRefreshTokenData !== undefined) {
-            if (newRefreshTokenData) {
-                storage.setItem('refreshToken', newRefreshTokenData)
-            } else {
-                storage.removeItem('refreshToken')
-            }
-        }
         if (newUserData && user.value) {
+            const isLocal = !!localStorage.getItem('user')
+            const storage = isLocal ? localStorage : sessionStorage
             storage.setItem('user', JSON.stringify(user.value))
         }
     }
@@ -145,6 +133,13 @@ export const useAuthStore = defineStore('auth', () => {
         token.value = null
         refreshToken.value = null
 
+        try {
+            const wsStore = useWebSocketStore()
+            wsStore.disconnect(true)
+        } catch {
+            // WebSocket store not initialized or already closed
+        }
+
         clearLocalSession()
         resetApiState()
     }
@@ -152,9 +147,9 @@ export const useAuthStore = defineStore('auth', () => {
     function updateUser(userData) {
         const sanitized = sanitizeUserData(userData)
         user.value = sanitized
-        if (localStorage.getItem('token')) {
+        if (localStorage.getItem('user')) {
             localStorage.setItem('user', JSON.stringify(sanitized))
-        } else if (sessionStorage.getItem('token')) {
+        } else if (sessionStorage.getItem('user')) {
             sessionStorage.setItem('user', JSON.stringify(sanitized))
         }
     }

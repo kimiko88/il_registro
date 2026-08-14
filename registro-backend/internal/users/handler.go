@@ -381,6 +381,14 @@ func (h *Handler) ForceResetPassword(c *gin.Context) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only privileged roles can force reset passwords"})
 		return
 	}
+	targetID := c.Param("id")
+	if role == "secretary" {
+		targetUser, err := h.service.GetUser(c.Request.Context(), role, getSchoolID(c), targetID)
+		if err == nil && targetUser != nil && (targetUser.Role == "admin" || targetUser.Role == "superadmin") {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: secretary cannot reset passwords of administrator accounts"})
+			return
+		}
+	}
 	var body struct {
 		NewPassword string `json:"new_password" binding:"required"`
 	}
@@ -388,7 +396,7 @@ func (h *Handler) ForceResetPassword(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	if err := h.service.ResetPassword(c.Request.Context(), role, getSchoolID(c), c.Param("id"), body.NewPassword); err != nil {
+	if err := h.service.ResetPassword(c.Request.Context(), role, getSchoolID(c), targetID, body.NewPassword); err != nil {
 		if errors.Is(err, ErrUnauthorized) || err == ErrUnauthorized {
 			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 			return
@@ -547,7 +555,15 @@ func (h *Handler) SwitchChild(c *gin.Context) {
 	}
 	student, err := h.service.SwitchChildContext(c.Request.Context(), parentID, studentID)
 	if err != nil {
-		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		if errors.Is(err, ErrUserNotFound) || strings.Contains(err.Error(), "not found") {
+			c.JSON(http.StatusNotFound, gin.H{"error": "student not found"})
+			return
+		}
+		if errors.Is(err, ErrUnauthorized) || strings.Contains(err.Error(), "unauthorized") || strings.Contains(err.Error(), "guardian") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{

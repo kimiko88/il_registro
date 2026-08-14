@@ -4,6 +4,8 @@ import (
 	"context"
 	"net/http"
 	"strings"
+	"sync"
+	"time"
 
 	"registro-backend/internal/users"
 	"registro-backend/pkg/jwt"
@@ -12,10 +14,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type activeCacheEntry struct {
+	isActive  bool
+	expiresAt time.Time
+}
+
 // Middleware provides authentication middleware
 type Middleware struct {
 	tokenManager *jwt.TokenManager
 	userRepo     users.Repository
+	activeCache  sync.Map
 }
 
 // NewMiddleware creates a new auth middleware.
@@ -73,15 +81,30 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 			return
 		}
 
-		// Always verify the account is still active in the DB.
-		// This ensures that disabling a user takes effect within one request,
-		// not just after the JWT expires (up to 15 minutes later).
-		isActive, err := m.userRepo.IsActive(c.Request.Context(), claims.UserID)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "auth check failed"})
-			c.Abort()
-			return
+		// Verify the account is still active in the DB with a short 10s TTL cache.
+		var isActive bool
+		if val, ok := m.activeCache.Load(claims.UserID); ok {
+			entry := val.(activeCacheEntry)
+			if time.Now().Before(entry.expiresAt) {
+				isActive = entry.isActive
+			}
 		}
+		if !isActive {
+			var err error
+			isActive, err = m.userRepo.IsActive(c.Request.Context(), claims.UserID)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "auth check failed"})
+				c.Abort()
+				return
+			}
+			if isActive {
+				m.activeCache.Store(claims.UserID, activeCacheEntry{
+					isActive:  true,
+					expiresAt: time.Now().Add(10 * time.Second),
+				})
+			}
+		}
+
 		if !isActive {
 			c.JSON(http.StatusForbidden, ErrorResponse{Error: "account is disabled"})
 			c.Abort()

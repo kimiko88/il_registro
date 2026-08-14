@@ -36,6 +36,9 @@ func backendURL() string {
 	if url := sanitizeCSPOrigin(os.Getenv("BACKEND_URL")); url != "" {
 		return url
 	}
+	if os.Getenv("APP_ENV") == "production" || os.Getenv("GIN_MODE") == "release" {
+		return "https://localhost:8080"
+	}
 	return "http://localhost:8080"
 }
 
@@ -71,7 +74,10 @@ func SecurityHeadersMiddleware() gin.HandlerFunc {
 
 		// Enforce HTTPS (HSTS) — 2 years, include subdomains, preload-ready
 		// Only set HSTS header on HTTPS connections or when running behind a TLS proxy
-		isHTTPS := c.Request.TLS != nil || c.GetHeader("X-Forwarded-Proto") == "https"
+		isHTTPS := c.Request.TLS != nil
+		if !isHTTPS && os.Getenv("TRUST_PROXY_HEADERS") == "true" {
+			isHTTPS = c.GetHeader("X-Forwarded-Proto") == "https" || c.GetHeader("X-Forwarded-Ssl") == "on"
+		}
 		if isHTTPS {
 			c.Writer.Header().Set("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload")
 		}
@@ -87,6 +93,11 @@ func SecurityHeadersMiddleware() gin.HandlerFunc {
 			"camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=()")
 
 		// Content Security Policy — strict nonce-based CSP without 'unsafe-inline'
+		upgradeInsecure := ""
+		if isHTTPS || os.Getenv("APP_ENV") == "production" || os.Getenv("GIN_MODE") == "release" {
+			upgradeInsecure = " upgrade-insecure-requests;"
+		}
+
 		csp := fmt.Sprintf(
 			"default-src 'self'; "+
 				"script-src 'self' 'nonce-%s'; "+
@@ -98,9 +109,8 @@ func SecurityHeadersMiddleware() gin.HandlerFunc {
 				"frame-src 'none'; "+
 				"base-uri 'self'; "+
 				"form-action 'self'; "+
-				"frame-ancestors 'none'; "+
-				"upgrade-insecure-requests;",
-			nonce, nonce, backendURL(), backendWSURL(),
+				"frame-ancestors 'none';%s",
+			nonce, nonce, backendURL(), backendWSURL(), upgradeInsecure,
 		)
 		c.Writer.Header().Set("Content-Security-Policy", csp)
 

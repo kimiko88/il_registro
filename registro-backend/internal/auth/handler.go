@@ -73,11 +73,25 @@ func (h *Handler) Register(c *gin.Context) {
 	})
 }
 
+func isHTTPSRequest(c *gin.Context) bool {
+	if c.Request.TLS != nil {
+		return true
+	}
+	if os.Getenv("TRUST_PROXY_HEADERS") == "true" {
+		if c.GetHeader("X-Forwarded-Proto") == "https" || c.GetHeader("X-Forwarded-Ssl") == "on" {
+			return true
+		}
+	}
+	return false
+}
+
 func setRefreshTokenCookie(c *gin.Context, token string, maxAge int) {
 	isSecure := true
-	if os.Getenv("COOKIE_SECURE") == "false" {
+	if os.Getenv("APP_ENV") == "production" || os.Getenv("GIN_MODE") == "release" {
+		isSecure = true
+	} else if os.Getenv("COOKIE_SECURE") == "false" {
 		isSecure = false
-	} else if c.Request.TLS != nil || c.GetHeader("X-Forwarded-Proto") == "https" || c.GetHeader("X-Forwarded-Ssl") == "on" {
+	} else if isHTTPSRequest(c) {
 		isSecure = true
 	}
 	domain := os.Getenv("COOKIE_DOMAIN")
@@ -130,14 +144,13 @@ func (h *Handler) Login(c *gin.Context) {
 // RefreshToken handles token refresh
 // POST /auth/refresh-token
 func (h *Handler) RefreshToken(c *gin.Context) {
-	var req RefreshTokenRequest
-	_ = c.ShouldBindJSON(&req)
-
-	rt := req.RefreshToken
-	if rt == "" {
-		if cookieToken, err := c.Cookie("refreshToken"); err == nil && cookieToken != "" {
-			rt = cookieToken
-		}
+	rt := ""
+	if cookieToken, err := c.Cookie("refreshToken"); err == nil && cookieToken != "" {
+		rt = cookieToken
+	} else {
+		var req RefreshTokenRequest
+		_ = c.ShouldBindJSON(&req)
+		rt = req.RefreshToken
 	}
 
 	if rt == "" {

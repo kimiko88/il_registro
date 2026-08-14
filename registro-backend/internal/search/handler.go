@@ -33,20 +33,22 @@ var validFilterTypes = map[string]bool{
 func (h *Handler) Search(c *gin.Context) {
 	userID := c.GetString("user_id")
 	schoolID := c.GetString("school_id")
+	role := c.GetString("role")
+
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	if role != "superadmin" && schoolID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "school_id required for search"})
+		return
+	}
 
 	q := c.Query("q")
 	filterType := c.Query("type")
 
 	if q == "" || len(q) < 2 {
-		c.JSON(http.StatusOK, gin.H{
-			"query":   q,
-			"total":   0,
-			"results": []SearchResultItem{},
-		})
-		return
-	}
-
-	if userID == "" {
 		c.JSON(http.StatusOK, gin.H{
 			"query":   q,
 			"total":   0,
@@ -65,11 +67,7 @@ func (h *Handler) Search(c *gin.Context) {
 
 	res, err := h.service.Search(c.Request.Context(), schoolID, q, filterType)
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"query":   q,
-			"total":   0,
-			"results": []SearchResultItem{},
-		})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "search failed"})
 		return
 	}
 	c.JSON(http.StatusOK, res)

@@ -59,7 +59,7 @@ func (h *Handler) GetLessons(c *gin.Context) {
 	res, err := h.service.GetLessons(classID, subjectID, date)
 	if err != nil {
 		logger.Log.Errorf("GetLessons error: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
 	c.JSON(http.StatusOK, res)
@@ -78,7 +78,7 @@ func (h *Handler) GetLessonsByGroup(c *gin.Context) {
 	res, err := h.service.GetLessonsByGroup(groupID, date)
 	if err != nil {
 		logger.Log.Errorf("GetLessonsByGroup error: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
 	c.JSON(http.StatusOK, res)
@@ -125,7 +125,7 @@ func (h *Handler) GetHomeworks(c *gin.Context) {
 
 	res, err := h.service.GetHomeworks(classID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
 	c.JSON(http.StatusOK, res)
@@ -343,27 +343,47 @@ func (h *Handler) GetActivityHours(c *gin.Context) {
 		return
 	}
 	classID := c.Param("class_id")
+	date := c.Query("date")
 
-	// Recupera tutte le lezioni della classe (senza filtro data per avere il totale)
-	lessons, err := h.service.GetLessons(classID, "", "")
+	if fromStr := c.Query("from"); fromStr != "" {
+		if toStr := c.Query("to"); toStr != "" {
+			fromT, errF := parseDate(fromStr)
+			toT, errT := parseDate(toStr)
+			if errF == nil && errT == nil {
+				if toT.Before(fromT) {
+					c.JSON(http.StatusBadRequest, gin.H{"error": "la data di fine non può essere precedente alla data di inizio"})
+					return
+				}
+				if toT.Sub(fromT) > 366*24*time.Hour {
+					c.JSON(http.StatusBadRequest, gin.H{"error": "range di date troppo ampio (massimo 1 anno)"})
+					return
+				}
+			}
+		}
+	}
+
+	// Recupera le lezioni della classe (con filtro data se specificato)
+	lessons, err := h.service.GetLessons(classID, "", date)
 	if err != nil {
 		logger.Log.Errorf("GetActivityHours error: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
 
 	// Conta le ore per tipo di attività
 	counters := map[string]int{
-		"pcto":         0,
-		"orientamento": 0,
-		"ptof":         0,
-		"assembly":     0,
-		"trip":         0,
-		"project":      0,
-		"lab":          0,
-		"standard":     0,
-		"other":        0,
+		"pcto":              0,
+		"orientamento":      0,
+		"pcto_orientamento": 0,
+		"ptof":              0,
+		"assembly":          0,
+		"trip":              0,
+		"project":           0,
+		"lab":               0,
+		"standard":          0,
+		"other":             0,
 	}
+	pctoOrientamentoRaw := 0
 	for _, l := range lessons {
 		key := l.ActivityType
 		if key == "" {
@@ -373,11 +393,24 @@ func (h *Handler) GetActivityHours(c *gin.Context) {
 		if dur <= 0 {
 			dur = 1
 		}
-		if _, ok := counters[key]; ok {
+		if key == "pcto_orientamento" || key == "pcto-orientamento" {
+			pctoOrientamentoRaw += dur
+			counters["pcto_orientamento"] += dur
+		} else if _, ok := counters[key]; ok {
 			counters[key] += dur
 		} else {
 			counters["other"] += dur
 		}
 	}
+
+	// Le ore di attività congiunta PCTO-Orientamento vengono conteggiate in entrambe le categorie fino a un massimo di 15 ore
+	jointHours := pctoOrientamentoRaw
+	if jointHours > 15 {
+		jointHours = 15
+	}
+	counters["pcto"] += jointHours
+	counters["orientamento"] += jointHours
+	counters["pcto_orientamento_effective"] = jointHours
+
 	c.JSON(http.StatusOK, counters)
 }
