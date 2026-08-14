@@ -74,8 +74,10 @@ func (h *Handler) Register(c *gin.Context) {
 }
 
 func setRefreshTokenCookie(c *gin.Context, token string, maxAge int) {
-	isSecure := c.Request.TLS != nil || c.GetHeader("X-Forwarded-Proto") == "https"
-	if os.Getenv("COOKIE_SECURE") == "true" {
+	isSecure := true
+	if os.Getenv("COOKIE_SECURE") == "false" {
+		isSecure = false
+	} else if c.Request.TLS != nil || c.GetHeader("X-Forwarded-Proto") == "https" || c.GetHeader("X-Forwarded-Ssl") == "on" {
 		isSecure = true
 	}
 	domain := os.Getenv("COOKIE_DOMAIN")

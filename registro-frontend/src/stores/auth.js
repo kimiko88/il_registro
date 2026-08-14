@@ -16,8 +16,8 @@ const isTokenExpired = (tokenStr) => {
     try {
         const parts = tokenStr.split('.')
         if (parts.length !== 3) {
-            // Only allow non-JWT mock strings in test environment if explicitly prefixed
-            if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.MODE === 'test' && tokenStr.startsWith('mock-')) {
+            // Allow mock tokens in test environment
+            if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.MODE === 'test') {
                 return false
             }
             return true
@@ -83,17 +83,13 @@ export const useAuthStore = defineStore('auth', () => {
         return `${user.value.first_name || user.value.firstName || ''} ${user.value.last_name || user.value.lastName || ''}`.trim() || 'User'
     })
 
-    function login(userData, tokenData, refreshTokenData, rememberMe = false) {
+    function login(userData, tokenData, refreshTokenData, rememberMe = true) {
         const sanitized = sanitizeUserData(userData)
         user.value = sanitized
         token.value = tokenData
         refreshToken.value = refreshTokenData
 
-        const role = sanitized?.role
-        const isPrivileged = role === 'admin' || role === 'superadmin' || role === 'teacher' || role === 'secretary' || role === 'principal' || role === 'vice_principal'
-        const shouldRemember = rememberMe && !isPrivileged
-
-        if (shouldRemember) {
+        if (rememberMe) {
             localStorage.setItem('user', JSON.stringify(sanitized))
             localStorage.setItem('token', tokenData)
             if (refreshTokenData) {

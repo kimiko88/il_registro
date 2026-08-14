@@ -93,7 +93,7 @@ func SecurityHeadersMiddleware() gin.HandlerFunc {
 				"style-src 'self' 'nonce-%s' https://fonts.googleapis.com; "+
 				"font-src 'self' https://fonts.gstatic.com; "+
 				"img-src 'self' data: https://cdn.quasar.dev; "+
-				"connect-src 'self' %s %s; "+
+				"connect-src 'self' %s %s https://*.supabase.co; "+
 				"object-src 'none'; "+
 				"frame-src 'none'; "+
 				"base-uri 'self'; "+

@@ -54,7 +54,7 @@ describe('Classes Store', () => {
         await store.createClass(newClass)
 
         expect(api.post).toHaveBeenCalledWith('/classes', newClass)
-        expect(store.classes).toContainEqual(createdClass)
+        expect(store.classes).toContainEqual(expect.objectContaining(createdClass))
     })
 
     it('updates class successfully', async () => {

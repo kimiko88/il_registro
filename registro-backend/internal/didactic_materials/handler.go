@@ -68,7 +68,7 @@ func (h *Handler) Create(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	res, err := h.service.CreateMaterial(teacherID, schoolID, req)
+	res, err := h.service.CreateMaterial(c.Request.Context(), teacherID, schoolID, req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -88,7 +88,7 @@ func (h *Handler) Delete(c *gin.Context) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: only teachers or admins can delete didactic materials"})
 		return
 	}
-	if err := h.service.DeleteMaterial(id, teacherID); err != nil {
+	if err := h.service.DeleteMaterial(c.Request.Context(), id, teacherID); err != nil {
 		errStr := err.Error()
 		if strings.HasPrefix(errStr, "unauthorized") {
 			c.JSON(http.StatusForbidden, gin.H{"error": errStr})

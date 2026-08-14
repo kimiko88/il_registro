@@ -63,14 +63,14 @@ func TestCreateMaterial(t *testing.T) {
 		SubjectID: "math",
 		Title:     "",
 	}
-	resp, err := s.CreateMaterial("teacher-1", "school-1", req)
+	resp, err := s.CreateMaterial(context.Background(), "teacher-1", "school-1", req)
 	assert.Nil(t, resp)
 	assert.EqualError(t, err, "title is required")
 
 	// Test successful creation
 	req.Title = "Math Slide"
 	req.Description = "Class slides"
-	resp, err = s.CreateMaterial("teacher-1", "school-1", req)
+	resp, err = s.CreateMaterial(context.Background(), "teacher-1", "school-1", req)
 	assert.NoError(t, err)
 	assert.NotNil(t, resp)
 	assert.Equal(t, "test-id", resp.ID)
@@ -79,7 +79,7 @@ func TestCreateMaterial(t *testing.T) {
 
 	// Test repository error
 	repo.errCreate = errors.New("db error")
-	resp, err = s.CreateMaterial("teacher-1", "school-1", req)
+	resp, err = s.CreateMaterial(context.Background(), "teacher-1", "school-1", req)
 	assert.Nil(t, resp)
 	assert.EqualError(t, err, "db error")
 }
@@ -113,7 +113,7 @@ func TestDeleteMaterial(t *testing.T) {
 	}
 	s := NewService(repo, nil)
 
-	err := s.DeleteMaterial("id-1", "teacher-1")
+	err := s.DeleteMaterial(context.Background(), "id-1", "teacher-1")
 	assert.NoError(t, err)
 	assert.Len(t, repo.materials, 0)
 }

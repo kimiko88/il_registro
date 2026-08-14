@@ -2,6 +2,26 @@ import { defineStore } from 'pinia';
 import api from '../services/api';
 import { gradeService } from '../services/gradeService';
 
+const calcClassAverage = (state, semester = 0) => {
+    if (!state.grades || !state.grades.students) return 0;
+    let sum = 0;
+    let count = 0;
+    state.grades.students.forEach(s => {
+        if (!s.grades) return;
+        s.grades.forEach(g => {
+            if (semester > 0 && g.semester && Number(g.semester) !== Number(semester)) {
+                return;
+            }
+            if (typeof g.grade_value === 'number' && g.grade_value > 0) {
+                sum += g.grade_value;
+                count++;
+            }
+        });
+    });
+    if (count === 0) return 0;
+    return Math.round((sum / count) * 10) / 10;
+};
+
 export const useGradesStore = defineStore('grades', {
     state: () => ({
         grades: null,      // ClassGradesResponse { students: [...] } or MyGradesResponse { semesters: [...] }
@@ -21,26 +41,11 @@ export const useGradesStore = defineStore('grades', {
             const student = state.grades.students.find(s => s.student_id === studentId);
             return student ? student.grades : [];
         },
-        classAverage: (state, getters) => (semester = 0) => {
-            return getters.classAverageForSemester(semester);
+        classAverage: (state) => (semester = 0) => {
+            return calcClassAverage(state, semester);
         },
         classAverageForSemester: (state) => (semester = 0) => {
-            if (!state.grades || !state.grades.students) return 0;
-            let sum = 0;
-            let count = 0;
-            state.grades.students.forEach(s => {
-                s.grades.forEach(g => {
-                    if (semester > 0 && g.semester && Number(g.semester) !== Number(semester)) {
-                        return;
-                    }
-                    if (typeof g.grade_value === 'number' && g.grade_value > 0) {
-                        sum += g.grade_value;
-                        count++;
-                    }
-                });
-            });
-            if (count === 0) return 0;
-            return Math.round((sum / count) * 10) / 10;
+            return calcClassAverage(state, semester);
         }
     },
 

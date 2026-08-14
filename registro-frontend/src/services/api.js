@@ -15,6 +15,7 @@ const getBaseURL = () => {
 const api = axios.create({
     baseURL: getBaseURL(),
     timeout: 15000,
+    withCredentials: true,
     headers: {
         'Content-Type': 'application/json',
     },
@@ -140,9 +141,9 @@ api.interceptors.response.use(
                     // Store not initialized
                 }
 
-                const refreshToken = authStore?.refreshToken || localStorage.getItem('refreshToken') || sessionStorage.getItem('refreshToken');
+                const refreshToken = authStore?.refreshToken;
 
-                if (refreshToken) {
+                if (refreshToken || document.cookie.includes('refreshToken')) {
                     if (isRefreshing) {
                         return new Promise((resolve, reject) => {
                             failedQueue.push({ resolve, reject });

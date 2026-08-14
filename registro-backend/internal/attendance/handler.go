@@ -30,7 +30,6 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	att.GET("/class/:id", h.GetClassAttendance)
 	att.DELETE("/class/:id/hour/:hour", h.DeleteClassAttendanceHour)
 	att.GET("/pending-justifications", h.GetPendingJustifications)
-	att.GET("/justifications/pending", h.GetPendingJustifications)
 	att.POST("/justification/:id/process", h.ProcessJustification)
 	att.POST("/justification/:id/reject", h.RejectJustification)
 	att.GET("/export", h.ExportAttendance)

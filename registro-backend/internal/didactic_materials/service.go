@@ -8,9 +8,9 @@ import (
 )
 
 type Service interface {
-	CreateMaterial(teacherID string, schoolID string, req CreateMaterialRequest) (*MaterialResponse, error)
+	CreateMaterial(ctx context.Context, teacherID string, schoolID string, req CreateMaterialRequest) (*MaterialResponse, error)
 	GetMaterialsByClass(ctx context.Context, userID, role, classID string) ([]MaterialResponse, error)
-	DeleteMaterial(id string, teacherID string) error
+	DeleteMaterial(ctx context.Context, id string, teacherID string) error
 }
 
 type service struct {
@@ -27,7 +27,7 @@ func NewService(r Repository, userRepo users.Repository) Service {
 	return &service{repo: r, userRepo: userRepo}
 }
 
-func (s *service) CreateMaterial(teacherID string, schoolID string, req CreateMaterialRequest) (*MaterialResponse, error) {
+func (s *service) CreateMaterial(ctx context.Context, teacherID string, schoolID string, req CreateMaterialRequest) (*MaterialResponse, error) {
 	if req.Title == "" {
 		return nil, errors.New("title is required")
 	}
@@ -100,7 +100,7 @@ func (s *service) GetMaterialsByClass(ctx context.Context, userID, role, classID
 	return res, nil
 }
 
-func (s *service) DeleteMaterial(id string, teacherID string) error {
+func (s *service) DeleteMaterial(ctx context.Context, id string, teacherID string) error {
 	return s.repo.Delete(id, teacherID)
 }
 

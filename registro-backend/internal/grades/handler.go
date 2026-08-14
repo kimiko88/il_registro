@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"registro-backend/pkg/logger"
+	"registro-backend/pkg/upload"
 
 	"github.com/gin-gonic/gin"
 )
@@ -267,6 +268,11 @@ func (h *Handler) BulkImport(c *gin.Context) {
 	}
 	defer file.Close()
 
+	if err := upload.ValidateUpload(file, fileHeader); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
 	semester := 1 // default
 	semStr := c.PostForm("semester")
 	if semStr == "" {
@@ -322,11 +328,12 @@ func (h *Handler) Export(c *gin.Context) {
 	}
 
 	if format == "json" || contentType == "" {
-		if format == "json" {
+		switch format {
+		case "json":
 			contentType = "application/json"
-		} else if format == "csv" {
+		case "csv":
 			contentType = "text/csv"
-		} else if format == "pdf" {
+		case "pdf":
 			contentType = "application/pdf"
 		}
 	}
