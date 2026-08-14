@@ -235,6 +235,7 @@ import { useQuasar } from 'quasar'
 import { useI18n } from 'vue-i18n'
 import { useAuth } from '@/composables/useAuth'
 import api from '@/services/api'
+import { SUPPORTED_LOCALES, applyLocale, normalizeLocale } from '@/utils/locale'
 
 const $q = useQuasar()
 const { locale, t } = useI18n()
@@ -253,26 +254,16 @@ const loadingSchools = ref(false)
 const selectedSchool = ref(null)
 const schools = ref([])
 
-const languageOptions = [
-  { label: 'Italiano', value: 'it-IT', code: 'IT', icon: 'flag' },
-  { label: 'English', value: 'en-US', code: 'EN', icon: 'language' },
-  { label: 'Deutsch', value: 'de-DE', code: 'DE', icon: 'language' },
-  { label: 'Français', value: 'fr-FR', code: 'FR', icon: 'language' },
-  { label: 'Español', value: 'es-ES', code: 'ES', icon: 'language' },
-  { label: 'Русский', value: 'ru-RU', code: 'RU', icon: 'language' },
-  { label: 'Українська', value: 'uk-UA', code: 'UK', icon: 'language' },
-  { label: 'العربية', value: 'ar-SA', code: 'AR', icon: 'language' },
-  { label: '中文 (简体)', value: 'zh-CN', code: 'ZH', icon: 'language' }
-]
+const languageOptions = SUPPORTED_LOCALES
 
 const currentLangCode = computed(() => {
-  const opt = languageOptions.find(o => o.value === locale.value)
+  const norm = normalizeLocale(locale.value)
+  const opt = languageOptions.find(o => o.value === norm)
   return opt ? opt.code : 'IT'
 })
 
 function changeLanguage(langKey) {
-  locale.value = langKey
-  localStorage.setItem('superadmin_language', langKey)
+  applyLocale(langKey, { locale }, $q)
 }
 
 const defaultSchools = [

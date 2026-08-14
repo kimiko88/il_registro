@@ -92,15 +92,23 @@ export default {
     calendar: 'Calendrier scolaire',
     reportCard: 'Bulletin scolaire',
     profile: 'Profil',
-    myChildren: 'Mes enfants'
+    myChildren: 'Mes enfants',
+    goals: 'Objectifs',
+    trips: 'Sorties & Voyages',
+    payments: 'Paiements',
+    assemblies: 'Assemblées & Réunions'
   },
   categories: {
     anagraficheClassi: 'Registres & Classes',
     attiCertificati: 'Actes & Certificats',
     serviziReport: 'Services & Rapports',
     didatticaValutazione: 'Enseignement & Évaluation',
-    organisationOrario: 'Organisation & Emploi du temps',
-    comunicazioniAtti: 'Communications & Actes'
+    organizzazioneOrario: 'Organisation & Emploi du temps',
+    comunicazioniAtti: 'Communications & Actes',
+    percorsiComunicazioni: 'Parcours & Communications',
+    valutazioneDidattica: 'Évaluation & Enseignement',
+    serviziOrari: 'Services & Horaires',
+    comunicazioniAccount: 'Communications & Compte'
   },
   roles: {
     admin: 'Administrateur',
@@ -116,13 +124,21 @@ export default {
     logoutSuccess: 'Déconnexion réussie',
     logoutError: 'Erreur lors de la déconnexion',
     settingsSaved: 'Paramètres enregistrés avec succès !',
-    emailCopied: 'Adresse e-mail copiée !'
+    emailCopied: 'Adresse e-mail copiée !',
+    passwordUpdated: 'Mot de passe mis à jour avec succès !',
+    languageChanged: 'Langue mise à jour avec succès'
   },
   errors: {
     connectionError: 'Erreur de connexion au serveur. Vérifiez votre connexion.',
     forbidden: 'Vous n\'avez pas les permissions nécessaires.',
     serverError: 'Une erreur s\'est produite sur le serveur.',
     unauthorized: 'Session invalide ou expirée.',
+    invalidCredentials: 'E-mail ou mot de passe incorrect.',
+    rateLimit: 'Trop de tentatives. Veuillez réessayer dans quelques minutes.',
+    accountDisabled: 'Compte désactivé ou suspendu. Veuillez contacter le secrétariat.',
+    userNotFound: 'Utilisateur non trouvé.',
+    passwordMismatch: 'Les mots de passe ne correspondent pas.',
+    sessionInvalid: 'Session invalide, veuillez vous reconnecter.',
     ERR_CURRENT_PASSWORD_INCORRECT: 'Le mot de passe actuel est incorrect.',
     ERR_PASSWORD_COMPLEXITY: 'Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial.',
     ERR_PASSWORD_TOO_SHORT: 'Le mot de passe doit comporter au moins 10 caractères.',
@@ -130,7 +146,6 @@ export default {
     ERR_PASSWORD_RECENTLY_USED: 'Le nouveau mot de passe ne doit pas correspondre aux 5 derniers mots de passe utilisés.',
     ERR_REQUIRED_FIELDS: 'Veuillez remplir tous les champs obligatoires.'
   },
-
   settings: {
     title: 'Paramètres du système',
     subtitle: 'Configurez les préférences générales, de sécurité et de notifications',
@@ -146,5 +161,111 @@ export default {
     minPasswordLength: 'Longueur minimale du mot de passe',
     sessionTimeout: 'Délai d\'inactivité de session',
     maxLoginAttempts: 'Tentatives échouées avant blocage'
+  },
+  search: {
+    placeholder: 'Rechercher élèves, enseignants, secrétariat, classes, circulaires, menus…',
+    hint: 'Tapez pour rechercher des élèves, enseignants, secrétariat, classes ou menus',
+    noResults: 'Aucun résultat pour',
+    navigate: 'Naviguer',
+    open: 'Ouvrir',
+    close: 'Fermer'
+  }
+,
+  onboarding: {
+    welcomeTitle: "Bienvenue dans le Registre Électronique!",
+    welcomeSubtitle: "Découvrez en quelques étapes comment utiliser au mieux toutes les fonctionnalités disponibles pour votre rôle.",
+    startTour: "Démarrer la visite",
+    skipTour: "Ignorer la visite",
+    next: "Suivant",
+    prev: "Précédent",
+    finish: "Commencer à utiliser le Registre",
+    stepOf: "Étape {current} sur {total}",
+    restartTour: "Redémarrer la visite",
+    tourCompleted: "Visite terminée!",
+    tourCompletedMsg: "Vous êtes prêt à utiliser le Registre Électronique. Vous pouvez revoir le guide à tout moment.",
+    teacher: {
+      step1_title: "Tableau de bord Professeur",
+      step1_desc: "Votre tableau de bord personnel affiche un résumé des cours du jour, les notifications récentes et un accès rapide aux fonctions les plus utilisées.",
+      step2_title: "Registre de classe & Présences",
+      step2_desc: "Dans \"Mes Classes\" vous pouvez accéder au registre, enregistrer les présences et absences, saisir les sujets de cours.",
+      step3_title: "Gestion des notes",
+      step3_desc: "Dans \"Notes\" vous pouvez saisir des notes orales et écrites, voir les moyennes de classe et la distribution des notes.",
+      step4_title: "Agenda & Communications",
+      step4_desc: "L'agenda permet de planifier des contrôles, devoirs et activités. Dans \"Communications\" vous pouvez envoyer des messages aux élèves et parents.",
+      step5_title: "Réunions parents",
+      step5_desc: "Gérez les rendez-vous individuels avec les parents : consultez les réservations, les disponibilités et la progression de la classe.",
+      step6_title: "Paramètres & Profil",
+      step6_desc: "Dans \"Paramètres\" vous pouvez personnaliser la langue, le thème, les notifications et mettre à jour votre mot de passe."
+    },
+    student: {
+      step1_title: "Votre tableau de bord",
+      step1_desc: "Le tableau de bord personnel affiche les devoirs à venir, les dernières notifications et un résumé de vos résultats scolaires.",
+      step2_title: "Mes notes",
+      step2_desc: "Dans \"Mes Notes\" vous pouvez voir toutes les notes enregistrées par les professeurs, les moyennes par matière et l'évolution dans le temps.",
+      step3_title: "Mes présences",
+      step3_desc: "Suivez vos présences, absences et retards. Vous pouvez consulter les détails journaliers et mensuels.",
+      step4_title: "Devoirs & Didactique",
+      step4_desc: "Dans \"Devoirs\" vous trouvez tous les devoirs assignés avec leurs échéances. \"Didactique\" affiche les documents déposés par les professeurs.",
+      step5_title: "Bulletin & Documents",
+      step5_desc: "Dans \"Bulletin\" vous pouvez consulter votre document d'évaluation. Dans \"Documents\" vous trouvez circulaires et matériel scolaire.",
+      step6_title: "Calendrier scolaire",
+      step6_desc: "Le calendrier scolaire affiche les vacances, les dates des contrôles prévus et les événements importants."
+    },
+    parent: {
+      step1_title: "Tableau de bord Parent",
+      step1_desc: "Votre tableau de bord affiche un résumé des progrès de vos enfants, les dernières notifications scolaires et les messages non lus.",
+      step2_title: "Mes enfants",
+      step2_desc: "Dans \"Mes Enfants\" vous trouvez la liste de vos enfants inscrits. Sélectionnez-en un pour voir le profil scolaire complet.",
+      step3_title: "Notes & Présences",
+      step3_desc: "Suivez les notes et présences de vos enfants en temps réel. Recevez des notifications immédiates pour les absences et nouvelles notes.",
+      step4_title: "Communications scolaires",
+      step4_desc: "Toutes les communications officielles de l'école (circulaires, avis, messages des professeurs) sont rassemblées ici.",
+      step5_title: "Rendez-vous professeurs",
+      step5_desc: "Réservez des rendez-vous individuels avec les professeurs directement depuis l'application.",
+      step6_title: "Paiements & Documents",
+      step6_desc: "Gérez les paiements scolaires et accédez aux documents de votre enfant (bulletins, certificats)."
+    },
+    secretary: {
+      step1_title: "Tableau de bord Secrétariat",
+      step1_desc: "Le tableau de bord affiche les activités en attente, les dernières demandes et les statistiques principales de l'établissement.",
+      step2_title: "Gestion classes & élèves",
+      step2_desc: "Dans \"Classes\" vous gérez toutes les classes. Dans \"Élèves\" vous trouvez le registre complet avec recherche avancée.",
+      step3_title: "Certificats & Documents",
+      step3_desc: "Générez et imprimez des certificats de scolarité et de présence. Gérez l'archive documentaire numérique.",
+      step4_title: "Gestion des horaires",
+      step4_desc: "Configurez l'emploi du temps scolaire, gérez les remplacements et planifiez les activités.",
+      step5_title: "Rapports & Statistiques",
+      step5_desc: "Générez des rapports personnalisés sur les présences, notes et inscriptions.",
+      step6_title: "Utilisateurs & Communications",
+      step6_desc: "Gérez les comptes enseignants, élèves et parents. Envoyez des communications officielles."
+    },
+    admin: {
+      step1_title: "Tableau de bord Administrateur",
+      step1_desc: "Le tableau de bord affiche l'état du système, les dernières activités et les métriques principales d'utilisation.",
+      step2_title: "Surveillance système",
+      step2_desc: "Surveillez les performances du système en temps réel, les sessions actives et les logs.",
+      step3_title: "Gestion utilisateurs & établissements",
+      step3_desc: "Gérez tous les comptes utilisateurs, créez de nouveaux établissements, assignez les rôles.",
+      step4_title: "Analytics & Rapports",
+      step4_desc: "Visualisez les analyses globales d'utilisation de la plateforme et générez des rapports détaillés.",
+      step5_title: "Journal d'audit",
+      step5_desc: "Accédez au registre complet de toutes les opérations effectuées dans le système.",
+      step6_title: "Paramètres système",
+      step6_desc: "Configurez les politiques de sécurité, l'authentification à deux facteurs et les intégrations e-learning."
+    }
+  },
+  help: {
+    title: "Centre d'aide",
+    subtitle: "Guides et tutoriels pour bien utiliser le Registre Électronique",
+    searchPlaceholder: "Rechercher dans le guide...",
+    noResults: "Aucun article trouvé pour",
+    categories: "Catégories",
+    allTopics: "Tous les sujets",
+    restartTour: "Redémarrer la visite guidée",
+    openHelp: "Ouvrir le guide",
+    needHelp: "Besoin d'aide?",
+    contactSupport: "Contacter le support",
+    fabTooltip: "Aide & Guide",
+    new: "Nouveau"
   }
 }

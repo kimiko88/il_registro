@@ -263,7 +263,7 @@
                     <q-chip dense outline :color="String(l.hour) === String(selectedHour) ? 'indigo-9' : 'indigo-5'" icon="event_note" class="bg-white">
                         Ora {{ l.hour }}: {{ l.topic || '—' }}
                         <q-badge v-if="l.activity_type && l.activity_type !== 'standard'" :color="getActivityTypeColor(l.activity_type)" class="q-ml-xs text-caption">
-                            {{ getActivityTypeLabel(l.activity_type) }}
+                            <q-icon :name="getActivityTypeIcon(l.activity_type)" size="12px" class="q-mr-xs" />{{ getActivityTypeLabel(l.activity_type) }}
                         </q-badge>
                         <q-tooltip>
                             Docente: {{ l.teacher_name || 'Docente' }}<br>
@@ -645,7 +645,7 @@ const activityTypeOptions = [
   { value: 'substitution',      label: 'Supplenza',                      icon: 'swap_horiz',   color: 'deep-orange', caption: 'Supplenza di un collega assente' },
   { value: 'pcto',              label: 'PCTO',                           icon: 'work',         color: 'deep-purple', caption: 'Ore di Alternanza Scuola-Lavoro (PCTO)' },
   { value: 'orientamento',      label: 'Orientamento',                   icon: 'explore',      color: 'teal',        caption: 'Attività di orientamento formativo' },
-  { value: 'pcto_orientamento', label: 'PCTO - Orientamento',             icon: 'hub',          color: 'indigo-8',    caption: 'Attività congiunta PCTO e Orientamento (max 15h ciascuno)' },
+  { value: 'pcto_orientamento', label: 'PCTO - Orientamento',             icon: 'hub',          color: 'indigo-8',    caption: 'Attività congiunta PCTO e Orientamento (max 15h)' },
   { value: 'ptof',              label: 'PTOF',                           icon: 'auto_stories', color: 'purple',      caption: 'Attività rientranti nel PTOF' },
   { value: 'project',           label: 'Progetto',                       icon: 'science',      color: 'indigo',      caption: 'Progetto didattico specifico' },
   { value: 'assembly',          label: 'Assemblea',                      icon: 'groups',       color: 'blue',        caption: 'Assemblea di istituto o di classe' },

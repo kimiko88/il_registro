@@ -166,6 +166,49 @@
           </q-list>
         </q-btn-dropdown>
 
+        <!-- Language Selector Menu -->
+        <q-btn-dropdown
+          flat
+          round
+          dense
+          icon="language"
+          color="primary"
+          class="q-mr-sm"
+          key="language-toggle"
+          aria-label="Seleziona Lingua"
+        >
+          <q-tooltip>{{ t('common.language') }}</q-tooltip>
+          <q-list style="min-width: 220px" class="q-py-xs">
+            <q-item-label header class="text-weight-bold text-uppercase text-caption letter-spacing-1">
+              {{ t('common.language') }}
+            </q-item-label>
+
+            <q-item
+              v-for="loc in SUPPORTED_LOCALES"
+              :key="loc.value"
+              clickable
+              v-close-popup
+              @click="changeAppLanguage(loc.value)"
+              :active="currentLocaleValue === loc.value"
+              active-class="bg-indigo-50 text-primary text-weight-bold"
+              class="rounded-lg q-mx-xs q-mb-xs"
+              role="option"
+              :aria-selected="currentLocaleValue === loc.value"
+            >
+              <q-item-section avatar min-width="32px">
+                <span style="font-size: 1.2rem;">{{ loc.flag }}</span>
+              </q-item-section>
+              <q-item-section>
+                <q-item-label class="text-weight-bold">{{ loc.label }}</q-item-label>
+                <q-item-label caption class="text-grey-7">{{ loc.code }}</q-item-label>
+              </q-item-section>
+              <q-item-section side v-if="currentLocaleValue === loc.value">
+                <q-icon name="check_circle" color="primary" size="20px" />
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-btn-dropdown>
+
         <!-- Dark Mode Toggle -->
         <q-btn flat round dense :icon="$q.dark.isActive ? 'light_mode' : 'dark_mode'" @click="$q.dark.toggle()" color="primary" class="q-mr-sm" :key="'dark-toggle'" :aria-label="$q.dark.isActive ? 'Attiva modalità chiara' : 'Attiva modalità scura'">
            <q-tooltip>{{ $q.dark.isActive ? 'Modalità Chiara' : 'Modalità Scura' }}</q-tooltip>
@@ -298,6 +341,28 @@
           </div>
         </q-scroll-area>
 
+        <!-- Help & Guide Button -->
+        <div class="q-px-md q-pb-xs">
+          <q-item
+            clickable
+            class="rounded-lg q-pa-sm text-primary"
+            @click="helpDrawerRef?.open()"
+            role="button"
+            :aria-label="t('help.openHelp')"
+            style="background: rgba(99, 102, 241, 0.07); border: 1.5px solid rgba(99, 102, 241, 0.18);"
+          >
+            <q-item-section avatar>
+              <q-icon name="help_outline" size="20px" aria-hidden="true" />
+            </q-item-section>
+            <q-item-section class="text-weight-bold">
+              {{ t('help.openHelp') }}
+            </q-item-section>
+            <q-item-section side>
+              <q-icon name="chevron_right" size="16px" color="primary" />
+            </q-item-section>
+          </q-item>
+        </div>
+
         <!-- Logout Button at Bottom -->
         <div class="q-pa-md border-t border-slate-100">
           <q-item
@@ -346,6 +411,16 @@
         </transition>
       </router-view>
     </q-page-container>
+
+    <!-- Onboarding Tour (global, triggers on first login per role) -->
+    <OnboardingTour ref="tourRef" />
+
+    <!-- Help Drawer (slides in from right) -->
+    <HelpDrawer ref="helpDrawerRef" @restart-tour="handleRestartTour" />
+
+    <!-- Help FAB (floating ? button bottom-right) -->
+    <HelpFab @open-help="helpDrawerRef?.open()" @restart-tour="handleRestartTour" />
+
   </q-layout>
 </template>
 
@@ -362,16 +437,40 @@ import { useMenuItems } from '@/composables/useMenuItems'
 import { storeToRefs } from 'pinia'
 import { useQuasar } from 'quasar'
 import { useI18n } from 'vue-i18n'
+import { SUPPORTED_LOCALES, applyLocale, normalizeLocale } from '@/utils/locale'
 import GlobalSearch from '@/components/Common/GlobalSearch.vue'
+import OnboardingTour from '@/components/Common/OnboardingTour.vue'
+import HelpDrawer from '@/components/Common/HelpDrawer.vue'
+import HelpFab from '@/components/Common/HelpFab.vue'
 
 const globalSearchRef = ref(null)
+const tourRef = ref(null)
+const helpDrawerRef = ref(null)
+
+function handleRestartTour() {
+  // Clear the flag so the tour shows again, then start it
+  const role = authStore.userRole || authStore.user?.role || 'user'
+  localStorage.removeItem(`onboarding_done_${role.toLowerCase()}`)
+  tourRef.value?.startTour()
+}
 
 const route = useRoute()
 const router = useRouter()
 const $q = useQuasar()
-const { t, te } = useI18n()
+const { t, te, locale } = useI18n()
 const themeStore = useThemeStore()
 const schoolYearStore = useSchoolYearStore()
+
+const currentLocaleValue = computed(() => normalizeLocale(locale.value))
+
+function changeAppLanguage(langCode) {
+  applyLocale(langCode, { locale }, $q)
+  $q.notify({
+    type: 'positive',
+    icon: 'language',
+    message: t('notifications.languageChanged')
+  })
+}
 
 const menuLabelToKeyMap = {
   'Dashboard': 'dashboard',
@@ -385,6 +484,7 @@ const menuLabelToKeyMap = {
   'Audit Logs': 'auditLogs',
   'Impostazioni': 'settings',
   'Supporto': 'support',
+  'Supporto & Assistenza': 'support',
   'Feature Flags & Istituto': 'featureFlags',
   'Google & Teams E-Learning': 'elearning',
   'Studenti': 'students',
@@ -407,12 +507,15 @@ const menuLabelToKeyMap = {
   'Presenze': 'attendance',
   'Didattica': 'didactics',
   'Piani PDP / PEI': 'pdp',
+  'Piano PDP / PEI': 'pdp',
   'Rubriche Valutative': 'rubrics',
   'Coordinamento': 'coordination',
   'Orario Lezioni': 'timetable',
+  'Orario Scolastico': 'timetable',
   'Agenda': 'agenda',
   'Colloqui': 'colloqui',
   'Sostituzioni': 'substitutions',
+  'Gestione Sostituzioni': 'substitutions',
   'Verbali': 'verbali',
   'Note Disciplinari': 'notes',
   'I Miei Voti': 'myGrades',
@@ -423,7 +526,11 @@ const menuLabelToKeyMap = {
   'Calendario Scolastico': 'calendar',
   'Pagella': 'reportCard',
   'Profilo': 'profile',
-  'I Miei Figli': 'myChildren'
+  'I Miei Figli': 'myChildren',
+  'Obiettivi': 'goals',
+  'Uscite & Viaggi': 'trips',
+  'Pagamenti': 'payments',
+  'Assemblee & Riunioni': 'assemblies'
 }
 
 const categoryToKeyMap = {
@@ -432,7 +539,11 @@ const categoryToKeyMap = {
   'Servizi & Report': 'serviziReport',
   'Didattica & Valutazione': 'didatticaValutazione',
   'Organizzazione & Orario': 'organizzazioneOrario',
-  'Comunicazioni & Atti': 'comunicazioniAtti'
+  'Comunicazioni & Atti': 'comunicazioniAtti',
+  'Percorsi & Comunicazioni': 'percorsiComunicazioni',
+  'Valutazione & Didattica': 'valutazioneDidattica',
+  'Servizi & Orari': 'serviziOrari',
+  'Comunicazioni & Account': 'comunicazioniAccount'
 }
 
 function translateMenuLabel(label) {

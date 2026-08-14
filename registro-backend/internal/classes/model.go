@@ -33,7 +33,7 @@ type ClassSubject struct {
 	SubjectName   string  `json:"subject_name,omitempty"`     // Joined
 	TeacherID     *string `json:"teacher_id" db:"teacher_id"` // Nullable
 	TeacherName   string  `json:"teacher_name,omitempty"`     // Joined
-	TeacherUserID string  `json:"teacher_user_id,omitempty"` // Joined user ID
+	TeacherUserID string  `json:"teacher_user_id,omitempty"`  // Joined user ID
 	HoursPerWeek  float64 `json:"hours_per_week" db:"hours_per_week"`
 }
 

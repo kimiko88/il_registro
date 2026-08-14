@@ -5,11 +5,15 @@ import { useAuth } from 'src/composables/useAuth'
 import authService from 'src/services/authService'
 
 vi.mock('src/services/authService')
-vi.mock('vue-router', () => ({
-    useRouter: () => ({
-        push: vi.fn()
-    })
-}))
+vi.mock('vue-router', async (importOriginal) => {
+    const actual = await importOriginal()
+    return {
+        ...actual,
+        useRouter: () => ({
+            push: vi.fn()
+        })
+    }
+})
 
 describe('Role-Based Authentication Flows', () => {
     beforeEach(() => {

@@ -367,16 +367,16 @@ const savingPwd = ref(false)
 
 async function changePassword() {
   if (!pwdCurrent.value || !pwdNew.value) {
-    $q.notify({ type: 'warning', message: 'Compilare i campi della password' })
+    $q.notify({ type: 'warning', message: t('errors.ERR_REQUIRED_FIELDS') })
     return
   }
   if (pwdNew.value !== pwdConfirm.value) {
-    $q.notify({ type: 'negative', message: 'Le nuove password non coincidono' })
+    $q.notify({ type: 'negative', message: t('errors.passwordMismatch') })
     return
   }
   const userId = authStore.user?.id
   if (!userId) {
-    $q.notify({ type: 'negative', message: 'Sessione non valida, effettua nuovamente il login' })
+    $q.notify({ type: 'negative', message: t('errors.sessionInvalid') })
     return
   }
   savingPwd.value = true
@@ -385,7 +385,7 @@ async function changePassword() {
     pwdCurrent.value = ''
     pwdNew.value = ''
     pwdConfirm.value = ''
-    $q.notify({ type: 'positive', message: 'Password aggiornata con successo' })
+    $q.notify({ type: 'positive', message: t('notifications.passwordUpdated') })
   } catch (err) {
     const errData = err.response?.data
     const code = errData?.code || errData?.error

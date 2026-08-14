@@ -92,15 +92,23 @@ export default {
     calendar: 'Schulkalender',
     reportCard: 'Zeugnis',
     profile: 'Profil',
-    myChildren: 'Meine Kinder'
+    myChildren: 'Meine Kinder',
+    goals: 'Ziele',
+    trips: 'Ausflüge & Reisen',
+    payments: 'Zahlungen',
+    assemblies: 'Versammlungen & Treffen'
   },
   categories: {
     anagraficheClassi: 'Stammdaten & Klassen',
     attiCertificati: 'Akten & Zertifikate',
     serviziReport: 'Dienste & Berichte',
     didatticaValutazione: 'Unterricht & Bewertung',
-    organisationOrario: 'Organisation & Stundenplan',
-    comunicazioniAtti: 'Mitteilungen & Akten'
+    organizzazioneOrario: 'Organisation & Stundenplan',
+    comunicazioniAtti: 'Mitteilungen & Akten',
+    percorsiComunicazioni: 'Wege & Mitteilungen',
+    valutazioneDidattica: 'Bewertung & Unterricht',
+    serviziOrari: 'Dienste & Pläne',
+    comunicazioniAccount: 'Mitteilungen & Konto'
   },
   roles: {
     admin: 'Administrator',
@@ -116,13 +124,21 @@ export default {
     logoutSuccess: 'Erfolgreich abgemeldet',
     logoutError: 'Fehler beim Abmelden',
     settingsSaved: 'Einstellungen erfolgreich gespeichert!',
-    emailCopied: 'E-Mail-Adresse in die Zwischenablage kopiert!'
+    emailCopied: 'E-Mail-Adresse in die Zwischenablage kopiert!',
+    passwordUpdated: 'Passwort erfolgreich aktualisiert!',
+    languageChanged: 'Sprache erfolgreich aktualisiert'
   },
   errors: {
     connectionError: 'Serververbindungsfehler. Bitte überprüfen Sie Ihre Internetverbindung.',
     forbidden: 'Sie verfügen nicht über die erforderlichen Berechtigungen.',
     serverError: 'Ein interner Serverfehler ist aufgetreten.',
     unauthorized: 'Ungültige oder abgelaufene Sitzung.',
+    invalidCredentials: 'Falsche E-Mail-Adresse oder falsches Passwort.',
+    rateLimit: 'Zu viele Versuche. Bitte versuchen Sie es in wenigen Minuten erneut.',
+    accountDisabled: 'Konto deaktiviert oder gesperrt. Bitte wenden Sie sich an das Sekretariat.',
+    userNotFound: 'Benutzer nicht gefunden.',
+    passwordMismatch: 'Passwörter stimmen nicht überein.',
+    sessionInvalid: 'Ungültige Sitzung, bitte melden Sie sich erneut an.',
     ERR_CURRENT_PASSWORD_INCORRECT: 'Das aktuelle Passwort ist falsch.',
     ERR_PASSWORD_COMPLEXITY: 'Das Passwort muss mindestens einen Großbuchstaben, einen Kleinbuchstaben, eine Zahl und ein Sonderzeichen enthalten.',
     ERR_PASSWORD_TOO_SHORT: 'Das Passwort muss mindestens 10 Zeichen lang sein.',
@@ -130,7 +146,6 @@ export default {
     ERR_PASSWORD_RECENTLY_USED: 'Das neue Passwort darf keinem der letzten 5 Passwörter entsprechen.',
     ERR_REQUIRED_FIELDS: 'Bitte füllen Sie alle erforderlichen Passwortfelder aus.'
   },
-
   settings: {
     title: 'Systemeinstellungen',
     subtitle: 'Konfigurieren Sie globale Einstellungen, Sicherheitsrichtlinien und Benachrichtigungen',
@@ -146,5 +161,111 @@ export default {
     minPasswordLength: 'Mindestpasswortlänge',
     sessionTimeout: 'Sitzungs-Inaktivitäts-Timeout',
     maxLoginAttempts: 'Fehlgeschlagene Anmeldeversuche'
+  },
+  search: {
+    placeholder: 'Suchen nach Schülern, Lehrern, Sekretariat, Klassen, Mitteilungen, Menüpunkten…',
+    hint: 'Tippen Sie, um nach Schülern, Lehrern, Sekretariat, Klassen oder Menüs zu suchen',
+    noResults: 'Keine Ergebnisse für',
+    navigate: 'Navigieren',
+    open: 'Öffnen',
+    close: 'Schließen'
+  }
+,
+  onboarding: {
+    welcomeTitle: "Willkommen im elektronischen Register!",
+    welcomeSubtitle: "Entdecken Sie in wenigen Schritten, wie Sie alle Funktionen für Ihre Rolle optimal nutzen können.",
+    startTour: "Tour starten",
+    skipTour: "Tour überspringen",
+    next: "Weiter",
+    prev: "Zurück",
+    finish: "Register verwenden",
+    stepOf: "Schritt {current} von {total}",
+    restartTour: "Tour neu starten",
+    tourCompleted: "Tour abgeschlossen!",
+    tourCompletedMsg: "Sie sind bereit, das elektronische Register zu verwenden. Sie können die Anleitung jederzeit erneut aufrufen.",
+    teacher: {
+      step1_title: "Lehrer-Dashboard",
+      step1_desc: "Ihr persönliches Dashboard zeigt eine Zusammenfassung der heutigen Stunden, aktuelle Benachrichtigungen und Schnellzugriff auf die meistgenutzten Funktionen.",
+      step2_title: "Klassenbuch & Anwesenheit",
+      step2_desc: "Im Bereich \"Meine Klassen\" können Sie auf das Klassenbuch zugreifen, Anwesenheiten und Abwesenheiten erfassen und Unterrichtsthemen eintragen.",
+      step3_title: "Notenverwaltung",
+      step3_desc: "Im Bereich \"Noten\" können Sie mündliche und schriftliche Noten eingeben, Klassendurchschnitte und Notenverteilung anzeigen.",
+      step4_title: "Agenda & Kommunikation",
+      step4_desc: "Die Agenda ermöglicht die Planung von Tests, Hausaufgaben und Aktivitäten. Über \"Kommunikation\" können Sie Nachrichten an Schüler und Eltern senden.",
+      step5_title: "Elterngespräche",
+      step5_desc: "Verwalten Sie Einzelgespräche mit Eltern: Buchungen, Verfügbarkeiten und Klassenfortschritt anzeigen.",
+      step6_title: "Einstellungen & Profil",
+      step6_desc: "Unter \"Einstellungen\" können Sie Sprache, Interface-Thema, Benachrichtigungen anpassen und Ihr Passwort aktualisieren."
+    },
+    student: {
+      step1_title: "Ihr Dashboard",
+      step1_desc: "Das persönliche Dashboard zeigt ausstehende Hausaufgaben, aktuelle Benachrichtigungen und eine Zusammenfassung Ihrer schulischen Leistung.",
+      step2_title: "Meine Noten",
+      step2_desc: "Im Bereich \"Meine Noten\" sehen Sie alle von Lehrern eingetragenen Noten, Fachdurchschnitte und zeitlichen Verlauf.",
+      step3_title: "Meine Anwesenheit",
+      step3_desc: "Verfolgen Sie Ihre Anwesenheit, Abwesenheiten und Verspätungen. Tages- und Monatsdetails sind einsehbar.",
+      step4_title: "Hausaufgaben & Didaktik",
+      step4_desc: "Unter \"Hausaufgaben\" finden Sie alle Aufgaben von Lehrern mit Fristen. \"Didaktik\" zeigt hochgeladene Materialien.",
+      step5_title: "Zeugnis & Dokumente",
+      step5_desc: "Unter \"Zeugnis\" können Sie Ihr Bewertungsdokument einsehen. In \"Dokumente\" finden Sie Rundschreiben und Schulmaterial.",
+      step6_title: "Schulkalender",
+      step6_desc: "Der Schulkalender zeigt Ferien, geplante Prüfungstermine und wichtige Schulveranstaltungen."
+    },
+    parent: {
+      step1_title: "Eltern-Dashboard",
+      step1_desc: "Ihr Dashboard zeigt eine Zusammenfassung des Fortschritts Ihrer Kinder, aktuelle Schulbenachrichtigungen und ungelesene Nachrichten.",
+      step2_title: "Meine Kinder",
+      step2_desc: "Im Bereich \"Meine Kinder\" finden Sie die Liste Ihrer eingeschriebenen Kinder. Wählen Sie eines aus, um das vollständige Schulprofil anzuzeigen.",
+      step3_title: "Noten & Anwesenheit",
+      step3_desc: "Überwachen Sie Noten und Anwesenheiten Ihrer Kinder in Echtzeit. Erhalten Sie sofortige Benachrichtigungen über Abwesenheiten und neue Noten.",
+      step4_title: "Schulkommunikation",
+      step4_desc: "Alle offiziellen Schulkommunikationen (Rundschreiben, Mitteilungen) sind hier gesammelt.",
+      step5_title: "Lehrergespräche",
+      step5_desc: "Vereinbaren Sie direkt über die App Einzelgespräche mit Lehrern und erhalten Sie automatische Bestätigung.",
+      step6_title: "Zahlungen & Dokumente",
+      step6_desc: "Verwalten Sie Schulzahlungen und greifen Sie auf Dokumente Ihres Kindes zu (Zeugnisse, Zertifikate)."
+    },
+    secretary: {
+      step1_title: "Sekretariat-Dashboard",
+      step1_desc: "Das Dashboard zeigt ausstehende Aktivitäten, aktuelle Anfragen und Hauptstatistiken der Schule.",
+      step2_title: "Klassen- & Schülerverwaltung",
+      step2_desc: "Im Bereich \"Klassen\" verwalten Sie alle Schulklassen. In \"Schüler\" finden Sie das vollständige Register mit erweiterter Suche.",
+      step3_title: "Zertifikate & Dokumente",
+      step3_desc: "Erstellen und drucken Sie Einschreibungs- und Anwesenheitsbescheinigungen. Verwalten Sie das digitale Dokumentenarchiv.",
+      step4_title: "Stundenplanverwaltung",
+      step4_desc: "Konfigurieren Sie den Stundenplan, verwalten Sie Vertretungen und planen Sie Aktivitäten.",
+      step5_title: "Berichte & Statistiken",
+      step5_desc: "Erstellen Sie benutzerdefinierte Berichte zu Anwesenheit, Noten und Einschreibungen.",
+      step6_title: "Benutzer & Kommunikation",
+      step6_desc: "Verwalten Sie Lehrer-, Schüler- und Elternkonten. Senden Sie offizielle Mitteilungen an alle Nutzergruppen."
+    },
+    admin: {
+      step1_title: "Administrator-Dashboard",
+      step1_desc: "Das Dashboard zeigt Systemstatus, aktuelle Aktivitäten und wichtigste Plattform-Nutzungsmetriken.",
+      step2_title: "Systemüberwachung",
+      step2_desc: "Überwachen Sie Systemleistung in Echtzeit, aktive Sitzungen, Systemlogs und Dienststatus.",
+      step3_title: "Benutzer- & Schulverwaltung",
+      step3_desc: "Verwalten Sie alle Benutzerkonten, erstellen Sie neue Schulen, weisen Sie Rollen zu und verwalten Sie Berechtigungen.",
+      step4_title: "Analytics & Berichte",
+      step4_desc: "Zeigen Sie globale Nutzungsanalysen an, erstellen Sie detaillierte Berichte und überwachen Sie Trends.",
+      step5_title: "Audit-Log",
+      step5_desc: "Greifen Sie auf das vollständige Register aller Systemoperationen zu.",
+      step6_title: "Systemeinstellungen",
+      step6_desc: "Konfigurieren Sie Sicherheitsrichtlinien, Zwei-Faktor-Authentifizierung und E-Learning-Integrationen."
+    }
+  },
+  help: {
+    title: "Hilfe-Center",
+    subtitle: "Anleitungen und Tutorials für das elektronische Register",
+    searchPlaceholder: "In der Anleitung suchen...",
+    noResults: "Keine Artikel gefunden für",
+    categories: "Kategorien",
+    allTopics: "Alle Themen",
+    restartTour: "Geführte Tour neu starten",
+    openHelp: "Hilfe öffnen",
+    needHelp: "Brauchen Sie Hilfe?",
+    contactSupport: "Support kontaktieren",
+    fabTooltip: "Hilfe & Anleitung",
+    new: "Neu"
   }
 }

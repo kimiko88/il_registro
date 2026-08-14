@@ -92,7 +92,11 @@ export default {
     calendar: 'Calendario escolar',
     reportCard: 'Boletín de notas',
     profile: 'Perfil',
-    myChildren: 'Mis hijos'
+    myChildren: 'Mis hijos',
+    goals: 'Objetivos',
+    trips: 'Salidas y Viajes',
+    payments: 'Pagos',
+    assemblies: 'Asambleas y Reuniones'
   },
   categories: {
     anagraficheClassi: 'Registros y Clases',
@@ -100,7 +104,11 @@ export default {
     serviziReport: 'Servicios e Informes',
     didatticaValutazione: 'Docencia y Evaluación',
     organizzazioneOrario: 'Organización y Horario',
-    comunicazioniAtti: 'Comunicación y Documentos'
+    comunicazioniAtti: 'Comunicación y Documentos',
+    percorsiComunicazioni: 'Itinerarios y Comunicación',
+    valutazioneDidattica: 'Evaluación y Docencia',
+    serviziOrari: 'Servicios y Horarios',
+    comunicazioniAccount: 'Comunicación y Cuenta'
   },
   roles: {
     admin: 'Administrador',
@@ -116,13 +124,21 @@ export default {
     logoutSuccess: 'Sesión cerrada correctamente',
     logoutError: 'Error al cerrar sesión',
     settingsSaved: '¡Configuración guardada correctamente!',
-    emailCopied: '¡Dirección de correo copiada!'
+    emailCopied: '¡Dirección de correo copiada!',
+    passwordUpdated: '¡Contraseña actualizada con éxito!',
+    languageChanged: 'Idioma actualizado con éxito'
   },
   errors: {
     connectionError: 'Error de conexión con el servidor. Comprueba tu red.',
     forbidden: 'No tienes los permisos necesarios para realizar esta acción.',
     serverError: 'Se ha producido un error en el servidor.',
     unauthorized: 'Sesión no válida o expirada.',
+    invalidCredentials: 'Correo electrónico o contraseña incorrectos.',
+    rateLimit: 'Demasiados intentos. Inténtalo de nuevo en unos minutos.',
+    accountDisabled: 'Cuenta deshabilitada o suspendida. Contacta con Secretaría.',
+    userNotFound: 'Usuario no encontrado.',
+    passwordMismatch: 'Las contraseñas no coinciden.',
+    sessionInvalid: 'Sesión inválida, por favor inicia sesión de nuevo.',
     ERR_CURRENT_PASSWORD_INCORRECT: 'La contraseña actual no es correcta.',
     ERR_PASSWORD_COMPLEXITY: 'La contraseña debe contener al menos una mayúscula, una minúscula, un número y un carácter especial.',
     ERR_PASSWORD_TOO_SHORT: 'La contraseña debe tener al menos 10 caracteres.',
@@ -130,7 +146,6 @@ export default {
     ERR_PASSWORD_RECENTLY_USED: 'La nueva contraseña no puede coincidir con ninguna de las últimas 5 utilizadas.',
     ERR_REQUIRED_FIELDS: 'Por favor, completa todos los campos requeridos.'
   },
-
   settings: {
     title: 'Configuración del Sistema',
     subtitle: 'Configura las preferencias generales, de seguridad y notificaciones',
@@ -146,5 +161,111 @@ export default {
     minPasswordLength: 'Longitud mínima de contraseña',
     sessionTimeout: 'Tiempo de inactividad de sesión',
     maxLoginAttempts: 'Intentos fallidos antes del bloqueo'
+  },
+  search: {
+    placeholder: 'Buscar alumnos, profesores, secretaría, clases, comunicados, menús…',
+    hint: 'Escribe para buscar estudiantes, docentes, secretaría, clases o menús',
+    noResults: 'Sin resultados para',
+    navigate: 'Navegar',
+    open: 'Abrir',
+    close: 'Cerrar'
+  }
+,
+  onboarding: {
+    welcomeTitle: "¡Bienvenido al Registro Electrónico!",
+    welcomeSubtitle: "Descubre en pocos pasos cómo aprovechar al máximo todas las funciones disponibles para tu rol.",
+    startTour: "Iniciar recorrido",
+    skipTour: "Omitir recorrido",
+    next: "Siguiente",
+    prev: "Anterior",
+    finish: "Empezar a usar el Registro",
+    stepOf: "Paso {current} de {total}",
+    restartTour: "Reiniciar recorrido",
+    tourCompleted: "¡Recorrido completado!",
+    tourCompletedMsg: "Estás listo para usar el Registro Electrónico. Puedes revisar la guía en cualquier momento.",
+    teacher: {
+      step1_title: "Panel del Profesor",
+      step1_desc: "Tu panel personal muestra un resumen de las clases de hoy, notificaciones recientes y acceso rápido a las funciones más utilizadas.",
+      step2_title: "Registro de clase & Asistencia",
+      step2_desc: "En \"Mis Clases\" puedes acceder al registro, registrar asistencia y ausencias, e insertar temas de clase.",
+      step3_title: "Gestión de notas",
+      step3_desc: "En \"Notas\" puedes insertar calificaciones orales y escritas, ver medias de clase y distribución de notas.",
+      step4_title: "Agenda & Comunicaciones",
+      step4_desc: "La agenda permite planificar exámenes, deberes y actividades. En \"Comunicaciones\" puedes enviar mensajes a alumnos y padres.",
+      step5_title: "Reuniones con padres",
+      step5_desc: "Gestiona reuniones individuales con padres: visualiza reservas, disponibilidades y progreso de la clase.",
+      step6_title: "Configuración & Perfil",
+      step6_desc: "En \"Configuración\" puedes personalizar idioma, tema, notificaciones y actualizar tu contraseña."
+    },
+    student: {
+      step1_title: "Tu panel",
+      step1_desc: "El panel personal muestra deberes pendientes, últimas notificaciones y un resumen de tu rendimiento académico.",
+      step2_title: "Mis notas",
+      step2_desc: "En \"Mis Notas\" puedes ver todas las calificaciones registradas por los profesores, medias por asignatura y evolución.",
+      step3_title: "Mi asistencia",
+      step3_desc: "Controla tu asistencia, ausencias y retrasos. Puedes ver el detalle diario y mensual.",
+      step4_title: "Deberes & Didáctica",
+      step4_desc: "En \"Deberes\" encuentras todas las tareas asignadas con sus fechas de entrega. \"Didáctica\" muestra materiales subidos por los profesores.",
+      step5_title: "Boletín & Documentos",
+      step5_desc: "En \"Boletín\" puedes ver tu documento de evaluación. En \"Documentos\" encuentras circulares y material escolar.",
+      step6_title: "Calendario escolar",
+      step6_desc: "El calendario escolar muestra vacaciones, fechas de exámenes programados y eventos importantes."
+    },
+    parent: {
+      step1_title: "Panel del Padre/Madre",
+      step1_desc: "Tu panel muestra un resumen del progreso de tus hijos, últimas notificaciones del colegio y mensajes no leídos.",
+      step2_title: "Mis hijos",
+      step2_desc: "En \"Mis Hijos\" encuentras la lista de tus hijos matriculados. Selecciona uno para ver el perfil escolar completo.",
+      step3_title: "Notas & Asistencia",
+      step3_desc: "Monitoriza las notas y asistencia de tus hijos en tiempo real. Recibe notificaciones inmediatas por ausencias y nuevas notas.",
+      step4_title: "Comunicaciones escolares",
+      step4_desc: "Todas las comunicaciones oficiales del colegio están recogidas aquí.",
+      step5_title: "Reuniones con profesores",
+      step5_desc: "Reserva reuniones individuales con los profesores directamente desde la app.",
+      step6_title: "Pagos & Documentos",
+      step6_desc: "Gestiona los pagos escolares y accede a los documentos de tu hijo (boletines, certificados)."
+    },
+    secretary: {
+      step1_title: "Panel de Secretaría",
+      step1_desc: "El panel muestra actividades pendientes, últimas solicitudes y estadísticas principales del centro.",
+      step2_title: "Gestión de clases & alumnos",
+      step2_desc: "En \"Clases\" gestionas todas las clases del centro. En \"Alumnos\" encuentras el registro completo con búsqueda avanzada.",
+      step3_title: "Certificados & Documentos",
+      step3_desc: "Genera e imprime certificados de matrícula y asistencia. Gestiona el archivo documental digital.",
+      step4_title: "Gestión de horarios",
+      step4_desc: "Configura el horario escolar, gestiona sustituciones y planifica actividades.",
+      step5_title: "Informes & Estadísticas",
+      step5_desc: "Genera informes personalizados sobre asistencia, notas y matrículas.",
+      step6_title: "Usuarios & Comunicaciones",
+      step6_desc: "Gestiona cuentas de profesores, alumnos y padres. Envía comunicaciones oficiales."
+    },
+    admin: {
+      step1_title: "Panel del Administrador",
+      step1_desc: "El panel muestra el estado del sistema, últimas actividades y métricas principales de uso.",
+      step2_title: "Monitorización del sistema",
+      step2_desc: "Monitoriza el rendimiento del sistema en tiempo real, sesiones activas y registros del sistema.",
+      step3_title: "Gestión de usuarios & centros",
+      step3_desc: "Gestiona todos los cuentas de usuario, crea nuevos centros, asigna roles y permisos.",
+      step4_title: "Analytics & Informes",
+      step4_desc: "Visualiza analíticas globales del uso de la plataforma y genera informes detallados.",
+      step5_title: "Registro de auditoría",
+      step5_desc: "Accede al registro completo de todas las operaciones realizadas en el sistema.",
+      step6_title: "Configuración del sistema",
+      step6_desc: "Configura políticas de seguridad, autenticación de dos factores e integraciones e-learning."
+    }
+  },
+  help: {
+    title: "Centro de ayuda",
+    subtitle: "Guías y tutoriales para usar el Registro Electrónico",
+    searchPlaceholder: "Buscar en la guía...",
+    noResults: "No se encontraron artículos para",
+    categories: "Categorías",
+    allTopics: "Todos los temas",
+    restartTour: "Reiniciar recorrido guiado",
+    openHelp: "Abrir guía",
+    needHelp: "¿Necesita ayuda?",
+    contactSupport: "Contactar soporte",
+    fabTooltip: "Ayuda y Guía",
+    new: "Nuevo"
   }
 }

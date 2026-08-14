@@ -92,7 +92,11 @@ export default {
     calendar: 'School Calendar',
     reportCard: 'Report Card',
     profile: 'Profile',
-    myChildren: 'My Children'
+    myChildren: 'My Children',
+    goals: 'Goals',
+    trips: 'Trips & Excursions',
+    payments: 'Payments',
+    assemblies: 'Assemblies & Meetings'
   },
   categories: {
     anagraficheClassi: 'Records & Classes',
@@ -100,7 +104,11 @@ export default {
     serviziReport: 'Services & Reports',
     didatticaValutazione: 'Teaching & Assessment',
     organizzazioneOrario: 'Schedule & Organization',
-    comunicazioniAtti: 'Communications & Files'
+    comunicazioniAtti: 'Communications & Files',
+    percorsiComunicazioni: 'Pathways & Communications',
+    valutazioneDidattica: 'Assessment & Teaching',
+    serviziOrari: 'Services & Schedules',
+    comunicazioniAccount: 'Communications & Account'
   },
   roles: {
     admin: 'Administrator',
@@ -116,13 +124,21 @@ export default {
     logoutSuccess: 'Logged out successfully',
     logoutError: 'Error during logout',
     settingsSaved: 'Settings saved successfully!',
-    emailCopied: 'Email address copied to clipboard!'
+    emailCopied: 'Email address copied to clipboard!',
+    passwordUpdated: 'Password updated successfully!',
+    languageChanged: 'Language updated successfully'
   },
   errors: {
     connectionError: 'Server connection error. Please check your internet connection and try again.',
     forbidden: 'You do not have the required permissions to perform this action.',
     serverError: 'An internal server error occurred. Please try again later.',
     unauthorized: 'Invalid or expired session.',
+    invalidCredentials: 'Incorrect email or password.',
+    rateLimit: 'Too many attempts. Please try again in a few minutes.',
+    accountDisabled: 'Account disabled or suspended. Please contact the Secretary.',
+    userNotFound: 'User not found.',
+    passwordMismatch: 'Passwords do not match.',
+    sessionInvalid: 'Invalid session, please log in again.',
     ERR_CURRENT_PASSWORD_INCORRECT: 'Current password is incorrect.',
     ERR_PASSWORD_COMPLEXITY: 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.',
     ERR_PASSWORD_TOO_SHORT: 'Password must be at least 10 characters long.',
@@ -130,7 +146,6 @@ export default {
     ERR_PASSWORD_RECENTLY_USED: 'New password must not match any of the last 5 used passwords.',
     ERR_REQUIRED_FIELDS: 'Please fill in all required password fields.'
   },
-
   settings: {
     title: 'System Settings',
     subtitle: 'Configure global system preferences, security policies, and notification alerts',
@@ -146,5 +161,13 @@ export default {
     minPasswordLength: 'Minimum Password Length',
     sessionTimeout: 'Session Inactivity Timeout',
     maxLoginAttempts: 'Failed Login Attempts Threshold'
+  },
+  search: {
+    placeholder: 'Search students, teachers, secretary, classes, notices, menu items…',
+    hint: 'Type to search students, teachers, secretary, classes, circulars or menu items',
+    noResults: 'No results for',
+    navigate: 'Navigate',
+    open: 'Open',
+    close: 'Close'
   }
 }

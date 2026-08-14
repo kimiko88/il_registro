@@ -530,4 +530,3 @@ func (r *repository) ChangePasswordTx(ctx context.Context, userID, passwordHash 
 
 	return tx.Commit()
 }
-

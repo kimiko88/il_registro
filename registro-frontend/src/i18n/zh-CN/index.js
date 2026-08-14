@@ -92,7 +92,11 @@ export default {
     calendar: '校历',
     reportCard: '成绩单',
     profile: '个人资料',
-    myChildren: '我的孩子'
+    myChildren: '我的孩子',
+    goals: '目标',
+    trips: '外出与游学',
+    payments: '缴费管理',
+    assemblies: '大会与会议'
   },
   categories: {
     anagraficheClassi: '学籍与班级',
@@ -100,7 +104,11 @@ export default {
     serviziReport: '服务与报告',
     didatticaValutazione: '教学与评估',
     organizzazioneOrario: '组织与课表',
-    comunicazioniAtti: '通知与文件'
+    comunicazioniAtti: '通知与文件',
+    percorsiComunicazioni: '发展路径与通知',
+    valutazioneDidattica: '评估与教学',
+    serviziOrari: '服务与时间表',
+    comunicazioniAccount: '通知与账户'
   },
   roles: {
     admin: '管理员',
@@ -116,13 +124,21 @@ export default {
     logoutSuccess: '成功退出登录',
     logoutError: '退出登录时发生错误',
     settingsSaved: '设置保存成功！',
-    emailCopied: '邮箱已复制！'
+    emailCopied: '邮箱已复制！',
+    passwordUpdated: '密码更新成功！',
+    languageChanged: '语言更新成功'
   },
   errors: {
     connectionError: '服务器连接错误，请检查您的网络。',
     forbidden: '您没有权限执行此操作。',
     serverError: '服务器发生错误，请稍后再试。',
     unauthorized: '登录会话无效或已过期。',
+    invalidCredentials: '邮箱或密码不正确。',
+    rateLimit: '尝试次数过多，请几分钟后再试。',
+    accountDisabled: '账号已被禁用或暂停，请联系教务处。',
+    userNotFound: '未找到该用户。',
+    passwordMismatch: '两次输入的密码不一致。',
+    sessionInvalid: '会话无效，请重新登录。',
     ERR_CURRENT_PASSWORD_INCORRECT: '当前密码不正确。',
     ERR_PASSWORD_COMPLEXITY: '密码必须包含至少一个大写字母、一个小写字母、一个数字和一个特殊字符。',
     ERR_PASSWORD_TOO_SHORT: '密码长度至少为10个字符。',
@@ -130,7 +146,6 @@ export default {
     ERR_PASSWORD_RECENTLY_USED: '新密码不能与最近使用的5个密码相同。',
     ERR_REQUIRED_FIELDS: '请填写所有必填的密码字段。'
   },
-
   settings: {
     title: '系统设置',
     subtitle: '配置常规偏好、安全与通知选项',
@@ -146,5 +161,111 @@ export default {
     minPasswordLength: '密码最小长度',
     sessionTimeout: '会话空闲超时',
     maxLoginAttempts: '锁定前的最大失败尝试次数'
+  },
+  search: {
+    placeholder: '搜索学生、教师、教务、班级、通知、菜单项…',
+    hint: '输入内容以搜索学生、教师、教务、班级、通告或菜单',
+    noResults: '未找到结果：',
+    navigate: '导航',
+    open: '打开',
+    close: '关闭'
+  }
+,
+  onboarding: {
+    welcomeTitle: "欢迎使用电子注册表！",
+    welcomeSubtitle: "通过几个简单步骤，了解如何充分利用您角色的所有功能。",
+    startTour: "开始导览",
+    skipTour: "跳过导览",
+    next: "下一步",
+    prev: "上一步",
+    finish: "开始使用注册表",
+    stepOf: "第 {current} 步，共 {total} 步",
+    restartTour: "重新开始导览",
+    tourCompleted: "导览完成！",
+    tourCompletedMsg: "您已准备好使用电子注册表。您可以随时查看指南。",
+    teacher: {
+      step1_title: "教师控制台",
+      step1_desc: "您的个人控制台显示今日课程摘要、最新通知以及最常用功能的快速访问入口。",
+      step2_title: "班级日志与考勤",
+      step2_desc: "在\"我的班级\"中，您可以访问日志、记录出勤和缺勤情况、输入课程主题。",
+      step3_title: "成绩管理",
+      step3_desc: "在\"成绩\"中，您可以输入口头和书面成绩，查看班级平均分和成绩分布。",
+      step4_title: "日程与通讯",
+      step4_desc: "日程允许规划测试、作业和活动。在\"通讯\"中，您可以向学生和家长发送消息。",
+      step5_title: "家长会面",
+      step5_desc: "管理与家长的个别会面：查看预约、可用时间和班级进度。",
+      step6_title: "设置与个人资料",
+      step6_desc: "在\"设置\"中，您可以自定义语言、界面主题、通知并更新密码。"
+    },
+    student: {
+      step1_title: "您的控制台",
+      step1_desc: "个人控制台显示待完成的作业、最新通知和学习成绩摘要。",
+      step2_title: "我的成绩",
+      step2_desc: "在\"我的成绩\"中，您可以查看教师记录的所有成绩、各科平均分和随时间的进步情况。",
+      step3_title: "我的考勤",
+      step3_desc: "跟踪您的出勤、缺勤和迟到情况。可以查看每日和每月详情。",
+      step4_title: "作业与教学",
+      step4_desc: "在\"作业\"中找到教师布置的所有作业及截止日期。\"教学\"显示教师上传的材料。",
+      step5_title: "成绩单与文件",
+      step5_desc: "从\"成绩单\"可以查看评估文件。在\"文件\"中找到通知和学校材料。",
+      step6_title: "学校日历",
+      step6_desc: "学校日历显示假期、计划的考试日期和重要的学校活动。"
+    },
+    parent: {
+      step1_title: "家长控制台",
+      step1_desc: "您的控制台显示孩子的进步摘要、最新学校通知和未读消息。",
+      step2_title: "我的孩子",
+      step2_desc: "在\"我的孩子\"中找到已注册孩子的列表。选择一个查看完整的学术档案。",
+      step3_title: "成绩与考勤",
+      step3_desc: "实时监控孩子的成绩和考勤。立即收到缺勤和新成绩的通知。",
+      step4_title: "学校通讯",
+      step4_desc: "所有官方学校通讯（通知、教师消息）都汇集在这里。",
+      step5_title: "教师会面",
+      step5_desc: "直接通过应用程序预约与教师的个别会面，查看可用时间并获得自动确认。",
+      step6_title: "付款与文件",
+      step6_desc: "管理学校付款并访问孩子的文件（成绩单、证书）。"
+    },
+    secretary: {
+      step1_title: "秘书处控制台",
+      step1_desc: "控制台显示待处理活动、最新请求和学校主要统计数据。",
+      step2_title: "班级与学生管理",
+      step2_desc: "在\"班级\"中管理所有学校班级。在\"学生\"中找到完整的注册表和高级搜索。",
+      step3_title: "证书与文件",
+      step3_desc: "生成并打印注册和出勤证书。管理数字文档档案。",
+      step4_title: "时间表管理",
+      step4_desc: "配置学校时间表，管理代课教师并规划活动。",
+      step5_title: "报告与统计",
+      step5_desc: "生成关于出勤、成绩和注册的自定义报告。",
+      step6_title: "用户与通讯",
+      step6_desc: "管理教师、学生和家长账户。向所有用户类别发送官方通讯。"
+    },
+    admin: {
+      step1_title: "管理员控制台",
+      step1_desc: "控制台显示系统状态、最新活动和平台主要使用指标。",
+      step2_title: "系统监控",
+      step2_desc: "实时监控系统性能、活跃会话、系统日志和服务状态。",
+      step3_title: "用户与学校管理",
+      step3_desc: "管理所有用户账户，创建新学校，分配角色和权限。",
+      step4_title: "分析与报告",
+      step4_desc: "查看平台使用的全局分析，生成详细报告并监控趋势。",
+      step5_title: "审计日志",
+      step5_desc: "访问系统中所有操作的完整记录，用于审计和合规。",
+      step6_title: "系统设置",
+      step6_desc: "配置安全策略、双因素身份验证和电子学习集成。"
+    }
+  },
+  help: {
+    title: "帮助中心",
+    subtitle: "使用电子注册表的指南和教程",
+    searchPlaceholder: "在指南中搜索...",
+    noResults: "未找到相关文章",
+    categories: "分类",
+    allTopics: "所有主题",
+    restartTour: "重新开始引导导览",
+    openHelp: "打开指南",
+    needHelp: "需要帮助？",
+    contactSupport: "联系支持",
+    fabTooltip: "帮助和指南",
+    new: "新"
   }
 }

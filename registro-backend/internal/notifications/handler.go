@@ -14,7 +14,7 @@ import (
 )
 
 type Handler struct {
-	service Service
+	service      Service
 	pushLimiters sync.Map
 }
 

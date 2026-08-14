@@ -2,11 +2,11 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import { createI18n } from 'vue-i18n'
 import { Quasar, Notify, Dialog, Loading } from 'quasar'
-import quasarLangIt from 'quasar/lang/it'
 import router from './router'
 import App from './App.vue'
 import messages from './i18n'
 import { setApiI18n } from './services/api'
+import { getSavedLocale, getQuasarLang, applyLocale } from './utils/locale'
 
 // Import Quasar css
 import '@quasar/extras/material-icons/material-icons.css'
@@ -15,7 +15,7 @@ import 'quasar/src/css/index.sass'
 // Global styles
 import './assets/styles/globals.css'
 
-const savedLang = localStorage.getItem('superadmin_language') || 'it-IT'
+const savedLang = getSavedLocale()
 
 export const i18n = createI18n({
   locale: savedLang,
@@ -25,6 +25,9 @@ export const i18n = createI18n({
 })
 
 setApiI18n(i18n)
+
+// Apply initial DOM attributes (lang, dir)
+applyLocale(savedLang, i18n)
 
 const app = createApp(App)
 
@@ -37,7 +40,7 @@ app.use(Quasar, {
         Dialog,
         Loading
     },
-    lang: quasarLangIt,
+    lang: getQuasarLang(savedLang),
     config: {
         brand: {
             primary: '#4F46E5',  // Indigo 600

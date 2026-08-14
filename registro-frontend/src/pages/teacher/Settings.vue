@@ -538,6 +538,7 @@ import { useI18n } from 'vue-i18n'
 import { useThemeStore } from '@/stores/theme'
 import { userService } from '@/services/userService'
 import { useAuthStore } from '@/stores/auth'
+import { SUPPORTED_LOCALES, applyLocale, normalizeLocale } from '@/utils/locale'
 
 const $q = useQuasar()
 const { t, te, locale } = useI18n()
@@ -548,18 +549,8 @@ const activeTab = ref('general')
 const savingAll = ref(false)
 
 // Lingua e Localizzazione
-const selectedLocale = ref(locale.value || 'it')
-const localeOptions = [
-  { label: 'Italiano', value: 'it', flag: '🇮🇹' },
-  { label: 'English', value: 'en', flag: '🇬🇧' },
-  { label: 'Español', value: 'es', flag: '🇪🇸' },
-  { label: 'Français', value: 'fr', flag: '🇫🇷' },
-  { label: 'Deutsch', value: 'de', flag: '🇩🇪' },
-  { label: 'Русский', value: 'ru', flag: '🇷🇺' },
-  { label: 'Українська', value: 'uk', flag: '🇺🇦' },
-  { label: 'العربية', value: 'ar', flag: '🇸🇦' },
-  { label: '中文 (简体)', value: 'zh', flag: '🇨🇳' }
-]
+const selectedLocale = ref(normalizeLocale(locale.value))
+const localeOptions = SUPPORTED_LOCALES
 
 const generalSettings = reactive({
   dateFormat: 'DD/MM/YYYY',
@@ -570,11 +561,11 @@ const generalSettings = reactive({
 
 const onLocaleChange = (newLoc) => {
   if (newLoc) {
-    locale.value = newLoc
-    localStorage.setItem('user_locale', newLoc)
+    applyLocale(newLoc, { locale }, $q)
     $q.notify({
       type: 'positive',
-      message: `Lingua impostata su: ${newLoc.toUpperCase()}`,
+      icon: 'language',
+      message: t('notifications.languageChanged'),
       position: 'top',
       timeout: 1500
     })
@@ -630,18 +621,18 @@ const passwordStrengthColorText = computed(() => {
 
 const changePassword = async () => {
   if (pwdForm.newPassword !== pwdForm.confirmPassword) {
-    $q.notify({ type: 'negative', message: 'Le password non coincidono' })
+    $q.notify({ type: 'negative', message: t('errors.passwordMismatch') })
     return
   }
   const userId = authStore.user?.id
   if (!userId) {
-    $q.notify({ type: 'negative', message: 'Sessione non valida, effettua nuovamente il login' })
+    $q.notify({ type: 'negative', message: t('errors.sessionInvalid') })
     return
   }
   updatingPassword.value = true
   try {
     await userService.changePassword(userId, pwdForm.currentPassword, pwdForm.newPassword)
-    $q.notify({ type: 'positive', message: 'Password aggiornata con successo!' })
+    $q.notify({ type: 'positive', message: t('notifications.passwordUpdated') })
     pwdForm.currentPassword = ''
     pwdForm.newPassword = ''
     pwdForm.confirmPassword = ''
