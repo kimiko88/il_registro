@@ -352,5 +352,117 @@ export default {
       a5: 'Vai su "Feature Flags & Istituto". Puoi abilitare o disabilitare funzionalità specifiche per singola scuola o per tutti gli istituti (es. integrazione Google Classroom, PCTO online).'
     }
   }
+,
+  onboardingExtra: {
+    openGuide: "Apri la Guida Completa",
+    viewAllFeatures: "Scopri tutte le funzioni",
+    completionTitle: "Sei pronto! 🎉",
+    completionDesc: "Hai completato il tour. Puoi accedere alla guida completa in qualsiasi momento dal pulsante ? in alto.",
+    teacher: {
+      step7_title: "Registro Elettronico e Firme",
+      step7_desc: "Firma digitalmente ogni lezione con un clic. Il registro tiene traccia automatica degli argomenti svolti, delle ore di lezione e delle annotazioni per ogni classe.",
+      step7_bullets: ["Firma digitale lezione","Argomenti lezione","Annotazioni private","Registro ore"],
+      step8_title: "Valutazione Competenze e UDA",
+      step8_desc: "Valuta le competenze degli studenti in base ai descrittori UE, gestisci le Unità Didattiche di Apprendimento e i piani di lavoro annuali.",
+      step8_bullets: ["Competenze UE","Unità Didattiche","Piano di lavoro","Rubriche valutative"],
+      step1_bullets: ["Lezioni di oggi","Notifiche recenti","Accesso rapido","Riepilogo classe"],
+      step2_bullets: ["Registro presenze","Argomenti lezione","Firma digitale","Gestione assenze"],
+      step3_bullets: ["Voti orali e scritti","Media classe","Grafico distribuzione","Download tabelle"],
+      step4_bullets: ["Compiti e verifiche","Calendario attività","Messaggi classe","Circolare genitori"],
+      step5_bullets: ["Disponibilità colloqui","Prenotazioni genitori","Video colloquio","Storico incontri"],
+      step6_bullets: ["Tema e lingua","Notifiche push","Password","Profilo pubblico"]
+    },
+    student: {
+      step7_title: "PCTO e Competenze",
+      step7_desc: "Monitora le tue ore di PCTO (ex alternanza), visualizza le certificazioni di competenza e costruisci il tuo portfolio digitale.",
+      step7_bullets: ["Ore PCTO","Certificazioni","Portfolio digitale","Valutazione tutor"],
+      step8_title: "Comunicazioni e Bacheca",
+      step8_desc: "Consulta tutte le comunicazioni della scuola, leggi le circolari, rispondi ai sondaggi e visualizza gli avvisi personalizzati.",
+      step8_bullets: ["Circolari scuola","Sondaggi e risposte","Avvisi personalizzati","Comunicazioni docenti"],
+      step1_bullets: ["Compiti in scadenza","Ultime notifiche","Media voti","Prossime verifiche"],
+      step2_bullets: ["Voti per materia","Media aggiornata","Grafico andamento","Confronto trimestri"],
+      step3_bullets: ["Presenze mensili","Contatore assenze","Ritardi e uscite","Giustificazioni"],
+      step4_bullets: ["Compiti assegnati","Scadenze per materia","Materiali didattici","Link e risorse"],
+      step5_bullets: ["Pagella digitale","Download PDF","Certificati","Modulistica"],
+      step6_bullets: ["Vacanze scolastiche","Date verifiche","Attività extra","Gite ed eventi"]
+    },
+    parent: {
+      step7_title: "Giustificazioni e Autorizzazioni",
+      step7_desc: "Invia giustifiche per le assenze dei tuoi figli direttamente dall'app, gestisci le autorizzazioni per uscite anticipate e attività speciali.",
+      step7_bullets: ["Giustifiche online","Autorizzazioni uscite","Attività speciali","Storico assenze"],
+      step8_title: "Statistiche e Andamento",
+      step8_desc: "Visualizza grafici di andamento scolastico nel tempo, confronta le prestazioni tra materie e monitora l'evoluzione dei risultati.",
+      step8_bullets: ["Grafico andamento","Confronto materie","Trend temporale","Obiettivi raggiunti"],
+      step1_bullets: ["Riepilogo figli","Ultime notifiche","Messaggi non letti","Appuntamenti"],
+      step2_bullets: ["Profilo scolastico","Documenti figlio","Contatti docenti","Dati iscrizione"],
+      step3_bullets: ["Voti in tempo reale","Media per materia","Presenze giornaliere","Alert automatici"],
+      step4_bullets: ["Circolari scuola","Avvisi docenti","Comunicazioni urgenti","Bacheca digitale"],
+      step5_bullets: ["Prenota colloquio","Scelta orario","Conferma email","Modifica prenotazione"],
+      step6_bullets: ["Rette e tasse","Storico pagamenti","Scarica ricevute","Richiedi documenti"]
+    },
+    secretary: {
+      step7_title: "Iscrizioni e Anagrafe",
+      step7_desc: "Gestisci le iscrizioni annuali, mantieni aggiornata l'anagrafe studenti, gestisci trasferimenti in entrata/uscita e situazioni speciali.",
+      step7_bullets: ["Iscrizioni annuali","Trasferimenti","Alunni BES/DSA","Situazioni speciali"],
+      step8_title: "Circolari e Comunicazioni",
+      step8_desc: "Crea e pubblica circolari, gestisci la bacheca digitale, invia comunicazioni massive a classi o categorie di utenti con firma digitale.",
+      step8_bullets: ["Crea circolari","Firma digitale","Destinatari multipli","Storico pubblicazioni"],
+      step1_bullets: ["Attività pendenti","Richieste in arrivo","Statistiche istituto","Alert sistema"],
+      step2_bullets: ["Elenco classi","Assegnazione docenti","Orario settimanale","Storico modifiche"],
+      step3_bullets: ["Certificato iscrizione","Attestato frequenza","Export PDF","Firma digitale"],
+      step4_bullets: ["Orario scolastico","Gestione sostituzioni","Attività extra","Avvisi docenti"],
+      step5_bullets: ["Report presenze","Export MIF/ministeriali","Grafici statistici","Filtri avanzati"],
+      step6_bullets: ["Crea utenti","Assegna ruoli","Reset password","Gestione accessi"]
+    },
+    admin: {
+      step7_title: "Gestione Scuole e Istituti",
+      step7_desc: "Crea e configura nuovi istituti scolastici, gestisci i parametri specifici di ogni scuola, assegna admin di plesso e monitora l'attività.",
+      step7_bullets: ["Nuovi istituti","Config per scuola","Admin di plesso","Multi-tenant"],
+      step8_title: "Integrazioni e API",
+      step8_desc: "Gestisci le integrazioni con sistemi esterni (Google Workspace, Microsoft 365, LMS), configura i webhook e monitora le chiamate API.",
+      step8_bullets: ["Google Workspace","Microsoft 365","Webhook config","API monitoring"],
+      step1_bullets: ["Stato sistema","Utenti attivi","Sessioni aperte","Errori recenti"],
+      step2_bullets: ["CPU e memoria","Risposta API","Log in tempo reale","Alert soglie"],
+      step3_bullets: ["Crea utenti","Assegna ruoli","Gestisci scuole","Import massivo"],
+      step4_bullets: ["Uso piattaforma","Report periodici","Trend utenti","Export dati"],
+      step5_bullets: ["Log immutabili","Filtri avanzati","Export audit","GDPR compliance"],
+      step6_bullets: ["Policy password","2FA obbligatorio","Feature flags","Manutenzione"]
+    }
+  },
+  guideCenter: {
+    title: "Guide per Sezione",
+    subtitle: "Guide dettagliate per usare ogni parte del Registro",
+    search: "Cerca nella guida...",
+    noResults: "Nessuna guida trovata per",
+    readingTime: "min di lettura",
+    step: "Passaggio",
+    tip: "Suggerimento",
+    warning: "Attenzione",
+    shortcut: "Scorciatoia",
+    teacher: {
+      dashboard: { title: "Dashboard Docente", desc: "La dashboard è il tuo centro di controllo. Scopri come personalizzarla e usarla al meglio.", content: "La dashboard docente ti offre una panoramica completa della giornata. In alto trovi il riepilogo delle lezioni programmate con orari e aule. Al centro vedi le ultime notifiche: nuove prenotazioni colloqui, messaggi dai genitori e avvisi della segreteria. I widget laterali mostrano la media voti per classe e il tasso di presenza.\n\nPassaggio 1: Personalizza i widget trascinandoli nella posizione preferita.\nPassaggio 2: Clicca su una classe nel riepilogo per aprire il registro direttamente.\nPassaggio 3: Usa i filtri in alto per vedere solo le tue materie o solo oggi.\n\nSuggerimento: Imposta i widget di notifica prioritaria per ricevere alert solo per eventi urgenti." },
+      attendance: { title: "Registro Presenze", desc: "Come registrare presenze, assenze e ritardi in modo rapido ed efficiente.", content: "Il registro presenze si apre automaticamente all'inizio di ogni lezione. La lista studenti è già precaricata per la tua classe.\n\nPassaggio 1: Clicca sul nome dello studente per cambiarne lo stato (P/A/R/U).\nPassaggio 2: Per le assenze, inserisci una nota opzionale (malattia, giustificata, ecc.).\nPassaggio 3: Premi \"Firma Lezione\" per confermare e registrare digitalmente.\nPassaggio 4: Gli assenti vengono notificati automaticamente ai genitori.\n\nScorciatoia: Premi Ctrl+Invio per salvare rapidamente tutte le presenze." },
+      grades: { title: "Gestione Voti", desc: "Inserire voti, gestire tipologie e visualizzare analisi per classe.", content: "Il tabellone voti è una griglia interattiva con righe = studenti e colonne = valutazioni.\n\nPassaggio 1: Seleziona la classe e la materia dal menu a tendina.\nPassaggio 2: Clicca sulla cella vuota per inserire un nuovo voto.\nPassaggio 3: Scegli la tipologia (Scritto, Orale, Pratico) e il valore (1-10 o lettere).\nPassaggio 4: Aggiungi un commento opzionale visibile solo a te o anche allo studente/genitore.\nPassaggio 5: La media si aggiorna in tempo reale.\n\nAttenzione: I voti pubblicati sono visibili allo studente e al genitore entro 30 secondi." },
+      agenda: { title: "Agenda Scolastica", desc: "Pianificare verifiche, compiti e attività condivise con la classe.", content: "L'agenda docente è sincronizzata con quella degli studenti. Ogni evento che crei appare nella sezione \"Compiti\" e \"Calendario\" degli studenti della classe.\n\nPassaggio 1: Clicca su un giorno nel calendario per aggiungere un evento.\nPassaggio 2: Seleziona il tipo: Compito, Verifica, Attività, Gita, Altro.\nPassaggio 3: Scegli la classe e la materia di riferimento.\nPassaggio 4: Imposta data e ora, aggiungi descrizione e allegati.\nPassaggio 5: Attiva \"Notifica studenti\" per inviare un alert push.\n\nSuggerimento: Usa la vista \"Settimana\" per avere una panoramica delle verifiche programmate ed evitare sovrapposizioni tra materie." },
+      communications: { title: "Comunicazioni", desc: "Inviare messaggi a studenti, genitori e coordinatori in modo strutturato.", content: "Il sistema di comunicazione è strutturato in canali: messaggi diretti, circolari di classe e comunicazioni generali.\n\nPassaggio 1: Vai su \"Comunicazioni\" → \"Nuova comunicazione\".\nPassaggio 2: Scegli il canale: Messaggio (privato), Comunicazione classe (tutti i genitori), Avviso urgente.\nPassaggio 3: Seleziona i destinatari: tutta la classe, singolo studente, o genitore specifico.\nPassaggio 4: Scrivi il messaggio con l'editor ricco (bold, link, allegati).\nPassaggio 5: Invia o programma per data/ora futura.\n\nAttenzione: Le comunicazioni \"Urgenti\" generano notifiche push immediate anche di notte." },
+      meetings: { title: "Colloqui e Ricevimento", desc: "Gestire disponibilità, prenotazioni e svolgimento dei colloqui.", content: "I colloqui si gestiscono in due modalità: ricevimento ordinario settimanale e colloqui individuali straordinari.\n\nPassaggio 1: Vai su \"Colloqui\" → \"Imposta Disponibilità\".\nPassaggio 2: Seleziona i giorni e gli orari in cui sei disponibile settimanalmente.\nPassaggio 3: Imposta la durata di ogni slot (15, 20 o 30 minuti).\nPassaggio 4: I genitori prenotano autonomamente; tu ricevi una conferma via email.\nPassaggio 5: Prima del colloquio, puoi consultare il profilo dello studente e le ultime valutazioni.\n\nSuggerimento: Attiva la videochiamata integrata per colloqui a distanza senza app esterne." }
+    },
+    student: {
+      dashboard: { title: "La Mia Dashboard", desc: "Come leggere la tua dashboard e usarla come punto di partenza ogni giorno.", content: "La dashboard studente è organizzata per priorità. In cima trovi le scadenze più urgenti: compiti da consegnare entro oggi e verifiche di domani.\n\nPassaggio 1: La sezione \"Oggi\" mostra lezioni, compiti e scadenze del giorno.\nPassaggio 2: Il widget \"Andamento\" mostra la media per materia aggiornata.\nPassaggio 3: Le notifiche in alto segnalano nuovi voti, messaggi e avvisi.\nPassaggio 4: Usa i link rapidi per accedere velocemente a Voti, Compiti e Calendario.\n\nSuggerimento: Attiva le notifiche push sul telefono per ricevere alert per nuovi voti e compiti assegnati." },
+      grades: { title: "I Miei Voti", desc: "Come leggere i voti, capire la media e analizzare il tuo andamento.", content: "La sezione Voti mostra tutte le valutazioni ricevute, organizzate per materia e per periodo.\n\nPassaggio 1: Seleziona la materia per vedere tutte le valutazioni nel dettaglio.\nPassaggio 2: Ogni voto mostra: data, tipologia (scritto/orale), valore e eventuale commento del docente.\nPassaggio 3: Il grafico \"Andamento\" mostra come cambia la media nel tempo.\nPassaggio 4: Filtra per periodo (1° trimestre, 2° trimestre, finale) con il selettore in alto.\nPassaggio 5: Clicca \"Scarica riepilogo\" per esportare un PDF con tutti i voti.\n\nAttenzione: I voti inseriti dal docente sono definitivi. Per contestare un voto, contatta il docente tramite la sezione Comunicazioni." },
+      homework: { title: "Compiti e Scadenze", desc: "Come organizzare compiti, scadenze e materiali di studio.", content: "La sezione Compiti raccoglie automaticamente tutto ciò che i tuoi docenti hanno assegnato.\n\nPassaggio 1: La vista predefinita mostra i compiti ordinati per scadenza (prima quelli urgenti).\nPassaggio 2: Clicca su un compito per vedere la descrizione completa e i file allegati.\nPassaggio 3: Usa il filtro per materia per concentrarti su una disciplina specifica.\nPassaggio 4: Spunta il compito come \"Fatto\" per tenerlo tracciato.\nPassaggio 5: Il calendario integrato mostra graficamente le giornate con consegne.\n\nSuggerimento: Attiva la vista \"Settimana\" per pianificare lo studio con anticipo ed evitare accumuli." }
+    },
+    parent: {
+      monitoring: { title: "Monitorare i Tuoi Figli", desc: "Come tenere sotto controllo voti, presenze e comunicazioni in tempo reale.", content: "Come genitore hai accesso completo al profilo scolastico di tutti i tuoi figli iscritti.\n\nPassaggio 1: Seleziona il figlio dal menu in alto (se hai più figli).\nPassaggio 2: La dashboard mostra un riepilogo aggiornato: media voti, presenze del mese, prossime verifiche.\nPassaggio 3: Ogni nuovo voto genera una notifica immediata sul tuo telefono.\nPassaggio 4: Clicca su \"Dettaglio voto\" per leggere il commento del docente.\nPassaggio 5: La sezione \"Andamento\" mostra i grafici storici per monitorare l'evoluzione.\n\nSuggerimento: Imposta gli \"Alert critici\" per ricevere notifiche speciali quando la media scende sotto una soglia che imposti tu." },
+      meetings: { title: "Prenotare Colloqui", desc: "Come prenotare, modificare e prepararsi ai colloqui con i docenti.", content: "Il sistema di colloqui ti permette di prenotare appuntamenti con tutti i docenti di tuo figlio.\n\nPassaggio 1: Vai su \"Colloqui\" e seleziona il docente con cui vuoi parlare.\nPassaggio 2: Il calendario mostra in verde gli slot disponibili. Quelli in grigio sono già occupati.\nPassaggio 3: Clicca su uno slot disponibile e conferma la prenotazione.\nPassaggio 4: Ricevi una conferma via email con tutti i dettagli.\nPassaggio 5: Il giorno del colloquio, ricevi un reminder 30 minuti prima.\n\nAttenzione: Puoi annullare il colloquio fino a 2 ore prima. Oltre questo termine, contatta direttamente la segreteria." }
+    },
+    secretary: {
+      students: { title: "Gestione Anagrafica Studenti", desc: "Come cercare, modificare e gestire i dati degli studenti.", content: "Il modulo anagrafe studenti è il cuore della gestione scolastica.\n\nPassaggio 1: Usa la barra di ricerca per trovare uno studente (nome, cognome, CF, classe).\nPassaggio 2: Clicca sul nome per aprire la scheda completa con dati anagrafici, contatti, situazione scolastica.\nPassaggio 3: Per modificare un dato, clicca sull'icona matita accanto al campo.\nPassaggio 4: Ogni modifica è tracciata nel log di sistema con data e utente.\nPassaggio 5: Usa \"Export\" per esportare i dati in formato Excel o CSV.\n\nAttenzione: Le modifiche ai dati sensibili richiedono doppia conferma e sono soggette al GDPR." },
+      certificates: { title: "Generazione Certificati", desc: "Come generare e consegnare certificati in modo veloce.", content: "Il generatore di certificati produce documenti ufficiali in pochi secondi.\n\nPassaggio 1: Cerca lo studente con la barra di ricerca.\nPassaggio 2: Vai sulla scheda \"Documenti\" → \"Genera Certificato\".\nPassaggio 3: Seleziona il tipo: Iscrizione, Frequenza, Esiti, Nulla osta, Titolo di studio.\nPassaggio 4: Il sistema compila automaticamente tutti i campi con i dati del registro.\nPassaggio 5: Anteprima → Aggiungi timbro digitale → Stampa o invia via email.\n\nSuggerimento: Usa i template personalizzati per aggiungere il logo e i dati dell'istituto." }
+    },
+    admin: {
+      monitoring: { title: "Monitoraggio Sistema", desc: "Come leggere i dati di sistema e intervenire in caso di anomalie.", content: "Il pannello di monitoraggio mostra lo stato in tempo reale di tutti i componenti del sistema.\n\nPassaggio 1: La dashboard principale mostra: stato API (verde/giallo/rosso), utilizzo CPU e RAM, numero sessioni attive.\nPassaggio 2: Il grafico \"Richieste API\" mostra il traffico nelle ultime 24 ore.\nPassaggio 3: La sezione \"Errori recenti\" elenca le eccezioni con stack trace.\nPassaggio 4: Imposta soglie di alert per CPU > 80% o tempi risposta > 2s.\nPassaggio 5: La sezione \"Sessioni attive\" mostra chi è connesso in questo momento.\n\nAttenzione: In caso di anomalie critiche, usa il pulsante \"Manutenzione\" per mettere il sistema in modalità manutenzione e avvisare gli utenti." },
+      users: { title: "Gestione Utenti", desc: "Come creare, modificare e gestire tutti gli utenti della piattaforma.", content: "Il pannello utenti permette di gestire tutti gli account in modo centralizzato.\n\nPassaggio 1: Vai su \"Utenti\" e usa i filtri per cercare per ruolo, scuola o stato.\nPassaggio 2: \"Aggiungi Utente\" per creare un singolo account con dati manuali.\nPassaggio 3: \"Import massivo\" per caricare centinaia di utenti da file Excel/CSV.\nPassaggio 4: Per ogni utente puoi: modificare ruolo, reset password, disabilitare account, vedere log attività.\nPassaggio 5: La sezione \"Permessi\" permette di personalizzare cosa ogni ruolo può vedere e fare.\n\nSuggerimento: Usa i gruppi per applicare permessi a insiemi di utenti invece di configurarli uno ad uno." }
+    }
+  }
 }
-

@@ -245,6 +245,21 @@
           <q-badge floating transparent class="search-kbd-badge">K</q-badge>
         </q-btn>
 
+        <!-- Help Center -->
+        <q-btn
+          flat
+          round
+          dense
+          icon="help_outline"
+          color="primary"
+          class="q-mr-sm"
+          :aria-label="t('help.openHelp')"
+          @click="helpCenterRef?.open()"
+          key="help-center-btn"
+        >
+          <q-tooltip>{{ t('help.openHelp') }}</q-tooltip>
+        </q-btn>
+
         <!-- Notifications -->
         <q-btn flat round dense icon="notifications" color="primary" class="q-mr-sm" :aria-label="t('notifications.title')" @click="navigateToNotifications">
           <q-tooltip>{{ t('notifications.title') }}</q-tooltip>
@@ -413,13 +428,16 @@
     </q-page-container>
 
     <!-- Onboarding Tour (global, triggers on first login per role) -->
-    <OnboardingTour ref="tourRef" />
+    <OnboardingTour ref="tourRef" @open-guide="helpCenterRef?.open()" />
 
-    <!-- Help Drawer (slides in from right) -->
+    <!-- Help Center Panel (full-screen, opens from toolbar or FAB) -->
+    <HelpCenterPanel ref="helpCenterRef" @restart-tour="handleRestartTour" />
+
+    <!-- Help Drawer (slides in from right, for FAB quick access) -->
     <HelpDrawer ref="helpDrawerRef" @restart-tour="handleRestartTour" />
 
     <!-- Help FAB (floating ? button bottom-right) -->
-    <HelpFab @open-help="helpDrawerRef?.open()" @restart-tour="handleRestartTour" />
+    <HelpFab @open-help="helpCenterRef?.open()" @restart-tour="handleRestartTour" />
 
   </q-layout>
 </template>
@@ -442,10 +460,12 @@ import GlobalSearch from '@/components/Common/GlobalSearch.vue'
 import OnboardingTour from '@/components/Common/OnboardingTour.vue'
 import HelpDrawer from '@/components/Common/HelpDrawer.vue'
 import HelpFab from '@/components/Common/HelpFab.vue'
+import HelpCenterPanel from '@/components/Common/HelpCenterPanel.vue'
 
 const globalSearchRef = ref(null)
 const tourRef = ref(null)
 const helpDrawerRef = ref(null)
+const helpCenterRef = ref(null)
 
 function handleRestartTour() {
   // Clear the flag so the tour shows again, then start it

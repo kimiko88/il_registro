@@ -1,6 +1,8 @@
 # il_registro — Registro Elettronico Scolastico
 
-> 🏛️ Un registro elettronico **pubblico, aperto e gratuito** per la scuola italiana — perché i dati degli studenti appartengono alla res pubblica, non alle aziende private.
+> 🏛️ Un registro elettronico **pubblico, aperto e gratuito** per la scuola italiana — ideato e realizzato da un docente, per la scuola pubblica.
+
+> ⚠️ **Stato del progetto: Beta funzionante** — Il progetto è attualmente in fase di sviluppo attivo. Le funzionalità principali sono operative e testabili tramite la demo online, ma **non è ancora consigliato per l'uso in produzione** in ambienti scolastici reali. API, struttura del database e configurazioni potrebbero subire modifiche prima del rilascio stabile.
 
 **Online Demo**: [https://registro-scuola.netlify.app](https://registro-scuola.netlify.app)
 **Demo accounts & passwords**: [example_accounts.md](./example_accounts.md)
@@ -14,6 +16,7 @@ _**Nota bene**_: alcune password, come quella per l'account superadmin, potrebbe
 [![Google Antigravity](https://img.shields.io/badge/IDE-Google%20Antigravity-4285F4?logo=google&logoColor=white)](https://antigravity.google)
 [![Google Gemini](https://img.shields.io/badge/AI-Google%20Gemini-4285F4?logo=google&logoColor=white)](https://gemini.google.com)
 [![Anthropic Claude](https://img.shields.io/badge/AI-Anthropic%20Claude-D97757?logo=anthropic&logoColor=white)](https://anthropic.com)
+[![Status](https://img.shields.io/badge/status-beta%20funzionante-yellow)](https://github.com/kimiko88/il_registro)
 
 ---
 
@@ -80,6 +83,14 @@ L'obiettivo è fornire alla _res pubblica_ — scuole, comuni, Stato — uno str
 - ✅ **Qualità**: funzionalità avanzate (SPID/CIE, BES/DSA, BI, PWA) tipicamente riservate ai prodotti commerciali
 
 > _"La scuola pubblica merita strumenti pubblici."_
+
+## 👨‍🏫 Autore
+
+**il_registro** è stato ideato e realizzato da **Me ([kimiko88](https://github.com/kimiko88))**, docente di informatica presso una scuola secondaria pubblica di secondo grado.
+
+Il progetto nasce dall'esperienza diretta in aula e dalla necessità quotidiana di disporre di uno strumento di registro elettronico che fosse **aperto, moderno e realmente al servizio della scuola pubblica** — senza costi di licenza e senza cedere i dati degli studenti a soggetti privati.
+
+> _"Da docente, sto provando a costruire lo strumento che avrei voluto avere."_
 
 ## Panoramica
 
