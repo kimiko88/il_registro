@@ -7,7 +7,7 @@ export const authGuard = (to, from, next) => {
 
     const getUserDashboard = (role) => {
         if (role === 'admin' || role === 'superadmin') return '/admin/dashboard'
-        if (role === 'system_auditor') return '/admin/audit-log'
+        if (role === 'system_auditor') return '/admin/audit-logs'
         if (role === 'teacher' || role === 'coordinator') return '/teacher'
         if (role === 'student') return '/student'
         if (role === 'parent') return '/parent'
@@ -17,12 +17,17 @@ export const authGuard = (to, from, next) => {
 
     const currentRole = authStore.userRole
 
-    const isPublic = to.meta?.requiresAuth === false || publicRoutes.includes(to.path)
+    const isPublic = to.meta?.requiresAuth === false ||
+        publicRoutes.includes(to.path) ||
+        to.matched?.some(record => record.meta?.requiresAuth === false)
 
     // If route is public
     if (isPublic) {
-        // If already logged in, redirect to user's dashboard
-        if (authStore.isAuthenticated) {
+        // Only redirect logged in users away if navigating to auth-entry routes (/login, /register, /forgot-password)
+        const isAuthEntry = publicRoutes.includes(to.path) ||
+            to.matched?.some(record => publicRoutes.includes(record.path))
+
+        if (authStore.isAuthenticated && isAuthEntry) {
             next(getUserDashboard(currentRole))
             return
         }

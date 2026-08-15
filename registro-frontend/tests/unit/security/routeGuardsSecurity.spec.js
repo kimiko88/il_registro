@@ -26,8 +26,7 @@ describe('Router Security Guards — Navigation & Role Access Control', () => {
 
     it('redirects authenticated users away from /login to their role dashboard', () => {
         const authStore = useAuthStore()
-        authStore.token = 'valid-token'
-        authStore.user = { id: 'u1', role: 'teacher' }
+        authStore.login({ id: 'u1', role: 'teacher' }, 'valid-token', 'refresh-token')
 
         const to = { path: '/login' }
         const from = { path: '/' }
@@ -52,8 +51,7 @@ describe('Router Security Guards — Navigation & Role Access Control', () => {
 
     it('blocks user with insufficient role permissions and redirects to own dashboard', () => {
         const authStore = useAuthStore()
-        authStore.token = 'valid-token'
-        authStore.user = { id: 's1', role: 'student' }
+        authStore.login({ id: 's1', role: 'student' }, 'valid-token', 'refresh-token')
 
         const to = { path: '/admin/dashboard', meta: { roles: ['admin', 'superadmin'] } }
         const from = { path: '/student' }
@@ -65,11 +63,23 @@ describe('Router Security Guards — Navigation & Role Access Control', () => {
 
     it('allows user with matching role permission to proceed to protected route', () => {
         const authStore = useAuthStore()
-        authStore.token = 'valid-token'
-        authStore.user = { id: 'a1', role: 'admin' }
+        authStore.login({ id: 'a1', role: 'admin' }, 'valid-token', 'refresh-token')
 
         const to = { path: '/admin/dashboard', meta: { roles: ['admin', 'superadmin'] } }
         const from = { path: '/admin/dashboard' }
+
+        authGuard(to, from, nextSpy)
+
+        expect(nextSpy).toHaveBeenCalledWith()
+    })
+
+    it('allows unauthenticated users to view 404 non-existent URLs directly', () => {
+        const authStore = useAuthStore()
+        authStore.token = null
+        authStore.user = null
+
+        const to = { path: '/some-invalid-path', meta: { requiresAuth: false } }
+        const from = { path: '/' }
 
         authGuard(to, from, nextSpy)
 

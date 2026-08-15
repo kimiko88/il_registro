@@ -1,11 +1,9 @@
-import { useAuthStore } from '@/stores/auth'
-
 export default [
     {
         path: '/',
         component: () => import('@/layouts/MainLayout.vue'),
         children: [
-            { path: '', component: () => import('@/pages/Dashboard.vue'), meta: { title: 'Dashboard', roles: ['superadmin', 'admin', 'secretary', 'teacher', 'student', 'parent'] } },
+            { path: '', component: () => import('@/pages/Dashboard.vue'), meta: { title: 'Dashboard', roles: ['superadmin', 'admin', 'secretary', 'teacher', 'student', 'parent', 'principal', 'vice_principal', 'coordinator', 'staff', 'system_auditor'] } },
             { path: 'dashboard', redirect: '/' },
 
             // Admin Routes (SuperAdmin + Admin)
@@ -71,7 +69,7 @@ export default [
             {
                 path: 'admin/audit-logs',
                 component: () => import('@/pages/admin/AuditLog.vue'),
-                meta: { title: 'Registro Eventi & Audit', roles: ['superadmin'] }
+                meta: { title: 'Registro Eventi & Audit', roles: ['superadmin', 'system_auditor'] }
             },
             {
                 path: 'admin/tenants',
@@ -80,49 +78,49 @@ export default [
             },
 
             // Secretary Routes
-            { path: 'secretary', component: () => import('@/pages/secretary/Index.vue'), meta: { title: 'Pannello Segreteria', roles: ['secretary'] } },
-            { path: 'secretary/documents', component: () => import('@/pages/secretary/Documents.vue'), meta: { title: 'Gestione Documenti', roles: ['secretary'] } },
-            { path: 'secretary/users', component: () => import('@/pages/secretary/Users.vue'), meta: { title: 'Anagrafica Utenti', roles: ['secretary'] } },
-            { path: 'secretary/students', component: () => import('@/pages/secretary/Students.vue'), meta: { title: 'Anagrafica Studenti', roles: ['secretary'] } },
-            { path: 'secretary/communications', component: () => import('@/pages/secretary/Communications.vue'), meta: { title: 'Circolari & Comunicazioni', roles: ['secretary'] } },
-            { path: 'secretary/reports', component: () => import('@/pages/secretary/Reports.vue'), meta: { title: 'Reportistica Scolastica', roles: ['secretary'] } },
+            { path: 'secretary', component: () => import('@/pages/secretary/Index.vue'), meta: { title: 'Pannello Segreteria', roles: ['secretary', 'principal', 'vice_principal'] } },
+            { path: 'secretary/documents', component: () => import('@/pages/secretary/Documents.vue'), meta: { title: 'Gestione Documenti', roles: ['secretary', 'principal', 'vice_principal'] } },
+            { path: 'secretary/users', component: () => import('@/pages/secretary/Users.vue'), meta: { title: 'Anagrafica Utenti', roles: ['secretary', 'principal', 'vice_principal'] } },
+            { path: 'secretary/students', component: () => import('@/pages/secretary/Students.vue'), meta: { title: 'Anagrafica Studenti', roles: ['secretary', 'principal', 'vice_principal'] } },
+            { path: 'secretary/communications', component: () => import('@/pages/secretary/Communications.vue'), meta: { title: 'Circolari & Comunicazioni', roles: ['secretary', 'principal', 'vice_principal'] } },
+            { path: 'secretary/reports', component: () => import('@/pages/secretary/Reports.vue'), meta: { title: 'Reportistica Scolastica', roles: ['secretary', 'principal', 'vice_principal'] } },
             { path: 'secretary/pcto', component: () => import('@/pages/secretary/PCTO.vue'), meta: { title: 'Gestione PCTO', roles: ['secretary'] } },
             { path: 'secretary/textbooks', component: () => import('@/pages/secretary/Textbooks.vue'), meta: { title: 'Adozione Libri di Testo', roles: ['secretary'] } },
-            { path: 'secretary/settings', component: () => import('@/pages/secretary/Settings.vue'), meta: { title: 'Impostazioni Segreteria', roles: ['secretary'] } },
-            { path: 'secretary/classes', component: () => import('@/pages/secretary/Classes.vue'), meta: { title: 'Gestione Classi', roles: ['secretary'] } },
-            { path: 'secretary/timetable', component: () => import('@/pages/secretary/Timetable.vue'), meta: { title: 'Orario Scolastico & Cattedre', roles: ['secretary', 'admin', 'superadmin'] } },
-            { path: 'secretary/scrutiny', component: () => import('@/pages/secretary/Scrutiny.vue'), meta: { title: 'Scrutini Scolastici', roles: ['secretary'] } },
+            { path: 'secretary/settings', component: () => import('@/pages/secretary/Settings.vue'), meta: { title: 'Impostazioni Segreteria', roles: ['secretary', 'principal', 'vice_principal'] } },
+            { path: 'secretary/classes', component: () => import('@/pages/secretary/Classes.vue'), meta: { title: 'Gestione Classi', roles: ['secretary', 'principal', 'vice_principal'] } },
+            { path: 'secretary/timetable', component: () => import('@/pages/secretary/Timetable.vue'), meta: { title: 'Orario Scolastico & Cattedre', roles: ['secretary', 'admin', 'superadmin', 'principal', 'vice_principal'] } },
+            { path: 'secretary/scrutiny', component: () => import('@/pages/secretary/Scrutiny.vue'), meta: { title: 'Scrutini Scolastici', roles: ['secretary', 'principal', 'vice_principal'] } },
 
             { path: 'secretary/groups', component: () => import('@/pages/secretary/Groups.vue'), meta: { title: 'Gruppi Linguistici / Articolati', roles: ['secretary'] } },
             { path: 'secretary/meetings', component: () => import('@/pages/secretary/Meetings.vue'), meta: { title: 'Organizzazione Riunioni', roles: ['secretary'] } },
-            { path: 'secretary/certificates', component: () => import('@/pages/secretary/Certificates.vue'), meta: { title: 'Certificati & Attestati', roles: ['secretary', 'admin', 'superadmin'] } },
-            { path: 'secretary/substitutions', component: () => import('@/pages/secretary/Substitutions.vue'), meta: { title: 'Gestione Sostituzioni Docenti', roles: ['secretary', 'admin', 'superadmin'] } },
-            { path: 'secretary/students/:id/fascicolo', component: () => import('@/pages/secretary/FascicoloStudente.vue'), meta: { title: 'Fascicolo Studente', roles: ['secretary'] } },
+            { path: 'secretary/certificates', component: () => import('@/pages/secretary/Certificates.vue'), meta: { title: 'Certificati & Attestati', roles: ['secretary', 'admin', 'superadmin', 'principal', 'vice_principal'] } },
+            { path: 'secretary/substitutions', component: () => import('@/pages/secretary/Substitutions.vue'), meta: { title: 'Gestione Sostituzioni Docenti', roles: ['secretary', 'admin', 'superadmin', 'principal', 'vice_principal'] } },
+            { path: 'secretary/students/:id/fascicolo', component: () => import('@/pages/secretary/FascicoloStudente.vue'), meta: { title: 'Fascicolo Studente', roles: ['secretary', 'principal', 'vice_principal'] } },
 
-            // Teacher Routes
-            { path: 'teacher', component: () => import('@/pages/teacher/Index.vue'), meta: { title: 'Pannello Docente', roles: ['teacher'] } },
-            { path: 'teacher/grades', component: () => import('@/pages/teacher/Grades.vue'), meta: { title: 'Gestione Voti', roles: ['teacher'] } },
-            { path: 'teacher/attendance', component: () => import('@/pages/teacher/Attendance.vue'), meta: { title: 'Registro Appello & Presenze', roles: ['teacher'] } },
-            { path: 'teacher/classes', component: () => import('@/pages/teacher/Classes.vue'), meta: { title: 'Le Mie Classi', roles: ['teacher'] } },
-            { path: 'teacher/groups', component: () => import('@/pages/teacher/Groups.vue'), meta: { title: 'Gruppi e Laboratori', roles: ['teacher'] } },
-            { path: 'teacher/coordinator', component: () => import('@/pages/teacher/CoordinatorView.vue'), meta: { title: 'Pannello Coordinatore', roles: ['teacher'] } },
-            { path: 'teacher/documents', component: () => import('@/pages/teacher/Documents.vue'), meta: { title: 'Documentazione Didattica', roles: ['teacher'] } },
-            { path: 'teacher/colloqui', component: () => import('@/pages/teacher/Colloqui.vue'), meta: { title: 'Ricevimento Famiglie', roles: ['teacher'] } },
-            { path: 'teacher/communications', component: () => import('@/pages/teacher/Communications.vue'), meta: { title: 'Comunicazioni Scuola', roles: ['teacher'] } },
-            { path: 'teacher/lessons', component: () => import('@/components/Teacher/LessonPlanner.vue'), meta: { title: 'Registro Lezioni', roles: ['teacher'] } },
-            { path: 'teacher/didactics', component: () => import('@/pages/teacher/Didactics.vue'), meta: { title: 'Materiale Didattico', roles: ['teacher'] } },
-            { path: 'teacher/timetable', component: () => import('@/pages/teacher/Timetable.vue'), meta: { title: 'Orario Docente', roles: ['teacher'] } },
-            { path: 'teacher/scrutiny', component: () => import('@/pages/teacher/Scrutiny.vue'), meta: { title: 'Gestione Scrutini', roles: ['teacher'] } },
-            { path: 'teacher/verbali', component: () => import('@/pages/teacher/Verbali.vue'), meta: { title: 'Verbali Consiglio di Classe', roles: ['teacher'] } },
-            { path: 'teacher/substitutions', component: () => import('@/pages/teacher/Substitutions.vue'), meta: { title: 'Sostituzioni Docenti', roles: ['teacher'] } },
-            { path: 'teacher/grade-weights', component: () => import('@/pages/teacher/GradeWeights.vue'), meta: { title: 'Pesi e Criteri Valutazione', roles: ['teacher'] } },
-            { path: 'teacher/agenda', component: () => import('@/pages/teacher/Agenda.vue'), meta: { title: 'Agenda di Classe', roles: ['teacher'] } },
-            { path: 'teacher/notes', component: () => import('@/pages/teacher/Notes.vue'), meta: { title: 'Note & Richiami', roles: ['teacher'] } },
-            { path: 'teacher/rubrics', component: () => import('@/pages/teacher/Rubrics.vue'), meta: { title: 'Rubriche Valutative', roles: ['teacher'] } },
-            { path: 'teacher/pdp', component: () => import('@/pages/teacher/PdpPlans.vue'), meta: { title: 'Piani PDP / PEI', roles: ['teacher'] } },
-            { path: 'teacher/uda', component: () => import('@/pages/teacher/UdaPlanner.vue'), meta: { title: 'Programmazione Didattica UdA', roles: ['teacher'] } },
-            { path: 'teacher/competencies', component: () => import('@/pages/teacher/Competencies.vue'), meta: { title: 'Valutazione per Competenze', roles: ['teacher'] } },
-            { path: 'teacher/settings', component: () => import('@/pages/teacher/Settings.vue'), meta: { title: 'Impostazioni Docente', roles: ['teacher'] } },
+            // Teacher Routes (Supports both 'teacher' and 'coordinator')
+            { path: 'teacher', component: () => import('@/pages/teacher/Index.vue'), meta: { title: 'Pannello Docente', roles: ['teacher', 'coordinator'] } },
+            { path: 'teacher/grades', component: () => import('@/pages/teacher/Grades.vue'), meta: { title: 'Gestione Voti', roles: ['teacher', 'coordinator'] } },
+            { path: 'teacher/attendance', component: () => import('@/pages/teacher/Attendance.vue'), meta: { title: 'Registro Appello & Presenze', roles: ['teacher', 'coordinator'] } },
+            { path: 'teacher/classes', component: () => import('@/pages/teacher/Classes.vue'), meta: { title: 'Le Mie Classi', roles: ['teacher', 'coordinator'] } },
+            { path: 'teacher/groups', component: () => import('@/pages/teacher/Groups.vue'), meta: { title: 'Gruppi e Laboratori', roles: ['teacher', 'coordinator'] } },
+            { path: 'teacher/coordinator', component: () => import('@/pages/teacher/CoordinatorView.vue'), meta: { title: 'Pannello Coordinatore', roles: ['teacher', 'coordinator'] } },
+            { path: 'teacher/documents', component: () => import('@/pages/teacher/Documents.vue'), meta: { title: 'Documentazione Didattica', roles: ['teacher', 'coordinator'] } },
+            { path: 'teacher/colloqui', component: () => import('@/pages/teacher/Colloqui.vue'), meta: { title: 'Ricevimento Famiglie', roles: ['teacher', 'coordinator'] } },
+            { path: 'teacher/communications', component: () => import('@/pages/teacher/Communications.vue'), meta: { title: 'Comunicazioni Scuola', roles: ['teacher', 'coordinator'] } },
+            { path: 'teacher/lessons', component: () => import('@/components/Teacher/LessonPlanner.vue'), meta: { title: 'Registro Lezioni', roles: ['teacher', 'coordinator'] } },
+            { path: 'teacher/didactics', component: () => import('@/pages/teacher/Didactics.vue'), meta: { title: 'Materiale Didattico', roles: ['teacher', 'coordinator'] } },
+            { path: 'teacher/timetable', component: () => import('@/pages/teacher/Timetable.vue'), meta: { title: 'Orario Docente', roles: ['teacher', 'coordinator'] } },
+            { path: 'teacher/scrutiny', component: () => import('@/pages/teacher/Scrutiny.vue'), meta: { title: 'Gestione Scrutini', roles: ['teacher', 'coordinator'] } },
+            { path: 'teacher/verbali', component: () => import('@/pages/teacher/Verbali.vue'), meta: { title: 'Verbali Consiglio di Classe', roles: ['teacher', 'coordinator'] } },
+            { path: 'teacher/substitutions', component: () => import('@/pages/teacher/Substitutions.vue'), meta: { title: 'Sostituzioni Docenti', roles: ['teacher', 'coordinator'] } },
+            { path: 'teacher/grade-weights', component: () => import('@/pages/teacher/GradeWeights.vue'), meta: { title: 'Pesi e Criteri Valutazione', roles: ['teacher', 'coordinator'] } },
+            { path: 'teacher/agenda', component: () => import('@/pages/teacher/Agenda.vue'), meta: { title: 'Agenda di Classe', roles: ['teacher', 'coordinator'] } },
+            { path: 'teacher/notes', component: () => import('@/pages/teacher/Notes.vue'), meta: { title: 'Note & Richiami', roles: ['teacher', 'coordinator'] } },
+            { path: 'teacher/rubrics', component: () => import('@/pages/teacher/Rubrics.vue'), meta: { title: 'Rubriche Valutative', roles: ['teacher', 'coordinator'] } },
+            { path: 'teacher/pdp', component: () => import('@/pages/teacher/PdpPlans.vue'), meta: { title: 'Piani PDP / PEI', roles: ['teacher', 'coordinator'] } },
+            { path: 'teacher/uda', component: () => import('@/pages/teacher/UdaPlanner.vue'), meta: { title: 'Programmazione Didattica UdA', roles: ['teacher', 'coordinator'] } },
+            { path: 'teacher/competencies', component: () => import('@/pages/teacher/Competencies.vue'), meta: { title: 'Valutazione per Competenze', roles: ['teacher', 'coordinator'] } },
+            { path: 'teacher/settings', component: () => import('@/pages/teacher/Settings.vue'), meta: { title: 'Impostazioni Docente', roles: ['teacher', 'coordinator'] } },
 
             // Student Routes
             { path: 'student', component: () => import('@/pages/student/Index.vue'), meta: { title: 'Pannello Studente', roles: ['student'] } },
@@ -161,28 +159,33 @@ export default [
             { path: 'parent/payments', component: () => import('@/pages/parent/Payments.vue'), meta: { title: 'Pagamenti Scolastici', roles: ['parent'] } },
             { path: 'parent/meetings', component: () => import('@/pages/parent/Meetings.vue'), meta: { title: 'Assemblee & Riunioni', roles: ['parent'] } },
             { path: 'parent/settings', component: () => import('@/pages/parent/Settings.vue'), meta: { title: 'Impostazioni Genitore', roles: ['parent'] } },
+
             {
                 path: 'communications',
-                redirect: () => {
+                redirect: async () => {
                     let role = ''
                     try {
+                        const { useAuthStore } = await import('@/stores/auth')
                         const authStore = useAuthStore()
                         role = authStore.userRole || authStore.user?.role || ''
                     } catch {
                         // store fallback
                     }
-                    if (role === 'teacher') return '/teacher/communications'
+                    if (role === 'teacher' || role === 'coordinator') return '/teacher/communications'
                     if (role === 'student') return '/student/communications'
                     if (role === 'parent') return '/parent/communications'
-                    return '/secretary/communications'
+                    if (role === 'secretary' || role === 'principal' || role === 'vice_principal') return '/secretary/communications'
+                    if (role === 'admin' || role === 'superadmin' || role === 'system_auditor') return '/admin/dashboard'
+                    return '/'
                 },
-                meta: { title: 'Comunicazioni', roles: ['superadmin', 'admin', 'secretary', 'teacher', 'student', 'parent'] }
+                meta: { title: 'Comunicazioni', roles: ['superadmin', 'admin', 'secretary', 'teacher', 'student', 'parent', 'principal', 'vice_principal', 'coordinator', 'system_auditor'] }
             },
             {
                 path: 'profile',
-                redirect: () => {
+                redirect: async () => {
                     let role = ''
                     try {
+                        const { useAuthStore } = await import('@/stores/auth')
                         const authStore = useAuthStore()
                         role = authStore.userRole || authStore.user?.role || ''
                     } catch {
@@ -191,10 +194,11 @@ export default [
                     if (role === 'student') return '/student/profile'
                     if (role === 'parent') return '/parent/profile'
                     if (role === 'admin' || role === 'superadmin') return '/admin/settings'
-                    if (role === 'secretary') return '/secretary/settings'
+                    if (role === 'secretary' || role === 'principal' || role === 'vice_principal') return '/secretary/settings'
+                    if (role === 'teacher' || role === 'coordinator') return '/teacher/settings'
                     return '/'
                 },
-                meta: { title: 'Profilo Utente', roles: ['superadmin', 'admin', 'secretary', 'teacher', 'student', 'parent'] }
+                meta: { title: 'Profilo Utente', roles: ['superadmin', 'admin', 'secretary', 'teacher', 'student', 'parent', 'principal', 'vice_principal', 'coordinator'] }
             },
             { path: 'support', component: () => import('@/pages/Support.vue'), meta: { title: 'Supporto & Assistenza', roles: ['superadmin', 'admin', 'secretary', 'teacher', 'student', 'parent'] } }
         ]
@@ -202,27 +206,30 @@ export default [
     {
         path: '/login',
         component: () => import('@/layouts/LoginLayout.vue'),
+        meta: { requiresAuth: false },
         children: [
-            { path: '', component: () => import('@/pages/Login.vue'), meta: { title: 'Accesso al Sistema' } }
+            { path: '', component: () => import('@/pages/Login.vue'), meta: { title: 'Accesso al Sistema', requiresAuth: false } }
         ]
     },
     {
         path: '/register',
         component: () => import('@/layouts/LoginLayout.vue'),
+        meta: { requiresAuth: false },
         children: [
-            { path: '', component: () => import('@/pages/Login.vue'), meta: { title: 'Registrazione' } }
+            { path: '', component: () => import('@/pages/Login.vue'), meta: { title: 'Registrazione', requiresAuth: false } }
         ]
     },
     {
         path: '/forgot-password',
         component: () => import('@/layouts/LoginLayout.vue'),
+        meta: { requiresAuth: false },
         children: [
-            { path: '', component: () => import('@/pages/Login.vue'), meta: { title: 'Recupero Password' } }
+            { path: '', component: () => import('@/pages/Login.vue'), meta: { title: 'Recupero Password', requiresAuth: false } }
         ]
     },
     {
         path: '/:catchAll(.*)*',
         component: () => import('@/pages/NotFound.vue'),
-        meta: { title: 'Pagina non trovata' }
+        meta: { title: 'Pagina non trovata', requiresAuth: false }
     }
 ]
