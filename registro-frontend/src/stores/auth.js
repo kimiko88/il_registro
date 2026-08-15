@@ -17,6 +17,9 @@ const isTokenExpired = (tokenStr) => {
     try {
         const parts = tokenStr.split('.')
         if (parts.length !== 3) {
+            if (tokenStr.includes('.')) {
+                return true
+            }
             return false
         }
         const base64Url = parts[1]
@@ -26,8 +29,7 @@ const isTokenExpired = (tokenStr) => {
         if (payload && typeof payload.exp === 'number') {
             return Date.now() >= payload.exp * 1000
         }
-        // Tokens missing 'exp' field are treated as invalid/expired
-        return true
+        return false
     } catch {
         return true
     }

@@ -86,9 +86,8 @@ export const useWebSocketStore = defineStore('websocket', () => {
         }
 
         const token = authStore.token
-        const finalWsUrl = token ? `${wsUrl}?token=${encodeURIComponent(token)}` : wsUrl
         try {
-            socket.value = new WebSocket(finalWsUrl)
+            socket.value = new WebSocket(wsUrl)
         } catch (e) {
             console.error('WebSocket connection error:', e)
             attemptReconnect()
@@ -97,6 +96,13 @@ export const useWebSocketStore = defineStore('websocket', () => {
 
         socket.value.onopen = () => {
             console.log('WebSocket: Connected')
+            if (token) {
+                try {
+                    socket.value.send(JSON.stringify({ type: 'AUTH', token }))
+                } catch (e) {
+                    console.error('WebSocket: Failed to send AUTH handshake', e)
+                }
+            }
             isConnected.value = true
             reconnectAttempts.value = 0
             if (reconnectTimer.value) {
@@ -162,8 +168,8 @@ export const useWebSocketStore = defineStore('websocket', () => {
             return
         }
 
-        if (reconnectAttempts.value >= 30) {
-            console.warn('WebSocket: Reached max reconnect attempts (30), stopping automatic reconnection')
+        if (reconnectAttempts.value >= 8) {
+            console.warn('WebSocket: Reached max reconnect attempts (8), stopping automatic reconnection')
             hasFailedPermanently.value = true
             lastError.value = 'Connessione WebSocket non disponibile dopo tentativi ripetuti.'
             disconnect()

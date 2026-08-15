@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"database/sql"
 	"encoding/hex"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -397,9 +398,9 @@ func (r *repository) ResetPasswordTx(ctx context.Context, userID, passwordHash, 
 		return ErrInvalidToken
 	}
 
-	addHistoryQuery := `INSERT INTO password_history (id, user_id, password_hash, created_at) VALUES ($1, $2, $3, $4)`
-	if _, err := tx.ExecContext(ctx, addHistoryQuery, uuid.New().String(), userID, passwordHash, now); err != nil {
-		return err
+	addHistoryQuery := `INSERT INTO user_password_history (user_id, password_hash) VALUES ($1, $2)`
+	if _, err := tx.ExecContext(ctx, addHistoryQuery, userID, passwordHash); err != nil {
+		return fmt.Errorf("failed to record password history: %w", err)
 	}
 
 	return tx.Commit()

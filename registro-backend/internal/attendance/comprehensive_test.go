@@ -39,8 +39,8 @@ func (m *MockRepo) Update(a *Attendance) error {
 	args := m.Called(a)
 	return args.Error(0)
 }
-func (m *MockRepo) DeleteByClassDateHour(classID string, date time.Time, hour int) error {
-	args := m.Called(classID, date, hour)
+func (m *MockRepo) DeleteByClassDateHour(schoolID, classID string, date time.Time, hour int) error {
+	args := m.Called(schoolID, classID, date, hour)
 	return args.Error(0)
 }
 func (m *MockRepo) ProcessJustificationTx(ctx context.Context, j *Justification, teacherID string, approve bool) error {

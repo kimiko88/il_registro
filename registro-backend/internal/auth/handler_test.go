@@ -275,7 +275,7 @@ func TestHandler_Login_Integration(t *testing.T) {
 
 				// Check tokens
 				assert.NotEmpty(t, response.AccessToken)
-				assert.NotEmpty(t, response.RefreshToken)
+				assert.Empty(t, response.RefreshToken)
 				assert.Greater(t, response.ExpiresIn, int64(0))
 			},
 		},

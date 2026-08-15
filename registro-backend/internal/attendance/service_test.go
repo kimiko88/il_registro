@@ -28,8 +28,8 @@ func (m *MockAttendanceRepo) Update(att *Attendance) error {
 	args := m.Called(att)
 	return args.Error(0)
 }
-func (m *MockAttendanceRepo) DeleteByClassDateHour(classID string, date time.Time, hour int) error {
-	args := m.Called(classID, date, hour)
+func (m *MockAttendanceRepo) DeleteByClassDateHour(schoolID, classID string, date time.Time, hour int) error {
+	args := m.Called(schoolID, classID, date, hour)
 	return args.Error(0)
 }
 func (m *MockAttendanceRepo) FindByID(id string) (*Attendance, error) {

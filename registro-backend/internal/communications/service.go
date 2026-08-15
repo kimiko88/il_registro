@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"registro-backend/internal/users"
@@ -14,13 +15,12 @@ type Service struct {
 	userRepo users.Repository
 }
 
-func NewService(repo Repository, uRepo ...users.Repository) *Service {
+func NewService(repo Repository, userRepo users.Repository) *Service {
 	if repo == nil {
 		panic("communications.NewService: repo must not be nil")
 	}
-	var userRepo users.Repository
-	if len(uRepo) > 0 {
-		userRepo = uRepo[0]
+	if userRepo == nil {
+		panic("communications.NewService: userRepo must not be nil")
 	}
 	return &Service{repo: repo, userRepo: userRepo}
 }
@@ -37,6 +37,13 @@ func (s *Service) SendMessage(ctx context.Context, actorRole, schoolID, senderID
 	}
 	if req.Type == "bacheca" && req.RequiresSignature {
 		return nil, errors.New("cannot set RequiresSignature on a board message")
+	}
+
+	if req.AttachmentURL != nil && *req.AttachmentURL != "" {
+		urlStr := strings.TrimSpace(*req.AttachmentURL)
+		if !strings.HasPrefix(urlStr, "http://") && !strings.HasPrefix(urlStr, "https://") {
+			return nil, errors.New("attachment_url non valido: deve iniziare con http:// o https://")
+		}
 	}
 
 	targetSchoolID := schoolID
@@ -92,7 +99,7 @@ func (s *Service) SendMessage(ctx context.Context, actorRole, schoolID, senderID
 }
 
 func (s *Service) ListMessages(ctx context.Context, userID, schoolID string) ([]*Message, error) {
-	return s.repo.List(ctx, userID)
+	return s.repo.List(ctx, userID, schoolID)
 }
 
 func (s *Service) ListBacheca(ctx context.Context, schoolID, userID string) ([]*Message, error) {
@@ -217,7 +224,10 @@ func (s *Service) UpdateMessage(ctx context.Context, actorID, actorRole, schoolI
 		}
 	}
 	sigs, err := s.repo.GetSignatures(ctx, id)
-	if err == nil && len(sigs) > 0 {
+	if err != nil {
+		return fmt.Errorf("impossibile verificare le firme del messaggio: %w", err)
+	}
+	if len(sigs) > 0 {
 		return errors.New("impossibile modificare un messaggio che contiene già firme digitali")
 	}
 	return s.repo.Update(ctx, id, subject, body)

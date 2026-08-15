@@ -169,7 +169,7 @@ func main() {
 	// Export SIDI/MIUR — scrutini, presenze, certificazioni DM 742/2017
 	sidiSvc := signatures.NewSidiExportService()
 
-	commsSvc := communications.NewService(commsRepo)
+	commsSvc := communications.NewService(commsRepo, usersRepo)
 	notesSvc := notes.NewService(notesRepo, usersRepo)
 	adminSvc := admin.NewService(adminRepo)
 	agendaSvc := agenda.NewService(agendaRepo)

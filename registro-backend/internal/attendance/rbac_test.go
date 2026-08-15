@@ -91,7 +91,7 @@ func (m *mockRepo) CountDistinctDays(_ string) (int, error) {
 func (m *mockRepo) GetAnalytics(_ context.Context, _ string) (*AnalyticsResponse, error) {
 	return &AnalyticsResponse{}, nil
 }
-func (m *mockRepo) DeleteByClassDateHour(_ string, _ time.Time, _ int) error { return m.deleteErr }
+func (m *mockRepo) DeleteByClassDateHour(_, _ string, _ time.Time, _ int) error { return m.deleteErr }
 func (m *mockRepo) FindJustificationByID(_ string) (*Justification, error) {
 	if m.justification != nil {
 		return m.justification, m.justificationErr

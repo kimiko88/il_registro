@@ -143,9 +143,14 @@ func (h *Handler) GetChildAttendance(c *gin.Context) {
 
 func (h *Handler) GetChildSummary(c *gin.Context) {
 	parentID := c.GetString("user_id")
+	role := c.GetString("role")
 	schoolID := c.GetString("school_id")
 	if parentID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "parent" && role != "admin" && role != "superadmin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: access restricted to parents or administrators"})
 		return
 	}
 	studentID := c.Param("studentID")

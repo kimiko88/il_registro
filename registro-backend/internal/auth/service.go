@@ -107,6 +107,8 @@ func (s *Service) Register(ctx context.Context, req *RegisterRequest) (*User, er
 
 // Login authenticates a user and returns tokens
 func (s *Service) Login(ctx context.Context, req *LoginRequest, ipAddress, userAgent string) (*AuthResponse, error) {
+	req.Email = strings.ToLower(strings.TrimSpace(req.Email))
+
 	// --- Rate limiting ---
 	// 1. Per (email, IP): max 5 attempts in 15 minutes — blocks single-IP bursts.
 	// 2. Per email only: max 20 attempts in 1 hour — blocks distributed IP-rotation attacks.
@@ -331,8 +333,6 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken, ipAddress, use
 func (s *Service) Logout(ctx context.Context, refreshToken string, callerUserID string) error {
 	rt, err := s.repo.GetRefreshToken(ctx, refreshToken)
 	if err != nil {
-		// Silent exit if token is invalid or not found to avoid user enumeration,
-		// but return any real database connection or context error.
 		if errors.Is(err, ErrInvalidToken) || errors.Is(err, sql.ErrNoRows) {
 			return nil
 		}

@@ -11,7 +11,7 @@ type Repository interface {
 	Create(att *Attendance) error
 	BatchCreate(atts []*Attendance) error
 	Update(att *Attendance) error
-	DeleteByClassDateHour(classID string, date time.Time, hour int) error
+	DeleteByClassDateHour(schoolID, classID string, date time.Time, hour int) error
 
 	FindByID(id string) (*Attendance, error)
 	FindByClassAndDate(classID string, date time.Time) ([]Attendance, error)
@@ -132,7 +132,14 @@ func (r *repository) Update(a *Attendance) error {
 	return err
 }
 
-func (r *repository) DeleteByClassDateHour(classID string, date time.Time, hour int) error {
+func (r *repository) DeleteByClassDateHour(schoolID, classID string, date time.Time, hour int) error {
+	if schoolID != "" {
+		_, err := r.db.Exec(
+			`DELETE FROM attendance WHERE school_id = $1::uuid AND class_id = $2::uuid AND date = $3 AND hour = $4`,
+			schoolID, classID, date, hour,
+		)
+		return err
+	}
 	_, err := r.db.Exec(
 		`DELETE FROM attendance WHERE class_id = $1::uuid AND date = $2 AND hour = $3`,
 		classID, date, hour,

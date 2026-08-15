@@ -86,13 +86,12 @@ func isHTTPSRequest(c *gin.Context) bool {
 }
 
 func setRefreshTokenCookie(c *gin.Context, token string, maxAge int) {
-	isSecure := true
-	if os.Getenv("APP_ENV") == "production" || os.Getenv("GIN_MODE") == "release" {
+	isSecure := false
+	if os.Getenv("COOKIE_SECURE") == "true" || os.Getenv("APP_ENV") == "production" || os.Getenv("GIN_MODE") == "release" || isHTTPSRequest(c) {
 		isSecure = true
-	} else if os.Getenv("COOKIE_SECURE") == "false" {
+	}
+	if os.Getenv("COOKIE_SECURE") == "false" {
 		isSecure = false
-	} else if isHTTPSRequest(c) {
-		isSecure = true
 	}
 	domain := os.Getenv("COOKIE_DOMAIN")
 	http.SetCookie(c.Writer, &http.Cookie{
@@ -136,6 +135,7 @@ func (h *Handler) Login(c *gin.Context) {
 
 	if authResp != nil && authResp.RefreshToken != "" {
 		setRefreshTokenCookie(c, authResp.RefreshToken, 604800)
+		authResp.RefreshToken = ""
 	}
 
 	c.JSON(http.StatusOK, authResp)

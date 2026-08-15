@@ -151,6 +151,11 @@ func (s *service) MarkBulk(ctx context.Context, teacherID, schoolID string, req 
 	if teacherID == "" {
 		return fmt.Errorf("forbidden: teacherID mancante")
 	}
+	loc, err := time.LoadLocation("Europe/Rome")
+	if err != nil {
+		loc = time.Local
+	}
+
 	if !req.IsSubstitution {
 		isAssigned, err := s.repo.IsTeacherAssignedToClass(ctx, teacherID, req.ClassID)
 		if err != nil {
@@ -160,12 +165,6 @@ func (s *service) MarkBulk(ctx context.Context, teacherID, schoolID string, req 
 			return fmt.Errorf("forbidden: docente non autorizzato per la classe")
 		}
 	} else {
-		// FIX: handle parse errors explicitly; a malformed date must not produce
-		// a zero-value time that silently passes the substitute check.
-		loc, err := time.LoadLocation("Europe/Rome")
-		if err != nil {
-			loc = time.Local
-		}
 		dateParsed, err := time.ParseInLocation("2006-01-02", req.Date, loc)
 		if err != nil {
 			return fmt.Errorf("data non valida '%s': usa il formato YYYY-MM-DD", req.Date)
@@ -175,20 +174,10 @@ func (s *service) MarkBulk(ctx context.Context, teacherID, schoolID string, req 
 			return fmt.Errorf("errore verifica docente supplente: %w", subErr)
 		}
 		if !isSub {
-			isAssigned, assignErr := s.repo.IsTeacherAssignedToClass(ctx, teacherID, req.ClassID)
-			if assignErr != nil {
-				return fmt.Errorf("errore verifica docente per classe: %w", assignErr)
-			}
-			if !isAssigned {
-				return fmt.Errorf("forbidden: docente non assegnato e non registrato come supplente per questa classe/ora")
-			}
+			return fmt.Errorf("forbidden: docente non registrato come supplente per questa classe/ora")
 		}
 	}
 
-	loc, err := time.LoadLocation("Europe/Rome")
-	if err != nil {
-		loc = time.Local
-	}
 	now := time.Now().In(loc)
 	date, err := time.ParseInLocation("2006-01-02", req.Date, loc)
 	if err != nil {
@@ -316,7 +305,7 @@ func (s *service) DeleteClassAttendanceHour(ctx context.Context, actorID, actorR
 	if err != nil {
 		return fmt.Errorf("data non valida '%s': usa il formato YYYY-MM-DD", dateStr)
 	}
-	return s.repo.DeleteByClassDateHour(classID, date, hour)
+	return s.repo.DeleteByClassDateHour(schoolID, classID, date, hour)
 }
 
 func (s *service) GetClassAttendance(ctx context.Context, actorID, actorRole, schoolID, classID string, dateStr string) (*ClassDailyAttendance, error) {
@@ -398,7 +387,13 @@ func (s *service) GetStudentAttendance(ctx context.Context, actorID, actorRole, 
 			return nil, fmt.Errorf("unauthorized: not a guardian of this student")
 		}
 	}
-	// FIX: teachers must belong to the same school as the student.
+	// FIX: teachers & admins must belong to the same school as the student.
+	if actorRole == "admin" && schoolID != "" {
+		st, err := s.userRepo.GetByID(ctx, studentID)
+		if err != nil || st == nil || st.SchoolID == nil || *st.SchoolID != schoolID {
+			return nil, fmt.Errorf("forbidden: lo studente appartiene ad un'altra scuola")
+		}
+	}
 	if actorRole == "teacher" {
 		if schoolID == "" {
 			return nil, fmt.Errorf("unauthorized: schoolID mancante per la verifica del docente")
@@ -625,12 +620,16 @@ func (s *service) GetStudentSummary(ctx context.Context, studentID, schoolID str
 		return nil, fmt.Errorf("failed to get stats: %w", err)
 	}
 
-	now := time.Now()
+	loc, err := time.LoadLocation("Europe/Rome")
+	if err != nil {
+		loc = time.Local
+	}
+	now := time.Now().In(loc)
 	startYear := now.Year()
 	if now.Month() < time.September {
 		startYear--
 	}
-	startOfSchoolYear := time.Date(startYear, time.September, 1, 0, 0, 0, 0, now.Location())
+	startOfSchoolYear := time.Date(startYear, time.September, 1, 0, 0, 0, 0, loc)
 	elapsedDays := int(now.Sub(startOfSchoolYear).Hours() / 24)
 	if elapsedDays <= 0 {
 		elapsedDays = 1

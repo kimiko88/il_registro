@@ -378,7 +378,20 @@ func (h *Handler) DeleteAdminUser(c *gin.Context) {
 	currentUserID, _ := auth.GetUserID(c)
 	callerRole, _ := auth.GetUserRole(c)
 
-	err := h.service.DeleteAdminUser(c.Request.Context(), callerRole, adminID, currentUserID)
+	targetUser, err := h.service.GetAdminUserByID(c.Request.Context(), adminID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, ErrorResponse{Error: "user not found"})
+		return
+	}
+
+	if callerRole != "superadmin" {
+		if targetUser.Role == "superadmin" || targetUser.Role == "admin" {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: "forbidden: cannot delete user with equal or higher role"})
+			return
+		}
+	}
+
+	err = h.service.DeleteAdminUser(c.Request.Context(), callerRole, adminID, currentUserID)
 	if err != nil {
 		if err == ErrCannotDeleteSelf {
 			c.JSON(http.StatusBadRequest, ErrorResponse{
@@ -388,7 +401,7 @@ func (h *Handler) DeleteAdminUser(c *gin.Context) {
 		}
 		c.JSON(http.StatusInternalServerError, ErrorResponse{
 			Error:   "failed to delete admin user",
-			Message: err.Error(),
+			Message: "internal server error",
 		})
 		return
 	}
@@ -530,7 +543,7 @@ func (h *Handler) GetSchoolSetting(c *gin.Context) {
 
 	value, err := h.service.GetSchoolSetting(c.Request.Context(), schoolID, key)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "internal server error"})
 		return
 	}
 
@@ -557,7 +570,7 @@ func (h *Handler) UpdateSchoolSetting(c *gin.Context) {
 	}
 
 	if err := h.service.UpdateSchoolSetting(c.Request.Context(), schoolID, key, body.Value); err != nil {
-		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "internal server error"})
 		return
 	}
 
