@@ -254,22 +254,6 @@ export default {
       step6_desc: "配置安全策略、双因素身份验证和电子学习集成。"
     }
   },
-  help: {
-    title: "帮助中心",
-    subtitle: "使用电子注册表的指南和教程",
-    searchPlaceholder: "在指南中搜索...",
-    noResults: "未找到相关文章",
-    categories: "分类",
-    allTopics: "所有主题",
-    restartTour: "重新开始引导导览",
-    openHelp: "打开指南",
-    needHelp: "需要帮助？",
-    contactSupport: "联系支持",
-    fabTooltip: "帮助和指南",
-    new: "新"
-  }
-
-,
   onboardingExtra: {
     "openGuide": "Open Full Guide",
     "viewAllFeatures": "Discover all features",
@@ -546,100 +530,208 @@ export default {
         ]
     }
 },
-  guideCenter: {
-    "title": "Help & Knowledge Center",
-    "subtitle": "Comprehensive guides for every section of the electronic register",
-    "search": "Search in guides...",
-    "noResults": "No guides found for",
-    "readingTime": "min read",
-    "step": "Step",
-    "tip": "Tip",
-    "warning": "Warning",
-    "shortcut": "Shortcut",
-    "teacher": {
-        "dashboard": {
-            "title": "Teacher Dashboard",
-            "desc": "Overview of daily lessons, notifications, and quick actions.",
-            "content": "The teacher dashboard provides a complete overview of your day. Top widgets display today’s scheduled classes with times and room numbers.\n\nStep 1: Customize your dashboard widgets by dragging them.\nStep 2: Click on any class in the timetable to open its register directly.\nStep 3: Filter notifications by urgency or category.\n\nTip: Enable priority alerts to stay informed about urgent announcements."
-        },
-        "attendance": {
-            "title": "Attendance Register",
-            "desc": "How to record attendance, absences, and delays quickly and accurately.",
-            "content": "The attendance register automatically loads the student list for the current period.\n\nStep 1: Click on a student name to toggle status (Present, Absent, Late, Early exit).\nStep 2: Add optional justification notes or remarks.\nStep 3: Click \"Sign Lesson\" to confirm and digitally sign the session.\nStep 4: Parents of absent students are notified automatically.\n\nShortcut: Press Ctrl+Enter to quickly save attendance."
-        },
-        "grades": {
-            "title": "Grade Management",
-            "desc": "Enter and manage written, oral, and practical grades.",
-            "content": "The gradebook is an interactive grid organized by students and evaluation dates.\n\nStep 1: Select class and subject from the dropdown.\nStep 2: Click on any cell to input or edit a grade.\nStep 3: Choose evaluation type (Written, Oral, Practical) and score.\nStep 4: Add private or public feedback comments.\nStep 5: Subject and class averages update instantly.\n\nWarning: Published grades are visible to students and parents within seconds."
-        },
-        "agenda": {
-            "title": "School Agenda & Homework",
-            "desc": "Plan tests, assignments, and shared class activities.",
-            "content": "The teacher agenda syncs automatically with students and parents.\n\nStep 1: Click on any calendar date to schedule an event.\nStep 2: Choose event type: Homework, Exam, Field trip, or Reminder.\nStep 3: Select subject, description, and attach learning files.\nStep 4: Check \"Notify students\" to broadcast an instant push notification.\n\nTip: Use the Week view to check for test overlaps across subjects."
-        },
-        "communications": {
-            "title": "Communications & Messages",
-            "desc": "Send structured messages to classes, parents, and colleagues.",
-            "content": "Send announcements through dedicated channels: direct messages, class circulars, or urgent bulletins.\n\nStep 1: Navigate to \"Communications\" → \"New Message\".\nStep 2: Choose channel type and recipient list.\nStep 3: Format your message using the rich-text editor.\nStep 4: Send immediately or schedule for future publication.\n\nWarning: Urgent announcements trigger push notifications and SMS alerts."
-        },
-        "meetings": {
-            "title": "Parent-Teacher Meetings",
-            "desc": "Configure availability slots and manage booking appointments.",
-            "content": "Manage weekly office hours and individual parent conferences.\n\nStep 1: Go to \"Meetings\" → \"Set Availability\".\nStep 2: Define weekly recurring time slots and appointment durations.\nStep 3: Parents book online; you receive automated calendar invites.\nStep 4: Review student performance records prior to the meeting.\n\nTip: Enable the integrated video call link for virtual meetings."
-        }
+  help: {
+    title: '帮助与知识中心',
+    subtitle: '电子记分册使用指南与操作教程',
+    searchPlaceholder: '搜索帮助文章...',
+    noResults: '未找到相关文章：',
+    categories: '分类',
+    allTopics: '所有主题',
+    restartTour: '重新播放引导',
+    openHelp: '打开指南',
+    needHelp: '需要帮助？',
+    contactSupport: '联系技术支持',
+    fabTooltip: '帮助与指南',
+    new: '新功能',
+    teacher: {
+      cat_register: '班级考勤簿',
+      cat_grades: '成绩管理',
+      cat_attendance: '出勤管理',
+      cat_agenda: '日程与布置',
+      cat_settings: '设置',
+      q1: '如何记录班级出勤与缺勤？',
+      a1: '进入“我的班级” → 选择班级 → 点击“出勤”标签页。为每位学生点击 出 (出席)、缺 (缺勤)、迟 (迟到)。最后点击“数字签名”保存。',
+      q2: '如何使用键盘快速网格 (Matrix View) 输入成绩？',
+      a2: '在“成绩管理”中选择班级与科目，开启 Matrix View 网格模式。使用 TAB 和方向键切换单元格，输入分数后按 ENTER。',
+      q3: '如何在日程表中安排考试或布置作业？',
+      a3: '在“日程表”中点击日期 → “添加事件”。选择类型（作业、考试、研学活动），选择科目并保存。',
+      q4: '如何向家长发送紧急通知或通告？',
+      a4: '进入“消息中心” → “新建通知”。选择接收对象，勾选“需要阅读回执”并发送。',
+      q5: '如何设置家长会与家长接待时间？',
+      a5: '在“预约接待” → “设置可用时段”。设置每周开放的日期、时间段及每次时长（15、20或30分钟）。',
+      q6: '如何进入期末评议与终考评定面板 (Scrutinio)？',
+      a6: '若您是班主任，侧边栏将显示“期末评议”。输入拟定成绩、品行评语及综合评语。',
+      q7: '如何制定或查看个性化教育计划 (PDP / PEI)？',
+      a7: '从班级菜单进入“个性化计划 (PDP)”。配置补偿性措施与豁免条款。',
+      q8: '如何恢复未保存的考勤簿草稿？',
+      a8: '系统每15秒自动保存一次草稿。重新打开页面时，系统会提示您恢复未保存的内容。',
+      q9: '如何切换界面语言与暗黑模式？',
+      a9: '在用户菜单的“设置”中，可在9种语言间无缝切换，并开启暗黑模式或 OpenDyslexic 易读字体。',
+      q10: '如何撤销刚刚误输入的成绩？',
+      a10: '保存成绩后，屏幕底部将出现15秒内有效的“撤销”浮条。超时后可直接在单元格修改。'
     },
-    "student": {
-        "dashboard": {
-            "title": "Student Dashboard",
-            "desc": "Your daily hub for deadlines, grades, and schedules.",
-            "content": "The student dashboard prioritizes urgent tasks and upcoming exams.\n\nStep 1: Review \"Today’s Schedule\" for lessons and rooms.\nStep 2: Check \"Due Today\" and \"Tomorrow’s Exams\".\nStep 3: Monitor your overall GPA and recent grade additions.\n\nTip: Install the PWA on your phone for instant notification alerts."
-        },
-        "grades": {
-            "title": "My Grades & Performance",
-            "desc": "Track your subject grades, averages, and evaluation history.",
-            "content": "View all assessments organized by subject and academic term.\n\nStep 1: Select a subject to inspect detailed teacher feedback.\nStep 2: Review the trend line to understand your progress over time.\nStep 3: Switch between terms (1st Term, 2nd Term, Final).\nStep 4: Download a full PDF transcript at any time."
-        },
-        "homework": {
-            "title": "Homework & Assignments",
-            "desc": "Organize your homework, downloads, and submission deadlines.",
-            "content": "Stay on top of all homework assignments and study materials.\n\nStep 1: Filter tasks by due date or subject.\nStep 2: Click on an assignment to download attachments.\nStep 3: Mark tasks as \"Completed\" to keep track of your workload."
-        }
+    student: {
+      cat_grades: '我的成绩',
+      cat_attendance: '我的出勤',
+      cat_homework: '作业列表',
+      cat_documents: '文档与成绩单',
+      cat_settings: '个人设置',
+      q1: '如何查看我的成绩和各科平均分？',
+      a1: '在侧边栏打开“我的成绩”，可查看笔试、口试及实操考核的详细记录与加权平均分。',
+      q2: '成绩模拟器 (Simulateur) 如何工作？',
+      a2: '在“我的成绩”中点击“成绩模拟器”。输入未来考试的预测分数，系统将计算目标平均分。',
+      q3: '如何查看我的累计缺勤学时？',
+      a3: '在“我的出勤”中，计数器会显示累计缺勤学时以及距离年度上限的剩余额度。',
+      q4: '在何处查看老师布置的作业？',
+      a4: '在“作业”页面或仪表板。作业按截止日期排序，并附有老师上传的学习资料。',
+      q5: '如何下载季度成绩单 PDF？',
+      a5: '进入“成绩单与文档”，选择学期并点击“下载成绩单 PDF”。',
+      q6: '在何处查看校外实习学时 (PCTO)？',
+      a6: '打开“PCTO 实习档案”即可查看认证学时、合作企业及指导老师评语。',
+      q7: '如何确认阅读通知或通告？',
+      a7: '打开“消息中心”，选择对应通知并点击“确认已读”。',
+      q8: '如何开启 OpenDyslexic 读写障碍友好字体？',
+      a8: '点击顶部无障碍图标，或进入“个人中心” → “无障碍设置”开启。',
+      q9: '忘记密码怎么办？',
+      a9: '在登录页面点击“忘记密码？”，输入绑定的电子邮箱重置。',
+      q10: '如何使用 Ctrl+K 快捷搜索？',
+      a10: '按下 Ctrl+K (Mac 上为 Cmd+K) 打开全局搜索框，可快速跳转至任意功能或课程。'
     },
-    "parent": {
-        "monitoring": {
-            "title": "Monitoring Your Children",
-            "desc": "Follow academic performance, daily attendance, and notices in real time.",
-            "content": "Access comprehensive academic information for all enrolled children.\n\nStep 1: Select your child from the top switcher.\nStep 2: Check daily attendance and real-time grade notifications.\nStep 3: Read teacher comments on individual assessments.\nStep 4: View academic progress charts.\n\nTip: Configure notification thresholds to receive alerts if grades drop."
-        },
-        "meetings": {
-            "title": "Booking Teacher Meetings",
-            "desc": "Schedule and manage conference appointments with teachers.",
-            "content": "Easily book one-on-one parent-teacher conferences.\n\nStep 1: Open \"Meetings\" and select the desired teacher.\nStep 2: Pick an available green time slot on the calendar.\nStep 3: Confirm booking to receive an email reminder.\n\nWarning: Cancellations should be submitted at least 2 hours in advance."
-        }
+    parent: {
+      cat_monitoring: '子女监控',
+      cat_communications: '消息通告',
+      cat_meetings: '家长会预约',
+      cat_documents: '文档与缴费',
+      cat_settings: '设置',
+      q1: '如何在多位在读子女间切换？',
+      a1: '使用页面顶部的学生切换器，即可在多位子女的档案间瞬间切换。',
+      q2: '成绩和缺勤是否有实时推送通知？',
+      a2: '是的！每当教师录入新成绩或缺勤记录时，手机应用将收到实时推送和电子邮件。',
+      q3: '如何预约与任课老师面谈？',
+      a3: '进入“预约接待” → 选择老师 → 在日历中选择绿色可用时段 → 确认预约。',
+      q4: '如何通过 PagoPA 缴纳学杂费或活动费？',
+      a4: '进入“PagoPA 缴费”。查看待缴账单，支持在线刷卡、PayPal 或下载 QR 码缴费。',
+      q5: '如何在在线提交请假条？',
+      a5: '在“出勤与请假”中，点击红色缺勤条目旁边的“请假”，选择原因并输入 PIN 码签名。',
+      q6: '如何下载孩子的成绩单？',
+      a6: '选择孩子 → “成绩单” → 选择学期 → “下载成绩单 PDF”。',
+      q7: '未签署的通告在哪里查看？',
+      a7: '在“消息中心”。需要家属确认的通知会带有显眼的“签署知悉”按钮。',
+      q8: '如何联系学校行政办公室？',
+      a8: '在“帮助与支持”中选择“联系客服”，可直接向学校秘书处提交咨询工单。',
+      q9: '两位家长可以分别拥有独立的登录账号吗？',
+      a9: '可以。学校秘书处可为同一位学生绑定多位法定监护人的独立账号。',
+      q10: '在无网络（离线）状态下如何使用？',
+      a10: '应用会展示本地缓存数据。离线填写的请假或表单将在网络恢复后自动同步。'
     },
-    "secretary": {
-        "students": {
-            "title": "Student Registry Management",
-            "desc": "Search, manage, and update student profiles and demographic records.",
-            "content": "The student registry is the central database for all enrolled learners.\n\nStep 1: Use the global search bar (name, tax code, class).\nStep 2: Click a record to open the full student dossier.\nStep 3: Edit contact information, enrollment status, or guardian links.\nStep 4: Export filtered data to Excel or CSV formats."
-        },
-        "certificates": {
-            "title": "Certificate Generation",
-            "desc": "Issue official school documents, attendance proofs, and certificates.",
-            "content": "Produce signed school documents in seconds.\n\nStep 1: Search for the student record.\nStep 2: Go to \"Certificates\" → \"Generate\".\nStep 3: Select certificate template (Enrollment, Attendance, Transcripts).\nStep 4: Preview, apply digital stamp, and print or email directly."
-        }
+    secretary: {
+      cat_students: '学生档案簿',
+      cat_classes: '班级编排',
+      cat_documents: '证明与公文',
+      cat_timetable: '课表与代课',
+      cat_reports: '统计与导出',
+      q1: '如何快速搜索学生档案？',
+      a1: '使用顶部全局搜索栏，支持按姓名、税号、学号或班级快速检索。',
+      q2: '如何开具官方在读证明？',
+      a2: '在“证明与文档”中搜索学生 → “生成证明 PDF”。生成的公文带有电子印章。',
+      q3: '如何处理教师日常临时代课安排？',
+      a3: '进入“课表与代课” → 选择日期与缺勤教师。系统会自动推荐无课的空闲教师。',
+      q4: '如何导出教育部门 (SIDI) 所需的数据文件？',
+      a4: '在“统计与导出” → “教育部 SIDI 导出”中选择时间段与导出格式。',
+      q5: '如何为新学生或家长创建系统账号？',
+      a5: '在“用户管理” → “新建用户”中填写基本信息并分配角色，系统将发送初始密码邮件。',
+      q6: '如何编排新学年的班级与课程？',
+      a6: '在“班级管理”中创建新班级，批量导入升学学生并分配任课教师团队。',
+      q7: '如何发布学校官方公文通告？',
+      a7: '在“消息与通告” → “新建公文”中输入文号、标题、正文，选择目标群体并发布。',
+      q8: '如何管理各班级教材选订目录？',
+      a8: '在“教材管理”中选择班级与科目，录入 ISBN 书号、书名及出版社信息。',
+      q9: '如何核查 PagoPA 学费缴纳状态？',
+      a9: '打开“财务与 PagoPA”面板，查看已缴与欠费列表，一键发送催缴提醒。',
+      q10: '如何废除误发的发文字号 (Protocollo)？',
+      a10: '在公文归档中选择对应文号 → “注明原因并作废”。此操作将记录于 Audit Log 审计日志。'
     },
-    "admin": {
-        "monitoring": {
-            "title": "System & Health Monitoring",
-            "desc": "Monitor platform uptime, API response times, and server performance.",
-            "content": "Real-time telemetry and health monitoring across all platform services.\n\nStep 1: Inspect server CPU, RAM, and active session count.\nStep 2: Monitor API throughput and error rates over the last 24 hours.\nStep 3: Configure alert thresholds for proactive notifications.\n\nWarning: Use Maintenance Mode during scheduled platform updates."
-        },
-        "users": {
-            "title": "User & Access Management",
-            "desc": "Manage user accounts, RBAC permissions, and authentication policies.",
-            "content": "Centralized user provisioning and security management.\n\nStep 1: Search users by role, institution, or active status.\nStep 2: Create single accounts or use the bulk CSV/Excel import tool.\nStep 3: Enforce 2FA/MFA and manage password resets.\nStep 4: Review immutable audit logs for compliance auditing."
-        }
+    admin: {
+      cat_monitoring: '系统监控',
+      cat_users: '用户管理',
+      cat_schools: '校区管理',
+      cat_security: '安全与认证',
+      cat_analytics: '辍学预警分析',
+      q1: '如何监控微服务与数据库运行状态？',
+      a1: '在“系统监控”中查看 CPU/内存实时图表、PostgreSQL 连接池状态及 API 响应延迟。',
+      q2: '如何添加新校区或分校？',
+      a2: '进入“校区管理” → “添加校区”。填写学校代码、名称、地址与官方邮箱。',
+      q3: '如何强制重置用户密码或开启双重认证 (2FA)？',
+      a3: '在“用户管理”中选择账号 → “安全” → 点击“强制重置密码”或“开启 2FA”。',
+      q4: '如何查看不可篡改的系统审计日志 (Audit Log)？',
+      a4: '进入“审计与合规”。可按操作人、事件类型、日期及 IP 地址过滤查询历史记录。',
+      q5: '如何管理平台功能开关 (Feature Flags)？',
+      a5: '在“Feature Flags 管理”中，可针对不同校区开启或关闭特定模块（如 PagoPA、SSO 等）。',
+      q6: '如何分析学生辍学与慢性缺勤风险？',
+      a6: '打开“Analytics & BI”。算法会自动标记缺勤率超过 20% 或平均分低于 6.0 的高风险学生。',
+      q7: '如何配置 Google 或 Microsoft 单点登录 (SSO)？',
+      a7: '在“集成与 SSO”中输入 Google Cloud 或 Azure 开发者后台提供的 OAuth2 Client ID 与 Secret。',
+      q8: '如何执行数据库手动备份？',
+      a8: '在“数据库与备份”中一键触发 PostgreSQL 镜像备份，或配置 AWS S3 自动定时备份。',
+      q9: '如何查看全站 RBAC 权限矩阵？',
+      a9: '进入“角色与权限”，查看9种系统角色的细粒度权限配置矩阵。',
+      q10: '如何将平台切换至维护模式？',
+      a10: '在“系统设置”中勾选“维护模式”。开启后，普通用户登录将看到系统维护提示。'
     }
-}
+  },
+  guideCenter: {
+    title: "帮助与知识中心",
+    subtitle: "电子记分册各模块的详细操作指南",
+    search: "搜索指南文章...",
+    noResults: "未找到相关指南：",
+    readingTime: "分钟阅读",
+    step: "步骤",
+    tip: "提示",
+    warning: "注意",
+    shortcut: "快捷键",
+    teacher: {
+      dashboard: { title: "教师工作台", desc: "今日课程、通知及快捷操作概览。", content: "教师工作台为您展示全天教学安排。顶部卡片实时显示今日课表、上课时间及教室编号。\n\n步骤 1: 拖拽卡片自定义工作台布局。\n步骤 2: 点击任意课程直接打开考勤簿。\n步骤 3: 按紧急程度筛选通知消息。\n\n提示: 开启高优先级通知可实时接收紧急公告。" },
+      attendance: { title: "班级考勤簿", desc: "快速准确地点名出勤、缺勤及迟到。", content: "考勤簿会自动加载当前课时的学生名单。\n\n步骤 1: 点击学生姓名切换状态（出席、缺勤、迟到）。\n步骤 2: 填写备注或请假原因。\n步骤 3: 点击“数字签名”确认并完成课时签署。\n步骤 4: 缺勤学生的家长将自动收到提醒通知。\n\n快捷键: 按 Ctrl+Enter 快速保存出勤记录。" },
+      grades: { title: "成绩管理与 Matrix 网格", desc: "使用键盘网格极速录入笔试及口试成绩。", content: "成绩簿提供经典视图与键盘极速网格 Matrix View。\n\n步骤 1: 选择班级与科目。\n步骤 2: 开启 Matrix 视图，使用 TAB 与方向键快速移动。\n步骤 3: 输入成绩（1-10分）并按 ENTER。\n步骤 4: 添加公开或私密评语。\n步骤 5: 科目平均分将实时自动重新计算。\n\n注意: 已发布的成绩将在数秒内同步给学生和家长查看。" },
+      agenda: { title: "课程表与作业布置", desc: "规划考试、课后作业及班级活动。", content: "教师日程表与学生及家长端自动同步。\n\n步骤 1: 在日历上点击日期新建事件。\n步骤 2: 选择类型：作业、考试、研学活动。\n步骤 3: 填写科目、说明并上传附件资料。\n步骤 4: 若同班级当日已有2场以上考试，系统将自动预警。\n\n提示: 使用周视图可有效避免考试冲突。" },
+      communications: { title: "消息中心与通告", desc: "向班级、家长及同事发送结构化通知。", content: "通过专用通道发布消息：私信、班级通告或紧急公告。\n\n步骤 1: 导航至“消息中心” → “新建消息”。\n步骤 2: 选择通道类型与接收人列表。\n步骤 3: 使用富文本编辑器编写内容。\n步骤 4: 立即发送或定时发布。\n\n注意: 紧急消息将触发推送通知。" },
+      meetings: { title: "家长会与接待预约", desc: "配置接待时段与预约管理。", content: "管理每周接待日与一对一家长会。\n\n步骤 1: 进入 '预约接待' → '设置可用时段'。\n步骤 2: 设定开放日期、时间及单次时长（15、20、30分钟）。\n步骤 3: 家长在线预约后您将收到确认通知。\n步骤 4: 面谈前可提前调阅学生学情档案。\n\n提示: 可开启集成式在线视频会议链接。" },
+      scrutiny: { title: "期末评议与终考 (Scrutinio)", desc: "拟定成绩、品行评语及评议会议记录。", content: "评议汇总表归集所有任课教师的拟定成绩。\n\n步骤 1: 选择班级与评议学期。\n步骤 2: 核对拟定平均分并输入决议成绩。\n步骤 3: 录入品行得分与综合评语。\n步骤 4: 班主任确认无误后锁定评议表。\n步骤 5: 导出并打印官方 PDF 评议记录。\n\n注意: 班主任锁定后，修改需联系教务处解锁。" },
+      pdp: { title: "个性化教育计划 (PDP / PEI)", desc: "为特殊需求学生制定补偿性与豁免措施。", content: "PDP 模块协助教师团队制定个性化教学方案。\n\n步骤 1: 从班级菜单进入 'PDP / PEI'。\n步骤 2: 选择学生，配置补偿工具与豁免条款。\n步骤 3: 保存草稿并发送至家长端完成电子签名。\n步骤 4: 考核时激活的措施将以图标形式进行预警提示。\n\n提示: 使用预设评语库可大幅提升撰写效率。" }
+    },
+    student: {
+      dashboard: { title: "学生个人主页", desc: "每日作业、成绩及课表中心。", content: "学生主页优先展示紧急任务与近期考试。\n\n步骤 1: 在“今日”中查看课程表与教室安排。\n步骤 2: 检查今日到期作业与明日考试。\n步骤 3: 关注您的整体平均分变化。\n\n提示: 推荐在手机上安装 PWA 应用以获取实时提醒。" },
+      grades: { title: "我的成绩与表现", desc: "追踪各科成绩、平均分及考核历史。", content: "按科目与学期整理的所有考核成绩。\n\n步骤 1: 点击科目阅读任课教师的评语。\n步骤 2: 查看成绩变化趋势图表。\n步骤 3: 切换不同学期进行对比。\n步骤 4: 随时导出完整 PDF 成绩单。" },
+      homework: { title: "作业与任务管理", desc: "管理作业提交、资料下载及截止时间。", content: "全面掌控作业进度与学习资料。\n\n步骤 1: 按截止日期或科目筛选任务。\n步骤 2: 点击任务下载老师上传的附件。\n步骤 3: 完成后勾选“标记为已完成”。" },
+      attendance: { title: "出勤与缺勤记录", desc: "统计缺勤学时、迟到记录及请假状态。", content: "查看您的出勤概况与学时额度。\n\n步骤 1: 打开“我的出勤”。\n步骤 2: 核对累计缺勤学时计数器。\n步骤 3: 检查月度日历中的缺勤（红）与迟到（橙）。\n步骤 4: 确认家长是否已在线提交请假条。" },
+      documents: { title: "成绩单与官方文档", desc: "查看并下载季度成绩单及学校证明。", content: "获取学校教务处发布的官方带签文档。\n\n步骤 1: 进入“成绩单与文档”。\n步骤 2: 选择学年与学期。\n步骤 3: 点击“在线预览成绩单”。\n步骤 4: 点击“下载 PDF”保存带电子签章的文档。" },
+      simulator: { title: "成绩目标模拟器", desc: "计算达到目标平均分所需的最少考试分数。", content: "模拟器为您精准计算下一次考核所需达到的分数。\n\n步骤 1: 选择目标科目。\n步骤 2: 输入期望达到的平均分（如：8.5分）。\n步骤 3: 系统自动计算下次考试需达到的最低分数。" },
+      pcto: { title: "PCTO 实习与履历档案", desc: "管理校外实习学时及能力认证。", content: "追踪您的高中校外实习 (PCTO) 累计学时。\n\n步骤 1: 打开“PCTO 实习档案”。\n步骤 2: 查看学时进度条与法定标准对比。\n步骤 3: 查看实习企业信息并下载实习证明。" }
+    },
+    parent: {
+      monitoring: { title: "子女学情实时监控", desc: "实时掌握孩子的成绩、出勤及学校通知。", content: "全面调阅名下所有学生的在校档案。\n\n步骤 1: 在顶部切换选择对应子女。\n步骤 2: 检查今日出勤及最新成绩推送。\n步骤 3: 查看教师在作业及测试中留下的评语。\n步骤 4: 观察学业表现趋势图表。\n\n提示: 可设置预警阈值，当平均分下降时自动接收通知。" },
+      meetings: { title: "家长会预约", desc: "在线预约任课教师接待时间。", content: "简单几步完成一对一家长会预约。\n\n步骤 1: 打开“预约接待”并选择教师。\n步骤 2: 在日历中挑选绿色的空闲时段。\n步骤 3: 确认预约，系统将自动发送邮件提醒。\n\n注意: 如需取消预约，请至少提前2小时提交。" },
+      communications: { title: "消息通知与公告板", desc: "查阅学校公文、紧急通知及班级消息。", content: "学校所有官方公告集中展示。\n\n步骤 1: 打开“消息中心”。\n步骤 2: 按分类筛选（校办、教师、班级）。\n步骤 3: 阅读正文并下载 PDF 附件。\n步骤 4: 提示需要回执时点击“签署知悉”。" },
+      pagopa: { title: "PagoPA 学杂费缴纳", desc: "在线安全缴纳研学活动、餐费及学杂费。", content: "集成 PagoPA 官方安全支付系统。\n\n步骤 1: 进入“PagoPA 缴费”。\n步骤 2: 查看待缴账单清单。\n步骤 3: 点击“立即支付”，支持银行卡或电子支付。\n步骤 4: 或下载带有二维码的缴费凭证至线下支付。" },
+      documents: { title: "文档与家长表格", desc: "下载成绩单、证明文件及在线签署授权书。", content: "直接在手机上接收带签名的官方文件。\n\n步骤 1: 进入“文档与成绩单”。\n步骤 2: 下载季度成绩单 PDF 文件。\n步骤 3: 在线填写并数字签名研学活动同意书。" },
+      justifications: { title: "在线请假与缺勤说明", desc: "在手机上为孩子的缺勤或迟到提交请假条。", content: "告别纸质假条：使用安全 PIN 码在线请假。\n\n步骤 1: 打开“出勤与请假”。\n步骤 2: 查看红色标记的未请假缺勤记录。\n步骤 3: 点击“请假”，选择原因（生病、私事）并输入 PIN 码确认。" }
+    },
+    secretary: {
+      students: { title: "学生学籍档案管理", desc: "检索、编辑及更新学生基本信息与档案。", content: "学生学籍库是教务管理的核心数据库。\n\n步骤 1: 使用全局搜索栏（姓名、税号、班级）。\n步骤 2: 点击卡片打开学生完整学籍档案。\n步骤 3: 修改联系方式或法定监护人信息。\n步骤 4: 导出筛选后的数据至 Excel 或 CSV。" },
+      classes: { title: "班级与教学计划编排", desc: "创建班级、分派课程及指定任课教师。", content: "规划新学年班级与课程分配方案。\n\n步骤 1: 打开“班级管理”。\n步骤 2: 点击“新建班级”添加新班级。\n步骤 3: 绑定教学大纲科目并指定任课教师。\n步骤 4: 指定班主任与教务秘书。" },
+      certificates: { title: "开具在读证明与公文", desc: "快速开具带电子印章的官方证明文件。", content: "数秒内自动生成官方签署的学籍证明。\n\n步骤 1: 检索目标学生。\n步骤 2: 进入“证明文件” → “生成”。\n步骤 3: 选择模板（在读证明、出勤证明、成绩单）。\n步骤 4: 预览无误后盖电子公章并打印或发送。" },
+      timetable: { title: "课表编排与临时代课", desc: "输入周课表及处理每日教师代课排班。", content: "管理学校总课表及缺勤教师代课安排。\n\n步骤 1: 打开“课表与代课”。\n步骤 2: 在周网格中录入各班级课程。\n步骤 3: 当教师请假时，系统会自动推荐有空闲的教师。\n步骤 4: 确认代课安排并一键通知相关教师。" },
+      communications: { title: "学校公文与通告发布", desc: "发布官方公文并追踪签收阅读进度。", content: "向全校教职工、学生及家长发布官方信息。\n\n步骤 1: 打开“消息与通告”。\n步骤 2: 点击“新建公文”。\n步骤 3: 填写发文字号、标题及正文内容。\n步骤 4: 选择接收对象与是否需要阅读签名。" },
+      reports: { title: "教育部 (SIDI) 数据报表与导出", desc: "汇总统计数据及国家教育部门标准格式导出。", content: "生成教务统计报表与教育部格式文件。\n\n步骤 1: 打开“统计与报表”。\n步骤 2: 选择报表类型（出勤率、评议结果）。\n步骤 3: 选择导出格式：Excel, CSV, PDF 或 XML SIDI。" }
+    },
+    admin: {
+      monitoring: { title: "系统运行状态监控", desc: "监控平台可用性、API 响应时间及服务器负载。", content: "全站微服务架构的实时遥测监控。\n\n步骤 1: 检查 CPU 使用率、内存及活跃会话数。\n步骤 2: 监控过去24小时的 API 吞吐量与错误率。\n步骤 3: 配置自动化故障预警阈值。\n\n注意: 在计划内更新时请开启维护模式。" },
+      users: { title: "用户账号与权限管理", desc: "管理用户账号、RBAC 角色及安全策略。", content: "集中式用户安全与账号全生命周期管理。\n\n步骤 1: 按角色、校区或状态检索用户。\n步骤 2: 单个创建账号或使用 CSV 批量导入。\n步骤 3: 强制开启 2FA/MFA 并管理密码重置。\n步骤 4: 查阅不可篡改的安全审计日志。" },
+      schools: { title: "多校区与机构管理", desc: "配置分校区、学校代码及网络参数。", content: "管理多租户 (Multi-tenant) 教育机构架构。\n\n步骤 1: 打开“校区管理”。\n步骤 2: 添加新校区（总校、分校、小学部、中学部）。\n步骤 3: 填写学校官方代码与联系方式。" },
+      security: { title: "安全策略与身份认证", desc: "密码复杂度、会话超时、2FA及限流规则。", content: "根据 GDPR 及网络安全规范配置防护策略。\n\n步骤 1: 打开“安全与认证”。\n步骤 2: 设置密码最小长度与定期更换周期。\n步骤 3: 为管理人员强制开启双重认证 (2FA)。" },
+      analytics: { title: "大数据分析与辍学预警", desc: "辍学风险与慢性缺勤的预测性分析。", content: "利用商业智能 (BI) 工具精准识别高风险学生。\n\n步骤 1: 打开“Analytics & BI”。\n步骤 2: 查看各班级与科目的缺勤热力图。\n步骤 3: 设置预警触发条件（如：缺勤>20% + 均分<6.0）。" },
+      integrations: { title: "教学平台集成与 SSO", desc: "同步 Google Classroom、Microsoft Teams 及 SSO。", content: "将电子记分册无缝对接云端教学平台。\n\n步骤 1: 打开“集成与 SSO”。\n步骤 2: 激活 Google Workspace 或 Microsoft 365 模块。\n步骤 3: 输入 OAuth2 Client ID 与 Secret。" },
+      audit: { title: "审计日志与 GDPR 合规", desc: "记录所有访问与修改操作的不可篡改系统日志。", content: "保障数据全生命周期合规与可追溯性。\n\n步骤 1: 打开“审计日志与追溯”。\n步骤 2: 检索历史记录：时间戳、用户、角色、IP、操作内容。\n步骤 3: 导出加密 PDF 审计报告以备检查。" }
+    }
+  }
 }

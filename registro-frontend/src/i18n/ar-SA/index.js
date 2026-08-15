@@ -254,22 +254,6 @@ export default {
       step6_desc: "تهيئة سياسات الأمان والمصادقة الثنائية وتكاملات التعلم الإلكتروني."
     }
   },
-  help: {
-    title: "مركز المساعدة",
-    subtitle: "أدلة ودروس تعليمية لاستخدام السجل الإلكتروني",
-    searchPlaceholder: "البحث في الدليل...",
-    noResults: "لم يتم العثور على مقالات لـ",
-    categories: "الفئات",
-    allTopics: "جميع الموضوعات",
-    restartTour: "إعادة تشغيل الجولة الإرشادية",
-    openHelp: "فتح الدليل",
-    needHelp: "هل تحتاج إلى مساعدة؟",
-    contactSupport: "الاتصال بالدعم",
-    fabTooltip: "المساعدة والدليل",
-    new: "جديد"
-  }
-
-,
   onboardingExtra: {
     "openGuide": "Open Full Guide",
     "viewAllFeatures": "Discover all features",
@@ -546,100 +530,208 @@ export default {
         ]
     }
 },
-  guideCenter: {
-    "title": "Help & Knowledge Center",
-    "subtitle": "Comprehensive guides for every section of the electronic register",
-    "search": "Search in guides...",
-    "noResults": "No guides found for",
-    "readingTime": "min read",
-    "step": "Step",
-    "tip": "Tip",
-    "warning": "Warning",
-    "shortcut": "Shortcut",
-    "teacher": {
-        "dashboard": {
-            "title": "Teacher Dashboard",
-            "desc": "Overview of daily lessons, notifications, and quick actions.",
-            "content": "The teacher dashboard provides a complete overview of your day. Top widgets display today’s scheduled classes with times and room numbers.\n\nStep 1: Customize your dashboard widgets by dragging them.\nStep 2: Click on any class in the timetable to open its register directly.\nStep 3: Filter notifications by urgency or category.\n\nTip: Enable priority alerts to stay informed about urgent announcements."
-        },
-        "attendance": {
-            "title": "Attendance Register",
-            "desc": "How to record attendance, absences, and delays quickly and accurately.",
-            "content": "The attendance register automatically loads the student list for the current period.\n\nStep 1: Click on a student name to toggle status (Present, Absent, Late, Early exit).\nStep 2: Add optional justification notes or remarks.\nStep 3: Click \"Sign Lesson\" to confirm and digitally sign the session.\nStep 4: Parents of absent students are notified automatically.\n\nShortcut: Press Ctrl+Enter to quickly save attendance."
-        },
-        "grades": {
-            "title": "Grade Management",
-            "desc": "Enter and manage written, oral, and practical grades.",
-            "content": "The gradebook is an interactive grid organized by students and evaluation dates.\n\nStep 1: Select class and subject from the dropdown.\nStep 2: Click on any cell to input or edit a grade.\nStep 3: Choose evaluation type (Written, Oral, Practical) and score.\nStep 4: Add private or public feedback comments.\nStep 5: Subject and class averages update instantly.\n\nWarning: Published grades are visible to students and parents within seconds."
-        },
-        "agenda": {
-            "title": "School Agenda & Homework",
-            "desc": "Plan tests, assignments, and shared class activities.",
-            "content": "The teacher agenda syncs automatically with students and parents.\n\nStep 1: Click on any calendar date to schedule an event.\nStep 2: Choose event type: Homework, Exam, Field trip, or Reminder.\nStep 3: Select subject, description, and attach learning files.\nStep 4: Check \"Notify students\" to broadcast an instant push notification.\n\nTip: Use the Week view to check for test overlaps across subjects."
-        },
-        "communications": {
-            "title": "Communications & Messages",
-            "desc": "Send structured messages to classes, parents, and colleagues.",
-            "content": "Send announcements through dedicated channels: direct messages, class circulars, or urgent bulletins.\n\nStep 1: Navigate to \"Communications\" → \"New Message\".\nStep 2: Choose channel type and recipient list.\nStep 3: Format your message using the rich-text editor.\nStep 4: Send immediately or schedule for future publication.\n\nWarning: Urgent announcements trigger push notifications and SMS alerts."
-        },
-        "meetings": {
-            "title": "Parent-Teacher Meetings",
-            "desc": "Configure availability slots and manage booking appointments.",
-            "content": "Manage weekly office hours and individual parent conferences.\n\nStep 1: Go to \"Meetings\" → \"Set Availability\".\nStep 2: Define weekly recurring time slots and appointment durations.\nStep 3: Parents book online; you receive automated calendar invites.\nStep 4: Review student performance records prior to the meeting.\n\nTip: Enable the integrated video call link for virtual meetings."
-        }
+  help: {
+    title: 'مركز المساعدة والمعرفة',
+    subtitle: 'أدلة وإرشادات شامة لاستخدام السجل الإلكتروني',
+    searchPlaceholder: 'البحث في المساعدة...',
+    noResults: 'لم يتم العثور على مقالات لـ',
+    categories: 'الفئات',
+    allTopics: 'جميع المواضيع',
+    restartTour: 'إعادة الجولة التوضيحية',
+    openHelp: 'فتح الدليل',
+    needHelp: 'هل تحتاج إلى مساعدة؟',
+    contactSupport: 'الاتصال بالدعم',
+    fabTooltip: 'المساعدة والدليل',
+    new: 'جديد',
+    teacher: {
+      cat_register: 'دفتر الحضور والغياب',
+      cat_grades: 'إدارة الدرجات',
+      cat_attendance: 'الحضور',
+      cat_agenda: 'الجدول والواجبات',
+      cat_settings: 'الإعدادات',
+      q1: 'كيف أسجل حضور وغياب الفصل؟',
+      a1: 'انتقل إلى "فصولي" ← اختر الفصل ← علامة تبويب "الحضور". انقر على ح (حاضر)، غ (غائب)، م (متأخر) لكل طالب. ثم انقر على "توقيع الدرس".',
+      q2: 'كيف أستخدم وضع الشبكة السريع (Matrix View) لإدخال الدرجات؟',
+      a2: 'في قسم "الدرجات"، اختر الفصل والمادة واعرض وضع Matrix View. تنقل بين الخانات باستعمال TAB والأسهم، أدخل الدرجة واضغط ENTER.',
+      q3: 'كيف أنشئ واجباً منزلیاً أو اختباراً في الجدول؟',
+      a3: 'في "الجدول" اضغط على التاريخ ← "إضافة حدث". اختر النوع (واجب، اختبار)، حدد المادة واحفظ.',
+      q4: 'كيف أرسل تعميماً عاجلاً لأولياء الأمور؟',
+      a4: 'انتقل إلى "المرسلات" ← "رسالة جديدة". حدد المستلمين، فعّل "تأكيد القراءة مطلوب" وأرسل.',
+      q5: 'كيف أضبط ساعات الاستقبال لمقابلة أولياء الأمور؟',
+      a5: 'في "المقابلات" ← "تحديد التوفر". حدد الأيام، الفترات الزمنية ومدة الموعد (15، 20 أو 30 دقيقة).',
+      q6: 'كيف أصل إلى لوحة التقييم النهائي (Scrutinio)؟',
+      a6: 'إذا كنت مربي الفصل، يظهر "Scrutinio" في الشريط الجانبي. أدخل اقتراحات الدرجات، السلوك والتقييم العام.',
+      q7: 'كيف أعد أو أراجع الخطة الفردية (PDP / PEI)؟',
+      a7: 'ادخل إلى "الخطة الفردية (PDP)" من قائمة الفصل. اضبط التدابير التعويضية والإعفاءات.',
+      q8: 'كيف أستعيد مسودة السجل غير المحفوظة؟',
+      a8: 'يحفظ النظام المسودة تلقائياً كل 15 ثانية. عند إعادة الفتح، سيطلب منك النظام استعادتها.',
+      q9: 'كيف أغير لغة الواجهة والوضع الداكن؟',
+      a9: 'في "الإعدادات" من قائمة المستخدم، اختر من بين 9 لغات وفعّل الوضع الداكن أو خط OpenDyslexic.',
+      q10: 'كيف يمكنني التراجع عن رصد درجة بالخطأ؟',
+      a10: 'بعد الحفظ، يظهر إشعار أسفل الشاشة يحتوي على زر "تراجع" نشط لمدة 15 ثانية.'
     },
-    "student": {
-        "dashboard": {
-            "title": "Student Dashboard",
-            "desc": "Your daily hub for deadlines, grades, and schedules.",
-            "content": "The student dashboard prioritizes urgent tasks and upcoming exams.\n\nStep 1: Review \"Today’s Schedule\" for lessons and rooms.\nStep 2: Check \"Due Today\" and \"Tomorrow’s Exams\".\nStep 3: Monitor your overall GPA and recent grade additions.\n\nTip: Install the PWA on your phone for instant notification alerts."
-        },
-        "grades": {
-            "title": "My Grades & Performance",
-            "desc": "Track your subject grades, averages, and evaluation history.",
-            "content": "View all assessments organized by subject and academic term.\n\nStep 1: Select a subject to inspect detailed teacher feedback.\nStep 2: Review the trend line to understand your progress over time.\nStep 3: Switch between terms (1st Term, 2nd Term, Final).\nStep 4: Download a full PDF transcript at any time."
-        },
-        "homework": {
-            "title": "Homework & Assignments",
-            "desc": "Organize your homework, downloads, and submission deadlines.",
-            "content": "Stay on top of all homework assignments and study materials.\n\nStep 1: Filter tasks by due date or subject.\nStep 2: Click on an assignment to download attachments.\nStep 3: Mark tasks as \"Completed\" to keep track of your workload."
-        }
+    student: {
+      cat_grades: 'درجاتي',
+      cat_attendance: 'حضوري',
+      cat_homework: 'الواجبات',
+      cat_documents: 'الوثائق والشهادة',
+      cat_settings: 'الملف الشخصي والإعدادات',
+      q1: 'كيف أطلع على درجاتي ومعدلي في كل مادة؟',
+      a1: 'افتح "درجاتي" في الشريط الجانبي لرؤية تفاصيل الاختبارات التحريرية والشفهية مع المعدل التراكمي.',
+      q2: 'كيف يعمل محاكي المعدل؟',
+      a2: 'في قسم "درجاتي"، انقر على "محاكي المعدل". أدخل درجات متوقعة للاختبارات القادمة لحساب المعدل المستقبلي.',
+      q3: 'كيف أتتبع إجمالي ساعات الغياب؟',
+      a3: 'في قسم "حضوري"، تعرض العدادات ساعات الغياب التراكمية مقارنة بالحد السنوي المسموح به.',
+      q4: 'أين أجد الواجبات المنزلية المطلوبة؟',
+      a4: 'في قسم "الواجبات" أو من اللوحة الرئيسية. الواجبات مرتبة حسب تاريخ التسليم مع الملفات المرفقة.',
+      q5: 'كيف أنزل شهادة الدرجات الفصلية بصيغة PDF؟',
+      a5: 'انتقل إلى "الشهادات والوثائق"، اختر الفصل وانقر على "تحميل الشهادة PDF".',
+      q6: 'أين أراجع ساعات التدريب الميداني / PCTO؟',
+      a6: 'افتح "PCTO والمحفظة" للاطلاع على الساعات المعتمدة، الشركات والمؤسسات والتقييمات.',
+      q7: 'كيف أجيب على استبيان أو تعميم مدرسي؟',
+      a7: 'افتح "المرسلات" واختر الرسالة. انقر على "تأكيد القراءة" إذا كان مطلوباً.',
+      q8: 'كيف أفعّل خط OpenDyslexic المخصص للقرائية؟',
+      a8: 'انقر على أيقونة إمكانية الوصول في الأعلى أو انتقل إلى "الملف الشخصي" ← "إمكانية الوصول".',
+      q9: 'ماذا أفعل إذا نسيت كلمة المرور؟',
+      a9: 'في صفحة تسجيل الدخول، انقر على "هل نسيت كلمة المرور؟" وأدخل بريدك الإلكتروني.',
+      q10: 'كيف أستخدم البحث السريع Ctrl+K؟',
+      a10: 'اضغط على Ctrl+K (أو Cmd+K) لفتح البحث الشامل والتنقل الفوري بين المواد والصفحات.'
     },
-    "parent": {
-        "monitoring": {
-            "title": "Monitoring Your Children",
-            "desc": "Follow academic performance, daily attendance, and notices in real time.",
-            "content": "Access comprehensive academic information for all enrolled children.\n\nStep 1: Select your child from the top switcher.\nStep 2: Check daily attendance and real-time grade notifications.\nStep 3: Read teacher comments on individual assessments.\nStep 4: View academic progress charts.\n\nTip: Configure notification thresholds to receive alerts if grades drop."
-        },
-        "meetings": {
-            "title": "Booking Teacher Meetings",
-            "desc": "Schedule and manage conference appointments with teachers.",
-            "content": "Easily book one-on-one parent-teacher conferences.\n\nStep 1: Open \"Meetings\" and select the desired teacher.\nStep 2: Pick an available green time slot on the calendar.\nStep 3: Confirm booking to receive an email reminder.\n\nWarning: Cancellations should be submitted at least 2 hours in advance."
-        }
+    parent: {
+      cat_monitoring: 'متابعة الأبناء',
+      cat_communications: 'المرسلات',
+      cat_meetings: 'مقابلات المعلمين',
+      cat_documents: 'الوثائق والمدفوعات',
+      cat_settings: 'الملف الشخصي والإعدادات',
+      q1: 'كيف أتبادل بين أبنائي المسجلين في المدرسة؟',
+      a1: 'استخدم محدد الأبناء في أعلى الشاشة للتنقل بين ملفاتهم فورياً.',
+      q2: 'هل تصلني إشعارات فورية عن الدرجات والغياب؟',
+      a2: 'نعم! يتم إرسال إشعارات لحظية ورسائل بريد إلكتروني فور رصد أي درجة أو غياب جديد.',
+      q3: 'كيف أحجز موعد مقابلة مع معلم؟',
+      a3: 'انتقل إلى "المقابلات" ← اختر المعلم ← حدد موعداً متاحاً باللون الأخضر في التقويم ← أكد الحجز.',
+      q4: 'كيف أدفع الرسوم والرحلات عبر PagoPA؟',
+      a4: 'ادخل إلى "مدفوعات PagoPA". راجع المطالبات وادفع مباشرة عبر الإنترنت أو بتحميل رمز QR.',
+      q5: 'كيف أقدم تبريراً للغياب عبر الإنترنت؟',
+      a5: 'في "الحضور والتبريرات"، انقر على "تبرير" أمام غياب باللون الأحمر، حدد السبب وأكد برمز PIN.',
+      q6: 'كيف أنزل كشف درجات ابني؟',
+      a6: 'حدد الابن ← "الشهادة" ← اختر الفصل ← "تحميل كشف الدرجات PDF".',
+      q7: 'أين أجد التعاميم التي تتطلب التوقيع؟',
+      a7: 'في قسم "المرسلات". التعاميم التي تتطلب إقراراً تعرض زراً بارزاً: "توقيع العلم بالشيء".',
+      q8: 'كيف أتواصل مع السكرتارية أو الإدارة؟',
+      a8: 'في "الدعم والأسئلة الشائعة" أو "الاتصال بالدعم"، أرسل تذكرة مباشرة إلى إدارة المدرسة.',
+      q9: 'هل يمكن لولي أمر ثاني الحصول على حساب مستقل؟',
+      a9: 'يمكن للسكرتارية ربط عدة حسابات لأولياء الأمور لنفس الطالب ببيانات دخول منفصلة.',
+      q10: 'كيف يعمل التطبيق بدون اتصال بالإنترنت (Offline)؟',
+      a10: 'يعرض التطبيق البيانات المخزنة مؤقتاً. وتحفظ النماذج المرسلة محلياً ويتم مزامنتها عند استعادة الاتصال.'
     },
-    "secretary": {
-        "students": {
-            "title": "Student Registry Management",
-            "desc": "Search, manage, and update student profiles and demographic records.",
-            "content": "The student registry is the central database for all enrolled learners.\n\nStep 1: Use the global search bar (name, tax code, class).\nStep 2: Click a record to open the full student dossier.\nStep 3: Edit contact information, enrollment status, or guardian links.\nStep 4: Export filtered data to Excel or CSV formats."
-        },
-        "certificates": {
-            "title": "Certificate Generation",
-            "desc": "Issue official school documents, attendance proofs, and certificates.",
-            "content": "Produce signed school documents in seconds.\n\nStep 1: Search for the student record.\nStep 2: Go to \"Certificates\" → \"Generate\".\nStep 3: Select certificate template (Enrollment, Attendance, Transcripts).\nStep 4: Preview, apply digital stamp, and print or email directly."
-        }
+    secretary: {
+      cat_students: 'سجل الطلاب',
+      cat_classes: 'إدارة الفصول',
+      cat_documents: 'الشهادات والوثائق',
+      cat_timetable: 'الجداول والبدلاء',
+      cat_reports: 'التقارير والتصدير',
+      q1: 'كيف أبحث عن طالب بسرعة؟',
+      a1: 'استخدم شريط البحث الشامل في الأعلى. ابحث بالاسم، السجل المدني، أو الفصل.',
+      q2: 'كيف أصدر شهادة قيد رسمية؟',
+      a2: 'في "الشهادات والوثائق" ← حدد الطالب ← "إنشاء PDF". تتضمن الوثيقة ختماً رقمياً.',
+      q3: 'كيف أدير البدلاء اليوميين للمعلمين الغائبين؟',
+      a3: 'انتقل إلى "الجداول والبدلاء" ← حدد اليوم والمعلم الغائب. يقترح النظام المعلمين المتفرغين.',
+      q4: 'كيف أصدر ملفات لتطبيقات الوزارة (SIDI)؟',
+      a4: 'في "التقارير والإحصائيات" ← "تصدير الوزارة" ← اختر الفترة والصيغة المطلوبة.',
+      q5: 'كيف أنشئ حساباً لطالب أو ولي أمر جديد؟',
+      a5: 'في "إدارة المستخدمين" ← "مستخدم جديد" ← أدخل البيانات والرمز. يتم إرسال كلمة مرور مؤقتة عبر البريد.',
+      q6: 'كيف أعد الفصول والشعب للعام الدراسي الجديد؟',
+      a6: 'في "إدارة الفصول"، أنشئ الفصول الجديدة، استورد الطلاب الناجحين وعيّن طاقم المعلمين.',
+      q7: 'كيف أنشر تعميماً رسمياً للمدرسة؟',
+      a7: 'في "المرسلات واللوحة" ← "تعميم جديد" ← حدد الفئات المستهدفة وانشر.',
+      q8: 'كيف أدير قائمة الكتب الدراسية المعتمدة؟',
+      a8: 'في "الكتب الدراسية"، اختر الفصل والمادة وأدخل الرقم الدولي ISBN، العنوان والناشر.',
+      q9: 'كيف أتحقق من حالة مدفوعات PagoPA؟',
+      a9: 'افتح "المالية و PagoPA" لمتابعة الترددات المالية وإرسال تذكيرات بالتسديد.',
+      q10: 'كيف ألغي رقم صادر (بروتوكول) صدر بالخطأ؟',
+      a10: 'في أرشيف الوثائق، حدد الصادر ← "إلغاء مع بيان السبب". يتم تسجيل الإجراء في Audit Log.'
     },
-    "admin": {
-        "monitoring": {
-            "title": "System & Health Monitoring",
-            "desc": "Monitor platform uptime, API response times, and server performance.",
-            "content": "Real-time telemetry and health monitoring across all platform services.\n\nStep 1: Inspect server CPU, RAM, and active session count.\nStep 2: Monitor API throughput and error rates over the last 24 hours.\nStep 3: Configure alert thresholds for proactive notifications.\n\nWarning: Use Maintenance Mode during scheduled platform updates."
-        },
-        "users": {
-            "title": "User & Access Management",
-            "desc": "Manage user accounts, RBAC permissions, and authentication policies.",
-            "content": "Centralized user provisioning and security management.\n\nStep 1: Search users by role, institution, or active status.\nStep 2: Create single accounts or use the bulk CSV/Excel import tool.\nStep 3: Enforce 2FA/MFA and manage password resets.\nStep 4: Review immutable audit logs for compliance auditing."
-        }
+    admin: {
+      cat_monitoring: 'مراقبة النظام',
+      cat_users: 'إدارة المستخدمين',
+      cat_schools: 'المدارس والفروع',
+      cat_security: 'الأمان والمصادقة',
+      cat_analytics: 'التحليلات والتسرب',
+      q1: 'كيف أراقب حالة الخدمات السحابية وقاعدة البيانات؟',
+      a1: 'في "مراقبة النظام"، راقب الرسوم البيانية الحية للمعالج CPU، الذاكرة RAM، اتصالات PostgreSQL وزمن استجابة API.',
+      q2: 'كيف أضيف مدرسة أو فرعاً جديداً؟',
+      a2: 'انتقل إلى "إدارة المدارس" ← "إضافة مدرسة". أدخل الكود الوزاري، الاسم، العنوان والبريد الرسمي.',
+      q3: 'كيف أفرض إعادة ضبط كلمة المرور أو تفعيل المصادقة الثنائية 2FA؟',
+      a3: 'في "إدارة المستخدمين"، حدد الحساب ← "الأمان" ← "إعادة ضبط كلمة المرور" أو "فرض 2FA".',
+      q4: 'كيف أراجع سجل التدقيق غير القابل للتعديل (Audit Log)؟',
+      a4: 'في "التدقيق والامتثال". قم بتصفية الأحداث حسب المستخدم، نوع الإجراء، التاريخ وعنوان IP.',
+      q5: 'كيف أدير ميزات المنصة (Feature Flags)؟',
+      a5: 'في "Feature Flags والموديولات"، فعّل أو عطّل ميزات معينة (PagoPA, Google SSO, Matrix View).',
+      q6: 'كيف أحلل مخاطر التسرب والتغيب المدرسي؟',
+      a6: 'افتح "Analytics & BI". تحدد الخوارزميات الطلاب الذين تتجاوز نسبة غيابهم 20% أو معدلهم أقل من 5 من 10.',
+      q7: 'كيف أضبط الدخول الموحد (SSO) مع Google و Microsoft؟',
+      a7: 'في "التكامل و SSO"، أدخل Client ID لـ OAuth2 والمفتاح السري من كونسول Google أو Azure.',
+      q8: 'كيف أنفذ نسخاً احتياطياً يدوي لقاعدة البيانات؟',
+      a8: 'في "قاعدة البيانات والنسخ الاحتياطي"، أنشئ نسخة فورية من PostgreSQL أو اضبط النسخ التلقائي على S3.',
+      q9: 'كيف أتحقق من مصفوفة الصلاحيات الكاملة RBAC؟',
+      a9: 'ادخل إلى "الأدوار والصلاحيات" لمراجعة مصفوفة الوصول التفاعلية لـ 9 أدوار في النظام.',
+      q10: 'كيف أضع المنصة في وضع الصيانة؟',
+      a10: 'في "إعدادات النظام"، فعّل "وضع الصيانة". سيظهر شريط تنبيه للمستخدمين.'
     }
-}
+  },
+  guideCenter: {
+    title: "مركز المساعدة والمعرفة",
+    subtitle: "أدلة تفصيلية لكل قسم من أقسام السجل الإلكتروني",
+    search: "البحث في الأدلة...",
+    noResults: "لم يتم العثور على أدلة لـ",
+    readingTime: "دقيقة قراءة",
+    step: "الخطوة",
+    tip: "نصيحة",
+    warning: "تنبيه",
+    shortcut: "اختصار",
+    teacher: {
+      dashboard: { title: "لوحة تحكم المعلم", desc: "نظرة عامة على اليوم الدراسي، الإشعارات والإجراءات السريعة.", content: "توفر لوحة المعلم رؤية شاملة ليومك الدراسي. تعرض العناصر التفاعلية حصصك اليومية ومواعيدها والقاعات.\n\nالخطوة 1: خصص العناصر بسحبها وإفلاتها.\nالخطوة 2: انقر على الفصل لفتح سجله مباشرة.\nالخطوة 3: صَفِّ الإشعارات حسب الأهمية.\n\nنصيحة: فعّل التنبيهات الأولوية لتلقي الإشعارات العاجلة." },
+      attendance: { title: "سجل الحضور والغياب", desc: "تسجيل سريع ودقيق للحضور والغياب والتأخير.", content: "يحمّل السجل تلقائياً قائمة الطلاب للحصة الحالية.\n\nالخطوة 1: انقر على اسم الطالب لتغيير حالته (حاضر، غائب، متأخر).\nالخطوة 2: أضف ملاحظات أو أسباب خيارية.\nالخطوة 3: انقر على \"توقيع الدرس\" لتوقيع الحصة رقمياً.\nالخطوة 4: يتم إشعارات أولياء أمور الطلاب الغائبين تلقائياً.\n\nاختصار: اضغط Ctrl+Enter للحفظ السريع." },
+      grades: { title: "إدارة الدرجات ووضع Matrix", desc: "رصد الاختبارات الشفهية والتحريرية باستعمال لوحة المفاتيح السريعة.", content: "يوفر دفتر الدرجات العرض الكلاسيكي وعرض الشبكة السريعة Matrix View.\n\nالخطوة 1: اختر الفصل والمادة.\nالخطوة 2: فعّل عرض Matrix للتنقل بزر TAB والأسهم.\nالخطوة 3: اكتب الدرجة (1-10) واضغط ENTER.\nالخطوة 4: أضف ملاحظات عامة أو خاصة.\nالخطوة 5: يتم تحديث المعدلات فورياً.\n\nتنبيه: الدرجات المنشورة تظهر لأولياء الأمور خلال ثوانٍ." },
+      agenda: { title: "الجدول والواجبات", desc: "تخطيط الاختبارات والواجبات والأنشطة.", content: "يتزامن جدول المعلم تلقائياً مع الطلاب وأولياء الأمور.\n\nالخطوة 1: انقر على تاريخ في التقويم لإضافة حدث.\nالخطوة 2: اختر النوع: واجب، اختبار، رحلة مدرسة.\nالخطوة 3: حدد المادة والوصف وأرفق الملفات.\nالخطوة 4: ينبهك النظام إذا كان للفصل أكثر من اختبارين في نفس اليوم.\n\nنصيحة: استخدم العرض الأسبوعي لتجنب تضارب الاختبارات." },
+      communications: { title: "المرسلات والرسائل", desc: "إرسال رسائل منظمة للفصول والأهالي والزملاء.", content: "انشر التنبيهات عبر القنوات المخصصة: رسائل مباشرة، تعاميم أو نشرات عاجلة.\n\nالخطوة 1: انتقل إلى \"المرسلات\" ← \"رسالة جديدة\".\nالخطوة 2: اختر القناة وقائمة المستلمين.\nالخطوة 3: صغ الرسالة بالمحرر المتقدم.\nالخطوة 4: أرسل فوراً أو جدول النشر.\n\nتنبيه: الرسائل العاجلة ترسل إشعارات لحظية." },
+      meetings: { title: "مقابلات أولياء الأمور", desc: "إدارة ساعات الاستقبال وحجوزات المواعيد.", content: "أدر ساعات استقبالك الأسبوعية والمقابلات الفردية.\n\nالخطوة 1: ادخل إلى 'المقابلات' ← 'تحديد التوفر'.\nالخطوة 2: حدد الأيام، الأوقات ومدة الموعد (15، 20، 30 دقيقة).\nالخطوة 3: يحجز أولياء الأمور عبر الإنترنت وتتلقى تأكيداً.\nالخطوة 4: راجع ملف الطالب قبل المقابلة.\n\nنصيحة: فعّل رابط المحادثة المرئية المدمج." },
+      scrutiny: { title: "مجلس التقييم النهائي (Scrutinio)", desc: "إجراءات اعتماد الدرجات وتدوين محاضر التقييم.", content: "تجمع لوحة المجلس التقييمات المقترحة من جميع معلمي المواد.\n\nالخطوة 1: حدد الفصل والفترة الدراسية.\nالخطوة 2: راجع المعدل المقترح وأدخل الدرجة المعتمدة.\nالخطوة 3: أدخل درجة السلوك والتقييم الشامل.\nالخطوة 4: بصفتك مربي الفصل، اقفل اللوحة بعد الاعتماد.\nالخطوة 5: اصدر واطبع المحضر الرسمية بصيغة PDF.\n\nتنبيه: بعد الإقفال، يتطلب أي تعديل فك الإقفال من إدارة المدرسة." },
+      pdp: { title: "الخطة الفردية (PDP / PEI)", desc: "إعداد التدابير التعويضية والإعفاءات لذوي الاحتياجات الخاصة.", content: "يتيح موديول PDP للهيئة التعليمية إعداد خطط تعلم مخصصة.\n\nالخطوة 1: ادخل إلى 'PDP / PEI' من قائمة الفصل.\nالخطوة 2: حدد الطالب واضبط التدابير التعويضية والإعفاءات.\nالخطوة 3: احفظ المسودة وأرسلها لأولياء الأمور للتوقيع الرقمي.\nالخطوة 4: تظهر التدابير النشطة كشارات تنبيهية أثناء التصحيح.\n\nنصيحة: استخدم معايير التقييم الجاهزة لتسريع الإدخال." }
+    },
+    student: {
+      dashboard: { title: "لوحة الطالب", desc: "مركزك اليومي لمتابعة الواجبات والدرجات والجداول.", content: "تركز لوحة الطالب على المهام العاجلة والاختبارات القادمة.\n\nالخطوة 1: راجع \"اليوم\" لجدول حصصك والقاعات.\nالخطوة 2: تحقق من الواجبات المطلوبة واختبارات الغد.\nالخطوة 3: تابع معدلك التراكمي العام.\n\nنصيحة: ثبّت تطبيق الويب PWA على هاتفك للتنبيهات الفورية." },
+      grades: { title: "درجاتي وأدائي", desc: "تتبع درجاتك ومعدلاتك وسجل الاختبارات.", content: "جميع تقييماتك مرتبة حسب المادة والفصل الدراسي.\n\nالخطوة 1: حدد مادة لقراءة ملاحظات المعلمين.\nالخطوة 2: افحص الرسم البياني لتطور أدائك.\nالخطوة 3: تنقل بين الفصول الدراسية.\nالخطوة 4: نزّل كشف الدرجات الكامل بصيغة PDF." },
+      homework: { title: "الواجبات والمهام", desc: "نظم واجباتك والملفات والمواعيد النهائية.", content: "تحكم كامل في واجباتك المنزلية والمواد الدراسية.\n\nالخطوة 1: صَفِّ المهام حسب التسليم أو المادة.\nالخطوة 2: انقر على الواجب لصحبت المرفقات.\nالخطوة 3: علّم المهام كـ 'مكتملة'." },
+      attendance: { title: "سجل حضوري وغيابي", desc: "متابعة غيابك وتأخيراتك وحالة التبريرات.", content: "اطلع على رصيد غيابك والحد المسموح به.\n\nالخطوة 1: افتح 'حضوري'.\nالخطوة 2: تحقق من عداد ساعات الغياب التراكمي.\nالخطوة 3: افحص التقويم الشهري للغياب (أحمر) والتأخير (برتقالي).\nالخطوة 4: تحقق من اعتماد التبريرات من أولياء أمورك." },
+      documents: { title: "الشهادات والوثائق الرسمية", desc: "الاطلاع والتحميل للشهادات الفصلية والوثائق.", content: "وصول للوثائق الرسمية الصادرة من إدارة المدرسة.\n\nالخطوة 1: انتقل إلى 'الشهادات والوثائق'.\nالخطوة 2: حدد العام والفصل الدراسي.\nالخطوة 3: انقر على 'معاينة الشهادة' للاطلاع أونلاين.\nالخطوة 4: انقر على 'تحميل PDF' لحفظ الوثيقة المعتمدة." },
+      simulator: { title: "محاكي المعدل والهدف", desc: "احسب الدرجة المطلوبة في الاختبارات القادمة للوصول لهدفك.", content: "يقدم المحاكي حسابات دقيقة للدرجة الدنيا المطلوبة في الاختبار القادم.\n\nالخطوة 1: حدد المادة المستهدفة.\nالخطوة 2: أدخل المعدل المطلوب (مثلاً: 8.5 من 10).\nالخطوة 3: يحسب النظام الدرجة المطلوبة في الاختبار القادم." },
+      pcto: { title: "التدريب الميداني PCTO والملف", desc: "إدارة ساعات التدريب الميداني والشهادات.", content: "تابع نشاطك وساعات تدريبك الميداني في الشركات.\n\nالخطوة 1: افتح 'PCTO والمحفظة'.\nالخطوة 2: تحقق من رسمك البياني مقارنة بالحد الإجباري.\nالخطوة 3: اطلع على بيانات الجهة المستضيفة ونزّل شهاداتك." }
+    },
+    parent: {
+      monitoring: { title: "متابعة الأبناء", desc: "تابع التحصيل الدراسي والحضور والمرسلات لحظة بلحظة.", content: "وصول كامل للملف الدراسي لجميع أبنائك المسجلين.\n\nالخطوة 1: حدد الابن في القائمة العلوية.\nالخطوة 2: تحقق من حضور اليوم وإشعارات الدرجات.\nالخطوة 3: اقرأ ملاحظات المعلمين على التقييمات.\nالخطوة 4: شاهد رسوم التطور الأكاديمي.\n\nنصيحة: اضبط حدود التنبيه لتلقي إشعار إذا انخفض المعدل." },
+      meetings: { title: "حجز مقابلات المعلمين", desc: "احجز مواعيد مقابلة مع معلمي أبنائك.", content: "احجز مقابلات فردية في خطوات بسيطة.\n\nالخطوة 1: افتح 'المقابلات' واختر المعلم.\nالخطوة 2: حدد فترة خضراء متاحة في التقويم.\nالخطوة 3: أكد الحجز لتلقي تذكير عبر البريد.\n\nتنبيه: يجب الإلغاء قبل الموعد بساعتين على الأقل." },
+      communications: { title: "المرسلات ولائحة الإعلانات", desc: "اقرأ التعاميم والتنبيهات العاجلة وإعلانات المدرسة.", content: "جميع الإعلانات الرسمية في مكان واحد.\n\nالخطوة 1: افتح 'المرسلات'.\nالخطوة 2: صَفِّ حسب الفئة (الإدارة، المعلمون، الفصل).\nالخطوة 3: اقرأ النص ونزّل المرفقات PDF.\nالخطوة 4: انقر على 'توقيع العلم بالشيء' عند الطلب." },
+      pagopa: { title: "المدفوعات المدرسية PagoPA", desc: "سدد رسوم الرحلات والمقصف والأنشطة إلكترونياً.", content: "نظام PagoPA مدمج للدفع الإلكتروني الآمن.\n\nالخطوة 1: انتقل إلى 'مدفوعات PagoPA'.\nالخطوة 2: راجع الفواتير المستحقة.\nالخطوة 3: انقر على 'دفع الآن' بالسداد بالبطاقة أو Apple Pay.\nالخطوة 4: أو نزّل إيصال QR للدفع عبر البنك." },
+      documents: { title: "الوثائق والنماذج للأهالي", desc: "نزّل الشهادات والموافقات الرسمية.", content: "استلم الوثائق الرسمية الموقعة مباشرة على جهازك.\n\nالخطوة 1: انتقل إلى 'الوثائق والشهادة'.\nالخطوة 2: نزّل كشوف الدرجات الفصلية بصيغة PDF.\nالخطوة 3: عبئ ووقع إلكترونياً موافقات الرحلات." },
+      justifications: { title: "تبرير الغياب إلكترونياً", desc: "برر غياب وتأخير أبنائك عبر الإنترنت.", content: "لا حاجة للأوراق: برر الغياب بأمان باستعمال رمز PIN.\n\nالخطوة 1: افتح 'الحضور والتبريرات'.\nالخطوة 2: شاهد حالات الغياب المعلقة باللون الأحمر.\nالخطوة 3: انقر على 'تبرير'، حدد السبب (مرض، عائلي) وأكد برمز PIN." }
+    },
+    secretary: {
+      students: { title: "إدارة سجل الطلاب", desc: "البحث والتعامل مع ملفات الطلاب وبياناتهم.", content: "سجل الطلاب هو قاعدة البيانات المركزية للسكرتارية.\n\nالخطوة 1: استخدم شريط البحث الشامل (الاسم، السجل، الفصل).\nالخطوة 2: انقر على بطاقة الطالب لفتح ملفه الكامل.\nالخطوة 3: عدّل بيانات التواصل أو أولياء الأمور.\nالخطوة 4: اصدر البيانات المفلترة إلى Excel أو CSV." },
+      classes: { title: "تنظيم الفصول والشعب", desc: "إنشاء الفصول وتوزيع المواد والمعلمين.", content: "قم بتنسيق توزيع الفصول للعام الدراسي.\n\nالخطوة 1: افتح 'إدارة الفصول'.\nالخطوة 2: انقر على 'فصل جديد' لإضافة شعبة.\nالخطوة 3: وزّع المواد الدراسية واربط معلميها.\nالخطوة 4: عين مربي الفصل وسكرتير الشعبة." },
+      certificates: { title: "إصدار الشهادات والوثائق", desc: "اصدر شهادات القيد والحضور والدرجات الرسمية.", content: "اصدر وثائق مدرسية موثقة في ثوانٍ.\n\nالخطوة 1: ابحث عن الطالب.\nالخطوة 2: انتقل إلى 'الشهادات' ← 'إنشاء'.\nالخطوة 3: اختر النموذج (قيد، حضور، درجات).\nالخطوة 4: عاين الوثيقة، طبق الختم الرقمي واطبع أو أرسل." },
+      timetable: { title: "الجداول وتكليف البدلاء", desc: "إدخال الجداول وإدارة بدلاء المعلمين يومياً.", content: "أدر جدول الحصص وتكليفات بدلاء المعلمين الغائبين.\n\nالخطوة 1: افتح 'الجداول والبدلاء'.\nالخطوة 2: أدخل الحصص على شبكة الأسبوع.\nالخطوة 3: عند الغياب، يقترح النظام المعلمين المتفرغين.\nالخطوة 4: اعتمد التكليف وأرسل تنبيهاً للمعلم." },
+      communications: { title: "إدارة التعاميم والنشرات", desc: "نشر التعاميم الرسمية ومتابعة التوقيعات.", content: "انشر المعلومات الرسمية للكادر والأهالي والطلاب.\n\nالخطوة 1: افتح 'المرسلات واللوحة'.\nالخطوة 2: انقر على 'تعميم جديد'.\nالخطوة 3: أدخل رقم الصادر، العنوان والنص.\nالخطوة 4: حدد الفئات والمطالبة بالتوقيع." },
+      reports: { title: "التقارير والتصدير الوزاري (SIDI)", desc: "استخراج الإحصائيات وملفات البيانات التنظيمية.", content: "اصدر التقارير الإحصائية التجميعية وملفات التصدير.\n\nالخطوة 1: افتح 'التقارير والإحصائيات'.\nالخطوة 2: اختر نوع التقرير (الحضور، نتائج المجالس).\nالخطوة 3: اختر الصيغة: Excel, CSV, PDF أو XML SIDI." }
+    },
+    admin: {
+      monitoring: { title: "مراقبة وصحة النظام", desc: "متابعة توفر المنصة وزمن الاستجابة والسيرفرات.", content: "مراقبة فورية لجميع الخدمات السحابية للمنصة.\n\nالخطوة 1: افحص استخدام المعالج CPU والذاكرة والجلسات.\nالخطوة 2: تابع حركة API ونسبة الأخطاء خلال 24 ساعة.\nالخطوة 3: اضبط حدود التنبيه الآلي.\n\nتنبيه: فعّل وضع الصيانة أثناء التحديثات المجدولة." },
+      users: { title: "إدارة المستخدمين والصلاحيات", desc: "إدارة الحسابات وصلاحيات RBAC وسياسات الأمان.", content: "إدارة مركزية للأمان والحسابات.\n\nالخطوة 1: ابحث عن المستخدمين حسب الدور أو المدرسة.\nالخطوة 2: أنشئ حسابات فردية أو استخدم الاستيراد الجماعي CSV.\nالخطوة 3: افرض 2FA وأدر إعادة ضبط كلمات المرور.\nالخطوة 4: راجع سجلات التدقيق غير القابلة للتعديل." },
+      schools: { title: "إدارة المدارس والفروع", desc: "إعداد المبان المدرسية والأكواد الوزارية.", content: "أدر هيكل المؤسسة متعدد الفروع multi-tenant.\n\nالخطوة 1: افتح 'إدارة المدارس'.\nالخطوة 2: أضف الفروع الجديدة (المقر، الملحق، الابتدائية، الثانوية).\nالخطوة 3: أدخل الكود الوزاري وبيانات التواصل." },
+      security: { title: "سياسات الأمان والمصادقة", desc: "قواعد كلمات المرور، انتهاء الجلسة و2FA.", content: "اضبط قواعد الحماية وفق معايير الأمان العالمية والخصوصية.\n\nالخطوة 1: افتح 'الأمان والمصادقة'.\nالخطوة 2: حدد الحد الأدنى للكلمة وصلاحيتها.\nالخطوة 3: افرض المصادقة الثنائية (2FA) للكادر الإداري." },
+      analytics: { title: "التحليلات والوقاية من التسرب", desc: "تحليل تنبؤي لمخاطر الغياب والتسرب المدرسي.", content: "استخدم أدوات ذكاء الأعمال لاكتشاف الطلاب في دائرة الخطر.\n\nالخطوة 1: افتح 'Analytics & BI'.\nالخطوة 2: راجع الخريطة الحرارية للغياب حسب الفصل والمادة.\nالخطوة 3: اضبط معايير التنبيه (مثال: الغياب > 20% + المعدل < 5)." },
+      integrations: { title: "التكامل مع التعلم الإلكتروني و SSO", desc: "المزامنة مع Google Classroom و Microsoft Teams.", content: "اربط السجل الإلكتروني بالمنصات التعليمية السحابية.\n\nالخطوة 1: افتح 'التكامل و SSO'.\nالخطوة 2: فعّل موديول Google Workspace أو Microsoft 365.\nالخطوة 3: أدخل Client ID و Secret لـ OAuth2." },
+      audit: { title: "سجلات التدقيق ومطابقة الخصوصية", desc: "سجل نشاط النظام غير القابل للتعديل لتتبع الوصول.", content: "ضمن التتبع الكامل وفق تشريعات الخصوصية والبيانات.\n\nالخطوة 1: افتح 'سجلات التدقيق والتتبع'.\nالخطوة 2: عاين السجل: الوقت، المستخدم، الدور، IP والإجراء.\nالخطوة 3: اصدر تقارير PDF مشفرة للتفتيش." }
+    }
+  }
 }

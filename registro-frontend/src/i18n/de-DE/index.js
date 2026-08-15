@@ -254,22 +254,6 @@ export default {
       step6_desc: "Konfigurieren Sie Sicherheitsrichtlinien, Zwei-Faktor-Authentifizierung und E-Learning-Integrationen."
     }
   },
-  help: {
-    title: "Hilfe-Center",
-    subtitle: "Anleitungen und Tutorials für das elektronische Register",
-    searchPlaceholder: "In der Anleitung suchen...",
-    noResults: "Keine Artikel gefunden für",
-    categories: "Kategorien",
-    allTopics: "Alle Themen",
-    restartTour: "Geführte Tour neu starten",
-    openHelp: "Hilfe öffnen",
-    needHelp: "Brauchen Sie Hilfe?",
-    contactSupport: "Support kontaktieren",
-    fabTooltip: "Hilfe & Anleitung",
-    new: "Neu"
-  }
-
-,
   onboardingExtra: {
     "openGuide": "Open Full Guide",
     "viewAllFeatures": "Discover all features",
@@ -546,100 +530,208 @@ export default {
         ]
     }
 },
-  guideCenter: {
-    "title": "Help & Knowledge Center",
-    "subtitle": "Comprehensive guides for every section of the electronic register",
-    "search": "Search in guides...",
-    "noResults": "No guides found for",
-    "readingTime": "min read",
-    "step": "Step",
-    "tip": "Tip",
-    "warning": "Warning",
-    "shortcut": "Shortcut",
-    "teacher": {
-        "dashboard": {
-            "title": "Teacher Dashboard",
-            "desc": "Overview of daily lessons, notifications, and quick actions.",
-            "content": "The teacher dashboard provides a complete overview of your day. Top widgets display today’s scheduled classes with times and room numbers.\n\nStep 1: Customize your dashboard widgets by dragging them.\nStep 2: Click on any class in the timetable to open its register directly.\nStep 3: Filter notifications by urgency or category.\n\nTip: Enable priority alerts to stay informed about urgent announcements."
-        },
-        "attendance": {
-            "title": "Attendance Register",
-            "desc": "How to record attendance, absences, and delays quickly and accurately.",
-            "content": "The attendance register automatically loads the student list for the current period.\n\nStep 1: Click on a student name to toggle status (Present, Absent, Late, Early exit).\nStep 2: Add optional justification notes or remarks.\nStep 3: Click \"Sign Lesson\" to confirm and digitally sign the session.\nStep 4: Parents of absent students are notified automatically.\n\nShortcut: Press Ctrl+Enter to quickly save attendance."
-        },
-        "grades": {
-            "title": "Grade Management",
-            "desc": "Enter and manage written, oral, and practical grades.",
-            "content": "The gradebook is an interactive grid organized by students and evaluation dates.\n\nStep 1: Select class and subject from the dropdown.\nStep 2: Click on any cell to input or edit a grade.\nStep 3: Choose evaluation type (Written, Oral, Practical) and score.\nStep 4: Add private or public feedback comments.\nStep 5: Subject and class averages update instantly.\n\nWarning: Published grades are visible to students and parents within seconds."
-        },
-        "agenda": {
-            "title": "School Agenda & Homework",
-            "desc": "Plan tests, assignments, and shared class activities.",
-            "content": "The teacher agenda syncs automatically with students and parents.\n\nStep 1: Click on any calendar date to schedule an event.\nStep 2: Choose event type: Homework, Exam, Field trip, or Reminder.\nStep 3: Select subject, description, and attach learning files.\nStep 4: Check \"Notify students\" to broadcast an instant push notification.\n\nTip: Use the Week view to check for test overlaps across subjects."
-        },
-        "communications": {
-            "title": "Communications & Messages",
-            "desc": "Send structured messages to classes, parents, and colleagues.",
-            "content": "Send announcements through dedicated channels: direct messages, class circulars, or urgent bulletins.\n\nStep 1: Navigate to \"Communications\" → \"New Message\".\nStep 2: Choose channel type and recipient list.\nStep 3: Format your message using the rich-text editor.\nStep 4: Send immediately or schedule for future publication.\n\nWarning: Urgent announcements trigger push notifications and SMS alerts."
-        },
-        "meetings": {
-            "title": "Parent-Teacher Meetings",
-            "desc": "Configure availability slots and manage booking appointments.",
-            "content": "Manage weekly office hours and individual parent conferences.\n\nStep 1: Go to \"Meetings\" → \"Set Availability\".\nStep 2: Define weekly recurring time slots and appointment durations.\nStep 3: Parents book online; you receive automated calendar invites.\nStep 4: Review student performance records prior to the meeting.\n\nTip: Enable the integrated video call link for virtual meetings."
-        }
+  help: {
+    title: 'Hilfe- & Wissenszentrum',
+    subtitle: 'Anleitungen und Tutorials zur optimalen Nutzung des elektronischen Klassenbuchs',
+    searchPlaceholder: 'In der Hilfe suchen...',
+    noResults: 'Keine Artikel gefunden für',
+    categories: 'Kategorien',
+    allTopics: 'Alle Themen',
+    restartTour: 'Geführte Tour neu starten',
+    openHelp: 'Anleitung öffnen',
+    needHelp: 'Brauchen Sie Hilfe?',
+    contactSupport: 'Support kontaktieren',
+    fabTooltip: 'Hilfe & Anleitung',
+    new: 'Neu',
+    teacher: {
+      cat_register: 'Klassenbuch',
+      cat_grades: 'Notenverwaltung',
+      cat_attendance: 'Anwesenheit',
+      cat_agenda: 'Agenda & Mitteilungen',
+      cat_settings: 'Einstellungen',
+      q1: 'Wie trage ich die Anwesenheit im Unterricht ein?',
+      a1: 'Gehen Sie zu "Meine Klassen" → Klasse wählen → Tab "Anwesenheit". Klicken Sie für jeden Schüler auf Anwesend, Abwesend, Verspätet oder Vorzeitiger Austritt. Klicken Sie auf "Unterricht signieren", um digital zu unterschreiben.',
+      q2: 'Wie nutze ich die Matrix-Tastaturansicht zur Noteneingabe?',
+      a2: 'Wählen Sie unter "Noten" Klasse und Fach, aktivieren Sie den Matrix-Modus und navigieren Sie mit TAB und Pfeiltasten. Tippen Sie die Note ein und drücken Sie ENTER.',
+      q3: 'Wie erstelle ich einen Test oder eine Aufgabe in der Agenda?',
+      a3: 'In "Agenda" auf ein Datum klicken → "Ereignis hinzufügen". Typ wählen (Hausaufgabe, Prüfung, Aktivität), Fach festlegen und Details speichern.',
+      q4: 'Wie sende ich eine dringende Mitteilung an die Eltern?',
+      a4: 'Unter "Mitteilungen" → "Neue Mitteilung". Zielgruppe wählen, "Lesebestätigung erforderlich" aktivieren und absenden. Sie erhalten Bestätigungen in Echtzeit.',
+      q5: 'Wie konfiguriere ich meine Sprechstunden für Elterngespräche?',
+      a5: 'Gehen Sie zu "Gespräche" → "Verfügbarkeit festlegen". Legen Sie Wochentage, Zeitfenster und Dauer (15, 20, 30 Min.) fest.',
+      q6: 'Wie greife ich auf die Notenkonferenz (Scrutiny) zu?',
+      a6: 'Als Klassenleiter erscheint "Scrutiny" in der Seitenleiste. Wählen Sie Klasse und Periode, um Notenvorschläge, Betragen und Gesamturteil einzutragen.',
+      q7: 'Wie erstelle oder bearbeite ich einen Förderplan (PDP/PEI)?',
+      a7: 'Öffnen Sie "Förderplan (PDP)" aus dem Klassenmenü. Konfigurieren Sie ausgleichende und befreiende Maßnahmen, die bei Bewertungen automatisch angezeigt werden.',
+      q8: 'Wie stelle ich einen ungespeicherten Entwurf wieder her?',
+      a8: 'Das System speichert Entwürfe alle 15 Sekunden automatisch. Beim erneuten Öffnen werden Sie gefragt, ob Sie den Entwurf wiederherstellen möchten.',
+      q9: 'Wie ändere ich Sprache und Dark Mode?',
+      a9: 'Unter "Einstellungen" im Benutzermenü können Sie aus 9 Sprachen wählen und den Dunkelmodus oder die OpenDyslexic-Schriftart aktivieren.',
+      q10: 'Wie kann ich eine kürzlich eingetragene Note widerrufen?',
+      a10: 'Nach jeder Eingabe erscheint unten ein Toast mit der Schaltfläche "Rückgängig" (15 Sek. aktiv). Danach direkt in der Zelle bearbeiten.'
     },
-    "student": {
-        "dashboard": {
-            "title": "Student Dashboard",
-            "desc": "Your daily hub for deadlines, grades, and schedules.",
-            "content": "The student dashboard prioritizes urgent tasks and upcoming exams.\n\nStep 1: Review \"Today’s Schedule\" for lessons and rooms.\nStep 2: Check \"Due Today\" and \"Tomorrow’s Exams\".\nStep 3: Monitor your overall GPA and recent grade additions.\n\nTip: Install the PWA on your phone for instant notification alerts."
-        },
-        "grades": {
-            "title": "My Grades & Performance",
-            "desc": "Track your subject grades, averages, and evaluation history.",
-            "content": "View all assessments organized by subject and academic term.\n\nStep 1: Select a subject to inspect detailed teacher feedback.\nStep 2: Review the trend line to understand your progress over time.\nStep 3: Switch between terms (1st Term, 2nd Term, Final).\nStep 4: Download a full PDF transcript at any time."
-        },
-        "homework": {
-            "title": "Homework & Assignments",
-            "desc": "Organize your homework, downloads, and submission deadlines.",
-            "content": "Stay on top of all homework assignments and study materials.\n\nStep 1: Filter tasks by due date or subject.\nStep 2: Click on an assignment to download attachments.\nStep 3: Mark tasks as \"Completed\" to keep track of your workload."
-        }
+    student: {
+      cat_grades: 'Meine Noten',
+      cat_attendance: 'Meine Anwesenheit',
+      cat_homework: 'Hausaufgaben',
+      cat_documents: 'Dokumente & Zeugnis',
+      cat_settings: 'Profil & Einstellungen',
+      q1: 'Wie sehe ich meine Noten und Fächerdurchschnitte?',
+      a1: 'Klicken Sie auf "Meine Noten". Sie sehen eine detaillierte Tabelle mit allen schriftlichen und mündlichen Noten sowie den gewichteten Durchschnitten.',
+      q2: 'Wie funktioniert der Notendurchschnitts-Simulator?',
+      a2: 'Klicken Sie unter "Meine Noten" auf "Durchschnittssimulator". Geben Sie hypothetische Noten für kommende Prüfungen ein, um den Notenspiegel zu berechnen.',
+      q3: 'Wie verfolge ich meine Fehlstunden?',
+      a3: 'Unter "Meine Anwesenheit" zeigen Widgets Ihre gesamten Fehlstunden und den Prozentsatz im Vergleich zur Jahresgrenze an.',
+      q4: 'Wo finde ich meine zugewiesenen Hausaufgaben?',
+      a4: 'In "Hausaufgaben" oder im Dashboard-Widget. Sortiert nach Fälligkeitsdatum mit Anhängen zum Download.',
+      q5: 'Wie lade ich mein Halbjahres- oder Jahreszeugnis herunter?',
+      a5: 'Gehen Sie zu "Zeugnis & Dokumente", wählen Sie den Zeitraum und klicken Sie auf "PDF-Zeugnis herunterladen".',
+      q6: 'Wie sehe ich meine absolvierten PCTO-Praktikumsstunden?',
+      a6: 'Öffnen Sie "PCTO & Portfolio". Hier sehen Sie die absolvierten Stunden, Partnerunternehmen und Tutorenbewertungen.',
+      q7: 'Wie antworte ich auf ein Rundschreiben oder eine Umfrage?',
+      a7: 'Öffnen Sie "Mitteilungen" und wählen Sie das Rundschreiben. Bei Bestätigungspflicht auf "Gelesen bestätigen" klicken.',
+      q8: 'Wie aktiviere ich die OpenDyslexic-Schriftart?',
+      a8: 'Klicken Sie auf das Barrierefreiheits-Symbol oder gehen Sie zu "Profil" → "Barrierefreiheit".',
+      q9: 'Was tue ich, wenn ich mein Passwort vergessen habe?',
+      a9: 'Klicken Sie auf der Anmeldeseite auf "Passwort vergessen?" und geben Sie Ihre E-Mail-Adresse ein.',
+      q10: 'Wie nutze ich die Schnellsuche Strg+K?',
+      a10: 'Drücken Sie Strg+K (oder Cmd+K), um die universelle Suche zu öffnen und sofort zu Fächern, Hausaufgaben oder Menüs zu navigieren.'
     },
-    "parent": {
-        "monitoring": {
-            "title": "Monitoring Your Children",
-            "desc": "Follow academic performance, daily attendance, and notices in real time.",
-            "content": "Access comprehensive academic information for all enrolled children.\n\nStep 1: Select your child from the top switcher.\nStep 2: Check daily attendance and real-time grade notifications.\nStep 3: Read teacher comments on individual assessments.\nStep 4: View academic progress charts.\n\nTip: Configure notification thresholds to receive alerts if grades drop."
-        },
-        "meetings": {
-            "title": "Booking Teacher Meetings",
-            "desc": "Schedule and manage conference appointments with teachers.",
-            "content": "Easily book one-on-one parent-teacher conferences.\n\nStep 1: Open \"Meetings\" and select the desired teacher.\nStep 2: Pick an available green time slot on the calendar.\nStep 3: Confirm booking to receive an email reminder.\n\nWarning: Cancellations should be submitted at least 2 hours in advance."
-        }
+    parent: {
+      cat_monitoring: 'Kinder-Überwachung',
+      cat_communications: 'Mitteilungen',
+      cat_meetings: 'Sprechstunden',
+      cat_documents: 'Dokumente & Zahlungen',
+      cat_settings: 'Profil & Einstellungen',
+      q1: 'Wie wechsele ich zwischen mehreren Kindern?',
+      a1: 'Verwenden Sie das Auswahlmenü in der Kopfzeile oder im Dashboard, um sofort zwischen Ihren angemeldeten Kindern zu wechseln.',
+      q2: 'Erhalte ich Echtzeit-Push-Benachrichtigungen?',
+      a2: 'Ja! Sofortige Push-Benachrichtigungen und E-Mails informieren über neue Noten, Abwesenheiten oder Verspätungen.',
+      q3: 'Wie buche ich einen Elterngesprächstermin?',
+      a3: 'Unter "Gespräche" → Lehrkraft wählen → grünen Zeitfenster-Slot im Kalender auswählen → "Buchen".',
+      q4: 'Wie bezahle ich Schulgebühren über PagoPA?',
+      a4: 'Gehen Sie zu "PagoPA-Zahlungen". Wählen Sie den Zahlungsbeleg aus und bezahlen Sie direkt online oder per QR-Code.',
+      q5: 'Wie reiche ich eine Online-Entschuldigung ein?',
+      a5: 'Unter "Anwesenheit & Entschuldigungen" die rote Abwesenheit wählen → "Entschuldigen" → Grund wählen und mit PIN bestätigen.',
+      q6: 'Wie lade ich das Zeugnis meines Kindes herunter?',
+      a6: 'Kind auswählen → "Zeugnis" → Zeitraum wählen → "PDF-Zeugnis herunterladen".',
+      q7: 'Wo finde ich Rundschreiben mit Bestätigungspflicht?',
+      a7: 'In "Mitteilungen". Rundschreiben mit Bestätigung weisen eine Hervorhebung auf: "Kenntnisnahme bestätigen" klicken.',
+      q8: 'Wie kontaktiere ich das Schulsekretariat?',
+      a8: 'Unter "Support & FAQ" oder "Support kontaktieren" ein Ticket direkt an die Verwaltung senden.',
+      q9: 'Kann ein zweiter Erziehungsberechtigter Zugang erhalten?',
+      a9: 'Das Sekretariat kann mehrere Elternkonten mit dem Schüler verknüpfen. Jeder Erziehungsberechtigte erhält eigene Anmeldedaten.',
+      q10: 'Was passiert im Offline-Modus der App?',
+      a10: 'Die App zeigt gespeicherte Daten an. Offline-Formulare werden lokal zwischengespeichert und bei Verbindung synchronisiert.'
     },
-    "secretary": {
-        "students": {
-            "title": "Student Registry Management",
-            "desc": "Search, manage, and update student profiles and demographic records.",
-            "content": "The student registry is the central database for all enrolled learners.\n\nStep 1: Use the global search bar (name, tax code, class).\nStep 2: Click a record to open the full student dossier.\nStep 3: Edit contact information, enrollment status, or guardian links.\nStep 4: Export filtered data to Excel or CSV formats."
-        },
-        "certificates": {
-            "title": "Certificate Generation",
-            "desc": "Issue official school documents, attendance proofs, and certificates.",
-            "content": "Produce signed school documents in seconds.\n\nStep 1: Search for the student record.\nStep 2: Go to \"Certificates\" → \"Generate\".\nStep 3: Select certificate template (Enrollment, Attendance, Transcripts).\nStep 4: Preview, apply digital stamp, and print or email directly."
-        }
+    secretary: {
+      cat_students: 'Schülerkartei',
+      cat_classes: 'Klassenverwaltung',
+      cat_documents: 'Zertifikate & Dokumente',
+      cat_timetable: 'Stundenplan & Vertretungen',
+      cat_reports: 'Berichte & Exporte',
+      q1: 'Wie suche ich schnell nach einem Schüler?',
+      a1: 'Nutzen Sie die Universalsuche im Header oder auf der Seite "Schüler". Suche nach Name, Steuernummer oder Klasse.',
+      q2: 'Wie erstelle ich eine offizielle Schulbescheinigung?',
+      a2: 'Unter "Zertifikate & Dokumente" → Schüler wählen → Typ auswählen → "PDF generieren". Das Dokument enthält ein digitales Siegel.',
+      q3: 'Wie verwalte ich tägliche Vertretungen?',
+      a3: 'Gehen Sie zu "Stundenplan & Vertretungen" → Datum wählen → abwesenden Lehrer auswählen. Das System schlägt freie Lehrkräfte vor.',
+      q4: 'Wie exportiere ich Daten für Ministeriums-Portale (SIDI)?',
+      a4: 'Unter "Berichte & Statistiken" → "Ministeriums-Export" → Zeitraum und Format konfigurieren.',
+      q5: 'Wie erstelle ich Konten für neue Schüler oder Eltern?',
+      a5: 'Gehen Sie zu "Benutzerverwaltung" → "Neuer Benutzer" → Daten eingeben und Rolle zuweisen. Eine Einladungs-E-Mail wird gesendet.',
+      q6: 'Wie konfiguriere ich neue Klassen und Fächer für das neue Schuljahr?',
+      a6: 'In "Klassenverwaltung" neue Klassen anlegen, versetzte Schüler importieren und Fachlehrer zuweisen.',
+      q7: 'Wie veröffentliche ich ein offizielles Rundschreiben?',
+      a7: 'Unter "Mitteilungen & Schwarzes Brett" → "Neues Rundschreiben" → Empfänger wählen → "Veröffentlichen".',
+      q8: 'Wie verwalte ich Schulbücher pro Klasse?',
+      a8: 'In "Schulbücher" Klasse und Fach wählen → ISBN-Code, Titel, Verlag und Preis eingeben.',
+      q9: 'Wie prüfe ich ausstehende PagoPA-Zahlungen?',
+      a9: 'Öffnen Sie "Finanzen & PagoPA", um den Zahlungsstatus einzusehen und Zahlungserinnerungen zu senden.',
+      q10: 'Wie widerrufe ich ein fehlerhaftes Dokumentenprotokoll?',
+      a10: 'Im Dokumentenarchiv das Protokoll auswählen → "Mit Begründung widerrufen". Der Widerruf wird im Audit-Log vermerkt.'
     },
-    "admin": {
-        "monitoring": {
-            "title": "System & Health Monitoring",
-            "desc": "Monitor platform uptime, API response times, and server performance.",
-            "content": "Real-time telemetry and health monitoring across all platform services.\n\nStep 1: Inspect server CPU, RAM, and active session count.\nStep 2: Monitor API throughput and error rates over the last 24 hours.\nStep 3: Configure alert thresholds for proactive notifications.\n\nWarning: Use Maintenance Mode during scheduled platform updates."
-        },
-        "users": {
-            "title": "User & Access Management",
-            "desc": "Manage user accounts, RBAC permissions, and authentication policies.",
-            "content": "Centralized user provisioning and security management.\n\nStep 1: Search users by role, institution, or active status.\nStep 2: Create single accounts or use the bulk CSV/Excel import tool.\nStep 3: Enforce 2FA/MFA and manage password resets.\nStep 4: Review immutable audit logs for compliance auditing."
-        }
+    admin: {
+      cat_monitoring: 'Systemüberwachung',
+      cat_users: 'Benutzerverwaltung',
+      cat_schools: 'Schulstandorte',
+      cat_security: 'Sicherheit & Auth',
+      cat_analytics: 'Analysen & Schulabbruch',
+      q1: 'Wie überwache ich Systemleistung und Datenbank-Health?',
+      a1: 'In "Systemüberwachung" sehen Sie Live-Diagramme für CPU, Arbeitsspeicher, Datenbank-Verbindungen und API-Latenzzeiten.',
+      q2: 'Wie füge ich einen neuen Schulstandort hinzu?',
+      a2: 'Gehen Sie zu "Schulverwaltung" → "Schule hinzufügen". Mechanografischen Code, Name, Adresse und PEC-E-Mail eingeben.',
+      q3: 'Wie erzwinge ich Passwort-Resets oder 2FA für Mitarbeiter?',
+      a3: 'In "Benutzerverwaltung" das Konto wählen → "Passwort-Reset erzwingen" oder "2FA erzwingen" auswählen.',
+      q4: 'Wie sehe ich das unveränderliche Audit-Log ein?',
+      a4: 'Unter "Audit-Logs & Compliance". Filtern Sie Ereignisse nach Benutzer, Aktionstyp, Datum und IP-Adresse.',
+      q5: 'Wie steuere ich Feature-Flags für Plattform-Funktionen?',
+      a5: 'In "Feature-Flags & Module" einzelne Funktionen (PagoPA, Google SSO, Matrix-Ansicht) pro Schule oder global aktivieren.',
+      q6: 'Wie analysiere ich das Schulabbruch-Risiko?',
+      a6: 'Öffnen Sie "Analytics & BI". Algorithmen markieren Schüler mit mehr als 20% Fehlzeiten oder Notendurchschnitt unter 6,0.',
+      q7: 'Wie konfiguriere ich Single Sign-On (SSO) mit Google & Microsoft?',
+      a7: 'Unter "Integrationen & SSO" die OAuth2 Client ID und den Secret Key eintragen.',
+      q8: 'Wie führe ich manuelle Datenbank-Backups durch?',
+      a8: 'In "Datenbank & Backups" einen sofortigen PostgreSQL-Dump auslösen oder automatisierte S3-Backups konfigurieren.',
+      q9: 'Wie sehe ich die vollständige RBAC-Rechtematrix ein?',
+      a9: 'Gehen Sie zu "Rollen & Berechtigungen", um die interaktive Matrix aller 9 Rollen einzusehen.',
+      q10: 'Wie aktiviere ich den Wartungsmodus der Plattform?',
+      a10: 'Unter "Systemeinstellungen" den "Wartungsmodus" aktivieren. Benutzern wird ein Informationsbanner angezeigt.'
     }
-}
+  },
+  guideCenter: {
+    title: "Hilfe- & Wissenszentrum",
+    subtitle: "Ausführliche Anleitungen für jeden Bereich des elektronischen Registers",
+    search: "In den Anleitungen suchen...",
+    noResults: "Keine Anleitungen gefunden für",
+    readingTime: "Min. Lesezeit",
+    step: "Schritt",
+    tip: "Tipp",
+    warning: "Achtung",
+    shortcut: "Tastenkombination",
+    teacher: {
+      dashboard: { title: "Lehrer-Dashboard", desc: "Übersicht über den Tagesablauf, Benachrichtigungen und Schnellaktionen.", content: "Das Lehrer-Dashboard bietet eine vollständige Übersicht über Ihren Tag. Widgets zeigen die heutigen Stunden, Raumzeiten und Mitteilungen an.\n\nSchritt 1: Passen Sie die Dashboard-Widgets durch Ziehen an.\nSchritt 2: Klicken Sie auf eine Klasse, um das Klassenbuch direkt zu öffnen.\nSchritt 3: Filtern Sie Benachrichtigungen nach Dringlichkeit.\n\nTipp: Aktivieren Sie Prioritäts-Alarme für wichtige Mitteilungen." },
+      attendance: { title: "Klassenbuch & Anwesenheit", desc: "Schnelle und präzise Erfassung von Anwesenheit, Fehlzeiten und Verspätungen.", content: "Das Anwesenheitsregister lädt automatisch die Schülerliste für die aktuelle Stunde.\n\nSchritt 1: Klicken Sie auf den Namen eines Schülers, um den Status zu ändern (Anwesend, Abwesend, Verspätet).\nSchritt 2: Fügen Sie optionale Entschuldigungsvermerke hinzu.\nSchritt 3: Klicken Sie auf \"Unterricht signieren\", um die Stunde digital zu unterschreiben.\nSchritt 4: Eltern abwesender Schüler werden automatisch benachrichtigt.\n\nTastenkombination: Drücken Sie Strg+Eingabe, um die Anwesenheit schnell zu speichern." },
+      grades: { title: "Notenverwaltung & Matrix-Ansicht", desc: "Eingabe schriftlicher und mündlicher Noten mit schneller Tastaturansicht.", content: "Das Notenbuch bietet Standardansicht und die schnelle Matrix-Tastaturansicht.\n\nSchritt 1: Wählen Sie Klasse und Fach aus.\nSchritt 2: Aktivieren Sie die Matrix-Ansicht, um mit TAB und Pfeiltasten zu navigieren.\nSchritt 3: Tippen Sie die Note (1-10) ein und drücken Sie ENTER.\nSchritt 4: Fügen Sie optionale Kommentare hinzu.\nSchritt 5: Fächerdurchschnitte werden sofort neu berechnet.\n\nAchtung: Veröffentlichte Noten sind für Schüler und Eltern innerhalb von Sekunden sichtbar." },
+      agenda: { title: "Agenda & Hausaufgaben", desc: "Planung von Prüfungen, Aufgaben und gemeinsamen Aktivitäten.", content: "Die Lehrer-Agenda wird automatisch mit Schülern und Eltern synchronisiert.\n\nSchritt 1: Klicken Sie im Kalender auf ein Datum.\nSchritt 2: Wählen Sie den Ereignistyp: Hausaufgabe, Prüfung, Ausflug.\nSchritt 3: Fach wählen, Beschreibung eingeben und Dateien anhängen.\nSchritt 4: Das System warnt Sie, wenn an einem Tag bereits mehr als 2 Prüfungen eingetragen sind.\n\nTipp: Nutzen Sie die Wochenansicht, um Überschneidungen zu vermeiden." },
+      communications: { title: "Mitteilungen & Rundschreiben", desc: "Strukturierte Nachrichten an Klassen, Eltern und Kollegium.", content: "Senden Sie Ankündigungen über Nachrichten, Rundschreiben oder Eilmitteilungen.\n\nSchritt 1: Navigieren Sie zu \"Mitteilungen\" → \"Neue Mitteilung\".\nSchritt 2: Kanal und Empfängerliste auswählen.\nSchritt 3: Formatieren Sie die Nachricht im Rich-Text-Editor.\nSchritt 4: Sofort senden oder für spätere Veröffentlichung planen.\n\nAchtung: Eilmitteilungen lösen Push-Benachrichtigungen aus." },
+      meetings: { title: "Elterngespräche", desc: "Verwaltung von Sprechzeiten und Buchungsterminen.", content: "Verwalten Sie wöchentliche Sprechstunden und Einzeltermine.\n\nSchritt 1: Gehen Sie zu \"Gespräche\" → \"Verfügbarkeit festlegen\".\nSchritt 2: Wochentage, Zeitfenster und Slot-Dauer (15, 20, 30 Min.) definieren.\nSchritt 3: Eltern buchen online; Sie erhalten eine automatische Bestätigung.\nSchritt 4: Überprüfen Sie vor dem Gespräch die Notenübersicht des Schülers.\n\nTipp: Aktivieren Sie den integrierten Videoanruf-Link." },
+      scrutiny: { title: "Notenkonferenz & Scrutiny", desc: "Ablauf für Notenvorschläge, Betragen und Konferenzprotokolle.", content: "Die Konferenzansicht konsolidiert die Notenvorschläge aller Fachlehrer für das Halbjahr oder Schuljahresende.\n\nSchritt 1: Klasse und Konferenzperiode auswählen.\nSchritt 2: Vorschlagsdurchschnitt prüfen und Endnote eintragen.\nSchritt 3: Betragensnote und Gesamturteil eingeben.\nSchritt 4: Als Klassenleiter den Validierungsstatus prüfen und die Notentabelle sperren.\nSchritt 5: Konferenzprotokoll als PDF exportieren und drucken.\n\nAchtung: Nach der Sperrung durch den Klassenleiter erfordern Änderungen eine Freischaltung." },
+      pdp: { title: "Förderplan (PDP / PEI)", desc: "Erstellung und Anwendung von ausgleichenden und befreitenden Maßnahmen.", content: "Das PDP-Modul ermöglicht der Klassenkonferenz die Erstellung individueller Förderpläne.\n\nSchritt 1: Öffnen Sie \"PDP / PEI\" im Klassenmenü.\nSchritt 2: Schüler auswählen und Ausgleichsmaßnahmen (Taschenrechner, Formeln) konfigurieren.\nSchritt 3: Entwurf speichern und den Eltern zur digitalen Bestätigung senden.\nSchritt 4: Aktive Maßnahmen werden bei der täglichen Noteneingabe grafisch angezeigt.\n\nTipp: Nutzen Sie vorgefertigte Rubriken zur schnelleren Erstellung." }
+    },
+    student: {
+      dashboard: { title: "Schüler-Dashboard", desc: "Tägliches Zentrum für Fristen, Noten und Stundenpläne.", content: "Das Schüler-Dashboard priorisiert dringende Aufgaben und Prüfungen.\n\nSchritt 1: Prüfen Sie den heutigen Stundenplan und Unterrichtsräume.\nSchritt 2: Prüfen Sie heutige Fälligkeiten und morgige Prüfungen.\nSchritt 3: Überwachen Sie Ihren Gesamtdurchschnitt.\n\nTipp: Installieren Sie die PWA auf Ihrem Smartphone für Push-Alarme." },
+      grades: { title: "Meine Noten & Leistungen", desc: "Verfolgen Sie Ihre Noten, Durchschnitte und Verläufe.", content: "Alle Bewertungen geordnet nach Fächern und Halbjahren.\n\nSchritt 1: Fach auswählen, um detailliertes Lehrer-Feedback zu lesen.\nSchritt 2: Entwicklungslinie zur Leistungsentwicklung prüfen.\nSchritt 3: Zwischen Halbjahren wechseln.\nSchritt 4: Vollständiges PDF-Transkript herunterladen." },
+      homework: { title: "Hausaufgaben & Fristen", desc: "Organisieren Sie Ihre Aufgaben, Downloads und Abgabetermine.", content: "Behalten Sie alle Aufgaben und Lernmaterialien im Blick.\n\nSchritt 1: Aufgaben nach Abgabedatum oder Fach filtern.\nSchritt 2: Aufgabe anklicken, um Anhänge herunterzuladen.\nSchritt 3: Aufgaben als \"Erledigt\" markieren." },
+      attendance: { title: "Meine Anwesenheit", desc: "Übersicht über Fehlzeiten, Verspätungen und Entschuldigungsstatus.", content: "Gesamtes Fehlzeitenkonto und Jahresgrenze einsehen.\n\nSchritt 1: Öffnen Sie \"Meine Anwesenheit\".\nSchritt 2: Gesamte Fehlstunden im oberen Widget prüfen.\nSchritt 3: Monatskalender für Abwesenheiten (rot) und Verspätungen (orange) prüfen.\nSchritt 4: Entschuldigungsstatus der Eltern prüfen." },
+      documents: { title: "Zeugnis & Dokumente", desc: "Zugriff und Download digitaler Zeugnisse und Bescheinigungen.", content: "Offizielle Schulunterlagen der Schulleitung abrufen.\n\nSchritt 1: Gehen Sie zu \"Zeugnis & Dokumente\".\nSchritt 2: Schuljahr und Periode auswählen.\nSchritt 3: \"Vorschau Zeugnis\" zum Online-Lesen anklicken.\nSchritt 4: \"PDF herunterladen\" zum Speichern des signierten Dokuments anklicken." },
+      simulator: { title: "Notendurchschnitts-Simulator", desc: "Berechnen Sie benötigte Noten in kommenden Prüfungen für Wunschdurchschnitt.", content: "Der Notensimulator liefert mathematische Prognosen für Prüfungen.\n\nSchritt 1: Ziel-Fach auswählen.\nSchritt 2: Wunschdurchschnitt eingeben (z. B. 2,0).\nSchritt 3: Das System berechnet die genau benötigte Mindestnote." },
+      pcto: { title: "PCTO & Praktikums-Portfolio", desc: "Praktikumsstunden und Kompetenzzertifikate verwalten.", content: "Verfolgen Sie Ihre absolvierten Praktikumsstunden in der Oberstufe.\n\nSchritt 1: Öffnen Sie \"PCTO & Portfolio\".\nSchritt 2: Fortschrittsbalken im Vergleich zur Pflichtstundenzahl prüfen.\nSchritt 3: Partnerunternehmens-Details einsehen und Sicherheitszertifikate herunterladen." }
+    },
+    parent: {
+      monitoring: { title: "Kinder-Überwachung", desc: "Schulische Leistungen, Anwesenheit und Mitteilungen in Echtzeit verfolgen.", content: "Zugriff auf umfassende schulische Informationen aller angemeldeten Kinder.\n\nSchritt 1: Kind im oberen Menü auswählen.\nSchritt 2: Tägliche Anwesenheit und Noten-Benachrichtigungen prüfen.\nSchritt 3: Lehrer-Kommentare zu Prüfungen lesen.\nSchritt 4: Leistungsdiagramme einsehen.\n\nTipp: Benachrichtigungsschwellen festlegen, um Alarme bei Notenabfall zu erhalten." },
+      meetings: { title: "Sprechstunden buchen", desc: "Gesprächstermine mit Lehrkräften vereinbaren und verwalten.", content: "Buchen Sie ganz einfach Einzeltermine mit Lehrkräften.\n\nSchritt 1: Öffnen Sie \"Gespräche\" und wählen Sie die Lehrkraft.\nSchritt 2: Wählen Sie einen grünen freien Slot im Kalender.\nSchritt 3: Buchung bestätigen, um E-Mail-Erinnerung zu erhalten.\n\nAchtung: Absagen sollten mindestens 2 Stunden im Voraus eingereicht werden." },
+      communications: { title: "Mitteilungen & Schwarzes Brett", desc: "Rundschreiben, Eilmitteilungen und Klassenhinweise lesen.", content: "Alle offiziellen Mitteilungen der Schulleitung an einem Ort.\n\nSchritt 1: Öffnen Sie \"Mitteilungen\".\nSchritt 2: Nach Kategorie filtern (Schulleitung, Lehrer, Klasse).\nSchritt 3: Text lesen und PDF-Anhänge herunterladen.\nSchritt 4: Bei Aufforderung \"Zur Kenntnis genommen\" anklicken." },
+      pagopa: { title: "Schulzahlungen über PagoPA", desc: "Schulgebühren, Ausflüge und Beiträge online verwalten und bezahlen.", content: "Integriertes PagoPA-System für sichere elektronische Zahlungen.\n\nSchritt 1: Gehen Sie zu \"PagoPA-Zahlungen\".\nSchritt 2: Offene Zahlungsaufforderungen prüfen.\nSchritt 3: \"Jetzt bezahlen\" für Kreditkarte, PayPal oder Giropay anklicken.\nSchritt 4: Oder QR-Zahlungsbeleg zum Bezahlen in der Bank herunterladen." },
+      documents: { title: "Dokumente & Elternformulare", desc: "Zeugnisse, Bescheinigungen und Schulformulare abrufen.", content: "Laden Sie offizielle Dokumente direkt auf Ihr Gerät herunter.\n\nSchritt 1: Gehen Sie zu \"Dokumente & Zeugnis\".\nSchritt 2: Quartalszeugnisse als PDF herunterladen.\nSchritt 3: Ausflugserlaubnisse oder Medikamentenformulare ausfüllen und digital signieren." },
+      justifications: { title: "Online-Entschuldigungen", desc: "Digitale Entschuldigungen für Fehlzeiten und Verspätungen einreichen.", content: "Keine Papierhefte nötig: Fehlzeiten sicher mit PIN oder OTP entschuldigen.\n\nSchritt 1: Öffnen Sie \"Anwesenheit & Entschuldigungen\".\nSchritt 2: Unentschuldigte Fehlzeiten einsehen.\nSchritt 3: Neben dem Datum auf \"Entschuldigen\" klicken, Grund wählen und mit PIN signieren." }
+    },
+    secretary: {
+      students: { title: "Schülerkartei-Verwaltung", desc: "Schülerprofile und Stammdaten suchen, verwalten und aktualisieren.", content: "Die Schülerkartei ist die zentrale Datenbank aller angemeldeten Schüler.\n\nSchritt 1: Nutzen Sie die Universalsuche (Name, Steuernummer, Klasse).\nSchritt 2: Datensatz anklicken, um die Schülerakte zu öffnen.\nSchritt 3: Kontaktdaten, Anmeldestatus oder Elternverknüpfungen bearbeiten.\nSchritt 4: Gefilterte Daten nach Excel oder CSV exportieren." },
+      classes: { title: "Klassen- & Sektionsorganisation", desc: "Klassen anlegen, Fächer zuordnen und Lehrkräfte zuweisen.", content: "Klassenstruktur und Lehrplanzuordnungen für das Schuljahr verwalten.\n\nSchritt 1: Öffnen Sie \"Klassenverwaltung\".\nSchritt 2: \"Neue Klasse\" anklicken, um eine Sektion hinzuzufügen.\nSchritt 3: Fächer zuordnen und Fachlehrer verknüpfen.\nSchritt 4: Klassenleiter und Schriftführer bestimmen." },
+      certificates: { title: "Zertifikatserstellung", desc: "Offizielle Schulbescheinigungen und Zeugnisse ausstellen.", content: "Erstellen Sie signierte Schuldokumente in Sekundenschnelle.\n\nSchritt 1: Schülerdatensatz suchen.\nSchritt 2: Gehen Sie zu \"Zertifikate\" → \"Generieren\".\nSchritt 3: Vorlage auswählen (Schulbescheinigung, Anwesenheit, Notenspiegel).\nSchritt 4: Vorschau prüfen, digitales Siegel aufbringen und drucken oder senden." },
+      timetable: { title: "Stundenplan & Vertretungsplanung", desc: "Wochenplan konfigurieren und tägliche Vertretungen zuweisen.", content: "Stundenplan-Raster verwalten und Lehrerabwesenheiten abdecken.\n\nSchritt 1: Öffnen Sie \"Stundenplan & Vertretungen\".\nSchritt 2: Unterichtszeiten im Stundenplan eintragen.\nSchritt 3: Bei Abwesenheiten schlägt das System freie Lehrkräfte vor.\nSchritt 4: Vertretung zuweisen und \"Lehrer benachrichtigen\" anklicken." },
+      communications: { title: "Rundschreiben-Verwaltung", desc: "Offizielle Rundschreiben veröffentlichen und Lesebestätigungen überwachen.", content: "Offizielle Mitteilungen an Personal, Eltern und Schüler veröffentlichen.\n\nSchritt 1: Öffnen Sie \"Mitteilungen & Schwarzes Brett\".\nSchritt 2: \"Neues Rundschreiben\" anklicken.\nSchritt 3: Protokollnummer, Titel und Text eingeben.\nSchritt 4: Empfängergruppen und Bestätigungspflicht festlegen." },
+      reports: { title: "Berichte & Ministeriums-Export (SIDI)", desc: "Statistiken, Anwesenheitsberichte und SIDI-Datensätze exportieren.", content: "Aggregierte Statistikberichte und SIDI-Exportdateien erstellen.\n\nSchritt 1: Öffnen Sie \"Berichte & Statistiken\".\nSchritt 2: Berichtstyp auswählen (Anwesenheitsprüfung, Scrutiny-Ergebnisse, Gemeindelisten).\nSchritt 3: Exportformat wählen: Excel, CSV, PDF oder SIDI XML." }
+    },
+    admin: {
+      monitoring: { title: "System- & Health-Überwachung", desc: "Plattform-Uptime, API-Antwortzeiten und Serverleistung überwachen.", content: "Echtzeit-Telemetrie und Systemzustand aller Dienste.\n\nSchritt 1: Server-CPU, Arbeitsspeicher und aktive Sitzungen prüfen.\nSchritt 2: API-Durchsatz und Fehlerraten der letzten 24 Stunden überwachen.\nSchritt 3: Schwellenwerte für Benachrichtigungen konfigurieren.\n\nAchtung: Nutzen Sie den Wartungsmodus bei geplanten Updates." },
+      users: { title: "Benutzer- & Zugriffsverwaltung", desc: "Benutzerkonten, RBAC-Rechte und Authentifizierungsrichtlinien verwalten.", content: "Zentrale Benutzerbereitstellung und Sicherheitsverwaltung.\n\nSchritt 1: Benutzer nach Rolle, Schule oder Status suchen.\nSchritt 2: Einzelkonten anlegen oder Massen-CSV-Import nutzen.\nSchritt 3: 2FA/MFA erzwingen und Passwort-Resets verwalten.\nSchritt 4: Unveränderbare Audit-Logs zur Konformitätsprüfung einsehen." },
+      schools: { title: "Schulstandorte & Filialen", desc: "Schulfilialen, mechanografische Codes und Netzwerkparameter konfigurieren.", content: "Multi-Tenant-Institutionsstruktur verwalten.\n\nSchritt 1: Öffnen Sie \"Schulverwaltung\".\nSchritt 2: Standorte hinzufügen (Hauptgebäude, Filiale, Grundschule, Sekundarschule).\nSchritt 3: Offiziellen mechanografischen Code und Kontaktdaten eingeben." },
+      security: { title: "Sicherheits- & Auth-Richtlinien", desc: "Passwortregeln, Session-Timeouts, 2FA und Rate Limiting einstellen.", content: "Sicherheitsregeln gemäß AgID- und DSGVO-Standards festlegen.\n\nSchritt 1: Öffnen Sie \"Sicherheit & Auth\".\nSchritt 2: Mindestlänge für Passwörter und Ablaufintervall festlegen.\nSchritt 3: 2FA-Pflicht für Verwaltungs- und Lehrpersonal erzwingen." },
+      analytics: { title: "Analysen & Prävention von Schulabbruch", desc: "Prädiktive Analysen zu Schulabbruch-Risiken und chronischen Fehlzeiten.", content: "BI-Tools nutzen, um gefährdete Schüler frühzeitig zu identifizieren.\n\nSchritt 1: Öffnen Sie \"Analytics & BI\".\nSchritt 2: Fehlzeiten-Heatmaps nach Klasse und Fach prüfen.\nSchritt 3: Kriterien festlegen (z. B. Fehlzeiten > 20% + Schnitt < 5,5)." },
+      integrations: { title: "E-Learning-Integrationen & SSO", desc: "Mit Google Classroom, Microsoft Teams und SSO-Anbietern synchronisieren.", content: "Elektronisches Register mit Cloud-LMS-Plattformen verbinden.\n\nSchritt 1: Öffnen Sie \"Integrationen & SSO\".\nSchritt 2: Modul Google Workspace oder Microsoft 365 aktivieren.\nSchritt 3: OAuth2 Client ID und Secret Key eingeben." },
+      audit: { title: "Audit-Log & DSGVO-Rückverfolgbarkeit", desc: "Unveränderliches Systemprotokoll zur Verfolgung aller Zugriffe und Bearbeitungen.", content: "Vollständige Datenrückverfolgbarkeit gemäß DSGVO 2016/679 gewährleisten.\n\nSchritt 1: Öffnen Sie \"Audit-Logs & Rückverfolgbarkeit\".\nSchritt 2: Aktivitätsprotokoll einsehen: Zeitstempel, Benutzer, Rolle, IP, Aktion.\nSchritt 3: Verschlüsselte PDF-Logs für Prüfungen exportieren." }
+    }
+  }
 }

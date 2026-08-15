@@ -255,391 +255,207 @@ export default {
     }
   },
   help: {
-    title: "Центр допомоги",
-    subtitle: "Посібники та навчальні матеріали з електронного журналу",
-    searchPlaceholder: "Пошук у посібнику...",
-    noResults: "Статті не знайдено для",
-    categories: "Категорії",
-    allTopics: "Усі теми",
-    restartTour: "Перезапустити екскурсію",
-    openHelp: "Відкрити посібник",
-    needHelp: "Потрібна допомога?",
-    contactSupport: "Зв'язатися з підтримкою",
-    fabTooltip: "Допомога та посібник",
-    new: "Нове"
-  }
-
-,
-  onboardingExtra: {
-    "openGuide": "Open Full Guide",
-    "viewAllFeatures": "Discover all features",
-    "completionTitle": "You're ready! 🎉",
-    "completionDesc": "You've completed the tour. You can access the full guide at any time from the ? button in the top bar.",
-    "teacher": {
-        "step7_title": "Digital Register & Signatures",
-        "step7_desc": "Digitally sign each lesson with a single click. The register automatically tracks lesson topics, teaching hours, and private notes.",
-        "step7_bullets": [
-            "Digital lesson signature",
-            "Lesson topics",
-            "Private notes",
-            "Hours log"
-        ],
-        "step8_title": "Competencies & Learning Units",
-        "step8_desc": "Assess student competencies according to EU descriptors, manage Learning Units (UDA) and annual work plans.",
-        "step8_bullets": [
-            "EU Competencies",
-            "Learning Units (UDA)",
-            "Annual work plan",
-            "Evaluation rubrics"
-        ],
-        "step1_bullets": [
-            "Today's lessons",
-            "Recent notifications",
-            "Quick shortcuts",
-            "Class overview"
-        ],
-        "step2_bullets": [
-            "Attendance register",
-            "Lesson topics",
-            "Digital signature",
-            "Absence management"
-        ],
-        "step3_bullets": [
-            "Oral & written grades",
-            "Class average",
-            "Distribution chart",
-            "Export tables"
-        ],
-        "step4_bullets": [
-            "Homework & tests",
-            "Activity calendar",
-            "Class announcements",
-            "Parent notices"
-        ],
-        "step5_bullets": [
-            "Meeting availability",
-            "Parent bookings",
-            "Video conferences",
-            "Meeting history"
-        ],
-        "step6_bullets": [
-            "Theme & language",
-            "Push notifications",
-            "Password management",
-            "Public profile"
-        ]
+    title: 'Центр допомоги та знань',
+    subtitle: 'Посібники та інструкції з користування електронним журналом',
+    searchPlaceholder: 'Пошук у довідці...',
+    noResults: 'Статей не знайдено за запитом',
+    categories: 'Категорії',
+    allTopics: 'Усі теми',
+    restartTour: 'Перезапустити тур',
+    openHelp: 'Відкрити посібник',
+    needHelp: 'Потрібна допомога?',
+    contactSupport: 'Зв’язатися з підтримкою',
+    fabTooltip: 'Довідка та посібник',
+    new: 'Нове',
+    teacher: {
+      cat_register: 'Класний журнал',
+      cat_grades: 'Управління оцінками',
+      cat_attendance: 'Відвідуваність',
+      cat_agenda: 'Щоденник та розклад',
+      cat_settings: 'Налаштування',
+      q1: 'Як відмітити відвідуваність на уроці?',
+      a1: 'Перейдіть у "Мої класи" → виберіть клас → вкладка "Відвідуваність". Натисніть П (Присутній), Н (Відсутній), С (Запізнення) для кожного учня. Натисніть "Підписати урок".',
+      q2: 'Як використовувати режим сітки Matrix View для виставити оцінок з клавіатури?',
+      a2: 'У розділі "Оцінки" виберіть клас і предмет, увімкніть режим Matrix View. Переміщуйтесь клавішами TAB та СТРІЛКАМИ, вводьте бали і тисніть ENTER.',
+      q3: 'Як створити домашнє завдання або контрольну у щоденнику?',
+      a3: 'У "Щоденнику" натисніть на дату → "Додати подію". Виберіть тип (Домашнє завдання, Контрольна), вкажіть предмет та збережіть.',
+      q4: 'Як відправити термінове оголошення батькам?',
+      a4: 'Перейдіть у "Повідомлення" → "Нове повідомлення". Виберіть отримувачів, позначте "Потрібне підтвердження прочитання" та відправте.',
+      q5: 'Як налаштувати години прийому для зустрічей з батьками?',
+      a5: 'У "Зустрічі" → "Налаштувати доступність". Задайте дні тижня, часові слоти та тривалість (15, 20 або 30 хв).',
+      q6: 'Як отримати доступ до підсумкового оцінювання (Scrutinio)?',
+      a6: 'Якщо ви класний керівник, у бічній панелі доступний розділ "Scrutinio". Введіть підсумкові оцінки, оцінки за поведінку та характеристику.',
+      q7: 'Як скласти або переглянути індивідуальний план навчання (PDP / PEI)?',
+      a7: 'Перейдіть у "Індивідуальний план (PDP)" з меню класу. Налаштуйте компенсувальні та звільнявальні заходи.',
+      q8: 'Як відновити незбережену чернетку журналу?',
+      a8: 'Система автоматично зберігає чернетку кожні 15 секунд. При повторному відкритті з’явиться пропозиція відновити її.',
+      q9: 'Як змінити мову інтерфейсу та темну тему?',
+      a9: 'У меню користувацьких налаштувань виберіть одну з 9 мов та увімкніть темний режим або шрифт OpenDyslexic.',
+      q10: 'Як скасувати випадково виставлену оцінку?',
+      a10: 'Після введення оцінки внизу екрана на 15 секунд з’являється сповіщення з кнопкою "Скасувати".'
     },
-    "student": {
-        "step7_title": "Internships & Competencies",
-        "step7_desc": "Track your work-based learning hours (PCTO), view competence certifications, and build your digital portfolio.",
-        "step7_bullets": [
-            "Internship hours",
-            "Certifications",
-            "Digital portfolio",
-            "Tutor feedback"
-        ],
-        "step8_title": "Announcements & Noticeboard",
-        "step8_desc": "Read official school circulars, answer surveys, and view personalized announcements from your teachers.",
-        "step8_bullets": [
-            "School circulars",
-            "Surveys & answers",
-            "Personal alerts",
-            "Teacher notices"
-        ],
-        "step1_bullets": [
-            "Upcoming deadlines",
-            "Latest notifications",
-            "GPA summary",
-            "Upcoming tests"
-        ],
-        "step2_bullets": [
-            "Grades by subject",
-            "Live average",
-            "Trend chart",
-            "Term comparison"
-        ],
-        "step3_bullets": [
-            "Monthly attendance",
-            "Absence counter",
-            "Late arrivals & early leaves",
-            "Excuses & justifications"
-        ],
-        "step4_bullets": [
-            "Assigned homework",
-            "Due dates",
-            "Learning materials",
-            "Links & resources"
-        ],
-        "step5_bullets": [
-            "Digital report card",
-            "PDF download",
-            "Certificates",
-            "Forms"
-        ],
-        "step6_bullets": [
-            "School holidays",
-            "Test dates",
-            "Extracurriculars",
-            "Field trips & events"
-        ]
+    student: {
+      cat_grades: 'Мої оцінки',
+      cat_attendance: 'Моя відвідуваність',
+      cat_homework: 'Домашні завдання',
+      cat_documents: 'Документи та табель',
+      cat_settings: 'Профіль та налаштування',
+      q1: 'Як переглянути мої оцінки та середній бал?',
+      a1: 'Відкрийте "Мої оцінки" у бічній панелі. Ви побачите детально розписані письмові й усні оцінки та середній бал.',
+      q2: 'Як працює симулятор середнього бала?',
+      a2: 'У розділі "Мої оцінки" натисніть "Симулятор середнього бала". Введіть очікувані оцінки за майбутні контрольні.',
+      q3: 'Як відстежувати кількість пропусків?',
+      a3: 'У розділі "Моя відвідуваність" відображається загальна кількість пропущених годин відносно річного ліміту.',
+      q4: 'Де знайти домашні завдання?',
+      a4: 'У розділі "Домашні завдання" або на головній панелі. Завдання відсортовані за терміном здачі.',
+      q5: 'Як завантажити табель успішності у PDF?',
+      a5: 'Перейдіть у "Табель та документи", виберіть період та натисніть "Завантажити табель PDF".',
+      q6: 'Де переглянути години проходження практики (PCTO)?',
+      a6: 'Відкрийте "PCTO та Портфоліо", щоб побачити зараховані години, компанії-партнери та відгуки кураторів.',
+      q7: 'Як відповісти на опитування чи ознайомитися з оголошенням?',
+      a7: 'Відкрийте "Повідомлення", виберіть оголошення та натисніть "Підтвердити прочитання".',
+      q8: 'Як увімкнути спеціальний шрифт OpenDyslexic?',
+      a8: 'Натисніть на іконку доступності або перейдіть у "Профіль" → "Налаштування доступності".',
+      q9: 'Що робити, якщо я забув пароль?',
+      a9: 'На сторінці входу натисніть "Забули пароль?" та введіть свою адресу електронної пошти.',
+      q10: 'Як використовувати швидкий пошук Ctrl+K?',
+      a10: 'Натисніть Ctrl+K (або Cmd+K на Mac), щоб відкрити універсальний пошук по предметах та розділах.'
     },
-    "parent": {
-        "step7_title": "Absence Justifications & Permissions",
-        "step7_desc": "Submit digital justifications for student absences directly from the app, and approve early leave authorizations.",
-        "step7_bullets": [
-            "Online justifications",
-            "Early leave permits",
-            "Special activities",
-            "Absence history"
-        ],
-        "step8_title": "Academic Analytics & Progress",
-        "step8_desc": "View academic performance charts over time, compare subject averages, and track improvement trends.",
-        "step8_bullets": [
-            "Progress chart",
-            "Subject comparison",
-            "Historical trends",
-            "Goals achieved"
-        ],
-        "step1_bullets": [
-            "Children overview",
-            "Recent alerts",
-            "Unread messages",
-            "Appointments"
-        ],
-        "step2_bullets": [
-            "Academic profile",
-            "Student documents",
-            "Teacher contacts",
-            "Enrollment info"
-        ],
-        "step3_bullets": [
-            "Real-time grades",
-            "Subject GPA",
-            "Daily attendance",
-            "Automated alerts"
-        ],
-        "step4_bullets": [
-            "School circulars",
-            "Teacher notices",
-            "Urgent alerts",
-            "Digital bulletin board"
-        ],
-        "step5_bullets": [
-            "Book parent meeting",
-            "Choose time slot",
-            "Email confirmation",
-            "Reschedule"
-        ],
-        "step6_bullets": [
-            "Tuition & fees",
-            "Payment history",
-            "Download receipts",
-            "Request documents"
-        ]
+    parent: {
+      cat_monitoring: 'Моніторинг дітей',
+      cat_communications: 'Повідомлення',
+      cat_meetings: 'Зустрічі з вчителями',
+      cat_documents: 'Документи та оплата',
+      cat_settings: 'Профіль та налаштування',
+      q1: 'Як перемикатися між профілями кількох дітей?',
+      a1: 'Використовуйте перемикач дітей у верхній панелі, щоб миттєво переходити між профілями.',
+      q2: 'Чи надходять пуш-сповіщення про оцінки та пропуски?',
+      a2: 'Так! Миттєві пуш-сповіщення та email надсилаються при виставленні кожної нової оцінки чи пропуску.',
+      q3: 'Як записатися на прийом до вчителя?',
+      a3: 'Перейдіть у "Зустрічі" → виберіть вчителя → виберіть зелений вільний слот у календарі → підтвердіть.',
+      q4: 'Як сплатити шкільні внески через PagoPA?',
+      a4: 'Перейдіть у "Платежі PagoPA", виберіть активний квиток та сплатіть онлайн або завантажте QR-код.',
+      q5: 'Як відправити онлайн-пояснювальну за пропуск?',
+      a5: 'У "Відвідуваність та пояснювальні" натисніть "Пояснити" напроти пропуску, вкажіть причину та підпишіть PIN-кодом.',
+      q6: 'Як завантажити табель успішності дитини?',
+      a6: 'Виберіть дитину → "Табель" → виберіть період → "Завантажити табель PDF".',
+      q7: 'Де знаходяться оголошення, що потребують підпису?',
+      a7: 'У розділі "Повідомлення". Оголошення з вимогою ознайомлення містять кнопку "Підтвердити прочитання".',
+      q8: 'Як зв’язатися з секретаріатом школи?',
+      a8: 'У розділі "Підтримка та FAQ" або "Зв’язатися з підтримкою" відправте звернення адміністрації.',
+      q9: 'Чи може другий з батьків отримати окремий доступ?',
+      a9: 'Секретаріат може прив’язати кілька батьківських акаунтів до одного учня з персональними логінами.',
+      q10: 'Як додаток працює в автономному офлайн-режимі?',
+      a10: 'Додаток показує збережені дані. Відправлені форми зберігаються локально та надсилаються при появі мережі.'
     },
-    "secretary": {
-        "step7_title": "Enrollment & Student Registry",
-        "step7_desc": "Manage yearly school enrollments, maintain student demographic records, and handle transfers and special education plans.",
-        "step7_bullets": [
-            "Yearly enrollment",
-            "Transfers in/out",
-            "Special needs / DSA",
-            "Registry archives"
-        ],
-        "step8_title": "Circulars & School Broadcasts",
-        "step8_desc": "Compose and publish digital circulars, manage noticeboards, and send targeted group broadcasts with signature tracking.",
-        "step8_bullets": [
-            "Compose circulars",
-            "Digital signature",
-            "Targeted recipients",
-            "Publication history"
-        ],
-        "step1_bullets": [
-            "Pending tasks",
-            "Incoming requests",
-            "School statistics",
-            "System alerts"
-        ],
-        "step2_bullets": [
-            "Class list",
-            "Teacher assignments",
-            "Weekly timetable",
-            "Revision history"
-        ],
-        "step3_bullets": [
-            "Enrollment certificates",
-            "Attendance records",
-            "PDF export",
-            "Digital seal"
-        ],
-        "step4_bullets": [
-            "School schedule",
-            "Teacher substitutions",
-            "Extracurriculars",
-            "Staff notices"
-        ],
-        "step5_bullets": [
-            "Attendance reports",
-            "Official exports",
-            "Statistical charts",
-            "Advanced filters"
-        ],
-        "step6_bullets": [
-            "Create accounts",
-            "Assign roles",
-            "Reset passwords",
-            "Access control"
-        ]
+    secretary: {
+      cat_students: 'База учнів',
+      cat_classes: 'Управління класами',
+      cat_documents: 'Довідки та документи',
+      cat_timetable: 'Розклад та заміни',
+      cat_reports: 'Звіти та експорт',
+      q1: 'Як швидко знайти картку учня?',
+      a1: 'Використовуйте пошуковий рядок у шапці. Пошук за ім’ям, прізвищем, кодом чи класом.',
+      q2: 'Як видати офіційну довідку про навчання?',
+      a2: 'У "Довідки та документи" → виберіть учня → "Сформувати PDF". Документ завіряється цифровою печаткою.',
+      q3: 'Як оформлювати щоденні заміни вчителів?',
+      a3: 'Перейдіть у "Розклад та заміни" → дата → відсутній вчитель. Система запропонує вільних викладачів.',
+      q4: 'Як експортувати дані для міністерства (SIDI)?',
+      a4: 'У "Звіти та статистика" → "Експорт до міністерства" → виберіть період і формат.',
+      q5: 'Як створити акаунт для нового учня чи батька?',
+      a5: 'У "Управління користувачами" → "Новий користувач" → введіть дані та роль. На email надійде тимчасовий пароль.',
+      q6: 'Як налаштувати нові класи на наступний навчальний рік?',
+      a6: 'У "Управління класами" створіть нові паралелі, переведіть учнів та призначте учителів-предметників.',
+      q7: 'Як опублікувати офіційний циркуляр?',
+      a7: 'У "Повідомлення та оголошення" → "Новий циркуляр" → виберіть групи отримувачів та натисніть "Опублікувати".',
+      q8: 'Як вести облік підручників по класах?',
+      a8: 'У "Підручники" виберіть клас і предмет → введіть код ISBN, назву, видавництво та ціну.',
+      q9: 'Як перевірити статус платежів PagoPA?',
+      a9: 'Відкрийте "Фінанси та PagoPA" для відстеження надходжень платежів та надсилання нагадувань.',
+      q10: 'Як анулювати помилковий номер протоколу?',
+      a10: 'В архіві документів виберіть протокол → "Анулювати із зазначенням причини". Дія фіксується у Audit Log.'
     },
-    "admin": {
-        "step7_title": "Schools & Campuses Management",
-        "step7_desc": "Create and configure multiple school branches, manage tenant settings, assign campus administrators, and monitor activity.",
-        "step7_bullets": [
-            "New campuses",
-            "Per-school config",
-            "Branch admins",
-            "Multi-tenant"
-        ],
-        "step8_title": "Integrations & API Management",
-        "step8_desc": "Connect third-party systems (Google Workspace, Microsoft 365, LMS), configure webhooks, and monitor API traffic.",
-        "step8_bullets": [
-            "Google Workspace",
-            "Microsoft 365",
-            "Webhook config",
-            "API monitoring"
-        ],
-        "step1_bullets": [
-            "System health",
-            "Active users",
-            "Open sessions",
-            "Recent errors"
-        ],
-        "step2_bullets": [
-            "CPU & memory usage",
-            "API latency",
-            "Live logs",
-            "Threshold alerts"
-        ],
-        "step3_bullets": [
-            "Manage users",
-            "RBAC roles",
-            "Manage schools",
-            "Bulk CSV import"
-        ],
-        "step4_bullets": [
-            "Platform metrics",
-            "Periodic reports",
-            "User growth",
-            "Data exports"
-        ],
-        "step5_bullets": [
-            "Immutable audit logs",
-            "Security filters",
-            "Compliance export",
-            "GDPR tools"
-        ],
-        "step6_bullets": [
-            "Password policy",
-            "Mandatory 2FA",
-            "Feature flags",
-            "Maintenance mode"
-        ]
+    admin: {
+      cat_monitoring: 'Моніторинг системи',
+      cat_users: 'Управління користувачами',
+      cat_schools: 'Школи та корпуси',
+      cat_security: 'Безпека та Auth',
+      cat_analytics: 'Аналітика та успішність',
+      q1: 'Як відстежувати працездатність мікросервісів та БД?',
+      a1: 'У "Моніторинг системи" доступний графічний моніторинг CPU, пам’яті, пулу з’єднань PostgreSQL та затримки API.',
+      q2: 'Як додати нову школу чи філію?',
+      a2: 'Перейдіть у "Управління школами" → "Додати школу". Вкажіть код, назву, адресу та офіційний email.',
+      q3: 'Як примусово скинути пароль або увімкнути 2FA?',
+      a3: 'У "Управління користувачами" виберіть акаунт → "Безпека" → "Скидання пароля" або "Обов’язкова 2FA".',
+      q4: 'Як переглянути незмінний журнал аудиту (Audit Log)?',
+      a4: 'У "Аудит та compliance". Фільтруйте події за користувачем, типом дії, датою та IP-адресою.',
+      q5: 'Як керувати Feature Flags для платформи?',
+      a5: 'У "Feature Flags та модулі" вмикайте або вимикайте функції (PagoPA, Google SSO, Matrix View) для окремих шкіл.',
+      q6: 'Як аналізувати ризики відрахування та неуспішності?',
+      a6: 'Відкрийте "Analytics & BI". Алгоритми автоматично відмічають учнів з пропусками понад 20% або середнім балом нижче 6.0.',
+      q7: 'Як налаштувати єдиний вхід (SSO) через Google та Microsoft?',
+      a7: 'У "Інтеграції та SSO" введіть Client ID OAuth2 та секретний ключ з консолі Google Cloud або Azure.',
+      q8: 'Як виконати ручний бекап бази даних?',
+      a8: 'У "База даних та бекапи" запустіть миттєвий дамп PostgreSQL або налаштуйте автоматичне резервне копіювання в S3.',
+      q9: 'Як переглянути повну матрицю прав доступу RBAC?',
+      a9: 'Перейдіть у "Ролі та права", щоб вивчити інтерактивну таблицю прав для всіх 9 ролей.',
+      q10: 'Як перевести платформу в режим технічного обслуговування?',
+      a10: 'У "Налаштування системи" увімкніть "Режим обслуговування". Користувачі побачать інформаційне повідомлення.'
     }
-},
+  },
   guideCenter: {
-    "title": "Help & Knowledge Center",
-    "subtitle": "Comprehensive guides for every section of the electronic register",
-    "search": "Search in guides...",
-    "noResults": "No guides found for",
-    "readingTime": "min read",
-    "step": "Step",
-    "tip": "Tip",
-    "warning": "Warning",
-    "shortcut": "Shortcut",
-    "teacher": {
-        "dashboard": {
-            "title": "Teacher Dashboard",
-            "desc": "Overview of daily lessons, notifications, and quick actions.",
-            "content": "The teacher dashboard provides a complete overview of your day. Top widgets display today’s scheduled classes with times and room numbers.\n\nStep 1: Customize your dashboard widgets by dragging them.\nStep 2: Click on any class in the timetable to open its register directly.\nStep 3: Filter notifications by urgency or category.\n\nTip: Enable priority alerts to stay informed about urgent announcements."
-        },
-        "attendance": {
-            "title": "Attendance Register",
-            "desc": "How to record attendance, absences, and delays quickly and accurately.",
-            "content": "The attendance register automatically loads the student list for the current period.\n\nStep 1: Click on a student name to toggle status (Present, Absent, Late, Early exit).\nStep 2: Add optional justification notes or remarks.\nStep 3: Click \"Sign Lesson\" to confirm and digitally sign the session.\nStep 4: Parents of absent students are notified automatically.\n\nShortcut: Press Ctrl+Enter to quickly save attendance."
-        },
-        "grades": {
-            "title": "Grade Management",
-            "desc": "Enter and manage written, oral, and practical grades.",
-            "content": "The gradebook is an interactive grid organized by students and evaluation dates.\n\nStep 1: Select class and subject from the dropdown.\nStep 2: Click on any cell to input or edit a grade.\nStep 3: Choose evaluation type (Written, Oral, Practical) and score.\nStep 4: Add private or public feedback comments.\nStep 5: Subject and class averages update instantly.\n\nWarning: Published grades are visible to students and parents within seconds."
-        },
-        "agenda": {
-            "title": "School Agenda & Homework",
-            "desc": "Plan tests, assignments, and shared class activities.",
-            "content": "The teacher agenda syncs automatically with students and parents.\n\nStep 1: Click on any calendar date to schedule an event.\nStep 2: Choose event type: Homework, Exam, Field trip, or Reminder.\nStep 3: Select subject, description, and attach learning files.\nStep 4: Check \"Notify students\" to broadcast an instant push notification.\n\nTip: Use the Week view to check for test overlaps across subjects."
-        },
-        "communications": {
-            "title": "Communications & Messages",
-            "desc": "Send structured messages to classes, parents, and colleagues.",
-            "content": "Send announcements through dedicated channels: direct messages, class circulars, or urgent bulletins.\n\nStep 1: Navigate to \"Communications\" → \"New Message\".\nStep 2: Choose channel type and recipient list.\nStep 3: Format your message using the rich-text editor.\nStep 4: Send immediately or schedule for future publication.\n\nWarning: Urgent announcements trigger push notifications and SMS alerts."
-        },
-        "meetings": {
-            "title": "Parent-Teacher Meetings",
-            "desc": "Configure availability slots and manage booking appointments.",
-            "content": "Manage weekly office hours and individual parent conferences.\n\nStep 1: Go to \"Meetings\" → \"Set Availability\".\nStep 2: Define weekly recurring time slots and appointment durations.\nStep 3: Parents book online; you receive automated calendar invites.\nStep 4: Review student performance records prior to the meeting.\n\nTip: Enable the integrated video call link for virtual meetings."
-        }
+    title: "Центр допомоги та знань",
+    subtitle: "Детальні посібники по кожному розділу електронного журналу",
+    search: "Пошук по посібниках...",
+    noResults: "Посібників не знайдено за запитом",
+    readingTime: "хв читання",
+    step: "Крок",
+    tip: "Порада",
+    warning: "Увага",
+    shortcut: "Комбінація клавіш",
+    teacher: {
+      dashboard: { title: "Панель вчителя", desc: "Огляд навчального дня, сповіщення та швидкі дії.", content: "Панель вчителя дає повну картину дня. Віджети показують сьогоднішні уроки, розклад та кабінети.\n\nКрок 1: Налаштуйте віджети перетягуванням.\nКрок 2: Натисніть на клас, щоб одразу відкрити журнал.\nКрок 3: Фільтруйте сповіщення за терміновістю.\n\nПорада: Увімкніть пріоритетні сповіщення для важливих подій." },
+      attendance: { title: "Класний журнал та відвідуваність", desc: "Швидкий облік присутності, відсутності та запізнень.", content: "Журнал автоматично завантажує список учнів на поточний урок.\n\nКрок 1: Натисніть на ім'я учня для зміни статусу (Присутній, Відсутній, Запізнився).\nКрок 2: Введіть примітки при потребі.\nКрок 3: Натисніть \"Підписати урок\" для електронного підпису.\nКрок 4: Батьки відсутніх учнів сповіщаються автоматично.\n\nКомбінація клавіш: Натисніть Ctrl+Enter для швидкого збереження." },
+      grades: { title: "Управління оцінками та Matrix View", desc: "Виставлення письмових та усних оцінок за допомогою швидкої клавіатурної сітки.", content: "Журнал оцінок підтримує стандартний вигляд та високошвидкісний режим Matrix View.\n\nКрок 1: Виберіть клас і предмет.\nКрок 2: Увімкніть Matrix View для переміщення клавішами TAB та СТРІЛКАМИ.\nКрок 3: Введіть оцінку (1-10) та натисніть ENTER.\nКрок 4: Додайте публічні або приватні коментарі.\nКрок 5: Середній бал перераховується миттєво.\n\nУвага: Опубліковані оцінки видно батькам через кілька секунд." },
+      agenda: { title: "Щоденник та домашні завдання", desc: "Планування контрольних, завдань та заходів.", content: "Календар вчителя синхронізується з учнями та батьками.\n\nКрок 1: Натисніть на дату в календарі для створення події.\nКрок 2: Виберіть тип: Домашнє завдання, Контрольна, Екскурсія.\nКрок 3: Вкажіть предмет, опис та прикріпіть файли.\nКрок 4: Система попередить, якщо у класу вже заплановано більше 2 контрольних на цей день.\n\nПорада: Використовуйте тижневий вигляд для запобігання накладкам." },
+      communications: { title: "Оголошення та повідомлення", desc: "Надсилання повідомлень класам, батькам та колегам.", content: "Публікуйте оголошення через особисті повідомлення, циркуляри або термінові бюлетені.\n\nКрок 1: Перейдіть у \"Повідомлення\" → \"Нове повідомлення\".\nКрок 2: Виберіть канал та список отримувачів.\nКрок 3: Оформіть текст у редакторі.\nКрок 4: Відправте одразу або заплануйте публікацію.\n\nУвага: Термінові повідомлення надсилають миттєві пуш-сповіщення." },
+      meetings: { title: "Батьківські збори та прийом", desc: "Управління годинами прийому та записом на зустрічі.", content: "Керуйте щотижневими прийомними годинами та особистими консультаціями.\n\nКрок 1: Перейдіть у 'Зустрічі' → 'Налаштувати доступність'.\nКрок 2: Задайте дні, інтервали та тривалість слотів (15, 20, 30 хв).\nКрок 3: Батьки записуються онлайн; ви отримуєте підтвердження.\nКрок 4: Ознайомтеся з успішністю учня до зустрічі.\n\nПорада: Увімкніть вбудований відеозв'язок для дистанційних зустрічей." },
+      scrutiny: { title: "Підсумкова атестація (Scrutinio)", desc: "Порядок узгодження оцінок, поведінки та складання протоколів.", content: "Зведена таблиця атестації збирає оцінки всіх вчителів-предметників за чверть або рік.\n\nКрок 1: Виберіть клас та період атестації.\nКрок 2: Перевірте середній бал та введіть підсумкову оцінку.\nКрок 3: Введіть оцінку за поведінку та загальну характеристику.\nКрок 4: Як класний керівник, заблокуйте відомість після перевірки.\nКрок 5: Експортуйте та роздрукуйте підсумковий протокол у PDF.\n\nУвага: Після блокування керівником внесення змін вимагає розблокування адміністратором." },
+      pdp: { title: "Індивідуальний план (PDP / PEI)", desc: "Розробка компенсувальних та звільнявальних заходів для учнів з ООП.", content: "Модуль PDP дозволяє педагогічному складу формувати персональні плани навчання.\n\nКрок 1: Відкрийте 'PDP / PEI' з меню класу.\nКрок 2: Виберіть учня та налаштуйте компенсувальні заходи (калькулятор, формули).\nКрок 3: Збережіть чернетку та відправте батькам на цифровий підпис.\nКрок 4: Активні заходи підсвічуються іконками при виставленні оцінок.\n\nПорада: Використовуйте готові критерії оцінювання для прискорення роботи." }
     },
-    "student": {
-        "dashboard": {
-            "title": "Student Dashboard",
-            "desc": "Your daily hub for deadlines, grades, and schedules.",
-            "content": "The student dashboard prioritizes urgent tasks and upcoming exams.\n\nStep 1: Review \"Today’s Schedule\" for lessons and rooms.\nStep 2: Check \"Due Today\" and \"Tomorrow’s Exams\".\nStep 3: Monitor your overall GPA and recent grade additions.\n\nTip: Install the PWA on your phone for instant notification alerts."
-        },
-        "grades": {
-            "title": "My Grades & Performance",
-            "desc": "Track your subject grades, averages, and evaluation history.",
-            "content": "View all assessments organized by subject and academic term.\n\nStep 1: Select a subject to inspect detailed teacher feedback.\nStep 2: Review the trend line to understand your progress over time.\nStep 3: Switch between terms (1st Term, 2nd Term, Final).\nStep 4: Download a full PDF transcript at any time."
-        },
-        "homework": {
-            "title": "Homework & Assignments",
-            "desc": "Organize your homework, downloads, and submission deadlines.",
-            "content": "Stay on top of all homework assignments and study materials.\n\nStep 1: Filter tasks by due date or subject.\nStep 2: Click on an assignment to download attachments.\nStep 3: Mark tasks as \"Completed\" to keep track of your workload."
-        }
+    student: {
+      dashboard: { title: "Панель учня", desc: "Щоденний центр для відстеження завдань, оцінок та розкладу.", content: "Панель учня фокусує увагу на термінових завданнях та майбутніх контрольних.\n\nКрок 1: Перевірте розділ 'Сьогодні' для перегляду уроків та кабінетів.\nКрок 2: Подивіться завдання зі терміном на сьогодні та контрольні на завтра.\nКрок 3: Слідкуйте за середнім балом.\n\nПорада: Встановіть PWA-додаток на телефон для миттєвих пуш-сповіщень." },
+      grades: { title: "Мої оцінки та динаміка", desc: "Відстеження оцінок, середнього бала та історії перевірок.", content: "Усі ваші оцінки згруповані за предметами та чвертями.\n\nКрок 1: Виберіть предмет, щоб прочитати коментарі вчителів.\nКрок 2: Вивчіть графік динаміки ваших результатів.\nКрок 3: Перемикайтеся між чвертями.\nКрок 4: Завантажте повну виписку оцінок у PDF." },
+      homework: { title: "Домашні завдання", desc: "Організація виконання завдань, завантаження файлів та терміни.", content: "Повний контроль над домашніми завданнями та навчальними матеріалами.\n\nКрок 1: Фільтруйте завдання за датою або предметом.\nКрок 2: Натисніть на завдання, щоб завантажити прикріплені файли.\nКрок 3: Відмічайте виконані завдання галочкою." },
+      attendance: { title: "Моя відвідуваність", desc: "Облік пропущених уроків, запізнень та статус пояснювальних.", content: "Переглядайте баланс відвідуваності та допустимий ліміт пропусків.\n\nКрок 1: Відкрийте 'Моя відвідуваність'.\nКрок 2: Перевірте лічильник пропущених годин.\nКрок 3: Вивчіть календар на предмет пропусків (червоний) та запізнень (помаранчевий).\nКрок 4: Перевірте статус підтвердження пропусків батьками." },
+      documents: { title: "Табель та офіційні документи", desc: "Перегляд та завантаження цифрових табелів та довідок.", content: "Доступ до офіційних документів, опублікованих адміністрацією школи.\n\nКрок 1: Перейдіть у 'Табель та документи'.\nКрок 2: Виберіть навчальний рік та чверть.\nКрок 3: Натисніть 'Перегляд табеля' для онлайн-ознайомлення.\nКрок 4: Натисніть 'Завантажити PDF' для збереження завіреного документа." },
+      simulator: { title: "Симулятор середнього бала", desc: "Розрахунок оцінки, необхідної на контрольній для досягнення мети.", content: "Симулятор розраховує точний мінімальний бал, який потрібно отримати на наступній роботі.\n\nКрок 1: Виберіть предмет.\nКрок 2: Введіть бажаний середній бал (наприклад, 4.5).\nКрок 3: Система розрахує мінімальну оцінку на контрольній." },
+      pcto: { title: "Практика PCTO та портфоліо", desc: "Облік годин проходження практики та сертифікатів.", content: "Відстежуйте години проходження виробничої практики PCTO.\n\nКрок 1: Відкрийте 'PCTO та Портфоліо'.\nКрок 2: Перевірте графік годин відносно обов'язкового мінімуму.\nКрок 3: Перегляньте інформацію про компанію-партнера та завантажте сертифікати." }
     },
-    "parent": {
-        "monitoring": {
-            "title": "Monitoring Your Children",
-            "desc": "Follow academic performance, daily attendance, and notices in real time.",
-            "content": "Access comprehensive academic information for all enrolled children.\n\nStep 1: Select your child from the top switcher.\nStep 2: Check daily attendance and real-time grade notifications.\nStep 3: Read teacher comments on individual assessments.\nStep 4: View academic progress charts.\n\nTip: Configure notification thresholds to receive alerts if grades drop."
-        },
-        "meetings": {
-            "title": "Booking Teacher Meetings",
-            "desc": "Schedule and manage conference appointments with teachers.",
-            "content": "Easily book one-on-one parent-teacher conferences.\n\nStep 1: Open \"Meetings\" and select the desired teacher.\nStep 2: Pick an available green time slot on the calendar.\nStep 3: Confirm booking to receive an email reminder.\n\nWarning: Cancellations should be submitted at least 2 hours in advance."
-        }
+    parent: {
+      monitoring: { title: "Моніторинг дітей", desc: "Відстеження успішності, відвідуваності та повідомлень у реальному часі.", content: "Повний доступ до навчальної справи всіх ваших школярів.\n\nКрок 1: Виберіть дитину у верхньому меню.\nКрок 2: Перевіряйте відвідуваність за день та сповіщення про оцінки.\nКрок 3: Читайте коментарі вчителів до робіт.\nКрок 4: Переглядайте графіки динаміки.\n\nПорада: Налаштуйте поріг сповіщень для оповіщень при зниженні середнього бала." },
+      meetings: { title: "Запис на прийом до вчителів", desc: "Планування зустрічей з викладачами вашої дитини.", content: "Записуйтесь на індивідуальні консультації в пару кліків.\n\nКрок 1: Відкрийте 'Зустрічі' та виберіть вчителя.\nКрок 2: Виберіть зелений вільний слот у календарі.\nКрок 3: Підтвердіть запис для отримання нагадування по email.\n\nУвага: Скасування запису має здійснюватися не менше ніж за 2 години до зустрічі." },
+      communications: { title: "Повідомлення та дошка оголошень", desc: "Перегляд циркулярів, термінових оповіщень та нотаток.", content: "Усі офіційні оголошення школи в єдиному цифровому просторі.\n\nКрок 1: Відкрийте 'Повідомлення'.\nКрок 2: Фільтруйте за категоріями (Адміністрація, Вчителі, Клас).\nКрок 3: Читайте текст та завантажуйте PDF-вкладення.\nКрок 4: Натисніть 'Підтвердити прочитання', якщо потрібно." },
+      pagopa: { title: "Шкільні платежі PagoPA", desc: "Оплата екскурсій, харчування та внесків онлайн.", content: "Інтегрована система PagoPA для безпечних електронних платежів.\n\nКрок 1: Перейдіть у 'Платежі PagoPA'.\nКрок 2: Ознайомтеся з рахунками до оплати.\nКрок 3: Натисніть 'Сплатити зараз' для оплати карткою або через Apple Pay.\nКрок 4: Або завантажте квитанцію з QR-кодом для оплати в банку." },
+      documents: { title: "Документи та заяви батьків", desc: "Завантаження табелів, довідок та заповнення дозволів.", content: "Завантажуйте офіційні підписані документи прямо на пристрій.\n\nКрок 1: Перейдіть у 'Документи та табель'.\nКрок 2: Завантажуйте чвертні табелі у форматі PDF.\nКрок 3: Заповнюйте та підписуйте дозволи на екскурсії онлайн." },
+      justifications: { title: "Онлайн-пояснювальні за пропуски", desc: "Подача пояснювальних за пропуски та запізнення дитини.", content: "Більше жодних паперових записок: підтверджуйте пропуски за допомогою PIN-коду.\n\nКрок 1: Відкрийте 'Відвідуваність та пояснювальні'.\nКрок 2: Знайдіть непідтверджені пропуски, позначені червоним.\nКрок 3: Натисніть 'Пояснити', виберіть причину (Хвороба, Сімейні обставини) та введіть PIN." }
     },
-    "secretary": {
-        "students": {
-            "title": "Student Registry Management",
-            "desc": "Search, manage, and update student profiles and demographic records.",
-            "content": "The student registry is the central database for all enrolled learners.\n\nStep 1: Use the global search bar (name, tax code, class).\nStep 2: Click a record to open the full student dossier.\nStep 3: Edit contact information, enrollment status, or guardian links.\nStep 4: Export filtered data to Excel or CSV formats."
-        },
-        "certificates": {
-            "title": "Certificate Generation",
-            "desc": "Issue official school documents, attendance proofs, and certificates.",
-            "content": "Produce signed school documents in seconds.\n\nStep 1: Search for the student record.\nStep 2: Go to \"Certificates\" → \"Generate\".\nStep 3: Select certificate template (Enrollment, Attendance, Transcripts).\nStep 4: Preview, apply digital stamp, and print or email directly."
-        }
+    secretary: {
+      students: { title: "Управління картотекою учнів", desc: "Пошук, редагування та оновлення особистих справ учнів.", content: "База даних учнів — центральна ланка роботи секретаріату.\n\nКрок 1: Використовуйте рядок глобального пошуку (Ім'я, Прізвище, Клас).\nКрок 2: Натисніть на картку учня для відкриття особистої справи.\nКрок 3: Редагуйте контактні дані або законних представників.\nКрок 4: Експортуйте відфільтровані дані в Excel або CSV." },
+      classes: { title: "Формування класів та паралелей", desc: "Створення класів, прив'язка предметів та призначення вчителів.", content: "Формуйте структуру класів на навчальний рік.\n\nКрок 1: Відкрийте 'Управління класами'.\nКрок 2: Натисніть 'Новий клас' для додавання паралелі.\nКрок 3: Призначте навчальні предмети та вчителів-предметників.\nКрок 4: Призначте класного керівника та секретаря." },
+      certificates: { title: "Видача довідок та документів", desc: "Оформлення офіційних довідок про навчання та успішність.", content: "Формуйте завірені шкільні документи за лічені секунди.\n\nКрок 1: Знайдіть потрібного учня.\nКрок 2: Перейдіть у 'Довідки' → 'Сформувати'.\nКрок 3: Виберіть шаблон (Довідка про навчання, Відвідуваність, Виписка оцінок).\nКрок 4: Перевірте передперегляд, накладіть цифрову печатку та роздрукуйте." },
+      timetable: { title: "Розклад та організація замін", desc: "Складання сітки розкладу та щоденне призначення замін.", content: "Управляйте розкладом та заміною відсутніх викладачів.\n\nКрок 1: Відкрийте 'Розклад та заміни'.\nКрок 2: Внесіть уроки у щотижневу сітку.\nКрок 3: У разі хвороби система запропонує вільних вчителів на заміну.\nКрок 4: Призначте заміну та відправте сповіщення вчителю." },
+      communications: { title: "Управління циркулярами", desc: "Публікація офіційних наказів та відстеження прочитання.", content: "Розсилайте офіційну інформацію співробітникам, батькам та учням.\n\nКрок 1: Відкрийте 'Повідомлення та оголошення'.\nКрок 2: Натисніть 'Новий циркуляр'.\nКрок 3: Вкажіть номер протоколу, тему та текст.\nКрок 4: Задайте групи отримувачів та вимогу підпису." },
+      reports: { title: "Звіти та експорт для міністерства (SIDI)", desc: "Вивантаження статистики, звітів по відвідуваності та файлів даних.", content: "Формуйте зведені статистичні звіти та файли вивантаження.\n\nКрок 1: Відкрийте 'Звіти та статистика'.\nКрок 2: Виберіть тип звіту (Відвідуваність, Підсумки атестації).\nКрок 3: Виберіть формат: Excel, CSV, PDF або XML SIDI." }
     },
-    "admin": {
-        "monitoring": {
-            "title": "System & Health Monitoring",
-            "desc": "Monitor platform uptime, API response times, and server performance.",
-            "content": "Real-time telemetry and health monitoring across all platform services.\n\nStep 1: Inspect server CPU, RAM, and active session count.\nStep 2: Monitor API throughput and error rates over the last 24 hours.\nStep 3: Configure alert thresholds for proactive notifications.\n\nWarning: Use Maintenance Mode during scheduled platform updates."
-        },
-        "users": {
-            "title": "User & Access Management",
-            "desc": "Manage user accounts, RBAC permissions, and authentication policies.",
-            "content": "Centralized user provisioning and security management.\n\nStep 1: Search users by role, institution, or active status.\nStep 2: Create single accounts or use the bulk CSV/Excel import tool.\nStep 3: Enforce 2FA/MFA and manage password resets.\nStep 4: Review immutable audit logs for compliance auditing."
-        }
+    admin: {
+      monitoring: { title: "Моніторинг працездатності системи", desc: "Контроль доступності, часу відгуку API та серверів.", content: "Телеметрія в реальному часі всіх мікросервісів платформи.\n\nКрок 1: Перевіряйте навантаження на CPU, пам'ять та кількість активних сесій.\nКрок 2: Відстежуйте трафік API та відсоток помилок за 24 години.\nКрок 3: Налаштуйте пороги автоматичних сповіщень.\n\nУвага: Вмикайте Режим обслуговування при планових оновленнях." },
+      users: { title: "Адміністрування користувачів та прав", desc: "Управління обліковими записами, правами RBAC та політиками доступу.", content: "Централізоване управління системою безпеки та користувачами.\n\nКрок 1: Шукайте користувачів за роллю, школою або статусом.\nКрок 2: Створюйте поодинокі акаунти або використовуйте масовий імпорт CSV.\nКрок 3: Вимагайте ввімкнення 2FA/MFA та керуйте скиданням паролів.\nКрок 4: Переглядайте незмінний журнал аудиту." },
+      schools: { title: "Управління школами та корпусами", desc: "Налаштування філій, офіційних кодів та мережевих параметрів.", content: "Управляйте мульти-тенантною структурою освітньої організації.\n\nКрок 1: Відкрийте 'Управління школами'.\nКрок 2: Додавайте нові корпуси (Головний будинок, Філія, Початкова школа).\nКрок 3: Введіть офіційний код школи та контактні дані." },
+      security: { title: "Політики безпеки та авторизації", desc: "Правила паролів, час сесії, 2FA та обмеження частоти запитів.", content: "Задавайте правила захисту інформації згідно зі стандартами безпеки.\n\nКрок 1: Відкрийте 'Безпека та авторизація'.\nКрок 2: Задайте мінімальну довжину пароля та термін його дії.\nКрок 3: Увімкніть обов'язкову двофакторну автентифікацію (2FA) для співробітників." },
+      analytics: { title: "Аналітика та профілактика відрахувань", desc: "Предиктивний аналіз ризиків відрахування та хронічних пропусків.", content: "Використовуйте інструменти Business Intelligence для виявлення учнів групи ризику.\n\nКрок 1: Відкрийте 'Analytics & BI'.\nКрок 2: Вивчайте теплову карту пропусків по класах та предметах.\nКрок 3: Налаштуйте критерії авто-сповіщень (наприклад: Пропуски > 20% + Сер. бал < 3.0)." },
+      integrations: { title: "Інтеграції з E-Learning та SSO", desc: "Синхронізація з Google Classroom, Microsoft Teams та SSO.", content: "Підключайте електронний журнал до хмарних навчальних платформ.\n\nКрок 1: Відкрийте 'Інтеграції та SSO'.\nКрок 2: Увімкніть модуль Google Workspace або Microsoft 365.\nКрок 3: Вкажіть Client ID OAuth2 та секретний ключ." },
+      audit: { title: "Журнал аудиту та compliance", desc: "Незмінний системний лог дій, що фіксує всі входи та правки.", content: "Забезпечте повну прозорість та відстежуваність даних.\n\nКрок 1: Відкрийте 'Аудит та відстежуваність'.\nКрок 2: Переглядайте історію: Час, Користувач, Роль, IP, Дія.\nКрок 3: Експортуйте зашифровані PDF-звіти для перевірок." }
     }
-}
+  }
 }

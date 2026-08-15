@@ -101,10 +101,32 @@ Lo store `useWebSocketStore` espone ref reattivi per lo stato della connessione 
 
 ---
 
+## 🚀 Sistema di Help Center, Onboarding & Guida In-App
+
+Il frontend integra un sistema multilivello di assistenza e onboarding guidato per gli utenti di ogni ruolo:
+
+1. **Onboarding Tour Interattivo (`OnboardingTour.vue`)**:
+   - Tutorial a 8 passaggi specifico per ruolo (`teacher`, `student`, `parent`, `secretary`, `admin`).
+   - Card grafiche con pillole di funzionalità, badge di categoria, suggerimenti pratici e lista puntata.
+   - Tracciamento completamento automatizzato in `localStorage` (`onboarding_done_{role}`).
+2. **Pannello Help Center Full-Screen (`HelpCenterPanel.vue`)**:
+   - Finestra modale a schermo intero con ricerca full-text istantanea in tutte le guide.
+   - Navigazione per sezioni tematiche (`GUIDE_DEFS`) e mapping dinamico delle domande frequenti (`FAQ_CATEGORY_MAP`).
+   - Parser automatico dei contenuti con formattazione grafica differenziata per `Passaggio N:`, `Suggerimento:`, `Attenzione:` e `Scorciatoia:`.
+3. **Help Drawer Laterale & FAB Flottante (`HelpDrawer.vue`, `HelpFab.vue`)**:
+   - Floating Action Button `?` in basso a destra con menu rapido (Riavvia Tour, Apri Guida, Contatta Assistenza).
+   - Drawer laterale per consultare FAQ e guide rapide senza abbandonare l'attività corrente.
+4. **Centro Supporto & Form Ticket (`Support.vue`)**:
+   - Pagina principale con FAQ accordion filtrate per ruolo utente e modalità offline (coda locale ticket per l'invio al ripristino connessione).
+
+---
+
 ## Unit Testing dei Componenti & Servizi 🧪
 
 I test unitari del frontend sono eseguiti con **Vitest** e **Vue Test Utils**.
 
 - **Esecuzione**: `npm run test:unit` oppure `npx vitest run`
+- **Suite Onboarding & Help**: `tests/unit/components/Common/HelpAndOnboarding.spec.js` (verifica inizializzazione tour, persistenza localStorage, apertura/chiusura HelpCenterPanel e HelpDrawer).
 - **Suite Componenti Orario**: `tests/unit/components/Secretary/TimetableManagement.spec.js` (verifica rendering `ScheduleGrid.vue`, `TeacherScheduleGrid.vue`, calcolo ore settimanali ed eventi `save`).
 - **Suite Servizi Admin**: `tests/unit/services/adminService.spec.js` (verifica chiamate API `/teachers/:id/schedule` e risposte).
+

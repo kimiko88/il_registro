@@ -368,73 +368,111 @@ const roleLabel = computed(() => t(roleMeta[userRole.value]?.label || 'roles.use
 const GUIDE_DEFS = {
   teacher: {
     categories: [
-      { key: 'dashboard',       label: 'Dashboard',         icon: 'dashboard',     color: 'indigo', description: 'Tutto sulla tua area di lavoro principale' },
+      { key: 'dashboard',       label: 'Dashboard',         icon: 'dashboard',       color: 'indigo', description: 'Tutto sulla tua area di lavoro principale' },
       { key: 'attendance',      label: 'Presenze',          icon: 'event_available', color: 'blue',   description: 'Registra e gestisci le presenze' },
-      { key: 'grades',          label: 'Voti',              icon: 'grade',         color: 'green',  description: 'Inserimento e analisi delle valutazioni' },
-      { key: 'agenda',          label: 'Agenda',            icon: 'event',         color: 'orange', description: 'Pianifica compiti, verifiche e attività' },
-      { key: 'communications',  label: 'Comunicazioni',     icon: 'campaign',      color: 'purple', description: 'Messaggi a studenti e genitori' },
-      { key: 'meetings',        label: 'Colloqui',          icon: 'people',        color: 'pink',   description: 'Gestione ricevimento e colloqui' }
+      { key: 'grades',          label: 'Voti',              icon: 'grade',           color: 'green',  description: 'Inserimento e analisi delle valutazioni' },
+      { key: 'agenda',          label: 'Agenda',            icon: 'event',           color: 'orange', description: 'Pianifica compiti, verifiche e attività' },
+      { key: 'communications',  label: 'Comunicazioni',     icon: 'campaign',        color: 'purple', description: 'Messaggi a studenti e genitori' },
+      { key: 'meetings',        label: 'Colloqui',          icon: 'people',          color: 'pink',   description: 'Gestione ricevimento e colloqui' },
+      { key: 'scrutiny',        label: 'Scrutinio',         icon: 'gavel',           color: 'amber',  description: 'Scrutini intermedi e finali del CdC' },
+      { key: 'pdp',             label: 'PDP / PEI',         icon: 'psychology',      color: 'teal',   description: 'Piani didattici personalizzati per BES/DSA' }
     ],
     guides: {
-      dashboard:      { key: 'dashboard',       icon: 'dashboard',     color: 'indigo', readTime: 3 },
-      attendance:     { key: 'attendance',      icon: 'event_available', color: 'blue',  readTime: 4 },
-      grades:         { key: 'grades',          icon: 'grade',         color: 'green',  readTime: 5 },
-      agenda:         { key: 'agenda',          icon: 'event',         color: 'orange', readTime: 4 },
-      communications: { key: 'communications',  icon: 'campaign',      color: 'purple', readTime: 3 },
-      meetings:       { key: 'meetings',        icon: 'people',        color: 'pink',   readTime: 4 }
+      dashboard:      { key: 'dashboard',       icon: 'dashboard',       color: 'indigo', readTime: 3 },
+      attendance:     { key: 'attendance',      icon: 'event_available', color: 'blue',   readTime: 4 },
+      grades:         { key: 'grades',          icon: 'grade',           color: 'green',  readTime: 5 },
+      agenda:         { key: 'agenda',          icon: 'event',           color: 'orange', readTime: 4 },
+      communications: { key: 'communications',  icon: 'campaign',        color: 'purple', readTime: 3 },
+      meetings:       { key: 'meetings',        icon: 'people',          color: 'pink',   readTime: 4 },
+      scrutiny:       { key: 'scrutiny',        icon: 'gavel',           color: 'amber',  readTime: 6 },
+      pdp:            { key: 'pdp',             icon: 'psychology',      color: 'teal',   readTime: 5 }
     }
   },
   student: {
     categories: [
-      { key: 'dashboard', label: 'Dashboard',  icon: 'dashboard',  color: 'teal',   description: 'La tua pagina principale' },
-      { key: 'grades',    label: 'Voti',       icon: 'grade',      color: 'green',  description: 'Consulta e analizza i tuoi voti' },
-      { key: 'homework',  label: 'Compiti',    icon: 'assignment', color: 'orange', description: 'Gestisci compiti e scadenze' }
+      { key: 'dashboard',  label: 'Dashboard',   icon: 'dashboard',       color: 'teal',   description: 'La tua pagina principale' },
+      { key: 'grades',     label: 'Voti',        icon: 'grade',           color: 'green',  description: 'Consulta e analizza i tuoi voti' },
+      { key: 'homework',   label: 'Compiti',     icon: 'assignment',      color: 'orange', description: 'Gestisci compiti e scadenze' },
+      { key: 'attendance', label: 'Presenze',    icon: 'event_available', color: 'blue',   description: 'Traccia assenze e ritardi' },
+      { key: 'documents',  label: 'Documenti',   icon: 'description',     color: 'purple', description: 'Pagella e documenti rilasciati' },
+      { key: 'simulator',  label: 'Simulatore',  icon: 'calculate',       color: 'indigo', description: 'Simula medie e voti target' },
+      { key: 'pcto',       label: 'PCTO',        icon: 'work',            color: 'brown',  description: 'Ore alternanza scuola-lavoro' }
     ],
     guides: {
-      dashboard: { key: 'dashboard', icon: 'dashboard',  color: 'teal',   readTime: 2 },
-      grades:    { key: 'grades',    icon: 'grade',      color: 'green',  readTime: 3 },
-      homework:  { key: 'homework',  icon: 'assignment', color: 'orange', readTime: 3 }
+      dashboard:  { key: 'dashboard',  icon: 'dashboard',       color: 'teal',   readTime: 2 },
+      grades:     { key: 'grades',     icon: 'grade',           color: 'green',  readTime: 3 },
+      homework:   { key: 'homework',   icon: 'assignment',      color: 'orange', readTime: 3 },
+      attendance: { key: 'attendance', icon: 'event_available', color: 'blue',   readTime: 3 },
+      documents:  { key: 'documents',  icon: 'description',     color: 'purple', readTime: 3 },
+      simulator:  { key: 'simulator',  icon: 'calculate',       color: 'indigo', readTime: 4 },
+      pcto:       { key: 'pcto',       icon: 'work',            color: 'brown',  readTime: 4 }
     }
   },
   parent: {
     categories: [
-      { key: 'monitoring', label: 'Monitoraggio', icon: 'monitor_heart', color: 'purple', description: 'Tieni d\'occhio i progressi dei tuoi figli' },
-      { key: 'meetings',   label: 'Colloqui',     icon: 'people',        color: 'orange', description: 'Prenota e gestisci i colloqui' }
+      { key: 'monitoring',     label: 'Monitoraggio',     icon: 'monitor_heart', color: 'purple', description: 'Tieni d\'occhio i progressi dei tuoi figli' },
+      { key: 'meetings',       label: 'Colloqui',         icon: 'people',        color: 'orange', description: 'Prenota e gestisci i colloqui' },
+      { key: 'communications', label: 'Comunicazioni',    icon: 'campaign',      color: 'blue',   description: 'Circolari e comunicazioni scuola' },
+      { key: 'pagopa',         label: 'Pagamenti PagoPA', icon: 'payments',      color: 'green',  description: 'Gestione rette e contributi' },
+      { key: 'documents',      label: 'Documenti',        icon: 'folder',        color: 'indigo', description: 'Pagelle e modulistica' },
+      { key: 'justifications', label: 'Giustificazioni',  icon: 'fact_check',    color: 'teal',   description: 'Giustifica assenze e ritardi' }
     ],
     guides: {
-      monitoring: { key: 'monitoring', icon: 'monitor_heart', color: 'purple', readTime: 4 },
-      meetings:   { key: 'meetings',   icon: 'people',        color: 'orange', readTime: 3 }
+      monitoring:     { key: 'monitoring',     icon: 'monitor_heart', color: 'purple', readTime: 4 },
+      meetings:       { key: 'meetings',       icon: 'people',        color: 'orange', readTime: 3 },
+      communications: { key: 'communications', icon: 'campaign',      color: 'blue',   readTime: 3 },
+      pagopa:         { key: 'pagopa',         icon: 'payments',      color: 'green',  readTime: 4 },
+      documents:      { key: 'documents',      icon: 'folder',        color: 'indigo', readTime: 3 },
+      justifications: { key: 'justifications', icon: 'fact_check',    color: 'teal',   readTime: 3 }
     }
   },
   secretary: {
     categories: [
-      { key: 'students',     label: 'Studenti',     icon: 'group',    color: 'orange', description: 'Gestione anagrafica studenti' },
-      { key: 'certificates', label: 'Certificati',  icon: 'verified', color: 'green',  description: 'Generazione documenti ufficiali' }
+      { key: 'students',       label: 'Studenti',     icon: 'group',        color: 'orange', description: 'Gestione anagrafica studenti' },
+      { key: 'classes',        label: 'Classi',        icon: 'school',       color: 'blue',   description: 'Organizzazione classi ed elenchi' },
+      { key: 'certificates',   label: 'Certificati',  icon: 'verified',     color: 'green',  description: 'Generazione documenti ufficiali' },
+      { key: 'timetable',      label: 'Orario & Sost.',icon: 'schedule',     color: 'purple', description: 'Orario scolastico e sostituzioni' },
+      { key: 'communications', label: 'Comunicazioni', icon: 'campaign',     color: 'indigo', description: 'Circolari e bacheca digitale' },
+      { key: 'reports',        label: 'Report',       icon: 'assessment',   color: 'teal',   description: 'Estrazioni dati ministeriali' }
     ],
     guides: {
-      students:     { key: 'students',     icon: 'group',    color: 'orange', readTime: 5 },
-      certificates: { key: 'certificates', icon: 'verified', color: 'green',  readTime: 4 }
+      students:       { key: 'students',       icon: 'group',        color: 'orange', readTime: 5 },
+      classes:        { key: 'classes',        icon: 'school',       color: 'blue',   readTime: 4 },
+      certificates:   { key: 'certificates',   icon: 'verified',     color: 'green',  readTime: 4 },
+      timetable:      { key: 'timetable',      icon: 'schedule',     color: 'purple', readTime: 5 },
+      communications: { key: 'communications', icon: 'campaign',     color: 'indigo', readTime: 4 },
+      reports:        { key: 'reports',        icon: 'assessment',   color: 'teal',   readTime: 5 }
     }
   },
   admin: {
     categories: [
-      { key: 'monitoring', label: 'Monitoraggio', icon: 'monitor_heart',   color: 'red',    description: 'Stato e performance del sistema' },
-      { key: 'users',      label: 'Utenti',       icon: 'manage_accounts', color: 'blue',   description: 'Gestione account e permessi' }
+      { key: 'monitoring',   label: 'Monitoraggio', icon: 'monitor_heart',   color: 'red',         description: 'Stato e performance del sistema' },
+      { key: 'users',        label: 'Utenti',       icon: 'manage_accounts', color: 'blue',        description: 'Gestione account e permessi' },
+      { key: 'schools',      label: 'Scuole',       icon: 'domain',          color: 'amber',       description: 'Gestione istituti e plessi' },
+      { key: 'security',     label: 'Sicurezza',    icon: 'security',        color: 'deep-orange', description: 'Policy password e 2FA' },
+      { key: 'analytics',    label: 'Analytics',    icon: 'insights',        color: 'indigo',      description: 'Statistiche e dispersione scolastica' },
+      { key: 'integrations', label: 'Integrazioni', icon: 'extension',       color: 'teal',        description: 'Classroom, Teams, SSO' },
+      { key: 'audit',        label: 'Audit Log',    icon: 'policy',          color: 'purple',      description: 'Tracciabilità e log immutabili' }
     ],
     guides: {
-      monitoring: { key: 'monitoring', icon: 'monitor_heart',   color: 'red',  readTime: 4 },
-      users:      { key: 'users',      icon: 'manage_accounts', color: 'blue', readTime: 5 }
+      monitoring:   { key: 'monitoring',   icon: 'monitor_heart',   color: 'red',         readTime: 4 },
+      users:        { key: 'users',        icon: 'manage_accounts', color: 'blue',        readTime: 5 },
+      schools:      { key: 'schools',      icon: 'domain',          color: 'amber',       readTime: 4 },
+      security:     { key: 'security',     icon: 'security',        color: 'deep-orange', readTime: 4 },
+      analytics:    { key: 'analytics',    icon: 'insights',        color: 'indigo',      readTime: 5 },
+      integrations: { key: 'integrations', icon: 'extension',       color: 'teal',        readTime: 5 },
+      audit:        { key: 'audit',        icon: 'policy',          color: 'purple',      readTime: 4 }
     }
   }
 }
 
 // FAQ definitions per ruolo (from help.* i18n keys)
 const FAQ_CATEGORY_MAP = {
-  teacher:   { dashboard: [], attendance: [1,2], grades: [1,2], agenda: [3], communications: [4], meetings: [5] },
-  student:   { dashboard: [], grades: [1,2], homework: [3,4,5] },
-  parent:    { monitoring: [1,2], meetings: [3,4,5] },
-  secretary: { students: [1], certificates: [2,3,4,5] },
-  admin:     { monitoring: [1], users: [2,3,4,5] }
+  teacher:   { dashboard: [1,2], attendance: [3,4], grades: [5,6], agenda: [7], communications: [8], meetings: [9], scrutiny: [10], pdp: [] },
+  student:   { dashboard: [1], grades: [2,3], homework: [4,5], attendance: [6], documents: [7], simulator: [8,9], pcto: [10] },
+  parent:    { monitoring: [1,2], meetings: [3,4], communications: [5], pagopa: [6,7], documents: [8], justifications: [9,10] },
+  secretary: { students: [1,2], classes: [3], certificates: [4,5], timetable: [6,7], communications: [8], reports: [9,10] },
+  admin:     { monitoring: [1], users: [2,3], schools: [4], security: [5,6], analytics: [7], integrations: [8], audit: [9,10] }
 }
 
 const categories = computed(() => {

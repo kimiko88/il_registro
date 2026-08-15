@@ -255,391 +255,207 @@ export default {
     }
   },
   help: {
-    title: "Centro de ayuda",
-    subtitle: "Guías y tutoriales para usar el Registro Electrónico",
-    searchPlaceholder: "Buscar en la guía...",
-    noResults: "No se encontraron artículos para",
-    categories: "Categorías",
-    allTopics: "Todos los temas",
-    restartTour: "Reiniciar recorrido guiado",
-    openHelp: "Abrir guía",
-    needHelp: "¿Necesita ayuda?",
-    contactSupport: "Contactar soporte",
-    fabTooltip: "Ayuda y Guía",
-    new: "Nuevo"
-  }
-
-,
-  onboardingExtra: {
-    "openGuide": "Open Full Guide",
-    "viewAllFeatures": "Discover all features",
-    "completionTitle": "You're ready! 🎉",
-    "completionDesc": "You've completed the tour. You can access the full guide at any time from the ? button in the top bar.",
-    "teacher": {
-        "step7_title": "Digital Register & Signatures",
-        "step7_desc": "Digitally sign each lesson with a single click. The register automatically tracks lesson topics, teaching hours, and private notes.",
-        "step7_bullets": [
-            "Digital lesson signature",
-            "Lesson topics",
-            "Private notes",
-            "Hours log"
-        ],
-        "step8_title": "Competencies & Learning Units",
-        "step8_desc": "Assess student competencies according to EU descriptors, manage Learning Units (UDA) and annual work plans.",
-        "step8_bullets": [
-            "EU Competencies",
-            "Learning Units (UDA)",
-            "Annual work plan",
-            "Evaluation rubrics"
-        ],
-        "step1_bullets": [
-            "Today's lessons",
-            "Recent notifications",
-            "Quick shortcuts",
-            "Class overview"
-        ],
-        "step2_bullets": [
-            "Attendance register",
-            "Lesson topics",
-            "Digital signature",
-            "Absence management"
-        ],
-        "step3_bullets": [
-            "Oral & written grades",
-            "Class average",
-            "Distribution chart",
-            "Export tables"
-        ],
-        "step4_bullets": [
-            "Homework & tests",
-            "Activity calendar",
-            "Class announcements",
-            "Parent notices"
-        ],
-        "step5_bullets": [
-            "Meeting availability",
-            "Parent bookings",
-            "Video conferences",
-            "Meeting history"
-        ],
-        "step6_bullets": [
-            "Theme & language",
-            "Push notifications",
-            "Password management",
-            "Public profile"
-        ]
+    title: 'Centro de Ayuda y Conocimiento',
+    subtitle: 'Guías y tutoriales para aprovechar al máximo el registro electrónico',
+    searchPlaceholder: 'Buscar en la ayuda...',
+    noResults: 'No se encontraron artículos para',
+    categories: 'Categorías',
+    allTopics: 'Todos los temas',
+    restartTour: 'Reiniciar el Tour Guiado',
+    openHelp: 'Abrir la Guía',
+    needHelp: '¿Necesitas ayuda?',
+    contactSupport: 'Contactar Soporte',
+    fabTooltip: 'Ayuda y Guía',
+    new: 'Nuevo',
+    teacher: {
+      cat_register: 'Registro de Clase',
+      cat_grades: 'Gestión de Notas',
+      cat_attendance: 'Asistencia',
+      cat_agenda: 'Agenda y Comunicaciones',
+      cat_settings: 'Configuración',
+      q1: '¿Cómo registro la asistencia de la clase?',
+      a1: 'Ve a "Mis Clases" → selecciona la clase → pestaña "Asistencia". Haz clic en P (Presente), A (Ausente), R (Retraso) para cada alumno. Haz clic en "Firmar Lección" para firmar digitalmente.',
+      q2: '¿Cómo uso la vista de cuadrícula por teclado (Matrix View) para introducir notas?',
+      a2: 'En "Notas", selecciona clase y asignatura, activa el modo Matrix View. Navega entre casillas usando TAB y FLECHAS, escribe la nota y presiona ENTER.',
+      q3: '¿Cómo creo un examen o tarea en la agenda?',
+      a3: 'En "Agenda" → haz clic en una fecha → "Añadir Evento". Selecciona el tipo (Tarea, Examen), indica la asignatura y guarda.',
+      q4: '¿Cómo envío un comunicado urgente a los padres?',
+      a4: 'Ve a "Comunicaciones" → "Nueva Comunicación". Selecciona los destinatarios, marca "Acuse de recibo obligatorio" y envía.',
+      q5: '¿Cómo me organizo para la atención a padres?',
+      a5: 'En "Reuniones" → "Establecer Disponibilidad". Define días, franjas horarias y duración de citas (15, 20 o 30 min).',
+      q6: '¿Cómo accedo al panel de Evaluación Final (Scrutiny)?',
+      a6: 'Si eres tutor de grupo, "Scrutinio" aparece en la barra lateral. Introduce propuestas de nota, conducta y evaluación global.',
+      q7: '¿Cómo redacto o consulto un plan individualizado (PDP / PEI)?',
+      a7: 'Accede a "Plan Individualizado (PDP)" desde el menú de clase. Configura las medidas compensatorias y dispensatorias.',
+      q8: '¿Cómo recupero un borrador no guardado del registro?',
+      a8: 'El sistema guarda borradores automáticamente cada 15 segundos. Al reabrir, el sistema te ofrecerá restaurarlo.',
+      q9: '¿Cómo cambio el idioma de la interfaz y el modo oscuro?',
+      a9: 'En "Configuración" del menú de usuario, elige entre 9 idiomas y activa el modo oscuro o la fuente OpenDyslexic.',
+      q10: '¿Cómo puedo deshacer una nota introducida recientemente?',
+      a10: 'Tras guardar, aparece una notificación con un botón "Deshacer" activo durante 15 segundos. Después, edita directamente la celda.'
     },
-    "student": {
-        "step7_title": "Internships & Competencies",
-        "step7_desc": "Track your work-based learning hours (PCTO), view competence certifications, and build your digital portfolio.",
-        "step7_bullets": [
-            "Internship hours",
-            "Certifications",
-            "Digital portfolio",
-            "Tutor feedback"
-        ],
-        "step8_title": "Announcements & Noticeboard",
-        "step8_desc": "Read official school circulars, answer surveys, and view personalized announcements from your teachers.",
-        "step8_bullets": [
-            "School circulars",
-            "Surveys & answers",
-            "Personal alerts",
-            "Teacher notices"
-        ],
-        "step1_bullets": [
-            "Upcoming deadlines",
-            "Latest notifications",
-            "GPA summary",
-            "Upcoming tests"
-        ],
-        "step2_bullets": [
-            "Grades by subject",
-            "Live average",
-            "Trend chart",
-            "Term comparison"
-        ],
-        "step3_bullets": [
-            "Monthly attendance",
-            "Absence counter",
-            "Late arrivals & early leaves",
-            "Excuses & justifications"
-        ],
-        "step4_bullets": [
-            "Assigned homework",
-            "Due dates",
-            "Learning materials",
-            "Links & resources"
-        ],
-        "step5_bullets": [
-            "Digital report card",
-            "PDF download",
-            "Certificates",
-            "Forms"
-        ],
-        "step6_bullets": [
-            "School holidays",
-            "Test dates",
-            "Extracurriculars",
-            "Field trips & events"
-        ]
+    student: {
+      cat_grades: 'Mis Notas',
+      cat_attendance: 'Mi Asistencia',
+      cat_homework: 'Tareas',
+      cat_documents: 'Documentos y Boletín',
+      cat_settings: 'Perfil y Configuración',
+      q1: '¿Cómo consulto mis notas y mi media por asignatura?',
+      a1: 'Consulta "Mis Notas" en la barra lateral para ver el desglose de tus evaluaciones escritas y orales junto con la media ponderada.',
+      q2: '¿Cómo funciona el simulador de media?',
+      a2: 'En "Mis Notas", haz clic en "Simulador de Media". Introduce notas hipotéticas para calcular tu promedio futuro.',
+      q3: '¿Cómo sigo el total de mis faltas de asistencia?',
+      a3: 'En "Mi Asistencia", los contadores muestran tus horas de falta acumuladas respecto al límite anual.',
+      q4: '¿Dónde encuentro las tareas asignadas?',
+      a4: 'En "Tareas" o en el panel de inicio. Las tareas están ordenadas por fecha de entrega con archivos adjuntos.',
+      q5: '¿Cómo descargo mi boletín de notas trimestral?',
+      a5: 'Ve a "Boletín y Documentos", selecciona el periodo y haz clic en "Descargar Boletín PDF".',
+      q6: '¿Dónde consulto mis horas de prácticas / PCTO?',
+      a6: 'Abre "PCTO y Portfolio" para consultar las horas acumuladas, empresas asignadas y evaluaciones del tutor.',
+      q7: '¿Cómo respondo a un comunicado o circular escolar?',
+      a7: 'Abre "Comunicaciones" y selecciona el mensaje. Haz clic en "Confirmar Lectura" si se requiere acuse.',
+      q8: '¿Cómo activo la tipografía accesible OpenDyslexic?',
+      a8: 'Haz clic en el icono de accesibilidad en cualquier página o ve a "Perfil" → "Accesibilidad".',
+      q9: '¿Qué hago si he olvidado mi contraseña?',
+      a9: 'En la pantalla de inicio de sesión, haz clic en "¿Has olvidado tu contraseña?" e introduce tu correo electrónico.',
+      q10: '¿Cómo uso la búsqueda rápida Ctrl+K?',
+      a10: 'Presiona Ctrl+K (o Cmd+K) para abrir la búsqueda universal y navegar instantáneamente.'
     },
-    "parent": {
-        "step7_title": "Absence Justifications & Permissions",
-        "step7_desc": "Submit digital justifications for student absences directly from the app, and approve early leave authorizations.",
-        "step7_bullets": [
-            "Online justifications",
-            "Early leave permits",
-            "Special activities",
-            "Absence history"
-        ],
-        "step8_title": "Academic Analytics & Progress",
-        "step8_desc": "View academic performance charts over time, compare subject averages, and track improvement trends.",
-        "step8_bullets": [
-            "Progress chart",
-            "Subject comparison",
-            "Historical trends",
-            "Goals achieved"
-        ],
-        "step1_bullets": [
-            "Children overview",
-            "Recent alerts",
-            "Unread messages",
-            "Appointments"
-        ],
-        "step2_bullets": [
-            "Academic profile",
-            "Student documents",
-            "Teacher contacts",
-            "Enrollment info"
-        ],
-        "step3_bullets": [
-            "Real-time grades",
-            "Subject GPA",
-            "Daily attendance",
-            "Automated alerts"
-        ],
-        "step4_bullets": [
-            "School circulars",
-            "Teacher notices",
-            "Urgent alerts",
-            "Digital bulletin board"
-        ],
-        "step5_bullets": [
-            "Book parent meeting",
-            "Choose time slot",
-            "Email confirmation",
-            "Reschedule"
-        ],
-        "step6_bullets": [
-            "Tuition & fees",
-            "Payment history",
-            "Download receipts",
-            "Request documents"
-        ]
+    parent: {
+      cat_monitoring: 'Seguimiento de Hijos',
+      cat_communications: 'Comunicaciones',
+      cat_meetings: 'Tutorías',
+      cat_documents: 'Documentos y Pagos',
+      cat_settings: 'Perfil y Configuración',
+      q1: '¿Cómo cambio entre varios hijos matriculados?',
+      a1: 'Utiliza el selector de hijo en la parte superior para cambiar de perfil de forma instantánea.',
+      q2: '¿Recibo notificaciones en tiempo real de notas y faltas?',
+      a2: '¡Sí! Se envían notificaciones push y correos cada vez que se publica una nota o falta de asistencia.',
+      q3: '¿Cómo solicito una cita de tutoría con un profesor?',
+      a3: 'Ve a "Tutorías" → selecciona el profesor → elige una franja verde disponible en el calendario → confirma.',
+      q4: '¿Cómo pago las excursiones y cuotas con PagoPA?',
+      a4: 'Accede a "Pagos PagoPA". Revisa los recibos activos y paga directamente en línea o descargando el código QR.',
+      q5: '¿Cómo justifico una falta de asistencia en línea?',
+      a5: 'En "Asistencia y Justificaciones", haz clic en "Justificar" sobre la falta roja, indica el motivo y firma con tu PIN.',
+      q6: '¿Cómo descargo el boletín de notas de mi hijo?',
+      a6: 'Selecciona a tu hijo → "Boletín" → elige el trimestre → "Descargar Boletín PDF".',
+      q7: '¿Dónde están las circulares pendientes de firma?',
+      a7: 'En "Comunicaciones". Las circulares que requieren firma muestran un botón destacado: "Firmar lectura".',
+      q8: '¿Cómo me pongo en contacto con la secretaría del centro?',
+      a8: 'En "Soporte y FAQ" o "Contactar Soporte", envía una consulta directamente a la administración del colegio.',
+      q9: '¿Puede un segundo progenitor tener un usuario propio?',
+      a9: 'La secretaría puede vincular varias cuentas de tutores legales al mismo estudiante con credenciales individuales.',
+      q10: '¿Qué ocurre al usar la aplicación sin conexión?',
+      a10: 'La aplicación muestra los datos guardados en caché. Las gestiones realizadas se sincronizan al recuperar la conexión.'
     },
-    "secretary": {
-        "step7_title": "Enrollment & Student Registry",
-        "step7_desc": "Manage yearly school enrollments, maintain student demographic records, and handle transfers and special education plans.",
-        "step7_bullets": [
-            "Yearly enrollment",
-            "Transfers in/out",
-            "Special needs / DSA",
-            "Registry archives"
-        ],
-        "step8_title": "Circulars & School Broadcasts",
-        "step8_desc": "Compose and publish digital circulars, manage noticeboards, and send targeted group broadcasts with signature tracking.",
-        "step8_bullets": [
-            "Compose circulars",
-            "Digital signature",
-            "Targeted recipients",
-            "Publication history"
-        ],
-        "step1_bullets": [
-            "Pending tasks",
-            "Incoming requests",
-            "School statistics",
-            "System alerts"
-        ],
-        "step2_bullets": [
-            "Class list",
-            "Teacher assignments",
-            "Weekly timetable",
-            "Revision history"
-        ],
-        "step3_bullets": [
-            "Enrollment certificates",
-            "Attendance records",
-            "PDF export",
-            "Digital seal"
-        ],
-        "step4_bullets": [
-            "School schedule",
-            "Teacher substitutions",
-            "Extracurriculars",
-            "Staff notices"
-        ],
-        "step5_bullets": [
-            "Attendance reports",
-            "Official exports",
-            "Statistical charts",
-            "Advanced filters"
-        ],
-        "step6_bullets": [
-            "Create accounts",
-            "Assign roles",
-            "Reset passwords",
-            "Access control"
-        ]
+    secretary: {
+      cat_students: 'Fichero de Alumnos',
+      cat_classes: 'Gestión de Grupos',
+      cat_documents: 'Certificados y Documentos',
+      cat_timetable: 'Horarios y Sustituciones',
+      cat_reports: 'Informes y Exportación',
+      q1: '¿Cómo busco rápidamente a un alumno?',
+      a1: 'Utiliza la barra de búsqueda global en la cabecera. Busca por nombre, apellidos, NIF/NIE o grupo.',
+      q2: '¿Cómo expido un certificado oficial de matriculación?',
+      a2: 'En "Certificados y Documentos" → selecciona el estudiante → "Generar PDF". El documento incluye sello digital.',
+      q3: '¿Cómo gestiono las sustituciones diarias de profesores?',
+      a3: 'Ve a "Horarios y Sustituciones" → selecciona la fecha y el profesor ausente. El sistema sugiere profesores libres.',
+      q4: '¿Cómo exporto ficheros para los portales del Ministerio (SIDI)?',
+      a4: 'En "Informes y Estadísticas" → "Exportación Ministerio" → selecciona el periodo y formato requerido.',
+      q5: '¿Cómo creo el usuario para un nuevo alumno o tutor legal?',
+      a5: 'En "Gestión de Usuarios" → "Nuevo Usuario" → introduce los datos personales y asigna el rol correspondiente.',
+      q6: '¿Cómo configuro los grupos e itinerarios para el nuevo curso?',
+      a6: 'En "Gestión de Grupos", crea los nuevos grupos, importa los alumnos promovidos y asigna el equipo docente.',
+      q7: '¿Cómo publico una circular oficial para toda la comunidad?',
+      a7: 'En "Comunicaciones" → "Nueva Circular" → selecciona los colectivos destinatarios y marca si requiere acuse.',
+      q8: '¿Cómo gestiono la lista de libros de texto adoptados?',
+      a8: 'En "Libros de Texto", selecciona el grupo y la asignatura e introduce el código ISBN, título y editorial.',
+      q9: '¿Cómo compruebo el estado de los cobros PagoPA?',
+      a9: 'Abre "Finanzas y PagoPA" para revisar el estado de los pagos y emitir recordatorios de cobro.',
+      q10: '¿Cómo anulo un número de protocolo emitido por error?',
+      a10: 'En el archivo documental, selecciona el protocolo → "Anular con justificación". La acción queda registrada en el Audit Log.'
     },
-    "admin": {
-        "step7_title": "Schools & Campuses Management",
-        "step7_desc": "Create and configure multiple school branches, manage tenant settings, assign campus administrators, and monitor activity.",
-        "step7_bullets": [
-            "New campuses",
-            "Per-school config",
-            "Branch admins",
-            "Multi-tenant"
-        ],
-        "step8_title": "Integrations & API Management",
-        "step8_desc": "Connect third-party systems (Google Workspace, Microsoft 365, LMS), configure webhooks, and monitor API traffic.",
-        "step8_bullets": [
-            "Google Workspace",
-            "Microsoft 365",
-            "Webhook config",
-            "API monitoring"
-        ],
-        "step1_bullets": [
-            "System health",
-            "Active users",
-            "Open sessions",
-            "Recent errors"
-        ],
-        "step2_bullets": [
-            "CPU & memory usage",
-            "API latency",
-            "Live logs",
-            "Threshold alerts"
-        ],
-        "step3_bullets": [
-            "Manage users",
-            "RBAC roles",
-            "Manage schools",
-            "Bulk CSV import"
-        ],
-        "step4_bullets": [
-            "Platform metrics",
-            "Periodic reports",
-            "User growth",
-            "Data exports"
-        ],
-        "step5_bullets": [
-            "Immutable audit logs",
-            "Security filters",
-            "Compliance export",
-            "GDPR tools"
-        ],
-        "step6_bullets": [
-            "Password policy",
-            "Mandatory 2FA",
-            "Feature flags",
-            "Maintenance mode"
-        ]
+    admin: {
+      cat_monitoring: 'Supervisión del Sistema',
+      cat_users: 'Gestión de Usuarios',
+      cat_schools: 'Centros Educativos',
+      cat_security: 'Seguridad y Autenticación',
+      cat_analytics: 'Analítica y Absentismo',
+      q1: '¿Cómo superviso el estado de los microservicios y la base de datos?',
+      a1: 'En "Supervisión del Sistema", consulta los gráficos en tiempo real de CPU, memoria RAM, conexiones y latencia API.',
+      q2: '¿Cómo añado un nuevo centro o sede escolar?',
+      a2: 'Ve a "Gestión de Centros" → "Añadir Centro". Introduce el código oficial, nombre, dirección y correo de contacto.',
+      q3: '¿Cómo fuerzo el restablecimiento de contraseña o activo el 2FA obligatorio?',
+      a3: 'En "Gestión de Usuarios", selecciona la cuenta → "Seguridad" → "Forzar cambio de contraseña" o "Exigir 2FA".',
+      q4: '¿Cómo consulto el registro inmutable de auditoría (Audit Log)?',
+      a4: 'En "Auditoría y Cumplimiento". Filtra eventos por usuario, tipo de acción, fecha y dirección IP de origen.',
+      q5: '¿Cómo gestiono los Feature Flags de la plataforma?',
+      a5: 'En "Feature Flags y Módulos", activa o desactiva funcionalidades específicas (PagoPA, Google SSO, Matrix View).',
+      q6: '¿Cómo analizo el riesgo de abandono y absentismo escolar?',
+      a6: 'Abre "Analytics y BI". Los algoritmos señalan a los alumnos que superan el 20% de faltas o con media inferior a 5.0.',
+      q7: '¿Cómo configuro la autenticación única (SSO) con Google y Microsoft?',
+      a7: 'En "Integraciones y SSO", introduce el Client ID de OAuth2 y la Clave Secreta de Google Cloud o Azure.',
+      q8: '¿Cómo ejecuto copias de seguridad manuales de la base de datos?',
+      a8: 'En "Base de Datos y Copias", lanza un volcado instantáneo de PostgreSQL o programa copias automáticas en S3.',
+      q9: '¿Cómo reviso la matriz completa de permisos RBAC?',
+      a9: 'Accede a "Roles y Permisos" para consultar la matriz interactiva de accesos de los 9 roles del sistema.',
+      q10: '¿Cómo activo el modo mantenimiento de la plataforma?',
+      a10: 'En "Configuración del Sistema", activa el "Modo Mantenimiento". Se mostrará un aviso informativo a los usuarios.'
     }
-},
+  },
   guideCenter: {
-    "title": "Help & Knowledge Center",
-    "subtitle": "Comprehensive guides for every section of the electronic register",
-    "search": "Search in guides...",
-    "noResults": "No guides found for",
-    "readingTime": "min read",
-    "step": "Step",
-    "tip": "Tip",
-    "warning": "Warning",
-    "shortcut": "Shortcut",
-    "teacher": {
-        "dashboard": {
-            "title": "Teacher Dashboard",
-            "desc": "Overview of daily lessons, notifications, and quick actions.",
-            "content": "The teacher dashboard provides a complete overview of your day. Top widgets display today’s scheduled classes with times and room numbers.\n\nStep 1: Customize your dashboard widgets by dragging them.\nStep 2: Click on any class in the timetable to open its register directly.\nStep 3: Filter notifications by urgency or category.\n\nTip: Enable priority alerts to stay informed about urgent announcements."
-        },
-        "attendance": {
-            "title": "Attendance Register",
-            "desc": "How to record attendance, absences, and delays quickly and accurately.",
-            "content": "The attendance register automatically loads the student list for the current period.\n\nStep 1: Click on a student name to toggle status (Present, Absent, Late, Early exit).\nStep 2: Add optional justification notes or remarks.\nStep 3: Click \"Sign Lesson\" to confirm and digitally sign the session.\nStep 4: Parents of absent students are notified automatically.\n\nShortcut: Press Ctrl+Enter to quickly save attendance."
-        },
-        "grades": {
-            "title": "Grade Management",
-            "desc": "Enter and manage written, oral, and practical grades.",
-            "content": "The gradebook is an interactive grid organized by students and evaluation dates.\n\nStep 1: Select class and subject from the dropdown.\nStep 2: Click on any cell to input or edit a grade.\nStep 3: Choose evaluation type (Written, Oral, Practical) and score.\nStep 4: Add private or public feedback comments.\nStep 5: Subject and class averages update instantly.\n\nWarning: Published grades are visible to students and parents within seconds."
-        },
-        "agenda": {
-            "title": "School Agenda & Homework",
-            "desc": "Plan tests, assignments, and shared class activities.",
-            "content": "The teacher agenda syncs automatically with students and parents.\n\nStep 1: Click on any calendar date to schedule an event.\nStep 2: Choose event type: Homework, Exam, Field trip, or Reminder.\nStep 3: Select subject, description, and attach learning files.\nStep 4: Check \"Notify students\" to broadcast an instant push notification.\n\nTip: Use the Week view to check for test overlaps across subjects."
-        },
-        "communications": {
-            "title": "Communications & Messages",
-            "desc": "Send structured messages to classes, parents, and colleagues.",
-            "content": "Send announcements through dedicated channels: direct messages, class circulars, or urgent bulletins.\n\nStep 1: Navigate to \"Communications\" → \"New Message\".\nStep 2: Choose channel type and recipient list.\nStep 3: Format your message using the rich-text editor.\nStep 4: Send immediately or schedule for future publication.\n\nWarning: Urgent announcements trigger push notifications and SMS alerts."
-        },
-        "meetings": {
-            "title": "Parent-Teacher Meetings",
-            "desc": "Configure availability slots and manage booking appointments.",
-            "content": "Manage weekly office hours and individual parent conferences.\n\nStep 1: Go to \"Meetings\" → \"Set Availability\".\nStep 2: Define weekly recurring time slots and appointment durations.\nStep 3: Parents book online; you receive automated calendar invites.\nStep 4: Review student performance records prior to the meeting.\n\nTip: Enable the integrated video call link for virtual meetings."
-        }
+    title: "Centro de Ayuda y Conocimiento",
+    subtitle: "Guías detalladas para cada sección del registro electrónico",
+    search: "Buscar en las guías...",
+    noResults: "No se encontraron guías para",
+    readingTime: "min de lectura",
+    step: "Paso",
+    tip: "Sugerencia",
+    warning: "Atención",
+    shortcut: "Atajo",
+    teacher: {
+      dashboard: { title: "Panel del Profesor", desc: "Resumen de la jornada, notificaciones y accesos rápidos.", content: "El panel del profesor ofrece una vista completa de tu día. Los widgets muestran tus clases de hoy, horarios y aulas.\n\nPaso 1: Personaliza tus widgets arrastrándolos.\nPaso 2: Haz clic en una clase para abrir su registro directamente.\nPaso 3: Filtra las notificaciones por prioridad.\n\nSugerencia: Activa las alertas prioritarias para recibir avisos urgentes." },
+      attendance: { title: "Registro de Asistencia", desc: "Registro rápido de asistencia, faltas y retrasos.", content: "El registro carga automáticamente la lista de alumnos de la clase.\n\nPaso 1: Haz clic en el nombre de un alumno para cambiar su estado (Presente, Ausente, Retraso).\nPaso 2: Añade observaciones o motivos opcionales.\nPaso 3: Haz clic en \"Firmar Lección\" para firmar digitalmente la sesión.\nPaso 4: Los padres de alumnos ausentes son notificados automáticamente.\n\nAtajo: Presiona Ctrl+Enter para guardar rápidamente la asistencia." },
+      grades: { title: "Gestión de Notas y Vista Matrix", desc: "Introducción de notas escritas y orales con cuadrícula rápida de teclado.", content: "El cuaderno de notas ofrece la vista estándar y la vista rápida por teclado Matrix View.\n\nPaso 1: Selecciona la clase y la asignatura.\nPaso 2: Activa la vista Matrix para navegar con TAB y FLECHAS.\nPaso 3: Escribe la nota (1-10) y presiona ENTER.\nPaso 4: Añade comentarios públicos o privados.\nPaso 5: Las medias se recalculan instantáneamente.\n\nAtención: Las notas publicadas son visibles para los padres en pocos segundos." },
+      agenda: { title: "Agenda y Tareas", desc: "Planificación de exámenes, tareas y actividades.", content: "La agenda del profesor se sincroniza automáticamente con alumnos y padres.\n\nPaso 1: Haz clic en una fecha del calendario para añadir un evento.\nPaso 2: Elige el tipo: Tarea, Examen, Salida escolar.\nPaso 3: Selecciona la asignatura, descripción y adjunta archivos.\nPaso 4: El sistema avisa si la clase ya tiene más de 2 exámenes el mismo día.\n\nSugerencia: Usa la vista semanal para evitar solapamientos de exámenes." },
+      communications: { title: "Comunicaciones y Mensajes", desc: "Envío de mensajes estructurados a grupos, padres y compañeros.", content: "Publica avisos mediante canales dedicados: mensajes directos, circulares o boletines urgentes.\n\nPaso 1: Ve a \"Comunicaciones\" → \"Nuevo mensaje\".\nPaso 2: Elige el canal y la lista de destinatarios.\nPaso 3: Redacta el mensaje con el editor enriquecido.\nPaso 4: Envía inmediatamente o programa la publicación.\n\nAtención: Los mensajes urgentes envían notificaciones push de inmediato." },
+      meetings: { title: "Tutorías y Atención a Padres", desc: "Gestión de horarios de atención y citas de tutoría.", content: "Gestiona tus horas de atención semanal y citas individuales.\n\nPaso 1: Ve a 'Tutorías' → 'Establecer Disponibilidad'.\nPaso 2: Define días, franjas horarias y duración de las citas (15, 20, 30 min).\nPaso 3: Los padres reservan en línea y recibes una confirmación.\nPaso 4: Revisa el expediente del alumno antes de la cita.\n\nSugerencia: Activa el enlace de videollamada integrado." },
+      scrutiny: { title: "Evaluación Final y Scrutinio", desc: "Procedimiento para propuesta de notas, conducta y actas de evaluación.", content: "El panel del equipo docente consolida las propuestas de nota de todas las asignaturas.\n\nPaso 1: Selecciona el grupo y el periodo de evaluación.\nPaso 2: Revisa la media propuesta e introduce la nota acordada.\nPaso 3: Introduce la nota de conducta y la valoración global.\nPaso 4: Como tutor, bloquea el panel una vez validado por todos.\nPaso 5: Exporta e imprime el acta oficial en PDF.\n\nAtención: Tras el bloqueo del tutor, cualquier cambio requiere desbloqueo de secretaría." },
+      pdp: { title: "Plan Individualizado (PDP / PEI)", desc: "Elaboración de medidas compensatorias y dispensatorias para necesidades específicas.", content: "El módulo PDP permite al equipo docente diseñar planes de aprendizaje adaptados.\n\nPaso 1: Accede a 'PDP / PEI' desde el menú de la clase.\nPaso 2: Selecciona al alumno y configura las medidas compensatorias y dispensatorias.\nPaso 3: Guarda el borrador y envíalo a los padres para firma digital.\nPaso 4: Las medidas activas se muestran con iconos de aviso durante la evaluación.\n\nSugerencia: Usa las rúbricas predefinidas para agilizar la redacción." }
     },
-    "student": {
-        "dashboard": {
-            "title": "Student Dashboard",
-            "desc": "Your daily hub for deadlines, grades, and schedules.",
-            "content": "The student dashboard prioritizes urgent tasks and upcoming exams.\n\nStep 1: Review \"Today’s Schedule\" for lessons and rooms.\nStep 2: Check \"Due Today\" and \"Tomorrow’s Exams\".\nStep 3: Monitor your overall GPA and recent grade additions.\n\nTip: Install the PWA on your phone for instant notification alerts."
-        },
-        "grades": {
-            "title": "My Grades & Performance",
-            "desc": "Track your subject grades, averages, and evaluation history.",
-            "content": "View all assessments organized by subject and academic term.\n\nStep 1: Select a subject to inspect detailed teacher feedback.\nStep 2: Review the trend line to understand your progress over time.\nStep 3: Switch between terms (1st Term, 2nd Term, Final).\nStep 4: Download a full PDF transcript at any time."
-        },
-        "homework": {
-            "title": "Homework & Assignments",
-            "desc": "Organize your homework, downloads, and submission deadlines.",
-            "content": "Stay on top of all homework assignments and study materials.\n\nStep 1: Filter tasks by due date or subject.\nStep 2: Click on an assignment to download attachments.\nStep 3: Mark tasks as \"Completed\" to keep track of your workload."
-        }
+    student: {
+      dashboard: { title: "Panel del Estudiante", desc: "Tu centro diario para entregas, notas y horarios.", content: "El panel del estudiante prioriza tus tareas pendientes y próximos exámenes.\n\nPaso 1: Consulta 'Hoy' para ver tus clases y aulas.\nPaso 2: Revisa las tareas con entrega hoy y exámenes de mañana.\nPaso 3: Sigue tu nota media global.\n\nSugerencia: Instala la PWA en tu móvil para recibir avisos al instante." },
+      grades: { title: "Mis Notas y Rendimiento", desc: "Sigue tus calificaciones, promedios e historial de evaluaciones.", content: "Todas tus notas organizadas por asignatura y trimestre.\n\nPaso 1: Selecciona una asignatura para leer los comentarios del profesor.\nPaso 2: Examina la gráfica de evolución de tus calificaciones.\nPaso 3: Cambia entre trimestres.\nPaso 4: Descarga tu expediente completo en PDF." },
+      homework: { title: "Tareas y Trabajos", desc: "Organiza tus entregas, descargas y fechas límite.", content: "Mantén el control total de tus tareas y materiales de estudio.\n\nPaso 1: Filtra las tareas por fecha o asignatura.\nPaso 2: Haz clic en una tarea para descargar archivos adjuntos.\nPaso 3: Marca las tareas como 'Completadas'." },
+      attendance: { title: "Mi Registro de Asistencia", desc: "Control de faltas de asistencia, retrasos y estado de justificaciones.", content: "Consulta tu cómputo total de faltas e historial mensual.\n\nPaso 1: Abre 'Mi Asistencia'.\nPaso 2: Revisa el contador de horas de falta en la parte superior.\nPaso 3: Comprueba el calendario mensual para faltas (rojo) y retrasos (naranja).\nPaso 4: Verifica si tus padres han justificado tus ausencias." },
+      documents: { title: "Boletín y Documentos Oficiales", desc: "Consulta y descarga de boletines trimestrales y certificados.", content: "Accede a los documentos oficiales publicados por el centro escolar.\n\nPaso 1: Ve a 'Boletín y Documentos'.\nPaso 2: Selecciona el curso y el trimestre.\nPaso 3: Haz clic en 'Vista previa del boletín' para consultarlo online.\nPaso 4: Haz clic en 'Descargar PDF' para guardar el documento firmado." },
+      simulator: { title: "Simulador de Nota Media", desc: "Calcula la nota necesaria en los próximos exámenes para alcanzar tu objetivo.", content: "El simulador calcula la nota exacta que necesitas obtener en la próxima prueba.\n\nPaso 1: Selecciona la asignatura objetivo.\nPaso 2: Introduce la media deseada (ej: 7.5).\nPaso 3: El sistema calcula la nota mínima requerida en el siguiente examen." },
+      pcto: { title: "PCTO y Portfolio de Competencias", desc: "Gestión de horas de prácticas en empresas y certificados.", content: "Haz el seguimiento de tus horas de prácticas en empresas (PCTO).\n\nPaso 1: Abre 'PCTO y Portfolio'.\nPaso 2: Comprueba tu gráfica de horas respecto al mínimo obligatorio.\nPaso 3: Consulta los datos de la empresa receptora y descarga tus certificados." }
     },
-    "parent": {
-        "monitoring": {
-            "title": "Monitoring Your Children",
-            "desc": "Follow academic performance, daily attendance, and notices in real time.",
-            "content": "Access comprehensive academic information for all enrolled children.\n\nStep 1: Select your child from the top switcher.\nStep 2: Check daily attendance and real-time grade notifications.\nStep 3: Read teacher comments on individual assessments.\nStep 4: View academic progress charts.\n\nTip: Configure notification thresholds to receive alerts if grades drop."
-        },
-        "meetings": {
-            "title": "Booking Teacher Meetings",
-            "desc": "Schedule and manage conference appointments with teachers.",
-            "content": "Easily book one-on-one parent-teacher conferences.\n\nStep 1: Open \"Meetings\" and select the desired teacher.\nStep 2: Pick an available green time slot on the calendar.\nStep 3: Confirm booking to receive an email reminder.\n\nWarning: Cancellations should be submitted at least 2 hours in advance."
-        }
+    parent: {
+      monitoring: { title: "Seguimiento de Hijos", desc: "Sigue las notas, asistencia y avisos de tus hijos en tiempo real.", content: "Acceso completo al expediente escolar de todos tus hijos matriculados.\n\nPaso 1: Selecciona a tu hijo en el menú superior.\nPaso 2: Revisa la asistencia diaria y las notificaciones de notas.\nPaso 3: Lee los comentarios de los profesores en los exámenes.\nPaso 4: Consulta los gráficos de evolución académica.\n\nSugerencia: Configura alertas si el promedio desciende de tu umbral deseado." },
+      meetings: { title: "Reserva de Tutorías", desc: "Reserva citas de atención con los profesores de tus hijos.", content: "Reserva tutorías individuales en pocos pasos.\n\nPaso 1: Abre 'Tutorías' y selecciona al profesor.\nPaso 2: Elige una franja verde disponible en el calendario.\nPaso 3: Confirma la reserva para recibir recordatorio por email.\n\nAtención: Las cancelaciones deben hacerse con al menos 2 horas de antelación." },
+      communications: { title: "Comunicaciones y Tablón de Anuncios", desc: "Lee circulares, avisos urgentes y notas del profesorado.", content: "Todos los comunicados oficiales del colegio en un solo lugar.\n\nPaso 1: Abre 'Comunicaciones'.\nPaso 2: Filtra por categoría (Dirección, Profesores, Grupo).\nPaso 3: Lee el texto y descarga los adjuntos PDF.\nPaso 4: Haz clic en 'Firmar lectura' cuando se solicite." },
+      pagopa: { title: "Pagos Escolares PagoPA", desc: "Gestiona y paga excursiones, comedor y cuotas en línea.", content: "Sistema PagoPA integrado para pagos electrónicos seguros.\n\nPaso 1: Ve a 'Pagos PagoPA'.\nPaso 2: Consulta las cuotas y avisos pendientes.\nPaso 3: Haz clic en 'Pagar ahora' para pagar con tarjeta, PayPal o bizum.\nPaso 4: O descarga el recibo con código QR para pagar en el banco." },
+      documents: { title: "Documentos y Formularios", desc: "Descarga boletines, certificados y autorizaciones escolares.", content: "Descarga documentos oficiales firmados directamente en tu dispositivo.\n\nPaso 1: Ve a 'Documentos y Boletín'.\nPaso 2: Descarga los boletines trimestrales en formato PDF.\nPaso 3: Rellena y firma digitalmente autorizaciones de excursiones." },
+      justifications: { title: "Justificación de Faltas Online", desc: "Justifica las ausencias y retrasos de tus hijos por internet.", content: "Olvídate de los justificantes en papel: justifica ausencias con tu PIN o código OTP.\n\nPaso 1: Abre 'Asistencia y Justificaciones'.\nPaso 2: Consulta las faltas pendientes marcadas en rojo.\nPaso 3: Haz clic en 'Justificar', selecciona el motivo (Enfermedad, Familia) y confirma con tu PIN." }
     },
-    "secretary": {
-        "students": {
-            "title": "Student Registry Management",
-            "desc": "Search, manage, and update student profiles and demographic records.",
-            "content": "The student registry is the central database for all enrolled learners.\n\nStep 1: Use the global search bar (name, tax code, class).\nStep 2: Click a record to open the full student dossier.\nStep 3: Edit contact information, enrollment status, or guardian links.\nStep 4: Export filtered data to Excel or CSV formats."
-        },
-        "certificates": {
-            "title": "Certificate Generation",
-            "desc": "Issue official school documents, attendance proofs, and certificates.",
-            "content": "Produce signed school documents in seconds.\n\nStep 1: Search for the student record.\nStep 2: Go to \"Certificates\" → \"Generate\".\nStep 3: Select certificate template (Enrollment, Attendance, Transcripts).\nStep 4: Preview, apply digital stamp, and print or email directly."
-        }
+    secretary: {
+      students: { title: "Gestión del Fichero de Alumnos", desc: "Búsqueda, edición y actualización de datos del alumnado.", content: "El fichero de alumnos es la base de datos central de la secretaría.\n\nPaso 1: Utiliza la barra de búsqueda global (Nombre, NIF, Grupo).\nPaso 2: Haz clic en la ficha de un alumno para abrir su expediente.\nPaso 3: Edita datos de contacto o tutores legales.\nPaso 4: Exporta los datos a Excel o CSV." },
+      classes: { title: "Organización de Grupos e Itinerarios", desc: "Creación de grupos, asignación de materias y profesores.", content: "Configura la estructura de grupos para el curso escolar.\n\nPaso 1: Abre 'Gestión de Grupos'.\nPaso 2: Haz clic en 'Nuevo Grupo' para añadir una unidad.\nPaso 3: Asigna las asignaturas del plan de estudios y los profesores.\nPaso 4: Designa al tutor de grupo y al secretario." },
+      certificates: { title: "Emisión de Certificados", desc: "Expide certificados oficiales de matrícula, asistencia y notas.", content: "Emite documentos escolares firmados en segundos.\n\nPaso 1: Busca al estudiante.\nPaso 2: Ve a 'Certificados' → 'Generar'.\nPaso 3: Elige la plantilla (Matrícula, Asistencia, Calificaciones).\nPaso 4: Revisa la vista previa, aplica sello digital e imprime o envía." },
+      timetable: { title: "Horarios y Sustituciones", desc: "Configuración del cuadro horario y gestión de sustituciones de profesores.", content: "Gestiona el cuadrante de clases y las ausencias de profesores.\n\nPaso 1: Abre 'Horarios y Sustituciones'.\nPaso 2: Introduce las horas lectivas en la parrilla semanal.\nPaso 3: En caso de ausencia, el sistema propone profesores de guardia disponibles.\nPaso 4: Asigna la sustitución y notifica al profesor." },
+      communications: { title: "Gestión de Circulares", desc: "Publicación de circulares oficiales y seguimiento de firmas.", content: "Difunde comunicados oficiales a personal, familias o alumnos.\n\nPaso 1: Abre 'Comunicaciones y Tablón'.\nPaso 2: Haz clic en 'Nueva Circular'.\nPaso 3: Indica el número de protocolo, título y contenido.\nPaso 4: Selecciona destinatarios y requisito de firma." },
+      reports: { title: "Informes y Exportación Ministerio (SIDI)", desc: "Extracción de estadísticas y ficheros de datos normativos.", content: "Genera informes estadísticos y ficheros de exportación oficiales.\n\nPaso 1: Abre 'Informes y Estadísticas'.\nPaso 2: Selecciona el tipo de informe (Control de faltas, Resultados de actas).\nPaso 3: Elige el formato: Excel, CSV, PDF o XML SIDI." }
     },
-    "admin": {
-        "monitoring": {
-            "title": "System & Health Monitoring",
-            "desc": "Monitor platform uptime, API response times, and server performance.",
-            "content": "Real-time telemetry and health monitoring across all platform services.\n\nStep 1: Inspect server CPU, RAM, and active session count.\nStep 2: Monitor API throughput and error rates over the last 24 hours.\nStep 3: Configure alert thresholds for proactive notifications.\n\nWarning: Use Maintenance Mode during scheduled platform updates."
-        },
-        "users": {
-            "title": "User & Access Management",
-            "desc": "Manage user accounts, RBAC permissions, and authentication policies.",
-            "content": "Centralized user provisioning and security management.\n\nStep 1: Search users by role, institution, or active status.\nStep 2: Create single accounts or use the bulk CSV/Excel import tool.\nStep 3: Enforce 2FA/MFA and manage password resets.\nStep 4: Review immutable audit logs for compliance auditing."
-        }
+    admin: {
+      monitoring: { title: "Supervisión del Sistema", desc: "Monitorización de disponibilidad, tiempos de respuesta y servidores.", content: "Telemetría en tiempo real de todos los microservicios del sistema.\n\nPaso 1: Revisa el uso de CPU, memoria RAM y sesiones activas.\nPaso 2: Sigue el tráfico de API y tasa de errores de las últimas 24 horas.\nPaso 3: Configura umbrales de alerta preventiva.\n\nAtención: Usa el Modo Mantenimiento durante las actualizaciones planificadas." },
+      users: { title: "Gestión de Usuarios y Permisos", desc: "Administración de cuentas, permisos RBAC y políticas de seguridad.", content: "Gestión centralizada de cuentas de usuario y seguridad.\n\nPaso 1: Busca usuarios por rol, centro o estado.\nPaso 2: Crea cuentas individuales o usa la importación masiva por CSV.\nPaso 3: Exige 2FA/MFA y gestiona el restablecimiento de contraseñas.\nPaso 4: Revisa el registro inalterable de auditoría." },
+      schools: { title: "Gestión de Centros Escolares", desc: "Configuración de sedes, códigos oficiales y parámetros de red.", content: "Gestiona la estructura de la institución multi-tenant.\n\nPaso 1: Abre 'Gestión de Centros'.\nPaso 2: Añade las sedes (Sede Central, Anexo, Primaria, Secundaria).\nPaso 3: Introduce el Código Oficial del centro y datos de contacto." },
+      security: { title: "Políticas de Seguridad y Autenticación", desc: "Reglas de contraseñas, caducidad de sesión, 2FA y límites de tasa.", content: "Establece reglas de protección conforme a la normativa de seguridad.\n\nPaso 1: Abre 'Seguridad y Autenticación'.\nPaso 2: Define la longitud mínima de contraseña y periodo de caducidad.\nPaso 3: Exige autenticación en dos pasos (2FA) para el personal." },
+      analytics: { title: "Analytics y Prevención del Abandono Escolar", desc: "Análisis predictivo sobre riesgos de abandono y absentismo.", content: "Usa herramientas de Business Intelligence para detectar alumnos en riesgo.\n\nPaso 1: Abre 'Analytics y BI'.\nPaso 2: Consulta el mapa de calor de absentismo por clase y asignatura.\nPaso 3: Configura criterios de alerta (ej: Faltas > 20% + Media < 5.0)." },
+      integrations: { title: "Integraciones E-Learning y SSO", desc: "Sincronización con Google Classroom, Microsoft Teams y SSO.", content: "Conecta el Registro Electrónico con plataformas educativas en la nube.\n\nPaso 1: Abre 'Integraciones y SSO'.\nPaso 2: Activa el módulo de Google Workspace o Microsoft 365.\nPaso 3: Introduce el Client ID de OAuth2 y la Clave Secreta." },
+      audit: { title: "Audit Log y Trazabilidad RGPD", desc: "Registro de actividad inalterable que rastrea todos los accesos y cambios.", content: "Garantiza la trazabilidad completa según la normativa RGPD 2016/679.\n\nPaso 1: Abre 'Auditoría y Trazabilidad'.\nPaso 2: Consulta el historial: Marca de tiempo, Usuario, Rol, IP y Acción.\nPaso 3: Exporta informes PDF cifrados para inspecciones." }
     }
-}
+  }
 }

@@ -187,29 +187,36 @@ const faqsByRole = {
   superadmin: [
     { category: 'scuole', question: 'Come posso creare una nuova scuola?', answer: 'Vai nella sezione "Gestione Scuole", clicca su "Nuova Scuola", inserisci i dettagli (Nome, Indirizzo, Codice Meccanografico) e conferma.' },
     { category: 'sistema', question: 'Cosa indica il pannello Monitoraggio?', answer: 'Mostra i tempi di risposta delle API del database e lo stato di salute generale dei microservizi collegati in tempo reale.' },
-    { category: 'sistema', question: 'Come faccio a visualizzare gli Audit Logs?', answer: 'Tutte le azioni significative degli utenti vengono registrate cronologicamente nella scheda "Audit Logs" per conformità GDPR.' }
+    { category: 'sistema', question: 'Come faccio a visualizzare gli Audit Logs?', answer: 'Tutte le azioni significative degli utenti vengono registrate cronologicamente nella scheda "Audit Logs" per conformità GDPR.' },
+    { category: 'sicurezza', question: 'Come posso configurare la policy password globale o l\'obbligo 2FA?', answer: 'In "Impostazioni Sistema" seleziona "Sicurezza", quindi configura la lunghezza minima password, i giorni di scadenza e il toggle per il 2FA obbligatorio per lo staff.' }
   ],
   admin: [
-    { category: 'scuole', question: 'Come configuro i plessi della scuola?', answer: 'Dalla sezione "La mia scuola" puoi configurare i parametri base e le classi associate al tuo istituto scolastico.' },
-    { category: 'utenti', question: 'Come posso assegnare il ruolo di docente?', answer: 'Vai in "Gestione Utenti", seleziona "Aggiungi Utente" e scegli il ruolo "docente", quindi assegna le sue materie/classi.' }
+    { category: 'scuole', question: 'Come configuro i plessi e le sezioni della scuola?', answer: 'Dalla sezione "La mia scuola" puoi configurare i plessi (Sede centrale, succursali), i parametri di rete e le sezioni associate al tuo istituto scolastico.' },
+    { category: 'utenti', question: 'Come posso inserire o importare massivamente i docenti e gli studenti?', answer: 'Vai in "Gestione Utenti" → "Import Massivo". Puoi caricare un file Excel o CSV strutturato per importare centinaia di account contemporaneamente.' },
+    { category: 'analytics', question: 'Come funziona l\'analisi predittiva della dispersione scolastica?', answer: 'Nel pannello "Analytics & BI" l\'algoritmo identifica in automatico gli studenti che superano il 20% di assenze o hanno una media inferiore al 6.0.' }
   ],
   secretary: [
     { category: 'classi', question: 'Come posso iscrivere uno studente ad una classe?', answer: 'Seleziona "Studenti" dal menu principale, clicca sullo studente desiderato e usa il selettore classe per impostare la classe corrente.' },
-    { category: 'didattica', question: 'Come importare i libri di testo?', answer: 'Accedi alla sezione "Libri di Testo" e compila le schede dei volumi consigliati o adottati per ciascuna classe.' },
-    { category: 'comunicazioni', question: 'Come inviare una circolare alle famiglie?', answer: 'Vai su "Comunicazioni", clicca su "Nuovo Messaggio", seleziona il target "Genitori" o "Tutti" e pubblica la circolare.' }
+    { category: 'didattica', question: 'Come importare i libri di testo?', answer: 'Accedi alla sezione "Libri di Testo" e compila le schede dei volumi consigliati o adottati per ciascuna classe, inserendo ISBN, editore e prezzo.' },
+    { category: 'comunicazioni', question: 'Come inviare una circolare alle famiglie con richiesta di presa d\'atto?', answer: 'Vai su "Comunicazioni", clicca su "Nuovo Messaggio", seleziona il target "Genitori", spunta "Obbligo presa d\'atto" e pubblica la circolare.' },
+    { category: 'certificati', question: 'Come genero e stampo un certificato con timbro digitale?', answer: 'In "Certificati" seleziona lo studente, il tipo di certificato (iscrizione, frequenza, esiti) e clicca "Genera PDF". Il documento viene firmato digitalmente dal sistema.' }
   ],
   teacher: [
     { category: 'registro', question: 'Come si firma il registro elettronico giornaliero?', answer: 'Vai nella sezione "Registro Classe" (Lesson Planner), seleziona la classe e la materia dell\'ora corrente, digita l\'argomento della lezione e clicca su "Firma".' },
-    { category: 'voti', question: 'Come inserire un voto o una valutazione?', answer: 'Usa la sezione "Voti", seleziona classe, materia e lo studente di interesse. Compila i dati del voto (scritto/orale, data, valore) e conferma.' },
+    { category: 'voti', question: 'Come uso l\'inserimento voti rapido Matrix View a tastiera?', answer: 'Accedi a "Voti" e passa alla modalità Matrix. Puoi navigare con TAB/FRECCE, digitare il voto e premere INVIO per salvare all\'istante.' },
+    { category: 'scrutinio', question: 'Come compilo la proposta di voto e il giudizio per lo Scrutinio?', answer: 'Nella sezione "Scrutinio" seleziona la classe ed inserisci il voto proposto, la condotta e il giudizio di livello. Se sei coordinatore, verifica le proposte dei colleghi e chiudi il tabellone.' },
+    { category: 'pdp', question: 'Come applico le misure compensative e dispensative PDP per studenti BES/DSA?', answer: 'Dalla scheda "PDP / PEI" del Consiglio di Classe imposta le misure attive. Verranno mostrate con icone dedicate nel registro durante le valutazioni.' },
     { category: 'colloqui', question: 'Come imposto la mia disponibilità oraria per i colloqui?', answer: 'Accedi alla sezione "Colloqui" e definisci le fasce orarie settimanali in cui i genitori possono prenotarsi.' }
   ],
   student: [
-    { category: 'voti', question: 'Dove vedo la mia media scolastica?', answer: 'La media dei voti è mostrata direttamente sulla Dashboard principale e nella sezione "I Miei Voti", suddivisa per materie.' },
+    { category: 'voti', question: 'Dove vedo la mia media scolastica e come uso il Simulatore?', answer: 'La media dei voti è mostrata sulla Dashboard e in "I Miei Voti". Usa il "Simulatore Media" per calcolare il voto che ti serve nella prossima verifica.' },
     { category: 'didattica', question: 'Come scaricare il materiale didattico?', answer: 'Vai nella sezione "Materiale Didattico". Qui troverai tutti i file inseriti dai tuoi professori divisi per materia.' },
-    { category: 'compiti', question: 'Come segno un compito come completato?', answer: 'Nella sezione "Compiti" puoi vedere la lista dei compiti assegnati e spuntare la casella di completamento.' }
+    { category: 'compiti', question: 'Come segno un compito come completato?', answer: 'Nella sezione "Compiti" puoi vedere la lista dei compiti assegnati e spuntare la casella di completamento.' },
+    { category: 'pcto', question: 'Dove consulto il monte ore PCTO accumulato?', answer: 'Nella sezione "PCTO & Portfolio" vedi il totale delle ore svolte presso le strutture convenzionate, i progetti e le valutazioni dei tutor.' }
   ],
   parent: [
-    { category: 'assenze', question: 'Come giustificare un\'assenza o un ritardo?', answer: 'Vai nella sezione "Presenze", individua l\'assenza o il ritardo che presenta la dicitura "Da Giustificare" e clicca sul pulsante "Giustifica", selezionando la motivazione.' },
+    { category: 'assenze', question: 'Come giustificare un\'assenza o un ritardo online?', answer: 'Vai nella sezione "Presenze", individua l\'assenza con la dicitura "Da Giustificare" e clicca su "Giustifica", inserendo motivo e PIN/OTP.' },
+    { category: 'pagopa', question: 'Come pago un avviso di contributo o gita scolastica tramite PagoPA?', answer: 'Accedi a "Pagamenti PagoPA", individua l\'avviso e clicca "Paga con PagoPA" per pagare direttamente online o scaricare il bollettino QR.' },
     { category: 'colloqui', question: 'Come posso prenotare un colloquio con un docente?', answer: 'Accedi alla sezione "Colloqui", seleziona il docente dall\'elenco a discesa e seleziona uno degli slot disponibili per confermare.' },
     { category: 'documenti', question: 'Dove trovo la pagella scolastica di mio figlio?', answer: 'La pagella quadrimestrale e tutti i documenti ufficiali firmati sono reperibili e scaricabili nella sezione "Documenti".' }
   ]
