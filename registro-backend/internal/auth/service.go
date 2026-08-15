@@ -91,6 +91,9 @@ func (s *Service) Register(ctx context.Context, req *RegisterRequest) (*User, er
 	}
 
 	if err := s.repo.CreateUser(ctx, user); err != nil {
+		if strings.Contains(err.Error(), "23505") || strings.Contains(err.Error(), "unique constraint") || strings.Contains(err.Error(), "already exists") || strings.Contains(err.Error(), "duplicate key") {
+			return nil, ErrEmailAlreadyExists
+		}
 		return nil, err
 	}
 

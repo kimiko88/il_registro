@@ -7,7 +7,7 @@ import (
 )
 
 type Repository interface {
-	GlobalSearch(ctx context.Context, schoolID, query, filterType string) ([]SearchResultItem, error)
+	GlobalSearch(ctx context.Context, actorRole, schoolID, query, filterType string) ([]SearchResultItem, error)
 }
 
 type PostgresRepository struct {
@@ -27,9 +27,11 @@ var validSearchFilterTypes = map[string]bool{
 	"classes":        true,
 	"communications": true,
 	"lessons":        true,
+	"documents":      true,
+	"notes":          true,
 }
 
-func (r *PostgresRepository) GlobalSearch(ctx context.Context, schoolID, q, filterType string) ([]SearchResultItem, error) {
+func (r *PostgresRepository) GlobalSearch(ctx context.Context, actorRole, schoolID, q, filterType string) ([]SearchResultItem, error) {
 	var results []SearchResultItem
 	searchPattern := "%" + q + "%"
 
@@ -48,6 +50,10 @@ func (r *PostgresRepository) GlobalSearch(ctx context.Context, schoolID, q, filt
 			for rows.Next() {
 				var id, role, name, email, cf string
 				if err := rows.Scan(&id, &role, &name, &email, &cf); err == nil {
+					// Students/parents cannot search or view parents/secretaries or fiscal codes
+					if (actorRole == "student" || actorRole == "parent") && (role == "admin" || role == "secretary" || role == "superadmin") {
+						continue
+					}
 					roleLabel := "Utente"
 					switch role {
 					case "student":
@@ -61,12 +67,18 @@ func (r *PostgresRepository) GlobalSearch(ctx context.Context, schoolID, q, filt
 					case "parent":
 						roleLabel = "Genitore"
 					}
+					desc := fmt.Sprintf("Ruolo: %s", roleLabel)
+					if actorRole == "admin" || actorRole == "superadmin" || actorRole == "secretary" || actorRole == "principal" || actorRole == "vice_principal" {
+						if cf != "" {
+							desc = fmt.Sprintf("Ruolo: %s | CF: %s", roleLabel, cf)
+						}
+					}
 					results = append(results, SearchResultItem{
 						ID:          id,
 						Type:        role,
 						Title:       name,
 						Subtitle:    email,
-						Description: fmt.Sprintf("Ruolo: %s | CF: %s", roleLabel, cf),
+						Description: desc,
 					})
 				}
 			}

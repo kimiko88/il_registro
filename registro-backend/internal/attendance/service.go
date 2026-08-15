@@ -171,8 +171,10 @@ func (s *service) MarkBulk(ctx context.Context, teacherID, schoolID string, req 
 			return fmt.Errorf("data non valida '%s': usa il formato YYYY-MM-DD", req.Date)
 		}
 		isSub, subErr := s.repo.IsTeacherSubstitute(ctx, teacherID, req.ClassID, dateParsed, req.Hour)
-		// FIX: check IsTeacherAssignedToClass error; a DB failure must not silently grant access.
-		if subErr != nil || !isSub {
+		if subErr != nil {
+			return fmt.Errorf("errore verifica docente supplente: %w", subErr)
+		}
+		if !isSub {
 			isAssigned, assignErr := s.repo.IsTeacherAssignedToClass(ctx, teacherID, req.ClassID)
 			if assignErr != nil {
 				return fmt.Errorf("errore verifica docente per classe: %w", assignErr)
@@ -542,7 +544,7 @@ func (s *service) GetPendingJustifications(ctx context.Context, classID, schoolI
 
 	var resp []JustificationResponse
 	for _, j := range js {
-		if schoolID != "" && j.SchoolID != "" && j.SchoolID != schoolID {
+		if schoolID != "" && (j.SchoolID == "" || j.SchoolID != schoolID) {
 			continue
 		}
 		resp = append(resp, JustificationResponse{
@@ -608,6 +610,16 @@ func (s *service) DeleteJustification(ctx context.Context, actorID string, justi
 }
 
 func (s *service) GetStudentSummary(ctx context.Context, studentID, schoolID string) (*SummaryResponse, error) {
+	if s.userRepo != nil && schoolID != "" {
+		st, err := s.userRepo.GetByID(ctx, studentID)
+		if err != nil {
+			return nil, fmt.Errorf("student not found")
+		}
+		if st.SchoolID == nil || *st.SchoolID != schoolID {
+			return nil, fmt.Errorf("forbidden: student belongs to another school")
+		}
+	}
+
 	stats, err := s.repo.GetStats(studentID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get stats: %w", err)
@@ -788,10 +800,10 @@ func (s *service) GetMonthlyBreakdown(ctx context.Context, studentID, schoolYear
 func (s *service) GetChildUnjustified(ctx context.Context, parentID, studentID string) ([]Attendance, error) {
 	isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, studentID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("errore nel controllo tutela genitore-studente: %w", err)
 	}
 	if !isGuardian {
-		return nil, fmt.Errorf("parent is not a guardian of student")
+		return nil, fmt.Errorf("forbidden: parent is not a guardian of student")
 	}
 	return s.repo.FindUnjustifiedByStudent(studentID)
 }
@@ -799,10 +811,10 @@ func (s *service) GetChildUnjustified(ctx context.Context, parentID, studentID s
 func (s *service) JustifyChildAbsence(ctx context.Context, parentID, studentID, attendanceID string, req JustifyAbsenceRequest) error {
 	isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, studentID)
 	if err != nil {
-		return err
+		return fmt.Errorf("errore nel controllo tutela genitore-studente: %w", err)
 	}
 	if !isGuardian {
-		return fmt.Errorf("parent is not a guardian of student")
+		return fmt.Errorf("forbidden: parent is not a guardian of student")
 	}
 	return s.repo.JustifyAbsenceByParent(attendanceID, req.Reason, req.Notes)
 }
@@ -810,10 +822,10 @@ func (s *service) JustifyChildAbsence(ctx context.Context, parentID, studentID, 
 func (s *service) GetChildAttendanceStats(ctx context.Context, parentID, studentID string) (*AttendanceStats, error) {
 	isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, studentID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("errore nel controllo tutela genitore-studente: %w", err)
 	}
 	if !isGuardian {
-		return nil, fmt.Errorf("parent is not a guardian of student")
+		return nil, fmt.Errorf("forbidden: parent is not a guardian of student")
 	}
 	return s.repo.GetStudentAttendanceStats(studentID)
 }

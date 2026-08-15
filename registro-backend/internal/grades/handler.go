@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -14,6 +15,20 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
+
+func sanitizeFilenameParam(input string) string {
+	reg := regexp.MustCompile(`[^a-zA-Z0-9_-]`)
+	res := reg.ReplaceAllString(input, "")
+	if res == "" {
+		return "export"
+	}
+	return res
+}
+
+func respond500(c *gin.Context, msg string, err error) {
+	logger.Log.Errorf("%s: %v", msg, err)
+	c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+}
 
 type Handler struct {
 	service   Service
@@ -485,14 +500,18 @@ func (h *Handler) GetStudentAverage(c *gin.Context) {
 	}
 	if actorRole == "parent" {
 		if err := h.service.ValidateParentGuardian(c.Request.Context(), userID, studentID); err != nil {
-			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: not a guardian of this student"})
+			if errors.Is(err, ErrNotGuardian) || strings.Contains(err.Error(), "not a guardian") {
+				c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: not a guardian of this student"})
+			} else {
+				respond500(c, "GetStudentAverage ValidateParentGuardian error", err)
+			}
 			return
 		}
 	}
 
 	avg, err := h.analytics.GetStudentAverage(studentID, subjectID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "GetStudentAverage error", err)
 		return
 	}
 
@@ -525,7 +544,7 @@ func (h *Handler) GetClassAverage(c *gin.Context) {
 
 	avg, err := h.analytics.GetClassAverage(classID, subjectID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "GetClassAverage error", err)
 		return
 	}
 
@@ -540,8 +559,13 @@ func (h *Handler) GetClassAverage(c *gin.Context) {
 
 func (h *Handler) GetMyGrades(c *gin.Context) {
 	studentID := c.GetString("user_id")
+	role := c.GetString("role")
 	if studentID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "student" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: endpoint reserved for students"})
 		return
 	}
 
@@ -549,7 +573,7 @@ func (h *Handler) GetMyGrades(c *gin.Context) {
 
 	resp, err := h.service.GetMyGrades(c.Request.Context(), studentID, filter)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "GetMyGrades error", err)
 		return
 	}
 
@@ -653,11 +677,11 @@ func (h *Handler) DownloadSemesterReportPDF(c *gin.Context) {
 
 	pdfData, err := h.service.GenerateSemesterReportPDF(targetStudentID, sem)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "GenerateSemesterReportPDF error", err)
 		return
 	}
 
-	filename := fmt.Sprintf("pagella_q%d_%s.pdf", sem, targetStudentID)
+	filename := fmt.Sprintf("pagella_q%d_%s.pdf", sem, sanitizeFilenameParam(targetStudentID))
 	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
 	c.Data(http.StatusOK, "application/pdf", pdfData)
 }

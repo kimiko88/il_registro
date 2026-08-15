@@ -51,7 +51,7 @@ func TestSearchHandler(t *testing.T) {
 
 	t.Run("Returns 500 when service fails", func(t *testing.T) {
 		mockRepo := new(MockRepository)
-		mockRepo.On("GlobalSearch", mock.Anything, "school-1", "test", "").Return(nil, errors.New("db down")).Once()
+		mockRepo.On("GlobalSearch", mock.Anything, "teacher", "school-1", "test", "").Return(nil, errors.New("db down")).Once()
 
 		svc := NewService(mockRepo)
 		h := NewHandler(svc)

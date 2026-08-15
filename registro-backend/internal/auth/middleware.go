@@ -83,13 +83,15 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 
 		// Verify the account is still active in the DB with a short 10s TTL cache.
 		var isActive bool
+		var foundInCache bool
 		if val, ok := m.activeCache.Load(claims.UserID); ok {
 			entry := val.(activeCacheEntry)
 			if time.Now().Before(entry.expiresAt) {
 				isActive = entry.isActive
+				foundInCache = true
 			}
 		}
-		if !isActive {
+		if !foundInCache {
 			var err error
 			isActive, err = m.userRepo.IsActive(c.Request.Context(), claims.UserID)
 			if err != nil {
@@ -97,12 +99,10 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 				c.Abort()
 				return
 			}
-			if isActive {
-				m.activeCache.Store(claims.UserID, activeCacheEntry{
-					isActive:  true,
-					expiresAt: time.Now().Add(10 * time.Second),
-				})
-			}
+			m.activeCache.Store(claims.UserID, activeCacheEntry{
+				isActive:  isActive,
+				expiresAt: time.Now().Add(10 * time.Second),
+			})
 		}
 
 		if !isActive {
@@ -126,6 +126,11 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 
 		c.Next()
 	}
+}
+
+// InvalidateUserActiveCache clears the cached active status for a user.
+func (m *Middleware) InvalidateUserActiveCache(userID string) {
+	m.activeCache.Delete(userID)
 }
 
 // RequireRole checks if user has required role

@@ -15,8 +15,8 @@ func NewService(repo Repository) *Service {
 	return &Service{repo: repo}
 }
 
-func (s *Service) Search(ctx context.Context, schoolID, query, filterType string) (*SearchResponse, error) {
-	results, err := s.repo.GlobalSearch(ctx, schoolID, query, filterType)
+func (s *Service) Search(ctx context.Context, actorRole, schoolID, query, filterType string) (*SearchResponse, error) {
+	results, err := s.repo.GlobalSearch(ctx, actorRole, schoolID, query, filterType)
 	if err != nil {
 		return nil, err
 	}

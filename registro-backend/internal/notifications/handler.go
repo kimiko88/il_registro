@@ -180,6 +180,33 @@ func (h *Handler) UnregisterToken(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "push token unregistered"})
 }
 
+type limiterEntry struct {
+	limiter  *rate.Limiter
+	lastSeen time.Time
+}
+
+func (h *Handler) getLimiter(userID string) *rate.Limiter {
+	now := time.Now()
+	val, loaded := h.pushLimiters.LoadOrStore(userID, &limiterEntry{
+		limiter:  rate.NewLimiter(rate.Every(6*time.Second), 5),
+		lastSeen: now,
+	})
+	entry := val.(*limiterEntry)
+	entry.lastSeen = now
+
+	// Periodic cleanup of stale limiters older than 1 hour when a new key is added
+	if !loaded {
+		h.pushLimiters.Range(func(key, value interface{}) bool {
+			e := value.(*limiterEntry)
+			if now.Sub(e.lastSeen) > 1*time.Hour {
+				h.pushLimiters.Delete(key)
+			}
+			return true
+		})
+	}
+	return entry.limiter
+}
+
 func (h *Handler) SendPush(c *gin.Context) {
 	userID := c.GetString("user_id")
 	if userID == "" {
@@ -193,8 +220,7 @@ func (h *Handler) SendPush(c *gin.Context) {
 	}
 
 	// Rate limit: max 10 requests per minute per admin caller
-	limiterVal, _ := h.pushLimiters.LoadOrStore(userID, rate.NewLimiter(rate.Every(6*time.Second), 5))
-	limiter := limiterVal.(*rate.Limiter)
+	limiter := h.getLimiter(userID)
 	if !limiter.Allow() {
 		c.JSON(http.StatusTooManyRequests, gin.H{"error": "troppi invii di notifiche push, riprova tra qualche istante"})
 		return

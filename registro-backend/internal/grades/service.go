@@ -89,27 +89,37 @@ func (s *service) GetStudentGrades(ctx context.Context, actorID, actorRole, stud
 	return s.GetStudentGradesWithFilter(ctx, actorID, actorRole, studentID, GradeFilter{})
 }
 
-func (s *service) GetStudentGradesWithFilter(ctx context.Context, actorID string, actorRole string, studentID string, filter GradeFilter) ([]GradeResponse, error) {
+func (s *service) checkGradeAccessPermissions(ctx context.Context, actorID string, actorRole string, studentID string) error {
+	if actorRole == "" {
+		return ErrUnauthorized
+	}
 	if actorRole == "student" && actorID != studentID {
-		return nil, ErrUnauthorized
+		return ErrUnauthorized
 	}
 	if actorRole == "parent" {
 		isGuardian, err := s.userRepo.IsGuardian(ctx, actorID, studentID)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if !isGuardian {
-			return nil, ErrNotGuardian
+			return ErrNotGuardian
 		}
 	}
 	if actorRole == "teacher" && s.validator != nil {
 		isAssigned, err := s.validator.IsTeacherAssignedToStudent(ctx, actorID, studentID)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if !isAssigned {
-			return nil, ErrUnauthorized
+			return ErrUnauthorized
 		}
+	}
+	return nil
+}
+
+func (s *service) GetStudentGradesWithFilter(ctx context.Context, actorID string, actorRole string, studentID string, filter GradeFilter) ([]GradeResponse, error) {
+	if err := s.checkGradeAccessPermissions(ctx, actorID, actorRole, studentID); err != nil {
+		return nil, err
 	}
 
 	if filter.Semester == 0 && filter.SubjectID == "" && filter.GradeType == "" && filter.IsPublished == nil {
@@ -132,26 +142,8 @@ func (s *service) GetStudentGradesWithFilter(ctx context.Context, actorID string
 // GetStudentGradesPaged applies the same ownership checks as GetStudentGradesWithFilter
 // then delegates to the paginated repository method.
 func (s *service) GetStudentGradesPaged(ctx context.Context, actorID string, actorRole string, studentID string, filter GradeFilter) (*PaginatedGradesResponse, error) {
-	if actorRole == "student" && actorID != studentID {
-		return nil, ErrUnauthorized
-	}
-	if actorRole == "parent" {
-		isGuardian, err := s.userRepo.IsGuardian(ctx, actorID, studentID)
-		if err != nil {
-			return nil, err
-		}
-		if !isGuardian {
-			return nil, ErrNotGuardian
-		}
-	}
-	if actorRole == "teacher" && s.validator != nil {
-		isAssigned, err := s.validator.IsTeacherAssignedToStudent(ctx, actorID, studentID)
-		if err != nil {
-			return nil, err
-		}
-		if !isAssigned {
-			return nil, ErrUnauthorized
-		}
+	if err := s.checkGradeAccessPermissions(ctx, actorID, actorRole, studentID); err != nil {
+		return nil, err
 	}
 
 	filter.StudentID = studentID

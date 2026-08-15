@@ -86,6 +86,10 @@ func parseWindowParams(c *gin.Context) (from, to time.Time, err error) {
 		to = time.Now()
 	}
 
+	if to.Before(from) {
+		err = errors.New("data di inizio successiva alla data di fine")
+		return
+	}
 	if to.Sub(from) > 365*24*time.Hour {
 		err = errors.New("range di date troppo ampio (massimo 1 anno consentito)")
 		return
@@ -214,7 +218,11 @@ func (h *Handler) ApproveJustification(c *gin.Context) {
 	}
 	id := c.Param("id")
 	if err := h.service.ProcessJustification(c.Request.Context(), actorID, id, true); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		if strings.Contains(err.Error(), "forbidden") || strings.Contains(err.Error(), "non assegnato") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "approved"})
@@ -230,7 +238,11 @@ func (h *Handler) RejectJustification(c *gin.Context) {
 		return
 	}
 	if err := h.service.ProcessJustification(c.Request.Context(), actorID, id, false); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		if strings.Contains(err.Error(), "forbidden") || strings.Contains(err.Error(), "non assegnato") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "rejected"})
@@ -466,7 +478,13 @@ func (h *Handler) ExportAttendance(c *gin.Context) {
 	}
 
 	classID := c.Query("class_id")
-	date := c.DefaultQuery("date", time.Now().Format("2006-01-02"))
+	dateRaw := c.DefaultQuery("date", time.Now().Format("2006-01-02"))
+	dateParsed, err := time.Parse("2006-01-02", dateRaw)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid date parameter format: expected YYYY-MM-DD"})
+		return
+	}
+	date := dateParsed.Format("2006-01-02")
 
 	if classID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "class_id parameter required"})
@@ -571,12 +589,22 @@ func (h *Handler) GetChildMonthlyBreakdown(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "parent" && role != "admin" && role != "superadmin" && role != "principal" && role != "vice_principal" && role != "secretary" {
+	studentID := c.Param("studentID")
+	schoolYear := c.DefaultQuery("school_year", "")
+
+	if role != "parent" {
+		if role == "admin" || role == "superadmin" || role == "principal" || role == "vice_principal" || role == "secretary" {
+			res, err := h.service.GetMonthlyBreakdown(c.Request.Context(), studentID, schoolYear)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+				return
+			}
+			c.JSON(http.StatusOK, res)
+			return
+		}
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: solo i genitori o il personale autorizzato possono accedere alle presenze del figlio"})
 		return
 	}
-	studentID := c.Param("studentID")
-	schoolYear := c.DefaultQuery("school_year", "")
 
 	res, err := h.service.GetChildMonthlyBreakdown(c.Request.Context(), parentID, studentID, schoolYear)
 	if err != nil {
@@ -584,7 +612,7 @@ func (h *Handler) GetChildMonthlyBreakdown(c *gin.Context) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
 	c.JSON(http.StatusOK, res)
