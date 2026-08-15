@@ -58,8 +58,8 @@ func (m *mockServiceForHardenTest) GetPendingJustifications(ctx context.Context,
 func (m *mockServiceForHardenTest) DeleteJustification(ctx context.Context, actorID string, justificationID string) error {
 	return m.Called(ctx, actorID, justificationID).Error(0)
 }
-func (m *mockServiceForHardenTest) GetStudentSummary(ctx context.Context, studentID, schoolID string) (*SummaryResponse, error) {
-	args := m.Called(ctx, studentID, schoolID)
+func (m *mockServiceForHardenTest) GetStudentSummary(ctx context.Context, actorID, actorRole, schoolID, studentID string) (*SummaryResponse, error) {
+	args := m.Called(ctx, actorID, actorRole, schoolID, studentID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -93,7 +93,7 @@ func (m *mockServiceForHardenTest) GetChildAttendanceTrends(ctx context.Context,
 	}
 	return args.Get(0).(*TrendsResponse), args.Error(1)
 }
-func (m *mockServiceForHardenTest) GetMonthlyBreakdown(ctx context.Context, studentID, schoolYear string) (*MonthlyBreakdownResponse, error) {
+func (m *mockServiceForHardenTest) GetMonthlyBreakdown(ctx context.Context, actorID, actorRole, schoolID, studentID, schoolYear string) (*MonthlyBreakdownResponse, error) {
 	args := m.Called(ctx, studentID, schoolYear)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)

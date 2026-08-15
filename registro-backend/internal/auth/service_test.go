@@ -90,6 +90,11 @@ func (m *MockRepository) CreateRefreshToken(ctx context.Context, token *RefreshT
 	return args.Error(0)
 }
 
+func (m *MockRepository) RotateRefreshTokenTx(ctx context.Context, oldID string, newRt *RefreshToken) error {
+	args := m.Called(ctx, oldID, newRt)
+	return args.Error(0)
+}
+
 func (m *MockRepository) GetMFASecret(ctx context.Context, userID string) (string, error) {
 	args := m.Called(ctx, userID)
 	return args.String(0), args.Error(1)
@@ -384,8 +389,7 @@ func TestRefreshToken(t *testing.T) {
 
 		mockRepo.On("GetRefreshToken", mock.Anything, token).Return(rt, nil).Once()
 		mockRepo.On("GetUserByID", mock.Anything, userID).Return(user, nil).Once()
-		mockRepo.On("RevokeRefreshToken", mock.Anything, "rt-1").Return(nil).Once()
-		mockRepo.On("CreateRefreshToken", mock.Anything, mock.AnythingOfType("*auth.RefreshToken")).Return(nil).Once()
+		mockRepo.On("RotateRefreshTokenTx", mock.Anything, "rt-1", mock.AnythingOfType("*auth.RefreshToken")).Return(nil).Once()
 
 		pair, err := s.RefreshToken(context.Background(), token, "127.0.0.1", "TestAgent")
 

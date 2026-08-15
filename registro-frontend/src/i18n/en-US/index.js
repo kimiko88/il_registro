@@ -41,7 +41,7 @@ export default {
     copyEmail: 'Copy Email',
     emailCopied: 'Email address copied to clipboard!',
     chooseSchoolPrompt: 'Choose an institute from the top menu to display Secretary contact details.',
-    sessionExpired: 'Session expired. Please sign in again.',
+    sessionExpired: 'For security reasons, your session has expired or could not be restored. Please sign in again.',
     showPassword: 'Show password',
     hidePassword: 'Hide password'
   },

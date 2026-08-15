@@ -155,17 +155,23 @@ func ProcessBulkImport(repo Repository, reqs []ImportRequest, teacherID string, 
 	res := ImportResult{}
 
 	var grades []*Grade
-	for _, req := range reqs {
+	for idx, req := range reqs {
 		sID := req.SchoolID
 		if sID == "" {
 			sID = schoolID
+		} else if schoolID != "" && sID != schoolID {
+			return res, fmt.Errorf("row %d: unauthorized cross-school import attempt", idx+1)
 		}
+
 		tID := req.TeacherID
 		if tID == "" {
 			tID = teacherProfileID
 		}
 		if tID == "" {
 			tID = teacherID
+		}
+		if teacherProfileID != "" && tID != teacherProfileID && tID != teacherID {
+			return res, fmt.Errorf("row %d: unauthorized attempt to import grades for another teacher profile", idx+1)
 		}
 
 		grades = append(grades, &Grade{

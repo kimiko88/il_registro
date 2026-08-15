@@ -321,8 +321,8 @@ func (h *Handler) GetMyDiary(c *gin.Context) {
 		}
 	}
 
-	if !fromTime.IsZero() && !toTime.IsZero() && toTime.Sub(fromTime) > 365*24*time.Hour {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "range di date troppo ampio (massimo 1 anno consentito)"})
+	if !fromTime.IsZero() && !toTime.IsZero() && toTime.Sub(fromTime) > 90*24*time.Hour {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "range di date troppo ampio (massimo 90 giorni consentito)"})
 		return
 	}
 

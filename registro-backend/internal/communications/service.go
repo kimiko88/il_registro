@@ -44,6 +44,10 @@ func (s *Service) SendMessage(ctx context.Context, actorRole, schoolID, senderID
 		if !strings.HasPrefix(urlStr, "http://") && !strings.HasPrefix(urlStr, "https://") {
 			return nil, errors.New("attachment_url non valido: deve iniziare con http:// o https://")
 		}
+		lowerURL := strings.ToLower(urlStr)
+		if strings.Contains(lowerURL, "localhost") || strings.Contains(lowerURL, "127.0.0.1") || strings.Contains(lowerURL, "169.254.169.254") || strings.Contains(lowerURL, "://10.") || strings.Contains(lowerURL, "://192.168.") {
+			return nil, errors.New("attachment_url non valido: indirizzo interno o privato non consentito (SSRF protection)")
+		}
 	}
 
 	targetSchoolID := schoolID
@@ -266,5 +270,19 @@ func (s *Service) ListCircolari(ctx context.Context, schoolID, userID, year stri
 }
 
 func (s *Service) AckMessage(ctx context.Context, communicationID, userID string) error {
-	return s.repo.Ack(ctx, communicationID, userID)
+	msg, err := s.repo.Get(ctx, communicationID)
+	if err != nil {
+		return fmt.Errorf("messaggio non trovato: %w", err)
+	}
+
+	if msg.Type == "bacheca" && len(msg.ReceiverIDs) == 0 {
+		return s.repo.Ack(ctx, communicationID, userID)
+	}
+
+	for _, rid := range msg.ReceiverIDs {
+		if rid == userID {
+			return s.repo.Ack(ctx, communicationID, userID)
+		}
+	}
+	return errors.New("unauthorized: non sei un destinatario di questo messaggio")
 }

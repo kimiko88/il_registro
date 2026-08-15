@@ -621,10 +621,16 @@ func (h *Handler) GetMyTrend(c *gin.Context) {
 }
 
 func (h *Handler) GetSemesterReport(c *gin.Context) {
-	studentID := c.GetString("user_id")
-	if studentID == "" {
+	actorID := c.GetString("user_id")
+	role := c.GetString("role")
+	if actorID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
+	}
+
+	targetStudentID := actorID
+	if (role == "admin" || role == "superadmin" || role == "secretary" || role == "principal" || role == "vice_principal" || role == "teacher" || role == "parent") && c.Query("student_id") != "" {
+		targetStudentID = c.Query("student_id")
 	}
 
 	semStr := c.Param("semester")
@@ -634,8 +640,12 @@ func (h *Handler) GetSemesterReport(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.service.GetSemesterReport(c.Request.Context(), studentID, sem)
+	resp, err := h.service.GetSemesterReport(c.Request.Context(), actorID, role, targetStudentID, sem)
 	if err != nil {
+		if errors.Is(err, ErrNotGuardian) || errors.Is(err, ErrUnauthorized) {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -945,10 +955,6 @@ func (h *Handler) GetClassTestsList(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "teacher" && role != "admin" && role != "superadmin" && role != "principal" && role != "secretary" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
-		return
-	}
 
 	classID := c.Query("class_id")
 	subjectID := c.Query("subject_id")
@@ -957,8 +963,12 @@ func (h *Handler) GetClassTestsList(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.service.GetClassTests(classID, subjectID)
+	resp, err := h.service.GetClassTests(c.Request.Context(), userID, role, classID, subjectID)
 	if err != nil {
+		if errors.Is(err, ErrUnauthorized) {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -976,10 +986,6 @@ func (h *Handler) GetUpcomingClassTests(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "teacher" && role != "admin" && role != "superadmin" && role != "principal" && role != "secretary" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
-		return
-	}
 
 	classID := c.Param("classID")
 	if classID == "" {
@@ -987,8 +993,12 @@ func (h *Handler) GetUpcomingClassTests(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.service.GetUpcomingTestsByClass(classID)
+	resp, err := h.service.GetUpcomingTestsByClass(c.Request.Context(), userID, role, classID)
 	if err != nil {
+		if errors.Is(err, ErrUnauthorized) {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

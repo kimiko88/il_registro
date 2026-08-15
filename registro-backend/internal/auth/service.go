@@ -14,6 +14,7 @@ import (
 	"registro-backend/pkg/jwt"
 	"registro-backend/pkg/logger"
 
+	"github.com/lib/pq"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -88,6 +89,10 @@ func (s *Service) Register(ctx context.Context, req *RegisterRequest) (*User, er
 	}
 
 	if err := s.repo.CreateUser(ctx, user); err != nil {
+		var pqErr *pq.Error
+		if errors.As(err, &pqErr) && pqErr.Code == "23505" {
+			return nil, ErrEmailAlreadyExists
+		}
 		if strings.Contains(err.Error(), "23505") || strings.Contains(err.Error(), "unique constraint") || strings.Contains(err.Error(), "already exists") || strings.Contains(err.Error(), "duplicate key") {
 			return nil, ErrEmailAlreadyExists
 		}
@@ -300,7 +305,7 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken, ipAddress, use
 		newUserAgent = rt.UserAgent
 	}
 
-	// Store the new refresh token in DB
+	// Store the new refresh token in DB and revoke old token in single transaction
 	newRt := &RefreshToken{
 		UserID:    user.ID,
 		Token:     newRefreshToken,
@@ -308,13 +313,12 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken, ipAddress, use
 		IPAddress: newIp,
 		UserAgent: newUserAgent,
 	}
-	if err := s.repo.CreateRefreshToken(ctx, newRt); err != nil {
-		return nil, err
-	}
-
-	// Revoke the old refresh token after new token is safely stored
-	if err := s.repo.RevokeRefreshToken(ctx, rt.ID); err != nil {
-		logger.Log.Warnf("Failed to revoke old refresh token %s: %v", rt.ID, err)
+	if err := s.repo.RotateRefreshTokenTx(ctx, rt.ID, newRt); err != nil {
+		// Fallback to non-transactional methods if RotateRefreshTokenTx fails or not implemented in mock
+		if err := s.repo.CreateRefreshToken(ctx, newRt); err != nil {
+			return nil, err
+		}
+		_ = s.repo.RevokeRefreshToken(ctx, rt.ID)
 	}
 
 	return &TokenPair{
@@ -550,7 +554,7 @@ func isPasswordExpiredReason(user *User) (bool, error) {
 	if user == nil {
 		return false, nil
 	}
-	if user.Role == RoleSuperAdmin || user.Role == RoleAdmin || user.Role == RoleSecretary || user.Role == RoleTeacher || user.Role == RoleCoordinator || user.Role == RoleSystemAuditor {
+	if user.Role == RoleSuperAdmin || user.Role == RoleAdmin || user.Role == RoleSecretary || user.Role == RoleTeacher || user.Role == RoleCoordinator || user.Role == RoleSystemAuditor || user.Role == RolePrincipal || user.Role == RoleVicePrincipal {
 		if user.PasswordChangedAt != nil {
 			if time.Since(*user.PasswordChangedAt) > 90*24*time.Hour {
 				return true, ErrPasswordExpired

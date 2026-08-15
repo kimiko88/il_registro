@@ -94,15 +94,22 @@ func (m *MockRepo) GetMonthlyBreakdown(ctx context.Context, studentID, schoolYea
 func (m *MockRepo) FindUnjustifiedByStudent(studentID string) ([]Attendance, error) {
 	return nil, nil
 }
-func (m *MockRepo) JustifyAbsenceByParent(attendanceID string, reason string, notes string) error {
+func (m *MockRepo) JustifyAbsenceByParent(attendanceID string, studentID string, reason string, notes string) error {
 	return nil
 }
 func (m *MockRepo) GetStudentAttendanceStats(studentID string) (*AttendanceStats, error) {
 	return &AttendanceStats{}, nil
 }
-func (m *MockRepo) FindPendingJustifications(classID string) ([]Justification, error) {
+func (m *MockRepo) FindPendingJustifications(classID, schoolID string) ([]Justification, error) {
 	args := m.Called(classID)
 	return args.Get(0).([]Justification), args.Error(1)
+}
+func (m *MockRepo) DeletePendingJustification(id string) error {
+	args := m.Called(id)
+	return args.Error(0)
+}
+func (m *MockRepo) IsStudentInClass(ctx context.Context, studentID, classID string) (bool, error) {
+	return true, nil
 }
 func (m *MockRepo) CountDistinctDays(studentID string) (int, error) {
 	args := m.Called(studentID)
@@ -118,6 +125,10 @@ func (m *MockRepo) GetAnalytics(ctx context.Context, schoolID string) (*Analytic
 func (m *MockRepo) DeleteJustification(id string) error {
 	args := m.Called(id)
 	return args.Error(0)
+}
+func (m *MockRepo) IsClassInSchool(ctx context.Context, classID, schoolID string) (bool, error) {
+	args := m.Called(ctx, classID, schoolID)
+	return args.Bool(0), args.Error(1)
 }
 func (m *MockRepo) IsTeacherAssignedToClass(ctx context.Context, teacherID, classID string) (bool, error) {
 	args := m.Called(ctx, teacherID, classID)
@@ -188,6 +199,7 @@ func TestService_ProcessJustification(t *testing.T) {
 	classID := "C1"
 
 	mockUserRepo.On("GetByID", mock.Anything, "S1").Return(&users.User{ID: "S1", ClassID: &classID}, nil).Maybe()
+	mockUserRepo.On("GetByID", mock.Anything, "T1").Return(&users.User{ID: "T1"}, nil).Maybe()
 	mockRepo.On("IsTeacherAssignedToClass", mock.Anything, "T1", "C1").Return(true, nil).Maybe()
 	mockRepo.On("FindJustificationByID", jid).Return(j, nil)
 	mockRepo.On("ProcessJustificationTx", mock.Anything, j, "T1", true).Return(nil)

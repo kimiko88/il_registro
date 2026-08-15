@@ -436,9 +436,6 @@
     <!-- Help Drawer (slides in from right, for FAB quick access) -->
     <HelpDrawer ref="helpDrawerRef" @restart-tour="handleRestartTour" />
 
-    <!-- Help FAB (floating ? button bottom-right) -->
-    <HelpFab @open-help="helpCenterRef?.open()" @restart-tour="handleRestartTour" />
-
   </q-layout>
 </template>
 
@@ -459,7 +456,6 @@ import { SUPPORTED_LOCALES, applyLocale, normalizeLocale } from '@/utils/locale'
 import GlobalSearch from '@/components/Common/GlobalSearch.vue'
 import OnboardingTour from '@/components/Common/OnboardingTour.vue'
 import HelpDrawer from '@/components/Common/HelpDrawer.vue'
-import HelpFab from '@/components/Common/HelpFab.vue'
 import HelpCenterPanel from '@/components/Common/HelpCenterPanel.vue'
 
 const globalSearchRef = ref(null)

@@ -47,6 +47,7 @@ type Repository interface {
 	GetRefreshToken(ctx context.Context, token string) (*RefreshToken, error)
 	RevokeRefreshToken(ctx context.Context, tokenID string) error
 	RevokeAllUserTokens(ctx context.Context, userID string) error
+	RotateRefreshTokenTx(ctx context.Context, oldID string, newRt *RefreshToken) error
 
 	// Password reset
 	CreatePasswordResetToken(ctx context.Context, token *PasswordResetToken) error
@@ -311,6 +312,34 @@ func (r *repository) RevokeAllUserTokens(ctx context.Context, userID string) err
 	query := `UPDATE refresh_tokens SET revoked = true WHERE user_id = $1`
 	_, err := r.db.ExecContext(ctx, query, userID)
 	return err
+}
+
+func (r *repository) RotateRefreshTokenTx(ctx context.Context, oldID string, newRt *RefreshToken) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	query := `
+		INSERT INTO refresh_tokens (id, user_id, token, expires_at, ip_address, user_agent, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
+	`
+	newRt.ID = uuid.New().String()
+	newRt.CreatedAt = time.Now()
+	hashed := hashToken(newRt.Token)
+
+	if _, err := tx.ExecContext(ctx, query,
+		newRt.ID, newRt.UserID, hashed, newRt.ExpiresAt, newRt.IPAddress, newRt.UserAgent, newRt.CreatedAt,
+	); err != nil {
+		return err
+	}
+
+	if _, err := tx.ExecContext(ctx, `UPDATE refresh_tokens SET revoked = true WHERE id = $1`, oldID); err != nil {
+		return err
+	}
+
+	return tx.Commit()
 }
 
 func (r *repository) CreatePasswordResetToken(ctx context.Context, token *PasswordResetToken) error {

@@ -59,6 +59,15 @@ type mockAttendanceRepoForTesting struct {
 	pendingJustifications []Justification
 }
 
-func (m *mockAttendanceRepoForTesting) FindPendingJustifications(classID string) ([]Justification, error) {
-	return m.pendingJustifications, nil
+func (m *mockAttendanceRepoForTesting) FindPendingJustifications(classID, schoolID string) ([]Justification, error) {
+	if schoolID == "" {
+		return m.pendingJustifications, nil
+	}
+	var filtered []Justification
+	for _, j := range m.pendingJustifications {
+		if j.SchoolID == schoolID {
+			filtered = append(filtered, j)
+		}
+	}
+	return filtered, nil
 }

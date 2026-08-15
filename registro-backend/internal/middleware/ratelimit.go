@@ -74,9 +74,7 @@ func InitRateLimiter(redisURL string) {
 // getBackend returns the active backend, performing a lazy in-memory init if
 // InitRateLimiter was never called (backward-compatible for tests).
 func getBackend() rateLimiterBackend {
-	if activeBackend == nil {
-		InitRateLimiter("")
-	}
+	InitRateLimiter("")
 	return activeBackend
 }
 

@@ -21,9 +21,6 @@ const (
 	maxMessageSize = 8192
 )
 
-// allowedOrigins returns the set of permitted WebSocket origins from the
-// ALLOWED_ORIGINS environment variable (comma-separated). Falls back to
-// rejecting all cross-origin requests if the variable is not set.
 func allowedOrigins() map[string]bool {
 	raw := os.Getenv("ALLOWED_ORIGINS")
 	origins := make(map[string]bool)
@@ -82,6 +79,11 @@ func (c *Client) readPump() {
 		_ = c.Conn.SetReadDeadline(time.Now().Add(pongWait))
 		return nil
 	})
+	var msgCount int
+	windowStart := time.Now()
+	const maxMsgsPerWindow = 30
+	const windowDuration = 10 * time.Second
+
 	for {
 		_, msg, err := c.Conn.ReadMessage()
 		if err != nil {
@@ -90,6 +92,18 @@ func (c *Client) readPump() {
 			}
 			break
 		}
+
+		now := time.Now()
+		if now.Sub(windowStart) > windowDuration {
+			windowStart = now
+			msgCount = 0
+		}
+		msgCount++
+		if msgCount > maxMsgsPerWindow {
+			logger.Log.Warnf("ws rate limit exceeded for user %s: closing connection", c.UserID)
+			break
+		}
+
 		var cm wsClientMsg
 		if err := json.Unmarshal(msg, &cm); err == nil {
 			if cm.Type == "PING" {
@@ -97,7 +111,11 @@ func (c *Client) readPump() {
 				_ = c.Conn.WriteMessage(websocket.TextMessage, []byte(`{"type":"PONG"}`))
 			} else if cm.Type == "AUTH" {
 				_ = c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
-				_ = c.Conn.WriteMessage(websocket.TextMessage, []byte(`{"type":"AUTH_ACK","status":"authenticated"}`))
+				if c.UserID != "" {
+					_ = c.Conn.WriteMessage(websocket.TextMessage, []byte(`{"type":"AUTH_ACK","status":"authenticated"}`))
+				} else {
+					_ = c.Conn.WriteMessage(websocket.TextMessage, []byte(`{"type":"AUTH_ACK","status":"unauthenticated"}`))
+				}
 			}
 		}
 	}

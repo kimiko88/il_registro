@@ -43,7 +43,7 @@ type Service interface {
 	GetMyGrades(ctx context.Context, studentID string, filter GradeFilter) (*MyGradesResponse, error)
 	GetMyAverages(ctx context.Context, studentID string) (*StudentAveragesResponse, error)
 	GetMyTrend(ctx context.Context, actorID string, actorRole string, studentID string, subjectID string) (*TrendResponse, error)
-	GetSemesterReport(ctx context.Context, studentID string, semester int) (*SemesterReportResponse, error)
+	GetSemesterReport(ctx context.Context, actorID string, actorRole string, studentID string, semester int) (*SemesterReportResponse, error)
 	GenerateSemesterReportPDF(studentID string, semester int) ([]byte, error)
 
 	// Parent
@@ -54,8 +54,8 @@ type Service interface {
 
 	// Class Tests
 	CreateTestWithGrades(teacherID string, req CreateClassTestRequest) error
-	GetClassTests(classID string, subjectID string) ([]ClassTestResponse, error)
-	GetUpcomingTestsByClass(classID string) ([]ClassTestResponse, error)
+	GetClassTests(ctx context.Context, actorID string, actorRole string, classID string, subjectID string) ([]ClassTestResponse, error)
+	GetUpcomingTestsByClass(ctx context.Context, actorID string, actorRole string, classID string) ([]ClassTestResponse, error)
 	DeleteClassTest(teacherID string, testID string) error
 	UpdateClassTest(teacherID string, testID string, req UpdateClassTestRequest) error
 
@@ -741,7 +741,11 @@ func (s *service) GetMyGrades(ctx context.Context, studentID string, filter Grad
 		semestersMap[int(g.Semester)] = append(semestersMap[int(g.Semester)], s.mapSingleResponse(g))
 	}
 
-	sem1Start, sem1End, sem2Start, sem2End := academicYearDates()
+	var dbConn *sql.DB
+	if s.validator != nil {
+		dbConn = s.validator.db
+	}
+	sem1Start, sem1End, sem2Start, sem2End := academicYearDates(ctx, dbConn, filter.SchoolID)
 	if gr, ok := semestersMap[1]; ok {
 		sort.Slice(gr, func(i, j int) bool {
 			return gr[i].Date.Before(gr[j].Date)
@@ -882,13 +886,14 @@ func (s *service) GetMyTrend(ctx context.Context, actorID string, actorRole stri
 		if err := s.validator.db.QueryRowContext(ctx,
 			`SELECT class_id FROM class_students WHERE student_id = $1 ORDER BY created_at DESC LIMIT 1`, studentID,
 		).Scan(&classID); err == nil && classID != "" {
-			_ = s.validator.db.QueryRow(
-				`SELECT COALESCE(AVG(grade_value), 0.0)
+			_ = s.validator.db.QueryRowContext(ctx,
+				`SELECT COALESCE(AVG(g.grade_value), 0.0)
 				 FROM grades g
 				 JOIN class_students cs ON g.student_id = cs.student_id
 				 WHERE cs.class_id = $1 AND g.subject_id = $2 AND g.semester = $3
+				   AND (g.school_id = (SELECT school_id FROM users WHERE id = $4 LIMIT 1) OR g.school_id IS NULL OR g.school_id = '')
 				   AND g.is_published = true AND g.deleted_at IS NULL`,
-				classID, subjectID, currentSem,
+				classID, subjectID, currentSem, studentID,
 			).Scan(&classAverage)
 			classAverage = math.Round(classAverage*100) / 100
 		}
@@ -954,7 +959,23 @@ func (s *service) GetMyTrend(ctx context.Context, actorID string, actorRole stri
 	}, nil
 }
 
-func (s *service) GetSemesterReport(ctx context.Context, studentID string, semester int) (*SemesterReportResponse, error) {
+func (s *service) GetSemesterReport(ctx context.Context, actorID string, actorRole string, studentID string, semester int) (*SemesterReportResponse, error) {
+	if actorRole == "" || actorID == "" {
+		return nil, ErrUnauthorized
+	}
+	if actorRole == "student" && actorID != studentID {
+		return nil, ErrUnauthorized
+	}
+	if actorRole == "parent" {
+		isGuardian, err := s.userRepo.IsGuardian(ctx, actorID, studentID)
+		if err != nil {
+			return nil, fmt.Errorf("guardian check failed: %w", err)
+		}
+		if !isGuardian {
+			return nil, ErrNotGuardian
+		}
+	}
+
 	grades, err := s.repo.FindByStudent(studentID)
 	if err != nil {
 		return nil, err
@@ -962,7 +983,8 @@ func (s *service) GetSemesterReport(ctx context.Context, studentID string, semes
 
 	var studentName, className, classID, schoolYear string
 	if s.validator != nil && s.validator.db != nil {
-		_ = s.validator.db.QueryRow(
+		_ = s.validator.db.QueryRowContext(
+			ctx,
 			`SELECT u.first_name || ' ' || u.last_name, COALESCE(c.name, 'N/D'), COALESCE(c.id, '')
 			 FROM users u
 			 LEFT JOIN class_students cs ON u.id = cs.student_id
@@ -1148,7 +1170,8 @@ func (s *service) GetSemesterReport(ctx context.Context, studentID string, semes
 
 	if s.validator != nil && s.validator.db != nil {
 		var bg, sc sql.NullFloat64
-		_ = s.validator.db.QueryRow(
+		_ = s.validator.db.QueryRowContext(
+			ctx,
 			`SELECT conduct_grade, scholastic_credit FROM scrutiny_records WHERE student_id = $1 AND semester = $2`, studentID, semester,
 		).Scan(&bg, &sc)
 		if bg.Valid {
@@ -1157,7 +1180,8 @@ func (s *service) GetSemesterReport(ctx context.Context, studentID string, semes
 		if sc.Valid {
 			scholasticCredit = sc.Float64
 		} else {
-			_ = s.validator.db.QueryRow(
+			_ = s.validator.db.QueryRowContext(
+				ctx,
 				`SELECT behavior_grade, scholastic_credit FROM semester_reports WHERE student_id = $1 AND semester = $2`, studentID, semester,
 			).Scan(&bg, &sc)
 			if bg.Valid {
@@ -1168,7 +1192,7 @@ func (s *service) GetSemesterReport(ctx context.Context, studentID string, semes
 			}
 		}
 
-		sem1Start, sem1End, sem2Start, sem2End := academicYearDates()
+		sem1Start, sem1End, sem2Start, sem2End := academicYearDates(ctx, s.validator.db, "")
 		var startD, endD string
 		if semester == 1 {
 			startD, endD = sem1Start, sem1End
@@ -1215,11 +1239,11 @@ func (s *service) GetChildSemesterReport(ctx context.Context, parentID, studentI
 			return nil, ErrNotGuardian
 		}
 	}
-	return s.GetSemesterReport(ctx, studentID, semester)
+	return s.GetSemesterReport(ctx, parentID, "parent", studentID, semester)
 }
 
 func (s *service) GenerateSemesterReportPDF(studentID string, semester int) ([]byte, error) {
-	report, err := s.GetSemesterReport(context.Background(), studentID, semester)
+	report, err := s.GetSemesterReport(context.Background(), studentID, "system_auditor", studentID, semester)
 	if err != nil {
 		return nil, err
 	}
@@ -1263,9 +1287,18 @@ func (s *service) mapSingleResponse(g Grade) GradeResponse {
 	}
 }
 
-// academicYearDates returns semester date boundaries for the current Italian school year.
-// Semester 1: Sep 1 – Jan 31 | Semester 2: Feb 1 – Jun 10
-func academicYearDates() (sem1Start, sem1End, sem2Start, sem2End string) {
+// academicYearDates returns semester date boundaries for the current school year,
+// reading custom dates from school_settings if configured.
+func academicYearDates(ctx context.Context, db *sql.DB, schoolID string) (sem1Start, sem1End, sem2Start, sem2End string) {
+	if db != nil && schoolID != "" {
+		var s1S, s1E, s2S, s2E sql.NullString
+		_ = db.QueryRowContext(ctx,
+			`SELECT sem1_start_date, sem1_end_date, sem2_start_date, sem2_end_date FROM school_settings WHERE school_id = $1`, schoolID,
+		).Scan(&s1S, &s1E, &s2S, &s2E)
+		if s1S.Valid && s1E.Valid && s2S.Valid && s2E.Valid && s1S.String != "" {
+			return s1S.String, s1E.String, s2S.String, s2E.String
+		}
+	}
 	now := time.Now()
 	year := now.Year()
 	if now.Month() < time.September {
@@ -1375,6 +1408,7 @@ func (s *service) CreateTestWithGrades(teacherID string, req CreateClassTestRequ
 			return fmt.Errorf("failed to insert grades for test: %w", err)
 		}
 		if s.broadcaster != nil {
+			s.broadcaster.BroadcastToUser(test.ClassID, "TEST_CREATED", test)
 			for _, g := range gradesList {
 				if g.IsPublished {
 					s.broadcaster.BroadcastToUser(g.StudentID, "GRADE_ADDED", s.mapSingleResponse(*g))
@@ -1386,7 +1420,40 @@ func (s *service) CreateTestWithGrades(teacherID string, req CreateClassTestRequ
 	return nil
 }
 
-func (s *service) GetClassTests(classID string, subjectID string) ([]ClassTestResponse, error) {
+func (s *service) GetClassTests(ctx context.Context, actorID string, actorRole string, classID string, subjectID string) ([]ClassTestResponse, error) {
+	if actorRole == "" || actorID == "" {
+		return nil, ErrUnauthorized
+	}
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" && actorRole != "principal" && actorRole != "vice_principal" && actorRole != "system_auditor" {
+		if actorRole == "teacher" {
+			var exists bool
+			if err := s.validator.db.QueryRowContext(ctx,
+				`SELECT EXISTS(SELECT 1 FROM class_subjects cs LEFT JOIN teachers t ON cs.teacher_id = t.id OR cs.teacher_id = t.user_id WHERE cs.class_id::text = $1 AND (cs.teacher_id::text = $2 OR t.user_id::text = $2))`,
+				classID, actorID,
+			).Scan(&exists); err != nil || !exists {
+				return nil, ErrUnauthorized
+			}
+		} else if actorRole == "student" {
+			var isEnrolled bool
+			if err := s.validator.db.QueryRowContext(ctx,
+				`SELECT EXISTS(SELECT 1 FROM class_students WHERE class_id::text = $1 AND student_id::text = $2)`,
+				classID, actorID,
+			).Scan(&isEnrolled); err != nil || !isEnrolled {
+				return nil, ErrUnauthorized
+			}
+		} else if actorRole == "parent" {
+			var isParentGuardian bool
+			if err := s.validator.db.QueryRowContext(ctx,
+				`SELECT EXISTS(SELECT 1 FROM parent_student_guardians psg JOIN class_students cs ON psg.student_id = cs.student_id WHERE psg.parent_id::text = $1 AND cs.class_id::text = $2)`,
+				actorID, classID,
+			).Scan(&isParentGuardian); err != nil || !isParentGuardian {
+				return nil, ErrUnauthorized
+			}
+		} else {
+			return nil, ErrUnauthorized
+		}
+	}
+
 	tests, err := s.repo.FindTestsByClassAndSubject(classID, subjectID)
 	if err != nil {
 		return nil, err
@@ -1409,7 +1476,40 @@ func (s *service) GetClassTests(classID string, subjectID string) ([]ClassTestRe
 	return resp, nil
 }
 
-func (s *service) GetUpcomingTestsByClass(classID string) ([]ClassTestResponse, error) {
+func (s *service) GetUpcomingTestsByClass(ctx context.Context, actorID string, actorRole string, classID string) ([]ClassTestResponse, error) {
+	if actorRole == "" || actorID == "" {
+		return nil, ErrUnauthorized
+	}
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" && actorRole != "principal" && actorRole != "vice_principal" && actorRole != "system_auditor" {
+		if actorRole == "teacher" {
+			var exists bool
+			if err := s.validator.db.QueryRowContext(ctx,
+				`SELECT EXISTS(SELECT 1 FROM class_subjects cs LEFT JOIN teachers t ON cs.teacher_id = t.id OR cs.teacher_id = t.user_id WHERE cs.class_id::text = $1 AND (cs.teacher_id::text = $2 OR t.user_id::text = $2))`,
+				classID, actorID,
+			).Scan(&exists); err != nil || !exists {
+				return nil, ErrUnauthorized
+			}
+		} else if actorRole == "student" {
+			var isEnrolled bool
+			if err := s.validator.db.QueryRowContext(ctx,
+				`SELECT EXISTS(SELECT 1 FROM class_students WHERE class_id::text = $1 AND student_id::text = $2)`,
+				classID, actorID,
+			).Scan(&isEnrolled); err != nil || !isEnrolled {
+				return nil, ErrUnauthorized
+			}
+		} else if actorRole == "parent" {
+			var isParentGuardian bool
+			if err := s.validator.db.QueryRowContext(ctx,
+				`SELECT EXISTS(SELECT 1 FROM parent_student_guardians psg JOIN class_students cs ON psg.student_id = cs.student_id WHERE psg.parent_id::text = $1 AND cs.class_id::text = $2)`,
+				actorID, classID,
+			).Scan(&isParentGuardian); err != nil || !isParentGuardian {
+				return nil, ErrUnauthorized
+			}
+		} else {
+			return nil, ErrUnauthorized
+		}
+	}
+
 	tests, err := s.repo.FindUpcomingTestsByClass(classID)
 	if err != nil {
 		return nil, err

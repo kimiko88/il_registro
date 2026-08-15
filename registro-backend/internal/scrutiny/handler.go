@@ -365,7 +365,7 @@ func (h *Handler) GetClassDeficiencies(c *gin.Context) {
 		return
 	}
 
-	deficiencies, err := h.service.GetClassDeficiencies(c.Request.Context(), classID, semester)
+	deficiencies, err := h.service.GetClassDeficiencies(c.Request.Context(), actorID, actorRole, classID, semester)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

@@ -288,10 +288,15 @@ func (r *repository) UpdateLesson(id string, req UpdateLessonRequest) (*Lesson, 
 		SET topic = COALESCE(NULLIF($2, ''), topic),
 		    type = COALESCE(NULLIF($3, ''), type),
 		    activity_type = COALESCE(NULLIF($4, ''), activity_type),
+		    hour = COALESCE($5, hour),
+		    duration = COALESCE($6, duration),
+		    is_substitution = COALESCE($7, is_substitution),
+		    is_co_teaching = COALESCE($8, is_co_teaching),
+		    notes = COALESCE(NULLIF($9, ''), notes),
 		    updated_at = NOW()
 		WHERE id = $1::uuid
 	`
-	_, err := r.db.Exec(query, id, req.Topic, req.Type, req.ActivityType)
+	_, err := r.db.Exec(query, id, req.Topic, req.Type, req.ActivityType, req.Hour, req.Duration, req.IsSubstitution, req.IsCoTeaching, req.Notes)
 	if err != nil {
 		return nil, err
 	}
@@ -384,7 +389,7 @@ func (r *repository) HasApprovedSubstitution(teacherID, classID, date string, ho
 			  AND s.class_id = $2::uuid
 			  AND s.date = $3::date
 			  AND (s.hour = $4 OR s.hour IS NULL)
-			  AND (s.status = 'approved' OR s.status = 'confirmed' OR s.status = 'assigned' OR s.status IS NULL)
+			  AND (s.status = 'approved' OR s.status = 'confirmed' OR s.status = 'assigned')
 		)`
 	var exists bool
 	err := r.db.QueryRow(query, teacherID, classID, date, hour).Scan(&exists)

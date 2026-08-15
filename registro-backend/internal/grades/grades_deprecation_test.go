@@ -106,8 +106,8 @@ func (m *mockServiceForDeprecationTest) GetMyTrend(ctx context.Context, actorID 
 	}
 	return args.Get(0).(*TrendResponse), args.Error(1)
 }
-func (m *mockServiceForDeprecationTest) GetSemesterReport(ctx context.Context, studentID string, semester int) (*SemesterReportResponse, error) {
-	args := m.Called(ctx, studentID, semester)
+func (m *mockServiceForDeprecationTest) GetSemesterReport(ctx context.Context, actorID string, actorRole string, studentID string, semester int) (*SemesterReportResponse, error) {
+	args := m.Called(ctx, actorID, actorRole, studentID, semester)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -147,15 +147,15 @@ func (m *mockServiceForDeprecationTest) GetChildSemesterReport(ctx context.Conte
 func (m *mockServiceForDeprecationTest) CreateTestWithGrades(teacherID string, req CreateClassTestRequest) error {
 	return m.Called(teacherID, req).Error(0)
 }
-func (m *mockServiceForDeprecationTest) GetClassTests(classID string, subjectID string) ([]ClassTestResponse, error) {
-	args := m.Called(classID, subjectID)
+func (m *mockServiceForDeprecationTest) GetClassTests(ctx context.Context, actorID string, actorRole string, classID string, subjectID string) ([]ClassTestResponse, error) {
+	args := m.Called(ctx, actorID, actorRole, classID, subjectID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]ClassTestResponse), args.Error(1)
 }
-func (m *mockServiceForDeprecationTest) GetUpcomingTestsByClass(classID string) ([]ClassTestResponse, error) {
-	args := m.Called(classID)
+func (m *mockServiceForDeprecationTest) GetUpcomingTestsByClass(ctx context.Context, actorID string, actorRole string, classID string) ([]ClassTestResponse, error) {
+	args := m.Called(ctx, actorID, actorRole, classID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}

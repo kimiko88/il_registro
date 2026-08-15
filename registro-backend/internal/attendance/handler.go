@@ -109,7 +109,7 @@ func (h *Handler) GetMySummary(c *gin.Context) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only students can access my-summary (parents must use /attendance/students/:studentID/summary)"})
 		return
 	}
-	res, err := h.service.GetStudentSummary(c.Request.Context(), studentID, schoolID)
+	res, err := h.service.GetStudentSummary(c.Request.Context(), studentID, role, schoolID, studentID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -186,7 +186,7 @@ func (h *Handler) GetStudentSummaryForTeacher(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "studentID mancante"})
 		return
 	}
-	res, err := h.service.GetStudentSummary(c.Request.Context(), studentID, schoolID)
+	res, err := h.service.GetStudentSummary(c.Request.Context(), actorID, actorRole, schoolID, studentID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -578,8 +578,13 @@ func (h *Handler) GetMonthlyBreakdown(c *gin.Context) {
 		return
 	}
 
-	res, err := h.service.GetMonthlyBreakdown(c.Request.Context(), studentID, schoolYear)
+	schoolID := c.GetString("school_id")
+	res, err := h.service.GetMonthlyBreakdown(c.Request.Context(), userID, role, schoolID, studentID, schoolYear)
 	if err != nil {
+		if strings.Contains(err.Error(), "unauthorized") || strings.Contains(err.Error(), "forbidden") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -590,6 +595,7 @@ func (h *Handler) GetMonthlyBreakdown(c *gin.Context) {
 func (h *Handler) GetChildMonthlyBreakdown(c *gin.Context) {
 	parentID := c.GetString("user_id")
 	role := c.GetString("role")
+	schoolID := c.GetString("school_id")
 	if parentID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
@@ -599,9 +605,9 @@ func (h *Handler) GetChildMonthlyBreakdown(c *gin.Context) {
 
 	if role != "parent" {
 		if role == "admin" || role == "superadmin" || role == "principal" || role == "vice_principal" || role == "secretary" {
-			res, err := h.service.GetMonthlyBreakdown(c.Request.Context(), studentID, schoolYear)
+			res, err := h.service.GetMonthlyBreakdown(c.Request.Context(), parentID, role, schoolID, studentID, schoolYear)
 			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
 			}
 			c.JSON(http.StatusOK, res)

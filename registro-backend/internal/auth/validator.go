@@ -41,6 +41,16 @@ var allRoles = map[string]bool{
 	RoleSystemAuditor: true,
 }
 
+// IsStaffRole returns true if the given role belongs to staff/administration/teachers.
+func IsStaffRole(role string) bool {
+	switch role {
+	case RoleTeacher, RoleCoordinator, RoleAdmin, RoleSuperAdmin, RoleSecretary, RolePrincipal, RoleVicePrincipal, RoleSystemAuditor:
+		return true
+	default:
+		return false
+	}
+}
+
 // creatableRoles defines which roles each caller role is allowed to create.
 var creatableRoles = map[string]map[string]bool{
 	RoleSuperAdmin: {

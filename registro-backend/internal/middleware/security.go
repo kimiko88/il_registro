@@ -56,16 +56,6 @@ func backendWSURL() string {
 
 func SecurityHeadersMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		nonce, err := generateNonce()
-		if err != nil {
-			c.JSON(500, gin.H{"error": "internal security error"})
-			c.Abort()
-			return
-		}
-
-		// Store the nonce so templates / other middleware can reference it
-		c.Set("csp_nonce", nonce)
-
 		// Prevent Clickjacking
 		c.Writer.Header().Set("X-Frame-Options", "DENY")
 
@@ -73,7 +63,6 @@ func SecurityHeadersMiddleware() gin.HandlerFunc {
 		c.Writer.Header().Set("X-Content-Type-Options", "nosniff")
 
 		// Enforce HTTPS (HSTS) — 2 years, include subdomains, preload-ready
-		// Only set HSTS header on HTTPS connections or when running behind a TLS proxy
 		isHTTPS := c.Request.TLS != nil
 		if !isHTTPS && os.Getenv("TRUST_PROXY_HEADERS") == "true" {
 			isHTTPS = c.GetHeader("X-Forwarded-Proto") == "https" || c.GetHeader("X-Forwarded-Ssl") == "on"
@@ -93,26 +82,30 @@ func SecurityHeadersMiddleware() gin.HandlerFunc {
 			"camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=()")
 
 		// Content Security Policy — strict nonce-based CSP without 'unsafe-inline'
-		upgradeInsecure := ""
-		if isHTTPS || os.Getenv("APP_ENV") == "production" || os.Getenv("GIN_MODE") == "release" {
-			upgradeInsecure = " upgrade-insecure-requests;"
-		}
+		nonce, err := generateNonce()
+		if err == nil {
+			c.Set("csp_nonce", nonce)
+			upgradeInsecure := ""
+			if isHTTPS || os.Getenv("APP_ENV") == "production" || os.Getenv("GIN_MODE") == "release" {
+				upgradeInsecure = " upgrade-insecure-requests;"
+			}
 
-		csp := fmt.Sprintf(
-			"default-src 'self'; "+
-				"script-src 'self' 'nonce-%s'; "+
-				"style-src 'self' 'nonce-%s' https://fonts.googleapis.com; "+
-				"font-src 'self' https://fonts.gstatic.com; "+
-				"img-src 'self' data: https://cdn.quasar.dev; "+
-				"connect-src 'self' %s %s https://*.supabase.co; "+
-				"object-src 'none'; "+
-				"frame-src 'none'; "+
-				"base-uri 'self'; "+
-				"form-action 'self'; "+
-				"frame-ancestors 'none';%s",
-			nonce, nonce, backendURL(), backendWSURL(), upgradeInsecure,
-		)
-		c.Writer.Header().Set("Content-Security-Policy", csp)
+			csp := fmt.Sprintf(
+				"default-src 'self'; "+
+					"script-src 'self' 'nonce-%s'; "+
+					"style-src 'self' 'nonce-%s' https://fonts.googleapis.com; "+
+					"font-src 'self' https://fonts.gstatic.com; "+
+					"img-src 'self' data: https://cdn.quasar.dev; "+
+					"connect-src 'self' %s %s https://*.supabase.co; "+
+					"object-src 'none'; "+
+					"frame-src 'none'; "+
+					"base-uri 'self'; "+
+					"form-action 'self'; "+
+					"frame-ancestors 'none';%s",
+				nonce, nonce, backendURL(), backendWSURL(), upgradeInsecure,
+			)
+			c.Writer.Header().Set("Content-Security-Policy", csp)
+		}
 
 		c.Next()
 	}

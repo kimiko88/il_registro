@@ -107,8 +107,7 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 		c.Set("email", claims.Email)
 		c.Set("role", claims.Role)
 		c.Set("school_id", claims.SchoolID)
-		isStaff := claims.Role == RoleTeacher || claims.Role == RoleCoordinator || claims.Role == RoleAdmin || claims.Role == RoleSuperAdmin || claims.Role == RoleSecretary || claims.Role == RolePrincipal || claims.Role == RoleVicePrincipal || claims.Role == RoleSystemAuditor
-		c.Set("is_staff", isStaff)
+		c.Set("is_staff", IsStaffRole(claims.Role))
 
 		c.Set("locale", parseAcceptLanguage(c.GetHeader("Accept-Language")))
 
@@ -159,8 +158,7 @@ func (m *Middleware) AuthenticateWSTicket(store *wsticket.Store) gin.HandlerFunc
 		c.Set("email", email)
 		c.Set("role", role)
 		c.Set("school_id", schoolID)
-		isStaff := role == RoleTeacher || role == RoleCoordinator || role == RoleAdmin || role == RoleSuperAdmin || role == RoleSecretary || role == RolePrincipal || role == RoleVicePrincipal || role == RoleSystemAuditor
-		c.Set("is_staff", isStaff)
+		c.Set("is_staff", IsStaffRole(role))
 		c.Set("locale", parseAcceptLanguage(c.GetHeader("Accept-Language")))
 		c.Request = c.Request.WithContext(SetUserContext(c.Request.Context(), userID, email, role, schoolID))
 

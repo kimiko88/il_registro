@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { useAuthStore } from '@/stores/auth';
 
-const getBaseURL = () => {
+export const getBaseURL = () => {
     const rawUrl = import.meta.env.VITE_API_URL;
     if (!rawUrl) {
         return '/api/v1';

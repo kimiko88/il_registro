@@ -48,6 +48,7 @@ func CORSMiddleware() gin.HandlerFunc {
 				return
 			}
 			if !isAllowed {
+				c.Writer.Header().Set("Access-Control-Allow-Origin", "null")
 				c.AbortWithStatus(403)
 				return
 			}

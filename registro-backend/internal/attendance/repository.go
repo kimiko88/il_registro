@@ -26,11 +26,14 @@ type Repository interface {
 	UpdateJustification(j *Justification) error
 	ProcessJustificationTx(ctx context.Context, j *Justification, teacherID string, approve bool) error
 	FindJustificationByID(id string) (*Justification, error)
-	FindPendingJustifications(classID string) ([]Justification, error)
+	FindPendingJustifications(classID, schoolID string) ([]Justification, error)
 	DeleteJustification(id string) error
+	DeletePendingJustification(id string) error
 
-	// Teacher Assignment Check
+	// Teacher & Student Assignment Checks
 	IsTeacherAssignedToClass(ctx context.Context, teacherID, classID string) (bool, error)
+	IsStudentInClass(ctx context.Context, studentID, classID string) (bool, error)
+	IsClassInSchool(ctx context.Context, classID, schoolID string) (bool, error)
 	IsTeacherSubstitute(ctx context.Context, teacherID, classID string, date time.Time, hour int) (bool, error)
 	HasOverlappingJustification(ctx context.Context, studentID string, startDate, endDate time.Time) (bool, error)
 
@@ -38,7 +41,7 @@ type Repository interface {
 	GetMonthlyBreakdown(ctx context.Context, studentID, schoolYear string) ([]MonthlyBreakdownRow, error)
 
 	FindUnjustifiedByStudent(studentID string) ([]Attendance, error)
-	JustifyAbsenceByParent(attendanceID string, reason string, notes string) error
+	JustifyAbsenceByParent(attendanceID string, studentID string, reason string, notes string) error
 	GetStudentAttendanceStats(studentID string) (*AttendanceStats, error)
 }
 
@@ -389,15 +392,17 @@ func (r *repository) FindJustificationByID(id string) (*Justification, error) {
 	return &j, nil
 }
 
-func (r *repository) FindPendingJustifications(classID string) ([]Justification, error) {
+func (r *repository) FindPendingJustifications(classID, schoolID string) ([]Justification, error) {
 	query := `
 		SELECT j.id, j.student_id, COALESCE(u.first_name || ' ' || u.last_name, 'Studente') AS student_name, j.start_date, j.end_date, j.reason, j.status 
 		FROM justifications j
 		JOIN users u ON j.student_id = u.id::uuid
 		LEFT JOIN students s ON s.user_id = u.id::uuid
-		WHERE ($1::text = '' OR s.class_id::text = $1::text) AND j.status = 'pending'`
+		WHERE ($1::text = '' OR s.class_id::text = $1::text)
+		  AND ($2::text = '' OR u.school_id::text = $2::text OR s.school_id::text = $2::text)
+		  AND j.status = 'pending'`
 
-	rows, err := r.db.Query(query, classID)
+	rows, err := r.db.Query(query, classID, schoolID)
 	if err != nil {
 		return nil, err
 	}
@@ -417,6 +422,21 @@ func (r *repository) FindPendingJustifications(classID string) ([]Justification,
 func (r *repository) DeleteJustification(id string) error {
 	_, err := r.db.Exec(`DELETE FROM justifications WHERE id=$1::uuid`, id)
 	return err
+}
+
+func (r *repository) DeletePendingJustification(id string) error {
+	res, err := r.db.Exec(`DELETE FROM justifications WHERE id=$1::uuid AND status = 'pending'`, id)
+	if err != nil {
+		return err
+	}
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return fmt.Errorf("impossibile eliminare la giustifica: non trovata o già elaborata")
+	}
+	return nil
 }
 
 func (r *repository) IsTeacherAssignedToClass(ctx context.Context, teacherID, classID string) (bool, error) {
@@ -536,15 +556,25 @@ func (r *repository) FindUnjustifiedByStudent(studentID string) ([]Attendance, e
 	return result, nil
 }
 
-func (r *repository) JustifyAbsenceByParent(attendanceID string, reason string, notes string) error {
+func (r *repository) JustifyAbsenceByParent(attendanceID string, studentID string, reason string, notes string) error {
 	query := `
 		UPDATE attendance
 		SET parent_justified = true, parent_justified_at = NOW(),
 		    justification_reason = $1, notes = COALESCE($2, notes), updated_at = NOW()
-		WHERE id = $3::uuid
+		WHERE id = $3::uuid AND student_id::text = $4::text
 	`
-	_, err := r.db.Exec(query, reason, notes, attendanceID)
-	return err
+	res, err := r.db.Exec(query, reason, notes, attendanceID, studentID)
+	if err != nil {
+		return err
+	}
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return fmt.Errorf("forbidden: l'assenza specificata non appartiene allo studente indicato")
+	}
+	return nil
 }
 
 func (r *repository) GetStudentAttendanceStats(studentID string) (*AttendanceStats, error) {
@@ -640,6 +670,39 @@ func (r *repository) HasOverlappingJustification(ctx context.Context, studentID 
 	`
 	var exists bool
 	err := r.db.QueryRowContext(ctx, query, studentID, startDate, endDate).Scan(&exists)
+	if err != nil {
+		return false, nil
+	}
+	return exists, nil
+}
+
+func (r *repository) IsStudentInClass(ctx context.Context, studentID, classID string) (bool, error) {
+	query := `
+		SELECT EXISTS (
+			SELECT 1 FROM class_students
+			WHERE student_id::text = $1::text AND class_id::text = $2::text
+		)
+	`
+	var exists bool
+	err := r.db.QueryRowContext(ctx, query, studentID, classID).Scan(&exists)
+	if err != nil {
+		return false, nil
+	}
+	return exists, nil
+}
+
+func (r *repository) IsClassInSchool(ctx context.Context, classID, schoolID string) (bool, error) {
+	if classID == "" || schoolID == "" {
+		return false, nil
+	}
+	query := `
+		SELECT EXISTS (
+			SELECT 1 FROM classes
+			WHERE id::text = $1::text AND school_id::text = $2::text
+		)
+	`
+	var exists bool
+	err := r.db.QueryRowContext(ctx, query, classID, schoolID).Scan(&exists)
 	if err != nil {
 		return false, nil
 	}

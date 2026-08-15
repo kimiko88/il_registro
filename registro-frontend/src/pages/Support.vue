@@ -93,7 +93,7 @@
             Contatta Assistenza
           </div>
 
-          <q-form @submit.prevent="handleSubmitTicket" class="q-gutter-md">
+          <q-form @submit.prevent="handleSubmitTicket" class="q-gutter-y-md">
             <q-input
               v-model="ticket.subject"
               label="Oggetto"

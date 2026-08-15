@@ -1,7 +1,12 @@
 import { useAuthStore } from 'src/stores/auth'
 
-export const authGuard = (to, from, next) => {
+export const authGuard = async (to, from, next) => {
     const authStore = useAuthStore()
+
+    // If token is null but user object exists (e.g. browser reload / F5), attempt silent refresh once before route guard checks
+    if (!authStore.token && (localStorage.getItem('user') || sessionStorage.getItem('user'))) {
+        await authStore.initAuth()
+    }
 
     const publicRoutes = ['/login', '/register', '/forgot-password']
 
@@ -37,7 +42,7 @@ export const authGuard = (to, from, next) => {
 
     // If not authenticated, redirect to login
     if (!authStore.isAuthenticated) {
-        next('/login')
+        next({ path: '/login', query: { reason: 'session_expired' } })
         return
     }
 

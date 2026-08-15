@@ -60,10 +60,17 @@ func (m *mockAttRepo) ProcessJustificationTx(ctx context.Context, j *attendance.
 func (m *mockAttRepo) FindJustificationByID(id string) (*attendance.Justification, error) {
 	return nil, nil
 }
-func (m *mockAttRepo) FindPendingJustifications(classID string) ([]attendance.Justification, error) {
+func (m *mockAttRepo) FindPendingJustifications(classID, schoolID string) ([]attendance.Justification, error) {
 	return nil, nil
 }
-func (m *mockAttRepo) DeleteJustification(id string) error { return nil }
+func (m *mockAttRepo) DeleteJustification(id string) error        { return nil }
+func (m *mockAttRepo) DeletePendingJustification(id string) error { return nil }
+func (m *mockAttRepo) IsStudentInClass(ctx context.Context, studentID, classID string) (bool, error) {
+	return true, nil
+}
+func (m *mockAttRepo) IsClassInSchool(ctx context.Context, classID, schoolID string) (bool, error) {
+	return true, nil
+}
 func (m *mockAttRepo) IsTeacherAssignedToClass(ctx context.Context, teacherID, classID string) (bool, error) {
 	args := m.Called(ctx, teacherID, classID)
 	return args.Bool(0), args.Error(1)
@@ -80,7 +87,7 @@ func (m *mockAttRepo) GetMonthlyBreakdown(ctx context.Context, studentID, school
 func (m *mockAttRepo) FindUnjustifiedByStudent(studentID string) ([]attendance.Attendance, error) {
 	return nil, nil
 }
-func (m *mockAttRepo) JustifyAbsenceByParent(attendanceID string, reason string, notes string) error {
+func (m *mockAttRepo) JustifyAbsenceByParent(attendanceID string, studentID string, reason string, notes string) error {
 	return nil
 }
 func (m *mockAttRepo) GetStudentAttendanceStats(studentID string) (*attendance.AttendanceStats, error) {

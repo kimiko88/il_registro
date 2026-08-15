@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { resetApiState, clearLocalSession } from '../services/api'
+import axios from 'axios'
+import { resetApiState, clearLocalSession, getBaseURL } from '../services/api'
 import { useWebSocketStore } from './websocket'
 
 const parseUser = (val) => {
@@ -35,18 +36,19 @@ const isTokenExpired = (tokenStr) => {
     }
 }
 
+const SENSITIVE_FIELDS = new Set([
+    'password_hash', 'mfa_secret', 'temp_mfa_secret', 'recovery_codes', 'ssn', 'tax_id'
+])
+
 const sanitizeUserData = (userData) => {
     if (!userData) return null
-    const {
-        password_hash: _password_hash,
-        mfa_secret: _mfa_secret,
-        temp_mfa_secret: _temp_mfa_secret,
-        recovery_codes: _recovery_codes,
-        ssn: _ssn,
-        tax_id: _tax_id,
-        ...safeData
-    } = userData
-    return safeData
+    const clean = {}
+    for (const key of Object.keys(userData)) {
+        if (!SENSITIVE_FIELDS.has(key)) {
+            clean[key] = userData[key]
+        }
+    }
+    return clean
 }
 
 const getRoleFromToken = (tokenStr) => {
@@ -66,6 +68,7 @@ const getRoleFromToken = (tokenStr) => {
 
 export const useAuthStore = defineStore('auth', () => {
     const user = ref(parseUser(sessionStorage.getItem('user')) || parseUser(localStorage.getItem('user')) || null)
+    const isInitializing = ref(false)
     // SECURITY: Access token is kept strictly in memory (Pinia ref) to prevent theft via XSS.
     // Refresh tokens are handled exclusively via HttpOnly cookies by backend; refreshToken ref always evaluates to null in memory.
     const token = ref(null)
@@ -152,6 +155,32 @@ export const useAuthStore = defineStore('auth', () => {
         }
     }
 
+    async function initAuth() {
+        if (isInitializing.value) return
+        if (token.value && !isTokenExpired(token.value)) return
+
+        const hasSavedUser = !!(localStorage.getItem('user') || sessionStorage.getItem('user'))
+        if (!hasSavedUser) return
+
+        isInitializing.value = true
+        try {
+            const refreshResponse = await axios.post(
+                `${getBaseURL()}/auth/refresh-token`,
+                {},
+                { withCredentials: true }
+            )
+            const { access_token, user: userData } = refreshResponse.data || {}
+            if (access_token) {
+                updateTokens(access_token, null, userData || user.value)
+            }
+        } catch (err) {
+            console.warn('Initial session restore failed:', err)
+            logout()
+        } finally {
+            isInitializing.value = false
+        }
+    }
+
     return {
         user,
         token,
@@ -159,6 +188,8 @@ export const useAuthStore = defineStore('auth', () => {
         isAuthenticated,
         userRole,
         userName,
+        isInitializing,
+        initAuth,
         login,
         logout,
         updateUser,

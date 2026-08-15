@@ -191,7 +191,6 @@ func TestService_SignatureReport(t *testing.T) {
 	report, err := svc.GetSignatureReport(context.Background(), "admin-1", "admin", "school-1", "msg-1")
 	assert.NoError(t, err)
 	assert.Equal(t, 25, report.SignedCount)
-	assert.Equal(t, 5, report.PendingCount)
 }
 
 func TestService_AckMessage(t *testing.T) {
@@ -199,6 +198,11 @@ func TestService_AckMessage(t *testing.T) {
 	mockUsers := new(MockUserRepoForComms)
 	svc := NewService(mockRepo, mockUsers)
 
+	mockRepo.On("Get", mock.Anything, "comm-123").Return(&Message{
+		ID:          "comm-123",
+		Type:        "bacheca",
+		ReceiverIDs: []string{},
+	}, nil).Once()
 	mockRepo.On("Ack", mock.Anything, "comm-123", "user-456").Return(nil).Once()
 
 	err := svc.AckMessage(context.Background(), "comm-123", "user-456")

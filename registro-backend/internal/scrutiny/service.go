@@ -72,6 +72,23 @@ func (s *Service) GetMatrix(ctx context.Context, actorID, actorRole, classID str
 	// If caller is NOT coordinator or dirigenza (e.g. parent, student, or subject teacher),
 	// check if scrutiny has been validated.
 	if !isCoordinator && !isDirigenza {
+		if actorRole == "teacher" {
+			clsSubs, err := s.classRepo.GetClassSubjects(ctx, classID)
+			if err != nil {
+				return nil, err
+			}
+			isTeacherAssigned := false
+			for _, cs := range clsSubs {
+				if cs.TeacherID != nil && *cs.TeacherID == actorID {
+					isTeacherAssigned = true
+					break
+				}
+			}
+			if !isTeacherAssigned {
+				return nil, errors.New("forbidden: docente non appartenente al consiglio di classe")
+			}
+		}
+
 		isValidated := false
 		for _, r := range records {
 			if r.Status == "validated" {
@@ -532,6 +549,9 @@ func (s *Service) ExportPagellaPDF(ctx context.Context, actorID, actorRole, clas
 }
 
 func (s *Service) SaveDeficiency(ctx context.Context, actorID, actorRole string, req *SaveDeficiencyRequest) error {
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "teacher" && actorRole != "secretary" && actorRole != "principal" && actorRole != "vice_principal" {
+		return errors.New("forbidden: non hai i permessi per inserire o modificare carenze")
+	}
 	if req.StudentID == "" || req.ClassID == "" || req.SubjectID == "" {
 		return errors.New("student_id, class_id, and subject_id are required")
 	}
@@ -574,7 +594,10 @@ func (s *Service) GetStudentDeficiencies(ctx context.Context, actorID, actorRole
 	return s.repo.GetDeficienciesByStudent(ctx, studentID)
 }
 
-func (s *Service) GetClassDeficiencies(ctx context.Context, classID string, semester int) ([]StudentDeficiency, error) {
+func (s *Service) GetClassDeficiencies(ctx context.Context, actorID, actorRole, classID string, semester int) ([]StudentDeficiency, error) {
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "teacher" && actorRole != "secretary" && actorRole != "principal" && actorRole != "vice_principal" {
+		return nil, errors.New("forbidden: non hai i permessi per accedere alle carenze della classe")
+	}
 	if classID == "" {
 		return []StudentDeficiency{}, nil
 	}
@@ -582,6 +605,9 @@ func (s *Service) GetClassDeficiencies(ctx context.Context, classID string, seme
 }
 
 func (s *Service) SaveDeferredScrutiny(ctx context.Context, actorID, actorRole string, req *SaveDeferredScrutinyRequest) error {
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "teacher" && actorRole != "principal" && actorRole != "vice_principal" {
+		return errors.New("forbidden: non hai i permessi per gestire lo scrutinio differito")
+	}
 	if req.StudentID == "" || req.ClassID == "" {
 		return errors.New("student_id and class_id are required")
 	}

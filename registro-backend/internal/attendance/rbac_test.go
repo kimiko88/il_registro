@@ -78,7 +78,7 @@ func (m *mockRepo) FindByStudent(_ string, _, _ time.Time) ([]Attendance, error)
 func (m *mockRepo) FindUnjustifiedByStudent(_ string) ([]Attendance, error) {
 	return nil, nil
 }
-func (m *mockRepo) JustifyAbsenceByParent(_, _, _ string) error { return nil }
+func (m *mockRepo) JustifyAbsenceByParent(_, _, _, _ string) error { return nil }
 func (m *mockRepo) GetStats(_ string) (*SummaryResponse, error) {
 	return &SummaryResponse{}, nil
 }
@@ -103,10 +103,17 @@ func (m *mockRepo) UpdateJustification(_ *Justification) error { return nil }
 func (m *mockRepo) HasOverlappingJustification(_ context.Context, _ string, _, _ time.Time) (bool, error) {
 	return m.hasOverlap, m.hasOverlapErr
 }
-func (m *mockRepo) FindPendingJustifications(_ string) ([]Justification, error) {
+func (m *mockRepo) FindPendingJustifications(_, _ string) ([]Justification, error) {
 	return nil, nil
 }
-func (m *mockRepo) DeleteJustification(_ string) error { return m.deleteErr }
+func (m *mockRepo) DeleteJustification(_ string) error        { return m.deleteErr }
+func (m *mockRepo) DeletePendingJustification(_ string) error { return m.deleteErr }
+func (m *mockRepo) IsStudentInClass(_ context.Context, _, _ string) (bool, error) {
+	return true, nil
+}
+func (m *mockRepo) IsClassInSchool(_ context.Context, _, _ string) (bool, error) {
+	return true, nil
+}
 func (m *mockRepo) ProcessJustificationTx(_ context.Context, _ *Justification, _ string, _ bool) error {
 	return m.processTxErr
 }

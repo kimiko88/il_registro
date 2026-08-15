@@ -226,7 +226,8 @@ export const useWebSocketStore = defineStore('websocket', () => {
             case 'GRADE_DELETED':
                 try {
                     const gradesStore = useGradesStore()
-                    if (payload.class_id) gradesStore.fetchGrades(payload.class_id, payload.subject_id, true)
+                    const targetClassId = gradesStore.currentClassId || payload.class_id
+                    if (targetClassId) gradesStore.fetchGrades(targetClassId, payload.subject_id, true)
                 } catch (err) {
                     console.debug('Failed to refresh grades store:', err)
                 }

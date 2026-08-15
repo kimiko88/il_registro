@@ -94,8 +94,8 @@ func (m *MockAttendanceRepo) FindJustificationByID(id string) (*Justification, e
 	}
 	return args.Get(0).(*Justification), args.Error(1)
 }
-func (m *MockAttendanceRepo) FindPendingJustifications(classID string) ([]Justification, error) {
-	args := m.Called(classID)
+func (m *MockAttendanceRepo) FindPendingJustifications(classID, schoolID string) ([]Justification, error) {
+	args := m.Called(classID, schoolID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -104,6 +104,18 @@ func (m *MockAttendanceRepo) FindPendingJustifications(classID string) ([]Justif
 func (m *MockAttendanceRepo) DeleteJustification(id string) error {
 	args := m.Called(id)
 	return args.Error(0)
+}
+func (m *MockAttendanceRepo) DeletePendingJustification(id string) error {
+	args := m.Called(id)
+	return args.Error(0)
+}
+func (m *MockAttendanceRepo) IsStudentInClass(ctx context.Context, studentID, classID string) (bool, error) {
+	args := m.Called(ctx, studentID, classID)
+	return args.Bool(0), args.Error(1)
+}
+func (m *MockAttendanceRepo) IsClassInSchool(ctx context.Context, classID, schoolID string) (bool, error) {
+	args := m.Called(ctx, classID, schoolID)
+	return args.Bool(0), args.Error(1)
 }
 func (m *MockAttendanceRepo) IsTeacherAssignedToClass(ctx context.Context, teacherID, classID string) (bool, error) {
 	args := m.Called(ctx, teacherID, classID)
@@ -131,8 +143,8 @@ func (m *MockAttendanceRepo) FindUnjustifiedByStudent(studentID string) ([]Atten
 	}
 	return args.Get(0).([]Attendance), args.Error(1)
 }
-func (m *MockAttendanceRepo) JustifyAbsenceByParent(attendanceID string, reason string, notes string) error {
-	args := m.Called(attendanceID, reason, notes)
+func (m *MockAttendanceRepo) JustifyAbsenceByParent(attendanceID string, studentID string, reason string, notes string) error {
+	args := m.Called(attendanceID, studentID, reason, notes)
 	return args.Error(0)
 }
 func (m *MockAttendanceRepo) GetStudentAttendanceStats(studentID string) (*AttendanceStats, error) {
@@ -230,6 +242,7 @@ func TestAttendanceService_MarkAttendance(t *testing.T) {
 	today := time.Now().Format("2006-01-02")
 
 	mockRepo.On("IsTeacherAssignedToClass", ctx, teacherID, classID).Return(true, nil).Once()
+	mockRepo.On("IsStudentInClass", ctx, "student-1", classID).Return(true, nil).Once()
 	mockRepo.On("Create", mock.Anything).Return(nil).Once()
 
 	err := svc.MarkAttendance(ctx, teacherID, schoolID, CreateAttendanceRequest{

@@ -74,6 +74,10 @@ func (m *MockAuthRepository) RevokeAllUserTokens(ctx context.Context, userID str
 	args := m.Called(ctx, userID)
 	return args.Error(0)
 }
+func (m *MockAuthRepository) RotateRefreshTokenTx(ctx context.Context, oldID string, newRt *auth.RefreshToken) error {
+	args := m.Called(ctx, oldID, newRt)
+	return args.Error(0)
+}
 func (m *MockAuthRepository) RecordLoginAttempt(ctx context.Context, attempt *auth.LoginAttempt) error {
 	args := m.Called(ctx, attempt)
 	return args.Error(0)
