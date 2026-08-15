@@ -375,7 +375,15 @@ func (h *Handler) Export(c *gin.Context) {
 // Helper to parse query params into GradeFilter
 func (h *Handler) parseFilter(c *gin.Context) GradeFilter {
 	var filter GradeFilter
-	_ = c.BindQuery(&filter)
+	if err := c.BindQuery(&filter); err != nil {
+		logger.Log.Warnf("parseFilter BindQuery error: %v", err)
+	}
+	if filter.Semester < 0 || filter.Semester > 2 {
+		filter.Semester = 0
+	}
+	if filter.Page < 0 {
+		filter.Page = 1
+	}
 	return filter
 }
 
@@ -582,8 +590,13 @@ func (h *Handler) GetMyGrades(c *gin.Context) {
 
 func (h *Handler) GetMyAverages(c *gin.Context) {
 	studentID := c.GetString("user_id")
+	role := c.GetString("role")
 	if studentID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "student" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: solo uno studente può accedere alle proprie medie"})
 		return
 	}
 
@@ -613,6 +626,10 @@ func (h *Handler) GetMyTrend(c *gin.Context) {
 
 	resp, err := h.service.GetMyTrend(c.Request.Context(), actorID, role, targetStudentID, subjectID)
 	if err != nil {
+		if errors.Is(err, ErrUnauthorized) || errors.Is(err, ErrNotGuardian) {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -869,8 +886,7 @@ func (h *Handler) GetStudentProfile(c *gin.Context) {
 
 	if actorRole == "parent" {
 		// Verify guardian relationship before exposing analytical student profile
-		_, err := h.service.GetChildGrades(c.Request.Context(), userID, studentID, GradeFilter{})
-		if err != nil {
+		if err := h.service.ValidateParentGuardian(c.Request.Context(), userID, studentID); err != nil {
 			if errors.Is(err, ErrNotGuardian) || strings.Contains(err.Error(), "guardian") {
 				c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 				return
@@ -940,12 +956,21 @@ func (h *Handler) CreateTestWithGrades(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.CreateTestWithGrades(teacherID, req); err != nil {
+	test, err := h.service.CreateTestWithGrades(teacherID, req)
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "test and grades created successfully"})
+	testID := ""
+	if test != nil {
+		testID = test.ID
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "test and grades created successfully",
+		"test_id": testID,
+	})
 }
 
 func (h *Handler) GetClassTestsList(c *gin.Context) {

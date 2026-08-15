@@ -195,6 +195,10 @@ func (s *Service) Login(ctx context.Context, req *LoginRequest, ipAddress, userA
 		return nil, err
 	}
 
+	if len(userAgent) > 512 {
+		userAgent = userAgent[:512]
+	}
+
 	// Store refresh token
 	rt := &RefreshToken{
 		UserID:    user.ID,
@@ -304,6 +308,9 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken, ipAddress, use
 	if newUserAgent == "" {
 		newUserAgent = rt.UserAgent
 	}
+	if len(newUserAgent) > 512 {
+		newUserAgent = newUserAgent[:512]
+	}
 
 	// Store the new refresh token in DB and revoke old token in single transaction
 	newRt := &RefreshToken{
@@ -314,11 +321,7 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken, ipAddress, use
 		UserAgent: newUserAgent,
 	}
 	if err := s.repo.RotateRefreshTokenTx(ctx, rt.ID, newRt); err != nil {
-		// Fallback to non-transactional methods if RotateRefreshTokenTx fails or not implemented in mock
-		if err := s.repo.CreateRefreshToken(ctx, newRt); err != nil {
-			return nil, err
-		}
-		_ = s.repo.RevokeRefreshToken(ctx, rt.ID)
+		return nil, fmt.Errorf("failed to rotate refresh token: %w", err)
 	}
 
 	return &TokenPair{
@@ -474,6 +477,8 @@ func (s *Service) RequestPasswordReset(ctx context.Context, email string) error 
 	logger.Log.Infof("PASSWORD RESET REQUEST for user %s", user.ID)
 
 	if s.emailSender != nil {
+		// SECURITY: SendPasswordReset receives the unhashed single-use token to generate the reset URL.
+		// Implementation of EmailSender MUST NOT log the raw token parameter under any log level.
 		if err := s.emailSender.SendPasswordReset(ctx, user.Email, token); err != nil {
 			logger.Log.Errorf("failed to send password reset email to %s: %v", user.Email, err)
 		}
@@ -561,9 +566,8 @@ func isPasswordExpiredReason(user *User) (bool, error) {
 			}
 			return false, nil
 		}
-		if !user.CreatedAt.IsZero() && time.Since(user.CreatedAt) > 90*24*time.Hour {
-			return true, ErrInitialPasswordExpired
-		}
+		// Legacy accounts created prior to PasswordChangedAt addition: do not lock out automatically
+		return false, nil
 	}
 	return false, nil
 }

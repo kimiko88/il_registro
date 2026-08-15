@@ -2,8 +2,8 @@
   <q-page class="q-pa-md">
     <div class="row items-center justify-between q-mb-md">
       <div>
-        <h1 class="text-h4 text-weight-bold q-my-none">📅 Agenda & Compiti</h1>
-        <p class="text-subtitle1 text-grey-7 q-mb-none">Calendario scadenze, verifiche ed esercitazioni con tracciamento completamento</p>
+        <h1 class="text-h4 text-weight-bold q-my-none">📅 {{ $t('agendaPage.studentTitle') }}</h1>
+        <p class="text-subtitle1 text-grey-7 q-mb-none">{{ $t('agendaPage.studentSubtitle') }}</p>
       </div>
       <div class="row items-center q-gutter-sm">
         <q-btn flat round icon="refresh" color="primary" :loading="agendaStore.loading" @click="loadAgenda" />
@@ -11,11 +11,11 @@
           v-model="filterType"
           toggle-color="primary"
           :options="[
-            { label: 'Tutti', value: 'all' },
-            { label: 'Compiti a casa', value: 'compito' },
-            { label: 'Compiti in classe', value: 'verifica' },
-            { label: 'Interrogazioni', value: 'interrogazione' },
-            { label: 'Altro', value: 'altro' }
+            { label: $t('agendaPage.all'), value: 'all' },
+            { label: $t('agendaPage.homework'), value: 'compito' },
+            { label: $t('agendaPage.test'), value: 'verifica' },
+            { label: $t('agendaPage.oralTest'), value: 'interrogazione' },
+            { label: $t('agendaPage.other'), value: 'altro' }
           ]"
         />
       </div>
@@ -27,7 +27,7 @@
 
     <div v-else-if="filteredHomeworks.length === 0" class="text-center q-my-xl q-pa-lg bg-grey-1 rounded-lg bordered">
       <q-icon name="event_busy" size="48px" color="grey-6" />
-      <div class="text-h6 text-grey-7 q-mt-sm">Nessun evento o compito trovato per questo filtro</div>
+      <div class="text-h6 text-grey-7 q-mt-sm">{{ $t('agendaPage.noEvents') }}</div>
     </div>
 
     <div v-else class="row q-col-gutter-md">

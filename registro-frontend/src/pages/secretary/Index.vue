@@ -3,9 +3,9 @@
     <div class="row items-center q-mb-xl">
       <div class="col">
         <h1 class="text-h3 text-weight-bold text-outfit q-my-none text-gradient-premium">
-          Dashboard Segreteria
+          {{ $t('roleDashboards.secretaryPanel') }}
         </h1>
-        <div class="text-subtitle1 text-slate-500 q-mt-sm">Benvenuto, ecco il riepilogo della gestione scolastica.</div>
+        <div class="text-subtitle1 text-slate-500 q-mt-sm">{{ $t('roleDashboards.secretarySub') }}</div>
       </div>
     </div>
 
@@ -37,7 +37,7 @@
       <div class="col-12 col-md-8">
         <q-card class="rounded-xl shadow-soft border-slate-100 bg-white overflow-hidden q-mb-lg">
            <q-card-section class="row items-center justify-between q-pa-lg">
-             <div class="text-h5 text-weight-bold text-slate-800">Da Revisionare</div>
+             <div class="text-h5 text-weight-bold text-slate-800">{{ $t('roleDashboards.pendingReviews') }}</div>
              <q-btn flat round icon="refresh" color="primary" @click="fetchData" />
            </q-card-section>
            
@@ -59,14 +59,14 @@
            </q-list>
            <div v-else class="q-pa-xl text-center text-slate-400">
              <q-icon name="check_circle" size="64px" color="emerald-400" class="opacity-40 q-mb-md" />
-             <div class="text-h6">Ottimo lavoro!</div>
-             <div>Nessun documento in attesa di revisione</div>
+             <div class="text-h6">{{ $t('roleDashboards.greatJob') }}</div>
+             <div>{{ $t('roleDashboards.noPendingDocs') }}</div>
            </div>
         </q-card>
 
         <q-card class="rounded-xl shadow-soft border-slate-100 bg-white overflow-hidden">
              <q-card-section class="q-pa-lg">
-                  <div class="text-h5 text-weight-bold text-slate-800">Attività Recenti</div>
+                  <div class="text-h5 text-weight-bold text-slate-800">{{ $t('dashboardPage.recentActivity') }}</div>
              </q-card-section>
              <q-separator color="slate-100" />
              <q-list v-if="recentEvents.length > 0">

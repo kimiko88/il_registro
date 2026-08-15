@@ -3,7 +3,7 @@
     <!-- Header -->
     <div class="row items-center q-mb-md justify-between">
       <div>
-        <h1 class="text-h4 q-my-none">Bentornato, {{ studentStore.profile?.first_name }}</h1>
+        <h1 class="text-h4 q-my-none">{{ $t('roleDashboards.studentPanel', { name: studentStore.profile?.first_name || '' }) }}</h1>
         <div class="text-subtitle1 text-grey-8">{{ studentStore.className }}</div>
       </div>
       <q-btn round flat icon="notifications" color="grey-8">
@@ -19,7 +19,7 @@
                      </q-item-section>
                  </q-item>
                  <q-item v-if="!studentStore.notifications.length">
-                     <q-item-section class="text-center text-grey">Nessuna nuova notifica</q-item-section>
+                     <q-item-section class="text-center text-grey">{{ $t('dashboardPage.noNotifications') }}</q-item-section>
                  </q-item>
              </q-list>
         </q-menu>
@@ -34,7 +34,7 @@
             <q-card-section class="row items-center no-wrap">
                 <div class="col">
                     <div class="text-h3 text-weight-bold text-outfit">{{ averageGrade }}</div>
-                    <div class="text-caption text-slate-500 text-uppercase letter-spacing-1">Media Voti</div>
+                    <div class="text-caption text-slate-500 text-uppercase letter-spacing-1">{{ $t('roleDashboards.averageGrade') }}</div>
                 </div>
                 <div class="col-auto">
                     <div :class="Number(averageGrade) >= 6 ? 'bg-green-100' : 'bg-red-100'" class="q-pa-md rounded-xl">
@@ -52,7 +52,7 @@
             <q-card-section class="row items-center no-wrap">
                 <div class="col">
                     <div class="text-h3 text-weight-bold text-outfit">{{ attendanceRate }}%</div>
-                    <div class="text-caption text-slate-500 text-uppercase letter-spacing-1">Presenze</div>
+                    <div class="text-caption text-slate-500 text-uppercase letter-spacing-1">{{ $t('roleDashboards.attendanceRate') }}</div>
                 </div>
                 <div class="col-auto">
                     <q-circular-progress
@@ -77,7 +77,7 @@
             <q-card-section class="row items-center no-wrap">
                 <div class="col">
                     <div class="text-h3 text-weight-bold text-outfit">{{ pctoHours }}h</div>
-                    <div class="text-caption text-slate-500 text-uppercase letter-spacing-1">Ore PCTO</div>
+                    <div class="text-caption text-slate-500 text-uppercase letter-spacing-1">{{ $t('roleDashboards.pctoHours') }}</div>
                 </div>
                 <div class="col-auto">
                     <div class="bg-orange-100 q-pa-md rounded-xl">

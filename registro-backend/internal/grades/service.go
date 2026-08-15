@@ -53,7 +53,7 @@ type Service interface {
 	GetChildSemesterReport(ctx context.Context, parentID, studentID string, semester int) (*SemesterReportResponse, error)
 
 	// Class Tests
-	CreateTestWithGrades(teacherID string, req CreateClassTestRequest) error
+	CreateTestWithGrades(teacherID string, req CreateClassTestRequest) (*ClassTest, error)
 	GetClassTests(ctx context.Context, actorID string, actorRole string, classID string, subjectID string) ([]ClassTestResponse, error)
 	GetUpcomingTestsByClass(ctx context.Context, actorID string, actorRole string, classID string) ([]ClassTestResponse, error)
 	DeleteClassTest(teacherID string, testID string) error
@@ -1321,13 +1321,13 @@ func currentSchoolYear() string {
 	return fmt.Sprintf("%d/%d", year, year+1)
 }
 
-func (s *service) CreateTestWithGrades(teacherID string, req CreateClassTestRequest) error {
+func (s *service) CreateTestWithGrades(teacherID string, req CreateClassTestRequest) (*ClassTest, error) {
 	teacherUser, err := s.userRepo.GetByID(context.Background(), teacherID)
 	if err != nil {
-		return fmt.Errorf("could not resolve teacher profile: %w", err)
+		return nil, fmt.Errorf("could not resolve teacher profile: %w", err)
 	}
 	if teacherUser.SchoolID == nil {
-		return fmt.Errorf("teacher is not associated with a school")
+		return nil, fmt.Errorf("teacher is not associated with a school")
 	}
 	schoolID := *teacherUser.SchoolID
 
@@ -1335,12 +1335,12 @@ func (s *service) CreateTestWithGrades(teacherID string, req CreateClassTestRequ
 	if err := s.validator.db.QueryRow(
 		`SELECT id FROM teachers WHERE user_id = $1`, teacherID,
 	).Scan(&teacherProfileID); err != nil {
-		return fmt.Errorf("could not resolve teacher profile ID: %w", err)
+		return nil, fmt.Errorf("could not resolve teacher profile ID: %w", err)
 	}
 
 	testDate, err := time.Parse("2006-01-02", req.Date)
 	if err != nil {
-		return fmt.Errorf("invalid test date format '%s': %w", req.Date, err)
+		return nil, fmt.Errorf("invalid test date format '%s': %w", req.Date, err)
 	}
 
 	test := &ClassTest{
@@ -1355,7 +1355,7 @@ func (s *service) CreateTestWithGrades(teacherID string, req CreateClassTestRequ
 	}
 
 	if err := s.repo.CreateTest(test); err != nil {
-		return fmt.Errorf("failed to create test: %w", err)
+		return nil, fmt.Errorf("failed to create test: %w", err)
 	}
 
 	validSemester := func(sem int) int {
@@ -1405,7 +1405,7 @@ func (s *service) CreateTestWithGrades(teacherID string, req CreateClassTestRequ
 
 	if len(gradesList) > 0 {
 		if err := s.repo.BatchCreate(gradesList); err != nil {
-			return fmt.Errorf("failed to insert grades for test: %w", err)
+			return nil, fmt.Errorf("failed to insert grades for test: %w", err)
 		}
 		if s.broadcaster != nil {
 			s.broadcaster.BroadcastToUser(test.ClassID, "TEST_CREATED", test)
@@ -1417,7 +1417,7 @@ func (s *service) CreateTestWithGrades(teacherID string, req CreateClassTestRequ
 		}
 	}
 
-	return nil
+	return test, nil
 }
 
 func (s *service) GetClassTests(ctx context.Context, actorID string, actorRole string, classID string, subjectID string) ([]ClassTestResponse, error) {

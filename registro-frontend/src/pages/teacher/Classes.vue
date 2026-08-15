@@ -1,12 +1,12 @@
 <template>
   <q-page class="q-pa-md">
     <div class="row items-center justify-between q-mb-md">
-      <div class="text-h4">Le Mie Classi</div>
+      <div class="text-h4">{{ $t('classRegister.myClasses') }}</div>
       <q-select
         v-model="selectedClass"
         :options="classesStore.classes"
         option-label="label"
-        label="Seleziona Classe"
+        :label="$t('classRegister.selectClass')"
         outlined
         dense
         options-dense
@@ -23,7 +23,7 @@
               <q-item-label>{{ scope.opt.label || scope.opt.displayName || scope.opt.name }}</q-item-label>
             </q-item-section>
             <q-item-section side v-if="scope.opt.isCoordinator">
-              <q-badge color="amber-9" label="COORD" />
+              <q-badge color="amber-9" :label="$t('classRegister.coordinator').toUpperCase()" />
             </q-item-section>
           </q-item>
         </template>
@@ -34,7 +34,7 @@
       <!-- Class List Sidebar -->
       <div class="col-12 col-md-3">
         <q-list bordered class="bg-white rounded-borders">
-          <q-item-label header class="text-weight-bold bg-grey-2">Elenco Classi</q-item-label>
+          <q-item-label header class="text-weight-bold bg-grey-2">{{ $t('classRegister.classList') }}</q-item-label>
           <q-item 
             v-for="cls in classesStore.classes" 
             :key="cls.id" 
@@ -49,10 +49,10 @@
             </q-item-section>
             <q-item-section>
               <q-item-label>{{ getClassLabel(cls) }}</q-item-label>
-              <q-item-label caption>{{ cls.students ?? cls.students_count ?? 0 }} Studenti</q-item-label>
+              <q-item-label caption>{{ $t('classRegister.studentsCount', { count: cls.students ?? cls.students_count ?? 0 }) }}</q-item-label>
             </q-item-section>
             <q-item-section side v-if="cls.isCoordinator">
-              <q-icon name="star" color="orange"><q-tooltip>Coordinatore</q-tooltip></q-icon>
+              <q-icon name="star" color="orange"><q-tooltip>{{ $t('classRegister.coordinator') }}</q-tooltip></q-icon>
             </q-item-section>
           </q-item>
         </q-list>
@@ -62,12 +62,12 @@
       <div class="col-12 col-md-9" v-if="selectedClass">
         <q-card>
           <q-toolbar class="bg-primary text-white">
-            <q-toolbar-title>Classe {{ getClassLabel(selectedClass) }}</q-toolbar-title>
+            <q-toolbar-title>{{ $t('classRegister.classLabel', { name: getClassLabel(selectedClass) }) }}</q-toolbar-title>
             <q-tabs v-model="tab" shrink stretch>
-              <q-tab name="students" label="Studenti" />
-              <q-tab name="notes" label="Note di Classe" />
-              <q-tab name="grades" label="Riepilogo Voti" />
-              <q-tab name="dashboard" label="Coordinatore" v-if="selectedClass.isCoordinator" />
+              <q-tab name="students" :label="$t('classRegister.tabStudents')" />
+              <q-tab name="notes" :label="$t('classRegister.tabNotes')" />
+              <q-tab name="grades" :label="$t('classRegister.tabGrades')" />
+              <q-tab name="dashboard" :label="$t('classRegister.tabCoordinator')" v-if="selectedClass.isCoordinator" />
             </q-tabs>
           </q-toolbar>
 
@@ -77,8 +77,8 @@
             <!-- Student List -->
             <q-tab-panel name="students">
               <div class="row items-center justify-between q-mb-md">
-                <div class="text-h6">Elenco Studenti</div>
-                <q-input dense outlined placeholder="Cerca studente..." v-model="search" rounded>
+                <div class="text-h6">{{ $t('classRegister.studentList') }}</div>
+                <q-input dense outlined :placeholder="$t('classRegister.searchStudent')" v-model="search" rounded>
                   <template v-slot:append><q-icon name="search" /></template>
                 </q-input>
               </div>
@@ -86,7 +86,7 @@
                 <template v-slot:body-cell-actions="props">
                   <q-td :props="props">
                     <q-btn round flat dense icon="note_add" color="grey-7" @click="openNoteDialog(props.row)">
-                      <q-tooltip>Aggiungi Nota</q-tooltip>
+                      <q-tooltip>{{ $t('classRegister.addNote') }}</q-tooltip>
                     </q-btn>
                   </q-td>
                 </template>
@@ -96,20 +96,14 @@
             <!-- Notes List -->
             <q-tab-panel name="notes">
               <div class="row items-center justify-between q-mb-md">
-                <div class="text-h6">Note di Classe</div>
+                <div class="text-h6">{{ $t('classRegister.tabNotes') }}</div>
                 <q-select
                   v-model="filterNoteType"
-                  :options="[
-                    {label:'Tutte', value:''}, 
-                    {label:'Nota Generica', value:'generic'}, 
-                    {label:'Richiamo Compiti', value:'homework'}, 
-                    {label:'Nota Comportamentale', value:'behavior'}, 
-                    {label:'Nota Disciplinare', value:'disciplinary'}
-                  ]"
+                  :options="noteTypeFilterOptions"
                   option-value="value"
                   option-label="label"
                   emit-value map-options
-                  label="Filtra per Tipo"
+                  :label="$t('common.filter') || 'Filtra'"
                   dense outlined
                   style="min-width: 180px"
                 />
@@ -119,10 +113,10 @@
                 <template v-slot:body-cell-actions="props">
                   <q-td :props="props" class="q-gutter-xs">
                     <q-btn round flat dense icon="edit" color="primary" @click="editNote(props.row)">
-                      <q-tooltip>Modifica Nota</q-tooltip>
+                      <q-tooltip>{{ $t('common.edit') }}</q-tooltip>
                     </q-btn>
                     <q-btn round flat dense icon="delete" color="negative" @click="deleteNote(props.row.id)">
-                      <q-tooltip>Elimina Nota</q-tooltip>
+                      <q-tooltip>{{ $t('common.delete') }}</q-tooltip>
                     </q-btn>
                   </q-td>
                 </template>
@@ -133,8 +127,8 @@
             <q-tab-panel name="grades">
               <div class="text-center text-grey text-h6 q-pa-xl">
                 <q-icon name="analytics" size="64px" class="q-mb-sm" />
-                <div>Riepilogo Voti e Media Classe</div>
-                <q-btn label="Vedi Dettagli Voti" color="primary" flat class="q-mt-sm" to="/teacher/grades" />
+                <div>{{ $t('classRegister.tabGrades') }}</div>
+                <q-btn :label="$t('common.details') || 'Dettagli'" color="primary" flat class="q-mt-sm" to="/teacher/grades" />
               </div>
             </q-tab-panel>
 
@@ -144,19 +138,9 @@
                 <div class="col-12 col-md-6">
                   <q-card bordered flat class="bg-red-1">
                     <q-card-section>
-                      <div class="text-subtitle1 text-red-9 text-weight-bold">Studenti a Rischio</div>
+                      <div class="text-subtitle1 text-red-9 text-weight-bold">{{ $t('classRegister.coordinator') }}</div>
                       <q-list dense>
-                        <q-item><q-item-label>• Nessuna segnalazione critica</q-item-label></q-item>
-                      </q-list>
-                    </q-card-section>
-                  </q-card>
-                </div>
-                <div class="col-12 col-md-6">
-                  <q-card bordered flat class="bg-yellow-1">
-                    <q-card-section>
-                      <div class="text-subtitle1 text-orange-9 text-weight-bold">Scadenze Coordinamento</div>
-                      <q-list dense>
-                        <q-item><q-item-label>• Preparazione Consigli di Classe</q-item-label></q-item>
+                        <q-item><q-item-label>• {{ $t('common.noData') }}</q-item-label></q-item>
                       </q-list>
                     </q-card-section>
                   </q-card>
@@ -170,7 +154,7 @@
       <div class="col-12 col-md-9 text-center text-grey" v-else>
         <div class="q-mt-xl">
           <q-icon name="school" size="100px" />
-          <div class="text-h5">Seleziona una classe per gestire</div>
+          <div class="text-h5">{{ $t('classRegister.selectClassPrompt') }}</div>
         </div>
       </div>
     </div>
@@ -190,16 +174,25 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
+import { useI18n } from 'vue-i18n'
 import NoteDialog from 'src/components/Teacher/NoteDialog.vue'
 import { useClassesStore } from '@/stores/classes'
 import notesService from '@/services/notesService'
 import api from '@/services/api'
-
 import { useSchoolYearStore } from '@/stores/schoolYear'
 
 const classesStore = useClassesStore()
 const schoolYearStore = useSchoolYearStore()
 const $q = useQuasar()
+let t = (key, fallback) => (typeof fallback === 'string' ? fallback : key)
+try {
+  const i18nInstance = useI18n()
+  if (i18nInstance && i18nInstance.t) {
+    t = i18nInstance.t
+  }
+} catch (e) {
+  // Fallback for isolated unit tests without vue-i18n app plugin
+}
 
 function getClassLabel(cls) {
   if (!cls) return ''
@@ -245,20 +238,28 @@ watch(() => schoolYearStore.selectedSchoolYear, async (newYear) => {
   }
 })
 
-const columns = [
-  { name: 'name', label: 'Nome', field: row => `${row.last_name} ${row.first_name}`, align: 'left', sortable: true },
-  { name: 'email', label: 'Email', field: 'email', align: 'left' },
-  { name: 'actions', label: 'Azioni', align: 'center' }
-]
+const columns = computed(() => [
+  { name: 'name', label: t('classRegister.fullName') || 'Nome', field: row => `${row.last_name} ${row.first_name}`, align: 'left', sortable: true },
+  { name: 'email', label: t('classRegister.email') || 'Email', field: 'email', align: 'left' },
+  { name: 'actions', label: t('classRegister.tableHeaderActions') || 'Azioni', align: 'center' }
+])
 
-const noteColumns = [
-  { name: 'date', label: 'Data', field: 'date', align: 'left', sortable: true },
-  { name: 'student', label: 'Studente', field: row => getStudentName(row.student_id), align: 'left', sortable: true },
-  { name: 'type', label: 'Tipo', field: row => formatNoteType(row.type), align: 'left' },
-  { name: 'note', label: 'Contenuto', field: 'note', align: 'left' },
-  { name: 'docente', label: 'Docente', field: 'teacher_name', align: 'left' },
-  { name: 'actions', label: 'Azioni', align: 'center' }
-]
+const noteColumns = computed(() => [
+  { name: 'date', label: t('classRegister.dateLabel') || 'Data', field: 'date', align: 'left', sortable: true },
+  { name: 'student', label: t('classRegister.tableHeaderStudent') || 'Studente', field: row => getStudentName(row.student_id), align: 'left', sortable: true },
+  { name: 'type', label: t('classRegister.lessonTypeLabel') || 'Tipo', field: row => formatNoteType(row.type), align: 'left' },
+  { name: 'note', label: t('classRegister.tabNotes') || 'Contenuto', field: 'note', align: 'left' },
+  { name: 'docente', label: t('classRegister.coordinator') || 'Docente', field: 'teacher_name', align: 'left' },
+  { name: 'actions', label: t('classRegister.tableHeaderActions') || 'Azioni', align: 'center' }
+])
+
+const noteTypeFilterOptions = computed(() => [
+  { label: t('common.all') || 'Tutte', value: '' }, 
+  { label: t('classRegister.activityStandard') || 'Nota Generica', value: 'generic' }, 
+  { label: t('classRegister.assignHomework') || 'Richiamo Compiti', value: 'homework' }, 
+  { label: t('classRegister.activityStandardCap') || 'Nota Comportamentale', value: 'behavior' }, 
+  { label: t('classRegister.addDisciplinaryNote') || 'Nota Disciplinare', value: 'disciplinary' }
+])
 
 const filteredStudents = computed(() => {
   if (!search.value) return students.value
@@ -271,15 +272,15 @@ const filteredStudents = computed(() => {
 
 const getStudentName = (studentId) => {
   const s = students.value.find(st => st.id === studentId)
-  return s ? `${s.last_name} ${s.first_name}` : `Studente`
+  return s ? `${s.last_name} ${s.first_name}` : t('classRegister.tableHeaderStudent')
 }
 
 const formatNoteType = (type) => {
   const map = {
-    generic: 'Generica',
-    homework: 'Compiti',
-    behavior: 'Comportamentale',
-    disciplinary: 'Disciplinare'
+    generic: t('classRegister.activityStandard'),
+    homework: t('classRegister.assignHomework'),
+    behavior: t('classRegister.activityStandardCap'),
+    disciplinary: t('classRegister.addDisciplinaryNote')
   }
   return map[type] || type
 }

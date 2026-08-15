@@ -196,6 +196,14 @@ func (s *service) MarkBulk(ctx context.Context, teacherID, schoolID string, req 
 		return fmt.Errorf("numero massimo di presenze registrabili in blocco superato (max 500)")
 	}
 
+	var studentIDs []string
+	for _, r := range req.Statuses {
+		if r.StudentID != "" {
+			studentIDs = append(studentIDs, r.StudentID)
+		}
+	}
+	validMembers, _ := s.repo.AreStudentsInClass(ctx, studentIDs, req.ClassID)
+
 	seen := make(map[string]bool)
 	var atts []*Attendance
 	for _, r := range req.Statuses {
@@ -205,9 +213,11 @@ func (s *service) MarkBulk(ctx context.Context, teacherID, schoolID string, req 
 		}
 		seen[key] = true
 
-		isMember, err := s.repo.IsStudentInClass(ctx, r.StudentID, req.ClassID)
-		if err != nil || !isMember {
-			return fmt.Errorf("forbidden: lo studente %s non appartiene alla classe indicata", r.StudentID)
+		if validMembers != nil && !validMembers[r.StudentID] {
+			isMember, err := s.repo.IsStudentInClass(ctx, r.StudentID, req.ClassID)
+			if err != nil || !isMember {
+				return fmt.Errorf("forbidden: lo studente %s non appartiene alla classe indicata", r.StudentID)
+			}
 		}
 
 		att := &Attendance{
@@ -307,6 +317,10 @@ func (s *service) DeleteClassAttendanceHour(ctx context.Context, actorID, actorR
 	case "admin", "superadmin", "secretary", "principal", "vice_principal":
 		// authorised unconditionally within their school
 	case "teacher":
+		inSchool, sErr := s.repo.IsClassInSchool(ctx, classID, schoolID)
+		if sErr != nil || !inSchool {
+			return fmt.Errorf("forbidden: la classe non appartiene alla scuola dell'utente")
+		}
 		isAssigned, err := s.repo.IsTeacherAssignedToClass(ctx, actorID, classID)
 		if err != nil {
 			return fmt.Errorf("errore verifica docente per classe: %w", err)
@@ -414,8 +428,8 @@ func (s *service) GetStudentAttendance(ctx context.Context, actorID, actorRole, 
 			}
 		}
 		st, err := s.userRepo.GetByID(ctx, studentID)
-		if err == nil && st != nil && st.SchoolID != nil && *st.SchoolID != schoolID {
-			return nil, fmt.Errorf("forbidden: lo studente appartiene ad un'altra scuola")
+		if err != nil || st == nil || st.SchoolID == nil || *st.SchoolID != schoolID {
+			return nil, fmt.Errorf("forbidden: lo studente appartiene ad un'altra scuola o non è stato trovato")
 		}
 	}
 
@@ -507,28 +521,29 @@ func (s *service) ProcessJustification(ctx context.Context, teacherID, justifica
 		return fmt.Errorf("la giustifica %s è già stata elaborata (stato attuale: %s)", justificationID, j.Status)
 	}
 
-	if s.userRepo != nil {
-		studentUser, err := s.userRepo.GetByID(ctx, j.StudentID)
-		if err != nil || studentUser == nil {
-			return fmt.Errorf("student not found or error fetching student: %w", err)
-		}
-		if teacherID != "" {
-			teacherUser, err := s.userRepo.GetByID(ctx, teacherID)
-			if err == nil && teacherUser != nil {
-				if teacherUser.Role != "superadmin" {
-					if teacherUser.SchoolID != nil && studentUser.SchoolID != nil && *teacherUser.SchoolID != *studentUser.SchoolID {
-						return fmt.Errorf("forbidden: il docente non appartiene alla stessa scuola dello studente")
-					}
+	if s.userRepo == nil {
+		return errors.New("unauthorized: userRepo is missing")
+	}
+	studentUser, err := s.userRepo.GetByID(ctx, j.StudentID)
+	if err != nil || studentUser == nil {
+		return fmt.Errorf("student not found or error fetching student: %w", err)
+	}
+	if teacherID != "" {
+		teacherUser, err := s.userRepo.GetByID(ctx, teacherID)
+		if err == nil && teacherUser != nil {
+			if teacherUser.Role != "superadmin" {
+				if teacherUser.SchoolID != nil && studentUser.SchoolID != nil && *teacherUser.SchoolID != *studentUser.SchoolID {
+					return fmt.Errorf("forbidden: il docente non appartiene alla stessa scuola dello studente")
 				}
 			}
 		}
-		if studentUser.ClassID == nil || *studentUser.ClassID == "" {
-			return fmt.Errorf("impossibile processare giustifica: studente non assegnato a nessuna classe")
-		}
-		isAssigned, err := s.repo.IsTeacherAssignedToClass(ctx, teacherID, *studentUser.ClassID)
-		if err != nil || !isAssigned {
-			return fmt.Errorf("forbidden: docente non assegnato alla classe dello studente")
-		}
+	}
+	if studentUser.ClassID == nil || *studentUser.ClassID == "" {
+		return fmt.Errorf("impossibile processare giustifica: studente non assegnato a nessuna classe")
+	}
+	isAssigned, err := s.repo.IsTeacherAssignedToClass(ctx, teacherID, *studentUser.ClassID)
+	if err != nil || !isAssigned {
+		return fmt.Errorf("forbidden: docente non assegnato alla classe dello studente")
 	}
 
 	if err := s.repo.ProcessJustificationTx(ctx, j, teacherID, approve); err != nil {
@@ -672,16 +687,21 @@ func (s *service) GetStudentSummary(ctx context.Context, actorID, actorRole, sch
 		startYear--
 	}
 	startOfSchoolYear := time.Date(startYear, time.September, 1, 0, 0, 0, 0, loc)
-	elapsedDays := int(now.Sub(startOfSchoolYear).Hours() / 24)
-	if elapsedDays <= 0 {
-		elapsedDays = 1
-	}
-
-	totalDays := elapsedDays
+	totalDays := 0
 	if s.calendar != nil && schoolID != "" {
 		count, err := s.calendar.CountTeachingDays(ctx, schoolID, startOfSchoolYear, now)
 		if err == nil && count > 0 {
 			totalDays = count
+		}
+	}
+	if totalDays <= 0 {
+		for d := startOfSchoolYear; !d.After(now); d = d.AddDate(0, 0, 1) {
+			if d.Weekday() != time.Saturday && d.Weekday() != time.Sunday {
+				totalDays++
+			}
+		}
+		if totalDays <= 0 {
+			totalDays = 1
 		}
 	}
 
@@ -706,15 +726,26 @@ func (s *service) GetSchoolAnalytics(ctx context.Context, schoolID string) (*Ana
 	return s.repo.GetAnalytics(ctx, schoolID)
 }
 
-func (s *service) GetChildAttendance(ctx context.Context, parentID, studentID string, from, to time.Time) ([]AttendanceResponse, error) {
+func (s *service) checkGuardianOrStaff(ctx context.Context, actorID, studentID string) (bool, error) {
 	if s.userRepo == nil {
-		return nil, fmt.Errorf("unauthorized: userRepo is nil")
+		return false, fmt.Errorf("unauthorized: userRepo is nil")
 	}
-	isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, studentID)
+	u, err := s.userRepo.GetByID(ctx, actorID)
+	if err == nil && u != nil {
+		role := u.Role
+		if role == "admin" || role == "superadmin" || role == "secretary" || role == "principal" || role == "vice_principal" {
+			return true, nil
+		}
+	}
+	return s.userRepo.IsGuardian(ctx, actorID, studentID)
+}
+
+func (s *service) GetChildAttendance(ctx context.Context, parentID, studentID string, from, to time.Time) ([]AttendanceResponse, error) {
+	isAllowed, err := s.checkGuardianOrStaff(ctx, parentID, studentID)
 	if err != nil {
 		return nil, err
 	}
-	if !isGuardian {
+	if !isAllowed {
 		return nil, fmt.Errorf("unauthorized: not a guardian of this student")
 	}
 	studentUser, err := s.userRepo.GetByID(ctx, studentID)
@@ -729,28 +760,22 @@ func (s *service) GetChildAttendance(ctx context.Context, parentID, studentID st
 }
 
 func (s *service) GetChildSummary(ctx context.Context, parentID, studentID, schoolID string) (*SummaryResponse, error) {
-	if s.userRepo == nil {
-		return nil, fmt.Errorf("unauthorized: userRepo is nil")
-	}
-	isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, studentID)
+	isAllowed, err := s.checkGuardianOrStaff(ctx, parentID, studentID)
 	if err != nil {
 		return nil, err
 	}
-	if !isGuardian {
+	if !isAllowed {
 		return nil, fmt.Errorf("unauthorized: not a guardian of this student")
 	}
 	return s.GetStudentSummary(ctx, parentID, "parent", schoolID, studentID)
 }
 
 func (s *service) GetChildAttendanceTrends(ctx context.Context, parentID, studentID string) (*TrendsResponse, error) {
-	if s.userRepo == nil {
-		return nil, fmt.Errorf("unauthorized: userRepo is nil")
-	}
-	isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, studentID)
+	isAllowed, err := s.checkGuardianOrStaff(ctx, parentID, studentID)
 	if err != nil {
 		return nil, err
 	}
-	if !isGuardian {
+	if !isAllowed {
 		return nil, fmt.Errorf("unauthorized: not a guardian of this student")
 	}
 
@@ -868,44 +893,53 @@ func (s *service) GetMonthlyBreakdown(ctx context.Context, actorID, actorRole, s
 }
 
 func (s *service) GetChildUnjustified(ctx context.Context, parentID, studentID string) ([]Attendance, error) {
-	isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, studentID)
+	isAllowed, err := s.checkGuardianOrStaff(ctx, parentID, studentID)
 	if err != nil {
 		return nil, fmt.Errorf("errore nel controllo tutela genitore-studente: %w", err)
 	}
-	if !isGuardian {
+	if !isAllowed {
 		return nil, fmt.Errorf("forbidden: parent is not a guardian of student")
 	}
 	return s.repo.FindUnjustifiedByStudent(studentID)
 }
 
 func (s *service) JustifyChildAbsence(ctx context.Context, parentID, studentID, attendanceID string, req JustifyAbsenceRequest) error {
-	isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, studentID)
+	isAllowed, err := s.checkGuardianOrStaff(ctx, parentID, studentID)
 	if err != nil {
 		return fmt.Errorf("errore nel controllo tutela genitore-studente: %w", err)
 	}
-	if !isGuardian {
+	if !isAllowed {
 		return fmt.Errorf("forbidden: parent is not a guardian of student")
 	}
+
+	att, err := s.repo.FindByID(attendanceID)
+	if err != nil || att == nil {
+		return fmt.Errorf("record di presenza non trovato")
+	}
+	if att.StudentID != studentID {
+		return fmt.Errorf("forbidden: il record di presenza non appartiene allo studente indicato")
+	}
+
 	return s.repo.JustifyAbsenceByParent(attendanceID, studentID, req.Reason, req.Notes)
 }
 
 func (s *service) GetChildAttendanceStats(ctx context.Context, parentID, studentID string) (*AttendanceStats, error) {
-	isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, studentID)
+	isAllowed, err := s.checkGuardianOrStaff(ctx, parentID, studentID)
 	if err != nil {
 		return nil, fmt.Errorf("errore nel controllo tutela genitore-studente: %w", err)
 	}
-	if !isGuardian {
+	if !isAllowed {
 		return nil, fmt.Errorf("forbidden: parent is not a guardian of student")
 	}
 	return s.repo.GetStudentAttendanceStats(studentID)
 }
 
 func (s *service) GetChildMonthlyBreakdown(ctx context.Context, parentID, studentID, schoolYear string) (*MonthlyBreakdownResponse, error) {
-	isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, studentID)
+	isAllowed, err := s.checkGuardianOrStaff(ctx, parentID, studentID)
 	if err != nil {
 		return nil, fmt.Errorf("errore nel controllo tutela genitore-studente: %w", err)
 	}
-	if !isGuardian {
+	if !isAllowed {
 		return nil, fmt.Errorf("forbidden: non sei il tutore di questo studente")
 	}
 	schoolID := ""

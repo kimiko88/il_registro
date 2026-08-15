@@ -5,18 +5,17 @@
       <div>
         <div class="text-h4 text-weight-bold text-slate-800">
           <q-icon name="help_center" color="primary" class="q-mr-sm" />
-          Centro Supporto & FAQ
+          {{ $t('supportPage.title') }}
         </div>
         <div class="text-subtitle1 text-slate-500 q-mt-xs">
-          Benvenuto nel portale di aiuto. Qui trovi risposte rapide per il ruolo di 
-          <q-badge color="primary" class="text-subtitle2 q-px-sm text-capitalize">{{ currentRoleLabel }}</q-badge>
+          {{ $t('supportPage.subtitle', { role: currentRoleLabel }) }}
         </div>
       </div>
       
       <!-- Connection Status Badge -->
       <div>
         <q-chip :color="isOnline ? 'green-1' : 'red-1'" :text-color="isOnline ? 'positive' : 'negative'" icon="wifi" class="text-weight-bold">
-          {{ isOnline ? 'Online' : 'Offline - Modalità locale' }}
+          {{ isOnline ? $t('supportPage.online') : $t('supportPage.offline') }}
         </q-chip>
       </div>
     </div>
@@ -26,7 +25,7 @@
       <template v-slot:avatar>
         <q-icon name="cloud_off" />
       </template>
-      Sei offline. Le FAQ caricate in cache rimangono accessibili. I messaggi di supporto inviati ora verranno messi in coda e spediti appena tornerai online.
+      {{ $t('supportPage.offlineBanner') }}
     </q-banner>
 
     <div class="row q-col-gutter-lg">
@@ -38,7 +37,7 @@
             <div class="col-12 col-sm-6">
               <q-input 
                 v-model="searchQuery" 
-                placeholder="Cerca tra le domande frequenti..." 
+                :placeholder="$t('supportPage.searchPlaceholder')" 
                 outlined 
                 dense
                 clearable

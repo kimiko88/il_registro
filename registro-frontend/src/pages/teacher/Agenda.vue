@@ -5,10 +5,10 @@
       <div>
         <h1 class="text-h4 text-weight-bold text-slate-800 q-my-none">
           <q-icon name="event" color="primary" class="q-mr-sm" />
-          Agenda & Calendario Didattico
+          {{ $t('agendaPage.title') }}
         </h1>
         <p class="text-subtitle1 text-slate-500 q-mt-xs q-mb-none">
-          Pianificazione compiti, verifiche, ed avvisi per le tue classi
+          {{ $t('agendaPage.subtitle') }}
         </p>
       </div>
 
@@ -21,9 +21,9 @@
           no-caps
           class="bg-white border-2 border-slate-300 rounded-lg shadow-xs"
           :options="[
-            { label: 'Mese', value: 'mese', icon: 'calendar_month' },
-            { label: 'Settimana', value: 'settimana', icon: 'view_week' },
-            { label: 'Giorno', value: 'giorno', icon: 'today' }
+            { label: $t('agendaPage.month'), value: 'mese', icon: 'calendar_month' },
+            { label: $t('agendaPage.week'), value: 'settimana', icon: 'view_week' },
+            { label: $t('agendaPage.day'), value: 'giorno', icon: 'today' }
           ]"
           @update:model-value="onViewModeChange"
         />
@@ -31,7 +31,7 @@
         <q-select
           v-model="selectedClassFilter"
           :options="classOptions"
-          label="Filtra per Classe"
+          :label="$t('agendaPage.filterClass')"
           outlined dense
           clearable
           emit-value
@@ -45,7 +45,7 @@
           color="primary"
           unelevated
           icon="add"
-          label="Nuovo Evento"
+          :label="$t('agendaPage.newEvent')"
           class="rounded-lg q-px-md shadow-xs font-bold"
           no-caps
           @click="openCreateDialog()"
@@ -57,7 +57,7 @@
 
     <!-- TYPE FILTER TOOLBAR -->
     <div class="q-px-md q-py-sm bg-white rounded-xl border-2 border-slate-300 shadow-xs q-mb-lg row items-center q-gutter-xs">
-      <span class="text-caption text-slate-600 font-bold q-mr-xs">Filtra tipo:</span>
+      <span class="text-caption text-slate-600 font-bold q-mr-xs">{{ $t('agendaPage.filterType') }}:</span>
       <q-chip
         clickable
         dense

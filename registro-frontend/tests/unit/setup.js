@@ -48,13 +48,28 @@ const mockQ = {
     iconSet: mockIconSet
 }
 
+import itMessages from '../../src/i18n/it-IT/index.js'
+
+function getNestedValue(obj, path) {
+    if (!obj || !path) return null
+    return path.split('.').reduce((prev, curr) => (prev && prev[curr] !== undefined ? prev[curr] : null), obj)
+}
+
 config.global.provide = {
     $q: mockQ
 }
 
 config.global.mocks = {
     $q: mockQ,
-    $t: (msg) => msg
+    $t: (msg, params) => {
+        let val = getNestedValue(itMessages, msg) || msg
+        if (typeof val === 'string' && params && typeof params === 'object') {
+            Object.keys(params).forEach(key => {
+                val = val.replace(new RegExp(`\\{${key}\\}`, 'g'), params[key])
+            })
+        }
+        return val
+    }
 }
 
 // Global stubs for Quasar components

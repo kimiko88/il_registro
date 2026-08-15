@@ -2,8 +2,8 @@
   <q-dialog v-model="visible" persistent>
     <q-card style="min-width: 400px">
       <q-card-section>
-        <div class="text-h6">Nuova Nota</div>
-        <div class="text-subtitle2" v-if="student">Studente: {{ student.name }}</div>
+        <div class="text-h6">{{ noteToEdit ? ($t('common.edit') || 'Modifica') : ($t('classRegister.addNote') || 'Nuova Nota') }}</div>
+        <div class="text-subtitle2" v-if="student">{{ $t('classRegister.tableHeaderStudent') }}: {{ student.name || `${student.last_name || ''} ${student.first_name || ''}` }}</div>
       </q-card-section>
 
       <q-card-section>
@@ -11,7 +11,7 @@
           <q-select
             v-model="noteData.type"
             :options="typeOptions"
-            label="Tipo Nota *"
+            :label="($t('classRegister.lessonTypeLabel') || 'Tipo Nota') + ' *'"
             outlined
             emit-value
             map-options
@@ -20,7 +20,7 @@
 
           <q-input
             v-model="noteData.note"
-            label="Contenuto *"
+            :label="($t('classRegister.topicLabel') || 'Contenuto') + ' *'"
             type="textarea"
             outlined
             autogrow
@@ -30,14 +30,14 @@
           <q-input
              v-model="noteData.date"
              type="date"
-             label="Data"
+             :label="$t('classRegister.dateLabel') || 'Data'"
              outlined
              :rules="[val => !!val || 'Data obbligatoria']"
           />
 
           <div class="row justify-end q-gutter-sm q-mt-md">
-            <q-btn flat label="Annulla" color="grey" v-close-popup />
-            <q-btn type="submit" label="Salva" color="primary" :loading="loading" />
+            <q-btn flat :label="$t('common.cancel') || 'Annulla'" color="grey" v-close-popup />
+            <q-btn type="submit" :label="$t('common.save') || 'Salva'" color="primary" :loading="loading" />
           </div>
         </q-form>
       </q-card-section>
@@ -48,6 +48,7 @@
 <script setup>
 import { ref, reactive, computed, watch } from 'vue'
 import { useQuasar } from 'quasar'
+import { useI18n } from 'vue-i18n'
 import notesService from '@/services/notesService'
 
 const props = defineProps({
@@ -60,6 +61,15 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'saved'])
 
 const $q = useQuasar()
+let t = (key, fallback) => (typeof fallback === 'string' ? fallback : key)
+try {
+  const i18nInstance = useI18n()
+  if (i18nInstance && i18nInstance.t) {
+    t = i18nInstance.t
+  }
+} catch (e) {
+  // Fallback for isolated unit tests without vue-i18n app plugin
+}
 const loading = ref(false)
 
 const noteData = reactive({
@@ -68,12 +78,12 @@ const noteData = reactive({
   date: new Date().toISOString().split('T')[0]
 })
 
-const typeOptions = [
-  { label: 'Nota Generica', value: 'generic' },
-  { label: 'Richiamo Compiti', value: 'homework' },
-  { label: 'Nota Comportamentale', value: 'behavior' },
-  { label: 'Nota Disciplinare', value: 'disciplinary' }
-]
+const typeOptions = computed(() => [
+  { label: t('classRegister.activityStandard') || 'Nota Generica', value: 'generic' },
+  { label: t('classRegister.assignHomework') || 'Richiamo Compiti', value: 'homework' },
+  { label: t('classRegister.activityStandardCap') || 'Nota Comportamentale', value: 'behavior' },
+  { label: t('classRegister.addDisciplinaryNote') || 'Nota Disciplinare', value: 'disciplinary' }
+])
 
 const visible = computed({
   get: () => props.modelValue,

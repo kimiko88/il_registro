@@ -27,6 +27,14 @@ func (m *MockRepo) GetStatsBatch(ctx context.Context, studentIDs []string) (map[
 	return nil, args.Error(1)
 }
 
+func (m *MockRepo) AreStudentsInClass(ctx context.Context, studentIDs []string, classID string) (map[string]bool, error) {
+	args := m.Called(ctx, studentIDs, classID)
+	if res, ok := args.Get(0).(map[string]bool); ok {
+		return res, args.Error(1)
+	}
+	return nil, args.Error(1)
+}
+
 func (m *MockRepo) Create(a *Attendance) error {
 	args := m.Called(a)
 	return args.Error(0)

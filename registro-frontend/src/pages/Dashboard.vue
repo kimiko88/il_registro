@@ -7,11 +7,11 @@
           {{ greeting }}, {{ user?.first_name || 'Utente' }}
         </h1>
         <div class="text-subtitle1 text-slate-500 q-mt-sm">
-          Bentornato! Ecco il riepilogo delle attività scolastiche di oggi.
+          {{ $t('dashboardPage.welcomeSub') }}
         </div>
       </div>
       <div class="col-12 col-md-4 text-right gt-sm">
-        <div class="text-caption text-slate-400 text-uppercase letter-spacing-1">Data Odierna</div>
+        <div class="text-caption text-slate-400 text-uppercase letter-spacing-1">{{ $t('dashboardPage.todayDate') }}</div>
         <div class="text-h6 text-outfit text-weight-bold text-slate-700">{{ today }}</div>
       </div>
     </div>
@@ -47,7 +47,7 @@
         <q-card class="no-shadow bordered-card full-height">
           <q-card-section class="row items-center justify-between">
             <div class="text-h6 text-weight-bold text-dark">
-              {{ isDashboardAdmin ? 'Attività Recenti' : 'Lezioni di Oggi' }}
+              {{ isDashboardAdmin ? $t('dashboardPage.recentActivity') : $t('dashboardPage.todayLessons') }}
             </div>
             
             <!-- 3 Dots Options Menu -->
@@ -57,20 +57,20 @@
                 <q-list style="min-width: 240px" v-if="currentRole === 'admin' || currentRole === 'superadmin'">
                   <q-item clickable @click="router.push('/admin/audit-logs')">
                     <q-item-section avatar><q-icon name="fact_check" color="primary" /></q-item-section>
-                    <q-item-section>Registro Eventi & Audit Log</q-item-section>
+                    <q-item-section>{{ $t('dashboardPage.auditLogs') }}</q-item-section>
                   </q-item>
                   <q-item clickable @click="router.push('/admin/users')">
                     <q-item-section avatar><q-icon name="people" color="secondary" /></q-item-section>
-                    <q-item-section>Gestione Utenti Sistema</q-item-section>
+                    <q-item-section>{{ $t('dashboardPage.userManagement') }}</q-item-section>
                   </q-item>
                   <q-item clickable @click="router.push('/admin/schools')">
                     <q-item-section avatar><q-icon name="school" color="indigo" /></q-item-section>
-                    <q-item-section>Gestione Istituti</q-item-section>
+                    <q-item-section>{{ $t('dashboardPage.schoolManagement') }}</q-item-section>
                   </q-item>
                   <q-separator />
                   <q-item clickable @click="fetchDashboardData">
                     <q-item-section avatar><q-icon name="refresh" color="grey-7" /></q-item-section>
-                    <q-item-section>Aggiorna Attività</q-item-section>
+                    <q-item-section>{{ $t('dashboardPage.refreshActivity') }}</q-item-section>
                   </q-item>
                 </q-list>
 
@@ -307,10 +307,26 @@ import { useQuasar } from 'quasar'
 import dashboardService from 'src/services/dashboardService'
 import api from '@/services/api'
 
+import { useI18n } from 'vue-i18n'
+
 const router = useRouter()
 const authStore = useAuthStore()
 const { user, userRole } = storeToRefs(authStore)
 const $q = useQuasar()
+
+let t = (key, fallback) => (typeof fallback === 'string' ? fallback : key)
+const currentLocale = ref('it-IT')
+try {
+  const i18nInstance = useI18n()
+  if (i18nInstance && i18nInstance.t) {
+    t = i18nInstance.t
+    if (i18nInstance.locale) {
+      currentLocale.value = i18nInstance.locale.value || i18nInstance.locale
+    }
+  }
+} catch (e) {
+  // Fallback for unmounted component test mocks
+}
 
 const realStats = ref([])
 const recentEvents = ref([])
@@ -335,9 +351,13 @@ const draftForm = ref({
 
 const currentRole = computed(() => userRole.value || user.value?.role || authStore.userRole || authStore.user?.role || 'student')
 
-const today = computed(() =>
-  new Date().toLocaleDateString('it-IT', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
-)
+const today = computed(() => {
+  try {
+    return new Date().toLocaleDateString(currentLocale.value || 'it-IT', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+  } catch (e) {
+    return new Date().toLocaleDateString('it-IT', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+  }
+})
 
 const isDashboardAdmin = computed(() => {
   return currentRole.value === 'secretary' || currentRole.value === 'admin' || currentRole.value === 'superadmin'
@@ -352,9 +372,9 @@ const latestAnnouncement = computed(() => {
 
 const greeting = computed(() => {
   const hour = new Date().getHours()
-  if (hour < 12) return 'Buongiorno'
-  if (hour < 18) return 'Buon pomeriggio'
-  return 'Buonasera'
+  if (hour < 12) return t('dashboardPage.greetingMorning') || 'Buongiorno'
+  if (hour < 18) return t('dashboardPage.greetingAfternoon') || 'Buon pomeriggio'
+  return t('dashboardPage.greetingEvening') || 'Buonasera'
 })
 
 const stats = computed(() => {
@@ -376,7 +396,7 @@ const displaySchedule = computed(() => {
   return draftsForToday.map(d => ({
     id: d.id || 'draft-1',
     hour_index: d.hour,
-    subject_name: `${d.subject} (Bozza)`,
+    subject_name: `${d.subject} (${t('dashboardPage.draft') || 'Bozza'})`,
     teacher_name: d.topic || 'Bozza preparata',
     room: 'Aula 2A',
     is_draft: true
@@ -384,15 +404,15 @@ const displaySchedule = computed(() => {
 })
 
 const getLessonStatus = (entry) => {
-  if (entry.is_draft) return 'Bozza Pianificata'
+  if (entry.is_draft) return t('dashboardPage.draft') || 'Bozza Pianificata'
   const now = new Date()
   const currentMinutes = now.getHours() * 60 + now.getMinutes()
   const hourIndex = Math.max(1, entry?.hour_index || 1)
   const startMinutes = (8 * 60) + ((hourIndex - 1) * 60)
   const endMinutes = startMinutes + 60
-  if (currentMinutes >= endMinutes) return 'Completata'
-  if (currentMinutes >= startMinutes) return 'In corso'
-  return 'Pianificata'
+  if (currentMinutes >= endMinutes) return t('dashboardPage.completed') || 'Completata'
+  if (currentMinutes >= startMinutes) return t('dashboardPage.inProgress') || 'In corso'
+  return t('dashboardPage.scheduled') || 'Pianificata'
 }
 
 const getLessonStatusColor = (entry) => {

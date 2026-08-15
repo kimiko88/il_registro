@@ -90,7 +90,7 @@ func parseWindowParams(c *gin.Context) (from, to time.Time, err error) {
 		err = errors.New("data di inizio successiva alla data di fine")
 		return
 	}
-	if to.Sub(from) > 365*24*time.Hour {
+	if to.After(from.AddDate(1, 0, 1)) {
 		err = errors.New("range di date troppo ampio (massimo 1 anno consentito)")
 		return
 	}

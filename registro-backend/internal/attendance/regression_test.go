@@ -41,6 +41,13 @@ func (m *MockAttRepo) DeletePendingJustification(id string) error { return nil }
 func (m *MockAttRepo) IsStudentInClass(ctx context.Context, studentID, classID string) (bool, error) {
 	return true, nil
 }
+func (m *MockAttRepo) AreStudentsInClass(ctx context.Context, studentIDs []string, classID string) (map[string]bool, error) {
+	res := make(map[string]bool)
+	for _, id := range studentIDs {
+		res[id] = true
+	}
+	return res, nil
+}
 func (m *MockAttRepo) IsClassInSchool(ctx context.Context, classID, schoolID string) (bool, error) {
 	return true, nil
 }

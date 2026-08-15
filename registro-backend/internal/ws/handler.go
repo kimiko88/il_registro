@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"registro-backend/pkg/logger"
@@ -21,16 +22,24 @@ const (
 	maxMessageSize = 8192
 )
 
+var (
+	allowedOriginsOnce sync.Once
+	allowedOriginsMap  map[string]bool
+)
+
 func allowedOrigins() map[string]bool {
-	raw := os.Getenv("ALLOWED_ORIGINS")
-	origins := make(map[string]bool)
-	for _, o := range strings.Split(raw, ",") {
-		o = strings.TrimSpace(o)
-		if o != "" {
-			origins[o] = true
+	allowedOriginsOnce.Do(func() {
+		raw := os.Getenv("ALLOWED_ORIGINS")
+		origins := make(map[string]bool)
+		for _, o := range strings.Split(raw, ",") {
+			o = strings.TrimSpace(o)
+			if o != "" {
+				origins[o] = true
+			}
 		}
-	}
-	return origins
+		allowedOriginsMap = origins
+	})
+	return allowedOriginsMap
 }
 
 var upgrader = websocket.Upgrader{
@@ -109,13 +118,6 @@ func (c *Client) readPump() {
 			if cm.Type == "PING" {
 				_ = c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
 				_ = c.Conn.WriteMessage(websocket.TextMessage, []byte(`{"type":"PONG"}`))
-			} else if cm.Type == "AUTH" {
-				_ = c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
-				if c.UserID != "" {
-					_ = c.Conn.WriteMessage(websocket.TextMessage, []byte(`{"type":"AUTH_ACK","status":"authenticated"}`))
-				} else {
-					_ = c.Conn.WriteMessage(websocket.TextMessage, []byte(`{"type":"AUTH_ACK","status":"unauthenticated"}`))
-				}
 			}
 		}
 	}
@@ -162,6 +164,7 @@ func (c *Client) writePump() {
 			// Drain any additionally queued messages — each as its own frame.
 			n := len(c.Send)
 			for i := 0; i < n; i++ {
+				_ = c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
 				if err := c.writeSingleMessage(<-c.Send); err != nil {
 					return
 				}
@@ -212,13 +215,7 @@ func (h *Handler) Listen(c *gin.Context) {
 		return
 	}
 
-	// Negotiate Sec-WebSocket-Protocol only if client sent "access_token"
-	var responseHeader http.Header
-	if secProto := c.Request.Header.Get("Sec-WebSocket-Protocol"); strings.Contains(secProto, "access_token") {
-		responseHeader = http.Header{"Sec-WebSocket-Protocol": []string{"access_token"}}
-	}
-
-	conn, err := upgrader.Upgrade(c.Writer, c.Request, responseHeader)
+	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		logger.Log.Warnf("ws upgrade error: %v", err)
 		return

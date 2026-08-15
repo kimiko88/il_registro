@@ -66,8 +66,8 @@ func NewHub(redisURL string) *Hub {
 	h := &Hub{
 		clients:        make(map[string]map[*Client]bool),
 		localBroadcast: make(chan Message, 512),
-		register:       make(chan *Client, 64),
-		unregister:     make(chan *Client, 64),
+		register:       make(chan *Client, 128),
+		unregister:     make(chan *Client, 512),
 	}
 
 	if redisURL != "" {
@@ -240,6 +240,7 @@ func (h *Hub) deliverLocally(msg Message) {
 	} else {
 		// Global system broadcast for system messages without specific recipient or school.
 		// Restrict delivery to global system roles (e.g., superadmin) unless AllowedRoles is explicitly specified.
+		log.Printf("[AUDIT] global broadcast: type=%s recipient=%s school_id=%s", msg.Type, msg.Recipient, msg.SchoolID)
 		for _, clients := range h.clients {
 			for client := range clients {
 				if len(msg.AllowedRoles) > 0 {

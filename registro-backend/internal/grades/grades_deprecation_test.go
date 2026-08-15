@@ -144,8 +144,12 @@ func (m *mockServiceForDeprecationTest) GetChildSemesterReport(ctx context.Conte
 	}
 	return args.Get(0).(*SemesterReportResponse), args.Error(1)
 }
-func (m *mockServiceForDeprecationTest) CreateTestWithGrades(teacherID string, req CreateClassTestRequest) error {
-	return m.Called(teacherID, req).Error(0)
+func (m *mockServiceForDeprecationTest) CreateTestWithGrades(teacherID string, req CreateClassTestRequest) (*ClassTest, error) {
+	args := m.Called(teacherID, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*ClassTest), args.Error(1)
 }
 func (m *mockServiceForDeprecationTest) GetClassTests(ctx context.Context, actorID string, actorRole string, classID string, subjectID string) ([]ClassTestResponse, error) {
 	args := m.Called(ctx, actorID, actorRole, classID, subjectID)

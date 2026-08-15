@@ -41,6 +41,13 @@ type mockRepo struct {
 func (m *mockRepo) IsTeacherAssignedToClass(_ context.Context, _, _ string) (bool, error) {
 	return m.isAssigned, m.isAssignedErr
 }
+func (m *mockRepo) AreStudentsInClass(_ context.Context, studentIDs []string, _ string) (map[string]bool, error) {
+	res := make(map[string]bool)
+	for _, id := range studentIDs {
+		res[id] = true
+	}
+	return res, nil
+}
 func (m *mockRepo) IsTeacherSubstitute(_ context.Context, _, _ string, _ time.Time, _ int) (bool, error) {
 	return m.isSub, m.isSubErr
 }
@@ -487,6 +494,7 @@ func TestGetStudentAttendance_TeacherSameSchool_Pass(t *testing.T) {
 	userRepo := &mockUserRepo{
 		users: map[string]*users.User{
 			"teacher1": {ID: "teacher1", Role: "teacher", SchoolID: &schoolID},
+			"stu1":     {ID: "stu1", Role: "student", SchoolID: &schoolID},
 		},
 	}
 	svc := makeService(&mockRepo{}, userRepo)

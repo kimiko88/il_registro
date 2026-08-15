@@ -121,6 +121,13 @@ func (m *MockAttendanceRepo) IsTeacherAssignedToClass(ctx context.Context, teach
 	args := m.Called(ctx, teacherID, classID)
 	return args.Bool(0), args.Error(1)
 }
+func (m *MockAttendanceRepo) AreStudentsInClass(ctx context.Context, studentIDs []string, classID string) (map[string]bool, error) {
+	args := m.Called(ctx, studentIDs, classID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(map[string]bool), args.Error(1)
+}
 func (m *MockAttendanceRepo) IsTeacherSubstitute(ctx context.Context, teacherID, classID string, date time.Time, hour int) (bool, error) {
 	args := m.Called(ctx, teacherID, classID, date, hour)
 	return args.Bool(0), args.Error(1)

@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"registro-backend/internal/users"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -81,7 +83,9 @@ func TestSecurity_JustifyChildAbsence_AttendanceOwnership(t *testing.T) {
 	studentID := "student-1"
 	otherStudentAttID := "att-other-student"
 
+	mockUserRepo.On("GetByID", ctx, parentID).Return(&users.User{ID: parentID, Role: "parent"}, nil).Once()
 	mockUserRepo.On("IsGuardian", ctx, parentID, studentID).Return(true, nil).Once()
+	mockRepo.On("FindByID", otherStudentAttID).Return(&Attendance{ID: otherStudentAttID, StudentID: studentID}, nil).Once()
 	mockRepo.On("JustifyAbsenceByParent", otherStudentAttID, studentID, "Malattia", "").Return(assert.AnError).Once()
 
 	err := svc.JustifyChildAbsence(ctx, parentID, studentID, otherStudentAttID, JustifyAbsenceRequest{

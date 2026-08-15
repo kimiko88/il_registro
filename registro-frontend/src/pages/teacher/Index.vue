@@ -4,12 +4,12 @@
     <div class="row items-center q-mb-xl justify-between">
       <div>
         <h1 class="text-h3 text-weight-bold text-outfit q-my-none text-gradient-premium">
-          Pannello Docente
+          {{ $t('roleDashboards.teacherPanel') }}
         </h1>
-        <div class="text-subtitle1 text-slate-500 q-mt-sm">Benvenuto, Prof. {{ teacherStore.fullName }}</div>
+        <div class="text-subtitle1 text-slate-500 q-mt-sm">{{ $t('roleDashboards.welcomeTeacher', { name: teacherStore.fullName }) }}</div>
       </div>
       <div class="text-right">
-        <div class="text-caption text-slate-400 text-uppercase letter-spacing-1">Oggi</div>
+        <div class="text-caption text-slate-400 text-uppercase letter-spacing-1">{{ $t('dashboardPage.todayDate') }}</div>
         <div class="text-h6 text-outfit text-weight-bold text-slate-700">{{ todayDate }}</div>
       </div>
     </div>
@@ -24,10 +24,10 @@
             </q-avatar>
             <div>
               <div class="text-caption opacity-80 text-uppercase letter-spacing-1 text-weight-bold">
-                Lezione in Corso — {{ currentHourLabel }}
+                {{ $t('roleDashboards.quickSignBanner', { hour: currentHourLabel }) }}
               </div>
               <div class="text-h5 text-weight-bold">
-                {{ activeLesson ? `${activeLesson.class_name} — ${activeLesson.subject_name}` : 'Seleziona una classe per firmare l\'appello' }}
+                {{ activeLesson ? `${activeLesson.class_name} — ${activeLesson.subject_name}` : $t('roleDashboards.selectClassPrompt') }}
               </div>
             </div>
           </div>
@@ -36,7 +36,7 @@
             <q-btn
               color="positive"
               icon="draw"
-              label="FIRMA ORA E REGISTRA PRESENZE"
+              :label="$t('roleDashboards.quickSignBtn')"
               size="lg"
               unelevated
               class="rounded-lg text-weight-bolder shadow-md"
@@ -55,8 +55,8 @@
           @click="$router.push('/teacher/agenda')"
         >
           <q-card-section>
-            <div class="text-caption opacity-80 text-uppercase letter-spacing-1">Prossima Lezione</div>
-            <div class="text-h4 text-weight-bold q-mt-sm">{{ nextLesson?.class_name || nextLesson?.class_id || 'Nessuna' }}</div>
+            <div class="text-caption opacity-80 text-uppercase letter-spacing-1">{{ $t('roleDashboards.nextLesson') }}</div>
+            <div class="text-h4 text-weight-bold q-mt-sm">{{ nextLesson?.class_name || nextLesson?.class_id || $t('roleDashboards.none') }}</div>
             <div class="text-caption q-mt-xs">{{ nextLesson?.subject_name || nextLesson?.subject_id || '-' }}</div>
           </q-card-section>
           <q-icon name="schedule" class="card-bg-icon" />
@@ -69,9 +69,9 @@
           @click="$router.push('/teacher/attendance')"
         >
           <q-card-section>
-            <div class="text-caption opacity-80 text-uppercase letter-spacing-1">Da Fare</div>
-            <div class="text-h4 text-weight-bold q-mt-sm">{{ teacherStore.pendingJustifications }} Revisioni</div>
-            <div class="text-caption q-mt-xs">Giustificazioni in sospeso</div>
+            <div class="text-caption opacity-80 text-uppercase letter-spacing-1">{{ $t('roleDashboards.toDo') }}</div>
+            <div class="text-h4 text-weight-bold q-mt-sm">{{ $t('roleDashboards.revisions', { count: teacherStore.pendingJustifications }) }}</div>
+            <div class="text-caption q-mt-xs">{{ $t('roleDashboards.pendingJustifications') }}</div>
           </q-card-section>
           <q-icon name="pending_actions" class="card-bg-icon" />
         </q-card>

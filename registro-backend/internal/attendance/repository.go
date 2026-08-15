@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"fmt"
 	"time"
+
+	"github.com/lib/pq"
 )
 
 type Repository interface {
@@ -33,6 +35,7 @@ type Repository interface {
 	// Teacher & Student Assignment Checks
 	IsTeacherAssignedToClass(ctx context.Context, teacherID, classID string) (bool, error)
 	IsStudentInClass(ctx context.Context, studentID, classID string) (bool, error)
+	AreStudentsInClass(ctx context.Context, studentIDs []string, classID string) (map[string]bool, error)
 	IsClassInSchool(ctx context.Context, classID, schoolID string) (bool, error)
 	IsTeacherSubstitute(ctx context.Context, teacherID, classID string, date time.Time, hour int) (bool, error)
 	HasOverlappingJustification(ctx context.Context, studentID string, startDate, endDate time.Time) (bool, error)
@@ -689,6 +692,30 @@ func (r *repository) IsStudentInClass(ctx context.Context, studentID, classID st
 		return false, nil
 	}
 	return exists, nil
+}
+
+func (r *repository) AreStudentsInClass(ctx context.Context, studentIDs []string, classID string) (map[string]bool, error) {
+	res := make(map[string]bool)
+	if len(studentIDs) == 0 || classID == "" {
+		return res, nil
+	}
+	query := `
+		SELECT student_id::text FROM class_students
+		WHERE class_id::text = $1::text AND student_id::text = ANY($2)
+	`
+	rows, err := r.db.QueryContext(ctx, query, classID, pq.Array(studentIDs))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var sID string
+		if err := rows.Scan(&sID); err == nil {
+			res[sID] = true
+		}
+	}
+	return res, rows.Err()
 }
 
 func (r *repository) IsClassInSchool(ctx context.Context, classID, schoolID string) (bool, error) {
