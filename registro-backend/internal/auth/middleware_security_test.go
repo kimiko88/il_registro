@@ -20,32 +20,64 @@ type DummyUserRepo struct {
 	mock.Mock
 }
 
-func (m *DummyUserRepo) Create(ctx context.Context, u *users.User) error { return nil }
+func (m *DummyUserRepo) Create(ctx context.Context, u *users.User) error             { return nil }
 func (m *DummyUserRepo) GetByID(ctx context.Context, id string) (*users.User, error) { return nil, nil }
-func (m *DummyUserRepo) GetByEmail(ctx context.Context, email string) (*users.User, error) { return nil, nil }
+func (m *DummyUserRepo) GetByEmail(ctx context.Context, email string) (*users.User, error) {
+	return nil, nil
+}
 func (m *DummyUserRepo) Update(ctx context.Context, u *users.User) error { return nil }
-func (m *DummyUserRepo) GetPasswordHistory(ctx context.Context, userID string) ([]string, error) { return nil, nil }
-func (m *DummyUserRepo) AddPasswordHistory(ctx context.Context, userID, passwordHash string) error { return nil }
-func (m *DummyUserRepo) Delete(ctx context.Context, id string) error { return nil }
+func (m *DummyUserRepo) GetPasswordHistory(ctx context.Context, userID string) ([]string, error) {
+	return nil, nil
+}
+func (m *DummyUserRepo) AddPasswordHistory(ctx context.Context, userID, passwordHash string) error {
+	return nil
+}
+func (m *DummyUserRepo) Delete(ctx context.Context, id string) error  { return nil }
 func (m *DummyUserRepo) Restore(ctx context.Context, id string) error { return nil }
-func (m *DummyUserRepo) List(ctx context.Context, filter users.UserFilter) ([]users.User, int, error) { return nil, 0, nil }
-func (m *DummyUserRepo) ListByIDs(ctx context.Context, ids []string) ([]users.User, error) { return nil, nil }
+func (m *DummyUserRepo) List(ctx context.Context, filter users.UserFilter) ([]users.User, int, error) {
+	return nil, 0, nil
+}
+func (m *DummyUserRepo) ListByIDs(ctx context.Context, ids []string) ([]users.User, error) {
+	return nil, nil
+}
 func (m *DummyUserRepo) LogAudit(ctx context.Context, log *users.AuditLog) error { return nil }
-func (m *DummyUserRepo) GetAuditLogs(ctx context.Context, userID string, limit, offset int) ([]users.AuditLog, int, error) { return nil, 0, nil }
-func (m *DummyUserRepo) BulkCreate(ctx context.Context, u []users.User) (int, []string, error) { return 0, nil, nil }
-func (m *DummyUserRepo) BulkDelete(ctx context.Context, ids []string) (int, error) { return 0, nil }
-func (m *DummyUserRepo) HardDelete(ctx context.Context, id string) error { return nil }
+func (m *DummyUserRepo) GetAuditLogs(ctx context.Context, userID string, limit, offset int) ([]users.AuditLog, int, error) {
+	return nil, 0, nil
+}
+func (m *DummyUserRepo) BulkCreate(ctx context.Context, u []users.User) (int, []string, error) {
+	return 0, nil, nil
+}
+func (m *DummyUserRepo) BulkDelete(ctx context.Context, ids []string) (int, error)    { return 0, nil }
+func (m *DummyUserRepo) HardDelete(ctx context.Context, id string) error              { return nil }
 func (m *DummyUserRepo) RevokeAllUserTokens(ctx context.Context, userID string) error { return nil }
-func (m *DummyUserRepo) ClearTempMFASecret(ctx context.Context, userID string) error { return nil }
-func (m *DummyUserRepo) IsGuardian(ctx context.Context, parentUserID, studentUserID string) (bool, error) { return false, nil }
-func (m *DummyUserRepo) GetChildren(ctx context.Context, parentUserID string) ([]users.StudentChild, error) { return nil, nil }
-func (m *DummyUserRepo) GetStudentsByClass(ctx context.Context, classID string) ([]users.User, error) { return nil, nil }
-func (m *DummyUserRepo) GetStudentProfile(ctx context.Context, userID string) (string, error) { return "", nil }
-func (m *DummyUserRepo) GetParentProfile(ctx context.Context, userID string) (string, error) { return "", nil }
-func (m *DummyUserRepo) AddGuardian(ctx context.Context, studentProfileID, parentProfileID, relationship string) error { return nil }
-func (m *DummyUserRepo) RemoveGuardian(ctx context.Context, studentProfileID, parentProfileID string) error { return nil }
-func (m *DummyUserRepo) GetGuardians(ctx context.Context, studentProfileID string) ([]users.GuardianInfo, error) { return nil, nil }
-func (m *DummyUserRepo) GetFascicoloSummary(ctx context.Context, studentID string, isActive bool) (map[string]interface{}, error) { return nil, nil }
+func (m *DummyUserRepo) ClearTempMFASecret(ctx context.Context, userID string) error  { return nil }
+func (m *DummyUserRepo) IsGuardian(ctx context.Context, parentUserID, studentUserID string) (bool, error) {
+	return false, nil
+}
+func (m *DummyUserRepo) GetChildren(ctx context.Context, parentUserID string) ([]users.StudentChild, error) {
+	return nil, nil
+}
+func (m *DummyUserRepo) GetStudentsByClass(ctx context.Context, classID string) ([]users.User, error) {
+	return nil, nil
+}
+func (m *DummyUserRepo) GetStudentProfile(ctx context.Context, userID string) (string, error) {
+	return "", nil
+}
+func (m *DummyUserRepo) GetParentProfile(ctx context.Context, userID string) (string, error) {
+	return "", nil
+}
+func (m *DummyUserRepo) AddGuardian(ctx context.Context, studentProfileID, parentProfileID, relationship string) error {
+	return nil
+}
+func (m *DummyUserRepo) RemoveGuardian(ctx context.Context, studentProfileID, parentProfileID string) error {
+	return nil
+}
+func (m *DummyUserRepo) GetGuardians(ctx context.Context, studentProfileID string) ([]users.GuardianInfo, error) {
+	return nil, nil
+}
+func (m *DummyUserRepo) GetFascicoloSummary(ctx context.Context, studentID string, isActive bool) (map[string]interface{}, error) {
+	return nil, nil
+}
 func (m *DummyUserRepo) IsActive(ctx context.Context, id string) (bool, error) {
 	args := m.Called(ctx, id)
 	return args.Bool(0), args.Error(1)

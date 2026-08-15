@@ -15,7 +15,7 @@ function getTranslation(key, fallback) {
 export function useAuth() {
     const authStore = useAuthStore()
     const router = useRouter()
-    const { user, isAuthenticated, refreshToken } = storeToRefs(authStore)
+    const { user, isAuthenticated } = storeToRefs(authStore)
 
     async function login(email, password, rememberMe = false) {
         try {
@@ -83,10 +83,7 @@ export function useAuth() {
 
     async function logout() {
         try {
-            // Call backend logout API if we have a refresh token
-            if (refreshToken.value) {
-                await authService.logout(refreshToken.value)
-            }
+            await authService.logout()
         } catch (error) {
             console.error('Logout API error:', error)
             // Continue with local logout even if API call fails

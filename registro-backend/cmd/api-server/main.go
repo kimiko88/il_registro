@@ -67,6 +67,7 @@ import (
 	"registro-backend/pkg/jwt"
 	"registro-backend/pkg/logger"
 	"registro-backend/pkg/upload"
+	"registro-backend/pkg/wsticket"
 )
 
 func main() {
@@ -180,8 +181,10 @@ func main() {
 	tripsSvc := trips.NewService(tripsRepo)
 	rubricsSvc := rubrics.NewService(rubricsRepo)
 
+	wsTicketStore := wsticket.NewStore()
+
 	// 7. Setup Handlers
-	authH := auth.NewHandler(authSvc)
+	authH := auth.NewHandler(authSvc, wsTicketStore)
 	usersH := users.NewHandler(usersSvc)
 	schoolsH := schools.NewHandler(schoolsSvc)
 	classesH := classes.NewHandler(classesSvc)
@@ -238,7 +241,7 @@ func main() {
 		authH.RegisterRoutes(api, authMiddleware)
 		api.GET("/public/schools", schoolsH.ListPublic)
 
-		api.GET("/ws", authMiddleware.Authenticate(), func(c *gin.Context) {
+		api.GET("/ws", authMiddleware.AuthenticateWSTicket(wsTicketStore), func(c *gin.Context) {
 			wsHandler.Listen(c)
 		})
 

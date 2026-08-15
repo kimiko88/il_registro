@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"net/http"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -10,6 +11,7 @@ import (
 	"registro-backend/internal/users"
 	"registro-backend/pkg/jwt"
 	"registro-backend/pkg/logger"
+	"registro-backend/pkg/wsticket"
 
 	"github.com/gin-gonic/gin"
 )
@@ -48,22 +50,11 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 		var token string
 		authHeader := c.GetHeader("Authorization")
 
-		// 1. Try Header
+		// Try Header
 		if authHeader != "" {
 			parts := strings.Split(authHeader, " ")
 			if len(parts) == 2 && parts[0] == "Bearer" {
 				token = parts[1]
-			}
-		}
-
-		if token == "" {
-			// 2. Fallback for WebSocket upgrade requests — browsers cannot set the
-			//    Authorization header during a WS handshake, so we accept the
-			//    short-lived access token via the ?token= query parameter ONLY when
-			//    the request is a WebSocket upgrade (Connection: Upgrade + Upgrade: websocket).
-			//    This replaces the deprecated Sec-WebSocket-Protocol token delivery mechanism.
-			if strings.EqualFold(c.GetHeader("Upgrade"), "websocket") {
-				token = c.Query("token")
 			}
 		}
 
@@ -116,7 +107,7 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 		c.Set("email", claims.Email)
 		c.Set("role", claims.Role)
 		c.Set("school_id", claims.SchoolID)
-		isStaff := claims.Role == RoleTeacher || claims.Role == RoleAdmin || claims.Role == RoleSuperAdmin || claims.Role == RoleSecretary || claims.Role == RolePrincipal || claims.Role == RoleVicePrincipal
+		isStaff := claims.Role == RoleTeacher || claims.Role == RoleCoordinator || claims.Role == RoleAdmin || claims.Role == RoleSuperAdmin || claims.Role == RoleSecretary || claims.Role == RolePrincipal || claims.Role == RoleVicePrincipal || claims.Role == RoleSystemAuditor
 		c.Set("is_staff", isStaff)
 
 		c.Set("locale", parseAcceptLanguage(c.GetHeader("Accept-Language")))
@@ -131,6 +122,50 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 // InvalidateUserActiveCache clears the cached active status for a user.
 func (m *Middleware) InvalidateUserActiveCache(userID string) {
 	m.activeCache.Delete(userID)
+}
+
+// AuthenticateWSTicket validates a single-use opaque WS ticket for WebSocket upgrades.
+// It prevents JWT tokens from appearing in query parameters or Nginx/proxy access logs.
+func (m *Middleware) AuthenticateWSTicket(store *wsticket.Store) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if store == nil {
+			c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "ws ticket store unconfigured"})
+			c.Abort()
+			return
+		}
+		ticket := c.Query("ticket")
+		if ticket == "" {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "missing ws ticket"})
+			c.Abort()
+			return
+		}
+
+		userID, email, role, schoolID, ok := store.Consume(ticket)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "invalid or expired ws ticket"})
+			c.Abort()
+			return
+		}
+
+		// Verify the account is still active in DB
+		isActive, err := m.userRepo.IsActive(c.Request.Context(), userID)
+		if err != nil || !isActive {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: "account is disabled"})
+			c.Abort()
+			return
+		}
+
+		c.Set("user_id", userID)
+		c.Set("email", email)
+		c.Set("role", role)
+		c.Set("school_id", schoolID)
+		isStaff := role == RoleTeacher || role == RoleCoordinator || role == RoleAdmin || role == RoleSuperAdmin || role == RoleSecretary || role == RolePrincipal || role == RoleVicePrincipal || role == RoleSystemAuditor
+		c.Set("is_staff", isStaff)
+		c.Set("locale", parseAcceptLanguage(c.GetHeader("Accept-Language")))
+		c.Request = c.Request.WithContext(SetUserContext(c.Request.Context(), userID, email, role, schoolID))
+
+		c.Next()
+	}
 }
 
 // RequireRole checks if user has required role
@@ -174,6 +209,8 @@ func GetUserID(c *gin.Context) (string, bool) {
 	return s, true
 }
 
+var bcp47Regex = regexp.MustCompile(`^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})*$`)
+
 // parseAcceptLanguage normalizes Accept-Language header value into a safe BCP-47 locale.
 func parseAcceptLanguage(raw string) string {
 	if raw == "" {
@@ -183,17 +220,8 @@ func parseAcceptLanguage(raw string) string {
 	first = strings.TrimSpace(strings.Split(first, ";")[0])
 	first = strings.ReplaceAll(first, "_", "-")
 
-	if len(first) >= 2 && len(first) <= 10 {
-		valid := true
-		for _, ch := range first {
-			if !(ch >= 'a' && ch <= 'z') && !(ch >= 'A' && ch <= 'Z') && !(ch >= '0' && ch <= '9') && ch != '-' {
-				valid = false
-				break
-			}
-		}
-		if valid {
-			return first
-		}
+	if bcp47Regex.MatchString(first) {
+		return first
 	}
 	return "it-IT"
 }

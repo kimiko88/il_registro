@@ -90,12 +90,15 @@ func (c *Client) readPump() {
 			}
 			break
 		}
-		// Use strict JSON matching so that only {"type":"PING"} triggers a PONG,
-		// not any payload that happens to contain the substring "PING".
 		var cm wsClientMsg
-		if err := json.Unmarshal(msg, &cm); err == nil && cm.Type == "PING" {
-			_ = c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
-			_ = c.Conn.WriteMessage(websocket.TextMessage, []byte(`{"type":"PONG"}`))
+		if err := json.Unmarshal(msg, &cm); err == nil {
+			if cm.Type == "PING" {
+				_ = c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
+				_ = c.Conn.WriteMessage(websocket.TextMessage, []byte(`{"type":"PONG"}`))
+			} else if cm.Type == "AUTH" {
+				_ = c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
+				_ = c.Conn.WriteMessage(websocket.TextMessage, []byte(`{"type":"AUTH_ACK","status":"authenticated"}`))
+			}
 		}
 	}
 }

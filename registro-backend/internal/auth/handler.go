@@ -1,21 +1,30 @@
 package auth
 
 import (
+	"fmt"
 	"net/http"
 	"os"
+
+	"registro-backend/pkg/wsticket"
 
 	"github.com/gin-gonic/gin"
 )
 
 // Handler handles HTTP requests for authentication
 type Handler struct {
-	service *Service
+	service       *Service
+	wsTicketStore *wsticket.Store
 }
 
 // NewHandler creates a new auth handler
-func NewHandler(service *Service) *Handler {
+func NewHandler(service *Service, wsTicketStore ...*wsticket.Store) *Handler {
+	var store *wsticket.Store
+	if len(wsTicketStore) > 0 {
+		store = wsTicketStore[0]
+	}
 	return &Handler{
-		service: service,
+		service:       service,
+		wsTicketStore: store,
 	}
 }
 
@@ -361,12 +370,32 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 	c.JSON(http.StatusOK, MessageResponse{Message: "password changed successfully"})
 }
 
+// IssueWSTicket issues a single-use opaque ticket to authenticate a WebSocket connection.
+// Requires a valid JWT in the Authorization header.
+func (h *Handler) IssueWSTicket(c *gin.Context) {
+	if h.wsTicketStore == nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "ws ticket store not configured"})
+		return
+	}
+	userID, _ := GetUserID(c)
+	email, _ := c.Get("email")
+	role, _ := GetUserRole(c)
+	schoolID, _ := GetSchoolID(c)
+
+	ticket, err := h.wsTicketStore.Issue(
+		userID,
+		fmt.Sprint(email),
+		role,
+		fmt.Sprint(schoolID),
+	)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "could not issue ws ticket"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"ticket": ticket})
+}
+
 // RegisterRoutes registers all auth routes.
-//
-// BREAKING CHANGE: POST /auth/register è ora un endpoint PROTETTO.
-// Richiede un JWT valido nel header Authorization: Bearer <token>.
-// Il caller deve avere ruolo superadmin, admin o segreteria.
-// La matrice dei permessi di creazione ruoli è applicata in ValidateRegisterRequest.
 func (h *Handler) RegisterRoutes(router *gin.RouterGroup, middleware *Middleware) {
 	auth := router.Group("/auth")
 	{
@@ -386,10 +415,9 @@ func (h *Handler) RegisterRoutes(router *gin.RouterGroup, middleware *Middleware
 			protected.POST("/change-password", h.ChangePassword)
 			protected.POST("/mfa/setup", h.SetupMFA)
 			protected.POST("/mfa/verify", h.VerifyMFA)
+			protected.POST("/ws-ticket", h.IssueWSTicket)
 
 			// Registration is protected: caller must be superadmin, admin or segreteria.
-			// Role-level permission checks are enforced inside the handler via
-			// ValidateRegisterRequest (validator.go).
 			protected.POST("/register", h.Register)
 		}
 	}

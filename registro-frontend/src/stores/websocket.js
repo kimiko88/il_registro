@@ -52,7 +52,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
         }
     }
 
-    function connect() {
+    async function connect() {
         if (reconnectTimer.value) {
             clearTimeout(reconnectTimer.value)
             reconnectTimer.value = null
@@ -67,12 +67,37 @@ export const useWebSocketStore = defineStore('websocket', () => {
             return
         }
 
+        // 1. Acquire single-use WS ticket via REST API (Bearer token in Authorization header)
         const rawUrl = import.meta.env.VITE_API_URL
         let baseUrl = rawUrl || `${window.location.protocol}//${window.location.host}/api/v1`
         if (rawUrl && !rawUrl.endsWith('/api/v1') && !rawUrl.endsWith('/api/v1/')) {
             baseUrl = rawUrl.endsWith('/') ? `${rawUrl}api/v1` : `${rawUrl}/api/v1`
         }
 
+        let ticket = null
+        try {
+            const res = await fetch(`${baseUrl}/auth/ws-ticket`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${authStore.token}`,
+                    'Content-Type': 'application/json'
+                }
+            })
+            if (!res.ok) throw new Error(`ws-ticket status ${res.status}`)
+            const data = await res.json()
+            ticket = data.ticket
+        } catch (e) {
+            console.error('WebSocket: Failed to acquire ws ticket', e)
+            attemptReconnect()
+            return
+        }
+
+        if (!ticket) {
+            attemptReconnect()
+            return
+        }
+
+        // 2. Build WebSocket URL with opaque ticket parameter
         let wsUrl = ''
         if (baseUrl.startsWith('http://') || baseUrl.startsWith('https://')) {
             wsUrl = `${baseUrl.replace(/^http/, 'ws')}/ws`
@@ -85,7 +110,8 @@ export const useWebSocketStore = defineStore('websocket', () => {
             wsUrl = `${wsScheme}//${baseUrl}/ws`
         }
 
-        const token = authStore.token
+        wsUrl += `?ticket=${encodeURIComponent(ticket)}`
+
         try {
             socket.value = new WebSocket(wsUrl)
         } catch (e) {
@@ -96,13 +122,6 @@ export const useWebSocketStore = defineStore('websocket', () => {
 
         socket.value.onopen = () => {
             console.log('WebSocket: Connected')
-            if (token) {
-                try {
-                    socket.value.send(JSON.stringify({ type: 'AUTH', token }))
-                } catch (e) {
-                    console.error('WebSocket: Failed to send AUTH handshake', e)
-                }
-            }
             isConnected.value = true
             reconnectAttempts.value = 0
             if (reconnectTimer.value) {
@@ -117,7 +136,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
             for (const line of lines) {
                 try {
                     const message = JSON.parse(line)
-                    if (message && message.type === 'PONG') continue
+                    if (message && (message.type === 'PONG' || message.type === 'AUTH_ACK')) continue
                     handleMessage(message)
                 } catch (e) {
                     console.error('WebSocket: Failed to parse message line', e)

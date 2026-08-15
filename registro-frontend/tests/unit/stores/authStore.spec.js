@@ -83,7 +83,7 @@ describe('Auth Store', () => {
 
             expect(store.user).toEqual(mockUser)
             expect(store.token).toBe('access-token')
-            expect(store.refreshToken).toBe('refresh-token')
+            expect(store.refreshToken).toBeNull()
             expect(store.isAuthenticated).toBe(true)
         })
 

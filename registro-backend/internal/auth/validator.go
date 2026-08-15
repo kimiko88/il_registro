@@ -21,8 +21,10 @@ const (
 	RoleVicePrincipal = "vice_principal"
 	RoleSecretary     = "secretary"
 	RoleTeacher       = "teacher"
+	RoleCoordinator   = "coordinator"
 	RoleStudent       = "student"
 	RoleParent        = "parent"
+	RoleSystemAuditor = "system_auditor"
 )
 
 // allRoles is the exhaustive set of valid role strings.
@@ -33,21 +35,24 @@ var allRoles = map[string]bool{
 	RoleVicePrincipal: true,
 	RoleSecretary:     true,
 	RoleTeacher:       true,
+	RoleCoordinator:   true,
 	RoleStudent:       true,
 	RoleParent:        true,
+	RoleSystemAuditor: true,
 }
 
 // creatableRoles defines which roles each caller role is allowed to create.
 var creatableRoles = map[string]map[string]bool{
 	RoleSuperAdmin: {
-		RoleSuperAdmin:    true,
 		RoleAdmin:         true,
 		RolePrincipal:     true,
 		RoleVicePrincipal: true,
 		RoleSecretary:     true,
 		RoleTeacher:       true,
+		RoleCoordinator:   true,
 		RoleStudent:       true,
 		RoleParent:        true,
+		RoleSystemAuditor: true,
 	},
 	RoleAdmin: {
 		RoleAdmin:         true,
@@ -55,13 +60,16 @@ var creatableRoles = map[string]map[string]bool{
 		RoleVicePrincipal: true,
 		RoleSecretary:     true,
 		RoleTeacher:       true,
+		RoleCoordinator:   true,
 		RoleStudent:       true,
 		RoleParent:        true,
+		RoleSystemAuditor: true,
 	},
 	RoleSecretary: {
 		RolePrincipal:     true,
 		RoleVicePrincipal: true,
 		RoleTeacher:       true,
+		RoleCoordinator:   true,
 		RoleStudent:       true,
 		RoleParent:        true,
 	},

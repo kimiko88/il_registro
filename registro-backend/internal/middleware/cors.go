@@ -43,7 +43,11 @@ func CORSMiddleware() gin.HandlerFunc {
 		}
 
 		if c.Request.Method == "OPTIONS" {
-			if origin != "" && !isAllowed {
+			if origin == "" {
+				c.AbortWithStatusJSON(400, gin.H{"error": "Origin header required for preflight OPTIONS request"})
+				return
+			}
+			if !isAllowed {
 				c.AbortWithStatus(403)
 				return
 			}

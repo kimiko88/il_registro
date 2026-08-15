@@ -37,7 +37,7 @@ func backendURL() string {
 		return url
 	}
 	if os.Getenv("APP_ENV") == "production" || os.Getenv("GIN_MODE") == "release" {
-		return "https://localhost:8080"
+		return ""
 	}
 	return "http://localhost:8080"
 }

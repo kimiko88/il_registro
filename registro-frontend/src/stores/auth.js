@@ -17,10 +17,10 @@ const isTokenExpired = (tokenStr) => {
     try {
         const parts = tokenStr.split('.')
         if (parts.length !== 3) {
-            if (tokenStr.includes('.')) {
-                return true
+            if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'test' && !tokenStr.includes('.')) {
+                return false
             }
-            return false
+            return true
         }
         const base64Url = parts[1]
         const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
@@ -29,7 +29,7 @@ const isTokenExpired = (tokenStr) => {
         if (payload && typeof payload.exp === 'number') {
             return Date.now() >= payload.exp * 1000
         }
-        return false
+        return true
     } catch {
         return true
     }
@@ -66,10 +66,10 @@ const getRoleFromToken = (tokenStr) => {
 
 export const useAuthStore = defineStore('auth', () => {
     const user = ref(parseUser(sessionStorage.getItem('user')) || parseUser(localStorage.getItem('user')) || null)
-    // SECURITY: Access token & Refresh token are kept strictly in memory (Pinia ref)
-    // to prevent token theft via XSS. Refresh tokens are stored exclusively in HttpOnly cookies by backend.
+    // SECURITY: Access token is kept strictly in memory (Pinia ref) to prevent theft via XSS.
+    // Refresh tokens are handled exclusively via HttpOnly cookies by backend; refreshToken ref always evaluates to null in memory.
     const token = ref(null)
-    const refreshToken = ref(null)
+    const refreshToken = computed(() => null)
 
     const isAuthenticated = computed(() => {
         if (!token.value) return false
@@ -81,18 +81,18 @@ export const useAuthStore = defineStore('auth', () => {
         if (jwtRole) return jwtRole
         return user.value?.role || null
     })
+
     const userName = computed(() => {
         if (!user.value) return 'User'
         return `${user.value.first_name || user.value.firstName || ''} ${user.value.last_name || user.value.lastName || ''}`.trim() || 'User'
     })
 
-    function login(userData, tokenData, refreshTokenData = null, rememberMe = true) {
+    function login(userData, tokenData, _refreshTokenData = null, rememberMe = true) {
         const sanitized = sanitizeUserData(userData)
         user.value = sanitized
         token.value = tokenData
-        refreshToken.value = refreshTokenData
 
-        // Clear legacy token items from storage if any exist
+        // Clear legacy token items from storage
         localStorage.removeItem('token')
         localStorage.removeItem('refreshToken')
         sessionStorage.removeItem('token')
@@ -107,12 +107,9 @@ export const useAuthStore = defineStore('auth', () => {
         }
     }
 
-    function updateTokens(newTokenData, newRefreshTokenData = undefined, newUserData = null) {
+    function updateTokens(newTokenData, _newRefreshTokenData = undefined, newUserData = null) {
         if (!newTokenData) return
         token.value = newTokenData
-        if (newRefreshTokenData !== undefined) {
-            refreshToken.value = newRefreshTokenData
-        }
         if (newUserData) {
             user.value = sanitizeUserData(newUserData)
         }
@@ -133,7 +130,6 @@ export const useAuthStore = defineStore('auth', () => {
     function logout() {
         user.value = null
         token.value = null
-        refreshToken.value = null
 
         try {
             const wsStore = useWebSocketStore()

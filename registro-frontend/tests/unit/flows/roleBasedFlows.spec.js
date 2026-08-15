@@ -68,7 +68,7 @@ describe('Role-Based Authentication Flows', () => {
 
             await logout()
 
-            expect(authService.logout).toHaveBeenCalledWith('refresh-token')
+            expect(authService.logout).toHaveBeenCalled()
             expect(authStore.isAuthenticated).toBe(false)
             expect(authStore.user).toBeNull()
         })
@@ -232,7 +232,7 @@ describe('Role-Based Authentication Flows', () => {
             authStore.login(teacherUser, 'token', 'refresh')
 
             // Try to manually change role (should not be possible)
-            const originalRole = authStore.userRole
+            const _originalRole = authStore.userRole
 
             // Even if user object is modified, logout should clear everything
             authStore.logout()

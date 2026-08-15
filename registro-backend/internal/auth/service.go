@@ -57,9 +57,6 @@ func (s *Service) SetEmailSender(sender EmailSender) {
 // Input validation and RBAC checks are performed by the handler layer
 // (ValidateRegisterRequest in validator.go) before this method is called.
 func (s *Service) Register(ctx context.Context, req *RegisterRequest) (*User, error) {
-	if req.Role == RoleSuperAdmin {
-		return nil, fmt.Errorf("forbidden: cannot register superadmin role")
-	}
 	if err := NewPasswordValidator().Validate(req.Password); err != nil {
 		return nil, err
 	}
@@ -150,9 +147,9 @@ func (s *Service) Login(ctx context.Context, req *LoginRequest, ipAddress, userA
 		return nil, ErrUserInactive
 	}
 
-	// Check if password has expired (90 days for privileged roles: superadmin, admin, secretary, teacher)
-	if isPasswordExpired(user) {
-		return nil, ErrPasswordExpired
+	// Check if password has expired (90 days for privileged roles)
+	if expired, err := isPasswordExpiredReason(user); expired {
+		return nil, err
 	}
 
 	// Check MFA — decrypt stored secret before verifying the TOTP code.
@@ -545,18 +542,26 @@ func (s *Service) ResetPassword(ctx context.Context, token, newPassword string) 
 
 // isPasswordExpired checks if a user's password has expired (90 days for privileged roles).
 func isPasswordExpired(user *User) bool {
+	expired, _ := isPasswordExpiredReason(user)
+	return expired
+}
+
+func isPasswordExpiredReason(user *User) (bool, error) {
 	if user == nil {
-		return false
+		return false, nil
 	}
-	if user.Role == RoleSuperAdmin || user.Role == RoleAdmin || user.Role == RoleSecretary || user.Role == RoleTeacher {
+	if user.Role == RoleSuperAdmin || user.Role == RoleAdmin || user.Role == RoleSecretary || user.Role == RoleTeacher || user.Role == RoleCoordinator || user.Role == RoleSystemAuditor {
 		if user.PasswordChangedAt != nil {
-			return time.Since(*user.PasswordChangedAt) > 90*24*time.Hour
+			if time.Since(*user.PasswordChangedAt) > 90*24*time.Hour {
+				return true, ErrPasswordExpired
+			}
+			return false, nil
 		}
-		if !user.CreatedAt.IsZero() {
-			return time.Since(user.CreatedAt) > 90*24*time.Hour
+		if !user.CreatedAt.IsZero() && time.Since(user.CreatedAt) > 90*24*time.Hour {
+			return true, ErrInitialPasswordExpired
 		}
 	}
-	return false
+	return false, nil
 }
 
 // ChangePassword changes password for an authenticated user
