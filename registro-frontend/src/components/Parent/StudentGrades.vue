@@ -1,19 +1,19 @@
 <template>
   <div class="q-pa-md">
-    <div class="text-h6 q-mb-md">My Children</div>
+    <div class="text-h6 q-mb-md">{{ t('roleDashboards.parentSub') || 'I Miei Figli' }}</div>
     
     <div class="row q-gutter-md">
       <q-card v-for="child in children" :key="child.id" class="my-card">
         <q-card-section>
           <div class="text-h6">{{ child.name }}</div>
-          <div class="text-subtitle2">Class: {{ child.class }}</div>
+          <div class="text-subtitle2">{{ t('classRegister.class', { name: '' }) || 'Classe' }}: {{ child.class }}</div>
         </q-card-section>
 
         <q-separator />
 
         <q-card-actions vertical>
-          <q-btn flat color="primary" label="View Grades" @click="viewGrades(child)" />
-          <q-btn flat color="primary" label="View Attendance" @click="viewAttendance(child)" />
+          <q-btn flat color="primary" :label="t('classRegister.tabGrades') || 'Voti'" @click="viewGrades(child)" />
+          <q-btn flat color="primary" :label="t('roleDashboards.attendanceRate') || 'Presenze'" @click="viewAttendance(child)" />
         </q-card-actions>
       </q-card>
     </div>
@@ -22,6 +22,9 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const children = ref([
   { id: 1, name: 'Mario Rossi', class: '1A' },

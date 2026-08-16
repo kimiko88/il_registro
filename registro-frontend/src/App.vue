@@ -6,24 +6,23 @@
     <q-card style="min-width: 380px; max-width: 480px;" class="rounded-xl">
       <q-card-section class="bg-amber-8 text-white row items-center">
         <q-icon name="security" size="28px" class="q-mr-sm" />
-        <div class="text-h6 text-weight-bold">Conferma Ricarica Pagina</div>
+        <div class="text-h6 text-weight-bold">{{ t('common.confirm') || 'Conferma Ricarica Pagina' }}</div>
       </q-card-section>
 
       <q-card-section class="q-pa-lg text-body1 text-slate-800">
         <p class="q-mb-sm text-weight-medium">
-          Sei sicuro di voler ricaricare la pagina?
+          {{ t('settingsPage.security') || 'Sei sicuro di voler ricaricare la pagina?' }}
         </p>
         <p class="text-caption text-grey-8 q-mb-none">
-          Per ragioni di sicurezza i dati di sessione sensibili non vengono memorizzati in modo permanente sul browser. 
-          Ricaricando la pagina i dati non salvati andranno persi e potresti dover effettuare nuovamente l'accesso.
+          {{ t('settingsPage.subtitle') || 'Per ragioni di sicurezza i dati non salvati andranno persi.' }}
         </p>
       </q-card-section>
 
       <q-card-actions align="right" class="q-pa-md bg-grey-1">
-        <q-btn flat label="Annulla (Rimani qui)" color="grey-8" v-close-popup no-caps />
+        <q-btn flat :label="t('common.cancel') || 'Annulla'" color="grey-8" v-close-popup no-caps />
         <q-btn 
           color="amber-9" 
-          label="Conferma e Ricarica" 
+          :label="t('common.confirm') || 'Conferma e Ricarica'" 
           icon="refresh" 
           no-caps 
           unelevated 
@@ -36,10 +35,12 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue'
-import { useAuthStore } from 'src/stores/auth'
-import { useWebSocketStore } from 'src/stores/websocket'
-import { useThemeStore } from 'src/stores/theme'
+import { useI18n } from 'vue-i18n'
+import { useAuthStore } from '@/stores/auth'
+import { useWebSocketStore } from '@/stores/websocket'
+import { useThemeStore } from '@/stores/theme'
 
+const { t } = useI18n()
 const authStore = useAuthStore()
 const wsStore = useWebSocketStore()
 const themeStore = useThemeStore()

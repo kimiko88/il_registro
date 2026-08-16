@@ -3,9 +3,9 @@
     <q-card-section class="row items-center justify-between q-pb-none">
       <div class="text-h6 text-weight-bold text-slate-800 row items-center">
         <q-icon name="dynamic_feed" color="primary" class="q-mr-sm" />
-        Timeline del Giorno & Attività
+        {{ t('dashboardPage.recentActivity') || 'Timeline del Giorno & Attività' }}
       </div>
-      <q-badge color="primary" class="text-weight-bold">Oggi</q-badge>
+      <q-badge color="primary" class="text-weight-bold">{{ t('agendaPage.today') || 'Oggi' }}</q-badge>
     </q-card-section>
 
     <q-card-section>
@@ -15,8 +15,8 @@
 
       <div v-else-if="events.length === 0" class="text-center text-slate-400 q-pa-xl">
         <q-icon name="event_available" size="48px" class="q-mb-xs text-grey-4" /><br />
-        <div class="text-weight-bold text-slate-600">Nessun evento registrato oggi</div>
-        <div class="text-caption text-grey-5">Non ci sono nuovi voti, assenze o note disciplinari registrate per la giornata odierna.</div>
+        <div class="text-weight-bold text-slate-600">{{ t('dashboardPage.noLessons') || 'Nessun evento registrato oggi' }}</div>
+        <div class="text-caption text-grey-5">{{ t('dashboardPage.noNotifications') || 'Non ci sono nuovi voti, assenze o note disciplinari registrate per la giornata odierna.' }}</div>
       </div>
 
       <q-timeline v-else color="primary" class="q-px-sm">
@@ -44,7 +44,10 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import api from '@/services/api'
+
+const { t } = useI18n()
 
 const props = defineProps({
   studentId: {

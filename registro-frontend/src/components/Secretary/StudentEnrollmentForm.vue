@@ -128,9 +128,11 @@
 
 <script setup>
 import { ref, reactive } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const step = ref(1)
 const stepper = ref(null)
 

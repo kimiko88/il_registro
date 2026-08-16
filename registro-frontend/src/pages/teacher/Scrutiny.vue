@@ -285,13 +285,15 @@
 
 <script setup>
 import { ref, reactive, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
-import { scrutinyService } from 'src/services/scrutinyService'
-import { useAuthStore } from 'src/stores/auth'
-import { useClassesStore } from 'src/stores/classes'
+import { scrutinyService } from '@/services/scrutinyService'
+import { useAuthStore } from '@/stores/auth'
+import { useClassesStore } from '@/stores/classes'
 import { useSchoolYearStore } from '@/stores/schoolYear'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const authStore = useAuthStore()
 const classesStore = useClassesStore()
 const schoolYearStore = useSchoolYearStore()

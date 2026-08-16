@@ -1,6 +1,6 @@
 <template>
   <q-card class="q-mb-md">
-    <q-card-section class="text-subtitle1">Performance Overview</q-card-section>
+    <q-card-section class="text-subtitle1">{{ t('roleDashboards.generalTrend') || 'Andamento Generale' }}</q-card-section>
     <q-card-section>
        <!-- Simple Visualization -->
        <div v-for="(avg, subject) in averages" :key="subject" class="row items-center q-mb-sm">
@@ -18,5 +18,8 @@
 </template>
 
 <script setup>
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 defineProps(['averages']);
 </script>

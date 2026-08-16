@@ -15,6 +15,9 @@
 </template>
 
 <script setup>
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 defineProps({
   lines: { type: Number, default: 4 },
   showFooter: { type: Boolean, default: false },

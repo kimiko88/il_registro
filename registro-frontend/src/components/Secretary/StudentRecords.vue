@@ -105,9 +105,12 @@
 
 <script setup>
 import { ref, watch } from 'vue'
-import { gradeService } from 'src/services/gradeService'
-import { attendanceService } from 'src/services/attendanceService'
+import { useI18n } from 'vue-i18n'
+import { gradeService } from '@/services/gradeService'
+import { attendanceService } from '@/services/attendanceService'
 import { date } from 'quasar'
+
+const { t } = useI18n()
 
 const props = defineProps({
   modelValue: Boolean,

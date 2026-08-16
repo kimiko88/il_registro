@@ -4,8 +4,8 @@
       <q-card-section class="bg-red-7 text-white row items-center q-pb-md">
         <q-avatar icon="priority_high" color="white" text-color="red-7" class="q-mr-sm" size="40px" />
         <div>
-          <div class="text-h6 text-weight-bold">Comunicazione Urgente</div>
-          <div class="text-caption opacity-90">Presa d'atto obbligatoria per accedere al sistema</div>
+          <div class="text-h6 text-weight-bold">{{ t('communicationsPage.title') }}</div>
+          <div class="text-caption opacity-90">{{ t('communicationsPage.requiresAck') }}</div>
         </div>
       </q-card-section>
 
@@ -14,7 +14,7 @@
           {{ communication.subject }}
         </div>
         <div class="text-caption text-slate-500 q-mb-md">
-          Inviato il {{ formatDate(communication.created_at) }}
+          {{ t('communicationsPage.publishDate') }}: {{ formatDate(communication.created_at) }}
         </div>
 
         <div class="text-body2 bg-slate-50 border q-pa-md rounded-lg text-slate-700 q-mb-md leading-relaxed" style="max-height: 220px; overflow-y: auto;">
@@ -25,7 +25,7 @@
           <template v-slot:avatar>
             <q-icon name="info" color="amber-9" />
           </template>
-          Facendo clic su <strong>"Prendi Atto e Continua"</strong> dichiari di aver letto e compreso questa comunicazione.
+          {{ t('communicationsPage.requiresAck') }}
         </q-banner>
       </q-card-section>
 
@@ -33,7 +33,7 @@
         <q-btn
           color="red-7"
           icon="check_circle"
-          label="Prendi Atto e Continua"
+          :label="t('communicationsPage.ackButton')"
           unelevated
           class="rounded-lg text-weight-bold full-width"
           size="lg"
@@ -47,17 +47,18 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
 import api from '@/services/api'
 
 const $q = useQuasar()
+const { t, locale } = useI18n()
 const show = ref(false)
 const communication = ref(null)
 const loading = ref(false)
 
 onMounted(async () => {
   try {
-    // Check if there are urgent mandatory communications needing acknowledgment
     const unreadRes = await api.get('/communications/bacheca')
     const urgent = (unreadRes.data || []).find(c => c.requires_acknowledgment && !c.acknowledged)
     if (urgent) {
@@ -65,7 +66,7 @@ onMounted(async () => {
       show.value = true
     }
   } catch (err) {
-    // Ignore error silently on initial check
+    // Ignore error silently
   }
 })
 
@@ -74,10 +75,10 @@ async function confirmAck() {
   loading.value = true
   try {
     await api.post(`/communications/${communication.value.id}/ack`)
-    $q.notify({ type: 'positive', message: 'Presa d\'atto registrata' })
+    $q.notify({ type: 'positive', message: t('communicationsPage.ackConfirmed') })
     show.value = false
   } catch (err) {
-    $q.notify({ type: 'negative', message: 'Errore durante la registrazione della presa d\'atto' })
+    $q.notify({ type: 'negative', message: t('common.error') })
   } finally {
     loading.value = false
   }
@@ -85,6 +86,6 @@ async function confirmAck() {
 
 function formatDate(iso) {
   if (!iso) return ''
-  return new Date(iso).toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' })
+  return new Date(iso).toLocaleDateString(locale.value || 'it-IT', { day: '2-digit', month: 'long', year: 'numeric' })
 }
 </script>

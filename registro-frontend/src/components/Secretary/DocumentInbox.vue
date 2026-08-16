@@ -78,9 +78,11 @@
 
 <script setup>
 import { ref } from 'vue';
-import { useDocumentsStore } from 'src/stores/documents';
+import { useI18n } from 'vue-i18n';
+import { useDocumentsStore } from '@/stores/documents';
 import { useQuasar } from 'quasar';
 
+const { t } = useI18n();
 const store = useDocumentsStore();
 const $q = useQuasar();
 const filter = ref('');

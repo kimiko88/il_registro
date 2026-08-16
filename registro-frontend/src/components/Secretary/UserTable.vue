@@ -140,7 +140,9 @@
 </template>
 <script setup>
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 // eslint-disable-next-line no-unused-vars
 const props = defineProps(['users', 'loading']);
 // eslint-disable-next-line no-unused-vars

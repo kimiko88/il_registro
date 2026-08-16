@@ -183,14 +183,16 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useQuasar, exportFile } from 'quasar'
 import { useAuthStore } from '@/stores/auth'
-import adminService from 'src/services/adminService'
-import { gradeService } from 'src/services/gradeService'
-import { attendanceService } from 'src/services/attendanceService'
-import api from 'src/services/api'
+import adminService from '@/services/adminService'
+import { gradeService } from '@/services/gradeService'
+import { attendanceService } from '@/services/attendanceService'
+import api from '@/services/api'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const authStore = useAuthStore()
 
 // ── School name from auth store (not hardcoded) ───────────────

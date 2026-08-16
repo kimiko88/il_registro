@@ -7,8 +7,8 @@
       </q-card-section>
 
       <q-card-actions align="right">
-        <q-btn flat label="Cancel" color="primary" v-close-popup />
-        <q-btn flat label="Confirm" color="negative" v-close-popup @click="$emit('confirm')" />
+        <q-btn flat :label="t('common.cancel') || 'Annulla'" color="primary" v-close-popup />
+        <q-btn flat :label="t('common.confirm') || 'Conferma'" color="negative" v-close-popup @click="$emit('confirm')" />
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -16,12 +16,15 @@
 
 <script setup>
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps({
   modelValue: Boolean,
   message: {
     type: String,
-    default: 'Are you sure?'
+    default: ''
   }
 })
 

@@ -103,11 +103,13 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useParentStore } from '@/stores/parent'
 import { storeToRefs } from 'pinia'
 import { useQuasar } from 'quasar'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const parentStore = useParentStore()
 const { selectedChild } = storeToRefs(parentStore)
 

@@ -1,6 +1,6 @@
 <template>
   <div v-if="store.children.length > 0">
-    <q-btn-dropdown flat no-caps dense :label="store.selectedChild?.firstName || 'Select Child'">
+    <q-btn-dropdown flat no-caps dense :label="store.selectedChild?.firstName || (t('roleDashboards.selectChild') || 'Seleziona Figlio')">
         <template v-slot:icon>
              <q-avatar size="24px">
                 <img :src="store.selectedChild?.avatar">
@@ -32,9 +32,11 @@
 </template>
 
 <script setup>
-import { useChildrenStore } from 'src/stores/children';
+import { useI18n } from 'vue-i18n';
+import { useChildrenStore } from '@/stores/children';
 import { onMounted } from 'vue';
 
+const { t } = useI18n();
 const store = useChildrenStore();
 
 onMounted(() => {

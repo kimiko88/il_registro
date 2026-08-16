@@ -2,7 +2,7 @@
   <q-dialog v-model="isOpen">
     <q-card style="min-width: 600px">
         <q-card-section>
-            <div class="text-h6">Select Template</div>
+            <div class="text-h6">{{ t('documentsPage.selectTemplate') || 'Seleziona Modello' }}</div>
         </q-card-section>
         
         <q-card-section>
@@ -24,8 +24,10 @@
 
 <script setup>
 import { ref, watch, onMounted } from 'vue';
-import { useDocumentsStore } from 'src/stores/documents';
+import { useI18n } from 'vue-i18n';
+import { useDocumentsStore } from '@/stores/documents';
 
+const { t } = useI18n();
 const props = defineProps(['modelValue']);
 const emit = defineEmits(['update:modelValue', 'selected']);
 

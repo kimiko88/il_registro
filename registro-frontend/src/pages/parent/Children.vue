@@ -1,6 +1,6 @@
 <template>
   <q-page class="q-pa-md bg-slate-50">
-    <div class="text-h5 text-weight-bold text-slate-800 q-mb-md">I Miei Figli</div>
+    <div class="text-h5 text-weight-bold text-slate-800 q-mb-md">{{ t('nav.children') || 'I Miei Figli' }}</div>
 
     <div v-if="loading" class="row justify-center">
       <q-spinner color="primary" size="3em" />
@@ -22,24 +22,21 @@
           </q-card-section>
 
           <q-card-section class="q-pt-none">
-            <div class="text-subtitle2 text-grey">Classe {{ child.class }}</div>
-            <div class="text-caption text-grey">Anno Accademico 2024/2025</div>
+            <div class="text-subtitle2 text-grey">{{ t('common.filter') + ' Classe ' + child.class }}</div>
           </q-card-section>
 
           <q-separator />
 
           <q-card-actions align="right">
             <q-btn flat round icon="email" color="primary">
-              <q-tooltip>Contatta Coordinatore</q-tooltip>
+              <q-tooltip>{{ t('common.search') }}</q-tooltip>
             </q-btn>
-            <q-btn flat label="Vedi Voti" color="primary" to="/parent/grades" @click="selectChild(child.id)" />
+            <q-btn flat :label="t('nav.myGrades')" color="primary" to="/parent/grades" @click="selectChild(child.id)" />
           </q-card-actions>
           
-          <q-expansion-item icon="info" label="Dettagli Scuola" header-class="text-primary">
+          <q-expansion-item icon="info" :label="t('documentsPage.title')" header-class="text-primary">
             <q-card>
               <q-card-section>
-                <p><strong>Indirizzo:</strong> Via Roma 1, Milano</p>
-                <p><strong>Segreteria:</strong> 02 12345678</p>
                 <p><strong>Email:</strong> segreteria@scuola.it</p>
               </q-card-section>
             </q-card>
@@ -52,9 +49,11 @@
 
 <script setup>
 import { onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useParentStore } from '@/stores/parent'
 import { storeToRefs } from 'pinia'
 
+const { t } = useI18n()
 const parentStore = useParentStore()
 const { children, loading } = storeToRefs(parentStore)
 const { fetchChildren, selectChild } = parentStore

@@ -123,10 +123,12 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
 import { elearningService } from '@/services/elearningService'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const googleConnected = ref(false)
 const googleConfigured = ref(false)
 const msConnected = ref(false)

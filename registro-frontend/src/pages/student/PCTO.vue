@@ -1,9 +1,11 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { pctoService } from 'src/services/pctoService'
+import { useI18n } from 'vue-i18n'
+import { pctoService } from '@/services/pctoService'
 import { useQuasar } from 'quasar'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const projects = ref([])
 const loading = ref(false)
 
@@ -24,7 +26,7 @@ const fetchPCTO = async () => {
         const res = await pctoService.getMyProjects()
         projects.value = res.data || []
     } catch (e) {
-        $q.notify({ message: 'Errore nel caricamento dei dati PCTO', color: 'negative' })
+        $q.notify({ message: t('common.error'), color: 'negative' })
         console.error(e)
     } finally {
         loading.value = false
@@ -46,7 +48,7 @@ onMounted(() => {
     <!-- Progress Bar -->
     <q-card class="q-mb-lg">
         <q-card-section>
-            <div class="text-subtitle1 q-mb-sm">Avanzamento Monte Ore Triennio</div>
+            <div class="text-subtitle1 q-mb-sm">{{ t('competenciesPage.title') }}</div>
             <q-linear-progress size="25px" :value="progressValue" color="primary" stripe rounded>
                 <div class="absolute-full flex flex-center">
                     <q-badge color="white" text-color="primary" :label="Math.round(progressValue * 100) + '%'" />
@@ -58,7 +60,7 @@ onMounted(() => {
     <div class="row q-col-gutter-lg">
         <!-- Projects List -->
         <div class="col-12 col-md-8">
-            <div class="text-h5 q-mb-md">I Miei Progetti</div>
+            <div class="text-h5 q-mb-md">{{ t('didacticsPage.title') }}</div>
             
             <div v-if="loading" class="flex flex-center q-pa-xl">
                 <q-spinner color="primary" size="3em" />
@@ -90,20 +92,20 @@ onMounted(() => {
                             <q-separator class="q-my-md" v-if="project.description" />
                             
                             <div v-if="project.description">
-                                <div class="text-h6 q-mb-sm">Descrizione</div>
+                                <div class="text-h6 q-mb-sm">{{ t('udaPage.descriptionLabel') }}</div>
                                 <p>{{ project.description }}</p>
                             </div>
                         </q-card-section>
                         <q-card-actions align="right">
-                             <q-btn flat icon="edit" label="Compila Diario" color="primary" />
-                             <q-btn flat icon="cloud_upload" label="Carica Documenti" color="primary" />
+                             <q-btn flat icon="edit" :label="t('common.edit')" color="primary" />
+                             <q-btn flat icon="cloud_upload" :label="t('didacticsPage.uploadMaterial')" color="primary" />
                         </q-card-actions>
                     </q-card>
                 </q-expansion-item>
 
                 <q-item v-if="projects.length === 0">
                     <q-item-section class="text-center text-grey q-pa-xl">
-                        Nessun progetto PCTO assegnato.
+                        {{ t('didacticsPage.noMaterials') }}
                     </q-item-section>
                 </q-item>
             </q-list>
@@ -113,7 +115,7 @@ onMounted(() => {
         <div class="col-12 col-md-4">
              <q-card>
                 <q-card-section>
-                    <div class="text-h6">Documentazione</div>
+                    <div class="text-h6">{{ t('documentsPage.title') }}</div>
                 </q-card-section>
                 <q-list separator>
                     <q-item clickable v-ripple>

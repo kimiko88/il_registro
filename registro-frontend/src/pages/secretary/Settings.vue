@@ -331,11 +331,11 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
-import { useThemeStore } from 'src/stores/theme'
-import { useAuthStore } from 'src/stores/auth'
-import { userService } from 'src/services/userService'
-import adminService from 'src/services/adminService'
-import api from 'src/services/api'
+import { useThemeStore } from '@/stores/theme'
+import { useAuthStore } from '@/stores/auth'
+import { userService } from '@/services/userService'
+import adminService from '@/services/adminService'
+import api from '@/services/api'
 
 import { useI18n } from 'vue-i18n'
 

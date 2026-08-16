@@ -17,7 +17,7 @@
     <!-- Input Area -->
     <div class="q-pa-md bg-grey-2">
         <div class="row q-gutter-sm">
-            <q-input v-model="text" outlined dense class="col" placeholder="Type a message..." @keyup.enter="send" :disable="loading" />
+            <q-input v-model="text" outlined dense class="col" :placeholder="t('common.typeMessage') || 'Scrivi un messaggio...'" @keyup.enter="send" :disable="loading" />
             <q-btn round flat icon="send" color="primary" @click="send" :loading="loading" />
         </div>
     </div>
@@ -26,7 +26,10 @@
 
 <script setup>
 import { ref } from 'vue';
-import { useMessages } from 'src/composables/useMessages';
+import { useI18n } from 'vue-i18n';
+import { useMessages } from '@/composables/useMessages';
+
+const { t } = useI18n();
 
 const props = defineProps(['threadId', 'messages']);
 const { sendMessage, sending: loading } = useMessages();

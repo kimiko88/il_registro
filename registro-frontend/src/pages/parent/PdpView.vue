@@ -94,12 +94,14 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
 import { pdpService } from '@/services/pdpService'
 import { useAuthStore } from '@/stores/auth'
 import SkeletonCard from '@/components/Common/SkeletonCard.vue'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const authStore = useAuthStore()
 
 const plans = ref([])
@@ -114,7 +116,7 @@ onMounted(async () => {
       plans.value = res.data?.plans || []
     }
   } catch (err) {
-    $q.notify({ type: 'negative', message: 'Errore caricamento PDP' })
+    $q.notify({ type: 'negative', message: t('common.error') })
   } finally {
     loading.value = false
   }
@@ -122,18 +124,18 @@ onMounted(async () => {
 
 async function approvePlan(plan) {
   $q.dialog({
-    title: 'Approvazione PDP',
-    message: 'Confermi di aver preso visione e di approvare il Piano Didattico Personalizzato per tuo figlio?',
+    title: t('common.confirm'),
+    message: t('pdpPage.confirmApproval') || 'Confermi di aver preso visione e di approvare il Piano Didattico Personalizzato?',
     cancel: true,
     persistent: true
   }).onOk(async () => {
     approving.value = true
     try {
       await pdpService.approveByFamily(plan.id)
-      $q.notify({ type: 'positive', message: 'PDP approvato con successo!' })
+      $q.notify({ type: 'positive', message: t('common.success') })
       plan.family_approved_at = new Date().toISOString()
     } catch {
-      $q.notify({ type: 'negative', message: 'Errore durante la registrazione dell\'approvazione' })
+      $q.notify({ type: 'negative', message: t('common.error') })
     } finally {
       approving.value = false
     }

@@ -11,33 +11,33 @@
           <q-select
             v-model="noteData.type"
             :options="typeOptions"
-            :label="($t('classRegister.lessonTypeLabel') || 'Tipo Nota') + ' *'"
+            :label="(t('classRegister.lessonTypeLabel') || 'Tipo Nota') + ' *'"
             outlined
             emit-value
             map-options
-            :rules="[val => !!val || 'Seleziona un tipo']"
+            :rules="[val => !!val || (t('common.requiredField') || 'Seleziona un tipo')]"
           />
 
           <q-input
             v-model="noteData.note"
-            :label="($t('classRegister.topicLabel') || 'Contenuto') + ' *'"
+            :label="(t('classRegister.topicLabel') || 'Contenuto') + ' *'"
             type="textarea"
             outlined
             autogrow
-            :rules="[val => !!val || 'Scrivi il contenuto']"
+            :rules="[val => !!val || (t('common.requiredField') || 'Scrivi il contenuto')]"
           />
 
           <q-input
              v-model="noteData.date"
              type="date"
-             :label="$t('classRegister.dateLabel') || 'Data'"
+             :label="t('classRegister.dateLabel') || 'Data'"
              outlined
-             :rules="[val => !!val || 'Data obbligatoria']"
+             :rules="[val => !!val || (t('common.requiredField') || 'Data obbligatoria')]"
           />
 
           <div class="row justify-end q-gutter-sm q-mt-md">
-            <q-btn flat :label="$t('common.cancel') || 'Annulla'" color="grey" v-close-popup />
-            <q-btn type="submit" :label="$t('common.save') || 'Salva'" color="primary" :loading="loading" />
+            <q-btn flat :label="t('common.cancel') || 'Annulla'" color="grey" v-close-popup />
+            <q-btn type="submit" :label="t('common.save') || 'Salva'" color="primary" :loading="loading" />
           </div>
         </q-form>
       </q-card-section>

@@ -117,9 +117,9 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { useI18n } from 'vue-i18n'
-import { gradeService } from 'src/services/gradeService'
-import api from 'src/services/api'
-import { useStudentStore } from 'src/stores/student'
+import { gradeService } from '@/services/gradeService'
+import api from '@/services/api'
+import { useStudentStore } from '@/stores/student'
 
 const $q = useQuasar()
 const { t } = useI18n()

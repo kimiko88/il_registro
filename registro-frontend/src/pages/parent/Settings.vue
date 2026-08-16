@@ -328,10 +328,10 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useThemeStore, THEMES } from 'src/stores/theme'
+import { useThemeStore, THEMES } from '@/stores/theme'
 import { useQuasar } from 'quasar'
-import { userService } from 'src/services/userService'
-import { useAuthStore } from 'src/stores/auth'
+import { userService } from '@/services/userService'
+import { useAuthStore } from '@/stores/auth'
 
 import { useI18n } from 'vue-i18n'
 

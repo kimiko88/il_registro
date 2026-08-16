@@ -150,12 +150,14 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useQuasar, date } from 'quasar'
-import { useStudentStore } from 'src/stores/student'
-import { lessonService } from 'src/services/lessonService'
-import adminService from 'src/services/adminService'
+import { useStudentStore } from '@/stores/student'
+import { lessonService } from '@/services/lessonService'
+import adminService from '@/services/adminService'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const studentStore = useStudentStore()
 
 const tab = ref('compiti')
@@ -200,7 +202,7 @@ const fetchHomeworks = async () => {
     homeworks.value = res.data || []
   } catch (e) {
     console.error(e)
-    $q.notify({ type: 'negative', message: 'Impossibile caricare i compiti' })
+    $q.notify({ type: 'negative', message: t('common.error') })
   }
 }
 

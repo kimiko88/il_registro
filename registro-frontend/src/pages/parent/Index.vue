@@ -82,10 +82,10 @@
       <div class="col-12 col-sm-6 col-md-3" role="region" aria-label="Prossimo colloquio">
         <q-card class="glass-card stat-card shadow-soft full-height overflow-hidden">
           <q-card-section>
-            <div class="text-caption text-slate-600 text-uppercase letter-spacing-1" style="font-size: 12px">Prossimo Colloquio</div>
+            <div class="text-caption text-slate-600 text-uppercase letter-spacing-1" style="font-size: 12px">{{ $t('colloquiPage.title') || 'Prossimo Colloquio' }}</div>
             <div v-if="nextColloquio" class="text-h6 text-weight-bold text-slate-800 q-mt-sm">{{ formatDate(nextColloquio.date) }}</div>
-            <div v-else class="text-h6 text-weight-bold text-slate-500 q-mt-sm">Nessuno</div>
-            <q-btn flat dense no-caps color="primary" label="Prenota ora" to="/parent/colloqui" class="q-mt-sm rounded-lg" aria-label="Prenota un colloquio" />
+            <div v-else class="text-h6 text-weight-bold text-slate-500 q-mt-sm">-</div>
+            <q-btn flat dense no-caps color="primary" :label="$t('colloquiPage.booked') || 'Prenota ora'" to="/parent/colloqui" class="q-mt-sm rounded-lg" aria-label="Prenota un colloquio" />
           </q-card-section>
           <q-icon name="event" class="card-bg-icon text-slate-100" aria-hidden="true" />
         </q-card>
@@ -94,7 +94,7 @@
       <div class="col-12 col-sm-6 col-md-3" role="region" aria-label="Avvisi da leggere">
         <q-card class="glass-card stat-card shadow-soft full-height overflow-hidden">
           <q-card-section>
-            <div class="text-caption text-slate-600 text-uppercase letter-spacing-1" style="font-size: 12px">Avvisi</div>
+            <div class="text-caption text-slate-600 text-uppercase letter-spacing-1" style="font-size: 12px">{{ $t('communicationsPage.title') }}</div>
             <div class="text-h3 text-weight-bold text-rose-700 q-mt-sm" :aria-label="`${unreadCount} avvisi da leggere`">{{ unreadCount }}</div>
             <div class="text-caption text-slate-600 q-mt-sm text-weight-medium">Da leggere</div>
           </q-card-section>
@@ -106,7 +106,7 @@
       <div class="col-12 col-md-8">
         <q-card class="shadow-sm rounded-lg" role="region" aria-label="Ultimi voti">
           <q-card-section class="row items-center justify-between">
-            <div class="text-h6 text-slate-800">Ultimi Voti</div>
+            <div class="text-h6 text-slate-800">{{ $t('gradesPage.title') }}</div>
             <q-btn flat no-caps color="primary" label="Vedi tutti" to="/parent/grades" aria-label="Vedi tutti i voti" />
           </q-card-section>
           <q-separator />

@@ -4,11 +4,11 @@
       <div>
         <h5 class="text-h5 text-weight-bold text-primary q-my-none">
           <q-icon name="stars" class="q-mr-sm" />
-          Valutazione delle Competenze (DM 742/2017)
+          {{ t('competenciesPage.title') || 'Valutazione delle Competenze (DM 742/2017)' }}
         </h5>
-        <div class="text-caption text-grey-7">Certificazione delle competenze per la scuola secondaria di primo grado</div>
+        <div class="text-caption text-grey-7">{{ t('competenciesPage.subtitle') || 'Certificazione delle competenze per la scuola secondaria di primo grado' }}</div>
       </div>
-      <q-btn color="secondary" icon="picture_as_pdf" label="Scarica Certificato PDF" @click="downloadPdfCertificate" class="glossy" />
+      <q-btn color="secondary" icon="picture_as_pdf" :label="t('competenciesPage.downloadPdf') || 'Scarica Certificato PDF'" @click="downloadPdfCertificate" class="glossy" />
     </div>
 
     <!-- Student Selector -->
@@ -22,7 +22,7 @@
             option-label="name"
             emit-value
             map-options
-            label="Seleziona Studente"
+            :label="t('competenciesPage.student') || 'Seleziona Studente'"
             outlined
             dense
             @update:model-value="fetchEvaluations"
@@ -32,12 +32,12 @@
           <q-select
             v-model="selectedSemester"
             :options="[
-              { label: '1° Quadrimestre', value: 1 },
-              { label: '2° Quadrimestre (Certificazione Finale)', value: 2 }
+              { label: t('competenciesPage.q1') || '1° Quadrimestre', value: 1 },
+              { label: t('competenciesPage.q2') || '2° Quadrimestre (Certificazione Finale)', value: 2 }
             ]"
             emit-value
             map-options
-            label="Quadrimestre"
+            :label="t('competenciesPage.semester') || 'Quadrimestre'"
             outlined
             dense
             @update:model-value="fetchEvaluations"
@@ -49,15 +49,15 @@
     <!-- Competence Grid Table -->
     <q-card flat bordered>
       <q-card-section class="bg-grey-2 text-weight-bold">
-        Griglia Competenze Chiave Europee (D.M. 742/2017)
+        {{ t('competenciesPage.gridTitle') || 'Griglia Competenze Chiave Europee (D.M. 742/2017)' }}
       </q-card-section>
 
       <q-markup-table flat separator="cell">
         <thead>
           <tr>
-            <th class="text-left" style="width: 30%">Competenza Chiave</th>
-            <th class="text-center" style="width: 40%">Livello di Padronanza (DM 742)</th>
-            <th class="text-left" style="width: 30%">Descrittore / Note</th>
+            <th class="text-left" style="width: 30%">{{ t('competenciesPage.colCompetence') || 'Competenza Chiave' }}</th>
+            <th class="text-center" style="width: 40%">{{ t('competenciesPage.colLevel') || 'Livello di Padronanza (DM 742)' }}</th>
+            <th class="text-left" style="width: 30%">{{ t('competenciesPage.colNotes') || 'Descrittore / Note' }}</th>
           </tr>
         </thead>
         <tbody>
@@ -81,7 +81,7 @@
                 v-model="comp.descriptor"
                 dense
                 borderless
-                placeholder="Aggiungi descrittore..."
+                :placeholder="t('competenciesPage.addDescriptor') || 'Aggiungi descrittore...'"
                 @blur="saveEvaluation(comp)"
               />
             </td>
@@ -93,10 +93,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import competenciesService from 'src/services/competenciesService'
-import { useNotify } from 'src/composables/useNotify'
+import { ref, onMounted, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+import competenciesService from '@/services/competenciesService'
+import { useNotify } from '@/composables/useNotify'
 
+const { t } = useI18n()
 const notify = useNotify()
 
 const selectedStudentId = ref('stu-demo-1')
@@ -107,12 +109,12 @@ const studentOptions = ref([
   { id: 'stu-demo-2', name: 'Bianchi Giulia (2A)' }
 ])
 
-const levelOptions = [
-  { label: 'A - Avanzato', value: 'A_Avanzato' },
-  { label: 'B - Intermedio', value: 'B_Intermedio' },
-  { label: 'C - Base', value: 'C_Base' },
-  { label: 'D - Iniziale', value: 'D_Iniziale' }
-]
+const levelOptions = computed(() => [
+  { label: t('competenciesPage.levelA') || 'A - Avanzato', value: 'A_Avanzato' },
+  { label: t('competenciesPage.levelB') || 'B - Intermedio', value: 'B_Intermedio' },
+  { label: t('competenciesPage.levelC') || 'C - Base', value: 'C_Base' },
+  { label: t('competenciesPage.levelD') || 'D - Iniziale', value: 'D_Iniziale' }
+])
 
 const competenceList = ref([
   { code: 'COMP_L1_ITA', name: 'Comunicazione nella madrelingua / lingua di istruzione', level: 'A_Avanzato', descriptor: 'Padroneggia la lingua con precisione e ricchezza lessicale.' },

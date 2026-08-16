@@ -18,7 +18,18 @@ export default {
     security: 'Sicurezza & Autenticazione',
     notifications: 'Notifiche & Alert',
     mainMenu: 'MENU PRINCIPALE',
-    logout: 'Esci'
+    logout: 'Esci',
+    confirmDelete: 'Sei sicuro di voler eliminare questo utente?',
+    period: 'Periodo',
+    requiredField: 'Campo obbligatorio',
+    approve: 'Approva',
+    reject: 'Rifiuta',
+    code: 'Codice',
+    name: 'Nome',
+    address: 'Indirizzo',
+    role: 'Ruolo',
+    add: 'Aggiungi',
+    notes: 'Note'
   },
   notFound: {
     title: 'Pagina non trovata',
@@ -235,7 +246,13 @@ export default {
     adminPanel: 'Dashboard Admin',
     globalControl: 'Benvenuto nel pannello di controllo globale',
     schoolControl: 'Gestione centralizzata della tua scuola',
-    syncData: 'Sincronizza Dati'
+    syncData: 'Sincronizza Dati',
+    coordinatorDashboard: 'Pannello Coordinatore',
+    atRiskStudents: 'Studenti a Rischio',
+    classOverview: 'Panoramica Classe',
+    attendanceAverage: 'Media Presenze',
+    gradeAverage: 'Media Voti',
+    tabGrades: 'I Miei Voti'
   },
   udaPage: {
     title: 'Programmazione Didattica Annuale (UdA)',
@@ -270,7 +287,10 @@ export default {
     saveUda: 'Salva UdA',
     deleteConfirmTitle: 'Conferma Eliminazione',
     deleteConfirmMsg: 'Sei sicuro di voler eliminare l\'UdA "{title}"?',
-    detailTitle: 'Dettaglio UdA'
+    detailTitle: 'Dettaglio UdA',
+    noUda: 'Nessuna Unità di Apprendimento (UdA) presente per questa classe.',
+    objectives: 'Obiettivi di Apprendimento',
+    methodologies: 'Metodologie Didattiche'
   },
   competenciesPage: {
     title: 'Valutazione Competenze Europee (DM 14/2024 & Quadro Europeo)',
@@ -304,7 +324,18 @@ export default {
     descInitial: '(Con supporto)',
     noStudentsFound: 'Nessun alunno trovato per questa classe',
     selectClassPrompt: 'Seleziona una classe per caricare gli studenti dal database.',
-    notEvaluated: 'Non Valutato'
+    notEvaluated: 'Non Valutato',
+    downloadPdf: 'Scarica Certificato PDF',
+    semester: 'Quadrimestre',
+    gridTitle: 'Griglia Competenze Chiave Europee (D.M. 742/2017)',
+    colCompetence: 'Competenza Chiave',
+    colLevel: 'Livello di Padronanza (DM 742)',
+    colNotes: 'Descrittore / Note',
+    addDescriptor: 'Aggiungi descrittore...',
+    levelA: 'A - Avanzato',
+    levelB: 'B - Intermedio',
+    levelC: 'C - Base',
+    levelD: 'D - Iniziale'
   },
   gradesPage: {
     title: 'Gestione Registro Voti',
@@ -328,7 +359,10 @@ export default {
     overallAverage: 'Media Generale',
     matrixView: 'Matrix View (Griglia Rapida)',
     standardView: 'Vista Elenco Standard',
-    saveGrades: 'Salva Voti'
+    saveGrades: 'Salva Voti',
+    statisticsTitle: 'Statistiche Voti',
+    totalGrades: 'Voti Assegnati',
+    distribution: 'Distribuzione'
   },
   didacticsPage: {
     title: 'Materiale Didattico & Risorse',
@@ -455,7 +489,16 @@ export default {
     meetingMode: 'Modalità Colloquio',
     inPerson: 'In Presenza (A Scuola)',
     online: 'Online (Videochiamata)',
-    saveSlots: 'Salva Disponibilità'
+    saveSlots: 'Salva Disponibilità',
+    createSlotsTitle: 'Crea Disponibilità Colloqui',
+    duration: 'Durata (min)',
+    break: 'Pausa (min)',
+    generateSlots: 'Genera Slot',
+    parent: 'Genitore'
+  },
+  studentAttendance: {
+    title: 'Le Mie Assenze & Presenze',
+    subtitle: 'Storico dettagliato delle presenze, assenze e ritardi'
   },
   substitutionsPage: {
     title: 'Gestione Sostituzioni & Supplenze',
@@ -536,7 +579,10 @@ export default {
     createdDate: 'Data Creazione',
     fileSize: 'Dimensione',
     printPdf: 'Stampa PDF',
-    downloadFile: 'Scarica File'
+    downloadFile: 'Scarica File',
+    selectTemplate: 'Seleziona Modello',
+    noPreview: 'Nessuna anteprima disponibile',
+    reviewTitle: 'Revisiona Documento'
   },
   notesPage: {
     title: 'Gestione Note Disciplinari & Richiami',

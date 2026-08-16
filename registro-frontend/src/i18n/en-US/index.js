@@ -18,7 +18,18 @@ export default {
     security: 'Security & Authentication',
     notifications: 'Notifications & Alerts',
     mainMenu: 'MAIN MENU',
-    logout: 'Log out'
+    logout: 'Log out',
+    confirmDelete: 'Are you sure you want to delete this user?',
+    period: 'Period',
+    requiredField: 'Required field',
+    approve: 'Approve',
+    reject: 'Reject',
+    code: 'Code',
+    name: 'Name',
+    address: 'Address',
+    role: 'Role',
+    add: 'Add',
+    notes: 'Notes'
   },
   notFound: {
     title: 'Page Not Found',
@@ -235,7 +246,13 @@ export default {
     adminPanel: 'Admin Dashboard',
     globalControl: 'Welcome to the global control panel',
     schoolControl: 'Centralized management of your school',
-    syncData: 'Sync Data'
+    syncData: 'Sync Data',
+    coordinatorDashboard: 'Coordinator Dashboard',
+    atRiskStudents: 'At-Risk Students',
+    classOverview: 'Class Overview',
+    attendanceAverage: 'Attendance Average',
+    gradeAverage: 'Grade Average',
+    tabGrades: 'My Grades'
   },
   udaPage: {
     title: 'Annual Learning Unit Planning (UdA)',
@@ -270,7 +287,10 @@ export default {
     saveUda: 'Save UdA',
     deleteConfirmTitle: 'Confirm Deletion',
     deleteConfirmMsg: 'Are you sure you want to delete UdA "{title}"?',
-    detailTitle: 'UdA Details'
+    detailTitle: 'UdA Details',
+    noUda: 'No Learning Unit (UdA) present for this class.',
+    objectives: 'Learning Objectives',
+    methodologies: 'Teaching Methodologies'
   },
   competenciesPage: {
     title: 'European Key Competencies Assessment (DM 14/2024 & European Framework)',
@@ -304,7 +324,18 @@ export default {
     descInitial: '(With support)',
     noStudentsFound: 'No students found for this class',
     selectClassPrompt: 'Select a class to load students from the database.',
-    notEvaluated: 'Not Evaluated'
+    notEvaluated: 'Not Evaluated',
+    downloadPdf: 'Download PDF Certificate',
+    semester: 'Semester',
+    gridTitle: 'European Key Competences Grid (D.M. 742/2017)',
+    colCompetence: 'Key Competence',
+    colLevel: 'Mastery Level (DM 742)',
+    colNotes: 'Descriptor / Notes',
+    addDescriptor: 'Add descriptor...',
+    levelA: 'A - Advanced',
+    levelB: 'B - Intermediate',
+    levelC: 'C - Basic',
+    levelD: 'D - Initial'
   },
   gradesPage: {
     title: 'Grade Register Management',
@@ -328,7 +359,10 @@ export default {
     overallAverage: 'Overall Average',
     matrixView: 'Matrix View (Quick Grid)',
     standardView: 'Standard List View',
-    saveGrades: 'Save Grades'
+    saveGrades: 'Save Grades',
+    statisticsTitle: 'Grade Statistics',
+    totalGrades: 'Assigned Grades',
+    distribution: 'Distribution'
   },
   didacticsPage: {
     title: 'Didactic Materials & Resources',
@@ -455,7 +489,16 @@ export default {
     meetingMode: 'Meeting Mode',
     inPerson: 'In Person (At School)',
     online: 'Online (Video Call)',
-    saveSlots: 'Save Availability'
+    saveSlots: 'Save Availability',
+    createSlotsTitle: 'Create Interview Availability',
+    duration: 'Duration (min)',
+    break: 'Break (min)',
+    generateSlots: 'Generate Slots',
+    parent: 'Parent'
+  },
+  studentAttendance: {
+    title: 'My Attendance & Absences',
+    subtitle: 'Detailed history of attendance, absences, and tardiness'
   },
   substitutionsPage: {
     title: 'Substitution & Cover Management',
@@ -536,7 +579,10 @@ export default {
     createdDate: 'Creation Date',
     fileSize: 'File Size',
     printPdf: 'Print PDF',
-    downloadFile: 'Download File'
+    downloadFile: 'Download File',
+    selectTemplate: 'Select Template',
+    noPreview: 'No preview available',
+    reviewTitle: 'Review Document'
   },
   notesPage: {
     title: 'Disciplinary Notes & Reminders',

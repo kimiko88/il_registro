@@ -46,13 +46,13 @@
   <!-- Note Dialog -->
   <q-dialog v-model="showNoteDialog">
     <q-card style="min-width: 300px">
-        <q-card-section class="text-h6">Add Note</q-card-section>
+        <q-card-section class="text-h6">{{ t('classRegister.addNote') || 'Aggiungi Nota' }}</q-card-section>
         <q-card-section>
             <q-input v-model="currentNote" autofocus dense outlined />
         </q-card-section>
         <q-card-actions align="right">
-            <q-btn flat label="Cancel" v-close-popup />
-            <q-btn flat label="Save" color="primary" @click="saveNote" />
+            <q-btn flat :label="t('common.cancel') || 'Annulla'" v-close-popup />
+            <q-btn flat :label="t('common.save') || 'Salva'" color="primary" @click="saveNote" />
         </q-card-actions>
     </q-card>
   </q-dialog>
@@ -60,13 +60,13 @@
   <!-- Late Dialog -->
   <q-dialog v-model="showLateDialog">
     <q-card style="min-width: 300px">
-        <q-card-section class="text-h6">Late Entry Time</q-card-section>
+        <q-card-section class="text-h6">{{ t('classRegister.tableHeaderEntryTime') || 'Ora Ingresso Ritardo' }}</q-card-section>
         <q-card-section>
             <q-input v-model="currentTime" type="time" filled />
         </q-card-section>
         <q-card-actions align="right">
-            <q-btn flat label="Cancel" v-close-popup />
-            <q-btn flat label="Confirm" color="orange" @click="confirmLate" />
+            <q-btn flat :label="t('common.cancel') || 'Annulla'" v-close-popup />
+            <q-btn flat :label="t('common.confirm') || 'Conferma'" color="orange" @click="confirmLate" />
         </q-card-actions>
     </q-card>
   </q-dialog>
@@ -74,8 +74,10 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import { useAttendanceStore } from 'src/stores/attendance';
+import { useI18n } from 'vue-i18n';
+import { useAttendanceStore } from '@/stores/attendance';
 
+const { t } = useI18n();
 const attendanceStore = useAttendanceStore();
 const localRecords = computed(() => attendanceStore.records);
 

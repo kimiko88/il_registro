@@ -80,10 +80,12 @@
 
 <script setup>
 import { ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
 import api from '@/services/api'
 import CompensativeMeasuresSelector from './CompensativeMeasuresSelector.vue'
 
+const { t } = useI18n()
 const props = defineProps({
   studentsList: {
     type: Array,

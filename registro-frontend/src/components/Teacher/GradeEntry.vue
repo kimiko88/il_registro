@@ -4,8 +4,8 @@
       <template v-slot:avatar>
         <q-icon name="lock" color="amber-9" size="24px" />
       </template>
-      <div class="text-weight-bold">Modalità Supplenza - Consultazione Voti Disabilitata</div>
-      <div class="text-caption">L'inserimento e la visualizzazione del registro voti è riservata ai docenti titolari di materia della classe.</div>
+      <div class="text-weight-bold">{{ t('gradesPage.substitutionWarningTitle') || 'Modalità Supplenza - Consultazione Voti Disabilitata' }}</div>
+      <div class="text-caption">{{ t('gradesPage.substitutionWarningDesc') || 'L\'inserimento e la visualizzazione del registro voti è riservata ai docenti titolari di materia della classe.' }}</div>
     </q-banner>
 
     <q-table
@@ -19,11 +19,11 @@
     >
        <template v-slot:header="props">
           <q-tr :props="props">
-            <q-th key="name" :props="props">Studente</q-th>
-            <q-th key="current_grade" :props="props">Nuovo Voto ({{ date }})</q-th>
-            <q-th key="history" :props="props">Storico</q-th>
-            <q-th key="average" :props="props">Media</q-th>
-            <q-th key="actions" :props="props">Azioni</q-th>
+            <q-th key="name" :props="props">{{ t('classRegister.tableHeaderStudent') || 'Studente' }}</q-th>
+            <q-th key="current_grade" :props="props">{{ t('classRegister.tableHeaderGrade') || 'Nuovo Voto' }} ({{ date }})</q-th>
+            <q-th key="history" :props="props">{{ t('common.history') || 'Storico' }}</q-th>
+            <q-th key="average" :props="props">{{ t('gradesPage.average') || 'Media' }}</q-th>
+            <q-th key="actions" :props="props">{{ t('common.actions') || 'Azioni' }}</q-th>
           </q-tr>
        </template>
 
@@ -31,7 +31,7 @@
            <q-tr :props="props" v-if="props.row">
               <q-td key="name" :props="props">
                  <div class="text-weight-bold">{{ props.row.full_name }}</div>
-                 <div class="text-caption text-grey">Assenze: {{ props.row.absences || 0 }}</div>
+                 <div class="text-caption text-grey">{{ t('classRegister.absent') || 'Assenze' }}: {{ props.row.absences || 0 }}</div>
               </q-td>
 
               <q-td key="current_grade" :props="props" style="width: 250px">
@@ -48,7 +48,7 @@
                     <q-input
                        v-model="entryData[props.row.student_id].notes"
                       dense outlined
-                      placeholder="Note..."
+                      :placeholder="t('classRegister.tableHeaderGradeNotes') || 'Note...'"
                       class="col"
                    />
                     <q-btn 
@@ -63,7 +63,7 @@
                 <div class="q-py-xs">
                    <!-- Scritto -->
                    <div class="row items-center q-mb-xs" style="min-height: 24px">
-                      <span class="text-caption text-grey-7 text-weight-bold q-mr-sm" style="min-width: 50px">Scritto:</span>
+                      <span class="text-caption text-grey-7 text-weight-bold q-mr-sm" style="min-width: 50px">{{ t('gradesPage.written') || 'Scritto' }}:</span>
                       <div class="row q-gutter-xs">
                          <q-badge
                             v-for="g in getGradesByType(props.row.grades, 'Written')"
@@ -74,7 +74,7 @@
                          >
                             {{ formatGrade(g.grade_value) }}
                             <q-tooltip anchor="top middle" self="bottom middle">
-                               {{ formatDate(g.date) }} - {{ g.description || 'Nessuna nota' }}
+                               {{ formatDate(g.date) }} - {{ g.description || t('common.noDescription') || 'Nessuna nota' }}
                             </q-tooltip>
                          </q-badge>
                          <span v-if="getGradesByType(props.row.grades, 'Written').length === 0" class="text-caption text-grey-4">-</span>
@@ -83,7 +83,7 @@
                    
                    <!-- Orale -->
                    <div class="row items-center q-mb-xs" style="min-height: 24px">
-                      <span class="text-caption text-grey-7 text-weight-bold q-mr-sm" style="min-width: 50px">Orale:</span>
+                      <span class="text-caption text-grey-7 text-weight-bold q-mr-sm" style="min-width: 50px">{{ t('gradesPage.oral') || 'Orale' }}:</span>
                       <div class="row q-gutter-xs">
                          <q-badge
                             v-for="g in getGradesByType(props.row.grades, 'Oral')"
@@ -94,7 +94,7 @@
                          >
                             {{ formatGrade(g.grade_value) }}
                             <q-tooltip anchor="top middle" self="bottom middle">
-                               {{ formatDate(g.date) }} - {{ g.description || 'Nessuna nota' }}
+                               {{ formatDate(g.date) }} - {{ g.description || t('common.noDescription') || 'Nessuna nota' }}
                             </q-tooltip>
                          </q-badge>
                          <span v-if="getGradesByType(props.row.grades, 'Oral').length === 0" class="text-caption text-grey-4">-</span>
@@ -103,7 +103,7 @@
                    
                    <!-- Pratico -->
                    <div class="row items-center" style="min-height: 24px">
-                      <span class="text-caption text-grey-7 text-weight-bold q-mr-sm" style="min-width: 50px">Pratico:</span>
+                      <span class="text-caption text-grey-7 text-weight-bold q-mr-sm" style="min-width: 50px">{{ t('gradesPage.practical') || 'Pratico' }}:</span>
                       <div class="row q-gutter-xs">
                          <q-badge
                             v-for="g in getGradesByType(props.row.grades, 'Practical')"
@@ -199,11 +199,14 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
-import { useGradesStore } from 'src/stores/grades';
-import { useAuthStore } from 'src/stores/auth';
+import { useI18n } from 'vue-i18n';
+import { useGradesStore } from '@/stores/grades';
+import { useAuthStore } from '@/stores/auth';
 import { useQuasar } from 'quasar';
-import { gradeService } from 'src/services/gradeService';
+import { gradeService } from '@/services/gradeService';
 import { ITALIAN_GRADE_OPTIONS, gradeToNumeric, formatGrade, getGradeColor } from '@/utils/gradeUtils';
+
+const { t } = useI18n();
 
 const props = defineProps({
   classId: String,

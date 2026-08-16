@@ -48,11 +48,13 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useQuasar, date } from 'quasar'
-import { useStudentStore } from 'src/stores/student'
-import notesService from 'src/services/notesService'
+import { useStudentStore } from '@/stores/student'
+import notesService from '@/services/notesService'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const studentStore = useStudentStore()
 const loading = ref(true)
 const notes = ref([])

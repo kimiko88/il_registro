@@ -741,15 +741,17 @@
 
 <script setup>
 import { ref, onMounted, reactive, computed, watch } from 'vue'
-import { useClassesStore } from 'src/stores/classes'
-import { useAuthStore } from 'src/stores/auth'
-import adminService from 'src/services/adminService'
-import api from 'src/services/api'
+import { useClassesStore } from '@/stores/classes'
+import { useAuthStore } from '@/stores/auth'
+import adminService from '@/services/adminService'
+import api from '@/services/api'
 import { useQuasar } from 'quasar'
-import { textbookService } from 'src/services/textbookService'
-import ScheduleGrid from 'src/components/Secretary/ScheduleGrid.vue'
+import { textbookService } from '@/services/textbookService'
+import { useI18n } from 'vue-i18n'
+import ScheduleGrid from '@/components/Secretary/ScheduleGrid.vue'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const classesStore = useClassesStore()
 const authStore = useAuthStore()
 

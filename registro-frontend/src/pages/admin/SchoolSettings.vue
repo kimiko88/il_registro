@@ -146,10 +146,12 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useQuasar } from 'quasar';
 import schoolSettingsService from '@/services/schoolSettingsService';
 
 const $q = useQuasar();
+const { t } = useI18n();
 const loading = ref(true);
 const saving = ref(false);
 

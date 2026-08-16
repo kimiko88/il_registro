@@ -94,11 +94,13 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useCommunicationsStore } from 'src/stores/communications'
-import CircularCreator from 'src/components/Secretary/CircularCreator.vue'
+import { useI18n } from 'vue-i18n'
+import { useCommunicationsStore } from '@/stores/communications'
+import CircularCreator from '@/components/Secretary/CircularCreator.vue'
 import { useQuasar } from 'quasar'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const commStore = useCommunicationsStore()
 const showCreator = ref(false)
 const filter = ref('all')

@@ -325,11 +325,13 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useQuasar, date as qdate } from 'quasar'
 import { useAttendanceStore } from '@/stores/attendance'
-import api from 'src/services/api'
+import api from '@/services/api'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const attendanceStore = useAttendanceStore()
 
 const activeTab = ref('list')

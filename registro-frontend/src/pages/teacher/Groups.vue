@@ -113,11 +113,13 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useQuasar } from 'quasar';
 import groupsService from '@/services/groupsService';
 import { useAuthStore } from '@/stores/auth';
 
 const $q = useQuasar();
+const { t } = useI18n();
 const authStore = useAuthStore();
 
 const groups = ref([]);

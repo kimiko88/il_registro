@@ -185,12 +185,14 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useQuasar, date as qdate } from 'quasar'
 import { studentGoalService } from '@/services/studentGoalService'
 import { useAuthStore } from '@/stores/auth'
-import api from 'src/services/api'
+import api from '@/services/api'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const authStore = useAuthStore()
 const loading = ref(false)
 const updatingId = ref(null)
@@ -254,10 +256,10 @@ async function markCompleted(goalId) {
   updatingId.value = goalId
   try {
     await api.patch(`/student-goals/${goalId}/status`, { status: 'completed' })
-    $q.notify({ type: 'positive', message: 'Obiettivo completato! Complimenti!' })
+    $q.notify({ type: 'positive', message: t('common.success') })
     await loadData()
   } catch (e) {
-    $q.notify({ type: 'negative', message: 'Errore durante l\'aggiornamento dell\'obiettivo' })
+    $q.notify({ type: 'negative', message: t('common.error') })
   } finally {
     updatingId.value = null
   }

@@ -449,12 +449,13 @@
 
 <script setup>
 import { ref, watch, computed } from 'vue';
-import { useClassesStore } from 'src/stores/classes';
-import { useGradesStore } from 'src/stores/grades';
-import { useAuthStore } from 'src/stores/auth';
-import GradeEntry from 'src/components/Teacher/GradeEntry.vue';
-import GradeStatistics from 'src/components/Teacher/GradeStatistics.vue';
-import { gradeService } from 'src/services/gradeService';
+import { useI18n } from 'vue-i18n';
+import { useClassesStore } from '@/stores/classes';
+import { useGradesStore } from '@/stores/grades';
+import { useAuthStore } from '@/stores/auth';
+import GradeEntry from '@/components/Teacher/GradeEntry.vue';
+import GradeStatistics from '@/components/Teacher/GradeStatistics.vue';
+import { gradeService } from '@/services/gradeService';
 import { useQuasar, date } from 'quasar';
 import SkeletonTable from '@/components/Common/SkeletonTable.vue';
 import { useUndoToast } from '@/composables/useUndoToast';
@@ -462,6 +463,7 @@ import { useSchoolYearStore } from '@/stores/schoolYear';
 import { ITALIAN_GRADE_OPTIONS, gradeToNumeric, formatGrade, getGradeColor } from '@/utils/gradeUtils';
 
 const $q = useQuasar();
+const { t } = useI18n();
 useUndoToast();
 const classesStore = useClassesStore();
 const gradesStore = useGradesStore();

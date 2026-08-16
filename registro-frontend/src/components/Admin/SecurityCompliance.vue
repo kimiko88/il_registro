@@ -4,7 +4,7 @@
       <div>
         <h5 class="text-h5 text-weight-bold text-primary q-my-none">
           <q-icon name="verified_user" class="q-mr-sm" />
-          Conformità Legale e Normativa (FEQ, CAD & Audit Trail)
+          {{ t('settingsPage.security') }}
         </h5>
         <div class="text-caption text-grey-7">Firma Elettronica Qualificata, Conservazione a Norma CAD e Catena Log Immutabili</div>
       </div>
@@ -50,12 +50,12 @@
         <q-card flat bordered class="shadow-1">
           <q-card-section>
             <div class="row items-center justify-between">
-              <div class="text-subtitle2 text-weight-bold text-primary">Catena Audit Log</div>
+              <div class="text-subtitle2 text-weight-bold text-primary">Audit Log Immutabile</div>
               <q-icon name="link" color="accent" size="24px" />
             </div>
-            <div class="text-h6 text-weight-bolder q-mt-xs text-accent">Catena Crittografica Integra</div>
+            <div class="text-h6 text-weight-bolder q-mt-xs text-accent">Catena Cryptographic Hash</div>
             <div class="text-caption text-grey-7 q-mt-xs">
-              Ogni modifica nel registro genera un hash concatenato SHA-256 inopponibile a terzi.
+              Ogni modifica a firme, voti e note genera un blocco incatenato crittograficamente (Block Hashing).
             </div>
           </q-card-section>
         </q-card>
@@ -110,9 +110,11 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import securityService from 'src/services/securityService'
-import { useNotify } from 'src/composables/useNotify'
+import { useI18n } from 'vue-i18n'
+import securityService from '@/services/securityService'
+import { useNotify } from '@/composables/useNotify'
 
+const { t } = useI18n()
 const notify = useNotify()
 const loading = ref(false)
 const report = ref({})

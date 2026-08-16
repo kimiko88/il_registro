@@ -88,13 +88,15 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useQuasar, date } from 'quasar'
 import { storeToRefs } from 'pinia'
-import { useParentStore } from 'src/stores/parent'
-import didacticService from 'src/services/didacticService'
-import adminService from 'src/services/adminService'
+import { useParentStore } from '@/stores/parent'
+import didacticService from '@/services/didacticService'
+import adminService from '@/services/adminService'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const parentStore = useParentStore()
 const { selectedChild } = storeToRefs(parentStore)
 

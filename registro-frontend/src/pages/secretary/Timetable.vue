@@ -5,10 +5,10 @@
       <div>
         <h1 class="text-h4 text-weight-bold text-slate-800 q-my-none row items-center gap-2">
           <q-icon name="schedule" color="primary" size="36px" />
-          Orario Scolastico &amp; Cattedre
+          {{ t('timetablePage.title') || 'Orario Scolastico & Cattedre' }}
         </h1>
         <p class="text-subtitle1 text-slate-500 q-mt-xs q-mb-none">
-          Gestisci l'orario delle lezioni per classe o consulta l'orario settimanale dei singoli docenti.
+          {{ t('timetablePage.subtitle') || 'Gestisci l\'orario delle lezioni per classe o consulta l\'orario settimanale dei singoli docenti.' }}
         </p>
       </div>
 
@@ -21,15 +21,15 @@
           no-caps
           class="bg-slate-200 rounded-xl q-pa-xs border border-slate-300 shadow-xs"
           :options="[
-            { label: 'Orario per Classe', value: 'class', icon: 'groups' },
-            { label: 'Orario per Docente', value: 'teacher', icon: 'person' }
+            { label: t('timetablePage.classSchedule') || 'Orario per Classe', value: 'class', icon: 'groups' },
+            { label: t('timetablePage.teacherSchedule') || 'Orario per Docente', value: 'teacher', icon: 'person' }
           ]"
           @update:model-value="onViewModeChange"
         />
 
         <q-btn
           v-if="viewMode === 'class' && selectedClass"
-          :label="isEditing ? 'Vista Lettura' : 'Modifica Orario'"
+          :label="isEditing ? (t('timetablePage.viewMode') || 'Vista Lettura') : (t('timetablePage.editSchedule') || 'Modifica Orario')"
           :icon="isEditing ? 'visibility' : 'edit_calendar'"
           :color="isEditing ? 'secondary' : 'primary'"
           unelevated
@@ -40,7 +40,7 @@
 
         <q-btn
           v-if="viewMode === 'teacher' && selectedTeacher"
-          :label="isTeacherEditing ? 'Vista Lettura' : 'Modifica Orario Docente'"
+          :label="isTeacherEditing ? (t('timetablePage.viewMode') || 'Vista Lettura') : (t('timetablePage.editTeacherSchedule') || 'Modifica Orario Docente')"
           :icon="isTeacherEditing ? 'visibility' : 'edit_calendar'"
           :color="isTeacherEditing ? 'secondary' : 'positive'"
           unelevated
@@ -51,7 +51,7 @@
 
         <q-btn
           v-if="viewMode === 'class' && selectedClass"
-          label="Cattedre / Materie"
+          :label="t('timetablePage.subjects') || 'Cattedre / Materie'"
           icon="menu_book"
           color="indigo-7"
           outline
@@ -332,12 +332,14 @@
 
 <script setup>
 import { ref, onMounted, watch, computed, reactive } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
-import adminService from 'src/services/adminService'
-import ScheduleGrid from 'src/components/Secretary/ScheduleGrid.vue'
-import TeacherScheduleGrid from 'src/components/Secretary/TeacherScheduleGrid.vue'
+import adminService from '@/services/adminService'
+import ScheduleGrid from '@/components/Secretary/ScheduleGrid.vue'
+import TeacherScheduleGrid from '@/components/Secretary/TeacherScheduleGrid.vue'
 
 const $q = useQuasar()
+const { t } = useI18n()
 
 const loading = ref(false)
 const saving = ref(false)
@@ -362,21 +364,21 @@ const assignForm = reactive({
   hours_per_week: 2
 })
 
-const days = [
-  { label: 'Lunedì', value: 1 },
-  { label: 'Martedì', value: 2 },
-  { label: 'Mercoledì', value: 3 },
-  { label: 'Giovedì', value: 4 },
-  { label: 'Venerdì', value: 5 },
-  { label: 'Sabato', value: 6 }
-]
+const days = computed(() => [
+  { label: t('timetablePage.monday') || 'Lunedì', value: 1 },
+  { label: t('timetablePage.tuesday') || 'Martedì', value: 2 },
+  { label: t('timetablePage.wednesday') || 'Mercoledì', value: 3 },
+  { label: t('timetablePage.thursday') || 'Giovedì', value: 4 },
+  { label: t('timetablePage.friday') || 'Venerdì', value: 5 },
+  { label: t('timetablePage.saturday') || 'Sabato', value: 6 }
+])
 
-const assignmentColumns = [
-  { name: 'subject_name', label: 'Materia', field: 'subject_name', align: 'left' },
-  { name: 'teacher_name', label: 'Docente', field: 'teacher_name', align: 'left' },
-  { name: 'hours_per_week', label: 'Ore/Sett.', field: 'hours_per_week', align: 'center' },
+const assignmentColumns = computed(() => [
+  { name: 'subject_name', label: t('agendaPage.subject') || 'Materia', field: 'subject_name', align: 'left' },
+  { name: 'teacher_name', label: t('agendaPage.teacher') || 'Docente', field: 'teacher_name', align: 'left' },
+  { name: 'hours_per_week', label: t('timetablePage.hoursPerWeek') || 'Ore/Sett.', field: 'hours_per_week', align: 'center' },
   { name: 'actions', label: '', field: 'actions', align: 'right' }
-]
+])
 
 const currentClassInfo = computed(() => {
   return classOptions.value.find(c => c.id === selectedClass.value)

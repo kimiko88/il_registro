@@ -142,9 +142,11 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const tab = ref('pending')
 const showReceiptDialog = ref(false)
 const completedPayment = ref(null)
@@ -156,8 +158,8 @@ const totalPending = computed(() => {
 const openPagoPAGuide = () => {
   $q.dialog({
     title: 'Guida ai Pagamenti PagoPA',
-    message: 'PagoPA è la piattaforma nazionale che permette di effettuare pagamenti verso la Pubblica Amministrazione in modo semplice e sicuro. Puoi pagare online con carta di credito, conto corrente o app di pagamento, oppure sul territorio presso tabaccherie, ricevitorie e banconote abilitate.',
-    ok: { label: 'Ho Capito', color: 'primary' }
+    message: 'PagoPA è la piattaforma nazionale che permette di effettuare pagamenti verso la Pubblica Amministrazione in modo semplice e sicuro.',
+    ok: { label: t('common.close') || 'Ho Capito', color: 'primary' }
   })
 }
 
@@ -171,7 +173,7 @@ const historyItems = ref([
 ])
 
 const pay = (item) => {
-    $q.loading.show({ message: 'Connessione al nodo PagoPA in corso...' })
+    $q.loading.show({ message: t('common.loading') })
     setTimeout(() => {
         $q.loading.hide()
         const paidItem = { ...item, paidDate: new Date().toLocaleString('it-IT') }
@@ -185,7 +187,7 @@ const pay = (item) => {
 const downloadReceipt = (item) => {
     $q.notify({
         type: 'positive',
-        message: `Ricevuta scaricata: ${item.title}.pdf`,
+        message: t('common.success'),
         icon: 'download',
         timeout: 2500
     })

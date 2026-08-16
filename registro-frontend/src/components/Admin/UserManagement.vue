@@ -1,8 +1,8 @@
 <template>
   <div class="q-pa-md">
     <div class="row q-mb-md justify-between items-center">
-      <div class="text-h6">User Management</div>
-      <q-btn color="primary" icon="add" label="Add User" @click="openAddUserDialog" />
+      <div class="text-h6">{{ t('roleDashboards.userManagement') || 'Gestione Utenti' }}</div>
+      <q-btn color="primary" icon="add" :label="t('common.add') || 'Aggiungi Utente'" @click="openAddUserDialog" />
     </div>
 
     <q-table
@@ -21,32 +21,34 @@
 
     <confirm-dialog
       v-model="showConfirm"
-      message="Are you sure you want to delete this user?"
+      :message="t('common.confirmDelete') || 'Sei sicuro di voler eliminare questo utente?'"
       @confirm="deleteUser"
     />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useApi } from '@/composables/useApi'
 import { useQuasar } from 'quasar'
 import adminService from '@/services/adminService'
 import ConfirmDialog from '@/components/Common/ConfirmDialog.vue'
 
+const { t } = useI18n()
 const $q = useQuasar()
 const { data: users, loading, fetch } = useApi('/users')
 const showConfirm = ref(false)
 const selectedUser = ref(null)
 
-const columns = [
+const columns = computed(() => [
   { name: 'id', label: 'ID', field: 'id', sortable: true },
-  { name: 'firstName', label: 'First Name', field: 'first_name', sortable: true },
-  { name: 'lastName', label: 'Last Name', field: 'last_name', sortable: true },
-  { name: 'email', label: 'Email', field: 'email', sortable: true },
-  { name: 'role', label: 'Role', field: 'role', sortable: true },
-  { name: 'actions', label: 'Actions', field: 'actions' }
-]
+  { name: 'firstName', label: t('common.name') || 'Nome', field: 'first_name', sortable: true },
+  { name: 'lastName', label: t('common.name') || 'Cognome', field: 'last_name', sortable: true },
+  { name: 'email', label: t('login.emailLabel') || 'Email', field: 'email', sortable: true },
+  { name: 'role', label: t('common.role') || 'Ruolo', field: 'role', sortable: true },
+  { name: 'actions', label: t('common.actions') || 'Azioni', field: 'actions' }
+])
 
 onMounted(() => {
   fetch()

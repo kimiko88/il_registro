@@ -78,20 +78,20 @@
                 <q-list style="min-width: 240px" v-else-if="currentRole === 'secretary'">
                   <q-item clickable @click="router.push('/secretary/audit-log')">
                     <q-item-section avatar><q-icon name="fact_check" color="primary" /></q-item-section>
-                    <q-item-section>Audit Log Segreteria</q-item-section>
+                    <q-item-section>{{ $t('dashboardPage.auditLogs') || 'Audit Log' }}</q-item-section>
                   </q-item>
                   <q-item clickable @click="router.push('/secretary/users')">
                     <q-item-section avatar><q-icon name="people" color="secondary" /></q-item-section>
-                    <q-item-section>Anagrafica Utenti</q-item-section>
+                    <q-item-section>{{ $t('dashboardPage.userManagement') || 'Anagrafica Utenti' }}</q-item-section>
                   </q-item>
                   <q-item clickable @click="router.push('/secretary/documents')">
                     <q-item-section avatar><q-icon name="folder" color="amber-9" /></q-item-section>
-                    <q-item-section>Gestione Documenti & Atti</q-item-section>
+                    <q-item-section>{{ $t('documentsPage.title') || 'Gestione Documenti & Atti' }}</q-item-section>
                   </q-item>
                   <q-separator />
                   <q-item clickable @click="fetchDashboardData">
                     <q-item-section avatar><q-icon name="refresh" color="grey-7" /></q-item-section>
-                    <q-item-section>Aggiorna Attività</q-item-section>
+                    <q-item-section>{{ $t('dashboardPage.refreshActivity') || 'Aggiorna Attività' }}</q-item-section>
                   </q-item>
                 </q-list>
 
@@ -99,16 +99,16 @@
                 <q-list style="min-width: 240px" v-else-if="currentRole === 'teacher'">
                   <q-item clickable @click="openDraftModal">
                     <q-item-section avatar><q-icon name="edit_note" color="primary" /></q-item-section>
-                    <q-item-section>Pianifica Bozza Lezione</q-item-section>
+                    <q-item-section>{{ $t('udaPage.createTitle') || 'Pianifica Bozza Lezione' }}</q-item-section>
                   </q-item>
                   <q-item clickable @click="openDraftsList">
                     <q-item-section avatar><q-icon name="collections_bookmark" color="secondary" /></q-item-section>
-                    <q-item-section>Vedi Bozze Salvate ({{ lessonDrafts.length }})</q-item-section>
+                    <q-item-section>{{ $t('udaPage.title') || 'Bozze Salvate' }} ({{ lessonDrafts.length }})</q-item-section>
                   </q-item>
                   <q-separator />
                   <q-item clickable @click="router.push('/teacher/lessons')">
                     <q-item-section avatar><q-icon name="menu_book" color="grey-7" /></q-item-section>
-                    <q-item-section>Registro di Classe Completo</q-item-section>
+                    <q-item-section>{{ $t('timetablePage.title') || 'Registro di Classe Completo' }}</q-item-section>
                   </q-item>
                 </q-list>
 
@@ -116,7 +116,7 @@
                 <q-list style="min-width: 240px" v-else>
                   <q-item clickable @click="fetchDashboardData">
                     <q-item-section avatar><q-icon name="refresh" color="primary" /></q-item-section>
-                    <q-item-section>Aggiorna Attività</q-item-section>
+                    <q-item-section>{{ $t('dashboardPage.refreshActivity') || 'Aggiorna Attività' }}</q-item-section>
                   </q-item>
                 </q-list>
               </q-menu>
@@ -139,7 +139,7 @@
               </q-item-section>
             </q-item>
             <q-item v-if="recentEvents.length === 0" class="text-center text-grey q-pa-md">
-                Nessuna attività recente
+                {{ $t('communicationsPage.searchPlaceholder') || 'Nessuna attività recente' }}
             </q-item>
           </q-list>
           
@@ -147,13 +147,13 @@
             <q-item v-for="entry in displaySchedule" :key="entry.id" class="q-mb-sm rounded-lg hover-bg-grey">
               <q-item-section avatar>
                 <div class="text-center bg-grey-2 rounded-lg q-pa-sm" style="min-width: 50px">
-                  <div class="text-weight-bold text-primary">{{ entry.hour_index }}ª Ora</div>
+                  <div class="text-weight-bold text-primary">{{ entry.hour_index }}ª {{ $t('timetablePage.hour') || 'Ora' }}</div>
                 </div>
               </q-item-section>
               <q-item-section>
                 <q-item-label class="text-weight-bold">{{ entry.subject_name }}</q-item-label>
                 <q-item-label caption>
-                  {{ entry.teacher_name }} <span v-if="entry.room">• Aula {{ entry.room }}</span>
+                  {{ entry.teacher_name }} <span v-if="entry.room">• {{ $t('timetablePage.classroom') || 'Aula' }} {{ entry.room }}</span>
                 </q-item-label>
               </q-item-section>
               <q-item-section side>
@@ -165,8 +165,8 @@
             
             <q-item v-if="displaySchedule.length === 0" class="text-center text-grey q-pa-md">
               <q-item-section>
-                <div>Nessuna lezione pianificata per oggi</div>
-                <q-btn flat color="primary" icon="add" label="Crea Bozza Lezione per Oggi" class="q-mt-sm" @click="openDraftModal" />
+                <div>{{ $t('timetablePage.freeSlot') || 'Nessuna lezione pianificata per oggi' }}</div>
+                <q-btn flat color="primary" icon="add" :label="$t('udaPage.newUda') || 'Crea Bozza Lezione per Oggi'" class="q-mt-sm" @click="openDraftModal" />
               </q-item-section>
             </q-item>
           </q-list>
@@ -180,13 +180,13 @@
             <q-skeleton v-if="loadingAnnouncements" type="text" :lines="3" />
             <template v-else>
               <div class="text-subtitle2 text-primary q-mb-xs">
-                {{ latestAnnouncement ? latestAnnouncement.type.toUpperCase() : 'COMUNICAZIONE' }}
+                {{ latestAnnouncement ? latestAnnouncement.type.toUpperCase() : ($t('communicationsPage.title') || 'COMUNICAZIONE') }}
               </div>
               <div class="text-h6 text-weight-bold text-slate-800 q-mb-sm">
-                {{ latestAnnouncement ? latestAnnouncement.subject : 'Benvenuto nel Registro' }}
+                {{ latestAnnouncement ? latestAnnouncement.subject : ($t('login.welcomeBack') || 'Benvenuto nel Registro') }}
               </div>
               <div class="text-body2 text-slate-600 opacity-80">
-                {{ latestAnnouncement ? latestAnnouncement.body : 'Le comunicazioni ufficiali e gli annunci per l\'anno scolastico corrente saranno mostrati in questa sezione.' }}
+                {{ latestAnnouncement ? latestAnnouncement.body : ($t('communicationsPage.subtitle') || 'Le comunicazioni ufficiali e gli annunci saranno mostrati in questa sezione.') }}
               </div>
             </template>
           </q-card-section>
@@ -194,7 +194,7 @@
 
         <q-card class="no-shadow bordered-card">
           <q-card-section>
-            <div class="text-h6 text-weight-bold text-dark q-mb-md">Azioni Rapide</div>
+            <div class="text-h6 text-weight-bold text-dark q-mb-md">{{ $t('common.actions') || 'Azioni Rapide' }}</div>
             <div class="row q-col-gutter-sm">
               <div class="col-6" v-for="action in actions" :key="action.key">
                 <q-btn 
@@ -222,13 +222,13 @@
       <q-card style="min-width: 500px; max-width: 650px" class="rounded-xl">
         <q-card-section class="bg-primary text-white row items-center justify-between">
           <div class="text-h6 text-weight-bold">
-            <q-icon name="edit_note" class="q-mr-xs" /> Pianifica Bozza Lezione
+            <q-icon name="edit_note" class="q-mr-xs" /> {{ $t('udaPage.createTitle') || 'Pianifica Bozza Lezione' }}
           </div>
           <q-btn icon="close" flat round dense v-close-popup />
         </q-card-section>
 
         <q-card-section class="q-pa-md q-gutter-y-sm">
-          <q-input v-model="draftForm.date" type="date" label="Data Lezione *" outlined dense />
+          <q-input v-model="draftForm.date" type="date" :label="$t('gradesPage.date')" outlined dense />
           <q-select
             v-model="draftForm.class_id"
             :options="[
@@ -236,23 +236,23 @@
               { label: 'Classe 3B', value: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb' }
             ]"
             emit-value map-options
-            label="Classe *"
+            :label="$t('udaPage.classLabel')"
             outlined dense
           />
           <q-select
             v-model="draftForm.hour"
             :options="[1, 2, 3, 4, 5, 6]"
-            label="Ora Svolgimento (1ª - 6ª)"
+            :label="$t('timetablePage.hour')"
             outlined dense
           />
-          <q-input v-model="draftForm.subject" label="Materia / Disciplina *" outlined dense />
-          <q-input v-model="draftForm.topic" type="textarea" rows="3" label="Argomento della Lezione in Bozza *" outlined dense />
-          <q-input v-model="draftForm.homework" type="textarea" rows="2" label="Compiti per Casa da Assegnare (opzionale)" outlined dense />
+          <q-input v-model="draftForm.subject" :label="$t('udaPage.subjectLabel')" outlined dense />
+          <q-input v-model="draftForm.topic" type="textarea" rows="3" :label="$t('udaPage.descriptionLabel')" outlined dense />
+          <q-input v-model="draftForm.homework" type="textarea" rows="2" :label="$t('didacticsPage.resourceCategory')" outlined dense />
         </q-card-section>
 
         <q-card-actions align="right" class="q-pa-md bg-slate-50">
-          <q-btn flat label="Annulla" v-close-popup />
-          <q-btn color="primary" icon="save" label="Salva come Bozza" unelevated @click="saveLessonDraft" />
+          <q-btn flat :label="$t('common.cancel')" v-close-popup />
+          <q-btn color="primary" icon="save" :label="$t('common.save')" unelevated @click="saveLessonDraft" />
         </q-card-actions>
       </q-card>
     </q-dialog>

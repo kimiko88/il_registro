@@ -4,11 +4,11 @@
       <div>
         <h5 class="text-h5 text-weight-bold text-primary q-my-none">
           <q-icon name="menu_book" class="q-mr-sm" />
-          Programmazione Didattica Annuale (UdA)
+          {{ t('udaPage.title') || 'Programmazione Didattica Annuale (UdA)' }}
         </h5>
-        <div class="text-caption text-grey-7">Pianificazione curricolare per materia, classe e competenze chiave</div>
+        <div class="text-caption text-grey-7">{{ t('udaPage.subtitle') || 'Pianificazione curricolare per materia, classe e competenze chiave' }}</div>
       </div>
-      <q-btn color="primary" icon="add" label="Nuova UdA" @click="openCreateDialog" class="glossy" />
+      <q-btn color="primary" icon="add" :label="t('udaPage.newUda') || 'Nuova UdA'" @click="openCreateDialog" class="glossy" />
     </div>
 
     <!-- Class Selector Filter -->
@@ -22,7 +22,7 @@
             option-label="name"
             emit-value
             map-options
-            label="Seleziona Classe"
+            :label="t('classRegister.selectClass') || 'Seleziona Classe'"
             outlined
             dense
             @update:model-value="fetchUdaPlans"
@@ -41,7 +41,7 @@
 
     <div v-else-if="udaList.length === 0" class="text-center q-pa-xl text-grey-6">
       <q-icon name="assignment_late" size="48px" class="q-mb-sm" />
-      <div>Nessuna Unità di Apprendimento (UdA) presente per questa classe.</div>
+      <div>{{ t('udaPage.noUda') || 'Nessuna Unità di Apprendimento (UdA) presente per questa classe.' }}</div>
     </div>
 
     <div v-else class="row q-col-gutter-md">
@@ -53,7 +53,7 @@
               <q-badge :color="getStatusColor(plan.status)" :label="plan.status.toUpperCase()" />
             </div>
             <div class="text-caption text-grey-7 q-mb-sm">
-              Materia: <strong>{{ plan.subject_name || 'Generale' }}</strong> | Periodo: <strong>{{ plan.period }}</strong>
+              {{ t('agendaPage.subject') || 'Materia' }}: <strong>{{ plan.subject_name || 'Generale' }}</strong> | {{ t('common.period') || 'Periodo' }}: <strong>{{ plan.period }}</strong>
             </div>
             <div class="text-body2 text-grey-9 q-mb-md">
               {{ plan.description || 'Nessuna descrizione.' }}
@@ -61,7 +61,7 @@
 
             <!-- Competencies Chips -->
             <div class="q-mb-sm">
-              <div class="text-caption text-weight-bold">Competenze Target:</div>
+              <div class="text-caption text-weight-bold">{{ t('competenciesPage.colCompetence') || 'Competenze Target' }}:</div>
               <div class="row q-gutter-xs q-mt-xs">
                 <q-chip v-for="c in plan.competencies" :key="c" dense color="primary" outline size="sm">
                   {{ c }}
@@ -73,8 +73,8 @@
           <q-separator />
 
           <q-card-actions align="right">
-            <q-btn flat dense icon="edit" color="secondary" label="Modifica" @click="openEditDialog(plan)" />
-            <q-btn flat dense icon="delete" color="negative" label="Elimina" @click="deleteUda(plan.id)" />
+            <q-btn flat dense icon="edit" color="secondary" :label="t('common.edit') || 'Modifica'" @click="openEditDialog(plan)" />
+            <q-btn flat dense icon="delete" color="negative" :label="t('common.delete') || 'Elimina'" @click="deleteUda(plan.id)" />
           </q-card-actions>
         </q-card>
       </div>
@@ -84,16 +84,16 @@
     <q-dialog v-model="showDialog" persistent>
       <q-card style="min-width: 500px; max-width: 700px">
         <q-card-section class="bg-primary text-white row items-center justify-between">
-          <div class="text-h6">{{ editMode ? 'Modifica UdA' : 'Nuova Unità di Apprendimento (UdA)' }}</div>
+          <div class="text-h6">{{ editMode ? (t('common.edit') || 'Modifica UdA') : (t('udaPage.newUda') || 'Nuova Unità di Apprendimento (UdA)') }}</div>
           <q-btn icon="close" flat round dense v-close-popup />
         </q-card-section>
 
         <q-card-section class="q-pa-md q-gutter-sm">
-          <q-input v-model="form.title" label="Titolo dell'UdA *" outlined dense />
-          <q-input v-model="form.description" label="Descrizione e Contenuti" type="textarea" outlined dense rows="3" />
-          <q-select v-model="form.period" :options="['primo_quadrimestre', 'secondo_quadrimestre', 'annuale']" label="Periodo" outlined dense />
+          <q-input v-model="form.title" :label="(t('udaPage.unitTitle') || 'Titolo dell\'UdA') + ' *'" outlined dense />
+          <q-input v-model="form.description" :label="t('common.description') || 'Descrizione e Contenuti'" type="textarea" outlined dense rows="3" />
+          <q-select v-model="form.period" :options="['primo_quadrimestre', 'secondo_quadrimestre', 'annuale']" :label="t('common.period') || 'Periodo'" outlined dense />
 
-          <div class="text-caption text-weight-bold q-mt-sm">Competenze Chiave (seleziona o digita):</div>
+          <div class="text-caption text-weight-bold q-mt-sm">{{ t('competenciesPage.colCompetence') || 'Competenze Chiave' }}:</div>
           <q-select
             v-model="form.competencies"
             :options="['Competenza Alfabetica Funzionale', 'Competenza Multilinguistica', 'Competenza STEM', 'Competenza Digitale', 'Competenza Personale e Sociale', 'Competenza in Materia di Cittadinanza']"
@@ -103,14 +103,14 @@
             dense
           />
 
-          <q-input v-model="form.objectives" label="Obiettivi di Apprendimento" type="textarea" outlined dense rows="2" />
-          <q-input v-model="form.methodologies" label="Metodologie Didattiche (e.g. Flipped Classroom, Cooperative Learning)" outlined dense />
-          <q-input v-model="form.evaluation_criteria" label="Criteri di Valutazione" outlined dense />
+          <q-input v-model="form.objectives" :label="t('udaPage.objectives') || 'Obiettivi di Apprendimento'" type="textarea" outlined dense rows="2" />
+          <q-input v-model="form.methodologies" :label="t('udaPage.methodologies') || 'Metodologie Didattiche'" outlined dense />
+          <q-input v-model="form.evaluation_criteria" :label="t('udaPage.evaluationCriteria') || 'Criteri di Valutazione'" outlined dense />
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn flat label="Annulla" v-close-popup />
-          <q-btn color="primary" label="Salva UdA" @click="saveUda" :loading="saving" />
+          <q-btn flat :label="t('common.cancel') || 'Annulla'" v-close-popup />
+          <q-btn color="primary" :label="t('common.save') || 'Salva UdA'" @click="saveUda" :loading="saving" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -119,9 +119,11 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import udaService from 'src/services/udaService'
-import { useNotify } from 'src/composables/useNotify'
+import { useI18n } from 'vue-i18n'
+import udaService from '@/services/udaService'
+import { useNotify } from '@/composables/useNotify'
 
+const { t } = useI18n()
 const notify = useNotify()
 
 const selectedClassId = ref('47a05d80-3836-452e-ac91-8cfa3a1999dd')

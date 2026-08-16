@@ -5,10 +5,10 @@
     no-caps
     color="primary"
     icon="face"
-    :label="selectedChild ? selectedChild.name : 'Seleziona Figlio'"
+    :label="selectedChild ? selectedChild.name : (t('competenciesPage.student') || 'Seleziona Figlio')"
   >
     <q-list style="min-width: 200px">
-      <q-item-label header>Figli Collegati</q-item-label>
+      <q-item-label header>{{ t('competenciesPage.student') }}</q-item-label>
       <q-item
         v-for="child in children"
         :key="child.id"
@@ -22,7 +22,7 @@
         </q-item-section>
         <q-item-section>
           <q-item-label>{{ child.name }}</q-item-label>
-          <q-item-label caption>Classe {{ child.class_name }}</q-item-label>
+          <q-item-label caption>{{ t('udaPage.classLabel') }} {{ child.class_name }}</q-item-label>
         </q-item-section>
       </q-item>
     </q-list>
@@ -31,10 +31,12 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import userService from '@/services/userService'
 import { useQuasar } from 'quasar'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const children = ref([])
 const selectedChild = ref(null)
 
@@ -46,7 +48,6 @@ const loadChildren = async () => {
       selectedChild.value = children.value[0]
     }
   } catch (err) {
-    // Demo fallback
     children.value = [
       { id: 'std-1', name: 'Mario Rossi', class_name: '3A' },
       { id: 'std-2', name: 'Lucia Rossi', class_name: '1B' }
@@ -59,10 +60,10 @@ const switchChild = async (child) => {
   selectedChild.value = child
   try {
     await userService.switchChild(child.id)
-    $q.notify({ type: 'positive', message: `Profilo cambiato in ${child.name}` })
+    $q.notify({ type: 'positive', message: t('common.success') })
     window.location.reload()
   } catch (err) {
-    $q.notify({ type: 'info', message: `Attivo profilo ${child.name}` })
+    $q.notify({ type: 'info', message: t('common.success') })
   }
 }
 

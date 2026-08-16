@@ -235,11 +235,13 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useQuasar } from 'quasar';
-import api from 'src/services/api';
-import TemplateManager from 'src/components/Secretary/TemplateManager.vue';
+import api from '@/services/api';
+import TemplateManager from '@/components/Secretary/TemplateManager.vue';
 
 const $q = useQuasar();
+const { t } = useI18n();
 const loading = ref(false);
 const saving = ref(false);
 const search = ref('');

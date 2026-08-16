@@ -1,6 +1,6 @@
 <template>
   <div class="q-pa-md">
-    <div class="text-h6 q-mb-md">My Grades</div>
+    <div class="text-h6 q-mb-md">{{ t('roleDashboards.tabGrades') || 'I Miei Voti' }}</div>
 
     <q-table
       :rows="grades"
@@ -20,17 +20,19 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useApi } from '@/composables/useApi'
 
+const { t } = useI18n()
 const { data: grades, loading } = useApi('/grades')
 
-const columns = [
-  { name: 'subject', label: 'Subject', field: row => row.subject.name, sortable: true },
-  { name: 'date', label: 'Date', field: 'date', sortable: true },
-  { name: 'value', label: 'Grade', field: 'value', sortable: true },
-  { name: 'type', label: 'Type', field: 'type' }
-]
+const columns = computed(() => [
+  { name: 'subject', label: t('agendaPage.subject') || 'Materia', field: row => row.subject?.name || row.subject, sortable: true },
+  { name: 'date', label: t('classRegister.dateLabel') || 'Data', field: 'date', sortable: true },
+  { name: 'value', label: t('classRegister.tableHeaderGrade') || 'Voto', field: 'value', sortable: true },
+  { name: 'type', label: t('classRegister.tableHeaderGradeType') || 'Tipo', field: 'type' }
+])
 
 onMounted(() => {
   // fetch() // Uncomment when API is ready

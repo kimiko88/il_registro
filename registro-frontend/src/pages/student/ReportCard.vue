@@ -197,13 +197,15 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
 import { useGradesStore } from '@/stores/grades'
 import { useAuthStore } from '@/stores/auth'
-import { scrutinyService } from 'src/services/scrutinyService'
-import api from 'src/services/api'
+import { scrutinyService } from '@/services/scrutinyService'
+import api from '@/services/api'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const gradesStore = useGradesStore()
 const authStore = useAuthStore()
 

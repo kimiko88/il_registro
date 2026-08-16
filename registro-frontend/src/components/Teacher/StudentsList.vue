@@ -1,6 +1,6 @@
 <template>
   <q-table
-    title="Students"
+    :title="t('classRegister.studentList') || 'Elenco Studenti'"
     :rows="students"
     :columns="columns"
     row-key="id"
@@ -22,14 +22,18 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 defineProps({
     students: { type: Array, default: () => [] }
 });
 
-const columns = [
-    { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true },
-    { name: 'dob', label: 'Date of Birth', align: 'left', field: 'dob' },
-    { name: 'needs', label: 'Specific Needs', align: 'left', field: 'needs' },
-    { name: 'actions', label: 'Actions', align: 'right' }
-];
+const columns = computed(() => [
+    { name: 'name', label: t('classRegister.tableHeaderStudent') || 'Nome Studente', align: 'left', field: 'name', sortable: true },
+    { name: 'dob', label: t('classRegister.dateLabel') || 'Data di Nascita', align: 'left', field: 'dob' },
+    { name: 'needs', label: t('common.notes') || 'Esigenze Specifiche', align: 'left', field: 'needs' },
+    { name: 'actions', label: t('common.actions') || 'Azioni', align: 'right' }
+]);
 </script>

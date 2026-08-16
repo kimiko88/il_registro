@@ -606,14 +606,16 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useQuasar, date } from 'quasar'
-import { useClassesStore } from 'src/stores/classes'
-import { useGradesStore } from 'src/stores/grades'
-import { useAuthStore } from 'src/stores/auth'
-import { lessonService } from 'src/services/lessonService'
-import { teacherActivityService } from 'src/services/teacherActivityService'
+import { useClassesStore } from '@/stores/classes'
+import { useGradesStore } from '@/stores/grades'
+import { useAuthStore } from '@/stores/auth'
+import { lessonService } from '@/services/lessonService'
+import { teacherActivityService } from '@/services/teacherActivityService'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const classesStore = useClassesStore()
 const gradesStore = useGradesStore()
 const authStore = useAuthStore()

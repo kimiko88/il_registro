@@ -1,8 +1,8 @@
 <template>
   <div class="q-pa-md">
     <div class="row q-mb-md justify-between items-center">
-      <div class="text-h6">School Management</div>
-      <q-btn color="primary" icon="add" label="Add School" />
+      <div class="text-h6">{{ t('roleDashboards.schoolManagement') || 'Gestione Istituti' }}</div>
+      <q-btn color="primary" icon="add" :label="t('common.add') || 'Aggiungi Scuola'" />
     </div>
 
     <q-list bordered separator>
@@ -27,6 +27,9 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const schools = ref([
   { id: 1, name: 'Liceo Scientifico', address: 'Via Roma 1' },

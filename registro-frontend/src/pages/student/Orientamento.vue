@@ -11,9 +11,9 @@
         <!-- Event List -->
         <div class="col-12 col-md-8">
             <q-tabs v-model="tab" dense class="text-grey q-mb-md" active-color="primary" indicator-color="primary" align="left">
-                <q-tab name="upcoming" label="Prossimi Eventi" />
-                <q-tab name="registered" label="I Miei Eventi" />
-                <q-tab name="past" label="Passati" />
+                <q-tab name="upcoming" :label="t('verbaliPage.agenda') || 'Prossimi Eventi'" />
+                <q-tab name="registered" :label="t('colloquiPage.bookings') || 'I Miei Eventi'" />
+                <q-tab name="past" :label="t('verbaliPage.resolutions') || 'Passati'" />
             </q-tabs>
 
             <q-tab-panels v-model="tab" animated class="bg-transparent">
@@ -33,8 +33,8 @@
                                  </q-card-section>
                                  <q-separator />
                                  <q-card-actions align="right">
-                                     <q-btn flat label="Dettagli" color="primary" />
-                                     <q-btn color="primary" label="Iscriviti" icon="event_available" @click="register(event)" />
+                                     <q-btn flat :label="t('udaPage.detailTitle') || 'Dettagli'" color="primary" />
+                                     <q-btn color="primary" :label="t('colloquiPage.booked') || 'Iscriviti'" icon="event_available" @click="register(event)" />
                                  </q-card-actions>
                              </q-card>
                          </div>
@@ -48,7 +48,7 @@
                                  <q-icon name="event" color="green" size="md" />
                              </q-item-section>
                              <q-item-section>
-                                 <q-item-label>{{ event.title }}</q-item-label>
+                                 <q-item-label class="text-weight-bold">{{ event.title }}</q-item-label>
                                  <q-item-label caption>{{ event.university }} - {{ event.date }}</q-item-label>
                              </q-item-section>
                              <q-item-section side>

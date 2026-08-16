@@ -213,10 +213,12 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
 import { useScrutinyStore } from '@/stores/scrutiny'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const scrutinyStore = useScrutinyStore()
 
 const selectedSchoolYear = ref('2025/2026')

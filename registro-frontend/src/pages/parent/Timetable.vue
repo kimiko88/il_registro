@@ -73,12 +73,14 @@
 
 <script setup>
 import { ref, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
-import { useParentStore } from 'src/stores/parent'
-import adminService from 'src/services/adminService'
+import { useParentStore } from '@/stores/parent'
+import adminService from '@/services/adminService'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const parentStore = useParentStore()
 const { selectedChild } = storeToRefs(parentStore)
 
@@ -118,7 +120,7 @@ const fetchSchedule = async () => {
     scheduleEntries.value = res.data || []
   } catch (e) {
     console.error(e)
-    $q.notify({ type: 'negative', message: 'Impossibile caricare l\'orario scolastico' })
+    $q.notify({ type: 'negative', message: t('common.error') })
   } finally {
     loading.value = false
   }
