@@ -24,9 +24,11 @@ const api = axios.create({
 api.interceptors.request.use(
     (config) => {
         let token = null;
+        let userLang = null;
         try {
             const authStore = useAuthStore();
             token = authStore.token;
+            userLang = authStore.user?.language;
         } catch {
             // Store not ready yet
         }
@@ -36,7 +38,7 @@ api.interceptors.request.use(
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
-        const lang = localStorage.getItem('superadmin_language') || 'it-IT';
+        const lang = userLang || localStorage.getItem('app_language') || localStorage.getItem('user_locale') || 'it-IT';
         const sanitizedLang = /^[a-zA-Z0-9_-]{2,10}$/.test(lang) ? lang : 'it-IT';
         config.headers['Accept-Language'] = sanitizedLang;
 

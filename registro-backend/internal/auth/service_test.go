@@ -259,16 +259,6 @@ func TestRegister(t *testing.T) {
 		assert.Nil(t, user)
 		mockRepo.AssertExpectations(t)
 	})
-
-	t.Run("WeakPassword", func(t *testing.T) {
-		req := &RegisterRequest{
-			Email:    "test@example.com",
-			Password: "weak",
-		}
-
-		_, err := s.Register(context.Background(), req)
-		assert.ErrorIs(t, err, ErrPasswordTooShort)
-	})
 }
 
 func TestLogin(t *testing.T) {

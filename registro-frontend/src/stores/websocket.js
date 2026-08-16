@@ -187,7 +187,9 @@ export const useWebSocketStore = defineStore('websocket', () => {
             return
         }
 
-        if (reconnectAttempts.value >= 8) {
+        reconnectAttempts.value++
+
+        if (reconnectAttempts.value > 8) {
             console.warn('WebSocket: Reached max reconnect attempts (8), stopping automatic reconnection')
             hasFailedPermanently.value = true
             lastError.value = 'Connessione WebSocket non disponibile dopo tentativi ripetuti.'
@@ -198,7 +200,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
         if (reconnectTimer.value) return
 
         // Exponential backoff with random jitter (1s, 2s, 4s, 8s... up to max 30s)
-        const baseDelay = 1000 * Math.pow(2, Math.min(reconnectAttempts.value, 5))
+        const baseDelay = 1000 * Math.pow(2, Math.min(reconnectAttempts.value - 1, 5))
         const maxDelay = 30000
         const jitter = Math.random() * 1000
         const delay = Math.min(baseDelay + jitter, maxDelay)
@@ -206,7 +208,6 @@ export const useWebSocketStore = defineStore('websocket', () => {
         reconnectTimer.value = setTimeout(() => {
             reconnectTimer.value = null
             if (authStore.isAuthenticated && authStore.token) {
-                reconnectAttempts.value++
                 console.log(`WebSocket: Executing reconnect attempt ${reconnectAttempts.value}`)
                 connect()
             } else {

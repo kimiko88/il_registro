@@ -54,7 +54,7 @@ export function normalizeLocale(lang) {
 
 export function getSavedLocale() {
   const saved = (typeof localStorage !== 'undefined')
-    ? (localStorage.getItem('app_language') || localStorage.getItem('superadmin_language') || localStorage.getItem('user_locale'))
+    ? (localStorage.getItem('app_language') || localStorage.getItem('user_locale'))
     : null
   return normalizeLocale(saved || 'it-IT')
 }
@@ -94,7 +94,6 @@ export function applyLocale(langCode, i18nInstance = null, $q = null) {
   // 4. Persist in localStorage
   if (typeof localStorage !== 'undefined') {
     localStorage.setItem('app_language', normalized)
-    localStorage.setItem('superadmin_language', normalized)
     localStorage.setItem('user_locale', normalized)
   }
 

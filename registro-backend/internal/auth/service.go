@@ -54,15 +54,15 @@ func (s *Service) SetEmailSender(sender EmailSender) {
 	s.emailSender = sender
 }
 
+func normalizeEmail(email string) string {
+	return strings.ToLower(strings.TrimSpace(email))
+}
+
 // Register creates a new user account.
 // Input validation and RBAC checks are performed by the handler layer
 // (ValidateRegisterRequest in validator.go) before this method is called.
 func (s *Service) Register(ctx context.Context, req *RegisterRequest) (*User, error) {
-	if err := NewPasswordValidator().Validate(req.Password); err != nil {
-		return nil, err
-	}
-
-	normalizedEmail := strings.ToLower(strings.TrimSpace(req.Email))
+	normalizedEmail := normalizeEmail(req.Email)
 
 	// Check if email already exists
 	_, err := s.repo.GetUserByEmail(ctx, normalizedEmail)
@@ -109,7 +109,7 @@ func (s *Service) Register(ctx context.Context, req *RegisterRequest) (*User, er
 
 // Login authenticates a user and returns tokens
 func (s *Service) Login(ctx context.Context, req *LoginRequest, ipAddress, userAgent string) (*AuthResponse, error) {
-	req.Email = strings.ToLower(strings.TrimSpace(req.Email))
+	req.Email = normalizeEmail(req.Email)
 
 	// --- Rate limiting ---
 	// 1. Per (email, IP): max 5 attempts in 15 minutes — blocks single-IP bursts.

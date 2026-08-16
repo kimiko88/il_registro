@@ -80,6 +80,8 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 			if time.Now().Before(entry.expiresAt) {
 				isActive = entry.isActive
 				foundInCache = true
+			} else {
+				m.activeCache.Delete(claims.UserID)
 			}
 		}
 		if !foundInCache {
@@ -121,6 +123,35 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 // InvalidateUserActiveCache clears the cached active status for a user.
 func (m *Middleware) InvalidateUserActiveCache(userID string) {
 	m.activeCache.Delete(userID)
+}
+
+// CleanupExpiredEntries iterates through activeCache and deletes entries past their expiration time.
+func (m *Middleware) CleanupExpiredEntries() {
+	now := time.Now()
+	m.activeCache.Range(func(key, value any) bool {
+		if entry, ok := value.(activeCacheEntry); ok {
+			if now.After(entry.expiresAt) {
+				m.activeCache.Delete(key)
+			}
+		}
+		return true
+	})
+}
+
+// StartCacheCleaner launches a background goroutine to periodically clean up expired activeCache entries until context cancellation.
+func (m *Middleware) StartCacheCleaner(ctx context.Context, interval time.Duration) {
+	ticker := time.NewTicker(interval)
+	go func() {
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				m.CleanupExpiredEntries()
+			}
+		}
+	}()
 }
 
 // AuthenticateWSTicket validates a single-use opaque WS ticket for WebSocket upgrades.

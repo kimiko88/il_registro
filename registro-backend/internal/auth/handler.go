@@ -177,6 +177,7 @@ func (h *Handler) RefreshToken(c *gin.Context) {
 
 	if tokens != nil && tokens.RefreshToken != "" {
 		setRefreshTokenCookie(c, tokens.RefreshToken, 604800)
+		tokens.RefreshToken = ""
 	}
 
 	c.JSON(http.StatusOK, tokens)
@@ -195,8 +196,6 @@ func (h *Handler) Logout(c *gin.Context) {
 		}
 	}
 
-	setRefreshTokenCookie(c, "", -1)
-
 	// Extract the authenticated user's ID from the JWT (set by Authenticate middleware).
 	// This ensures a user can only revoke their own sessions.
 	callerUserID, exists := GetUserID(c)
@@ -214,6 +213,7 @@ func (h *Handler) Logout(c *gin.Context) {
 		return
 	}
 
+	setRefreshTokenCookie(c, "", -1)
 	c.JSON(http.StatusOK, MessageResponse{Message: "logged out successfully"})
 }
 

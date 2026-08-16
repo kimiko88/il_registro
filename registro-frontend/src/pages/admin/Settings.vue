@@ -427,7 +427,7 @@ const loadSettings = () => {
     const savedNotif = localStorage.getItem('superadmin_notification_settings')
     if (savedNotif) Object.assign(notificationSettings, JSON.parse(savedNotif))
 
-    const savedLang = localStorage.getItem('superadmin_language')
+    const savedLang = localStorage.getItem('app_language') || localStorage.getItem('user_locale')
     if (savedLang) {
       selectedLanguage.value = savedLang
       locale.value = savedLang

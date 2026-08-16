@@ -155,30 +155,37 @@ export const useAuthStore = defineStore('auth', () => {
         }
     }
 
+    let initPromise = null
+
     async function initAuth() {
-        if (isInitializing.value) return
+        if (initPromise) return initPromise
         if (token.value && !isTokenExpired(token.value)) return
 
         const hasSavedUser = !!(localStorage.getItem('user') || sessionStorage.getItem('user'))
         if (!hasSavedUser) return
 
         isInitializing.value = true
-        try {
-            const refreshResponse = await axios.post(
-                `${getBaseURL()}/auth/refresh-token`,
-                {},
-                { withCredentials: true }
-            )
-            const { access_token, user: userData } = refreshResponse.data || {}
-            if (access_token) {
-                updateTokens(access_token, null, userData || user.value)
+        initPromise = (async () => {
+            try {
+                const refreshResponse = await axios.post(
+                    `${getBaseURL()}/auth/refresh-token`,
+                    {},
+                    { withCredentials: true }
+                )
+                const { access_token, user: userData } = refreshResponse.data || {}
+                if (access_token) {
+                    updateTokens(access_token, null, userData || user.value)
+                }
+            } catch (err) {
+                console.warn('Initial session restore failed:', err)
+                logout()
+            } finally {
+                isInitializing.value = false
+                initPromise = null
             }
-        } catch (err) {
-            console.warn('Initial session restore failed:', err)
-            logout()
-        } finally {
-            isInitializing.value = false
-        }
+        })()
+
+        return initPromise
     }
 
     return {
