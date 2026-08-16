@@ -5,11 +5,11 @@
       <div>
         <div class="text-h5 text-weight-bold">
           <q-icon name="folder_shared" color="primary" class="q-mr-sm" />
-          Materiale Didattico
+          {{ t('didacticsPage.title') }}
         </div>
-        <div class="text-caption text-grey">Condividi dispense, compiti, link o materiale di studio con le tue classi</div>
+        <div class="text-caption text-grey">{{ t('didacticsPage.subtitle') }}</div>
       </div>
-      <q-btn icon="cloud_upload" label="Condividi File" color="primary" class="shadow-soft" @click="openUploadDialog" />
+      <q-btn icon="cloud_upload" :label="t('didacticsPage.uploadMaterial')" color="primary" class="shadow-soft" @click="openUploadDialog" />
     </div>
 
     <!-- Filters -->
@@ -21,7 +21,7 @@
           option-value="id"
           option-label="label"
           emit-value map-options
-          label="Classe"
+          :label="t('common.filter') + ' Classe'"
           dense outlined
           style="min-width:180px"
         />
@@ -31,7 +31,7 @@
           option-value="subject_id"
           option-label="subject_name"
           emit-value map-options
-          label="Materia"
+          :label="t('didacticsPage.filterSubject')"
           dense outlined
           style="min-width:160px"
           clearable
@@ -181,17 +181,20 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
-import { useQuasar, date } from 'quasar'
-import { useClassesStore } from 'src/stores/classes'
-import { useGradesStore } from 'src/stores/grades'
-import { useAuthStore } from 'src/stores/auth'
-import didacticService from 'src/services/didacticService'
+import { ref, computed, watch, onMounted } from 'vue'
+import { useQuasar, date as qdate } from 'quasar'
+import { useI18n } from 'vue-i18n'
+import { useAuthStore } from '@/stores/auth'
+import { useClassesStore } from '@/stores/classes'
+import { useGradesStore } from '@/stores/grades'
+import didacticService from '@/services/didacticService'
+import api from '@/services/api'
 
 const $q = useQuasar()
-const classesStore = useClassesStore()
-const gradesStore = useGradesStore()
+const { t } = useI18n()
 const authStore = useAuthStore()
+const gradesStore = useGradesStore()
+const classesStore = useClassesStore()
 
 const selectedClass = ref(null)
 const selectedSubject = ref(null)

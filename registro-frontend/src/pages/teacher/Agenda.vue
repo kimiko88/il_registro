@@ -64,42 +64,42 @@
         :color="selectedTypeFilter === 'tutti' ? 'primary' : 'grey-3'"
         :text-color="selectedTypeFilter === 'tutti' ? 'white' : 'dark'"
         @click="selectedTypeFilter = 'tutti'"
-      >Tutti</q-chip>
+      >{{ $t('agendaPage.all') }}</q-chip>
       <q-chip
         clickable
         dense
         :color="selectedTypeFilter === 'compito' ? 'info' : 'grey-3'"
         :text-color="selectedTypeFilter === 'compito' ? 'white' : 'dark'"
         @click="selectedTypeFilter = 'compito'"
-      >Compiti a casa</q-chip>
+      >{{ $t('agendaPage.homework') }}</q-chip>
       <q-chip
         clickable
         dense
         :color="selectedTypeFilter === 'verifica' ? 'negative' : 'grey-3'"
         :text-color="selectedTypeFilter === 'verifica' ? 'white' : 'dark'"
         @click="selectedTypeFilter = 'verifica'"
-      >Compiti in classe</q-chip>
+      >{{ $t('agendaPage.test') }}</q-chip>
       <q-chip
         clickable
         dense
         :color="selectedTypeFilter === 'interrogazione' ? 'purple' : 'grey-3'"
         :text-color="selectedTypeFilter === 'interrogazione' ? 'white' : 'dark'"
         @click="selectedTypeFilter = 'interrogazione'"
-      >Interrogazioni</q-chip>
+      >{{ $t('agendaPage.oralTest') }}</q-chip>
       <q-chip
         clickable
         dense
         :color="selectedTypeFilter === 'avviso' ? 'warning' : 'grey-3'"
         :text-color="selectedTypeFilter === 'avviso' ? 'white' : 'dark'"
         @click="selectedTypeFilter = 'avviso'"
-      >Avvisi</q-chip>
+      >{{ $t('communicationsPage.title') }}</q-chip>
       <q-chip
         clickable
         dense
         :color="selectedTypeFilter === 'evento' ? 'positive' : 'grey-3'"
         :text-color="selectedTypeFilter === 'evento' ? 'white' : 'dark'"
         @click="selectedTypeFilter = 'evento'"
-      >Eventi</q-chip>
+      >{{ $t('agendaPage.event') }}</q-chip>
       <q-chip
         clickable
         dense

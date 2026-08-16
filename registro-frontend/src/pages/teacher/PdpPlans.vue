@@ -5,10 +5,10 @@
       <div>
         <h1 class="text-h4 text-weight-bold text-slate-800 q-my-none row items-center">
           <q-icon name="accessibility_new" color="primary" class="q-mr-sm" />
-          Piani Didattici Personalizzati (PDP / PEI)
+          {{ t('pdpPage.title') }}
         </h1>
         <p class="text-subtitle1 text-slate-500 q-mt-xs q-mb-none">
-          Gestione riservata al Consiglio di Classe e al referente inclusione per studenti BES / DSA / H
+          {{ t('pdpPage.subtitle') }}
         </p>
       </div>
       
@@ -20,7 +20,7 @@
           option-label="label"
           emit-value map-options
           dense outlined
-          label="Classe"
+          :label="t('pdpPage.filterClass')"
           style="min-width: 180px"
           class="bg-white"
           @update:model-value="fetchClassPlans"
@@ -28,7 +28,7 @@
         <q-btn
           color="primary"
           icon="add"
-          label="Nuovo PDP / PEI"
+          :label="t('pdpPage.newPlan')"
           unelevated
           class="rounded-lg text-weight-bold"
           :disable="!selectedClassId"
@@ -217,6 +217,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
+import { useI18n } from 'vue-i18n'
 import { useClassesStore } from '@/stores/classes'
 import { pdpService } from '@/services/pdpService'
 import api from '@/services/api'
@@ -224,6 +225,7 @@ import SkeletonCard from '@/components/Common/SkeletonCard.vue'
 import CompensativeMeasuresSelector from '@/components/Teacher/CompensativeMeasuresSelector.vue'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const classesStore = useClassesStore()
 
 const selectedClassId = ref(null)

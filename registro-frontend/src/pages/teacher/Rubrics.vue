@@ -5,10 +5,10 @@
       <div>
         <h1 class="text-h4 text-weight-bold text-slate-800 q-my-none">
           <q-icon name="fact_check" color="primary" class="q-mr-sm" />
-          Rubriche Valutative
+          {{ t('rubricsPage.title') }}
         </h1>
         <p class="text-subtitle1 text-slate-500 q-mt-xs q-mb-none">
-          Valutazione per competenze mediante rubriche a criteri e livelli
+          {{ t('rubricsPage.subtitle') }}
         </p>
       </div>
       <div class="row items-center q-gutter-sm">
@@ -16,7 +16,7 @@
           color="primary"
           unelevated
           icon="add"
-          label="Nuova Rubrica"
+          :label="t('rubricsPage.newRubric')"
           class="rounded-lg q-px-md"
           no-caps
           @click="openCreateRubricDialog"
@@ -36,8 +36,8 @@
         align="left"
         no-caps
       >
-        <q-tab name="rubrics" icon="menu_book" label="Le Mie Rubriche" />
-        <q-tab name="assessments" icon="history_edu" label="Storico Valutazioni" />
+        <q-tab name="rubrics" icon="menu_book" :label="t('rubricsPage.title')" />
+        <q-tab name="assessments" icon="history_edu" :label="t('nav.competencies')" />
       </q-tabs>
 
       <q-separator />
@@ -312,12 +312,14 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useQuasar, date as qdate } from 'quasar'
+import { useI18n } from 'vue-i18n'
 import { useRubricsStore } from '@/stores/rubrics'
 import { useClassesStore } from '@/stores/classes'
 import { useGradesStore } from '@/stores/grades'
 import api from 'src/services/api'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const rubricsStore = useRubricsStore()
 const classesStore = useClassesStore()
 const gradesStore = useGradesStore()

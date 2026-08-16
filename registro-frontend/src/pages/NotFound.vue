@@ -13,11 +13,11 @@
           </div>
 
           <div class="text-h5 text-weight-bold q-mb-sm">
-            Pagina non trovata
+            {{ t('notFound.title') }}
           </div>
 
           <p class="text-subtitle1 text-slate-600 q-mb-xl">
-            La pagina che stai cercando non esiste o potrebbe essere stata spostata.
+            {{ t('notFound.subtitle') }}
           </p>
 
           <div class="row q-col-gutter-sm justify-center">
@@ -26,7 +26,7 @@
                 color="primary"
                 unelevated
                 icon="dashboard"
-                label="Torna alla Dashboard"
+                :label="t('notFound.backToDashboard')"
                 to="/"
                 no-caps
                 class="full-width rounded-lg q-px-lg"
@@ -37,7 +37,7 @@
                 outline
                 color="primary"
                 icon="arrow_back"
-                label="Pagina Precedente"
+                :label="t('notFound.goBack')"
                 @click="goBack"
                 no-caps
                 class="full-width rounded-lg q-px-lg"
@@ -52,8 +52,10 @@
 
 <script setup>
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 
 const router = useRouter()
+const { t } = useI18n()
 
 const goBack = () => {
   if (window.history.length > 1) {

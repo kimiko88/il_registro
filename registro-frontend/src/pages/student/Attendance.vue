@@ -1,7 +1,7 @@
 <template>
   <q-page class="q-pa-md">
     <div class="row items-center justify-between q-mb-md">
-       <div class="text-h4">Presenze e Assenze</div>
+       <div class="text-h4">{{ t('classRegister.title') }}</div>
        <q-btn v-if="isParentUser" icon="fact_check" label="Richiedi Giustificazione" color="primary" @click="showJustifyDialog = true" />
        <q-badge v-else color="grey-6" class="q-pa-xs">Giustificazioni gestite dai Genitori</q-badge>
     </div>
@@ -10,7 +10,7 @@
         <!-- Stats Sidebar -->
         <div class="col-12 col-md-4">
             <q-card class="text-center q-pa-md">
-                <div class="text-h6">Riepilogo</div>
+                <div class="text-h6">{{ t('classRegister.statsSummary') }}</div>
                 <div class="q-my-md relative-position flex flex-center">
                     <q-circular-progress
                       show-value
@@ -22,17 +22,17 @@
                       color="green"
                       track-color="red-1"
                     >
-                        {{ attendancePercentage }}%<br><span class="text-caption text-grey">Presente</span>
+                        {{ attendancePercentage }}%<br><span class="text-caption text-grey">{{ t('classRegister.present') }}</span>
                     </q-circular-progress>
                 </div>
                 <div class="row justify-around">
                     <div>
                         <div class="text-h5 text-red">{{ totalAbsences }}</div>
-                        <div class="text-caption">Assenze</div>
+                        <div class="text-caption">{{ t('classRegister.absent') }}</div>
                     </div>
                     <div>
                         <div class="text-h5 text-orange">{{ totalDelays }}</div>
-                        <div class="text-caption">Ritardi</div>
+                        <div class="text-caption">{{ t('classRegister.late') }}</div>
                     </div>
                 </div>
             </q-card>
@@ -95,11 +95,13 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useQuasar } from 'quasar'
-import { attendanceService } from 'src/services/attendanceService'
-import { useAuthStore } from 'src/stores/auth'
+import { useQuasar, date as qdate } from 'quasar'
+import { useI18n } from 'vue-i18n'
+import { useAuthStore } from '@/stores/auth'
+import { attendanceService } from '@/services/attendanceService'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const authStore = useAuthStore()
 const showJustifyDialog = ref(false)
 const attendanceEvents = ref([])

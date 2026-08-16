@@ -2,8 +2,8 @@
   <q-page class="q-pa-md" style="height: calc(100vh - 50px);">
     <!-- Tab switcher -->
     <q-tabs v-model="activeTab" dense class="text-primary q-mb-md" align="left">
-      <q-tab name="messaggi" icon="mail" label="Messaggi" />
-      <q-tab name="circolari" icon="campaign" label="Circolari Ufficiali (Bacheca)" />
+      <q-tab name="messaggi" icon="mail" :label="t('nav.communications')" />
+      <q-tab name="circolari" icon="campaign" :label="t('communicationsPage.title')" />
     </q-tabs>
     <q-separator class="q-mb-md" />
 
@@ -224,12 +224,14 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useCommunicationsStore } from 'src/stores/communications'
-import { communicationService } from '@/services/communicationService'
 import { useQuasar, date as qdate } from 'quasar'
-import api from 'src/services/api'
+import { useI18n } from 'vue-i18n'
+import { useCommunicationsStore } from '@/stores/communications'
+import { communicationService } from '@/services/communicationService'
+import api from '@/services/api'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const store = useCommunicationsStore()
 const showCompose = ref(false)
 const selectedMessage = ref(null)

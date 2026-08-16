@@ -5,10 +5,10 @@
       <div>
         <h1 class="text-h4 text-weight-bold text-slate-800 q-my-none">
           <q-icon name="swap_horiz" color="primary" class="q-mr-sm" />
-          Le Mie Sostituzioni
+          {{ t('substitutionsPage.title') }}
         </h1>
         <p class="text-subtitle1 text-slate-500 q-mt-xs q-mb-none">
-          Gestione delle sostituzioni per colleghi assenti e inserimento rapido presenze
+          {{ t('substitutionsPage.subtitle') }}
         </p>
       </div>
       <div class="row items-center q-gutter-sm">
@@ -16,7 +16,7 @@
           v-model="weekFilter"
           type="week"
           dense outlined
-          label="Filtra per Settimana"
+          :label="t('common.filter')"
           class="bg-white"
           style="min-width: 200px"
           @update:model-value="loadSubstitutions"
@@ -31,9 +31,9 @@
         <q-card flat bordered class="rounded-xl bg-white shadow-soft">
           <q-card-section class="row items-center justify-between">
             <div>
-              <div class="text-caption text-uppercase text-weight-bold text-slate-500">Riepilogo Mensile</div>
+              <div class="text-caption text-uppercase text-weight-bold text-slate-500">{{ t('substitutionsPage.assignedToYou') }}</div>
               <div class="text-h4 text-weight-bold text-positive q-mt-xs">{{ monthlyCompletedCount }} Ore</div>
-              <div class="text-caption text-slate-400">Sostituzioni effettuate questo mese</div>
+              <div class="text-caption text-slate-400">{{ t('substitutionsPage.statusCompleted') }}</div>
             </div>
             <q-avatar color="green-1" text-color="positive" icon="task_alt" size="52px" />
           </q-card-section>
@@ -44,9 +44,9 @@
         <q-card flat bordered class="rounded-xl bg-white shadow-soft">
           <q-card-section class="row items-center justify-between">
             <div>
-              <div class="text-caption text-uppercase text-weight-bold text-slate-500">In Attesa di Conferma</div>
+              <div class="text-caption text-uppercase text-weight-bold text-slate-500">{{ t('substitutionsPage.statusScheduled') }}</div>
               <div class="text-h4 text-weight-bold text-amber-7 q-mt-xs">{{ pendingCount }} Ore</div>
-              <div class="text-caption text-slate-400">Da confermare per la settimana</div>
+              <div class="text-caption text-slate-400">{{ t('substitutionsPage.hourClass') }}</div>
             </div>
             <q-avatar color="amber-1" text-color="amber-8" icon="pending_actions" size="52px" />
           </q-card-section>
@@ -57,9 +57,9 @@
         <q-card flat bordered class="rounded-xl bg-white shadow-soft">
           <q-card-section class="row items-center justify-between">
             <div>
-              <div class="text-caption text-uppercase text-weight-bold text-slate-500">Totale Assegnate</div>
+              <div class="text-caption text-uppercase text-weight-bold text-slate-500">{{ t('substitutionsPage.substituteTeacher') }}</div>
               <div class="text-h4 text-weight-bold text-primary q-mt-xs">{{ substitutionsStore.mySubstitutions.length }}</div>
-              <div class="text-caption text-slate-400">Tutte le ore di supplenza</div>
+              <div class="text-caption text-slate-400">{{ t('substitutionsPage.title') }}</div>
             </div>
             <q-avatar color="blue-1" text-color="primary" icon="history" size="52px" />
           </q-card-section>
@@ -70,7 +70,7 @@
     <!-- Assigned Substitutions List -->
     <q-card flat bordered class="rounded-xl bg-white shadow-soft overflow-hidden">
       <q-card-section class="bg-slate-100 border-b border-slate-200 row items-center justify-between q-py-sm q-px-md">
-        <div class="text-subtitle1 text-weight-bold text-slate-800">Sostituzioni Assegnate a Me</div>
+        <div class="text-subtitle1 text-weight-bold text-slate-800">{{ t('substitutionsPage.assignedToYou') }}</div>
         <q-badge color="primary" class="q-px-sm q-py-xs text-weight-bold">
           {{ filteredSubstitutions.length }} Elementi
         </q-badge>
@@ -82,8 +82,7 @@
 
       <div v-else-if="filteredSubstitutions.length === 0" class="text-center q-pa-xl text-slate-400">
         <q-icon name="event_available" size="64px" class="q-mb-md opacity-40" />
-        <div class="text-h6">Nessuna sostituzione registrata</div>
-        <div class="text-caption">Non hai ore di supplenza assegnate per la settimana selezionata.</div>
+        <div class="text-h6">{{ t('substitutionsPage.noSubsToday') }}</div>
       </div>
 
       <q-list v-else separator class="rounded-lg">
@@ -200,10 +199,12 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useQuasar, date as qdate } from 'quasar'
+import { useI18n } from 'vue-i18n'
 import { useSubstitutionsStore } from '@/stores/substitutions'
 import api from 'src/services/api'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const substitutionsStore = useSubstitutionsStore()
 
 function getCurrentWeekFormat() {

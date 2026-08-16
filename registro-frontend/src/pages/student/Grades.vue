@@ -1,8 +1,8 @@
 <template>
   <q-page class="q-pa-md">
     <div class="row items-center justify-between q-mb-md">
-       <div class="text-h4">I Miei Voti</div>
-       <q-btn icon="download" label="Scarica Report" color="primary" :loading="downloading" @click="downloadReport" />
+       <div class="text-h4">{{ t('nav.myGrades') }}</div>
+       <q-btn icon="download" :label="t('gradesPage.printReport')" color="primary" :loading="downloading" @click="downloadReport" />
     </div>
 
     <div class="row q-col-gutter-lg">
@@ -116,11 +116,13 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
+import { useI18n } from 'vue-i18n'
 import { gradeService } from 'src/services/gradeService'
 import api from 'src/services/api'
 import { useStudentStore } from 'src/stores/student'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const studentStore = useStudentStore()
 const gradesLoading = ref(true)
 

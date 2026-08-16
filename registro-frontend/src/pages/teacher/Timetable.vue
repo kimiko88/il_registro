@@ -5,15 +5,15 @@
       <div>
         <div class="text-h5 text-weight-bold text-slate-800 row items-center gap-2">
           <q-icon name="schedule" color="primary" size="md" />
-          Il Mio Orario di Insegnamento
+          {{ t('timetablePage.title') }}
         </div>
         <div class="text-caption text-slate-500">
-          Orario settimanale delle lezioni assegnate con materie, classi e aule
+          {{ t('timetablePage.subtitle') }}
         </div>
       </div>
       <div class="row items-center gap-2">
         <q-btn
-          label="Stampa Orario"
+          :label="t('timetablePage.printTimetable')"
           icon="print"
           color="primary"
           outline
@@ -39,8 +39,8 @@
         <q-card flat class="bg-white rounded-xl border border-slate-200 q-pa-sm">
           <div class="row items-center justify-between">
             <div>
-              <div class="text-caption text-slate-500">Ore Settimanali</div>
-              <div class="text-h6 text-weight-bold text-primary">{{ myScheduleEntries.length }} Ore</div>
+              <div class="text-caption text-slate-500">{{ t('timetablePage.title') }}</div>
+              <div class="text-h6 text-weight-bold text-primary">{{ myScheduleEntries.length }} {{ t('timetablePage.hour') }}</div>
             </div>
             <q-avatar color="indigo-1" text-color="primary" icon="access_time" />
           </div>
@@ -50,8 +50,8 @@
         <q-card flat class="bg-white rounded-xl border border-slate-200 q-pa-sm">
           <div class="row items-center justify-between">
             <div>
-              <div class="text-caption text-slate-500">Classi Assegnate</div>
-              <div class="text-h6 text-weight-bold text-emerald-600">{{ uniqueClassesCount }} Classi</div>
+              <div class="text-caption text-slate-500">{{ t('nav.classes') }}</div>
+              <div class="text-h6 text-weight-bold text-emerald-600">{{ uniqueClassesCount }} {{ t('nav.classes') }}</div>
             </div>
             <q-avatar color="emerald-1" text-color="positive" icon="groups" />
           </div>
@@ -61,8 +61,8 @@
         <q-card flat class="bg-white rounded-xl border border-slate-200 q-pa-sm">
           <div class="row items-center justify-between">
             <div>
-              <div class="text-caption text-slate-500">Materie Insegnate</div>
-              <div class="text-h6 text-weight-bold text-amber-600">{{ uniqueSubjectsCount }} Materie</div>
+              <div class="text-caption text-slate-500">{{ t('udaPage.subject') }}</div>
+              <div class="text-h6 text-weight-bold text-amber-600">{{ uniqueSubjectsCount }}</div>
             </div>
             <q-avatar color="amber-1" text-color="warning" icon="menu_book" />
           </div>
@@ -73,15 +73,11 @@
     <!-- Timetable Grid -->
     <q-card v-if="loading" class="text-center q-pa-xl shadow-1 rounded-xl">
       <q-spinner-dots color="primary" size="60px" />
-      <div class="text-caption text-slate-500 q-mt-sm">Caricamento il tuo orario...</div>
     </q-card>
 
     <q-card v-else-if="myScheduleEntries.length === 0" class="text-center q-pa-xl text-grey-6 shadow-1 rounded-xl bg-white">
       <q-icon name="event_busy" size="80px" color="slate-400" class="q-mb-md" />
-      <div class="text-h6 text-slate-700">Nessuna lezione in orario</div>
-      <div class="text-caption text-slate-500 max-w-md mx-auto q-mt-xs">
-        Non risultano ancora ore di lezione o cattedre assegnate al tuo profilo per questo anno scolastico. Contatta la Segreteria per l'assegnazione dell'orario.
-      </div>
+      <div class="text-h6 text-slate-700">{{ t('timetablePage.freeSlot') }}</div>
     </q-card>
 
     <q-card v-else class="shadow-soft rounded-xl overflow-hidden bg-white border border-slate-200">
@@ -89,7 +85,7 @@
         <table class="timetable-grid">
           <thead>
             <tr>
-              <th class="hour-col text-outfit">Ora</th>
+              <th class="hour-col text-outfit">{{ t('timetablePage.hour') }}</th>
               <th v-for="day in days" :key="day.value" class="day-col text-outfit">
                 {{ day.label }}
               </th>
@@ -97,28 +93,20 @@
           </thead>
           <tbody>
             <tr v-for="hour in 8" :key="hour">
-              <td class="hour-cell text-weight-bold">{{ hour }}ª ora</td>
+              <td class="hour-cell text-weight-bold">{{ hour }}ª {{ t('timetablePage.hour') }}</td>
               <td 
-                v-for="day in 6" 
-                :key="day" 
-                class="schedule-cell"
-                :class="{ 'has-content': getMyCell(day, hour) }"
+                v-for="day in days" 
+                :key="day.value" 
+                class="timetable-cell"
               >
-                <div v-if="getMyCell(day, hour)" class="cell-content">
-                  <div class="text-subtitle2 text-weight-bold text-primary line-clamp-1">
-                    {{ getMyCell(day, hour).subject_name }}
-                  </div>
-                  <div class="q-mt-xs">
-                    <q-badge color="indigo-1" text-color="indigo-9" class="text-weight-bold px-2 py-1 rounded-md text-caption">
-                      {{ getMyCellName(getMyCell(day, hour)) }}
-                    </q-badge>
-                  </div>
-                  <div v-if="getMyCell(day, hour).room" class="text-caption text-slate-500 text-weight-medium q-mt-xs row items-center justify-center">
-                    <q-icon name="room" size="xs" color="slate-400" class="q-mr-xs" />
-                    Aula: {{ getMyCell(day, hour).room }}
-                  </div>
+                <div v-if="getMyCell(day.value, hour)" class="cell-content bg-indigo-50 border-indigo-200">
+                  <div class="text-weight-bold text-primary">{{ getMyCell(day.value, hour).subject_name }}</div>
+                  <div class="text-caption text-grey-8">{{ getMyCellName(getMyCell(day.value, hour)) }}</div>
+                  <div v-if="getMyCell(day.value, hour).room" class="text-caption text-grey-6">{{ t('timetablePage.classroom') }}: {{ getMyCell(day.value, hour).room }}</div>
                 </div>
-                <div v-else class="empty-cell">-</div>
+                <div v-else class="empty-cell text-grey-4 text-caption">
+                  {{ t('timetablePage.freeSlot') }}
+                </div>
               </td>
             </tr>
           </tbody>
@@ -131,23 +119,25 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
-import { useClassesStore } from 'src/stores/classes'
-import api from 'src/services/api'
+import { useI18n } from 'vue-i18n'
+import { useClassesStore } from '@/stores/classes'
+import api from '@/services/api'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const classesStore = useClassesStore()
 
 const loading = ref(false)
 const myScheduleEntries = ref([])
 
-const days = [
-  { label: 'Lunedì', value: 1 },
-  { label: 'Martedì', value: 2 },
-  { label: 'Mercoledì', value: 3 },
-  { label: 'Giovedì', value: 4 },
-  { label: 'Venerdì', value: 5 },
-  { label: 'Sabato', value: 6 }
-]
+const days = computed(() => [
+  { label: t('timetablePage.monday'), value: 1 },
+  { label: t('timetablePage.tuesday'), value: 2 },
+  { label: t('timetablePage.wednesday'), value: 3 },
+  { label: t('timetablePage.thursday'), value: 4 },
+  { label: t('timetablePage.friday'), value: 5 },
+  { label: t('timetablePage.saturday'), value: 6 }
+])
 
 onMounted(async () => {
   loading.value = true
