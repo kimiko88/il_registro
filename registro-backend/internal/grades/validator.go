@@ -277,4 +277,3 @@ func (v *Validator) IsTeacherAssignedToSubjectBySubjectID(ctx context.Context, t
 	err := v.db.QueryRowContext(ctx, query, subjectID, teacherID).Scan(&exists)
 	return exists, err
 }
-
