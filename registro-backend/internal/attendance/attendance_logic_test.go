@@ -46,9 +46,10 @@ func TestPendingJustifications_FiltersEmptySchoolID(t *testing.T) {
 				{ID: "j3", SchoolID: "school-2", StudentID: "s3"},
 			},
 		},
+		userRepo: &mockUserRepo{},
 	}
 
-	resp, err := svc.GetPendingJustifications(context.Background(), "class-1", "school-1")
+	resp, err := svc.GetPendingJustifications(context.Background(), "teacher-1", "teacher", "class-1", "school-1")
 	assert.NoError(t, err)
 	assert.Len(t, resp, 1)
 	assert.Equal(t, "j1", resp[0].ID)
@@ -70,4 +71,8 @@ func (m *mockAttendanceRepoForTesting) FindPendingJustifications(classID, school
 		}
 	}
 	return filtered, nil
+}
+
+func (m *mockAttendanceRepoForTesting) IsTeacherAssignedToClass(_ context.Context, _, _ string) (bool, error) {
+	return true, nil
 }

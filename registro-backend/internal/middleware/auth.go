@@ -8,7 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// AuthMiddleware wraps internal/auth middleware for convenience in the middleware package.
+// Deprecated: AuthMiddleware is a legacy wrapper. The canonical JWT auth middleware is
+// located and configured in internal/auth/middleware.go (used in cmd/api-server/main.go).
 type AuthMiddleware struct {
 	inner *auth.Middleware
 }

@@ -4,8 +4,14 @@ export const attendanceService = {
     async markAttendance(data) {
         return api.post('/attendance/mark', data)
     },
+    async recordBulk(payload) {
+        return api.post('/attendance/mark', payload)
+    },
     async getByClass(classId, date) {
         return api.get(`/attendance/class/${classId}`, { params: { date } })
+    },
+    async getAttendance(classId, date) {
+        return this.getByClass(classId, date)
     },
     async justify(absenceId, justification) {
         return api.post('/attendance/justify', { absence_id: absenceId, ...justification })

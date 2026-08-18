@@ -24,7 +24,7 @@ func CORSMiddleware() gin.HandlerFunc {
 	originsMap := make(map[string]bool)
 	for _, o := range allowedOrigins {
 		trimmed := strings.TrimSpace(o)
-		if trimmed != "" && trimmed != "*" {
+		if trimmed != "" && trimmed != "*" && (strings.HasPrefix(trimmed, "http://") || strings.HasPrefix(trimmed, "https://")) {
 			originsMap[trimmed] = true
 		}
 	}

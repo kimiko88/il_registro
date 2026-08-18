@@ -61,8 +61,8 @@ func (m *mockServiceForDeprecationTest) AddGrade(ctx context.Context, teacherID 
 func (m *mockServiceForDeprecationTest) BatchCreateGrades(teacherID, actorRole, schoolID string, grades []*Grade) error {
 	return m.Called(teacherID, actorRole, schoolID, grades).Error(0)
 }
-func (m *mockServiceForDeprecationTest) BulkImport(teacherID string, r io.Reader, semester int) (*ImportResult, error) {
-	args := m.Called(teacherID, r, semester)
+func (m *mockServiceForDeprecationTest) BulkImport(teacherID, schoolID string, r io.Reader, semester int) (*ImportResult, error) {
+	args := m.Called(teacherID, schoolID, r, semester)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -113,8 +113,8 @@ func (m *mockServiceForDeprecationTest) GetSemesterReport(ctx context.Context, a
 	}
 	return args.Get(0).(*SemesterReportResponse), args.Error(1)
 }
-func (m *mockServiceForDeprecationTest) GenerateSemesterReportPDF(studentID string, semester int) ([]byte, error) {
-	args := m.Called(studentID, semester)
+func (m *mockServiceForDeprecationTest) GenerateSemesterReportPDF(ctx context.Context, actorID, actorRole, studentID string, semester int) ([]byte, error) {
+	args := m.Called(ctx, actorID, actorRole, studentID, semester)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}

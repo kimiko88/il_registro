@@ -3,6 +3,16 @@ import { setActivePinia, createPinia } from 'pinia'
 import { authGuard } from '@/router/guards'
 import { useAuthStore } from '@/stores/auth'
 
+const createMockJWT = (role = 'teacher', expInSeconds = 3600) => {
+    const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }))
+    const payload = btoa(JSON.stringify({
+        sub: 'user-123',
+        role: role,
+        exp: Math.floor(Date.now() / 1000) + expInSeconds
+    }))
+    return `${header}.${payload}.signature`
+}
+
 describe('Router Security Guards — Navigation & Role Access Control', () => {
     let nextSpy
 
@@ -28,7 +38,7 @@ describe('Router Security Guards — Navigation & Role Access Control', () => {
 
     it('redirects authenticated users away from /login to their role dashboard', async () => {
         const authStore = useAuthStore()
-        authStore.login({ id: 'u1', role: 'teacher' }, 'valid-token', 'refresh-token')
+        authStore.login({ id: 'u1', role: 'teacher' }, createMockJWT('teacher'), 'refresh-token')
 
         const to = { path: '/login' }
         const from = { path: '/' }
@@ -53,7 +63,7 @@ describe('Router Security Guards — Navigation & Role Access Control', () => {
 
     it('blocks user with insufficient role permissions and redirects to own dashboard', async () => {
         const authStore = useAuthStore()
-        authStore.login({ id: 's1', role: 'student' }, 'valid-token', 'refresh-token')
+        authStore.login({ id: 's1', role: 'student' }, createMockJWT('student'), 'refresh-token')
 
         const to = { path: '/admin/dashboard', meta: { roles: ['admin', 'superadmin'] } }
         const from = { path: '/student' }
@@ -65,7 +75,7 @@ describe('Router Security Guards — Navigation & Role Access Control', () => {
 
     it('allows user with matching role permission to proceed to protected route', async () => {
         const authStore = useAuthStore()
-        authStore.login({ id: 'a1', role: 'admin' }, 'valid-token', 'refresh-token')
+        authStore.login({ id: 'a1', role: 'admin' }, createMockJWT('admin'), 'refresh-token')
 
         const to = { path: '/admin/dashboard', meta: { roles: ['admin', 'superadmin'] } }
         const from = { path: '/admin/dashboard' }
@@ -94,7 +104,7 @@ describe('Router Security Guards — Navigation & Role Access Control', () => {
         localStorage.setItem('user', JSON.stringify({ id: 't1', role: 'teacher' }))
 
         vi.spyOn(authStore, 'initAuth').mockImplementation(async () => {
-            authStore.token = 'restored-access-token'
+            authStore.token = createMockJWT('teacher')
             authStore.user = { id: 't1', role: 'teacher' }
         })
 
@@ -107,3 +117,4 @@ describe('Router Security Guards — Navigation & Role Access Control', () => {
         expect(nextSpy).toHaveBeenCalledWith()
     })
 })
+

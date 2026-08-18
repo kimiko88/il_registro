@@ -29,6 +29,7 @@ export default {
     address: 'Indirizzo',
     role: 'Ruolo',
     add: 'Aggiungi',
+    confirm: 'Conferma',
     notes: 'Note'
   },
   notFound: {

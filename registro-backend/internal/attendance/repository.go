@@ -229,12 +229,12 @@ func (r *repository) GetStats(studentID string) (*SummaryResponse, error) {
 	}
 	query := `
 		SELECT 
-			COUNT(*) FILTER (WHERE status = 'Absent') as absences,
-			COUNT(*) FILTER (WHERE status = 'Late') as lates,
-			COUNT(*) FILTER (WHERE status = 'LeftEarly') as early_exits,
-			COUNT(*) FILTER (WHERE justified = true) as justified
+			COUNT(DISTINCT date) FILTER (WHERE status = 'Absent' OR status = 'absent') as absences,
+			COUNT(*) FILTER (WHERE status = 'Late' OR status = 'late') as lates,
+			COUNT(*) FILTER (WHERE status = 'LeftEarly' OR status = 'left_early') as early_exits,
+			COUNT(*) FILTER (WHERE justified = true OR parent_justified = true) as justified
 		FROM attendance
-		WHERE student_id = $1::uuid`
+		WHERE student_id = $1::uuid AND deleted_at IS NULL`
 
 	var s SummaryResponse
 	err := r.db.QueryRow(query, studentID).Scan(&s.TotalAbsences, &s.TotalLates, &s.TotalEarlyExits, &s.JustifiedCount)
@@ -252,12 +252,12 @@ func (r *repository) GetStatsBatch(ctx context.Context, studentIDs []string) (ma
 	query := `
 		SELECT 
 			student_id::text,
-			COUNT(*) FILTER (WHERE status = 'Absent' OR status = 'absent') as absences,
+			COUNT(DISTINCT date) FILTER (WHERE status = 'Absent' OR status = 'absent') as absences,
 			COUNT(*) FILTER (WHERE status = 'Late' OR status = 'late') as lates,
 			COUNT(*) FILTER (WHERE status = 'LeftEarly' OR status = 'left_early') as early_exits,
-			COUNT(*) FILTER (WHERE justified = true) as justified
+			COUNT(*) FILTER (WHERE justified = true OR parent_justified = true) as justified
 		FROM attendance
-		WHERE student_id = ANY($1::uuid[])
+		WHERE student_id = ANY($1::uuid[]) AND deleted_at IS NULL
 		GROUP BY student_id`
 
 	rows, err := r.db.QueryContext(ctx, query, studentIDs)
@@ -564,7 +564,7 @@ func (r *repository) JustifyAbsenceByParent(attendanceID string, studentID strin
 		UPDATE attendance
 		SET parent_justified = true, parent_justified_at = NOW(),
 		    justification_reason = $1, notes = COALESCE($2, notes), updated_at = NOW()
-		WHERE id = $3::uuid AND student_id::text = $4::text
+		WHERE id = $3::uuid AND student_id::text = $4::text AND (parent_justified IS NULL OR parent_justified = false)
 	`
 	res, err := r.db.Exec(query, reason, notes, attendanceID, studentID)
 	if err != nil {
@@ -575,7 +575,7 @@ func (r *repository) JustifyAbsenceByParent(attendanceID string, studentID strin
 		return err
 	}
 	if rows == 0 {
-		return fmt.Errorf("forbidden: l'assenza specificata non appartiene allo studente indicato")
+		return fmt.Errorf("forbidden: l'assenza non appartiene allo studente o è già stata giustificata")
 	}
 	return nil
 }

@@ -20,18 +20,23 @@ vi.mock('quasar', async () => {
 })
 
 // Mock attendance service
-vi.mock('@/services/attendanceService', () => ({
-    attendanceService: {
-        getByClass: vi.fn().mockResolvedValue({
-            data: [
-                { student_id: 's1', student_name: 'Mario Rossi', status: 'present' },
-                { student_id: 's2', student_name: 'Luigi Verdi', status: 'absent' }
-            ]
-        }),
-        markAttendance: vi.fn().mockResolvedValue({}),
-        justify: vi.fn().mockResolvedValue({})
+vi.mock('@/services/attendanceService', () => {
+    const mockData = {
+        data: [
+            { student_id: 's1', first_name: 'Mario', last_name: 'Rossi', status: 'present' },
+            { student_id: 's2', first_name: 'Luigi', last_name: 'Verdi', status: 'absent' }
+        ]
     }
-}))
+    return {
+        attendanceService: {
+            getByClass: vi.fn().mockResolvedValue(mockData),
+            getAttendance: vi.fn().mockResolvedValue(mockData),
+            markAttendance: vi.fn().mockResolvedValue({}),
+            recordBulk: vi.fn().mockResolvedValue({}),
+            justify: vi.fn().mockResolvedValue({})
+        }
+    }
+})
 
 describe('Teacher/AttendanceMarking.vue', () => {
     let wrapper
@@ -101,6 +106,6 @@ describe('Teacher/AttendanceMarking.vue', () => {
         
         await wrapper.vm.saveAll()
         
-        expect(attendanceService.markAttendance).toHaveBeenCalled()
+        expect(attendanceService.recordBulk).toHaveBeenCalled()
     })
 })

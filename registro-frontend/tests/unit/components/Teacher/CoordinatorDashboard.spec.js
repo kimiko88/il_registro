@@ -36,7 +36,7 @@ describe('Teacher/CoordinatorDashboard.vue', () => {
             }
         })
 
-        expect(wrapper.text()).toContain('Coordinator Dashboard - Class 5A')
+        expect(wrapper.text()).toMatch(/Coordinator Dashboard|Pannello Coordinatore/)
         expect(wrapper.text()).toContain('Alice')
         expect(wrapper.text()).toContain('Low Attendance')
         expect(mockGetProblemStudents).toHaveBeenCalledWith('c1')

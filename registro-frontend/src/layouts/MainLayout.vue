@@ -436,6 +436,9 @@
     <!-- Help Drawer (slides in from right, for FAB quick access) -->
     <HelpDrawer ref="helpDrawerRef" @restart-tour="handleRestartTour" />
 
+    <!-- Session Reauth Dialog (globale: appare sopra la pagina quando il token scade) -->
+    <SessionReauthDialog />
+
   </q-layout>
 </template>
 
@@ -457,6 +460,9 @@ import GlobalSearch from '@/components/Common/GlobalSearch.vue'
 import OnboardingTour from '@/components/Common/OnboardingTour.vue'
 import HelpDrawer from '@/components/Common/HelpDrawer.vue'
 import HelpCenterPanel from '@/components/Common/HelpCenterPanel.vue'
+import SessionReauthDialog from '@/components/Common/SessionReauthDialog.vue'
+import { useSessionReauth } from '@/composables/useSessionReauth'
+import { setReauthHandler } from '@/services/api'
 
 const globalSearchRef = ref(null)
 const tourRef = ref(null)
@@ -610,6 +616,12 @@ const navigateToProfile = () => {
 
 onMounted(() => {
   themeStore.initTheme()
+
+  // Registra il handler per la re-autenticazione in-page.
+  // Quando il token scade e il refresh fallisce, api.js chiamerà triggerReauth()
+  // invece di navigare a /login, preservando lo stato della pagina corrente.
+  const { triggerReauth } = useSessionReauth()
+  setReauthHandler(triggerReauth)
 })
 
 watch(() => route.path, () => {

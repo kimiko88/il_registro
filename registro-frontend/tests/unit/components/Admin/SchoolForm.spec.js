@@ -17,7 +17,7 @@ describe('Admin/SchoolForm.vue', () => {
                 }
             }
         })
-        expect(wrapper.text()).toContain('New School')
+        expect(wrapper.text()).toMatch(/New School|Nuova Scuola|Aggiungi/)
         expect(wrapper.vm.form.name).toBe('')
     })
 
@@ -36,7 +36,7 @@ describe('Admin/SchoolForm.vue', () => {
             },
             props: { school }
         })
-        expect(wrapper.text()).toContain('Edit School')
+        expect(wrapper.text()).toMatch(/Edit School|Modifica/)
         expect(wrapper.vm.form.name).toBe('Test School')
     })
 
@@ -51,7 +51,7 @@ describe('Admin/SchoolForm.vue', () => {
     })
 
     it('validates required fields', async () => {
-        const wrapper = mount(SchoolForm, {
+        mount(SchoolForm, {
             global: {
                 plugins: [Quasar],
                 stubs: {

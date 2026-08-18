@@ -620,6 +620,10 @@ func (s *Service) ChangePassword(ctx context.Context, userID, currentPassword, n
 	return nil
 }
 
+func (s *Service) RecordFailedAttempt(ctx context.Context, email, ipAddress string) {
+	s.recordFailedAttempt(ctx, email, ipAddress)
+}
+
 func (s *Service) recordFailedAttempt(ctx context.Context, email, ipAddress string) {
 	attempt := &LoginAttempt{
 		Email:       email,

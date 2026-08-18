@@ -23,7 +23,7 @@ describe('HTTP Interceptors & Token Security', () => {
     })
 
     it('injects saved Accept-Language header into outgoing requests', async () => {
-        localStorage.setItem('superadmin_language', 'en-US')
+        localStorage.setItem('app_language', 'en-US')
 
         const interceptor = api.interceptors.request.handlers[0]
         const config = { headers: {} }

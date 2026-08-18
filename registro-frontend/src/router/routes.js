@@ -2,6 +2,7 @@ export default [
     {
         path: '/',
         component: () => import('@/layouts/MainLayout.vue'),
+        meta: { requiresAuth: true },
         children: [
             { path: '', component: () => import('@/pages/Dashboard.vue'), meta: { title: 'Dashboard', roles: ['superadmin', 'admin', 'secretary', 'teacher', 'student', 'parent', 'principal', 'vice_principal', 'coordinator', 'staff', 'system_auditor'] } },
             { path: 'dashboard', redirect: '/' },

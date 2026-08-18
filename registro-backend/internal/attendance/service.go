@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"registro-backend/internal/users"
+	"registro-backend/pkg/logger"
 )
 
 // EventBroadcaster defines the interface for real-time notifications
@@ -34,7 +35,7 @@ type Service interface {
 	// Justifications
 	RequestJustification(ctx context.Context, parentID string, req JustificationRequest) error
 	ProcessJustification(ctx context.Context, teacherID, justificationID string, approve bool) error
-	GetPendingJustifications(ctx context.Context, classID, schoolID string) ([]JustificationResponse, error)
+	GetPendingJustifications(ctx context.Context, actorID, actorRole, classID, schoolID string) ([]JustificationResponse, error)
 	DeleteJustification(ctx context.Context, actorID string, justificationID string) error
 
 	// Analytics & Summaries
@@ -77,6 +78,18 @@ func NewService(repo Repository, uRepo users.Repository, b EventBroadcaster, cal
 		broadcaster: b,
 		calendar:    cal,
 	}
+}
+
+func (s *service) safeBroadcast(userID, event string, payload interface{}) {
+	if s.broadcaster == nil || userID == "" {
+		return
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			logger.Log.Warnf("safeBroadcast: recovered from panic in broadcaster: %v", r)
+		}
+	}()
+	s.broadcaster.BroadcastToUser(userID, event, payload)
 }
 
 func (s *service) MarkAttendance(ctx context.Context, teacherID, schoolID string, req CreateAttendanceRequest) error {
@@ -145,9 +158,7 @@ func (s *service) MarkAttendance(ctx context.Context, teacherID, schoolID string
 		return err
 	}
 
-	if s.broadcaster != nil {
-		s.broadcaster.BroadcastToUser(att.StudentID, "ATTENDANCE_"+string(att.Status), s.mapSingleResponse(*att))
-	}
+	s.safeBroadcast(att.StudentID, "ATTENDANCE_"+string(att.Status), s.mapSingleResponse(*att))
 
 	return nil
 }
@@ -202,7 +213,10 @@ func (s *service) MarkBulk(ctx context.Context, teacherID, schoolID string, req 
 			studentIDs = append(studentIDs, r.StudentID)
 		}
 	}
-	validMembers, _ := s.repo.AreStudentsInClass(ctx, studentIDs, req.ClassID)
+	validMembers, err := s.repo.AreStudentsInClass(ctx, studentIDs, req.ClassID)
+	if err != nil {
+		return fmt.Errorf("errore verifica appartenenza studenti a classe: %w", err)
+	}
 
 	seen := make(map[string]bool)
 	var atts []*Attendance
@@ -213,7 +227,7 @@ func (s *service) MarkBulk(ctx context.Context, teacherID, schoolID string, req 
 		}
 		seen[key] = true
 
-		if validMembers != nil && !validMembers[r.StudentID] {
+		if !validMembers[r.StudentID] {
 			isMember, err := s.repo.IsStudentInClass(ctx, r.StudentID, req.ClassID)
 			if err != nil || !isMember {
 				return fmt.Errorf("forbidden: lo studente %s non appartiene alla classe indicata", r.StudentID)
@@ -249,10 +263,8 @@ func (s *service) MarkBulk(ctx context.Context, teacherID, schoolID string, req 
 		return err
 	}
 
-	if s.broadcaster != nil {
-		for _, att := range atts {
-			s.broadcaster.BroadcastToUser(att.StudentID, "ATTENDANCE_"+string(att.Status), s.mapSingleResponse(*att))
-		}
+	for _, att := range atts {
+		s.safeBroadcast(att.StudentID, "ATTENDANCE_"+string(att.Status), s.mapSingleResponse(*att))
 	}
 
 	return nil
@@ -512,6 +524,10 @@ func (s *service) RequestJustification(ctx context.Context, parentID string, req
 }
 
 func (s *service) ProcessJustification(ctx context.Context, teacherID, justificationID string, approve bool) error {
+	if teacherID == "" {
+		return errors.New("unauthorized: teacherID mancante")
+	}
+
 	j, err := s.repo.FindJustificationByID(justificationID)
 	if err != nil {
 		return err
@@ -528,14 +544,13 @@ func (s *service) ProcessJustification(ctx context.Context, teacherID, justifica
 	if err != nil || studentUser == nil {
 		return fmt.Errorf("student not found or error fetching student: %w", err)
 	}
-	if teacherID != "" {
-		teacherUser, err := s.userRepo.GetByID(ctx, teacherID)
-		if err == nil && teacherUser != nil {
-			if teacherUser.Role != "superadmin" {
-				if teacherUser.SchoolID != nil && studentUser.SchoolID != nil && *teacherUser.SchoolID != *studentUser.SchoolID {
-					return fmt.Errorf("forbidden: il docente non appartiene alla stessa scuola dello studente")
-				}
-			}
+	teacherUser, err := s.userRepo.GetByID(ctx, teacherID)
+	if err != nil || teacherUser == nil {
+		return fmt.Errorf("unauthorized: teacher not found: %w", err)
+	}
+	if teacherUser.Role != "superadmin" {
+		if teacherUser.SchoolID != nil && studentUser.SchoolID != nil && *teacherUser.SchoolID != *studentUser.SchoolID {
+			return fmt.Errorf("forbidden: il docente non appartiene alla stessa scuola dello studente")
 		}
 	}
 	if studentUser.ClassID == nil || *studentUser.ClassID == "" {
@@ -558,24 +573,38 @@ func (s *service) ProcessJustification(ctx context.Context, teacherID, justifica
 		j.Status = JustificationRejected
 	}
 
-	if s.broadcaster != nil {
-		payload := map[string]interface{}{
-			"id":     j.ID,
-			"status": string(j.Status),
-			"reason": j.Reason,
-		}
-		if j.ParentID != "" {
-			s.broadcaster.BroadcastToUser(j.ParentID, "justification_processed", payload)
-		}
-		if j.StudentID != "" {
-			s.broadcaster.BroadcastToUser(j.StudentID, "justification_processed", payload)
-		}
+	payload := map[string]interface{}{
+		"id":     j.ID,
+		"status": string(j.Status),
+		"reason": j.Reason,
+	}
+	if j.ParentID != "" {
+		s.safeBroadcast(j.ParentID, "justification_processed", payload)
+	}
+	if j.StudentID != "" {
+		s.safeBroadcast(j.StudentID, "justification_processed", payload)
 	}
 
 	return nil
 }
 
-func (s *service) GetPendingJustifications(ctx context.Context, classID, schoolID string) ([]JustificationResponse, error) {
+func (s *service) GetPendingJustifications(ctx context.Context, actorID, actorRole, classID, schoolID string) ([]JustificationResponse, error) {
+	if actorID == "" {
+		return nil, errors.New("unauthorized: actorID non fornito")
+	}
+
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" && actorRole != "principal" && actorRole != "vice_principal" {
+		if actorRole != "teacher" {
+			return nil, errors.New("forbidden: ruolo non autorizzato")
+		}
+		if classID != "" {
+			assigned, err := s.repo.IsTeacherAssignedToClass(ctx, actorID, classID)
+			if err != nil || !assigned {
+				return nil, errors.New("forbidden: docente non assegnato alla classe indicata")
+			}
+		}
+	}
+
 	js, err := s.repo.FindPendingJustifications(classID, schoolID)
 	if err != nil {
 		return nil, err
@@ -918,6 +947,9 @@ func (s *service) JustifyChildAbsence(ctx context.Context, parentID, studentID, 
 	}
 	if att.StudentID != studentID {
 		return fmt.Errorf("forbidden: il record di presenza non appartiene allo studente indicato")
+	}
+	if att.ParentJustified {
+		return fmt.Errorf("forbidden: l'assenza è già stata giustificata")
 	}
 
 	return s.repo.JustifyAbsenceByParent(attendanceID, studentID, req.Reason, req.Notes)

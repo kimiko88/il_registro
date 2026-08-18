@@ -58,8 +58,9 @@ func InitRateLimiter(redisURL string) {
 						limiter:     redis_rate.NewLimiter(rdb),
 						globalLimit: redis_rate.PerSecond(5),
 						authLimit:   redis_rate.PerMinute(5),
+						fallback:    newMemoryBackend(),
 					}
-					log.Println("ratelimit: using Redis-backed distributed rate limiter")
+					log.Println("ratelimit: using Redis-backed distributed rate limiter with in-memory fallback")
 					return
 				}
 			}
@@ -86,13 +87,16 @@ type redisBackend struct {
 	limiter     *redis_rate.Limiter
 	globalLimit redis_rate.Limit
 	authLimit   redis_rate.Limit
+	fallback    rateLimiterBackend
 }
 
 func (r *redisBackend) allowGlobal(ctx context.Context, ip string) bool {
 	res, err := r.limiter.Allow(ctx, "rl:global:"+ip, r.globalLimit)
 	if err != nil {
-		// Fail open: Redis errors must not take down the API.
-		log.Printf("ratelimit: redis error (global): %v — allowing request", err)
+		log.Printf("ALERT ratelimit: Redis error (global): %v — activating in-memory fallback", err)
+		if r.fallback != nil {
+			return r.fallback.allowGlobal(ctx, ip)
+		}
 		return true
 	}
 	return res.Allowed > 0
@@ -101,7 +105,10 @@ func (r *redisBackend) allowGlobal(ctx context.Context, ip string) bool {
 func (r *redisBackend) allowAuth(ctx context.Context, ip string) bool {
 	res, err := r.limiter.Allow(ctx, "rl:auth:"+ip, r.authLimit)
 	if err != nil {
-		log.Printf("ratelimit: redis error (auth): %v — allowing request", err)
+		log.Printf("ALERT ratelimit: Redis error (auth): %v — activating in-memory fallback", err)
+		if r.fallback != nil {
+			return r.fallback.allowAuth(ctx, ip)
+		}
 		return true
 	}
 	return res.Allowed > 0

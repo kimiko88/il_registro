@@ -69,10 +69,12 @@ export const setApiRouter = (router) => {
 
 export const resetApiState = () => {
     isRefreshing = false;
+    processQueue(new Error('Session reset or logged out'), null);
     failedQueue = [];
 };
 
 export const clearLocalSession = () => {
+    resetApiState();
     localStorage.removeItem('user');
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
@@ -81,6 +83,15 @@ export const clearLocalSession = () => {
     sessionStorage.removeItem('token');
     sessionStorage.removeItem('refreshToken');
     sessionStorage.removeItem('selectedChildId');
+};
+
+// Handler per la re-autenticazione in-page (registrato da MainLayout).
+// Se presente, invece di navigare a /login, mostra un dialog modale.
+// Firma: (email: string) => Promise<string>  (risolve col nuovo access_token)
+let _reauthHandler = null;
+
+export const setReauthHandler = (fn) => {
+    _reauthHandler = fn;
 };
 
 const handleSessionExpired = () => {
@@ -117,12 +128,16 @@ api.interceptors.response.use(
             error.userMessage = appI18n?.global?.t ? appI18n.global.t('errors.serverError') : 'Si è verificato un errore sul server. Riprova più tardi.';
         }
 
+        const isAuthUrl = originalRequest?.url && (
+            originalRequest.url.endsWith('/auth/login') ||
+            originalRequest.url.endsWith('/auth/refresh-token') ||
+            originalRequest.url.endsWith('/auth/refresh')
+        );
 
         if (
             error.response.status === 401 &&
             originalRequest &&
-            !originalRequest.url.includes('/auth/login') &&
-            !originalRequest.url.includes('/auth/refresh')
+            !isAuthUrl
         ) {
             if (!originalRequest._retry) {
                 originalRequest._retry = true;
@@ -164,6 +179,24 @@ api.interceptors.response.use(
                     return api(originalRequest);
                 } catch (refreshErr) {
                     processQueue(refreshErr, null);
+
+                    // Prova la re-autenticazione in-page se il handler è registrato
+                    if (_reauthHandler) {
+                        try {
+                            const email = authStore?.user?.email || '';
+                            const newToken = await _reauthHandler(email);
+                            // Successo: riprova la request originale col nuovo token
+                            processQueue(null, newToken);
+                            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+                            return api(originalRequest);
+                        } catch (reauthErr) {
+                            // L'utente ha annullato il dialog → logout gestito dal dialog
+                            processQueue(reauthErr, null);
+                            return Promise.reject(reauthErr);
+                        }
+                    }
+
+                    // Fallback: nessun handler registrato → logout + redirect classico
                     if (authStore) {
                         authStore.logout();
                     } else {

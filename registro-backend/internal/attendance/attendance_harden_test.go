@@ -48,8 +48,8 @@ func (m *mockServiceForHardenTest) RequestJustification(ctx context.Context, par
 func (m *mockServiceForHardenTest) ProcessJustification(ctx context.Context, teacherID, justificationID string, approve bool) error {
 	return m.Called(ctx, teacherID, justificationID, approve).Error(0)
 }
-func (m *mockServiceForHardenTest) GetPendingJustifications(ctx context.Context, classID, schoolID string) ([]JustificationResponse, error) {
-	args := m.Called(ctx, classID, schoolID)
+func (m *mockServiceForHardenTest) GetPendingJustifications(ctx context.Context, actorID, actorRole, classID, schoolID string) ([]JustificationResponse, error) {
+	args := m.Called(ctx, actorID, actorRole, classID, schoolID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}

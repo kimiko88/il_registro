@@ -174,9 +174,19 @@ func (m *MockUserRepo) IsGuardian(ctx context.Context, parentID, studentID strin
 	return args.Bool(0), args.Error(1)
 }
 
-// Stub other methods required by users.Repository interface if needed
 func (m *MockUserRepo) Create(ctx context.Context, user *users.User) error          { return nil }
-func (m *MockUserRepo) GetByID(ctx context.Context, id string) (*users.User, error) { return nil, nil }
+func (m *MockUserRepo) GetByID(ctx context.Context, id string) (*users.User, error) {
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "GetByID" {
+			args := m.Called(ctx, id)
+			if args.Get(0) == nil {
+				return nil, args.Error(1)
+			}
+			return args.Get(0).(*users.User), args.Error(1)
+		}
+	}
+	return &users.User{ID: id, Role: "teacher"}, nil
+}
 func (m *MockUserRepo) GetByEmail(ctx context.Context, email string) (*users.User, error) {
 	return nil, nil
 }

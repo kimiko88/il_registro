@@ -24,7 +24,7 @@ const props = defineProps({
   modelValue: Boolean,
   message: {
     type: String,
-    default: ''
+    default: 'Are you sure?'
   }
 })
 

@@ -373,11 +373,15 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 // IssueWSTicket issues a single-use opaque ticket to authenticate a WebSocket connection.
 // Requires a valid JWT in the Authorization header.
 func (h *Handler) IssueWSTicket(c *gin.Context) {
+	userID, exists := GetUserID(c)
+	if !exists || userID == "" {
+		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "user not authenticated"})
+		return
+	}
 	if h.wsTicketStore == nil {
 		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "ws ticket store not configured"})
 		return
 	}
-	userID, _ := GetUserID(c)
 	email, _ := c.Get("email")
 	role, _ := GetUserRole(c)
 	schoolID, _ := GetSchoolID(c)

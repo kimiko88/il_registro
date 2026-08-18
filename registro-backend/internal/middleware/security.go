@@ -90,19 +90,39 @@ func SecurityHeadersMiddleware() gin.HandlerFunc {
 				upgradeInsecure = " upgrade-insecure-requests;"
 			}
 
+			connectSources := []string{"'self'"}
+			if bURL := backendURL(); bURL != "" {
+				connectSources = append(connectSources, bURL)
+			}
+			if wsURL := backendWSURL(); wsURL != "" {
+				connectSources = append(connectSources, wsURL)
+			}
+			connectSources = append(connectSources, "https://*.supabase.co")
+
+			var uniqueSources []string
+			seen := make(map[string]bool)
+			for _, src := range connectSources {
+				src = strings.TrimSpace(src)
+				if src != "" && !seen[src] {
+					seen[src] = true
+					uniqueSources = append(uniqueSources, src)
+				}
+			}
+			connectSrcStr := strings.Join(uniqueSources, " ")
+
 			csp := fmt.Sprintf(
 				"default-src 'self'; "+
 					"script-src 'self' 'nonce-%s'; "+
 					"style-src 'self' 'nonce-%s' https://fonts.googleapis.com; "+
 					"font-src 'self' https://fonts.gstatic.com; "+
 					"img-src 'self' data: https://cdn.quasar.dev; "+
-					"connect-src 'self' %s %s https://*.supabase.co; "+
+					"connect-src %s; "+
 					"object-src 'none'; "+
 					"frame-src 'none'; "+
 					"base-uri 'self'; "+
 					"form-action 'self'; "+
 					"frame-ancestors 'none';%s",
-				nonce, nonce, backendURL(), backendWSURL(), upgradeInsecure,
+				nonce, nonce, connectSrcStr, upgradeInsecure,
 			)
 			c.Writer.Header().Set("Content-Security-Policy", csp)
 		}

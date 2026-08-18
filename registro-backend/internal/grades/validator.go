@@ -259,3 +259,22 @@ func (v *Validator) IsTeacherAssignedToStudent(ctx context.Context, teacherID st
 	err := v.db.QueryRowContext(ctx, query, studentID, teacherID).Scan(&exists)
 	return exists, err
 }
+
+// IsTeacherAssignedToSubjectBySubjectID checks if a teacher teaches the given subject in any class.
+// Unlike IsTeacherAssignedToSubject, no classID is required — used when only the subjectID is known (e.g. GetSubjectGrades).
+func (v *Validator) IsTeacherAssignedToSubjectBySubjectID(ctx context.Context, teacherID, subjectID string) (bool, error) {
+	if v == nil || v.db == nil || teacherID == "" || subjectID == "" {
+		return false, nil
+	}
+	var exists bool
+	query := `
+		SELECT EXISTS(
+			SELECT 1 FROM class_subjects cs
+			LEFT JOIN teachers t ON (NULLIF(cs.teacher_id::text, '') = t.id::text OR NULLIF(cs.teacher_id::text, '') = t.user_id::text)
+			WHERE cs.subject_id::text = $1
+			  AND (NULLIF(cs.teacher_id::text, '') = $2 OR t.id::text = $2 OR t.user_id::text = $2)
+		)`
+	err := v.db.QueryRowContext(ctx, query, subjectID, teacherID).Scan(&exists)
+	return exists, err
+}
+

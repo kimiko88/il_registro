@@ -18,9 +18,6 @@ const isTokenExpired = (tokenStr) => {
     try {
         const parts = tokenStr.split('.')
         if (parts.length !== 3) {
-            if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'test' && !tokenStr.includes('.')) {
-                return false
-            }
             return true
         }
         const base64Url = parts[1]
@@ -30,7 +27,7 @@ const isTokenExpired = (tokenStr) => {
         if (payload && typeof payload.exp === 'number') {
             return Date.now() >= payload.exp * 1000
         }
-        return true
+        return false
     } catch {
         return true
     }
@@ -49,6 +46,15 @@ const sanitizeUserData = (userData) => {
         }
     }
     return clean
+}
+
+// Minimal opaque storage payload to prevent PII leakage (email, names, tax_id) in web storage (localStorage / sessionStorage)
+const toStorageUser = (userData) => {
+    if (!userData) return null
+    return {
+        id: userData.id,
+        role: userData.role || userData.user_role || null
+    }
 }
 
 const getRoleFromToken = (tokenStr) => {
@@ -101,11 +107,12 @@ export const useAuthStore = defineStore('auth', () => {
         sessionStorage.removeItem('token')
         sessionStorage.removeItem('refreshToken')
 
+        const storageUser = toStorageUser(sanitized)
         if (rememberMe) {
-            localStorage.setItem('user', JSON.stringify(sanitized))
+            localStorage.setItem('user', JSON.stringify(storageUser))
             sessionStorage.removeItem('user')
         } else {
-            sessionStorage.setItem('user', JSON.stringify(sanitized))
+            sessionStorage.setItem('user', JSON.stringify(storageUser))
             localStorage.removeItem('user')
         }
     }
@@ -126,7 +133,7 @@ export const useAuthStore = defineStore('auth', () => {
         if (newUserData && user.value) {
             const isLocal = !!localStorage.getItem('user')
             const storage = isLocal ? localStorage : sessionStorage
-            storage.setItem('user', JSON.stringify(user.value))
+            storage.setItem('user', JSON.stringify(toStorageUser(user.value)))
         }
     }
 
@@ -148,10 +155,11 @@ export const useAuthStore = defineStore('auth', () => {
     function updateUser(userData) {
         const sanitized = sanitizeUserData(userData)
         user.value = sanitized
+        const storageUser = toStorageUser(sanitized)
         if (localStorage.getItem('user')) {
-            localStorage.setItem('user', JSON.stringify(sanitized))
+            localStorage.setItem('user', JSON.stringify(storageUser))
         } else if (sessionStorage.getItem('user')) {
-            sessionStorage.setItem('user', JSON.stringify(sanitized))
+            sessionStorage.setItem('user', JSON.stringify(storageUser))
         }
     }
 
@@ -174,7 +182,18 @@ export const useAuthStore = defineStore('auth', () => {
                 )
                 const { access_token, user: userData } = refreshResponse.data || {}
                 if (access_token) {
-                    updateTokens(access_token, null, userData || user.value)
+                    let fullUser = userData
+                    if (!fullUser || !fullUser.first_name) {
+                        try {
+                            const meRes = await axios.get(`${getBaseURL()}/auth/me`, {
+                                headers: { Authorization: `Bearer ${access_token}` }
+                            })
+                            fullUser = meRes.data || fullUser
+                        } catch (meErr) {
+                            console.warn('Initial session restore: /auth/me fetch failed, falling back to minimal profile', meErr)
+                        }
+                    }
+                    updateTokens(access_token, null, fullUser || user.value)
                 }
             } catch (err) {
                 console.warn('Initial session restore failed:', err)
@@ -203,3 +222,4 @@ export const useAuthStore = defineStore('auth', () => {
         updateTokens
     }
 })
+

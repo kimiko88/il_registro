@@ -134,7 +134,7 @@ func (h *Handler) GetStudentGrades(c *gin.Context) {
 				c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 				return
 			}
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			respond500(c, "GetStudentGradesPaged error", err)
 			return
 		}
 		c.JSON(http.StatusOK, resp)
@@ -147,7 +147,7 @@ func (h *Handler) GetStudentGrades(c *gin.Context) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "GetStudentGradesWithFilter error", err)
 		return
 	}
 	if grades == nil {
@@ -182,7 +182,7 @@ func (h *Handler) GetStudentGradesPaged(c *gin.Context) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "GetStudentGradesPaged error", err)
 		return
 	}
 
@@ -206,12 +206,11 @@ func (h *Handler) GetClassGrades(c *gin.Context) {
 
 	resp, err := h.service.GetClassGrades(c.Request.Context(), actorID, actorRole, classID, filter)
 	if err != nil {
-		logger.Log.Errorf("GetClassGrades error: %v", err)
-		if errors.Is(err, ErrUnauthorized) || strings.Contains(err.Error(), "unauthorized") {
+		if errors.Is(err, ErrUnauthorized) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "GetClassGrades error", err)
 		return
 	}
 	if resp == nil {
@@ -243,11 +242,11 @@ func (h *Handler) GetSubjectGrades(c *gin.Context) {
 
 	resp, err := h.service.GetSubjectGrades(c.Request.Context(), actorID, actorRole, subjectID, filter)
 	if err != nil {
-		if errors.Is(err, ErrUnauthorized) || strings.Contains(err.Error(), "unauthorized") {
+		if errors.Is(err, ErrUnauthorized) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "GetSubjectGrades error", err)
 		return
 	}
 	if resp == nil {
@@ -317,9 +316,10 @@ func (h *Handler) BulkImport(c *gin.Context) {
 		}
 	}
 
-	result, err := h.service.BulkImport(teacherID, file, semester)
+	schoolID := c.GetString("school_id")
+	result, err := h.service.BulkImport(teacherID, schoolID, file, semester)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "BulkImport error", err)
 		return
 	}
 
@@ -352,7 +352,7 @@ func (h *Handler) Export(c *gin.Context) {
 
 	data, contentType, err := h.service.Export(teacherID, schoolID, filter, format)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "Export error", err)
 		return
 	}
 
@@ -442,11 +442,11 @@ func (h *Handler) UpdateGrade(c *gin.Context) {
 
 	res, err := h.service.UpdateGrade(c.Request.Context(), teacherID, gradeID, req)
 	if err != nil {
-		if errors.Is(err, ErrUnauthorized) || strings.Contains(err.Error(), "unauthorized") {
+		if errors.Is(err, ErrUnauthorized) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "UpdateGrade error", err)
 		return
 	}
 
@@ -473,11 +473,11 @@ func (h *Handler) DeleteGrade(c *gin.Context) {
 	}
 
 	if err := h.service.DeleteGrade(c.Request.Context(), teacherID, gradeID); err != nil {
-		if errors.Is(err, ErrUnauthorized) || strings.Contains(err.Error(), "unauthorized") {
+		if errors.Is(err, ErrUnauthorized) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "DeleteGrade error", err)
 		return
 	}
 
@@ -537,7 +537,7 @@ func (h *Handler) GetClassAverage(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "teacher" && role != "admin" && role != "superadmin" && role != "principal" && role != "secretary" {
+	if role != "teacher" && role != "admin" && role != "superadmin" && role != "principal" && role != "vice_principal" && role != "secretary" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -602,7 +602,7 @@ func (h *Handler) GetMyAverages(c *gin.Context) {
 
 	resp, err := h.service.GetMyAverages(c.Request.Context(), studentID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "GetMyAverages error", err)
 		return
 	}
 
@@ -618,8 +618,25 @@ func (h *Handler) GetMyTrend(c *gin.Context) {
 	}
 
 	targetStudentID := actorID
-	if (role == "admin" || role == "superadmin" || role == "secretary" || role == "teacher" || role == "parent") && c.Query("student_id") != "" {
+	if (role == "admin" || role == "superadmin" || role == "secretary" || role == "principal" || role == "vice_principal" || role == "teacher" || role == "parent") && c.Query("student_id") != "" {
 		targetStudentID = c.Query("student_id")
+	}
+
+	if role == "parent" && targetStudentID != actorID {
+		if err := h.service.ValidateParentGuardian(c.Request.Context(), actorID, targetStudentID); err != nil {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: not a guardian of this student"})
+			return
+		}
+	}
+
+	if role == "teacher" && targetStudentID != actorID {
+		if h.validator != nil {
+			assigned, err := h.validator.IsTeacherAssignedToStudent(c.Request.Context(), actorID, targetStudentID)
+			if err != nil || !assigned {
+				c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: teacher is not assigned to this student"})
+				return
+			}
+		}
 	}
 
 	subjectID := c.Query("subject_id")
@@ -630,7 +647,7 @@ func (h *Handler) GetMyTrend(c *gin.Context) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "GetMyTrend error", err)
 		return
 	}
 
@@ -650,6 +667,23 @@ func (h *Handler) GetSemesterReport(c *gin.Context) {
 		targetStudentID = c.Query("student_id")
 	}
 
+	if role == "parent" && targetStudentID != actorID {
+		if err := h.service.ValidateParentGuardian(c.Request.Context(), actorID, targetStudentID); err != nil {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: not a guardian of this student"})
+			return
+		}
+	}
+
+	if role == "teacher" && targetStudentID != actorID {
+		if h.validator != nil {
+			assigned, err := h.validator.IsTeacherAssignedToStudent(c.Request.Context(), actorID, targetStudentID)
+			if err != nil || !assigned {
+				c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: teacher is not assigned to this student"})
+				return
+			}
+		}
+	}
+
 	semStr := c.Param("semester")
 	sem, err := strconv.Atoi(semStr)
 	if err != nil || (sem != 1 && sem != 2) {
@@ -663,7 +697,7 @@ func (h *Handler) GetSemesterReport(c *gin.Context) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "GetSemesterReport error", err)
 		return
 	}
 
@@ -683,15 +717,24 @@ func (h *Handler) DownloadSemesterReportPDF(c *gin.Context) {
 	}
 
 	targetStudentID := studentID
-	if (role == "admin" || role == "superadmin" || role == "secretary" || role == "principal" || role == "vice_principal" || role == "teacher") && c.Query("student_id") != "" {
+	if (role == "admin" || role == "superadmin" || role == "secretary" || role == "principal" || role == "vice_principal" || role == "teacher" || role == "parent") && c.Query("student_id") != "" {
 		targetStudentID = c.Query("student_id")
 	}
 
-	if role == "teacher" && targetStudentID != studentID {
-		assigned, err := h.validator.IsTeacherAssignedToStudent(c.Request.Context(), studentID, targetStudentID)
-		if err != nil || !assigned {
-			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: teacher is not assigned to this student"})
+	if role == "parent" && targetStudentID != studentID {
+		if err := h.service.ValidateParentGuardian(c.Request.Context(), studentID, targetStudentID); err != nil {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: not a guardian of this student"})
 			return
+		}
+	}
+
+	if role == "teacher" && targetStudentID != studentID {
+		if h.validator != nil {
+			assigned, err := h.validator.IsTeacherAssignedToStudent(c.Request.Context(), studentID, targetStudentID)
+			if err != nil || !assigned {
+				c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: teacher is not assigned to this student"})
+				return
+			}
 		}
 	}
 
@@ -702,7 +745,7 @@ func (h *Handler) DownloadSemesterReportPDF(c *gin.Context) {
 		return
 	}
 
-	pdfData, err := h.service.GenerateSemesterReportPDF(targetStudentID, sem)
+	pdfData, err := h.service.GenerateSemesterReportPDF(c.Request.Context(), studentID, role, targetStudentID, sem)
 	if err != nil {
 		respond500(c, "GenerateSemesterReportPDF error", err)
 		return
@@ -728,12 +771,11 @@ func (h *Handler) GetChildGrades(c *gin.Context) {
 
 	resp, err := h.service.GetChildGrades(c.Request.Context(), parentID, studentID, filter)
 	if err != nil {
-		logger.Log.Errorf("GetChildGrades error: %v", err)
 		if errors.Is(err, ErrNotGuardian) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "GetChildGrades error", err)
 		return
 	}
 
@@ -754,7 +796,7 @@ func (h *Handler) GetChildGradesAverage(c *gin.Context) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "GetChildAverages error", err)
 		return
 	}
 
@@ -782,7 +824,7 @@ func (h *Handler) GetChildSemesterReport(c *gin.Context) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "GetChildSemesterReport error", err)
 		return
 	}
 
@@ -798,7 +840,7 @@ func (h *Handler) GetClassAnalysis(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "teacher" && role != "admin" && role != "superadmin" && role != "principal" && role != "secretary" {
+	if role != "teacher" && role != "admin" && role != "superadmin" && role != "principal" && role != "vice_principal" && role != "secretary" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -822,7 +864,7 @@ func (h *Handler) GetClassAnalysis(c *gin.Context) {
 
 	resp, err := h.analytics.GetClassAnalysis(classID, sem)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "GetClassAnalysis error", err)
 		return
 	}
 	c.JSON(http.StatusOK, resp)
@@ -835,7 +877,7 @@ func (h *Handler) GetSubjectAnalysis(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "teacher" && role != "admin" && role != "superadmin" && role != "principal" && role != "secretary" {
+	if role != "teacher" && role != "admin" && role != "superadmin" && role != "principal" && role != "vice_principal" && role != "secretary" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -859,7 +901,7 @@ func (h *Handler) GetSubjectAnalysis(c *gin.Context) {
 
 	resp, err := h.analytics.GetSubjectAnalysis(subjectID, sem)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "GetSubjectAnalysis error", err)
 		return
 	}
 	c.JSON(http.StatusOK, resp)
@@ -888,10 +930,10 @@ func (h *Handler) GetStudentProfile(c *gin.Context) {
 		// Verify guardian relationship before exposing analytical student profile
 		if err := h.service.ValidateParentGuardian(c.Request.Context(), userID, studentID); err != nil {
 			if errors.Is(err, ErrNotGuardian) || strings.Contains(err.Error(), "guardian") {
-				c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+				c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: not a guardian of this student"})
 				return
 			}
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			respond500(c, "GetStudentProfile ValidateParentGuardian error", err)
 			return
 		}
 	}
@@ -909,7 +951,7 @@ func (h *Handler) GetStudentProfile(c *gin.Context) {
 
 	resp, err := h.analytics.GetStudentProfile(studentID, sem)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "GetStudentProfile error", err)
 		return
 	}
 	c.JSON(http.StatusOK, resp)
@@ -923,7 +965,7 @@ func (h *Handler) GetSchoolStatistics(c *gin.Context) {
 	}
 
 	actorRole := c.GetString("role")
-	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "secretary" && actorRole != "teacher" {
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "vice_principal" && actorRole != "secretary" && actorRole != "teacher" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: school statistics accessible only to staff and administrators"})
 		return
 	}
@@ -932,7 +974,7 @@ func (h *Handler) GetSchoolStatistics(c *gin.Context) {
 	year := c.Query("year")
 	resp, err := h.analytics.GetSchoolStatistics(year, schoolID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "GetSchoolStatistics error", err)
 		return
 	}
 	c.JSON(http.StatusOK, resp)
@@ -958,7 +1000,7 @@ func (h *Handler) CreateTestWithGrades(c *gin.Context) {
 
 	test, err := h.service.CreateTestWithGrades(teacherID, req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "CreateTestWithGrades error", err)
 		return
 	}
 
@@ -994,7 +1036,7 @@ func (h *Handler) GetClassTestsList(c *gin.Context) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "GetClassTestsList error", err)
 		return
 	}
 	if resp == nil {
@@ -1024,7 +1066,7 @@ func (h *Handler) GetUpcomingClassTests(c *gin.Context) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "GetUpcomingClassTests error", err)
 		return
 	}
 
@@ -1057,7 +1099,7 @@ func (h *Handler) DeleteClassTest(c *gin.Context) {
 			c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: not the author of this test"})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "DeleteClassTest error", err)
 		return
 	}
 
@@ -1089,7 +1131,7 @@ func (h *Handler) UpdateClassTest(c *gin.Context) {
 	}
 
 	if err := h.service.UpdateClassTest(teacherID, testID, req); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "UpdateClassTest error", err)
 		return
 	}
 
@@ -1108,7 +1150,7 @@ func (h *Handler) ListWeightConfigs(c *gin.Context) {
 
 	configs, err := h.service.GetWeightConfigs(schoolID, subjectID, classID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "ListWeightConfigs error", err)
 		return
 	}
 	c.JSON(http.StatusOK, configs)

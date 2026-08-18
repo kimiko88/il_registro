@@ -75,7 +75,7 @@ describe('Settings.vue — Admin Settings & Self-Service Password Change', () =>
     it('persists selected language to localStorage when calling saveLanguage', () => {
         wrapper.vm.selectedLanguage = 'en-US'
         wrapper.vm.saveLanguage()
-        expect(localStorage.getItem('superadmin_language')).toBe('en-US')
+        expect(localStorage.getItem('app_language')).toBe('en-US')
     })
 
     it('saves security settings to localStorage', () => {

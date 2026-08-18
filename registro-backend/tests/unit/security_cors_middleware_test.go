@@ -71,4 +71,29 @@ func TestSecurity_CORSMiddleware(t *testing.T) {
 
 		assert.Equal(t, http.StatusNoContent, w.Code)
 	})
+
+	t.Run("Rejects non-http and non-https origins configured in ALLOWED_ORIGINS", func(t *testing.T) {
+		os.Setenv("ALLOWED_ORIGINS", "javascript:alert(1),data:text/html;base64,abc,https://valid.school.it")
+		defer os.Unsetenv("ALLOWED_ORIGINS")
+
+		r := gin.New()
+		r.Use(middleware.CORSMiddleware())
+		r.GET("/api/v1/test", func(c *gin.Context) {
+			c.String(http.StatusOK, "ok")
+		})
+
+		// javascript: origin should not be matched or allowed
+		req := httptest.NewRequest(http.MethodGet, "/api/v1/test", nil)
+		req.Header.Set("Origin", "javascript:alert(1)")
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+		assert.Empty(t, w.Header().Get("Access-Control-Allow-Origin"))
+
+		// https: valid origin should be allowed
+		req2 := httptest.NewRequest(http.MethodGet, "/api/v1/test", nil)
+		req2.Header.Set("Origin", "https://valid.school.it")
+		w2 := httptest.NewRecorder()
+		r.ServeHTTP(w2, req2)
+		assert.Equal(t, "https://valid.school.it", w2.Header().Get("Access-Control-Allow-Origin"))
+	})
 }

@@ -9,8 +9,15 @@ import (
 	"strings"
 	"time"
 
+	"registro-backend/pkg/logger"
+
 	"github.com/gin-gonic/gin"
 )
+
+func respond500(c *gin.Context, msg string, err error) {
+	logger.Log.Errorf("%s: %v", msg, err)
+	c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+}
 
 type Handler struct {
 	service Service
@@ -90,8 +97,8 @@ func parseWindowParams(c *gin.Context) (from, to time.Time, err error) {
 		err = errors.New("data di inizio successiva alla data di fine")
 		return
 	}
-	if to.After(from.AddDate(1, 0, 1)) {
-		err = errors.New("range di date troppo ampio (massimo 1 anno consentito)")
+	if to.After(from.AddDate(1, 1, 15)) {
+		err = errors.New("range di date troppo ampio (massimo 1 anno e 1 mese consentito)")
 		return
 	}
 	return
@@ -111,7 +118,7 @@ func (h *Handler) GetMySummary(c *gin.Context) {
 	}
 	res, err := h.service.GetStudentSummary(c.Request.Context(), studentID, role, schoolID, studentID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "GetMySummary error", err)
 		return
 	}
 	c.JSON(http.StatusOK, res)
@@ -135,7 +142,7 @@ func (h *Handler) GetChildAttendance(c *gin.Context) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "GetChildAttendance error", err)
 		return
 	}
 	c.JSON(http.StatusOK, res)
@@ -160,7 +167,7 @@ func (h *Handler) GetChildSummary(c *gin.Context) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "GetChildSummary error", err)
 		return
 	}
 	c.JSON(http.StatusOK, res)
@@ -188,7 +195,7 @@ func (h *Handler) GetStudentSummaryForTeacher(c *gin.Context) {
 	}
 	res, err := h.service.GetStudentSummary(c.Request.Context(), actorID, actorRole, schoolID, studentID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "GetStudentSummaryForTeacher error", err)
 		return
 	}
 	c.JSON(http.StatusOK, res)
@@ -207,7 +214,7 @@ func (h *Handler) GetChildAttendanceTrends(c *gin.Context) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "GetChildAttendanceTrends error", err)
 		return
 	}
 	c.JSON(http.StatusOK, res)
@@ -371,7 +378,7 @@ func (h *Handler) GetMyAttendance(c *gin.Context) {
 	}
 	res, err := h.service.GetStudentAttendance(c.Request.Context(), studentID, role, schoolID, studentID, from, to)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "GetMyAttendance error", err)
 		return
 	}
 	c.JSON(http.StatusOK, res)
@@ -404,14 +411,22 @@ func (h *Handler) GetPendingJustifications(c *gin.Context) {
 	actorID := c.GetString("user_id")
 	actorRole := c.GetString("role")
 	schoolID := c.GetString("school_id")
-	if actorID == "" || (actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary") {
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" && actorRole != "principal" && actorRole != "vice_principal" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 	classID := c.Query("class_id")
-	res, err := h.service.GetPendingJustifications(c.Request.Context(), classID, schoolID)
+	res, err := h.service.GetPendingJustifications(c.Request.Context(), actorID, actorRole, classID, schoolID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		if strings.Contains(err.Error(), "forbidden") || strings.Contains(err.Error(), "unauthorized") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		respond500(c, "GetPendingJustifications error", err)
 		return
 	}
 	c.JSON(http.StatusOK, res)
@@ -433,13 +448,11 @@ func (h *Handler) ProcessJustification(c *gin.Context) {
 		return
 	}
 	if err := h.service.ProcessJustification(c.Request.Context(), teacherID, id, req.Approve); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "ProcessJustification error", err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "processed"})
 }
-
-func (h *Handler) GetAttendance(c *gin.Context) { h.GetMyAttendance(c) }
 
 func (h *Handler) UpdateAttendance(c *gin.Context) {
 	id := c.Param("id")
@@ -477,7 +490,7 @@ func (h *Handler) ExportAttendance(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" {
+	if actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" && actorRole != "principal" && actorRole != "vice_principal" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -498,7 +511,11 @@ func (h *Handler) ExportAttendance(c *gin.Context) {
 
 	res, err := h.service.GetClassAttendance(c.Request.Context(), actorID, actorRole, schoolID, classID, date)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		if strings.Contains(err.Error(), "forbidden") || strings.Contains(err.Error(), "unauthorized") || strings.Contains(err.Error(), "non sei assegnato") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		respond500(c, "ExportAttendance GetClassAttendance error", err)
 		return
 	}
 
@@ -571,7 +588,7 @@ func (h *Handler) GetMonthlyBreakdown(c *gin.Context) {
 				c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 				return
 			}
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			respond500(c, "GetMonthlyBreakdown parent error", err)
 			return
 		}
 		c.JSON(http.StatusOK, res)
@@ -585,48 +602,16 @@ func (h *Handler) GetMonthlyBreakdown(c *gin.Context) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "GetMonthlyBreakdown error", err)
 		return
 	}
 	c.JSON(http.StatusOK, res)
 }
 
 // GetChildMonthlyBreakdown returns per-month attendance statistics for a parent's child.
+// Maintained as an alias endpoint delegating directly to GetMonthlyBreakdown.
 func (h *Handler) GetChildMonthlyBreakdown(c *gin.Context) {
-	parentID := c.GetString("user_id")
-	role := c.GetString("role")
-	schoolID := c.GetString("school_id")
-	if parentID == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
-	studentID := c.Param("studentID")
-	schoolYear := c.DefaultQuery("school_year", "")
-
-	if role != "parent" {
-		if role == "admin" || role == "superadmin" || role == "principal" || role == "vice_principal" || role == "secretary" {
-			res, err := h.service.GetMonthlyBreakdown(c.Request.Context(), parentID, role, schoolID, studentID, schoolYear)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-				return
-			}
-			c.JSON(http.StatusOK, res)
-			return
-		}
-		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: solo i genitori o il personale autorizzato possono accedere alle presenze del figlio"})
-		return
-	}
-
-	res, err := h.service.GetChildMonthlyBreakdown(c.Request.Context(), parentID, studentID, schoolYear)
-	if err != nil {
-		if strings.Contains(err.Error(), "guardian") || strings.Contains(err.Error(), "access denied") {
-			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
-		return
-	}
-	c.JSON(http.StatusOK, res)
+	h.GetMonthlyBreakdown(c)
 }
 
 func (h *Handler) GetChildUnjustified(c *gin.Context) {
@@ -648,7 +633,7 @@ func (h *Handler) GetChildUnjustified(c *gin.Context) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "GetChildUnjustified error", err)
 		return
 	}
 
@@ -681,7 +666,7 @@ func (h *Handler) JustifyChildAbsence(c *gin.Context) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "JustifyChildAbsence error", err)
 		return
 	}
 
@@ -707,7 +692,7 @@ func (h *Handler) GetChildAttendanceStats(c *gin.Context) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "GetChildAttendanceStats error", err)
 		return
 	}
 
@@ -721,7 +706,7 @@ func (h *Handler) DeleteClassAttendanceHour(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin" {
+	if actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" && actorRole != "principal" && actorRole != "vice_principal" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -743,7 +728,7 @@ func (h *Handler) DeleteClassAttendanceHour(c *gin.Context) {
 	schoolID := c.GetString("school_id")
 
 	if err := h.service.DeleteClassAttendanceHour(c.Request.Context(), actorID, actorRole, schoolID, classID, dateStr, hourInt); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "DeleteClassAttendanceHour error", err)
 		return
 	}
 

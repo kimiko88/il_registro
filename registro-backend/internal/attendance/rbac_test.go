@@ -540,9 +540,11 @@ func TestProcessJustification_TeacherNotAssigned_Forbidden(t *testing.T) {
 		},
 		isAssigned: false,
 	}
+	schoolID := "school1"
 	userRepo := &mockUserRepo{
 		users: map[string]*users.User{
-			"stu1": {ID: "stu1", Role: "student", ClassID: &classID},
+			"stu1":     {ID: "stu1", Role: "student", ClassID: &classID, SchoolID: &schoolID},
+			"teacher1": {ID: "teacher1", Role: "teacher", SchoolID: &schoolID},
 		},
 	}
 	svc := makeService(repo, userRepo)
@@ -564,9 +566,11 @@ func TestProcessJustification_AssignedTeacher_Pass(t *testing.T) {
 		},
 		isAssigned: true,
 	}
+	schoolID := "school1"
 	userRepo := &mockUserRepo{
 		users: map[string]*users.User{
-			"stu1": {ID: "stu1", Role: "student", ClassID: &classID},
+			"stu1":     {ID: "stu1", Role: "student", ClassID: &classID, SchoolID: &schoolID},
+			"teacher1": {ID: "teacher1", Role: "teacher", SchoolID: &schoolID},
 		},
 	}
 	svc := makeService(repo, userRepo)
