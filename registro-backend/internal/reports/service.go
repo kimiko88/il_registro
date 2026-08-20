@@ -31,27 +31,34 @@ func (s *Service) ExportGradesExcel(ctx context.Context, actorID, actorRole, cla
 	f.SetActiveSheet(index)
 
 	// Headers
-	_ = f.SetCellValue(sheet, "A1", "Studente")
-	colChar := 'B'
+	colIdx := 1
+	cell, _ := excelize.CoordinatesToCellName(colIdx, 1)
+	_ = f.SetCellValue(sheet, cell, "Studente")
+
 	for _, sub := range matrix.Subjects {
-		cell := fmt.Sprintf("%c1", colChar)
+		colIdx++
+		cell, _ = excelize.CoordinatesToCellName(colIdx, 1)
 		_ = f.SetCellValue(sheet, cell, sub.Name)
-		colChar++
 	}
-	_ = f.SetCellValue(sheet, fmt.Sprintf("%c1", colChar), "Media Generale")
-	colChar++
-	_ = f.SetCellValue(sheet, fmt.Sprintf("%c1", colChar), "Esito")
+	colIdx++
+	cell, _ = excelize.CoordinatesToCellName(colIdx, 1)
+	_ = f.SetCellValue(sheet, cell, "Media Generale")
+	colIdx++
+	cell, _ = excelize.CoordinatesToCellName(colIdx, 1)
+	_ = f.SetCellValue(sheet, cell, "Esito")
 
 	// Rows
 	rowNum := 2
 	for _, stu := range matrix.Students {
-		_ = f.SetCellValue(sheet, fmt.Sprintf("A%d", rowNum), stu.StudentName)
-		colChar = 'B'
+		cell, _ = excelize.CoordinatesToCellName(1, rowNum)
+		_ = f.SetCellValue(sheet, cell, stu.StudentName)
+		colIdx = 1
 		var sum float64
 		var count int
 
 		for _, sub := range matrix.Subjects {
-			cell := fmt.Sprintf("%c%d", colChar, rowNum)
+			colIdx++
+			cell, _ = excelize.CoordinatesToCellName(colIdx, rowNum)
 			val := 0.0
 			found := false
 
@@ -79,16 +86,18 @@ func (s *Service) ExportGradesExcel(ctx context.Context, actorID, actorRole, cla
 			} else {
 				_ = f.SetCellValue(sheet, cell, "N/D")
 			}
-			colChar++
 		}
 
 		genAvg := 0.0
 		if count > 0 {
 			genAvg = sum / float64(count)
 		}
-		_ = f.SetCellValue(sheet, fmt.Sprintf("%c%d", colChar, rowNum), fmt.Sprintf("%.2f", genAvg))
-		colChar++
+		colIdx++
+		cell, _ = excelize.CoordinatesToCellName(colIdx, rowNum)
+		_ = f.SetCellValue(sheet, cell, fmt.Sprintf("%.2f", genAvg))
 
+		colIdx++
+		cell, _ = excelize.CoordinatesToCellName(colIdx, rowNum)
 		decision := "Nessun Record"
 		if stu.Record != nil {
 			if stu.Record.FinalDecision != "" {
@@ -97,7 +106,7 @@ func (s *Service) ExportGradesExcel(ctx context.Context, actorID, actorRole, cla
 				decision = "In Corso"
 			}
 		}
-		_ = f.SetCellValue(sheet, fmt.Sprintf("%c%d", colChar, rowNum), decision)
+		_ = f.SetCellValue(sheet, cell, decision)
 
 		rowNum++
 	}

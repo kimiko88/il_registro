@@ -29,6 +29,9 @@ func (s *Service) CreateUda(ctx context.Context, schoolID, teacherID string, req
 			end = &t
 		}
 	}
+	if start != nil && end != nil && end.Before(*start) {
+		return nil, fmt.Errorf("end_date cannot be before start_date")
+	}
 	if req.Period == "" {
 		req.Period = "annuale"
 	}
@@ -117,8 +120,13 @@ func (h *Handler) ListByClass(c *gin.Context) {
 func (h *Handler) CreateUda(c *gin.Context) {
 	teacherID := c.GetString("user_id")
 	schoolID := c.GetString("school_id")
+	role := c.GetString("role")
 	if teacherID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "teacher" && role != "admin" && role != "superadmin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 
@@ -137,6 +145,17 @@ func (h *Handler) CreateUda(c *gin.Context) {
 }
 
 func (h *Handler) UpdateUda(c *gin.Context) {
+	teacherID := c.GetString("user_id")
+	role := c.GetString("role")
+	if teacherID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "teacher" && role != "admin" && role != "superadmin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
 	id := c.Param("id")
 	var req UpdateUdaRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -153,6 +172,17 @@ func (h *Handler) UpdateUda(c *gin.Context) {
 }
 
 func (h *Handler) DeleteUda(c *gin.Context) {
+	teacherID := c.GetString("user_id")
+	role := c.GetString("role")
+	if teacherID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "teacher" && role != "admin" && role != "superadmin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
 	id := c.Param("id")
 	if err := h.service.DeleteUda(c.Request.Context(), id); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

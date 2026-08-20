@@ -119,6 +119,9 @@ func (s *Service) DeleteRubric(ctx context.Context, actorID, actorRole, actorSch
 func (s *Service) AssessStudent(ctx context.Context, teacherID, rubricID string, req CreateAssessmentRequest) (*RubricAssessment, error) {
 	var totalScore float64
 	for _, cs := range req.Scores {
+		if cs.Score < 0 {
+			return nil, errors.New("score cannot be negative")
+		}
 		totalScore += cs.Score
 	}
 

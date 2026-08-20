@@ -85,6 +85,10 @@ func (h *Handler) RegisterStudent(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	if req.EventID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "event_id is required"})
+		return
+	}
 
 	if err := h.service.RegisterStudent(c.Request.Context(), userID, req.EventID); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -126,6 +130,10 @@ func (h *Handler) MarkAttendance(c *gin.Context) {
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if req.StudentID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "student_id is required"})
 		return
 	}
 	if err := h.service.MarkAttendance(c.Request.Context(), id, req.StudentID); err != nil {

@@ -178,6 +178,9 @@ func (r *Repository) GetByClass(ctx context.Context, classID, subjectID string) 
 			result = append(result, sc)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	if result == nil {
 		result = []StudentCompetencyEvaluation{}
 	}
@@ -283,5 +286,34 @@ func (h *Handler) SaveEvaluation(c *gin.Context) {
 }
 
 func (h *Handler) BatchSave(c *gin.Context) {
+	evaluatorID := c.GetString("user_id")
+	schoolID := c.GetString("school_id")
+	if evaluatorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	var req BatchSaveRequest
+	if err := c.ShouldBindJSON(&req); err == nil {
+		for _, studentEval := range req.Evaluations {
+			for code, level := range studentEval.Evaluations {
+				if IsValidCompetencyLevel(level) {
+					var subj *string
+					if req.SubjectID != "" {
+						subj = &req.SubjectID
+					}
+					_, _ = h.service.SaveEvaluation(c.Request.Context(), schoolID, evaluatorID, SaveEvaluationRequest{
+						StudentID:      studentEval.StudentID,
+						ClassID:        req.ClassID,
+						SubjectID:      subj,
+						CompetenceCode: code,
+						CompetenceName: code,
+						Level:          level,
+					})
+				}
+			}
+		}
+	}
+
 	c.JSON(http.StatusOK, gin.H{"message": "valutazioni per competenze salvate con successo"})
 }
