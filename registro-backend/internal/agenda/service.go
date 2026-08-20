@@ -53,6 +53,15 @@ func (s *Service) CreateAgendaItem(ctx context.Context, teacherID, schoolID stri
 		req.EndTime = "10:00"
 	}
 
+	if !req.AllDay {
+		if _, err := time.Parse("15:04", req.StartTime); err != nil {
+			return nil, errors.New("invalid start_time format: expected HH:MM")
+		}
+		if _, err := time.Parse("15:04", req.EndTime); err != nil {
+			return nil, errors.New("invalid end_time format: expected HH:MM")
+		}
+	}
+
 	item := &AgendaItem{
 		SchoolID:    schoolID,
 		ClassID:     req.ClassID,
@@ -111,9 +120,19 @@ func (s *Service) UpdateAgendaItem(ctx context.Context, actorID, actorRole, acto
 		item.AllDay = *req.AllDay
 	}
 	if req.StartTime != nil {
+		if *req.StartTime != "" {
+			if _, err := time.Parse("15:04", *req.StartTime); err != nil {
+				return nil, errors.New("invalid start_time format: expected HH:MM")
+			}
+		}
 		item.StartTime = *req.StartTime
 	}
 	if req.EndTime != nil {
+		if *req.EndTime != "" {
+			if _, err := time.Parse("15:04", *req.EndTime); err != nil {
+				return nil, errors.New("invalid end_time format: expected HH:MM")
+			}
+		}
 		item.EndTime = *req.EndTime
 	}
 	if req.Date != nil {
@@ -161,11 +180,15 @@ func (s *Service) GetCalendar(ctx context.Context, schoolID, userID, role string
 			filter.StudentID = userID
 		}
 	case "parent":
-		if filter.StudentID != "" && s.userRepo != nil {
-			isGuardian, err := s.userRepo.IsGuardian(ctx, userID, filter.StudentID)
-			if err != nil || !isGuardian {
-				return nil, ErrUnauthorized
-			}
+		if filter.StudentID == "" {
+			return nil, errors.New("student_id is required for parent role")
+		}
+		if s.userRepo == nil {
+			return nil, ErrUnauthorized
+		}
+		isGuardian, err := s.userRepo.IsGuardian(ctx, userID, filter.StudentID)
+		if err != nil || !isGuardian {
+			return nil, ErrUnauthorized
 		}
 	}
 	return s.repo.ListCalendar(ctx, schoolID, filter)
@@ -185,14 +208,15 @@ func (s *Service) SetTaskCompletion(ctx context.Context, actorID, role, targetSt
 		if targetStudentID == "" {
 			return errors.New("unauthorized: studentID required for parent role")
 		}
-		if s.userRepo != nil {
-			isGuardian, err := s.userRepo.IsGuardian(ctx, actorID, targetStudentID)
-			if err != nil {
-				return fmt.Errorf("failed to verify guardianship: %w", err)
-			}
-			if !isGuardian {
-				return ErrUnauthorized
-			}
+		if s.userRepo == nil {
+			return ErrUnauthorized
+		}
+		isGuardian, err := s.userRepo.IsGuardian(ctx, actorID, targetStudentID)
+		if err != nil {
+			return fmt.Errorf("failed to verify guardianship: %w", err)
+		}
+		if !isGuardian {
+			return ErrUnauthorized
 		}
 	default:
 		return errors.New("unauthorized: task completion can only be updated by a student or parent")
@@ -202,8 +226,11 @@ func (s *Service) SetTaskCompletion(ctx context.Context, actorID, role, targetSt
 	if err != nil {
 		return err
 	}
-	// Note: class membership check (studentBelongsToClass) is enforced at DB level
-	// via the SetCompletion JOIN on student_classes.
-	_ = item
+	if item.ClassID != "" {
+		isMember, err := s.repo.IsStudentInClass(ctx, targetStudentID, item.ClassID)
+		if err != nil || !isMember {
+			return errors.New("forbidden: lo studente non appartiene alla classe dell'agenda item")
+		}
+	}
 	return s.repo.SetCompletion(ctx, itemID, targetStudentID, completed)
 }

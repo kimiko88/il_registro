@@ -33,15 +33,17 @@ const isTokenExpired = (tokenStr) => {
     }
 }
 
-const SENSITIVE_FIELDS = new Set([
-    'password_hash', 'mfa_secret', 'temp_mfa_secret', 'recovery_codes', 'ssn', 'tax_id'
+import { useGradesStore } from './grades'
+
+const ALLOWED_USER_FIELDS = new Set([
+    'id', 'first_name', 'last_name', 'email', 'role', 'user_role', 'school_id', 'class_id', 'is_staff', 'created_at', 'updated_at', 'avatar'
 ])
 
 const sanitizeUserData = (userData) => {
     if (!userData) return null
     const clean = {}
     for (const key of Object.keys(userData)) {
-        if (!SENSITIVE_FIELDS.has(key)) {
+        if (ALLOWED_USER_FIELDS.has(key)) {
             clean[key] = userData[key]
         }
     }
@@ -88,7 +90,7 @@ export const useAuthStore = defineStore('auth', () => {
     const userRole = computed(() => {
         const jwtRole = getRoleFromToken(token.value)
         if (jwtRole) return jwtRole
-        return user.value?.role || null
+        return user.value?.role || user.value?.user_role || null
     })
 
     const userName = computed(() => {
@@ -148,6 +150,13 @@ export const useAuthStore = defineStore('auth', () => {
             // WebSocket store not initialized or already closed
         }
 
+        try {
+            const gradesStore = useGradesStore()
+            gradesStore.clearCache()
+        } catch {
+            // Grades store not initialized
+        }
+
         clearLocalSession()
         resetApiState()
     }
@@ -163,17 +172,17 @@ export const useAuthStore = defineStore('auth', () => {
         }
     }
 
-    let initPromise = null
+    const initPromise = ref(null)
 
     async function initAuth() {
-        if (initPromise) return initPromise
+        if (initPromise.value) return initPromise.value
         if (token.value && !isTokenExpired(token.value)) return
 
         const hasSavedUser = !!(localStorage.getItem('user') || sessionStorage.getItem('user'))
         if (!hasSavedUser) return
 
         isInitializing.value = true
-        initPromise = (async () => {
+        initPromise.value = (async () => {
             try {
                 const refreshResponse = await axios.post(
                     `${getBaseURL()}/auth/refresh-token`,
@@ -200,11 +209,11 @@ export const useAuthStore = defineStore('auth', () => {
                 logout()
             } finally {
                 isInitializing.value = false
-                initPromise = null
+                initPromise.value = null
             }
         })()
 
-        return initPromise
+        return initPromise.value
     }
 
     return {

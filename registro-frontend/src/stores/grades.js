@@ -267,8 +267,16 @@ export const useGradesStore = defineStore('grades', {
                 console.error("Error downloading report card PDF:", err);
                 throw err;
             } finally {
-                if (link && link.parentNode) {
-                    link.remove();
+                if (link) {
+                    try {
+                        if (link.parentNode) {
+                            link.parentNode.removeChild(link);
+                        } else if (typeof link.remove === 'function') {
+                            link.remove();
+                        }
+                    } catch (e) {
+                        console.debug("Failed to remove anchor element:", e);
+                    }
                 }
                 if (url) {
                     window.URL.revokeObjectURL(url);

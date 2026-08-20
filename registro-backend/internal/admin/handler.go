@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"runtime"
+	"strings"
 	"time"
 
 	"registro-backend/internal/auth"
@@ -180,7 +181,13 @@ func (h *Handler) UpdateSchool(c *gin.Context) {
 		return
 	}
 
-	school, err := h.service.UpdateSchool(c.Request.Context(), schoolID, &req, nil)
+	filterSchoolID := GetFilteredSchoolID(c)
+	var schoolFilter *string
+	if filterSchoolID != "" {
+		schoolFilter = &filterSchoolID
+	}
+
+	school, err := h.service.UpdateSchool(c.Request.Context(), schoolID, &req, schoolFilter)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, ErrorResponse{
 			Error:   "failed to update school",
@@ -230,8 +237,14 @@ func (h *Handler) DeleteSchool(c *gin.Context) {
 // ListAdminUsers returns a list of admin users
 // GET /api/v1/admin/users/admins
 func (h *Handler) ListAdminUsers(c *gin.Context) {
-	if userID, _ := auth.GetUserID(c); userID == "" {
+	userID, _ := auth.GetUserID(c)
+	if userID == "" {
 		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "unauthorized"})
+		return
+	}
+	callerRole, _ := auth.GetUserRole(c)
+	if callerRole != "superadmin" {
+		c.JSON(http.StatusForbidden, ErrorResponse{Error: "forbidden: superadmin role required"})
 		return
 	}
 	page := 1
@@ -378,25 +391,20 @@ func (h *Handler) DeleteAdminUser(c *gin.Context) {
 	currentUserID, _ := auth.GetUserID(c)
 	callerRole, _ := auth.GetUserRole(c)
 
-	targetUser, err := h.service.GetAdminUserByID(c.Request.Context(), adminID)
-	if err != nil {
-		c.JSON(http.StatusNotFound, ErrorResponse{Error: "user not found"})
-		return
-	}
-
-	if callerRole != "superadmin" {
-		if targetUser.Role == "superadmin" || targetUser.Role == "admin" {
-			c.JSON(http.StatusForbidden, ErrorResponse{Error: "forbidden: cannot delete user with equal or higher role"})
-			return
-		}
-	}
-
-	err = h.service.DeleteAdminUser(c.Request.Context(), callerRole, adminID, currentUserID)
+	err := h.service.DeleteAdminUser(c.Request.Context(), callerRole, adminID, currentUserID)
 	if err != nil {
 		if err == ErrCannotDeleteSelf {
 			c.JSON(http.StatusBadRequest, ErrorResponse{
 				Error: "cannot delete your own account",
 			})
+			return
+		}
+		if strings.Contains(err.Error(), "unauthorized") {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+			return
+		}
+		if strings.Contains(err.Error(), "not found") {
+			c.JSON(http.StatusNotFound, ErrorResponse{Error: "admin user not found"})
 			return
 		}
 		c.JSON(http.StatusInternalServerError, ErrorResponse{
@@ -584,12 +592,11 @@ func (h *Handler) GetSystemMetrics(c *gin.Context) {
 	runtime.ReadMemStats(&memStats)
 
 	metrics := gin.H{
-		"api_success_rate": 99.8,
-		"db_cpu_percent":   12.5,
-		"cache_hit_rate":   95.4,
-		"goroutines":       runtime.NumGoroutine(),
-		"memory_alloc_mb":  float64(memStats.Alloc) / 1024 / 1024,
-		"uptime_seconds":   time.Since(startTime).Seconds(),
+		"goroutines":      runtime.NumGoroutine(),
+		"memory_alloc_mb": float64(memStats.Alloc) / 1024 / 1024,
+		"memory_sys_mb":   float64(memStats.Sys) / 1024 / 1024,
+		"gc_cycles":       memStats.NumGC,
+		"uptime_seconds":  time.Since(startTime).Seconds(),
 	}
 	c.JSON(http.StatusOK, metrics)
 }
@@ -606,29 +613,39 @@ func (h *Handler) GetSystemHealth(c *gin.Context) {
 	minutes := int(uptimeDuration.Minutes()) % 60
 	uptimeStr := fmt.Sprintf("%dd %dh %dm", days, hours, minutes)
 
-	memPercent := 35
+	memPercent := 0
 	if memStats.Sys > 0 {
 		memPercent = int((float64(memStats.Alloc) / float64(memStats.Sys)) * 100)
 	}
 
+	dbPingStart := time.Now()
+	healthStatus, err := h.service.GetSystemHealth(c.Request.Context())
+	dbPingMs := time.Since(dbPingStart).Milliseconds()
+
+	dbStatus := "healthy"
+	overall := "healthy"
+	if err != nil || (healthStatus != nil && healthStatus.OverallStatus == "down") {
+		dbStatus = "unhealthy"
+		overall = "unhealthy"
+	} else if healthStatus != nil && healthStatus.OverallStatus == "degraded" {
+		dbStatus = "degraded"
+		overall = "degraded"
+	}
+
 	health := gin.H{
-		"status": "healthy",
+		"status": overall,
 		"services": gin.H{
-			"api":           "healthy",
-			"database":      "healthy",
-			"redis":         "healthy",
-			"storage":       "healthy",
-			"db_ping_ms":    2,
-			"redis_ping_ms": 1,
+			"api":        "healthy",
+			"database":   dbStatus,
+			"storage":    "healthy",
+			"db_ping_ms": dbPingMs,
 		},
 		"metrics": gin.H{
-			"cpu_percent":    12,
 			"memory_percent": memPercent,
-			"disk_percent":   28,
-			"api_latency_ms": 14,
+			"goroutines":     runtime.NumGoroutine(),
+			"memory_alloc_mb": float64(memStats.Alloc) / 1024 / 1024,
 		},
 		"api_version": "1.0.0",
-		"db_version":  "PostgreSQL 15",
 		"environment": "production",
 		"uptime":      uptimeStr,
 		"last_deploy": startTime.Format(time.RFC3339),

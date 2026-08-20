@@ -36,3 +36,29 @@ func TestSaveEvaluationRequest(t *testing.T) {
 		t.Fatalf("invalid request fields")
 	}
 }
+
+func TestSaveEvaluation_Validation(t *testing.T) {
+	svc := NewService(nil)
+
+	// Test invalid level
+	_, err := svc.SaveEvaluation(nil, "school-1", "evaluator-1", SaveEvaluationRequest{
+		StudentID:      "stu-1",
+		ClassID:        "cls-1",
+		CompetenceCode: "COMP_1",
+		Level:          "INVALID_LEVEL_XYZ",
+	})
+	if err == nil {
+		t.Fatalf("expected error for invalid competency level, got nil")
+	}
+
+	// Test missing student_id
+	_, err = svc.SaveEvaluation(nil, "school-1", "evaluator-1", SaveEvaluationRequest{
+		StudentID:      "",
+		ClassID:        "cls-1",
+		CompetenceCode: "COMP_1",
+		Level:          "A_Avanzato",
+	})
+	if err == nil {
+		t.Fatalf("expected error for missing student_id, got nil")
+	}
+}

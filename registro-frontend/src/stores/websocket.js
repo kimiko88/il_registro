@@ -181,11 +181,15 @@ export const useWebSocketStore = defineStore('websocket', () => {
         }
     }
 
+    const isReconnecting = ref(false)
+
     function attemptReconnect() {
         if (!authStore.isAuthenticated) {
             disconnect()
             return
         }
+
+        if (isReconnecting.value || reconnectTimer.value) return
 
         reconnectAttempts.value++
 
@@ -197,7 +201,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
             return
         }
 
-        if (reconnectTimer.value) return
+        isReconnecting.value = true
 
         // Exponential backoff with random jitter (1s, 2s, 4s, 8s... up to max 30s)
         const baseDelay = 1000 * Math.pow(2, Math.min(reconnectAttempts.value - 1, 5))
@@ -205,13 +209,17 @@ export const useWebSocketStore = defineStore('websocket', () => {
         const jitter = Math.random() * 1000
         const delay = Math.min(baseDelay + jitter, maxDelay)
 
-        reconnectTimer.value = setTimeout(() => {
+        reconnectTimer.value = setTimeout(async () => {
             reconnectTimer.value = null
-            if (authStore.isAuthenticated && authStore.token) {
-                console.log(`WebSocket: Executing reconnect attempt ${reconnectAttempts.value}`)
-                connect()
-            } else {
-                disconnect()
+            try {
+                if (authStore.isAuthenticated && authStore.token) {
+                    console.log(`WebSocket: Executing reconnect attempt ${reconnectAttempts.value}`)
+                    await connect()
+                } else {
+                    disconnect()
+                }
+            } finally {
+                isReconnecting.value = false
             }
         }, delay)
     }

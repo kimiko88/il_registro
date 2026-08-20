@@ -97,8 +97,8 @@ func parseWindowParams(c *gin.Context) (from, to time.Time, err error) {
 		err = errors.New("data di inizio successiva alla data di fine")
 		return
 	}
-	if to.After(from.AddDate(1, 1, 15)) {
-		err = errors.New("range di date troppo ampio (massimo 1 anno e 1 mese consentito)")
+	if to.After(from.AddDate(1, 3, 0)) {
+		err = errors.New("range di date troppo ampio (massimo 1 anno e 3 mesi consentito)")
 		return
 	}
 	return
@@ -511,8 +511,13 @@ func (h *Handler) ExportAttendance(c *gin.Context) {
 
 	res, err := h.service.GetClassAttendance(c.Request.Context(), actorID, actorRole, schoolID, classID, date)
 	if err != nil {
-		if strings.Contains(err.Error(), "forbidden") || strings.Contains(err.Error(), "unauthorized") || strings.Contains(err.Error(), "non sei assegnato") {
+		errStr := strings.ToLower(err.Error())
+		if strings.Contains(errStr, "forbidden") || strings.Contains(errStr, "unauthorized") || strings.Contains(errStr, "non sei assegnato") || strings.Contains(errStr, "non appartiene") {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		if strings.Contains(errStr, "non trovata") || strings.Contains(errStr, "not found") {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
 		}
 		respond500(c, "ExportAttendance GetClassAttendance error", err)
@@ -609,7 +614,7 @@ func (h *Handler) GetMonthlyBreakdown(c *gin.Context) {
 }
 
 // GetChildMonthlyBreakdown returns per-month attendance statistics for a parent's child.
-// Maintained as an alias endpoint delegating directly to GetMonthlyBreakdown.
+// Maintained as an explicit legacy alias route delegating directly to GetMonthlyBreakdown for backward compatibility with mobile/frontend clients.
 func (h *Handler) GetChildMonthlyBreakdown(c *gin.Context) {
 	h.GetMonthlyBreakdown(c)
 }

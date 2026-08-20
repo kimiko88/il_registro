@@ -13,6 +13,15 @@ const (
 	CertBehavior   CertificateType = "condotta"
 )
 
+func IsValidCertificateType(t CertificateType) bool {
+	switch t {
+	case CertIscrizione, CertFrequenza, CertPromozione, CertBehavior, "diploma", "certificate", "attendance":
+		return true
+	default:
+		return false
+	}
+}
+
 type Certificate struct {
 	ID           string          `json:"id" db:"id"`
 	SchoolID     string          `json:"school_id" db:"school_id"`

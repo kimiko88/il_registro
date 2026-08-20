@@ -217,6 +217,9 @@ func (s *service) MarkBulk(ctx context.Context, teacherID, schoolID string, req 
 	if err != nil {
 		return fmt.Errorf("errore verifica appartenenza studenti a classe: %w", err)
 	}
+	if validMembers == nil {
+		validMembers = make(map[string]bool)
+	}
 
 	seen := make(map[string]bool)
 	var atts []*Attendance
@@ -325,14 +328,16 @@ func (s *service) UpdateAttendance(ctx context.Context, teacherID, schoolID, id 
 // (admin, superadmin, secretary, principal, vice_principal, or the assigned teacher)
 // can perform this destructive operation.
 func (s *service) DeleteClassAttendanceHour(ctx context.Context, actorID, actorRole, schoolID, classID, dateStr string, hour int) error {
-	switch actorRole {
-	case "admin", "superadmin", "secretary", "principal", "vice_principal":
-		// authorised unconditionally within their school
-	case "teacher":
+	if actorRole != "superadmin" {
 		inSchool, sErr := s.repo.IsClassInSchool(ctx, classID, schoolID)
 		if sErr != nil || !inSchool {
 			return fmt.Errorf("forbidden: la classe non appartiene alla scuola dell'utente")
 		}
+	}
+	switch actorRole {
+	case "admin", "superadmin", "secretary", "principal", "vice_principal":
+		// authorised unconditionally within their school
+	case "teacher":
 		isAssigned, err := s.repo.IsTeacherAssignedToClass(ctx, actorID, classID)
 		if err != nil {
 			return fmt.Errorf("errore verifica docente per classe: %w", err)
@@ -597,11 +602,12 @@ func (s *service) GetPendingJustifications(ctx context.Context, actorID, actorRo
 		if actorRole != "teacher" {
 			return nil, errors.New("forbidden: ruolo non autorizzato")
 		}
-		if classID != "" {
-			assigned, err := s.repo.IsTeacherAssignedToClass(ctx, actorID, classID)
-			if err != nil || !assigned {
-				return nil, errors.New("forbidden: docente non assegnato alla classe indicata")
-			}
+		if classID == "" {
+			return nil, errors.New("forbidden: classID obbligatorio per i docenti")
+		}
+		assigned, err := s.repo.IsTeacherAssignedToClass(ctx, actorID, classID)
+		if err != nil || !assigned {
+			return nil, errors.New("forbidden: docente non assegnato alla classe indicata")
 		}
 	}
 
@@ -734,6 +740,8 @@ func (s *service) GetStudentSummary(ctx context.Context, actorID, actorRole, sch
 		}
 	}
 
+	// Note: stats.TotalAbsences counts distinct absent days (via COUNT(DISTINCT date) in DB),
+	// matching the unit of totalDays (teaching days).
 	if totalDays > 0 {
 		stats.AbsenceRate = (float64(stats.TotalAbsences) / float64(totalDays)) * 100
 	} else {

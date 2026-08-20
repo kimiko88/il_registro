@@ -11,9 +11,23 @@ func NewValidator() *Validator {
 	return &Validator{}
 }
 
+func (v *Validator) IsValidStatus(status AttendanceStatus) bool {
+	switch status {
+	case StatusPresent, StatusAbsent, StatusLate, StatusEarlyExit, StatusOutOfClass, StatusExempt,
+		"present", "absent", "late", "left_early", "excused", "exempt":
+		return true
+	default:
+		return false
+	}
+}
+
 func (v *Validator) ValidateEntry(a *Attendance) error {
 	now := time.Now()
 	date := a.Date
+
+	if !v.IsValidStatus(a.Status) {
+		return errors.New("invalid attendance status")
+	}
 
 	// 1. Future Check
 	if date.After(now.Add(24 * time.Hour)) {

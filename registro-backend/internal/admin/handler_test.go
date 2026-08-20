@@ -498,15 +498,18 @@ func TestHandler_GetSystemMetrics(t *testing.T) {
 	var resp map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &resp)
 	assert.NoError(t, err)
-	assert.Contains(t, resp, "api_success_rate")
-	assert.Contains(t, resp, "db_cpu_percent")
-	assert.Contains(t, resp, "cache_hit_rate")
 	assert.Contains(t, resp, "goroutines")
 	assert.Contains(t, resp, "memory_alloc_mb")
+	assert.Contains(t, resp, "memory_sys_mb")
+	assert.Contains(t, resp, "uptime_seconds")
 }
 
 func TestHandler_GetSystemHealth(t *testing.T) {
-	handler, _ := setupTestHandler()
+	handler, mockRepo := setupTestHandler()
+	mockRepo.On("GetSystemHealth", mock.Anything).Return(&SystemHealthStatus{
+		OverallStatus: "healthy",
+		Database:      HealthCheck{Status: "healthy"},
+	}, nil)
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)

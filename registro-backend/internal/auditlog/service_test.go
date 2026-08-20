@@ -3,8 +3,12 @@ package auditlog
 import (
 	"context"
 	"errors"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/gin-gonic/gin"
 )
 
 // mockRepo implements Repository for unit tests.
@@ -207,6 +211,33 @@ func TestService_ExportCSV_PropagatesError(t *testing.T) {
 	_, err := svc.ExportCSV(context.Background(), FilterParams{})
 	if err == nil {
 		t.Error("expected error from ExportCSV when repo fails")
+	}
+}
+
+func TestHandler_SystemAuditorAccess(t *testing.T) {
+	repo := &mockRepo{
+		events: []AuditEvent{
+			{ID: "e1", ActorID: "auditor-1", ActorRole: "system_auditor", Action: "audit_check"},
+		},
+	}
+	svc := NewService(repo)
+	handler := NewHandler(svc)
+
+	gin.SetMode(gin.TestMode)
+	w := httptest.NewRecorder()
+	c, r := gin.CreateTestContext(w)
+
+	r.GET("/audit-log", func(ctx *gin.Context) {
+		ctx.Set("role", "system_auditor")
+		ctx.Set("school_id", "school-1")
+		handler.List(ctx)
+	})
+
+	c.Request, _ = http.NewRequest(http.MethodGet, "/audit-log", nil)
+	r.ServeHTTP(w, c.Request)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected HTTP 200 OK for system_auditor, got %d", w.Code)
 	}
 }
 

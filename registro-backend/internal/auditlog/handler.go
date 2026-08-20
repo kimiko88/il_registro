@@ -34,8 +34,8 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 
 func (h *Handler) List(c *gin.Context) {
 	role := c.GetString("role")
-	if role != "admin" && role != "superadmin" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "access restricted to admin and superadmin"})
+	if role != "admin" && role != "superadmin" && role != "system_auditor" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "access restricted to admin, superadmin, and system_auditor"})
 		return
 	}
 
@@ -65,8 +65,8 @@ func (h *Handler) List(c *gin.Context) {
 
 func (h *Handler) ExportCSV(c *gin.Context) {
 	role := c.GetString("role")
-	if role != "admin" && role != "superadmin" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "access restricted to admin and superadmin"})
+	if role != "admin" && role != "superadmin" && role != "system_auditor" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "access restricted to admin, superadmin, and system_auditor"})
 		return
 	}
 
@@ -93,7 +93,7 @@ func (h *Handler) ExportCSV(c *gin.Context) {
 
 func (h *Handler) GetImmutabilityChain(c *gin.Context) {
 	role := c.GetString("role")
-	if role != "admin" && role != "superadmin" && role != "secretary" {
+	if role != "admin" && role != "superadmin" && role != "secretary" && role != "system_auditor" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}

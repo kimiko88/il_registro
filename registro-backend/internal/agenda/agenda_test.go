@@ -28,9 +28,10 @@ func TestSetTaskCompletion_ParentGuardian(t *testing.T) {
 	err := svc.SetTaskCompletion(context.Background(), "student-1", "student", "", "item-10", true)
 	assert.NoError(t, err)
 
-	// Parent completion
+	// Parent completion without userRepo returns ErrUnauthorized (security hardening)
 	err = svc.SetTaskCompletion(context.Background(), "parent-1", "parent", "student-1", "item-10", true)
-	assert.NoError(t, err)
+	assert.Error(t, err)
+	assert.Equal(t, ErrUnauthorized, err)
 }
 
 func TestAgendaHandler_GetByID_ErrorMapping(t *testing.T) {

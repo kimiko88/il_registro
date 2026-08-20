@@ -14,6 +14,12 @@ func NewService(repo Repository) *Service {
 }
 
 func (s *Service) CreateClass(ctx context.Context, schoolID string, req CreateClassRequest) (*Class, error) {
+	if schoolID == "" {
+		schoolID = req.SchoolID
+	}
+	if schoolID == "" {
+		return nil, fmt.Errorf("school_id is required")
+	}
 	if req.Name == "" {
 		return nil, fmt.Errorf("class name is required")
 	}

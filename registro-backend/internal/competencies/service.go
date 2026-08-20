@@ -3,6 +3,7 @@ package competencies
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -191,7 +192,22 @@ func NewService(repo *Repository) *Service {
 	return &Service{repo: repo}
 }
 
+func IsValidCompetencyLevel(level string) bool {
+	switch level {
+	case "A_Avanzato", "B_Intermedio", "C_Base", "D_Iniziale", "A", "B", "C", "D", "beginner", "intermediate", "advanced", "expert":
+		return true
+	default:
+		return false
+	}
+}
+
 func (s *Service) SaveEvaluation(ctx context.Context, schoolID, evaluatorID string, req SaveEvaluationRequest) (*Evaluation, error) {
+	if req.StudentID == "" || req.ClassID == "" || req.CompetenceCode == "" {
+		return nil, fmt.Errorf("student_id, class_id, and competence_code are required")
+	}
+	if !IsValidCompetencyLevel(req.Level) {
+		return nil, fmt.Errorf("invalid competency level: %s", req.Level)
+	}
 	return s.repo.Upsert(ctx, schoolID, evaluatorID, req)
 }
 
