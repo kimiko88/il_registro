@@ -90,13 +90,16 @@ Lo store `useWebSocketStore` espone ref reattivi per lo stato della connessione 
 
 ---
 
-## Impostazioni Docente & Filtro Anno Scolastico
+## Impostazioni Utente, MFA (2FA) & Filtro Anno Scolastico
 
-1. **Pannello Impostazioni Docente (`src/pages/teacher/Settings.vue`)**:
-   - Rotta dedicata `/teacher/settings` integrata nel menu reattivo sidebar `useMenuItems('teacher')`.
-   - Sezioni per Cambio Password con verifica di forza, Selezione Lingua (con persistenza `localStorage.setItem('user_locale')`), Preferenze Notifiche, Layout Registro (Griglia compatta, Landing page predefinita), e PIN Veloce per la firma delle lezioni.
-2. **Filtraggio Dinamico per Anno Scolastico (`src/stores/schoolYear.js`)**:
-   - Genera gli anni scolastici disponibili a partire dall'anno di registrazione del docente (`user.created_at`) fino all'anno attivo.
+1. **Autenticazione a Due Fattori (MFA / 2FA TOTP)**:
+   - Componente `MfaSetupModal.vue` utilizzabile da tutte le impostazioni utente (`Settings.vue` per ogni ruolo).
+   - Generazione dinamica QR code via secret TOTP e verifica codice di conferma a 6 cifre.
+2. **Pannello Impostazioni Utente (`Settings.vue`)**:
+   - Rotte dedicate per ciascun ruolo integrate nel menu reattivo sidebar `useMenuItems`.
+   - Sezioni per Cambio Password, 2FA TOTP, Selezione Lingua (con persistenza `localStorage.setItem('user_locale')`), Preferenze Notifiche e Layout Registro.
+3. **Filtraggio Dinamico per Anno Scolastico (`src/stores/schoolYear.js`)**:
+   - Genera gli anni scolastici disponibili a partire dall'anno di registrazione dell'utente (`user.created_at`) fino all'anno attivo.
    - Trasmette reattivamente l'anno scelto a `Classes.vue`, `Grades.vue`, `Attendance.vue`, `CoordinatorView.vue` e `Scrutiny.vue`.
 
 ---

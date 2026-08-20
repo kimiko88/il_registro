@@ -198,6 +198,11 @@ func (r *repository) GetBooking(ctx context.Context, id string) (*ColloquioBooki
 	if err != nil {
 		return nil, err
 	}
+	if b.SlotID != "" {
+		if s, err := r.GetSlotByID(ctx, b.SlotID); err == nil {
+			b.Slot = s
+		}
+	}
 	return &b, nil
 }
 func (r *repository) GetBookingsByParent(ctx context.Context, parentUserID string) ([]ColloquioBooking, error) {
@@ -243,13 +248,32 @@ func (r *repository) GetBookingsByTeacher(ctx context.Context, teacherID string)
 }
 
 func (r *repository) UpdateBooking(ctx context.Context, b *ColloquioBooking) error {
-	// If status changes to cancelled, should decrement slot count.
-	// Logic simplified here: just update status. Service handles complexity or triggers.
-	// Actually, let's keep it simple: Service handles logic, this just updates.
-	// BUT decrementation is critical.
-	// Let's assume UpdateBooking is simple update. Logic for cancellation should likely be separate or safe.
-	_, err := r.db.ExecContext(ctx, `UPDATE colloquio_bookings SET status=$1, notes=$2 WHERE id=$3`, b.Status, b.Notes, b.ID)
-	return err
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	var prevStatus string
+	var slotID string
+	err = tx.QueryRowContext(ctx, `SELECT status, slot_id FROM colloquio_bookings WHERE id = $1 FOR UPDATE`, b.ID).Scan(&prevStatus, &slotID)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return err
+	}
+
+	_, err = tx.ExecContext(ctx, `UPDATE colloquio_bookings SET status=$1, notes=$2 WHERE id=$3`, b.Status, b.Notes, b.ID)
+	if err != nil {
+		return err
+	}
+
+	if prevStatus != string(StatusCancelled) && b.Status == StatusCancelled && slotID != "" {
+		_, err = tx.ExecContext(ctx, `UPDATE colloquio_slots SET booking_count = GREATEST(0, booking_count - 1) WHERE id = $1`, slotID)
+		if err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit()
 }
 
 func (r *repository) CountBookingsForParent(ctx context.Context, parentUserID string, date time.Time, start, end time.Time) (int, error) {

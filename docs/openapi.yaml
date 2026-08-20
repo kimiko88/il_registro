@@ -118,6 +118,56 @@ paths:
       responses:
         '200':
           description: Panoramica figli, medie e comunicazioni
+  /auth/mfa/setup:
+    post:
+      summary: Inizializza setup TOTP 2FA
+      tags:
+        - Auth
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Secret TOTP e QR code URI
+  /auth/mfa/verify:
+    post:
+      summary: Verifica codice 2FA e attiva MFA
+      tags:
+        - Auth
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: MFA attivato
+  /colloqui/slots:
+    get:
+      summary: Lista slot colloqui disponibili
+      tags:
+        - Colloqui
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Lista slot
+  /pdp:
+    get:
+      summary: Lista piani didattici personalizzati (PDP/PEI)
+      tags:
+        - Inclusione
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Lista piani PDP
+  /reports/grades/excel:
+    get:
+      summary: Export matrice voti in formato Excel XLSX
+      tags:
+        - Report
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: File Excel generato
 components:
   securitySchemes:
     BearerAuth:

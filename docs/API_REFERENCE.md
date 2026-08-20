@@ -13,16 +13,21 @@ Questo documento descrive gli endpoint REST e le connessioni WebSocket del backe
 ## Indice
 
 - [Autenticazione & Endpoint Pubblici](#autenticazione--endpoint-pubblici)
-- [Scuole](#scuole)
+- [Autenticazione a Due Fattori (MFA / 2FA)](#autenticazione-a-due-fattori-mfa--2fa)
+- [Scuole & Recapiti Pubblici](#scuole--recapiti-pubblici)
 - [Classi e Materie](#classi-e-materie)
-- [Utenti](#utenti)
+- [Utenti & Fascicolo](#utenti--fascicolo)
 - [Lezioni e Agenda](#lezioni-e-agenda)
 - [Orario Scolastico](#orario-scolastico)
 - [Sostituzioni Docenti](#sostituzioni-docenti)
-- [Voti ed Educazione Civica](#voti-ed-educazione-civica)
+- [Colloqui e Ricevimento Famiglie](#colloqui-e-ricevimento-famiglie)
+- [Voti, Rubriche ed Educazione Civica](#voti-rubriche-ed-educazione-civica)
+- [Piani Didattici Personalizzati (PDP / PEI)](#piani-didattici-personalizzati-pdp--pei)
+- [Piattaforme E-Learning (Google Classroom & Teams)](#piattaforme-e-learning-google-classroom--teams)
 - [Presenze, PCTO e Orientamento](#presenze-pcto-e-orientamento)
 - [Libri di Testo](#libri-di-testo)
-- [Scrutinio](#scrutinio)
+- [Scrutinio e Pagelle](#scrutinio-e-pagelle)
+- [Export e Reportistica (Excel, PDF, SIDI)](#export-e-reportistica-excel-pdf-sidi)
 - [WebSocket Notifiche](#websocket-notifiche)
 - [Codici di Errore Strutturati](#codici-di-errore-strutturati)
 - [Struttura Risposte](#struttura-risposte)
@@ -82,150 +87,151 @@ Reset forzato della password per l'utente specificato dall'ID.
 - `admin`: può resettare la password di tutti gli utenti appartenenti al proprio istituto scolastico.
 - `secretary`: può resettare la password **esclusivamente** di utenti con ruolo `teacher` (docenti), `student` (studenti) e `parent` (genitori). Tentativi su utenti `admin`, `superadmin` o altra `secretary` restituiscono `HTTP 403 Forbidden`.
 
-**Request body:**
-```json
-{
-  "new_password": "NuovaPasswordAssegnata123!"
-}
-```
+---
+
+## Autenticazione a Due Fattori (MFA / 2FA)
+
+Disponibile per tutti i ruoli (`superadmin`, `admin`, `secretary`, `teacher`, `student`, `parent`).
+
+### `POST /api/v1/auth/mfa/setup`
+Inizializza la configurazione TOTP. Restituisce il secret crittografico e l'URI `otpauth://` per il QR code.
+
+### `POST /api/v1/auth/mfa/verify`
+Valida il codice a 6 cifre generato dall'app di autenticazione e attiva l'MFA sull'account.
+
+### `POST /api/v1/auth/mfa/disable`
+Disattiva l'MFA previa verifica della password dell'utente.
+
+---
+
+## Scuole & Recapiti Pubblici
+
+### `GET /api/v1/public/schools`
+Endpoint pubblico senza autenticazione per elencare le scuole con recapiti di segreteria (PEO, PEC, telefono, indirizzo).
+
+---
+
+## Utenti & Fascicolo
+
+### `GET /api/v1/students/:id/fascicolo`
+Restituisce lo storico completo dello studente (valutazioni, presenze, note, PDP, attestati PCTO).
+- **Autorizzazione**: Accessibile da docenti, personale di segreteria, dirigente, dallo studente stesso o dai genitori con tutela legale verificata.
 
 ---
 
 ## Orario Scolastico
 
 ### `GET /api/v1/classes/:id/schedule`
-
 Recupera l'orario scolastico della classe specificata.
-
 **Ruoli ammessi**: `superadmin`, `admin`, `secretary`, `principal`, `vice_principal`, `staff`, `teacher`, `student`, `parent`
 
 ### `POST /api/v1/classes/:id/schedule`
-
 Aggiorna o imposta l'orario scolastico per la classe.
-
 **Ruoli ammessi**: `superadmin`, `admin`, `secretary`, `principal`, `teacher`
 
 ### `GET /api/v1/teachers/:id/schedule`
-
-Recupera l'orario settimanale individuale del docente specificato (con classi, materie ed aule abbinate).
-
+Recupera l'orario settimanale individuale del docente specificato.
 **Ruoli ammessi**: `superadmin`, `admin`, `secretary`, `principal`, `teacher`
 
 ### `POST /api/v1/teachers/:id/schedule`
-
-Imposta o modifica l'orario scolastico del docente. Le modifiche effettuati sull'orario del docente aggiornano automaticamente in tempo reale gli orari di tutte le classi coinvolte (sincronizzazione bidirezionale).
-
-**Ruoli ammessi**: `superadmin`, `admin`, `secretary`
+Imposta o modifica l'orario scolastico del docente (sincronizzazione bidirezionale con le classi coinvolte).
 
 ---
 
 ## Sostituzioni Docenti
 
 ### `GET /api/v1/substitutions`
-
 Lista le sostituzioni docenti programmate per la scuola o per il docente.
 
 ### `POST /api/v1/substitutions`
-
 Crea una nuova richiesta di sostituzione per un docente assente.
-
 **Ruoli ammessi**: `superadmin`, `admin`, `secretary`, `principal`
-
-### `PUT /api/v1/substitutions/:id`
-
-Aggiorna i dettagli o assegna il docente sostituto.
-
-### `DELETE /api/v1/substitutions/:id`
-
-Elimina la registrazione di sostituzione.
 
 ---
 
-## Voti ed Educazione Civica
+## Colloqui e Ricevimento Famiglie
 
-### `POST /api/v1/grades`
+### `GET /api/v1/colloqui/slots`
+Recupera gli slot di colloquio disponibili con filtri per scuola, docente e intervallo di date.
 
-Inserisce una nuova valutazione numerica o giudizio. Supporta materie condivise come Educazione Civica.
+### `POST /api/v1/colloqui/slots`
+Crea nuovi slot di colloquio per il docente autenticato con controllo di sovrapposizione oraria.
 
-**Ruoli ammessi**: `superadmin`, `admin`, `teacher`, `coordinator`
+### `POST /api/v1/colloqui/book`
+Prenota uno slot da parte di un genitore (verifica tutela studente e blocco concorrenza).
 
-### `PATCH /api/v1/grades/:id`
+### `POST /api/v1/colloqui/bookings/:id/cancel`
+Annulla una prenotazione con rilascio e decremento atomico del conteggio prenotazioni dello slot.
 
-Modifica una valutazione esistente. Per le valutazioni di Educazione Civica, la modifica è riservata al docente creatore del voto o all'amministrazione.
+---
+
+## Piani Didattici Personalizzati (PDP / PEI)
+
+### `GET /api/v1/pdp`
+Elenca i piani didattici personalizzati per classe o studente.
+
+### `POST /api/v1/pdp`
+Crea un nuovo piano PDP/PEI con misure dispensative e strumenti compensativi.
+**Ruoli ammessi**: `teacher`, `coordinator`, `admin`, `superadmin`
+
+### `POST /api/v1/pdp/:id/approve`
+Approvazione formale da parte della famiglia/tutore o del Consiglio di Classe.
+
+---
+
+## Piattaforme E-Learning (Google Classroom & Teams)
+
+### `POST /api/v1/elearning/google/connect` & `POST /api/v1/elearning/microsoft/connect`
+Collega l'account istituzionale al provider LMS. Riservato al personale scolastico.
+
+### `POST /api/v1/elearning/sync/courses` & `POST /api/v1/elearning/sync/grades`
+Sincronizza corsi, compiti e valutazioni tra il registro e la piattaforma e-learning.
 
 ---
 
 ## Presenze, PCTO e Orientamento
 
 ### `POST /api/v1/attendance/mark-bulk`
-
 Registrazione in blocco delle presenze/assenze dell'ora, con indicazione opzionale del tipo di attività (`PCTO` o `Orientamento`).
-
-**Request body:**
-
-```json
-{
-  "class_id": "uuid",
-  "date": "2025-10-15",
-  "hour": 1,
-  "subject_id": "sub-uuid",
-  "lesson_type": "PCTO",
-  "statuses": [{ "student_id": "st-uuid", "status": "Present" }]
-}
-```
 
 ---
 
 ## Libri di Testo
 
 ### `POST /api/v1/textbooks`
-
 Crea un nuovo libro di testo nel catalogo dell'istituto (con codice ISBN, titolo, autore, materia, casa editrice, prezzo).
 
-**Ruoli ammessi**: `superadmin`, `admin`, `secretary`, `teacher`
-
 ### `GET /api/v1/textbooks`
-
 Lista i libri di testo presenti nel catalogo della scuola.
-
-### `POST /api/v1/textbooks/class/:classId`
-
-Assegna un libro di testo a una specifica classe e materia.
-
-### `DELETE /api/v1/textbooks/class/assignment/:id`
-
-Rimuove l'assegnazione del libro dalla classe.
 
 ---
 
-## Scrutinio
+## Scrutinio e Pagelle
 
 ### `GET /api/v1/scrutiny/overview`
-
 Panoramica sintetica dello stato degli scrutini (Q1 e Q2).
 
-**Ruoli ammessi**: `superadmin`, `admin`, `secretary`, `principal`
-
-### `GET /api/v1/scrutiny/class/:classId`
-
-Recupera le medie proposte ed i voti di scrutinio per la classe.
-
 ### `POST /api/v1/scrutiny/validate`
-
 Valida e blocca lo scrutinio della classe per il quadrimestre specificato.
 
-**Ruoli ammessi**: `superadmin`, `admin`, `secretary`, `principal`, `coordinator`
-
 ### `GET /api/v1/scrutiny-final/export`
+Esporta la pagella finale / tabellone dello scrutinio in formato PDF con caratteri sanitizzati.
 
-Esporta la pagella finale / tabellone dello scrutinio in formato PDF.
+---
+
+## Export e Reportistica (Excel, PDF, SIDI)
+
+### `GET /api/v1/reports/grades/excel`
+Esporta la matrice voti di classe in formato Excel XLSX con supporto a colonne dinamiche illimitate oltre la colonna Z (`AA`, `AB`, ecc.).
+
+### `GET /api/v1/reports/sidi/xml` e `GET /api/v1/reports/sidi/csv`
+Esporta i flussi dati aggregati per il portale ministeriale SIDI.
 
 ---
 
 ## WebSocket Notifiche
 
 ### `GET /api/v1/ws`
-
 Connessione WebSocket in tempo reale per notifiche su voti, presenze, circolari e sostituzioni.
 
 ---
@@ -238,6 +244,6 @@ Connessione WebSocket in tempo reale per notifiche su voti, presenze, circolari 
 | `401 Unauthorized`          | `UNAUTHORIZED`             | Token mancante, scaduto o non valido                           |
 | `403 Forbidden`             | `FORBIDDEN`                | Ruolo insufficiente o assenza di associazione docente/classe   |
 | `404 Not Found`             | `NOT_FOUND`                | Risorsa o entità non esistente                                 |
-| `409 Conflict`              | `DUPLICATE_ENTRY`          | Email o codice scuola già presente                             |
+| `409 Conflict`              | `DUPLICATE_ENTRY`          | Email, codice scuola o prenotazione già presente               |
 | `429 Too Many Requests`     | `AUTH_RATE_LIMIT_EXCEEDED` | Più di 5 tentativi di login/refresh al minuto per lo stesso IP |
 | `500 Internal Server Error` | `INTERNAL_ERROR`           | Errore inaspettato del database o del server                   |
