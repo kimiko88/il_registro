@@ -58,17 +58,25 @@ func TestIntegration_Grading_Scrutiny_Lifecycle(t *testing.T) {
 
 type mockGradesRepoForScrutiny struct{}
 
-func (m *mockGradesRepoForScrutiny) Create(g *grades.Grade) error                                  { return nil }
-func (m *mockGradesRepoForScrutiny) BatchCreate(gradesList []*grades.Grade) error                   { return nil }
-func (m *mockGradesRepoForScrutiny) Update(g *grades.Grade, history *grades.GradeHistory) error    { return nil }
-func (m *mockGradesRepoForScrutiny) Delete(id string, deletedBy string) error                      { return nil }
-func (m *mockGradesRepoForScrutiny) FindByID(id string) (*grades.Grade, error)                     { return &grades.Grade{ID: id, GradeValue: 8}, nil }
-func (m *mockGradesRepoForScrutiny) FindByStudent(studentID string) ([]grades.Grade, error)        { return []grades.Grade{}, nil }
+func (m *mockGradesRepoForScrutiny) Create(g *grades.Grade) error                 { return nil }
+func (m *mockGradesRepoForScrutiny) BatchCreate(gradesList []*grades.Grade) error { return nil }
+func (m *mockGradesRepoForScrutiny) Update(g *grades.Grade, history *grades.GradeHistory) error {
+	return nil
+}
+func (m *mockGradesRepoForScrutiny) Delete(id string, deletedBy string) error { return nil }
+func (m *mockGradesRepoForScrutiny) FindByID(id string) (*grades.Grade, error) {
+	return &grades.Grade{ID: id, GradeValue: 8}, nil
+}
+func (m *mockGradesRepoForScrutiny) FindByStudent(studentID string) ([]grades.Grade, error) {
+	return []grades.Grade{}, nil
+}
 func (m *mockGradesRepoForScrutiny) FindByClassAndSubject(classID, subjectID string, semester int) ([]grades.Grade, error) {
 	return []grades.Grade{}, nil
 }
-func (m *mockGradesRepoForScrutiny) GetClassAverage(classID string) (float64, error)              { return 7.5, nil }
-func (m *mockGradesRepoForScrutiny) GetSubjectAverage(studentID, subjectID string) (float64, error) { return 8.0, nil }
+func (m *mockGradesRepoForScrutiny) GetClassAverage(classID string) (float64, error) { return 7.5, nil }
+func (m *mockGradesRepoForScrutiny) GetSubjectAverage(studentID, subjectID string) (float64, error) {
+	return 8.0, nil
+}
 func (m *mockGradesRepoForScrutiny) IsTeacherAssignedToClassSubject(teacherID, classID, subjectID string) (bool, error) {
 	return true, nil
 }
@@ -90,9 +98,9 @@ func (m *mockGradesRepoForScrutiny) UpsertWeightConfig(cfg *grades.GradeWeightCo
 func (m *mockGradesRepoForScrutiny) GetWeightConfig(schoolID, subjectID, classID string) (*grades.GradeWeightConfig, error) {
 	return nil, nil
 }
-func (m *mockGradesRepoForScrutiny) DeleteWeightConfig(id string) error { return nil }
+func (m *mockGradesRepoForScrutiny) DeleteWeightConfig(id string) error          { return nil }
 func (m *mockGradesRepoForScrutiny) CreateTest(testData *grades.ClassTest) error { return nil }
-func (m *mockGradesRepoForScrutiny) DeleteTest(id string) error { return nil }
+func (m *mockGradesRepoForScrutiny) DeleteTest(id string) error                  { return nil }
 func (m *mockGradesRepoForScrutiny) FindByClass(classID string, semester int) ([]grades.Grade, error) {
 	return []grades.Grade{}, nil
 }
