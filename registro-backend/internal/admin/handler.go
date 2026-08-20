@@ -641,8 +641,8 @@ func (h *Handler) GetSystemHealth(c *gin.Context) {
 			"db_ping_ms": dbPingMs,
 		},
 		"metrics": gin.H{
-			"memory_percent": memPercent,
-			"goroutines":     runtime.NumGoroutine(),
+			"memory_percent":  memPercent,
+			"goroutines":      runtime.NumGoroutine(),
 			"memory_alloc_mb": float64(memStats.Alloc) / 1024 / 1024,
 		},
 		"api_version": "1.0.0",

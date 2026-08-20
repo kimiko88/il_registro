@@ -39,13 +39,13 @@ func TestCreateAgendaItem_InvalidTimeFormat_Rejected(t *testing.T) {
 	svc := NewService(mockRepo)
 
 	req := CreateAgendaItemRequest{
-		ClassID:     "class-1",
-		Title:       "Math Homework",
-		Type:        TypeHomework,
-		Date:        "2025-11-15",
-		StartTime:   "invalid-time",
-		EndTime:     "10:00",
-		AllDay:      false,
+		ClassID:   "class-1",
+		Title:     "Math Homework",
+		Type:      TypeHomework,
+		Date:      "2025-11-15",
+		StartTime: "invalid-time",
+		EndTime:   "10:00",
+		AllDay:    false,
 	}
 
 	_, err := svc.CreateAgendaItem(context.Background(), "teacher-1", "school-1", req)
