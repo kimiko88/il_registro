@@ -64,7 +64,7 @@ func (r *repository) GetByClass(classID string) ([]DidacticMaterial, error) {
 		}
 		list = append(list, m)
 	}
-	return list, nil
+	return list, rows.Err()
 }
 
 func (r *repository) Delete(id string, teacherID string) error {

@@ -323,7 +323,7 @@ func (r *repository) querySlots(ctx context.Context, query string, args ...inter
 		}
 		slots = append(slots, s)
 	}
-	return slots, nil
+	return slots, rows.Err()
 }
 
 func (r *repository) queryBookings(ctx context.Context, query string, args ...interface{}) ([]ColloquioBooking, error) {
@@ -346,7 +346,7 @@ func (r *repository) queryBookings(ctx context.Context, query string, args ...in
 		b.Slot = &s
 		bookings = append(bookings, b)
 	}
-	return bookings, nil
+	return bookings, rows.Err()
 }
 
 func (r *repository) ResolveParentUserID(ctx context.Context, userID string) (string, error) {

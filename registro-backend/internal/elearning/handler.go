@@ -29,10 +29,19 @@ func (h *Handler) GetProviders(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
+func isStaff(role string) bool {
+	return role == "teacher" || role == "admin" || role == "superadmin" || role == "principal" || role == "vice_principal" || role == "secretary"
+}
+
 func (h *Handler) ConnectGoogle(c *gin.Context) {
 	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if !isStaff(role) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only staff can connect eLearning providers"})
 		return
 	}
 
@@ -52,8 +61,13 @@ func (h *Handler) ConnectGoogle(c *gin.Context) {
 
 func (h *Handler) ConnectMicrosoft(c *gin.Context) {
 	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if !isStaff(role) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only staff can connect eLearning providers"})
 		return
 	}
 
@@ -73,8 +87,13 @@ func (h *Handler) ConnectMicrosoft(c *gin.Context) {
 
 func (h *Handler) SyncCourses(c *gin.Context) {
 	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if !isStaff(role) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only staff can sync courses"})
 		return
 	}
 
@@ -90,8 +109,13 @@ func (h *Handler) SyncCourses(c *gin.Context) {
 
 func (h *Handler) SyncAssignments(c *gin.Context) {
 	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if !isStaff(role) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only staff can sync assignments"})
 		return
 	}
 
@@ -110,8 +134,13 @@ func (h *Handler) SyncAssignments(c *gin.Context) {
 
 func (h *Handler) SyncGrades(c *gin.Context) {
 	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if !isStaff(role) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only staff can sync grades"})
 		return
 	}
 

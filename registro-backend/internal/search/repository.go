@@ -45,43 +45,47 @@ func (r *PostgresRepository) GlobalSearch(ctx context.Context, actorRole, school
 			LIMIT 20
 		`
 		rows, err := r.db.QueryContext(ctx, userQuery, schoolID, searchPattern)
-		if err == nil {
-			defer rows.Close()
-			for rows.Next() {
-				var id, role, name, email, cf string
-				if err := rows.Scan(&id, &role, &name, &email, &cf); err == nil {
-					// Students/parents cannot search or view parents/secretaries or fiscal codes
-					if (actorRole == "student" || actorRole == "parent") && (role == "admin" || role == "secretary" || role == "superadmin") {
-						continue
-					}
-					roleLabel := "Utente"
-					switch role {
-					case "student":
-						roleLabel = "Studente"
-					case "teacher":
-						roleLabel = "Docente"
-					case "secretary":
-						roleLabel = "Personale di Segreteria"
-					case "admin":
-						roleLabel = "Amministratore"
-					case "parent":
-						roleLabel = "Genitore"
-					}
-					desc := fmt.Sprintf("Ruolo: %s", roleLabel)
-					if actorRole == "admin" || actorRole == "superadmin" || actorRole == "secretary" || actorRole == "principal" || actorRole == "vice_principal" {
-						if cf != "" {
-							desc = fmt.Sprintf("Ruolo: %s | CF: %s", roleLabel, cf)
-						}
-					}
-					results = append(results, SearchResultItem{
-						ID:          id,
-						Type:        role,
-						Title:       name,
-						Subtitle:    email,
-						Description: desc,
-					})
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+		for rows.Next() {
+			var id, role, name, email, cf string
+			if err := rows.Scan(&id, &role, &name, &email, &cf); err == nil {
+				// Students/parents cannot search or view parents/secretaries or fiscal codes
+				if (actorRole == "student" || actorRole == "parent") && (role == "admin" || role == "secretary" || role == "superadmin") {
+					continue
 				}
+				roleLabel := "Utente"
+				switch role {
+				case "student":
+					roleLabel = "Studente"
+				case "teacher":
+					roleLabel = "Docente"
+				case "secretary":
+					roleLabel = "Personale di Segreteria"
+				case "admin":
+					roleLabel = "Amministratore"
+				case "parent":
+					roleLabel = "Genitore"
+				}
+				desc := fmt.Sprintf("Ruolo: %s", roleLabel)
+				if actorRole == "admin" || actorRole == "superadmin" || actorRole == "secretary" || actorRole == "principal" || actorRole == "vice_principal" {
+					if cf != "" {
+						desc = fmt.Sprintf("Ruolo: %s | CF: %s", roleLabel, cf)
+					}
+				}
+				results = append(results, SearchResultItem{
+					ID:          id,
+					Type:        role,
+					Title:       name,
+					Subtitle:    email,
+					Description: desc,
+				})
 			}
+		}
+		if err := rows.Err(); err != nil {
+			return nil, err
 		}
 	}
 
@@ -95,20 +99,24 @@ func (r *PostgresRepository) GlobalSearch(ctx context.Context, actorRole, school
 			LIMIT 10
 		`
 		rows, err := r.db.QueryContext(ctx, classQuery, schoolID, searchPattern)
-		if err == nil {
-			defer rows.Close()
-			for rows.Next() {
-				var id, section, spec string
-				if err := rows.Scan(&id, &section, &spec); err == nil {
-					results = append(results, SearchResultItem{
-						ID:          id,
-						Type:        "class",
-						Title:       "Classe " + section,
-						Subtitle:    spec,
-						Description: "Gestione Classe e Studenti",
-					})
-				}
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+		for rows.Next() {
+			var id, section, spec string
+			if err := rows.Scan(&id, &section, &spec); err == nil {
+				results = append(results, SearchResultItem{
+					ID:          id,
+					Type:        "class",
+					Title:       "Classe " + section,
+					Subtitle:    spec,
+					Description: "Gestione Classe e Studenti",
+				})
 			}
+		}
+		if err := rows.Err(); err != nil {
+			return nil, err
 		}
 	}
 
@@ -122,23 +130,27 @@ func (r *PostgresRepository) GlobalSearch(ctx context.Context, actorRole, school
 			LIMIT 20
 		`
 		rows, err := r.db.QueryContext(ctx, commQuery, schoolID, searchPattern)
-		if err == nil {
-			defer rows.Close()
-			for rows.Next() {
-				var id, subject, ctype, body string
-				if err := rows.Scan(&id, &subject, &ctype, &body); err == nil {
-					if len(body) > 100 {
-						body = body[:100] + "..."
-					}
-					results = append(results, SearchResultItem{
-						ID:          id,
-						Type:        "communication",
-						Title:       subject,
-						Subtitle:    fmt.Sprintf("Circolare / Avviso (%s)", ctype),
-						Description: body,
-					})
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+		for rows.Next() {
+			var id, subject, ctype, body string
+			if err := rows.Scan(&id, &subject, &ctype, &body); err == nil {
+				if len(body) > 100 {
+					body = body[:100] + "..."
 				}
+				results = append(results, SearchResultItem{
+					ID:          id,
+					Type:        "communication",
+					Title:       subject,
+					Subtitle:    fmt.Sprintf("Circolare / Avviso (%s)", ctype),
+					Description: body,
+				})
 			}
+		}
+		if err := rows.Err(); err != nil {
+			return nil, err
 		}
 	}
 
@@ -153,20 +165,24 @@ func (r *PostgresRepository) GlobalSearch(ctx context.Context, actorRole, school
 			LIMIT 20
 		`
 		rows, err := r.db.QueryContext(ctx, lessonQuery, schoolID, searchPattern)
-		if err == nil {
-			defer rows.Close()
-			for rows.Next() {
-				var id, topic, notes, ltype string
-				if err := rows.Scan(&id, &topic, &notes, &ltype); err == nil {
-					results = append(results, SearchResultItem{
-						ID:          id,
-						Type:        "lesson",
-						Title:       topic,
-						Subtitle:    fmt.Sprintf("Tipo Lezione: %s", ltype),
-						Description: notes,
-					})
-				}
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+		for rows.Next() {
+			var id, topic, notes, ltype string
+			if err := rows.Scan(&id, &topic, &notes, &ltype); err == nil {
+				results = append(results, SearchResultItem{
+					ID:          id,
+					Type:        "lesson",
+					Title:       topic,
+					Subtitle:    fmt.Sprintf("Tipo Lezione: %s", ltype),
+					Description: notes,
+				})
 			}
+		}
+		if err := rows.Err(); err != nil {
+			return nil, err
 		}
 	}
 
