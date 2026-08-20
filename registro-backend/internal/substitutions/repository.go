@@ -130,7 +130,7 @@ func (r *PostgresRepository) ListBySchool(ctx context.Context, schoolID, date st
 	if list == nil {
 		list = []*Substitution{}
 	}
-	return list, nil
+	return list, rows.Err()
 }
 
 func (r *PostgresRepository) ListByTeacher(ctx context.Context, teacherID string, date string) ([]*Substitution, error) {
@@ -185,7 +185,7 @@ func (r *PostgresRepository) ListByTeacher(ctx context.Context, teacherID string
 	if list == nil {
 		list = []*Substitution{}
 	}
-	return list, nil
+	return list, rows.Err()
 }
 
 func (r *PostgresRepository) AssignSubstitute(ctx context.Context, id string, substituteTeacherID string, notes string) error {

@@ -54,7 +54,7 @@ func (r *postgresRepository) List(ctx context.Context, schoolID string) ([]Textb
 		}
 		res = append(res, t)
 	}
-	return res, nil
+	return res, rows.Err()
 }
 
 func (r *postgresRepository) Delete(ctx context.Context, id string) error {
@@ -96,5 +96,5 @@ func (r *postgresRepository) ListByClass(ctx context.Context, classID string) ([
 		}
 		res = append(res, ct)
 	}
-	return res, nil
+	return res, rows.Err()
 }

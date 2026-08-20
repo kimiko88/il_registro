@@ -523,7 +523,7 @@ func (r *AdminRepository) ListAdminUsers(ctx context.Context, offset, limit int,
 		users = append(users, u)
 	}
 
-	return users, total, nil
+	return users, total, rows.Err()
 }
 
 // GetAdminUserByID retrieves a single admin user by their ID
@@ -840,7 +840,7 @@ func (r *AdminRepository) ListAuditLogs(ctx context.Context, req *admin.AuditLog
 		entries = append(entries, entry)
 	}
 
-	return entries, total, nil
+	return entries, total, rows.Err()
 }
 
 // LogAdminAction logs an admin action
@@ -971,6 +971,9 @@ func (r *AdminRepository) GetUserGrowth(ctx context.Context, schoolID *string) (
 			{Label: "Gen", Value: 160},
 			{Label: "Feb", Value: 185},
 		}
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return points, nil
 }
