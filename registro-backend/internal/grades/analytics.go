@@ -197,10 +197,15 @@ func (a *analyticsService) GetClassAnalysis(classID string, semester int) (*Anal
 			suspended++
 		}
 
+		stuDisplayName := "Student " + sID
+		if len(sID) >= 4 {
+			stuDisplayName = "Student " + sID[:4]
+		}
+
 		if failingCount > 0 {
 			atRisk = append(atRisk, RiskStudent{
 				StudentID:      sID,
-				StudentName:    "Student " + sID[:4], // Mock name without user repo
+				StudentName:    stuDisplayName,
 				FailedSubjects: failedSubs,
 				AvgFailing:     avg, // Avg of ALL or Failing? Using overall for now
 				Recommendation: "Supporto intensivo",
@@ -210,7 +215,7 @@ func (a *analyticsService) GetClassAnalysis(classID string, semester int) (*Anal
 		if avg >= 8.0 {
 			topPerf = append(topPerf, TopStudent{
 				StudentID:   sID,
-				StudentName: "Student " + sID[:4],
+				StudentName: stuDisplayName,
 				AvgGrade:    avg,
 			})
 		}

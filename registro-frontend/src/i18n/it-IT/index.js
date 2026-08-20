@@ -186,7 +186,30 @@ export default {
     draft: 'Bozza Pianificata',
     saveDraft: 'Salva Bozza Lezione',
     deleteDraft: 'Bozza eliminata',
-    topicRequired: 'Inserire l\'argomento della lezione'
+    topicRequired: 'Inserire l\'argomento della lezione',
+    draftsListTitle: 'Bozze Lezioni Pianificate',
+    noDrafts: 'Nessuna bozza lezione salvata al momento.',
+    signAndRegister: 'Firma & Registra',
+    draftSaved: 'Bozza lezione salvata per il {date}!',
+    draftRegistered: 'Bozza convertita e registrata con successo!',
+    optionsMenu: 'Opzioni e scorciatoie',
+    statTotalSchools: 'Totale Scuole',
+    statActiveUsers: 'Utenti Attivi',
+    statActive24h: 'Attivi 24h',
+    statPendingDocs: 'Doc. in Attesa',
+    statStudents: 'Studenti',
+    statTeachers: 'Docenti',
+    statDocuments: 'Documenti',
+    statRequests: 'Richieste',
+    statMyClasses: 'Le Mie Classi',
+    statLessonsToday: 'Lezioni Oggi',
+    statGradesPending: 'Voti da Inserire',
+    actionAttendance: 'Segna Presenze',
+    actionGrades: 'Inserisci Voti',
+    actionLessons: 'Registro Lezioni',
+    actionAgenda: 'Agenda Classe',
+    actionUsers: 'Gestione Utenti',
+    actionClasses: 'Gestione Classi'
   },
   agendaPage: {
     title: 'Agenda & Calendario Didattico',
@@ -696,6 +719,10 @@ export default {
     serviziOrari: 'Servizi & Orari',
     comunicazioniAccount: 'Comunicazioni & Account'
   },
+  classes: {
+    linguisticGroup: 'Gruppo Linguistico / Articolazione',
+    linguisticGroupLabel: 'Gruppo Linguistico: {name}'
+  },
   roles: {
     admin: 'Amministratore',
     superadmin: 'Super Amministratore',
@@ -712,7 +739,18 @@ export default {
     settingsSaved: 'Impostazioni salvate con successo!',
     emailCopied: 'Indirizzo email copiato negli appunti!',
     passwordUpdated: 'Password aggiornata con successo!',
-    languageChanged: 'Lingua impostata con successo'
+    languageChanged: 'Lingua impostata con successo',
+    wsConnectionFailed: 'Connessione in tempo reale non disponibile dopo tentativi ripetuti.',
+    wsGradeUpdated: 'Aggiornamento voto: {value} ({subject})',
+    wsGradeDeleted: 'Voto eliminato per {subject}',
+    wsAttendanceUpdated: 'Aggiornamento presenze: {status}',
+    wsJustificationApproved: 'Giustifica approvata: {reason}',
+    wsJustificationRejected: 'Giustifica non approvata: {reason}',
+    wsNewCommunication: 'Nuova comunicazione: {title}',
+    wsNoteAdded: 'Nuova nota disciplinare: {title}',
+    wsScrutinyPublished: 'Esito scrutinio pubblicato per {student}',
+    wsGoalUpdated: 'Obiettivo aggiornato: {title}',
+    wsSlotUpdated: 'Aggiornamento colloquio: {msg}'
   },
   errors: {
     connectionError: 'Errore di connessione al server. Verifica la tua connessione e riprova.',
@@ -1117,6 +1155,83 @@ export default {
       analytics: { title: "Analytics & Dispersione Scolastica", desc: "Analisi predittiva sui rischi di abbandono, assenteismo e andamento voti.", content: "Utilizza gli strumenti di Business Intelligence per identificare preventivamente gli studenti a rischio dispersione.\n\nPassaggio 1: Accedi alla sezione \"Analytics & BI\".\nPassaggio 2: Consulta la mappa termica dell'assenteismo per classe e disciplina.\nPassaggio 3: Imposta i criteri dell'algoritmo di alert (es. Assenze > 20% + Media < 5.5).\nPassaggio 4: Visualizza la lista degli studenti segnalati a rischio abbandono scolastico.\nPassaggio 5: Esporta i report statistici per la Presidenza e il Nucleo Interno di Valutazione (NIV).\n\nSuggerimento: Utilizza i grafici comparativi 1° vs 2° Quadrimestre per monitorare l'efficacia dei corsi di recupero." },
       integrations: { title: "Integrazioni E-Learning & SSO", desc: "Sincronizzazione con Google Classroom, Microsoft Teams e identity provider.", content: "Connetti il Registro Elettronico con le principali piattaforme didattiche cloud.\n\nPassaggio 1: Vai su \"Integrazioni & SSO\".\nPassaggio 2: Abilita il modulo Google Workspace o Microsoft 365.\nPassaggio 3: Configura le API Key e gli ID di autenticazione OAuth2.\nPassaggio 4: Attiva la sincronizzazione automatica delle classi e degli elenchi studenti.\nPassaggio 5: I voti e i compiti creati su Google Classroom verranno riportati direttamente nel Registro Elettronico.\n\nScorciatoia: Clicca su \"Sincronizza Ora\" per forzare un aggiornamento immediato delle classi su Classroom." },
       audit: { title: "Audit Log & Tracciabilità GDPR", desc: "Registro delle operazioni di sistema con tracciamento immutabile degli accessi.", content: "Garantisci la completa tracciabilità e la sicurezza dei dati secondo il regolamento GDPR 2016/679.\n\nPassaggio 1: Accedi a \"Audit Log & Tracciabilità\".\nPassaggio 2: Visualizza la tabella di tracciamento contenente: Timestamp, Utente, Ruolo, Indirizzo IP, Azione e Risorsa.\nPassaggio 3: Filtra le azioni per categoria (es. Modifica Voto, Cancellazione Utente, Export Dati Sensibili).\nPassaggio 4: Esporta i log in formato PDF cifrato per eventuali ispezioni AgID o procedimenti formali.\n\nAttenzione: Gli audit log sono immutabili e non possono essere alterati o eliminati da alcun utente del sistema." }
+    }
+  },
+  layout: {
+    skipToContent: 'Salta al contenuto principale',
+    mainNav: 'Barra di navigazione principale',
+    toggleDrawer: 'Apri o chiudi menu di navigazione laterale',
+    schoolYear: 'Anno Scolastico',
+    schoolYearSelect: 'Seleziona Anno Scolastico',
+    themeAriaLabel: 'Scegli il Tema Visivo dell\'Interfaccia',
+    themeTooltip: 'Seleziona Tema Visivo',
+    themesTitle: 'Temi e Palette Visive',
+    a11yAriaLabel: 'Opzioni di Accessibilità Visiva (OpenDyslexic e Contrasto)',
+    a11yTooltip: 'Accessibilità Visiva (DSA & Contrasto)',
+    a11yTitle: 'Accessibilità Visiva (A11y)',
+    dsaFontDesc: 'Alta leggibilità dislessia/BES',
+    highContrast: 'Contrasto Elevato',
+    highContrastDesc: 'Nitidezza e bordi netti 2px',
+    lightMode: 'Modalità Chiara',
+    darkMode: 'Modalità Scura',
+    enterFullscreen: 'Vai a Schermo Intero',
+    exitFullscreen: 'Esci da Schermo Intero',
+    sideNav: 'Menu laterale di navigazione',
+    userProfile: 'Profilo utente connesso',
+    connectedUser: 'Utente connesso: {name}',
+    userRole: 'Ruolo: {role}',
+    breadcrumbNav: 'Percorso di navigazione corrente'
+  },
+  composables: {
+    adminUsers: {
+      confirmTitle: 'Conferma eliminazione',
+      confirmMsg: 'Sei sicuro di voler eliminare questo amministratore?'
+    },
+    attendance: {
+      saveSuccess: 'Presenze salvate con successo',
+      saveError: 'Impossibile salvare le presenze',
+      requestSent: 'Richiesta di giustifica inviata',
+      requestError: 'Impossibile inviare la richiesta di giustifica'
+    },
+    children: {
+      addSuccess: 'Figlio aggiunto con successo',
+      removeConfirmTitle: 'Conferma rimozione',
+      removeConfirmMsg: 'Sei sicuro di voler rimuovere questo profilo studente?',
+      removeSuccess: 'Profilo studente rimosso'
+    },
+    colloqui: {
+      bookingConfirmed: 'Prenotazione colloquio confermata',
+      bookingCancelled: 'Prenotazione colloquio annullata',
+      slotsCreated: '{count} disponibilità create con successo',
+      slotsError: 'Errore durante la creazione delle disponibilità'
+    },
+    documents: {
+      draftCreated: 'Bozza documento creata',
+      draftError: 'Impossibile creare la bozza',
+      reviewSuccess: 'Documento {decision}',
+      reviewError: 'Revisione fallita',
+      downloading: 'Download di {title} in corso...'
+    },
+    grades: {
+      fillRequired: 'Compilare tutti i campi obbligatori per il voto',
+      saveSuccess: 'Voto salvato con successo',
+      saveError: 'Impossibile salvare il voto'
+    },
+    schools: {
+      updated: 'Scuola aggiornata con successo',
+      created: 'Scuola creata con successo',
+      operationFailed: 'Operazione fallita',
+      deleteConfirmTitle: 'Conferma eliminazione',
+      deleteConfirmMsg: 'Sei sicuro di voler eliminare questa scuola?',
+      deleted: 'Scuola eliminata con successo'
+    },
+    undo: {
+      cancelWithSeconds: 'Annulla ({remaining}s)',
+      actionCancelled: 'Azione annullata',
+      cancelError: 'Errore durante l\'annullamento'
+    },
+    users: {
+      importStarted: 'Importazione utenti avviata'
     }
   }
 }

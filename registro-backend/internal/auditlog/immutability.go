@@ -74,6 +74,10 @@ func VerifyChainIntegrity(ctx context.Context, db *sql.DB) (*ImmutabilityReport,
 		blocks = append(blocks, b)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
 	return &ImmutabilityReport{
 		TotalBlocks:   len(blocks),
 		ValidBlocks:   validCount,

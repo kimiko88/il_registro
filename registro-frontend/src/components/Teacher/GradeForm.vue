@@ -2,7 +2,7 @@
   <q-dialog v-model="isOpen" persistent>
     <q-card style="min-width: 400px">
       <q-card-section>
-        <div class="text-h6">{{ t('classRegister.tableHeaderGrade') || 'Inserisci Voto' }}</div>
+        <div class="text-h6">{{ t('gradesPage.insertGrade') || 'Inserisci Voto' }}</div>
         <div class="text-subtitle2">{{ studentName }}</div>
       </q-card-section>
 
@@ -12,6 +12,8 @@
             v-model="form.type"
             :options="typeOptions"
             :label="t('classRegister.tableHeaderGradeType') || 'Tipo Voto'"
+            emit-value
+            map-options
             outlined
             dense
           />
@@ -21,7 +23,7 @@
             :label="t('classRegister.tableHeaderGrade') || 'Voto (1-10)'"
             outlined
             dense
-            :rules="[val => val >= 1 && val <= 10 || 'Voto non valido']"
+            :rules="[val => val >= 1 && val <= 10 || (t('gradesPage.invalidGrade') || 'Voto non valido')]"
           />
           <q-input
             v-model="form.date"

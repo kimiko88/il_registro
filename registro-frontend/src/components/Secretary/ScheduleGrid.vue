@@ -63,6 +63,7 @@
                   flat round dense icon="close"
                   size="xs"
                   color="negative"
+                  :aria-label="t('common.remove') || 'Rimuovi'"
                   @click.stop="removeCell(day, hour)"
                 />
               </div>
@@ -81,14 +82,14 @@
         <q-card-section class="bg-primary text-white row items-center justify-between q-py-md">
           <div class="text-subtitle1 font-bold">
             <q-icon name="edit_calendar" class="q-mr-xs" />
-            {{ editingCell ? `${days[editingCell.day - 1].label} - ${editingCell.hour}ª Ora` : 'Assegna Ora' }}
+            {{ editingCell ? `${days[editingCell.day - 1]?.label} - ${editingCell.hour}ª Ora` : 'Assegna Ora' }}
           </div>
           <q-btn icon="close" flat round dense v-close-popup />
         </q-card-section>
 
         <q-card-section class="q-pa-md space-y-3">
           <div v-if="assignmentOptions.length === 0" class="bg-amber-50 border border-amber-300 p-3 rounded-lg text-amber-900 text-caption">
-            ⚠️ Nessuna materia/cattedra assegnata a questa classe. Per poter comporre l'orario, prima aggiungi le materie e i docenti nella sezione <strong>Cattedre</strong>.
+            ⚠️ Nessuna materia/cattedra assegnata a questa classe. Per poter comporre l'orario, prima aggiungi le materie e i docenti nella sezione Cattedre.
           </div>
 
           <q-select
@@ -104,28 +105,27 @@
 
           <q-input
             v-model="room"
-            label="Aula (opzionale)"
+            label="Aula (es. Lab 2, Aula Magna)"
             outlined
             dense
-            placeholder="Es. Lab Informatica, Aula 1B"
             class="bg-white"
           />
         </q-card-section>
 
-        <q-card-actions align="between" class="q-pa-md bg-slate-50 border-t border-slate-100">
+        <q-card-actions align="between" class="bg-slate-100 q-px-md q-py-sm border-t">
           <q-btn
             v-if="editingCell && getCell(editingCell.day, editingCell.hour)"
-            label="Rimuovi"
-            color="negative"
             flat
+            color="negative"
+            :label="t('common.remove') || 'Rimuovi'"
+            icon="delete"
             no-caps
             @click="removeCell(editingCell.day, editingCell.hour); cellDialogVisible = false"
           />
-          <div v-else />
-
+          <div v-else></div>
           <div class="row q-gutter-sm">
-            <q-btn label="Annulla" flat no-caps v-close-popup />
-            <q-btn label="Conferma" color="primary" unelevated class="rounded-lg q-px-md" no-caps @click="applyCell" />
+            <q-btn flat :label="t('common.cancel') || 'Annulla'" color="grey-7" no-caps v-close-popup />
+            <q-btn unelevated color="primary" :label="t('common.confirm') || 'Conferma'" no-caps @click="applyCell" />
           </div>
         </q-card-actions>
       </q-card>

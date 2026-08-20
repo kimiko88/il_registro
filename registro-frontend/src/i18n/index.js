@@ -1,3 +1,5 @@
+import { createI18n } from 'vue-i18n'
+import { getSavedLocale } from '../utils/locale'
 import itIT from './it-IT'
 import enUS from './en-US'
 import deDE from './de-DE'
@@ -8,7 +10,7 @@ import ukUA from './uk-UA'
 import arSA from './ar-SA'
 import zhCN from './zh-CN'
 
-export default {
+export const messages = {
   'it-IT': itIT,
   'it': itIT,
   'en-US': enUS,
@@ -28,3 +30,13 @@ export default {
   'zh-CN': zhCN,
   'zh': zhCN
 }
+
+export const i18n = createI18n({
+  locale: getSavedLocale(),
+  fallbackLocale: 'it-IT',
+  legacy: false,
+  messages
+})
+
+export default messages
+

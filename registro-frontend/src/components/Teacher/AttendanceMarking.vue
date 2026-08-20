@@ -15,13 +15,9 @@
       <q-input v-model="dateVal" type="date" :label="t('gradesPage.date')" dense outlined style="max-width: 160px" />
       <q-select
         v-model="lessonType"
-        :options="[
-          { label: 'Lezione Standard', value: 'standard', icon: 'school' },
-          { label: 'Attività PCTO', value: 'pcto', icon: 'work' },
-          { label: 'Orientamento', value: 'orientamento', icon: 'explore' }
-        ]"
+        :options="activityTypeOptions"
         emit-value map-options
-        label="Tipo Attività"
+        :label="t('attendance.activityType') || 'Tipo Attività'"
         dense outlined
         style="min-width: 180px"
       />
@@ -32,7 +28,7 @@
     <q-banner v-if="selectedClassId && lessonType !== 'standard'" class="bg-indigo-1 text-indigo-10 rounded-xl q-mb-md border border-indigo-200">
       <template #avatar><q-icon :name="lessonType === 'pcto' ? 'work' : 'explore'" color="indigo" size="24px" /></template>
       <div class="text-weight-bold">
-        Attività di {{ lessonType === 'pcto' ? 'PCTO' : 'Orientamento Scolastico' }}
+        {{ t('attendance.activityPrefix') || 'Attività di' }} {{ lessonType === 'pcto' ? 'PCTO' : (t('attendance.careerGuidance') || 'Orientamento Scolastico') }}
       </div>
     </q-banner>
 
@@ -85,7 +81,7 @@
               v-if="attendanceMap[props.row.id].status === 'late'"
               v-model.number="attendanceMap[props.row.id].minutesLate"
               type="number"
-              label="Min. ritardo"
+              :label="t('attendance.minutesLate') || 'Min. ritardo'"
               dense outlined
               min="1" max="120"
               style="max-width:120px"
@@ -94,7 +90,7 @@
               v-else-if="attendanceMap[props.row.id].status === 'early_exit'"
               v-model="attendanceMap[props.row.id].exitTime"
               type="time"
-              label="Ora uscita"
+              :label="t('attendance.earlyExitTime') || 'Ora uscita'"
               dense outlined
               style="max-width:120px"
             />
@@ -107,11 +103,11 @@
               <q-chip
                 v-if="attendanceMap[props.row.id].isJustified"
                 color="positive" text-color="white" icon="check" size="sm" dense
-              >Giustificato</q-chip>
+              >{{ t('attendance.justified') || 'Giustificato' }}</q-chip>
               <q-btn
                 v-else
                 flat dense size="sm" icon="fact_check" color="grey"
-                label="Giustifica"
+                :label="t('attendance.justify') || 'Giustifica'"
                 @click="openJustify(props.row)"
               />
             </template>
@@ -124,21 +120,23 @@
     <q-dialog v-model="justifyDialog" persistent>
       <q-card style="min-width: 380px">
         <q-card-section>
-          <div class="text-h6">Giustifica Assenza</div>
+          <div class="text-h6">{{ t('attendance.justifyAbsence') || 'Giustifica Assenza' }}</div>
           <div class="text-caption text-grey" v-if="justifyTarget">{{ justifyTarget.name }}</div>
         </q-card-section>
         <q-card-section class="q-gutter-md">
           <q-select
             v-model="justifyReason"
-            :options="['Motivi di Salute', 'Motivi Familiari', 'Visita Medica', 'Altro']"
-            label="Motivazione *"
+            :options="justifyReasonOptions"
+            :label="(t('attendance.reason') || 'Motivazione') + ' *'"
+            emit-value
+            map-options
             outlined dense
           />
           <q-input v-model="justifyNotes" :label="t('gradesPage.notes')" type="textarea" outlined dense autogrow />
         </q-card-section>
         <q-card-actions align="right">
           <q-btn flat :label="t('common.cancel')" v-close-popup />
-          <q-btn color="primary" label="Giustifica" @click="submitJustify" />
+          <q-btn color="primary" :label="t('attendance.justify') || 'Giustifica'" @click="submitJustify" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -174,6 +172,19 @@ const justifyTarget = ref(null)
 const justifyReason = ref('Motivi di Salute')
 const justifyNotes = ref('')
 
+const activityTypeOptions = computed(() => [
+  { label: t('attendance.standardLesson') || 'Lezione Standard', value: 'standard', icon: 'school' },
+  { label: 'Attività PCTO', value: 'pcto', icon: 'work' },
+  { label: t('attendance.careerGuidance') || 'Orientamento', value: 'orientamento', icon: 'explore' }
+])
+
+const justifyReasonOptions = computed(() => [
+  { label: t('attendance.healthReasons') || 'Motivi di Salute', value: 'Motivi di Salute' },
+  { label: t('attendance.familyReasons') || 'Motivi Familiari', value: 'Motivi Familiari' },
+  { label: t('attendance.medicalVisit') || 'Visita Medica', value: 'Visita Medica' },
+  { label: t('common.other') || 'Altro', value: 'Altro' }
+])
+
 const columns = computed(() => [
   { name: 'name', label: t('competenciesPage.student'), field: 'name', align: 'left' },
   { name: 'status', label: t('substitutionsPage.status'), field: 'status', align: 'left' },
@@ -207,8 +218,10 @@ const hasChanges = computed(() => {
 
 const onStatusChange = (studentId) => {
   const att = attendanceMap[studentId]
-  if (att.status !== 'late') att.minutesLate = null
-  if (att.status !== 'early_exit') att.exitTime = null
+  if (att) {
+    if (att.status !== 'late') att.minutesLate = null
+    if (att.status !== 'early_exit') att.exitTime = null
+  }
 }
 
 const fetchStudentsAndAttendance = async () => {
@@ -254,7 +267,7 @@ const saveAll = async () => {
     $q.notify({ type: 'positive', message: t('common.success') })
     initialSnapshot.value = snapshotCurrent()
   } catch (e) {
-    $q.notify({ type: 'negative', message: `Errore: ${e.response?.data?.error || e.message}` })
+    $q.notify({ type: 'negative', message: (t('common.error') || 'Errore') + `: ${e.response?.data?.error || e.message}` })
   } finally {
     saving.value = false
   }

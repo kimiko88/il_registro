@@ -2,6 +2,7 @@ import { ref } from 'vue';
 import { useColloquiStore } from 'src/stores/colloqui';
 import { useQuasar } from 'quasar';
 import { date } from 'quasar';
+import { i18n } from '@/i18n';
 
 export function useColloquiScheduling() {
     const store = useColloquiStore();
@@ -32,10 +33,12 @@ export function useColloquiScheduling() {
             }
 
             await store.createSlots(slots);
-            $q.notify({ type: 'positive', message: `${slots.length} slots created` });
+            const t = i18n?.global?.t;
+            $q.notify({ type: 'positive', message: t ? t('composables.colloqui.slotsCreated', { count: slots.length }) : `${slots.length} disponibilità create con successo` });
             return true;
         } catch (e) {
-            $q.notify({ type: 'negative', message: 'Error creating slots' });
+            const t = i18n?.global?.t;
+            $q.notify({ type: 'negative', message: t ? t('composables.colloqui.slotsError') : 'Errore durante la creazione delle disponibilità' });
             return false;
         } finally {
             generating.value = false;

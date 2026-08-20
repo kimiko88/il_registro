@@ -10,10 +10,10 @@
             
             <div class="text-subtitle2">{{ t('communicationsPage.recipientRole') }}</div>
             <div class="row q-gutter-sm">
-                <q-checkbox v-model="form.recipients.teachers" label="Docenti" />
-                <q-checkbox v-model="form.recipients.parents" label="Genitori" />
-                <q-checkbox v-model="form.recipients.students" label="Studenti" />
-                <q-checkbox v-model="form.recipients.staff" label="Personale ATA" />
+                <q-checkbox v-model="form.recipients.teachers" :label="t('usersPage.roleTeachers') || 'Docenti'" />
+                <q-checkbox v-model="form.recipients.parents" :label="t('usersPage.roleParents') || 'Genitori'" />
+                <q-checkbox v-model="form.recipients.students" :label="t('usersPage.roleStudents') || 'Studenti'" />
+                <q-checkbox v-model="form.recipients.staff" :label="t('usersPage.roleStaff') || 'Personale ATA'" />
             </div>
 
             <q-select

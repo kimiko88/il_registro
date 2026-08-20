@@ -63,7 +63,7 @@ const switchChild = async (child) => {
     $q.notify({ type: 'positive', message: t('common.success') })
     window.location.reload()
   } catch (err) {
-    $q.notify({ type: 'info', message: t('common.success') })
+    $q.notify({ type: 'negative', message: t('common.error') })
   }
 }
 

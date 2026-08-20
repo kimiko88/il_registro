@@ -1,13 +1,19 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { Notify } from 'quasar'
+import { i18n } from '@/i18n'
 
 export const useErrorStore = defineStore('error', () => {
     const globalError = ref(null)
     const errorHistory = ref([])
 
     function reportError(error, customMessage = null) {
-        const message = customMessage || error?.userMessage || error?.response?.data?.error || error?.message || 'Si è verificato un errore inaspettato.'
+        // i18n may not be available yet during early boot errors — use safe fallback
+        const t = i18n?.global?.t
+        const defaultMsg = t ? t('common.error') : 'Si è verificato un errore inaspettato.'
+        const closeLabel = t ? t('common.close') : 'Chiudi'
+
+        const message = customMessage || error?.userMessage || error?.response?.data?.error || error?.message || defaultMsg
         const errObj = {
             id: Date.now(),
             timestamp: new Date(),
@@ -32,7 +38,7 @@ export const useErrorStore = defineStore('error', () => {
             position: 'top-right',
             timeout: 5000,
             actions: [
-                { label: 'Chiudi', color: 'white' }
+                { label: closeLabel, color: 'white' }
             ]
         })
     }

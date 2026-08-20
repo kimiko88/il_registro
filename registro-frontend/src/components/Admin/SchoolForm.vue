@@ -22,7 +22,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -34,7 +34,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['submit']);
-const isEdit = !!props.school;
+const isEdit = computed(() => !!props.school);
 
 const form = ref({
   name: '',
@@ -44,11 +44,25 @@ const form = ref({
   phone: ''
 });
 
-onMounted(() => {
-  if (props.school) {
-    form.value = { ...props.school };
+watch(() => props.school, (newSchool) => {
+  if (newSchool) {
+    form.value = {
+      name: newSchool.name || '',
+      code: newSchool.code || '',
+      address: newSchool.address || '',
+      email: newSchool.email || '',
+      phone: newSchool.phone || ''
+    };
+  } else {
+    form.value = {
+      name: '',
+      code: '',
+      address: '',
+      email: '',
+      phone: ''
+    };
   }
-});
+}, { immediate: true });
 
 const onSubmit = () => {
   emit('submit', form.value);

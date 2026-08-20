@@ -6,7 +6,7 @@
       :options="classesStore.classes"
       option-value="id"
       option-label="label"
-      label="Classe Attuale"
+      :label="t('classesPage.currentClass') || 'Classe Attuale'"
       dense
       outlined
       options-dense

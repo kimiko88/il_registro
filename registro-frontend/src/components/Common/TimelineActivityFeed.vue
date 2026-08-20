@@ -43,11 +43,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import api from '@/services/api'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 const props = defineProps({
   studentId: {
@@ -59,7 +59,8 @@ const props = defineProps({
 const loading = ref(true)
 const events = ref([])
 
-onMounted(async () => {
+const fetchTimeline = async () => {
+  loading.value = true
   try {
     const params = props.studentId ? { student_id: props.studentId } : {}
     const [gradesRes, attendanceRes, notesRes] = await Promise.allSettled([
@@ -77,11 +78,11 @@ onMounted(async () => {
         list.push({
           id: `grade-${g.id}`,
           type: 'grade',
-          title: `Valutazione in ${g.subject_name || 'Materia'}`,
+          title: `${t('dashboardPage.recentGrades') || 'Valutazione in'} ${g.subject_name || t('agendaPage.subject') || 'Materia'}`,
           subtitle: formatDate(g.date || g.created_at),
-          time: 'Voto Registrato',
-          description: g.description || 'Valutazione periodica',
-          badge: `Voto: ${g.grade_value}`
+          time: t('classRegister.tableHeaderGrade') || 'Voto Registrato',
+          description: g.description || t('common.notes') || 'Valutazione periodica',
+          badge: `${t('classRegister.tableHeaderGrade') || 'Voto'}: ${g.grade_value}`
         })
       })
     }
@@ -94,11 +95,11 @@ onMounted(async () => {
           list.push({
             id: `att-${a.id}`,
             type: 'attendance',
-            title: a.status === 'absent' ? 'Assenza Registrata' : 'Ritardo in Ingresso',
+            title: a.status === 'absent' ? (t('attendance.absent') || 'Assenza Registrata') : (t('attendance.late') || 'Ritardo in Ingresso'),
             subtitle: formatDate(a.date),
-            time: 'Registro Presenze',
-            description: a.justification_reason || (a.status === 'absent' ? 'In attesa di giustificazione' : 'Ingresso in ritardo'),
-            badge: a.status === 'absent' ? 'Assente' : 'Ritardo'
+            time: t('roleDashboards.tabAttendance') || 'Registro Presenze',
+            description: a.justification_reason || (a.status === 'absent' ? (t('attendance.pendingJustification') || 'In attesa di giustificazione') : (t('attendance.late') || 'Ingresso in ritardo')),
+            badge: a.status === 'absent' ? (t('classRegister.absent') || 'Assente') : (t('classRegister.late') || 'Ritardo')
           })
         }
       })
@@ -111,11 +112,11 @@ onMounted(async () => {
         list.push({
           id: `note-${n.id}`,
           type: 'note',
-          title: 'Nota Disciplinare',
+          title: t('classRegister.addDisciplinaryNote') || 'Nota Disciplinare',
           subtitle: formatDate(n.created_at),
-          time: 'Annotazione Docente',
+          time: t('classRegister.activityStandard') || 'Annotazione Docente',
           description: n.description || n.note_text,
-          badge: 'Nota'
+          badge: t('classRegister.addNote') || 'Nota'
         })
       })
     }
@@ -126,6 +127,14 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
+}
+
+watch(() => props.studentId, () => {
+  fetchTimeline()
+})
+
+onMounted(() => {
+  fetchTimeline()
 })
 
 function getEventColor(type) {
@@ -148,6 +157,6 @@ function getEventIcon(type) {
 
 function formatDate(dateStr) {
   if (!dateStr) return ''
-  return new Date(dateStr).toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })
+  return new Date(dateStr).toLocaleDateString(locale.value || 'it-IT', { day: '2-digit', month: 'short' })
 }
 </script>

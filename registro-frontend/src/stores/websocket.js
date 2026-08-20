@@ -6,6 +6,7 @@ import { useAttendanceStore } from './attendance'
 import { useCommunicationsStore } from './communications'
 import { useScrutinyStore } from './scrutiny'
 import { Notify } from 'quasar'
+import { i18n } from '@/i18n'
 
 const escapeHtml = (str) => {
     if (!str) return ''
@@ -196,7 +197,8 @@ export const useWebSocketStore = defineStore('websocket', () => {
         if (reconnectAttempts.value > 8) {
             console.warn('WebSocket: Reached max reconnect attempts (8), stopping automatic reconnection')
             hasFailedPermanently.value = true
-            lastError.value = 'Connessione WebSocket non disponibile dopo tentativi ripetuti.'
+            const t = i18n?.global?.t
+            lastError.value = t ? t('notifications.wsConnectionFailed') : 'Connessione WebSocket non disponibile dopo tentativi ripetuti.'
             disconnect()
             return
         }
@@ -229,10 +231,12 @@ export const useWebSocketStore = defineStore('websocket', () => {
 
         const payload = message.payload || {}
 
+        const t = i18n?.global?.t
+
         switch (message.type) {
             case 'GRADE_ADDED':
             case 'GRADE_UPDATED':
-            case 'GRADE_DELETED':
+            case 'GRADE_DELETED': {
                 try {
                     const gradesStore = useGradesStore()
                     const targetClassId = gradesStore.currentClassId || payload.class_id
@@ -240,19 +244,21 @@ export const useWebSocketStore = defineStore('websocket', () => {
                 } catch (err) {
                     console.debug('Failed to refresh grades store:', err)
                 }
+                const subjectFallback = t ? t('gradesPage.student') : 'Materia'
                 Notify.create({
                     message: message.type === 'GRADE_DELETED'
-                        ? `Voto eliminato per ${escapeHtml(payload.subject_name || 'Materia')}`
-                        : `Aggiornamento voto: ${escapeHtml(payload.grade_value || '')} (${escapeHtml(payload.subject_name || 'Materia')})`,
+                        ? (t ? t('notifications.wsGradeDeleted', { subject: escapeHtml(payload.subject_name || subjectFallback) }) : `Voto eliminato per ${escapeHtml(payload.subject_name || subjectFallback)}`)
+                        : (t ? t('notifications.wsGradeUpdated', { value: escapeHtml(payload.grade_value || ''), subject: escapeHtml(payload.subject_name || subjectFallback) }) : `Aggiornamento voto: ${escapeHtml(payload.grade_value || '')} (${escapeHtml(payload.subject_name || subjectFallback)})`),
                     color: 'info',
                     icon: 'school',
                     position: 'top-right',
                     attrs: { role: 'alert' }
                 })
                 break
+            }
             case 'ATTENDANCE_LATE':
             case 'ATTENDANCE_ABSENT':
-            case 'ATTENDANCE_PRESENT':
+            case 'ATTENDANCE_PRESENT': {
                 try {
                     const attendanceStore = useAttendanceStore()
                     attendanceStore.fetchMyAttendance()
@@ -260,14 +266,15 @@ export const useWebSocketStore = defineStore('websocket', () => {
                     console.debug('Failed to refresh attendance store:', err)
                 }
                 Notify.create({
-                    message: `Aggiornamento presenze: ${escapeHtml(payload.status || 'Presenza registrata')}`,
+                    message: t ? t('notifications.wsAttendanceUpdated', { status: escapeHtml(payload.status || '') }) : `Aggiornamento presenze: ${escapeHtml(payload.status || 'Presenza registrata')}`,
                     color: 'warning',
                     icon: 'warning',
                     position: 'top-right',
                     attrs: { role: 'alert' }
                 })
                 break
-            case 'JUSTIFICATION_APPROVED':
+            }
+            case 'JUSTIFICATION_APPROVED': {
                 try {
                     const attendanceStore = useAttendanceStore()
                     attendanceStore.fetchMyAttendance()
@@ -275,14 +282,15 @@ export const useWebSocketStore = defineStore('websocket', () => {
                     console.debug('Failed to refresh attendance store:', err)
                 }
                 Notify.create({
-                    message: `Giustifica approvata: ${escapeHtml(payload.reason || '')}`,
+                    message: t ? t('notifications.wsJustificationApproved', { reason: escapeHtml(payload.reason || '') }) : `Giustifica approvata: ${escapeHtml(payload.reason || '')}`,
                     color: 'positive',
                     icon: 'check_circle',
                     position: 'top-right',
                     attrs: { role: 'alert' }
                 })
                 break
-            case 'JUSTIFICATION_REJECTED':
+            }
+            case 'JUSTIFICATION_REJECTED': {
                 try {
                     const attendanceStore = useAttendanceStore()
                     attendanceStore.fetchMyAttendance()
@@ -290,15 +298,16 @@ export const useWebSocketStore = defineStore('websocket', () => {
                     console.debug('Failed to refresh attendance store:', err)
                 }
                 Notify.create({
-                    message: `Giustifica non approvata: ${escapeHtml(payload.reason || '')}`,
+                    message: t ? t('notifications.wsJustificationRejected', { reason: escapeHtml(payload.reason || '') }) : `Giustifica non approvata: ${escapeHtml(payload.reason || '')}`,
                     color: 'negative',
                     icon: 'cancel',
                     position: 'top-right',
                     attrs: { role: 'alert' }
                 })
                 break
+            }
             case 'NEW_COMMUNICATION':
-            case 'COMMUNICATION_PUBLISHED':
+            case 'COMMUNICATION_PUBLISHED': {
                 try {
                     const commsStore = useCommunicationsStore()
                     commsStore.fetchCommunications()
@@ -306,23 +315,25 @@ export const useWebSocketStore = defineStore('websocket', () => {
                     console.debug('Failed to refresh communications store:', err)
                 }
                 Notify.create({
-                    message: `Nuova comunicazione: ${escapeHtml(payload.title || 'Circolare scolastica')}`,
+                    message: t ? t('notifications.wsNewCommunication', { title: escapeHtml(payload.title || '') }) : `Nuova comunicazione: ${escapeHtml(payload.title || 'Circolare scolastica')}`,
                     color: 'primary',
                     icon: 'mail',
                     position: 'top-right',
                     attrs: { role: 'alert' }
                 })
                 break
-            case 'NOTE_ADDED':
+            }
+            case 'NOTE_ADDED': {
                 Notify.create({
-                    message: `Nuova nota disciplinare registrata: ${escapeHtml(payload.title)}`,
+                    message: t ? t('notifications.wsNoteAdded', { title: escapeHtml(payload.title || '') }) : `Nuova nota disciplinare registrata: ${escapeHtml(payload.title)}`,
                     color: 'negative',
                     icon: 'report_problem',
                     position: 'top-right',
                     attrs: { role: 'alert' }
                 })
                 break
-            case 'SCRUTINY_PUBLISHED':
+            }
+            case 'SCRUTINY_PUBLISHED': {
                 try {
                     const scrutinyStore = useScrutinyStore()
                     scrutinyStore.fetchOverview()
@@ -330,32 +341,35 @@ export const useWebSocketStore = defineStore('websocket', () => {
                     console.debug('Failed to refresh scrutiny store:', err)
                 }
                 Notify.create({
-                    message: `Esito scrutinio pubblicato per ${escapeHtml(payload.student_name || 'lo studente')}`,
+                    message: t ? t('notifications.wsScrutinyPublished', { student: escapeHtml(payload.student_name || '') }) : `Esito scrutinio pubblicato per ${escapeHtml(payload.student_name || 'lo studente')}`,
                     color: 'positive',
                     icon: 'assignment_turned_in',
                     position: 'top-right',
                     attrs: { role: 'alert' }
                 })
                 break
-            case 'GOAL_UPDATED':
+            }
+            case 'GOAL_UPDATED': {
                 Notify.create({
-                    message: `Obiettivo aggiornato: ${escapeHtml(payload.title)}`,
+                    message: t ? t('notifications.wsGoalUpdated', { title: escapeHtml(payload.title || '') }) : `Obiettivo aggiornato: ${escapeHtml(payload.title)}`,
                     color: 'secondary',
                     icon: 'star',
                     position: 'top-right',
                     attrs: { role: 'alert' }
                 })
                 break
+            }
             case 'SLOT_BOOKED':
-            case 'SLOT_CANCELLED':
+            case 'SLOT_CANCELLED': {
                 Notify.create({
-                    message: `Aggiornamento colloquio: ${escapeHtml(payload.message || message.type)}`,
+                    message: t ? t('notifications.wsSlotUpdated', { msg: escapeHtml(payload.message || '') }) : `Aggiornamento colloquio: ${escapeHtml(payload.message || message.type)}`,
                     color: 'accent',
                     icon: 'event',
                     position: 'top-right',
                     attrs: { role: 'alert' }
                 })
                 break
+            }
             default:
                 if (payload.title || payload.body) {
                     Notify.create({

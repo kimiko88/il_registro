@@ -1,6 +1,7 @@
 import { computed } from 'vue';
 import { useAttendanceStore } from 'src/stores/attendance';
 import { useQuasar } from 'quasar';
+import { i18n } from '@/i18n';
 
 export function useMyAttendance() {
     const store = useAttendanceStore();
@@ -23,12 +24,13 @@ export function useMyAttendance() {
     });
 
     const requestJustification = async (date, reason) => {
+        const t = i18n?.global?.t;
         try {
             await store.requestJustification(date, reason);
-            $q.notify({ type: 'positive', message: 'Request sent' });
+            $q.notify({ type: 'positive', message: t ? t('composables.attendance.requestSent') : 'Richiesta di giustifica inviata' });
             return true;
         } catch (e) {
-            $q.notify({ type: 'negative', message: 'Failed to send request' });
+            $q.notify({ type: 'negative', message: t ? t('composables.attendance.requestError') : 'Impossibile inviare la richiesta di giustifica' });
             return false;
         }
     };

@@ -97,9 +97,11 @@ import { ref, onMounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import competenciesService from '@/services/competenciesService'
 import { useNotify } from '@/composables/useNotify'
+import { useClassesStore } from '@/stores/classes'
 
 const { t } = useI18n()
 const notify = useNotify()
+const classesStore = useClassesStore()
 
 const selectedStudentId = ref('stu-demo-1')
 const selectedSemester = ref(1)
@@ -148,21 +150,21 @@ const saveEvaluation = async (comp) => {
   try {
     await competenciesService.saveEvaluation({
       student_id: selectedStudentId.value,
-      class_id: '47a05d80-3836-452e-ac91-8cfa3a1999dd',
+      class_id: classesStore.selectedClassId || '',
       semester: selectedSemester.value,
       competence_code: comp.code,
       competence_name: comp.name,
       level: comp.level,
       descriptor: comp.descriptor || ''
     })
-    notify.success(`Competenza "${comp.code}" salvata`)
+    notify.success(t('common.success'))
   } catch (err) {
-    notify.error('Errore durante il salvataggio')
+    notify.error(t('common.error'))
   }
 }
 
 const downloadPdfCertificate = () => {
-  notify.success('Certificazione Competenze DM 742 in generazione PDF...')
+  notify.success(t('competenciesPage.generatingPdf') || 'Certificazione Competenze DM 742 in generazione PDF...')
   setTimeout(() => {
     window.open(`/api/v1/competencies/student/${selectedStudentId.value}`, '_blank')
   }, 500)

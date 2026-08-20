@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import api from '../services/api';
+import { i18n } from '@/i18n';
 
 function formatClassItem(c) {
     if (!c) return c;
@@ -101,12 +102,13 @@ export const useClassesStore = defineStore('classes', {
                 const rawGroups = gRes.data?.groups || gRes.data || [];
 
                 const formattedClasses = rawClasses.map(formatClassItem);
+                const t = i18n?.global?.t
                 const formattedGroups = rawGroups.map(g => ({
                     id: g.id,
                     name: g.name,
                     section: g.name,
-                    articolazione: 'Gruppo Linguistico / Articolazione',
-                    label: `Gruppo Linguistico: ${g.name}`,
+                    articolazione: t ? t('classes.linguisticGroup') : 'Gruppo Linguistico / Articolazione',
+                    label: t ? t('classes.linguisticGroupLabel', { name: g.name }) : `Gruppo Linguistico: ${g.name}`,
                     isGroup: true
                 }));
 

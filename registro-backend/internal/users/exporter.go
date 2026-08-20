@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"sort"
 
 	"github.com/xuri/excelize/v2"
 )
@@ -23,11 +24,12 @@ func (e *Exporter) ToCSV(data []map[string]interface{}) ([]byte, error) {
 	var buf bytes.Buffer
 	w := csv.NewWriter(&buf)
 
-	// Headers
+	// Headers sorted deterministically
 	var headers []string
 	for k := range data[0] {
 		headers = append(headers, k)
 	}
+	sort.Strings(headers)
 	if err := w.Write(headers); err != nil {
 		return nil, err
 	}
@@ -57,11 +59,12 @@ func (e *Exporter) ToXLSX(data []map[string]interface{}) ([]byte, error) {
 		return buf.Bytes(), nil
 	}
 
-	// Headers
+	// Headers sorted deterministically
 	var headers []string
 	for k := range data[0] {
 		headers = append(headers, k)
 	}
+	sort.Strings(headers)
 
 	for i, h := range headers {
 		cell, _ := excelize.CoordinatesToCellName(i+1, 1)

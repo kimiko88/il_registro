@@ -185,7 +185,30 @@ export default {
     draft: 'Draft Scheduled',
     saveDraft: 'Save Lesson Draft',
     deleteDraft: 'Draft deleted',
-    topicRequired: 'Please enter lesson topic'
+    topicRequired: 'Please enter lesson topic',
+    draftsListTitle: 'Scheduled Lesson Drafts',
+    noDrafts: 'No lesson drafts saved at the moment.',
+    signAndRegister: 'Sign & Register',
+    draftSaved: 'Lesson draft saved for {date}!',
+    draftRegistered: 'Draft converted and registered successfully!',
+    optionsMenu: 'Options and shortcuts',
+    statTotalSchools: 'Total Schools',
+    statActiveUsers: 'Active Users',
+    statActive24h: 'Active 24h',
+    statPendingDocs: 'Pending Docs',
+    statStudents: 'Students',
+    statTeachers: 'Teachers',
+    statDocuments: 'Documents',
+    statRequests: 'Requests',
+    statMyClasses: 'My Classes',
+    statLessonsToday: 'Lessons Today',
+    statGradesPending: 'Grades to Enter',
+    actionAttendance: 'Mark Attendance',
+    actionGrades: 'Enter Grades',
+    actionLessons: 'Lesson Register',
+    actionAgenda: 'Class Agenda',
+    actionUsers: 'User Management',
+    actionClasses: 'Class Management'
   },
   agendaPage: {
     title: 'Agenda & Teaching Calendar',
@@ -697,6 +720,10 @@ export default {
     serviziOrari: 'Services & Schedules',
     comunicazioniAccount: 'Communications & Account'
   },
+  classes: {
+    linguisticGroup: 'Language / Track Group',
+    linguisticGroupLabel: 'Language Group: {name}'
+  },
   roles: {
     admin: 'Administrator',
     superadmin: 'Super Administrator',
@@ -713,7 +740,18 @@ export default {
     settingsSaved: 'Settings saved successfully!',
     emailCopied: 'Email address copied to clipboard!',
     passwordUpdated: 'Password updated successfully!',
-    languageChanged: 'Language updated successfully'
+    languageChanged: 'Language updated successfully',
+    wsConnectionFailed: 'Real-time connection unavailable after repeated attempts.',
+    wsGradeUpdated: 'Grade update: {value} ({subject})',
+    wsGradeDeleted: 'Grade deleted for {subject}',
+    wsAttendanceUpdated: 'Attendance update: {status}',
+    wsJustificationApproved: 'Justification approved: {reason}',
+    wsJustificationRejected: 'Justification rejected: {reason}',
+    wsNewCommunication: 'New communication: {title}',
+    wsNoteAdded: 'New disciplinary note: {title}',
+    wsScrutinyPublished: 'Scrutiny result published for {student}',
+    wsGoalUpdated: 'Goal updated: {title}',
+    wsSlotUpdated: 'Appointment update: {msg}'
   },
   errors: {
     connectionError: 'Server connection error. Please check your internet connection and try again.',
@@ -959,6 +997,83 @@ export default {
       analytics: { title: "Analytics & Dropout Prevention", desc: "Predictive analytics for student dropout risk and chronic absenteeism.", content: "Use BI tools to identify students at risk of dropout.\n\nStep 1: Open \"Analytics & BI\".\nStep 2: Inspect absenteeism heatmaps by class and subject.\nStep 3: Set alert criteria (e.g. Absences > 20% + GPA < 5.5)." },
       integrations: { title: "E-Learning Integrations & SSO", desc: "Sync with Google Classroom, Microsoft Teams, and SSO providers.", content: "Connect Electronic Register with cloud LMS platforms.\n\nStep 1: Open \"Integrations & SSO\".\nStep 2: Enable Google Workspace or Microsoft 365 module.\nStep 3: Enter OAuth2 Client ID and Secret Key." },
       audit: { title: "Audit Log & GDPR Traceability", desc: "Immutable system activity log tracking all user access and edits.", content: "Ensure full data traceability in compliance with GDPR 2016/679.\n\nStep 1: Open \"Audit Logs & Traceability\".\nStep 2: Inspect activity log: Timestamp, User, Role, IP, Action.\nStep 3: Export encrypted PDF logs for compliance audits." }
+    }
+  },
+  layout: {
+    skipToContent: 'Skip to main content',
+    mainNav: 'Main navigation bar',
+    toggleDrawer: 'Toggle side navigation drawer',
+    schoolYear: 'School Year',
+    schoolYearSelect: 'Select School Year',
+    themeAriaLabel: 'Choose Visual Interface Theme',
+    themeTooltip: 'Select Visual Theme',
+    themesTitle: 'Themes & Visual Palettes',
+    a11yAriaLabel: 'Visual Accessibility Options (OpenDyslexic & Contrast)',
+    a11yTooltip: 'Visual Accessibility (Dyslexia & Contrast)',
+    a11yTitle: 'Visual Accessibility (A11y)',
+    dsaFontDesc: 'High readability dyslexia font',
+    highContrast: 'High Contrast',
+    highContrastDesc: 'Crisp 2px bold contrast borders',
+    lightMode: 'Light Mode',
+    darkMode: 'Dark Mode',
+    enterFullscreen: 'Enter Fullscreen',
+    exitFullscreen: 'Exit Fullscreen',
+    sideNav: 'Side navigation menu',
+    userProfile: 'Connected user profile',
+    connectedUser: 'Connected user: {name}',
+    userRole: 'Role: {role}',
+    breadcrumbNav: 'Current navigation breadcrumbs'
+  },
+  composables: {
+    adminUsers: {
+      confirmTitle: 'Confirm deletion',
+      confirmMsg: 'Are you sure you want to delete this administrator?'
+    },
+    attendance: {
+      saveSuccess: 'Attendance saved successfully',
+      saveError: 'Failed to save attendance',
+      requestSent: 'Justification request sent',
+      requestError: 'Failed to send justification request'
+    },
+    children: {
+      addSuccess: 'Child profile added successfully',
+      removeConfirmTitle: 'Confirm removal',
+      removeConfirmMsg: 'Are you sure you want to remove this student profile?',
+      removeSuccess: 'Student profile removed'
+    },
+    colloqui: {
+      bookingConfirmed: 'Appointment booking confirmed',
+      bookingCancelled: 'Appointment booking cancelled',
+      slotsCreated: '{count} slots created successfully',
+      slotsError: 'Error creating appointment slots'
+    },
+    documents: {
+      draftCreated: 'Document draft created',
+      draftError: 'Failed to create document draft',
+      reviewSuccess: 'Document {decision}',
+      reviewError: 'Review failed',
+      downloading: 'Downloading {title}...'
+    },
+    grades: {
+      fillRequired: 'Please fill all required grade fields',
+      saveSuccess: 'Grade saved successfully',
+      saveError: 'Failed to save grade'
+    },
+    schools: {
+      updated: 'School updated successfully',
+      created: 'School created successfully',
+      operationFailed: 'Operation failed',
+      deleteConfirmTitle: 'Confirm deletion',
+      deleteConfirmMsg: 'Are you sure you want to delete this school?',
+      deleted: 'School deleted successfully'
+    },
+    undo: {
+      cancelWithSeconds: 'Undo ({remaining}s)',
+      actionCancelled: 'Action undone',
+      cancelError: 'Error while undoing action'
+    },
+    users: {
+      importStarted: 'User import started'
     }
   }
 }

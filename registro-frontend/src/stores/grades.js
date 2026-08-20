@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import api from '../services/api';
 import { gradeService } from '../services/gradeService';
+import { i18n } from '@/i18n';
 
 const calcClassAverage = (state, semester = 0) => {
     if (!state.grades || !state.grades.students) return 0;
@@ -42,9 +43,6 @@ export const useGradesStore = defineStore('grades', {
             return student ? student.grades : [];
         },
         classAverage: (state) => (semester = 0) => {
-            return calcClassAverage(state, semester);
-        },
-        classAverageForSemester: (state) => (semester = 0) => {
             return calcClassAverage(state, semester);
         }
     },
@@ -95,7 +93,8 @@ export const useGradesStore = defineStore('grades', {
                 }
             } catch (err) {
                 if (currentReqId === this._requestId) {
-                    this.error = err.response?.data?.error || err.message || 'Errore durante il recupero dei voti';
+                    const t = i18n?.global?.t;
+                    this.error = err.response?.data?.error || err.message || (t ? t('common.error') : 'Errore durante il recupero dei voti');
                     console.error("Error fetching grades:", err);
                 }
             } finally {
@@ -113,7 +112,8 @@ export const useGradesStore = defineStore('grades', {
                 const response = await gradeService.getMyGrades();
                 this.grades = response.data;
             } catch (err) {
-                this.error = err.response?.data?.error || err.message || 'Errore durante il recupero dei voti';
+                const t = i18n?.global?.t;
+                this.error = err.response?.data?.error || err.message || (t ? t('common.error') : 'Errore durante il recupero dei voti');
             } finally {
                 this.loading = false;
             }
@@ -131,7 +131,8 @@ export const useGradesStore = defineStore('grades', {
                 }
                 return response.data;
             } catch (err) {
-                this.error = err.response?.data?.error || err.message || 'Errore durante la registrazione del voto';
+                const t = i18n?.global?.t;
+                this.error = err.response?.data?.error || err.message || (t ? t('common.error') : 'Errore durante la registrazione del voto');
                 console.error("Error adding grade:", err);
                 throw err;
             } finally {

@@ -3,7 +3,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
 import authService from '@/services/authService'
 
-import { i18n } from '@/main'
+import { i18n } from '@/i18n'
 
 function getTranslation(key, fallback) {
     if (i18n?.global?.t && i18n.global.te && i18n.global.te(key)) {

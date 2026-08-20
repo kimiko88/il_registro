@@ -20,6 +20,9 @@ var ErrFileTooLarge = errors.New("il file supera la dimensione massima consentit
 // ErrFileTypeNotAllowed is returned when the detected MIME type is not in the allowlist.
 var ErrFileTypeNotAllowed = errors.New("tipo di file non consentito: solo PDF, immagini e documenti Office sono accettati")
 
+// ErrFileEmpty is returned when the uploaded file is empty (0 bytes).
+var ErrFileEmpty = errors.New("il file caricato è vuoto")
+
 // allowedMIMETypes is the allowlist of accepted MIME types for document uploads.
 var allowedMIMETypes = map[string]bool{
 	"application/pdf": true,
@@ -52,6 +55,9 @@ func ValidateUpload(file multipart.File, header *multipart.FileHeader) error {
 	n, err := limitedReader.Read(head)
 	if err != nil && err != io.EOF {
 		return errors.New("errore nella lettura del file")
+	}
+	if n == 0 {
+		return ErrFileEmpty
 	}
 	head = head[:n]
 

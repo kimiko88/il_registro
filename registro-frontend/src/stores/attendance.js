@@ -3,6 +3,7 @@ import api from '../services/api';
 import { attendanceService } from '../services/attendanceService';
 import { useAuthStore } from './auth';
 import { useChildrenStore } from './children';
+import { i18n } from '@/i18n';
 
 export const useAttendanceStore = defineStore('attendance', {
     state: () => ({
@@ -37,9 +38,11 @@ export const useAttendanceStore = defineStore('attendance', {
                 const response = await attendanceService.getByClass(classId, date);
                 if (currentReqId === this._requestId) {
                     const records = response.data?.records || [];
+                    const t = i18n?.global?.t;
+                    const studentLabel = t ? t('gradesPage.student') : 'Studente';
                     this.records = records.map(r => ({
                         studentId: r.student_id,
-                        name: r.student_name || `Student (${r.student_id})`,
+                        name: r.student_name || `${studentLabel} (${r.student_id})`,
                         status: r.status,
                         notes: r.notes || '',
                         time: r.entry_time || ''
@@ -47,7 +50,8 @@ export const useAttendanceStore = defineStore('attendance', {
                 }
             } catch (err) {
                 if (currentReqId === this._requestId) {
-                    this.error = err.response?.data?.error || err.message || 'Errore durante il recupero delle presenze';
+                    const t = i18n?.global?.t;
+                    this.error = err.response?.data?.error || err.message || (t ? t('common.error') : 'Errore durante il recupero delle presenze');
                     console.error("Error fetching daily attendance:", err);
                 }
             } finally {
@@ -98,13 +102,15 @@ export const useAttendanceStore = defineStore('attendance', {
             }
         },
 
-        async approveJustification(id) {
+        async approveJustification(id, classId = null) {
             try {
                 await api.post(`/attendance/justification/${id}/process`, { approve: true });
                 this.justifications = this.justifications.filter(j => j.id !== id);
                 const authStore = useAuthStore();
                 if (authStore.userRole === 'student' || authStore.userRole === 'parent') {
                     await this.fetchMyAttendance();
+                } else if (classId) {
+                    await this.fetchPendingJustifications(classId);
                 }
             } catch (err) {
                 console.error("Error approving justification:", err);
@@ -127,7 +133,8 @@ export const useAttendanceStore = defineStore('attendance', {
                     justificationStatus: r.is_justified ? 'Justified' : (r.parent_justified ? 'PendingApproval' : 'Unjustified')
                 }));
             } catch (err) {
-                this.error = err.response?.data?.error || err.message || 'Errore durante il recupero delle mie presenze';
+                const t = i18n?.global?.t;
+                this.error = err.response?.data?.error || err.message || (t ? t('common.error') : 'Errore durante il recupero delle mie presenze');
                 console.error("Error fetching my attendance:", err);
             } finally {
                 this.loading = false;

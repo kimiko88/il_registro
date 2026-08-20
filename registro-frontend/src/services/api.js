@@ -123,7 +123,7 @@ api.interceptors.response.use(
         if (error.response.status === 403) {
             error.userMessage = appI18n?.global?.t ? appI18n.global.t('errors.forbidden') : 'Non disponi dei permessi necessari per completare questa operazione.';
         } else if (error.response.status === 429) {
-            error.userMessage = error.response.data?.error || 'Troppi tentativi di accesso. Riprova tra un minuto.';
+            error.userMessage = error.response.data?.error || (appI18n?.global?.t ? appI18n.global.t('errors.rateLimit') : 'Troppi tentativi di accesso. Riprova tra un minuto.');
         } else if (error.response.status >= 500) {
             error.userMessage = appI18n?.global?.t ? appI18n.global.t('errors.serverError') : 'Si è verificato un errore sul server. Riprova più tardi.';
         }

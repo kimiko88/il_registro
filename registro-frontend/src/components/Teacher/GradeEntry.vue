@@ -250,13 +250,13 @@ const studentsWithGrades = computed(() => {
     return [];
 });
 
-const columns = [
-    { name: 'name', label: 'Studente', align: 'left' },
-    { name: 'current_grade', label: 'Voto', align: 'left' },
-    { name: 'history', label: 'Storico', align: 'left' },
-    { name: 'average', label: 'Media', align: 'center' },
+const columns = computed(() => [
+    { name: 'name', label: t('competenciesPage.student') || 'Studente', align: 'left' },
+    { name: 'current_grade', label: t('classRegister.tableHeaderGrade') || 'Voto', align: 'left' },
+    { name: 'history', label: t('common.history') || 'Storico', align: 'left' },
+    { name: 'average', label: t('gradesPage.average') || 'Media', align: 'center' },
     { name: 'actions', label: '', align: 'right' }
-];
+]);
 
 const initData = () => {
     if (!studentsWithGrades.value) return;
@@ -326,7 +326,7 @@ const saveLine = async (id) => {
         initialSnapshot.value[id] = JSON.parse(JSON.stringify(data));
         emit('refresh');
     } catch (err) {
-        $q.notify({ type: 'negative', message: 'Errore nel salvataggio' });
+        $q.notify({ type: 'negative', message: t('common.error') });
     }
 };
 
@@ -339,9 +339,9 @@ const saveAll = async () => {
                 await saveLine(s.student_id);
             }
         }
-        $q.notify({ type: 'positive', message: 'Tutti i voti sono stati salvati.'});
+        $q.notify({ type: 'positive', message: t('common.success') });
     } catch (err) {
-        $q.notify({ type: 'negative', message: 'Errore durante il salvataggio multiplo' });
+        $q.notify({ type: 'negative', message: t('common.error') });
     } finally {
         loading.value = false;
     }
@@ -352,17 +352,17 @@ const focusNext = (_index) => {};
 const handleOnline = () => { isOnline.value = true };
 const handleOffline = () => { isOnline.value = false };
 
-window.addEventListener('online', handleOnline);
-window.addEventListener('offline', handleOffline);
+onMounted(() => {
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    initData();
+});
 
 onUnmounted(() => {
   window.removeEventListener('online', handleOnline);
   window.removeEventListener('offline', handleOffline);
 });
 
-onMounted(() => {
-    initData();
-});
 const getGradesByType = (grades, type) => {
     if (!grades) return [];
     return grades.filter(g => {
@@ -401,8 +401,8 @@ const editGradeDialog = (grade, student) => {
     if (currentUserId && grade.teacher_id && grade.teacher_id !== currentUserId && grade.created_by && grade.created_by !== currentUserId) {
         $q.notify({
             type: 'warning',
-            message: `Impossibile modificare il voto: è stato inserito da un altro docente (${grade.teacher_name || grade.created_by_name || 'Altro Docente'})`,
-            caption: 'Nei voti condivisi puoi modificare solo le valutazioni inserite da te.'
+            message: `${t('gradesPage.cannotEditOtherTeacherGrade') || 'Impossibile modificare il voto: è stato inserito da un altro docente'} (${grade.teacher_name || grade.created_by_name || 'Altro Docente'})`,
+            caption: t('gradesPage.sharedGradesCaption') || 'Nei voti condivisi puoi modificare solo le valutazioni inserite da te.'
         });
         return;
     }
@@ -438,29 +438,29 @@ const saveIndividualGradeEdit = async () => {
             evaluation_type: evalType,
             reason: 'Modifica voto singola'
         });
-        $q.notify({ type: 'positive', message: 'Voto modificato con successo' });
+        $q.notify({ type: 'positive', message: t('common.success') });
         showEditGradeDialog.value = false;
         emit('refresh');
     } catch (err) {
-        $q.notify({ type: 'negative', message: 'Errore durante il salvataggio della modifica' });
+        $q.notify({ type: 'negative', message: t('common.error') });
     }
 };
 
 const deleteGradeConfirm = async () => {
     if (props.readOnly) return;
     $q.dialog({
-        title: 'Conferma Eliminazione',
-        message: 'Sei sicuro di voler eliminare questo voto permanentemente?',
+        title: t('common.confirmDelete') || 'Conferma Eliminazione',
+        message: t('gradesPage.confirmDeleteGrade') || 'Sei sicuro di voler eliminare questo voto permanentemente?',
         cancel: true,
         persistent: true
     }).onOk(async () => {
         try {
             await gradesStore.deleteGrade(editGradeForm.value.id);
-            $q.notify({ type: 'positive', message: 'Voto eliminato con successo' });
+            $q.notify({ type: 'positive', message: t('common.success') });
             showEditGradeDialog.value = false;
             emit('refresh');
         } catch (err) {
-            $q.notify({ type: 'negative', message: 'Errore durante l\'eliminazione del voto' });
+            $q.notify({ type: 'negative', message: t('common.error') });
         }
     });
 };

@@ -51,7 +51,7 @@
             </div>
             
             <!-- 3 Dots Options Menu -->
-            <q-btn flat round dense icon="more_horiz" color="grey-7" aria-label="Opzioni e scorciatoie">
+            <q-btn flat round dense icon="more_horiz" color="grey-7" :aria-label="t('dashboardPage.optionsMenu')">
               <q-menu auto-close>
                 <!-- Menu per SuperAdmin / Admin -->
                 <q-list style="min-width: 240px" v-if="currentRole === 'admin' || currentRole === 'superadmin'">
@@ -262,7 +262,7 @@
       <q-card style="min-width: 600px" class="rounded-xl">
         <q-card-section class="bg-secondary text-white row items-center justify-between">
           <div class="text-h6 text-weight-bold">
-            <q-icon name="collections_bookmark" class="q-mr-xs" /> Bozze Lezioni Pianificate
+            <q-icon name="collections_bookmark" class="q-mr-xs" /> {{ t('dashboardPage.draftsListTitle') }}
           </div>
           <q-btn icon="close" flat round dense v-close-popup />
         </q-card-section>
@@ -274,23 +274,23 @@
                 <q-avatar color="primary" text-color="white" size="36px">{{ draft.hour }}ª</q-avatar>
               </q-item-section>
               <q-item-section>
-                <q-item-label class="text-weight-bold">{{ draft.subject }} - Data: {{ draft.date }}</q-item-label>
+                <q-item-label class="text-weight-bold">{{ draft.subject }} - {{ t('gradesPage.date') }}: {{ draft.date }}</q-item-label>
                 <q-item-label caption class="text-grey-8">{{ draft.topic }}</q-item-label>
-                <q-item-label caption v-if="draft.homework" class="text-indigo">Compiti: {{ draft.homework }}</q-item-label>
+                <q-item-label caption v-if="draft.homework" class="text-indigo">{{ t('classRegister.assignHomework') }}: {{ draft.homework }}</q-item-label>
               </q-item-section>
               <q-item-section side class="row items-center q-gutter-xs">
-                <q-btn color="positive" size="sm" icon="check" label="Firma & Registra" @click="registerDraftNow(draft, idx)" />
+                <q-btn color="positive" size="sm" icon="check" :label="t('dashboardPage.signAndRegister')" @click="registerDraftNow(draft, idx)" />
                 <q-btn flat round dense icon="delete" color="negative" @click="deleteDraft(idx)" />
               </q-item-section>
             </q-item>
           </q-list>
           <div v-else class="text-center text-grey-6 q-pa-xl">
-            Nessuna bozza lezione salvata al momento.
+            {{ t('dashboardPage.noDrafts') }}
           </div>
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn flat label="Chiudi" v-close-popup />
+          <q-btn flat :label="t('common.close')" v-close-popup />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -314,19 +314,7 @@ const authStore = useAuthStore()
 const { user, userRole } = storeToRefs(authStore)
 const $q = useQuasar()
 
-let t = (key, fallback) => (typeof fallback === 'string' ? fallback : key)
-const currentLocale = ref('it-IT')
-try {
-  const i18nInstance = useI18n()
-  if (i18nInstance && i18nInstance.t) {
-    t = i18nInstance.t
-    if (i18nInstance.locale) {
-      currentLocale.value = i18nInstance.locale.value || i18nInstance.locale
-    }
-  }
-} catch (e) {
-  // Fallback for unmounted component test mocks
-}
+const { t, locale: currentLocale } = useI18n()
 
 const realStats = ref([])
 const recentEvents = ref([])
@@ -410,24 +398,37 @@ const getLessonStatus = (entry) => {
   const hourIndex = Math.max(1, entry?.hour_index || 1)
   const startMinutes = (8 * 60) + ((hourIndex - 1) * 60)
   const endMinutes = startMinutes + 60
-  if (currentMinutes >= endMinutes) return t('dashboardPage.completed') || 'Completata'
-  if (currentMinutes >= startMinutes) return t('dashboardPage.inProgress') || 'In corso'
-  return t('dashboardPage.scheduled') || 'Pianificata'
+  if (currentMinutes >= endMinutes) return t('dashboardPage.completed')
+  if (currentMinutes >= startMinutes) return t('dashboardPage.inProgress')
+  return t('dashboardPage.scheduled')
+}
+
+// Uses internal status code instead of translated string to avoid locale-dependent comparisons
+const getLessonStatusCode = (entry) => {
+  if (entry.is_draft) return 'draft'
+  const now = new Date()
+  const currentMinutes = now.getHours() * 60 + now.getMinutes()
+  const hourIndex = Math.max(1, entry?.hour_index || 1)
+  const startMinutes = (8 * 60) + ((hourIndex - 1) * 60)
+  const endMinutes = startMinutes + 60
+  if (currentMinutes >= endMinutes) return 'completed'
+  if (currentMinutes >= startMinutes) return 'inProgress'
+  return 'scheduled'
 }
 
 const getLessonStatusColor = (entry) => {
-  if (entry.is_draft) return 'amber-2'
-  const status = getLessonStatus(entry)
-  if (status === 'Completata') return 'grey-3'
-  if (status === 'In corso') return 'positive'
+  const code = getLessonStatusCode(entry)
+  if (code === 'draft') return 'amber-2'
+  if (code === 'completed') return 'grey-3'
+  if (code === 'inProgress') return 'positive'
   return 'blue-1'
 }
 
 const getLessonStatusTextColor = (entry) => {
-  if (entry.is_draft) return 'amber-9'
-  const status = getLessonStatus(entry)
-  if (status === 'Completata') return 'grey-7'
-  if (status === 'In corso') return 'white'
+  const code = getLessonStatusCode(entry)
+  if (code === 'draft') return 'amber-9'
+  if (code === 'completed') return 'grey-7'
+  if (code === 'inProgress') return 'white'
   return 'primary'
 }
 
@@ -449,38 +450,39 @@ const openDraftsList = () => {
 
 const saveLessonDraft = () => {
   if (!draftForm.value.topic) {
-    $q.notify({ type: 'warning', message: 'Inserire l\'argomento della lezione' })
+    $q.notify({ type: 'warning', message: t('dashboardPage.topicRequired') })
     return
   }
   const newDraft = { ...draftForm.value, id: 'draft_' + Date.now() }
   lessonDrafts.value.push(newDraft)
   localStorage.setItem('registro_lesson_drafts', JSON.stringify(lessonDrafts.value))
-  $q.notify({ type: 'positive', message: `Bozza lezione salvata per il ${newDraft.date}!` })
+  $q.notify({ type: 'positive', message: t('dashboardPage.draftSaved', { date: newDraft.date }) })
   showDraftDialog.value = false
 }
 
 const deleteDraft = (idx) => {
   lessonDrafts.value.splice(idx, 1)
   localStorage.setItem('registro_lesson_drafts', JSON.stringify(lessonDrafts.value))
-  $q.notify({ type: 'info', message: 'Bozza eliminata' })
+  $q.notify({ type: 'info', message: t('dashboardPage.deleteDraft') })
 }
 
 const registerDraftNow = async (draft, idx) => {
   try {
     await api.post('/lessons', {
       class_id: draft.class_id,
-      subject_id: '26f22f7c-4c50-448b-8052-bdcb561953d4',
+      // subject_id comes from the draft if available; the server must not require a fixed ID
+      ...(draft.subject_id ? { subject_id: draft.subject_id } : {}),
       date: draft.date,
       hour: draft.hour,
       duration: 1,
       topic: draft.topic,
       notes: draft.homework
     })
-    $q.notify({ type: 'positive', message: 'Bozza convertita e registrata con successo!' })
+    $q.notify({ type: 'positive', message: t('dashboardPage.draftRegistered') })
     deleteDraft(idx)
   } catch (err) {
-    $q.notify({ type: 'positive', message: 'Lezione registrata con successo!' })
-    deleteDraft(idx)
+    $q.notify({ type: 'negative', message: t('common.error') })
+    console.error('Error registering draft lesson:', err)
   }
 }
 
@@ -501,40 +503,40 @@ const fetchDashboardData = async () => {
         if (data) {
             if (role === 'admin' || role === 'superadmin') {
                 realStats.value = [
-                    { label: 'Totale Scuole', value: data.total_schools ?? '0', icon: 'school', color: 'indigo' },
-                    { label: 'Utenti Attivi', value: data.total_users ?? '0', icon: 'people', color: 'cyan' },
-                    { label: 'Attivi 24h', value: data.active_users_24h ?? '0', icon: 'event', color: 'amber' },
-                    { label: 'Doc. Pending', value: data.pending_documents_count ?? '0', icon: 'assignment', color: 'red' }
+                    { label: t('dashboardPage.statTotalSchools'), value: data.total_schools ?? '0', icon: 'school', color: 'indigo' },
+                    { label: t('dashboardPage.statActiveUsers'), value: data.total_users ?? '0', icon: 'people', color: 'cyan' },
+                    { label: t('dashboardPage.statActive24h'), value: data.active_users_24h ?? '0', icon: 'event', color: 'amber' },
+                    { label: t('dashboardPage.statPendingDocs'), value: data.pending_documents_count ?? '0', icon: 'assignment', color: 'red' }
                 ]
                 recentEvents.value = data.recent_events || []
             } else if (role === 'secretary') {
                 realStats.value = [
-                    { label: 'Studenti', value: data.total_students ?? '0', icon: 'school', color: 'indigo' },
-                    { label: 'Docenti', value: data.total_teachers ?? '0', icon: 'people', color: 'cyan' },
-                    { label: 'Documenti', value: data.total_documents ?? '0', icon: 'description', color: 'amber' },
-                    { label: 'Richieste', value: data.pending_documents_count ?? '0', icon: 'assignment', color: 'red' }
+                    { label: t('dashboardPage.statStudents'), value: data.total_students ?? '0', icon: 'school', color: 'indigo' },
+                    { label: t('dashboardPage.statTeachers'), value: data.total_teachers ?? '0', icon: 'people', color: 'cyan' },
+                    { label: t('dashboardPage.statDocuments'), value: data.total_documents ?? '0', icon: 'description', color: 'amber' },
+                    { label: t('dashboardPage.statRequests'), value: data.pending_documents_count ?? '0', icon: 'assignment', color: 'red' }
                 ]
                 recentEvents.value = data.recent_events || []
             } else if (role === 'teacher') {
                 realStats.value = [
-                    { label: 'Le Mie Classi', value: data.classes_count ?? '0', icon: 'class', color: 'indigo' },
-                    { label: 'Studenti', value: data.students_count ?? '0', icon: 'school', color: 'cyan' },
-                    { label: 'Lezioni Oggi', value: data.lessons_today_count ?? '0', icon: 'event', color: 'amber' },
-                    { label: 'Voti da inserire', value: data.grades_pending_count ?? '0', icon: 'grade', color: 'red' }
+                    { label: t('dashboardPage.statMyClasses'), value: data.classes_count ?? '0', icon: 'class', color: 'indigo' },
+                    { label: t('dashboardPage.statStudents'), value: data.students_count ?? '0', icon: 'school', color: 'cyan' },
+                    { label: t('dashboardPage.statLessonsToday'), value: data.lessons_today_count ?? '0', icon: 'event', color: 'amber' },
+                    { label: t('dashboardPage.statGradesPending'), value: data.grades_pending_count ?? '0', icon: 'grade', color: 'red' }
                 ]
             } else if (role === 'student') {
                 realStats.value = [
-                    { label: 'Media Voti', value: data.average_grade ?? '-', icon: 'grade', color: 'indigo' },
-                    { label: 'Presenze', value: data.attendance_rate != null ? data.attendance_rate + '%' : '-', icon: 'how_to_reg', color: 'cyan' },
-                    { label: 'Compiti', value: data.homework_count ?? '0', icon: 'assignment', color: 'amber' },
-                    { label: 'Documenti', value: data.documents_count ?? '0', icon: 'description', color: 'purple' }
+                    { label: t('roleDashboards.averageGrade'), value: data.average_grade ?? '-', icon: 'grade', color: 'indigo' },
+                    { label: t('roleDashboards.attendanceRate'), value: data.attendance_rate != null ? data.attendance_rate + '%' : '-', icon: 'how_to_reg', color: 'cyan' },
+                    { label: t('agendaPage.homework'), value: data.homework_count ?? '0', icon: 'assignment', color: 'amber' },
+                    { label: t('documentsPage.title'), value: data.documents_count ?? '0', icon: 'description', color: 'purple' }
                 ]
             } else if (role === 'parent') {
                 realStats.value = [
-                    { label: 'I Miei Figli', value: data.children_count ?? '0', icon: 'family_restroom', color: 'indigo' },
-                    { label: 'Colloqui', value: data.upcoming_colloqui ?? '0', icon: 'event', color: 'cyan' },
-                    { label: 'Comunicazioni', value: data.unread_communications ?? '0', icon: 'email', color: 'amber' },
-                    { label: 'Documenti', value: data.documents_count ?? '0', icon: 'description', color: 'purple' }
+                    { label: t('nav.myChildren'), value: data.children_count ?? '0', icon: 'family_restroom', color: 'indigo' },
+                    { label: t('nav.colloqui'), value: data.upcoming_colloqui ?? '0', icon: 'event', color: 'cyan' },
+                    { label: t('nav.communications'), value: data.unread_communications ?? '0', icon: 'email', color: 'amber' },
+                    { label: t('documentsPage.title'), value: data.documents_count ?? '0', icon: 'description', color: 'purple' }
                 ]
             }
         }
@@ -558,22 +560,26 @@ const getEventColor = (type) => {
 
 const formatDate = (dateString) => {
     const date = new Date(dateString)
-    return date.toLocaleString('it-IT')
+    try {
+        return date.toLocaleString(currentLocale.value || 'it-IT')
+    } catch {
+        return date.toLocaleString('it-IT')
+    }
 }
 
 const actions = computed(() => {
   const role = currentRole.value
   if (role === 'teacher') {
     return [
-      { key: 'attendance', label: 'Segna Presenze', icon: 'how_to_reg', route: '/teacher/attendance' },
-      { key: 'grades', label: 'Inserisci Voti', icon: 'grade', route: '/teacher/grades' },
-      { key: 'lessons', label: 'Registro Lezioni', icon: 'edit_calendar', route: '/teacher/lessons' },
-      { key: 'agenda', label: 'Agenda Classe', icon: 'event', route: '/teacher/agenda' }
+      { key: 'attendance', label: t('dashboardPage.actionAttendance'), icon: 'how_to_reg', route: '/teacher/attendance' },
+      { key: 'grades', label: t('dashboardPage.actionGrades'), icon: 'grade', route: '/teacher/grades' },
+      { key: 'lessons', label: t('dashboardPage.actionLessons'), icon: 'edit_calendar', route: '/teacher/lessons' },
+      { key: 'agenda', label: t('dashboardPage.actionAgenda'), icon: 'event', route: '/teacher/agenda' }
     ]
   }
   return [
-    { key: 'users', label: 'Gestione Utenti', icon: 'people', route: '/admin/users' },
-    { key: 'classes', label: 'Gestione Classi', icon: 'school', route: '/admin/classes' }
+    { key: 'users', label: t('dashboardPage.actionUsers'), icon: 'people', route: '/admin/users' },
+    { key: 'classes', label: t('dashboardPage.actionClasses'), icon: 'school', route: '/admin/classes' }
   ]
 })
 

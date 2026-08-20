@@ -61,15 +61,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'saved'])
 
 const $q = useQuasar()
-let t = (key, fallback) => (typeof fallback === 'string' ? fallback : key)
-try {
-  const i18nInstance = useI18n()
-  if (i18nInstance && i18nInstance.t) {
-    t = i18nInstance.t
-  }
-} catch (e) {
-  // Fallback for isolated unit tests without vue-i18n app plugin
-}
+const { t } = useI18n()
 const loading = ref(false)
 
 const noteData = reactive({
@@ -116,7 +108,7 @@ const onSubmit = async () => {
       })
       $q.notify({
         type: 'positive',
-        message: 'Nota modificata con successo'
+        message: t('common.success')
       })
     } else {
       const payload = {
@@ -129,7 +121,7 @@ const onSubmit = async () => {
       await notesService.createNote(payload)
       $q.notify({
         type: 'positive',
-        message: 'Nota salvata con successo'
+        message: t('common.success')
       })
     }
     
@@ -138,7 +130,7 @@ const onSubmit = async () => {
   } catch (error) {
     $q.notify({
       type: 'negative',
-      message: 'Errore nel salvataggio della nota',
+      message: t('common.error'),
       caption: error.response?.data?.error || error.message
     })
   } finally {

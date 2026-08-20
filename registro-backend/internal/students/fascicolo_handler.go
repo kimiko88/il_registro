@@ -96,6 +96,23 @@ func (h *FascicoloHandler) GetFascicolo(c *gin.Context) {
 		return
 	}
 
+	// If caller is a parent, verify they are a registered guardian for this student
+	if actorRole == "parent" && h.db != nil {
+		var isGuardian bool
+		err := h.db.QueryRowContext(c.Request.Context(), `
+			SELECT EXISTS (
+				SELECT 1 FROM parent_students ps
+				WHERE ps.parent_id = $1 AND ps.student_id = $2
+				UNION
+				SELECT 1 FROM parent_student_guardians psg
+				WHERE psg.parent_id::text = $1 AND psg.student_id::text = $2
+			)`, actorID, studentID).Scan(&isGuardian)
+		if err != nil || !isGuardian {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: not authorized for this student"})
+			return
+		}
+	}
+
 	semester, _ := strconv.Atoi(c.DefaultQuery("semester", "1"))
 
 	voti := []VotoItem{}

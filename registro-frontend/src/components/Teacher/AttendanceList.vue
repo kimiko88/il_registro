@@ -2,13 +2,13 @@
   <q-list separator bordered class="rounded-borders">
     <q-item v-for="record in localRecords" :key="record.studentId" class="q-py-md">
       <q-item-section avatar>
-        <q-avatar color="primary" text-color="white">{{ record.name.charAt(0) }}</q-avatar>
+        <q-avatar color="primary" text-color="white">{{ record.name?.charAt(0) || '?' }}</q-avatar>
       </q-item-section>
 
       <q-item-section>
         <q-item-label class="text-weight-bold">{{ record.name }}</q-item-label>
         <q-item-label caption>
-          {{ record.status }} <span v-if="record.time">at {{ record.time }}</span>
+          {{ getStatusLabel(record.status) }} <span v-if="record.time">{{ t('attendance.atTime') || 'alle' }} {{ record.time }}</span>
         </q-item-label>
       </q-item-section>
 
@@ -20,24 +20,35 @@
                     :text-color="record.status === 'Present' ? 'white' : 'black'"
                     label="P" 
                     dense size="sm"
+                    :aria-label="t('attendance.present') || 'Presente'"
                     @click="updateStatus(record, 'Present')"
-                />
+                >
+                    <q-tooltip>{{ t('attendance.present') || 'Presente' }}</q-tooltip>
+                </q-btn>
                 <q-btn 
                     :color="record.status === 'Absent' ? 'red' : 'grey-3'"
                     :text-color="record.status === 'Absent' ? 'white' : 'black'"
                     label="A" 
                     dense size="sm"
+                    :aria-label="t('attendance.absent') || 'Assente'"
                     @click="updateStatus(record, 'Absent')"
-                />
+                >
+                    <q-tooltip>{{ t('attendance.absent') || 'Assente' }}</q-tooltip>
+                </q-btn>
                 <q-btn 
                     :color="record.status === 'Late' ? 'orange' : 'grey-3'"
                     :text-color="record.status === 'Late' ? 'white' : 'black'"
                     label="L" 
                     dense size="sm"
+                    :aria-label="t('attendance.late') || 'In Ritardo'"
                     @click="promptLate(record)"
-                />
+                >
+                    <q-tooltip>{{ t('attendance.late') || 'In Ritardo' }}</q-tooltip>
+                </q-btn>
              </q-btn-group>
-             <q-btn flat round icon="edit_note" size="sm" @click="editNote(record)" :color="record.notes ? 'primary' : 'grey'" />
+             <q-btn flat round icon="edit_note" size="sm" :aria-label="t('classRegister.addNote') || 'Aggiungi Nota'" @click="editNote(record)" :color="record.notes ? 'primary' : 'grey'">
+                <q-tooltip>{{ t('classRegister.addNote') || 'Aggiungi Nota' }}</q-tooltip>
+             </q-btn>
         </div>
       </q-item-section>
     </q-item>
@@ -112,6 +123,15 @@ const editNote = (record) => {
     activeRecord.value = record;
     currentNote.value = record.notes;
     showNoteDialog.value = true;
+};
+
+const getStatusLabel = (status) => {
+    switch (status) {
+        case 'Present': return t('attendance.present') || 'Presente';
+        case 'Absent': return t('attendance.absent') || 'Assente';
+        case 'Late': return t('attendance.late') || 'In Ritardo';
+        default: return status;
+    }
 };
 
 const saveNote = () => {

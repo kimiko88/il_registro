@@ -27,7 +27,7 @@ func TestIntegration_Tenant_Isolation_Security(t *testing.T) {
 	// 1. User from School A attempts to access resource belonging to School B
 	w1 := httptest.NewRecorder()
 	req1, _ := http.NewRequest("GET", "/api/v1/classes/class-school-b", nil)
-	
+
 	// Set context to School A
 	r.ServeHTTP(w1, req1) // Unauthenticated -> Forbidden/Unauthorized
 
@@ -35,7 +35,7 @@ func TestIntegration_Tenant_Isolation_Security(t *testing.T) {
 	rAuthSchoolA.GET("/api/v1/classes/:id", func(c *gin.Context) {
 		c.Set("user_id", "teacher-school-a")
 		c.Set("school_id", "school-A")
-		
+
 		callerSchoolID := c.GetString("school_id")
 		targetClassSchoolID := "school-B" // Class belongs to School B
 
@@ -56,7 +56,7 @@ func TestIntegration_Tenant_Isolation_Security(t *testing.T) {
 	rAuthSchoolB.GET("/api/v1/classes/:id", func(c *gin.Context) {
 		c.Set("user_id", "teacher-school-b")
 		c.Set("school_id", "school-B")
-		
+
 		callerSchoolID := c.GetString("school_id")
 		targetClassSchoolID := "school-B"
 

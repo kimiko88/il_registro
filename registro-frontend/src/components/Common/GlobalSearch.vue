@@ -265,10 +265,21 @@ function openResult(item) {
 }
 
 // ── Highlight matching text ──────────────────────────────────────────────────
+function escapeHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
+
 function highlight(text) {
-  if (!query.value || !text) return text || ''
-  const escaped = query.value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  return text.replace(new RegExp(`(${escaped})`, 'gi'), '<mark class="search-highlight">$1</mark>')
+  if (!text) return ''
+  const safeText = escapeHtml(text)
+  if (!query.value) return safeText
+  const escaped = escapeHtml(query.value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return safeText.replace(new RegExp(`(${escaped})`, 'gi'), '<mark class="search-highlight">$1</mark>')
 }
 
 // Expose open() so MainLayout can call it

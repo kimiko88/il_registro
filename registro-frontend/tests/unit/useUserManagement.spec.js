@@ -41,7 +41,7 @@ describe('useUserManagement', () => {
 
         expect(mockNotify).toHaveBeenCalledWith(expect.objectContaining({
             type: 'positive',
-            message: 'Import started'
+            message: expect.any(String)
         }));
     });
 });

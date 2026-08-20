@@ -1,8 +1,9 @@
 <template>
   <q-table
-    :title="t('roleDashboards.schoolManagement') || 'Istituti Scholastici'"
+    :title="t('roleDashboards.schoolManagement') || 'Istituti Scolastici'"
     :rows="store.schools"
     :columns="columns"
+    :filter="filter"
     row-key="id"
     v-model:pagination="store.pagination"
     :loading="store.loading"
@@ -21,8 +22,12 @@
 
     <template v-slot:body-cell-actions="props">
       <q-td :props="props">
-        <q-btn flat round color="primary" icon="edit" @click="$emit('edit', props.row)" />
-        <q-btn flat round color="negative" icon="delete" @click="$emit('delete', props.row.id)" />
+        <q-btn flat round color="primary" icon="edit" :aria-label="t('common.edit') || 'Modifica'" @click="$emit('edit', props.row)">
+          <q-tooltip>{{ t('common.edit') || 'Modifica' }}</q-tooltip>
+        </q-btn>
+        <q-btn flat round color="negative" icon="delete" :aria-label="t('common.delete') || 'Elimina'" @click="$emit('delete', props.row.id)">
+          <q-tooltip>{{ t('common.delete') || 'Elimina' }}</q-tooltip>
+        </q-btn>
       </q-td>
     </template>
   </q-table>

@@ -118,19 +118,23 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import udaService from '@/services/udaService'
 import { useNotify } from '@/composables/useNotify'
+import { useClassesStore } from '@/stores/classes'
 
 const { t } = useI18n()
 const notify = useNotify()
+const classesStore = useClassesStore()
 
-const selectedClassId = ref('47a05d80-3836-452e-ac91-8cfa3a1999dd')
-const classOptions = ref([
-  { id: '47a05d80-3836-452e-ac91-8cfa3a1999dd', name: 'Classe 2A' },
-  { id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', name: 'Classe 3B' }
-])
+const selectedClassId = ref('')
+const classOptions = computed(() => {
+  return (classesStore.classes || []).map(c => ({
+    id: c.id,
+    name: c.name ? `${c.name} ${c.section || ''}` : `${c.year || ''}${c.section || ''}`
+  }))
+})
 
 const loading = ref(false)
 const saving = ref(false)
@@ -142,7 +146,7 @@ const currentPlanId = ref(null)
 
 const form = ref({
   class_id: '',
-  subject_id: '26f22f7c-4c50-448b-8052-bdcb561953d4',
+  subject_id: '',
   title: '',
   description: '',
   period: 'primo_quadrimestre',
@@ -176,7 +180,7 @@ const openCreateDialog = () => {
   currentPlanId.value = null
   form.value = {
     class_id: selectedClassId.value,
-    subject_id: '26f22f7c-4c50-448b-8052-bdcb561953d4',
+    subject_id: '',
     title: '',
     description: '',
     period: 'primo_quadrimestre',
@@ -197,7 +201,7 @@ const openEditDialog = (plan) => {
 
 const saveUda = async () => {
   if (!form.value.title) {
-    notify.error('Inserire il titolo dell\'UdA')
+    notify.error(t('common.requiredField') || 'Inserire il titolo dell\'UdA')
     return
   }
   saving.value = true
@@ -205,15 +209,15 @@ const saveUda = async () => {
     form.value.class_id = selectedClassId.value
     if (editMode.value) {
       await udaService.update(currentPlanId.value, form.value)
-      notify.success('UdA aggiornata con successo!')
+      notify.success(t('common.success'))
     } else {
       await udaService.create(form.value)
-      notify.success('UdA creata con successo!')
+      notify.success(t('common.success'))
     }
     showDialog.value = false
     await fetchUdaPlans()
   } catch (err) {
-    notify.error('Errore nel salvataggio dell\'UdA')
+    notify.error(t('common.error'))
   } finally {
     saving.value = false
   }
@@ -222,14 +226,20 @@ const saveUda = async () => {
 const deleteUda = async (id) => {
   try {
     await udaService.delete(id)
-    notify.success('UdA eliminata')
+    notify.success(t('common.success'))
     await fetchUdaPlans()
   } catch (err) {
-    notify.error('Errore durante l\'eliminazione')
+    notify.error(t('common.error'))
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  if (classesStore.classes.length === 0) {
+    await classesStore.fetchClasses()
+  }
+  if (classesStore.classes.length > 0) {
+    selectedClassId.value = classesStore.classes[0].id
+  }
   fetchUdaPlans()
 })
 </script>

@@ -14,8 +14,8 @@
           <q-icon name="lock_clock" size="32px" color="white" />
         </div>
         <div>
-          <div class="text-h6 text-weight-bold text-white">Sessione scaduta</div>
-          <div class="text-caption text-indigo-100">Inserisci la password per continuare</div>
+          <div class="text-h6 text-weight-bold text-white">{{ t('auth.sessionExpired') || 'Sessione scaduta' }}</div>
+          <div class="text-caption text-indigo-100">{{ t('auth.enterPasswordToContinue') || 'Inserisci la password per continuare' }}</div>
         </div>
       </q-card-section>
 
@@ -26,15 +26,14 @@
         <div class="reauth-info-banner q-pa-sm q-mb-md row items-start">
           <q-icon name="info_outline" color="indigo-6" size="18px" class="q-mt-xs q-mr-sm flex-shrink-0" />
           <div class="text-caption text-indigo-9" style="line-height: 1.5">
-            Il tuo lavoro nella pagina corrente è stato preservato.<br>
-            Accedi di nuovo per continuare.
+            {{ t('auth.sessionWorkPreserved') || 'Il tuo lavoro nella pagina corrente è stato preservato. Accedi di nuovo per continuare.' }}
           </div>
         </div>
 
         <!-- Email (read-only) -->
         <q-input
           :model-value="userEmail"
-          label="Email"
+          :label="t('login.emailLabel') || 'Email'"
           outlined
           dense
           readonly
@@ -50,7 +49,7 @@
         <q-input
           ref="passwordRef"
           v-model="password"
-          label="Password"
+          :label="t('login.passwordLabel') || 'Password'"
           :type="showPassword ? 'text' : 'password'"
           outlined
           dense
@@ -68,7 +67,7 @@
             <q-btn
               flat round dense
               :icon="showPassword ? 'visibility_off' : 'visibility'"
-              :aria-label="showPassword ? 'Nascondi password' : 'Mostra password'"
+              :aria-label="showPassword ? (t('login.hidePassword') || 'Nascondi password') : (t('login.showPassword') || 'Mostra password')"
               @click="showPassword = !showPassword"
             />
           </template>
@@ -80,7 +79,7 @@
       <q-card-actions class="q-px-md q-pb-md q-pt-sm row q-gutter-sm">
         <q-btn
           flat
-          label="Esci"
+          :label="t('common.logout') || 'Esci'"
           color="grey-7"
           no-caps
           class="col"
@@ -88,7 +87,7 @@
           @click="onCancel"
         />
         <q-btn
-          label="Accedi"
+          :label="t('login.loginButton') || 'Accedi'"
           color="primary"
           no-caps
           unelevated
@@ -105,11 +104,13 @@
 
 <script setup>
 import { ref, nextTick, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useSessionReauth } from '@/composables/useSessionReauth'
 import { useAuthStore } from '@/stores/auth'
 import authService from '@/services/authService'
 import { useRouter } from 'vue-router'
 
+const { t } = useI18n()
 const { showDialog, userEmail, resolveReauth, cancelReauth } = useSessionReauth()
 const authStore = useAuthStore()
 const router = useRouter()
@@ -133,7 +134,7 @@ watch(showDialog, async (val) => {
 
 async function onSubmit() {
   if (!password.value) {
-    errorMessage.value = 'Inserisci la password.'
+    errorMessage.value = t('login.enterPassword') || 'Inserisci la password.'
     return
   }
   errorMessage.value = ''
@@ -150,11 +151,11 @@ async function onSubmit() {
   } catch (err) {
     const raw = String(err?.response?.data?.error || err?.message || '').toLowerCase()
     if (raw.includes('invalid') || raw.includes('credentials') || raw.includes('password')) {
-      errorMessage.value = 'Password non corretta. Riprova.'
+      errorMessage.value = t('login.invalidPassword') || 'Password non corretta. Riprova.'
     } else if (raw.includes('too many') || raw.includes('rate limit')) {
-      errorMessage.value = 'Troppi tentativi. Attendi qualche minuto.'
+      errorMessage.value = t('login.tooManyAttempts') || 'Troppi tentativi. Attendi qualche minuto.'
     } else {
-      errorMessage.value = 'Errore durante l\'accesso. Riprova.'
+      errorMessage.value = t('login.loginError') || 'Errore durante l\'accesso. Riprova.'
     }
   } finally {
     loading.value = false

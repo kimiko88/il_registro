@@ -1,5 +1,6 @@
 import { Notify } from 'quasar'
 import { useErrorStore } from '@/stores/error'
+import { i18n } from '@/i18n'
 
 /**
  * Custom composable for consistent, central error handling across Vue components.
@@ -15,8 +16,10 @@ export function useErrorHandler() {
      * @param {String} [fallbackMessage] - Optional human fallback message
      * @param {Boolean} [showToast=true] - Whether to display a toast notification
      */
-    function handleError(err, fallbackMessage = 'Si è verificato un errore durante l\'operazione.', showToast = true) {
-        const message = err?.userMessage || err?.response?.data?.error || err?.message || fallbackMessage
+    function handleError(err, fallbackMessage = null, showToast = true) {
+        const t = i18n?.global?.t
+        const defaultMsg = t ? t('common.error') : 'Si è verificato un errore durante l\'operazione.'
+        const message = err?.userMessage || err?.response?.data?.error || err?.message || fallbackMessage || defaultMsg
 
         console.error('[ErrorHandler]', err)
 

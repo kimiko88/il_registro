@@ -1,6 +1,7 @@
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useQuasar } from 'quasar';
 import { useColloquiStore } from 'src/stores/colloqui';
+import { i18n } from '@/i18n';
 
 export function useColloquiBooking() {
     const store = useColloquiStore();
@@ -13,6 +14,7 @@ export function useColloquiBooking() {
 
     const bookSlot = async (slotId) => {
         loading.value = true;
+        const t = i18n?.global?.t;
         try {
             await new Promise(resolve => setTimeout(resolve, 500));
             // Mock booking
@@ -23,7 +25,7 @@ export function useColloquiBooking() {
                 subject: 'Mathematics',
                 date: '2025-01-25 15:00'
             });
-            $q.notify({ type: 'positive', message: 'Booking Confirmed' });
+            $q.notify({ type: 'positive', message: t ? t('composables.colloqui.bookingConfirmed') : 'Prenotazione colloquio confermata' });
             return true;
         } finally {
             loading.value = false;
@@ -31,12 +33,13 @@ export function useColloquiBooking() {
     };
 
     const cancelBooking = async (bookingId) => {
+        const t = i18n?.global?.t;
         store.bookings = store.bookings.filter(b => b.id !== bookingId);
-        $q.notify({ type: 'positive', message: 'Booking Cancelled' });
+        $q.notify({ type: 'positive', message: t ? t('composables.colloqui.bookingCancelled') : 'Prenotazione colloquio annullata' });
     };
 
     return {
-        bookings: store.bookings, // This should be reactive
+        bookings: computed(() => store.bookings),
         fetchAvailableSlots,
         bookSlot,
         cancelBooking,

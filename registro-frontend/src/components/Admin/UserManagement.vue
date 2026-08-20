@@ -6,15 +6,19 @@
     </div>
 
     <q-table
-      :rows="users"
+      :rows="users || []"
       :columns="columns"
       row-key="id"
       :loading="loading"
     >
       <template v-slot:body-cell-actions="props">
         <q-td :props="props">
-          <q-btn flat round color="primary" icon="edit" size="sm" @click="editUser(props.row)" />
-          <q-btn flat round color="negative" icon="delete" size="sm" @click="confirmDelete(props.row)" />
+          <q-btn flat round color="primary" icon="edit" size="sm" :aria-label="t('common.edit') || 'Modifica'" @click="editUser(props.row)">
+            <q-tooltip>{{ t('common.edit') || 'Modifica' }}</q-tooltip>
+          </q-btn>
+          <q-btn flat round color="negative" icon="delete" size="sm" :aria-label="t('common.delete') || 'Elimina'" @click="confirmDelete(props.row)">
+            <q-tooltip>{{ t('common.delete') || 'Elimina' }}</q-tooltip>
+          </q-btn>
         </q-td>
       </template>
     </q-table>
@@ -44,7 +48,7 @@ const selectedUser = ref(null)
 const columns = computed(() => [
   { name: 'id', label: 'ID', field: 'id', sortable: true },
   { name: 'firstName', label: t('common.name') || 'Nome', field: 'first_name', sortable: true },
-  { name: 'lastName', label: t('common.name') || 'Cognome', field: 'last_name', sortable: true },
+  { name: 'lastName', label: t('common.surname') || 'Cognome', field: 'last_name', sortable: true },
   { name: 'email', label: t('login.emailLabel') || 'Email', field: 'email', sortable: true },
   { name: 'role', label: t('common.role') || 'Ruolo', field: 'role', sortable: true },
   { name: 'actions', label: t('common.actions') || 'Azioni', field: 'actions' }
@@ -71,10 +75,10 @@ async function deleteUser() {
   if (!selectedUser.value) return
   try {
     await adminService.deleteUser(selectedUser.value.id)
-    $q.notify({ type: 'positive', message: 'User deleted successfully' })
+    $q.notify({ type: 'positive', message: t('admin.userDeleted') || 'Utente eliminato con successo' })
     fetch() // Reload list
   } catch (error) {
-    $q.notify({ type: 'negative', message: 'Error deleting user' })
+    $q.notify({ type: 'negative', message: t('admin.userDeleteError') || 'Errore durante l\'eliminazione dell\'utente' })
   }
 }
 </script>

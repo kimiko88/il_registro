@@ -81,7 +81,7 @@ export function applyLocale(langCode, i18nInstance = null, $q = null) {
   const quasarPack = QUASAR_LANG_MAP[normalized] || quasarLangIt
   if ($q && $q.lang && typeof $q.lang.set === 'function') {
     $q.lang.set(quasarPack)
-  } else if (Quasar && Quasar.lang && typeof Quasar.lang.set === 'function') {
+  } else if (typeof Quasar !== 'undefined' && Quasar?.lang && typeof Quasar.lang.set === 'function') {
     Quasar.lang.set(quasarPack)
   }
 

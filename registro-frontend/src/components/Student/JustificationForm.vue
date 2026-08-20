@@ -2,7 +2,7 @@
   <q-dialog v-model="isOpen">
     <q-card style="min-width: 300px">
         <q-card-section>
-            <div class="text-h6">{{ t('common.save') }}</div>
+            <div class="text-h6">{{ t('attendance.justifyAbsence') || 'Giustifica Assenza' }}</div>
             <div class="text-caption">{{ t('gradesPage.date') }}: {{ date }}</div>
         </q-card-section>
 
@@ -10,14 +10,16 @@
             <q-form @submit="onSubmit">
                 <q-select 
                     v-model="reason" 
-                    :options="['Motivi di Salute', 'Motivi Familiari', 'Altro']" 
-                    :label="t('notesPage.descriptionLabel')" 
+                    :options="reasonOptions" 
+                    :label="t('notesPage.descriptionLabel') || 'Motivazione'" 
+                    emit-value
+                    map-options
                     filled 
                     class="q-mb-md" 
                 />
                 <q-input 
                     v-model="notes" 
-                    :label="t('gradesPage.notes')" 
+                    :label="t('gradesPage.notes') || 'Note'" 
                     filled 
                     type="textarea" 
                     rows="3" 
@@ -33,7 +35,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
@@ -44,7 +46,19 @@ const isOpen = ref(props.modelValue)
 const reason = ref('Motivi di Salute')
 const notes = ref('')
 
-watch(() => props.modelValue, (val) => isOpen.value = val)
+const reasonOptions = computed(() => [
+  { label: t('attendance.healthReasons') || 'Motivi di Salute', value: 'Motivi di Salute' },
+  { label: t('attendance.familyReasons') || 'Motivi Familiari', value: 'Motivi Familiari' },
+  { label: t('common.other') || 'Altro', value: 'Altro' }
+])
+
+watch(() => props.modelValue, (val) => {
+  isOpen.value = val
+  if (val) {
+    reason.value = 'Motivi di Salute'
+    notes.value = ''
+  }
+})
 watch(isOpen, (val) => emit('update:modelValue', val))
 
 const onSubmit = () => {

@@ -9,8 +9,14 @@ export function useGlobalAnalytics() {
     });
 
     const fetchStats = async () => {
-        const res = await api.get('/monitoring/analytics');
-        stats.value = res.data;
+        try {
+            const res = await api.get('/monitoring/analytics');
+            if (res?.data) {
+                stats.value = res.data;
+            }
+        } catch (err) {
+            console.error('[useGlobalAnalytics] Failed to fetch stats:', err);
+        }
     };
 
     onMounted(fetchStats);

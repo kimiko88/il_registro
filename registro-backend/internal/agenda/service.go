@@ -54,11 +54,16 @@ func (s *Service) CreateAgendaItem(ctx context.Context, teacherID, schoolID stri
 	}
 
 	if !req.AllDay {
-		if _, err := time.Parse("15:04", req.StartTime); err != nil {
+		st, err := time.Parse("15:04", req.StartTime)
+		if err != nil {
 			return nil, errors.New("invalid start_time format: expected HH:MM")
 		}
-		if _, err := time.Parse("15:04", req.EndTime); err != nil {
+		et, err := time.Parse("15:04", req.EndTime)
+		if err != nil {
 			return nil, errors.New("invalid end_time format: expected HH:MM")
+		}
+		if et.Before(st) {
+			return nil, errors.New("end_time cannot be before start_time")
 		}
 	}
 
@@ -134,6 +139,13 @@ func (s *Service) UpdateAgendaItem(ctx context.Context, actorID, actorRole, acto
 			}
 		}
 		item.EndTime = *req.EndTime
+	}
+	if !item.AllDay && item.StartTime != "" && item.EndTime != "" {
+		st, err1 := time.Parse("15:04", item.StartTime)
+		et, err2 := time.Parse("15:04", item.EndTime)
+		if err1 == nil && err2 == nil && et.Before(st) {
+			return nil, errors.New("end_time cannot be before start_time")
+		}
 	}
 	if req.Date != nil {
 		d, err := time.Parse("2006-01-02", *req.Date)

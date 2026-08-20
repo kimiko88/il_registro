@@ -111,7 +111,11 @@ func GenerateVerbale(verbale *MeetingVerbale, meeting *CouncilMeeting, sigs []Ve
 			}
 			name := sig.UserName
 			if name == "" {
-				name = sig.UserID[:8] + "…"
+				if len(sig.UserID) > 8 {
+					name = sig.UserID[:8] + "…"
+				} else {
+					name = sig.UserID
+				}
 			}
 			pdf.CellFormat(70, 6, sanitize(name), "1", 0, "L", fillColor, 0, "")
 			pdf.CellFormat(55, 6, sig.SignedAt.Format("02/01/2006 15:04"), "1", 0, "C", fillColor, 0, "")

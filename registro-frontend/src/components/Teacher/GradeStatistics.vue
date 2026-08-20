@@ -55,9 +55,10 @@ const average = computed(() => {
 const totalGrades = computed(() => {
     if (!gradesStore.grades || !gradesStore.grades.students) return 0;
     return gradesStore.grades.students.reduce((acc, s) => {
+        const studentGrades = s.grades || [];
         const filtered = props.selectedSemester > 0
-            ? s.grades.filter(g => !g.semester || Number(g.semester) === Number(props.selectedSemester))
-            : s.grades;
+            ? studentGrades.filter(g => !g.semester || Number(g.semester) === Number(props.selectedSemester))
+            : studentGrades;
         return acc + filtered.length;
     }, 0);
 });

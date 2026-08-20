@@ -1,5 +1,6 @@
 import { useQuasar } from 'quasar'
 import { ref } from 'vue'
+import { i18n } from '@/i18n'
 
 /**
  * useUndoToast — Composable for showing an undo-able action toast.
@@ -34,6 +35,11 @@ export function useUndoToast(timeoutMs = 15000) {
      */
     async function notifyWithUndo(message, undoFn, options = {}) {
         undoClicked.value = false
+        const t = i18n?.global?.t
+
+        const getCancelLabel = (sec) => t ? t('composables.undo.cancelWithSeconds', { remaining: sec }) : `Annulla (${sec}s)`
+        const getActionCancelled = () => t ? t('composables.undo.actionCancelled') : 'Azione annullata'
+        const getCancelError = () => t ? t('composables.undo.cancelError') : 'Errore durante l\'annullamento'
 
         return new Promise((resolve) => {
             let dismissed = false
@@ -53,7 +59,7 @@ export function useUndoToast(timeoutMs = 15000) {
                 timeout: timeoutMs + 200,     // slightly longer than our timer
                 actions: [
                     {
-                        label: `Annulla (${remaining}s)`,
+                        label: getCancelLabel(remaining),
                         color: 'yellow',
                         handler: async () => {
                             if (dismissed) return
@@ -65,14 +71,14 @@ export function useUndoToast(timeoutMs = 15000) {
                                 $q.notify({
                                     type: 'warning',
                                     icon: 'undo',
-                                    message: 'Azione annullata',
+                                    message: getActionCancelled(),
                                     position: options.position || 'bottom',
                                     timeout: 2000
                                 })
                             } catch (err) {
                                 $q.notify({
                                     type: 'negative',
-                                    message: "Errore durante l'annullamento",
+                                    message: getCancelError(),
                                     position: options.position || 'bottom',
                                     timeout: 2500
                                 })
@@ -108,7 +114,7 @@ export function useUndoToast(timeoutMs = 15000) {
                     timeout: (remaining * 1000) + 200,
                     actions: [
                         {
-                            label: `Annulla (${remaining}s)`,
+                            label: getCancelLabel(remaining),
                             color: 'yellow',
                             handler: async () => {
                                 if (dismissed) return
@@ -120,14 +126,14 @@ export function useUndoToast(timeoutMs = 15000) {
                                     $q.notify({
                                         type: 'warning',
                                         icon: 'undo',
-                                        message: 'Azione annullata',
+                                        message: getActionCancelled(),
                                         position: options.position || 'bottom',
                                         timeout: 2000
                                     })
                                 } catch {
                                     $q.notify({
                                         type: 'negative',
-                                        message: "Errore durante l'annullamento",
+                                        message: getCancelError(),
                                         position: options.position || 'bottom',
                                         timeout: 2500
                                     })

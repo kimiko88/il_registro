@@ -13,7 +13,7 @@
     >
       <template v-slot:top>
         <div class="row items-center full-width q-mb-md">
-          <div class="text-h5 text-weight-bold text-outfit q-mr-xl text-slate-800">Elenco Utenti</div>
+          <div class="text-h5 text-weight-bold text-outfit q-mr-xl text-slate-800">{{ t('usersPage.title') || 'Elenco Utenti' }}</div>
           
           <q-select
             v-model="roleFilter"
@@ -30,15 +30,15 @@
           <q-space />
           
           <div class="row q-gutter-sm">
-            <q-input dense outlined v-model="filter" placeholder="Cerca per nome, email..." class="bg-white min-width-250">
+            <q-input dense outlined v-model="filter" :placeholder="t('usersPage.searchPlaceholder') || 'Cerca per nome, email...'" class="bg-white min-width-250">
               <template v-slot:prepend>
                 <q-icon name="search" color="slate-300" />
               </template>
             </q-input>
             
-            <q-btn unelevated color="primary" icon="add" label="Nuovo Utente" class="rounded-lg shadow-sm" no-caps @click="$emit('create')" />
-            <q-btn flat round icon="file_download" color="slate-400" @click="$emit('export')">
-                <q-tooltip>Esporta in CSV</q-tooltip>
+            <q-btn unelevated color="primary" icon="add" :label="t('usersPage.newUser') || 'Nuovo Utente'" class="rounded-lg shadow-sm" no-caps @click="$emit('create')" />
+            <q-btn flat round icon="file_download" color="slate-400" :aria-label="t('usersPage.exportCsv') || 'Esporta in CSV'" @click="$emit('export')">
+                <q-tooltip>{{ t('usersPage.exportCsv') || 'Esporta in CSV' }}</q-tooltip>
             </q-btn>
           </div>
         </div>
@@ -50,11 +50,11 @@
            <q-td colspan="100%">
              <div class="row items-center q-gutter-md q-pa-sm">
                <q-icon name="check_circle" color="indigo" size="24px" />
-               <span class="text-weight-bold text-indigo-700">{{ selected.length }} utenti selezionati</span>
+               <span class="text-weight-bold text-indigo-700">{{ selected.length }} {{ t('usersPage.selectedUsers') || 'utenti selezionati' }}</span>
                <q-space />
                <div class="row q-gutter-sm">
-                 <q-btn unelevated size="sm" color="negative" icon="delete" label="Elimina Selezionati" no-caps class="rounded-md" @click="$emit('bulk-delete', selected)" />
-                 <q-btn outline size="sm" color="indigo" icon="lock_reset" label="Reset Password" no-caps class="rounded-md" @click="$emit('bulk-reset', selected)" />
+                 <q-btn unelevated size="sm" color="negative" icon="delete" :label="t('usersPage.deleteSelected') || 'Elimina Selezionati'" no-caps class="rounded-md" @click="$emit('bulk-delete', selected)" />
+                 <q-btn outline size="sm" color="indigo" icon="lock_reset" :label="t('usersPage.resetPassword') || 'Reset Password'" no-caps class="rounded-md" @click="$emit('bulk-reset', selected)" />
                </div>
              </div>
            </q-td>
@@ -76,13 +76,13 @@
               {{ getRoleLabel(props.value) }}
             </q-chip>
             <q-chip v-if="props.row?.is_staff" color="amber-1" text-color="amber-10" icon="shield" size="xs" class="text-weight-bold rounded-md">
-              Staff
+              {{ t('usersPage.roleStaff') || 'Staff' }}
             </q-chip>
             <q-chip v-if="props.row?.is_vice_principal" color="purple-1" text-color="purple-10" icon="stars" size="xs" class="text-weight-bold rounded-md">
-              Vicepreside
+              {{ t('usersPage.roleVicePrincipal') || 'Vicepreside' }}
             </q-chip>
             <q-chip v-if="props.row?.is_principal" color="deep-purple-1" text-color="deep-purple-10" icon="workspace_premium" size="xs" class="text-weight-bold rounded-md">
-              Preside
+              {{ t('usersPage.rolePrincipal') || 'Preside' }}
             </q-chip>
           </div>
         </q-td>
@@ -93,7 +93,7 @@
             <div class="row items-center q-gutter-xs">
               <div :class="props.value ? 'bg-emerald-500' : 'bg-slate-300'" class="status-dot"></div>
               <span :class="props.value ? 'text-emerald-700 text-weight-medium' : 'text-slate-400'">
-                {{ props.value ? 'Attivo' : 'Inattivo' }}
+                {{ props.value ? (t('common.active') || 'Attivo') : (t('common.inactive') || 'Inattivo') }}
               </span>
             </div>
          </q-td>
@@ -101,27 +101,27 @@
 
       <template v-slot:body-cell-actions="props">
         <q-td :props="props" auto-width>
-          <q-btn flat round size="sm" color="slate-400" icon="more_horiz">
+          <q-btn flat round size="sm" color="slate-400" icon="more_horiz" :aria-label="t('common.actions') || 'Azioni'">
             <q-menu class="rounded-lg shadow-2xl border border-slate-100" transition-show="fade" transition-hide="fade">
               <q-list style="min-width: 180px" padding>
                 <q-item clickable v-close-popup class="q-mx-sm rounded-md" @click="$emit('edit', props.row)">
                   <q-item-section avatar><q-icon name="edit" color="primary" /></q-item-section>
-                  <q-item-section class="text-slate-700">Modifica Profilo</q-item-section>
+                  <q-item-section class="text-slate-700">{{ t('usersPage.editProfile') || 'Modifica Profilo' }}</q-item-section>
                 </q-item>
                 <q-item clickable v-close-popup class="q-mx-sm rounded-md" @click="$emit('reset-pwd', props.row)">
                   <q-item-section avatar><q-icon name="lock_reset" color="orange" /></q-item-section>
-                  <q-item-section class="text-slate-700">Reset Password</q-item-section>
+                  <q-item-section class="text-slate-700">{{ t('usersPage.resetPassword') || 'Reset Password' }}</q-item-section>
                 </q-item>
                 
                 <q-item v-if="props.row.role === 'teacher'" clickable v-close-popup class="q-mx-sm rounded-md" @click="$emit('manage-subjects', props.row)">
                   <q-item-section avatar><q-icon name="menu_book" color="indigo" /></q-item-section>
-                  <q-item-section class="text-slate-700">Gestione Materie</q-item-section>
+                  <q-item-section class="text-slate-700">{{ t('usersPage.manageSubjects') || 'Gestione Materie' }}</q-item-section>
                 </q-item>
                 
                 <q-separator class="q-my-sm opacity-50" />
                 <q-item clickable v-close-popup class="q-mx-sm rounded-md text-negative" @click="$emit('delete', props.row)">
                   <q-item-section avatar><q-icon name="delete" color="negative" /></q-item-section>
-                  <q-item-section class="text-weight-bold">Elimina Account</q-item-section>
+                  <q-item-section class="text-weight-bold">{{ t('usersPage.deleteAccount') || 'Elimina Account' }}</q-item-section>
                 </q-item>
               </q-list>
             </q-menu>
@@ -132,14 +132,14 @@
       <template v-slot:no-data>
         <div class="full-width q-pa-xl text-center text-slate-400">
           <q-icon name="group_off" size="64px" class="opacity-10 q-mb-md" />
-          <div class="text-h6">Nessun utente trovato</div>
+          <div class="text-h6">{{ t('usersPage.noUsersFound') || 'Nessun utente trovato' }}</div>
         </div>
       </template>
     </q-table>
   </q-card>
 </template>
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
@@ -152,22 +152,22 @@ const filter = ref('')
 const roleFilter = ref('all')
 const selected = ref([])
 
-const roleFilterOptions = [
-  {label: 'Tutti', value: 'all'},
-  {label: 'Studenti', value: 'student'},
-  {label: 'Docenti', value: 'teacher'},
-  {label: 'Genitori', value: 'parent'},
-  {label: 'Staff', value: 'staff'}
-]
+const roleFilterOptions = computed(() => [
+  { label: t('common.all') || 'Tutti', value: 'all' },
+  { label: t('usersPage.roleStudents') || 'Studenti', value: 'student' },
+  { label: t('usersPage.roleTeachers') || 'Docenti', value: 'teacher' },
+  { label: t('usersPage.roleParents') || 'Genitori', value: 'parent' },
+  { label: t('usersPage.roleStaff') || 'Staff', value: 'staff' }
+])
 
-const columns = [
-    { name: 'name', label: 'Nome Completo', field: row => `${row.last_name} ${row.first_name}`, sortable: true, align: 'left' },
-    { name: 'email', label: 'Email', field: 'email', sortable: true, align: 'left' },
-    { name: 'role', label: 'Ruolo', field: 'role', sortable: true, align: 'center' },
-    { name: 'class', label: 'Classe', field: row => row.class_name || row.class || '-', align: 'center' },
-    { name: 'status', label: 'Stato', field: row => row.is_active !== undefined ? row.is_active : row.active, align: 'center' },
-    { name: 'actions', label: 'Azioni', align: 'right' }
-];
+const columns = computed(() => [
+    { name: 'name', label: t('common.fullName') || 'Nome Completo', field: row => `${row?.last_name || ''} ${row?.first_name || ''}`.trim() || '-', sortable: true, align: 'left' },
+    { name: 'email', label: t('login.emailLabel') || 'Email', field: 'email', sortable: true, align: 'left' },
+    { name: 'role', label: t('usersPage.roleLabel') || 'Ruolo', field: 'role', sortable: true, align: 'center' },
+    { name: 'class', label: t('udaPage.classLabel') || 'Classe', field: row => row.class_name || row.class || '-', align: 'center' },
+    { name: 'status', label: t('substitutionsPage.status') || 'Stato', field: row => row.is_active !== undefined ? row.is_active : row.active, align: 'center' },
+    { name: 'actions', label: t('common.actions') || 'Azioni', align: 'right' }
+]);
 
 const getRoleColor = (role) => {
     switch(role) {
@@ -181,10 +181,10 @@ const getRoleColor = (role) => {
 
 const getRoleLabel = (role) => {
     switch(role) {
-        case 'student': return 'Studente'
-        case 'teacher': return 'Docente'
-        case 'parent': return 'Genitore'
-        case 'staff': return 'Personale'
+        case 'student': return t('usersPage.roleStudents') || 'Studente'
+        case 'teacher': return t('usersPage.roleTeachers') || 'Docente'
+        case 'parent': return t('usersPage.roleParents') || 'Genitore'
+        case 'staff': return t('usersPage.roleStaff') || 'Personale'
         default: return role
     }
 }

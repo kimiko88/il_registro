@@ -130,9 +130,12 @@ const checkImmutabilityChain = async () => {
   try {
     const res = await securityService.getImmutabilityChain()
     report.value = res || {}
-    notify.success('Verifica integrità registro completata: Catena valida!')
+    if (res?.blocks && Array.isArray(res.blocks)) {
+      sampleBlocks.value = res.blocks
+    }
+    notify.success(t('security.integrityVerified') || 'Verifica integrità registro completata: Catena valida!')
   } catch (err) {
-    notify.error('Errore durante la verifica della catena')
+    notify.error(t('security.integrityError') || 'Errore durante la verifica della catena')
   } finally {
     loading.value = false
   }
@@ -140,7 +143,7 @@ const checkImmutabilityChain = async () => {
 
 const downloadCadPackage = async () => {
   try {
-    notify.info('Generazione del pacchetto di conservazione CAD ZIP...')
+    notify.info(t('security.cadGenerating') || 'Generazione del pacchetto di conservazione CAD ZIP...')
     const blob = await securityService.downloadCadPackage()
     const url = window.URL.createObjectURL(new Blob([blob]))
     const link = document.createElement('a')
@@ -149,9 +152,10 @@ const downloadCadPackage = async () => {
     document.body.appendChild(link)
     link.click()
     link.remove()
-    notify.success('Pacchetto CAD scaricato con successo!')
+    window.URL.revokeObjectURL(url)
+    notify.success(t('security.cadDownloaded') || 'Pacchetto CAD scaricato con successo!')
   } catch (err) {
-    notify.error('Errore durante il download del pacchetto CAD')
+    notify.error(t('security.cadError') || 'Errore durante il download del pacchetto CAD')
   }
 }
 

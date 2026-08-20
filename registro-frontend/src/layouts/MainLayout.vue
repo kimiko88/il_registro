@@ -2,17 +2,17 @@
   <q-layout view="hHh Lpr lFf">
     <!-- Skip to main content link for Accessibility (a11y) -->
     <a href="#main-content" class="sr-only focus:not-sr-only q-pa-sm bg-primary text-white text-weight-bold shadow-2" style="position: absolute; top: 4px; left: 4px; z-index: 9999; border-radius: 8px;">
-      Salta al contenuto principale
+      {{ t('layout.skipToContent') }}
     </a>
 
     <q-header class="glass-effect text-slate-900 q-py-xs" :class="$q.dark.isActive ? 'bg-dark' : 'bg-white'" role="banner">
-      <q-toolbar role="navigation" aria-label="Barra di navigazione principale">
+      <q-toolbar role="navigation" :aria-label="t('layout.mainNav')">
         <q-btn
           flat
           dense
           round
           icon="menu"
-          aria-label="Apri o chiudi menu di navigazione laterale"
+          :aria-label="t('layout.toggleDrawer')"
           :aria-expanded="leftDrawerOpen"
           color="primary"
           @click="toggleLeftDrawer"
@@ -35,9 +35,9 @@
             options-dense
             bg-color="white"
             style="min-width: 140px"
-            label="Anno Scolastico"
+            :label="t('layout.schoolYear')"
             key="school-year-select"
-            aria-label="Seleziona Anno Scolastico"
+            :aria-label="t('layout.schoolYearSelect')"
           >
             <template v-slot:prepend>
               <q-icon name="event" color="primary" size="18px" />
@@ -54,12 +54,12 @@
           color="primary"
           class="q-mr-sm"
           key="theme-toggle"
-          aria-label="Scegli il Tema Visivo dell'Interfaccia"
+          :aria-label="t('layout.themeAriaLabel')"
         >
-          <q-tooltip>Seleziona Tema Visivo</q-tooltip>
+          <q-tooltip>{{ t('layout.themeTooltip') }}</q-tooltip>
           <q-list style="min-width: 280px" class="q-py-xs">
             <q-item-label header class="text-weight-bold text-uppercase text-caption letter-spacing-1">
-              Temi e Palette Visive
+              {{ t('layout.themesTitle') }}
             </q-item-label>
 
             <q-item
@@ -114,12 +114,12 @@
           color="primary"
           class="q-mr-sm"
           key="accessibility-toggle"
-          aria-label="Opzioni di Accessibilità Visiva (OpenDyslexic e Contrasto)"
+          :aria-label="t('layout.a11yAriaLabel')"
         >
-          <q-tooltip>Accessibilità Visiva (DSA & Contrasto)</q-tooltip>
+          <q-tooltip>{{ t('layout.a11yTooltip') }}</q-tooltip>
           <q-list style="min-width: 300px" class="q-py-xs">
             <q-item-label header class="text-weight-bold text-uppercase text-caption letter-spacing-1">
-              Accessibilità Visiva (A11y)
+              {{ t('layout.a11yTitle') }}
             </q-item-label>
 
             <!-- Font OpenDyslexic (DSA) -->
@@ -130,8 +130,8 @@
                 </q-avatar>
               </q-item-section>
               <q-item-section>
-                <q-item-label class="text-weight-bold">Font OpenDyslexic (DSA)</q-item-label>
-                <q-item-label caption class="text-grey-7">Alta leggibilità dislessia/BES</q-item-label>
+                <q-item-label class="text-weight-bold">{{ t('settingsPage.fontDyslexic') }}</q-item-label>
+                <q-item-label caption class="text-grey-7">{{ t('layout.dsaFontDesc') }}</q-item-label>
               </q-item-section>
               <q-item-section side>
                 <q-toggle
@@ -151,8 +151,8 @@
                 </q-avatar>
               </q-item-section>
               <q-item-section>
-                <q-item-label class="text-weight-bold">Contrasto Elevato</q-item-label>
-                <q-item-label caption class="text-grey-7">Nitidezza e bordi netti 2px</q-item-label>
+                <q-item-label class="text-weight-bold">{{ t('layout.highContrast') }}</q-item-label>
+                <q-item-label caption class="text-grey-7">{{ t('layout.highContrastDesc') }}</q-item-label>
               </q-item-section>
               <q-item-section side>
                 <q-toggle
@@ -210,8 +210,8 @@
         </q-btn-dropdown>
 
         <!-- Dark Mode Toggle -->
-        <q-btn flat round dense :icon="$q.dark.isActive ? 'light_mode' : 'dark_mode'" @click="$q.dark.toggle()" color="primary" class="q-mr-sm" :key="'dark-toggle'" :aria-label="$q.dark.isActive ? 'Attiva modalità chiara' : 'Attiva modalità scura'">
-           <q-tooltip>{{ $q.dark.isActive ? 'Modalità Chiara' : 'Modalità Scura' }}</q-tooltip>
+        <q-btn flat round dense :icon="$q.dark.isActive ? 'light_mode' : 'dark_mode'" @click="$q.dark.toggle()" color="primary" class="q-mr-sm" :key="'dark-toggle'" :aria-label="$q.dark.isActive ? t('layout.lightMode') : t('layout.darkMode')">
+           <q-tooltip>{{ $q.dark.isActive ? t('layout.lightMode') : t('layout.darkMode') }}</q-tooltip>
         </q-btn>
 
         <!-- Fullscreen Toggle -->
@@ -225,9 +225,9 @@
           color="primary" 
           class="q-mr-sm"
           :key="'fullscreen-toggle'"
-          :aria-label="$q.fullscreen.isActive ? 'Esci da schermo intero' : 'Vai a schermo intero'"
+          :aria-label="$q.fullscreen.isActive ? t('layout.exitFullscreen') : t('layout.enterFullscreen')"
         >
-           <q-tooltip>{{ $q.fullscreen.isActive ? 'Esci da Schermo Intero' : 'Schermo Intero' }}</q-tooltip>
+           <q-tooltip>{{ $q.fullscreen.isActive ? t('layout.exitFullscreen') : t('layout.enterFullscreen') }}</q-tooltip>
         </q-btn>
 
         <!-- Global Search Ctrl+K -->
@@ -277,18 +277,18 @@
       :class="$q.dark.isActive ? 'bg-dark' : 'bg-white'"
       :width="260"
       role="navigation"
-      aria-label="Menu laterale di navigazione"
+      :aria-label="t('layout.sideNav')"
     >
       <div class="column full-height no-wrap">
         <!-- User Profile Section -->
-        <div class="q-pa-md bg-primary text-white relative-position overflow-hidden" v-if="userName" role="region" aria-label="Profilo utente connesso">
+        <div class="q-pa-md bg-primary text-white relative-position overflow-hidden" v-if="userName" role="region" :aria-label="t('layout.userProfile')">
           <div class="row items-center relative-position" style="z-index: 1">
             <q-avatar size="42px" color="white" text-color="primary" class="q-mr-md shadow-soft" aria-hidden="true">
               <q-icon name="person" size="24px" />
             </q-avatar>
             <div class="col">
-              <div class="text-subtitle1 text-weight-bold no-wrap ellipsis" :aria-label="'Utente connesso: ' + userName">{{ userName }}</div>
-              <div class="text-caption opacity-80 text-uppercase letter-spacing-1" :aria-label="'Ruolo: ' + roleLabel">{{ roleLabel }}</div>
+              <div class="text-subtitle1 text-weight-bold no-wrap ellipsis" :aria-label="t('layout.connectedUser', { name: userName })">{{ userName }}</div>
+              <div class="text-caption opacity-80 text-uppercase letter-spacing-1" :aria-label="t('layout.userRole', { role: roleLabel })">{{ roleLabel }}</div>
             </div>
           </div>
           <div class="absolute-bottom-right q-mr-n-lg q-mb-n-lg" style="width: 90px; height: 90px; border-radius: 50%; background: rgba(255,255,255,0.1)" aria-hidden="true"></div>
@@ -409,7 +409,7 @@
     <q-page-container role="main" id="main-content" tabindex="-1">
       <!-- Dynamic Breadcrumb Navigation Header -->
       <div v-if="breadcrumbs.length > 0" class="q-px-md q-pt-md">
-        <q-breadcrumbs aria-label="Percorso di navigazione corrente" class="text-caption text-grey-7" active-color="primary" separator-icon="chevron_right" separator-color="grey-5">
+        <q-breadcrumbs :aria-label="t('layout.breadcrumbNav')" class="text-caption text-grey-7" active-color="primary" separator-icon="chevron_right" separator-color="grey-5">
           <q-breadcrumbs-el icon="home" to="/dashboard" :label="t('nav.dashboard')" />
           <q-breadcrumbs-el
             v-for="(crumb, idx) in breadcrumbs"
@@ -675,7 +675,7 @@ const teacherStore = useTeacherStore()
 const classesStore = useClassesStore()
 
 const isTeacherCoordinator = computed(() => {
-  if (userRole.value !== 'teacher') return true
+  if (userRole.value !== 'teacher') return false
   if (teacherStore.isCoordinator) return true
   const currentUserId = user.value?.id
   if (currentUserId && classesStore.classes.some(c => c.coordinator_id === currentUserId)) {
