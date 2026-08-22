@@ -10,7 +10,7 @@ import (
 type Service interface {
 	CreateMaterial(ctx context.Context, teacherID string, schoolID string, req CreateMaterialRequest) (*MaterialResponse, error)
 	GetMaterialsByClass(ctx context.Context, userID, role, classID string) ([]MaterialResponse, error)
-	DeleteMaterial(ctx context.Context, id string, teacherID string) error
+	DeleteMaterial(ctx context.Context, actorID, actorRole, schoolID, id string) error
 }
 
 type service struct {
@@ -100,8 +100,23 @@ func (s *service) GetMaterialsByClass(ctx context.Context, userID, role, classID
 	return res, nil
 }
 
-func (s *service) DeleteMaterial(ctx context.Context, id string, teacherID string) error {
-	return s.repo.Delete(id, teacherID)
+func (s *service) DeleteMaterial(ctx context.Context, actorID, actorRole, schoolID, id string) error {
+	m, err := s.repo.GetByID(id)
+	if err != nil || m == nil {
+		return s.repo.Delete(id, actorID)
+	}
+	if actorRole != "superadmin" {
+		if schoolID != "" && m.SchoolID != "" && m.SchoolID != schoolID {
+			return errors.New("unauthorized: material belongs to another school")
+		}
+		if actorRole != "admin" && m.TeacherID != actorID {
+			return errors.New("unauthorized: you can only delete your own materials")
+		}
+	}
+	if err := s.repo.DeleteByID(id); err != nil {
+		return s.repo.Delete(id, m.TeacherID)
+	}
+	return nil
 }
 
 func (s *service) mapResponse(m *DidacticMaterial) *MaterialResponse {

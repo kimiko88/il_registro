@@ -157,11 +157,16 @@ func (h *Handler) AssessStudent(c *gin.Context) {
 
 func (h *Handler) ListByStudent(c *gin.Context) {
 	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 	studentID := c.Param("studentID")
+	if role == "student" && userID != studentID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: cannot view assessments of another student"})
+		return
+	}
 
 	list, err := h.service.ListAssessmentsByStudent(c.Request.Context(), studentID)
 	if err != nil {
@@ -173,8 +178,13 @@ func (h *Handler) ListByStudent(c *gin.Context) {
 
 func (h *Handler) ListByClass(c *gin.Context) {
 	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "teacher" && role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && role != "vice_principal" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 	classID := c.Param("classID")

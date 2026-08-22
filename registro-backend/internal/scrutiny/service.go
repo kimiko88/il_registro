@@ -137,6 +137,29 @@ func (s *Service) GetMatrix(ctx context.Context, actorID, actorRole, classID str
 		return nil, fmt.Errorf("failed to load grades for class %s: %w", classID, err)
 	}
 
+	// Pre-indice voti: map[studentID][subjectID] → []Grade
+	// Riduce la complessità da O(S×G×M) a O(G + S×M), eliminando il loop triplo.
+	type gradeEntry struct {
+		sum   float64
+		count int
+	}
+	gradeIndex := make(map[string]map[string]*gradeEntry)
+	for _, g := range allClassGrades {
+		if !g.IsPublished || g.DeletedAt != nil {
+			continue
+		}
+		if _, ok := gradeIndex[g.StudentID]; !ok {
+			gradeIndex[g.StudentID] = make(map[string]*gradeEntry)
+		}
+		e := gradeIndex[g.StudentID][g.SubjectID]
+		if e == nil {
+			e = &gradeEntry{}
+			gradeIndex[g.StudentID][g.SubjectID] = e
+		}
+		e.sum += g.GradeValue
+		e.count++
+	}
+
 	studentIDs := make([]string, len(allStudents))
 	for i, stu := range allStudents {
 		studentIDs[i] = stu.ID
@@ -151,22 +174,16 @@ func (s *Service) GetMatrix(ctx context.Context, actorID, actorRole, classID str
 		}
 
 		for _, sub := range subjects {
-			var sum float64
-			var count int
-			for _, g := range allClassGrades {
-				if g.StudentID == stu.ID && g.SubjectID == sub.SubjectID && g.IsPublished && g.DeletedAt == nil {
-					sum += g.GradeValue
-					count++
-				}
-			}
-
 			avg := 0.0
 			proposed := 0.0
-			if count > 0 {
-				avg = sum / float64(count)
-				proposed = math.Round(avg)
+			count := 0
+			if smap, ok := gradeIndex[stu.ID]; ok {
+				if e, ok := smap[sub.SubjectID]; ok {
+					count = e.count
+					avg = e.sum / float64(e.count)
+					proposed = math.Round(avg)
+				}
 			}
-
 			row.SubjectData[sub.SubjectID] = SubjectAverages{
 				Average:    avg,
 				GradeCount: count,
@@ -485,13 +502,25 @@ func (s *Service) CloseScrutiny(ctx context.Context, actorID, actorRole, classID
 	return s.repo.UpdateClassScrutinyStatus(ctx, classID, semester, "closed")
 }
 
-func (s *Service) SaveScrutiny(ctx context.Context, coordinatorID, actorRole string, req SaveScrutinyRequest) error {
+func (s *Service) SaveScrutiny(ctx context.Context, coordinatorID, actorRole, actorSchoolID string, req SaveScrutinyRequest) error {
 	isCoordinator, isDirigenza, err := s.isDirigenzaOrCoordinator(ctx, coordinatorID, actorRole, req.ClassID)
 	if err != nil {
 		return err
 	}
 	if !isCoordinator && !isDirigenza {
 		return ErrUnauthorizedScrutiny
+	}
+
+	// Fix cross-tenant: verifica che la classe appartenga alla stessa scuola dell'attore.
+	// isDirigenzaOrCoordinator ha già caricato la classe — la recuperiamo per il check.
+	if actorRole != "superadmin" && actorSchoolID != "" {
+		cls, clsErr := s.classRepo.Get(ctx, req.ClassID)
+		if clsErr != nil {
+			return clsErr
+		}
+		if cls.SchoolID != actorSchoolID {
+			return errors.New("forbidden: la classe non appartiene alla tua scuola")
+		}
 	}
 
 	// Check if any record in the scrutiny for this class/semester is already validated or closed

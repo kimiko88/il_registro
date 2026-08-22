@@ -136,14 +136,49 @@ func TestGeneralMeetings_DeleteAuthorization(t *testing.T) {
 	}
 
 	// Unauthorized user (not creator, not admin) trying to delete
-	err = svc.DeleteMeeting(ctx, gm.ID, "other-user", "teacher")
+	err = svc.DeleteMeeting(ctx, gm.ID, "other-user", "teacher", "school-1")
 	if err == nil {
 		t.Error("expected error when non-creator non-admin user deletes meeting")
 	}
 
-	// Admin user deleting meeting
-	err = svc.DeleteMeeting(ctx, gm.ID, "admin-user", "admin")
+	// Admin of different school trying to delete
+	err = svc.DeleteMeeting(ctx, gm.ID, "admin-user", "admin", "school-2")
+	if err == nil {
+		t.Error("expected error when admin of different school deletes meeting")
+	}
+
+	// Admin of same school deleting meeting
+	err = svc.DeleteMeeting(ctx, gm.ID, "admin-user", "admin", "school-1")
 	if err != nil {
 		t.Errorf("unexpected error when admin deletes meeting: %v", err)
+	}
+}
+
+func TestGeneralMeetings_ListRegistrationsMultiTenant(t *testing.T) {
+	repo := newMockRepo()
+	svc := NewService(repo)
+	ctx := context.Background()
+
+	gm, err := svc.CreateMeeting(ctx, "creator-id", "school-1", CreateGeneralMeetingRequest{
+		Title:       "Collegio Docenti",
+		MeetingDate: "2026-10-15",
+	})
+	if err != nil {
+		t.Fatalf("failed to create meeting: %v", err)
+	}
+
+	// Different school admin listing registrations
+	_, err = svc.ListRegistrations(ctx, gm.ID, "admin-2", "admin", "school-2")
+	if err == nil {
+		t.Error("expected error for admin of different school listing registrations")
+	}
+
+	// Same school admin listing registrations
+	regs, err := svc.ListRegistrations(ctx, gm.ID, "admin-1", "admin", "school-1")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(regs) != 0 {
+		t.Errorf("expected 0 registrations, got %d", len(regs))
 	}
 }

@@ -70,7 +70,11 @@ func (s *Service) GetDashboard(ctx context.Context, parentUserID string) (*Paren
 		}
 
 		// Fetch pending circulars
-		if msgs, err := s.commsRepo.ListBacheca(ctx, "school-id", child.UserID); err == nil {
+		childSchoolID := ""
+		if childUser, err := s.usersRepo.GetByID(ctx, child.UserID); err == nil && childUser != nil && childUser.SchoolID != nil {
+			childSchoolID = *childUser.SchoolID
+		}
+		if msgs, err := s.commsRepo.ListBacheca(ctx, childSchoolID, child.UserID); err == nil {
 			for _, m := range msgs {
 				if m.RequiresSignature && !m.IsSigned {
 					overview.PendingCirculars = append(overview.PendingCirculars, m)

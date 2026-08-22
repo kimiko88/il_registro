@@ -7,7 +7,7 @@ export default {
   createTrip(data) {
     return api.post('/trips', data)
   },
-  signConsent(tripId) {
-    return api.post(`/trips/${tripId}/consent`)
+  signConsent(tripId, data = {}) {
+    return api.post(`/trips/${tripId}/consent`, { trip_id: tripId, ...data })
   }
 }

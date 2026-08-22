@@ -2,6 +2,7 @@ package subjects
 
 import (
 	"context"
+	"errors"
 )
 
 type Service struct {
@@ -39,10 +40,13 @@ func (s *Service) GetSubject(ctx context.Context, id string) (*Subject, error) {
 	return s.repo.Get(ctx, id)
 }
 
-func (s *Service) UpdateSubject(ctx context.Context, id string, req CreateSubjectRequest) (*Subject, error) {
+func (s *Service) UpdateSubject(ctx context.Context, id string, req CreateSubjectRequest, schoolID ...string) (*Subject, error) {
 	subj, err := s.repo.Get(ctx, id)
 	if err != nil {
 		return nil, err
+	}
+	if len(schoolID) > 0 && schoolID[0] != "" && subj.SchoolID != "" && subj.SchoolID != schoolID[0] {
+		return nil, errors.New("forbidden: cannot update subject of another school")
 	}
 	subj.Name = req.Name
 	subj.Code = req.Code
@@ -57,6 +61,15 @@ func (s *Service) UpdateSubject(ctx context.Context, id string, req CreateSubjec
 	return subj, nil
 }
 
-func (s *Service) DeleteSubject(ctx context.Context, id string) error {
+func (s *Service) DeleteSubject(ctx context.Context, id string, schoolID ...string) error {
+	if len(schoolID) > 0 && schoolID[0] != "" {
+		subj, err := s.repo.Get(ctx, id)
+		if err != nil {
+			return err
+		}
+		if subj.SchoolID != "" && subj.SchoolID != schoolID[0] {
+			return errors.New("forbidden: cannot delete subject of another school")
+		}
+	}
 	return s.repo.Delete(ctx, id)
 }

@@ -173,13 +173,19 @@ func (s *Service) ListNotes(ctx context.Context, filter NoteFilter) ([]StudentNo
 	}
 
 	if filter.ActorRole == "parent" {
+		// Fix: usa una singola query batch invece di N query individuali all'interno di una GET.
+		// Raccoglie gli ID delle note non ancora viste e li aggiorna in un unico UPDATE.
+		var unviewedIDs []string
+		now := time.Now()
 		for i := range notes {
 			if !notes[i].IsViewedByParent {
-				_ = s.repo.MarkAsViewedByParent(ctx, notes[i].ID)
+				unviewedIDs = append(unviewedIDs, notes[i].ID)
 				notes[i].IsViewedByParent = true
-				now := time.Now()
 				notes[i].ParentViewedAt = &now
 			}
+		}
+		if len(unviewedIDs) > 0 {
+			_ = s.repo.MarkManyAsViewedByParent(ctx, unviewedIDs)
 		}
 	}
 

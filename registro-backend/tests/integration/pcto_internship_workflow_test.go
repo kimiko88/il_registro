@@ -112,6 +112,20 @@ func (m *mockPCTORepo) VerifyHours(ctx context.Context, hourID, teacherID string
 	return nil
 }
 
+func (m *mockPCTORepo) GetHourLogByID(ctx context.Context, id string) (*pcto.HourLog, error) {
+	if h, ok := m.hours[id]; ok {
+		return h, nil
+	}
+	return nil, errors.New("hour log not found")
+}
+
+func (m *mockPCTORepo) GetParticipationByID(ctx context.Context, id string) (*pcto.Participation, error) {
+	if p, ok := m.participations[id]; ok {
+		return p, nil
+	}
+	return nil, errors.New("participation not found")
+}
+
 func (m *mockPCTORepo) UpdateHourLogStatus(ctx context.Context, logID, status string) error {
 	return nil
 }

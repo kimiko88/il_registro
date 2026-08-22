@@ -93,30 +93,33 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useQuasar } from 'quasar'
 import competenciesService from '@/services/competenciesService'
-import { useNotify } from '@/composables/useNotify'
 import { useClassesStore } from '@/stores/classes'
+import { getBaseURL } from '@/services/api'
 
+const $q = useQuasar()
 const { t } = useI18n()
-const notify = useNotify()
 const classesStore = useClassesStore()
 
-const selectedStudentId = ref('stu-demo-1')
+const selectedStudentId = ref('')
 const selectedSemester = ref(1)
 
-const studentOptions = ref([
-  { id: 'stu-demo-1', name: 'Rossi Mario (2A)' },
-  { id: 'stu-demo-2', name: 'Bianchi Giulia (2A)' }
-])
-
-const levelOptions = computed(() => [
-  { label: t('competenciesPage.levelA') || 'A - Avanzato', value: 'A_Avanzato' },
-  { label: t('competenciesPage.levelB') || 'B - Intermedio', value: 'B_Intermedio' },
-  { label: t('competenciesPage.levelC') || 'C - Base', value: 'C_Base' },
-  { label: t('competenciesPage.levelD') || 'D - Iniziale', value: 'D_Iniziale' }
-])
+const studentOptions = computed(() => {
+  const students = classesStore.classStudents || []
+  if (students.length > 0) {
+    return students.map(s => ({
+      id: s.id || s.user_id,
+      name: `${s.last_name || ''} ${s.first_name || ''}`.trim() || s.name || s.id
+    }))
+  }
+  return [
+    { id: 'stu-demo-1', name: 'Rossi Mario (2A)' },
+    { id: 'stu-demo-2', name: 'Bianchi Giulia (2A)' }
+  ]
+})
 
 const competenceList = ref([
   { code: 'COMP_L1_ITA', name: 'Comunicazione nella madrelingua / lingua di istruzione', level: 'A_Avanzato', descriptor: 'Padroneggia la lingua con precisione e ricchezza lessicale.' },
@@ -129,7 +132,8 @@ const competenceList = ref([
   { code: 'COMP_CULTURE', name: 'Consapevolezza ed espressione culturale', level: 'A_Avanzato', descriptor: 'Esprime idee e sentimenti con diversi linguaggi espressivi.' }
 ])
 
-const fetchEvaluations = async () => {
+async function fetchEvaluations() {
+  if (!selectedStudentId.value) return
   try {
     const data = await competenciesService.getStudentEvaluations(selectedStudentId.value, selectedSemester.value)
     if (data && data.length > 0) {
@@ -146,7 +150,15 @@ const fetchEvaluations = async () => {
   }
 }
 
+watch(studentOptions, (opts) => {
+  if (opts.length > 0 && !selectedStudentId.value) {
+    selectedStudentId.value = opts[0].id
+    fetchEvaluations()
+  }
+}, { immediate: true })
+
 const saveEvaluation = async (comp) => {
+  if (!selectedStudentId.value) return
   try {
     await competenciesService.saveEvaluation({
       student_id: selectedStudentId.value,
@@ -157,20 +169,25 @@ const saveEvaluation = async (comp) => {
       level: comp.level,
       descriptor: comp.descriptor || ''
     })
-    notify.success(t('common.success'))
+    $q.notify({ type: 'positive', message: t('common.success') })
   } catch (err) {
-    notify.error(t('common.error'))
+    $q.notify({ type: 'negative', message: t('common.error') })
   }
 }
 
 const downloadPdfCertificate = () => {
-  notify.success(t('competenciesPage.generatingPdf') || 'Certificazione Competenze DM 742 in generazione PDF...')
+  if (!selectedStudentId.value) return
+  $q.notify({ type: 'info', message: t('competenciesPage.generatingPdf') || 'Certificazione Competenze DM 742 in generazione PDF...' })
   setTimeout(() => {
-    window.open(`/api/v1/competencies/student/${selectedStudentId.value}`, '_blank')
+    const base = getBaseURL()
+    window.open(`${base}/competencies/student/${selectedStudentId.value}`, '_blank')
   }, 500)
 }
 
 onMounted(() => {
+  if (studentOptions.value.length > 0 && !selectedStudentId.value) {
+    selectedStudentId.value = studentOptions.value[0].id
+  }
   fetchEvaluations()
 })
 </script>

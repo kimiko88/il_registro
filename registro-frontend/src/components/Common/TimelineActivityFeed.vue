@@ -64,7 +64,7 @@ const fetchTimeline = async () => {
   try {
     const params = props.studentId ? { student_id: props.studentId } : {}
     const [gradesRes, attendanceRes, notesRes] = await Promise.allSettled([
-      api.get('/grades/my', { params }),
+      api.get('/grades/my-grades', { params }),
       api.get('/attendance', { params }),
       api.get('/notes', { params })
     ])

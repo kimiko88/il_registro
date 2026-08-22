@@ -79,6 +79,94 @@ func (r *Repository) ListByClass(ctx context.Context, classID string) ([]*UdaPla
 	return plans, nil
 }
 
+func (r *Repository) GetByID(ctx context.Context, id string) (*UdaPlan, error) {
+	query := `
+		SELECT u.id, u.school_id, u.class_id, COALESCE(c.section, '') AS class_name,
+		       u.subject_id, COALESCE(s.name, '') AS subject_name,
+		       u.teacher_id, COALESCE(usr.first_name || ' ' || usr.last_name, '') AS teacher_name,
+		       u.title, COALESCE(u.description, ''), COALESCE(u.period, 'annuale'),
+		       u.start_date, u.end_date, COALESCE(u.competencies, '[]'::jsonb),
+		       COALESCE(u.objectives, ''), COALESCE(u.methodologies, ''), COALESCE(u.evaluation_criteria, ''),
+		       COALESCE(u.status, 'draft'), u.created_at, u.updated_at
+		FROM uda_plans u
+		LEFT JOIN classes c ON u.class_id = c.id
+		LEFT JOIN subjects s ON u.subject_id = s.id
+		LEFT JOIN users usr ON u.teacher_id = usr.id
+		WHERE u.id = $1::uuid`
+
+	p := &UdaPlan{}
+	var compBytes []byte
+	err := r.db.QueryRowContext(ctx, query, id).Scan(
+		&p.ID, &p.SchoolID, &p.ClassID, &p.ClassName,
+		&p.SubjectID, &p.SubjectName,
+		&p.TeacherID, &p.TeacherName,
+		&p.Title, &p.Description, &p.Period,
+		&p.StartDate, &p.EndDate, &compBytes,
+		&p.Objectives, &p.Methodologies, &p.EvaluationCriteria,
+		&p.Status, &p.CreatedAt, &p.UpdatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+	_ = json.Unmarshal(compBytes, &p.Competencies)
+	if p.Competencies == nil {
+		p.Competencies = []string{}
+	}
+	return p, nil
+}
+
+func (r *Repository) ListBySchool(ctx context.Context, schoolID string) ([]*UdaPlan, error) {
+	if schoolID == "" {
+		return r.ListAll(ctx)
+	}
+	query := `
+		SELECT u.id, u.school_id, u.class_id, COALESCE(c.section, '') AS class_name,
+		       u.subject_id, COALESCE(s.name, '') AS subject_name,
+		       u.teacher_id, COALESCE(usr.first_name || ' ' || usr.last_name, '') AS teacher_name,
+		       u.title, COALESCE(u.description, ''), COALESCE(u.period, 'annuale'),
+		       u.start_date, u.end_date, COALESCE(u.competencies, '[]'::jsonb),
+		       COALESCE(u.objectives, ''), COALESCE(u.methodologies, ''), COALESCE(u.evaluation_criteria, ''),
+		       COALESCE(u.status, 'draft'), u.created_at, u.updated_at
+		FROM uda_plans u
+		LEFT JOIN classes c ON u.class_id = c.id
+		LEFT JOIN subjects s ON u.subject_id = s.id
+		LEFT JOIN users usr ON u.teacher_id = usr.id
+		WHERE u.school_id = $1::uuid
+		ORDER BY u.created_at DESC`
+
+	rows, err := r.db.QueryContext(ctx, query, schoolID)
+	if err != nil {
+		return []*UdaPlan{}, nil
+	}
+	defer rows.Close()
+
+	var plans []*UdaPlan
+	for rows.Next() {
+		p := &UdaPlan{}
+		var compBytes []byte
+		if err := rows.Scan(
+			&p.ID, &p.SchoolID, &p.ClassID, &p.ClassName,
+			&p.SubjectID, &p.SubjectName,
+			&p.TeacherID, &p.TeacherName,
+			&p.Title, &p.Description, &p.Period,
+			&p.StartDate, &p.EndDate, &compBytes,
+			&p.Objectives, &p.Methodologies, &p.EvaluationCriteria,
+			&p.Status, &p.CreatedAt, &p.UpdatedAt,
+		); err != nil {
+			return []*UdaPlan{}, nil
+		}
+		_ = json.Unmarshal(compBytes, &p.Competencies)
+		if p.Competencies == nil {
+			p.Competencies = []string{}
+		}
+		plans = append(plans, p)
+	}
+	if plans == nil {
+		plans = []*UdaPlan{}
+	}
+	return plans, nil
+}
+
 func (r *Repository) ListAll(ctx context.Context) ([]*UdaPlan, error) {
 	query := `
 		SELECT u.id, u.school_id, u.class_id, COALESCE(c.section, '') AS class_name,

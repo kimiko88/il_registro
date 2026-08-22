@@ -52,6 +52,7 @@ func (h *Handler) ListTenants(c *gin.Context) {
 func (h *Handler) GetTenant(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
+	schoolID := c.GetString("school_id")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
@@ -62,6 +63,10 @@ func (h *Handler) GetTenant(c *gin.Context) {
 	}
 
 	id := c.Param("id")
+	if role != "superadmin" && schoolID != "" && schoolID != id {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: cannot view other tenant details"})
+		return
+	}
 	tenant, err := h.service.GetTenant(c.Request.Context(), id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})

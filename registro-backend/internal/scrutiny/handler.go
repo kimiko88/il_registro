@@ -114,13 +114,14 @@ func (h *Handler) Save(c *gin.Context) {
 
 	coordinatorID := c.GetString("user_id")
 	actorRole := c.GetString("role")
+	actorSchoolID := c.GetString("school_id")
 	if coordinatorID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 
-	if err := h.service.SaveScrutiny(c.Request.Context(), coordinatorID, actorRole, req); err != nil {
-		if err == ErrUnauthorizedScrutiny || strings.HasPrefix(err.Error(), "unauthorized") {
+	if err := h.service.SaveScrutiny(c.Request.Context(), coordinatorID, actorRole, actorSchoolID, req); err != nil {
+		if err == ErrUnauthorizedScrutiny || strings.HasPrefix(err.Error(), "unauthorized") || strings.HasPrefix(err.Error(), "forbidden") {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}

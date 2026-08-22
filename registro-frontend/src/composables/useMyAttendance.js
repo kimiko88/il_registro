@@ -11,9 +11,12 @@ export function useMyAttendance() {
         const total = store.records.length;
         if (total === 0) return { present: 0, absent: 0, late: 0, percentage: 100 };
 
-        const present = store.records.filter(r => r.status === 'Present' || r.status === 'Late').length;
-        const absent = store.records.filter(r => r.status === 'Absent').length;
-        const late = store.records.filter(r => r.status === 'Late').length;
+        const present = store.records.filter(r => {
+            const s = (r.status || '').toLowerCase();
+            return s === 'present' || s === 'late';
+        }).length;
+        const absent = store.records.filter(r => (r.status || '').toLowerCase() === 'absent').length;
+        const late = store.records.filter(r => (r.status || '').toLowerCase() === 'late').length;
 
         return {
             present,

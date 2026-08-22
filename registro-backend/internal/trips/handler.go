@@ -20,6 +20,7 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 		g.POST("", h.CreateTrip)
 		g.GET("", h.ListTrips)
 		g.POST("/consent", h.SubmitConsent)
+		g.POST("/:id/consent", h.SubmitConsent)
 		g.GET("/:id/consents", h.ListConsents)
 	}
 }
@@ -58,6 +59,12 @@ func (h *Handler) ListTrips(c *gin.Context) {
 	}
 
 	targetStudentID := userID
+	if role == "parent" {
+		childID := c.Query("student_id")
+		if childID != "" {
+			targetStudentID = childID
+		}
+	}
 	if role == "teacher" || role == "admin" || role == "superadmin" || role == "secretary" || role == "principal" || role == "vice_principal" {
 		targetStudentID = "" // Staff sees all school trips
 	}
@@ -85,9 +92,20 @@ func (h *Handler) SubmitConsent(c *gin.Context) {
 	}
 
 	var req SubmitConsentRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+	if c.Request.ContentLength > 0 {
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+	}
+	if req.TripID == "" && c.Param("id") != "" {
+		req.TripID = c.Param("id")
+	}
+	if req.StudentID == "" && role == "student" {
+		req.StudentID = userID
+	}
+	if req.Status == "" {
+		req.Status = "Consented"
 	}
 
 	if err := h.service.SubmitConsent(c.Request.Context(), userID, role, ipAddress, req); err != nil {

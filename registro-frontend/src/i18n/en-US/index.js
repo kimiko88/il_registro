@@ -1075,5 +1075,34 @@ export default {
     users: {
       importStarted: 'User import started'
     }
+  },
+  security: {
+    title: 'Security & Legal Compliance',
+    subtitle: 'Qualified Electronic Signature (FEQ), CAD Compliant Preservation, and Immutable Log Chain',
+    downloadCadZip: 'Download CAD ZIP Package',
+    feqTitle: 'Qualified Signature (FEQ)',
+    feqActive: 'Active and Verified',
+    feqDesc: 'All signatures on class registers and substitutions are sealed with legally binding SHA-256 timestamps.',
+    cadTitle: 'CAD Long-Term Preservation',
+    cadManifest: 'XML Manifest Package',
+    cadDesc: 'Compliant with AgID guidelines for long-term document preservation.',
+    immutableAuditTitle: 'Immutable Audit Trail',
+    cryptoChain: 'Cryptographic Hash Chain',
+    immutableAuditDesc: 'Every edit on signatures, grades, and notes generates a cryptographically chained block (Block Hashing).',
+    integrityVerifier: 'Register Integrity Verifier (Audit Trail)',
+    verifyNow: 'Verify Integrity Now',
+    allBlocksValid: 'All register blocks are valid and legally binding',
+    verifiedOn: 'Verified on',
+    colAction: 'Action / Event',
+    colActor: 'User / Actor',
+    colPrevHash: 'Previous Hash (SHA-256)',
+    colCurrHash: 'Current Hash (SHA-256)',
+    colCryptoStatus: 'Cryptographic Status',
+    intact: 'Intact',
+    integrityVerified: 'Register integrity verification completed: Chain is valid!',
+    integrityError: 'Error verifying hash chain',
+    cadGenerating: 'Generating CAD preservation ZIP package...',
+    cadDownloaded: 'CAD Package downloaded successfully!',
+    cadError: 'Error downloading CAD package'
   }
 }

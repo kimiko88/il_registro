@@ -150,7 +150,7 @@ func TestListByStudent_ReturnsMatchingGoals(t *testing.T) {
 	}
 	svc := NewService(repo)
 
-	goals, err := svc.ListByStudent(context.Background(), "stu-1")
+	goals, err := svc.ListByStudent(context.Background(), "stu-1", "student", "stu-1")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

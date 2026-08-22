@@ -259,8 +259,8 @@ function openResult(item) {
   close()
   if (item.route) {
     router.push(item.route)
-  } else if (item.url) {
-    window.open(item.url, '_blank')
+  } else if (item.url && /^https?:\/\//i.test(item.url)) {
+    window.open(item.url, '_blank', 'noopener,noreferrer')
   }
 }
 

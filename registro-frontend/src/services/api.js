@@ -42,6 +42,14 @@ api.interceptors.request.use(
         const sanitizedLang = /^[a-zA-Z0-9_-]{2,10}$/.test(lang) ? lang : 'it-IT';
         config.headers['Accept-Language'] = sanitizedLang;
 
+        if (config.url) {
+            if (config.url.startsWith('/api/v1/')) {
+                config.url = config.url.substring(7);
+            } else if (config.url.startsWith('api/v1/')) {
+                config.url = '/' + config.url.substring(7);
+            }
+        }
+
         return config;
     },
     (error) => Promise.reject(error)

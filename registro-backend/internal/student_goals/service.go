@@ -3,18 +3,26 @@ package student_goals
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
+
+	"registro-backend/internal/users"
 )
 
 type Service struct {
-	repo Repository
+	repo     Repository
+	userRepo users.Repository
 }
 
-func NewService(repo Repository) *Service {
+func NewService(repo Repository, uRepo ...users.Repository) *Service {
 	if repo == nil {
 		panic("student_goals.NewService: repo must not be nil")
 	}
-	return &Service{repo: repo}
+	svc := &Service{repo: repo}
+	if len(uRepo) > 0 && uRepo[0] != nil {
+		svc.userRepo = uRepo[0]
+	}
+	return svc
 }
 
 func (s *Service) CreateGoal(ctx context.Context, teacherID string, req CreateGoalRequest) (*StudentGoal, error) {
@@ -42,7 +50,19 @@ func (s *Service) CreateGoal(ctx context.Context, teacherID string, req CreateGo
 	return g, nil
 }
 
-func (s *Service) ListByStudent(ctx context.Context, studentID string) ([]*StudentGoal, error) {
+func (s *Service) ListByStudent(ctx context.Context, actorID, actorRole, studentID string) ([]*StudentGoal, error) {
+	if actorRole == "student" && actorID != studentID {
+		return nil, errors.New("unauthorized: cannot view goals of another student")
+	}
+	if actorRole == "parent" && s.userRepo != nil {
+		isGuardian, err := s.userRepo.IsGuardian(ctx, actorID, studentID)
+		if err != nil {
+			return nil, fmt.Errorf("errore verifica tutela: %w", err)
+		}
+		if !isGuardian {
+			return nil, errors.New("unauthorized: non sei tutore legale di questo studente")
+		}
+	}
 	return s.repo.ListByStudent(ctx, studentID)
 }
 

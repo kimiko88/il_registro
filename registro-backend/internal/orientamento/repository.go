@@ -94,7 +94,7 @@ func (r *repository) GetPreference(ctx context.Context, studentID string) (*Stud
 	err := r.db.QueryRowContext(ctx, query, studentID).Scan(&p.ID, &p.StudentID, &p.PreferredTrack, &p.TargetField, &p.Notes, &p.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return &StudentPreference{StudentID: studentID, PreferredTrack: "University", TargetField: "Ingegneria Informatica"}, nil
+			return &StudentPreference{StudentID: studentID}, nil
 		}
 		return nil, err
 	}

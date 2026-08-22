@@ -221,7 +221,7 @@ func (h *Handler) RemoveSubject(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.RemoveSubject(c.Request.Context(), c.Param("assignmentId")); err != nil {
+	if err := h.service.RemoveSubject(c.Request.Context(), c.Param("assignmentId"), schoolID, c.Param("id")); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

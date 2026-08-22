@@ -60,10 +60,11 @@ func (h *Handler) GetByStudent(c *gin.Context) {
 		return
 	}
 	actorRole := getRole(c)
+	schoolID := c.GetString(ContextKeySchoolID)
 	studentID := c.Param("studentId")
 	year := c.DefaultQuery("year", "")
 
-	plans, err := h.svc.GetByStudent(c.Request.Context(), actorRole, studentID, year)
+	plans, err := h.svc.GetByStudent(c.Request.Context(), actorID, actorRole, schoolID, studentID, year)
 	if handleErr(c, err) {
 		return
 	}
@@ -94,7 +95,8 @@ func (h *Handler) GetByID(c *gin.Context) {
 		return
 	}
 	actorRole := getRole(c)
-	plan, err := h.svc.GetByID(c.Request.Context(), actorRole, c.Param("id"))
+	schoolID := c.GetString(ContextKeySchoolID)
+	plan, err := h.svc.GetByID(c.Request.Context(), actorID, actorRole, schoolID, c.Param("id"))
 	if handleErr(c, err) {
 		return
 	}
@@ -130,12 +132,13 @@ func (h *Handler) Update(c *gin.Context) {
 		return
 	}
 	actorRole := getRole(c)
+	schoolID := c.GetString(ContextKeySchoolID)
 	var req UpdatePdpRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	plan, err := h.svc.UpdatePlan(c.Request.Context(), actorRole, c.Param("id"), &req)
+	plan, err := h.svc.UpdatePlan(c.Request.Context(), actorRole, schoolID, c.Param("id"), &req)
 	if handleErr(c, err) {
 		return
 	}
@@ -149,7 +152,8 @@ func (h *Handler) Delete(c *gin.Context) {
 		return
 	}
 	actorRole := getRole(c)
-	if err := h.svc.DeletePlan(c.Request.Context(), actorRole, c.Param("id")); handleErr(c, err) {
+	schoolID := c.GetString(ContextKeySchoolID)
+	if err := h.svc.DeletePlan(c.Request.Context(), actorRole, schoolID, c.Param("id")); handleErr(c, err) {
 		return
 	}
 	c.JSON(http.StatusNoContent, nil)
@@ -162,12 +166,13 @@ func (h *Handler) Share(c *gin.Context) {
 		return
 	}
 	actorRole := getRole(c)
+	schoolID := c.GetString(ContextKeySchoolID)
 	var req ShareWithFamilyRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	plan, err := h.svc.ShareWithFamily(c.Request.Context(), actorRole, c.Param("id"), req.Share)
+	plan, err := h.svc.ShareWithFamily(c.Request.Context(), actorRole, schoolID, c.Param("id"), req.Share)
 	if handleErr(c, err) {
 		return
 	}
@@ -177,6 +182,7 @@ func (h *Handler) Share(c *gin.Context) {
 func (h *Handler) ApproveByFamily(c *gin.Context) {
 	actorID := c.GetString(ContextKeyUserID)
 	actorRole := getRole(c)
+	schoolID := c.GetString(ContextKeySchoolID)
 	if actorID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
@@ -185,7 +191,7 @@ func (h *Handler) ApproveByFamily(c *gin.Context) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: solo i genitori o gli amministratori possono approvare i piani PDP"})
 		return
 	}
-	if err := h.svc.ApproveByFamily(c.Request.Context(), actorRole, actorID, c.Param("id")); handleErr(c, err) {
+	if err := h.svc.ApproveByFamily(c.Request.Context(), actorRole, actorID, schoolID, c.Param("id")); handleErr(c, err) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Piano approvato dalla famiglia"})
@@ -219,6 +225,8 @@ func handleErr(c *gin.Context, err error) bool {
 	case errors.Is(err, ErrPlanNotFound):
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 	case errors.Is(err, ErrUnauthorized):
+		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+	case errors.Is(err, ErrNotGuardian):
 		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 	case errors.Is(err, ErrNotSharedYet):
 		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})

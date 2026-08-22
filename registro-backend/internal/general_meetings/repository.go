@@ -118,11 +118,25 @@ func (r *repository) Delete(ctx context.Context, id string) error {
 func (r *repository) RegisterUser(ctx context.Context, meetingID, userID string) error {
 	query := `
 		INSERT INTO general_meeting_registrations (meeting_id, user_id, registered_at)
-		VALUES ($1::uuid, $2::uuid, NOW())
+		SELECT $1::uuid, $2::uuid, NOW()
+		WHERE (
+			SELECT COUNT(*) FROM general_meeting_registrations WHERE meeting_id = $1::uuid
+		) < COALESCE((SELECT max_participants FROM general_meetings WHERE id = $1::uuid), 2147483647)
 		ON CONFLICT (meeting_id, user_id) DO NOTHING
 	`
-	_, err := r.db.ExecContext(ctx, query, meetingID, userID)
-	return err
+	res, err := r.db.ExecContext(ctx, query, meetingID, userID)
+	if err != nil {
+		return err
+	}
+	n, _ := res.RowsAffected()
+	if n == 0 {
+		var isReg bool
+		_ = r.db.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM general_meeting_registrations WHERE meeting_id = $1::uuid AND user_id = $2::uuid)`, meetingID, userID).Scan(&isReg)
+		if !isReg {
+			return fmt.Errorf("meeting is fully booked")
+		}
+	}
+	return nil
 }
 
 func (r *repository) UnregisterUser(ctx context.Context, meetingID, userID string) error {

@@ -35,6 +35,12 @@ func (m *MockRepo) GetHours(ctx context.Context, id string) ([]HourLog, error)  
 func (m *MockRepo) VerifyHours(ctx context.Context, h, t string) error            { return nil }
 func (m *MockRepo) GetCompanies(ctx context.Context, s string) ([]Company, error) { return nil, nil }
 func (m *MockRepo) DeleteProject(ctx context.Context, id string) error            { return nil }
+func (m *MockRepo) GetHourLogByID(ctx context.Context, id string) (*HourLog, error) {
+	return &HourLog{ID: id, ParticipationID: "part1"}, nil
+}
+func (m *MockRepo) GetParticipationByID(ctx context.Context, id string) (*Participation, error) {
+	return &Participation{ID: id, ProjectID: "p1"}, nil
+}
 func (m *MockRepo) GetStats(ctx context.Context, schoolID string) (*PCTOStats, error) {
 	return nil, nil
 }

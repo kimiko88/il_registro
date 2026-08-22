@@ -21,6 +21,8 @@
                 v-model="form.specificClasses"
                 multiple
                 use-chips
+                emit-value
+                map-options
                 :options="classOptions"
                 :label="t('udaPage.classLabel')"
                 outlined
@@ -60,7 +62,12 @@ const emit = defineEmits(['sent', 'cancel'])
 
 const sending = ref(false)
 
-const classOptions = computed(() => classesStore.classes.map(c => `${c.name || c.year}${c.section}`))
+const classOptions = computed(() =>
+    classesStore.classes.map(c => ({
+        label: c.name || `${c.year || ''}${c.section || ''}`.trim() || c.id,
+        value: c.id
+    }))
+)
 
 const form = reactive({
     title: '',

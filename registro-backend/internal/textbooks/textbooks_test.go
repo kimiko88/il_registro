@@ -24,6 +24,13 @@ func (m *mockRepo) Create(ctx context.Context, t *Textbook) error {
 	return nil
 }
 
+func (m *mockRepo) GetByID(ctx context.Context, id string) (*Textbook, error) {
+	if tb, ok := m.textbooks[id]; ok {
+		return tb, nil
+	}
+	return nil, errors.New("not found")
+}
+
 func (m *mockRepo) Update(ctx context.Context, t *Textbook) error {
 	if _, ok := m.textbooks[t.ID]; !ok {
 		return errors.New("not found")

@@ -291,7 +291,7 @@ func main() {
 			schoolCalendarH.RegisterRoutes(protected)
 
 			pdpRepo := pdp.NewRepository(database)
-			pdpSvc := pdp.NewService(pdpRepo)
+			pdpSvc := pdp.NewService(pdpRepo, usersRepo)
 			pdpH := pdp.NewHandler(pdpSvc)
 			pdpH.RegisterRoutes(protected)
 

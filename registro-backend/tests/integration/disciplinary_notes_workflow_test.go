@@ -84,6 +84,9 @@ func (m *mockNotesRepoForWorkflow) ApproveNote(ctx context.Context, id, approver
 func (m *mockNotesRepoForWorkflow) MarkAsViewedByParent(ctx context.Context, id string) error {
 	return nil
 }
+func (m *mockNotesRepoForWorkflow) MarkManyAsViewedByParent(ctx context.Context, ids []string) error {
+	return nil
+}
 func (m *mockNotesRepoForWorkflow) IsTeacherAssignedToClass(ctx context.Context, teacherID, classID string) (bool, error) {
 	return true, nil
 }

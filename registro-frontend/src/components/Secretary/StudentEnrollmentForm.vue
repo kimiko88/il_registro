@@ -127,12 +127,14 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
+import { useClassesStore } from '@/stores/classes'
 
 const $q = useQuasar()
 const { t } = useI18n()
+const classesStore = useClassesStore()
 const step = ref(1)
 const stepper = ref(null)
 
@@ -160,19 +162,28 @@ const form = reactive({
     documentsSubmitted: false
 })
 
-const classOptions = ['1A', '1B', '2A', '2B', '3A', '3B', '4A', '5A'] // Mock
+const classOptions = computed(() => {
+    if (classesStore.classes.length > 0) {
+        return classesStore.classes.map(c => ({
+            label: c.name || `${c.year || ''}${c.section || ''}`.trim() || c.id,
+            value: c.id
+        }))
+    }
+    return ['1A', '1B', '2A', '2B', '3A', '3B', '4A', '5A']
+})
+
+onMounted(async () => {
+    if (classesStore.classes.length === 0) {
+        await classesStore.fetchClasses()
+    }
+})
 
 const nextStep = () => {
     if (step.value === 4) {
-        // Submit
-        $q.loading.show()
-        setTimeout(() => {
-            $q.loading.hide()
-            $q.notify({ type: 'positive', message: t('studentsPage.enrollmentSuccess') || 'Iscrizione completata con successo' })
-            emit('complete', { ...form })
-        }, 1000)
+        $q.notify({ type: 'positive', message: t('studentsPage.enrollmentSuccess') || 'Iscrizione completata con successo' })
+        emit('complete', { ...form })
     } else {
-        stepper.value.next()
+        stepper.value?.next()
     }
 }
 

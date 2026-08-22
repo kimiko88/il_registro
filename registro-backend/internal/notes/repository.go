@@ -19,6 +19,7 @@ type Repository interface {
 	List(ctx context.Context, filter NoteFilter) ([]StudentNote, error)
 	ApproveNote(ctx context.Context, id string, approverID string) error
 	MarkAsViewedByParent(ctx context.Context, id string) error
+	MarkManyAsViewedByParent(ctx context.Context, ids []string) error
 	IsTeacherAssignedToClass(ctx context.Context, teacherID, classID string) (bool, error)
 }
 
@@ -114,6 +115,21 @@ func (r *PostgresRepository) MarkAsViewedByParent(ctx context.Context, id string
 		WHERE id = $1 AND COALESCE(is_viewed_by_parent, false) = false
 	`
 	_, err := r.db.ExecContext(ctx, query, id)
+	return err
+}
+
+// MarkManyAsViewedByParent esegue un singolo UPDATE per tutte le note non ancora viste dal genitore.
+// Questo evita le N query individuali che venivano eseguite all'interno di una GET in ListNotes.
+func (r *PostgresRepository) MarkManyAsViewedByParent(ctx context.Context, ids []string) error {
+	if len(ids) == 0 {
+		return nil
+	}
+	query := `
+		UPDATE student_notes
+		SET is_viewed_by_parent = true, parent_viewed_at = NOW()
+		WHERE id = ANY($1) AND COALESCE(is_viewed_by_parent, false) = false
+	`
+	_, err := r.db.ExecContext(ctx, query, ids)
 	return err
 }
 

@@ -19,6 +19,18 @@ func NewService(scrutinySvc *scrutiny.Service) *Service {
 	}
 }
 
+// sanitizeExcelField prevents Excel formula injection by prepending a tab
+// if the string begins with formula-triggering characters (=, +, -, @).
+func sanitizeExcelField(v string) string {
+	if len(v) > 0 {
+		switch v[0] {
+		case '=', '+', '-', '@':
+			return "\t" + v
+		}
+	}
+	return v
+}
+
 func (s *Service) ExportGradesExcel(ctx context.Context, actorID, actorRole, classID string, semester int) ([]byte, error) {
 	matrix, err := s.scrutinySvc.GetMatrix(ctx, actorID, actorRole, classID, semester)
 	if err != nil {
@@ -38,7 +50,7 @@ func (s *Service) ExportGradesExcel(ctx context.Context, actorID, actorRole, cla
 	for _, sub := range matrix.Subjects {
 		colIdx++
 		cell, _ = excelize.CoordinatesToCellName(colIdx, 1)
-		_ = f.SetCellValue(sheet, cell, sub.Name)
+		_ = f.SetCellValue(sheet, cell, sanitizeExcelField(sub.Name))
 	}
 	colIdx++
 	cell, _ = excelize.CoordinatesToCellName(colIdx, 1)
@@ -51,7 +63,7 @@ func (s *Service) ExportGradesExcel(ctx context.Context, actorID, actorRole, cla
 	rowNum := 2
 	for _, stu := range matrix.Students {
 		cell, _ = excelize.CoordinatesToCellName(1, rowNum)
-		_ = f.SetCellValue(sheet, cell, stu.StudentName)
+		_ = f.SetCellValue(sheet, cell, sanitizeExcelField(stu.StudentName))
 		colIdx = 1
 		var sum float64
 		var count int

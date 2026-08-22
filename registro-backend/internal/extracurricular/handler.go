@@ -87,6 +87,7 @@ func (h *Handler) EnrollStudent(c *gin.Context) {
 func (h *Handler) ListEnrollments(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
+	schoolID := c.GetString("school_id")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
@@ -97,7 +98,7 @@ func (h *Handler) ListEnrollments(c *gin.Context) {
 	}
 
 	courseID := c.Param("id")
-	enrollments, err := h.service.ListEnrollments(c.Request.Context(), courseID)
+	enrollments, err := h.service.ListEnrollments(c.Request.Context(), role, schoolID, courseID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

@@ -117,7 +117,12 @@ func (s *Service) AssignSubject(ctx context.Context, schoolID, classID string, r
 	return s.repo.AssignSubject(ctx, classID, req.SubjectID, req.TeacherID, req.HoursPerWeek)
 }
 
-func (s *Service) RemoveSubject(ctx context.Context, assignmentID string) error {
+func (s *Service) RemoveSubject(ctx context.Context, assignmentID string, schoolAndClassIDs ...string) error {
+	if len(schoolAndClassIDs) >= 2 && schoolAndClassIDs[0] != "" && schoolAndClassIDs[1] != "" {
+		if err := s.checkClassSchool(ctx, schoolAndClassIDs[0], schoolAndClassIDs[1]); err != nil {
+			return err
+		}
+	}
 	return s.repo.UnassignSubject(ctx, assignmentID)
 }
 

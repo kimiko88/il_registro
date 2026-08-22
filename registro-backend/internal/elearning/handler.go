@@ -121,7 +121,12 @@ func (h *Handler) SyncAssignments(c *gin.Context) {
 
 	provider := c.Param("provider")
 	var req SyncAssignmentsRequest
-	_ = c.ShouldBindJSON(&req)
+	if c.Request.ContentLength > 0 {
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+	}
 
 	resp, err := h.service.SyncAssignments(c.Request.Context(), userID, provider, req.ClassID)
 	if err != nil {
@@ -146,7 +151,12 @@ func (h *Handler) SyncGrades(c *gin.Context) {
 
 	provider := c.Param("provider")
 	var req SyncGradesRequest
-	_ = c.ShouldBindJSON(&req)
+	if c.Request.ContentLength > 0 {
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+	}
 
 	resp, err := h.service.SyncGrades(c.Request.Context(), userID, provider, req.ClassID)
 	if err != nil {

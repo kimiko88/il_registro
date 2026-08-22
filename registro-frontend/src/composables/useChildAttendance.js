@@ -1,7 +1,7 @@
 import { computed, watch } from 'vue';
 import { useChildrenStore } from 'src/stores/children';
 import { useAttendanceStore } from 'src/stores/attendance';
-import { useMyAttendance } from 'src/composables/useMyAttendance'; // Reuse!
+import { useMyAttendance } from 'src/composables/useMyAttendance';
 
 export function useChildAttendance() {
     const childrenStore = useChildrenStore();
@@ -10,8 +10,14 @@ export function useChildAttendance() {
     const { stats, records, loading } = useMyAttendance();
 
     const fetchAttendanceForChild = async (_studentId) => {
-        // In real app, pass studentId to fetchMyAttendance or a specific fetchChildAttendance
-        await attendanceStore.fetchMyAttendance();
+        if (typeof attendanceStore.fetchMyAttendance === 'function') {
+            await attendanceStore.fetchMyAttendance();
+        }
+    };
+
+    const requestChildJustification = async (date, reason) => {
+        const targetId = childrenStore.selectedChildId;
+        return attendanceStore.requestJustification(date, reason, targetId);
     };
 
     watch(() => childrenStore.selectedChildId, (newId) => {
@@ -22,6 +28,8 @@ export function useChildAttendance() {
         selectedChild: computed(() => childrenStore.selectedChild),
         stats,
         records,
-        loading
+        loading,
+        fetchAttendanceForChild,
+        requestChildJustification
     };
 }

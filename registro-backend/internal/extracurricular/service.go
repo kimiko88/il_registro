@@ -92,7 +92,13 @@ func (s *Service) EnrollStudent(ctx context.Context, courseID, studentID string)
 	return s.repo.EnrollStudent(ctx, courseID, studentID)
 }
 
-func (s *Service) ListEnrollments(ctx context.Context, courseID string) ([]*Enrollment, error) {
+func (s *Service) ListEnrollments(ctx context.Context, actorRole, schoolID, courseID string) ([]*Enrollment, error) {
+	if actorRole != "superadmin" && schoolID != "" {
+		course, err := s.repo.GetCourseByID(ctx, courseID)
+		if err == nil && course != nil && course.SchoolID != "" && course.SchoolID != schoolID {
+			return nil, errors.New("unauthorized: il corso appartiene ad un'altra scuola")
+		}
+	}
 	return s.repo.ListEnrollments(ctx, courseID)
 }
 

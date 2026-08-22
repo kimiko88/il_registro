@@ -59,6 +59,16 @@ func (m *MockRepository) MarkAsViewedByParent(ctx context.Context, id string) er
 	return nil
 }
 
+func (m *MockRepository) MarkManyAsViewedByParent(ctx context.Context, ids []string) error {
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "MarkManyAsViewedByParent" {
+			args := m.Called(ctx, ids)
+			return args.Error(0)
+		}
+	}
+	return nil
+}
+
 func (m *MockRepository) List(ctx context.Context, filter NoteFilter) ([]StudentNote, error) {
 	args := m.Called(ctx, filter)
 	if args.Get(0) == nil {

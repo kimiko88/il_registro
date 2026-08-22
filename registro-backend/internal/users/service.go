@@ -20,6 +20,10 @@ var (
 	ErrUnauthorized = errors.New("unauthorized")
 )
 
+// bcryptCost è il cost factor usato per tutti gli hash bcrypt nel package users.
+// Usare cost 12 invece di bcrypt.DefaultCost (10) per maggiore resistenza al brute-force.
+const bcryptCost = 12
+
 // allowedCreators maps each role to the set of roles it is allowed to create.
 var allowedCreators = map[string]map[string]bool{
 	"superadmin": {"superadmin": true, "admin": true, "secretary": true, "teacher": true, "student": true, "parent": true},
@@ -58,8 +62,6 @@ func (s *Service) CreateUser(ctx context.Context, actorRole string, req CreateUs
 	if err := validatePasswordComplexity(req.Password); err != nil {
 		return nil, err
 	}
-
-	const bcryptCost = 12
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcryptCost)
 	if err != nil {
@@ -289,7 +291,7 @@ func (s *Service) ChangePassword(ctx context.Context, userID string, req ChangeP
 		}
 	}
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
+	hash, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcryptCost)
 	if err != nil {
 		return err
 	}
@@ -368,7 +370,7 @@ func (s *Service) ResetPassword(ctx context.Context, actorRole, actorSchoolID, u
 		}
 	}
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcryptCost)
 	if err != nil {
 		return err
 	}
@@ -435,7 +437,7 @@ func (s *Service) BulkImport(ctx context.Context, actorRole, actorSchoolID strin
 				result.Errors = append(result.Errors, fmt.Sprintf("utente %s: password non conforme (%v)", u.Email, err))
 				continue
 			}
-			hash, err := bcrypt.GenerateFromPassword([]byte(u.PasswordHash), bcrypt.DefaultCost)
+			hash, err := bcrypt.GenerateFromPassword([]byte(u.PasswordHash), bcryptCost)
 			if err != nil {
 				result.Failed++
 				result.Errors = append(result.Errors, fmt.Sprintf("utente %s: errore hashing password", u.Email))

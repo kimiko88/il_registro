@@ -38,6 +38,18 @@ func (m *mockRepository) GetByClass(classID string) ([]DidacticMaterial, error) 
 	return res, nil
 }
 
+func (m *mockRepository) GetByID(id string) (*DidacticMaterial, error) {
+	if m.errGet != nil {
+		return nil, m.errGet
+	}
+	for _, mat := range m.materials {
+		if mat.ID == id {
+			return &mat, nil
+		}
+	}
+	return nil, errors.New("material not found")
+}
+
 func (m *mockRepository) Delete(id string, teacherID string) error {
 	if m.errDelete != nil {
 		return m.errDelete
@@ -45,6 +57,21 @@ func (m *mockRepository) Delete(id string, teacherID string) error {
 	var keep []DidacticMaterial
 	for _, mat := range m.materials {
 		if mat.ID == id && mat.TeacherID == teacherID {
+			continue
+		}
+		keep = append(keep, mat)
+	}
+	m.materials = keep
+	return nil
+}
+
+func (m *mockRepository) DeleteByID(id string) error {
+	if m.errDelete != nil {
+		return m.errDelete
+	}
+	var keep []DidacticMaterial
+	for _, mat := range m.materials {
+		if mat.ID == id {
 			continue
 		}
 		keep = append(keep, mat)
@@ -108,12 +135,12 @@ func TestGetMaterialsByClass(t *testing.T) {
 func TestDeleteMaterial(t *testing.T) {
 	repo := &mockRepository{
 		materials: []DidacticMaterial{
-			{ID: "id-1", TeacherID: "teacher-1", Title: "Math"},
+			{ID: "id-1", SchoolID: "school-1", TeacherID: "teacher-1", Title: "Math"},
 		},
 	}
 	s := NewService(repo, nil)
 
-	err := s.DeleteMaterial(context.Background(), "id-1", "teacher-1")
+	err := s.DeleteMaterial(context.Background(), "teacher-1", "teacher", "school-1", "id-1")
 	assert.NoError(t, err)
 	assert.Len(t, repo.materials, 0)
 }

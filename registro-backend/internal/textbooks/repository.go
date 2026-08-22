@@ -8,6 +8,7 @@ import (
 
 type Repository interface {
 	Create(ctx context.Context, t *Textbook) error
+	GetByID(ctx context.Context, id string) (*Textbook, error)
 	Update(ctx context.Context, t *Textbook) error
 	List(ctx context.Context, schoolID string) ([]Textbook, error)
 	Delete(ctx context.Context, id string) error
@@ -30,6 +31,16 @@ func (r *postgresRepository) Create(ctx context.Context, t *Textbook) error {
 	query := `INSERT INTO textbooks (id, school_id, title, author, subject, isbn, publisher, price) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
 	_, err := r.db.ExecContext(ctx, query, t.ID, t.SchoolID, t.Title, t.Author, t.Subject, t.ISBN, t.Publisher, t.Price)
 	return err
+}
+
+func (r *postgresRepository) GetByID(ctx context.Context, id string) (*Textbook, error) {
+	query := `SELECT id, school_id, title, COALESCE(author, ''), COALESCE(subject, ''), COALESCE(isbn, ''), COALESCE(publisher, ''), COALESCE(price, 0), created_at FROM textbooks WHERE id = $1`
+	var t Textbook
+	err := r.db.QueryRowContext(ctx, query, id).Scan(&t.ID, &t.SchoolID, &t.Title, &t.Author, &t.Subject, &t.ISBN, &t.Publisher, &t.Price, &t.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return &t, nil
 }
 
 func (r *postgresRepository) Update(ctx context.Context, t *Textbook) error {

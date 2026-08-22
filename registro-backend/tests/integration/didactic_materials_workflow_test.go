@@ -3,6 +3,7 @@ package integration
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -35,7 +36,19 @@ func (m *mockDidacticRepo) GetByClass(classID string) ([]didactic_materials.Dida
 	return res, nil
 }
 
+func (m *mockDidacticRepo) GetByID(id string) (*didactic_materials.DidacticMaterial, error) {
+	if dm, ok := m.mats[id]; ok {
+		return dm, nil
+	}
+	return nil, errors.New("not found")
+}
+
 func (m *mockDidacticRepo) Delete(id, teacherID string) error {
+	delete(m.mats, id)
+	return nil
+}
+
+func (m *mockDidacticRepo) DeleteByID(id string) error {
 	delete(m.mats, id)
 	return nil
 }

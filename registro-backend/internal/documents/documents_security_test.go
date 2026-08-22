@@ -96,6 +96,10 @@ func (m *mockServiceForSecTest) ExportDocument(ctx context.Context, actorRole, s
 	}
 	return args.Get(0).([]byte), args.String(1), args.Error(2)
 }
+func (m *mockServiceForSecTest) GetDocumentContent(ctx context.Context, id string) (string, error) {
+	args := m.Called(ctx, id)
+	return args.String(0), args.Error(1)
+}
 func (m *mockServiceForSecTest) LockDocument(ctx context.Context, id string) error {
 	return m.Called(ctx, id).Error(0)
 }

@@ -35,7 +35,7 @@
               </q-td>
 
               <q-td key="current_grade" :props="props" style="width: 250px">
-                 <div class="row items-center no-wrap q-gutter-sm">
+                 <div v-if="entryData[props.row.student_id]" class="row items-center no-wrap q-gutter-sm">
                      <q-select
                         v-model="entryData[props.row.student_id].value"
                        :options="gradeOptions"

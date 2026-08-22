@@ -1,36 +1,4 @@
-import { watch, onBeforeUnmount } from 'vue'
-
-/**
- * useDraftAutosave — Composable per il salvataggio automatico delle bozze in localStorage.
- *
- * Salva automaticamente un ref/reactive dopo `debounceMs` millisecondi di inattività.
- * Ripristina automaticamente la bozza salvata al montaggio del componente (se presente).
- * Cancella la bozza dopo un salvataggio riuscito (`clearDraft()`).
- *
- * @param {string}  storageKey   — Chiave localStorage univoca (es. 'agenda-event-draft-{classId}')
- * @param {Ref}     dataRef      — Ref o reactive da sorvegliare e salvare
- * @param {number}  debounceMs   — Debounce in ms prima di scrivere nel localStorage (default 1500)
- *
- * @returns {object}
- *   hasDraft    — boolean: true se esiste una bozza salvata
- *   restoreDraft — funzione: ripristina la bozza nel dataRef
- *   clearDraft  — funzione: elimina la bozza salvata (da chiamare dopo salvataggio riuscito)
- *   savedAt     — Ref<Date|null>: timestamp dell'ultimo autosave
- *
- * Usage:
- *   const { hasDraft, restoreDraft, clearDraft, savedAt } = useDraftAutosave(
- *     `lesson-draft-${classId}`,
- *     lessonForm
- *   )
- *   // On mount:
- *   if (hasDraft.value) {
- *     const confirmed = await $q.dialog({ message: 'Esiste una bozza non salvata. Ripristinarla?' })
- *     if (confirmed) restoreDraft()
- *   }
- *   // On successful save:
- *   clearDraft()
- */
-import { ref } from 'vue'
+import { watch, onBeforeUnmount, getCurrentInstance, ref } from 'vue'
 
 const DRAFT_PREFIX = 'il_registro_draft_'
 
@@ -110,11 +78,20 @@ export function useDraftAutosave(storageKey, dataRef, debounceMs = 1500) {
         { deep: true }
     )
 
-    // Clean up on unmount
-    onBeforeUnmount(() => {
-        stopWatcher()
-        clearTimeout(debounceTimer)
-    })
+    function stop() {
+        if (stopWatcher) stopWatcher()
+        if (debounceTimer) {
+            clearTimeout(debounceTimer)
+            debounceTimer = null
+        }
+    }
 
-    return { hasDraft, restoreDraft, clearDraft, savedAt }
+    // Clean up on unmount if within component setup
+    if (getCurrentInstance()) {
+        onBeforeUnmount(() => {
+            stop()
+        })
+    }
+
+    return { hasDraft, restoreDraft, clearDraft, savedAt, stop }
 }

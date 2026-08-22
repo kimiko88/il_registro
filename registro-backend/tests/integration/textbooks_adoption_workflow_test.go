@@ -29,6 +29,13 @@ func (m *mockTextbooksRepo) Create(ctx context.Context, t *textbooks.Textbook) e
 	return nil
 }
 
+func (m *mockTextbooksRepo) GetByID(ctx context.Context, id string) (*textbooks.Textbook, error) {
+	if tb, ok := m.textbooks[id]; ok {
+		return tb, nil
+	}
+	return nil, assert.AnError
+}
+
 func (m *mockTextbooksRepo) Update(ctx context.Context, t *textbooks.Textbook) error {
 	m.textbooks[t.ID] = t
 	return nil

@@ -62,19 +62,46 @@ func (s *Service) CreateUda(ctx context.Context, schoolID, teacherID string, req
 	return plan, nil
 }
 
-func (s *Service) ListAll(ctx context.Context) ([]*UdaPlan, error) {
-	return s.repo.ListAll(ctx)
+func (s *Service) ListAll(ctx context.Context, schoolID, role string) ([]*UdaPlan, error) {
+	if role == "superadmin" {
+		return s.repo.ListAll(ctx)
+	}
+	return s.repo.ListBySchool(ctx, schoolID)
 }
 
 func (s *Service) ListByClass(ctx context.Context, classID string) ([]*UdaPlan, error) {
 	return s.repo.ListByClass(ctx, classID)
 }
 
-func (s *Service) UpdateUda(ctx context.Context, id string, req UpdateUdaRequest) (*UdaPlan, error) {
+func (s *Service) UpdateUda(ctx context.Context, actorID, actorRole, schoolID, id string, req UpdateUdaRequest) (*UdaPlan, error) {
+	plan, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("uda plan non trovato: %w", err)
+	}
+	if actorRole != "superadmin" {
+		if schoolID != "" && plan.SchoolID != "" && plan.SchoolID != schoolID {
+			return nil, fmt.Errorf("forbidden: il piano UDA appartiene ad un'altra scuola")
+		}
+		if actorRole != "admin" && plan.TeacherID != actorID {
+			return nil, fmt.Errorf("forbidden: non sei il docente proprietario di questo piano UDA")
+		}
+	}
 	return s.repo.Update(ctx, id, req)
 }
 
-func (s *Service) DeleteUda(ctx context.Context, id string) error {
+func (s *Service) DeleteUda(ctx context.Context, actorID, actorRole, schoolID, id string) error {
+	plan, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return fmt.Errorf("uda plan non trovato: %w", err)
+	}
+	if actorRole != "superadmin" {
+		if schoolID != "" && plan.SchoolID != "" && plan.SchoolID != schoolID {
+			return fmt.Errorf("forbidden: il piano UDA appartiene ad un'altra scuola")
+		}
+		if actorRole != "admin" && plan.TeacherID != actorID {
+			return fmt.Errorf("forbidden: non sei il docente proprietario di questo piano UDA")
+		}
+	}
 	return s.repo.Delete(ctx, id)
 }
 
@@ -99,7 +126,9 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 }
 
 func (h *Handler) ListAll(c *gin.Context) {
-	plans, err := h.service.ListAll(c.Request.Context())
+	schoolID := c.GetString("school_id")
+	role := c.GetString("role")
+	plans, err := h.service.ListAll(c.Request.Context(), schoolID, role)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -146,6 +175,7 @@ func (h *Handler) CreateUda(c *gin.Context) {
 
 func (h *Handler) UpdateUda(c *gin.Context) {
 	teacherID := c.GetString("user_id")
+	schoolID := c.GetString("school_id")
 	role := c.GetString("role")
 	if teacherID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
@@ -163,7 +193,7 @@ func (h *Handler) UpdateUda(c *gin.Context) {
 		return
 	}
 
-	plan, err := h.service.UpdateUda(c.Request.Context(), id, req)
+	plan, err := h.service.UpdateUda(c.Request.Context(), teacherID, role, schoolID, id, req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -173,6 +203,7 @@ func (h *Handler) UpdateUda(c *gin.Context) {
 
 func (h *Handler) DeleteUda(c *gin.Context) {
 	teacherID := c.GetString("user_id")
+	schoolID := c.GetString("school_id")
 	role := c.GetString("role")
 	if teacherID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
@@ -184,7 +215,7 @@ func (h *Handler) DeleteUda(c *gin.Context) {
 	}
 
 	id := c.Param("id")
-	if err := h.service.DeleteUda(c.Request.Context(), id); err != nil {
+	if err := h.service.DeleteUda(c.Request.Context(), teacherID, role, schoolID, id); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

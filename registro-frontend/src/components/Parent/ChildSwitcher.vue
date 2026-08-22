@@ -1,28 +1,29 @@
 <template>
   <q-btn-dropdown
+    v-if="store.children.length > 0"
     flat
     dense
     no-caps
     color="primary"
     icon="face"
-    :label="selectedChild ? selectedChild.name : (t('competenciesPage.student') || 'Seleziona Figlio')"
+    :label="selectedChildName"
   >
     <q-list style="min-width: 200px">
-      <q-item-label header>{{ t('competenciesPage.student') }}</q-item-label>
+      <q-item-label header>{{ t('competenciesPage.student') || 'Figli' }}</q-item-label>
       <q-item
-        v-for="child in children"
+        v-for="child in store.children"
         :key="child.id"
         clickable
         v-close-popup
-        @click="switchChild(child)"
-        :active="selectedChild && selectedChild.id === child.id"
+        @click="store.selectChild(child.id)"
+        :active="store.selectedChildId === child.id"
       >
         <q-item-section avatar>
           <q-avatar color="primary" text-color="white" icon="person" size="sm" />
         </q-item-section>
         <q-item-section>
-          <q-item-label>{{ child.name }}</q-item-label>
-          <q-item-label caption>{{ t('udaPage.classLabel') }} {{ child.class_name }}</q-item-label>
+          <q-item-label>{{ child.firstName }} {{ child.lastName }}</q-item-label>
+          <q-item-label caption v-if="child.className">{{ t('udaPage.classLabel') || 'Classe' }} {{ child.className }}</q-item-label>
         </q-item-section>
       </q-item>
     </q-list>
@@ -30,44 +31,22 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import userService from '@/services/userService'
-import { useQuasar } from 'quasar'
+import { useChildrenStore } from '@/stores/children'
 
-const $q = useQuasar()
 const { t } = useI18n()
-const children = ref([])
-const selectedChild = ref(null)
+const store = useChildrenStore()
 
-const loadChildren = async () => {
-  try {
-    const res = await userService.getChildren()
-    children.value = res.data || []
-    if (children.value.length > 0) {
-      selectedChild.value = children.value[0]
-    }
-  } catch (err) {
-    children.value = [
-      { id: 'std-1', name: 'Mario Rossi', class_name: '3A' },
-      { id: 'std-2', name: 'Lucia Rossi', class_name: '1B' }
-    ]
-    selectedChild.value = children.value[0]
-  }
-}
-
-const switchChild = async (child) => {
-  selectedChild.value = child
-  try {
-    await userService.switchChild(child.id)
-    $q.notify({ type: 'positive', message: t('common.success') })
-    window.location.reload()
-  } catch (err) {
-    $q.notify({ type: 'negative', message: t('common.error') })
-  }
-}
+const selectedChildName = computed(() => {
+  const c = store.selectedChild
+  if (!c) return t('competenciesPage.student') || 'Seleziona Figlio'
+  return `${c.firstName || ''} ${c.lastName || ''}`.trim() || c.id
+})
 
 onMounted(() => {
-  loadChildren()
+  if (store.children.length === 0) {
+    store.fetchChildren()
+  }
 })
 </script>

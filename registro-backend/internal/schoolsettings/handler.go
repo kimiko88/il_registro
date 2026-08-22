@@ -23,12 +23,19 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 }
 
 func (h *Handler) GetSettings(c *gin.Context) {
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	role := c.GetString("role")
 	schoolID := c.GetString("school_id")
-	if schoolID == "" {
+	if role == "superadmin" && c.Query("school_id") != "" {
 		schoolID = c.Query("school_id")
 	}
 	if schoolID == "" {
-		schoolID = "162737ff-081f-436c-8874-11cd57bc60f1"
+		c.JSON(http.StatusBadRequest, gin.H{"error": "school_id required"})
+		return
 	}
 
 	res, err := h.service.GetSettings(c.Request.Context(), schoolID)
@@ -41,17 +48,23 @@ func (h *Handler) GetSettings(c *gin.Context) {
 }
 
 func (h *Handler) UpdateSettings(c *gin.Context) {
-	schoolID := c.GetString("school_id")
-	if schoolID == "" {
-		schoolID = c.Query("school_id")
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
 	}
-	if schoolID == "" {
-		schoolID = "162737ff-081f-436c-8874-11cd57bc60f1"
-	}
-
 	role := c.GetString("role")
 	if role != "admin" && role != "superadmin" && role != "principal" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: only admin or principal can update school settings"})
+		return
+	}
+
+	schoolID := c.GetString("school_id")
+	if role == "superadmin" && c.Query("school_id") != "" {
+		schoolID = c.Query("school_id")
+	}
+	if schoolID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "school_id required"})
 		return
 	}
 

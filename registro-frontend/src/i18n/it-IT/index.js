@@ -1233,5 +1233,34 @@ export default {
     users: {
       importStarted: 'Importazione utenti avviata'
     }
+  },
+  security: {
+    title: 'Sicurezza & Conformità Normativa',
+    subtitle: 'Firma Elettronica Qualificata, Conservazione a Norma CAD e Catena Log Immutabili',
+    downloadCadZip: 'Scarica Pacchetto CAD ZIP',
+    feqTitle: 'Firma Qualificata (FEQ)',
+    feqActive: 'Attiva e Verificata',
+    feqDesc: 'Tutte le firme sui registri di classe e sulle supplenze sono sigillate con timestamp SHA-256 con valore legale.',
+    cadTitle: 'Conservazione CAD',
+    cadManifest: 'Pacchetto XML Manifesto',
+    cadDesc: 'Conforme alle linee guida AgID per la conservazione documentale sostitutiva a lungo termine.',
+    immutableAuditTitle: 'Audit Log Immutabile',
+    cryptoChain: 'Catena Cryptographic Hash',
+    immutableAuditDesc: 'Ogni modifica a firme, voti e note genera un blocco incatenato crittograficamente (Block Hashing).',
+    integrityVerifier: 'Verificatore di Integrità Registro (Audit Trail)',
+    verifyNow: 'Verifica Integrità Ora',
+    allBlocksValid: 'Tutti i blocchi del registro sono validi ed inopponibili',
+    verifiedOn: 'Verificato il',
+    colAction: 'Azione / Evento',
+    colActor: 'Utente / Modificatore',
+    colPrevHash: 'Hash Precedente (SHA-256)',
+    colCurrHash: 'Hash Corrente (SHA-256)',
+    colCryptoStatus: 'Stato Crittografico',
+    intact: 'Integro',
+    integrityVerified: 'Verifica integrità registro completata: Catena valida!',
+    integrityError: 'Errore durante la verifica della catena',
+    cadGenerating: 'Generazione del pacchetto di conservazione CAD ZIP...',
+    cadDownloaded: 'Pacchetto CAD scaricato con successo!',
+    cadError: 'Errore durante il download del pacchetto CAD'
   }
 }

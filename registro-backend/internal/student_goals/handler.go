@@ -55,14 +55,12 @@ func (h *Handler) ListByStudent(c *gin.Context) {
 
 	studentID := c.Param("studentID")
 
-	// Ownership check: students can only access their own goals.
-	if role == "student" && uid != studentID {
-		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: cannot view goals of another student"})
-		return
-	}
-
-	goals, err := h.service.ListByStudent(c.Request.Context(), studentID)
+	goals, err := h.service.ListByStudent(c.Request.Context(), uid, role, studentID)
 	if err != nil {
+		if err.Error() == "unauthorized: cannot view goals of another student" || err.Error() == "unauthorized: non sei tutore legale di questo studente" {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

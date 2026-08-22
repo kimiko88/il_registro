@@ -20,6 +20,8 @@ type Repository interface {
 
 	LogHours(ctx context.Context, h *HourLog) error
 	GetHours(ctx context.Context, participationID string) ([]HourLog, error)
+	GetHourLogByID(ctx context.Context, id string) (*HourLog, error)
+	GetParticipationByID(ctx context.Context, id string) (*Participation, error)
 	VerifyHours(ctx context.Context, hourID, teacherID string) error
 	UpdateHourLogStatus(ctx context.Context, logID, status string) error
 
@@ -162,6 +164,29 @@ func (r *repository) GetHours(ctx context.Context, participationID string) ([]Ho
 		logs = append(logs, h)
 	}
 	return logs, nil
+}
+
+func (r *repository) GetHourLogByID(ctx context.Context, id string) (*HourLog, error) {
+	var h HourLog
+	var verifiedBy sql.NullString
+	err := r.db.QueryRowContext(ctx, `SELECT id, participation_id, date, hours, activity_description, verified, verified_by FROM pcto_hours WHERE id=$1`, id).Scan(&h.ID, &h.ParticipationID, &h.Date, &h.Hours, &h.Activity, &h.Verified, &verifiedBy)
+	if err != nil {
+		return nil, err
+	}
+	if verifiedBy.Valid {
+		val := verifiedBy.String
+		h.VerifiedBy = &val
+	}
+	return &h, nil
+}
+
+func (r *repository) GetParticipationByID(ctx context.Context, id string) (*Participation, error) {
+	var p Participation
+	err := r.db.QueryRowContext(ctx, `SELECT id, project_id, student_id, status, hours_completed FROM pcto_participations WHERE id=$1`, id).Scan(&p.ID, &p.ProjectID, &p.StudentID, &p.Status, &p.HoursCompleted)
+	if err != nil {
+		return nil, err
+	}
+	return &p, nil
 }
 
 func (r *repository) VerifyHours(ctx context.Context, hourID, teacherID string) error {
