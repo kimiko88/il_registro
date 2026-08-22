@@ -604,7 +604,7 @@ func (s *service) ProcessJustification(ctx context.Context, teacherID, justifica
 	}
 	if j.ParentID != "" {
 		schoolID := ""
-		if studentUser != nil && studentUser.SchoolID != nil {
+		if studentUser.SchoolID != nil {
 			schoolID = *studentUser.SchoolID
 		}
 		s.safeBroadcast(j.ParentID, schoolID, "justification_processed", payload)
@@ -1025,4 +1025,3 @@ func countWeekdays(start, end time.Time) int {
 	}
 	return weekdays
 }
-
