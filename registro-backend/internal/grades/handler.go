@@ -3,6 +3,7 @@ package grades
 import (
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"path/filepath"
 	"regexp"
@@ -125,9 +126,12 @@ func (h *Handler) GetStudentGrades(c *gin.Context) {
 		return
 	}
 
+	c.Header("Deprecation", "true")
+	c.Header("Link", fmt.Sprintf(`</api/v1/grades/student/%s/paged>; rel="successor-version"`, studentID))
+
 	filter := h.parseFilter(c)
 
-	if filter.Page > 0 {
+	if c.Query("page") != "" {
 		resp, err := h.service.GetStudentGradesPaged(c.Request.Context(), actorID, actorRole, studentID, filter)
 		if err != nil {
 			if errors.Is(err, ErrUnauthorized) || errors.Is(err, ErrNotGuardian) {
@@ -299,6 +303,12 @@ func (h *Handler) BulkImport(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	if seeker, ok := file.(io.Seeker); ok {
+		if _, err := seeker.Seek(0, io.SeekStart); err != nil {
+			respond500(c, "file seek error", err)
+			return
+		}
+	}
 
 	// In multipart/form-data, the form field takes explicit precedence over query parameter
 	semester := 1 // default
@@ -334,7 +344,7 @@ func (h *Handler) Export(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "teacher" && role != "admin" && role != "superadmin" && role != "principal" && role != "secretary" {
+	if role != "teacher" && role != "admin" && role != "superadmin" && role != "principal" && role != "vice_principal" && role != "secretary" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: export reserved to staff"})
 		return
 	}
@@ -408,6 +418,10 @@ func (h *Handler) AddGrade(c *gin.Context) {
 
 	res, err := h.service.AddGrade(c.Request.Context(), teacherID, req)
 	if err != nil {
+		if errors.Is(err, ErrUnauthorized) || errors.Is(err, ErrNotGuardian) {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -505,6 +519,17 @@ func (h *Handler) GetStudentAverage(c *gin.Context) {
 	if actorRole == "student" && userID != studentID {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
+	}
+	if actorRole == "teacher" {
+		if h.validator == nil {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: validator unconfigured"})
+			return
+		}
+		assigned, err := h.validator.IsTeacherAssignedToStudent(c.Request.Context(), userID, studentID)
+		if err != nil || !assigned {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: teacher is not assigned to this student"})
+			return
+		}
 	}
 	if actorRole == "parent" {
 		if err := h.service.ValidateParentGuardian(c.Request.Context(), userID, studentID); err != nil {
@@ -630,12 +655,14 @@ func (h *Handler) GetMyTrend(c *gin.Context) {
 	}
 
 	if role == "teacher" && targetStudentID != actorID {
-		if h.validator != nil {
-			assigned, err := h.validator.IsTeacherAssignedToStudent(c.Request.Context(), actorID, targetStudentID)
-			if err != nil || !assigned {
-				c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: teacher is not assigned to this student"})
-				return
-			}
+		if h.validator == nil {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: validator unconfigured"})
+			return
+		}
+		assigned, err := h.validator.IsTeacherAssignedToStudent(c.Request.Context(), actorID, targetStudentID)
+		if err != nil || !assigned {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: teacher is not assigned to this student"})
+			return
 		}
 	}
 
@@ -675,12 +702,14 @@ func (h *Handler) GetSemesterReport(c *gin.Context) {
 	}
 
 	if role == "teacher" && targetStudentID != actorID {
-		if h.validator != nil {
-			assigned, err := h.validator.IsTeacherAssignedToStudent(c.Request.Context(), actorID, targetStudentID)
-			if err != nil || !assigned {
-				c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: teacher is not assigned to this student"})
-				return
-			}
+		if h.validator == nil {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: validator unconfigured"})
+			return
+		}
+		assigned, err := h.validator.IsTeacherAssignedToStudent(c.Request.Context(), actorID, targetStudentID)
+		if err != nil || !assigned {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: teacher is not assigned to this student"})
+			return
 		}
 	}
 
@@ -729,12 +758,14 @@ func (h *Handler) DownloadSemesterReportPDF(c *gin.Context) {
 	}
 
 	if role == "teacher" && targetStudentID != studentID {
-		if h.validator != nil {
-			assigned, err := h.validator.IsTeacherAssignedToStudent(c.Request.Context(), studentID, targetStudentID)
-			if err != nil || !assigned {
-				c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: teacher is not assigned to this student"})
-				return
-			}
+		if h.validator == nil {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: validator unconfigured"})
+			return
+		}
+		assigned, err := h.validator.IsTeacherAssignedToStudent(c.Request.Context(), studentID, targetStudentID)
+		if err != nil || !assigned {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: teacher is not assigned to this student"})
+			return
 		}
 	}
 
@@ -760,8 +791,13 @@ func (h *Handler) DownloadSemesterReportPDF(c *gin.Context) {
 
 func (h *Handler) GetChildGrades(c *gin.Context) {
 	parentID := c.GetString("user_id")
+	role := c.GetString("role")
 	if parentID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "parent" && role != "admin" && role != "superadmin" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: endpoint reserved for parents"})
 		return
 	}
 
@@ -1131,6 +1167,10 @@ func (h *Handler) UpdateClassTest(c *gin.Context) {
 	}
 
 	if err := h.service.UpdateClassTest(teacherID, testID, req); err != nil {
+		if errors.Is(err, ErrUnauthorized) {
+			c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: not the author of this test"})
+			return
+		}
 		respond500(c, "UpdateClassTest error", err)
 		return
 	}

@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"registro-backend/pkg/crypto"
@@ -58,22 +59,23 @@ func normalizeEmail(email string) string {
 	return strings.ToLower(strings.TrimSpace(email))
 }
 
-// Register creates a new user account.
-// Input validation and RBAC checks are performed by the handler layer
-// (ValidateRegisterRequest in validator.go) before this method is called.
 func (s *Service) Register(ctx context.Context, req *RegisterRequest) (*User, error) {
 	normalizedEmail := normalizeEmail(req.Email)
-
-	// Check if email already exists
-	_, err := s.repo.GetUserByEmail(ctx, normalizedEmail)
-	if err == nil {
-		return nil, ErrEmailAlreadyExists
-	}
 
 	// Hash password
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(req.Password), s.bcryptCost)
 	if err != nil {
 		return nil, err
+	}
+
+	if req.SchoolID != "" && s.repo != nil {
+		exists, err := s.repo.SchoolExists(ctx, req.SchoolID)
+		if err != nil {
+			return nil, fmt.Errorf("school check failed: %w", err)
+		}
+		if !exists {
+			return nil, fmt.Errorf("invalid school ID")
+		}
 	}
 
 	// Create user
@@ -149,6 +151,7 @@ func (s *Service) Login(ctx context.Context, req *LoginRequest, ipAddress, userA
 	}
 
 	if !user.IsActive {
+		s.recordFailedAttempt(ctx, req.Email, ipAddress)
 		return nil, ErrUserInactive
 	}
 
@@ -195,6 +198,14 @@ func (s *Service) Login(ctx context.Context, req *LoginRequest, ipAddress, userA
 		return nil, err
 	}
 
+	// Sanitize UserAgent: strip control characters, null bytes, carriage returns, and newlines
+	userAgent = strings.Map(func(r rune) rune {
+		if r < 32 || r == 127 {
+			return -1
+		}
+		return r
+	}, userAgent)
+
 	if len(userAgent) > 512 {
 		userAgent = userAgent[:512]
 	}
@@ -212,7 +223,9 @@ func (s *Service) Login(ctx context.Context, req *LoginRequest, ipAddress, userA
 	}
 
 	// Update last login
-	_ = s.repo.UpdateLastLogin(ctx, user.ID)
+	if err := s.repo.UpdateLastLogin(ctx, user.ID); err != nil {
+		logger.Log.Warnf("Login: failed to update last login for user %s: %v", user.ID, err)
+	}
 
 	// Record successful attempt
 	s.recordSuccessfulAttempt(ctx, req.Email, ipAddress)
@@ -415,21 +428,29 @@ func (s *Service) VerifyMFA(ctx context.Context, userID, token string) ([]string
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate recovery codes: %w", err)
 	}
-	var validHashed []string
-	for _, code := range plainRecoveryCodes {
-		h, err := bcrypt.GenerateFromPassword([]byte(code), s.bcryptCost)
-		if err != nil {
-			return nil, fmt.Errorf("failed to hash recovery code: %w", err)
-		}
-		validHashed = append(validHashed, string(h))
+	validHashed := make([]string, len(plainRecoveryCodes))
+	var wg sync.WaitGroup
+	var hashErr error
+	var errOnce sync.Once
+	for i, code := range plainRecoveryCodes {
+		wg.Add(1)
+		go func(idx int, c string) {
+			defer wg.Done()
+			h, err := bcrypt.GenerateFromPassword([]byte(c), s.bcryptCost)
+			if err != nil {
+				errOnce.Do(func() { hashErr = err })
+				return
+			}
+			validHashed[idx] = string(h)
+		}(i, code)
 	}
-	if err := s.repo.CreateRecoveryCodes(ctx, userID, validHashed); err != nil {
-		return nil, fmt.Errorf("failed to save recovery codes: %w", err)
+	wg.Wait()
+	if hashErr != nil {
+		return nil, fmt.Errorf("failed to hash recovery code: %w", hashErr)
 	}
-
-	// Token is correct, enable MFA officially
-	if err := s.repo.ConfirmMFA(ctx, userID); err != nil {
-		return nil, err
+	// Token is correct, enable MFA and store recovery codes atomically in a single transaction
+	if err := s.repo.ConfirmMFAAndSaveRecoveryCodesTx(ctx, userID, validHashed); err != nil {
+		return nil, fmt.Errorf("failed to confirm MFA and save recovery codes: %w", err)
 	}
 	return plainRecoveryCodes, nil
 }
@@ -495,20 +516,10 @@ func (s *Service) ResetPassword(ctx context.Context, token, newPassword string) 
 		return err
 	}
 
-	// Get reset token
+	// Get reset token (validated atomically for non-expired, non-used status in DB query)
 	prt, err := s.repo.GetPasswordResetToken(ctx, token)
 	if err != nil {
 		return err
-	}
-
-	// Check if already used
-	if prt.Used {
-		return ErrInvalidToken
-	}
-
-	// Check if expired
-	if time.Now().After(prt.ExpiresAt) {
-		return ErrInvalidToken
 	}
 
 	user, err := s.repo.GetUserByID(ctx, prt.UserID)
@@ -559,7 +570,7 @@ func isPasswordExpiredReason(user *User) (bool, error) {
 	if user == nil {
 		return false, nil
 	}
-	if user.Role == RoleSuperAdmin || user.Role == RoleAdmin || user.Role == RoleSecretary || user.Role == RoleTeacher || user.Role == RoleCoordinator || user.Role == RoleSystemAuditor || user.Role == RolePrincipal || user.Role == RoleVicePrincipal {
+	if user.Role != RoleStudent && user.Role != RoleParent {
 		if user.PasswordChangedAt != nil {
 			if time.Since(*user.PasswordChangedAt) > 90*24*time.Hour {
 				return true, ErrPasswordExpired
@@ -621,10 +632,11 @@ func (s *Service) ChangePassword(ctx context.Context, userID, currentPassword, n
 }
 
 func (s *Service) RecordFailedAttempt(ctx context.Context, email, ipAddress string) {
-	s.recordFailedAttempt(ctx, email, ipAddress)
+	s.recordFailedAttempt(ctx, normalizeEmail(email), ipAddress)
 }
 
 func (s *Service) recordFailedAttempt(ctx context.Context, email, ipAddress string) {
+	email = normalizeEmail(email)
 	attempt := &LoginAttempt{
 		Email:       email,
 		IPAddress:   ipAddress,

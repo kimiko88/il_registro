@@ -65,8 +65,10 @@ func InitRateLimiter(redisURL string) {
 				}
 			}
 		} else {
-			log.Println("ratelimit: REDIS_URL not set — using in-memory rate limiter " +
-				"(not distributed; unsuitable for multi-instance deployments)")
+			if gin.Mode() != gin.TestMode {
+				log.Println("ratelimit: REDIS_URL not set — using in-memory rate limiter " +
+					"(not distributed; unsuitable for multi-instance deployments)")
+			}
 		}
 		activeBackend = newMemoryBackend()
 	})
@@ -75,6 +77,9 @@ func InitRateLimiter(redisURL string) {
 // getBackend returns the active backend, performing a lazy in-memory init if
 // InitRateLimiter was never called (backward-compatible for tests).
 func getBackend() rateLimiterBackend {
+	if activeBackend != nil {
+		return activeBackend
+	}
 	InitRateLimiter("")
 	return activeBackend
 }
@@ -197,7 +202,7 @@ type memoryBackend struct {
 func newMemoryBackend() *memoryBackend {
 	return &memoryBackend{
 		global: NewIPRateLimiter(5, 10),
-		auth:   NewIPRateLimiter(rate.Every(12*time.Second), 5),
+		auth:   NewIPRateLimiter(rate.Every(12*time.Second), 1),
 	}
 }
 

@@ -69,28 +69,32 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 // parseWindowParams legge i query param from/to; se assenti usa l'intero anno scolastico corrente.
 func parseWindowParams(c *gin.Context) (from, to time.Time, err error) {
 	const layout = "2006-01-02"
+	loc, lErr := time.LoadLocation("Europe/Rome")
+	if lErr != nil {
+		loc = time.Local
+	}
 	fromStr := c.Query("from")
 	toStr := c.Query("to")
 	if fromStr != "" {
-		from, err = time.Parse(layout, fromStr)
+		from, err = time.ParseInLocation(layout, fromStr, loc)
 		if err != nil {
 			return
 		}
 	} else {
-		now := time.Now()
+		now := time.Now().In(loc)
 		year := now.Year()
 		if now.Month() < time.September {
 			year--
 		}
-		from = time.Date(year, time.September, 1, 0, 0, 0, 0, time.UTC)
+		from = time.Date(year, time.September, 1, 0, 0, 0, 0, loc)
 	}
 	if toStr != "" {
-		to, err = time.Parse(layout, toStr)
+		to, err = time.ParseInLocation(layout, toStr, loc)
 		if err != nil {
 			return
 		}
 	} else {
-		to = time.Now()
+		to = time.Now().In(loc)
 	}
 
 	if to.Before(from) {
@@ -448,6 +452,23 @@ func (h *Handler) ProcessJustification(c *gin.Context) {
 		return
 	}
 	if err := h.service.ProcessJustification(c.Request.Context(), teacherID, id, req.Approve); err != nil {
+		errStr := strings.ToLower(err.Error())
+		if errors.Is(err, ErrAlreadyProcessed) || strings.Contains(errStr, "già stata elaborata") || strings.Contains(errStr, "already processed") {
+			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+			return
+		}
+		if errors.Is(err, ErrForbidden) || strings.Contains(errStr, "forbidden") || strings.Contains(errStr, "non assegnato") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		if errors.Is(err, ErrUnauthorized) || strings.Contains(errStr, "unauthorized") {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+			return
+		}
+		if errors.Is(err, ErrNotFound) || strings.Contains(errStr, "not found") || strings.Contains(errStr, "non trovata") {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
 		respond500(c, "ProcessJustification error", err)
 		return
 	}
@@ -538,7 +559,7 @@ func (h *Handler) ExportAttendance(c *gin.Context) {
 	var buf bytes.Buffer
 	buf.Write([]byte{0xEF, 0xBB, 0xBF})
 	w := csv.NewWriter(&buf)
-	_ = w.Write([]string{"StudentID", "Status", "IsJustified", "Notes"})
+	_ = w.Write([]string{"StudentID", "Date", "Hour", "Status", "IsJustified", "EntryTime", "ExitTime", "Notes"})
 
 	for _, rec := range res.Records {
 		studentID := rec.StudentID
@@ -553,10 +574,18 @@ func (h *Handler) ExportAttendance(c *gin.Context) {
 		if len(notes) > 0 && (notes[0] == '=' || notes[0] == '+' || notes[0] == '-' || notes[0] == '@') {
 			notes = "'" + notes
 		}
+		hourStr := ""
+		if rec.Hour > 0 {
+			hourStr = fmt.Sprintf("%d", rec.Hour)
+		}
 		_ = w.Write([]string{
 			studentID,
+			rec.Date,
+			hourStr,
 			statusStr,
 			fmt.Sprintf("%t", rec.IsJustified),
+			rec.EntryTime,
+			rec.ExitTime,
 			notes,
 		})
 	}
@@ -733,6 +762,11 @@ func (h *Handler) DeleteClassAttendanceHour(c *gin.Context) {
 	schoolID := c.GetString("school_id")
 
 	if err := h.service.DeleteClassAttendanceHour(c.Request.Context(), actorID, actorRole, schoolID, classID, dateStr, hourInt); err != nil {
+		errStr := strings.ToLower(err.Error())
+		if errors.Is(err, ErrForbidden) || strings.Contains(errStr, "forbidden") || strings.Contains(errStr, "unauthorized") || strings.Contains(errStr, "non sei assegnato") || strings.Contains(errStr, "non assegnato") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
 		respond500(c, "DeleteClassAttendanceHour error", err)
 		return
 	}

@@ -157,6 +157,6 @@ func (m *mockLessonsRepoForSubDiary) UpdateHomework(id string, req lessons.Updat
 	return &lessons.Homework{ID: id}, nil
 }
 func (m *mockLessonsRepoForSubDiary) DeleteHomework(id string) error { return nil }
-func (m *mockLessonsRepoForSubDiary) GetHomeworkByClass(classID string) ([]lessons.Homework, error) {
+func (m *mockLessonsRepoForSubDiary) GetHomeworkByClass(classID string, fromDate ...string) ([]lessons.Homework, error) {
 	return []lessons.Homework{}, nil
 }

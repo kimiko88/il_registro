@@ -18,7 +18,7 @@ type Repository interface {
 	GetHomeworkByID(id string) (*Homework, error)
 	UpdateHomework(id string, req UpdateHomeworkRequest) (*Homework, error)
 	DeleteHomework(id string) error
-	GetHomeworkByClass(classID string) ([]Homework, error)
+	GetHomeworkByClass(classID string, fromDate ...string) ([]Homework, error)
 	IsTeacherAssignedToClass(teacherID, classID string) (bool, error)
 	HasApprovedSubstitution(teacherID, classID, date string, hour int) (bool, error)
 }
@@ -228,12 +228,18 @@ func (r *repository) CreateHomework(homework *Homework) error {
 	).Scan(&homework.ID, &homework.TeacherName)
 }
 
-func (r *repository) GetHomeworkByClass(classID string) ([]Homework, error) {
+func (r *repository) GetHomeworkByClass(classID string, fromDate ...string) ([]Homework, error) {
 	query := `SELECT ch.id, ch.lesson_id, ch.class_id, ch.subject_id, ch.teacher_id, COALESCE(u.first_name || ' ' || u.last_name, '') AS teacher_name, ch.due_date, ch.description, COALESCE(ch.type, 'compito'), ch.created_at, ch.updated_at 
 	          FROM class_homeworks ch
 	          LEFT JOIN users u ON ch.teacher_id = u.id
-	          WHERE ch.class_id = $1 ORDER BY ch.due_date ASC`
-	rows, err := r.db.Query(query, classID)
+	          WHERE ch.class_id = $1`
+	args := []interface{}{classID}
+	if len(fromDate) > 0 && fromDate[0] != "" {
+		query += " AND ch.due_date >= $2::date"
+		args = append(args, fromDate[0])
+	}
+	query += " ORDER BY ch.due_date ASC"
+	rows, err := r.db.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}

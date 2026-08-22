@@ -6,7 +6,6 @@ import (
 	"net/url"
 	"os"
 	"strings"
-	"sync"
 	"time"
 
 	"registro-backend/pkg/logger"
@@ -22,24 +21,16 @@ const (
 	maxMessageSize = 8192
 )
 
-var (
-	allowedOriginsOnce sync.Once
-	allowedOriginsMap  map[string]bool
-)
-
 func allowedOrigins() map[string]bool {
-	allowedOriginsOnce.Do(func() {
-		raw := os.Getenv("ALLOWED_ORIGINS")
-		origins := make(map[string]bool)
-		for _, o := range strings.Split(raw, ",") {
-			o = strings.TrimSpace(o)
-			if o != "" {
-				origins[o] = true
-			}
+	raw := os.Getenv("ALLOWED_ORIGINS")
+	origins := make(map[string]bool)
+	for _, o := range strings.Split(raw, ",") {
+		o = strings.TrimSpace(o)
+		if o != "" {
+			origins[o] = true
 		}
-		allowedOriginsMap = origins
-	})
-	return allowedOriginsMap
+	}
+	return origins
 }
 
 var upgrader = websocket.Upgrader{
@@ -94,22 +85,22 @@ func (c *Client) readPump() {
 	const windowDuration = 10 * time.Second
 
 	for {
-		_, msg, err := c.Conn.ReadMessage()
-		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				logger.Log.Warnf("ws read error: %v", err)
-			}
-			break
-		}
-
 		now := time.Now()
 		if now.Sub(windowStart) > windowDuration {
 			windowStart = now
 			msgCount = 0
 		}
-		msgCount++
-		if msgCount > maxMsgsPerWindow {
+		if msgCount >= maxMsgsPerWindow {
 			logger.Log.Warnf("ws rate limit exceeded for user %s: closing connection", c.UserID)
+			break
+		}
+		msgCount++
+
+		_, msg, err := c.Conn.ReadMessage()
+		if err != nil {
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				logger.Log.Warnf("ws read error: %v", err)
+			}
 			break
 		}
 
@@ -162,11 +153,20 @@ func (c *Client) writePump() {
 				return
 			}
 			// Drain any additionally queued messages — each as its own frame.
-			n := len(c.Send)
-			for i := 0; i < n; i++ {
-				_ = c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
-				if err := c.writeSingleMessage(<-c.Send); err != nil {
-					return
+		drain:
+			for {
+				select {
+				case message, ok := <-c.Send:
+					if !ok {
+						_ = c.Conn.WriteMessage(websocket.CloseMessage, []byte{})
+						return
+					}
+					_ = c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
+					if err := c.writeSingleMessage(message); err != nil {
+						return
+					}
+				default:
+					break drain
 				}
 			}
 		case <-ticker.C:

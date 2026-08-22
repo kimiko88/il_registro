@@ -138,6 +138,24 @@ func (m *mockGradesRepoForScrutiny) GetWeightConfigs(schoolID, subjectID, classI
 	return []grades.GradeWeightConfig{}, nil
 }
 func (m *mockGradesRepoForScrutiny) UpdateTest(test *grades.ClassTest) error { return nil }
+func (m *mockGradesRepoForScrutiny) GetStudentClassAndSchoolInfo(ctx context.Context, studentID string) (string, string, string, string, error) {
+	return "", "", "", "", nil
+}
+func (m *mockGradesRepoForScrutiny) GetTeacherNamesByClass(ctx context.Context, classID string) (map[string]string, error) {
+	return nil, nil
+}
+func (m *mockGradesRepoForScrutiny) GetSubjectNamesMap(ctx context.Context, schoolID string) (map[string]string, error) {
+	return nil, nil
+}
+func (m *mockGradesRepoForScrutiny) GetScrutinyRecordSummary(ctx context.Context, studentID string, semester int) (float64, float64, bool, error) {
+	return 0, 0, false, nil
+}
+func (m *mockGradesRepoForScrutiny) GetStudentAbsenceCountForPeriod(ctx context.Context, studentID, startD, endD string) (int, error) {
+	return 0, nil
+}
+func (m *mockGradesRepoForScrutiny) GetClassSubjectAverage(ctx context.Context, classID, subjectID string, semester int, studentID string) (float64, error) {
+	return -1, nil
+}
 
 type mockScrutinyRepoForGrading struct{}
 

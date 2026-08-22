@@ -26,6 +26,11 @@ func (m *MockRepository) CreateUser(ctx context.Context, user *User) error {
 	return args.Error(0)
 }
 
+func (m *MockRepository) SchoolExists(ctx context.Context, schoolID string) (bool, error) {
+	args := m.Called(ctx, schoolID)
+	return args.Bool(0), args.Error(1)
+}
+
 func (m *MockRepository) GetPasswordHistory(ctx context.Context, userID string) ([]string, error) {
 	args := m.Called(ctx, userID)
 	if args.Get(0) == nil {
@@ -117,6 +122,11 @@ func (m *MockRepository) SaveTempMFASecret(ctx context.Context, userID, secret s
 
 func (m *MockRepository) ConfirmMFA(ctx context.Context, userID string) error {
 	args := m.Called(ctx, userID)
+	return args.Error(0)
+}
+
+func (m *MockRepository) ConfirmMFAAndSaveRecoveryCodesTx(ctx context.Context, userID string, codes []string) error {
+	args := m.Called(ctx, userID, codes)
 	return args.Error(0)
 }
 
@@ -227,7 +237,6 @@ func TestRegister(t *testing.T) {
 			Role:      "student",
 		}
 
-		mockRepo.On("GetUserByEmail", mock.Anything, req.Email).Return(nil, errors.New("not found")).Once()
 		mockRepo.On("CreateUser", mock.Anything, mock.MatchedBy(func(u *User) bool {
 			return u.Email == req.Email && u.FirstName == req.FirstName
 		})).Return(nil).Once()
@@ -250,8 +259,7 @@ func TestRegister(t *testing.T) {
 			Role:      "student",
 		}
 
-		existingUser := &User{Email: req.Email}
-		mockRepo.On("GetUserByEmail", mock.Anything, req.Email).Return(existingUser, nil).Once()
+		mockRepo.On("CreateUser", mock.Anything, mock.Anything).Return(ErrEmailAlreadyExists).Once()
 
 		user, err := s.Register(context.Background(), req)
 
@@ -329,6 +337,7 @@ func TestLogin(t *testing.T) {
 
 		mockRepo.On("GetRecentLoginAttempts", mock.Anything, req.Email, mock.Anything, mock.Anything).Return(0, nil).Once()
 		mockRepo.On("GetUserByEmail", mock.Anything, req.Email).Return(inactiveUser, nil).Once()
+		mockRepo.On("RecordLoginAttempt", mock.Anything, mock.Anything).Return(nil).Once()
 
 		resp, err := s.Login(context.Background(), req, "127.0.0.1", "test-agent")
 

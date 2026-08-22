@@ -25,8 +25,11 @@ type activeCacheEntry struct {
 type Middleware struct {
 	tokenManager *jwt.TokenManager
 	userRepo     users.Repository
-	activeCache  sync.Map
+	activeCache  map[string]activeCacheEntry
+	cacheMu      sync.RWMutex
 }
+
+const maxActiveCacheSize = 10000
 
 // NewMiddleware creates a new auth middleware.
 // userRepo must not be nil — it is required to verify that accounts are still
@@ -39,6 +42,7 @@ func NewMiddleware(tokenManager *jwt.TokenManager, userRepo users.Repository) *M
 	return &Middleware{
 		tokenManager: tokenManager,
 		userRepo:     userRepo,
+		activeCache:  make(map[string]activeCacheEntry),
 	}
 }
 
@@ -75,15 +79,17 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 		// Verify the account is still active in the DB with a short 10s TTL cache.
 		var isActive bool
 		var foundInCache bool
-		if val, ok := m.activeCache.Load(claims.UserID); ok {
-			entry := val.(activeCacheEntry)
-			if time.Now().Before(entry.expiresAt) {
-				isActive = entry.isActive
-				foundInCache = true
-			} else {
-				m.activeCache.Delete(claims.UserID)
+		m.cacheMu.RLock()
+		if m.activeCache != nil {
+			if entry, ok := m.activeCache[claims.UserID]; ok {
+				if time.Now().Before(entry.expiresAt) {
+					isActive = entry.isActive
+					foundInCache = true
+				}
 			}
 		}
+		m.cacheMu.RUnlock()
+
 		if !foundInCache {
 			var err error
 			isActive, err = m.userRepo.IsActive(c.Request.Context(), claims.UserID)
@@ -92,10 +98,26 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 				c.Abort()
 				return
 			}
-			m.activeCache.Store(claims.UserID, activeCacheEntry{
-				isActive:  isActive,
-				expiresAt: time.Now().Add(10 * time.Second),
-			})
+			m.cacheMu.Lock()
+			if m.activeCache == nil {
+				m.activeCache = make(map[string]activeCacheEntry)
+			}
+			// Cap activeCache size to 10,000 entries to prevent memory exhaustion from forged token bursts.
+			if len(m.activeCache) >= maxActiveCacheSize {
+				now := time.Now()
+				for k, v := range m.activeCache {
+					if now.After(v.expiresAt) {
+						delete(m.activeCache, k)
+					}
+				}
+			}
+			if len(m.activeCache) < maxActiveCacheSize {
+				m.activeCache[claims.UserID] = activeCacheEntry{
+					isActive:  isActive,
+					expiresAt: time.Now().Add(3 * time.Second),
+				}
+			}
+			m.cacheMu.Unlock()
 		}
 
 		if !isActive {
@@ -122,20 +144,23 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 
 // InvalidateUserActiveCache clears the cached active status for a user.
 func (m *Middleware) InvalidateUserActiveCache(userID string) {
-	m.activeCache.Delete(userID)
+	m.cacheMu.Lock()
+	defer m.cacheMu.Unlock()
+	if m.activeCache != nil {
+		delete(m.activeCache, userID)
+	}
 }
 
 // CleanupExpiredEntries iterates through activeCache and deletes entries past their expiration time.
 func (m *Middleware) CleanupExpiredEntries() {
 	now := time.Now()
-	m.activeCache.Range(func(key, value any) bool {
-		if entry, ok := value.(activeCacheEntry); ok {
-			if now.After(entry.expiresAt) {
-				m.activeCache.Delete(key)
-			}
+	m.cacheMu.Lock()
+	defer m.cacheMu.Unlock()
+	for key, entry := range m.activeCache {
+		if now.After(entry.expiresAt) {
+			delete(m.activeCache, key)
 		}
-		return true
-	})
+	}
 }
 
 // StartCacheCleaner launches a background goroutine to periodically clean up expired activeCache entries until context cancellation.
@@ -177,9 +202,42 @@ func (m *Middleware) AuthenticateWSTicket(store *wsticket.Store) gin.HandlerFunc
 			return
 		}
 
-		// Verify the account is still active in DB
-		isActive, err := m.userRepo.IsActive(c.Request.Context(), userID)
-		if err != nil || !isActive {
+		// Verify the account is still active in DB with short TTL cache
+		var isActive bool
+		var foundInCache bool
+		m.cacheMu.RLock()
+		if m.activeCache != nil {
+			if entry, ok := m.activeCache[userID]; ok {
+				if time.Now().Before(entry.expiresAt) {
+					isActive = entry.isActive
+					foundInCache = true
+				}
+			}
+		}
+		m.cacheMu.RUnlock()
+
+		if !foundInCache {
+			var err error
+			isActive, err = m.userRepo.IsActive(c.Request.Context(), userID)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "auth check failed"})
+				c.Abort()
+				return
+			}
+			m.cacheMu.Lock()
+			if m.activeCache == nil {
+				m.activeCache = make(map[string]activeCacheEntry)
+			}
+			if len(m.activeCache) < maxActiveCacheSize {
+				m.activeCache[userID] = activeCacheEntry{
+					isActive:  isActive,
+					expiresAt: time.Now().Add(3 * time.Second),
+				}
+			}
+			m.cacheMu.Unlock()
+		}
+
+		if !isActive {
 			c.JSON(http.StatusForbidden, ErrorResponse{Error: "account is disabled"})
 			c.Abort()
 			return
@@ -248,6 +306,9 @@ func parseAcceptLanguage(raw string) string {
 	first := strings.Split(raw, ",")[0]
 	first = strings.TrimSpace(strings.Split(first, ";")[0])
 	first = strings.ReplaceAll(first, "_", "-")
+	if len(first) > 35 {
+		first = first[:35]
+	}
 
 	if bcp47Regex.MatchString(first) {
 		return first

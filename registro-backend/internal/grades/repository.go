@@ -1,8 +1,10 @@
 package grades
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
+	"math"
 	"strings"
 )
 
@@ -75,6 +77,14 @@ type Repository interface {
 	GetWeightConfigs(schoolID, subjectID, classID string) ([]GradeWeightConfig, error)
 	UpsertWeightConfig(cfg *GradeWeightConfig) (*GradeWeightConfig, error)
 	DeleteWeightConfig(id string) error
+
+	// Semester report and trend helpers
+	GetStudentClassAndSchoolInfo(ctx context.Context, studentID string) (studentName, className, classID, schoolID string, err error)
+	GetTeacherNamesByClass(ctx context.Context, classID string) (map[string]string, error)
+	GetSubjectNamesMap(ctx context.Context, schoolID string) (map[string]string, error)
+	GetScrutinyRecordSummary(ctx context.Context, studentID string, semester int) (behaviorGrade, scholasticCredit float64, found bool, err error)
+	GetStudentAbsenceCountForPeriod(ctx context.Context, studentID, startD, endD string) (int, error)
+	GetClassSubjectAverage(ctx context.Context, classID, subjectID string, semester int, studentID string) (float64, error)
 }
 
 type repository struct {
@@ -791,4 +801,131 @@ func (r *repository) DeleteWeightConfig(id string) error {
 		return fmt.Errorf("weight config not found")
 	}
 	return nil
+}
+
+func (r *repository) GetStudentClassAndSchoolInfo(ctx context.Context, studentID string) (studentName, className, classID, schoolID string, err error) {
+	err = r.db.QueryRowContext(
+		ctx,
+		`SELECT u.first_name || ' ' || u.last_name, COALESCE(c.name, 'N/D'), COALESCE(c.id, ''), COALESCE(c.school_id::text, COALESCE(u.school_id::text, ''))
+		 FROM users u
+		 LEFT JOIN class_students cs ON u.id = cs.student_id
+		 LEFT JOIN classes c ON cs.class_id = c.id
+		 WHERE u.id = $1
+		 ORDER BY cs.created_at DESC LIMIT 1`, studentID,
+	).Scan(&studentName, &className, &classID, &schoolID)
+	return
+}
+
+func (r *repository) GetTeacherNamesByClass(ctx context.Context, classID string) (map[string]string, error) {
+	teacherMap := make(map[string]string)
+	tRows, err := r.db.QueryContext(ctx,
+		`SELECT DISTINCT ON (cs.subject_id) cs.subject_id, COALESCE(u.first_name || ' ' || u.last_name, '')
+		 FROM class_subjects cs
+		 LEFT JOIN teachers t ON (NULLIF(cs.teacher_id::text, '') = t.id::text OR NULLIF(cs.teacher_id::text, '') = t.user_id::text)
+		 LEFT JOIN users u ON t.user_id = u.id OR cs.teacher_id = u.id
+		 WHERE cs.class_id::text = $1 AND u.first_name IS NOT NULL
+		 ORDER BY cs.subject_id, cs.created_at DESC`, classID,
+	)
+	if err != nil {
+		return teacherMap, err
+	}
+	defer tRows.Close()
+	for tRows.Next() {
+		var subID, tName string
+		if scanErr := tRows.Scan(&subID, &tName); scanErr == nil {
+			teacherMap[subID] = tName
+		}
+	}
+	return teacherMap, tRows.Err()
+}
+
+func (r *repository) GetSubjectNamesMap(ctx context.Context, schoolID string) (map[string]string, error) {
+	subjectNameMap := make(map[string]string)
+	var sRows *sql.Rows
+	var err error
+	if schoolID != "" {
+		sRows, err = r.db.QueryContext(ctx, `SELECT id::text, name FROM subjects WHERE school_id::text = $1`, schoolID)
+	} else {
+		sRows, err = r.db.QueryContext(ctx, `SELECT id::text, name FROM subjects`)
+	}
+	if err != nil {
+		return subjectNameMap, err
+	}
+	defer sRows.Close()
+	for sRows.Next() {
+		var id, name string
+		if scanErr := sRows.Scan(&id, &name); scanErr == nil {
+			subjectNameMap[id] = name
+		}
+	}
+	return subjectNameMap, sRows.Err()
+}
+
+func (r *repository) GetScrutinyRecordSummary(ctx context.Context, studentID string, semester int) (behaviorGrade, scholasticCredit float64, found bool, err error) {
+	var bg, sc sql.NullFloat64
+	err = r.db.QueryRowContext(
+		ctx,
+		`SELECT conduct_grade, scholastic_credit FROM scrutiny_records WHERE student_id = $1 AND semester = $2`, studentID, semester,
+	).Scan(&bg, &sc)
+	if err == nil {
+		if bg.Valid {
+			behaviorGrade = bg.Float64
+		}
+		if sc.Valid {
+			scholasticCredit = sc.Float64
+		}
+		found = true
+		return
+	}
+
+	err = r.db.QueryRowContext(
+		ctx,
+		`SELECT behavior_grade, scholastic_credit FROM semester_reports WHERE student_id = $1 AND semester = $2`, studentID, semester,
+	).Scan(&bg, &sc)
+	if err == nil {
+		if bg.Valid {
+			behaviorGrade = bg.Float64
+		}
+		if sc.Valid {
+			scholasticCredit = sc.Float64
+		}
+		found = true
+		return
+	}
+	err = nil
+	return
+}
+
+func (r *repository) GetStudentAbsenceCountForPeriod(ctx context.Context, studentID, startD, endD string) (int, error) {
+	var count int
+	err := r.db.QueryRowContext(
+		ctx,
+		`SELECT COUNT(DISTINCT date::date) FROM attendance
+		 WHERE student_id = $1
+		   AND (status = 'Absent' OR status = 'absent')
+		   AND date::date >= $2::date
+		   AND date::date <= $3::date`,
+		studentID, startD, endD,
+	).Scan(&count)
+	return count, err
+}
+
+func (r *repository) GetClassSubjectAverage(ctx context.Context, classID, subjectID string, semester int, studentID string) (float64, error) {
+	var avgVal sql.NullFloat64
+	err := r.db.QueryRowContext(ctx,
+		`SELECT AVG(g.grade_value)
+		 FROM grades g
+		 JOIN class_students cs ON g.student_id = cs.student_id
+		 WHERE cs.class_id = $1 AND g.subject_id = $2 AND g.semester = $3
+		   AND (g.school_id = (SELECT school_id FROM users WHERE id = $4 LIMIT 1) OR g.school_id IS NULL OR g.school_id = '')
+		   AND g.is_published = true AND g.deleted_at IS NULL`,
+		classID, subjectID, semester, studentID,
+	).Scan(&avgVal)
+	if err != nil {
+		return -1, err
+	}
+	if !avgVal.Valid {
+		return -1, nil
+	}
+	return math.Round(avgVal.Float64*100) / 100, nil
 }

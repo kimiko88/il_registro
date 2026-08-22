@@ -14,10 +14,10 @@ func TestWS_AllowedOriginsCaching(t *testing.T) {
 	origins1 := allowedOrigins()
 	assert.True(t, origins1["https://app.scuola.it"])
 
-	// Mutate env variable; cached Once map MUST preserve first value
-	os.Setenv("ALLOWED_ORIGINS", "https://hacked.com")
+	// Mutate env variable; dynamic evaluation updates allowed origins
+	os.Setenv("ALLOWED_ORIGINS", "https://new-domain.com")
 
 	origins2 := allowedOrigins()
-	assert.True(t, origins2["https://app.scuola.it"])
-	assert.False(t, origins2["https://hacked.com"])
+	assert.False(t, origins2["https://app.scuola.it"])
+	assert.True(t, origins2["https://new-domain.com"])
 }

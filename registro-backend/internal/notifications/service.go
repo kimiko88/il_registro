@@ -108,9 +108,6 @@ func (s *serviceImpl) CreateInAppNotification(ctx context.Context, userID, title
 	if err := s.repo.CreateDBNotification(ctx, n); err != nil {
 		return nil, err
 	}
-	if n.ID == "" {
-		n.ID = fmt.Sprintf("notif-%d", time.Now().UnixNano())
-	}
 	if n.CreatedAt.IsZero() {
 		n.CreatedAt = time.Now()
 	}

@@ -22,6 +22,10 @@ func (m *MockAuthRepository) CreateUser(ctx context.Context, user *auth.User) er
 	args := m.Called(ctx, user)
 	return args.Error(0)
 }
+func (m *MockAuthRepository) SchoolExists(ctx context.Context, schoolID string) (bool, error) {
+	args := m.Called(ctx, schoolID)
+	return args.Bool(0), args.Error(1)
+}
 func (m *MockAuthRepository) GetPasswordHistory(ctx context.Context, userID string) ([]string, error) {
 	args := m.Called(ctx, userID)
 	if args.Get(0) == nil {
@@ -101,6 +105,15 @@ func (m *MockAuthRepository) EnableMFA(ctx context.Context, userID, secret strin
 func (m *MockAuthRepository) ConfirmMFA(ctx context.Context, userID string) error {
 	args := m.Called(ctx, userID)
 	return args.Error(0)
+}
+func (m *MockAuthRepository) ConfirmMFAAndSaveRecoveryCodesTx(ctx context.Context, userID string, codes []string) error {
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "ConfirmMFAAndSaveRecoveryCodesTx" {
+			args := m.Called(ctx, userID, codes)
+			return args.Error(0)
+		}
+	}
+	return nil
 }
 func (m *MockAuthRepository) DisableMFA(ctx context.Context, userID string) error {
 	args := m.Called(ctx, userID)
@@ -491,6 +504,72 @@ func (m *MockGradesRepository) UpsertWeightConfig(cfg *grades.GradeWeightConfig)
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*grades.GradeWeightConfig), args.Error(1)
+}
+
+func (m *MockGradesRepository) GetStudentClassAndSchoolInfo(ctx context.Context, studentID string) (string, string, string, string, error) {
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "GetStudentClassAndSchoolInfo" {
+			args := m.Called(ctx, studentID)
+			return args.String(0), args.String(1), args.String(2), args.String(3), args.Error(4)
+		}
+	}
+	return "", "", "", "", nil
+}
+
+func (m *MockGradesRepository) GetTeacherNamesByClass(ctx context.Context, classID string) (map[string]string, error) {
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "GetTeacherNamesByClass" {
+			args := m.Called(ctx, classID)
+			if args.Get(0) == nil {
+				return nil, args.Error(1)
+			}
+			return args.Get(0).(map[string]string), args.Error(1)
+		}
+	}
+	return nil, nil
+}
+
+func (m *MockGradesRepository) GetSubjectNamesMap(ctx context.Context, schoolID string) (map[string]string, error) {
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "GetSubjectNamesMap" {
+			args := m.Called(ctx, schoolID)
+			if args.Get(0) == nil {
+				return nil, args.Error(1)
+			}
+			return args.Get(0).(map[string]string), args.Error(1)
+		}
+	}
+	return nil, nil
+}
+
+func (m *MockGradesRepository) GetScrutinyRecordSummary(ctx context.Context, studentID string, semester int) (float64, float64, bool, error) {
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "GetScrutinyRecordSummary" {
+			args := m.Called(ctx, studentID, semester)
+			return args.Get(0).(float64), args.Get(1).(float64), args.Bool(2), args.Error(3)
+		}
+	}
+	return 0, 0, false, nil
+}
+
+func (m *MockGradesRepository) GetStudentAbsenceCountForPeriod(ctx context.Context, studentID, startD, endD string) (int, error) {
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "GetStudentAbsenceCountForPeriod" {
+			args := m.Called(ctx, studentID, startD, endD)
+			return args.Int(0), args.Error(1)
+		}
+	}
+	return 0, nil
+}
+
+func (m *MockGradesRepository) GetClassSubjectAverage(ctx context.Context, classID, subjectID string, semester int, studentID string) (float64, error) {
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "GetClassSubjectAverage" {
+			args := m.Called(ctx, classID, subjectID, semester, studentID)
+			return args.Get(0).(float64), args.Error(1)
+		}
+	}
+	return -1, nil
 }
 
 type MockAnalyticsService struct {

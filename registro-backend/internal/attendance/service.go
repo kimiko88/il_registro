@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"sort"
 	"time"
 
@@ -13,7 +14,7 @@ import (
 
 // EventBroadcaster defines the interface for real-time notifications
 type EventBroadcaster interface {
-	BroadcastToUser(userID string, msgType string, payload interface{})
+	BroadcastToUser(userID string, schoolID string, msgType string, payload interface{})
 	BroadcastToSchool(schoolID string, msgType string, payload interface{})
 }
 
@@ -80,7 +81,7 @@ func NewService(repo Repository, uRepo users.Repository, b EventBroadcaster, cal
 	}
 }
 
-func (s *service) safeBroadcast(userID, event string, payload interface{}) {
+func (s *service) safeBroadcast(userID, schoolID, event string, payload interface{}) {
 	if s.broadcaster == nil || userID == "" {
 		return
 	}
@@ -89,7 +90,7 @@ func (s *service) safeBroadcast(userID, event string, payload interface{}) {
 			logger.Log.Warnf("safeBroadcast: recovered from panic in broadcaster: %v", r)
 		}
 	}()
-	s.broadcaster.BroadcastToUser(userID, event, payload)
+	s.broadcaster.BroadcastToUser(userID, schoolID, event, payload)
 }
 
 func (s *service) MarkAttendance(ctx context.Context, teacherID, schoolID string, req CreateAttendanceRequest) error {
@@ -158,7 +159,7 @@ func (s *service) MarkAttendance(ctx context.Context, teacherID, schoolID string
 		return err
 	}
 
-	s.safeBroadcast(att.StudentID, "ATTENDANCE_"+string(att.Status), s.mapSingleResponse(*att))
+	s.safeBroadcast(att.StudentID, schoolID, "ATTENDANCE_"+string(att.Status), s.mapSingleResponse(*att))
 
 	return nil
 }
@@ -231,10 +232,7 @@ func (s *service) MarkBulk(ctx context.Context, teacherID, schoolID string, req 
 		seen[key] = true
 
 		if !validMembers[r.StudentID] {
-			isMember, err := s.repo.IsStudentInClass(ctx, r.StudentID, req.ClassID)
-			if err != nil || !isMember {
-				return fmt.Errorf("forbidden: lo studente %s non appartiene alla classe indicata", r.StudentID)
-			}
+			return fmt.Errorf("forbidden: lo studente %s non appartiene alla classe indicata", r.StudentID)
 		}
 
 		att := &Attendance{
@@ -267,7 +265,7 @@ func (s *service) MarkBulk(ctx context.Context, teacherID, schoolID string, req 
 	}
 
 	for _, att := range atts {
-		s.safeBroadcast(att.StudentID, "ATTENDANCE_"+string(att.Status), s.mapSingleResponse(*att))
+		s.safeBroadcast(att.StudentID, schoolID, "ATTENDANCE_"+string(att.Status), s.mapSingleResponse(*att))
 	}
 
 	return nil
@@ -443,10 +441,21 @@ func (s *service) GetStudentAttendance(ctx context.Context, actorID, actorRole, 
 			if err != nil || teacherUser == nil || teacherUser.SchoolID == nil || *teacherUser.SchoolID != schoolID {
 				return nil, fmt.Errorf("forbidden: il docente non appartiene alla stessa scuola dello studente")
 			}
-		}
-		st, err := s.userRepo.GetByID(ctx, studentID)
-		if err != nil || st == nil || st.SchoolID == nil || *st.SchoolID != schoolID {
-			return nil, fmt.Errorf("forbidden: lo studente appartiene ad un'altra scuola o non è stato trovato")
+			st, err := s.userRepo.GetByID(ctx, studentID)
+			if err != nil || st == nil || st.SchoolID == nil || *st.SchoolID != schoolID {
+				return nil, fmt.Errorf("forbidden: lo studente appartiene ad un'altra scuola o non è stato trovato")
+			}
+			if st.ClassID != nil && *st.ClassID != "" {
+				isAssigned, err := s.repo.IsTeacherAssignedToClass(ctx, actorID, *st.ClassID)
+				if err != nil || !isAssigned {
+					return nil, fmt.Errorf("forbidden: docente non assegnato alla classe dello studente")
+				}
+			}
+		} else {
+			st, err := s.userRepo.GetByID(ctx, studentID)
+			if err != nil || st == nil || st.SchoolID == nil || *st.SchoolID != schoolID {
+				return nil, fmt.Errorf("forbidden: lo studente appartiene ad un'altra scuola o non è stato trovato")
+			}
 		}
 	}
 
@@ -498,6 +507,16 @@ func (s *service) RequestJustification(ctx context.Context, parentID string, req
 	end, err := time.Parse("2006-01-02", req.EndDate)
 	if err != nil {
 		return fmt.Errorf("end_date non valida '%s': usa il formato YYYY-MM-DD", req.EndDate)
+	}
+
+	loc, locErr := time.LoadLocation("Europe/Rome")
+	if locErr != nil {
+		loc = time.Local
+	}
+	now := time.Now().In(loc)
+	todayEnd := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 999999999, loc)
+	if start.After(todayEnd) {
+		return fmt.Errorf("impossibile richiedere una giustificazione per una data futura (%s)", req.StartDate)
 	}
 
 	if end.Before(start) {
@@ -584,10 +603,12 @@ func (s *service) ProcessJustification(ctx context.Context, teacherID, justifica
 		"reason": j.Reason,
 	}
 	if j.ParentID != "" {
-		s.safeBroadcast(j.ParentID, "justification_processed", payload)
-	}
-	if j.StudentID != "" {
-		s.safeBroadcast(j.StudentID, "justification_processed", payload)
+		schoolID := ""
+		if studentUser != nil && studentUser.SchoolID != nil {
+			schoolID = *studentUser.SchoolID
+		}
+		s.safeBroadcast(j.ParentID, schoolID, "justification_processed", payload)
+		s.safeBroadcast(j.StudentID, schoolID, "justification_processed", payload)
 	}
 
 	return nil
@@ -730,11 +751,7 @@ func (s *service) GetStudentSummary(ctx context.Context, actorID, actorRole, sch
 		}
 	}
 	if totalDays <= 0 {
-		for d := startOfSchoolYear; !d.After(now); d = d.AddDate(0, 0, 1) {
-			if d.Weekday() != time.Saturday && d.Weekday() != time.Sunday {
-				totalDays++
-			}
-		}
+		totalDays = countWeekdays(startOfSchoolYear, now)
 		if totalDays <= 0 {
 			totalDays = 1
 		}
@@ -833,21 +850,24 @@ func (s *service) GetChildAttendanceTrends(ctx context.Context, parentID, studen
 	}
 
 	monthlyMap := make(map[string]*MonthlyTrend)
-	monthlyTotalMap := make(map[string]int)
-	monthlyPresentMap := make(map[string]int)
+	monthlyDaysMap := make(map[string]map[string]bool)
+	monthlyPresentDaysMap := make(map[string]map[string]bool)
 	var monthKeys []string
 
 	for _, a := range atts {
 		mKey := a.Date.Format("2006-01")
+		dKey := a.Date.Format("2006-01-02")
 		tr, exists := monthlyMap[mKey]
 		if !exists {
 			tr = &MonthlyTrend{Month: mKey}
 			monthlyMap[mKey] = tr
 			monthKeys = append(monthKeys, mKey)
+			monthlyDaysMap[mKey] = make(map[string]bool)
+			monthlyPresentDaysMap[mKey] = make(map[string]bool)
 		}
-		monthlyTotalMap[mKey]++
+		monthlyDaysMap[mKey][dKey] = true
 		if a.Status == StatusPresent || a.Status == StatusLate || a.Status == StatusEarlyExit {
-			monthlyPresentMap[mKey]++
+			monthlyPresentDaysMap[mKey][dKey] = true
 		}
 		switch a.Status {
 		case StatusAbsent:
@@ -867,13 +887,13 @@ func (s *service) GetChildAttendanceTrends(ctx context.Context, parentID, studen
 	}
 	for _, k := range monthKeys {
 		tr := monthlyMap[k]
-		totalEntries := monthlyTotalMap[k]
-		presentCount := monthlyPresentMap[k]
+		totalDays := len(monthlyDaysMap[k])
+		presentDays := len(monthlyPresentDaysMap[k])
 		rate := 100.0
-		if totalEntries > 0 {
-			rate = (float64(presentCount) / float64(totalEntries)) * 100.0
+		if totalDays > 0 {
+			rate = (float64(presentDays) / float64(totalDays)) * 100.0
 		}
-		tr.PresenceRate = rate
+		tr.PresenceRate = math.Round(rate*100) / 100
 		resp.Trends = append(resp.Trends, *tr)
 	}
 
@@ -988,3 +1008,21 @@ func (s *service) GetChildMonthlyBreakdown(ctx context.Context, parentID, studen
 	}
 	return s.GetMonthlyBreakdown(ctx, parentID, "parent", schoolID, studentID, schoolYear)
 }
+
+func countWeekdays(start, end time.Time) int {
+	if end.Before(start) {
+		return 0
+	}
+	days := int(end.Sub(start).Hours()/24) + 1
+	weeks := days / 7
+	weekdays := weeks * 5
+	rem := days % 7
+	for i := 0; i < rem; i++ {
+		d := start.AddDate(0, 0, weeks*7+i)
+		if d.Weekday() != time.Saturday && d.Weekday() != time.Sunday {
+			weekdays++
+		}
+	}
+	return weekdays
+}
+

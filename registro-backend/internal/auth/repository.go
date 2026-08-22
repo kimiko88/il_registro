@@ -25,6 +25,7 @@ type Repository interface {
 	GetUserByID(ctx context.Context, id string) (*User, error)
 	UpdateUser(ctx context.Context, user *User) error
 	UpdateLastLogin(ctx context.Context, userID string) error
+	SchoolExists(ctx context.Context, schoolID string) (bool, error)
 
 	// MFA operations
 	EnableMFA(ctx context.Context, userID, secret string) error
@@ -32,6 +33,7 @@ type Repository interface {
 	GetMFASecret(ctx context.Context, userID string) (string, error)
 	SaveTempMFASecret(ctx context.Context, userID, secret string) error
 	ConfirmMFA(ctx context.Context, userID string) error
+	ConfirmMFAAndSaveRecoveryCodesTx(ctx context.Context, userID string, hashedCodes []string) error
 
 	// Recovery codes
 	// NOTE: codes passed to CreateRecoveryCodes must already be bcrypt-hashed.
@@ -202,9 +204,29 @@ func (r *repository) ConfirmMFA(ctx context.Context, userID string) error {
 	return err
 }
 
-// CreateRecoveryCodes stores pre-hashed recovery codes.
-// Callers (service layer) are responsible for hashing codes with bcrypt before
-// passing them here — raw codes must never be persisted.
+// ConfirmMFAAndSaveRecoveryCodesTx enables MFA and stores pre-hashed recovery codes atomically in a single transaction.
+func (r *repository) ConfirmMFAAndSaveRecoveryCodesTx(ctx context.Context, userID string, hashedCodes []string) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	queryMFA := `UPDATE users SET mfa_enabled = true WHERE id = $1 AND deleted_at IS NULL`
+	if _, err := tx.ExecContext(ctx, queryMFA, userID); err != nil {
+		return err
+	}
+
+	queryCode := `INSERT INTO mfa_recovery_codes (id, user_id, code, used, created_at) VALUES ($1, $2, $3, false, $4)`
+	for _, code := range hashedCodes {
+		if _, err := tx.ExecContext(ctx, queryCode, uuid.New().String(), userID, code, time.Now()); err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit()
+}
+
 func (r *repository) CreateRecoveryCodes(ctx context.Context, userID string, hashedCodes []string) error {
 	query := `INSERT INTO mfa_recovery_codes (id, user_id, code, used, created_at) VALUES ($1, $2, $3, false, $4)`
 	tx, err := r.db.BeginTx(ctx, nil)
@@ -214,8 +236,7 @@ func (r *repository) CreateRecoveryCodes(ctx context.Context, userID string, has
 	defer func() { _ = tx.Rollback() }()
 
 	for _, code := range hashedCodes {
-		_, err := tx.ExecContext(ctx, query, uuid.New().String(), userID, code, time.Now())
-		if err != nil {
+		if _, err := tx.ExecContext(ctx, query, uuid.New().String(), userID, code, time.Now()); err != nil {
 			return err
 		}
 	}
@@ -365,7 +386,7 @@ func (r *repository) GetPasswordResetToken(ctx context.Context, token string) (*
 	query := `
 		SELECT id, user_id, token, expires_at, used, created_at
 		FROM password_reset_tokens
-		WHERE token = $1
+		WHERE token = $1 AND used = false AND expires_at > NOW()
 	`
 	prt := &PasswordResetToken{}
 	hashed := hashToken(token)
@@ -463,7 +484,7 @@ func (r *repository) GetRecentLoginAttempts(ctx context.Context, email, ipAddres
 	query := `
 		SELECT COUNT(*) 
 		FROM login_attempts
-		WHERE email = $1 AND ip_address = $2 AND success = false AND attempted_at > $3
+		WHERE LOWER(email) = LOWER($1) AND ip_address = $2 AND success = false AND attempted_at > $3
 	`
 	var count int
 	err := r.db.QueryRowContext(ctx, query, email, ipAddress, since).Scan(&count)
@@ -476,7 +497,7 @@ func (r *repository) GetRecentLoginAttemptsByEmail(ctx context.Context, email st
 	query := `
 		SELECT COUNT(*)
 		FROM login_attempts
-		WHERE email = $1 AND success = false AND attempted_at > $2
+		WHERE LOWER(email) = LOWER($1) AND success = false AND attempted_at > $2
 	`
 	var count int
 	err := r.db.QueryRowContext(ctx, query, email, since).Scan(&count)
@@ -559,4 +580,14 @@ func (r *repository) ChangePasswordTx(ctx context.Context, userID, passwordHash 
 	_, _ = tx.ExecContext(ctx, pruneQuery, userID)
 
 	return tx.Commit()
+}
+
+func (r *repository) SchoolExists(ctx context.Context, schoolID string) (bool, error) {
+	if schoolID == "" {
+		return false, nil
+	}
+	var exists bool
+	query := `SELECT EXISTS(SELECT 1 FROM schools WHERE id = $1::uuid)`
+	err := r.db.QueryRowContext(ctx, query, schoolID).Scan(&exists)
+	return exists, err
 }

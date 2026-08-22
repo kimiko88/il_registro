@@ -88,7 +88,7 @@ func (m *mockLessonsService) DeleteHomework(teacherID, role, id string) error {
 	return m.Called(teacherID, role, id).Error(0)
 }
 
-func (m *mockLessonsService) GetHomeworks(classID string) ([]HomeworkResponse, error) {
+func (m *mockLessonsService) GetHomeworks(classID string, fromDate ...string) ([]HomeworkResponse, error) {
 	args := m.Called(classID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)

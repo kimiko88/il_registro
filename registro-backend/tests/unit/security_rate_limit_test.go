@@ -20,16 +20,14 @@ func TestSecurity_AuthRateLimiter(t *testing.T) {
 			c.JSON(http.StatusOK, gin.H{"status": "ok"})
 		})
 
-		// Perform 5 allowed requests
-		for i := 0; i < 5; i++ {
-			req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/login", nil)
-			req.RemoteAddr = "192.168.1.50:12345"
-			w := httptest.NewRecorder()
-			r.ServeHTTP(w, req)
-			assert.Equal(t, http.StatusOK, w.Code)
-		}
+		// 1st request allowed
+		req1 := httptest.NewRequest(http.MethodPost, "/api/v1/auth/login", nil)
+		req1.RemoteAddr = "192.168.1.50:12345"
+		w1 := httptest.NewRecorder()
+		r.ServeHTTP(w1, req1)
+		assert.Equal(t, http.StatusOK, w1.Code)
 
-		// 6th request from same IP should be blocked with 429
+		// Immediate 2nd request from same IP should be blocked with 429
 		reqBlocked := httptest.NewRequest(http.MethodPost, "/api/v1/auth/login", nil)
 		reqBlocked.RemoteAddr = "192.168.1.50:12345"
 		wBlocked := httptest.NewRecorder()
@@ -47,12 +45,11 @@ func TestSecurity_AuthRateLimiter(t *testing.T) {
 		})
 
 		// 1st IP exhausts burst
-		for i := 0; i < 5; i++ {
-			req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/login", nil)
-			req.RemoteAddr = "10.0.0.1:12345"
-			w := httptest.NewRecorder()
-			r.ServeHTTP(w, req)
-		}
+		req1 := httptest.NewRequest(http.MethodPost, "/api/v1/auth/login", nil)
+		req1.RemoteAddr = "10.0.0.1:12345"
+		w1 := httptest.NewRecorder()
+		r.ServeHTTP(w1, req1)
+		assert.Equal(t, http.StatusOK, w1.Code)
 
 		// 2nd IP should still be allowed
 		req2 := httptest.NewRequest(http.MethodPost, "/api/v1/auth/login", nil)

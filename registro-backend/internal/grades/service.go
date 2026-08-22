@@ -22,7 +22,7 @@ var (
 
 // EventBroadcaster defines the interface for real-time notifications
 type EventBroadcaster interface {
-	BroadcastToUser(userID string, msgType string, payload interface{})
+	BroadcastToUser(userID string, schoolID string, msgType string, payload interface{})
 	BroadcastToSchool(schoolID string, msgType string, payload interface{})
 }
 
@@ -106,7 +106,7 @@ func (s *service) checkGradeAccessPermissions(ctx context.Context, actorID strin
 			return ErrNotGuardian
 		}
 	}
-	if actorRole == "teacher" && s.validator != nil {
+	if (actorRole == "teacher" || actorRole == "coordinator") && s.validator != nil {
 		isAssigned, err := s.validator.IsTeacherAssignedToStudent(ctx, actorID, studentID)
 		if err != nil {
 			return err
@@ -223,8 +223,6 @@ func (s *service) GetClassGrades(ctx context.Context, actorID string, actorRole 
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch class students: %w", err)
 	}
-	addedStudents := make(map[string]bool)
-
 	for _, u := range studentUsers {
 		sID := u.StudentID
 		gList := studentMap[sID]
@@ -239,7 +237,6 @@ func (s *service) GetClassGrades(ctx context.Context, actorID string, actorRole 
 			AvgSemester2: avg2,
 			Grades:       gList,
 		})
-		addedStudents[sID] = true
 	}
 
 	sort.Slice(resp.Students, func(i, j int) bool {
@@ -249,12 +246,10 @@ func (s *service) GetClassGrades(ctx context.Context, actorID string, actorRole 
 	return resp, nil
 }
 
-// calcSemesterAverages computes per-semester unweighted averages from a grade list.
-// FIX: grades with an empty GradeCategory are now skipped; only explicitly
-// summative grades contribute to the semester average shown in the class panel.
+// calcSemesterAverages computes per-semester weighted averages from a grade list.
 func calcSemesterAverages(grades []GradeResponse) (avg1, avg2 float64) {
-	var sum1, sum2 float64
-	var count1, count2 int
+	var weightedSum1, totalWeight1 float64
+	var weightedSum2, totalWeight2 float64
 	for _, g := range grades {
 		// Skip non-summative categories (including empty category which was
 		// previously let through and polluted averages with formative grades).
@@ -262,20 +257,24 @@ func calcSemesterAverages(grades []GradeResponse) (avg1, avg2 float64) {
 			continue
 		}
 		if g.GradeValue > 0 {
+			w := g.Weight
+			if w <= 0 {
+				w = 1.0
+			}
 			if g.Semester == 1 {
-				sum1 += g.GradeValue
-				count1++
+				weightedSum1 += g.GradeValue * w
+				totalWeight1 += w
 			} else {
-				sum2 += g.GradeValue
-				count2++
+				weightedSum2 += g.GradeValue * w
+				totalWeight2 += w
 			}
 		}
 	}
-	if count1 > 0 {
-		avg1 = sum1 / float64(count1)
+	if totalWeight1 > 0 {
+		avg1 = math.Round((weightedSum1/totalWeight1)*100) / 100
 	}
-	if count2 > 0 {
-		avg2 = sum2 / float64(count2)
+	if totalWeight2 > 0 {
+		avg2 = math.Round((weightedSum2/totalWeight2)*100) / 100
 	}
 	return
 }
@@ -420,7 +419,7 @@ func (s *service) AddGrade(ctx context.Context, teacherID string, req CreateGrad
 
 	resp := s.mapSingleResponse(*grade)
 	if s.broadcaster != nil {
-		s.broadcaster.BroadcastToUser(grade.StudentID, "GRADE_ADDED", resp)
+		s.broadcaster.BroadcastToUser(grade.StudentID, schoolID, "GRADE_ADDED", resp)
 	}
 
 	return &resp, nil
@@ -446,11 +445,13 @@ func (s *service) BatchCreateGrades(teacherID, actorRole, schoolID string, grade
 		if g.EvaluationType != nil {
 			evalTypeStr = string(*g.EvaluationType)
 		}
-		key := g.ID
-		if key == "" && g.TestID != nil && *g.TestID != "" {
-			key = fmt.Sprintf("%s_%s_%s_%s", g.StudentID, g.SubjectID, *g.TestID, g.Date.Format("2006-01-02"))
-		} else if key == "" {
-			key = fmt.Sprintf("%s_%s_%s_%s_%s_%.2f_%s", g.StudentID, g.SubjectID, g.Date.Format("2006-01-02"), g.GradeType, evalTypeStr, g.GradeValue, g.Description)
+		testIDStr := ""
+		if g.TestID != nil {
+			testIDStr = *g.TestID
+		}
+		key := fmt.Sprintf("%s_%s_%s_%s_%s_%s_%.2f_%s", g.StudentID, g.SubjectID, testIDStr, g.Date.Format("2006-01-02"), g.GradeType, evalTypeStr, g.GradeValue, g.Description)
+		if g.ID != "" {
+			key = g.ID + "_" + key
 		}
 		if seen[key] {
 			continue
@@ -518,6 +519,11 @@ func (s *service) Export(teacherID, schoolID string, filter GradeFilter, format 
 		filter.TeacherID = teacherProfileID
 	} else {
 		filter.TeacherID = teacherID
+	}
+	if schoolID == "" && s.userRepo != nil {
+		if tUser, uErr := s.userRepo.GetByID(context.Background(), teacherID); uErr == nil && tUser != nil && tUser.SchoolID != nil {
+			schoolID = *tUser.SchoolID
+		}
 	}
 	if schoolID != "" {
 		filter.SchoolID = schoolID
@@ -838,8 +844,18 @@ func (s *service) GetMyAverages(ctx context.Context, studentID string) (*Student
 		}
 
 		overall := 0.0
-		if totalSub > 0 {
-			overall = math.Round((totalSum/float64(totalSub))*100) / 100
+		var totalWeightedSum float64
+		var totalWeight float64
+		for _, g := range gs {
+			w := g.Weight
+			if w <= 0 {
+				w = 1.0
+			}
+			totalWeightedSum += g.GradeValue * w
+			totalWeight += w
+		}
+		if totalWeight > 0 {
+			overall = math.Round((totalWeightedSum/totalWeight)*100) / 100
 		}
 
 		cond := "OTTIMO"
@@ -916,21 +932,16 @@ func (s *service) GetMyTrend(ctx context.Context, actorID string, actorRole stri
 	if len(relevant) > 0 && relevant[len(relevant)-1].Semester > 0 {
 		currentSem = int(relevant[len(relevant)-1].Semester)
 	}
-	if s.validator != nil && s.validator.db != nil {
-		if err := s.validator.db.QueryRowContext(ctx,
-			`SELECT class_id FROM class_students WHERE student_id = $1 ORDER BY created_at DESC LIMIT 1`, studentID,
-		).Scan(&classID); err == nil && classID != "" {
-			var avgVal sql.NullFloat64
-			if err := s.validator.db.QueryRowContext(ctx,
-				`SELECT AVG(g.grade_value)
-				 FROM grades g
-				 JOIN class_students cs ON g.student_id = cs.student_id
-				 WHERE cs.class_id = $1 AND g.subject_id = $2 AND g.semester = $3
-				   AND (g.school_id = (SELECT school_id FROM users WHERE id = $4 LIMIT 1) OR g.school_id IS NULL OR g.school_id = '')
-				   AND g.is_published = true AND g.deleted_at IS NULL`,
-				classID, subjectID, currentSem, studentID,
-			).Scan(&avgVal); err == nil && avgVal.Valid {
-				classAverage = math.Round(avgVal.Float64*100) / 100
+	if s.repo != nil {
+		sName, cName, cID, sID, _ := s.repo.GetStudentClassAndSchoolInfo(ctx, studentID)
+		_ = sName
+		_ = cName
+		_ = sID
+		classID = cID
+		if classID != "" {
+			avg, err := s.repo.GetClassSubjectAverage(ctx, classID, subjectID, currentSem, studentID)
+			if err == nil && avg >= 0 {
+				classAverage = avg
 			}
 		}
 	}
@@ -1040,16 +1051,9 @@ func (s *service) GetSemesterReport(ctx context.Context, actorID string, actorRo
 	}
 
 	var studentName, className, classID, schoolYear, schoolID string
-	if s.validator != nil && s.validator.db != nil {
-		_ = s.validator.db.QueryRowContext(
-			ctx,
-			`SELECT u.first_name || ' ' || u.last_name, COALESCE(c.name, 'N/D'), COALESCE(c.id, ''), COALESCE(c.school_id::text, COALESCE(u.school_id::text, ''))
-			 FROM users u
-			 LEFT JOIN class_students cs ON u.id = cs.student_id
-			 LEFT JOIN classes c ON cs.class_id = c.id
-			 WHERE u.id = $1
-			 ORDER BY cs.created_at DESC LIMIT 1`, studentID,
-		).Scan(&studentName, &className, &classID, &schoolID)
+	if s.repo != nil {
+		sName, cName, cID, sID, _ := s.repo.GetStudentClassAndSchoolInfo(ctx, studentID)
+		studentName, className, classID, schoolID = sName, cName, cID, sID
 	}
 	if studentName == "" {
 		studentName = "Studente " + studentID
@@ -1073,82 +1077,31 @@ func (s *service) GetSemesterReport(ctx context.Context, actorID string, actorRo
 
 	enrolledSubjects, enrollErr := s.repo.FindEnrolledSubjects(studentID, semester)
 
-	// Query teacher names for subjects in student's class
 	teacherMap := make(map[string]string)
-	if s.validator != nil && s.validator.db != nil && classID != "" {
-		tRows, tErr := s.validator.db.QueryContext(ctx,
-			`SELECT DISTINCT ON (cs.subject_id) cs.subject_id, COALESCE(u.first_name || ' ' || u.last_name, '')
-			 FROM class_subjects cs
-			 LEFT JOIN teachers t ON (NULLIF(cs.teacher_id::text, '') = t.id::text OR NULLIF(cs.teacher_id::text, '') = t.user_id::text)
-			 LEFT JOIN users u ON t.user_id = u.id OR cs.teacher_id = u.id
-			 WHERE cs.class_id::text = $1 AND u.first_name IS NOT NULL
-			 ORDER BY cs.subject_id, cs.created_at DESC`, classID,
-		)
+	if s.repo != nil && classID != "" {
+		tNames, tErr := s.repo.GetTeacherNamesByClass(ctx, classID)
 		if tErr == nil {
-			defer tRows.Close()
-			for tRows.Next() {
-				var subID, tName string
-				if scanErr := tRows.Scan(&subID, &tName); scanErr == nil {
-					teacherMap[subID] = tName
-				}
-			}
-			if err := tRows.Err(); err != nil {
-				logger.Log.Warnf("GetSemesterReport: error iterating teacher rows: %v", err)
-			}
+			teacherMap = tNames
 		}
 	}
 
 	subjectNameMap := make(map[string]string)
-	if s.validator != nil && s.validator.db != nil {
-		var sRows *sql.Rows
-		var sErr error
-		if schoolID != "" {
-			sRows, sErr = s.validator.db.QueryContext(ctx, `SELECT id::text, name FROM subjects WHERE school_id::text = $1`, schoolID)
-		} else {
-			sRows, sErr = s.validator.db.QueryContext(ctx, `SELECT id::text, name FROM subjects`)
-		}
+	if s.repo != nil {
+		sNames, sErr := s.repo.GetSubjectNamesMap(ctx, schoolID)
 		if sErr == nil {
-			defer sRows.Close()
-			for sRows.Next() {
-				var id, name string
-				if scanErr := sRows.Scan(&id, &name); scanErr == nil {
-					subjectNameMap[id] = name
-				}
-			}
-			if err := sRows.Err(); err != nil {
-				logger.Log.Warnf("GetSemesterReport: error iterating subject rows: %v", err)
-			}
+			subjectNameMap = sNames
 		}
 	}
 
-	// FIX: compute totalAbsenceDays BEFORE building subjects so it can be
-	// propagated into each SubjectReport (was always 0 there).
 	behaviorGrade := 0.0
 	scholasticCredit := 0.0
 	totalAbsenceDays := 0
 
-	if s.validator != nil && s.validator.db != nil {
-		var bg, sc sql.NullFloat64
-		_ = s.validator.db.QueryRowContext(
-			ctx,
-			`SELECT conduct_grade, scholastic_credit FROM scrutiny_records WHERE student_id = $1 AND semester = $2`, studentID, semester,
-		).Scan(&bg, &sc)
-		if bg.Valid {
-			behaviorGrade = bg.Float64
-		}
-		if sc.Valid {
-			scholasticCredit = sc.Float64
-		} else {
-			_ = s.validator.db.QueryRowContext(
-				ctx,
-				`SELECT behavior_grade, scholastic_credit FROM semester_reports WHERE student_id = $1 AND semester = $2`, studentID, semester,
-			).Scan(&bg, &sc)
-			if bg.Valid {
-				behaviorGrade = bg.Float64
-			}
-			if sc.Valid {
-				scholasticCredit = sc.Float64
-			}
+	if s.repo != nil {
+		bg, sc, found, _ := s.repo.GetScrutinyRecordSummary(ctx, studentID, semester)
+		if found {
+			behaviorGrade = bg
+			scholasticCredit = sc
 		}
 
 		sem1Start, sem1End, sem2Start, sem2End := academicYearDates(ctx, s.validator.db, schoolID)
@@ -1158,16 +1111,9 @@ func (s *service) GetSemesterReport(ctx context.Context, actorID string, actorRo
 		} else {
 			startD, endD = sem2Start, sem2End
 		}
-		// FIX: use date <= endD so that the last school day is fully included.
-		_ = s.validator.db.QueryRowContext(
-			ctx,
-			`SELECT COUNT(DISTINCT date::date) FROM attendance
-			 WHERE student_id = $1
-			   AND (status = 'Absent' OR status = 'absent')
-			   AND date::date >= $2::date
-			   AND date::date <= $3::date`,
-			studentID, startD, endD,
-		).Scan(&totalAbsenceDays)
+		if absCount, err := s.repo.GetStudentAbsenceCountForPeriod(ctx, studentID, startD, endD); err == nil {
+			totalAbsenceDays = absCount
+		}
 	}
 
 	var subjects []SubjectReport
@@ -1473,10 +1419,10 @@ func (s *service) CreateTestWithGrades(teacherID string, req CreateClassTestRequ
 			return nil, fmt.Errorf("failed to insert grades for test: %w", err)
 		}
 		if s.broadcaster != nil {
-			s.broadcaster.BroadcastToUser(test.ClassID, "TEST_CREATED", test)
+			s.broadcaster.BroadcastToSchool(schoolID, "TEST_CREATED", test)
 			for _, g := range gradesList {
 				if g.IsPublished {
-					s.broadcaster.BroadcastToUser(g.StudentID, "GRADE_ADDED", s.mapSingleResponse(*g))
+					s.broadcaster.BroadcastToUser(g.StudentID, schoolID, "GRADE_ADDED", s.mapSingleResponse(*g))
 				}
 			}
 		}

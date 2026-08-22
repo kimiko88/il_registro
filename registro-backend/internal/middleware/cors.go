@@ -7,20 +7,18 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func CORSMiddleware() gin.HandlerFunc {
+func buildOriginsMap() map[string]bool {
 	allowedOriginsStr := os.Getenv("ALLOWED_ORIGINS")
 	var allowedOrigins []string
 	if allowedOriginsStr != "" {
 		allowedOrigins = strings.Split(allowedOriginsStr, ",")
 	} else {
-		// Secure default fallback for local development and staging
 		allowedOrigins = []string{
 			"http://localhost:5173",
 			"http://localhost:3000",
 			"http://localhost:8080",
 		}
 	}
-
 	originsMap := make(map[string]bool)
 	for _, o := range allowedOrigins {
 		trimmed := strings.TrimSpace(o)
@@ -28,8 +26,12 @@ func CORSMiddleware() gin.HandlerFunc {
 			originsMap[trimmed] = true
 		}
 	}
+	return originsMap
+}
 
+func CORSMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		originsMap := buildOriginsMap()
 		origin := c.Request.Header.Get("Origin")
 		c.Writer.Header().Add("Vary", "Origin")
 

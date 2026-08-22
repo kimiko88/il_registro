@@ -18,7 +18,7 @@ type Service interface {
 	CreateHomework(teacherID string, req CreateHomeworkRequest) (*HomeworkResponse, error)
 	UpdateHomework(teacherID, role, id string, req UpdateHomeworkRequest) (*HomeworkResponse, error)
 	DeleteHomework(teacherID, role, id string) error
-	GetHomeworks(classID string) ([]HomeworkResponse, error)
+	GetHomeworks(classID string, fromDate ...string) ([]HomeworkResponse, error)
 }
 
 type service struct {
@@ -33,6 +33,9 @@ func NewService(r Repository) Service {
 }
 
 func (s *service) CreateLesson(teacherID string, req CreateLessonRequest) (*LessonResponse, error) {
+	if req.IsCoTeaching && req.IsSubstitution {
+		return nil, errors.New("non è possibile contrassegnare una lezione sia come Compresenza che come Sostituzione")
+	}
 	if req.ClassID == "" {
 		return nil, errors.New("class_id is required")
 	}
@@ -207,13 +210,19 @@ func (s *service) CreateHomework(teacherID string, req CreateHomeworkRequest) (*
 	return s.mapHomeworkResponse(hw), nil
 }
 
-func (s *service) GetHomeworks(classID string) ([]HomeworkResponse, error) {
-	homeworks, err := s.repo.GetHomeworkByClass(classID)
+func (s *service) GetHomeworks(classID string, fromDate ...string) ([]HomeworkResponse, error) {
+	filterDate := ""
+	if len(fromDate) > 0 && fromDate[0] != "" {
+		filterDate = fromDate[0]
+	} else {
+		filterDate = time.Now().AddDate(0, 0, -30).Format("2006-01-02")
+	}
+	homeworks, err := s.repo.GetHomeworkByClass(classID, filterDate)
 	if err != nil {
 		return nil, err
 	}
 
-	var res []HomeworkResponse
+	res := []HomeworkResponse{}
 	for _, h := range homeworks {
 		res = append(res, *s.mapHomeworkResponse(&h))
 	}
@@ -264,16 +273,23 @@ func (s *service) GetLessonByID(id string) (*LessonResponse, error) {
 	return s.mapLessonResponse(l), nil
 }
 
-func (s *service) UpdateLesson(teacherID, role, id string, req UpdateLessonRequest) (*LessonResponse, error) {
-	if role != "teacher" && role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && role != "vice_principal" {
-		return nil, errors.New("unauthorized: insufficient permissions")
+func canManageLessonOrHomework(role, teacherID, existingTeacherID string) error {
+	if role != "teacher" && role != "coordinator" && role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && role != "vice_principal" {
+		return errors.New("unauthorized: insufficient permissions")
 	}
+	if existingTeacherID != "" && teacherID != existingTeacherID && role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && role != "vice_principal" {
+		return errors.New("unauthorized: cannot modify another teacher's record")
+	}
+	return nil
+}
+
+func (s *service) UpdateLesson(teacherID, role, id string, req UpdateLessonRequest) (*LessonResponse, error) {
 	existing, err := s.repo.GetLessonByID(id)
 	if err != nil {
 		return nil, err
 	}
-	if existing.TeacherID != teacherID && role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && role != "vice_principal" {
-		return nil, errors.New("unauthorized: cannot edit another teacher's lesson")
+	if err := canManageLessonOrHomework(role, teacherID, existing.TeacherID); err != nil {
+		return nil, err
 	}
 
 	targetHour := existing.Hour
@@ -287,6 +303,13 @@ func (s *service) UpdateLesson(teacherID, role, id string, req UpdateLessonReque
 	targetCoTeaching := existing.IsCoTeaching
 	if req.IsCoTeaching != nil {
 		targetCoTeaching = *req.IsCoTeaching
+	}
+	targetSub := existing.IsSubstitution
+	if req.IsSubstitution != nil {
+		targetSub = *req.IsSubstitution
+	}
+	if targetCoTeaching && targetSub {
+		return nil, errors.New("non è possibile contrassegnare una lezione sia come Compresenza che come Sostituzione")
 	}
 
 	dateStr := existing.Date.Format("2006-01-02")
@@ -303,9 +326,8 @@ func (s *service) UpdateLesson(teacherID, role, id string, req UpdateLessonReque
 			}
 			exStart, exEnd := l.Hour, l.Hour+lDur
 			if newStart < exEnd && exStart < newEnd {
-				targetSub := (req.IsSubstitution != nil && *req.IsSubstitution) || existing.IsSubstitution
-				if !((l.IsCoTeaching && targetCoTeaching) || l.IsSubstitution || targetSub) {
-					return nil, fmt.Errorf("impossibile registrare più lezioni nella stessa ora (%dª ora) per questa classe senza la spunta 'Compresenza' o 'Sostituzione'", targetHour)
+				if !((l.IsCoTeaching && targetCoTeaching) || (l.IsSubstitution && targetSub)) {
+					return nil, fmt.Errorf("impossibile registrare più lezioni nella stessa ora (%dª ora) per questa classe senza la spunta 'Compresenza' o entrambe 'Sostituzione'", targetHour)
 				}
 			}
 		}
@@ -319,30 +341,24 @@ func (s *service) UpdateLesson(teacherID, role, id string, req UpdateLessonReque
 }
 
 func (s *service) DeleteLesson(teacherID, role, id string) error {
-	if role != "teacher" && role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && role != "vice_principal" {
-		return errors.New("unauthorized: insufficient permissions")
-	}
 	existing, err := s.repo.GetLessonByID(id)
 	if err != nil {
 		return err
 	}
-	if existing.TeacherID != teacherID && role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && role != "vice_principal" {
-		return errors.New("unauthorized: cannot delete another teacher's lesson")
+	if err := canManageLessonOrHomework(role, teacherID, existing.TeacherID); err != nil {
+		return err
 	}
 
 	return s.repo.DeleteLesson(id)
 }
 
 func (s *service) UpdateHomework(teacherID, role, id string, req UpdateHomeworkRequest) (*HomeworkResponse, error) {
-	if role != "teacher" && role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && role != "vice_principal" {
-		return nil, errors.New("unauthorized: insufficient permissions")
-	}
 	existing, err := s.repo.GetHomeworkByID(id)
 	if err != nil {
 		return nil, err
 	}
-	if existing.TeacherID != teacherID && role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && role != "vice_principal" {
-		return nil, errors.New("unauthorized: cannot edit another teacher's homework")
+	if err := canManageLessonOrHomework(role, teacherID, existing.TeacherID); err != nil {
+		return nil, err
 	}
 
 	h, err := s.repo.UpdateHomework(id, req)
@@ -353,15 +369,12 @@ func (s *service) UpdateHomework(teacherID, role, id string, req UpdateHomeworkR
 }
 
 func (s *service) DeleteHomework(teacherID, role, id string) error {
-	if role != "teacher" && role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && role != "vice_principal" {
-		return errors.New("unauthorized: insufficient permissions to delete homework")
-	}
 	existing, err := s.repo.GetHomeworkByID(id)
 	if err != nil {
 		return err
 	}
-	if existing.TeacherID != teacherID && role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && role != "vice_principal" {
-		return errors.New("unauthorized: cannot delete another teacher's homework")
+	if err := canManageLessonOrHomework(role, teacherID, existing.TeacherID); err != nil {
+		return err
 	}
 
 	return s.repo.DeleteHomework(id)

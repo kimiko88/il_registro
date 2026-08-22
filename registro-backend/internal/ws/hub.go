@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"log"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -37,11 +38,12 @@ func (c *Client) CloseSend() {
 // Message è il formato condiviso sia per i canali Go interni
 // sia per la serializzazione JSON su Redis.
 type Message struct {
-	Type         string      `json:"type"`
-	Payload      interface{} `json:"payload"`
-	Recipient    string      `json:"recipient,omitempty"`
-	SchoolID     string      `json:"school_id,omitempty"`
-	AllowedRoles []string    `json:"allowed_roles,omitempty"`
+	Type            string      `json:"type"`
+	Payload         interface{} `json:"payload"`
+	Recipient       string      `json:"recipient,omitempty"`
+	SchoolID        string      `json:"school_id,omitempty"`
+	AllowedRoles    []string    `json:"allowed_roles,omitempty"`
+	GlobalBroadcast bool        `json:"global_broadcast,omitempty"`
 }
 
 // Hub gestisce le connessioni locali e un bridge Redis per il multi-istanza.
@@ -54,6 +56,9 @@ type Hub struct {
 	localBroadcast chan Message
 	register       chan *Client
 	unregister     chan *Client
+
+	// Metrics tracking
+	droppedMessageCount uint64
 
 	// Redis (opzionale: se redisURL non è fornito, funziona in modalità in-memory locale)
 	rdb    *redis.Client
@@ -256,13 +261,22 @@ func (h *Hub) deliverLocally(msg Message) {
 	h.mu.RUnlock()
 
 	for _, client := range targetClients {
+		h.safeSend(client, bytes)
+	}
+}
+
+func (h *Hub) safeSend(client *Client, data []byte) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("[WARN] ws.Hub: panic recovered sending to client %s (channel closed concurrently)", client.UserID)
+		}
+	}()
+	select {
+	case client.Send <- data:
+	default:
 		select {
-		case client.Send <- bytes:
+		case h.unregister <- client:
 		default:
-			select {
-			case h.unregister <- client:
-			default:
-			}
 		}
 	}
 }
@@ -289,14 +303,19 @@ func (h *Hub) sendBroadcast(msg Message) {
 		select {
 		case h.localBroadcast <- msg:
 		case <-time.After(100 * time.Millisecond):
-			log.Printf("[WARN] ws.Hub: localBroadcast channel full after retry timeout — message DROPPED (type=%s recipient=%q schoolID=%q)",
-				msg.Type, msg.Recipient, msg.SchoolID)
+			atomic.AddUint64(&h.droppedMessageCount, 1)
+			log.Printf("[WARN] ws.Hub: localBroadcast channel full after retry timeout — message DROPPED (type=%s recipient=%q schoolID=%q total_dropped=%d)",
+				msg.Type, msg.Recipient, msg.SchoolID, atomic.LoadUint64(&h.droppedMessageCount))
 		}
 	}
 }
 
-func (h *Hub) BroadcastToUser(userID, msgType string, payload interface{}) {
-	h.sendBroadcast(Message{Type: msgType, Payload: payload, Recipient: userID})
+func (h *Hub) GetDroppedMessageCount() uint64 {
+	return atomic.LoadUint64(&h.droppedMessageCount)
+}
+
+func (h *Hub) BroadcastToUser(userID, schoolID, msgType string, payload interface{}) {
+	h.sendBroadcast(Message{Type: msgType, Payload: payload, Recipient: userID, SchoolID: schoolID})
 }
 
 func (h *Hub) BroadcastToUserInSchool(userID, schoolID, msgType string, payload interface{}) {
@@ -309,6 +328,10 @@ func (h *Hub) BroadcastToSchool(schoolID, msgType string, payload interface{}) {
 
 func (h *Hub) BroadcastToSchoolRoles(schoolID string, allowedRoles []string, msgType string, payload interface{}) {
 	h.sendBroadcast(Message{Type: msgType, Payload: payload, SchoolID: schoolID, AllowedRoles: allowedRoles})
+}
+
+func (h *Hub) BroadcastGlobalSystem(msgType string, payload interface{}, allowedRoles ...string) {
+	h.sendBroadcast(Message{Type: msgType, Payload: payload, GlobalBroadcast: true, AllowedRoles: allowedRoles})
 }
 
 func isRoleAllowed(role string, allowed []string) bool {
