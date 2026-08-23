@@ -128,7 +128,22 @@ func (s *service) GetStudentGradesWithFilter(ctx context.Context, actorID string
 		if err != nil {
 			return nil, err
 		}
+		// For student and parent roles, filter out unpublished and deleted grades
+		if actorRole == "student" || actorRole == "parent" {
+			var publishedGrades []Grade
+			for _, g := range grades {
+				if g.IsPublished && g.DeletedAt == nil {
+					publishedGrades = append(publishedGrades, g)
+				}
+			}
+			return s.mapToResponse(publishedGrades), nil
+		}
 		return s.mapToResponse(grades), nil
+	}
+
+	if actorRole == "student" || actorRole == "parent" {
+		t := true
+		filter.IsPublished = &t
 	}
 
 	filter.StudentID = studentID
@@ -145,6 +160,11 @@ func (s *service) GetStudentGradesWithFilter(ctx context.Context, actorID string
 func (s *service) GetStudentGradesPaged(ctx context.Context, actorID string, actorRole string, studentID string, filter GradeFilter) (*PaginatedGradesResponse, error) {
 	if err := s.checkGradeAccessPermissions(ctx, actorID, actorRole, studentID); err != nil {
 		return nil, err
+	}
+
+	if actorRole == "student" || actorRole == "parent" {
+		t := true
+		filter.IsPublished = &t
 	}
 
 	filter.StudentID = studentID
@@ -911,6 +931,9 @@ func (s *service) GetMyTrend(ctx context.Context, actorID string, actorRole stri
 		if subjectID != "" && g.SubjectID != subjectID {
 			continue
 		}
+		if g.GradeValue < 1.0 || g.GradeValue > 10.0 {
+			continue // exclude non-votable grades/absences (-1) from trend calculation
+		}
 		relevant = append(relevant, g)
 	}
 
@@ -1214,11 +1237,11 @@ func (s *service) GetSemesterReport(ctx context.Context, actorID string, actorRo
 
 	// Promotion evaluation: all enrolled subjects must be graded, passed, and overall >= 6.0
 	promoted := "NO"
-	if totalEnrolled > 0 && gradedCount < totalEnrolled {
+	if enrollErr == nil && totalEnrolled > 0 && gradedCount < totalEnrolled {
 		promoted = "IN CORSO"
 	} else {
 		requiredSubjects := totalEnrolled
-		if requiredSubjects == 0 && enrollErr == nil {
+		if requiredSubjects == 0 {
 			requiredSubjects = gradedCount
 		}
 		if requiredSubjects > 0 && passedCount == requiredSubjects && overall >= 6.0 {

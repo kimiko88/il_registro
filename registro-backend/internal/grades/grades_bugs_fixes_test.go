@@ -233,3 +233,63 @@ func TestAnalytics_GetSchoolStatistics_YearFilter(t *testing.T) {
 	assert.Equal(t, 1, res.DataVolume.TotalStudents)
 	assert.Equal(t, 8.0, res.Overall.Average)
 }
+
+func TestGrades_GetStudentGradesWithFilter_StudentRole_FiltersUnpublished(t *testing.T) {
+	mockRepo := new(MockRepository)
+	svc := &service{repo: mockRepo}
+
+	delTime := time.Now()
+	mockRepo.On("FindByStudent", "s1").Return([]Grade{
+		{ID: "g1", StudentID: "s1", GradeValue: 8.0, IsPublished: true, DeletedAt: nil},
+		{ID: "g2", StudentID: "s1", GradeValue: 9.0, IsPublished: false, DeletedAt: nil},      // unpublished draft
+		{ID: "g3", StudentID: "s1", GradeValue: 7.0, IsPublished: true, DeletedAt: &delTime},  // deleted
+	}, nil).Once()
+
+	res, err := svc.GetStudentGradesWithFilter(context.Background(), "s1", "student", "s1", GradeFilter{})
+	assert.NoError(t, err)
+	assert.Len(t, res, 1)
+	assert.Equal(t, "g1", res[0].ID)
+}
+
+func TestGrades_GetSemesterReport_PromotionFallbackOnEnrollErr(t *testing.T) {
+	mockRepo := new(MockRepository)
+	calc := NewCalculator()
+	svc := &service{repo: mockRepo, calculator: calc}
+
+	mockRepo.On("FindByStudent", "s1").Return([]Grade{
+		{ID: "g1", StudentID: "s1", SubjectID: "math", GradeValue: 8.0, Semester: 1, IsPublished: true, GradeCategory: GradeCategorySummative},
+		{ID: "g2", StudentID: "s1", SubjectID: "history", GradeValue: 7.0, Semester: 1, IsPublished: true, GradeCategory: GradeCategorySummative},
+	}, nil).Once()
+
+	mockRepo.On("GetStudentClassAndSchoolInfo", mock.Anything, "s1").Return("Student 1", "Class 1A", "c1", "sch1", nil).Once()
+	mockRepo.On("FindEnrolledSubjects", "s1", 1).Return(nil, assert.AnError).Once()
+	mockRepo.On("GetTeacherNamesByClass", mock.Anything, "c1").Return(map[string]string{}, nil).Once()
+	mockRepo.On("GetSubjectNamesMap", mock.Anything, "sch1").Return(map[string]string{}, nil).Once()
+	mockRepo.On("GetScrutinyRecordSummary", mock.Anything, "s1", 1).Return(0.0, 0.0, false, nil).Once()
+
+	rep, err := svc.GetSemesterReport(context.Background(), "admin-1", "admin", "s1", 1)
+	assert.NoError(t, err)
+	assert.NotNil(t, rep)
+	assert.Equal(t, "SÌ", rep.Promoted)
+}
+
+func TestGrades_GetMyTrend_ExcludesAbsencesFromTrend(t *testing.T) {
+	mockRepo := new(MockRepository)
+	calc := NewCalculator()
+	svc := &service{repo: mockRepo, calculator: calc}
+
+	mockRepo.On("FindByStudent", "s1").Return([]Grade{
+		{ID: "g1", StudentID: "s1", SubjectID: "math", GradeValue: 8.0, Date: time.Now().AddDate(0, 0, -5), IsPublished: true},
+		{ID: "g2", StudentID: "s1", SubjectID: "math", GradeValue: -1.0, Date: time.Now().AddDate(0, 0, -3), IsPublished: true}, // absence
+		{ID: "g3", StudentID: "s1", SubjectID: "math", GradeValue: 9.0, Date: time.Now().AddDate(0, 0, -1), IsPublished: true},
+	}, nil).Once()
+	mockRepo.On("GetStudentClassAndSchoolInfo", mock.Anything, "s1").Return("Student 1", "Class 1A", "c1", "sch1", nil).Once()
+	mockRepo.On("GetClassSubjectAverage", mock.Anything, "c1", "math", mock.Anything, "s1").Return(7.5, nil).Once()
+
+	trend, err := svc.GetMyTrend(context.Background(), "s1", "student", "s1", "math")
+	assert.NoError(t, err)
+	assert.NotNil(t, trend)
+	assert.Len(t, trend.Trends, 2) // g2 (-1) excluded
+	assert.Equal(t, 8.0, trend.Trends[0].Grade)
+	assert.Equal(t, 9.0, trend.Trends[1].Grade)
+}

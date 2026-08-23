@@ -378,6 +378,11 @@ func (r *repository) FindWithFilter(filter GradeFilter) ([]Grade, error) {
 		args = append(args, filter.StudentID)
 		argIdx++
 	}
+	if filter.ClassID != "" {
+		conditions = append(conditions, fmt.Sprintf("EXISTS (SELECT 1 FROM students s WHERE (s.id = grades.student_id OR s.user_id = grades.student_id) AND s.class_id = $%d::uuid)", argIdx))
+		args = append(args, filter.ClassID)
+		argIdx++
+	}
 	if filter.TeacherID != "" {
 		conditions = append(conditions, fmt.Sprintf("teacher_id = $%d::uuid", argIdx))
 		args = append(args, filter.TeacherID)
@@ -426,6 +431,11 @@ func (r *repository) FindWithFilterPaginated(filter GradeFilter) ([]Grade, int, 
 	if filter.StudentID != "" {
 		conditions = append(conditions, fmt.Sprintf("student_id = $%d::uuid", argIdx))
 		args = append(args, filter.StudentID)
+		argIdx++
+	}
+	if filter.ClassID != "" {
+		conditions = append(conditions, fmt.Sprintf("EXISTS (SELECT 1 FROM students s WHERE (s.id = grades.student_id OR s.user_id = grades.student_id) AND s.class_id = $%d::uuid)", argIdx))
+		args = append(args, filter.ClassID)
 		argIdx++
 	}
 	if filter.Semester > 0 {
