@@ -17,9 +17,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+var filenameParamRegex = regexp.MustCompile(`[^a-zA-Z0-9_-]`)
+
 func sanitizeFilenameParam(input string) string {
-	reg := regexp.MustCompile(`[^a-zA-Z0-9_-]`)
-	res := reg.ReplaceAllString(input, "")
+	res := filenameParamRegex.ReplaceAllString(input, "")
 	if res == "" {
 		return "export"
 	}
@@ -130,20 +131,6 @@ func (h *Handler) GetStudentGrades(c *gin.Context) {
 	c.Header("Link", fmt.Sprintf(`</api/v1/grades/student/%s/paged>; rel="successor-version"`, studentID))
 
 	filter := h.parseFilter(c)
-
-	if c.Query("page") != "" {
-		resp, err := h.service.GetStudentGradesPaged(c.Request.Context(), actorID, actorRole, studentID, filter)
-		if err != nil {
-			if errors.Is(err, ErrUnauthorized) || errors.Is(err, ErrNotGuardian) {
-				c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
-				return
-			}
-			respond500(c, "GetStudentGradesPaged error", err)
-			return
-		}
-		c.JSON(http.StatusOK, resp)
-		return
-	}
 
 	grades, err := h.service.GetStudentGradesWithFilter(c.Request.Context(), actorID, actorRole, studentID, filter)
 	if err != nil {
@@ -391,7 +378,7 @@ func (h *Handler) parseFilter(c *gin.Context) GradeFilter {
 	if filter.Semester < 0 || filter.Semester > 2 {
 		filter.Semester = 0
 	}
-	if filter.Page < 0 {
+	if filter.Page <= 0 {
 		filter.Page = 1
 	}
 	return filter
@@ -734,9 +721,9 @@ func (h *Handler) GetSemesterReport(c *gin.Context) {
 }
 
 func (h *Handler) DownloadSemesterReportPDF(c *gin.Context) {
-	studentID := c.GetString("user_id")
+	actorID := c.GetString("user_id")
 	role := c.GetString("role")
-	if studentID == "" {
+	if actorID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
@@ -745,24 +732,24 @@ func (h *Handler) DownloadSemesterReportPDF(c *gin.Context) {
 		return
 	}
 
-	targetStudentID := studentID
+	targetStudentID := actorID
 	if (role == "admin" || role == "superadmin" || role == "secretary" || role == "principal" || role == "vice_principal" || role == "teacher" || role == "parent") && c.Query("student_id") != "" {
 		targetStudentID = c.Query("student_id")
 	}
 
-	if role == "parent" && targetStudentID != studentID {
-		if err := h.service.ValidateParentGuardian(c.Request.Context(), studentID, targetStudentID); err != nil {
+	if role == "parent" && targetStudentID != actorID {
+		if err := h.service.ValidateParentGuardian(c.Request.Context(), actorID, targetStudentID); err != nil {
 			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: not a guardian of this student"})
 			return
 		}
 	}
 
-	if role == "teacher" && targetStudentID != studentID {
+	if role == "teacher" && targetStudentID != actorID {
 		if h.validator == nil {
 			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: validator unconfigured"})
 			return
 		}
-		assigned, err := h.validator.IsTeacherAssignedToStudent(c.Request.Context(), studentID, targetStudentID)
+		assigned, err := h.validator.IsTeacherAssignedToStudent(c.Request.Context(), actorID, targetStudentID)
 		if err != nil || !assigned {
 			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: teacher is not assigned to this student"})
 			return
@@ -776,7 +763,7 @@ func (h *Handler) DownloadSemesterReportPDF(c *gin.Context) {
 		return
 	}
 
-	pdfData, err := h.service.GenerateSemesterReportPDF(c.Request.Context(), studentID, role, targetStudentID, sem)
+	pdfData, err := h.service.GenerateSemesterReportPDF(c.Request.Context(), actorID, role, targetStudentID, sem)
 	if err != nil {
 		respond500(c, "GenerateSemesterReportPDF error", err)
 		return
@@ -820,8 +807,13 @@ func (h *Handler) GetChildGrades(c *gin.Context) {
 
 func (h *Handler) GetChildGradesAverage(c *gin.Context) {
 	parentID := c.GetString("user_id")
+	role := c.GetString("role")
 	if parentID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "parent" && role != "admin" && role != "superadmin" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: endpoint reserved for parents"})
 		return
 	}
 
@@ -841,8 +833,13 @@ func (h *Handler) GetChildGradesAverage(c *gin.Context) {
 
 func (h *Handler) GetChildSemesterReport(c *gin.Context) {
 	parentID := c.GetString("user_id")
+	role := c.GetString("role")
 	if parentID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "parent" && role != "admin" && role != "superadmin" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: endpoint reserved for parents"})
 		return
 	}
 

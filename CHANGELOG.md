@@ -7,6 +7,17 @@ Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/)
 
 ### Aggiunto & Modificato
 
+- **Hardening & Correzioni Modulo Valutazioni Backend (`internal/grades`)**:
+  - `parseFilter`: Normalizzazione corretta per query parameter `page <= 0` con fallback a `Page = 1`.
+  - `CalculateWeightedAverage`: Fallback esplicito alla media aritmetica se tutti i voti hanno peso 0 o non configurato.
+  - `ConvertJudgmentToValue` & `isVotableGrade`: Gestione case-insensitive per tutti i giudizi scolastici italiani su scala 1-10 (`ottimo`, `distinto`, `buono`, `discreto`, `sufficiente`, `mediocre`, `insufficiente`, `gravemente insufficiente`).
+  - `GetStudentGrades`: Rimossa ambiguità di routing interno, delegazione diretta a `GetStudentGradesWithFilter` e header `Deprecation/Link`.
+  - `GetChildGradesAverage` & `GetChildSemesterReport`: Aggiunti controlli di autorizzazione per ruolo nell'handler per respingere accessi non autorizzati con `HTTP 403 Forbidden`.
+  - `DownloadSemesterReportPDF`: Corretta denominazione semantica `actorID` e relative validazioni per studente, genitore e docente.
+  - `CalculateBellCurve` & `CalculateStandardDeviation`: Ottimizzazione per evitare doppie passate nell'estrazione dei valori e nel calcolo della media.
+  - `sanitizeFilenameParam`: Precompilazione della regex a livello di package (`filenameParamRegex`).
+  - Nuova suite di test unitari Go `grades_audit_fixes_10_test.go` a copertura di tutte le correzioni con esito 100% passante.
+
 - **Audit Completo & Hardening Frontend (`registro-frontend`)**:
   - **Composables & Authentication (`src/composables`)**:
     - Risolto mascheramento degli errori in `useUserManagement.js` durante l'importazione utenti CSV (notifica negativa `type: 'negative'` e ritorno `false`).

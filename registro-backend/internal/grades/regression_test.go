@@ -30,8 +30,8 @@ func TestCalculator_EdgeCases(t *testing.T) {
 			{GradeValue: 10, Weight: 0},
 			{GradeValue: 10, Weight: 0},
 		}
-		// Should handle zero division by returning 0
-		assert.Equal(t, 0.0, c.CalculateWeightedAverage(g))
+		// Falls back to arithmetic average (10.0) when total weights is zero
+		assert.Equal(t, 10.0, c.CalculateWeightedAverage(g))
 	})
 
 	t.Run("Weighted Average Mixed", func(t *testing.T) {

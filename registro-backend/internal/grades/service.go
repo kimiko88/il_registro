@@ -324,7 +324,7 @@ func (s *service) GetSubjectGrades(ctx context.Context, actorID string, actorRol
 		if val == 0 && g.GradeType == GradeTypeJudgment {
 			val = s.calculator.ConvertJudgmentToValue(g.Description)
 		}
-		if val <= 0 {
+		if val < 1.0 || val > 10.0 {
 			continue
 		}
 		validGrades = append(validGrades, g)
@@ -335,7 +335,7 @@ func (s *service) GetSubjectGrades(ctx context.Context, actorID string, actorRol
 		sum += val
 		switch {
 		case val < 4:
-			dist["0-3"]++
+			dist["1-3"]++
 		case val < 7:
 			dist["4-6"]++
 		case val < 9:
@@ -843,28 +843,20 @@ func (s *service) GetMyAverages(ctx context.Context, studentID string) (*Student
 			totalSub++
 		}
 
-		overall := 0.0
-		var totalWeightedSum float64
-		var totalWeight float64
-		for _, g := range gs {
-			w := g.Weight
-			if w <= 0 {
-				w = 1.0
-			}
-			totalWeightedSum += g.GradeValue * w
-			totalWeight += w
-		}
-		if totalWeight > 0 {
-			overall = math.Round((totalWeightedSum/totalWeight)*100) / 100
-		}
+		overall := s.calculator.CalculateWeightedAverage(gs)
 
 		cond := "OTTIMO"
-		if overall < 6.0 {
+		switch {
+		case overall < 6.0:
 			cond = "ATTENZIONE"
-		} else if overall <= 6.5 {
-			// FIX: was `< 6.5`, so exactly 6.0 fell into "OTTIMO".
-			// Now 6.0–6.5 (inclusive) = "MONITORARE"; only > 6.5 = "OTTIMO".
-			cond = "MONITORARE"
+		case overall < 7.0:
+			cond = "SUFFICIENTE"
+		case overall < 8.0:
+			cond = "BUONO"
+		case overall < 9.0:
+			cond = "DISTINTO"
+		default:
+			cond = "OTTIMO"
 		}
 
 		return SemesterAverageSummary{
@@ -1104,7 +1096,11 @@ func (s *service) GetSemesterReport(ctx context.Context, actorID string, actorRo
 			scholasticCredit = sc
 		}
 
-		sem1Start, sem1End, sem2Start, sem2End := academicYearDates(ctx, s.validator.db, schoolID)
+		var dbConn *sql.DB
+		if s.validator != nil {
+			dbConn = s.validator.db
+		}
+		sem1Start, sem1End, sem2Start, sem2End := academicYearDates(ctx, dbConn, schoolID)
 		var startD, endD string
 		if semester == 1 {
 			startD, endD = sem1Start, sem1End
@@ -1140,9 +1136,12 @@ func (s *service) GetSemesterReport(ctx context.Context, actorID string, actorRo
 			passedCount++
 		}
 
+		// Final grade rounded to integer on the Italian 1-10 school report scale
 		finalGrade := math.Round(avg)
 		if finalGrade < 1 {
 			finalGrade = 1
+		} else if finalGrade > 10 {
+			finalGrade = 10
 		}
 
 		tName := teacherMap[subID]
@@ -1162,13 +1161,10 @@ func (s *service) GetSemesterReport(ctx context.Context, actorID string, actorRo
 			FinalGrade:     finalGrade,
 			SubjectAverage: math.Round(avg*100) / 100,
 			GradeCount:     len(gs),
-			// FIX: propagate totalAbsenceDays (was hardcoded 0).
-			// Per-subject absences require a join on attendance.subject_id which
-			// is not available; the student-level total is the best approximation.
-			AbsenceDays: totalAbsenceDays,
-			Notes:       "",
-			Grades:      gVals,
-			Passed:      passed,
+			AbsenceDays:    totalAbsenceDays,
+			Notes:          "",
+			Grades:         gVals,
+			Passed:         passed,
 		})
 		processedSubjects[subID] = true
 	}
@@ -1204,8 +1200,6 @@ func (s *service) GetSemesterReport(ctx context.Context, actorID string, actorRo
 	gradedCount := len(subMap)
 	totalEnrolled := len(enrolledSubjects)
 
-	// FIX: use the larger of gradedCount and totalEnrolled as the denominator
-	// so that subjects with no grades still drag down the overall average.
 	denominator := gradedCount
 	if totalEnrolled > gradedCount {
 		denominator = totalEnrolled
@@ -1215,10 +1209,10 @@ func (s *service) GetSemesterReport(ctx context.Context, actorID string, actorRo
 		overall = math.Round((totalSum/float64(denominator))*100) / 100
 	}
 
-	// FIX: promoted only when every enrolled subject has been graded AND passed.
+	// Promotion evaluation: all enrolled subjects must be graded, passed, and overall >= 6.0
 	promoted := "NO"
 	requiredSubjects := totalEnrolled
-	if requiredSubjects == 0 {
+	if requiredSubjects == 0 && enrollErr == nil {
 		requiredSubjects = gradedCount
 	}
 	if requiredSubjects > 0 && passedCount == requiredSubjects && gradedCount >= requiredSubjects && overall >= 6.0 {

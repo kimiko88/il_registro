@@ -3,6 +3,7 @@ package grades
 import (
 	"math"
 	"sort"
+	"strings"
 )
 
 type Calculator struct{}
@@ -11,23 +12,20 @@ func NewCalculator() *Calculator {
 	return &Calculator{}
 }
 
-// isVotableGrade determines if a grade entry represents a valid evaluable score.
-// Numeric grade 0.0 (GradeTypeNumeric) is a valid grade in Italian schools.
-// Unset/unrated grades (GradeType == "" and GradeValue == 0.0) or absences (< 0) are excluded.
+// isVotableGrade determines if a grade entry represents a valid evaluable score in the Italian 1-10 scale.
+// Valid grades must be between 1.0 and 10.0.
+// Unset/unrated grades (val < 1.0 or val == 0.0) or absences (< 0) are excluded.
 func isVotableGrade(g Grade, val float64) bool {
-	if val < 0 {
+	if val < 1.0 || val > 10.0 {
 		return false
 	}
-	if g.GradeType == GradeTypeNumeric && val >= 0 {
+	if g.GradeType == GradeTypeNumeric && val >= 1.0 {
 		return true
 	}
-	if g.GradeType == GradeTypeJudgment && val > 0 {
+	if g.GradeType == GradeTypeJudgment && val >= 1.0 {
 		return true
 	}
-	if val > 0 {
-		return true
-	}
-	return false
+	return val >= 1.0
 }
 
 // CalculateAverage computes the arithmetic mean
@@ -57,31 +55,33 @@ func (c *Calculator) CalculateAverage(grades []Grade) float64 {
 	return math.Round((total/float64(count))*100) / 100 // Round to 2 decimal places
 }
 
-// ConvertJudgmentToValue converts standard Italian judgments to scale 0-10
+// ConvertJudgmentToValue converts standard Italian judgments to scale 1-10 with case-insensitive matching
 func (c *Calculator) ConvertJudgmentToValue(judgment string) float64 {
-	switch judgment {
-	case "Eccellente", "Ottimo":
+	cleaned := strings.TrimSpace(strings.ToLower(judgment))
+	switch cleaned {
+	case "eccellente", "ottimo", "avanzato":
 		return 10.0
-	case "Distinto":
+	case "distinto":
 		return 9.0
-	case "Buono":
+	case "buono", "intermedio":
 		return 8.0
-	case "Discreto":
+	case "discreto", "base":
 		return 7.0
-	case "Sufficiente":
+	case "sufficiente":
 		return 6.0
-	case "Mediocre", "Quasi Sufficiente":
+	case "mediocre", "quasi sufficiente", "iniziale":
 		return 5.0
-	case "Insufficiente":
+	case "insufficiente", "non raggiunto":
 		return 4.0
-	case "Gravemente Insufficiente":
+	case "gravemente insufficiente":
 		return 3.0
 	default:
 		return 0.0
 	}
 }
 
-// CalculateWeightedAverage computes the weighted mean
+// CalculateWeightedAverage computes the weighted mean.
+// If all weights are 0 or unconfigured, it falls back to the simple arithmetic average.
 func (c *Calculator) CalculateWeightedAverage(grades []Grade) float64 {
 	if len(grades) == 0 {
 		return 0
@@ -102,7 +102,7 @@ func (c *Calculator) CalculateWeightedAverage(grades []Grade) float64 {
 	}
 
 	if totalWeights == 0 {
-		return 0
+		return c.CalculateAverage(grades)
 	}
 
 	return math.Round((totalWeighted/totalWeights)*100) / 100
@@ -124,6 +124,17 @@ func (c *Calculator) CalculateMedian(grades []Grade) float64 {
 	return (vals[n/2-1] + vals[n/2]) / 2
 }
 
+func (c *Calculator) calculateStandardDeviationFromValues(vals []float64, mean float64) float64 {
+	if len(vals) < 2 {
+		return 0
+	}
+	var varianceSum float64
+	for _, v := range vals {
+		varianceSum += math.Pow(v-mean, 2)
+	}
+	return math.Sqrt(varianceSum / float64(len(vals)-1))
+}
+
 func (c *Calculator) CalculateStandardDeviation(grades []Grade) float64 {
 	vals := c.extractValues(grades)
 	if len(vals) < 2 {
@@ -135,12 +146,7 @@ func (c *Calculator) CalculateStandardDeviation(grades []Grade) float64 {
 		sum += v
 	}
 	mean := sum / float64(len(vals))
-
-	var varianceSum float64
-	for _, v := range vals {
-		varianceSum += math.Pow(v-mean, 2)
-	}
-	return math.Sqrt(varianceSum / float64(len(vals)-1))
+	return c.calculateStandardDeviationFromValues(vals, mean)
 }
 
 func (c *Calculator) CalculateBellCurve(grades []Grade) (mean, stdDev, skewness, kurtosis float64) {
@@ -155,7 +161,7 @@ func (c *Calculator) CalculateBellCurve(grades []Grade) (mean, stdDev, skewness,
 		sum += v
 	}
 	mean = sum / n
-	stdDev = c.CalculateStandardDeviation(grades)
+	stdDev = c.calculateStandardDeviationFromValues(vals, mean)
 
 	if stdDev == 0 || n < 3 {
 		return mean, stdDev, 0, 0
@@ -174,7 +180,7 @@ func (c *Calculator) CalculateBellCurve(grades []Grade) (mean, stdDev, skewness,
 	// Adjusted sample excess kurtosis (Joanes-Gill estimator).
 	// Requires n > 3; for n == 3 the formula is undefined (division by zero
 	// in the correction term). Return 0 rather than mixing population and
-	// sample estimators, which was the previous inconsistency.
+	// sample estimators.
 	if n > 3 {
 		kurtosis = ((n*(n+1))/((n-1)*(n-2)*(n-3)))*kurtSum - ((3 * math.Pow(n-1, 2)) / ((n - 2) * (n - 3)))
 	} else {
@@ -205,14 +211,14 @@ func (c *Calculator) CalculatePercentile(grades []Grade, score float64) float64 
 }
 
 func (c *Calculator) DetectOutliers(grades []Grade) []string {
-	// Returns IDs of outlier grades (outside Mean +/- 2*StdDev)
+	// Returns IDs of outlier grades (outside Mean +/- 2*StdDev clamped to [1.0, 10.0])
 	mean := c.CalculateAverage(grades)
 	stdDev := c.CalculateStandardDeviation(grades)
 	if stdDev == 0 {
 		return nil
 	}
-	low := mean - 2*stdDev
-	high := mean + 2*stdDev
+	low := math.Max(1.0, mean-2*stdDev)
+	high := math.Min(10.0, mean+2*stdDev)
 
 	var outliers []string
 	for _, g := range grades {

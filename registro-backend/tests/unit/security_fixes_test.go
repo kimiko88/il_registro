@@ -72,7 +72,7 @@ func TestSecurityHeaders_CSPNoUnsafeInlineAndSanitizedBackendURL(t *testing.T) {
 	}
 }
 
-func TestCalculateAverage_IncludesGradeZero(t *testing.T) {
+func TestCalculateAverage_ExcludesGradeZero(t *testing.T) {
 	calc := grades.NewCalculator()
 
 	gradeList := []grades.Grade{
@@ -81,14 +81,14 @@ func TestCalculateAverage_IncludesGradeZero(t *testing.T) {
 		{ID: "g3", GradeValue: 9.0, GradeType: grades.GradeTypeNumeric},
 	}
 
-	// Average should be (0 + 6 + 9) / 3 = 5.0
+	// 0.0 is unrated/unset and excluded; average is (6 + 9) / 2 = 7.5
 	avg := calc.CalculateAverage(gradeList)
-	if avg != 5.0 {
-		t.Errorf("expected average to be 5.0 including grade 0.0, got %f", avg)
+	if avg != 7.5 {
+		t.Errorf("expected average to be 7.5 excluding grade 0.0, got %f", avg)
 	}
 }
 
-func TestCalculateWeightedAverage_IncludesGradeZero(t *testing.T) {
+func TestCalculateWeightedAverage_ExcludesGradeZero(t *testing.T) {
 	calc := grades.NewCalculator()
 
 	gradeList := []grades.Grade{
@@ -96,10 +96,10 @@ func TestCalculateWeightedAverage_IncludesGradeZero(t *testing.T) {
 		{ID: "g2", GradeValue: 10.0, Weight: 1.0, GradeType: grades.GradeTypeNumeric},
 	}
 
-	// Weighted Average should be (0*1 + 10*1) / 2 = 5.0
+	// 0.0 is unrated/unset and excluded; weighted average is 10.0
 	avg := calc.CalculateWeightedAverage(gradeList)
-	if avg != 5.0 {
-		t.Errorf("expected weighted average to be 5.0 including grade 0.0, got %f", avg)
+	if avg != 10.0 {
+		t.Errorf("expected weighted average to be 10.0 excluding grade 0.0, got %f", avg)
 	}
 }
 
