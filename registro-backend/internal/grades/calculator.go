@@ -15,7 +15,7 @@ func NewCalculator() *Calculator {
 // isVotableGrade determines if a grade entry represents a valid evaluable score in the Italian 1-10 scale.
 // Valid grades must be between 1.0 and 10.0.
 // Unset/unrated grades (val < 1.0 or val == 0.0) or absences (< 0) are excluded.
-func isVotableGrade(g Grade, val float64) bool {
+func isVotableGrade(val float64) bool {
 	return val >= 1.0 && val <= 10.0
 }
 
@@ -33,7 +33,7 @@ func (c *Calculator) CalculateAverage(grades []Grade) float64 {
 		if val == 0 && g.GradeType == GradeTypeJudgment {
 			val = c.ConvertJudgmentToValue(g.Description)
 		}
-		if isVotableGrade(g, val) {
+		if isVotableGrade(val) {
 			total += val
 			count++
 		}
@@ -86,7 +86,7 @@ func (c *Calculator) CalculateWeightedAverage(grades []Grade) float64 {
 		if val == 0 && g.GradeType == GradeTypeJudgment {
 			val = c.ConvertJudgmentToValue(g.Description)
 		}
-		if isVotableGrade(g, val) && g.Weight > 0 {
+		if isVotableGrade(val) && g.Weight > 0 {
 			totalWeighted += val * g.Weight
 			totalWeights += g.Weight
 		}
@@ -228,7 +228,7 @@ func (c *Calculator) DetectOutliers(grades []Grade) []string {
 		if val == 0 && g.GradeType == GradeTypeJudgment {
 			val = c.ConvertJudgmentToValue(g.Description)
 		}
-		if !isVotableGrade(g, val) {
+		if !isVotableGrade(val) {
 			continue
 		}
 
@@ -247,7 +247,7 @@ func (c *Calculator) extractValues(grades []Grade) []float64 {
 		if val == 0 && g.GradeType == GradeTypeJudgment {
 			val = c.ConvertJudgmentToValue(g.Description)
 		}
-		if isVotableGrade(g, val) {
+		if isVotableGrade(val) {
 			vals = append(vals, val)
 		}
 	}

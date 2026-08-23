@@ -233,14 +233,14 @@ func TestGrades_AuditFix_SanitizeFilenameParam(t *testing.T) {
 
 // 11. Test isVotableGrade bounds (1.0 to 10.0 Italian scale)
 func TestGrades_AuditFix_IsVotableGrade_ItalianScale(t *testing.T) {
-	assert.False(t, isVotableGrade(Grade{GradeType: GradeTypeNumeric}, 0.0), "0.0 must be excluded as unrated/unset")
-	assert.False(t, isVotableGrade(Grade{GradeType: GradeTypeNumeric}, -1.0), "Negative values must be excluded")
-	assert.False(t, isVotableGrade(Grade{GradeType: GradeTypeNumeric}, 10.5), "Values above 10.0 must be excluded")
-	assert.True(t, isVotableGrade(Grade{GradeType: GradeTypeNumeric}, 1.0), "1.0 is valid minimum grade")
-	assert.True(t, isVotableGrade(Grade{GradeType: GradeTypeNumeric}, 6.0), "6.0 is valid passing grade")
-	assert.True(t, isVotableGrade(Grade{GradeType: GradeTypeNumeric}, 10.0), "10.0 is valid maximum grade")
-	assert.True(t, isVotableGrade(Grade{GradeType: GradeTypeJudgment}, 8.0), "Converted judgment 8.0 is valid")
-	assert.False(t, isVotableGrade(Grade{GradeType: GradeTypeJudgment}, 0.0), "Unrecognized judgment 0.0 is excluded")
+	assert.False(t, isVotableGrade(0.0), "0.0 must be excluded as unrated/unset")
+	assert.False(t, isVotableGrade(-1.0), "Negative values must be excluded")
+	assert.False(t, isVotableGrade(10.5), "Values above 10.0 must be excluded")
+	assert.True(t, isVotableGrade(1.0), "1.0 is valid minimum grade")
+	assert.True(t, isVotableGrade(6.0), "6.0 is valid passing grade")
+	assert.True(t, isVotableGrade(10.0), "10.0 is valid maximum grade")
+	assert.True(t, isVotableGrade(8.0), "Converted judgment 8.0 is valid")
+	assert.False(t, isVotableGrade(0.0), "Unrecognized judgment 0.0 is excluded")
 }
 
 // 12. Test DetectOutliers bounds clamped to [1.0, 10.0]
