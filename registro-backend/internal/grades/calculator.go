@@ -16,16 +16,7 @@ func NewCalculator() *Calculator {
 // Valid grades must be between 1.0 and 10.0.
 // Unset/unrated grades (val < 1.0 or val == 0.0) or absences (< 0) are excluded.
 func isVotableGrade(g Grade, val float64) bool {
-	if val < 1.0 || val > 10.0 {
-		return false
-	}
-	if g.GradeType == GradeTypeNumeric && val >= 1.0 {
-		return true
-	}
-	if g.GradeType == GradeTypeJudgment && val >= 1.0 {
-		return true
-	}
-	return val >= 1.0
+	return val >= 1.0 && val <= 10.0
 }
 
 // CalculateAverage computes the arithmetic mean

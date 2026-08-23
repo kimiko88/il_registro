@@ -491,13 +491,15 @@ func TestGetStudentAttendance_TeacherWrongSchool_Forbidden(t *testing.T) {
 
 func TestGetStudentAttendance_TeacherSameSchool_Pass(t *testing.T) {
 	schoolID := "school1"
+	classID := "class1"
 	userRepo := &mockUserRepo{
 		users: map[string]*users.User{
 			"teacher1": {ID: "teacher1", Role: "teacher", SchoolID: &schoolID},
-			"stu1":     {ID: "stu1", Role: "student", SchoolID: &schoolID},
+			"stu1":     {ID: "stu1", Role: "student", SchoolID: &schoolID, ClassID: &classID},
 		},
 	}
-	svc := makeService(&mockRepo{}, userRepo)
+	repo := &mockRepo{isAssigned: true}
+	svc := makeService(repo, userRepo)
 	_, err := svc.GetStudentAttendance(context.Background(),
 		"teacher1", "teacher", "school1", "stu1",
 		time.Now().Add(-7*24*time.Hour), time.Now())

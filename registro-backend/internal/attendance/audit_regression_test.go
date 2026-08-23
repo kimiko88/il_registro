@@ -113,7 +113,7 @@ func TestValidator_StatusAndDateValidation(t *testing.T) {
 	assert.True(t, v.IsValidStatus(StatusPresent))
 	assert.True(t, v.IsValidStatus(StatusAbsent))
 	assert.True(t, v.IsValidStatus(StatusLate))
-	assert.True(t, v.IsValidStatus("present"))
+	assert.False(t, v.IsValidStatus("present"))
 	assert.False(t, v.IsValidStatus("invalid_status_xyz"))
 
 	// Test Invalid Status Entry
@@ -132,11 +132,11 @@ func TestValidator_StatusAndDateValidation(t *testing.T) {
 	assert.Error(t, v.ValidateEntry(futureEntry))
 	assert.Contains(t, v.ValidateEntry(futureEntry).Error(), "cannot mark attendance in future")
 
-	// Test Retroactive Limit (over 30 days)
+	// Test Obsolete Limit (over 2 years)
 	oldEntry := &Attendance{
 		Status: StatusPresent,
-		Date:   time.Now().AddDate(0, 0, -40),
+		Date:   time.Now().AddDate(-3, 0, 0),
 	}
 	assert.Error(t, v.ValidateEntry(oldEntry))
-	assert.Contains(t, v.ValidateEntry(oldEntry).Error(), "cannot edit attendance older than 30 days")
+	assert.Contains(t, v.ValidateEntry(oldEntry).Error(), "cannot mark attendance for dates older than 2 years")
 }

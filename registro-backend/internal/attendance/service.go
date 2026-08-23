@@ -269,11 +269,24 @@ func (s *service) MarkBulk(ctx context.Context, teacherID, schoolID string, req 
 	}
 
 	if s.broadcaster != nil {
-		go func(records []*Attendance, sid string) {
-			for _, att := range records {
-				s.safeBroadcast(att.StudentID, sid, "ATTENDANCE_"+string(att.Status), s.mapSingleResponse(*att))
+		type broadcastPayload struct {
+			studentID string
+			status    string
+			resp      AttendanceResponse
+		}
+		items := make([]broadcastPayload, len(atts))
+		for i, att := range atts {
+			items[i] = broadcastPayload{
+				studentID: att.StudentID,
+				status:    string(att.Status),
+				resp:      s.mapSingleResponse(*att),
 			}
-		}(atts, schoolID)
+		}
+		go func(items []broadcastPayload, sid string) {
+			for _, item := range items {
+				s.safeBroadcast(item.studentID, sid, "ATTENDANCE_"+item.status, item.resp)
+			}
+		}(items, schoolID)
 	}
 
 	return nil
@@ -458,6 +471,8 @@ func (s *service) GetStudentAttendance(ctx context.Context, actorID, actorRole, 
 				if err != nil || !isAssigned {
 					return nil, fmt.Errorf("forbidden: docente non assegnato alla classe dello studente")
 				}
+			} else {
+				return nil, fmt.Errorf("forbidden: lo studente non è assegnato ad alcuna classe")
 			}
 		} else {
 			st, err := s.userRepo.GetByID(ctx, studentID)
@@ -601,12 +616,14 @@ func (s *service) ProcessJustification(ctx context.Context, teacherID, justifica
 			return fmt.Errorf("forbidden: il docente non appartiene alla stessa scuola dello studente")
 		}
 	}
-	if studentUser.ClassID == nil || *studentUser.ClassID == "" {
-		return fmt.Errorf("impossibile processare giustifica: studente non assegnato a nessuna classe")
-	}
-	isAssigned, err := s.repo.IsTeacherAssignedToClass(ctx, teacherID, *studentUser.ClassID)
-	if err != nil || !isAssigned {
-		return fmt.Errorf("forbidden: docente non assegnato alla classe dello studente")
+	if role == "teacher" || role == "coordinator" {
+		if studentUser.ClassID == nil || *studentUser.ClassID == "" {
+			return fmt.Errorf("impossibile processare giustifica: studente non assegnato a nessuna classe")
+		}
+		isAssigned, err := s.repo.IsTeacherAssignedToClass(ctx, teacherID, *studentUser.ClassID)
+		if err != nil || !isAssigned {
+			return fmt.Errorf("forbidden: docente non assegnato alla classe dello studente")
+		}
 	}
 
 	if err := s.repo.ProcessJustificationTx(ctx, j, teacherID, approve); err != nil {
