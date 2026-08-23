@@ -544,7 +544,7 @@ func (r *repository) FindEnrolledSubjects(studentID string, semester int) ([]str
 		SELECT DISTINCT cs.subject_id::text
 		FROM class_subjects cs
 		JOIN students st ON st.class_id = cs.class_id
-		WHERE st.id = $1::uuid`
+		WHERE (st.id = $1::uuid OR st.user_id = $1::uuid)`
 
 	rows, err := r.db.Query(query, studentID)
 	if err != nil {
@@ -900,11 +900,12 @@ func (r *repository) GetStudentAbsenceCountForPeriod(ctx context.Context, studen
 	var count int
 	err := r.db.QueryRowContext(
 		ctx,
-		`SELECT COUNT(DISTINCT date::date) FROM attendance
-		 WHERE student_id = $1
-		   AND (status = 'Absent' OR status = 'absent')
-		   AND date::date >= $2::date
-		   AND date::date <= $3::date`,
+		`SELECT COUNT(DISTINCT a.date::date) FROM attendance a
+		 LEFT JOIN students st ON (a.student_id::text = st.id::text OR a.student_id::text = st.user_id::text)
+		 WHERE (a.student_id::text = $1 OR st.id::text = $1 OR st.user_id::text = $1)
+		   AND LOWER(a.status) IN ('absent', 'assente', 'a')
+		   AND a.date::date >= $2::date
+		   AND a.date::date <= $3::date`,
 		studentID, startD, endD,
 	).Scan(&count)
 	return count, err
@@ -915,9 +916,14 @@ func (r *repository) GetClassSubjectAverage(ctx context.Context, classID, subjec
 	err := r.db.QueryRowContext(ctx,
 		`SELECT AVG(g.grade_value)
 		 FROM grades g
-		 JOIN class_students cs ON g.student_id = cs.student_id
-		 WHERE cs.class_id = $1 AND g.subject_id = $2 AND g.semester = $3
-		   AND (g.school_id = (SELECT school_id FROM users WHERE id = $4 LIMIT 1) OR g.school_id IS NULL OR g.school_id = '')
+		 JOIN students s ON (g.student_id = s.id OR g.student_id = s.user_id)
+		 WHERE (s.class_id = $1::uuid OR EXISTS (SELECT 1 FROM class_students cs WHERE (cs.student_id = s.id OR cs.student_id = s.user_id OR cs.student_id = g.student_id) AND cs.class_id = $1::uuid))
+		   AND g.subject_id = $2::uuid AND g.semester = $3
+		   AND (
+		     g.school_id = (SELECT school_id FROM users WHERE id = $4::uuid LIMIT 1)
+		     OR g.school_id = (SELECT u.school_id FROM users u JOIN students st ON (st.user_id = u.id OR st.id = u.id) WHERE (st.id = $4::uuid OR st.user_id = $4::uuid) LIMIT 1)
+		     OR g.school_id IS NULL OR g.school_id = '' OR $4 = ''
+		   )
 		   AND g.is_published = true AND g.deleted_at IS NULL`,
 		classID, subjectID, semester, studentID,
 	).Scan(&avgVal)

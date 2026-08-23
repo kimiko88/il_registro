@@ -16,85 +16,101 @@ export const ITALIAN_GRADE_OPTIONS = [
 
 export function gradeToNumeric(val) {
   if (val === undefined || val === null || val === '') return null
-  if (typeof val === 'number') return isNaN(val) ? null : val
+  if (typeof val === 'number') {
+    if (isNaN(val)) return null
+    if (val === -1) return -1
+    if (val < 1.0 || val > 10.0) return null
+    return val
+  }
   const clean = String(val).trim().toUpperCase()
   if (clean === 'A' || clean === 'ASSENTE' || clean === 'ABSENT') return -1
-  if (clean === 'NC' || clean === 'NON CLASSIFICATO') return null
-  if (clean === 'E' || clean === 'ESENTE') return null
+  if (clean === 'NC' || clean === 'NON CLASSIFICATO' || clean === 'E' || clean === 'ESENTE' || clean === 'NV' || clean === 'NON VALUTATO') return null
+
+  // Judgments to standard numerical scale
+  if (clean === 'ECCELLENTE' || clean === 'OTTIMO' || clean === 'O' || clean === 'AVANZATO') return 10
+  if (clean === 'DISTINTO' || clean === 'D') return 8
+  if (clean === 'BUONO' || clean === 'B' || clean === 'INTERMEDIO') return 7
+  if (clean === 'DISCRETO' || clean === 'BASE') return 6.5
   if (clean === 'S' || clean === 'SUFF' || clean === 'SUFFICIENTE') return 6
-  if (clean === 'INS' || clean === 'INSUFFICIENTE') return 5
-  if (clean === 'O' || clean === 'OTTIMO') return 10
-  if (clean === 'D' || clean === 'DISTINTO') return 8
-  if (clean === 'B' || clean === 'BUONO') return 7
+  if (clean === 'QUASI SUFFICIENTE' || clean === 'QUASI SUFF' || clean === 'MEDIOCRE' || clean === 'INIZIALE') return 5
+  if (clean === 'INS' || clean === 'INSUFFICIENTE' || clean === 'NON RAGGIUNTO') return 5
+  if (clean === 'GRAVEMENTE INSUFFICIENTE' || clean === 'GRAVE INSUFFICIENTE' || clean === 'GRAVEMENTE INS') return 3
+
+  let candidate = null
 
   // Handle half notation first (e.g. 8 1/2 or 9½) before general / fraction split
   if (clean.endsWith('1/2') || clean.endsWith('½')) {
     const base = parseFloat(clean.replace('1/2', '').replace('½', '').trim().replace(',', '.'))
-    if (!isNaN(base)) return base + 0.5
-  }
-
-  // Handle ratio scores like 15/20 or grade ranges like 7/8
-  if (clean.includes('/')) {
+    if (!isNaN(base)) candidate = base + 0.5
+  } else if (clean.includes('/')) {
+    // Handle ratio scores like 18/20 or grade ranges like 7/8
     const parts = clean.split('/')
     if (parts.length === 2) {
       const n1 = parseFloat(parts[0].replace(',', '.'))
       const n2 = parseFloat(parts[1].replace(',', '.'))
       if (!isNaN(n1) && !isNaN(n2) && n2 > 0) {
-        if (n2 > 10 && n1 <= n2) {
-          // Normalized test score e.g. 18/20 -> 9
-          return Math.round(((n1 / n2) * 10) * 100) / 100
+        if (n1 >= 1 && n1 <= 10 && n2 >= 1 && n2 <= 10 && Math.abs(n2 - n1) <= 1.5) {
+          // Grade range e.g. 7/8 -> 7.5, 6/7 -> 6.5
+          candidate = (n1 + n2) / 2
+        } else if (n1 <= n2) {
+          // Normalized test score e.g. 18/20 -> 9, 0/5 -> 0 (rejected later)
+          candidate = Math.round(((n1 / n2) * 10) * 100) / 100
         }
-        // Grade range e.g. 7/8 -> 7.5
-        return (n1 + n2) / 2
       }
     }
-  }
-
-  // Handle hyphen ranges e.g. 7-8 -> 7.5 (excluding trailing minus e.g. '8-')
-  if (clean.includes('-') && !clean.endsWith('-')) {
+  } else if (clean.includes('-') && !clean.endsWith('-')) {
+    // Handle hyphen ranges e.g. 7-8 -> 7.5 (excluding trailing minus e.g. '8-')
     const parts = clean.split('-')
     if (parts.length === 2) {
       const n1 = parseFloat(parts[0].replace(',', '.'))
       const n2 = parseFloat(parts[1].replace(',', '.'))
       if (!isNaN(n1) && !isNaN(n2) && n1 > 0 && n2 > 0) {
-        return (n1 + n2) / 2
+        candidate = (n1 + n2) / 2
       }
     }
-  }
-
-  if (clean.endsWith('+')) {
+  } else if (clean.endsWith('+')) {
     const base = parseFloat(clean.slice(0, -1).trim().replace(',', '.'))
-    if (!isNaN(base)) return base + 0.25
-  }
-
-  if (clean.startsWith('+')) {
+    if (!isNaN(base)) candidate = base + 0.25
+  } else if (clean.startsWith('+')) {
     const base = parseFloat(clean.slice(1).trim().replace(',', '.'))
-    if (!isNaN(base)) return base + 0.25
-  }
-
-  if (clean.endsWith('-')) {
+    if (!isNaN(base)) candidate = base + 0.25
+  } else if (clean.endsWith('-')) {
     const base = parseFloat(clean.slice(0, -1).trim().replace(',', '.'))
-    if (!isNaN(base)) return base - 0.25
+    if (!isNaN(base)) candidate = base - 0.25
+  } else {
+    candidate = parseFloat(clean.replace(',', '.'))
   }
 
-  const numericVal = parseFloat(clean.replace(',', '.'))
-  return isNaN(numericVal) ? null : numericVal
+  if (candidate === null || isNaN(candidate)) return null
+  if (candidate === -1) return -1
+  // Strictly enforce Italian 1-10 grading range
+  if (candidate < 1.0 || candidate > 10.0) return null
+
+  return Math.round(candidate * 100) / 100
 }
 
 export function formatGrade(val, customSeparator = null) {
   if (val === undefined || val === null || val === '' || val === '-') return '-'
-  const num = Number(val)
+  let num = Number(val)
   if (isNaN(num)) return String(val)
   if (num === -1) return 'A'
 
+  // Clamp within bounds [-1, 10]
+  if (num < -1) num = -1
+  if (num > 10) num = 10
+  if (num > 0 && num < 1) num = 1
+
   const sep = customSeparator || (typeof localStorage !== 'undefined' ? (localStorage.getItem('user_decimal_separator') || ',') : ',')
   const rounded = Math.round(num * 100) / 100
-  const integerPart = Math.floor(rounded)
+  const integerPart = Math.min(10, Math.floor(rounded))
   const decimalPart = Math.round((rounded - integerPart) * 100) / 100
+
+  // 10 is the maximum allowed integer grade
+  if (integerPart >= 10) return '10'
 
   // Check if rounding pushed it to the next integer
   if (decimalPart >= 0.96) {
-    return `${integerPart + 1}`
+    return `${Math.min(10, integerPart + 1)}`
   }
 
   if (Math.abs(decimalPart - 0.5) < 0.04) {
@@ -104,7 +120,7 @@ export function formatGrade(val, customSeparator = null) {
     return `${integerPart}+`
   }
   if (Math.abs(decimalPart - 0.75) < 0.04) {
-    return `${integerPart + 1}-`
+    return `${Math.min(10, integerPart + 1)}-`
   }
 
   if (decimalPart === 0) return `${integerPart}`
@@ -112,7 +128,7 @@ export function formatGrade(val, customSeparator = null) {
   // Single decimal digit e.g. 5.3 -> '5,3', or two decimals e.g. 5.35 -> '5,35'
   const roundedDec = Math.round(decimalPart * 10)
   if (roundedDec === 10) {
-    return `${integerPart + 1}`
+    return `${Math.min(10, integerPart + 1)}`
   }
   if (Math.abs(decimalPart * 10 - roundedDec) < 0.05) {
     return `${integerPart}${sep}${roundedDec}`
@@ -127,5 +143,6 @@ export function getGradeColor(val) {
   if (num < 0) return 'grey-3'
   if (num < 5) return 'red-2'
   if (num < 6) return 'amber-2'
-  return 'green-2'
+  if (num <= 10) return 'green-2'
+  return 'white'
 }

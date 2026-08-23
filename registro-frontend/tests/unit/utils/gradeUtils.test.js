@@ -61,7 +61,7 @@ describe('gradeUtils — Italian Grade Conversion & Formatting', () => {
       expect(gradeToNumeric('15/30')).toBe(5)
     })
 
-    it('handles special grade labels (A, NC, E, S, INS, O, B, D)', () => {
+    it('handles special grade labels (A, NC, E, S, INS, O, B, D, Eccellente, Avanzato, Mediocre)', () => {
       expect(gradeToNumeric('A')).toBe(-1)
       expect(gradeToNumeric('ASSENTE')).toBe(-1)
       expect(gradeToNumeric('ABSENT')).toBe(-1)
@@ -72,6 +72,20 @@ describe('gradeUtils — Italian Grade Conversion & Formatting', () => {
       expect(gradeToNumeric('O')).toBe(10)
       expect(gradeToNumeric('D')).toBe(8)
       expect(gradeToNumeric('B')).toBe(7)
+      expect(gradeToNumeric('ECCELLENTE')).toBe(10)
+      expect(gradeToNumeric('AVANZATO')).toBe(10)
+      expect(gradeToNumeric('MEDIOCRE')).toBe(5)
+      expect(gradeToNumeric('GRAVEMENTE INSUFFICIENTE')).toBe(3)
+    })
+
+    it('rejects out of bounds grades outside [1.0, 10.0] scale', () => {
+      expect(gradeToNumeric(0)).toBeNull()
+      expect(gradeToNumeric(11)).toBeNull()
+      expect(gradeToNumeric('0')).toBeNull()
+      expect(gradeToNumeric('11')).toBeNull()
+      expect(gradeToNumeric('-5')).toBeNull()
+      expect(gradeToNumeric('0/5')).toBeNull()
+      expect(gradeToNumeric(15)).toBeNull()
     })
   })
 
@@ -92,6 +106,13 @@ describe('gradeUtils — Italian Grade Conversion & Formatting', () => {
       expect(formatGrade(10)).toBe('10')
       expect(formatGrade(6)).toBe('6')
       expect(formatGrade('8')).toBe('8')
+    })
+
+    it('clamps values beyond 10 to 10 and does not format as 11', () => {
+      expect(formatGrade(10.02)).toBe('10')
+      expect(formatGrade(10.5)).toBe('10')
+      expect(formatGrade(11)).toBe('10')
+      expect(formatGrade(0.5)).toBe('1')
     })
 
     it('formats half and quarter increments correctly', () => {
@@ -139,6 +160,8 @@ describe('gradeUtils — Italian Grade Conversion & Formatting', () => {
       expect(getGradeColor(null)).toBe('white')
       expect(getGradeColor('')).toBe('white')
       expect(getGradeColor('-')).toBe('white')
+      expect(getGradeColor(11)).toBe('white')
+      expect(getGradeColor('11')).toBe('white')
     })
   })
 })

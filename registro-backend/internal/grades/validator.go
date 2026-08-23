@@ -50,6 +50,7 @@ func (v *Validator) ValidateJudgmentString(judgment string) error {
 	allowed := []string{
 		"Insufficiente", "Mediocre", "Sufficiente", "Discreto", "Buono",
 		"Distinto", "Ottimo", "Eccellente", "Gravemente Insufficiente", "Quasi Sufficiente",
+		"Avanzato", "Intermedio", "Base", "Iniziale", "Non Raggiunto",
 	}
 	for _, a := range allowed {
 		if strings.EqualFold(a, judgment) {
