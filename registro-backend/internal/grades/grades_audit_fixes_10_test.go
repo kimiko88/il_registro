@@ -335,3 +335,48 @@ s5,sub1,7.0,,summative,EmptyDateShouldFallbackToNow`
 	assert.Equal(t, 7.0, reqs[1].GradeValue)
 	assert.False(t, reqs[1].Date.IsZero(), "Date must fallback to time.Now() and not be zero")
 }
+
+// 17. Test calcSemesterAverages ignores Semester == 0
+func TestGrades_AuditFix_CalcSemesterAverages_SemesterZeroExcluded(t *testing.T) {
+	grades := []GradeResponse{
+		{GradeValue: 8.0, Semester: 1, GradeCategory: string(GradeCategorySummative), Weight: 1.0},
+		{GradeValue: 9.0, Semester: 2, GradeCategory: string(GradeCategorySummative), Weight: 1.0},
+		{GradeValue: 4.0, Semester: 0, GradeCategory: string(GradeCategorySummative), Weight: 1.0}, // Unassigned semester
+	}
+
+	avg1, avg2 := calcSemesterAverages(grades)
+	assert.Equal(t, 8.0, avg1, "Semester 1 average must only include Semester == 1")
+	assert.Equal(t, 9.0, avg2, "Semester 2 average must only include Semester == 2, not Semester == 0")
+}
+
+// 18. Test GetMyAverages returns NV for empty semester
+func TestGrades_AuditFix_GetMyAverages_EmptySemester_NV(t *testing.T) {
+	mockRepo := new(MockRepository)
+	svc := &service{
+		repo:       mockRepo,
+		calculator: NewCalculator(),
+	}
+
+	// Student with grades ONLY in semester 1
+	grades := []Grade{
+		{
+			ID:            "g1",
+			StudentID:     "s1",
+			SubjectID:     "sub1",
+			GradeValue:    8.0,
+			Weight:        1.0,
+			Semester:      1,
+			IsPublished:   true,
+			GradeCategory: GradeCategorySummative,
+		},
+	}
+
+	mockRepo.On("FindByStudent", "s1").Return(grades, nil).Once()
+
+	res, err := svc.GetMyAverages(context.Background(), "s1")
+	assert.NoError(t, err)
+	assert.NotNil(t, res)
+
+	assert.Equal(t, "DISTINTO", res.Semester1.Condition)
+	assert.Equal(t, "N.V.", res.Semester2.Condition, "Empty semester must return N.V.")
+}

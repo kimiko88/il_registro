@@ -264,7 +264,7 @@ func calcSemesterAverages(grades []GradeResponse) (avg1, avg2 float64) {
 			if g.Semester == 1 {
 				weightedSum1 += g.GradeValue * w
 				totalWeight1 += w
-			} else {
+			} else if g.Semester == 2 {
 				weightedSum2 += g.GradeValue * w
 				totalWeight2 += w
 			}
@@ -827,9 +827,6 @@ func (s *service) GetMyAverages(ctx context.Context, studentID string) (*Student
 		}
 
 		var subjects []SubjectAverage
-		var totalSum float64
-		var totalSub int
-
 		for subID, subGrades := range subMap {
 			avg := s.calculator.CalculateAverage(subGrades)
 			weightedAvg := s.calculator.CalculateWeightedAverage(subGrades)
@@ -839,24 +836,24 @@ func (s *service) GetMyAverages(ctx context.Context, studentID string) (*Student
 				WeightedAverage: weightedAvg,
 				TotalGrades:     len(subGrades),
 			})
-			totalSum += weightedAvg
-			totalSub++
 		}
 
 		overall := s.calculator.CalculateWeightedAverage(gs)
 
-		cond := "OTTIMO"
-		switch {
-		case overall < 6.0:
-			cond = "ATTENZIONE"
-		case overall < 7.0:
-			cond = "SUFFICIENTE"
-		case overall < 8.0:
-			cond = "BUONO"
-		case overall < 9.0:
-			cond = "DISTINTO"
-		default:
-			cond = "OTTIMO"
+		cond := "N.V."
+		if len(gs) > 0 && overall > 0 {
+			switch {
+			case overall < 6.0:
+				cond = "ATTENZIONE"
+			case overall < 7.0:
+				cond = "SUFFICIENTE"
+			case overall < 8.0:
+				cond = "BUONO"
+			case overall < 9.0:
+				cond = "DISTINTO"
+			default:
+				cond = "OTTIMO"
+			}
 		}
 
 		return SemesterAverageSummary{
@@ -1161,7 +1158,7 @@ func (s *service) GetSemesterReport(ctx context.Context, actorID string, actorRo
 			FinalGrade:     finalGrade,
 			SubjectAverage: math.Round(avg*100) / 100,
 			GradeCount:     len(gs),
-			AbsenceDays:    totalAbsenceDays,
+			AbsenceDays:    0, // Per-subject hourly absences; total student absences are in TotalAbsenceDays
 			Notes:          "",
 			Grades:         gVals,
 			Passed:         passed,
@@ -1189,8 +1186,8 @@ func (s *service) GetSemesterReport(ctx context.Context, actorID string, actorRo
 				FinalGrade:     0,
 				SubjectAverage: 0,
 				GradeCount:     0,
-				AbsenceDays:    totalAbsenceDays,
-				Notes:          "",
+				AbsenceDays:    0,
+				Notes:          "N.V.",
 				Grades:         []GradeVal{},
 				Passed:         false,
 			})
@@ -1331,11 +1328,8 @@ func (s *service) CreateTestWithGrades(teacherID string, req CreateClassTestRequ
 		return nil, fmt.Errorf("teacher is not associated with a school")
 	}
 	schoolID := *teacherUser.SchoolID
-
-	var teacherProfileID string
-	if err := s.validator.db.QueryRow(
-		`SELECT id FROM teachers WHERE user_id = $1`, teacherID,
-	).Scan(&teacherProfileID); err != nil {
+	teacherProfileID, err := s.resolveTeacherProfileID(context.Background(), teacherID)
+	if err != nil {
 		return nil, fmt.Errorf("could not resolve teacher profile ID: %w", err)
 	}
 
@@ -1553,10 +1547,8 @@ func (s *service) UpdateClassTest(teacherID string, testID string, req UpdateCla
 	}
 	schoolID := *teacherUser.SchoolID
 
-	var teacherProfileID string
-	if err := s.validator.db.QueryRow(
-		`SELECT id FROM teachers WHERE user_id = $1`, teacherID,
-	).Scan(&teacherProfileID); err != nil {
+	teacherProfileID, err := s.resolveTeacherProfileID(context.Background(), teacherID)
+	if err != nil {
 		return fmt.Errorf("could not resolve teacher profile ID: %w", err)
 	}
 
@@ -1609,7 +1601,7 @@ func (s *service) UpdateClassTest(teacherID string, testID string, req UpdateCla
 	for _, gInput := range req.Grades {
 		existingGrade, exists := existingMap[gInput.StudentID]
 
-		if gInput.GradeValue == nil || *gInput.GradeValue < -1 {
+		if gInput.GradeValue == nil || *gInput.GradeValue < 0 {
 			if exists {
 				if err := s.repo.Delete(existingGrade.ID, teacherID); err != nil {
 					return fmt.Errorf("failed to delete grade for student %s: %w", gInput.StudentID, err)

@@ -66,8 +66,8 @@ func (e *pdfExporter) ExportReportCard(report *SemesterReportResponse, semester 
 		pdf.CellFormat(30, 7, fmt.Sprintf("%.2f", sub.SubjectAverage), "1", 0, "C", false, 0, "")
 
 		finalGradeStr := fmt.Sprintf("%.0f", sub.FinalGrade)
-		if sub.FinalGrade == 0 {
-			finalGradeStr = fmt.Sprintf("%.1f", sub.SubjectAverage)
+		if sub.GradeCount == 0 || sub.FinalGrade <= 0 {
+			finalGradeStr = "N.V."
 		}
 		pdf.CellFormat(30, 7, finalGradeStr, "1", 1, "C", false, 0, "")
 	}

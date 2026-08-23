@@ -244,3 +244,32 @@ func TestCountWeekdays(t *testing.T) {
 	count := countWeekdays(start, end)
 	assert.Equal(t, 10, count)
 }
+
+func TestAttendance_MarkBulk_HourValidation(t *testing.T) {
+	s := &service{}
+
+	ctx := context.Background()
+	req0 := BulkAttendanceRequest{
+		ClassID: "c1",
+		Date:    "2026-03-15",
+		Hour:    0, // Invalid hour 0
+		Statuses: []StudentStatusRequest{
+			{StudentID: "s1", Status: StatusPresent},
+		},
+	}
+	err0 := s.MarkBulk(ctx, "t1", "sch1", req0)
+	assert.Error(t, err0)
+	assert.Contains(t, err0.Error(), "ora lezione non valida")
+
+	req13 := BulkAttendanceRequest{
+		ClassID: "c1",
+		Date:    "2026-03-15",
+		Hour:    13, // Invalid hour > 12
+		Statuses: []StudentStatusRequest{
+			{StudentID: "s1", Status: StatusPresent},
+		},
+	}
+	err13 := s.MarkBulk(ctx, "t1", "sch1", req13)
+	assert.Error(t, err13)
+	assert.Contains(t, err13.Error(), "ora lezione non valida")
+}

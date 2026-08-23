@@ -186,6 +186,10 @@ func (s *service) MarkBulk(ctx context.Context, teacherID, schoolID string, req 
 		return fmt.Errorf("impossibile registrare presenze per date future (%s)", req.Date)
 	}
 
+	if req.Hour < 1 || req.Hour > 12 {
+		return fmt.Errorf("ora lezione non valida (%d): deve essere compresa tra 1 e 12", req.Hour)
+	}
+
 	isAssigned, err := s.repo.IsTeacherAssignedToClass(ctx, teacherID, req.ClassID)
 	if err != nil {
 		return fmt.Errorf("errore verifica docente per classe: %w", err)
@@ -889,7 +893,7 @@ func (s *service) GetChildAttendanceTrends(ctx context.Context, parentID, studen
 		tr := monthlyMap[k]
 		totalDays := len(monthlyDaysMap[k])
 		presentDays := len(monthlyPresentDaysMap[k])
-		rate := 100.0
+		rate := 0.0
 		if totalDays > 0 {
 			rate = (float64(presentDays) / float64(totalDays)) * 100.0
 		}
@@ -928,7 +932,11 @@ func (s *service) GetMonthlyBreakdown(ctx context.Context, actorID, actorRole, s
 	}
 
 	if schoolYear == "" {
-		now := time.Now()
+		loc, err := time.LoadLocation("Europe/Rome")
+		if err != nil {
+			loc = time.Local
+		}
+		now := time.Now().In(loc)
 		if now.Month() >= 9 {
 			schoolYear = fmt.Sprintf("%d-%d", now.Year(), now.Year()+1)
 		} else {
