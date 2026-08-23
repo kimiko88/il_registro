@@ -3,6 +3,8 @@ import quasarLangEn from 'quasar/lang/en-US'
 import quasarLangDe from 'quasar/lang/de'
 import quasarLangFr from 'quasar/lang/fr'
 import quasarLangEs from 'quasar/lang/es'
+import quasarLangRo from 'quasar/lang/ro'
+import quasarLangSq from 'quasar/lang/sq'
 import quasarLangRu from 'quasar/lang/ru'
 import quasarLangUk from 'quasar/lang/uk'
 import quasarLangAr from 'quasar/lang/ar'
@@ -15,6 +17,8 @@ export const SUPPORTED_LOCALES = [
   { label: 'Deutsch', value: 'de-DE', code: 'DE', flag: '🇩🇪', icon: 'language', dir: 'ltr' },
   { label: 'Français', value: 'fr-FR', code: 'FR', flag: '🇫🇷', icon: 'language', dir: 'ltr' },
   { label: 'Español', value: 'es-ES', code: 'ES', flag: '🇪🇸', icon: 'language', dir: 'ltr' },
+  { label: 'Română', value: 'ro-RO', code: 'RO', flag: '🇷🇴', icon: 'language', dir: 'ltr' },
+  { label: 'Shqip', value: 'sq-AL', code: 'SQ', flag: '🇦🇱', icon: 'language', dir: 'ltr' },
   { label: 'Русский', value: 'ru-RU', code: 'RU', flag: '🇷🇺', icon: 'language', dir: 'ltr' },
   { label: 'Українська', value: 'uk-UA', code: 'UK', flag: '🇺🇦', icon: 'language', dir: 'ltr' },
   { label: 'العربية', value: 'ar-SA', code: 'AR', flag: '🇸🇦', icon: 'language', dir: 'rtl' },
@@ -32,6 +36,11 @@ const QUASAR_LANG_MAP = {
   'fr': quasarLangFr,
   'es-ES': quasarLangEs,
   'es': quasarLangEs,
+  'ro-RO': quasarLangRo,
+  'ro': quasarLangRo,
+  'sq-AL': quasarLangSq,
+  'sq': quasarLangSq,
+  'al': quasarLangSq,
   'ru-RU': quasarLangRu,
   'ru': quasarLangRu,
   'uk-UA': quasarLangUk,

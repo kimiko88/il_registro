@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { messages } from '@/i18n'
 
-describe('i18n Dictionary Integrity across all 9 Supported Languages', () => {
-  const supportedLocales = ['it-IT', 'en-US', 'de-DE', 'fr-FR', 'es-ES', 'ru-RU', 'uk-UA', 'ar-SA', 'zh-CN']
+describe('i18n Dictionary Integrity across all 11 Supported Languages', () => {
+  const supportedLocales = ['it-IT', 'en-US', 'de-DE', 'fr-FR', 'es-ES', 'ro-RO', 'sq-AL', 'ru-RU', 'uk-UA', 'ar-SA', 'zh-CN']
   const requiredSections = ['roles', 'layout', 'categories', 'nav', 'notifications', 'help']
 
   supportedLocales.forEach((locale) => {

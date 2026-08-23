@@ -17,14 +17,16 @@ describe('locale.js — Multilingual & Accessibility Support', () => {
   })
 
   describe('SUPPORTED_LOCALES', () => {
-    it('supports 9 languages including Italian, English, French, German, Spanish, Russian, Ukrainian, Arabic, Chinese', () => {
-      expect(SUPPORTED_LOCALES).toHaveLength(9)
+    it('supports 11 languages including Italian, English, French, German, Spanish, Romanian, Albanian, Russian, Ukrainian, Arabic, Chinese', () => {
+      expect(SUPPORTED_LOCALES).toHaveLength(11)
       const values = SUPPORTED_LOCALES.map(l => l.value)
       expect(values).toContain('it-IT')
       expect(values).toContain('en-US')
       expect(values).toContain('de-DE')
       expect(values).toContain('fr-FR')
       expect(values).toContain('es-ES')
+      expect(values).toContain('ro-RO')
+      expect(values).toContain('sq-AL')
       expect(values).toContain('ru-RU')
       expect(values).toContain('uk-UA')
       expect(values).toContain('ar-SA')
@@ -37,6 +39,12 @@ describe('locale.js — Multilingual & Accessibility Support', () => {
 
       const italian = SUPPORTED_LOCALES.find(l => l.value === 'it-IT')
       expect(italian.dir).toBe('ltr')
+
+      const romanian = SUPPORTED_LOCALES.find(l => l.value === 'ro-RO')
+      expect(romanian.dir).toBe('ltr')
+
+      const albanian = SUPPORTED_LOCALES.find(l => l.value === 'sq-AL')
+      expect(albanian.dir).toBe('ltr')
     })
   })
 
@@ -44,6 +52,8 @@ describe('locale.js — Multilingual & Accessibility Support', () => {
     it('normalizes full locale codes', () => {
       expect(normalizeLocale('it-IT')).toBe('it-IT')
       expect(normalizeLocale('en-US')).toBe('en-US')
+      expect(normalizeLocale('ro-RO')).toBe('ro-RO')
+      expect(normalizeLocale('sq-AL')).toBe('sq-AL')
       expect(normalizeLocale('ar-SA')).toBe('ar-SA')
     })
 
@@ -53,6 +63,10 @@ describe('locale.js — Multilingual & Accessibility Support', () => {
       expect(normalizeLocale('fr')).toBe('fr-FR')
       expect(normalizeLocale('DE')).toBe('de-DE')
       expect(normalizeLocale('es')).toBe('es-ES')
+      expect(normalizeLocale('ro')).toBe('ro-RO')
+      expect(normalizeLocale('RO')).toBe('ro-RO')
+      expect(normalizeLocale('sq')).toBe('sq-AL')
+      expect(normalizeLocale('SQ')).toBe('sq-AL')
       expect(normalizeLocale('ru')).toBe('ru-RU')
       expect(normalizeLocale('uk')).toBe('uk-UA')
       expect(normalizeLocale('ar')).toBe('ar-SA')
