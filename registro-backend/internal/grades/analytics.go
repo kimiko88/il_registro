@@ -28,19 +28,19 @@ func NewAnalyticsService(r Repository) AnalyticsService {
 }
 
 func (a *analyticsService) GetStudentAverage(studentID string, subjectID string) (float64, error) {
-	// We need a repository method to find by student AND subject
-	// For now we fetch all student grades and filter, or find by student which likely filters by default
-	// Let's use FindByStudent and filter in memory if necessary, or add FindByStudentAndSubject to repo.
-
-	// Reusing FindByStudent for now as it's efficient enough for MVP
-	grades, err := a.repo.FindByStudent(studentID)
+	// Filter by student and subject at database level via FindWithFilter
+	filter := GradeFilter{
+		StudentID: studentID,
+		SubjectID: subjectID,
+	}
+	grades, err := a.repo.FindWithFilter(filter)
 	if err != nil {
 		return 0, err
 	}
 
 	var subjectGrades []Grade
 	for _, g := range grades {
-		if subjectID == "" || g.SubjectID == subjectID {
+		if g.IsPublished && g.DeletedAt == nil {
 			subjectGrades = append(subjectGrades, g)
 		}
 	}
@@ -49,30 +49,20 @@ func (a *analyticsService) GetStudentAverage(studentID string, subjectID string)
 }
 
 func (a *analyticsService) GetClassAverage(classID string, subjectID string) (float64, error) {
-	// We need class fetching. Using FindByClassAndSubject
-	// Assuming semester 0 means "all" or we default to current.
-	// We'll calculate for all semesters found or specific logic.
-	// For this simple analytic, let's just get the grades provided.
-
-	// NOTE: Repository FindByClassAndSubject takes semester. We might need to iterate or change repo.
-	// Let's assume we want current semester logic, but for now passing 0 might not work with the query "=" check.
-	// I'll stick to a simpler implementations: fetch for semester 1 and 2 and combine.
-
-	var allGrades []Grade
-
-	g1, err := a.repo.FindByClassAndSubject(classID, subjectID, 1)
+	// Fetch all semesters for class and subject in a single optimized query (semester 0 = all)
+	allGrades, err := a.repo.FindByClassAndSubject(classID, subjectID, 0)
 	if err != nil {
 		return 0, err
 	}
-	allGrades = append(allGrades, g1...)
 
-	g2, err := a.repo.FindByClassAndSubject(classID, subjectID, 2)
-	if err != nil {
-		return 0, err
+	var validGrades []Grade
+	for _, g := range allGrades {
+		if g.IsPublished && g.DeletedAt == nil {
+			validGrades = append(validGrades, g)
+		}
 	}
-	allGrades = append(allGrades, g2...)
 
-	return a.calculator.CalculateAverage(allGrades), nil
+	return a.calculator.CalculateAverage(validGrades), nil
 }
 
 // --- Specific Implementations ---
@@ -193,8 +183,8 @@ func (a *analyticsService) GetClassAnalysis(classID string, semester int) (*Anal
 
 		if failingCount == 0 {
 			promoted++
-		} else {
-			suspended++
+		} else if failingCount <= 2 {
+			suspended++ // Sospensione del giudizio (1-2 debiti formativi)
 		}
 
 		stuDisplayName := "Student " + sID
@@ -207,7 +197,7 @@ func (a *analyticsService) GetClassAnalysis(classID string, semester int) (*Anal
 				StudentID:      sID,
 				StudentName:    stuDisplayName,
 				FailedSubjects: failedSubs,
-				AvgFailing:     avg, // Avg of ALL or Failing? Using overall for now
+				AvgFailing:     avg,
 				Recommendation: "Supporto intensivo",
 			})
 		}
@@ -226,6 +216,27 @@ func (a *analyticsService) GetClassAnalysis(classID string, semester int) (*Anal
 		className = "Class " + classID[:4]
 	}
 
+	// Calculate real min and max from class summative grades on Italian scale [1.0, 10.0]
+	realMin := 10.0
+	realMax := 1.0
+	if len(summative) > 0 {
+		for _, g := range summative {
+			if g.GradeValue >= 1.0 && g.GradeValue <= 10.0 {
+				if g.GradeValue < realMin {
+					realMin = g.GradeValue
+				}
+				if g.GradeValue > realMax {
+					realMax = g.GradeValue
+				}
+			}
+		}
+		if realMin > realMax {
+			realMin, realMax = 1.0, 10.0
+		}
+	} else {
+		realMin, realMax = 1.0, 10.0
+	}
+
 	return &AnalyticsClassResponse{
 		Class:        ClassInfo{ID: classID, Name: className},
 		Semester:     semester,
@@ -242,7 +253,8 @@ func (a *analyticsService) GetClassAnalysis(classID string, semester int) (*Anal
 			StdDev:       stdDev,
 			BellCurve:    BellCurveInfo{Mean: mean, StdDev: stdDev, Skewness: skew, Kurtosis: kurt, NormalityTest: "approx_normal"},
 			Distribution: dist,
-			Min:          0, Max: 10, // simplified
+			Min:          realMin,
+			Max:          realMax,
 		},
 		Subjects:      subPerf,
 		AtRisk:        atRisk,
@@ -316,6 +328,7 @@ func (a *analyticsService) GetStudentProfile(studentID string, semester int) (*A
 	}
 
 	var subAvgs []SubjectAvgDetail
+	failingSubjects := 0
 	for sub, gs := range subMap {
 		var subSum []Grade
 		for _, g := range gs {
@@ -325,6 +338,9 @@ func (a *analyticsService) GetStudentProfile(studentID string, semester int) (*A
 		}
 
 		avg := a.calculator.CalculateAverage(subSum)
+		if len(subSum) > 0 && avg < 6.0 {
+			failingSubjects++
+		}
 		subAvgs = append(subAvgs, SubjectAvgDetail{
 			Subject:     sub,
 			Average:     avg,
@@ -333,11 +349,18 @@ func (a *analyticsService) GetStudentProfile(studentID string, semester int) (*A
 		})
 	}
 
+	promotionStatus := "On Track"
+	if failingSubjects > 2 {
+		promotionStatus = "Critical"
+	} else if failingSubjects > 0 {
+		promotionStatus = "At Risk"
+	}
+
 	return &AnalyticsStudentResponse{
 		Student: StudentInfo{ID: studentID},
 		OverallProfile: OverallProfile{
 			OverallAverage:  overallAvg,
-			PromotionStatus: "On Track",
+			PromotionStatus: promotionStatus,
 		},
 		SubjectAverages: subAvgs,
 	}, nil

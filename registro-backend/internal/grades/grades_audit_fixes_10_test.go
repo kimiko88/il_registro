@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -274,4 +275,63 @@ func TestGrades_AuditFix_AcademicYearDates_NilDBSafety(t *testing.T) {
 	assert.NotEmpty(t, s1End)
 	assert.NotEmpty(t, s2Start)
 	assert.NotEmpty(t, s2End)
+}
+
+// 14. Test ValidateGradeValue Italian 1-10 scale
+func TestGrades_AuditFix_ValidateGradeValue_ItalianScale(t *testing.T) {
+	v := NewValidator(nil)
+
+	// In Italian system: 0.0 is NOT a valid grade (must be between 1 and 10, or -1 for absence)
+	assert.Error(t, v.ValidateGradeValue(0.0, "numeric"), "0.0 must be rejected")
+	assert.Error(t, v.ValidateGradeValue(0.5, "numeric"), "0.5 must be rejected")
+	assert.Error(t, v.ValidateGradeValue(10.5, "numeric"), "10.5 must be rejected")
+	assert.Error(t, v.ValidateGradeValue(-2.0, "numeric"), "-2.0 must be rejected")
+
+	assert.NoError(t, v.ValidateGradeValue(1.0, "numeric"), "1.0 must be accepted")
+	assert.NoError(t, v.ValidateGradeValue(6.0, "numeric"), "6.0 must be accepted")
+	assert.NoError(t, v.ValidateGradeValue(10.0, "numeric"), "10.0 must be accepted")
+	assert.NoError(t, v.ValidateGradeValue(-1.0, "numeric"), "-1.0 must be accepted as absence")
+}
+
+// 15. Test helpers ConvertNumericToJudgment and ConvertJudgmentToNumeric
+func TestGrades_AuditFix_Helpers_ConvertNumericAndJudgment(t *testing.T) {
+	// Out of bounds / non-evaluated
+	assert.Equal(t, "Non valutato", ConvertNumericToJudgment(0.0))
+	assert.Equal(t, "Non valutato", ConvertNumericToJudgment(10.5))
+	assert.Equal(t, "Gravemente Insufficiente", ConvertNumericToJudgment(3.0))
+	assert.Equal(t, "Insufficiente", ConvertNumericToJudgment(5.0))
+	assert.Equal(t, "Sufficiente", ConvertNumericToJudgment(6.0))
+	assert.Equal(t, "Discreto", ConvertNumericToJudgment(7.5))
+	assert.Equal(t, "Buono", ConvertNumericToJudgment(8.5))
+	assert.Equal(t, "Distinto", ConvertNumericToJudgment(9.5))
+	assert.Equal(t, "Ottimo", ConvertNumericToJudgment(10.0))
+
+	// Judgment string to numeric
+	assert.Equal(t, 3.0, ConvertJudgmentToNumeric("Gravemente Insufficiente"))
+	assert.Equal(t, 5.0, ConvertJudgmentToNumeric("Quasi Sufficiente"))
+	assert.Equal(t, 6.0, ConvertJudgmentToNumeric("Sufficiente"))
+	assert.Equal(t, 10.0, ConvertJudgmentToNumeric("Ottimo"))
+	assert.Equal(t, 0.0, ConvertJudgmentToNumeric("InvalidJudgment"))
+}
+
+// 16. Test ParseCSVGrades validation and date fallback
+func TestGrades_AuditFix_ParseCSVGrades_ValidationAndDateSafety(t *testing.T) {
+	csvData := `StudentID,SubjectID,Value,Date,Category,Description
+s1,sub1,8.5,2026-03-15,summative,Compito
+s2,sub1,0.0,2026-03-15,summative,InvalidZeroGrade
+s3,sub1,15.0,2026-03-15,summative,OutOfRangeGrade
+s4,sub1,not_a_number,2026-03-15,summative,MalformedValue
+s5,sub1,7.0,,summative,EmptyDateShouldFallbackToNow`
+
+	reqs, err := ParseCSVGrades(strings.NewReader(csvData), 2)
+	assert.NoError(t, err)
+	assert.Len(t, reqs, 2, "Only valid 1-10 grades should be parsed (s1 and s5)")
+
+	assert.Equal(t, "s1", reqs[0].StudentID)
+	assert.Equal(t, 8.5, reqs[0].GradeValue)
+	assert.Equal(t, 2026, reqs[0].Date.Year())
+
+	assert.Equal(t, "s5", reqs[1].StudentID)
+	assert.Equal(t, 7.0, reqs[1].GradeValue)
+	assert.False(t, reqs[1].Date.IsZero(), "Date must fallback to time.Now() and not be zero")
 }
