@@ -10,16 +10,18 @@ describe('Secretary Schedule Grids Robustness Suite', () => {
 
   it('ScheduleGrid calculates total weekly hours and populates cells', async () => {
     const initialSchedule = [
-      { day: 1, hour: 1, subject_name: 'Matematica', teacher_name: 'Prof. Rossi', room: 'Aula 10' },
-      { day: 1, hour: 2, subject_name: 'Matematica', teacher_name: 'Prof. Rossi', room: 'Aula 10' },
-      { day: 2, hour: 1, subject_name: 'Italiano', teacher_name: 'Prof. Bianchi', room: 'Aula 10' }
+      { day_of_week: 1, hour_index: 1, subject_id: 's1', subject_name: 'Matematica', teacher_name: 'Prof. Rossi', room: 'Aula 10' },
+      { day_of_week: 1, hour_index: 2, subject_id: 's1', subject_name: 'Matematica', teacher_name: 'Prof. Rossi', room: 'Aula 10' },
+      { day_of_week: 2, hour_index: 1, subject_id: 's2', subject_name: 'Italiano', teacher_name: 'Prof. Bianchi', room: 'Aula 10' }
     ]
 
     const wrapper = mount(ScheduleGrid, {
       props: {
-        schedule: initialSchedule,
-        subjects: [{ id: 's1', name: 'Matematica' }, { id: 's2', name: 'Italiano' }],
-        teachers: [{ id: 't1', first_name: 'Mario', last_name: 'Rossi' }]
+        initialSchedule,
+        assignments: [
+          { id: 'a1', subject_id: 's1', subject_name: 'Matematica', teacher_id: 't1', teacher_name: 'Prof. Rossi' },
+          { id: 'a2', subject_id: 's2', subject_name: 'Italiano', teacher_id: 't2', teacher_name: 'Prof. Bianchi' }
+        ]
       },
       global: {
         mocks: { t: (k) => k },
@@ -43,12 +45,12 @@ describe('Secretary Schedule Grids Robustness Suite', () => {
 
   it('TeacherScheduleGrid emits save with current grid entries', async () => {
     const initialSchedule = [
-      { day: 1, hour: 1, subject_name: 'Fisica', class_name: '3A', room: 'Lab 1' }
+      { day_of_week: 1, hour_index: 1, subject_id: 's1', subject_name: 'Fisica', class_id: 'c1', class_name: '3A', room: 'Lab 1' }
     ]
 
     const wrapper = mount(TeacherScheduleGrid, {
       props: {
-        schedule: initialSchedule,
+        initialSchedule,
         classes: [{ id: 'c1', name: '3A' }],
         subjects: [{ id: 's1', name: 'Fisica' }]
       },

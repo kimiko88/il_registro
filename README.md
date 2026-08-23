@@ -252,8 +252,6 @@ cd registro-frontend && npx playwright test
 
 ## Licenza
 
-## Licenza
-
 Questo progetto è rilasciato sotto licenza **[PolyForm Noncommercial 1.0.0](./LICENSE)**.
 
 **L'utilizzo per scuole pubbliche, Comuni, Regioni, università, enti di ricerca e istituzioni pubbliche è gratuito e senza limitazioni** — perché crediamo che i dati degli studenti e gli strumenti per gestirli debbano rimanere in mano pubblica.

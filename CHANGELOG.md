@@ -3,6 +3,26 @@
 Tutte le modifiche rilevanti a questo progetto sono documentate in questo file.
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/).
 
+## [0.6.0] — 2026-08-23
+
+### Aggiunto & Modificato
+
+- **Audit Completo & Hardening Frontend (`registro-frontend`)**:
+  - **Composables & Authentication (`src/composables`)**:
+    - Risolto mascheramento degli errori in `useUserManagement.js` durante l'importazione utenti CSV (notifica negativa `type: 'negative'` e ritorno `false`).
+    - Mappatura completa post-login per tutti i ruoli scolastici estesi (`principal`, `vice_principal`, `coordinator`, `system_auditor`, `staff`, `docente`) in `useAuth.js`.
+    - Validazione durate e intervalli orari in `useColloquiScheduling.js` per prevenire loop infiniti o date non valide.
+  - **Componenti Vue (`src/components`)**:
+    - Prevenzione valori `NaN` e warning Quasar in `GradeChart.vue` per medie non numeriche o assenti (`'-'`).
+    - Correzione sintassi prop chip e protezione array `Array.isArray()` per stream multipli asincroni in `TimelineActivityFeed.vue`.
+  - **Localizzazione & Internazionalizzazione (`src/i18n`)**:
+    - Pulizia delle chiavi duplicate e allineamento semantico dei ruoli e dei menu su tutte le 9 lingue supportate (`it-IT`, `en-US`, `de-DE`, `fr-FR`, `es-ES`, `ru-RU`, `uk-UA`, `ar-SA`, `zh-CN`).
+  - **Espansione Test Suite Vitest**:
+    - Create 5 nuove suite di test unitari dedicate (`useUserManagementFix.spec.js`, `useAuthRoleRouting.spec.js`, `StudentGradeChart.spec.js`, `TimelineActivityFeed.spec.js`, `ScheduleGridsRobustness.spec.js`).
+    - **153 test file** e **908 unit test** superati con successo al 100% (0 fallimenti, 0 errori).
+
+---
+
 ## [0.5.0] — 2026-08-13
 
 ### Aggiunto & Modificato
