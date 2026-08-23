@@ -192,6 +192,9 @@ func (c *Calculator) CalculateBellCurve(grades []Grade) (mean, stdDev, skewness,
 }
 
 func (c *Calculator) CalculatePercentile(grades []Grade, score float64) float64 {
+	if score < 1.0 || score > 10.0 {
+		return 0
+	}
 	vals := c.extractValues(grades)
 	if len(vals) == 0 {
 		return 0
@@ -211,14 +214,14 @@ func (c *Calculator) CalculatePercentile(grades []Grade, score float64) float64 
 }
 
 func (c *Calculator) DetectOutliers(grades []Grade) []string {
-	// Returns IDs of outlier grades (outside Mean +/- 2*StdDev clamped to [1.0, 10.0])
+	// Returns IDs of outlier grades (outside Mean +/- 2*StdDev)
 	mean := c.CalculateAverage(grades)
 	stdDev := c.CalculateStandardDeviation(grades)
 	if stdDev == 0 {
 		return nil
 	}
-	low := math.Max(1.0, mean-2*stdDev)
-	high := math.Min(10.0, mean+2*stdDev)
+	low := mean - 2*stdDev
+	high := mean + 2*stdDev
 
 	var outliers []string
 	for _, g := range grades {

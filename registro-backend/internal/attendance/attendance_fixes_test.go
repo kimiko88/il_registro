@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"registro-backend/internal/users"
+
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -272,4 +274,38 @@ func TestAttendance_MarkBulk_HourValidation(t *testing.T) {
 	err13 := s.MarkBulk(ctx, "t1", "sch1", req13)
 	assert.Error(t, err13)
 	assert.Contains(t, err13.Error(), "ora lezione non valida")
+}
+
+func TestCountWeekdays_MidnightNormalization(t *testing.T) {
+	// Single day test: 2026-09-01 (Tuesday)
+	start := time.Date(2026, 9, 1, 0, 0, 0, 0, time.UTC)
+	endSameDayEndOfDay := time.Date(2026, 9, 1, 23, 59, 59, 999999999, time.UTC)
+	endSameDayMidnight := time.Date(2026, 9, 1, 0, 0, 0, 0, time.UTC)
+
+	assert.Equal(t, 1, countWeekdays(start, endSameDayEndOfDay))
+	assert.Equal(t, 1, countWeekdays(start, endSameDayMidnight))
+}
+
+func TestAttendance_ProcessJustification_RoleEnforcement(t *testing.T) {
+	mockRepo := new(MockAttendanceRepo)
+	mockUserRepo := new(MockUserRepo)
+	svc := NewService(mockRepo, mockUserRepo, nil, nil)
+
+	jid := "just-1"
+	j := &Justification{ID: jid, StudentID: "stud-1", Status: JustificationPending}
+	classID := "cls-1"
+	mockRepo.On("FindJustificationByID", jid).Return(j, nil)
+	mockUserRepo.On("GetByID", mock.Anything, "stud-1").Return(&users.User{ID: "stud-1", ClassID: &classID}, nil)
+
+	// Parent role must be forbidden
+	mockUserRepo.On("GetByID", mock.Anything, "parent-1").Return(&users.User{ID: "parent-1", Role: "parent"}, nil).Once()
+	errParent := svc.ProcessJustification(context.Background(), "parent-1", jid, true)
+	assert.Error(t, errParent)
+	assert.Contains(t, errParent.Error(), "non è autorizzato")
+
+	// Student role must be forbidden
+	mockUserRepo.On("GetByID", mock.Anything, "student-1").Return(&users.User{ID: "student-1", Role: "student"}, nil).Once()
+	errStudent := svc.ProcessJustification(context.Background(), "student-1", jid, true)
+	assert.Error(t, errStudent)
+	assert.Contains(t, errStudent.Error(), "non è autorizzato")
 }

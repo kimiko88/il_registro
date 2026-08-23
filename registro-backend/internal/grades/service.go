@@ -261,10 +261,11 @@ func calcSemesterAverages(grades []GradeResponse) (avg1, avg2 float64) {
 			if w <= 0 {
 				w = 1.0
 			}
-			if g.Semester == 1 {
+			switch g.Semester {
+			case 1:
 				weightedSum1 += g.GradeValue * w
 				totalWeight1 += w
-			} else if g.Semester == 2 {
+			case 2:
 				weightedSum2 += g.GradeValue * w
 				totalWeight2 += w
 			}

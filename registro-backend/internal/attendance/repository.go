@@ -666,7 +666,7 @@ func (r *repository) HasOverlappingJustification(ctx context.Context, studentID 
 		SELECT EXISTS (
 			SELECT 1 FROM justifications
 			WHERE student_id = $1::uuid
-			  AND status != 'Rejected'
+			  AND LOWER(status::text) IN ('pending', 'approved')
 			  AND start_date <= $3::date
 			  AND end_date >= $2::date
 		)
@@ -674,7 +674,7 @@ func (r *repository) HasOverlappingJustification(ctx context.Context, studentID 
 	var exists bool
 	err := r.db.QueryRowContext(ctx, query, studentID, startDate, endDate).Scan(&exists)
 	if err != nil {
-		return false, nil
+		return false, err
 	}
 	return exists, nil
 }

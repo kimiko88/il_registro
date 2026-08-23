@@ -268,8 +268,12 @@ func (s *service) MarkBulk(ctx context.Context, teacherID, schoolID string, req 
 		return err
 	}
 
-	for _, att := range atts {
-		s.safeBroadcast(att.StudentID, schoolID, "ATTENDANCE_"+string(att.Status), s.mapSingleResponse(*att))
+	if s.broadcaster != nil {
+		go func(records []*Attendance, sid string) {
+			for _, att := range records {
+				s.safeBroadcast(att.StudentID, sid, "ATTENDANCE_"+string(att.Status), s.mapSingleResponse(*att))
+			}
+		}(atts, schoolID)
 	}
 
 	return nil
@@ -576,7 +580,23 @@ func (s *service) ProcessJustification(ctx context.Context, teacherID, justifica
 	if err != nil || teacherUser == nil {
 		return fmt.Errorf("unauthorized: teacher not found: %w", err)
 	}
-	if teacherUser.Role != "superadmin" {
+	role := teacherUser.Role
+	if role == "" {
+		role = "teacher"
+	}
+	allowedRoles := map[string]bool{
+		"teacher":        true,
+		"coordinator":    true,
+		"admin":          true,
+		"superadmin":     true,
+		"principal":      true,
+		"vice_principal": true,
+		"secretary":      true,
+	}
+	if !allowedRoles[role] {
+		return fmt.Errorf("forbidden: il ruolo '%s' non è autorizzato ad elaborare giustifiche", role)
+	}
+	if role != "superadmin" {
 		if teacherUser.SchoolID != nil && studentUser.SchoolID != nil && *teacherUser.SchoolID != *studentUser.SchoolID {
 			return fmt.Errorf("forbidden: il docente non appartiene alla stessa scuola dello studente")
 		}
@@ -764,7 +784,7 @@ func (s *service) GetStudentSummary(ctx context.Context, actorID, actorRole, sch
 	// Note: stats.TotalAbsences counts distinct absent days (via COUNT(DISTINCT date) in DB),
 	// matching the unit of totalDays (teaching days).
 	if totalDays > 0 {
-		stats.AbsenceRate = (float64(stats.TotalAbsences) / float64(totalDays)) * 100
+		stats.AbsenceRate = math.Min(100.0, math.Max(0.0, (float64(stats.TotalAbsences)/float64(totalDays))*100))
 	} else {
 		stats.AbsenceRate = 0
 	}
@@ -1018,15 +1038,17 @@ func (s *service) GetChildMonthlyBreakdown(ctx context.Context, parentID, studen
 }
 
 func countWeekdays(start, end time.Time) int {
-	if end.Before(start) {
+	s := time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0, time.UTC)
+	e := time.Date(end.Year(), end.Month(), end.Day(), 0, 0, 0, 0, time.UTC)
+	if e.Before(s) {
 		return 0
 	}
-	days := int(end.Sub(start).Hours()/24) + 1
+	days := int(e.Sub(s).Hours()/24) + 1
 	weeks := days / 7
 	weekdays := weeks * 5
 	rem := days % 7
 	for i := 0; i < rem; i++ {
-		d := start.AddDate(0, 0, weeks*7+i)
+		d := s.AddDate(0, 0, weeks*7+i)
 		if d.Weekday() != time.Saturday && d.Weekday() != time.Sunday {
 			weekdays++
 		}

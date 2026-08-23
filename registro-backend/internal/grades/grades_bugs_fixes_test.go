@@ -60,3 +60,37 @@ func TestGrades_Service_CoordinatorRoleAccess(t *testing.T) {
 	err := s.checkGradeAccessPermissions(context.Background(), "coord1", "coordinator", "s1")
 	assert.NoError(t, err)
 }
+
+func TestCalculator_DetectOutliers_UnclampedThresholds(t *testing.T) {
+	calc := NewCalculator()
+
+	// High mean cluster with low outlier
+	// Mean around 8.8, stdDev around 2.4 -> low bound around 4.0, high bound around 13.6
+	// Grade 2.0 should be detected as outlier (< low bound)
+	grades := []Grade{
+		{ID: "g1", GradeValue: 9.0, GradeType: GradeTypeNumeric},
+		{ID: "g2", GradeValue: 9.5, GradeType: GradeTypeNumeric},
+		{ID: "g3", GradeValue: 9.0, GradeType: GradeTypeNumeric},
+		{ID: "g4", GradeValue: 8.5, GradeType: GradeTypeNumeric},
+		{ID: "g5", GradeValue: 9.0, GradeType: GradeTypeNumeric},
+		{ID: "g6", GradeValue: 10.0, GradeType: GradeTypeNumeric},
+		{ID: "g-outlier", GradeValue: 2.0, GradeType: GradeTypeNumeric},
+	}
+
+	outliers := calc.DetectOutliers(grades)
+	assert.Contains(t, outliers, "g-outlier")
+	assert.Len(t, outliers, 1)
+}
+
+func TestCalculator_CalculatePercentile_InvalidScore(t *testing.T) {
+	calc := NewCalculator()
+	grades := []Grade{
+		{ID: "g1", GradeValue: 6.0, GradeType: GradeTypeNumeric},
+		{ID: "g2", GradeValue: 8.0, GradeType: GradeTypeNumeric},
+	}
+
+	assert.Equal(t, 0.0, calc.CalculatePercentile(grades, 0.0))
+	assert.Equal(t, 0.0, calc.CalculatePercentile(grades, -1.0))
+	assert.Equal(t, 0.0, calc.CalculatePercentile(grades, 11.0))
+	assert.InDelta(t, 50.0, calc.CalculatePercentile(grades, 7.0), 0.01)
+}

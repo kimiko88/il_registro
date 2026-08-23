@@ -207,7 +207,7 @@ func TestService_ProcessJustification(t *testing.T) {
 	classID := "C1"
 
 	mockUserRepo.On("GetByID", mock.Anything, "S1").Return(&users.User{ID: "S1", ClassID: &classID}, nil).Maybe()
-	mockUserRepo.On("GetByID", mock.Anything, "T1").Return(&users.User{ID: "T1"}, nil).Maybe()
+	mockUserRepo.On("GetByID", mock.Anything, "T1").Return(&users.User{ID: "T1", Role: "teacher"}, nil).Maybe()
 	mockRepo.On("IsTeacherAssignedToClass", mock.Anything, "T1", "C1").Return(true, nil).Maybe()
 	mockRepo.On("FindJustificationByID", jid).Return(j, nil)
 	mockRepo.On("ProcessJustificationTx", mock.Anything, j, "T1", true).Return(nil)
