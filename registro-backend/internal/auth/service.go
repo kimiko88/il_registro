@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"sync"
 	"time"
 
 	"registro-backend/pkg/crypto"
@@ -321,6 +320,13 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken, ipAddress, use
 	if newUserAgent == "" {
 		newUserAgent = rt.UserAgent
 	}
+	// Sanitize UserAgent: strip control characters, null bytes, carriage returns, and newlines
+	newUserAgent = strings.Map(func(r rune) rune {
+		if r < 32 || r == 127 {
+			return -1
+		}
+		return r
+	}, newUserAgent)
 	if len(newUserAgent) > 512 {
 		newUserAgent = newUserAgent[:512]
 	}
@@ -429,24 +435,16 @@ func (s *Service) VerifyMFA(ctx context.Context, userID, token string) ([]string
 		return nil, fmt.Errorf("failed to generate recovery codes: %w", err)
 	}
 	validHashed := make([]string, len(plainRecoveryCodes))
-	var wg sync.WaitGroup
-	var hashErr error
-	var errOnce sync.Once
-	for i, code := range plainRecoveryCodes {
-		wg.Add(1)
-		go func(idx int, c string) {
-			defer wg.Done()
-			h, err := bcrypt.GenerateFromPassword([]byte(c), s.bcryptCost)
-			if err != nil {
-				errOnce.Do(func() { hashErr = err })
-				return
-			}
-			validHashed[idx] = string(h)
-		}(i, code)
+	recoveryCost := bcrypt.DefaultCost // Cost 10 avoids CPU starvation from concurrent spikes
+	if s.bcryptCost > 0 && s.bcryptCost < recoveryCost {
+		recoveryCost = s.bcryptCost
 	}
-	wg.Wait()
-	if hashErr != nil {
-		return nil, fmt.Errorf("failed to hash recovery code: %w", hashErr)
+	for i, code := range plainRecoveryCodes {
+		h, err := bcrypt.GenerateFromPassword([]byte(code), recoveryCost)
+		if err != nil {
+			return nil, fmt.Errorf("failed to hash recovery code: %w", err)
+		}
+		validHashed[i] = string(h)
 	}
 	// Token is correct, enable MFA and store recovery codes atomically in a single transaction
 	if err := s.repo.ConfirmMFAAndSaveRecoveryCodesTx(ctx, userID, validHashed); err != nil {
@@ -560,7 +558,7 @@ func (s *Service) ResetPassword(ctx context.Context, token, newPassword string) 
 	return nil
 }
 
-// isPasswordExpired checks if a user's password has expired (90 days for privileged roles).
+// isPasswordExpired checks if a user's password has expired (90 days for staff/privileged roles).
 func isPasswordExpired(user *User) bool {
 	expired, _ := isPasswordExpiredReason(user)
 	return expired
@@ -570,16 +568,19 @@ func isPasswordExpiredReason(user *User) (bool, error) {
 	if user == nil {
 		return false, nil
 	}
-	if user.Role != RoleStudent && user.Role != RoleParent {
-		if user.PasswordChangedAt != nil {
-			if time.Since(*user.PasswordChangedAt) > 90*24*time.Hour {
-				return true, ErrPasswordExpired
-			}
-			return false, nil
-		}
-		// Legacy accounts created prior to PasswordChangedAt addition: do not lock out automatically
+	// Whitelist of exempt roles: students and parents are not subject to the 90-day password expiration policy
+	if user.Role == RoleStudent || user.Role == RoleParent {
 		return false, nil
 	}
+
+	// All other staff/privileged roles (admin, superadmin, principal, vice_principal, secretary, coordinator, teacher, etc.)
+	if user.PasswordChangedAt != nil {
+		if time.Since(*user.PasswordChangedAt) > 90*24*time.Hour {
+			return true, ErrPasswordExpired
+		}
+		return false, nil
+	}
+	// Legacy accounts created prior to PasswordChangedAt addition: do not lock out automatically
 	return false, nil
 }
 

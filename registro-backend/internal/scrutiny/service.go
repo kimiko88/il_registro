@@ -181,7 +181,7 @@ func (s *Service) GetMatrix(ctx context.Context, actorID, actorRole, classID str
 				if e, ok := smap[sub.SubjectID]; ok {
 					count = e.count
 					avg = e.sum / float64(e.count)
-					proposed = math.Round(avg)
+					proposed = math.Min(10, math.Max(1, math.Round(avg)))
 				}
 			}
 			row.SubjectData[sub.SubjectID] = SubjectAverages{
@@ -260,7 +260,11 @@ func (s *Service) GetOverview(ctx context.Context, actorID, actorRole, schoolID 
 	}
 	if sem == 0 {
 		sem = 2
-		now := time.Now()
+		loc, err := time.LoadLocation("Europe/Rome")
+		if err != nil {
+			loc = time.Local
+		}
+		now := time.Now().In(loc)
 		if now.Month() >= time.September || now.Month() <= time.January {
 			sem = 1
 		}
@@ -533,26 +537,47 @@ func (s *Service) SaveScrutiny(ctx context.Context, coordinatorID, actorRole, ac
 		}
 	}
 
+	if req.ConductGrade != 0 && (req.ConductGrade < 1 || req.ConductGrade > 10) {
+		return fmt.Errorf("voto di condotta non valido (%d): deve essere compreso tra 1 e 10", req.ConductGrade)
+	}
+
+	canonicalDecision := req.FinalDecision
+	switch req.FinalDecision {
+	case "Promosso", "promosso", "ammesso", "Ammesso":
+		canonicalDecision = "Ammesso"
+	case "Bocciato", "bocciato", "non ammesso", "Non Ammesso", "Non ammesso":
+		canonicalDecision = "Non Ammesso"
+	case "Giudizio Sospeso", "giudizio sospeso", "sospeso", "Sospeso":
+		canonicalDecision = "Sospeso"
+	}
+
 	rec := &ScrutinyRecord{
 		StudentID:     req.StudentID,
 		ClassID:       req.ClassID,
 		Semester:      req.Semester,
 		ConductGrade:  req.ConductGrade,
-		FinalDecision: req.FinalDecision,
+		FinalDecision: canonicalDecision,
 		Notes:         req.Notes,
 		CoordinatorID: coordinatorID,
 		Status:        "in_progress",
 	}
 
+	var clsSubs []classes.ClassSubject
+	var clsSubsLoaded bool
+
 	for _, g := range req.Grades {
 		tID := g.TeacherID
 		if tID == "" {
-			if clsSubs, err := s.classRepo.GetClassSubjects(ctx, req.ClassID); err == nil {
-				for _, cs := range clsSubs {
-					if cs.SubjectID == g.SubjectID && cs.TeacherID != nil && *cs.TeacherID != "" {
-						tID = *cs.TeacherID
-						break
-					}
+			if !clsSubsLoaded {
+				if fetched, err := s.classRepo.GetClassSubjects(ctx, req.ClassID); err == nil {
+					clsSubs = fetched
+				}
+				clsSubsLoaded = true
+			}
+			for _, cs := range clsSubs {
+				if cs.SubjectID == g.SubjectID && cs.TeacherID != nil && *cs.TeacherID != "" {
+					tID = *cs.TeacherID
+					break
 				}
 			}
 			if tID == "" {

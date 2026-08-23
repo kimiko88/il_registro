@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
 
@@ -89,4 +90,59 @@ func TestAuthFixes_Register_TOCTOU(t *testing.T) {
 	assert.NotNil(t, user)
 	assert.Equal(t, "newuser@school.it", user.Email)
 	mockRepo.AssertExpectations(t)
+}
+
+func TestAuthFixes_RefreshToken_UserAgentSanitization(t *testing.T) {
+	s, mockRepo := setupTest(t)
+
+	rawToken := "valid-refresh-token"
+	hashedToken := hashToken(rawToken)
+
+	rt := &RefreshToken{
+		ID:        "rt-1",
+		UserID:    "u-1",
+		Token:     hashedToken,
+		ExpiresAt: time.Now().Add(24 * time.Hour),
+		IPAddress: "127.0.0.1",
+		UserAgent: "original-agent",
+	}
+
+	user := &User{
+		ID:       "u-1",
+		IsActive: true,
+		Role:     RoleTeacher,
+	}
+
+	mockRepo.On("GetRefreshToken", mock.Anything, rawToken).Return(rt, nil).Once()
+	mockRepo.On("GetUserByID", mock.Anything, "u-1").Return(user, nil).Once()
+	mockRepo.On("RotateRefreshTokenTx", mock.Anything, "rt-1", mock.MatchedBy(func(newRt *RefreshToken) bool {
+		// Verify control characters (such as \x1b or \x00) are stripped
+		return !strings.ContainsAny(newRt.UserAgent, "\x1b\x00\r\n") && strings.Contains(newRt.UserAgent, "malicious-agent")
+	})).Return(nil).Once()
+
+	dirtyUserAgent := "malicious-agent\x1b[31m\x00\r\ntest"
+	tokens, err := s.RefreshToken(context.Background(), rawToken, "127.0.0.1", dirtyUserAgent)
+	assert.NoError(t, err)
+	assert.NotNil(t, tokens)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestAuthFixes_PasswordExpired_StudentParentExempt(t *testing.T) {
+	past := time.Now().Add(-180 * 24 * time.Hour) // 6 months ago
+
+	student := &User{
+		Role:              RoleStudent,
+		PasswordChangedAt: &past,
+	}
+	expiredStudent, errStudent := isPasswordExpiredReason(student)
+	assert.False(t, expiredStudent)
+	assert.NoError(t, errStudent)
+
+	parent := &User{
+		Role:              RoleParent,
+		PasswordChangedAt: &past,
+	}
+	expiredParent, errParent := isPasswordExpiredReason(parent)
+	assert.False(t, expiredParent)
+	assert.NoError(t, errParent)
 }

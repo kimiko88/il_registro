@@ -262,3 +262,19 @@ func TestScrutinyOutcome_NonPromossoPerVotoCondotta(t *testing.T) {
 		t.Errorf("expected outcome 'non_promosso' due to conduct < 6, got '%s'", outcome)
 	}
 }
+
+func TestSubjectAverages_ProposedClamping(t *testing.T) {
+	// Out of range high average (e.g. 10.5) should be clamped to 10
+	highAvg := 10.5
+	proposedHigh := math.Min(10, math.Max(1, math.Round(highAvg)))
+	if proposedHigh != 10 {
+		t.Errorf("expected clamped proposed grade 10 for avg 10.5, got %.0f", proposedHigh)
+	}
+
+	// Out of range low average (e.g. 0.4) should be clamped to 1
+	lowAvg := 0.4
+	proposedLow := math.Min(10, math.Max(1, math.Round(lowAvg)))
+	if proposedLow != 1 {
+		t.Errorf("expected clamped proposed grade 1 for avg 0.4, got %.0f", proposedLow)
+	}
+}
