@@ -231,12 +231,12 @@
           <q-input v-model="draftForm.date" type="date" :label="$t('gradesPage.date')" outlined dense />
           <q-select
             v-model="draftForm.class_id"
-            :options="[
-              { label: 'Classe 2A', value: '47a05d80-3836-452e-ac91-8cfa3a1999dd' },
-              { label: 'Classe 3B', value: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb' }
-            ]"
+            :options="classesStore.classes"
+            option-label="name"
+            option-value="id"
             emit-value map-options
             :label="$t('udaPage.classLabel')"
+            :loading="classesStore.loading"
             outlined dense
           />
           <q-select
@@ -306,11 +306,13 @@ import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import dashboardService from 'src/services/dashboardService'
 import api from '@/services/api'
+import { useClassesStore } from '@/stores/classes'
 
 import { useI18n } from 'vue-i18n'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const classesStore = useClassesStore()
 const { user, userRole } = storeToRefs(authStore)
 const $q = useQuasar()
 
@@ -337,7 +339,11 @@ const draftForm = ref({
   homework: ''
 })
 
-const currentRole = computed(() => userRole.value || user.value?.role || authStore.userRole || authStore.user?.role || 'student')
+const currentRole = computed(() => userRole.value || user.value?.role || 'student')
+
+const isDashboardAdmin = computed(() =>
+  ['secretary', 'admin', 'superadmin', 'principal', 'vice_principal', 'system_auditor'].includes(currentRole.value)
+)
 
 const today = computed(() => {
   try {
@@ -347,9 +353,7 @@ const today = computed(() => {
   }
 })
 
-const isDashboardAdmin = computed(() => {
-  return currentRole.value === 'secretary' || currentRole.value === 'admin' || currentRole.value === 'superadmin'
-})
+
 
 const latestAnnouncement = computed(() => {
   if (announcements.value && announcements.value.length > 0) {
@@ -381,8 +385,8 @@ const displaySchedule = computed(() => {
   // Convert drafts for today into visible schedule items
   const todayStr = new Date().toISOString().substring(0, 10)
   const draftsForToday = lessonDrafts.value.filter(d => d.date === todayStr)
-  return draftsForToday.map(d => ({
-    id: d.id || 'draft-1',
+  return draftsForToday.map((d, index) => ({
+    id: d.id || `draft-${Date.now()}-${index}`,
     hour_index: d.hour,
     subject_name: `${d.subject} (${t('dashboardPage.draft') || 'Bozza'})`,
     teacher_name: d.topic || 'Bozza preparata',
@@ -455,14 +459,14 @@ const saveLessonDraft = () => {
   }
   const newDraft = { ...draftForm.value, id: 'draft_' + Date.now() }
   lessonDrafts.value.push(newDraft)
-  localStorage.setItem('registro_lesson_drafts', JSON.stringify(lessonDrafts.value))
+  sessionStorage.setItem('registro_lesson_drafts', JSON.stringify(lessonDrafts.value))
   $q.notify({ type: 'positive', message: t('dashboardPage.draftSaved', { date: newDraft.date }) })
   showDraftDialog.value = false
 }
 
 const deleteDraft = (idx) => {
   lessonDrafts.value.splice(idx, 1)
-  localStorage.setItem('registro_lesson_drafts', JSON.stringify(lessonDrafts.value))
+  sessionStorage.setItem('registro_lesson_drafts', JSON.stringify(lessonDrafts.value))
   $q.notify({ type: 'info', message: t('dashboardPage.deleteDraft') })
 }
 
@@ -488,7 +492,8 @@ const registerDraftNow = async (draft, idx) => {
 
 const loadStoredDrafts = () => {
   try {
-    const raw = localStorage.getItem('registro_lesson_drafts')
+    // Use sessionStorage: draft data may contain student names / homework — not appropriate for localStorage
+    const raw = sessionStorage.getItem('registro_lesson_drafts')
     if (raw) {
       lessonDrafts.value = JSON.parse(raw)
     }
@@ -569,7 +574,7 @@ const formatDate = (dateString) => {
 
 const actions = computed(() => {
   const role = currentRole.value
-  if (role === 'teacher') {
+  if (role === 'teacher' || role === 'coordinator') {
     return [
       { key: 'attendance', label: t('dashboardPage.actionAttendance'), icon: 'how_to_reg', route: '/teacher/attendance' },
       { key: 'grades', label: t('dashboardPage.actionGrades'), icon: 'grade', route: '/teacher/grades' },
@@ -577,15 +582,44 @@ const actions = computed(() => {
       { key: 'agenda', label: t('dashboardPage.actionAgenda'), icon: 'event', route: '/teacher/agenda' }
     ]
   }
+  if (role === 'secretary' || role === 'principal' || role === 'vice_principal') {
+    return [
+      { key: 'users', label: t('dashboardPage.actionUsers') || 'Utenti', icon: 'people', route: '/secretary/users' },
+      { key: 'classes', label: t('dashboardPage.actionClasses') || 'Classi', icon: 'school', route: '/secretary/classes' },
+      { key: 'documents', label: t('documentsPage.title') || 'Documenti', icon: 'folder', route: '/secretary/documents' },
+      { key: 'reports', label: t('reportsPage.title') || 'Report', icon: 'bar_chart', route: '/secretary/reports' }
+    ]
+  }
+  if (role === 'student') {
+    return [
+      { key: 'grades', label: t('dashboardPage.actionGrades') || 'Voti', icon: 'grade', route: '/student/grades' },
+      { key: 'attendance', label: t('dashboardPage.actionAttendance') || 'Presenze', icon: 'how_to_reg', route: '/student/attendance' },
+      { key: 'homework', label: t('agendaPage.homework') || 'Compiti', icon: 'assignment', route: '/student/homework' },
+      { key: 'timetable', label: t('timetablePage.title') || 'Orario', icon: 'schedule', route: '/student/timetable' }
+    ]
+  }
+  if (role === 'parent') {
+    return [
+      { key: 'grades', label: t('dashboardPage.actionGrades') || 'Voti', icon: 'grade', route: '/parent/grades' },
+      { key: 'attendance', label: t('dashboardPage.actionAttendance') || 'Presenze', icon: 'how_to_reg', route: '/parent/attendance' },
+      { key: 'colloqui', label: t('nav.colloqui') || 'Colloqui', icon: 'event', route: '/parent/colloqui' },
+      { key: 'communications', label: t('nav.communications') || 'Comunicazioni', icon: 'email', route: '/parent/communications' }
+    ]
+  }
+  // admin / superadmin / system_auditor
   return [
-    { key: 'users', label: t('dashboardPage.actionUsers'), icon: 'people', route: '/admin/users' },
-    { key: 'classes', label: t('dashboardPage.actionClasses'), icon: 'school', route: '/admin/classes' }
+    { key: 'users', label: t('dashboardPage.actionUsers') || 'Utenti', icon: 'people', route: '/admin/users' },
+    { key: 'schools', label: t('dashboardPage.schoolManagement') || 'Scuole', icon: 'school', route: '/admin/schools' },
+    { key: 'analytics', label: t('nav.analytics') || 'Analytics', icon: 'bar_chart', route: '/admin/analytics' },
+    { key: 'settings', label: t('settings.title') || 'Impostazioni', icon: 'settings', route: '/admin/settings' }
   ]
 })
 
-const handleActionClick = (action) => {
+const handleActionClick = async (action) => {
   if (action.route) {
-    router.push(action.route)
+    navigatingAction.value = action.key
+    await router.push(action.route)
+    navigatingAction.value = null
   }
 }
 

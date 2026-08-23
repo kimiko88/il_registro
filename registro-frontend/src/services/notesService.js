@@ -1,6 +1,6 @@
 import api from './api'
 
-export default {
+export const notesService = {
     // Create a new note
     async createNote(data) {
         return api.post('/notes', data)
@@ -9,6 +9,16 @@ export default {
     // List notes with filters
     async getNotes(params) {
         return api.get('/notes', { params })
+    },
+
+    // Get notes for a specific student
+    async getStudentNotes(studentId, params = {}) {
+        return api.get(`/notes/student/${studentId}`, { params })
+    },
+
+    // Get notes for a specific class
+    async getClassNotes(classId, params = {}) {
+        return api.get(`/notes/class/${classId}`, { params })
     },
 
     // Update a note
@@ -26,3 +36,6 @@ export default {
         return api.delete(`/notes/${id}`)
     }
 }
+
+export default notesService
+

@@ -455,6 +455,7 @@ import { useMenuItems } from '@/composables/useMenuItems'
 import { storeToRefs } from 'pinia'
 import { useQuasar } from 'quasar'
 import { useI18n } from 'vue-i18n'
+import { i18n } from '@/i18n'
 import { SUPPORTED_LOCALES, applyLocale, normalizeLocale } from '@/utils/locale'
 import GlobalSearch from '@/components/Common/GlobalSearch.vue'
 import OnboardingTour from '@/components/Common/OnboardingTour.vue'
@@ -486,11 +487,11 @@ const schoolYearStore = useSchoolYearStore()
 const currentLocaleValue = computed(() => normalizeLocale(locale.value))
 
 function changeAppLanguage(langCode) {
-  applyLocale(langCode, { locale }, $q)
+  applyLocale(langCode, i18n, $q)
   $q.notify({
     type: 'positive',
     icon: 'language',
-    message: t('notifications.languageChanged')
+    message: t('notifications.languageChanged') || 'Lingua aggiornata con successo'
   })
 }
 
@@ -585,29 +586,31 @@ function translateCategory(cat) {
 }
 
 const navigateToNotifications = () => {
-  const role = userRole.value
-  if (role === 'teacher') {
+  const role = (userRole.value || '').toLowerCase()
+  if (role === 'teacher' || role === 'docente' || role === 'coordinator') {
     router.push('/teacher/communications')
   } else if (role === 'student') {
     router.push('/student/communications')
   } else if (role === 'parent') {
     router.push('/parent/communications')
-  } else if (role === 'admin' || role === 'superadmin') {
-    router.push('/admin/users')
+  } else if (role === 'admin' || role === 'superadmin' || role === 'system_auditor') {
+    router.push('/admin/dashboard')
   } else {
     router.push('/secretary/communications')
   }
 }
 
 const navigateToProfile = () => {
-  const role = userRole.value
+  const role = (userRole.value || '').toLowerCase()
   if (role === 'student') {
     router.push('/student/profile')
   } else if (role === 'parent') {
     router.push('/parent/profile')
-  } else if (role === 'admin' || role === 'superadmin') {
+  } else if (role === 'teacher' || role === 'docente' || role === 'coordinator') {
+    router.push('/teacher/settings')
+  } else if (role === 'admin' || role === 'superadmin' || role === 'system_auditor') {
     router.push('/admin/settings')
-  } else if (role === 'secretary') {
+  } else if (role === 'secretary' || role === 'principal' || role === 'vice_principal' || role === 'staff') {
     router.push('/secretary/settings')
   } else {
     router.push('/dashboard')
@@ -637,15 +640,15 @@ const breadcrumbs = computed(() => {
   const current = { label: currentMatch, icon: undefined, path: route.path }
 
   if (route.path.startsWith('/teacher/') && route.path !== '/teacher') {
-    items.push({ label: t('roles.teacher'), icon: 'school', path: '/teacher' })
+    items.push({ label: t('roles.teacher') || 'Docente', icon: 'school', path: '/teacher' })
   } else if (route.path.startsWith('/student/') && route.path !== '/student') {
-    items.push({ label: t('roles.student'), icon: 'person', path: '/student' })
+    items.push({ label: t('roles.student') || 'Studente', icon: 'person', path: '/student' })
   } else if (route.path.startsWith('/parent/') && route.path !== '/parent') {
-    items.push({ label: t('roles.parent'), icon: 'family_restroom', path: '/parent' })
+    items.push({ label: t('roles.parent') || 'Genitore', icon: 'family_restroom', path: '/parent' })
   } else if (route.path.startsWith('/admin/') && route.path !== '/admin' && route.path !== '/admin/dashboard') {
-    items.push({ label: t('roles.admin'), icon: 'admin_panel_settings', path: '/admin/dashboard' })
+    items.push({ label: t('roles.admin') || 'Amministrazione', icon: 'admin_panel_settings', path: '/admin/dashboard' })
   } else if (route.path.startsWith('/secretary/') && route.path !== '/secretary') {
-    items.push({ label: t('roles.secretary'), icon: 'badge', path: '/secretary' })
+    items.push({ label: t('roles.secretary') || 'Segreteria', icon: 'badge', path: '/secretary' })
   }
 
   items.push(current)
@@ -669,13 +672,18 @@ const roleLabel = computed(() => {
   return userRole.value
 })
 
-const isTeacherRole = computed(() => userRole.value === 'teacher' || userRole.value === 'docente')
+const isTeacherRole = computed(() => {
+  const r = (userRole.value || '').toLowerCase()
+  return r === 'teacher' || r === 'docente' || r === 'coordinator'
+})
 
 const teacherStore = useTeacherStore()
 const classesStore = useClassesStore()
 
 const isTeacherCoordinator = computed(() => {
-  if (userRole.value !== 'teacher') return false
+  const r = (userRole.value || '').toLowerCase()
+  if (r === 'coordinator') return true
+  if (r !== 'teacher' && r !== 'docente') return false
   if (teacherStore.isCoordinator) return true
   const currentUserId = user.value?.id
   if (currentUserId && classesStore.classes.some(c => c.coordinator_id === currentUserId)) {

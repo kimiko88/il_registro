@@ -216,11 +216,42 @@ export default {
   roles: {
     admin: 'Адміністратор',
     superadmin: 'Головний адміністратор',
-    secretary: 'Секретар',
-    teacher: 'Вчитель',
+    secretary: 'Секретаріат',
+    teacher: 'Вчитель / Викладач',
+    docente: 'Вчитель / Викладач',
     student: 'Учень',
-    parent: 'Батьки',
+    parent: 'Батько / Мати',
+    principal: 'Директор',
+    vice_principal: 'Завуч',
+    coordinator: 'Класний керівник',
+    staff: 'Персонал',
+    system_auditor: 'Аудитор системи',
     user: 'Користувач'
+  },
+  layout: {
+    skipToContent: 'Перейти до основного вмісту',
+    mainNav: 'Основна навігація',
+    toggleDrawer: 'Відкрити/Закрити меню',
+    schoolYear: 'Навч. рік',
+    schoolYearSelect: 'Вибрати навчальний рік',
+    themeAriaLabel: 'Вибрати тему оформлення',
+    themeTooltip: 'Теми та персоналізація',
+    themesTitle: 'Теми оформлення',
+    a11yAriaLabel: 'Спеціальні можливості',
+    a11yTooltip: 'Інструменти доступності',
+    a11yTitle: 'Доступність та дислексія',
+    dsaFontDesc: 'Шрифт OpenDyslexic для кращої читабельності',
+    highContrast: 'Висока контрастність',
+    highContrastDesc: 'Контрастні рамки та текст',
+    lightMode: 'Світлий режим',
+    darkMode: 'Темний режим',
+    exitFullscreen: 'Вийти з повноекранного режиму',
+    enterFullscreen: 'На весь екран',
+    sideNav: 'Бічне меню',
+    userProfile: 'Профіль користувача',
+    connectedUser: 'Ви увійшли як: {name}',
+    userRole: 'Роль: {role}',
+    breadcrumbNav: 'Навігаційний ланцюжок'
   },
   notifications: {
     title: 'Сповіщення та повідомлення',
@@ -907,3 +938,4 @@ export default {
     saveSettings: 'Зберегти налаштування'
   }
 }
+

@@ -36,27 +36,40 @@ const QUASAR_LANG_MAP = {
   'ru': quasarLangRu,
   'uk-UA': quasarLangUk,
   'uk': quasarLangUk,
+  'ua': quasarLangUk,
   'ar-SA': quasarLangAr,
   'ar': quasarLangAr,
   'zh-CN': quasarLangZh,
-  'zh': quasarLangZh
+  'zh': quasarLangZh,
+  'cn': quasarLangZh
 }
 
 export function normalizeLocale(lang) {
-  if (!lang) return 'it-IT'
-  const found = SUPPORTED_LOCALES.find(
-    l => l.value.toLowerCase() === lang.toLowerCase() ||
-         l.code.toLowerCase() === lang.toLowerCase() ||
-         l.value.startsWith(lang)
+  if (!lang || typeof lang !== 'string') return 'it-IT'
+  const trimmed = lang.trim().toLowerCase()
+  if (!trimmed) return 'it-IT'
+
+  const exact = SUPPORTED_LOCALES.find(
+    l => l.value.toLowerCase() === trimmed || l.code.toLowerCase() === trimmed
   )
-  return found ? found.value : 'it-IT'
+  if (exact) return exact.value
+
+  const byPrefix = SUPPORTED_LOCALES.find(
+    l => l.value.toLowerCase().startsWith(trimmed) || trimmed.startsWith(l.value.toLowerCase().slice(0, 2))
+  )
+  return byPrefix ? byPrefix.value : 'it-IT'
 }
 
 export function getSavedLocale() {
-  const saved = (typeof localStorage !== 'undefined')
-    ? (localStorage.getItem('app_language') || localStorage.getItem('user_locale'))
-    : null
-  return normalizeLocale(saved || 'it-IT')
+  try {
+    if (typeof localStorage !== 'undefined') {
+      const saved = localStorage.getItem('app_language') || localStorage.getItem('user_locale')
+      if (saved) return normalizeLocale(saved)
+    }
+  } catch (e) {
+    console.warn('Could not read saved locale from localStorage:', e)
+  }
+  return 'it-IT'
 }
 
 export function getQuasarLang(langCode) {
@@ -70,31 +83,51 @@ export function applyLocale(langCode, i18nInstance = null, $q = null) {
 
   // 1. Update i18n
   if (i18nInstance) {
-    if (i18nInstance.global && i18nInstance.global.locale) {
-      i18nInstance.global.locale.value = normalized
-    } else if (i18nInstance.locale) {
-      i18nInstance.locale.value = normalized
+    try {
+      if (i18nInstance.global && i18nInstance.global.locale) {
+        if (typeof i18nInstance.global.locale === 'object' && 'value' in i18nInstance.global.locale) {
+          i18nInstance.global.locale.value = normalized
+        } else {
+          i18nInstance.global.locale = normalized
+        }
+      } else if (i18nInstance.locale) {
+        if (typeof i18nInstance.locale === 'object' && 'value' in i18nInstance.locale) {
+          i18nInstance.locale.value = normalized
+        } else {
+          i18nInstance.locale = normalized
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to set i18n locale:', err)
     }
   }
 
   // 2. Update Quasar Language Pack
   const quasarPack = QUASAR_LANG_MAP[normalized] || quasarLangIt
-  if ($q && $q.lang && typeof $q.lang.set === 'function') {
-    $q.lang.set(quasarPack)
-  } else if (typeof Quasar !== 'undefined' && Quasar?.lang && typeof Quasar.lang.set === 'function') {
-    Quasar.lang.set(quasarPack)
+  try {
+    if ($q && $q.lang && typeof $q.lang.set === 'function') {
+      $q.lang.set(quasarPack)
+    } else if (typeof Quasar !== 'undefined' && Quasar?.lang && typeof Quasar.lang.set === 'function') {
+      Quasar.lang.set(quasarPack)
+    }
+  } catch (err) {
+    console.warn('Failed to set Quasar language pack:', err)
   }
 
   // 3. Update DOM direction and lang
-  if (typeof document !== 'undefined') {
+  if (typeof document !== 'undefined' && document.documentElement) {
     document.documentElement.setAttribute('lang', normalized)
     document.documentElement.setAttribute('dir', isRTL ? 'rtl' : 'ltr')
   }
 
   // 4. Persist in localStorage
-  if (typeof localStorage !== 'undefined') {
-    localStorage.setItem('app_language', normalized)
-    localStorage.setItem('user_locale', normalized)
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('app_language', normalized)
+      localStorage.setItem('user_locale', normalized)
+    }
+  } catch (err) {
+    console.warn('Failed to persist locale in localStorage:', err)
   }
 
   return normalized

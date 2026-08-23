@@ -31,7 +31,7 @@
           <div class="text-body2 text-slate-700 bg-slate-50 q-pa-sm rounded-lg border">
             {{ evt.description }}
             <div v-if="evt.badge" class="q-mt-xs">
-              <q-chip dense :color="getEventColor(evt.type)" text-color="white" size="xs font-bold">
+              <q-chip dense :color="getEventColor(evt.type)" text-color="white" size="xs" class="text-weight-bold">
                 {{ evt.badge }}
               </q-chip>
             </div>
@@ -73,7 +73,8 @@ const fetchTimeline = async () => {
 
     // 1. Process recent grades
     if (gradesRes.status === 'fulfilled') {
-      const grades = gradesRes.value.data?.grades || gradesRes.value.data || []
+      const raw = gradesRes.value.data?.grades || gradesRes.value.data
+      const grades = Array.isArray(raw) ? raw : []
       grades.slice(0, 3).forEach(g => {
         list.push({
           id: `grade-${g.id}`,
@@ -89,7 +90,8 @@ const fetchTimeline = async () => {
 
     // 2. Process attendance
     if (attendanceRes.status === 'fulfilled') {
-      const atts = attendanceRes.value.data || []
+      const rawAtts = attendanceRes.value.data
+      const atts = Array.isArray(rawAtts) ? rawAtts : (Array.isArray(rawAtts?.items) ? rawAtts.items : [])
       atts.slice(0, 2).forEach(a => {
         if (a.status === 'absent' || a.status === 'late') {
           list.push({
@@ -107,7 +109,8 @@ const fetchTimeline = async () => {
 
     // 3. Process notes
     if (notesRes.status === 'fulfilled') {
-      const notes = notesRes.value.data || []
+      const rawNotes = notesRes.value.data
+      const notes = Array.isArray(rawNotes) ? rawNotes : (Array.isArray(rawNotes?.items) ? rawNotes.items : [])
       notes.slice(0, 2).forEach(n => {
         list.push({
           id: `note-${n.id}`,

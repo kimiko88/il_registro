@@ -212,11 +212,42 @@ export default {
   roles: {
     admin: 'Администратор',
     superadmin: 'Главный администратор',
-    secretary: 'Секретарь',
-    teacher: 'Учитель',
+    secretary: 'Секретариат',
+    teacher: 'Преподаватель',
+    docente: 'Преподаватель',
     student: 'Ученик',
     parent: 'Родитель',
+    principal: 'Директор',
+    vice_principal: 'Завуч',
+    coordinator: 'Классный руководитель',
+    staff: 'Персонал',
+    system_auditor: 'Аудитор системы',
     user: 'Пользователь'
+  },
+  layout: {
+    skipToContent: 'Перейти к основному содержимому',
+    mainNav: 'Основная навигация',
+    toggleDrawer: 'Открыть/Закрыть меню',
+    schoolYear: 'Уч. год',
+    schoolYearSelect: 'Выбрать учебный год',
+    themeAriaLabel: 'Выбрать тему оформления',
+    themeTooltip: 'Темы и персонализация',
+    themesTitle: 'Темы оформления',
+    a11yAriaLabel: 'Специальные возможности',
+    a11yTooltip: 'Специальные возможности',
+    a11yTitle: 'Доступность и дислексия',
+    dsaFontDesc: 'Шрифт OpenDyslexic для удобства чтения',
+    highContrast: 'Высокая контрастность',
+    highContrastDesc: 'Контрастные границы и текст',
+    lightMode: 'Светлая тема',
+    darkMode: 'Тёмная тема',
+    exitFullscreen: 'Выйти из полноэкранного режима',
+    enterFullscreen: 'Во весь экран',
+    sideNav: 'Боковое меню',
+    userProfile: 'Профиль пользователя',
+    connectedUser: 'Вы вошли как: {name}',
+    userRole: 'Роль: {role}',
+    breadcrumbNav: 'Навигационная цепочка'
   },
   notifications: {
     title: 'Уведомления и сообщения',
@@ -1179,3 +1210,4 @@ export default {
     saveSettings: 'Сохранить настройки'
   }
 }
+

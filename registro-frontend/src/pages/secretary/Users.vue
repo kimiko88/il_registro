@@ -25,7 +25,7 @@
            />
            <q-btn unelevated :label="t('common.addClass') || 'Nuova Classe'" color="primary" icon="add" class="rounded-lg shadow-sm" no-caps @click="openClassDialog" />
            <q-btn outline :label="t('gradesPage.importCSV') || 'Importa CSV'" color="primary" icon="upload" class="rounded-lg" no-caps @click="showImport=true" />
-           <q-btn flat icon="history" :label="t('dashboardPage.auditLogs') || 'Log Attività'" class="rounded-lg text-slate-400" no-caps @click="$q.notify('Audit Log non disponibile per Segreteria')" />
+           <q-btn flat icon="history" :label="t('dashboardPage.auditLogs') || 'Log Attività'" class="rounded-lg text-slate-400" no-caps @click="$router.push('/secretary/audit-logs')" />
        </div>
     </div>
 
@@ -59,7 +59,7 @@
                                 <q-input v-model="userForm.first_name" :label="t('common.name') || 'Nome'" outlined :rules="[val => !!val || (t('common.requiredField') || 'Campo richiesto')]" />
                             </div>
                             <div class="col-6">
-                                <q-input v-model="userForm.last_name" :label="t('common.name') || 'Cognome'" outlined :rules="[val => !!val || (t('common.requiredField') || 'Campo richiesto')]" />
+                                <q-input v-model="userForm.last_name" :label="t('common.surname') || 'Cognome'" outlined :rules="[val => !!val || (t('common.requiredField') || 'Campo richiesto')]" />
                             </div>
                         </div>
                     </div>

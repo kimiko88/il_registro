@@ -61,7 +61,10 @@ export default {
     chooseSchoolPrompt: 'Scegli un istituto dal menu in alto per visualizzare i dettagli di contatto della Segreteria.',
     sessionExpired: 'Per ragioni di sicurezza, la sessione è scaduta o non è stato possibile ripristinarla. Effettua nuovamente l\'accesso.',
     showPassword: 'Mostra password',
-    hidePassword: 'Nascondi password'
+    hidePassword: 'Nascondi password',
+    emailInvalid: 'Inserisci un indirizzo email valido',
+    tooManyAttempts: 'Troppi tentativi falliti. Riprova tra {secs} secondi.',
+    copyFailed: 'Impossibile copiare automaticamente. Copia manuale:'
   },
   classRegister: {
     title: 'Registro di Classe & Presenze',
@@ -726,10 +729,16 @@ export default {
   roles: {
     admin: 'Amministratore',
     superadmin: 'Super Amministratore',
-    secretary: 'Segretario',
+    secretary: 'Segreteria',
     teacher: 'Docente',
+    docente: 'Docente',
     student: 'Studente',
     parent: 'Genitore',
+    principal: 'Dirigente Scolastico',
+    vice_principal: 'Vice Preside',
+    coordinator: 'Coordinatore',
+    staff: 'Personale ATA',
+    system_auditor: 'Auditor di Sistema',
     user: 'Utente'
   },
   notifications: {
@@ -1264,3 +1273,4 @@ export default {
     cadError: 'Errore durante il download del pacchetto CAD'
   }
 }
+

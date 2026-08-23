@@ -30,5 +30,14 @@ export const pdpService = {
   },
   getDispensativeMeasures() {
     return api.get('/pdp/measures/dispensative')
+  },
+  exportPdpPdf(id) {
+    return api.get(`/pdp/${id}/pdf`, {
+      responseType: 'blob',
+      timeout: 60000
+    })
   }
 }
+
+export default pdpService
+

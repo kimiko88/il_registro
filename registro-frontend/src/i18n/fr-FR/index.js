@@ -299,11 +299,42 @@ export default {
   roles: {
     admin: 'Administrateur',
     superadmin: 'Super Administrateur',
-    secretary: 'Secrétaire',
+    secretary: 'Secrétariat',
     teacher: 'Enseignant',
+    docente: 'Enseignant',
     student: 'Élève',
     parent: 'Parent',
+    principal: 'Chef d\'établissement',
+    vice_principal: 'Proviseur adjoint',
+    coordinator: 'Professeur principal',
+    staff: 'Personnel non enseignant',
+    system_auditor: 'Auditeur système',
     user: 'Utilisateur'
+  },
+  layout: {
+    skipToContent: 'Aller au contenu principal',
+    mainNav: 'Navigation principale',
+    toggleDrawer: 'Ouvrir/Fermer le menu',
+    schoolYear: 'Année scol.',
+    schoolYearSelect: 'Sélectionner l\'année scolaire',
+    themeAriaLabel: 'Sélectionner le thème',
+    themeTooltip: 'Thèmes & Personnalisation',
+    themesTitle: 'Thèmes graphiques',
+    a11yAriaLabel: 'Accessibilité',
+    a11yTooltip: 'Outils d\'accessibilité',
+    a11yTitle: 'Accessibilité & Dyslexie',
+    dsaFontDesc: 'Police OpenDyslexic pour une meilleure lisibilité',
+    highContrast: 'Contraste Élevé',
+    highContrastDesc: 'Bordures et textes à fort contraste',
+    lightMode: 'Mode Clair',
+    darkMode: 'Mode Sombre',
+    exitFullscreen: 'Quitter plein écran',
+    enterFullscreen: 'Plein écran',
+    sideNav: 'Menu latéral',
+    userProfile: 'Profil de l\'utilisateur connecté',
+    connectedUser: 'Connecté en tant que: {name}',
+    userRole: 'Rôle: {role}',
+    breadcrumbNav: 'Fil d\'Ariane'
   },
   notifications: {
     title: 'Notifications et communications',
@@ -1266,3 +1297,4 @@ export default {
     saveSettings: 'Enregistrer les préférences'
   }
 }
+

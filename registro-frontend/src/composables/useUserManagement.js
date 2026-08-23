@@ -31,8 +31,8 @@ export function useUserManagement() {
             return true;
         } catch (err) {
             console.error('[useUserManagement] importUsers error:', err);
-            $q.notify({ type: 'positive', message: t ? t('composables.users.importStarted') : 'Importazione utenti avviata' });
-            return true;
+            $q.notify({ type: 'negative', message: t ? t('composables.users.importError') : 'Errore durante l\'importazione utenti' });
+            return false;
         } finally {
             loading.value = false;
         }

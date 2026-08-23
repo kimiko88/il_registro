@@ -69,7 +69,10 @@ export const useScrutinyStore = defineStore('scrutiny', {
       let url = null
       let link = null
       try {
-        const response = await api.get('/scrutiny/export', { responseType: 'blob' })
+        const response = await api.get('/scrutiny/export', {
+          responseType: 'blob',
+          timeout: 60000
+        })
         const blob = new Blob([response.data], { type: 'text/csv' })
         url = window.URL.createObjectURL(blob)
         link = document.createElement('a')

@@ -212,13 +212,44 @@ export default {
     comunicazioniAccount: 'التواصل والحساب'
   },
   roles: {
-    admin: 'مدير النظام',
-    superadmin: 'المدير العام',
-    secretary: 'السكرتير',
-    teacher: 'المعلم',
-    student: 'الطالب',
-    parent: 'ولي الأمر',
+    admin: 'مسؤول المدرسة',
+    superadmin: 'مدير عام للنظام',
+    secretary: 'السكرتارية والإدارة',
+    teacher: 'معلم / أستاذ',
+    docente: 'معلم / أستاذ',
+    student: 'طالب',
+    parent: 'ولي أمر',
+    principal: 'مدير المدرسة',
+    vice_principal: 'وكيل المدرسة',
+    coordinator: 'رائد الفصل / منسق',
+    staff: 'الكادر الإداري',
+    system_auditor: 'مدقق النظام',
     user: 'مستخدم'
+  },
+  layout: {
+    skipToContent: 'الانتقال إلى المحتوى الرئيسي',
+    mainNav: 'التنقل الرئيسي',
+    toggleDrawer: 'فتح/إغلاق القائمة',
+    schoolYear: 'العام الدراسي',
+    schoolYearSelect: 'اختر العام الدراسي',
+    themeAriaLabel: 'اختر المظهر',
+    themeTooltip: 'المظهر والتخصيص',
+    themesTitle: 'المظاهر اللونية',
+    a11yAriaLabel: 'إمكانية الوصول',
+    a11yTooltip: 'أدوات إمكانية الوصول',
+    a11yTitle: 'إمكانية الوصول وصعوبات القراءة',
+    dsaFontDesc: 'خط OpenDyslexic لتسهيل القراءة',
+    highContrast: 'تباين عالٍ',
+    highContrastDesc: 'نصوص وحدود عالية التباين',
+    lightMode: 'الوضع الفاتح',
+    darkMode: 'الوضع الداكن',
+    exitFullscreen: 'إنهاء وضع ملء الشاشة',
+    enterFullscreen: 'ملء الشاشة',
+    sideNav: 'القائمة الجانبية',
+    userProfile: 'الملف الشخصي للمستخدم',
+    connectedUser: 'تم تسجيل الدخول باسم: {name}',
+    userRole: 'الدور: {role}',
+    breadcrumbNav: 'مسار التصفح'
   },
   notifications: {
     title: 'الإشعارات والرسائل',
@@ -1181,3 +1212,4 @@ export default {
     saveSettings: 'حفظ التفضيلات'
   }
 }
+

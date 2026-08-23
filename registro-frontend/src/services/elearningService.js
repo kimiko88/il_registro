@@ -18,5 +18,14 @@ export const elearningService = {
   },
   syncGrades(provider, classId) {
     return api.post(`/elearning/${provider}/sync-grades`, { class_id: classId })
+  },
+  disconnect(provider) {
+    return api.post(`/elearning/${provider}/disconnect`)
+  },
+  getStatus(provider) {
+    return api.get(`/elearning/${provider}/status`)
   }
 }
+
+export default elearningService
+

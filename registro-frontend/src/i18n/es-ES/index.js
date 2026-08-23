@@ -298,12 +298,43 @@ export default {
   },
   roles: {
     admin: 'Administrador',
-    superadmin: 'Superadministrador',
-    secretary: 'Secretario/a',
-    teacher: 'Profesor/a',
+    superadmin: 'Super Administrador',
+    secretary: 'Secretaría',
+    teacher: 'Profesor / Docente',
+    docente: 'Profesor / Docente',
     student: 'Estudiante',
-    parent: 'Padre/Madre/Tutor',
+    parent: 'Padre / Tutor',
+    principal: 'Director / Directora',
+    vice_principal: 'Jefe de Estudios',
+    coordinator: 'Tutor / Coordinador',
+    staff: 'Personal no docente',
+    system_auditor: 'Auditor de Sistema',
     user: 'Usuario'
+  },
+  layout: {
+    skipToContent: 'Saltar al contenido principal',
+    mainNav: 'Navegación principal',
+    toggleDrawer: 'Abrir/Cerrar menú',
+    schoolYear: 'Curso escolar',
+    schoolYearSelect: 'Seleccionar curso escolar',
+    themeAriaLabel: 'Seleccionar tema visual',
+    themeTooltip: 'Temas y Personalización',
+    themesTitle: 'Temas visuales',
+    a11yAriaLabel: 'Accesibilidad',
+    a11yTooltip: 'Herramientas de Accesibilidad',
+    a11yTitle: 'Accesibilidad y Dislexia',
+    dsaFontDesc: 'Tipografía OpenDyslexic para mayor legibilidad',
+    highContrast: 'Alto Contraste',
+    highContrastDesc: 'Bordes y textos de alto contraste',
+    lightMode: 'Modo Claro',
+    darkMode: 'Modo Oscuro',
+    exitFullscreen: 'Salir de pantalla completa',
+    enterFullscreen: 'Pantalla completa',
+    sideNav: 'Menú lateral',
+    userProfile: 'Perfil del usuario conectado',
+    connectedUser: 'Conectado como: {name}',
+    userRole: 'Rol: {role}',
+    breadcrumbNav: 'Ruta de navegación'
   },
   notifications: {
     title: 'Notificaciones y avisos',
@@ -990,3 +1021,4 @@ export default {
     saveSettings: 'Guardar preferencias'
   }
 }
+

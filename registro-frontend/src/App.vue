@@ -65,15 +65,20 @@ function handleKeyDown(e) {
 }
 
 function executeReload() {
-  window.removeEventListener('beforeunload', handleBeforeUnload)
-  showReloadConfirmDialog.value = false
-  window.location.reload()
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('beforeunload', handleBeforeUnload)
+    window.removeEventListener('keydown', handleKeyDown)
+    showReloadConfirmDialog.value = false
+    window.location.reload()
+  }
 }
 
 onMounted(async () => {
   themeStore.initTheme()
-  window.addEventListener('beforeunload', handleBeforeUnload)
-  window.addEventListener('keydown', handleKeyDown)
+  if (typeof window !== 'undefined') {
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    window.addEventListener('keydown', handleKeyDown)
+  }
 
   if (!authStore.token && (localStorage.getItem('user') || sessionStorage.getItem('user'))) {
     await authStore.initAuth()
@@ -84,8 +89,15 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-  window.removeEventListener('beforeunload', handleBeforeUnload)
-  window.removeEventListener('keydown', handleKeyDown)
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('beforeunload', handleBeforeUnload)
+    window.removeEventListener('keydown', handleKeyDown)
+  }
+  try {
+    wsStore.disconnect()
+  } catch {
+    // ws store cleanup guard
+  }
 })
 
 watch(() => authStore.isAuthenticated, (val) => {
@@ -105,12 +117,14 @@ watch(() => authStore.isAuthenticated, (val) => {
   src: url('https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/otf/OpenDyslexic-Regular.otf') format('opentype');
   font-weight: normal;
   font-style: normal;
+  font-display: swap;
 }
 @font-face {
   font-family: 'OpenDyslexic';
   src: url('https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/otf/OpenDyslexic-Bold.otf') format('opentype');
   font-weight: bold;
   font-style: normal;
+  font-display: swap;
 }
 
 /* Accessibility DSA Font — applies to all elements EXCEPT icon fonts */
@@ -138,7 +152,6 @@ body.dsa-font-active .notranslate {
   -webkit-font-feature-settings: 'liga' !important;
   text-rendering: optimizeLegibility !important;
 }
-
 
 /* Additional Font Families */
 body.font-family-lexend,

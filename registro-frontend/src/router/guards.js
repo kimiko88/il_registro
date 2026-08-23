@@ -1,13 +1,36 @@
 import { useAuthStore } from 'src/stores/auth'
 
+/**
+ * Decodes the JWT payload and checks if the token is expired.
+ * This is a client-side check only (second layer); the backend always
+ * re-validates authorization on every API call.
+ * @param {string} token
+ * @returns {boolean} true if the token is expired or malformed
+ */
+function isTokenExpired(token) {
+    if (!token) return true
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]))
+        return payload.exp ? payload.exp * 1000 < Date.now() : false
+    } catch {
+        // Malformed token — treat as expired
+        return true
+    }
+}
+
+// Shared in-flight promise to prevent concurrent initAuth calls
+let _initAuthPromise = null
+
 export const authGuard = async (to, from, next) => {
     const authStore = useAuthStore()
 
-    // If initAuth is currently running or token is missing with stored user session, wait for initAuth to resolve
-    if (authStore.isInitializing) {
-        await authStore.initAuth()
-    } else if (!authStore.token && (localStorage.getItem('user') || sessionStorage.getItem('user'))) {
-        await authStore.initAuth()
+    // If initAuth is currently running or token is missing with stored user session,
+    // wait for the shared promise to avoid concurrent executions.
+    if (authStore.isInitializing || (!authStore.token && (localStorage.getItem('user') || sessionStorage.getItem('user')))) {
+        if (!_initAuthPromise) {
+            _initAuthPromise = authStore.initAuth().finally(() => { _initAuthPromise = null })
+        }
+        await _initAuthPromise
     }
 
     const publicRoutes = ['/login', '/register', '/forgot-password']
@@ -38,6 +61,13 @@ export const authGuard = async (to, from, next) => {
             return
         }
         next()
+        return
+    }
+
+    // Client-side JWT expiry check (second layer — backend is the primary authority)
+    if (authStore.token && isTokenExpired(authStore.token)) {
+        authStore.logout?.()
+        next({ path: '/login', query: { reason: 'session_expired' } })
         return
     }
 

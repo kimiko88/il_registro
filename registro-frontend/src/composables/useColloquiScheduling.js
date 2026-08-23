@@ -15,12 +15,25 @@ export function useColloquiScheduling() {
         // Logic to generate individual slots
         generating.value = true;
         try {
+            const duration = parseInt(config?.duration, 10);
+            if (!duration || duration <= 0) {
+                const t = i18n?.global?.t;
+                $q.notify({ type: 'warning', message: t ? t('composables.colloqui.invalidDuration') : 'Durata colloquio non valida' });
+                return false;
+            }
+
             const slots = [];
             let current = date.addToDate(date.extractDate(`${config.date} ${config.startTime}`, 'YYYY-MM-DD HH:mm'), { minutes: 0 });
             const end = date.extractDate(`${config.date} ${config.endTime}`, 'YYYY-MM-DD HH:mm');
 
+            if (isNaN(current.getTime()) || isNaN(end.getTime()) || current >= end) {
+                const t = i18n?.global?.t;
+                $q.notify({ type: 'warning', message: t ? t('composables.colloqui.invalidTimeRange') : 'Intervallo orario non valido' });
+                return false;
+            }
+
             while (current < end) {
-                const slotEnd = date.addToDate(current, { minutes: parseInt(config.duration) });
+                const slotEnd = date.addToDate(current, { minutes: duration });
                 if (slotEnd > end) break;
 
                 slots.push({
@@ -29,7 +42,7 @@ export function useColloquiScheduling() {
                     endTime: date.formatDate(slotEnd, 'HH:mm')
                 });
 
-                current = date.addToDate(slotEnd, { minutes: parseInt(config.break || 0) });
+                current = date.addToDate(slotEnd, { minutes: parseInt(config.break || 0, 10) || 0 });
             }
 
             await store.createSlots(slots);

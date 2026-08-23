@@ -1,6 +1,6 @@
 import api from './api';
 
-export default {
+export const groupsService = {
   getGroups(params) {
     return api.get('/groups', { params });
   },
@@ -23,3 +23,6 @@ export default {
     return api.delete(`/groups/${id}/students/${studentId}`);
   }
 };
+
+export default groupsService;
+

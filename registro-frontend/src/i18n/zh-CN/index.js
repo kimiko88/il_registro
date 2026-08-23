@@ -297,13 +297,44 @@ export default {
     comunicazioniAccount: '通知与账户'
   },
   roles: {
-    admin: '管理员',
+    admin: '学校管理员',
     superadmin: '超级管理员',
-    secretary: '教务人员',
+    secretary: '教务秘书处',
     teacher: '教师',
+    docente: '教师',
     student: '学生',
     parent: '家长',
+    principal: '校长',
+    vice_principal: '副校长',
+    coordinator: '班主任 / 协调员',
+    staff: '教职工',
+    system_auditor: '系统审计员',
     user: '用户'
+  },
+  layout: {
+    skipToContent: '跳转至主要内容',
+    mainNav: '主导航',
+    toggleDrawer: '展开/折叠菜单',
+    schoolYear: '学年',
+    schoolYearSelect: '选择学年',
+    themeAriaLabel: '选择主题色彩',
+    themeTooltip: '主题与个性化',
+    themesTitle: '视觉主题',
+    a11yAriaLabel: '无障碍辅助',
+    a11yTooltip: '无障碍辅助工具',
+    a11yTitle: '无障碍与阅读辅助',
+    dsaFontDesc: 'OpenDyslexic 易读字体',
+    highContrast: '高对比度',
+    highContrastDesc: '高对比度边框与文字',
+    lightMode: '浅色模式',
+    darkMode: '深色模式',
+    exitFullscreen: '退出全屏',
+    enterFullscreen: '全屏显示',
+    sideNav: '侧边菜单',
+    userProfile: '当前登录用户资料',
+    connectedUser: '已登录为: {name}',
+    userRole: '身份角色: {role}',
+    breadcrumbNav: '面包屑导航'
   },
   notifications: {
     title: '通知与消息',
@@ -1266,3 +1297,4 @@ export default {
     saveSettings: '保存设置'
   }
 }
+

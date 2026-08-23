@@ -6,10 +6,11 @@ export const getBaseURL = () => {
     if (!rawUrl) {
         return '/api/v1';
     }
-    if (rawUrl.endsWith('/api/v1') || rawUrl.endsWith('/api/v1/')) {
-        return rawUrl;
+    const cleaned = String(rawUrl).trim().replace(/\/+$/, '');
+    if (cleaned.endsWith('/api/v1')) {
+        return cleaned;
     }
-    return rawUrl.endsWith('/') ? `${rawUrl}api/v1` : `${rawUrl}/api/v1`;
+    return `${cleaned}/api/v1`;
 };
 
 const api = axios.create({
@@ -39,7 +40,7 @@ api.interceptors.request.use(
             config.headers.Authorization = `Bearer ${token}`;
         }
         const lang = userLang || localStorage.getItem('app_language') || localStorage.getItem('user_locale') || 'it-IT';
-        const sanitizedLang = /^[a-zA-Z0-9_-]{2,10}$/.test(lang) ? lang : 'it-IT';
+        const sanitizedLang = typeof lang === 'string' && /^[a-zA-Z0-9_-]{2,10}$/.test(lang) ? lang : 'it-IT';
         config.headers['Accept-Language'] = sanitizedLang;
 
         if (config.url) {
@@ -91,6 +92,7 @@ export const clearLocalSession = () => {
     sessionStorage.removeItem('token');
     sessionStorage.removeItem('refreshToken');
     sessionStorage.removeItem('selectedChildId');
+    sessionStorage.removeItem('registro_lesson_drafts');
 };
 
 // Handler per la re-autenticazione in-page (registrato da MainLayout).
@@ -107,7 +109,7 @@ const handleSessionExpired = () => {
         if (appRouter.currentRoute?.value?.path !== '/login') {
             appRouter.push('/login?reason=session_expired');
         }
-    } else if (window.location.pathname !== '/login') {
+    } else if (typeof window !== 'undefined' && window.location?.pathname !== '/login') {
         window.location.href = '/login?reason=session_expired';
     }
 };
@@ -128,12 +130,16 @@ api.interceptors.response.use(
             return Promise.reject(error);
         }
 
+        const serverMsg = error.response?.data?.message || error.response?.data?.error;
+
         if (error.response.status === 403) {
-            error.userMessage = appI18n?.global?.t ? appI18n.global.t('errors.forbidden') : 'Non disponi dei permessi necessari per completare questa operazione.';
+            error.userMessage = serverMsg || (appI18n?.global?.t ? appI18n.global.t('errors.forbidden') : 'Non disponi dei permessi necessari per completare questa operazione.');
         } else if (error.response.status === 429) {
-            error.userMessage = error.response.data?.error || (appI18n?.global?.t ? appI18n.global.t('errors.rateLimit') : 'Troppi tentativi di accesso. Riprova tra un minuto.');
+            error.userMessage = serverMsg || (appI18n?.global?.t ? appI18n.global.t('errors.rateLimit') : 'Troppi tentativi di accesso. Riprova tra un minuto.');
         } else if (error.response.status >= 500) {
-            error.userMessage = appI18n?.global?.t ? appI18n.global.t('errors.serverError') : 'Si è verificato un errore sul server. Riprova più tardi.';
+            error.userMessage = serverMsg || (appI18n?.global?.t ? appI18n.global.t('errors.serverError') : 'Si è verificato un errore sul server. Riprova più tardi.');
+        } else if (serverMsg && typeof serverMsg === 'string') {
+            error.userMessage = serverMsg;
         }
 
         const isAuthUrl = originalRequest?.url && (
@@ -186,32 +192,40 @@ api.interceptors.response.use(
                     originalRequest.headers.Authorization = `Bearer ${access_token}`;
                     return api(originalRequest);
                 } catch (refreshErr) {
-                    processQueue(refreshErr, null);
-
                     // Prova la re-autenticazione in-page se il handler è registrato
                     if (_reauthHandler) {
                         try {
                             const email = authStore?.user?.email || '';
                             const newToken = await _reauthHandler(email);
-                            // Successo: riprova la request originale col nuovo token
+                            if (authStore && authStore.updateTokens) {
+                                authStore.updateTokens(newToken);
+                            }
+                            // Successo: risolvi la coda e riprova la request originale col nuovo token
                             processQueue(null, newToken);
                             originalRequest.headers.Authorization = `Bearer ${newToken}`;
                             return api(originalRequest);
                         } catch (reauthErr) {
-                            // L'utente ha annullato il dialog → logout gestito dal dialog
+                            // L'utente ha annullato il dialog o reauth fallito -> rifiuta la coda
                             processQueue(reauthErr, null);
+                            if (authStore) {
+                                authStore.logout();
+                            } else {
+                                clearLocalSession();
+                            }
+                            handleSessionExpired();
                             return Promise.reject(reauthErr);
                         }
-                    }
-
-                    // Fallback: nessun handler registrato → logout + redirect classico
-                    if (authStore) {
-                        authStore.logout();
                     } else {
-                        clearLocalSession();
+                        // Fallback: nessun handler registrato → svuota coda con errore + logout + redirect
+                        processQueue(refreshErr, null);
+                        if (authStore) {
+                            authStore.logout();
+                        } else {
+                            clearLocalSession();
+                        }
+                        handleSessionExpired();
+                        return Promise.reject(refreshErr);
                     }
-                    handleSessionExpired();
-                    return Promise.reject(refreshErr);
                 } finally {
                     isRefreshing = false;
                 }
@@ -222,3 +236,4 @@ api.interceptors.response.use(
 );
 
 export default api;
+

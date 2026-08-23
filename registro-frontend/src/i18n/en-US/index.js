@@ -727,10 +727,16 @@ export default {
   roles: {
     admin: 'Administrator',
     superadmin: 'Super Administrator',
-    secretary: 'Secretary',
+    secretary: 'School Office / Secretary',
     teacher: 'Teacher',
+    docente: 'Teacher',
     student: 'Student',
     parent: 'Parent',
+    principal: 'Principal / Headmaster',
+    vice_principal: 'Vice Principal',
+    coordinator: 'Class Coordinator',
+    staff: 'Administrative Staff',
+    system_auditor: 'System Auditor',
     user: 'User'
   },
   notifications: {
@@ -1106,3 +1112,4 @@ export default {
     cadError: 'Error downloading CAD package'
   }
 }
+

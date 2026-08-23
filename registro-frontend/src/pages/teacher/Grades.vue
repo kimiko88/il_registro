@@ -522,8 +522,12 @@ const showRubric = ref(false);
 const gradeOptions = ITALIAN_GRADE_OPTIONS;
 
 const isAssignedClass = computed(() => {
-  if (!selectedClassId.value) return false;
-  return classesStore.classes.some(c => String(c.id) === String(selectedClassId.value));
+  if (!selectedClassId.value) return false
+  const cls = classesStore.classes.find(c => String(c.id) === String(selectedClassId.value))
+  if (!cls) return false
+  // If the backend provides an is_owner / is_assigned field, use it.
+  // Absence of the field (undefined) is treated as owned (backward-compatible).
+  return cls.is_owner !== false
 });
 
 const showImportDialog = ref(false);
@@ -552,7 +556,8 @@ const filledEditTestGradesCount = computed(() => {
 
 const overlappingTestsCount = computed(() => {
     if (!testForm.value?.date || !classTests.value) return 0;
-    return classTests.value.filter(t => t.date && t.date.startsWith(testForm.value.date)).length;
+    // Use split('T')[0] for reliable comparison with ISO timestamps (e.g. '2026-08-23T00:00:00+02:00')
+    return classTests.value.filter(t => t.date && t.date.split('T')[0] === testForm.value.date).length;
 });
 
 const openTestDialog = () => {

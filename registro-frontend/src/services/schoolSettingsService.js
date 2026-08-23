@@ -1,6 +1,6 @@
 import api from './api';
 
-export default {
+export const schoolSettingsService = {
   getSettings() {
     return api.get('/school-settings');
   },
@@ -8,3 +8,6 @@ export default {
     return api.put('/school-settings', data);
   }
 };
+
+export default schoolSettingsService;
+

@@ -23,3 +23,6 @@ export const textbookService = {
         return api.delete(`/textbooks/class/assignment/${assignmentId}`)
     }
 }
+
+export default textbookService
+

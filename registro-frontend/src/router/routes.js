@@ -1,3 +1,5 @@
+import { useAuthStore } from '@/stores/auth'
+
 export default [
     {
         path: '/',
@@ -70,12 +72,19 @@ export default [
             {
                 path: 'admin/audit-logs',
                 component: () => import('@/pages/admin/AuditLog.vue'),
-                meta: { title: 'Registro Eventi & Audit', roles: ['superadmin', 'system_auditor'] }
+                // admin included so the dashboard menu item works correctly
+                meta: { title: 'Registro Eventi & Audit', roles: ['superadmin', 'admin', 'system_auditor'] }
             },
             {
                 path: 'admin/tenants',
                 component: () => import('@/pages/admin/Tenants.vue'),
                 meta: { title: 'Gestione Multi-Tenant', roles: ['superadmin'] }
+            },
+            {
+                // Redirect /admin/classes → secretary/classes (same component, admin-accessible)
+                path: 'admin/classes',
+                redirect: '/secretary/classes',
+                meta: { title: 'Gestione Classi', roles: ['superadmin', 'admin'] }
             },
 
             // Secretary Routes
@@ -163,40 +172,32 @@ export default [
 
             {
                 path: 'communications',
-                redirect: async () => {
-                    let role = ''
+                redirect: () => {
                     try {
-                        const { useAuthStore } = await import('@/stores/auth')
                         const authStore = useAuthStore()
-                        role = authStore.userRole || authStore.user?.role || ''
-                    } catch {
-                        // store fallback
-                    }
-                    if (role === 'teacher' || role === 'coordinator') return '/teacher/communications'
-                    if (role === 'student') return '/student/communications'
-                    if (role === 'parent') return '/parent/communications'
-                    if (role === 'secretary' || role === 'principal' || role === 'vice_principal') return '/secretary/communications'
-                    if (role === 'admin' || role === 'superadmin' || role === 'system_auditor') return '/admin/dashboard'
+                        const role = authStore.userRole || authStore.user?.role || ''
+                        if (role === 'teacher' || role === 'coordinator') return '/teacher/communications'
+                        if (role === 'student') return '/student/communications'
+                        if (role === 'parent') return '/parent/communications'
+                        if (role === 'secretary' || role === 'principal' || role === 'vice_principal') return '/secretary/communications'
+                        if (role === 'admin' || role === 'superadmin' || role === 'system_auditor') return '/admin/dashboard'
+                    } catch { /* store not ready */ }
                     return '/'
                 },
                 meta: { title: 'Comunicazioni', roles: ['superadmin', 'admin', 'secretary', 'teacher', 'student', 'parent', 'principal', 'vice_principal', 'coordinator', 'system_auditor'] }
             },
             {
                 path: 'profile',
-                redirect: async () => {
-                    let role = ''
+                redirect: () => {
                     try {
-                        const { useAuthStore } = await import('@/stores/auth')
                         const authStore = useAuthStore()
-                        role = authStore.userRole || authStore.user?.role || ''
-                    } catch {
-                        // store fallback
-                    }
-                    if (role === 'student') return '/student/profile'
-                    if (role === 'parent') return '/parent/profile'
-                    if (role === 'admin' || role === 'superadmin') return '/admin/settings'
-                    if (role === 'secretary' || role === 'principal' || role === 'vice_principal') return '/secretary/settings'
-                    if (role === 'teacher' || role === 'coordinator') return '/teacher/settings'
+                        const role = authStore.userRole || authStore.user?.role || ''
+                        if (role === 'student') return '/student/profile'
+                        if (role === 'parent') return '/parent/profile'
+                        if (role === 'admin' || role === 'superadmin') return '/admin/settings'
+                        if (role === 'secretary' || role === 'principal' || role === 'vice_principal') return '/secretary/settings'
+                        if (role === 'teacher' || role === 'coordinator') return '/teacher/settings'
+                    } catch { /* store not ready */ }
                     return '/'
                 },
                 meta: { title: 'Profilo Utente', roles: ['superadmin', 'admin', 'secretary', 'teacher', 'student', 'parent', 'principal', 'vice_principal', 'coordinator'] }

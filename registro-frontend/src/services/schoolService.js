@@ -1,6 +1,6 @@
 import api from './api';
 
-export default {
+export const schoolService = {
     getSchools(params) {
         return api.get('/schools', { params });
     },
@@ -21,6 +21,10 @@ export default {
         formData.append('file', file);
         return api.post('/schools/import', formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
+            timeout: 60000
         });
     },
 };
+
+export default schoolService;
+

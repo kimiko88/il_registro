@@ -3,7 +3,7 @@ import api from './api'
 /**
  * Admin service for SuperAdmin and Admin operations
  */
-export default {
+export const adminService = {
     // ========== Dashboard ==========
 
     getDashboardStats() {
@@ -231,3 +231,6 @@ export default {
         return api.put(`/admin/settings/${key}`, { value: String(value) })
     }
 }
+
+export default adminService
+

@@ -4,7 +4,7 @@ import { Quasar, Notify, Dialog, Loading } from 'quasar'
 import router from './router'
 import App from './App.vue'
 import { i18n } from './i18n'
-import { setApiI18n } from './services/api'
+import { setApiI18n, setApiRouter } from './services/api'
 import { getSavedLocale, getQuasarLang, applyLocale } from './utils/locale'
 
 // Import Quasar css
@@ -18,6 +18,10 @@ const savedLang = getSavedLocale()
 
 if (typeof setApiI18n === 'function') {
   setApiI18n(i18n)
+}
+
+if (typeof setApiRouter === 'function') {
+  setApiRouter(router)
 }
 
 // Apply initial DOM attributes (lang, dir)

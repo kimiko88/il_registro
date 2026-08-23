@@ -36,7 +36,6 @@ export function useMenuItems(role) {
                     { label: 'Classi', icon: 'room', path: '/secretary/classes' },
                     { label: 'Orario Scolastico', icon: 'schedule', path: '/secretary/timetable' },
                     { label: 'Gruppi Linguistici / Articolati', icon: 'groups', path: '/secretary/groups' }
-
                 ]
             },
             {
@@ -180,5 +179,21 @@ export function useMenuItems(role) {
         ]
     }
 
-    return menuConfig[role] || []
+    const normRole = (role || '').toLowerCase()
+    if (normRole === 'principal' || normRole === 'vice_principal') {
+        return menuConfig.secretary
+    }
+    if (normRole === 'coordinator' || normRole === 'docente') {
+        return menuConfig.teacher
+    }
+    if (normRole === 'system_auditor') {
+        return menuConfig.superadmin
+    }
+    if (normRole === 'staff') {
+        return menuConfig.secretary
+    }
+
+    return menuConfig[normRole] || []
 }
+
+export default useMenuItems

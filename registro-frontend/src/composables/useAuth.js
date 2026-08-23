@@ -27,12 +27,18 @@ export function useAuth() {
             switch (userData.role) {
                 case 'superadmin':
                 case 'admin':
+                case 'system_auditor':
                     router.push('/admin')
                     break
                 case 'secretary':
+                case 'principal':
+                case 'vice_principal':
+                case 'staff':
                     router.push('/secretary')
                     break
                 case 'teacher':
+                case 'coordinator':
+                case 'docente':
                     router.push('/teacher')
                     break
                 case 'student':

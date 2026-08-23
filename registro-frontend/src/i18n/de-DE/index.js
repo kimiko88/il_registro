@@ -298,12 +298,43 @@ export default {
   },
   roles: {
     admin: 'Administrator',
-    superadmin: 'Superadministrator',
-    secretary: 'Sekretär',
-    teacher: 'Lehrer',
+    superadmin: 'Super-Administrator',
+    secretary: 'Sekretariat',
+    teacher: 'Lehrkraft',
+    docente: 'Lehrkraft',
     student: 'Schüler',
     parent: 'Elternteil',
+    principal: 'Schulleitung',
+    vice_principal: 'Stellv. Schulleitung',
+    coordinator: 'Klassenlehrer / Koordinator',
+    staff: 'Schulpersonal',
+    system_auditor: 'Systemprüfer',
     user: 'Benutzer'
+  },
+  layout: {
+    skipToContent: 'Zum Hauptinhalt springen',
+    mainNav: 'Hauptnavigation',
+    toggleDrawer: 'Menü ein-/ausblenden',
+    schoolYear: 'Schuljahr',
+    schoolYearSelect: 'Schuljahr auswählen',
+    themeAriaLabel: 'Farbschema auswählen',
+    themeTooltip: 'Designs & Personalisierung',
+    themesTitle: 'Farbschemata',
+    a11yAriaLabel: 'Barrierefreiheit',
+    a11yTooltip: 'Barrierefreiheits-Tools',
+    a11yTitle: 'Barrierefreiheit & LRS',
+    dsaFontDesc: 'OpenDyslexic-Schriftart für bessere Lesbarkeit',
+    highContrast: 'Hoher Kontrast',
+    highContrastDesc: 'Kontrastreiche Rahmen und Texte',
+    lightMode: 'Heller Modus',
+    darkMode: 'Dunkler Modus',
+    exitFullscreen: 'Vollbild beenden',
+    enterFullscreen: 'Vollbild aktivieren',
+    sideNav: 'Seitenmenü',
+    userProfile: 'Profil des angemeldeten Benutzers',
+    connectedUser: 'Angemeldet als: {name}',
+    userRole: 'Rolle: {role}',
+    breadcrumbNav: 'Pfadnavigation'
   },
   notifications: {
     title: 'Benachrichtigungen & Mitteilungen',
@@ -1266,3 +1297,4 @@ export default {
     saveSettings: 'Einstellungen speichern'
   }
 }
+
