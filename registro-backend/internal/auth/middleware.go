@@ -76,7 +76,7 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 			return
 		}
 
-		// Verify the account is still active in the DB with a short 10s TTL cache.
+		// Verify the account is still active in the DB with a short 30s TTL cache.
 		var isActive bool
 		var foundInCache bool
 		m.cacheMu.RLock()
@@ -114,7 +114,7 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 			if len(m.activeCache) < maxActiveCacheSize {
 				m.activeCache[claims.UserID] = activeCacheEntry{
 					isActive:  isActive,
-					expiresAt: time.Now().Add(3 * time.Second),
+					expiresAt: time.Now().Add(30 * time.Second),
 				}
 			}
 			m.cacheMu.Unlock()
@@ -228,10 +228,19 @@ func (m *Middleware) AuthenticateWSTicket(store *wsticket.Store) gin.HandlerFunc
 			if m.activeCache == nil {
 				m.activeCache = make(map[string]activeCacheEntry)
 			}
+			// Cap activeCache size to 10,000 entries to prevent memory exhaustion from forged token bursts.
+			if len(m.activeCache) >= maxActiveCacheSize {
+				now := time.Now()
+				for k, v := range m.activeCache {
+					if now.After(v.expiresAt) {
+						delete(m.activeCache, k)
+					}
+				}
+			}
 			if len(m.activeCache) < maxActiveCacheSize {
 				m.activeCache[userID] = activeCacheEntry{
 					isActive:  isActive,
-					expiresAt: time.Now().Add(3 * time.Second),
+					expiresAt: time.Now().Add(30 * time.Second),
 				}
 			}
 			m.cacheMu.Unlock()
@@ -296,6 +305,7 @@ func GetUserID(c *gin.Context) (string, bool) {
 	return s, true
 }
 
+// bcp47Regex is pre-compiled at package level for high performance on incoming requests.
 var bcp47Regex = regexp.MustCompile(`^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})*$`)
 
 // parseAcceptLanguage normalizes Accept-Language header value into a safe BCP-47 locale.
@@ -303,8 +313,14 @@ func parseAcceptLanguage(raw string) string {
 	if raw == "" {
 		return "it-IT"
 	}
-	first := strings.Split(raw, ",")[0]
-	first = strings.TrimSpace(strings.Split(first, ";")[0])
+	first := raw
+	if commaIdx := strings.IndexByte(first, ','); commaIdx != -1 {
+		first = first[:commaIdx]
+	}
+	if semiIdx := strings.IndexByte(first, ';'); semiIdx != -1 {
+		first = first[:semiIdx]
+	}
+	first = strings.TrimSpace(first)
 	first = strings.ReplaceAll(first, "_", "-")
 	if len(first) > 35 {
 		first = first[:35]

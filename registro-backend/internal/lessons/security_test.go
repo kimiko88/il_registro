@@ -74,7 +74,23 @@ func TestSecurity_CreateLesson_SubstitutionErrorHandling(t *testing.T) {
 	})
 
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "forbidden")
+	assert.Contains(t, err.Error(), "failed to check substitution")
+	repo.AssertExpectations(t)
+
+	// Test unapproved substitution returns forbidden
+	repo.On("IsTeacherAssignedToClass", teacherID, classID).Return(false, nil).Once()
+	repo.On("HasApprovedSubstitution", teacherID, classID, today, 1).Return(false, nil).Once()
+
+	_, errUnapproved := svc.CreateLesson(teacherID, CreateLessonRequest{
+		ClassID:        classID,
+		SubjectID:      "sub-1",
+		Date:           today,
+		Hour:           1,
+		Duration:       1,
+		IsSubstitution: true,
+	})
+	assert.Error(t, errUnapproved)
+	assert.Contains(t, errUnapproved.Error(), "forbidden")
 	repo.AssertExpectations(t)
 }
 

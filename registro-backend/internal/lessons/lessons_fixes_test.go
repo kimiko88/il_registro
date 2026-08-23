@@ -128,5 +128,56 @@ func TestLessons_GetHomeworks_Default30DaysFilter(t *testing.T) {
 	res, err := svc.GetHomeworks("class-1")
 	assert.NoError(t, err)
 	assert.NotNil(t, res)
+	assert.Empty(t, res)
 	mockRepo.AssertExpectations(t)
+}
+
+func TestLessons_GetLessons_EmptySlice(t *testing.T) {
+	mockRepo := new(MockLessonsRepository)
+	svc := NewService(mockRepo)
+
+	mockRepo.On("GetLessonsByClass", "class-1", "2026-03-15").Return([]Lesson{}, nil).Once()
+
+	res, err := svc.GetLessons("class-1", "", "2026-03-15")
+	assert.NoError(t, err)
+	assert.NotNil(t, res, "Must return non-nil empty slice for JSON [] serialization")
+	assert.Len(t, res, 0)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestLessons_GetTeacherDiary_DefaultDateRange(t *testing.T) {
+	mockRepo := new(MockLessonsRepository)
+	svc := NewService(mockRepo)
+
+	mockRepo.On("GetLessonsByTeacher", "t-1", mock.Anything, mock.Anything).Return([]Lesson{}, nil).Once()
+
+	res, err := svc.GetTeacherDiary("t-1", "", "")
+	assert.NoError(t, err)
+	assert.NotNil(t, res)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestLessons_CreateHomework_DueDateValidation(t *testing.T) {
+	mockRepo := new(MockLessonsRepository)
+	svc := NewService(mockRepo)
+
+	mockRepo.On("IsTeacherAssignedToClass", "t-1", "class-1").Return(true, nil).Twice()
+
+	// Past due date
+	_, errPast := svc.CreateHomework("t-1", CreateHomeworkRequest{
+		ClassID: "class-1",
+		DueDate: "2020-01-01",
+	})
+	assert.Error(t, errPast)
+	assert.Contains(t, errPast.Error(), "due_date")
+
+	// Today's due date (must be strictly in future)
+	loc, _ := time.LoadLocation("Europe/Rome")
+	todayStr := time.Now().In(loc).Format("2006-01-02")
+	_, errToday := svc.CreateHomework("t-1", CreateHomeworkRequest{
+		ClassID: "class-1",
+		DueDate: todayStr,
+	})
+	assert.Error(t, errToday)
+	assert.Contains(t, errToday.Error(), "due_date")
 }

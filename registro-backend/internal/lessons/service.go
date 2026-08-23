@@ -46,7 +46,10 @@ func (s *service) CreateLesson(teacherID string, req CreateLessonRequest) (*Less
 	if !isAssigned {
 		if req.IsSubstitution {
 			hasSub, subErr := s.repo.HasApprovedSubstitution(teacherID, req.ClassID, req.Date, req.Hour)
-			if subErr != nil || !hasSub {
+			if subErr != nil {
+				return nil, fmt.Errorf("failed to check substitution: %w", subErr)
+			}
+			if !hasSub {
 				return nil, errors.New("forbidden: docente non assegnato alla classe e nessuna sostituzione approvata trovata")
 			}
 		} else {
@@ -54,7 +57,10 @@ func (s *service) CreateLesson(teacherID string, req CreateLessonRequest) (*Less
 		}
 	} else if req.IsSubstitution {
 		hasSub, subErr := s.repo.HasApprovedSubstitution(teacherID, req.ClassID, req.Date, req.Hour)
-		if subErr != nil || !hasSub {
+		if subErr != nil {
+			return nil, fmt.Errorf("failed to check substitution: %w", subErr)
+		}
+		if !hasSub {
 			return nil, errors.New("forbidden: nessuna sostituzione approvata trovata per la data e ora indicate")
 		}
 	}
@@ -66,12 +72,17 @@ func (s *service) CreateLesson(teacherID string, req CreateLessonRequest) (*Less
 		return nil, errors.New("hour must be greater than 0")
 	}
 
-	date, err := time.Parse("2006-01-02", req.Date)
+	loc, err := time.LoadLocation("Europe/Rome")
+	if err != nil {
+		loc = time.Local
+	}
+
+	date, err := time.ParseInLocation("2006-01-02", req.Date, loc)
 	if err != nil {
 		return nil, fmt.Errorf("invalid date format: %w", err)
 	}
 
-	now := time.Now()
+	now := time.Now().In(loc)
 	minDate := now.AddDate(-2, 0, 0)
 	maxDate := now.AddDate(1, 0, 0)
 	if date.Before(minDate) || date.After(maxDate) {
@@ -95,8 +106,8 @@ func (s *service) CreateLesson(teacherID string, req CreateLessonRequest) (*Less
 			exStart, exEnd := l.Hour, l.Hour+lDur
 
 			if newStart < exEnd && exStart < newEnd {
-				if !((l.IsCoTeaching && req.IsCoTeaching) || (l.IsSubstitution && req.IsSubstitution)) {
-					return nil, fmt.Errorf("impossibile inserire più lezioni nella stessa ora (%dª ora) per questa classe a meno che non sia spuntata la voce 'Compresenza' o entrambe siano 'Sostituzione'", req.Hour)
+				if !(l.IsCoTeaching && req.IsCoTeaching) {
+					return nil, fmt.Errorf("impossibile inserire più lezioni nella stessa ora (%dª ora) per questa classe a meno che non sia spuntata la voce 'Compresenza'", req.Hour)
 				}
 			}
 		}
@@ -151,7 +162,7 @@ func (s *service) GetLessons(classID, subjectID string, date string) ([]LessonRe
 		return nil, err
 	}
 
-	var res []LessonResponse
+	res := []LessonResponse{}
 	for _, l := range lessons {
 		res = append(res, *s.mapLessonResponse(&l))
 	}
@@ -164,7 +175,7 @@ func (s *service) GetLessonsByGroup(groupID string, date string) ([]LessonRespon
 		return nil, err
 	}
 
-	var res []LessonResponse
+	res := []LessonResponse{}
 	for _, l := range lessons {
 		res = append(res, *s.mapLessonResponse(&l))
 	}
@@ -182,14 +193,18 @@ func (s *service) CreateHomework(teacherID string, req CreateHomeworkRequest) (*
 	if !isAssigned {
 		return nil, errors.New("forbidden: docente non assegnato alla classe")
 	}
-	dueDate, err := time.Parse("2006-01-02", req.DueDate)
+
+	loc, err := time.LoadLocation("Europe/Rome")
+	if err != nil {
+		loc = time.Local
+	}
+	now := time.Now().In(loc)
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, loc)
+	dueDate, err := time.ParseInLocation("2006-01-02", req.DueDate, loc)
 	if err != nil {
 		return nil, fmt.Errorf("invalid due_date format: %w", err)
 	}
-
-	now := time.Now()
-	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
-	if dueDate.Before(today) {
+	if !dueDate.After(today) {
 		return nil, errors.New("due_date non può essere nel passato")
 	}
 
@@ -326,8 +341,8 @@ func (s *service) UpdateLesson(teacherID, role, id string, req UpdateLessonReque
 			}
 			exStart, exEnd := l.Hour, l.Hour+lDur
 			if newStart < exEnd && exStart < newEnd {
-				if !((l.IsCoTeaching && targetCoTeaching) || (l.IsSubstitution && targetSub)) {
-					return nil, fmt.Errorf("impossibile registrare più lezioni nella stessa ora (%dª ora) per questa classe senza la spunta 'Compresenza' o entrambe 'Sostituzione'", targetHour)
+				if !(l.IsCoTeaching && targetCoTeaching) {
+					return nil, fmt.Errorf("impossibile registrare più lezioni nella stessa ora (%dª ora) per questa classe senza la spunta 'Compresenza'", targetHour)
 				}
 			}
 		}
@@ -381,7 +396,15 @@ func (s *service) DeleteHomework(teacherID, role, id string) error {
 }
 
 func (s *service) GetTeacherDiary(teacherID string, fromDate, toDate string) ([]LessonResponse, error) {
-	if fromDate != "" && toDate != "" {
+	if fromDate == "" && toDate == "" {
+		loc, err := time.LoadLocation("Europe/Rome")
+		if err != nil {
+			loc = time.Local
+		}
+		now := time.Now().In(loc)
+		fromDate = now.AddDate(0, 0, -30).Format("2006-01-02")
+		toDate = now.AddDate(0, 0, 30).Format("2006-01-02")
+	} else if fromDate != "" && toDate != "" {
 		from, err1 := time.Parse("2006-01-02", fromDate)
 		to, err2 := time.Parse("2006-01-02", toDate)
 		if err1 != nil || err2 != nil {
@@ -398,7 +421,7 @@ func (s *service) GetTeacherDiary(teacherID string, fromDate, toDate string) ([]
 	if err != nil {
 		return nil, err
 	}
-	var res []LessonResponse
+	res := []LessonResponse{}
 	for _, l := range lessons {
 		res = append(res, *s.mapLessonResponse(&l))
 	}
