@@ -30,8 +30,8 @@ func (v *Validator) ValidateGradeValue(value float64, gradeType string) error {
 			return errors.New("Valore giudizio fuori range (1-10)")
 		}
 	case GradeTypeCredit:
-		if value <= 0 {
-			return errors.New("Credito deve essere positivo")
+		if value < 1.0 || value > 25.0 {
+			return errors.New("Credito scolastico deve essere compreso tra 1 e 25")
 		}
 	case GradeTypeCompetence:
 		if value < 1 || value > 4 {

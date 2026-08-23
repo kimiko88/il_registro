@@ -77,9 +77,9 @@ func GetSemesterDateRange(semester int) (time.Time, time.Time) {
 		end := time.Date(yearStart+1, time.January, 31, 23, 59, 59, 0, time.UTC)
 		return start, end
 	case 2:
-		// Feb 1 to June 30
+		// Feb 1 to August 31 (covering summer exam sessions & debiti recovery)
 		start := time.Date(yearStart+1, time.February, 1, 0, 0, 0, 0, time.UTC)
-		end := time.Date(yearStart+1, time.June, 30, 23, 59, 59, 0, time.UTC)
+		end := time.Date(yearStart+1, time.August, 31, 23, 59, 59, 0, time.UTC)
 		return start, end
 	default:
 		return time.Time{}, time.Time{}

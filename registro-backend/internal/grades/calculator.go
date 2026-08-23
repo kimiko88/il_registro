@@ -215,8 +215,16 @@ func (c *Calculator) CalculatePercentile(grades []Grade, score float64) float64 
 
 func (c *Calculator) DetectOutliers(grades []Grade) []string {
 	// Returns IDs of outlier grades (outside Mean +/- 2*StdDev)
-	mean := c.CalculateAverage(grades)
-	stdDev := c.CalculateStandardDeviation(grades)
+	vals := c.extractValues(grades)
+	if len(vals) < 2 {
+		return nil
+	}
+	var sum float64
+	for _, v := range vals {
+		sum += v
+	}
+	mean := sum / float64(len(vals))
+	stdDev := c.calculateStandardDeviationFromValues(vals, mean)
 	if stdDev == 0 {
 		return nil
 	}

@@ -844,6 +844,8 @@ func (s *service) GetMyAverages(ctx context.Context, studentID string) (*Student
 		cond := "N.V."
 		if len(gs) > 0 && overall > 0 {
 			switch {
+			case overall < 5.0:
+				cond = "GRAVEMENTE INSUFFICIENTE"
 			case overall < 6.0:
 				cond = "ATTENZIONE"
 			case overall < 7.0:
@@ -973,10 +975,17 @@ func (s *service) GetMyTrend(ctx context.Context, actorID string, actorRole stri
 	}
 
 	direction := "stable"
-	if len(points) >= 2 {
+	if len(points) >= 3 {
 		last := points[len(points)-1]
 		prev := points[len(points)-2]
 		diff := last.MovingAvg3 - prev.MovingAvg3
+		if diff > 0.5 {
+			direction = "improving"
+		} else if diff < -0.5 {
+			direction = "declining"
+		}
+	} else if len(points) == 2 {
+		diff := relevant[1].GradeValue - relevant[0].GradeValue
 		if diff > 0.5 {
 			direction = "improving"
 		} else if diff < -0.5 {
@@ -1198,23 +1207,23 @@ func (s *service) GetSemesterReport(ctx context.Context, actorID string, actorRo
 	gradedCount := len(subMap)
 	totalEnrolled := len(enrolledSubjects)
 
-	denominator := gradedCount
-	if totalEnrolled > gradedCount {
-		denominator = totalEnrolled
-	}
 	overall := 0.0
-	if denominator > 0 {
-		overall = math.Round((totalSum/float64(denominator))*100) / 100
+	if gradedCount > 0 {
+		overall = math.Round((totalSum/float64(gradedCount))*100) / 100
 	}
 
 	// Promotion evaluation: all enrolled subjects must be graded, passed, and overall >= 6.0
 	promoted := "NO"
-	requiredSubjects := totalEnrolled
-	if requiredSubjects == 0 && enrollErr == nil {
-		requiredSubjects = gradedCount
-	}
-	if requiredSubjects > 0 && passedCount == requiredSubjects && gradedCount >= requiredSubjects && overall >= 6.0 {
-		promoted = "SÌ"
+	if totalEnrolled > 0 && gradedCount < totalEnrolled {
+		promoted = "IN CORSO"
+	} else {
+		requiredSubjects := totalEnrolled
+		if requiredSubjects == 0 && enrollErr == nil {
+			requiredSubjects = gradedCount
+		}
+		if requiredSubjects > 0 && passedCount == requiredSubjects && overall >= 6.0 {
+			promoted = "SÌ"
+		}
 	}
 
 	return &SemesterReportResponse{

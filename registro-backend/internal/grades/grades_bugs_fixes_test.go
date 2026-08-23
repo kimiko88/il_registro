@@ -94,3 +94,33 @@ func TestCalculator_CalculatePercentile_InvalidScore(t *testing.T) {
 	assert.Equal(t, 0.0, calc.CalculatePercentile(grades, 11.0))
 	assert.InDelta(t, 50.0, calc.CalculatePercentile(grades, 7.0), 0.01)
 }
+
+func TestValidator_CreditUpperLimit(t *testing.T) {
+	v := NewValidator(nil)
+	assert.NoError(t, v.ValidateGradeValue(10, string(GradeTypeCredit)))
+	assert.NoError(t, v.ValidateGradeValue(25, string(GradeTypeCredit)))
+	assert.Error(t, v.ValidateGradeValue(26, string(GradeTypeCredit)))
+	assert.Error(t, v.ValidateGradeValue(0, string(GradeTypeCredit)))
+}
+
+func TestGrades_GetMyAverages_GravementeInsufficiente(t *testing.T) {
+	mockRepo := new(MockRepository)
+	calc := NewCalculator()
+	svc := &service{repo: mockRepo, calculator: calc}
+
+	mockRepo.On("FindByStudent", "s-low").Return([]Grade{
+		{
+			ID:            "g1",
+			StudentID:     "s-low",
+			SubjectID:     "sub1",
+			GradeValue:    3.5,
+			GradeCategory: GradeCategorySummative,
+			Semester:      1,
+			IsPublished:   true,
+		},
+	}, nil).Once()
+
+	res, err := svc.GetMyAverages(context.Background(), "s-low")
+	assert.NoError(t, err)
+	assert.Equal(t, "GRAVEMENTE INSUFFICIENTE", res.Semester1.Condition)
+}

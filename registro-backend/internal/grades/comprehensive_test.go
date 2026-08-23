@@ -30,7 +30,8 @@ func TestValidateGradeValue(t *testing.T) {
 		{"Invalid judgment value", -1, string(GradeTypeJudgment), true, "Valore giudizio fuori range"},
 		{"Valid judgment value", 6, string(GradeTypeJudgment), false, ""},
 		{"Valid credit", 5, string(GradeTypeCredit), false, ""},
-		{"Invalid credit", 0, string(GradeTypeCredit), true, "Credito deve essere positivo"},
+		{"Invalid credit", 0, string(GradeTypeCredit), true, "Credito"},
+		{"Invalid credit > 25", 26, string(GradeTypeCredit), true, "Credito"},
 		{"Valid competence", 3, string(GradeTypeCompetence), false, ""},
 		{"Invalid competence", 5, string(GradeTypeCompetence), true, "Livello competenza non valido"},
 	}
