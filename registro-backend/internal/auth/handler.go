@@ -95,11 +95,15 @@ func isHTTPSRequest(c *gin.Context) bool {
 }
 
 func setRefreshTokenCookie(c *gin.Context, token string, maxAge int) {
+	appEnv := os.Getenv("APP_ENV")
+	ginMode := os.Getenv("GIN_MODE")
+	cookieSecure := os.Getenv("COOKIE_SECURE")
+
 	isSecure := false
-	if os.Getenv("COOKIE_SECURE") == "true" || os.Getenv("APP_ENV") == "production" || os.Getenv("GIN_MODE") == "release" || isHTTPSRequest(c) {
+	if cookieSecure == "true" || appEnv == "production" || ginMode == "release" || isHTTPSRequest(c) {
 		isSecure = true
 	}
-	if os.Getenv("COOKIE_SECURE") == "false" {
+	if cookieSecure == "false" && appEnv != "production" && ginMode != "release" {
 		isSecure = false
 	}
 	domain := os.Getenv("COOKIE_DOMAIN")
@@ -156,9 +160,12 @@ func (h *Handler) RefreshToken(c *gin.Context) {
 	rt := ""
 	if cookieToken, err := c.Cookie("refreshToken"); err == nil && cookieToken != "" {
 		rt = cookieToken
-	} else {
+	} else if c.Request.Body != nil && c.Request.ContentLength != 0 {
 		var req RefreshTokenRequest
-		_ = c.ShouldBindJSON(&req)
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "invalid request body", Message: err.Error()})
+			return
+		}
 		rt = req.RefreshToken
 	}
 
@@ -186,18 +193,15 @@ func (h *Handler) RefreshToken(c *gin.Context) {
 // Logout handles user logout
 // POST /auth/logout
 func (h *Handler) Logout(c *gin.Context) {
-	var req RefreshTokenRequest
-	_ = c.ShouldBindJSON(&req)
-
-	rt := req.RefreshToken
-	if rt == "" {
-		if cookieToken, err := c.Cookie("refreshToken"); err == nil && cookieToken != "" {
-			rt = cookieToken
-		}
+	rt := ""
+	if cookieToken, err := c.Cookie("refreshToken"); err == nil && cookieToken != "" {
+		rt = cookieToken
+	} else if c.Request.Body != nil && c.Request.ContentLength != 0 {
+		var req RefreshTokenRequest
+		_ = c.ShouldBindJSON(&req)
+		rt = req.RefreshToken
 	}
 
-	// Extract the authenticated user's ID from the JWT (set by Authenticate middleware).
-	// This ensures a user can only revoke their own sessions.
 	callerUserID, exists := GetUserID(c)
 	if !exists {
 		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "user not authenticated"})
@@ -382,15 +386,27 @@ func (h *Handler) IssueWSTicket(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "ws ticket store not configured"})
 		return
 	}
-	email, _ := c.Get("email")
-	role, _ := GetUserRole(c)
-	schoolID, _ := GetSchoolID(c)
+
+	emailStr := ""
+	if emailVal, ok := c.Get("email"); ok && emailVal != nil {
+		emailStr = fmt.Sprint(emailVal)
+	}
+	role, roleExists := GetUserRole(c)
+	schoolIDStr := ""
+	if sID, ok := GetSchoolID(c); ok {
+		schoolIDStr = sID
+	}
+
+	if emailStr == "" || !roleExists || role == "" {
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "incomplete user metadata for ws ticket"})
+		return
+	}
 
 	ticket, err := h.wsTicketStore.Issue(
 		userID,
-		fmt.Sprint(email),
+		emailStr,
 		role,
-		fmt.Sprint(schoolID),
+		schoolIDStr,
 	)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "could not issue ws ticket"})
