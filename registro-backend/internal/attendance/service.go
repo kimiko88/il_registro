@@ -564,7 +564,7 @@ func (s *service) RequestJustification(ctx context.Context, parentID string, req
 	if end.Before(start) {
 		return fmt.Errorf("end_date (%s) non può essere precedente a start_date (%s)", req.EndDate, req.StartDate)
 	}
-	if end.Sub(start) > 30*24*time.Hour {
+	if end.After(start.AddDate(0, 0, 30)) {
 		return fmt.Errorf("l'intervallo della giustifica non può superare 30 giorni")
 	}
 

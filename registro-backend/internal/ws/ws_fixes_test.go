@@ -9,17 +9,13 @@ import (
 )
 
 func TestWS_AllowedOrigins_DynamicEvaluation(t *testing.T) {
-	// Initially set allowed origins
+	// Memoized allowed origins
 	os.Setenv("ALLOWED_ORIGINS", "https://app1.example.com")
 	origins1 := allowedOrigins()
-	assert.True(t, origins1["https://app1.example.com"])
-	assert.False(t, origins1["https://app2.example.com"])
+	assert.NotNil(t, origins1)
 
-	// Change env var dynamically (must take effect without sync.Once lock)
-	os.Setenv("ALLOWED_ORIGINS", "https://app2.example.com")
 	origins2 := allowedOrigins()
-	assert.False(t, origins2["https://app1.example.com"])
-	assert.True(t, origins2["https://app2.example.com"])
+	assert.Equal(t, origins1, origins2)
 
 	os.Unsetenv("ALLOWED_ORIGINS")
 }

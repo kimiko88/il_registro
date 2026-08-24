@@ -22,6 +22,29 @@ const api = axios.create({
     },
 });
 
+const getEffectiveLanguage = (userLang) => {
+    if (userLang && typeof userLang === 'string') return userLang;
+    try {
+        const lang = (typeof localStorage !== 'undefined' && (localStorage.getItem('app_language') || localStorage.getItem('user_locale'))) || 'it-IT';
+        return typeof lang === 'string' && /^[a-zA-Z0-9_-]{2,10}$/.test(lang) ? lang : 'it-IT';
+    } catch {
+        return 'it-IT';
+    }
+};
+
+const activeAbortControllers = new Set();
+
+export const cancelInFlightRequests = () => {
+    for (const controller of activeAbortControllers) {
+        try {
+            controller.abort();
+        } catch (_e) {
+            // Ignore errors if the request was already completed or aborted
+        }
+    }
+    activeAbortControllers.clear();
+};
+
 api.interceptors.request.use(
     (config) => {
         let token = null;
@@ -39,15 +62,13 @@ api.interceptors.request.use(
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
-        const lang = userLang || localStorage.getItem('app_language') || localStorage.getItem('user_locale') || 'it-IT';
-        const sanitizedLang = typeof lang === 'string' && /^[a-zA-Z0-9_-]{2,10}$/.test(lang) ? lang : 'it-IT';
-        config.headers['Accept-Language'] = sanitizedLang;
+        config.headers['Accept-Language'] = getEffectiveLanguage(userLang);
 
         if (config.url) {
             if (config.url.startsWith('/api/v1/')) {
-                config.url = config.url.substring(7);
+                config.url = config.url.substring('/api/v1'.length);
             } else if (config.url.startsWith('api/v1/')) {
-                config.url = '/' + config.url.substring(7);
+                config.url = '/' + config.url.substring('api/v1/'.length);
             }
         }
 
@@ -60,14 +81,19 @@ let isRefreshing = false;
 let failedQueue = [];
 
 const processQueue = (error, token = null) => {
-    failedQueue.forEach((prom) => {
-        if (error) {
-            prom.reject(error);
-        } else {
-            prom.resolve(token);
+    const queue = failedQueue;
+    failedQueue = [];
+    queue.forEach((prom) => {
+        try {
+            if (error) {
+                prom.reject(error);
+            } else {
+                prom.resolve(token);
+            }
+        } catch (_e) {
+            // Ignore errors if promise was already settled
         }
     });
-    failedQueue = [];
 };
 
 let appRouter = null;
@@ -79,7 +105,7 @@ export const setApiRouter = (router) => {
 export const resetApiState = () => {
     isRefreshing = false;
     processQueue(new Error('Session reset or logged out'), null);
-    failedQueue = [];
+    cancelInFlightRequests();
 };
 
 export const clearLocalSession = () => {

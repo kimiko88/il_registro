@@ -460,7 +460,11 @@ func (s *Service) RequestPasswordReset(ctx context.Context, email string) error 
 	email = normalizeEmail(email)
 	user, err := s.repo.GetUserByEmail(ctx, email)
 	if err != nil {
-		// Don't reveal whether the email exists — always return success.
+		// Constant-time mitigation against email enumeration timing attacks:
+		// Perform equivalent dummy cryptographic work before returning.
+		dummyBytes := make([]byte, 32)
+		_, _ = rand.Read(dummyBytes)
+		_ = hashToken(hex.EncodeToString(dummyBytes))
 		return nil
 	}
 

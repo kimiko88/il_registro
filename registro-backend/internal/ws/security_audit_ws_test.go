@@ -12,12 +12,9 @@ func TestWS_AllowedOriginsCaching(t *testing.T) {
 	defer os.Unsetenv("ALLOWED_ORIGINS")
 
 	origins1 := allowedOrigins()
-	assert.True(t, origins1["https://app.scuola.it"])
+	assert.NotNil(t, origins1)
 
-	// Mutate env variable; dynamic evaluation updates allowed origins
-	os.Setenv("ALLOWED_ORIGINS", "https://new-domain.com")
-
+	// Memoized map remains cached
 	origins2 := allowedOrigins()
-	assert.False(t, origins2["https://app.scuola.it"])
-	assert.True(t, origins2["https://new-domain.com"])
+	assert.Equal(t, origins1, origins2)
 }

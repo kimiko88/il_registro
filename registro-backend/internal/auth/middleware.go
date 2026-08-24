@@ -23,11 +23,11 @@ type activeCacheEntry struct {
 	expiresAt time.Time
 }
 
-// Middleware provides authentication middleware
 type Middleware struct {
 	tokenManager *jwt.TokenManager
 	userRepo     users.Repository
 	activeCache  map[string]activeCacheEntry
+	cacheTTL     time.Duration
 	cacheMu      sync.RWMutex
 }
 
@@ -45,6 +45,7 @@ func NewMiddleware(tokenManager *jwt.TokenManager, userRepo users.Repository) *M
 		tokenManager: tokenManager,
 		userRepo:     userRepo,
 		activeCache:  make(map[string]activeCacheEntry),
+		cacheTTL:     getActiveCacheTTL(),
 	}
 }
 
@@ -161,17 +162,24 @@ func (m *Middleware) isAccountActive(ctx context.Context, userID string) (bool, 
 	}
 	if len(m.activeCache) >= maxActiveCacheSize {
 		now := time.Now()
+		var oldestKey string
+		var oldestExp time.Time
 		for k, v := range m.activeCache {
 			if now.After(v.expiresAt) {
 				delete(m.activeCache, k)
+			} else if oldestKey == "" || v.expiresAt.Before(oldestExp) {
+				oldestKey = k
+				oldestExp = v.expiresAt
 			}
 		}
-	}
-	if len(m.activeCache) < maxActiveCacheSize {
-		m.activeCache[userID] = activeCacheEntry{
-			isActive:  isActive,
-			expiresAt: time.Now().Add(getActiveCacheTTL()),
+		// If still full, evict the oldest valid entry to guarantee slot availability
+		if len(m.activeCache) >= maxActiveCacheSize && oldestKey != "" {
+			delete(m.activeCache, oldestKey)
 		}
+	}
+	m.activeCache[userID] = activeCacheEntry{
+		isActive:  isActive,
+		expiresAt: time.Now().Add(m.cacheTTL),
 	}
 	m.cacheMu.Unlock()
 
@@ -299,8 +307,9 @@ func parseAcceptLanguage(raw string) string {
 	}
 	first = strings.TrimSpace(first)
 	first = strings.ReplaceAll(first, "_", "-")
-	if len(first) > 35 {
-		first = first[:35]
+	runes := []rune(first)
+	if len(runes) > 35 {
+		first = string(runes[:35])
 	}
 
 	if bcp47Regex.MatchString(first) {

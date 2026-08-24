@@ -18,7 +18,7 @@ import { i18n } from '@/i18n'
  *
  * @param {number} timeoutMs  — How long the undo window lasts (default 5000ms)
  */
-export function useUndoToast(timeoutMs = 15000) {
+export function useUndoToast(timeoutMs = 6000) {
     const $q = useQuasar()
     // Track whether the user clicked Undo
     const undoClicked = ref(false)
@@ -45,104 +45,94 @@ export function useUndoToast(timeoutMs = 15000) {
             let dismissed = false
             let timer = null
 
-            // Build countdown label
             const totalSeconds = Math.round(timeoutMs / 1000)
             let remaining = totalSeconds
 
-            let dismiss = $q.notify({
+            const handleUndo = async () => {
+                if (dismissed) return
+                dismissed = true
+                if (timer) clearInterval(timer)
+                undoClicked.value = true
+                if (typeof notifHandle === 'function') notifHandle()
+                try {
+                    await undoFn()
+                    $q.notify({
+                        type: 'warning',
+                        icon: 'undo',
+                        message: getActionCancelled(),
+                        position: options.position || 'bottom',
+                        timeout: 2000
+                    })
+                } catch (err) {
+                    $q.notify({
+                        type: 'negative',
+                        message: getCancelError(),
+                        position: options.position || 'bottom',
+                        timeout: 2500
+                    })
+                }
+                resolve(true)
+            }
+
+            let notifHandle = $q.notify({
                 type: options.color === 'negative' ? 'negative' : 'positive',
                 color: options.color || 'dark',
                 textColor: 'white',
                 icon: options.icon || 'check_circle',
                 message,
                 position: options.position || 'bottom',
-                timeout: timeoutMs + 200,     // slightly longer than our timer
+                timeout: timeoutMs + 200,
                 actions: [
                     {
                         label: getCancelLabel(remaining),
                         color: 'yellow',
-                        handler: async () => {
-                            if (dismissed) return
-                            dismissed = true
-                            clearInterval(timer)
-                            undoClicked.value = true
-                            try {
-                                await undoFn()
-                                $q.notify({
-                                    type: 'warning',
-                                    icon: 'undo',
-                                    message: getActionCancelled(),
-                                    position: options.position || 'bottom',
-                                    timeout: 2000
-                                })
-                            } catch (err) {
-                                $q.notify({
-                                    type: 'negative',
-                                    message: getCancelError(),
-                                    position: options.position || 'bottom',
-                                    timeout: 2500
-                                })
-                            }
-                            resolve(true)
-                        }
+                        handler: handleUndo
                     }
                 ]
             })
 
-            // Update countdown label every second
+            // Update countdown label every second using notification update()
             timer = setInterval(() => {
                 remaining--
                 if (remaining <= 0 || dismissed) {
                     clearInterval(timer)
                     if (!dismissed) {
                         dismissed = true
-                        if (typeof dismiss === 'function') dismiss()
+                        if (typeof notifHandle === 'function') notifHandle()
                         resolve(false)
                     }
                     return
                 }
-                // Re-issue notify with updated label (Quasar doesn't support reactive actions,
-                // so we close and re-open the same notify to refresh the countdown)
-                if (typeof dismiss === 'function') dismiss()
-                dismiss = $q.notify({
-                    type: options.color === 'negative' ? 'negative' : 'positive',
-                    color: options.color || 'dark',
-                    textColor: 'white',
-                    icon: options.icon || 'check_circle',
-                    message,
-                    position: options.position || 'bottom',
-                    timeout: (remaining * 1000) + 200,
-                    actions: [
-                        {
-                            label: getCancelLabel(remaining),
-                            color: 'yellow',
-                            handler: async () => {
-                                if (dismissed) return
-                                dismissed = true
-                                clearInterval(timer)
-                                undoClicked.value = true
-                                try {
-                                    await undoFn()
-                                    $q.notify({
-                                        type: 'warning',
-                                        icon: 'undo',
-                                        message: getActionCancelled(),
-                                        position: options.position || 'bottom',
-                                        timeout: 2000
-                                    })
-                                } catch {
-                                    $q.notify({
-                                        type: 'negative',
-                                        message: getCancelError(),
-                                        position: options.position || 'bottom',
-                                        timeout: 2500
-                                    })
-                                }
-                                resolve(true)
+
+                if (typeof notifHandle === 'function' && typeof notifHandle.update === 'function') {
+                    notifHandle.update({
+                        actions: [
+                            {
+                                label: getCancelLabel(remaining),
+                                color: 'yellow',
+                                handler: handleUndo
                             }
-                        }
-                    ]
-                })
+                        ]
+                    })
+                } else {
+                    if (typeof notifHandle === 'function') notifHandle()
+                    notifHandle = $q.notify({
+                        type: options.color === 'negative' ? 'negative' : 'positive',
+                        color: options.color || 'dark',
+                        textColor: 'white',
+                        icon: options.icon || 'check_circle',
+                        message,
+                        position: options.position || 'bottom',
+                        timeout: (remaining * 1000) + 200,
+                        actions: [
+                            {
+                                label: getCancelLabel(remaining),
+                                color: 'yellow',
+                                handler: handleUndo
+                            }
+                        ]
+                    })
+                }
             }, 1000)
         })
     }

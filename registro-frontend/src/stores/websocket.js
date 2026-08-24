@@ -29,6 +29,15 @@ export const useWebSocketStore = defineStore('websocket', () => {
     const isReconnecting = ref(false)
     const authStore = useAuthStore()
 
+    const debounceTimers = {}
+    function debouncedFetch(key, fetchFn, delayMs = 300) {
+        if (debounceTimers[key]) clearTimeout(debounceTimers[key])
+        debounceTimers[key] = setTimeout(() => {
+            fetchFn()
+            delete debounceTimers[key]
+        }, delayMs)
+    }
+
     function startHeartbeat() {
         stopHeartbeat()
         heartbeatTimer.value = setInterval(() => {
@@ -240,7 +249,11 @@ export const useWebSocketStore = defineStore('websocket', () => {
                 try {
                     const gradesStore = useGradesStore()
                     const targetClassId = gradesStore.currentClassId || payload.class_id
-                    if (targetClassId) gradesStore.fetchGrades(targetClassId, payload.subject_id, true)
+                    if (targetClassId) {
+                        debouncedFetch(`grades_${targetClassId}`, () => {
+                            gradesStore.fetchGrades(targetClassId, payload.subject_id, true)
+                        })
+                    }
                 } catch (err) {
                     console.debug('Failed to refresh grades store:', err)
                 }
@@ -261,7 +274,9 @@ export const useWebSocketStore = defineStore('websocket', () => {
             case 'ATTENDANCE_PRESENT': {
                 try {
                     const attendanceStore = useAttendanceStore()
-                    attendanceStore.fetchMyAttendance()
+                    debouncedFetch('my_attendance', () => {
+                        attendanceStore.fetchMyAttendance()
+                    })
                 } catch (err) {
                     console.debug('Failed to refresh attendance store:', err)
                 }

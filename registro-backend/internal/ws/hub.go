@@ -49,8 +49,9 @@ type Message struct {
 // Hub gestisce le connessioni locali e un bridge Redis per il multi-istanza.
 type Hub struct {
 	// clients: userID -> set di connessioni locali
-	clients map[string]map[*Client]bool
-	mu      sync.RWMutex
+	clients       map[string]map[*Client]bool
+	schoolClients map[string]map[*Client]bool
+	mu            sync.RWMutex
 
 	// canali interni (solo per messaggi originati da questa istanza)
 	localBroadcast chan Message
@@ -70,6 +71,7 @@ type Hub struct {
 func NewHub(redisURL string) *Hub {
 	h := &Hub{
 		clients:        make(map[string]map[*Client]bool),
+		schoolClients:  make(map[string]map[*Client]bool),
 		localBroadcast: make(chan Message, 512),
 		register:       make(chan *Client, 128),
 		unregister:     make(chan *Client, 512),
@@ -120,6 +122,12 @@ func (h *Hub) Run(ctx context.Context) {
 				h.clients[client.UserID] = make(map[*Client]bool)
 			}
 			h.clients[client.UserID][client] = true
+			if client.SchoolID != "" {
+				if _, ok := h.schoolClients[client.SchoolID]; !ok {
+					h.schoolClients[client.SchoolID] = make(map[*Client]bool)
+				}
+				h.schoolClients[client.SchoolID][client] = true
+			}
 			h.mu.Unlock()
 
 		case client := <-h.unregister:
@@ -130,6 +138,14 @@ func (h *Hub) Run(ctx context.Context) {
 					client.CloseSend()
 					if len(userClients) == 0 {
 						delete(h.clients, client.UserID)
+					}
+				}
+			}
+			if client.SchoolID != "" {
+				if sc, ok := h.schoolClients[client.SchoolID]; ok {
+					delete(sc, client)
+					if len(sc) == 0 {
+						delete(h.schoolClients, client.SchoolID)
 					}
 				}
 			}
@@ -234,10 +250,10 @@ func (h *Hub) deliverLocally(msg Message) {
 				}
 			}
 		}
-	} else if msg.SchoolID != "" {
-		for _, clients := range h.clients {
-			for client := range clients {
-				if client.SchoolID == msg.SchoolID && isRoleAllowed(client.Role, msg.AllowedRoles) {
+	} else if msg.SchoolID != "" && !msg.GlobalBroadcast {
+		if sClients, ok := h.schoolClients[msg.SchoolID]; ok {
+			for client := range sClients {
+				if isRoleAllowed(client.Role, msg.AllowedRoles) {
 					targetClients = append(targetClients, client)
 				}
 			}
@@ -245,7 +261,7 @@ func (h *Hub) deliverLocally(msg Message) {
 	} else {
 		// Global system broadcast for system messages without specific recipient or school.
 		// Restrict delivery to global system roles (e.g., superadmin) unless AllowedRoles is explicitly specified.
-		log.Printf("[AUDIT] global broadcast: type=%s recipient=%s school_id=%s", msg.Type, msg.Recipient, msg.SchoolID)
+		log.Printf("[AUDIT] global broadcast: type=%s recipient=%s school_id=%s global=%v", msg.Type, msg.Recipient, msg.SchoolID, msg.GlobalBroadcast)
 		for _, clients := range h.clients {
 			for client := range clients {
 				if len(msg.AllowedRoles) > 0 {
@@ -266,17 +282,16 @@ func (h *Hub) deliverLocally(msg Message) {
 }
 
 func (h *Hub) safeSend(client *Client, data []byte) {
-	defer func() {
-		if r := recover(); r != nil {
-			log.Printf("[WARN] ws.Hub: panic recovered sending to client %s (channel closed concurrently)", client.UserID)
-		}
-	}()
+	if client == nil {
+		return
+	}
 	select {
 	case client.Send <- data:
 	default:
 		select {
 		case h.unregister <- client:
 		default:
+			client.CloseSend()
 		}
 	}
 }
@@ -318,8 +333,9 @@ func (h *Hub) BroadcastToUser(userID, schoolID, msgType string, payload interfac
 	h.sendBroadcast(Message{Type: msgType, Payload: payload, Recipient: userID, SchoolID: schoolID})
 }
 
+// BroadcastToUserInSchool delegates to BroadcastToUser for backward compatibility.
 func (h *Hub) BroadcastToUserInSchool(userID, schoolID, msgType string, payload interface{}) {
-	h.sendBroadcast(Message{Type: msgType, Payload: payload, Recipient: userID, SchoolID: schoolID})
+	h.BroadcastToUser(userID, schoolID, msgType, payload)
 }
 
 func (h *Hub) BroadcastToSchool(schoolID, msgType string, payload interface{}) {

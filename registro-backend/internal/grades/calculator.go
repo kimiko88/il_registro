@@ -21,58 +21,84 @@ func isVotableGrade(val float64) bool {
 
 // CalculateAverage computes the arithmetic mean
 func (c *Calculator) CalculateAverage(grades []Grade) float64 {
-	if len(grades) == 0 {
+	vals := c.extractValues(grades)
+	if len(vals) == 0 {
 		return 0
 	}
-
 	var total float64
-	var count int
-
-	for _, g := range grades {
-		val := g.GradeValue
-		if val == 0 && g.GradeType == GradeTypeJudgment {
-			val = c.ConvertJudgmentToValue(g.Description)
-		}
-		if isVotableGrade(val) {
-			total += val
-			count++
-		}
+	for _, v := range vals {
+		total += v
 	}
-
-	if count == 0 {
-		return 0
-	}
-
-	return math.Round((total/float64(count))*100) / 100 // Round to 2 decimal places
+	return math.Round((total/float64(len(vals)))*100) / 100 // Round to 2 decimal places
 }
 
-// ConvertJudgmentToValue converts standard Italian judgments to scale 1-10 with case-insensitive matching
+// ConvertJudgmentToValue converts standard and composite Italian judgments to scale 1-10 with case-insensitive matching
 func (c *Calculator) ConvertJudgmentToValue(judgment string) float64 {
 	cleaned := strings.TrimSpace(strings.ToLower(judgment))
-	switch cleaned {
-	case "eccellente", "ottimo", "avanzato":
-		return 10.0
-	case "distinto":
-		return 9.0
-	case "buono", "intermedio":
-		return 8.0
-	case "discreto", "base":
-		return 7.0
-	case "sufficiente":
-		return 6.0
-	case "mediocre", "quasi sufficiente", "iniziale":
-		return 5.0
-	case "insufficiente", "non raggiunto":
-		return 4.0
-	case "gravemente insufficiente":
-		return 3.0
-	default:
+	if cleaned == "" {
 		return 0.0
 	}
+	switch cleaned {
+	case "eccellente", "ottimo", "avanzato", "ottimo+", "eccellente+":
+		return 10.0
+	case "ottimo-", "quasi ottimo", "distinto+":
+		return 9.5
+	case "distinto":
+		return 9.0
+	case "distinto-", "quasi distinto", "buono+", "più che buono":
+		return 8.5
+	case "buono", "intermedio":
+		return 8.0
+	case "buono-", "discreto+", "più che discreto":
+		return 7.5
+	case "discreto", "base":
+		return 7.0
+	case "discreto-", "sufficiente+", "più che sufficiente", "sopra la sufficienza":
+		return 6.5
+	case "sufficiente":
+		return 6.0
+	case "sufficiente-", "mediocre+":
+		return 5.5
+	case "mediocre", "quasi sufficiente", "iniziale":
+		return 5.0
+	case "mediocre-", "insufficiente+":
+		return 4.5
+	case "insufficiente", "non raggiunto":
+		return 4.0
+	case "insufficiente-", "gravemente insufficiente+":
+		return 3.5
+	case "gravemente insufficiente":
+		return 3.0
+	}
+
+	// Fallback check for dynamic prefixes/suffixes
+	if strings.HasSuffix(cleaned, "+") {
+		baseVal := c.ConvertJudgmentToValue(strings.TrimSuffix(cleaned, "+"))
+		if baseVal > 0 {
+			return math.Min(10.0, baseVal+0.25)
+		}
+	} else if strings.HasSuffix(cleaned, "-") {
+		baseVal := c.ConvertJudgmentToValue(strings.TrimSuffix(cleaned, "-"))
+		if baseVal > 0 {
+			return math.Max(1.0, baseVal-0.25)
+		}
+	} else if strings.HasPrefix(cleaned, "più che ") {
+		baseVal := c.ConvertJudgmentToValue(strings.TrimPrefix(cleaned, "più che "))
+		if baseVal > 0 {
+			return math.Min(10.0, baseVal+0.5)
+		}
+	} else if strings.HasPrefix(cleaned, "quasi ") {
+		baseVal := c.ConvertJudgmentToValue(strings.TrimPrefix(cleaned, "quasi "))
+		if baseVal > 0 {
+			return math.Max(1.0, baseVal-0.5)
+		}
+	}
+
+	return 0.0
 }
 
 // CalculateWeightedAverage computes the weighted mean.
-// If all weights are 0 or unconfigured, it falls back to the simple arithmetic average.
+// If no explicit non-zero weights are configured across all grades, it falls back to the simple arithmetic average.
 func (c *Calculator) CalculateWeightedAverage(grades []Grade) float64 {
 	if len(grades) == 0 {
 		return 0
@@ -80,20 +106,27 @@ func (c *Calculator) CalculateWeightedAverage(grades []Grade) float64 {
 
 	var totalWeighted float64
 	var totalWeights float64
+	var hasNonZeroWeight bool
 
 	for _, g := range grades {
 		val := g.GradeValue
 		if val == 0 && g.GradeType == GradeTypeJudgment {
 			val = c.ConvertJudgmentToValue(g.Description)
 		}
-		if isVotableGrade(val) && g.Weight > 0 {
-			totalWeighted += val * g.Weight
-			totalWeights += g.Weight
+		if isVotableGrade(val) {
+			if g.Weight > 0 {
+				totalWeighted += val * g.Weight
+				totalWeights += g.Weight
+				hasNonZeroWeight = true
+			}
 		}
 	}
 
-	if totalWeights == 0 {
+	if !hasNonZeroWeight {
 		return c.CalculateAverage(grades)
+	}
+	if totalWeights == 0 {
+		return 0
 	}
 
 	return math.Round((totalWeighted/totalWeights)*100) / 100
@@ -210,7 +243,6 @@ func (c *Calculator) DetectOutliers(grades []Grade) []string {
 		val float64
 	}
 	var vals []indexedVal
-	var sum float64
 	for _, g := range grades {
 		val := g.GradeValue
 		if val == 0 && g.GradeType == GradeTypeJudgment {
@@ -218,24 +250,41 @@ func (c *Calculator) DetectOutliers(grades []Grade) []string {
 		}
 		if isVotableGrade(val) {
 			vals = append(vals, indexedVal{id: g.ID, val: val})
-			sum += val
 		}
 	}
-	if len(vals) < 2 {
+	if len(vals) < 4 {
 		return nil
 	}
 
-	mean := sum / float64(len(vals))
-	numVals := make([]float64, len(vals))
+	// Calculate IQR (Interquartile Range)
+	sortedVals := make([]float64, len(vals))
 	for i, iv := range vals {
-		numVals[i] = iv.val
+		sortedVals[i] = iv.val
 	}
-	stdDev := c.calculateStandardDeviationFromValues(numVals, mean)
-	if stdDev == 0 {
-		return nil
+	sort.Float64s(sortedVals)
+
+	n := len(sortedVals)
+	q1 := sortedVals[n/4]
+	q3 := sortedVals[(3*n)/4]
+	iqr := q3 - q1
+
+	var low, high float64
+	if iqr > 0 {
+		low = q1 - 1.5*iqr
+		high = q3 + 1.5*iqr
+	} else {
+		var sum float64
+		for _, v := range sortedVals {
+			sum += v
+		}
+		mean := sum / float64(n)
+		stdDev := c.calculateStandardDeviationFromValues(sortedVals, mean)
+		if stdDev == 0 {
+			return nil
+		}
+		low = mean - 2.5*stdDev
+		high = mean + 2.5*stdDev
 	}
-	low := mean - 2*stdDev
-	high := mean + 2*stdDev
 
 	var outliers []string
 	for _, iv := range vals {

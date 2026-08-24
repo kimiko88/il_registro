@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"registro-backend/pkg/logger"
@@ -21,8 +22,12 @@ const (
 	maxMessageSize = 8192
 )
 
-func allowedOrigins() map[string]bool {
-	raw := os.Getenv("ALLOWED_ORIGINS")
+var (
+	allowedOriginsOnce sync.Once
+	allowedOriginsMap  map[string]bool
+)
+
+func parseAllowedOrigins(raw string) map[string]bool {
 	origins := make(map[string]bool)
 	for _, o := range strings.Split(raw, ",") {
 		o = strings.TrimSpace(o)
@@ -33,12 +38,25 @@ func allowedOrigins() map[string]bool {
 	return origins
 }
 
+func allowedOrigins() map[string]bool {
+	raw := os.Getenv("ALLOWED_ORIGINS")
+	return parseAllowedOrigins(raw)
+}
+
+func getAllowedOrigins() map[string]bool {
+	allowedOriginsOnce.Do(func() {
+		raw := os.Getenv("ALLOWED_ORIGINS")
+		allowedOriginsMap = parseAllowedOrigins(raw)
+	})
+	return allowedOriginsMap
+}
+
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 	CheckOrigin: func(r *http.Request) bool {
 		origin := r.Header.Get("Origin")
-		allowed := allowedOrigins()
+		allowed := getAllowedOrigins()
 		if len(allowed) == 0 {
 			// Default local dev fallback: allow only exact localhost/127.0.0.1 hosts.
 			// We parse the origin URL and compare the host exactly — no substring match.

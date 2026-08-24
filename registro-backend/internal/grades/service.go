@@ -8,6 +8,7 @@ import (
 	"io"
 	"math"
 	"sort"
+	"sync"
 	"time"
 
 	"registro-backend/internal/users"
@@ -67,12 +68,13 @@ type Service interface {
 }
 
 type service struct {
-	repo        Repository
-	userRepo    users.Repository
-	validator   *Validator
-	calculator  *Calculator
-	broadcaster EventBroadcaster
-	pdfExporter ReportCardPDFExporter
+	repo                Repository
+	userRepo            users.Repository
+	validator           *Validator
+	teacherProfileCache sync.Map
+	calculator          *Calculator
+	broadcaster         EventBroadcaster
+	pdfExporter         ReportCardPDFExporter
 }
 
 func NewService(r Repository, ur users.Repository, db *sql.DB, b EventBroadcaster) Service {
@@ -276,6 +278,8 @@ func (s *service) GetClassGrades(ctx context.Context, actorID string, actorRole 
 
 // calcSemesterAverages computes per-semester weighted averages from a grade list.
 func calcSemesterAverages(grades []GradeResponse) (avg1, avg2 float64) {
+	avg1 = -1.0
+	avg2 = -1.0
 	var weightedSum1, totalWeight1 float64
 	var weightedSum2, totalWeight2 float64
 	for _, g := range grades {
@@ -534,7 +538,7 @@ func (s *service) BulkImport(teacherID, schoolID string, file io.Reader, semeste
 					var err error
 					assignedSub, err = s.validator.IsTeacherAssignedToSubjectBySubjectID(ctx, teacherID, req.SubjectID)
 					if err != nil {
-						assignedSub = false
+						return nil, fmt.Errorf("row %d: database error checking subject assignment: %w", idx+1, err)
 					}
 					assignedSubjectsCache[req.SubjectID] = assignedSub
 				}
@@ -547,7 +551,7 @@ func (s *service) BulkImport(teacherID, schoolID string, file io.Reader, semeste
 					var err error
 					assignedStud, err = s.validator.IsTeacherAssignedToStudent(ctx, teacherID, req.StudentID)
 					if err != nil {
-						assignedStud = false
+						return nil, fmt.Errorf("row %d: database error checking student assignment: %w", idx+1, err)
 					}
 					assignedStudentsCache[req.StudentID] = assignedStud
 				}
@@ -1659,6 +1663,13 @@ func (s *service) UpdateClassTest(ctx context.Context, teacherID string, testID 
 	for _, gInput := range req.Grades {
 		existingGrade, exists := existingMap[gInput.StudentID]
 
+		if !exists && s.validator != nil {
+			isMember, err := s.validator.IsStudentInClass(ctx, gInput.StudentID, test.ClassID)
+			if err != nil || !isMember {
+				return fmt.Errorf("student %s is not a member of class %s", gInput.StudentID, test.ClassID)
+			}
+		}
+
 		if gInput.GradeValue == nil || *gInput.GradeValue < 0 {
 			if exists {
 				if err := s.repo.Delete(existingGrade.ID, teacherID); err != nil {
@@ -1784,6 +1795,9 @@ func (s *service) DeleteWeightConfig(actorID, actorRole, schoolID, configID stri
 }
 
 func (s *service) resolveTeacherProfileID(ctx context.Context, userID string) (string, error) {
+	if val, ok := s.teacherProfileCache.Load(userID); ok {
+		return val.(string), nil
+	}
 	if s.validator == nil || s.validator.db == nil {
 		return "", nil
 	}
@@ -1791,9 +1805,11 @@ func (s *service) resolveTeacherProfileID(ctx context.Context, userID string) (s
 	err := s.validator.db.QueryRowContext(ctx, `SELECT id FROM teachers WHERE user_id = $1`, userID).Scan(&teacherProfileID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
+			s.teacherProfileCache.Store(userID, "")
 			return "", nil
 		}
 		return "", fmt.Errorf("failed to resolve teacher profile ID: %w", err)
 	}
+	s.teacherProfileCache.Store(userID, teacherProfileID)
 	return teacherProfileID, nil
 }

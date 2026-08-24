@@ -1,4 +1,4 @@
-import { watch, onBeforeUnmount, getCurrentInstance, ref } from 'vue'
+import { watch, onBeforeUnmount, getCurrentInstance, ref, toRaw } from 'vue'
 
 const DRAFT_PREFIX = 'il_registro_draft_'
 
@@ -66,9 +66,10 @@ export function useDraftAutosave(storageKey, dataRef, debounceMs = 1500) {
         (newVal) => {
             clearTimeout(debounceTimer)
             debounceTimer = setTimeout(() => {
-                // Deep-clone to avoid storing reactive proxies
+                // Efficient clone using structuredClone / toRaw to avoid heavy JSON stringify
                 try {
-                    const serializable = JSON.parse(JSON.stringify(newVal))
+                    const rawVal = toRaw(newVal)
+                    const serializable = typeof structuredClone === 'function' ? structuredClone(rawVal) : JSON.parse(JSON.stringify(rawVal))
                     saveDraft(serializable)
                 } catch {
                     saveDraft(newVal)

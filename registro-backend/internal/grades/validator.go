@@ -293,3 +293,16 @@ func (v *Validator) IsTeacherAssignedToSubjectBySubjectID(ctx context.Context, t
 	err := v.db.QueryRowContext(ctx, query, subjectID, teacherID).Scan(&exists)
 	return exists, err
 }
+
+// IsStudentInClass checks whether studentID belongs to classID.
+func (v *Validator) IsStudentInClass(ctx context.Context, studentID string, classID string) (bool, error) {
+	if v == nil || v.db == nil || studentID == "" || classID == "" {
+		return true, nil
+	}
+	var exists bool
+	query := `SELECT EXISTS(
+		SELECT 1 FROM class_students WHERE student_id::text = $1 AND class_id::text = $2
+	)`
+	err := v.db.QueryRowContext(ctx, query, studentID, classID).Scan(&exists)
+	return exists, err
+}

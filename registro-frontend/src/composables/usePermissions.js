@@ -25,7 +25,7 @@ export function usePermissions() {
     const canAccessGlobalAnalytics = computed(() => isSuperAdmin.value)
     const canAccessSystemSettings = computed(() => isSuperAdmin.value)
 
-    // School-level permissions
+    // School-level permissions (evaluate against reactive computed getters)
     const canViewSchool = (schoolId) => {
         if (isSuperAdmin.value) return true
         if (isAdmin.value) return schoolId === userSchoolId.value

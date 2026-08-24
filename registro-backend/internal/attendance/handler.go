@@ -224,6 +224,27 @@ func (h *Handler) GetChildAttendanceTrends(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+func handleJustificationError(c *gin.Context, err error) {
+	errStr := strings.ToLower(err.Error())
+	if errors.Is(err, ErrAlreadyProcessed) || strings.Contains(errStr, "già stata elaborata") || strings.Contains(errStr, "already processed") {
+		c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+		return
+	}
+	if errors.Is(err, ErrForbidden) || strings.Contains(errStr, "forbidden") || strings.Contains(errStr, "non assegnato") {
+		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		return
+	}
+	if errors.Is(err, ErrUnauthorized) || strings.Contains(errStr, "unauthorized") {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+	if errors.Is(err, ErrNotFound) || strings.Contains(errStr, "not found") || strings.Contains(errStr, "non trovata") {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+	respond500(c, "Justification processing error", err)
+}
+
 // ApproveJustification requires teacher or admin role.
 func (h *Handler) ApproveJustification(c *gin.Context) {
 	actorID := c.GetString("user_id")
@@ -234,11 +255,7 @@ func (h *Handler) ApproveJustification(c *gin.Context) {
 	}
 	id := c.Param("id")
 	if err := h.service.ProcessJustification(c.Request.Context(), actorID, actorRole, id, true); err != nil {
-		if strings.Contains(err.Error(), "forbidden") || strings.Contains(err.Error(), "non assegnato") {
-			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		handleJustificationError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "approved"})
@@ -254,11 +271,7 @@ func (h *Handler) RejectJustification(c *gin.Context) {
 		return
 	}
 	if err := h.service.ProcessJustification(c.Request.Context(), actorID, actorRole, id, false); err != nil {
-		if strings.Contains(err.Error(), "forbidden") || strings.Contains(err.Error(), "non assegnato") {
-			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		handleJustificationError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "rejected"})
@@ -452,24 +465,7 @@ func (h *Handler) ProcessJustification(c *gin.Context) {
 		return
 	}
 	if err := h.service.ProcessJustification(c.Request.Context(), teacherID, actorRole, id, req.Approve); err != nil {
-		errStr := strings.ToLower(err.Error())
-		if errors.Is(err, ErrAlreadyProcessed) || strings.Contains(errStr, "già stata elaborata") || strings.Contains(errStr, "already processed") {
-			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
-			return
-		}
-		if errors.Is(err, ErrForbidden) || strings.Contains(errStr, "forbidden") || strings.Contains(errStr, "non assegnato") {
-			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
-			return
-		}
-		if errors.Is(err, ErrUnauthorized) || strings.Contains(errStr, "unauthorized") {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-			return
-		}
-		if errors.Is(err, ErrNotFound) || strings.Contains(errStr, "not found") || strings.Contains(errStr, "non trovata") {
-			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-			return
-		}
-		respond500(c, "ProcessJustification error", err)
+		handleJustificationError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "processed"})

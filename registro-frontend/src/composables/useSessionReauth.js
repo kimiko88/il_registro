@@ -15,14 +15,13 @@ import { ref } from 'vue'
 const showDialog = ref(false)
 const userEmail = ref('')
 
-// Resolve/reject della Promise corrente — impostati da triggerReauth()
-let _resolve = null
-let _reject = null
+// Queue of pending resolvers — handles concurrent reauth triggers cleanly
+const _pendingResolvers = []
 
 // ── Composable ────────────────────────────────────────────────────────────────
 export function useSessionReauth() {
     /**
-     * Apre il dialog di re-autenticazione e restituisce una Promise.
+     * Abre il dialog di re-autenticazione e restituisce una Promise.
      * La Promise si risolve con il nuovo access_token al successo del login,
      * oppure viene rigettata se l'utente chiude il dialog senza autenticarsi.
      *
@@ -34,35 +33,36 @@ export function useSessionReauth() {
         showDialog.value = true
 
         return new Promise((resolve, reject) => {
-            _resolve = resolve
-            _reject = reject
+            _pendingResolvers.push({ resolve, reject })
         })
     }
 
     /**
      * Chiamato dal SessionReauthDialog al successo del login.
-     * Risolve la Promise pendente col nuovo token.
+     * Risolve tutte le Promise pendenti col nuovo token.
      * @param {string} newToken
      */
     function resolveReauth(newToken) {
         showDialog.value = false
-        if (_resolve) {
-            _resolve(newToken)
-            _resolve = null
-            _reject = null
+        while (_pendingResolvers.length > 0) {
+            const item = _pendingResolvers.shift()
+            if (item && item.resolve) {
+                item.resolve(newToken)
+            }
         }
     }
 
     /**
      * Chiamato dal SessionReauthDialog quando l'utente annulla / chiude.
-     * Rigetta la Promise pendente.
+     * Rigetta tutte le Promise pendenti.
      */
     function cancelReauth() {
         showDialog.value = false
-        if (_reject) {
-            _reject(new Error('reauth_cancelled'))
-            _resolve = null
-            _reject = null
+        while (_pendingResolvers.length > 0) {
+            const item = _pendingResolvers.shift()
+            if (item && item.reject) {
+                item.reject(new Error('reauth_cancelled'))
+            }
         }
     }
 

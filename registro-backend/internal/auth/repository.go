@@ -245,7 +245,7 @@ func (r *repository) CreateRecoveryCodes(ctx context.Context, userID string, has
 }
 
 func (r *repository) GetRecoveryCodes(ctx context.Context, userID string) ([]*MFARecoveryCode, error) {
-	query := `SELECT id, user_id, code, used, used_at, created_at FROM mfa_recovery_codes WHERE user_id = $1`
+	query := `SELECT id, user_id, code, used, used_at, created_at FROM mfa_recovery_codes WHERE user_id = $1 AND used = false`
 	rows, err := r.db.QueryContext(ctx, query, userID)
 	if err != nil {
 		return nil, err
