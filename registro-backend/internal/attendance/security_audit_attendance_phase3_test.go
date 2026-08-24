@@ -94,9 +94,11 @@ func TestAttendance_AdminAccessToParentChildEndpoints(t *testing.T) {
 
 	adminID := "admin-1"
 	studentID := "student-1"
+	schoolID := "school-1"
 
-	// Caller is an Admin (role: admin)
-	uRepo.On("GetByID", ctx, adminID).Return(&users.User{ID: adminID, Role: "admin"}, nil).Once()
+	// Caller is an Admin (role: admin) in school-1 and target student is in school-1
+	uRepo.On("GetByID", ctx, adminID).Return(&users.User{ID: adminID, Role: "admin", SchoolID: &schoolID}, nil).Once()
+	uRepo.On("GetByID", ctx, studentID).Return(&users.User{ID: studentID, Role: "student", SchoolID: &schoolID}, nil).Once()
 
 	aRepo.On("FindUnjustifiedByStudent", studentID).Return([]Attendance{}, nil).Once()
 
@@ -105,4 +107,26 @@ func TestAttendance_AdminAccessToParentChildEndpoints(t *testing.T) {
 	assert.NotNil(t, res)
 	uRepo.AssertExpectations(t)
 	aRepo.AssertExpectations(t)
+}
+
+func TestAttendance_CrossSchoolAdminAccess_Forbidden(t *testing.T) {
+	uRepo := new(mockUserRepoPhase3)
+	aRepo := new(mockAttRepoPhase3)
+
+	svc := NewService(aRepo, uRepo, nil, nil)
+	ctx := context.Background()
+
+	adminID := "admin-1"
+	studentID := "student-1"
+	schoolA := "school-A"
+	schoolB := "school-B"
+
+	// Admin is in school-A, student is in school-B -> should be forbidden
+	uRepo.On("GetByID", ctx, adminID).Return(&users.User{ID: adminID, Role: "admin", SchoolID: &schoolA}, nil).Once()
+	uRepo.On("GetByID", ctx, studentID).Return(&users.User{ID: studentID, Role: "student", SchoolID: &schoolB}, nil).Once()
+
+	_, err := svc.GetChildUnjustified(ctx, adminID, studentID)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "forbidden")
+	uRepo.AssertExpectations(t)
 }

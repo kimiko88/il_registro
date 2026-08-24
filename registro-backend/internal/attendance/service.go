@@ -829,7 +829,16 @@ func (s *service) checkGuardianOrStaff(ctx context.Context, actorID, studentID s
 	if err == nil && u != nil {
 		role := u.Role
 		if role == "admin" || role == "superadmin" || role == "secretary" || role == "principal" || role == "vice_principal" {
-			return true, nil
+			if role == "superadmin" {
+				return true, nil
+			}
+			studentUser, err := s.userRepo.GetByID(ctx, studentID)
+			if err == nil && studentUser != nil {
+				if u.SchoolID != nil && studentUser.SchoolID != nil && *u.SchoolID == *studentUser.SchoolID {
+					return true, nil
+				}
+				return false, nil
+			}
 		}
 	}
 	return s.userRepo.IsGuardian(ctx, actorID, studentID)
@@ -851,7 +860,13 @@ func (s *service) GetChildAttendance(ctx context.Context, parentID, studentID st
 		return nil, fmt.Errorf("lo studente %s non ha una scuola associata", studentID)
 	}
 	schoolID := *studentUser.SchoolID
-	return s.GetStudentAttendance(ctx, parentID, "parent", schoolID, studentID, from, to)
+
+	actorRole := "parent"
+	if u, uErr := s.userRepo.GetByID(ctx, parentID); uErr == nil && u != nil {
+		actorRole = u.Role
+	}
+
+	return s.GetStudentAttendance(ctx, parentID, actorRole, schoolID, studentID, from, to)
 }
 
 func (s *service) GetChildSummary(ctx context.Context, parentID, studentID, schoolID string) (*SummaryResponse, error) {
