@@ -29,7 +29,10 @@ func NewRepository(db *sql.DB) Repository {
 
 func (r *PostgresRepository) GetStudentClassID(ctx context.Context, userID string) (string, error) {
 	query := `
-		SELECT class_id FROM students WHERE user_id = $1::uuid OR id = $1::uuid
+		SELECT class_id FROM students WHERE (user_id = $1::uuid OR id = $1::uuid) AND class_id IS NOT NULL
+		UNION
+		SELECT cs.class_id FROM class_students cs LEFT JOIN students s ON cs.student_id = s.id OR cs.student_id = s.user_id WHERE (cs.student_id = $1::uuid OR s.user_id = $1::uuid OR s.id = $1::uuid) AND cs.class_id IS NOT NULL
+		LIMIT 1
 	`
 	var classID string
 	err := r.db.QueryRowContext(ctx, query, userID).Scan(&classID)
@@ -39,9 +42,24 @@ func (r *PostgresRepository) GetStudentClassID(ctx context.Context, userID strin
 func (r *PostgresRepository) GetParentStudentClassID(ctx context.Context, userID string) (string, error) {
 	query := `
 		SELECT s.class_id
-		FROM parent_student ps
-		JOIN students s ON ps.student_id = s.id
-		WHERE ps.parent_id = $1::uuid OR ps.parent_id IN (SELECT id FROM parents WHERE user_id = $1::uuid)
+		FROM student_parents sp
+		LEFT JOIN parents p ON sp.parent_id = p.id
+		LEFT JOIN students s ON sp.student_id = s.id
+		WHERE (sp.parent_id = $1::uuid OR p.user_id = $1::uuid OR p.id = $1::uuid)
+		  AND s.class_id IS NOT NULL
+		UNION
+		SELECT s.class_id
+		FROM parent_students ps
+		LEFT JOIN parents p ON ps.parent_id = p.id
+		LEFT JOIN students s ON (ps.student_id = s.id OR ps.student_id = s.user_id)
+		WHERE (ps.parent_id = $1::uuid OR p.user_id = $1::uuid OR p.id = $1::uuid)
+		  AND s.class_id IS NOT NULL
+		UNION
+		SELECT s.class_id
+		FROM parent_student_guardians psg
+		LEFT JOIN students s ON (psg.student_id = s.id OR psg.student_id = s.user_id)
+		WHERE (psg.parent_id::text = $1::text)
+		  AND s.class_id IS NOT NULL
 		LIMIT 1
 	`
 	var classID string
@@ -59,12 +77,13 @@ func (r *PostgresRepository) GetClassSchoolID(ctx context.Context, classID strin
 func (r *PostgresRepository) GetTeacherSchedule(ctx context.Context, userID string) ([]ClassSchedule, error) {
 	query := `
 		SELECT cs.id, cs.class_id, COALESCE(c.name || c.section, c.name, ''), cs.day_of_week, cs.hour_index, cs.subject_id, s.name, 
-		       cs.teacher_id, u.last_name, u.first_name, COALESCE(cs.room, ''), cs.created_at, cs.updated_at
+		       cs.teacher_id, COALESCE(u.last_name, tu.last_name, ''), COALESCE(u.first_name, tu.first_name, ''), COALESCE(cs.room, ''), cs.created_at, cs.updated_at
 		FROM class_schedules cs
 		JOIN subjects s ON cs.subject_id = s.id
 		JOIN classes c ON cs.class_id = c.id
 		LEFT JOIN users u ON cs.teacher_id = u.id
 		LEFT JOIN teachers t ON t.id = cs.teacher_id OR t.user_id = cs.teacher_id
+		LEFT JOIN users tu ON t.user_id = tu.id
 		WHERE cs.teacher_id = $1::uuid OR t.user_id = $1::uuid OR t.id = $1::uuid
 		ORDER BY cs.day_of_week, cs.hour_index
 	`
@@ -85,10 +104,13 @@ func (r *PostgresRepository) GetTeacherSchedule(ctx context.Context, userID stri
 		if err != nil {
 			return nil, err
 		}
-		if tLast.Valid {
-			cs.TeacherName = tLast.String + " " + tFirst.String
+		if tLast.Valid && tFirst.Valid {
+			cs.TeacherName = strings.TrimSpace(tLast.String + " " + tFirst.String)
 		}
 		results = append(results, cs)
+	}
+	if results == nil {
+		results = []ClassSchedule{}
 	}
 	return results, nil
 }
@@ -96,11 +118,13 @@ func (r *PostgresRepository) GetTeacherSchedule(ctx context.Context, userID stri
 func (r *PostgresRepository) GetByClass(ctx context.Context, classID string) ([]ClassSchedule, error) {
 	query := `
 		SELECT cs.id, cs.class_id, cs.day_of_week, cs.hour_index, cs.subject_id, s.name, 
-		       cs.teacher_id, u.last_name, u.first_name, COALESCE(cs.room, ''), cs.created_at, cs.updated_at
+		       cs.teacher_id, COALESCE(u.last_name, tu.last_name, ''), COALESCE(u.first_name, tu.first_name, ''), COALESCE(cs.room, ''), cs.created_at, cs.updated_at
 		FROM class_schedules cs
 		JOIN subjects s ON cs.subject_id = s.id
 		LEFT JOIN users u ON cs.teacher_id = u.id
-		WHERE cs.class_id = $1
+		LEFT JOIN teachers t ON t.id = cs.teacher_id OR t.user_id = cs.teacher_id
+		LEFT JOIN users tu ON t.user_id = tu.id
+		WHERE cs.class_id = $1::uuid
 		ORDER BY cs.day_of_week, cs.hour_index
 	`
 	rows, err := r.db.QueryContext(ctx, query, classID)
@@ -120,10 +144,13 @@ func (r *PostgresRepository) GetByClass(ctx context.Context, classID string) ([]
 		if err != nil {
 			return nil, err
 		}
-		if tLast.Valid {
-			cs.TeacherName = tLast.String + " " + tFirst.String
+		if tLast.Valid && tFirst.Valid {
+			cs.TeacherName = strings.TrimSpace(tLast.String + " " + tFirst.String)
 		}
 		results = append(results, cs)
+	}
+	if results == nil {
+		results = []ClassSchedule{}
 	}
 	return results, nil
 }

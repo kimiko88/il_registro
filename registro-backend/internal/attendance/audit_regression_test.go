@@ -13,14 +13,18 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func TestGetPendingJustifications_TeacherEmptyClassID_Forbidden(t *testing.T) {
+func TestGetPendingJustifications_TeacherEmptyClassID_Success(t *testing.T) {
 	svc := &service{
-		repo: &mockAuditAttendanceRepo{},
+		repo: &mockAuditAttendanceRepo{
+			pendingJustifications: []Justification{
+				{ID: "j-1", SchoolID: "school-1", Status: JustificationPending},
+			},
+		},
 	}
 
-	_, err := svc.GetPendingJustifications(context.Background(), "teacher-1", "teacher", "", "school-1")
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "forbidden: classID obbligatorio per i docenti")
+	res, err := svc.GetPendingJustifications(context.Background(), "teacher-1", "teacher", "", "school-1")
+	assert.NoError(t, err)
+	assert.Len(t, res, 1)
 }
 
 func TestDeleteClassAttendanceHour_DifferentSchool_Forbidden(t *testing.T) {
@@ -43,16 +47,24 @@ func TestProcessJustification_EmptyTeacherID_Unauthorized(t *testing.T) {
 }
 
 func TestParseWindowParams_ExtendedItalianSchoolYear_Allowed(t *testing.T) {
-	gin.SetMode(gin.TestMode)
+	req := httptest.NewRequest(http.MethodGet, "/attendance?from=2025-09-01&to=2026-06-30", nil)
 	c, _ := gin.CreateTestContext(httptest.NewRecorder())
-	// 400 days range (e.g. Sept 1 2025 to Oct 5 2026)
-	req, _ := http.NewRequest("GET", "/test?from=2025-09-01&to=2026-10-05", nil)
 	c.Request = req
 
-	from, to, err := parseWindowParams(c)
+	start, end, err := parseWindowParams(c)
 	assert.NoError(t, err)
-	assert.Equal(t, "2025-09-01", from.Format("2006-01-02"))
-	assert.Equal(t, "2026-10-05", to.Format("2006-01-02"))
+	assert.Equal(t, 2025, start.Year())
+	assert.Equal(t, 2026, end.Year())
+}
+
+func TestParseWindowParams_OverRange_Rejected(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/attendance?from=2024-01-01&to=2025-06-15", nil)
+	c, _ := gin.CreateTestContext(httptest.NewRecorder())
+	c.Request = req
+
+	_, _, err := parseWindowParams(c)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "range di date troppo ampio")
 }
 
 func TestExportAttendance_ErrorMapping_ForbiddenAndNotFound(t *testing.T) {
@@ -96,6 +108,10 @@ func (m *mockAuditAttendanceRepo) FindPendingJustifications(classID, schoolID st
 		}
 	}
 	return filtered, nil
+}
+
+func (m *mockAuditAttendanceRepo) FindPendingJustificationsForTeacher(ctx context.Context, teacherID, schoolID string) ([]Justification, error) {
+	return m.FindPendingJustifications("", schoolID)
 }
 
 func (m *mockAuditAttendanceRepo) IsTeacherAssignedToClass(_ context.Context, _, _ string) (bool, error) {

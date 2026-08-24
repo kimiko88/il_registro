@@ -75,7 +75,7 @@ func (s *Service) UpdateClass(ctx context.Context, schoolID, id string, req Crea
 	if err != nil {
 		return nil, err
 	}
-	if c.SchoolID != schoolID {
+	if schoolID != "" && c.SchoolID != schoolID {
 		return nil, fmt.Errorf("forbidden: class belongs to another school")
 	}
 
@@ -100,7 +100,7 @@ func (s *Service) DeleteClass(ctx context.Context, schoolID, id string) error {
 	if err != nil {
 		return err
 	}
-	if c.SchoolID != schoolID {
+	if schoolID != "" && c.SchoolID != schoolID {
 		return fmt.Errorf("forbidden: class belongs to another school")
 	}
 	return s.repo.Delete(ctx, id)
@@ -111,7 +111,7 @@ func (s *Service) AssignSubject(ctx context.Context, schoolID, classID string, r
 	if err != nil {
 		return err
 	}
-	if c.SchoolID != schoolID {
+	if schoolID != "" && c.SchoolID != schoolID {
 		return fmt.Errorf("forbidden: class belongs to another school")
 	}
 	return s.repo.AssignSubject(ctx, classID, req.SubjectID, req.TeacherID, req.HoursPerWeek)

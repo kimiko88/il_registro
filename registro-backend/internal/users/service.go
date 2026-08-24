@@ -112,7 +112,11 @@ func (s *Service) CreateUser(ctx context.Context, actorRole string, req CreateUs
 // ListUsers returns a paginated, filtered list of users.
 func (s *Service) ListUsers(ctx context.Context, actorRole, actorSchoolID string, filter UserFilter) ([]User, int, error) {
 	if !isPrivileged(actorRole) && actorRole != "teacher" && actorRole != "principal" && actorRole != "vice_principal" {
-		return nil, 0, ErrUnauthorized
+		if (actorRole == "parent" || actorRole == "student") && filter.Role == "teacher" {
+			// Allowed to query teachers in their school for booking colloqui or communications
+		} else {
+			return nil, 0, ErrUnauthorized
+		}
 	}
 	if actorRole != "superadmin" && actorSchoolID != "" {
 		filter.SchoolID = &actorSchoolID
@@ -122,7 +126,7 @@ func (s *Service) ListUsers(ctx context.Context, actorRole, actorSchoolID string
 
 // GetUser returns a single user by ID.
 func (s *Service) GetUser(ctx context.Context, actorRole, actorSchoolID string, id string) (*User, error) {
-	if !isPrivileged(actorRole) && actorRole != "teacher" {
+	if !isPrivileged(actorRole) && actorRole != "teacher" && actorRole != "principal" && actorRole != "vice_principal" {
 		return nil, ErrUnauthorized
 	}
 	user, err := s.repo.GetByID(ctx, id)

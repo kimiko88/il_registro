@@ -222,6 +222,9 @@ func (m *mockAttRepoForParentTest) FindJustificationByID(id string) (*attendance
 func (m *mockAttRepoForParentTest) FindPendingJustifications(classID, schoolID string) ([]attendance.Justification, error) {
 	return nil, nil
 }
+func (m *mockAttRepoForParentTest) FindPendingJustificationsForTeacher(ctx context.Context, teacherID, schoolID string) ([]attendance.Justification, error) {
+	return nil, nil
+}
 func (m *mockAttRepoForParentTest) DeleteJustification(id string) error        { return nil }
 func (m *mockAttRepoForParentTest) DeletePendingJustification(id string) error { return nil }
 func (m *mockAttRepoForParentTest) IsTeacherAssignedToClass(ctx context.Context, teacherID, classID string) (bool, error) {

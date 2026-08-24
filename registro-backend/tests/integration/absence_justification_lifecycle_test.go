@@ -35,11 +35,11 @@ func TestIntegration_Absence_Justification_Lifecycle(t *testing.T) {
 		handler.ProcessJustification(c)
 	})
 
-	// 1. Get pending justifications requiring class_id for teacher
+	// 1. Get pending justifications for teacher across assigned classes
 	w1 := httptest.NewRecorder()
 	req1, _ := http.NewRequest("GET", "/attendance/justifications/pending", nil)
 	r.ServeHTTP(w1, req1)
-	assert.Equal(t, http.StatusForbidden, w1.Code)
+	assert.Equal(t, http.StatusOK, w1.Code)
 
 	// 2. Get pending justifications with class_id
 	w2 := httptest.NewRecorder()
@@ -90,6 +90,9 @@ func (m *mockAbsenceRepoForLifecycle) FindJustificationByID(id string) (*attenda
 	return &attendance.Justification{ID: id}, nil
 }
 func (m *mockAbsenceRepoForLifecycle) FindPendingJustifications(classID, schoolID string) ([]attendance.Justification, error) {
+	return []attendance.Justification{}, nil
+}
+func (m *mockAbsenceRepoForLifecycle) FindPendingJustificationsForTeacher(ctx context.Context, teacherID, schoolID string) ([]attendance.Justification, error) {
 	return []attendance.Justification{}, nil
 }
 func (m *mockAbsenceRepoForLifecycle) DeleteJustification(id string) error        { return nil }

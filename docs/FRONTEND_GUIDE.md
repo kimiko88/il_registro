@@ -145,14 +145,30 @@ I 28 composabili in `src/composables/` incapsulano la logica reattiva, l'interaz
 
 ---
 
+## 🎨 Dark Mode & Sistema di Design Globale (`globals.css`)
+
+Il registro implementa un sistema coerente di tema scuro (`.body--dark`) gestito da Quasar e dallo store `useThemeStore`:
+
+1. **Variabili CSS di base**:
+   - `--bg-primary`: `#0f172a` (sfondo pagina scuro).
+   - `--bg-secondary`: `#1e293b` (sfondo card, modali, navbar e tabelle).
+   - `--border-color`: `#334155` (bordi e divisori).
+   - `--text-primary`: `#f1f5f9` (testi principali e titoli).
+   - `--text-secondary`: `#94a3b8` (testi secondari, didascalie e placeholder).
+2. **Override dei contenitori chiari**: In modalità dark, tutte le varianti di colore chiare usate nei componenti e nelle impostazioni (`bg-slate-50`, `bg-slate-100`, `bg-indigo-50`, `bg-amber-50`, `bg-emerald-50`, `bg-blue-50`, ecc.) vengono mappate automaticamente su `--bg-secondary` o `rgba(30, 41, 59, 0.85)` con testi e bordi scuri ad alto contrasto.
+3. **Evidenziazione Giorno Odierno (`Agenda.vue`)**:
+   - La cella e la colonna del giorno corrente (`isTodayIso`) adottano classi semantiche dedicate (`today-cell`, `today-header-cell`, `today-slot`) con badge numerico blu ad alto contrasto e bordo perimetrale a 2px (`#2563eb`), garantendo massima leggibilità sia in modalità chiara che in Dark Mode.
+
+---
+
 ## 🧪 Unit Testing dei Componenti, Composabili & Servizi
 
 La suite di test frontend è sviluppata con **Vitest** e **Vue Test Utils**:
 
 - **Comando di esecuzione**: `npm run test:unit`
-- **Metriche**: **153 test suite**, **908 unit test passati al 100%**.
+- **Metriche**: **153 test suite**, **928 unit test passati al 100%** (0 errori, 0 fallimenti).
 - **Copertura**:
-  - `tests/unit/components/`: Test dedicati per componenti Admin, Common, Parent, Secretary, Student e Teacher (`StudentGradeChart.spec.js`, `TimelineActivityFeed.spec.js`, `ScheduleGridsRobustness.spec.js`, ecc.).
+  - `tests/unit/components/`: Test dedicati per componenti Admin, Common, Parent, Secretary, Student e Teacher (`StudentGradeChart.spec.js`, `TimelineActivityFeed.spec.js`, `ScheduleGridsRobustness.spec.js`, `GradeWeights.spec.js`, ecc.).
   - `tests/unit/composables/`: Test dedicati per tutti i composabili (`useUserManagementFix.spec.js`, `useAuthRoleRouting.spec.js`, `useDraftAutosave.spec.js`, `usePermissions.spec.js`, ecc.).
   - `tests/unit/security/`: Test di anti-regressione RBAC, XSS DOMPurify sanitization, CSV injection prevention, route guards e token security.
 

@@ -37,6 +37,9 @@ func (m *MockAttRepo) ProcessJustificationTx(ctx context.Context, j *Justificati
 func (m *MockAttRepo) FindPendingJustifications(classID, schoolID string) ([]Justification, error) {
 	return nil, nil
 }
+func (m *MockAttRepo) FindPendingJustificationsForTeacher(ctx context.Context, teacherID, schoolID string) ([]Justification, error) {
+	return nil, nil
+}
 func (m *MockAttRepo) DeletePendingJustification(id string) error { return nil }
 func (m *MockAttRepo) IsStudentInClass(ctx context.Context, studentID, classID string) (bool, error) {
 	return true, nil

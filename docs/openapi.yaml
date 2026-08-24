@@ -2,11 +2,71 @@ openapi: 3.0.3
 info:
   title: Registro Elettronico V2 API
   description: API REST per la gestione scolastica (Auth, Utenti, Voti, Presenze, Comunicazioni, Documenti, Colloqui, Agenda).
-  version: 0.3.0
+  version: 0.7.0
 servers:
   - url: http://localhost:8080/api/v1
     description: Local Development Server
 paths:
+  /classes:
+    get:
+      summary: Lista classi scolastiche (supporta SuperAdmin globale e filtri multi-scuola)
+      tags:
+        - Classi
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: academic_year
+          in: query
+          schema:
+            type: string
+        - name: school_id
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista classi
+        '401':
+          description: Non autorizzato
+    post:
+      summary: Creazione nuova classe
+      tags:
+        - Classi
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Classe creata
+        '403':
+          description: Permessi insufficienti
+  /attendance/pending-justifications:
+    get:
+      summary: Lista giustificazioni in attesa di approvazione
+      tags:
+        - Presenze
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: class_id
+          in: query
+          description: UUID della classe (opzionale per i docenti, default tutte le classi assegnate)
+          schema:
+            type: string
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Lista giustificazioni in sospeso
+        '403':
+          description: Accesso non autorizzato
   /auth/login:
     post:
       summary: Autenticazione utente

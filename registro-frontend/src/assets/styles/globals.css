@@ -415,31 +415,54 @@ body {
 /* Dark Mode Utility Overrides */
 .body--dark .bg-white {
     background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
 }
 
 .body--dark .bg-slate-50,
+.body--dark .bg-gray-50,
+.body--dark .bg-zinc-50,
 .body--dark .bg-grey-1,
 .body--dark .bg-indigo-50,
 .body--dark .bg-amber-50,
 .body--dark .bg-emerald-50,
-.body--dark .bg-orange-50 {
-    background-color: #1e1e2e !important;
+.body--dark .bg-orange-50,
+.body--dark .bg-blue-50,
+.body--dark .bg-purple-50,
+.body--dark .bg-teal-50,
+.body--dark .bg-red-50,
+.body--dark .bg-pink-50,
+.body--dark .bg-cyan-50 {
+    background-color: rgba(30, 41, 59, 0.85) !important;
     color: var(--text-primary) !important;
 }
 
 .body--dark .bg-slate-100,
+.body--dark .bg-slate-200,
+.body--dark .bg-slate-300,
+.body--dark .bg-gray-100,
+.body--dark .bg-gray-200,
+.body--dark .bg-zinc-100,
 .body--dark .bg-grey-2,
 .body--dark .bg-grey-3,
+.body--dark .bg-grey-4,
 .body--dark .bg-indigo-100,
 .body--dark .bg-amber-100,
 .body--dark .bg-emerald-100,
-.body--dark .bg-orange-100 {
-    background-color: #2a2b3d !important;
+.body--dark .bg-orange-100,
+.body--dark .bg-blue-100,
+.body--dark .bg-purple-100,
+.body--dark .bg-teal-100,
+.body--dark .bg-red-100 {
+    background-color: #242f42 !important;
     color: var(--text-primary) !important;
 }
 
+.body--dark .text-slate-900,
 .body--dark .text-slate-800,
 .body--dark .text-slate-700,
+.body--dark .text-gray-900,
+.body--dark .text-gray-800,
+.body--dark .text-gray-700,
 .body--dark .text-grey-8,
 .body--dark .text-grey-9,
 .body--dark .text-indigo-900,
@@ -449,18 +472,65 @@ body {
     color: var(--text-primary) !important;
 }
 
+.body--dark .text-slate-600,
 .body--dark .text-slate-500,
 .body--dark .text-slate-400,
+.body--dark .text-gray-600,
+.body--dark .text-gray-500,
+.body--dark .text-gray-400,
 .body--dark .text-grey-6,
 .body--dark .text-grey-7,
-.body--dark .text-indigo-400 {
+.body--dark .text-indigo-400,
+.body--dark .text-indigo-600,
+.body--dark .text-indigo-700 {
     color: var(--text-secondary) !important;
 }
 
 .body--dark .border-slate-100,
 .body--dark .border-slate-200,
+.body--dark .border-slate-300,
+.body--dark .border-gray-100,
+.body--dark .border-gray-200,
 .body--dark .border-grey {
     border-color: var(--border-color) !important;
+}
+
+.body--dark .q-page.bg-slate-50 {
+    background-color: var(--bg-primary) !important;
+}
+
+.body--dark .q-tabs {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-secondary) !important;
+    border-color: var(--border-color) !important;
+}
+
+.body--dark .q-tab-panels,
+.body--dark .q-tab-panel {
+    background-color: transparent !important;
+    color: var(--text-primary) !important;
+}
+
+.body--dark .q-separator {
+    background-color: var(--border-color) !important;
+}
+
+.body--dark .q-item {
+    color: var(--text-primary);
+}
+
+.body--dark .q-item__label--caption {
+    color: var(--text-secondary) !important;
+}
+
+.body--dark .q-field__label {
+    color: var(--text-secondary) !important;
+}
+
+.body--dark .q-menu {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color);
 }
 
 .body--dark .active-menu-item {

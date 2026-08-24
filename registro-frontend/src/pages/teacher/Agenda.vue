@@ -148,9 +148,10 @@
             :key="d.iso"
             class="gcal-day-cell p-2 flex flex-col justify-start transition-colors group cursor-pointer hover:bg-blue-50/50"
             :class="{
-              'bg-slate-100/70': !d.isCurrentMonth,
-              'bg-slate-50/40': d.isCurrentMonth && cIndex >= 5,
-              'bg-blue-50/80': d.iso === isoSelectedDate && d.isCurrentMonth
+              'today-cell': d.iso === isTodayIso,
+              'bg-slate-100/70': !d.isCurrentMonth && d.iso !== isTodayIso,
+              'bg-slate-50/40': d.isCurrentMonth && cIndex >= 5 && d.iso !== isTodayIso,
+              'bg-blue-50/80': d.iso === isoSelectedDate && d.isCurrentMonth && d.iso !== isTodayIso
             }"
             @click="openCreateDialog(d.iso)"
           >
@@ -242,15 +243,16 @@
           :key="'head-' + d.iso"
           class="gcal-header-cell py-2.5 cursor-pointer hover:bg-slate-200/60 transition-colors"
           :class="{
-            'bg-blue-50/90': d.iso === isoSelectedDate,
-            'bg-slate-200/50': dIdx >= 5 && d.iso !== isoSelectedDate
+            'today-header-cell': d.iso === isTodayIso,
+            'bg-blue-50/90': d.iso === isoSelectedDate && d.iso !== isTodayIso,
+            'bg-slate-200/50': dIdx >= 5 && d.iso !== isoSelectedDate && d.iso !== isTodayIso
           }"
           @click="selectDateIso(d.iso)"
         >
-          <div class="text-[11px] font-bold uppercase tracking-wider text-slate-700">{{ d.dayName }}</div>
+          <div class="text-[11px] font-bold uppercase tracking-wider" :class="d.iso === isTodayIso ? 'text-blue-800 font-extrabold' : 'text-slate-700'">{{ d.dayName }}</div>
           <div
             class="inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-bold mt-0.5"
-            :class="d.iso === isTodayIso ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-800'"
+            :class="d.iso === isTodayIso ? 'bg-blue-700 text-white font-black shadow-sm' : 'text-slate-800'"
           >
             {{ d.dateNumber }}
           </div>
@@ -267,8 +269,9 @@
           :key="'allday-' + d.iso"
           class="gcal-day-cell p-1 min-h-[44px] cursor-pointer"
           :class="{
-            'bg-blue-50/40': d.iso === isoSelectedDate,
-            'bg-slate-100/40': dIdx >= 5 && d.iso !== isoSelectedDate
+            'today-slot': d.iso === isTodayIso,
+            'bg-blue-50/40': d.iso === isoSelectedDate && d.iso !== isTodayIso,
+            'bg-slate-100/40': dIdx >= 5 && d.iso !== isoSelectedDate && d.iso !== isTodayIso
           }"
           @click="openCreateDialog(d.iso)"
         >
@@ -314,8 +317,9 @@
             :key="d.iso + '-' + hour"
             class="gcal-day-cell p-1.5 relative bg-white hover:bg-blue-50/30 transition-colors cursor-pointer group"
             :class="{
-              'bg-blue-50/20': d.iso === isoSelectedDate,
-              'bg-slate-100/40': dIdx >= 5 && d.iso !== isoSelectedDate
+              'today-slot': d.iso === isTodayIso,
+              'bg-blue-50/20': d.iso === isoSelectedDate && d.iso !== isTodayIso,
+              'bg-slate-100/40': dIdx >= 5 && d.iso !== isoSelectedDate && d.iso !== isTodayIso
             }"
             @click="openCreateDialog(d.iso, hour)"
           >
@@ -361,16 +365,17 @@
       </div>
 
       <!-- Day Header Line -->
-      <div class="row bg-slate-100 text-center py-2.5 items-center border-b-2 border-slate-300">
+      <div class="row bg-slate-100 text-center py-2.5 items-center border-b-2 border-slate-300" :class="{ 'today-header-cell': isoSelectedDate === isTodayIso }">
         <div class="gcal-time-col text-[10px] text-slate-700 font-mono font-bold py-1" style="width: 65px; min-width: 65px;">GMT+2</div>
         <div class="col text-left pl-4 row items-center gap-2">
-          <span class="text-sm font-bold uppercase tracking-wider text-slate-700">{{ currentDayName }}</span>
+          <span class="text-sm font-bold uppercase tracking-wider" :class="isoSelectedDate === isTodayIso ? 'text-blue-800 font-extrabold' : 'text-slate-700'">{{ currentDayName }}</span>
           <span
             class="inline-flex items-center justify-center w-8 h-8 rounded-full text-base font-bold"
-            :class="isoSelectedDate === isTodayIso ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-200 text-slate-800'"
+            :class="isoSelectedDate === isTodayIso ? 'bg-blue-700 text-white shadow-sm font-black' : 'bg-slate-200 text-slate-800'"
           >
             {{ currentDayNumber }}
           </span>
+          <q-badge v-if="isoSelectedDate === isTodayIso" color="primary" label="Oggi" class="q-ml-sm text-weight-bold" />
         </div>
       </div>
 
@@ -1213,6 +1218,25 @@ function getTypeLabel(type) {
   background-color: #f8fafc;
 }
 
+/* Today Highlighting */
+.today-cell {
+  background-color: #eff6ff !important;
+  box-shadow: inset 0 0 0 2px #2563eb !important;
+  position: relative;
+  z-index: 2;
+}
+
+.today-header-cell {
+  background-color: #dbeafe !important;
+  border-bottom: 3px solid #2563eb !important;
+}
+
+.today-slot {
+  background-color: #f0f7ff !important;
+  border-left: 1px solid #bfdbfe !important;
+  border-right: 1px solid #bfdbfe !important;
+}
+
 /* Date Circle Badges */
 .gcal-date-badge {
   display: inline-flex;
@@ -1226,9 +1250,10 @@ function getTypeLabel(type) {
 }
 
 .gcal-date-badge.today {
-  background-color: #2563eb !important;
+  background-color: #1d4ed8 !important;
   color: #ffffff !important;
-  box-shadow: 0 2px 4px rgba(37,99,235,0.3);
+  font-weight: 900 !important;
+  box-shadow: 0 2px 5px rgba(29, 78, 216, 0.4);
 }
 
 .gcal-date-badge.current {

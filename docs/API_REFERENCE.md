@@ -111,11 +111,41 @@ Endpoint pubblico senza autenticazione per elencare le scuole con recapiti di se
 
 ---
 
+## Classi e Materie
+
+### `GET /api/v1/classes`
+Elenca le classi scolastiche.
+- **Parametri opzionali**: `academic_year` (stringa anno scolastico, es. `2025/2026`), `school_id` (UUID della scuola).
+- **Ruoli ammessi**: `superadmin`, `admin`, `secretary`, `principal`, `vice_principal`, `teacher`, `student`, `parent`.
+- **Comportamento SuperAdmin**: Il ruolo `superadmin` può invocare l'endpoint senza specificare `school_id` per interrogare la totalità delle classi su tutti gli istituti della piattaforma.
+
+### `GET /api/v1/classes/:id`
+Recupera il dettaglio di una specifica classe scolastica.
+
+### `POST /api/v1/classes`
+Crea una nuova classe. Per il ruolo `superadmin`, accetta lo `school_id` all'interno del payload JSON.
+- **Ruoli ammessi**: `superadmin`, `admin`, `secretary`.
+
+---
+
 ## Utenti & Fascicolo
 
 ### `GET /api/v1/students/:id/fascicolo`
 Restituisce lo storico completo dello studente (valutazioni, presenze, note, PDP, attestati PCTO).
 - **Autorizzazione**: Accessibile da docenti, personale di segreteria, dirigente, dallo studente stesso o dai genitori con tutela legale verificata.
+
+---
+
+## Presenze, Giustificazioni e Appello
+
+### `GET /api/v1/attendance/pending-justifications`
+Recupera l'elenco delle giustificazioni in attesa di approvazione.
+- **Parametri query opzionali**: `class_id` (UUID della classe), `from` (data inizio YYYY-MM-DD), `to` (data fine YYYY-MM-DD).
+- **Comportamento Docente**: Se un docente chiama l'endpoint senza specificare `class_id`, il backend aggrega e restituisce automaticamente le giustificazioni in sospeso di tutte le classi a cui il docente è assegnato.
+- **Ruoli ammessi**: `teacher`, `admin`, `superadmin`, `secretary`, `principal`, `vice_principal`.
+
+### `POST /api/v1/attendance/mark-bulk`
+Registrazione in blocco delle presenze/assenze dell'ora, con indicazione opzionale del tipo di attività (`PCTO` o `Orientamento`).
 
 ---
 

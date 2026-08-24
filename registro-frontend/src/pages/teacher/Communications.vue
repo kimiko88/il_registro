@@ -261,18 +261,9 @@ async function fetchCircolari() {
     loadingCircolari.value = true
     try {
         const res = await api.get('/communications/circolari')
-        circolari.value = res.data || []
-        if (circolari.value.length === 0) {
-          circolari.value = [
-            { id: 'circ-1', subject: 'Circolare n. 104 - Convocazione Consigli di Classe', created_at: new Date().toISOString(), body: 'Si comunica la convocazione dei consigli di classe per il quadrimestre.', is_read: false },
-            { id: 'circ-2', subject: 'Circolare n. 105 - Sospensione Attività Didattiche per Festività', created_at: new Date().toISOString(), body: 'Si comunicano i giorni di chiusura dell\'istituto.', is_read: true }
-          ]
-        }
+        circolari.value = Array.isArray(res.data) ? res.data : (res.data?.items || [])
     } catch (e) {
-        circolari.value = [
-          { id: 'circ-1', subject: 'Circolare n. 104 - Convocazione Consigli di Classe', created_at: new Date().toISOString(), body: 'Si comunica la convocazione dei consigli di classe per il quadrimestre.', is_read: false },
-          { id: 'circ-2', subject: 'Circolare n. 105 - Sospensione Attività Didattiche per Festività', created_at: new Date().toISOString(), body: 'Si comunicano i giorni di chiusura dell\'istituto.', is_read: true }
-        ]
+        circolari.value = []
     } finally {
         loadingCircolari.value = false
     }

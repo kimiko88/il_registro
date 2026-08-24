@@ -689,16 +689,21 @@ func (s *service) GetPendingJustifications(ctx context.Context, actorID, actorRo
 		if actorRole != "teacher" {
 			return nil, errors.New("forbidden: ruolo non autorizzato")
 		}
-		if classID == "" {
-			return nil, errors.New("forbidden: classID obbligatorio per i docenti")
-		}
-		assigned, err := s.repo.IsTeacherAssignedToClass(ctx, actorID, classID)
-		if err != nil || !assigned {
-			return nil, errors.New("forbidden: docente non assegnato alla classe indicata")
+		if classID != "" {
+			assigned, err := s.repo.IsTeacherAssignedToClass(ctx, actorID, classID)
+			if err != nil || !assigned {
+				return nil, errors.New("forbidden: docente non assegnato alla classe indicata")
+			}
 		}
 	}
 
-	js, err := s.repo.FindPendingJustifications(classID, schoolID)
+	var js []Justification
+	var err error
+	if actorRole == "teacher" && classID == "" {
+		js, err = s.repo.FindPendingJustificationsForTeacher(ctx, actorID, schoolID)
+	} else {
+		js, err = s.repo.FindPendingJustifications(classID, schoolID)
+	}
 	if err != nil {
 		return nil, err
 	}

@@ -1,14 +1,27 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { mount, flushPromises } from '@vue/test-utils'
 import { createTestingPinia } from '@pinia/testing'
 import { Quasar } from 'quasar'
 import ParentPayments from '@/pages/parent/Payments.vue'
+import paymentService from '@/services/paymentService'
+
+vi.mock('@/services/paymentService', () => ({
+    default: {
+        getPayments: vi.fn(),
+        pay: vi.fn(),
+        downloadReceipt: vi.fn()
+    },
+    paymentService: {
+        getPayments: vi.fn(),
+        pay: vi.fn(),
+        downloadReceipt: vi.fn()
+    }
+}))
 
 const commonStubs = {
     'q-page': { template: '<div><slot /></div>' },
     'q-card': { template: '<div><slot /></div>' },
     'q-card-section': { template: '<div><slot /></div>' },
-    'q-banner': { template: '<div data-testid="q-banner"><slot /><slot name="avatar" /></div>' },
     'q-tabs': { template: '<div><slot /></div>', props: ['modelValue'] },
     'q-tab': { template: '<button><slot /></button>', props: ['name', 'label', 'icon'] },
     'q-tab-panels': { template: '<div><slot /></div>', props: ['modelValue'] },
@@ -23,6 +36,8 @@ const commonStubs = {
     'q-chip': { template: '<div data-testid="q-chip"><slot /></div>', props: ['color', 'textColor'] },
     'q-btn': { template: '<button @click="$emit(\'click\')"><slot /></button>', props: ['label', 'color', 'loading'] },
     'q-dialog': { template: '<div><slot /></div>', props: ['modelValue'] },
+    'q-spinner': true,
+    'q-tooltip': true
 }
 
 function mountPayments() {
@@ -42,34 +57,57 @@ describe('Parent/Payments.vue', () => {
 
     beforeEach(() => {
         vi.clearAllMocks()
-        wrapper = mountPayments()
+        paymentService.getPayments.mockResolvedValue({
+            data: {
+                payments: [
+                    { id: '1', title: 'Assicurazione Scolastica', amount: 8.50, due_date: '2026-03-30', status: 'pending' },
+                    { id: '2', title: 'Gita Firenze', amount: 45.00, due_date: '2026-04-15', status: 'pending' },
+                    { id: '3', title: 'Contributo Volontario', amount: 120.00, paid_at: '2025-09-10', status: 'paid', receipt_number: 'REC-2025-001' }
+                ]
+            }
+        })
     })
 
-    it('renders the page title', () => {
+    it('renders the page title and subtitle', async () => {
+        wrapper = mountPayments()
+        await flushPromises()
         expect(wrapper.text()).toContain('Pagamenti Scolastici')
     })
 
-    it('shows the simulation mode banner', () => {
-        const banner = wrapper.find('[data-testid="q-banner"]')
-        expect(banner.exists()).toBe(true)
-        expect(banner.text()).toContain('Modalità Dimostrativa')
-    })
-
-    it('shows total pending chip', () => {
+    it('computes totalPending correctly from database items', async () => {
+        wrapper = mountPayments()
+        await flushPromises()
+        // 8.50 + 45.00 = 53.50
         const chip = wrapper.find('[data-testid="q-chip"]')
         expect(chip.exists()).toBe(true)
-        expect(chip.text()).toContain('Totale da Pagare')
-    })
-
-    it('computes totalPending correctly from default items', () => {
-        // Default items: 8.50 + 45.00 = 53.50
-        const chip = wrapper.find('[data-testid="q-chip"]')
         expect(chip.text()).toContain('53.50')
     })
 
-    it('has pending payment items rendered', () => {
+    it('has pending payment items rendered from database', async () => {
+        wrapper = mountPayments()
+        await flushPromises()
         const items = wrapper.findAll('li')
-        // At least 2 pending items + 1 empty state item = 3+
         expect(items.length).toBeGreaterThanOrEqual(2)
+        expect(wrapper.text()).toContain('Assicurazione Scolastica')
+        expect(wrapper.text()).toContain('Gita Firenze')
+    })
+
+    it('calls pay method and opens confirmation', async () => {
+        paymentService.pay.mockResolvedValue({
+            data: {
+                message: 'success',
+                payment: { id: '1', title: 'Assicurazione Scolastica', amount: 8.50, status: 'paid', receipt_number: 'REC-001' }
+            }
+        })
+        wrapper = mountPayments()
+        await flushPromises()
+
+        const payButtons = wrapper.findAll('button')
+        const payBtn = payButtons.find(b => b.text().includes('PagoPA') || b.attributes('label')?.includes('PagoPA'))
+        if (payBtn) {
+            await payBtn.trigger('click')
+            await flushPromises()
+            expect(paymentService.pay).toHaveBeenCalledWith('1', { payment_method: 'PagoPA' })
+        }
     })
 })

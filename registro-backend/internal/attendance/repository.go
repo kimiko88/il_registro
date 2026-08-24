@@ -29,6 +29,7 @@ type Repository interface {
 	ProcessJustificationTx(ctx context.Context, j *Justification, teacherID string, approve bool) error
 	FindJustificationByID(id string) (*Justification, error)
 	FindPendingJustifications(classID, schoolID string) ([]Justification, error)
+	FindPendingJustificationsForTeacher(ctx context.Context, teacherID, schoolID string) ([]Justification, error)
 	DeleteJustification(id string) error
 	DeletePendingJustification(id string) error
 
@@ -422,6 +423,46 @@ func (r *repository) FindPendingJustifications(classID, schoolID string) ([]Just
 	return res, nil
 }
 
+func (r *repository) FindPendingJustificationsForTeacher(ctx context.Context, teacherID, schoolID string) ([]Justification, error) {
+	query := `
+		SELECT j.id, j.student_id, COALESCE(u.first_name || ' ' || u.last_name, 'Studente') AS student_name, j.start_date, j.end_date, j.reason, j.status 
+		FROM justifications j
+		JOIN users u ON j.student_id = u.id::uuid
+		JOIN students s ON s.user_id = u.id::uuid
+		WHERE j.status = 'pending'
+		  AND ($2::text = '' OR u.school_id::text = $2::text OR s.school_id::text = $2::text)
+		  AND (
+			EXISTS (
+				SELECT 1 FROM classes c
+				LEFT JOIN class_subjects cs ON c.id::text = cs.class_id::text
+				LEFT JOIN teachers t ON (cs.teacher_id::text = t.id::text OR cs.teacher_id::text = t.user_id::text)
+				WHERE c.id::text = s.class_id::text AND (
+					t.user_id::text = $1::text OR
+					t.id::text = $1::text OR
+					cs.teacher_id::text = $1::text OR
+					c.coordinator_id::text = $1::text
+				)
+			)
+		  )
+		ORDER BY j.start_date DESC`
+
+	rows, err := r.db.QueryContext(ctx, query, teacherID, schoolID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var res []Justification
+	for rows.Next() {
+		var j Justification
+		if err := rows.Scan(&j.ID, &j.StudentID, &j.StudentName, &j.StartDate, &j.EndDate, &j.Reason, &j.Status); err != nil {
+			return nil, err
+		}
+		res = append(res, j)
+	}
+	return res, nil
+}
+
 func (r *repository) DeleteJustification(id string) error {
 	_, err := r.db.Exec(`DELETE FROM justifications WHERE id=$1::uuid`, id)
 	return err
@@ -535,7 +576,11 @@ func (r *repository) FindUnjustifiedByStudent(studentID string) ([]Attendance, e
 	query := `
 		SELECT id, school_id, student_id, class_id, date, hour, subject_id, status, justified, justified_by, justified_at, COALESCE(notes, ''), entry_time, exit_time
 		FROM attendance
-		WHERE student_id = $1::uuid AND status IN ('Absent', 'Late', 'LeftEarly')
+		WHERE (
+			student_id = $1::uuid OR
+			student_id = (SELECT user_id FROM students WHERE id = $1::uuid) OR
+			student_id = (SELECT id FROM students WHERE user_id = $1::uuid)
+		) AND status IN ('Absent', 'Late', 'LeftEarly')
 		  AND COALESCE(justified, false) = false AND COALESCE(parent_justified, false) = false
 		ORDER BY date DESC
 	`
@@ -556,6 +601,9 @@ func (r *repository) FindUnjustifiedByStudent(studentID string) ([]Attendance, e
 		}
 		result = append(result, a)
 	}
+	if result == nil {
+		result = []Attendance{}
+	}
 	return result, nil
 }
 
@@ -564,7 +612,13 @@ func (r *repository) JustifyAbsenceByParent(attendanceID string, studentID strin
 		UPDATE attendance
 		SET parent_justified = true, parent_justified_at = NOW(),
 		    justification_reason = $1, notes = COALESCE($2, notes), updated_at = NOW()
-		WHERE id = $3::uuid AND student_id::text = $4::text AND (parent_justified IS NULL OR parent_justified = false)
+		WHERE id = $3::uuid 
+		  AND (
+			student_id = $4::uuid OR
+			student_id = (SELECT user_id FROM students WHERE id = $4::uuid) OR
+			student_id = (SELECT id FROM students WHERE user_id = $4::uuid)
+		  )
+		  AND COALESCE(parent_justified, false) = false
 	`
 	res, err := r.db.Exec(query, reason, notes, attendanceID, studentID)
 	if err != nil {
@@ -588,10 +642,14 @@ func (r *repository) GetStudentAttendanceStats(studentID string) (*AttendanceSta
 			COUNT(*) FILTER (WHERE status = 'Absent') AS absent,
 			COUNT(*) FILTER (WHERE status = 'Late') AS lates,
 			COUNT(*) FILTER (WHERE status = 'LeftEarly') AS early_exits,
-			COUNT(*) FILTER (WHERE (justified = true OR parent_justified = true)) AS justified,
-			COUNT(*) FILTER (WHERE status IN ('Absent', 'Late') AND justified = false AND parent_justified = false) AS unjustified
+			COUNT(*) FILTER (WHERE (COALESCE(justified, false) = true OR COALESCE(parent_justified, false) = true)) AS justified,
+			COUNT(*) FILTER (WHERE status IN ('Absent', 'Late', 'LeftEarly') AND COALESCE(justified, false) = false AND COALESCE(parent_justified, false) = false) AS unjustified
 		FROM attendance
-		WHERE student_id = $1::uuid
+		WHERE (
+			student_id = $1::uuid OR
+			student_id = (SELECT user_id FROM students WHERE id = $1::uuid) OR
+			student_id = (SELECT id FROM students WHERE user_id = $1::uuid)
+		)
 	`
 	stats := &AttendanceStats{}
 	err := r.db.QueryRow(query, studentID).Scan(
@@ -621,7 +679,11 @@ func (r *repository) GetStudentAttendanceStats(studentID string) (*AttendanceSta
 			COUNT(*) FILTER (WHERE status = 'Present') AS p_cnt,
 			COUNT(*) FILTER (WHERE status = 'Absent') AS a_cnt
 		FROM attendance
-		WHERE student_id = $1::uuid
+		WHERE (
+			student_id = $1::uuid OR
+			student_id = (SELECT user_id FROM students WHERE id = $1::uuid) OR
+			student_id = (SELECT id FROM students WHERE user_id = $1::uuid)
+		)
 		GROUP BY to_char(date, 'YYYY-MM'), m_name
 		ORDER BY to_char(date, 'YYYY-MM')
 	`

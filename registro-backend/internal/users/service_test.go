@@ -212,12 +212,14 @@ func TestService_ListUsers(t *testing.T) {
 	tests := []struct {
 		name      string
 		actorRole string
+		filter    UserFilter
 		mockSetup func()
 		wantErr   bool
 	}{
 		{
 			name:      "Admin can list",
 			actorRole: "admin",
+			filter:    UserFilter{},
 			mockSetup: func() {
 				mockRepo.On("List", mock.Anything, mock.AnythingOfType("users.UserFilter")).
 					Return([]User{}, 0, nil)
@@ -226,7 +228,25 @@ func TestService_ListUsers(t *testing.T) {
 		},
 		{
 			name:      "Student cannot list (unauthorized)",
-			actorRole: "student", // Assumed from permissions.go which had no list perm
+			actorRole: "student",
+			filter:    UserFilter{},
+			mockSetup: func() {},
+			wantErr:   true,
+		},
+		{
+			name:      "Parent can list teachers (allowed)",
+			actorRole: "parent",
+			filter:    UserFilter{Role: "teacher"},
+			mockSetup: func() {
+				mockRepo.On("List", mock.Anything, mock.AnythingOfType("users.UserFilter")).
+					Return([]User{}, 0, nil)
+			},
+			wantErr: false,
+		},
+		{
+			name:      "Parent cannot list all users (unauthorized)",
+			actorRole: "parent",
+			filter:    UserFilter{},
 			mockSetup: func() {},
 			wantErr:   true,
 		},
@@ -235,7 +255,7 @@ func TestService_ListUsers(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mockSetup()
-			_, _, err := service.ListUsers(context.Background(), tt.actorRole, "", UserFilter{})
+			_, _, err := service.ListUsers(context.Background(), tt.actorRole, "", tt.filter)
 			if tt.wantErr {
 				// We expect ErrUnauthorized
 				assert.Error(t, err)

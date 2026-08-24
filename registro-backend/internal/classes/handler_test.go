@@ -172,3 +172,26 @@ func TestHandler_GetDisciplinaryNotes(t *testing.T) {
 		})
 	}
 }
+
+func TestHandler_List_SuperadminAllowedWithoutSchoolID(t *testing.T) {
+	handler, mockRepo := setupClassesHandlerTest()
+	mockRepo.On("List", mock.Anything, "", "").Return([]Class{
+		{ID: "class-1", Name: "1A", SchoolID: "school-1"},
+	}, nil)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Set("user_id", "superadmin-user-id")
+	c.Set("role", "superadmin")
+	c.Request = httptest.NewRequest("GET", "/classes", nil)
+
+	handler.List(c)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	var res []Class
+	err := json.Unmarshal(w.Body.Bytes(), &res)
+	assert.NoError(t, err)
+	assert.Len(t, res, 1)
+	assert.Equal(t, "1A", res[0].Name)
+	mockRepo.AssertExpectations(t)
+}

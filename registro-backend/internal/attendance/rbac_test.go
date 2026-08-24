@@ -113,6 +113,9 @@ func (m *mockRepo) HasOverlappingJustification(_ context.Context, _ string, _, _
 func (m *mockRepo) FindPendingJustifications(_, _ string) ([]Justification, error) {
 	return nil, nil
 }
+func (m *mockRepo) FindPendingJustificationsForTeacher(_ context.Context, _, _ string) ([]Justification, error) {
+	return nil, nil
+}
 func (m *mockRepo) DeleteJustification(_ string) error        { return m.deleteErr }
 func (m *mockRepo) DeletePendingJustification(_ string) error { return m.deleteErr }
 func (m *mockRepo) IsStudentInClass(_ context.Context, _, _ string) (bool, error) {

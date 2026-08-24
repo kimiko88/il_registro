@@ -14,9 +14,11 @@ This checklist tracks authorization fixes and security controls required before 
 - [x] **eLearning Integrations**: restricted provider connections and synchronization actions to staff roles.
 - [x] **Colloqui / Scheduling**: atomic decrement of slot booking counts upon cancellation inside transactions; verified guardianship and slot hydration.
 - [x] **Database Stream Integrity**: added `rows.Err()` checks across all repository streaming loops (substitutions, textbooks, search, admin, competencies, auditlog).
+- [x] **Attendance & Pending Justifications**: secured `GET /attendance/pending-justifications` to automatically query all assigned classes for a teacher context when `class_id` is omitted, eliminating spurious 403 errors while maintaining strict multi-tenant school isolation.
+- [x] **Classes Management & SuperAdmin RBAC**: decoupled strict `school_id` requirement for global `superadmin` role across `/classes` endpoints while preserving strict school tenant isolation for `admin`, `secretary`, and `teacher` roles.
 
 ## Verified Test Suites
 
 - **Backend Integration & Unit Tests**: `go test -v ./...` passing 100% with dedicated negative tests for multi-role RBAC, cross-school access denial, and boundary cases.
-- **Frontend Unit & Component Tests**: `npm run test:unit` passing 100% across 129 test files and 647 tests.
+- **Frontend Unit & Component Tests**: `npm run test:unit` passing 100% across 153 test files and 928 tests.
 

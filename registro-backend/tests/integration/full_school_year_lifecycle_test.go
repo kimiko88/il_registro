@@ -63,6 +63,9 @@ func (m *mockAttRepo) FindJustificationByID(id string) (*attendance.Justificatio
 func (m *mockAttRepo) FindPendingJustifications(classID, schoolID string) ([]attendance.Justification, error) {
 	return nil, nil
 }
+func (m *mockAttRepo) FindPendingJustificationsForTeacher(ctx context.Context, teacherID, schoolID string) ([]attendance.Justification, error) {
+	return nil, nil
+}
 func (m *mockAttRepo) DeleteJustification(id string) error        { return nil }
 func (m *mockAttRepo) DeletePendingJustification(id string) error { return nil }
 func (m *mockAttRepo) IsStudentInClass(ctx context.Context, studentID, classID string) (bool, error) {

@@ -659,7 +659,8 @@ func (h *Handler) GetChildUnjustified(c *gin.Context) {
 
 	result, err := h.service.GetChildUnjustified(c.Request.Context(), parentID, studentID)
 	if err != nil {
-		if strings.Contains(err.Error(), "guardian") || strings.Contains(err.Error(), "unauthorized") || strings.Contains(err.Error(), "access denied") {
+		errLower := strings.ToLower(err.Error())
+		if strings.Contains(errLower, "guardian") || strings.Contains(errLower, "tutela") || strings.Contains(errLower, "forbidden") || strings.Contains(errLower, "unauthorized") || strings.Contains(errLower, "access denied") {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
@@ -692,7 +693,8 @@ func (h *Handler) JustifyChildAbsence(c *gin.Context) {
 
 	err := h.service.JustifyChildAbsence(c.Request.Context(), parentID, studentID, attendanceID, req)
 	if err != nil {
-		if strings.Contains(err.Error(), "guardian") || strings.Contains(err.Error(), "unauthorized") || strings.Contains(err.Error(), "access denied") {
+		errLower := strings.ToLower(err.Error())
+		if strings.Contains(errLower, "guardian") || strings.Contains(errLower, "tutela") || strings.Contains(errLower, "forbidden") || strings.Contains(errLower, "unauthorized") || strings.Contains(errLower, "access denied") {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
@@ -718,7 +720,8 @@ func (h *Handler) GetChildAttendanceStats(c *gin.Context) {
 
 	stats, err := h.service.GetChildAttendanceStats(c.Request.Context(), parentID, studentID)
 	if err != nil {
-		if strings.Contains(err.Error(), "guardian") || strings.Contains(err.Error(), "unauthorized") || strings.Contains(err.Error(), "access denied") {
+		errLower := strings.ToLower(err.Error())
+		if strings.Contains(errLower, "guardian") || strings.Contains(errLower, "tutela") || strings.Contains(errLower, "forbidden") || strings.Contains(errLower, "unauthorized") || strings.Contains(errLower, "access denied") {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}

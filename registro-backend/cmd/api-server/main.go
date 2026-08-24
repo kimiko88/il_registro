@@ -38,6 +38,7 @@ import (
 	"registro-backend/internal/notifications"
 	"registro-backend/internal/orientamento"
 	"registro-backend/internal/parents"
+	"registro-backend/internal/payments"
 	"registro-backend/internal/pcto"
 	"registro-backend/internal/pdp"
 	"registro-backend/internal/postgres"
@@ -409,6 +410,12 @@ func main() {
 			teacherActH.RegisterRoutes(protected)
 
 			elearningH.RegisterRoutes(protected)
+
+			// Gestione Pagamenti & PagoPA
+			paymentsRepo := payments.NewRepository(database)
+			paymentsSvc := payments.NewService(paymentsRepo, usersRepo)
+			paymentsH := payments.NewHandler(paymentsSvc)
+			paymentsH.RegisterRoutes(protected)
 
 			// Firme qualificate FEQ/FES + SIDI export + CAD preservation
 			signaturesH.RegisterRoutes(protected)

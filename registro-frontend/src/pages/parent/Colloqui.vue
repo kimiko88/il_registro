@@ -136,14 +136,20 @@ async function loadTeachers() {
     const res = await api.get('/users', { params: { role: 'teacher', page_size: 100 } })
     const list = res.data?.users || res.data || []
     teachers.value = list.map(t => ({
-      label: `Prof. ${t.last_name || ''} ${t.first_name || ''}`,
+      label: `Prof. ${t.last_name || ''} ${t.first_name || ''}`.trim(),
       value: t.id
     }))
   } catch (err) {
-    teachers.value = [
-      { label: 'Prof. Mario Rossi (Matematica)', value: 't-1' },
-      { label: 'Prof.ssa Giulia Bianchi (Italiano)', value: 't-2' }
-    ]
+    try {
+      const res = await api.get('/teachers')
+      const list = res.data?.teachers || res.data || []
+      teachers.value = list.map(t => ({
+        label: `Prof. ${t.last_name || ''} ${t.first_name || ''}`.trim(),
+        value: t.user_id || t.id
+      }))
+    } catch {
+      teachers.value = []
+    }
   }
 }
 

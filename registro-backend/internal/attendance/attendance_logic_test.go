@@ -73,6 +73,10 @@ func (m *mockAttendanceRepoForTesting) FindPendingJustifications(classID, school
 	return filtered, nil
 }
 
+func (m *mockAttendanceRepoForTesting) FindPendingJustificationsForTeacher(ctx context.Context, teacherID, schoolID string) ([]Justification, error) {
+	return m.FindPendingJustifications("", schoolID)
+}
+
 func (m *mockAttendanceRepoForTesting) IsTeacherAssignedToClass(_ context.Context, _, _ string) (bool, error) {
 	return true, nil
 }

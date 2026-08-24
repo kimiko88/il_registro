@@ -112,6 +112,9 @@ func (m *MockRepo) FindPendingJustifications(classID, schoolID string) ([]Justif
 	args := m.Called(classID)
 	return args.Get(0).([]Justification), args.Error(1)
 }
+func (m *MockRepo) FindPendingJustificationsForTeacher(ctx context.Context, teacherID, schoolID string) ([]Justification, error) {
+	return nil, nil
+}
 func (m *MockRepo) DeletePendingJustification(id string) error {
 	args := m.Called(id)
 	return args.Error(0)

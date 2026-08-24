@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file servicesExportsAndEndpoints.test.js
  * Verifies all 34 services have dual exports (default + named), proper query param encoding, and timeouts on large operations.
  */
@@ -23,6 +23,7 @@ import * as lessonModule from '@/services/lessonService'
 import * as monitoringModule from '@/services/monitoringService'
 import * as notesModule from '@/services/notesService'
 import * as notificationModule from '@/services/notificationService'
+import * as paymentModule from '@/services/paymentService'
 import * as pctoModule from '@/services/pctoService'
 import * as pdpModule from '@/services/pdpService'
 import * as schoolModule from '@/services/schoolService'
@@ -69,6 +70,7 @@ describe('Dual Exports on all 34 service modules', () => {
     { name: 'monitoringService', mod: monitoringModule },
     { name: 'notesService', mod: notesModule },
     { name: 'notificationService', mod: notificationModule },
+    { name: 'paymentService', mod: paymentModule },
     { name: 'pctoService', mod: pctoModule },
     { name: 'pdpService', mod: pdpModule },
     { name: 'schoolService', mod: schoolModule },
