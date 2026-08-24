@@ -258,13 +258,20 @@ func (r *repository) FindByID(id string) (*Grade, error) {
 
 func (r *repository) FindByStudent(studentID string) ([]Grade, error) {
 	query := `
-		SELECT id, student_id, school_id, subject_id, teacher_id, 
-			       grade_value, grade_type, semester, date, 
-			       description, rubric_id, weight, is_published, published_at,
-			       grade_category, evaluation_type, COALESCE(created_by::text, ''), created_at, updated_at, test_id
-		FROM grades 
-		WHERE student_id = $1::uuid AND deleted_at IS NULL
-		ORDER BY date DESC`
+		SELECT g.id, g.student_id, g.school_id, g.subject_id, g.teacher_id, 
+			       g.grade_value, g.grade_type, g.semester, g.date, 
+			       g.description, g.rubric_id, g.weight, g.is_published, g.published_at,
+			       g.grade_category, COALESCE(g.evaluation_type, 'Written'), COALESCE(g.created_by::text, ''), g.created_at, g.updated_at, g.test_id
+		FROM grades g
+		WHERE (
+			g.student_id = $1::uuid 
+			OR EXISTS (
+				SELECT 1 FROM students s 
+				WHERE (s.id = $1::uuid OR s.user_id = $1::uuid) 
+				  AND (g.student_id = s.id OR g.student_id = s.user_id)
+			)
+		) AND g.deleted_at IS NULL
+		ORDER BY g.date DESC`
 
 	return r.scanGrades(query, studentID)
 }
@@ -374,7 +381,7 @@ func (r *repository) FindWithFilter(filter GradeFilter) ([]Grade, error) {
 	argIdx := 1
 
 	if filter.StudentID != "" {
-		conditions = append(conditions, fmt.Sprintf("student_id = $%d::uuid", argIdx))
+		conditions = append(conditions, fmt.Sprintf("(grades.student_id = $%d::uuid OR EXISTS (SELECT 1 FROM students s WHERE (s.id = $%d::uuid OR s.user_id = $%d::uuid) AND (grades.student_id = s.id OR grades.student_id = s.user_id)))", argIdx, argIdx, argIdx))
 		args = append(args, filter.StudentID)
 		argIdx++
 	}
@@ -386,6 +393,11 @@ func (r *repository) FindWithFilter(filter GradeFilter) ([]Grade, error) {
 	if filter.TeacherID != "" {
 		conditions = append(conditions, fmt.Sprintf("teacher_id = $%d::uuid", argIdx))
 		args = append(args, filter.TeacherID)
+		argIdx++
+	}
+	if filter.SchoolID != "" {
+		conditions = append(conditions, fmt.Sprintf("school_id = $%d::uuid", argIdx))
+		args = append(args, filter.SchoolID)
 		argIdx++
 	}
 	if filter.Semester > 0 {
@@ -429,13 +441,23 @@ func (r *repository) FindWithFilterPaginated(filter GradeFilter) ([]Grade, int, 
 	argIdx := 1
 
 	if filter.StudentID != "" {
-		conditions = append(conditions, fmt.Sprintf("student_id = $%d::uuid", argIdx))
+		conditions = append(conditions, fmt.Sprintf("(grades.student_id = $%d::uuid OR EXISTS (SELECT 1 FROM students s WHERE (s.id = $%d::uuid OR s.user_id = $%d::uuid) AND (grades.student_id = s.id OR grades.student_id = s.user_id)))", argIdx, argIdx, argIdx))
 		args = append(args, filter.StudentID)
 		argIdx++
 	}
 	if filter.ClassID != "" {
 		conditions = append(conditions, fmt.Sprintf("EXISTS (SELECT 1 FROM students s WHERE (s.id = grades.student_id OR s.user_id = grades.student_id) AND s.class_id = $%d::uuid)", argIdx))
 		args = append(args, filter.ClassID)
+		argIdx++
+	}
+	if filter.TeacherID != "" {
+		conditions = append(conditions, fmt.Sprintf("teacher_id = $%d::uuid", argIdx))
+		args = append(args, filter.TeacherID)
+		argIdx++
+	}
+	if filter.SchoolID != "" {
+		conditions = append(conditions, fmt.Sprintf("school_id = $%d::uuid", argIdx))
+		args = append(args, filter.SchoolID)
 		argIdx++
 	}
 	if filter.Semester > 0 {
@@ -762,7 +784,10 @@ func (r *repository) GetWeightConfigs(schoolID, subjectID, classID string) ([]Gr
 		WHERE school_id = $1::uuid
 		  AND ($2 = '' OR subject_id IS NULL OR subject_id = NULLIF($2, '')::uuid)
 		  AND ($3 = '' OR class_id IS NULL OR class_id = NULLIF($3, '')::uuid)
-		ORDER BY grade_category, evaluation_type
+		ORDER BY 
+		  (CASE WHEN subject_id IS NOT NULL THEN 1 ELSE 0 END) DESC,
+		  (CASE WHEN class_id IS NOT NULL THEN 1 ELSE 0 END) DESC,
+		  grade_category, evaluation_type
 	`
 	rows, err := r.db.Query(query, schoolID, subjectID, classID)
 	if err != nil {
@@ -816,12 +841,18 @@ func (r *repository) DeleteWeightConfig(id string) error {
 func (r *repository) GetStudentClassAndSchoolInfo(ctx context.Context, studentID string) (studentName, className, classID, schoolID string, err error) {
 	err = r.db.QueryRowContext(
 		ctx,
-		`SELECT u.first_name || ' ' || u.last_name, COALESCE(c.name, 'N/D'), COALESCE(c.id, ''), COALESCE(c.school_id::text, COALESCE(u.school_id::text, ''))
+		`SELECT 
+			COALESCE(u.first_name || ' ' || u.last_name, ''),
+			COALESCE(c.name, 'N/D'),
+			COALESCE(c.id::text, COALESCE(s.class_id::text, '')),
+			COALESCE(c.school_id::text, COALESCE(s.school_id::text, COALESCE(u.school_id::text, '')))
 		 FROM users u
-		 LEFT JOIN class_students cs ON u.id = cs.student_id
-		 LEFT JOIN classes c ON cs.class_id = c.id
-		 WHERE u.id = $1
-		 ORDER BY cs.created_at DESC LIMIT 1`, studentID,
+		 LEFT JOIN students s ON (s.user_id = u.id OR s.id = u.id)
+		 LEFT JOIN class_students cs ON (cs.student_id = u.id OR (s.id IS NOT NULL AND (cs.student_id = s.id OR cs.student_id = s.user_id)))
+		 LEFT JOIN classes c ON (c.id = cs.class_id OR (s.class_id IS NOT NULL AND c.id = s.class_id))
+		 WHERE (u.id = $1 OR (s.id IS NOT NULL AND (s.id = $1 OR s.user_id = $1)))
+		 ORDER BY cs.created_at DESC NULLS LAST, c.id DESC NULLS LAST
+		 LIMIT 1`, studentID,
 	).Scan(&studentName, &className, &classID, &schoolID)
 	return
 }
@@ -927,12 +958,15 @@ func (r *repository) GetClassSubjectAverage(ctx context.Context, classID, subjec
 		`SELECT AVG(g.grade_value)
 		 FROM grades g
 		 JOIN students s ON (g.student_id = s.id OR g.student_id = s.user_id)
+		 LEFT JOIN classes c ON c.id = $1::uuid
 		 WHERE (s.class_id = $1::uuid OR EXISTS (SELECT 1 FROM class_students cs WHERE (cs.student_id = s.id OR cs.student_id = s.user_id OR cs.student_id = g.student_id) AND cs.class_id = $1::uuid))
 		   AND g.subject_id = $2::uuid AND g.semester = $3
 		   AND (
-		     g.school_id = (SELECT school_id FROM users WHERE id = $4::uuid LIMIT 1)
-		     OR g.school_id = (SELECT u.school_id FROM users u JOIN students st ON (st.user_id = u.id OR st.id = u.id) WHERE (st.id = $4::uuid OR st.user_id = $4::uuid) LIMIT 1)
-		     OR g.school_id IS NULL OR g.school_id = '' OR $4 = ''
+		     c.school_id IS NULL 
+		     OR g.school_id IS NULL 
+		     OR g.school_id = c.school_id 
+		     OR g.school_id = s.school_id
+		     OR ($4 <> '' AND g.school_id = (SELECT school_id FROM users WHERE id = $4::uuid LIMIT 1))
 		   )
 		   AND g.is_published = true AND g.deleted_at IS NULL`,
 		classID, subjectID, semester, studentID,

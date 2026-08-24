@@ -662,6 +662,7 @@ func TestService_DisableMFA(t *testing.T) {
 				user := &User{ID: "user-123", MFAEnabled: true, MFASecret: "secret"}
 				mockRepo.On("GetByID", mock.Anything, "user-123").Return(user, nil)
 				mockRepo.On("ClearTempMFASecret", mock.Anything, "user-123").Return(nil)
+				mockRepo.On("RevokeAllUserTokens", mock.Anything, "user-123").Return(nil)
 				mockRepo.On("Update", mock.Anything, mock.MatchedBy(func(u *User) bool {
 					return !u.MFAEnabled && u.MFASecret == ""
 				})).Return(nil)
@@ -891,4 +892,25 @@ func TestService_RestoreUser_SchoolIDIsolation(t *testing.T) {
 		err := service.RestoreUser(context.Background(), "secretary", "school-A", "target-2")
 		assert.NoError(t, err)
 	})
+}
+
+func TestSanitizeCSV_EscapeSequences(t *testing.T) {
+	assert.Equal(t, "'\tdata", sanitizeCSV("\tdata"))
+	assert.Equal(t, "'\rdata", sanitizeCSV("\rdata"))
+	assert.Equal(t, "'=SUM(A1)", sanitizeCSV("=SUM(A1)"))
+	assert.Equal(t, "normal", sanitizeCSV("normal"))
+}
+
+func TestService_BulkDeleteUsers_EmptyActorSchoolID(t *testing.T) {
+	mockRepo := new(MockRepository)
+	service := NewService(mockRepo)
+	schoolB := "school-B"
+
+	// Admin with empty actorSchoolID attempts to delete user in school-B -> should be filtered out
+	targetUser := User{ID: "u1", Role: "student", SchoolID: &schoolB}
+	mockRepo.On("ListByIDs", mock.Anything, []string{"u1"}).Return([]User{targetUser}, nil).Once()
+
+	count, err := service.BulkDeleteUsers(context.Background(), "admin", "", []string{"u1"})
+	assert.NoError(t, err)
+	assert.Equal(t, 0, count, "Admin without schoolID should not be able to delete users in school-B")
 }

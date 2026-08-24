@@ -448,6 +448,20 @@ func TestPasswordReset(t *testing.T) {
 		mockRepo.AssertExpectations(t)
 	})
 
+	t.Run("RequestResetNormalizedEmail", func(t *testing.T) {
+		s, mockRepo := setupTest(t)
+		rawEmail := "  Test.User@Example.COM "
+		normalizedEmail := "test.user@example.com"
+		user := &User{ID: "user-123", Email: normalizedEmail}
+
+		mockRepo.On("GetUserByEmail", mock.Anything, normalizedEmail).Return(user, nil).Once()
+		mockRepo.On("CreatePasswordResetToken", mock.Anything, mock.AnythingOfType("*auth.PasswordResetToken")).Return(nil).Once()
+
+		err := s.RequestPasswordReset(context.Background(), rawEmail)
+		assert.NoError(t, err)
+		mockRepo.AssertExpectations(t)
+	})
+
 	t.Run("ResetSuccess", func(t *testing.T) {
 		s, mockRepo := setupTest(t)
 		token := "valid-reset-token"

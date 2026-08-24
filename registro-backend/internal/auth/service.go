@@ -457,6 +457,7 @@ func (s *Service) VerifyMFA(ctx context.Context, userID, token string) ([]string
 // To prevent email flooding attacks, at most 3 reset requests are allowed
 // per email address in a 15-minute window.
 func (s *Service) RequestPasswordReset(ctx context.Context, email string) error {
+	email = normalizeEmail(email)
 	user, err := s.repo.GetUserByEmail(ctx, email)
 	if err != nil {
 		// Don't reveal whether the email exists — always return success.

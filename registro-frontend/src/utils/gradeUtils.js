@@ -32,8 +32,9 @@ export function gradeToNumeric(val) {
   if (clean === 'BUONO' || clean === 'B' || clean === 'INTERMEDIO') return 7
   if (clean === 'DISCRETO' || clean === 'BASE') return 6.5
   if (clean === 'S' || clean === 'SUFF' || clean === 'SUFFICIENTE') return 6
-  if (clean === 'QUASI SUFFICIENTE' || clean === 'QUASI SUFF' || clean === 'MEDIOCRE' || clean === 'INIZIALE') return 5
-  if (clean === 'INS' || clean === 'INSUFFICIENTE' || clean === 'NON RAGGIUNTO') return 5
+  if (clean === 'QUASI SUFFICIENTE' || clean === 'QUASI SUFF' || clean === 'MEDIOCRE') return 5.5
+  if (clean === 'INIZIALE') return 5
+  if (clean === 'INS' || clean === 'INSUFFICIENTE' || clean === 'NON RAGGIUNTO') return 4.5
   if (clean === 'GRAVEMENTE INSUFFICIENTE' || clean === 'GRAVE INSUFFICIENTE' || clean === 'GRAVEMENTE INS') return 3
 
   let candidate = null
@@ -49,7 +50,7 @@ export function gradeToNumeric(val) {
       const n1 = parseFloat(parts[0].replace(',', '.'))
       const n2 = parseFloat(parts[1].replace(',', '.'))
       if (!isNaN(n1) && !isNaN(n2) && n2 > 0) {
-        if (n1 >= 1 && n1 <= 10 && n2 >= 1 && n2 <= 10 && Math.abs(n2 - n1) <= 1.5) {
+        if (n1 >= 1 && n1 <= 10 && n2 >= 1 && n2 <= 10 && Math.abs(n2 - n1) <= 2.0) {
           // Grade range e.g. 7/8 -> 7.5, 6/7 -> 6.5
           candidate = (n1 + n2) / 2
         } else if (n1 <= n2) {
@@ -60,11 +61,12 @@ export function gradeToNumeric(val) {
     }
   } else if (clean.includes('-') && !clean.endsWith('-')) {
     // Handle hyphen ranges e.g. 7-8 -> 7.5 (excluding trailing minus e.g. '8-')
+    // Requires reasonable range bounds within [1, 10] and maximum gap <= 2.0
     const parts = clean.split('-')
     if (parts.length === 2) {
       const n1 = parseFloat(parts[0].replace(',', '.'))
       const n2 = parseFloat(parts[1].replace(',', '.'))
-      if (!isNaN(n1) && !isNaN(n2) && n1 > 0 && n2 > 0) {
+      if (!isNaN(n1) && !isNaN(n2) && n1 >= 1.0 && n1 <= 10.0 && n2 >= 1.0 && n2 <= 10.0 && Math.abs(n2 - n1) <= 2.0) {
         candidate = (n1 + n2) / 2
       }
     }

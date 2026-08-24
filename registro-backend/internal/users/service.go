@@ -225,7 +225,7 @@ func (s *Service) BulkDeleteUsers(ctx context.Context, actorRole, actorSchoolID 
 		var safeIDs []string
 		for _, tu := range targetUsers {
 			if tu.Role != "admin" && tu.Role != "superadmin" {
-				if actorSchoolID == "" || (tu.SchoolID != nil && *tu.SchoolID == actorSchoolID) {
+				if actorSchoolID != "" && tu.SchoolID != nil && *tu.SchoolID == actorSchoolID {
 					safeIDs = append(safeIDs, tu.ID)
 				}
 			}
@@ -397,6 +397,7 @@ func (s *Service) DisableMFA(ctx context.Context, actorRole string, userID strin
 	user.MFAEnabled = false
 	user.MFASecret = ""
 	_ = s.repo.ClearTempMFASecret(ctx, userID)
+	_ = s.repo.RevokeAllUserTokens(ctx, userID)
 	return s.repo.Update(ctx, user)
 }
 
@@ -429,8 +430,15 @@ func (s *Service) BulkImport(ctx context.Context, actorRole, actorSchoolID strin
 		Errors: parseErrors,
 	}
 
+	allowed, ok := allowedCreators[actorRole]
+
 	var validUsers []User
 	for _, u := range users {
+		if !ok || !allowed[u.Role] {
+			result.Failed++
+			result.Errors = append(result.Errors, fmt.Sprintf("utente %s: ruolo %s non consentito per il ruolo %s", u.Email, u.Role, actorRole))
+			continue
+		}
 		if !strings.HasPrefix(u.PasswordHash, "$2a$") && !strings.HasPrefix(u.PasswordHash, "$2b$") {
 			if err := validatePasswordComplexity(u.PasswordHash); err != nil {
 				result.Failed++
