@@ -228,6 +228,16 @@ func (m *MockRepository) GetClassSubjectAverage(ctx context.Context, classID, su
 	return -1, nil
 }
 
+func (m *MockRepository) CheckClassAccessPermission(ctx context.Context, actorID, actorRole, classID string) (bool, error) {
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "CheckClassAccessPermission" {
+			args := m.Called(ctx, actorID, actorRole, classID)
+			return args.Bool(0), args.Error(1)
+		}
+	}
+	return true, nil
+}
+
 // MockUserRepo
 type MockUserRepo struct {
 	mock.Mock

@@ -70,20 +70,21 @@ export const useWebSocketStore = defineStore('websocket', () => {
 
         // 1. Acquire single-use WS ticket via REST API (Bearer token in Authorization header)
         const rawUrl = import.meta.env.VITE_API_URL
-        let baseUrl = rawUrl || `${window.location.protocol}//${window.location.host}/api/v1`
-        if (rawUrl && !rawUrl.endsWith('/api/v1') && !rawUrl.endsWith('/api/v1/')) {
-            baseUrl = rawUrl.endsWith('/') ? `${rawUrl}api/v1` : `${rawUrl}/api/v1`
-        }
+        let baseUrl = rawUrl ? rawUrl.replace(/\/+$/, '') : `${window.location.protocol}//${window.location.host}/api/v1`
 
         let ticket = null
         try {
+            const controller = new AbortController()
+            const timeoutId = setTimeout(() => controller.abort(), 5000)
             const res = await fetch(`${baseUrl}/auth/ws-ticket`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${authStore.token}`,
                     'Content-Type': 'application/json'
-                }
+                },
+                signal: controller.signal
             })
+            clearTimeout(timeoutId)
             if (!res.ok) throw new Error(`ws-ticket status ${res.status}`)
             const data = await res.json()
             ticket = data.ticket
@@ -171,6 +172,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
             socket.value = null
         }
         isConnected.value = false
+        isReconnecting.value = false
         reconnectAttempts.value = 0
         if (resetPermanentFlag) {
             hasFailedPermanently.value = false
@@ -325,7 +327,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
             }
             case 'NOTE_ADDED': {
                 Notify.create({
-                    message: t ? t('notifications.wsNoteAdded', { title: escapeHtml(payload.title || '') }) : `Nuova nota disciplinare registrata: ${escapeHtml(payload.title)}`,
+                    message: t ? t('notifications.wsNoteAdded', { title: escapeHtml(payload.title || '') }) : `Nuova nota disciplinare registrata: ${escapeHtml(payload.title || '')}`,
                     color: 'negative',
                     icon: 'report_problem',
                     position: 'top-right',
@@ -371,7 +373,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
                 break
             }
             default:
-                if (payload.title || payload.body) {
+                if ((message.type === 'NOTIFICATION' || message.type === 'SYSTEM_ALERT') && (payload.title || payload.body)) {
                     Notify.create({
                         message: payload.title ? `${escapeHtml(payload.title)}: ${escapeHtml(payload.body)}` : escapeHtml(payload.body),
                         color: 'info',

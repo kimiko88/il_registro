@@ -198,7 +198,10 @@ func (h *Handler) Logout(c *gin.Context) {
 		rt = cookieToken
 	} else if c.Request.Body != nil && c.Request.ContentLength != 0 {
 		var req RefreshTokenRequest
-		_ = c.ShouldBindJSON(&req)
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "invalid request body", Message: err.Error()})
+			return
+		}
 		rt = req.RefreshToken
 	}
 

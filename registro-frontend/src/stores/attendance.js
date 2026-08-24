@@ -84,6 +84,8 @@ export const useAttendanceStore = defineStore('attendance', {
                 }
                 return response.data;
             } catch (err) {
+                const t = i18n?.global?.t;
+                this.error = err.response?.data?.error || err.message || (t ? t('common.error') : 'Errore nella registrazione presenze');
                 console.error("Error submitting attendance:", err);
                 throw err;
             } finally {
@@ -142,6 +144,14 @@ export const useAttendanceStore = defineStore('attendance', {
         },
 
         async requestJustification(date, reason, studentId) {
+            const cleanReason = (reason || '').trim();
+            if (!cleanReason || cleanReason.length < 3) {
+                throw new Error("La motivazione della giustificazione deve contenere almeno 3 caratteri");
+            }
+            if (cleanReason.length > 500) {
+                throw new Error("La motivazione della giustificazione non può superare 500 caratteri");
+            }
+
             try {
                 const authStore = useAuthStore();
                 const childrenStore = useChildrenStore();
@@ -168,12 +178,18 @@ export const useAttendanceStore = defineStore('attendance', {
                     student_id: targetStudentId,
                     start_date: date,
                     end_date: date,
-                    reason: reason
+                    reason: cleanReason
                 };
-                await api.post('/attendance/justify', payload);
                 const record = this.records.find(r => r.date === date);
+                const prevStatus = record ? record.justificationStatus : null;
                 if (record) record.justificationStatus = 'Pending';
-                await this.fetchMyAttendance();
+                try {
+                    await api.post('/attendance/justify', payload);
+                    await this.fetchMyAttendance();
+                } catch (err) {
+                    if (record && prevStatus) record.justificationStatus = prevStatus;
+                    throw err;
+                }
             } catch (err) {
                 console.error("Error requesting justification:", err);
                 throw err;

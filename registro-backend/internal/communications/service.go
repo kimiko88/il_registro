@@ -33,6 +33,13 @@ func (s *Service) SendMessage(ctx context.Context, actorRole, schoolID, senderID
 	if req.Subject == "" || req.Body == "" {
 		return nil, errors.New("subject and body are required")
 	}
+	if len(req.Subject) > 200 {
+		return nil, errors.New("subject exceeds maximum length of 200 characters")
+	}
+	if len(req.Body) > 50000 {
+		return nil, errors.New("body exceeds maximum length of 50000 characters")
+	}
+
 	if req.Type != "bacheca" && len(req.Recipients) == 0 {
 		return nil, errors.New("recipients are required for targeted messages")
 	}
@@ -55,6 +62,7 @@ func (s *Service) SendMessage(ctx context.Context, actorRole, schoolID, senderID
 		if strings.Contains(hostname, "localhost") ||
 			hostname == "0.0.0.0" ||
 			hostname == "[::1]" || hostname == "::1" ||
+			strings.HasPrefix(hostname, "[::ffff:") || strings.HasPrefix(hostname, "::ffff:") ||
 			strings.HasPrefix(hostname, "127.") ||
 			hostname == "169.254.169.254" || // AWS metadata
 			strings.HasPrefix(hostname, "10.") ||

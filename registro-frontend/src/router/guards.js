@@ -1,22 +1,5 @@
 import { useAuthStore } from 'src/stores/auth'
-
-/**
- * Decodes the JWT payload and checks if the token is expired.
- * This is a client-side check only (second layer); the backend always
- * re-validates authorization on every API call.
- * @param {string} token
- * @returns {boolean} true if the token is expired or malformed
- */
-function isTokenExpired(token) {
-    if (!token) return true
-    try {
-        const payload = JSON.parse(atob(token.split('.')[1]))
-        return payload.exp ? payload.exp * 1000 < Date.now() : false
-    } catch {
-        // Malformed token — treat as expired
-        return true
-    }
-}
+import { isTokenExpired } from 'src/utils/jwt'
 
 // Shared in-flight promise to prevent concurrent initAuth calls
 let _initAuthPromise = null

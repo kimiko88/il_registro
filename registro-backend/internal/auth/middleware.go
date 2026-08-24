@@ -76,50 +76,12 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 			return
 		}
 
-		// Verify the account is still active in the DB with a short 30s TTL cache.
-		var isActive bool
-		var foundInCache bool
-		m.cacheMu.RLock()
-		if m.activeCache != nil {
-			if entry, ok := m.activeCache[claims.UserID]; ok {
-				if time.Now().Before(entry.expiresAt) {
-					isActive = entry.isActive
-					foundInCache = true
-				}
-			}
+		isActive, err := m.isAccountActive(c.Request.Context(), claims.UserID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "auth check failed"})
+			c.Abort()
+			return
 		}
-		m.cacheMu.RUnlock()
-
-		if !foundInCache {
-			var err error
-			isActive, err = m.userRepo.IsActive(c.Request.Context(), claims.UserID)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "auth check failed"})
-				c.Abort()
-				return
-			}
-			m.cacheMu.Lock()
-			if m.activeCache == nil {
-				m.activeCache = make(map[string]activeCacheEntry)
-			}
-			// Cap activeCache size to 10,000 entries to prevent memory exhaustion from forged token bursts.
-			if len(m.activeCache) >= maxActiveCacheSize {
-				now := time.Now()
-				for k, v := range m.activeCache {
-					if now.After(v.expiresAt) {
-						delete(m.activeCache, k)
-					}
-				}
-			}
-			if len(m.activeCache) < maxActiveCacheSize {
-				m.activeCache[claims.UserID] = activeCacheEntry{
-					isActive:  isActive,
-					expiresAt: time.Now().Add(30 * time.Second),
-				}
-			}
-			m.cacheMu.Unlock()
-		}
-
 		if !isActive {
 			c.JSON(http.StatusForbidden, ErrorResponse{Error: "account is disabled"})
 			c.Abort()
@@ -163,6 +125,47 @@ func (m *Middleware) CleanupExpiredEntries() {
 	}
 }
 
+// isAccountActive checks whether a user account is active, utilizing a 30s TTL in-memory cache.
+func (m *Middleware) isAccountActive(ctx context.Context, userID string) (bool, error) {
+	m.cacheMu.RLock()
+	if m.activeCache != nil {
+		if entry, ok := m.activeCache[userID]; ok {
+			if time.Now().Before(entry.expiresAt) {
+				m.cacheMu.RUnlock()
+				return entry.isActive, nil
+			}
+		}
+	}
+	m.cacheMu.RUnlock()
+
+	isActive, err := m.userRepo.IsActive(ctx, userID)
+	if err != nil {
+		return false, err
+	}
+
+	m.cacheMu.Lock()
+	if m.activeCache == nil {
+		m.activeCache = make(map[string]activeCacheEntry)
+	}
+	if len(m.activeCache) >= maxActiveCacheSize {
+		now := time.Now()
+		for k, v := range m.activeCache {
+			if now.After(v.expiresAt) {
+				delete(m.activeCache, k)
+			}
+		}
+	}
+	if len(m.activeCache) < maxActiveCacheSize {
+		m.activeCache[userID] = activeCacheEntry{
+			isActive:  isActive,
+			expiresAt: time.Now().Add(30 * time.Second),
+		}
+	}
+	m.cacheMu.Unlock()
+
+	return isActive, nil
+}
+
 // StartCacheCleaner launches a background goroutine to periodically clean up expired activeCache entries until context cancellation.
 func (m *Middleware) StartCacheCleaner(ctx context.Context, interval time.Duration) {
 	ticker := time.NewTicker(interval)
@@ -202,50 +205,12 @@ func (m *Middleware) AuthenticateWSTicket(store *wsticket.Store) gin.HandlerFunc
 			return
 		}
 
-		// Verify the account is still active in DB with short TTL cache
-		var isActive bool
-		var foundInCache bool
-		m.cacheMu.RLock()
-		if m.activeCache != nil {
-			if entry, ok := m.activeCache[userID]; ok {
-				if time.Now().Before(entry.expiresAt) {
-					isActive = entry.isActive
-					foundInCache = true
-				}
-			}
+		isActive, err := m.isAccountActive(c.Request.Context(), userID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "auth check failed"})
+			c.Abort()
+			return
 		}
-		m.cacheMu.RUnlock()
-
-		if !foundInCache {
-			var err error
-			isActive, err = m.userRepo.IsActive(c.Request.Context(), userID)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "auth check failed"})
-				c.Abort()
-				return
-			}
-			m.cacheMu.Lock()
-			if m.activeCache == nil {
-				m.activeCache = make(map[string]activeCacheEntry)
-			}
-			// Cap activeCache size to 10,000 entries to prevent memory exhaustion from forged token bursts.
-			if len(m.activeCache) >= maxActiveCacheSize {
-				now := time.Now()
-				for k, v := range m.activeCache {
-					if now.After(v.expiresAt) {
-						delete(m.activeCache, k)
-					}
-				}
-			}
-			if len(m.activeCache) < maxActiveCacheSize {
-				m.activeCache[userID] = activeCacheEntry{
-					isActive:  isActive,
-					expiresAt: time.Now().Add(30 * time.Second),
-				}
-			}
-			m.cacheMu.Unlock()
-		}
-
 		if !isActive {
 			c.JSON(http.StatusForbidden, ErrorResponse{Error: "account is disabled"})
 			c.Abort()

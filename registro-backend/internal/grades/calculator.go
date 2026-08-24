@@ -205,17 +205,32 @@ func (c *Calculator) CalculatePercentile(grades []Grade, score float64) float64 
 }
 
 func (c *Calculator) DetectOutliers(grades []Grade) []string {
-	// Returns IDs of outlier grades (outside Mean +/- 2*StdDev)
-	vals := c.extractValues(grades)
+	type indexedVal struct {
+		id  string
+		val float64
+	}
+	var vals []indexedVal
+	var sum float64
+	for _, g := range grades {
+		val := g.GradeValue
+		if val == 0 && g.GradeType == GradeTypeJudgment {
+			val = c.ConvertJudgmentToValue(g.Description)
+		}
+		if isVotableGrade(val) {
+			vals = append(vals, indexedVal{id: g.ID, val: val})
+			sum += val
+		}
+	}
 	if len(vals) < 2 {
 		return nil
 	}
-	var sum float64
-	for _, v := range vals {
-		sum += v
-	}
+
 	mean := sum / float64(len(vals))
-	stdDev := c.calculateStandardDeviationFromValues(vals, mean)
+	numVals := make([]float64, len(vals))
+	for i, iv := range vals {
+		numVals[i] = iv.val
+	}
+	stdDev := c.calculateStandardDeviationFromValues(numVals, mean)
 	if stdDev == 0 {
 		return nil
 	}
@@ -223,17 +238,9 @@ func (c *Calculator) DetectOutliers(grades []Grade) []string {
 	high := mean + 2*stdDev
 
 	var outliers []string
-	for _, g := range grades {
-		val := g.GradeValue
-		if val == 0 && g.GradeType == GradeTypeJudgment {
-			val = c.ConvertJudgmentToValue(g.Description)
-		}
-		if !isVotableGrade(val) {
-			continue
-		}
-
-		if val < low || val > high {
-			outliers = append(outliers, g.ID)
+	for _, iv := range vals {
+		if iv.val < low || iv.val > high {
+			outliers = append(outliers, iv.id)
 		}
 	}
 	return outliers

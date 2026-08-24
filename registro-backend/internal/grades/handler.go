@@ -1031,7 +1031,7 @@ func (h *Handler) CreateTestWithGrades(c *gin.Context) {
 		return
 	}
 
-	test, err := h.service.CreateTestWithGrades(teacherID, req)
+	test, err := h.service.CreateTestWithGrades(c.Request.Context(), teacherID, req)
 	if err != nil {
 		respond500(c, "CreateTestWithGrades error", err)
 		return
@@ -1127,7 +1127,7 @@ func (h *Handler) DeleteClassTest(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.DeleteClassTest(teacherID, testID); err != nil {
+	if err := h.service.DeleteClassTest(c.Request.Context(), teacherID, testID); err != nil {
 		if errors.Is(err, ErrUnauthorized) {
 			c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: not the author of this test"})
 			return
@@ -1163,7 +1163,7 @@ func (h *Handler) UpdateClassTest(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.UpdateClassTest(teacherID, testID, req); err != nil {
+	if err := h.service.UpdateClassTest(c.Request.Context(), teacherID, testID, req); err != nil {
 		if errors.Is(err, ErrUnauthorized) {
 			c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: not the author of this test"})
 			return

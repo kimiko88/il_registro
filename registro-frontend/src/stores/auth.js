@@ -4,6 +4,8 @@ import axios from 'axios'
 import { resetApiState, clearLocalSession, getBaseURL } from '../services/api'
 import { useWebSocketStore } from './websocket'
 
+import { parseJwt, isTokenExpired, getRoleFromToken } from '../utils/jwt'
+
 const parseUser = (val) => {
     if (!val) return null
     try {
@@ -12,28 +14,6 @@ const parseUser = (val) => {
         return null
     }
 }
-
-const isTokenExpired = (tokenStr) => {
-    if (!tokenStr) return true
-    try {
-        const parts = tokenStr.split('.')
-        if (parts.length !== 3) {
-            return true
-        }
-        const base64Url = parts[1]
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
-        const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''))
-        const payload = JSON.parse(jsonPayload)
-        if (payload && typeof payload.exp === 'number') {
-            return Date.now() >= payload.exp * 1000
-        }
-        return false
-    } catch {
-        return true
-    }
-}
-
-import { useGradesStore } from './grades'
 
 const ALLOWED_USER_FIELDS = new Set([
     'id', 'first_name', 'last_name', 'email', 'role', 'user_role', 'school_id', 'class_id', 'is_staff', 'created_at', 'updated_at', 'avatar'
@@ -50,27 +30,11 @@ const sanitizeUserData = (userData) => {
     return clean
 }
 
-// Minimal opaque storage payload to prevent PII leakage (email, names, tax_id) in web storage (localStorage / sessionStorage)
 const toStorageUser = (userData) => {
     if (!userData) return null
     return {
         id: userData.id,
         role: userData.role || userData.user_role || null
-    }
-}
-
-const getRoleFromToken = (tokenStr) => {
-    if (!tokenStr) return null
-    try {
-        const parts = tokenStr.split('.')
-        if (parts.length !== 3) return null
-        const base64Url = parts[1]
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
-        const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''))
-        const payload = JSON.parse(jsonPayload)
-        return payload ? (payload.role || payload.user_role || null) : null
-    } catch {
-        return null
     }
 }
 
@@ -176,10 +140,10 @@ export const useAuthStore = defineStore('auth', () => {
 
     async function initAuth() {
         if (initPromise.value) return initPromise.value
-        if (token.value && !isTokenExpired(token.value)) return
+        if (token.value && !isTokenExpired(token.value)) return Promise.resolve(true)
 
         const hasSavedUser = !!(localStorage.getItem('user') || sessionStorage.getItem('user'))
-        if (!hasSavedUser) return
+        if (!hasSavedUser) return Promise.resolve(false)
 
         isInitializing.value = true
         initPromise.value = (async () => {

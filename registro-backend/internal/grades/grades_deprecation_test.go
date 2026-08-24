@@ -144,7 +144,7 @@ func (m *mockServiceForDeprecationTest) GetChildSemesterReport(ctx context.Conte
 	}
 	return args.Get(0).(*SemesterReportResponse), args.Error(1)
 }
-func (m *mockServiceForDeprecationTest) CreateTestWithGrades(teacherID string, req CreateClassTestRequest) (*ClassTest, error) {
+func (m *mockServiceForDeprecationTest) CreateTestWithGrades(ctx context.Context, teacherID string, req CreateClassTestRequest) (*ClassTest, error) {
 	args := m.Called(teacherID, req)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -165,10 +165,10 @@ func (m *mockServiceForDeprecationTest) GetUpcomingTestsByClass(ctx context.Cont
 	}
 	return args.Get(0).([]ClassTestResponse), args.Error(1)
 }
-func (m *mockServiceForDeprecationTest) DeleteClassTest(teacherID string, testID string) error {
+func (m *mockServiceForDeprecationTest) DeleteClassTest(ctx context.Context, teacherID string, testID string) error {
 	return m.Called(teacherID, testID).Error(0)
 }
-func (m *mockServiceForDeprecationTest) UpdateClassTest(teacherID string, testID string, req UpdateClassTestRequest) error {
+func (m *mockServiceForDeprecationTest) UpdateClassTest(ctx context.Context, teacherID string, testID string, req UpdateClassTestRequest) error {
 	return m.Called(teacherID, testID, req).Error(0)
 }
 func (m *mockServiceForDeprecationTest) GetWeightConfigs(schoolID, subjectID, classID string) ([]GradeWeightConfig, error) {

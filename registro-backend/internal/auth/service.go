@@ -645,7 +645,9 @@ func (s *Service) recordFailedAttempt(ctx context.Context, email, ipAddress stri
 		Success:     false,
 		AttemptedAt: time.Now(),
 	}
-	_ = s.repo.RecordLoginAttempt(ctx, attempt)
+	if err := s.repo.RecordLoginAttempt(ctx, attempt); err != nil {
+		logger.Log.Warnf("recordFailedAttempt: failed to record login attempt for %s (%s): %v", email, ipAddress, err)
+	}
 }
 
 func (s *Service) recordSuccessfulAttempt(ctx context.Context, email, ipAddress string) {

@@ -78,6 +78,9 @@ type Repository interface {
 	UpsertWeightConfig(cfg *GradeWeightConfig) (*GradeWeightConfig, error)
 	DeleteWeightConfig(id string) error
 
+	// CheckClassAccessPermission checks user access to a class in DB
+	CheckClassAccessPermission(ctx context.Context, actorID, actorRole, classID string) (bool, error)
+
 	// Semester report and trend helpers
 	GetStudentClassAndSchoolInfo(ctx context.Context, studentID string) (studentName, className, classID, schoolID string, err error)
 	GetTeacherNamesByClass(ctx context.Context, classID string) (map[string]string, error)
@@ -978,4 +981,34 @@ func (r *repository) GetClassSubjectAverage(ctx context.Context, classID, subjec
 		return -1, nil
 	}
 	return math.Round(avgVal.Float64*100) / 100, nil
+}
+
+func (r *repository) CheckClassAccessPermission(ctx context.Context, actorID, actorRole, classID string) (bool, error) {
+	if r.db == nil {
+		return false, fmt.Errorf("database connection unavailable")
+	}
+	switch actorRole {
+	case "teacher":
+		var exists bool
+		err := r.db.QueryRowContext(ctx,
+			`SELECT EXISTS(SELECT 1 FROM class_subjects cs LEFT JOIN teachers t ON cs.teacher_id = t.id OR cs.teacher_id = t.user_id WHERE cs.class_id::text = $1 AND (cs.teacher_id::text = $2 OR t.user_id::text = $2))`,
+			classID, actorID,
+		).Scan(&exists)
+		return exists, err
+	case "student":
+		var isEnrolled bool
+		err := r.db.QueryRowContext(ctx,
+			`SELECT EXISTS(SELECT 1 FROM class_students WHERE class_id::text = $1 AND student_id::text = $2)`,
+			classID, actorID,
+		).Scan(&isEnrolled)
+		return isEnrolled, err
+	case "parent":
+		var isParentGuardian bool
+		err := r.db.QueryRowContext(ctx,
+			`SELECT EXISTS(SELECT 1 FROM parent_student_guardians psg JOIN class_students cs ON psg.student_id = cs.student_id WHERE psg.parent_id::text = $1 AND cs.class_id::text = $2)`,
+			actorID, classID,
+		).Scan(&isParentGuardian)
+		return isParentGuardian, err
+	}
+	return false, nil
 }

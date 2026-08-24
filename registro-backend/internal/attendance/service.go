@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math"
 	"sort"
+	"strings"
 	"time"
 
 	"registro-backend/internal/users"
@@ -159,7 +160,7 @@ func (s *service) MarkAttendance(ctx context.Context, teacherID, schoolID string
 		return err
 	}
 
-	s.safeBroadcast(att.StudentID, schoolID, "ATTENDANCE_"+string(att.Status), s.mapSingleResponse(*att))
+	s.safeBroadcast(att.StudentID, schoolID, "ATTENDANCE_"+strings.ToUpper(string(att.Status)), s.mapSingleResponse(*att))
 
 	return nil
 }
@@ -284,7 +285,7 @@ func (s *service) MarkBulk(ctx context.Context, teacherID, schoolID string, req 
 		}
 		go func(items []broadcastPayload, sid string) {
 			for _, item := range items {
-				s.safeBroadcast(item.studentID, sid, "ATTENDANCE_"+item.status, item.resp)
+				s.safeBroadcast(item.studentID, sid, "ATTENDANCE_"+strings.ToUpper(item.status), item.resp)
 			}
 		}(items, schoolID)
 	}
@@ -302,6 +303,9 @@ func (s *service) UpdateAttendance(ctx context.Context, teacherID, schoolID, id 
 		return fmt.Errorf("impossibile modificare la presenza: il record è già stato giustificato")
 	}
 
+	if schoolID == "" {
+		return fmt.Errorf("forbidden: school_id mancante")
+	}
 	if att.SchoolID != schoolID {
 		return fmt.Errorf("forbidden: impossibile modificare presenze di un'altra scuola")
 	}
@@ -538,8 +542,8 @@ func (s *service) RequestJustification(ctx context.Context, parentID string, req
 	}
 	now := time.Now().In(loc)
 	todayEnd := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 999999999, loc)
-	if start.After(todayEnd) {
-		return fmt.Errorf("impossibile richiedere una giustificazione per una data futura (%s)", req.StartDate)
+	if start.After(todayEnd) || end.After(todayEnd) {
+		return fmt.Errorf("impossibile richiedere una giustificazione per una data futura (%s - %s)", req.StartDate, req.EndDate)
 	}
 
 	if end.Before(start) {

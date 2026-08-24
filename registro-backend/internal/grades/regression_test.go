@@ -152,7 +152,10 @@ func (m *RegressionMockRepo) GetStudentAbsenceCountForPeriod(ctx context.Context
 	return 0, nil
 }
 func (m *RegressionMockRepo) GetClassSubjectAverage(ctx context.Context, classID, subjectID string, semester int, studentID string) (float64, error) {
-	return -1, nil
+	return 7.5, nil
+}
+func (m *RegressionMockRepo) CheckClassAccessPermission(ctx context.Context, actorID, actorRole, classID string) (bool, error) {
+	return true, nil
 }
 
 func TestService_FilterLogicRegex(t *testing.T) {

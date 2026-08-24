@@ -39,7 +39,7 @@ func (m *mockGradesServiceAudit) GetMyTrend(ctx context.Context, actorID, actorR
 	return args.Get(0).(*TrendResponse), args.Error(1)
 }
 
-func (m *mockGradesServiceAudit) CreateTestWithGrades(teacherID string, req CreateClassTestRequest) (*ClassTest, error) {
+func (m *mockGradesServiceAudit) CreateTestWithGrades(ctx context.Context, teacherID string, req CreateClassTestRequest) (*ClassTest, error) {
 	args := m.Called(teacherID, req)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)

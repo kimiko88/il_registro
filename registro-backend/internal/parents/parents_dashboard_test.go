@@ -177,6 +177,9 @@ func (m *mockGradesRepoForParentTest) GetStudentAbsenceCountForPeriod(ctx contex
 func (m *mockGradesRepoForParentTest) GetClassSubjectAverage(ctx context.Context, classID, subjectID string, semester int, studentID string) (float64, error) {
 	return 0, nil
 }
+func (m *mockGradesRepoForParentTest) CheckClassAccessPermission(ctx context.Context, actorID, actorRole, classID string) (bool, error) {
+	return true, nil
+}
 
 type mockAttRepoForParentTest struct{ mock.Mock }
 

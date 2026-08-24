@@ -54,11 +54,11 @@ type Service interface {
 	GetChildSemesterReport(ctx context.Context, parentID, studentID string, semester int) (*SemesterReportResponse, error)
 
 	// Class Tests
-	CreateTestWithGrades(teacherID string, req CreateClassTestRequest) (*ClassTest, error)
+	CreateTestWithGrades(ctx context.Context, teacherID string, req CreateClassTestRequest) (*ClassTest, error)
 	GetClassTests(ctx context.Context, actorID string, actorRole string, classID string, subjectID string) ([]ClassTestResponse, error)
 	GetUpcomingTestsByClass(ctx context.Context, actorID string, actorRole string, classID string) ([]ClassTestResponse, error)
-	DeleteClassTest(teacherID string, testID string) error
-	UpdateClassTest(teacherID string, testID string, req UpdateClassTestRequest) error
+	DeleteClassTest(ctx context.Context, teacherID string, testID string) error
+	UpdateClassTest(ctx context.Context, teacherID string, testID string, req UpdateClassTestRequest) error
 
 	// Weight Config
 	GetWeightConfigs(schoolID, subjectID, classID string) ([]GradeWeightConfig, error)
@@ -232,6 +232,9 @@ func (s *service) GetClassGrades(ctx context.Context, actorID string, actorRole 
 	// Group by student
 	studentMap := make(map[string][]GradeResponse)
 	for _, g := range grades {
+		if g.DeletedAt != nil {
+			continue
+		}
 		if filter.IsPublished != nil && g.IsPublished != *filter.IsPublished {
 			continue
 		}
@@ -368,7 +371,7 @@ func (s *service) GetSubjectGrades(ctx context.Context, actorID string, actorRol
 
 	var avg float64
 	if len(validGrades) > 0 {
-		avg = sum / float64(len(validGrades))
+		avg = s.calculator.CalculateWeightedAverage(validGrades)
 	}
 
 	stat.Classes = append(stat.Classes, ClassStat{
@@ -508,9 +511,15 @@ func (s *service) BulkImport(teacherID, schoolID string, file io.Reader, semeste
 		return nil, fmt.Errorf("teacher profile ID is required for bulk import: %w", err)
 	}
 
-	// Validate teacher ownership & assignment for each row when teacher is importing
-	if teacherUser.Role != "admin" && teacherUser.Role != "superadmin" && s.validator != nil && s.validator.db != nil {
-		for idx, req := range reqs {
+	// Validate grade values, semesters & teacher assignment for each row
+	for idx, req := range reqs {
+		if req.GradeValue != -1 && (req.GradeValue < 1.0 || req.GradeValue > 10.0) {
+			return nil, fmt.Errorf("row %d: voto %.2f non valido (deve essere tra 1 e 10 o -1 per assente)", idx+1, req.GradeValue)
+		}
+		if req.Semester != 1 && req.Semester != 2 {
+			return nil, fmt.Errorf("row %d: semestre %d non valido (deve essere 1 o 2)", idx+1, req.Semester)
+		}
+		if teacherUser.Role != "admin" && teacherUser.Role != "superadmin" && s.validator != nil && s.validator.db != nil {
 			assigned, err := s.validator.IsTeacherAssignedToSubjectBySubjectID(ctx, teacherID, req.SubjectID)
 			if err != nil || !assigned {
 				return nil, fmt.Errorf("row %d: %w: teacher is not assigned to teach subject %s", idx+1, ErrUnauthorized, req.SubjectID)
@@ -597,7 +606,8 @@ func (s *service) UpdateGrade(ctx context.Context, teacherID string, gradeID str
 		return nil, fmt.Errorf("could not resolve teacher profile: %w", err)
 	}
 
-	if grade.TeacherID != teacherProfileID {
+	isOwner := grade.TeacherID == teacherID || (teacherProfileID != "" && grade.TeacherID == teacherProfileID)
+	if !isOwner {
 		return nil, fmt.Errorf("%w: can only modify own grades", ErrUnauthorized)
 	}
 
@@ -1231,13 +1241,19 @@ func (s *service) GetSemesterReport(ctx context.Context, actorID string, actorRo
 	totalEnrolled := len(enrolledSubjects)
 
 	overall := 0.0
-	if gradedCount > 0 {
-		overall = math.Round((totalSum/float64(gradedCount))*100) / 100
+	denom := gradedCount
+	if enrollErr == nil && totalEnrolled > 0 {
+		denom = totalEnrolled
+	}
+	if denom > 0 {
+		overall = math.Round((totalSum/float64(denom))*100) / 100
 	}
 
 	// Promotion evaluation: all enrolled subjects must be graded, passed, and overall >= 6.0
 	promoted := "NO"
-	if enrollErr == nil && totalEnrolled > 0 && gradedCount < totalEnrolled {
+	if totalEnrolled == 0 && gradedCount == 0 {
+		promoted = "N/D"
+	} else if enrollErr == nil && totalEnrolled > 0 && gradedCount < totalEnrolled {
 		promoted = "IN CORSO"
 	} else {
 		requiredSubjects := totalEnrolled
@@ -1352,8 +1368,8 @@ func currentSchoolYear() string {
 	return fmt.Sprintf("%d/%d", year, year+1)
 }
 
-func (s *service) CreateTestWithGrades(teacherID string, req CreateClassTestRequest) (*ClassTest, error) {
-	teacherUser, err := s.userRepo.GetByID(context.Background(), teacherID)
+func (s *service) CreateTestWithGrades(ctx context.Context, teacherID string, req CreateClassTestRequest) (*ClassTest, error) {
+	teacherUser, err := s.userRepo.GetByID(ctx, teacherID)
 	if err != nil {
 		return nil, fmt.Errorf("could not resolve teacher profile: %w", err)
 	}
@@ -1361,7 +1377,7 @@ func (s *service) CreateTestWithGrades(teacherID string, req CreateClassTestRequ
 		return nil, fmt.Errorf("teacher is not associated with a school")
 	}
 	schoolID := *teacherUser.SchoolID
-	teacherProfileID, err := s.resolveTeacherProfileID(context.Background(), teacherID)
+	teacherProfileID, err := s.resolveTeacherProfileID(ctx, teacherID)
 	if err != nil {
 		return nil, fmt.Errorf("could not resolve teacher profile ID: %w", err)
 	}
@@ -1463,38 +1479,14 @@ func (s *service) checkClassAccessPermission(ctx context.Context, actorID, actor
 		actorRole == "principal" || actorRole == "vice_principal" || actorRole == "system_auditor" {
 		return nil
 	}
-	if s.validator == nil || s.validator.db == nil {
-		return fmt.Errorf("%w: authorization service unavailable", ErrUnauthorized)
+	if s.repo != nil {
+		allowed, err := s.repo.CheckClassAccessPermission(ctx, actorID, actorRole, classID)
+		if err != nil || !allowed {
+			return ErrUnauthorized
+		}
+		return nil
 	}
-	switch actorRole {
-	case "teacher":
-		var exists bool
-		if err := s.validator.db.QueryRowContext(ctx,
-			`SELECT EXISTS(SELECT 1 FROM class_subjects cs LEFT JOIN teachers t ON cs.teacher_id = t.id OR cs.teacher_id = t.user_id WHERE cs.class_id::text = $1 AND (cs.teacher_id::text = $2 OR t.user_id::text = $2))`,
-			classID, actorID,
-		).Scan(&exists); err != nil || !exists {
-			return ErrUnauthorized
-		}
-	case "student":
-		var isEnrolled bool
-		if err := s.validator.db.QueryRowContext(ctx,
-			`SELECT EXISTS(SELECT 1 FROM class_students WHERE class_id::text = $1 AND student_id::text = $2)`,
-			classID, actorID,
-		).Scan(&isEnrolled); err != nil || !isEnrolled {
-			return ErrUnauthorized
-		}
-	case "parent":
-		var isParentGuardian bool
-		if err := s.validator.db.QueryRowContext(ctx,
-			`SELECT EXISTS(SELECT 1 FROM parent_student_guardians psg JOIN class_students cs ON psg.student_id = cs.student_id WHERE psg.parent_id::text = $1 AND cs.class_id::text = $2)`,
-			actorID, classID,
-		).Scan(&isParentGuardian); err != nil || !isParentGuardian {
-			return ErrUnauthorized
-		}
-	default:
-		return ErrUnauthorized
-	}
-	return nil
+	return ErrUnauthorized
 }
 
 func (s *service) GetClassTests(ctx context.Context, actorID string, actorRole string, classID string, subjectID string) ([]ClassTestResponse, error) {
@@ -1552,7 +1544,7 @@ func (s *service) GetUpcomingTestsByClass(ctx context.Context, actorID string, a
 	return resp, nil
 }
 
-func (s *service) DeleteClassTest(teacherID string, testID string) error {
+func (s *service) DeleteClassTest(ctx context.Context, teacherID string, testID string) error {
 	test, err := s.repo.FindTestByID(testID)
 	if err != nil {
 		return err
@@ -1560,7 +1552,7 @@ func (s *service) DeleteClassTest(teacherID string, testID string) error {
 	// FIX: propagate the error instead of silently ignoring it.
 	// A DB failure previously set teacherProfileID="" which made the ownership
 	// check always deny valid teachers (teacherProfileID == "" branch was true).
-	teacherProfileID, err := s.resolveTeacherProfileID(context.Background(), teacherID)
+	teacherProfileID, err := s.resolveTeacherProfileID(ctx, teacherID)
 	if err != nil {
 		return fmt.Errorf("could not resolve teacher profile for ownership check: %w", err)
 	}
@@ -1570,8 +1562,8 @@ func (s *service) DeleteClassTest(teacherID string, testID string) error {
 	return s.repo.DeleteTest(testID)
 }
 
-func (s *service) UpdateClassTest(teacherID string, testID string, req UpdateClassTestRequest) error {
-	teacherUser, err := s.userRepo.GetByID(context.Background(), teacherID)
+func (s *service) UpdateClassTest(ctx context.Context, teacherID string, testID string, req UpdateClassTestRequest) error {
+	teacherUser, err := s.userRepo.GetByID(ctx, teacherID)
 	if err != nil {
 		return fmt.Errorf("could not resolve teacher profile: %w", err)
 	}
@@ -1580,7 +1572,7 @@ func (s *service) UpdateClassTest(teacherID string, testID string, req UpdateCla
 	}
 	schoolID := *teacherUser.SchoolID
 
-	teacherProfileID, err := s.resolveTeacherProfileID(context.Background(), teacherID)
+	teacherProfileID, err := s.resolveTeacherProfileID(ctx, teacherID)
 	if err != nil {
 		return fmt.Errorf("could not resolve teacher profile ID: %w", err)
 	}
@@ -1590,7 +1582,8 @@ func (s *service) UpdateClassTest(teacherID string, testID string, req UpdateCla
 		return fmt.Errorf("could not resolve test details: %w", err)
 	}
 
-	if test.TeacherID != teacherID && (teacherProfileID == "" || test.TeacherID != teacherProfileID) {
+	isOwner := test.TeacherID == teacherID || (teacherProfileID != "" && test.TeacherID == teacherProfileID)
+	if !isOwner {
 		return ErrUnauthorized
 	}
 
@@ -1760,13 +1753,13 @@ func (s *service) DeleteWeightConfig(actorID, actorRole, schoolID, configID stri
 
 func (s *service) resolveTeacherProfileID(ctx context.Context, userID string) (string, error) {
 	if s.validator == nil || s.validator.db == nil {
-		return userID, nil
+		return "", nil
 	}
 	var teacherProfileID string
 	err := s.validator.db.QueryRowContext(ctx, `SELECT id FROM teachers WHERE user_id = $1`, userID).Scan(&teacherProfileID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return userID, nil
+			return "", nil
 		}
 		return "", fmt.Errorf("failed to resolve teacher profile ID: %w", err)
 	}

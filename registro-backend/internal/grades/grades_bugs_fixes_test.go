@@ -241,8 +241,8 @@ func TestGrades_GetStudentGradesWithFilter_StudentRole_FiltersUnpublished(t *tes
 	delTime := time.Now()
 	mockRepo.On("FindByStudent", "s1").Return([]Grade{
 		{ID: "g1", StudentID: "s1", GradeValue: 8.0, IsPublished: true, DeletedAt: nil},
-		{ID: "g2", StudentID: "s1", GradeValue: 9.0, IsPublished: false, DeletedAt: nil},      // unpublished draft
-		{ID: "g3", StudentID: "s1", GradeValue: 7.0, IsPublished: true, DeletedAt: &delTime},  // deleted
+		{ID: "g2", StudentID: "s1", GradeValue: 9.0, IsPublished: false, DeletedAt: nil},     // unpublished draft
+		{ID: "g3", StudentID: "s1", GradeValue: 7.0, IsPublished: true, DeletedAt: &delTime}, // deleted
 	}, nil).Once()
 
 	res, err := svc.GetStudentGradesWithFilter(context.Background(), "s1", "student", "s1", GradeFilter{})

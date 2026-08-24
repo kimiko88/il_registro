@@ -156,6 +156,9 @@ func (m *mockGradesRepoForScrutiny) GetStudentAbsenceCountForPeriod(ctx context.
 func (m *mockGradesRepoForScrutiny) GetClassSubjectAverage(ctx context.Context, classID, subjectID string, semester int, studentID string) (float64, error) {
 	return -1, nil
 }
+func (m *mockGradesRepoForScrutiny) CheckClassAccessPermission(ctx context.Context, actorID, actorRole, classID string) (bool, error) {
+	return true, nil
+}
 
 type mockScrutinyRepoForGrading struct{}
 

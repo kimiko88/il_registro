@@ -5,22 +5,24 @@ import { i18n } from '@/i18n';
 
 const calcClassAverage = (state, semester = 0) => {
     if (!state.grades || !state.grades.students) return 0;
-    let sum = 0;
-    let count = 0;
+    let weightedSum = 0;
+    let totalWeight = 0;
     state.grades.students.forEach(s => {
         if (!s.grades) return;
         s.grades.forEach(g => {
+            if (g.is_published === false || g.deleted_at || g.deletedAt) return;
             if (semester > 0 && g.semester && Number(g.semester) !== Number(semester)) {
                 return;
             }
             if (typeof g.grade_value === 'number' && g.grade_value > 0) {
-                sum += g.grade_value;
-                count++;
+                const w = (typeof g.weight === 'number' && g.weight > 0) ? g.weight : 1.0;
+                weightedSum += g.grade_value * w;
+                totalWeight += w;
             }
         });
     });
-    if (count === 0) return 0;
-    return Math.round((sum / count) * 10) / 10;
+    if (totalWeight === 0) return 0;
+    return Math.round((weightedSum / totalWeight) * 10) / 10;
 };
 
 export const useGradesStore = defineStore('grades', {
@@ -88,6 +90,10 @@ export const useGradesStore = defineStore('grades', {
                     const data = response.data || null;
                     this.grades = data;
                     if (data) {
+                        const keys = Object.keys(this._cacheMap);
+                        if (keys.length >= 30) {
+                            delete this._cacheMap[keys[0]];
+                        }
                         this._cacheMap[cacheKey] = { data, timestamp: Date.now() };
                     }
                 }
@@ -119,13 +125,22 @@ export const useGradesStore = defineStore('grades', {
             }
         },
 
+        _invalidateClassCache(classId) {
+            if (!classId) return;
+            const prefix = `${classId}:`;
+            Object.keys(this._cacheMap).forEach(k => {
+                if (k.startsWith(prefix)) {
+                    delete this._cacheMap[k];
+                }
+            });
+        },
+
         async addGrade(gradeData) {
             this.loading = true;
             this.error = null;
             try {
                 const response = await gradeService.saveGrade(gradeData);
-                const targetKey = `${this._lastClassId}:${this._lastSubjectId || 'all'}`;
-                delete this._cacheMap[targetKey];
+                this._invalidateClassCache(this._lastClassId);
                 if (this._lastClassId) {
                     await this.fetchGrades(this._lastClassId, this._lastSubjectId, true, true);
                 }
@@ -145,8 +160,7 @@ export const useGradesStore = defineStore('grades', {
             this.error = null;
             try {
                 const response = await gradeService.updateGrade(id, updates);
-                const targetKey = `${this._lastClassId}:${this._lastSubjectId || 'all'}`;
-                delete this._cacheMap[targetKey];
+                this._invalidateClassCache(this._lastClassId);
                 if (this._lastClassId) {
                     await this.fetchGrades(this._lastClassId, this._lastSubjectId, true, true);
                 }
@@ -165,8 +179,7 @@ export const useGradesStore = defineStore('grades', {
             this.error = null;
             try {
                 const response = await gradeService.deleteGrade(id);
-                const targetKey = `${this._lastClassId}:${this._lastSubjectId || 'all'}`;
-                delete this._cacheMap[targetKey];
+                this._invalidateClassCache(this._lastClassId);
                 if (this._lastClassId) {
                     await this.fetchGrades(this._lastClassId, this._lastSubjectId, true, true);
                 }
@@ -185,6 +198,7 @@ export const useGradesStore = defineStore('grades', {
             this.error = null;
             try {
                 const response = await gradeService.createClassTest(testData);
+                this._invalidateClassCache(this._lastClassId);
                 if (this._lastClassId) {
                     await this.fetchGrades(this._lastClassId, this._lastSubjectId, true, true);
                 }
@@ -203,6 +217,7 @@ export const useGradesStore = defineStore('grades', {
             this.error = null;
             try {
                 const response = await gradeService.updateClassTest(id, testData);
+                this._invalidateClassCache(this._lastClassId);
                 if (this._lastClassId) {
                     await this.fetchGrades(this._lastClassId, this._lastSubjectId, true, true);
                 }
@@ -221,6 +236,7 @@ export const useGradesStore = defineStore('grades', {
             this.error = null;
             try {
                 const response = await gradeService.deleteClassTest(id);
+                this._invalidateClassCache(this._lastClassId);
                 if (this._lastClassId) {
                     await this.fetchGrades(this._lastClassId, this._lastSubjectId, true, true);
                 }
@@ -280,7 +296,10 @@ export const useGradesStore = defineStore('grades', {
                     }
                 }
                 if (url) {
-                    window.URL.revokeObjectURL(url);
+                    const objectUrl = url;
+                    setTimeout(() => {
+                        window.URL.revokeObjectURL(objectUrl);
+                    }, 1000);
                 }
                 this.loading = false;
             }
@@ -291,6 +310,7 @@ export const useGradesStore = defineStore('grades', {
             this.grades = null;
             this._lastClassId = null;
             this._lastSubjectId = null;
+            this._requestId++;
         }
     }
 });
