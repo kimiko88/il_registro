@@ -30,8 +30,8 @@ func buildOriginsMap() map[string]bool {
 }
 
 func CORSMiddleware() gin.HandlerFunc {
+	originsMap := buildOriginsMap()
 	return func(c *gin.Context) {
-		originsMap := buildOriginsMap()
 		origin := c.Request.Header.Get("Origin")
 		c.Writer.Header().Add("Vary", "Origin")
 

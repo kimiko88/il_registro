@@ -212,7 +212,7 @@ func TestService_ProcessJustification(t *testing.T) {
 	mockRepo.On("FindJustificationByID", jid).Return(j, nil)
 	mockRepo.On("ProcessJustificationTx", mock.Anything, j, "T1", true).Return(nil)
 
-	err := svc.ProcessJustification(context.Background(), "T1", jid, true)
+	err := svc.ProcessJustification(context.Background(), "T1", "teacher", jid, true)
 	assert.NoError(t, err)
 	mockRepo.AssertExpectations(t)
 }

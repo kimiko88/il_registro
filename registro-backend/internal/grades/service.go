@@ -198,6 +198,11 @@ func (s *service) GetStudentGradesPaged(ctx context.Context, actorID string, act
 
 func (s *service) GetClassGrades(ctx context.Context, actorID string, actorRole string, classID string, filter GradeFilter) (*ClassGradesResponse, error) {
 	// Permission check
+	if actorRole != "superadmin" {
+		if err := s.checkClassAccessPermission(ctx, actorID, actorRole, classID); err != nil {
+			return nil, fmt.Errorf("class access check failed: %w", err)
+		}
+	}
 	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" && actorRole != "principal" && actorRole != "vice_principal" {
 		isCoord, err := s.validator.IsClassCoordinator(actorID, classID)
 		if err != nil {
@@ -511,6 +516,9 @@ func (s *service) BulkImport(teacherID, schoolID string, file io.Reader, semeste
 		return nil, fmt.Errorf("teacher profile ID is required for bulk import: %w", err)
 	}
 
+	assignedSubjectsCache := make(map[string]bool)
+	assignedStudentsCache := make(map[string]bool)
+
 	// Validate grade values, semesters & teacher assignment for each row
 	for idx, req := range reqs {
 		if req.GradeValue != -1 && (req.GradeValue < 1.0 || req.GradeValue > 10.0) {
@@ -519,14 +527,33 @@ func (s *service) BulkImport(teacherID, schoolID string, file io.Reader, semeste
 		if req.Semester != 1 && req.Semester != 2 {
 			return nil, fmt.Errorf("row %d: semestre %d non valido (deve essere 1 o 2)", idx+1, req.Semester)
 		}
-		if teacherUser.Role != "admin" && teacherUser.Role != "superadmin" && s.validator != nil && s.validator.db != nil {
-			assigned, err := s.validator.IsTeacherAssignedToSubjectBySubjectID(ctx, teacherID, req.SubjectID)
-			if err != nil || !assigned {
-				return nil, fmt.Errorf("row %d: %w: teacher is not assigned to teach subject %s", idx+1, ErrUnauthorized, req.SubjectID)
-			}
-			assignedStudent, err := s.validator.IsTeacherAssignedToStudent(ctx, teacherID, req.StudentID)
-			if err != nil || !assignedStudent {
-				return nil, fmt.Errorf("row %d: %w: teacher is not assigned to student %s", idx+1, ErrUnauthorized, req.StudentID)
+		if teacherUser.Role != "admin" && teacherUser.Role != "superadmin" && s.validator != nil {
+			if s.validator.db != nil {
+				assignedSub, knownSub := assignedSubjectsCache[req.SubjectID]
+				if !knownSub {
+					var err error
+					assignedSub, err = s.validator.IsTeacherAssignedToSubjectBySubjectID(ctx, teacherID, req.SubjectID)
+					if err != nil {
+						assignedSub = false
+					}
+					assignedSubjectsCache[req.SubjectID] = assignedSub
+				}
+				if !assignedSub {
+					return nil, fmt.Errorf("row %d: %w: teacher is not assigned to teach subject %s", idx+1, ErrUnauthorized, req.SubjectID)
+				}
+
+				assignedStud, knownStud := assignedStudentsCache[req.StudentID]
+				if !knownStud {
+					var err error
+					assignedStud, err = s.validator.IsTeacherAssignedToStudent(ctx, teacherID, req.StudentID)
+					if err != nil {
+						assignedStud = false
+					}
+					assignedStudentsCache[req.StudentID] = assignedStud
+				}
+				if !assignedStud {
+					return nil, fmt.Errorf("row %d: %w: teacher is not assigned to student %s", idx+1, ErrUnauthorized, req.StudentID)
+				}
 			}
 		}
 	}
@@ -698,14 +725,23 @@ func (s *service) DeleteGrade(ctx context.Context, teacherID string, gradeID str
 		return fmt.Errorf("grade not found")
 	}
 
-	// Resolve teacher profile ID for correct ownership comparison.
-	teacherProfileID, err := s.resolveTeacherProfileID(ctx, teacherID)
-	if err != nil {
-		return fmt.Errorf("could not resolve teacher profile: %w", err)
+	// Check actor user role
+	actorUser, err := s.userRepo.GetByID(ctx, teacherID)
+	if err != nil || actorUser == nil {
+		return fmt.Errorf("could not resolve actor profile: %w", err)
 	}
 
-	if grade.TeacherID != teacherProfileID {
-		return fmt.Errorf("%w: unauthorized to delete this grade", ErrUnauthorized)
+	isStaffAdmin := actorUser.Role == "admin" || actorUser.Role == "superadmin"
+
+	// Resolve teacher profile ID for correct ownership comparison if not admin/superadmin.
+	if !isStaffAdmin {
+		teacherProfileID, err := s.resolveTeacherProfileID(ctx, teacherID)
+		if err != nil {
+			return fmt.Errorf("could not resolve teacher profile: %w", err)
+		}
+		if grade.TeacherID != teacherProfileID {
+			return fmt.Errorf("%w: unauthorized to delete this grade", ErrUnauthorized)
+		}
 	}
 
 	if err := s.validator.ValidateModification(*grade, UpdateGradeRequest{}); err != nil {
@@ -1008,17 +1044,10 @@ func (s *service) GetMyTrend(ctx context.Context, actorID string, actorRole stri
 	}
 
 	direction := "stable"
-	if len(points) >= 3 {
+	if len(points) >= 2 {
 		last := points[len(points)-1]
 		prev := points[len(points)-2]
 		diff := last.MovingAvg3 - prev.MovingAvg3
-		if diff > 0.5 {
-			direction = "improving"
-		} else if diff < -0.5 {
-			direction = "declining"
-		}
-	} else if len(points) == 2 {
-		diff := relevant[1].GradeValue - relevant[0].GradeValue
 		if diff > 0.5 {
 			direction = "improving"
 		} else if diff < -0.5 {
@@ -1048,6 +1077,9 @@ func (s *service) GetMyTrend(ctx context.Context, actorID string, actorRole stri
 }
 
 func (s *service) GetSemesterReport(ctx context.Context, actorID string, actorRole string, studentID string, semester int) (*SemesterReportResponse, error) {
+	if semester != 1 && semester != 2 {
+		return nil, fmt.Errorf("semester must be 1 or 2")
+	}
 	if actorRole == "" || actorID == "" {
 		return nil, ErrUnauthorized
 	}
@@ -1171,17 +1203,17 @@ func (s *service) GetSemesterReport(ctx context.Context, actorID string, actorRo
 			})
 		}
 
-		passed := avg >= 6.0
-		if passed {
-			passedCount++
-		}
-
 		// Final grade rounded to integer on the Italian 1-10 school report scale
 		finalGrade := math.Round(avg)
 		if finalGrade < 1 {
 			finalGrade = 1
 		} else if finalGrade > 10 {
 			finalGrade = 10
+		}
+
+		passed := finalGrade >= 6.0
+		if passed {
+			passedCount++
 		}
 
 		tName := teacherMap[subID]

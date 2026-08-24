@@ -25,9 +25,9 @@ export const useWebSocketStore = defineStore('websocket', () => {
     const reconnectAttempts = ref(0)
     const hasFailedPermanently = ref(false)
     const lastError = ref(null)
-    const authStore = useAuthStore()
-
     const heartbeatTimer = ref(null)
+    const isReconnecting = ref(false)
+    const authStore = useAuthStore()
 
     function startHeartbeat() {
         stopHeartbeat()
@@ -183,8 +183,6 @@ export const useWebSocketStore = defineStore('websocket', () => {
             reconnectTimer.value = null
         }
     }
-
-    const isReconnecting = ref(false)
 
     function attemptReconnect() {
         if (!authStore.isAuthenticated) {

@@ -1202,7 +1202,7 @@ func (h *Handler) UpsertWeightConfig(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "teacher" && role != "admin" && role != "superadmin" && role != "secretary" {
+	if role != "admin" && role != "superadmin" && role != "secretary" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -1215,6 +1215,10 @@ func (h *Handler) UpsertWeightConfig(c *gin.Context) {
 
 	result, err := h.service.UpsertWeightConfig(actorID, role, schoolID, req)
 	if err != nil {
+		if errors.Is(err, ErrUnauthorized) {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -1230,7 +1234,7 @@ func (h *Handler) DeleteWeightConfig(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "teacher" && role != "admin" && role != "superadmin" && role != "secretary" {
+	if role != "admin" && role != "superadmin" && role != "secretary" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}

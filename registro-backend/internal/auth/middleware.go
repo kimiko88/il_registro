@@ -3,7 +3,9 @@ package auth
 import (
 	"context"
 	"net/http"
+	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -125,7 +127,17 @@ func (m *Middleware) CleanupExpiredEntries() {
 	}
 }
 
-// isAccountActive checks whether a user account is active, utilizing a 30s TTL in-memory cache.
+func getActiveCacheTTL() time.Duration {
+	ttlStr := os.Getenv("ACTIVE_ACCOUNT_CACHE_TTL_SECONDS")
+	if ttlStr != "" {
+		if sec, err := strconv.Atoi(ttlStr); err == nil && sec > 0 {
+			return time.Duration(sec) * time.Second
+		}
+	}
+	return 10 * time.Second
+}
+
+// isAccountActive checks whether a user account is active, utilizing a configurable TTL in-memory cache (default 10s).
 func (m *Middleware) isAccountActive(ctx context.Context, userID string) (bool, error) {
 	m.cacheMu.RLock()
 	if m.activeCache != nil {
@@ -158,7 +170,7 @@ func (m *Middleware) isAccountActive(ctx context.Context, userID string) (bool, 
 	if len(m.activeCache) < maxActiveCacheSize {
 		m.activeCache[userID] = activeCacheEntry{
 			isActive:  isActive,
-			expiresAt: time.Now().Add(30 * time.Second),
+			expiresAt: time.Now().Add(getActiveCacheTTL()),
 		}
 	}
 	m.cacheMu.Unlock()

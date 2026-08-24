@@ -550,7 +550,7 @@ func TestProcessJustification_TeacherNotAssigned_Forbidden(t *testing.T) {
 		},
 	}
 	svc := makeService(repo, userRepo)
-	err := svc.ProcessJustification(context.Background(), "teacher1", "just1", true)
+	err := svc.ProcessJustification(context.Background(), "teacher1", "teacher", "just1", true)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "forbidden")
 }
@@ -576,7 +576,7 @@ func TestProcessJustification_AssignedTeacher_Pass(t *testing.T) {
 		},
 	}
 	svc := makeService(repo, userRepo)
-	err := svc.ProcessJustification(context.Background(), "teacher1", "just1", true)
+	err := svc.ProcessJustification(context.Background(), "teacher1", "teacher", "just1", true)
 	assert.NoError(t, err)
 }
 

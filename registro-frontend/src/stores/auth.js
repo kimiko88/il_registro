@@ -2,15 +2,19 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import axios from 'axios'
 import { resetApiState, clearLocalSession, getBaseURL } from '../services/api'
-import { useWebSocketStore } from './websocket'
+import { useGradesStore } from './grades'
+import { useAttendanceStore } from './attendance'
+import { useCommunicationsStore } from './communications'
+import { useScrutinyStore } from './scrutiny'
+import { useParentStore } from './parent'
 
-import { parseJwt, isTokenExpired, getRoleFromToken } from '../utils/jwt'
+import { isTokenExpired, getRoleFromToken } from '../utils/jwt'
 
 const parseUser = (val) => {
     if (!val) return null
     try {
         return JSON.parse(val)
-    } catch {
+    } catch (_err) {
         return null
     }
 }
@@ -121,6 +125,34 @@ export const useAuthStore = defineStore('auth', () => {
             // Grades store not initialized
         }
 
+        try {
+            const attendanceStore = useAttendanceStore()
+            if (typeof attendanceStore.$reset === 'function') attendanceStore.$reset()
+        } catch (_e) {
+            // Store not initialized
+        }
+
+        try {
+            const communicationsStore = useCommunicationsStore()
+            if (typeof communicationsStore.$reset === 'function') communicationsStore.$reset()
+        } catch (_e) {
+            // Store not initialized
+        }
+
+        try {
+            const scrutinyStore = useScrutinyStore()
+            if (typeof scrutinyStore.$reset === 'function') scrutinyStore.$reset()
+        } catch (_e) {
+            // Store not initialized
+        }
+
+        try {
+            const parentStore = useParentStore()
+            if (typeof parentStore.$reset === 'function') parentStore.$reset()
+        } catch (_e) {
+            // Store not initialized
+        }
+
         clearLocalSession()
         resetApiState()
     }
@@ -170,7 +202,9 @@ export const useAuthStore = defineStore('auth', () => {
                 }
             } catch (err) {
                 console.warn('Initial session restore failed:', err)
-                logout()
+                if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+                    logout()
+                }
             } finally {
                 isInitializing.value = false
                 initPromise.value = null

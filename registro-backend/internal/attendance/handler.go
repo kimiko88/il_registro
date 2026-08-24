@@ -233,7 +233,7 @@ func (h *Handler) ApproveJustification(c *gin.Context) {
 		return
 	}
 	id := c.Param("id")
-	if err := h.service.ProcessJustification(c.Request.Context(), actorID, id, true); err != nil {
+	if err := h.service.ProcessJustification(c.Request.Context(), actorID, actorRole, id, true); err != nil {
 		if strings.Contains(err.Error(), "forbidden") || strings.Contains(err.Error(), "non assegnato") {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
@@ -253,7 +253,7 @@ func (h *Handler) RejectJustification(c *gin.Context) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
-	if err := h.service.ProcessJustification(c.Request.Context(), actorID, id, false); err != nil {
+	if err := h.service.ProcessJustification(c.Request.Context(), actorID, actorRole, id, false); err != nil {
 		if strings.Contains(err.Error(), "forbidden") || strings.Contains(err.Error(), "non assegnato") {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
@@ -451,7 +451,7 @@ func (h *Handler) ProcessJustification(c *gin.Context) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
-	if err := h.service.ProcessJustification(c.Request.Context(), teacherID, id, req.Approve); err != nil {
+	if err := h.service.ProcessJustification(c.Request.Context(), teacherID, actorRole, id, req.Approve); err != nil {
 		errStr := strings.ToLower(err.Error())
 		if errors.Is(err, ErrAlreadyProcessed) || strings.Contains(errStr, "già stata elaborata") || strings.Contains(errStr, "already processed") {
 			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})

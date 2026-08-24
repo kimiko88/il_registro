@@ -45,8 +45,8 @@ func (m *mockServiceForHardenTest) GetStudentAttendance(ctx context.Context, act
 func (m *mockServiceForHardenTest) RequestJustification(ctx context.Context, parentID string, req JustificationRequest) error {
 	return m.Called(ctx, parentID, req).Error(0)
 }
-func (m *mockServiceForHardenTest) ProcessJustification(ctx context.Context, teacherID, justificationID string, approve bool) error {
-	return m.Called(ctx, teacherID, justificationID, approve).Error(0)
+func (m *mockServiceForHardenTest) ProcessJustification(ctx context.Context, teacherID, actorRole, justificationID string, approve bool) error {
+	return m.Called(ctx, teacherID, actorRole, justificationID, approve).Error(0)
 }
 func (m *mockServiceForHardenTest) GetPendingJustifications(ctx context.Context, actorID, actorRole, classID, schoolID string) ([]JustificationResponse, error) {
 	args := m.Called(ctx, actorID, actorRole, classID, schoolID)

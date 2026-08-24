@@ -61,8 +61,8 @@ func (m *MockServiceForFixes) RequestJustification(ctx context.Context, parentID
 	return args.Error(0)
 }
 
-func (m *MockServiceForFixes) ProcessJustification(ctx context.Context, teacherID, justificationID string, approve bool) error {
-	args := m.Called(ctx, teacherID, justificationID, approve)
+func (m *MockServiceForFixes) ProcessJustification(ctx context.Context, teacherID, actorRole, justificationID string, approve bool) error {
+	args := m.Called(ctx, teacherID, actorRole, justificationID, approve)
 	return args.Error(0)
 }
 
@@ -182,7 +182,7 @@ func TestProcessJustification_AlreadyProcessedReturns409(t *testing.T) {
 	mockSvc := new(MockServiceForFixes)
 	h := NewHandler(mockSvc)
 
-	mockSvc.On("ProcessJustification", mock.Anything, "t1", "j123", true).
+	mockSvc.On("ProcessJustification", mock.Anything, "t1", "teacher", "j123", true).
 		Return(ErrAlreadyProcessed)
 
 	w := httptest.NewRecorder()
@@ -299,13 +299,13 @@ func TestAttendance_ProcessJustification_RoleEnforcement(t *testing.T) {
 
 	// Parent role must be forbidden
 	mockUserRepo.On("GetByID", mock.Anything, "parent-1").Return(&users.User{ID: "parent-1", Role: "parent"}, nil).Once()
-	errParent := svc.ProcessJustification(context.Background(), "parent-1", jid, true)
+	errParent := svc.ProcessJustification(context.Background(), "parent-1", "parent", jid, true)
 	assert.Error(t, errParent)
 	assert.Contains(t, errParent.Error(), "non è autorizzato")
 
 	// Student role must be forbidden
 	mockUserRepo.On("GetByID", mock.Anything, "student-1").Return(&users.User{ID: "student-1", Role: "student"}, nil).Once()
-	errStudent := svc.ProcessJustification(context.Background(), "student-1", jid, true)
+	errStudent := svc.ProcessJustification(context.Background(), "student-1", "student", jid, true)
 	assert.Error(t, errStudent)
 	assert.Contains(t, errStudent.Error(), "non è autorizzato")
 }
@@ -354,7 +354,7 @@ func TestAttendance_ProcessJustification_AdminBypassesClassAssignment(t *testing
 	mockUserRepo.On("GetByID", mock.Anything, "admin-1").Return(&users.User{ID: "admin-1", Role: "admin", SchoolID: &schoolID}, nil)
 	mockRepo.On("ProcessJustificationTx", mock.Anything, j, "admin-1", true).Return(nil)
 
-	err := svc.ProcessJustification(context.Background(), "admin-1", jid, true)
+	err := svc.ProcessJustification(context.Background(), "admin-1", "admin", jid, true)
 	assert.NoError(t, err)
 }
 

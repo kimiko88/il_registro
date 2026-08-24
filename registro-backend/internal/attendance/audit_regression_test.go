@@ -37,7 +37,7 @@ func TestDeleteClassAttendanceHour_DifferentSchool_Forbidden(t *testing.T) {
 
 func TestProcessJustification_EmptyTeacherID_Unauthorized(t *testing.T) {
 	svc := &service{}
-	err := svc.ProcessJustification(context.Background(), "", "justification-1", true)
+	err := svc.ProcessJustification(context.Background(), "", "teacher", "justification-1", true)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "unauthorized: teacherID mancante")
 }

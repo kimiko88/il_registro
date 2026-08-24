@@ -36,7 +36,7 @@ type Service interface {
 
 	// Justifications
 	RequestJustification(ctx context.Context, parentID string, req JustificationRequest) error
-	ProcessJustification(ctx context.Context, teacherID, justificationID string, approve bool) error
+	ProcessJustification(ctx context.Context, teacherID, actorRole, justificationID string, approve bool) error
 	GetPendingJustifications(ctx context.Context, actorID, actorRole, classID, schoolID string) ([]JustificationResponse, error)
 	DeleteJustification(ctx context.Context, actorID string, justificationID string) error
 
@@ -197,11 +197,17 @@ func (s *service) MarkBulk(ctx context.Context, teacherID, schoolID string, req 
 	}
 	if !isAssigned {
 		inSchool, sErr := s.repo.IsClassInSchool(ctx, req.ClassID, schoolID)
-		if sErr != nil || !inSchool {
+		if sErr != nil {
+			return fmt.Errorf("errore durante la verifica appartenenza scuola: %w", sErr)
+		}
+		if !inSchool {
 			return fmt.Errorf("forbidden: la classe non appartiene alla scuola dell'utente")
 		}
 		isSub, subErr := s.repo.IsTeacherSubstitute(ctx, teacherID, req.ClassID, date, req.Hour)
-		if subErr != nil || !isSub {
+		if subErr != nil {
+			return fmt.Errorf("errore durante la verifica del docente supplente: %w", subErr)
+		}
+		if !isSub {
 			return fmt.Errorf("forbidden: docente non registrato come supplente per questa classe/ora")
 		}
 	}
@@ -213,9 +219,11 @@ func (s *service) MarkBulk(ctx context.Context, teacherID, schoolID string, req 
 		return fmt.Errorf("numero massimo di presenze registrabili in blocco superato (max 500)")
 	}
 
+	seenStudents := make(map[string]bool)
 	var studentIDs []string
 	for _, r := range req.Statuses {
-		if r.StudentID != "" {
+		if r.StudentID != "" && !seenStudents[r.StudentID] {
+			seenStudents[r.StudentID] = true
 			studentIDs = append(studentIDs, r.StudentID)
 		}
 	}
@@ -294,23 +302,29 @@ func (s *service) MarkBulk(ctx context.Context, teacherID, schoolID string, req 
 }
 
 func (s *service) UpdateAttendance(ctx context.Context, teacherID, schoolID, id string, req UpdateAttendanceRequest) error {
+	if id == "" {
+		return fmt.Errorf("id mancante")
+	}
+	if schoolID == "" {
+		return fmt.Errorf("forbidden: school_id mancante")
+	}
+	if teacherID == "" {
+		return fmt.Errorf("forbidden: teacherID mancante")
+	}
+
 	att, err := s.repo.FindByID(id)
 	if err != nil {
 		return err
+	}
+	if att == nil {
+		return fmt.Errorf("record di presenza non trovato")
 	}
 
 	if att.Justified {
 		return fmt.Errorf("impossibile modificare la presenza: il record è già stato giustificato")
 	}
-
-	if schoolID == "" {
-		return fmt.Errorf("forbidden: school_id mancante")
-	}
 	if att.SchoolID != schoolID {
 		return fmt.Errorf("forbidden: impossibile modificare presenze di un'altra scuola")
-	}
-	if teacherID == "" {
-		return fmt.Errorf("forbidden: teacherID mancante")
 	}
 
 	loc, err := time.LoadLocation("Europe/Rome")
@@ -476,6 +490,7 @@ func (s *service) GetStudentAttendance(ctx context.Context, actorID, actorRole, 
 					return nil, fmt.Errorf("forbidden: docente non assegnato alla classe dello studente")
 				}
 			} else {
+				logger.Log.Warnf("SECURITY AUDIT: GetStudentAttendance access rejected — actor %s (role: %s) attempted to read attendance of student %s who has no assigned ClassID", actorID, actorRole, studentID)
 				return nil, fmt.Errorf("forbidden: lo studente non è assegnato ad alcuna classe")
 			}
 		} else {
@@ -549,6 +564,9 @@ func (s *service) RequestJustification(ctx context.Context, parentID string, req
 	if end.Before(start) {
 		return fmt.Errorf("end_date (%s) non può essere precedente a start_date (%s)", req.EndDate, req.StartDate)
 	}
+	if end.Sub(start) > 30*24*time.Hour {
+		return fmt.Errorf("l'intervallo della giustifica non può superare 30 giorni")
+	}
 
 	hasOverlap, err := s.repo.HasOverlappingJustification(ctx, req.StudentID, start, end)
 	if err != nil {
@@ -574,7 +592,7 @@ func (s *service) RequestJustification(ctx context.Context, parentID string, req
 	return s.repo.CreateJustification(j)
 }
 
-func (s *service) ProcessJustification(ctx context.Context, teacherID, justificationID string, approve bool) error {
+func (s *service) ProcessJustification(ctx context.Context, teacherID, actorRole, justificationID string, approve bool) error {
 	if teacherID == "" {
 		return errors.New("unauthorized: teacherID mancante")
 	}
@@ -599,7 +617,10 @@ func (s *service) ProcessJustification(ctx context.Context, teacherID, justifica
 	if err != nil || teacherUser == nil {
 		return fmt.Errorf("unauthorized: teacher not found: %w", err)
 	}
-	role := teacherUser.Role
+	role := actorRole
+	if role == "" {
+		role = teacherUser.Role
+	}
 	if role == "" {
 		role = "teacher"
 	}
@@ -718,7 +739,7 @@ func (s *service) DeleteJustification(ctx context.Context, actorID string, justi
 		isGuardian = g
 	}
 
-	if actorID != j.ParentID && actorID != j.StudentID && !isGuardian {
+	if actorID != j.ParentID && !isGuardian {
 		if s.userRepo == nil {
 			return errors.New("unauthorized: userRepo non configurato per il controllo permessi")
 		}
