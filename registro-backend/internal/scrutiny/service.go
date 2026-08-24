@@ -178,7 +178,7 @@ func (s *Service) GetMatrix(ctx context.Context, actorID, actorRole, classID str
 			proposed := 0.0
 			count := 0
 			if smap, ok := gradeIndex[stu.ID]; ok {
-				if e, ok := smap[sub.SubjectID]; ok {
+				if e, ok := smap[sub.SubjectID]; ok && e.count > 0 {
 					count = e.count
 					avg = e.sum / float64(e.count)
 					proposed = math.Min(10, math.Max(1, math.Round(avg)))

@@ -49,7 +49,20 @@ func ValidateUpload(file multipart.File, header *multipart.FileHeader) error {
 		return ErrFileTooLarge
 	}
 
-	// 2. Read the first 512 bytes using LimitReader to ensure actual payload doesn't bypass limit
+	// 2. Size check from Seeker (verifies real stream size even if header is missing or spoofed)
+	if seeker, ok := file.(io.Seeker); ok {
+		size, err := seeker.Seek(0, io.SeekEnd)
+		if err == nil {
+			if _, err := seeker.Seek(0, io.SeekStart); err != nil {
+				return errors.New("errore nel riposizionamento del file")
+			}
+			if size > MaxUploadSize {
+				return ErrFileTooLarge
+			}
+		}
+	}
+
+	// 3. Read the first 512 bytes using LimitReader to ensure actual payload doesn't bypass limit
 	limitedReader := io.LimitReader(file, MaxUploadSize+1)
 	head := make([]byte, 512)
 	n, err := limitedReader.Read(head)
