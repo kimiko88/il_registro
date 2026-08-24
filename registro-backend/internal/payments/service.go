@@ -68,10 +68,11 @@ func (s *Service) List(ctx context.Context, actorID, actorRole, schoolID, target
 	}
 
 	for _, p := range list {
-		if p.Status == "pending" {
+		switch p.Status {
+		case "pending":
 			summary.PendingTotal += p.Amount
 			summary.PendingCount++
-		} else if p.Status == "paid" {
+		case "paid":
 			summary.PaidCount++
 		}
 	}
