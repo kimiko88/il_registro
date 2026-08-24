@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"math"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 type Repository interface {
@@ -575,10 +577,16 @@ func (r *repository) GetHistory(gradeID string) ([]GradeHistory, error) {
 // class_subjects does not carry a semester column; the caller filters by semester
 // at the grade level.
 func (r *repository) FindEnrolledSubjects(studentID string, semester int) ([]string, error) {
+	if _, err := uuid.Parse(studentID); err != nil {
+		return []string{}, nil
+	}
 	query := `
 		SELECT DISTINCT cs.subject_id::text
 		FROM class_subjects cs
-		JOIN students st ON st.class_id = cs.class_id
+		JOIN students st ON (
+			st.class_id = cs.class_id 
+			OR EXISTS (SELECT 1 FROM class_students cls WHERE (cls.student_id = st.id OR cls.student_id = st.user_id) AND cls.class_id = cs.class_id)
+		)
 		WHERE (st.id = $1::uuid OR st.user_id = $1::uuid)`
 
 	rows, err := r.db.Query(query, studentID)
@@ -853,7 +861,7 @@ func (r *repository) GetStudentClassAndSchoolInfo(ctx context.Context, studentID
 		 LEFT JOIN students s ON (s.user_id = u.id OR s.id = u.id)
 		 LEFT JOIN class_students cs ON (cs.student_id = u.id OR (s.id IS NOT NULL AND (cs.student_id = s.id OR cs.student_id = s.user_id)))
 		 LEFT JOIN classes c ON (c.id = cs.class_id OR (s.class_id IS NOT NULL AND c.id = s.class_id))
-		 WHERE (u.id = $1 OR (s.id IS NOT NULL AND (s.id = $1 OR s.user_id = $1)))
+		 WHERE (u.id::text = $1 OR (s.id IS NOT NULL AND (s.id::text = $1 OR s.user_id::text = $1)))
 		 ORDER BY cs.created_at DESC NULLS LAST, c.id DESC NULLS LAST
 		 LIMIT 1`, studentID,
 	).Scan(&studentName, &className, &classID, &schoolID)

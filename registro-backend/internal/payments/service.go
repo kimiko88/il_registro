@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	ErrUnauthorized = errors.New("unauthorized")
+	ErrUnauthorized    = errors.New("unauthorized")
 	ErrPaymentNotFound = errors.New("pagamento non trovato")
 )
 

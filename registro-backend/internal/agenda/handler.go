@@ -2,10 +2,12 @@ package agenda
 
 import (
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 func parseFlexibleDate(s string) time.Time {
@@ -38,6 +40,7 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	{
 		ag.POST("", h.Create)
 		ag.GET("", h.GetCalendar)
+		ag.GET("/events", h.GetCalendar)
 		ag.GET("/class/:classID", h.GetClassEvents)
 		ag.GET("/:id", h.GetByID)
 		ag.PUT("/:id", h.Update)
@@ -113,8 +116,14 @@ func (h *Handler) GetCalendar(c *gin.Context) {
 		}
 	}
 
+	studentID := c.Query("student_id")
+	if studentID == "" {
+		studentID = c.Query("studentID")
+	}
+
 	filter := CalendarFilter{
 		ClassID:   classID,
+		StudentID: studentID,
 		SubjectID: subjectID,
 		Type:      agendaType,
 		From:      fromTime,
@@ -127,6 +136,13 @@ func (h *Handler) GetCalendar(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	if limitStr := c.Query("limit"); limitStr != "" {
+		if limit, err := strconv.Atoi(limitStr); err == nil && limit > 0 && len(items) > limit {
+			items = items[:limit]
+		}
+	}
+
 	c.JSON(http.StatusOK, items)
 }
 
@@ -137,9 +153,14 @@ func (h *Handler) GetByID(c *gin.Context) {
 		return
 	}
 
+	id := c.Param("id")
+	if _, err := uuid.Parse(id); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "agenda item not found"})
+		return
+	}
+
 	role := c.GetString("role")
 	schoolID := c.GetString("school_id")
-	id := c.Param("id")
 	item, err := h.service.GetAgendaItem(c.Request.Context(), role, schoolID, id)
 	if err != nil {
 		if err == ErrUnauthorized {
