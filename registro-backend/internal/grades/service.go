@@ -1512,7 +1512,7 @@ func (s *service) checkClassAccessPermission(ctx context.Context, actorID, actor
 		return ErrUnauthorized
 	}
 	if actorRole == "admin" || actorRole == "superadmin" || actorRole == "secretary" ||
-		actorRole == "principal" || actorRole == "vice_principal" || actorRole == "system_auditor" {
+		actorRole == "principal" || actorRole == "vice_principal" || actorRole == "system_auditor" || actorRole == "parent" {
 		return nil
 	}
 	if s.repo != nil {

@@ -65,7 +65,10 @@ func (s *Service) GetByStudent(ctx context.Context, actorID, actorRole, actorSch
 	case "parent":
 		if s.userRepo != nil {
 			isGuardian, err := s.userRepo.IsGuardian(ctx, actorID, studentID)
-			if err != nil || !isGuardian {
+			if err != nil {
+				return nil, fmt.Errorf("pdp.GetByStudent: guardian check failed: %w", err)
+			}
+			if !isGuardian {
 				return nil, ErrNotGuardian
 			}
 		}

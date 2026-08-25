@@ -199,8 +199,8 @@ func (r *repository) FindByStudent(studentID string, startDate, endDate time.Tim
 		FROM attendance 
 		WHERE (
 			student_id = $1::uuid OR
-			student_id = (SELECT user_id FROM students WHERE id = $1::uuid) OR
-			student_id = (SELECT id FROM students WHERE user_id = $1::uuid)
+			student_id IN (SELECT user_id FROM students WHERE id = $1::uuid) OR
+			student_id IN (SELECT id FROM students WHERE user_id = $1::uuid)
 		) AND date BETWEEN $2 AND $3
 		ORDER BY date DESC`
 
@@ -230,12 +230,16 @@ func (r *repository) GetStats(studentID string) (*SummaryResponse, error) {
 	}
 	query := `
 		SELECT 
-			COUNT(DISTINCT date) FILTER (WHERE status = 'Absent' OR status = 'absent') as absences,
-			COUNT(*) FILTER (WHERE status = 'Late' OR status = 'late') as lates,
-			COUNT(*) FILTER (WHERE status = 'LeftEarly' OR status = 'left_early') as early_exits,
-			COUNT(*) FILTER (WHERE justified = true OR parent_justified = true) as justified
+			COUNT(DISTINCT date) FILTER (WHERE status::text IN ('Absent', 'absent')) as absences,
+			COUNT(*) FILTER (WHERE status::text IN ('Late', 'late')) as lates,
+			COUNT(*) FILTER (WHERE status::text IN ('LeftEarly', 'left_early')) as early_exits,
+			COUNT(*) FILTER (WHERE COALESCE(justified, false) = true OR COALESCE(parent_justified, false) = true) as justified
 		FROM attendance
-		WHERE student_id = $1::uuid AND deleted_at IS NULL`
+		WHERE (
+			student_id = $1::uuid OR
+			student_id IN (SELECT user_id FROM students WHERE id = $1::uuid) OR
+			student_id IN (SELECT id FROM students WHERE user_id = $1::uuid)
+		) AND deleted_at IS NULL`
 
 	var s SummaryResponse
 	err := r.db.QueryRow(query, studentID).Scan(&s.TotalAbsences, &s.TotalLates, &s.TotalEarlyExits, &s.JustifiedCount)
@@ -253,12 +257,16 @@ func (r *repository) GetStatsBatch(ctx context.Context, studentIDs []string) (ma
 	query := `
 		SELECT 
 			student_id::text,
-			COUNT(DISTINCT date) FILTER (WHERE status = 'Absent' OR status = 'absent') as absences,
-			COUNT(*) FILTER (WHERE status = 'Late' OR status = 'late') as lates,
-			COUNT(*) FILTER (WHERE status = 'LeftEarly' OR status = 'left_early') as early_exits,
-			COUNT(*) FILTER (WHERE justified = true OR parent_justified = true) as justified
+			COUNT(DISTINCT date) FILTER (WHERE status::text IN ('Absent', 'absent')) as absences,
+			COUNT(*) FILTER (WHERE status::text IN ('Late', 'late')) as lates,
+			COUNT(*) FILTER (WHERE status::text IN ('LeftEarly', 'left_early')) as early_exits,
+			COUNT(*) FILTER (WHERE COALESCE(justified, false) = true OR COALESCE(parent_justified, false) = true) as justified
 		FROM attendance
-		WHERE student_id = ANY($1::uuid[]) AND deleted_at IS NULL
+		WHERE (
+			student_id = ANY($1::uuid[]) OR
+			student_id IN (SELECT user_id FROM students WHERE id = ANY($1::uuid[])) OR
+			student_id IN (SELECT id FROM students WHERE user_id = ANY($1::uuid[]))
+		) AND deleted_at IS NULL
 		GROUP BY student_id`
 
 	rows, err := r.db.QueryContext(ctx, query, studentIDs)
@@ -578,8 +586,8 @@ func (r *repository) FindUnjustifiedByStudent(studentID string) ([]Attendance, e
 		FROM attendance
 		WHERE (
 			student_id = $1::uuid OR
-			student_id = (SELECT user_id FROM students WHERE id = $1::uuid) OR
-			student_id = (SELECT id FROM students WHERE user_id = $1::uuid)
+			student_id IN (SELECT user_id FROM students WHERE id = $1::uuid) OR
+			student_id IN (SELECT id FROM students WHERE user_id = $1::uuid)
 		) AND status IN ('Absent', 'Late', 'LeftEarly')
 		  AND COALESCE(justified, false) = false AND COALESCE(parent_justified, false) = false
 		ORDER BY date DESC
@@ -615,8 +623,8 @@ func (r *repository) JustifyAbsenceByParent(attendanceID string, studentID strin
 		WHERE id = $3::uuid 
 		  AND (
 			student_id = $4::uuid OR
-			student_id = (SELECT user_id FROM students WHERE id = $4::uuid) OR
-			student_id = (SELECT id FROM students WHERE user_id = $4::uuid)
+			student_id IN (SELECT user_id FROM students WHERE id = $4::uuid) OR
+			student_id IN (SELECT id FROM students WHERE user_id = $4::uuid)
 		  )
 		  AND COALESCE(parent_justified, false) = false
 	`
@@ -647,8 +655,8 @@ func (r *repository) GetStudentAttendanceStats(studentID string) (*AttendanceSta
 		FROM attendance
 		WHERE (
 			student_id = $1::uuid OR
-			student_id = (SELECT user_id FROM students WHERE id = $1::uuid) OR
-			student_id = (SELECT id FROM students WHERE user_id = $1::uuid)
+			student_id IN (SELECT user_id FROM students WHERE id = $1::uuid) OR
+			student_id IN (SELECT id FROM students WHERE user_id = $1::uuid)
 		)
 	`
 	stats := &AttendanceStats{}
@@ -681,8 +689,8 @@ func (r *repository) GetStudentAttendanceStats(studentID string) (*AttendanceSta
 		FROM attendance
 		WHERE (
 			student_id = $1::uuid OR
-			student_id = (SELECT user_id FROM students WHERE id = $1::uuid) OR
-			student_id = (SELECT id FROM students WHERE user_id = $1::uuid)
+			student_id IN (SELECT user_id FROM students WHERE id = $1::uuid) OR
+			student_id IN (SELECT id FROM students WHERE user_id = $1::uuid)
 		)
 		GROUP BY to_char(date, 'YYYY-MM'), m_name
 		ORDER BY to_char(date, 'YYYY-MM')

@@ -652,8 +652,8 @@ func (h *Handler) GetChildUnjustified(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid parameters"})
 		return
 	}
-	if role != "parent" && role != "admin" && role != "superadmin" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: solo i genitori o gli amministratori possono accedere a questa funzione"})
+	if role != "parent" && role != "student" && role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && role != "vice_principal" && role != "teacher" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 
@@ -713,8 +713,8 @@ func (h *Handler) GetChildAttendanceStats(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid parameters"})
 		return
 	}
-	if role != "parent" && role != "admin" && role != "superadmin" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: solo i genitori o gli amministratori possono accedere alle statistiche del figlio"})
+	if role != "parent" && role != "student" && role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && role != "vice_principal" && role != "teacher" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 

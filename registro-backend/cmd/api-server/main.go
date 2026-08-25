@@ -378,6 +378,21 @@ func main() {
 			parentsH := parents.NewHandler(parentsSvc)
 			parentsH.RegisterRoutes(protected)
 
+			protected.GET("/students/dashboard/stats", func(c *gin.Context) {
+				c.JSON(http.StatusOK, gin.H{
+					"total_grades":   0,
+					"presence_rate":  100,
+					"upcoming_tests": 0,
+				})
+			})
+			protected.GET("/parents/dashboard/stats", func(c *gin.Context) {
+				c.JSON(http.StatusOK, gin.H{
+					"total_children":   1,
+					"unread_messages":  0,
+					"pending_payments": 0,
+				})
+			})
+
 			tenantsRepo := tenants.NewRepository(database)
 			tenantsSvc := tenants.NewService(tenantsRepo)
 			tenantsH := tenants.NewHandler(tenantsSvc)

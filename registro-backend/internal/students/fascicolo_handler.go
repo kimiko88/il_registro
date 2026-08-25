@@ -101,11 +101,11 @@ func (h *FascicoloHandler) GetFascicolo(c *gin.Context) {
 		var isGuardian bool
 		err := h.db.QueryRowContext(c.Request.Context(), `
 			SELECT EXISTS (
-				SELECT 1 FROM parent_students ps
-				WHERE ps.parent_id = $1 AND ps.student_id = $2
-				UNION
-				SELECT 1 FROM parent_student_guardians psg
-				WHERE psg.parent_id::text = $1 AND psg.student_id::text = $2
+				SELECT 1 FROM student_parents sp
+				LEFT JOIN parents p ON sp.parent_id = p.id
+				LEFT JOIN students s ON sp.student_id = s.id
+				WHERE (sp.parent_id::text = $1 OR p.user_id::text = $1 OR p.id::text = $1)
+				  AND (sp.student_id::text = $2 OR s.user_id::text = $2 OR s.id::text = $2)
 			)`, actorID, studentID).Scan(&isGuardian)
 		if err != nil || !isGuardian {
 			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: not authorized for this student"})

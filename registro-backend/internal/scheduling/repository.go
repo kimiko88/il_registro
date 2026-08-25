@@ -385,11 +385,11 @@ func (r *repository) IsGuardian(ctx context.Context, parentUserID, studentID str
 	}
 	query := `
 		SELECT EXISTS (
-			SELECT 1 FROM parent_students ps
-			JOIN parents p ON ps.parent_id = p.id
-			LEFT JOIN students s ON ps.student_id = s.id OR ps.student_id = s.user_id
-			WHERE (p.user_id = $1::uuid OR p.id = $1::uuid)
-			  AND (ps.student_id = $2::uuid OR s.user_id = $2::uuid OR s.id = $2::uuid)
+			SELECT 1 FROM student_parents sp
+			LEFT JOIN parents p ON sp.parent_id = p.id
+			LEFT JOIN students s ON sp.student_id = s.id
+			WHERE (sp.parent_id = $1::uuid OR p.user_id = $1::uuid OR p.id = $1::uuid)
+			  AND (sp.student_id = $2::uuid OR s.user_id = $2::uuid OR s.id = $2::uuid)
 		)`
 	var exists bool
 	err := r.db.QueryRowContext(ctx, query, parentUserID, studentID).Scan(&exists)

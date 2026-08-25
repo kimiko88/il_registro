@@ -81,11 +81,11 @@ func (r *PostgresRepository) ListByStudent(ctx context.Context, schoolID, studen
 		       COALESCE(u.first_name || ' ' || u.last_name, '') AS student_name
 		FROM school_payments sp
 		LEFT JOIN users u ON sp.student_id = u.id
-		WHERE (sp.school_id = $1::uuid OR $1 = '')
+		WHERE (sp.school_id::text = $1 OR $1 = '')
 		  AND (
 			sp.student_id = $2::uuid OR
-			sp.student_id = (SELECT user_id FROM students WHERE id = $2::uuid) OR
-			sp.student_id = (SELECT id FROM students WHERE user_id = $2::uuid)
+			sp.student_id IN (SELECT user_id FROM students WHERE id = $2::uuid) OR
+			sp.student_id IN (SELECT id FROM students WHERE user_id = $2::uuid)
 		  )
 		ORDER BY sp.due_date DESC
 	`
@@ -130,18 +130,12 @@ func (r *PostgresRepository) ListByParent(ctx context.Context, schoolID, parentU
 		       COALESCE(u.first_name || ' ' || u.last_name, '') AS student_name
 		FROM school_payments sp
 		LEFT JOIN users u ON sp.student_id = u.id
-		WHERE (sp.school_id = $1::uuid OR $1 = '')
+		WHERE (sp.school_id::text = $1 OR $1 = '')
 		  AND (
 			sp.student_id IN (
 				SELECT s.user_id FROM student_parents rel JOIN parents p ON rel.parent_id = p.id JOIN students s ON rel.student_id = s.id WHERE p.user_id = $2::uuid OR p.id = $2::uuid
 				UNION
 				SELECT s.id FROM student_parents rel JOIN parents p ON rel.parent_id = p.id JOIN students s ON rel.student_id = s.id WHERE p.user_id = $2::uuid OR p.id = $2::uuid
-				UNION
-				SELECT s.user_id FROM parent_students ps LEFT JOIN parents p ON ps.parent_id = p.id LEFT JOIN students s ON (ps.student_id = s.id OR ps.student_id = s.user_id) WHERE ps.parent_id = $2::uuid OR p.user_id = $2::uuid OR p.id = $2::uuid
-				UNION
-				SELECT s.id FROM parent_students ps LEFT JOIN parents p ON ps.parent_id = p.id LEFT JOIN students s ON (ps.student_id = s.id OR ps.student_id = s.user_id) WHERE ps.parent_id = $2::uuid OR p.user_id = $2::uuid OR p.id = $2::uuid
-				UNION
-				SELECT psg.student_id FROM parent_student_guardians psg WHERE psg.parent_id::text = $2::text
 			)
 			OR sp.payer_user_id = $2::uuid
 		  )
@@ -188,7 +182,7 @@ func (r *PostgresRepository) ListBySchool(ctx context.Context, schoolID string) 
 		       COALESCE(u.first_name || ' ' || u.last_name, '') AS student_name
 		FROM school_payments sp
 		LEFT JOIN users u ON sp.student_id = u.id
-		WHERE sp.school_id = $1::uuid OR $1 = ''
+		WHERE sp.school_id::text = $1 OR $1 = ''
 		ORDER BY sp.due_date DESC
 	`
 	rows, err := r.db.QueryContext(ctx, query, schoolID)

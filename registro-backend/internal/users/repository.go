@@ -576,30 +576,19 @@ func (r *PostgresRepository) IsGuardian(ctx context.Context, parentUserID string
 	}
 
 	query := `
-		SELECT (
-			EXISTS (
-				SELECT 1
-				FROM student_parents sp
-				LEFT JOIN parents p ON sp.parent_id = p.id
-				LEFT JOIN students s ON sp.student_id = s.id
-				WHERE (sp.parent_id = $1::uuid OR p.user_id = $1::uuid OR p.id = $1::uuid)
-				  AND (sp.student_id = $2::uuid OR s.user_id = $2::uuid OR s.id = $2::uuid)
-			)
-			OR EXISTS (
-				SELECT 1
-				FROM parent_students ps
-				LEFT JOIN parents p ON ps.parent_id = p.id
-				LEFT JOIN students s ON (ps.student_id = s.id OR ps.student_id = s.user_id)
-				WHERE (ps.parent_id = $1::uuid OR p.user_id = $1::uuid OR p.id = $1::uuid)
-				  AND (ps.student_id = $2::uuid OR s.user_id = $2::uuid OR s.id = $2::uuid)
-			)
-			OR EXISTS (
-				SELECT 1
-				FROM parent_student_guardians psg
-				LEFT JOIN students s ON (psg.student_id = s.id OR psg.student_id = s.user_id)
-				WHERE (psg.parent_id::text = $1::text)
-				  AND (psg.student_id::text = $2::text OR s.user_id::text = $2::text OR s.id::text = $2::text)
-			)
+		SELECT EXISTS (
+			SELECT 1
+			FROM student_parents sp
+			LEFT JOIN parents p ON (sp.parent_id = p.id OR sp.parent_id = p.user_id)
+			LEFT JOIN students s ON (sp.student_id = s.id OR sp.student_id = s.user_id)
+			WHERE (sp.parent_id = $1::uuid OR p.user_id = $1::uuid OR p.id = $1::uuid)
+			  AND (
+				sp.student_id = $2::uuid OR 
+				s.user_id = $2::uuid OR 
+				s.id = $2::uuid OR 
+				sp.student_id IN (SELECT id FROM students WHERE user_id = $2::uuid OR id = $2::uuid) OR 
+				sp.student_id IN (SELECT user_id FROM students WHERE id = $2::uuid OR user_id = $2::uuid)
+			  )
 		)`
 
 	var exists bool

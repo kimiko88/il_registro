@@ -47,19 +47,6 @@ func (r *PostgresRepository) GetParentStudentClassID(ctx context.Context, userID
 		LEFT JOIN students s ON sp.student_id = s.id
 		WHERE (sp.parent_id = $1::uuid OR p.user_id = $1::uuid OR p.id = $1::uuid)
 		  AND s.class_id IS NOT NULL
-		UNION
-		SELECT s.class_id
-		FROM parent_students ps
-		LEFT JOIN parents p ON ps.parent_id = p.id
-		LEFT JOIN students s ON (ps.student_id = s.id OR ps.student_id = s.user_id)
-		WHERE (ps.parent_id = $1::uuid OR p.user_id = $1::uuid OR p.id = $1::uuid)
-		  AND s.class_id IS NOT NULL
-		UNION
-		SELECT s.class_id
-		FROM parent_student_guardians psg
-		LEFT JOIN students s ON (psg.student_id = s.id OR psg.student_id = s.user_id)
-		WHERE (psg.parent_id::text = $1::text)
-		  AND s.class_id IS NOT NULL
 		LIMIT 1
 	`
 	var classID string

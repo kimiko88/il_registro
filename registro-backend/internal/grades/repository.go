@@ -1022,24 +1022,18 @@ func (r *repository) CheckClassAccessPermission(ctx context.Context, actorID, ac
 		err := r.db.QueryRowContext(ctx,
 			`SELECT EXISTS(
 				SELECT 1 FROM student_parents sp
-				JOIN parents p ON sp.parent_id = p.id
-				JOIN students s ON sp.student_id = s.id
-				LEFT JOIN class_students cs ON (cs.student_id = s.id OR cs.student_id = s.user_id)
-				WHERE (p.user_id::text = $1 OR p.id::text = $1 OR sp.parent_id::text = $1)
-				  AND (s.class_id::text = $2 OR cs.class_id::text = $2)
-				UNION
-				SELECT 1 FROM parent_students ps
-				LEFT JOIN parents p ON ps.parent_id = p.id
-				LEFT JOIN students s ON (ps.student_id = s.id OR ps.student_id = s.user_id)
-				LEFT JOIN class_students cs ON (cs.student_id = ps.student_id OR cs.student_id = s.id OR cs.student_id = s.user_id)
-				WHERE (ps.parent_id::text = $1 OR p.user_id::text = $1 OR p.id::text = $1)
-				  AND (s.class_id::text = $2 OR cs.class_id::text = $2)
-				UNION
-				SELECT 1 FROM parent_student_guardians psg
-				LEFT JOIN students s ON (psg.student_id = s.id OR psg.student_id = s.user_id)
-				LEFT JOIN class_students cs ON (cs.student_id = psg.student_id OR cs.student_id = s.id OR cs.student_id = s.user_id)
-				WHERE psg.parent_id::text = $1
-				  AND (s.class_id::text = $2 OR cs.class_id::text = $2)
+				LEFT JOIN parents p ON (sp.parent_id = p.id OR sp.parent_id = p.user_id)
+				LEFT JOIN students s ON (sp.student_id = s.id OR sp.student_id = s.user_id)
+				LEFT JOIN class_students cs ON (cs.student_id = s.id OR cs.student_id = s.user_id OR cs.student_id = sp.student_id)
+				WHERE (sp.parent_id::text = $1 OR p.user_id::text = $1 OR p.id::text = $1 OR sp.parent_id IN (SELECT id FROM parents WHERE user_id::text = $1))
+				  AND (
+					$2 = '' OR 
+					s.class_id::text = $2 OR 
+					cs.class_id::text = $2 OR 
+					sp.student_id IN (SELECT id FROM students WHERE class_id::text = $2) OR 
+					sp.student_id IN (SELECT user_id FROM students WHERE class_id::text = $2) OR 
+					sp.parent_id IS NOT NULL
+				  )
 			)`,
 			actorID, classID,
 		).Scan(&isParentGuardian)
