@@ -1,6 +1,6 @@
 import api from './api';
 
-export default {
+export const documentService = {
     getInbox(params) {
         return api.get('/documents/inbox', { params });
     },
@@ -15,5 +15,20 @@ export default {
     },
     getDocumentVersions(id) {
         return api.get(`/documents/${id}/versions`);
+    },
+    downloadDocument(id) {
+        return api.get(`/documents/${id}/download`, {
+            responseType: 'blob',
+            timeout: 60000
+        });
+    },
+    uploadDocument(formData) {
+        return api.post('/documents/upload', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+            timeout: 60000
+        });
     }
 };
+
+export default documentService;
+

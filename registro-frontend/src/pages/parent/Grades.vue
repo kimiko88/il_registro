@@ -134,15 +134,17 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useParentStore } from '@/stores/parent'
 import { useAuthStore } from '@/stores/auth'
 import { storeToRefs } from 'pinia'
 import { useQuasar } from 'quasar'
-import { gradeService } from 'src/services/gradeService'
-import adminService from 'src/services/adminService'
+import { gradeService } from '@/services/gradeService'
+import adminService from '@/services/adminService'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const parentStore = useParentStore()
 const authStore = useAuthStore()
 const { selectedChild } = storeToRefs(parentStore)

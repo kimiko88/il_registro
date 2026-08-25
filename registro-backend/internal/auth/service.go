@@ -14,6 +14,7 @@ import (
 	"registro-backend/pkg/jwt"
 	"registro-backend/pkg/logger"
 
+	"github.com/lib/pq"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -53,29 +54,27 @@ func (s *Service) SetEmailSender(sender EmailSender) {
 	s.emailSender = sender
 }
 
-// Register creates a new user account.
-// Input validation and RBAC checks are performed by the handler layer
-// (ValidateRegisterRequest in validator.go) before this method is called.
+func normalizeEmail(email string) string {
+	return strings.ToLower(strings.TrimSpace(email))
+}
+
 func (s *Service) Register(ctx context.Context, req *RegisterRequest) (*User, error) {
-	if req.Role == RoleSuperAdmin {
-		return nil, fmt.Errorf("forbidden: cannot register superadmin role")
-	}
-	if err := NewPasswordValidator().Validate(req.Password); err != nil {
-		return nil, err
-	}
-
-	normalizedEmail := strings.ToLower(strings.TrimSpace(req.Email))
-
-	// Check if email already exists
-	_, err := s.repo.GetUserByEmail(ctx, normalizedEmail)
-	if err == nil {
-		return nil, ErrEmailAlreadyExists
-	}
+	normalizedEmail := normalizeEmail(req.Email)
 
 	// Hash password
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(req.Password), s.bcryptCost)
 	if err != nil {
 		return nil, err
+	}
+
+	if req.SchoolID != "" && s.repo != nil {
+		exists, err := s.repo.SchoolExists(ctx, req.SchoolID)
+		if err != nil {
+			return nil, fmt.Errorf("school check failed: %w", err)
+		}
+		if !exists {
+			return nil, fmt.Errorf("invalid school ID")
+		}
 	}
 
 	// Create user
@@ -91,17 +90,28 @@ func (s *Service) Register(ctx context.Context, req *RegisterRequest) (*User, er
 	}
 
 	if err := s.repo.CreateUser(ctx, user); err != nil {
+		var pqErr *pq.Error
+		if errors.As(err, &pqErr) && pqErr.Code == "23505" {
+			return nil, ErrEmailAlreadyExists
+		}
+		if strings.Contains(err.Error(), "23505") || strings.Contains(err.Error(), "unique constraint") || strings.Contains(err.Error(), "already exists") || strings.Contains(err.Error(), "duplicate key") {
+			return nil, ErrEmailAlreadyExists
+		}
 		return nil, err
 	}
 
 	// Seed password history so ResetPassword can detect immediate re-use.
-	_ = s.repo.AddPasswordHistory(ctx, user.ID, string(passwordHash))
+	if err := s.repo.AddPasswordHistory(ctx, user.ID, string(passwordHash)); err != nil {
+		logger.Log.Warnf("Register: failed to seed initial password history for user %s: %v", user.ID, err)
+	}
 
 	return user, nil
 }
 
 // Login authenticates a user and returns tokens
 func (s *Service) Login(ctx context.Context, req *LoginRequest, ipAddress, userAgent string) (*AuthResponse, error) {
+	req.Email = normalizeEmail(req.Email)
+
 	// --- Rate limiting ---
 	// 1. Per (email, IP): max 5 attempts in 15 minutes — blocks single-IP bursts.
 	// 2. Per email only: max 20 attempts in 1 hour — blocks distributed IP-rotation attacks.
@@ -144,15 +154,9 @@ func (s *Service) Login(ctx context.Context, req *LoginRequest, ipAddress, userA
 		return nil, ErrUserInactive
 	}
 
-	// Check if password has expired (90 days for privileged roles: superadmin, admin, secretary, teacher)
-	if user.Role == RoleSuperAdmin || user.Role == RoleAdmin || user.Role == RoleSecretary || user.Role == RoleTeacher {
-		if user.PasswordChangedAt != nil {
-			if time.Since(*user.PasswordChangedAt) > 90*24*time.Hour {
-				return nil, ErrPasswordExpired
-			}
-		} else if !user.CreatedAt.IsZero() && time.Since(user.CreatedAt) > 90*24*time.Hour {
-			return nil, ErrPasswordExpired
-		}
+	// Check if password has expired (90 days for privileged roles)
+	if expired, err := isPasswordExpiredReason(user); expired {
+		return nil, err
 	}
 
 	// Check MFA — decrypt stored secret before verifying the TOTP code.
@@ -169,6 +173,7 @@ func (s *Service) Login(ctx context.Context, req *LoginRequest, ipAddress, userA
 			return nil, err
 		}
 		if !s.mfaService.VerifyTOTPUser(user.ID, secret, req.MFAToken) {
+			s.recordFailedAttempt(ctx, req.Email, ipAddress)
 			return nil, ErrInvalidMFAToken
 		}
 	}
@@ -192,6 +197,18 @@ func (s *Service) Login(ctx context.Context, req *LoginRequest, ipAddress, userA
 		return nil, err
 	}
 
+	// Sanitize UserAgent: strip control characters, null bytes, carriage returns, and newlines
+	userAgent = strings.Map(func(r rune) rune {
+		if r < 32 || r == 127 {
+			return -1
+		}
+		return r
+	}, userAgent)
+
+	if len(userAgent) > 512 {
+		userAgent = userAgent[:512]
+	}
+
 	// Store refresh token
 	rt := &RefreshToken{
 		UserID:    user.ID,
@@ -205,7 +222,9 @@ func (s *Service) Login(ctx context.Context, req *LoginRequest, ipAddress, userA
 	}
 
 	// Update last login
-	_ = s.repo.UpdateLastLogin(ctx, user.ID)
+	if err := s.repo.UpdateLastLogin(ctx, user.ID); err != nil {
+		logger.Log.Warnf("Login: failed to update last login for user %s: %v", user.ID, err)
+	}
 
 	// Record successful attempt
 	s.recordSuccessfulAttempt(ctx, req.Email, ipAddress)
@@ -267,16 +286,9 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken, ipAddress, use
 		return nil, ErrUserInactive
 	}
 
-	if user.Role == RoleSuperAdmin || user.Role == RoleAdmin || user.Role == RoleSecretary || user.Role == RoleTeacher {
-		if user.PasswordChangedAt != nil {
-			if time.Since(*user.PasswordChangedAt) > 90*24*time.Hour {
-				_ = s.repo.RevokeRefreshToken(ctx, rt.ID)
-				return nil, ErrPasswordExpired
-			}
-		} else if !user.CreatedAt.IsZero() && time.Since(user.CreatedAt) > 90*24*time.Hour {
-			_ = s.repo.RevokeRefreshToken(ctx, rt.ID)
-			return nil, ErrPasswordExpired
-		}
+	if isPasswordExpired(user) {
+		_ = s.repo.RevokeRefreshToken(ctx, rt.ID)
+		return nil, ErrPasswordExpired
 	}
 
 	// Generate new access token
@@ -308,8 +320,18 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken, ipAddress, use
 	if newUserAgent == "" {
 		newUserAgent = rt.UserAgent
 	}
+	// Sanitize UserAgent: strip control characters, null bytes, carriage returns, and newlines
+	newUserAgent = strings.Map(func(r rune) rune {
+		if r < 32 || r == 127 {
+			return -1
+		}
+		return r
+	}, newUserAgent)
+	if len(newUserAgent) > 512 {
+		newUserAgent = newUserAgent[:512]
+	}
 
-	// Store the new refresh token in DB
+	// Store the new refresh token in DB and revoke old token in single transaction
 	newRt := &RefreshToken{
 		UserID:    user.ID,
 		Token:     newRefreshToken,
@@ -317,13 +339,8 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken, ipAddress, use
 		IPAddress: newIp,
 		UserAgent: newUserAgent,
 	}
-	if err := s.repo.CreateRefreshToken(ctx, newRt); err != nil {
-		return nil, err
-	}
-
-	// Revoke the old refresh token after new token is safely stored
-	if err := s.repo.RevokeRefreshToken(ctx, rt.ID); err != nil {
-		logger.Log.Warnf("Failed to revoke old refresh token %s: %v", rt.ID, err)
+	if err := s.repo.RotateRefreshTokenTx(ctx, rt.ID, newRt); err != nil {
+		return nil, fmt.Errorf("failed to rotate refresh token: %w", err)
 	}
 
 	return &TokenPair{
@@ -339,8 +356,6 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken, ipAddress, use
 func (s *Service) Logout(ctx context.Context, refreshToken string, callerUserID string) error {
 	rt, err := s.repo.GetRefreshToken(ctx, refreshToken)
 	if err != nil {
-		// Silent exit if token is invalid or not found to avoid user enumeration,
-		// but return any real database connection or context error.
 		if errors.Is(err, ErrInvalidToken) || errors.Is(err, sql.ErrNoRows) {
 			return nil
 		}
@@ -419,21 +434,21 @@ func (s *Service) VerifyMFA(ctx context.Context, userID, token string) ([]string
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate recovery codes: %w", err)
 	}
-	var validHashed []string
-	for _, code := range plainRecoveryCodes {
-		h, err := bcrypt.GenerateFromPassword([]byte(code), s.bcryptCost)
+	validHashed := make([]string, len(plainRecoveryCodes))
+	recoveryCost := bcrypt.DefaultCost // Cost 10 avoids CPU starvation from concurrent spikes
+	if s.bcryptCost > 0 && s.bcryptCost < recoveryCost {
+		recoveryCost = s.bcryptCost
+	}
+	for i, code := range plainRecoveryCodes {
+		h, err := bcrypt.GenerateFromPassword([]byte(code), recoveryCost)
 		if err != nil {
 			return nil, fmt.Errorf("failed to hash recovery code: %w", err)
 		}
-		validHashed = append(validHashed, string(h))
+		validHashed[i] = string(h)
 	}
-	if err := s.repo.CreateRecoveryCodes(ctx, userID, validHashed); err != nil {
-		return nil, fmt.Errorf("failed to save recovery codes: %w", err)
-	}
-
-	// Token is correct, enable MFA officially
-	if err := s.repo.ConfirmMFA(ctx, userID); err != nil {
-		return nil, err
+	// Token is correct, enable MFA and store recovery codes atomically in a single transaction
+	if err := s.repo.ConfirmMFAAndSaveRecoveryCodesTx(ctx, userID, validHashed); err != nil {
+		return nil, fmt.Errorf("failed to confirm MFA and save recovery codes: %w", err)
 	}
 	return plainRecoveryCodes, nil
 }
@@ -442,9 +457,14 @@ func (s *Service) VerifyMFA(ctx context.Context, userID, token string) ([]string
 // To prevent email flooding attacks, at most 3 reset requests are allowed
 // per email address in a 15-minute window.
 func (s *Service) RequestPasswordReset(ctx context.Context, email string) error {
+	email = normalizeEmail(email)
 	user, err := s.repo.GetUserByEmail(ctx, email)
 	if err != nil {
-		// Don't reveal whether the email exists — always return success.
+		// Constant-time mitigation against email enumeration timing attacks:
+		// Perform equivalent dummy cryptographic work before returning.
+		dummyBytes := make([]byte, 32)
+		_, _ = rand.Read(dummyBytes)
+		_ = hashToken(hex.EncodeToString(dummyBytes))
 		return nil
 	}
 
@@ -481,6 +501,8 @@ func (s *Service) RequestPasswordReset(ctx context.Context, email string) error 
 	logger.Log.Infof("PASSWORD RESET REQUEST for user %s", user.ID)
 
 	if s.emailSender != nil {
+		// SECURITY: SendPasswordReset receives the unhashed single-use token to generate the reset URL.
+		// Implementation of EmailSender MUST NOT log the raw token parameter under any log level.
 		if err := s.emailSender.SendPasswordReset(ctx, user.Email, token); err != nil {
 			logger.Log.Errorf("failed to send password reset email to %s: %v", user.Email, err)
 		}
@@ -497,20 +519,10 @@ func (s *Service) ResetPassword(ctx context.Context, token, newPassword string) 
 		return err
 	}
 
-	// Get reset token
+	// Get reset token (validated atomically for non-expired, non-used status in DB query)
 	prt, err := s.repo.GetPasswordResetToken(ctx, token)
 	if err != nil {
 		return err
-	}
-
-	// Check if already used
-	if prt.Used {
-		return ErrInvalidToken
-	}
-
-	// Check if expired
-	if time.Now().After(prt.ExpiresAt) {
-		return ErrInvalidToken
 	}
 
 	user, err := s.repo.GetUserByID(ctx, prt.UserID)
@@ -544,9 +556,37 @@ func (s *Service) ResetPassword(ctx context.Context, token, newPassword string) 
 	}
 
 	// Revoke all refresh tokens for security
-	_ = s.repo.RevokeAllUserTokens(ctx, prt.UserID)
+	if err := s.repo.RevokeAllUserTokens(ctx, prt.UserID); err != nil {
+		logger.Log.Warnf("ResetPassword: failed to revoke user tokens for user %s: %v", prt.UserID, err)
+	}
 
 	return nil
+}
+
+// isPasswordExpired checks if a user's password has expired (90 days for staff/privileged roles).
+func isPasswordExpired(user *User) bool {
+	expired, _ := isPasswordExpiredReason(user)
+	return expired
+}
+
+func isPasswordExpiredReason(user *User) (bool, error) {
+	if user == nil {
+		return false, nil
+	}
+	// Whitelist of exempt roles: students and parents are not subject to the 90-day password expiration policy
+	if user.Role == RoleStudent || user.Role == RoleParent {
+		return false, nil
+	}
+
+	// All other staff/privileged roles (admin, superadmin, principal, vice_principal, secretary, coordinator, teacher, etc.)
+	if user.PasswordChangedAt != nil {
+		if time.Since(*user.PasswordChangedAt) > 90*24*time.Hour {
+			return true, ErrPasswordExpired
+		}
+		return false, nil
+	}
+	// Legacy accounts created prior to PasswordChangedAt addition: do not lock out automatically
+	return false, nil
 }
 
 // ChangePassword changes password for an authenticated user
@@ -587,23 +627,31 @@ func (s *Service) ChangePassword(ctx context.Context, userID, currentPassword, n
 		return err
 	}
 
-	if err := s.repo.UpdatePassword(ctx, userID, string(passwordHash)); err != nil {
+	if err := s.repo.ChangePasswordTx(ctx, userID, string(passwordHash)); err != nil {
 		return err
 	}
 
-	_ = s.repo.AddPasswordHistory(ctx, userID, string(passwordHash))
-	_ = s.repo.RevokeAllUserTokens(ctx, userID)
+	if err := s.repo.RevokeAllUserTokens(ctx, userID); err != nil {
+		logger.Log.Warnf("ChangePassword: failed to revoke user tokens for user %s: %v", userID, err)
+	}
 	return nil
 }
 
+func (s *Service) RecordFailedAttempt(ctx context.Context, email, ipAddress string) {
+	s.recordFailedAttempt(ctx, normalizeEmail(email), ipAddress)
+}
+
 func (s *Service) recordFailedAttempt(ctx context.Context, email, ipAddress string) {
+	email = normalizeEmail(email)
 	attempt := &LoginAttempt{
 		Email:       email,
 		IPAddress:   ipAddress,
 		Success:     false,
 		AttemptedAt: time.Now(),
 	}
-	_ = s.repo.RecordLoginAttempt(ctx, attempt)
+	if err := s.repo.RecordLoginAttempt(ctx, attempt); err != nil {
+		logger.Log.Warnf("recordFailedAttempt: failed to record login attempt for %s (%s): %v", email, ipAddress, err)
+	}
 }
 
 func (s *Service) recordSuccessfulAttempt(ctx context.Context, email, ipAddress string) {

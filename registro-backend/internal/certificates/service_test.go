@@ -151,6 +151,18 @@ func TestDeleteCertificate_Authorization(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
+func TestGenerateCertificate_InvalidType(t *testing.T) {
+	repo := new(MockRepository)
+	svc := NewService(repo, nil)
+
+	_, _, err := svc.GenerateCertificate(context.Background(), "admin-1", "school-1", GenerateCertificateRequest{
+		StudentID: "student-1",
+		Type:      CertificateType("invalid_type_xyz"),
+	})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid certificate type")
+}
+
 func TestGetAndListCertificates(t *testing.T) {
 	repo := new(MockRepository)
 	svc := NewService(repo, nil)

@@ -37,10 +37,12 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { userService } from '@/services/userService'
 
 const route = useRoute()
+const { t } = useI18n()
 const loading = ref(true)
 const fascicolo = ref(null)
 

@@ -25,6 +25,7 @@ type Participation struct {
 	Status       string    `json:"status" db:"status"` // Registered, Attended
 	Attended     bool      `json:"attended" db:"attended"`
 	RegisteredAt time.Time `json:"registered_at" db:"registered_at"`
+	Event        *Event    `json:"event,omitempty"`
 }
 
 // DTOs

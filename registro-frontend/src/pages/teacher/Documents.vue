@@ -1,14 +1,14 @@
 <template>
   <q-page class="q-pa-md">
     <div class="row items-center justify-between q-mb-md">
-       <div class="text-h4">Documenti Didattici</div>
-       <q-btn color="primary" icon="note_add" label="Nuovo Documento" @click="showCreateDialog = true" />
+       <div class="text-h4">{{ t('documentsPage.title') }}</div>
+       <q-btn color="primary" icon="note_add" :label="t('documentsPage.uploadDoc')" @click="showCreateDialog = true" />
     </div>
 
     <!-- Filters -->
     <div class="row q-gutter-md q-mb-md">
-        <q-select dense outlined v-model="filter.class" :options="classes" label="Classe" style="min-width: 120px" bg-color="white" />
-        <q-select dense outlined v-model="filter.type" :options="['Tutti', 'PDP', 'PFI', 'PCTO', 'Programmazione']" label="Tipo" style="min-width: 150px" bg-color="white" />
+        <q-select dense outlined v-model="filter.class" :options="classes" :label="t('nav.classes')" style="min-width: 120px" bg-color="white" />
+        <q-select dense outlined v-model="filter.type" :options="['Tutti', 'PDP', 'PFI', 'PCTO', 'Programmazione']" :label="t('documentsPage.docType')" style="min-width: 150px" bg-color="white" />
     </div>
 
     <!-- Documents Grid -->
@@ -138,10 +138,12 @@
 
 <script setup>
 import { ref, reactive } from 'vue'
-import { useDocumentsStore } from 'src/stores/documents'
 import { useQuasar } from 'quasar'
+import { useI18n } from 'vue-i18n'
+import { useDocumentsStore } from '@/stores/documents'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const docsStore = useDocumentsStore()
 const showCreateDialog = ref(false)
 const filter = reactive({ class: '5A', type: 'Tutti' })

@@ -86,6 +86,7 @@ func TestHandler_GetLessonTopics(t *testing.T) {
 			c, _ := gin.CreateTestContext(w)
 			if tt.userID != "" {
 				c.Set("user_id", tt.userID)
+				c.Set("role", "teacher")
 			}
 			c.Params = gin.Params{{Key: "id", Value: "class-1"}}
 			c.Request = httptest.NewRequest("GET", "/classes/class-1/lesson-topics", nil)
@@ -156,6 +157,7 @@ func TestHandler_GetDisciplinaryNotes(t *testing.T) {
 			c, _ := gin.CreateTestContext(w)
 			if tt.userID != "" {
 				c.Set("user_id", tt.userID)
+				c.Set("role", "teacher")
 			}
 			c.Params = gin.Params{{Key: "id", Value: "class-1"}}
 			c.Request = httptest.NewRequest("GET", "/classes/class-1/disciplinary-notes", nil)
@@ -169,4 +171,27 @@ func TestHandler_GetDisciplinaryNotes(t *testing.T) {
 			mockRepo.AssertExpectations(t)
 		})
 	}
+}
+
+func TestHandler_List_SuperadminAllowedWithoutSchoolID(t *testing.T) {
+	handler, mockRepo := setupClassesHandlerTest()
+	mockRepo.On("List", mock.Anything, "", "").Return([]Class{
+		{ID: "class-1", Name: "1A", SchoolID: "school-1"},
+	}, nil)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Set("user_id", "superadmin-user-id")
+	c.Set("role", "superadmin")
+	c.Request = httptest.NewRequest("GET", "/classes", nil)
+
+	handler.List(c)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	var res []Class
+	err := json.Unmarshal(w.Body.Bytes(), &res)
+	assert.NoError(t, err)
+	assert.Len(t, res, 1)
+	assert.Equal(t, "1A", res[0].Name)
+	mockRepo.AssertExpectations(t)
 }

@@ -2,11 +2,71 @@ openapi: 3.0.3
 info:
   title: Registro Elettronico V2 API
   description: API REST per la gestione scolastica (Auth, Utenti, Voti, Presenze, Comunicazioni, Documenti, Colloqui, Agenda).
-  version: 0.3.0
+  version: 0.7.0
 servers:
   - url: http://localhost:8080/api/v1
     description: Local Development Server
 paths:
+  /classes:
+    get:
+      summary: Lista classi scolastiche (supporta SuperAdmin globale e filtri multi-scuola)
+      tags:
+        - Classi
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: academic_year
+          in: query
+          schema:
+            type: string
+        - name: school_id
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista classi
+        '401':
+          description: Non autorizzato
+    post:
+      summary: Creazione nuova classe
+      tags:
+        - Classi
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Classe creata
+        '403':
+          description: Permessi insufficienti
+  /attendance/pending-justifications:
+    get:
+      summary: Lista giustificazioni in attesa di approvazione
+      tags:
+        - Presenze
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: class_id
+          in: query
+          description: UUID della classe (opzionale per i docenti, default tutte le classi assegnate)
+          schema:
+            type: string
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Lista giustificazioni in sospeso
+        '403':
+          description: Accesso non autorizzato
   /auth/login:
     post:
       summary: Autenticazione utente
@@ -118,6 +178,56 @@ paths:
       responses:
         '200':
           description: Panoramica figli, medie e comunicazioni
+  /auth/mfa/setup:
+    post:
+      summary: Inizializza setup TOTP 2FA
+      tags:
+        - Auth
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Secret TOTP e QR code URI
+  /auth/mfa/verify:
+    post:
+      summary: Verifica codice 2FA e attiva MFA
+      tags:
+        - Auth
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: MFA attivato
+  /colloqui/slots:
+    get:
+      summary: Lista slot colloqui disponibili
+      tags:
+        - Colloqui
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Lista slot
+  /pdp:
+    get:
+      summary: Lista piani didattici personalizzati (PDP/PEI)
+      tags:
+        - Inclusione
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Lista piani PDP
+  /reports/grades/excel:
+    get:
+      summary: Export matrice voti in formato Excel XLSX
+      tags:
+        - Report
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: File Excel generato
 components:
   securitySchemes:
     BearerAuth:

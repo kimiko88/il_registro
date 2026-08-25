@@ -168,7 +168,7 @@ func TestScuolaDiProvaWorkflow(t *testing.T) {
 	assert.GreaterOrEqual(t, len(matrix.Subjects), 4, "Matrix for 2A should contain 4 subjects")
 
 	// Teacher 2 (Not Coordinator of 2A) MUST get ErrUnauthorizedScrutiny on modification/saving
-	err = scrutinySvc.SaveScrutiny(ctx, teacher2ID, "teacher", scrutiny.SaveScrutinyRequest{ClassID: class2AID, Semester: 1, StudentID: matrix.Students[0].StudentID})
+	err = scrutinySvc.SaveScrutiny(ctx, teacher2ID, "teacher", schoolID, scrutiny.SaveScrutinyRequest{ClassID: class2AID, Semester: 1, StudentID: matrix.Students[0].StudentID})
 	assert.ErrorIs(t, err, scrutiny.ErrUnauthorizedScrutiny, "Non-coordinator (Teacher 2) must be forbidden from saving 2A scrutiny")
 
 	// 9. Verify Parent access to child's provisional report card (Pagella provvisoria)

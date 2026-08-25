@@ -275,7 +275,7 @@ func TestHandler_Login_Integration(t *testing.T) {
 
 				// Check tokens
 				assert.NotEmpty(t, response.AccessToken)
-				assert.NotEmpty(t, response.RefreshToken)
+				assert.Empty(t, response.RefreshToken)
 				assert.Greater(t, response.ExpiresIn, int64(0))
 			},
 		},
@@ -350,4 +350,11 @@ func TestHandler_FieldConsistency(t *testing.T) {
 func (m *MockRepository) CountAll(ctx context.Context) (int64, error) {
 	args := m.Called(ctx)
 	return args.Get(0).(int64), args.Error(1)
+}
+
+func TestParseAcceptLanguage(t *testing.T) {
+	assert.Equal(t, "it-IT", parseAcceptLanguage(""))
+	assert.Equal(t, "it-IT", parseAcceptLanguage("it-IT,it;q=0.9,en-US;q=0.8"))
+	assert.Equal(t, "en-US", parseAcceptLanguage("en-US,en;q=0.5"))
+	assert.Equal(t, "it-IT", parseAcceptLanguage("<script>alert(1)</script>"))
 }

@@ -185,27 +185,19 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useQuasar, date as qdate } from 'quasar'
 import { studentGoalService } from '@/services/studentGoalService'
 import { useAuthStore } from '@/stores/auth'
-import api from 'src/services/api'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const authStore = useAuthStore()
 const loading = ref(false)
 const updatingId = ref(null)
 const tab = ref('goals')
 const filterStatus = ref('all')
 const goals = ref([])
-
-const badges = ref([
-  { icon: '🏆', name: 'Primo Traguardo', desc: 'Completa il tuo primo obiettivo scolastico', unlocked: true },
-  { icon: '📚', name: 'Lettore Instancabile', desc: 'Leggi e firma 10 circolari di classe', unlocked: true },
-  { icon: '⭐', name: 'Media Eccellente', desc: 'Mantieni una media generale pari o superiore a 8', unlocked: false },
-  { icon: '⏰', name: 'Presenza Perfetta', desc: 'Nessuna assenza per 30 giorni consecutivi', unlocked: true },
-  { icon: '🎯', name: 'Punto di Svolta', desc: 'Raggiungi 100 punti obiettivo totali', unlocked: false },
-  { icon: '🧪', name: 'Pratico Provvetto', desc: 'Ottieni un voto d\'eccellenza in laboratorio', unlocked: false }
-])
 
 const totalPoints = computed(() => {
   return goals.value
@@ -215,6 +207,73 @@ const totalPoints = computed(() => {
 
 const completedCount = computed(() => goals.value.filter(g => g.status === 'completed').length)
 const inProgressCount = computed(() => goals.value.filter(g => g.status !== 'completed').length)
+
+const distinctCompletedCategories = computed(() => {
+  const cats = new Set()
+  goals.value.filter(g => g.status === 'completed' && g.category).forEach(g => cats.add(g.category.toLowerCase()))
+  return cats
+})
+
+const badges = computed(() => {
+  const list = []
+
+  // Custom badges defined directly on goals in the database
+  const seenBadgeNames = new Set()
+  goals.value.forEach(g => {
+    if (g.badge_name && !seenBadgeNames.has(g.badge_name)) {
+      seenBadgeNames.add(g.badge_name)
+      list.push({
+        icon: g.badge_icon || '🏅',
+        name: g.badge_name,
+        desc: `Associato all'obiettivo: "${g.title}"`,
+        unlocked: g.status === 'completed'
+      })
+    }
+  })
+
+  // System milestone badges dynamically calculated from database accomplishments
+  list.push(
+    {
+      icon: '🏆',
+      name: 'Primo Traguardo',
+      desc: 'Completa il tuo primo obiettivo scolastico',
+      unlocked: completedCount.value >= 1
+    },
+    {
+      icon: '🎯',
+      name: 'Punto di Svolta',
+      desc: 'Raggiungi 100 punti obiettivo totali',
+      unlocked: totalPoints.value >= 100
+    },
+    {
+      icon: '🌟',
+      name: 'Traguardo Avanzato',
+      desc: 'Completa 3 o più obiettivi formativi',
+      unlocked: completedCount.value >= 3
+    },
+    {
+      icon: '🚀',
+      name: 'Esploratore di Competenze',
+      desc: 'Completa obiettivi in almeno 2 categorie diverse',
+      unlocked: distinctCompletedCategories.value.size >= 2
+    },
+    {
+      icon: '🧪',
+      name: 'Impegno Costante',
+      desc: 'Accumula almeno 50 punti complessivi',
+      unlocked: totalPoints.value >= 50
+    },
+    {
+      icon: '👑',
+      name: 'Maestro degli Obiettivi',
+      desc: 'Completa con successo tutti gli obiettivi assegnati',
+      unlocked: goals.value.length > 0 && completedCount.value === goals.value.length
+    }
+  )
+
+  return list
+})
+
 const unlockedBadgesCount = computed(() => badges.value.filter(b => b.unlocked).length)
 
 const filteredGoals = computed(() => {
@@ -225,11 +284,14 @@ const filteredGoals = computed(() => {
 
 const formatDate = (d) => d ? qdate.formatDate(new Date(d), 'DD/MM/YYYY') : ''
 const categoryColor = (cat) => ({
-  Studio: 'primary',
-  Presenza: 'positive',
-  Voti: 'purple',
-  Comportamento: 'deep-orange'
-}[cat] || 'indigo')
+  academic: 'primary',
+  behavioral: 'deep-orange',
+  social: 'positive',
+  studio: 'primary',
+  presenza: 'positive',
+  voti: 'purple',
+  comportamento: 'deep-orange'
+}[(cat || '').toLowerCase()] || 'indigo')
 
 onMounted(() => {
   loadData()
@@ -253,8 +315,8 @@ async function loadData() {
 async function markCompleted(goalId) {
   updatingId.value = goalId
   try {
-    await api.patch(`/student-goals/${goalId}/status`, { status: 'completed' })
-    $q.notify({ type: 'positive', message: 'Obiettivo completato! Complimenti!' })
+    await studentGoalService.updateStatus(goalId, 'completed')
+    $q.notify({ type: 'positive', message: 'Obiettivo completato con successo!' })
     await loadData()
   } catch (e) {
     $q.notify({ type: 'negative', message: 'Errore durante l\'aggiornamento dell\'obiettivo' })

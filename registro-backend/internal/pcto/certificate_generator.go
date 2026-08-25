@@ -1,11 +1,14 @@
 package pcto
 
-import "fmt"
+import (
+	"fmt"
+	"html"
+)
 
 type CertificateGenerator struct{}
 
 func (g *CertificateGenerator) GenerateCertificate(project *Project, studentName string) ([]byte, error) {
-	html := fmt.Sprintf(`
+	htmlContent := fmt.Sprintf(`
 		<html>
 		<head><style>body{font-family: Arial, sans-serif; text-align: center; margin-top: 50px;}</style></head>
 		<body>
@@ -17,16 +20,16 @@ func (g *CertificateGenerator) GenerateCertificate(project *Project, studentName
 			<p>Periodo: %s - %s</p>
 		</body>
 		</html>`,
-		studentName, project.Title,
+		html.EscapeString(studentName), html.EscapeString(project.Title),
 		project.StartDate.Format("02/01/2006"), project.EndDate.Format("02/01/2006"),
 	)
-	return []byte(html), nil
+	return []byte(htmlContent), nil
 }
 
 type AgreementGenerator struct{}
 
 func (g *AgreementGenerator) GenerateAgreement(project *Project, company *Company) ([]byte, error) {
-	html := fmt.Sprintf(`
+	htmlContent := fmt.Sprintf(`
 		<html>
 		<head><style>body{font-family: Arial, sans-serif; margin: 40px;}</style></head>
 		<body>
@@ -46,8 +49,8 @@ func (g *AgreementGenerator) GenerateAgreement(project *Project, company *Compan
 			<p>___________________ (Azienda)</p>
 		</body>
 		</html>`,
-		company.Name, company.VatNumber, project.Title,
+		html.EscapeString(company.Name), html.EscapeString(company.VatNumber), html.EscapeString(project.Title),
 		project.StartDate.Format("02/01/2006"), project.EndDate.Format("02/01/2006"),
 	)
-	return []byte(html), nil
+	return []byte(htmlContent), nil
 }

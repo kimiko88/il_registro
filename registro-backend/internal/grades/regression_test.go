@@ -30,8 +30,8 @@ func TestCalculator_EdgeCases(t *testing.T) {
 			{GradeValue: 10, Weight: 0},
 			{GradeValue: 10, Weight: 0},
 		}
-		// Should handle zero division by returning 0
-		assert.Equal(t, 0.0, c.CalculateWeightedAverage(g))
+		// Falls back to arithmetic average (10.0) when total weights is zero
+		assert.Equal(t, 10.0, c.CalculateWeightedAverage(g))
 	})
 
 	t.Run("Weighted Average Mixed", func(t *testing.T) {
@@ -136,6 +136,27 @@ func (m *RegressionMockRepo) UpsertWeightConfig(cfg *GradeWeightConfig) (*GradeW
 	return cfg, nil
 }
 func (m *RegressionMockRepo) DeleteWeightConfig(id string) error { return nil }
+func (m *RegressionMockRepo) GetStudentClassAndSchoolInfo(ctx context.Context, studentID string) (string, string, string, string, error) {
+	return "", "", "", "", nil
+}
+func (m *RegressionMockRepo) GetTeacherNamesByClass(ctx context.Context, classID string) (map[string]string, error) {
+	return nil, nil
+}
+func (m *RegressionMockRepo) GetSubjectNamesMap(ctx context.Context, schoolID string) (map[string]string, error) {
+	return nil, nil
+}
+func (m *RegressionMockRepo) GetScrutinyRecordSummary(ctx context.Context, studentID string, semester int) (float64, float64, bool, error) {
+	return 0, 0, false, nil
+}
+func (m *RegressionMockRepo) GetStudentAbsenceCountForPeriod(ctx context.Context, studentID, startD, endD string) (int, error) {
+	return 0, nil
+}
+func (m *RegressionMockRepo) GetClassSubjectAverage(ctx context.Context, classID, subjectID string, semester int, studentID string) (float64, error) {
+	return 7.5, nil
+}
+func (m *RegressionMockRepo) CheckClassAccessPermission(ctx context.Context, actorID, actorRole, classID string) (bool, error) {
+	return true, nil
+}
 
 func TestService_FilterLogicRegex(t *testing.T) {
 	// Setup specific data

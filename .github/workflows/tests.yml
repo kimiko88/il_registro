@@ -27,13 +27,13 @@ jobs:
           --health-retries 5
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v7
         with:
           go-version: "1.25"
       - run: go mod download
       - run: go test -v -race -coverprofile=coverage.out ./tests/... ./internal/...
       - run: go tool cover -html=coverage.out -o coverage.html
-      - uses: codecov/codecov-action@v5
+      - uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./registro-backend/coverage.out
@@ -46,13 +46,13 @@ jobs:
         working-directory: ./registro-frontend
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: "24"
       - run: npm ci
       - run: npm run test:unit
       # - run: npm run test:coverage # Uncomment when configured
-      - uses: codecov/codecov-action@v5
+      - uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./registro-frontend/coverage/coverage-final.json

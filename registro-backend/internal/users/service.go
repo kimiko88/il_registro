@@ -20,6 +20,10 @@ var (
 	ErrUnauthorized = errors.New("unauthorized")
 )
 
+// bcryptCost è il cost factor usato per tutti gli hash bcrypt nel package users.
+// Usare cost 12 invece di bcrypt.DefaultCost (10) per maggiore resistenza al brute-force.
+const bcryptCost = 12
+
 // allowedCreators maps each role to the set of roles it is allowed to create.
 var allowedCreators = map[string]map[string]bool{
 	"superadmin": {"superadmin": true, "admin": true, "secretary": true, "teacher": true, "student": true, "parent": true},
@@ -59,7 +63,7 @@ func (s *Service) CreateUser(ctx context.Context, actorRole string, req CreateUs
 		return nil, err
 	}
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcryptCost)
 	if err != nil {
 		return nil, fmt.Errorf("password hashing failed: %w", err)
 	}
@@ -108,7 +112,11 @@ func (s *Service) CreateUser(ctx context.Context, actorRole string, req CreateUs
 // ListUsers returns a paginated, filtered list of users.
 func (s *Service) ListUsers(ctx context.Context, actorRole, actorSchoolID string, filter UserFilter) ([]User, int, error) {
 	if !isPrivileged(actorRole) && actorRole != "teacher" && actorRole != "principal" && actorRole != "vice_principal" {
-		return nil, 0, ErrUnauthorized
+		if (actorRole == "parent" || actorRole == "student") && filter.Role == "teacher" {
+			// Allowed to query teachers in their school for booking colloqui or communications
+		} else {
+			return nil, 0, ErrUnauthorized
+		}
 	}
 	if actorRole != "superadmin" && actorSchoolID != "" {
 		filter.SchoolID = &actorSchoolID
@@ -118,7 +126,7 @@ func (s *Service) ListUsers(ctx context.Context, actorRole, actorSchoolID string
 
 // GetUser returns a single user by ID.
 func (s *Service) GetUser(ctx context.Context, actorRole, actorSchoolID string, id string) (*User, error) {
-	if !isPrivileged(actorRole) && actorRole != "teacher" {
+	if !isPrivileged(actorRole) && actorRole != "teacher" && actorRole != "principal" && actorRole != "vice_principal" {
 		return nil, ErrUnauthorized
 	}
 	user, err := s.repo.GetByID(ctx, id)
@@ -221,7 +229,7 @@ func (s *Service) BulkDeleteUsers(ctx context.Context, actorRole, actorSchoolID 
 		var safeIDs []string
 		for _, tu := range targetUsers {
 			if tu.Role != "admin" && tu.Role != "superadmin" {
-				if actorSchoolID == "" || (tu.SchoolID != nil && *tu.SchoolID == actorSchoolID) {
+				if actorSchoolID != "" && tu.SchoolID != nil && *tu.SchoolID == actorSchoolID {
 					safeIDs = append(safeIDs, tu.ID)
 				}
 			}
@@ -235,8 +243,15 @@ func (s *Service) BulkDeleteUsers(ctx context.Context, actorRole, actorSchoolID 
 }
 
 // RestoreUser un-deletes a soft-deleted user.
-func (s *Service) RestoreUser(ctx context.Context, actorRole string, id string) error {
+func (s *Service) RestoreUser(ctx context.Context, actorRole, actorSchoolID string, id string) error {
 	if !isPrivileged(actorRole) {
+		return ErrUnauthorized
+	}
+	user, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	if actorRole != "superadmin" && actorSchoolID != "" && user.SchoolID != nil && *user.SchoolID != actorSchoolID {
 		return ErrUnauthorized
 	}
 	return s.repo.Restore(ctx, id)
@@ -280,7 +295,7 @@ func (s *Service) ChangePassword(ctx context.Context, userID string, req ChangeP
 		}
 	}
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
+	hash, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcryptCost)
 	if err != nil {
 		return err
 	}
@@ -324,7 +339,6 @@ func validatePasswordComplexity(password string) error {
 	return nil
 }
 
-
 // ResetPassword allows an admin, superadmin, or secretary to force-reset a user's password.
 // Secretary is strictly limited to resetting passwords for teachers, students, and parents.
 func (s *Service) ResetPassword(ctx context.Context, actorRole, actorSchoolID, userID, newPassword string) error {
@@ -360,8 +374,7 @@ func (s *Service) ResetPassword(ctx context.Context, actorRole, actorSchoolID, u
 		}
 	}
 
-
-	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcryptCost)
 	if err != nil {
 		return err
 	}
@@ -372,6 +385,7 @@ func (s *Service) ResetPassword(ctx context.Context, actorRole, actorSchoolID, u
 	if err := s.repo.Update(ctx, user); err != nil {
 		return err
 	}
+	_ = s.repo.RevokeAllUserTokens(ctx, userID)
 	return s.repo.AddPasswordHistory(ctx, userID, string(hash))
 }
 
@@ -386,6 +400,8 @@ func (s *Service) DisableMFA(ctx context.Context, actorRole string, userID strin
 	}
 	user.MFAEnabled = false
 	user.MFASecret = ""
+	_ = s.repo.ClearTempMFASecret(ctx, userID)
+	_ = s.repo.RevokeAllUserTokens(ctx, userID)
 	return s.repo.Update(ctx, user)
 }
 
@@ -418,14 +434,40 @@ func (s *Service) BulkImport(ctx context.Context, actorRole, actorSchoolID strin
 		Errors: parseErrors,
 	}
 
-	if len(users) > 0 {
-		count, bulkErrors, err := s.repo.BulkCreate(ctx, users)
+	allowed, ok := allowedCreators[actorRole]
+
+	var validUsers []User
+	for _, u := range users {
+		if !ok || !allowed[u.Role] {
+			result.Failed++
+			result.Errors = append(result.Errors, fmt.Sprintf("utente %s: ruolo %s non consentito per il ruolo %s", u.Email, u.Role, actorRole))
+			continue
+		}
+		if !strings.HasPrefix(u.PasswordHash, "$2a$") && !strings.HasPrefix(u.PasswordHash, "$2b$") {
+			if err := validatePasswordComplexity(u.PasswordHash); err != nil {
+				result.Failed++
+				result.Errors = append(result.Errors, fmt.Sprintf("utente %s: password non conforme (%v)", u.Email, err))
+				continue
+			}
+			hash, err := bcrypt.GenerateFromPassword([]byte(u.PasswordHash), bcryptCost)
+			if err != nil {
+				result.Failed++
+				result.Errors = append(result.Errors, fmt.Sprintf("utente %s: errore hashing password", u.Email))
+				continue
+			}
+			u.PasswordHash = string(hash)
+		}
+		validUsers = append(validUsers, u)
+	}
+
+	if len(validUsers) > 0 {
+		count, bulkErrors, err := s.repo.BulkCreate(ctx, validUsers)
 		result.Created = count
 		result.Failed += len(bulkErrors)
 		result.Errors = append(result.Errors, bulkErrors...)
 		if err != nil && len(bulkErrors) == 0 {
 			result.Errors = append(result.Errors, err.Error())
-			result.Failed += len(users)
+			result.Failed += len(validUsers)
 		}
 	}
 

@@ -4,10 +4,10 @@
     <div class="row items-center q-mb-xl">
       <div class="col">
         <h1 class="text-h3 text-weight-bold text-outfit q-my-none text-gradient-premium">
-          Dashboard Admin
+          {{ $t('roleDashboards.adminPanel') }}
         </h1>
         <div class="text-subtitle1 text-slate-500 q-mt-sm">
-          {{ isSuperAdmin ? 'Benvenuto nel pannello di controllo globale' : 'Gestione centralizzata della tua scuola' }}
+          {{ isSuperAdmin ? $t('roleDashboards.globalControl') : $t('roleDashboards.schoolControl') }}
         </div>
       </div>
       <div class="col-auto">
@@ -17,7 +17,7 @@
           color="white"
           text-color="primary"
           icon="refresh"
-          label="Sincronizza Dati"
+          :label="$t('roleDashboards.syncData')"
           class="rounded-lg shadow-soft q-px-md"
           @click="fetchDashboardStats"
           :loading="loading"
@@ -59,8 +59,8 @@
         <q-card class="glass-card shadow-soft overflow-hidden">
           <q-card-section class="q-pa-lg">
             <div class="row items-center justify-between q-mb-lg">
-                <div class="text-h5 text-weight-bold text-outfit">Attività Recenti</div>
-                <q-btn flat color="primary" label="Vedi Audit Log" to="/admin/audit-logs" no-caps v-if="isSuperAdmin" />
+                <div class="text-h5 text-weight-bold text-outfit">{{ $t('dashboardPage.recentActivity') }}</div>
+                <q-btn flat color="primary" :label="$t('dashboardPage.auditLogs')" to="/admin/audit-logs" no-caps v-if="isSuperAdmin" />
             </div>
             <q-list v-if="stats.recent_events && stats.recent_events.length > 0" separator>
               <q-item v-for="event in stats.recent_events" :key="event.id">
@@ -202,11 +202,13 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
 import { usePermissions } from '@/composables/usePermissions'
 import adminService from '@/services/adminService'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const { isSuperAdmin } = usePermissions()
 
 const loading = ref(false)

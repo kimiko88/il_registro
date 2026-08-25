@@ -50,7 +50,10 @@
           dense
           bg-color="white"
           class="rounded-input"
-          :rules="[val => !!val || t('login.emailRequired')]"
+          :rules="[
+            val => !!val || t('login.emailRequired'),
+            val => /.+@.+\..+/.test(val) || t('login.emailInvalid')
+          ]"
           @keyup.enter="() => passwordInputRef?.focus()"
         >
           <template v-slot:prepend>
@@ -235,6 +238,7 @@ import { useQuasar } from 'quasar'
 import { useI18n } from 'vue-i18n'
 import { useAuth } from '@/composables/useAuth'
 import api from '@/services/api'
+import { SUPPORTED_LOCALES, applyLocale, normalizeLocale } from '@/utils/locale'
 
 const $q = useQuasar()
 const { locale, t } = useI18n()
@@ -245,6 +249,8 @@ const showPassword = ref(false)
 const rememberMe = ref(false)
 const loading = ref(false)
 const errorMessage = ref('')
+const failedAttempts = ref(0)
+const lockoutUntil = ref(null)
 const { login } = useAuth()
 const route = useRoute()
 
@@ -253,26 +259,16 @@ const loadingSchools = ref(false)
 const selectedSchool = ref(null)
 const schools = ref([])
 
-const languageOptions = [
-  { label: 'Italiano', value: 'it-IT', code: 'IT', icon: 'flag' },
-  { label: 'English', value: 'en-US', code: 'EN', icon: 'language' },
-  { label: 'Deutsch', value: 'de-DE', code: 'DE', icon: 'language' },
-  { label: 'Français', value: 'fr-FR', code: 'FR', icon: 'language' },
-  { label: 'Español', value: 'es-ES', code: 'ES', icon: 'language' },
-  { label: 'Русский', value: 'ru-RU', code: 'RU', icon: 'language' },
-  { label: 'Українська', value: 'uk-UA', code: 'UK', icon: 'language' },
-  { label: 'العربية', value: 'ar-SA', code: 'AR', icon: 'language' },
-  { label: '中文 (简体)', value: 'zh-CN', code: 'ZH', icon: 'language' }
-]
+const languageOptions = SUPPORTED_LOCALES
 
 const currentLangCode = computed(() => {
-  const opt = languageOptions.find(o => o.value === locale.value)
+  const norm = normalizeLocale(locale.value)
+  const opt = languageOptions.find(o => o.value === norm)
   return opt ? opt.code : 'IT'
 })
 
 function changeLanguage(langKey) {
-  locale.value = langKey
-  localStorage.setItem('superadmin_language', langKey)
+  applyLocale(langKey, { locale }, $q)
 }
 
 const defaultSchools = [
@@ -287,6 +283,9 @@ onMounted(() => {
   document.title = 'Accedi — Registro Elettronico'
   if (route?.query?.reason === 'session_expired') {
     errorMessage.value = t('login.sessionExpired')
+  }
+  if (route?.path === '/register' || route?.path === '/forgot-password') {
+    openContactSecretary()
   }
 })
 
@@ -314,24 +313,45 @@ function openContactSecretary() {
   }
 }
 
-function copyEmail(emailStr) {
+async function copyEmail(emailStr) {
   if (!emailStr) return
-  navigator.clipboard.writeText(emailStr)
-  $q.notify({
-    type: 'positive',
-    icon: 'content_copy',
-    message: t('login.emailCopied')
-  })
+  try {
+    await navigator.clipboard.writeText(emailStr)
+    $q.notify({
+      type: 'positive',
+      icon: 'content_copy',
+      message: t('login.emailCopied')
+    })
+  } catch {
+    // Clipboard API requires HTTPS; show a fallback notification
+    $q.notify({
+      type: 'warning',
+      icon: 'content_copy',
+      message: t('login.copyFailed') || `Copia manuale: ${emailStr}`
+    })
+  }
 }
 
 async function onSubmit() {
+  // UI-level lockout after repeated failures (backend is the primary rate limiter)
+  if (lockoutUntil.value && Date.now() < lockoutUntil.value) {
+    const secs = Math.ceil((lockoutUntil.value - Date.now()) / 1000)
+    errorMessage.value = t('login.tooManyAttempts', { secs }) || `Troppi tentativi. Riprova tra ${secs}s.`
+    return
+  }
   errorMessage.value = ''
   loading.value = true
   const error = await login(email.value, password.value, rememberMe.value)
   loading.value = false
-  
   if (error) {
+    failedAttempts.value++
+    if (failedAttempts.value >= 5) {
+      lockoutUntil.value = Date.now() + 30_000 // 30-second UI lockout
+    }
     errorMessage.value = error
+  } else {
+    failedAttempts.value = 0
+    lockoutUntil.value = null
   }
 }
 </script>

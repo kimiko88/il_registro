@@ -29,6 +29,20 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	}
 }
 
+func isStaffRole(role string, c *gin.Context) bool {
+	if role == "teacher" || role == "admin" || role == "superadmin" || role == "secretary" || role == "principal" || role == "vice_principal" {
+		return true
+	}
+	return c.GetBool("is_staff")
+}
+
+func isManagementRole(role string, c *gin.Context) bool {
+	if role == "admin" || role == "superadmin" || role == "secretary" || role == "principal" || role == "vice_principal" {
+		return true
+	}
+	return c.GetBool("is_staff")
+}
+
 func (h *Handler) Create(c *gin.Context) {
 	if c.GetString("user_id") == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
@@ -36,8 +50,7 @@ func (h *Handler) Create(c *gin.Context) {
 	}
 	role := c.GetString("role")
 	schoolID := c.GetString("school_id")
-	isStaff := c.GetBool("is_staff")
-	if role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && !isStaff {
+	if !isManagementRole(role, c) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -49,7 +62,7 @@ func (h *Handler) Create(c *gin.Context) {
 	}
 
 	effectiveRole := role
-	if isStaff {
+	if c.GetBool("is_staff") {
 		effectiveRole = "staff"
 	}
 
@@ -65,6 +78,12 @@ func (h *Handler) ListBySchool(c *gin.Context) {
 	uid := c.GetString("user_id")
 	if uid == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	role := c.GetString("role")
+	isStaff := isStaffRole(role, c)
+	if !isStaff {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 
@@ -116,8 +135,8 @@ func (h *Handler) AssignSubstitute(c *gin.Context) {
 		return
 	}
 	role := c.GetString("role")
-	isStaff := c.GetBool("is_staff")
-	if role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && !isStaff {
+	isStaff := isStaffRole(role, c)
+	if !isStaff {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -148,7 +167,7 @@ func (h *Handler) Confirm(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "teacher" && role != "admin" && role != "superadmin" {
+	if role != "teacher" && role != "admin" && role != "superadmin" && role != "principal" && role != "vice_principal" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -163,8 +182,13 @@ func (h *Handler) Confirm(c *gin.Context) {
 
 func (h *Handler) SignRegister(c *gin.Context) {
 	teacherID := c.GetString("user_id")
+	role := c.GetString("role")
 	if teacherID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "teacher" && role != "admin" && role != "superadmin" && role != "principal" && role != "vice_principal" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 
@@ -182,6 +206,18 @@ func (h *Handler) SignRegister(c *gin.Context) {
 }
 
 func (h *Handler) RecommendSubstitutes(c *gin.Context) {
+	uid := c.GetString("user_id")
+	role := c.GetString("role")
+	isStaff := isStaffRole(role, c)
+	if uid == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if !isStaff {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
 	schoolID := c.GetString("school_id")
 	classID := c.Query("class_id")
 	subjectID := c.Query("subject_id")

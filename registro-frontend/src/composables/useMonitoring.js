@@ -1,25 +1,43 @@
-import { onMounted, onUnmounted } from 'vue';
+import { onMounted, onUnmounted, getCurrentInstance } from 'vue';
 import { useMonitoringStore } from '../stores/monitoring';
 
-export function useMonitoring() {
+export function useMonitoring(autoStart = true, pollIntervalMs = 30000) {
     const store = useMonitoringStore();
-    let interval;
+    let interval = null;
 
-    onMounted(() => {
+    const refreshAll = () => {
         store.fetchHealth();
         store.fetchMetrics();
         store.fetchActiveUsers();
+    };
 
-        // Poll every 30 seconds
+    const startPolling = () => {
+        stopPolling();
+        refreshAll();
         interval = setInterval(() => {
             store.fetchHealth();
             store.fetchActiveUsers();
-        }, 30000);
-    });
+        }, pollIntervalMs);
+    };
 
-    onUnmounted(() => {
-        clearInterval(interval);
-    });
+    const stopPolling = () => {
+        if (interval) {
+            clearInterval(interval);
+            interval = null;
+        }
+    };
 
-    return { store };
+    if (getCurrentInstance()) {
+        onMounted(() => {
+            if (autoStart) {
+                startPolling();
+            }
+        });
+
+        onUnmounted(() => {
+            stopPolling();
+        });
+    }
+
+    return { store, refreshAll, startPolling, stopPolling };
 }

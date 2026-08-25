@@ -2,8 +2,8 @@
   <q-page padding class="bg-slate-50">
     <div class="row items-center q-mb-lg">
       <div class="col">
-        <h1 class="text-h4 text-weight-bold text-slate-800 q-my-none">Scrutinio Accademico</h1>
-        <p class="text-subtitle1 text-slate-500 q-mb-none">Gestione voti finali e deliberazioni del Consiglio di Classe</p>
+        <h1 class="text-h4 text-weight-bold text-slate-800 q-my-none">Scrutinio Accademico & Differito</h1>
+        <p class="text-subtitle1 text-slate-500 q-mt-xs q-mb-none">Gestione voti finali, argomenti delle carenze e recupero debiti formativi</p>
       </div>
       <div class="col-auto">
         <div class="row q-gutter-md glass-card q-pa-sm rounded-xl border-slate-200 items-center">
@@ -119,16 +119,22 @@
                 <q-select
                   v-if="scrutinyData[props.row.student_id]"
                   v-model="scrutinyData[props.row.student_id].final_decision"
-                  :options="['Ammesso', 'Non Ammesso', 'Sospeso', 'Promosso', 'Respinto']"
+                  :options="['Ammesso', 'Non Ammesso', 'Sospeso', 'Promosso', 'Respinto', 'Promosso con debiti saldati']"
                   dense outlined
                   options-dense
                   class="decision-select rounded-lg"
                 />
               </q-td>
 
-              <q-td align="center">
+              <q-td align="center" class="q-gutter-xs">
                 <q-btn flat round dense icon="save" color="primary" @click="saveStudentScrutiny(props.row.student_id)">
                   <q-tooltip>Salva Singolo</q-tooltip>
+                </q-btn>
+                <q-btn flat round dense icon="warning" color="amber-9" @click="openDeficiencyModal(props.row)">
+                  <q-tooltip>Argomenti Carenze & Recuperi</q-tooltip>
+                </q-btn>
+                <q-btn v-if="period === 2" flat round dense icon="event_repeat" color="deep-orange" @click="openDeferredModal(props.row)">
+                  <q-tooltip>Scrutinio Differito (Esami Recupero)</q-tooltip>
                 </q-btn>
               </q-td>
             </q-tr>
@@ -141,20 +147,156 @@
         <q-btn label="Salva Scrutinio Finale" color="primary" icon="done_all" class="q-px-lg rounded-lg shadow-sm" @click="saveAll" :loading="saving" />
       </q-card-actions>
     </q-card>
+
+    <!-- Dialog: Argomenti Carenze & Recuperi -->
+    <q-dialog v-model="showDeficiencyModal">
+      <q-card style="min-width: 550px" class="rounded-xl">
+        <q-card-section class="bg-amber-700 text-white row items-center justify-between">
+          <div>
+            <div class="text-h6 text-weight-bold">Argomenti Carenze — {{ selectedStudent?.student_name }}</div>
+            <div class="text-caption">Indicazione delle lacune da recuperare (visibile a studente e genitori)</div>
+          </div>
+          <q-btn flat round icon="close" v-close-popup />
+        </q-card-section>
+
+        <q-card-section class="q-pa-md space-y-4">
+          <q-select
+            v-model="deficiencyForm.subject_id"
+            :options="matrix.subjects"
+            option-label="name"
+            option-value="id"
+            label="Materia della Carenza"
+            outlined dense emit-value map-options
+          />
+
+          <q-input
+            v-model="deficiencyForm.topics"
+            type="textarea"
+            rows="3"
+            outlined
+            label="Argomenti della Carenza / Lacune Specifiche *"
+            hint="Es. Equazioni di 2° grado, Sintassi del periodo, Verbi irregolari"
+          />
+
+          <q-select
+            v-model="deficiencyForm.recovery_mode"
+            :options="[
+              { label: 'Studio Individuale', value: 'studio_individuale' },
+              { label: 'Corso di Recupero Estivo', value: 'corso_recupero' },
+              { label: 'Sportello Didattico', value: 'sportello_didattico' }
+            ]"
+            label="Modalità di Recupero"
+            outlined dense emit-value map-options
+          />
+
+          <q-select
+            v-model="deficiencyForm.status"
+            :options="[
+              { label: 'Da Recuperare', value: 'da_recuperare' },
+              { label: 'In Corso', value: 'in_corso' },
+              { label: 'Recuperato', value: 'recuperato' },
+              { label: 'Non Recuperato', value: 'non_recuperato' }
+            ]"
+            label="Stato Recupero"
+            outlined dense emit-value map-options
+          />
+
+          <div class="row q-col-gutter-md">
+            <div class="col-6">
+              <q-input v-model.number="deficiencyForm.recovery_grade" type="number" step="0.5" label="Voto Prova di Recupero" outlined dense />
+            </div>
+            <div class="col-6">
+              <q-input v-model="deficiencyForm.recovery_date" type="date" label="Data Prova Recupero" outlined dense stack-label />
+            </div>
+          </div>
+        </q-card-section>
+
+        <q-card-actions align="right" class="q-pa-md bg-slate-50">
+          <q-btn flat label="Annulla" v-close-popup />
+          <q-btn color="amber-9" label="Salva Carenza" unelevated @click="saveDeficiency" :loading="savingDeficiency" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+    <!-- Dialog: Scrutinio Differito (Saldo Debiti Formativi) -->
+    <q-dialog v-model="showDeferredModal">
+      <q-card style="min-width: 600px" class="rounded-xl">
+        <q-card-section class="bg-deep-orange-8 text-white row items-center justify-between">
+          <div>
+            <div class="text-h6 text-weight-bold">Scrutinio Differito — {{ selectedStudent?.student_name }}</div>
+            <div class="text-caption">Verifica del saldo dei debiti formativi post-esami di recupero</div>
+          </div>
+          <q-btn flat round icon="close" v-close-popup />
+        </q-card-section>
+
+        <q-card-section class="q-pa-md space-y-4">
+          <div v-if="studentDeficienciesList.length === 0" class="text-slate-500 text-center q-pa-md">
+            Nessuna carenza o debito salvato per questo studente.
+          </div>
+
+          <div v-for="def in studentDeficienciesList" :key="def.id" class="p-3 border rounded-lg bg-slate-50 space-y-2">
+            <div class="row items-center justify-between">
+              <div class="text-weight-bold text-slate-800">{{ def.subject_name || 'Materia' }}</div>
+              <q-badge :color="def.status === 'recuperato' ? 'positive' : 'negative'">{{ def.status }}</q-badge>
+            </div>
+            <div class="text-caption text-slate-600"><strong>Argomenti:</strong> {{ def.topics }}</div>
+
+            <div class="row q-col-gutter-md q-pt-xs">
+              <div class="col-6">
+                <q-select
+                  v-model="def.status"
+                  :options="[
+                    { label: 'Recuperato (Debito Saldato)', value: 'recuperato' },
+                    { label: 'Non Recuperato', value: 'non_recuperato' }
+                  ]"
+                  label="Esito Verifica"
+                  outlined dense emit-value map-options
+                />
+              </div>
+              <div class="col-6">
+                <q-input v-model.number="def.recovery_grade" type="number" step="0.5" label="Voto Prova Recupero" outlined dense />
+              </div>
+            </div>
+          </div>
+
+          <q-separator />
+
+          <q-select
+            v-model="deferredForm.final_decision"
+            :options="[
+              { label: 'Promosso con debiti saldati', value: 'promosso_con_debiti_saldati' },
+              { label: 'Non promosso (Debiti non saldati)', value: 'non_promosso' }
+            ]"
+            label="Delibera Finale Scrutinio Differito *"
+            outlined dense emit-value map-options
+          />
+
+          <q-input v-model="deferredForm.notes" type="textarea" rows="2" label="Note Verbale Scrutinio Differito" outlined />
+        </q-card-section>
+
+        <q-card-actions align="right" class="q-pa-md bg-slate-50">
+          <q-btn flat label="Annulla" v-close-popup />
+          <q-btn color="deep-orange-8" label="Delibera Scrutinio Differito" unelevated @click="saveDeferredScrutiny" :loading="savingDeferred" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
-import { scrutinyService } from 'src/services/scrutinyService'
-import { useClassesStore } from 'src/stores/classes'
-import { useAuthStore } from 'src/stores/auth'
-import api from 'src/services/api'
+import { scrutinyService } from '@/services/scrutinyService'
+import { useAuthStore } from '@/stores/auth'
+import { useClassesStore } from '@/stores/classes'
+import { useSchoolYearStore } from '@/stores/schoolYear'
 
 const $q = useQuasar()
-const classesStore = useClassesStore()
+const { t } = useI18n()
 const authStore = useAuthStore()
+const classesStore = useClassesStore()
+const schoolYearStore = useSchoolYearStore()
 
 const selectedClassId = ref(null)
 const period = ref(1)
@@ -179,9 +321,34 @@ const columns = [
 
 const scrutinyData = reactive({})
 
-import { useSchoolYearStore } from '@/stores/schoolYear'
+// Deficiency & Deferred Scrutiny state
+const showDeficiencyModal = ref(false)
+const showDeferredModal = ref(false)
+const selectedStudent = ref(null)
+const savingDeficiency = ref(false)
+const savingDeferred = ref(false)
+const studentDeficienciesList = ref([])
 
-const schoolYearStore = useSchoolYearStore()
+const deficiencyForm = reactive({
+  id: '',
+  student_id: '',
+  class_id: '',
+  subject_id: '',
+  semester: 1,
+  topics: '',
+  recovery_mode: 'studio_individuale',
+  status: 'da_recuperare',
+  recovery_grade: null,
+  recovery_date: '',
+  notes: ''
+})
+
+const deferredForm = reactive({
+  student_id: '',
+  class_id: '',
+  final_decision: 'promosso_con_debiti_saldati',
+  notes: ''
+})
 
 const loadClasses = async () => {
   if (['admin', 'secretary', 'principal', 'vice_principal'].includes(authStore.userRole)) {
@@ -211,7 +378,6 @@ const loadClasses = async () => {
 onMounted(async () => {
   await loadClasses()
 
-  // Load dynamic periods if available
   try {
     const res = await api.get('/school-calendar/periods')
     if (res.data && res.data.length > 0) {
@@ -220,7 +386,7 @@ onMounted(async () => {
         value: p.period || p.value || (index + 1)
       }))
     }
-  } catch { /* fallback to defaults */ }
+  } catch { /* fallback */ }
 })
 
 watch(() => schoolYearStore.selectedSchoolYear, () => {
@@ -313,6 +479,79 @@ const saveAll = async () => {
     }
   } finally {
     saving.value = false
+  }
+}
+
+const openDeficiencyModal = (row) => {
+  selectedStudent.value = row
+  deficiencyForm.student_id = row.student_id
+  deficiencyForm.class_id = selectedClassId.value
+  deficiencyForm.semester = period.value
+  deficiencyForm.topics = ''
+  deficiencyForm.subject_id = matrix.value.subjects?.[0]?.id || ''
+  deficiencyForm.status = 'da_recuperare'
+  deficiencyForm.recovery_mode = 'studio_individuale'
+  deficiencyForm.recovery_grade = null
+  deficiencyForm.recovery_date = ''
+  showDeficiencyModal.value = true
+}
+
+const saveDeficiency = async () => {
+  if (!deficiencyForm.topics) {
+    $q.notify({ type: 'warning', message: 'Inserire gli argomenti della carenza' })
+    return
+  }
+  savingDeficiency.value = true
+  try {
+    await scrutinyService.saveDeficiency(deficiencyForm)
+    $q.notify({ type: 'positive', message: 'Argomenti della carenza salvati con successo!' })
+    showDeficiencyModal.value = false
+  } catch {
+    $q.notify({ type: 'negative', message: 'Errore salvataggio carenza' })
+  } finally {
+    savingDeficiency.value = false
+  }
+}
+
+const openDeferredModal = async (row) => {
+  selectedStudent.value = row
+  deferredForm.student_id = row.student_id
+  deferredForm.class_id = selectedClassId.value
+  deferredForm.final_decision = 'promosso_con_debiti_saldati'
+  deferredForm.notes = ''
+
+  try {
+    const res = await scrutinyService.getStudentDeficiencies(row.student_id)
+    studentDeficienciesList.value = res.data || []
+  } catch {
+    studentDeficienciesList.value = []
+  }
+
+  showDeferredModal.value = true
+}
+
+const saveDeferredScrutiny = async () => {
+  savingDeferred.value = true
+  try {
+    const payload = {
+      student_id: deferredForm.student_id,
+      class_id: deferredForm.class_id,
+      final_decision: deferredForm.final_decision,
+      notes: deferredForm.notes,
+      deficiencies: studentDeficienciesList.value.map(d => ({
+        deficiency_id: d.id,
+        status: d.status,
+        recovery_grade: d.recovery_grade
+      }))
+    }
+    await scrutinyService.saveDeferredScrutiny(payload)
+    $q.notify({ type: 'positive', message: 'Scrutinio differito registrato con successo!' })
+    showDeferredModal.value = false
+    fetchMatrix()
+  } catch {
+    $q.notify({ type: 'negative', message: 'Errore salvataggio dello scrutinio differito' })
+  } finally {
+    savingDeferred.value = false
   }
 }
 

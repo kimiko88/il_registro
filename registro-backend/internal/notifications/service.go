@@ -108,6 +108,9 @@ func (s *serviceImpl) CreateInAppNotification(ctx context.Context, userID, title
 	if err := s.repo.CreateDBNotification(ctx, n); err != nil {
 		return nil, err
 	}
+	if n.CreatedAt.IsZero() {
+		n.CreatedAt = time.Now()
+	}
 
 	// Async FCM / Push dispatch with timeout context and error logging
 	go func() {
@@ -126,12 +129,21 @@ func (s *serviceImpl) CreateInAppNotification(ctx context.Context, userID, title
 		}
 		var err error
 		for attempt := 1; attempt <= 2; attempt++ {
+			select {
+			case <-asyncCtx.Done():
+				return
+			default:
+			}
 			_, err = s.SendPushNotification(asyncCtx, req)
 			if err == nil {
 				break
 			}
 			log.Printf("[WARN] notifications.CreateInAppNotification: attempt %d push dispatch failed for user %s: %v", attempt, userID, err)
-			time.Sleep(200 * time.Millisecond)
+			select {
+			case <-asyncCtx.Done():
+				return
+			case <-time.After(200 * time.Millisecond):
+			}
 		}
 	}()
 

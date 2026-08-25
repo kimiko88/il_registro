@@ -40,6 +40,10 @@ type Service interface {
 	// Export
 	ExportDocument(ctx context.Context, actorRole, schoolID, id, format string) ([]byte, string, error)
 
+	// GetDocumentContent restituisce il contenuto corrente del documento per firma o verifica.
+	// Implementa signatures.DocumentService.
+	GetDocumentContent(ctx context.Context, id string) (string, error)
+
 	// Status
 	LockDocument(ctx context.Context, id string) error
 	GetDocumentVersions(ctx context.Context, actorRole, schoolID, docID string) ([]DocumentVersion, error)
@@ -499,4 +503,20 @@ func (s *service) AttachFile(ctx context.Context, actorRole, schoolID, docID, fi
 	}
 
 	return s.repo.Update(doc, updatedContent, "Attached file: "+cleanURL)
+}
+
+// GetDocumentContent restituisce il contenuto corrente del documento.
+// Implementa signatures.DocumentService — usato per calcolare l'hash crittografico prima della firma.
+// Non esegue check RBAC: la chiamata è interna e il controllo accessi è già stato effettuato
+// dall'handler di firma tramite SignDocument / SignDocumentCtx.
+func (s *service) GetDocumentContent(ctx context.Context, id string) (string, error) {
+	doc, err := s.repo.FindByID(id)
+	if err != nil {
+		return "", fmt.Errorf("documento non trovato: %w", err)
+	}
+	content, err := s.repo.GetContent(id, doc.CurrentVersion)
+	if err != nil {
+		return "", fmt.Errorf("impossibile recuperare il contenuto del documento: %w", err)
+	}
+	return content, nil
 }

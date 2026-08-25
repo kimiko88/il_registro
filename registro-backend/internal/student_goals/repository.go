@@ -62,7 +62,12 @@ func (r *PostgresRepository) ListByStudent(ctx context.Context, studentID string
 	query := `
 		SELECT id, student_id, teacher_id, title, description, COALESCE(badge_name, ''), COALESCE(badge_icon, ''),
 		       category, status, points, due_date, created_at, completed_at
-		FROM student_goals WHERE student_id = $1::uuid
+		FROM student_goals 
+		WHERE (
+			student_id = $1::uuid OR
+			student_id IN (SELECT user_id FROM students WHERE id = $1::uuid) OR
+			student_id IN (SELECT id FROM students WHERE user_id = $1::uuid)
+		)
 		ORDER BY created_at DESC
 	`
 	rows, err := r.db.QueryContext(ctx, query, studentID)

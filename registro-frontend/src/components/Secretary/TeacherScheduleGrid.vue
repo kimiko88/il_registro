@@ -63,6 +63,7 @@
                   flat round dense icon="close"
                   size="xs"
                   color="negative"
+                  :aria-label="t('common.remove') || 'Rimuovi'"
                   @click.stop="removeCell(day, hour)"
                 />
               </div>
@@ -81,7 +82,7 @@
         <q-card-section class="bg-emerald-700 text-white row items-center justify-between q-py-md">
           <div class="text-subtitle1 font-bold row items-center gap-2">
             <q-icon name="edit_calendar" />
-            {{ editingCell ? `${days[editingCell.day - 1].label} - ${editingCell.hour}ª Ora` : 'Assegna Ora Docente' }}
+            {{ editingCell ? `${days[editingCell.day - 1]?.label} - ${editingCell.hour}ª Ora` : 'Assegna Ora Docente' }}
           </div>
           <q-btn icon="close" flat round dense v-close-popup />
         </q-card-section>
@@ -111,28 +112,27 @@
 
           <q-input
             v-model="room"
-            label="Aula (opzionale)"
+            label="Aula (es. Lab 2, Aula Magna)"
             outlined
             dense
-            placeholder="Es. Lab Informatica, Aula 2A"
             class="bg-white"
           />
         </q-card-section>
 
-        <q-card-actions align="between" class="q-pa-md bg-slate-50 border-t border-slate-100">
+        <q-card-actions align="between" class="bg-slate-100 q-px-md q-py-sm border-t">
           <q-btn
             v-if="editingCell && getCell(editingCell.day, editingCell.hour)"
-            label="Rimuovi"
-            color="negative"
             flat
+            color="negative"
+            :label="t('common.remove') || 'Rimuovi'"
+            icon="delete"
             no-caps
             @click="removeCell(editingCell.day, editingCell.hour); cellDialogVisible = false"
           />
-          <div v-else />
-
+          <div v-else></div>
           <div class="row q-gutter-sm">
-            <q-btn label="Annulla" flat no-caps v-close-popup />
-            <q-btn label="Conferma" color="positive" unelevated class="rounded-lg q-px-md font-bold" no-caps @click="applyCell" />
+            <q-btn flat :label="t('common.cancel') || 'Annulla'" color="grey-7" no-caps v-close-popup />
+            <q-btn unelevated color="positive" :label="t('common.confirm') || 'Conferma'" no-caps class="font-bold" @click="applyCell" />
           </div>
         </q-card-actions>
       </q-card>
@@ -142,7 +142,9 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const props = defineProps({
   classes: { type: Array, default: () => [] },
   subjects: { type: Array, default: () => [] },

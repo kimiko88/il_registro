@@ -1,20 +1,20 @@
 <template>
   <q-card>
     <q-card-section>
-        <div class="text-h6">Create Availability</div>
+        <div class="text-h6">{{ t('colloquiPage.createSlotsTitle') || 'Crea Disponibilità Colloqui' }}</div>
     </q-card-section>
     <q-card-section>
         <q-form @submit="onSubmit" class="q-gutter-md">
-            <q-input v-model="form.date" type="date" label="Date" filled />
+            <q-input v-model="form.date" type="date" :label="t('classRegister.dateLabel') || 'Data'" filled />
             <div class="row q-gutter-md">
-                <q-input v-model="form.startTime" type="time" label="Start" filled class="col" />
-                <q-input v-model="form.endTime" type="time" label="End" filled class="col" />
+                <q-input v-model="form.startTime" type="time" :label="t('colloquiPage.startTime') || 'Ora Inizio'" filled class="col" />
+                <q-input v-model="form.endTime" type="time" :label="t('colloquiPage.endTime') || 'Ora Fine'" filled class="col" />
             </div>
             <div class="row q-gutter-md">
-                <q-input v-model.number="form.duration" type="number" label="Duration (min)" filled class="col" />
-                <q-input v-model.number="form.break" type="number" label="Break (min)" filled class="col" />
+                <q-input v-model.number="form.duration" type="number" :label="t('colloquiPage.duration') || 'Durata (min)'" filled class="col" />
+                <q-input v-model.number="form.break" type="number" :label="t('colloquiPage.break') || 'Pausa (min)'" filled class="col" />
             </div>
-            <q-btn type="submit" label="Generate Slots" color="primary" :loading="generating" />
+            <q-btn type="submit" :label="t('colloquiPage.generateSlots') || 'Genera Slot'" color="primary" :loading="generating" />
         </q-form>
     </q-card-section>
   </q-card>
@@ -22,9 +22,11 @@
 
 <script setup>
 import { ref } from 'vue';
-import { useColloquiScheduling } from 'src/composables/useColloquiScheduling';
+import { useI18n } from 'vue-i18n';
+import { useColloquiScheduling } from '@/composables/useColloquiScheduling';
 import { date } from 'quasar';
 
+const { t } = useI18n();
 const { generateSlots, generating } = useColloquiScheduling();
 
 const form = ref({

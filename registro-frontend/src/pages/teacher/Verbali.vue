@@ -2,10 +2,10 @@
   <q-page class="q-pa-md">
     <div class="row items-center justify-between q-mb-md">
       <div>
-        <h1 class="text-h4 text-weight-bold q-my-none">Verbali Consiglio di Classe (Ver.Di 2.0)</h1>
-        <p class="text-subtitle1 text-grey-7 q-mb-none">Gestione, stesura e firma digitale con marca temporale ed IP audit</p>
+        <h1 class="text-h4 text-weight-bold q-my-none">{{ t('verbaliPage.title') }}</h1>
+        <p class="text-subtitle1 text-grey-7 q-mb-none">{{ t('verbaliPage.subtitle') }}</p>
       </div>
-      <q-btn color="primary" icon="add" label="Nuovo Verbale" @click="showDialog = true" unelevated />
+      <q-btn color="primary" icon="add" :label="t('verbaliPage.newVerbal')" @click="showDialog = true" unelevated />
     </div>
 
     <q-card flat bordered>
@@ -34,20 +34,20 @@
     <q-dialog v-model="showDialog">
       <q-card style="min-width: 500px">
         <q-card-section class="row items-center q-pb-none">
-          <div class="text-h6">Crea Nuovo Verbale</div>
+          <div class="text-h6">{{ t('verbaliPage.createTitle') }}</div>
           <q-space />
           <q-btn icon="close" flat round dense v-close-popup />
         </q-card-section>
 
         <q-card-section>
           <q-form @submit="createVerbale" class="q-gutter-md">
-            <q-input v-model="form.class_id" label="ID Classe" outlined dense :rules="[val => !!val || 'Campo obbligatorio']" />
-            <q-input v-model="form.title" label="Titolo Verbale" outlined dense :rules="[val => !!val || 'Campo obbligatorio']" />
-            <q-input v-model="form.content" type="textarea" label="Contenuto / OdG" outlined dense rows="5" />
+            <q-input v-model="form.class_id" :label="t('verbaliPage.selectClass')" outlined dense :rules="[val => !!val || t('errors.ERR_REQUIRED_FIELDS')]" />
+            <q-input v-model="form.title" :label="t('verbaliPage.subjectLabel')" outlined dense :rules="[val => !!val || t('errors.ERR_REQUIRED_FIELDS')]" />
+            <q-input v-model="form.content" type="textarea" :label="t('verbaliPage.textLabel')" outlined dense rows="5" />
 
             <div class="row justify-end q-mt-md">
-              <q-btn label="Annulla" flat v-close-popup />
-              <q-btn label="Salva Verbale" color="primary" type="submit" unelevated :loading="submitting" />
+              <q-btn :label="t('common.cancel')" flat v-close-popup />
+              <q-btn :label="t('verbaliPage.saveVerbal')" color="primary" type="submit" unelevated :loading="submitting" />
             </div>
           </q-form>
         </q-card-section>
@@ -57,11 +57,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import verbaliService from '@/services/verbaliService'
 import { useQuasar } from 'quasar'
+import { useI18n } from 'vue-i18n'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const verbali = ref([])
 const loading = ref(false)
 const showDialog = ref(false)
@@ -73,13 +75,13 @@ const form = ref({
   content: ''
 })
 
-const columns = [
-  { name: 'title', label: 'Titolo', field: 'title', align: 'left', sortable: true },
-  { name: 'class_id', label: 'Classe', field: 'class_id', align: 'center' },
-  { name: 'signed_by', label: 'Firme Raccolte', field: r => (r.signed_by || []).length, align: 'center' },
-  { name: 'created_at', label: 'Data', field: r => new Date(r.created_at).toLocaleDateString(), align: 'right' },
-  { name: 'actions', label: 'Azioni', align: 'center' }
-]
+const columns = computed(() => [
+  { name: 'title', label: t('verbaliPage.subjectLabel'), field: 'title', align: 'left', sortable: true },
+  { name: 'class_id', label: t('gradesPage.student'), field: 'class_id', align: 'center' },
+  { name: 'signed_by', label: t('verbaliPage.attendees'), field: r => (r.signed_by || []).length, align: 'center' },
+  { name: 'created_at', label: t('timetablePage.hour'), field: r => new Date(r.created_at).toLocaleDateString(), align: 'right' },
+  { name: 'actions', label: t('common.actions'), align: 'center' }
+])
 
 const loadVerbali = async () => {
   loading.value = true

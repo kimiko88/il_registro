@@ -3,6 +3,7 @@ package agenda
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -43,6 +44,9 @@ func (r *PostgresRepository) Create(ctx context.Context, item *AgendaItem) error
 }
 
 func (r *PostgresRepository) GetByID(ctx context.Context, id string) (*AgendaItem, error) {
+	if _, err := uuid.Parse(id); err != nil {
+		return nil, ErrNotFound
+	}
 	query := `
 		SELECT a.id, a.school_id, a.class_id, a.subject_id, a.teacher_id, a.title, COALESCE(a.description, ''),
 		       a.type, COALESCE(a.all_day, false), COALESCE(a.start_time, '09:00'), COALESCE(a.end_time, '10:00'),
@@ -61,6 +65,9 @@ func (r *PostgresRepository) GetByID(ctx context.Context, id string) (*AgendaIte
 		&item.Type, &item.AllDay, &item.StartTime, &item.EndTime, &item.Date, &item.CreatedAt, &item.UpdatedAt, &item.SubjectName, &item.TeacherName,
 	)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNotFound
+		}
 		return nil, err
 	}
 	if subjID.Valid {

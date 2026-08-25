@@ -1,8 +1,8 @@
 <template>
   <q-page class="q-pa-md">
     <div class="row items-center justify-between q-mb-md">
-       <div class="text-h4">I Miei Voti</div>
-       <q-btn icon="download" label="Scarica Report" color="primary" :loading="downloading" @click="downloadReport" />
+       <div class="text-h4">{{ t('gradesPage.studentTitle') }}</div>
+       <q-btn icon="download" :label="t('gradesPage.printReport')" color="primary" :loading="downloading" @click="downloadReport" />
     </div>
 
     <div class="row q-col-gutter-lg">
@@ -10,15 +10,15 @@
         <div class="col-12 col-md-4">
             <q-card class="q-mb-md shadow-1">
                 <q-card-section>
-                    <div class="text-h6 text-outfit text-weight-bold q-mb-md">Filtri</div>
-                    <q-select v-model="filters.semester" :options="[1, 2]" label="Quadrimestre" outlined dense class="q-mb-sm" />
-                    <q-select v-model="filters.period" :options="['Tutti', 'Ultimo Mese', 'Ultima Settimana']" label="Periodo" outlined dense class="q-mb-sm" />
+                    <div class="text-h6 text-outfit text-weight-bold q-mb-md">{{ t('gradesPage.filtersTitle') }}</div>
+                    <q-select v-model="filters.semester" :options="[1, 2]" :label="t('gradesPage.semesterLabel')" outlined dense class="q-mb-sm" />
+                    <q-select v-model="filters.period" :options="periodOptions" :label="t('gradesPage.periodLabel')" outlined dense class="q-mb-sm" />
                 </q-card-section>
             </q-card>
 
             <q-card class="q-mb-md shadow-1">
                <q-card-section>
-                   <div class="text-h6 text-outfit text-weight-bold q-mb-md">Andamento Medie</div>
+                   <div class="text-h6 text-outfit text-weight-bold q-mb-md">{{ t('gradesPage.averageTrends') }}</div>
                    <div v-for="sub in subjectAverages" :key="sub.name" class="q-mb-sm">
                        <div class="row justify-between text-caption">
                            <span class="text-weight-medium">{{ sub.name }}</span>
@@ -34,21 +34,21 @@
                 <q-card-section>
                     <div class="text-h6 text-weight-bold text-outfit row items-center q-mb-md">
                         <q-icon name="calculate" color="primary" class="q-mr-sm" />
-                        Simulatore & Proiezioni
+                        {{ t('gradesPage.simulatorTitle') }}
                     </div>
 
                     <!-- Sufficiency Warnings -->
                     <div v-if="subjectsBelowSufficiency.length > 0" class="q-mb-md">
-                        <div class="text-caption text-weight-bold text-red-9 q-mb-sm">PER RAGGIUNGERE LA SUFFICIENZA (6.0):</div>
+                        <div class="text-caption text-weight-bold text-red-9 q-mb-sm">{{ t('gradesPage.sufficiencyHeader') }}</div>
                         <q-list dense separator class="bg-red-1 rounded q-pa-xs">
                             <q-item v-for="item in subjectsBelowSufficiency" :key="item.name">
                                 <q-item-section>
                                     <div class="text-caption text-weight-bold">{{ item.name }}</div>
-                                    <div class="text-caption text-grey-8">Media attuale: {{ item.avg }}</div>
+                                    <div class="text-caption text-grey-8">{{ t('gradesPage.currentAvg', { avg: item.avg }) }}</div>
                                 </q-item-section>
                                 <q-item-section side>
                                     <q-badge color="negative" class="text-weight-bold q-pa-xs">
-                                        Prossimo voto: {{ item.needed }}
+                                        {{ t('gradesPage.neededGrade', { needed: item.needed }) }}
                                     </q-badge>
                                 </q-item-section>
                             </q-item>
@@ -57,11 +57,11 @@
 
                     <!-- Interactive Simulator -->
                     <q-separator class="q-my-md" />
-                    <div class="text-caption text-weight-bold text-grey-7 q-mb-sm">SIMULA IL TUO PROSSIMO VOTO:</div>
+                    <div class="text-caption text-weight-bold text-grey-7 q-mb-sm">{{ t('gradesPage.simulateNextGrade') }}</div>
                     <q-select
                         v-model="simSubject"
                         :options="subjectNames"
-                        label="Seleziona Materia"
+                        :label="t('gradesPage.selectSubject')"
                         dense outlined
                         class="q-mb-sm"
                     />
@@ -70,15 +70,15 @@
                             <q-input
                                 v-model.number="simGrade"
                                 type="number"
-                                label="Voto ipotetico"
+                                :label="t('gradesPage.hypotheticalGrade')"
                                 dense outlined
                                 min="1" max="10" step="0.25"
                                 aria-describedby="simulated-avg-output"
-                                :rules="[v => (v >= 1 && v <= 10) || 'Inserisci un voto tra 1 e 10']"
+                                :rules="[v => (v >= 1 && v <= 10) || t('gradesPage.gradeRuleError')]"
                             />
                         </div>
                         <div class="col-6 text-center">
-                            <div class="text-caption text-grey">Nuova Media</div>
+                            <div class="text-caption text-grey">{{ t('gradesPage.newAverage') }}</div>
                             <div id="simulated-avg-output" class="text-h6 text-weight-bold" :class="simulatedAverage >= 6 ? 'text-green' : 'text-red'">
                                 {{ simulatedAverage }}
                             </div>
@@ -91,13 +91,13 @@
         <!-- Main Grade Table -->
         <div class="col-12 col-md-8">
             <q-table
-              title="Registro Voti"
+              :title="t('gradesPage.tableTitle')"
               :rows="filteredGrades"
               :columns="columns"
               row-key="id"
               :pagination="{ rowsPerPage: 10 }"
               :loading="gradesLoading"
-              loading-label="Caricamento voti..."
+              :loading-label="t('gradesPage.loading')"
               flat bordered
             >
                 <template v-slot:body-cell-value="props">
@@ -116,27 +116,49 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
-import { gradeService } from 'src/services/gradeService'
-import api from 'src/services/api'
-import { useStudentStore } from 'src/stores/student'
+import { useI18n } from 'vue-i18n'
+import { gradeService } from '@/services/gradeService'
+import api from '@/services/api'
+import { useStudentStore } from '@/stores/student'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const studentStore = useStudentStore()
 const gradesLoading = ref(true)
 
+const getGradeColor = (val) => {
+    if (!val || val === 'A') return 'grey'
+    const v = parseFloat(val)
+    if (isNaN(v)) return 'grey'
+    if (v >= 8) return 'green-7'
+    if (v >= 6) return 'blue-7'
+    if (v >= 5) return 'amber-8'
+    return 'red-7'
+}
+
+const periodOptions = computed(() => [
+    t('gradesPage.periods.all'),
+    t('gradesPage.periods.lastMonth'),
+    t('gradesPage.periods.lastWeek')
+])
+
 const filters = ref({
     semester: 1,
-    period: 'Tutti'
+    period: t('gradesPage.periods.all')
 })
 
-const columns = [
-    { name: 'date', label: 'Data', align: 'left', field: 'date', sortable: true },
-    { name: 'subject', label: 'Materia', align: 'left', field: 'subject', sortable: true },
-    { name: 'evalType', label: 'Tipo Prova', align: 'left', field: 'evalType' },
-    { name: 'type', label: 'Categoria', align: 'left', field: 'type' },
-    { name: 'value', label: 'Voto', align: 'center', field: 'value', sortable: true },
-    { name: 'desc', label: 'Argomento', align: 'left', field: 'description' }
-]
+watch(() => t('gradesPage.periods.all'), (newVal) => {
+    filters.value.period = newVal
+})
+
+const columns = computed(() => [
+    { name: 'date', label: t('gradesPage.cols.date'), align: 'left', field: 'date', sortable: true },
+    { name: 'subject', label: t('gradesPage.cols.subject'), align: 'left', field: 'subject', sortable: true },
+    { name: 'evalType', label: t('gradesPage.cols.evalType'), align: 'left', field: 'evalType' },
+    { name: 'type', label: t('gradesPage.cols.category'), align: 'left', field: 'type' },
+    { name: 'value', label: t('gradesPage.cols.value'), align: 'center', field: 'value', sortable: true },
+    { name: 'desc', label: t('gradesPage.cols.desc'), align: 'left', field: 'description' }
+])
 
 const grades = ref([])
 const subjectsMap = ref({})
@@ -163,7 +185,11 @@ const fetchSubjects = async () => {
 }
 
 const mapEvalType = (type) => {
-    const map = { Written: 'Scritto', Oral: 'Orale', Practical: 'Pratico' }
+    const map = {
+        Written: t('gradesPage.evalTypes.written'),
+        Oral: t('gradesPage.evalTypes.oral'),
+        Practical: t('gradesPage.evalTypes.practical')
+    }
     return map[type] || type || '-'
 }
 
@@ -178,7 +204,7 @@ const fetchMyGrades = async () => {
                        all.push({
                            id: g.id,
                            date: g.date.split('T')[0],
-                           subject: subjectsMap.value[g.subject_id] || g.subject_name || (g.subject_id && !g.subject_id.includes('-') ? g.subject_id : 'Materia sconosciuta'),
+                           subject: subjectsMap.value[g.subject_id] || g.subject_name || (g.subject_id && !g.subject_id.includes('-') ? g.subject_id : t('gradesPage.unknownSubject')),
                            evalType: mapEvalType(g.evaluation_type),
                            type: g.grade_type,
                            value: g.grade_value === -1 ? 'A' : g.grade_value,
@@ -199,10 +225,14 @@ const fetchMyGrades = async () => {
 
 const filteredGrades = computed(() => {
     let list = grades.value.filter(g => g.semester === filters.value.semester)
-    if (filters.value.period === 'Ultimo Mese') {
+    const p = filters.value.period
+    const isLastMonth = p === t('gradesPage.periods.lastMonth') || p === 'Ultimo Mese' || p === 'Last Month'
+    const isLastWeek = p === t('gradesPage.periods.lastWeek') || p === 'Ultima Settimana' || p === 'Last Week'
+
+    if (isLastMonth) {
         const monthAgo = new Date(); monthAgo.setMonth(monthAgo.getMonth() - 1);
         list = list.filter(g => new Date(g.date) >= monthAgo)
-    } else if (filters.value.period === 'Ultima Settimana') {
+    } else if (isLastWeek) {
         const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
         list = list.filter(g => new Date(g.date) >= weekAgo)
     }
@@ -288,9 +318,9 @@ const downloadReport = async () => {
     downloading.value = true
     try {
         await gradeService.downloadReportCardPDF(filters.value.semester)
-        $q.notify({ type: 'positive', message: 'Report PDF scaricato con successo' })
+        $q.notify({ type: 'positive', message: t('gradesPage.reportDownloadSuccess') })
     } catch (e) {
-        $q.notify({ type: 'negative', message: 'Errore nel download del report PDF' })
+        $q.notify({ type: 'negative', message: t('gradesPage.reportDownloadError') })
     } finally {
         downloading.value = false
     }

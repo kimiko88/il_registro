@@ -413,12 +413,14 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
 import { usePermissions } from '@/composables/usePermissions'
 import adminService from '@/services/adminService'
 import api from '@/services/api'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const { isSuperAdmin } = usePermissions()
 
 const loading = ref(false)

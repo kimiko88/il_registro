@@ -35,7 +35,8 @@ export const userService = {
         return api.post('/users/bulk-import', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data'
-            }
+            },
+            timeout: 60000
         })
     },
     getGuardians(studentId) {
@@ -51,3 +52,6 @@ export const userService = {
         return api.get(`/users/students/${studentId}/fascicolo`)
     }
 }
+
+export default userService
+

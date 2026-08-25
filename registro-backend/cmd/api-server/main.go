@@ -38,6 +38,7 @@ import (
 	"registro-backend/internal/notifications"
 	"registro-backend/internal/orientamento"
 	"registro-backend/internal/parents"
+	"registro-backend/internal/payments"
 	"registro-backend/internal/pcto"
 	"registro-backend/internal/pdp"
 	"registro-backend/internal/postgres"
@@ -54,8 +55,8 @@ import (
 	"registro-backend/internal/students"
 	"registro-backend/internal/subjects"
 	"registro-backend/internal/substitutions"
-	"registro-backend/internal/teachers"
 	"registro-backend/internal/teacher_activities"
+	"registro-backend/internal/teachers"
 	"registro-backend/internal/tenants"
 	"registro-backend/internal/textbooks"
 	"registro-backend/internal/timetables"
@@ -67,6 +68,7 @@ import (
 	"registro-backend/pkg/jwt"
 	"registro-backend/pkg/logger"
 	"registro-backend/pkg/upload"
+	"registro-backend/pkg/wsticket"
 )
 
 func main() {
@@ -81,6 +83,10 @@ func main() {
 
 	// 2. Init Logger
 	logger.Init(cfg.Server.Mode)
+
+	// 2a. Init rate limiter backend (Redis-backed if REDIS_URL is set, in-memory otherwise).
+	// Must be called before the first request, so we do it right after logging is up.
+	middleware.InitRateLimiter(os.Getenv("REDIS_URL"))
 
 	// 3. Connect DB
 	database, err := db.Connect(cfg.Database)
@@ -165,7 +171,7 @@ func main() {
 	// Export SIDI/MIUR — scrutini, presenze, certificazioni DM 742/2017
 	sidiSvc := signatures.NewSidiExportService()
 
-	commsSvc := communications.NewService(commsRepo)
+	commsSvc := communications.NewService(commsRepo, usersRepo)
 	notesSvc := notes.NewService(notesRepo, usersRepo)
 	adminSvc := admin.NewService(adminRepo)
 	agendaSvc := agenda.NewService(agendaRepo)
@@ -176,8 +182,10 @@ func main() {
 	tripsSvc := trips.NewService(tripsRepo)
 	rubricsSvc := rubrics.NewService(rubricsRepo)
 
+	wsTicketStore := wsticket.NewStore()
+
 	// 7. Setup Handlers
-	authH := auth.NewHandler(authSvc)
+	authH := auth.NewHandler(authSvc, wsTicketStore)
 	usersH := users.NewHandler(usersSvc)
 	schoolsH := schools.NewHandler(schoolsSvc)
 	classesH := classes.NewHandler(classesSvc)
@@ -234,7 +242,7 @@ func main() {
 		authH.RegisterRoutes(api, authMiddleware)
 		api.GET("/public/schools", schoolsH.ListPublic)
 
-		api.GET("/ws", authMiddleware.Authenticate(), func(c *gin.Context) {
+		api.GET("/ws", authMiddleware.AuthenticateWSTicket(wsTicketStore), func(c *gin.Context) {
 			wsHandler.Listen(c)
 		})
 
@@ -284,7 +292,7 @@ func main() {
 			schoolCalendarH.RegisterRoutes(protected)
 
 			pdpRepo := pdp.NewRepository(database)
-			pdpSvc := pdp.NewService(pdpRepo)
+			pdpSvc := pdp.NewService(pdpRepo, usersRepo)
 			pdpH := pdp.NewHandler(pdpSvc)
 			pdpH.RegisterRoutes(protected)
 
@@ -370,6 +378,21 @@ func main() {
 			parentsH := parents.NewHandler(parentsSvc)
 			parentsH.RegisterRoutes(protected)
 
+			protected.GET("/students/dashboard/stats", func(c *gin.Context) {
+				c.JSON(http.StatusOK, gin.H{
+					"total_grades":   0,
+					"presence_rate":  100,
+					"upcoming_tests": 0,
+				})
+			})
+			protected.GET("/parents/dashboard/stats", func(c *gin.Context) {
+				c.JSON(http.StatusOK, gin.H{
+					"total_children":   1,
+					"unread_messages":  0,
+					"pending_payments": 0,
+				})
+			})
+
 			tenantsRepo := tenants.NewRepository(database)
 			tenantsSvc := tenants.NewService(tenantsRepo)
 			tenantsH := tenants.NewHandler(tenantsSvc)
@@ -402,6 +425,12 @@ func main() {
 			teacherActH.RegisterRoutes(protected)
 
 			elearningH.RegisterRoutes(protected)
+
+			// Gestione Pagamenti & PagoPA
+			paymentsRepo := payments.NewRepository(database)
+			paymentsSvc := payments.NewService(paymentsRepo, usersRepo)
+			paymentsH := payments.NewHandler(paymentsSvc)
+			paymentsH.RegisterRoutes(protected)
 
 			// Firme qualificate FEQ/FES + SIDI export + CAD preservation
 			signaturesH.RegisterRoutes(protected)

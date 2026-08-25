@@ -331,11 +331,11 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
-import { useThemeStore } from 'src/stores/theme'
-import { useAuthStore } from 'src/stores/auth'
-import { userService } from 'src/services/userService'
-import adminService from 'src/services/adminService'
-import api from 'src/services/api'
+import { useThemeStore } from '@/stores/theme'
+import { useAuthStore } from '@/stores/auth'
+import { userService } from '@/services/userService'
+import adminService from '@/services/adminService'
+import api from '@/services/api'
 
 import { useI18n } from 'vue-i18n'
 
@@ -367,18 +367,18 @@ const pwdForm = reactive({ current: '', newPwd: '', confirm: '' })
 
 const changeSecretaryPassword = async () => {
   if (pwdForm.newPwd !== pwdForm.confirm) {
-    $q.notify({ type: 'negative', message: 'Le password non coincidono' })
+    $q.notify({ type: 'negative', message: t('errors.passwordMismatch') })
     return
   }
   const userId = authStore.user?.id
   if (!userId) {
-    $q.notify({ type: 'negative', message: 'Sessione non valida' })
+    $q.notify({ type: 'negative', message: t('errors.sessionInvalid') })
     return
   }
   changingPwd.value = true
   try {
     await userService.changePassword(userId, pwdForm.current, pwdForm.newPwd)
-    $q.notify({ type: 'positive', message: 'Password aggiornata con successo!' })
+    $q.notify({ type: 'positive', message: t('notifications.passwordUpdated') })
     pwdForm.current = ''
     pwdForm.newPwd = ''
     pwdForm.confirm = ''

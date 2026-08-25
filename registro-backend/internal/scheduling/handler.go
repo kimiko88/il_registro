@@ -33,8 +33,12 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 
 func (h *Handler) CreateSlot(c *gin.Context) {
 	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	role := c.GetString("role")
-	if userID == "" || (role != "teacher" && role != "admin" && role != "superadmin") {
+	if role != "teacher" && role != "admin" && role != "superadmin" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only teachers or admins can create slots"})
 		return
 	}

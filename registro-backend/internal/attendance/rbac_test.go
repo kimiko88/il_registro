@@ -41,6 +41,13 @@ type mockRepo struct {
 func (m *mockRepo) IsTeacherAssignedToClass(_ context.Context, _, _ string) (bool, error) {
 	return m.isAssigned, m.isAssignedErr
 }
+func (m *mockRepo) AreStudentsInClass(_ context.Context, studentIDs []string, _ string) (map[string]bool, error) {
+	res := make(map[string]bool)
+	for _, id := range studentIDs {
+		res[id] = true
+	}
+	return res, nil
+}
 func (m *mockRepo) IsTeacherSubstitute(_ context.Context, _, _ string, _ time.Time, _ int) (bool, error) {
 	return m.isSub, m.isSubErr
 }
@@ -78,7 +85,7 @@ func (m *mockRepo) FindByStudent(_ string, _, _ time.Time) ([]Attendance, error)
 func (m *mockRepo) FindUnjustifiedByStudent(_ string) ([]Attendance, error) {
 	return nil, nil
 }
-func (m *mockRepo) JustifyAbsenceByParent(_, _, _ string) error { return nil }
+func (m *mockRepo) JustifyAbsenceByParent(_, _, _, _ string) error { return nil }
 func (m *mockRepo) GetStats(_ string) (*SummaryResponse, error) {
 	return &SummaryResponse{}, nil
 }
@@ -91,7 +98,7 @@ func (m *mockRepo) CountDistinctDays(_ string) (int, error) {
 func (m *mockRepo) GetAnalytics(_ context.Context, _ string) (*AnalyticsResponse, error) {
 	return &AnalyticsResponse{}, nil
 }
-func (m *mockRepo) DeleteByClassDateHour(_ string, _ time.Time, _ int) error { return m.deleteErr }
+func (m *mockRepo) DeleteByClassDateHour(_, _ string, _ time.Time, _ int) error { return m.deleteErr }
 func (m *mockRepo) FindJustificationByID(_ string) (*Justification, error) {
 	if m.justification != nil {
 		return m.justification, m.justificationErr
@@ -103,10 +110,20 @@ func (m *mockRepo) UpdateJustification(_ *Justification) error { return nil }
 func (m *mockRepo) HasOverlappingJustification(_ context.Context, _ string, _, _ time.Time) (bool, error) {
 	return m.hasOverlap, m.hasOverlapErr
 }
-func (m *mockRepo) FindPendingJustifications(_ string) ([]Justification, error) {
+func (m *mockRepo) FindPendingJustifications(_, _ string) ([]Justification, error) {
 	return nil, nil
 }
-func (m *mockRepo) DeleteJustification(_ string) error { return m.deleteErr }
+func (m *mockRepo) FindPendingJustificationsForTeacher(_ context.Context, _, _ string) ([]Justification, error) {
+	return nil, nil
+}
+func (m *mockRepo) DeleteJustification(_ string) error        { return m.deleteErr }
+func (m *mockRepo) DeletePendingJustification(_ string) error { return m.deleteErr }
+func (m *mockRepo) IsStudentInClass(_ context.Context, _, _ string) (bool, error) {
+	return true, nil
+}
+func (m *mockRepo) IsClassInSchool(_ context.Context, _, _ string) (bool, error) {
+	return true, nil
+}
 func (m *mockRepo) ProcessJustificationTx(_ context.Context, _ *Justification, _ string, _ bool) error {
 	return m.processTxErr
 }
@@ -160,6 +177,7 @@ func (m *mockUserRepo) BulkCreate(_ context.Context, _ []users.User) (int, []str
 func (m *mockUserRepo) BulkDelete(_ context.Context, _ []string) (int, error) { return 0, nil }
 func (m *mockUserRepo) HardDelete(_ context.Context, _ string) error          { return nil }
 func (m *mockUserRepo) RevokeAllUserTokens(_ context.Context, _ string) error { return nil }
+func (m *mockUserRepo) ClearTempMFASecret(_ context.Context, _ string) error  { return nil }
 func (m *mockUserRepo) AddGuardian(_ context.Context, _, _, _ string) error   { return nil }
 func (m *mockUserRepo) GetChildren(_ context.Context, _ string) ([]users.StudentChild, error) {
 	return nil, nil
@@ -476,12 +494,15 @@ func TestGetStudentAttendance_TeacherWrongSchool_Forbidden(t *testing.T) {
 
 func TestGetStudentAttendance_TeacherSameSchool_Pass(t *testing.T) {
 	schoolID := "school1"
+	classID := "class1"
 	userRepo := &mockUserRepo{
 		users: map[string]*users.User{
 			"teacher1": {ID: "teacher1", Role: "teacher", SchoolID: &schoolID},
+			"stu1":     {ID: "stu1", Role: "student", SchoolID: &schoolID, ClassID: &classID},
 		},
 	}
-	svc := makeService(&mockRepo{}, userRepo)
+	repo := &mockRepo{isAssigned: true}
+	svc := makeService(repo, userRepo)
 	_, err := svc.GetStudentAttendance(context.Background(),
 		"teacher1", "teacher", "school1", "stu1",
 		time.Now().Add(-7*24*time.Hour), time.Now())
@@ -524,13 +545,15 @@ func TestProcessJustification_TeacherNotAssigned_Forbidden(t *testing.T) {
 		},
 		isAssigned: false,
 	}
+	schoolID := "school1"
 	userRepo := &mockUserRepo{
 		users: map[string]*users.User{
-			"stu1": {ID: "stu1", Role: "student", ClassID: &classID},
+			"stu1":     {ID: "stu1", Role: "student", ClassID: &classID, SchoolID: &schoolID},
+			"teacher1": {ID: "teacher1", Role: "teacher", SchoolID: &schoolID},
 		},
 	}
 	svc := makeService(repo, userRepo)
-	err := svc.ProcessJustification(context.Background(), "teacher1", "just1", true)
+	err := svc.ProcessJustification(context.Background(), "teacher1", "teacher", "just1", true)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "forbidden")
 }
@@ -548,13 +571,15 @@ func TestProcessJustification_AssignedTeacher_Pass(t *testing.T) {
 		},
 		isAssigned: true,
 	}
+	schoolID := "school1"
 	userRepo := &mockUserRepo{
 		users: map[string]*users.User{
-			"stu1": {ID: "stu1", Role: "student", ClassID: &classID},
+			"stu1":     {ID: "stu1", Role: "student", ClassID: &classID, SchoolID: &schoolID},
+			"teacher1": {ID: "teacher1", Role: "teacher", SchoolID: &schoolID},
 		},
 	}
 	svc := makeService(repo, userRepo)
-	err := svc.ProcessJustification(context.Background(), "teacher1", "just1", true)
+	err := svc.ProcessJustification(context.Background(), "teacher1", "teacher", "just1", true)
 	assert.NoError(t, err)
 }
 

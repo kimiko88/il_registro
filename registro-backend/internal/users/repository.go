@@ -42,6 +42,7 @@ type Repository interface {
 	// GDPR
 	HardDelete(ctx context.Context, id string) error // Actual DB delete
 	RevokeAllUserTokens(ctx context.Context, userID string) error
+	ClearTempMFASecret(ctx context.Context, userID string) error
 
 	// Relationships
 	IsGuardian(ctx context.Context, parentUserID string, studentUserID string) (bool, error)
@@ -574,17 +575,20 @@ func (r *PostgresRepository) IsGuardian(ctx context.Context, parentUserID string
 		return false, nil
 	}
 
-	// Check 1: parent-student relationship via student_parents table
-	// Accepts parentUserID as either users.id or parents.id
-	// Accepts studentID as either users.id (attendance) or students.id (profile)
 	query := `
 		SELECT EXISTS (
 			SELECT 1
 			FROM student_parents sp
-			JOIN parents p ON sp.parent_id = p.id
-			JOIN students s ON sp.student_id = s.id
-			WHERE (p.user_id = $1::uuid OR p.id = $1::uuid)
-			  AND (s.user_id = $2::uuid OR s.id = $2::uuid)
+			LEFT JOIN parents p ON (sp.parent_id = p.id OR sp.parent_id = p.user_id)
+			LEFT JOIN students s ON (sp.student_id = s.id OR sp.student_id = s.user_id)
+			WHERE (sp.parent_id = $1::uuid OR p.user_id = $1::uuid OR p.id = $1::uuid)
+			  AND (
+				sp.student_id = $2::uuid OR 
+				s.user_id = $2::uuid OR 
+				s.id = $2::uuid OR 
+				sp.student_id IN (SELECT id FROM students WHERE user_id = $2::uuid OR id = $2::uuid) OR 
+				sp.student_id IN (SELECT user_id FROM students WHERE id = $2::uuid OR user_id = $2::uuid)
+			  )
 		)`
 
 	var exists bool
@@ -723,7 +727,13 @@ func (r *PostgresRepository) AddPasswordHistory(ctx context.Context, userID, pas
 }
 
 func (r *PostgresRepository) RevokeAllUserTokens(ctx context.Context, userID string) error {
-	query := `UPDATE refresh_tokens SET revoked = true, revoked_at = NOW() WHERE user_id = $1::uuid AND revoked = false`
+	query := `UPDATE refresh_tokens SET revoked = true WHERE user_id = $1::uuid`
+	_, err := r.db.ExecContext(ctx, query, userID)
+	return err
+}
+
+func (r *PostgresRepository) ClearTempMFASecret(ctx context.Context, userID string) error {
+	query := `UPDATE users SET temp_mfa_secret = NULL WHERE id = $1::uuid`
 	_, err := r.db.ExecContext(ctx, query, userID)
 	return err
 }

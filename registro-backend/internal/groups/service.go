@@ -48,10 +48,13 @@ func (s *Service) CreateGroup(ctx context.Context, req CreateGroupRequest) (*Gro
 	return s.GetGroupByID(ctx, g.ID)
 }
 
-func (s *Service) UpdateGroup(ctx context.Context, id string, req UpdateGroupRequest) (*Group, error) {
+func (s *Service) UpdateGroup(ctx context.Context, actorRole, schoolID, id string, req UpdateGroupRequest) (*Group, error) {
 	g, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, ErrGroupNotFound
+	}
+	if actorRole != "superadmin" && schoolID != "" && g.SchoolID != "" && g.SchoolID != schoolID {
+		return nil, errors.New("forbidden: il gruppo appartiene ad un'altra scuola")
 	}
 
 	if req.Name != "" {
@@ -71,10 +74,17 @@ func (s *Service) UpdateGroup(ctx context.Context, id string, req UpdateGroupReq
 		return nil, err
 	}
 
-	return s.GetGroupByID(ctx, id)
+	return s.GetGroupByID(ctx, g.ID)
 }
 
-func (s *Service) DeleteGroup(ctx context.Context, id string) error {
+func (s *Service) DeleteGroup(ctx context.Context, actorRole, schoolID, id string) error {
+	g, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return ErrGroupNotFound
+	}
+	if actorRole != "superadmin" && schoolID != "" && g.SchoolID != "" && g.SchoolID != schoolID {
+		return errors.New("forbidden: il gruppo appartiene ad un'altra scuola")
+	}
 	return s.repo.Delete(ctx, id)
 }
 
@@ -94,11 +104,25 @@ func (s *Service) ListGroupsByStudent(ctx context.Context, studentID string) ([]
 	return s.repo.ListByStudent(ctx, studentID)
 }
 
-func (s *Service) AddStudentsToGroup(ctx context.Context, groupID string, studentIDs []string) error {
+func (s *Service) AddStudentsToGroup(ctx context.Context, actorRole, schoolID, groupID string, studentIDs []string) error {
+	g, err := s.repo.GetByID(ctx, groupID)
+	if err != nil {
+		return ErrGroupNotFound
+	}
+	if actorRole != "superadmin" && schoolID != "" && g.SchoolID != "" && g.SchoolID != schoolID {
+		return errors.New("forbidden: il gruppo appartiene ad un'altra scuola")
+	}
 	return s.repo.AddStudents(ctx, groupID, studentIDs)
 }
 
-func (s *Service) RemoveStudentFromGroup(ctx context.Context, groupID, studentID string) error {
+func (s *Service) RemoveStudentFromGroup(ctx context.Context, actorRole, schoolID, groupID, studentID string) error {
+	g, err := s.repo.GetByID(ctx, groupID)
+	if err != nil {
+		return ErrGroupNotFound
+	}
+	if actorRole != "superadmin" && schoolID != "" && g.SchoolID != "" && g.SchoolID != schoolID {
+		return errors.New("forbidden: il gruppo appartiene ad un'altra scuola")
+	}
 	return s.repo.RemoveStudent(ctx, groupID, studentID)
 }
 

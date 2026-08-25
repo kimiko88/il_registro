@@ -1,6 +1,6 @@
 import api from './api';
 
-export default {
+export const monitoringService = {
     getSystemHealth() {
         return api.get('/monitoring/health');
     },
@@ -17,3 +17,6 @@ export default {
         return api.get('/monitoring/analytics');
     }
 };
+
+export default monitoringService;
+

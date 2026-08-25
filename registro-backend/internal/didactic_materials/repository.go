@@ -7,7 +7,9 @@ import (
 type Repository interface {
 	Create(m *DidacticMaterial) error
 	GetByClass(classID string) ([]DidacticMaterial, error)
+	GetByID(id string) (*DidacticMaterial, error)
 	Delete(id string, teacherID string) error
+	DeleteByID(id string) error
 }
 
 type repository struct {
@@ -64,11 +66,38 @@ func (r *repository) GetByClass(classID string) ([]DidacticMaterial, error) {
 		}
 		list = append(list, m)
 	}
-	return list, nil
+	return list, rows.Err()
+}
+
+func (r *repository) GetByID(id string) (*DidacticMaterial, error) {
+	query := `
+		SELECT dm.id, dm.school_id, dm.class_id, dm.subject_id, dm.teacher_id, 
+		       COALESCE(u.first_name || ' ' || u.last_name, '') AS teacher_name, 
+		       dm.title, dm.description, dm.attachment_url, dm.created_at, dm.updated_at
+		FROM didactic_materials dm
+		LEFT JOIN users u ON dm.teacher_id = u.id
+		WHERE dm.id = $1
+	`
+	var m DidacticMaterial
+	err := r.db.QueryRow(query, id).Scan(
+		&m.ID, &m.SchoolID, &m.ClassID, &m.SubjectID, &m.TeacherID,
+		&m.TeacherName, &m.Title, &m.Description, &m.AttachmentURL,
+		&m.CreatedAt, &m.UpdatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &m, nil
 }
 
 func (r *repository) Delete(id string, teacherID string) error {
 	query := `DELETE FROM didactic_materials WHERE id = $1 AND teacher_id = $2`
 	_, err := r.db.Exec(query, id, teacherID)
+	return err
+}
+
+func (r *repository) DeleteByID(id string) error {
+	query := `DELETE FROM didactic_materials WHERE id = $1`
+	_, err := r.db.Exec(query, id)
 	return err
 }

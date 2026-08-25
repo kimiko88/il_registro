@@ -57,26 +57,29 @@ func (h *Handler) ListGroups(c *gin.Context) {
 		return
 	}
 
-	schoolID := c.Query("school_id")
+	role := c.GetString("role")
+	schoolID := c.GetString("school_id")
+	if role == "superadmin" {
+		querySchoolID := c.Query("school_id")
+		if querySchoolID != "" {
+			schoolID = querySchoolID
+		}
+	}
+
 	teacherID := c.Query("teacher_id")
 	studentID := c.Query("student_id")
 
 	var groups []Group
 	var err error
 
-	if schoolID != "" {
-		groups, err = h.service.ListGroupsBySchool(c.Request.Context(), schoolID)
-	} else if teacherID != "" {
+	if teacherID != "" {
 		groups, err = h.service.ListGroupsByTeacher(c.Request.Context(), teacherID)
 	} else if studentID != "" {
 		groups, err = h.service.ListGroupsByStudent(c.Request.Context(), studentID)
+	} else if schoolID != "" {
+		groups, err = h.service.ListGroupsBySchool(c.Request.Context(), schoolID)
 	} else {
-		sID := c.GetString("school_id")
-		if sID != "" {
-			groups, err = h.service.ListGroupsBySchool(c.Request.Context(), sID)
-		} else {
-			groups = []Group{}
-		}
+		groups = []Group{}
 	}
 
 	if err != nil {
@@ -107,6 +110,7 @@ func (h *Handler) GetGroup(c *gin.Context) {
 func (h *Handler) UpdateGroup(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
+	schoolID := c.GetString("school_id")
 	if userID == "" || (role != "secretary" && role != "admin" && role != "superadmin") {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
@@ -119,7 +123,7 @@ func (h *Handler) UpdateGroup(c *gin.Context) {
 		return
 	}
 
-	group, err := h.service.UpdateGroup(c.Request.Context(), id, req)
+	group, err := h.service.UpdateGroup(c.Request.Context(), role, schoolID, id, req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -131,13 +135,14 @@ func (h *Handler) UpdateGroup(c *gin.Context) {
 func (h *Handler) DeleteGroup(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
+	schoolID := c.GetString("school_id")
 	if userID == "" || (role != "secretary" && role != "admin" && role != "superadmin") {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 
 	id := c.Param("id")
-	if err := h.service.DeleteGroup(c.Request.Context(), id); err != nil {
+	if err := h.service.DeleteGroup(c.Request.Context(), role, schoolID, id); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -148,6 +153,7 @@ func (h *Handler) DeleteGroup(c *gin.Context) {
 func (h *Handler) AddStudents(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
+	schoolID := c.GetString("school_id")
 	if userID == "" || (role != "secretary" && role != "admin" && role != "superadmin") {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
@@ -160,7 +166,7 @@ func (h *Handler) AddStudents(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.AddStudentsToGroup(c.Request.Context(), id, req.StudentIDs); err != nil {
+	if err := h.service.AddStudentsToGroup(c.Request.Context(), role, schoolID, id, req.StudentIDs); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -171,6 +177,7 @@ func (h *Handler) AddStudents(c *gin.Context) {
 func (h *Handler) RemoveStudent(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
+	schoolID := c.GetString("school_id")
 	if userID == "" || (role != "secretary" && role != "admin" && role != "superadmin") {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
@@ -179,7 +186,7 @@ func (h *Handler) RemoveStudent(c *gin.Context) {
 	id := c.Param("id")
 	studentID := c.Param("student_id")
 
-	if err := h.service.RemoveStudentFromGroup(c.Request.Context(), id, studentID); err != nil {
+	if err := h.service.RemoveStudentFromGroup(c.Request.Context(), role, schoolID, id, studentID); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

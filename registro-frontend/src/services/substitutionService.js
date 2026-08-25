@@ -21,6 +21,12 @@ export const substitutionService = {
   },
   recommendSubstitutes(params) {
     return api.get('/substitutions/recommend-substitutes', { params })
+  },
+  signRegister(subId, notes = '') {
+    return api.post(`/substitutions/${subId}/sign-register`, { notes })
   }
 }
+
+export default substitutionService
+
 

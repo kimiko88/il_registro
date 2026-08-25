@@ -8,40 +8,33 @@
         option-value="id"
         option-label="label"
         emit-value map-options
-        label="Classe"
+        :label="t('udaPage.classLabel')"
         dense outlined
         style="min-width: 220px"
       />
-      <q-input v-model="dateVal" type="date" label="Data" dense outlined style="max-width: 160px" />
+      <q-input v-model="dateVal" type="date" :label="t('gradesPage.date')" dense outlined style="max-width: 160px" />
       <q-select
         v-model="lessonType"
-        :options="[
-          { label: 'Lezione Standard', value: 'standard', icon: 'school' },
-          { label: 'Attività PCTO', value: 'pcto', icon: 'work' },
-          { label: 'Orientamento', value: 'orientamento', icon: 'explore' }
-        ]"
+        :options="activityTypeOptions"
         emit-value map-options
-        label="Tipo Attività"
+        :label="t('attendance.activityType') || 'Tipo Attività'"
         dense outlined
         style="min-width: 180px"
       />
       <q-space />
-      <q-btn color="primary" icon="save" label="Salva Presenze" :loading="saving" @click="saveAll" :disable="!hasChanges" />
+      <q-btn color="primary" icon="save" :label="t('common.save')" :loading="saving" @click="saveAll" :disable="!hasChanges" />
     </div>
 
     <q-banner v-if="selectedClassId && lessonType !== 'standard'" class="bg-indigo-1 text-indigo-10 rounded-xl q-mb-md border border-indigo-200">
       <template #avatar><q-icon :name="lessonType === 'pcto' ? 'work' : 'explore'" color="indigo" size="24px" /></template>
       <div class="text-weight-bold">
-        Attività di {{ lessonType === 'pcto' ? 'PCTO (Percorsi per le Competenze Trasversali e l\'Orientamento)' : 'Orientamento Scolastico' }}
-      </div>
-      <div class="text-caption">
-        Le ore firmate per questa attività vengono accumulate nel contatore di classe. In queste attività non è previsto l'inserimento di valutazioni numeriche.
+        {{ t('attendance.activityPrefix') || 'Attività di' }} {{ lessonType === 'pcto' ? 'PCTO' : (t('attendance.careerGuidance') || 'Orientamento Scolastico') }}
       </div>
     </q-banner>
 
     <q-banner v-if="!selectedClassId" class="bg-blue-1 q-mb-md">
       <template #avatar><q-icon name="info" color="primary" /></template>
-      Seleziona una classe per registrare le presenze.
+      {{ t('competenciesPage.selectClassPrompt') }}
     </q-banner>
 
     <q-table
@@ -51,27 +44,34 @@
       row-key="id"
       flat bordered
       :loading="loading"
+      :pagination="{ rowsPerPage: 50 }"
       hide-bottom
     >
-      <template v-slot:body="props">
+      <template #body="props">
         <q-tr :props="props">
-          <!-- Student Name -->
           <q-td key="name" :props="props">
-            <div class="text-weight-bold" v-if="props.row">{{ props.row.name }}</div>
+            <div class="row items-center no-wrap">
+              <q-avatar size="32px" color="grey-3" text-color="grey-8" class="q-mr-sm">
+                {{ props.row.name ? props.row.name.charAt(0) : 'S' }}
+              </q-avatar>
+              <div>
+                <div class="text-weight-bold">{{ props.row.name }}</div>
+              </div>
+            </div>
           </q-td>
 
-          <!-- Status Toggle -->
-          <q-td key="status" :props="props" style="width:280px">
+          <q-td key="status" :props="props">
             <q-btn-toggle
               v-model="attendanceMap[props.row.id].status"
               toggle-color="primary"
-              flat dense
+              dense unelevated
               :options="[
-                { label: 'Presente', value: 'present', icon: 'check_circle' },
-                { label: 'Assente', value: 'absent', icon: 'cancel' },
-                { label: 'Ritardo', value: 'late', icon: 'schedule' },
-                { label: 'Uscita', value: 'early_exit', icon: 'exit_to_app' }
+                { label: 'P', value: 'present', slot: 'present' },
+                { label: 'A', value: 'absent', slot: 'absent' },
+                { label: 'R', value: 'late', slot: 'late' },
+                { label: 'U', value: 'early_exit', slot: 'early' }
               ]"
+              @update:model-value="onStatusChange(props.row.id)"
             />
           </q-td>
 
@@ -81,17 +81,16 @@
               v-if="attendanceMap[props.row.id].status === 'late'"
               v-model.number="attendanceMap[props.row.id].minutesLate"
               type="number"
-              label="Min. ritardo"
+              :label="t('attendance.minutesLate') || 'Min. ritardo'"
               dense outlined
               min="1" max="120"
               style="max-width:120px"
             />
-            <!-- Exit time for early_exit -->
             <q-input
               v-else-if="attendanceMap[props.row.id].status === 'early_exit'"
               v-model="attendanceMap[props.row.id].exitTime"
               type="time"
-              label="Ora uscita"
+              :label="t('attendance.earlyExitTime') || 'Ora uscita'"
               dense outlined
               style="max-width:120px"
             />
@@ -104,11 +103,11 @@
               <q-chip
                 v-if="attendanceMap[props.row.id].isJustified"
                 color="positive" text-color="white" icon="check" size="sm" dense
-              >Giustificato</q-chip>
+              >{{ t('attendance.justified') || 'Giustificato' }}</q-chip>
               <q-btn
                 v-else
                 flat dense size="sm" icon="fact_check" color="grey"
-                label="Giustifica"
+                :label="t('attendance.justify') || 'Giustifica'"
                 @click="openJustify(props.row)"
               />
             </template>
@@ -121,21 +120,23 @@
     <q-dialog v-model="justifyDialog" persistent>
       <q-card style="min-width: 380px">
         <q-card-section>
-          <div class="text-h6">Giustifica Assenza</div>
+          <div class="text-h6">{{ t('attendance.justifyAbsence') || 'Giustifica Assenza' }}</div>
           <div class="text-caption text-grey" v-if="justifyTarget">{{ justifyTarget.name }}</div>
         </q-card-section>
         <q-card-section class="q-gutter-md">
           <q-select
             v-model="justifyReason"
-            :options="['Motivi di Salute', 'Motivi Familiari', 'Visita Medica', 'Altro']"
-            label="Motivazione *"
+            :options="justifyReasonOptions"
+            :label="(t('attendance.reason') || 'Motivazione') + ' *'"
+            emit-value
+            map-options
             outlined dense
           />
-          <q-input v-model="justifyNotes" label="Note" type="textarea" outlined dense autogrow />
+          <q-input v-model="justifyNotes" :label="t('gradesPage.notes')" type="textarea" outlined dense autogrow />
         </q-card-section>
         <q-card-actions align="right">
-          <q-btn flat label="Annulla" v-close-popup />
-          <q-btn color="primary" label="Giustifica" @click="submitJustify" />
+          <q-btn flat :label="t('common.cancel')" v-close-popup />
+          <q-btn color="primary" :label="t('attendance.justify') || 'Giustifica'" @click="submitJustify" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -144,11 +145,13 @@
 
 <script setup>
 import { ref, reactive, watch, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useQuasar, date } from 'quasar'
-import { useClassesStore } from 'src/stores/classes'
-import { attendanceService } from 'src/services/attendanceService'
+import { useClassesStore } from '@/stores/classes'
+import { attendanceService } from '@/services/attendanceService'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const classesStore = useClassesStore()
 
 const selectedClassId = ref(null)
@@ -161,7 +164,6 @@ const loading = ref(false)
 
 const classOptions = ref([])
 const students = ref([])
-// Map: studentId -> { status, minutesLate, exitTime, isJustified }
 const attendanceMap = reactive({})
 const initialSnapshot = ref('')
 
@@ -170,85 +172,102 @@ const justifyTarget = ref(null)
 const justifyReason = ref('Motivi di Salute')
 const justifyNotes = ref('')
 
-const columns = [
-  { name: 'name', label: 'Studente', field: 'name', align: 'left' },
-  { name: 'status', label: 'Stato', field: 'status', align: 'left' },
-  { name: 'minutes', label: 'Dettagli', field: 'minutesLate', align: 'left' },
-  { name: 'justified', label: 'Giustificazione', field: 'isJustified', align: 'center' }
-]
+const activityTypeOptions = computed(() => [
+  { label: t('attendance.standardLesson') || 'Lezione Standard', value: 'standard', icon: 'school' },
+  { label: 'Attività PCTO', value: 'pcto', icon: 'work' },
+  { label: t('attendance.careerGuidance') || 'Orientamento', value: 'orientamento', icon: 'explore' }
+])
+
+const justifyReasonOptions = computed(() => [
+  { label: t('attendance.healthReasons') || 'Motivi di Salute', value: 'Motivi di Salute' },
+  { label: t('attendance.familyReasons') || 'Motivi Familiari', value: 'Motivi Familiari' },
+  { label: t('attendance.medicalVisit') || 'Visita Medica', value: 'Visita Medica' },
+  { label: t('common.other') || 'Altro', value: 'Altro' }
+])
+
+const columns = computed(() => [
+  { name: 'name', label: t('competenciesPage.student'), field: 'name', align: 'left' },
+  { name: 'status', label: t('substitutionsPage.status'), field: 'status', align: 'left' },
+  { name: 'minutes', label: t('udaPage.detailTitle'), field: 'minutesLate', align: 'left' },
+  { name: 'justified', label: t('verbaliPage.resolutions'), field: 'isJustified', align: 'center' }
+])
 
 onMounted(async () => {
-  await classesStore.fetchAssignedClasses()
-  classOptions.value = classesStore.classOptions || []
+  await classesStore.fetchClasses()
+  classOptions.value = (classesStore.classes || []).map(c => ({
+    id: c.id,
+    label: `${c.year}${c.section} ${c.school_level || ''}`.trim()
+  }))
   if (classOptions.value.length > 0) {
     selectedClassId.value = classOptions.value[0].id
   }
 })
 
-watch(selectedClassId, () => {
-  if (selectedClassId.value) fetchStudentsAndAttendance()
+watch([selectedClassId, dateVal], () => {
+  if (selectedClassId.value) {
+    fetchStudentsAndAttendance()
+  }
 })
 
-watch(dateVal, () => {
-  if (selectedClassId.value) fetchStudentsAndAttendance()
+const snapshotCurrent = () => JSON.stringify(attendanceMap)
+
+const hasChanges = computed(() => {
+  if (!initialSnapshot.value) return false
+  return snapshotCurrent() !== initialSnapshot.value
 })
+
+const onStatusChange = (studentId) => {
+  const att = attendanceMap[studentId]
+  if (att) {
+    if (att.status !== 'late') att.minutesLate = null
+    if (att.status !== 'early_exit') att.exitTime = null
+  }
+}
 
 const fetchStudentsAndAttendance = async () => {
   loading.value = true
   try {
-    // Fetch today's attendance for the class
-    const res = await attendanceService.getByClass(selectedClassId.value, dateVal.value)
-    const records = res.data || []
-
-    // Initialize attendance map
-    records.forEach(r => {
-      attendanceMap[r.student_id] = {
-        attendanceId: r.id || null,
-        status: r.status || 'present',
-        minutesLate: r.minutes_late || 0,
-        exitTime: r.exit_time || '',
-        isJustified: r.is_justified || false
+    const res = await attendanceService.getAttendance(selectedClassId.value, dateVal.value)
+    const rawData = res.data || []
+    students.value = rawData.map(s => ({ id: s.student_id, name: `${s.first_name} ${s.last_name}` }))
+    
+    Object.keys(attendanceMap).forEach(k => delete attendanceMap[k])
+    rawData.forEach(s => {
+      attendanceMap[s.student_id] = {
+        attendanceId: s.attendance_id || null,
+        status: s.status || 'present',
+        minutesLate: s.minutes_late || null,
+        exitTime: s.exit_time || null,
+        isJustified: Boolean(s.is_justified)
       }
     })
-
-    // Build student list + map from existing records
-    const fetched = records.map(r => ({
-      id: r.student_id,
-      name: r.student_name || r.student_id
-    }))
-    students.value = fetched
-    initialSnapshot.value = JSON.stringify(attendanceMap)
+    initialSnapshot.value = snapshotCurrent()
   } catch (e) {
-    console.error(e)
-    students.value = []
+    $q.notify({ type: 'negative', message: t('common.error') })
   } finally {
     loading.value = false
   }
 }
 
-const hasChanges = computed(() => JSON.stringify(attendanceMap) !== initialSnapshot.value)
-
 const saveAll = async () => {
   saving.value = true
   try {
-    const records = students.value.map(s => ({
-      student_id: s.id,
-      date: dateVal.value,
-      status: attendanceMap[s.id]?.status || 'present',
-      minutes_late: attendanceMap[s.id]?.status === 'late' ? (attendanceMap[s.id]?.minutesLate || 0) : 0,
-      exit_time: attendanceMap[s.id]?.status === 'early_exit' ? (attendanceMap[s.id]?.exitTime || '') : null
+    const records = Object.entries(attendanceMap).map(([studentId, data]) => ({
+      student_id: studentId,
+      status: data.status,
+      minutes_late: data.minutesLate,
+      exit_time: data.exitTime
     }))
-
-    await attendanceService.markAttendance({
+    await attendanceService.recordBulk({
       class_id: selectedClassId.value,
       date: dateVal.value,
+      lesson_type: lessonType.value,
       records
     })
-
-    $q.notify({ type: 'positive', message: 'Presenze salvate con successo' })
-    initialSnapshot.value = JSON.stringify(attendanceMap)
+    $q.notify({ type: 'positive', message: t('common.success') })
+    initialSnapshot.value = snapshotCurrent()
   } catch (e) {
-    $q.notify({ type: 'negative', message: `Errore: ${e.response?.data?.error || e.message}` })
+    $q.notify({ type: 'negative', message: (t('common.error') || 'Errore') + `: ${e.response?.data?.error || e.message}` })
   } finally {
     saving.value = false
   }
@@ -273,10 +292,10 @@ const submitJustify = async () => {
       })
       att.isJustified = true
     }
-    $q.notify({ type: 'positive', message: 'Giustificazione registrata' })
+    $q.notify({ type: 'positive', message: t('common.success') })
     justifyDialog.value = false
   } catch (e) {
-    $q.notify({ type: 'negative', message: 'Errore nella giustificazione' })
+    $q.notify({ type: 'negative', message: t('common.error') })
   }
 }
 

@@ -1,11 +1,14 @@
 # il_registro — Registro Elettronico Scolastico
 
-> 🏛️ Un registro elettronico **pubblico, aperto e gratuito** per la scuola italiana — perché i dati degli studenti appartengono alla res pubblica, non alle aziende private.
+> 🏛️ Un registro elettronico **pubblico, aperto e gratuito** per la scuola italiana — ideato e realizzato da un docente, per la scuola pubblica.
+
+> ⚠️ **Stato del progetto: Beta funzionante** — Il progetto è attualmente in fase di sviluppo attivo. Le funzionalità principali sono operative e testabili tramite la demo online, ma **non è ancora consigliato per l'uso in produzione** in ambienti scolastici reali. API, struttura del database e configurazioni potrebbero subire modifiche prima del rilascio stabile.
 
 **Online Demo**: [https://registro-scuola.netlify.app](https://registro-scuola.netlify.app)
 **Demo accounts & passwords**: [example_accounts.md](./example_accounts.md)
 _**Nota bene**_: alcune password, come quella per l'account superadmin, potrebbero essere state modificate per motivi di sicurezza.
 
+[![Discord Members](https://img.shields.io/discord/426912293134270465.svg?label=Discord&logo=discord)](https://discord.gg/Qh5XjQxwb)
 [![Backend CI](https://github.com/kimiko88/il_registro/actions/workflows/ci.yml/badge.svg)](https://github.com/kimiko88/il_registro/actions/workflows/ci.yml)
 [![Go Version](https://img.shields.io/badge/go-1.25%2B-blue)](https://go.dev/)
 [![Vue Version](https://img.shields.io/badge/vue-3.x-brightgreen)](https://vuejs.org/)
@@ -13,6 +16,7 @@ _**Nota bene**_: alcune password, come quella per l'account superadmin, potrebbe
 [![Google Antigravity](https://img.shields.io/badge/IDE-Google%20Antigravity-4285F4?logo=google&logoColor=white)](https://antigravity.google)
 [![Google Gemini](https://img.shields.io/badge/AI-Google%20Gemini-4285F4?logo=google&logoColor=white)](https://gemini.google.com)
 [![Anthropic Claude](https://img.shields.io/badge/AI-Anthropic%20Claude-D97757?logo=anthropic&logoColor=white)](https://anthropic.com)
+[![Status](https://img.shields.io/badge/status-beta%20funzionante-yellow)](https://github.com/kimiko88/il_registro)
 
 ---
 
@@ -79,6 +83,14 @@ L'obiettivo è fornire alla _res pubblica_ — scuole, comuni, Stato — uno str
 - ✅ **Qualità**: funzionalità avanzate (SPID/CIE, BES/DSA, BI, PWA) tipicamente riservate ai prodotti commerciali
 
 > _"La scuola pubblica merita strumenti pubblici."_
+
+## 👨‍🏫 Autore
+
+**il_registro** è stato ideato e realizzato da **Me ([kimiko88](https://github.com/kimiko88))**, docente di informatica presso una scuola secondaria pubblica di secondo grado.
+
+Il progetto nasce dall'esperienza diretta in aula e dalla necessità quotidiana di disporre di uno strumento di registro elettronico che fosse **aperto, moderno e realmente al servizio della scuola pubblica** — senza costi di licenza e senza cedere i dati degli studenti a soggetti privati.
+
+> _"Da docente, sto provando a costruire lo strumento che avrei voluto avere."_
 
 ## Panoramica
 
@@ -164,6 +176,31 @@ npm run dev
 
 ---
 
+## ⚙️ Perché Go e Vue.js? (oltre al gusto personale di chi vi scrive)
+
+### Backend — Go
+
+Go è stato scelto per il backend per ragioni che vanno oltre la moda tecnologica:
+
+- **Performance nativa**: Go compila in binari statici con garbage collector a bassa latenza,
+  ideale per gestire centinaia di richieste concorrenti (WebSocket, notifiche real-time)
+  senza il overhead di una JVM o di un runtime interpretato
+- **Semplicità operativa**: un singolo binario da deployare, senza dipendenze runtime —
+  perfetto per scuole con infrastruttura IT limitata o per self-hosting su hardware modesto
+- **Concorrenza strutturale**: le goroutine rendono naturale gestire operazioni parallele
+  (sincronizzazione Google Classroom + notifiche + API) senza la complessità dei thread tradizionali
+- **Ecosistema stabile**: a differenza di Node.js o Python, Go ha una compatibilità
+  backward garantita — il codice scritto oggi funzionerà tra 10 anni
+
+### Frontend — Vue 3 + Quasar
+
+- **Curva di apprendimento gentile**: Vue è il framework più adottabile da sviluppatori
+  scolastici e contributori occasionali, abbassando la barriera ai contributi della community
+- **Quasar Framework**: genera nativamente PWA, SPA e app mobile da un'unica codebase —
+  fondamentale per supportare dispositivi datati tipici delle scuole pubbliche
+- **Reattività granulare**: la Composition API di Vue 3 permette componenti complessi
+  (matrix dei voti, scrutinio) senza sacrificare la leggibilità del codice
+
 ## Documentazione
 
 | Documento                                                    | Descrizione                                                  |
@@ -212,8 +249,6 @@ cd registro-frontend && npx playwright test
 ```
 
 ---
-
-## Licenza
 
 ## Licenza
 

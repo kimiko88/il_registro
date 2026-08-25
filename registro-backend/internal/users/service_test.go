@@ -79,6 +79,10 @@ func (m *MockRepository) BulkDelete(ctx context.Context, ids []string) (int, err
 	args := m.Called(ctx, ids)
 	return args.Int(0), args.Error(1)
 }
+func (m *MockRepository) ClearTempMFASecret(ctx context.Context, userID string) error {
+	args := m.Called(ctx, userID)
+	return args.Error(0)
+}
 func (m *MockRepository) HardDelete(ctx context.Context, id string) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)
@@ -208,12 +212,14 @@ func TestService_ListUsers(t *testing.T) {
 	tests := []struct {
 		name      string
 		actorRole string
+		filter    UserFilter
 		mockSetup func()
 		wantErr   bool
 	}{
 		{
 			name:      "Admin can list",
 			actorRole: "admin",
+			filter:    UserFilter{},
 			mockSetup: func() {
 				mockRepo.On("List", mock.Anything, mock.AnythingOfType("users.UserFilter")).
 					Return([]User{}, 0, nil)
@@ -222,7 +228,25 @@ func TestService_ListUsers(t *testing.T) {
 		},
 		{
 			name:      "Student cannot list (unauthorized)",
-			actorRole: "student", // Assumed from permissions.go which had no list perm
+			actorRole: "student",
+			filter:    UserFilter{},
+			mockSetup: func() {},
+			wantErr:   true,
+		},
+		{
+			name:      "Parent can list teachers (allowed)",
+			actorRole: "parent",
+			filter:    UserFilter{Role: "teacher"},
+			mockSetup: func() {
+				mockRepo.On("List", mock.Anything, mock.AnythingOfType("users.UserFilter")).
+					Return([]User{}, 0, nil)
+			},
+			wantErr: false,
+		},
+		{
+			name:      "Parent cannot list all users (unauthorized)",
+			actorRole: "parent",
+			filter:    UserFilter{},
 			mockSetup: func() {},
 			wantErr:   true,
 		},
@@ -231,7 +255,7 @@ func TestService_ListUsers(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mockSetup()
-			_, _, err := service.ListUsers(context.Background(), tt.actorRole, "", UserFilter{})
+			_, _, err := service.ListUsers(context.Background(), tt.actorRole, "", tt.filter)
 			if tt.wantErr {
 				// We expect ErrUnauthorized
 				assert.Error(t, err)
@@ -611,6 +635,8 @@ func TestService_RestoreUser(t *testing.T) {
 			actorRole: "admin",
 			userID:    "user-123",
 			mockSetup: func() {
+				user := &User{ID: "user-123"}
+				mockRepo.On("GetByID", mock.Anything, "user-123").Return(user, nil)
 				mockRepo.On("Restore", mock.Anything, "user-123").Return(nil)
 			},
 			wantErr: false,
@@ -627,7 +653,7 @@ func TestService_RestoreUser(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mockSetup()
-			err := service.RestoreUser(context.Background(), tt.actorRole, tt.userID)
+			err := service.RestoreUser(context.Background(), tt.actorRole, "", tt.userID)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
@@ -655,6 +681,8 @@ func TestService_DisableMFA(t *testing.T) {
 			mockSetup: func() {
 				user := &User{ID: "user-123", MFAEnabled: true, MFASecret: "secret"}
 				mockRepo.On("GetByID", mock.Anything, "user-123").Return(user, nil)
+				mockRepo.On("ClearTempMFASecret", mock.Anything, "user-123").Return(nil)
+				mockRepo.On("RevokeAllUserTokens", mock.Anything, "user-123").Return(nil)
 				mockRepo.On("Update", mock.Anything, mock.MatchedBy(func(u *User) bool {
 					return !u.MFAEnabled && u.MFASecret == ""
 				})).Return(nil)
@@ -862,3 +890,47 @@ func TestService_DeleteUser_SchoolIDIsolation(t *testing.T) {
 	})
 }
 
+func TestService_RestoreUser_SchoolIDIsolation(t *testing.T) {
+	mockRepo := new(MockRepository)
+	service := NewService(mockRepo)
+
+	t.Run("Secretary restoring user in another school -> Unauthorized", func(t *testing.T) {
+		otherSchool := "school-B"
+		user := &User{ID: "target-1", SchoolID: &otherSchool}
+		mockRepo.On("GetByID", mock.Anything, "target-1").Return(user, nil).Once()
+
+		err := service.RestoreUser(context.Background(), "secretary", "school-A", "target-1")
+		assert.ErrorIs(t, err, ErrUnauthorized)
+	})
+
+	t.Run("Secretary restoring user in same school -> Allowed", func(t *testing.T) {
+		sameSchool := "school-A"
+		user := &User{ID: "target-2", SchoolID: &sameSchool}
+		mockRepo.On("GetByID", mock.Anything, "target-2").Return(user, nil).Once()
+		mockRepo.On("Restore", mock.Anything, "target-2").Return(nil).Once()
+
+		err := service.RestoreUser(context.Background(), "secretary", "school-A", "target-2")
+		assert.NoError(t, err)
+	})
+}
+
+func TestSanitizeCSV_EscapeSequences(t *testing.T) {
+	assert.Equal(t, "'\tdata", sanitizeCSV("\tdata"))
+	assert.Equal(t, "'\rdata", sanitizeCSV("\rdata"))
+	assert.Equal(t, "'=SUM(A1)", sanitizeCSV("=SUM(A1)"))
+	assert.Equal(t, "normal", sanitizeCSV("normal"))
+}
+
+func TestService_BulkDeleteUsers_EmptyActorSchoolID(t *testing.T) {
+	mockRepo := new(MockRepository)
+	service := NewService(mockRepo)
+	schoolB := "school-B"
+
+	// Admin with empty actorSchoolID attempts to delete user in school-B -> should be filtered out
+	targetUser := User{ID: "u1", Role: "student", SchoolID: &schoolB}
+	mockRepo.On("ListByIDs", mock.Anything, []string{"u1"}).Return([]User{targetUser}, nil).Once()
+
+	count, err := service.BulkDeleteUsers(context.Background(), "admin", "", []string{"u1"})
+	assert.NoError(t, err)
+	assert.Equal(t, 0, count, "Admin without schoolID should not be able to delete users in school-B")
+}

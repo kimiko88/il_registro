@@ -28,8 +28,8 @@ export const lessonService = {
     },
 
     // Homework (Compiti)
-    async getHomeworks(classId) {
-        return api.get(`/homeworks/class/${classId}`)
+    async getHomeworks(classId, params = {}) {
+        return api.get(`/homeworks/class/${classId}`, { params })
     },
     async createHomework(data) {
         return api.post('/homeworks', data)
@@ -42,7 +42,10 @@ export const lessonService = {
     },
 
     // Student & Parent access to homeworks
-    async getMyHomeworks(classId) {
-        return api.get(`/homeworks/class/${classId}`)
+    async getMyHomeworks(classId, params = {}) {
+        return this.getHomeworks(classId, params)
     }
 }
+
+export default lessonService
+

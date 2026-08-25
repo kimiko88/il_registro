@@ -140,10 +140,12 @@
 
 <script setup>
 import { ref, onMounted, reactive } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
-import { textbookService } from 'src/services/textbookService'
+import { textbookService } from '@/services/textbookService'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const textbooks = ref([])
 const loading = ref(false)
 const saving = ref(false)

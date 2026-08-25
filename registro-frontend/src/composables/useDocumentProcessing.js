@@ -1,6 +1,7 @@
 import { ref } from 'vue';
 import { useDocumentsStore } from '../stores/documents';
 import { useQuasar } from 'quasar';
+import { i18n } from '@/i18n';
 
 export function useDocumentProcessing() {
     const store = useDocumentsStore();
@@ -17,12 +18,13 @@ export function useDocumentProcessing() {
     };
 
     const submitReview = async (decision) => {
+        const t = i18n?.global?.t;
         try {
             await store.reviewDocument(selectedDoc.value.id, decision, reviewNotes.value);
-            $q.notify({ type: 'positive', message: `Document ${decision}` });
+            $q.notify({ type: 'positive', message: t ? t('composables.documents.reviewSuccess', { decision }) : `Documento ${decision}` });
             showReviewDialog.value = false;
         } catch (e) {
-            $q.notify({ type: 'negative', message: 'Review failed' });
+            $q.notify({ type: 'negative', message: t ? t('composables.documents.reviewError') : 'Revisione fallita' });
         }
     };
 

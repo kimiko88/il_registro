@@ -45,8 +45,11 @@
 </template>
 
 <script setup>
-import { useGradesStore } from 'src/stores/grades';
+import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useGradesStore } from '@/stores/grades';
 
+const { t } = useI18n();
 defineProps({
   students: Array,
   loading: Boolean
@@ -54,11 +57,11 @@ defineProps({
 
 const gradesStore = useGradesStore();
 
-const columns = [
-  { name: 'name', required: true, label: 'Student', align: 'left', field: 'name', sortable: true },
-  { name: 'grades', label: 'Grades', align: 'left' },
-  { name: 'average', label: 'Average', align: 'center' }
-];
+const columns = computed(() => [
+  { name: 'name', required: true, label: t('classRegister.tableHeaderStudent') || 'Studente', align: 'left', field: 'name', sortable: true },
+  { name: 'grades', label: t('classRegister.tabGrades') || 'Voti', align: 'left' },
+  { name: 'average', label: t('roleDashboards.gradeAverage') || 'Media', align: 'center' }
+]);
 
 const getStudentGrades = (studentId) => {
   return gradesStore.getGradesByStudent(studentId);

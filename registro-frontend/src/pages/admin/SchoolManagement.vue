@@ -278,6 +278,7 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useQuasar, exportFile, debounce } from 'quasar'
 import { usePermissions } from '@/composables/usePermissions'
@@ -285,6 +286,7 @@ import adminService from '@/services/adminService'
 
 const router = useRouter()
 const $q = useQuasar()
+const { t } = useI18n()
 const {
   isSuperAdmin,
   canCreateSchools,

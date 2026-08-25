@@ -11,13 +11,16 @@
             <iframe :src="doc.url" width="100%" height="100%" frameborder="0"></iframe>
         </div>
         <div v-else class="text-center q-pa-xl text-grey">
-            No preview available
+            {{ t('documentsPage.noPreview') || 'Nessuna anteprima disponibile' }}
         </div>
     </q-card-section>
   </q-card>
 </template>
 
 <script setup>
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 defineProps({
     doc: Object
 });

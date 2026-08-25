@@ -94,6 +94,7 @@ func TestHandler_GetDashboardStats(t *testing.T) {
 		{
 			name: "successful dashboard stats for superadmin",
 			setupContext: func(c *gin.Context) {
+				c.Set("user_id", "admin-1")
 				c.Set("role", "superadmin")
 			},
 			setupMock: func(m *MockRepository) {
@@ -244,8 +245,12 @@ func TestHandler_CreateSchool(t *testing.T) {
 			expectedStatus: http.StatusCreated,
 		},
 		{
-			name:           "invalid request body",
-			requestBody:    "invalid json",
+			name:        "invalid request body",
+			requestBody: "invalid json",
+			setupContext: func(c *gin.Context) {
+				c.Set("user_id", "1")
+				c.Set("role", "superadmin")
+			},
 			expectedStatus: http.StatusBadRequest,
 			setupMock:      func(m *MockRepository) {},
 		},
@@ -466,6 +471,8 @@ func TestHandler_ListAdminUsers(t *testing.T) {
 				url += tt.queryParams
 			}
 			c.Request = httptest.NewRequest("GET", url, nil)
+			c.Set("user_id", "admin-123")
+			c.Set("role", "superadmin")
 
 			handler.ListAdminUsers(c)
 
@@ -491,15 +498,18 @@ func TestHandler_GetSystemMetrics(t *testing.T) {
 	var resp map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &resp)
 	assert.NoError(t, err)
-	assert.Contains(t, resp, "api_success_rate")
-	assert.Contains(t, resp, "db_cpu_percent")
-	assert.Contains(t, resp, "cache_hit_rate")
 	assert.Contains(t, resp, "goroutines")
 	assert.Contains(t, resp, "memory_alloc_mb")
+	assert.Contains(t, resp, "memory_sys_mb")
+	assert.Contains(t, resp, "uptime_seconds")
 }
 
 func TestHandler_GetSystemHealth(t *testing.T) {
-	handler, _ := setupTestHandler()
+	handler, mockRepo := setupTestHandler()
+	mockRepo.On("GetSystemHealth", mock.Anything).Return(&SystemHealthStatus{
+		OverallStatus: "healthy",
+		Database:      HealthCheck{Status: "healthy"},
+	}, nil)
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)

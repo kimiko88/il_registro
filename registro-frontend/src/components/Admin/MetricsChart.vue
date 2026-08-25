@@ -3,6 +3,8 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -14,7 +16,8 @@ import {
   Legend
 } from 'chart.js';
 import { Line } from 'vue-chartjs';
-import { computed } from 'vue';
+
+const { t } = useI18n();
 
 ChartJS.register(
   CategoryScale,
@@ -27,15 +30,18 @@ ChartJS.register(
 );
 
 const props = defineProps({
-  data: Array
+  data: {
+    type: Array,
+    default: () => []
+  }
 });
 
 const chartData = computed(() => ({
-  labels: props.data.map(d => d.timestamp),
+  labels: (props.data || []).map(d => d.timestamp),
   datasets: [{
-    label: 'API Requests',
+    label: t('admin.apiRequests') || 'API Requests',
     backgroundColor: '#f87979',
-    data: props.data.map(d => d.value)
+    data: (props.data || []).map(d => d.value)
   }]
 }));
 

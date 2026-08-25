@@ -3,12 +3,12 @@
     <!-- Header -->
     <div class="row items-center justify-between q-mb-lg">
       <div>
-        <h1 class="text-h4 font-bold text-slate-800 q-my-none">Gestione Colloqui</h1>
+        <h1 class="text-h4 font-bold text-slate-800 q-my-none">{{ t('colloquiPage.title') }}</h1>
         <p class="text-subtitle1 text-slate-500 q-mt-xs q-mb-none">
-          Pianifica le tue disponibilità ed accetta le prenotazioni dei genitori
+          {{ t('colloquiPage.subtitle') }}
         </p>
       </div>
-      <q-btn color="indigo" icon="add" label="Nuova Disponibilità" rounded @click="showSlotDialog = true" />
+      <q-btn color="indigo" icon="add" :label="t('colloquiPage.addSlot')" rounded @click="showSlotDialog = true" />
     </div>
 
     <!-- Main Content -->
@@ -16,8 +16,8 @@
         <div class="col-12 col-md-8">
             <q-card flat bordered class="rounded-xl shadow-sm overflow-hidden">
                 <q-tabs v-model="tab" class="text-indigo bg-indigo-50/50" active-color="indigo" indicator-color="indigo" align="left">
-                    <q-tab name="meetings" label="Incontri Programmati" icon="event" />
-                    <q-tab name="slots" label="Le tue Disponibilità" icon="schedule" />
+                    <q-tab name="meetings" :label="t('colloquiPage.bookings')" icon="event" />
+                    <q-tab name="slots" :label="t('colloquiPage.activeSlots')" icon="schedule" />
                 </q-tabs>
 
                 <q-separator />
@@ -274,9 +274,11 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
+import { useI18n } from 'vue-i18n'
 import api from 'src/services/api'
 
 const $q = useQuasar()
+const { t } = useI18n()
 
 const tab = ref('meetings')
 const showSlotDialog = ref(false)

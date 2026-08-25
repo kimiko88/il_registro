@@ -2,8 +2,8 @@
   <q-page class="q-pa-md" style="height: calc(100vh - 50px);">
     <!-- Tab switcher -->
     <q-tabs v-model="activeTab" dense class="text-primary q-mb-md" align="left">
-      <q-tab name="messaggi" icon="mail" label="Messaggi" />
-      <q-tab name="circolari" icon="campaign" label="Circolari Ufficiali (Bacheca)" />
+      <q-tab name="messaggi" icon="mail" :label="t('nav.communications')" />
+      <q-tab name="circolari" icon="campaign" :label="t('communicationsPage.title')" />
     </q-tabs>
     <q-separator class="q-mb-md" />
 
@@ -224,12 +224,14 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useCommunicationsStore } from 'src/stores/communications'
-import { communicationService } from '@/services/communicationService'
 import { useQuasar, date as qdate } from 'quasar'
-import api from 'src/services/api'
+import { useI18n } from 'vue-i18n'
+import { useCommunicationsStore } from '@/stores/communications'
+import { communicationService } from '@/services/communicationService'
+import api from '@/services/api'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const store = useCommunicationsStore()
 const showCompose = ref(false)
 const selectedMessage = ref(null)
@@ -259,18 +261,9 @@ async function fetchCircolari() {
     loadingCircolari.value = true
     try {
         const res = await api.get('/communications/circolari')
-        circolari.value = res.data || []
-        if (circolari.value.length === 0) {
-          circolari.value = [
-            { id: 'circ-1', subject: 'Circolare n. 104 - Convocazione Consigli di Classe', created_at: new Date().toISOString(), body: 'Si comunica la convocazione dei consigli di classe per il quadrimestre.', is_read: false },
-            { id: 'circ-2', subject: 'Circolare n. 105 - Sospensione Attività Didattiche per Festività', created_at: new Date().toISOString(), body: 'Si comunicano i giorni di chiusura dell\'istituto.', is_read: true }
-          ]
-        }
+        circolari.value = Array.isArray(res.data) ? res.data : (res.data?.items || [])
     } catch (e) {
-        circolari.value = [
-          { id: 'circ-1', subject: 'Circolare n. 104 - Convocazione Consigli di Classe', created_at: new Date().toISOString(), body: 'Si comunica la convocazione dei consigli di classe per il quadrimestre.', is_read: false },
-          { id: 'circ-2', subject: 'Circolare n. 105 - Sospensione Attività Didattiche per Festività', created_at: new Date().toISOString(), body: 'Si comunicano i giorni di chiusura dell\'istituto.', is_read: true }
-        ]
+        circolari.value = []
     } finally {
         loadingCircolari.value = false
     }

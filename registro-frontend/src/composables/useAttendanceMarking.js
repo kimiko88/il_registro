@@ -1,6 +1,7 @@
 import { ref } from 'vue';
 import { useAttendanceStore } from 'src/stores/attendance';
 import { useQuasar } from 'quasar';
+import { i18n } from '@/i18n';
 
 export function useAttendanceMarking() {
     const attendanceStore = useAttendanceStore();
@@ -20,16 +21,17 @@ export function useAttendanceMarking() {
 
     const saveAttendance = async (classId, date) => {
         isSaving.value = true;
+        const t = i18n?.global?.t;
         try {
             await attendanceStore.submitAttendance(classId, date, attendanceStore.records);
             $q.notify({
                 type: 'positive',
-                message: 'Attendance saved successfully'
+                message: t ? t('composables.attendance.saveSuccess') : 'Presenze salvate con successo'
             });
         } catch (err) {
             $q.notify({
                 type: 'negative',
-                message: 'Failed to save attendance'
+                message: t ? t('composables.attendance.saveError') : 'Impossibile salvare le presenze'
             });
         } finally {
             isSaving.value = false;

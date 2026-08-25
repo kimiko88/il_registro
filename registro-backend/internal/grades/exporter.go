@@ -38,7 +38,11 @@ func (e *pdfExporter) ExportReportCard(report *SemesterReportResponse, semester 
 	pdf.CellFormat(95, 7, fmt.Sprintf("Studente: %s", report.StudentName), "1", 0, "L", false, 0, "")
 	pdf.CellFormat(95, 7, fmt.Sprintf("Classe: %s", report.ClassName), "1", 1, "L", false, 0, "")
 	pdf.CellFormat(95, 7, fmt.Sprintf("Media Generale: %.2f", report.OverallAverage), "1", 0, "L", false, 0, "")
-	pdf.CellFormat(95, 7, fmt.Sprintf("Voto Comportamento: %.0f", report.BehaviorGrade), "1", 1, "L", false, 0, "")
+	behaviorStr := "N.V."
+	if report.BehaviorGrade > 0 {
+		behaviorStr = fmt.Sprintf("%.0f", report.BehaviorGrade)
+	}
+	pdf.CellFormat(95, 7, fmt.Sprintf("Voto Comportamento: %s", behaviorStr), "1", 1, "L", false, 0, "")
 	pdf.Ln(6)
 
 	pdf.SetFont("Arial", "B", 10)
@@ -66,8 +70,8 @@ func (e *pdfExporter) ExportReportCard(report *SemesterReportResponse, semester 
 		pdf.CellFormat(30, 7, fmt.Sprintf("%.2f", sub.SubjectAverage), "1", 0, "C", false, 0, "")
 
 		finalGradeStr := fmt.Sprintf("%.0f", sub.FinalGrade)
-		if sub.FinalGrade == 0 {
-			finalGradeStr = fmt.Sprintf("%.1f", sub.SubjectAverage)
+		if sub.GradeCount == 0 || sub.FinalGrade <= 0 {
+			finalGradeStr = "N.V."
 		}
 		pdf.CellFormat(30, 7, finalGradeStr, "1", 1, "C", false, 0, "")
 	}

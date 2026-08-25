@@ -96,6 +96,42 @@ func (h *FascicoloHandler) GetFascicolo(c *gin.Context) {
 		return
 	}
 
+	// If caller is a parent, verify they are a registered guardian for this student
+	if actorRole == "parent" && h.db != nil {
+		var isGuardian bool
+		err := h.db.QueryRowContext(c.Request.Context(), `
+			SELECT EXISTS (
+				SELECT 1 FROM student_parents sp
+				LEFT JOIN parents p ON sp.parent_id = p.id
+				LEFT JOIN students s ON sp.student_id = s.id
+				WHERE (sp.parent_id::text = $1 OR p.user_id::text = $1 OR p.id::text = $1)
+				  AND (sp.student_id::text = $2 OR s.user_id::text = $2 OR s.id::text = $2)
+			)`, actorID, studentID).Scan(&isGuardian)
+		if err != nil || !isGuardian {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: not authorized for this student"})
+			return
+		}
+	}
+
+	// If caller is a teacher, verify student belongs to the teacher's school
+	if actorRole == "teacher" && h.db != nil {
+		schoolID := c.GetString("school_id")
+		if schoolID != "" {
+			var isAuthorized bool
+			err := h.db.QueryRowContext(c.Request.Context(), `
+				SELECT EXISTS (
+					SELECT 1 FROM students s
+					JOIN classes c ON s.class_id = c.id
+					WHERE (s.id = $1::uuid OR s.user_id = $1::uuid)
+					  AND c.school_id = $2::uuid
+				)`, studentID, schoolID).Scan(&isAuthorized)
+			if err != nil || !isAuthorized {
+				c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: not authorized for this student"})
+				return
+			}
+		}
+	}
+
 	semester, _ := strconv.Atoi(c.DefaultQuery("semester", "1"))
 
 	voti := []VotoItem{}

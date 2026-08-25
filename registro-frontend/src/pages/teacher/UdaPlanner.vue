@@ -5,17 +5,17 @@
       <div>
         <h1 class="text-h4 text-weight-bold text-slate-800 q-my-none">
           <q-icon name="auto_stories" color="primary" class="q-mr-sm" />
-          Programmazione Didattica Annuale (UdA)
+          {{ t('udaPage.title') }}
         </h1>
         <p class="text-subtitle1 text-slate-500 q-mt-xs q-mb-none">
-          Progettazione curricolare per Unità di Apprendimento, competenze trasversali e monte ore
+          {{ t('udaPage.subtitle') }}
         </p>
       </div>
       <div class="row items-center q-gutter-sm">
         <q-btn
           color="primary"
           icon="add"
-          label="Nuova UdA"
+          :label="t('udaPage.newUda')"
           unelevated
           class="rounded-lg text-weight-bold"
           @click="openCreateModal"
@@ -31,7 +31,7 @@
           <q-select
             v-model="selectedClass"
             :options="classOptions"
-            label="Filtra per Classe"
+            :label="t('udaPage.filterClass')"
             outlined dense emit-value map-options
             clearable
             @update:model-value="fetchUdaList"
@@ -41,7 +41,7 @@
           <q-select
             v-model="selectedSubject"
             :options="subjectOptions"
-            label="Filtra per Materia"
+            :label="t('udaPage.filterSubject')"
             outlined dense emit-value map-options
             clearable
             @update:model-value="fetchUdaList"
@@ -50,7 +50,7 @@
         <div class="col-12 col-md-4">
           <q-input
             v-model="searchQuery"
-            placeholder="Cerca per titolo o obiettivo..."
+            :placeholder="t('udaPage.searchPlaceholder')"
             outlined dense clearable
           >
             <template v-slot:append>
@@ -68,9 +68,9 @@
 
     <div v-else-if="filteredUdaList.length === 0" class="text-center q-pa-xl text-slate-400">
       <q-icon name="auto_stories" size="64px" class="q-mb-md opacity-40" />
-      <div class="text-h6">Nessuna Unità di Apprendimento presente</div>
-      <div class="text-caption q-mb-md">Non sono presenti UdA nel database per la selezione corrente.</div>
-      <q-btn color="primary" icon="add" label="Crea UdA nel Database" unelevated @click="openCreateModal" />
+      <div class="text-h6">{{ t('udaPage.noUdaFound') }}</div>
+      <div class="text-caption q-mb-md">{{ t('udaPage.noUdaFoundDesc') }}</div>
+      <q-btn color="primary" icon="add" :label="t('udaPage.createInDb')" unelevated @click="openCreateModal" />
     </div>
 
     <div v-else class="row q-col-gutter-md">
@@ -82,7 +82,7 @@
                 {{ getStatusLabel(uda.status) }}
               </q-badge>
               <div class="text-caption text-grey-6 text-weight-medium">
-                {{ uda.hours || 10 }} Ore Totali
+                {{ uda.hours || 10 }} {{ t('udaPage.totalHours') }}
               </div>
             </div>
 
@@ -90,21 +90,21 @@
               {{ uda.title }}
             </div>
             <div class="text-caption text-primary text-weight-bold q-mb-sm">
-              {{ uda.subject_name || 'Materia' }} · Classe {{ uda.class_name || uda.class_id || 'N/D' }}
+              {{ uda.subject_name || t('udaPage.subject') }} · {{ t('classRegister.classLabel', { name: uda.class_name || uda.class_id || 'N/D' }) }}
             </div>
 
             <div class="text-body2 text-slate-600 line-clamp-3 q-mb-md">
-              {{ uda.description || 'Nessuna descrizione specificata.' }}
+              {{ uda.description || t('udaPage.noDescription') }}
             </div>
 
             <div class="bg-slate-50 q-pa-sm rounded-lg border border-slate-200">
-              <div class="text-caption text-weight-bold text-slate-700">Competenze Target:</div>
-              <div class="text-caption text-slate-600 line-clamp-2">{{ Array.isArray(uda.competencies) ? uda.competencies.join(', ') : (uda.competencies || 'Competenze curricolari') }}</div>
+              <div class="text-caption text-weight-bold text-slate-700">{{ t('udaPage.targetCompetencies') }}:</div>
+              <div class="text-caption text-slate-600 line-clamp-2">{{ Array.isArray(uda.competencies) ? uda.competencies.join(', ') : (uda.competencies || t('udaPage.curricularCompetencies')) }}</div>
             </div>
           </q-card-section>
 
           <q-card-actions class="bg-slate-50 border-t border-slate-200 justify-between q-px-md">
-            <q-btn flat dense icon="visibility" color="primary" label="Dettagli" @click="viewUda(uda)" />
+            <q-btn flat dense icon="visibility" color="primary" :label="t('udaPage.details')" @click="viewUda(uda)" />
             <div>
               <q-btn flat round dense icon="edit" color="secondary" @click="openEditModal(uda)" />
               <q-btn flat round dense icon="delete" color="negative" @click="confirmDeleteUda(uda)" />
@@ -120,7 +120,7 @@
         <q-card-section class="bg-primary text-white row items-center justify-between q-py-md q-px-lg">
           <div class="text-h6 text-weight-bold">
             <q-icon name="auto_stories" class="q-mr-xs" />
-            {{ isEditing ? 'Modifica UdA' : 'Nuova Unità di Apprendimento (UdA)' }}
+            {{ isEditing ? t('udaPage.editUda') : t('udaPage.createUda') }}
           </div>
           <q-btn icon="close" flat round dense v-close-popup />
         </q-card-section>
@@ -130,21 +130,21 @@
             <div class="col-12 col-md-8">
               <q-input
                 v-model="form.title"
-                label="Titolo Unità di Apprendimento *"
+                :label="t('udaPage.titleLabel')"
                 outlined dense hide-bottom-space
-                :rules="[val => !!val || 'Campo obbligatorio']"
+                :rules="[val => !!val || t('errors.ERR_REQUIRED_FIELDS')]"
               />
             </div>
             <div class="col-12 col-md-4">
               <q-select
                 v-model="form.status"
                 :options="[
-                  { label: 'Bozza', value: 'draft' },
-                  { label: 'In Corso', value: 'active' },
-                  { label: 'Completata', value: 'completed' }
+                  { label: t('udaPage.draft'), value: 'draft' },
+                  { label: t('udaPage.active'), value: 'active' },
+                  { label: t('udaPage.completed'), value: 'completed' }
                 ]"
                 emit-value map-options
-                label="Stato *"
+                :label="t('udaPage.statusLabel')"
                 outlined dense hide-bottom-space
               />
             </div>
@@ -156,9 +156,9 @@
                 v-model="form.class_id"
                 :options="classOptions"
                 emit-value map-options
-                label="Classe Target *"
+                :label="t('competenciesPage.selectClass')"
                 outlined dense hide-bottom-space
-                :rules="[val => !!val || 'Campo obbligatorio']"
+                :rules="[val => !!val || t('errors.ERR_REQUIRED_FIELDS')]"
               />
             </div>
             <div class="col-12 col-md-5">
@@ -166,16 +166,16 @@
                 v-model="form.subject_id"
                 :options="subjectOptions"
                 emit-value map-options
-                label="Materia *"
+                :label="t('udaPage.subject') + ' *'"
                 outlined dense hide-bottom-space
-                :rules="[val => !!val || 'Campo obbligatorio']"
+                :rules="[val => !!val || t('errors.ERR_REQUIRED_FIELDS')]"
               />
             </div>
             <div class="col-12 col-md-2">
               <q-input
                 v-model.number="form.hours"
                 type="number"
-                label="Monte Ore *"
+                :label="t('udaPage.duration')"
                 outlined dense hide-bottom-space
               />
             </div>
@@ -186,7 +186,7 @@
               v-model="form.description"
               type="textarea"
               rows="3"
-              label="Descrizione e Motivazione Didattica"
+              :label="t('udaPage.descLabel')"
               outlined dense hide-bottom-space
             />
           </div>
@@ -196,7 +196,7 @@
               v-model="form.competenciesText"
               type="textarea"
               rows="3"
-              label="Competenze Chiave e Obiettivi (separati da virgola) *"
+              :label="t('udaPage.competenciesLabel')"
               outlined dense hide-bottom-space
             />
           </div>
@@ -206,14 +206,14 @@
               v-model="form.evaluation_criteria"
               type="textarea"
               rows="2"
-              label="Criteri di Valutazione e Griglia"
+              :label="t('udaPage.criteriaLabel')"
               outlined dense hide-bottom-space
             />
           </div>
 
           <q-card-actions align="right" class="q-pt-lg q-px-none q-pb-none bg-white">
-            <q-btn flat label="Annulla" v-close-popup class="text-weight-bold" />
-            <q-btn color="primary" icon="save" label="Salva UdA nel DB" unelevated :loading="submitting" type="submit" class="rounded-lg text-weight-bold" />
+            <q-btn flat :label="t('common.cancel')" v-close-popup class="text-weight-bold" />
+            <q-btn color="primary" icon="save" :label="t('udaPage.saveUda')" unelevated :loading="submitting" type="submit" class="rounded-lg text-weight-bold" />
           </q-card-actions>
         </q-form>
       </q-card>
@@ -225,34 +225,34 @@
         <q-card-section class="bg-slate-800 text-white row items-center justify-between q-py-md q-px-lg">
           <div>
             <div class="text-h6 text-weight-bold">{{ selectedUda.title }}</div>
-            <div class="text-caption opacity-80">{{ selectedUda.subject_name }} · Classe {{ selectedUda.class_name }}</div>
+            <div class="text-caption opacity-80">{{ selectedUda.subject_name }} · {{ t('classRegister.classLabel', { name: selectedUda.class_name }) }}</div>
           </div>
           <q-btn icon="close" flat round dense v-close-popup />
         </q-card-section>
 
         <q-card-section class="q-pa-lg q-gutter-y-md">
           <div>
-            <div class="text-caption text-weight-bold text-slate-500 text-uppercase">Descrizione</div>
-            <div class="text-body1 text-slate-800 q-mt-xs">{{ selectedUda.description || 'Nessuna descrizione' }}</div>
+            <div class="text-caption text-weight-bold text-slate-500 text-uppercase">{{ t('udaPage.descLabel') }}</div>
+            <div class="text-body1 text-slate-800 q-mt-xs">{{ selectedUda.description || t('udaPage.noDescription') }}</div>
           </div>
 
           <q-separator />
 
           <div>
-            <div class="text-caption text-weight-bold text-slate-500 text-uppercase">Competenze Chiave</div>
+            <div class="text-caption text-weight-bold text-slate-500 text-uppercase">{{ t('udaPage.targetCompetencies') }}</div>
             <div class="text-body2 text-slate-700 q-mt-xs">{{ Array.isArray(selectedUda.competencies) ? selectedUda.competencies.join(', ') : selectedUda.competencies }}</div>
           </div>
 
           <q-separator />
 
           <div>
-            <div class="text-caption text-weight-bold text-slate-500 text-uppercase">Criteri di Valutazione</div>
+            <div class="text-caption text-weight-bold text-slate-500 text-uppercase">{{ t('udaPage.evaluationCriteria') }}</div>
             <div class="text-body2 text-slate-700 q-mt-xs">{{ selectedUda.evaluation_criteria || 'Criteri standard' }}</div>
           </div>
         </q-card-section>
 
         <q-card-actions align="right" class="q-pa-md">
-          <q-btn flat label="Chiudi" v-close-popup />
+          <q-btn flat :label="t('common.close')" v-close-popup />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -262,9 +262,11 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
+import { useI18n } from 'vue-i18n'
 import api from 'src/services/api'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const udaList = ref([])
 const loading = ref(false)
 const submitting = ref(false)

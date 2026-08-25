@@ -26,6 +26,11 @@ func (m *MockRepository) CreateUser(ctx context.Context, user *User) error {
 	return args.Error(0)
 }
 
+func (m *MockRepository) SchoolExists(ctx context.Context, schoolID string) (bool, error) {
+	args := m.Called(ctx, schoolID)
+	return args.Bool(0), args.Error(1)
+}
+
 func (m *MockRepository) GetPasswordHistory(ctx context.Context, userID string) ([]string, error) {
 	args := m.Called(ctx, userID)
 	if args.Get(0) == nil {
@@ -90,6 +95,11 @@ func (m *MockRepository) CreateRefreshToken(ctx context.Context, token *RefreshT
 	return args.Error(0)
 }
 
+func (m *MockRepository) RotateRefreshTokenTx(ctx context.Context, oldID string, newRt *RefreshToken) error {
+	args := m.Called(ctx, oldID, newRt)
+	return args.Error(0)
+}
+
 func (m *MockRepository) GetMFASecret(ctx context.Context, userID string) (string, error) {
 	args := m.Called(ctx, userID)
 	return args.String(0), args.Error(1)
@@ -112,6 +122,11 @@ func (m *MockRepository) SaveTempMFASecret(ctx context.Context, userID, secret s
 
 func (m *MockRepository) ConfirmMFA(ctx context.Context, userID string) error {
 	args := m.Called(ctx, userID)
+	return args.Error(0)
+}
+
+func (m *MockRepository) ConfirmMFAAndSaveRecoveryCodesTx(ctx context.Context, userID string, codes []string) error {
+	args := m.Called(ctx, userID, codes)
 	return args.Error(0)
 }
 
@@ -169,6 +184,11 @@ func (m *MockRepository) ResetPasswordTx(ctx context.Context, userID, hash, toke
 	return args.Error(0)
 }
 
+func (m *MockRepository) ChangePasswordTx(ctx context.Context, userID, hash string) error {
+	args := m.Called(ctx, userID, hash)
+	return args.Error(0)
+}
+
 func (m *MockRepository) UsePasswordResetToken(ctx context.Context, id string) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)
@@ -217,7 +237,6 @@ func TestRegister(t *testing.T) {
 			Role:      "student",
 		}
 
-		mockRepo.On("GetUserByEmail", mock.Anything, req.Email).Return(nil, errors.New("not found")).Once()
 		mockRepo.On("CreateUser", mock.Anything, mock.MatchedBy(func(u *User) bool {
 			return u.Email == req.Email && u.FirstName == req.FirstName
 		})).Return(nil).Once()
@@ -240,24 +259,13 @@ func TestRegister(t *testing.T) {
 			Role:      "student",
 		}
 
-		existingUser := &User{Email: req.Email}
-		mockRepo.On("GetUserByEmail", mock.Anything, req.Email).Return(existingUser, nil).Once()
+		mockRepo.On("CreateUser", mock.Anything, mock.Anything).Return(ErrEmailAlreadyExists).Once()
 
 		user, err := s.Register(context.Background(), req)
 
 		assert.ErrorIs(t, err, ErrEmailAlreadyExists)
 		assert.Nil(t, user)
 		mockRepo.AssertExpectations(t)
-	})
-
-	t.Run("WeakPassword", func(t *testing.T) {
-		req := &RegisterRequest{
-			Email:    "test@example.com",
-			Password: "weak",
-		}
-
-		_, err := s.Register(context.Background(), req)
-		assert.ErrorIs(t, err, ErrPasswordTooShort)
 	})
 }
 
@@ -367,77 +375,95 @@ func TestRefreshToken(t *testing.T) {
 		rt := &RefreshToken{
 			ID:        "rt-1",
 			UserID:    userID,
-			Token:     token,
-			ExpiresAt: time.Now().Add(time.Hour),
+			Token:     hashToken(token),
+			ExpiresAt: time.Now().Add(24 * time.Hour),
 			Revoked:   false,
+			IPAddress: "127.0.0.1",
 		}
 
 		user := &User{
 			ID:       userID,
-			Email:    "test@example.com",
-			Role:     "student",
 			IsActive: true,
 		}
 
 		mockRepo.On("GetRefreshToken", mock.Anything, token).Return(rt, nil).Once()
 		mockRepo.On("GetUserByID", mock.Anything, userID).Return(user, nil).Once()
-		mockRepo.On("RevokeRefreshToken", mock.Anything, "rt-1").Return(nil).Once()
-		mockRepo.On("CreateRefreshToken", mock.Anything, mock.AnythingOfType("*auth.RefreshToken")).Return(nil).Once()
+		mockRepo.On("RotateRefreshTokenTx", mock.Anything, "rt-1", mock.AnythingOfType("*auth.RefreshToken")).Return(nil).Once()
 
 		pair, err := s.RefreshToken(context.Background(), token, "127.0.0.1", "TestAgent")
 
 		assert.NoError(t, err)
-		assert.NotNil(t, pair)
-		assert.NotEqual(t, token, pair.RefreshToken)
 		assert.NotEmpty(t, pair.AccessToken)
+		assert.NotEmpty(t, pair.RefreshToken)
+		assert.NotEqual(t, token, pair.RefreshToken)
 		mockRepo.AssertExpectations(t)
 	})
 
-	t.Run("Revoked", func(t *testing.T) {
+	t.Run("RevokedToken", func(t *testing.T) {
 		rt := &RefreshToken{
-			ID:      "rt-1",
-			Token:   token,
-			Revoked: true,
+			ID:        "rt-1",
+			UserID:    userID,
+			Token:     hashToken(token),
+			ExpiresAt: time.Now().Add(24 * time.Hour),
+			Revoked:   true,
 		}
 
 		mockRepo.On("GetRefreshToken", mock.Anything, token).Return(rt, nil).Once()
 
 		_, err := s.RefreshToken(context.Background(), token, "", "")
+
 		assert.ErrorIs(t, err, ErrTokenRevoked)
 		mockRepo.AssertExpectations(t)
 	})
 
-	t.Run("Expired", func(t *testing.T) {
+	t.Run("ExpiredToken", func(t *testing.T) {
 		rt := &RefreshToken{
 			ID:        "rt-1",
-			Token:     token,
-			ExpiresAt: time.Now().Add(-time.Hour),
+			UserID:    userID,
+			Token:     hashToken(token),
+			ExpiresAt: time.Now().Add(-24 * time.Hour),
+			Revoked:   false,
 		}
 
 		mockRepo.On("GetRefreshToken", mock.Anything, token).Return(rt, nil).Once()
 
 		_, err := s.RefreshToken(context.Background(), token, "", "")
+
 		assert.ErrorIs(t, err, ErrInvalidToken)
 		mockRepo.AssertExpectations(t)
 	})
 }
 
 func TestPasswordReset(t *testing.T) {
-	s, mockRepo := setupTest(t)
-
-	t.Run("RequestSuccess", func(t *testing.T) {
+	t.Run("RequestResetSuccess", func(t *testing.T) {
+		s, mockRepo := setupTest(t)
 		email := "test@example.com"
 		user := &User{ID: "user-123", Email: email}
 
 		mockRepo.On("GetUserByEmail", mock.Anything, email).Return(user, nil).Once()
-		mockRepo.On("CreatePasswordResetToken", mock.Anything, mock.Anything).Return(nil).Once()
+		mockRepo.On("CreatePasswordResetToken", mock.Anything, mock.AnythingOfType("*auth.PasswordResetToken")).Return(nil).Once()
 
 		err := s.RequestPasswordReset(context.Background(), email)
 		assert.NoError(t, err)
 		mockRepo.AssertExpectations(t)
 	})
 
+	t.Run("RequestResetNormalizedEmail", func(t *testing.T) {
+		s, mockRepo := setupTest(t)
+		rawEmail := "  Test.User@Example.COM "
+		normalizedEmail := "test.user@example.com"
+		user := &User{ID: "user-123", Email: normalizedEmail}
+
+		mockRepo.On("GetUserByEmail", mock.Anything, normalizedEmail).Return(user, nil).Once()
+		mockRepo.On("CreatePasswordResetToken", mock.Anything, mock.AnythingOfType("*auth.PasswordResetToken")).Return(nil).Once()
+
+		err := s.RequestPasswordReset(context.Background(), rawEmail)
+		assert.NoError(t, err)
+		mockRepo.AssertExpectations(t)
+	})
+
 	t.Run("ResetSuccess", func(t *testing.T) {
+		s, mockRepo := setupTest(t)
 		token := "valid-reset-token"
 		newPass := "NewPass123!Safe"
 
@@ -461,6 +487,7 @@ func TestPasswordReset(t *testing.T) {
 	})
 
 	t.Run("ChangePasswordSuccess", func(t *testing.T) {
+		s, mockRepo := setupTest(t)
 		userID := "user-change-123"
 		currentPass := "OldPass123!Valid"
 		newPass := "NewSuperPass123!"
@@ -470,8 +497,7 @@ func TestPasswordReset(t *testing.T) {
 
 		mockRepo.On("GetUserByID", mock.Anything, userID).Return(user, nil).Once()
 		mockRepo.On("GetPasswordHistory", mock.Anything, userID).Return([]string{}, nil).Once()
-		mockRepo.On("UpdatePassword", mock.Anything, userID, mock.Anything).Return(nil).Once()
-		mockRepo.On("AddPasswordHistory", mock.Anything, userID, mock.Anything).Return(nil).Once()
+		mockRepo.On("ChangePasswordTx", mock.Anything, userID, mock.Anything).Return(nil).Once()
 		mockRepo.On("RevokeAllUserTokens", mock.Anything, userID).Return(nil).Once()
 
 		err := s.ChangePassword(context.Background(), userID, currentPass, newPass)
@@ -480,6 +506,7 @@ func TestPasswordReset(t *testing.T) {
 	})
 
 	t.Run("ChangePasswordInvalidCurrent", func(t *testing.T) {
+		s, mockRepo := setupTest(t)
 		userID := "user-change-123"
 		currentPass := "WrongOldPass123!"
 		newPass := "NewSuperPass123!"

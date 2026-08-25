@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import api from '../services/api';
+import { i18n } from '@/i18n';
 
 function formatClassItem(c) {
     if (!c) return c;
@@ -88,19 +89,26 @@ export const useClassesStore = defineStore('classes', {
             this.loading = true;
             try {
                 const [cRes, gRes] = await Promise.all([
-                    api.get('/classes').catch(() => ({ data: [] })),
-                    api.get('/groups').catch(() => ({ data: [] }))
+                    api.get('/classes').catch(err => {
+                        console.error('Error fetching /classes in fetchAllSchoolClassesAndGroups:', err);
+                        return { data: [] };
+                    }),
+                    api.get('/groups').catch(err => {
+                        console.error('Error fetching /groups in fetchAllSchoolClassesAndGroups:', err);
+                        return { data: [] };
+                    })
                 ]);
                 const rawClasses = cRes.data?.classes || cRes.data || [];
                 const rawGroups = gRes.data?.groups || gRes.data || [];
 
                 const formattedClasses = rawClasses.map(formatClassItem);
+                const t = i18n?.global?.t
                 const formattedGroups = rawGroups.map(g => ({
                     id: g.id,
                     name: g.name,
                     section: g.name,
-                    articolazione: 'Gruppo Linguistico / Articolazione',
-                    label: `Gruppo Linguistico: ${g.name}`,
+                    articolazione: t ? t('classes.linguisticGroup') : 'Gruppo Linguistico / Articolazione',
+                    label: t ? t('classes.linguisticGroupLabel', { name: g.name }) : `Gruppo Linguistico: ${g.name}`,
                     isGroup: true
                 }));
 
@@ -118,8 +126,9 @@ export const useClassesStore = defineStore('classes', {
         async createClass(classData) {
             try {
                 const response = await api.post('/classes', classData);
-                this.classes.push(response.data);
-                return response.data;
+                const item = formatClassItem(response.data);
+                this.classes.push(item);
+                return item;
             } catch (err) {
                 this.error = 'Failed to create class';
                 throw err;
@@ -131,7 +140,7 @@ export const useClassesStore = defineStore('classes', {
                 const response = await api.put(`/classes/${id}`, classData);
                 const index = this.classes.findIndex(c => c.id === id);
                 if (index !== -1) {
-                    this.classes[index] = response.data;
+                    this.classes[index] = formatClassItem(response.data);
                 }
             } catch (err) {
                 this.error = 'Failed to update class';

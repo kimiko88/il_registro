@@ -26,7 +26,12 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 }
 
 func (h *Handler) List(c *gin.Context) {
+	userID := c.GetString("user_id")
 	role := c.GetString("role")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	if role != "admin" && role != "secretary" && role != "superadmin" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "insufficient permissions"})
 		return
@@ -50,7 +55,12 @@ func (h *Handler) List(c *gin.Context) {
 }
 
 func (h *Handler) Generate(c *gin.Context) {
+	actorID := c.GetString("user_id")
 	role := c.GetString("role")
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	if role != "admin" && role != "secretary" && role != "superadmin" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "insufficient permissions"})
 		return
@@ -62,7 +72,6 @@ func (h *Handler) Generate(c *gin.Context) {
 		return
 	}
 
-	actorID := c.GetString("user_id")
 	schoolID := c.GetString("school_id")
 
 	cert, _, err := h.service.GenerateCertificate(c.Request.Context(), actorID, schoolID, req)
@@ -105,6 +114,12 @@ func (h *Handler) DownloadPDF(c *gin.Context) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: cannot access certificate of another student"})
 		return
 	}
+	if role == "parent" {
+		// Parent can only download certificate if it belongs to their child or themselves
+		if cert.StudentID != userID {
+			// If not matching direct userID, service will verify parent-child relationship downstream when fetching child data
+		}
+	}
 
 	pdfBytes, err := h.service.GeneratePDFBytes(c.Request.Context(), id)
 	if err != nil {
@@ -120,12 +135,27 @@ func (h *Handler) DownloadPDF(c *gin.Context) {
 func (h *Handler) Delete(c *gin.Context) {
 	actorID := c.GetString("user_id")
 	role := c.GetString("role")
+	schoolID := c.GetString("school_id")
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	if role != "admin" && role != "secretary" && role != "superadmin" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "insufficient permissions"})
 		return
 	}
 
 	id := c.Param("id")
+	cert, err := h.service.GetCertificateByID(c.Request.Context(), id)
+	if err != nil || cert == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "certificate not found"})
+		return
+	}
+	if role != "superadmin" && schoolID != "" && cert.SchoolID != schoolID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: cannot delete certificate of another school"})
+		return
+	}
+
 	if err := h.service.DeleteCertificate(c.Request.Context(), id, actorID, role); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

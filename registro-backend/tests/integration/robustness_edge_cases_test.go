@@ -20,6 +20,9 @@ type mockTextbookRepo struct{}
 func (m *mockTextbookRepo) Create(ctx context.Context, t *textbooks.Textbook) error {
 	return nil
 }
+func (m *mockTextbookRepo) GetByID(ctx context.Context, id string) (*textbooks.Textbook, error) {
+	return &textbooks.Textbook{ID: id, SchoolID: "sch-101"}, nil
+}
 func (m *mockTextbookRepo) Update(ctx context.Context, t *textbooks.Textbook) error {
 	return nil
 }

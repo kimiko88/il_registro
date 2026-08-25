@@ -15,18 +15,21 @@ func NewHandler(service *Service) *Handler {
 }
 
 func getSchoolID(c *gin.Context) string {
+	role := c.GetString("role")
+	if res, exists := c.Get("school_id"); exists {
+		if s, ok := res.(string); ok && s != "" {
+			if role != "superadmin" {
+				return s
+			}
+		}
+	}
 	if q := c.Query("school_id"); q != "" {
 		return q
 	}
 	if h := c.GetHeader("X-School-ID"); h != "" {
 		return h
 	}
-	if res, exists := c.Get("school_id"); exists {
-		if s, ok := res.(string); ok && s != "" {
-			return s
-		}
-	}
-	return "162737ff-081f-436c-8874-11cd57bc60f1"
+	return c.GetString("school_id")
 }
 
 func (h *Handler) Create(c *gin.Context) {
@@ -72,10 +75,7 @@ func (h *Handler) List(c *gin.Context) {
 		return
 	}
 
-	schoolID := c.Query("school_id")
-	if schoolID == "" {
-		schoolID = getSchoolID(c)
-	}
+	schoolID := getSchoolID(c)
 	if schoolID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "school_id required"})
 		return
@@ -92,6 +92,7 @@ func (h *Handler) List(c *gin.Context) {
 func (h *Handler) Update(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
+	schoolID := getSchoolID(c)
 	if userID == "" || (role != "admin" && role != "superadmin" && role != "secretary") {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
@@ -102,8 +103,17 @@ func (h *Handler) Update(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	res, err := h.service.UpdateSubject(c.Request.Context(), c.Param("id"), req)
+
+	var sID string
+	if role != "superadmin" {
+		sID = schoolID
+	}
+	res, err := h.service.UpdateSubject(c.Request.Context(), c.Param("id"), req, sID)
 	if err != nil {
+		if err.Error() == "forbidden: cannot update subject of another school" {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -128,12 +138,21 @@ func (h *Handler) Get(c *gin.Context) {
 func (h *Handler) Delete(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
+	schoolID := getSchoolID(c)
 	if userID == "" || (role != "admin" && role != "superadmin" && role != "secretary") {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 
-	if err := h.service.DeleteSubject(c.Request.Context(), c.Param("id")); err != nil {
+	var sID string
+	if role != "superadmin" {
+		sID = schoolID
+	}
+	if err := h.service.DeleteSubject(c.Request.Context(), c.Param("id"), sID); err != nil {
+		if err.Error() == "forbidden: cannot delete subject of another school" {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

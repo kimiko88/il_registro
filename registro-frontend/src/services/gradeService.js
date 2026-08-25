@@ -1,11 +1,13 @@
 import api from './api'
 
 export const gradeService = {
-    async getMyGrades() {
-        return api.get('/grades/my-grades')
+    async getMyGrades(params) {
+        return params ? api.get('/grades/my-grades', { params }) : api.get('/grades/my-grades')
     },
-    async getByClass(classId, subjectId) {
-        return api.get(`/grades/class/${classId}`, { params: { subject_id: subjectId } })
+    async getByClass(classId, subjectId, params = {}) {
+        const queryParams = { ...params }
+        if (subjectId) queryParams.subject_id = subjectId
+        return api.get(`/grades/class/${classId}`, { params: queryParams })
     },
     async saveGrade(gradeData) {
         return api.post('/grades', gradeData)
@@ -51,13 +53,17 @@ export const gradeService = {
     },
     async bulkImport(formData) {
         return api.post('/grades/bulk-import', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
+            headers: { 'Content-Type': 'multipart/form-data' },
+            timeout: 60000
         })
     },
     async getSemesterReport(semester = 1) {
         return api.get(`/grades/my-grades/semester/${semester}`)
     },
     async downloadReportCardPDF(semester = 1) {
-        return api.get(`/grades/my-grades/semester/${semester}/pdf`, { responseType: 'blob', timeout: 30000 })
+        return api.get(`/grades/my-grades/semester/${semester}/pdf`, { responseType: 'blob', timeout: 60000 })
     }
 }
+
+export default gradeService
+

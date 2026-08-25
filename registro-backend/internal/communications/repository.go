@@ -12,7 +12,7 @@ import (
 
 type Repository interface {
 	Create(ctx context.Context, msg *Message) error
-	List(ctx context.Context, userID string) ([]*Message, error)
+	List(ctx context.Context, userID, schoolID string) ([]*Message, error)
 	ListBacheca(ctx context.Context, schoolID, userID string) ([]*Message, error)
 	Delete(ctx context.Context, id string) error
 	Sign(ctx context.Context, communicationID string, userID string) error
@@ -56,7 +56,7 @@ func (r *PostgresRepository) Create(ctx context.Context, msg *Message) error {
 	return err
 }
 
-func (r *PostgresRepository) List(ctx context.Context, userID string) ([]*Message, error) {
+func (r *PostgresRepository) List(ctx context.Context, userID, schoolID string) ([]*Message, error) {
 	if userID == "" {
 		return []*Message{}, nil
 	}
@@ -68,10 +68,11 @@ func (r *PostgresRepository) List(ctx context.Context, userID string) ([]*Messag
 		       COALESCE(c.requires_signature, false), c.signature_deadline, c.created_at,
 		       EXISTS(SELECT 1 FROM communication_signatures cs WHERE cs.communication_id = c.id AND cs.user_id = NULLIF($1, '')::uuid) AS is_signed
 		FROM communications c
-		WHERE c.sender_id = NULLIF($1, '')::uuid OR $1::text = ANY(c.receiver_ids)
+		WHERE (c.sender_id = NULLIF($1, '')::uuid OR $1::text = ANY(c.receiver_ids))
+		  AND (c.school_id = NULLIF($2, '')::uuid OR $2 = '')
 		ORDER BY c.created_at DESC
 	`
-	rows, err := r.db.QueryContext(ctx, query, userID)
+	rows, err := r.db.QueryContext(ctx, query, userID, schoolID)
 	if err != nil {
 		return nil, err
 	}

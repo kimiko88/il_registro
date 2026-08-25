@@ -257,11 +257,13 @@
 
 <script setup>
 import { ref, computed, onMounted, reactive } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useQuasar, date } from 'quasar';
-import { useCertificatesStore } from 'src/stores/certificates';
-import api from 'src/services/api';
+import { useCertificatesStore } from '@/stores/certificates';
+import api from '@/services/api';
 
 const $q = useQuasar();
+const { t } = useI18n();
 const certStore = useCertificatesStore();
 
 const showGenerateDialog = ref(false);

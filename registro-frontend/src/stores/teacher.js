@@ -1,6 +1,6 @@
-import { defineStore } from 'pinia';
-import authService from 'src/services/authService';
-import api from '../services/api';
+import { defineStore } from 'pinia'
+import authService from '@/services/authService'
+import api from '@/services/api'
 
 // Normalize the user profile from backend (snake_case) to a consistent shape
 function normalizeProfile(data) {
@@ -33,15 +33,17 @@ export const useTeacherStore = defineStore('teacher', {
 
     actions: {
         async fetchProfile() {
-            this.loading = true;
+            this.loading = true
+            this.error = null
             try {
-                const userData = await authService.getCurrentUser();
-                this.profile = normalizeProfile(userData);
+                const userData = await authService.getCurrentUser()
+                this.profile = normalizeProfile(userData)
+                return this.profile
             } catch (err) {
-                this.error = err.message;
-                console.error('Error fetching teacher profile:', err);
+                this.error = err.response?.data?.error || err.userMessage || err.message || 'Error fetching teacher profile'
+                console.error('Error fetching teacher profile:', err)
             } finally {
-                this.loading = false;
+                this.loading = false
             }
         },
 
@@ -49,9 +51,11 @@ export const useTeacherStore = defineStore('teacher', {
             try {
                 const response = await api.get('/notifications')
                 this.notifications = response.data || []
+                return this.notifications
             } catch (err) {
                 console.error('Error fetching notifications:', err)
                 this.notifications = []
+                return []
             }
         },
 
@@ -62,9 +66,11 @@ export const useTeacherStore = defineStore('teacher', {
                     ? response.data
                     : (response.data?.items || [])
                 this.pendingJustifications = items.length
+                return this.pendingJustifications
             } catch (err) {
                 console.error('Error fetching pending justifications:', err)
                 this.pendingJustifications = 0
+                return 0
             }
         },
 
@@ -75,10 +81,12 @@ export const useTeacherStore = defineStore('teacher', {
                     ? response.data
                     : (response.data?.items || [])
                 this.upcomingColloqui = items.filter(c => c.booked).length
+                return this.upcomingColloqui
             } catch (err) {
                 console.error('Error fetching upcoming colloqui:', err)
                 this.upcomingColloqui = 0
+                return 0
             }
         }
     }
-});
+})

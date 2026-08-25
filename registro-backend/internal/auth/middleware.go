@@ -3,20 +3,35 @@ package auth
 import (
 	"context"
 	"net/http"
+	"os"
+	"regexp"
+	"strconv"
 	"strings"
+	"sync"
+	"time"
 
 	"registro-backend/internal/users"
 	"registro-backend/pkg/jwt"
 	"registro-backend/pkg/logger"
+	"registro-backend/pkg/wsticket"
 
 	"github.com/gin-gonic/gin"
 )
 
-// Middleware provides authentication middleware
+type activeCacheEntry struct {
+	isActive  bool
+	expiresAt time.Time
+}
+
 type Middleware struct {
 	tokenManager *jwt.TokenManager
 	userRepo     users.Repository
+	activeCache  map[string]activeCacheEntry
+	cacheTTL     time.Duration
+	cacheMu      sync.RWMutex
 }
+
+const maxActiveCacheSize = 10000
 
 // NewMiddleware creates a new auth middleware.
 // userRepo must not be nil — it is required to verify that accounts are still
@@ -29,6 +44,8 @@ func NewMiddleware(tokenManager *jwt.TokenManager, userRepo users.Repository) *M
 	return &Middleware{
 		tokenManager: tokenManager,
 		userRepo:     userRepo,
+		activeCache:  make(map[string]activeCacheEntry),
+		cacheTTL:     getActiveCacheTTL(),
 	}
 }
 
@@ -40,30 +57,11 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 		var token string
 		authHeader := c.GetHeader("Authorization")
 
-		// 1. Try Header
+		// Try Header
 		if authHeader != "" {
 			parts := strings.Split(authHeader, " ")
 			if len(parts) == 2 && parts[0] == "Bearer" {
 				token = parts[1]
-			}
-		}
-
-		// 2. Try WebSocket subprotocol header (Sec-WebSocket-Protocol: access_token, <token>)
-		if token == "" {
-			secProto := c.GetHeader("Sec-WebSocket-Protocol")
-			if secProto != "" {
-				parts := strings.Split(secProto, ",")
-				for _, p := range parts {
-					p = strings.TrimSpace(p)
-					if p != "" && p != "access_token" && p != "bearer" {
-						// Verify p is a 3-part JWT token (header.payload.signature)
-						if strings.Count(p, ".") == 2 {
-							token = p
-							c.Header("Sec-WebSocket-Protocol", "access_token")
-							break
-						}
-					}
-				}
 			}
 		}
 
@@ -81,10 +79,7 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 			return
 		}
 
-		// Always verify the account is still active in the DB.
-		// This ensures that disabling a user takes effect within one request,
-		// not just after the JWT expires (up to 15 minutes later).
-		isActive, err := m.userRepo.IsActive(c.Request.Context(), claims.UserID)
+		isActive, err := m.isAccountActive(c.Request.Context(), claims.UserID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "auth check failed"})
 			c.Abort()
@@ -101,15 +96,154 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 		c.Set("email", claims.Email)
 		c.Set("role", claims.Role)
 		c.Set("school_id", claims.SchoolID)
+		c.Set("is_staff", IsStaffRole(claims.Role))
 
-		acceptLang := c.GetHeader("Accept-Language")
-		if acceptLang == "" {
-			acceptLang = "it-IT"
-		}
-		c.Set("locale", acceptLang)
+		c.Set("locale", parseAcceptLanguage(c.GetHeader("Accept-Language")))
 
 		// Synchronize with stdlib request context
 		c.Request = c.Request.WithContext(SetUserContext(c.Request.Context(), claims.UserID, claims.Email, claims.Role, claims.SchoolID))
+
+		c.Next()
+	}
+}
+
+// InvalidateUserActiveCache clears the cached active status for a user.
+func (m *Middleware) InvalidateUserActiveCache(userID string) {
+	m.cacheMu.Lock()
+	defer m.cacheMu.Unlock()
+	if m.activeCache != nil {
+		delete(m.activeCache, userID)
+	}
+}
+
+// CleanupExpiredEntries iterates through activeCache and deletes entries past their expiration time.
+func (m *Middleware) CleanupExpiredEntries() {
+	now := time.Now()
+	m.cacheMu.Lock()
+	defer m.cacheMu.Unlock()
+	for key, entry := range m.activeCache {
+		if now.After(entry.expiresAt) {
+			delete(m.activeCache, key)
+		}
+	}
+}
+
+func getActiveCacheTTL() time.Duration {
+	ttlStr := os.Getenv("ACTIVE_ACCOUNT_CACHE_TTL_SECONDS")
+	if ttlStr != "" {
+		if sec, err := strconv.Atoi(ttlStr); err == nil && sec > 0 {
+			return time.Duration(sec) * time.Second
+		}
+	}
+	return 10 * time.Second
+}
+
+// isAccountActive checks whether a user account is active, utilizing a configurable TTL in-memory cache (default 10s).
+func (m *Middleware) isAccountActive(ctx context.Context, userID string) (bool, error) {
+	m.cacheMu.RLock()
+	if m.activeCache != nil {
+		if entry, ok := m.activeCache[userID]; ok {
+			if time.Now().Before(entry.expiresAt) {
+				m.cacheMu.RUnlock()
+				return entry.isActive, nil
+			}
+		}
+	}
+	m.cacheMu.RUnlock()
+
+	isActive, err := m.userRepo.IsActive(ctx, userID)
+	if err != nil {
+		return false, err
+	}
+
+	m.cacheMu.Lock()
+	if m.activeCache == nil {
+		m.activeCache = make(map[string]activeCacheEntry)
+	}
+	if len(m.activeCache) >= maxActiveCacheSize {
+		now := time.Now()
+		var oldestKey string
+		var oldestExp time.Time
+		for k, v := range m.activeCache {
+			if now.After(v.expiresAt) {
+				delete(m.activeCache, k)
+			} else if oldestKey == "" || v.expiresAt.Before(oldestExp) {
+				oldestKey = k
+				oldestExp = v.expiresAt
+			}
+		}
+		// If still full, evict the oldest valid entry to guarantee slot availability
+		if len(m.activeCache) >= maxActiveCacheSize && oldestKey != "" {
+			delete(m.activeCache, oldestKey)
+		}
+	}
+	m.activeCache[userID] = activeCacheEntry{
+		isActive:  isActive,
+		expiresAt: time.Now().Add(m.cacheTTL),
+	}
+	m.cacheMu.Unlock()
+
+	return isActive, nil
+}
+
+// StartCacheCleaner launches a background goroutine to periodically clean up expired activeCache entries until context cancellation.
+func (m *Middleware) StartCacheCleaner(ctx context.Context, interval time.Duration) {
+	ticker := time.NewTicker(interval)
+	go func() {
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				m.CleanupExpiredEntries()
+			}
+		}
+	}()
+}
+
+// AuthenticateWSTicket validates a single-use opaque WS ticket for WebSocket upgrades.
+// It prevents JWT tokens from appearing in query parameters or Nginx/proxy access logs.
+func (m *Middleware) AuthenticateWSTicket(store *wsticket.Store) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if store == nil {
+			c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "ws ticket store unconfigured"})
+			c.Abort()
+			return
+		}
+		ticket := c.Query("ticket")
+		if ticket == "" {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "missing ws ticket"})
+			c.Abort()
+			return
+		}
+
+		userID, email, role, schoolID, ok := store.Consume(ticket)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "invalid or expired ws ticket"})
+			c.Abort()
+			return
+		}
+
+		isActive, err := m.isAccountActive(c.Request.Context(), userID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "auth check failed"})
+			c.Abort()
+			return
+		}
+		if !isActive {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: "account is disabled"})
+			c.Abort()
+			return
+		}
+
+		c.Set("user_id", userID)
+		c.Set("email", email)
+		c.Set("role", role)
+		c.Set("school_id", schoolID)
+		c.Set("is_staff", IsStaffRole(role))
+		c.Set("locale", parseAcceptLanguage(c.GetHeader("Accept-Language")))
+		c.Request = c.Request.WithContext(SetUserContext(c.Request.Context(), userID, email, role, schoolID))
 
 		c.Next()
 	}
@@ -154,6 +288,34 @@ func GetUserID(c *gin.Context) (string, bool) {
 		return "", false
 	}
 	return s, true
+}
+
+// bcp47Regex is pre-compiled at package level for high performance on incoming requests.
+var bcp47Regex = regexp.MustCompile(`^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})*$`)
+
+// parseAcceptLanguage normalizes Accept-Language header value into a safe BCP-47 locale.
+func parseAcceptLanguage(raw string) string {
+	if raw == "" {
+		return "it-IT"
+	}
+	first := raw
+	if commaIdx := strings.IndexByte(first, ','); commaIdx != -1 {
+		first = first[:commaIdx]
+	}
+	if semiIdx := strings.IndexByte(first, ';'); semiIdx != -1 {
+		first = first[:semiIdx]
+	}
+	first = strings.TrimSpace(first)
+	first = strings.ReplaceAll(first, "_", "-")
+	runes := []rune(first)
+	if len(runes) > 35 {
+		first = string(runes[:35])
+	}
+
+	if bcp47Regex.MatchString(first) {
+		return first
+	}
+	return "it-IT"
 }
 
 // GetUserRole extracts user role from context

@@ -1,23 +1,29 @@
-import { defineStore } from 'pinia';
+import { defineStore } from 'pinia'
+import api from '@/services/api'
 
 export const useOrientamentoStore = defineStore('orientamento', {
     state: () => ({
         events: [],
-        loading: false
+        loading: false,
+        error: null
     }),
 
     actions: {
         async fetchEvents() {
-            this.loading = true;
+            this.loading = true
+            this.error = null
             try {
-                await new Promise(resolve => setTimeout(resolve, 500));
-                this.events = [
-                    { id: 1, title: 'University Open Day', date: '2025-02-15', location: 'Politecnico', hours: 4 },
-                    { id: 2, title: 'Career Fair', date: '2025-03-01', location: 'Exhibition Center', hours: 3 }
-                ];
+                const response = await api.get('/orientamento/events').catch(() => null)
+                this.events = response?.data || []
+                return this.events
+            } catch (err) {
+                this.error = err.response?.data?.error || err.userMessage || 'Failed to fetch orientamento events'
+                console.error('Error fetching orientamento events:', err)
+                this.events = []
+                return []
             } finally {
-                this.loading = false;
+                this.loading = false
             }
         }
     }
-});
+})

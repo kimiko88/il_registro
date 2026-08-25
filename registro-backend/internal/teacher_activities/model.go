@@ -9,8 +9,8 @@ type TeacherFreeActivity struct {
 	TeacherID    string    `json:"teacher_id" db:"teacher_id"`
 	TeacherName  string    `json:"teacher_name" db:"teacher_name"`
 	Date         time.Time `json:"date" db:"date"`
-	StartHour    int       `json:"start_hour" db:"start_hour"`   // Ora di inizio (1–10)
-	Duration     int       `json:"duration" db:"duration"`       // Numero di ore coperte
+	StartHour    int       `json:"start_hour" db:"start_hour"` // Ora di inizio (1–10)
+	Duration     int       `json:"duration" db:"duration"`     // Numero di ore coperte
 	ActivityType string    `json:"activity_type" db:"activity_type"`
 	// disponibilita | riunione | formazione | ptof | gita | altro
 	Description string    `json:"description" db:"description"`

@@ -79,12 +79,14 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useQuasar, date } from 'quasar'
-import { useStudentStore } from 'src/stores/student'
-import didacticService from 'src/services/didacticService'
-import api from 'src/services/api'
+import { useStudentStore } from '@/stores/student'
+import didacticService from '@/services/didacticService'
+import api from '@/services/api'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const studentStore = useStudentStore()
 
 const loading = ref(true)
@@ -175,6 +177,7 @@ const formatDate = (d) => {
 .line-clamp-3 {
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;  
   overflow: hidden;
 }

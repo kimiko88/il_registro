@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"log"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -37,23 +38,28 @@ func (c *Client) CloseSend() {
 // Message è il formato condiviso sia per i canali Go interni
 // sia per la serializzazione JSON su Redis.
 type Message struct {
-	Type         string      `json:"type"`
-	Payload      interface{} `json:"payload"`
-	Recipient    string      `json:"recipient,omitempty"`
-	SchoolID     string      `json:"school_id,omitempty"`
-	AllowedRoles []string    `json:"allowed_roles,omitempty"`
+	Type            string      `json:"type"`
+	Payload         interface{} `json:"payload"`
+	Recipient       string      `json:"recipient,omitempty"`
+	SchoolID        string      `json:"school_id,omitempty"`
+	AllowedRoles    []string    `json:"allowed_roles,omitempty"`
+	GlobalBroadcast bool        `json:"global_broadcast,omitempty"`
 }
 
 // Hub gestisce le connessioni locali e un bridge Redis per il multi-istanza.
 type Hub struct {
 	// clients: userID -> set di connessioni locali
-	clients map[string]map[*Client]bool
-	mu      sync.RWMutex
+	clients       map[string]map[*Client]bool
+	schoolClients map[string]map[*Client]bool
+	mu            sync.RWMutex
 
 	// canali interni (solo per messaggi originati da questa istanza)
 	localBroadcast chan Message
 	register       chan *Client
 	unregister     chan *Client
+
+	// Metrics tracking
+	droppedMessageCount uint64
 
 	// Redis (opzionale: se redisURL non è fornito, funziona in modalità in-memory locale)
 	rdb    *redis.Client
@@ -65,9 +71,10 @@ type Hub struct {
 func NewHub(redisURL string) *Hub {
 	h := &Hub{
 		clients:        make(map[string]map[*Client]bool),
+		schoolClients:  make(map[string]map[*Client]bool),
 		localBroadcast: make(chan Message, 512),
-		register:       make(chan *Client, 64),
-		unregister:     make(chan *Client, 64),
+		register:       make(chan *Client, 128),
+		unregister:     make(chan *Client, 512),
 	}
 
 	if redisURL != "" {
@@ -115,6 +122,12 @@ func (h *Hub) Run(ctx context.Context) {
 				h.clients[client.UserID] = make(map[*Client]bool)
 			}
 			h.clients[client.UserID][client] = true
+			if client.SchoolID != "" {
+				if _, ok := h.schoolClients[client.SchoolID]; !ok {
+					h.schoolClients[client.SchoolID] = make(map[*Client]bool)
+				}
+				h.schoolClients[client.SchoolID][client] = true
+			}
 			h.mu.Unlock()
 
 		case client := <-h.unregister:
@@ -125,6 +138,14 @@ func (h *Hub) Run(ctx context.Context) {
 					client.CloseSend()
 					if len(userClients) == 0 {
 						delete(h.clients, client.UserID)
+					}
+				}
+			}
+			if client.SchoolID != "" {
+				if sc, ok := h.schoolClients[client.SchoolID]; ok {
+					delete(sc, client)
+					if len(sc) == 0 {
+						delete(h.schoolClients, client.SchoolID)
 					}
 				}
 			}
@@ -151,7 +172,17 @@ func (h *Hub) redisListener(ctx context.Context) {
 	const maxBackoff = 30 * time.Second
 
 	for {
+		// Snapshot the pubsub pointer under a read lock to avoid a data race with
+		// Run()'s ctx.Done() case, which closes and nils h.pubsub under a write lock.
+		// When Run() closes the subscription the snapshotted channel will close
+		// naturally, and redisListener will detect !ok and then return via ctx.Done().
+		h.mu.RLock()
+		if h.pubsub == nil {
+			h.mu.RUnlock()
+			return // shutdown already in progress
+		}
 		ch := h.pubsub.Channel()
+		h.mu.RUnlock()
 		running := true
 		for running {
 			select {
@@ -219,19 +250,25 @@ func (h *Hub) deliverLocally(msg Message) {
 				}
 			}
 		}
-	} else if msg.SchoolID != "" {
-		for _, clients := range h.clients {
-			for client := range clients {
-				if client.SchoolID == msg.SchoolID && isRoleAllowed(client.Role, msg.AllowedRoles) {
+	} else if msg.SchoolID != "" && !msg.GlobalBroadcast {
+		if sClients, ok := h.schoolClients[msg.SchoolID]; ok {
+			for client := range sClients {
+				if isRoleAllowed(client.Role, msg.AllowedRoles) {
 					targetClients = append(targetClients, client)
 				}
 			}
 		}
 	} else {
-		// Bug 164: Global broadcast for system messages without specific recipient or school
+		// Global system broadcast for system messages without specific recipient or school.
+		// Restrict delivery to global system roles (e.g., superadmin) unless AllowedRoles is explicitly specified.
+		log.Printf("[AUDIT] global broadcast: type=%s recipient=%s school_id=%s global=%v", msg.Type, msg.Recipient, msg.SchoolID, msg.GlobalBroadcast)
 		for _, clients := range h.clients {
 			for client := range clients {
-				if isRoleAllowed(client.Role, msg.AllowedRoles) {
+				if len(msg.AllowedRoles) > 0 {
+					if isRoleAllowed(client.Role, msg.AllowedRoles) {
+						targetClients = append(targetClients, client)
+					}
+				} else if client.Role == "superadmin" || client.Role == "system_auditor" {
 					targetClients = append(targetClients, client)
 				}
 			}
@@ -240,13 +277,21 @@ func (h *Hub) deliverLocally(msg Message) {
 	h.mu.RUnlock()
 
 	for _, client := range targetClients {
+		h.safeSend(client, bytes)
+	}
+}
+
+func (h *Hub) safeSend(client *Client, data []byte) {
+	if client == nil {
+		return
+	}
+	select {
+	case client.Send <- data:
+	default:
 		select {
-		case client.Send <- bytes:
+		case h.unregister <- client:
 		default:
-			select {
-			case h.unregister <- client:
-			default:
-			}
+			client.CloseSend()
 		}
 	}
 }
@@ -273,18 +318,24 @@ func (h *Hub) sendBroadcast(msg Message) {
 		select {
 		case h.localBroadcast <- msg:
 		case <-time.After(100 * time.Millisecond):
-			log.Printf("[WARN] ws.Hub: localBroadcast channel full after retry timeout — message DROPPED (type=%s recipient=%q schoolID=%q)",
-				msg.Type, msg.Recipient, msg.SchoolID)
+			atomic.AddUint64(&h.droppedMessageCount, 1)
+			log.Printf("[WARN] ws.Hub: localBroadcast channel full after retry timeout — message DROPPED (type=%s recipient=%q schoolID=%q total_dropped=%d)",
+				msg.Type, msg.Recipient, msg.SchoolID, atomic.LoadUint64(&h.droppedMessageCount))
 		}
 	}
 }
 
-func (h *Hub) BroadcastToUser(userID, msgType string, payload interface{}) {
-	h.sendBroadcast(Message{Type: msgType, Payload: payload, Recipient: userID})
+func (h *Hub) GetDroppedMessageCount() uint64 {
+	return atomic.LoadUint64(&h.droppedMessageCount)
 }
 
-func (h *Hub) BroadcastToUserInSchool(userID, schoolID, msgType string, payload interface{}) {
+func (h *Hub) BroadcastToUser(userID, schoolID, msgType string, payload interface{}) {
 	h.sendBroadcast(Message{Type: msgType, Payload: payload, Recipient: userID, SchoolID: schoolID})
+}
+
+// BroadcastToUserInSchool delegates to BroadcastToUser for backward compatibility.
+func (h *Hub) BroadcastToUserInSchool(userID, schoolID, msgType string, payload interface{}) {
+	h.BroadcastToUser(userID, schoolID, msgType, payload)
 }
 
 func (h *Hub) BroadcastToSchool(schoolID, msgType string, payload interface{}) {
@@ -293,6 +344,10 @@ func (h *Hub) BroadcastToSchool(schoolID, msgType string, payload interface{}) {
 
 func (h *Hub) BroadcastToSchoolRoles(schoolID string, allowedRoles []string, msgType string, payload interface{}) {
 	h.sendBroadcast(Message{Type: msgType, Payload: payload, SchoolID: schoolID, AllowedRoles: allowedRoles})
+}
+
+func (h *Hub) BroadcastGlobalSystem(msgType string, payload interface{}, allowedRoles ...string) {
+	h.sendBroadcast(Message{Type: msgType, Payload: payload, GlobalBroadcast: true, AllowedRoles: allowedRoles})
 }
 
 func isRoleAllowed(role string, allowed []string) bool {

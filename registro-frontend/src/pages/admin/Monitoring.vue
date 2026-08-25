@@ -111,8 +111,10 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import api from '@/services/api'
 
+const { t } = useI18n()
 const loading  = ref(false)
 const health   = ref(null)
 const fetchError = ref(false)

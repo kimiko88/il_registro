@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
+	"sort"
 	"time"
 
 	"registro-backend/internal/notifications"
@@ -191,5 +192,11 @@ func (s *serviceImpl) RecommendSubstitutes(ctx context.Context, schoolID, classI
 			TeachesSubject: teachesSubject,
 		})
 	}
+
+	// Ordina per score decrescente: il candidato migliore appare per primo.
+	sort.Slice(recs, func(i, j int) bool {
+		return recs[i].Score > recs[j].Score
+	})
+
 	return recs, nil
 }

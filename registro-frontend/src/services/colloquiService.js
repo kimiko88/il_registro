@@ -13,8 +13,14 @@ export const colloquiService = {
   cancelSlot(id) {
     return api.delete(`/colloqui/slots/${id}`)
   },
+  deleteSlot(id) {
+    return api.delete(`/colloqui/slots/${id}`)
+  },
   bookSlot(data) {
     return api.post('/colloqui/bookings', data)
+  },
+  cancelBooking(id) {
+    return api.delete(`/colloqui/bookings/${id}`)
   },
   getMyBookings() {
     return api.get('/colloqui/my-bookings')
@@ -34,4 +40,3 @@ export const colloquiService = {
 }
 
 export default colloquiService
-

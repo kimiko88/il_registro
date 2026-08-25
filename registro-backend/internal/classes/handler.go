@@ -15,25 +15,19 @@ func NewHandler(service *Service) *Handler {
 }
 
 func getSchoolID(c *gin.Context) string {
-	if q := c.Query("school_id"); q != "" {
-		return q
-	}
-	if h := c.GetHeader("X-School-ID"); h != "" {
-		return h
-	}
 	if res, exists := c.Get("school_id"); exists {
 		if s, ok := res.(string); ok && s != "" {
 			return s
 		}
 	}
-	return "162737ff-081f-436c-8874-11cd57bc60f1"
+	return c.Query("school_id")
 }
 
 func (h *Handler) Create(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
 	schoolID := getSchoolID(c)
-	if userID == "" || schoolID == "" {
+	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
@@ -47,6 +41,13 @@ func (h *Handler) Create(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	if schoolID == "" && req.SchoolID != "" {
+		schoolID = req.SchoolID
+	}
+	if schoolID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "school_id is required"})
+		return
+	}
 	class, err := h.service.CreateClass(c.Request.Context(), schoolID, req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -57,8 +58,13 @@ func (h *Handler) Create(c *gin.Context) {
 
 func (h *Handler) List(c *gin.Context) {
 	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	schoolID := getSchoolID(c)
-	if userID == "" || schoolID == "" {
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if schoolID == "" && role != "superadmin" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
@@ -73,8 +79,13 @@ func (h *Handler) List(c *gin.Context) {
 
 func (h *Handler) Get(c *gin.Context) {
 	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	schoolID := getSchoolID(c)
-	if userID == "" || schoolID == "" {
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if schoolID == "" && role != "superadmin" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
@@ -89,8 +100,18 @@ func (h *Handler) Get(c *gin.Context) {
 
 // Update verifies the class belongs to the caller's school before updating.
 func (h *Handler) Update(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	schoolID := getSchoolID(c)
-	if schoolID == "" {
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "admin" && role != "superadmin" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+	if schoolID == "" && role != "superadmin" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
@@ -113,8 +134,18 @@ func (h *Handler) Update(c *gin.Context) {
 
 // Delete verifies the class belongs to the caller's school before deleting.
 func (h *Handler) Delete(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	schoolID := getSchoolID(c)
-	if schoolID == "" {
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "admin" && role != "superadmin" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+	if schoolID == "" && role != "superadmin" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
@@ -123,7 +154,7 @@ func (h *Handler) Delete(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "class not found"})
 		return
 	}
-	if existing.SchoolID != schoolID {
+	if schoolID != "" && existing.SchoolID != schoolID && role != "superadmin" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -154,8 +185,18 @@ func (h *Handler) GetTeacherClasses(c *gin.Context) {
 }
 
 func (h *Handler) AssignSubject(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	schoolID := getSchoolID(c)
-	if schoolID == "" {
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "admin" && role != "superadmin" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+	if schoolID == "" && role != "superadmin" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
@@ -164,7 +205,7 @@ func (h *Handler) AssignSubject(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "class not found"})
 		return
 	}
-	if existing.SchoolID != schoolID {
+	if schoolID != "" && existing.SchoolID != schoolID && role != "superadmin" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -182,8 +223,13 @@ func (h *Handler) AssignSubject(c *gin.Context) {
 
 func (h *Handler) GetClassSubjects(c *gin.Context) {
 	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	schoolID := getSchoolID(c)
-	if userID == "" || schoolID == "" {
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if schoolID == "" && role != "superadmin" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
@@ -200,7 +246,7 @@ func (h *Handler) RemoveSubject(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
 	schoolID := getSchoolID(c)
-	if userID == "" || schoolID == "" {
+	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
@@ -208,8 +254,12 @@ func (h *Handler) RemoveSubject(c *gin.Context) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
+	if schoolID == "" && role != "superadmin" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 
-	if err := h.service.RemoveSubject(c.Request.Context(), c.Param("assignmentId")); err != nil {
+	if err := h.service.RemoveSubject(c.Request.Context(), c.Param("assignmentId"), schoolID, c.Param("id")); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -220,12 +270,16 @@ func (h *Handler) GetClassGuardians(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
 	schoolID := getSchoolID(c)
-	if userID == "" || schoolID == "" {
+	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 	if role != "admin" && role != "superadmin" && role != "secretary" && role != "teacher" && role != "principal" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+	if schoolID == "" && role != "superadmin" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 
@@ -239,8 +293,13 @@ func (h *Handler) GetClassGuardians(c *gin.Context) {
 
 func (h *Handler) GetLessonTopics(c *gin.Context) {
 	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "teacher" && role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && role != "vice_principal" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 
@@ -254,8 +313,13 @@ func (h *Handler) GetLessonTopics(c *gin.Context) {
 
 func (h *Handler) GetDisciplinaryNotes(c *gin.Context) {
 	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "teacher" && role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && role != "vice_principal" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 
@@ -271,12 +335,16 @@ func (h *Handler) BulkMigrateStudents(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
 	schoolID := getSchoolID(c)
-	if userID == "" || schoolID == "" {
+	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 	if role != "admin" && role != "superadmin" && role != "secretary" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+	if schoolID == "" && role != "superadmin" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 

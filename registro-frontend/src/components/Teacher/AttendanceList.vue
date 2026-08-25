@@ -2,13 +2,13 @@
   <q-list separator bordered class="rounded-borders">
     <q-item v-for="record in localRecords" :key="record.studentId" class="q-py-md">
       <q-item-section avatar>
-        <q-avatar color="primary" text-color="white">{{ record.name.charAt(0) }}</q-avatar>
+        <q-avatar color="primary" text-color="white">{{ record.name?.charAt(0) || '?' }}</q-avatar>
       </q-item-section>
 
       <q-item-section>
         <q-item-label class="text-weight-bold">{{ record.name }}</q-item-label>
         <q-item-label caption>
-          {{ record.status }} <span v-if="record.time">at {{ record.time }}</span>
+          {{ getStatusLabel(record.status) }} <span v-if="record.time">{{ t('attendance.atTime') || 'alle' }} {{ record.time }}</span>
         </q-item-label>
       </q-item-section>
 
@@ -20,24 +20,35 @@
                     :text-color="record.status === 'Present' ? 'white' : 'black'"
                     label="P" 
                     dense size="sm"
+                    :aria-label="t('attendance.present') || 'Presente'"
                     @click="updateStatus(record, 'Present')"
-                />
+                >
+                    <q-tooltip>{{ t('attendance.present') || 'Presente' }}</q-tooltip>
+                </q-btn>
                 <q-btn 
                     :color="record.status === 'Absent' ? 'red' : 'grey-3'"
                     :text-color="record.status === 'Absent' ? 'white' : 'black'"
                     label="A" 
                     dense size="sm"
+                    :aria-label="t('attendance.absent') || 'Assente'"
                     @click="updateStatus(record, 'Absent')"
-                />
+                >
+                    <q-tooltip>{{ t('attendance.absent') || 'Assente' }}</q-tooltip>
+                </q-btn>
                 <q-btn 
                     :color="record.status === 'Late' ? 'orange' : 'grey-3'"
                     :text-color="record.status === 'Late' ? 'white' : 'black'"
                     label="L" 
                     dense size="sm"
+                    :aria-label="t('attendance.late') || 'In Ritardo'"
                     @click="promptLate(record)"
-                />
+                >
+                    <q-tooltip>{{ t('attendance.late') || 'In Ritardo' }}</q-tooltip>
+                </q-btn>
              </q-btn-group>
-             <q-btn flat round icon="edit_note" size="sm" @click="editNote(record)" :color="record.notes ? 'primary' : 'grey'" />
+             <q-btn flat round icon="edit_note" size="sm" :aria-label="t('classRegister.addNote') || 'Aggiungi Nota'" @click="editNote(record)" :color="record.notes ? 'primary' : 'grey'">
+                <q-tooltip>{{ t('classRegister.addNote') || 'Aggiungi Nota' }}</q-tooltip>
+             </q-btn>
         </div>
       </q-item-section>
     </q-item>
@@ -46,13 +57,13 @@
   <!-- Note Dialog -->
   <q-dialog v-model="showNoteDialog">
     <q-card style="min-width: 300px">
-        <q-card-section class="text-h6">Add Note</q-card-section>
+        <q-card-section class="text-h6">{{ t('classRegister.addNote') || 'Aggiungi Nota' }}</q-card-section>
         <q-card-section>
             <q-input v-model="currentNote" autofocus dense outlined />
         </q-card-section>
         <q-card-actions align="right">
-            <q-btn flat label="Cancel" v-close-popup />
-            <q-btn flat label="Save" color="primary" @click="saveNote" />
+            <q-btn flat :label="t('common.cancel') || 'Annulla'" v-close-popup />
+            <q-btn flat :label="t('common.save') || 'Salva'" color="primary" @click="saveNote" />
         </q-card-actions>
     </q-card>
   </q-dialog>
@@ -60,13 +71,13 @@
   <!-- Late Dialog -->
   <q-dialog v-model="showLateDialog">
     <q-card style="min-width: 300px">
-        <q-card-section class="text-h6">Late Entry Time</q-card-section>
+        <q-card-section class="text-h6">{{ t('classRegister.tableHeaderEntryTime') || 'Ora Ingresso Ritardo' }}</q-card-section>
         <q-card-section>
             <q-input v-model="currentTime" type="time" filled />
         </q-card-section>
         <q-card-actions align="right">
-            <q-btn flat label="Cancel" v-close-popup />
-            <q-btn flat label="Confirm" color="orange" @click="confirmLate" />
+            <q-btn flat :label="t('common.cancel') || 'Annulla'" v-close-popup />
+            <q-btn flat :label="t('common.confirm') || 'Conferma'" color="orange" @click="confirmLate" />
         </q-card-actions>
     </q-card>
   </q-dialog>
@@ -74,8 +85,10 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import { useAttendanceStore } from 'src/stores/attendance';
+import { useI18n } from 'vue-i18n';
+import { useAttendanceStore } from '@/stores/attendance';
 
+const { t } = useI18n();
 const attendanceStore = useAttendanceStore();
 const localRecords = computed(() => attendanceStore.records);
 
@@ -110,6 +123,15 @@ const editNote = (record) => {
     activeRecord.value = record;
     currentNote.value = record.notes;
     showNoteDialog.value = true;
+};
+
+const getStatusLabel = (status) => {
+    switch (status) {
+        case 'Present': return t('attendance.present') || 'Presente';
+        case 'Absent': return t('attendance.absent') || 'Assente';
+        case 'Late': return t('attendance.late') || 'In Ritardo';
+        default: return status;
+    }
 };
 
 const saveNote = () => {

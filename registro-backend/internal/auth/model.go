@@ -28,6 +28,7 @@ type User struct {
 type RefreshToken struct {
 	ID        string    `json:"id"`
 	UserID    string    `json:"user_id"`
+	SchoolID  string    `json:"school_id,omitempty"`
 	Token     string    `json:"token"`
 	ExpiresAt time.Time `json:"expires_at"`
 	CreatedAt time.Time `json:"created_at"`

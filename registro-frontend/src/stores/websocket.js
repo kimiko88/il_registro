@@ -6,6 +6,7 @@ import { useAttendanceStore } from './attendance'
 import { useCommunicationsStore } from './communications'
 import { useScrutinyStore } from './scrutiny'
 import { Notify } from 'quasar'
+import { i18n } from '@/i18n'
 
 const escapeHtml = (str) => {
     if (!str) return ''
@@ -24,9 +25,18 @@ export const useWebSocketStore = defineStore('websocket', () => {
     const reconnectAttempts = ref(0)
     const hasFailedPermanently = ref(false)
     const lastError = ref(null)
+    const heartbeatTimer = ref(null)
+    const isReconnecting = ref(false)
     const authStore = useAuthStore()
 
-    const heartbeatTimer = ref(null)
+    const debounceTimers = {}
+    function debouncedFetch(key, fetchFn, delayMs = 300) {
+        if (debounceTimers[key]) clearTimeout(debounceTimers[key])
+        debounceTimers[key] = setTimeout(() => {
+            fetchFn()
+            delete debounceTimers[key]
+        }, delayMs)
+    }
 
     function startHeartbeat() {
         stopHeartbeat()
@@ -52,7 +62,12 @@ export const useWebSocketStore = defineStore('websocket', () => {
         }
     }
 
-    function connect() {
+    async function connect() {
+        if (reconnectTimer.value) {
+            clearTimeout(reconnectTimer.value)
+            reconnectTimer.value = null
+        }
+
         if (socket.value && (socket.value.readyState === WebSocket.OPEN || socket.value.readyState === WebSocket.CONNECTING)) {
             return
         }
@@ -62,12 +77,38 @@ export const useWebSocketStore = defineStore('websocket', () => {
             return
         }
 
+        // 1. Acquire single-use WS ticket via REST API (Bearer token in Authorization header)
         const rawUrl = import.meta.env.VITE_API_URL
-        let baseUrl = rawUrl || `${window.location.protocol}//${window.location.host}/api/v1`
-        if (rawUrl && !rawUrl.endsWith('/api/v1') && !rawUrl.endsWith('/api/v1/')) {
-            baseUrl = rawUrl.endsWith('/') ? `${rawUrl}api/v1` : `${rawUrl}/api/v1`
+        let baseUrl = rawUrl ? rawUrl.replace(/\/+$/, '') : `${window.location.protocol}//${window.location.host}/api/v1`
+
+        let ticket = null
+        try {
+            const controller = new AbortController()
+            const timeoutId = setTimeout(() => controller.abort(), 5000)
+            const res = await fetch(`${baseUrl}/auth/ws-ticket`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${authStore.token}`,
+                    'Content-Type': 'application/json'
+                },
+                signal: controller.signal
+            })
+            clearTimeout(timeoutId)
+            if (!res.ok) throw new Error(`ws-ticket status ${res.status}`)
+            const data = await res.json()
+            ticket = data.ticket
+        } catch (e) {
+            console.error('WebSocket: Failed to acquire ws ticket', e)
+            attemptReconnect()
+            return
         }
 
+        if (!ticket) {
+            attemptReconnect()
+            return
+        }
+
+        // 2. Build WebSocket URL with opaque ticket parameter
         let wsUrl = ''
         if (baseUrl.startsWith('http://') || baseUrl.startsWith('https://')) {
             wsUrl = `${baseUrl.replace(/^http/, 'ws')}/ws`
@@ -80,9 +121,10 @@ export const useWebSocketStore = defineStore('websocket', () => {
             wsUrl = `${wsScheme}//${baseUrl}/ws`
         }
 
-        const token = authStore.token
+        wsUrl += `?ticket=${encodeURIComponent(ticket)}`
+
         try {
-            socket.value = new WebSocket(wsUrl, ['access_token', token])
+            socket.value = new WebSocket(wsUrl)
         } catch (e) {
             console.error('WebSocket connection error:', e)
             attemptReconnect()
@@ -101,12 +143,15 @@ export const useWebSocketStore = defineStore('websocket', () => {
         }
 
         socket.value.onmessage = (event) => {
-            try {
-                const message = JSON.parse(event.data)
-                if (message && message.type === 'PONG') return
-                handleMessage(message)
-            } catch (e) {
-                console.error('WebSocket: Failed to parse message', e)
+            const lines = (event.data || '').split('\n').filter(line => line.trim().length > 0)
+            for (const line of lines) {
+                try {
+                    const message = JSON.parse(line)
+                    if (message && (message.type === 'PONG' || message.type === 'AUTH_ACK')) continue
+                    handleMessage(message)
+                } catch (e) {
+                    console.error('WebSocket: Failed to parse message line', e)
+                }
             }
         }
 
@@ -115,7 +160,9 @@ export const useWebSocketStore = defineStore('websocket', () => {
             isConnected.value = false
             socket.value = null
             stopHeartbeat()
-            attemptReconnect()
+            if (!event.wasClean && event.code !== 1000 && !hasFailedPermanently.value) {
+                attemptReconnect()
+            }
         }
 
         socket.value.onerror = (error) => {
@@ -127,16 +174,19 @@ export const useWebSocketStore = defineStore('websocket', () => {
         }
     }
 
-    function disconnect() {
+    function disconnect(resetPermanentFlag = false) {
         stopHeartbeat()
         if (socket.value) {
             socket.value.close()
             socket.value = null
         }
         isConnected.value = false
+        isReconnecting.value = false
         reconnectAttempts.value = 0
-        hasFailedPermanently.value = false
-        lastError.value = null
+        if (resetPermanentFlag) {
+            hasFailedPermanently.value = false
+            lastError.value = null
+        }
         if (reconnectTimer.value) {
             clearTimeout(reconnectTimer.value)
             reconnectTimer.value = null
@@ -149,31 +199,38 @@ export const useWebSocketStore = defineStore('websocket', () => {
             return
         }
 
-        if (reconnectAttempts.value >= 30) {
-            console.warn('WebSocket: Reached max reconnect attempts (30), stopping automatic reconnection')
+        if (isReconnecting.value || reconnectTimer.value) return
+
+        reconnectAttempts.value++
+
+        if (reconnectAttempts.value > 8) {
+            console.warn('WebSocket: Reached max reconnect attempts (8), stopping automatic reconnection')
             hasFailedPermanently.value = true
-            lastError.value = 'Connessione WebSocket non disponibile dopo tentativi ripetuti.'
+            const t = i18n?.global?.t
+            lastError.value = t ? t('notifications.wsConnectionFailed') : 'Connessione WebSocket non disponibile dopo tentativi ripetuti.'
             disconnect()
             return
         }
 
-        if (reconnectTimer.value) return
+        isReconnecting.value = true
 
         // Exponential backoff with random jitter (1s, 2s, 4s, 8s... up to max 30s)
-        const baseDelay = 1000 * Math.pow(2, Math.min(reconnectAttempts.value, 5))
+        const baseDelay = 1000 * Math.pow(2, Math.min(reconnectAttempts.value - 1, 5))
         const maxDelay = 30000
         const jitter = Math.random() * 1000
         const delay = Math.min(baseDelay + jitter, maxDelay)
 
-        reconnectAttempts.value++
-        console.log(`WebSocket: Attempting reconnect in ${(delay / 1000).toFixed(1)}s (attempt ${reconnectAttempts.value})`)
-
-        reconnectTimer.value = setTimeout(() => {
+        reconnectTimer.value = setTimeout(async () => {
             reconnectTimer.value = null
-            if (authStore.isAuthenticated) {
-                connect()
-            } else {
-                disconnect()
+            try {
+                if (authStore.isAuthenticated && authStore.token) {
+                    console.log(`WebSocket: Executing reconnect attempt ${reconnectAttempts.value}`)
+                    await connect()
+                } else {
+                    disconnect()
+                }
+            } finally {
+                isReconnecting.value = false
             }
         }, delay)
     }
@@ -183,41 +240,56 @@ export const useWebSocketStore = defineStore('websocket', () => {
 
         const payload = message.payload || {}
 
+        const t = i18n?.global?.t
+
         switch (message.type) {
             case 'GRADE_ADDED':
             case 'GRADE_UPDATED':
+            case 'GRADE_DELETED': {
                 try {
                     const gradesStore = useGradesStore()
-                    if (payload.class_id) gradesStore.fetchGrades(payload.class_id, payload.subject_id, true)
+                    const targetClassId = gradesStore.currentClassId || payload.class_id
+                    if (targetClassId) {
+                        debouncedFetch(`grades_${targetClassId}`, () => {
+                            gradesStore.fetchGrades(targetClassId, payload.subject_id, true)
+                        })
+                    }
                 } catch (err) {
                     console.debug('Failed to refresh grades store:', err)
                 }
+                const subjectFallback = t ? t('gradesPage.student') : 'Materia'
                 Notify.create({
-                    message: `Aggiornamento voto: ${escapeHtml(payload.grade_value || '')} (${escapeHtml(payload.subject_name || 'Materia')})`,
+                    message: message.type === 'GRADE_DELETED'
+                        ? (t ? t('notifications.wsGradeDeleted', { subject: escapeHtml(payload.subject_name || subjectFallback) }) : `Voto eliminato per ${escapeHtml(payload.subject_name || subjectFallback)}`)
+                        : (t ? t('notifications.wsGradeUpdated', { value: escapeHtml(payload.grade_value || ''), subject: escapeHtml(payload.subject_name || subjectFallback) }) : `Aggiornamento voto: ${escapeHtml(payload.grade_value || '')} (${escapeHtml(payload.subject_name || subjectFallback)})`),
                     color: 'info',
                     icon: 'school',
                     position: 'top-right',
                     attrs: { role: 'alert' }
                 })
                 break
+            }
             case 'ATTENDANCE_LATE':
             case 'ATTENDANCE_ABSENT':
-            case 'ATTENDANCE_PRESENT':
+            case 'ATTENDANCE_PRESENT': {
                 try {
                     const attendanceStore = useAttendanceStore()
-                    attendanceStore.fetchMyAttendance()
+                    debouncedFetch('my_attendance', () => {
+                        attendanceStore.fetchMyAttendance()
+                    })
                 } catch (err) {
                     console.debug('Failed to refresh attendance store:', err)
                 }
                 Notify.create({
-                    message: `Aggiornamento presenze: ${escapeHtml(payload.status || 'Presenza registrata')}`,
+                    message: t ? t('notifications.wsAttendanceUpdated', { status: escapeHtml(payload.status || '') }) : `Aggiornamento presenze: ${escapeHtml(payload.status || 'Presenza registrata')}`,
                     color: 'warning',
                     icon: 'warning',
                     position: 'top-right',
                     attrs: { role: 'alert' }
                 })
                 break
-            case 'JUSTIFICATION_APPROVED':
+            }
+            case 'JUSTIFICATION_APPROVED': {
                 try {
                     const attendanceStore = useAttendanceStore()
                     attendanceStore.fetchMyAttendance()
@@ -225,14 +297,15 @@ export const useWebSocketStore = defineStore('websocket', () => {
                     console.debug('Failed to refresh attendance store:', err)
                 }
                 Notify.create({
-                    message: `Giustifica approvata: ${escapeHtml(payload.reason || '')}`,
+                    message: t ? t('notifications.wsJustificationApproved', { reason: escapeHtml(payload.reason || '') }) : `Giustifica approvata: ${escapeHtml(payload.reason || '')}`,
                     color: 'positive',
                     icon: 'check_circle',
                     position: 'top-right',
                     attrs: { role: 'alert' }
                 })
                 break
-            case 'JUSTIFICATION_REJECTED':
+            }
+            case 'JUSTIFICATION_REJECTED': {
                 try {
                     const attendanceStore = useAttendanceStore()
                     attendanceStore.fetchMyAttendance()
@@ -240,15 +313,16 @@ export const useWebSocketStore = defineStore('websocket', () => {
                     console.debug('Failed to refresh attendance store:', err)
                 }
                 Notify.create({
-                    message: `Giustifica non approvata: ${escapeHtml(payload.reason || '')}`,
+                    message: t ? t('notifications.wsJustificationRejected', { reason: escapeHtml(payload.reason || '') }) : `Giustifica non approvata: ${escapeHtml(payload.reason || '')}`,
                     color: 'negative',
                     icon: 'cancel',
                     position: 'top-right',
                     attrs: { role: 'alert' }
                 })
                 break
+            }
             case 'NEW_COMMUNICATION':
-            case 'COMMUNICATION_PUBLISHED':
+            case 'COMMUNICATION_PUBLISHED': {
                 try {
                     const commsStore = useCommunicationsStore()
                     commsStore.fetchCommunications()
@@ -256,23 +330,25 @@ export const useWebSocketStore = defineStore('websocket', () => {
                     console.debug('Failed to refresh communications store:', err)
                 }
                 Notify.create({
-                    message: `Nuova comunicazione: ${escapeHtml(payload.title || 'Circolare scolastica')}`,
+                    message: t ? t('notifications.wsNewCommunication', { title: escapeHtml(payload.title || '') }) : `Nuova comunicazione: ${escapeHtml(payload.title || 'Circolare scolastica')}`,
                     color: 'primary',
                     icon: 'mail',
                     position: 'top-right',
                     attrs: { role: 'alert' }
                 })
                 break
-            case 'NOTE_ADDED':
+            }
+            case 'NOTE_ADDED': {
                 Notify.create({
-                    message: `Nuova nota disciplinare registrata: ${escapeHtml(payload.title)}`,
+                    message: t ? t('notifications.wsNoteAdded', { title: escapeHtml(payload.title || '') }) : `Nuova nota disciplinare registrata: ${escapeHtml(payload.title || '')}`,
                     color: 'negative',
                     icon: 'report_problem',
                     position: 'top-right',
                     attrs: { role: 'alert' }
                 })
                 break
-            case 'SCRUTINY_PUBLISHED':
+            }
+            case 'SCRUTINY_PUBLISHED': {
                 try {
                     const scrutinyStore = useScrutinyStore()
                     scrutinyStore.fetchOverview()
@@ -280,34 +356,37 @@ export const useWebSocketStore = defineStore('websocket', () => {
                     console.debug('Failed to refresh scrutiny store:', err)
                 }
                 Notify.create({
-                    message: `Esito scrutinio pubblicato per ${escapeHtml(payload.student_name || 'lo studente')}`,
+                    message: t ? t('notifications.wsScrutinyPublished', { student: escapeHtml(payload.student_name || '') }) : `Esito scrutinio pubblicato per ${escapeHtml(payload.student_name || 'lo studente')}`,
                     color: 'positive',
                     icon: 'assignment_turned_in',
                     position: 'top-right',
                     attrs: { role: 'alert' }
                 })
                 break
-            case 'GOAL_UPDATED':
+            }
+            case 'GOAL_UPDATED': {
                 Notify.create({
-                    message: `Obiettivo aggiornato: ${escapeHtml(payload.title)}`,
+                    message: t ? t('notifications.wsGoalUpdated', { title: escapeHtml(payload.title || '') }) : `Obiettivo aggiornato: ${escapeHtml(payload.title)}`,
                     color: 'secondary',
                     icon: 'star',
                     position: 'top-right',
                     attrs: { role: 'alert' }
                 })
                 break
+            }
             case 'SLOT_BOOKED':
-            case 'SLOT_CANCELLED':
+            case 'SLOT_CANCELLED': {
                 Notify.create({
-                    message: `Aggiornamento colloquio: ${escapeHtml(payload.message || message.type)}`,
+                    message: t ? t('notifications.wsSlotUpdated', { msg: escapeHtml(payload.message || '') }) : `Aggiornamento colloquio: ${escapeHtml(payload.message || message.type)}`,
                     color: 'accent',
                     icon: 'event',
                     position: 'top-right',
                     attrs: { role: 'alert' }
                 })
                 break
+            }
             default:
-                if (payload.title || payload.body) {
+                if ((message.type === 'NOTIFICATION' || message.type === 'SYSTEM_ALERT') && (payload.title || payload.body)) {
                     Notify.create({
                         message: payload.title ? `${escapeHtml(payload.title)}: ${escapeHtml(payload.body)}` : escapeHtml(payload.body),
                         color: 'info',

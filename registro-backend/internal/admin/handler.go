@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"runtime"
+	"strings"
 	"time"
 
 	"registro-backend/internal/auth"
@@ -30,7 +31,7 @@ func NewHandler(service *Service) *Handler {
 func (h *Handler) GetDashboardStats(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role, _ := auth.GetUserRole(c)
-	if userID == "" && role == "" {
+	if userID == "" || role == "" {
 		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "unauthorized"})
 		return
 	}
@@ -123,6 +124,15 @@ func (h *Handler) GetSchool(c *gin.Context) {
 // CreateSchool creates a new school
 // POST /api/v1/admin/schools
 func (h *Handler) CreateSchool(c *gin.Context) {
+	callerRole, _ := auth.GetUserRole(c)
+	if callerRole != "superadmin" {
+		c.JSON(http.StatusForbidden, ErrorResponse{
+			Error:   "forbidden",
+			Message: "creating a school requires superadmin role",
+		})
+		return
+	}
+
 	var req CreateSchoolRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse{
@@ -171,7 +181,13 @@ func (h *Handler) UpdateSchool(c *gin.Context) {
 		return
 	}
 
-	school, err := h.service.UpdateSchool(c.Request.Context(), schoolID, &req, nil)
+	filterSchoolID := GetFilteredSchoolID(c)
+	var schoolFilter *string
+	if filterSchoolID != "" {
+		schoolFilter = &filterSchoolID
+	}
+
+	school, err := h.service.UpdateSchool(c.Request.Context(), schoolID, &req, schoolFilter)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, ErrorResponse{
 			Error:   "failed to update school",
@@ -221,6 +237,16 @@ func (h *Handler) DeleteSchool(c *gin.Context) {
 // ListAdminUsers returns a list of admin users
 // GET /api/v1/admin/users/admins
 func (h *Handler) ListAdminUsers(c *gin.Context) {
+	userID, _ := auth.GetUserID(c)
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "unauthorized"})
+		return
+	}
+	callerRole, _ := auth.GetUserRole(c)
+	if callerRole != "superadmin" {
+		c.JSON(http.StatusForbidden, ErrorResponse{Error: "forbidden: superadmin role required"})
+		return
+	}
 	page := 1
 	pageSize := 20
 
@@ -270,6 +296,15 @@ func (h *Handler) ListAdminUsers(c *gin.Context) {
 // CreateAdminUser creates a new admin user
 // POST /api/v1/admin/users/admins
 func (h *Handler) CreateAdminUser(c *gin.Context) {
+	callerRole, _ := auth.GetUserRole(c)
+	if callerRole != "superadmin" {
+		c.JSON(http.StatusForbidden, ErrorResponse{
+			Error:   "forbidden",
+			Message: "creating an admin user requires superadmin role",
+		})
+		return
+	}
+
 	var req CreateAdminRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse{
@@ -364,9 +399,17 @@ func (h *Handler) DeleteAdminUser(c *gin.Context) {
 			})
 			return
 		}
+		if strings.Contains(err.Error(), "unauthorized") {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+			return
+		}
+		if strings.Contains(err.Error(), "not found") {
+			c.JSON(http.StatusNotFound, ErrorResponse{Error: "admin user not found"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, ErrorResponse{
 			Error:   "failed to delete admin user",
-			Message: err.Error(),
+			Message: "internal server error",
 		})
 		return
 	}
@@ -389,8 +432,8 @@ func (h *Handler) GetAdminActivity(c *gin.Context) {
 			limit = 50
 		}
 	}
-	if limit > 200 {
-		limit = 200
+	if limit > 100 {
+		limit = 100
 	}
 	if limit < 1 {
 		limit = 1
@@ -508,7 +551,7 @@ func (h *Handler) GetSchoolSetting(c *gin.Context) {
 
 	value, err := h.service.GetSchoolSetting(c.Request.Context(), schoolID, key)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "internal server error"})
 		return
 	}
 
@@ -535,7 +578,7 @@ func (h *Handler) UpdateSchoolSetting(c *gin.Context) {
 	}
 
 	if err := h.service.UpdateSchoolSetting(c.Request.Context(), schoolID, key, body.Value); err != nil {
-		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "internal server error"})
 		return
 	}
 
@@ -549,12 +592,11 @@ func (h *Handler) GetSystemMetrics(c *gin.Context) {
 	runtime.ReadMemStats(&memStats)
 
 	metrics := gin.H{
-		"api_success_rate": 99.8,
-		"db_cpu_percent":   12.5,
-		"cache_hit_rate":   95.4,
-		"goroutines":       runtime.NumGoroutine(),
-		"memory_alloc_mb":  float64(memStats.Alloc) / 1024 / 1024,
-		"uptime_seconds":   time.Since(startTime).Seconds(),
+		"goroutines":      runtime.NumGoroutine(),
+		"memory_alloc_mb": float64(memStats.Alloc) / 1024 / 1024,
+		"memory_sys_mb":   float64(memStats.Sys) / 1024 / 1024,
+		"gc_cycles":       memStats.NumGC,
+		"uptime_seconds":  time.Since(startTime).Seconds(),
 	}
 	c.JSON(http.StatusOK, metrics)
 }
@@ -571,29 +613,39 @@ func (h *Handler) GetSystemHealth(c *gin.Context) {
 	minutes := int(uptimeDuration.Minutes()) % 60
 	uptimeStr := fmt.Sprintf("%dd %dh %dm", days, hours, minutes)
 
-	memPercent := 35
+	memPercent := 0
 	if memStats.Sys > 0 {
 		memPercent = int((float64(memStats.Alloc) / float64(memStats.Sys)) * 100)
 	}
 
+	dbPingStart := time.Now()
+	healthStatus, err := h.service.GetSystemHealth(c.Request.Context())
+	dbPingMs := time.Since(dbPingStart).Milliseconds()
+
+	dbStatus := "healthy"
+	overall := "healthy"
+	if err != nil || (healthStatus != nil && healthStatus.OverallStatus == "down") {
+		dbStatus = "unhealthy"
+		overall = "unhealthy"
+	} else if healthStatus != nil && healthStatus.OverallStatus == "degraded" {
+		dbStatus = "degraded"
+		overall = "degraded"
+	}
+
 	health := gin.H{
-		"status": "healthy",
+		"status": overall,
 		"services": gin.H{
-			"api":           "healthy",
-			"database":      "healthy",
-			"redis":         "healthy",
-			"storage":       "healthy",
-			"db_ping_ms":    2,
-			"redis_ping_ms": 1,
+			"api":        "healthy",
+			"database":   dbStatus,
+			"storage":    "healthy",
+			"db_ping_ms": dbPingMs,
 		},
 		"metrics": gin.H{
-			"cpu_percent":    12,
-			"memory_percent": memPercent,
-			"disk_percent":   28,
-			"api_latency_ms": 14,
+			"memory_percent":  memPercent,
+			"goroutines":      runtime.NumGoroutine(),
+			"memory_alloc_mb": float64(memStats.Alloc) / 1024 / 1024,
 		},
 		"api_version": "1.0.0",
-		"db_version":  "PostgreSQL 15",
 		"environment": "production",
 		"uptime":      uptimeStr,
 		"last_deploy": startTime.Format(time.RFC3339),

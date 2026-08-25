@@ -72,6 +72,23 @@ func (s *Service) GetMatrix(ctx context.Context, actorID, actorRole, classID str
 	// If caller is NOT coordinator or dirigenza (e.g. parent, student, or subject teacher),
 	// check if scrutiny has been validated.
 	if !isCoordinator && !isDirigenza {
+		if actorRole == "teacher" {
+			clsSubs, err := s.classRepo.GetClassSubjects(ctx, classID)
+			if err != nil {
+				return nil, err
+			}
+			isTeacherAssigned := false
+			for _, cs := range clsSubs {
+				if cs.TeacherID != nil && *cs.TeacherID == actorID {
+					isTeacherAssigned = true
+					break
+				}
+			}
+			if !isTeacherAssigned {
+				return nil, errors.New("forbidden: docente non appartenente al consiglio di classe")
+			}
+		}
+
 		isValidated := false
 		for _, r := range records {
 			if r.Status == "validated" {
@@ -120,6 +137,29 @@ func (s *Service) GetMatrix(ctx context.Context, actorID, actorRole, classID str
 		return nil, fmt.Errorf("failed to load grades for class %s: %w", classID, err)
 	}
 
+	// Pre-indice voti: map[studentID][subjectID] → []Grade
+	// Riduce la complessità da O(S×G×M) a O(G + S×M), eliminando il loop triplo.
+	type gradeEntry struct {
+		sum   float64
+		count int
+	}
+	gradeIndex := make(map[string]map[string]*gradeEntry)
+	for _, g := range allClassGrades {
+		if !g.IsPublished || g.DeletedAt != nil {
+			continue
+		}
+		if _, ok := gradeIndex[g.StudentID]; !ok {
+			gradeIndex[g.StudentID] = make(map[string]*gradeEntry)
+		}
+		e := gradeIndex[g.StudentID][g.SubjectID]
+		if e == nil {
+			e = &gradeEntry{}
+			gradeIndex[g.StudentID][g.SubjectID] = e
+		}
+		e.sum += g.GradeValue
+		e.count++
+	}
+
 	studentIDs := make([]string, len(allStudents))
 	for i, stu := range allStudents {
 		studentIDs[i] = stu.ID
@@ -134,22 +174,16 @@ func (s *Service) GetMatrix(ctx context.Context, actorID, actorRole, classID str
 		}
 
 		for _, sub := range subjects {
-			var sum float64
-			var count int
-			for _, g := range allClassGrades {
-				if g.StudentID == stu.ID && g.SubjectID == sub.SubjectID && g.IsPublished && g.DeletedAt == nil {
-					sum += g.GradeValue
-					count++
-				}
-			}
-
 			avg := 0.0
 			proposed := 0.0
-			if count > 0 {
-				avg = sum / float64(count)
-				proposed = math.Round(avg)
+			count := 0
+			if smap, ok := gradeIndex[stu.ID]; ok {
+				if e, ok := smap[sub.SubjectID]; ok && e.count > 0 {
+					count = e.count
+					avg = e.sum / float64(e.count)
+					proposed = math.Min(10, math.Max(1, math.Round(avg)))
+				}
 			}
-
 			row.SubjectData[sub.SubjectID] = SubjectAverages{
 				Average:    avg,
 				GradeCount: count,
@@ -226,7 +260,11 @@ func (s *Service) GetOverview(ctx context.Context, actorID, actorRole, schoolID 
 	}
 	if sem == 0 {
 		sem = 2
-		now := time.Now()
+		loc, err := time.LoadLocation("Europe/Rome")
+		if err != nil {
+			loc = time.Local
+		}
+		now := time.Now().In(loc)
 		if now.Month() >= time.September || now.Month() <= time.January {
 			sem = 1
 		}
@@ -468,13 +506,25 @@ func (s *Service) CloseScrutiny(ctx context.Context, actorID, actorRole, classID
 	return s.repo.UpdateClassScrutinyStatus(ctx, classID, semester, "closed")
 }
 
-func (s *Service) SaveScrutiny(ctx context.Context, coordinatorID, actorRole string, req SaveScrutinyRequest) error {
+func (s *Service) SaveScrutiny(ctx context.Context, coordinatorID, actorRole, actorSchoolID string, req SaveScrutinyRequest) error {
 	isCoordinator, isDirigenza, err := s.isDirigenzaOrCoordinator(ctx, coordinatorID, actorRole, req.ClassID)
 	if err != nil {
 		return err
 	}
 	if !isCoordinator && !isDirigenza {
 		return ErrUnauthorizedScrutiny
+	}
+
+	// Fix cross-tenant: verifica che la classe appartenga alla stessa scuola dell'attore.
+	// isDirigenzaOrCoordinator ha già caricato la classe — la recuperiamo per il check.
+	if actorRole != "superadmin" && actorSchoolID != "" {
+		cls, clsErr := s.classRepo.Get(ctx, req.ClassID)
+		if clsErr != nil {
+			return clsErr
+		}
+		if cls.SchoolID != actorSchoolID {
+			return errors.New("forbidden: la classe non appartiene alla tua scuola")
+		}
 	}
 
 	// Check if any record in the scrutiny for this class/semester is already validated or closed
@@ -487,26 +537,47 @@ func (s *Service) SaveScrutiny(ctx context.Context, coordinatorID, actorRole str
 		}
 	}
 
+	if req.ConductGrade != 0 && (req.ConductGrade < 1 || req.ConductGrade > 10) {
+		return fmt.Errorf("voto di condotta non valido (%d): deve essere compreso tra 1 e 10", req.ConductGrade)
+	}
+
+	canonicalDecision := req.FinalDecision
+	switch req.FinalDecision {
+	case "Promosso", "promosso", "ammesso", "Ammesso":
+		canonicalDecision = "Ammesso"
+	case "Bocciato", "bocciato", "non ammesso", "Non Ammesso", "Non ammesso":
+		canonicalDecision = "Non Ammesso"
+	case "Giudizio Sospeso", "giudizio sospeso", "sospeso", "Sospeso":
+		canonicalDecision = "Sospeso"
+	}
+
 	rec := &ScrutinyRecord{
 		StudentID:     req.StudentID,
 		ClassID:       req.ClassID,
 		Semester:      req.Semester,
 		ConductGrade:  req.ConductGrade,
-		FinalDecision: req.FinalDecision,
+		FinalDecision: canonicalDecision,
 		Notes:         req.Notes,
 		CoordinatorID: coordinatorID,
 		Status:        "in_progress",
 	}
 
+	var clsSubs []classes.ClassSubject
+	var clsSubsLoaded bool
+
 	for _, g := range req.Grades {
 		tID := g.TeacherID
 		if tID == "" {
-			if clsSubs, err := s.classRepo.GetClassSubjects(ctx, req.ClassID); err == nil {
-				for _, cs := range clsSubs {
-					if cs.SubjectID == g.SubjectID && cs.TeacherID != nil && *cs.TeacherID != "" {
-						tID = *cs.TeacherID
-						break
-					}
+			if !clsSubsLoaded {
+				if fetched, err := s.classRepo.GetClassSubjects(ctx, req.ClassID); err == nil {
+					clsSubs = fetched
+				}
+				clsSubsLoaded = true
+			}
+			for _, cs := range clsSubs {
+				if cs.SubjectID == g.SubjectID && cs.TeacherID != nil && *cs.TeacherID != "" {
+					tID = *cs.TeacherID
+					break
 				}
 			}
 			if tID == "" {
@@ -529,4 +600,70 @@ func (s *Service) ExportPagellaPDF(ctx context.Context, actorID, actorRole, clas
 		return nil, err
 	}
 	return GeneratePagellaPDF(matrix, studentID)
+}
+
+func (s *Service) SaveDeficiency(ctx context.Context, actorID, actorRole string, req *SaveDeficiencyRequest) error {
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "teacher" && actorRole != "secretary" && actorRole != "principal" && actorRole != "vice_principal" {
+		return errors.New("forbidden: non hai i permessi per inserire o modificare carenze")
+	}
+	if req.StudentID == "" || req.ClassID == "" || req.SubjectID == "" {
+		return errors.New("student_id, class_id, and subject_id are required")
+	}
+
+	def := &StudentDeficiency{
+		ID:            req.ID,
+		SchoolID:      req.SchoolID,
+		StudentID:     req.StudentID,
+		ClassID:       req.ClassID,
+		SubjectID:     req.SubjectID,
+		Semester:      req.Semester,
+		PeriodType:    req.PeriodType,
+		Topics:        req.Topics,
+		RecoveryMode:  req.RecoveryMode,
+		Status:        req.Status,
+		RecoveryGrade: req.RecoveryGrade,
+		Notes:         req.Notes,
+	}
+	if req.RecoveryDate != nil && *req.RecoveryDate != "" {
+		if t, err := time.Parse("2006-01-02", *req.RecoveryDate); err == nil {
+			def.RecoveryDate = &t
+		}
+	}
+	return s.repo.SaveDeficiency(ctx, def)
+}
+
+func (s *Service) GetStudentDeficiencies(ctx context.Context, actorID, actorRole, studentID string) ([]StudentDeficiency, error) {
+	if studentID == "" {
+		return []StudentDeficiency{}, nil
+	}
+	if actorRole == "student" && actorID != studentID {
+		return nil, errors.New("forbidden: student can only access own deficiencies")
+	}
+	if actorRole == "parent" {
+		isGuardian, err := s.userRepo.IsGuardian(ctx, actorID, studentID)
+		if err != nil || !isGuardian {
+			return nil, errors.New("forbidden: parent is not a guardian of this student")
+		}
+	}
+	return s.repo.GetDeficienciesByStudent(ctx, studentID)
+}
+
+func (s *Service) GetClassDeficiencies(ctx context.Context, actorID, actorRole, classID string, semester int) ([]StudentDeficiency, error) {
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "teacher" && actorRole != "secretary" && actorRole != "principal" && actorRole != "vice_principal" {
+		return nil, errors.New("forbidden: non hai i permessi per accedere alle carenze della classe")
+	}
+	if classID == "" {
+		return []StudentDeficiency{}, nil
+	}
+	return s.repo.GetDeficienciesByClass(ctx, classID, semester)
+}
+
+func (s *Service) SaveDeferredScrutiny(ctx context.Context, actorID, actorRole string, req *SaveDeferredScrutinyRequest) error {
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "teacher" && actorRole != "principal" && actorRole != "vice_principal" {
+		return errors.New("forbidden: non hai i permessi per gestire lo scrutinio differito")
+	}
+	if req.StudentID == "" || req.ClassID == "" {
+		return errors.New("student_id and class_id are required")
+	}
+	return s.repo.SaveDeferredScrutiny(ctx, req)
 }

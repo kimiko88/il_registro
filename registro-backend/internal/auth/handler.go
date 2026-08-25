@@ -1,20 +1,30 @@
 package auth
 
 import (
+	"fmt"
 	"net/http"
+	"os"
+
+	"registro-backend/pkg/wsticket"
 
 	"github.com/gin-gonic/gin"
 )
 
 // Handler handles HTTP requests for authentication
 type Handler struct {
-	service *Service
+	service       *Service
+	wsTicketStore *wsticket.Store
 }
 
 // NewHandler creates a new auth handler
-func NewHandler(service *Service) *Handler {
+func NewHandler(service *Service, wsTicketStore ...*wsticket.Store) *Handler {
+	var store *wsticket.Store
+	if len(wsTicketStore) > 0 {
+		store = wsTicketStore[0]
+	}
 	return &Handler{
-		service: service,
+		service:       service,
+		wsTicketStore: store,
 	}
 }
 
@@ -72,6 +82,43 @@ func (h *Handler) Register(c *gin.Context) {
 	})
 }
 
+func isHTTPSRequest(c *gin.Context) bool {
+	if c.Request.TLS != nil {
+		return true
+	}
+	if os.Getenv("TRUST_PROXY_HEADERS") == "true" {
+		if c.GetHeader("X-Forwarded-Proto") == "https" || c.GetHeader("X-Forwarded-Ssl") == "on" {
+			return true
+		}
+	}
+	return false
+}
+
+func setRefreshTokenCookie(c *gin.Context, token string, maxAge int) {
+	appEnv := os.Getenv("APP_ENV")
+	ginMode := os.Getenv("GIN_MODE")
+	cookieSecure := os.Getenv("COOKIE_SECURE")
+
+	isSecure := false
+	if cookieSecure == "true" || appEnv == "production" || ginMode == "release" || isHTTPSRequest(c) {
+		isSecure = true
+	}
+	if cookieSecure == "false" && appEnv != "production" && ginMode != "release" {
+		isSecure = false
+	}
+	domain := os.Getenv("COOKIE_DOMAIN")
+	http.SetCookie(c.Writer, &http.Cookie{
+		Name:     "refreshToken",
+		Value:    token,
+		MaxAge:   maxAge,
+		Path:     "/",
+		Domain:   domain,
+		Secure:   isSecure,
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+	})
+}
+
 // Login handles user login
 // POST /auth/login
 func (h *Handler) Login(c *gin.Context) {
@@ -100,7 +147,8 @@ func (h *Handler) Login(c *gin.Context) {
 	}
 
 	if authResp != nil && authResp.RefreshToken != "" {
-		c.SetCookie("refreshToken", authResp.RefreshToken, 604800, "/", "", false, true)
+		setRefreshTokenCookie(c, authResp.RefreshToken, 604800)
+		authResp.RefreshToken = ""
 	}
 
 	c.JSON(http.StatusOK, authResp)
@@ -109,14 +157,16 @@ func (h *Handler) Login(c *gin.Context) {
 // RefreshToken handles token refresh
 // POST /auth/refresh-token
 func (h *Handler) RefreshToken(c *gin.Context) {
-	var req RefreshTokenRequest
-	_ = c.ShouldBindJSON(&req)
-
-	rt := req.RefreshToken
-	if rt == "" {
-		if cookieToken, err := c.Cookie("refreshToken"); err == nil && cookieToken != "" {
-			rt = cookieToken
+	rt := ""
+	if cookieToken, err := c.Cookie("refreshToken"); err == nil && cookieToken != "" {
+		rt = cookieToken
+	} else if c.Request.Body != nil && c.Request.ContentLength != 0 {
+		var req RefreshTokenRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "invalid request body", Message: err.Error()})
+			return
 		}
+		rt = req.RefreshToken
 	}
 
 	if rt == "" {
@@ -133,7 +183,8 @@ func (h *Handler) RefreshToken(c *gin.Context) {
 	}
 
 	if tokens != nil && tokens.RefreshToken != "" {
-		c.SetCookie("refreshToken", tokens.RefreshToken, 604800, "/", "", false, true)
+		setRefreshTokenCookie(c, tokens.RefreshToken, 604800)
+		tokens.RefreshToken = ""
 	}
 
 	c.JSON(http.StatusOK, tokens)
@@ -142,20 +193,18 @@ func (h *Handler) RefreshToken(c *gin.Context) {
 // Logout handles user logout
 // POST /auth/logout
 func (h *Handler) Logout(c *gin.Context) {
-	var req RefreshTokenRequest
-	_ = c.ShouldBindJSON(&req)
-
-	rt := req.RefreshToken
-	if rt == "" {
-		if cookieToken, err := c.Cookie("refreshToken"); err == nil && cookieToken != "" {
-			rt = cookieToken
+	rt := ""
+	if cookieToken, err := c.Cookie("refreshToken"); err == nil && cookieToken != "" {
+		rt = cookieToken
+	} else if c.Request.Body != nil && c.Request.ContentLength != 0 {
+		var req RefreshTokenRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "invalid request body", Message: err.Error()})
+			return
 		}
+		rt = req.RefreshToken
 	}
 
-	c.SetCookie("refreshToken", "", -1, "/", "", false, true)
-
-	// Extract the authenticated user's ID from the JWT (set by Authenticate middleware).
-	// This ensures a user can only revoke their own sessions.
 	callerUserID, exists := GetUserID(c)
 	if !exists {
 		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "user not authenticated"})
@@ -167,8 +216,11 @@ func (h *Handler) Logout(c *gin.Context) {
 			c.JSON(http.StatusForbidden, ErrorResponse{Error: "token does not belong to the authenticated user"})
 			return
 		}
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+		return
 	}
 
+	setRefreshTokenCookie(c, "", -1)
 	c.JSON(http.StatusOK, MessageResponse{Message: "logged out successfully"})
 }
 
@@ -296,8 +348,8 @@ type ChangePasswordRequest struct {
 }
 
 func (h *Handler) ChangePassword(c *gin.Context) {
-	userID := c.GetString("user_id")
-	if userID == "" {
+	userID, exists := GetUserID(c)
+	if !exists || userID == "" {
 		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "unauthorized"})
 		return
 	}
@@ -325,12 +377,48 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 	c.JSON(http.StatusOK, MessageResponse{Message: "password changed successfully"})
 }
 
+// IssueWSTicket issues a single-use opaque ticket to authenticate a WebSocket connection.
+// Requires a valid JWT in the Authorization header.
+func (h *Handler) IssueWSTicket(c *gin.Context) {
+	userID, exists := GetUserID(c)
+	if !exists || userID == "" {
+		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "user not authenticated"})
+		return
+	}
+	if h.wsTicketStore == nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "ws ticket store not configured"})
+		return
+	}
+
+	emailStr := ""
+	if emailVal, ok := c.Get("email"); ok && emailVal != nil {
+		emailStr = fmt.Sprint(emailVal)
+	}
+	role, roleExists := GetUserRole(c)
+	schoolIDStr := ""
+	if sID, ok := GetSchoolID(c); ok {
+		schoolIDStr = sID
+	}
+
+	if emailStr == "" || !roleExists || role == "" {
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "incomplete user metadata for ws ticket"})
+		return
+	}
+
+	ticket, err := h.wsTicketStore.Issue(
+		userID,
+		emailStr,
+		role,
+		schoolIDStr,
+	)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "could not issue ws ticket"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"ticket": ticket})
+}
+
 // RegisterRoutes registers all auth routes.
-//
-// BREAKING CHANGE: POST /auth/register è ora un endpoint PROTETTO.
-// Richiede un JWT valido nel header Authorization: Bearer <token>.
-// Il caller deve avere ruolo superadmin, admin o segreteria.
-// La matrice dei permessi di creazione ruoli è applicata in ValidateRegisterRequest.
 func (h *Handler) RegisterRoutes(router *gin.RouterGroup, middleware *Middleware) {
 	auth := router.Group("/auth")
 	{
@@ -350,10 +438,9 @@ func (h *Handler) RegisterRoutes(router *gin.RouterGroup, middleware *Middleware
 			protected.POST("/change-password", h.ChangePassword)
 			protected.POST("/mfa/setup", h.SetupMFA)
 			protected.POST("/mfa/verify", h.VerifyMFA)
+			protected.POST("/ws-ticket", h.IssueWSTicket)
 
 			// Registration is protected: caller must be superadmin, admin or segreteria.
-			// Role-level permission checks are enforced inside the handler via
-			// ValidateRegisterRequest (validator.go).
 			protected.POST("/register", h.Register)
 		}
 	}

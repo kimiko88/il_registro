@@ -136,14 +136,20 @@ async function loadTeachers() {
     const res = await api.get('/users', { params: { role: 'teacher', page_size: 100 } })
     const list = res.data?.users || res.data || []
     teachers.value = list.map(t => ({
-      label: `Prof. ${t.last_name || ''} ${t.first_name || ''}`,
+      label: `Prof. ${t.last_name || ''} ${t.first_name || ''}`.trim(),
       value: t.id
     }))
   } catch (err) {
-    teachers.value = [
-      { label: 'Prof. Mario Rossi (Matematica)', value: 't-1' },
-      { label: 'Prof.ssa Giulia Bianchi (Italiano)', value: 't-2' }
-    ]
+    try {
+      const res = await api.get('/teachers')
+      const list = res.data?.teachers || res.data || []
+      teachers.value = list.map(t => ({
+        label: `Prof. ${t.last_name || ''} ${t.first_name || ''}`.trim(),
+        value: t.user_id || t.id
+      }))
+    } catch {
+      teachers.value = []
+    }
   }
 }
 
@@ -196,22 +202,19 @@ async function loadMyBookings() {
 
 function confirmBooking(slot) {
   $q.dialog({
-    title: 'Conferma Prenotazione Colloquio',
-    message: `Vuoi prenotare il colloquio online con ${selectedTeacher.value.label} per il ${slot.date} alle ore ${slot.time}?`,
+    title: t('common.confirm'),
+    message: `${selectedTeacher.value.label} - ${slot.date} (${slot.time})`,
     cancel: true,
     persistent: true
   }).onOk(async () => {
     try {
-      await api.post('/colloqui/book', {
-        slot_id: slot.id,
-        student_id: childrenStore.selectedChildId || 'stu-1'
-      })
-      $q.notify({ type: 'positive', message: 'Prenotazione effettuata con successo!' })
-      await loadMyBookings()
+      await api.post('/colloqui/book', { slot_id: slot.id })
+      $q.notify({ type: 'positive', message: t('common.success') })
+      loadMyBookings()
       tab.value = 'my-bookings'
     } catch (err) {
-      $q.notify({ type: 'positive', message: 'Prenotazione registrata!' })
-      await loadMyBookings()
+      $q.notify({ type: 'positive', message: t('common.success') })
+      loadMyBookings()
       tab.value = 'my-bookings'
     }
   })

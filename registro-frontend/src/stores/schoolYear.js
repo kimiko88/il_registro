@@ -71,6 +71,7 @@ export const useSchoolYearStore = defineStore('schoolYear', {
         this.selectedSchoolYear = saved
       } else if (!years.includes(this.selectedSchoolYear)) {
         this.selectedSchoolYear = years[0] || getCurrentSchoolYear()
+        localStorage.setItem('selected_school_year', this.selectedSchoolYear)
       }
     },
     setSchoolYear(year) {

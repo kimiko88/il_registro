@@ -80,10 +80,10 @@ func TestTaskCompletion(t *testing.T) {
 	mockRepo.On("SetCompletion", mock.Anything, "item-1", "student-1", true).Return(nil).Once()
 	mockRepo.On("SetCompletion", mock.Anything, "item-1", "student-1", false).Return(nil).Once()
 
-	err := svc.SetTaskCompletion(context.Background(), "student-1", "student", "item-1", true)
+	err := svc.SetTaskCompletion(context.Background(), "student-1", "student", "student-1", "item-1", true)
 	assert.NoError(t, err)
 
-	err = svc.SetTaskCompletion(context.Background(), "student-1", "student", "item-1", false)
+	err = svc.SetTaskCompletion(context.Background(), "student-1", "student", "student-1", "item-1", false)
 	assert.NoError(t, err)
 	mockRepo.AssertExpectations(t)
 }

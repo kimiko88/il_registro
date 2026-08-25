@@ -3,6 +3,7 @@ import api from '../services/api';
 import { attendanceService } from '../services/attendanceService';
 import { useAuthStore } from './auth';
 import { useChildrenStore } from './children';
+import { i18n } from '@/i18n';
 
 export const useAttendanceStore = defineStore('attendance', {
     state: () => ({
@@ -17,7 +18,15 @@ export const useAttendanceStore = defineStore('attendance', {
         presentCount: (state) => state.records.filter(r => (r.status || '').toLowerCase() === 'present').length,
         absentCount: (state) => state.records.filter(r => (r.status || '').toLowerCase() === 'absent').length,
         lateCount: (state) => state.records.filter(r => (r.status || '').toLowerCase() === 'late').length,
-        unjustifiedCount: (state) => state.records.filter(r => (r.status || '').toLowerCase() === 'absent' && (!r.justificationStatus || (r.justificationStatus || '').toLowerCase() === 'unjustified')).length,
+        unjustifiedCount: (state) => state.records.filter(r => {
+            const status = (r.status || '').toLowerCase();
+            const jStatus = (r.justificationStatus || r.justification_status || '').toLowerCase();
+            const isJustifiedFlag = r.is_justified || r.isJustified || r.justified;
+            if (status !== 'absent') return false;
+            if (isJustifiedFlag) return false;
+            if (jStatus === 'justified' || jStatus === 'pending' || jStatus === 'pendingapproval' || jStatus === 'pending_approval') return false;
+            return true;
+        }).length,
     },
 
     actions: {
@@ -29,9 +38,11 @@ export const useAttendanceStore = defineStore('attendance', {
                 const response = await attendanceService.getByClass(classId, date);
                 if (currentReqId === this._requestId) {
                     const records = response.data?.records || [];
+                    const t = i18n?.global?.t;
+                    const studentLabel = t ? t('gradesPage.student') : 'Studente';
                     this.records = records.map(r => ({
                         studentId: r.student_id,
-                        name: r.student_name || `Student (${r.student_id})`,
+                        name: r.student_name || `${studentLabel} (${r.student_id})`,
                         status: r.status,
                         notes: r.notes || '',
                         time: r.entry_time || ''
@@ -39,7 +50,8 @@ export const useAttendanceStore = defineStore('attendance', {
                 }
             } catch (err) {
                 if (currentReqId === this._requestId) {
-                    this.error = err.response?.data?.error || err.message || 'Errore durante il recupero delle presenze';
+                    const t = i18n?.global?.t;
+                    this.error = err.response?.data?.error || err.message || (t ? t('common.error') : 'Errore durante il recupero delle presenze');
                     console.error("Error fetching daily attendance:", err);
                 }
             } finally {
@@ -72,6 +84,8 @@ export const useAttendanceStore = defineStore('attendance', {
                 }
                 return response.data;
             } catch (err) {
+                const t = i18n?.global?.t;
+                this.error = err.response?.data?.error || err.message || (t ? t('common.error') : 'Errore nella registrazione presenze');
                 console.error("Error submitting attendance:", err);
                 throw err;
             } finally {
@@ -90,11 +104,16 @@ export const useAttendanceStore = defineStore('attendance', {
             }
         },
 
-        async approveJustification(id) {
+        async approveJustification(id, classId = null) {
             try {
                 await api.post(`/attendance/justification/${id}/process`, { approve: true });
                 this.justifications = this.justifications.filter(j => j.id !== id);
-                await this.fetchMyAttendance();
+                const authStore = useAuthStore();
+                if (authStore.userRole === 'student' || authStore.userRole === 'parent') {
+                    await this.fetchMyAttendance();
+                } else if (classId) {
+                    await this.fetchPendingJustifications(classId);
+                }
             } catch (err) {
                 console.error("Error approving justification:", err);
                 throw err;
@@ -116,7 +135,8 @@ export const useAttendanceStore = defineStore('attendance', {
                     justificationStatus: r.is_justified ? 'Justified' : (r.parent_justified ? 'PendingApproval' : 'Unjustified')
                 }));
             } catch (err) {
-                this.error = err.response?.data?.error || err.message || 'Errore durante il recupero delle mie presenze';
+                const t = i18n?.global?.t;
+                this.error = err.response?.data?.error || err.message || (t ? t('common.error') : 'Errore durante il recupero delle mie presenze');
                 console.error("Error fetching my attendance:", err);
             } finally {
                 this.loading = false;
@@ -124,6 +144,14 @@ export const useAttendanceStore = defineStore('attendance', {
         },
 
         async requestJustification(date, reason, studentId) {
+            const cleanReason = (reason || '').trim();
+            if (!cleanReason || cleanReason.length < 3) {
+                throw new Error("La motivazione della giustificazione deve contenere almeno 3 caratteri");
+            }
+            if (cleanReason.length > 500) {
+                throw new Error("La motivazione della giustificazione non può superare 500 caratteri");
+            }
+
             try {
                 const authStore = useAuthStore();
                 const childrenStore = useChildrenStore();
@@ -150,12 +178,18 @@ export const useAttendanceStore = defineStore('attendance', {
                     student_id: targetStudentId,
                     start_date: date,
                     end_date: date,
-                    reason: reason
+                    reason: cleanReason
                 };
-                await api.post('/attendance/justify', payload);
                 const record = this.records.find(r => r.date === date);
+                const prevStatus = record ? record.justificationStatus : null;
                 if (record) record.justificationStatus = 'Pending';
-                await this.fetchMyAttendance();
+                try {
+                    await api.post('/attendance/justify', payload);
+                    await this.fetchMyAttendance();
+                } catch (err) {
+                    if (record && prevStatus) record.justificationStatus = prevStatus;
+                    throw err;
+                }
             } catch (err) {
                 console.error("Error requesting justification:", err);
                 throw err;

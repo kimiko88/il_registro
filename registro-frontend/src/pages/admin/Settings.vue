@@ -339,6 +339,7 @@ import { useQuasar } from 'quasar'
 import { useI18n } from 'vue-i18n'
 import api from 'src/services/api'
 import { useAuthStore } from 'src/stores/auth'
+import { SUPPORTED_LOCALES, applyLocale, normalizeLocale } from '@/utils/locale'
 
 const $q = useQuasar()
 const { locale, t } = useI18n()
@@ -364,22 +365,13 @@ const passwordForm = reactive({
 })
 
 // Lingua
-const selectedLanguage = ref(locale.value || 'it-IT')
-const languageOptions = [
-  { label: 'Italiano (Italia)', value: 'it-IT', icon: 'flag' },
-  { label: 'English (United States)', value: 'en-US', icon: 'language' },
-  { label: 'Deutsch (Deutschland)', value: 'de-DE', icon: 'language' },
-  { label: 'Français (France)', value: 'fr-FR', icon: 'language' },
-  { label: 'Español (España)', value: 'es-ES', icon: 'language' },
-  { label: 'Русский (Россия)', value: 'ru-RU', icon: 'language' },
-  { label: 'Українська (Україна)', value: 'uk-UA', icon: 'language' },
-  { label: 'العربية (السعودية)', value: 'ar-SA', icon: 'language' },
-  { label: '中文 (简体)', value: 'zh-CN', icon: 'language' }
-]
+const selectedLanguage = ref(normalizeLocale(locale.value))
+const languageOptions = SUPPORTED_LOCALES
 
 const currentLanguageLabel = computed(() => {
-  const opt = languageOptions.find(o => o.value === locale.value)
-  return opt ? opt.label : 'Italiano (Italia)'
+  const norm = normalizeLocale(locale.value)
+  const opt = languageOptions.find(o => o.value === norm)
+  return opt ? opt.label : 'Italiano'
 })
 
 // Settings state loaded from localStorage / defaults
@@ -435,7 +427,7 @@ const loadSettings = () => {
     const savedNotif = localStorage.getItem('superadmin_notification_settings')
     if (savedNotif) Object.assign(notificationSettings, JSON.parse(savedNotif))
 
-    const savedLang = localStorage.getItem('superadmin_language')
+    const savedLang = localStorage.getItem('app_language') || localStorage.getItem('user_locale')
     if (savedLang) {
       selectedLanguage.value = savedLang
       locale.value = savedLang
@@ -539,12 +531,11 @@ const saveNotificationSettings = async () => {
 }
 
 const saveLanguage = () => {
-  locale.value = selectedLanguage.value
-  localStorage.setItem('superadmin_language', selectedLanguage.value)
+  applyLocale(selectedLanguage.value, { locale }, $q)
   $q.notify({
     type: 'positive',
     icon: 'language',
-    message: `Lingua impostata su: ${currentLanguageLabel.value}`
+    message: t('notifications.languageChanged')
   })
   languageDialog.value = false
 }

@@ -1,6 +1,7 @@
 package grades
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -17,27 +18,28 @@ func NewValidator(db *sql.DB) *Validator {
 }
 
 // ValidateGradeValue checks if the grade value matches the grade type requirements.
+// In the Italian school system, grades range from 1 to 10 (with -1 indicating absence).
 func (v *Validator) ValidateGradeValue(value float64, gradeType string) error {
 	switch GradeType(gradeType) {
 	case GradeTypeNumeric, "":
-		if (value < 0 && value != -1) || value > 10 {
-			return errors.New("Voto deve essere tra 0 e 10, o -1 per assenza")
+		if (value < 1.0 && value != -1.0) || value > 10.0 {
+			return errors.New("Voto deve essere tra 1 e 10, o -1 per assenza")
 		}
 	case GradeTypeJudgment:
-		if value < 0 || value > 10 {
-			return errors.New("Valore giudizio fuori range")
+		if value < 1.0 || value > 10.0 {
+			return errors.New("Valore giudizio fuori range (1-10)")
 		}
 	case GradeTypeCredit:
-		if value <= 0 {
-			return errors.New("Credito deve essere positivo")
+		if value < 1.0 || value > 25.0 {
+			return errors.New("Credito scolastico deve essere compreso tra 1 e 25")
 		}
 	case GradeTypeCompetence:
 		if value < 1 || value > 4 {
 			return errors.New("Livello competenza non valido (1-4)")
 		}
 	default:
-		if (value < 0 && value != -1) || value > 10 {
-			return errors.New("Voto deve essere tra 0 e 10, o -1 per assenza")
+		if (value < 1.0 && value != -1.0) || value > 10.0 {
+			return errors.New("Voto deve essere tra 1 e 10, o -1 per assenza")
 		}
 	}
 	return nil
@@ -48,6 +50,7 @@ func (v *Validator) ValidateJudgmentString(judgment string) error {
 	allowed := []string{
 		"Insufficiente", "Mediocre", "Sufficiente", "Discreto", "Buono",
 		"Distinto", "Ottimo", "Eccellente", "Gravemente Insufficiente", "Quasi Sufficiente",
+		"Avanzato", "Intermedio", "Base", "Iniziale", "Non Raggiunto",
 	}
 	for _, a := range allowed {
 		if strings.EqualFold(a, judgment) {
@@ -73,14 +76,28 @@ func (v *Validator) ValidateTeacherCanGrade(teacherUserID string, subjectID stri
 // ValidateStudentEnrolled verifies that the student has an active enrollment
 // for the given semester (checks class_students, not just student existence).
 func (v *Validator) ValidateStudentEnrolled(studentID string, semester int) error {
-	query := `
-		SELECT 1
-		FROM class_students cs
-		JOIN students s ON cs.student_id = s.id
-		WHERE s.id = $1
-		  AND cs.status = 'active'`
+	var query string
+	var args []interface{}
+	if semester > 0 {
+		query = `
+			SELECT 1
+			FROM class_students cs
+			JOIN students s ON (cs.student_id = s.id OR cs.student_id = s.user_id)
+			WHERE (s.id = $1::uuid OR s.user_id = $1::uuid)
+			  AND cs.status = 'active'
+			  AND (cs.semester = $2 OR cs.semester IS NULL OR cs.semester = 0)`
+		args = []interface{}{studentID, semester}
+	} else {
+		query = `
+			SELECT 1
+			FROM class_students cs
+			JOIN students s ON (cs.student_id = s.id OR cs.student_id = s.user_id)
+			WHERE (s.id = $1::uuid OR s.user_id = $1::uuid)
+			  AND cs.status = 'active'`
+		args = []interface{}{studentID}
+	}
 	var exists int
-	err := v.db.QueryRow(query, studentID).Scan(&exists)
+	err := v.db.QueryRow(query, args...).Scan(&exists)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return fmt.Errorf("studente non iscritto ad alcuna classe attiva (semestre %d)", semester)
@@ -232,5 +249,60 @@ func (v *Validator) IsTeacherAssignedToSubject(teacherID string, subjectID strin
 			  AND (cs.teacher_id IS NULL OR cs.teacher_id::text = '')
 		)`
 	err := v.db.QueryRow(query, classID, subjectID, teacherID).Scan(&exists)
+	return exists, err
+}
+
+// IsTeacherAssignedToStudent checks if a teacher is assigned to any of the student's class subjects or is class coordinator.
+func (v *Validator) IsTeacherAssignedToStudent(ctx context.Context, teacherID string, studentID string) (bool, error) {
+	if v == nil || v.db == nil || teacherID == "" || studentID == "" {
+		return false, nil
+	}
+	var exists bool
+	query := `
+		SELECT EXISTS(
+			SELECT 1 FROM class_students cs
+			JOIN class_subjects csub ON cs.class_id = csub.class_id
+			LEFT JOIN teachers t ON (NULLIF(csub.teacher_id::text, '') = t.id::text OR NULLIF(csub.teacher_id::text, '') = t.user_id::text)
+			WHERE cs.student_id::text = $1 AND (csub.teacher_id::text = $2 OR t.id::text = $2 OR t.user_id::text = $2)
+
+			UNION ALL
+
+			SELECT 1 FROM class_students cs
+			JOIN classes c ON cs.class_id = c.id
+			LEFT JOIN teachers t ON (NULLIF(c.coordinator_id::text, '') = t.id::text OR NULLIF(c.coordinator_id::text, '') = t.user_id::text)
+			WHERE cs.student_id::text = $1 AND (c.coordinator_id::text = $2 OR t.id::text = $2 OR t.user_id::text = $2)
+		)`
+	err := v.db.QueryRowContext(ctx, query, studentID, teacherID).Scan(&exists)
+	return exists, err
+}
+
+// IsTeacherAssignedToSubjectBySubjectID checks if a teacher teaches the given subject in any class.
+// Unlike IsTeacherAssignedToSubject, no classID is required — used when only the subjectID is known (e.g. GetSubjectGrades).
+func (v *Validator) IsTeacherAssignedToSubjectBySubjectID(ctx context.Context, teacherID, subjectID string) (bool, error) {
+	if v == nil || v.db == nil || teacherID == "" || subjectID == "" {
+		return false, nil
+	}
+	var exists bool
+	query := `
+		SELECT EXISTS(
+			SELECT 1 FROM class_subjects cs
+			LEFT JOIN teachers t ON (NULLIF(cs.teacher_id::text, '') = t.id::text OR NULLIF(cs.teacher_id::text, '') = t.user_id::text)
+			WHERE cs.subject_id::text = $1
+			  AND (NULLIF(cs.teacher_id::text, '') = $2 OR t.id::text = $2 OR t.user_id::text = $2)
+		)`
+	err := v.db.QueryRowContext(ctx, query, subjectID, teacherID).Scan(&exists)
+	return exists, err
+}
+
+// IsStudentInClass checks whether studentID belongs to classID.
+func (v *Validator) IsStudentInClass(ctx context.Context, studentID string, classID string) (bool, error) {
+	if v == nil || v.db == nil || studentID == "" || classID == "" {
+		return true, nil
+	}
+	var exists bool
+	query := `SELECT EXISTS(
+		SELECT 1 FROM class_students WHERE student_id::text = $1 AND class_id::text = $2
+	)`
+	err := v.db.QueryRowContext(ctx, query, studentID, classID).Scan(&exists)
 	return exists, err
 }

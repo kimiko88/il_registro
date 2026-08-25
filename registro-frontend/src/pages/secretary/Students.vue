@@ -223,13 +223,15 @@
 
 <script setup>
 import { ref, onMounted, reactive, computed } from 'vue'
-import { userService } from 'src/services/userService'
-import adminService from 'src/services/adminService'
-import { useAuthStore } from 'src/stores/auth'
+import { useI18n } from 'vue-i18n'
+import { userService } from '@/services/userService'
+import adminService from '@/services/adminService'
+import { useAuthStore } from '@/stores/auth'
 import { useQuasar } from 'quasar'
-import StudentRecords from 'src/components/Secretary/StudentRecords.vue'
+import StudentRecords from '@/components/Secretary/StudentRecords.vue'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const authStore = useAuthStore()
 
 const loading = ref(false)

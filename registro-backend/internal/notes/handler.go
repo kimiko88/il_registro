@@ -52,6 +52,10 @@ func (h *Handler) Approve(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
+	if actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "vice_principal" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only staff can approve discipline notes"})
+		return
+	}
 	noteID := c.Param("id")
 
 	if err := h.service.ApproveNote(c.Request.Context(), actorID, actorRole, noteID); err != nil {
@@ -112,11 +116,11 @@ func (h *Handler) Delete(c *gin.Context) {
 	noteID := c.Param("id")
 
 	var req DeleteNoteRequest
-	_ = c.ShouldBindJSON(&req)
-	reason := req.Reason
-	if reason == "" {
-		reason = c.Query("reason")
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "motivo cancellazione obbligatorio: " + err.Error()})
+		return
 	}
+	reason := req.Reason
 
 	if err := h.service.DeleteNote(c.Request.Context(), userID, role, noteID, reason); err != nil {
 		if errors.Is(err, ErrUnauthorizedDelete) || strings.HasPrefix(err.Error(), "forbidden") {

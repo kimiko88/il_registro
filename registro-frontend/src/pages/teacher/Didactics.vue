@@ -5,11 +5,11 @@
       <div>
         <div class="text-h5 text-weight-bold">
           <q-icon name="folder_shared" color="primary" class="q-mr-sm" />
-          Materiale Didattico
+          {{ t('didacticsPage.title') }}
         </div>
-        <div class="text-caption text-grey">Condividi dispense, compiti, link o materiale di studio con le tue classi</div>
+        <div class="text-caption text-grey">{{ t('didacticsPage.subtitle') }}</div>
       </div>
-      <q-btn icon="cloud_upload" label="Condividi File" color="primary" class="shadow-soft" @click="openUploadDialog" />
+      <q-btn icon="cloud_upload" :label="t('didacticsPage.uploadMaterial')" color="primary" class="shadow-soft" @click="openUploadDialog" />
     </div>
 
     <!-- Filters -->
@@ -21,17 +21,17 @@
           option-value="id"
           option-label="label"
           emit-value map-options
-          label="Classe"
+          :label="t('common.filter') + ' Classe'"
           dense outlined
           style="min-width:180px"
         />
         <q-select
           v-model="selectedSubject"
-          :options="gradesStore.subjects"
+          :options="availableSubjectOptions"
           option-value="subject_id"
           option-label="subject_name"
           emit-value map-options
-          label="Materia"
+          :label="t('didacticsPage.filterSubject')"
           dense outlined
           style="min-width:160px"
           clearable
@@ -181,15 +181,20 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
-import { useQuasar, date } from 'quasar'
-import { useClassesStore } from 'src/stores/classes'
-import { useGradesStore } from 'src/stores/grades'
-import didacticService from 'src/services/didacticService'
+import { ref, computed, watch, onMounted } from 'vue'
+import { useQuasar, date as qdate } from 'quasar'
+import { useI18n } from 'vue-i18n'
+import { useAuthStore } from '@/stores/auth'
+import { useClassesStore } from '@/stores/classes'
+import { useGradesStore } from '@/stores/grades'
+import didacticService from '@/services/didacticService'
+import api from '@/services/api'
 
 const $q = useQuasar()
-const classesStore = useClassesStore()
+const { t } = useI18n()
+const authStore = useAuthStore()
 const gradesStore = useGradesStore()
+const classesStore = useClassesStore()
 
 const selectedClass = ref(null)
 const selectedSubject = ref(null)
@@ -201,6 +206,48 @@ const uploadedFile = ref(null)
 
 const materials = ref([])
 const classOptions = ref([])
+
+const isCivicaSubject = (s) => {
+  const name = (s.subject_name || s.name || '').toLowerCase()
+  return name.includes('civica') || name.includes('educazione civica') || name.includes('ed. civica')
+}
+
+const isAssignedToCurrentTeacher = (s, user) => {
+  if (!user) return false
+  const currentUserId = String(user.id || '')
+  const teacherId = user.teacher_id ? String(user.teacher_id) : ''
+  const sTeacherId = s.teacher_id ? String(s.teacher_id) : ''
+  const sTeacherUserId = s.teacher_user_id ? String(s.teacher_user_id) : ''
+
+  if (sTeacherId && (sTeacherId === currentUserId || (teacherId && sTeacherId === teacherId))) {
+    return true
+  }
+  if (sTeacherUserId && (sTeacherUserId === currentUserId || (teacherId && sTeacherUserId === teacherId))) {
+    return true
+  }
+  if (s.teacher_name && user.last_name) {
+    const tName = s.teacher_name.toLowerCase()
+    const uLast = user.last_name.toLowerCase()
+    const uFirst = (user.first_name || '').toLowerCase()
+    if (tName.includes(uLast) && (!uFirst || tName.includes(uFirst))) {
+      return true
+    }
+  }
+  return false
+}
+
+const availableSubjectOptions = computed(() => {
+  const allSubjects = gradesStore.subjects || []
+  const user = authStore.user
+  if (!user || ['admin', 'superadmin', 'secretary'].includes(user.role)) {
+    return allSubjects
+  }
+
+  // Mostra ESCLUSIVAMENTE le materie assegnate dalla segreteria al docente loggato + Educazione Civica
+  return allSubjects.filter(s => {
+    return isAssignedToCurrentTeacher(s, user) || isCivicaSubject(s)
+  })
+})
 
 const newMaterial = ref({
   subject_id: null,
@@ -220,8 +267,8 @@ onMounted(async () => {
 watch(selectedClass, async () => {
   if (selectedClass.value) {
     await gradesStore.fetchClassSubjects(selectedClass.value)
-    if (gradesStore.subjects && gradesStore.subjects.length > 0) {
-      selectedSubject.value = gradesStore.subjects[0].subject_id
+    if (availableSubjectOptions.value && availableSubjectOptions.value.length > 0) {
+      selectedSubject.value = availableSubjectOptions.value[0].subject_id
     } else {
       selectedSubject.value = null
     }
@@ -336,6 +383,7 @@ const formatDate = (d) => date.formatDate(new Date(d), 'DD/MM/YYYY')
 .line-clamp-3 {
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;  
   overflow: hidden;
 }

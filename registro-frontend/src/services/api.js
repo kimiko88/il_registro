@@ -1,42 +1,76 @@
 import axios from 'axios';
 import { useAuthStore } from '@/stores/auth';
 
-const getBaseURL = () => {
+export const getBaseURL = () => {
     const rawUrl = import.meta.env.VITE_API_URL;
     if (!rawUrl) {
         return '/api/v1';
     }
-    if (rawUrl.endsWith('/api/v1') || rawUrl.endsWith('/api/v1/')) {
-        return rawUrl;
+    const cleaned = String(rawUrl).trim().replace(/\/+$/, '');
+    if (cleaned.endsWith('/api/v1')) {
+        return cleaned;
     }
-    return rawUrl.endsWith('/') ? `${rawUrl}api/v1` : `${rawUrl}/api/v1`;
+    return `${cleaned}/api/v1`;
 };
 
 const api = axios.create({
     baseURL: getBaseURL(),
     timeout: 15000,
+    withCredentials: true,
     headers: {
         'Content-Type': 'application/json',
     },
 });
 
+const getEffectiveLanguage = (userLang) => {
+    if (userLang && typeof userLang === 'string') return userLang;
+    try {
+        const lang = (typeof localStorage !== 'undefined' && (localStorage.getItem('app_language') || localStorage.getItem('user_locale'))) || 'it-IT';
+        return typeof lang === 'string' && /^[a-zA-Z0-9_-]{2,10}$/.test(lang) ? lang : 'it-IT';
+    } catch {
+        return 'it-IT';
+    }
+};
+
+const activeAbortControllers = new Set();
+
+export const cancelInFlightRequests = () => {
+    for (const controller of activeAbortControllers) {
+        try {
+            controller.abort();
+        } catch (_e) {
+            // Ignore errors if the request was already completed or aborted
+        }
+    }
+    activeAbortControllers.clear();
+};
+
 api.interceptors.request.use(
     (config) => {
         let token = null;
+        let userLang = null;
         try {
             const authStore = useAuthStore();
             token = authStore.token;
+            userLang = authStore.user?.language;
         } catch {
-            // fallback if store not ready
+            // Store not ready yet
         }
-        if (!token) {
-            token = localStorage.getItem('token') || sessionStorage.getItem('token');
-        }
+        // Note: Tokens are stored exclusively in Pinia memory to prevent XSS.
+        // Any client-side decoding is used strictly for UX optimization (e.g. routing/UI state);
+        // cryptographical signature verification and authorization are strictly enforced server-side.
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
-        const lang = localStorage.getItem('superadmin_language') || 'it-IT';
-        config.headers['Accept-Language'] = lang;
+        config.headers['Accept-Language'] = getEffectiveLanguage(userLang);
+
+        if (config.url) {
+            if (config.url.startsWith('/api/v1/')) {
+                config.url = config.url.substring('/api/v1'.length);
+            } else if (config.url.startsWith('api/v1/')) {
+                config.url = '/' + config.url.substring('api/v1/'.length);
+            }
+        }
 
         return config;
     },
@@ -47,14 +81,19 @@ let isRefreshing = false;
 let failedQueue = [];
 
 const processQueue = (error, token = null) => {
-    failedQueue.forEach((prom) => {
-        if (error) {
-            prom.reject(error);
-        } else {
-            prom.resolve(token);
+    const queue = failedQueue;
+    failedQueue = [];
+    queue.forEach((prom) => {
+        try {
+            if (error) {
+                prom.reject(error);
+            } else {
+                prom.resolve(token);
+            }
+        } catch (_e) {
+            // Ignore errors if promise was already settled
         }
     });
-    failedQueue = [];
 };
 
 let appRouter = null;
@@ -65,7 +104,30 @@ export const setApiRouter = (router) => {
 
 export const resetApiState = () => {
     isRefreshing = false;
-    failedQueue = [];
+    processQueue(new Error('Session reset or logged out'), null);
+    cancelInFlightRequests();
+};
+
+export const clearLocalSession = () => {
+    resetApiState();
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('selectedChildId');
+    sessionStorage.removeItem('user');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('refreshToken');
+    sessionStorage.removeItem('selectedChildId');
+    sessionStorage.removeItem('registro_lesson_drafts');
+};
+
+// Handler per la re-autenticazione in-page (registrato da MainLayout).
+// Se presente, invece di navigare a /login, mostra un dialog modale.
+// Firma: (email: string) => Promise<string>  (risolve col nuovo access_token)
+let _reauthHandler = null;
+
+export const setReauthHandler = (fn) => {
+    _reauthHandler = fn;
 };
 
 const handleSessionExpired = () => {
@@ -73,7 +135,7 @@ const handleSessionExpired = () => {
         if (appRouter.currentRoute?.value?.path !== '/login') {
             appRouter.push('/login?reason=session_expired');
         }
-    } else if (window.location.pathname !== '/login') {
+    } else if (typeof window !== 'undefined' && window.location?.pathname !== '/login') {
         window.location.href = '/login?reason=session_expired';
     }
 };
@@ -94,18 +156,28 @@ api.interceptors.response.use(
             return Promise.reject(error);
         }
 
+        const serverMsg = error.response?.data?.message || error.response?.data?.error;
+
         if (error.response.status === 403) {
-            error.userMessage = appI18n?.global?.t ? appI18n.global.t('errors.forbidden') : 'Non disponi dei permessi necessari per completare questa operazione.';
+            error.userMessage = serverMsg || (appI18n?.global?.t ? appI18n.global.t('errors.forbidden') : 'Non disponi dei permessi necessari per completare questa operazione.');
+        } else if (error.response.status === 429) {
+            error.userMessage = serverMsg || (appI18n?.global?.t ? appI18n.global.t('errors.rateLimit') : 'Troppi tentativi di accesso. Riprova tra un minuto.');
         } else if (error.response.status >= 500) {
-            error.userMessage = appI18n?.global?.t ? appI18n.global.t('errors.serverError') : 'Si è verificato un errore sul server. Riprova più tardi.';
+            error.userMessage = serverMsg || (appI18n?.global?.t ? appI18n.global.t('errors.serverError') : 'Si è verificato un errore sul server. Riprova più tardi.');
+        } else if (serverMsg && typeof serverMsg === 'string') {
+            error.userMessage = serverMsg;
         }
 
+        const isAuthUrl = originalRequest?.url && (
+            originalRequest.url.endsWith('/auth/login') ||
+            originalRequest.url.endsWith('/auth/refresh-token') ||
+            originalRequest.url.endsWith('/auth/refresh')
+        );
 
         if (
             error.response.status === 401 &&
             originalRequest &&
-            !originalRequest.url.includes('/auth/login') &&
-            !originalRequest.url.includes('/auth/refresh')
+            !isAuthUrl
         ) {
             if (!originalRequest._retry) {
                 originalRequest._retry = true;
@@ -116,74 +188,72 @@ api.interceptors.response.use(
                     // Store not initialized
                 }
 
-                const refreshToken = authStore?.refreshToken || localStorage.getItem('refreshToken') || sessionStorage.getItem('refreshToken');
-
-                if (refreshToken) {
-                    if (isRefreshing) {
-                        return new Promise((resolve, reject) => {
-                            failedQueue.push({ resolve, reject });
+                if (isRefreshing) {
+                    return new Promise((resolve, reject) => {
+                        failedQueue.push({ resolve, reject });
+                    })
+                        .then((token) => {
+                            originalRequest.headers.Authorization = `Bearer ${token}`;
+                            return api(originalRequest);
                         })
-                            .then((token) => {
-                                originalRequest.headers.Authorization = `Bearer ${token}`;
-                                return api(originalRequest);
-                            })
-                            .catch((err) => Promise.reject(err));
+                        .catch((err) => Promise.reject(err));
+                }
+
+                isRefreshing = true;
+
+                try {
+                    const refreshResponse = await axios.post(
+                        `${getBaseURL()}/auth/refresh-token`,
+                        {},
+                        { withCredentials: true }
+                    );
+                    const access_token = refreshResponse.data?.access_token;
+                    const newRefreshToken = refreshResponse.data?.refresh_token;
+
+                    if (authStore && authStore.updateTokens) {
+                        authStore.updateTokens(access_token, newRefreshToken);
                     }
 
-                    isRefreshing = true;
-
-                    try {
-                        const refreshResponse = await axios.post(`${getBaseURL()}/auth/refresh-token`, {
-                            refresh_token: refreshToken,
-                        }, { timeout: 15000 });
-                        const access_token = refreshResponse.data?.access_token;
-                        const newRefreshToken = refreshResponse.data?.refresh_token;
-
-                        if (authStore && authStore.updateTokens) {
-                            authStore.updateTokens(access_token, newRefreshToken);
-                        } else {
-                            if (localStorage.getItem('token')) {
-                                localStorage.setItem('token', access_token);
-                                if (newRefreshToken) localStorage.setItem('refreshToken', newRefreshToken);
-                            } else if (sessionStorage.getItem('token')) {
-                                sessionStorage.setItem('token', access_token);
-                                if (newRefreshToken) sessionStorage.setItem('refreshToken', newRefreshToken);
+                    processQueue(null, access_token);
+                    originalRequest.headers.Authorization = `Bearer ${access_token}`;
+                    return api(originalRequest);
+                } catch (refreshErr) {
+                    // Prova la re-autenticazione in-page se il handler è registrato
+                    if (_reauthHandler) {
+                        try {
+                            const email = authStore?.user?.email || '';
+                            const newToken = await _reauthHandler(email);
+                            if (authStore && authStore.updateTokens) {
+                                authStore.updateTokens(newToken);
                             }
+                            // Successo: risolvi la coda e riprova la request originale col nuovo token
+                            processQueue(null, newToken);
+                            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+                            return api(originalRequest);
+                        } catch (reauthErr) {
+                            // L'utente ha annullato il dialog o reauth fallito -> rifiuta la coda
+                            processQueue(reauthErr, null);
+                            if (authStore) {
+                                authStore.logout();
+                            } else {
+                                clearLocalSession();
+                            }
+                            handleSessionExpired();
+                            return Promise.reject(reauthErr);
                         }
-
-                        processQueue(null, access_token);
-                        originalRequest.headers.Authorization = `Bearer ${access_token}`;
-                        return api(originalRequest);
-                    } catch (refreshErr) {
+                    } else {
+                        // Fallback: nessun handler registrato → svuota coda con errore + logout + redirect
                         processQueue(refreshErr, null);
                         if (authStore) {
                             authStore.logout();
                         } else {
-                            localStorage.removeItem('user');
-                            localStorage.removeItem('token');
-                            localStorage.removeItem('refreshToken');
-                            sessionStorage.removeItem('user');
-                            sessionStorage.removeItem('token');
-                            sessionStorage.removeItem('refreshToken');
+                            clearLocalSession();
                         }
                         handleSessionExpired();
                         return Promise.reject(refreshErr);
-                    } finally {
-                        isRefreshing = false;
                     }
-                } else {
-                    if (authStore) {
-                        authStore.logout();
-                    } else {
-                        localStorage.removeItem('user');
-                        localStorage.removeItem('token');
-                        localStorage.removeItem('refreshToken');
-                        sessionStorage.removeItem('user');
-                        sessionStorage.removeItem('token');
-                        sessionStorage.removeItem('refreshToken');
-                    }
-                    handleSessionExpired();
-                    return Promise.reject(error);
+                } finally {
+                    isRefreshing = false;
                 }
             }
         }
@@ -192,3 +262,4 @@ api.interceptors.response.use(
 );
 
 export default api;
+

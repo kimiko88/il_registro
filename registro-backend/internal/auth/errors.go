@@ -3,18 +3,19 @@ package auth
 import "errors"
 
 var (
-	ErrUserNotFound        = errors.New("user not found")
-	ErrEmailAlreadyExists  = errors.New("email already exists")
-	ErrInvalidCredentials  = errors.New("invalid credentials")
-	ErrInvalidEmail        = errors.New("invalid email format")
-	ErrPasswordTooShort    = errors.New("password must be at least 10 characters")
-	ErrPasswordTooLong     = errors.New("password must be at most 128 characters")
-	ErrPasswordNoUppercase = errors.New("password must contain at least one uppercase letter")
-	ErrPasswordNoLowercase = errors.New("password must contain at least one lowercase letter")
-	ErrPasswordNoNumber    = errors.New("password must contain at least one number")
-	ErrPasswordNoSpecial   = errors.New("password must contain at least one special character")
-	ErrPasswordExpired     = errors.New("password has expired, please reset it")
-	ErrPasswordReused      = errors.New("cannot reuse a recent password")
+	ErrUserNotFound           = errors.New("user not found")
+	ErrEmailAlreadyExists     = errors.New("email already exists")
+	ErrInvalidCredentials     = errors.New("invalid credentials")
+	ErrInvalidEmail           = errors.New("invalid email format")
+	ErrPasswordTooShort       = errors.New("password must be at least 10 characters")
+	ErrPasswordTooLong        = errors.New("password must be at most 128 characters")
+	ErrPasswordNoUppercase    = errors.New("password must contain at least one uppercase letter")
+	ErrPasswordNoLowercase    = errors.New("password must contain at least one lowercase letter")
+	ErrPasswordNoNumber       = errors.New("password must contain at least one number")
+	ErrPasswordNoSpecial      = errors.New("password must contain at least one special character")
+	ErrPasswordExpired        = errors.New("password has expired, please reset it")
+	ErrInitialPasswordExpired = errors.New("initial password has expired, please change your password")
+	ErrPasswordReused         = errors.New("cannot reuse a recent password")
 	// ErrInvalidRole is returned when the requested role is not a valid role string.
 	ErrInvalidRole = errors.New("invalid role")
 	// ErrInsufficientRole is returned when the caller's role does not have

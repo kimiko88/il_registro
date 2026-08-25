@@ -18,7 +18,7 @@
               ref="inputRef"
               v-model="query"
               class="search-native-input col"
-              placeholder="Cerca studenti, docenti, segreteria, classi, circolari, voci di menu…"
+              :placeholder="t('search.placeholder')"
               autocomplete="off"
               spellcheck="false"
               @keydown.escape="close"
@@ -34,11 +34,11 @@
           <!-- No input hint -->
           <div v-if="!query" class="search-hint q-pa-lg text-center text-grey-6">
             <q-icon name="keyboard" size="32px" class="q-mb-sm opacity-50" /><br />
-            <span class="text-caption">Digita per cercare studenti, docenti, segreteria, classi, circolari o voci di menu</span>
+            <span class="text-caption">{{ t('search.hint') }}</span>
             <div class="row justify-center q-mt-md q-gutter-sm">
-              <q-chip dense outline color="grey-5" label="↑↓ Naviga" />
-              <q-chip dense outline color="grey-5" label="Enter Apri" />
-              <q-chip dense outline color="grey-5" label="Esc Chiudi" />
+              <q-chip dense outline color="grey-5" :label="'↑↓ ' + t('search.navigate')" />
+              <q-chip dense outline color="grey-5" :label="'Enter ' + t('search.open')" />
+              <q-chip dense outline color="grey-5" :label="'Esc ' + t('search.close')" />
             </div>
           </div>
 
@@ -50,7 +50,7 @@
           <!-- No results -->
           <div v-else-if="query && results.length === 0" class="q-pa-lg text-center text-grey-6">
             <q-icon name="search_off" size="32px" class="opacity-50 q-mb-sm" /><br />
-            <span class="text-caption">Nessun risultato per "<strong>{{ query }}</strong>"</span>
+            <span class="text-caption">{{ t('search.noResults') }} "<strong>{{ query }}</strong>"</span>
           </div>
 
           <!-- Results -->
@@ -99,8 +99,10 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/services/api'
 import { debounce } from 'quasar'
+import { useI18n } from 'vue-i18n'
 
 // ── State ──────────────────────────────────────────────────────────────────
+const { t } = useI18n()
 const isOpen = ref(false)
 const query = ref('')
 const loading = ref(false)
@@ -257,16 +259,27 @@ function openResult(item) {
   close()
   if (item.route) {
     router.push(item.route)
-  } else if (item.url) {
-    window.open(item.url, '_blank')
+  } else if (item.url && /^https?:\/\//i.test(item.url)) {
+    window.open(item.url, '_blank', 'noopener,noreferrer')
   }
 }
 
 // ── Highlight matching text ──────────────────────────────────────────────────
+function escapeHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
+
 function highlight(text) {
-  if (!query.value || !text) return text || ''
-  const escaped = query.value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  return text.replace(new RegExp(`(${escaped})`, 'gi'), '<mark class="search-highlight">$1</mark>')
+  if (!text) return ''
+  const safeText = escapeHtml(text)
+  if (!query.value) return safeText
+  const escaped = escapeHtml(query.value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return safeText.replace(new RegExp(`(${escaped})`, 'gi'), '<mark class="search-highlight">$1</mark>')
 }
 
 // Expose open() so MainLayout can call it

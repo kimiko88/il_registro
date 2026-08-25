@@ -1,9 +1,10 @@
 <template>
   <div v-if="store.children.length > 0">
-    <q-btn-dropdown flat no-caps dense :label="store.selectedChild?.firstName || 'Select Child'">
+    <q-btn-dropdown flat no-caps dense :label="store.selectedChild?.firstName || (t('roleDashboards.selectChild') || 'Seleziona Figlio')">
         <template v-slot:icon>
-             <q-avatar size="24px">
-                <img :src="store.selectedChild?.avatar">
+             <q-avatar size="24px" color="primary" text-color="white">
+                <img v-if="store.selectedChild?.avatar" :src="store.selectedChild.avatar">
+                <q-icon v-else name="person" size="16px" />
              </q-avatar>
         </template>
         
@@ -17,8 +18,9 @@
                 :active="child.id === store.selectedChildId"
             >
                 <q-item-section avatar>
-                    <q-avatar>
-                        <img :src="child.avatar" />
+                    <q-avatar color="primary" text-color="white">
+                        <img v-if="child.avatar" :src="child.avatar" />
+                        <q-icon v-else name="person" size="20px" />
                     </q-avatar>
                 </q-item-section>
                 <q-item-section>
@@ -32,9 +34,11 @@
 </template>
 
 <script setup>
-import { useChildrenStore } from 'src/stores/children';
+import { useI18n } from 'vue-i18n';
+import { useChildrenStore } from '@/stores/children';
 import { onMounted } from 'vue';
 
+const { t } = useI18n();
 const store = useChildrenStore();
 
 onMounted(() => {

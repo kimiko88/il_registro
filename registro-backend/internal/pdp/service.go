@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
+	"registro-backend/internal/users"
 )
 
 var (
@@ -11,21 +13,27 @@ var (
 	ErrNotSharedYet    = errors.New("pdp plan has not been shared with the family yet")
 	ErrAlreadyApproved = errors.New("pdp plan already approved by the family")
 	ErrUnauthorized    = errors.New("unauthorized: insufficient role for this pdp operation")
+	ErrNotGuardian     = errors.New("unauthorized: non sei il tutore legale dello studente")
 )
 
 // Service defines the business logic for PDP/PEI plans.
 type Service struct {
-	repo Repository
+	repo     Repository
+	userRepo users.Repository
 }
 
 // NewService creates a new PDP service.
-func NewService(repo Repository) *Service {
-	return &Service{repo: repo}
+func NewService(repo Repository, uRepo ...users.Repository) *Service {
+	svc := &Service{repo: repo}
+	if len(uRepo) > 0 && uRepo[0] != nil {
+		svc.userRepo = uRepo[0]
+	}
+	return svc
 }
 
 // CreatePlan creates a new PDP/PEI plan.
 // Only coordinators, referenti or dirigenza may create plans.
-func (s *Service) CreatePlan(ctx context.Context, actorID, actorRole string, req *CreatePdpRequest) (*PdpPlan, error) {
+func (s *Service) CreatePlan(ctx context.Context, actorID, actorRole, schoolID string, req *CreatePdpRequest) (*PdpPlan, error) {
 	if !canManagePDP(actorRole) {
 		return nil, ErrUnauthorized
 	}
@@ -36,6 +44,7 @@ func (s *Service) CreatePlan(ctx context.Context, actorID, actorRole string, req
 	plan := &PdpPlan{
 		StudentID:     req.StudentID,
 		ClassID:       req.ClassID,
+		SchoolID:      schoolID,
 		AcademicYear:  req.AcademicYear,
 		PlanType:      req.PlanType,
 		Diagnosis:     req.Diagnosis,
@@ -50,25 +59,45 @@ func (s *Service) CreatePlan(ctx context.Context, actorID, actorRole string, req
 }
 
 // GetByStudent returns all PDP/PEI plans for a student for a given academic year.
-// Parents only see plans that have been shared with the family.
-func (s *Service) GetByStudent(ctx context.Context, actorRole, studentID, academicYear string) ([]*PdpPlan, error) {
+// Parents only see plans that have been shared with the family, and guardianship is verified.
+func (s *Service) GetByStudent(ctx context.Context, actorID, actorRole, actorSchoolID, studentID, academicYear string) ([]*PdpPlan, error) {
+	switch actorRole {
+	case "parent":
+		if s.userRepo != nil {
+			isGuardian, err := s.userRepo.IsGuardian(ctx, actorID, studentID)
+			if err != nil {
+				return nil, fmt.Errorf("pdp.GetByStudent: guardian check failed: %w", err)
+			}
+			if !isGuardian {
+				return nil, ErrNotGuardian
+			}
+		}
+	case "student":
+		if actorID != studentID {
+			return nil, ErrUnauthorized
+		}
+	}
+
 	plans, err := s.repo.GetByStudent(ctx, studentID, academicYear)
 	if err != nil {
 		return nil, err
 	}
 
-	// Parents/students see only shared plans; strip confidential diagnosis field
-	if actorRole == "parent" || actorRole == "student" {
-		visible := make([]*PdpPlan, 0, len(plans))
-		for _, p := range plans {
-			if p.SharedWithFamily {
-				p.Diagnosis = "" // never expose diagnosis to non-staff
-				visible = append(visible, p)
-			}
+	// Multi-tenant check & privacy filter
+	var visible []*PdpPlan
+	for _, p := range plans {
+		if actorRole != "superadmin" && actorSchoolID != "" && p.SchoolID != "" && p.SchoolID != actorSchoolID {
+			continue
 		}
-		return visible, nil
+		if actorRole == "parent" || actorRole == "student" {
+			if !p.SharedWithFamily {
+				continue
+			}
+			p.Diagnosis = "" // never expose diagnosis to non-staff
+		}
+		visible = append(visible, p)
 	}
-	return plans, nil
+	return visible, nil
 }
 
 // GetByClass returns all PDP/PEI plans for an entire class.
@@ -81,7 +110,7 @@ func (s *Service) GetByClass(ctx context.Context, actorRole, classID, academicYe
 }
 
 // GetByID returns a single plan by ID.
-func (s *Service) GetByID(ctx context.Context, actorRole, id string) (*PdpPlan, error) {
+func (s *Service) GetByID(ctx context.Context, actorID, actorRole, actorSchoolID, id string) (*PdpPlan, error) {
 	plan, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -89,17 +118,37 @@ func (s *Service) GetByID(ctx context.Context, actorRole, id string) (*PdpPlan, 
 	if plan == nil {
 		return nil, ErrPlanNotFound
 	}
-	if (actorRole == "parent" || actorRole == "student") && !plan.SharedWithFamily {
-		return nil, ErrNotSharedYet
+	if actorRole != "superadmin" && actorSchoolID != "" && plan.SchoolID != "" && plan.SchoolID != actorSchoolID {
+		return nil, ErrUnauthorized
 	}
-	if actorRole == "parent" || actorRole == "student" {
+
+	switch actorRole {
+	case "parent":
+		if s.userRepo != nil {
+			isGuardian, err := s.userRepo.IsGuardian(ctx, actorID, plan.StudentID)
+			if err != nil || !isGuardian {
+				return nil, ErrNotGuardian
+			}
+		}
+		if !plan.SharedWithFamily {
+			return nil, ErrNotSharedYet
+		}
+		plan.Diagnosis = ""
+	case "student":
+		if actorID != plan.StudentID {
+			return nil, ErrUnauthorized
+		}
+		if !plan.SharedWithFamily {
+			return nil, ErrNotSharedYet
+		}
 		plan.Diagnosis = ""
 	}
+
 	return plan, nil
 }
 
 // UpdatePlan updates an existing plan. Only staff roles may update.
-func (s *Service) UpdatePlan(ctx context.Context, actorRole, id string, req *UpdatePdpRequest) (*PdpPlan, error) {
+func (s *Service) UpdatePlan(ctx context.Context, actorRole, actorSchoolID, id string, req *UpdatePdpRequest) (*PdpPlan, error) {
 	if !canManagePDP(actorRole) {
 		return nil, ErrUnauthorized
 	}
@@ -107,12 +156,22 @@ func (s *Service) UpdatePlan(ctx context.Context, actorRole, id string, req *Upd
 	if err != nil || plan == nil {
 		return nil, ErrPlanNotFound
 	}
+	if actorRole != "superadmin" && actorSchoolID != "" && plan.SchoolID != "" && plan.SchoolID != actorSchoolID {
+		return nil, ErrUnauthorized
+	}
 	return s.repo.Update(ctx, id, req)
 }
 
 // ShareWithFamily sets the shared_with_family flag.
-func (s *Service) ShareWithFamily(ctx context.Context, actorRole, id string, share bool) (*PdpPlan, error) {
+func (s *Service) ShareWithFamily(ctx context.Context, actorRole, actorSchoolID, id string, share bool) (*PdpPlan, error) {
 	if !canManagePDP(actorRole) {
+		return nil, ErrUnauthorized
+	}
+	plan, err := s.repo.GetByID(ctx, id)
+	if err != nil || plan == nil {
+		return nil, ErrPlanNotFound
+	}
+	if actorRole != "superadmin" && actorSchoolID != "" && plan.SchoolID != "" && plan.SchoolID != actorSchoolID {
 		return nil, ErrUnauthorized
 	}
 	if err := s.repo.SetSharedWithFamily(ctx, id, share); err != nil {
@@ -122,13 +181,24 @@ func (s *Service) ShareWithFamily(ctx context.Context, actorRole, id string, sha
 }
 
 // ApproveByFamily records family approval of the plan.
-func (s *Service) ApproveByFamily(ctx context.Context, actorRole, actorID, id string) error {
-	if actorRole != "parent" {
+func (s *Service) ApproveByFamily(ctx context.Context, actorRole, actorID, actorSchoolID, id string) error {
+	if actorRole != "parent" && actorRole != "admin" && actorRole != "superadmin" {
 		return ErrUnauthorized
 	}
 	plan, err := s.repo.GetByID(ctx, id)
 	if err != nil || plan == nil {
 		return ErrPlanNotFound
+	}
+	if actorRole != "superadmin" && actorSchoolID != "" && plan.SchoolID != "" && plan.SchoolID != actorSchoolID {
+		return ErrUnauthorized
+	}
+	if actorRole == "parent" {
+		if s.userRepo != nil {
+			isGuardian, err := s.userRepo.IsGuardian(ctx, actorID, plan.StudentID)
+			if err != nil || !isGuardian {
+				return ErrNotGuardian
+			}
+		}
 	}
 	if !plan.SharedWithFamily {
 		return ErrNotSharedYet
@@ -140,8 +210,15 @@ func (s *Service) ApproveByFamily(ctx context.Context, actorRole, actorID, id st
 }
 
 // DeletePlan deletes a plan. Only coordinators and dirigenza can delete.
-func (s *Service) DeletePlan(ctx context.Context, actorRole, id string) error {
+func (s *Service) DeletePlan(ctx context.Context, actorRole, actorSchoolID, id string) error {
 	if !canManagePDP(actorRole) {
+		return ErrUnauthorized
+	}
+	plan, err := s.repo.GetByID(ctx, id)
+	if err != nil || plan == nil {
+		return ErrPlanNotFound
+	}
+	if actorRole != "superadmin" && actorSchoolID != "" && plan.SchoolID != "" && plan.SchoolID != actorSchoolID {
 		return ErrUnauthorized
 	}
 	return s.repo.Delete(ctx, id)

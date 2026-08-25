@@ -531,6 +531,175 @@ func SeedScuolaDiProva(ctx context.Context, dbConn *sql.DB) error {
 	}
 	fmt.Println("[SEED] Communications and Acknowledgments created.")
 
+	// 15. Orientamento Events, Participations & Preferences
+	var orEvt1ID, orEvt2ID, orEvt3ID string
+	err = dbConn.QueryRowContext(ctx, `SELECT id FROM orientamento_events WHERE school_id = $1 AND title = 'Open Day Ingegneria e Nuove Tecnologie'`, schoolID).Scan(&orEvt1ID)
+	if err != nil {
+		orEvt1ID = uuid.New().String()
+		_, _ = dbConn.ExecContext(ctx, `
+			INSERT INTO orientamento_events (id, school_id, title, description, category, date, end_date, location, hours, max_attendees, created_by, created_at)
+			VALUES ($1, $2, 'Open Day Ingegneria e Nuove Tecnologie', 'Presentazione dei corsi di laurea triennale e magistrale in Ingegneria Informatica e Gestionale', 'University', '2024-11-15 09:00:00+01', '2024-11-15 13:00:00+01', 'Aula Magna - Politecnico', 4.0, 100, $3, NOW())
+		`, orEvt1ID, schoolID, adminID)
+	}
+
+	err = dbConn.QueryRowContext(ctx, `SELECT id FROM orientamento_events WHERE school_id = $1 AND title = 'Salone dello Studente e Orientamento Post-Diploma'`, schoolID).Scan(&orEvt2ID)
+	if err != nil {
+		orEvt2ID = uuid.New().String()
+		_, _ = dbConn.ExecContext(ctx, `
+			INSERT INTO orientamento_events (id, school_id, title, description, category, date, end_date, location, hours, max_attendees, created_by, created_at)
+			VALUES ($1, $2, 'Salone dello Studente e Orientamento Post-Diploma', 'Incontro con università, accademie e aziende per la scelta del percorso futuro', 'Work', '2024-11-20 09:30:00+01', '2024-11-20 13:30:00+01', 'Fiera di Roma - Padiglione 3', 4.0, 250, $3, NOW())
+		`, orEvt2ID, schoolID, adminID)
+	}
+
+	err = dbConn.QueryRowContext(ctx, `SELECT id FROM orientamento_events WHERE school_id = $1 AND title = 'Workshop Soft Skills & Colloqui di Lavoro'`, schoolID).Scan(&orEvt3ID)
+	if err != nil {
+		orEvt3ID = uuid.New().String()
+		_, _ = dbConn.ExecContext(ctx, `
+			INSERT INTO orientamento_events (id, school_id, title, description, category, date, end_date, location, hours, max_attendees, created_by, created_at)
+			VALUES ($1, $2, 'Workshop Soft Skills & Colloqui di Lavoro', 'Simulazione di colloqui di selezione e redazione del curriculum vitae efficace', 'SoftSkills', '2024-12-05 15:00:00+01', '2024-12-05 17:00:00+01', 'Laboratorio Multimediale', 2.0, 30, $3, NOW())
+		`, orEvt3ID, schoolID, adminID)
+	}
+
+	if st2A1_ProfID != "" {
+		if orEvt1ID != "" {
+			_, _ = dbConn.ExecContext(ctx, `
+				INSERT INTO orientamento_participations (id, event_id, student_id, status, attended, registered_at)
+				VALUES ($1, $2, $3, 'Attended', TRUE, NOW() - INTERVAL '10 days')
+				ON CONFLICT (event_id, student_id) DO NOTHING
+			`, uuid.New().String(), orEvt1ID, st2A1_ProfID)
+		}
+		if orEvt2ID != "" {
+			_, _ = dbConn.ExecContext(ctx, `
+				INSERT INTO orientamento_participations (id, event_id, student_id, status, attended, registered_at)
+				VALUES ($1, $2, $3, 'Registered', FALSE, NOW() - INTERVAL '2 days')
+				ON CONFLICT (event_id, student_id) DO NOTHING
+			`, uuid.New().String(), orEvt2ID, st2A1_ProfID)
+		}
+	}
+
+	if st2A1_UserID != "" {
+		_, _ = dbConn.ExecContext(ctx, `
+			INSERT INTO orientamento_preferences (id, student_id, preferred_track, target_field, notes, updated_at)
+			VALUES ($1, $2, 'Università / Laurea Triennale', 'Ingegneria Informatica & AI', 'Interessato allo sviluppo software e all intelligenza artificiale.', NOW())
+			ON CONFLICT (student_id) DO NOTHING
+		`, uuid.New().String(), st2A1_UserID)
+	}
+	fmt.Println("[SEED] Orientamento Events, Participations & Preferences created.")
+
+	// 16. PCTO Companies, Projects, Participations & Hours
+	var companyID string
+	err = dbConn.QueryRowContext(ctx, `SELECT id FROM pcto_companies WHERE school_id = $1 AND name = 'Tech Innovators S.r.l.'`, schoolID).Scan(&companyID)
+	if err != nil {
+		companyID = uuid.New().String()
+		_, _ = dbConn.ExecContext(ctx, `
+			INSERT INTO pcto_companies (id, school_id, name, vat_number, address, contact_person, contact_person_first_name, contact_person_last_name, contact_person_phone, email, agreement_date, created_at)
+			VALUES ($1, $2, 'Tech Innovators S.r.l.', 'IT12345678901', 'Via dell Innovazione 42, Roma', 'Ing. Mario Rossi', 'Mario', 'Rossi', '+39 06 1234567', 'tutor@techinnovators.it', '2024-09-01', NOW())
+		`, companyID, schoolID)
+	}
+
+	var pctoProjectID string
+	err = dbConn.QueryRowContext(ctx, `SELECT id FROM pcto_projects WHERE school_id = $1 AND title = 'Sviluppo Web e Applicazioni Didattiche Cloud'`, schoolID).Scan(&pctoProjectID)
+	if err != nil {
+		pctoProjectID = uuid.New().String()
+		_, _ = dbConn.ExecContext(ctx, `
+			INSERT INTO pcto_projects (id, school_id, title, description, type, start_date, end_date, total_hours, company_id, school_tutor_id, company_tutor_name, created_by, created_at, updated_at)
+			VALUES ($1, $2, 'Sviluppo Web e Applicazioni Didattiche Cloud', 'Progetto di tirocinio aziendale per la progettazione e implementazione di moduli web per la didattica digitale.', 'External', '2024-10-01', '2024-12-20', 60, $3, $4, 'Ing. Mario Rossi', $4, NOW(), NOW())
+		`, pctoProjectID, schoolID, companyID, teacherUserIDs[0])
+	}
+
+	if st2A1_ProfID != "" && pctoProjectID != "" {
+		var pctoPartID string
+		err = dbConn.QueryRowContext(ctx, `SELECT id FROM pcto_participations WHERE project_id = $1 AND student_id = $2`, pctoProjectID, st2A1_ProfID).Scan(&pctoPartID)
+		if err != nil {
+			pctoPartID = uuid.New().String()
+			_, _ = dbConn.ExecContext(ctx, `
+				INSERT INTO pcto_participations (id, project_id, student_id, status, hours_completed, risk_assessment_ack, created_at)
+				VALUES ($1, $2, $3, 'Active', 20.0, TRUE, NOW())
+			`, pctoPartID, pctoProjectID, st2A1_ProfID)
+
+			// Seed hour logs for this participation
+			hourLogs := []struct {
+				Date     string
+				Hours    float64
+				Activity string
+			}{
+				{"2024-10-01", 5.0, "Configurazione ambiente di sviluppo e introduzione all architettura software"},
+				{"2024-10-08", 5.0, "Analisi dei requisiti funzionali e wireframing interfaccia utente"},
+				{"2024-10-15", 5.0, "Implementazione componenti frontend e integrazione API REST"},
+				{"2024-10-22", 5.0, "Testing di integrazione, debug e stesura della documentazione tecnica"},
+			}
+			for _, hl := range hourLogs {
+				_, _ = dbConn.ExecContext(ctx, `
+					INSERT INTO pcto_hours (id, participation_id, date, hours, activity_description, verified, verified_by, verified_at, created_at)
+					VALUES ($1, $2, $3::date, $4, $5, TRUE, $6, NOW(), NOW())
+				`, uuid.New().String(), pctoPartID, hl.Date, hl.Hours, hl.Activity, teacherUserIDs[0])
+			}
+		}
+	}
+	fmt.Println("[SEED] PCTO Companies, Projects, Participations & Hours created.")
+
+	// 17. Student Goals (Obiettivi Formativi & Badges)
+	if st2A1_ProfID != "" {
+		goalsSeed := []struct {
+			Title, Description, BadgeName, BadgeIcon, Category, Status string
+			Points                                                     int
+			DueDate                                                    string
+		}{
+			{
+				Title:       "Completare tutti gli esercizi di Matematica sulle Equazioni",
+				Description: "Svolgimento completo degli esercizi assegnati per il consolidamento delle equazioni di secondo grado.",
+				BadgeName:   "Matematico Brillante",
+				BadgeIcon:   "🧮",
+				Category:    "academic",
+				Status:      "completed",
+				Points:      25,
+				DueDate:     "2024-10-20",
+			},
+			{
+				Title:       "Firma e visione delle circolari scolastiche entro 48 ore",
+				Description: "Costanza nella consultazione della bacheca e firma tempestiva delle circolari informative.",
+				BadgeName:   "Lettore Attento",
+				BadgeIcon:   "📚",
+				Category:    "social",
+				Status:      "completed",
+				Points:      15,
+				DueDate:     "2024-10-25",
+			},
+			{
+				Title:       "Preparazione relazione sul laboratorio scientifico",
+				Description: "Stesura accurata del report sperimentale con analisi dati e conclusioni.",
+				BadgeName:   "Sperimentatore Provvetto",
+				BadgeIcon:   "🧪",
+				Category:    "academic",
+				Status:      "in_progress",
+				Points:      30,
+				DueDate:     "2024-11-10",
+			},
+			{
+				Title:       "Partecipazione attiva e diario di bordo PCTO",
+				Description: "Compilazione puntuale del registro attività e raggiungimento delle prime 20 ore di tirocinio.",
+				BadgeName:   "Futuro Professionista",
+				BadgeIcon:   "💼",
+				Category:    "behavioral",
+				Status:      "in_progress",
+				Points:      30,
+				DueDate:     "2024-11-30",
+			},
+		}
+
+		for _, g := range goalsSeed {
+			var gID string
+			err = dbConn.QueryRowContext(ctx, `SELECT id FROM student_goals WHERE student_id = $1 AND title = $2`, st2A1_ProfID, g.Title).Scan(&gID)
+			if err != nil {
+				_, _ = dbConn.ExecContext(ctx, `
+					INSERT INTO student_goals (id, student_id, teacher_id, title, description, badge_name, badge_icon, category, status, points, due_date, created_at, completed_at)
+					VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::date, NOW(), CASE WHEN $9 = 'completed' THEN NOW() ELSE NULL END)
+				`, uuid.New().String(), st2A1_ProfID, teacherUserIDs[0], g.Title, g.Description, g.BadgeName, g.BadgeIcon, g.Category, g.Status, g.Points, g.DueDate)
+			}
+		}
+		fmt.Println("[SEED] Student Goals & Badges created.")
+	}
+
 	fmt.Println("[SEED] Complete seeding for 'Scuola di Prova' finished successfully!")
 	return nil
 }

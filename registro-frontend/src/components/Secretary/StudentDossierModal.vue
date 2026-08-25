@@ -4,16 +4,16 @@
       <q-card-section class="bg-primary text-white row items-center justify-between">
         <div class="row items-center">
           <q-icon name="folder_shared" size="28px" class="q-mr-sm" />
-          <div class="text-h6">Fascicolo Personale Studente (Storico Multi-Anno)</div>
+          <div class="text-h6">{{ t('studentsPage.studentDossier') || 'Fascicolo Personale Studente (Storico Multi-Anno)' }}</div>
         </div>
         <q-btn icon="close" flat round dense v-close-popup />
       </q-card-section>
 
       <q-card-section class="q-pa-md">
         <q-tabs v-model="tab" dense class="text-grey" active-color="primary" indicator-color="primary" align="justify">
-          <q-tab name="panoramica" icon="analytics" label="Storico Multi-Anno" />
-          <q-tab name="allegati" icon="attach_file" label="Documentazione & Allegati" />
-          <q-tab name="bes" icon="medical_services" label="Fascicolo BES/DSA & PDP" />
+          <q-tab name="panoramica" icon="analytics" :label="t('studentsPage.multiYearHistory') || 'Storico Multi-Anno'" />
+          <q-tab name="allegati" icon="attach_file" :label="t('studentsPage.documentsAndAttachments') || 'Documentazione & Allegati'" />
+          <q-tab name="bes" icon="medical_services" :label="t('studentsPage.besDsaDossier') || 'Fascicolo BES/DSA & PDP'" />
         </q-tabs>
 
         <q-separator class="q-mb-md" />
@@ -25,9 +25,9 @@
               <div class="col-12 col-md-4">
                 <q-card flat bordered class="bg-grey-1">
                   <q-card-section>
-                    <div class="text-subtitle2 text-weight-bold text-primary">Riepilogo Presenze Multi-Anno</div>
+                    <div class="text-subtitle2 text-weight-bold text-primary">{{ t('roleDashboards.attendanceAverage') || 'Riepilogo Presenze Multi-Anno' }}</div>
                     <div class="text-h4 text-weight-bolder text-secondary q-my-xs">97.8%</div>
-                    <div class="text-caption text-grey-7">Assenze Totali: 12 ore (tutte giustificate)</div>
+                    <div class="text-caption text-grey-7">{{ t('attendance.totalAbsences') || 'Assenze Totali: 12 ore (tutte giustificate)' }}</div>
                   </q-card-section>
                 </q-card>
               </div>
@@ -35,9 +35,9 @@
               <div class="col-12 col-md-4">
                 <q-card flat bordered class="bg-grey-1">
                   <q-card-section>
-                    <div class="text-subtitle2 text-weight-bold text-primary">Media Generale Voti</div>
+                    <div class="text-subtitle2 text-weight-bold text-primary">{{ t('roleDashboards.gradeAverage') || 'Media Generale Voti' }}</div>
                     <div class="text-h4 text-weight-bolder text-positive q-my-xs">8.3</div>
-                    <div class="text-caption text-grey-7">Scrutinio Finale 1° e 2° anno: Promosso</div>
+                    <div class="text-caption text-grey-7">{{ t('gradesPage.finalOutcome') || 'Scrutinio Finale 1° e 2° anno: Promosso' }}</div>
                   </q-card-section>
                 </q-card>
               </div>
@@ -45,9 +45,9 @@
               <div class="col-12 col-md-4">
                 <q-card flat bordered class="bg-grey-1">
                   <q-card-section>
-                    <div class="text-subtitle2 text-weight-bold text-primary">Note Disciplinari</div>
+                    <div class="text-subtitle2 text-weight-bold text-primary">{{ t('classRegister.addDisciplinaryNote') || 'Note Disciplinari' }}</div>
                     <div class="text-h4 text-weight-bolder text-grey-8 q-my-xs">0</div>
-                    <div class="text-caption text-grey-7">Nessun provvedimento disciplinare</div>
+                    <div class="text-caption text-grey-7">{{ t('dashboardPage.noNotifications') || 'Nessun provvedimento disciplinare' }}</div>
                   </q-card-section>
                 </q-card>
               </div>
@@ -57,8 +57,8 @@
           <!-- Allegati Tab -->
           <q-tab-panel name="allegati">
             <div class="row items-center justify-between q-mb-sm">
-              <div class="text-subtitle1 text-weight-bold">Allegati e Documenti Inseriti</div>
-              <q-btn color="primary" icon="upload" label="Carica Documento" size="sm" />
+              <div class="text-subtitle1 text-weight-bold">{{ t('documentsPage.documentsList') || 'Allegati e Documenti Inseriti' }}</div>
+              <q-btn color="primary" icon="upload" :label="t('documentsPage.uploadDocument') || 'Carica Documento'" size="sm" />
             </div>
 
             <q-list bordered separator>
@@ -68,10 +68,10 @@
                 </q-item-section>
                 <q-item-section>
                   <q-item-label class="text-weight-bold">{{ doc.title }}</q-item-label>
-                  <q-item-label caption>Categoria: {{ doc.category }} | Anno: {{ doc.academic_year }}</q-item-label>
+                  <q-item-label caption>{{ t('common.category') || 'Categoria' }}: {{ doc.category }} | {{ t('common.year') || 'Anno' }}: {{ doc.academic_year }}</q-item-label>
                 </q-item-section>
                 <q-item-section side>
-                  <q-btn flat icon="download" color="primary" label="Download" />
+                  <q-btn flat icon="download" color="primary" :label="t('common.download') || 'Download'" />
                 </q-item-section>
               </q-item>
             </q-list>
@@ -81,7 +81,7 @@
           <q-tab-panel name="bes">
             <div class="q-pa-sm">
               <div class="text-subtitle1 text-weight-bold text-warning">
-                <q-icon name="warning" class="q-mr-xs" /> Documentazione BES / DSA Riservata
+                <q-icon name="warning" class="q-mr-xs" /> {{ t('studentsPage.besDsaDocumentation') || 'Documentazione BES / DSA Riservata' }}
               </div>
               <div class="text-body2 text-grey-8 q-mt-xs">
                 Certificato Medico Diagnostico DSA (Legge 170/2010) depositato in data 10/09/2025.
@@ -93,7 +93,7 @@
       </q-card-section>
 
       <q-card-actions align="right">
-        <q-btn flat label="Chiudi" v-close-popup />
+        <q-btn flat :label="t('common.close') || 'Chiudi'" v-close-popup />
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -101,7 +101,9 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const show = ref(false)
 const tab = ref('panoramica')
 

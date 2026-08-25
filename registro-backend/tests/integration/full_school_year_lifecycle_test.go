@@ -32,7 +32,7 @@ func (m *mockAttRepo) BatchCreate(atts []*attendance.Attendance) error {
 	return args.Error(0)
 }
 func (m *mockAttRepo) Update(att *attendance.Attendance) error { return nil }
-func (m *mockAttRepo) DeleteByClassDateHour(classID string, date time.Time, hour int) error {
+func (m *mockAttRepo) DeleteByClassDateHour(schoolID, classID string, date time.Time, hour int) error {
 	return nil
 }
 func (m *mockAttRepo) FindByID(id string) (*attendance.Attendance, error) { return nil, nil }
@@ -60,10 +60,27 @@ func (m *mockAttRepo) ProcessJustificationTx(ctx context.Context, j *attendance.
 func (m *mockAttRepo) FindJustificationByID(id string) (*attendance.Justification, error) {
 	return nil, nil
 }
-func (m *mockAttRepo) FindPendingJustifications(classID string) ([]attendance.Justification, error) {
+func (m *mockAttRepo) FindPendingJustifications(classID, schoolID string) ([]attendance.Justification, error) {
 	return nil, nil
 }
-func (m *mockAttRepo) DeleteJustification(id string) error { return nil }
+func (m *mockAttRepo) FindPendingJustificationsForTeacher(ctx context.Context, teacherID, schoolID string) ([]attendance.Justification, error) {
+	return nil, nil
+}
+func (m *mockAttRepo) DeleteJustification(id string) error        { return nil }
+func (m *mockAttRepo) DeletePendingJustification(id string) error { return nil }
+func (m *mockAttRepo) IsStudentInClass(ctx context.Context, studentID, classID string) (bool, error) {
+	return true, nil
+}
+func (m *mockAttRepo) AreStudentsInClass(ctx context.Context, studentIDs []string, classID string) (map[string]bool, error) {
+	res := make(map[string]bool)
+	for _, id := range studentIDs {
+		res[id] = true
+	}
+	return res, nil
+}
+func (m *mockAttRepo) IsClassInSchool(ctx context.Context, classID, schoolID string) (bool, error) {
+	return true, nil
+}
 func (m *mockAttRepo) IsTeacherAssignedToClass(ctx context.Context, teacherID, classID string) (bool, error) {
 	args := m.Called(ctx, teacherID, classID)
 	return args.Bool(0), args.Error(1)
@@ -80,7 +97,7 @@ func (m *mockAttRepo) GetMonthlyBreakdown(ctx context.Context, studentID, school
 func (m *mockAttRepo) FindUnjustifiedByStudent(studentID string) ([]attendance.Attendance, error) {
 	return nil, nil
 }
-func (m *mockAttRepo) JustifyAbsenceByParent(attendanceID string, reason string, notes string) error {
+func (m *mockAttRepo) JustifyAbsenceByParent(attendanceID string, studentID string, reason string, notes string) error {
 	return nil
 }
 func (m *mockAttRepo) GetStudentAttendanceStats(studentID string) (*attendance.AttendanceStats, error) {
@@ -104,6 +121,18 @@ func (m *mockScrutinyRepo) ValidateClassScrutiny(ctx context.Context, classID st
 	return nil
 }
 func (m *mockScrutinyRepo) UpdateClassScrutinyStatus(ctx context.Context, classID string, semester int, status string) error {
+	return nil
+}
+func (m *mockScrutinyRepo) SaveDeficiency(ctx context.Context, def *scrutiny.StudentDeficiency) error {
+	return nil
+}
+func (m *mockScrutinyRepo) GetDeficienciesByStudent(ctx context.Context, studentID string) ([]scrutiny.StudentDeficiency, error) {
+	return nil, nil
+}
+func (m *mockScrutinyRepo) GetDeficienciesByClass(ctx context.Context, classID string, semester int) ([]scrutiny.StudentDeficiency, error) {
+	return nil, nil
+}
+func (m *mockScrutinyRepo) SaveDeferredScrutiny(ctx context.Context, req *scrutiny.SaveDeferredScrutinyRequest) error {
 	return nil
 }
 

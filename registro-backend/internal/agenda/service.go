@@ -53,6 +53,20 @@ func (s *Service) CreateAgendaItem(ctx context.Context, teacherID, schoolID stri
 		req.EndTime = "10:00"
 	}
 
+	if !req.AllDay {
+		st, err := time.Parse("15:04", req.StartTime)
+		if err != nil {
+			return nil, errors.New("invalid start_time format: expected HH:MM")
+		}
+		et, err := time.Parse("15:04", req.EndTime)
+		if err != nil {
+			return nil, errors.New("invalid end_time format: expected HH:MM")
+		}
+		if et.Before(st) {
+			return nil, errors.New("end_time cannot be before start_time")
+		}
+	}
+
 	item := &AgendaItem{
 		SchoolID:    schoolID,
 		ClassID:     req.ClassID,
@@ -111,10 +125,27 @@ func (s *Service) UpdateAgendaItem(ctx context.Context, actorID, actorRole, acto
 		item.AllDay = *req.AllDay
 	}
 	if req.StartTime != nil {
+		if *req.StartTime != "" {
+			if _, err := time.Parse("15:04", *req.StartTime); err != nil {
+				return nil, errors.New("invalid start_time format: expected HH:MM")
+			}
+		}
 		item.StartTime = *req.StartTime
 	}
 	if req.EndTime != nil {
+		if *req.EndTime != "" {
+			if _, err := time.Parse("15:04", *req.EndTime); err != nil {
+				return nil, errors.New("invalid end_time format: expected HH:MM")
+			}
+		}
 		item.EndTime = *req.EndTime
+	}
+	if !item.AllDay && item.StartTime != "" && item.EndTime != "" {
+		st, err1 := time.Parse("15:04", item.StartTime)
+		et, err2 := time.Parse("15:04", item.EndTime)
+		if err1 == nil && err2 == nil && et.Before(st) {
+			return nil, errors.New("end_time cannot be before start_time")
+		}
 	}
 	if req.Date != nil {
 		d, err := time.Parse("2006-01-02", *req.Date)
@@ -155,36 +186,63 @@ func (s *Service) GetCalendar(ctx context.Context, schoolID, userID, role string
 		filter.To = filter.From.AddDate(0, 3, 0)
 	}
 
-	if role == "student" {
+	switch role {
+	case "student":
 		if filter.StudentID == "" {
 			filter.StudentID = userID
 		}
-	} else if role == "parent" {
-		if filter.StudentID != "" && s.userRepo != nil {
-			isGuardian, err := s.userRepo.IsGuardian(ctx, userID, filter.StudentID)
-			if err != nil || !isGuardian {
-				return nil, ErrUnauthorized
-			}
+	case "parent":
+		if filter.StudentID == "" {
+			return nil, errors.New("student_id is required for parent role")
+		}
+		if s.userRepo == nil {
+			return nil, ErrUnauthorized
+		}
+		isGuardian, err := s.userRepo.IsGuardian(ctx, userID, filter.StudentID)
+		if err != nil || !isGuardian {
+			return nil, ErrUnauthorized
 		}
 	}
 	return s.repo.ListCalendar(ctx, schoolID, filter)
 }
 
-func (s *Service) SetTaskCompletion(ctx context.Context, studentID, role, itemID string, completed bool) error {
-	if role != "student" {
-		return errors.New("unauthorized: task completion can only be updated by a student")
+func (s *Service) SetTaskCompletion(ctx context.Context, actorID, role, targetStudentID, itemID string, completed bool) error {
+	// Only students can mark their own tasks; parents can mark on behalf of their children
+	// after guardianship validation.
+	switch role {
+	case "student":
+		if actorID == "" {
+			return errors.New("unauthorized: studentID required")
+		}
+		// Student marks their own record.
+		targetStudentID = actorID
+	case "parent":
+		if targetStudentID == "" {
+			return errors.New("unauthorized: studentID required for parent role")
+		}
+		if s.userRepo == nil {
+			return ErrUnauthorized
+		}
+		isGuardian, err := s.userRepo.IsGuardian(ctx, actorID, targetStudentID)
+		if err != nil {
+			return fmt.Errorf("failed to verify guardianship: %w", err)
+		}
+		if !isGuardian {
+			return ErrUnauthorized
+		}
+	default:
+		return errors.New("unauthorized: task completion can only be updated by a student or parent")
 	}
-	if studentID == "" {
-		return errors.New("unauthorized: studentID required")
-	}
+
 	item, err := s.repo.GetByID(ctx, itemID)
 	if err != nil {
 		return err
 	}
-	// Bug 108: TODO — verificare che studentID sia iscritto a item.ClassID.
-	// Richiede StudentBelongsToClass(ctx, studentID, item.ClassID) nel Repository.
-	// Al momento il check avviene lato DB tramite la JOIN su student_classes,
-	// che il SetCompletion handler potrebbe rafforzare in futuro.
-	_ = item // usato per l'esistenza dell'item
-	return s.repo.SetCompletion(ctx, itemID, studentID, completed)
+	if item.ClassID != "" {
+		isMember, err := s.repo.IsStudentInClass(ctx, targetStudentID, item.ClassID)
+		if err != nil || !isMember {
+			return errors.New("forbidden: lo studente non appartiene alla classe dell'agenda item")
+		}
+	}
+	return s.repo.SetCompletion(ctx, itemID, targetStudentID, completed)
 }

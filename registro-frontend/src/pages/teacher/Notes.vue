@@ -5,10 +5,10 @@
       <div>
         <h1 class="text-h4 text-weight-bold text-slate-800 q-my-none">
           <q-icon name="assignment_late" color="primary" class="q-mr-sm" />
-          Note & Annotazioni Disciplinari
+          {{ t('notesPage.title') }}
         </h1>
         <p class="text-subtitle1 text-slate-500 q-mt-xs q-mb-none">
-          Gestione delle annotazioni scolastiche e note riservate al coordinatore
+          {{ t('notesPage.subtitle') }}
         </p>
       </div>
       <div class="row items-center q-gutter-sm">
@@ -16,7 +16,7 @@
           color="primary"
           unelevated
           icon="add"
-          label="Nuova Nota"
+          :label="t('notesPage.addNote')"
           class="rounded-lg q-px-md"
           no-caps
           @click="openDialog"
@@ -32,7 +32,7 @@
           <q-select
             v-model="selectedClassId"
             :options="classOptions"
-            label="Seleziona Classe *"
+            :label="t('notesPage.filterClass')"
             outlined dense
             emit-value map-options
             @update:model-value="onClassChange"
@@ -42,7 +42,7 @@
           <q-select
             v-model="selectedStudentId"
             :options="studentOptions"
-            label="Filtra per Studente"
+            :label="t('notesPage.searchStudent')"
             outlined dense
             clearable
             emit-value map-options
@@ -51,7 +51,7 @@
         </div>
         <div class="col-12 col-sm-4 text-right">
           <q-badge color="indigo-1" text-color="indigo-8" class="q-px-md q-py-xs text-weight-bold">
-            Totale Note: {{ filteredNotes.length }}
+            {{ t('notesPage.allNotes') }}: {{ filteredNotes.length }}
           </q-badge>
         </div>
       </div>
@@ -222,11 +222,13 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useQuasar, date as qdate } from 'quasar'
+import { useI18n } from 'vue-i18n'
 import { useNotesStore } from '@/stores/notes'
 import { useClassesStore } from '@/stores/classes'
 import api from 'src/services/api'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const notesStore = useNotesStore()
 const classesStore = useClassesStore()
 

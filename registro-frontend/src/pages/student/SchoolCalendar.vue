@@ -148,23 +148,26 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { date as qdate } from 'quasar'
 import { useSchoolCalendarStore } from '@/stores/schoolCalendar'
 
+const { t } = useI18n()
 const calendarStore = useSchoolCalendarStore()
-
 const currentDate = ref(new Date())
 const detailsDialog = ref(false)
 const selectedDayNum = ref(null)
 
-const weekDays = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom']
-
+const currentMonth = computed(() => currentDate.value.getMonth())
 const currentYear = computed(() => currentDate.value.getFullYear())
-const currentMonth = computed(() => currentDate.value.getMonth()) // 0-indexed
 
-const monthName = computed(() => {
-  return currentDate.value.toLocaleString('it-IT', { month: 'long' }).toUpperCase()
-})
+const monthNames = [
+  'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
+  'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'
+]
+const monthName = computed(() => monthNames[currentMonth.value].toUpperCase())
+
+const weekDays = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom']
 
 const daysInMonth = computed(() => {
   return new Date(currentYear.value, currentMonth.value + 1, 0).getDate()

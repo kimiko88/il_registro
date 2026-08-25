@@ -80,10 +80,15 @@ func GenerateCadPreservationPackage(ctx context.Context, schoolID string, year s
 		schoolID, year,
 	))
 
+	yearPrefix := year
+	if len(year) >= 4 {
+		yearPrefix = year[:4]
+	}
+
 	docs := []cadDocument{
-		{ID: "REG-" + year[:4] + "-001", Tipo: "RegistroDiClasse", Oggetto: "Registro di Classe Anno " + year, Content: regClasseContent, Firmato: true, TSToken: computeSimulatedTSA(regClasseContent)},
-		{ID: "SCR-" + year[:4] + "-Q1", Tipo: "VerbaleScrutinio", Oggetto: "Verbale Scrutinio Primo Quadrimestre " + year, Content: verbaleContent, Firmato: true, TSToken: computeSimulatedTSA(verbaleContent)},
-		{ID: "CERT-" + year[:4] + "-ALL", Tipo: "CertificazioneCompetenze", Oggetto: "Certificazioni DM 742/2017 Anno " + year, Content: certContent, Firmato: true, TSToken: computeSimulatedTSA(certContent)},
+		{ID: "REG-" + yearPrefix + "-001", Tipo: "RegistroDiClasse", Oggetto: "Registro di Classe Anno " + year, Content: regClasseContent, Firmato: true, TSToken: computeSimulatedTSA(regClasseContent)},
+		{ID: "SCR-" + yearPrefix + "-Q1", Tipo: "VerbaleScrutinio", Oggetto: "Verbale Scrutinio Primo Quadrimestre " + year, Content: verbaleContent, Firmato: true, TSToken: computeSimulatedTSA(verbaleContent)},
+		{ID: "CERT-" + yearPrefix + "-ALL", Tipo: "CertificazioneCompetenze", Oggetto: "Certificazioni DM 742/2017 Anno " + year, Content: certContent, Firmato: true, TSToken: computeSimulatedTSA(certContent)},
 	}
 
 	// Calcola hash reali

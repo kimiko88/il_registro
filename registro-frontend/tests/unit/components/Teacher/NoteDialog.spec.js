@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { Quasar, Notify } from 'quasar'
+import { Quasar } from 'quasar'
 import NoteDialog from '@/components/Teacher/NoteDialog.vue'
 
 // Mock services using vi.hoisted to avoid reference errors
@@ -36,6 +36,9 @@ describe('NoteDialog.vue', () => {
         vi.clearAllMocks()
         wrapper = mount(NoteDialog, {
             global: {
+                mocks: {
+                    $t: (key) => key === 'classRegister.addNote' ? 'Nuova Nota' : (key === 'classRegister.tableHeaderStudent' ? 'Studente' : key)
+                },
                 plugins: [
                     [Quasar, {}]
                 ],

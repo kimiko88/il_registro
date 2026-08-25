@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
+	"strings"
 	"time"
 
 	"registro-backend/internal/users"
@@ -14,13 +16,12 @@ type Service struct {
 	userRepo users.Repository
 }
 
-func NewService(repo Repository, uRepo ...users.Repository) *Service {
+func NewService(repo Repository, userRepo users.Repository) *Service {
 	if repo == nil {
 		panic("communications.NewService: repo must not be nil")
 	}
-	var userRepo users.Repository
-	if len(uRepo) > 0 {
-		userRepo = uRepo[0]
+	if userRepo == nil {
+		panic("communications.NewService: userRepo must not be nil")
 	}
 	return &Service{repo: repo, userRepo: userRepo}
 }
@@ -32,11 +33,54 @@ func (s *Service) SendMessage(ctx context.Context, actorRole, schoolID, senderID
 	if req.Subject == "" || req.Body == "" {
 		return nil, errors.New("subject and body are required")
 	}
+	if len(req.Subject) > 200 {
+		return nil, errors.New("subject exceeds maximum length of 200 characters")
+	}
+	if len(req.Body) > 50000 {
+		return nil, errors.New("body exceeds maximum length of 50000 characters")
+	}
+
 	if req.Type != "bacheca" && len(req.Recipients) == 0 {
 		return nil, errors.New("recipients are required for targeted messages")
 	}
 	if req.Type == "bacheca" && req.RequiresSignature {
 		return nil, errors.New("cannot set RequiresSignature on a board message")
+	}
+
+	if req.AttachmentURL != nil && *req.AttachmentURL != "" {
+		urlStr := strings.TrimSpace(*req.AttachmentURL)
+		// Fix SSRF: blocca URL non-HTTPS e indirizzi interni/privati.
+		// La blocklist copre ora anche IPv6 loopback, 0.0.0.0 e la subnet 172.16.0.0/12 (Docker).
+		if !strings.HasPrefix(urlStr, "http://") && !strings.HasPrefix(urlStr, "https://") {
+			return nil, errors.New("attachment_url non valido: deve iniziare con http:// o https://")
+		}
+		parsedAtt, parseErr := url.Parse(urlStr)
+		if parseErr != nil || parsedAtt.Host == "" {
+			return nil, errors.New("attachment_url non valido")
+		}
+		hostname := strings.ToLower(parsedAtt.Hostname())
+		if strings.Contains(hostname, "localhost") ||
+			hostname == "0.0.0.0" ||
+			hostname == "[::1]" || hostname == "::1" ||
+			strings.HasPrefix(hostname, "[::ffff:") || strings.HasPrefix(hostname, "::ffff:") ||
+			strings.HasPrefix(hostname, "127.") ||
+			hostname == "169.254.169.254" || // AWS metadata
+			strings.HasPrefix(hostname, "10.") ||
+			strings.HasPrefix(hostname, "192.168.") ||
+			// 172.16.0.0/12: da 172.16.x.x a 172.31.x.x (Docker default)
+			func() bool {
+				parts := strings.Split(hostname, ".")
+				if len(parts) != 4 || parts[0] != "172" {
+					return false
+				}
+				var second int
+				if _, scanErr := fmt.Sscanf(parts[1], "%d", &second); scanErr != nil {
+					return false
+				}
+				return second >= 16 && second <= 31
+			}() {
+			return nil, errors.New("attachment_url non valido: indirizzo interno o privato non consentito (SSRF protection)")
+		}
 	}
 
 	targetSchoolID := schoolID
@@ -92,7 +136,7 @@ func (s *Service) SendMessage(ctx context.Context, actorRole, schoolID, senderID
 }
 
 func (s *Service) ListMessages(ctx context.Context, userID, schoolID string) ([]*Message, error) {
-	return s.repo.List(ctx, userID)
+	return s.repo.List(ctx, userID, schoolID)
 }
 
 func (s *Service) ListBacheca(ctx context.Context, schoolID, userID string) ([]*Message, error) {
@@ -217,7 +261,10 @@ func (s *Service) UpdateMessage(ctx context.Context, actorID, actorRole, schoolI
 		}
 	}
 	sigs, err := s.repo.GetSignatures(ctx, id)
-	if err == nil && len(sigs) > 0 {
+	if err != nil {
+		return fmt.Errorf("impossibile verificare le firme del messaggio: %w", err)
+	}
+	if len(sigs) > 0 {
 		return errors.New("impossibile modificare un messaggio che contiene già firme digitali")
 	}
 	return s.repo.Update(ctx, id, subject, body)
@@ -256,5 +303,19 @@ func (s *Service) ListCircolari(ctx context.Context, schoolID, userID, year stri
 }
 
 func (s *Service) AckMessage(ctx context.Context, communicationID, userID string) error {
-	return s.repo.Ack(ctx, communicationID, userID)
+	msg, err := s.repo.Get(ctx, communicationID)
+	if err != nil {
+		return fmt.Errorf("messaggio non trovato: %w", err)
+	}
+
+	if msg.Type == "bacheca" && len(msg.ReceiverIDs) == 0 {
+		return s.repo.Ack(ctx, communicationID, userID)
+	}
+
+	for _, rid := range msg.ReceiverIDs {
+		if rid == userID {
+			return s.repo.Ack(ctx, communicationID, userID)
+		}
+	}
+	return errors.New("unauthorized: non sei un destinatario di questo messaggio")
 }

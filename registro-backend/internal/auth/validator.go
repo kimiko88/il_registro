@@ -15,46 +15,73 @@ const (
 
 // Role constants — single source of truth used by validator, service and middleware.
 const (
-	RoleSuperAdmin = "superadmin"
-	RoleAdmin      = "admin"
-	RoleSecretary  = "secretary"
-	RoleTeacher    = "teacher"
-	RoleStudent    = "student"
-	RoleParent     = "parent"
+	RoleSuperAdmin    = "superadmin"
+	RoleAdmin         = "admin"
+	RolePrincipal     = "principal"
+	RoleVicePrincipal = "vice_principal"
+	RoleSecretary     = "secretary"
+	RoleTeacher       = "teacher"
+	RoleCoordinator   = "coordinator"
+	RoleStudent       = "student"
+	RoleParent        = "parent"
+	RoleSystemAuditor = "system_auditor"
 )
 
 // allRoles is the exhaustive set of valid role strings.
 var allRoles = map[string]bool{
-	RoleSuperAdmin: true,
-	RoleAdmin:      true,
-	RoleSecretary:  true,
-	RoleTeacher:    true,
-	RoleStudent:    true,
-	RoleParent:     true,
+	RoleSuperAdmin:    true,
+	RoleAdmin:         true,
+	RolePrincipal:     true,
+	RoleVicePrincipal: true,
+	RoleSecretary:     true,
+	RoleTeacher:       true,
+	RoleCoordinator:   true,
+	RoleStudent:       true,
+	RoleParent:        true,
+	RoleSystemAuditor: true,
+}
+
+// IsStaffRole returns true if the given role belongs to staff/administration/teachers.
+func IsStaffRole(role string) bool {
+	switch role {
+	case RoleTeacher, RoleCoordinator, RoleAdmin, RoleSuperAdmin, RoleSecretary, RolePrincipal, RoleVicePrincipal, RoleSystemAuditor:
+		return true
+	default:
+		return false
+	}
 }
 
 // creatableRoles defines which roles each caller role is allowed to create.
 var creatableRoles = map[string]map[string]bool{
 	RoleSuperAdmin: {
-		RoleSuperAdmin: true,
-		RoleAdmin:      true,
-		RoleSecretary:  true,
-		RoleTeacher:    true,
-		RoleStudent:    true,
-		RoleParent:     true,
+		RoleAdmin:         true,
+		RolePrincipal:     true,
+		RoleVicePrincipal: true,
+		RoleSecretary:     true,
+		RoleTeacher:       true,
+		RoleCoordinator:   true,
+		RoleStudent:       true,
+		RoleParent:        true,
+		RoleSystemAuditor: true,
 	},
 	RoleAdmin: {
-		RoleAdmin:     true,
-		RoleSecretary: true,
-		RoleTeacher:   true,
-		RoleStudent:   true,
-		RoleParent:    true,
+		RoleAdmin:         true,
+		RolePrincipal:     true,
+		RoleVicePrincipal: true,
+		RoleSecretary:     true,
+		RoleTeacher:       true,
+		RoleCoordinator:   true,
+		RoleStudent:       true,
+		RoleParent:        true,
+		RoleSystemAuditor: true,
 	},
 	RoleSecretary: {
-		RoleSecretary: true,
-		RoleTeacher:   true,
-		RoleStudent:   true,
-		RoleParent:    true,
+		RolePrincipal:     true,
+		RoleVicePrincipal: true,
+		RoleTeacher:       true,
+		RoleCoordinator:   true,
+		RoleStudent:       true,
+		RoleParent:        true,
 	},
 }
 

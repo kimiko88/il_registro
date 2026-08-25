@@ -69,10 +69,12 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import tenantsService from '@/services/tenantsService'
 import { useQuasar } from 'quasar'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const tenants = ref([])
 const loading = ref(false)
 const showDialog = ref(false)

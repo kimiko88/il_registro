@@ -60,12 +60,9 @@ func (s *service) CreateEvent(ctx context.Context, teacherID, schoolID string, r
 	return s.repo.CreateEvent(ctx, e)
 }
 
-// GetEvents returns events for a specific school.
+// GetEvents returns events for a specific school, or all events if schoolID is empty.
 // Bug 145: schoolID is now a parameter instead of the hardcoded literal "default-school".
 func (s *service) GetEvents(ctx context.Context, schoolID string) ([]Event, error) {
-	if schoolID == "" {
-		return nil, errors.New("school_id required")
-	}
 	return s.repo.GetEvents(ctx, schoolID)
 }
 

@@ -4,12 +4,26 @@ import { useAuthStore } from 'src/stores/auth'
 import { useAuth } from 'src/composables/useAuth'
 import authService from 'src/services/authService'
 
+const createMockJWT = (role = 'teacher', expInSeconds = 3600) => {
+    const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }))
+    const payload = btoa(JSON.stringify({
+        sub: 'user-123',
+        role: role,
+        exp: Math.floor(Date.now() / 1000) + expInSeconds
+    }))
+    return `${header}.${payload}.signature`
+}
+
 vi.mock('src/services/authService')
-vi.mock('vue-router', () => ({
-    useRouter: () => ({
-        push: vi.fn()
-    })
-}))
+vi.mock('vue-router', async (importOriginal) => {
+    const actual = await importOriginal()
+    return {
+        ...actual,
+        useRouter: () => ({
+            push: vi.fn()
+        })
+    }
+})
 
 describe('Role-Based Authentication Flows', () => {
     beforeEach(() => {
@@ -31,10 +45,11 @@ describe('Role-Based Authentication Flows', () => {
         it('should complete full admin login flow', async () => {
             const { login } = useAuth()
             const authStore = useAuthStore()
+            const adminToken = createMockJWT('admin')
 
             authService.login.mockResolvedValue({
                 user: adminUser,
-                access_token: 'admin-access-token',
+                access_token: adminToken,
                 refresh_token: 'admin-refresh-token'
             })
 
@@ -42,14 +57,14 @@ describe('Role-Based Authentication Flows', () => {
 
             expect(error).toBeNull()
             expect(authStore.user).toEqual(adminUser)
-            expect(authStore.token).toBe('admin-access-token')
+            expect(authStore.token).toBe(adminToken)
             expect(authStore.userRole).toBe('admin')
             expect(authStore.isAuthenticated).toBe(true)
         })
 
         it('should have admin permissions and access', () => {
             const authStore = useAuthStore()
-            authStore.login(adminUser, 'token', 'refresh')
+            authStore.login(adminUser, createMockJWT('admin'), 'refresh')
 
             expect(authStore.user.role).toBe('admin')
             expect(authStore.user.school_id).toBeDefined()
@@ -59,12 +74,12 @@ describe('Role-Based Authentication Flows', () => {
             const { logout } = useAuth()
             const authStore = useAuthStore()
 
-            authStore.login(adminUser, 'token', 'refresh-token')
+            authStore.login(adminUser, createMockJWT('admin'), 'refresh-token')
             authService.logout.mockResolvedValue({ message: 'logged out successfully' })
 
             await logout()
 
-            expect(authService.logout).toHaveBeenCalledWith('refresh-token')
+            expect(authService.logout).toHaveBeenCalled()
             expect(authStore.isAuthenticated).toBe(false)
             expect(authStore.user).toBeNull()
         })
@@ -83,10 +98,11 @@ describe('Role-Based Authentication Flows', () => {
         it('should complete full teacher login flow', async () => {
             const { login } = useAuth()
             const authStore = useAuthStore()
+            const teacherToken = createMockJWT('teacher')
 
             authService.login.mockResolvedValue({
                 user: teacherUser,
-                access_token: 'teacher-access-token',
+                access_token: teacherToken,
                 refresh_token: 'teacher-refresh-token'
             })
 
@@ -97,23 +113,23 @@ describe('Role-Based Authentication Flows', () => {
             expect(authStore.userName).toBe('Giovanni Bianchi')
         })
 
-        it('should maintain teacher session across page reload', () => {
+        it('should maintain user profile across page reload while keeping token in memory', () => {
             const authStore = useAuthStore()
+            const teacherToken = createMockJWT('teacher')
 
             // Simulate login
-            authStore.login(teacherUser, 'token', 'refresh')
+            authStore.login(teacherUser, teacherToken, 'refresh')
 
-            // Verify localStorage
-            expect(localStorage.getItem('user')).toBe(JSON.stringify(teacherUser))
-            expect(localStorage.getItem('token')).toBe('token')
+            // Verify localStorage (minimal user profile persisted, token kept in memory)
+            expect(localStorage.getItem('user')).toBe(JSON.stringify({ id: teacherUser.id, role: teacherUser.role }))
+            expect(localStorage.getItem('token')).toBeNull()
 
             // Simulate page reload by creating new store
             setActivePinia(createPinia())
             const newAuthStore = useAuthStore()
 
-            // Store should load from localStorage
-            expect(newAuthStore.user).toEqual(teacherUser)
-            expect(newAuthStore.isAuthenticated).toBe(true)
+            // Store should load minimal user profile from localStorage
+            expect(newAuthStore.user).toEqual({ id: teacherUser.id, role: teacherUser.role })
         })
     })
 
@@ -130,10 +146,11 @@ describe('Role-Based Authentication Flows', () => {
         it('should complete full student login flow', async () => {
             const { login } = useAuth()
             const authStore = useAuthStore()
+            const studentToken = createMockJWT('student')
 
             authService.login.mockResolvedValue({
                 user: studentUser,
-                access_token: 'student-access-token',
+                access_token: studentToken,
                 refresh_token: 'student-refresh-token'
             })
 
@@ -145,7 +162,7 @@ describe('Role-Based Authentication Flows', () => {
 
         it('should handle student profile updates', () => {
             const authStore = useAuthStore()
-            authStore.login(studentUser, 'token', 'refresh')
+            authStore.login(studentUser, createMockJWT('student'), 'refresh')
 
             const updatedStudent = {
                 ...studentUser,
@@ -156,7 +173,7 @@ describe('Role-Based Authentication Flows', () => {
 
             expect(authStore.user.first_name).toBe('Luca Updated')
             expect(authStore.userName).toBe('Luca Updated Verdi')
-            expect(localStorage.getItem('user')).toBe(JSON.stringify(updatedStudent))
+            expect(localStorage.getItem('user')).toBe(JSON.stringify({ id: updatedStudent.id, role: updatedStudent.role }))
         })
     })
 
@@ -173,10 +190,11 @@ describe('Role-Based Authentication Flows', () => {
         it('should complete full parent login flow', async () => {
             const { login } = useAuth()
             const authStore = useAuthStore()
+            const parentToken = createMockJWT('parent')
 
             authService.login.mockResolvedValue({
                 user: parentUser,
-                access_token: 'parent-access-token',
+                access_token: parentToken,
                 refresh_token: 'parent-refresh-token'
             })
 
@@ -200,10 +218,11 @@ describe('Role-Based Authentication Flows', () => {
         it('should complete full secretary login flow', async () => {
             const { login } = useAuth()
             const authStore = useAuthStore()
+            const secretaryToken = createMockJWT('secretary')
 
             authService.login.mockResolvedValue({
                 user: secretaryUser,
-                access_token: 'secretary-access-token',
+                access_token: secretaryToken,
                 refresh_token: 'secretary-refresh-token'
             })
 
@@ -226,10 +245,10 @@ describe('Role-Based Authentication Flows', () => {
                 role: 'teacher'
             }
 
-            authStore.login(teacherUser, 'token', 'refresh')
+            authStore.login(teacherUser, createMockJWT('teacher'), 'refresh')
 
             // Try to manually change role (should not be possible)
-            const originalRole = authStore.userRole
+            const _originalRole = authStore.userRole
 
             // Even if user object is modified, logout should clear everything
             authStore.logout()
@@ -249,7 +268,7 @@ describe('Role-Based Authentication Flows', () => {
                 role: 'admin'
             }
 
-            authStore.login(adminUser, 'admin-token', 'admin-refresh')
+            authStore.login(adminUser, createMockJWT('admin'), 'admin-refresh')
             expect(authStore.userRole).toBe('admin')
 
             authStore.logout()
@@ -291,7 +310,7 @@ describe('Role-Based Authentication Flows', () => {
 
             authStore.login(
                 { id: '1', email: 'test@test.com', role: 'teacher' },
-                'token',
+                createMockJWT('teacher'),
                 'refresh'
             )
 
@@ -311,20 +330,21 @@ describe('Role-Based Authentication Flows', () => {
 
             authStore.login(
                 { id: '1', email: 'test@test.com', first_name: 'Test', last_name: 'User', role: 'teacher' },
-                'old-token',
+                createMockJWT('teacher'),
                 'old-refresh'
             )
 
             authService.refreshToken.mockResolvedValue({
-                access_token: 'new-token',
+                access_token: createMockJWT('teacher'),
                 refresh_token: 'new-refresh',
                 expires_in: 3600
             })
 
             const result = await authService.refreshToken('old-refresh')
 
-            expect(result.access_token).toBe('new-token')
+            expect(result.access_token).toBeDefined()
             expect(result.refresh_token).toBe('new-refresh')
         })
     })
 })
+

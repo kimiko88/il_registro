@@ -18,7 +18,7 @@ type Repository interface {
 	GetHomeworkByID(id string) (*Homework, error)
 	UpdateHomework(id string, req UpdateHomeworkRequest) (*Homework, error)
 	DeleteHomework(id string) error
-	GetHomeworkByClass(classID string) ([]Homework, error)
+	GetHomeworkByClass(classID string, fromDate ...string) ([]Homework, error)
 	IsTeacherAssignedToClass(teacherID, classID string) (bool, error)
 	HasApprovedSubstitution(teacherID, classID, date string, hour int) (bool, error)
 }
@@ -228,12 +228,18 @@ func (r *repository) CreateHomework(homework *Homework) error {
 	).Scan(&homework.ID, &homework.TeacherName)
 }
 
-func (r *repository) GetHomeworkByClass(classID string) ([]Homework, error) {
+func (r *repository) GetHomeworkByClass(classID string, fromDate ...string) ([]Homework, error) {
 	query := `SELECT ch.id, ch.lesson_id, ch.class_id, ch.subject_id, ch.teacher_id, COALESCE(u.first_name || ' ' || u.last_name, '') AS teacher_name, ch.due_date, ch.description, COALESCE(ch.type, 'compito'), ch.created_at, ch.updated_at 
 	          FROM class_homeworks ch
 	          LEFT JOIN users u ON ch.teacher_id = u.id
-	          WHERE ch.class_id = $1 ORDER BY ch.due_date ASC`
-	rows, err := r.db.Query(query, classID)
+	          WHERE ch.class_id = $1`
+	args := []interface{}{classID}
+	if len(fromDate) > 0 && fromDate[0] != "" {
+		query += " AND ch.due_date >= $2::date"
+		args = append(args, fromDate[0])
+	}
+	query += " ORDER BY ch.due_date ASC"
+	rows, err := r.db.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -288,10 +294,15 @@ func (r *repository) UpdateLesson(id string, req UpdateLessonRequest) (*Lesson, 
 		SET topic = COALESCE(NULLIF($2, ''), topic),
 		    type = COALESCE(NULLIF($3, ''), type),
 		    activity_type = COALESCE(NULLIF($4, ''), activity_type),
+		    hour = COALESCE($5, hour),
+		    duration = COALESCE($6, duration),
+		    is_substitution = COALESCE($7, is_substitution),
+		    is_co_teaching = COALESCE($8, is_co_teaching),
+		    notes = COALESCE(NULLIF($9, ''), notes),
 		    updated_at = NOW()
 		WHERE id = $1::uuid
 	`
-	_, err := r.db.Exec(query, id, req.Topic, req.Type, req.ActivityType)
+	_, err := r.db.Exec(query, id, req.Topic, req.Type, req.ActivityType, req.Hour, req.Duration, req.IsSubstitution, req.IsCoTeaching, req.Notes)
 	if err != nil {
 		return nil, err
 	}
@@ -384,7 +395,7 @@ func (r *repository) HasApprovedSubstitution(teacherID, classID, date string, ho
 			  AND s.class_id = $2::uuid
 			  AND s.date = $3::date
 			  AND (s.hour = $4 OR s.hour IS NULL)
-			  AND (s.status = 'approved' OR s.status = 'confirmed' OR s.status = 'assigned' OR s.status IS NULL)
+			  AND (s.status = 'approved' OR s.status = 'confirmed' OR s.status = 'assigned')
 		)`
 	var exists bool
 	err := r.db.QueryRow(query, teacherID, classID, date, hour).Scan(&exists)

@@ -3,6 +3,7 @@ package competencies
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -144,26 +145,7 @@ func (r *Repository) GetByClass(ctx context.Context, classID, subjectID string) 
 
 	rows, err := r.db.QueryContext(ctx, query, classID)
 	if err != nil {
-		// Fallback query directly on users table if students table is not populated
-		altQuery := `
-			SELECT u.id, COALESCE(u.first_name || ' ' || u.last_name, '') AS student_name
-			FROM users u
-			WHERE u.role = 'student'
-			ORDER BY u.last_name ASC, u.first_name ASC`
-		altRows, altErr := r.db.QueryContext(ctx, altQuery)
-		if altErr != nil {
-			return []StudentCompetencyEvaluation{}, nil
-		}
-		defer altRows.Close()
-		var altList []StudentCompetencyEvaluation
-		for altRows.Next() {
-			var sc StudentCompetencyEvaluation
-			if scanErr := altRows.Scan(&sc.StudentID, &sc.StudentName); scanErr == nil {
-				sc.Evaluations = map[string]string{"c1": "B", "c2": "B", "c3": "A", "c4": "B"}
-				altList = append(altList, sc)
-			}
-		}
-		return altList, nil
+		return []StudentCompetencyEvaluation{}, nil
 	}
 	defer rows.Close()
 
@@ -171,15 +153,43 @@ func (r *Repository) GetByClass(ctx context.Context, classID, subjectID string) 
 	for rows.Next() {
 		var sc StudentCompetencyEvaluation
 		if err := rows.Scan(&sc.StudentID, &sc.StudentName); err == nil {
-			sc.Evaluations = map[string]string{
-				"c1": "B", "c2": "B", "c3": "A", "c4": "B",
-			}
+			sc.Evaluations = make(map[string]string)
 			result = append(result, sc)
 		}
 	}
-	if result == nil {
-		result = []StudentCompetencyEvaluation{}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
+	if result == nil {
+		return []StudentCompetencyEvaluation{}, nil
+	}
+
+	if len(result) > 0 {
+		evalQuery := `
+			SELECT student_id, competence_code, level
+			FROM competence_evaluations
+			WHERE ($1 = '' OR class_id = $1::uuid) AND ($2 = '' OR subject_id::text = $2)`
+		evalRows, err := r.db.QueryContext(ctx, evalQuery, classID, subjectID)
+		if err == nil {
+			defer evalRows.Close()
+			evalMap := make(map[string]map[string]string)
+			for evalRows.Next() {
+				var stID, code, lvl string
+				if err := evalRows.Scan(&stID, &code, &lvl); err == nil {
+					if evalMap[stID] == nil {
+						evalMap[stID] = make(map[string]string)
+					}
+					evalMap[stID][code] = lvl
+				}
+			}
+			for i := range result {
+				if m, ok := evalMap[result[i].StudentID]; ok {
+					result[i].Evaluations = m
+				}
+			}
+		}
+	}
+
 	return result, nil
 }
 
@@ -191,7 +201,22 @@ func NewService(repo *Repository) *Service {
 	return &Service{repo: repo}
 }
 
+func IsValidCompetencyLevel(level string) bool {
+	switch level {
+	case "A_Avanzato", "B_Intermedio", "C_Base", "D_Iniziale", "A", "B", "C", "D", "beginner", "intermediate", "advanced", "expert":
+		return true
+	default:
+		return false
+	}
+}
+
 func (s *Service) SaveEvaluation(ctx context.Context, schoolID, evaluatorID string, req SaveEvaluationRequest) (*Evaluation, error) {
+	if req.StudentID == "" || req.ClassID == "" || req.CompetenceCode == "" {
+		return nil, fmt.Errorf("student_id, class_id, and competence_code are required")
+	}
+	if !IsValidCompetencyLevel(req.Level) {
+		return nil, fmt.Errorf("invalid competency level: %s", req.Level)
+	}
 	return s.repo.Upsert(ctx, schoolID, evaluatorID, req)
 }
 
@@ -223,6 +248,11 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 }
 
 func (h *Handler) GetClassEvaluations(c *gin.Context) {
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	classID := c.Query("class_id")
 	subjectID := c.Query("subject_id")
 	evals, err := h.service.GetClassEvaluations(c.Request.Context(), classID, subjectID)
@@ -234,7 +264,17 @@ func (h *Handler) GetClassEvaluations(c *gin.Context) {
 }
 
 func (h *Handler) GetStudentEvaluations(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	studentID := c.Param("studentID")
+	if role == "student" && userID != studentID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: cannot view other students evaluations"})
+		return
+	}
 	sem := 0
 	evals, err := h.service.GetStudentEvaluations(c.Request.Context(), studentID, sem)
 	if err != nil {
@@ -247,8 +287,13 @@ func (h *Handler) GetStudentEvaluations(c *gin.Context) {
 func (h *Handler) SaveEvaluation(c *gin.Context) {
 	evaluatorID := c.GetString("user_id")
 	schoolID := c.GetString("school_id")
+	role := c.GetString("role")
 	if evaluatorID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "teacher" && role != "admin" && role != "superadmin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 
@@ -267,5 +312,42 @@ func (h *Handler) SaveEvaluation(c *gin.Context) {
 }
 
 func (h *Handler) BatchSave(c *gin.Context) {
+	evaluatorID := c.GetString("user_id")
+	schoolID := c.GetString("school_id")
+	role := c.GetString("role")
+	if evaluatorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "teacher" && role != "admin" && role != "superadmin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
+	var req BatchSaveRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	for _, studentEval := range req.Evaluations {
+		for code, level := range studentEval.Evaluations {
+			if IsValidCompetencyLevel(level) {
+				var subj *string
+				if req.SubjectID != "" {
+					subj = &req.SubjectID
+				}
+				_, _ = h.service.SaveEvaluation(c.Request.Context(), schoolID, evaluatorID, SaveEvaluationRequest{
+					StudentID:      studentEval.StudentID,
+					ClassID:        req.ClassID,
+					SubjectID:      subj,
+					CompetenceCode: code,
+					CompetenceName: code,
+					Level:          level,
+				})
+			}
+		}
+	}
+
 	c.JSON(http.StatusOK, gin.H{"message": "valutazioni per competenze salvate con successo"})
 }

@@ -13,6 +13,8 @@ var (
 	ErrPastDate        = errors.New("la data dello slot non può essere nel passato")
 	ErrOverlappingSlot = errors.New("esiste già uno slot sovrapposto per questo docente in questa fascia oraria")
 	ErrNotGuardian     = errors.New("il genitore non è tutore legale dello studente indicato")
+	ErrBookingNotFound = errors.New("booking not found")
+	ErrSlotNotFound    = errors.New("slot not found")
 )
 
 type Service interface {
@@ -48,8 +50,11 @@ func (s *serviceImpl) CreateSlot(ctx context.Context, teacherUserID, schoolID st
 		return nil, ErrInvalidDate
 	}
 
-	// Bug 146: confronto data con timezone locale della scuola/server
-	todayStr := time.Now().In(time.Local).Format("2006-01-02")
+	loc, err := time.LoadLocation("Europe/Rome")
+	if err != nil {
+		loc = time.Local
+	}
+	todayStr := time.Now().In(loc).Format("2006-01-02")
 	if req.Date < todayStr {
 		return nil, ErrPastDate
 	}
@@ -64,10 +69,9 @@ func (s *serviceImpl) CreateSlot(ctx context.Context, teacherUserID, schoolID st
 
 	teacherProfileID, err := s.repo.GetTeacherProfileID(ctx, teacherUserID)
 	if err != nil || teacherProfileID == "" {
-		teacherProfileID = teacherUserID
+		return nil, fmt.Errorf("profilo docente non trovato per l'utente %s: %w", teacherUserID, err)
 	}
 
-	// Bug 98: verifica slot sovrapposti per lo stesso docente
 	if req.StartTime != "" && req.EndTime != "" {
 		overlaps, err := s.repo.ExistsOverlappingSlot(ctx, teacherProfileID, req.Date, req.StartTime, req.EndTime)
 		if err == nil && overlaps {
@@ -93,6 +97,10 @@ func (s *serviceImpl) CreateSlot(ctx context.Context, teacherUserID, schoolID st
 }
 
 func (s *serviceImpl) ListSlots(ctx context.Context, schoolID, teacherID string, from, to time.Time, availableOnly bool) ([]*ColloquioSlot, error) {
+	if schoolID == "" && teacherID == "" {
+		return nil, errors.New("parametro school_id o teacher_id obbligatorio per la ricerca degli slot")
+	}
+
 	if from.IsZero() {
 		from = time.Now().Truncate(24 * time.Hour)
 	}
@@ -117,7 +125,7 @@ func (s *serviceImpl) CancelSlot(ctx context.Context, actorID, actorRole, actorS
 		return err
 	}
 
-	if actorRole == "admin" && actorSchoolID != "" && slot.SchoolID != actorSchoolID {
+	if actorRole == "admin" && (actorSchoolID == "" || slot.SchoolID != actorSchoolID) {
 		return ErrUnauthorized
 	}
 
@@ -208,7 +216,7 @@ func (s *serviceImpl) UpdateBookingStatus(ctx context.Context, actorID, actorRol
 	parentProfileID, _ := s.repo.GetParentProfileID(ctx, actorID)
 	isOwner := (booking.ParentID != nil && (*booking.ParentID == actorID || *booking.ParentID == parentProfileID))
 
-	if isOwner && req.Status != "cancelled" && req.Status != StatusCancelled {
+	if isOwner && req.Status != StatusCancelled {
 		return errors.New("unauthorized: i genitori possono solo cancellare le proprie prenotazioni")
 	}
 
@@ -240,7 +248,7 @@ func (s *serviceImpl) PatchSlot(ctx context.Context, actorID, actorRole, actorSc
 	if slot.BookingCount > 0 {
 		return errors.New("impossibile modificare l'orario di uno slot con prenotazioni attive")
 	}
-	if actorRole == "admin" && actorSchoolID != "" && slot.SchoolID != actorSchoolID {
+	if actorRole == "admin" && (actorSchoolID == "" || slot.SchoolID != actorSchoolID) {
 		return ErrUnauthorized
 	}
 	teacherProfileID, _ := s.repo.GetTeacherProfileID(ctx, actorID)

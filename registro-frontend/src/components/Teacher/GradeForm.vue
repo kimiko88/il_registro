@@ -2,7 +2,7 @@
   <q-dialog v-model="isOpen" persistent>
     <q-card style="min-width: 400px">
       <q-card-section>
-        <div class="text-h6">Enter Grade</div>
+        <div class="text-h6">{{ t('gradesPage.insertGrade') || 'Inserisci Voto' }}</div>
         <div class="text-subtitle2">{{ studentName }}</div>
       </q-card-section>
 
@@ -10,29 +10,31 @@
         <q-form class="q-gutter-md">
           <q-select
             v-model="form.type"
-            :options="['Written', 'Oral', 'Practical']"
-            label="Type"
+            :options="typeOptions"
+            :label="t('classRegister.tableHeaderGradeType') || 'Tipo Voto'"
+            emit-value
+            map-options
             outlined
             dense
           />
           <q-input
             v-model.number="form.value"
             type="number"
-            label="Grade (1-10)"
+            :label="t('classRegister.tableHeaderGrade') || 'Voto (1-10)'"
             outlined
             dense
-            :rules="[val => val >= 1 && val <= 10 || 'Invalid grade']"
+            :rules="[val => val >= 1 && val <= 10 || (t('gradesPage.invalidGrade') || 'Voto non valido')]"
           />
           <q-input
             v-model="form.date"
             type="date"
-            label="Date"
+            :label="t('classRegister.dateLabel') || 'Data'"
             outlined
             dense
           />
           <q-input
             v-model="form.description"
-            label="Description / Topic"
+            :label="t('classRegister.tableHeaderGradeNotes') || 'Descrizione / Argomento'"
             outlined
             dense
           />
@@ -40,17 +42,26 @@
       </q-card-section>
 
       <q-card-actions align="right">
-        <q-btn flat label="Cancel" color="primary" v-close-popup />
-        <q-btn flat label="Save" color="primary" @click="save" :loading="submitting" />
+        <q-btn flat :label="t('common.cancel') || 'Annulla'" color="primary" v-close-popup />
+        <q-btn flat :label="t('common.save') || 'Salva'" color="primary" @click="save" :loading="submitting" />
       </q-card-actions>
     </q-card>
   </q-dialog>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
-import { useGradeEntry } from 'src/composables/useGradeEntry';
+import { ref, watch, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useGradeEntry } from '@/composables/useGradeEntry';
 import { date } from 'quasar';
+
+const { t } = useI18n();
+
+const typeOptions = computed(() => [
+  { label: t('agendaPage.test') || 'Scritto', value: 'Written' },
+  { label: t('agendaPage.oralTest') || 'Orale', value: 'Oral' },
+  { label: t('classRegister.activityLab') || 'Pratico', value: 'Practical' }
+])
 
 const props = defineProps({
   modelValue: Boolean,

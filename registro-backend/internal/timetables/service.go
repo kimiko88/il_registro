@@ -33,18 +33,19 @@ func (s *service) GetByClass(ctx context.Context, actorID, actorRole, schoolID, 
 		return nil, errors.New("class_id is required")
 	}
 
-	if actorRole == "student" {
+	switch actorRole {
+	case "student":
 		studentClassID, err := s.repo.GetStudentClassID(ctx, actorID)
 		if err != nil {
-			return nil, fmt.Errorf("impossibile verificare la classe dello studente: %w", err)
+			return nil, errors.New("forbidden: studente non associato ad alcuna classe")
 		}
 		if studentClassID != classID {
 			return nil, errors.New("forbidden: non puoi visualizzare l'orario di un'altra classe")
 		}
-	} else if actorRole == "parent" {
+	case "parent":
 		parentClassID, err := s.repo.GetParentStudentClassID(ctx, actorID)
 		if err != nil {
-			return nil, fmt.Errorf("impossibile verificare la classe del figlio: %w", err)
+			return nil, errors.New("forbidden: genitore non associato a studenti in questa classe")
 		}
 		if parentClassID != classID {
 			return nil, errors.New("forbidden: non puoi visualizzare l'orario di una classe diversa da quella di tuo figlio")

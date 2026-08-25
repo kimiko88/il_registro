@@ -1,6 +1,9 @@
 package grades
 
 import (
+	"math"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -12,7 +15,7 @@ type AnalyticsService interface {
 	GetClassAnalysis(classID string, semester int) (*AnalyticsClassResponse, error)
 	GetSubjectAnalysis(subjectID string, semester int) (*AnalyticsSubjectResponse, error)
 	GetStudentProfile(studentID string, semester int) (*AnalyticsStudentResponse, error)
-	GetSchoolStatistics(year string) (*SchoolStatisticsResponse, error)
+	GetSchoolStatistics(year string, schoolID ...string) (*SchoolStatisticsResponse, error)
 }
 
 type analyticsService struct {
@@ -28,19 +31,19 @@ func NewAnalyticsService(r Repository) AnalyticsService {
 }
 
 func (a *analyticsService) GetStudentAverage(studentID string, subjectID string) (float64, error) {
-	// We need a repository method to find by student AND subject
-	// For now we fetch all student grades and filter, or find by student which likely filters by default
-	// Let's use FindByStudent and filter in memory if necessary, or add FindByStudentAndSubject to repo.
-
-	// Reusing FindByStudent for now as it's efficient enough for MVP
-	grades, err := a.repo.FindByStudent(studentID)
+	// Filter by student and subject at database level via FindWithFilter
+	filter := GradeFilter{
+		StudentID: studentID,
+		SubjectID: subjectID,
+	}
+	grades, err := a.repo.FindWithFilter(filter)
 	if err != nil {
 		return 0, err
 	}
 
 	var subjectGrades []Grade
 	for _, g := range grades {
-		if subjectID == "" || g.SubjectID == subjectID {
+		if g.IsPublished && g.DeletedAt == nil {
 			subjectGrades = append(subjectGrades, g)
 		}
 	}
@@ -49,30 +52,20 @@ func (a *analyticsService) GetStudentAverage(studentID string, subjectID string)
 }
 
 func (a *analyticsService) GetClassAverage(classID string, subjectID string) (float64, error) {
-	// We need class fetching. Using FindByClassAndSubject
-	// Assuming semester 0 means "all" or we default to current.
-	// We'll calculate for all semesters found or specific logic.
-	// For this simple analytic, let's just get the grades provided.
-
-	// NOTE: Repository FindByClassAndSubject takes semester. We might need to iterate or change repo.
-	// Let's assume we want current semester logic, but for now passing 0 might not work with the query "=" check.
-	// I'll stick to a simpler implementations: fetch for semester 1 and 2 and combine.
-
-	var allGrades []Grade
-
-	g1, err := a.repo.FindByClassAndSubject(classID, subjectID, 1)
+	// Fetch all semesters for class and subject in a single optimized query (semester 0 = all)
+	allGrades, err := a.repo.FindByClassAndSubject(classID, subjectID, 0)
 	if err != nil {
 		return 0, err
 	}
-	allGrades = append(allGrades, g1...)
 
-	g2, err := a.repo.FindByClassAndSubject(classID, subjectID, 2)
-	if err != nil {
-		return 0, err
+	var validGrades []Grade
+	for _, g := range allGrades {
+		if g.IsPublished && g.DeletedAt == nil {
+			validGrades = append(validGrades, g)
+		}
 	}
-	allGrades = append(allGrades, g2...)
 
-	return a.calculator.CalculateAverage(allGrades), nil
+	return a.calculator.CalculateAverage(validGrades), nil
 }
 
 // --- Specific Implementations ---
@@ -104,29 +97,38 @@ func (a *analyticsService) GetClassAnalysis(classID string, semester int) (*Anal
 	mean, stdDev, skew, kurt := a.calculator.CalculateBellCurve(summative)
 	median := a.calculator.CalculateMedian(summative)
 
-	// Distribution
+	// Distribution on Italian 1-10 scale (excluding absences / out-of-range)
 	dist := make(map[string]CountPct)
-	totalSumm := len(summative)
-	if totalSumm > 0 {
-		ranges := map[string]int{"0-3": 0, "4-5.9": 0, "6-6.9": 0, "7-7.9": 0, "8-8.9": 0, "9-10": 0}
-		for _, g := range summative {
-			val := g.GradeValue
-			if val < 4 {
-				ranges["0-3"]++
-			} else if val < 6 {
-				ranges["4-5.9"]++
-			} else if val < 7 {
-				ranges["6-6.9"]++
-			} else if val < 8 {
-				ranges["7-7.9"]++
-			} else if val < 9 {
-				ranges["8-8.9"]++
-			} else {
-				ranges["9-10"]++
-			}
+	ranges := map[string]int{"1-3": 0, "4-5.9": 0, "6-6.9": 0, "7-7.9": 0, "8-8.9": 0, "9-10": 0}
+	validVotableCount := 0
+	for _, g := range summative {
+		val := g.GradeValue
+		if val < 1.0 || val > 10.0 {
+			continue // exclude absences (-1) or invalid values
 		}
+		validVotableCount++
+		if val < 4.0 {
+			ranges["1-3"]++
+		} else if val < 6.0 {
+			ranges["4-5.9"]++
+		} else if val < 7.0 {
+			ranges["6-6.9"]++
+		} else if val < 8.0 {
+			ranges["7-7.9"]++
+		} else if val < 9.0 {
+			ranges["8-8.9"]++
+		} else {
+			ranges["9-10"]++
+		}
+	}
+
+	if validVotableCount > 0 {
 		for k, v := range ranges {
-			dist[k] = CountPct{Count: v, Percentage: (float64(v) / float64(totalSumm)) * 100}
+			dist[k] = CountPct{Count: v, Percentage: math.Round((float64(v)/float64(validVotableCount))*10000) / 100}
+		}
+	} else {
+		for k, v := range ranges {
+			dist[k] = CountPct{Count: v, Percentage: 0}
 		}
 	}
 
@@ -140,15 +142,19 @@ func (a *analyticsService) GetClassAnalysis(classID string, semester int) (*Anal
 		avg := a.calculator.CalculateAverage(gs)
 		passed, failed := 0, 0
 		for _, g := range gs {
-			if g.GradeValue >= 6 {
+			if g.GradeValue < 1.0 || g.GradeValue > 10.0 {
+				continue
+			}
+			if g.GradeValue >= 6.0 {
 				passed++
 			} else {
 				failed++
 			}
 		}
+		totalGraded := passed + failed
 		rate := 0.0
-		if len(gs) > 0 {
-			rate = (float64(passed) / float64(len(gs))) * 100
+		if totalGraded > 0 {
+			rate = math.Round((float64(passed)/float64(totalGraded))*10000) / 100
 		}
 
 		subPerf = append(subPerf, SubjectPerf{
@@ -162,7 +168,7 @@ func (a *analyticsService) GetClassAnalysis(classID string, semester int) (*Anal
 	}
 
 	// 4. Student Stats & Risk
-	// Need to group by Student to count avg
+	// Group by Student to calculate averages and failing subjects
 	stuMap := make(map[string][]Grade)
 	for _, g := range summative {
 		stuMap[g.StudentID] = append(stuMap[g.StudentID], g)
@@ -174,9 +180,9 @@ func (a *analyticsService) GetClassAnalysis(classID string, semester int) (*Anal
 	suspended := 0
 
 	for sID, sGrades := range stuMap {
-		avg := a.calculator.CalculateWeightedAverage(sGrades) // Weighted correct? Prompt says "Media: SOLO voti sommativi" which I filtered.
+		avg := a.calculator.CalculateWeightedAverage(sGrades)
 
-		// Check failing
+		// Check failing subjects
 		var failedSubs []string
 		subGroups := make(map[string][]Grade)
 		for _, g := range sGrades {
@@ -184,25 +190,34 @@ func (a *analyticsService) GetClassAnalysis(classID string, semester int) (*Anal
 		}
 
 		failingCount := 0
+		var failingSum float64
 		for sub, gs := range subGroups {
-			if a.calculator.CalculateAverage(gs) < 6.0 {
+			subAvg := a.calculator.CalculateAverage(gs)
+			if subAvg >= 1.0 && subAvg < 6.0 {
 				failingCount++
 				failedSubs = append(failedSubs, sub)
+				failingSum += subAvg
 			}
 		}
 
 		if failingCount == 0 {
 			promoted++
-		} else {
-			suspended++
+		} else if failingCount <= 2 {
+			suspended++ // Sospensione del giudizio (1-2 debiti formativi)
+		}
+
+		stuDisplayName := "Student " + sID
+		if len(sID) >= 4 {
+			stuDisplayName = "Student " + sID[:4]
 		}
 
 		if failingCount > 0 {
+			avgFailing := failingSum / float64(failingCount)
 			atRisk = append(atRisk, RiskStudent{
 				StudentID:      sID,
-				StudentName:    "Student " + sID[:4], // Mock name without user repo
+				StudentName:    stuDisplayName,
 				FailedSubjects: failedSubs,
-				AvgFailing:     avg, // Avg of ALL or Failing? Using overall for now
+				AvgFailing:     math.Round(avgFailing*100) / 100,
 				Recommendation: "Supporto intensivo",
 			})
 		}
@@ -210,7 +225,7 @@ func (a *analyticsService) GetClassAnalysis(classID string, semester int) (*Anal
 		if avg >= 8.0 {
 			topPerf = append(topPerf, TopStudent{
 				StudentID:   sID,
-				StudentName: "Student " + sID[:4],
+				StudentName: stuDisplayName,
 				AvgGrade:    avg,
 			})
 		}
@@ -219,6 +234,25 @@ func (a *analyticsService) GetClassAnalysis(classID string, semester int) (*Anal
 	className := "Class " + classID
 	if len(classID) >= 4 {
 		className = "Class " + classID[:4]
+	}
+
+	// Calculate real min and max from class summative grades on Italian scale [1.0, 10.0]
+	realMin := 10.0
+	realMax := 1.0
+	hasValidVotable := false
+	for _, g := range summative {
+		if g.GradeValue >= 1.0 && g.GradeValue <= 10.0 {
+			hasValidVotable = true
+			if g.GradeValue < realMin {
+				realMin = g.GradeValue
+			}
+			if g.GradeValue > realMax {
+				realMax = g.GradeValue
+			}
+		}
+	}
+	if !hasValidVotable {
+		realMin, realMax = 0.0, 0.0
 	}
 
 	return &AnalyticsClassResponse{
@@ -237,7 +271,8 @@ func (a *analyticsService) GetClassAnalysis(classID string, semester int) (*Anal
 			StdDev:       stdDev,
 			BellCurve:    BellCurveInfo{Mean: mean, StdDev: stdDev, Skewness: skew, Kurtosis: kurt, NormalityTest: "approx_normal"},
 			Distribution: dist,
-			Min:          0, Max: 10, // simplified
+			Min:          realMin,
+			Max:          realMax,
 		},
 		Subjects:      subPerf,
 		AtRisk:        atRisk,
@@ -254,26 +289,30 @@ func (a *analyticsService) GetSubjectAnalysis(subjectID string, semester int) (*
 	// Summative only for key metrics
 	var summative []Grade
 	passCount := 0
+	totalGraded := 0
 	for _, g := range grades {
 		if g.IsPublished && g.DeletedAt == nil && g.GradeCategory == GradeCategorySummative {
 			summative = append(summative, g)
-			if g.GradeValue >= 6.0 {
-				passCount++
+			if g.GradeValue >= 1.0 && g.GradeValue <= 10.0 {
+				totalGraded++
+				if g.GradeValue >= 6.0 {
+					passCount++
+				}
 			}
 		}
 	}
 
 	avg := a.calculator.CalculateAverage(summative)
 	passRate := 0.0
-	if len(summative) > 0 {
-		passRate = (float64(passCount) / float64(len(summative))) * 100.0
+	if totalGraded > 0 {
+		passRate = math.Round((float64(passCount)/float64(totalGraded))*10000.0) / 100.0
 	}
 
 	return &AnalyticsSubjectResponse{
 		Subject:  SubjectMeta{ID: subjectID, Name: "Subject"},
 		Semester: semester,
 		Aggregated: SubjectAggregated{
-			TotalGrades: len(summative),
+			TotalGrades: totalGraded,
 			AvgGrade:    avg,
 			PassRate:    passRate,
 		},
@@ -281,7 +320,6 @@ func (a *analyticsService) GetSubjectAnalysis(subjectID string, semester int) (*
 }
 
 func (a *analyticsService) GetStudentProfile(studentID string, semester int) (*AnalyticsStudentResponse, error) {
-	// Re-use Logic from GetMyGrades/GetMyAverages but add Metrics
 	grades, err := a.repo.FindByStudent(studentID)
 	if err != nil {
 		return nil, err
@@ -311,6 +349,7 @@ func (a *analyticsService) GetStudentProfile(studentID string, semester int) (*A
 	}
 
 	var subAvgs []SubjectAvgDetail
+	failingSubjects := 0
 	for sub, gs := range subMap {
 		var subSum []Grade
 		for _, g := range gs {
@@ -320,6 +359,9 @@ func (a *analyticsService) GetStudentProfile(studentID string, semester int) (*A
 		}
 
 		avg := a.calculator.CalculateAverage(subSum)
+		if len(subSum) > 0 && avg >= 1.0 && avg < 6.0 {
+			failingSubjects++
+		}
 		subAvgs = append(subAvgs, SubjectAvgDetail{
 			Subject:     sub,
 			Average:     avg,
@@ -328,27 +370,80 @@ func (a *analyticsService) GetStudentProfile(studentID string, semester int) (*A
 		})
 	}
 
+	promotionStatus := "On Track"
+	if failingSubjects > 2 {
+		promotionStatus = "Critical"
+	} else if failingSubjects > 0 {
+		promotionStatus = "At Risk"
+	}
+
 	return &AnalyticsStudentResponse{
 		Student: StudentInfo{ID: studentID},
 		OverallProfile: OverallProfile{
 			OverallAverage:  overallAvg,
-			PromotionStatus: "On Track",
+			PromotionStatus: promotionStatus,
 		},
 		SubjectAverages: subAvgs,
 	}, nil
 }
 
-func (a *analyticsService) GetSchoolStatistics(year string) (*SchoolStatisticsResponse, error) {
-	allGrades, err := a.repo.FindWithFilter(GradeFilter{})
+func parseSchoolYearDateRange(yearStr string) (time.Time, time.Time, bool) {
+	yearStr = strings.TrimSpace(yearStr)
+	if yearStr == "" {
+		return time.Time{}, time.Time{}, false
+	}
+	var startYear int
+	if strings.Contains(yearStr, "/") {
+		parts := strings.Split(yearStr, "/")
+		if len(parts) == 2 {
+			if y, err := strconv.Atoi(strings.TrimSpace(parts[0])); err == nil {
+				startYear = y
+			}
+		}
+	} else if strings.Contains(yearStr, "-") {
+		parts := strings.Split(yearStr, "-")
+		if len(parts) == 2 {
+			if y, err := strconv.Atoi(strings.TrimSpace(parts[0])); err == nil {
+				startYear = y
+			}
+		}
+	} else if len(yearStr) == 4 {
+		if y, err := strconv.Atoi(yearStr); err == nil {
+			startYear = y
+		}
+	}
+
+	if startYear > 1900 && startYear < 2100 {
+		startDate := time.Date(startYear, time.September, 1, 0, 0, 0, 0, time.UTC)
+		endDate := time.Date(startYear+1, time.August, 31, 23, 59, 59, 999999999, time.UTC)
+		return startDate, endDate, true
+	}
+	return time.Time{}, time.Time{}, false
+}
+
+func (a *analyticsService) GetSchoolStatistics(year string, schoolID ...string) (*SchoolStatisticsResponse, error) {
+	filter := GradeFilter{}
+	if len(schoolID) > 0 && schoolID[0] != "" {
+		filter.SchoolID = schoolID[0]
+	}
+	allGrades, err := a.repo.FindWithFilter(filter)
 	if err != nil {
 		return nil, err
 	}
 
+	startDate, endDate, hasYearFilter := parseSchoolYearDateRange(year)
+
 	var grades []Grade
 	for _, g := range allGrades {
-		if g.IsPublished && g.DeletedAt == nil {
-			grades = append(grades, g)
+		if !g.IsPublished || g.DeletedAt != nil {
+			continue
 		}
+		if hasYearFilter {
+			if g.Date.Before(startDate) || g.Date.After(endDate) {
+				continue
+			}
+		}
+		grades = append(grades, g)
 	}
 
 	vol := DataVolume{

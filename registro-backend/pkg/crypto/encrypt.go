@@ -24,6 +24,9 @@ func GetEncryptionKey() []byte {
 		if err == nil && len(key) == 32 {
 			return key
 		}
+		if len(keyStr) == 32 {
+			return []byte(keyStr)
+		}
 	}
 	// Fallback 32-byte development key (hex of "registro_elettronico_secure_aes_key")
 	// "726567697374726f5f656c657474726f6e69636f5f7365637572655f6b657931"

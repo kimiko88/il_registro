@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"database/sql"
 	"encoding/hex"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -24,6 +25,7 @@ type Repository interface {
 	GetUserByID(ctx context.Context, id string) (*User, error)
 	UpdateUser(ctx context.Context, user *User) error
 	UpdateLastLogin(ctx context.Context, userID string) error
+	SchoolExists(ctx context.Context, schoolID string) (bool, error)
 
 	// MFA operations
 	EnableMFA(ctx context.Context, userID, secret string) error
@@ -31,6 +33,7 @@ type Repository interface {
 	GetMFASecret(ctx context.Context, userID string) (string, error)
 	SaveTempMFASecret(ctx context.Context, userID, secret string) error
 	ConfirmMFA(ctx context.Context, userID string) error
+	ConfirmMFAAndSaveRecoveryCodesTx(ctx context.Context, userID string, hashedCodes []string) error
 
 	// Recovery codes
 	// NOTE: codes passed to CreateRecoveryCodes must already be bcrypt-hashed.
@@ -46,6 +49,7 @@ type Repository interface {
 	GetRefreshToken(ctx context.Context, token string) (*RefreshToken, error)
 	RevokeRefreshToken(ctx context.Context, tokenID string) error
 	RevokeAllUserTokens(ctx context.Context, userID string) error
+	RotateRefreshTokenTx(ctx context.Context, oldID string, newRt *RefreshToken) error
 
 	// Password reset
 	CreatePasswordResetToken(ctx context.Context, token *PasswordResetToken) error
@@ -60,6 +64,7 @@ type Repository interface {
 	// Password history
 	GetPasswordHistory(ctx context.Context, userID string) ([]string, error)
 	AddPasswordHistory(ctx context.Context, userID, passwordHash string) error
+	ChangePasswordTx(ctx context.Context, userID, passwordHash string) error
 
 	// Rate limiting
 	RecordLoginAttempt(ctx context.Context, attempt *LoginAttempt) error
@@ -178,7 +183,7 @@ func (r *repository) DisableMFA(ctx context.Context, userID string) error {
 }
 
 func (r *repository) GetMFASecret(ctx context.Context, userID string) (string, error) {
-	query := `SELECT mfa_secret FROM users WHERE id = $1`
+	query := `SELECT mfa_secret FROM users WHERE id = $1 AND deleted_at IS NULL`
 	var secret sql.NullString
 	err := r.db.QueryRowContext(ctx, query, userID).Scan(&secret)
 	if err == sql.ErrNoRows || !secret.Valid || secret.String == "" {
@@ -188,20 +193,40 @@ func (r *repository) GetMFASecret(ctx context.Context, userID string) (string, e
 }
 
 func (r *repository) SaveTempMFASecret(ctx context.Context, userID, secret string) error {
-	query := `UPDATE users SET mfa_enabled = false, mfa_secret = $1 WHERE id = $2`
+	query := `UPDATE users SET mfa_enabled = false, mfa_secret = $1 WHERE id = $2 AND deleted_at IS NULL`
 	_, err := r.db.ExecContext(ctx, query, secret, userID)
 	return err
 }
 
 func (r *repository) ConfirmMFA(ctx context.Context, userID string) error {
-	query := `UPDATE users SET mfa_enabled = true WHERE id = $1`
+	query := `UPDATE users SET mfa_enabled = true WHERE id = $1 AND deleted_at IS NULL`
 	_, err := r.db.ExecContext(ctx, query, userID)
 	return err
 }
 
-// CreateRecoveryCodes stores pre-hashed recovery codes.
-// Callers (service layer) are responsible for hashing codes with bcrypt before
-// passing them here — raw codes must never be persisted.
+// ConfirmMFAAndSaveRecoveryCodesTx enables MFA and stores pre-hashed recovery codes atomically in a single transaction.
+func (r *repository) ConfirmMFAAndSaveRecoveryCodesTx(ctx context.Context, userID string, hashedCodes []string) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	queryMFA := `UPDATE users SET mfa_enabled = true WHERE id = $1 AND deleted_at IS NULL`
+	if _, err := tx.ExecContext(ctx, queryMFA, userID); err != nil {
+		return err
+	}
+
+	queryCode := `INSERT INTO mfa_recovery_codes (id, user_id, code, used, created_at) VALUES ($1, $2, $3, false, $4)`
+	for _, code := range hashedCodes {
+		if _, err := tx.ExecContext(ctx, queryCode, uuid.New().String(), userID, code, time.Now()); err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit()
+}
+
 func (r *repository) CreateRecoveryCodes(ctx context.Context, userID string, hashedCodes []string) error {
 	query := `INSERT INTO mfa_recovery_codes (id, user_id, code, used, created_at) VALUES ($1, $2, $3, false, $4)`
 	tx, err := r.db.BeginTx(ctx, nil)
@@ -211,8 +236,7 @@ func (r *repository) CreateRecoveryCodes(ctx context.Context, userID string, has
 	defer func() { _ = tx.Rollback() }()
 
 	for _, code := range hashedCodes {
-		_, err := tx.ExecContext(ctx, query, uuid.New().String(), userID, code, time.Now())
-		if err != nil {
+		if _, err := tx.ExecContext(ctx, query, uuid.New().String(), userID, code, time.Now()); err != nil {
 			return err
 		}
 	}
@@ -221,7 +245,7 @@ func (r *repository) CreateRecoveryCodes(ctx context.Context, userID string, has
 }
 
 func (r *repository) GetRecoveryCodes(ctx context.Context, userID string) ([]*MFARecoveryCode, error) {
-	query := `SELECT id, user_id, code, used, used_at, created_at FROM mfa_recovery_codes WHERE user_id = $1`
+	query := `SELECT id, user_id, code, used, used_at, created_at FROM mfa_recovery_codes WHERE user_id = $1 AND used = false`
 	rows, err := r.db.QueryContext(ctx, query, userID)
 	if err != nil {
 		return nil, err
@@ -311,7 +335,38 @@ func (r *repository) RevokeAllUserTokens(ctx context.Context, userID string) err
 	return err
 }
 
+func (r *repository) RotateRefreshTokenTx(ctx context.Context, oldID string, newRt *RefreshToken) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	query := `
+		INSERT INTO refresh_tokens (id, user_id, token, expires_at, ip_address, user_agent, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
+	`
+	newRt.ID = uuid.New().String()
+	newRt.CreatedAt = time.Now()
+	hashed := hashToken(newRt.Token)
+
+	if _, err := tx.ExecContext(ctx, query,
+		newRt.ID, newRt.UserID, hashed, newRt.ExpiresAt, newRt.IPAddress, newRt.UserAgent, newRt.CreatedAt,
+	); err != nil {
+		return err
+	}
+
+	if _, err := tx.ExecContext(ctx, `UPDATE refresh_tokens SET revoked = true WHERE id = $1`, oldID); err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
 func (r *repository) CreatePasswordResetToken(ctx context.Context, token *PasswordResetToken) error {
+	// Invalidate any existing active reset tokens for this user before creating a new one
+	_, _ = r.db.ExecContext(ctx, `UPDATE password_reset_tokens SET used = true WHERE user_id = $1 AND used = false`, token.UserID)
+
 	query := `
 		INSERT INTO password_reset_tokens (id, user_id, token, expires_at, used, created_at)
 		VALUES ($1, $2, $3, $4, false, $5)
@@ -331,7 +386,7 @@ func (r *repository) GetPasswordResetToken(ctx context.Context, token string) (*
 	query := `
 		SELECT id, user_id, token, expires_at, used, created_at
 		FROM password_reset_tokens
-		WHERE token = $1
+		WHERE token = $1 AND used = false AND expires_at > NOW()
 	`
 	prt := &PasswordResetToken{}
 	hashed := hashToken(token)
@@ -393,9 +448,9 @@ func (r *repository) ResetPasswordTx(ctx context.Context, userID, passwordHash, 
 		return ErrInvalidToken
 	}
 
-	addHistoryQuery := `INSERT INTO password_history (id, user_id, password_hash, created_at) VALUES ($1, $2, $3, $4)`
-	if _, err := tx.ExecContext(ctx, addHistoryQuery, uuid.New().String(), userID, passwordHash, now); err != nil {
-		return err
+	addHistoryQuery := `INSERT INTO user_password_history (user_id, password_hash) VALUES ($1, $2)`
+	if _, err := tx.ExecContext(ctx, addHistoryQuery, userID, passwordHash); err != nil {
+		return fmt.Errorf("failed to record password history: %w", err)
 	}
 
 	return tx.Commit()
@@ -429,7 +484,7 @@ func (r *repository) GetRecentLoginAttempts(ctx context.Context, email, ipAddres
 	query := `
 		SELECT COUNT(*) 
 		FROM login_attempts
-		WHERE email = $1 AND ip_address = $2 AND success = false AND attempted_at > $3
+		WHERE LOWER(email) = LOWER($1) AND ip_address = $2 AND success = false AND attempted_at > $3
 	`
 	var count int
 	err := r.db.QueryRowContext(ctx, query, email, ipAddress, since).Scan(&count)
@@ -442,7 +497,7 @@ func (r *repository) GetRecentLoginAttemptsByEmail(ctx context.Context, email st
 	query := `
 		SELECT COUNT(*)
 		FROM login_attempts
-		WHERE email = $1 AND success = false AND attempted_at > $2
+		WHERE LOWER(email) = LOWER($1) AND success = false AND attempted_at > $2
 	`
 	var count int
 	err := r.db.QueryRowContext(ctx, query, email, since).Scan(&count)
@@ -495,4 +550,44 @@ func (r *repository) AddPasswordHistory(ctx context.Context, userID, passwordHas
 	`
 	_, _ = tx.ExecContext(ctx, pruneQuery, userID)
 	return tx.Commit()
+}
+
+func (r *repository) ChangePasswordTx(ctx context.Context, userID, passwordHash string) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	now := time.Now()
+	updateQuery := `UPDATE users SET password_hash = $1, password_changed_at = $2 WHERE id = $3 AND deleted_at IS NULL`
+	if _, err := tx.ExecContext(ctx, updateQuery, passwordHash, now, userID); err != nil {
+		return err
+	}
+
+	histQuery := `INSERT INTO user_password_history (user_id, password_hash) VALUES ($1, $2)`
+	if _, err := tx.ExecContext(ctx, histQuery, userID, passwordHash); err != nil {
+		return err
+	}
+
+	pruneQuery := `
+		DELETE FROM user_password_history
+		WHERE user_id = $1 AND id NOT IN (
+			SELECT id FROM user_password_history
+			WHERE user_id = $1 ORDER BY created_at DESC LIMIT 5
+		)
+	`
+	_, _ = tx.ExecContext(ctx, pruneQuery, userID)
+
+	return tx.Commit()
+}
+
+func (r *repository) SchoolExists(ctx context.Context, schoolID string) (bool, error) {
+	if schoolID == "" {
+		return false, nil
+	}
+	var exists bool
+	query := `SELECT EXISTS(SELECT 1 FROM schools WHERE id = $1::uuid)`
+	err := r.db.QueryRowContext(ctx, query, schoolID).Scan(&exists)
+	return exists, err
 }

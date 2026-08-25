@@ -64,12 +64,14 @@
 
 <script setup>
 import { ref, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useQuasar, date } from 'quasar'
 import { storeToRefs } from 'pinia'
-import { useParentStore } from 'src/stores/parent'
-import notesService from 'src/services/notesService'
+import { useParentStore } from '@/stores/parent'
+import notesService from '@/services/notesService'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const parentStore = useParentStore()
 const { selectedChild } = storeToRefs(parentStore)
 
@@ -100,7 +102,7 @@ const fetchNotes = async () => {
     notes.value = res.data || []
   } catch (e) {
     console.error(e)
-    $q.notify({ type: 'negative', message: 'Impossibile caricare le note' })
+    $q.notify({ type: 'negative', message: t('common.error') })
   } finally {
     loading.value = false
   }

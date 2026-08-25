@@ -65,11 +65,11 @@ func (r *PostgresRepository) GetClassSubjects(ctx context.Context, classID strin
 		return []ClassSubject{}, nil
 	}
 	query := `
-		SELECT cs.id, cs.class_id, cs.subject_id, s.name, COALESCE(cs.teacher_id::text, ''), COALESCE(u.last_name, ''), COALESCE(u.first_name, ''), COALESCE(cs.hours_per_week, 0)
+		SELECT cs.id, cs.class_id, cs.subject_id, s.name, COALESCE(cs.teacher_id::text, ''), COALESCE(u.last_name, ''), COALESCE(u.first_name, ''), COALESCE(u.id::text, t.user_id::text, ''), COALESCE(cs.hours_per_week, 0)
 		FROM class_subjects cs
 		JOIN subjects s ON cs.subject_id::text = s.id::text
 		LEFT JOIN teachers t ON (NULLIF(cs.teacher_id::text, '') = t.id::text OR NULLIF(cs.teacher_id::text, '') = t.user_id::text)
-		LEFT JOIN users u ON t.user_id::text = u.id::text
+		LEFT JOIN users u ON (t.user_id::text = u.id::text OR cs.teacher_id::text = u.id::text)
 		WHERE cs.class_id::text = $1
 		ORDER BY s.name
 	`
@@ -84,7 +84,7 @@ func (r *PostgresRepository) GetClassSubjects(ctx context.Context, classID strin
 		var cs ClassSubject
 		var tLen, tFirst sql.NullString
 		err := rows.Scan(
-			&cs.ID, &cs.ClassID, &cs.SubjectID, &cs.SubjectName, &cs.TeacherID, &tLen, &tFirst, &cs.HoursPerWeek,
+			&cs.ID, &cs.ClassID, &cs.SubjectID, &cs.SubjectName, &cs.TeacherID, &tLen, &tFirst, &cs.TeacherUserID, &cs.HoursPerWeek,
 		)
 		if err != nil {
 			return nil, err

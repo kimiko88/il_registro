@@ -21,8 +21,8 @@ func NewHandler(service *Service) *Handler {
 // POST /schools
 func (h *Handler) Create(c *gin.Context) {
 	role := c.GetString("role")
-	if role != "superadmin" && role != "admin" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only administrative staff can create schools"})
+	if role != "superadmin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only superadmin can create schools"})
 		return
 	}
 
@@ -87,6 +87,7 @@ func (h *Handler) List(c *gin.Context) {
 // PATCH /schools/:id
 func (h *Handler) Update(c *gin.Context) {
 	role := c.GetString("role")
+	schoolID := c.GetString("school_id")
 	if role != "superadmin" && role != "admin" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only administrative staff can update schools"})
 		return
@@ -94,6 +95,10 @@ func (h *Handler) Update(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "school ID is required"})
+		return
+	}
+	if role == "admin" && schoolID != "" && schoolID != id {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: cannot update other schools"})
 		return
 	}
 	var req UpdateSchoolRequest

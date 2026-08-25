@@ -5,12 +5,17 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
+	"time"
+
+	"golang.org/x/time/rate"
 
 	"github.com/gin-gonic/gin"
 )
 
 type Handler struct {
-	service Service
+	service      Service
+	pushLimiters sync.Map
 }
 
 func NewHandler(s Service) *Handler {
@@ -128,14 +133,8 @@ func (h *Handler) RegisterDevice(c *gin.Context) {
 
 	platform := strings.ToLower(req.Platform)
 	if platform != "ios" && platform != "android" && platform != "web" {
-		ua := strings.ToLower(c.GetHeader("User-Agent"))
-		if strings.Contains(ua, "iphone") || strings.Contains(ua, "ipad") {
-			platform = "ios"
-		} else if strings.Contains(ua, "android") {
-			platform = "android"
-		} else {
-			platform = "web"
-		}
+		c.JSON(http.StatusBadRequest, gin.H{"error": "platform must be 'ios', 'android', or 'web'"})
+		return
 	}
 
 	tokenReq := RegisterTokenRequest{
@@ -157,18 +156,16 @@ func (h *Handler) UnregisterToken(c *gin.Context) {
 		return
 	}
 
-	deviceToken := c.Query("device_token")
-	if deviceToken == "" {
-		deviceToken = c.GetHeader("X-Device-Token")
-	}
-	if deviceToken == "" {
+	deviceToken := c.GetHeader("X-Device-Token")
+	if deviceToken == "" && c.Request.Body != nil && c.Request.ContentLength > 0 {
 		var req struct {
 			DeviceToken string `json:"device_token"`
 		}
-		_ = c.ShouldBindJSON(&req)
-		if req.DeviceToken != "" {
-			deviceToken = req.DeviceToken
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid JSON payload: " + err.Error()})
+			return
 		}
+		deviceToken = req.DeviceToken
 	}
 
 	if deviceToken == "" {
@@ -183,6 +180,33 @@ func (h *Handler) UnregisterToken(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "push token unregistered"})
 }
 
+type limiterEntry struct {
+	limiter  *rate.Limiter
+	lastSeen time.Time
+}
+
+func (h *Handler) getLimiter(userID string) *rate.Limiter {
+	now := time.Now()
+	val, loaded := h.pushLimiters.LoadOrStore(userID, &limiterEntry{
+		limiter:  rate.NewLimiter(rate.Every(6*time.Second), 5),
+		lastSeen: now,
+	})
+	entry := val.(*limiterEntry)
+	entry.lastSeen = now
+
+	// Periodic cleanup of stale limiters older than 1 hour when a new key is added
+	if !loaded {
+		h.pushLimiters.Range(func(key, value interface{}) bool {
+			e := value.(*limiterEntry)
+			if now.Sub(e.lastSeen) > 1*time.Hour {
+				h.pushLimiters.Delete(key)
+			}
+			return true
+		})
+	}
+	return entry.limiter
+}
+
 func (h *Handler) SendPush(c *gin.Context) {
 	userID := c.GetString("user_id")
 	if userID == "" {
@@ -192,6 +216,13 @@ func (h *Handler) SendPush(c *gin.Context) {
 	role := c.GetString("role")
 	if role != "admin" && role != "superadmin" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: push notifications restricted to administrative staff"})
+		return
+	}
+
+	// Rate limit: max 10 requests per minute per admin caller
+	limiter := h.getLimiter(userID)
+	if !limiter.Allow() {
+		c.JSON(http.StatusTooManyRequests, gin.H{"error": "troppi invii di notifiche push, riprova tra qualche istante"})
 		return
 	}
 

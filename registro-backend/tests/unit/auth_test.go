@@ -38,7 +38,6 @@ func TestAuthService_Register(t *testing.T) {
 				Role:      "student",
 			},
 			setupMock: func() {
-				mockRepo.On("GetUserByEmail", mock.Anything, "new@test.com").Return(nil, errors.New("user not found"))
 				mockRepo.On("CreateUser", mock.Anything, mock.MatchedBy(func(u *auth.User) bool {
 					return u.Email == "new@test.com"
 				})).Return(nil)
@@ -56,10 +55,7 @@ func TestAuthService_Register(t *testing.T) {
 				Role:      "student",
 			},
 			setupMock: func() {
-				// Validation passes first, then checks email
-				existingUser := &auth.User{ID: "1", Email: "existing@test.com"}
-				// We expect GetUserByEmail to be called and RETURN existing user (nil error means found)
-				mockRepo.On("GetUserByEmail", mock.Anything, "existing@test.com").Return(existingUser, nil)
+				mockRepo.On("CreateUser", mock.Anything, mock.Anything).Return(auth.ErrEmailAlreadyExists)
 			},
 			expectedError: auth.ErrEmailAlreadyExists,
 		},

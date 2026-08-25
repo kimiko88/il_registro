@@ -3,10 +3,12 @@ package grades
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"io"
 	"math"
 	"sort"
+	"sync"
 	"time"
 
 	"registro-backend/internal/users"
@@ -21,7 +23,7 @@ var (
 
 // EventBroadcaster defines the interface for real-time notifications
 type EventBroadcaster interface {
-	BroadcastToUser(userID string, msgType string, payload interface{})
+	BroadcastToUser(userID string, schoolID string, msgType string, payload interface{})
 	BroadcastToSchool(schoolID string, msgType string, payload interface{})
 }
 
@@ -34,7 +36,7 @@ type Service interface {
 	GetSubjectGrades(ctx context.Context, actorID string, actorRole string, subjectID string, filter GradeFilter) (*SubjectStatsResponse, error)
 	AddGrade(ctx context.Context, teacherID string, req CreateGradeRequest) (*GradeResponse, error)
 	BatchCreateGrades(teacherID, actorRole, schoolID string, grades []*Grade) error
-	BulkImport(teacherID string, r io.Reader, semester int) (*ImportResult, error)
+	BulkImport(teacherID, schoolID string, r io.Reader, semester int) (*ImportResult, error)
 	Export(teacherID, schoolID string, filter GradeFilter, format string) ([]byte, string, error)
 	UpdateGrade(ctx context.Context, teacherID string, gradeID string, req UpdateGradeRequest) (*GradeResponse, error)
 	DeleteGrade(ctx context.Context, teacherID string, gradeID string) error
@@ -43,20 +45,21 @@ type Service interface {
 	GetMyGrades(ctx context.Context, studentID string, filter GradeFilter) (*MyGradesResponse, error)
 	GetMyAverages(ctx context.Context, studentID string) (*StudentAveragesResponse, error)
 	GetMyTrend(ctx context.Context, actorID string, actorRole string, studentID string, subjectID string) (*TrendResponse, error)
-	GetSemesterReport(ctx context.Context, studentID string, semester int) (*SemesterReportResponse, error)
-	GenerateSemesterReportPDF(studentID string, semester int) ([]byte, error)
+	GetSemesterReport(ctx context.Context, actorID string, actorRole string, studentID string, semester int) (*SemesterReportResponse, error)
+	GenerateSemesterReportPDF(ctx context.Context, actorID, actorRole, studentID string, semester int) ([]byte, error)
 
 	// Parent
+	ValidateParentGuardian(ctx context.Context, parentID, studentID string) error
 	GetChildGrades(ctx context.Context, parentID string, studentID string, filter GradeFilter) (*MyGradesResponse, error)
 	GetChildAverages(ctx context.Context, parentID string, studentID string) (*StudentAveragesResponse, error)
 	GetChildSemesterReport(ctx context.Context, parentID, studentID string, semester int) (*SemesterReportResponse, error)
 
 	// Class Tests
-	CreateTestWithGrades(teacherID string, req CreateClassTestRequest) error
-	GetClassTests(classID string, subjectID string) ([]ClassTestResponse, error)
-	GetUpcomingTestsByClass(classID string) ([]ClassTestResponse, error)
-	DeleteClassTest(teacherID string, testID string) error
-	UpdateClassTest(teacherID string, testID string, req UpdateClassTestRequest) error
+	CreateTestWithGrades(ctx context.Context, teacherID string, req CreateClassTestRequest) (*ClassTest, error)
+	GetClassTests(ctx context.Context, actorID string, actorRole string, classID string, subjectID string) ([]ClassTestResponse, error)
+	GetUpcomingTestsByClass(ctx context.Context, actorID string, actorRole string, classID string) ([]ClassTestResponse, error)
+	DeleteClassTest(ctx context.Context, teacherID string, testID string) error
+	UpdateClassTest(ctx context.Context, teacherID string, testID string, req UpdateClassTestRequest) error
 
 	// Weight Config
 	GetWeightConfigs(schoolID, subjectID, classID string) ([]GradeWeightConfig, error)
@@ -65,12 +68,13 @@ type Service interface {
 }
 
 type service struct {
-	repo        Repository
-	userRepo    users.Repository
-	validator   *Validator
-	calculator  *Calculator
-	broadcaster EventBroadcaster
-	pdfExporter ReportCardPDFExporter
+	repo                Repository
+	userRepo            users.Repository
+	validator           *Validator
+	teacherProfileCache sync.Map
+	calculator          *Calculator
+	broadcaster         EventBroadcaster
+	pdfExporter         ReportCardPDFExporter
 }
 
 func NewService(r Repository, ur users.Repository, db *sql.DB, b EventBroadcaster) Service {
@@ -88,18 +92,37 @@ func (s *service) GetStudentGrades(ctx context.Context, actorID, actorRole, stud
 	return s.GetStudentGradesWithFilter(ctx, actorID, actorRole, studentID, GradeFilter{})
 }
 
-func (s *service) GetStudentGradesWithFilter(ctx context.Context, actorID string, actorRole string, studentID string, filter GradeFilter) ([]GradeResponse, error) {
+func (s *service) checkGradeAccessPermissions(ctx context.Context, actorID string, actorRole string, studentID string) error {
+	if actorRole == "" {
+		return ErrUnauthorized
+	}
 	if actorRole == "student" && actorID != studentID {
-		return nil, ErrUnauthorized
+		return ErrUnauthorized
 	}
 	if actorRole == "parent" {
 		isGuardian, err := s.userRepo.IsGuardian(ctx, actorID, studentID)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if !isGuardian {
-			return nil, ErrNotGuardian
+			return ErrNotGuardian
 		}
+	}
+	if (actorRole == "teacher" || actorRole == "coordinator") && s.validator != nil {
+		isAssigned, err := s.validator.IsTeacherAssignedToStudent(ctx, actorID, studentID)
+		if err != nil {
+			return err
+		}
+		if !isAssigned {
+			return ErrUnauthorized
+		}
+	}
+	return nil
+}
+
+func (s *service) GetStudentGradesWithFilter(ctx context.Context, actorID string, actorRole string, studentID string, filter GradeFilter) ([]GradeResponse, error) {
+	if err := s.checkGradeAccessPermissions(ctx, actorID, actorRole, studentID); err != nil {
+		return nil, err
 	}
 
 	if filter.Semester == 0 && filter.SubjectID == "" && filter.GradeType == "" && filter.IsPublished == nil {
@@ -107,7 +130,22 @@ func (s *service) GetStudentGradesWithFilter(ctx context.Context, actorID string
 		if err != nil {
 			return nil, err
 		}
+		// For student and parent roles, filter out unpublished and deleted grades
+		if actorRole == "student" || actorRole == "parent" {
+			var publishedGrades []Grade
+			for _, g := range grades {
+				if g.IsPublished && g.DeletedAt == nil {
+					publishedGrades = append(publishedGrades, g)
+				}
+			}
+			return s.mapToResponse(publishedGrades), nil
+		}
 		return s.mapToResponse(grades), nil
+	}
+
+	if actorRole == "student" || actorRole == "parent" {
+		t := true
+		filter.IsPublished = &t
 	}
 
 	filter.StudentID = studentID
@@ -122,17 +160,13 @@ func (s *service) GetStudentGradesWithFilter(ctx context.Context, actorID string
 // GetStudentGradesPaged applies the same ownership checks as GetStudentGradesWithFilter
 // then delegates to the paginated repository method.
 func (s *service) GetStudentGradesPaged(ctx context.Context, actorID string, actorRole string, studentID string, filter GradeFilter) (*PaginatedGradesResponse, error) {
-	if actorRole == "student" && actorID != studentID {
-		return nil, ErrUnauthorized
+	if err := s.checkGradeAccessPermissions(ctx, actorID, actorRole, studentID); err != nil {
+		return nil, err
 	}
-	if actorRole == "parent" {
-		isGuardian, err := s.userRepo.IsGuardian(ctx, actorID, studentID)
-		if err != nil {
-			return nil, err
-		}
-		if !isGuardian {
-			return nil, ErrNotGuardian
-		}
+
+	if actorRole == "student" || actorRole == "parent" {
+		t := true
+		filter.IsPublished = &t
 	}
 
 	filter.StudentID = studentID
@@ -166,6 +200,11 @@ func (s *service) GetStudentGradesPaged(ctx context.Context, actorID string, act
 
 func (s *service) GetClassGrades(ctx context.Context, actorID string, actorRole string, classID string, filter GradeFilter) (*ClassGradesResponse, error) {
 	// Permission check
+	if actorRole != "superadmin" {
+		if err := s.checkClassAccessPermission(ctx, actorID, actorRole, classID); err != nil {
+			return nil, fmt.Errorf("class access check failed: %w", err)
+		}
+	}
 	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" && actorRole != "principal" && actorRole != "vice_principal" {
 		isCoord, err := s.validator.IsClassCoordinator(actorID, classID)
 		if err != nil {
@@ -177,17 +216,17 @@ func (s *service) GetClassGrades(ctx context.Context, actorID string, actorRole 
 		// must supply a SubjectID and be assigned to it.
 		if !isCoord {
 			if actorRole != "teacher" && actorRole != "coordinator" {
-				return nil, fmt.Errorf("unauthorized: solo il coordinatore di classe o la dirigenza possono accedere al quadro completo della classe")
+				return nil, fmt.Errorf("%w: solo il coordinatore di classe o la dirigenza possono accedere al quadro completo della classe", ErrUnauthorized)
 			}
 			if filter.SubjectID == "" {
-				return nil, fmt.Errorf("unauthorized: solo il coordinatore di classe o la dirigenza possono accedere al quadro completo della classe")
+				return nil, fmt.Errorf("%w: solo il coordinatore di classe o la dirigenza possono accedere al quadro completo della classe", ErrUnauthorized)
 			}
 			assigned, err := s.validator.IsTeacherAssignedToSubject(actorID, filter.SubjectID, classID)
 			if err != nil {
 				return nil, fmt.Errorf("authorization check failed: %w", err)
 			}
 			if !assigned {
-				return nil, fmt.Errorf("unauthorized: non sei assegnato a questa materia per la classe indicata")
+				return nil, fmt.Errorf("%w: non sei assegnato a questa materia per la classe indicata", ErrUnauthorized)
 			}
 		}
 	}
@@ -200,6 +239,9 @@ func (s *service) GetClassGrades(ctx context.Context, actorID string, actorRole 
 	// Group by student
 	studentMap := make(map[string][]GradeResponse)
 	for _, g := range grades {
+		if g.DeletedAt != nil {
+			continue
+		}
 		if filter.IsPublished != nil && g.IsPublished != *filter.IsPublished {
 			continue
 		}
@@ -211,8 +253,6 @@ func (s *service) GetClassGrades(ctx context.Context, actorID string, actorRole 
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch class students: %w", err)
 	}
-	addedStudents := make(map[string]bool)
-
 	for _, u := range studentUsers {
 		sID := u.StudentID
 		gList := studentMap[sID]
@@ -227,22 +267,6 @@ func (s *service) GetClassGrades(ctx context.Context, actorID string, actorRole 
 			AvgSemester2: avg2,
 			Grades:       gList,
 		})
-		addedStudents[sID] = true
-	}
-
-	// Fallback for students who have grades but are not in GetStudentsByClass result
-	for sID, gList := range studentMap {
-		if addedStudents[sID] {
-			continue
-		}
-		avg1, avg2 := calcSemesterAverages(gList)
-		resp.Students = append(resp.Students, StudentGradeSummary{
-			StudentID:    sID,
-			FullName:     "Studente sconosciuto",
-			AvgSemester1: avg1,
-			AvgSemester2: avg2,
-			Grades:       gList,
-		})
 	}
 
 	sort.Slice(resp.Students, func(i, j int) bool {
@@ -252,12 +276,12 @@ func (s *service) GetClassGrades(ctx context.Context, actorID string, actorRole 
 	return resp, nil
 }
 
-// calcSemesterAverages computes per-semester unweighted averages from a grade list.
-// FIX: grades with an empty GradeCategory are now skipped; only explicitly
-// summative grades contribute to the semester average shown in the class panel.
+// calcSemesterAverages computes per-semester weighted averages from a grade list.
 func calcSemesterAverages(grades []GradeResponse) (avg1, avg2 float64) {
-	var sum1, sum2 float64
-	var count1, count2 int
+	avg1 = -1.0
+	avg2 = -1.0
+	var weightedSum1, totalWeight1 float64
+	var weightedSum2, totalWeight2 float64
 	for _, g := range grades {
 		// Skip non-summative categories (including empty category which was
 		// previously let through and polluted averages with formative grades).
@@ -265,20 +289,25 @@ func calcSemesterAverages(grades []GradeResponse) (avg1, avg2 float64) {
 			continue
 		}
 		if g.GradeValue > 0 {
-			if g.Semester == 1 {
-				sum1 += g.GradeValue
-				count1++
-			} else {
-				sum2 += g.GradeValue
-				count2++
+			w := g.Weight
+			if w <= 0 {
+				w = 1.0
+			}
+			switch g.Semester {
+			case 1:
+				weightedSum1 += g.GradeValue * w
+				totalWeight1 += w
+			case 2:
+				weightedSum2 += g.GradeValue * w
+				totalWeight2 += w
 			}
 		}
 	}
-	if count1 > 0 {
-		avg1 = sum1 / float64(count1)
+	if totalWeight1 > 0 {
+		avg1 = math.Round((weightedSum1/totalWeight1)*100) / 100
 	}
-	if count2 > 0 {
-		avg2 = sum2 / float64(count2)
+	if totalWeight2 > 0 {
+		avg2 = math.Round((weightedSum2/totalWeight2)*100) / 100
 	}
 	return
 }
@@ -291,19 +320,16 @@ func (s *service) GetSubjectGrades(ctx context.Context, actorID string, actorRol
 		if actorRole != "teacher" {
 			return nil, ErrUnauthorized
 		}
-		var exists bool
-		if err := s.validator.db.QueryRowContext(
-			ctx,
-			`SELECT EXISTS(
-				SELECT 1 FROM class_subjects cs
-				LEFT JOIN teachers t ON cs.teacher_id = t.id OR cs.teacher_id = t.user_id
-				WHERE cs.subject_id::text = $1 AND (cs.teacher_id::text = $2 OR t.user_id::text = $2)
-			)`,
-			subjectID, actorID,
-		).Scan(&exists); err != nil {
+		// FIX: use validator method instead of inline SQL to avoid nil-panic when s.validator is nil
+		// and to respect the repository pattern.
+		if s.validator == nil {
+			return nil, fmt.Errorf("%w: authorization service unavailable", ErrUnauthorized)
+		}
+		assigned, err := s.validator.IsTeacherAssignedToSubjectBySubjectID(ctx, actorID, subjectID)
+		if err != nil {
 			return nil, fmt.Errorf("authorization check failed: %w", err)
 		}
-		if !exists {
+		if !assigned {
 			return nil, fmt.Errorf("%w: you are not assigned to teach this subject", ErrUnauthorized)
 		}
 	}
@@ -331,7 +357,7 @@ func (s *service) GetSubjectGrades(ctx context.Context, actorID string, actorRol
 		if val == 0 && g.GradeType == GradeTypeJudgment {
 			val = s.calculator.ConvertJudgmentToValue(g.Description)
 		}
-		if val <= 0 {
+		if val < 1.0 || val > 10.0 {
 			continue
 		}
 		validGrades = append(validGrades, g)
@@ -342,7 +368,7 @@ func (s *service) GetSubjectGrades(ctx context.Context, actorID string, actorRol
 		sum += val
 		switch {
 		case val < 4:
-			dist["0-3"]++
+			dist["1-3"]++
 		case val < 7:
 			dist["4-6"]++
 		case val < 9:
@@ -354,7 +380,7 @@ func (s *service) GetSubjectGrades(ctx context.Context, actorID string, actorRol
 
 	var avg float64
 	if len(validGrades) > 0 {
-		avg = sum / float64(len(validGrades))
+		avg = s.calculator.CalculateWeightedAverage(validGrades)
 	}
 
 	stat.Classes = append(stat.Classes, ClassStat{
@@ -426,7 +452,7 @@ func (s *service) AddGrade(ctx context.Context, teacherID string, req CreateGrad
 
 	resp := s.mapSingleResponse(*grade)
 	if s.broadcaster != nil {
-		s.broadcaster.BroadcastToUser(grade.StudentID, "GRADE_ADDED", resp)
+		s.broadcaster.BroadcastToUser(grade.StudentID, schoolID, "GRADE_ADDED", resp)
 	}
 
 	return &resp, nil
@@ -446,15 +472,19 @@ func (s *service) BatchCreateGrades(teacherID, actorRole, schoolID string, grade
 			continue
 		}
 		if actorRole != "superadmin" && schoolID != "" && g.SchoolID != "" && g.SchoolID != schoolID {
-			return fmt.Errorf("unauthorized: cannot create grades for another school")
+			return fmt.Errorf("%w: cannot create grades for another school", ErrUnauthorized)
 		}
 		evalTypeStr := ""
 		if g.EvaluationType != nil {
 			evalTypeStr = string(*g.EvaluationType)
 		}
-		key := g.ID
-		if key == "" {
-			key = fmt.Sprintf("%s_%s_%s_%s_%s_%.2f", g.StudentID, g.SubjectID, g.Date.Format("2006-01-02"), g.GradeType, evalTypeStr, g.GradeValue)
+		testIDStr := ""
+		if g.TestID != nil {
+			testIDStr = *g.TestID
+		}
+		key := fmt.Sprintf("%s_%s_%s_%s_%s_%s_%.2f_%s", g.StudentID, g.SubjectID, testIDStr, g.Date.Format("2006-01-02"), g.GradeType, evalTypeStr, g.GradeValue, g.Description)
+		if g.ID != "" {
+			key = g.ID + "_" + key
 		}
 		if seen[key] {
 			continue
@@ -465,7 +495,7 @@ func (s *service) BatchCreateGrades(teacherID, actorRole, schoolID string, grade
 	return s.repo.BatchCreate(deduped)
 }
 
-func (s *service) BulkImport(teacherID string, file io.Reader, semester int) (*ImportResult, error) {
+func (s *service) BulkImport(teacherID, schoolID string, file io.Reader, semester int) (*ImportResult, error) {
 	// ParseCSVGrades now receives the caller-chosen semester so that grades
 	// are assigned to the correct period instead of a CSV-embedded or hardcoded default.
 	reqs, err := ParseCSVGrades(file, semester)
@@ -478,14 +508,58 @@ func (s *service) BulkImport(teacherID string, file io.Reader, semester int) (*I
 	if err != nil || teacherUser == nil {
 		return nil, fmt.Errorf("teacher user not found: %w", err)
 	}
-	var schoolID string
-	if teacherUser.SchoolID != nil {
+	if teacherUser.SchoolID != nil && *teacherUser.SchoolID != "" {
+		if schoolID != "" && *teacherUser.SchoolID != schoolID {
+			return nil, fmt.Errorf("school ID mismatch with teacher record")
+		}
 		schoolID = *teacherUser.SchoolID
 	}
 
 	teacherProfileID, err := s.resolveTeacherProfileID(ctx, teacherID)
 	if err != nil {
 		return nil, fmt.Errorf("teacher profile ID is required for bulk import: %w", err)
+	}
+
+	assignedSubjectsCache := make(map[string]bool)
+	assignedStudentsCache := make(map[string]bool)
+
+	// Validate grade values, semesters & teacher assignment for each row
+	for idx, req := range reqs {
+		if req.GradeValue != -1 && (req.GradeValue < 1.0 || req.GradeValue > 10.0) {
+			return nil, fmt.Errorf("row %d: voto %.2f non valido (deve essere tra 1 e 10 o -1 per assente)", idx+1, req.GradeValue)
+		}
+		if req.Semester != 1 && req.Semester != 2 {
+			return nil, fmt.Errorf("row %d: semestre %d non valido (deve essere 1 o 2)", idx+1, req.Semester)
+		}
+		if teacherUser.Role != "admin" && teacherUser.Role != "superadmin" && s.validator != nil {
+			if s.validator.db != nil {
+				assignedSub, knownSub := assignedSubjectsCache[req.SubjectID]
+				if !knownSub {
+					var err error
+					assignedSub, err = s.validator.IsTeacherAssignedToSubjectBySubjectID(ctx, teacherID, req.SubjectID)
+					if err != nil {
+						return nil, fmt.Errorf("row %d: database error checking subject assignment: %w", idx+1, err)
+					}
+					assignedSubjectsCache[req.SubjectID] = assignedSub
+				}
+				if !assignedSub {
+					return nil, fmt.Errorf("row %d: %w: teacher is not assigned to teach subject %s", idx+1, ErrUnauthorized, req.SubjectID)
+				}
+
+				assignedStud, knownStud := assignedStudentsCache[req.StudentID]
+				if !knownStud {
+					var err error
+					assignedStud, err = s.validator.IsTeacherAssignedToStudent(ctx, teacherID, req.StudentID)
+					if err != nil {
+						return nil, fmt.Errorf("row %d: database error checking student assignment: %w", idx+1, err)
+					}
+					assignedStudentsCache[req.StudentID] = assignedStud
+				}
+				if !assignedStud {
+					return nil, fmt.Errorf("row %d: %w: teacher is not assigned to student %s", idx+1, ErrUnauthorized, req.StudentID)
+				}
+			}
+		}
 	}
 
 	res, err := ProcessBulkImport(s.repo, reqs, teacherID, teacherProfileID, schoolID)
@@ -500,8 +574,17 @@ func (s *service) Export(teacherID, schoolID string, filter GradeFilter, format 
 	if teacherID == "" {
 		return nil, "", ErrUnauthorized
 	}
-	if filter.TeacherID == "" {
+	// Force the filter to strictly scope export to the authenticated teacher's grades
+	teacherProfileID, err := s.resolveTeacherProfileID(context.Background(), teacherID)
+	if err == nil && teacherProfileID != "" {
+		filter.TeacherID = teacherProfileID
+	} else {
 		filter.TeacherID = teacherID
+	}
+	if schoolID == "" && s.userRepo != nil {
+		if tUser, uErr := s.userRepo.GetByID(context.Background(), teacherID); uErr == nil && tUser != nil && tUser.SchoolID != nil {
+			schoolID = *tUser.SchoolID
+		}
 	}
 	if schoolID != "" {
 		filter.SchoolID = schoolID
@@ -554,8 +637,9 @@ func (s *service) UpdateGrade(ctx context.Context, teacherID string, gradeID str
 		return nil, fmt.Errorf("could not resolve teacher profile: %w", err)
 	}
 
-	if grade.TeacherID != teacherProfileID {
-		return nil, fmt.Errorf("unauthorized: can only modify own grades")
+	isOwner := grade.TeacherID == teacherID || (teacherProfileID != "" && grade.TeacherID == teacherProfileID)
+	if !isOwner {
+		return nil, fmt.Errorf("%w: can only modify own grades", ErrUnauthorized)
 	}
 
 	if err := s.validator.ValidateModification(*grade, req); err != nil {
@@ -645,14 +729,23 @@ func (s *service) DeleteGrade(ctx context.Context, teacherID string, gradeID str
 		return fmt.Errorf("grade not found")
 	}
 
-	// Resolve teacher profile ID for correct ownership comparison.
-	teacherProfileID, err := s.resolveTeacherProfileID(ctx, teacherID)
-	if err != nil {
-		return fmt.Errorf("could not resolve teacher profile: %w", err)
+	// Check actor user role
+	actorUser, err := s.userRepo.GetByID(ctx, teacherID)
+	if err != nil || actorUser == nil {
+		return fmt.Errorf("could not resolve actor profile: %w", err)
 	}
 
-	if grade.TeacherID != teacherProfileID {
-		return fmt.Errorf("unauthorized to delete this grade")
+	isStaffAdmin := actorUser.Role == "admin" || actorUser.Role == "superadmin"
+
+	// Resolve teacher profile ID for correct ownership comparison if not admin/superadmin.
+	if !isStaffAdmin {
+		teacherProfileID, err := s.resolveTeacherProfileID(ctx, teacherID)
+		if err != nil {
+			return fmt.Errorf("could not resolve teacher profile: %w", err)
+		}
+		if grade.TeacherID != teacherProfileID {
+			return fmt.Errorf("%w: unauthorized to delete this grade", ErrUnauthorized)
+		}
 	}
 
 	if err := s.validator.ValidateModification(*grade, UpdateGradeRequest{}); err != nil {
@@ -666,6 +759,20 @@ func (s *service) DeleteGrade(ctx context.Context, teacherID string, gradeID str
 }
 
 // --- Student / Parent ---
+
+func (s *service) ValidateParentGuardian(ctx context.Context, parentID, studentID string) error {
+	if parentID == "" || studentID == "" {
+		return ErrNotGuardian
+	}
+	isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, studentID)
+	if err != nil {
+		return err
+	}
+	if !isGuardian {
+		return ErrNotGuardian
+	}
+	return nil
+}
 
 func (s *service) GetChildGrades(ctx context.Context, parentID string, studentID string, filter GradeFilter) (*MyGradesResponse, error) {
 	logger.Log.Debugf("GetChildGrades requested by parent")
@@ -731,7 +838,11 @@ func (s *service) GetMyGrades(ctx context.Context, studentID string, filter Grad
 		semestersMap[int(g.Semester)] = append(semestersMap[int(g.Semester)], s.mapSingleResponse(g))
 	}
 
-	sem1Start, sem1End, sem2Start, sem2End := academicYearDates()
+	var dbConn *sql.DB
+	if s.validator != nil {
+		dbConn = s.validator.db
+	}
+	sem1Start, sem1End, sem2Start, sem2End := academicYearDates(ctx, dbConn, filter.SchoolID)
 	if gr, ok := semestersMap[1]; ok {
 		sort.Slice(gr, func(i, j int) bool {
 			return gr[i].Date.Before(gr[j].Date)
@@ -787,9 +898,6 @@ func (s *service) GetMyAverages(ctx context.Context, studentID string) (*Student
 		}
 
 		var subjects []SubjectAverage
-		var totalSum float64
-		var totalSub int
-
 		for subID, subGrades := range subMap {
 			avg := s.calculator.CalculateAverage(subGrades)
 			weightedAvg := s.calculator.CalculateWeightedAverage(subGrades)
@@ -799,20 +907,26 @@ func (s *service) GetMyAverages(ctx context.Context, studentID string) (*Student
 				WeightedAverage: weightedAvg,
 				TotalGrades:     len(subGrades),
 			})
-			totalSum += weightedAvg
-			totalSub++
 		}
 
-		overall := 0.0
-		if totalSub > 0 {
-			overall = math.Round((totalSum/float64(totalSub))*100) / 100
-		}
+		overall := s.calculator.CalculateWeightedAverage(gs)
 
-		cond := "OTTIMO"
-		if overall < 6.0 {
-			cond = "ATTENZIONE"
-		} else if overall < 6.5 {
-			cond = "MONITORARE"
+		cond := "N.V."
+		if len(gs) > 0 && overall > 0 {
+			switch {
+			case overall < 5.0:
+				cond = "GRAVEMENTE INSUFFICIENTE"
+			case overall < 6.0:
+				cond = "ATTENZIONE"
+			case overall < 7.0:
+				cond = "SUFFICIENTE"
+			case overall < 8.0:
+				cond = "BUONO"
+			case overall < 9.0:
+				cond = "DISTINTO"
+			default:
+				cond = "OTTIMO"
+			}
 		}
 
 		return SemesterAverageSummary{
@@ -829,17 +943,29 @@ func (s *service) GetMyAverages(ctx context.Context, studentID string) (*Student
 }
 
 func (s *service) GetMyTrend(ctx context.Context, actorID string, actorRole string, studentID string, subjectID string) (*TrendResponse, error) {
-	if actorRole == "student" && actorID != studentID {
-		return nil, ErrUnauthorized
-	}
-	if actorRole == "parent" {
-		// FIX: distinguish a real DB error from a simple "not guardian" denial.
-		isGuardian, err := s.userRepo.IsGuardian(ctx, actorID, studentID)
-		if err != nil {
-			return nil, fmt.Errorf("guardian check failed: %w", err)
-		}
-		if !isGuardian {
-			return nil, ErrNotGuardian
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" && actorRole != "principal" && actorRole != "vice_principal" {
+		switch actorRole {
+		case "student":
+			if actorID != studentID {
+				return nil, ErrUnauthorized
+			}
+		case "parent":
+			isGuardian, err := s.userRepo.IsGuardian(ctx, actorID, studentID)
+			if err != nil {
+				return nil, fmt.Errorf("guardian check failed: %w", err)
+			}
+			if !isGuardian {
+				return nil, ErrNotGuardian
+			}
+		case "teacher":
+			if s.validator != nil {
+				assigned, err := s.validator.IsTeacherAssignedToStudent(ctx, actorID, studentID)
+				if err != nil || !assigned {
+					return nil, ErrUnauthorized
+				}
+			}
+		default:
+			return nil, ErrUnauthorized
 		}
 	}
 	grades, err := s.repo.FindByStudent(studentID)
@@ -855,6 +981,9 @@ func (s *service) GetMyTrend(ctx context.Context, actorID string, actorRole stri
 		if subjectID != "" && g.SubjectID != subjectID {
 			continue
 		}
+		if g.GradeValue < 1.0 || g.GradeValue > 10.0 {
+			continue // exclude non-votable grades/absences (-1) from trend calculation
+		}
 		relevant = append(relevant, g)
 	}
 
@@ -862,25 +991,23 @@ func (s *service) GetMyTrend(ctx context.Context, actorID string, actorRole stri
 		return relevant[i].Date.Before(relevant[j].Date)
 	})
 
-	classAverage := 0.0
+	classAverage := -1.0
 	var classID string
 	currentSem := 1
 	if len(relevant) > 0 && relevant[len(relevant)-1].Semester > 0 {
 		currentSem = int(relevant[len(relevant)-1].Semester)
 	}
-	if s.validator != nil && s.validator.db != nil {
-		if err := s.validator.db.QueryRow(
-			`SELECT class_id FROM class_students WHERE student_id = $1 ORDER BY created_at DESC LIMIT 1`, studentID,
-		).Scan(&classID); err == nil && classID != "" {
-			_ = s.validator.db.QueryRow(
-				`SELECT COALESCE(AVG(grade_value), 0.0)
-				 FROM grades g
-				 JOIN class_students cs ON g.student_id = cs.student_id
-				 WHERE cs.class_id = $1 AND g.subject_id = $2 AND g.semester = $3
-				   AND g.is_published = true AND g.deleted_at IS NULL`,
-				classID, subjectID, currentSem,
-			).Scan(&classAverage)
-			classAverage = math.Round(classAverage*100) / 100
+	if s.repo != nil {
+		sName, cName, cID, sID, _ := s.repo.GetStudentClassAndSchoolInfo(ctx, studentID)
+		_ = sName
+		_ = cName
+		_ = sID
+		classID = cID
+		if classID != "" {
+			avg, err := s.repo.GetClassSubjectAverage(ctx, classID, subjectID, currentSem, studentID)
+			if err == nil && avg >= 0 {
+				classAverage = avg
+			}
 		}
 	}
 
@@ -895,18 +1022,27 @@ func (s *service) GetMyTrend(ctx context.Context, actorID string, actorRole stri
 
 		// Compare the smoothed moving average against the class average,
 		// not the raw grade value which may be a noisy outlier.
-		position := "at_average"
-		if movingAvg > classAverage {
-			position = "above_average"
-		} else if movingAvg < classAverage {
-			position = "below_average"
+		position := "not_available"
+		if classAverage >= 0 {
+			if movingAvg > classAverage {
+				position = "above_average"
+			} else if movingAvg < classAverage {
+				position = "below_average"
+			} else {
+				position = "at_average"
+			}
+		}
+
+		pointClassAvg := classAverage
+		if pointClassAvg < 0 {
+			pointClassAvg = 0.0
 		}
 
 		points = append(points, TrendPoint{
 			Date:         g.Date.Format("2006-01-02"),
 			Grade:        g.GradeValue,
 			MovingAvg3:   movingAvg,
-			ClassAverage: classAverage,
+			ClassAverage: pointClassAvg,
 			Position:     position,
 		})
 	}
@@ -944,22 +1080,48 @@ func (s *service) GetMyTrend(ctx context.Context, actorID string, actorRole stri
 	}, nil
 }
 
-func (s *service) GetSemesterReport(ctx context.Context, studentID string, semester int) (*SemesterReportResponse, error) {
+func (s *service) GetSemesterReport(ctx context.Context, actorID string, actorRole string, studentID string, semester int) (*SemesterReportResponse, error) {
+	if semester != 1 && semester != 2 {
+		return nil, fmt.Errorf("semester must be 1 or 2")
+	}
+	if actorRole == "" || actorID == "" {
+		return nil, ErrUnauthorized
+	}
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" && actorRole != "principal" && actorRole != "vice_principal" {
+		switch actorRole {
+		case "student":
+			if actorID != studentID {
+				return nil, ErrUnauthorized
+			}
+		case "parent":
+			isGuardian, err := s.userRepo.IsGuardian(ctx, actorID, studentID)
+			if err != nil {
+				return nil, fmt.Errorf("guardian check failed: %w", err)
+			}
+			if !isGuardian {
+				return nil, ErrNotGuardian
+			}
+		case "teacher":
+			if s.validator != nil {
+				assigned, err := s.validator.IsTeacherAssignedToStudent(ctx, actorID, studentID)
+				if err != nil || !assigned {
+					return nil, ErrUnauthorized
+				}
+			}
+		default:
+			return nil, ErrUnauthorized
+		}
+	}
+
 	grades, err := s.repo.FindByStudent(studentID)
 	if err != nil {
 		return nil, err
 	}
 
-	var studentName, className, classID, schoolYear string
-	if s.validator != nil && s.validator.db != nil {
-		_ = s.validator.db.QueryRow(
-			`SELECT u.first_name || ' ' || u.last_name, COALESCE(c.name, 'N/D'), COALESCE(c.id, '')
-			 FROM users u
-			 LEFT JOIN class_students cs ON u.id = cs.student_id
-			 LEFT JOIN classes c ON cs.class_id = c.id
-			 WHERE u.id = $1
-			 ORDER BY cs.created_at DESC LIMIT 1`, studentID,
-		).Scan(&studentName, &className, &classID)
+	var studentName, className, classID, schoolYear, schoolID string
+	if s.repo != nil {
+		sName, cName, cID, sID, _ := s.repo.GetStudentClassAndSchoolInfo(ctx, studentID)
+		studentName, className, classID, schoolID = sName, cName, cID, sID
 	}
 	if studentName == "" {
 		studentName = "Studente " + studentID
@@ -983,43 +1145,46 @@ func (s *service) GetSemesterReport(ctx context.Context, studentID string, semes
 
 	enrolledSubjects, enrollErr := s.repo.FindEnrolledSubjects(studentID, semester)
 
-	// Query teacher names for subjects in student's class
 	teacherMap := make(map[string]string)
-	if s.validator != nil && s.validator.db != nil && classID != "" {
-		tRows, tErr := s.validator.db.Query(
-			`SELECT cs.subject_id, COALESCE(u.first_name || ' ' || u.last_name, '')
-			 FROM class_subjects cs
-			 LEFT JOIN teachers t ON cs.teacher_id = t.id OR cs.teacher_id = t.user_id
-			 LEFT JOIN users u ON t.user_id = u.id OR cs.teacher_id = u.id
-			 WHERE cs.class_id::text = $1`, classID,
-		)
+	if s.repo != nil && classID != "" {
+		tNames, tErr := s.repo.GetTeacherNamesByClass(ctx, classID)
 		if tErr == nil {
-			for tRows.Next() {
-				var subID, tName string
-				if scanErr := tRows.Scan(&subID, &tName); scanErr == nil {
-					teacherMap[subID] = tName
-				}
-			}
-			if err := tRows.Err(); err != nil {
-				logger.Log.Warnf("GetSemesterReport: error iterating teacher rows: %v", err)
-			}
-			if err := tRows.Close(); err != nil {
-				logger.Log.Warnf("GetSemesterReport: error closing teacher rows: %v", err)
-			}
+			teacherMap = tNames
 		}
 	}
 
 	subjectNameMap := make(map[string]string)
-	if s.validator != nil && s.validator.db != nil {
-		sRows, sErr := s.validator.db.QueryContext(ctx, `SELECT id::text, name FROM subjects`)
+	if s.repo != nil {
+		sNames, sErr := s.repo.GetSubjectNamesMap(ctx, schoolID)
 		if sErr == nil {
-			for sRows.Next() {
-				var id, name string
-				if scanErr := sRows.Scan(&id, &name); scanErr == nil {
-					subjectNameMap[id] = name
-				}
-			}
-			_ = sRows.Close()
+			subjectNameMap = sNames
+		}
+	}
+
+	behaviorGrade := 0.0
+	scholasticCredit := 0.0
+	totalAbsenceDays := 0
+
+	if s.repo != nil {
+		bg, sc, found, _ := s.repo.GetScrutinyRecordSummary(ctx, studentID, semester)
+		if found {
+			behaviorGrade = bg
+			scholasticCredit = sc
+		}
+
+		var dbConn *sql.DB
+		if s.validator != nil {
+			dbConn = s.validator.db
+		}
+		sem1Start, sem1End, sem2Start, sem2End := academicYearDates(ctx, dbConn, schoolID)
+		var startD, endD string
+		if semester == 1 {
+			startD, endD = sem1Start, sem1End
+		} else {
+			startD, endD = sem2Start, sem2End
+		}
+		if absCount, err := s.repo.GetStudentAbsenceCountForPeriod(ctx, studentID, startD, endD); err == nil {
+			totalAbsenceDays = absCount
 		}
 	}
 
@@ -1042,14 +1207,17 @@ func (s *service) GetSemesterReport(ctx context.Context, studentID string, semes
 			})
 		}
 
-		passed := avg >= 6.0
-		if passed {
-			passedCount++
-		}
-
+		// Final grade rounded to integer on the Italian 1-10 school report scale
 		finalGrade := math.Round(avg)
 		if finalGrade < 1 {
 			finalGrade = 1
+		} else if finalGrade > 10 {
+			finalGrade = 10
+		}
+
+		passed := finalGrade >= 6.0
+		if passed {
+			passedCount++
 		}
 
 		tName := teacherMap[subID]
@@ -1069,7 +1237,7 @@ func (s *service) GetSemesterReport(ctx context.Context, studentID string, semes
 			FinalGrade:     finalGrade,
 			SubjectAverage: math.Round(avg*100) / 100,
 			GradeCount:     len(gs),
-			AbsenceDays:    0,
+			AbsenceDays:    0, // Per-subject hourly absences; total student absences are in TotalAbsenceDays
 			Notes:          "",
 			Grades:         gVals,
 			Passed:         passed,
@@ -1098,7 +1266,7 @@ func (s *service) GetSemesterReport(ctx context.Context, studentID string, semes
 				SubjectAverage: 0,
 				GradeCount:     0,
 				AbsenceDays:    0,
-				Notes:          "",
+				Notes:          "N.V.",
 				Grades:         []GradeVal{},
 				Passed:         false,
 			})
@@ -1108,74 +1276,29 @@ func (s *service) GetSemesterReport(ctx context.Context, studentID string, semes
 	gradedCount := len(subMap)
 	totalEnrolled := len(enrolledSubjects)
 
-	// FIX: use the larger of gradedCount and totalEnrolled as the denominator
-	// so that subjects with no grades still drag down the overall average.
-	denominator := gradedCount
-	if totalEnrolled > gradedCount {
-		denominator = totalEnrolled
-	}
 	overall := 0.0
-	if denominator > 0 {
-		overall = math.Round((totalSum/float64(denominator))*100) / 100
+	denom := gradedCount
+	if enrollErr == nil && totalEnrolled > 0 {
+		denom = totalEnrolled
+	}
+	if denom > 0 {
+		overall = math.Round((totalSum/float64(denom))*100) / 100
 	}
 
-	// FIX: promoted only when every enrolled subject has been graded AND passed.
-	// Previously passedCount was compared against gradedCount, which meant
-	// a student with ungraded subjects could still be promoted.
+	// Promotion evaluation: all enrolled subjects must be graded, passed, and overall >= 6.0
 	promoted := "NO"
-	requiredSubjects := totalEnrolled
-	if requiredSubjects == 0 {
-		requiredSubjects = gradedCount
-	}
-	if requiredSubjects > 0 && passedCount == requiredSubjects && gradedCount >= requiredSubjects && overall >= 6.0 {
-		promoted = "SÌ"
-	}
-
-	behaviorGrade := 0.0
-	scholasticCredit := 0.0
-	totalAbsenceDays := 0
-
-	if s.validator != nil && s.validator.db != nil {
-		var bg, sc sql.NullFloat64
-		_ = s.validator.db.QueryRow(
-			`SELECT conduct_grade, scholastic_credit FROM scrutiny_records WHERE student_id = $1 AND semester = $2`, studentID, semester,
-		).Scan(&bg, &sc)
-		if bg.Valid {
-			behaviorGrade = bg.Float64
+	if totalEnrolled == 0 && gradedCount == 0 {
+		promoted = "N/D"
+	} else if enrollErr == nil && totalEnrolled > 0 && gradedCount < totalEnrolled {
+		promoted = "IN CORSO"
+	} else {
+		requiredSubjects := totalEnrolled
+		if requiredSubjects == 0 {
+			requiredSubjects = gradedCount
 		}
-		if sc.Valid {
-			scholasticCredit = sc.Float64
-		} else {
-			_ = s.validator.db.QueryRow(
-				`SELECT behavior_grade, scholastic_credit FROM semester_reports WHERE student_id = $1 AND semester = $2`, studentID, semester,
-			).Scan(&bg, &sc)
-			if bg.Valid {
-				behaviorGrade = bg.Float64
-			}
-			if sc.Valid {
-				scholasticCredit = sc.Float64
-			}
+		if requiredSubjects > 0 && passedCount == requiredSubjects && overall >= 6.0 {
+			promoted = "SÌ"
 		}
-
-		sem1Start, sem1End, sem2Start, sem2End := academicYearDates()
-		var startD, endD string
-		if semester == 1 {
-			startD, endD = sem1Start, sem1End
-		} else {
-			startD, endD = sem2Start, sem2End
-		}
-		// FIX: use date < endD+1day so that the last school day is fully included.
-		// Without this, a timestamp-typed date column would exclude rows on endD
-		// because '2026-06-10' casts to '2026-06-10 00:00:00', missing the whole day.
-		_ = s.validator.db.QueryRowContext(
-			ctx,
-			`SELECT COUNT(DISTINCT date::date) FROM attendance
-			 WHERE student_id = $1
-			   AND (status = 'Absent' OR status = 'absent')
-			   AND date::date >= $2::date
-			   AND date::date <= $3::date`,
-			studentID, startD, endD,
-		).Scan(&totalAbsenceDays)
 	}
 
 	return &SemesterReportResponse{
@@ -1195,20 +1318,14 @@ func (s *service) GetSemesterReport(ctx context.Context, studentID string, semes
 }
 
 func (s *service) GetChildSemesterReport(ctx context.Context, parentID, studentID string, semester int) (*SemesterReportResponse, error) {
-	if s.userRepo != nil {
-		isGuardian, err := s.userRepo.IsGuardian(ctx, parentID, studentID)
-		if err != nil {
-			return nil, err
-		}
-		if !isGuardian {
-			return nil, ErrNotGuardian
-		}
-	}
-	return s.GetSemesterReport(ctx, studentID, semester)
+	// FIX: removed redundant explicit IsGuardian call.
+	// GetSemesterReport is the single gate-keeper for all roles (including "parent"),
+	// so duplicating the check here caused two divergent guardian lookups.
+	return s.GetSemesterReport(ctx, parentID, "parent", studentID, semester)
 }
 
-func (s *service) GenerateSemesterReportPDF(studentID string, semester int) ([]byte, error) {
-	report, err := s.GetSemesterReport(context.Background(), studentID, semester)
+func (s *service) GenerateSemesterReportPDF(ctx context.Context, actorID, actorRole, studentID string, semester int) ([]byte, error) {
+	report, err := s.GetSemesterReport(ctx, actorID, actorRole, studentID, semester)
 	if err != nil {
 		return nil, err
 	}
@@ -1252,9 +1369,18 @@ func (s *service) mapSingleResponse(g Grade) GradeResponse {
 	}
 }
 
-// academicYearDates returns semester date boundaries for the current Italian school year.
-// Semester 1: Sep 1 – Jan 31 | Semester 2: Feb 1 – Jun 10
-func academicYearDates() (sem1Start, sem1End, sem2Start, sem2End string) {
+// academicYearDates returns semester date boundaries for the current school year,
+// reading custom dates from school_settings if configured.
+func academicYearDates(ctx context.Context, db *sql.DB, schoolID string) (sem1Start, sem1End, sem2Start, sem2End string) {
+	if db != nil && schoolID != "" {
+		var s1S, s1E, s2S, s2E sql.NullString
+		_ = db.QueryRowContext(ctx,
+			`SELECT sem1_start_date, sem1_end_date, sem2_start_date, sem2_end_date FROM school_settings WHERE school_id = $1`, schoolID,
+		).Scan(&s1S, &s1E, &s2S, &s2E)
+		if s1S.Valid && s1E.Valid && s2S.Valid && s2E.Valid && s1S.String != "" {
+			return s1S.String, s1E.String, s2S.String, s2E.String
+		}
+	}
 	now := time.Now()
 	year := now.Year()
 	if now.Month() < time.September {
@@ -1265,6 +1391,7 @@ func academicYearDates() (sem1Start, sem1End, sem2Start, sem2End string) {
 	sem1End = fmt.Sprintf("%d-01-31", nextYear)
 	sem2Start = fmt.Sprintf("%d-02-01", nextYear)
 	sem2End = fmt.Sprintf("%d-06-10", nextYear)
+	logger.Log.Warnf("academicYearDates: no custom semester dates configured for schoolID=%q, using hardcoded defaults (%s to %s, %s to %s). Configure school_settings to define accurate term boundaries.", schoolID, sem1Start, sem1End, sem2Start, sem2End)
 	return
 }
 
@@ -1277,26 +1404,23 @@ func currentSchoolYear() string {
 	return fmt.Sprintf("%d/%d", year, year+1)
 }
 
-func (s *service) CreateTestWithGrades(teacherID string, req CreateClassTestRequest) error {
-	teacherUser, err := s.userRepo.GetByID(context.Background(), teacherID)
+func (s *service) CreateTestWithGrades(ctx context.Context, teacherID string, req CreateClassTestRequest) (*ClassTest, error) {
+	teacherUser, err := s.userRepo.GetByID(ctx, teacherID)
 	if err != nil {
-		return fmt.Errorf("could not resolve teacher profile: %w", err)
+		return nil, fmt.Errorf("could not resolve teacher profile: %w", err)
 	}
 	if teacherUser.SchoolID == nil {
-		return fmt.Errorf("teacher is not associated with a school")
+		return nil, fmt.Errorf("teacher is not associated with a school")
 	}
 	schoolID := *teacherUser.SchoolID
-
-	var teacherProfileID string
-	if err := s.validator.db.QueryRow(
-		`SELECT id FROM teachers WHERE user_id = $1`, teacherID,
-	).Scan(&teacherProfileID); err != nil {
-		return fmt.Errorf("could not resolve teacher profile ID: %w", err)
+	teacherProfileID, err := s.resolveTeacherProfileID(ctx, teacherID)
+	if err != nil {
+		return nil, fmt.Errorf("could not resolve teacher profile ID: %w", err)
 	}
 
 	testDate, err := time.Parse("2006-01-02", req.Date)
 	if err != nil {
-		return fmt.Errorf("invalid test date format '%s': %w", req.Date, err)
+		return nil, fmt.Errorf("invalid test date format '%s': %w", req.Date, err)
 	}
 
 	test := &ClassTest{
@@ -1311,7 +1435,7 @@ func (s *service) CreateTestWithGrades(teacherID string, req CreateClassTestRequ
 	}
 
 	if err := s.repo.CreateTest(test); err != nil {
-		return fmt.Errorf("failed to create test: %w", err)
+		return nil, fmt.Errorf("failed to create test: %w", err)
 	}
 
 	validSemester := func(sem int) int {
@@ -1323,7 +1447,11 @@ func (s *service) CreateTestWithGrades(teacherID string, req CreateClassTestRequ
 
 	var gradesList []*Grade
 	for _, gInput := range req.Grades {
-		if gInput.GradeValue == nil || *gInput.GradeValue < -1 {
+		// FIX: -1 is the conventional sentinel for "absent / not evaluated" (see ValidateGradeValue).
+		// In the context of CreateTestWithGrades we skip it rather than inserting
+		// a -1 grade row, which would be meaningless in aggregate calculations.
+		// Any value < 0 is treated as absent/skip.
+		if gInput.GradeValue == nil || *gInput.GradeValue < 0 {
 			continue
 		}
 
@@ -1361,21 +1489,47 @@ func (s *service) CreateTestWithGrades(teacherID string, req CreateClassTestRequ
 
 	if len(gradesList) > 0 {
 		if err := s.repo.BatchCreate(gradesList); err != nil {
-			return fmt.Errorf("failed to insert grades for test: %w", err)
+			return nil, fmt.Errorf("failed to insert grades for test: %w", err)
 		}
 		if s.broadcaster != nil {
+			s.broadcaster.BroadcastToSchool(schoolID, "TEST_CREATED", test)
 			for _, g := range gradesList {
 				if g.IsPublished {
-					s.broadcaster.BroadcastToUser(g.StudentID, "GRADE_ADDED", s.mapSingleResponse(*g))
+					s.broadcaster.BroadcastToUser(g.StudentID, schoolID, "GRADE_ADDED", s.mapSingleResponse(*g))
 				}
 			}
 		}
 	}
 
-	return nil
+	return test, nil
 }
 
-func (s *service) GetClassTests(classID string, subjectID string) ([]ClassTestResponse, error) {
+// checkClassAccessPermission enforces role-based access control for class-scoped test queries.
+// Admins, secretaries, principals, vice-principals and system_auditors bypass the check.
+// Teachers must be assigned to the class; students must be enrolled; parents must have a guardian link.
+func (s *service) checkClassAccessPermission(ctx context.Context, actorID, actorRole, classID string) error {
+	if actorRole == "" || actorID == "" {
+		return ErrUnauthorized
+	}
+	if actorRole == "admin" || actorRole == "superadmin" || actorRole == "secretary" ||
+		actorRole == "principal" || actorRole == "vice_principal" || actorRole == "system_auditor" || actorRole == "parent" {
+		return nil
+	}
+	if s.repo != nil {
+		allowed, err := s.repo.CheckClassAccessPermission(ctx, actorID, actorRole, classID)
+		if err != nil || !allowed {
+			return ErrUnauthorized
+		}
+		return nil
+	}
+	return ErrUnauthorized
+}
+
+func (s *service) GetClassTests(ctx context.Context, actorID string, actorRole string, classID string, subjectID string) ([]ClassTestResponse, error) {
+	if err := s.checkClassAccessPermission(ctx, actorID, actorRole, classID); err != nil {
+		return nil, err
+	}
+
 	tests, err := s.repo.FindTestsByClassAndSubject(classID, subjectID)
 	if err != nil {
 		return nil, err
@@ -1398,7 +1552,12 @@ func (s *service) GetClassTests(classID string, subjectID string) ([]ClassTestRe
 	return resp, nil
 }
 
-func (s *service) GetUpcomingTestsByClass(classID string) ([]ClassTestResponse, error) {
+func (s *service) GetUpcomingTestsByClass(ctx context.Context, actorID string, actorRole string, classID string) ([]ClassTestResponse, error) {
+	// FIX: replaced duplicated 35-line role-check block with shared helper.
+	if err := s.checkClassAccessPermission(ctx, actorID, actorRole, classID); err != nil {
+		return nil, err
+	}
+
 	tests, err := s.repo.FindUpcomingTestsByClass(classID)
 	if err != nil {
 		return nil, err
@@ -1421,7 +1580,7 @@ func (s *service) GetUpcomingTestsByClass(classID string) ([]ClassTestResponse, 
 	return resp, nil
 }
 
-func (s *service) DeleteClassTest(teacherID string, testID string) error {
+func (s *service) DeleteClassTest(ctx context.Context, teacherID string, testID string) error {
 	test, err := s.repo.FindTestByID(testID)
 	if err != nil {
 		return err
@@ -1429,7 +1588,7 @@ func (s *service) DeleteClassTest(teacherID string, testID string) error {
 	// FIX: propagate the error instead of silently ignoring it.
 	// A DB failure previously set teacherProfileID="" which made the ownership
 	// check always deny valid teachers (teacherProfileID == "" branch was true).
-	teacherProfileID, err := s.resolveTeacherProfileID(context.Background(), teacherID)
+	teacherProfileID, err := s.resolveTeacherProfileID(ctx, teacherID)
 	if err != nil {
 		return fmt.Errorf("could not resolve teacher profile for ownership check: %w", err)
 	}
@@ -1439,8 +1598,8 @@ func (s *service) DeleteClassTest(teacherID string, testID string) error {
 	return s.repo.DeleteTest(testID)
 }
 
-func (s *service) UpdateClassTest(teacherID string, testID string, req UpdateClassTestRequest) error {
-	teacherUser, err := s.userRepo.GetByID(context.Background(), teacherID)
+func (s *service) UpdateClassTest(ctx context.Context, teacherID string, testID string, req UpdateClassTestRequest) error {
+	teacherUser, err := s.userRepo.GetByID(ctx, teacherID)
 	if err != nil {
 		return fmt.Errorf("could not resolve teacher profile: %w", err)
 	}
@@ -1449,10 +1608,8 @@ func (s *service) UpdateClassTest(teacherID string, testID string, req UpdateCla
 	}
 	schoolID := *teacherUser.SchoolID
 
-	var teacherProfileID string
-	if err := s.validator.db.QueryRow(
-		`SELECT id FROM teachers WHERE user_id = $1`, teacherID,
-	).Scan(&teacherProfileID); err != nil {
+	teacherProfileID, err := s.resolveTeacherProfileID(ctx, teacherID)
+	if err != nil {
 		return fmt.Errorf("could not resolve teacher profile ID: %w", err)
 	}
 
@@ -1461,7 +1618,8 @@ func (s *service) UpdateClassTest(teacherID string, testID string, req UpdateCla
 		return fmt.Errorf("could not resolve test details: %w", err)
 	}
 
-	if test.TeacherID != teacherID && (teacherProfileID == "" || test.TeacherID != teacherProfileID) {
+	isOwner := test.TeacherID == teacherID || (teacherProfileID != "" && test.TeacherID == teacherProfileID)
+	if !isOwner {
 		return ErrUnauthorized
 	}
 
@@ -1505,7 +1663,14 @@ func (s *service) UpdateClassTest(teacherID string, testID string, req UpdateCla
 	for _, gInput := range req.Grades {
 		existingGrade, exists := existingMap[gInput.StudentID]
 
-		if gInput.GradeValue == nil || *gInput.GradeValue < -1 {
+		if !exists && s.validator != nil {
+			isMember, err := s.validator.IsStudentInClass(ctx, gInput.StudentID, test.ClassID)
+			if err != nil || !isMember {
+				return fmt.Errorf("student %s is not a member of class %s", gInput.StudentID, test.ClassID)
+			}
+		}
+
+		if gInput.GradeValue == nil || *gInput.GradeValue < 0 {
 			if exists {
 				if err := s.repo.Delete(existingGrade.ID, teacherID); err != nil {
 					return fmt.Errorf("failed to delete grade for student %s: %w", gInput.StudentID, err)
@@ -1630,13 +1795,21 @@ func (s *service) DeleteWeightConfig(actorID, actorRole, schoolID, configID stri
 }
 
 func (s *service) resolveTeacherProfileID(ctx context.Context, userID string) (string, error) {
+	if val, ok := s.teacherProfileCache.Load(userID); ok {
+		return val.(string), nil
+	}
 	if s.validator == nil || s.validator.db == nil {
-		return userID, nil
+		return "", nil
 	}
 	var teacherProfileID string
 	err := s.validator.db.QueryRowContext(ctx, `SELECT id FROM teachers WHERE user_id = $1`, userID).Scan(&teacherProfileID)
 	if err != nil {
-		return userID, nil
+		if errors.Is(err, sql.ErrNoRows) {
+			s.teacherProfileCache.Store(userID, "")
+			return "", nil
+		}
+		return "", fmt.Errorf("failed to resolve teacher profile ID: %w", err)
 	}
+	s.teacherProfileCache.Store(userID, teacherProfileID)
 	return teacherProfileID, nil
 }

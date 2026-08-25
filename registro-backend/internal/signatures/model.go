@@ -112,6 +112,9 @@ type ArchivePackage struct {
 type SignRequest struct {
 	DocumentID string `json:"document_id"`
 	Pin        string `json:"pin"`
+	// IPAddress è l'indirizzo IP reale del client (impostato dall'handler dal contesto HTTP).
+	// Non deve essere fornito dal body JSON — viene impostato internamente.
+	IPAddress string `json:"-"`
 }
 
 // Service è l'interfaccia per la firma FEA base (legacy).

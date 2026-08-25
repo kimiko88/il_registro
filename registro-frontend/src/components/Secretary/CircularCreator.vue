@@ -1,19 +1,19 @@
 <template>
   <q-card style="min-width: 600px">
     <q-card-section>
-        <div class="text-h6">Crea Nuova Circolare</div>
+        <div class="text-h6">{{ t('communicationsPage.newCircular') }}</div>
     </q-card-section>
 
     <q-card-section>
         <q-form @submit="sendCircular" class="q-gutter-md">
-            <q-input v-model="form.title" label="Oggetto" outlined dense :rules="[val => !!val || 'Obbligatorio']" />
+            <q-input v-model="form.title" :label="t('communicationsPage.titleLabel')" outlined dense :rules="[val => !!val || t('common.error')]" />
             
-            <div class="text-subtitle2">Destinatari</div>
+            <div class="text-subtitle2">{{ t('communicationsPage.recipientRole') }}</div>
             <div class="row q-gutter-sm">
-                <q-checkbox v-model="form.recipients.teachers" label="Docenti" />
-                <q-checkbox v-model="form.recipients.parents" label="Genitori" />
-                <q-checkbox v-model="form.recipients.students" label="Studenti" />
-                <q-checkbox v-model="form.recipients.staff" label="Personale ATA" />
+                <q-checkbox v-model="form.recipients.teachers" :label="t('usersPage.roleTeachers') || 'Docenti'" />
+                <q-checkbox v-model="form.recipients.parents" :label="t('usersPage.roleParents') || 'Genitori'" />
+                <q-checkbox v-model="form.recipients.students" :label="t('usersPage.roleStudents') || 'Studenti'" />
+                <q-checkbox v-model="form.recipients.staff" :label="t('usersPage.roleStaff') || 'Personale ATA'" />
             </div>
 
             <q-select
@@ -21,25 +21,26 @@
                 v-model="form.specificClasses"
                 multiple
                 use-chips
+                emit-value
+                map-options
                 :options="classOptions"
-                label="Limita a classi (opzionale)"
+                :label="t('udaPage.classLabel')"
                 outlined
                 dense
-                hint="Lascia vuoto per inviare a tutte le classi"
             />
 
             <div class="q-my-sm">
-                <div class="text-subtitle2 q-mb-xs">Contento</div>
+                <div class="text-subtitle2 q-mb-xs">{{ t('communicationsPage.bodyLabel') }}</div>
                 <q-editor v-model="form.content" min-height="150px" />
             </div>
 
-            <q-file v-model="form.attachments" multiple label="Allegati" outlined dense use-chips>
+            <q-file v-model="form.attachments" multiple :label="t('communicationsPage.hasAttachment')" outlined dense use-chips>
                 <template v-slot:prepend><q-icon name="attach_file" /></template>
             </q-file>
 
             <div class="row justify-end q-mt-md">
-                <q-btn label="Annulla" flat v-close-popup color="grey" />
-                <q-btn label="Invia Comunicazione" type="submit" color="primary" class="q-ml-sm" icon="send" :loading="sending" />
+                <q-btn :label="t('common.cancel')" flat v-close-popup color="grey" />
+                <q-btn :label="t('communicationsPage.publish')" type="submit" color="primary" class="q-ml-sm" icon="send" :loading="sending" />
             </div>
         </q-form>
     </q-card-section>
@@ -48,18 +49,25 @@
 
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
-import { useCommunicationsStore } from 'src/stores/communications'
-import { useClassesStore } from 'src/stores/classes'
+import { useCommunicationsStore } from '@/stores/communications'
+import { useClassesStore } from '@/stores/classes'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const commStore = useCommunicationsStore()
 const classesStore = useClassesStore()
 const emit = defineEmits(['sent', 'cancel'])
 
 const sending = ref(false)
 
-const classOptions = computed(() => classesStore.classes.map(c => `${c.name}${c.section}`))
+const classOptions = computed(() =>
+    classesStore.classes.map(c => ({
+        label: c.name || `${c.year || ''}${c.section || ''}`.trim() || c.id,
+        value: c.id
+    }))
+)
 
 const form = reactive({
     title: '',
@@ -82,7 +90,7 @@ onMounted(async () => {
 
 const sendCircular = async () => {
     if (!form.recipients.teachers && !form.recipients.parents && !form.recipients.students && !form.recipients.staff) {
-        $q.notify({ type: 'warning', message: 'Seleziona almeno un gruppo di destinatari' })
+        $q.notify({ type: 'warning', message: t('communicationsPage.recipientsLabel') })
         return
     }
 
@@ -95,10 +103,10 @@ const sendCircular = async () => {
             specific_classes: form.specificClasses,
             type: 'circular'
         })
-        $q.notify({ type: 'positive', message: 'Circolare inviata correttamente' })
+        $q.notify({ type: 'positive', message: t('common.success') })
         emit('sent')
     } catch (err) {
-        $q.notify({ type: 'negative', message: 'Errore durante l\'invio' })
+        $q.notify({ type: 'negative', message: t('common.error') })
     } finally {
         sending.value = false
     }

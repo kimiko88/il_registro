@@ -2,6 +2,16 @@ import { setActivePinia, createPinia } from 'pinia'
 import { useAuthStore } from 'src/stores/auth'
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 
+const createMockJWT = (role = 'teacher', expInSeconds = 3600) => {
+    const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }))
+    const payload = btoa(JSON.stringify({
+        sub: 'user-123',
+        role: role,
+        exp: Math.floor(Date.now() / 1000) + expInSeconds
+    }))
+    return `${header}.${payload}.signature`
+}
+
 describe('Auth Store', () => {
     beforeEach(() => {
         setActivePinia(createPinia())
@@ -22,7 +32,7 @@ describe('Auth Store', () => {
             expect(store.isAuthenticated).toBe(false)
         })
 
-        it('should load user and token from localStorage', () => {
+        it('should load user from storage while keeping token in memory', () => {
             const mockUser = {
                 id: '123',
                 email: 'test@example.com',
@@ -31,16 +41,13 @@ describe('Auth Store', () => {
                 role: 'teacher'
             }
 
-            localStorage.setItem('user', JSON.stringify(mockUser))
-            localStorage.setItem('token', 'access-token')
-            localStorage.setItem('refreshToken', 'refresh-token')
+            localStorage.setItem('user', JSON.stringify({ id: '123', role: 'teacher' }))
 
             const store = useAuthStore()
 
-            expect(store.user).toEqual(mockUser)
-            expect(store.token).toBe('access-token')
-            expect(store.refreshToken).toBe('refresh-token')
-            expect(store.isAuthenticated).toBe(true)
+            expect(store.user).toEqual({ id: '123', role: 'teacher' })
+            expect(store.token).toBeNull()
+            expect(store.refreshToken).toBeNull()
         })
     })
 
@@ -81,16 +88,17 @@ describe('Auth Store', () => {
                 last_name: 'Doe',
                 role: 'teacher'
             }
+            const token = createMockJWT('teacher')
 
-            store.login(mockUser, 'access-token', 'refresh-token')
+            store.login(mockUser, token, 'refresh-token')
 
             expect(store.user).toEqual(mockUser)
-            expect(store.token).toBe('access-token')
-            expect(store.refreshToken).toBe('refresh-token')
+            expect(store.token).toBe(token)
+            expect(store.refreshToken).toBeNull()
             expect(store.isAuthenticated).toBe(true)
         })
 
-        it('should persist data to localStorage', () => {
+        it('should persist minimal user profile to localStorage while keeping tokens in memory', () => {
             const store = useAuthStore()
             const mockUser = {
                 id: '123',
@@ -99,12 +107,13 @@ describe('Auth Store', () => {
                 last_name: 'Doe',
                 role: 'teacher'
             }
+            const token = createMockJWT('teacher')
 
-            store.login(mockUser, 'access-token', 'refresh-token')
+            store.login(mockUser, token, 'refresh-token')
 
-            expect(localStorage.getItem('user')).toBe(JSON.stringify(mockUser))
-            expect(localStorage.getItem('token')).toBe('access-token')
-            expect(localStorage.getItem('refreshToken')).toBe('refresh-token')
+            expect(localStorage.getItem('user')).toBe(JSON.stringify({ id: '123', role: 'teacher' }))
+            expect(localStorage.getItem('token')).toBeNull()
+            expect(localStorage.getItem('refreshToken')).toBeNull()
         })
     })
 
@@ -112,8 +121,9 @@ describe('Auth Store', () => {
         it('should clear user, token, and refreshToken', () => {
             const store = useAuthStore()
             const mockUser = { id: '123', email: 'test@example.com', role: 'teacher' }
+            const token = createMockJWT('teacher')
 
-            store.login(mockUser, 'access-token', 'refresh-token')
+            store.login(mockUser, token, 'refresh-token')
             expect(store.isAuthenticated).toBe(true)
 
             store.logout()
@@ -127,8 +137,9 @@ describe('Auth Store', () => {
         it('should clear localStorage', () => {
             const store = useAuthStore()
             const mockUser = { id: '123', email: 'test@example.com', role: 'teacher' }
+            const token = createMockJWT('teacher')
 
-            store.login(mockUser, 'access-token', 'refresh-token')
+            store.login(mockUser, token, 'refresh-token')
             store.logout()
 
             expect(localStorage.getItem('user')).toBeNull()
@@ -142,12 +153,13 @@ describe('Auth Store', () => {
             const store = useAuthStore()
             const initialUser = { id: '123', first_name: 'John', last_name: 'Doe', role: 'teacher' }
             const updatedUser = { id: '123', first_name: 'Jane', last_name: 'Smith', role: 'admin' }
+            const token = createMockJWT('teacher')
 
-            store.login(initialUser, 'token', 'refresh')
+            store.login(initialUser, token, 'refresh')
             store.updateUser(updatedUser)
 
             expect(store.user).toEqual(updatedUser)
-            expect(localStorage.getItem('user')).toBe(JSON.stringify(updatedUser))
+            expect(localStorage.getItem('user')).toBe(JSON.stringify({ id: '123', role: 'admin' }))
         })
     })
 
@@ -164,8 +176,9 @@ describe('Auth Store', () => {
                     last_name: 'User',
                     role: role
                 }
+                const token = createMockJWT(role)
 
-                store.login(mockUser, 'token', 'refresh')
+                store.login(mockUser, token, 'refresh')
 
                 expect(store.userRole).toBe(role)
                 expect(store.isAuthenticated).toBe(true)
@@ -173,3 +186,4 @@ describe('Auth Store', () => {
         })
     })
 })
+

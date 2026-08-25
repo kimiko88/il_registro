@@ -3,21 +3,21 @@
     <q-btn-group spread>
       <q-btn 
         color="positive" 
-        label="Presente" 
+        :label="t('classRegister.present') || 'Presente'" 
         :outline="modelValue !== 'present'"
         @click="update('present')"
         data-test="btn-present"
       />
       <q-btn 
         color="warning" 
-        label="Ritardo" 
+        :label="t('classRegister.late') || 'Ritardo'" 
         :outline="modelValue !== 'late'"
         @click="update('late')"
         data-test="btn-late"
       />
       <q-btn 
         color="negative" 
-        label="Assente" 
+        :label="t('classRegister.absent') || 'Assente'" 
         :outline="modelValue !== 'absent'"
         @click="update('absent')"
         data-test="btn-absent"
@@ -27,6 +27,9 @@
 </template>
 
 <script setup>
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
+
 defineProps({
   modelValue: {
     type: String,

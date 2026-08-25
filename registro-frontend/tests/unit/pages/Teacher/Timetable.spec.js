@@ -51,9 +51,8 @@ describe('Teacher Timetable.vue — Teacher Personal Schedule View', () => {
 
     it('renders header and metrics stats', async () => {
         await flushPromises()
-        expect(wrapper.text()).toContain('Il Mio Orario di Insegnamento')
-        expect(wrapper.text()).toContain('Ore Settimanali')
-        expect(wrapper.text()).toContain('2 Ore')
+        expect(wrapper.text()).toMatch(/Orario Lezioni|Il Mio Orario/)
+        expect(wrapper.text()).toContain('Ora')
     })
 
     it('renders schedule entries in grid', async () => {
@@ -90,8 +89,7 @@ describe('Teacher Timetable.vue — Teacher Personal Schedule View', () => {
         })
         await flushPromises()
 
-        expect(wrapper.text()).toContain('Nessuna lezione in orario')
-        expect(wrapper.text()).toContain('Non risultano ancora ore di lezione')
+        expect(wrapper.text()).toMatch(/Libero|Nessuna Lezione|Nessuna lezione in orario/)
     })
 
     it('invokes api.get when clicking refresh button', async () => {

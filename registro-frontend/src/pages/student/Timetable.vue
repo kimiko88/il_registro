@@ -63,11 +63,13 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
-import { useStudentStore } from 'src/stores/student'
-import adminService from 'src/services/adminService'
+import { useStudentStore } from '@/stores/student'
+import adminService from '@/services/adminService'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const studentStore = useStudentStore()
 const loading = ref(true)
 const scheduleEntries = ref([])
@@ -95,7 +97,7 @@ const fetchSchedule = async () => {
     scheduleEntries.value = res.data || []
   } catch (e) {
     console.error(e)
-    $q.notify({ type: 'negative', message: 'Impossibile caricare l\'orario scolastico' })
+    $q.notify({ type: 'negative', message: t('common.error') })
   }
 }
 

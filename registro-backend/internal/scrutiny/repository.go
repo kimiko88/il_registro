@@ -14,6 +14,12 @@ type Repository interface {
 	ListRecordsByClass(ctx context.Context, classID string, semester int) ([]ScrutinyRecord, error)
 	ValidateClassScrutiny(ctx context.Context, classID string, semester int, validatorID string) error
 	UpdateClassScrutinyStatus(ctx context.Context, classID string, semester int, status string) error
+
+	// Deficiency & Deferred Scrutiny Methods
+	SaveDeficiency(ctx context.Context, def *StudentDeficiency) error
+	GetDeficienciesByStudent(ctx context.Context, studentID string) ([]StudentDeficiency, error)
+	GetDeficienciesByClass(ctx context.Context, classID string, semester int) ([]StudentDeficiency, error)
+	SaveDeferredScrutiny(ctx context.Context, req *SaveDeferredScrutinyRequest) error
 }
 
 type postgresRepository struct {
@@ -176,4 +182,168 @@ func (r *postgresRepository) UpdateClassScrutinyStatus(ctx context.Context, clas
 	`
 	_, err := r.db.ExecContext(ctx, query, status, classID, semester)
 	return err
+}
+
+func (r *postgresRepository) SaveDeficiency(ctx context.Context, def *StudentDeficiency) error {
+	if def.ID == "" {
+		def.ID = uuid.New().String()
+	}
+	def.UpdatedAt = time.Now()
+	if def.PeriodType == "" {
+		def.PeriodType = "semester_1"
+		if def.Semester == 2 {
+			def.PeriodType = "semester_2"
+		}
+	}
+	if def.Status == "" {
+		def.Status = "da_recuperare"
+	}
+	if def.RecoveryMode == "" {
+		def.RecoveryMode = "studio_individuale"
+	}
+
+	query := `
+		INSERT INTO student_deficiencies (
+			id, school_id, student_id, class_id, subject_id, semester, period_type,
+			topics, recovery_mode, status, recovery_grade, recovery_date, notes, updated_at
+		) VALUES (
+			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
+		)
+		ON CONFLICT (id) DO UPDATE SET
+			topics = EXCLUDED.topics,
+			recovery_mode = EXCLUDED.recovery_mode,
+			status = EXCLUDED.status,
+			recovery_grade = EXCLUDED.recovery_grade,
+			recovery_date = EXCLUDED.recovery_date,
+			notes = EXCLUDED.notes,
+			updated_at = EXCLUDED.updated_at
+	`
+	_, err := r.db.ExecContext(ctx, query,
+		def.ID, def.SchoolID, def.StudentID, def.ClassID, def.SubjectID, def.Semester, def.PeriodType,
+		def.Topics, def.RecoveryMode, def.Status, def.RecoveryGrade, def.RecoveryDate, def.Notes, def.UpdatedAt,
+	)
+	return err
+}
+
+func (r *postgresRepository) GetDeficienciesByStudent(ctx context.Context, studentID string) ([]StudentDeficiency, error) {
+	if studentID == "" {
+		return []StudentDeficiency{}, nil
+	}
+	query := `
+		SELECT d.id, d.school_id, d.student_id, d.class_id, d.subject_id,
+		       COALESCE(s.name, ''), d.semester, d.period_type, d.topics,
+		       d.recovery_mode, d.status, d.recovery_grade, d.recovery_date,
+		       COALESCE(d.notes, ''), d.created_at, d.updated_at
+		FROM student_deficiencies d
+		LEFT JOIN subjects s ON d.subject_id::text = s.id::text
+		WHERE d.student_id::text = $1
+		ORDER BY d.semester ASC, s.name ASC
+	`
+	rows, err := r.db.QueryContext(ctx, query, studentID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var res []StudentDeficiency
+	for rows.Next() {
+		var def StudentDeficiency
+		var recGrade sql.NullFloat64
+		var recDate sql.NullTime
+		if err := rows.Scan(
+			&def.ID, &def.SchoolID, &def.StudentID, &def.ClassID, &def.SubjectID,
+			&def.SubjectName, &def.Semester, &def.PeriodType, &def.Topics,
+			&def.RecoveryMode, &def.Status, &recGrade, &recDate,
+			&def.Notes, &def.CreatedAt, &def.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		if recGrade.Valid {
+			def.RecoveryGrade = &recGrade.Float64
+		}
+		if recDate.Valid {
+			def.RecoveryDate = &recDate.Time
+		}
+		res = append(res, def)
+	}
+	return res, nil
+}
+
+func (r *postgresRepository) GetDeficienciesByClass(ctx context.Context, classID string, semester int) ([]StudentDeficiency, error) {
+	if classID == "" {
+		return []StudentDeficiency{}, nil
+	}
+	query := `
+		SELECT d.id, d.school_id, d.student_id, COALESCE(u.first_name || ' ' || u.last_name, ''),
+		       d.class_id, d.subject_id, COALESCE(s.name, ''), d.semester, d.period_type, d.topics,
+		       d.recovery_mode, d.status, d.recovery_grade, d.recovery_date,
+		       COALESCE(d.notes, ''), d.created_at, d.updated_at
+		FROM student_deficiencies d
+		LEFT JOIN users u ON d.student_id::text = u.id::text
+		LEFT JOIN subjects s ON d.subject_id::text = s.id::text
+		WHERE d.class_id::text = $1 AND ($2 = 0 OR d.semester = $2)
+		ORDER BY u.last_name ASC, s.name ASC
+	`
+	rows, err := r.db.QueryContext(ctx, query, classID, semester)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var res []StudentDeficiency
+	for rows.Next() {
+		var def StudentDeficiency
+		var recGrade sql.NullFloat64
+		var recDate sql.NullTime
+		if err := rows.Scan(
+			&def.ID, &def.SchoolID, &def.StudentID, &def.StudentName,
+			&def.ClassID, &def.SubjectID, &def.SubjectName, &def.Semester, &def.PeriodType, &def.Topics,
+			&def.RecoveryMode, &def.Status, &recGrade, &recDate,
+			&def.Notes, &def.CreatedAt, &def.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		if recGrade.Valid {
+			def.RecoveryGrade = &recGrade.Float64
+		}
+		if recDate.Valid {
+			def.RecoveryDate = &recDate.Time
+		}
+		res = append(res, def)
+	}
+	return res, nil
+}
+
+func (r *postgresRepository) SaveDeferredScrutiny(ctx context.Context, req *SaveDeferredScrutinyRequest) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	// Update final decision in scrutiny_records for semester 2
+	queryScrutiny := `
+		UPDATE scrutiny_records
+		SET final_decision = $1, notes = COALESCE(notes, '') || ' [Scrutinio Differito: ' || $1 || ']', updated_at = NOW()
+		WHERE student_id::text = $2 AND class_id::text = $3 AND semester = 2
+	`
+	_, err = tx.ExecContext(ctx, queryScrutiny, req.FinalDecision, req.StudentID, req.ClassID)
+	if err != nil {
+		return err
+	}
+
+	// Update individual deficiency items
+	queryDef := `
+		UPDATE student_deficiencies
+		SET status = $1, recovery_grade = $2, updated_at = NOW()
+		WHERE id::text = $3
+	`
+	for _, item := range req.Deficiencies {
+		_, err = tx.ExecContext(ctx, queryDef, item.Status, item.RecoveryGrade, item.DeficiencyID)
+		if err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit()
 }

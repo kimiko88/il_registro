@@ -4,10 +4,10 @@
       <div>
         <div class="text-h6 text-weight-bold text-slate-800 row items-center">
           <q-icon name="grid_on" color="primary" class="q-mr-sm" />
-          Inserimento Rapido Voti in Griglia (Matrix View)
+          {{ t('gradesPage.matrixViewTitle') || 'Inserimento Rapido Voti in Griglia (Matrix View)' }}
         </div>
         <div class="text-caption text-slate-500">
-          Usa <kbd class="bg-slate-200 q-px-xs rounded">TAB</kbd>, <kbd class="bg-slate-200 q-px-xs rounded">INVIO</kbd> o le <kbd class="bg-slate-200 q-px-xs rounded">FRECCE</kbd> per spostarti velocemente tra gli studenti
+          {{ t('gradesPage.matrixViewKbdHint') || 'Usa TAB, INVIO o le FRECCE per spostarti velocemente tra gli studenti' }}
         </div>
       </div>
 
@@ -15,7 +15,7 @@
         <q-btn
           color="positive"
           icon="save"
-          label="Salva Tutti i Voti"
+          :label="t('gradesPage.saveAllGrades') || 'Salva Tutti i Voti'"
           unelevated
           class="rounded-lg text-weight-bold"
           :loading="saving"
@@ -32,10 +32,10 @@
           <thead>
             <tr class="bg-slate-100 text-slate-700 text-left">
               <th class="q-pa-sm" style="width: 40px">#</th>
-              <th class="q-pa-sm">Alunno</th>
-              <th class="q-pa-sm" style="width: 140px">Voto (1-10)</th>
-              <th class="q-pa-sm" style="width: 220px">Misure BES / DSA</th>
-              <th class="q-pa-sm">Note / Descrizione</th>
+              <th class="q-pa-sm">{{ t('competenciesPage.student') || 'Alunno' }}</th>
+              <th class="q-pa-sm" style="width: 140px">{{ t('classRegister.tableHeaderGrade') || 'Voto (1-10)' }}</th>
+              <th class="q-pa-sm" style="width: 220px">{{ t('gradesPage.besDsaMeasures') || 'Misure BES / DSA' }}</th>
+              <th class="q-pa-sm">{{ t('classRegister.tableHeaderGradeNotes') || 'Note / Descrizione' }}</th>
             </tr>
           </thead>
           <tbody>
@@ -66,7 +66,7 @@
                 <q-input
                   v-model="student.notes"
                   dense outlined
-                  placeholder="Note facoltative"
+                  :placeholder="t('common.optionalNotes') || 'Note facoltative'"
                   class="bg-white"
                 />
               </td>
@@ -80,10 +80,12 @@
 
 <script setup>
 import { ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
 import api from '@/services/api'
 import CompensativeMeasuresSelector from './CompensativeMeasuresSelector.vue'
 
+const { t } = useI18n()
 const props = defineProps({
   studentsList: {
     type: Array,
@@ -132,7 +134,7 @@ function focusPrev(idx) {
 async function saveAllGrades() {
   const gradesToSave = students.value.filter(s => s.grade_value !== null && s.grade_value !== '' && !isNaN(s.grade_value))
   if (gradesToSave.length === 0) {
-    $q.notify({ type: 'warning', message: 'Inserisci almeno un voto in griglia' })
+    $q.notify({ type: 'warning', message: t('gradesPage.insertAtLeastOneGrade') || 'Inserisci almeno un voto in griglia' })
     return
   }
 
@@ -146,15 +148,15 @@ async function saveAllGrades() {
       grades: gradesToSave.map(s => ({
         student_id: s.id,
         grade_value: s.grade_value,
-        description: s.notes || 'Valutazione in griglia',
+        description: s.notes || (t('gradesPage.matrixGradeDesc') || 'Valutazione in griglia'),
         compensative_measures: s.compensative_measures
       }))
     }
     await api.post('/grades/bulk', payload)
-    $q.notify({ type: 'positive', message: `${gradesToSave.length} voti salvati con successo!` })
+    $q.notify({ type: 'positive', message: t('common.success') })
     emit('saved')
   } catch (err) {
-    $q.notify({ type: 'negative', message: 'Errore durante il salvataggio dei voti in griglia' })
+    $q.notify({ type: 'negative', message: t('common.error') })
   } finally {
     saving.value = false
   }

@@ -97,7 +97,7 @@ describe('Common/ConfirmDialog.vue', () => {
         })
 
         const buttons = wrapper.findAll('.confirm-btn')
-        const confirmBtn = buttons.find(b => b.text() === 'Confirm')
+        const confirmBtn = buttons.find(b => b.text() === 'Confirm' || b.text() === 'Conferma')
         await confirmBtn.trigger('click')
 
         expect(wrapper.emitted('confirm')).toBeTruthy()

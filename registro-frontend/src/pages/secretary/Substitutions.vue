@@ -304,12 +304,14 @@
 
 <script setup>
 import { ref, computed, onMounted, reactive } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
-import { substitutionService } from 'src/services/substitutionService'
-import adminService from 'src/services/adminService'
-import api from 'src/services/api'
+import { substitutionService } from '@/services/substitutionService'
+import adminService from '@/services/adminService'
+import api from '@/services/api'
 
 const $q = useQuasar()
+const { t } = useI18n()
 
 const selectedDate = ref(new Date().toISOString().substring(0, 10))
 const loading = ref(false)

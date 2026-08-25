@@ -2,9 +2,9 @@
   <q-dialog v-model="show" full-width full-height>
     <q-card class="column no-wrap rounded-xl overflow-hidden glass-card">
       <q-card-section class="bg-gradient-premium text-white row items-center q-pa-lg">
-        <div class="text-h5 text-weight-bold text-outfit">Gestione Modelli Documenti</div>
+        <div class="text-h5 text-weight-bold text-outfit">{{ t('documentsPage.templateManagement') || 'Gestione Modelli Documenti' }}</div>
         <q-space />
-        <q-btn icon="add" label="Nuovo Modello" color="white" text-color="primary" class="rounded-lg q-mr-sm" @click="openCreate" />
+        <q-btn icon="add" :label="t('documentsPage.newTemplate') || 'Nuovo Modello'" color="white" text-color="primary" class="rounded-lg q-mr-sm" @click="openCreate" />
         <q-btn icon="close" flat round dense v-close-popup />
       </q-card-section>
 
@@ -15,8 +15,8 @@
         
         <div v-else-if="templates.length === 0" class="column items-center justify-center q-pa-xl text-grey-6">
           <q-icon name="description" size="80px" class="q-mb-md" />
-          <div class="text-h6">Nessun modello configurato</div>
-          <p>Crea un modello per velocizzare la generazione di documenti e circolari.</p>
+          <div class="text-h6">{{ t('documentsPage.noTemplates') || 'Nessun modello configurato' }}</div>
+          <p>{{ t('documentsPage.noTemplatesDesc') || 'Crea un modello per velocizzare la generazione di documenti e circolari.' }}</p>
         </div>
 
         <div v-else class="row q-col-gutter-lg">
@@ -28,12 +28,16 @@
                     {{ getTypeLabel(tpl.type) }}
                   </q-chip>
                   <div class="row q-gutter-xs">
-                    <q-btn flat round dense icon="edit" color="primary" size="sm" @click="openEdit(tpl)" />
-                    <q-btn flat round dense icon="delete" color="negative" size="sm" @click="confirmDelete(tpl)" />
+                    <q-btn flat round dense icon="edit" color="primary" size="sm" :aria-label="t('common.edit') || 'Modifica'" @click="openEdit(tpl)">
+                      <q-tooltip>{{ t('common.edit') || 'Modifica' }}</q-tooltip>
+                    </q-btn>
+                    <q-btn flat round dense icon="delete" color="negative" size="sm" :aria-label="t('common.delete') || 'Elimina'" @click="confirmDelete(tpl)">
+                      <q-tooltip>{{ t('common.delete') || 'Elimina' }}</q-tooltip>
+                    </q-btn>
                   </div>
                 </div>
                 <div class="text-subtitle1 text-weight-bold text-slate-800 q-mb-xs">{{ tpl.name }}</div>
-                <div class="text-caption text-slate-500 ellipsis-3-lines" v-html="tpl.content"></div>
+                <div class="text-caption text-slate-500 ellipsis-3-lines">{{ stripHtml(tpl.content) }}</div>
               </q-card-section>
             </q-card>
           </div>
@@ -45,7 +49,7 @@
     <q-dialog v-model="showEditDialog" persistent maximized transition-show="slide-up" transition-hide="slide-down">
       <q-card class="column no-wrap">
         <q-card-section class="row items-center q-pa-md border-b">
-          <div class="text-h6 text-weight-bold">{{ editingTemplate?.id ? 'Modifica Modello' : 'Nuovo Modello' }}</div>
+          <div class="text-h6 text-weight-bold">{{ editingTemplate?.id ? (t('documentsPage.editTemplate') || 'Modifica Modello') : (t('documentsPage.newTemplate') || 'Nuovo Modello') }}</div>
           <q-space />
           <q-btn icon="close" flat round dense v-close-popup />
         </q-card-section>
@@ -55,13 +59,13 @@
             <q-form @submit="saveTemplate" class="q-gutter-md">
               <div class="row q-col-gutter-md">
                 <div class="col-8">
-                  <q-input v-model="form.name" label="Nome Modello" outlined :rules="[val => !!val || 'Obbligatorio']" />
+                  <q-input v-model="form.name" :label="t('documentsPage.templateName') || 'Nome Modello'" outlined :rules="[val => !!val || (t('common.requiredField') || 'Obbligatorio')]" />
                 </div>
                 <div class="col-4">
                   <q-select 
                     v-model="form.type" 
                     :options="typeOptions" 
-                    label="Tipo" 
+                    :label="t('classRegister.tableHeaderGradeType') || 'Tipo'" 
                     outlined 
                     emit-value
                     map-options
@@ -69,7 +73,7 @@
                 </div>
               </div>
 
-              <div class="text-subtitle2 q-mb-xs">Contenuto Modello</div>
+              <div class="text-subtitle2 q-mb-xs">{{ t('documentsPage.templateContent') || 'Contenuto Modello' }}</div>
               <div class="text-caption text-grey-7 q-mb-sm">
                 Puoi usare placeholder come <code>{student_name}</code>, <code>{date}</code>, <code>{school_name}</code>.
               </div>
@@ -107,8 +111,8 @@
               />
 
               <div class="row justify-end q-mt-xl q-gutter-sm">
-                <q-btn label="Annulla" flat v-close-popup />
-                <q-btn :label="editingTemplate?.id ? 'Aggiorna Modello' : 'Crea Modello'" type="submit" color="primary" class="q-px-xl rounded-lg" :loading="saving" />
+                <q-btn :label="t('common.cancel') || 'Annulla'" flat v-close-popup />
+                <q-btn :label="editingTemplate?.id ? (t('common.save') || 'Aggiorna Modello') : (t('common.add') || 'Crea Modello')" type="submit" color="primary" class="q-px-xl rounded-lg" :loading="saving" />
               </div>
             </q-form>
           </div>
@@ -119,9 +123,14 @@
 </template>
 
 <script setup>
-import { ref, reactive, watch } from 'vue'
+import { ref, reactive, watch, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
-import api from 'src/services/api'
+import api from '@/services/api'
+
+const { t } = useI18n()
+
+const stripHtml = (html) => (html || '').replace(/<[^>]*>?/gm, '')
 
 const props = defineProps({
   modelValue: Boolean
@@ -137,19 +146,19 @@ const templates = ref([])
 const showEditDialog = ref(false)
 const editingTemplate = ref(null)
 
-const typeOptions = [
-  { label: 'Circolare', value: 'circular' },
-  { label: 'Certificato', value: 'certificate' },
-  { label: 'Verbale/Pagella', value: 'report' },
-  { label: 'Altro', value: 'other' }
-]
+const typeOptions = computed(() => [
+  { label: t('communicationsPage.circular') || 'Circolare', value: 'circular' },
+  { label: t('documentsPage.certificates') || 'Certificato', value: 'certificate' },
+  { label: t('verbaliPage.title') || 'Verbale/Pagella', value: 'report' },
+  { label: t('common.other') || 'Altro', value: 'other' }
+])
 
 const getTypeLabel = (type) => {
   switch (type) {
-    case 'circular': return 'Circolare';
-    case 'certificate': return 'Certificato';
-    case 'report': return 'Verbale/Pagella';
-    default: return 'Altro';
+    case 'circular': return t('communicationsPage.circular') || 'Circolare';
+    case 'certificate': return t('documentsPage.certificates') || 'Certificato';
+    case 'report': return t('verbaliPage.title') || 'Verbale/Pagella';
+    default: return t('common.other') || 'Altro';
   }
 }
 
@@ -175,7 +184,7 @@ const fetchTemplates = async () => {
     templates.value = res.data || []
   } catch (e) {
     console.error('Error fetching templates:', e)
-    $q.notify({ type: 'negative', message: 'Errore caricamento modelli' })
+    $q.notify({ type: 'negative', message: t('documentsPage.loadError') || 'Errore caricamento modelli' })
   } finally {
     loading.value = false
   }
@@ -202,16 +211,16 @@ const saveTemplate = async () => {
   try {
     if (editingTemplate.value) {
       await api.patch(`/documents/template/${editingTemplate.value.id}`, form)
-      $q.notify({ type: 'positive', message: 'Modello aggiornato' })
+      $q.notify({ type: 'positive', message: t('common.success') })
     } else {
       await api.post('/documents/template', form)
-      $q.notify({ type: 'positive', message: 'Modello creato' })
+      $q.notify({ type: 'positive', message: t('common.success') })
     }
     showEditDialog.value = false
     fetchTemplates()
     emit('templates-updated')
   } catch (e) {
-    $q.notify({ type: 'negative', message: 'Errore durante il salvataggio' })
+    $q.notify({ type: 'negative', message: t('common.error') })
   } finally {
     saving.value = false
   }
@@ -219,19 +228,19 @@ const saveTemplate = async () => {
 
 const confirmDelete = (tpl) => {
   $q.dialog({
-    title: 'Conferma Eliminazione',
-    message: `Sei sicuro di voler eliminare il modello "${tpl.name}"?`,
+    title: t('common.confirmDelete') || 'Conferma Eliminazione',
+    message: `${t('common.confirmDelete')} "${tpl.name}"?`,
     cancel: true,
     persistent: true,
-    ok: { color: 'negative', label: 'Elimina' }
+    ok: { color: 'negative', label: t('common.delete') || 'Elimina' }
   }).onOk(async () => {
     try {
       await api.delete(`/documents/template/${tpl.id}`)
-      $q.notify({ type: 'positive', message: 'Modello eliminato' })
+      $q.notify({ type: 'positive', message: t('common.success') })
       fetchTemplates()
       emit('templates-updated')
     } catch (e) {
-      $q.notify({ type: 'negative', message: 'Errore durante l\'eliminazione' })
+      $q.notify({ type: 'negative', message: t('common.error') })
     }
   })
 }

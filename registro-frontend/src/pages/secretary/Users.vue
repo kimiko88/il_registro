@@ -3,16 +3,16 @@
     <div class="row items-center justify-between q-mb-xl">
        <div>
          <h1 class="text-h4 text-weight-bold text-outfit q-my-none text-gradient-premium">
-           Gestione Utenti
+           {{ t('roleDashboards.userManagement') || 'Gestione Utenti' }}
          </h1>
-         <p class="text-subtitle1 text-slate-500 q-mt-sm q-mb-none">Amministrazione profili studenti, docenti e staff</p>
+         <p class="text-subtitle1 text-slate-500 q-mt-sm q-mb-none">{{ t('roleDashboards.secretarySub') || 'Amministrazione profili studenti, docenti e staff' }}</p>
        </div>
        <div class="row q-gutter-sm items-center">
            <q-select
                v-if="isSuperAdmin"
                v-model="filterSchoolId"
                :options="schoolOptions"
-               label="Filtra per Scuola"
+               :label="t('login.selectSchool') || 'Filtra per Scuola'"
                option-label="name"
                option-value="id"
                emit-value
@@ -23,9 +23,9 @@
                bg-color="white"
                style="min-width: 250px"
            />
-           <q-btn unelevated label="Nuova Classe" color="primary" icon="add" class="rounded-lg shadow-sm" no-caps @click="openClassDialog" />
-           <q-btn outline label="Importa CSV" color="primary" icon="upload" class="rounded-lg" no-caps @click="showImport=true" />
-           <q-btn flat icon="history" label="Log Attività" class="rounded-lg text-slate-400" no-caps @click="$q.notify('Audit Log non disponibile per Segreteria')" />
+           <q-btn unelevated :label="t('common.addClass') || 'Nuova Classe'" color="primary" icon="add" class="rounded-lg shadow-sm" no-caps @click="openClassDialog" />
+           <q-btn outline :label="t('gradesPage.importCSV') || 'Importa CSV'" color="primary" icon="upload" class="rounded-lg" no-caps @click="showImport=true" />
+           <q-btn flat icon="history" :label="t('dashboardPage.auditLogs') || 'Log Attività'" class="rounded-lg text-slate-400" no-caps @click="$router.push('/secretary/audit-logs')" />
        </div>
     </div>
 
@@ -46,7 +46,7 @@
     <q-dialog v-model="showUserDialog" class="premium-dialog">
         <q-card style="display: flex; flex-direction: column; width: 650px; max-width: 95vw; max-height: 90vh;" class="rounded-xl overflow-hidden shadow-24 bg-white">
             <q-card-section class="bg-gradient-primary text-white q-pa-lg row items-center justify-between">
-                <div class="text-h5 text-weight-bold">{{ isEditing ? 'Modifica Profilo' : 'Crea Nuovo Profilo' }}</div>
+                <div class="text-h5 text-weight-bold">{{ isEditing ? (t('common.edit') || 'Modifica Profilo') : (t('common.add') || 'Crea Nuovo Profilo') }}</div>
                 <q-btn icon="close" flat round dense v-close-popup />
             </q-card-section>
             
@@ -56,17 +56,17 @@
                     <div>
                         <div class="row q-col-gutter-lg">
                             <div class="col-6">
-                                <q-input v-model="userForm.first_name" label="Nome" outlined :rules="[val => !!val || 'Campo richiesto']" />
+                                <q-input v-model="userForm.first_name" :label="t('common.name') || 'Nome'" outlined :rules="[val => !!val || (t('common.requiredField') || 'Campo richiesto')]" />
                             </div>
                             <div class="col-6">
-                                <q-input v-model="userForm.last_name" label="Cognome" outlined :rules="[val => !!val || 'Campo richiesto']" />
+                                <q-input v-model="userForm.last_name" :label="t('common.surname') || 'Cognome'" outlined :rules="[val => !!val || (t('common.requiredField') || 'Campo richiesto')]" />
                             </div>
                         </div>
                     </div>
-                    <q-input v-model="userForm.email" label="Email Istituzionale" outlined type="email" :rules="[val => !!val || 'Inserire un email valida']" />
+                    <q-input v-model="userForm.email" :label="t('login.emailLabel') || 'Email Istituzionale'" outlined type="email" :rules="[val => !!val || (t('common.requiredField') || 'Inserire un email valida')]" />
                     <q-input
                       v-model="userForm.fiscal_code"
-                      label="Codice Fiscale"
+                      :label="t('classRegister.fiscalCode') || 'Codice Fiscale'"
                       outlined
                       maxlength="16"
                       class="uppercase-input"
@@ -440,15 +440,17 @@
 
 <script setup>
 import { ref, computed, onMounted, reactive, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useQuasar, exportFile } from 'quasar';
-import UserTable from 'src/components/Secretary/UserTable.vue';
-import { userService } from 'src/services/userService';
-import adminService from 'src/services/adminService';
-import { useAuthStore } from 'src/stores/auth';
-import { usePermissions } from 'src/composables/usePermissions';
-import { useUsersStore } from 'src/stores/users';
+import UserTable from '@/components/Secretary/UserTable.vue';
+import { userService } from '@/services/userService';
+import adminService from '@/services/adminService';
+import { useAuthStore } from '@/stores/auth';
+import { usePermissions } from '@/composables/usePermissions';
+import { useUsersStore } from '@/stores/users';
 
 const $q = useQuasar();
+const { t } = useI18n();
 const authStore = useAuthStore();
 const usersStore = useUsersStore();
 const { isSuperAdmin } = usePermissions();
@@ -530,10 +532,15 @@ const fetchUsers = async () => {
     try {
         const res = await userService.getAll({ 
             role: currentRoleFilter.value === 'all' ? undefined : currentRoleFilter.value,
-            school_id: filterSchoolId.value || undefined
+            school_id: filterSchoolId.value || undefined,
+            page_size: 500
         })
-        // FILTER: Remove 'admin' users from the list as requested
-        users.value = (res.data.users || []).filter(u => u.role !== 'admin')
+        const allUsers = res.data?.users || []
+        if (isSuperAdmin.value) {
+            users.value = allUsers
+        } else {
+            users.value = allUsers.filter(u => u.role !== 'admin' && u.role !== 'superadmin')
+        }
     } catch (e) {
         $q.notify({ type: 'negative', message: 'Errore durante il caricamento degli utenti' })
     } finally {

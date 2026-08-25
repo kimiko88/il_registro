@@ -3,35 +3,35 @@
     <!-- Header -->
     <div class="row items-center justify-between q-mb-md">
        <div class="row items-center q-gutter-sm">
-         <div class="text-h5 text-weight-bold text-slate-800">Registro di Classe &amp; Presenze</div>
+         <div class="text-h5 text-weight-bold text-slate-800">{{ $t('classRegister.title') }}</div>
          <q-chip v-if="isSubstitutionMode" color="deep-orange" text-color="white" dense class="text-weight-bold">
-           <q-icon name="swap_horiz" class="q-mr-xs" />Supplenza
+           <q-icon name="swap_horiz" class="q-mr-xs" />{{ $t('classRegister.typeSubstitution') }}
          </q-chip>
        </div>
        <div class="row q-gutter-sm items-center">
            <q-btn
              :color="isSubstitutionMode ? 'deep-orange' : 'primary'"
              :icon="isSubstitutionMode ? 'swap_horiz' : 'school'"
-             :label="isSubstitutionMode ? 'Torna alle Mie Classi' : 'Supplenza in Altre Classi'"
+             :label="isSubstitutionMode ? $t('classRegister.backToMyClasses') : $t('classRegister.substitutionBtn')"
              unelevated dense
              class="rounded-lg text-weight-bold"
              @click="toggleSubstitutionMode"
            />
-           <q-btn color="secondary" icon="download" label="Esporta CSV" unelevated dense @click="exportCSV" />
+           <q-btn color="secondary" icon="download" :label="$t('classRegister.exportCSV')" unelevated dense @click="exportCSV" />
        </div>
     </div>
 
     <!-- Filters Row -->
     <div class="row q-col-gutter-sm q-mb-md items-center">
       <div class="col-12 col-sm-auto">
-        <q-input dense outlined v-model="date" type="date" label="Data" bg-color="white" style="min-width: 150px" @update:model-value="fetchData" />
+        <q-input dense outlined v-model="date" type="date" :label="$t('classRegister.dateLabel')" bg-color="white" style="min-width: 150px" @update:model-value="fetchData" />
       </div>
       <div class="col-12 col-sm-auto">
         <q-select
            dense outlined
            v-model="selectedHour"
            :options="[1,2,3,4,5,6,7,8]"
-           label="Ora Lezione"
+           :label="$t('classRegister.hourLabel')"
            bg-color="white"
            style="min-width: 100px"
            @update:model-value="fetchData"
@@ -44,7 +44,7 @@
            :options="availableClassOptions"
            option-label="label"
            option-value="id"
-           label="Classe / Gruppo"
+           :label="$t('classRegister.selectClass')"
            bg-color="white"
            style="min-width: 240px"
            @update:model-value="onClassChange"
@@ -57,8 +57,8 @@
       <template v-slot:avatar>
         <q-icon name="swap_horiz" color="amber-9" size="24px" />
       </template>
-      <div class="text-weight-bold">Modalità Supplenza — {{ selectedClass?.label || 'Seleziona Classe' }}</div>
-      <div class="text-caption">Firma come supplente. Non è richiesta una materia specifica. Voti non accessibili.</div>
+      <div class="text-weight-bold">{{ $t('classRegister.substitutionBannerTitle', { class: selectedClass?.label || $t('classRegister.selectClass') }) }}</div>
+      <div class="text-caption">{{ $t('classRegister.substitutionBannerDesc') }}</div>
     </q-banner>
 
     <!-- Read-Only Banner: another teacher has signed this hour -->
@@ -66,8 +66,8 @@
       <template v-slot:avatar>
         <q-icon name="lock" color="blue-grey-7" size="24px" />
       </template>
-      <div class="text-weight-bold">Ora {{ selectedHour }}ª — già firmata da {{ signedByTeacherName }}</div>
-      <div class="text-caption">Puoi visualizzare le presenze ma non modificarle. Solo il docente che ha firmato può modificare questa ora.</div>
+      <div class="text-weight-bold">{{ $t('classRegister.readOnlyBannerTitle', { hour: selectedHour, teacher: signedByTeacherName }) }}</div>
+      <div class="text-caption">{{ $t('classRegister.readOnlyBannerDesc') }}</div>
     </q-banner>
 
     <!-- Summary Cards (compact) -->
@@ -76,7 +76,7 @@
             <q-card flat bordered class="bg-green-1">
                 <q-card-section class="q-pa-sm text-center row items-center justify-center q-gutter-xs">
                     <q-icon name="check_circle" size="20px" color="green-8" />
-                    <span class="text-caption text-green-9 text-weight-bold">Presenti</span>
+                    <span class="text-caption text-green-9 text-weight-bold">{{ $t('classRegister.present') }}</span>
                     <span class="text-h6 text-green-8 text-weight-bolder">{{ stats.present }}</span>
                     <q-badge v-if="unjustifiedCount > 0" color="negative" class="q-ml-xs" floating>!</q-badge>
                 </q-card-section>
@@ -86,7 +86,7 @@
              <q-card flat bordered class="bg-red-1">
                 <q-card-section class="q-pa-sm text-center row items-center justify-center q-gutter-xs">
                     <q-icon name="cancel" size="20px" color="red-8" />
-                    <span class="text-caption text-red-9 text-weight-bold">Assenti</span>
+                    <span class="text-caption text-red-9 text-weight-bold">{{ $t('classRegister.absent') }}</span>
                     <span class="text-h6 text-red-8 text-weight-bolder">{{ stats.absent }}</span>
                 </q-card-section>
             </q-card>
@@ -95,7 +95,7 @@
              <q-card flat bordered class="bg-orange-1">
                 <q-card-section class="q-pa-sm text-center row items-center justify-center q-gutter-xs">
                     <q-icon name="schedule" size="20px" color="orange-8" />
-                    <span class="text-caption text-orange-9 text-weight-bold">Ritardi</span>
+                    <span class="text-caption text-orange-9 text-weight-bold">{{ $t('classRegister.late') }}</span>
                     <span class="text-h6 text-orange-8 text-weight-bolder">{{ stats.late }}</span>
                 </q-card-section>
             </q-card>
@@ -104,7 +104,7 @@
              <q-card flat bordered class="bg-purple-1">
                 <q-card-section class="q-pa-sm text-center row items-center justify-center q-gutter-xs">
                     <q-icon name="output" size="20px" color="purple-8" />
-                    <span class="text-caption text-purple-9 text-weight-bold">Uscite Anticip.</span>
+                    <span class="text-caption text-purple-9 text-weight-bold">{{ $t('classRegister.earlyExit') }}</span>
                     <span class="text-h6 text-purple-8 text-weight-bolder">{{ stats.early }}</span>
                 </q-card-section>
             </q-card>
@@ -115,7 +115,7 @@
     <q-banner v-if="unjustifiedStudents.length > 0" class="bg-red-1 text-red-9 rounded-xl border border-red-3 q-mb-md" dense>
       <template v-slot:avatar><q-icon name="warning" color="negative" size="22px" /></template>
       <div class="text-weight-bold text-caption">
-        {{ unjustifiedStudents.length }} aluno/i con assenze/ritardi NON GIUSTIFICATI:
+        {{ $t('classRegister.unjustifiedBanner', { count: unjustifiedStudents.length }) }}
         <span v-for="(s, i) in unjustifiedStudents" :key="s.id">{{ s.last_name }} {{ s.first_name }}<span v-if="i < unjustifiedStudents.length - 1">, </span></span>
       </div>
     </q-banner>
@@ -125,7 +125,7 @@
         <q-card-section class="bg-slate-800 text-white row items-center justify-between q-py-sm">
             <div class="text-subtitle2 text-weight-bold row items-center">
                 <q-icon name="edit_note" class="q-mr-sm" size="20px" />
-                Firma Lezione — {{ selectedHour }}ª Ora ({{ date }})
+                {{ $t('classRegister.signLessonTitle', { hour: selectedHour, date: date }) }}
             </div>
             <div class="row items-center q-gutter-xs">
                 <q-btn
@@ -135,15 +135,15 @@
                     color="negative"
                     text-color="white"
                     icon="delete_forever"
-                    label="Cancella Firma"
+                    :label="$t('classRegister.deleteSignature')"
                     class="text-weight-bold q-mr-sm q-px-sm rounded-md"
                     @click="deleteUnifiedRecord"
                     :loading="saving"
                 >
-                    <q-tooltip>Cancella la firma della lezione e tutte le presenze per questa ora</q-tooltip>
+                    <q-tooltip>{{ $t('classRegister.deleteSignatureTooltip') }}</q-tooltip>
                 </q-btn>
                 <q-badge color="primary" class="text-weight-bold">
-                    {{ isSubstitutionMode ? 'Supplenza' : getSubjectName(lessonSubjectId) }}
+                    {{ isSubstitutionMode ? $t('classRegister.typeSubstitution') : getSubjectName(lessonSubjectId) }}
                 </q-badge>
             </div>
         </q-card-section>
@@ -155,7 +155,7 @@
                     <q-select
                         v-model="selectedHour"
                         :options="[1,2,3,4,5,6,7,8]"
-                        label="Ora da Firmare"
+                        :label="$t('classRegister.hourToSign')"
                         outlined
                         dense
                         @update:model-value="fetchData"
@@ -169,23 +169,23 @@
                 <div v-if="!isSubstitutionMode" class="col-12 col-md-3">
                     <q-select
                         v-model="lessonSubjectId"
-                        :options="gradesStore.subjects"
+                        :options="availableSubjectOptions"
                         option-label="subject_name"
                         option-value="subject_id"
                         emit-value
                         map-options
-                        label="Materia *"
+                        :label="$t('classRegister.subjectLabel')"
                         outlined
                         dense
                     />
                 </div>
-                <div class="col-12" :class="isSubstitutionMode ? '' : 'col-md-6'">
+                <div class="col-12" :class="isSubstitutionMode ? 'col-md-10' : 'col-md-7'">
                     <q-input
                         v-model="lessonTopic"
-                        label="Argomento della Lezione"
+                        :label="$t('classRegister.topicLabel')"
                         outlined
                         dense
-                        placeholder="Descrivi brevemente l'argomento trattato"
+                        :placeholder="$t('classRegister.topicPlaceholder')"
                         :readonly="isReadOnly"
                         :bg-color="isReadOnly ? 'grey-2' : 'white'"
                     />
@@ -194,28 +194,61 @@
                     <q-select
                         v-model="lessonType"
                         :options="lessonTypeOptions"
-                        label="Tipo Lezione"
+                        :label="$t('classRegister.lessonTypeLabel')"
                         outlined
                         dense
+                        :readonly="isReadOnly"
                     />
                 </div>
-                <div class="col-12 col-md-3 row items-center">
-                    <q-toggle v-model="isCoTeaching" label="Compresenza" color="deep-purple" dense />
+                <div class="col-12 col-md-4">
+                    <q-select
+                        v-model="activityType"
+                        :options="activityTypeOptions"
+                        option-value="value"
+                        option-label="label"
+                        emit-value
+                        map-options
+                        :label="$t('classRegister.activityTypeLabel')"
+                        outlined
+                        dense
+                        :readonly="isReadOnly"
+                    >
+                        <template v-slot:option="scope">
+                            <q-item v-bind="scope.itemProps">
+                                <q-item-section avatar>
+                                    <q-icon :name="scope.opt.icon" :color="scope.opt.color" />
+                                </q-item-section>
+                                <q-item-section>
+                                    <q-item-label>{{ scope.opt.label }}</q-item-label>
+                                    <q-item-label caption>{{ scope.opt.caption }}</q-item-label>
+                                </q-item-section>
+                            </q-item>
+                        </template>
+                    </q-select>
                 </div>
-                <div class="col-12">
-                    <q-input v-model="lessonNotes" label="Note interne docente" outlined dense autogrow placeholder="(Opzionale)" />
+                <div class="col-12 col-md-2 row items-center">
+                    <q-toggle v-model="isCoTeaching" :label="$t('classRegister.coTeaching')" color="deep-purple" dense :disable="isReadOnly" />
+                </div>
+                <div class="col-12 col-md-3">
+                    <q-input v-model="lessonNotes" :label="$t('classRegister.notesLabel')" outlined dense autogrow :placeholder="$t('classRegister.notesPlaceholder')" :readonly="isReadOnly" />
+                </div>
+                <div v-if="isPctoOrOrientamento" class="col-12">
+                    <q-banner class="bg-blue-1 text-blue-9 rounded-borders" dense>
+                        <template v-slot:avatar><q-icon name="info" color="blue-7" /></template>
+                        {{ $t('classRegister.noGradesWarning', { type: getActivityTypeLabel(activityType) }) }}
+                    </q-banner>
                 </div>
             </div>
 
             <!-- Homework Accordion -->
             <div class="q-mt-sm">
-                <q-toggle v-model="assignHomework" label="Assegna compiti per questa lezione" color="orange" dense />
+                <q-toggle v-model="assignHomework" :label="$t('classRegister.assignHomework')" color="orange" dense :disable="isReadOnly" />
                 <div v-if="assignHomework" class="row q-col-gutter-md q-mt-xs">
                     <div class="col-12 col-md-8">
-                        <q-input v-model="homeworkDesc" label="Descrizione Compito *" outlined dense autogrow placeholder="Es. Esercizi pag. 140 n. 1-10" />
+                        <q-input v-model="homeworkDesc" :label="$t('classRegister.homeworkDesc')" outlined dense autogrow :placeholder="$t('classRegister.homeworkDescPlaceholder')" />
                     </div>
                     <div class="col-12 col-md-4">
-                        <q-input v-model="homeworkDue" type="date" label="Data Consegna *" outlined dense />
+                        <q-input v-model="homeworkDue" type="date" :label="$t('classRegister.homeworkDueDate')" outlined dense />
                     </div>
                 </div>
             </div>
@@ -224,20 +257,24 @@
         <!-- Daily Lessons Timeline -->
         <q-separator />
         <div class="q-pa-sm bg-slate-50">
-            <div class="text-caption text-weight-bold text-slate-700 q-mb-xs q-px-sm">LEZIONI REGISTRATE OGGI PER QUESTA CLASSE</div>
+            <div class="text-caption text-weight-bold text-slate-700 q-mb-xs q-px-sm">{{ $t('classRegister.todayLessonsTitle') }}</div>
             <div v-if="dailyLessons.length > 0" class="row q-gutter-xs q-px-sm">
                 <div v-for="l in dailyLessons" :key="l.id" class="col-auto">
                     <q-chip dense outline :color="String(l.hour) === String(selectedHour) ? 'indigo-9' : 'indigo-5'" icon="event_note" class="bg-white">
-                        Ora {{ l.hour }}: {{ l.topic || '—' }}
+                        {{ $t('classRegister.hourLabel') }} {{ l.hour }}: {{ l.topic || '—' }}
+                        <q-badge v-if="l.activity_type && l.activity_type !== 'standard'" :color="getActivityTypeColor(l.activity_type)" class="q-ml-xs text-caption">
+                            <q-icon :name="getActivityTypeIcon(l.activity_type)" size="12px" class="q-mr-xs" />{{ getActivityTypeLabel(l.activity_type) }}
+                        </q-badge>
                         <q-tooltip>
                             Docente: {{ l.teacher_name || 'Docente' }}<br>
                             Materia: {{ getSubjectName(l.subject_id) }}<br>
-                            Tipo: {{ l.type }}
+                            Tipo: {{ l.type }}<br>
+                            Attività: {{ getActivityTypeLabel(l.activity_type || 'standard') }}
                         </q-tooltip>
                     </q-chip>
                 </div>
             </div>
-            <div v-else class="q-px-sm text-caption text-grey-6">Nessuna lezione registrata in precedenza per la giornata odierna.</div>
+            <div v-else class="q-px-sm text-caption text-grey-6">{{ $t('classRegister.noLessonsToday') }}</div>
         </div>
     </q-card>
 
@@ -246,7 +283,7 @@
         <q-toolbar class="bg-grey-2 text-grey-9">
             <q-toolbar-title class="text-subtitle2 row items-center">
                 <q-icon name="how_to_reg" class="q-mr-xs" color="primary" />
-                <span>Appello &amp; Orari — Ora {{ selectedHour }}</span>
+                <span>{{ $t('classRegister.attendanceSectionTitle') }} — {{ $t('classRegister.hourLabel') }} {{ selectedHour }}</span>
                 <q-chip dense :color="markedCountChipColor" text-color="white" class="q-ml-sm">
                     {{ markedCount }}/{{ students.length }}
                 </q-chip>
@@ -254,7 +291,7 @@
                     Bozza {{ lastAutosaveTime }}
                 </q-chip>
             </q-toolbar-title>
-            <q-btn flat dense icon="check_circle" label="Tutti Presenti" color="primary" @click="markAllPresent" :disable="loading || isReadOnly" />
+            <q-btn flat dense icon="check_circle" :label="$t('classRegister.markAllPresent')" color="primary" @click="markAllPresent" :disable="loading || isReadOnly" />
         </q-toolbar>
 
         <div v-if="loading" class="q-pa-md">
@@ -272,7 +309,7 @@
                         @click="openStudentPanel(student)"
                     >
                         {{ student.first_name ? student.first_name.charAt(0) : '?' }}
-                        <q-tooltip>Visualizza scheda studente</q-tooltip>
+                        <q-tooltip>{{ $t('classRegister.studentInfo') }}</q-tooltip>
                     </q-avatar>
                 </q-item-section>
 
@@ -287,7 +324,7 @@
                           size="16px"
                           class="q-ml-xs"
                         >
-                          <q-tooltip>Ha assenze/ritardi non giustificati</q-tooltip>
+                          <q-tooltip>{{ $t('classRegister.unjustifiedBanner', { count: 1 }) }}</q-tooltip>
                         </q-icon>
                     </q-item-label>
                     <!-- Hourly presence indicator (mini timeline) -->
@@ -306,21 +343,21 @@
                     <!-- Status / time badges -->
                     <div class="row items-center q-gutter-xs q-mt-xs">
                         <q-badge v-if="student.status === 'Present'" color="positive" class="q-px-sm q-py-xs">
-                            <q-icon name="check_circle" class="q-mr-xs" size="12px" /> Presente
+                            <q-icon name="check_circle" class="q-mr-xs" size="12px" /> {{ $t('classRegister.present') }}
                         </q-badge>
                         <q-badge v-else-if="student.status === 'OutOfClass'" color="teal" class="q-px-sm q-py-xs">
                             <q-icon name="meeting_room" class="q-mr-xs" size="12px" /> Fuori Aula
                         </q-badge>
                         <q-badge v-else-if="student.status === 'Absent'" color="negative" class="q-px-sm q-py-xs">
-                            <q-icon name="cancel" class="q-mr-xs" size="12px" /> Assente
+                            <q-icon name="cancel" class="q-mr-xs" size="12px" /> {{ $t('classRegister.absent') }}
                         </q-badge>
                         <q-badge v-else-if="student.status === 'Late'" color="warning" text-color="black" class="q-px-sm q-py-xs text-weight-bold">
                             <q-icon name="schedule" class="q-mr-xs" size="12px" />
-                            {{ student.entry_time ? `Ingresso ore ${student.entry_time}` : 'Ritardo (inserire ora)' }}
+                            {{ student.entry_time ? `${$t('classRegister.tableHeaderEntryTime')} ${student.entry_time}` : $t('classRegister.late') }}
                         </q-badge>
                         <q-badge v-else-if="student.status === 'LeftEarly'" color="purple" class="q-px-sm q-py-xs text-weight-bold">
                             <q-icon name="output" class="q-mr-xs" size="12px" />
-                            {{ student.exit_time ? `Uscita ore ${student.exit_time}` : 'Uscita Anticipata (inserire ora)' }}
+                            {{ student.exit_time ? `${$t('classRegister.tableHeaderExitTime')} ${student.exit_time}` : $t('classRegister.earlyExit') }}
                         </q-badge>
                     </div>
                 </q-item-section>
@@ -339,11 +376,11 @@
                             {icon: 'logout', value: 'LeftEarly', slot: 'early'}
                         ]"
                     >
-                        <template v-slot:present><q-tooltip>Presente</q-tooltip></template>
-                        <template v-slot:outofclass><q-tooltip>Fuori Aula (Presente ma fuori dalla classe)</q-tooltip></template>
-                        <template v-slot:absent><q-tooltip>Assente</q-tooltip></template>
-                        <template v-slot:late><q-tooltip>Ritardo</q-tooltip></template>
-                        <template v-slot:early><q-tooltip>Uscita Anticipata</q-tooltip></template>
+                        <template v-slot:present><q-tooltip>{{ $t('classRegister.present') }}</q-tooltip></template>
+                        <template v-slot:outofclass><q-tooltip>Fuori Aula</q-tooltip></template>
+                        <template v-slot:absent><q-tooltip>{{ $t('classRegister.absent') }}</q-tooltip></template>
+                        <template v-slot:late><q-tooltip>{{ $t('classRegister.late') }}</q-tooltip></template>
+                        <template v-slot:early><q-tooltip>{{ $t('classRegister.earlyExit') }}</q-tooltip></template>
                     </q-btn-toggle>
                 </q-item-section>
 
@@ -353,7 +390,7 @@
                         v-model="student.entry_time"
                         type="time"
                         dense outlined
-                        label="Ora Ingresso"
+                        :label="$t('classRegister.tableHeaderEntryTime')"
                         bg-color="white"
                      />
                 </q-item-section>
@@ -364,20 +401,20 @@
                         v-model="student.exit_time"
                         type="time"
                         dense outlined
-                        label="Ora Uscita"
+                        :label="$t('classRegister.tableHeaderExitTime')"
                         bg-color="white"
                      />
                 </q-item-section>
 
                 <q-item-section side>
                     <q-btn round flat icon="note_add" color="grey-7" @click="openNoteDialog(student)">
-                        <q-tooltip>Aggiungi Nota Disciplinare</q-tooltip>
+                        <q-tooltip>{{ $t('classRegister.addDisciplinaryNote') }}</q-tooltip>
                     </q-btn>
                 </q-item-section>
             </q-item>
 
             <q-item v-if="students.length === 0" class="text-center text-grey">
-                <q-item-section>Nessuno studente trovato. Seleziona una classe.</q-item-section>
+                <q-item-section>{{ $t('classRegister.noStudentsFound') }}</q-item-section>
             </q-item>
         </q-list>
 
@@ -385,7 +422,7 @@
             <div>
                 <q-btn
                     v-if="canDeleteCurrentSignature"
-                    label="Cancella Firma e Presenze"
+                    :label="$t('classRegister.deleteSignatureAndAttendance')"
                     color="negative"
                     unelevated
                     icon="delete_outline"
@@ -396,7 +433,7 @@
             </div>
             <div>
                 <q-btn
-                  :label="isReadOnly ? 'Sola lettura — Ora già firmata da altro docente' : (currentHourLesson ? 'Aggiorna Firma Lezione e Appello' : 'Salva Firma Lezione e Appello')"
+                  :label="isReadOnly ? $t('classRegister.readOnlySaveBtn') : (currentHourLesson ? $t('classRegister.updateSaveBtn') : $t('classRegister.saveBtn'))"
                   :color="isReadOnly ? 'grey-6' : isSubstitutionMode ? 'deep-orange' : 'primary'"
                   size="md"
                   :icon="isReadOnly ? 'lock' : 'cloud_done'"
@@ -561,6 +598,7 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useQuasar } from 'quasar'
+import { useI18n } from 'vue-i18n'
 import { useClassesStore } from '@/stores/classes'
 import { useGradesStore } from '@/stores/grades'
 import { useAuthStore } from '@/stores/auth'
@@ -572,6 +610,15 @@ import SkeletonTable from '@/components/Common/SkeletonTable.vue'
 import { useSchoolYearStore } from '@/stores/schoolYear'
 
 const $q = useQuasar()
+let t = (key, fallback) => (typeof fallback === 'string' ? fallback : key)
+try {
+  const i18nInstance = useI18n()
+  if (i18nInstance && i18nInstance.t) {
+    t = i18nInstance.t
+  }
+} catch (e) {
+  // Fallback for isolated unit tests without vue-i18n app plugin
+}
 const classesStore = useClassesStore()
 const gradesStore = useGradesStore()
 const authStore = useAuthStore()
@@ -589,6 +636,7 @@ const allSchoolClasses = ref([])
 // Lesson Form State
 const lessonTopic = ref('')
 const lessonType = ref('Frontale')
+const activityType = ref('standard')
 const lessonSubjectId = ref(null)
 const isCoTeaching = ref(false)
 const lessonNotes = ref('')
@@ -599,7 +647,43 @@ const homeworkDue = ref('')
 // All attendance records for this class today (all hours) for timeline
 const allTodayAttendance = ref([])
 
-const lessonTypeOptions = ['Frontale', 'Supplenza', 'Laboratorio', 'Verifica', 'Discussione', 'Lavoro di gruppo', 'Interrogazione', 'Altro']
+const lessonTypeOptions = computed(() => [
+  t('classRegister.typeCurricular'),
+  t('classRegister.typeSubstitution'),
+  t('classRegister.activityLab'),
+  t('classRegister.typeExtracurricular'),
+  t('classRegister.typeCoTeaching'),
+  t('classRegister.activityStandard')
+])
+
+/** Opzioni per la tipologia di attività */
+const activityTypeOptions = computed(() => [
+  { value: 'standard',          label: t('classRegister.activityStandard'),          icon: 'menu_book',   color: 'primary',     caption: t('classRegister.activityStandardCap') },
+  { value: 'substitution',      label: t('classRegister.typeSubstitution'),          icon: 'swap_horiz',   color: 'deep-orange', caption: t('classRegister.substitutionBannerDesc') },
+  { value: 'pcto',              label: t('classRegister.activityPcto'),              icon: 'work',         color: 'deep-purple', caption: t('classRegister.activityPctoCap') },
+  { value: 'orientamento',      label: t('classRegister.activityOrientamento'),      icon: 'explore',      color: 'teal',        caption: t('classRegister.activityOrientamentoCap') },
+  { value: 'pcto_orientamento', label: `${t('classRegister.activityPcto')} - ${t('classRegister.activityOrientamento')}`, icon: 'hub', color: 'indigo-8', caption: t('classRegister.activityPctoCap') },
+  { value: 'lab',               label: t('classRegister.activityLab'),               icon: 'biotech',      color: 'green',       caption: t('classRegister.activityLabCap') },
+  { value: 'recupero',          label: t('classRegister.activityRecupero'),          icon: 'healing',      color: 'purple',      caption: t('classRegister.activityRecuperoCap') }
+])
+
+const getActivityTypeColor = (type) => {
+  const opt = activityTypeOptions.value?.find(o => o.value === type)
+  return opt ? opt.color : 'grey'
+}
+const getActivityTypeIcon = (type) => {
+  const opt = activityTypeOptions.value?.find(o => o.value === type)
+  return opt ? opt.icon : 'menu_book'
+}
+const getActivityTypeLabel = (type) => {
+  const opt = activityTypeOptions.value?.find(o => o.value === type)
+  return opt ? opt.label : (type || 'Standard')
+}
+const isPctoOrOrientamento = computed(() =>
+  activityType.value === 'pcto' ||
+  activityType.value === 'orientamento' ||
+  activityType.value === 'pcto_orientamento'
+)
 
 const availableClassOptions = computed(() => {
   const source = isSubstitutionMode.value ? allSchoolClasses.value : classesStore.classes
@@ -608,6 +692,51 @@ const availableClassOptions = computed(() => {
     if (c.section && !nameText.endsWith(c.section)) nameText += c.section
     if (c.articolazione) nameText += ` - ${c.articolazione}`
     return { ...c, label: c.label || nameText }
+  })
+})
+
+const isCivicaSubject = (s) => {
+  const name = (s.subject_name || s.name || '').toLowerCase()
+  return name.includes('civica') || name.includes('educazione civica') || name.includes('ed. civica')
+}
+
+const isAssignedToCurrentTeacher = (s, user) => {
+  if (!user) return false
+  const currentUserId = String(user.id || '')
+  const teacherId = user.teacher_id ? String(user.teacher_id) : ''
+  const sTeacherId = s.teacher_id ? String(s.teacher_id) : ''
+  const sTeacherUserId = s.teacher_user_id ? String(s.teacher_user_id) : ''
+
+  if (sTeacherId && (sTeacherId === currentUserId || (teacherId && sTeacherId === teacherId))) {
+    return true
+  }
+  if (sTeacherUserId && (sTeacherUserId === currentUserId || (teacherId && sTeacherUserId === teacherId))) {
+    return true
+  }
+  if (s.teacher_name && user.last_name) {
+    const tName = s.teacher_name.toLowerCase()
+    const uLast = user.last_name.toLowerCase()
+    const uFirst = (user.first_name || '').toLowerCase()
+    if (tName.includes(uLast) && (!uFirst || tName.includes(uFirst))) {
+      return true
+    }
+  }
+  return false
+}
+
+const availableSubjectOptions = computed(() => {
+  if (isSubstitutionMode.value) {
+    return [{ subject_name: 'Supplenza / Compresenza', subject_id: 'supplenza' }]
+  }
+  const allSubjects = gradesStore.subjects || []
+  const user = authStore.user
+  if (!user || ['admin', 'superadmin', 'secretary'].includes(user.role)) {
+    return allSubjects
+  }
+
+  // Mostra ESCLUSIVAMENTE le materie assegnate dalla segreteria al docente loggato + Educazione Civica
+  return allSubjects.filter(s => {
+    return isAssignedToCurrentTeacher(s, user) || isCivicaSubject(s)
   })
 })
 
@@ -736,12 +865,14 @@ const toggleSubstitutionMode = async () => {
     if (allSchoolClasses.value.length > 0) selectedClass.value = allSchoolClasses.value[0]
     lessonSubjectId.value = null
     lessonType.value = 'Supplenza'
+    activityType.value = 'substitution'
     lessonTopic.value = ''
     $q.notify({ type: 'info', message: 'Modalità Supplenza attivata', timeout: 2500 })
   } else {
     await classesStore.fetchAssignedClasses()
     if (classesStore.classes.length > 0) selectedClass.value = classesStore.classes[0]
     lessonType.value = 'Frontale'
+    activityType.value = 'standard'
     lessonTopic.value = ''
     await onClassChange()
   }
@@ -805,7 +936,14 @@ const onClassChange = async () => {
     if (selectedClass.value && !isSubstitutionMode.value) {
         const classId = typeof selectedClass.value === 'object' ? selectedClass.value.id : selectedClass.value
         await gradesStore.fetchClassSubjects(classId)
-        lessonSubjectId.value = gradesStore.subjects.length > 0 ? gradesStore.subjects[0].subject_id : null
+        if (availableSubjectOptions.value.length > 0) {
+            const isSelectedAvailable = availableSubjectOptions.value.some(s => s.subject_id === lessonSubjectId.value)
+            if (!lessonSubjectId.value || !isSelectedAvailable) {
+                lessonSubjectId.value = availableSubjectOptions.value[0].subject_id
+            }
+        } else {
+            lessonSubjectId.value = null
+        }
     } else if (isSubstitutionMode.value) {
         lessonSubjectId.value = null
     }
@@ -873,6 +1011,7 @@ const fetchData = async () => {
             // Own lesson: pre-fill all fields
             lessonTopic.value = existingLesson.topic || ''
             lessonType.value = existingLesson.type || 'Frontale'
+            activityType.value = existingLesson.activity_type || 'standard'
             isCoTeaching.value = !!existingLesson.is_co_teaching
             lessonNotes.value = existingLesson.notes || ''
             if (existingLesson.subject_id) lessonSubjectId.value = existingLesson.subject_id
@@ -880,6 +1019,7 @@ const fetchData = async () => {
             // Another teacher's lesson: show read-only but clear form fields for display
             lessonTopic.value = existingLesson.topic || ''
             lessonType.value = existingLesson.type || 'Frontale'
+            activityType.value = existingLesson.activity_type || 'standard'
             isCoTeaching.value = false
             lessonNotes.value = ''
         } else {
@@ -888,6 +1028,7 @@ const fetchData = async () => {
             lessonNotes.value = ''
             if (!isSubstitutionMode.value) {
                 lessonType.value = 'Frontale'
+                activityType.value = 'standard'
                 isCoTeaching.value = false
             }
         }
@@ -975,6 +1116,7 @@ const saveUnifiedRecord = async () => {
                 duration: 1,
                 topic: lessonTopic.value,
                 type: isSubstitutionMode.value ? 'Supplenza' : lessonType.value,
+                activity_type: activityType.value || 'standard',
                 is_co_teaching: isCoTeaching.value,
                 notes: lessonNotes.value
             }

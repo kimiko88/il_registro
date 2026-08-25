@@ -11,7 +11,7 @@
     :filter="filter"
   >
     <template v-slot:top>
-        <div class="text-h6 q-mr-md">Documenti in Arrivo</div>
+        <div class="text-h6 q-mr-md">{{ t('documentsPage.inbox') || 'Documenti in Arrivo' }}</div>
         
         <q-btn-toggle
             v-model="typeFilter"
@@ -20,16 +20,16 @@
             toggle-color="primary"
             class="q-mr-md"
             :options="[
-                {label: 'Tutti', value: 'all'},
+                {label: t('common.all') || 'Tutti', value: 'all'},
                 {label: 'PDP', value: 'PDP'},
                 {label: 'PFI', value: 'PFI'},
                 {label: 'PCTO', value: 'PCTO'},
-                {label: 'Certificati', value: 'Certificate'}
+                {label: t('documentsPage.certificates') || 'Certificati', value: 'Certificate'}
             ]"
         />
         
         <q-space />
-        <q-input dense debounce="300" v-model="filter" placeholder="Cerca documento...">
+        <q-input dense debounce="300" v-model="filter" :placeholder="t('documentsPage.searchPlaceholder') || 'Cerca documento...'">
           <template v-slot:append>
             <q-icon name="search" />
           </template>
@@ -41,10 +41,10 @@
         <q-tr>
             <q-td colspan="100%">
                  <div class="row items-center q-gutter-sm bg-blue-1 q-pa-sm rounded-borders">
-                   <span class="text-weight-bold text-primary">{{ selected.length }} selezionati</span>
+                   <span class="text-weight-bold text-primary">{{ selected.length }} {{ t('common.selected') || 'selezionati' }}</span>
                    <q-space />
-                   <q-btn size="sm" color="positive" icon="check_circle" label="Approva Selezionati" @click="batchApprove" />
-                   <q-btn size="sm" color="orange" icon="archive" label="Archivia" @click="batchArchive" />
+                   <q-btn size="sm" color="positive" icon="check_circle" :label="t('documentsPage.approveSelected') || 'Approva Selezionati'" @click="batchApprove" />
+                   <q-btn size="sm" color="orange" icon="archive" :label="t('documentsPage.archive') || 'Archivia'" @click="batchArchive" />
                  </div>
             </q-td>
         </q-tr>
@@ -52,7 +52,7 @@
 
     <template v-slot:body-cell-favorite="props">
         <q-td :props="props" auto-width>
-            <q-btn flat round dense :icon="props.row.favorite ? 'star' : 'star_border'" :color="props.row.favorite ? 'amber' : 'grey'" @click="toggleFavorite(props.row)" />
+            <q-btn flat round dense :icon="props.row.favorite ? 'star' : 'star_border'" :color="props.row.favorite ? 'amber' : 'grey'" :aria-label="t('documentsPage.favorite') || 'Preferito'" @click="toggleFavorite(props.row)" />
         </q-td>
     </template>
 
@@ -64,38 +64,42 @@
 
     <template v-slot:body-cell-actions="props">
       <q-td :props="props" auto-width>
-        <q-btn flat round icon="visibility" @click="$emit('preview', props.row)" tooltip="Anteprima">
-            <q-tooltip>Anteprima</q-tooltip>
+        <q-btn flat round icon="visibility" :aria-label="t('common.preview') || 'Anteprima'" @click="$emit('preview', props.row)">
+            <q-tooltip>{{ t('common.preview') || 'Anteprima' }}</q-tooltip>
         </q-btn>
-        <q-btn flat round color="primary" icon="rate_review" @click="$emit('review', props.row)" v-if="props.row.status === 'Pending'">
-            <q-tooltip>Revisiona</q-tooltip>
+        <q-btn flat round color="primary" icon="rate_review" :aria-label="t('common.review') || 'Revisiona'" @click="$emit('review', props.row)" v-if="props.row.status === 'Pending'">
+            <q-tooltip>{{ t('common.review') || 'Revisiona' }}</q-tooltip>
         </q-btn>
-        <q-btn flat round color="grey" icon="archive" @click="$emit('archive', props.row)" />
+        <q-btn flat round color="grey" icon="archive" :aria-label="t('documentsPage.archive') || 'Archivia'" @click="$emit('archive', props.row)">
+            <q-tooltip>{{ t('documentsPage.archive') || 'Archivia' }}</q-tooltip>
+        </q-btn>
       </q-td>
     </template>
   </q-table>
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import { useDocumentsStore } from 'src/stores/documents';
+import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useDocumentsStore } from '@/stores/documents';
 import { useQuasar } from 'quasar';
 
+const { t } = useI18n();
 const store = useDocumentsStore();
 const $q = useQuasar();
 const filter = ref('');
 const typeFilter = ref('all');
 const selected = ref([]);
 
-const columns = [
+const columns = computed(() => [
   { name: 'favorite', label: '', field: 'favorite', align: 'center', sortable: true },
-  { name: 'title', label: 'Titolo', field: 'title', align: 'left', sortable: true },
-  { name: 'type', label: 'Tipo', field: 'type', align: 'left', sortable: true },
-  { name: 'student', label: 'Studente', field: 'student', align: 'left' },
-  { name: 'status', label: 'Stato', field: 'status', align: 'center', sortable: true },
-  { name: 'date', label: 'Data', field: 'date', align: 'left', sortable: true },
-  { name: 'actions', label: 'Azioni', align: 'right' }
-];
+  { name: 'title', label: t('documentsPage.titleLabel') || 'Titolo', field: 'title', align: 'left', sortable: true },
+  { name: 'type', label: t('classRegister.tableHeaderGradeType') || 'Tipo', field: 'type', align: 'left', sortable: true },
+  { name: 'student', label: t('competenciesPage.student') || 'Studente', field: 'student', align: 'left' },
+  { name: 'status', label: t('substitutionsPage.status') || 'Stato', field: 'status', align: 'center', sortable: true },
+  { name: 'date', label: t('classRegister.dateLabel') || 'Data', field: 'date', align: 'left', sortable: true },
+  { name: 'actions', label: t('common.actions') || 'Azioni', align: 'right' }
+]);
 
 const emit = defineEmits(['preview', 'review', 'request', 'archive']);
 
@@ -110,10 +114,9 @@ const getStatusColor = (status) => {
 };
 
 const toggleFavorite = (row) => {
-    // Should call store action
     row.favorite = !row.favorite;
     $q.notify({ 
-        message: row.favorite ? 'Aggiunto ai preferiti' : 'Rimosso dai preferiti', 
+        message: row.favorite ? (t('documentsPage.favoriteAdded') || 'Aggiunto ai preferiti') : (t('documentsPage.favoriteRemoved') || 'Rimosso dai preferiti'), 
         icon: 'star', 
         color: row.favorite ? 'amber' : 'grey-8' 
     });
@@ -121,19 +124,18 @@ const toggleFavorite = (row) => {
 
 const batchApprove = () => {
     $q.dialog({
-        title: 'Approvazione Multipla',
-        message: `Approvare ${selected.value.length} documenti?`,
+        title: t('documentsPage.batchApproveTitle') || 'Approvazione Multipla',
+        message: t('documentsPage.batchApproveConfirm', { count: selected.value.length }) || `Approvare ${selected.value.length} documenti?`,
         cancel: true
     }).onOk(() => {
-        // Mock store call
         selected.value.forEach(d => d.status = 'Approved');
         selected.value = [];
-        $q.notify({ type: 'positive', message: 'Documenti approvati' });
+        $q.notify({ type: 'positive', message: t('documentsPage.documentsApproved') || 'Documenti approvati' });
     })
 };
 
 const batchArchive = () => {
-     $q.notify({ message: 'Documenti archiviati', icon: 'archive' });
+     $q.notify({ message: t('documentsPage.documentsArchived') || 'Documenti archiviati', icon: 'archive' });
      selected.value = [];
 }
 

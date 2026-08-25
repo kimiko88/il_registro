@@ -3,13 +3,13 @@
     <q-item v-for="slot in slots" :key="slot.id">
         <q-item-section>
             <q-item-label>{{ slot.startTime }} - {{ slot.endTime }}</q-item-label>
-            <q-item-label caption v-if="slot.booked" class="text-positive">Booked</q-item-label>
-            <q-item-label caption v-else class="text-grey">Available</q-item-label>
+            <q-item-label caption v-if="slot.booked" class="text-positive">{{ t('colloquiPage.booked') || 'Prenotato' }}</q-item-label>
+            <q-item-label caption v-else class="text-grey">{{ t('colloquiPage.available') || 'Disponibile' }}</q-item-label>
         </q-item-section>
         
         <q-item-section v-if="slot.booked">
             <q-item-label>{{ getBooking(slot.id)?.studentName }}</q-item-label>
-            <q-item-label caption>Parent: {{ getBooking(slot.id)?.parentName }}</q-item-label>
+            <q-item-label caption>{{ t('colloquiPage.parent') || 'Genitore' }}: {{ getBooking(slot.id)?.parentName }}</q-item-label>
         </q-item-section>
 
         <q-item-section side>
@@ -20,8 +20,10 @@
 </template>
 
 <script setup>
-import { useColloquiStore } from 'src/stores/colloqui';
+import { useI18n } from 'vue-i18n';
+import { useColloquiStore } from '@/stores/colloqui';
 
+const { t } = useI18n();
 defineProps(['slots']);
 const store = useColloquiStore();
 

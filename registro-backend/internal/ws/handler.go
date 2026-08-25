@@ -1,12 +1,15 @@
 package ws
 
 import (
-	"log"
+	"encoding/json"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
+	"sync"
 	"time"
+
+	"registro-backend/pkg/logger"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -19,19 +22,33 @@ const (
 	maxMessageSize = 8192
 )
 
-// allowedOrigins returns the set of permitted WebSocket origins from the
-// ALLOWED_ORIGINS environment variable (comma-separated). Falls back to
-// rejecting all cross-origin requests if the variable is not set.
-func allowedOrigins() map[string]bool {
-	raw := os.Getenv("ALLOWED_ORIGINS")
-	set := make(map[string]bool)
+var (
+	allowedOriginsOnce sync.Once
+	allowedOriginsMap  map[string]bool
+)
+
+func parseAllowedOrigins(raw string) map[string]bool {
+	origins := make(map[string]bool)
 	for _, o := range strings.Split(raw, ",") {
 		o = strings.TrimSpace(o)
 		if o != "" {
-			set[o] = true
+			origins[o] = true
 		}
 	}
-	return set
+	return origins
+}
+
+func allowedOrigins() map[string]bool {
+	raw := os.Getenv("ALLOWED_ORIGINS")
+	return parseAllowedOrigins(raw)
+}
+
+func getAllowedOrigins() map[string]bool {
+	allowedOriginsOnce.Do(func() {
+		raw := os.Getenv("ALLOWED_ORIGINS")
+		allowedOriginsMap = parseAllowedOrigins(raw)
+	})
+	return allowedOriginsMap
 }
 
 var upgrader = websocket.Upgrader{
@@ -39,7 +56,7 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 	CheckOrigin: func(r *http.Request) bool {
 		origin := r.Header.Get("Origin")
-		allowed := allowedOrigins()
+		allowed := getAllowedOrigins()
 		if len(allowed) == 0 {
 			// Default local dev fallback: allow only exact localhost/127.0.0.1 hosts.
 			// We parse the origin URL and compare the host exactly — no substring match.
@@ -54,6 +71,11 @@ var upgrader = websocket.Upgrader{
 			return host == "localhost" || host == "127.0.0.1"
 		}
 		if allowed["*"] {
+			isProd := os.Getenv("GIN_MODE") == "release" || os.Getenv("APP_ENV") == "production"
+			if isProd {
+				logger.Log.Warn("WARNING: Wildcard '*' in ALLOWED_ORIGINS is forbidden in production environment; rejecting WebSocket connection")
+				return false
+			}
 			return true
 		}
 		if origin == "" {
@@ -75,15 +97,60 @@ func (c *Client) readPump() {
 		_ = c.Conn.SetReadDeadline(time.Now().Add(pongWait))
 		return nil
 	})
+	var msgCount int
+	windowStart := time.Now()
+	const maxMsgsPerWindow = 30
+	const windowDuration = 10 * time.Second
+
 	for {
-		_, _, err := c.Conn.ReadMessage()
+		now := time.Now()
+		if now.Sub(windowStart) > windowDuration {
+			windowStart = now
+			msgCount = 0
+		}
+		if msgCount >= maxMsgsPerWindow {
+			logger.Log.Warnf("ws rate limit exceeded for user %s: closing connection", c.UserID)
+			break
+		}
+		msgCount++
+
+		_, msg, err := c.Conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("ws error: %v", err)
+				logger.Log.Warnf("ws read error: %v", err)
 			}
 			break
 		}
+
+		var cm wsClientMsg
+		if err := json.Unmarshal(msg, &cm); err == nil {
+			if cm.Type == "PING" {
+				_ = c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
+				_ = c.Conn.WriteMessage(websocket.TextMessage, []byte(`{"type":"PONG"}`))
+			}
+		}
 	}
+}
+
+// wsClientMsg is the minimal shape of messages sent by the browser client.
+type wsClientMsg struct {
+	Type string `json:"type"`
+}
+
+// writeSingleMessage sends data as its own WebSocket text frame.
+// Using a dedicated NextWriter/Close pair per message guarantees that each
+// JSON object is delivered as a separate frame, preventing concatenation bugs
+// like {"type":"A"}{"type":"B"} that break client-side JSON.parse().
+func (c *Client) writeSingleMessage(data []byte) error {
+	w, err := c.Conn.NextWriter(websocket.TextMessage)
+	if err != nil {
+		return err
+	}
+	if _, err = w.Write(data); err != nil {
+		_ = w.Close()
+		return err
+	}
+	return w.Close()
 }
 
 func (c *Client) writePump() {
@@ -100,17 +167,25 @@ func (c *Client) writePump() {
 				_ = c.Conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
-			w, err := c.Conn.NextWriter(websocket.TextMessage)
-			if err != nil {
+			if err := c.writeSingleMessage(message); err != nil {
 				return
 			}
-			_, _ = w.Write(message)
-			n := len(c.Send)
-			for i := 0; i < n; i++ {
-				_, _ = w.Write(<-c.Send)
-			}
-			if err := w.Close(); err != nil {
-				return
+			// Drain any additionally queued messages — each as its own frame.
+		drain:
+			for {
+				select {
+				case message, ok := <-c.Send:
+					if !ok {
+						_ = c.Conn.WriteMessage(websocket.CloseMessage, []byte{})
+						return
+					}
+					_ = c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
+					if err := c.writeSingleMessage(message); err != nil {
+						return
+					}
+				default:
+					break drain
+				}
 			}
 		case <-ticker.C:
 			_ = c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
@@ -153,15 +228,14 @@ func (h *Handler) Listen(c *gin.Context) {
 			schoolID = s
 		}
 	}
-
-	var responseHeader http.Header
-	if secProto := c.Writer.Header().Get("Sec-WebSocket-Protocol"); secProto != "" {
-		responseHeader = http.Header{"Sec-WebSocket-Protocol": []string{secProto}}
+	if role != "superadmin" && role != "system_auditor" && schoolID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "school_id required for websocket connection"})
+		return
 	}
 
-	conn, err := upgrader.Upgrade(c.Writer, c.Request, responseHeader)
+	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		log.Println("ws upgrade error:", err)
+		logger.Log.Warnf("ws upgrade error: %v", err)
 		return
 	}
 

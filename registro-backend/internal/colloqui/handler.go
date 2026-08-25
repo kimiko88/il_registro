@@ -1,6 +1,8 @@
 package colloqui
 
 import (
+	"database/sql"
+	"errors"
 	"net/http"
 	"strings"
 	"time"
@@ -38,8 +40,8 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	{
 		g.POST("/slots", h.CreateSlot)
 		g.GET("/slots", h.ListSlots)
-		g.GET("/slots/my", h.ListSlots)
-		g.GET("/my-slots", h.ListSlots)
+		g.GET("/slots/my", h.ListMySlots)
+		g.GET("/my-slots", h.ListMySlots)
 		g.GET("/available-slots", h.ListSlots)
 		g.GET("/availability/:teacherID", h.GetAvailabilityByTeacher)
 		g.PATCH("/slots/:id", h.PatchSlot)
@@ -89,9 +91,6 @@ func (h *Handler) ListSlots(c *gin.Context) {
 	}
 	schoolID := c.GetString("school_id")
 	teacherID := c.Query("teacher_id")
-	if teacherID == "" && (strings.HasSuffix(c.Request.URL.Path, "/slots/my") || strings.Contains(c.Request.URL.Path, "my-slots")) {
-		teacherID = userID
-	}
 	available := c.Query("available") == "true"
 
 	var fromTime, toTime time.Time
@@ -276,15 +275,15 @@ func (h *Handler) GetBookingByID(c *gin.Context) {
 	id := c.Param("id")
 	booking, err := h.service.GetBookingByID(c.Request.Context(), userID, role, id)
 	if err != nil {
-		if err == ErrUnauthorized {
+		if errors.Is(err, ErrUnauthorized) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
-		if strings.Contains(err.Error(), "not found") || err.Error() == "sql: no rows in result set" {
+		if errors.Is(err, sql.ErrNoRows) || errors.Is(err, ErrBookingNotFound) || errors.Is(err, ErrSlotNotFound) || strings.Contains(err.Error(), "not found") {
 			c.JSON(http.StatusNotFound, gin.H{"error": "booking not found"})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
 	c.JSON(http.StatusOK, booking)
@@ -315,9 +314,23 @@ func (h *Handler) CreateAssembly(c *gin.Context) {
 	c.JSON(http.StatusCreated, slot)
 }
 
-func (h *Handler) GetAvailabilityByTeacher(c *gin.Context) {
+func (h *Handler) ListMySlots(c *gin.Context) {
 	userID := c.GetString("user_id")
 	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	// Force teacher_id query param to current user ID
+	q := c.Request.URL.Query()
+	q.Set("teacher_id", userID)
+	c.Request.URL.RawQuery = q.Encode()
+	h.ListSlots(c)
+}
+
+func (h *Handler) GetAvailabilityByTeacher(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	if userID == "" || role == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
@@ -328,6 +341,23 @@ func (h *Handler) GetAvailabilityByTeacher(c *gin.Context) {
 	}
 
 	var fromTime, toTime time.Time
+	if fromStr := c.Query("from"); fromStr != "" {
+		fromTime = parseFlexibleDate(fromStr)
+	} else {
+		fromTime = time.Now()
+	}
+	if toStr := c.Query("to"); toStr != "" {
+		toTime = parseFlexibleDate(toStr)
+	} else {
+		toTime = fromTime.AddDate(0, 3, 0)
+	}
+
+	// Enforce max 1-year range to prevent heavy unbounded queries.
+	if toTime.Sub(fromTime) > 366*24*time.Hour {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "range di date troppo ampio (massimo 1 anno)"})
+		return
+	}
+
 	slots, err := h.service.ListSlots(c.Request.Context(), schoolID, teacherID, fromTime, toTime, true)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -338,6 +368,10 @@ func (h *Handler) GetAvailabilityByTeacher(c *gin.Context) {
 
 func (h *Handler) CancelBookingAlias(c *gin.Context) {
 	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	role := c.GetString("role")
 	bookingID := c.Param("id")
 

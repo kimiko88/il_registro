@@ -32,6 +32,9 @@ func (s *service) GenerateCertificate(ctx context.Context, actorID, schoolID str
 	if req.StudentID == "" {
 		return nil, nil, fmt.Errorf("student_id required")
 	}
+	if !IsValidCertificateType(req.Type) {
+		return nil, nil, fmt.Errorf("invalid certificate type: %s", req.Type)
+	}
 	if req.AcademicYear == "" {
 		req.AcademicYear = currentAcademicYear()
 	}

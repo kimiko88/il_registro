@@ -20,6 +20,9 @@ var ErrFileTooLarge = errors.New("il file supera la dimensione massima consentit
 // ErrFileTypeNotAllowed is returned when the detected MIME type is not in the allowlist.
 var ErrFileTypeNotAllowed = errors.New("tipo di file non consentito: solo PDF, immagini e documenti Office sono accettati")
 
+// ErrFileEmpty is returned when the uploaded file is empty (0 bytes).
+var ErrFileEmpty = errors.New("il file caricato è vuoto")
+
 // allowedMIMETypes is the allowlist of accepted MIME types for document uploads.
 var allowedMIMETypes = map[string]bool{
 	"application/pdf": true,
@@ -46,12 +49,28 @@ func ValidateUpload(file multipart.File, header *multipart.FileHeader) error {
 		return ErrFileTooLarge
 	}
 
-	// 2. Read the first 512 bytes using LimitReader to ensure actual payload doesn't bypass limit
+	// 2. Size check from Seeker (verifies real stream size even if header is missing or spoofed)
+	if seeker, ok := file.(io.Seeker); ok {
+		size, err := seeker.Seek(0, io.SeekEnd)
+		if err == nil {
+			if _, err := seeker.Seek(0, io.SeekStart); err != nil {
+				return errors.New("errore nel riposizionamento del file")
+			}
+			if size > MaxUploadSize {
+				return ErrFileTooLarge
+			}
+		}
+	}
+
+	// 3. Read the first 512 bytes using LimitReader to ensure actual payload doesn't bypass limit
 	limitedReader := io.LimitReader(file, MaxUploadSize+1)
 	head := make([]byte, 512)
 	n, err := limitedReader.Read(head)
 	if err != nil && err != io.EOF {
 		return errors.New("errore nella lettura del file")
+	}
+	if n == 0 {
+		return ErrFileEmpty
 	}
 	head = head[:n]
 
@@ -71,4 +90,24 @@ func ValidateUpload(file multipart.File, header *multipart.FileHeader) error {
 	}
 
 	return nil
+}
+
+// DetectMIME inspects the first 512 bytes of file to detect real MIME type using magic bytes, then seeks back.
+func DetectMIME(file multipart.File) (string, error) {
+	if file == nil {
+		return "", errors.New("file is nil")
+	}
+	head := make([]byte, 512)
+	n, err := file.Read(head)
+	if err != nil && err != io.EOF {
+		return "", err
+	}
+	head = head[:n]
+
+	if seeker, ok := file.(io.Seeker); ok {
+		_, _ = seeker.Seek(0, io.SeekStart)
+	}
+
+	mtype := mimetype.Detect(head)
+	return mtype.String(), nil
 }

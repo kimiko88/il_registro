@@ -1,168 +1,217 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import axios from 'axios'
+import { resetApiState, clearLocalSession, getBaseURL } from '../services/api'
+import { useGradesStore } from './grades'
+import { useAttendanceStore } from './attendance'
+import { useCommunicationsStore } from './communications'
+import { useScrutinyStore } from './scrutiny'
+import { useParentStore } from './parent'
+
+import { isTokenExpired, getRoleFromToken } from '../utils/jwt'
 
 const parseUser = (val) => {
     if (!val) return null
     try {
         return JSON.parse(val)
-    } catch {
+    } catch (_err) {
         return null
     }
 }
 
-const isTokenExpired = (tokenStr) => {
-    if (!tokenStr) return true
-    try {
-        const parts = tokenStr.split('.')
-        if (parts.length !== 3) {
-            // Allow mock tokens in test environment
-            if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.MODE === 'test') {
-                return false
-            }
-            return true
-        }
-        const base64Url = parts[1]
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
-        const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''))
-        const payload = JSON.parse(jsonPayload)
-        if (payload && payload.exp) {
-            return Date.now() >= payload.exp * 1000
-        }
-        return false
-    } catch {
-        return true
-    }
-}
+const ALLOWED_USER_FIELDS = new Set([
+    'id', 'first_name', 'last_name', 'email', 'role', 'user_role', 'school_id', 'class_id', 'is_staff', 'created_at', 'updated_at', 'avatar'
+])
 
 const sanitizeUserData = (userData) => {
     if (!userData) return null
-    const {
-        password_hash: _password_hash,
-        mfa_secret: _mfa_secret,
-        temp_mfa_secret: _temp_mfa_secret,
-        recovery_codes: _recovery_codes,
-        ssn: _ssn,
-        tax_id: _tax_id,
-        ...safeData
-    } = userData
-    return safeData
+    const clean = {}
+    for (const key of Object.keys(userData)) {
+        if (ALLOWED_USER_FIELDS.has(key)) {
+            clean[key] = userData[key]
+        }
+    }
+    return clean
 }
 
-const getRoleFromToken = (tokenStr) => {
-    if (!tokenStr) return null
-    try {
-        const parts = tokenStr.split('.')
-        if (parts.length !== 3) return null
-        const base64Url = parts[1]
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
-        const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''))
-        const payload = JSON.parse(jsonPayload)
-        return payload ? (payload.role || payload.user_role || null) : null
-    } catch {
-        return null
+const toStorageUser = (userData) => {
+    if (!userData) return null
+    return {
+        id: userData.id,
+        role: userData.role || userData.user_role || null
     }
 }
 
 export const useAuthStore = defineStore('auth', () => {
     const user = ref(parseUser(sessionStorage.getItem('user')) || parseUser(localStorage.getItem('user')) || null)
-    const token = ref(sessionStorage.getItem('token') || localStorage.getItem('token') || null)
-    const refreshToken = ref(sessionStorage.getItem('refreshToken') || localStorage.getItem('refreshToken') || null)
+    const isInitializing = ref(false)
+    // SECURITY: Access token is kept strictly in memory (Pinia ref) to prevent theft via XSS.
+    // Refresh tokens are handled exclusively via HttpOnly cookies by backend; refreshToken ref always evaluates to null in memory.
+    const token = ref(null)
+    const refreshToken = computed(() => null)
 
     const isAuthenticated = computed(() => {
         if (!token.value) return false
         return !isTokenExpired(token.value)
     })
+
     const userRole = computed(() => {
         const jwtRole = getRoleFromToken(token.value)
         if (jwtRole) return jwtRole
-        return user.value?.role || null
+        return user.value?.role || user.value?.user_role || null
     })
+
     const userName = computed(() => {
         if (!user.value) return 'User'
         return `${user.value.first_name || user.value.firstName || ''} ${user.value.last_name || user.value.lastName || ''}`.trim() || 'User'
     })
 
-    function login(userData, tokenData, refreshTokenData, rememberMe = true) {
+    function login(userData, tokenData, _refreshTokenData = null, rememberMe = true) {
         const sanitized = sanitizeUserData(userData)
         user.value = sanitized
         token.value = tokenData
-        refreshToken.value = refreshTokenData
 
+        // Clear legacy token items from storage
+        localStorage.removeItem('token')
+        localStorage.removeItem('refreshToken')
+        sessionStorage.removeItem('token')
+        sessionStorage.removeItem('refreshToken')
+
+        const storageUser = toStorageUser(sanitized)
         if (rememberMe) {
-            localStorage.setItem('user', JSON.stringify(sanitized))
-            localStorage.setItem('token', tokenData)
-            if (refreshTokenData) {
-                localStorage.setItem('refreshToken', refreshTokenData)
-            } else {
-                localStorage.removeItem('refreshToken')
-            }
+            localStorage.setItem('user', JSON.stringify(storageUser))
             sessionStorage.removeItem('user')
-            sessionStorage.removeItem('token')
-            sessionStorage.removeItem('refreshToken')
         } else {
-            sessionStorage.setItem('user', JSON.stringify(sanitized))
-            sessionStorage.setItem('token', tokenData)
-            if (refreshTokenData) {
-                sessionStorage.setItem('refreshToken', refreshTokenData)
-            } else {
-                sessionStorage.removeItem('refreshToken')
-            }
+            sessionStorage.setItem('user', JSON.stringify(storageUser))
             localStorage.removeItem('user')
-            localStorage.removeItem('token')
-            localStorage.removeItem('refreshToken')
         }
     }
 
-    function updateTokens(newTokenData, newRefreshTokenData = undefined, newUserData = null) {
+    function updateTokens(newTokenData, _newRefreshTokenData = undefined, newUserData = null) {
         if (!newTokenData) return
         token.value = newTokenData
-        if (newRefreshTokenData !== undefined) {
-            refreshToken.value = newRefreshTokenData
-        }
         if (newUserData) {
             user.value = sanitizeUserData(newUserData)
         }
 
-        const isLocal = !!(localStorage.getItem('token') || localStorage.getItem('user'))
-        const storage = isLocal ? localStorage : sessionStorage
+        // Ensure legacy tokens are removed from storage
+        localStorage.removeItem('token')
+        localStorage.removeItem('refreshToken')
+        sessionStorage.removeItem('token')
+        sessionStorage.removeItem('refreshToken')
 
-        storage.setItem('token', newTokenData)
-        if (newRefreshTokenData !== undefined) {
-            if (newRefreshTokenData) {
-                storage.setItem('refreshToken', newRefreshTokenData)
-            } else {
-                storage.removeItem('refreshToken')
-            }
-        }
         if (newUserData && user.value) {
-            storage.setItem('user', JSON.stringify(user.value))
+            const isLocal = !!localStorage.getItem('user')
+            const storage = isLocal ? localStorage : sessionStorage
+            storage.setItem('user', JSON.stringify(toStorageUser(user.value)))
         }
     }
 
     function logout() {
         user.value = null
         token.value = null
-        refreshToken.value = null
 
-        localStorage.removeItem('user')
-        localStorage.removeItem('token')
-        localStorage.removeItem('refreshToken')
-        localStorage.removeItem('selectedChildId')
+        try {
+            const wsStore = useWebSocketStore()
+            wsStore.disconnect(true)
+        } catch {
+            // WebSocket store not initialized or already closed
+        }
 
-        sessionStorage.removeItem('user')
-        sessionStorage.removeItem('token')
-        sessionStorage.removeItem('refreshToken')
-        sessionStorage.removeItem('selectedChildId')
+        try {
+            const gradesStore = useGradesStore()
+            gradesStore.clearCache()
+        } catch {
+            // Grades store not initialized
+        }
+
+        try {
+            const attendanceStore = useAttendanceStore()
+            if (typeof attendanceStore.$reset === 'function') attendanceStore.$reset()
+        } catch (_e) {
+            // Store not initialized
+        }
+
+        try {
+            const communicationsStore = useCommunicationsStore()
+            if (typeof communicationsStore.$reset === 'function') communicationsStore.$reset()
+        } catch (_e) {
+            // Store not initialized
+        }
+
+        try {
+            const scrutinyStore = useScrutinyStore()
+            if (typeof scrutinyStore.$reset === 'function') scrutinyStore.$reset()
+        } catch (_e) {
+            // Store not initialized
+        }
+
+        try {
+            const parentStore = useParentStore()
+            if (typeof parentStore.$reset === 'function') parentStore.$reset()
+        } catch (_e) {
+            // Store not initialized
+        }
+
+        clearLocalSession()
+        resetApiState()
     }
 
     function updateUser(userData) {
         const sanitized = sanitizeUserData(userData)
         user.value = sanitized
-        if (localStorage.getItem('token')) {
-            localStorage.setItem('user', JSON.stringify(sanitized))
-        } else if (sessionStorage.getItem('token')) {
-            sessionStorage.setItem('user', JSON.stringify(sanitized))
+        const storageUser = toStorageUser(sanitized)
+        if (localStorage.getItem('user')) {
+            localStorage.setItem('user', JSON.stringify(storageUser))
+        } else if (sessionStorage.getItem('user')) {
+            sessionStorage.setItem('user', JSON.stringify(storageUser))
         }
+    }
+
+    const initPromise = ref(null)
+
+    async function initAuth() {
+        if (initPromise.value) return initPromise.value
+        if (token.value && !isTokenExpired(token.value)) return Promise.resolve(true)
+
+        const hasSavedUser = !!(localStorage.getItem('user') || sessionStorage.getItem('user'))
+        if (!hasSavedUser) return Promise.resolve(false)
+
+        isInitializing.value = true
+        initPromise.value = (async () => {
+            try {
+                const refreshResponse = await axios.post(
+                    `${getBaseURL()}/auth/refresh-token`,
+                    {},
+                    { withCredentials: true }
+                )
+                const { access_token, user: userData } = refreshResponse.data || {}
+                if (access_token) {
+                    let fullUser = userData
+                    if (!fullUser || !fullUser.first_name) {
+                        try {
+                            const meRes = await axios.get(`${getBaseURL()}/auth/me`, {
+                                headers: { Authorization: `Bearer ${access_token}` }
+                            })
+                            fullUser = meRes.data || fullUser
+                        } catch (meErr) {
+                            console.warn('Initial session restore: /auth/me fetch failed, falling back to minimal profile', meErr)
+                        }
+                    }
+                    updateTokens(access_token, null, fullUser || user.value)
+                }
+            } catch (err) {
+                console.warn('Initial session restore failed:', err)
+                if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+                    logout()
+                }
+            } finally {
+                isInitializing.value = false
+                initPromise.value = null
+            }
+        })()
+
+        return initPromise.value
     }
 
     return {
@@ -172,9 +221,12 @@ export const useAuthStore = defineStore('auth', () => {
         isAuthenticated,
         userRole,
         userName,
+        isInitializing,
+        initAuth,
         login,
         logout,
         updateUser,
         updateTokens
     }
 })
+

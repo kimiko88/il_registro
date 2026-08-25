@@ -1,4 +1,4 @@
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, getCurrentInstance } from 'vue';
 import api from '../services/api';
 
 export function useGlobalAnalytics() {
@@ -7,13 +7,25 @@ export function useGlobalAnalytics() {
         students: 0,
         apiCalls: 0
     });
+    const loading = ref(false);
 
     const fetchStats = async () => {
-        const res = await api.get('/monitoring/analytics');
-        stats.value = res.data;
+        loading.value = true;
+        try {
+            const res = await api.get('/monitoring/analytics');
+            if (res?.data) {
+                stats.value = res.data;
+            }
+        } catch (err) {
+            console.error('[useGlobalAnalytics] Failed to fetch stats:', err);
+        } finally {
+            loading.value = false;
+        }
     };
 
-    onMounted(fetchStats);
+    if (getCurrentInstance()) {
+        onMounted(fetchStats);
+    }
 
-    return { stats };
+    return { stats, loading, fetchStats };
 }

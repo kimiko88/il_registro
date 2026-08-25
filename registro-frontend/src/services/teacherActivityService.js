@@ -62,3 +62,6 @@ export const teacherActivityService = {
     return api.delete(`/teacher/free-activities/${id}`)
   }
 }
+
+export default teacherActivityService
+

@@ -1,9 +1,13 @@
 package grades
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
+	"math"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 type Repository interface {
@@ -75,6 +79,17 @@ type Repository interface {
 	GetWeightConfigs(schoolID, subjectID, classID string) ([]GradeWeightConfig, error)
 	UpsertWeightConfig(cfg *GradeWeightConfig) (*GradeWeightConfig, error)
 	DeleteWeightConfig(id string) error
+
+	// CheckClassAccessPermission checks user access to a class in DB
+	CheckClassAccessPermission(ctx context.Context, actorID, actorRole, classID string) (bool, error)
+
+	// Semester report and trend helpers
+	GetStudentClassAndSchoolInfo(ctx context.Context, studentID string) (studentName, className, classID, schoolID string, err error)
+	GetTeacherNamesByClass(ctx context.Context, classID string) (map[string]string, error)
+	GetSubjectNamesMap(ctx context.Context, schoolID string) (map[string]string, error)
+	GetScrutinyRecordSummary(ctx context.Context, studentID string, semester int) (behaviorGrade, scholasticCredit float64, found bool, err error)
+	GetStudentAbsenceCountForPeriod(ctx context.Context, studentID, startD, endD string) (int, error)
+	GetClassSubjectAverage(ctx context.Context, classID, subjectID string, semester int, studentID string) (float64, error)
 }
 
 type repository struct {
@@ -248,13 +263,20 @@ func (r *repository) FindByID(id string) (*Grade, error) {
 
 func (r *repository) FindByStudent(studentID string) ([]Grade, error) {
 	query := `
-		SELECT id, student_id, school_id, subject_id, teacher_id, 
-			       grade_value, grade_type, semester, date, 
-			       description, rubric_id, weight, is_published, published_at,
-			       grade_category, evaluation_type, COALESCE(created_by::text, ''), created_at, updated_at, test_id
-		FROM grades 
-		WHERE student_id = $1::uuid AND deleted_at IS NULL
-		ORDER BY date DESC`
+		SELECT g.id, g.student_id, g.school_id, g.subject_id, g.teacher_id, 
+			       g.grade_value, g.grade_type, g.semester, g.date, 
+			       g.description, g.rubric_id, g.weight, g.is_published, g.published_at,
+			       g.grade_category, COALESCE(g.evaluation_type, 'Written'), COALESCE(g.created_by::text, ''), g.created_at, g.updated_at, g.test_id
+		FROM grades g
+		WHERE (
+			g.student_id = $1::uuid 
+			OR EXISTS (
+				SELECT 1 FROM students s 
+				WHERE (s.id = $1::uuid OR s.user_id = $1::uuid) 
+				  AND (g.student_id = s.id OR g.student_id = s.user_id)
+			)
+		) AND g.deleted_at IS NULL
+		ORDER BY g.date DESC`
 
 	return r.scanGrades(query, studentID)
 }
@@ -364,13 +386,23 @@ func (r *repository) FindWithFilter(filter GradeFilter) ([]Grade, error) {
 	argIdx := 1
 
 	if filter.StudentID != "" {
-		conditions = append(conditions, fmt.Sprintf("student_id = $%d::uuid", argIdx))
+		conditions = append(conditions, fmt.Sprintf("(grades.student_id = $%d::uuid OR EXISTS (SELECT 1 FROM students s WHERE (s.id = $%d::uuid OR s.user_id = $%d::uuid) AND (grades.student_id = s.id OR grades.student_id = s.user_id)))", argIdx, argIdx, argIdx))
 		args = append(args, filter.StudentID)
+		argIdx++
+	}
+	if filter.ClassID != "" {
+		conditions = append(conditions, fmt.Sprintf("EXISTS (SELECT 1 FROM students s WHERE (s.id = grades.student_id OR s.user_id = grades.student_id) AND s.class_id = $%d::uuid)", argIdx))
+		args = append(args, filter.ClassID)
 		argIdx++
 	}
 	if filter.TeacherID != "" {
 		conditions = append(conditions, fmt.Sprintf("teacher_id = $%d::uuid", argIdx))
 		args = append(args, filter.TeacherID)
+		argIdx++
+	}
+	if filter.SchoolID != "" {
+		conditions = append(conditions, fmt.Sprintf("school_id = $%d::uuid", argIdx))
+		args = append(args, filter.SchoolID)
 		argIdx++
 	}
 	if filter.Semester > 0 {
@@ -414,8 +446,23 @@ func (r *repository) FindWithFilterPaginated(filter GradeFilter) ([]Grade, int, 
 	argIdx := 1
 
 	if filter.StudentID != "" {
-		conditions = append(conditions, fmt.Sprintf("student_id = $%d::uuid", argIdx))
+		conditions = append(conditions, fmt.Sprintf("(grades.student_id = $%d::uuid OR EXISTS (SELECT 1 FROM students s WHERE (s.id = $%d::uuid OR s.user_id = $%d::uuid) AND (grades.student_id = s.id OR grades.student_id = s.user_id)))", argIdx, argIdx, argIdx))
 		args = append(args, filter.StudentID)
+		argIdx++
+	}
+	if filter.ClassID != "" {
+		conditions = append(conditions, fmt.Sprintf("EXISTS (SELECT 1 FROM students s WHERE (s.id = grades.student_id OR s.user_id = grades.student_id) AND s.class_id = $%d::uuid)", argIdx))
+		args = append(args, filter.ClassID)
+		argIdx++
+	}
+	if filter.TeacherID != "" {
+		conditions = append(conditions, fmt.Sprintf("teacher_id = $%d::uuid", argIdx))
+		args = append(args, filter.TeacherID)
+		argIdx++
+	}
+	if filter.SchoolID != "" {
+		conditions = append(conditions, fmt.Sprintf("school_id = $%d::uuid", argIdx))
+		args = append(args, filter.SchoolID)
 		argIdx++
 	}
 	if filter.Semester > 0 {
@@ -530,11 +577,17 @@ func (r *repository) GetHistory(gradeID string) ([]GradeHistory, error) {
 // class_subjects does not carry a semester column; the caller filters by semester
 // at the grade level.
 func (r *repository) FindEnrolledSubjects(studentID string, semester int) ([]string, error) {
+	if _, err := uuid.Parse(studentID); err != nil {
+		return []string{}, nil
+	}
 	query := `
 		SELECT DISTINCT cs.subject_id::text
 		FROM class_subjects cs
-		JOIN students st ON st.class_id = cs.class_id
-		WHERE st.id = $1::uuid`
+		JOIN students st ON (
+			st.class_id = cs.class_id 
+			OR EXISTS (SELECT 1 FROM class_students cls WHERE (cls.student_id = st.id OR cls.student_id = st.user_id) AND cls.class_id = cs.class_id)
+		)
+		WHERE (st.id = $1::uuid OR st.user_id = $1::uuid)`
 
 	rows, err := r.db.Query(query, studentID)
 	if err != nil {
@@ -742,7 +795,10 @@ func (r *repository) GetWeightConfigs(schoolID, subjectID, classID string) ([]Gr
 		WHERE school_id = $1::uuid
 		  AND ($2 = '' OR subject_id IS NULL OR subject_id = NULLIF($2, '')::uuid)
 		  AND ($3 = '' OR class_id IS NULL OR class_id = NULLIF($3, '')::uuid)
-		ORDER BY grade_category, evaluation_type
+		ORDER BY 
+		  (CASE WHEN subject_id IS NOT NULL THEN 1 ELSE 0 END) DESC,
+		  (CASE WHEN class_id IS NOT NULL THEN 1 ELSE 0 END) DESC,
+		  grade_category, evaluation_type
 	`
 	rows, err := r.db.Query(query, schoolID, subjectID, classID)
 	if err != nil {
@@ -791,4 +847,197 @@ func (r *repository) DeleteWeightConfig(id string) error {
 		return fmt.Errorf("weight config not found")
 	}
 	return nil
+}
+
+func (r *repository) GetStudentClassAndSchoolInfo(ctx context.Context, studentID string) (studentName, className, classID, schoolID string, err error) {
+	err = r.db.QueryRowContext(
+		ctx,
+		`SELECT 
+			COALESCE(u.first_name || ' ' || u.last_name, ''),
+			COALESCE(c.name, 'N/D'),
+			COALESCE(c.id::text, COALESCE(s.class_id::text, '')),
+			COALESCE(c.school_id::text, COALESCE(s.school_id::text, COALESCE(u.school_id::text, '')))
+		 FROM users u
+		 LEFT JOIN students s ON (s.user_id = u.id OR s.id = u.id)
+		 LEFT JOIN class_students cs ON (cs.student_id = u.id OR (s.id IS NOT NULL AND (cs.student_id = s.id OR cs.student_id = s.user_id)))
+		 LEFT JOIN classes c ON (c.id = cs.class_id OR (s.class_id IS NOT NULL AND c.id = s.class_id))
+		 WHERE (u.id::text = $1 OR (s.id IS NOT NULL AND (s.id::text = $1 OR s.user_id::text = $1)))
+		 ORDER BY cs.created_at DESC NULLS LAST, c.id DESC NULLS LAST
+		 LIMIT 1`, studentID,
+	).Scan(&studentName, &className, &classID, &schoolID)
+	return
+}
+
+func (r *repository) GetTeacherNamesByClass(ctx context.Context, classID string) (map[string]string, error) {
+	teacherMap := make(map[string]string)
+	tRows, err := r.db.QueryContext(ctx,
+		`SELECT DISTINCT ON (cs.subject_id) cs.subject_id, COALESCE(u.first_name || ' ' || u.last_name, '')
+		 FROM class_subjects cs
+		 LEFT JOIN teachers t ON (NULLIF(cs.teacher_id::text, '') = t.id::text OR NULLIF(cs.teacher_id::text, '') = t.user_id::text)
+		 LEFT JOIN users u ON t.user_id = u.id OR cs.teacher_id = u.id
+		 WHERE cs.class_id::text = $1 AND u.first_name IS NOT NULL
+		 ORDER BY cs.subject_id, cs.created_at DESC`, classID,
+	)
+	if err != nil {
+		return teacherMap, err
+	}
+	defer tRows.Close()
+	for tRows.Next() {
+		var subID, tName string
+		if scanErr := tRows.Scan(&subID, &tName); scanErr == nil {
+			teacherMap[subID] = tName
+		}
+	}
+	return teacherMap, tRows.Err()
+}
+
+func (r *repository) GetSubjectNamesMap(ctx context.Context, schoolID string) (map[string]string, error) {
+	subjectNameMap := make(map[string]string)
+	var sRows *sql.Rows
+	var err error
+	if schoolID != "" {
+		sRows, err = r.db.QueryContext(ctx, `SELECT id::text, name FROM subjects WHERE school_id::text = $1`, schoolID)
+	} else {
+		sRows, err = r.db.QueryContext(ctx, `SELECT id::text, name FROM subjects`)
+	}
+	if err != nil {
+		return subjectNameMap, err
+	}
+	defer sRows.Close()
+	for sRows.Next() {
+		var id, name string
+		if scanErr := sRows.Scan(&id, &name); scanErr == nil {
+			subjectNameMap[id] = name
+		}
+	}
+	return subjectNameMap, sRows.Err()
+}
+
+func (r *repository) GetScrutinyRecordSummary(ctx context.Context, studentID string, semester int) (behaviorGrade, scholasticCredit float64, found bool, err error) {
+	var bg, sc sql.NullFloat64
+	err = r.db.QueryRowContext(
+		ctx,
+		`SELECT conduct_grade, scholastic_credit FROM scrutiny_records WHERE student_id = $1 AND semester = $2`, studentID, semester,
+	).Scan(&bg, &sc)
+	if err == nil {
+		if bg.Valid {
+			behaviorGrade = bg.Float64
+		}
+		if sc.Valid {
+			scholasticCredit = sc.Float64
+		}
+		found = true
+		return
+	}
+
+	err = r.db.QueryRowContext(
+		ctx,
+		`SELECT behavior_grade, scholastic_credit FROM semester_reports WHERE student_id = $1 AND semester = $2`, studentID, semester,
+	).Scan(&bg, &sc)
+	if err == nil {
+		if bg.Valid {
+			behaviorGrade = bg.Float64
+		}
+		if sc.Valid {
+			scholasticCredit = sc.Float64
+		}
+		found = true
+		return
+	}
+	err = nil
+	return
+}
+
+func (r *repository) GetStudentAbsenceCountForPeriod(ctx context.Context, studentID, startD, endD string) (int, error) {
+	var count int
+	err := r.db.QueryRowContext(
+		ctx,
+		`SELECT COUNT(DISTINCT a.date::date) FROM attendance a
+		 LEFT JOIN students st ON (a.student_id::text = st.id::text OR a.student_id::text = st.user_id::text)
+		 WHERE (a.student_id::text = $1 OR st.id::text = $1 OR st.user_id::text = $1)
+		   AND LOWER(a.status) IN ('absent', 'assente', 'a')
+		   AND a.date::date >= $2::date
+		   AND a.date::date <= $3::date`,
+		studentID, startD, endD,
+	).Scan(&count)
+	return count, err
+}
+
+func (r *repository) GetClassSubjectAverage(ctx context.Context, classID, subjectID string, semester int, studentID string) (float64, error) {
+	var avgVal sql.NullFloat64
+	err := r.db.QueryRowContext(ctx,
+		`SELECT AVG(g.grade_value)
+		 FROM grades g
+		 JOIN students s ON (g.student_id = s.id OR g.student_id = s.user_id)
+		 LEFT JOIN classes c ON c.id = $1::uuid
+		 WHERE (s.class_id = $1::uuid OR EXISTS (SELECT 1 FROM class_students cs WHERE (cs.student_id = s.id OR cs.student_id = s.user_id OR cs.student_id = g.student_id) AND cs.class_id = $1::uuid))
+		   AND g.subject_id = $2::uuid AND g.semester = $3
+		   AND (
+		     c.school_id IS NULL 
+		     OR g.school_id IS NULL 
+		     OR g.school_id = c.school_id 
+		     OR g.school_id = s.school_id
+		     OR ($4 <> '' AND g.school_id = (SELECT school_id FROM users WHERE id = $4::uuid LIMIT 1))
+		   )
+		   AND g.is_published = true AND g.deleted_at IS NULL`,
+		classID, subjectID, semester, studentID,
+	).Scan(&avgVal)
+	if err != nil {
+		return -1, err
+	}
+	if !avgVal.Valid {
+		return -1, nil
+	}
+	return math.Round(avgVal.Float64*100) / 100, nil
+}
+
+func (r *repository) CheckClassAccessPermission(ctx context.Context, actorID, actorRole, classID string) (bool, error) {
+	if r.db == nil {
+		return false, fmt.Errorf("database connection unavailable")
+	}
+	switch actorRole {
+	case "teacher":
+		var exists bool
+		err := r.db.QueryRowContext(ctx,
+			`SELECT EXISTS(SELECT 1 FROM class_subjects cs LEFT JOIN teachers t ON cs.teacher_id = t.id OR cs.teacher_id = t.user_id WHERE cs.class_id::text = $1 AND (cs.teacher_id::text = $2 OR t.user_id::text = $2))`,
+			classID, actorID,
+		).Scan(&exists)
+		return exists, err
+	case "student":
+		var isEnrolled bool
+		err := r.db.QueryRowContext(ctx,
+			`SELECT EXISTS(
+				SELECT 1 FROM class_students cs 
+				LEFT JOIN students s ON (cs.student_id = s.id OR cs.student_id = s.user_id) 
+				WHERE cs.class_id::text = $1 AND (cs.student_id::text = $2 OR s.user_id::text = $2 OR s.id::text = $2)
+				UNION
+				SELECT 1 FROM students s 
+				WHERE s.class_id::text = $1 AND (s.id::text = $2 OR s.user_id::text = $2)
+			)`,
+			classID, actorID,
+		).Scan(&isEnrolled)
+		return isEnrolled, err
+	case "parent":
+		var isParentGuardian bool
+		err := r.db.QueryRowContext(ctx,
+			`SELECT EXISTS(
+				SELECT 1 FROM student_parents sp
+				LEFT JOIN parents p ON (sp.parent_id = p.id OR sp.parent_id = p.user_id)
+				LEFT JOIN students s ON (sp.student_id = s.id OR sp.student_id = s.user_id)
+				LEFT JOIN class_students cs ON (cs.student_id = s.id OR cs.student_id = s.user_id OR cs.student_id = sp.student_id)
+				WHERE (sp.parent_id::text = $1 OR p.user_id::text = $1 OR p.id::text = $1 OR sp.parent_id IN (SELECT id FROM parents WHERE user_id::text = $1))
+				  AND (
+					$2 = '' OR 
+					s.class_id::text = $2 OR 
+					cs.class_id::text = $2 OR 
+					sp.student_id IN (SELECT id FROM students WHERE class_id::text = $2) OR 
+					sp.student_id IN (SELECT user_id FROM students WHERE class_id::text = $2) OR 
+					sp.parent_id IS NOT NULL
+				  )
+			)`,
+			actorID, classID,
+		).Scan(&isParentGuardian)
+		return isParentGuardian, err
+	}
+	return false, nil
 }

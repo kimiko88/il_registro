@@ -403,11 +403,11 @@ func (r *PostgresRepository) UpdateBookingStatus(ctx context.Context, bookingID 
 func (r *PostgresRepository) IsGuardian(ctx context.Context, parentUserID, studentUserID string) (bool, error) {
 	query := `
 		SELECT EXISTS (
-			SELECT 1 FROM parent_students ps
-			JOIN parents p ON ps.parent_id = p.id
-			JOIN students s ON ps.student_id = s.id
-			WHERE (p.user_id = $1::uuid OR ps.parent_id = $1::uuid)
-			  AND (s.user_id = $2::uuid OR ps.student_id = $2::uuid)
+			SELECT 1 FROM student_parents sp
+			LEFT JOIN parents p ON sp.parent_id = p.id
+			LEFT JOIN students s ON sp.student_id = s.id
+			WHERE (sp.parent_id = $1::uuid OR p.user_id = $1::uuid OR p.id = $1::uuid)
+			  AND (sp.student_id = $2::uuid OR s.user_id = $2::uuid OR s.id = $2::uuid)
 		)
 	`
 	var ok bool

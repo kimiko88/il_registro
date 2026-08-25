@@ -3,11 +3,11 @@
     <div class="row items-center justify-between q-mb-md">
       <div class="text-h5 text-weight-bold">
         <q-icon name="assignment" color="orange" class="q-mr-sm" />
-        Agenda e Compiti
+        {{ t('agendaPage.homeworkTitle') || 'Agenda e Compiti' }}
       </div>
       <q-tabs v-model="tab" dense class="text-grey" active-color="primary" indicator-color="primary" align="justify" narrow-indicator aria-label="Sezioni agenda e compiti">
-        <q-tab name="compiti" label="Lista Compiti" icon="list" />
-        <q-tab name="agenda" label="Agenda & Lezioni" icon="calendar_month" />
+        <q-tab name="compiti" :label="t('agendaPage.homeworkList') || 'Lista Compiti'" icon="list" />
+        <q-tab name="agenda" :label="t('agendaPage.agendaLessons') || 'Agenda & Lezioni'" icon="calendar_month" />
       </q-tabs>
     </div>
 
@@ -20,8 +20,8 @@
       <q-tab-panel name="compiti" class="q-pa-none">
         <q-card v-if="homeworks.length === 0" class="text-center q-pa-xl text-grey-6">
           <q-icon name="check_circle" size="80px" class="q-mb-md" color="positive" />
-          <div class="text-h6">Nessun compito in sospeso</div>
-          <div class="text-caption">Sei in pari con i tuoi compiti!</div>
+          <div class="text-h6">{{ t('agendaPage.noPendingHomework') || 'Nessun compito in sospeso' }}</div>
+          <div class="text-caption">{{ t('agendaPage.allCaughtUp') || 'Sei in pari con i tuoi compiti!' }}</div>
         </q-card>
 
         <div v-else>
@@ -42,15 +42,15 @@
                   </q-chip>
                 </div>
                 <q-item-label caption class="q-mt-xs">
-                  Consegna:
+                  {{ t('agendaPage.due') || 'Consegna' }}:
                   <strong :class="isPast(hw.due_date) ? 'text-negative' : 'text-positive'">
                     {{ formatDate(hw.due_date) }}
                   </strong>
-                  <q-badge v-if="isPast(hw.due_date)" color="negative" class="q-ml-sm">Scaduto</q-badge>
-                  <q-badge v-else-if="isDueSoon(hw.due_date)" color="warning" class="q-ml-sm">Domani</q-badge>
+                  <q-badge v-if="isPast(hw.due_date)" color="negative" class="q-ml-sm">{{ t('agendaPage.expired') || 'Scaduto' }}</q-badge>
+                  <q-badge v-else-if="isDueSoon(hw.due_date)" color="warning" class="q-ml-sm">{{ t('agendaPage.tomorrow') || 'Domani' }}</q-badge>
                 </q-item-label>
                 <q-item-label caption v-if="hw.teacher_name" class="text-grey-6 q-mt-xs">
-                  Assegnato da: {{ hw.teacher_name }}
+                  {{ t('agendaPage.assignedBy') || 'Assegnato da' }}: {{ hw.teacher_name }}
                 </q-item-label>
               </q-item-section>
             </q-item>
@@ -81,7 +81,7 @@
             <q-card class="shadow-1 full-height">
               <q-card-section class="bg-primary text-white q-py-sm">
                 <div class="text-subtitle1 text-weight-medium">
-                  Dettagli del {{ formatDate(selectedDate) }}
+                  {{ t('agendaPage.detailsOf') || 'Dettagli del' }} {{ formatDate(selectedDate) }}
                 </div>
               </q-card-section>
 
@@ -89,30 +89,30 @@
               <q-card-section>
                 <div class="text-subtitle2 text-weight-bold text-primary q-mb-sm">
                   <q-icon name="menu_book" class="q-mr-xs" />
-                  Lezioni Svolte
+                  {{ t('agendaPage.lessonsHeld') || 'Lezioni Svolte' }}
                 </div>
                 <q-list v-if="lessonsOnSelectedDate.length > 0" separator dense>
                   <q-item v-for="lesson in lessonsOnSelectedDate" :key="lesson.id" class="q-py-sm">
                     <q-item-section>
                       <div class="row items-center justify-between">
                         <div class="text-weight-bold text-grey-9">
-                          {{ lesson.hour }}° Ora - {{ subjectsMap[lesson.subject_id] || lesson.subject_id }}
+                          {{ lesson.hour }}ª {{ t('timetablePage.hour') || 'Ora' }} - {{ subjectsMap[lesson.subject_id] || lesson.subject_id }}
                           <span class="text-caption text-grey-6 text-weight-regular q-ml-sm">
-                            ({{ lesson.duration }} ore, {{ lesson.type }})
+                            ({{ lesson.duration }}h, {{ lesson.type }})
                           </span>
                         </div>
                       </div>
                       <div class="text-body2 text-grey-8 q-mt-xs">{{ lesson.topic }}</div>
                       <div class="text-caption text-grey-6 q-mt-xs" v-if="lesson.notes">
-                        Note: {{ lesson.notes }}
+                        {{ t('common.notes') || 'Note' }}: {{ lesson.notes }}
                       </div>
                       <div class="text-caption text-grey-5 q-mt-xs" v-if="lesson.teacher_name">
-                        Docente: {{ lesson.teacher_name }}
+                        {{ t('dashboardPage.teacher') || 'Docente' }}: {{ lesson.teacher_name }}
                       </div>
                     </q-item-section>
                   </q-item>
                 </q-list>
-                <div v-else class="text-caption text-grey q-py-sm">Nessuna lezione registrata in questa data.</div>
+                <div v-else class="text-caption text-grey q-py-sm">{{ t('agendaPage.noLessons') || 'Nessuna lezione registrata in questa data.' }}</div>
               </q-card-section>
 
               <q-separator inset />
@@ -121,7 +121,7 @@
               <q-card-section>
                 <div class="text-subtitle2 text-weight-bold text-orange-8 q-mb-sm">
                   <q-icon name="assignment" class="q-mr-xs" />
-                  Compiti in Scadenza
+                  {{ t('agendaPage.dueHomework') || 'Compiti in Scadenza' }}
                 </div>
                 <q-list v-if="homeworksOnSelectedDate.length > 0" separator dense>
                   <q-item v-for="hw in homeworksOnSelectedDate" :key="hw.id" class="q-py-sm">
@@ -133,12 +133,12 @@
                       </div>
                       <div class="text-body2 text-grey-8 q-mt-xs">{{ hw.description }}</div>
                       <div class="text-caption text-grey-5 q-mt-xs" v-if="hw.teacher_name">
-                        Docente: {{ hw.teacher_name }}
+                        {{ t('dashboardPage.teacher') || 'Docente' }}: {{ hw.teacher_name }}
                       </div>
                     </q-item-section>
                   </q-item>
                 </q-list>
-                <div v-else class="text-caption text-grey q-py-sm">Nessun compito con scadenza in questa data.</div>
+                <div v-else class="text-caption text-grey q-py-sm">{{ t('agendaPage.noDueHomework') || 'Nessun compito con scadenza in questa data.' }}</div>
               </q-card-section>
             </q-card>
           </div>
@@ -150,12 +150,14 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useQuasar, date } from 'quasar'
-import { useStudentStore } from 'src/stores/student'
-import { lessonService } from 'src/services/lessonService'
-import adminService from 'src/services/adminService'
+import { useStudentStore } from '@/stores/student'
+import { lessonService } from '@/services/lessonService'
+import adminService from '@/services/adminService'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const studentStore = useStudentStore()
 
 const tab = ref('compiti')
@@ -200,7 +202,7 @@ const fetchHomeworks = async () => {
     homeworks.value = res.data || []
   } catch (e) {
     console.error(e)
-    $q.notify({ type: 'negative', message: 'Impossibile caricare i compiti' })
+    $q.notify({ type: 'negative', message: t('common.error') })
   }
 }
 

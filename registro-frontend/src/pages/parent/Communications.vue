@@ -132,12 +132,14 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
-import { useParentStore } from 'src/stores/parent'
-import { communicationService } from 'src/services/communicationService'
+import { useParentStore } from '@/stores/parent'
+import { communicationService } from '@/services/communicationService'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const parentStore = useParentStore()
 const { selectedChild } = storeToRefs(parentStore)
 

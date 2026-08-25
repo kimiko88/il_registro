@@ -82,6 +82,10 @@ func (s *Service) ListTrips(ctx context.Context, schoolID, studentID string) ([]
 	return s.repo.ListTrips(ctx, schoolID, studentID)
 }
 
+func (s *Service) GetTripByID(ctx context.Context, id string) (*EducationalTrip, error) {
+	return s.repo.GetTripByID(ctx, id)
+}
+
 // SubmitConsent records a parent or student consent for an educational trip.
 // Bug 131: when the actor is a parent, verifies guardianship before recording consent.
 func (s *Service) SubmitConsent(ctx context.Context, actorID, actorRole, ipAddress string, req SubmitConsentRequest) error {

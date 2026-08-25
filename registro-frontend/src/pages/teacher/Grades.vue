@@ -21,7 +21,7 @@
         />
         <q-select
           v-model="selectedSubject"
-          :options="gradesStore.subjects"
+          :options="availableSubjectOptions"
           option-label="subject_name"
           option-value="subject_id"
           emit-value
@@ -449,11 +449,13 @@
 
 <script setup>
 import { ref, watch, computed } from 'vue';
-import { useClassesStore } from 'src/stores/classes';
-import { useGradesStore } from 'src/stores/grades';
-import GradeEntry from 'src/components/Teacher/GradeEntry.vue';
-import GradeStatistics from 'src/components/Teacher/GradeStatistics.vue';
-import { gradeService } from 'src/services/gradeService';
+import { useI18n } from 'vue-i18n';
+import { useClassesStore } from '@/stores/classes';
+import { useGradesStore } from '@/stores/grades';
+import { useAuthStore } from '@/stores/auth';
+import GradeEntry from '@/components/Teacher/GradeEntry.vue';
+import GradeStatistics from '@/components/Teacher/GradeStatistics.vue';
+import { gradeService } from '@/services/gradeService';
 import { useQuasar, date } from 'quasar';
 import SkeletonTable from '@/components/Common/SkeletonTable.vue';
 import { useUndoToast } from '@/composables/useUndoToast';
@@ -461,13 +463,57 @@ import { useSchoolYearStore } from '@/stores/schoolYear';
 import { ITALIAN_GRADE_OPTIONS, gradeToNumeric, formatGrade, getGradeColor } from '@/utils/gradeUtils';
 
 const $q = useQuasar();
+const { t } = useI18n();
 useUndoToast();
 const classesStore = useClassesStore();
 const gradesStore = useGradesStore();
+const authStore = useAuthStore();
 const schoolYearStore = useSchoolYearStore();
 
 const selectedClassId = ref(null);
-const selectedSubject = ref(null); 
+const selectedSubject = ref(null);
+
+const isCivicaSubject = (s) => {
+  const name = (s.subject_name || s.name || '').toLowerCase();
+  return name.includes('civica') || name.includes('educazione civica') || name.includes('ed. civica');
+};
+
+const isAssignedToCurrentTeacher = (s, user) => {
+  if (!user) return false;
+  const currentUserId = String(user.id || '');
+  const teacherId = user.teacher_id ? String(user.teacher_id) : '';
+  const sTeacherId = s.teacher_id ? String(s.teacher_id) : '';
+  const sTeacherUserId = s.teacher_user_id ? String(s.teacher_user_id) : '';
+
+  if (sTeacherId && (sTeacherId === currentUserId || (teacherId && sTeacherId === teacherId))) {
+    return true;
+  }
+  if (sTeacherUserId && (sTeacherUserId === currentUserId || (teacherId && sTeacherUserId === teacherId))) {
+    return true;
+  }
+  if (s.teacher_name && user.last_name) {
+    const tName = s.teacher_name.toLowerCase();
+    const uLast = user.last_name.toLowerCase();
+    const uFirst = (user.first_name || '').toLowerCase();
+    if (tName.includes(uLast) && (!uFirst || tName.includes(uFirst))) {
+      return true;
+    }
+  }
+  return false;
+};
+
+const availableSubjectOptions = computed(() => {
+  const allSubjects = gradesStore.subjects || [];
+  const user = authStore.user;
+  if (!user || ['admin', 'superadmin', 'secretary'].includes(user.role)) {
+    return allSubjects;
+  }
+
+  // Mostra ESCLUSIVAMENTE le materie assegnate dalla segreteria al docente loggato + Educazione Civica
+  return allSubjects.filter(s => {
+    return isAssignedToCurrentTeacher(s, user) || isCivicaSubject(s);
+  });
+});
 const viewMode = ref('table');
 const filterDate = ref(date.formatDate(Date.now(), 'YYYY-MM-DD'));
 const gradeType = ref('Orale');
@@ -476,8 +522,12 @@ const showRubric = ref(false);
 const gradeOptions = ITALIAN_GRADE_OPTIONS;
 
 const isAssignedClass = computed(() => {
-  if (!selectedClassId.value) return false;
-  return classesStore.classes.some(c => String(c.id) === String(selectedClassId.value));
+  if (!selectedClassId.value) return false
+  const cls = classesStore.classes.find(c => String(c.id) === String(selectedClassId.value))
+  if (!cls) return false
+  // If the backend provides an is_owner / is_assigned field, use it.
+  // Absence of the field (undefined) is treated as owned (backward-compatible).
+  return cls.is_owner !== false
 });
 
 const showImportDialog = ref(false);
@@ -506,7 +556,8 @@ const filledEditTestGradesCount = computed(() => {
 
 const overlappingTestsCount = computed(() => {
     if (!testForm.value?.date || !classTests.value) return 0;
-    return classTests.value.filter(t => t.date && t.date.startsWith(testForm.value.date)).length;
+    // Use split('T')[0] for reliable comparison with ISO timestamps (e.g. '2026-08-23T00:00:00+02:00')
+    return classTests.value.filter(t => t.date && t.date.split('T')[0] === testForm.value.date).length;
 });
 
 const openTestDialog = () => {
@@ -594,8 +645,8 @@ watch(selectedClassId, async (newVal) => {
     if (newVal) {
         await gradesStore.fetchClassSubjects(newVal);
         if (currentReq !== classChangeReqId) return;
-        if (gradesStore.subjects && gradesStore.subjects.length > 0) {
-            selectedSubject.value = gradesStore.subjects[0].subject_id;
+        if (availableSubjectOptions.value && availableSubjectOptions.value.length > 0) {
+            selectedSubject.value = availableSubjectOptions.value[0].subject_id;
         } else {
             selectedSubject.value = null;
         }

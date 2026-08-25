@@ -103,13 +103,10 @@ func (h *Handler) Send(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 64*1024)
 	var req CreateMessageRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	if len(req.Body) > 64*1024 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "il corpo del messaggio supera il limite massimo consentito (64 KB)"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "il corpo del messaggio supera il limite massimo consentito (64 KB) o formato JSON non valido"})
 		return
 	}
 	msg, err := h.service.SendMessage(c.Request.Context(), role, schoolID, uid, req)
@@ -167,8 +164,13 @@ func (h *Handler) Sign(c *gin.Context) {
 // GetSignatures returns the list of users who signed a message.
 func (h *Handler) GetSignatures(c *gin.Context) {
 	uid := c.GetString("user_id")
+	role := c.GetString("role")
 	if uid == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "teacher" && role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && role != "vice_principal" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 	id := c.Param("id")
@@ -325,35 +327,26 @@ func (h *Handler) UploadAttachment(c *gin.Context) {
 	}
 	defer file.Close()
 
-	// Max size check: 10 MB
-	const maxFileSize = 10 * 1024 * 1024
-	if header.Size > maxFileSize {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "la dimensione del file supera il limite massimo consentito (10 MB)"})
+	// Validate size + magic bytes Content-Type check
+	if err := upload.ValidateUpload(file, header); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Extension & MIME check
-	ext := strings.ToLower(filepath.Ext(header.Filename))
-	allowedExts := map[string]bool{
-		".pdf": true, ".jpg": true, ".jpeg": true, ".png": true,
-		".gif": true, ".webp": true, ".doc": true, ".docx": true,
-		".xls": true, ".xlsx": true, ".txt": true,
+	ext := filepath.Ext(header.Filename)
+	detectedMIME, errMIME := upload.DetectMIME(file)
+	if errMIME != nil {
+		detectedMIME = header.Header.Get("Content-Type")
 	}
-	if !allowedExts[ext] {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "estensione file non consentita"})
-		return
-	}
-
-	contentType := header.Header.Get("Content-Type")
-	if contentType != "" && !isValidMIME(contentType) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "tipo MIME non consentito"})
+	if !isAllowedMIMEType(detectedMIME) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "tipo di allegato non consentito"})
 		return
 	}
 
 	var publicURL string
 	if h.uploader != nil {
 		storagePath := fmt.Sprintf("communications/%s%s", uuid.New().String(), ext)
-		publicURL, err = h.uploader.UploadFile(c.Request.Context(), storagePath, contentType, file)
+		publicURL, err = h.uploader.UploadFile(c.Request.Context(), storagePath, detectedMIME, file)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -366,7 +359,10 @@ func (h *Handler) UploadAttachment(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"attachment_url": publicURL})
 }
 
-func isValidMIME(contentType string) bool {
+// isAllowedMIMEType validates that the MIME type is in the allowed allowlist.
+// IMPORTANT: contentType MUST be derived from magic-byte detection (upload.DetectMIME),
+// NOT from the client-supplied Content-Type header, to prevent MIME-spoofing attacks.
+func isAllowedMIMEType(contentType string) bool {
 	contentType = strings.ToLower(strings.TrimSpace(strings.Split(contentType, ";")[0]))
 	allowed := map[string]bool{
 		"application/pdf":    true,
@@ -378,8 +374,7 @@ func isValidMIME(contentType string) bool {
 		"application/vnd.openxmlformats-officedocument.wordprocessingml.document": true,
 		"application/vnd.ms-excel": true,
 		"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": true,
-		"text/plain":               true,
-		"application/octet-stream": true,
+		"text/plain": true,
 	}
 	return allowed[contentType]
 }

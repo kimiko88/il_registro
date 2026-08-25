@@ -48,8 +48,8 @@
           <div class="row items-center">
             <q-avatar color="primary" text-color="white" icon="school" size="48px" class="q-mr-md" />
             <div>
-              <div class="text-h6 text-weight-bold text-slate-800">ISTITUTO SCOLASTICO REGISTRO V2</div>
-              <div class="text-caption text-slate-500">Anno Scolastico {{ reportData?.school_year || '2025/2026' }}</div>
+              <div class="text-h6 text-weight-bold text-slate-800">{{ authStore.user?.school_name || reportData?.school_name || 'ISTITUTO SCOLASTICO' }}</div>
+              <div class="text-caption text-slate-500">{{ t('common.year') || 'Anno Scolastico' }} {{ reportData?.school_year || '2025/2026' }}</div>
             </div>
           </div>
           <div class="text-right">
@@ -59,132 +59,106 @@
           </div>
         </div>
 
-        <div class="row q-col-gutter-md text-body2">
-          <div class="col-12 col-sm-4">
-            <span class="text-slate-400">Studente:</span>
-            <div class="text-weight-bold text-slate-800 text-subtitle1">
-              {{ reportData?.student_name || authStore.user?.name || 'Studente' }}
+        <div class="row q-col-gutter-md">
+          <div class="col-12 col-md-6">
+            <div class="text-subtitle2 text-slate-500">{{ t('usersPage.roleStudents') || 'Studente/ssa' }}</div>
+            <div class="text-h6 text-weight-bold text-slate-800">
+              {{ reportData?.student_name || `${authStore.user?.first_name || ''} ${authStore.user?.last_name || ''}`.trim() || 'Studente' }}
             </div>
+            <div class="text-caption text-slate-500">Codice Fiscale: {{ authStore.user?.fiscal_code || reportData?.fiscal_code || 'N/D' }}</div>
           </div>
-          <div class="col-12 col-sm-4">
-            <span class="text-slate-400">Classe:</span>
-            <div class="text-weight-bold text-slate-800 text-subtitle1">
-              {{ reportData?.class_name || 'N/D' }}
+          <div class="col-12 col-md-6 text-md-right">
+            <div class="text-subtitle2 text-slate-500">{{ t('classRegister.selectClass') || 'Classe Frequentata' }}</div>
+            <div class="text-h6 text-weight-bold text-slate-800">
+              {{ reportData?.class_name || 'Classe N/A' }}
             </div>
-          </div>
-          <div class="col-12 col-sm-4">
-            <span class="text-slate-400">Media Generale:</span>
-            <div class="text-weight-bold text-subtitle1" :class="getAverageClass(reportData?.overall_average)">
-              {{ reportData?.overall_average ? reportData.overall_average.toFixed(2) : '0.00' }} / 10
-            </div>
+            <div class="text-caption text-slate-500">{{ t('classRegister.coordinator') || 'Coordinatore' }}: {{ reportData?.coordinator_name || 'Docente Coordinatore' }}</div>
           </div>
         </div>
       </q-card>
 
-      <!-- Grades Table Card -->
+      <!-- Grades Table -->
       <q-card flat bordered class="rounded-xl bg-white shadow-soft overflow-hidden">
-        <q-card-section class="bg-slate-100 border-b border-slate-200 row items-center justify-between q-py-sm q-px-md">
-          <div class="text-subtitle1 text-weight-bold text-slate-800">Valutazioni per Materia</div>
+        <q-card-section class="q-pa-none">
+          <q-table
+            :rows="reportData?.subjects || reportData?.subject_grades || []"
+            :columns="columns"
+            row-key="subject"
+            flat
+            hide-bottom
+            :pagination="{ rowsPerPage: 0 }"
+            class="bg-transparent"
+          >
+            <template v-slot:body-cell-average="props">
+              <q-td :props="props" align="center" :class="getAverageClass(props.row.subject_average)">
+                {{ props.row.subject_average ? props.row.subject_average.toFixed(2) : '-' }}
+              </q-td>
+            </template>
+
+            <template v-slot:body-cell-final_grade="props">
+              <q-td :props="props" align="center">
+                <q-chip
+                  :color="props.row.final_grade >= 6 ? 'positive' : 'negative'"
+                  text-color="white"
+                  class="text-weight-bold"
+                >
+                  {{ props.row.final_grade ?? '-' }}
+                </q-chip>
+              </q-td>
+            </template>
+          </q-table>
         </q-card-section>
-
-        <div v-if="gradesStore.loading" class="text-center q-pa-xl">
-          <q-spinner-dots color="primary" size="40px" />
-        </div>
-
-        <q-table
-          v-else
-          flat
-          dense
-          :rows="reportData?.subjects || []"
-          :columns="columns"
-          row-key="subject_id"
-          hide-pagination
-          :pagination="{ rowsPerPage: 0 }"
-          class="no-shadow"
-        >
-          <!-- Subject Column -->
-          <template v-slot:body-cell-subject="props">
-            <q-td :props="props" class="text-weight-bold text-slate-800">
-              {{ props.row.subject }}
-            </q-td>
-          </template>
-
-          <!-- Teacher Column -->
-          <template v-slot:body-cell-teacher="props">
-            <q-td :props="props" class="text-slate-600">
-              {{ props.row.teacher || 'Docente' }}
-            </q-td>
-          </template>
-
-          <!-- Period Grades Column -->
-          <template v-slot:body-cell-grades="props">
-            <q-td :props="props">
-              <span class="text-caption text-slate-500">
-                {{ props.row.grade_count || (props.row.grades ? props.row.grades.length : 0) }} voti registrati
-              </span>
-            </q-td>
-          </template>
-
-          <!-- Average Column -->
-          <template v-slot:body-cell-average="props">
-            <q-td :props="props" class="text-weight-bold" :class="getAverageClass(props.row.subject_average)">
-              {{ props.row.subject_average ? props.row.subject_average.toFixed(2) : '-' }}
-            </q-td>
-          </template>
-
-          <!-- Final Grade Column -->
-          <template v-slot:body-cell-final_grade="props">
-            <q-td :props="props">
-              <q-badge
-                size="md"
-                :color="props.row.passed || props.row.subject_average >= 6 ? 'positive' : 'negative'"
-                class="text-weight-bold text-subtitle2 q-px-sm"
-              >
-                {{ props.row.final_grade || Math.round(props.row.subject_average) || '-' }}
-              </q-badge>
-            </q-td>
-          </template>
-
-          <!-- Notes Column -->
-          <template v-slot:body-cell-notes="props">
-            <q-td :props="props" class="text-caption text-slate-500">
-              {{ props.row.notes || '-' }}
-            </q-td>
-          </template>
-        </q-table>
       </q-card>
 
-      <!-- Summary & Attendance Section -->
+      <!-- Section: Carenze Formative & Argomenti da Recuperare -->
+      <q-card v-if="deficiencies.length > 0" flat bordered class="rounded-xl bg-amber-50/50 border-amber-200 shadow-soft q-pa-md">
+        <div class="row items-center q-mb-md">
+          <q-icon name="warning" color="warning" size="28px" class="q-mr-sm" />
+          <div class="text-h6 text-weight-bold text-amber-900">Carenze Formative & Argomenti da Recuperare</div>
+        </div>
+
+        <div class="space-y-3">
+          <div v-for="def in deficiencies" :key="def.id" class="bg-white p-3 rounded-lg border border-amber-200 shadow-sm">
+            <div class="row items-center justify-between">
+              <div class="text-subtitle1 text-weight-bold text-slate-800">{{ def.subject_name || 'Materia' }}</div>
+              <q-badge :color="def.status === 'recuperato' ? 'positive' : 'warning'" class="q-px-sm q-py-xs text-weight-bold">
+                {{ def.status === 'recuperato' ? 'RECUPERATO' : 'DA RECUPERARE' }}
+              </q-badge>
+            </div>
+            <div class="text-body2 text-slate-700 q-mt-xs">
+              <strong>Argomenti della carenza:</strong> {{ def.topics }}
+            </div>
+            <div class="row items-center justify-between text-caption text-slate-500 q-mt-xs">
+              <span>Modalità: {{ def.recovery_mode }}</span>
+              <span v-if="def.recovery_grade">Voto prova recupero: <strong>{{ def.recovery_grade }}</strong></span>
+            </div>
+          </div>
+        </div>
+      </q-card>
+
+      <!-- Final Evaluation Summary & Attendance -->
       <div class="row q-col-gutter-md">
-        <div class="col-12 col-sm-6">
+        <div class="col-12 col-md-6">
           <q-card flat bordered class="rounded-xl bg-white shadow-soft h-full">
             <q-card-section>
-              <div class="text-subtitle1 text-weight-bold text-slate-800 q-mb-xs">Riepilogo Presenze</div>
-              <div class="text-caption text-slate-500 q-mb-md">Assenze e ritardi cumulate nel quadrimestre</div>
-
+              <div class="text-subtitle1 text-weight-bold text-slate-800 q-mb-sm">{{ t('attendancePage.tableTitle') || 'Quadro Presenze' }}</div>
               <div class="row q-col-gutter-sm text-center">
                 <div class="col-4">
-                  <div class="bg-red-50 border border-red-200 rounded-lg p-2">
-                    <div class="text-h6 text-weight-bold text-negative">
-                      {{ reportData?.total_absence_days || attendanceStats.absences }}
-                    </div>
-                    <div class="text-caption text-slate-500">Assenze (gg)</div>
+                  <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                    <div class="text-h6 text-weight-bold text-primary">{{ attendanceStats.absences }}</div>
+                    <div class="text-caption text-slate-500">{{ t('classRegister.absent') || 'Ore Assenza' }}</div>
                   </div>
                 </div>
                 <div class="col-4">
-                  <div class="bg-amber-50 border border-amber-200 rounded-lg p-2">
-                    <div class="text-h6 text-weight-bold text-warning">
-                      {{ attendanceStats.lates }}
-                    </div>
-                    <div class="text-caption text-slate-500">Ritardi</div>
+                  <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                    <div class="text-h6 text-weight-bold text-warning">{{ attendanceStats.lates }}</div>
+                    <div class="text-caption text-slate-500">{{ t('classRegister.late') || 'Ritardi' }}</div>
                   </div>
                 </div>
                 <div class="col-4">
-                  <div class="bg-blue-50 border border-blue-200 rounded-lg p-2">
-                    <div class="text-h6 text-weight-bold text-primary">
-                      {{ attendanceStats.earlyExits }}
-                    </div>
-                    <div class="text-caption text-slate-500">Uscite Anticipate</div>
+                  <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                    <div class="text-h6 text-weight-bold text-info">{{ attendanceStats.earlyExits }}</div>
+                    <div class="text-caption text-slate-500">{{ t('classRegister.earlyExit') || 'Uscite Ant.' }}</div>
                   </div>
                 </div>
               </div>
@@ -192,12 +166,11 @@
           </q-card>
         </div>
 
-        <div class="col-12 col-sm-6">
+        <div class="col-12 col-md-6">
           <q-card flat bordered class="rounded-xl bg-white shadow-soft h-full">
             <q-card-section>
-              <div class="text-subtitle1 text-weight-bold text-slate-800 q-mb-xs">Esito & Giudizio Comportamento</div>
-              <div class="text-caption text-slate-500 q-mb-md">Stato finale del percorso di apprendimento</div>
-
+              <div class="text-subtitle1 text-weight-bold text-slate-800 q-mb-sm">{{ t('reportCardPage.finalEvaluation') || 'Esito e Giudizio Finale' }}</div>
+              
               <div class="row items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-200 q-mb-sm">
                 <span class="text-weight-bold text-slate-700">Voto di Comportamento:</span>
                 <q-chip color="primary" text-color="white" class="text-weight-bold">
@@ -223,18 +196,22 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
 import { useGradesStore } from '@/stores/grades'
 import { useAuthStore } from '@/stores/auth'
-import api from 'src/services/api'
+import { scrutinyService } from '@/services/scrutinyService'
+import api from '@/services/api'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const gradesStore = useGradesStore()
 const authStore = useAuthStore()
 
 const selectedSemester = ref(1)
 const reportData = ref(null)
+const deficiencies = ref([])
 
 const attendanceStats = reactive({
   absences: 0,
@@ -242,18 +219,19 @@ const attendanceStats = reactive({
   earlyExits: 0
 })
 
-const columns = [
-  { name: 'subject', label: 'Materia', align: 'left', field: 'subject', sortable: true },
-  { name: 'teacher', label: 'Docente', align: 'left', field: 'teacher' },
-  { name: 'grades', label: 'Voti Periodo', align: 'center', field: 'grade_count' },
-  { name: 'average', label: 'Media Voti', align: 'center', field: 'subject_average', sortable: true },
-  { name: 'final_grade', label: 'Voto Finale', align: 'center', field: 'final_grade', sortable: true },
-  { name: 'notes', label: 'Note', align: 'left', field: 'notes' }
-]
+const columns = computed(() => [
+  { name: 'subject', label: t('agendaPage.subject') || 'Materia', align: 'left', field: 'subject', sortable: true },
+  { name: 'teacher', label: t('agendaPage.teacher') || 'Docente', align: 'left', field: 'teacher' },
+  { name: 'grades', label: t('gradesPage.periodGrades') || 'Voti Periodo', align: 'center', field: 'grade_count' },
+  { name: 'average', label: t('roleDashboards.averageGrade') || 'Media Voti', align: 'center', field: 'subject_average', sortable: true },
+  { name: 'final_grade', label: t('gradesPage.finalGrade') || 'Voto Finale', align: 'center', field: 'final_grade', sortable: true },
+  { name: 'notes', label: t('common.notes') || 'Note', align: 'left', field: 'notes' }
+])
 
 onMounted(async () => {
   await loadReport()
   await loadAttendanceStats()
+  await loadDeficiencies()
 })
 
 async function loadReport() {
@@ -265,16 +243,31 @@ async function loadReport() {
   }
 }
 
+async function loadDeficiencies() {
+  try {
+    if (authStore.user?.id) {
+      const res = await scrutinyService.getStudentDeficiencies(authStore.user.id)
+      deficiencies.value = res.data || []
+    }
+  } catch {
+    deficiencies.value = []
+  }
+}
+
 async function loadAttendanceStats() {
   try {
     const res = await api.get('/attendance/my-attendance/summary')
     if (res.data) {
-      attendanceStats.absences = res.data.absences || 0
-      attendanceStats.lates = res.data.lates || 0
-      attendanceStats.earlyExits = res.data.early_exits || 0
+      attendanceStats.absences = res.data.total_absences ?? res.data.absences ?? 0
+      attendanceStats.lates = res.data.total_lates ?? res.data.lates ?? 0
+      attendanceStats.earlyExits = res.data.total_early_exits ?? res.data.early_exits ?? 0
+    } else if (reportData.value?.total_absence_days != null) {
+      attendanceStats.absences = reportData.value.total_absence_days
     }
   } catch {
-    // fallback defaults
+    if (reportData.value?.total_absence_days != null) {
+      attendanceStats.absences = reportData.value.total_absence_days
+    }
   }
 }
 
@@ -288,7 +281,6 @@ async function exportPDF() {
     await gradesStore.downloadReportCardPDF(selectedSemester.value)
     $q.notify({ type: 'positive', message: 'PDF della pagella scaricato con successo' })
   } catch (e) {
-    // Fallback to print
     window.print()
   }
 }

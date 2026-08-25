@@ -48,12 +48,20 @@ func ParseCSVGrades(r io.Reader, semester int) ([]ImportRequest, error) {
 			continue
 		}
 
-		val, _ := strconv.ParseFloat(strings.TrimSpace(row[2]), 64)
+		rawVal := strings.TrimSpace(row[2])
+		val, err := strconv.ParseFloat(rawVal, 64)
+		if err != nil {
+			continue // Skip rows with non-numeric / malformed grade values
+		}
+		// In the Italian grading system, valid grades are 1-10 (or -1 for absence)
+		if (val < 1.0 && val != -1.0) || val > 10.0 {
+			continue // Skip out-of-range grade values
+		}
 
-		var date time.Time
-		if len(row) > 3 {
+		date := time.Now()
+		if len(row) > 3 && strings.TrimSpace(row[3]) != "" {
 			d, err := time.Parse("2006-01-02", strings.TrimSpace(row[3]))
-			if err == nil {
+			if err == nil && !d.IsZero() {
 				date = d
 			}
 		}
@@ -115,12 +123,19 @@ func ParseXLSXGrades(r io.Reader, semester int) ([]ImportRequest, error) {
 			continue
 		}
 
-		val, _ := strconv.ParseFloat(strings.TrimSpace(row[2]), 64)
+		rawVal := strings.TrimSpace(row[2])
+		val, err := strconv.ParseFloat(rawVal, 64)
+		if err != nil {
+			continue // Skip non-numeric / malformed grade values
+		}
+		if (val < 1.0 && val != -1.0) || val > 10.0 {
+			continue // Skip out-of-range grade values
+		}
 
-		var date time.Time
-		if len(row) > 3 {
+		date := time.Now()
+		if len(row) > 3 && strings.TrimSpace(row[3]) != "" {
 			d, err := time.Parse("2006-01-02", strings.TrimSpace(row[3]))
-			if err == nil {
+			if err == nil && !d.IsZero() {
 				date = d
 			}
 		}
@@ -155,17 +170,23 @@ func ProcessBulkImport(repo Repository, reqs []ImportRequest, teacherID string, 
 	res := ImportResult{}
 
 	var grades []*Grade
-	for _, req := range reqs {
+	for idx, req := range reqs {
 		sID := req.SchoolID
 		if sID == "" {
 			sID = schoolID
+		} else if schoolID != "" && sID != schoolID {
+			return res, fmt.Errorf("row %d: unauthorized cross-school import attempt", idx+1)
 		}
+
 		tID := req.TeacherID
 		if tID == "" {
 			tID = teacherProfileID
 		}
 		if tID == "" {
 			tID = teacherID
+		}
+		if teacherProfileID != "" && tID != teacherProfileID && tID != teacherID {
+			return res, fmt.Errorf("row %d: unauthorized attempt to import grades for another teacher profile", idx+1)
 		}
 
 		grades = append(grades, &Grade{

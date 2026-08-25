@@ -99,12 +99,13 @@ func (h *Handler) GetByID(c *gin.Context) {
 func (h *Handler) Delete(c *gin.Context) {
 	actorID := c.GetString("user_id")
 	role := c.GetString("role")
+	schoolID := c.GetString("school_id")
 	if role != "admin" && role != "superadmin" && role != "secretary" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 	id := c.Param("id")
-	if err := h.service.DeleteMeeting(c.Request.Context(), id, actorID, role); err != nil {
+	if err := h.service.DeleteMeeting(c.Request.Context(), id, actorID, role, schoolID); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -142,14 +143,20 @@ func (h *Handler) Unregister(c *gin.Context) {
 }
 
 func (h *Handler) ListRegistrations(c *gin.Context) {
+	userID := c.GetString("user_id")
 	role := c.GetString("role")
+	schoolID := c.GetString("school_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	if role != "admin" && role != "superadmin" && role != "secretary" && role != "teacher" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 	meetingID := c.Param("id")
 
-	regs, err := h.service.ListRegistrations(c.Request.Context(), meetingID)
+	regs, err := h.service.ListRegistrations(c.Request.Context(), meetingID, userID, role, schoolID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

@@ -1,6 +1,12 @@
 import { config } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, vi } from 'vitest'
+import itMessages from '../../src/i18n/it-IT/index.js'
+
+function getNestedValue(obj, path) {
+    if (!obj || !path) return null
+    return path.split('.').reduce((prev, curr) => (prev && prev[curr] !== undefined ? prev[curr] : null), obj)
+}
 
 const mockIconSet = {
     name: 'material-icons',
@@ -48,13 +54,53 @@ const mockQ = {
     iconSet: mockIconSet
 }
 
+// Mock vue-i18n globally to avoid "SyntaxError: Need to install with app.use function"
+vi.mock('vue-i18n', async (importOriginal) => {
+    const actual = await importOriginal().catch(() => ({}))
+    const translate = (msg, params) => {
+        let val = getNestedValue(itMessages, msg) || msg
+        if (typeof val === 'string' && params && typeof params === 'object') {
+            Object.keys(params).forEach(key => {
+                val = val.replace(new RegExp(`\\{${key}\\}`, 'g'), params[key])
+            })
+        }
+        return val
+    }
+    const hasTranslation = (msg) => !!getNestedValue(itMessages, msg)
+
+    return {
+        ...actual,
+        useI18n: () => ({
+            t: translate,
+            te: hasTranslation,
+            locale: { value: 'it-IT' }
+        }),
+        createI18n: () => ({
+            install: () => {},
+            global: {
+                t: translate,
+                te: hasTranslation,
+                locale: { value: 'it-IT' }
+            }
+        })
+    }
+})
+
 config.global.provide = {
     $q: mockQ
 }
 
 config.global.mocks = {
     $q: mockQ,
-    $t: (msg) => msg
+    $t: (msg, params) => {
+        let val = getNestedValue(itMessages, msg) || msg
+        if (typeof val === 'string' && params && typeof params === 'object') {
+            Object.keys(params).forEach(key => {
+                val = val.replace(new RegExp(`\\{${key}\\}`, 'g'), params[key])
+            })
+        }
+        return val
+    }
 }
 
 // Global stubs for Quasar components

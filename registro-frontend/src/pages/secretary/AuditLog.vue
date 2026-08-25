@@ -125,10 +125,12 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useQuasar, date } from 'quasar';
-import { useAuditLogStore } from 'src/stores/auditLog';
+import { useAuditLogStore } from '@/stores/auditLog';
 
 const $q = useQuasar();
+const { t } = useI18n();
 const auditStore = useAuditLogStore();
 
 const filters = reactive({

@@ -1,39 +1,44 @@
 package grades
 
 import (
+	"strings"
 	"time"
 )
 
 // Helper Functions for Italian Grading System
 
-// 1. ConvertJudgmentToNumeric converts judgment string to 0-10 scale
+// 1. ConvertJudgmentToNumeric converts judgment string to 1-10 scale
 func ConvertJudgmentToNumeric(judgment string) float64 {
-	switch judgment {
-	case "Insufficiente":
-		return 3.0 // Or 4.0 depending on school policy, using 3.0 as per prompt
-	case "Mediocre":
-		return 4.5
-	case "Sufficiente":
+	switch strings.TrimSpace(strings.ToLower(judgment)) {
+	case "gravemente insufficiente":
+		return 3.0
+	case "insufficiente", "non raggiunto":
+		return 4.0
+	case "mediocre", "quasi sufficiente", "iniziale":
+		return 5.0
+	case "sufficiente", "base":
 		return 6.0
-	case "Discreto":
+	case "discreto":
 		return 7.0
-	case "Buono":
+	case "buono", "intermedio":
 		return 8.0
-	case "Distinto":
+	case "distinto":
 		return 9.0
-	case "Ottimo":
+	case "ottimo", "eccellente", "avanzato":
 		return 10.0
 	default:
 		return 0.0
 	}
 }
 
-// 2. ConvertNumericToJudgment converts value 0-10 to judgment string
+// 2. ConvertNumericToJudgment converts value 1-10 to judgment string
 func ConvertNumericToJudgment(value float64) string {
-	if value < 4.0 {
-		return "Insufficiente"
+	if value < 1.0 || value > 10.0 {
+		return "Non valutato"
+	} else if value < 4.0 {
+		return "Gravemente Insufficiente"
 	} else if value < 6.0 {
-		return "Mediocre"
+		return "Insufficiente"
 	} else if value < 7.0 {
 		return "Sufficiente"
 	} else if value < 8.0 {
@@ -72,9 +77,9 @@ func GetSemesterDateRange(semester int) (time.Time, time.Time) {
 		end := time.Date(yearStart+1, time.January, 31, 23, 59, 59, 0, time.UTC)
 		return start, end
 	case 2:
-		// Feb 1 to June 30
+		// Feb 1 to August 31 (covering summer exam sessions & debiti recovery)
 		start := time.Date(yearStart+1, time.February, 1, 0, 0, 0, 0, time.UTC)
-		end := time.Date(yearStart+1, time.June, 30, 23, 59, 59, 0, time.UTC)
+		end := time.Date(yearStart+1, time.August, 31, 23, 59, 59, 0, time.UTC)
 		return start, end
 	default:
 		return time.Time{}, time.Time{}

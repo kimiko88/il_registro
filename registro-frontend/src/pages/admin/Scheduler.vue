@@ -94,8 +94,10 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useSchedulingStore } from 'src/stores/scheduling'
+import { useI18n } from 'vue-i18n'
+import { useSchedulingStore } from '@/stores/scheduling'
 
+const { t } = useI18n()
 const store = useSchedulingStore()
 
 const config = ref({

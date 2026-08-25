@@ -2,17 +2,17 @@
   <q-layout view="hHh Lpr lFf">
     <!-- Skip to main content link for Accessibility (a11y) -->
     <a href="#main-content" class="sr-only focus:not-sr-only q-pa-sm bg-primary text-white text-weight-bold shadow-2" style="position: absolute; top: 4px; left: 4px; z-index: 9999; border-radius: 8px;">
-      Salta al contenuto principale
+      {{ t('layout.skipToContent') }}
     </a>
 
     <q-header class="glass-effect text-slate-900 q-py-xs" :class="$q.dark.isActive ? 'bg-dark' : 'bg-white'" role="banner">
-      <q-toolbar role="navigation" aria-label="Barra di navigazione principale">
+      <q-toolbar role="navigation" :aria-label="t('layout.mainNav')">
         <q-btn
           flat
           dense
           round
           icon="menu"
-          aria-label="Apri o chiudi menu di navigazione laterale"
+          :aria-label="t('layout.toggleDrawer')"
           :aria-expanded="leftDrawerOpen"
           color="primary"
           @click="toggleLeftDrawer"
@@ -35,9 +35,9 @@
             options-dense
             bg-color="white"
             style="min-width: 140px"
-            label="Anno Scolastico"
+            :label="t('layout.schoolYear')"
             key="school-year-select"
-            aria-label="Seleziona Anno Scolastico"
+            :aria-label="t('layout.schoolYearSelect')"
           >
             <template v-slot:prepend>
               <q-icon name="event" color="primary" size="18px" />
@@ -54,12 +54,12 @@
           color="primary"
           class="q-mr-sm"
           key="theme-toggle"
-          aria-label="Scegli il Tema Visivo dell'Interfaccia"
+          :aria-label="t('layout.themeAriaLabel')"
         >
-          <q-tooltip>Seleziona Tema Visivo</q-tooltip>
+          <q-tooltip>{{ t('layout.themeTooltip') }}</q-tooltip>
           <q-list style="min-width: 280px" class="q-py-xs">
             <q-item-label header class="text-weight-bold text-uppercase text-caption letter-spacing-1">
-              Temi e Palette Visive
+              {{ t('layout.themesTitle') }}
             </q-item-label>
 
             <q-item
@@ -114,12 +114,12 @@
           color="primary"
           class="q-mr-sm"
           key="accessibility-toggle"
-          aria-label="Opzioni di Accessibilità Visiva (OpenDyslexic e Contrasto)"
+          :aria-label="t('layout.a11yAriaLabel')"
         >
-          <q-tooltip>Accessibilità Visiva (DSA & Contrasto)</q-tooltip>
+          <q-tooltip>{{ t('layout.a11yTooltip') }}</q-tooltip>
           <q-list style="min-width: 300px" class="q-py-xs">
             <q-item-label header class="text-weight-bold text-uppercase text-caption letter-spacing-1">
-              Accessibilità Visiva (A11y)
+              {{ t('layout.a11yTitle') }}
             </q-item-label>
 
             <!-- Font OpenDyslexic (DSA) -->
@@ -130,8 +130,8 @@
                 </q-avatar>
               </q-item-section>
               <q-item-section>
-                <q-item-label class="text-weight-bold">Font OpenDyslexic (DSA)</q-item-label>
-                <q-item-label caption class="text-grey-7">Alta leggibilità dislessia/BES</q-item-label>
+                <q-item-label class="text-weight-bold">{{ t('settingsPage.fontDyslexic') }}</q-item-label>
+                <q-item-label caption class="text-grey-7">{{ t('layout.dsaFontDesc') }}</q-item-label>
               </q-item-section>
               <q-item-section side>
                 <q-toggle
@@ -151,8 +151,8 @@
                 </q-avatar>
               </q-item-section>
               <q-item-section>
-                <q-item-label class="text-weight-bold">Contrasto Elevato</q-item-label>
-                <q-item-label caption class="text-grey-7">Nitidezza e bordi netti 2px</q-item-label>
+                <q-item-label class="text-weight-bold">{{ t('layout.highContrast') }}</q-item-label>
+                <q-item-label caption class="text-grey-7">{{ t('layout.highContrastDesc') }}</q-item-label>
               </q-item-section>
               <q-item-section side>
                 <q-toggle
@@ -166,9 +166,52 @@
           </q-list>
         </q-btn-dropdown>
 
+        <!-- Language Selector Menu -->
+        <q-btn-dropdown
+          flat
+          round
+          dense
+          icon="language"
+          color="primary"
+          class="q-mr-sm"
+          key="language-toggle"
+          aria-label="Seleziona Lingua"
+        >
+          <q-tooltip>{{ t('common.language') }}</q-tooltip>
+          <q-list style="min-width: 220px" class="q-py-xs">
+            <q-item-label header class="text-weight-bold text-uppercase text-caption letter-spacing-1">
+              {{ t('common.language') }}
+            </q-item-label>
+
+            <q-item
+              v-for="loc in SUPPORTED_LOCALES"
+              :key="loc.value"
+              clickable
+              v-close-popup
+              @click="changeAppLanguage(loc.value)"
+              :active="currentLocaleValue === loc.value"
+              active-class="bg-indigo-50 text-primary text-weight-bold"
+              class="rounded-lg q-mx-xs q-mb-xs"
+              role="option"
+              :aria-selected="currentLocaleValue === loc.value"
+            >
+              <q-item-section avatar min-width="32px">
+                <span style="font-size: 1.2rem;">{{ loc.flag }}</span>
+              </q-item-section>
+              <q-item-section>
+                <q-item-label class="text-weight-bold">{{ loc.label }}</q-item-label>
+                <q-item-label caption class="text-grey-7">{{ loc.code }}</q-item-label>
+              </q-item-section>
+              <q-item-section side v-if="currentLocaleValue === loc.value">
+                <q-icon name="check_circle" color="primary" size="20px" />
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-btn-dropdown>
+
         <!-- Dark Mode Toggle -->
-        <q-btn flat round dense :icon="$q.dark.isActive ? 'light_mode' : 'dark_mode'" @click="$q.dark.toggle()" color="primary" class="q-mr-sm" :key="'dark-toggle'" :aria-label="$q.dark.isActive ? 'Attiva modalità chiara' : 'Attiva modalità scura'">
-           <q-tooltip>{{ $q.dark.isActive ? 'Modalità Chiara' : 'Modalità Scura' }}</q-tooltip>
+        <q-btn flat round dense :icon="$q.dark.isActive ? 'light_mode' : 'dark_mode'" @click="$q.dark.toggle()" color="primary" class="q-mr-sm" :key="'dark-toggle'" :aria-label="$q.dark.isActive ? t('layout.lightMode') : t('layout.darkMode')">
+           <q-tooltip>{{ $q.dark.isActive ? t('layout.lightMode') : t('layout.darkMode') }}</q-tooltip>
         </q-btn>
 
         <!-- Fullscreen Toggle -->
@@ -182,9 +225,9 @@
           color="primary" 
           class="q-mr-sm"
           :key="'fullscreen-toggle'"
-          :aria-label="$q.fullscreen.isActive ? 'Esci da schermo intero' : 'Vai a schermo intero'"
+          :aria-label="$q.fullscreen.isActive ? t('layout.exitFullscreen') : t('layout.enterFullscreen')"
         >
-           <q-tooltip>{{ $q.fullscreen.isActive ? 'Esci da Schermo Intero' : 'Schermo Intero' }}</q-tooltip>
+           <q-tooltip>{{ $q.fullscreen.isActive ? t('layout.exitFullscreen') : t('layout.enterFullscreen') }}</q-tooltip>
         </q-btn>
 
         <!-- Global Search Ctrl+K -->
@@ -200,6 +243,21 @@
         >
           <q-tooltip>{{ t('common.search') }}</q-tooltip>
           <q-badge floating transparent class="search-kbd-badge">K</q-badge>
+        </q-btn>
+
+        <!-- Help Center -->
+        <q-btn
+          flat
+          round
+          dense
+          icon="help_outline"
+          color="primary"
+          class="q-mr-sm"
+          :aria-label="t('help.openHelp')"
+          @click="helpCenterRef?.open()"
+          key="help-center-btn"
+        >
+          <q-tooltip>{{ t('help.openHelp') }}</q-tooltip>
         </q-btn>
 
         <!-- Notifications -->
@@ -219,18 +277,18 @@
       :class="$q.dark.isActive ? 'bg-dark' : 'bg-white'"
       :width="260"
       role="navigation"
-      aria-label="Menu laterale di navigazione"
+      :aria-label="t('layout.sideNav')"
     >
       <div class="column full-height no-wrap">
         <!-- User Profile Section -->
-        <div class="q-pa-md bg-primary text-white relative-position overflow-hidden" v-if="userName" role="region" aria-label="Profilo utente connesso">
+        <div class="q-pa-md bg-primary text-white relative-position overflow-hidden" v-if="userName" role="region" :aria-label="t('layout.userProfile')">
           <div class="row items-center relative-position" style="z-index: 1">
             <q-avatar size="42px" color="white" text-color="primary" class="q-mr-md shadow-soft" aria-hidden="true">
               <q-icon name="person" size="24px" />
             </q-avatar>
             <div class="col">
-              <div class="text-subtitle1 text-weight-bold no-wrap ellipsis" :aria-label="'Utente connesso: ' + userName">{{ userName }}</div>
-              <div class="text-caption opacity-80 text-uppercase letter-spacing-1" :aria-label="'Ruolo: ' + roleLabel">{{ roleLabel }}</div>
+              <div class="text-subtitle1 text-weight-bold no-wrap ellipsis" :aria-label="t('layout.connectedUser', { name: userName })">{{ userName }}</div>
+              <div class="text-caption opacity-80 text-uppercase letter-spacing-1" :aria-label="t('layout.userRole', { role: roleLabel })">{{ roleLabel }}</div>
             </div>
           </div>
           <div class="absolute-bottom-right q-mr-n-lg q-mb-n-lg" style="width: 90px; height: 90px; border-radius: 50%; background: rgba(255,255,255,0.1)" aria-hidden="true"></div>
@@ -298,6 +356,28 @@
           </div>
         </q-scroll-area>
 
+        <!-- Help & Guide Button -->
+        <div class="q-px-md q-pb-xs">
+          <q-item
+            clickable
+            class="rounded-lg q-pa-sm text-primary"
+            @click="helpDrawerRef?.open()"
+            role="button"
+            :aria-label="t('help.openHelp')"
+            style="background: rgba(99, 102, 241, 0.07); border: 1.5px solid rgba(99, 102, 241, 0.18);"
+          >
+            <q-item-section avatar>
+              <q-icon name="help_outline" size="20px" aria-hidden="true" />
+            </q-item-section>
+            <q-item-section class="text-weight-bold">
+              {{ t('help.openHelp') }}
+            </q-item-section>
+            <q-item-section side>
+              <q-icon name="chevron_right" size="16px" color="primary" />
+            </q-item-section>
+          </q-item>
+        </div>
+
         <!-- Logout Button at Bottom -->
         <div class="q-pa-md border-t border-slate-100">
           <q-item
@@ -329,7 +409,7 @@
     <q-page-container role="main" id="main-content" tabindex="-1">
       <!-- Dynamic Breadcrumb Navigation Header -->
       <div v-if="breadcrumbs.length > 0" class="q-px-md q-pt-md">
-        <q-breadcrumbs aria-label="Percorso di navigazione corrente" class="text-caption text-grey-7" active-color="primary" separator-icon="chevron_right" separator-color="grey-5">
+        <q-breadcrumbs :aria-label="t('layout.breadcrumbNav')" class="text-caption text-grey-7" active-color="primary" separator-icon="chevron_right" separator-color="grey-5">
           <q-breadcrumbs-el icon="home" to="/dashboard" :label="t('nav.dashboard')" />
           <q-breadcrumbs-el
             v-for="(crumb, idx) in breadcrumbs"
@@ -346,6 +426,19 @@
         </transition>
       </router-view>
     </q-page-container>
+
+    <!-- Onboarding Tour (global, triggers on first login per role) -->
+    <OnboardingTour ref="tourRef" @open-guide="helpCenterRef?.open()" />
+
+    <!-- Help Center Panel (full-screen, opens from toolbar or FAB) -->
+    <HelpCenterPanel ref="helpCenterRef" @restart-tour="handleRestartTour" />
+
+    <!-- Help Drawer (slides in from right, for FAB quick access) -->
+    <HelpDrawer ref="helpDrawerRef" @restart-tour="handleRestartTour" />
+
+    <!-- Session Reauth Dialog (globale: appare sopra la pagina quando il token scade) -->
+    <SessionReauthDialog />
+
   </q-layout>
 </template>
 
@@ -362,16 +455,45 @@ import { useMenuItems } from '@/composables/useMenuItems'
 import { storeToRefs } from 'pinia'
 import { useQuasar } from 'quasar'
 import { useI18n } from 'vue-i18n'
+import { i18n } from '@/i18n'
+import { SUPPORTED_LOCALES, applyLocale, normalizeLocale } from '@/utils/locale'
 import GlobalSearch from '@/components/Common/GlobalSearch.vue'
+import OnboardingTour from '@/components/Common/OnboardingTour.vue'
+import HelpDrawer from '@/components/Common/HelpDrawer.vue'
+import HelpCenterPanel from '@/components/Common/HelpCenterPanel.vue'
+import SessionReauthDialog from '@/components/Common/SessionReauthDialog.vue'
+import { useSessionReauth } from '@/composables/useSessionReauth'
+import { setReauthHandler } from '@/services/api'
 
 const globalSearchRef = ref(null)
+const tourRef = ref(null)
+const helpDrawerRef = ref(null)
+const helpCenterRef = ref(null)
+
+function handleRestartTour() {
+  // Clear the flag so the tour shows again, then start it
+  const role = authStore.userRole || authStore.user?.role || 'user'
+  localStorage.removeItem(`onboarding_done_${role.toLowerCase()}`)
+  tourRef.value?.startTour()
+}
 
 const route = useRoute()
 const router = useRouter()
 const $q = useQuasar()
-const { t, te } = useI18n()
+const { t, te, locale } = useI18n()
 const themeStore = useThemeStore()
 const schoolYearStore = useSchoolYearStore()
+
+const currentLocaleValue = computed(() => normalizeLocale(locale.value))
+
+function changeAppLanguage(langCode) {
+  applyLocale(langCode, i18n, $q)
+  $q.notify({
+    type: 'positive',
+    icon: 'language',
+    message: t('notifications.languageChanged') || 'Lingua aggiornata con successo'
+  })
+}
 
 const menuLabelToKeyMap = {
   'Dashboard': 'dashboard',
@@ -385,6 +507,7 @@ const menuLabelToKeyMap = {
   'Audit Logs': 'auditLogs',
   'Impostazioni': 'settings',
   'Supporto': 'support',
+  'Supporto & Assistenza': 'support',
   'Feature Flags & Istituto': 'featureFlags',
   'Google & Teams E-Learning': 'elearning',
   'Studenti': 'students',
@@ -407,12 +530,15 @@ const menuLabelToKeyMap = {
   'Presenze': 'attendance',
   'Didattica': 'didactics',
   'Piani PDP / PEI': 'pdp',
+  'Piano PDP / PEI': 'pdp',
   'Rubriche Valutative': 'rubrics',
   'Coordinamento': 'coordination',
   'Orario Lezioni': 'timetable',
+  'Orario Scolastico': 'timetable',
   'Agenda': 'agenda',
   'Colloqui': 'colloqui',
   'Sostituzioni': 'substitutions',
+  'Gestione Sostituzioni': 'substitutions',
   'Verbali': 'verbali',
   'Note Disciplinari': 'notes',
   'I Miei Voti': 'myGrades',
@@ -423,7 +549,15 @@ const menuLabelToKeyMap = {
   'Calendario Scolastico': 'calendar',
   'Pagella': 'reportCard',
   'Profilo': 'profile',
-  'I Miei Figli': 'myChildren'
+  'I Miei Figli': 'myChildren',
+  'Obiettivi': 'goals',
+  'Uscite & Viaggi': 'trips',
+  'Pagamenti': 'payments',
+  'Assemblee & Riunioni': 'assemblies',
+  'Fascicolo Documentale & Atti': 'documents',
+  'Fascicolo Documentale': 'documents',
+  'Compiti a casa': 'homework',
+  'Media Voti': 'averageGrade'
 }
 
 const categoryToKeyMap = {
@@ -432,7 +566,11 @@ const categoryToKeyMap = {
   'Servizi & Report': 'serviziReport',
   'Didattica & Valutazione': 'didatticaValutazione',
   'Organizzazione & Orario': 'organizzazioneOrario',
-  'Comunicazioni & Atti': 'comunicazioniAtti'
+  'Comunicazioni & Atti': 'comunicazioniAtti',
+  'Percorsi & Comunicazioni': 'percorsiComunicazioni',
+  'Valutazione & Didattica': 'valutazioneDidattica',
+  'Servizi & Orari': 'serviziOrari',
+  'Comunicazioni & Account': 'comunicazioniAccount'
 }
 
 function translateMenuLabel(label) {
@@ -452,29 +590,31 @@ function translateCategory(cat) {
 }
 
 const navigateToNotifications = () => {
-  const role = userRole.value
-  if (role === 'teacher') {
+  const role = (userRole.value || '').toLowerCase()
+  if (role === 'teacher' || role === 'docente' || role === 'coordinator') {
     router.push('/teacher/communications')
   } else if (role === 'student') {
     router.push('/student/communications')
   } else if (role === 'parent') {
     router.push('/parent/communications')
-  } else if (role === 'admin' || role === 'superadmin') {
-    router.push('/admin/users')
+  } else if (role === 'admin' || role === 'superadmin' || role === 'system_auditor') {
+    router.push('/admin/dashboard')
   } else {
     router.push('/secretary/communications')
   }
 }
 
 const navigateToProfile = () => {
-  const role = userRole.value
+  const role = (userRole.value || '').toLowerCase()
   if (role === 'student') {
     router.push('/student/profile')
   } else if (role === 'parent') {
     router.push('/parent/profile')
-  } else if (role === 'admin' || role === 'superadmin') {
+  } else if (role === 'teacher' || role === 'docente' || role === 'coordinator') {
+    router.push('/teacher/settings')
+  } else if (role === 'admin' || role === 'superadmin' || role === 'system_auditor') {
     router.push('/admin/settings')
-  } else if (role === 'secretary') {
+  } else if (role === 'secretary' || role === 'principal' || role === 'vice_principal' || role === 'staff') {
     router.push('/secretary/settings')
   } else {
     router.push('/dashboard')
@@ -483,6 +623,12 @@ const navigateToProfile = () => {
 
 onMounted(() => {
   themeStore.initTheme()
+
+  // Registra il handler per la re-autenticazione in-page.
+  // Quando il token scade e il refresh fallisce, api.js chiamerà triggerReauth()
+  // invece di navigare a /login, preservando lo stato della pagina corrente.
+  const { triggerReauth } = useSessionReauth()
+  setReauthHandler(triggerReauth)
 })
 
 watch(() => route.path, () => {
@@ -498,15 +644,15 @@ const breadcrumbs = computed(() => {
   const current = { label: currentMatch, icon: undefined, path: route.path }
 
   if (route.path.startsWith('/teacher/') && route.path !== '/teacher') {
-    items.push({ label: t('roles.teacher'), icon: 'school', path: '/teacher' })
+    items.push({ label: t('roles.teacher') || 'Docente', icon: 'school', path: '/teacher' })
   } else if (route.path.startsWith('/student/') && route.path !== '/student') {
-    items.push({ label: t('roles.student'), icon: 'person', path: '/student' })
+    items.push({ label: t('roles.student') || 'Studente', icon: 'person', path: '/student' })
   } else if (route.path.startsWith('/parent/') && route.path !== '/parent') {
-    items.push({ label: t('roles.parent'), icon: 'family_restroom', path: '/parent' })
+    items.push({ label: t('roles.parent') || 'Genitore', icon: 'family_restroom', path: '/parent' })
   } else if (route.path.startsWith('/admin/') && route.path !== '/admin' && route.path !== '/admin/dashboard') {
-    items.push({ label: t('roles.admin'), icon: 'admin_panel_settings', path: '/admin/dashboard' })
+    items.push({ label: t('roles.admin') || 'Amministrazione', icon: 'admin_panel_settings', path: '/admin/dashboard' })
   } else if (route.path.startsWith('/secretary/') && route.path !== '/secretary') {
-    items.push({ label: t('roles.secretary'), icon: 'badge', path: '/secretary' })
+    items.push({ label: t('roles.secretary') || 'Segreteria', icon: 'badge', path: '/secretary' })
   }
 
   items.push(current)
@@ -530,13 +676,18 @@ const roleLabel = computed(() => {
   return userRole.value
 })
 
-const isTeacherRole = computed(() => userRole.value === 'teacher' || userRole.value === 'docente')
+const isTeacherRole = computed(() => {
+  const r = (userRole.value || '').toLowerCase()
+  return r === 'teacher' || r === 'docente' || r === 'coordinator'
+})
 
 const teacherStore = useTeacherStore()
 const classesStore = useClassesStore()
 
 const isTeacherCoordinator = computed(() => {
-  if (userRole.value !== 'teacher') return true
+  const r = (userRole.value || '').toLowerCase()
+  if (r === 'coordinator') return true
+  if (r !== 'teacher' && r !== 'docente') return false
   if (teacherStore.isCoordinator) return true
   const currentUserId = user.value?.id
   if (currentUserId && classesStore.classes.some(c => c.coordinator_id === currentUserId)) {

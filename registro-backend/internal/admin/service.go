@@ -325,6 +325,11 @@ func (s *Service) DeleteAdminUser(ctx context.Context, callerRole, adminID, curr
 	return s.repo.DeleteAdminUser(ctx, adminID)
 }
 
+// GetSystemHealth retrieves overall system health from repository
+func (s *Service) GetSystemHealth(ctx context.Context) (*SystemHealthStatus, error) {
+	return s.repo.GetSystemHealth(ctx)
+}
+
 // GetAdminActivity retrieves activity log for an admin user
 func (s *Service) GetAdminActivity(ctx context.Context, adminID string, limit int) ([]ActivityLogEntry, error) {
 	if limit < 1 || limit > 100 {
@@ -381,6 +386,11 @@ var allowedSettingKeys = map[string]bool{
 	"allow_parents_view_grades":       true,
 	"require_mfa":                     true,
 	"enable_substitute_notifications": true,
+	"enable_pcto":                     true,
+	"timetable_visible_to_parents":    true,
+	"enable_elearning":                true,
+	"enable_uda":                      true,
+	"enable_colloqui":                 true,
 }
 
 // UpdateSchoolSetting updates a school setting with allowlist validation

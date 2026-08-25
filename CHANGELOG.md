@@ -3,6 +3,55 @@
 Tutte le modifiche rilevanti a questo progetto sono documentate in questo file.
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/).
 
+## [0.7.0] — 2026-08-24
+
+### Corretto & Migliorato
+
+- **Backend (`registro-backend`)**:
+  - **Giustificazioni Docente (`internal/attendance`)**: Risolto errore `HTTP 403 Forbidden` su `GET /attendance/pending-justifications` quando richiamato dalla Dashboard Docente senza specificare `class_id`. Aggiunta la query `FindPendingJustificationsForTeacher` per aggregare istantaneamente le giustificazioni in attesa per tutte le classi di competenza del docente.
+  - **Accesso SuperAdmin a Gestione Classi (`internal/classes`)**: Risolto errore `HTTP 401 Unauthorized` su `GET /api/v1/classes` (e correlate operazioni CRUD) per il ruolo `superadmin`. Rimosso l'obbligo vincolante di `school_id` nel token per il ruolo superadmin sia a livello di handler che di service, abilitando l'interrogazione globale multi-istituto e l'accettazione di `school_id` dinamico da payload.
+  - **Suite di Test Go**: Aggiunti test unitari di conformità in `handler_test.go` (`TestHandler_List_SuperadminAllowedWithoutSchoolID`) e `audit_regression_test.go`; test suite backend (`go test ./...`) passata al 100%.
+
+- **Frontend (`registro-frontend`)**:
+  - **Internazionalizzazione (i18n)**: Risolti tutti i warning Intlify mancanti. Aggiunte nei dizionari `it-IT` ed `en-US` le chiavi `common.history`, `common.active`, `common.inactive`, `common.all`, `common.fullName`, `common.refresh`, `common.status`, `common.lastLogin`, `common.user`, `common.stats`, `common.activityLog`, `agendaPage.event`, la sezione `usersPage` completa e `roleDashboards.userManagement`.
+  - **Agenda (`Agenda.vue`)**: Ridisegnata la grafica e la visibilità del giorno attuale (`today-cell`, `today-header-cell`, `today-slot`) con badge numerico blu ad alto contrasto, bordo perimetrale ed evidenziazione oraria continua nelle viste Mese, Settimana e Giorno.
+  - **Comunicazioni & Circolari (`Communications.vue`)**: Eliminati i mock fittizi con ID non-UUID (`circ-1`, `circ-2`) che generavano eccezioni SQL `HTTP 500` alla marcatura di lettura; consumo sicuro di soli record validi dal database PostgreSQL.
+  - **Dark Mode (`globals.css`)**: Completato il supporto della modalità scura per tutte le sfumature di background (`bg-slate-50`, `bg-slate-100`, `bg-slate-200`, `bg-indigo-50`, `bg-amber-50`, `bg-emerald-50`, `bg-orange-50`, `bg-blue-50`, `bg-gray-*`), eliminando contrasti scorretti e sfondi bianchi nelle sezioni Impostazioni (`Settings.vue`) per tutti i ruoli.
+  - **Test Suite Vitest**: 153 test file e 928 unit test superati con successo al 100% (0 fallimenti, 0 errori).
+
+---
+
+## [0.6.0] — 2026-08-23
+
+### Aggiunto & Modificato
+
+- **Hardening & Correzioni Modulo Valutazioni Backend (`internal/grades`)**:
+  - `parseFilter`: Normalizzazione corretta per query parameter `page <= 0` con fallback a `Page = 1`.
+  - `CalculateWeightedAverage`: Fallback esplicito alla media aritmetica se tutti i voti hanno peso 0 o non configurato.
+  - `ConvertJudgmentToValue` & `isVotableGrade`: Gestione case-insensitive per tutti i giudizi scolastici italiani su scala 1-10 (`ottimo`, `distinto`, `buono`, `discreto`, `sufficiente`, `mediocre`, `insufficiente`, `gravemente insufficiente`).
+  - `GetStudentGrades`: Rimossa ambiguità di routing interno, delegazione diretta a `GetStudentGradesWithFilter` e header `Deprecation/Link`.
+  - `GetChildGradesAverage` & `GetChildSemesterReport`: Aggiunti controlli di autorizzazione per ruolo nell'handler per respingere accessi non autorizzati con `HTTP 403 Forbidden`.
+  - `DownloadSemesterReportPDF`: Corretta denominazione semantica `actorID` e relative validazioni per studente, genitore e docente.
+  - `CalculateBellCurve` & `CalculateStandardDeviation`: Ottimizzazione per evitare doppie passate nell'estrazione dei valori e nel calcolo della media.
+  - `sanitizeFilenameParam`: Precompilazione della regex a livello di package (`filenameParamRegex`).
+  - Nuova suite di test unitari Go `grades_audit_fixes_10_test.go` a copertura di tutte le correzioni con esito 100% passante.
+
+- **Audit Completo & Hardening Frontend (`registro-frontend`)**:
+  - **Composables & Authentication (`src/composables`)**:
+    - Risolto mascheramento degli errori in `useUserManagement.js` durante l'importazione utenti CSV (notifica negativa `type: 'negative'` e ritorno `false`).
+    - Mappatura completa post-login per tutti i ruoli scolastici estesi (`principal`, `vice_principal`, `coordinator`, `system_auditor`, `staff`, `docente`) in `useAuth.js`.
+    - Validazione durate e intervalli orari in `useColloquiScheduling.js` per prevenire loop infiniti o date non valide.
+  - **Componenti Vue (`src/components`)**:
+    - Prevenzione valori `NaN` e warning Quasar in `GradeChart.vue` per medie non numeriche o assenti (`'-'`).
+    - Correzione sintassi prop chip e protezione array `Array.isArray()` per stream multipli asincroni in `TimelineActivityFeed.vue`.
+  - **Localizzazione & Internazionalizzazione (`src/i18n`)**:
+    - Pulizia delle chiavi duplicate e allineamento semantico dei ruoli e dei menu su tutte le 9 lingue supportate (`it-IT`, `en-US`, `de-DE`, `fr-FR`, `es-ES`, `ru-RU`, `uk-UA`, `ar-SA`, `zh-CN`).
+  - **Espansione Test Suite Vitest**:
+    - Create 5 nuove suite di test unitari dedicate (`useUserManagementFix.spec.js`, `useAuthRoleRouting.spec.js`, `StudentGradeChart.spec.js`, `TimelineActivityFeed.spec.js`, `ScheduleGridsRobustness.spec.js`).
+    - **153 test file** e **908 unit test** superati con successo al 100% (0 fallimenti, 0 errori).
+
+---
+
 ## [0.5.0] — 2026-08-13
 
 ### Aggiunto & Modificato

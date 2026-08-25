@@ -1,25 +1,27 @@
 import api from './api'
 
 export const notificationService = {
-  async getNotifications(unreadOnly = false) {
-    const response = await api.get('/notifications', { params: { unread_only: unreadOnly } })
-    return response
+  getNotifications(unreadOnly = false) {
+    return api.get('/notifications', { params: { unread_only: unreadOnly } })
   },
-  async markAsRead(id) {
+  markAsRead(id) {
     return api.put(`/notifications/${id}/read`)
   },
-  async markAllAsRead() {
+  markAllAsRead() {
     return api.put('/notifications/read-all')
   },
-  async registerPushToken(token, platform = 'web') {
+  registerPushToken(token, platform = 'web') {
     return api.post('/notifications/push-tokens', { device_token: token, platform })
   },
-  async unregisterPushToken(token) {
+  unregisterPushToken(token) {
     return api.delete('/notifications/push-tokens', { params: { device_token: token } })
   },
   async requestPushPermissionAndRegister() {
-    if (!('Notification' in window)) {
+    if (typeof window === 'undefined' || !('Notification' in window)) {
       console.warn('Web Push Notifications are not supported by this browser.')
+      return null
+    }
+    if (Notification.permission === 'denied') {
       return null
     }
     const permission = await Notification.requestPermission()
@@ -34,3 +36,6 @@ export const notificationService = {
     return null
   }
 }
+
+export default notificationService
+

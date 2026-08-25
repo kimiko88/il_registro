@@ -83,3 +83,56 @@ func TestHub_Broadcast(t *testing.T) {
 		t.Fatal("Timeout waiting for broadcast")
 	}
 }
+
+func TestHub_GlobalBroadcastIsolation(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	hub := NewHub("")
+	go hub.Run(ctx)
+
+	clientNormal := &Client{
+		Hub:      hub,
+		Send:     make(chan []byte, 5),
+		UserID:   "user-normal",
+		Role:     "student",
+		SchoolID: "school-1",
+	}
+	clientSuperAdmin := &Client{
+		Hub:      hub,
+		Send:     make(chan []byte, 5),
+		UserID:   "user-superadmin",
+		Role:     "superadmin",
+		SchoolID: "",
+	}
+	hub.register <- clientNormal
+	hub.register <- clientSuperAdmin
+	time.Sleep(15 * time.Millisecond)
+
+	// Global un-scoped broadcast
+	msg := Message{
+		Type:    "GLOBAL_SYSTEM_EVENT",
+		Payload: "secret",
+	}
+
+	hub.localBroadcast <- msg
+	time.Sleep(15 * time.Millisecond)
+
+	// Superadmin receives it
+	select {
+	case received := <-clientSuperAdmin.Send:
+		var parsed Message
+		_ = json.Unmarshal(received, &parsed)
+		assert.Equal(t, "GLOBAL_SYSTEM_EVENT", parsed.Type)
+	case <-time.After(1 * time.Second):
+		t.Fatal("Superadmin should receive global un-scoped message")
+	}
+
+	// Normal student should NOT receive global un-scoped message
+	select {
+	case <-clientNormal.Send:
+		t.Fatal("Normal student must not receive global un-scoped system message")
+	default:
+		// Success
+	}
+}

@@ -3,16 +3,16 @@
     <!-- Header -->
     <div class="row items-center q-mb-md">
       <div class="col">
-        <div class="text-h4 text-weight-bold">Gestione Admin Scuole</div>
+        <div class="text-h4 text-weight-bold">{{ t('roleDashboards.userManagement') || 'Gestione Admin Scuole' }}</div>
         <div class="text-subtitle1 text-grey-7">
-          Gestisci gli amministratori delle singole scuole
+          {{ t('roleDashboards.schoolControl') || 'Gestisci gli amministratori delle singole scuole' }}
         </div>
       </div>
       <div class="col-auto">
         <q-btn
           color="primary"
           icon="add"
-          label="Nuovo Admin"
+          :label="t('common.add') || 'Nuovo Admin'"
           @click="openCreateDialog"
         />
       </div>
@@ -25,7 +25,7 @@
           <div class="col-12 col-md-6">
             <q-input
               v-model="filters.search"
-              placeholder="Cerca per nome o email..."
+              :placeholder="t('common.search') || 'Cerca per nome o email...'"
               dense
               outlined
               clearable
@@ -40,7 +40,7 @@
              <q-select
               v-model="filters.school_id"
               :options="schoolOptions"
-              label="Filtra per Scuola"
+              :label="t('login.selectSchool') || 'Filtra per Scuola'"
               option-label="name"
               option-value="id"
               emit-value
@@ -56,7 +56,7 @@
               outline
               color="primary"
               icon="refresh"
-              label="Aggiorna"
+              :label="t('common.refresh') || 'Aggiorna'"
               @click="fetchAdmins"
               :loading="loading"
               class="full-width"
@@ -262,10 +262,12 @@
 
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useQuasar, debounce } from 'quasar'
 import adminService from '@/services/adminService'
 
 const $q = useQuasar()
+const { t } = useI18n()
 
 // State
 const admins = ref([])
@@ -302,20 +304,20 @@ const adminForm = reactive({
 
 // Columns
 const columns = computed(() => [
-  { name: 'user', label: 'Utente', align: 'left', field: 'email', sortable: true },
-  { name: 'school', label: 'Scuola', align: 'left', field: 'school_name', sortable: true },
-  { name: 'status', label: 'Stato', align: 'center', field: 'is_active', sortable: true },
-  { name: 'last_login', label: 'Ultimo Accesso', align: 'left', field: 'last_login_at', sortable: true },
-  { name: 'actions', label: 'Azioni', align: 'center' }
+  { name: 'user', label: t('classRegister.tableHeaderStudent') || 'Utente', align: 'left', field: 'email', sortable: true },
+  { name: 'school', label: t('login.selectSchool') || 'Scuola', align: 'left', field: 'school_name', sortable: true },
+  { name: 'status', label: t('common.status') || 'Stato', align: 'center', field: 'is_active', sortable: true },
+  { name: 'last_login', label: t('common.lastLogin') || 'Ultimo Accesso', align: 'left', field: 'last_login_at', sortable: true },
+  { name: 'actions', label: t('common.actions') || 'Azioni', align: 'center' }
 ])
 
-const activityColumns = [
-  { name: 'action', label: 'Azione', align: 'left', field: 'action_type' },
+const activityColumns = computed(() => [
+  { name: 'action', label: t('common.actions') || 'Azione', align: 'left', field: 'action_type' },
   { name: 'target', label: 'Target', align: 'left', field: 'target_entity' },
-  { name: 'school', label: 'Scuola', align: 'left', field: 'school_name' },
-  { name: 'details', label: 'Dettagli', align: 'left', field: 'details' },
-  { name: 'created_at', label: 'Data', align: 'left', field: 'created_at', sortable: true }
-]
+  { name: 'school', label: t('login.selectSchool') || 'Scuola', align: 'left', field: 'school_name' },
+  { name: 'details', label: t('udaPage.details') || 'Dettagli', align: 'left', field: 'details' },
+  { name: 'created_at', label: t('classRegister.dateLabel') || 'Data', align: 'left', field: 'created_at', sortable: true }
+])
 
 // Methods
 const fetchAdmins = async () => {

@@ -6,7 +6,7 @@
       :options="classesStore.classes"
       option-value="id"
       option-label="label"
-      label="Classe Attuale"
+      :label="t('classesPage.currentClass') || 'Classe Attuale'"
       dense
       outlined
       options-dense
@@ -32,8 +32,10 @@
 
 <script setup>
 import { computed, onMounted } from 'vue';
-import { useClassesStore } from 'src/stores/classes';
+import { useI18n } from 'vue-i18n';
+import { useClassesStore } from '@/stores/classes';
 
+const { t } = useI18n();
 const classesStore = useClassesStore();
 
 const selectedClassModel = computed({

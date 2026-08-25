@@ -198,6 +198,11 @@ func (r *repository) GetBooking(ctx context.Context, id string) (*ColloquioBooki
 	if err != nil {
 		return nil, err
 	}
+	if b.SlotID != "" {
+		if s, err := r.GetSlotByID(ctx, b.SlotID); err == nil {
+			b.Slot = s
+		}
+	}
 	return &b, nil
 }
 func (r *repository) GetBookingsByParent(ctx context.Context, parentUserID string) ([]ColloquioBooking, error) {
@@ -243,13 +248,32 @@ func (r *repository) GetBookingsByTeacher(ctx context.Context, teacherID string)
 }
 
 func (r *repository) UpdateBooking(ctx context.Context, b *ColloquioBooking) error {
-	// If status changes to cancelled, should decrement slot count.
-	// Logic simplified here: just update status. Service handles complexity or triggers.
-	// Actually, let's keep it simple: Service handles logic, this just updates.
-	// BUT decrementation is critical.
-	// Let's assume UpdateBooking is simple update. Logic for cancellation should likely be separate or safe.
-	_, err := r.db.ExecContext(ctx, `UPDATE colloquio_bookings SET status=$1, notes=$2 WHERE id=$3`, b.Status, b.Notes, b.ID)
-	return err
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	var prevStatus string
+	var slotID string
+	err = tx.QueryRowContext(ctx, `SELECT status, slot_id FROM colloquio_bookings WHERE id = $1 FOR UPDATE`, b.ID).Scan(&prevStatus, &slotID)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return err
+	}
+
+	_, err = tx.ExecContext(ctx, `UPDATE colloquio_bookings SET status=$1, notes=$2 WHERE id=$3`, b.Status, b.Notes, b.ID)
+	if err != nil {
+		return err
+	}
+
+	if prevStatus != string(StatusCancelled) && b.Status == StatusCancelled && slotID != "" {
+		_, err = tx.ExecContext(ctx, `UPDATE colloquio_slots SET booking_count = GREATEST(0, booking_count - 1) WHERE id = $1`, slotID)
+		if err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit()
 }
 
 func (r *repository) CountBookingsForParent(ctx context.Context, parentUserID string, date time.Time, start, end time.Time) (int, error) {
@@ -323,7 +347,7 @@ func (r *repository) querySlots(ctx context.Context, query string, args ...inter
 		}
 		slots = append(slots, s)
 	}
-	return slots, nil
+	return slots, rows.Err()
 }
 
 func (r *repository) queryBookings(ctx context.Context, query string, args ...interface{}) ([]ColloquioBooking, error) {
@@ -346,7 +370,7 @@ func (r *repository) queryBookings(ctx context.Context, query string, args ...in
 		b.Slot = &s
 		bookings = append(bookings, b)
 	}
-	return bookings, nil
+	return bookings, rows.Err()
 }
 
 func (r *repository) ResolveParentUserID(ctx context.Context, userID string) (string, error) {
@@ -361,11 +385,11 @@ func (r *repository) IsGuardian(ctx context.Context, parentUserID, studentID str
 	}
 	query := `
 		SELECT EXISTS (
-			SELECT 1 FROM parent_students ps
-			JOIN parents p ON ps.parent_id = p.id
-			LEFT JOIN students s ON ps.student_id = s.id OR ps.student_id = s.user_id
-			WHERE (p.user_id = $1::uuid OR p.id = $1::uuid)
-			  AND (ps.student_id = $2::uuid OR s.user_id = $2::uuid OR s.id = $2::uuid)
+			SELECT 1 FROM student_parents sp
+			LEFT JOIN parents p ON sp.parent_id = p.id
+			LEFT JOIN students s ON sp.student_id = s.id
+			WHERE (sp.parent_id = $1::uuid OR p.user_id = $1::uuid OR p.id = $1::uuid)
+			  AND (sp.student_id = $2::uuid OR s.user_id = $2::uuid OR s.id = $2::uuid)
 		)`
 	var exists bool
 	err := r.db.QueryRowContext(ctx, query, parentUserID, studentID).Scan(&exists)

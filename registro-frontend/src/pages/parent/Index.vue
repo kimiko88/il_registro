@@ -4,9 +4,9 @@
     <div class="row items-center justify-between q-mb-xl">
       <div>
         <h1 class="text-h3 text-weight-bold text-outfit parent-heading q-my-none" style="display: inline-block;">
-          Bentornato, {{ parentName }}
+          {{ $t('roleDashboards.parentPanel', { name: parentName }) }}
         </h1>
-        <div class="text-subtitle1 text-slate-600 q-mt-sm" aria-live="polite">Panoramica delle attività per i tuoi figli</div>
+        <div class="text-subtitle1 text-slate-600 q-mt-sm" aria-live="polite">{{ $t('roleDashboards.parentSub') }}</div>
       </div>
       <div v-if="children.length > 0">
         <q-btn-dropdown
@@ -14,7 +14,7 @@
           unelevated
           no-caps
           class="rounded-xl shadow-soft q-px-md"
-          :label="selectedChild ? `${selectedChild.first_name || selectedChild.firstName} ${selectedChild.last_name || selectedChild.lastName}` : 'Seleziona Figlio'"
+          :label="selectedChild ? `${selectedChild.first_name || selectedChild.firstName} ${selectedChild.last_name || selectedChild.lastName}` : $t('roleDashboards.selectChild')"
           icon="face"
           aria-label="Seleziona figlio da visualizzare"
         >
@@ -55,11 +55,11 @@
       <div class="col-12 col-sm-6 col-md-3" role="region" aria-label="Media voti">
         <q-card class="glass-card stat-card shadow-soft full-height overflow-hidden">
           <q-card-section>
-            <div class="text-caption text-slate-600 text-uppercase letter-spacing-1" style="font-size: 12px">Media Voti</div>
+            <div class="text-caption text-slate-600 text-uppercase letter-spacing-1" style="font-size: 12px">{{ $t('roleDashboards.averageGrade') }}</div>
             <div class="text-h3 text-weight-bold text-indigo-700 q-mt-sm" :aria-label="`Media voti: ${averageGrade}`">{{ averageGrade }}</div>
             <div class="row items-center q-mt-sm">
               <q-icon name="trending_up" color="positive" class="q-mr-xs" aria-hidden="true" />
-              <span class="text-positive text-caption text-weight-medium">Andamento generale</span>
+              <span class="text-positive text-caption text-weight-medium">{{ $t('roleDashboards.generalTrend') }}</span>
             </div>
           </q-card-section>
           <q-icon name="grade" class="card-bg-icon text-indigo-100" aria-hidden="true" />
@@ -69,10 +69,10 @@
       <div class="col-12 col-sm-6 col-md-3" role="region" aria-label="Assenze">
         <q-card class="glass-card stat-card shadow-soft full-height overflow-hidden">
           <q-card-section>
-            <div class="text-caption text-slate-600 text-uppercase letter-spacing-1" style="font-size: 12px">Assenze</div>
+            <div class="text-caption text-slate-600 text-uppercase letter-spacing-1" style="font-size: 12px">{{ $t('roleDashboards.totalAbsences') }}</div>
             <div class="text-h3 text-weight-bold text-orange-700 q-mt-sm" :aria-label="`Numero assenze: ${totalAbsences}`">{{ totalAbsences }}</div>
             <div class="row items-center q-mt-sm">
-              <span class="text-caption text-slate-600">Anno in corso</span>
+              <span class="text-caption text-slate-600">{{ $t('roleDashboards.currentYear') }}</span>
             </div>
           </q-card-section>
           <q-icon name="how_to_reg" class="card-bg-icon text-orange-100" aria-hidden="true" />
@@ -82,10 +82,10 @@
       <div class="col-12 col-sm-6 col-md-3" role="region" aria-label="Prossimo colloquio">
         <q-card class="glass-card stat-card shadow-soft full-height overflow-hidden">
           <q-card-section>
-            <div class="text-caption text-slate-600 text-uppercase letter-spacing-1" style="font-size: 12px">Prossimo Colloquio</div>
+            <div class="text-caption text-slate-600 text-uppercase letter-spacing-1" style="font-size: 12px">{{ $t('colloquiPage.title') || 'Prossimo Colloquio' }}</div>
             <div v-if="nextColloquio" class="text-h6 text-weight-bold text-slate-800 q-mt-sm">{{ formatDate(nextColloquio.date) }}</div>
-            <div v-else class="text-h6 text-weight-bold text-slate-500 q-mt-sm">Nessuno</div>
-            <q-btn flat dense no-caps color="primary" label="Prenota ora" to="/parent/colloqui" class="q-mt-sm rounded-lg" aria-label="Prenota un colloquio" />
+            <div v-else class="text-h6 text-weight-bold text-slate-500 q-mt-sm">-</div>
+            <q-btn flat dense no-caps color="primary" :label="$t('colloquiPage.booked') || 'Prenota ora'" to="/parent/colloqui" class="q-mt-sm rounded-lg" aria-label="Prenota un colloquio" />
           </q-card-section>
           <q-icon name="event" class="card-bg-icon text-slate-100" aria-hidden="true" />
         </q-card>
@@ -94,7 +94,7 @@
       <div class="col-12 col-sm-6 col-md-3" role="region" aria-label="Avvisi da leggere">
         <q-card class="glass-card stat-card shadow-soft full-height overflow-hidden">
           <q-card-section>
-            <div class="text-caption text-slate-600 text-uppercase letter-spacing-1" style="font-size: 12px">Avvisi</div>
+            <div class="text-caption text-slate-600 text-uppercase letter-spacing-1" style="font-size: 12px">{{ $t('communicationsPage.title') }}</div>
             <div class="text-h3 text-weight-bold text-rose-700 q-mt-sm" :aria-label="`${unreadCount} avvisi da leggere`">{{ unreadCount }}</div>
             <div class="text-caption text-slate-600 q-mt-sm text-weight-medium">Da leggere</div>
           </q-card-section>
@@ -106,7 +106,7 @@
       <div class="col-12 col-md-8">
         <q-card class="shadow-sm rounded-lg" role="region" aria-label="Ultimi voti">
           <q-card-section class="row items-center justify-between">
-            <div class="text-h6 text-slate-800">Ultimi Voti</div>
+            <div class="text-h6 text-slate-800">{{ $t('gradesPage.title') }}</div>
             <q-btn flat no-caps color="primary" label="Vedi tutti" to="/parent/grades" aria-label="Vedi tutti i voti" />
           </q-card-section>
           <q-separator />

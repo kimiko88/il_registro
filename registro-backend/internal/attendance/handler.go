@@ -9,8 +9,15 @@ import (
 	"strings"
 	"time"
 
+	"registro-backend/pkg/logger"
+
 	"github.com/gin-gonic/gin"
 )
+
+func respond500(c *gin.Context, msg string, err error) {
+	logger.Log.Errorf("%s: %v", msg, err)
+	c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+}
 
 type Handler struct {
 	service Service
@@ -30,7 +37,6 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	att.GET("/class/:id", h.GetClassAttendance)
 	att.DELETE("/class/:id/hour/:hour", h.DeleteClassAttendanceHour)
 	att.GET("/pending-justifications", h.GetPendingJustifications)
-	att.GET("/justifications/pending", h.GetPendingJustifications)
 	att.POST("/justification/:id/process", h.ProcessJustification)
 	att.POST("/justification/:id/reject", h.RejectJustification)
 	att.GET("/export", h.ExportAttendance)
@@ -63,32 +69,40 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 // parseWindowParams legge i query param from/to; se assenti usa l'intero anno scolastico corrente.
 func parseWindowParams(c *gin.Context) (from, to time.Time, err error) {
 	const layout = "2006-01-02"
+	loc, lErr := time.LoadLocation("Europe/Rome")
+	if lErr != nil {
+		loc = time.Local
+	}
 	fromStr := c.Query("from")
 	toStr := c.Query("to")
 	if fromStr != "" {
-		from, err = time.Parse(layout, fromStr)
+		from, err = time.ParseInLocation(layout, fromStr, loc)
 		if err != nil {
 			return
 		}
 	} else {
-		now := time.Now()
+		now := time.Now().In(loc)
 		year := now.Year()
 		if now.Month() < time.September {
 			year--
 		}
-		from = time.Date(year, time.September, 1, 0, 0, 0, 0, time.UTC)
+		from = time.Date(year, time.September, 1, 0, 0, 0, 0, loc)
 	}
 	if toStr != "" {
-		to, err = time.Parse(layout, toStr)
+		to, err = time.ParseInLocation(layout, toStr, loc)
 		if err != nil {
 			return
 		}
 	} else {
-		to = time.Now()
+		to = time.Now().In(loc)
 	}
 
-	if to.Sub(from) > 365*24*time.Hour {
-		err = errors.New("range di date troppo ampio (massimo 1 anno consentito)")
+	if to.Before(from) {
+		err = errors.New("data di inizio successiva alla data di fine")
+		return
+	}
+	if to.After(from.AddDate(1, 3, 0)) {
+		err = errors.New("range di date troppo ampio (massimo 1 anno e 3 mesi consentito)")
 		return
 	}
 	return
@@ -96,14 +110,19 @@ func parseWindowParams(c *gin.Context) (from, to time.Time, err error) {
 
 func (h *Handler) GetMySummary(c *gin.Context) {
 	studentID := c.GetString("user_id")
+	role := c.GetString("role")
 	schoolID := c.GetString("school_id")
 	if studentID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	res, err := h.service.GetStudentSummary(c.Request.Context(), studentID, schoolID)
+	if role != "student" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only students can access my-summary (parents must use /attendance/students/:studentID/summary)"})
+		return
+	}
+	res, err := h.service.GetStudentSummary(c.Request.Context(), studentID, role, schoolID, studentID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "GetMySummary error", err)
 		return
 	}
 	c.JSON(http.StatusOK, res)
@@ -127,7 +146,7 @@ func (h *Handler) GetChildAttendance(c *gin.Context) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "GetChildAttendance error", err)
 		return
 	}
 	c.JSON(http.StatusOK, res)
@@ -135,9 +154,14 @@ func (h *Handler) GetChildAttendance(c *gin.Context) {
 
 func (h *Handler) GetChildSummary(c *gin.Context) {
 	parentID := c.GetString("user_id")
+	role := c.GetString("role")
 	schoolID := c.GetString("school_id")
 	if parentID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "parent" && role != "admin" && role != "superadmin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: access restricted to parents or administrators"})
 		return
 	}
 	studentID := c.Param("studentID")
@@ -147,24 +171,35 @@ func (h *Handler) GetChildSummary(c *gin.Context) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "GetChildSummary error", err)
 		return
 	}
 	c.JSON(http.StatusOK, res)
 }
 
-// GetStudentSummaryForTeacher allows a teacher to fetch the attendance summary of
-// any student (no parent-guardian check required).
+// GetStudentSummaryForTeacher allows a teacher or staff member to fetch the attendance summary of
+// a student in their school.
 func (h *Handler) GetStudentSummaryForTeacher(c *gin.Context) {
+	actorID := c.GetString("user_id")
+	actorRole := c.GetString("role")
 	schoolID := c.GetString("school_id")
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
 	studentID := c.Param("studentID")
 	if studentID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "studentID mancante"})
 		return
 	}
-	res, err := h.service.GetStudentSummary(c.Request.Context(), studentID, schoolID)
+	res, err := h.service.GetStudentSummary(c.Request.Context(), actorID, actorRole, schoolID, studentID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "GetStudentSummaryForTeacher error", err)
 		return
 	}
 	c.JSON(http.StatusOK, res)
@@ -183,10 +218,31 @@ func (h *Handler) GetChildAttendanceTrends(c *gin.Context) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "GetChildAttendanceTrends error", err)
 		return
 	}
 	c.JSON(http.StatusOK, res)
+}
+
+func handleJustificationError(c *gin.Context, err error) {
+	errStr := strings.ToLower(err.Error())
+	if errors.Is(err, ErrAlreadyProcessed) || strings.Contains(errStr, "già stata elaborata") || strings.Contains(errStr, "already processed") {
+		c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+		return
+	}
+	if errors.Is(err, ErrForbidden) || strings.Contains(errStr, "forbidden") || strings.Contains(errStr, "non assegnato") {
+		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		return
+	}
+	if errors.Is(err, ErrUnauthorized) || strings.Contains(errStr, "unauthorized") {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+	if errors.Is(err, ErrNotFound) || strings.Contains(errStr, "not found") || strings.Contains(errStr, "non trovata") {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+	respond500(c, "Justification processing error", err)
 }
 
 // ApproveJustification requires teacher or admin role.
@@ -198,8 +254,8 @@ func (h *Handler) ApproveJustification(c *gin.Context) {
 		return
 	}
 	id := c.Param("id")
-	if err := h.service.ProcessJustification(c.Request.Context(), actorID, id, true); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	if err := h.service.ProcessJustification(c.Request.Context(), actorID, actorRole, id, true); err != nil {
+		handleJustificationError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "approved"})
@@ -214,14 +270,19 @@ func (h *Handler) RejectJustification(c *gin.Context) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
-	if err := h.service.ProcessJustification(c.Request.Context(), actorID, id, false); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	if err := h.service.ProcessJustification(c.Request.Context(), actorID, actorRole, id, false); err != nil {
+		handleJustificationError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "rejected"})
 }
 
 func (h *Handler) GetAnalytics(c *gin.Context) {
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	role := c.GetString("role")
 	if role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && role != "teacher" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
@@ -234,7 +295,7 @@ func (h *Handler) GetAnalytics(c *gin.Context) {
 	}
 	res, err := h.service.GetSchoolAnalytics(c.Request.Context(), schoolID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
 	c.JSON(http.StatusOK, res)
@@ -323,8 +384,8 @@ func (h *Handler) GetMyAttendance(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "student" && role != "parent" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only students or parents can view my-attendance"})
+	if role != "student" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only students can view my-attendance (parents must use /child-attendance/:studentID)"})
 		return
 	}
 	from, to, err := parseWindowParams(c)
@@ -334,7 +395,7 @@ func (h *Handler) GetMyAttendance(c *gin.Context) {
 	}
 	res, err := h.service.GetStudentAttendance(c.Request.Context(), studentID, role, schoolID, studentID, from, to)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "GetMyAttendance error", err)
 		return
 	}
 	c.JSON(http.StatusOK, res)
@@ -366,14 +427,23 @@ func (h *Handler) RequestJustification(c *gin.Context) {
 func (h *Handler) GetPendingJustifications(c *gin.Context) {
 	actorID := c.GetString("user_id")
 	actorRole := c.GetString("role")
-	if actorID == "" || (actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary") {
+	schoolID := c.GetString("school_id")
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" && actorRole != "principal" && actorRole != "vice_principal" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 	classID := c.Query("class_id")
-	res, err := h.service.GetPendingJustifications(c.Request.Context(), classID)
+	res, err := h.service.GetPendingJustifications(c.Request.Context(), actorID, actorRole, classID, schoolID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		if strings.Contains(err.Error(), "forbidden") || strings.Contains(err.Error(), "unauthorized") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		respond500(c, "GetPendingJustifications error", err)
 		return
 	}
 	c.JSON(http.StatusOK, res)
@@ -394,14 +464,12 @@ func (h *Handler) ProcessJustification(c *gin.Context) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
-	if err := h.service.ProcessJustification(c.Request.Context(), teacherID, id, req.Approve); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	if err := h.service.ProcessJustification(c.Request.Context(), teacherID, actorRole, id, req.Approve); err != nil {
+		handleJustificationError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "processed"})
 }
-
-func (h *Handler) GetAttendance(c *gin.Context) { h.GetMyAttendance(c) }
 
 func (h *Handler) UpdateAttendance(c *gin.Context) {
 	id := c.Param("id")
@@ -439,13 +507,19 @@ func (h *Handler) ExportAttendance(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" {
+	if actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" && actorRole != "principal" && actorRole != "vice_principal" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 
 	classID := c.Query("class_id")
-	date := c.DefaultQuery("date", time.Now().Format("2006-01-02"))
+	dateRaw := c.DefaultQuery("date", time.Now().Format("2006-01-02"))
+	dateParsed, err := time.Parse("2006-01-02", dateRaw)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid date parameter format: expected YYYY-MM-DD"})
+		return
+	}
+	date := dateParsed.Format("2006-01-02")
 
 	if classID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "class_id parameter required"})
@@ -454,28 +528,60 @@ func (h *Handler) ExportAttendance(c *gin.Context) {
 
 	res, err := h.service.GetClassAttendance(c.Request.Context(), actorID, actorRole, schoolID, classID, date)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		errStr := strings.ToLower(err.Error())
+		if strings.Contains(errStr, "forbidden") || strings.Contains(errStr, "unauthorized") || strings.Contains(errStr, "non sei assegnato") || strings.Contains(errStr, "non appartiene") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		if strings.Contains(errStr, "non trovata") || strings.Contains(errStr, "not found") {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
+		respond500(c, "ExportAttendance GetClassAttendance error", err)
 		return
 	}
 
-	filename := fmt.Sprintf("presenze_%s_%s.csv", classID, date)
+	// Sanitize classID to prevent header injection: strip quotes, CR, LF, semicolons.
+	safeClassID := strings.Map(func(r rune) rune {
+		if r == '"' || r == '\r' || r == '\n' || r == ';' || r == '\\' {
+			return '_'
+		}
+		return r
+	}, classID)
+	filename := fmt.Sprintf("presenze_%s_%s.csv", safeClassID, date)
 	c.Header("Content-Type", "text/csv; charset=utf-8")
 	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
 
 	var buf bytes.Buffer
 	buf.Write([]byte{0xEF, 0xBB, 0xBF})
 	w := csv.NewWriter(&buf)
-	_ = w.Write([]string{"StudentID", "Status", "IsJustified", "Notes"})
+	_ = w.Write([]string{"StudentID", "Date", "Hour", "Status", "IsJustified", "EntryTime", "ExitTime", "Notes"})
 
 	for _, rec := range res.Records {
+		studentID := rec.StudentID
+		if len(studentID) > 0 && (studentID[0] == '=' || studentID[0] == '+' || studentID[0] == '-' || studentID[0] == '@') {
+			studentID = "'" + studentID
+		}
+		statusStr := string(rec.Status)
+		if len(statusStr) > 0 && (statusStr[0] == '=' || statusStr[0] == '+' || statusStr[0] == '-' || statusStr[0] == '@') {
+			statusStr = "'" + statusStr
+		}
 		notes := rec.Notes
 		if len(notes) > 0 && (notes[0] == '=' || notes[0] == '+' || notes[0] == '-' || notes[0] == '@') {
 			notes = "'" + notes
 		}
+		hourStr := ""
+		if rec.Hour > 0 {
+			hourStr = fmt.Sprintf("%d", rec.Hour)
+		}
 		_ = w.Write([]string{
-			rec.StudentID,
-			string(rec.Status),
+			studentID,
+			rec.Date,
+			hourStr,
+			statusStr,
 			fmt.Sprintf("%t", rec.IsJustified),
+			rec.EntryTime,
+			rec.ExitTime,
 			notes,
 		})
 	}
@@ -484,7 +590,7 @@ func (h *Handler) ExportAttendance(c *gin.Context) {
 	c.Data(http.StatusOK, "text/csv; charset=utf-8", buf.Bytes())
 }
 
-// GetMonthlyBreakdown returns per-month attendance statistics for a student (teacher/admin view).
+// GetMonthlyBreakdown returns per-month attendance statistics for a student.
 func (h *Handler) GetMonthlyBreakdown(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
@@ -500,51 +606,65 @@ func (h *Handler) GetMonthlyBreakdown(c *gin.Context) {
 		return
 	}
 
-	res, err := h.service.GetMonthlyBreakdown(c.Request.Context(), studentID, schoolYear)
+	if role == "student" && userID != studentID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: student can only access own monthly breakdown"})
+		return
+	}
+
+	if role == "parent" {
+		res, err := h.service.GetChildMonthlyBreakdown(c.Request.Context(), userID, studentID, schoolYear)
+		if err != nil {
+			if strings.Contains(err.Error(), "guardian") || strings.Contains(err.Error(), "access denied") {
+				c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+				return
+			}
+			respond500(c, "GetMonthlyBreakdown parent error", err)
+			return
+		}
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	schoolID := c.GetString("school_id")
+	res, err := h.service.GetMonthlyBreakdown(c.Request.Context(), userID, role, schoolID, studentID, schoolYear)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		if strings.Contains(err.Error(), "unauthorized") || strings.Contains(err.Error(), "forbidden") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		respond500(c, "GetMonthlyBreakdown error", err)
 		return
 	}
 	c.JSON(http.StatusOK, res)
 }
 
 // GetChildMonthlyBreakdown returns per-month attendance statistics for a parent's child.
+// Maintained as an explicit legacy alias route delegating directly to GetMonthlyBreakdown for backward compatibility with mobile/frontend clients.
 func (h *Handler) GetChildMonthlyBreakdown(c *gin.Context) {
-	parentID := c.GetString("user_id")
-	if parentID == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
-	studentID := c.Param("studentID")
-	schoolYear := c.DefaultQuery("school_year", "")
-
-	res, err := h.service.GetChildMonthlyBreakdown(c.Request.Context(), parentID, studentID, schoolYear)
-	if err != nil {
-		if err.Error() == "access denied: not a guardian of this student" {
-			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, res)
+	h.GetMonthlyBreakdown(c)
 }
 
 func (h *Handler) GetChildUnjustified(c *gin.Context) {
 	parentID := c.GetString("user_id")
+	role := c.GetString("role")
 	studentID := c.Param("studentID")
 	if parentID == "" || studentID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid parameters"})
 		return
 	}
+	if role != "parent" && role != "student" && role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && role != "vice_principal" && role != "teacher" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
 
 	result, err := h.service.GetChildUnjustified(c.Request.Context(), parentID, studentID)
 	if err != nil {
-		if strings.Contains(err.Error(), "guardian") || strings.Contains(err.Error(), "unauthorized") || strings.Contains(err.Error(), "access denied") {
+		errLower := strings.ToLower(err.Error())
+		if strings.Contains(errLower, "guardian") || strings.Contains(errLower, "tutela") || strings.Contains(errLower, "forbidden") || strings.Contains(errLower, "unauthorized") || strings.Contains(errLower, "access denied") {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "GetChildUnjustified error", err)
 		return
 	}
 
@@ -553,25 +673,32 @@ func (h *Handler) GetChildUnjustified(c *gin.Context) {
 
 func (h *Handler) JustifyChildAbsence(c *gin.Context) {
 	parentID := c.GetString("user_id")
+	role := c.GetString("role")
 	studentID := c.Param("studentID")
 	attendanceID := c.Param("attendanceID")
 	if parentID == "" || studentID == "" || attendanceID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid parameters"})
 		return
 	}
+	if role != "parent" && role != "admin" && role != "superadmin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: solo i genitori o gli amministratori possono giustificare le assenze del figlio"})
+		return
+	}
 
 	var req JustifyAbsenceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		req.Reason = "Giustificato da genitore"
+		c.JSON(http.StatusBadRequest, gin.H{"error": "corpo della richiesta non valido: " + err.Error()})
+		return
 	}
 
 	err := h.service.JustifyChildAbsence(c.Request.Context(), parentID, studentID, attendanceID, req)
 	if err != nil {
-		if strings.Contains(err.Error(), "guardian") || strings.Contains(err.Error(), "unauthorized") || strings.Contains(err.Error(), "access denied") {
+		errLower := strings.ToLower(err.Error())
+		if strings.Contains(errLower, "guardian") || strings.Contains(errLower, "tutela") || strings.Contains(errLower, "forbidden") || strings.Contains(errLower, "unauthorized") || strings.Contains(errLower, "access denied") {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "JustifyChildAbsence error", err)
 		return
 	}
 
@@ -580,19 +707,25 @@ func (h *Handler) JustifyChildAbsence(c *gin.Context) {
 
 func (h *Handler) GetChildAttendanceStats(c *gin.Context) {
 	parentID := c.GetString("user_id")
+	role := c.GetString("role")
 	studentID := c.Param("studentID")
 	if parentID == "" || studentID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid parameters"})
 		return
 	}
+	if role != "parent" && role != "student" && role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && role != "vice_principal" && role != "teacher" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
 
 	stats, err := h.service.GetChildAttendanceStats(c.Request.Context(), parentID, studentID)
 	if err != nil {
-		if strings.Contains(err.Error(), "guardian") || strings.Contains(err.Error(), "unauthorized") || strings.Contains(err.Error(), "access denied") {
+		errLower := strings.ToLower(err.Error())
+		if strings.Contains(errLower, "guardian") || strings.Contains(errLower, "tutela") || strings.Contains(errLower, "forbidden") || strings.Contains(errLower, "unauthorized") || strings.Contains(errLower, "access denied") {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respond500(c, "GetChildAttendanceStats error", err)
 		return
 	}
 
@@ -600,13 +733,13 @@ func (h *Handler) GetChildAttendanceStats(c *gin.Context) {
 }
 
 func (h *Handler) DeleteClassAttendanceHour(c *gin.Context) {
-	userID := c.GetString("user_id")
-	role := c.GetString("role")
-	if userID == "" {
+	actorID := c.GetString("user_id")
+	actorRole := c.GetString("role")
+	if actorID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "teacher" && role != "admin" && role != "superadmin" {
+	if actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" && actorRole != "principal" && actorRole != "vice_principal" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -619,26 +752,21 @@ func (h *Handler) DeleteClassAttendanceHour(c *gin.Context) {
 		return
 	}
 
-	hour, err := time.ParseDuration(hourStr)
 	var hourInt int
-	if err == nil {
-		hourInt = int(hour.Hours())
-	} else {
-		// Atoi
-		var convErr error
-		_, convErr = fmt.Sscanf(hourStr, "%d", &hourInt)
-		if convErr != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid hour parameter"})
-			return
-		}
+	if _, convErr := fmt.Sscanf(hourStr, "%d", &hourInt); convErr != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid hour parameter"})
+		return
 	}
 
-	actorID := c.GetString("user_id")
-	actorRole := c.GetString("role")
 	schoolID := c.GetString("school_id")
 
 	if err := h.service.DeleteClassAttendanceHour(c.Request.Context(), actorID, actorRole, schoolID, classID, dateStr, hourInt); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		errStr := strings.ToLower(err.Error())
+		if errors.Is(err, ErrForbidden) || strings.Contains(errStr, "forbidden") || strings.Contains(errStr, "unauthorized") || strings.Contains(errStr, "non sei assegnato") || strings.Contains(errStr, "non assegnato") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		respond500(c, "DeleteClassAttendanceHour error", err)
 		return
 	}
 

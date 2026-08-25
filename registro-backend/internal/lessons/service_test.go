@@ -119,7 +119,7 @@ func (m *mockRepository) CreateHomework(h *Homework) error {
 	return nil
 }
 
-func (m *mockRepository) GetHomeworkByClass(classID string) ([]Homework, error) {
+func (m *mockRepository) GetHomeworkByClass(classID string, fromDate ...string) ([]Homework, error) {
 	if m.errHW != nil {
 		return nil, m.errHW
 	}

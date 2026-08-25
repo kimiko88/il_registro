@@ -3,7 +3,7 @@
     <q-card class="column no-wrap rounded-xl overflow-hidden glass-card" style="min-height: 80vh">
       <q-card-section class="bg-gradient-primary text-white row items-center q-pa-lg">
         <div>
-          <div class="text-h5 text-weight-bold text-outfit">Scheda Studente</div>
+          <div class="text-h5 text-weight-bold text-outfit">{{ t('studentsPage.studentFile') || 'Scheda Studente' }}</div>
           <div class="text-subtitle2 opacity-80">{{ student?.first_name }} {{ student?.last_name }}</div>
         </div>
         <q-space />
@@ -19,8 +19,8 @@
         align="justify"
         narrow-indicator
       >
-        <q-tab name="grades" icon="grade" label="Voti" />
-        <q-tab name="attendance" icon="event" label="Assenze" />
+        <q-tab name="grades" icon="grade" :label="t('roleDashboards.tabGrades') || 'Voti'" />
+        <q-tab name="attendance" icon="event" :label="t('roleDashboards.tabAttendance') || 'Assenze'" />
       </q-tabs>
 
       <q-separator />
@@ -34,7 +34,7 @@
           
           <div v-else-if="grades.length === 0" class="column items-center justify-center q-pa-xl text-grey-6">
             <q-icon name="history_edu" size="64px" class="q-mb-md" />
-            <div class="text-h6">Nessun voto registrato</div>
+            <div class="text-h6">{{ t('gradesPage.noGrades') || 'Nessun voto registrato' }}</div>
           </div>
 
           <div v-else>
@@ -66,7 +66,7 @@
           
           <div v-else-if="attendance.length === 0" class="column items-center justify-center q-pa-xl text-grey-6">
             <q-icon name="event_available" size="64px" class="q-mb-md" />
-            <div class="text-h6">Nessuna assenza registrata</div>
+            <div class="text-h6">{{ t('attendance.noAbsences') || 'Nessuna assenza registrata' }}</div>
           </div>
 
           <div v-else>
@@ -104,10 +104,13 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
-import { gradeService } from 'src/services/gradeService'
-import { attendanceService } from 'src/services/attendanceService'
+import { ref, watch, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { gradeService } from '@/services/gradeService'
+import { attendanceService } from '@/services/attendanceService'
 import { date } from 'quasar'
+
+const { t } = useI18n()
 
 const props = defineProps({
   modelValue: Boolean,
@@ -123,20 +126,20 @@ const loadingAttendance = ref(false)
 const grades = ref([])
 const attendance = ref([])
 
-const gradeColumns = [
-  { name: 'subject', label: 'Materia', field: row => row.subject_id, align: 'left', sortable: true },
-  { name: 'grade', label: 'Voto', field: 'grade_value', align: 'center', sortable: true },
-  { name: 'date', label: 'Data', field: row => date.formatDate(row.date, 'DD/MM/YYYY'), align: 'left', sortable: true },
-  { name: 'type', label: 'Tipo', field: 'grade_type', align: 'left' },
-  { name: 'comment', label: 'Commento', field: 'description', align: 'left' }
-]
+const gradeColumns = computed(() => [
+  { name: 'subject', label: t('agendaPage.subject') || 'Materia', field: row => row.subject_id, align: 'left', sortable: true },
+  { name: 'grade', label: t('classRegister.tableHeaderGrade') || 'Voto', field: 'grade_value', align: 'center', sortable: true },
+  { name: 'date', label: t('classRegister.dateLabel') || 'Data', field: row => date.formatDate(row.date, 'DD/MM/YYYY'), align: 'left', sortable: true },
+  { name: 'type', label: t('classRegister.tableHeaderGradeType') || 'Tipo', field: 'grade_type', align: 'left' },
+  { name: 'comment', label: t('common.comment') || 'Commento', field: 'description', align: 'left' }
+])
 
-const attendanceColumns = [
-  { name: 'date', label: 'Data', field: row => date.formatDate(row.date, 'DD/MM/YYYY'), align: 'left', sortable: true },
-  { name: 'status', label: 'Stato', field: 'status', align: 'center' },
-  { name: 'justified', label: 'Giustificata', field: 'is_justified', align: 'center' },
-  { name: 'reason', label: 'Motivazione', field: 'justification_reason', align: 'left' }
-]
+const attendanceColumns = computed(() => [
+  { name: 'date', label: t('classRegister.dateLabel') || 'Data', field: row => date.formatDate(row.date, 'DD/MM/YYYY'), align: 'left', sortable: true },
+  { name: 'status', label: t('substitutionsPage.status') || 'Stato', field: 'status', align: 'center' },
+  { name: 'justified', label: t('attendance.justified') || 'Giustificata', field: 'is_justified', align: 'center' },
+  { name: 'reason', label: t('attendance.reason') || 'Motivazione', field: 'justification_reason', align: 'left' }
+])
 
 watch(() => props.modelValue, (val) => {
   show.value = val
@@ -184,7 +187,8 @@ const getGradeColor = (val) => {
 }
 
 const getAttendanceColor = (status) => {
-  switch (status.toLowerCase()) {
+  if (!status) return 'grey'
+  switch (String(status).toLowerCase()) {
     case 'present': return 'positive';
     case 'absent': return 'negative';
     case 'late': return 'warning';
