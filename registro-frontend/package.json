@@ -15,7 +15,7 @@
     "lint": "eslint src"
   },
   "dependencies": {
-    "@quasar/extras": "^2.0.2",
+    "@quasar/extras": "^2.0.4",
     "axios": "^1.18.1",
     "chart.js": "^4.5.1",
     "pinia": "^4.0.2",
