@@ -49,17 +49,25 @@ func TestAgendaHandler_GetByID_ErrorMapping(t *testing.T) {
 	})
 	h.RegisterRoutes(r.Group("/api/v1"))
 
-	// 1. Not found -> 404
-	mockRepo.On("GetByID", mock.Anything, "non-existent").Return(nil, ErrNotFound).Once()
+	// 1. Invalid UUID format -> 404
+	w0 := httptest.NewRecorder()
+	req0, _ := http.NewRequest(http.MethodGet, "/api/v1/agenda/not-a-valid-uuid", nil)
+	r.ServeHTTP(w0, req0)
+	assert.Equal(t, http.StatusNotFound, w0.Code)
+
+	// 2. Not found -> 404
+	validNotFoundID := "00000000-0000-0000-0000-000000000001"
+	mockRepo.On("GetByID", mock.Anything, validNotFoundID).Return(nil, ErrNotFound).Once()
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest(http.MethodGet, "/api/v1/agenda/non-existent", nil)
+	req, _ := http.NewRequest(http.MethodGet, "/api/v1/agenda/"+validNotFoundID, nil)
 	r.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusNotFound, w.Code)
 
-	// 2. Internal error -> 500
-	mockRepo.On("GetByID", mock.Anything, "db-error").Return(nil, errors.New("connection failed")).Once()
+	// 3. Internal error -> 500
+	validDbErrID := "00000000-0000-0000-0000-000000000002"
+	mockRepo.On("GetByID", mock.Anything, validDbErrID).Return(nil, errors.New("connection failed")).Once()
 	w2 := httptest.NewRecorder()
-	req2, _ := http.NewRequest(http.MethodGet, "/api/v1/agenda/db-error", nil)
+	req2, _ := http.NewRequest(http.MethodGet, "/api/v1/agenda/"+validDbErrID, nil)
 	r.ServeHTTP(w2, req2)
 	assert.Equal(t, http.StatusInternalServerError, w2.Code)
 }

@@ -122,6 +122,9 @@ func (s *service) GetMyProjects(ctx context.Context, studentID string) ([]Projec
 	for _, p := range parts {
 		proj, _ := s.repo.GetProjectByID(ctx, p.ProjectID)
 		if proj != nil {
+			proj.HoursCompleted = p.HoursCompleted
+			proj.HoursDone = p.HoursCompleted
+			proj.Status = p.Status
 			projects = append(projects, *proj)
 		}
 	}

@@ -93,41 +93,55 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
+import { storeToRefs } from 'pinia'
 import { pdpService } from '@/services/pdpService'
-import { useAuthStore } from '@/stores/auth'
+import { useParentStore } from '@/stores/parent'
 import SkeletonCard from '@/components/Common/SkeletonCard.vue'
 
 const $q = useQuasar()
 const { t } = useI18n()
-const authStore = useAuthStore()
+const parentStore = useParentStore()
+const { selectedChild } = storeToRefs(parentStore)
 
 const plans = ref([])
 const loading = ref(true)
 const approving = ref(false)
 
-onMounted(async () => {
+const fetchPlans = async () => {
+  const studentId = selectedChild.value?.id || selectedChild.value?.user_id
+  if (!studentId) {
+    plans.value = []
+    loading.value = false
+    return
+  }
+  loading.value = true
   try {
-    let studentId = authStore.selectedChildId || authStore.selectedChild?.id || authStore.selectedChild?.user_id
-    if (!studentId && authStore.user?.role === 'parent') {
-      const child = authStore.user?.children?.[0]
-      studentId = child?.id || child?.user_id
-    }
-    if (!studentId) {
-      studentId = authStore.user?.id
-    }
-
-    if (studentId) {
-      const res = await pdpService.getStudentPlans(studentId, '2025/2026')
-      plans.value = res.data?.plans || []
-    }
+    const res = await pdpService.getStudentPlans(studentId, '2025/2026')
+    plans.value = res.data?.plans || []
   } catch (err) {
     console.warn('Could not fetch PDP plans:', err)
+    plans.value = []
   } finally {
     loading.value = false
   }
+}
+
+onMounted(async () => {
+  if (!parentStore.children || parentStore.children.length === 0) {
+    try {
+      await parentStore.fetchChildren()
+    } catch (e) {
+      console.warn('Could not fetch parent children:', e)
+    }
+  }
+  await fetchPlans()
+})
+
+watch(selectedChild, async () => {
+  await fetchPlans()
 })
 
 async function approvePlan(plan) {

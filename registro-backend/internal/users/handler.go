@@ -89,12 +89,12 @@ func (h *Handler) List(c *gin.Context) {
 	}
 
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
-	if pageSize > 100 {
-		pageSize = 100
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "50"))
+	if pageSize > 500 {
+		pageSize = 500
 	}
 	if pageSize < 1 {
-		pageSize = 20
+		pageSize = 50
 	}
 
 	isActiveStr := c.Query("is_active")

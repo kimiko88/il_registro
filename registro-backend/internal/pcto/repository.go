@@ -66,10 +66,25 @@ func (r *repository) GetProjects(ctx context.Context, schoolID string) ([]Projec
 
 func (r *repository) GetProjectByID(ctx context.Context, id string) (*Project, error) {
 	var p Project
-	err := r.db.QueryRowContext(ctx, `SELECT id, school_id, title, description, type, start_date, end_date, total_hours, company_id, school_tutor_id, company_tutor_name, created_by FROM pcto_projects WHERE id=$1`, id).Scan(
+	var compName sql.NullString
+	query := `
+		SELECT p.id, p.school_id, p.title, p.description, p.type, p.start_date, p.end_date, p.total_hours, p.company_id, p.school_tutor_id, p.company_tutor_name, p.created_by,
+		       COALESCE(c.name, '')
+		FROM pcto_projects p
+		LEFT JOIN pcto_companies c ON p.company_id = c.id
+		WHERE p.id=$1
+	`
+	err := r.db.QueryRowContext(ctx, query, id).Scan(
 		&p.ID, &p.SchoolID, &p.Title, &p.Description, &p.Type, &p.StartDate, &p.EndDate, &p.TotalHours, &p.CompanyID, &p.SchoolTutorID, &p.CompanyTutor, &p.CreatedBy,
+		&compName,
 	)
-	return &p, err
+	if err != nil {
+		return nil, err
+	}
+	if compName.Valid {
+		p.CompanyName = compName.String
+	}
+	return &p, nil
 }
 
 func (r *repository) UpdateProject(ctx context.Context, p *Project) error {
@@ -103,7 +118,16 @@ func (r *repository) GetParticipationsByProject(ctx context.Context, projectID s
 }
 
 func (r *repository) GetParticipationsByStudent(ctx context.Context, studentID string) ([]Participation, error) {
-	rows, err := r.db.QueryContext(ctx, `SELECT id, project_id, student_id, status, hours_completed FROM pcto_participations WHERE student_id=$1`, studentID)
+	query := `
+		SELECT id, project_id, student_id, status, hours_completed 
+		FROM pcto_participations 
+		WHERE (
+			student_id = $1::uuid OR
+			student_id IN (SELECT id FROM students WHERE user_id = $1::uuid OR id = $1::uuid) OR
+			student_id IN (SELECT user_id FROM students WHERE id = $1::uuid OR user_id = $1::uuid)
+		)
+	`
+	rows, err := r.db.QueryContext(ctx, query, studentID)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +143,17 @@ func (r *repository) GetParticipationsByStudent(ctx context.Context, studentID s
 
 func (r *repository) GetParticipation(ctx context.Context, projectID, studentID string) (*Participation, error) {
 	var p Participation
-	err := r.db.QueryRowContext(ctx, `SELECT id, project_id, student_id, status, hours_completed FROM pcto_participations WHERE project_id=$1 AND student_id=$2`, projectID, studentID).Scan(&p.ID, &p.ProjectID, &p.StudentID, &p.Status, &p.HoursCompleted)
+	query := `
+		SELECT id, project_id, student_id, status, hours_completed 
+		FROM pcto_participations 
+		WHERE project_id = $1::uuid 
+		  AND (
+			student_id = $2::uuid OR
+			student_id IN (SELECT id FROM students WHERE user_id = $2::uuid OR id = $2::uuid) OR
+			student_id IN (SELECT user_id FROM students WHERE id = $2::uuid OR user_id = $2::uuid)
+		  )
+	`
+	err := r.db.QueryRowContext(ctx, query, projectID, studentID).Scan(&p.ID, &p.ProjectID, &p.StudentID, &p.Status, &p.HoursCompleted)
 	return &p, err
 }
 

@@ -32,7 +32,13 @@ func (r *repository) CreateEvent(ctx context.Context, e *Event) error {
 }
 
 func (r *repository) GetEvents(ctx context.Context, schoolID string) ([]Event, error) {
-	rows, err := r.db.QueryContext(ctx, `SELECT id, school_id, title, description, category, date, end_date, location, hours, max_attendees, created_by FROM orientamento_events WHERE school_id=$1 ORDER BY date DESC`, schoolID)
+	var rows *sql.Rows
+	var err error
+	if schoolID != "" {
+		rows, err = r.db.QueryContext(ctx, `SELECT id, school_id, title, description, category, date, end_date, location, hours, max_attendees, created_by FROM orientamento_events WHERE school_id=$1 ORDER BY date DESC`, schoolID)
+	} else {
+		rows, err = r.db.QueryContext(ctx, `SELECT id, school_id, title, description, category, date, end_date, location, hours, max_attendees, created_by FROM orientamento_events ORDER BY date DESC`)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -47,12 +53,27 @@ func (r *repository) GetEvents(ctx context.Context, schoolID string) ([]Event, e
 }
 
 func (r *repository) RegisterStudent(ctx context.Context, p *Participation) error {
-	return r.db.QueryRowContext(ctx, `INSERT INTO orientamento_participations (event_id, student_id, status) VALUES ($1, $2, 'Registered') RETURNING id`,
-		p.EventID, p.StudentID).Scan(&p.ID)
+	query := `
+		INSERT INTO orientamento_participations (event_id, student_id, status)
+		VALUES ($1, COALESCE((SELECT id FROM students WHERE user_id = $2::uuid OR id = $2::uuid LIMIT 1), $2::uuid), 'Registered')
+		RETURNING id`
+	return r.db.QueryRowContext(ctx, query, p.EventID, p.StudentID).Scan(&p.ID)
 }
 
 func (r *repository) GetParticipations(ctx context.Context, studentID string) ([]Participation, error) {
-	rows, err := r.db.QueryContext(ctx, `SELECT id, event_id, student_id, status, attended, registered_at FROM orientamento_participations WHERE student_id=$1`, studentID)
+	query := `
+		SELECT p.id, p.event_id, p.student_id, p.status, p.attended, p.registered_at,
+		       e.id, e.school_id, e.title, e.description, e.category, e.date, e.end_date, e.location, e.hours, e.max_attendees, e.created_by
+		FROM orientamento_participations p
+		LEFT JOIN orientamento_events e ON p.event_id = e.id
+		WHERE (
+			p.student_id = $1::uuid OR
+			p.student_id IN (SELECT id FROM students WHERE user_id = $1::uuid OR id = $1::uuid) OR
+			p.student_id IN (SELECT user_id FROM students WHERE id = $1::uuid OR user_id = $1::uuid)
+		)
+		ORDER BY e.date DESC
+	`
+	rows, err := r.db.QueryContext(ctx, query, studentID)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +81,37 @@ func (r *repository) GetParticipations(ctx context.Context, studentID string) ([
 	var parts []Participation
 	for rows.Next() {
 		var p Participation
-		_ = rows.Scan(&p.ID, &p.EventID, &p.StudentID, &p.Status, &p.Attended, &p.RegisteredAt)
+		var e Event
+		var eID, eSchoolID, eTitle, eDesc, eCat, eLoc, eCreatedBy sql.NullString
+		var eDate, eEndDate sql.NullTime
+		var eHours sql.NullFloat64
+		var eMaxAttendees sql.NullInt64
+
+		err := rows.Scan(
+			&p.ID, &p.EventID, &p.StudentID, &p.Status, &p.Attended, &p.RegisteredAt,
+			&eID, &eSchoolID, &eTitle, &eDesc, &eCat, &eDate, &eEndDate, &eLoc, &eHours, &eMaxAttendees, &eCreatedBy,
+		)
+		if err != nil {
+			return nil, err
+		}
+		if eID.Valid {
+			e.ID = eID.String
+			e.SchoolID = eSchoolID.String
+			e.Title = eTitle.String
+			e.Description = eDesc.String
+			e.Category = eCat.String
+			if eDate.Valid {
+				e.Date = eDate.Time
+			}
+			if eEndDate.Valid {
+				e.EndDate = eEndDate.Time
+			}
+			e.Location = eLoc.String
+			e.Hours = eHours.Float64
+			e.MaxAttendees = int(eMaxAttendees.Int64)
+			e.CreatedBy = eCreatedBy.String
+			p.Event = &e
+		}
 		parts = append(parts, p)
 	}
 	return parts, nil

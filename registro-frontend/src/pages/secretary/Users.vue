@@ -532,10 +532,15 @@ const fetchUsers = async () => {
     try {
         const res = await userService.getAll({ 
             role: currentRoleFilter.value === 'all' ? undefined : currentRoleFilter.value,
-            school_id: filterSchoolId.value || undefined
+            school_id: filterSchoolId.value || undefined,
+            page_size: 500
         })
-        // FILTER: Remove 'admin' users from the list as requested
-        users.value = (res.data.users || []).filter(u => u.role !== 'admin')
+        const allUsers = res.data?.users || []
+        if (isSuperAdmin.value) {
+            users.value = allUsers
+        } else {
+            users.value = allUsers.filter(u => u.role !== 'admin' && u.role !== 'superadmin')
+        }
     } catch (e) {
         $q.notify({ type: 'negative', message: 'Errore durante il caricamento degli utenti' })
     } finally {

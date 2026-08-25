@@ -19,18 +19,22 @@ type Company struct {
 }
 
 type Project struct {
-	ID            string    `json:"id" db:"id"`
-	SchoolID      string    `json:"school_id" db:"school_id"`
-	Title         string    `json:"title" db:"title"`
-	Description   string    `json:"description" db:"description"`
-	Type          string    `json:"type" db:"type"` // Internal, External
-	StartDate     time.Time `json:"start_date" db:"start_date"`
-	EndDate       time.Time `json:"end_date" db:"end_date"`
-	TotalHours    int       `json:"total_hours" db:"total_hours"`
-	CompanyID     *string   `json:"company_id,omitempty" db:"company_id"`
-	SchoolTutorID *string   `json:"school_tutor_id,omitempty" db:"school_tutor_id"`
-	CompanyTutor  string    `json:"company_tutor_name" db:"company_tutor_name"`
-	CreatedBy     string    `json:"created_by" db:"created_by"`
+	ID             string    `json:"id" db:"id"`
+	SchoolID       string    `json:"school_id" db:"school_id"`
+	Title          string    `json:"title" db:"title"`
+	Description    string    `json:"description" db:"description"`
+	Type           string    `json:"type" db:"type"` // Internal, External
+	StartDate      time.Time `json:"start_date" db:"start_date"`
+	EndDate        time.Time `json:"end_date" db:"end_date"`
+	TotalHours     int       `json:"total_hours" db:"total_hours"`
+	CompanyID      *string   `json:"company_id,omitempty" db:"company_id"`
+	SchoolTutorID  *string   `json:"school_tutor_id,omitempty" db:"school_tutor_id"`
+	CompanyTutor   string    `json:"company_tutor_name" db:"company_tutor_name"`
+	CreatedBy      string    `json:"created_by" db:"created_by"`
+	CompanyName    string    `json:"company_name,omitempty"`
+	HoursCompleted float64   `json:"hours_completed,omitempty"`
+	HoursDone      float64   `json:"hours_done,omitempty"`
+	Status         string    `json:"status,omitempty"`
 }
 
 type Participation struct {
