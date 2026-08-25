@@ -108,7 +108,7 @@
       <q-card flat bordered class="rounded-xl bg-white shadow-soft overflow-hidden">
         <q-card-section class="q-pa-none">
           <q-table
-            :rows="reportData?.subject_grades || []"
+            :rows="reportData?.subjects || reportData?.subject_grades || []"
             :columns="columns"
             row-key="subject"
             flat

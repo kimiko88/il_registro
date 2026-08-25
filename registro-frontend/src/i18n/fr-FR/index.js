@@ -10,93 +10,97 @@ export default {
     "search": "Rechercher (Ctrl+K)...",
     "filter": "Filtrer",
     "actions": "Actions",
-    "loading": "Chargement en cours...",
+    "loading": "Chargement...",
     "success": "Opération réussie",
     "error": "Une erreur est survenue",
-    "systemSettings": "Paramètres du système",
+    "systemSettings": "Paramètres Système",
     "language": "Langue / Language",
     "security": "Sécurité & Authentification",
     "notifications": "Notifications & Alertes",
     "mainMenu": "MENU PRINCIPAL",
-    "logout": "Se déconnecter",
-    "category": "Category",
-    "year": "Year",
-    "download": "Download",
-    "city": "City",
-    "zip": "ZIP / Postal Code",
-    "next": "Next",
-    "comment": "Comment",
-    "remove": "Remove",
-    "other": "Other",
-    "info": "Information",
-    "noDescription": "No description",
-    "optionalNotes": "Optional notes",
-    "typeMessage": "Type a message...",
+    "logout": "Déconnexion",
+    "category": "Catégorie",
+    "year": "Année",
+    "download": "Télécharger",
+    "city": "Ville",
+    "zip": "Code Postal",
+    "next": "Suivant",
+    "comment": "Commentaire",
+    "remove": "Supprimer",
+    "other": "Autre",
+    "info": "Informations",
+    "noDescription": "Aucune description",
+    "optionalNotes": "Notes facultatives",
+    "typeMessage": "Écrivez un message...",
     "description": "Description",
-    "details": "Details",
-    "noData": "No data available",
-    "confirmDelete": "Are you sure you want to delete this user?",
-    "period": "Period",
-    "requiredField": "Required field",
-    "approve": "Approve",
-    "reject": "Reject",
+    "details": "Détails",
+    "noData": "Aucune donnée disponible",
+    "confirmDelete": "Voulez-vous vraiment supprimer cet utilisateur ?",
+    "period": "Période",
+    "requiredField": "Champ obligatoire",
+    "approve": "Approuver",
+    "reject": "Refuser",
     "code": "Code",
-    "name": "Name",
-    "address": "Address",
-    "role": "Role",
-    "add": "Add",
-    "confirm": "Confirm",
+    "name": "Nom",
+    "address": "Adresse",
+    "role": "Rôle",
+    "add": "Ajouter",
+    "confirm": "Confirmer",
     "notes": "Notes",
-    "history": "History",
-    "active": "Active",
-    "inactive": "Inactive",
-    "all": "All",
-    "fullName": "Full Name",
-    "refresh": "Refresh",
-    "status": "Status",
-    "lastLogin": "Last Login",
-    "user": "User",
-    "activityLog": "Activity Log",
-    "stats": "Quick Stats",
-    "addClass": "New Class",
-    "surname": "Surname",
-    "resetPassword": "Reset Password",
-    "appName": "Electronic Register",
-    "selected": "selected",
-    "preview": "Preview",
-    "review": "Review"
+    "history": "Historique",
+    "active": "Actif",
+    "inactive": "Inactif",
+    "all": "Tous",
+    "fullName": "Nom Complet",
+    "refresh": "Actualiser",
+    "status": "Statut",
+    "lastLogin": "Dernière Connexion",
+    "user": "Utilisateur",
+    "activityLog": "Journal d'Activité",
+    "stats": "Statistiques",
+    "addClass": "Nouvelle Classe",
+    "surname": "Nom de Famille",
+    "resetPassword": "Réinitialiser le mot de passe",
+    "appName": "Registre Scolaire",
+    "selected": "sélectionnés",
+    "preview": "Aperçu",
+    "review": "Réviser",
+    "viewAll": "Voir Tout",
+    "noStudentsFound": "Aucun élève trouvé",
+    "readOnlySaveBtn": "Enregistrement désactivé (Lecture seule)",
+    "children": "Enfants associés"
   },
   "login": {
     "welcomeBack": "Bon retour",
-    "subtitle": "Connectez-vous pour accéder au registre électronique",
-    "emailLabel": "Adresse E-mail",
-    "emailRequired": "L'e-mail est obligatoire",
+    "subtitle": "Connectez-vous pour accéder au Registre Électronique",
+    "emailLabel": "Adresse Email",
+    "emailRequired": "L'email est obligatoire",
     "passwordLabel": "Mot de passe",
     "passwordRequired": "Le mot de passe est obligatoire",
     "rememberMe": "Se souvenir de moi",
-    "submit": "Connexion",
+    "submit": "Se Connecter",
     "noAccount": "Vous n'avez pas de compte ?",
     "contactSecretary": "Contacter le Secrétariat",
     "contactTitle": "Contacter le Secrétariat",
-    "contactSubtitle": "Sélectionnez votre établissement dans le menu déroulant pour afficher les coordonnées e-mail et téléphoniques du secrétariat.",
-    "selectSchool": "Sélectionnez votre école / établissement",
-    "noSchoolFound": "Aucune école trouvée",
-    "emailSegreteria": "E-mail Secrétariat",
+    "contactSubtitle": "Sélectionnez votre établissement pour obtenir les coordonnées du secrétariat.",
+    "selectSchool": "Sélectionnez votre Établissement",
+    "noSchoolFound": "Aucun établissement trouvé",
+    "emailSegreteria": "Email Secrétariat",
     "phone": "Téléphone",
-    "sendEmail": "Envoyer un e-mail",
-    "copyEmail": "Copier l'e-mail",
-    "emailCopied": "Adresse e-mail copiée dans le presse-papiers !",
-    "chooseSchoolPrompt": "Choisissez un établissement dans le menu ci-dessus pour afficher les coordonnées.",
-    "sessionExpired": "Session expirée. Veuillez vous reconnecter.",
+    "sendEmail": "Envoyer un Email",
+    "copyEmail": "Copier l'Email",
+    "emailCopied": "Adresse email copiée dans le presse-papier !",
+    "chooseSchoolPrompt": "Choisissez un établissement ci-dessus pour afficher le contact.",
+    "sessionExpired": "Par sécurité, votre session a expiré. Veuillez vous reconnecter.",
     "showPassword": "Afficher le mot de passe",
     "hidePassword": "Masquer le mot de passe",
-    "emailInvalid": "Please enter a valid email address",
-    "copyFailed": "Copy to clipboard failed",
-    "tooManyAttempts": "Too many failed attempts. Please try again later",
-    "loginButton": "Log In",
-    "enterPassword": "Password",
-    "invalidPassword": "Incorrect password",
-    "loginError": "Login error"
+    "emailInvalid": "Veuillez saisir une adresse email valide",
+    "copyFailed": "Échec de la copie dans le presse-papier",
+    "tooManyAttempts": "Trop de tentatives échouées. Veuillez réessayer plus tard.",
+    "loginButton": "Se Connecter",
+    "enterPassword": "Mot de passe",
+    "invalidPassword": "Mot de passe incorrect",
+    "loginError": "Erreur de connexion"
   },
   "classRegister": {
     "title": "Cahier de Texte & Appel",
@@ -176,8 +180,8 @@ export default {
     "activityLabCap": "Activité pratique en laboratoire",
     "activityRecupero": "Soutien / Renforcement",
     "activityRecuperoCap": "Cours de soutien ou de remise à niveau",
-    "typeCurricular": "Curriculaire",
-    "typeExtracurricular": "Extracurriculaire",
+    "typeCurricular": "Enseignement Général",
+    "typeExtracurricular": "Activités Péri-éducatives",
     "typeCoTeaching": "Co-enseignement",
     "typeSubstitution": "Remplacement",
     "studentInfo": "Informations Personnelles",
@@ -198,48 +202,50 @@ export default {
     "greetingMorning": "Bonjour",
     "greetingAfternoon": "Bon après-midi",
     "greetingEvening": "Bonsoir",
-    "welcomeSub": "Bon retour ! Voici le résumé des activités scolaires d'aujourd'hui.",
-    "todayDate": "Date d'aujourd'hui",
+    "welcomeSub": "Bienvenue ! Voici le résumé des activités scolaires du jour.",
+    "todayDate": "Date du Jour",
     "recentActivity": "Activité Récente",
     "todayLessons": "Cours d'Aujourd'hui",
-    "auditLogs": "Registre d'Événements & Journaux d'Audit",
+    "auditLogs": "Journal d'Audit",
     "userManagement": "Gestion des Utilisateurs",
-    "schoolManagement": "Gestion des Établissements",
+    "schoolManagement": "Gestion de l'Établissement",
     "refreshActivity": "Actualiser l'Activité",
     "noLessons": "Aucun cours enregistré",
     "noNotifications": "Aucune nouvelle notification",
     "inProgress": "En cours",
     "completed": "Terminé",
     "scheduled": "Planifié",
-    "draft": "Brouillon planifié",
-    "saveDraft": "Enregistrer le brouillon de cours",
+    "draft": "Brouillon Planifié",
+    "saveDraft": "Enregistrer le Brouillon",
     "deleteDraft": "Brouillon supprimé",
     "topicRequired": "Veuillez saisir le sujet du cours",
-    "draftsListTitle": "Scheduled Lesson Drafts",
-    "noDrafts": "No lesson drafts saved at the moment.",
-    "signAndRegister": "Sign & Register",
-    "draftSaved": "Lesson draft saved for {date}!",
-    "draftRegistered": "Draft converted and registered successfully!",
-    "optionsMenu": "Options and shortcuts",
-    "statTotalSchools": "Total Schools",
-    "statActiveUsers": "Active Users",
-    "statActive24h": "Active 24h",
-    "statPendingDocs": "Pending Docs",
-    "statStudents": "Students",
-    "statTeachers": "Teachers",
+    "draftsListTitle": "Brouillons de Cours",
+    "noDrafts": "Aucun brouillon enregistré pour le moment.",
+    "signAndRegister": "Signer & Enregistrer",
+    "draftSaved": "Brouillon de cours enregistré pour le {date} !",
+    "draftRegistered": "Brouillon converti et enregistré avec succès !",
+    "optionsMenu": "Options et raccourcis",
+    "statTotalSchools": "Total Écoles",
+    "statActiveUsers": "Utilisateurs Actifs",
+    "statActive24h": "Actifs 24h",
+    "statPendingDocs": "Docs en Attente",
+    "statStudents": "Élèves",
+    "statTeachers": "Enseignants",
     "statDocuments": "Documents",
-    "statRequests": "Requests",
-    "statMyClasses": "My Classes",
-    "statLessonsToday": "Lessons Today",
-    "statGradesPending": "Grades to Enter",
-    "actionAttendance": "Mark Attendance",
-    "actionGrades": "Enter Grades",
-    "actionLessons": "Lesson Register",
-    "actionAgenda": "Class Agenda",
-    "actionUsers": "User Management",
-    "actionClasses": "Class Management",
-    "recentGrades": "Recent Grades",
-    "noChildren": "No linked children"
+    "statRequests": "Demandes",
+    "statMyClasses": "Mes Classes",
+    "statLessonsToday": "Cours Aujourd'hui",
+    "statGradesPending": "Notes à Saisir",
+    "actionAttendance": "Faire l'Appel",
+    "actionGrades": "Saisir les Notes",
+    "actionLessons": "Cahier de Textes",
+    "actionAgenda": "Cahier de Liaison",
+    "actionUsers": "Gestion des Utilisateurs",
+    "actionClasses": "Gestion des Classes",
+    "recentGrades": "Dernières Notes",
+    "noChildren": "Aucun enfant associé",
+    "systemStatus": "État du Système",
+    "syncedNow": "Synchronisé à l'instant"
   },
   "agendaPage": {
     "title": "Agenda & Calendrier Pédagogique",
@@ -261,8 +267,23 @@ export default {
     "dueDate": "Date limite",
     "teacher": "Enseignant",
     "subject": "Matière",
-    "event": "Event",
-    "today": "Today"
+    "event": "Événement",
+    "today": "Aujourd'hui",
+    "homeworkTitle": "Cahier de textes et Devoirs",
+    "homeworkList": "Liste des Devoirs",
+    "agendaLessons": "Agenda & Cours",
+    "dueHomework": "Prochains Devoirs & Contrôles",
+    "organizeStudy": "Organisez vos échéances d'étude",
+    "noPendingHomework": "Aucun devoir en attente",
+    "allCaughtUp": "Vous êtes à jour dans vos devoirs !",
+    "due": "Date limite",
+    "expired": "En retard",
+    "tomorrow": "Demain",
+    "assignedBy": "Assigné par",
+    "detailsOf": "Détails du",
+    "lessonsHeld": "Cours Dispensés",
+    "noLessons": "Aucun cours enregistré à cette date.",
+    "noDueHomework": "Aucun devoir à rendre à cette date."
   },
   "supportPage": {
     "title": "Centre d'Assistance & FAQ",
@@ -285,7 +306,7 @@ export default {
     "revisions": "{count} Révisions",
     "pendingJustifications": "Motifs d'absence en attente",
     "studentPanel": "Bon retour, {name}",
-    "averageGrade": "Moyenne générale",
+    "averageGrade": "Moyenne des Notes",
     "attendanceRate": "Présences",
     "pctoHours": "Heures PCTO",
     "parentPanel": "Bon retour, {name}",
@@ -303,15 +324,17 @@ export default {
     "globalControl": "Bienvenue sur le panneau de contrôle global",
     "schoolControl": "Gestion centralisée de votre établissement",
     "syncData": "Synchroniser les Données",
-    "tabAttendance": "Attendance",
-    "userManagement": "School Admins Management",
-    "coordinatorDashboard": "Coordinator Dashboard",
-    "atRiskStudents": "At-Risk Students",
-    "classOverview": "Class Overview",
-    "attendanceAverage": "Attendance Average",
-    "gradeAverage": "Grade Average",
-    "tabGrades": "My Grades",
-    "schoolManagement": "School Management"
+    "tabAttendance": "Présences",
+    "userManagement": "Gestion des Administrateurs",
+    "coordinatorDashboard": "Tableau de Bord Coordinateur",
+    "atRiskStudents": "Élèves en Difficulté",
+    "classOverview": "Aperçu de la Classe",
+    "attendanceAverage": "Moyenne de Présence",
+    "gradeAverage": "Moyenne des Notes",
+    "tabGrades": "Mes Notes",
+    "homework": "Devoirs à la maison",
+    "documents": "Dossier Documentaire & Actes",
+    "schoolManagement": "Gestion des Écoles"
   },
   "nav": {
     "dashboard": "Tableau de bord",
@@ -365,7 +388,7 @@ export default {
     "trips": "Sorties & Voyages",
     "payments": "Paiements",
     "assemblies": "Assemblées & Réunions",
-    "children": "My Children"
+    "children": "Mes Enfants"
   },
   "categories": {
     "anagraficheClassi": "Registres & Classes",
@@ -420,24 +443,24 @@ export default {
     "breadcrumbNav": "Fil d'Ariane"
   },
   "notifications": {
-    "title": "Notifications et communications",
+    "title": "Notifications et Messages",
     "logoutSuccess": "Déconnexion réussie",
     "logoutError": "Erreur lors de la déconnexion",
     "settingsSaved": "Paramètres enregistrés avec succès !",
-    "emailCopied": "Adresse e-mail copiée !",
+    "emailCopied": "Email copié !",
     "passwordUpdated": "Mot de passe mis à jour avec succès !",
-    "languageChanged": "Langue mise à jour avec succès",
-    "wsConnectionFailed": "Real-time connection unavailable after repeated attempts.",
-    "wsGradeUpdated": "Grade update: {value} ({subject})",
-    "wsGradeDeleted": "Grade deleted for {subject}",
-    "wsAttendanceUpdated": "Attendance update: {status}",
-    "wsJustificationApproved": "Justification approved: {reason}",
-    "wsJustificationRejected": "Justification rejected: {reason}",
-    "wsNewCommunication": "New communication: {title}",
-    "wsNoteAdded": "New disciplinary note: {title}",
-    "wsScrutinyPublished": "Scrutiny result published for {student}",
-    "wsGoalUpdated": "Goal updated: {title}",
-    "wsSlotUpdated": "Appointment update: {msg}"
+    "languageChanged": "Langue modifiée avec succès",
+    "wsConnectionFailed": "Connexion en temps réel indisponible.",
+    "wsGradeUpdated": "Note mise à jour : {value} ({subject})",
+    "wsGradeDeleted": "Note supprimée pour {subject}",
+    "wsAttendanceUpdated": "Présence mise à jour : {status}",
+    "wsJustificationApproved": "Justificatif approuvé : {reason}",
+    "wsJustificationRejected": "Justificatif refusé : {reason}",
+    "wsNewCommunication": "Nouvelle communication : {title}",
+    "wsNoteAdded": "Nouvelle observation disciplinaire : {title}",
+    "wsScrutinyPublished": "Résultat d'évaluation publié pour {student}",
+    "wsGoalUpdated": "Objectif mis à jour : {title}",
+    "wsSlotUpdated": "Rendez-vous mis à jour : {msg}"
   },
   "errors": {
     "connectionError": "Erreur de connexion au serveur. Vérifiez votre connexion.",
@@ -563,281 +586,281 @@ export default {
       "step6_title": "Paramètres système",
       "step6_desc": "Configurez les politiques de sécurité, l'authentification à deux facteurs et les intégrations e-learning."
     },
-    "keyboardHint": "Use arrows to navigate"
+    "keyboardHint": "Utilisez les touches fléchées pour naviguer"
   },
   "onboardingExtra": {
-    "openGuide": "Open Full Guide",
-    "viewAllFeatures": "Discover all features",
-    "completionTitle": "You're ready! 🎉",
-    "completionDesc": "You've completed the tour. You can access the full guide at any time from the ? button in the top bar.",
+    "openGuide": "Ouvrir le guide complet",
+    "viewAllFeatures": "Découvrir toutes les fonctionnalités",
+    "completionTitle": "Vous êtes prêt ! 🎉",
+    "completionDesc": "Vous avez terminé la visite guidée. Vous pouvez accéder au guide complet à tout moment via le bouton ? dans la barre supérieure.",
     "teacher": {
-      "step7_title": "Digital Register & Signatures",
-      "step7_desc": "Digitally sign each lesson with a single click. The register automatically tracks lesson topics, teaching hours, and private notes.",
+      "step7_title": "Registre numérique & Signatures",
+      "step7_desc": "Signez chaque cours numériquement en un clic. Le registre suit automatiquement les sujets de cours, les heures d'enseignement et les notes privées.",
       "step7_bullets": [
-        "Digital lesson signature",
-        "Lesson topics",
-        "Private notes",
-        "Hours log"
+        "Signature numérique du cours",
+        "Sujets de cours",
+        "Notes privées",
+        "Journal des heures"
       ],
-      "step8_title": "Competencies & Learning Units",
-      "step8_desc": "Assess student competencies according to EU descriptors, manage Learning Units (UDA) and annual work plans.",
+      "step8_title": "Compétences & Unités d'apprentissage",
+      "step8_desc": "Évaluez les compétences des élèves selon les descripteurs européens, gérez les unités d'apprentissage (UdA) et les plans annuels.",
       "step8_bullets": [
-        "EU Competencies",
-        "Learning Units (UDA)",
-        "Annual work plan",
-        "Evaluation rubrics"
+        "Compétences européennes",
+        "Unités d'apprentissage (UdA)",
+        "Plan de travail annuel",
+        "Grilles d'évaluation"
       ],
       "step1_bullets": [
-        "Today's lessons",
-        "Recent notifications",
-        "Quick shortcuts",
-        "Class overview"
+        "Cours du jour",
+        "Notifications récentes",
+        "Raccourcis rapides",
+        "Vue d'ensemble de la classe"
       ],
       "step2_bullets": [
-        "Attendance register",
-        "Lesson topics",
-        "Digital signature",
-        "Absence management"
+        "Registre des présences",
+        "Sujets de cours",
+        "Signature numérique",
+        "Gestion des absences"
       ],
       "step3_bullets": [
-        "Oral & written grades",
-        "Class average",
-        "Distribution chart",
-        "Export tables"
+        "Notes orales & écrites",
+        "Moyenne de classe",
+        "Graphique de distribution",
+        "Tableaux d'export"
       ],
       "step4_bullets": [
-        "Homework & tests",
-        "Activity calendar",
-        "Class announcements",
-        "Parent notices"
+        "Devoirs & contrôles",
+        "Calendrier d'activités",
+        "Annonces de classe",
+        "Avis aux parents"
       ],
       "step5_bullets": [
-        "Meeting availability",
-        "Parent bookings",
-        "Video conferences",
-        "Meeting history"
+        "Disponibilités de réunion",
+        "Réservations parents",
+        "Vidéoconférences",
+        "Historique des entretiens"
       ],
       "step6_bullets": [
-        "Theme & language",
-        "Push notifications",
-        "Password management",
-        "Public profile"
+        "Thème & langue",
+        "Notifications push",
+        "Gestion des mots de passe",
+        "Profil public"
       ]
     },
     "student": {
-      "step7_title": "Internships & Competencies",
-      "step7_desc": "Track your work-based learning hours (PCTO), view competence certifications, and build your digital portfolio.",
+      "step7_title": "Stages & Compétences",
+      "step7_desc": "Suivez vos heures de stage (PCTO), consultez les certifications de compétences et construisez votre portfolio numérique.",
       "step7_bullets": [
-        "Internship hours",
+        "Heures de stage",
         "Certifications",
-        "Digital portfolio",
-        "Tutor feedback"
+        "Portfolio numérique",
+        "Évaluations tuteur"
       ],
-      "step8_title": "Announcements & Noticeboard",
-      "step8_desc": "Read official school circulars, answer surveys, and view personalized announcements from your teachers.",
+      "step8_title": "Annonces & Tableau d'affichage",
+      "step8_desc": "Lisez les circulaires officielles, répondez aux sondages et consultez les annonces personnalisées de vos enseignants.",
       "step8_bullets": [
-        "School circulars",
-        "Surveys & answers",
-        "Personal alerts",
-        "Teacher notices"
+        "Circulaires scolaires",
+        "Sondages & réponses",
+        "Alertes personnelles",
+        "Avis des enseignants"
       ],
       "step1_bullets": [
-        "Upcoming deadlines",
-        "Latest notifications",
-        "GPA summary",
-        "Upcoming tests"
+        "Échéances à venir",
+        "Dernières notifications",
+        "Résumé de la moyenne",
+        "Prochains contrôles"
       ],
       "step2_bullets": [
-        "Grades by subject",
-        "Live average",
-        "Trend chart",
-        "Term comparison"
+        "Notes par matière",
+        "Moyenne en direct",
+        "Graphique de tendance",
+        "Comparaison des semestres"
       ],
       "step3_bullets": [
-        "Monthly attendance",
-        "Absence counter",
-        "Late arrivals & early leaves",
-        "Excuses & justifications"
+        "Présences mensuelles",
+        "Compteur d'absences",
+        "Retards & sorties anticipées",
+        "Justificatifs & excuses"
       ],
       "step4_bullets": [
-        "Assigned homework",
-        "Due dates",
-        "Learning materials",
-        "Links & resources"
+        "Devoirs assignés",
+        "Dates de remise",
+        "Matériel pédagogique",
+        "Liens & ressources"
       ],
       "step5_bullets": [
-        "Digital report card",
-        "PDF download",
-        "Certificates",
-        "Forms"
+        "Bulletin numérique",
+        "Téléchargement PDF",
+        "Certificats",
+        "Formulaires"
       ],
       "step6_bullets": [
-        "School holidays",
-        "Test dates",
-        "Extracurriculars",
-        "Field trips & events"
+        "Vacances scolaires",
+        "Dates des contrôles",
+        "Activités parascolaires",
+        "Sorties & événements"
       ]
     },
     "parent": {
-      "step7_title": "Absence Justifications & Permissions",
-      "step7_desc": "Submit digital justifications for student absences directly from the app, and approve early leave authorizations.",
+      "step7_title": "Justificatifs & Autorisations",
+      "step7_desc": "Soumettez des justificatifs numériques pour les absences directement depuis l'application et approuvez les autorisations de sortie anticipée.",
       "step7_bullets": [
-        "Online justifications",
-        "Early leave permits",
-        "Special activities",
-        "Absence history"
+        "Justificatifs en ligne",
+        "Autorisations de sortie anticipée",
+        "Activités spéciales",
+        "Historique des absences"
       ],
-      "step8_title": "Academic Analytics & Progress",
-      "step8_desc": "View academic performance charts over time, compare subject averages, and track improvement trends.",
+      "step8_title": "Analyse académique & Progrès",
+      "step8_desc": "Consultez les graphiques de performance dans le temps, comparez les moyennes par matière et suivez les tendances d'amélioration.",
       "step8_bullets": [
-        "Progress chart",
-        "Subject comparison",
-        "Historical trends",
-        "Goals achieved"
+        "Graphique de progression",
+        "Comparaison par matière",
+        "Tendances historiques",
+        "Objectifs atteints"
       ],
       "step1_bullets": [
-        "Children overview",
-        "Recent alerts",
-        "Unread messages",
-        "Appointments"
+        "Vue d'ensemble des enfants",
+        "Alertes récentes",
+        "Messages non lus",
+        "Rendez-vous"
       ],
       "step2_bullets": [
-        "Academic profile",
-        "Student documents",
-        "Teacher contacts",
-        "Enrollment info"
+        "Profil académique",
+        "Documents de l'élève",
+        "Contacts enseignants",
+        "Informations d'inscription"
       ],
       "step3_bullets": [
-        "Real-time grades",
-        "Subject GPA",
-        "Daily attendance",
-        "Automated alerts"
+        "Notes en temps réel",
+        "Moyenne par matière",
+        "Présences quotidiennes",
+        "Alertes automatiques"
       ],
       "step4_bullets": [
-        "School circulars",
-        "Teacher notices",
-        "Urgent alerts",
-        "Digital bulletin board"
+        "Circulaires scolaires",
+        "Avis des enseignants",
+        "Alertes urgentes",
+        "Tableau d'affichage numérique"
       ],
       "step5_bullets": [
-        "Book parent meeting",
-        "Choose time slot",
-        "Email confirmation",
-        "Reschedule"
+        "Réserver un entretien",
+        "Choisir un créneau",
+        "Confirmation par e-mail",
+        "Reprogrammer"
       ],
       "step6_bullets": [
-        "Tuition & fees",
-        "Payment history",
-        "Download receipts",
-        "Request documents"
+        "Frais de scolarité",
+        "Historique des paiements",
+        "Télécharger les reçus",
+        "Demander des documents"
       ]
     },
     "secretary": {
-      "step7_title": "Enrollment & Student Registry",
-      "step7_desc": "Manage yearly school enrollments, maintain student demographic records, and handle transfers and special education plans.",
+      "step7_title": "Inscriptions & Registre des élèves",
+      "step7_desc": "Gérez les inscriptions scolaires annuelles, maintenez les dossiers démographiques des élèves et traitez les transferts et plans d'éducation spécialisée.",
       "step7_bullets": [
-        "Yearly enrollment",
-        "Transfers in/out",
-        "Special needs / DSA",
-        "Registry archives"
+        "Inscription annuelle",
+        "Transferts entrants/sortants",
+        "Besoins spéciaux / DSA",
+        "Archives du registre"
       ],
-      "step8_title": "Circulars & School Broadcasts",
-      "step8_desc": "Compose and publish digital circulars, manage noticeboards, and send targeted group broadcasts with signature tracking.",
+      "step8_title": "Circulaires & Communications scolaires",
+      "step8_desc": "Composez et publiez des circulaires numériques, gérez les tableaux d'affichage et envoyez des diffusions de groupe ciblées avec suivi des signatures.",
       "step8_bullets": [
-        "Compose circulars",
-        "Digital signature",
-        "Targeted recipients",
-        "Publication history"
+        "Rédiger des circulaires",
+        "Signature numérique",
+        "Destinataires ciblés",
+        "Historique de publication"
       ],
       "step1_bullets": [
-        "Pending tasks",
-        "Incoming requests",
-        "School statistics",
-        "System alerts"
+        "Tâches en attente",
+        "Demandes entrantes",
+        "Statistiques scolaires",
+        "Alertes système"
       ],
       "step2_bullets": [
-        "Class list",
-        "Teacher assignments",
-        "Weekly timetable",
-        "Revision history"
+        "Liste des classes",
+        "Affectations des enseignants",
+        "Emploi du temps hebdomadaire",
+        "Historique des révisions"
       ],
       "step3_bullets": [
-        "Enrollment certificates",
-        "Attendance records",
-        "PDF export",
-        "Digital seal"
+        "Certificats d'inscription",
+        "Registres de présence",
+        "Export PDF",
+        "Cachet numérique"
       ],
       "step4_bullets": [
-        "School schedule",
-        "Teacher substitutions",
-        "Extracurriculars",
-        "Staff notices"
+        "Emploi du temps scolaire",
+        "Remplacements d'enseignants",
+        "Activités parascolaires",
+        "Avis au personnel"
       ],
       "step5_bullets": [
-        "Attendance reports",
-        "Official exports",
-        "Statistical charts",
-        "Advanced filters"
+        "Rapports de présence",
+        "Exports officiels",
+        "Graphiques statistiques",
+        "Filtres avancés"
       ],
       "step6_bullets": [
-        "Create accounts",
-        "Assign roles",
-        "Reset passwords",
-        "Access control"
+        "Créer des comptes",
+        "Attribuer des rôles",
+        "Réinitialiser les mots de passe",
+        "Contrôle d'accès"
       ]
     },
     "admin": {
-      "step7_title": "Schools & Campuses Management",
-      "step7_desc": "Create and configure multiple school branches, manage tenant settings, assign campus administrators, and monitor activity.",
+      "step7_title": "Gestion des écoles & campus",
+      "step7_desc": "Créez et configurez plusieurs établissements, gérez les paramètres des locataires, affectez des administrateurs de campus et surveillez l'activité.",
       "step7_bullets": [
-        "New campuses",
-        "Per-school config",
-        "Branch admins",
-        "Multi-tenant"
+        "Nouveaux campus",
+        "Config. par établissement",
+        "Admins de campus",
+        "Multi-locataire"
       ],
-      "step8_title": "Integrations & API Management",
-      "step8_desc": "Connect third-party systems (Google Workspace, Microsoft 365, LMS), configure webhooks, and monitor API traffic.",
+      "step8_title": "Intégrations & Gestion API",
+      "step8_desc": "Connectez des systèmes tiers (Google Workspace, Microsoft 365, LMS), configurez des webhooks et surveillez le trafic API.",
       "step8_bullets": [
         "Google Workspace",
         "Microsoft 365",
-        "Webhook config",
-        "API monitoring"
+        "Config. webhook",
+        "Surveillance API"
       ],
       "step1_bullets": [
-        "System health",
-        "Active users",
-        "Open sessions",
-        "Recent errors"
+        "Santé du système",
+        "Utilisateurs actifs",
+        "Sessions ouvertes",
+        "Erreurs récentes"
       ],
       "step2_bullets": [
-        "CPU & memory usage",
-        "API latency",
-        "Live logs",
-        "Threshold alerts"
+        "Utilisation CPU & mémoire",
+        "Latence API",
+        "Journaux en direct",
+        "Alertes de seuil"
       ],
       "step3_bullets": [
-        "Manage users",
-        "RBAC roles",
-        "Manage schools",
-        "Bulk CSV import"
+        "Gérer les utilisateurs",
+        "Rôles RBAC",
+        "Gérer les écoles",
+        "Import CSV en masse"
       ],
       "step4_bullets": [
-        "Platform metrics",
-        "Periodic reports",
-        "User growth",
-        "Data exports"
+        "Métriques de la plateforme",
+        "Rapports périodiques",
+        "Croissance des utilisateurs",
+        "Exports de données"
       ],
       "step5_bullets": [
-        "Immutable audit logs",
-        "Security filters",
-        "Compliance export",
-        "GDPR tools"
+        "Journaux d'audit immuables",
+        "Filtres de sécurité",
+        "Export de conformité",
+        "Outils RGPD"
       ],
       "step6_bullets": [
-        "Password policy",
-        "Mandatory 2FA",
+        "Politique de mot de passe",
+        "2FA obligatoire",
         "Feature flags",
-        "Maintenance mode"
+        "Mode maintenance"
       ]
     }
   },
@@ -879,7 +902,32 @@ export default {
       "q9": "Comment changer la langue d'interface et le mode sombre ?",
       "a9": "Dans \"Paramètres\", choisissez parmi 9 langues et activez le mode sombre ou la police OpenDyslexic.",
       "q10": "Comment annuler une note récemment saisie ?",
-      "a10": "Après la saisie, un pavé réactif affiche un bouton \"Annuler\" actif pendant 15 secondes. Ensuite, modifiez directement dans la cellule."
+      "a10": "Après la saisie, un pavé réactif affiche un bouton \"Annuler\" actif pendant 15 secondes. Ensuite, modifiez directement dans la cellule.",
+      "attendance": {
+        "title": "Marrja e Mungesave & Nënshkrimi i Mësimit",
+        "desc": "Si të merrni praninë e nxënësve dhe të nënshkruani orën mësimore.",
+        "content": "Dhe regjistroni mungesat dhe temat e mësimit brenda pak sekondave.\n\nHapi 1: Hapni 'Ditari i Klasës' dhe zgjidhni klasën tuaj.\nHapi 2: Shënoni nxënësit si të pranishëm, mungesë ose me vonesë.\nHapi 3: Vendosni temën dhe nënshkruani orën."
+      },
+      "grades": {
+        "title": "Hedhja e Notave dhe Vlerësimi",
+        "desc": "Si të vendosni notat me gojë, me shkrim dhe praktike.",
+        "content": "Menaxhoni notat dhe vlerësimet për secilin nxënës me lehtësi."
+      },
+      "uda": {
+        "title": "Planifikimi i Njësive Mësimore (UdA)",
+        "desc": "Dizajnimi kurrikular sipas kompetencave.",
+        "content": "Strukturoni orët mësimore dhe vlerësoni kompetencat kyçe evropiane."
+      },
+      "agenda": {
+        "title": "Detyrat e Shtëpisë & Kalendari",
+        "desc": "Si të caktoni detyrat dhe provimet.",
+        "content": "Caktoni afatet dhe organizoni ngarkesën e studimit për klasën."
+      },
+      "colloqui": {
+        "title": "Takimet me Prindërit",
+        "desc": "Caktimi i orareve të lira për takime individuale.",
+        "content": "Përcaktoni fashat orare dhe konfirmoni kërkesat e prindërve."
+      }
     },
     "student": {
       "cat_grades": "Mes Notes",
@@ -906,7 +954,22 @@ export default {
       "q9": "Que faire en cas d'oubli de mot de passe ?",
       "a9": "Sur la page de connexion, cliquez sur \"Mot de passe oublié ?\" et entrez votre adresse e-mail.",
       "q10": "Comment utiliser la recherche rapide Ctrl+K ?",
-      "a10": "Appuyez sur Ctrl+K (ou Cmd+K) pour ouvrir la recherche universelle et naviguer instantanément."
+      "a10": "Appuyez sur Ctrl+K (ou Cmd+K) pour ouvrir la recherche universelle et naviguer instantanément.",
+      "grades": {
+        "title": "Konsultimi i Notave & Mesatareve",
+        "desc": "Si të kontrolloni notat dhe ecurinë tuaj akademike.",
+        "content": "Shikoni notat e fundit, mesataret sipas lëndëve dhe simuloni notat kaluese."
+      },
+      "homework": {
+        "title": "Detyrat & Kalendari i Studimit",
+        "desc": "Organizoni detyrat dhe përgatitjet për testet.",
+        "content": "Mbani nën kontroll afatet e detyrave dhe njoftimet nga mësuesit."
+      },
+      "attendance": {
+        "title": "Prania & Arsyetimet",
+        "desc": "Kontrolloni mungesat dhe vonesat tuaja.",
+        "content": "Shikoni statusin e mungesave dhe kërkesave për arsyetim."
+      }
     },
     "parent": {
       "cat_monitoring": "Suivi des Enfants",
@@ -933,7 +996,22 @@ export default {
       "q9": "Un second parent peut-il avoir un compte distinct ?",
       "a9": "Le secrétariat peut associer plusieurs comptes responsables à un élève. Chaque parent dispose de ses accès.",
       "q10": "Que se passe-t-il en mode hors ligne ?",
-      "a10": "L'application affiche les données en cache. Les formulaires soumis sont conservés en file locale et synchronisés au retour du réseau."
+      "a10": "L'application affiche les données en cache. Les formulaires soumis sont conservés en file locale et synchronisés au retour du réseau.",
+      "grades": {
+        "title": "Vlerësimi & Dëftesa",
+        "desc": "Ndiqni notat dhe vlerësimet e fëmijëve tuaj.",
+        "content": "Qasje e menjëhershme në të gjitha notat, mesataret dhe dëftesat zyrtare."
+      },
+      "attendance": {
+        "title": "Arsyetimi i Mungesave",
+        "desc": "Si të arsyetoni mungesat e fëmijës tuaj online.",
+        "content": "Dërgoni arsyetime për mungesat dhe vonesat me një klikim."
+      },
+      "colloqui": {
+        "title": "Rezervimi i Takimeve me Mësuesit",
+        "desc": "Caktoni takime individuale me stafin mësimdhënës.",
+        "content": "Zgjidhni orarin e përshtatshëm dhe rezervoni takimin online ose në shkollë."
+      }
     },
     "secretary": {
       "cat_students": "Fichier Élèves",
@@ -960,7 +1038,37 @@ export default {
       "q9": "Comment vérifier le statut des paiements PagoPA ?",
       "a9": "Ouvrez \"Finance & PagoPA\" pour consulter l'état des encaissements et relancer les impayés.",
       "q10": "Comment annuler un protocole de document erroné ?",
-      "a10": "Dans les archives documentaires, sélectionnez le protocole → \"Annuler avec motif\". L'action est consignée dans l'audit log."
+      "a10": "Dans les archives documentaires, sélectionnez le protocole → \"Annuler avec motif\". L'action est consignée dans l'audit log.",
+      "students": {
+        "title": "Menaxhimi i Regjistrit të Nxënësve",
+        "desc": "Kërkimi, regjistrimi dhe përditësimi i të dhënave të nxënësve.",
+        "content": "Administroni dosjet akademike, kontaktet dhe regjistrimet e reja."
+      },
+      "classes": {
+        "title": "Organizimi i Klasave dhe Seksioneve",
+        "desc": "Krijimi i klasave dhe caktimi i mësuesve titullarë.",
+        "content": "Strukturoni vitin shkollor, oraret dhe ndarjen e lëndëve."
+      },
+      "certificates": {
+        "title": "Gjenerimi i Vërtetimeve",
+        "desc": "Lëshimi i dokumenteve zyrtare dhe vërtetimeve të frekuentimit.",
+        "content": "Gjeneroni dokumente me vulë digjitale dhe nënshkrim zyrtar në sekonda."
+      },
+      "timetable": {
+        "title": "Orari Mësimor dhe Zëvendësimet",
+        "desc": "Menaxhimi i orareve javore dhe zëvendësimit të mësuesve.",
+        "content": "Planifikoni orët dhe mbuloni mungesat e mësuesve."
+      },
+      "communications": {
+        "title": "Qarkoret dhe Njoftimet Zyrtare",
+        "desc": "Publikimi i njoftimeve dhe monitorimi i marrjes së dijenisë.",
+        "content": "Dërgoni qarkore zyrtare për stafin, prindërit dhe nxënësit."
+      },
+      "reports": {
+        "title": "Raportet dhe Statistikat",
+        "desc": "Nxjerrja e statistikave dhe eksportimi i të dhënave.",
+        "content": "Gjeneroni raporte të agreguara për frekuentimin dhe rezultatet."
+      }
     },
     "admin": {
       "cat_monitoring": "Supervision Système",
@@ -987,7 +1095,42 @@ export default {
       "q9": "Comment vérifier la matrice des droits RBAC ?",
       "a9": "Allez dans \"Rôles & Permissions\" pour consulter la matrice d'accès des 9 rôles du système.",
       "q10": "Comment placer la plateforme en mode maintenance ?",
-      "a10": "Dans \"Paramètres système\", activez le \"Mode Maintenance\". Un bandeau d'information s'affiche pour les utilisateurs."
+      "a10": "Dans \"Paramètres système\", activez le \"Mode Maintenance\". Un bandeau d'information s'affiche pour les utilisateurs.",
+      "monitoring": {
+        "title": "Monitorimi i Sistemit",
+        "desc": "Monitorimi i performancës së serverit dhe bazës së të dhënave.",
+        "content": "Kontrolloni gjendjen teknike, memorien RAM dhe shërbimet e sistemit në kohë reale."
+      },
+      "users": {
+        "title": "Menaxhimi i Përdoruesve",
+        "desc": "Krijimi i llogarive, të drejtat dhe politikat e sigurisë.",
+        "content": "Menaxhoni të gjitha llogaritë e përdoruesve dhe konfiguroni 2FA."
+      },
+      "schools": {
+        "title": "Menaxhimi i Institucioneve",
+        "desc": "Konfigurimi i shkollave dhe degëve arsimore.",
+        "content": "Regjistroni kodet zyrtare dhe të dhënat administrative të shkollave."
+      },
+      "security": {
+        "title": "Politikat e Sigurisë",
+        "desc": "Konfigurimi i fjalëkalimeve dhe kërkesave të sigurisë.",
+        "content": "Përshtatni rregullat e sigurisë sipas standardeve më të larta."
+      },
+      "analytics": {
+        "title": "Analitika dhe Parandalimi i Braktisjes",
+        "desc": "Analizë parashikuese për rrezikun e braktisjes shkollore.",
+        "content": "Identifikoni nxënësit me rrezik mungesash dhe rezultatesh të ulëta."
+      },
+      "integrations": {
+        "title": "Integrimet dhe Hyrja me Një Klik (SSO)",
+        "desc": "Lidhja me Google Workspace dhe Microsoft 365.",
+        "content": "Aktivizoni hyrjen me llogaritë institucionale."
+      },
+      "audit": {
+        "title": "Regjistri i Auditimit & Gjurmueshmëria",
+        "desc": "Gjurmimi i plotë i veprimeve të përdoruesve në sistem.",
+        "content": "Regjistër i pandryshueshëm i të gjitha veprimeve për transparencë maksimale."
+      }
     }
   },
   "guideCenter": {
@@ -1040,6 +1183,16 @@ export default {
         "title": "Plan d'Accompagnement (PDP / PEI)",
         "desc": "Élaboration des mesures compensatoires et dispensatoires pour élèves BES/DSA.",
         "content": "Le module PDP permet à l'équipe pédagogique d'élaborer les plans personnalisés.\n\nÉtape 1 : Accédez à 'PDP / PEI' depuis le menu de classe.\nÉtape 2 : Sélectionnez l'élève et configurez les mesures compensatoires et dispensatoires.\nÉtape 3 : Enregistrez le brouillon et transmettez aux parents pour signature numérique.\nÉtape 4 : Les mesures actives apparaissent sous forme de badges lors des évaluations.\n\nConseil : Utilisez les grilles d'évaluation préremplies pour accélérer la saisie."
+      },
+      "uda": {
+        "title": "Planifikimi i Njësive Mësimore (UdA)",
+        "desc": "Dizajnimi kurrikular sipas kompetencave.",
+        "content": "Strukturoni orët mësimore dhe vlerësoni kompetencat kyçe evropiane."
+      },
+      "colloqui": {
+        "title": "Takimet me Prindërit",
+        "desc": "Caktimi i orareve të lira për takime individuale.",
+        "content": "Përcaktoni fashat orare dhe konfirmoni kërkesat e prindërve."
       }
     },
     "student": {
@@ -1109,6 +1262,21 @@ export default {
         "title": "Justification d'Absences en Ligne",
         "desc": "Justifiez les absences et retards de votre enfant en ligne.",
         "content": "Plus besoin de carnet papier : justifiez les absences en toute sécurité avec votre PIN.\n\nÉtape 1 : Ouvrez 'Présences & Justifications'.\nÉtape 2 : Visualisez les absences non justifiées en rouge.\nÉtape 3 : Cliquez sur 'Justifier', sélectionnez le motif (Maladie, Famille) et validez avec votre code PIN."
+      },
+      "grades": {
+        "title": "Vlerësimi & Dëftesa",
+        "desc": "Ndiqni notat dhe vlerësimet e fëmijëve tuaj.",
+        "content": "Qasje e menjëhershme në të gjitha notat, mesataret dhe dëftesat zyrtare."
+      },
+      "attendance": {
+        "title": "Arsyetimi i Mungesave",
+        "desc": "Si të arsyetoni mungesat e fëmijës tuaj online.",
+        "content": "Dërgoni arsyetime për mungesat dhe vonesat me një klikim."
+      },
+      "colloqui": {
+        "title": "Rezervimi i Takimeve me Mësuesit",
+        "desc": "Caktoni takime individuale me stafin mësimdhënës.",
+        "content": "Zgjidhni orarin e përshtatshëm dhe rezervoni takimin online ose në shkollë."
       }
     },
     "secretary": {
@@ -1188,58 +1356,58 @@ export default {
     "goBack": "Retour"
   },
   "udaPage": {
-    "title": "Planificateur d'Unités d'Apprentissage (UdA)",
-    "subtitle": "Créer et gérer les unités d'apprentissage interdisciplinaires et les compétences",
+    "title": "Planification Pédagogique (UdA)",
+    "subtitle": "Conception curriculaire par Unités d'Apprentissage et compétences",
     "newUda": "Nouvelle UdA",
-    "filterSubject": "Filtrer par matière",
-    "filterClass": "Filtrer par classe",
-    "searchPlaceholder": "Rechercher UdA...",
+    "filterSubject": "Filtrer par Matière",
+    "filterClass": "Filtrer par Classe",
+    "searchPlaceholder": "Rechercher par titre ou objectif...",
     "allSubjects": "Toutes les matières",
     "allClasses": "Toutes les classes",
     "draft": "Brouillon",
-    "published": "Publié",
-    "archived": "Archivé",
+    "published": "Publiée",
+    "archived": "Archivée",
     "noUda": "Aucune unité d'apprentissage trouvée",
-    "noUdaDesc": "Créez votre première UdA pour structurer vos cours et compétences.",
+    "noUdaDesc": "Aucune UdA disponible",
     "titleLabel": "Titre de l'UdA *",
-    "subjectLabel": "Matière principale *",
-    "classLabel": "Classe cible *",
-    "descriptionLabel": "Description générale",
-    "goalsLabel": "Objectifs d'apprentissage & Compétences",
-    "durationHours": "Durée (Heures)",
-    "createTitle": "Créer une nouvelle UdA",
-    "editTitle": "Modifier l'UdA",
+    "subjectLabel": "Matière *",
+    "classLabel": "Classe",
+    "descriptionLabel": "Description",
+    "goalsLabel": "Objectifs pédagogiques",
+    "durationHours": "Heures allouées",
+    "createTitle": "Planifier un Brouillon de Cours",
+    "editTitle": "Modifier l'Unité d'Apprentissage",
     "saveUda": "Enregistrer l'UdA",
     "deleteConfirmTitle": "Confirmer la suppression",
     "deleteConfirmMsg": "Voulez-vous vraiment supprimer l'UdA \"{title}\" ?",
     "detailTitle": "Détails de l'UdA",
-    "unitTitle": "Unit Title",
-    "duration": "Duration (hours)",
-    "status": "Status",
-    "active": "Active",
-    "completed": "Completed",
-    "targetCompetencies": "Target Competencies",
-    "evaluationCriteria": "Evaluation Criteria",
-    "noUdaFound": "No Learning Units found",
-    "noUdaFoundDesc": "No UdA units present in the database for current selection.",
-    "createInDb": "Create UdA in Database",
-    "totalHours": "Total Hours",
-    "subject": "Subject",
-    "noDescription": "No description specified.",
-    "curricularCompetencies": "Curricular competencies",
-    "details": "Details",
-    "editUda": "Edit UdA",
-    "createUda": "New Learning Unit (UdA)",
-    "statusLabel": "Status *",
-    "descLabel": "Description & Scope",
-    "competenciesLabel": "Competencies to develop",
-    "criteriaLabel": "Evaluation Criteria & Rubrics",
-    "objectives": "Learning Objectives",
-    "methodologies": "Teaching Methodologies"
+    "unitTitle": "Titre de l'Unité",
+    "duration": "Durée (heures)",
+    "status": "Statut",
+    "active": "En Cours",
+    "completed": "Terminée",
+    "targetCompetencies": "Compétences Cibles",
+    "evaluationCriteria": "Critères d'Évaluation",
+    "noUdaFound": "Aucune Unité d'Apprentissage trouvée",
+    "noUdaFoundDesc": "Aucune UdA dans la base de données pour la sélection actuelle.",
+    "createInDb": "Créer l'UdA dans la Base de Données",
+    "totalHours": "Heures Totales",
+    "subject": "Matière",
+    "noDescription": "Aucune description spécifiée.",
+    "curricularCompetencies": "Compétences curriculaires",
+    "details": "Détails",
+    "editUda": "Modifier l'UdA",
+    "createUda": "Nouvelle Unité d'Apprentissage (UdA)",
+    "statusLabel": "Statut *",
+    "descLabel": "Description & Finalité",
+    "competenciesLabel": "Compétences à développer",
+    "criteriaLabel": "Critères & Grilles d'Évaluation",
+    "objectives": "Objectifs Pédagogiques",
+    "methodologies": "Méthodes Didactiques"
   },
   "competenciesPage": {
-    "title": "Évaluation des Compétences Clés Européennes",
-    "subtitle": "Grille de compétences transversales avec niveaux de maîtrise A, B, C, D",
+    "title": "Évaluation des Compétences",
+    "subtitle": "Évaluation continue et grilles des compétences clés européennes",
     "student": "Élève",
     "descriptor": "Descripteur de compétence",
     "level": "Niveau atteint",
@@ -1270,57 +1438,64 @@ export default {
     "noStudentsFound": "Aucun élève trouvé pour cette classe",
     "selectClassPrompt": "Sélectionnez une classe pour charger les élèves.",
     "notEvaluated": "Non évalué",
-    "generatingPdf": "Generating PDF...",
-    "downloadPdf": "Download PDF Certificate",
-    "semester": "Semester",
-    "gridTitle": "European Key Competences Grid (D.M. 742/2017)",
-    "colCompetence": "Key Competence",
-    "colLevel": "Mastery Level (DM 742)",
-    "colNotes": "Descriptor / Notes",
-    "addDescriptor": "Add descriptor...",
-    "levelA": "A - Advanced",
-    "levelB": "B - Intermediate",
-    "levelC": "C - Basic",
-    "levelD": "D - Initial"
+    "generatingPdf": "Génération du PDF...",
+    "downloadPdf": "Télécharger le Certificat en PDF",
+    "semester": "Semestre / Période",
+    "gridTitle": "Grille des Compétences Clés",
+    "colCompetence": "Compétence Clé",
+    "colLevel": "Niveau de Maîtrise",
+    "colNotes": "Descripteur / Notes",
+    "addDescriptor": "Ajouter un descripteur...",
+    "levelA": "A - Avancé",
+    "levelB": "B - Intermédiaire",
+    "levelC": "C - Base",
+    "levelD": "D - Initial",
+    "tabSubjects": "Compétences Disciplinaires",
+    "tabKeyCompetencies": "Compétences Clés Européennes",
+    "btnEvaluate": "Évaluer",
+    "levelAssigned": "Niveau Attribué",
+    "actions": "Actions",
+    "selectClassSubjectPrompt": "Sélectionnez une classe et une matière pour évaluer",
+    "noEvaluationsFound": "Aucune évaluation de compétences trouvée"
   },
   "gradesPage": {
-    "title": "Gestion du Carnet de Notes",
+    "title": "Gestion du Registre des Notes",
     "subtitle": "Saisie des notes, calcul des moyennes et historique par classe",
-    "newTest": "Nouvelle évaluation",
+    "newTest": "Nouvelle Évaluation",
     "importCSV": "Importer CSV",
-    "printReport": "Télécharger le rapport PDF",
-    "filterDate": "Date de note",
-    "gradeType": "Type de note",
-    "showRubric": "Afficher la grille",
+    "printReport": "Télécharger le Rapport PDF",
+    "filterDate": "Date de la Note",
+    "gradeType": "Type d'Évaluation",
+    "showRubric": "Afficher le Barème",
     "written": "Écrit",
     "oral": "Oral",
     "practical": "Pratique",
-    "substitutionWarningTitle": "Mode Remplacement - Saisie désactivée",
-    "substitutionWarningDesc": "Cette classe n'est pas votre classe titulaire. La saisie des notes est réservée aux enseignants titulaires.",
+    "substitutionWarningTitle": "Mode Remplacement - Saisie des Notes Désactivée",
+    "substitutionWarningDesc": "Cette classe ne fait pas partie de vos cours titulaires.",
     "weight": "Coefficient",
     "date": "Date",
     "notes": "Remarques",
     "student": "Élève",
     "average": "Moyenne",
-    "overallAverage": "Moyenne générale",
-    "matrixView": "Vue Matrice",
+    "overallAverage": "Moyenne Générale",
+    "matrixView": "Vue Grille Rapide",
     "standardView": "Vue Liste Standard",
-    "saveGrades": "Enregistrer les notes",
-    "cannotEditOtherTeacherGrade": "You cannot edit grades created by another teacher",
-    "sharedGradesCaption": "Grades shared with class",
-    "confirmDeleteGrade": "Are you sure you want to delete this grade?",
-    "insertGrade": "Insert Grade",
-    "invalidGrade": "Invalid grade value",
-    "matrixViewTitle": "Grade Matrix Grid",
-    "matrixViewKbdHint": "Use Tab to navigate between cells, Enter to confirm",
-    "saveAllGrades": "Save All Grades",
-    "besDsaMeasures": "Dispensing / Compensatory Measures",
-    "insertAtLeastOneGrade": "Enter at least one grade before saving",
-    "matrixGradeDesc": "Quick tabular grade entry",
-    "noGrades": "No evaluations present",
-    "finalOutcome": "Final Outcome",
-    "statisticsTitle": "Grade Statistics",
-    "totalGrades": "Assigned Grades",
+    "saveGrades": "Enregistrer les Notes",
+    "cannotEditOtherTeacherGrade": "Vous ne pouvez pas modifier les notes d'un autre enseignant",
+    "sharedGradesCaption": "Notes partagées avec la classe",
+    "confirmDeleteGrade": "Voulez-vous vraiment supprimer cette note ?",
+    "insertGrade": "Saisir une Note",
+    "invalidGrade": "Valeur de note invalide",
+    "matrixViewTitle": "Grille des Évaluations",
+    "matrixViewKbdHint": "Utilisez Tab pour vous déplacer et Entrée pour valider",
+    "saveAllGrades": "Enregistrer Toutes les Notes",
+    "besDsaMeasures": "Aménagements Pédagogiques / PAP",
+    "insertAtLeastOneGrade": "Veuillez saisir au moins une note avant d'enregistrer",
+    "matrixGradeDesc": "Saisie tabulaire rapide des notes",
+    "noGrades": "Aucune note enregistrée",
+    "finalOutcome": "Bilan Final",
+    "statisticsTitle": "Statistiques des Notes",
+    "totalGrades": "Notes Attribuées",
     "distribution": "Distribution",
     "studentTitle": "Mes Notes",
     "filtersTitle": "Filtres",
@@ -1328,25 +1503,25 @@ export default {
     "periodLabel": "Période",
     "periods": {
       "all": "Tous",
-      "lastMonth": "Dernier mois",
-      "lastWeek": "Dernière semaine"
+      "lastMonth": "Dernier Mois",
+      "lastWeek": "Dernière Semaine"
     },
-    "averageTrends": "Évolution des moyennes",
-    "simulatorTitle": "Simulateur & Projections",
-    "sufficiencyHeader": "POUR ATTEINDRE LA MOYENNE (6.0):",
-    "currentAvg": "Moyenne actuelle: {avg}",
-    "neededGrade": "Prochaine note: {needed}",
-    "simulateNextGrade": "SIMULER VOTRE PROCHAINE NOTE:",
-    "selectSubject": "Sélectionner la matière",
+    "averageTrends": "Évolution des Moyennes",
+    "simulatorTitle": "Simulateur et Projections",
+    "sufficiencyHeader": "POUR OBTENIR LA MOYENNE (6.0 / 10):",
+    "currentAvg": "Moyenne actuelle : {avg}",
+    "neededGrade": "Prochaine note nécessaire : {needed}",
+    "simulateNextGrade": "SIMULEZ VOTRE PROCHAINE NOTE :",
+    "selectSubject": "Sélectionner une Matière",
     "hypotheticalGrade": "Note hypothétique",
-    "gradeRuleError": "Entrez une note entre 1 et 10",
+    "gradeRuleError": "Saisissez une note entre 1 et 10",
     "newAverage": "Nouvelle Moyenne",
-    "tableTitle": "Registre des notes",
+    "tableTitle": "Registre des Notes",
     "loading": "Chargement des notes...",
     "cols": {
       "date": "Date",
       "subject": "Matière",
-      "evalType": "Type d'épreuve",
+      "evalType": "Type",
       "category": "Catégorie",
       "value": "Note",
       "desc": "Sujet"
@@ -1357,8 +1532,21 @@ export default {
       "practical": "Pratique"
     },
     "unknownSubject": "Matière inconnue",
-    "reportDownloadSuccess": "Rapport PDF téléchargé avec succès",
-    "reportDownloadError": "Erreur lors du téléchargement du rapport PDF"
+    "reportDownloadSuccess": "Bulletin de notes téléchargé avec succès",
+    "reportDownloadError": "Erreur lors du téléchargement du bulletin",
+    "gradeTypes": {
+      "standard": "Standard",
+      "test": "Contrôle",
+      "bonus": "Points Bonus"
+    },
+    "simulatedAvg": "Moyenne Simulée",
+    "pointsNeeded": "Points Requis",
+    "status": "Statut",
+    "sufficient": "Moyenne Atteinte",
+    "insufficient": "Insuffisant",
+    "recentGrades": "Dernières Notes",
+    "periodGrades": "Notes du Semestre",
+    "finalGrade": "Note Finale"
   },
   "didacticsPage": {
     "title": "Supports de Cours & Ressources",
@@ -1494,32 +1682,32 @@ export default {
   },
   "colloquiPage": {
     "title": "Rendez-vous Parents-Professeurs",
-    "subtitle": "Gestion des créneaux de réception et rendez-vous",
-    "addSlot": "Ajouter des créneaux",
-    "activeSlots": "Créneaux ouverts",
-    "bookings": "Rendez-vous réservés",
+    "subtitle": "Gestion des disponibilités et des entretiens individuels",
+    "addSlot": "Ajouter une Disponibilité",
+    "activeSlots": "Créneaux Disponibles",
+    "bookings": "Rendez-vous Réservés",
     "booked": "Réservé",
     "available": "Disponible",
-    "completed": "Terminé",
+    "completed": "Effectué",
     "cancelled": "Annulé",
-    "parentName": "Parent / Responsable",
-    "studentName": "Élève",
-    "slotTime": "Date & Heure",
-    "notes": "Notes de réunion",
-    "configModalTitle": "Configurer les créneaux de réception",
-    "dayOfWeek": "Jour de la semaine",
-    "startTime": "Heure de début",
-    "endTime": "Heure de fin",
-    "slotDuration": "Durée par entretien (minutes)",
-    "meetingMode": "Modalité",
-    "inPerson": "En présentiel (Au collège/Lycée)",
-    "online": "En ligne (Visioconférence)",
-    "saveSlots": "Enregistrer les créneaux",
-    "createSlotsTitle": "Create Interview Availability",
-    "duration": "Duration (min)",
-    "break": "Break (min)",
-    "generateSlots": "Generate Slots",
-    "parent": "Parent"
+    "parentName": "Nom du Parent",
+    "studentName": "Nom de l'Élève",
+    "slotTime": "Horaire",
+    "notes": "Remarques",
+    "configModalTitle": "Configurer les Créneaux",
+    "dayOfWeek": "Jour de la Semaine",
+    "startTime": "Heure de Début",
+    "endTime": "Heure de Fin",
+    "slotDuration": "Durée par Entretien (min)",
+    "meetingMode": "Mode de Rencontre",
+    "inPerson": "En Présentiel",
+    "online": "En Ligne / Visio",
+    "saveSlots": "Enregistrer les Créneaux",
+    "createSlotsTitle": "Générer les Créneaux",
+    "duration": "Durée",
+    "break": "Pause entre créneaux",
+    "generateSlots": "Générer Créneaux",
+    "parent": "Parent / Tuteur"
   },
   "substitutionsPage": {
     "title": "Gestion des Remplacements",
@@ -1586,11 +1774,11 @@ export default {
     "bodyLabel": "Contenu du message *",
     "recipientsLabel": "Destinataires (Rôles)",
     "publish": "Publier la communication",
-    "circular": "Circular"
+    "circular": "Circulaire"
   },
   "documentsPage": {
-    "title": "Gestion Documentaire & Attestations",
-    "subtitle": "Archivage centralisé des documents scolaires et certificats",
+    "title": "Archives Documentaires et Actes",
+    "subtitle": "Gestion des actes officiels, circulaires, certificats et dossiers scolaires",
     "uploadDoc": "Téléverser un document",
     "generateCert": "Générer un certificat",
     "certEnrollment": "Certificat de scolarité",
@@ -1602,41 +1790,44 @@ export default {
     "fileSize": "Taille",
     "printPdf": "Imprimer PDF",
     "downloadFile": "Télécharger le fichier",
-    "documentsList": "Document List",
-    "uploadDocument": "Upload Document",
-    "templateManagement": "Template Management",
-    "newTemplate": "New Template",
-    "noTemplates": "No templates available",
-    "noTemplatesDesc": "Create a new customized template for your school",
-    "editTemplate": "Edit Template",
-    "templateName": "Template Name",
-    "templateContent": "Template Content",
-    "certificates": "Certificates",
-    "loadError": "Error loading document",
-    "download": "Download Document",
-    "selectTemplate": "Select Template",
-    "noPreview": "No preview available",
-    "reviewTitle": "Review Document",
-    "inbox": "Inbox & Received Documents",
-    "searchPlaceholder": "Search by title, protocol or sender...",
-    "approveSelected": "Approve Selected",
-    "archive": "Archive",
-    "favorite": "Favorite",
-    "titleLabel": "Document Title",
-    "favoriteAdded": "Added to favorites",
-    "favoriteRemoved": "Removed from favorites",
-    "batchApproveTitle": "Batch Document Approval",
-    "batchApproveConfirm": "Are you sure you want to approve selected documents?",
-    "documentsApproved": "Documents approved successfully",
-    "documentsArchived": "Documents archived successfully",
+    "documentsList": "Liste des Documents",
+    "uploadDocument": "Déposer un Document",
+    "templateManagement": "Gestion des Modèles",
+    "newTemplate": "Nouveau Modèle",
+    "noTemplates": "Aucun modèle disponible",
+    "noTemplatesDesc": "Créez un nouveau modèle personnalisé pour votre établissement",
+    "editTemplate": "Modifier le Modèle",
+    "templateName": "Nom du Modèle",
+    "templateContent": "Contenu du Modèle",
+    "certificates": "Certificats",
+    "loadError": "Erreur lors du chargement du document",
+    "download": "Télécharger",
+    "selectTemplate": "Sélectionner un Modèle",
+    "noPreview": "Aperçu non disponible",
+    "reviewTitle": "Réviser le Document",
+    "inbox": "Boîte de Réception & Documents Reçus",
+    "searchPlaceholder": "Rechercher par titre, protocole ou expéditeur...",
+    "approveSelected": "Approuver la Sélection",
+    "archive": "Archiver",
+    "favorite": "Favori",
+    "titleLabel": "Titre du Document",
+    "favoriteAdded": "Ajouté aux favoris",
+    "favoriteRemoved": "Retiré des favoris",
+    "batchApproveTitle": "Approbation Groupée de Documents",
+    "batchApproveConfirm": "Voulez-vous vraiment approuver les documents sélectionnés ?",
+    "documentsApproved": "Documents approuvés avec succès",
+    "documentsArchived": "Documents archivés avec succès",
     "parentTitle": "Documents & Communications",
     "parentSubtitle": "Consulter et télécharger les documents officiels pour {name}",
     "searchPlaceholderDoc": "Rechercher un document...",
     "tabs": {
-      "all": "Tous les documents",
+      "all": "Tous",
       "reportCards": "Bulletins & Évaluations",
-      "circulars": "Circulaires & Formulaires",
-      "plans": "Projets Pédagogiques (PAP/PPRE/PPS)"
+      "circulars": "Circulaires",
+      "plans": "Projets Pédagogiques (PAP/PPRE/PPS)",
+      "certificates": "Certificats",
+      "minutes": "Procès-verbaux",
+      "studentFiles": "Dossiers Élèves"
     },
     "loadingDatabase": "Chargement des documents depuis la base de données...",
     "isNew": "Nouveau",
@@ -1657,7 +1848,10 @@ export default {
     "fascicoloFallbackTitle": "Document Élève",
     "fascicoloFallbackSubtitle": "Dossier de l'élève",
     "previewDialogMessage": "Détails du document: {subtitle}. Date: {date}. Statut: {status}",
-    "downloadStarted": "Téléchargement du document: {title}"
+    "downloadStarted": "Téléchargement du document: {title}",
+    "upload": "Déposer un Document",
+    "tableTitle": "Documents Officiels",
+    "noDocs": "Aucun document disponible dans cette section."
   },
   "notesPage": {
     "title": "Disciplines & Observations",
@@ -1704,9 +1898,9 @@ export default {
     "currentPassword": "Mot de passe actuel",
     "newPassword": "Nouveau mot de passe",
     "saveSettings": "Enregistrer les préférences",
-    "profile": "User Profile",
-    "confirmPassword": "Confirm New Password",
-    "changePassword": "Change Password"
+    "profile": "Profil Utilisateur",
+    "confirmPassword": "Confirmer le Nouveau Mot de Passe",
+    "changePassword": "Modifier le Mot de Passe"
   },
   "paymentsPage": {
     "title": "Paiements Scolaires & PagoPA",
@@ -1744,184 +1938,217 @@ export default {
     "cost": "Frais de participation"
   },
   "usersPage": {
-    "title": "User Management",
-    "searchPlaceholder": "Search by name, email...",
-    "newUser": "New User",
-    "exportCsv": "Export to CSV",
-    "selectedUsers": "selected users",
-    "deleteSelected": "Delete Selected",
-    "roleStudents": "Students",
-    "roleTeachers": "Teachers",
-    "roleParents": "Parents",
-    "roleStaff": "Staff",
-    "roleCoordinator": "Coordinator",
-    "roleVicePrincipal": "Vice Principal",
-    "rolePrincipal": "Principal",
-    "roleLabel": "Role",
-    "editProfile": "Edit Profile",
-    "resetPassword": "Reset Password",
-    "manageSubjects": "Manage Subjects",
-    "deleteAccount": "Delete Account",
-    "noUsersFound": "No users found"
+    "title": "Gestion des Utilisateurs",
+    "searchPlaceholder": "Rechercher par nom, email, identifiant...",
+    "newUser": "Nouvel Utilisateur",
+    "exportCsv": "Exporter CSV",
+    "selectedUsers": "utilisateurs sélectionnés",
+    "deleteSelected": "Supprimer la sélection",
+    "roleStudents": "Élèves",
+    "roleTeachers": "Enseignants",
+    "roleParents": "Parents / Tuteurs",
+    "roleStaff": "Personnel Administratif",
+    "roleCoordinator": "Coordonnateur",
+    "roleVicePrincipal": "Proviseur Adjoint",
+    "rolePrincipal": "Chef d'Établissement",
+    "roleLabel": "Rôle",
+    "editProfile": "Modifier le Profil",
+    "resetPassword": "Réinitialiser le mot de passe",
+    "manageSubjects": "Assigner les Matières",
+    "deleteAccount": "Supprimer le Compte",
+    "noUsersFound": "Aucun utilisateur trouvé",
+    "roleSecretary": "Secrétariat",
+    "roleAdmin": "Administrateur"
   },
   "studentAttendance": {
-    "title": "My Attendance & Absences",
-    "subtitle": "Detailed history of attendance, absences, and tardiness"
+    "title": "Mes Présences & Absences",
+    "subtitle": "Historique détaillé des présences, retards et dispenses"
   },
   "classes": {
-    "linguisticGroup": "Language / Track Group",
-    "linguisticGroupLabel": "Language Group: {name}"
+    "linguisticGroup": "Groupe Linguistique",
+    "linguisticGroupLabel": "Groupe Linguistique : {name}"
   },
   "composables": {
     "colloqui": {
-      "invalidDuration": "Invalid appointment duration",
-      "invalidTimeRange": "Invalid time range",
-      "bookingConfirmed": "Appointment booking confirmed",
-      "bookingCancelled": "Appointment booking cancelled",
-      "slotsCreated": "{count} slots created successfully",
-      "slotsError": "Error creating appointment slots"
+      "invalidDuration": "Durée de créneau invalide",
+      "invalidTimeRange": "Plage horaire invalide",
+      "bookingConfirmed": "Rendez-vous confirmé avec succès",
+      "bookingCancelled": "Rendez-vous annulé avec succès",
+      "slotsCreated": "{count} créneaux créés avec succès",
+      "slotsError": "Erreur lors de la création des créneaux de rendez-vous",
+      "slotDeleted": "Créneau supprimé avec succès"
     },
     "users": {
-      "importError": "Error importing users",
-      "importStarted": "User import started"
+      "importError": "Erreur lors de l'importation des utilisateurs",
+      "importStarted": "Importation des utilisateurs démarrée",
+      "userCreated": "Utilisateur créé avec succès",
+      "userUpdated": "Utilisateur mis à jour avec succès",
+      "userDeleted": "Utilisateur supprimé avec succès",
+      "passwordResetSuccess": "Mot de passe réinitialisé avec succès"
     },
     "adminUsers": {
-      "confirmTitle": "Confirm deletion",
-      "confirmMsg": "Are you sure you want to delete this administrator?"
+      "confirmTitle": "Confirmer la suppression",
+      "confirmMsg": "Voulez-vous vraiment supprimer cet administrateur ?",
+      "confirmDeleteTitle": "Confirmer la suppression",
+      "confirmDeleteMsg": "Voulez-vous supprimer définitivement cet utilisateur ?"
     },
     "attendance": {
-      "saveSuccess": "Attendance saved successfully",
-      "saveError": "Failed to save attendance",
-      "requestSent": "Justification request sent",
-      "requestError": "Failed to send justification request"
+      "saveSuccess": "Présences enregistrées avec succès",
+      "saveError": "Erreur lors de l'enregistrement des présences",
+      "requestSent": "Demande de justification envoyée",
+      "requestError": "Échec de l'envoi de la demande de justification",
+      "savedSuccess": "Présences enregistrées avec succès",
+      "justifiedSuccess": "Absence justifiée avec succès"
     },
     "children": {
-      "addSuccess": "Child profile added successfully",
-      "removeConfirmTitle": "Confirm removal",
-      "removeConfirmMsg": "Are you sure you want to remove this student profile?",
-      "removeSuccess": "Student profile removed"
+      "addSuccess": "Profil d'enfant associé avec succès",
+      "removeConfirmTitle": "Confirmer la suppression",
+      "removeConfirmMsg": "Voulez-vous vraiment retirer cet élève ?",
+      "removeSuccess": "Profil d'élève retiré",
+      "noChildrenFound": "Aucun enfant associé trouvé"
     },
     "documents": {
-      "draftCreated": "Document draft created",
-      "draftError": "Failed to create document draft",
+      "draftCreated": "Brouillon de document créé",
+      "draftError": "Erreur lors de la création du brouillon",
       "reviewSuccess": "Document {decision}",
-      "reviewError": "Review failed",
-      "downloading": "Downloading {title}..."
+      "reviewError": "Échec de la révision",
+      "downloading": "Téléchargement de {title}...",
+      "uploadSuccess": "Document déposé avec succès",
+      "deleteSuccess": "Document supprimé avec succès"
     },
     "grades": {
-      "fillRequired": "Please fill all required grade fields",
-      "saveSuccess": "Grade saved successfully",
-      "saveError": "Failed to save grade"
+      "fillRequired": "Veuillez renseigner tous les champs obligatoires",
+      "saveSuccess": "Note enregistrée avec succès",
+      "saveError": "Erreur lors de l'enregistrement de la note",
+      "gradeSaved": "Note enregistrée avec succès",
+      "gradeDeleted": "Note supprimée avec succès"
     },
     "schools": {
-      "updated": "School updated successfully",
-      "created": "School created successfully",
-      "operationFailed": "Operation failed",
-      "deleteConfirmTitle": "Confirm deletion",
-      "deleteConfirmMsg": "Are you sure you want to delete this school?",
-      "deleted": "School deleted successfully"
+      "updated": "Établissement mis à jour avec succès",
+      "created": "Établissement créé avec succès",
+      "operationFailed": "L'opération a échoué",
+      "deleteConfirmTitle": "Confirmer la suppression",
+      "deleteConfirmMsg": "Voulez-vous vraiment supprimer cet établissement ?",
+      "deleted": "Établissement supprimé avec succès",
+      "schoolSaved": "Établissement enregistré avec succès"
     },
     "undo": {
-      "cancelWithSeconds": "Undo ({remaining}s)",
-      "actionCancelled": "Action undone",
-      "cancelError": "Error while undoing action"
+      "cancelWithSeconds": "Annuler ({remaining}s)",
+      "actionCancelled": "Action annulée",
+      "cancelError": "Erreur lors de l'annulation de l'action",
+      "actionUndone": "Action annulée avec succès"
     }
   },
   "security": {
-    "title": "Security & Legal Compliance",
-    "subtitle": "Qualified Electronic Signature (FEQ), CAD Compliant Preservation, and Immutable Log Chain",
-    "downloadCadZip": "Download CAD ZIP Package",
-    "feqTitle": "Qualified Signature (FEQ)",
-    "feqActive": "Active and Verified",
-    "feqDesc": "All signatures on class registers and substitutions are sealed with legally binding SHA-256 timestamps.",
-    "cadTitle": "CAD Long-Term Preservation",
-    "cadManifest": "XML Manifest Package",
-    "cadDesc": "Compliant with AgID guidelines for long-term document preservation.",
-    "immutableAuditTitle": "Immutable Audit Trail",
-    "cryptoChain": "Cryptographic Hash Chain",
-    "immutableAuditDesc": "Every edit on signatures, grades, and notes generates a cryptographically chained block (Block Hashing).",
-    "integrityVerifier": "Register Integrity Verifier (Audit Trail)",
-    "verifyNow": "Verify Integrity Now",
-    "allBlocksValid": "All register blocks are valid and legally binding",
-    "verifiedOn": "Verified on",
-    "colAction": "Action / Event",
-    "colActor": "User / Actor",
-    "colPrevHash": "Previous Hash (SHA-256)",
-    "colCurrHash": "Current Hash (SHA-256)",
-    "colCryptoStatus": "Cryptographic Status",
-    "intact": "Intact",
-    "integrityVerified": "Register integrity verification completed: Chain is valid!",
-    "integrityError": "Error verifying hash chain",
-    "cadGenerating": "Generating CAD preservation ZIP package...",
-    "cadDownloaded": "CAD Package downloaded successfully!",
-    "cadError": "Error downloading CAD package"
+    "title": "Sécurité & Conformité Réglementaire",
+    "subtitle": "Signature Électronique Qualifiée (FEQ), Archivage Légal et Journal d'Audit Immuable",
+    "downloadCadZip": "Télécharger l'Archive ZIP CAD",
+    "feqTitle": "Signature Qualifiée (FEQ)",
+    "feqActive": "Active et Vérifiée",
+    "feqDesc": "Tous les registres sont signés numériquement conformément aux normes eIDAS.",
+    "cadTitle": "Conservation Légale CAD",
+    "cadManifest": "Archive Manifest XML",
+    "cadDesc": "Conforme aux normes de conservation numérique à long terme.",
+    "immutableAuditTitle": "Journal d'Audit Immuable",
+    "cryptoChain": "Chaîne Cryptographique de Hashes",
+    "immutableAuditDesc": "Chaque opération génère un bloc chaîné de manière cryptographique.",
+    "integrityVerifier": "Vérificateur d'Intégrité du Registre",
+    "verifyNow": "Vérifier l'Intégrité Maintenant",
+    "allBlocksValid": "Tous les blocs cryptographiques sont intègres et valides",
+    "verifiedOn": "Vérifié le",
+    "colAction": "Action",
+    "colActor": "Utilisateur",
+    "colPrevHash": "Hash Précédent",
+    "colCurrHash": "Hash Actuel",
+    "colCryptoStatus": "Statut Cryptographique",
+    "intact": "Intègre",
+    "integrityVerified": "Intégrité du registre vérifiée avec succès !",
+    "integrityError": "Erreur lors de la vérification de l'intégrité cryptographique.",
+    "cadGenerating": "Génération de l'archive de conservation légale CAD...",
+    "cadDownloaded": "Archive CAD générée et téléchargée avec succès !",
+    "cadError": "Erreur lors de la génération de l'archive CAD.",
+    "blockchainTitle": "Chaîne de Blocs Cryptographique",
+    "blockchainDesc": "Registre d'audit inaltérable et inviolable sécurisé par hachage SHA-256."
   },
   "reportsPage": {
-    "title": "Reports & Analytics",
-    "subtitle": "Statistical summaries, grade averages and exportable documents",
-    "exportPdf": "Export PDF",
-    "exportExcel": "Export Excel"
+    "title": "Rapports & Statistiques",
+    "subtitle": "Bilans statistiques, moyennes générales et exports officiels",
+    "exportPdf": "Exporter en PDF",
+    "exportExcel": "Exporter en Excel"
   },
   "attendance": {
-    "title": "Attendance & Daily Register",
-    "present": "Present",
+    "title": "Présence et Registre Journalier",
+    "present": "Présent",
     "absent": "Absent",
-    "late": "Late",
-    "earlyExit": "Early Exit",
-    "justified": "Justified",
-    "justify": "Justify",
-    "justifyAbsence": "Justify Absence / Tardy",
-    "reason": "Reason",
-    "healthReasons": "Health Reasons",
-    "familyReasons": "Family Reasons",
-    "medicalVisit": "Medical Appointment",
-    "activityType": "Activity Type",
-    "activityPrefix": "Activity:",
-    "careerGuidance": "Career Guidance",
-    "minutesLate": "Minutes Late",
-    "earlyExitTime": "Exit Time",
-    "standardLesson": "Standard Lesson",
-    "atTime": "at",
+    "late": "Retard",
+    "earlyExit": "Sortie Anticipée",
+    "justified": "Justifiée",
+    "justify": "Justifier",
+    "justifyAbsence": "Justifier Absence / Retard",
+    "reason": "Motif",
+    "healthReasons": "Raisons de Santé",
+    "familyReasons": "Raisons Familiales",
+    "medicalVisit": "Consultation Médicale",
+    "activityType": "Type d'Activité",
+    "activityPrefix": "Activité",
+    "careerGuidance": "Orientation & Tutorat",
+    "minutesLate": "minutes de retard",
+    "earlyExitTime": "Heure de départ",
+    "standardLesson": "Cours Ordinaire",
+    "atTime": "à",
     "totalAbsences": "Total Absences",
-    "noAbsences": "No absences recorded",
-    "pendingJustification": "Pending justification"
+    "noAbsences": "Aucune absence enregistrée",
+    "pendingJustification": "En attente de justification"
   },
   "studentsPage": {
-    "studentDossier": "Student Dossier",
-    "multiYearHistory": "Multi-Year History",
-    "documentsAndAttachments": "Documents & Attachments",
-    "besDsaDossier": "SEN / Specific Learning Needs Dossier",
-    "besDsaDocumentation": "SEN / Learning Needs Documentation",
-    "newEnrollment": "New Student Enrollment",
-    "personalData": "Personal Data",
-    "birthDate": "Date of Birth",
-    "birthPlace": "Place of Birth",
-    "taxCode": "Tax Code",
-    "gender": "Gender",
-    "residenceAndContacts": "Residence & Contacts",
-    "personalEmail": "Personal Email",
-    "parentsGuardians": "Parents / Guardians",
-    "primaryContact": "Primary Contact",
-    "secondaryContact": "Secondary Contact",
-    "schoolData": "School Data",
-    "assignedClass": "Assigned Class",
-    "enrollmentDate": "Enrollment Date",
-    "documentsSubmitted": "Submitted Documents",
-    "completeEnrollment": "Complete Enrollment",
-    "enrollmentSuccess": "Enrollment completed successfully",
-    "studentFile": "Dossier"
+    "studentDossier": "Dossier Scolaire de l'Élève",
+    "multiYearHistory": "Historique Pluriannuel",
+    "documentsAndAttachments": "Documents et Pièces Jointes",
+    "besDsaDossier": "Dossier Besoins Éducatifs Particuliers (PAP / PPS)",
+    "besDsaDocumentation": "Documentation Aménagements Pédagogiques",
+    "newEnrollment": "Nouvelle Inscription",
+    "personalData": "Données Personnelles",
+    "birthDate": "Date de Naissance",
+    "birthPlace": "Lieu de Naissance",
+    "taxCode": "Numéro National / Identifiant",
+    "gender": "Genre",
+    "residenceAndContacts": "Adresse et Coordonnées",
+    "personalEmail": "Email Personnel",
+    "parentsGuardians": "Parents / Responsables Légaux",
+    "primaryContact": "Contact Principal",
+    "secondaryContact": "Contact Secondaire",
+    "schoolData": "Données Scolaires",
+    "assignedClass": "Classe Assignée",
+    "enrollmentDate": "Date d'Inscription",
+    "documentsSubmitted": "Documents Fournis",
+    "completeEnrollment": "Finaliser l'Inscription",
+    "enrollmentSuccess": "Inscription finalisée avec succès !",
+    "studentFile": "Fiche Élève"
   },
   "classesPage": {
-    "currentClass": "Current Class"
+    "currentClass": "Classe Actuelle"
   },
   "admin": {
-    "apiRequests": "API Requests",
-    "userDeleted": "User deleted successfully",
-    "userDeleteError": "Error deleting user"
+    "apiRequests": "Requêtes API",
+    "userDeleted": "Utilisateur supprimé avec succès",
+    "userDeleteError": "Erreur lors de la suppression de l'utilisateur"
   },
   "auth": {
-    "sessionExpired": "Session expired",
-    "enterPasswordToContinue": "Enter password to continue",
-    "sessionWorkPreserved": "Unsaved changes were preserved"
+    "sessionExpired": "Session expirée",
+    "enterPasswordToContinue": "Entrez votre mot de passe pour continuer",
+    "sessionWorkPreserved": "Les modifications non enregistrées ont été préservées"
+  },
+  "attendancePage": {
+    "title": "Présences & Absences",
+    "subtitle": "Suivi des présences, retards et justificatifs",
+    "tableTitle": "Tableau des Présences"
+  },
+  "reportCardPage": {
+    "title": "Bulletin Scolaire & Évaluation Finale",
+    "subtitle": "Fiche formelle d'évaluation de fin de période scolaire",
+    "finalEvaluation": "Bilan et Décision du Conseil",
+    "semester1": "1er Semestre",
+    "semester2": "2nd Semestre",
+    "exportPdf": "Exporter en PDF"
   }
-};
+}

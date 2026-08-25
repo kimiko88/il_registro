@@ -166,10 +166,118 @@
             <q-item v-if="displaySchedule.length === 0" class="text-center text-grey q-pa-md">
               <q-item-section>
                 <div>{{ $t('timetablePage.freeSlot') || 'Nessuna lezione pianificata per oggi' }}</div>
-                <q-btn flat color="primary" icon="add" :label="$t('udaPage.newUda') || 'Crea Bozza Lezione per Oggi'" class="q-mt-sm" @click="openDraftModal" />
+                <q-btn
+                  v-if="currentRole === 'teacher'"
+                  flat
+                  color="primary"
+                  icon="add"
+                  :label="$t('dashboardPage.saveDraft') || 'Pianifica Bozza Lezione per Oggi'"
+                  class="q-mt-sm"
+                  @click="openDraftModal"
+                />
+                <q-btn
+                  v-else-if="currentRole === 'student'"
+                  flat
+                  color="primary"
+                  icon="assignment"
+                  label="Vedi i Tuoi Compiti & Attività"
+                  class="q-mt-sm"
+                  to="/student/homework"
+                />
               </q-item-section>
             </q-item>
           </q-list>
+        </q-card>
+
+        <!-- Prossimi Compiti & Scadenze per Studenti / Genitori -->
+        <q-card v-if="currentRole === 'student' || currentRole === 'parent'" class="no-shadow bordered-card q-mt-lg">
+          <q-card-section class="row items-center justify-between q-pb-none">
+            <div>
+              <div class="text-h6 text-weight-bold text-dark row items-center">
+                <q-icon name="assignment" color="primary" class="q-mr-sm" size="24px" />
+                <span>Prossimi Compiti da Svolgere</span>
+              </div>
+              <div class="text-caption text-slate-500 q-mt-xs">
+                Organizza il tuo studio: compiti, verifiche e consegne in arrivo
+              </div>
+            </div>
+            <q-btn
+              flat
+              dense
+              color="primary"
+              icon="open_in_new"
+              label="Tutti i Compiti"
+              no-caps
+              :to="currentRole === 'student' ? '/student/homework' : '/parent/didactics'"
+              class="text-weight-bold"
+            />
+          </q-card-section>
+
+          <q-card-section class="q-pt-sm">
+            <div v-if="loadingHomeworks" class="text-center q-pa-md">
+              <q-spinner-dots color="primary" size="30px" />
+            </div>
+
+            <q-list v-else-if="upcomingHomeworks.length > 0" class="q-gutter-y-xs">
+              <q-item
+                v-for="hw in upcomingHomeworks"
+                :key="hw.id"
+                class="q-py-sm rounded-lg bg-slate-50 border border-slate-100 hover:border-slate-300 transition-all cursor-pointer"
+                @click="router.push(currentRole === 'student' ? '/student/homework' : '/parent/didactics')"
+              >
+                <q-item-section avatar>
+                  <q-avatar
+                    :color="`${getTaskTypeBadgeColor(hw.type)}-1`"
+                    :text-color="getTaskTypeBadgeColor(hw.type)"
+                    :icon="getTaskTypeIcon(hw.type)"
+                    size="40px"
+                  />
+                </q-item-section>
+
+                <q-item-section>
+                  <div class="row items-center q-gutter-x-sm">
+                    <q-chip
+                      size="xs"
+                      :color="`${getTaskTypeBadgeColor(hw.type)}-1`"
+                      :text-color="getTaskTypeBadgeColor(hw.type)"
+                      class="text-weight-bold uppercase"
+                    >
+                      {{ hw.type }}
+                    </q-chip>
+                    <span class="text-weight-bold text-slate-800">{{ hw.subject }}</span>
+                  </div>
+                  <q-item-label class="text-body2 text-slate-700 q-mt-xs text-weight-medium">
+                    {{ hw.title || hw.description }}
+                  </q-item-label>
+                  <q-item-label caption v-if="hw.teacher" class="text-slate-400">
+                    Docente: {{ hw.teacher }}
+                  </q-item-label>
+                </q-item-section>
+
+                <q-item-section side>
+                  <div class="text-right">
+                    <q-chip
+                      size="sm"
+                      :color="getDueRelativeColor(hw.due_date)"
+                      text-color="white"
+                      class="text-weight-bold"
+                    >
+                      {{ getDueRelativeText(hw.due_date) }}
+                    </q-chip>
+                    <div class="text-caption text-slate-500 q-mt-xs">
+                      {{ formatDateOnly(hw.due_date) }}
+                    </div>
+                  </div>
+                </q-item-section>
+              </q-item>
+            </q-list>
+
+            <div v-else class="text-center q-pa-lg text-slate-500">
+              <q-icon name="task_alt" size="48px" color="positive" class="q-mb-sm opacity-80" />
+              <div class="text-subtitle1 text-weight-bold text-slate-700">Nessun compito in sospeso</div>
+              <div class="text-caption text-slate-500">Sei in pari con tutte le consegne e le attività di studio!</div>
+            </div>
+          </q-card-section>
         </q-card>
       </div>
 
@@ -217,8 +325,8 @@
       </div>
     </div>
 
-    <!-- Dialog Pianifica Bozza Lezione -->
-    <q-dialog v-model="showDraftDialog" persistent>
+    <!-- Dialog Pianifica Bozza Lezione (Solo Docente) -->
+    <q-dialog v-if="currentRole === 'teacher'" v-model="showDraftDialog" persistent>
       <q-card style="min-width: 500px; max-width: 650px" class="rounded-xl">
         <q-card-section class="bg-primary text-white row items-center justify-between">
           <div class="text-h6 text-weight-bold">
@@ -257,8 +365,8 @@
       </q-card>
     </q-dialog>
 
-    <!-- Dialog Elenco Bozze Salvate -->
-    <q-dialog v-model="showDraftsListDialog">
+    <!-- Dialog Elenco Bozze Salvate (Solo Docente) -->
+    <q-dialog v-if="currentRole === 'teacher'" v-model="showDraftsListDialog">
       <q-card style="min-width: 600px" class="rounded-xl">
         <q-card-section class="bg-secondary text-white row items-center justify-between">
           <div class="text-h6 text-weight-bold">
@@ -322,8 +430,10 @@ const realStats = ref([])
 const recentEvents = ref([])
 const announcements = ref([])
 const todaySchedule = ref([])
+const upcomingHomeworks = ref([])
 const loadingData = ref(false)
 const loadingAnnouncements = ref(false)
+const loadingHomeworks = ref(false)
 const navigatingAction = ref(null)
 
 const showDraftDialog = ref(false)
@@ -544,6 +654,37 @@ const fetchDashboardData = async () => {
                     { label: t('documentsPage.title'), value: data.documents_count ?? '0', icon: 'description', color: 'purple' }
                 ]
             }
+
+            // Se l'utente è uno studente o un genitore, carica i prossimi compiti/verifiche da svolgere
+            if (role === 'student' || role === 'parent') {
+                try {
+                    loadingHomeworks.value = true
+                    const todayStr = new Date().toISOString().split('T')[0]
+                    const agendaRes = await api.get('/agenda/events', {
+                        params: { from: todayStr, limit: 8 }
+                    }).catch(() => null)
+
+                    if (agendaRes?.data) {
+                        const items = Array.isArray(agendaRes.data) ? agendaRes.data : (agendaRes.data?.items || [])
+                        upcomingHomeworks.value = items.filter(i => {
+                            const itemDate = (i.date || i.due_date || i.start_date || '').substring(0, 10)
+                            return itemDate >= todayStr
+                        }).slice(0, 5).map(i => ({
+                            id: i.id,
+                            title: i.title || i.description || 'Compito / Attività',
+                            description: i.description || i.notes || '',
+                            due_date: i.date || i.due_date || i.start_date,
+                            subject: i.subject_name || i.subject || 'Generale',
+                            type: (i.type || i.event_type || 'compito').toLowerCase(),
+                            teacher: i.teacher_name || i.created_by_name || ''
+                        }))
+                    }
+                } catch (err) {
+                    console.error('Error fetching upcoming homework for dashboard:', err)
+                } finally {
+                    loadingHomeworks.value = false
+                }
+            }
         }
     } catch (e) {
         console.error('Error fetching dashboard data', e)
@@ -551,6 +692,59 @@ const fetchDashboardData = async () => {
     } finally {
         loadingData.value = false
     }
+}
+
+const getTaskTypeBadgeColor = (type) => {
+    switch (type) {
+        case 'verifica': return 'negative'
+        case 'interrogazione': return 'warning'
+        case 'compito': return 'primary'
+        case 'evento': return 'purple'
+        default: return 'indigo'
+    }
+}
+
+const getTaskTypeIcon = (type) => {
+    switch (type) {
+        case 'verifica': return 'quiz'
+        case 'interrogazione': return 'record_voice_over'
+        case 'compito': return 'assignment'
+        case 'evento': return 'event'
+        default: return 'task_alt'
+    }
+}
+
+const getDueRelativeText = (dateStr) => {
+    if (!dateStr) return ''
+    const target = new Date(dateStr)
+    target.setHours(0, 0, 0, 0)
+    const now = new Date()
+    now.setHours(0, 0, 0, 0)
+    const diffDays = Math.round((target - now) / (1000 * 60 * 60 * 24))
+    if (diffDays === 0) return 'Oggi'
+    if (diffDays === 1) return 'Domani'
+    if (diffDays > 1 && diffDays <= 7) return `Tra ${diffDays} giorni`
+    return target.toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })
+}
+
+const getDueRelativeColor = (dateStr) => {
+    if (!dateStr) return 'grey-6'
+    const target = new Date(dateStr)
+    target.setHours(0, 0, 0, 0)
+    const now = new Date()
+    now.setHours(0, 0, 0, 0)
+    const diffDays = Math.round((target - now) / (1000 * 60 * 60 * 24))
+    if (diffDays === 0) return 'red-8'
+    if (diffDays === 1) return 'orange-8'
+    if (diffDays <= 3) return 'amber-9'
+    return 'primary'
+}
+
+const formatDateOnly = (dateString) => {
+    if (!dateString) return '-'
+    const d = new Date(dateString)
+    if (isNaN(d.getTime())) return dateString
+    return d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
 const getEventIcon = (type) => {

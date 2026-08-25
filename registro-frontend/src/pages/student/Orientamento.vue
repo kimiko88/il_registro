@@ -52,7 +52,7 @@
                         {{ event.category || 'Orientamento' }}
                       </q-chip>
                       <q-chip size="xs" color="indigo-1" text-color="indigo-9" icon="timer">
-                        {{ event.hours || 2 }}h Riconosciute
+                        {{ event.hours || 0 }}h Riconosciute
                       </q-chip>
                     </div>
 

@@ -10,75 +10,79 @@ export default {
     "search": "搜索 (Ctrl+K)...",
     "filter": "筛选",
     "actions": "操作",
-    "loading": "正在加载...",
+    "loading": "加载中...",
     "success": "操作成功完成",
     "error": "发生错误",
     "systemSettings": "系统设置",
     "language": "语言 / Language",
-    "security": "安全与身份验证",
+    "security": "安全与认证",
     "notifications": "通知与提醒",
     "mainMenu": "主菜单",
     "logout": "退出登录",
-    "category": "Category",
-    "year": "Year",
-    "download": "Download",
-    "city": "City",
-    "zip": "ZIP / Postal Code",
-    "next": "Next",
-    "comment": "Comment",
-    "remove": "Remove",
-    "other": "Other",
-    "info": "Information",
-    "noDescription": "No description",
-    "optionalNotes": "Optional notes",
-    "typeMessage": "Type a message...",
-    "description": "Description",
-    "details": "Details",
-    "noData": "No data available",
-    "confirmDelete": "Are you sure you want to delete this user?",
-    "period": "Period",
-    "requiredField": "Required field",
-    "approve": "Approve",
-    "reject": "Reject",
-    "code": "Code",
-    "name": "Name",
-    "address": "Address",
-    "role": "Role",
-    "add": "Add",
-    "confirm": "Confirm",
-    "notes": "Notes",
-    "history": "History",
-    "active": "Active",
-    "inactive": "Inactive",
-    "all": "All",
-    "fullName": "Full Name",
-    "refresh": "Refresh",
-    "status": "Status",
-    "lastLogin": "Last Login",
-    "user": "User",
-    "activityLog": "Activity Log",
-    "stats": "Quick Stats",
-    "addClass": "New Class",
-    "surname": "Surname",
-    "resetPassword": "Reset Password",
-    "appName": "Electronic Register",
-    "selected": "selected",
-    "preview": "Preview",
-    "review": "Review"
+    "category": "类别",
+    "year": "学年",
+    "download": "下载",
+    "city": "城市",
+    "zip": "邮政编码",
+    "next": "下一步",
+    "comment": "评语",
+    "remove": "移除",
+    "other": "其他",
+    "info": "信息",
+    "noDescription": "暂无描述",
+    "optionalNotes": "可选备注",
+    "typeMessage": "输入消息...",
+    "description": "描述",
+    "details": "详情",
+    "noData": "暂无数据",
+    "confirmDelete": "您确定要删除此用户吗？",
+    "period": "周期",
+    "requiredField": "必填项",
+    "approve": "批准",
+    "reject": "拒绝",
+    "code": "代码",
+    "name": "姓名",
+    "address": "地址",
+    "role": "角色",
+    "add": "添加",
+    "confirm": "确认",
+    "notes": "备注",
+    "history": "历史记录",
+    "active": "启用",
+    "inactive": "停用",
+    "all": "全部",
+    "fullName": "全名",
+    "refresh": "刷新",
+    "status": "状态",
+    "lastLogin": "最后登录",
+    "user": "用户",
+    "activityLog": "活动日志",
+    "stats": "统计概览",
+    "addClass": "新建班级",
+    "surname": "姓氏",
+    "resetPassword": "重置密码",
+    "appName": "电子教学日志",
+    "selected": "项已选",
+    "preview": "预览",
+    "review": "审核",
+    "viewAll": "查看全部",
+    "noStudentsFound": "未找到学生",
+    "readOnlySaveBtn": "保存已禁用（只读模式）",
+    "children": "关联子女"
   },
   "login": {
     "welcomeBack": "欢迎回来",
-    "subtitle": "登录以访问电子记分册系统",
+    "subtitle": "登录以进入电子教务日志系统",
     "emailLabel": "电子邮箱",
-    "emailRequired": "电子邮箱不能为空",
+    "emailRequired": "邮箱为必填项",
     "passwordLabel": "密码",
-    "passwordRequired": "密码不能为空",
+    "passwordRequired": "密码为必填项",
     "rememberMe": "记住我",
     "submit": "登录",
     "noAccount": "还没有账号？",
     "contactSecretary": "联系教务处",
     "contactTitle": "联系教务处",
-    "contactSubtitle": "请从下拉菜单中选择您的学校，以查看教务处的联系邮箱和电话。",
+    "contactSubtitle": "选择您的学校以查看教务处联系方式。",
     "selectSchool": "选择您的学校 / 机构",
     "noSchoolFound": "未找到学校",
     "emailSegreteria": "教务处邮箱",
@@ -86,17 +90,17 @@ export default {
     "sendEmail": "发送邮件",
     "copyEmail": "复制邮箱",
     "emailCopied": "邮箱地址已复制到剪贴板！",
-    "chooseSchoolPrompt": "请从上方菜单选择学校以查看联系信息。",
-    "sessionExpired": "登录已过期，请重新登录。",
+    "chooseSchoolPrompt": "在上方选择学校以查看教务处联系信息。",
+    "sessionExpired": "出于安全原因，会话已过期。请重新登录。",
     "showPassword": "显示密码",
     "hidePassword": "隐藏密码",
-    "emailInvalid": "Please enter a valid email address",
-    "copyFailed": "Copy to clipboard failed",
-    "tooManyAttempts": "Too many failed attempts. Please try again later",
-    "loginButton": "Log In",
-    "enterPassword": "Password",
-    "invalidPassword": "Incorrect password",
-    "loginError": "Login error"
+    "emailInvalid": "请输入有效的电子邮箱地址",
+    "copyFailed": "复制到剪贴板失败",
+    "tooManyAttempts": "失败尝试次数过多，请稍后再试。",
+    "loginButton": "登录",
+    "enterPassword": "密码",
+    "invalidPassword": "密码错误",
+    "loginError": "登录发生错误"
   },
   "classRegister": {
     "title": "班级日志与考勤",
@@ -161,7 +165,7 @@ export default {
     "tableHeaderGradeNotes": "备注",
     "tableHeaderActions": "操作",
     "addDisciplinaryNote": "添加纪律处分/备注",
-    "noStudentsFound": "未找到学生。",
+    "noStudentsFound": "未找到学生，请选择班级。",
     "readOnlySaveBtn": "只读 — 已由其他教师签署",
     "updateSaveBtn": "更新并保存",
     "saveBtn": "保存并签署",
@@ -176,8 +180,8 @@ export default {
     "activityLabCap": "实验室动手操作课",
     "activityRecupero": "补习 / 强化",
     "activityRecuperoCap": "课后补习或强化课程",
-    "typeCurricular": "课内课程",
-    "typeExtracurricular": "课外课程",
+    "typeCurricular": "课内常规教学",
+    "typeExtracurricular": "课外拓展教学",
     "typeCoTeaching": "协同教学",
     "typeSubstitution": "代课",
     "studentInfo": "个人信息",
@@ -198,48 +202,50 @@ export default {
     "greetingMorning": "早上好",
     "greetingAfternoon": "下午好",
     "greetingEvening": "晚上好",
-    "welcomeSub": "欢迎回来！这是今天的学校活动摘要。",
+    "welcomeSub": "欢迎！以下是今日学校教学活动概览。",
     "todayDate": "今日日期",
     "recentActivity": "近期动态",
     "todayLessons": "今日课程",
-    "auditLogs": "事件日志与审计",
-    "userManagement": "系统用户管理",
-    "schoolManagement": "学校机构管理",
+    "auditLogs": "审计日志",
+    "userManagement": "用户管理",
+    "schoolManagement": "学校管理",
     "refreshActivity": "刷新动态",
-    "noLessons": "暂无已登记课程",
+    "noLessons": "暂无登记课程",
     "noNotifications": "暂无新通知",
     "inProgress": "进行中",
     "completed": "已完成",
-    "scheduled": "已计划",
-    "draft": "已计划草稿",
+    "scheduled": "已排期",
+    "draft": "计划草稿",
     "saveDraft": "保存课程草稿",
     "deleteDraft": "草稿已删除",
     "topicRequired": "请输入课程主题",
-    "draftsListTitle": "Scheduled Lesson Drafts",
-    "noDrafts": "No lesson drafts saved at the moment.",
-    "signAndRegister": "Sign & Register",
-    "draftSaved": "Lesson draft saved for {date}!",
-    "draftRegistered": "Draft converted and registered successfully!",
-    "optionsMenu": "Options and shortcuts",
-    "statTotalSchools": "Total Schools",
-    "statActiveUsers": "Active Users",
-    "statActive24h": "Active 24h",
-    "statPendingDocs": "Pending Docs",
-    "statStudents": "Students",
-    "statTeachers": "Teachers",
-    "statDocuments": "Documents",
-    "statRequests": "Requests",
-    "statMyClasses": "My Classes",
-    "statLessonsToday": "Lessons Today",
-    "statGradesPending": "Grades to Enter",
-    "actionAttendance": "Mark Attendance",
-    "actionGrades": "Enter Grades",
-    "actionLessons": "Lesson Register",
-    "actionAgenda": "Class Agenda",
-    "actionUsers": "User Management",
-    "actionClasses": "Class Management",
-    "recentGrades": "Recent Grades",
-    "noChildren": "No linked children"
+    "draftsListTitle": "已计划课程草稿",
+    "noDrafts": "当前没有保存的课程草稿。",
+    "signAndRegister": "签署并登记",
+    "draftSaved": "已保存 {date} 的课程草稿！",
+    "draftRegistered": "草稿已成功转换并登记！",
+    "optionsMenu": "选项与快捷操作",
+    "statTotalSchools": "学校总数",
+    "statActiveUsers": "活跃用户",
+    "statActive24h": "24小时活跃",
+    "statPendingDocs": "待审文档",
+    "statStudents": "学生人数",
+    "statTeachers": "教师人数",
+    "statDocuments": "文档总数",
+    "statRequests": "申请数量",
+    "statMyClasses": "我的班级",
+    "statLessonsToday": "今日课程",
+    "statGradesPending": "待录成绩",
+    "actionAttendance": "考勤点名",
+    "actionGrades": "录入成绩",
+    "actionLessons": "教学日志",
+    "actionAgenda": "班级日程",
+    "actionUsers": "用户管理",
+    "actionClasses": "班级管理",
+    "recentGrades": "最新成绩",
+    "noChildren": "未关联子女",
+    "systemStatus": "系统状态",
+    "syncedNow": "刚刚已同步"
   },
   "agendaPage": {
     "title": "日程与教学日历",
@@ -261,8 +267,23 @@ export default {
     "dueDate": "截止日期",
     "teacher": "教师",
     "subject": "科目",
-    "event": "Event",
-    "today": "Today"
+    "event": "事件",
+    "today": "今天",
+    "homeworkTitle": "日程与家庭作业",
+    "homeworkList": "作业列表",
+    "agendaLessons": "日程与课程",
+    "dueHomework": "即将截止的作业与测试",
+    "organizeStudy": "合理规划学习与复习时间",
+    "noPendingHomework": "暂无未完成的作业",
+    "allCaughtUp": "您已完成所有作业任务！",
+    "due": "截止日期",
+    "expired": "已逾期",
+    "tomorrow": "明天",
+    "assignedBy": "布置教师",
+    "detailsOf": "详情日期",
+    "lessonsHeld": "已授课程",
+    "noLessons": "该日期无已记录课程。",
+    "noDueHomework": "该日期无待交作业。"
   },
   "supportPage": {
     "title": "帮助中心与常见问题",
@@ -303,15 +324,17 @@ export default {
     "globalControl": "欢迎使用全局控制面板",
     "schoolControl": "您学校的集中式管理",
     "syncData": "同步数据",
-    "tabAttendance": "Attendance",
-    "userManagement": "School Admins Management",
-    "coordinatorDashboard": "Coordinator Dashboard",
-    "atRiskStudents": "At-Risk Students",
-    "classOverview": "Class Overview",
-    "attendanceAverage": "Attendance Average",
-    "gradeAverage": "Grade Average",
-    "tabGrades": "My Grades",
-    "schoolManagement": "School Management"
+    "tabAttendance": "出勤考勤",
+    "userManagement": "管理员管理",
+    "coordinatorDashboard": "年级组长/班主任工作台",
+    "atRiskStudents": "预警学生",
+    "classOverview": "班级概览",
+    "attendanceAverage": "平均出勤率",
+    "gradeAverage": "平均成绩",
+    "tabGrades": "我的成绩",
+    "homework": "家庭作业",
+    "documents": "文件档案与法令",
+    "schoolManagement": "学校管理"
   },
   "nav": {
     "dashboard": "仪表盘",
@@ -365,7 +388,7 @@ export default {
     "trips": "外出与游学",
     "payments": "缴费管理",
     "assemblies": "大会与会议",
-    "children": "My Children"
+    "children": "我的子女"
   },
   "categories": {
     "anagraficheClassi": "学籍与班级",
@@ -427,17 +450,17 @@ export default {
     "emailCopied": "邮箱已复制！",
     "passwordUpdated": "密码更新成功！",
     "languageChanged": "语言更新成功",
-    "wsConnectionFailed": "Real-time connection unavailable after repeated attempts.",
-    "wsGradeUpdated": "Grade update: {value} ({subject})",
-    "wsGradeDeleted": "Grade deleted for {subject}",
-    "wsAttendanceUpdated": "Attendance update: {status}",
-    "wsJustificationApproved": "Justification approved: {reason}",
-    "wsJustificationRejected": "Justification rejected: {reason}",
-    "wsNewCommunication": "New communication: {title}",
-    "wsNoteAdded": "New disciplinary note: {title}",
-    "wsScrutinyPublished": "Scrutiny result published for {student}",
-    "wsGoalUpdated": "Goal updated: {title}",
-    "wsSlotUpdated": "Appointment update: {msg}"
+    "wsConnectionFailed": "多次尝试后仍无法建立实时通信连接。",
+    "wsGradeUpdated": "成绩更新：{value} ({subject})",
+    "wsGradeDeleted": "已删除 {subject} 的成绩",
+    "wsAttendanceUpdated": "考勤状态更新：{status}",
+    "wsJustificationApproved": "请假条已批准：{reason}",
+    "wsJustificationRejected": "请假条已驳回：{reason}",
+    "wsNewCommunication": "新通告通知：{title}",
+    "wsNoteAdded": "新增纪律处分/行为表现记录：{title}",
+    "wsScrutinyPublished": "已公布学生 {student} 的期末成绩",
+    "wsGoalUpdated": "培养目标已更新：{title}",
+    "wsSlotUpdated": "预约会谈更新：{msg}"
   },
   "errors": {
     "connectionError": "服务器连接错误，请检查您的网络。",
@@ -563,281 +586,281 @@ export default {
       "step6_title": "系统设置",
       "step6_desc": "配置安全策略、双因素身份验证和电子学习集成。"
     },
-    "keyboardHint": "Use arrows to navigate"
+    "keyboardHint": "使用方向键进行导航"
   },
   "onboardingExtra": {
-    "openGuide": "Open Full Guide",
-    "viewAllFeatures": "Discover all features",
-    "completionTitle": "You're ready! 🎉",
-    "completionDesc": "You've completed the tour. You can access the full guide at any time from the ? button in the top bar.",
+    "openGuide": "打开完整指南",
+    "viewAllFeatures": "探索所有功能",
+    "completionTitle": "准备就绪！🎉",
+    "completionDesc": "您已完成导览。您可随时通过顶部栏的 ? 按钮访问完整指南。",
     "teacher": {
-      "step7_title": "Digital Register & Signatures",
-      "step7_desc": "Digitally sign each lesson with a single click. The register automatically tracks lesson topics, teaching hours, and private notes.",
+      "step7_title": "数字教务册与签名",
+      "step7_desc": "一键数字签署每节课。教务册自动记录课程主题、教学时数和私人备注。",
       "step7_bullets": [
-        "Digital lesson signature",
-        "Lesson topics",
-        "Private notes",
-        "Hours log"
+        "课程数字签名",
+        "课程主题",
+        "私人备注",
+        "课时日志"
       ],
-      "step8_title": "Competencies & Learning Units",
-      "step8_desc": "Assess student competencies according to EU descriptors, manage Learning Units (UDA) and annual work plans.",
+      "step8_title": "核心能力与学习单元",
+      "step8_desc": "根据欧洲描述符评估学生能力，管理学习单元（UdA）和年度工作计划。",
       "step8_bullets": [
-        "EU Competencies",
-        "Learning Units (UDA)",
-        "Annual work plan",
-        "Evaluation rubrics"
+        "欧洲核心能力",
+        "学习单元（UdA）",
+        "年度工作计划",
+        "评估量规"
       ],
       "step1_bullets": [
-        "Today's lessons",
-        "Recent notifications",
-        "Quick shortcuts",
-        "Class overview"
+        "今日课程",
+        "最新通知",
+        "快捷方式",
+        "班级概览"
       ],
       "step2_bullets": [
-        "Attendance register",
-        "Lesson topics",
-        "Digital signature",
-        "Absence management"
+        "出勤记录",
+        "课程主题",
+        "数字签名",
+        "缺勤管理"
       ],
       "step3_bullets": [
-        "Oral & written grades",
-        "Class average",
-        "Distribution chart",
-        "Export tables"
+        "口头与书面成绩",
+        "班级平均分",
+        "分布图",
+        "导出表格"
       ],
       "step4_bullets": [
-        "Homework & tests",
-        "Activity calendar",
-        "Class announcements",
-        "Parent notices"
+        "作业与测验",
+        "活动日历",
+        "班级公告",
+        "家长通知"
       ],
       "step5_bullets": [
-        "Meeting availability",
-        "Parent bookings",
-        "Video conferences",
-        "Meeting history"
+        "家长会可用时间",
+        "家长预约",
+        "视频会议",
+        "会谈历史"
       ],
       "step6_bullets": [
-        "Theme & language",
-        "Push notifications",
-        "Password management",
-        "Public profile"
+        "主题与语言",
+        "推送通知",
+        "密码管理",
+        "公开个人资料"
       ]
     },
     "student": {
-      "step7_title": "Internships & Competencies",
-      "step7_desc": "Track your work-based learning hours (PCTO), view competence certifications, and build your digital portfolio.",
+      "step7_title": "实习与能力",
+      "step7_desc": "跟踪您的实习时数（PCTO），查看能力证书，构建您的数字作品集。",
       "step7_bullets": [
-        "Internship hours",
-        "Certifications",
-        "Digital portfolio",
-        "Tutor feedback"
+        "实习时数",
+        "资格证书",
+        "数字作品集",
+        "导师反馈"
       ],
-      "step8_title": "Announcements & Noticeboard",
-      "step8_desc": "Read official school circulars, answer surveys, and view personalized announcements from your teachers.",
+      "step8_title": "公告与通知栏",
+      "step8_desc": "阅读官方学校通知，回答调查，查看教师的个性化公告。",
       "step8_bullets": [
-        "School circulars",
-        "Surveys & answers",
-        "Personal alerts",
-        "Teacher notices"
+        "学校通知",
+        "调查与回答",
+        "个人提醒",
+        "教师通知"
       ],
       "step1_bullets": [
-        "Upcoming deadlines",
-        "Latest notifications",
-        "GPA summary",
-        "Upcoming tests"
+        "即将到来的截止日期",
+        "最新通知",
+        "平均分汇总",
+        "即将进行的测验"
       ],
       "step2_bullets": [
-        "Grades by subject",
-        "Live average",
-        "Trend chart",
-        "Term comparison"
+        "各科成绩",
+        "实时平均分",
+        "趋势图",
+        "学期对比"
       ],
       "step3_bullets": [
-        "Monthly attendance",
-        "Absence counter",
-        "Late arrivals & early leaves",
-        "Excuses & justifications"
+        "每月出勤",
+        "缺勤计数器",
+        "迟到与早退",
+        "请假与理由"
       ],
       "step4_bullets": [
-        "Assigned homework",
-        "Due dates",
-        "Learning materials",
-        "Links & resources"
+        "已布置作业",
+        "截止日期",
+        "学习材料",
+        "链接与资源"
       ],
       "step5_bullets": [
-        "Digital report card",
-        "PDF download",
-        "Certificates",
-        "Forms"
+        "数字成绩单",
+        "PDF下载",
+        "证书",
+        "表格"
       ],
       "step6_bullets": [
-        "School holidays",
-        "Test dates",
-        "Extracurriculars",
-        "Field trips & events"
+        "学校假期",
+        "测验日期",
+        "课外活动",
+        "校外活动与活动"
       ]
     },
     "parent": {
-      "step7_title": "Absence Justifications & Permissions",
-      "step7_desc": "Submit digital justifications for student absences directly from the app, and approve early leave authorizations.",
+      "step7_title": "缺勤证明与许可",
+      "step7_desc": "直接从应用程序提交学生缺勤的数字证明，并批准提前离校申请。",
       "step7_bullets": [
-        "Online justifications",
-        "Early leave permits",
-        "Special activities",
-        "Absence history"
+        "在线证明",
+        "提前离校许可",
+        "特殊活动",
+        "缺勤历史"
       ],
-      "step8_title": "Academic Analytics & Progress",
-      "step8_desc": "View academic performance charts over time, compare subject averages, and track improvement trends.",
+      "step8_title": "学业分析与进步",
+      "step8_desc": "查看随时间的学业表现图表，比较各科平均分，跟踪进步趋势。",
       "step8_bullets": [
-        "Progress chart",
-        "Subject comparison",
-        "Historical trends",
-        "Goals achieved"
+        "进步图表",
+        "科目对比",
+        "历史趋势",
+        "已达成目标"
       ],
       "step1_bullets": [
-        "Children overview",
-        "Recent alerts",
-        "Unread messages",
-        "Appointments"
+        "孩子概览",
+        "最新提醒",
+        "未读消息",
+        "预约"
       ],
       "step2_bullets": [
-        "Academic profile",
-        "Student documents",
-        "Teacher contacts",
-        "Enrollment info"
+        "学业档案",
+        "学生文件",
+        "教师联系方式",
+        "入学信息"
       ],
       "step3_bullets": [
-        "Real-time grades",
-        "Subject GPA",
-        "Daily attendance",
-        "Automated alerts"
+        "实时成绩",
+        "科目平均分",
+        "每日出勤",
+        "自动提醒"
       ],
       "step4_bullets": [
-        "School circulars",
-        "Teacher notices",
-        "Urgent alerts",
-        "Digital bulletin board"
+        "学校通知",
+        "教师通知",
+        "紧急提醒",
+        "数字公告栏"
       ],
       "step5_bullets": [
-        "Book parent meeting",
-        "Choose time slot",
-        "Email confirmation",
-        "Reschedule"
+        "预约家长会",
+        "选择时间段",
+        "电子邮件确认",
+        "重新安排"
       ],
       "step6_bullets": [
-        "Tuition & fees",
-        "Payment history",
-        "Download receipts",
-        "Request documents"
+        "学费",
+        "付款历史",
+        "下载收据",
+        "申请文件"
       ]
     },
     "secretary": {
-      "step7_title": "Enrollment & Student Registry",
-      "step7_desc": "Manage yearly school enrollments, maintain student demographic records, and handle transfers and special education plans.",
+      "step7_title": "入学注册与学生档案",
+      "step7_desc": "管理每年学生入学注册，维护学生基本信息，处理转学和特殊教育计划。",
       "step7_bullets": [
-        "Yearly enrollment",
-        "Transfers in/out",
-        "Special needs / DSA",
-        "Registry archives"
+        "年度入学注册",
+        "转入/转出",
+        "特殊需求 / DSA",
+        "档案存档"
       ],
-      "step8_title": "Circulars & School Broadcasts",
-      "step8_desc": "Compose and publish digital circulars, manage noticeboards, and send targeted group broadcasts with signature tracking.",
+      "step8_title": "通知与校园广播",
+      "step8_desc": "撰写并发布数字通知，管理公告栏，发送有签名跟踪的群组广播。",
       "step8_bullets": [
-        "Compose circulars",
-        "Digital signature",
-        "Targeted recipients",
-        "Publication history"
+        "撰写通知",
+        "数字签名",
+        "目标收件人",
+        "发布历史"
       ],
       "step1_bullets": [
-        "Pending tasks",
-        "Incoming requests",
-        "School statistics",
-        "System alerts"
+        "待处理任务",
+        "入站请求",
+        "学校统计",
+        "系统提醒"
       ],
       "step2_bullets": [
-        "Class list",
-        "Teacher assignments",
-        "Weekly timetable",
-        "Revision history"
+        "班级列表",
+        "教师分配",
+        "每周课程表",
+        "修订历史"
       ],
       "step3_bullets": [
-        "Enrollment certificates",
-        "Attendance records",
-        "PDF export",
-        "Digital seal"
+        "入学证明",
+        "出勤记录",
+        "PDF导出",
+        "数字印章"
       ],
       "step4_bullets": [
-        "School schedule",
-        "Teacher substitutions",
-        "Extracurriculars",
-        "Staff notices"
+        "学校课程表",
+        "教师替换",
+        "课外活动",
+        "教职工通知"
       ],
       "step5_bullets": [
-        "Attendance reports",
-        "Official exports",
-        "Statistical charts",
-        "Advanced filters"
+        "出勤报告",
+        "官方导出",
+        "统计图表",
+        "高级筛选"
       ],
       "step6_bullets": [
-        "Create accounts",
-        "Assign roles",
-        "Reset passwords",
-        "Access control"
+        "创建账户",
+        "分配角色",
+        "重置密码",
+        "访问控制"
       ]
     },
     "admin": {
-      "step7_title": "Schools & Campuses Management",
-      "step7_desc": "Create and configure multiple school branches, manage tenant settings, assign campus administrators, and monitor activity.",
+      "step7_title": "学校与校区管理",
+      "step7_desc": "创建和配置多个学校分支，管理租户设置，指派校区管理员，并监控活动。",
       "step7_bullets": [
-        "New campuses",
-        "Per-school config",
-        "Branch admins",
-        "Multi-tenant"
+        "新校区",
+        "每校配置",
+        "校区管理员",
+        "多租户"
       ],
-      "step8_title": "Integrations & API Management",
-      "step8_desc": "Connect third-party systems (Google Workspace, Microsoft 365, LMS), configure webhooks, and monitor API traffic.",
+      "step8_title": "集成与API管理",
+      "step8_desc": "连接第三方系统（Google Workspace、Microsoft 365、LMS），配置Webhook，监控API流量。",
       "step8_bullets": [
         "Google Workspace",
         "Microsoft 365",
-        "Webhook config",
-        "API monitoring"
+        "Webhook配置",
+        "API监控"
       ],
       "step1_bullets": [
-        "System health",
-        "Active users",
-        "Open sessions",
-        "Recent errors"
+        "系统健康状态",
+        "活跃用户",
+        "开放会话",
+        "最近错误"
       ],
       "step2_bullets": [
-        "CPU & memory usage",
-        "API latency",
-        "Live logs",
-        "Threshold alerts"
+        "CPU与内存使用率",
+        "API延迟",
+        "实时日志",
+        "阈值提醒"
       ],
       "step3_bullets": [
-        "Manage users",
-        "RBAC roles",
-        "Manage schools",
-        "Bulk CSV import"
+        "管理用户",
+        "RBAC角色",
+        "管理学校",
+        "批量CSV导入"
       ],
       "step4_bullets": [
-        "Platform metrics",
-        "Periodic reports",
-        "User growth",
-        "Data exports"
+        "平台指标",
+        "定期报告",
+        "用户增长",
+        "数据导出"
       ],
       "step5_bullets": [
-        "Immutable audit logs",
-        "Security filters",
-        "Compliance export",
-        "GDPR tools"
+        "不可变审计日志",
+        "安全过滤器",
+        "合规导出",
+        "GDPR工具"
       ],
       "step6_bullets": [
-        "Password policy",
-        "Mandatory 2FA",
-        "Feature flags",
-        "Maintenance mode"
+        "密码策略",
+        "强制双重认证",
+        "功能标志",
+        "维护模式"
       ]
     }
   },
@@ -879,7 +902,32 @@ export default {
       "q9": "如何切换界面语言与暗黑模式？",
       "a9": "在用户菜单的“设置”中，可在9种语言间无缝切换，并开启暗黑模式或 OpenDyslexic 易读字体。",
       "q10": "如何撤销刚刚误输入的成绩？",
-      "a10": "保存成绩后，屏幕底部将出现15秒内有效的“撤销”浮条。超时后可直接在单元格修改。"
+      "a10": "保存成绩后，屏幕底部将出现15秒内有效的“撤销”浮条。超时后可直接在单元格修改。",
+      "attendance": {
+        "title": "Marrja e Mungesave & Nënshkrimi i Mësimit",
+        "desc": "Si të merrni praninë e nxënësve dhe të nënshkruani orën mësimore.",
+        "content": "Dhe regjistroni mungesat dhe temat e mësimit brenda pak sekondave.\n\nHapi 1: Hapni 'Ditari i Klasës' dhe zgjidhni klasën tuaj.\nHapi 2: Shënoni nxënësit si të pranishëm, mungesë ose me vonesë.\nHapi 3: Vendosni temën dhe nënshkruani orën."
+      },
+      "grades": {
+        "title": "Hedhja e Notave dhe Vlerësimi",
+        "desc": "Si të vendosni notat me gojë, me shkrim dhe praktike.",
+        "content": "Menaxhoni notat dhe vlerësimet për secilin nxënës me lehtësi."
+      },
+      "uda": {
+        "title": "Planifikimi i Njësive Mësimore (UdA)",
+        "desc": "Dizajnimi kurrikular sipas kompetencave.",
+        "content": "Strukturoni orët mësimore dhe vlerësoni kompetencat kyçe evropiane."
+      },
+      "agenda": {
+        "title": "Detyrat e Shtëpisë & Kalendari",
+        "desc": "Si të caktoni detyrat dhe provimet.",
+        "content": "Caktoni afatet dhe organizoni ngarkesën e studimit për klasën."
+      },
+      "colloqui": {
+        "title": "Takimet me Prindërit",
+        "desc": "Caktimi i orareve të lira për takime individuale.",
+        "content": "Përcaktoni fashat orare dhe konfirmoni kërkesat e prindërve."
+      }
     },
     "student": {
       "cat_grades": "我的成绩",
@@ -906,7 +954,22 @@ export default {
       "q9": "忘记密码怎么办？",
       "a9": "在登录页面点击“忘记密码？”，输入绑定的电子邮箱重置。",
       "q10": "如何使用 Ctrl+K 快捷搜索？",
-      "a10": "按下 Ctrl+K (Mac 上为 Cmd+K) 打开全局搜索框，可快速跳转至任意功能或课程。"
+      "a10": "按下 Ctrl+K (Mac 上为 Cmd+K) 打开全局搜索框，可快速跳转至任意功能或课程。",
+      "grades": {
+        "title": "Konsultimi i Notave & Mesatareve",
+        "desc": "Si të kontrolloni notat dhe ecurinë tuaj akademike.",
+        "content": "Shikoni notat e fundit, mesataret sipas lëndëve dhe simuloni notat kaluese."
+      },
+      "homework": {
+        "title": "Detyrat & Kalendari i Studimit",
+        "desc": "Organizoni detyrat dhe përgatitjet për testet.",
+        "content": "Mbani nën kontroll afatet e detyrave dhe njoftimet nga mësuesit."
+      },
+      "attendance": {
+        "title": "Prania & Arsyetimet",
+        "desc": "Kontrolloni mungesat dhe vonesat tuaja.",
+        "content": "Shikoni statusin e mungesave dhe kërkesave për arsyetim."
+      }
     },
     "parent": {
       "cat_monitoring": "子女监控",
@@ -933,7 +996,22 @@ export default {
       "q9": "两位家长可以分别拥有独立的登录账号吗？",
       "a9": "可以。学校秘书处可为同一位学生绑定多位法定监护人的独立账号。",
       "q10": "在无网络（离线）状态下如何使用？",
-      "a10": "应用会展示本地缓存数据。离线填写的请假或表单将在网络恢复后自动同步。"
+      "a10": "应用会展示本地缓存数据。离线填写的请假或表单将在网络恢复后自动同步。",
+      "grades": {
+        "title": "Vlerësimi & Dëftesa",
+        "desc": "Ndiqni notat dhe vlerësimet e fëmijëve tuaj.",
+        "content": "Qasje e menjëhershme në të gjitha notat, mesataret dhe dëftesat zyrtare."
+      },
+      "attendance": {
+        "title": "Arsyetimi i Mungesave",
+        "desc": "Si të arsyetoni mungesat e fëmijës tuaj online.",
+        "content": "Dërgoni arsyetime për mungesat dhe vonesat me një klikim."
+      },
+      "colloqui": {
+        "title": "Rezervimi i Takimeve me Mësuesit",
+        "desc": "Caktoni takime individuale me stafin mësimdhënës.",
+        "content": "Zgjidhni orarin e përshtatshëm dhe rezervoni takimin online ose në shkollë."
+      }
     },
     "secretary": {
       "cat_students": "学生档案簿",
@@ -960,7 +1038,37 @@ export default {
       "q9": "如何核查 PagoPA 学费缴纳状态？",
       "a9": "打开“财务与 PagoPA”面板，查看已缴与欠费列表，一键发送催缴提醒。",
       "q10": "如何废除误发的发文字号 (Protocollo)？",
-      "a10": "在公文归档中选择对应文号 → “注明原因并作废”。此操作将记录于 Audit Log 审计日志。"
+      "a10": "在公文归档中选择对应文号 → “注明原因并作废”。此操作将记录于 Audit Log 审计日志。",
+      "students": {
+        "title": "Menaxhimi i Regjistrit të Nxënësve",
+        "desc": "Kërkimi, regjistrimi dhe përditësimi i të dhënave të nxënësve.",
+        "content": "Administroni dosjet akademike, kontaktet dhe regjistrimet e reja."
+      },
+      "classes": {
+        "title": "Organizimi i Klasave dhe Seksioneve",
+        "desc": "Krijimi i klasave dhe caktimi i mësuesve titullarë.",
+        "content": "Strukturoni vitin shkollor, oraret dhe ndarjen e lëndëve."
+      },
+      "certificates": {
+        "title": "Gjenerimi i Vërtetimeve",
+        "desc": "Lëshimi i dokumenteve zyrtare dhe vërtetimeve të frekuentimit.",
+        "content": "Gjeneroni dokumente me vulë digjitale dhe nënshkrim zyrtar në sekonda."
+      },
+      "timetable": {
+        "title": "Orari Mësimor dhe Zëvendësimet",
+        "desc": "Menaxhimi i orareve javore dhe zëvendësimit të mësuesve.",
+        "content": "Planifikoni orët dhe mbuloni mungesat e mësuesve."
+      },
+      "communications": {
+        "title": "Qarkoret dhe Njoftimet Zyrtare",
+        "desc": "Publikimi i njoftimeve dhe monitorimi i marrjes së dijenisë.",
+        "content": "Dërgoni qarkore zyrtare për stafin, prindërit dhe nxënësit."
+      },
+      "reports": {
+        "title": "Raportet dhe Statistikat",
+        "desc": "Nxjerrja e statistikave dhe eksportimi i të dhënave.",
+        "content": "Gjeneroni raporte të agreguara për frekuentimin dhe rezultatet."
+      }
     },
     "admin": {
       "cat_monitoring": "系统监控",
@@ -987,7 +1095,42 @@ export default {
       "q9": "如何查看全站 RBAC 权限矩阵？",
       "a9": "进入“角色与权限”，查看9种系统角色的细粒度权限配置矩阵。",
       "q10": "如何将平台切换至维护模式？",
-      "a10": "在“系统设置”中勾选“维护模式”。开启后，普通用户登录将看到系统维护提示。"
+      "a10": "在“系统设置”中勾选“维护模式”。开启后，普通用户登录将看到系统维护提示。",
+      "monitoring": {
+        "title": "Monitorimi i Sistemit",
+        "desc": "Monitorimi i performancës së serverit dhe bazës së të dhënave.",
+        "content": "Kontrolloni gjendjen teknike, memorien RAM dhe shërbimet e sistemit në kohë reale."
+      },
+      "users": {
+        "title": "Menaxhimi i Përdoruesve",
+        "desc": "Krijimi i llogarive, të drejtat dhe politikat e sigurisë.",
+        "content": "Menaxhoni të gjitha llogaritë e përdoruesve dhe konfiguroni 2FA."
+      },
+      "schools": {
+        "title": "Menaxhimi i Institucioneve",
+        "desc": "Konfigurimi i shkollave dhe degëve arsimore.",
+        "content": "Regjistroni kodet zyrtare dhe të dhënat administrative të shkollave."
+      },
+      "security": {
+        "title": "Politikat e Sigurisë",
+        "desc": "Konfigurimi i fjalëkalimeve dhe kërkesave të sigurisë.",
+        "content": "Përshtatni rregullat e sigurisë sipas standardeve më të larta."
+      },
+      "analytics": {
+        "title": "Analitika dhe Parandalimi i Braktisjes",
+        "desc": "Analizë parashikuese për rrezikun e braktisjes shkollore.",
+        "content": "Identifikoni nxënësit me rrezik mungesash dhe rezultatesh të ulëta."
+      },
+      "integrations": {
+        "title": "Integrimet dhe Hyrja me Një Klik (SSO)",
+        "desc": "Lidhja me Google Workspace dhe Microsoft 365.",
+        "content": "Aktivizoni hyrjen me llogaritë institucionale."
+      },
+      "audit": {
+        "title": "Regjistri i Auditimit & Gjurmueshmëria",
+        "desc": "Gjurmimi i plotë i veprimeve të përdoruesve në sistem.",
+        "content": "Regjistër i pandryshueshëm i të gjitha veprimeve për transparencë maksimale."
+      }
     }
   },
   "guideCenter": {
@@ -1040,6 +1183,16 @@ export default {
         "title": "个性化教育计划 (PDP / PEI)",
         "desc": "为特殊需求学生制定补偿性与豁免措施。",
         "content": "PDP 模块协助教师团队制定个性化教学方案。\n\n步骤 1: 从班级菜单进入 'PDP / PEI'。\n步骤 2: 选择学生，配置补偿工具与豁免条款。\n步骤 3: 保存草稿并发送至家长端完成电子签名。\n步骤 4: 考核时激活的措施将以图标形式进行预警提示。\n\n提示: 使用预设评语库可大幅提升撰写效率。"
+      },
+      "uda": {
+        "title": "Planifikimi i Njësive Mësimore (UdA)",
+        "desc": "Dizajnimi kurrikular sipas kompetencave.",
+        "content": "Strukturoni orët mësimore dhe vlerësoni kompetencat kyçe evropiane."
+      },
+      "colloqui": {
+        "title": "Takimet me Prindërit",
+        "desc": "Caktimi i orareve të lira për takime individuale.",
+        "content": "Përcaktoni fashat orare dhe konfirmoni kërkesat e prindërve."
       }
     },
     "student": {
@@ -1109,6 +1262,21 @@ export default {
         "title": "在线请假与缺勤说明",
         "desc": "在手机上为孩子的缺勤或迟到提交请假条。",
         "content": "告别纸质假条：使用安全 PIN 码在线请假。\n\n步骤 1: 打开“出勤与请假”。\n步骤 2: 查看红色标记的未请假缺勤记录。\n步骤 3: 点击“请假”，选择原因（生病、私事）并输入 PIN 码确认。"
+      },
+      "grades": {
+        "title": "Vlerësimi & Dëftesa",
+        "desc": "Ndiqni notat dhe vlerësimet e fëmijëve tuaj.",
+        "content": "Qasje e menjëhershme në të gjitha notat, mesataret dhe dëftesat zyrtare."
+      },
+      "attendance": {
+        "title": "Arsyetimi i Mungesave",
+        "desc": "Si të arsyetoni mungesat e fëmijës tuaj online.",
+        "content": "Dërgoni arsyetime për mungesat dhe vonesat me një klikim."
+      },
+      "colloqui": {
+        "title": "Rezervimi i Takimeve me Mësuesit",
+        "desc": "Caktoni takime individuale me stafin mësimdhënës.",
+        "content": "Zgjidhni orarin e përshtatshëm dhe rezervoni takimin online ose në shkollë."
       }
     },
     "secretary": {
@@ -1188,58 +1356,58 @@ export default {
     "goBack": "返回上一页"
   },
   "udaPage": {
-    "title": "跨学科学习单元规划器 (UdA)",
-    "subtitle": "创建与管理跨学科学习单元和能力目标",
+    "title": "教学单元规划 (UdA)",
+    "subtitle": "按学习单元与核心素养进行课程体系设计",
     "newUda": "新建学习单元",
     "filterSubject": "按科目筛选",
     "filterClass": "按班级筛选",
-    "searchPlaceholder": "搜索学习单元...",
+    "searchPlaceholder": "按标题或目标搜索...",
     "allSubjects": "所有科目",
     "allClasses": "所有班级",
     "draft": "草稿",
     "published": "已发布",
     "archived": "已归档",
     "noUda": "未找到学习单元",
-    "noUdaDesc": "创建您的第一个学习单元以规划教学活动与核心素养。",
+    "noUdaDesc": "暂无可用的学习单元",
     "titleLabel": "单元名称 *",
-    "subjectLabel": "主修科目 *",
-    "classLabel": "目标班级 *",
-    "descriptionLabel": "总体概述",
-    "goalsLabel": "学习与能力目标",
-    "durationHours": "课时数 (小时)",
-    "createTitle": "创建新学习单元",
-    "editTitle": "编辑学习单元",
+    "subjectLabel": "科目 *",
+    "classLabel": "班级",
+    "descriptionLabel": "描述说明",
+    "goalsLabel": "培养目标",
+    "durationHours": "学时数",
+    "createTitle": "规划备课草稿",
+    "editTitle": "编辑教学单元",
     "saveUda": "保存学习单元",
     "deleteConfirmTitle": "确认删除",
     "deleteConfirmMsg": "您确定要删除学习单元 \"{title}\" 吗？",
     "detailTitle": "学习单元详情",
-    "unitTitle": "Unit Title",
-    "duration": "Duration (hours)",
-    "status": "Status",
-    "active": "Active",
-    "completed": "Completed",
-    "targetCompetencies": "Target Competencies",
-    "evaluationCriteria": "Evaluation Criteria",
-    "noUdaFound": "No Learning Units found",
-    "noUdaFoundDesc": "No UdA units present in the database for current selection.",
-    "createInDb": "Create UdA in Database",
-    "totalHours": "Total Hours",
-    "subject": "Subject",
-    "noDescription": "No description specified.",
-    "curricularCompetencies": "Curricular competencies",
-    "details": "Details",
-    "editUda": "Edit UdA",
-    "createUda": "New Learning Unit (UdA)",
-    "statusLabel": "Status *",
-    "descLabel": "Description & Scope",
-    "competenciesLabel": "Competencies to develop",
-    "criteriaLabel": "Evaluation Criteria & Rubrics",
-    "objectives": "Learning Objectives",
-    "methodologies": "Teaching Methodologies"
+    "unitTitle": "单元标题",
+    "duration": "学时 (小时)",
+    "status": "状态",
+    "active": "进行中",
+    "completed": "已完成",
+    "targetCompetencies": "核心素养目标",
+    "evaluationCriteria": "评价标准",
+    "noUdaFound": "未找到学习单元",
+    "noUdaFoundDesc": "当前筛选条件下数据库中暂无 UdA 数据。",
+    "createInDb": "在数据库中创建单元",
+    "totalHours": "总学时",
+    "subject": "科目",
+    "noDescription": "未填写描述。",
+    "curricularCompetencies": "课程能力要求",
+    "details": "详情",
+    "editUda": "编辑学习单元",
+    "createUda": "新建学习单元 (UdA)",
+    "statusLabel": "状态 *",
+    "descLabel": "单元说明与适用范围",
+    "competenciesLabel": "拟培养核心素养",
+    "criteriaLabel": "评价标准与量规",
+    "objectives": "教学与培养目标",
+    "methodologies": "教学组织方法"
   },
   "competenciesPage": {
-    "title": "欧洲核心素养评估",
-    "subtitle": "跨学科核心素养评估矩阵 (等级 A, B, C, D)",
+    "title": "能力素养评价",
+    "subtitle": "欧洲核心素养与学科能力的形成性评价量表",
     "student": "学生",
     "descriptor": "能力指标描述",
     "level": "达成等级",
@@ -1270,86 +1438,93 @@ export default {
     "noStudentsFound": "该班级未找到学生",
     "selectClassPrompt": "请选择班级以加载学生名单。",
     "notEvaluated": "未评估",
-    "generatingPdf": "Generating PDF...",
-    "downloadPdf": "Download PDF Certificate",
-    "semester": "Semester",
-    "gridTitle": "European Key Competences Grid (D.M. 742/2017)",
-    "colCompetence": "Key Competence",
-    "colLevel": "Mastery Level (DM 742)",
-    "colNotes": "Descriptor / Notes",
-    "addDescriptor": "Add descriptor...",
-    "levelA": "A - Advanced",
-    "levelB": "B - Intermediate",
-    "levelC": "C - Basic",
-    "levelD": "D - Initial"
+    "generatingPdf": "正在生成 PDF...",
+    "downloadPdf": "下载 PDF 素养证明",
+    "semester": "学期 / 时间段",
+    "gridTitle": "核心素养评价量表",
+    "colCompetence": "核心素养",
+    "colLevel": "熟练度等级",
+    "colNotes": "指标描述 / 评语",
+    "addDescriptor": "添加指标描述...",
+    "levelA": "A - 优秀/熟练",
+    "levelB": "B - 良好/进阶",
+    "levelC": "C - 基础/达标",
+    "levelD": "D - 起步/待提高",
+    "tabSubjects": "学科能力",
+    "tabKeyCompetencies": "欧洲核心素养",
+    "btnEvaluate": "进行评价",
+    "levelAssigned": "评定等级",
+    "actions": "操作",
+    "selectClassSubjectPrompt": "请选择班级和科目进行评价",
+    "noEvaluationsFound": "未找到能力评价记录"
   },
   "gradesPage": {
-    "title": "成绩簿管理",
-    "subtitle": "班级成绩录入、平均分计算及历史记录",
+    "title": "成绩管理系统",
+    "subtitle": "按班级录入成绩、计算平均分及查看历史记录",
     "newTest": "新建测试",
     "importCSV": "导入 CSV",
-    "printReport": "下载 PDF 报告",
-    "filterDate": "成绩日期",
+    "printReport": "下载 PDF 成绩单",
+    "filterDate": "评分日期",
     "gradeType": "成绩类型",
-    "showRubric": "查看量规",
+    "showRubric": "查看评分标准",
     "written": "笔试",
     "oral": "口试",
-    "practical": "实验/实践",
+    "practical": "实践",
     "substitutionWarningTitle": "代课模式 - 成绩录入已禁用",
-    "substitutionWarningDesc": "该班级非您的常态任教班级。成绩录入权限仅限任课教师。",
+    "substitutionWarningDesc": "该班级非您的正式任教课程。",
     "weight": "权重",
     "date": "日期",
-    "notes": "成绩评语",
+    "notes": "评语/备注",
     "student": "学生",
     "average": "平均分",
     "overallAverage": "总平均分",
-    "matrixView": "网格矩阵视图",
+    "matrixView": "矩阵表格视图",
     "standardView": "标准列表视图",
     "saveGrades": "保存成绩",
-    "cannotEditOtherTeacherGrade": "You cannot edit grades created by another teacher",
-    "sharedGradesCaption": "Grades shared with class",
-    "confirmDeleteGrade": "Are you sure you want to delete this grade?",
-    "insertGrade": "Insert Grade",
-    "invalidGrade": "Invalid grade value",
-    "matrixViewTitle": "Grade Matrix Grid",
-    "matrixViewKbdHint": "Use Tab to navigate between cells, Enter to confirm",
-    "saveAllGrades": "Save All Grades",
-    "besDsaMeasures": "Dispensing / Compensatory Measures",
-    "insertAtLeastOneGrade": "Enter at least one grade before saving",
-    "matrixGradeDesc": "Quick tabular grade entry",
-    "noGrades": "No evaluations present",
-    "finalOutcome": "Final Outcome",
-    "statisticsTitle": "Grade Statistics",
-    "totalGrades": "Assigned Grades",
-    "distribution": "Distribution",
+    "cannotEditOtherTeacherGrade": "您无法修改其他教师录入的成绩",
+    "sharedGradesCaption": "向全班公布的成绩",
+    "confirmDeleteGrade": "您确定要删除此项成绩吗？",
+    "insertGrade": "录入成绩",
+    "invalidGrade": "成绩数值无效",
+    "matrixViewTitle": "成绩录入矩阵",
+    "matrixViewKbdHint": "使用 Tab 键切换单元格，按 Enter 键确认",
+    "saveAllGrades": "保存所有成绩",
+    "besDsaMeasures": "个性化辅导措施",
+    "insertAtLeastOneGrade": "保存前请至少录入一项成绩",
+    "matrixGradeDesc": "快速表格批量录入成绩",
+    "noGrades": "暂无成绩记录",
+    "finalOutcome": "最终考评结果",
+    "statisticsTitle": "成绩统计",
+    "totalGrades": "已录成绩数",
+    "distribution": "成绩分布",
     "studentTitle": "我的成绩",
     "filtersTitle": "筛选",
     "semesterLabel": "学期",
     "periodLabel": "时间段",
     "periods": {
       "all": "全部",
-      "lastMonth": "上个月",
-      "lastWeek": "上周"
+      "lastMonth": "近一个月",
+      "lastWeek": "近一周"
     },
-    "averageTrends": "平均分趋势",
-    "simulatorTitle": "模拟器与预测",
-    "sufficiencyHeader": "达到及格线 (6.0) 所需:",
+    "averageTrends": "均分走势",
+    "simulatorTitle": "成绩预测与模拟器",
+    "sufficiencyHeader": "达到及格标准 (6.0 / 10) 目标：",
     "currentAvg": "当前平均分: {avg}",
-    "neededGrade": "下次需考: {needed}",
-    "simulateNextGrade": "模拟您的下次成绩:",
+    "neededGrade": "下次所需分数: {needed}",
+    "simulateNextGrade": "模拟您下次测验的分数：",
     "selectSubject": "选择科目",
-    "hypotheticalGrade": "假设成绩",
-    "gradeRuleError": "请输入 1 到 10 之间的成绩",
-    "newAverage": "新平均分",
-    "tableTitle": "成绩簿",
+    "hypotheticalGrade": "预估分数",
+    "gradeRuleError": "请输入 1 到 10 之间的分值",
+    "newAverage": "新均分",
+    "tableTitle": "成绩记录表",
     "loading": "正在加载成绩...",
     "cols": {
       "date": "日期",
       "subject": "科目",
-      "evalType": "考试类型",
+      "evalType": "考核类型",
       "category": "类别",
-      "value": "成绩",
-      "desc": "主题"
+      "value": "分数",
+      "desc": "考核内容"
     },
     "evalTypes": {
       "written": "笔试",
@@ -1357,8 +1532,21 @@ export default {
       "practical": "实践"
     },
     "unknownSubject": "未知科目",
-    "reportDownloadSuccess": "PDF 报告下载成功",
-    "reportDownloadError": "下载 PDF 报告时出错"
+    "reportDownloadSuccess": "成绩报告下载成功",
+    "reportDownloadError": "下载成绩报告失败",
+    "gradeTypes": {
+      "standard": "常规",
+      "test": "测试",
+      "bonus": "加分"
+    },
+    "simulatedAvg": "模拟均分",
+    "pointsNeeded": "所需分数",
+    "status": "状态",
+    "sufficient": "及格",
+    "insufficient": "不及格",
+    "recentGrades": "最新成绩",
+    "periodGrades": "学期成绩",
+    "finalGrade": "期末总评"
   },
   "didacticsPage": {
     "title": "教学资源与课件",
@@ -1493,33 +1681,33 @@ export default {
     "hoursPerWeek": "每周课时"
   },
   "colloquiPage": {
-    "title": "家校接待与约见管理",
-    "subtitle": "管理教师接待日、时段及家长预约",
-    "addSlot": "添加接待时段",
-    "activeSlots": "已开放时段",
-    "bookings": "家长预约记录",
+    "title": "家校会谈与接待预约",
+    "subtitle": "教师接待时间设置与家长预约会谈管理",
+    "addSlot": "新增接待时段",
+    "activeSlots": "已设接待时段",
+    "bookings": "家长预约列表",
     "booked": "已预约",
     "available": "可预约",
     "completed": "已完成",
     "cancelled": "已取消",
-    "parentName": "家长 / 监护人",
-    "studentName": "学生",
-    "slotTime": "日期与时间",
-    "notes": "约见备注",
-    "configModalTitle": "配置接待时间段",
+    "parentName": "家长姓名",
+    "studentName": "学生姓名",
+    "slotTime": "会谈时间",
+    "notes": "会谈备注",
+    "configModalTitle": "配置接待时段",
     "dayOfWeek": "星期几",
     "startTime": "开始时间",
     "endTime": "结束时间",
-    "slotDuration": "单次面谈时长 (分钟)",
-    "meetingMode": "接待形式",
-    "inPerson": "线下 (在校)",
-    "online": "线上 (视频会议)",
-    "saveSlots": "保存时段",
-    "createSlotsTitle": "Create Interview Availability",
-    "duration": "Duration (min)",
-    "break": "Break (min)",
-    "generateSlots": "Generate Slots",
-    "parent": "Parent"
+    "slotDuration": "单次会谈时长 (分钟)",
+    "meetingMode": "会谈方式",
+    "inPerson": "校内面谈",
+    "online": "线上视频连线",
+    "saveSlots": "保存接待时段",
+    "createSlotsTitle": "自动批量生成时段",
+    "duration": "时长",
+    "break": "会谈间歇休息",
+    "generateSlots": "批量生成",
+    "parent": "家长 / 监护人"
   },
   "substitutionsPage": {
     "title": "代课与临时代课管理",
@@ -1586,11 +1774,11 @@ export default {
     "bodyLabel": "通告正文 *",
     "recipientsLabel": "接收对象 (角色)",
     "publish": "发布通告",
-    "circular": "Circular"
+    "circular": "通告通知"
   },
   "documentsPage": {
-    "title": "公文与档案中心",
-    "subtitle": "学校官方文档与学生证明文件集中归档",
+    "title": "档案与公文管理中心",
+    "subtitle": "学校正式公文、通知通告、学籍证明及学生档案管理",
     "uploadDoc": "上传文档",
     "generateCert": "生成证明书",
     "certEnrollment": "在读证明",
@@ -1602,41 +1790,44 @@ export default {
     "fileSize": "文件大小",
     "printPdf": "打印 PDF",
     "downloadFile": "下载文件",
-    "documentsList": "Document List",
-    "uploadDocument": "Upload Document",
-    "templateManagement": "Template Management",
-    "newTemplate": "New Template",
-    "noTemplates": "No templates available",
-    "noTemplatesDesc": "Create a new customized template for your school",
-    "editTemplate": "Edit Template",
-    "templateName": "Template Name",
-    "templateContent": "Template Content",
-    "certificates": "Certificates",
-    "loadError": "Error loading document",
-    "download": "Download Document",
-    "selectTemplate": "Select Template",
-    "noPreview": "No preview available",
-    "reviewTitle": "Review Document",
-    "inbox": "Inbox & Received Documents",
-    "searchPlaceholder": "Search by title, protocol or sender...",
-    "approveSelected": "Approve Selected",
-    "archive": "Archive",
-    "favorite": "Favorite",
-    "titleLabel": "Document Title",
-    "favoriteAdded": "Added to favorites",
-    "favoriteRemoved": "Removed from favorites",
-    "batchApproveTitle": "Batch Document Approval",
-    "batchApproveConfirm": "Are you sure you want to approve selected documents?",
-    "documentsApproved": "Documents approved successfully",
-    "documentsArchived": "Documents archived successfully",
+    "documentsList": "公文文档列表",
+    "uploadDocument": "上传文档公文",
+    "templateManagement": "公文模板管理",
+    "newTemplate": "新建公文模板",
+    "noTemplates": "暂无可用模板",
+    "noTemplatesDesc": "为您的学校创建个性化公文模板",
+    "editTemplate": "编辑公文模板",
+    "templateName": "模板名称",
+    "templateContent": "模板内容正文",
+    "certificates": "学籍证明",
+    "loadError": "文档加载失败",
+    "download": "下载文件",
+    "selectTemplate": "选择公文模板",
+    "noPreview": "暂无可预览内容",
+    "reviewTitle": "公文文档审核",
+    "inbox": "收件箱与已接收公文",
+    "searchPlaceholder": "按标题、字号或发件人搜索...",
+    "approveSelected": "审批通过所选",
+    "archive": "归档入库",
+    "favorite": "标星收藏",
+    "titleLabel": "文档标题",
+    "favoriteAdded": "已加入收藏",
+    "favoriteRemoved": "已取消收藏",
+    "batchApproveTitle": "批量审批公文",
+    "batchApproveConfirm": "您确定要批量审批通过所选文档公文吗？",
+    "documentsApproved": "公文已成功审批通过",
+    "documentsArchived": "公文已成功归档",
     "parentTitle": "文档与通知",
     "parentSubtitle": "查看并下载 {name} 的官方文档",
     "searchPlaceholderDoc": "搜索文档...",
     "tabs": {
-      "all": "所有文档",
+      "all": "全部",
       "reportCards": "成绩单与评估",
-      "circulars": "通告与表格",
-      "plans": "教学计划 (PDP/PEI)"
+      "circulars": "通告通知",
+      "plans": "教学计划 (PDP/PEI)",
+      "certificates": "学籍证明",
+      "minutes": "教务决议",
+      "studentFiles": "学生档案"
     },
     "loadingDatabase": "正在从数据库加载文档...",
     "isNew": "最新",
@@ -1657,7 +1848,10 @@ export default {
     "fascicoloFallbackTitle": "学生文档",
     "fascicoloFallbackSubtitle": "学生档案",
     "previewDialogMessage": "文档详情: {subtitle}。日期: {date}。状态: {status}",
-    "downloadStarted": "正在下载文档: {title}"
+    "downloadStarted": "正在下载文档: {title}",
+    "upload": "上传文件",
+    "tableTitle": "正式公文列表",
+    "noDocs": "当前分类下暂无文档公文。"
   },
   "notesPage": {
     "title": "纪律处分与行为记录",
@@ -1704,9 +1898,9 @@ export default {
     "currentPassword": "当前密码",
     "newPassword": "新密码",
     "saveSettings": "保存设置",
-    "profile": "User Profile",
-    "confirmPassword": "Confirm New Password",
-    "changePassword": "Change Password"
+    "profile": "个人资料设置",
+    "confirmPassword": "确认新密码",
+    "changePassword": "修改账号密码"
   },
   "paymentsPage": {
     "title": "学校缴费与 PagoPA",
@@ -1744,184 +1938,217 @@ export default {
     "cost": "活动费用"
   },
   "usersPage": {
-    "title": "User Management",
-    "searchPlaceholder": "Search by name, email...",
-    "newUser": "New User",
-    "exportCsv": "Export to CSV",
-    "selectedUsers": "selected users",
-    "deleteSelected": "Delete Selected",
-    "roleStudents": "Students",
-    "roleTeachers": "Teachers",
-    "roleParents": "Parents",
-    "roleStaff": "Staff",
-    "roleCoordinator": "Coordinator",
-    "roleVicePrincipal": "Vice Principal",
-    "rolePrincipal": "Principal",
-    "roleLabel": "Role",
-    "editProfile": "Edit Profile",
-    "resetPassword": "Reset Password",
-    "manageSubjects": "Manage Subjects",
-    "deleteAccount": "Delete Account",
-    "noUsersFound": "No users found"
+    "title": "用户账号管理",
+    "searchPlaceholder": "按姓名、邮箱、身份证号搜索...",
+    "newUser": "新建用户",
+    "exportCsv": "导出 CSV",
+    "selectedUsers": "项已选用户",
+    "deleteSelected": "批量删除所选",
+    "roleStudents": "学生",
+    "roleTeachers": "教师",
+    "roleParents": "家长 / 监护人",
+    "roleStaff": "教务及后勤人员",
+    "roleCoordinator": "年级主任/协调员",
+    "roleVicePrincipal": "副校长",
+    "rolePrincipal": "校长",
+    "roleLabel": "用户角色",
+    "editProfile": "编辑资料",
+    "resetPassword": "重置密码",
+    "manageSubjects": "任教科目分配",
+    "deleteAccount": "删除账号",
+    "noUsersFound": "未检索到匹配用户",
+    "roleSecretary": "教务秘书处",
+    "roleAdmin": "系统管理员"
   },
   "studentAttendance": {
-    "title": "My Attendance & Absences",
-    "subtitle": "Detailed history of attendance, absences, and tardiness"
+    "title": "我的考勤与缺勤记录",
+    "subtitle": "详尽的出勤、缺勤、迟到与早退明细历史"
   },
   "classes": {
-    "linguisticGroup": "Language / Track Group",
-    "linguisticGroupLabel": "Language Group: {name}"
+    "linguisticGroup": "专业组 / 语言选修方向",
+    "linguisticGroupLabel": "方向组：{name}"
   },
   "composables": {
     "colloqui": {
-      "invalidDuration": "Invalid appointment duration",
-      "invalidTimeRange": "Invalid time range",
-      "bookingConfirmed": "Appointment booking confirmed",
-      "bookingCancelled": "Appointment booking cancelled",
-      "slotsCreated": "{count} slots created successfully",
-      "slotsError": "Error creating appointment slots"
+      "invalidDuration": "预约时长设置无效",
+      "invalidTimeRange": "预约时间段设置无效",
+      "bookingConfirmed": "家长会谈预约已确认",
+      "bookingCancelled": "家长会谈预约已取消",
+      "slotsCreated": "成功创建 {count} 个可预约时段",
+      "slotsError": "创建会谈预约时段失败",
+      "slotDeleted": "预约时段已删除"
     },
     "users": {
-      "importError": "Error importing users",
-      "importStarted": "User import started"
+      "importError": "导入用户数据失败",
+      "importStarted": "已启动批量用户导入",
+      "userCreated": "用户创建成功",
+      "userUpdated": "用户信息更新成功",
+      "userDeleted": "用户已删除",
+      "passwordResetSuccess": "密码重置成功"
     },
     "adminUsers": {
-      "confirmTitle": "Confirm deletion",
-      "confirmMsg": "Are you sure you want to delete this administrator?"
+      "confirmTitle": "确认删除管理员",
+      "confirmMsg": "您确定要永久删除该管理员账号吗？",
+      "confirmDeleteTitle": "确认删除用户",
+      "confirmDeleteMsg": "您确定要永久删除该用户账号吗？"
     },
     "attendance": {
-      "saveSuccess": "Attendance saved successfully",
-      "saveError": "Failed to save attendance",
-      "requestSent": "Justification request sent",
-      "requestError": "Failed to send justification request"
+      "saveSuccess": "考勤点名已成功保存",
+      "saveError": "保存考勤记录失败",
+      "requestSent": "请假申请已成功提交",
+      "requestError": "提交请假申请失败",
+      "savedSuccess": "考勤记录保存成功",
+      "justifiedSuccess": "请假销假处理成功"
     },
     "children": {
-      "addSuccess": "Child profile added successfully",
-      "removeConfirmTitle": "Confirm removal",
-      "removeConfirmMsg": "Are you sure you want to remove this student profile?",
-      "removeSuccess": "Student profile removed"
+      "addSuccess": "已成功关联子女学籍档案",
+      "removeConfirmTitle": "确认解除关联",
+      "removeConfirmMsg": "您确定要解除与该学生档案的关联吗？",
+      "removeSuccess": "已成功解除关联",
+      "noChildrenFound": "未找到关联的子女信息"
     },
     "documents": {
-      "draftCreated": "Document draft created",
-      "draftError": "Failed to create document draft",
-      "reviewSuccess": "Document {decision}",
-      "reviewError": "Review failed",
-      "downloading": "Downloading {title}..."
+      "draftCreated": "公文草稿创建成功",
+      "draftError": "创建公文草稿失败",
+      "reviewSuccess": "公文已处理为：{decision}",
+      "reviewError": "公文审核操作失败",
+      "downloading": "正在下载 {title}...",
+      "uploadSuccess": "文件上传成功",
+      "deleteSuccess": "文件删除成功"
     },
     "grades": {
-      "fillRequired": "Please fill all required grade fields",
-      "saveSuccess": "Grade saved successfully",
-      "saveError": "Failed to save grade"
+      "fillRequired": "请完整填写所有必填成绩字段",
+      "saveSuccess": "成绩录入成功保存",
+      "saveError": "保存成绩记录失败",
+      "gradeSaved": "成绩录入保存成功",
+      "gradeDeleted": "成绩记录已删除"
     },
     "schools": {
-      "updated": "School updated successfully",
-      "created": "School created successfully",
-      "operationFailed": "Operation failed",
-      "deleteConfirmTitle": "Confirm deletion",
-      "deleteConfirmMsg": "Are you sure you want to delete this school?",
-      "deleted": "School deleted successfully"
+      "updated": "学校信息已更新",
+      "created": "学校创建成功",
+      "operationFailed": "操作执行失败",
+      "deleteConfirmTitle": "确认删除学校",
+      "deleteConfirmMsg": "您确定要删除该学校档案吗？",
+      "deleted": "学校档案已删除",
+      "schoolSaved": "学校资料保存成功"
     },
     "undo": {
-      "cancelWithSeconds": "Undo ({remaining}s)",
-      "actionCancelled": "Action undone",
-      "cancelError": "Error while undoing action"
+      "cancelWithSeconds": "撤销操作 ({remaining}秒)",
+      "actionCancelled": "已成功撤销操作",
+      "cancelError": "撤销操作时发生错误",
+      "actionUndone": "操作已成功撤销"
     }
   },
   "security": {
-    "title": "Security & Legal Compliance",
-    "subtitle": "Qualified Electronic Signature (FEQ), CAD Compliant Preservation, and Immutable Log Chain",
-    "downloadCadZip": "Download CAD ZIP Package",
-    "feqTitle": "Qualified Signature (FEQ)",
-    "feqActive": "Active and Verified",
-    "feqDesc": "All signatures on class registers and substitutions are sealed with legally binding SHA-256 timestamps.",
-    "cadTitle": "CAD Long-Term Preservation",
-    "cadManifest": "XML Manifest Package",
-    "cadDesc": "Compliant with AgID guidelines for long-term document preservation.",
-    "immutableAuditTitle": "Immutable Audit Trail",
-    "cryptoChain": "Cryptographic Hash Chain",
-    "immutableAuditDesc": "Every edit on signatures, grades, and notes generates a cryptographically chained block (Block Hashing).",
-    "integrityVerifier": "Register Integrity Verifier (Audit Trail)",
-    "verifyNow": "Verify Integrity Now",
-    "allBlocksValid": "All register blocks are valid and legally binding",
-    "verifiedOn": "Verified on",
-    "colAction": "Action / Event",
-    "colActor": "User / Actor",
-    "colPrevHash": "Previous Hash (SHA-256)",
-    "colCurrHash": "Current Hash (SHA-256)",
-    "colCryptoStatus": "Cryptographic Status",
-    "intact": "Intact",
-    "integrityVerified": "Register integrity verification completed: Chain is valid!",
-    "integrityError": "Error verifying hash chain",
-    "cadGenerating": "Generating CAD preservation ZIP package...",
-    "cadDownloaded": "CAD Package downloaded successfully!",
-    "cadError": "Error downloading CAD package"
+    "title": "系统安全与合规审计",
+    "subtitle": "合规电子签名 (FEQ)、法律数字存证与不可篡改区块链审计日志",
+    "downloadCadZip": "下载 CAD 存证归档包",
+    "feqTitle": "合规电子签名 (FEQ)",
+    "feqActive": "已激活且验证有效",
+    "feqDesc": "所有日志登记均符合欧盟 eIDAS 电子签名法案标准。",
+    "cadTitle": "CAD 法律规范化数字存证",
+    "cadManifest": "XML 清单归档数据包",
+    "cadDesc": "严格遵循欧洲数字主权与法律合规长期归档标准。",
+    "immutableAuditTitle": "不可篡改区块链审计存证",
+    "cryptoChain": "密码学哈希验证链",
+    "immutableAuditDesc": "所有签名、成绩与考勤变更均自动生成密码学串联区块。",
+    "integrityVerifier": "教学日志完整性校验器 (Audit Trail)",
+    "verifyNow": "立即运行完整性校验",
+    "allBlocksValid": "所有区块链加密校验块均完好有效",
+    "verifiedOn": "校验时间",
+    "colAction": "操作",
+    "colActor": "操作用户",
+    "colPrevHash": "前置哈希",
+    "colCurrHash": "当前哈希",
+    "colCryptoStatus": "校验状态",
+    "intact": "完整完好",
+    "integrityVerified": "审计日志密码学完整性验证通过！",
+    "integrityError": "密码学完整性校验失败，请检查数据链。",
+    "cadGenerating": "正在生成 CAD 法律存证包...",
+    "cadDownloaded": "CAD 存证包已生成并下载成功！",
+    "cadError": "生成 CAD 存证包时发生错误。",
+    "blockchainTitle": "加密审计数据链",
+    "blockchainDesc": "基于 SHA-256 哈希链的防篡改合规日志系统。"
   },
   "reportsPage": {
-    "title": "Reports & Analytics",
-    "subtitle": "Statistical summaries, grade averages and exportable documents",
-    "exportPdf": "Export PDF",
-    "exportExcel": "Export Excel"
+    "title": "统计报表与数据分析",
+    "subtitle": "统计汇总、学科均分走势与官方导出表格",
+    "exportPdf": "导出 PDF 报表",
+    "exportExcel": "导出 Excel 报表"
   },
   "attendance": {
-    "title": "Attendance & Daily Register",
-    "present": "Present",
-    "absent": "Absent",
-    "late": "Late",
-    "earlyExit": "Early Exit",
-    "justified": "Justified",
-    "justify": "Justify",
-    "justifyAbsence": "Justify Absence / Tardy",
-    "reason": "Reason",
-    "healthReasons": "Health Reasons",
-    "familyReasons": "Family Reasons",
-    "medicalVisit": "Medical Appointment",
-    "activityType": "Activity Type",
-    "activityPrefix": "Activity:",
-    "careerGuidance": "Career Guidance",
-    "minutesLate": "Minutes Late",
-    "earlyExitTime": "Exit Time",
-    "standardLesson": "Standard Lesson",
-    "atTime": "at",
-    "totalAbsences": "Total Absences",
-    "noAbsences": "No absences recorded",
-    "pendingJustification": "Pending justification"
+    "title": "每日考勤与点名日志",
+    "present": "出勤",
+    "absent": "缺勤",
+    "late": "迟到",
+    "earlyExit": "早退",
+    "justified": "已请假/销假",
+    "justify": "假条销假",
+    "justifyAbsence": "缺勤/迟到销假",
+    "reason": "请假事由",
+    "healthReasons": "病假事由",
+    "familyReasons": "事假事由",
+    "medicalVisit": "就医挂号",
+    "activityType": "活动类型",
+    "activityPrefix": "教学活动",
+    "careerGuidance": "生涯规划与导师指导",
+    "minutesLate": "分钟迟到",
+    "earlyExitTime": "早退离校时间",
+    "standardLesson": "标准课堂教学",
+    "atTime": "时间为",
+    "totalAbsences": "累计缺勤课时",
+    "noAbsences": "无缺勤记录",
+    "pendingJustification": "待审批销假"
   },
   "studentsPage": {
-    "studentDossier": "Student Dossier",
-    "multiYearHistory": "Multi-Year History",
-    "documentsAndAttachments": "Documents & Attachments",
-    "besDsaDossier": "SEN / Specific Learning Needs Dossier",
-    "besDsaDocumentation": "SEN / Learning Needs Documentation",
-    "newEnrollment": "New Student Enrollment",
-    "personalData": "Personal Data",
-    "birthDate": "Date of Birth",
-    "birthPlace": "Place of Birth",
-    "taxCode": "Tax Code",
-    "gender": "Gender",
-    "residenceAndContacts": "Residence & Contacts",
-    "personalEmail": "Personal Email",
-    "parentsGuardians": "Parents / Guardians",
-    "primaryContact": "Primary Contact",
-    "secondaryContact": "Secondary Contact",
-    "schoolData": "School Data",
-    "assignedClass": "Assigned Class",
-    "enrollmentDate": "Enrollment Date",
-    "documentsSubmitted": "Submitted Documents",
-    "completeEnrollment": "Complete Enrollment",
-    "enrollmentSuccess": "Enrollment completed successfully",
-    "studentFile": "Dossier"
+    "studentDossier": "学生学籍档案",
+    "multiYearHistory": "历年就读履历",
+    "documentsAndAttachments": "学籍材料与附件",
+    "besDsaDossier": "特殊教育需求 (SEN/DSA) 档案",
+    "besDsaDocumentation": "个性化支持与辅导档案",
+    "newEnrollment": "新生入学注册",
+    "personalData": "个人基本信息",
+    "birthDate": "出生日期",
+    "birthPlace": "出生地",
+    "taxCode": "身份证号 / 税号",
+    "gender": "性别",
+    "residenceAndContacts": "居住地址与联络方式",
+    "personalEmail": "个人电子邮箱",
+    "parentsGuardians": "父母 / 法定监护人",
+    "primaryContact": "首要联系人",
+    "secondaryContact": "紧急联系人",
+    "schoolData": "学籍就读信息",
+    "assignedClass": "分配就读班级",
+    "enrollmentDate": "入学注册日期",
+    "documentsSubmitted": "已递交证明文件",
+    "completeEnrollment": "完成入学注册",
+    "enrollmentSuccess": "新生入学注册成功！",
+    "studentFile": "学籍卡片"
   },
   "classesPage": {
-    "currentClass": "Current Class"
+    "currentClass": "当前班级"
   },
   "admin": {
-    "apiRequests": "API Requests",
-    "userDeleted": "User deleted successfully",
-    "userDeleteError": "Error deleting user"
+    "apiRequests": "API 调用次数",
+    "userDeleted": "用户删除成功",
+    "userDeleteError": "删除用户失败"
   },
   "auth": {
-    "sessionExpired": "Session expired",
-    "enterPasswordToContinue": "Enter password to continue",
-    "sessionWorkPreserved": "Unsaved changes were preserved"
+    "sessionExpired": "会话已过期",
+    "enterPasswordToContinue": "请输入密码以继续操作",
+    "sessionWorkPreserved": "未保存的内容已自动保留"
+  },
+  "attendancePage": {
+    "title": "考勤与出勤管理",
+    "subtitle": "出勤记录、迟到登记与请假条管理",
+    "tableTitle": "出勤概览表"
+  },
+  "reportCardPage": {
+    "title": "期末综合成绩报告单",
+    "subtitle": "学期末正式学术评估与评价报告单",
+    "finalEvaluation": "评定结果与校务决议",
+    "semester1": "第一学期",
+    "semester2": "第二学期",
+    "exportPdf": "导出 PDF 报告单"
   }
-};
+}

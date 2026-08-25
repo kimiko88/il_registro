@@ -64,7 +64,11 @@ export default {
     "appName": "Electronic Register",
     "selected": "selected",
     "preview": "Preview",
-    "review": "Review"
+    "review": "Review",
+    "viewAll": "View All",
+    "noStudentsFound": "No students found",
+    "readOnlySaveBtn": "Save disabled (Read-only)",
+    "children": "Linked children"
   },
   "notFound": {
     "title": "Page Not Found",
@@ -245,7 +249,9 @@ export default {
     "actionUsers": "User Management",
     "actionClasses": "Class Management",
     "recentGrades": "Recent Grades",
-    "noChildren": "No linked children"
+    "noChildren": "No linked children",
+    "systemStatus": "System Status",
+    "syncedNow": "Synced just now"
   },
   "agendaPage": {
     "title": "Agenda & Teaching Calendar",
@@ -268,7 +274,22 @@ export default {
     "teacher": "Teacher",
     "subject": "Subject",
     "event": "Event",
-    "today": "Today"
+    "today": "Today",
+    "homeworkTitle": "Agenda & Homework",
+    "homeworkList": "Homework List",
+    "agendaLessons": "Agenda & Lessons",
+    "dueHomework": "Upcoming Homework & Tests",
+    "organizeStudy": "Organize your study deadlines",
+    "noPendingHomework": "No pending homework",
+    "allCaughtUp": "You are all caught up with your homework!",
+    "due": "Due",
+    "expired": "Overdue",
+    "tomorrow": "Tomorrow",
+    "assignedBy": "Assigned by",
+    "detailsOf": "Details for",
+    "lessonsHeld": "Completed Lessons",
+    "noLessons": "No lessons recorded for this date.",
+    "noDueHomework": "No homework due on this date."
   },
   "usersPage": {
     "title": "User Management",
@@ -285,7 +306,7 @@ export default {
     "roleCoordinator": "Coordinator",
     "roleVicePrincipal": "Vice Principal",
     "rolePrincipal": "Principal",
-    "roleAdmin": "Administrator",
+    "roleAdmin": "Admin",
     "roleLabel": "Role",
     "editProfile": "Edit Profile",
     "resetPassword": "Reset Password",
@@ -340,6 +361,8 @@ export default {
     "attendanceAverage": "Attendance Average",
     "gradeAverage": "Grade Average",
     "tabGrades": "My Grades",
+    "homework": "Homework",
+    "documents": "Document Dossier & Acts",
     "schoolManagement": "School Management"
   },
   "udaPage": {
@@ -382,7 +405,15 @@ export default {
     "detailTitle": "UdA Details",
     "noUda": "No Learning Unit (UdA) present for this class.",
     "objectives": "Learning Objectives",
-    "methodologies": "Teaching Methodologies"
+    "methodologies": "Teaching Methodologies",
+    "allSubjects": "Tutte le Materie",
+    "allClasses": "Tutte le Classi",
+    "published": "Pubblicata",
+    "archived": "Archiviata",
+    "noUdaDesc": "Nessuna UdA disponibile per i filtri selezionati.",
+    "goalsLabel": "Obiettivi Formativi",
+    "durationHours": "Ore di Durata",
+    "editTitle": "Modifica Unità di Apprendimento"
   },
   "competenciesPage": {
     "generatingPdf": "Generating PDF...",
@@ -428,7 +459,14 @@ export default {
     "levelA": "A - Advanced",
     "levelB": "B - Intermediate",
     "levelC": "C - Basic",
-    "levelD": "D - Initial"
+    "levelD": "D - Initial",
+    "tabSubjects": "Competenze Disciplinari",
+    "tabKeyCompetencies": "Competenze Chiave Europee",
+    "btnEvaluate": "Valuta",
+    "levelAssigned": "Livello Assegnato",
+    "actions": "Azioni",
+    "selectClassSubjectPrompt": "Seleziona una classe e materia per valutare",
+    "noEvaluationsFound": "Nessuna valutazione delle competenze trovata"
   },
   "gradesPage": {
     "cannotEditOtherTeacherGrade": "You cannot edit grades created by another teacher",
@@ -505,7 +543,20 @@ export default {
     },
     "unknownSubject": "Unknown subject",
     "reportDownloadSuccess": "PDF Report downloaded successfully",
-    "reportDownloadError": "Error downloading PDF Report"
+    "reportDownloadError": "Error downloading PDF Report",
+    "recentGrades": "Recent Grades",
+    "periodGrades": "Period Grades",
+    "finalGrade": "Final Grade",
+    "gradeTypes": {
+      "standard": "Standard",
+      "test": "Verifica",
+      "bonus": "Punti Bonus"
+    },
+    "simulatedAvg": "Mesatarja e Simuluar",
+    "pointsNeeded": "Pikët e Nevojshme",
+    "status": "Gjendja",
+    "sufficient": "Kalues",
+    "insufficient": "Mbetës"
   },
   "didacticsPage": {
     "title": "Didactic Materials & Resources",
@@ -787,7 +838,10 @@ export default {
       "all": "All Documents",
       "reportCards": "Report Cards & Grades",
       "circulars": "Circulars & Forms",
-      "plans": "Educational Plans (PDP/PEI)"
+      "plans": "Educational Plans (PDP/PEI)",
+      "certificates": "Vërtetime",
+      "minutes": "Procesverbale",
+      "studentFiles": "Dosjet e Nxënësve"
     },
     "loadingDatabase": "Loading documents from database...",
     "isNew": "New",
@@ -808,7 +862,10 @@ export default {
     "fascicoloFallbackTitle": "Student Document",
     "fascicoloFallbackSubtitle": "Student record folder",
     "previewDialogMessage": "Document details: {subtitle}. Date: {date}. Status: {status}",
-    "downloadStarted": "Downloading document: {title}"
+    "downloadStarted": "Downloading document: {title}",
+    "upload": "Ngarko Dokument",
+    "tableTitle": "Dokumente Zyrtare",
+    "noDocs": "Nuk ka dokumente të disponueshme në këtë seksion."
   },
   "notesPage": {
     "title": "Disciplinary Notes & Reminders",
@@ -990,7 +1047,32 @@ export default {
       "q9": "How do I change my interface language and dark mode?",
       "a9": "Go to \"Settings\" in your user menu. Choose from 9 languages (Italian, English, German, French, Spanish, Russian, Ukrainian, Arabic, Chinese) and enable Dark Mode or OpenDyslexic font.",
       "q10": "How can I undo a recently entered grade or attendance mark?",
-      "a10": "After any entry, an animated toast appears at the bottom with an \"Undo\" button active for 15 seconds. If elapsed, edit the cell directly in the grade or attendance grid."
+      "a10": "After any entry, an animated toast appears at the bottom with an \"Undo\" button active for 15 seconds. If elapsed, edit the cell directly in the grade or attendance grid.",
+      "attendance": {
+        "title": "Marrja e Mungesave & Nënshkrimi i Mësimit",
+        "desc": "Si të merrni praninë e nxënësve dhe të nënshkruani orën mësimore.",
+        "content": "Dhe regjistroni mungesat dhe temat e mësimit brenda pak sekondave.\n\nHapi 1: Hapni 'Ditari i Klasës' dhe zgjidhni klasën tuaj.\nHapi 2: Shënoni nxënësit si të pranishëm, mungesë ose me vonesë.\nHapi 3: Vendosni temën dhe nënshkruani orën."
+      },
+      "grades": {
+        "title": "Hedhja e Notave dhe Vlerësimi",
+        "desc": "Si të vendosni notat me gojë, me shkrim dhe praktike.",
+        "content": "Menaxhoni notat dhe vlerësimet për secilin nxënës me lehtësi."
+      },
+      "uda": {
+        "title": "Planifikimi i Njësive Mësimore (UdA)",
+        "desc": "Dizajnimi kurrikular sipas kompetencave.",
+        "content": "Strukturoni orët mësimore dhe vlerësoni kompetencat kyçe evropiane."
+      },
+      "agenda": {
+        "title": "Detyrat e Shtëpisë & Kalendari",
+        "desc": "Si të caktoni detyrat dhe provimet.",
+        "content": "Caktoni afatet dhe organizoni ngarkesën e studimit për klasën."
+      },
+      "colloqui": {
+        "title": "Takimet me Prindërit",
+        "desc": "Caktimi i orareve të lira për takime individuale.",
+        "content": "Përcaktoni fashat orare dhe konfirmoni kërkesat e prindërve."
+      }
     },
     "student": {
       "cat_grades": "My Grades",
@@ -1017,7 +1099,22 @@ export default {
       "q9": "What should I do if I forget my account password?",
       "a9": "On the Login page, click \"Forgot Password?\". Enter your registered email or tax code to receive a secure password reset link.",
       "q10": "How do I use the Ctrl+K Quick Search bar?",
-      "a10": "Pressing Ctrl+K (or Cmd+K on Mac) opens universal search to navigate instantly to subjects, assignments, circulars, or menu items."
+      "a10": "Pressing Ctrl+K (or Cmd+K on Mac) opens universal search to navigate instantly to subjects, assignments, circulars, or menu items.",
+      "grades": {
+        "title": "Konsultimi i Notave & Mesatareve",
+        "desc": "Si të kontrolloni notat dhe ecurinë tuaj akademike.",
+        "content": "Shikoni notat e fundit, mesataret sipas lëndëve dhe simuloni notat kaluese."
+      },
+      "homework": {
+        "title": "Detyrat & Kalendari i Studimit",
+        "desc": "Organizoni detyrat dhe përgatitjet për testet.",
+        "content": "Mbani nën kontroll afatet e detyrave dhe njoftimet nga mësuesit."
+      },
+      "attendance": {
+        "title": "Prania & Arsyetimet",
+        "desc": "Kontrolloni mungesat dhe vonesat tuaja.",
+        "content": "Shikoni statusin e mungesave dhe kërkesave për arsyetim."
+      }
     },
     "parent": {
       "cat_monitoring": "Child Monitoring",
@@ -1044,7 +1141,22 @@ export default {
       "q9": "Can I grant access to a second parent or guardian?",
       "a9": "The school secretary can link multiple guardian accounts to a student. Each guardian receives individual login credentials and alerts.",
       "q10": "What happens when using the app in offline mode?",
-      "a10": "The app displays cached data seamlessly. Offline forms or payment submissions are queued locally and synced once connection restores."
+      "a10": "The app displays cached data seamlessly. Offline forms or payment submissions are queued locally and synced once connection restores.",
+      "grades": {
+        "title": "Vlerësimi & Dëftesa",
+        "desc": "Ndiqni notat dhe vlerësimet e fëmijëve tuaj.",
+        "content": "Qasje e menjëhershme në të gjitha notat, mesataret dhe dëftesat zyrtare."
+      },
+      "attendance": {
+        "title": "Arsyetimi i Mungesave",
+        "desc": "Si të arsyetoni mungesat e fëmijës tuaj online.",
+        "content": "Dërgoni arsyetime për mungesat dhe vonesat me një klikim."
+      },
+      "colloqui": {
+        "title": "Rezervimi i Takimeve me Mësuesit",
+        "desc": "Caktoni takime individuale me stafin mësimdhënës.",
+        "content": "Zgjidhni orarin e përshtatshëm dhe rezervoni takimin online ose në shkollë."
+      }
     },
     "secretary": {
       "cat_students": "Student Registry",
@@ -1071,7 +1183,37 @@ export default {
       "q9": "How do I check pending PagoPA payment statuses?",
       "a9": "Open \"Finance & PagoPA\" to inspect collection statuses, download daily reconciliation logs, and send reminder notices.",
       "q10": "What should I do to revoke an incorrectly issued document protocol?",
-      "a10": "In \"Document Archives\", select protocol → click \"Revoke with Reason\". The revocation is permanently logged in system audit trail."
+      "a10": "In \"Document Archives\", select protocol → click \"Revoke with Reason\". The revocation is permanently logged in system audit trail.",
+      "students": {
+        "title": "Menaxhimi i Regjistrit të Nxënësve",
+        "desc": "Kërkimi, regjistrimi dhe përditësimi i të dhënave të nxënësve.",
+        "content": "Administroni dosjet akademike, kontaktet dhe regjistrimet e reja."
+      },
+      "classes": {
+        "title": "Organizimi i Klasave dhe Seksioneve",
+        "desc": "Krijimi i klasave dhe caktimi i mësuesve titullarë.",
+        "content": "Strukturoni vitin shkollor, oraret dhe ndarjen e lëndëve."
+      },
+      "certificates": {
+        "title": "Gjenerimi i Vërtetimeve",
+        "desc": "Lëshimi i dokumenteve zyrtare dhe vërtetimeve të frekuentimit.",
+        "content": "Gjeneroni dokumente me vulë digjitale dhe nënshkrim zyrtar në sekonda."
+      },
+      "timetable": {
+        "title": "Orari Mësimor dhe Zëvendësimet",
+        "desc": "Menaxhimi i orareve javore dhe zëvendësimit të mësuesve.",
+        "content": "Planifikoni orët dhe mbuloni mungesat e mësuesve."
+      },
+      "communications": {
+        "title": "Qarkoret dhe Njoftimet Zyrtare",
+        "desc": "Publikimi i njoftimeve dhe monitorimi i marrjes së dijenisë.",
+        "content": "Dërgoni qarkore zyrtare për stafin, prindërit dhe nxënësit."
+      },
+      "reports": {
+        "title": "Raportet dhe Statistikat",
+        "desc": "Nxjerrja e statistikave dhe eksportimi i të dhënave.",
+        "content": "Gjeneroni raporte të agreguara për frekuentimin dhe rezultatet."
+      }
     },
     "admin": {
       "cat_monitoring": "System Monitoring",
@@ -1098,7 +1240,42 @@ export default {
       "q9": "How do I inspect full RBAC role permission matrices across all 9 roles?",
       "a9": "Go to \"Roles & Permissions\". Review the interactive matrix to verify resource access limits for each role.",
       "q10": "How do I put the platform into scheduled Maintenance Mode?",
-      "a10": "In \"System Settings\", toggle \"Maintenance Mode\". Non-admin users see an informational notice banner and write requests are paused."
+      "a10": "In \"System Settings\", toggle \"Maintenance Mode\". Non-admin users see an informational notice banner and write requests are paused.",
+      "monitoring": {
+        "title": "Monitorimi i Sistemit",
+        "desc": "Monitorimi i performancës së serverit dhe bazës së të dhënave.",
+        "content": "Kontrolloni gjendjen teknike, memorien RAM dhe shërbimet e sistemit në kohë reale."
+      },
+      "users": {
+        "title": "Menaxhimi i Përdoruesve",
+        "desc": "Krijimi i llogarive, të drejtat dhe politikat e sigurisë.",
+        "content": "Menaxhoni të gjitha llogaritë e përdoruesve dhe konfiguroni 2FA."
+      },
+      "schools": {
+        "title": "Menaxhimi i Institucioneve",
+        "desc": "Konfigurimi i shkollave dhe degëve arsimore.",
+        "content": "Regjistroni kodet zyrtare dhe të dhënat administrative të shkollave."
+      },
+      "security": {
+        "title": "Politikat e Sigurisë",
+        "desc": "Konfigurimi i fjalëkalimeve dhe kërkesave të sigurisë.",
+        "content": "Përshtatni rregullat e sigurisë sipas standardeve më të larta."
+      },
+      "analytics": {
+        "title": "Analitika dhe Parandalimi i Braktisjes",
+        "desc": "Analizë parashikuese për rrezikun e braktisjes shkollore.",
+        "content": "Identifikoni nxënësit me rrezik mungesash dhe rezultatesh të ulëta."
+      },
+      "integrations": {
+        "title": "Integrimet dhe Hyrja me Një Klik (SSO)",
+        "desc": "Lidhja me Google Workspace dhe Microsoft 365.",
+        "content": "Aktivizoni hyrjen me llogaritë institucionale."
+      },
+      "audit": {
+        "title": "Regjistri i Auditimit & Gjurmueshmëria",
+        "desc": "Gjurmimi i plotë i veprimeve të përdoruesve në sistem.",
+        "content": "Regjistër i pandryshueshëm i të gjitha veprimeve për transparencë maksimale."
+      }
     }
   },
   "guideCenter": {
@@ -1151,6 +1328,16 @@ export default {
         "title": "Personalized Education Plan (PDP / PEI)",
         "desc": "Draft and apply compensatory and dispensatory measures for Special Needs / DSA students.",
         "content": "The PDP module allows Class Councils to define and share personalized learning plans.\n\nStep 1: Access \"PDP / PEI\" from class menu.\nStep 2: Select student and configure grid of compensatory measures (calculators, formulas) and dispensatory measures.\nStep 3: Save draft and share document with parents for digital approval.\nStep 4: Active measures display visual badges during daily grading.\n\nTip: Use pre-configured evaluation rubrics to speed up plan drafting."
+      },
+      "uda": {
+        "title": "Planifikimi i Njësive Mësimore (UdA)",
+        "desc": "Dizajnimi kurrikular sipas kompetencave.",
+        "content": "Strukturoni orët mësimore dhe vlerësoni kompetencat kyçe evropiane."
+      },
+      "colloqui": {
+        "title": "Takimet me Prindërit",
+        "desc": "Caktimi i orareve të lira për takime individuale.",
+        "content": "Përcaktoni fashat orare dhe konfirmoni kërkesat e prindërve."
       }
     },
     "student": {
@@ -1220,6 +1407,21 @@ export default {
         "title": "Online Absence Justifications",
         "desc": "Submit digital justifications for student absences and tardiness.",
         "content": "No paper books required: justify absences securely with PIN or OTP.\n\nStep 1: Open \"Attendance & Justifications\".\nStep 2: View pending unexcused absences.\nStep 3: Click \"Justify\" next to date, select reason (Illness, Family), and sign with PIN."
+      },
+      "grades": {
+        "title": "Vlerësimi & Dëftesa",
+        "desc": "Ndiqni notat dhe vlerësimet e fëmijëve tuaj.",
+        "content": "Qasje e menjëhershme në të gjitha notat, mesataret dhe dëftesat zyrtare."
+      },
+      "attendance": {
+        "title": "Arsyetimi i Mungesave",
+        "desc": "Si të arsyetoni mungesat e fëmijës tuaj online.",
+        "content": "Dërgoni arsyetime për mungesat dhe vonesat me një klikim."
+      },
+      "colloqui": {
+        "title": "Rezervimi i Takimeve me Mësuesit",
+        "desc": "Caktoni takime individuale me stafin mësimdhënës.",
+        "content": "Zgjidhni orarin e përshtatshëm dhe rezervoni takimin online ose në shkollë."
       }
     },
     "secretary": {
@@ -1324,39 +1526,53 @@ export default {
       "bookingConfirmed": "Appointment booking confirmed",
       "bookingCancelled": "Appointment booking cancelled",
       "slotsCreated": "{count} slots created successfully",
-      "slotsError": "Error creating appointment slots"
+      "slotsError": "Error creating appointment slots",
+      "slotDeleted": "Orari u fshi me sukses"
     },
     "users": {
       "importError": "Error importing users",
-      "importStarted": "User import started"
+      "importStarted": "User import started",
+      "userCreated": "Përdoruesi u krijua me sukses",
+      "userUpdated": "Përdoruesi u përditësua me sukses",
+      "userDeleted": "Përdoruesi u fshi me sukses",
+      "passwordResetSuccess": "Fjalëkalimi u rivendos me sukses"
     },
     "adminUsers": {
       "confirmTitle": "Confirm deletion",
-      "confirmMsg": "Are you sure you want to delete this administrator?"
+      "confirmMsg": "Are you sure you want to delete this administrator?",
+      "confirmDeleteTitle": "Konfirmo fshirjen",
+      "confirmDeleteMsg": "A dëshironi ta fshini përfundimisht këtë përdorues?"
     },
     "attendance": {
       "saveSuccess": "Attendance saved successfully",
       "saveError": "Failed to save attendance",
       "requestSent": "Justification request sent",
-      "requestError": "Failed to send justification request"
+      "requestError": "Failed to send justification request",
+      "savedSuccess": "Prania u ruajt me sukses",
+      "justifiedSuccess": "Mungesa u arsyetua me sukses"
     },
     "children": {
       "addSuccess": "Child profile added successfully",
       "removeConfirmTitle": "Confirm removal",
       "removeConfirmMsg": "Are you sure you want to remove this student profile?",
-      "removeSuccess": "Student profile removed"
+      "removeSuccess": "Student profile removed",
+      "noChildrenFound": "Nuk u gjet asnjë fëmijë i lidhur"
     },
     "documents": {
       "draftCreated": "Document draft created",
       "draftError": "Failed to create document draft",
       "reviewSuccess": "Document {decision}",
       "reviewError": "Review failed",
-      "downloading": "Downloading {title}..."
+      "downloading": "Downloading {title}...",
+      "uploadSuccess": "Dokumenti u ngarkua me sukses",
+      "deleteSuccess": "Dokumenti u fshi me sukses"
     },
     "grades": {
       "fillRequired": "Please fill all required grade fields",
       "saveSuccess": "Grade saved successfully",
-      "saveError": "Failed to save grade"
+      "saveError": "Failed to save grade",
+      "gradeSaved": "Nota u ruajt me sukses",
+      "gradeDeleted": "Nota u fshi me sukses"
     },
     "schools": {
       "updated": "School updated successfully",
@@ -1364,12 +1580,14 @@ export default {
       "operationFailed": "Operation failed",
       "deleteConfirmTitle": "Confirm deletion",
       "deleteConfirmMsg": "Are you sure you want to delete this school?",
-      "deleted": "School deleted successfully"
+      "deleted": "School deleted successfully",
+      "schoolSaved": "Shkolla u ruajt me sukses"
     },
     "undo": {
       "cancelWithSeconds": "Undo ({remaining}s)",
       "actionCancelled": "Action undone",
-      "cancelError": "Error while undoing action"
+      "cancelError": "Error while undoing action",
+      "actionUndone": "Veprimi u zhbë me sukses"
     }
   },
   "security": {
@@ -1399,7 +1617,9 @@ export default {
     "integrityError": "Error verifying hash chain",
     "cadGenerating": "Generating CAD preservation ZIP package...",
     "cadDownloaded": "CAD Package downloaded successfully!",
-    "cadError": "Error downloading CAD package"
+    "cadError": "Error downloading CAD package",
+    "blockchainTitle": "Zinxhiri Kriptografik",
+    "blockchainDesc": "Regjistër auditi i pandryshueshëm dhe i mbrojtur me lidhje hash SHA-256."
   },
   "reportsPage": {
     "title": "Reports & Analytics",
@@ -1479,12 +1699,355 @@ export default {
     "prev": "Previous",
     "next": "Next",
     "tourCompleted": "Tour Completed",
-    "tourCompletedMsg": "You are ready to use the register!"
+    "tourCompletedMsg": "You are ready to use the register!",
+    "stepOf": "Step {current} of {total}",
+    "restartTour": "Restart Tour",
+    "teacher": {
+      "step1_title": "Class Register & Attendance",
+      "step1_desc": "Take daily attendance and sign lessons quickly.",
+      "step2_title": "Grades Management",
+      "step2_desc": "Insert grades, view averages, and run grade simulations.",
+      "step3_title": "Teaching Planning (UdA)",
+      "step3_desc": "Design learning units and evaluate competencies.",
+      "step4_title": "Class Agenda & Calendar",
+      "step4_desc": "Assign homework, schedule tests, and check school events.",
+      "step5_title": "Parent Meetings",
+      "step5_desc": "Set available slots and manage meeting bookings.",
+      "step6_title": "Document Archive",
+      "step6_desc": "Access official circulars, certificates, and reports."
+    },
+    "student": {
+      "step1_title": "My Grades & Simulator",
+      "step1_desc": "Check your recent grades and test averages.",
+      "step2_title": "Homework & Agenda",
+      "step2_desc": "Organize your study schedule and upcoming tests.",
+      "step3_title": "Attendance & Justifications",
+      "step3_desc": "Track absences, delays, and justifications.",
+      "step4_title": "Orientation & Academic Dossier",
+      "step4_desc": "Explore career pathways and school certificates.",
+      "step5_title": "Pagella e Documenti",
+      "step5_desc": "Dalla sezione \"Pagella\" puoi visualizzare il documento di valutazione. In \"Documenti\" trovi circolari, avvisi e materiale scolastico.",
+      "step6_title": "Calendario Scolastico",
+      "step6_desc": "Il calendario scolastico mostra le vacanze, le date delle verifiche programmate e gli eventi importanti dell'istituto."
+    },
+    "parent": {
+      "step1_title": "Dashboard Genitore",
+      "step1_desc": "La tua dashboard mostra un riepilogo dell'andamento dei tuoi figli, le ultime notifiche della scuola e i messaggi non letti.",
+      "step2_title": "I Miei Figli",
+      "step2_desc": "Nella sezione \"I Miei Figli\" trovi l'elenco dei tuoi figli iscritti. Selezionane uno per visualizzarne il profilo scolastico completo.",
+      "step3_title": "Voti e Presenze",
+      "step3_desc": "Monitora i voti e le presenze dei tuoi figli in tempo reale. Ricevi notifiche immediate per assenze, ritardi e nuovi voti inseriti.",
+      "step4_title": "Comunicazioni dalla Scuola",
+      "step4_desc": "Tutte le comunicazioni ufficiali della scuola (circolari, avvisi, comunicazioni del docente) sono raccolte in questa sezione.",
+      "step5_title": "Colloqui con i Docenti",
+      "step5_desc": "Prenota colloqui individuali con i docenti direttamente dall'app, visualizza le disponibilità e ricevi conferma automatica.",
+      "step6_title": "Pagamenti e Documenti",
+      "step6_desc": "Gestisci i pagamenti scolastici e accedi ai documenti del tuo figlio (pagelle, certificati, modulistica)."
+    },
+    "secretary": {
+      "step1_title": "Dashboard Segreteria",
+      "step1_desc": "La dashboard mostra un riepilogo delle attività pendenti, le ultime richieste e le statistiche principali dell'istituto.",
+      "step2_title": "Gestione Classi e Studenti",
+      "step2_desc": "Nella sezione \"Classi\" puoi visualizzare e gestire tutte le classi dell'istituto. In \"Studenti\" trovi l'anagrafica completa con ricerca avanzata.",
+      "step3_title": "Certificati e Documenti",
+      "step3_desc": "Genera e stampa certificati di iscrizione, frequenza e altri documenti ufficiali. Gestisci l'archivio documentale digitale.",
+      "step4_title": "Gestione Orari",
+      "step4_desc": "Configura l'orario scolastico, gestisci le sostituzioni dei docenti assenti e pianifica le attività extra-curriculari.",
+      "step5_title": "Report e Statistiche",
+      "step5_desc": "Genera report personalizzati su presenze, voti, iscrizioni e altri parametri per uso interno o per l'invio agli enti.",
+      "step6_title": "Utenti e Comunicazioni",
+      "step6_desc": "Gestisci gli account di docenti, studenti e genitori. Invia comunicazioni ufficiali e circolari a tutte le categorie di utenti."
+    },
+    "admin": {
+      "step1_title": "Dashboard Amministratore",
+      "step1_desc": "La dashboard mostra lo stato del sistema, le ultime attività e le metriche principali di utilizzo della piattaforma.",
+      "step2_title": "Monitoraggio Sistema",
+      "step2_desc": "Monitora in tempo reale le prestazioni del sistema, le sessioni attive, i log di sistema e lo stato dei servizi.",
+      "step3_title": "Gestione Utenti e Scuole",
+      "step3_desc": "Gestisci gli account di tutti gli utenti, crea nuove scuole/istituti, assegna ruoli e gestisci le autorizzazioni.",
+      "step4_title": "Analytics e Report",
+      "step4_desc": "Visualizza analytics globali sull'utilizzo della piattaforma, genera report dettagliati e monitora le tendenze nel tempo.",
+      "step5_title": "Audit Log",
+      "step5_desc": "Accedi al registro completo di tutte le operazioni effettuate nel sistema per audit e conformità normativa.",
+      "step6_title": "Impostazioni Sistema",
+      "step6_desc": "Configura le policy di sicurezza, l'autenticazione a due fattori, i parametri di sistema e le integrazioni e-learning."
+    }
   },
   "onboardingExtra": {
     "completionTitle": "Great job!",
     "completionDesc": "You completed the initial overview",
-    "openGuide": "Open Guide"
+    "openGuide": "Open Guide",
+    "viewAllFeatures": "Scopri tutte le funzioni",
+    "teacher": {
+      "step7_title": "Didattica & Valutazione > Registro Elettronico e Firme",
+      "step7_desc": "Nel menu 'Didattica & Valutazione > Registro di Classe', firma digitalmente ogni lezione con un clic. Il registro tiene traccia automatica degli argomenti svolti, delle ore di lezione e delle annotazioni per ogni classe.",
+      "step7_bullets": [
+        "Firma digitale lezione",
+        "Argomenti lezione",
+        "Annotazioni private",
+        "Registro ore"
+      ],
+      "step8_title": "Didattica & Valutazione > Valutazione Competenze e UDA",
+      "step8_desc": "Nel menu 'Didattica & Valutazione > Valutazioni', valuta le competenze degli studenti in base ai descrittori UE, gestisci le Unità Didattiche di Apprendimento (UDA) e i piani di lavoro annuali.",
+      "step8_bullets": [
+        "Competenze UE",
+        "Unità Didattiche",
+        "Piano di lavoro",
+        "Rubriche valutative"
+      ],
+      "step1_bullets": [
+        "Lezioni di oggi",
+        "Notifiche recenti",
+        "Accesso rapido",
+        "Riepilogo classe"
+      ],
+      "step2_bullets": [
+        "Registro presenze",
+        "Argomenti lezione",
+        "Firma digitale",
+        "Gestione assenze"
+      ],
+      "step3_bullets": [
+        "Voti orali e scritti",
+        "Media classe",
+        "Grafico distribuzione",
+        "Download tabelle"
+      ],
+      "step4_bullets": [
+        "Compiti e verifiche",
+        "Calendario attività",
+        "Messaggi classe",
+        "Circolare genitori"
+      ],
+      "step5_bullets": [
+        "Disponibilità colloqui",
+        "Prenotazioni genitori",
+        "Video colloquio",
+        "Storico incontri"
+      ],
+      "step6_bullets": [
+        "Tema e lingua",
+        "Notifiche push",
+        "Password",
+        "Profilo pubblico"
+      ]
+    },
+    "student": {
+      "step7_title": "PCTO e Competenze",
+      "step7_desc": "Monitora le tue ore di PCTO (ex alternanza), visualizza le certificazioni di competenza e costruisci il tuo portfolio digitale.",
+      "step7_bullets": [
+        "Ore PCTO",
+        "Certificazioni",
+        "Portfolio digitale",
+        "Valutazione tutor"
+      ],
+      "step8_title": "Comunicazioni e Bacheca",
+      "step8_desc": "Consulta tutte le comunicazioni della scuola, leggi le circolari, rispondi ai sondaggi e visualizza gli avvisi personalizzati.",
+      "step8_bullets": [
+        "Circolari scuola",
+        "Sondaggi e risposte",
+        "Avvisi personalizzati",
+        "Comunicazioni docenti"
+      ],
+      "step1_bullets": [
+        "Compiti in scadenza",
+        "Ultime notifiche",
+        "Media voti",
+        "Prossime verifiche"
+      ],
+      "step2_bullets": [
+        "Voti per materia",
+        "Media aggiornata",
+        "Grafico andamento",
+        "Confronto trimestri"
+      ],
+      "step3_bullets": [
+        "Presenze mensili",
+        "Contatore assenze",
+        "Ritardi e uscite",
+        "Giustificazioni"
+      ],
+      "step4_bullets": [
+        "Compiti assegnati",
+        "Scadenze per materia",
+        "Materiali didattici",
+        "Link e risorse"
+      ],
+      "step5_bullets": [
+        "Pagella digitale",
+        "Download PDF",
+        "Certificati",
+        "Modulistica"
+      ],
+      "step6_bullets": [
+        "Vacanze scolastiche",
+        "Date verifiche",
+        "Attività extra",
+        "Gite ed eventi"
+      ]
+    },
+    "parent": {
+      "step7_title": "Giustificazioni e Autorizzazioni",
+      "step7_desc": "Invia giustifiche per le assenze dei tuoi figli direttamente dall'app, gestisci le autorizzazioni per uscite anticipate e attività speciali.",
+      "step7_bullets": [
+        "Giustifiche online",
+        "Autorizzazioni uscite",
+        "Attività speciali",
+        "Storico assenze"
+      ],
+      "step8_title": "Statistiche e Andamento",
+      "step8_desc": "Visualizza grafici di andamento scolastico nel tempo, confronta le prestazioni tra materie e monitora l'evoluzione dei risultati.",
+      "step8_bullets": [
+        "Grafico andamento",
+        "Confronto materie",
+        "Trend temporale",
+        "Obiettivi raggiunti"
+      ],
+      "step1_bullets": [
+        "Riepilogo figli",
+        "Ultime notifiche",
+        "Messaggi non letti",
+        "Appuntamenti"
+      ],
+      "step2_bullets": [
+        "Profilo scolastico",
+        "Documenti figlio",
+        "Contatti docenti",
+        "Dati iscrizione"
+      ],
+      "step3_bullets": [
+        "Voti in tempo reale",
+        "Media per materia",
+        "Presenze giornaliere",
+        "Alert automatici"
+      ],
+      "step4_bullets": [
+        "Circolari scuola",
+        "Avvisi docenti",
+        "Comunicazioni urgenti",
+        "Bacheca digitale"
+      ],
+      "step5_bullets": [
+        "Prenota colloquio",
+        "Scelta orario",
+        "Conferma email",
+        "Modifica prenotazione"
+      ],
+      "step6_bullets": [
+        "Rette e tasse",
+        "Storico pagamenti",
+        "Scarica ricevute",
+        "Richiedi documenti"
+      ]
+    },
+    "secretary": {
+      "step7_title": "Iscrizioni e Anagrafe",
+      "step7_desc": "Gestisci le iscrizioni annuali, mantieni aggiornata l'anagrafe studenti, gestisci trasferimenti in entrata/uscita e situazioni speciali.",
+      "step7_bullets": [
+        "Iscrizioni annuali",
+        "Trasferimenti",
+        "Alunni BES/DSA",
+        "Situazioni speciali"
+      ],
+      "step8_title": "Circolari e Comunicazioni",
+      "step8_desc": "Crea e pubblica circolari, gestisci la bacheca digitale, invia comunicazioni massive a classi o categorie di utenti con firma digitale.",
+      "step8_bullets": [
+        "Crea circolari",
+        "Firma digitale",
+        "Destinatari multipli",
+        "Storico pubblicazioni"
+      ],
+      "step1_bullets": [
+        "Attività pendenti",
+        "Richieste in arrivo",
+        "Statistiche istituto",
+        "Alert sistema"
+      ],
+      "step2_bullets": [
+        "Elenco classi",
+        "Assegnazione docenti",
+        "Orario settimanale",
+        "Storico modifiche"
+      ],
+      "step3_bullets": [
+        "Certificato iscrizione",
+        "Attestato frequenza",
+        "Export PDF",
+        "Firma digitale"
+      ],
+      "step4_bullets": [
+        "Orario scolastico",
+        "Gestione sostituzioni",
+        "Attività extra",
+        "Avvisi docenti"
+      ],
+      "step5_bullets": [
+        "Report presenze",
+        "Export MIF/ministeriali",
+        "Grafici statistici",
+        "Filtri avanzati"
+      ],
+      "step6_bullets": [
+        "Crea utenti",
+        "Assegna ruoli",
+        "Reset password",
+        "Gestione accessi"
+      ]
+    },
+    "admin": {
+      "step7_title": "Gestione Scuole e Istituti",
+      "step7_desc": "Crea e configura nuovi istituti scolastici, gestisci i parametri specifici di ogni scuola, assegna admin di plesso e monitora l'attività.",
+      "step7_bullets": [
+        "Nuovi istituti",
+        "Config per scuola",
+        "Admin di plesso",
+        "Multi-tenant"
+      ],
+      "step8_title": "Integrazioni e API",
+      "step8_desc": "Gestisci le integrazioni con sistemi esterni (Google Workspace, Microsoft 365, LMS), configura i webhook e monitora le chiamate API.",
+      "step8_bullets": [
+        "Google Workspace",
+        "Microsoft 365",
+        "Webhook config",
+        "API monitoring"
+      ],
+      "step1_bullets": [
+        "Stato sistema",
+        "Utenti attivi",
+        "Sessioni aperte",
+        "Errori recenti"
+      ],
+      "step2_bullets": [
+        "CPU e memoria",
+        "Risposta API",
+        "Log in tempo reale",
+        "Alert soglie"
+      ],
+      "step3_bullets": [
+        "Crea utenti",
+        "Assegna ruoli",
+        "Gestisci scuole",
+        "Import massivo"
+      ],
+      "step4_bullets": [
+        "Uso piattaforma",
+        "Report periodici",
+        "Trend utenti",
+        "Export dati"
+      ],
+      "step5_bullets": [
+        "Log immutabili",
+        "Filtri avanzati",
+        "Export audit",
+        "GDPR compliance"
+      ],
+      "step6_bullets": [
+        "Policy password",
+        "2FA obbligatorio",
+        "Feature flags",
+        "Manutenzione"
+      ]
+    }
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -1574,5 +2137,18 @@ export default {
     "downloadReceipt": "Download Receipt",
     "receiptDownloaded": "PDF Receipt downloaded successfully",
     "child": "Student / Child"
+  },
+  "attendancePage": {
+    "title": "Attendance & Absences",
+    "subtitle": "Attendance tracking, absences, and justifications",
+    "tableTitle": "Attendance Overview"
+  },
+  "reportCardPage": {
+    "title": "Final Evaluation Report Card",
+    "subtitle": "Formal end-of-term academic evaluation card",
+    "finalEvaluation": "Outcome and Final Evaluation",
+    "semester1": "1st Semester",
+    "semester2": "2nd Semester",
+    "exportPdf": "Export PDF"
   }
-};
+}

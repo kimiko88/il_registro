@@ -31,40 +31,44 @@ export default {
     "add": "Adaugă",
     "confirm": "Confirmă",
     "notes": "Note",
-    "category": "Category",
-    "year": "Year",
-    "download": "Download",
-    "city": "City",
-    "zip": "ZIP / Postal Code",
-    "next": "Next",
-    "comment": "Comment",
-    "remove": "Remove",
-    "other": "Other",
-    "info": "Information",
-    "noDescription": "No description",
-    "optionalNotes": "Optional notes",
-    "typeMessage": "Type a message...",
-    "description": "Description",
-    "details": "Details",
-    "noData": "No data available",
-    "history": "History",
-    "active": "Active",
-    "inactive": "Inactive",
-    "all": "All",
-    "fullName": "Full Name",
-    "refresh": "Refresh",
-    "status": "Status",
-    "lastLogin": "Last Login",
-    "user": "User",
-    "activityLog": "Activity Log",
-    "stats": "Quick Stats",
-    "addClass": "New Class",
-    "surname": "Surname",
-    "resetPassword": "Reset Password",
-    "appName": "Electronic Register",
-    "selected": "selected",
-    "preview": "Preview",
-    "review": "Review"
+    "category": "Categorie",
+    "year": "An",
+    "download": "Descarcă",
+    "city": "Oraș",
+    "zip": "Cod Poștal",
+    "next": "Următorul",
+    "comment": "Comentariu",
+    "remove": "Elimină",
+    "other": "Altele",
+    "info": "Informații",
+    "noDescription": "Fără descriere",
+    "optionalNotes": "Note opționale",
+    "typeMessage": "Scrieți un mesaj...",
+    "description": "Descriere",
+    "details": "Detalii",
+    "noData": "Nu există date disponibile",
+    "history": "Istoric",
+    "active": "Activ",
+    "inactive": "Inactiv",
+    "all": "Toate",
+    "fullName": "Nume Complet",
+    "refresh": "Reîmprospătează",
+    "status": "Stare",
+    "lastLogin": "Ultima Autentificare",
+    "user": "Utilizator",
+    "activityLog": "Jurnal de Activitate",
+    "stats": "Statistici",
+    "addClass": "Clasă Nouă",
+    "surname": "Prenume",
+    "resetPassword": "Resetare Parolă",
+    "appName": "Catalog Electronic",
+    "selected": "selectate",
+    "preview": "Previzualizare",
+    "review": "Revizuiește",
+    "viewAll": "Vezi Toate",
+    "noStudentsFound": "Niciun elev găsit",
+    "readOnlySaveBtn": "Salvare dezactivată (Doar citire)",
+    "children": "Copii asociați"
   },
   "notFound": {
     "title": "Pagina nu a fost găsită",
@@ -75,7 +79,7 @@ export default {
   "login": {
     "welcomeBack": "Bine ați revenit",
     "subtitle": "Autentificați-vă pentru a accesa Catalogul Electronic",
-    "emailLabel": "Adresă de Email",
+    "emailLabel": "Adresă Email",
     "emailRequired": "Emailul este obligatoriu",
     "passwordLabel": "Parolă",
     "passwordRequired": "Parola este obligatorie",
@@ -84,25 +88,25 @@ export default {
     "noAccount": "Nu aveți un cont?",
     "contactSecretary": "Contactați Secretariatul",
     "contactTitle": "Contactați Secretariatul",
-    "contactSubtitle": "Selectați școala din meniu pentru a vizualiza datele de contact ale Secretariatului.",
-    "selectSchool": "Selectați Școala / Institutul",
+    "contactSubtitle": "Selectați școala pentru a vizualiza datele de contact ale secretariatului.",
+    "selectSchool": "Selectați Școala",
     "noSchoolFound": "Nicio școală găsită",
     "emailSegreteria": "Email Secretariat",
     "phone": "Telefon",
     "sendEmail": "Trimite Email",
     "copyEmail": "Copiază Email",
-    "emailCopied": "Adresă de email copiată în clipboard!",
-    "chooseSchoolPrompt": "Alegeți o școală din meniul de mai sus pentru a vedea datele de contact ale Secretariatului.",
+    "emailCopied": "Adresa de email a fost copiată!",
+    "chooseSchoolPrompt": "Alegeți o școală de mai sus pentru a vizualiza datele de contact.",
     "sessionExpired": "Din motive de securitate, sesiunea a expirat. Vă rugăm să vă autentificați din nou.",
-    "showPassword": "Afișează parola",
+    "showPassword": "Arată parola",
     "hidePassword": "Ascunde parola",
-    "emailInvalid": "Introduceți o adresă de email validă",
-    "tooManyAttempts": "Prea multe încercări eșuate. Reîncercați în {secs} secunde.",
+    "emailInvalid": "Vă rugăm să introduceți o adresă de email validă",
+    "tooManyAttempts": "Prea multe încercări eșuate. Încercați din nou mai târziu.",
     "copyFailed": "Copiere automată eșuată. Copiați manual:",
-    "loginButton": "Log In",
-    "enterPassword": "Password",
-    "invalidPassword": "Incorrect password",
-    "loginError": "Login error"
+    "loginButton": "Autentificare",
+    "enterPassword": "Parolă",
+    "invalidPassword": "Parolă incorectă",
+    "loginError": "Eroare la autentificare"
   },
   "classRegister": {
     "title": "Catalogul Clasei & Prezență",
@@ -204,13 +208,13 @@ export default {
     "greetingMorning": "Bună dimineața",
     "greetingAfternoon": "Bună ziua",
     "greetingEvening": "Bună seara",
-    "welcomeSub": "Bine ați revenit! Iată rezumatul activităților școlare de azi.",
-    "todayDate": "Data de Azi",
+    "welcomeSub": "Bun venit! Iată rezumatul activităților școlare de astăzi.",
+    "todayDate": "Data de Astăzi",
     "recentActivity": "Activitate Recentă",
-    "todayLessons": "Lecțiile de Azi",
-    "auditLogs": "Jurnal Evenimente & Audit",
-    "userManagement": "Gestiune Utilizatori Sistem",
-    "schoolManagement": "Gestiune Școli",
+    "todayLessons": "Lecțiile de Astăzi",
+    "auditLogs": "Jurnal de Audit",
+    "userManagement": "Gestiune Utilizatori",
+    "schoolManagement": "Gestiune Școală",
     "refreshActivity": "Actualizează Activitatea",
     "noLessons": "Nicio lecție înregistrată",
     "noNotifications": "Nicio notificare nouă",
@@ -218,34 +222,36 @@ export default {
     "completed": "Finalizată",
     "scheduled": "Programată",
     "draft": "Ciornă Programată",
-    "saveDraft": "Salvează Ciornă Lecție",
+    "saveDraft": "Salvează Ciorna",
     "deleteDraft": "Ciornă ștearsă",
-    "topicRequired": "Introduceți subiectul lecției",
-    "draftsListTitle": "Ciorne Lecții Programate",
-    "noDrafts": "Nicio ciornă de lecție salvată momentan.",
+    "topicRequired": "Vă rugăm să introduceți tema lecției",
+    "draftsListTitle": "Ciorne de Lecții",
+    "noDrafts": "Nicio ciornă salvată în acest moment.",
     "signAndRegister": "Semnează & Înregistrează",
     "draftSaved": "Ciorna lecției a fost salvată pentru {date}!",
-    "draftRegistered": "Ciorna a fost convertită și înregistrată cu succes!",
-    "optionsMenu": "Opțiuni și scurtături",
+    "draftRegistered": "Ciorna a fost transformată și înregistrată cu succes!",
+    "optionsMenu": "Opțiuni și comenzi rapide",
     "statTotalSchools": "Total Școli",
     "statActiveUsers": "Utilizatori Activi",
     "statActive24h": "Activi în 24h",
-    "statPendingDocs": "Doc. în Așteptare",
+    "statPendingDocs": "Documente în Așteptare",
     "statStudents": "Elevi",
     "statTeachers": "Profesori",
     "statDocuments": "Documente",
     "statRequests": "Cereri",
     "statMyClasses": "Clasele Mele",
-    "statLessonsToday": "Lecții Azi",
-    "statGradesPending": "Note de Introdus",
-    "actionAttendance": "Înregistrează Prezențe",
-    "actionGrades": "Introdu Note",
-    "actionLessons": "Catalog Lecții",
+    "statLessonsToday": "Lecții Astăzi",
+    "statGradesPending": "Note de Acordat",
+    "actionAttendance": "Fă Prezența",
+    "actionGrades": "Notează",
+    "actionLessons": "Condică de Prezență",
     "actionAgenda": "Agenda Clasei",
     "actionUsers": "Gestiune Utilizatori",
     "actionClasses": "Gestiune Clase",
-    "recentGrades": "Recent Grades",
-    "noChildren": "No linked children"
+    "recentGrades": "Ultimele Note",
+    "noChildren": "Niciun copil asociat",
+    "systemStatus": "Stare Sistem",
+    "syncedNow": "Sincronizat acum"
   },
   "agendaPage": {
     "title": "Agendă & Calendar Didactic",
@@ -267,8 +273,23 @@ export default {
     "dueDate": "Termen",
     "teacher": "Profesor",
     "subject": "Materie",
-    "event": "Event",
-    "today": "Today"
+    "event": "Eveniment",
+    "today": "Astăzi",
+    "homeworkTitle": "Agendă și Teme pentru acasă",
+    "homeworkList": "Lista Temelor",
+    "agendaLessons": "Agendă & Lecții",
+    "dueHomework": "Teme și Teste Următoare",
+    "organizeStudy": "Organizați-vă termenele de studiu",
+    "noPendingHomework": "Nicio temă în așteptare",
+    "allCaughtUp": "Sunteți la zi cu toate temele!",
+    "due": "Termen",
+    "expired": "Expirat",
+    "tomorrow": "Mâine",
+    "assignedBy": "Atribuit de",
+    "detailsOf": "Detalii pentru",
+    "lessonsHeld": "Lecții Desfășurate",
+    "noLessons": "Nicio lecție înregistrată la această dată.",
+    "noDueHomework": "Nicio temă cu termen la această dată."
   },
   "supportPage": {
     "title": "Centru de Asistență & FAQ",
@@ -315,13 +336,15 @@ export default {
     "attendanceAverage": "Medie Prezență",
     "gradeAverage": "Medie Note",
     "tabGrades": "Notele Mele",
-    "tabAttendance": "Attendance",
-    "userManagement": "School Admins Management",
-    "schoolManagement": "School Management"
+    "tabAttendance": "Prezență",
+    "homework": "Teme pentru acasă",
+    "documents": "Dosar Documentar & Acte",
+    "userManagement": "Gestiune Administratori",
+    "schoolManagement": "Gestiune Școli"
   },
   "udaPage": {
     "title": "Planificare Didactică (UdA)",
-    "subtitle": "Proiectare curriculară pe Unități de Învățare, competențe transversale și ore alocate",
+    "subtitle": "Proiectare curriculară pe Unități de Învățare și competențe",
     "newUda": "UdA Nouă",
     "filterSubject": "Filtrează după Materie",
     "filterClass": "Filtrează după Clasă",
@@ -334,7 +357,7 @@ export default {
     "completed": "Finalizată",
     "targetCompetencies": "Competențe Țintă",
     "evaluationCriteria": "Criterii de Evaluare",
-    "noUdaFound": "Nicio Unitate de Învățare prezentă",
+    "noUdaFound": "Nicio Unitate de Învățare găsită",
     "noUdaFoundDesc": "Nu există UdA în baza de date pentru selecția curentă.",
     "createInDb": "Creează UdA în Baza de Date",
     "totalHours": "Ore Totale",
@@ -356,14 +379,22 @@ export default {
     "noUda": "Nicio Unitate de Învățare prezentă pentru această clasă.",
     "objectives": "Obiective de Învățare",
     "methodologies": "Metodologii Didactice",
-    "subjectLabel": "Subject *",
-    "descriptionLabel": "Description",
-    "createTitle": "Plan Lesson Draft",
-    "classLabel": "Class"
+    "subjectLabel": "Materie *",
+    "descriptionLabel": "Descriere",
+    "createTitle": "Planifică Ciornă Lecție",
+    "classLabel": "Clasă",
+    "allSubjects": "Toate materiile",
+    "allClasses": "Toate clasele",
+    "published": "Publicată",
+    "archived": "Arhivată",
+    "noUdaDesc": "Nu există UdA disponibile",
+    "goalsLabel": "Obiective educaționale",
+    "durationHours": "Ore alocate",
+    "editTitle": "Modifică Unitatea de Învățare"
   },
   "competenciesPage": {
-    "title": "Evaluarea Competențelor Europene",
-    "subtitle": "Grilă de competențe transversale europene cu niveluri de stăpânire A, B, C, D",
+    "title": "Evaluarea Competențelor",
+    "subtitle": "Evaluare continuă și grilele competențelor cheie europene",
     "student": "Elev",
     "descriptor": "Descriptor Competență",
     "level": "Nivel Obținut",
@@ -396,83 +427,90 @@ export default {
     "notEvaluated": "Neevaluat",
     "downloadPdf": "Descarcă Certificat PDF",
     "semester": "Semestru",
-    "gridTitle": "Grila Competențelor Cheie Europene",
+    "gridTitle": "Grila Competențelor Cheie",
     "colCompetence": "Competență Cheie",
     "colLevel": "Nivel de Stăpânire",
-    "colNotes": "Descriptor / Observații",
+    "colNotes": "Descriptor / Note",
     "addDescriptor": "Adaugă descriptor...",
     "levelA": "A - Avansat",
     "levelB": "B - Intermediar",
-    "levelC": "C - De bază",
+    "levelC": "C - De Bază",
     "levelD": "D - Inițial",
-    "generatingPdf": "Generating PDF..."
+    "generatingPdf": "Se generează PDF-ul...",
+    "tabSubjects": "Competențe Disciplinare",
+    "tabKeyCompetencies": "Competențe Cheie Europene",
+    "btnEvaluate": "Evaluează",
+    "levelAssigned": "Nivel Atribuit",
+    "actions": "Acțiuni",
+    "selectClassSubjectPrompt": "Selectați o clasă și o materie pentru evaluare",
+    "noEvaluationsFound": "Nu s-au găsit evaluări de competențe"
   },
   "gradesPage": {
-    "title": "Gestiune Catalog Note",
-    "subtitle": "Introducere, calcul medii și istoric evaluări pe clase",
-    "newTest": "Test Nou",
+    "title": "Gestiune Catalog de Note",
+    "subtitle": "Acordare note, calcul medii și istoric pe clasă",
+    "newTest": "Lucrare / Test Nou",
     "importCSV": "Importă CSV",
     "printReport": "Descarcă Raport PDF",
     "filterDate": "Data Notei",
     "gradeType": "Tip Notă",
-    "showRubric": "Afișează Rubrica",
+    "showRubric": "Vezi Barem",
     "written": "Scris",
     "oral": "Oral",
     "practical": "Practic",
-    "substitutionWarningTitle": "Mod Suplinire - Consultarea și Introducerea Notelor Dezactivate",
-    "substitutionWarningDesc": "Această clasă nu face parte din catedra dumneavoastră titulară. Introducerea notelor este rezervată profesorilor titulari.",
+    "substitutionWarningTitle": "Mod Suplinire - Acordarea Notelor Dezactivată",
+    "substitutionWarningDesc": "Această clasă nu face parte din orele dumneavoastră titulare.",
     "weight": "Pondere",
-    "date": "Dată",
-    "notes": "Observații Notă",
+    "date": "Data",
+    "notes": "Observații",
     "student": "Elev",
     "average": "Medie",
     "overallAverage": "Medie Generală",
-    "matrixView": "Vizualizare Matrice (Rapidă)",
-    "standardView": "Vizualizare Listă Standard",
+    "matrixView": "Vizualizare Tabelară",
+    "standardView": "Vizualizare Listă",
     "saveGrades": "Salvează Notele",
     "statisticsTitle": "Statistici Note",
     "totalGrades": "Note Acordate",
     "distribution": "Distribuție",
-    "cannotEditOtherTeacherGrade": "You cannot edit grades created by another teacher",
-    "sharedGradesCaption": "Grades shared with class",
-    "confirmDeleteGrade": "Are you sure you want to delete this grade?",
-    "insertGrade": "Insert Grade",
-    "invalidGrade": "Invalid grade value",
-    "matrixViewTitle": "Grade Matrix Grid",
-    "matrixViewKbdHint": "Use Tab to navigate between cells, Enter to confirm",
-    "saveAllGrades": "Save All Grades",
-    "besDsaMeasures": "Dispensing / Compensatory Measures",
-    "insertAtLeastOneGrade": "Enter at least one grade before saving",
-    "matrixGradeDesc": "Quick tabular grade entry",
-    "noGrades": "No evaluations present",
-    "finalOutcome": "Final Outcome",
+    "cannotEditOtherTeacherGrade": "Nu puteți modifica notele puse de un alt profesor",
+    "sharedGradesCaption": "Note vizibile pentru clasă",
+    "confirmDeleteGrade": "Sigur doriți să ștergeți această notă?",
+    "insertGrade": "Acordă Notă",
+    "invalidGrade": "Valoare notă nevalidă",
+    "matrixViewTitle": "Grilă de Notare",
+    "matrixViewKbdHint": "Folosiți Tab pentru navigare și Enter pentru confirmare",
+    "saveAllGrades": "Salvează Toate Notele",
+    "besDsaMeasures": "Măsuri de Sprijin / Adaptare",
+    "insertAtLeastOneGrade": "Introduceți cel puțin o notă înainte de salvare",
+    "matrixGradeDesc": "Introducere rapidă tabelară a notelor",
+    "noGrades": "Nicio notă înregistrată",
+    "finalOutcome": "Rezultat Final",
     "studentTitle": "Notele Mele",
     "filtersTitle": "Filtre",
     "semesterLabel": "Semestru",
     "periodLabel": "Perioadă",
     "periods": {
       "all": "Toate",
-      "lastMonth": "Ultima lună",
-      "lastWeek": "Ultima săptămână"
+      "lastMonth": "Ultima Lună",
+      "lastWeek": "Ultima Săptămână"
     },
     "averageTrends": "Evoluție Medii",
-    "simulatorTitle": "Simulator & Proiecții",
-    "sufficiencyHeader": "PENTRU A ATINGE NOTA DE TRECERE (6.0):",
-    "currentAvg": "Media actuală: {avg}",
-    "neededGrade": "Nota următoare: {needed}",
-    "simulateNextGrade": "SIMULEAZĂ URMĂTOAREA NOTĂ:",
-    "selectSubject": "Selectează Materia",
-    "hypotheticalGrade": "Nota ipotetică",
+    "simulatorTitle": "Simulator de Note & Prognoză",
+    "sufficiencyHeader": "PENTRU A PROMOVA (MEDIE 6.0 / 10):",
+    "currentAvg": "Medie actuală: {avg}",
+    "neededGrade": "Următoarea notă necesară: {needed}",
+    "simulateNextGrade": "SIMULAȚI URMĂTOAREA NOTĂ:",
+    "selectSubject": "Selectați Materia",
+    "hypotheticalGrade": "Notă ipotetică",
     "gradeRuleError": "Introduceți o notă între 1 și 10",
     "newAverage": "Noua Medie",
-    "tableTitle": "Catalog de Note",
+    "tableTitle": "Catalogul de Note",
     "loading": "Se încarcă notele...",
     "cols": {
       "date": "Data",
-      "subject": "Materia",
-      "evalType": "Tip probă",
+      "subject": "Materie",
+      "evalType": "Tip Proba",
       "category": "Categorie",
-      "value": "Nota",
+      "value": "Notă",
       "desc": "Subiect"
     },
     "evalTypes": {
@@ -481,8 +519,21 @@ export default {
       "practical": "Practic"
     },
     "unknownSubject": "Materie necunoscută",
-    "reportDownloadSuccess": "Raport PDF descărcat cu succes",
-    "reportDownloadError": "Eroare la descărcarea raportului PDF"
+    "reportDownloadSuccess": "Foaia matricolă a fost descărcată cu succes",
+    "reportDownloadError": "Eroare la descărcarea foii matricole",
+    "gradeTypes": {
+      "standard": "Standard",
+      "test": "Test / Teză",
+      "bonus": "Puncte Bonus"
+    },
+    "simulatedAvg": "Medie Simulată",
+    "pointsNeeded": "Puncte Necesare",
+    "status": "Stare",
+    "sufficient": "Promovat",
+    "insufficient": "Nepromovat",
+    "recentGrades": "Ultimele Note",
+    "periodGrades": "Note pe Semestru",
+    "finalGrade": "Notă Finală"
   },
   "didacticsPage": {
     "title": "Materiale Didactice & Resurse",
@@ -617,36 +668,36 @@ export default {
     "hoursPerWeek": "Ore pe săptămână"
   },
   "colloquiPage": {
-    "title": "Programare Audiențe Școală-Familie",
-    "subtitle": "Gestiunea disponibilității, orarelor și întâlnirilor cu părinții",
-    "addSlot": "Adaugă Disponibilitate",
-    "activeSlots": "Intervale Introduse",
-    "bookings": "Programări Părinți",
+    "title": "Ședințe și Consultații cu Părinții",
+    "subtitle": "Gestiunea disponibilităților și a programărilor pentru consultații",
+    "addSlot": "Adaugă Interval",
+    "activeSlots": "Intervale Disponibile",
+    "bookings": "Programări Înregistrate",
     "booked": "Rezervat",
     "available": "Disponibil",
-    "completed": "Încheiat",
+    "completed": "Efectuat",
     "cancelled": "Anulat",
-    "parentName": "Părinte / Tutore",
-    "studentName": "Elev",
-    "slotTime": "Data & Ora Interval",
-    "notes": "Note audiență",
-    "configModalTitle": "Configurează Intervale de Audiență",
-    "dayOfWeek": "Ziua Săptămânii",
-    "startTime": "Ora Început",
-    "endTime": "Ora Sfârșit",
-    "slotDuration": "Durată Interval (Minute)",
-    "meetingMode": "Format Întâlnire",
-    "inPerson": "În Persoană (La Școală)",
-    "online": "Online (Apel Video)",
-    "saveSlots": "Salvează Disponibilitatea",
-    "createSlotsTitle": "Creează Disponibilitate Audiențe",
-    "duration": "Durată (min)",
-    "break": "Pauză (min)",
+    "parentName": "Nume Părinte",
+    "studentName": "Nume Elev",
+    "slotTime": "Orar",
+    "notes": "Observații",
+    "configModalTitle": "Configurare Disponibilități",
+    "dayOfWeek": "Ziua din Săptămână",
+    "startTime": "Ora de Început",
+    "endTime": "Ora de Sfârșit",
+    "slotDuration": "Durată per Întâlnire (min)",
+    "meetingMode": "Modalitate",
+    "inPerson": "În Persoană",
+    "online": "Online / Video",
+    "saveSlots": "Salvează Intervale",
+    "createSlotsTitle": "Generează Intervale Automat",
+    "duration": "Durată",
+    "break": "Pauză între întâlniri",
     "generateSlots": "Generează Intervale",
-    "parent": "Părinte"
+    "parent": "Părinte / Tutore"
   },
   "studentAttendance": {
-    "title": "Prezențele & Absențele Mele",
+    "title": "Prezența & Absențele Mele",
     "subtitle": "Istoric detaliat al prezențelor, absențelor și întârzierilor"
   },
   "substitutionsPage": {
@@ -714,11 +765,11 @@ export default {
     "bodyLabel": "Textul Comunicatului *",
     "recipientsLabel": "Destinatari (Roluri)",
     "publish": "Publică Comunicarea",
-    "circular": "Circular"
+    "circular": "Circulară"
   },
   "documentsPage": {
-    "title": "Dosar Documente & Acte Școlare",
-    "subtitle": "Arhivă centralizată a documentelor școlare și dosarelor elevilor",
+    "title": "Arhivă Documente și Acte",
+    "subtitle": "Gestiunea documentelor oficiale, circularelor, adeverințelor și dosarelor elevilor",
     "uploadDoc": "Încarcă Document",
     "generateCert": "Generează Adeverință",
     "certEnrollment": "Adeverință de Înscriere",
@@ -733,38 +784,41 @@ export default {
     "selectTemplate": "Selectează Șablon",
     "noPreview": "Nicio previzualizare disponibilă",
     "reviewTitle": "Revizuire Document",
-    "documentsList": "Document List",
-    "uploadDocument": "Upload Document",
-    "templateManagement": "Template Management",
-    "newTemplate": "New Template",
-    "noTemplates": "No templates available",
-    "noTemplatesDesc": "Create a new customized template for your school",
-    "editTemplate": "Edit Template",
-    "templateName": "Template Name",
-    "templateContent": "Template Content",
-    "certificates": "Certificates",
-    "loadError": "Error loading document",
-    "download": "Download Document",
-    "inbox": "Inbox & Received Documents",
-    "searchPlaceholder": "Search by title, protocol or sender...",
-    "approveSelected": "Approve Selected",
-    "archive": "Archive",
-    "favorite": "Favorite",
-    "titleLabel": "Document Title",
-    "favoriteAdded": "Added to favorites",
-    "favoriteRemoved": "Removed from favorites",
-    "batchApproveTitle": "Batch Document Approval",
-    "batchApproveConfirm": "Are you sure you want to approve selected documents?",
-    "documentsApproved": "Documents approved successfully",
-    "documentsArchived": "Documents archived successfully",
+    "documentsList": "Listă Documente",
+    "uploadDocument": "Încarcă Document",
+    "templateManagement": "Gestiune Șabloane",
+    "newTemplate": "Șablon Nou",
+    "noTemplates": "Nu există șabloane disponibile",
+    "noTemplatesDesc": "Creați un nou șablon personalizat pentru școala dumneavoastră",
+    "editTemplate": "Modifică Șablon",
+    "templateName": "Nume Șablon",
+    "templateContent": "Conținut Șablon",
+    "certificates": "Adeverințe",
+    "loadError": "Eroare la încărcarea documentului",
+    "download": "Descarcă",
+    "inbox": "Mesaje Primite & Documente Recepționate",
+    "searchPlaceholder": "Căutare după titlu, număr de înregistrare sau expeditor...",
+    "approveSelected": "Aprobă Selecția",
+    "archive": "Arhivează",
+    "favorite": "Favorit",
+    "titleLabel": "Titlu Document",
+    "favoriteAdded": "Adăugat la favorite",
+    "favoriteRemoved": "Eliminat din favorite",
+    "batchApproveTitle": "Aprobare Masivă Documente",
+    "batchApproveConfirm": "Sigur doriți să aprobați documentele selectate?",
+    "documentsApproved": "Documentele au fost aprobate cu succes",
+    "documentsArchived": "Documentele au fost arhivate cu succes",
     "parentTitle": "Documente și Comunicări",
     "parentSubtitle": "Consultare și descărcare documente oficiale pentru {name}",
     "searchPlaceholderDoc": "Căutare document...",
     "tabs": {
-      "all": "Toate Documentele",
+      "all": "Toate",
       "reportCards": "Carnete & Evaluări",
-      "circulars": "Circulare & Formulare",
-      "plans": "Planuri Educaționale (PDP/PEI)"
+      "circulars": "Circulare",
+      "plans": "Planuri Educaționale (PDP/PEI)",
+      "certificates": "Adeverințe",
+      "minutes": "Procese-Verbale",
+      "studentFiles": "Dosare Elevi"
     },
     "loadingDatabase": "Se încarcă documentele din baza de date...",
     "isNew": "Nou",
@@ -785,7 +839,10 @@ export default {
     "fascicoloFallbackTitle": "Document Elev",
     "fascicoloFallbackSubtitle": "Dosarul elevului",
     "previewDialogMessage": "Detalii document: {subtitle}. Data: {date}. Statut: {status}",
-    "downloadStarted": "Se descarcă documentul: {title}"
+    "downloadStarted": "Se descarcă documentul: {title}",
+    "upload": "Încarcă Document",
+    "tableTitle": "Documente Oficiale",
+    "noDocs": "Nu există documente disponibile în această secțiune."
   },
   "notesPage": {
     "title": "Gestiune Note Disciplinare & Observații",
@@ -832,9 +889,9 @@ export default {
     "currentPassword": "Parolă Curentă",
     "newPassword": "Parolă Nouă",
     "saveSettings": "Salvează Preferințele",
-    "profile": "User Profile",
-    "confirmPassword": "Confirm New Password",
-    "changePassword": "Change Password"
+    "profile": "Profil Utilizator",
+    "confirmPassword": "Confirmă Noua Parolă",
+    "changePassword": "Schimbă Parola"
   },
   "nav": {
     "dashboard": "Panou",
@@ -888,7 +945,7 @@ export default {
     "trips": "Excursii & Vizite",
     "payments": "Plăți",
     "assemblies": "Adunări & Ședințe",
-    "children": "My Children"
+    "children": "Copiii Mei"
   },
   "categories": {
     "anagraficheClassi": "Date Personale & Clase",
@@ -903,8 +960,8 @@ export default {
     "comunicazioniAccount": "Comunicări & Cont"
   },
   "classes": {
-    "linguisticGroup": "Grupă Lingvistică / Opțională",
-    "linguisticGroupLabel": "Grupă Lingvistică: {name}"
+    "linguisticGroup": "Profil / Grup Lingvistic",
+    "linguisticGroupLabel": "Profil: {name}"
   },
   "roles": {
     "admin": "Administrator",
@@ -1065,7 +1122,7 @@ export default {
       "step6_title": "Setări Sistem",
       "step6_desc": "Configurați politicile de securitate, autentificarea în doi pași și integrările e-learning."
     },
-    "keyboardHint": "Use arrows to navigate"
+    "keyboardHint": "Folosiți săgețile pentru navigare"
   },
   "help": {
     "title": "Centru de Ajutor",
@@ -1105,7 +1162,32 @@ export default {
       "q9": "Cum schimb limba și tema întunecată?",
       "a9": "Accesați \"Setări > Profil\". Puteți alege limba dorită și activa modul Dark sau fontul pentru dislexie.",
       "q10": "Cum anulez o prezență sau o notă introdusă din greșeală?",
-      "a10": "După fiecare introducere apare un mesaj temporar cu butonul \"Anulează\" activ timp de 15 secunde."
+      "a10": "După fiecare introducere apare un mesaj temporar cu butonul \"Anulează\" activ timp de 15 secunde.",
+      "attendance": {
+        "title": "Marrja e Mungesave & Nënshkrimi i Mësimit",
+        "desc": "Si të merrni praninë e nxënësve dhe të nënshkruani orën mësimore.",
+        "content": "Dhe regjistroni mungesat dhe temat e mësimit brenda pak sekondave.\n\nHapi 1: Hapni 'Ditari i Klasës' dhe zgjidhni klasën tuaj.\nHapi 2: Shënoni nxënësit si të pranishëm, mungesë ose me vonesë.\nHapi 3: Vendosni temën dhe nënshkruani orën."
+      },
+      "grades": {
+        "title": "Hedhja e Notave dhe Vlerësimi",
+        "desc": "Si të vendosni notat me gojë, me shkrim dhe praktike.",
+        "content": "Menaxhoni notat dhe vlerësimet për secilin nxënës me lehtësi."
+      },
+      "uda": {
+        "title": "Planifikimi i Njësive Mësimore (UdA)",
+        "desc": "Dizajnimi kurrikular sipas kompetencave.",
+        "content": "Strukturoni orët mësimore dhe vlerësoni kompetencat kyçe evropiane."
+      },
+      "agenda": {
+        "title": "Detyrat e Shtëpisë & Kalendari",
+        "desc": "Si të caktoni detyrat dhe provimet.",
+        "content": "Caktoni afatet dhe organizoni ngarkesën e studimit për klasën."
+      },
+      "colloqui": {
+        "title": "Takimet me Prindërit",
+        "desc": "Caktimi i orareve të lira për takime individuale.",
+        "content": "Përcaktoni fashat orare dhe konfirmoni kërkesat e prindërve."
+      }
     },
     "student": {
       "cat_grades": "Notele Mele",
@@ -1132,7 +1214,22 @@ export default {
       "q9": "Ce fac dacă am uitat parola?",
       "a9": "Pe pagina de autentificare apăsați \"Ați uitat parola?\" și introduceți adresa de email pentru resetare.",
       "q10": "Cum folosesc căutarea rapidă Ctrl+K?",
-      "a10": "Apăsați combinația Ctrl+K (sau Cmd+K pe Mac) pentru a deschide bara de căutare universală."
+      "a10": "Apăsați combinația Ctrl+K (sau Cmd+K pe Mac) pentru a deschide bara de căutare universală.",
+      "grades": {
+        "title": "Konsultimi i Notave & Mesatareve",
+        "desc": "Si të kontrolloni notat dhe ecurinë tuaj akademike.",
+        "content": "Shikoni notat e fundit, mesataret sipas lëndëve dhe simuloni notat kaluese."
+      },
+      "homework": {
+        "title": "Detyrat & Kalendari i Studimit",
+        "desc": "Organizoni detyrat dhe përgatitjet për testet.",
+        "content": "Mbani nën kontroll afatet e detyrave dhe njoftimet nga mësuesit."
+      },
+      "attendance": {
+        "title": "Prania & Arsyetimet",
+        "desc": "Kontrolloni mungesat dhe vonesat tuaja.",
+        "content": "Shikoni statusin e mungesave dhe kërkesave për arsyetim."
+      }
     },
     "parent": {
       "cat_monitoring": "Monitorizare Copil",
@@ -1159,7 +1256,22 @@ export default {
       "q9": "Pot delega un alt tutore pentru vizualizarea notelor?",
       "a9": "Secretariatul poate asocia mai multe conturi de părinte/tutore aceluiași elev.",
       "q10": "Ce se întâmplă în modul offline?",
-      "a10": "Aplicația afișează datele salvate în cache, iar acțiunile se vor sincroniza automat la revenirea conexiunii."
+      "a10": "Aplicația afișează datele salvate în cache, iar acțiunile se vor sincroniza automat la revenirea conexiunii.",
+      "grades": {
+        "title": "Vlerësimi & Dëftesa",
+        "desc": "Ndiqni notat dhe vlerësimet e fëmijëve tuaj.",
+        "content": "Qasje e menjëhershme në të gjitha notat, mesataret dhe dëftesat zyrtare."
+      },
+      "attendance": {
+        "title": "Arsyetimi i Mungesave",
+        "desc": "Si të arsyetoni mungesat e fëmijës tuaj online.",
+        "content": "Dërgoni arsyetime për mungesat dhe vonesat me një klikim."
+      },
+      "colloqui": {
+        "title": "Rezervimi i Takimeve me Mësuesit",
+        "desc": "Caktoni takime individuale me stafin mësimdhënës.",
+        "content": "Zgjidhni orarin e përshtatshëm dhe rezervoni takimin online ose në shkollë."
+      }
     },
     "secretary": {
       "cat_students": "Elevi",
@@ -1186,7 +1298,37 @@ export default {
       "q9": "Cum verific situația plăților școlare?",
       "a9": "În secțiunea de plăți puteți monitoriza încasările și trimite atenționări pentru sumele restante.",
       "q10": "Cum anulez un document eliberat greșit?",
-      "a10": "În arhiva documentelor identificați numărul de înregistrare și apăsați \"Anulează cu motivare\"."
+      "a10": "În arhiva documentelor identificați numărul de înregistrare și apăsați \"Anulează cu motivare\".",
+      "students": {
+        "title": "Menaxhimi i Regjistrit të Nxënësve",
+        "desc": "Kërkimi, regjistrimi dhe përditësimi i të dhënave të nxënësve.",
+        "content": "Administroni dosjet akademike, kontaktet dhe regjistrimet e reja."
+      },
+      "classes": {
+        "title": "Organizimi i Klasave dhe Seksioneve",
+        "desc": "Krijimi i klasave dhe caktimi i mësuesve titullarë.",
+        "content": "Strukturoni vitin shkollor, oraret dhe ndarjen e lëndëve."
+      },
+      "certificates": {
+        "title": "Gjenerimi i Vërtetimeve",
+        "desc": "Lëshimi i dokumenteve zyrtare dhe vërtetimeve të frekuentimit.",
+        "content": "Gjeneroni dokumente me vulë digjitale dhe nënshkrim zyrtar në sekonda."
+      },
+      "timetable": {
+        "title": "Orari Mësimor dhe Zëvendësimet",
+        "desc": "Menaxhimi i orareve javore dhe zëvendësimit të mësuesve.",
+        "content": "Planifikoni orët dhe mbuloni mungesat e mësuesve."
+      },
+      "communications": {
+        "title": "Qarkoret dhe Njoftimet Zyrtare",
+        "desc": "Publikimi i njoftimeve dhe monitorimi i marrjes së dijenisë.",
+        "content": "Dërgoni qarkore zyrtare për stafin, prindërit dhe nxënësit."
+      },
+      "reports": {
+        "title": "Raportet dhe Statistikat",
+        "desc": "Nxjerrja e statistikave dhe eksportimi i të dhënave.",
+        "content": "Gjeneroni raporte të agreguara për frekuentimin dhe rezultatet."
+      }
     },
     "admin": {
       "cat_monitoring": "Monitorizare Sistem",
@@ -1213,7 +1355,42 @@ export default {
       "q9": "Cum vizualizez matricea de permisiuni (RBAC)?",
       "a9": "În \"Roluri & Permisiuni\" găsiți matricea interactivă a drepturilor de acces pentru toate rolurile.",
       "q10": "Cum activez modul de mentenanță?",
-      "a10": "În \"Setări Sistem\" activați comutatorul \"Mod Mentenanță\" pentru a suspenda accesul utilizatorilor non-admin."
+      "a10": "În \"Setări Sistem\" activați comutatorul \"Mod Mentenanță\" pentru a suspenda accesul utilizatorilor non-admin.",
+      "monitoring": {
+        "title": "Monitorimi i Sistemit",
+        "desc": "Monitorimi i performancës së serverit dhe bazës së të dhënave.",
+        "content": "Kontrolloni gjendjen teknike, memorien RAM dhe shërbimet e sistemit në kohë reale."
+      },
+      "users": {
+        "title": "Menaxhimi i Përdoruesve",
+        "desc": "Krijimi i llogarive, të drejtat dhe politikat e sigurisë.",
+        "content": "Menaxhoni të gjitha llogaritë e përdoruesve dhe konfiguroni 2FA."
+      },
+      "schools": {
+        "title": "Menaxhimi i Institucioneve",
+        "desc": "Konfigurimi i shkollave dhe degëve arsimore.",
+        "content": "Regjistroni kodet zyrtare dhe të dhënat administrative të shkollave."
+      },
+      "security": {
+        "title": "Politikat e Sigurisë",
+        "desc": "Konfigurimi i fjalëkalimeve dhe kërkesave të sigurisë.",
+        "content": "Përshtatni rregullat e sigurisë sipas standardeve më të larta."
+      },
+      "analytics": {
+        "title": "Analitika dhe Parandalimi i Braktisjes",
+        "desc": "Analizë parashikuese për rrezikun e braktisjes shkollore.",
+        "content": "Identifikoni nxënësit me rrezik mungesash dhe rezultatesh të ulëta."
+      },
+      "integrations": {
+        "title": "Integrimet dhe Hyrja me Një Klik (SSO)",
+        "desc": "Lidhja me Google Workspace dhe Microsoft 365.",
+        "content": "Aktivizoni hyrjen me llogaritë institucionale."
+      },
+      "audit": {
+        "title": "Regjistri i Auditimit & Gjurmueshmëria",
+        "desc": "Gjurmimi i plotë i veprimeve të përdoruesve në sistem.",
+        "content": "Regjistër i pandryshueshëm i të gjitha veprimeve për transparencë maksimale."
+      }
     }
   },
   "onboardingExtra": {
@@ -1542,6 +1719,16 @@ export default {
         "title": "Plan Educațional Personalizat",
         "desc": "Măsuri de sprijin pentru elevi cu cerințe speciale.",
         "content": "Configurați instrumentele compensatorii și dispensatorii prevăzute în planul educațional."
+      },
+      "uda": {
+        "title": "Planifikimi i Njësive Mësimore (UdA)",
+        "desc": "Dizajnimi kurrikular sipas kompetencave.",
+        "content": "Strukturoni orët mësimore dhe vlerësoni kompetencat kyçe evropiane."
+      },
+      "colloqui": {
+        "title": "Takimet me Prindërit",
+        "desc": "Caktimi i orareve të lira për takime individuale.",
+        "content": "Përcaktoni fashat orare dhe konfirmoni kërkesat e prindërve."
       }
     },
     "student": {
@@ -1611,6 +1798,21 @@ export default {
         "title": "Motivare Absențe",
         "desc": "Motivarea absențelor direct din aplicație.",
         "content": "Selectați absența copilului, indicați motivul și trimiteți motivarea online."
+      },
+      "grades": {
+        "title": "Vlerësimi & Dëftesa",
+        "desc": "Ndiqni notat dhe vlerësimet e fëmijëve tuaj.",
+        "content": "Qasje e menjëhershme në të gjitha notat, mesataret dhe dëftesat zyrtare."
+      },
+      "attendance": {
+        "title": "Arsyetimi i Mungesave",
+        "desc": "Si të arsyetoni mungesat e fëmijës tuaj online.",
+        "content": "Dërgoni arsyetime për mungesat dhe vonesat me një klikim."
+      },
+      "colloqui": {
+        "title": "Rezervimi i Takimeve me Mësuesit",
+        "desc": "Caktoni takime individuale me stafin mësimdhënës.",
+        "content": "Zgjidhni orarin e përshtatshëm dhe rezervoni takimin online ose në shkollë."
       }
     },
     "secretary": {
@@ -1711,39 +1913,49 @@ export default {
   "composables": {
     "adminUsers": {
       "confirmTitle": "Confirmare ștergere",
-      "confirmMsg": "Sigur doriți să ștergeți acest administrator?"
+      "confirmMsg": "Sigur doriți să ștergeți acest administrator?",
+      "confirmDeleteTitle": "Confirmare ștergere",
+      "confirmDeleteMsg": "Sigur doriți să ștergeți definitiv acest utilizator?"
     },
     "attendance": {
       "saveSuccess": "Prezențe salvate cu succes",
       "saveError": "Imposibil de salvat prezențele",
       "requestSent": "Cerere de motivare trimisă",
-      "requestError": "Imposibil de trimis cererea de motivare"
+      "requestError": "Imposibil de trimis cererea de motivare",
+      "savedSuccess": "Prezența a fost salvată cu succes",
+      "justifiedSuccess": "Absența a fost motivată cu succes"
     },
     "children": {
       "addSuccess": "Copil adăugat cu succes",
       "removeConfirmTitle": "Confirmare eliminare",
       "removeConfirmMsg": "Sigur doriți să eliminați acest profil de elev?",
-      "removeSuccess": "Profil elev eliminat"
+      "removeSuccess": "Profil elev eliminat",
+      "noChildrenFound": "Nu s-au găsit copii asociați"
     },
     "colloqui": {
-      "bookingConfirmed": "Programare audiență confirmată",
-      "bookingCancelled": "Programare audiență anulată",
+      "bookingConfirmed": "Programarea a fost confirmată cu succes",
+      "bookingCancelled": "Programarea a fost anulată cu succes",
       "slotsCreated": "{count} intervale create cu succes",
       "slotsError": "Eroare la crearea intervalelor de audiență",
-      "invalidDuration": "Invalid appointment duration",
-      "invalidTimeRange": "Invalid time range"
+      "invalidDuration": "Durata programării este nevalidă",
+      "invalidTimeRange": "Intervalul orar este nevalid",
+      "slotDeleted": "Intervalul a fost șters cu succes"
     },
     "documents": {
       "draftCreated": "Ciornă document creată",
       "draftError": "Imposibil de creat ciorna",
       "reviewSuccess": "Document {decision}",
       "reviewError": "Revizuire eșuată",
-      "downloading": "Descărcare {title} în curs..."
+      "downloading": "Descărcare {title} în curs...",
+      "uploadSuccess": "Documentul a fost încărcat cu succes",
+      "deleteSuccess": "Documentul a fost șters cu succes"
     },
     "grades": {
       "fillRequired": "Completați toate câmpurile obligatorii pentru notă",
       "saveSuccess": "Notă salvată cu succes",
-      "saveError": "Imposibil de salvat nota"
+      "saveError": "Imposibil de salvat nota",
+      "gradeSaved": "Nota a fost salvată cu succes",
+      "gradeDeleted": "Nota a fost ștearsă cu succes"
     },
     "schools": {
       "updated": "Școală actualizată cu succes",
@@ -1751,25 +1963,31 @@ export default {
       "operationFailed": "Operațiune eșuată",
       "deleteConfirmTitle": "Confirmare ștergere",
       "deleteConfirmMsg": "Sigur doriți să ștergeți această școală?",
-      "deleted": "Școală ștearsă cu succes"
+      "deleted": "Școală ștearsă cu succes",
+      "schoolSaved": "Școala a fost salvată cu succes"
     },
     "undo": {
       "cancelWithSeconds": "Anulează ({remaining}s)",
       "actionCancelled": "Acțiune anulată",
-      "cancelError": "Eroare la anulare"
+      "cancelError": "Eroare la anulare",
+      "actionUndone": "Acțiunea a fost anulată cu succes"
     },
     "users": {
       "importStarted": "Import utilizatori demarat",
-      "importError": "Error importing users"
+      "importError": "Eroare la importul utilizatorilor",
+      "userCreated": "Utilizatorul a fost creat cu succes",
+      "userUpdated": "Utilizatorul a fost actualizat cu succes",
+      "userDeleted": "Utilizatorul a fost șters cu succes",
+      "passwordResetSuccess": "Parola a fost resetată cu succes"
     }
   },
   "security": {
     "title": "Securitate & Conformitate Legală",
-    "subtitle": "Semnătură Electronică Calificată, Arhivare Digitală și Jurnal Criptografic Imutabil",
-    "downloadCadZip": "Descarcă Pachet Arhivare ZIP",
-    "feqTitle": "Semnătură Calificată",
+    "subtitle": "Semnătură Electronică Calificată (FEQ), Arhivare Legală și Jurnal de Audit Imutabil",
+    "downloadCadZip": "Descarcă Pachetul ZIP CAD",
+    "feqTitle": "Semnătură Calificată (FEQ)",
     "feqActive": "Activă și Verificată",
-    "feqDesc": "Toate semnăturile din cataloage sunt validate cu marcă temporală SHA-256 cu valoare legală.",
+    "feqDesc": "Toate înregistrările din catalog sunt semnate digital conform standardului eIDAS.",
     "cadTitle": "Păstrare Digitală Conformă",
     "cadManifest": "Pachet XML Manifest",
     "cadDesc": "Conform normelor europene pentru păstrarea digitală a documentelor pe termen lung.",
@@ -1778,19 +1996,21 @@ export default {
     "immutableAuditDesc": "Fiecare modificare generează un bloc securizat criptografic (Block Hashing).",
     "integrityVerifier": "Verificator de Integritate Catalog",
     "verifyNow": "Verifică Integritatea Acum",
-    "allBlocksValid": "Toate blocurile din catalog sunt valide și integre",
+    "allBlocksValid": "Toate blocurile criptografice sunt integre și valide",
     "verifiedOn": "Verificat la",
-    "colAction": "Acțiune / Eveniment",
-    "colActor": "Utilizator / Modificator",
-    "colPrevHash": "Hash Anterior (SHA-256)",
-    "colCurrHash": "Hash Curent (SHA-256)",
+    "colAction": "Acțiune",
+    "colActor": "Utilizator",
+    "colPrevHash": "Hash Anterior",
+    "colCurrHash": "Hash Curent",
     "colCryptoStatus": "Stare Criptografică",
     "intact": "Integru",
-    "integrityVerified": "Verificare integritate finalizată: Lanț valid!",
-    "integrityError": "Eroare la verificarea lanțului criptografic",
-    "cadGenerating": "Generare pachet arhivare ZIP în curs...",
-    "cadDownloaded": "Pachet arhivare descărcat cu succes!",
-    "cadError": "Eroare la descărcarea pachetului de arhivare"
+    "integrityVerified": "Integritatea catalogului a fost verificată cu succes!",
+    "integrityError": "Eroare la verificarea integrității criptografice.",
+    "cadGenerating": "Se generează pachetul de conservare legală CAD...",
+    "cadDownloaded": "Pachetul CAD a fost generat și descărcat cu succes!",
+    "cadError": "Eroare la generarea pachetului CAD.",
+    "blockchainTitle": "Lanț Criptografic de Audit",
+    "blockchainDesc": "Jurnal de audit inalterabil și protejat prin lanț de hash-uri SHA-256."
   },
   "paymentsPage": {
     "title": "Plăți Școlare & PagoPA",
@@ -1828,92 +2048,107 @@ export default {
     "cost": "Taxă de participare"
   },
   "usersPage": {
-    "title": "User Management",
-    "searchPlaceholder": "Search by name, email...",
-    "newUser": "New User",
-    "exportCsv": "Export to CSV",
-    "selectedUsers": "selected users",
-    "deleteSelected": "Delete Selected",
-    "roleStudents": "Students",
-    "roleTeachers": "Teachers",
-    "roleParents": "Parents",
-    "roleStaff": "Staff",
-    "roleCoordinator": "Coordinator",
-    "roleVicePrincipal": "Vice Principal",
-    "rolePrincipal": "Principal",
-    "roleLabel": "Role",
-    "editProfile": "Edit Profile",
-    "resetPassword": "Reset Password",
-    "manageSubjects": "Manage Subjects",
-    "deleteAccount": "Delete Account",
-    "noUsersFound": "No users found"
+    "title": "Gestiune Utilizatori",
+    "searchPlaceholder": "Căutare după nume, email, CNP...",
+    "newUser": "Utilizator Nou",
+    "exportCsv": "Exportă CSV",
+    "selectedUsers": "utilizatori selectați",
+    "deleteSelected": "Șterge selecția",
+    "roleStudents": "Elevi",
+    "roleTeachers": "Profesori",
+    "roleParents": "Părinți / Tutori",
+    "roleStaff": "Personal Administrativ",
+    "roleCoordinator": "Diriginte",
+    "roleVicePrincipal": "Director Adjunct",
+    "rolePrincipal": "Director",
+    "roleLabel": "Rol",
+    "editProfile": "Modifică Profil",
+    "resetPassword": "Resetare Parolă",
+    "manageSubjects": "Alocare Materii",
+    "deleteAccount": "Șterge Cont",
+    "noUsersFound": "Niciun utilizator găsit",
+    "roleSecretary": "Secretariat",
+    "roleAdmin": "Administrator"
   },
   "reportsPage": {
-    "title": "Reports & Analytics",
-    "subtitle": "Statistical summaries, grade averages and exportable documents",
-    "exportPdf": "Export PDF",
-    "exportExcel": "Export Excel"
+    "title": "Rapoarte & Statistici",
+    "subtitle": "Sinteze statistice, medii generale și documente oficiale",
+    "exportPdf": "Exportă PDF",
+    "exportExcel": "Exportă Excel"
   },
   "attendance": {
-    "title": "Attendance & Daily Register",
-    "present": "Present",
+    "title": "Prezență și Condică Zilnică",
+    "present": "Prezent",
     "absent": "Absent",
-    "late": "Late",
-    "earlyExit": "Early Exit",
-    "justified": "Justified",
-    "justify": "Justify",
-    "justifyAbsence": "Justify Absence / Tardy",
-    "reason": "Reason",
-    "healthReasons": "Health Reasons",
-    "familyReasons": "Family Reasons",
-    "medicalVisit": "Medical Appointment",
-    "activityType": "Activity Type",
-    "activityPrefix": "Activity:",
-    "careerGuidance": "Career Guidance",
-    "minutesLate": "Minutes Late",
-    "earlyExitTime": "Exit Time",
-    "standardLesson": "Standard Lesson",
-    "atTime": "at",
-    "totalAbsences": "Total Absences",
-    "noAbsences": "No absences recorded",
-    "pendingJustification": "Pending justification"
+    "late": "Întârziat",
+    "earlyExit": "Învoire / Plecare Anticipată",
+    "justified": "Motivată",
+    "justify": "Motivează",
+    "justifyAbsence": "Motivează Absența / Întârzierea",
+    "reason": "Motiv",
+    "healthReasons": "Motive Medicale",
+    "familyReasons": "Motive Familiale",
+    "medicalVisit": "Consult Medical",
+    "activityType": "Tip Activitate",
+    "activityPrefix": "Activitate",
+    "careerGuidance": "Consiliere & Orientare Profesională",
+    "minutesLate": "minute întârziere",
+    "earlyExitTime": "Ora plecării",
+    "standardLesson": "Oră Obișnuită",
+    "atTime": "la ora",
+    "totalAbsences": "Total Absențe",
+    "noAbsences": "Nu există absențe înregistrate",
+    "pendingJustification": "În așteptarea motivării"
   },
   "studentsPage": {
-    "studentDossier": "Student Dossier",
-    "multiYearHistory": "Multi-Year History",
-    "documentsAndAttachments": "Documents & Attachments",
-    "besDsaDossier": "SEN / Specific Learning Needs Dossier",
-    "besDsaDocumentation": "SEN / Learning Needs Documentation",
-    "newEnrollment": "New Student Enrollment",
-    "personalData": "Personal Data",
-    "birthDate": "Date of Birth",
-    "birthPlace": "Place of Birth",
-    "taxCode": "Tax Code",
-    "gender": "Gender",
-    "residenceAndContacts": "Residence & Contacts",
-    "personalEmail": "Personal Email",
-    "parentsGuardians": "Parents / Guardians",
-    "primaryContact": "Primary Contact",
-    "secondaryContact": "Secondary Contact",
-    "schoolData": "School Data",
-    "assignedClass": "Assigned Class",
-    "enrollmentDate": "Enrollment Date",
-    "documentsSubmitted": "Submitted Documents",
-    "completeEnrollment": "Complete Enrollment",
-    "enrollmentSuccess": "Enrollment completed successfully",
-    "studentFile": "Dossier"
+    "studentDossier": "Dosarul Elevului",
+    "multiYearHistory": "Istoric Multianual",
+    "documentsAndAttachments": "Documente & Anexe",
+    "besDsaDossier": "Dosar Cerințe Educaționale Speciale (CES)",
+    "besDsaDocumentation": "Documentație Planuri Individuale de Învățare",
+    "newEnrollment": "Înscriere Nouă",
+    "personalData": "Date Personale",
+    "birthDate": "Data Nașterii",
+    "birthPlace": "Locul Nașterii",
+    "taxCode": "CNP / Serie Act Identitate",
+    "gender": "Sex",
+    "residenceAndContacts": "Domiciliu și Contact",
+    "personalEmail": "Email Personal",
+    "parentsGuardians": "Părinți / Tutori Legali",
+    "primaryContact": "Contact Principal",
+    "secondaryContact": "Contact Secundar",
+    "schoolData": "Date Școlare",
+    "assignedClass": "Clasa Alocată",
+    "enrollmentDate": "Data Înscrierii",
+    "documentsSubmitted": "Documente Depuse",
+    "completeEnrollment": "Finalizează Înscrierea",
+    "enrollmentSuccess": "Înscrierea a fost finalizată cu succes!",
+    "studentFile": "Fișa Elevului"
   },
   "classesPage": {
-    "currentClass": "Current Class"
+    "currentClass": "Clasa Curentă"
   },
   "admin": {
-    "apiRequests": "API Requests",
-    "userDeleted": "User deleted successfully",
-    "userDeleteError": "Error deleting user"
+    "apiRequests": "Cereri API",
+    "userDeleted": "Utilizatorul a fost șters cu succes",
+    "userDeleteError": "Eroare la ștergerea utilizatorului"
   },
   "auth": {
-    "sessionExpired": "Session expired",
-    "enterPasswordToContinue": "Enter password to continue",
-    "sessionWorkPreserved": "Unsaved changes were preserved"
+    "sessionExpired": "Sesiunea a expirat",
+    "enterPasswordToContinue": "Introduceți parola pentru a continua",
+    "sessionWorkPreserved": "Modificările nesalvate au fost păstrate"
+  },
+  "attendancePage": {
+    "title": "Prezență & Absențe",
+    "subtitle": "Evidența prezenței, întârzierilor și motivărilor",
+    "tableTitle": "Tabel Prezență"
+  },
+  "reportCardPage": {
+    "title": "Foaie Matricolă & Evaluare Finală",
+    "subtitle": "Fișă oficială de evaluare academică la încheierea semestrului",
+    "finalEvaluation": "Rezultat & Decizie Consiliu Profesoral",
+    "semester1": "Semestrul 1",
+    "semester2": "Semestrul 2",
+    "exportPdf": "Exportă PDF"
   }
-};
+}

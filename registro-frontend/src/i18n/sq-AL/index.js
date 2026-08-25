@@ -11,13 +11,13 @@ export default {
     "filter": "Filtro",
     "actions": "Veprime",
     "loading": "Po ngarkohet...",
-    "success": "Operacioni u krye me sukses",
+    "success": "Veprimi u krye me sukses",
     "error": "Ndodhi një gabim",
     "systemSettings": "Cilësimet e Sistemit",
     "language": "Gjuha / Language",
     "security": "Siguria & Autentifikimi",
-    "notifications": "Njoftime & Paralajmërime",
-    "mainMenu": "MENYJA KRYESORE",
+    "notifications": "Njoftimet & Sinjalizimet",
+    "mainMenu": "MENUJA KRYESORE",
     "logout": "Dilni",
     "confirmDelete": "A jeni të sigurt që dëshironi ta fshini këtë përdorues?",
     "period": "Periudha",
@@ -31,40 +31,44 @@ export default {
     "add": "Shto",
     "confirm": "Konfirmo",
     "notes": "Shënime",
-    "category": "Category",
-    "year": "Year",
-    "download": "Download",
-    "city": "City",
-    "zip": "ZIP / Postal Code",
-    "next": "Next",
-    "comment": "Comment",
-    "remove": "Remove",
-    "other": "Other",
-    "info": "Information",
-    "noDescription": "No description",
-    "optionalNotes": "Optional notes",
-    "typeMessage": "Type a message...",
-    "description": "Description",
-    "details": "Details",
-    "noData": "No data available",
-    "history": "History",
-    "active": "Active",
-    "inactive": "Inactive",
-    "all": "All",
-    "fullName": "Full Name",
-    "refresh": "Refresh",
-    "status": "Status",
-    "lastLogin": "Last Login",
-    "user": "User",
-    "activityLog": "Activity Log",
-    "stats": "Quick Stats",
-    "addClass": "New Class",
-    "surname": "Surname",
-    "resetPassword": "Reset Password",
-    "appName": "Electronic Register",
-    "selected": "selected",
-    "preview": "Preview",
-    "review": "Review"
+    "category": "Kategoria",
+    "year": "Viti",
+    "download": "Shkarko",
+    "city": "Qyteti",
+    "zip": "Kodi Postar",
+    "next": "Tjetra",
+    "comment": "Koment",
+    "remove": "Hiq",
+    "other": "Tjetër",
+    "info": "Informacion",
+    "noDescription": "Pa përshkrim",
+    "optionalNotes": "Shënime opsionale",
+    "typeMessage": "Shkruaj një mesazh...",
+    "description": "Përshkrimi",
+    "details": "Detaje",
+    "noData": "Nuk ka të dhëna të disponueshme",
+    "history": "Historiku",
+    "active": "Aktiv",
+    "inactive": "Joaktiv",
+    "all": "Të gjitha",
+    "fullName": "Emri i Plotë",
+    "refresh": "Rifresko",
+    "status": "Gjendja",
+    "lastLogin": "Hyrja e Fundit",
+    "user": "Përdoruesi",
+    "activityLog": "Regjistri i Veprimeve",
+    "stats": "Statistika",
+    "addClass": "Klasë e Re",
+    "surname": "Mbiemri",
+    "resetPassword": "Rivendos Fjalëkalimin",
+    "appName": "Ditari Elektronik",
+    "selected": "të zgjedhur",
+    "preview": "Parapamje",
+    "review": "Rishikim",
+    "viewAll": "Shiko të Gjitha",
+    "noStudentsFound": "Nuk u gjet asnjë nxënës",
+    "readOnlySaveBtn": "Ruajtja është çaktivizuar (Vetëm lexim)",
+    "children": "Fëmijët e lidhur"
   },
   "notFound": {
     "title": "Faqja nuk u gjet",
@@ -74,35 +78,35 @@ export default {
   },
   "login": {
     "welcomeBack": "Mirë se u kthyet",
-    "subtitle": "Hyni për të hyrë në Regjistrin Elektronik",
+    "subtitle": "Hyni për të hyrë në Ditarin Elektronik",
     "emailLabel": "Adresa e Email-it",
     "emailRequired": "Email-i është i detyrueshëm",
     "passwordLabel": "Fjalëkalimi",
     "passwordRequired": "Fjalëkalimi është i detyrueshëm",
     "rememberMe": "Më mbaj mend",
-    "submit": "Hyr",
-    "noAccount": "Nuk keni një llogari?",
+    "submit": "Hyni",
+    "noAccount": "Nuk keni llogari?",
     "contactSecretary": "Kontaktoni Sekretarinë",
     "contactTitle": "Kontaktoni Sekretarinë",
-    "contactSubtitle": "Zgjidhni shkollën tuaj nga menyja për të parë të dhënat e kontaktit të Sekretarisë.",
-    "selectSchool": "Zgjidhni Shkollën / Institutin tuaj",
+    "contactSubtitle": "Zgjidhni shkollën tuaj për të parë të dhënat e kontaktit të sekretarisë.",
+    "selectSchool": "Zgjidhni Shkollën tuaj",
     "noSchoolFound": "Nuk u gjet asnjë shkollë",
-    "emailSegreteria": "Email-i i Sekretarisë",
+    "emailSegreteria": "Email Sekretarie",
     "phone": "Telefoni",
     "sendEmail": "Dërgo Email",
     "copyEmail": "Kopjo Email-in",
-    "emailCopied": "Adresa e email-it u kopjua në kujtesë!",
-    "chooseSchoolPrompt": "Zgjidhni një shkollë nga menyja e mësipërme për të parë të dhënat e kontaktit.",
+    "emailCopied": "Adresa e email-it u kopjua!",
+    "chooseSchoolPrompt": "Zgjidhni shkollën më lart për të parë kontaktet.",
     "sessionExpired": "Për arsye sigurie, seanca ka skaduar. Ju lutemi hyni përsëri.",
     "showPassword": "Shfaq fjalëkalimin",
     "hidePassword": "Fshih fjalëkalimin",
-    "emailInvalid": "Vendosni një adresë email-i të vlefshme",
-    "tooManyAttempts": "Shumë tentativa të pasuksesshme. Provoni përsëri pas {secs} sekondash.",
-    "copyFailed": "Kopjimi automatik dështoi. Kopjoni manualisht:",
-    "loginButton": "Log In",
-    "enterPassword": "Password",
-    "invalidPassword": "Incorrect password",
-    "loginError": "Login error"
+    "emailInvalid": "Ju lutemi vendosni një email të vlefshëm",
+    "tooManyAttempts": "Shumë përpjekje të pasuksesshme. Provoni më vonë.",
+    "copyFailed": "Kopimi në kujtesën e përkohshme dështoi",
+    "loginButton": "Hyni",
+    "enterPassword": "Fjalëkalimi",
+    "invalidPassword": "Fjalëkalim i pasaktë",
+    "loginError": "Gabim gjatë hyrjes"
   },
   "classRegister": {
     "title": "Regjistri i Klasës & Pjesëmarrja",
@@ -167,7 +171,7 @@ export default {
     "tableHeaderGradeNotes": "Shënime për Notën",
     "tableHeaderActions": "Veprime",
     "addDisciplinaryNote": "Shto Vërejtje Disiplinore",
-    "noStudentsFound": "Nuk u gjet asnjë nxënës. Zgjidhni një klasë.",
+    "noStudentsFound": "Nuk u gjet asnjë nxënës. Ju lutemi zgjidhni një klasë.",
     "readOnlySaveBtn": "Vetëm lexim — Ora tashmë e nënshkruar nga një mësues tjetër",
     "updateSaveBtn": "Përditëso Nënshkrimin dhe Pjesëmarrjen",
     "saveBtn": "Ruaj Nënshkrimin dhe Pjesëmarrjen",
@@ -204,48 +208,50 @@ export default {
     "greetingMorning": "Mirëmëngjes",
     "greetingAfternoon": "Mirëdita",
     "greetingEvening": "Mirëmbrëma",
-    "welcomeSub": "Mirë se u kthyet! Ja përmbledhja e aktiviteteve shkollore të sotme.",
+    "welcomeSub": "Mirë se vini! Ja përmbledhja e aktiviteteve shkollore për sot.",
     "todayDate": "Data e Sotme",
     "recentActivity": "Aktiviteti i Fundit",
     "todayLessons": "Mësimet e Sotme",
-    "auditLogs": "Regjistri i Ngjarjeve & Auditimi",
-    "userManagement": "Menaxhimi i Përdoruesve të Sistemit",
-    "schoolManagement": "Menaxhimi i Shkollave",
-    "refreshActivity": "Përditëso Aktivitetin",
+    "auditLogs": "Regjistri i Auditimit",
+    "userManagement": "Menaxhimi i Përdoruesve",
+    "schoolManagement": "Menaxhimi i Shkollës",
+    "refreshActivity": "Rifresko Aktivitetin",
     "noLessons": "Nuk ka mësime të regjistruara",
     "noNotifications": "Nuk ka njoftime të reja",
     "inProgress": "Në zhvillim",
-    "completed": "E përfunduar",
-    "scheduled": "E planifikuar",
+    "completed": "Përfunduar",
+    "scheduled": "Planifikuar",
     "draft": "Draft i Planifikuar",
-    "saveDraft": "Ruaj Draftin e Mësimit",
+    "saveDraft": "Ruaj Draftin",
     "deleteDraft": "Drafti u fshi",
     "topicRequired": "Vendosni temën e mësimit",
-    "draftsListTitle": "Draftet e Mësimeve të Planifikuara",
-    "noDrafts": "Nuk ka drafte mësimi të ruajtura aktualisht.",
+    "draftsListTitle": "Draftet e Mësimeve",
+    "noDrafts": "Nuk ka drafte mësimi për momentin.",
     "signAndRegister": "Nënshkruaj & Regjistro",
-    "draftSaved": "Drafti i mësimit u ruajt për datën {date}!",
-    "draftRegistered": "Drafti u konvertua dhe u regjistrua me sukses!",
-    "optionsMenu": "Opsione dhe shkurtore",
-    "statTotalSchools": "Gjithsej Shkolla",
+    "draftSaved": "Drafti i mësimit u ruajt për {date}!",
+    "draftRegistered": "Drafti u kthye dhe u regjistrua me sukses!",
+    "optionsMenu": "Opsionet dhe shkurtoret",
+    "statTotalSchools": "Totali i Shkollave",
     "statActiveUsers": "Përdorues Aktivë",
-    "statActive24h": "Aktivë në 24 orë",
-    "statPendingDocs": "Dok. në Pritje",
+    "statActive24h": "Aktivë 24h",
+    "statPendingDocs": "Dokumente në Pritje",
     "statStudents": "Nxënës",
     "statTeachers": "Mësues",
     "statDocuments": "Dokumente",
     "statRequests": "Kërkesa",
     "statMyClasses": "Klasat e Mia",
     "statLessonsToday": "Mësime Sot",
-    "statGradesPending": "Nota për t'u Vendosur",
-    "actionAttendance": "Shëno Pjesëmarrjen",
+    "statGradesPending": "Nota për Vendosje",
+    "actionAttendance": "Merr Mungesat",
     "actionGrades": "Vendos Nota",
-    "actionLessons": "Regjistri i Mësimeve",
-    "actionAgenda": "Agenda e Klasës",
-    "actionUsers": "Menaxho Përdoruesit",
-    "actionClasses": "Menaxho Klasat",
-    "recentGrades": "Recent Grades",
-    "noChildren": "No linked children"
+    "actionLessons": "Ditari i Klasës",
+    "actionAgenda": "Kalendari i Klasës",
+    "actionUsers": "Menaxhimi i Përdoruesve",
+    "actionClasses": "Menaxhimi i Klasave",
+    "recentGrades": "Notat e Fundit",
+    "noChildren": "Nuk ka fëmijë të lidhur",
+    "systemStatus": "Gjendja e Sistemit",
+    "syncedNow": "Sinkronizuar tani"
   },
   "agendaPage": {
     "title": "Agenda & Kalendari Didaktik",
@@ -267,8 +273,23 @@ export default {
     "dueDate": "Afati",
     "teacher": "Mësuesi",
     "subject": "Lënda",
-    "event": "Event",
-    "today": "Today"
+    "event": "Ngjarje",
+    "today": "Sot",
+    "homeworkTitle": "Agenda dhe Detyrat e shtëpisë",
+    "homeworkList": "Lista e Detyrave",
+    "agendaLessons": "Agenda & Mësimet",
+    "dueHomework": "Detyrat & Testet e Ardhshme",
+    "organizeStudy": "Organizoni afatet tuaja të studimit",
+    "noPendingHomework": "Nuk ka detyra në pritje",
+    "allCaughtUp": "Jeni në rregull me të gjitha detyrat!",
+    "due": "Dorëzimi",
+    "expired": "Skaduar",
+    "tomorrow": "Nesër",
+    "assignedBy": "Caktuar nga",
+    "detailsOf": "Detajet e",
+    "lessonsHeld": "Mësimet e Zhvilluara",
+    "noLessons": "Nuk ka mësime të regjistruara në këtë datë.",
+    "noDueHomework": "Nuk ka detyra me afat në këtë datë."
   },
   "supportPage": {
     "title": "Qendra e Mbështetjes & Pyetjet e Shpeshta",
@@ -315,13 +336,15 @@ export default {
     "attendanceAverage": "Mesatarja e Pjesëmarrjes",
     "gradeAverage": "Mesatarja e Notave",
     "tabGrades": "Notat e Mia",
-    "tabAttendance": "Attendance",
-    "userManagement": "School Admins Management",
-    "schoolManagement": "School Management"
+    "tabAttendance": "Pjesëmarrja",
+    "homework": "Detyrat e shtëpisë",
+    "documents": "Dosja Dokumentare & Aktet",
+    "userManagement": "Menaxhimi i Administratorëve",
+    "schoolManagement": "Menaxhimi i Shkollave"
   },
   "udaPage": {
-    "title": "Planifikimi Didaktik Vjetor (UdA)",
-    "subtitle": "Planifikimi kurrikular sipas Njësive Mësimore, kompetencave ndërkurrikulare dhe orëve",
+    "title": "Planifikimi Didaktik (UdA)",
+    "subtitle": "Dizajnimi kurrikular sipas Njësive Mësimore dhe kompetencave",
     "newUda": "UdA e Re",
     "filterSubject": "Filtro sipas Lëndës",
     "filterClass": "Filtro sipas Klasës",
@@ -331,16 +354,16 @@ export default {
     "status": "Gjendja",
     "draft": "Draft",
     "active": "Në Zhvillim",
-    "completed": "E përfunduar",
+    "completed": "Përfunduar",
     "targetCompetencies": "Kompetencat Synuese",
     "evaluationCriteria": "Kriteret e Vlerësimit",
-    "noUdaFound": "Nuk ka asnjë Njësi Mësimore",
+    "noUdaFound": "Nuk u gjet asnjë Njësi Mësimore",
     "noUdaFoundDesc": "Nuk ka UdA në bazën e të dhënave për përzgjedhjen aktuale.",
-    "createInDb": "Krijo UdA në Bazën e të Dhënave",
-    "totalHours": "Gjithsej Orë",
+    "createInDb": "Krijo UdA në Databazë",
+    "totalHours": "Orë Totale",
     "subject": "Lënda",
-    "noDescription": "Nuk është specifikuar asnjë përshkrim.",
-    "curricularCompetencies": "Kompetenca kurrikulare",
+    "noDescription": "Nuk është dhënë përshkrim.",
+    "curricularCompetencies": "Kompetencat kurrikulare",
     "details": "Detaje",
     "editUda": "Ndrysho UdA",
     "createUda": "Njësi e Re Mësimore (UdA)",
@@ -348,22 +371,30 @@ export default {
     "statusLabel": "Gjendja *",
     "descLabel": "Përshkrimi & Qëllimi",
     "competenciesLabel": "Kompetencat për t'u zhvilluar",
-    "criteriaLabel": "Kriteret e Vlerësimit & Tabelat",
+    "criteriaLabel": "Kriteret & Rubrikat e Vlerësimit",
     "saveUda": "Ruaj UdA",
     "deleteConfirmTitle": "Konfirmo Fshirjen",
     "deleteConfirmMsg": "A jeni të sigurt që dëshironi ta fshini UdA \"{title}\"?",
     "detailTitle": "Detajet e UdA",
     "noUda": "Nuk ka asnjë Njësi Mësimore (UdA) për këtë klasë.",
-    "objectives": "Objektivat e të Nxënit",
-    "methodologies": "Metodologjitë Didaktike",
-    "subjectLabel": "Subject *",
-    "descriptionLabel": "Description",
-    "createTitle": "Plan Lesson Draft",
-    "classLabel": "Class"
+    "objectives": "Objektivat Edukativë",
+    "methodologies": "Metodologjitë e Mësimdhënies",
+    "subjectLabel": "Lënda *",
+    "descriptionLabel": "Përshkrimi",
+    "createTitle": "Planifiko Draft Mësimi",
+    "classLabel": "Klasa",
+    "allSubjects": "Të gjitha lëndët",
+    "allClasses": "Të gjitha klasat",
+    "published": "Publikuar",
+    "archived": "Arkivuar",
+    "noUdaDesc": "Nuk ka UdA të disponueshme",
+    "goalsLabel": "Objektivat arsimorë",
+    "durationHours": "Orë kohëzgjatje",
+    "editTitle": "Ndrysho Njësinë Mësimore"
   },
   "competenciesPage": {
-    "title": "Vlerësimi i Kompetencave Evropiane",
-    "subtitle": "Tabela e kompetencave kyçe evropiane me nivele zotërimi A, B, C, D",
+    "title": "Vlerësimi i Kompetencave",
+    "subtitle": "Vlerësimi i vazhdueshëm dhe tabelat e kompetencave kryesore evropiane",
     "student": "Nxënësi",
     "descriptor": "Përshkruesi i Kompetencës",
     "level": "Niveli i Arritur",
@@ -394,22 +425,29 @@ export default {
     "noStudentsFound": "Nuk u gjet asnjë nxënës për këtë klasë",
     "selectClassPrompt": "Zgjidhni një klasë për të ngarkuar nxënësit nga baza e të dhënave.",
     "notEvaluated": "I Pavlerësuar",
-    "downloadPdf": "Shkarko Certifikatën PDF",
-    "semester": "Semestri",
-    "gridTitle": "Tabela e Kompetencave Kyçe Evropiane",
-    "colCompetence": "Kompetenca Kyçe",
+    "downloadPdf": "Shkarko Dëftesën në PDF",
+    "semester": "Semestri / Periudha",
+    "gridTitle": "Rrjeti i Kompetencave Kryesore",
+    "colCompetence": "Kompetenca Kryesore",
     "colLevel": "Niveli i Zotërimit",
     "colNotes": "Përshkruesi / Shënime",
     "addDescriptor": "Shto përshkrues...",
-    "levelA": "A - I avancuar",
+    "levelA": "A - I Avancuar",
     "levelB": "B - Mesatar",
     "levelC": "C - Bazë",
     "levelD": "D - Fillestar",
-    "generatingPdf": "Generating PDF..."
+    "generatingPdf": "Po gjenerohet PDF...",
+    "tabSubjects": "Kompetencat Lëndore",
+    "tabKeyCompetencies": "Kompetencat Kryesore Evropiane",
+    "btnEvaluate": "Vlerëso",
+    "levelAssigned": "Niveli i Caktuar",
+    "actions": "Veprime",
+    "selectClassSubjectPrompt": "Zgjidhni një klasë dhe lëndë për të vlerësuar",
+    "noEvaluationsFound": "Nuk u gjet asnjë vlerësim kompetencash"
   },
   "gradesPage": {
-    "title": "Menaxhimi i Notave",
-    "subtitle": "Vendosja e notave, llogaritja e mesatareve dhe historiku i vlerësimeve",
+    "title": "Menaxhimi i Regjistrit të Notave",
+    "subtitle": "Hedhja e notave, llogaritja e mesatareve dhe historiku sipas klasës",
     "newTest": "Test i Ri",
     "importCSV": "Importo CSV",
     "printReport": "Shkarko Raportin PDF",
@@ -419,58 +457,58 @@ export default {
     "written": "Me shkrim",
     "oral": "Me gojë",
     "practical": "Praktike",
-    "substitutionWarningTitle": "Modaliteti i Zëvendësimit - Shikimi dhe Vendosja e Notave është Çaktivizuar",
-    "substitutionWarningDesc": "Kjo klasë nuk bën pjesë në lëndët tuaja titullare. Vendosja e notave është e rezervuar për mësuesit titullarë.",
+    "substitutionWarningTitle": "Modaliteti Zëvendësim - Hedhja e notave është çaktivizuar",
+    "substitutionWarningDesc": "Kjo klasë nuk është në ngarkesën tuaj mësimore titullare.",
     "weight": "Pesha",
     "date": "Data",
-    "notes": "Shënime për Notën",
+    "notes": "Shënime",
     "student": "Nxënësi",
     "average": "Mesatarja",
     "overallAverage": "Mesatarja e Përgjithshme",
-    "matrixView": "Pamja Matricë (E shpejtë)",
-    "standardView": "Pamja Listë Standarde",
+    "matrixView": "Pamja Matricë",
+    "standardView": "Pamja Standarde",
     "saveGrades": "Ruaj Notat",
     "statisticsTitle": "Statistikat e Notave",
     "totalGrades": "Nota të Vendosura",
     "distribution": "Shpërndarja",
-    "cannotEditOtherTeacherGrade": "You cannot edit grades created by another teacher",
-    "sharedGradesCaption": "Grades shared with class",
-    "confirmDeleteGrade": "Are you sure you want to delete this grade?",
-    "insertGrade": "Insert Grade",
-    "invalidGrade": "Invalid grade value",
-    "matrixViewTitle": "Grade Matrix Grid",
-    "matrixViewKbdHint": "Use Tab to navigate between cells, Enter to confirm",
-    "saveAllGrades": "Save All Grades",
-    "besDsaMeasures": "Dispensing / Compensatory Measures",
-    "insertAtLeastOneGrade": "Enter at least one grade before saving",
-    "matrixGradeDesc": "Quick tabular grade entry",
-    "noGrades": "No evaluations present",
-    "finalOutcome": "Final Outcome",
+    "cannotEditOtherTeacherGrade": "Nuk mund të ndryshoni notat e vendosura nga një mësues tjetër",
+    "sharedGradesCaption": "Nota të ndara me klasën",
+    "confirmDeleteGrade": "A jeni të sigurt që dëshironi ta fshini këtë notë?",
+    "insertGrade": "Vendos Notë",
+    "invalidGrade": "Vlerë note e pavlefshme",
+    "matrixViewTitle": "Matrica e Notave",
+    "matrixViewKbdHint": "Përdorni Tab për lëvizje dhe Enter për konfirmim",
+    "saveAllGrades": "Ruaj të Gjitha Notat",
+    "besDsaMeasures": "Masa Mbështetëse / Përshtatëse",
+    "insertAtLeastOneGrade": "Vendosni të paktën një notë përpara se të ruani",
+    "matrixGradeDesc": "Hedhje e shpejtë tabelare e notave",
+    "noGrades": "Nuk ka nota të regjistruara",
+    "finalOutcome": "Përfundimi",
     "studentTitle": "Notat e Mia",
     "filtersTitle": "Filtrat",
-    "semesterLabel": "Katërmujori / Semestri",
+    "semesterLabel": "Semestri",
     "periodLabel": "Periudha",
     "periods": {
       "all": "Të gjitha",
-      "lastMonth": "Muajin e kaluar",
-      "lastWeek": "Javën e kaluar"
+      "lastMonth": "Muaji i Fundit",
+      "lastWeek": "Java e Fundit"
     },
     "averageTrends": "Ecuria e Mesatareve",
-    "simulatorTitle": "Simuluesi & Projeksionet",
-    "sufficiencyHeader": "PËR TË ARRITUR KALUESHMËRINË (6.0):",
+    "simulatorTitle": "Simuluesi dhe Parashikimet",
+    "sufficiencyHeader": "PËR TË ARRITUR NOTËN KALUESE (6.0 / 10):",
     "currentAvg": "Mesatarja aktuale: {avg}",
-    "neededGrade": "Nota tjetër: {needed}",
-    "simulateNextGrade": "SIMULO NOTËN TËND TË ARDHSHME:",
-    "selectSubject": "Zgjidh Lëndën",
+    "neededGrade": "Nota e nevojshme: {needed}",
+    "simulateNextGrade": "SIMULONI NOTËN TUAJ TË ARDHSHME:",
+    "selectSubject": "Zgjidhni Lëndën",
     "hypotheticalGrade": "Nota hipotetike",
     "gradeRuleError": "Vendosni një notë midis 1 dhe 10",
     "newAverage": "Mesatarja e Re",
     "tableTitle": "Regjistri i Notave",
-    "loading": "Duke ngarkuar notat...",
+    "loading": "Po ngarkohen notat...",
     "cols": {
       "date": "Data",
       "subject": "Lënda",
-      "evalType": "Lloji i Testit",
+      "evalType": "Lloji",
       "category": "Kategoria",
       "value": "Nota",
       "desc": "Tema"
@@ -478,11 +516,24 @@ export default {
     "evalTypes": {
       "written": "Me shkrim",
       "oral": "Me gojë",
-      "practical": "Praktikë"
+      "practical": "Praktike"
     },
     "unknownSubject": "Lëndë e panjohur",
-    "reportDownloadSuccess": "Raporti PDF u shkarkua me sukses",
-    "reportDownloadError": "Gabim gjatë shkarkimit të raportit PDF"
+    "reportDownloadSuccess": "Dëftesa u shkarkua me sukses",
+    "reportDownloadError": "Gabim gjatë shkarkimit të dëftesës",
+    "gradeTypes": {
+      "standard": "Standarde",
+      "test": "Kontroll",
+      "bonus": "Pikë Shtesë"
+    },
+    "simulatedAvg": "Mesatarja e Simuluar",
+    "pointsNeeded": "Pikët e Nevojshme",
+    "status": "Gjendja",
+    "sufficient": "Kalues",
+    "insufficient": "Mbetës",
+    "recentGrades": "Notat e Fundit",
+    "periodGrades": "Notat e Periudhës",
+    "finalGrade": "Nota Përfundimtare"
   },
   "didacticsPage": {
     "title": "Materiale Didaktike & Burime",
@@ -617,37 +668,37 @@ export default {
     "hoursPerWeek": "Orë në javë"
   },
   "colloquiPage": {
-    "title": "Takimet Shkollë-Familje",
-    "subtitle": "Menaxhimi i disponueshmërisë, orareve dhe takimeve me prindërit",
+    "title": "Takimet Prind-Mësues",
+    "subtitle": "Menaxhimi i disponueshmërisë dhe rezervimeve të takimeve",
     "addSlot": "Shto Disponueshmëri",
-    "activeSlots": "Orarët e Vendosur",
-    "bookings": "Rezervimet e Prindërve",
-    "booked": "E rezervuar",
-    "available": "E lirë",
-    "completed": "E përfunduar",
-    "cancelled": "E anuluar",
-    "parentName": "Prindi / Kujdestari",
-    "studentName": "Nxënësi",
-    "slotTime": "Data & Ora e Takimit",
-    "notes": "Shënime për takimin",
-    "configModalTitle": "Konfiguro Orarin e Takimeve",
+    "activeSlots": "Orare të Lira",
+    "bookings": "Takime të Rezervuara",
+    "booked": "I Rezervuar",
+    "available": "I Lirë",
+    "completed": "I Përfunduar",
+    "cancelled": "I Anuluar",
+    "parentName": "Emri i Prindit",
+    "studentName": "Emri i Nxënësit",
+    "slotTime": "Orari",
+    "notes": "Shënime",
+    "configModalTitle": "Konfiguro Disponueshmërinë",
     "dayOfWeek": "Dita e Javës",
     "startTime": "Ora e Fillimit",
     "endTime": "Ora e Mbarimit",
-    "slotDuration": "Kohëzgjatja e Takimit (Minuta)",
-    "meetingMode": "Formati i Takimit",
-    "inPerson": "Në Person (Në Shkollë)",
-    "online": "Online (Video-thirrje)",
-    "saveSlots": "Ruaj Disponueshmërinë",
-    "createSlotsTitle": "Krijo Orar Takimesh",
-    "duration": "Kohëzgjatja (min)",
-    "break": "Pushim (min)",
-    "generateSlots": "Gjenero Orarët",
-    "parent": "Prindi"
+    "slotDuration": "Kohëzgjatja për Takim (min)",
+    "meetingMode": "Mënyra e Takimit",
+    "inPerson": "Në Person",
+    "online": "Online",
+    "saveSlots": "Ruaj Oraret",
+    "createSlotsTitle": "Gjenero Orare Automatikisht",
+    "duration": "Kohëzgjatja",
+    "break": "Pushim midis takimeve",
+    "generateSlots": "Gjenero Orare",
+    "parent": "Prind / Kujdestar"
   },
   "studentAttendance": {
-    "title": "Pjesëmarrja & Mungesat e Mia",
-    "subtitle": "Historiku i detajuar i pjesëmarrjes, mungesave dhe vonesave"
+    "title": "Prania & Mungesat e Mia",
+    "subtitle": "Historiku i detajuar i pranisë, mungesave dhe vonesave"
   },
   "substitutionsPage": {
     "title": "Menaxhimi i Zëvendësimeve",
@@ -714,11 +765,11 @@ export default {
     "bodyLabel": "Teksti i Njoftimit *",
     "recipientsLabel": "Marrësit (Rolet)",
     "publish": "Publiko Njoftimin",
-    "circular": "Circular"
+    "circular": "Qarkore"
   },
   "documentsPage": {
-    "title": "Dosja e Dokumenteve & Aktet Shkollore",
-    "subtitle": "Arkivi i centralizuar i dokumenteve shkollore dhe dosjeve të nxënësve",
+    "title": "Arkiva e Dokumenteve dhe Akteve",
+    "subtitle": "Menaxhimi i akteve zyrtare, qarkoreve, certifikatave dhe dosjeve shkollore",
     "uploadDoc": "Ngarko Dokument",
     "generateCert": "Gjenero Vërtetim",
     "certEnrollment": "Vërtetim Regjistrimi",
@@ -730,41 +781,44 @@ export default {
     "fileSize": "Madhësia",
     "printPdf": "Printo PDF",
     "downloadFile": "Shkarko Skedarin",
-    "selectTemplate": "Zgjidhni Modelin",
-    "noPreview": "Nuk ka parashikim të disponueshëm",
+    "selectTemplate": "Zgjidh Shabllon",
+    "noPreview": "Nuk ka pamje paraprake",
     "reviewTitle": "Rishiko Dokumentin",
-    "documentsList": "Document List",
-    "uploadDocument": "Upload Document",
-    "templateManagement": "Template Management",
-    "newTemplate": "New Template",
-    "noTemplates": "No templates available",
-    "noTemplatesDesc": "Create a new customized template for your school",
-    "editTemplate": "Edit Template",
-    "templateName": "Template Name",
-    "templateContent": "Template Content",
-    "certificates": "Certificates",
-    "loadError": "Error loading document",
-    "download": "Download Document",
-    "inbox": "Inbox & Received Documents",
-    "searchPlaceholder": "Search by title, protocol or sender...",
-    "approveSelected": "Approve Selected",
-    "archive": "Archive",
-    "favorite": "Favorite",
-    "titleLabel": "Document Title",
-    "favoriteAdded": "Added to favorites",
-    "favoriteRemoved": "Removed from favorites",
-    "batchApproveTitle": "Batch Document Approval",
-    "batchApproveConfirm": "Are you sure you want to approve selected documents?",
-    "documentsApproved": "Documents approved successfully",
-    "documentsArchived": "Documents archived successfully",
+    "documentsList": "Lista e Dokumenteve",
+    "uploadDocument": "Ngarko Dokument",
+    "templateManagement": "Menaxhimi i Shablloneve",
+    "newTemplate": "Shabllon i Ri",
+    "noTemplates": "Nuk ka shabllone të disponueshme",
+    "noTemplatesDesc": "Krijoni një shabllon të ri të personalizuar për shkollën tuaj",
+    "editTemplate": "Ndrysho Shabllonin",
+    "templateName": "Emri i Shabllonit",
+    "templateContent": "Përmbajtja e Shabllonit",
+    "certificates": "Vërtetime",
+    "loadError": "Gabim gjatë ngarkimit të dokumentit",
+    "download": "Shkarko",
+    "inbox": "Kutia Hyrëse & Dokumentet e Marra",
+    "searchPlaceholder": "Kërko sipas titullit, protokollit ose dërguesit...",
+    "approveSelected": "Mirato të Përzgjedhurit",
+    "archive": "Arkivo",
+    "favorite": "Të preferuara",
+    "titleLabel": "Titulli i Dokumentit",
+    "favoriteAdded": "U shtua te të preferuarat",
+    "favoriteRemoved": "U hoq nga të preferuarat",
+    "batchApproveTitle": "Miratim Masiv Dokumentesh",
+    "batchApproveConfirm": "A jeni të sigurt që dëshironi të miratoni dokumentet e zgjedhura?",
+    "documentsApproved": "Dokumentet u miratuan me sukses",
+    "documentsArchived": "Dokumentet u arkivuan me sukses",
     "parentTitle": "Dokumentet dhe Komunikimet",
     "parentSubtitle": "Qasja dhe shkarkimi i dokumenteve zyrtare për {name}",
     "searchPlaceholderDoc": "Kërko dokument...",
     "tabs": {
-      "all": "Të gjitha Dokumentet",
+      "all": "Të gjitha",
       "reportCards": "Dëftesat & Vlerësimet",
-      "circulars": "Qarkoret & Formularët",
-      "plans": "Planetet Arsimore (PDP/PEI)"
+      "circulars": "Qarkore",
+      "plans": "Planetet Arsimore (PDP/PEI)",
+      "certificates": "Vërtetime",
+      "minutes": "Procesverbale",
+      "studentFiles": "Dosjet e Nxënësve"
     },
     "loadingDatabase": "Duke ngarkuar dokumentet nga baza e të dhënave...",
     "isNew": "E re",
@@ -785,7 +839,10 @@ export default {
     "fascicoloFallbackTitle": "Dokument i Nxënësit",
     "fascicoloFallbackSubtitle": "Dosja e nxënësit",
     "previewDialogMessage": "Detajet e dokumentit: {subtitle}. Data: {date}. Statusi: {status}",
-    "downloadStarted": "Duke shkarkuar dokumentin: {title}"
+    "downloadStarted": "Duke shkarkuar dokumentin: {title}",
+    "upload": "Ngarko Dokument",
+    "tableTitle": "Dokumente Zyrtare",
+    "noDocs": "Nuk ka dokumente të disponueshme në këtë seksion."
   },
   "notesPage": {
     "title": "Vërejtjet Disiplinore & Shënimet",
@@ -832,9 +889,9 @@ export default {
     "currentPassword": "Fjalëkalimi Aktual",
     "newPassword": "Fjalëkalimi i Ri",
     "saveSettings": "Ruaj Preferencat",
-    "profile": "User Profile",
-    "confirmPassword": "Confirm New Password",
-    "changePassword": "Change Password"
+    "profile": "Profili i Përdoruesit",
+    "confirmPassword": "Konfirmo Fjalëkalimin e Ri",
+    "changePassword": "Ndrysho Fjalëkalimin"
   },
   "nav": {
     "dashboard": "Paneli",
@@ -888,7 +945,7 @@ export default {
     "trips": "Ekskursionet & Vizitat",
     "payments": "Pagesat",
     "assemblies": "Kuvendet & Takimet",
-    "children": "My Children"
+    "children": "Fëmijët e Mi"
   },
   "categories": {
     "anagraficheClassi": "Të Dhënat & Klasat",
@@ -903,7 +960,7 @@ export default {
     "comunicazioniAccount": "Njoftimet & Llogaria"
   },
   "classes": {
-    "linguisticGroup": "Grup Gjuhësor / Zgjedhor",
+    "linguisticGroup": "Grupi Gjuhësor",
     "linguisticGroupLabel": "Grupi Gjuhësor: {name}"
   },
   "roles": {
@@ -922,24 +979,24 @@ export default {
     "user": "Përdorues"
   },
   "notifications": {
-    "title": "Njoftimet dhe Komunikimet",
+    "title": "Njoftimet dhe Mesazhet",
     "logoutSuccess": "Dalja u krye me sukses",
     "logoutError": "Gabim gjatë daljes",
     "settingsSaved": "Cilësimet u ruajtën me sukses!",
-    "emailCopied": "Adresa e email-it u kopjua në kujtesë!",
+    "emailCopied": "Email-i u kopjua!",
     "passwordUpdated": "Fjalëkalimi u përditësua me sukses!",
     "languageChanged": "Gjuha u ndryshua me sukses",
     "wsConnectionFailed": "Lidhja në kohë reale nuk është e disponueshme.",
     "wsGradeUpdated": "Përditësim note: {value} ({subject})",
     "wsGradeDeleted": "Nota u fshi për {subject}",
-    "wsAttendanceUpdated": "Përditësim pjesëmarrjeje: {status}",
+    "wsAttendanceUpdated": "Përditësim i pranisë: {status}",
     "wsJustificationApproved": "Arsyetimi u miratua: {reason}",
     "wsJustificationRejected": "Arsyetimi u refuzua: {reason}",
     "wsNewCommunication": "Njoftim i ri: {title}",
     "wsNoteAdded": "Vërejtje e re disiplinore: {title}",
-    "wsScrutinyPublished": "Vlerësimi përfundimtar u publikua për {student}",
+    "wsScrutinyPublished": "Rezultati i dëftesës u publikua për {student}",
     "wsGoalUpdated": "Objektivi u përditësua: {title}",
-    "wsSlotUpdated": "Përditësim takimi: {msg}"
+    "wsSlotUpdated": "Takimi u përditësua: {msg}"
   },
   "errors": {
     "connectionError": "Gabim në lidhjen me serverin. Kontrolloni lidhjen tuaj dhe provoni përsëri.",
@@ -1065,7 +1122,7 @@ export default {
       "step6_title": "Cilësimet e Sistemit",
       "step6_desc": "Konfiguroni politikat e sigurisë, autentifikimin 2FA dhe integrimet e-learning."
     },
-    "keyboardHint": "Use arrows to navigate"
+    "keyboardHint": "Përdorni shigjetat e tastierës për të lëvizur"
   },
   "help": {
     "title": "Qendra e Ndihmës",
@@ -1105,7 +1162,32 @@ export default {
       "q9": "Si të ndryshoj gjuhën dhe temën e errët?",
       "a9": "Hyni te \"Cilësimet > Profili\". Mund të zgjidhni gjuhën dhe të aktivizoni Dark Mode ose shkrimin për disleksi.",
       "q10": "Si të anuloj një pjesëmarrje ose notë të vendosur gabim?",
-      "a10": "Pas çdo veprimi shfaqet një njoftim me butonin \"Anulo\" aktiv për 15 sekonda."
+      "a10": "Pas çdo veprimi shfaqet një njoftim me butonin \"Anulo\" aktiv për 15 sekonda.",
+      "attendance": {
+        "title": "Marrja e Mungesave & Nënshkrimi i Mësimit",
+        "desc": "Si të merrni praninë e nxënësve dhe të nënshkruani orën mësimore.",
+        "content": "Dhe regjistroni mungesat dhe temat e mësimit brenda pak sekondave.\n\nHapi 1: Hapni 'Ditari i Klasës' dhe zgjidhni klasën tuaj.\nHapi 2: Shënoni nxënësit si të pranishëm, mungesë ose me vonesë.\nHapi 3: Vendosni temën dhe nënshkruani orën."
+      },
+      "grades": {
+        "title": "Hedhja e Notave dhe Vlerësimi",
+        "desc": "Si të vendosni notat me gojë, me shkrim dhe praktike.",
+        "content": "Menaxhoni notat dhe vlerësimet për secilin nxënës me lehtësi."
+      },
+      "uda": {
+        "title": "Planifikimi i Njësive Mësimore (UdA)",
+        "desc": "Dizajnimi kurrikular sipas kompetencave.",
+        "content": "Strukturoni orët mësimore dhe vlerësoni kompetencat kyçe evropiane."
+      },
+      "agenda": {
+        "title": "Detyrat e Shtëpisë & Kalendari",
+        "desc": "Si të caktoni detyrat dhe provimet.",
+        "content": "Caktoni afatet dhe organizoni ngarkesën e studimit për klasën."
+      },
+      "colloqui": {
+        "title": "Takimet me Prindërit",
+        "desc": "Caktimi i orareve të lira për takime individuale.",
+        "content": "Përcaktoni fashat orare dhe konfirmoni kërkesat e prindërve."
+      }
     },
     "student": {
       "cat_grades": "Notat e Mia",
@@ -1132,7 +1214,22 @@ export default {
       "q9": "Çfarë të bëj nëse harroj fjalëkalimin?",
       "a9": "Në faqen e hyrjes klikoni \"Keni harruar fjalëkalimin?\" dhe vendosni email-in tuaj për rivendosje.",
       "q10": "Si të përdor kërkimin e shpejtë Ctrl+K?",
-      "a10": "Shtypni kombinimin Ctrl+K (ose Cmd+K në Mac) për të hapur shiritin e kërkimit universal."
+      "a10": "Shtypni kombinimin Ctrl+K (ose Cmd+K në Mac) për të hapur shiritin e kërkimit universal.",
+      "grades": {
+        "title": "Konsultimi i Notave & Mesatareve",
+        "desc": "Si të kontrolloni notat dhe ecurinë tuaj akademike.",
+        "content": "Shikoni notat e fundit, mesataret sipas lëndëve dhe simuloni notat kaluese."
+      },
+      "homework": {
+        "title": "Detyrat & Kalendari i Studimit",
+        "desc": "Organizoni detyrat dhe përgatitjet për testet.",
+        "content": "Mbani nën kontroll afatet e detyrave dhe njoftimet nga mësuesit."
+      },
+      "attendance": {
+        "title": "Prania & Arsyetimet",
+        "desc": "Kontrolloni mungesat dhe vonesat tuaja.",
+        "content": "Shikoni statusin e mungesave dhe kërkesave për arsyetim."
+      }
     },
     "parent": {
       "cat_monitoring": "Monitorimi i Fëmijës",
@@ -1159,38 +1256,53 @@ export default {
       "q9": "A mund të delegoj një kujdestar tjetër?",
       "a9": "Sekretaria mund të lidhë disa llogari prindërish/kujdestarësh me të njëjtin nxënës.",
       "q10": "Çfarë ndodh në modalitetin offline?",
-      "a10": "Aplikacioni shfaq të dhënat e ruajtura dhe veprimet do të sinkronizohen kur të kthehet lidhja."
+      "a10": "Aplikacioni shfaq të dhënat e ruajtura dhe veprimet do të sinkronizohen kur të kthehet lidhja.",
+      "grades": {
+        "title": "Vlerësimi & Dëftesa",
+        "desc": "Ndiqni notat dhe vlerësimet e fëmijëve tuaj.",
+        "content": "Qasje e menjëhershme në të gjitha notat, mesataret dhe dëftesat zyrtare."
+      },
+      "attendance": {
+        "title": "Arsyetimi i Mungesave",
+        "desc": "Si të arsyetoni mungesat e fëmijës tuaj online.",
+        "content": "Dërgoni arsyetime për mungesat dhe vonesat me një klikim."
+      },
+      "colloqui": {
+        "title": "Rezervimi i Takimeve me Mësuesit",
+        "desc": "Caktoni takime individuale me stafin mësimdhënës.",
+        "content": "Zgjidhni orarin e përshtatshëm dhe rezervoni takimin online ose në shkollë."
+      }
     },
     "secretary": {
       "students": {
-        "title": "Regjistri i Nxënësve",
-        "desc": "Kërkimi dhe përditësimi i të dhënave të nxënësve.",
-        "content": "Moduli i plotë për menaxhimin e të dhënave personale dhe shkollore të nxënësve."
+        "title": "Menaxhimi i Regjistrit të Nxënësve",
+        "desc": "Kërkimi, regjistrimi dhe përditësimi i të dhënave të nxënësve.",
+        "content": "Administroni dosjet akademike, kontaktet dhe regjistrimet e reja."
       },
       "classes": {
-        "title": "Struktura e Klasave",
-        "desc": "Konfigurimi i klasave dhe caktimi i mësuesve.",
-        "content": "Organizoni klasat dhe lidhni mësuesit me lëndët përkatëse."
+        "title": "Organizimi i Klasave dhe Seksioneve",
+        "desc": "Krijimi i klasave dhe caktimi i mësuesve titullarë.",
+        "content": "Strukturoni vitin shkollor, oraret dhe ndarjen e lëndëve."
       },
       "certificates": {
-        "title": "Lëshimi i Vërtetimeve",
-        "desc": "Gjenerimi i vërtetimeve zyrtare.",
-        "content": "Gjeneroni dhe printoni vërtetime regjistrimi dhe dëftesa notash në format PDF."
+        "title": "Gjenerimi i Vërtetimeve",
+        "desc": "Lëshimi i dokumenteve zyrtare dhe vërtetimeve të frekuentimit.",
+        "content": "Gjeneroni dokumente me vulë digjitale dhe nënshkrim zyrtar në sekonda."
       },
       "timetable": {
-        "title": "Orari & Zëvendësimet",
-        "desc": "Menaxhimi i orarit dhe mësuesve zëvendësues.",
-        "content": "Planifikoni orarin javor dhe mbuloni orët e mësuesve në mungesë."
+        "title": "Orari Mësimor dhe Zëvendësimet",
+        "desc": "Menaxhimi i orareve javore dhe zëvendësimit të mësuesve.",
+        "content": "Planifikoni orët dhe mbuloni mungesat e mësuesve."
       },
       "communications": {
-        "title": "Publikimi i Njoftimeve",
-        "desc": "Shpërndarja e qarkoreve institucionale.",
-        "content": "Krijoni dhe dërgoni njoftime për mësuesit, prindërit ose nxënësit."
+        "title": "Qarkoret dhe Njoftimet Zyrtare",
+        "desc": "Publikimi i njoftimeve dhe monitorimi i marrjes së dijenisë.",
+        "content": "Dërgoni qarkore zyrtare për stafin, prindërit dhe nxënësit."
       },
       "reports": {
-        "title": "Raportet Statistikore",
-        "desc": "Nxjerrja e të dhënave për raportime zyrtare.",
-        "content": "Gjeneroni raporte të përmbledhura për pjesëmarrjen, notat dhe statistikat."
+        "title": "Raportet dhe Statistikat",
+        "desc": "Nxjerrja e statistikave dhe eksportimi i të dhënave.",
+        "content": "Gjeneroni raporte të agreguara për frekuentimin dhe rezultatet."
       },
       "cat_students": "Student Registry",
       "cat_classes": "Class Management",
@@ -1220,39 +1332,39 @@ export default {
     },
     "admin": {
       "monitoring": {
-        "title": "Monitorimi i Serverit",
-        "desc": "Ndjekja e gjendjes së shërbimeve dhe performancës.",
-        "content": "Shikoni në kohë reale funksionimin e mikroshërbimeve dhe bazës së të dhënave."
+        "title": "Monitorimi i Sistemit",
+        "desc": "Monitorimi i performancës së serverit dhe bazës së të dhënave.",
+        "content": "Kontrolloni gjendjen teknike, memorien RAM dhe shërbimet e sistemit në kohë reale."
       },
       "users": {
-        "title": "Menaxhimi i Llogarive",
-        "desc": "Administrimi i përdoruesve dhe lejeve.",
-        "content": "Krijoni, modifikoni ose pezulloni llogaritë e përdoruesve në platformë."
+        "title": "Menaxhimi i Përdoruesve",
+        "desc": "Krijimi i llogarive, të drejtat dhe politikat e sigurisë.",
+        "content": "Menaxhoni të gjitha llogaritë e përdoruesve dhe konfiguroni 2FA."
       },
       "schools": {
-        "title": "Menaxhimi i Shkollave",
-        "desc": "Konfigurimi i njësive arsimore.",
-        "content": "Menaxhoni strukturën me shumë shkolla dhe të dhënat zyrtare."
+        "title": "Menaxhimi i Institucioneve",
+        "desc": "Konfigurimi i shkollave dhe degëve arsimore.",
+        "content": "Regjistroni kodet zyrtare dhe të dhënat administrative të shkollave."
       },
       "security": {
         "title": "Politikat e Sigurisë",
-        "desc": "Rregullat e autentifikimit dhe 2FA.",
-        "content": "Konfiguroni kërkesat e fjalëkalimeve, kohën e seancave dhe autentifikimin dy-faktorësh."
+        "desc": "Konfigurimi i fjalëkalimeve dhe kërkesave të sigurisë.",
+        "content": "Përshtatni rregullat e sigurisë sipas standardeve më të larta."
       },
       "analytics": {
-        "title": "Statistika Globale",
-        "desc": "Analiza e treguesve arsimorë.",
-        "content": "Gjeneroni analiza krahasuese dhe raporte mbi aktivitetin shkollor."
+        "title": "Analitika dhe Parandalimi i Braktisjes",
+        "desc": "Analizë parashikuese për rrezikun e braktisjes shkollore.",
+        "content": "Identifikoni nxënësit me rrezik mungesash dhe rezultatesh të ulëta."
       },
       "integrations": {
-        "title": "Integrimet Cloud",
-        "desc": "Lidhja me Google Classroom dhe Teams.",
-        "content": "Sinkronizoni të dhënat e përdoruesve dhe klasave me platformat partnere."
+        "title": "Integrimet dhe Hyrja me Një Klik (SSO)",
+        "desc": "Lidhja me Google Workspace dhe Microsoft 365.",
+        "content": "Aktivizoni hyrjen me llogaritë institucionale."
       },
       "audit": {
-        "title": "Regjistri i Auditimit GDPR",
-        "desc": "Gjurmueshmëria e plotë e veprimeve në sistem.",
-        "content": "Kontrolloni historikun e të gjitha veprimeve për të garantuar sigurinë dhe përputhshmërinë."
+        "title": "Regjistri i Auditimit & Gjurmueshmëria",
+        "desc": "Gjurmimi i plotë i veprimeve të përdoruesve në sistem.",
+        "content": "Regjistër i pandryshueshëm i të gjitha veprimeve për transparencë maksimale."
       },
       "cat_monitoring": "System Monitoring",
       "cat_users": "User Management",
@@ -1585,86 +1697,104 @@ export default {
   "composables": {
     "adminUsers": {
       "confirmTitle": "Konfirmo fshirjen",
-      "confirmMsg": "A jeni të sigurt që dëshironi ta fshini këtë administrator?"
+      "confirmMsg": "A jeni të sigurt që dëshironi ta fshini këtë administrator?",
+      "confirmDeleteTitle": "Konfirmo fshirjen",
+      "confirmDeleteMsg": "A dëshironi ta fshini përfundimisht këtë përdorues?"
     },
     "attendance": {
-      "saveSuccess": "Pjesëmarrja u ruajt me sukses",
-      "saveError": "Nuk mund të ruhet pjesëmarrja",
+      "saveSuccess": "Prania u ruajt me sukses",
+      "saveError": "Gabim gjatë ruajtjes së pranisë",
       "requestSent": "Kërkesa për arsyetim u dërgua",
-      "requestError": "Nuk mund të dërgohet kërkesa për arsyetim"
+      "requestError": "Dërgimi i kërkesës për arsyetim dështoi",
+      "savedSuccess": "Prania u ruajt me sukses",
+      "justifiedSuccess": "Mungesa u arsyetua me sukses"
     },
     "children": {
-      "addSuccess": "Fëmija u shtua me sukses",
+      "addSuccess": "Profili i fëmijës u lidh me sukses",
       "removeConfirmTitle": "Konfirmo heqjen",
-      "removeConfirmMsg": "A jeni të sigurt që dëshironi ta hiqni këtë profil nxënësi?",
-      "removeSuccess": "Profili i nxënësit u hoq"
+      "removeConfirmMsg": "A jeni të sigurt që dëshironi ta hiqni këtë nxënës?",
+      "removeSuccess": "Profili i nxënësit u hoq",
+      "noChildrenFound": "Nuk u gjet asnjë fëmijë i lidhur"
     },
     "colloqui": {
-      "bookingConfirmed": "Rezervimi i takimit u konfirmua",
-      "bookingCancelled": "Rezervimi i takimit u anulua",
+      "bookingConfirmed": "Takimi u konfirmua me sukses",
+      "bookingCancelled": "Takimi u anulua me sukses",
       "slotsCreated": "{count} orare u krijuan me sukses",
       "slotsError": "Gabim gjatë krijimit të orareve të takimeve",
-      "invalidDuration": "Invalid appointment duration",
-      "invalidTimeRange": "Invalid time range"
+      "invalidDuration": "Kohëzgjatje e pavlefshme e takimit",
+      "invalidTimeRange": "Fashë orare e pavlefshme",
+      "slotDeleted": "Orari u fshi me sukses"
     },
     "documents": {
       "draftCreated": "Drafti i dokumentit u krijua",
-      "draftError": "Nuk mund të krijohet drafti",
+      "draftError": "Krijimi i draftit dështoi",
       "reviewSuccess": "Dokumenti {decision}",
       "reviewError": "Rishikimi dështoi",
-      "downloading": "Po shkarkohet {title}..."
+      "downloading": "Po shkarkohet {title}...",
+      "uploadSuccess": "Dokumenti u ngarkua me sukses",
+      "deleteSuccess": "Dokumenti u fshi me sukses"
     },
     "grades": {
-      "fillRequired": "Plotësoni të gjitha fushat e detyrueshme për notën",
+      "fillRequired": "Ju lutemi plotësoni të gjitha fushat e detyrueshme",
       "saveSuccess": "Nota u ruajt me sukses",
-      "saveError": "Nuk mund të ruhet nota"
+      "saveError": "Ruajtja e notës dështoi",
+      "gradeSaved": "Nota u ruajt me sukses",
+      "gradeDeleted": "Nota u fshi me sukses"
     },
     "schools": {
       "updated": "Shkolla u përditësua me sukses",
       "created": "Shkolla u krijua me sukses",
-      "operationFailed": "Operacioni dështoi",
+      "operationFailed": "Veprimi dështoi",
       "deleteConfirmTitle": "Konfirmo fshirjen",
       "deleteConfirmMsg": "A jeni të sigurt që dëshironi ta fshini këtë shkollë?",
-      "deleted": "Shkolla u fshi me sukses"
+      "deleted": "Shkolla u fshi me sukses",
+      "schoolSaved": "Shkolla u ruajt me sukses"
     },
     "undo": {
-      "cancelWithSeconds": "Anulo ({remaining}s)",
-      "actionCancelled": "Veprimi u anulua",
-      "cancelError": "Gabim gjatë anulimit"
+      "cancelWithSeconds": "Zhbëj ({remaining}s)",
+      "actionCancelled": "Veprimi u zhbë",
+      "cancelError": "Gabim gjatë zhbërjes së veprimit",
+      "actionUndone": "Veprimi u zhbë me sukses"
     },
     "users": {
       "importStarted": "Importimi i përdoruesve filloi",
-      "importError": "Error importing users"
+      "importError": "Gabim gjatë importimit të përdoruesve",
+      "userCreated": "Përdoruesi u krijua me sukses",
+      "userUpdated": "Përdoruesi u përditësua me sukses",
+      "userDeleted": "Përdoruesi u fshi me sukses",
+      "passwordResetSuccess": "Fjalëkalimi u rivendos me sukses"
     }
   },
   "security": {
     "title": "Siguria & Përputhshmëria Ligjore",
-    "subtitle": "Nënshkrim Elektronik i Kualifikuar, Ruajtje Dixhitale dhe Zinxhir Kriptografik i Pandryshueshëm",
-    "downloadCadZip": "Shkarko Paketën e Ruajtjes ZIP",
-    "feqTitle": "Nënshkrim i Kualifikuar",
+    "subtitle": "Nënshkrim Elektronik i Kualifikuar (FEQ), Ruajtje Ligjore dhe Regjistër Auditi i Pandryshueshëm",
+    "downloadCadZip": "Shkarko Paketën ZIP CAD",
+    "feqTitle": "Nënshkrim i Kualifikuar (FEQ)",
     "feqActive": "Aktiv dhe i Verifikuar",
-    "feqDesc": "Të gjitha nënshkrimet në regjistrat e klasave janë të vulosura me pullë kohore SHA-256 me vlerë ligjore.",
-    "cadTitle": "Ruajtje Dixhitale e Përputhshme",
-    "cadManifest": "Paketa XML Manifest",
-    "cadDesc": "Në përputhje me standardet evropiane për ruajtjen dixhitale afatgjatë të dokumenteve.",
-    "immutableAuditTitle": "Regjistër Auditimi i Pandryshueshëm",
+    "feqDesc": "Të gjitha regjistrimet në ditar nënshkruhen në mënyrë digjitale sipas standardit eIDAS.",
+    "cadTitle": "Ruajtje Ligjore CAD",
+    "cadManifest": "Paketa Manifest XML",
+    "cadDesc": "Përputhje me standardet e ruajtjes digjitale afatgjatë.",
+    "immutableAuditTitle": "Regjistër Auditi i Pandryshueshëm",
     "cryptoChain": "Zinxhir Kriptografik Hash",
-    "immutableAuditDesc": "Çdo ndryshim gjeneron një bllok të siguruar kriptografikisht (Block Hashing).",
+    "immutableAuditDesc": "Çdo veprim gjeneron një bllok të lidhur me enkriptim.",
     "integrityVerifier": "Verifikuesi i Integritetit të Regjistrit",
     "verifyNow": "Verifiko Integritetin Tani",
-    "allBlocksValid": "Të gjitha blloqet e regjistrit janë të vlefshme dhe të paprekura",
+    "allBlocksValid": "Të gjitha blloqet kriptografike janë të paprekura dhe të vlefshme",
     "verifiedOn": "Verifikuar më",
-    "colAction": "Veprimi / Ngjarja",
-    "colActor": "Përdoruesi / Modifikuesi",
-    "colPrevHash": "Hash-i i Mëparshëm (SHA-256)",
-    "colCurrHash": "Hash-i Aktual (SHA-256)",
+    "colAction": "Veprimi",
+    "colActor": "Përdoruesi",
+    "colPrevHash": "Hash-i i Mëparshëm",
+    "colCurrHash": "Hash-i Aktual",
     "colCryptoStatus": "Gjendja Kriptografike",
-    "intact": "I paprekur",
-    "integrityVerified": "Verifikimi i integritetit përfundoi: Zinxhiri është i vlefshëm!",
-    "integrityError": "Gabim gjatë verifikimit të zinxhirit kriptografik",
-    "cadGenerating": "Po gjenerohet paketa e ruajtjes ZIP...",
-    "cadDownloaded": "Paketa e ruajtjes u shkarkua me sukses!",
-    "cadError": "Gabim gjatë shkarkimit të paketës së ruajtjes"
+    "intact": "I Paprekur",
+    "integrityVerified": "Integriteti i regjistrit u verifikua me sukses!",
+    "integrityError": "Gabim gjatë verifikimit të integritetit kriptografik.",
+    "cadGenerating": "Po gjenerohet paketa e ruajtjes ligjore CAD...",
+    "cadDownloaded": "Paketa CAD u gjenerua dhe u shkarkua me sukses!",
+    "cadError": "Gabim gjatë gjenerimit të paketës CAD.",
+    "blockchainTitle": "Zinxhiri Kriptografik",
+    "blockchainDesc": "Regjistër auditi i pandryshueshëm dhe i mbrojtur me lidhje hash SHA-256."
   },
   "paymentsPage": {
     "title": "Pagesat Shkollore & PagoPA",
@@ -1702,25 +1832,27 @@ export default {
     "cost": "Tarifa e pjesëmarrjes"
   },
   "usersPage": {
-    "title": "User Management",
-    "searchPlaceholder": "Search by name, email...",
-    "newUser": "New User",
-    "exportCsv": "Export to CSV",
-    "selectedUsers": "selected users",
-    "deleteSelected": "Delete Selected",
-    "roleStudents": "Students",
-    "roleTeachers": "Teachers",
-    "roleParents": "Parents",
-    "roleStaff": "Staff",
-    "roleCoordinator": "Coordinator",
-    "roleVicePrincipal": "Vice Principal",
-    "rolePrincipal": "Principal",
-    "roleLabel": "Role",
-    "editProfile": "Edit Profile",
-    "resetPassword": "Reset Password",
-    "manageSubjects": "Manage Subjects",
-    "deleteAccount": "Delete Account",
-    "noUsersFound": "No users found"
+    "title": "Menaxhimi i Përdoruesve",
+    "searchPlaceholder": "Kërko sipas emrit, email-it, kodit personal...",
+    "newUser": "Përdorues i Ri",
+    "exportCsv": "Eksporto CSV",
+    "selectedUsers": "përdorues të përzgjedhur",
+    "deleteSelected": "Fshi të përzgjedhurit",
+    "roleStudents": "Nxënës",
+    "roleTeachers": "Mësues",
+    "roleParents": "Prindër / Kujdestarë",
+    "roleStaff": "Staf Administrativ",
+    "roleCoordinator": "Koordinator",
+    "roleVicePrincipal": "Nëndrejtor",
+    "rolePrincipal": "Drejtor",
+    "roleLabel": "Roli",
+    "editProfile": "Ndrysho Profilin",
+    "resetPassword": "Rivendos Fjalëkalimin",
+    "manageSubjects": "Cakto Lëndët",
+    "deleteAccount": "Fshi Llogarinë",
+    "noUsersFound": "Nuk u gjet asnjë përdorues",
+    "roleSecretary": "Sekretaria",
+    "roleAdmin": "Administrator"
   },
   "guideCenter": {
     "title": "Help & Knowledge Center",
@@ -1739,19 +1871,19 @@ export default {
         "content": "The teacher dashboard provides a complete overview of your day. Top widgets display today's scheduled classes with times and room numbers. Central notifications show parent meeting requests, messages, and office notices.\n\nStep 1: Customize your dashboard widgets by dragging them.\nStep 2: Click on any class in the schedule to open its register directly.\nStep 3: Filter notifications by urgency or category.\n\nTip: Enable priority alerts to stay informed about urgent announcements."
       },
       "attendance": {
-        "title": "Attendance Register",
-        "desc": "How to record attendance, absences, and delays quickly and accurately.",
-        "content": "The attendance register automatically loads the student list for the current period.\n\nStep 1: Click on a student name to toggle status (Present, Absent, Late, Early exit).\nStep 2: Add optional justification notes or remarks.\nStep 3: Click \"Sign Lesson\" to confirm and digitally sign the session.\nStep 4: Parents of absent students are notified automatically.\n\nShortcut: Press Ctrl+Enter to quickly save attendance."
+        "title": "Marrja e Mungesave & Nënshkrimi i Mësimit",
+        "desc": "Si të merrni praninë e nxënësve dhe të nënshkruani orën mësimore.",
+        "content": "Dhe regjistroni mungesat dhe temat e mësimit brenda pak sekondave.\n\nHapi 1: Hapni 'Ditari i Klasës' dhe zgjidhni klasën tuaj.\nHapi 2: Shënoni nxënësit si të pranishëm, mungesë ose me vonesë.\nHapi 3: Vendosni temën dhe nënshkruani orën."
       },
       "grades": {
-        "title": "Grade Management",
-        "desc": "Enter and manage written, oral, and practical grades with keyboard Matrix View.",
-        "content": "The gradebook offers standard view and high-speed keyboard Matrix View.\n\nStep 1: Select class and subject from the dropdown.\nStep 2: Activate Matrix View to navigate cells with TAB and ARROW keys.\nStep 3: Type numerical score (1-10) or qualitative mark and press ENTER.\nStep 4: Add optional public or private comments.\nStep 5: Subject and class averages update instantly.\n\nWarning: Published grades are visible to students and parents within seconds."
+        "title": "Hedhja e Notave dhe Vlerësimi",
+        "desc": "Si të vendosni notat me gojë, me shkrim dhe praktike.",
+        "content": "Menaxhoni notat dhe vlerësimet për secilin nxënës me lehtësi."
       },
       "agenda": {
-        "title": "School Agenda & Homework",
-        "desc": "Plan tests, assignments, and shared class activities.",
-        "content": "The teacher agenda syncs automatically with students and parents.\n\nStep 1: Click on any calendar date to schedule an event.\nStep 2: Choose event type: Homework, Exam, Field trip, or Reminder.\nStep 3: Select subject, description, and attach learning files.\nStep 4: The system alerts you if the class already has more than 2 exams on the same day.\n\nTip: Use the Week view to check for test overlaps across subjects."
+        "title": "Detyrat e Shtëpisë & Kalendari",
+        "desc": "Si të caktoni detyrat dhe provimet.",
+        "content": "Caktoni afatet dhe organizoni ngarkesën e studimit për klasën."
       },
       "communications": {
         "title": "Communications & Messages",
@@ -1772,6 +1904,16 @@ export default {
         "title": "Personalized Education Plan (PDP / PEI)",
         "desc": "Draft and apply compensatory and dispensatory measures for Special Needs / DSA students.",
         "content": "The PDP module allows Class Councils to define and share personalized learning plans.\n\nStep 1: Access \"PDP / PEI\" from class menu.\nStep 2: Select student and configure grid of compensatory measures (calculators, formulas) and dispensatory measures.\nStep 3: Save draft and share document with parents for digital approval.\nStep 4: Active measures display visual badges during daily grading.\n\nTip: Use pre-configured evaluation rubrics to speed up plan drafting."
+      },
+      "uda": {
+        "title": "Planifikimi i Njësive Mësimore (UdA)",
+        "desc": "Dizajnimi kurrikular sipas kompetencave.",
+        "content": "Strukturoni orët mësimore dhe vlerësoni kompetencat kyçe evropiane."
+      },
+      "colloqui": {
+        "title": "Takimet me Prindërit",
+        "desc": "Caktimi i orareve të lira për takime individuale.",
+        "content": "Përcaktoni fashat orare dhe konfirmoni kërkesat e prindërve."
       }
     },
     "student": {
@@ -1781,19 +1923,19 @@ export default {
         "content": "The student dashboard prioritizes urgent tasks and upcoming exams.\n\nStep 1: Review \"Today's Schedule\" for lessons and rooms.\nStep 2: Check \"Due Today\" and \"Tomorrow's Exams\".\nStep 3: Monitor your overall GPA and recent grade additions.\n\nTip: Install the PWA on your phone for instant notification alerts."
       },
       "grades": {
-        "title": "My Grades & Performance",
-        "desc": "Track your subject grades, averages, and evaluation history.",
-        "content": "View all assessments organized by subject and academic term.\n\nStep 1: Select a subject to inspect detailed teacher feedback.\nStep 2: Review the trend line to understand your progress over time.\nStep 3: Switch between terms (1st Term, 2nd Term, Final).\nStep 4: Download a full PDF transcript at any time."
+        "title": "Konsultimi i Notave & Mesatareve",
+        "desc": "Si të kontrolloni notat dhe ecurinë tuaj akademike.",
+        "content": "Shikoni notat e fundit, mesataret sipas lëndëve dhe simuloni notat kaluese."
       },
       "homework": {
-        "title": "Homework & Assignments",
-        "desc": "Organize your homework, downloads, and submission deadlines.",
-        "content": "Stay on top of all homework assignments and study materials.\n\nStep 1: Filter tasks by due date or subject.\nStep 2: Click on an assignment to download attachments.\nStep 3: Mark tasks as \"Completed\" to keep track of your workload."
+        "title": "Detyrat & Kalendari i Studimit",
+        "desc": "Organizoni detyrat dhe përgatitjet për testet.",
+        "content": "Mbani nën kontroll afatet e detyrave dhe njoftimet nga mësuesit."
       },
       "attendance": {
-        "title": "My Attendance Record",
-        "desc": "Track overall attendance, absences, tardiness, and justification status.",
-        "content": "Inspect your full attendance balance and annual hour threshold.\n\nStep 1: Open \"My Attendance\".\nStep 2: Check top badge for total absence hours.\nStep 3: Review monthly calendar for absent (red) and late (orange) days.\nStep 4: Verify parent justification status (Green = Justified, Red = Pending)."
+        "title": "Prania & Arsyetimet",
+        "desc": "Kontrolloni mungesat dhe vonesat tuaja.",
+        "content": "Shikoni statusin e mungesave dhe kërkesave për arsyetim."
       },
       "documents": {
         "title": "Report Card & Official Documents",
@@ -1841,144 +1983,172 @@ export default {
         "title": "Online Absence Justifications",
         "desc": "Submit digital justifications for student absences and tardiness.",
         "content": "No paper books required: justify absences securely with PIN or OTP.\n\nStep 1: Open \"Attendance & Justifications\".\nStep 2: View pending unexcused absences.\nStep 3: Click \"Justify\" next to date, select reason (Illness, Family), and sign with PIN."
+      },
+      "grades": {
+        "title": "Vlerësimi & Dëftesa",
+        "desc": "Ndiqni notat dhe vlerësimet e fëmijëve tuaj.",
+        "content": "Qasje e menjëhershme në të gjitha notat, mesataret dhe dëftesat zyrtare."
+      },
+      "attendance": {
+        "title": "Arsyetimi i Mungesave",
+        "desc": "Si të arsyetoni mungesat e fëmijës tuaj online.",
+        "content": "Dërgoni arsyetime për mungesat dhe vonesat me një klikim."
+      },
+      "colloqui": {
+        "title": "Rezervimi i Takimeve me Mësuesit",
+        "desc": "Caktoni takime individuale me stafin mësimdhënës.",
+        "content": "Zgjidhni orarin e përshtatshëm dhe rezervoni takimin online ose në shkollë."
       }
     },
     "secretary": {
       "students": {
-        "title": "Student Registry Management",
-        "desc": "Search, manage, and update student profiles and demographic records.",
-        "content": "The student registry is the central database for all enrolled learners.\n\nStep 1: Use global search bar (name, tax code, class).\nStep 2: Click a record to open the full student dossier.\nStep 3: Edit contact information, enrollment status, or guardian links.\nStep 4: Export filtered data to Excel or CSV formats."
+        "title": "Menaxhimi i Regjistrit të Nxënësve",
+        "desc": "Kërkimi, regjistrimi dhe përditësimi i të dhënave të nxënësve.",
+        "content": "Administroni dosjet akademike, kontaktet dhe regjistrimet e reja."
       },
       "classes": {
-        "title": "Class & Section Organization",
-        "desc": "Create classes, associate subjects, and assign teachers.",
-        "content": "Manage class structure and curriculum mappings for current school year.\n\nStep 1: Open \"Class Management\".\nStep 2: Click \"New Class\" to add section.\nStep 3: Assign curriculum subjects and link subject teachers.\nStep 4: Designate Class Coordinator and Secretary."
+        "title": "Organizimi i Klasave dhe Seksioneve",
+        "desc": "Krijimi i klasave dhe caktimi i mësuesve titullarë.",
+        "content": "Strukturoni vitin shkollor, oraret dhe ndarjen e lëndëve."
       },
       "certificates": {
-        "title": "Certificate Generation",
-        "desc": "Issue official school documents, attendance proofs, and certificates.",
-        "content": "Produce signed school documents in seconds.\n\nStep 1: Search for student record.\nStep 2: Go to \"Certificates\" → \"Generate\".\nStep 3: Select template (Enrollment, Attendance, Transcripts).\nStep 4: Preview, apply digital stamp, and print or email directly."
+        "title": "Gjenerimi i Vërtetimeve",
+        "desc": "Lëshimi i dokumenteve zyrtare dhe vërtetimeve të frekuentimit.",
+        "content": "Gjeneroni dokumente me vulë digjitale dhe nënshkrim zyrtar në sekonda."
       },
       "timetable": {
-        "title": "School Timetable & Substitutions",
-        "desc": "Configure weekly schedule and assign daily teacher substitutions.",
-        "content": "Manage school schedule grid and cover teacher absences.\n\nStep 1: Open \"Timetable & Substitutions\".\nStep 2: Input weekly lesson slots on schedule grid.\nStep 3: In case of absence, system recommends available free teachers.\nStep 4: Assign substitute and click \"Notify Teacher\"."
+        "title": "Orari Mësimor dhe Zëvendësimet",
+        "desc": "Menaxhimi i orareve javore dhe zëvendësimit të mësuesve.",
+        "content": "Planifikoni orët dhe mbuloni mungesat e mësuesve."
       },
       "communications": {
-        "title": "Circular & Notice Management",
-        "desc": "Publish official circulars and monitor reading confirmation.",
-        "content": "Publish official broadcasts to staff, parents, and students.\n\nStep 1: Open \"Communications & Bulletin\".\nStep 2: Click \"New Circular\".\nStep 3: Enter protocol number, title, body text.\nStep 4: Select target groups and signature requirement."
+        "title": "Qarkoret dhe Njoftimet Zyrtare",
+        "desc": "Publikimi i njoftimeve dhe monitorimi i marrjes së dijenisë.",
+        "content": "Dërgoni qarkore zyrtare për stafin, prindërit dhe nxënësit."
       },
       "reports": {
-        "title": "Reports & Ministry Data Export (SIDI)",
-        "desc": "Extract statistics, attendance reports, and SIDI data files.",
-        "content": "Generate aggregate statistical reports and SIDI export files.\n\nStep 1: Open \"Reports & Statistics\".\nStep 2: Choose report type (Attendance audit, Scrutiny esiti, Municipal lists).\nStep 3: Select export format: Excel, CSV, PDF, or SIDI XML."
+        "title": "Raportet dhe Statistikat",
+        "desc": "Nxjerrja e statistikave dhe eksportimi i të dhënave.",
+        "content": "Gjeneroni raporte të agreguara për frekuentimin dhe rezultatet."
       }
     },
     "admin": {
       "monitoring": {
-        "title": "System & Health Monitoring",
-        "desc": "Monitor platform uptime, API response times, and server performance.",
-        "content": "Real-time telemetry and health monitoring across all platform services.\n\nStep 1: Inspect server CPU, RAM, and active session count.\nStep 2: Monitor API throughput and error rates over last 24 hours.\nStep 3: Configure alert thresholds for proactive notifications.\n\nWarning: Use Maintenance Mode during scheduled platform updates."
+        "title": "Monitorimi i Sistemit",
+        "desc": "Monitorimi i performancës së serverit dhe bazës së të dhënave.",
+        "content": "Kontrolloni gjendjen teknike, memorien RAM dhe shërbimet e sistemit në kohë reale."
       },
       "users": {
-        "title": "User & Access Management",
-        "desc": "Manage user accounts, RBAC permissions, and authentication policies.",
-        "content": "Centralized user provisioning and security management.\n\nStep 1: Search users by role, institution, or active status.\nStep 2: Create single accounts or use bulk CSV/Excel import tool.\nStep 3: Enforce 2FA/MFA and manage password resets.\nStep 4: Review immutable audit logs for compliance auditing."
+        "title": "Menaxhimi i Përdoruesve",
+        "desc": "Krijimi i llogarive, të drejtat dhe politikat e sigurisë.",
+        "content": "Menaxhoni të gjitha llogaritë e përdoruesve dhe konfiguroni 2FA."
       },
       "schools": {
-        "title": "School Campuses & Branches",
-        "desc": "Configure school branches, mechanical codes, and network parameters.",
-        "content": "Manage multi-tenant institution structure.\n\nStep 1: Open \"School Management\".\nStep 2: Add campus branches (Central, Branch, Primary, Secondary).\nStep 3: Input official Mechanical Code and contact info."
+        "title": "Menaxhimi i Institucioneve",
+        "desc": "Konfigurimi i shkollave dhe degëve arsimore.",
+        "content": "Regjistroni kodet zyrtare dhe të dhënat administrative të shkollave."
       },
       "security": {
-        "title": "Security & Auth Policies",
-        "desc": "Configure password rules, session timeouts, 2FA, and rate limiting.",
-        "content": "Set security rules in compliance with AgID and GDPR standards.\n\nStep 1: Open \"Security & Auth\".\nStep 2: Set minimum password length and expiration frequency.\nStep 3: Enforce 2FA requirement for administrative and teaching staff."
+        "title": "Politikat e Sigurisë",
+        "desc": "Konfigurimi i fjalëkalimeve dhe kërkesave të sigurisë.",
+        "content": "Përshtatni rregullat e sigurisë sipas standardeve më të larta."
       },
       "analytics": {
-        "title": "Analytics & Dropout Prevention",
-        "desc": "Predictive analytics for student dropout risk and chronic absenteeism.",
-        "content": "Use BI tools to identify students at risk of dropout.\n\nStep 1: Open \"Analytics & BI\".\nStep 2: Inspect absenteeism heatmaps by class and subject.\nStep 3: Set alert criteria (e.g. Absences > 20% + GPA < 5.5)."
+        "title": "Analitika dhe Parandalimi i Braktisjes",
+        "desc": "Analizë parashikuese për rrezikun e braktisjes shkollore.",
+        "content": "Identifikoni nxënësit me rrezik mungesash dhe rezultatesh të ulëta."
       },
       "integrations": {
-        "title": "E-Learning Integrations & SSO",
-        "desc": "Sync with Google Classroom, Microsoft Teams, and SSO providers.",
-        "content": "Connect Electronic Register with cloud LMS platforms.\n\nStep 1: Open \"Integrations & SSO\".\nStep 2: Enable Google Workspace or Microsoft 365 module.\nStep 3: Enter OAuth2 Client ID and Secret Key."
+        "title": "Integrimet dhe Hyrja me Një Klik (SSO)",
+        "desc": "Lidhja me Google Workspace dhe Microsoft 365.",
+        "content": "Aktivizoni hyrjen me llogaritë institucionale."
       },
       "audit": {
-        "title": "Audit Log & GDPR Traceability",
-        "desc": "Immutable system activity log tracking all user access and edits.",
-        "content": "Ensure full data traceability in compliance with GDPR 2016/679.\n\nStep 1: Open \"Audit Logs & Traceability\".\nStep 2: Inspect activity log: Timestamp, User, Role, IP, Action.\nStep 3: Export encrypted PDF logs for compliance audits."
+        "title": "Regjistri i Auditimit & Gjurmueshmëria",
+        "desc": "Gjurmimi i plotë i veprimeve të përdoruesve në sistem.",
+        "content": "Regjistër i pandryshueshëm i të gjitha veprimeve për transparencë maksimale."
       }
     }
   },
   "reportsPage": {
-    "title": "Reports & Analytics",
-    "subtitle": "Statistical summaries, grade averages and exportable documents",
-    "exportPdf": "Export PDF",
-    "exportExcel": "Export Excel"
+    "title": "Raporte & Statistika",
+    "subtitle": "Përmbledhje statistikore, mesatare notash dhe dokumente zyrtare",
+    "exportPdf": "Eksporto PDF",
+    "exportExcel": "Eksporto Excel"
   },
   "attendance": {
-    "title": "Attendance & Daily Register",
-    "present": "Present",
-    "absent": "Absent",
-    "late": "Late",
-    "earlyExit": "Early Exit",
-    "justified": "Justified",
-    "justify": "Justify",
-    "justifyAbsence": "Justify Absence / Tardy",
-    "reason": "Reason",
-    "healthReasons": "Health Reasons",
-    "familyReasons": "Family Reasons",
-    "medicalVisit": "Medical Appointment",
-    "activityType": "Activity Type",
-    "activityPrefix": "Activity:",
-    "careerGuidance": "Career Guidance",
-    "minutesLate": "Minutes Late",
-    "earlyExitTime": "Exit Time",
-    "standardLesson": "Standard Lesson",
-    "atTime": "at",
-    "totalAbsences": "Total Absences",
-    "noAbsences": "No absences recorded",
-    "pendingJustification": "Pending justification"
+    "title": "Prania dhe Regjistri Ditor",
+    "present": "I Pranishëm",
+    "absent": "Mungesë",
+    "late": "Vonesë",
+    "earlyExit": "Largim i Parakohshëm",
+    "justified": "E Arsyetuar",
+    "justify": "Arsyeto",
+    "justifyAbsence": "Arsyeto Mungesën / Vonesën",
+    "reason": "Arsyeja",
+    "healthReasons": "Arsye Shëndetësore",
+    "familyReasons": "Arsye Familjare",
+    "medicalVisit": "Vizitë Mjekësore",
+    "activityType": "Lloji i Aktivitetit",
+    "activityPrefix": "Aktiviteti",
+    "careerGuidance": "Orientim & Këshillim Karriere",
+    "minutesLate": "minuta vonesë",
+    "earlyExitTime": "Ora e largimit",
+    "standardLesson": "Mësim i Zakonshëm",
+    "atTime": "në orën",
+    "totalAbsences": "Totali i Mungesave",
+    "noAbsences": "Nuk ka mungesa të regjistruara",
+    "pendingJustification": "Në pritje të arsyetimit"
   },
   "studentsPage": {
-    "studentDossier": "Student Dossier",
-    "multiYearHistory": "Multi-Year History",
-    "documentsAndAttachments": "Documents & Attachments",
-    "besDsaDossier": "SEN / Specific Learning Needs Dossier",
-    "besDsaDocumentation": "SEN / Learning Needs Documentation",
-    "newEnrollment": "New Student Enrollment",
-    "personalData": "Personal Data",
-    "birthDate": "Date of Birth",
-    "birthPlace": "Place of Birth",
-    "taxCode": "Tax Code",
-    "gender": "Gender",
-    "residenceAndContacts": "Residence & Contacts",
-    "personalEmail": "Personal Email",
-    "parentsGuardians": "Parents / Guardians",
-    "primaryContact": "Primary Contact",
-    "secondaryContact": "Secondary Contact",
-    "schoolData": "School Data",
-    "assignedClass": "Assigned Class",
-    "enrollmentDate": "Enrollment Date",
-    "documentsSubmitted": "Submitted Documents",
-    "completeEnrollment": "Complete Enrollment",
-    "enrollmentSuccess": "Enrollment completed successfully",
-    "studentFile": "Dossier"
+    "studentDossier": "Dosja e Nxënësit",
+    "multiYearHistory": "Historiku Shumëvjeçar",
+    "documentsAndAttachments": "Dokumente & Bashkëngjitje",
+    "besDsaDossier": "Dosja e Nevojave të Veçanta Arsimore",
+    "besDsaDocumentation": "Dokumentacioni i Masave Mbështetëse",
+    "newEnrollment": "Regjistrim i Ri",
+    "personalData": "Të Dhënat Personale",
+    "birthDate": "Datëlindja",
+    "birthPlace": "Vendlindja",
+    "taxCode": "Numri Personal / ID",
+    "gender": "Gjinia",
+    "residenceAndContacts": "Vendbanimi dhe Kontaktet",
+    "personalEmail": "Email Personal",
+    "parentsGuardians": "Prindërit / Kujdestarët Ligjorë",
+    "primaryContact": "Kontakti Kryesor",
+    "secondaryContact": "Kontakti Dytësor",
+    "schoolData": "Të Dhënat Shkollore",
+    "assignedClass": "Klasa e Caktuar",
+    "enrollmentDate": "Data e Regjistrimit",
+    "documentsSubmitted": "Dokumentet e Paraqitura",
+    "completeEnrollment": "Përfundo Regjistrimin",
+    "enrollmentSuccess": "Regjistrimi u krye me sukses!",
+    "studentFile": "Skeda e Nxënësit"
   },
   "classesPage": {
-    "currentClass": "Current Class"
+    "currentClass": "Klasa Aktuale"
   },
   "admin": {
-    "apiRequests": "API Requests",
-    "userDeleted": "User deleted successfully",
-    "userDeleteError": "Error deleting user"
+    "apiRequests": "Kërkesa API",
+    "userDeleted": "Përdoruesi u fshi me sukses",
+    "userDeleteError": "Gabim gjatë fshirjes së përdoruesit"
   },
   "auth": {
-    "sessionExpired": "Session expired",
-    "enterPasswordToContinue": "Enter password to continue",
-    "sessionWorkPreserved": "Unsaved changes were preserved"
+    "sessionExpired": "Seanca ka skaduar",
+    "enterPasswordToContinue": "Vendosni fjalëkalimin për të vazhduar",
+    "sessionWorkPreserved": "Ndryshimet e paruajtura u ruajtën automatikisht"
+  },
+  "attendancePage": {
+    "title": "Prania & Mungesat",
+    "subtitle": "Regjistrimi i pranisë, vonesave dhe arsyetimeve",
+    "tableTitle": "Pasqyra e Pranisë"
+  },
+  "reportCardPage": {
+    "title": "Dëftesa & Vlerësimi Përfundimtar",
+    "subtitle": "Fleta zyrtare e vlerësimit në mbyllje të periudhës shkollore",
+    "finalEvaluation": "Rezultati & Vendimi Përfundimtar",
+    "semester1": "Semestri 1",
+    "semester2": "Semestri 2",
+    "exportPdf": "Eksporto PDF"
   }
-};
+}

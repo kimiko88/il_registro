@@ -1,16 +1,16 @@
 <template>
   <q-page class="q-pa-md">
     <div class="row items-center justify-between q-mb-md">
-       <div class="text-h4">{{ t('classRegister.title') }}</div>
-       <q-btn v-if="isParentUser" icon="fact_check" label="Richiedi Giustificazione" color="primary" @click="showJustifyDialog = true" />
-       <q-badge v-else color="grey-6" class="q-pa-xs">Giustificazioni gestite dai Genitori</q-badge>
+       <div class="text-h4">{{ t('nav.myAttendance') || t('classRegister.title') || 'Presenze & Assenze' }}</div>
+       <q-btn v-if="isParentUser" icon="fact_check" :label="t('attendancePage.requestJustification') || 'Richiedi Giustificazione'" color="primary" @click="showJustifyDialog = true" />
+       <q-badge v-else color="grey-6" class="q-pa-xs">{{ t('attendancePage.parentManagedJustifications') || 'Giustificazioni gestite dai Genitori' }}</q-badge>
     </div>
 
     <div class="row q-col-gutter-lg">
         <!-- Stats Sidebar -->
         <div class="col-12 col-md-4">
             <q-card class="text-center q-pa-md">
-                <div class="text-h6">{{ t('classRegister.statsSummary') }}</div>
+                <div class="text-h6">{{ t('classRegister.statsSummary') || 'Riepilogo Presenze' }}</div>
                 <div class="q-my-md relative-position flex flex-center">
                     <q-circular-progress
                       show-value
@@ -22,25 +22,25 @@
                       color="green"
                       track-color="red-1"
                     >
-                        {{ attendancePercentage }}%<br><span class="text-caption text-grey">{{ t('classRegister.present') }}</span>
+                        {{ attendancePercentage }}%<br><span class="text-caption text-grey">{{ t('classRegister.present') || 'Presente' }}</span>
                     </q-circular-progress>
                 </div>
                 <div class="row justify-around">
                     <div>
                         <div class="text-h5 text-red">{{ totalAbsences }}</div>
-                        <div class="text-caption">{{ t('classRegister.absent') }}</div>
+                        <div class="text-caption">{{ t('classRegister.absent') || 'Assenze' }}</div>
                     </div>
                     <div>
                         <div class="text-h5 text-orange">{{ totalDelays }}</div>
-                        <div class="text-caption">{{ t('classRegister.late') }}</div>
+                        <div class="text-caption">{{ t('classRegister.late') || 'Ritardi' }}</div>
                     </div>
                 </div>
             </q-card>
 
             <q-card v-if="attendancePercentage < 85" class="q-mt-md bg-orange-1">
                 <q-card-section>
-                    <div class="text-subtitle2"><q-icon name="warning" /> Attenzione</div>
-                    <div class="text-caption">Hai raggiunto il 15% di assenze consentite. Mettiti in regola per evitare problemi con l'anno scolastico.</div>
+                    <div class="text-subtitle2"><q-icon name="warning" /> {{ t('common.warning') || 'Attenzione' }}</div>
+                    <div class="text-caption">{{ t('attendancePage.warningAbsenceLimit') || 'Hai raggiunto il 15% di assenze consentite. Mettiti in regola per evitare problemi con l\'anno scolastico.' }}</div>
                 </q-card-section>
             </q-card>
         </div>
@@ -48,7 +48,7 @@
         <!-- Attendance List -->
         <div class="col-12 col-md-8">
             <q-table
-              title="Giornale di Classe"
+              :title="t('attendancePage.tableTitle') || 'Giornale di Classe'"
               :rows="attendanceEvents"
               :columns="columns"
               row-key="id"
@@ -69,25 +69,46 @@
         </div>
     </div>
 
-    <!-- Justification Dialog -->
+    <!-- Dialog Giustificazione -->
     <q-dialog v-model="showJustifyDialog">
-        <q-card style="min-width: 400px">
-            <q-card-section class="text-h6">Nuova Giustificazione</q-card-section>
-            <q-card-section>
-                <q-select v-model="justification.event" :options="unjustifiedAbsences" option-label="label" label="Seleziona Assenza" outlined />
-                <q-select v-model="justification.reason" :options="['Motivi di Salute', 'Motivi Familiari', 'Visita Medica']" label="Motivazione" outlined class="q-mt-md" />
-                <q-input v-model="justification.notes" type="textarea" label="Note Aggiuntive" outlined class="q-mt-md" />
-                
-                <div class="q-mt-lg border-dashed q-pa-md text-center bg-grey-1">
-                    <q-icon name="touch_app" size="md" color="grey" />
-                    <div class="text-caption">Firma Digitale (PIN genitore richiesto)</div>
-                </div>
-            </q-card-section>
-            <q-card-actions align="right">
-                <q-btn flat label="Annulla" v-close-popup />
-                <q-btn color="primary" label="Invia Richiesta" @click="submitJustification" v-close-popup />
-            </q-card-actions>
-        </q-card>
+      <q-card style="min-width: 400px">
+        <q-card-section class="bg-primary text-white">
+          <div class="text-h6">{{ t('attendancePage.requestJustification') || 'Giustifica Assenza' }}</div>
+        </q-card-section>
+        <q-card-section class="q-pa-md">
+          <q-select
+            v-model="justification.event"
+            :options="unjustifiedAbsences"
+            :label="t('attendancePage.selectAbsence') || 'Seleziona Assenza da Giustificare'"
+            outlined
+            dense
+            class="q-mb-md"
+          />
+          <q-select
+            v-model="justification.reason"
+            :options="[
+                { label: t('attendancePage.reasonHealth') || 'Motivi di Salute', value: 'Salute' },
+                { label: t('attendancePage.reasonFamily') || 'Motivi Familiari', value: 'Famiglia' },
+                { label: t('common.other') || 'Altro', value: 'Altro' }
+            ]"
+            :label="t('attendancePage.reason') || 'Motivazione'"
+            outlined
+            dense
+            class="q-mb-md"
+          />
+          <q-input
+            v-model="justification.notes"
+            type="textarea"
+            :label="t('common.optionalNotes') || 'Note aggiuntive (opzionale)'"
+            outlined
+            dense
+          />
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn flat :label="t('common.cancel') || 'Annulla'" v-close-popup />
+          <q-btn color="primary" :label="t('common.confirm') || 'Invia Richiesta'" @click="submitJustification" />
+        </q-card-actions>
+      </q-card>
     </q-dialog>
 
   </q-page>
@@ -95,7 +116,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useQuasar, date as qdate } from 'quasar'
+import { useQuasar } from 'quasar'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { attendanceService } from '@/services/attendanceService'
@@ -110,13 +131,13 @@ onMounted(() => {
     fetchAttendance()
 })
 
-const columns = [
-  { name: 'date', label: 'Data', field: 'date', align: 'left', sortable: true },
-  { name: 'type', label: 'Stato', field: 'type', align: 'center' },
-  { name: 'time', label: 'Dettaglio Orario', field: 'time', align: 'center' },
-  { name: 'justified', label: 'Giustificata', field: 'justified', align: 'center' },
-  { name: 'notes', label: 'Annotazioni', field: 'notes', align: 'left' }
-]
+const columns = computed(() => [
+  { name: 'date', label: t('gradesPage.date') || 'Data', field: 'date', align: 'left', sortable: true },
+  { name: 'type', label: t('common.status') || 'Stato', field: 'type', align: 'center' },
+  { name: 'time', label: t('attendancePage.timeDetail') || 'Dettaglio Orario', field: 'time', align: 'center' },
+  { name: 'justified', label: t('attendancePage.justified') || 'Giustificata', field: 'justified', align: 'center' },
+  { name: 'notes', label: t('common.notes') || 'Annotazioni', field: 'notes', align: 'left' }
+])
 
 const fetchAttendance = async () => {
     try {

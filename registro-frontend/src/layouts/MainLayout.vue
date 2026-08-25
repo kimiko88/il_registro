@@ -553,7 +553,11 @@ const menuLabelToKeyMap = {
   'Obiettivi': 'goals',
   'Uscite & Viaggi': 'trips',
   'Pagamenti': 'payments',
-  'Assemblee & Riunioni': 'assemblies'
+  'Assemblee & Riunioni': 'assemblies',
+  'Fascicolo Documentale & Atti': 'documents',
+  'Fascicolo Documentale': 'documents',
+  'Compiti a casa': 'homework',
+  'Media Voti': 'averageGrade'
 }
 
 const categoryToKeyMap = {

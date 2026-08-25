@@ -48,8 +48,8 @@
           <div class="row items-center">
             <q-avatar color="primary" text-color="white" icon="school" size="48px" class="q-mr-md" />
             <div>
-              <div class="text-h6 text-weight-bold text-slate-800">ISTITUTO SCOLASTICO REGISTRO V2</div>
-              <div class="text-caption text-slate-500">Anno Scolastico {{ reportData?.school_year || '2025/2026' }}</div>
+              <div class="text-h6 text-weight-bold text-slate-800">{{ authStore.user?.school_name || reportData?.school_name || 'ISTITUTO SCOLASTICO' }}</div>
+              <div class="text-caption text-slate-500">{{ t('common.year') || 'Anno Scolastico' }} {{ reportData?.school_year || '2025/2026' }}</div>
             </div>
           </div>
           <div class="text-right">
@@ -61,18 +61,18 @@
 
         <div class="row q-col-gutter-md">
           <div class="col-12 col-md-6">
-            <div class="text-subtitle2 text-slate-500">Studente/ssa</div>
+            <div class="text-subtitle2 text-slate-500">{{ t('usersPage.roleStudents') || 'Studente/ssa' }}</div>
             <div class="text-h6 text-weight-bold text-slate-800">
-              {{ authStore.user?.first_name }} {{ authStore.user?.last_name }}
+              {{ reportData?.student_name || `${authStore.user?.first_name || ''} ${authStore.user?.last_name || ''}`.trim() || 'Studente' }}
             </div>
-            <div class="text-caption text-slate-500">Codice Fiscale: {{ authStore.user?.fiscal_code || 'N/D' }}</div>
+            <div class="text-caption text-slate-500">Codice Fiscale: {{ authStore.user?.fiscal_code || reportData?.fiscal_code || 'N/D' }}</div>
           </div>
           <div class="col-12 col-md-6 text-md-right">
-            <div class="text-subtitle2 text-slate-500">Classe Frequentata</div>
+            <div class="text-subtitle2 text-slate-500">{{ t('classRegister.selectClass') || 'Classe Frequentata' }}</div>
             <div class="text-h6 text-weight-bold text-slate-800">
               {{ reportData?.class_name || 'Classe N/A' }}
             </div>
-            <div class="text-caption text-slate-500">Coordinatore: {{ reportData?.coordinator_name || 'Docente Coordinatore' }}</div>
+            <div class="text-caption text-slate-500">{{ t('classRegister.coordinator') || 'Coordinatore' }}: {{ reportData?.coordinator_name || 'Docente Coordinatore' }}</div>
           </div>
         </div>
       </q-card>
@@ -81,7 +81,7 @@
       <q-card flat bordered class="rounded-xl bg-white shadow-soft overflow-hidden">
         <q-card-section class="q-pa-none">
           <q-table
-            :rows="reportData?.subject_grades || []"
+            :rows="reportData?.subjects || reportData?.subject_grades || []"
             :columns="columns"
             row-key="subject"
             flat
@@ -141,24 +141,24 @@
         <div class="col-12 col-md-6">
           <q-card flat bordered class="rounded-xl bg-white shadow-soft h-full">
             <q-card-section>
-              <div class="text-subtitle1 text-weight-bold text-slate-800 q-mb-sm">Quadro Presenze</div>
+              <div class="text-subtitle1 text-weight-bold text-slate-800 q-mb-sm">{{ t('attendancePage.tableTitle') || 'Quadro Presenze' }}</div>
               <div class="row q-col-gutter-sm text-center">
                 <div class="col-4">
                   <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
                     <div class="text-h6 text-weight-bold text-primary">{{ attendanceStats.absences }}</div>
-                    <div class="text-caption text-slate-500">Ore Assenza</div>
+                    <div class="text-caption text-slate-500">{{ t('classRegister.absent') || 'Ore Assenza' }}</div>
                   </div>
                 </div>
                 <div class="col-4">
                   <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
                     <div class="text-h6 text-weight-bold text-warning">{{ attendanceStats.lates }}</div>
-                    <div class="text-caption text-slate-500">Ritardi</div>
+                    <div class="text-caption text-slate-500">{{ t('classRegister.late') || 'Ritardi' }}</div>
                   </div>
                 </div>
                 <div class="col-4">
                   <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
                     <div class="text-h6 text-weight-bold text-info">{{ attendanceStats.earlyExits }}</div>
-                    <div class="text-caption text-slate-500">Uscite Ant.</div>
+                    <div class="text-caption text-slate-500">{{ t('classRegister.earlyExit') || 'Uscite Ant.' }}</div>
                   </div>
                 </div>
               </div>
@@ -169,7 +169,7 @@
         <div class="col-12 col-md-6">
           <q-card flat bordered class="rounded-xl bg-white shadow-soft h-full">
             <q-card-section>
-              <div class="text-subtitle1 text-weight-bold text-slate-800 q-mb-sm">Esito e Giudizio Finale</div>
+              <div class="text-subtitle1 text-weight-bold text-slate-800 q-mb-sm">{{ t('reportCardPage.finalEvaluation') || 'Esito e Giudizio Finale' }}</div>
               
               <div class="row items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-200 q-mb-sm">
                 <span class="text-weight-bold text-slate-700">Voto di Comportamento:</span>
@@ -196,7 +196,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
 import { useGradesStore } from '@/stores/grades'
@@ -219,14 +219,14 @@ const attendanceStats = reactive({
   earlyExits: 0
 })
 
-const columns = [
-  { name: 'subject', label: 'Materia', align: 'left', field: 'subject', sortable: true },
-  { name: 'teacher', label: 'Docente', align: 'left', field: 'teacher' },
-  { name: 'grades', label: 'Voti Periodo', align: 'center', field: 'grade_count' },
-  { name: 'average', label: 'Media Voti', align: 'center', field: 'subject_average', sortable: true },
-  { name: 'final_grade', label: 'Voto Finale', align: 'center', field: 'final_grade', sortable: true },
-  { name: 'notes', label: 'Note', align: 'left', field: 'notes' }
-]
+const columns = computed(() => [
+  { name: 'subject', label: t('agendaPage.subject') || 'Materia', align: 'left', field: 'subject', sortable: true },
+  { name: 'teacher', label: t('agendaPage.teacher') || 'Docente', align: 'left', field: 'teacher' },
+  { name: 'grades', label: t('gradesPage.periodGrades') || 'Voti Periodo', align: 'center', field: 'grade_count' },
+  { name: 'average', label: t('roleDashboards.averageGrade') || 'Media Voti', align: 'center', field: 'subject_average', sortable: true },
+  { name: 'final_grade', label: t('gradesPage.finalGrade') || 'Voto Finale', align: 'center', field: 'final_grade', sortable: true },
+  { name: 'notes', label: t('common.notes') || 'Note', align: 'left', field: 'notes' }
+])
 
 onMounted(async () => {
   await loadReport()
@@ -258,12 +258,16 @@ async function loadAttendanceStats() {
   try {
     const res = await api.get('/attendance/my-attendance/summary')
     if (res.data) {
-      attendanceStats.absences = res.data.absences || 0
-      attendanceStats.lates = res.data.lates || 0
-      attendanceStats.earlyExits = res.data.early_exits || 0
+      attendanceStats.absences = res.data.total_absences ?? res.data.absences ?? 0
+      attendanceStats.lates = res.data.total_lates ?? res.data.lates ?? 0
+      attendanceStats.earlyExits = res.data.total_early_exits ?? res.data.early_exits ?? 0
+    } else if (reportData.value?.total_absence_days != null) {
+      attendanceStats.absences = reportData.value.total_absence_days
     }
   } catch {
-    // fallback defaults
+    if (reportData.value?.total_absence_days != null) {
+      attendanceStats.absences = reportData.value.total_absence_days
+    }
   }
 }
 
