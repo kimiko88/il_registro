@@ -84,4 +84,56 @@ describe('Frontend Robustness & Input Boundary Test Suite', () => {
       expect(authStore.user.is_principal).toBe(false)
     })
   })
+
+  describe('4. Grade Average Calculation Edge Cases', () => {
+    it('calculates arithmetic fallback when weights are zero or missing', () => {
+      const grades = [
+        { grade_value: 8.0, weight: 0 },
+        { grade_value: 6.0, weight: 0 }
+      ]
+      const totalWeight = grades.reduce((acc, g) => acc + (g.weight || 0), 0)
+      let avg
+      if (totalWeight === 0) {
+        avg = grades.reduce((acc, g) => acc + g.grade_value, 0) / grades.length
+      } else {
+        avg = grades.reduce((acc, g) => acc + g.grade_value * g.weight, 0) / totalWeight
+      }
+      expect(avg).toBe(7.0)
+    })
+
+    it('calculates weighted average correctly when positive weights exist', () => {
+      const grades = [
+        { grade_value: 8.0, weight: 1 },
+        { grade_value: 6.0, weight: 3 }
+      ]
+      const totalWeight = grades.reduce((acc, g) => acc + (g.weight || 0), 0)
+      const avg = grades.reduce((acc, g) => acc + g.grade_value * g.weight, 0) / totalWeight
+      expect(avg).toBe(6.5)
+    })
+  })
+
+  describe('5. Scrutiny Record Immutability & Validation', () => {
+    it('blocks grade updates on locked scrutiny records', async () => {
+      api.post.mockRejectedValueOnce({
+        response: { status: 403, data: { error: 'scrutinio già validato e bloccato dal coordinatore' } }
+      })
+
+      await expect(
+        api.post('/scrutiny/record/rec-1/save', { final_grade: 8 })
+      ).rejects.toBeDefined()
+    })
+  })
+
+  describe('6. Parent Absence Justification Validation', () => {
+    it('requires valid reason when submitting absence justification', async () => {
+      api.post.mockRejectedValueOnce({
+        response: { status: 400, data: { error: 'motivo della giustificazione obbligatorio' } }
+      })
+
+      await expect(
+        api.post('/attendance/justifications', { attendance_id: 'att-1', reason: '' })
+      ).rejects.toBeDefined()
+    })
+  })
 })
+

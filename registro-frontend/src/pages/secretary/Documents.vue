@@ -219,7 +219,7 @@
 
         <q-card-section class="q-pa-xl scroll bg-slate-50" style="max-height: 75vh">
           <div class="document-paper shadow-lg rounded-sm q-pa-xl bg-white mx-auto" style="max-width: 800px">
-            <div v-html="selectedDoc?.content || 'Caricamento...'" class="document-content-html"></div>
+            <div v-html="sanitizedPreviewContent" class="document-content-html"></div>
           </div>
         </q-card-section>
 
@@ -239,6 +239,7 @@ import { useI18n } from 'vue-i18n';
 import { useQuasar } from 'quasar';
 import api from '@/services/api';
 import TemplateManager from '@/components/Secretary/TemplateManager.vue';
+import { sanitizeHTMLContent } from '@/utils/sanitize';
 
 const $q = useQuasar();
 const { t } = useI18n();
@@ -305,6 +306,10 @@ const filteredDocs = computed(() => {
     );
   }
   return filtered;
+});
+
+const sanitizedPreviewContent = computed(() => {
+  return sanitizeHTMLContent(selectedDoc.value?.content || 'Caricamento...');
 });
 
 onMounted(async () => {
