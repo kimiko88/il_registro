@@ -119,6 +119,9 @@ func (h *Handler) RecordTest(c *gin.Context) {
 
 	schoolID := c.GetString("school_id")
 	teacherID := c.GetString("teacher_id")
+	if teacherID == "" {
+		teacherID = c.GetString("user_id")
+	}
 
 	test, err := h.svc.RecordTestOutcome(c.Request.Context(), schoolID, teacherID, req)
 	if err != nil {

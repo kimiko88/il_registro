@@ -471,24 +471,52 @@ function getStatusColor(status) {
   }
 }
 
+function extractList(response) {
+  if (!response) return []
+  const data = response.data !== undefined ? response.data : response
+  if (Array.isArray(data)) return data
+  if (data && Array.isArray(data.users)) return data.users
+  if (data && Array.isArray(data.classes)) return data.classes
+  if (data && Array.isArray(data.subjects)) return data.subjects
+  return []
+}
+
 async function loadData() {
   loadingCourses.value = true
   loadingTests.value = true
   try {
-    const [coursesRes, testsRes, classesRes, subjectsRes, studentsRes] = await Promise.all([
+    const [coursesRes, testsRes, classesRes, subjectsRes, studentsRes] = await Promise.allSettled([
       recoveryService.listCourses(),
       recoveryService.listTests(),
       api.get('/classes'),
       api.get('/subjects'),
       api.get('/users/search?role=student')
     ])
-    courses.value = coursesRes.data || []
-    tests.value = testsRes.data || []
-    classOptions.value = (classesRes.data || []).map(c => ({ label: c.name, value: c.id }))
-    subjectOptions.value = (subjectsRes.data || []).map(s => ({ label: s.name, value: s.id }))
-    studentOptions.value = (studentsRes.data || []).map(s => ({ label: `${s.last_name} ${s.first_name}`, value: s.id }))
+
+    if (coursesRes.status === 'fulfilled') {
+      courses.value = extractList(coursesRes.value)
+    }
+    if (testsRes.status === 'fulfilled') {
+      tests.value = extractList(testsRes.value)
+    }
+
+    const rawClasses = classesRes.status === 'fulfilled' ? extractList(classesRes.value) : []
+    classOptions.value = rawClasses.map(c => {
+      let name = c.name || `Classe ${c.id}`
+      if (c.section && !name.endsWith(c.section)) name += c.section
+      return { label: name, value: c.id }
+    })
+
+    const rawSubjects = subjectsRes.status === 'fulfilled' ? extractList(subjectsRes.value) : []
+    subjectOptions.value = rawSubjects.map(s => ({ label: s.name, value: s.id }))
+
+    const rawStudents = studentsRes.status === 'fulfilled' ? extractList(studentsRes.value) : []
+    studentOptions.value = rawStudents.map(s => ({
+      label: `${s.last_name || ''} ${s.first_name || ''}`.trim() || s.email || s.id,
+      value: s.id
+    }))
   } catch (err) {
-    $q.notify({ type: 'negative', message: 'Errore nel caricamento dei corsi di recupero' })
+    console.error('Error loading recovery courses data', err)
   } finally {
     loadingCourses.value = false
     loadingTests.value = false

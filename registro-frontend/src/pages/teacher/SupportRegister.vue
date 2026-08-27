@@ -500,19 +500,45 @@ const peiColumns = [
   { name: 'progress_status', label: 'Avanzamento', field: 'progress_status', align: 'center' }
 ]
 
+function extractList(response) {
+  if (!response) return []
+  const data = response.data !== undefined ? response.data : response
+  if (Array.isArray(data)) return data
+  if (data && Array.isArray(data.users)) return data.users
+  if (data && Array.isArray(data.classes)) return data.classes
+  return []
+}
+
 async function loadInitialData() {
   try {
-    const [studentsRes, teachersRes, classesRes] = await Promise.all([
+    const [studentsRes, teachersRes, classesRes] = await Promise.allSettled([
       api.get('/users/search?role=student'),
       api.get('/users/search?role=teacher'),
       api.get('/classes')
     ])
-    studentOptions.value = (studentsRes.data || []).map(s => ({ label: `${s.last_name} ${s.first_name}`, value: s.id }))
-    teacherOptions.value = (teachersRes.data || []).map(t => ({ label: `${t.last_name} ${t.first_name}`, value: t.id }))
-    classOptions.value = (classesRes.data || []).map(c => ({ label: c.name, value: c.id }))
+
+    const rawStudents = studentsRes.status === 'fulfilled' ? extractList(studentsRes.value) : []
+    studentOptions.value = rawStudents.map(s => ({
+      label: `${s.last_name || ''} ${s.first_name || ''}`.trim() || s.email || s.id,
+      value: s.id
+    }))
+
+    const rawTeachers = teachersRes.status === 'fulfilled' ? extractList(teachersRes.value) : []
+    teacherOptions.value = rawTeachers.map(t => ({
+      label: `${t.last_name || ''} ${t.first_name || ''}`.trim() || t.email || t.id,
+      value: t.id
+    }))
+
+    const rawClasses = classesRes.status === 'fulfilled' ? extractList(classesRes.value) : []
+    classOptions.value = rawClasses.map(c => {
+      let name = c.name || `Classe ${c.id}`
+      if (c.section && !name.endsWith(c.section)) name += c.section
+      return { label: name, value: c.id }
+    })
+
     loadData()
   } catch (err) {
-    $q.notify({ type: 'negative', message: 'Errore nel caricamento dei dati di base' })
+    console.error('Error loading support register initial data', err)
   }
 }
 
@@ -521,14 +547,18 @@ async function loadData() {
   loadingPei.value = true
   try {
     const params = selectedStudentId.value ? { student_id: selectedStudentId.value } : {}
-    const [diaryRes, peiRes] = await Promise.all([
+    const [diaryRes, peiRes] = await Promise.allSettled([
       supportService.listDiaryEntries(params),
       supportService.listPeiGoals(params)
     ])
-    diaryEntries.value = diaryRes.data || []
-    peiGoals.value = peiRes.data || []
+    if (diaryRes.status === 'fulfilled') {
+      diaryEntries.value = extractList(diaryRes.value)
+    }
+    if (peiRes.status === 'fulfilled') {
+      peiGoals.value = extractList(peiRes.value)
+    }
   } catch (err) {
-    $q.notify({ type: 'negative', message: 'Errore nel caricamento del registro di sostegno' })
+    console.error('Error loading support register data', err)
   } finally {
     loadingDiary.value = false
     loadingPei.value = false

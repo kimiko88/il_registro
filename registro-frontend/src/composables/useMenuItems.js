@@ -166,8 +166,7 @@ export function useMenuItems(role) {
                     { label: 'Colloqui', icon: 'event', path: '/parent/colloqui' },
                     { label: 'Ricevimento Generale', icon: 'confirmation_number', path: '/parent/general-meetings' },
                     { label: 'Uscite & Viaggi', icon: 'card_travel', path: '/parent/trips' },
-                    { label: 'Pagamenti', icon: 'payments', path: '/parent/payments' },
-                    { label: 'Assemblee & Riunioni', icon: 'groups', path: '/parent/meetings' }
+                    { label: 'Pagamenti', icon: 'payments', path: '/parent/payments' }
                 ]
             },
             {

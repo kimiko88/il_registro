@@ -120,8 +120,8 @@ describe('MainLayout Logic', () => {
             // parent uses nested categories — use getFlatItems to count leaves
             const flatItems = getFlatItems('parent')
 
-            // 1 dashboard + 7 Valutazione + 6 Servizi + 5 Comunicazioni = 19
-            expect(flatItems).toHaveLength(19)
+            // 1 dashboard + 7 Valutazione + 5 Servizi + 5 Comunicazioni = 18
+            expect(flatItems).toHaveLength(18)
             expect(flatItems.map(i => i.label)).toContain('Dashboard')
             expect(flatItems.map(i => i.label)).toContain('I Miei Figli')
             expect(flatItems.map(i => i.label)).toContain('Colloqui')

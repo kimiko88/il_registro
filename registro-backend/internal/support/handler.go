@@ -36,6 +36,9 @@ func (h *Handler) CreateDiaryEntry(c *gin.Context) {
 
 	schoolID := c.GetString("school_id")
 	teacherID := c.GetString("teacher_id")
+	if teacherID == "" {
+		teacherID = c.GetString("user_id")
+	}
 
 	entry, err := h.svc.CreateDiaryEntry(c.Request.Context(), schoolID, teacherID, req)
 	if err != nil {
@@ -53,6 +56,9 @@ func (h *Handler) ListDiaryEntries(c *gin.Context) {
 	classID := c.Query("class_id")
 
 	role := c.GetString("user_role")
+	if role == "" {
+		role = c.GetString("role")
+	}
 	isFamily := (role == "parent" || role == "student")
 
 	list, err := h.svc.ListDiaryEntries(c.Request.Context(), schoolID, studentID, teacherID, classID, isFamily)
@@ -70,6 +76,9 @@ func (h *Handler) ListDiaryEntries(c *gin.Context) {
 func (h *Handler) DeleteDiaryEntry(c *gin.Context) {
 	id := c.Param("id")
 	teacherID := c.GetString("teacher_id")
+	if teacherID == "" {
+		teacherID = c.GetString("user_id")
+	}
 
 	if err := h.svc.DeleteDiaryEntry(c.Request.Context(), id, teacherID); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

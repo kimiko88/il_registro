@@ -176,15 +176,24 @@ const bookingForm = ref({
   notes: ''
 })
 
+function extractList(response) {
+  if (!response) return []
+  const data = response.data !== undefined ? response.data : response
+  if (Array.isArray(data)) return data
+  if (data && Array.isArray(data.meetings)) return data.meetings
+  if (data && Array.isArray(data.children)) return data.children
+  if (data && Array.isArray(data.tickets)) return data.tickets
+  return []
+}
+
 async function loadData() {
   try {
-    const [meetingsRes, childrenRes] = await Promise.all([
+    const [meetingsRes, childrenRes] = await Promise.allSettled([
       colloquiService.listGeneralMeetings(),
       api.get('/users/me/children')
     ])
 
-    const rawMeetings = meetingsRes.data || []
-    // Fetch full details with teacher slots for each meeting
+    const rawMeetings = meetingsRes.status === 'fulfilled' ? extractList(meetingsRes.value) : []
     const detailedMeetings = await Promise.all(
       rawMeetings.map(async m => {
         try {
@@ -197,19 +206,22 @@ async function loadData() {
     )
     meetings.value = detailedMeetings
 
-    childrenOptions.value = (childrenRes.data || []).map(c => ({
-      label: `${c.first_name} ${c.last_name}`,
+    const rawChildren = childrenRes.status === 'fulfilled' ? extractList(childrenRes.value) : []
+    childrenOptions.value = rawChildren.map(c => ({
+      label: `${c.first_name || ''} ${c.last_name || ''}`.trim() || c.id,
       value: c.id
     }))
 
     // Load active tickets for parent
     if (detailedMeetings.length > 0) {
       const ticketsPromises = detailedMeetings.map(m => colloquiService.listQueueTickets(m.id))
-      const ticketsResponses = await Promise.all(ticketsPromises)
-      myTickets.value = ticketsResponses.flatMap(r => r.data || [])
+      const ticketsResponses = await Promise.allSettled(ticketsPromises)
+      myTickets.value = ticketsResponses
+        .filter(r => r.status === 'fulfilled')
+        .flatMap(r => extractList(r.value))
     }
   } catch (err) {
-    $q.notify({ type: 'negative', message: 'Errore caricamento ricevimenti pomeridiani' })
+    console.error('Error loading parent general meeting data', err)
   }
 }
 

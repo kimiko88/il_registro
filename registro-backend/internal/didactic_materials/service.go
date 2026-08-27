@@ -93,7 +93,7 @@ func (s *service) GetMaterialsByClass(ctx context.Context, userID, role, classID
 		return nil, err
 	}
 
-	var res []MaterialResponse
+	res := []MaterialResponse{}
 	for _, m := range list {
 		res = append(res, *s.mapResponse(&m))
 	}

@@ -13,6 +13,9 @@ func CalculateCreditRange(gradeLevel int, average float64, conductGrade int, pct
 
 	// Clamp average between 6.0 and 10.0
 	avg := math.Round(average*100) / 100
+	if avg > 10.0 {
+		avg = 10.0
+	}
 	if avg < 6.0 {
 		return CreditCalculationResult{
 			GradeLevel:         gradeLevel,

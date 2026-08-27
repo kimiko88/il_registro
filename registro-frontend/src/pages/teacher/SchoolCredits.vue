@@ -23,7 +23,7 @@
           bg-color="white"
           style="min-width: 180px;"
           :label="$t('credits.selectClass')"
-          @update:model-value="loadClassCredits"
+          @update:model-value="onClassChanged"
         />
         <q-btn
           color="primary"
@@ -329,20 +329,46 @@ const creditColumns = [
   { name: 'actions', label: 'Azioni', field: 'actions', align: 'right' }
 ]
 
+function extractList(response) {
+  if (!response) return []
+  const data = response.data !== undefined ? response.data : response
+  if (Array.isArray(data)) return data
+  if (data && Array.isArray(data.users)) return data.users
+  if (data && Array.isArray(data.classes)) return data.classes
+  return []
+}
+
 async function loadInitialData() {
   try {
-    const [classesRes, studentsRes] = await Promise.all([
+    const [classesRes, studentsRes] = await Promise.allSettled([
       api.get('/classes'),
       api.get('/users/search?role=student')
     ])
-    classOptions.value = (classesRes.data || []).map(c => ({ label: c.name, value: c.id }))
-    studentOptions.value = (studentsRes.data || []).map(s => ({ label: `${s.last_name} ${s.first_name}`, value: s.id }))
+
+    const rawClasses = classesRes.status === 'fulfilled' ? extractList(classesRes.value) : []
+    classOptions.value = rawClasses.map(c => {
+      let name = c.name || `Classe ${c.id}`
+      if (c.section && !name.endsWith(c.section)) {
+        name += c.section
+      }
+      if (c.academic_year) {
+        name += ` (${c.academic_year})`
+      }
+      return { label: name, value: c.id }
+    })
+
+    const rawStudents = studentsRes.status === 'fulfilled' ? extractList(studentsRes.value) : []
+    studentOptions.value = rawStudents.map(s => ({
+      label: `${s.last_name || ''} ${s.first_name || ''}`.trim() || s.email || s.id,
+      value: s.id
+    }))
+
     if (classOptions.value.length > 0) {
       selectedClassId.value = classOptions.value[0].value
       loadClassCredits()
     }
   } catch (err) {
-    $q.notify({ type: 'negative', message: 'Errore nel caricamento delle classi' })
+    console.error('Error loading initial credits data', err)
   }
 }
 
@@ -351,11 +377,29 @@ async function loadClassCredits() {
   loadingCredits.value = true
   try {
     const res = await creditService.listClassCredits(selectedClassId.value)
-    classCredits.value = res.data || []
+    classCredits.value = extractList(res)
   } catch (err) {
     $q.notify({ type: 'negative', message: 'Errore nel caricamento dei crediti scolastici' })
   } finally {
     loadingCredits.value = false
+  }
+}
+
+async function onClassChanged() {
+  loadClassCredits()
+  if (selectedClassId.value) {
+    try {
+      const res = await api.get(`/users/search?role=student&class_id=${selectedClassId.value}`)
+      const classStudents = extractList(res)
+      if (classStudents.length > 0) {
+        studentOptions.value = classStudents.map(s => ({
+          label: `${s.last_name || ''} ${s.first_name || ''}`.trim() || s.email || s.id,
+          value: s.id
+        }))
+      }
+    } catch {
+      // Keep general student options
+    }
   }
 }
 

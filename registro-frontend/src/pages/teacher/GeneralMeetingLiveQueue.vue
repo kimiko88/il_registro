@@ -247,17 +247,26 @@ function getTicketBadgeColor(status) {
   }
 }
 
+function extractList(response) {
+  if (!response) return []
+  const data = response.data !== undefined ? response.data : response
+  if (Array.isArray(data)) return data
+  if (data && Array.isArray(data.meetings)) return data.meetings
+  if (data && Array.isArray(data.tickets)) return data.tickets
+  return []
+}
+
 async function loadMeetings() {
   try {
     const res = await colloquiService.listGeneralMeetings()
-    const list = res.data || []
+    const list = extractList(res)
     meetingOptions.value = list.map(m => ({ label: `${m.title} (${m.event_date})`, value: m.id }))
     if (meetingOptions.value.length > 0) {
       selectedMeetingId.value = meetingOptions.value[0].value
       loadQueueTickets()
     }
   } catch (err) {
-    $q.notify({ type: 'negative', message: 'Errore caricamento ricevimenti generali' })
+    console.error('Error loading general meetings', err)
   }
 }
 
@@ -266,9 +275,9 @@ async function loadQueueTickets() {
   loadingTickets.value = true
   try {
     const res = await colloquiService.listQueueTickets(selectedMeetingId.value)
-    tickets.value = res.data || []
+    tickets.value = extractList(res)
   } catch (err) {
-    $q.notify({ type: 'negative', message: 'Errore caricamento coda biglietti' })
+    console.error('Error loading queue tickets', err)
   } finally {
     loadingTickets.value = false
   }

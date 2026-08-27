@@ -473,6 +473,9 @@ func (h *Handler) ListQueueTickets(c *gin.Context) {
 		}
 	} else if role == "teacher" && teacherID == "" {
 		teacherID = c.GetString("teacher_id")
+		if teacherID == "" {
+			teacherID = c.GetString("user_id")
+		}
 	}
 
 	tickets, err := h.service.ListQueueTickets(c.Request.Context(), meetingID, teacherID, parentID)

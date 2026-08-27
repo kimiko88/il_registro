@@ -172,7 +172,6 @@ export default [
             { path: 'parent/pdp', component: () => import('@/pages/parent/PdpView.vue'), meta: { title: 'Piano PDP / PEI', roles: ['parent'] } },
             { path: 'parent/documents', component: () => import('@/pages/parent/Documents.vue'), meta: { title: 'Documentazione & Moduli', roles: ['parent'] } },
             { path: 'parent/payments', component: () => import('@/pages/parent/Payments.vue'), meta: { title: 'Pagamenti Scolastici', roles: ['parent'] } },
-            { path: 'parent/meetings', component: () => import('@/pages/parent/Meetings.vue'), meta: { title: 'Assemblee & Riunioni', roles: ['parent'] } },
             { path: 'parent/settings', component: () => import('@/pages/parent/Settings.vue'), meta: { title: 'Impostazioni Genitore', roles: ['parent'] } },
 
             {
