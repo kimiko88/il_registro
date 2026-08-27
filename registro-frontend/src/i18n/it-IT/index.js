@@ -2152,5 +2152,18 @@ export default {
       "selectStudent": "Seleziona Figlio / Studente",
       "notes": "Note per il Docente"
     }
+  },
+  "a11y": {
+    "panelTitle": "Impostazioni di Accessibilità & Inclusione Visiva",
+    "panelSubtitle": "Personalizza l'esperienza visiva, i font, la sintesi vocale e gli strumenti di supporto DSA in conformità alle Linee Guida AgID / WCAG 2.2.",
+    "statementTitle": "Dichiarazione di Accessibilità",
+    "shortcutsTitle": "Scorciatoie da Tastiera & Accessibilità",
+    "shortcutsSubtitle": "Usa la combinazione di tasti per navigare rapidamente nel registro senza utilizzare il mouse.",
+    "ttsLabel": "Sintesi Vocale (TTS)",
+    "rulerLabel": "Righello di Lettura (Focus Mask)",
+    "highContrastLabel": "Contrasto Elevato",
+    "colorblindLabel": "Filtri Daltonismo",
+    "textSpacingLabel": "Spaziatura Testo (WCAG 1.4.12)",
+    "feedbackSent": "Segnalazione di accessibilità inviata con successo"
   }
 }

@@ -470,60 +470,7 @@
 
         <!-- Tab Accessibilità & Aspetto -->
         <q-tab-panel name="accessibility" class="q-pa-md">
-          <div class="text-h6 text-weight-bold text-slate-800 q-mb-xs">Accessibilità Visiva &amp; Modalità di Lettura</div>
-          <div class="text-caption text-slate-500 q-mb-md">Attiva font ad alta leggibilità (OpenDyslexic) per utenti DSA, contrasto elevato e temi visivi dell'interfaccia.</div>
-
-          <div class="row q-col-gutter-lg">
-            <!-- Font OpenDyslexic (DSA) -->
-            <div class="col-12 col-md-6">
-              <q-card flat bordered class="q-pa-md rounded-xl bg-white full-height shadow-sm">
-                <div class="row items-center justify-between q-mb-sm">
-                  <div class="row items-center">
-                    <q-avatar color="indigo-50" text-color="indigo-700" icon="spellcheck" size="44px" class="q-mr-sm" />
-                    <div>
-                      <div class="text-subtitle1 text-weight-bold text-slate-800">Font OpenDyslexic (Alta Leggibilità DSA)</div>
-                      <div class="text-caption text-slate-500">Applica il font ad alta leggibilità specifico per la dislessia ed i disturbi dell'apprendimento</div>
-                    </div>
-                  </div>
-                  <q-toggle
-                    v-model="themeStore.dsaFont"
-                    color="indigo"
-                    size="lg"
-                    @update:model-value="themeStore.toggleDsaFont"
-                  />
-                </div>
-                <q-separator class="q-my-sm" />
-                <div class="q-pa-md bg-slate-50 rounded-lg text-slate-700 text-body2 q-mt-sm border border-slate-100" :class="{ 'dsa-font-active': themeStore.dsaFont }">
-                  <span class="text-weight-bold">Anteprima Testo:</span> Il registro elettronico garantisce un'esperienza di lettura inclusiva ed accessibile per tutti gli utenti ed alunni con BES/DSA.
-                </div>
-              </q-card>
-            </div>
-
-            <!-- Contrasto Elevato -->
-            <div class="col-12 col-md-6">
-              <q-card flat bordered class="q-pa-md rounded-xl bg-white full-height shadow-sm">
-                <div class="row items-center justify-between q-mb-sm">
-                  <div class="row items-center">
-                    <q-avatar color="amber-50" text-color="amber-9" icon="contrast" size="44px" class="q-mr-sm" />
-                    <div>
-                      <div class="text-subtitle1 text-weight-bold text-slate-800">Modalità Contrasto Elevato</div>
-                      <div class="text-caption text-slate-500">Aumenta la definizione dei bordi e la nitidezza del testo (WCAG 2.1 AAA)</div>
-                    </div>
-                  </div>
-                  <q-toggle
-                    v-model="themeStore.highContrast"
-                    color="amber-9"
-                    size="lg"
-                    @update:model-value="themeStore.toggleHighContrast"
-                  />
-                </div>
-                <q-separator class="q-my-sm" />
-                <div class="q-pa-md bg-slate-50 rounded-lg text-slate-700 text-body2 q-mt-sm border border-slate-100" :class="{ 'high-contrast-active': themeStore.highContrast }">
-                  <span class="text-weight-bold">Anteprima Contrasto:</span> Pulsanti, card ed evidenziatori avranno bordi netti a 2px per la massima visibilità in ambienti molto illuminati.
-                </div>
-              </q-card>
-            </div>
-          </div>
+          <AccessibilitySettingsPanel />
         </q-tab-panel>
 
       </q-tab-panels>
@@ -539,6 +486,7 @@ import { useThemeStore } from '@/stores/theme'
 import { userService } from '@/services/userService'
 import { useAuthStore } from '@/stores/auth'
 import { SUPPORTED_LOCALES, applyLocale, normalizeLocale } from '@/utils/locale'
+import AccessibilitySettingsPanel from '@/components/Common/AccessibilitySettingsPanel.vue'
 
 const $q = useQuasar()
 const { t, te, locale } = useI18n()

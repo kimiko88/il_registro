@@ -238,42 +238,7 @@
 
         <!-- SECTION 3: ACCESSIBILITY -->
         <q-card v-if="activeSection === 'accessibility'" flat bordered class="rounded-xl bg-white q-pa-lg shadow-sm">
-          <div class="text-h6 text-weight-bold text-slate-800 q-mb-xs">Accessibilità Visiva (A11y)</div>
-          <div class="text-caption text-slate-500 q-mb-lg">
-            Opzioni di visualizzazione ad alta leggibilità.
-          </div>
-
-          <div class="q-gutter-y-md">
-            <q-card flat bordered class="q-pa-md rounded-xl bg-slate-50">
-              <div class="row items-center justify-between">
-                <div>
-                  <div class="text-subtitle1 text-weight-bold text-slate-800">Font OpenDyslexic (Alta Leggibilità DSA)</div>
-                  <div class="text-caption text-slate-500">Applica il font facilitato a tutti i testi dell'applicazione</div>
-                </div>
-                <q-toggle
-                  v-model="themeStore.dsaFont"
-                  color="indigo"
-                  size="lg"
-                  @update:model-value="themeStore.toggleDsaFont"
-                />
-              </div>
-            </q-card>
-
-            <q-card flat bordered class="q-pa-md rounded-xl bg-slate-50">
-              <div class="row items-center justify-between">
-                <div>
-                  <div class="text-subtitle1 text-weight-bold text-slate-800">Modalità Contrasto Elevato</div>
-                  <div class="text-caption text-slate-500">Aumenta la definizione dei bordi e la nitidezza del testo</div>
-                </div>
-                <q-toggle
-                  v-model="themeStore.highContrast"
-                  color="indigo"
-                  size="lg"
-                  @update:model-value="themeStore.toggleHighContrast"
-                />
-              </div>
-            </q-card>
-          </div>
+          <AccessibilitySettingsPanel />
         </q-card>
 
         <!-- SECTION 4: SECURITY -->
@@ -332,6 +297,7 @@ import { useThemeStore, THEMES } from '@/stores/theme'
 import { useQuasar } from 'quasar'
 import { userService } from '@/services/userService'
 import { useAuthStore } from '@/stores/auth'
+import AccessibilitySettingsPanel from '@/components/Common/AccessibilitySettingsPanel.vue'
 
 import { useI18n } from 'vue-i18n'
 

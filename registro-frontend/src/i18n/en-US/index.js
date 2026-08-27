@@ -2152,5 +2152,18 @@ export default {
       "selectStudent": "Select Child / Student",
       "notes": "Notes for Teacher"
     }
+  },
+  "a11y": {
+    "panelTitle": "Visual Accessibility & Inclusion Settings",
+    "panelSubtitle": "Customize visual experience, fonts, speech synthesis and dyslexia tools in compliance with AgID / WCAG 2.2 guidelines.",
+    "statementTitle": "Accessibility Statement",
+    "shortcutsTitle": "Keyboard Shortcuts & Accessibility",
+    "shortcutsSubtitle": "Use keyboard shortcuts to navigate quickly across the register without using a mouse.",
+    "ttsLabel": "Speech Synthesis (TTS)",
+    "rulerLabel": "Reading Ruler (Focus Mask)",
+    "highContrastLabel": "High Contrast",
+    "colorblindLabel": "Color Blindness Filters",
+    "textSpacingLabel": "Text Spacing (WCAG 1.4.12)",
+    "feedbackSent": "Accessibility feedback sent successfully"
   }
 }

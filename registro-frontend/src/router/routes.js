@@ -206,7 +206,9 @@ export default [
                 },
                 meta: { title: 'Profilo Utente', roles: ['superadmin', 'admin', 'secretary', 'teacher', 'student', 'parent', 'principal', 'vice_principal', 'coordinator'] }
             },
-            { path: 'support', component: () => import('@/pages/Support.vue'), meta: { title: 'Supporto & Assistenza', roles: ['superadmin', 'admin', 'secretary', 'teacher', 'student', 'parent'] } }
+            { path: 'support', component: () => import('@/pages/Support.vue'), meta: { title: 'Supporto & Assistenza', roles: ['superadmin', 'admin', 'secretary', 'teacher', 'student', 'parent'] } },
+            { path: 'accessibility-statement', component: () => import('@/pages/AccessibilityStatement.vue'), meta: { title: 'Dichiarazione di Accessibilità (AgID)', requiresAuth: false } },
+            { path: 'dichiarazione-accessibilita', redirect: '/accessibility-statement' }
         ]
     },
     {

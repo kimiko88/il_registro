@@ -68,6 +68,10 @@
                   Pubblicato il {{ formatDate(msg.created_at || msg.date) }} · Da {{ msg.sender_name || 'Segreteria' }}
                 </div>
               </q-item-section>
+
+              <q-item-section side>
+                <TextToSpeechButton :text="(msg.title || msg.subject || '') + '. ' + (msg.body || msg.content || '')" />
+              </q-item-section>
             </template>
 
             <q-card flat class="bg-slate-50 border-t border-slate-200 q-pa-md">
@@ -76,7 +80,8 @@
               </div>
 
               <div class="row items-center justify-between border-t border-slate-200 q-pt-md">
-                <div>
+                <div class="flex items-center gap-sm">
+                  <TextToSpeechButton :text="msg.body || msg.content || ''" size="sm" :flat="false" color="primary" />
                   <q-chip v-if="msg.requires_signature && msg.signed_at" color="positive" text-color="white" icon="check_circle" size="sm" class="text-weight-bold">
                     Firmato per presa visione
                   </q-chip>
@@ -209,6 +214,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useQuasar, date as qdate } from 'quasar'
 import { communicationService } from '@/services/communicationService'
+import TextToSpeechButton from '@/components/Common/TextToSpeechButton.vue'
 import api from '@/services/api'
 
 const $q = useQuasar()

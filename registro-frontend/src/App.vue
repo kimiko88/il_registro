@@ -187,4 +187,89 @@ body.high-contrast-active .q-btn,
 body.high-contrast-active .q-table {
   border: 2px solid #0f172a !important;
 }
+
+/* Visible Focus Indicator (WCAG 2.4.7) */
+:focus-visible,
+body.focus-visible-high :focus-visible {
+  outline: 3px solid #f59e0b !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 0 5px rgba(245, 158, 11, 0.3) !important;
+}
+
+/* Text Spacing Overrides (WCAG 1.4.12) */
+body.line-height-relaxed {
+  line-height: 1.8 !important;
+}
+body.line-height-loose {
+  line-height: 2.1 !important;
+}
+body.letter-spacing-wide {
+  letter-spacing: 0.08em !important;
+}
+body.letter-spacing-wider {
+  letter-spacing: 0.16em !important;
+}
+body.word-spacing-wide {
+  word-spacing: 0.18em !important;
+}
+body.word-spacing-wider {
+  word-spacing: 0.32em !important;
+}
+
+/* Colorblind Modes */
+body.colorblind-protanopia {
+  filter: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"><filter id="protanopia"><feColorMatrix type="matrix" values="0.567, 0.433, 0, 0, 0 0.558, 0.442, 0, 0, 0 0, 0.242, 0.758, 0, 0 0, 0, 0, 1, 0"/></filter></svg>#protanopia');
+}
+body.colorblind-deuteranopia {
+  filter: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"><filter id="deuteranopia"><feColorMatrix type="matrix" values="0.625, 0.375, 0, 0, 0 0.7, 0.3, 0, 0, 0 0, 0.3, 0.7, 0, 0 0, 0, 0, 1, 0"/></filter></svg>#deuteranopia');
+}
+body.colorblind-tritanopia {
+  filter: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"><filter id="tritanopia"><feColorMatrix type="matrix" values="0.95, 0.05, 0, 0, 0 0, 0.433, 0.567, 0, 0 0, 0.475, 0.525, 0, 0 0, 0, 0, 1, 0"/></filter></svg>#tritanopia');
+}
+body.colorblind-monochrome {
+  filter: grayscale(100%);
+}
+
+/* Advanced OLED High Contrast / Amber / Green */
+body.contrast-oled-amber {
+  background-color: #000000 !important;
+  color: #fbbf24 !important;
+}
+body.contrast-oled-amber .q-card,
+body.contrast-oled-amber .q-table,
+body.contrast-oled-amber .q-header,
+body.contrast-oled-amber .q-drawer {
+  background-color: #000000 !important;
+  color: #fbbf24 !important;
+  border-color: #d97706 !important;
+}
+
+body.contrast-oled-green {
+  background-color: #000000 !important;
+  color: #4ade80 !important;
+}
+body.contrast-oled-green .q-card,
+body.contrast-oled-green .q-table,
+body.contrast-oled-green .q-header,
+body.contrast-oled-green .q-drawer {
+  background-color: #000000 !important;
+  color: #4ade80 !important;
+  border-color: #16a34a !important;
+}
+
+body.contrast-inverted {
+  filter: invert(100%) hue-rotate(180deg);
+}
+
+/* Visual Grade Indicators */
+.grade-badge-fail::before {
+  content: '▼ ';
+  font-size: 0.8em;
+  margin-right: 2px;
+}
+.grade-badge-pass::before {
+  content: '✓ ';
+  font-size: 0.8em;
+  margin-right: 2px;
+}
 </style>

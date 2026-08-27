@@ -117,9 +117,12 @@
           :aria-label="t('layout.a11yAriaLabel')"
         >
           <q-tooltip>{{ t('layout.a11yTooltip') }}</q-tooltip>
-          <q-list style="min-width: 300px" class="q-py-xs">
-            <q-item-label header class="text-weight-bold text-uppercase text-caption letter-spacing-1">
-              {{ t('layout.a11yTitle') }}
+          <q-list style="min-width: 320px" class="q-py-xs">
+            <q-item-label header class="text-weight-bold text-uppercase text-caption letter-spacing-1 text-primary flex items-center justify-between">
+              <span>{{ t('layout.a11yTitle') }}</span>
+              <q-btn flat round dense icon="help_outline" size="sm" @click="themeStore.toggleKeyboardShortcutsHelp(true)">
+                <q-tooltip>Scorciatoie da tastiera (?)</q-tooltip>
+              </q-btn>
             </q-item-label>
 
             <!-- Font OpenDyslexic (DSA) -->
@@ -143,10 +146,52 @@
               </q-item-section>
             </q-item>
 
-            <!-- Contrasto Elevato -->
-            <q-item clickable class="rounded-lg q-mx-xs">
+            <!-- Righello di Lettura (Reading Ruler) -->
+            <q-item clickable class="rounded-lg q-mx-xs q-mb-xs">
               <q-item-section avatar>
                 <q-avatar size="32px" color="amber-50" text-color="amber-9">
+                  <q-icon name="straighten" size="18px" />
+                </q-avatar>
+              </q-item-section>
+              <q-item-section>
+                <q-item-label class="text-weight-bold">Righello di Lettura</q-item-label>
+                <q-item-label caption class="text-grey-7">Guida visiva riga per riga</q-item-label>
+              </q-item-section>
+              <q-item-section side>
+                <q-toggle
+                  v-model="themeStore.readingRuler"
+                  color="amber-9"
+                  dense
+                  @update:model-value="themeStore.toggleReadingRuler"
+                />
+              </q-item-section>
+            </q-item>
+
+            <!-- Text-to-Speech (TTS) -->
+            <q-item clickable class="rounded-lg q-mx-xs q-mb-xs">
+              <q-item-section avatar>
+                <q-avatar size="32px" color="teal-50" text-color="teal-8">
+                  <q-icon name="volume_up" size="18px" />
+                </q-avatar>
+              </q-item-section>
+              <q-item-section>
+                <q-item-label class="text-weight-bold">Sintesi Vocale (TTS)</q-item-label>
+                <q-item-label caption class="text-grey-7">Lettura vocale compiti e avvisi</q-item-label>
+              </q-item-section>
+              <q-item-section side>
+                <q-toggle
+                  v-model="themeStore.ttsEnabled"
+                  color="teal"
+                  dense
+                  @update:model-value="themeStore.toggleTts"
+                />
+              </q-item-section>
+            </q-item>
+
+            <!-- Contrasto Elevato -->
+            <q-item clickable class="rounded-lg q-mx-xs q-mb-xs">
+              <q-item-section avatar>
+                <q-avatar size="32px" color="grey-2" text-color="dark">
                   <q-icon name="contrast" size="18px" />
                 </q-avatar>
               </q-item-section>
@@ -157,11 +202,28 @@
               <q-item-section side>
                 <q-toggle
                   v-model="themeStore.highContrast"
-                  color="amber-9"
+                  color="dark"
                   dense
                   @update:model-value="themeStore.toggleHighContrast"
                 />
               </q-item-section>
+            </q-item>
+
+            <q-separator class="q-my-xs" />
+
+            <!-- Link Scorciatoie & Dichiarazione AgID -->
+            <q-item clickable class="rounded-lg q-mx-xs text-primary" @click="themeStore.toggleKeyboardShortcutsHelp(true)">
+              <q-item-section avatar>
+                <q-icon name="keyboard" size="20px" />
+              </q-item-section>
+              <q-item-section class="text-weight-bold">Scorciatoie da Tastiera (?)</q-item-section>
+            </q-item>
+
+            <q-item clickable to="/accessibility-statement" class="rounded-lg q-mx-xs text-grey-8">
+              <q-item-section avatar>
+                <q-icon name="verified_user" size="20px" color="positive" />
+              </q-item-section>
+              <q-item-section class="text-weight-medium text-caption">Dichiarazione AgID / WCAG 2.2</q-item-section>
             </q-item>
           </q-list>
         </q-btn-dropdown>
@@ -439,6 +501,29 @@
     <!-- Session Reauth Dialog (globale: appare sopra la pagina quando il token scade) -->
     <SessionReauthDialog />
 
+    <!-- Reading Ruler Overlay for Dyslexia/ADHD -->
+    <ReadingRuler />
+
+    <!-- Keyboard Shortcuts Help Dialog -->
+    <KeyboardShortcutsDialog />
+
+    <!-- Accessible Footer with AgID Statement & Shortcuts Link -->
+    <q-footer class="bg-slate-900 text-white text-caption q-py-xs q-px-md print-hide" role="contentinfo">
+      <div class="row items-center justify-between">
+        <div>© 2026 Registro Elettronico Scolastico • Conforme AgID & WCAG 2.2 AA</div>
+        <div class="flex items-center gap-md">
+          <router-link to="/accessibility-statement" class="text-amber-4 text-weight-medium text-decoration-none flex items-center">
+            <q-icon name="accessibility" size="xs" class="q-mr-xs" />
+            Dichiarazione di Accessibilità (AgID)
+          </router-link>
+          <a href="#" @click.prevent="themeStore.toggleKeyboardShortcutsHelp(true)" class="text-grey-4 text-decoration-none flex items-center">
+            <q-icon name="keyboard" size="xs" class="q-mr-xs" />
+            Scorciatoie ( ? )
+          </a>
+        </div>
+      </div>
+    </q-footer>
+
   </q-layout>
 </template>
 
@@ -462,8 +547,13 @@ import OnboardingTour from '@/components/Common/OnboardingTour.vue'
 import HelpDrawer from '@/components/Common/HelpDrawer.vue'
 import HelpCenterPanel from '@/components/Common/HelpCenterPanel.vue'
 import SessionReauthDialog from '@/components/Common/SessionReauthDialog.vue'
+import ReadingRuler from '@/components/Common/ReadingRuler.vue'
+import KeyboardShortcutsDialog from '@/components/Common/KeyboardShortcutsDialog.vue'
 import { useSessionReauth } from '@/composables/useSessionReauth'
+import { useGlobalKeyboardShortcuts } from '@/composables/useGlobalKeyboardShortcuts'
 import { setReauthHandler } from '@/services/api'
+
+useGlobalKeyboardShortcuts()
 
 const globalSearchRef = ref(null)
 const tourRef = ref(null)
