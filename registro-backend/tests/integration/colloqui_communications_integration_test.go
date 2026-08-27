@@ -157,6 +157,24 @@ func (m *mockColloquiRepo) IsGuardian(ctx context.Context, parentUserID, student
 func (m *mockColloquiRepo) ExistsOverlappingSlot(ctx context.Context, teacherID, date, start, end string) (bool, error) {
 	return false, nil
 }
+func (m *mockColloquiRepo) CreateGeneralMeeting(ctx context.Context, gm *colloqui.GeneralParentMeeting, teacherIDs []string) error {
+	return nil
+}
+func (m *mockColloquiRepo) ListGeneralMeetings(ctx context.Context, schoolID string) ([]colloqui.GeneralParentMeeting, error) {
+	return []colloqui.GeneralParentMeeting{}, nil
+}
+func (m *mockColloquiRepo) GetGeneralMeeting(ctx context.Context, id string) (*colloqui.GeneralParentMeeting, error) {
+	return &colloqui.GeneralParentMeeting{ID: id}, nil
+}
+func (m *mockColloquiRepo) BookQueueTicket(ctx context.Context, t *colloqui.GeneralMeetingQueueTicket) error {
+	return nil
+}
+func (m *mockColloquiRepo) ListQueueTickets(ctx context.Context, meetingID, teacherID, parentID string) ([]colloqui.GeneralMeetingQueueTicket, error) {
+	return []colloqui.GeneralMeetingQueueTicket{}, nil
+}
+func (m *mockColloquiRepo) UpdateTicketStatus(ctx context.Context, id, status, notes string) error {
+	return nil
+}
 
 type mockCommsRepo struct{}
 

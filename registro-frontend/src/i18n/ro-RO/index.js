@@ -244,6 +244,8 @@ export default {
     "statGradesPending": "Note de Acordat",
     "actionAttendance": "Fă Prezența",
     "actionGrades": "Notează",
+    "viewAttendance": "Prezențe",
+    "viewGrades": "Note",
     "actionLessons": "Condică de Prezență",
     "actionAgenda": "Agenda Clasei",
     "actionUsers": "Gestiune Utilizatori",
@@ -1162,32 +1164,7 @@ export default {
       "q9": "Cum schimb limba și tema întunecată?",
       "a9": "Accesați \"Setări > Profil\". Puteți alege limba dorită și activa modul Dark sau fontul pentru dislexie.",
       "q10": "Cum anulez o prezență sau o notă introdusă din greșeală?",
-      "a10": "După fiecare introducere apare un mesaj temporar cu butonul \"Anulează\" activ timp de 15 secunde.",
-      "attendance": {
-        "title": "Marrja e Mungesave & Nënshkrimi i Mësimit",
-        "desc": "Si të merrni praninë e nxënësve dhe të nënshkruani orën mësimore.",
-        "content": "Dhe regjistroni mungesat dhe temat e mësimit brenda pak sekondave.\n\nHapi 1: Hapni 'Ditari i Klasës' dhe zgjidhni klasën tuaj.\nHapi 2: Shënoni nxënësit si të pranishëm, mungesë ose me vonesë.\nHapi 3: Vendosni temën dhe nënshkruani orën."
-      },
-      "grades": {
-        "title": "Hedhja e Notave dhe Vlerësimi",
-        "desc": "Si të vendosni notat me gojë, me shkrim dhe praktike.",
-        "content": "Menaxhoni notat dhe vlerësimet për secilin nxënës me lehtësi."
-      },
-      "uda": {
-        "title": "Planifikimi i Njësive Mësimore (UdA)",
-        "desc": "Dizajnimi kurrikular sipas kompetencave.",
-        "content": "Strukturoni orët mësimore dhe vlerësoni kompetencat kyçe evropiane."
-      },
-      "agenda": {
-        "title": "Detyrat e Shtëpisë & Kalendari",
-        "desc": "Si të caktoni detyrat dhe provimet.",
-        "content": "Caktoni afatet dhe organizoni ngarkesën e studimit për klasën."
-      },
-      "colloqui": {
-        "title": "Takimet me Prindërit",
-        "desc": "Caktimi i orareve të lira për takime individuale.",
-        "content": "Përcaktoni fashat orare dhe konfirmoni kërkesat e prindërve."
-      }
+      "a10": "După fiecare introducere apare un mesaj temporar cu butonul \"Anulează\" activ timp de 15 secunde."
     },
     "student": {
       "cat_grades": "Notele Mele",
@@ -1214,22 +1191,7 @@ export default {
       "q9": "Ce fac dacă am uitat parola?",
       "a9": "Pe pagina de autentificare apăsați \"Ați uitat parola?\" și introduceți adresa de email pentru resetare.",
       "q10": "Cum folosesc căutarea rapidă Ctrl+K?",
-      "a10": "Apăsați combinația Ctrl+K (sau Cmd+K pe Mac) pentru a deschide bara de căutare universală.",
-      "grades": {
-        "title": "Konsultimi i Notave & Mesatareve",
-        "desc": "Si të kontrolloni notat dhe ecurinë tuaj akademike.",
-        "content": "Shikoni notat e fundit, mesataret sipas lëndëve dhe simuloni notat kaluese."
-      },
-      "homework": {
-        "title": "Detyrat & Kalendari i Studimit",
-        "desc": "Organizoni detyrat dhe përgatitjet për testet.",
-        "content": "Mbani nën kontroll afatet e detyrave dhe njoftimet nga mësuesit."
-      },
-      "attendance": {
-        "title": "Prania & Arsyetimet",
-        "desc": "Kontrolloni mungesat dhe vonesat tuaja.",
-        "content": "Shikoni statusin e mungesave dhe kërkesave për arsyetim."
-      }
+      "a10": "Apăsați combinația Ctrl+K (sau Cmd+K pe Mac) pentru a deschide bara de căutare universală."
     },
     "parent": {
       "cat_monitoring": "Monitorizare Copil",
@@ -1256,22 +1218,7 @@ export default {
       "q9": "Pot delega un alt tutore pentru vizualizarea notelor?",
       "a9": "Secretariatul poate asocia mai multe conturi de părinte/tutore aceluiași elev.",
       "q10": "Ce se întâmplă în modul offline?",
-      "a10": "Aplicația afișează datele salvate în cache, iar acțiunile se vor sincroniza automat la revenirea conexiunii.",
-      "grades": {
-        "title": "Vlerësimi & Dëftesa",
-        "desc": "Ndiqni notat dhe vlerësimet e fëmijëve tuaj.",
-        "content": "Qasje e menjëhershme në të gjitha notat, mesataret dhe dëftesat zyrtare."
-      },
-      "attendance": {
-        "title": "Arsyetimi i Mungesave",
-        "desc": "Si të arsyetoni mungesat e fëmijës tuaj online.",
-        "content": "Dërgoni arsyetime për mungesat dhe vonesat me një klikim."
-      },
-      "colloqui": {
-        "title": "Rezervimi i Takimeve me Mësuesit",
-        "desc": "Caktoni takime individuale me stafin mësimdhënës.",
-        "content": "Zgjidhni orarin e përshtatshëm dhe rezervoni takimin online ose në shkollë."
-      }
+      "a10": "Aplicația afișează datele salvate în cache, iar acțiunile se vor sincroniza automat la revenirea conexiunii."
     },
     "secretary": {
       "cat_students": "Elevi",
@@ -1298,37 +1245,7 @@ export default {
       "q9": "Cum verific situația plăților școlare?",
       "a9": "În secțiunea de plăți puteți monitoriza încasările și trimite atenționări pentru sumele restante.",
       "q10": "Cum anulez un document eliberat greșit?",
-      "a10": "În arhiva documentelor identificați numărul de înregistrare și apăsați \"Anulează cu motivare\".",
-      "students": {
-        "title": "Menaxhimi i Regjistrit të Nxënësve",
-        "desc": "Kërkimi, regjistrimi dhe përditësimi i të dhënave të nxënësve.",
-        "content": "Administroni dosjet akademike, kontaktet dhe regjistrimet e reja."
-      },
-      "classes": {
-        "title": "Organizimi i Klasave dhe Seksioneve",
-        "desc": "Krijimi i klasave dhe caktimi i mësuesve titullarë.",
-        "content": "Strukturoni vitin shkollor, oraret dhe ndarjen e lëndëve."
-      },
-      "certificates": {
-        "title": "Gjenerimi i Vërtetimeve",
-        "desc": "Lëshimi i dokumenteve zyrtare dhe vërtetimeve të frekuentimit.",
-        "content": "Gjeneroni dokumente me vulë digjitale dhe nënshkrim zyrtar në sekonda."
-      },
-      "timetable": {
-        "title": "Orari Mësimor dhe Zëvendësimet",
-        "desc": "Menaxhimi i orareve javore dhe zëvendësimit të mësuesve.",
-        "content": "Planifikoni orët dhe mbuloni mungesat e mësuesve."
-      },
-      "communications": {
-        "title": "Qarkoret dhe Njoftimet Zyrtare",
-        "desc": "Publikimi i njoftimeve dhe monitorimi i marrjes së dijenisë.",
-        "content": "Dërgoni qarkore zyrtare për stafin, prindërit dhe nxënësit."
-      },
-      "reports": {
-        "title": "Raportet dhe Statistikat",
-        "desc": "Nxjerrja e statistikave dhe eksportimi i të dhënave.",
-        "content": "Gjeneroni raporte të agreguara për frekuentimin dhe rezultatet."
-      }
+      "a10": "În arhiva documentelor identificați numărul de înregistrare și apăsați \"Anulează cu motivare\"."
     },
     "admin": {
       "cat_monitoring": "Monitorizare Sistem",
@@ -1355,42 +1272,7 @@ export default {
       "q9": "Cum vizualizez matricea de permisiuni (RBAC)?",
       "a9": "În \"Roluri & Permisiuni\" găsiți matricea interactivă a drepturilor de acces pentru toate rolurile.",
       "q10": "Cum activez modul de mentenanță?",
-      "a10": "În \"Setări Sistem\" activați comutatorul \"Mod Mentenanță\" pentru a suspenda accesul utilizatorilor non-admin.",
-      "monitoring": {
-        "title": "Monitorimi i Sistemit",
-        "desc": "Monitorimi i performancës së serverit dhe bazës së të dhënave.",
-        "content": "Kontrolloni gjendjen teknike, memorien RAM dhe shërbimet e sistemit në kohë reale."
-      },
-      "users": {
-        "title": "Menaxhimi i Përdoruesve",
-        "desc": "Krijimi i llogarive, të drejtat dhe politikat e sigurisë.",
-        "content": "Menaxhoni të gjitha llogaritë e përdoruesve dhe konfiguroni 2FA."
-      },
-      "schools": {
-        "title": "Menaxhimi i Institucioneve",
-        "desc": "Konfigurimi i shkollave dhe degëve arsimore.",
-        "content": "Regjistroni kodet zyrtare dhe të dhënat administrative të shkollave."
-      },
-      "security": {
-        "title": "Politikat e Sigurisë",
-        "desc": "Konfigurimi i fjalëkalimeve dhe kërkesave të sigurisë.",
-        "content": "Përshtatni rregullat e sigurisë sipas standardeve më të larta."
-      },
-      "analytics": {
-        "title": "Analitika dhe Parandalimi i Braktisjes",
-        "desc": "Analizë parashikuese për rrezikun e braktisjes shkollore.",
-        "content": "Identifikoni nxënësit me rrezik mungesash dhe rezultatesh të ulëta."
-      },
-      "integrations": {
-        "title": "Integrimet dhe Hyrja me Një Klik (SSO)",
-        "desc": "Lidhja me Google Workspace dhe Microsoft 365.",
-        "content": "Aktivizoni hyrjen me llogaritë institucionale."
-      },
-      "audit": {
-        "title": "Regjistri i Auditimit & Gjurmueshmëria",
-        "desc": "Gjurmimi i plotë i veprimeve të përdoruesve në sistem.",
-        "content": "Regjistër i pandryshueshëm i të gjitha veprimeve për transparencë maksimale."
-      }
+      "a10": "În \"Setări Sistem\" activați comutatorul \"Mod Mentenanță\" pentru a suspenda accesul utilizatorilor non-admin."
     }
   },
   "onboardingExtra": {
@@ -1719,16 +1601,6 @@ export default {
         "title": "Plan Educațional Personalizat",
         "desc": "Măsuri de sprijin pentru elevi cu cerințe speciale.",
         "content": "Configurați instrumentele compensatorii și dispensatorii prevăzute în planul educațional."
-      },
-      "uda": {
-        "title": "Planifikimi i Njësive Mësimore (UdA)",
-        "desc": "Dizajnimi kurrikular sipas kompetencave.",
-        "content": "Strukturoni orët mësimore dhe vlerësoni kompetencat kyçe evropiane."
-      },
-      "colloqui": {
-        "title": "Takimet me Prindërit",
-        "desc": "Caktimi i orareve të lira për takime individuale.",
-        "content": "Përcaktoni fashat orare dhe konfirmoni kërkesat e prindërve."
       }
     },
     "student": {
@@ -1798,21 +1670,6 @@ export default {
         "title": "Motivare Absențe",
         "desc": "Motivarea absențelor direct din aplicație.",
         "content": "Selectați absența copilului, indicați motivul și trimiteți motivarea online."
-      },
-      "grades": {
-        "title": "Vlerësimi & Dëftesa",
-        "desc": "Ndiqni notat dhe vlerësimet e fëmijëve tuaj.",
-        "content": "Qasje e menjëhershme në të gjitha notat, mesataret dhe dëftesat zyrtare."
-      },
-      "attendance": {
-        "title": "Arsyetimi i Mungesave",
-        "desc": "Si të arsyetoni mungesat e fëmijës tuaj online.",
-        "content": "Dërgoni arsyetime për mungesat dhe vonesat me një klikim."
-      },
-      "colloqui": {
-        "title": "Rezervimi i Takimeve me Mësuesit",
-        "desc": "Caktoni takime individuale me stafin mësimdhënës.",
-        "content": "Zgjidhni orarin e përshtatshëm dhe rezervoni takimin online ose në shkollë."
       }
     },
     "secretary": {
@@ -2150,5 +2007,150 @@ export default {
     "semester1": "Semestrul 1",
     "semester2": "Semestrul 2",
     "exportPdf": "Exportă PDF"
+  },
+  "recovery": {
+    "title": "Recovery Courses & Deficiencies (PAI)",
+    "subtitle": "Summer remediation flow, recovery courses, and September makeup exams",
+    "activeCourses": "Active Courses",
+    "completedTests": "Recorded Makeup Exams",
+    "resolvedDebts": "Resolved Deficiencies",
+    "newCourseBtn": "New Recovery Course",
+    "recordTestBtn": "Record September Exam",
+    "tabs": {
+      "courses": "Recovery Courses",
+      "tests": "September Makeup Exams"
+    },
+    "status": {
+      "scheduled": "Scheduled",
+      "in_progress": "In Progress",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "outcomes": {
+      "recuperato": "Deficiency Resolved",
+      "non_recuperato": "Not Resolved"
+    },
+    "dialog": {
+      "newCourseTitle": "Schedule New Recovery Course",
+      "recordTestTitle": "Record September Makeup Exam"
+    },
+    "form": {
+      "title": "Course Title",
+      "subject": "Subject",
+      "period": "Period",
+      "hours": "Total Hours",
+      "room": "Room",
+      "description": "Description / Syllabus",
+      "student": "Student",
+      "class": "Class",
+      "testDate": "Exam Date",
+      "testType": "Exam Format",
+      "grade": "Grade (1-10)",
+      "verbale": "Council Minute Number"
+    },
+    "preview": {
+      "resolved": "Deficiency Successfully Resolved",
+      "unresolved": "Deficiency Not Resolved",
+      "promoted": "Admitted to next grade",
+      "notPromoted": "Not Admitted / Remediation Failed"
+    }
+  },
+  "credits": {
+    "title": "School Credits Calculation",
+    "subtitle": "State Exam credit attribution for high school triennium (D.Lgs. 62/2017)",
+    "selectClass": "Select Class",
+    "calculatorModalBtn": "Calculator & Assign",
+    "referenceGuideTitle": "Ministerial Reference Table (D.Lgs. 62/2017)",
+    "editCredit": "Edit Credit",
+    "calcModalTitle": "School Credit Calculation & Attribution",
+    "form": {
+      "student": "Student",
+      "gradeLevel": "Grade Level",
+      "average": "Grade Average (M)",
+      "conduct": "Conduct Grade",
+      "pctoHours": "PCTO Hours Completed",
+      "hasExtracurricular": "Educational Credits / Extracurriculars",
+      "suggestedBand": "Calculated Ministerial Range",
+      "assignedCredit": "Final Assigned Credit",
+      "deliberationNotes": "Class Council Deliberation Notes"
+    }
+  },
+  "support": {
+    "title": "Special Education Support & PEI",
+    "subtitle": "Hourly inclusion logbook, co-teaching, and PEI goals monitoring",
+    "newDiaryEntryBtn": "New Log Entry",
+    "newPeiGoalBtn": "New PEI Goal",
+    "filterStudent": "Filter by Student",
+    "tabs": {
+      "diary": "Hourly Support Log",
+      "peiGoals": "PEI Goals Plan"
+    },
+    "activityTypes": {
+      "in_classe": "In Class with Curricular Teacher",
+      "laboratorio": "Educational Lab",
+      "aula_sostegno": "Support Classroom",
+      "individuale": "1:1 Individual Session",
+      "piccolo_gruppo": "Small Cooperative Group"
+    },
+    "shared": "Shared with Family",
+    "internal": "Internal Use Only",
+    "dialog": {
+      "newDiaryTitle": "Record Support Log Entry",
+      "newPeiGoalTitle": "Define New PEI Goal"
+    },
+    "form": {
+      "student": "Student",
+      "class": "Class",
+      "date": "Date",
+      "timeSlot": "Time Slot",
+      "activityType": "Activity Type",
+      "coTeacher": "Co-teaching Teacher",
+      "topicAndActivities": "Topics & Activities",
+      "studentResponses": "Student Response & Autonomy",
+      "educatorNotes": "Notes for Educator / Support Assistant",
+      "shareWithFamily": "Make Visible to Family",
+      "peiType": "PEI Type",
+      "axis": "Development Axis",
+      "goalTitle": "Goal Title",
+      "goalDescription": "Description & Strategies",
+      "expectedTerm": "Target Term",
+      "status": "Progress Status"
+    }
+  },
+  "generalMeeting": {
+    "teacherQueueTitle": "Afternoon General Parent-Teacher Conference",
+    "teacherQueueSubtitle": "Teacher station and live virtual queue monitor",
+    "parentTitle": "General Parent-Teacher Conference",
+    "parentSubtitle": "Book conference time slots with numbered virtual ticket",
+    "selectMeeting": "Select General Meeting",
+    "currentlyInMeeting": "Parent Currently in Meeting",
+    "noActiveMeeting": "No parent currently in meeting at station",
+    "completeMeeting": "Complete Meeting",
+    "nextInLine": "Next Parent in Queue",
+    "queueEmpty": "Queue is empty",
+    "callNext": "Call Next Ticket",
+    "queueSummary": "Station Summary",
+    "callParent": "Call",
+    "startMeeting": "Start Meeting",
+    "markAbsent": "Mark Absent",
+    "myActiveTickets": "Your Active Numbered Tickets",
+    "availableEvents": "Available Parent Conferences",
+    "noEventsAvailable": "No general parent conferences currently open for booking",
+    "selectTeacher": "Available Teachers",
+    "bookTicketBtn": "Get Ticket",
+    "confirmBookingTitle": "Confirm Ticket Booking",
+    "confirmTicket": "Confirm Ticket",
+    "ticketStatus": {
+      "prenotato": "In Queue",
+      "chiamato": "Called",
+      "in_colloquio": "In Meeting",
+      "concluso": "Completed",
+      "assente": "Absent",
+      "annullato": "Cancelled"
+    },
+    "form": {
+      "selectStudent": "Select Child / Student",
+      "notes": "Notes for Teacher"
+    }
   }
 }

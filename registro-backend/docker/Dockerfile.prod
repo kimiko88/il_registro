@@ -42,15 +42,19 @@ FROM alpine:3.21
 
 WORKDIR /app
 
-RUN apk add --no-cache ca-certificates tzdata
+RUN apk add --no-cache ca-certificates tzdata && \
+    addgroup -g 10001 -S appgroup && \
+    adduser -u 10001 -S -G appgroup -s /sbin/nologin appuser
 
-COPY --from=builder /app/api-server .
+COPY --from=builder --chown=10001:10001 /app/api-server .
 
 # NOTE: Do NOT copy .env or .env.example here.
 # All configuration is supplied at runtime via environment variables
 # (Render → Environment tab, Docker → -e / --env-file, k8s → ConfigMap/Secret).
 # Viper reads env vars automatically via AutomaticEnv(); a .env file in the
 # container would override those injected values with the placeholder defaults.
+
+USER 10001:10001
 
 EXPOSE 8080
 
@@ -59,3 +63,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD wget -qO- http://localhost:8080/health || exit 1
 
 CMD ["./api-server"]
+

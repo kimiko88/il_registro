@@ -18,6 +18,15 @@ func NewHandler(s *Service) *Handler {
 	return &Handler{service: s}
 }
 
+func isAllowedVerbaliRole(role string) bool {
+	switch strings.ToLower(role) {
+	case "teacher", "coordinator", "admin", "superadmin", "secretary", "principal", "vice_principal", "docente":
+		return true
+	default:
+		return false
+	}
+}
+
 func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	v := r.Group("/verbali")
 	{
@@ -36,7 +45,11 @@ func (h *Handler) CreateMeeting(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
 	schoolID := c.GetString("school_id")
-	if userID == "" || (role != "teacher" && role != "admin" && role != "superadmin") {
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if !isAllowedVerbaliRole(role) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -57,10 +70,16 @@ func (h *Handler) CreateMeeting(c *gin.Context) {
 
 func (h *Handler) ListMeetings(c *gin.Context) {
 	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
+	if !isAllowedVerbaliRole(role) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
 	schoolID := c.GetString("school_id")
 	classID := c.Query("class_id")
 
@@ -80,6 +99,10 @@ func (h *Handler) CreateVerbale(c *gin.Context) {
 	role := c.GetString("role")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if !isAllowedVerbaliRole(role) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 
@@ -104,8 +127,13 @@ func (h *Handler) CreateVerbale(c *gin.Context) {
 func (h *Handler) GetVerbale(c *gin.Context) {
 	id := c.Param("id")
 	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if !isAllowedVerbaliRole(role) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 
@@ -128,8 +156,13 @@ func (h *Handler) GetVerbale(c *gin.Context) {
 func (h *Handler) ListVerbali(c *gin.Context) {
 	meetingID := c.Param("meetingId")
 	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if !isAllowedVerbaliRole(role) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 
@@ -160,10 +193,15 @@ func (h *Handler) ListVerbali(c *gin.Context) {
 func (h *Handler) SignVerbale(c *gin.Context) {
 	id := c.Param("id")
 	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	ipAddress := c.ClientIP()
 
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if !isAllowedVerbaliRole(role) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 
@@ -180,8 +218,13 @@ func (h *Handler) SignVerbale(c *gin.Context) {
 
 func (h *Handler) GetSignatures(c *gin.Context) {
 	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if !isAllowedVerbaliRole(role) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 
@@ -201,8 +244,13 @@ func (h *Handler) GetSignatures(c *gin.Context) {
 func (h *Handler) ExportPDF(c *gin.Context) {
 	id := c.Param("id")
 	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if !isAllowedVerbaliRole(role) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 

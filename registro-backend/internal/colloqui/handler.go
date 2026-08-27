@@ -57,6 +57,14 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 		g.GET("/slots/:id/bookings", h.ListSlotBookings)
 		g.PUT("/bookings/:id/status", h.UpdateBookingStatus)
 		g.PATCH("/bookings/:id/cancel", h.CancelBookingAlias)
+
+		// General Meetings & Live Virtual Queue
+		g.POST("/general-meetings", h.CreateGeneralMeeting)
+		g.GET("/general-meetings", h.ListGeneralMeetings)
+		g.GET("/general-meetings/:id", h.GetGeneralMeeting)
+		g.POST("/general-meetings/book-ticket", h.BookQueueTicket)
+		g.GET("/general-meetings/:id/tickets", h.ListQueueTickets)
+		g.PATCH("/general-meetings/tickets/:ticket_id/status", h.UpdateTicketStatus)
 	}
 }
 
@@ -389,4 +397,113 @@ func (h *Handler) CancelBookingAlias(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "booking status updated"})
+}
+
+func (h *Handler) CreateGeneralMeeting(c *gin.Context) {
+	var req CreateGeneralParentMeetingRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	schoolID := c.GetString("school_id")
+	m, err := h.service.CreateGeneralMeeting(c.Request.Context(), schoolID, req)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, m)
+}
+
+func (h *Handler) ListGeneralMeetings(c *gin.Context) {
+	schoolID := c.GetString("school_id")
+	list, err := h.service.ListGeneralMeetings(c.Request.Context(), schoolID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if list == nil {
+		list = []GeneralParentMeeting{}
+	}
+	c.JSON(http.StatusOK, list)
+}
+
+func (h *Handler) GetGeneralMeeting(c *gin.Context) {
+	id := c.Param("id")
+	m, err := h.service.GetGeneralMeeting(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, m)
+}
+
+func (h *Handler) BookQueueTicket(c *gin.Context) {
+	var req BookQueueTicketRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	parentID := c.GetString("parent_id")
+	if parentID == "" {
+		parentID = c.GetString("user_id")
+	}
+
+	ticket, err := h.service.BookQueueTicket(c.Request.Context(), parentID, req)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, ticket)
+}
+
+func (h *Handler) ListQueueTickets(c *gin.Context) {
+	meetingID := c.Param("id")
+	teacherID := c.Query("teacher_id")
+	parentID := c.Query("parent_id")
+
+	role := c.GetString("role")
+	if role == "parent" && parentID == "" {
+		parentID = c.GetString("parent_id")
+		if parentID == "" {
+			parentID = c.GetString("user_id")
+		}
+	} else if role == "teacher" && teacherID == "" {
+		teacherID = c.GetString("teacher_id")
+		if teacherID == "" {
+			teacherID = c.GetString("user_id")
+		}
+	}
+
+	tickets, err := h.service.ListQueueTickets(c.Request.Context(), meetingID, teacherID, parentID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if tickets == nil {
+		tickets = []GeneralMeetingQueueTicket{}
+	}
+	c.JSON(http.StatusOK, tickets)
+}
+
+func (h *Handler) UpdateTicketStatus(c *gin.Context) {
+	ticketID := c.Param("ticket_id")
+	var body struct {
+		Status string `json:"status" binding:"required"`
+		Notes  string `json:"notes"`
+	}
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.service.UpdateTicketStatus(c.Request.Context(), ticketID, body.Status, body.Notes); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }

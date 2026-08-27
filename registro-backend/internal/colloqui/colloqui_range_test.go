@@ -88,6 +88,25 @@ func (m *mockServiceForRangeTest) CreateAssembly(ctx context.Context, actorRole,
 	return args.Get(0).(*ColloquioSlot), args.Error(1)
 }
 
+func (m *mockServiceForRangeTest) CreateGeneralMeeting(ctx context.Context, schoolID string, req CreateGeneralParentMeetingRequest) (*GeneralParentMeeting, error) {
+	return nil, nil
+}
+func (m *mockServiceForRangeTest) ListGeneralMeetings(ctx context.Context, schoolID string) ([]GeneralParentMeeting, error) {
+	return nil, nil
+}
+func (m *mockServiceForRangeTest) GetGeneralMeeting(ctx context.Context, id string) (*GeneralParentMeeting, error) {
+	return nil, nil
+}
+func (m *mockServiceForRangeTest) BookQueueTicket(ctx context.Context, parentID string, req BookQueueTicketRequest) (*GeneralMeetingQueueTicket, error) {
+	return nil, nil
+}
+func (m *mockServiceForRangeTest) ListQueueTickets(ctx context.Context, meetingID, teacherID, parentID string) ([]GeneralMeetingQueueTicket, error) {
+	return nil, nil
+}
+func (m *mockServiceForRangeTest) UpdateTicketStatus(ctx context.Context, id, status, notes string) error {
+	return nil
+}
+
 func TestGetAvailabilityByTeacher_RangeLimit(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	mockSvc := new(mockServiceForRangeTest)

@@ -104,3 +104,68 @@ type CreateAssemblyRequest struct {
 	Location    string `json:"location"`
 	Description string `json:"description"`
 }
+
+type GeneralParentMeeting struct {
+	ID                  string                      `json:"id"`
+	SchoolID            string                      `json:"school_id"`
+	Title               string                      `json:"title"`
+	EventDate           string                      `json:"event_date"` // YYYY-MM-DD
+	StartTime           string                      `json:"start_time"` // HH:MM
+	EndTime             string                      `json:"end_time"`   // HH:MM
+	SlotDurationMinutes int                         `json:"slot_duration_minutes"`
+	LocationType        string                      `json:"location_type"` // 'in_presenza', 'online_meet'
+	Status              string                      `json:"status"`        // 'draft', 'open_for_booking', 'in_progress', 'closed'
+	TeacherSlots        []GeneralMeetingTeacherSlot `json:"teacher_slots,omitempty"`
+	CreatedAt           time.Time                   `json:"created_at"`
+	UpdatedAt           time.Time                   `json:"updated_at"`
+}
+
+type GeneralMeetingTeacherSlot struct {
+	ID          string `json:"id"`
+	MeetingID   string `json:"meeting_id"`
+	TeacherID   string `json:"teacher_id"`
+	TeacherName string `json:"teacher_name,omitempty"`
+	SubjectName string `json:"subject_name,omitempty"`
+	RoomOrTable string `json:"room_or_table"`
+	MeetURL     string `json:"meet_url,omitempty"`
+	MaxBookings int    `json:"max_bookings"`
+	BookedCount int    `json:"booked_count"`
+}
+
+type GeneralMeetingQueueTicket struct {
+	ID            string     `json:"id"`
+	MeetingID     string     `json:"meeting_id"`
+	MeetingTitle  string     `json:"meeting_title,omitempty"`
+	TeacherID     string     `json:"teacher_id"`
+	TeacherName   string     `json:"teacher_name,omitempty"`
+	ParentID      string     `json:"parent_id"`
+	ParentName    string     `json:"parent_name,omitempty"`
+	StudentID     string     `json:"student_id"`
+	StudentName   string     `json:"student_name,omitempty"`
+	TicketNumber  int        `json:"ticket_number"`  // #01, #02...
+	ScheduledTime string     `json:"scheduled_time"` // HH:MM
+	Status        string     `json:"status"`         // 'prenotato', 'chiamato', 'in_colloquio', 'concluso', 'assente', 'annullato'
+	Notes         string     `json:"notes"`
+	RoomOrTable   string     `json:"room_or_table,omitempty"`
+	CalledAt      *time.Time `json:"called_at,omitempty"`
+	CompletedAt   *time.Time `json:"completed_at,omitempty"`
+	CreatedAt     time.Time  `json:"created_at"`
+	UpdatedAt     time.Time  `json:"updated_at"`
+}
+
+type CreateGeneralParentMeetingRequest struct {
+	Title               string   `json:"title" binding:"required"`
+	EventDate           string   `json:"event_date" binding:"required"`
+	StartTime           string   `json:"start_time" binding:"required"`
+	EndTime             string   `json:"end_time" binding:"required"`
+	SlotDurationMinutes int      `json:"slot_duration_minutes"`
+	LocationType        string   `json:"location_type"`
+	TeacherIDs          []string `json:"teacher_ids"`
+}
+
+type BookQueueTicketRequest struct {
+	MeetingID string `json:"meeting_id" binding:"required"`
+	TeacherID string `json:"teacher_id" binding:"required"`
+	StudentID string `json:"student_id" binding:"required"`
+	Notes     string `json:"notes"`
+}

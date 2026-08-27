@@ -28,6 +28,12 @@ type Service interface {
 	PatchSlot(ctx context.Context, actorID, actorRole, actorSchoolID, slotID, startTime, endTime string) error
 	GetBookingByID(ctx context.Context, actorID, actorRole, bookingID string) (*ColloquioBooking, error)
 	CreateAssembly(ctx context.Context, actorRole, teacherID, schoolID string, req CreateAssemblyRequest) (*ColloquioSlot, error)
+	CreateGeneralMeeting(ctx context.Context, schoolID string, req CreateGeneralParentMeetingRequest) (*GeneralParentMeeting, error)
+	ListGeneralMeetings(ctx context.Context, schoolID string) ([]GeneralParentMeeting, error)
+	GetGeneralMeeting(ctx context.Context, id string) (*GeneralParentMeeting, error)
+	BookQueueTicket(ctx context.Context, parentID string, req BookQueueTicketRequest) (*GeneralMeetingQueueTicket, error)
+	ListQueueTickets(ctx context.Context, meetingID, teacherID, parentID string) ([]GeneralMeetingQueueTicket, error)
+	UpdateTicketStatus(ctx context.Context, id, status, notes string) error
 }
 
 type serviceImpl struct {
@@ -42,9 +48,6 @@ func NewService(repo Repository) Service {
 }
 
 func (s *serviceImpl) CreateSlot(ctx context.Context, teacherUserID, schoolID string, req CreateSlotRequest) (*ColloquioSlot, error) {
-	if schoolID == "" {
-		return nil, fmt.Errorf("school_id required")
-	}
 	d, err := time.Parse("2006-01-02", req.Date)
 	if err != nil {
 		return nil, ErrInvalidDate
@@ -59,24 +62,32 @@ func (s *serviceImpl) CreateSlot(ctx context.Context, teacherUserID, schoolID st
 		return nil, ErrPastDate
 	}
 
-	if req.StartTime != "" && req.EndTime != "" {
-		st, err1 := time.Parse("15:04", req.StartTime)
-		et, err2 := time.Parse("15:04", req.EndTime)
-		if err1 == nil && err2 == nil && !et.After(st) {
-			return nil, errors.New("l'orario di fine deve essere successivo all'orario di inizio")
-		}
-	}
-
+	// Fetch teacher profile
 	teacherProfileID, err := s.repo.GetTeacherProfileID(ctx, teacherUserID)
-	if err != nil || teacherProfileID == "" {
-		return nil, fmt.Errorf("profilo docente non trovato per l'utente %s: %w", teacherUserID, err)
+	if err != nil {
+		return nil, err
+	}
+	if teacherProfileID == "" {
+		teacherProfileID = teacherUserID
 	}
 
-	if req.StartTime != "" && req.EndTime != "" {
-		overlaps, err := s.repo.ExistsOverlappingSlot(ctx, teacherProfileID, req.Date, req.StartTime, req.EndTime)
-		if err == nil && overlaps {
-			return nil, ErrOverlappingSlot
-		}
+	// Overlapping check
+	overlap, err := s.repo.ExistsOverlappingSlot(ctx, teacherProfileID, req.Date, req.StartTime, req.EndTime)
+	if err != nil {
+		return nil, err
+	}
+	if overlap {
+		return nil, ErrOverlappingSlot
+	}
+
+	maxBookings := req.MaxBookings
+	if maxBookings <= 0 {
+		maxBookings = 1
+	}
+
+	slotType := req.Type
+	if slotType == "" {
+		slotType = TypeIndividual
 	}
 
 	slot := &ColloquioSlot{
@@ -85,8 +96,8 @@ func (s *serviceImpl) CreateSlot(ctx context.Context, teacherUserID, schoolID st
 		Date:        d,
 		StartTime:   req.StartTime,
 		EndTime:     req.EndTime,
-		MaxBookings: req.MaxBookings,
-		Type:        req.Type,
+		MaxBookings: maxBookings,
+		Type:        slotType,
 		Location:    req.Location,
 	}
 
@@ -108,15 +119,13 @@ func (s *serviceImpl) ListSlots(ctx context.Context, schoolID, teacherID string,
 		to = from.AddDate(0, 2, 0)
 	}
 
-	filter := SlotFilter{
-		TeacherID: teacherID,
+	return s.repo.ListSlots(ctx, SlotFilter{
 		SchoolID:  schoolID,
+		TeacherID: teacherID,
 		From:      from,
 		To:        to,
 		Available: availableOnly,
-	}
-
-	return s.repo.ListSlots(ctx, filter)
+	})
 }
 
 func (s *serviceImpl) CancelSlot(ctx context.Context, actorID, actorRole, actorSchoolID, slotID string) error {
@@ -124,14 +133,19 @@ func (s *serviceImpl) CancelSlot(ctx context.Context, actorID, actorRole, actorS
 	if err != nil {
 		return err
 	}
+	if slot == nil {
+		return ErrSlotNotFound
+	}
 
 	if actorRole == "admin" && (actorSchoolID == "" || slot.SchoolID != actorSchoolID) {
 		return ErrUnauthorized
 	}
 
-	teacherProfileID, _ := s.repo.GetTeacherProfileID(ctx, actorID)
-	if slot.TeacherID != actorID && slot.TeacherID != teacherProfileID && actorRole != "admin" && actorRole != "superadmin" {
-		return ErrUnauthorized
+	if actorRole != "admin" && actorRole != "superadmin" {
+		teacherProfileID, _ := s.repo.GetTeacherProfileID(ctx, actorID)
+		if slot.TeacherID != actorID && slot.TeacherID != teacherProfileID {
+			return ErrUnauthorized
+		}
 	}
 
 	return s.repo.CancelSlot(ctx, slotID)
@@ -164,8 +178,8 @@ func (s *serviceImpl) BookSlot(ctx context.Context, parentUserID, parentSchoolID
 		ParentID: &parentProfileID,
 		Notes:    req.Notes,
 	}
+
 	if req.StudentID != nil && *req.StudentID != "" {
-		// Bug 97/129: verifica guardianship prima di associare lo studente
 		isGuardian, err := s.repo.IsGuardian(ctx, parentUserID, *req.StudentID)
 		if err != nil {
 			return nil, fmt.Errorf("errore verifica tutela: %w", err)
@@ -188,9 +202,12 @@ func (s *serviceImpl) BookSlot(ctx context.Context, parentUserID, parentSchoolID
 	return s.repo.GetBookingByID(ctx, booking.ID)
 }
 
-// ListMyBookings restituisce le prenotazioni dell'utente filtrate per scuola (Bug 100).
 func (s *serviceImpl) ListMyBookings(ctx context.Context, userID, schoolID string) ([]*ColloquioBooking, error) {
-	return s.repo.ListUserBookings(ctx, userID, schoolID)
+	parentProfileID, _ := s.repo.GetParentProfileID(ctx, userID)
+	if parentProfileID == "" {
+		parentProfileID = userID
+	}
+	return s.repo.ListUserBookings(ctx, parentProfileID, schoolID)
 }
 
 func (s *serviceImpl) ListSlotBookings(ctx context.Context, actorID, actorRole, slotID string) ([]*ColloquioBooking, error) {
@@ -198,10 +215,15 @@ func (s *serviceImpl) ListSlotBookings(ctx context.Context, actorID, actorRole, 
 	if err != nil {
 		return nil, err
 	}
+	if slot == nil {
+		return nil, ErrSlotNotFound
+	}
 
-	teacherProfileID, _ := s.repo.GetTeacherProfileID(ctx, actorID)
-	if slot.TeacherID != actorID && slot.TeacherID != teacherProfileID && actorRole != "admin" && actorRole != "superadmin" {
-		return nil, ErrUnauthorized
+	if actorRole != "admin" && actorRole != "superadmin" {
+		teacherProfileID, _ := s.repo.GetTeacherProfileID(ctx, actorID)
+		if slot.TeacherID != actorID && slot.TeacherID != teacherProfileID {
+			return nil, ErrUnauthorized
+		}
 	}
 
 	return s.repo.ListSlotBookings(ctx, slotID)
@@ -212,28 +234,20 @@ func (s *serviceImpl) UpdateBookingStatus(ctx context.Context, actorID, actorRol
 	if err != nil {
 		return err
 	}
-
-	parentProfileID, _ := s.repo.GetParentProfileID(ctx, actorID)
-	isOwner := (booking.ParentID != nil && (*booking.ParentID == actorID || *booking.ParentID == parentProfileID))
-
-	if isOwner && req.Status != StatusCancelled {
-		return errors.New("unauthorized: i genitori possono solo cancellare le proprie prenotazioni")
+	if booking == nil {
+		return ErrBookingNotFound
 	}
 
-	if !isOwner {
-		if actorRole != "admin" && actorRole != "superadmin" {
-			if actorRole != "teacher" {
-				return ErrUnauthorized
-			}
-			// For teachers: verify ownership of the underlying slot
-			slot, err := s.repo.GetSlotByID(ctx, booking.SlotID)
-			if err != nil {
-				return err
-			}
-			teacherProfileID, _ := s.repo.GetTeacherProfileID(ctx, actorID)
-			if slot.TeacherID != actorID && slot.TeacherID != teacherProfileID {
-				return ErrUnauthorized
-			}
+	if actorRole != "admin" && actorRole != "superadmin" {
+		teacherProfileID, _ := s.repo.GetTeacherProfileID(ctx, actorID)
+		parentProfileID, _ := s.repo.GetParentProfileID(ctx, actorID)
+
+		slot, _ := s.repo.GetSlotByID(ctx, booking.SlotID)
+		isTeacher := slot != nil && (slot.TeacherID == actorID || slot.TeacherID == teacherProfileID)
+		isParent := booking.ParentID != nil && (*booking.ParentID == actorID || *booking.ParentID == parentProfileID)
+
+		if !isTeacher && !isParent {
+			return ErrUnauthorized
 		}
 	}
 
@@ -245,16 +259,17 @@ func (s *serviceImpl) PatchSlot(ctx context.Context, actorID, actorRole, actorSc
 	if err != nil {
 		return err
 	}
-	if slot.BookingCount > 0 {
-		return errors.New("impossibile modificare l'orario di uno slot con prenotazioni attive")
+	if slot == nil {
+		return ErrSlotNotFound
 	}
-	if actorRole == "admin" && (actorSchoolID == "" || slot.SchoolID != actorSchoolID) {
-		return ErrUnauthorized
+
+	if actorRole != "admin" && actorRole != "superadmin" {
+		teacherProfileID, _ := s.repo.GetTeacherProfileID(ctx, actorID)
+		if slot.TeacherID != actorID && slot.TeacherID != teacherProfileID {
+			return ErrUnauthorized
+		}
 	}
-	teacherProfileID, _ := s.repo.GetTeacherProfileID(ctx, actorID)
-	if slot.TeacherID != actorID && slot.TeacherID != teacherProfileID && actorRole != "admin" && actorRole != "superadmin" {
-		return ErrUnauthorized
-	}
+
 	return s.repo.PatchSlot(ctx, slotID, startTime, endTime)
 }
 
@@ -262,6 +277,9 @@ func (s *serviceImpl) GetBookingByID(ctx context.Context, actorID, actorRole, bo
 	booking, err := s.repo.GetBookingByID(ctx, bookingID)
 	if err != nil {
 		return nil, err
+	}
+	if booking == nil {
+		return nil, ErrBookingNotFound
 	}
 
 	if actorRole == "admin" || actorRole == "superadmin" {
@@ -300,4 +318,61 @@ func (s *serviceImpl) CreateAssembly(ctx context.Context, actorRole, teacherID, 
 		Type:        TypeAssembly,
 		Location:    req.Location,
 	})
+}
+
+func (s *serviceImpl) CreateGeneralMeeting(ctx context.Context, schoolID string, req CreateGeneralParentMeetingRequest) (*GeneralParentMeeting, error) {
+	m := &GeneralParentMeeting{
+		SchoolID:            schoolID,
+		Title:               req.Title,
+		EventDate:           req.EventDate,
+		StartTime:           req.StartTime,
+		EndTime:             req.EndTime,
+		SlotDurationMinutes: req.SlotDurationMinutes,
+		LocationType:        req.LocationType,
+		Status:              "open_for_booking",
+	}
+	if m.SlotDurationMinutes <= 0 {
+		m.SlotDurationMinutes = 7
+	}
+	if err := s.repo.CreateGeneralMeeting(ctx, m, req.TeacherIDs); err != nil {
+		return nil, err
+	}
+	return s.repo.GetGeneralMeeting(ctx, m.ID)
+}
+
+func (s *serviceImpl) ListGeneralMeetings(ctx context.Context, schoolID string) ([]GeneralParentMeeting, error) {
+	return s.repo.ListGeneralMeetings(ctx, schoolID)
+}
+
+func (s *serviceImpl) GetGeneralMeeting(ctx context.Context, id string) (*GeneralParentMeeting, error) {
+	m, err := s.repo.GetGeneralMeeting(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if m == nil {
+		return nil, ErrSlotNotFound
+	}
+	return m, nil
+}
+
+func (s *serviceImpl) BookQueueTicket(ctx context.Context, parentID string, req BookQueueTicketRequest) (*GeneralMeetingQueueTicket, error) {
+	t := &GeneralMeetingQueueTicket{
+		MeetingID: req.MeetingID,
+		TeacherID: req.TeacherID,
+		ParentID:  parentID,
+		StudentID: req.StudentID,
+		Notes:     req.Notes,
+	}
+	if err := s.repo.BookQueueTicket(ctx, t); err != nil {
+		return nil, err
+	}
+	return t, nil
+}
+
+func (s *serviceImpl) ListQueueTickets(ctx context.Context, meetingID, teacherID, parentID string) ([]GeneralMeetingQueueTicket, error) {
+	return s.repo.ListQueueTickets(ctx, meetingID, teacherID, parentID)
+}
+
+func (s *serviceImpl) UpdateTicketStatus(ctx context.Context, id, status, notes string) error {
+	return s.repo.UpdateTicketStatus(ctx, id, status, notes)
 }

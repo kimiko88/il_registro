@@ -77,13 +77,17 @@ describe('MainLayout Logic', () => {
             setupUserRole('teacher')
             const flatItems = getFlatItems('teacher')
 
-            // 1 dashboard + 11 Didattica + 5 Organizzazione + 4 Comunicazioni = 21
-            expect(flatItems).toHaveLength(21)
+            // 1 dashboard + 14 Didattica + 6 Organizzazione + 4 Comunicazioni = 25
+            expect(flatItems).toHaveLength(25)
             expect(flatItems.map(i => i.label)).toContain('Dashboard')
             expect(flatItems.map(i => i.label)).toContain('Le Mie Classi')
             expect(flatItems.map(i => i.label)).toContain('Voti')
             expect(flatItems.map(i => i.label)).toContain('Presenze')
             expect(flatItems.map(i => i.label)).toContain('Agenda')
+            expect(flatItems.map(i => i.label)).toContain('Credito Scolastico')
+            expect(flatItems.map(i => i.label)).toContain('Corsi Recupero & PAI')
+            expect(flatItems.map(i => i.label)).toContain('Registro Sostegno & PEI')
+            expect(flatItems.map(i => i.label)).toContain('Ricevimento Generale')
         })
 
         it('should provide admin menu items', () => {
@@ -121,6 +125,7 @@ describe('MainLayout Logic', () => {
             expect(flatItems.map(i => i.label)).toContain('Dashboard')
             expect(flatItems.map(i => i.label)).toContain('I Miei Figli')
             expect(flatItems.map(i => i.label)).toContain('Colloqui')
+            expect(flatItems.map(i => i.label)).toContain('Ricevimento Generale')
         })
 
         it('should provide secretary menu items', () => {

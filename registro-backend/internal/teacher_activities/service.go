@@ -129,7 +129,7 @@ func (s *service) GetByTeacher(teacherID, fromDate, toDate string) ([]TeacherAct
 	if err != nil {
 		return nil, err
 	}
-	var res []TeacherActivityResponse
+	res := []TeacherActivityResponse{}
 	for _, a := range activities {
 		res = append(res, *s.toResponse(&a))
 	}

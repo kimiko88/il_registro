@@ -25,9 +25,9 @@
           align="left"
           no-caps
         >
-          <q-tab name="upcoming" icon="event" :label="t('verbaliPage.agenda') || 'Eventi Disponibili'" />
-          <q-tab name="registered" icon="bookmark" :label="t('colloquiPage.bookings') || 'I Miei Eventi'" />
-          <q-tab name="past" icon="history" :label="t('verbaliPage.resolutions') || 'Storico & Presenze'" />
+          <q-tab name="upcoming" icon="event" :label="t('orientamento.availableEvents') || 'Eventi Disponibili'" />
+          <q-tab name="registered" icon="bookmark" :label="t('orientamento.myEvents') || 'I Miei Eventi'" />
+          <q-tab name="past" icon="history" :label="t('orientamento.history') || 'Storico & Presenze'" />
         </q-tabs>
 
         <div v-if="loading" class="text-center q-pa-xl">

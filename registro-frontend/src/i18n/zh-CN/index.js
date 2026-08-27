@@ -238,6 +238,8 @@ export default {
     "statGradesPending": "待录成绩",
     "actionAttendance": "考勤点名",
     "actionGrades": "录入成绩",
+    "viewAttendance": "考勤",
+    "viewGrades": "成绩",
     "actionLessons": "教学日志",
     "actionAgenda": "班级日程",
     "actionUsers": "用户管理",
@@ -902,32 +904,7 @@ export default {
       "q9": "如何切换界面语言与暗黑模式？",
       "a9": "在用户菜单的“设置”中，可在9种语言间无缝切换，并开启暗黑模式或 OpenDyslexic 易读字体。",
       "q10": "如何撤销刚刚误输入的成绩？",
-      "a10": "保存成绩后，屏幕底部将出现15秒内有效的“撤销”浮条。超时后可直接在单元格修改。",
-      "attendance": {
-        "title": "Marrja e Mungesave & Nënshkrimi i Mësimit",
-        "desc": "Si të merrni praninë e nxënësve dhe të nënshkruani orën mësimore.",
-        "content": "Dhe regjistroni mungesat dhe temat e mësimit brenda pak sekondave.\n\nHapi 1: Hapni 'Ditari i Klasës' dhe zgjidhni klasën tuaj.\nHapi 2: Shënoni nxënësit si të pranishëm, mungesë ose me vonesë.\nHapi 3: Vendosni temën dhe nënshkruani orën."
-      },
-      "grades": {
-        "title": "Hedhja e Notave dhe Vlerësimi",
-        "desc": "Si të vendosni notat me gojë, me shkrim dhe praktike.",
-        "content": "Menaxhoni notat dhe vlerësimet për secilin nxënës me lehtësi."
-      },
-      "uda": {
-        "title": "Planifikimi i Njësive Mësimore (UdA)",
-        "desc": "Dizajnimi kurrikular sipas kompetencave.",
-        "content": "Strukturoni orët mësimore dhe vlerësoni kompetencat kyçe evropiane."
-      },
-      "agenda": {
-        "title": "Detyrat e Shtëpisë & Kalendari",
-        "desc": "Si të caktoni detyrat dhe provimet.",
-        "content": "Caktoni afatet dhe organizoni ngarkesën e studimit për klasën."
-      },
-      "colloqui": {
-        "title": "Takimet me Prindërit",
-        "desc": "Caktimi i orareve të lira për takime individuale.",
-        "content": "Përcaktoni fashat orare dhe konfirmoni kërkesat e prindërve."
-      }
+      "a10": "保存成绩后，屏幕底部将出现15秒内有效的“撤销”浮条。超时后可直接在单元格修改。"
     },
     "student": {
       "cat_grades": "我的成绩",
@@ -954,22 +931,7 @@ export default {
       "q9": "忘记密码怎么办？",
       "a9": "在登录页面点击“忘记密码？”，输入绑定的电子邮箱重置。",
       "q10": "如何使用 Ctrl+K 快捷搜索？",
-      "a10": "按下 Ctrl+K (Mac 上为 Cmd+K) 打开全局搜索框，可快速跳转至任意功能或课程。",
-      "grades": {
-        "title": "Konsultimi i Notave & Mesatareve",
-        "desc": "Si të kontrolloni notat dhe ecurinë tuaj akademike.",
-        "content": "Shikoni notat e fundit, mesataret sipas lëndëve dhe simuloni notat kaluese."
-      },
-      "homework": {
-        "title": "Detyrat & Kalendari i Studimit",
-        "desc": "Organizoni detyrat dhe përgatitjet për testet.",
-        "content": "Mbani nën kontroll afatet e detyrave dhe njoftimet nga mësuesit."
-      },
-      "attendance": {
-        "title": "Prania & Arsyetimet",
-        "desc": "Kontrolloni mungesat dhe vonesat tuaja.",
-        "content": "Shikoni statusin e mungesave dhe kërkesave për arsyetim."
-      }
+      "a10": "按下 Ctrl+K (Mac 上为 Cmd+K) 打开全局搜索框，可快速跳转至任意功能或课程。"
     },
     "parent": {
       "cat_monitoring": "子女监控",
@@ -996,22 +958,7 @@ export default {
       "q9": "两位家长可以分别拥有独立的登录账号吗？",
       "a9": "可以。学校秘书处可为同一位学生绑定多位法定监护人的独立账号。",
       "q10": "在无网络（离线）状态下如何使用？",
-      "a10": "应用会展示本地缓存数据。离线填写的请假或表单将在网络恢复后自动同步。",
-      "grades": {
-        "title": "Vlerësimi & Dëftesa",
-        "desc": "Ndiqni notat dhe vlerësimet e fëmijëve tuaj.",
-        "content": "Qasje e menjëhershme në të gjitha notat, mesataret dhe dëftesat zyrtare."
-      },
-      "attendance": {
-        "title": "Arsyetimi i Mungesave",
-        "desc": "Si të arsyetoni mungesat e fëmijës tuaj online.",
-        "content": "Dërgoni arsyetime për mungesat dhe vonesat me një klikim."
-      },
-      "colloqui": {
-        "title": "Rezervimi i Takimeve me Mësuesit",
-        "desc": "Caktoni takime individuale me stafin mësimdhënës.",
-        "content": "Zgjidhni orarin e përshtatshëm dhe rezervoni takimin online ose në shkollë."
-      }
+      "a10": "应用会展示本地缓存数据。离线填写的请假或表单将在网络恢复后自动同步。"
     },
     "secretary": {
       "cat_students": "学生档案簿",
@@ -1038,37 +985,7 @@ export default {
       "q9": "如何核查 PagoPA 学费缴纳状态？",
       "a9": "打开“财务与 PagoPA”面板，查看已缴与欠费列表，一键发送催缴提醒。",
       "q10": "如何废除误发的发文字号 (Protocollo)？",
-      "a10": "在公文归档中选择对应文号 → “注明原因并作废”。此操作将记录于 Audit Log 审计日志。",
-      "students": {
-        "title": "Menaxhimi i Regjistrit të Nxënësve",
-        "desc": "Kërkimi, regjistrimi dhe përditësimi i të dhënave të nxënësve.",
-        "content": "Administroni dosjet akademike, kontaktet dhe regjistrimet e reja."
-      },
-      "classes": {
-        "title": "Organizimi i Klasave dhe Seksioneve",
-        "desc": "Krijimi i klasave dhe caktimi i mësuesve titullarë.",
-        "content": "Strukturoni vitin shkollor, oraret dhe ndarjen e lëndëve."
-      },
-      "certificates": {
-        "title": "Gjenerimi i Vërtetimeve",
-        "desc": "Lëshimi i dokumenteve zyrtare dhe vërtetimeve të frekuentimit.",
-        "content": "Gjeneroni dokumente me vulë digjitale dhe nënshkrim zyrtar në sekonda."
-      },
-      "timetable": {
-        "title": "Orari Mësimor dhe Zëvendësimet",
-        "desc": "Menaxhimi i orareve javore dhe zëvendësimit të mësuesve.",
-        "content": "Planifikoni orët dhe mbuloni mungesat e mësuesve."
-      },
-      "communications": {
-        "title": "Qarkoret dhe Njoftimet Zyrtare",
-        "desc": "Publikimi i njoftimeve dhe monitorimi i marrjes së dijenisë.",
-        "content": "Dërgoni qarkore zyrtare për stafin, prindërit dhe nxënësit."
-      },
-      "reports": {
-        "title": "Raportet dhe Statistikat",
-        "desc": "Nxjerrja e statistikave dhe eksportimi i të dhënave.",
-        "content": "Gjeneroni raporte të agreguara për frekuentimin dhe rezultatet."
-      }
+      "a10": "在公文归档中选择对应文号 → “注明原因并作废”。此操作将记录于 Audit Log 审计日志。"
     },
     "admin": {
       "cat_monitoring": "系统监控",
@@ -1095,42 +1012,7 @@ export default {
       "q9": "如何查看全站 RBAC 权限矩阵？",
       "a9": "进入“角色与权限”，查看9种系统角色的细粒度权限配置矩阵。",
       "q10": "如何将平台切换至维护模式？",
-      "a10": "在“系统设置”中勾选“维护模式”。开启后，普通用户登录将看到系统维护提示。",
-      "monitoring": {
-        "title": "Monitorimi i Sistemit",
-        "desc": "Monitorimi i performancës së serverit dhe bazës së të dhënave.",
-        "content": "Kontrolloni gjendjen teknike, memorien RAM dhe shërbimet e sistemit në kohë reale."
-      },
-      "users": {
-        "title": "Menaxhimi i Përdoruesve",
-        "desc": "Krijimi i llogarive, të drejtat dhe politikat e sigurisë.",
-        "content": "Menaxhoni të gjitha llogaritë e përdoruesve dhe konfiguroni 2FA."
-      },
-      "schools": {
-        "title": "Menaxhimi i Institucioneve",
-        "desc": "Konfigurimi i shkollave dhe degëve arsimore.",
-        "content": "Regjistroni kodet zyrtare dhe të dhënat administrative të shkollave."
-      },
-      "security": {
-        "title": "Politikat e Sigurisë",
-        "desc": "Konfigurimi i fjalëkalimeve dhe kërkesave të sigurisë.",
-        "content": "Përshtatni rregullat e sigurisë sipas standardeve më të larta."
-      },
-      "analytics": {
-        "title": "Analitika dhe Parandalimi i Braktisjes",
-        "desc": "Analizë parashikuese për rrezikun e braktisjes shkollore.",
-        "content": "Identifikoni nxënësit me rrezik mungesash dhe rezultatesh të ulëta."
-      },
-      "integrations": {
-        "title": "Integrimet dhe Hyrja me Një Klik (SSO)",
-        "desc": "Lidhja me Google Workspace dhe Microsoft 365.",
-        "content": "Aktivizoni hyrjen me llogaritë institucionale."
-      },
-      "audit": {
-        "title": "Regjistri i Auditimit & Gjurmueshmëria",
-        "desc": "Gjurmimi i plotë i veprimeve të përdoruesve në sistem.",
-        "content": "Regjistër i pandryshueshëm i të gjitha veprimeve për transparencë maksimale."
-      }
+      "a10": "在“系统设置”中勾选“维护模式”。开启后，普通用户登录将看到系统维护提示。"
     }
   },
   "guideCenter": {
@@ -1185,14 +1067,14 @@ export default {
         "content": "PDP 模块协助教师团队制定个性化教学方案。\n\n步骤 1: 从班级菜单进入 'PDP / PEI'。\n步骤 2: 选择学生，配置补偿工具与豁免条款。\n步骤 3: 保存草稿并发送至家长端完成电子签名。\n步骤 4: 考核时激活的措施将以图标形式进行预警提示。\n\n提示: 使用预设评语库可大幅提升撰写效率。"
       },
       "uda": {
-        "title": "Planifikimi i Njësive Mësimore (UdA)",
-        "desc": "Dizajnimi kurrikular sipas kompetencave.",
-        "content": "Strukturoni orët mësimore dhe vlerësoni kompetencat kyçe evropiane."
+        "title": "教学单元规划 (UdA)",
+        "desc": "按核心素养设计课程体系与单元目标。",
+        "content": "规划教学单元课时分配并评估欧洲关键能力素养。"
       },
       "colloqui": {
-        "title": "Takimet me Prindërit",
-        "desc": "Caktimi i orareve të lira për takime individuale.",
-        "content": "Përcaktoni fashat orare dhe konfirmoni kërkesat e prindërve."
+        "title": "家长会与接待预约",
+        "desc": "设置用于个别家长会面的空闲接待时段。",
+        "content": "设定每周开放时段并在线确认家长的预约申请。"
       }
     },
     "student": {
@@ -1264,19 +1146,19 @@ export default {
         "content": "告别纸质假条：使用安全 PIN 码在线请假。\n\n步骤 1: 打开“出勤与请假”。\n步骤 2: 查看红色标记的未请假缺勤记录。\n步骤 3: 点击“请假”，选择原因（生病、私事）并输入 PIN 码确认。"
       },
       "grades": {
-        "title": "Vlerësimi & Dëftesa",
-        "desc": "Ndiqni notat dhe vlerësimet e fëmijëve tuaj.",
-        "content": "Qasje e menjëhershme në të gjitha notat, mesataret dhe dëftesat zyrtare."
+        "title": "学业评估与正式成绩单",
+        "desc": "全面掌握孩子的各科成绩与考核评价。",
+        "content": "实时获取所有科目成绩、加权均分及学校出具的正式评估成绩单。"
       },
       "attendance": {
-        "title": "Arsyetimi i Mungesave",
-        "desc": "Si të arsyetoni mungesat e fëmijës tuaj online.",
-        "content": "Dërgoni arsyetime për mungesat dhe vonesat me një klikim."
+        "title": "缺勤在线请假说明",
+        "desc": "在线为孩子的缺勤或迟到提交请假理由与说明。",
+        "content": "随时在手机端为孩子的缺勤或早退一键发送在线请假条。"
       },
       "colloqui": {
-        "title": "Rezervimi i Takimeve me Mësuesit",
-        "desc": "Caktoni takime individuale me stafin mësimdhënës.",
-        "content": "Zgjidhni orarin e përshtatshëm dhe rezervoni takimin online ose në shkollë."
+        "title": "预约任课教师接待",
+        "desc": "预约与任课教师一对一家长会面交流。",
+        "content": "选择方便的接待时段，轻松预约线上或线下家校面谈。"
       }
     },
     "secretary": {
@@ -2150,5 +2032,150 @@ export default {
     "semester1": "第一学期",
     "semester2": "第二学期",
     "exportPdf": "导出 PDF 报告单"
+  },
+  "recovery": {
+    "title": "Recovery Courses & Deficiencies (PAI)",
+    "subtitle": "Summer remediation flow, recovery courses, and September makeup exams",
+    "activeCourses": "Active Courses",
+    "completedTests": "Recorded Makeup Exams",
+    "resolvedDebts": "Resolved Deficiencies",
+    "newCourseBtn": "New Recovery Course",
+    "recordTestBtn": "Record September Exam",
+    "tabs": {
+      "courses": "Recovery Courses",
+      "tests": "September Makeup Exams"
+    },
+    "status": {
+      "scheduled": "Scheduled",
+      "in_progress": "In Progress",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "outcomes": {
+      "recuperato": "Deficiency Resolved",
+      "non_recuperato": "Not Resolved"
+    },
+    "dialog": {
+      "newCourseTitle": "Schedule New Recovery Course",
+      "recordTestTitle": "Record September Makeup Exam"
+    },
+    "form": {
+      "title": "Course Title",
+      "subject": "Subject",
+      "period": "Period",
+      "hours": "Total Hours",
+      "room": "Room",
+      "description": "Description / Syllabus",
+      "student": "Student",
+      "class": "Class",
+      "testDate": "Exam Date",
+      "testType": "Exam Format",
+      "grade": "Grade (1-10)",
+      "verbale": "Council Minute Number"
+    },
+    "preview": {
+      "resolved": "Deficiency Successfully Resolved",
+      "unresolved": "Deficiency Not Resolved",
+      "promoted": "Admitted to next grade",
+      "notPromoted": "Not Admitted / Remediation Failed"
+    }
+  },
+  "credits": {
+    "title": "School Credits Calculation",
+    "subtitle": "State Exam credit attribution for high school triennium (D.Lgs. 62/2017)",
+    "selectClass": "Select Class",
+    "calculatorModalBtn": "Calculator & Assign",
+    "referenceGuideTitle": "Ministerial Reference Table (D.Lgs. 62/2017)",
+    "editCredit": "Edit Credit",
+    "calcModalTitle": "School Credit Calculation & Attribution",
+    "form": {
+      "student": "Student",
+      "gradeLevel": "Grade Level",
+      "average": "Grade Average (M)",
+      "conduct": "Conduct Grade",
+      "pctoHours": "PCTO Hours Completed",
+      "hasExtracurricular": "Educational Credits / Extracurriculars",
+      "suggestedBand": "Calculated Ministerial Range",
+      "assignedCredit": "Final Assigned Credit",
+      "deliberationNotes": "Class Council Deliberation Notes"
+    }
+  },
+  "support": {
+    "title": "Special Education Support & PEI",
+    "subtitle": "Hourly inclusion logbook, co-teaching, and PEI goals monitoring",
+    "newDiaryEntryBtn": "New Log Entry",
+    "newPeiGoalBtn": "New PEI Goal",
+    "filterStudent": "Filter by Student",
+    "tabs": {
+      "diary": "Hourly Support Log",
+      "peiGoals": "PEI Goals Plan"
+    },
+    "activityTypes": {
+      "in_classe": "In Class with Curricular Teacher",
+      "laboratorio": "Educational Lab",
+      "aula_sostegno": "Support Classroom",
+      "individuale": "1:1 Individual Session",
+      "piccolo_gruppo": "Small Cooperative Group"
+    },
+    "shared": "Shared with Family",
+    "internal": "Internal Use Only",
+    "dialog": {
+      "newDiaryTitle": "Record Support Log Entry",
+      "newPeiGoalTitle": "Define New PEI Goal"
+    },
+    "form": {
+      "student": "Student",
+      "class": "Class",
+      "date": "Date",
+      "timeSlot": "Time Slot",
+      "activityType": "Activity Type",
+      "coTeacher": "Co-teaching Teacher",
+      "topicAndActivities": "Topics & Activities",
+      "studentResponses": "Student Response & Autonomy",
+      "educatorNotes": "Notes for Educator / Support Assistant",
+      "shareWithFamily": "Make Visible to Family",
+      "peiType": "PEI Type",
+      "axis": "Development Axis",
+      "goalTitle": "Goal Title",
+      "goalDescription": "Description & Strategies",
+      "expectedTerm": "Target Term",
+      "status": "Progress Status"
+    }
+  },
+  "generalMeeting": {
+    "teacherQueueTitle": "Afternoon General Parent-Teacher Conference",
+    "teacherQueueSubtitle": "Teacher station and live virtual queue monitor",
+    "parentTitle": "General Parent-Teacher Conference",
+    "parentSubtitle": "Book conference time slots with numbered virtual ticket",
+    "selectMeeting": "Select General Meeting",
+    "currentlyInMeeting": "Parent Currently in Meeting",
+    "noActiveMeeting": "No parent currently in meeting at station",
+    "completeMeeting": "Complete Meeting",
+    "nextInLine": "Next Parent in Queue",
+    "queueEmpty": "Queue is empty",
+    "callNext": "Call Next Ticket",
+    "queueSummary": "Station Summary",
+    "callParent": "Call",
+    "startMeeting": "Start Meeting",
+    "markAbsent": "Mark Absent",
+    "myActiveTickets": "Your Active Numbered Tickets",
+    "availableEvents": "Available Parent Conferences",
+    "noEventsAvailable": "No general parent conferences currently open for booking",
+    "selectTeacher": "Available Teachers",
+    "bookTicketBtn": "Get Ticket",
+    "confirmBookingTitle": "Confirm Ticket Booking",
+    "confirmTicket": "Confirm Ticket",
+    "ticketStatus": {
+      "prenotato": "In Queue",
+      "chiamato": "Called",
+      "in_colloquio": "In Meeting",
+      "concluso": "Completed",
+      "assente": "Absent",
+      "annullato": "Cancelled"
+    },
+    "form": {
+      "selectStudent": "Select Child / Student",
+      "notes": "Notes for Teacher"
+    }
   }
 }
