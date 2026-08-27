@@ -83,20 +83,39 @@ registro-frontend/src/
   - `?` (o `Shift + /`) → Apri Dialogo Guida Scorciatoie
   - `Escape` → Chiudi modale o interrompi lettura vocale
 
-### 3.6. Dichiarazione di Accessibilità AgID & Meccanismo di Feedback
-- **Pagina Dedicata**: `/accessibility-statement` (e alias `/dichiarazione-accessibilita`).
-- **Sezioni**:
+### 3.6. Dichiarazione di Accessibilità AgID & Meccanismo di Feedback End-to-End
+- **Pagina Dedicata Frontend**: `/accessibility-statement` (e alias `/dichiarazione-accessibilita`).
+- **Sezioni Principali**:
   1. Stato di conformità (WCAG 2.2 AA / AAA).
   2. Tecnologie e strumenti compensativi integrati.
   3. Modulo interattivo di segnalazione barriere digitali al Responsabile della Transizione Digitale (RTD).
   4. Procedura di attuazione con il Difensore Civico per il Digitale (AgID).
+- **Backend & Database**:
+  - **Tabella PostgreSQL**: `accessibility_feedbacks` (migrazione `095_create_accessibility_feedback.sql`).
+  - **Generazione Protocollo AgID**: Generazione univoca del codice `A11Y-YYYY-MMDD-XXXX` (es. `A11Y-2026-0827-1042`) restituito al cittadino.
+  - **Endpoint REST**:
+    - `POST /api/v1/public/accessibility-feedback` *(Aperto al pubblico e a utenti anonimi)*
+    - `POST /api/v1/accessibility/feedback` *(Per utenti autenticati)*
+    - `GET /api/v1/admin/accessibility-feedbacks` *(Consultazione per amministratori e RTD)*
+    - `PATCH /api/v1/admin/accessibility-feedbacks/:id/status` *(Presa in carico / Risoluzione)*
 
 ---
 
 ## 🧪 4. Test e Manutenzione
 
-La suite è coperta da test unitari automatici in Vitest:
+La suite è coperta al 100% da test unitari automatici su frontend e backend:
+
 ```bash
+# Frontend (Vitest - Suite A11y e Test Globali)
+cd registro-frontend
 npm run test:unit
+
+# Backend (Go Test)
+cd registro-backend
+go test ./internal/accessibility/...
 ```
-File di test: `tests/unit/accessibility/accessibilitySuite.spec.js`.
+
+File di test:
+- Frontend: `registro-frontend/tests/unit/accessibility/accessibilitySuite.spec.js` (12 test unitari dedicati).
+- Backend: `registro-backend/internal/accessibility/service_test.go`.
+

@@ -83,10 +83,17 @@ Lo store `useWebSocketStore` espone ref reattivi per lo stato della connessione 
 
 ---
 
-## Internazionalizzazione & Accessibilità (a11y)
+## Internazionalizzazione & Accessibilità (a11y - AgID / WCAG 2.2)
 
-1. **i18n Multi-Lingua**: i file `src/i18n/` coprono 9 lingue distinte: Italiano (`it-IT`), Inglese (`en-US`), Tedesco (`de-DE`), Francese (`fr-FR`), Spagnolo (`es-ES`), Russo (`ru-RU`), Ucraino (`uk-UA`), Arabo (`ar-SA`) e Cinese Semplificato (`zh-CN`).
-2. **WAI-ARIA**: inclusione obbligatoria di `role="alert"`, `role="navigation"`, `role="banner"`, `aria-expanded` e Skip Links (_Salta al contenuto principale_ `#main-content`).
+1. **i18n Multi-Lingua**: i file `src/i18n/` coprono 9 lingue distinte (`it-IT`, `en-US`, `de-DE`, `fr-FR`, `es-ES`, `ru-RU`, `uk-UA`, `ar-SA`, `zh-CN`) basati su `vue-i18n` v11.
+2. **Suite di Accessibilità & Supporto DSA**:
+   - **Sintesi Vocale (TTS)**: Composable `useSpeechSynthesis` con Web Speech API nativa e pulsante `TextToSpeechButton.vue`.
+   - **Righello di Lettura / Focus Mask**: `ReadingRuler.vue` con tracciamento mouse o navigazione `Alt + ↑/↓`.
+   - **Spaziatura Testo (WCAG 1.4.12)**: Regolazione interlinea (fino a 2.1x), spaziatura lettere e parole.
+   - **Filtri Daltonismo & Modalità OLED**: Protanopia, Deuteranopia, Tritanopia, Monocromatico e OLED Pure Black (Ambra/Verde).
+   - **Navigazione da Tastiera & Scorciatoie Globali**: Focus ring visibile `:focus-visible`, dialogo guida `KeyboardShortcutsDialog.vue` (attivabile con `?`) e scorciatoie globali `Alt + 1..5`, `Alt + V`, `Alt + P`, `Alt + A`, `Alt + R`, `Alt + T`.
+   - **Dichiarazione di Accessibilità AgID**: Pagina `/accessibility-statement` con invio feedback protocollato `A11Y-YYYY-MMDD-XXXX`.
+3. **WAI-ARIA**: Inclusione di `role="alert"`, `role="navigation"`, `role="banner"`, `aria-expanded` e Skip Links (*Salta al contenuto principale* `#main-content`).
 
 ---
 
@@ -97,7 +104,7 @@ Lo store `useWebSocketStore` espone ref reattivi per lo stato della connessione 
    - Generazione dinamica QR code via secret TOTP e verifica codice di conferma a 6 cifre.
 2. **Pannello Impostazioni Utente (`Settings.vue`)**:
    - Rotte dedicate per ciascun ruolo integrate nel menu reattivo sidebar `useMenuItems`.
-   - Sezioni per Cambio Password, 2FA TOTP, Selezione Lingua (con persistenza `localStorage.setItem('user_locale')`), Preferenze Notifiche e Layout Registro.
+   - Sezioni per Cambio Password, 2FA TOTP, Selezione Lingua (con persistenza `localStorage.setItem('user_locale')`), Preferenze Notifiche, Layout Registro e Pannello Accessibilità Unificato (`AccessibilitySettingsPanel.vue`).
 3. **Filtraggio Dinamico per Anno Scolastico (`src/stores/schoolYear.js`)**:
    - Genera gli anni scolastici disponibili a partire dall'anno di registrazione dell'utente (`user.created_at`) fino all'anno attivo.
    - Trasmette reattivamente l'anno scelto a `Classes.vue`, `Grades.vue`, `Attendance.vue`, `CoordinatorView.vue` e `Scrutiny.vue`.
@@ -126,14 +133,16 @@ Il frontend integra un sistema multilivello di assistenza e onboarding guidato p
 
 ## 🛠️ Architettura dei Composables & Safety Guidelines
 
-I 28 composabili in `src/composables/` incapsulano la logica reattiva, l'interazione con gli store e la gestione delle operazioni asincrone:
+I composabili in `src/composables/` incapsulano la logica reattiva, l'interazione con gli store e la gestione delle operazioni asincrone:
 
-1. **`useAuth.js`**: Gestione autenticazione, persistenza sessione, traduzione granulare degli errori di login e instradamento post-login per tutti i 13 ruoli supportati (`superadmin`, `admin`, `secretary`, `principal`, `vice_principal`, `staff`, `coordinator`, `teacher`, `student`, `parent`, `docente`, `system_auditor`).
-2. **`useUserManagement.js`**: Gestione utenti di segreteria/amministrazione con gestione esplicita degli errori di importazione CSV (notifica negativa `type: 'negative'` e ritorno booleano affidabile `false`).
-3. **`useColloquiScheduling.js`**: Generatore di slot disponibilità con validazione preventiva dei limiti di durata (`duration > 0`) e coerenza temporale (`startTime < endTime`).
-4. **`useDraftAutosave.js`**: Salvataggio automatico debounced in `localStorage` con deep-clone serializzabile, ripristino istantaneo e cleanup automatizzato su unmount del componente.
-5. **`useUndoToast.js`**: Notifiche transitorie con countdown visivo e possibilità di revocare l'azione entro 15 secondi (`notifyWithUndo`).
-6. **`useGradeFormatter.js`**: Formattazione coerente dei voti (decimale con virgola/punto, frazionario o centesimale) in base alle preferenze dell'istituto.
+1. **`useAuth.js`**: Gestione autenticazione, persistenza sessione, traduzione granulare degli errori di login e instradamento post-login per tutti i ruoli supportati.
+2. **`useSpeechSynthesis.js`**: Gestione Web Speech API con controllo sintesi vocale, pausa, ripresa, annullamento e selezione voce italiana.
+3. **`useGlobalKeyboardShortcuts.js`**: Intercettazione tasti di scelta rapida globali con esclusione automatica quando il focus è su input o campi modulo.
+4. **`useUserManagement.js`**: Gestione utenti di segreteria/amministrazione con gestione esplicita degli errori di importazione CSV.
+5. **`useColloquiScheduling.js`**: Generatore di slot disponibilità con validazione preventiva dei limiti di durata (`duration > 0`) e coerenza temporale (`startTime < endTime`).
+6. **`useDraftAutosave.js`**: Salvataggio automatico debounced in `localStorage` con deep-clone serializzabile, ripristino istantaneo e cleanup automatizzato su unmount del componente.
+7. **`useUndoToast.js`**: Notifiche transitorie con countdown visivo e possibilità di revocare l'azione entro 15 secondi (`notifyWithUndo`).
+8. **`useGradeFormatter.js`**: Formattazione coerente dei voti (decimale con virgola/punto, frazionario o centesimale) in base alle preferenze dell'istituto.
 
 ---
 
@@ -166,9 +175,11 @@ Il registro implementa un sistema coerente di tema scuro (`.body--dark`) gestito
 La suite di test frontend è sviluppata con **Vitest** e **Vue Test Utils**:
 
 - **Comando di esecuzione**: `npm run test:unit`
-- **Metriche**: **153 test suite**, **928 unit test passati al 100%** (0 errori, 0 fallimenti).
+- **Metriche**: **159 test suite**, **950 unit test passati al 100%** (0 errori, 0 fallimenti).
 - **Copertura**:
-  - `tests/unit/components/`: Test dedicati per componenti Admin, Common, Parent, Secretary, Student e Teacher (`StudentGradeChart.spec.js`, `TimelineActivityFeed.spec.js`, `ScheduleGridsRobustness.spec.js`, `GradeWeights.spec.js`, ecc.).
-  - `tests/unit/composables/`: Test dedicati per tutti i composabili (`useUserManagementFix.spec.js`, `useAuthRoleRouting.spec.js`, `useDraftAutosave.spec.js`, `usePermissions.spec.js`, ecc.).
+  - `tests/unit/components/`: Test dedicati per componenti Admin, Common, Parent, Secretary, Student e Teacher.
+  - `tests/unit/composables/`: Test dedicati per tutti i composabili (`useSpeechSynthesis`, `useGlobalKeyboardShortcuts`, `useDraftAutosave`, `usePermissions`, ecc.).
+  - `tests/unit/accessibility/`: Suite completa per compliance WCAG 2.2, AgID, TTS, Reading Ruler e invio segnalazioni.
   - `tests/unit/security/`: Test di anti-regressione RBAC, XSS DOMPurify sanitization, CSV injection prevention, route guards e token security.
+
 

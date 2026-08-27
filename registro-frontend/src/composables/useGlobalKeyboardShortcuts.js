@@ -45,8 +45,7 @@ export function useGlobalKeyboardShortcuts() {
       switch (key) {
         case '1': {
           e.preventDefault()
-          const role = authStore.userRole || 'teacher'
-          router.push(`/${role}/dashboard`).catch(() => {})
+          router.push('/').catch(() => {})
           break
         }
         case 'v': {

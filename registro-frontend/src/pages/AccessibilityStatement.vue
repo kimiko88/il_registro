@@ -87,9 +87,23 @@
           </h2>
           <div class="text-body1 text-grey-9 q-mt-md">
             Se riscontri qualsiasi difficoltà di accesso o desideri richiedere informazioni e contenuti in un formato alternativo accessibile, puoi inviare una segnalazione compilando il modulo sottostante:
+            
+            <!-- Feedback Confirmation Banner -->
+            <q-banner v-if="submittedProtocol" rounded class="bg-positive text-white q-mt-md shadow-1">
+              <template v-slot:avatar>
+                <q-icon name="verified" size="32px" />
+              </template>
+              <div class="text-subtitle1 text-weight-bold">Segnalazione Registrata Correttamente</div>
+              <div>
+                La tua segnalazione è stata protocollata con codice <strong>{{ submittedProtocol }}</strong> ed è stata presa in carico dal Responsabile della Transizione Digitale (RTD). Riceverai riscontro all'indirizzo email indicato entro i termini di legge (30 giorni).
+              </div>
+              <template v-slot:action>
+                <q-btn flat color="white" label="Nuova Segnalazione" @click="submittedProtocol = null" />
+              </template>
+            </q-banner>
           </div>
 
-          <q-form @submit.prevent="submitFeedback" class="q-mt-lg q-gutter-y-md">
+          <q-form @submit="submitFeedback" class="q-mt-lg q-gutter-y-md">
             <div class="row q-col-gutter-md">
               <div class="col-12 col-sm-6">
                 <q-input
@@ -170,9 +184,11 @@
 <script setup>
 import { ref } from 'vue'
 import { useQuasar } from 'quasar'
+import { accessibilityService } from '@/services/accessibilityService'
 
 const $q = useQuasar()
 const sendingFeedback = ref(false)
+const submittedProtocol = ref(null)
 
 const feedbackForm = ref({
   name: '',
@@ -189,14 +205,24 @@ const barrierOptions = [
   { label: 'Altra barriera digitale o suggerimento di miglioramento', value: 'other' }
 ]
 
-function submitFeedback() {
+async function submitFeedback() {
+  if (!feedbackForm.value.name || !feedbackForm.value.email || !feedbackForm.value.description) {
+    $q.notify({
+      type: 'warning',
+      message: 'Compila tutti i campi obbligatori'
+    })
+    return
+  }
+
   sendingFeedback.value = true
-  setTimeout(() => {
-    sendingFeedback.value = false
+  try {
+    const res = await accessibilityService.submitFeedback(feedbackForm.value)
+    submittedProtocol.value = res.protocol_number || res.id
     $q.notify({
       type: 'positive',
-      message: 'Grazie! La tua segnalazione di accessibilità è stata inviata al Responsabile della Transizione Digitale (RTD).',
-      timeout: 5000
+      icon: 'check_circle',
+      message: `Grazie! Segnalazione inviata con successo. Protocollo: ${submittedProtocol.value}`,
+      timeout: 7000
     })
     feedbackForm.value = {
       name: '',
@@ -204,7 +230,17 @@ function submitFeedback() {
       barrierType: 'contrast',
       description: ''
     }
-  }, 600)
+  } catch (error) {
+    const errorMsg = error.response?.data?.error || error.message || 'Errore durante l\'invio della segnalazione'
+    $q.notify({
+      type: 'negative',
+      icon: 'error',
+      message: errorMsg,
+      timeout: 6000
+    })
+  } finally {
+    sendingFeedback.value = false
+  }
 }
 </script>
 

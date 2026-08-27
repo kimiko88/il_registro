@@ -225,12 +225,74 @@ paths:
         - Report
       security:
         - BearerAuth: []
+  /public/accessibility-feedback:
+    post:
+      summary: Invia segnalazione barriera digitale (AgID / WCAG 2.2)
+      tags:
+        - Accessibilità
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+                - barrier_type
+                - description
+              properties:
+                name:
+                  type: string
+                  example: Mario Rossi
+                email:
+                  type: string
+                  format: email
+                  example: mario.rossi@example.com
+                barrier_type:
+                  type: string
+                  enum: [contrast, keyboard, tts, documents, other]
+                  example: contrast
+                description:
+                  type: string
+                  example: Contrasto visivo insufficiente nelle circolari.
+      responses:
+        '201':
+          description: Segnalazione registrata con protocollo AgID
+        '400':
+          description: Errore di validazione
+  /admin/accessibility-feedbacks:
+    get:
+      summary: Lista segnalazioni di accessibilità (Admin / RTD)
+      tags:
+        - Accessibilità
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [open, in_progress, resolved]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
       responses:
         '200':
-          description: File Excel generato
+          description: Lista segnalazioni e totale
+        '403':
+          description: Permessi insufficienti
 components:
   securitySchemes:
     BearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+

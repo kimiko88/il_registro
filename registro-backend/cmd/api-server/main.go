@@ -11,6 +11,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"registro-backend/internal/accessibility"
 	"registro-backend/internal/admin"
 	"registro-backend/internal/agenda"
 	"registro-backend/internal/attendance"
@@ -213,6 +214,10 @@ func main() {
 	rubricsH := rubrics.NewHandler(rubricsSvc)
 	schoolCalendarH := schoolcalendar.NewHandler(schoolCalendarSvc)
 
+	a11yRepo := accessibility.NewRepository(database)
+	a11ySvc := accessibility.NewService(a11yRepo)
+	a11yH := accessibility.NewHandler(a11ySvc)
+
 	elearningSvc := elearning.NewService(cfg.Elearning)
 	elearningH := elearning.NewHandler(elearningSvc)
 
@@ -244,6 +249,7 @@ func main() {
 
 		authH.RegisterRoutes(api, authMiddleware)
 		api.GET("/public/schools", schoolsH.ListPublic)
+		api.POST("/public/accessibility-feedback", a11yH.SubmitPublic)
 
 		api.GET("/ws", authMiddleware.AuthenticateWSTicket(wsTicketStore), func(c *gin.Context) {
 			wsHandler.Listen(c)
@@ -252,6 +258,9 @@ func main() {
 		protected := api.Group("/")
 		protected.Use(authMiddleware.Authenticate())
 		{
+			protected.POST("/accessibility/feedback", a11yH.SubmitPublic)
+			protected.GET("/admin/accessibility-feedbacks", adminMiddleware.RequireAdminOrSuperAdmin(), a11yH.List)
+			protected.PATCH("/admin/accessibility-feedbacks/:id/status", adminMiddleware.RequireAdminOrSuperAdmin(), a11yH.UpdateStatus)
 			usersGroup := protected.Group("/users")
 			{
 				usersGroup.GET("/me/children", usersH.GetMyChildren)

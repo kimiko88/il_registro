@@ -204,7 +204,7 @@ describe('Suite di Accessibilità (A11y), DSA & AgID Compliance', () => {
     })
   })
 
-  describe('4. Dichiarazione di Accessibilità AgID (AccessibilityStatement)', () => {
+  describe('4. Dichiarazione di Accessibilità AgID & Invio Segnalazioni', () => {
     it('renderizza la dichiarazione con i 4 pilastri AgID e il form di feedback', () => {
       const wrapper = mount(AccessibilityStatement, {
         global: {
@@ -216,6 +216,7 @@ describe('Suite di Accessibilità (A11y), DSA & AgID Compliance', () => {
             'q-card': { template: '<div><slot /></div>' },
             'q-avatar': { template: '<div><slot /></div>' },
             'q-icon': true,
+            'q-banner': { template: '<div><slot /><slot name="action" /></div>' },
             'q-form': { template: '<form @submit.prevent="$emit(\'submit\')"><slot /></form>' },
             'q-input': true,
             'q-select': true,
@@ -227,6 +228,30 @@ describe('Suite di Accessibilità (A11y), DSA & AgID Compliance', () => {
       expect(wrapper.text()).toContain('Dichiarazione di Accessibilità')
       expect(wrapper.text()).toContain('WCAG 2.2')
       expect(wrapper.text()).toContain('Difensore Civico per il Digitale')
+    })
+
+    it('invia la segnalazione di accessibilità tramite accessibilityService', async () => {
+      const { accessibilityService } = await import('@/services/accessibilityService')
+      const mockPost = vi.spyOn(accessibilityService, 'submitFeedback').mockResolvedValue({
+        id: '123-abc',
+        protocol_number: 'A11Y-2026-0827-1001',
+        message: 'Segnalazione registrata con successo'
+      })
+
+      const res = await accessibilityService.submitFeedback({
+        name: 'Maria Bianchi',
+        email: 'maria.bianchi@scuola.it',
+        barrierType: 'contrast',
+        description: 'Contrasto basso sui pulsanti di azione'
+      })
+
+      expect(mockPost).toHaveBeenCalledWith({
+        name: 'Maria Bianchi',
+        email: 'maria.bianchi@scuola.it',
+        barrierType: 'contrast',
+        description: 'Contrasto basso sui pulsanti di azione'
+      })
+      expect(res.protocol_number).toBe('A11Y-2026-0827-1001')
     })
   })
 })
