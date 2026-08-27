@@ -2007,5 +2007,150 @@ export default {
     "semester1": "Semestrul 1",
     "semester2": "Semestrul 2",
     "exportPdf": "Exportă PDF"
+  },
+  "recovery": {
+    "title": "Recovery Courses & Deficiencies (PAI)",
+    "subtitle": "Summer remediation flow, recovery courses, and September makeup exams",
+    "activeCourses": "Active Courses",
+    "completedTests": "Recorded Makeup Exams",
+    "resolvedDebts": "Resolved Deficiencies",
+    "newCourseBtn": "New Recovery Course",
+    "recordTestBtn": "Record September Exam",
+    "tabs": {
+      "courses": "Recovery Courses",
+      "tests": "September Makeup Exams"
+    },
+    "status": {
+      "scheduled": "Scheduled",
+      "in_progress": "In Progress",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "outcomes": {
+      "recuperato": "Deficiency Resolved",
+      "non_recuperato": "Not Resolved"
+    },
+    "dialog": {
+      "newCourseTitle": "Schedule New Recovery Course",
+      "recordTestTitle": "Record September Makeup Exam"
+    },
+    "form": {
+      "title": "Course Title",
+      "subject": "Subject",
+      "period": "Period",
+      "hours": "Total Hours",
+      "room": "Room",
+      "description": "Description / Syllabus",
+      "student": "Student",
+      "class": "Class",
+      "testDate": "Exam Date",
+      "testType": "Exam Format",
+      "grade": "Grade (1-10)",
+      "verbale": "Council Minute Number"
+    },
+    "preview": {
+      "resolved": "Deficiency Successfully Resolved",
+      "unresolved": "Deficiency Not Resolved",
+      "promoted": "Admitted to next grade",
+      "notPromoted": "Not Admitted / Remediation Failed"
+    }
+  },
+  "credits": {
+    "title": "School Credits Calculation",
+    "subtitle": "State Exam credit attribution for high school triennium (D.Lgs. 62/2017)",
+    "selectClass": "Select Class",
+    "calculatorModalBtn": "Calculator & Assign",
+    "referenceGuideTitle": "Ministerial Reference Table (D.Lgs. 62/2017)",
+    "editCredit": "Edit Credit",
+    "calcModalTitle": "School Credit Calculation & Attribution",
+    "form": {
+      "student": "Student",
+      "gradeLevel": "Grade Level",
+      "average": "Grade Average (M)",
+      "conduct": "Conduct Grade",
+      "pctoHours": "PCTO Hours Completed",
+      "hasExtracurricular": "Educational Credits / Extracurriculars",
+      "suggestedBand": "Calculated Ministerial Range",
+      "assignedCredit": "Final Assigned Credit",
+      "deliberationNotes": "Class Council Deliberation Notes"
+    }
+  },
+  "support": {
+    "title": "Special Education Support & PEI",
+    "subtitle": "Hourly inclusion logbook, co-teaching, and PEI goals monitoring",
+    "newDiaryEntryBtn": "New Log Entry",
+    "newPeiGoalBtn": "New PEI Goal",
+    "filterStudent": "Filter by Student",
+    "tabs": {
+      "diary": "Hourly Support Log",
+      "peiGoals": "PEI Goals Plan"
+    },
+    "activityTypes": {
+      "in_classe": "In Class with Curricular Teacher",
+      "laboratorio": "Educational Lab",
+      "aula_sostegno": "Support Classroom",
+      "individuale": "1:1 Individual Session",
+      "piccolo_gruppo": "Small Cooperative Group"
+    },
+    "shared": "Shared with Family",
+    "internal": "Internal Use Only",
+    "dialog": {
+      "newDiaryTitle": "Record Support Log Entry",
+      "newPeiGoalTitle": "Define New PEI Goal"
+    },
+    "form": {
+      "student": "Student",
+      "class": "Class",
+      "date": "Date",
+      "timeSlot": "Time Slot",
+      "activityType": "Activity Type",
+      "coTeacher": "Co-teaching Teacher",
+      "topicAndActivities": "Topics & Activities",
+      "studentResponses": "Student Response & Autonomy",
+      "educatorNotes": "Notes for Educator / Support Assistant",
+      "shareWithFamily": "Make Visible to Family",
+      "peiType": "PEI Type",
+      "axis": "Development Axis",
+      "goalTitle": "Goal Title",
+      "goalDescription": "Description & Strategies",
+      "expectedTerm": "Target Term",
+      "status": "Progress Status"
+    }
+  },
+  "generalMeeting": {
+    "teacherQueueTitle": "Afternoon General Parent-Teacher Conference",
+    "teacherQueueSubtitle": "Teacher station and live virtual queue monitor",
+    "parentTitle": "General Parent-Teacher Conference",
+    "parentSubtitle": "Book conference time slots with numbered virtual ticket",
+    "selectMeeting": "Select General Meeting",
+    "currentlyInMeeting": "Parent Currently in Meeting",
+    "noActiveMeeting": "No parent currently in meeting at station",
+    "completeMeeting": "Complete Meeting",
+    "nextInLine": "Next Parent in Queue",
+    "queueEmpty": "Queue is empty",
+    "callNext": "Call Next Ticket",
+    "queueSummary": "Station Summary",
+    "callParent": "Call",
+    "startMeeting": "Start Meeting",
+    "markAbsent": "Mark Absent",
+    "myActiveTickets": "Your Active Numbered Tickets",
+    "availableEvents": "Available Parent Conferences",
+    "noEventsAvailable": "No general parent conferences currently open for booking",
+    "selectTeacher": "Available Teachers",
+    "bookTicketBtn": "Get Ticket",
+    "confirmBookingTitle": "Confirm Ticket Booking",
+    "confirmTicket": "Confirm Ticket",
+    "ticketStatus": {
+      "prenotato": "In Queue",
+      "chiamato": "Called",
+      "in_colloquio": "In Meeting",
+      "concluso": "Completed",
+      "assente": "Absent",
+      "annullato": "Cancelled"
+    },
+    "form": {
+      "selectStudent": "Select Child / Student",
+      "notes": "Notes for Teacher"
+    }
   }
 }

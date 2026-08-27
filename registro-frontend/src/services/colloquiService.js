@@ -36,6 +36,24 @@ export const colloquiService = {
   },
   createAssembly(data) {
     return api.post('/colloqui/assemblies', data)
+  },
+  createGeneralMeeting(data) {
+    return api.post('/colloqui/general-meetings', data)
+  },
+  listGeneralMeetings() {
+    return api.get('/colloqui/general-meetings')
+  },
+  getGeneralMeeting(id) {
+    return api.get(`/colloqui/general-meetings/${id}`)
+  },
+  bookQueueTicket(data) {
+    return api.post('/colloqui/general-meetings/book-ticket', data)
+  },
+  listQueueTickets(meetingId, params = {}) {
+    return api.get(`/colloqui/general-meetings/${meetingId}/tickets`, { params })
+  },
+  updateTicketStatus(ticketId, data) {
+    return api.patch(`/colloqui/general-meetings/tickets/${ticketId}/status`, data)
   }
 }
 

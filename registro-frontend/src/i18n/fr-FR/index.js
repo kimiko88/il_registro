@@ -2007,5 +2007,150 @@ export default {
     "semester1": "1er Semestre",
     "semester2": "2nd Semestre",
     "exportPdf": "Exporter en PDF"
+  },
+  "recovery": {
+    "title": "Cours de Soutien & PAI",
+    "subtitle": "Gestion des rattrapages d'été et examens de septembre",
+    "activeCourses": "Cours Actifs",
+    "completedTests": "Examens Enregistrés",
+    "resolvedDebts": "Matières Rattrapées",
+    "newCourseBtn": "Nouveau Cours de Soutien",
+    "recordTestBtn": "Enregistrer Examen de Septembre",
+    "tabs": {
+      "courses": "Cours de Soutien",
+      "tests": "Examens de Septembre"
+    },
+    "status": {
+      "scheduled": "Planifié",
+      "in_progress": "En Cours",
+      "completed": "Terminé",
+      "cancelled": "Annulé"
+    },
+    "outcomes": {
+      "recuperato": "Rattrapé",
+      "non_recuperato": "Non Rattrapé"
+    },
+    "dialog": {
+      "newCourseTitle": "Planifier Cours de Soutien",
+      "recordTestTitle": "Enregistrer Examen de Rattrapage"
+    },
+    "form": {
+      "title": "Titre du Cours",
+      "subject": "Matière",
+      "period": "Période",
+      "hours": "Heures Totales",
+      "room": "Salle",
+      "description": "Description",
+      "student": "Élève",
+      "class": "Classe",
+      "testDate": "Date Examen",
+      "testType": "Type d'Examen",
+      "grade": "Note (1-10)",
+      "verbale": "N° Procès-Verbal"
+    },
+    "preview": {
+      "resolved": "Rattrapage Réussi",
+      "unresolved": "Non Rattrapé",
+      "promoted": "Admis en classe supérieure",
+      "notPromoted": "Non Admis"
+    }
+  },
+  "credits": {
+    "title": "Calcul du Crédit Scolaire",
+    "subtitle": "Attribution des crédits du Baccalauréat (D.Lgs. 62/2017)",
+    "selectClass": "Sélectionner Classe",
+    "calculatorModalBtn": "Calculateur & Attribuer",
+    "referenceGuideTitle": "Barème Ministériel D.Lgs. 62/2017",
+    "editCredit": "Modifier Crédit",
+    "calcModalTitle": "Calcul et Attribution du Crédit",
+    "form": {
+      "student": "Élève",
+      "gradeLevel": "Année",
+      "average": "Moyenne (M)",
+      "conduct": "Conduite",
+      "pctoHours": "Heures PCTO",
+      "hasExtracurricular": "Activités Extrascolaires",
+      "suggestedBand": "Fourchette Ministérielle",
+      "assignedCredit": "Crédit Définitif",
+      "deliberationNotes": "Notes de Délibération"
+    }
+  },
+  "support": {
+    "title": "Registre de Soutien & PPS/PEI",
+    "subtitle": "Journal de bord horaire pour l'inclusion et objectifs PEI",
+    "newDiaryEntryBtn": "Nouvelle Entrée Journal",
+    "newPeiGoalBtn": "Nouvel Objectif PEI",
+    "filterStudent": "Filtrer par Élève",
+    "tabs": {
+      "diary": "Journal de Soutien",
+      "peiGoals": "Objectifs PEI"
+    },
+    "activityTypes": {
+      "in_classe": "En Classe",
+      "laboratorio": "Laboratoire",
+      "aula_sostegno": "Salle de Soutien",
+      "individuale": "Individuel 1:1",
+      "piccolo_gruppo": "Petit Groupe"
+    },
+    "shared": "Partagé avec Famille",
+    "internal": "Usage Interne",
+    "dialog": {
+      "newDiaryTitle": "Ajouter Entrée au Journal",
+      "newPeiGoalTitle": "Définir Objectif PEI"
+    },
+    "form": {
+      "student": "Élève",
+      "class": "Classe",
+      "date": "Date",
+      "timeSlot": "Créneau Horaire",
+      "activityType": "Type d'Activité",
+      "coTeacher": "Enseignant en Co-intervention",
+      "topicAndActivities": "Thèmes & Activités",
+      "studentResponses": "Réponse et Autonomie",
+      "educatorNotes": "Notes pour Éducateur",
+      "shareWithFamily": "Visible pour la Famille",
+      "peiType": "Type PEI",
+      "axis": "Axe de Développement",
+      "goalTitle": "Titre Objectif",
+      "goalDescription": "Description",
+      "expectedTerm": "Échéance",
+      "status": "Progression"
+    }
+  },
+  "generalMeeting": {
+    "teacherQueueTitle": "Rencontre Parents-Professeurs Générale",
+    "teacherQueueSubtitle": "Gestion du stand et file d'attente virtuelle en temps réel",
+    "parentTitle": "Rencontre Parents-Professeurs",
+    "parentSubtitle": "Réservation de créneaux avec ticket numéroté",
+    "selectMeeting": "Sélectionner la Rencontre",
+    "currentlyInMeeting": "Parent Actuellement en Entretien",
+    "noActiveMeeting": "Aucun parent en entretien",
+    "completeMeeting": "Terminer l'Entretien",
+    "nextInLine": "Prochain Parent",
+    "queueEmpty": "File d'attente vide",
+    "callNext": "Appeler le Suivant",
+    "queueSummary": "Résumé du Poste",
+    "callParent": "Appeler",
+    "startMeeting": "Commencer l'Entretien",
+    "markAbsent": "Marquer Absent",
+    "myActiveTickets": "Vos Tickets Actifs",
+    "availableEvents": "Rencontres Disponibles",
+    "noEventsAvailable": "Aucune rencontre générale ouverte aux réservations",
+    "selectTeacher": "Enseignants Disponibles",
+    "bookTicketBtn": "Prendre Ticket",
+    "confirmBookingTitle": "Confirmer Réservation Ticket",
+    "confirmTicket": "Confirmer Ticket",
+    "ticketStatus": {
+      "prenotato": "En File",
+      "chiamato": "Appelé",
+      "in_colloquio": "En Cours",
+      "concluso": "Terminé",
+      "assente": "Absent",
+      "annullato": "Annulé"
+    },
+    "form": {
+      "selectStudent": "Sélectionner Enfant / Élève",
+      "notes": "Notes pour l'Enseignant"
+    }
   }
 }

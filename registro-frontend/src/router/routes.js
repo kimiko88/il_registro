@@ -131,6 +131,10 @@ export default [
             { path: 'teacher/uda', component: () => import('@/pages/teacher/UdaPlanner.vue'), meta: { title: 'Programmazione Didattica UdA', roles: ['teacher', 'coordinator'] } },
             { path: 'teacher/competencies', component: () => import('@/pages/teacher/Competencies.vue'), meta: { title: 'Valutazione per Competenze', roles: ['teacher', 'coordinator'] } },
             { path: 'teacher/settings', component: () => import('@/pages/teacher/Settings.vue'), meta: { title: 'Impostazioni Docente', roles: ['teacher', 'coordinator'] } },
+            { path: 'teacher/recovery', component: () => import('@/pages/teacher/RecoveryCourses.vue'), meta: { title: 'Corsi di Recupero & PAI', roles: ['teacher', 'coordinator'] } },
+            { path: 'teacher/credits', component: () => import('@/pages/teacher/SchoolCredits.vue'), meta: { title: 'Credito Scolastico Triennio', roles: ['teacher', 'coordinator'] } },
+            { path: 'teacher/support', component: () => import('@/pages/teacher/SupportRegister.vue'), meta: { title: 'Registro di Sostegno & PEI', roles: ['teacher', 'coordinator'] } },
+            { path: 'teacher/general-meetings', component: () => import('@/pages/teacher/GeneralMeetingLiveQueue.vue'), meta: { title: 'Ricevimento Generale Pomeridiano', roles: ['teacher', 'coordinator'] } },
 
             // Student Routes
             { path: 'student', component: () => import('@/pages/student/Index.vue'), meta: { title: 'Pannello Studente', roles: ['student'] } },
@@ -158,6 +162,7 @@ export default [
             { path: 'parent/report-card', component: () => import('@/pages/parent/ReportCard.vue'), meta: { title: 'Pagella Scolastica', roles: ['parent'] } },
             { path: 'parent/attendance', component: () => import('@/pages/parent/Attendance.vue'), meta: { title: 'Presenze & Giustificazioni', roles: ['parent'] } },
             { path: 'parent/colloqui', component: () => import('@/pages/parent/Colloqui.vue'), meta: { title: 'Prenotazione Colloqui', roles: ['parent'] } },
+            { path: 'parent/general-meetings', component: () => import('@/pages/parent/GeneralMeetingBooking.vue'), meta: { title: 'Ricevimento Generale Scuola-Famiglia', roles: ['parent'] } },
             { path: 'parent/communications', component: () => import('@/pages/parent/Communications.vue'), meta: { title: 'Avvisi & Circolari', roles: ['parent'] } },
             { path: 'parent/trips', component: () => import('@/pages/parent/Trips.vue'), meta: { title: 'Uscite & Viaggi di Istruzione', roles: ['parent'] } },
             { path: 'parent/profile', component: () => import('@/pages/parent/Profile.vue'), meta: { title: 'Profilo Genitore', roles: ['parent'] } },

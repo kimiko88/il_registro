@@ -2007,5 +2007,150 @@ export default {
     "semester1": "1. Halbjahr",
     "semester2": "2. Halbjahr",
     "exportPdf": "Als PDF exportieren"
+  },
+  "recovery": {
+    "title": "Förderkurse & Lernrückstände (PAI)",
+    "subtitle": "Sommerförderung und Nachprüfungen im September",
+    "activeCourses": "Aktive Kurse",
+    "completedTests": "Erfasste Prüfungen",
+    "resolvedDebts": "Behobene Rückstände",
+    "newCourseBtn": "Neuer Förderkurs",
+    "recordTestBtn": "Septemberprüfung erfassen",
+    "tabs": {
+      "courses": "Förderkurse",
+      "tests": "Septemberprüfungen"
+    },
+    "status": {
+      "scheduled": "Geplant",
+      "in_progress": "Laufend",
+      "completed": "Abgeschlossen",
+      "cancelled": "Storniert"
+    },
+    "outcomes": {
+      "recuperato": "Bestanden",
+      "non_recuperato": "Nicht bestanden"
+    },
+    "dialog": {
+      "newCourseTitle": "Förderkurs planen",
+      "recordTestTitle": "Nachprüfung erfassen"
+    },
+    "form": {
+      "title": "Kurstitel",
+      "subject": "Fach",
+      "period": "Zeitraum",
+      "hours": "Gesamtstunden",
+      "room": "Raum",
+      "description": "Beschreibung",
+      "student": "Schüler",
+      "class": "Klasse",
+      "testDate": "Prüfungsdatum",
+      "testType": "Prüfungsart",
+      "grade": "Note (1-10)",
+      "verbale": "Protokoll-Nr."
+    },
+    "preview": {
+      "resolved": "Erfolgreich behoben",
+      "unresolved": "Nicht behoben",
+      "promoted": "Versetzt in nächste Klasse",
+      "notPromoted": "Nicht versetzt"
+    }
+  },
+  "credits": {
+    "title": "Berechnung Schulguthaben (Kredite)",
+    "subtitle": "Vergabe von Krediten für das Abitur (D.Lgs. 62/2017)",
+    "selectClass": "Klasse auswählen",
+    "calculatorModalBtn": "Rechner & Zuweisen",
+    "referenceGuideTitle": "Ministerielle Referenztabelle D.Lgs. 62/2017",
+    "editCredit": "Kredit bearbeiten",
+    "calcModalTitle": "Berechnung und Zuweisung von Krediten",
+    "form": {
+      "student": "Schüler",
+      "gradeLevel": "Jahrgang",
+      "average": "Notendurchschnitt (M)",
+      "conduct": "Betragensnote",
+      "pctoHours": "PCTO-Stunden",
+      "hasExtracurricular": "Zusatzaktivitäten",
+      "suggestedBand": "Ministerielle Spanne",
+      "assignedCredit": "Zugewiesener Kredit",
+      "deliberationNotes": "Klassenratsnotizen"
+    }
+  },
+  "support": {
+    "title": "Inklusions- & Förderregister (PEI)",
+    "subtitle": "Stundenweises Logbuch für Integration, Co-Teaching und PEI-Ziele",
+    "newDiaryEntryBtn": "Neuer Tagebucheintrag",
+    "newPeiGoalBtn": "Neues PEI-Ziel",
+    "filterStudent": "Nach Schüler filtern",
+    "tabs": {
+      "diary": "Förder-Logbuch",
+      "peiGoals": "PEI-Ziele"
+    },
+    "activityTypes": {
+      "in_classe": "In der Klasse",
+      "laboratorio": "Fachraum/Labor",
+      "aula_sostegno": "Förderraum",
+      "individuale": "Einzelförderung 1:1",
+      "piccolo_gruppo": "Kleingruppe"
+    },
+    "shared": "Mit Familie geteilt",
+    "internal": "Nur interner Gebrauch",
+    "dialog": {
+      "newDiaryTitle": "Eintrag ins Fördertagebuch",
+      "newPeiGoalTitle": "Neues PEI-Ziel definieren"
+    },
+    "form": {
+      "student": "Schüler",
+      "class": "Klasse",
+      "date": "Datum",
+      "timeSlot": "Unterrichtsstunde",
+      "activityType": "Aktivitätsart",
+      "coTeacher": "Fachlehrer im Team-Teaching",
+      "topicAndActivities": "Themen & Aktivitäten",
+      "studentResponses": "Schülerreaktion & Selbstständigkeit",
+      "educatorNotes": "Notizen für Erzieher",
+      "shareWithFamily": "Für Familie sichtbar",
+      "peiType": "PEI-Typ",
+      "axis": "Entwicklungsbereich",
+      "goalTitle": "Zieltitel",
+      "goalDescription": "Beschreibung",
+      "expectedTerm": "Zielzeitraum",
+      "status": "Status"
+    }
+  },
+  "generalMeeting": {
+    "teacherQueueTitle": "Allgemeiner Elternsprechtag am Nachmittag",
+    "teacherQueueSubtitle": "Lehrerstation und digitale Warteschlange in Echtzeit",
+    "parentTitle": "Allgemeiner Elternsprechtag",
+    "parentSubtitle": "Terminbuchung mit digitalem Wartenummernticket",
+    "selectMeeting": "Sprechtag auswählen",
+    "currentlyInMeeting": "Aktuell im Gespräch",
+    "noActiveMeeting": "Derzeit kein Gespräch",
+    "completeMeeting": "Gespräch beenden",
+    "nextInLine": "Nächster Elternteil",
+    "queueEmpty": "Warteschlange leer",
+    "callNext": "Nächste Nummer aufrufen",
+    "queueSummary": "Stationsübersicht",
+    "callParent": "Aufrufen",
+    "startMeeting": "Gespräch starten",
+    "markAbsent": "Als abwesend markieren",
+    "myActiveTickets": "Ihre aktiven Wartenummern",
+    "availableEvents": "Verfügbare Sprechtage",
+    "noEventsAvailable": "Derzeit keine Sprechtage für Buchungen geöffnet",
+    "selectTeacher": "Verfügbare Lehrkräfte",
+    "bookTicketBtn": "Ticket ziehen",
+    "confirmBookingTitle": "Ticketbuchung bestätigen",
+    "confirmTicket": "Ticket bestätigen",
+    "ticketStatus": {
+      "prenotato": "In Warteschlange",
+      "chiamato": "Aufgerufen",
+      "in_colloquio": "Im Gespräch",
+      "concluso": "Beendet",
+      "assente": "Abwesend",
+      "annullato": "Storniert"
+    },
+    "form": {
+      "selectStudent": "Kind / Schüler auswählen",
+      "notes": "Notizen für die Lehrkraft"
+    }
   }
 }

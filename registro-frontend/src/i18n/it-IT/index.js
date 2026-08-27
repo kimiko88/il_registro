@@ -2007,5 +2007,150 @@ export default {
     "semester1": "1° Quadrimestre",
     "semester2": "2° Quadrimestre",
     "exportPdf": "Esporta PDF"
+  },
+  "recovery": {
+    "title": "Corsi di Recupero & Debiti (PAI)",
+    "subtitle": "Gestione flussi estivi, corsi di recupero e prove integrative di settembre",
+    "activeCourses": "Corsi Attivi",
+    "completedTests": "Prove Registrate",
+    "resolvedDebts": "Debiti Saldati",
+    "newCourseBtn": "Nuovo Corso di Recupero",
+    "recordTestBtn": "Registra Prova Settembre",
+    "tabs": {
+      "courses": "Corsi di Recupero",
+      "tests": "Prove Integrative di Settembre"
+    },
+    "status": {
+      "scheduled": "Pianificato",
+      "in_progress": "In Corso",
+      "completed": "Completato",
+      "cancelled": "Annullato"
+    },
+    "outcomes": {
+      "recuperato": "Debito Recuperato",
+      "non_recuperato": "Non Recuperato"
+    },
+    "dialog": {
+      "newCourseTitle": "Pianifica Nuovo Corso di Recupero",
+      "recordTestTitle": "Verbalizzazione Prova Integrativa di Settembre"
+    },
+    "form": {
+      "title": "Titolo Corso",
+      "subject": "Materia",
+      "period": "Periodo",
+      "hours": "Ore Totali",
+      "room": "Aula",
+      "description": "Descrizione / Programma",
+      "student": "Studente",
+      "class": "Classe",
+      "testDate": "Data Prova",
+      "testType": "Tipo di Prova",
+      "grade": "Voto Prova (1-10)",
+      "verbale": "N° Verbale CdC"
+    },
+    "preview": {
+      "resolved": "Debito Saldato con Successo",
+      "unresolved": "Debito Non Saldato",
+      "promoted": "Ammesso alla classe successiva",
+      "notPromoted": "Non Ammesso / Sospensione non superata"
+    }
+  },
+  "credits": {
+    "title": "Calcolo Credito Scolastico",
+    "subtitle": "Attribuzione crediti Esame di Stato per il Triennio (D.Lgs. 62/2017)",
+    "selectClass": "Seleziona Classe",
+    "calculatorModalBtn": "Calcolatore & Assegna",
+    "referenceGuideTitle": "Tabella Ministeriale di Riferimento D.Lgs. 62/2017",
+    "editCredit": "Modifica Credito",
+    "calcModalTitle": "Calcolo e Attribuzione Credito Scolastico",
+    "form": {
+      "student": "Studente",
+      "gradeLevel": "Anno di Corso",
+      "average": "Media Voti (M)",
+      "conduct": "Voto di Condotta",
+      "pctoHours": "Ore PCTO Svolte",
+      "hasExtracurricular": "Crediti Formativi / Attività Extracurriculari",
+      "suggestedBand": "Fascia Ministeriale Calcolata",
+      "assignedCredit": "Credito Assegnato Definitivo",
+      "deliberationNotes": "Note Delibera del Consiglio di Classe"
+    }
+  },
+  "support": {
+    "title": "Registro di Sostegno & PEI",
+    "subtitle": "Diario di bordo orario per l'inclusione, compresenze e monitoraggio obiettivi PEI",
+    "newDiaryEntryBtn": "Nuova Voce Diario",
+    "newPeiGoalBtn": "Nuovo Obiettivo PEI",
+    "filterStudent": "Filtra per Studente",
+    "tabs": {
+      "diary": "Diario di Bordo Orario",
+      "peiGoals": "Piano Obiettivi PEI"
+    },
+    "activityTypes": {
+      "in_classe": "In Classe con Docente Curricolare",
+      "laboratorio": "Laboratorio Didattico",
+      "aula_sostegno": "Aula Sostegno",
+      "individuale": "Attività Individuale 1:1",
+      "piccolo_gruppo": "Piccolo Gruppo"
+    },
+    "shared": "Condiviso con Famiglia",
+    "internal": "Solo Uso Interno",
+    "dialog": {
+      "newDiaryTitle": "Registrazione Attività nel Diario di Sostegno",
+      "newPeiGoalTitle": "Definizione Nuovo Obiettivo PEI"
+    },
+    "form": {
+      "student": "Studente",
+      "class": "Classe",
+      "date": "Data",
+      "timeSlot": "Fascia Oraria",
+      "activityType": "Tipologia Attività",
+      "coTeacher": "Docente Curricolare in Compresenza",
+      "topicAndActivities": "Argomenti e Attività Svolte",
+      "studentResponses": "Risposte dell'Alunno & Autonomia",
+      "educatorNotes": "Note per Educatore / Assistente ASACOM",
+      "shareWithFamily": "Rendi visibile alla Famiglia",
+      "peiType": "Tipologia PEI",
+      "axis": "Asse di Sviluppo",
+      "goalTitle": "Titolo Obiettivo",
+      "goalDescription": "Descrizione e Strategie Didattiche",
+      "expectedTerm": "Termine Previsto",
+      "status": "Stato Avanzamento"
+    }
+  },
+  "generalMeeting": {
+    "teacherQueueTitle": "Ricevimento Generale Pomeridiano",
+    "teacherQueueSubtitle": "Gestione postazione e monitor coda virtuale in tempo reale",
+    "parentTitle": "Ricevimento Generale Scuola-Famiglia",
+    "parentSubtitle": "Prenotazione colloqui pomeridiani con biglietto numerato",
+    "selectMeeting": "Seleziona Ricevimento Generale",
+    "currentlyInMeeting": "Genitore Attualmente a Colloquio",
+    "noActiveMeeting": "Nessun genitore attualmente a colloquio alla postazione",
+    "completeMeeting": "Concludi Colloquio",
+    "nextInLine": "Prossimo Genitore in Coda",
+    "queueEmpty": "Coda d'attesa vuota",
+    "callNext": "Chiama Prossimo Biglietto",
+    "queueSummary": "Riepilogo Postazione",
+    "callParent": "Chiama",
+    "startMeeting": "Avvia Colloquio",
+    "markAbsent": "Segna Assente",
+    "myActiveTickets": "I Tuoi Biglietti Numerati Attivi",
+    "availableEvents": "Ricevimenti Pomeridiani Disponibili",
+    "noEventsAvailable": "Nessun ricevimento generale pomeridiano attualmente aperto alle prenotazioni",
+    "selectTeacher": "Docenti Disponibili",
+    "bookTicketBtn": "Prendi Biglietto",
+    "confirmBookingTitle": "Conferma Prenotazione Biglietto",
+    "confirmTicket": "Conferma Biglietto",
+    "ticketStatus": {
+      "prenotato": "In Coda",
+      "chiamato": "Chiamato",
+      "in_colloquio": "In Corso",
+      "concluso": "Concluso",
+      "assente": "Assente",
+      "annullato": "Annullato"
+    },
+    "form": {
+      "selectStudent": "Seleziona Figlio / Studente",
+      "notes": "Note per il Docente"
+    }
   }
 }

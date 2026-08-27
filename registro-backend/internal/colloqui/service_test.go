@@ -84,6 +84,39 @@ func (m *MockRepository) ExistsOverlappingSlot(ctx context.Context, teacherID, d
 	args := m.Called(ctx, teacherID, date, startTime, endTime)
 	return args.Bool(0), args.Error(1)
 }
+func (m *MockRepository) CreateGeneralMeeting(ctx context.Context, gm *GeneralParentMeeting, teacherIDs []string) error {
+	args := m.Called(ctx, gm, teacherIDs)
+	return args.Error(0)
+}
+func (m *MockRepository) ListGeneralMeetings(ctx context.Context, schoolID string) ([]GeneralParentMeeting, error) {
+	args := m.Called(ctx, schoolID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]GeneralParentMeeting), args.Error(1)
+}
+func (m *MockRepository) GetGeneralMeeting(ctx context.Context, id string) (*GeneralParentMeeting, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*GeneralParentMeeting), args.Error(1)
+}
+func (m *MockRepository) BookQueueTicket(ctx context.Context, t *GeneralMeetingQueueTicket) error {
+	args := m.Called(ctx, t)
+	return args.Error(0)
+}
+func (m *MockRepository) ListQueueTickets(ctx context.Context, meetingID, teacherID, parentID string) ([]GeneralMeetingQueueTicket, error) {
+	args := m.Called(ctx, meetingID, teacherID, parentID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]GeneralMeetingQueueTicket), args.Error(1)
+}
+func (m *MockRepository) UpdateTicketStatus(ctx context.Context, id, status, notes string) error {
+	args := m.Called(ctx, id, status, notes)
+	return args.Error(0)
+}
 
 func TestCreateSlot(t *testing.T) {
 	mockRepo := new(MockRepository)

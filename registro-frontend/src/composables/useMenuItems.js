@@ -75,6 +75,9 @@ export function useMenuItems(role) {
                     { label: 'Presenze', icon: 'how_to_reg', path: '/teacher/attendance' },
                     { label: 'Didattica', icon: 'folder_shared', path: '/teacher/didactics' },
                     { label: 'Scrutinio', icon: 'analytics', path: '/teacher/scrutiny', coordinatorOnly: true },
+                    { label: 'Credito Scolastico', icon: 'military_tech', path: '/teacher/credits' },
+                    { label: 'Corsi Recupero & PAI', icon: 'school', path: '/teacher/recovery' },
+                    { label: 'Registro Sostegno & PEI', icon: 'favorite', path: '/teacher/support' },
                     { label: 'Piani PDP / PEI', icon: 'accessibility_new', path: '/teacher/pdp' },
                     { label: 'Rubriche Valutative', icon: 'fact_check', path: '/teacher/rubrics' },
                     { label: 'Coordinamento', icon: 'co_present', path: '/teacher/coordinator', coordinatorOnly: true }
@@ -87,6 +90,7 @@ export function useMenuItems(role) {
                     { label: 'Orario Lezioni', icon: 'schedule', path: '/teacher/timetable' },
                     { label: 'Agenda', icon: 'edit_calendar', path: '/teacher/agenda' },
                     { label: 'Colloqui', icon: 'event', path: '/teacher/colloqui' },
+                    { label: 'Ricevimento Generale', icon: 'meeting_room', path: '/teacher/general-meetings' },
                     { label: 'Sostituzioni', icon: 'swap_horiz', path: '/teacher/substitutions' },
                     { label: 'Verbali', icon: 'gavel', path: '/teacher/verbali' }
                 ]
@@ -160,6 +164,7 @@ export function useMenuItems(role) {
                 children: [
                     { label: 'Orario Lezioni', icon: 'schedule', path: '/parent/timetable' },
                     { label: 'Colloqui', icon: 'event', path: '/parent/colloqui' },
+                    { label: 'Ricevimento Generale', icon: 'confirmation_number', path: '/parent/general-meetings' },
                     { label: 'Uscite & Viaggi', icon: 'card_travel', path: '/parent/trips' },
                     { label: 'Pagamenti', icon: 'payments', path: '/parent/payments' },
                     { label: 'Assemblee & Riunioni', icon: 'groups', path: '/parent/meetings' }

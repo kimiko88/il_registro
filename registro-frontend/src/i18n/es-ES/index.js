@@ -2007,5 +2007,150 @@ export default {
     "semester1": "1.er Cuatrimestre",
     "semester2": "2.º Cuatrimestre",
     "exportPdf": "Exportar PDF"
+  },
+  "recovery": {
+    "title": "Cursos de Recuperación & PAI",
+    "subtitle": "Gestión de recuperación estival y pruebas extraordinarias de septiembre",
+    "activeCourses": "Cursos Activos",
+    "completedTests": "Pruebas Registradas",
+    "resolvedDebts": "Materias Recuperadas",
+    "newCourseBtn": "Nuevo Curso de Recuperación",
+    "recordTestBtn": "Registrar Prueba de Septiembre",
+    "tabs": {
+      "courses": "Cursos de Recuperación",
+      "tests": "Pruebas de Septiembre"
+    },
+    "status": {
+      "scheduled": "Planificado",
+      "in_progress": "En Curso",
+      "completed": "Completado",
+      "cancelled": "Cancelado"
+    },
+    "outcomes": {
+      "recuperato": "Recuperado",
+      "non_recuperato": "No Recuperado"
+    },
+    "dialog": {
+      "newCourseTitle": "Planificar Curso de Recuperación",
+      "recordTestTitle": "Registrar Prueba de Recuperación"
+    },
+    "form": {
+      "title": "Título del Curso",
+      "subject": "Materia",
+      "period": "Período",
+      "hours": "Horas Totales",
+      "room": "Aula",
+      "description": "Descripción",
+      "student": "Estudiante",
+      "class": "Clase",
+      "testDate": "Fecha de Prueba",
+      "testType": "Tipo de Prueba",
+      "grade": "Calificación (1-10)",
+      "verbale": "N° Acta"
+    },
+    "preview": {
+      "resolved": "Materia Recuperada con Éxito",
+      "unresolved": "No Recuperado",
+      "promoted": "Admitido al curso siguiente",
+      "notPromoted": "No Admitido"
+    }
+  },
+  "credits": {
+    "title": "Cálculo de Crédito Escolar",
+    "subtitle": "Asignación de créditos de Bachillerato (D.Lgs. 62/2017)",
+    "selectClass": "Seleccionar Clase",
+    "calculatorModalBtn": "Calculadora y Asignar",
+    "referenceGuideTitle": "Tabla Ministerial de Referencia D.Lgs. 62/2017",
+    "editCredit": "Modificar Crédito",
+    "calcModalTitle": "Cálculo y Asignación de Crédito",
+    "form": {
+      "student": "Estudiante",
+      "gradeLevel": "Curso",
+      "average": "Media (M)",
+      "conduct": "Conducta",
+      "pctoHours": "Horas PCTO",
+      "hasExtracurricular": "Actividades Extracurriculares",
+      "suggestedBand": "Franja Ministerial",
+      "assignedCredit": "Crédito Asignado",
+      "deliberationNotes": "Notas del Acta del Consejo"
+    }
+  },
+  "support": {
+    "title": "Registro de Apoyo & PEI",
+    "subtitle": "Diario de inclusión, docencia compartida y objetivos PEI",
+    "newDiaryEntryBtn": "Nueva Entrada de Diario",
+    "newPeiGoalBtn": "Nuevo Objetivo PEI",
+    "filterStudent": "Filtrar por Estudiante",
+    "tabs": {
+      "diary": "Diario de Apoyo",
+      "peiGoals": "Objetivos PEI"
+    },
+    "activityTypes": {
+      "in_classe": "En Clase con Docente Curricular",
+      "laboratorio": "Laboratorio",
+      "aula_sostegno": "Aula de Apoyo",
+      "individuale": "Individual 1:1",
+      "piccolo_gruppo": "Grupo Pequeño"
+    },
+    "shared": "Compartido con Familia",
+    "internal": "Uso Interno",
+    "dialog": {
+      "newDiaryTitle": "Registrar Entrada en Diario de Apoyo",
+      "newPeiGoalTitle": "Nuevo Objetivo PEI"
+    },
+    "form": {
+      "student": "Estudiante",
+      "class": "Clase",
+      "date": "Fecha",
+      "timeSlot": "Horario",
+      "activityType": "Tipo de Actividad",
+      "coTeacher": "Docente en Codocencia",
+      "topicAndActivities": "Temas y Actividades",
+      "studentResponses": "Respuesta y Autonomía",
+      "educatorNotes": "Notas para Educador / Asistente",
+      "shareWithFamily": "Visible para Familia",
+      "peiType": "Tipo de PEI",
+      "axis": "Eje de Desarrollo",
+      "goalTitle": "Título del Objetivo",
+      "goalDescription": "Descripción",
+      "expectedTerm": "Plazo Previsto",
+      "status": "Estado"
+    }
+  },
+  "generalMeeting": {
+    "teacherQueueTitle": "Recepción General de Familias",
+    "teacherQueueSubtitle": "Gestión de puesto y cola virtual en tiempo real",
+    "parentTitle": "Reunión General Escuela-Familia",
+    "parentSubtitle": "Reserva de turnos con billete numerado",
+    "selectMeeting": "Seleccionar Reunión General",
+    "currentlyInMeeting": "Familia Actual en Reunión",
+    "noActiveMeeting": "No hay reuniones activas",
+    "completeMeeting": "Finalizar Reunión",
+    "nextInLine": "Próxima Familia en Cola",
+    "queueEmpty": "Cola vacía",
+    "callNext": "Llamar Siguiente",
+    "queueSummary": "Resumen del Puesto",
+    "callParent": "Llamar",
+    "startMeeting": "Iniciar Reunión",
+    "markAbsent": "Marcar Ausente",
+    "myActiveTickets": "Tus Billetes Activos",
+    "availableEvents": "Reuniones Disponibles",
+    "noEventsAvailable": "No hay reuniones generales disponibles",
+    "selectTeacher": "Docentes Disponibles",
+    "bookTicketBtn": "Tomar Billete",
+    "confirmBookingTitle": "Confirmar Reserva de Billete",
+    "confirmTicket": "Confirmar Billete",
+    "ticketStatus": {
+      "prenotato": "En Cola",
+      "chiamato": "Llamado",
+      "in_colloquio": "En Curso",
+      "concluso": "Concluido",
+      "assente": "Ausente",
+      "annullato": "Cancelado"
+    },
+    "form": {
+      "selectStudent": "Seleccionar Hijo / Estudiante",
+      "notes": "Notas para el Docente"
+    }
   }
 }

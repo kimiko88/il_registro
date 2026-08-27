@@ -22,6 +22,7 @@ import (
 	"registro-backend/internal/communications"
 	"registro-backend/internal/competencies"
 	"registro-backend/internal/config"
+	"registro-backend/internal/credits"
 	"registro-backend/internal/db"
 	"registro-backend/internal/didactic_materials"
 	"registro-backend/internal/documents"
@@ -42,6 +43,7 @@ import (
 	"registro-backend/internal/pcto"
 	"registro-backend/internal/pdp"
 	"registro-backend/internal/postgres"
+	"registro-backend/internal/recovery"
 	"registro-backend/internal/reports"
 	"registro-backend/internal/rubrics"
 	"registro-backend/internal/scheduling"
@@ -55,6 +57,7 @@ import (
 	"registro-backend/internal/students"
 	"registro-backend/internal/subjects"
 	"registro-backend/internal/substitutions"
+	"registro-backend/internal/support"
 	"registro-backend/internal/teacher_activities"
 	"registro-backend/internal/teachers"
 	"registro-backend/internal/tenants"
@@ -377,6 +380,21 @@ func main() {
 			parentsSvc := parents.NewService(parentsRepo, usersRepo, gradesRepo, attendanceRepo, commsRepo)
 			parentsH := parents.NewHandler(parentsSvc)
 			parentsH.RegisterRoutes(protected)
+
+			creditsRepo := credits.NewRepository(database)
+			creditsSvc := credits.NewService(creditsRepo)
+			creditsH := credits.NewHandler(creditsSvc)
+			creditsH.RegisterRoutes(protected)
+
+			recoveryRepo := recovery.NewRepository(database)
+			recoverySvc := recovery.NewService(recoveryRepo)
+			recoveryH := recovery.NewHandler(recoverySvc)
+			recoveryH.RegisterRoutes(protected)
+
+			supportRepo := support.NewRepository(database)
+			supportSvc := support.NewService(supportRepo)
+			supportH := support.NewHandler(supportSvc)
+			supportH.RegisterRoutes(protected)
 
 			protected.GET("/students/dashboard/stats", func(c *gin.Context) {
 				c.JSON(http.StatusOK, gin.H{
