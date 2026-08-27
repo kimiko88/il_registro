@@ -412,7 +412,7 @@ import { storeToRefs } from 'pinia'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
-import dashboardService from 'src/services/dashboardService'
+import dashboardService from '@/services/dashboardService'
 import api from '@/services/api'
 import { useClassesStore } from '@/stores/classes'
 
@@ -786,16 +786,16 @@ const actions = computed(() => {
   }
   if (role === 'student') {
     return [
-      { key: 'grades', label: t('dashboardPage.actionGrades') || 'Voti', icon: 'grade', route: '/student/grades' },
-      { key: 'attendance', label: t('dashboardPage.actionAttendance') || 'Presenze', icon: 'how_to_reg', route: '/student/attendance' },
+      { key: 'grades', label: t('dashboardPage.viewGrades') || t('nav.myGrades') || 'Voti', icon: 'grade', route: '/student/grades' },
+      { key: 'attendance', label: t('dashboardPage.viewAttendance') || t('nav.myAttendance') || 'Presenze', icon: 'how_to_reg', route: '/student/attendance' },
       { key: 'homework', label: t('agendaPage.homework') || 'Compiti', icon: 'assignment', route: '/student/homework' },
       { key: 'timetable', label: t('timetablePage.title') || 'Orario', icon: 'schedule', route: '/student/timetable' }
     ]
   }
   if (role === 'parent') {
     return [
-      { key: 'grades', label: t('dashboardPage.actionGrades') || 'Voti', icon: 'grade', route: '/parent/grades' },
-      { key: 'attendance', label: t('dashboardPage.actionAttendance') || 'Presenze', icon: 'how_to_reg', route: '/parent/attendance' },
+      { key: 'grades', label: t('dashboardPage.viewGrades') || t('nav.myGrades') || 'Voti', icon: 'grade', route: '/parent/grades' },
+      { key: 'attendance', label: t('dashboardPage.viewAttendance') || t('nav.myAttendance') || 'Presenze', icon: 'how_to_reg', route: '/parent/attendance' },
       { key: 'colloqui', label: t('nav.colloqui') || 'Colloqui', icon: 'event', route: '/parent/colloqui' },
       { key: 'communications', label: t('nav.communications') || 'Comunicazioni', icon: 'email', route: '/parent/communications' }
     ]

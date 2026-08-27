@@ -764,32 +764,7 @@ export default {
       "q9": "Как изменить язык интерфейса и тёмную тему?",
       "a9": "В меню пользовательских настроек выберите один из 9 языков и включите тёмный режим или шрифт OpenDyslexic.",
       "q10": "Как отменить случайно выставленную оценку?",
-      "a10": "После ввода оценки внизу экрана на 15 секунд появляется всплывающее уведомление с кнопкой \"Отменить\".",
-      "attendance": {
-        "title": "Marrja e Mungesave & Nënshkrimi i Mësimit",
-        "desc": "Si të merrni praninë e nxënësve dhe të nënshkruani orën mësimore.",
-        "content": "Dhe regjistroni mungesat dhe temat e mësimit brenda pak sekondave.\n\nHapi 1: Hapni 'Ditari i Klasës' dhe zgjidhni klasën tuaj.\nHapi 2: Shënoni nxënësit si të pranishëm, mungesë ose me vonesë.\nHapi 3: Vendosni temën dhe nënshkruani orën."
-      },
-      "grades": {
-        "title": "Hedhja e Notave dhe Vlerësimi",
-        "desc": "Si të vendosni notat me gojë, me shkrim dhe praktike.",
-        "content": "Menaxhoni notat dhe vlerësimet për secilin nxënës me lehtësi."
-      },
-      "uda": {
-        "title": "Planifikimi i Njësive Mësimore (UdA)",
-        "desc": "Dizajnimi kurrikular sipas kompetencave.",
-        "content": "Strukturoni orët mësimore dhe vlerësoni kompetencat kyçe evropiane."
-      },
-      "agenda": {
-        "title": "Detyrat e Shtëpisë & Kalendari",
-        "desc": "Si të caktoni detyrat dhe provimet.",
-        "content": "Caktoni afatet dhe organizoni ngarkesën e studimit për klasën."
-      },
-      "colloqui": {
-        "title": "Takimet me Prindërit",
-        "desc": "Caktimi i orareve të lira për takime individuale.",
-        "content": "Përcaktoni fashat orare dhe konfirmoni kërkesat e prindërve."
-      }
+      "a10": "После ввода оценки внизу экрана на 15 секунд появляется всплывающее уведомление с кнопкой \"Отменить\"."
     },
     "student": {
       "cat_grades": "Мои оценки",
@@ -816,22 +791,7 @@ export default {
       "q9": "Что делать, если я забыл пароль?",
       "a9": "На странице входа нажмите \"Забыли пароль?\" и введите свой адрес электронной почты.",
       "q10": "Как использовать быстрый поиск Ctrl+K?",
-      "a10": "Нажмите Ctrl+K (или Cmd+K на Mac), чтобы открыть быстрый поиск по предметам, заданиям и разделам.",
-      "grades": {
-        "title": "Konsultimi i Notave & Mesatareve",
-        "desc": "Si të kontrolloni notat dhe ecurinë tuaj akademike.",
-        "content": "Shikoni notat e fundit, mesataret sipas lëndëve dhe simuloni notat kaluese."
-      },
-      "homework": {
-        "title": "Detyrat & Kalendari i Studimit",
-        "desc": "Organizoni detyrat dhe përgatitjet për testet.",
-        "content": "Mbani nën kontroll afatet e detyrave dhe njoftimet nga mësuesit."
-      },
-      "attendance": {
-        "title": "Prania & Arsyetimet",
-        "desc": "Kontrolloni mungesat dhe vonesat tuaja.",
-        "content": "Shikoni statusin e mungesave dhe kërkesave për arsyetim."
-      }
+      "a10": "Нажмите Ctrl+K (или Cmd+K на Mac), чтобы открыть быстрый поиск по предметам, заданиям и разделам."
     },
     "parent": {
       "cat_monitoring": "Мониторинг детей",
@@ -858,22 +818,7 @@ export default {
       "q9": "Может ли второй родитель получить отдельный доступ?",
       "a9": "Секретариат может привязать несколько родительских аккаунтов к одному ученику с персональными логинами.",
       "q10": "Как приложение работает в автономном оффлайн-режиме?",
-      "a10": "Приложение показывает кэшированные данные. Отправленные формы сохраняются локально и отправляются при появлении сети.",
-      "grades": {
-        "title": "Vlerësimi & Dëftesa",
-        "desc": "Ndiqni notat dhe vlerësimet e fëmijëve tuaj.",
-        "content": "Qasje e menjëhershme në të gjitha notat, mesataret dhe dëftesat zyrtare."
-      },
-      "attendance": {
-        "title": "Arsyetimi i Mungesave",
-        "desc": "Si të arsyetoni mungesat e fëmijës tuaj online.",
-        "content": "Dërgoni arsyetime për mungesat dhe vonesat me një klikim."
-      },
-      "colloqui": {
-        "title": "Rezervimi i Takimeve me Mësuesit",
-        "desc": "Caktoni takime individuale me stafin mësimdhënës.",
-        "content": "Zgjidhni orarin e përshtatshëm dhe rezervoni takimin online ose në shkollë."
-      }
+      "a10": "Приложение показывает кэшированные данные. Отправленные формы сохраняются локально и отправляются при появлении сети."
     },
     "secretary": {
       "cat_students": "База учащихся",
@@ -900,37 +845,7 @@ export default {
       "q9": "Как проверить статус платежей PagoPA?",
       "a9": "Откройте \"Финансы и PagoPA\" для отслеживания поступивших платежей и отправки напоминаний.",
       "q10": "Как аннулировать ошибочный номер протокола?",
-      "a10": "В архиве документов выберите протокол → \"Аннулировать с указанием причины\". Действие фиксируется в Audit Log.",
-      "students": {
-        "title": "Menaxhimi i Regjistrit të Nxënësve",
-        "desc": "Kërkimi, regjistrimi dhe përditësimi i të dhënave të nxënësve.",
-        "content": "Administroni dosjet akademike, kontaktet dhe regjistrimet e reja."
-      },
-      "classes": {
-        "title": "Organizimi i Klasave dhe Seksioneve",
-        "desc": "Krijimi i klasave dhe caktimi i mësuesve titullarë.",
-        "content": "Strukturoni vitin shkollor, oraret dhe ndarjen e lëndëve."
-      },
-      "certificates": {
-        "title": "Gjenerimi i Vërtetimeve",
-        "desc": "Lëshimi i dokumenteve zyrtare dhe vërtetimeve të frekuentimit.",
-        "content": "Gjeneroni dokumente me vulë digjitale dhe nënshkrim zyrtar në sekonda."
-      },
-      "timetable": {
-        "title": "Orari Mësimor dhe Zëvendësimet",
-        "desc": "Menaxhimi i orareve javore dhe zëvendësimit të mësuesve.",
-        "content": "Planifikoni orët dhe mbuloni mungesat e mësuesve."
-      },
-      "communications": {
-        "title": "Qarkoret dhe Njoftimet Zyrtare",
-        "desc": "Publikimi i njoftimeve dhe monitorimi i marrjes së dijenisë.",
-        "content": "Dërgoni qarkore zyrtare për stafin, prindërit dhe nxënësit."
-      },
-      "reports": {
-        "title": "Raportet dhe Statistikat",
-        "desc": "Nxjerrja e statistikave dhe eksportimi i të dhënave.",
-        "content": "Gjeneroni raporte të agreguara për frekuentimin dhe rezultatet."
-      }
+      "a10": "В архиве документов выберите протокол → \"Аннулировать с указанием причины\". Действие фиксируется в Audit Log."
     },
     "admin": {
       "cat_monitoring": "Мониторинг системы",
@@ -957,42 +872,7 @@ export default {
       "q9": "Как просмотреть полную матрицу прав доступа RBAC?",
       "a9": "Перейдите в \"Роли и права\", чтобы изучить интерактивную таблицу прав для всех 9 ролей.",
       "q10": "Как перевести платформу в режим технического обслуживания?",
-      "a10": "В \"Настройки системы\" включите \"Режим обслуживания\". Пользователи увидят информационное сообщение.",
-      "monitoring": {
-        "title": "Monitorimi i Sistemit",
-        "desc": "Monitorimi i performancës së serverit dhe bazës së të dhënave.",
-        "content": "Kontrolloni gjendjen teknike, memorien RAM dhe shërbimet e sistemit në kohë reale."
-      },
-      "users": {
-        "title": "Menaxhimi i Përdoruesve",
-        "desc": "Krijimi i llogarive, të drejtat dhe politikat e sigurisë.",
-        "content": "Menaxhoni të gjitha llogaritë e përdoruesve dhe konfiguroni 2FA."
-      },
-      "schools": {
-        "title": "Menaxhimi i Institucioneve",
-        "desc": "Konfigurimi i shkollave dhe degëve arsimore.",
-        "content": "Regjistroni kodet zyrtare dhe të dhënat administrative të shkollave."
-      },
-      "security": {
-        "title": "Politikat e Sigurisë",
-        "desc": "Konfigurimi i fjalëkalimeve dhe kërkesave të sigurisë.",
-        "content": "Përshtatni rregullat e sigurisë sipas standardeve më të larta."
-      },
-      "analytics": {
-        "title": "Analitika dhe Parandalimi i Braktisjes",
-        "desc": "Analizë parashikuese për rrezikun e braktisjes shkollore.",
-        "content": "Identifikoni nxënësit me rrezik mungesash dhe rezultatesh të ulëta."
-      },
-      "integrations": {
-        "title": "Integrimet dhe Hyrja me Një Klik (SSO)",
-        "desc": "Lidhja me Google Workspace dhe Microsoft 365.",
-        "content": "Aktivizoni hyrjen me llogaritë institucionale."
-      },
-      "audit": {
-        "title": "Regjistri i Auditimit & Gjurmueshmëria",
-        "desc": "Gjurmimi i plotë i veprimeve të përdoruesve në sistem.",
-        "content": "Regjistër i pandryshueshëm i të gjitha veprimeve për transparencë maksimale."
-      }
+      "a10": "В \"Настройки системы\" включите \"Режим обслуживания\". Пользователи увидят информационное сообщение."
     }
   },
   "guideCenter": {
@@ -1045,16 +925,6 @@ export default {
         "title": "Индивидуальный план (PDP / PEI)",
         "desc": "Разработка компенсирующих и освобождающих мер для учеников с ООП.",
         "content": "Модуль PDP позволяет педагогическому составу формировать персональные планы обучения.\n\nШаг 1: Откройте 'PDP / PEI' из меню класса.\nШаг 2: Выберите ученика и настройте компенсирующие меры (калькулятор, формулы).\nШаг 3: Сохраните черновик и отправьте родителям на цифровую подпись.\nШаг 4: Активные меры подсвечиваются иконками при выставлении оценок.\n\nСовет: Используйте готовые критерии оценивания для ускорения работы."
-      },
-      "uda": {
-        "title": "Planifikimi i Njësive Mësimore (UdA)",
-        "desc": "Dizajnimi kurrikular sipas kompetencave.",
-        "content": "Strukturoni orët mësimore dhe vlerësoni kompetencat kyçe evropiane."
-      },
-      "colloqui": {
-        "title": "Takimet me Prindërit",
-        "desc": "Caktimi i orareve të lira për takime individuale.",
-        "content": "Përcaktoni fashat orare dhe konfirmoni kërkesat e prindërve."
       }
     },
     "student": {
@@ -1124,21 +994,6 @@ export default {
         "title": "Онлайн-объяснительные за пропуски",
         "desc": "Подача объяснительных за пропуски и опоздания ребёнка.",
         "content": "Больше никаких бумажных записок: подтверждайте пропуски с помощью PIN-кода.\n\nШаг 1: Откройте 'Посещаемость и объяснительные'.\nШаг 2: Найдите неподтверждённые пропуски, отмеченные красным.\nШаг 3: Нажмите 'Объяснить', выберите причину (Болезнь, Семейные обстоятельства) и введите PIN."
-      },
-      "grades": {
-        "title": "Vlerësimi & Dëftesa",
-        "desc": "Ndiqni notat dhe vlerësimet e fëmijëve tuaj.",
-        "content": "Qasje e menjëhershme në të gjitha notat, mesataret dhe dëftesat zyrtare."
-      },
-      "attendance": {
-        "title": "Arsyetimi i Mungesave",
-        "desc": "Si të arsyetoni mungesat e fëmijës tuaj online.",
-        "content": "Dërgoni arsyetime për mungesat dhe vonesat me një klikim."
-      },
-      "colloqui": {
-        "title": "Rezervimi i Takimeve me Mësuesit",
-        "desc": "Caktoni takime individuale me stafin mësimdhënës.",
-        "content": "Zgjidhni orarin e përshtatshëm dhe rezervoni takimin online ose në shkollë."
       }
     },
     "secretary": {
@@ -1839,6 +1694,8 @@ export default {
     "statGradesPending": "Оценок к выставлению",
     "actionAttendance": "Отметить посещаемость",
     "actionGrades": "Выставить оценки",
+    "viewAttendance": "Посещаемость",
+    "viewGrades": "Оценки",
     "actionLessons": "Журнал уроков",
     "actionAgenda": "Расписание класса",
     "actionUsers": "Пользователи",

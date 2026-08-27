@@ -1839,6 +1839,8 @@ export default {
     "statGradesPending": "درجات للرصد",
     "actionAttendance": "تسجيل الحضور",
     "actionGrades": "رصد الدرجات",
+    "viewAttendance": "الحضور",
+    "viewGrades": "الدرجات",
     "actionLessons": "سجل الدروس",
     "actionAgenda": "أجندة الفصل",
     "actionUsers": "إدارة المستخدمين",

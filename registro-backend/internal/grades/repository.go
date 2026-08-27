@@ -853,7 +853,7 @@ func (r *repository) GetStudentClassAndSchoolInfo(ctx context.Context, studentID
 	err = r.db.QueryRowContext(
 		ctx,
 		`SELECT 
-			COALESCE(u.first_name || ' ' || u.last_name, ''),
+			TRIM(COALESCE(u.first_name, '') || ' ' || COALESCE(u.last_name, '')),
 			COALESCE(c.name, 'N/D'),
 			COALESCE(c.id::text, COALESCE(s.class_id::text, '')),
 			COALESCE(c.school_id::text, COALESCE(s.school_id::text, COALESCE(u.school_id::text, '')))
@@ -865,6 +865,17 @@ func (r *repository) GetStudentClassAndSchoolInfo(ctx context.Context, studentID
 		 ORDER BY cs.created_at DESC NULLS LAST, c.id DESC NULLS LAST
 		 LIMIT 1`, studentID,
 	).Scan(&studentName, &className, &classID, &schoolID)
+
+	if studentName == "" {
+		_ = r.db.QueryRowContext(ctx,
+			`SELECT TRIM(COALESCE(first_name, '') || ' ' || COALESCE(last_name, ''))
+			 FROM users
+			 WHERE id::text = $1
+			    OR id IN (SELECT user_id FROM students WHERE id::text = $1)
+			 LIMIT 1`, studentID,
+		).Scan(&studentName)
+	}
+
 	return
 }
 

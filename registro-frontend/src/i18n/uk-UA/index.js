@@ -488,32 +488,7 @@ export default {
       "q9": "Як змінити мову інтерфейсу та темну тему?",
       "a9": "У меню користувацьких налаштувань виберіть одну з 9 мов та увімкніть темний режим або шрифт OpenDyslexic.",
       "q10": "Як скасувати випадково виставлену оцінку?",
-      "a10": "Після введення оцінки внизу екрана на 15 секунд з’являється сповіщення з кнопкою \"Скасувати\".",
-      "attendance": {
-        "title": "Marrja e Mungesave & Nënshkrimi i Mësimit",
-        "desc": "Si të merrni praninë e nxënësve dhe të nënshkruani orën mësimore.",
-        "content": "Dhe regjistroni mungesat dhe temat e mësimit brenda pak sekondave.\n\nHapi 1: Hapni 'Ditari i Klasës' dhe zgjidhni klasën tuaj.\nHapi 2: Shënoni nxënësit si të pranishëm, mungesë ose me vonesë.\nHapi 3: Vendosni temën dhe nënshkruani orën."
-      },
-      "grades": {
-        "title": "Hedhja e Notave dhe Vlerësimi",
-        "desc": "Si të vendosni notat me gojë, me shkrim dhe praktike.",
-        "content": "Menaxhoni notat dhe vlerësimet për secilin nxënës me lehtësi."
-      },
-      "uda": {
-        "title": "Planifikimi i Njësive Mësimore (UdA)",
-        "desc": "Dizajnimi kurrikular sipas kompetencave.",
-        "content": "Strukturoni orët mësimore dhe vlerësoni kompetencat kyçe evropiane."
-      },
-      "agenda": {
-        "title": "Detyrat e Shtëpisë & Kalendari",
-        "desc": "Si të caktoni detyrat dhe provimet.",
-        "content": "Caktoni afatet dhe organizoni ngarkesën e studimit për klasën."
-      },
-      "colloqui": {
-        "title": "Takimet me Prindërit",
-        "desc": "Caktimi i orareve të lira për takime individuale.",
-        "content": "Përcaktoni fashat orare dhe konfirmoni kërkesat e prindërve."
-      }
+      "a10": "Після введення оцінки внизу екрана на 15 секунд з’являється сповіщення з кнопкою \"Скасувати\"."
     },
     "student": {
       "cat_grades": "Мої оцінки",
@@ -540,22 +515,7 @@ export default {
       "q9": "Що робити, якщо я забув пароль?",
       "a9": "На сторінці входу натисніть \"Забули пароль?\" та введіть свою адресу електронної пошти.",
       "q10": "Як використовувати швидкий пошук Ctrl+K?",
-      "a10": "Натисніть Ctrl+K (або Cmd+K на Mac), щоб відкрити універсальний пошук по предметах та розділах.",
-      "grades": {
-        "title": "Konsultimi i Notave & Mesatareve",
-        "desc": "Si të kontrolloni notat dhe ecurinë tuaj akademike.",
-        "content": "Shikoni notat e fundit, mesataret sipas lëndëve dhe simuloni notat kaluese."
-      },
-      "homework": {
-        "title": "Detyrat & Kalendari i Studimit",
-        "desc": "Organizoni detyrat dhe përgatitjet për testet.",
-        "content": "Mbani nën kontroll afatet e detyrave dhe njoftimet nga mësuesit."
-      },
-      "attendance": {
-        "title": "Prania & Arsyetimet",
-        "desc": "Kontrolloni mungesat dhe vonesat tuaja.",
-        "content": "Shikoni statusin e mungesave dhe kërkesave për arsyetim."
-      }
+      "a10": "Натисніть Ctrl+K (або Cmd+K на Mac), щоб відкрити універсальний пошук по предметах та розділах."
     },
     "parent": {
       "cat_monitoring": "Моніторинг дітей",
@@ -582,22 +542,7 @@ export default {
       "q9": "Чи може другий з батьків отримати окремий доступ?",
       "a9": "Секретаріат може прив’язати кілька батьківських акаунтів до одного учня з персональними логінами.",
       "q10": "Як додаток працює в автономному офлайн-режимі?",
-      "a10": "Додаток показує збережені дані. Відправлені форми зберігаються локально та надсилаються при появі мережі.",
-      "grades": {
-        "title": "Vlerësimi & Dëftesa",
-        "desc": "Ndiqni notat dhe vlerësimet e fëmijëve tuaj.",
-        "content": "Qasje e menjëhershme në të gjitha notat, mesataret dhe dëftesat zyrtare."
-      },
-      "attendance": {
-        "title": "Arsyetimi i Mungesave",
-        "desc": "Si të arsyetoni mungesat e fëmijës tuaj online.",
-        "content": "Dërgoni arsyetime për mungesat dhe vonesat me një klikim."
-      },
-      "colloqui": {
-        "title": "Rezervimi i Takimeve me Mësuesit",
-        "desc": "Caktoni takime individuale me stafin mësimdhënës.",
-        "content": "Zgjidhni orarin e përshtatshëm dhe rezervoni takimin online ose në shkollë."
-      }
+      "a10": "Додаток показує збережені дані. Відправлені форми зберігаються локально та надсилаються при появі мережі."
     },
     "secretary": {
       "cat_students": "База учнів",
@@ -624,37 +569,7 @@ export default {
       "q9": "Як перевірити статус платежів PagoPA?",
       "a9": "Відкрийте \"Фінанси та PagoPA\" для відстеження надходжень платежів та надсилання нагадувань.",
       "q10": "Як анулювати помилковий номер протоколу?",
-      "a10": "В архіві документів виберіть протокол → \"Анулювати із зазначенням причини\". Дія фіксується у Audit Log.",
-      "students": {
-        "title": "Menaxhimi i Regjistrit të Nxënësve",
-        "desc": "Kërkimi, regjistrimi dhe përditësimi i të dhënave të nxënësve.",
-        "content": "Administroni dosjet akademike, kontaktet dhe regjistrimet e reja."
-      },
-      "classes": {
-        "title": "Organizimi i Klasave dhe Seksioneve",
-        "desc": "Krijimi i klasave dhe caktimi i mësuesve titullarë.",
-        "content": "Strukturoni vitin shkollor, oraret dhe ndarjen e lëndëve."
-      },
-      "certificates": {
-        "title": "Gjenerimi i Vërtetimeve",
-        "desc": "Lëshimi i dokumenteve zyrtare dhe vërtetimeve të frekuentimit.",
-        "content": "Gjeneroni dokumente me vulë digjitale dhe nënshkrim zyrtar në sekonda."
-      },
-      "timetable": {
-        "title": "Orari Mësimor dhe Zëvendësimet",
-        "desc": "Menaxhimi i orareve javore dhe zëvendësimit të mësuesve.",
-        "content": "Planifikoni orët dhe mbuloni mungesat e mësuesve."
-      },
-      "communications": {
-        "title": "Qarkoret dhe Njoftimet Zyrtare",
-        "desc": "Publikimi i njoftimeve dhe monitorimi i marrjes së dijenisë.",
-        "content": "Dërgoni qarkore zyrtare për stafin, prindërit dhe nxënësit."
-      },
-      "reports": {
-        "title": "Raportet dhe Statistikat",
-        "desc": "Nxjerrja e statistikave dhe eksportimi i të dhënave.",
-        "content": "Gjeneroni raporte të agreguara për frekuentimin dhe rezultatet."
-      }
+      "a10": "В архіві документів виберіть протокол → \"Анулювати із зазначенням причини\". Дія фіксується у Audit Log."
     },
     "admin": {
       "cat_monitoring": "Моніторинг системи",
@@ -681,42 +596,7 @@ export default {
       "q9": "Як переглянути повну матрицю прав доступу RBAC?",
       "a9": "Перейдіть у \"Ролі та права\", щоб вивчити інтерактивну таблицю прав для всіх 9 ролей.",
       "q10": "Як перевести платформу в режим технічного обслуговування?",
-      "a10": "У \"Налаштування системи\" увімкніть \"Режим обслуговування\". Користувачі побачать інформаційне повідомлення.",
-      "monitoring": {
-        "title": "Monitorimi i Sistemit",
-        "desc": "Monitorimi i performancës së serverit dhe bazës së të dhënave.",
-        "content": "Kontrolloni gjendjen teknike, memorien RAM dhe shërbimet e sistemit në kohë reale."
-      },
-      "users": {
-        "title": "Menaxhimi i Përdoruesve",
-        "desc": "Krijimi i llogarive, të drejtat dhe politikat e sigurisë.",
-        "content": "Menaxhoni të gjitha llogaritë e përdoruesve dhe konfiguroni 2FA."
-      },
-      "schools": {
-        "title": "Menaxhimi i Institucioneve",
-        "desc": "Konfigurimi i shkollave dhe degëve arsimore.",
-        "content": "Regjistroni kodet zyrtare dhe të dhënat administrative të shkollave."
-      },
-      "security": {
-        "title": "Politikat e Sigurisë",
-        "desc": "Konfigurimi i fjalëkalimeve dhe kërkesave të sigurisë.",
-        "content": "Përshtatni rregullat e sigurisë sipas standardeve më të larta."
-      },
-      "analytics": {
-        "title": "Analitika dhe Parandalimi i Braktisjes",
-        "desc": "Analizë parashikuese për rrezikun e braktisjes shkollore.",
-        "content": "Identifikoni nxënësit me rrezik mungesash dhe rezultatesh të ulëta."
-      },
-      "integrations": {
-        "title": "Integrimet dhe Hyrja me Një Klik (SSO)",
-        "desc": "Lidhja me Google Workspace dhe Microsoft 365.",
-        "content": "Aktivizoni hyrjen me llogaritë institucionale."
-      },
-      "audit": {
-        "title": "Regjistri i Auditimit & Gjurmueshmëria",
-        "desc": "Gjurmimi i plotë i veprimeve të përdoruesve në sistem.",
-        "content": "Regjistër i pandryshueshëm i të gjitha veprimeve për transparencë maksimale."
-      }
+      "a10": "У \"Налаштування системи\" увімкніть \"Режим обслуговування\". Користувачі побачать інформаційне повідомлення."
     }
   },
   "guideCenter": {
@@ -769,16 +649,6 @@ export default {
         "title": "Індивідуальний план (PDP / PEI)",
         "desc": "Розробка компенсувальних та звільнявальних заходів для учнів з ООП.",
         "content": "Модуль PDP дозволяє педагогічному складу формувати персональні плани навчання.\n\nКрок 1: Відкрийте 'PDP / PEI' з меню класу.\nКрок 2: Виберіть учня та налаштуйте компенсувальні заходи (калькулятор, формули).\nКрок 3: Збережіть чернетку та відправте батькам на цифровий підпис.\nКрок 4: Активні заходи підсвічуються іконками при виставленні оцінок.\n\nПорада: Використовуйте готові критерії оцінювання для прискорення роботи."
-      },
-      "uda": {
-        "title": "Planifikimi i Njësive Mësimore (UdA)",
-        "desc": "Dizajnimi kurrikular sipas kompetencave.",
-        "content": "Strukturoni orët mësimore dhe vlerësoni kompetencat kyçe evropiane."
-      },
-      "colloqui": {
-        "title": "Takimet me Prindërit",
-        "desc": "Caktimi i orareve të lira për takime individuale.",
-        "content": "Përcaktoni fashat orare dhe konfirmoni kërkesat e prindërve."
       }
     },
     "student": {
@@ -848,21 +718,6 @@ export default {
         "title": "Онлайн-пояснювальні за пропуски",
         "desc": "Подача пояснювальних за пропуски та запізнення дитини.",
         "content": "Більше жодних паперових записок: підтверджуйте пропуски за допомогою PIN-коду.\n\nКрок 1: Відкрийте 'Відвідуваність та пояснювальні'.\nКрок 2: Знайдіть непідтверджені пропуски, позначені червоним.\nКрок 3: Натисніть 'Пояснити', виберіть причину (Хвороба, Сімейні обставини) та введіть PIN."
-      },
-      "grades": {
-        "title": "Vlerësimi & Dëftesa",
-        "desc": "Ndiqni notat dhe vlerësimet e fëmijëve tuaj.",
-        "content": "Qasje e menjëhershme në të gjitha notat, mesataret dhe dëftesat zyrtare."
-      },
-      "attendance": {
-        "title": "Arsyetimi i Mungesave",
-        "desc": "Si të arsyetoni mungesat e fëmijës tuaj online.",
-        "content": "Dërgoni arsyetime për mungesat dhe vonesat me një klikim."
-      },
-      "colloqui": {
-        "title": "Rezervimi i Takimeve me Mësuesit",
-        "desc": "Caktoni takime individuale me stafin mësimdhënës.",
-        "content": "Zgjidhni orarin e përshtatshëm dhe rezervoni takimin online ose në shkollë."
       }
     },
     "secretary": {
@@ -1563,6 +1418,8 @@ export default {
     "statGradesPending": "Оцінок до виставлення",
     "actionAttendance": "Відмітити відвідуваність",
     "actionGrades": "Виставити оцінки",
+    "viewAttendance": "Відвідуваність",
+    "viewGrades": "Оцінки",
     "actionLessons": "Журнал уроків",
     "actionAgenda": "Розклад класу",
     "actionUsers": "Користувачі",
@@ -1863,278 +1720,278 @@ export default {
     "sessionWorkPreserved": "Незбережені зміни збережено в чернетці"
   },
   "onboardingExtra": {
-    "completionTitle": "Чудова робота!",
-    "completionDesc": "Ви завершили початковий огляд",
-    "openGuide": "Відкрити посібник",
+    "openGuide": "Відкрити повний посібник",
     "viewAllFeatures": "Дізнатися про всі можливості",
+    "completionTitle": "Чудова робота! 🎉",
+    "completionDesc": "Ви завершили початковий огляд. Ви можете відкрити повний посібник у будь-який час за допомогою кнопки ? у верхній панелі.",
     "teacher": {
-      "step7_title": "Навчання та Оцінювання > Електронний щоденник",
-      "step7_desc": "Підписуйте цифрово кожен урок в один клік. Журнал зберігає теми та години.",
-      "step8_title": "Інклюзивна освіта > Індивідуальні плани розвитку",
-      "step8_desc": "Переглядайте плани підтримки та адаптації для кожного учня.",
+      "step7_title": "Електронний журнал та підписи",
+      "step7_desc": "У меню 'Журнал класу' підписуйте цифровим підписом кожен урок в один клік. Журнал автоматично відстежує теми занять, години та приватні примітки.",
       "step7_bullets": [
-        "Firma digitale lezione",
-        "Argomenti lezione",
-        "Annotazioni private",
-        "Registro ore"
+        "Цифровий підпис уроку",
+        "Теми уроку",
+        "Приватні примітки",
+        "Облік годин"
       ],
+      "step8_title": "Оцінювання компетентностей та планування",
+      "step8_desc": "Оцінюйте компетентності учнів за європейськими дескрипторами, керуйте навчальними модулями (UDA) та річними планами роботи.",
       "step8_bullets": [
-        "Competenze UE",
-        "Unità Didattiche",
-        "Piano di lavoro",
-        "Rubriche valutative"
+        "Компетентності ЄС",
+        "Навчальні модулі",
+        "Річний план роботи",
+        "Критерії оцінювання"
       ],
       "step1_bullets": [
-        "Lezioni di oggi",
-        "Notifiche recenti",
-        "Accesso rapido",
-        "Riepilogo classe"
+        "Уроки на сьогодні",
+        "Останні сповіщення",
+        "Швидкий доступ",
+        "Огляд класу"
       ],
       "step2_bullets": [
-        "Registro presenze",
-        "Argomenti lezione",
-        "Firma digitale",
-        "Gestione assenze"
+        "Журнал відвідуваності",
+        "Теми уроку",
+        "Цифровий підпис",
+        "Облік пропусків"
       ],
       "step3_bullets": [
-        "Voti orali e scritti",
-        "Media classe",
-        "Grafico distribuzione",
-        "Download tabelle"
+        "Усні та письмові оцінки",
+        "Середній бал класу",
+        "Графік розподілу",
+        "Експорт таблиць"
       ],
       "step4_bullets": [
-        "Compiti e verifiche",
-        "Calendario attività",
-        "Messaggi classe",
-        "Circolare genitori"
+        "Завдання та контрольні",
+        "Календар занять",
+        "Повідомлення класу",
+        "Оголошення батькам"
       ],
       "step5_bullets": [
-        "Disponibilità colloqui",
-        "Prenotazioni genitori",
-        "Video colloquio",
-        "Storico incontri"
+        "Години консультацій",
+        "Записи батьків",
+        "Відеозустрічі",
+        "Історія зустрічей"
       ],
       "step6_bullets": [
-        "Tema e lingua",
-        "Notifiche push",
-        "Password",
-        "Profilo pubblico"
+        "Тема та мова",
+        "Push-сповіщення",
+        "Зміна пароля",
+        "Публічний профіль"
       ]
     },
     "student": {
-      "step7_title": "PCTO e Competenze",
-      "step7_desc": "Monitora le tue ore di PCTO (ex alternanza), visualizza le certificazioni di competenza e costruisci il tuo portfolio digitale.",
+      "step7_title": "Практика (PCTO) та компетентності",
+      "step7_desc": "Відстежуйте години практики (PCTO), переглядайте сертифікати компетентностей та формуйте своє цифрове портфоліо.",
       "step7_bullets": [
-        "Ore PCTO",
-        "Certificazioni",
-        "Portfolio digitale",
-        "Valutazione tutor"
+        "Години практики",
+        "Сертифікати",
+        "Цифрове портфоліо",
+        "Оцінка куратора"
       ],
-      "step8_title": "Comunicazioni e Bacheca",
-      "step8_desc": "Consulta tutte le comunicazioni della scuola, leggi le circolari, rispondi ai sondaggi e visualizza gli avvisi personalizzati.",
+      "step8_title": "Оголошення та дошка новин",
+      "step8_desc": "Читайте всі шкільні оголошення, офіційні накази, беріть участь в опитуваннях та переглядайте персональні сповіщення.",
       "step8_bullets": [
-        "Circolari scuola",
-        "Sondaggi e risposte",
-        "Avvisi personalizzati",
-        "Comunicazioni docenti"
+        "Шкільні накази",
+        "Опитування та відповіді",
+        "Персональні сповіщення",
+        "Повідомлення вчителів"
       ],
       "step1_bullets": [
-        "Compiti in scadenza",
-        "Ultime notifiche",
-        "Media voti",
-        "Prossime verifiche"
+        "Термінові завдання",
+        "Останні сповіщення",
+        "Середній бал",
+        "Найближчі контрольні"
       ],
       "step2_bullets": [
-        "Voti per materia",
-        "Media aggiornata",
-        "Grafico andamento",
-        "Confronto trimestri"
+        "Оцінки з предметів",
+        "Поточний середній бал",
+        "Графік успішності",
+        "Порівняння семестрів"
       ],
       "step3_bullets": [
-        "Presenze mensili",
-        "Contatore assenze",
-        "Ritardi e uscite",
-        "Giustificazioni"
+        "Відвідуваність за місяць",
+        "Лічильник пропусків",
+        "Запізнення та виходи",
+        "Пояснювальні записки"
       ],
       "step4_bullets": [
-        "Compiti assegnati",
-        "Scadenze per materia",
-        "Materiali didattici",
-        "Link e risorse"
+        "Задані домашні завдання",
+        "Терміни за предметами",
+        "Навчальні матеріали",
+        "Корисні посилання"
       ],
       "step5_bullets": [
-        "Pagella digitale",
-        "Download PDF",
-        "Certificati",
-        "Modulistica"
+        "Електронний табель",
+        "Завантаження PDF",
+        "Довідки та свідоцтва",
+        "Бланки заяв"
       ],
       "step6_bullets": [
-        "Vacanze scolastiche",
-        "Date verifiche",
-        "Attività extra",
-        "Gite ed eventi"
+        "Шкільні канікули",
+        "Дати контрольних",
+        "Позакласні заходи",
+        "Екскурсії та події"
       ]
     },
     "parent": {
-      "step7_title": "Giustificazioni e Autorizzazioni",
-      "step7_desc": "Invia giustifiche per le assenze dei tuoi figli direttamente dall'app, gestisci le autorizzazioni per uscite anticipate e attività speciali.",
+      "step7_title": "Пояснювальні записки та дозволи",
+      "step7_desc": "Надсилайте пояснювальні записки про відсутність дитини прямо з додатка, керуйте дозволами на достроковий вихід та екскурсії.",
       "step7_bullets": [
-        "Giustifiche online",
-        "Autorizzazioni uscite",
-        "Attività speciali",
-        "Storico assenze"
+        "Онлайн-пояснювальні",
+        "Дозволи на вихід",
+        "Спеціальні заходи",
+        "Історія пропусків"
       ],
-      "step8_title": "Statistiche e Andamento",
-      "step8_desc": "Visualizza grafici di andamento scolastico nel tempo, confronta le prestazioni tra materie e monitora l'evoluzione dei risultati.",
+      "step8_title": "Статистика та успішність",
+      "step8_desc": "Переглядайте графіки академічного прогресу, порівнюйте оцінки за предметами та слідкуйте за динамікою результатів.",
       "step8_bullets": [
-        "Grafico andamento",
-        "Confronto materie",
-        "Trend temporale",
-        "Obiettivi raggiunti"
+        "Графік успішності",
+        "Порівняння предметів",
+        "Динаміка результатів",
+        "Досягнуті цілі"
       ],
       "step1_bullets": [
-        "Riepilogo figli",
-        "Ultime notifiche",
-        "Messaggi non letti",
-        "Appuntamenti"
+        "Інформація про дітей",
+        "Останні сповіщення",
+        "Непрочитані повідомлення",
+        "Заплановані зустрічі"
       ],
       "step2_bullets": [
-        "Profilo scolastico",
-        "Documenti figlio",
-        "Contatti docenti",
-        "Dati iscrizione"
+        "Шкільний профіль",
+        "Документи учня",
+        "Контакти вчителів",
+        "Дані реєстрації"
       ],
       "step3_bullets": [
-        "Voti in tempo reale",
-        "Media per materia",
-        "Presenze giornaliere",
-        "Alert automatici"
+        "Оцінки в реальному часі",
+        "Середній бал за предметом",
+        "Щоденна відвідуваність",
+        "Автоматичні сповіщення"
       ],
       "step4_bullets": [
-        "Circolari scuola",
-        "Avvisi docenti",
-        "Comunicazioni urgenti",
-        "Bacheca digitale"
+        "Шкільні накази",
+        "Повідомлення вчителів",
+        "Термінові оголошення",
+        "Електронна дошка"
       ],
       "step5_bullets": [
-        "Prenota colloquio",
-        "Scelta orario",
-        "Conferma email",
-        "Modifica prenotazione"
+        "Запис на консультацію",
+        "Вибір зручного часу",
+        "Підтвердження на email",
+        "Зміна часу запису"
       ],
       "step6_bullets": [
-        "Rette e tasse",
-        "Storico pagamenti",
-        "Scarica ricevute",
-        "Richiedi documenti"
+        "Шкільні внески та оплати",
+        "Історія платежів",
+        "Завантаження квитанцій",
+        "Замовлення довідок"
       ]
     },
     "secretary": {
-      "step7_title": "Iscrizioni e Anagrafe",
-      "step7_desc": "Gestisci le iscrizioni annuali, mantieni aggiornata l'anagrafe studenti, gestisci trasferimenti in entrata/uscita e situazioni speciali.",
+      "step7_title": "Зарахування та картотека учнів",
+      "step7_desc": "Керуйте щорічним прийомом учнів, ведіть актуальну картотеку, оформлюйте переведення та особливі освітні потреби.",
       "step7_bullets": [
-        "Iscrizioni annuali",
-        "Trasferimenti",
-        "Alunni BES/DSA",
-        "Situazioni speciali"
+        "Щорічний прийом",
+        "Переведення учнів",
+        "Інклюзивне навчання (ООП)",
+        "Особливі випадки"
       ],
-      "step8_title": "Circolari e Comunicazioni",
-      "step8_desc": "Crea e pubblica circolari, gestisci la bacheca digitale, invia comunicazioni massive a classi o categorie di utenti con firma digitale.",
+      "step8_title": "Накази та масові розсилки",
+      "step8_desc": "Створюйте та публікуйте накази й розпорядження, керуйте дошкою оголошень, надсилайте масові повідомлення з цифровим підписом.",
       "step8_bullets": [
-        "Crea circolari",
-        "Firma digitale",
-        "Destinatari multipli",
-        "Storico pubblicazioni"
+        "Створення наказів",
+        "Цифровий підпис",
+        "Групові розсилки",
+        "Історія публікацій"
       ],
       "step1_bullets": [
-        "Attività pendenti",
-        "Richieste in arrivo",
-        "Statistiche istituto",
-        "Alert sistema"
+        "Поточні завдання",
+        "Вхідні запити",
+        "Статистика закладу",
+        "Системні сповіщення"
       ],
       "step2_bullets": [
-        "Elenco classi",
-        "Assegnazione docenti",
-        "Orario settimanale",
-        "Storico modifiche"
+        "Список класів",
+        "Призначення вчителів",
+        "Тижневий розклад",
+        "Історія змін"
       ],
       "step3_bullets": [
-        "Certificato iscrizione",
-        "Attestato frequenza",
-        "Export PDF",
-        "Firma digitale"
+        "Довідка про навчання",
+        "Табель відвідуваності",
+        "Експорт у PDF",
+        "Електронна печатка"
       ],
       "step4_bullets": [
-        "Orario scolastico",
-        "Gestione sostituzioni",
-        "Attività extra",
-        "Avvisi docenti"
+        "Шкільний розклад",
+        "Заміна вчителів",
+        "Позакласні заходи",
+        "Повідомлення персоналу"
       ],
       "step5_bullets": [
-        "Report presenze",
-        "Export MIF/ministeriali",
-        "Grafici statistici",
-        "Filtri avanzati"
+        "Звіти з відвідуваності",
+        "Державна звітність",
+        "Статистичні діаграми",
+        "Розширені фільтри"
       ],
       "step6_bullets": [
-        "Crea utenti",
-        "Assegna ruoli",
-        "Reset password",
-        "Gestione accessi"
+        "Створення облікових записів",
+        "Призначення ролей",
+        "Скидання паролів",
+        "Керування доступом"
       ]
     },
     "admin": {
-      "step7_title": "Gestione Scuole e Istituti",
-      "step7_desc": "Crea e configura nuovi istituti scolastici, gestisci i parametri specifici di ogni scuola, assegna admin di plesso e monitora l'attività.",
+      "step7_title": "Керування закладами та філіями",
+      "step7_desc": "Створюйте та налаштовуйте структури шкіл, параметри кожного підрозділу, призначайте локальних адміністраторів та моніторте активність.",
       "step7_bullets": [
-        "Nuovi istituti",
-        "Config per scuola",
-        "Admin di plesso",
-        "Multi-tenant"
+        "Нові заклади",
+        "Налаштування школи",
+        "Адміністратори філій",
+        "Мультиарендність"
       ],
-      "step8_title": "Integrazioni e API",
-      "step8_desc": "Gestisci le integrazioni con sistemi esterni (Google Workspace, Microsoft 365, LMS), configura i webhook e monitora le chiamate API.",
+      "step8_title": "Інтеграції та API",
+      "step8_desc": "Налаштовуйте підключення до зовнішніх систем (Google Workspace, Microsoft 365, LMS), конфігуруйте вебхуки та відстежуйте API-запити.",
       "step8_bullets": [
         "Google Workspace",
         "Microsoft 365",
-        "Webhook config",
-        "API monitoring"
+        "Налаштування Webhook",
+        "Моніторинг API"
       ],
       "step1_bullets": [
-        "Stato sistema",
-        "Utenti attivi",
-        "Sessioni aperte",
-        "Errori recenti"
+        "Стан системи",
+        "Активні користувачі",
+        "Відкриті сесії",
+        "Останні помилки"
       ],
       "step2_bullets": [
-        "CPU e memoria",
-        "Risposta API",
-        "Log in tempo reale",
-        "Alert soglie"
+        "Навантаження CPU та RAM",
+        "Швидкість відповіді API",
+        "Логи в реальному часі",
+        "Порогові сповіщення"
       ],
       "step3_bullets": [
-        "Crea utenti",
-        "Assegna ruoli",
-        "Gestisci scuole",
-        "Import massivo"
+        "Створення користувачів",
+        "Призначення прав (RBAC)",
+        "Керування школами",
+        "Масовий імпорт CSV"
       ],
       "step4_bullets": [
-        "Uso piattaforma",
-        "Report periodici",
-        "Trend utenti",
-        "Export dati"
+        "Метрики платформи",
+        "Періодичні звіти",
+        "Динаміка користувачів",
+        "Експорт даних"
       ],
       "step5_bullets": [
-        "Log immutabili",
-        "Filtri avanzati",
-        "Export audit",
-        "GDPR compliance"
+        "Незмінні аудиторські логи",
+        "Розширені фільтри безпеки",
+        "Експорт звіту для аудиту",
+        "Відповідність GDPR"
       ],
       "step6_bullets": [
-        "Policy password",
-        "2FA obbligatorio",
-        "Feature flags",
-        "Manutenzione"
+        "Політика паролів",
+        "Обов'язкова 2FA",
+        "Прапорці функцій",
+        "Режим обслуговування"
       ]
     }
   },

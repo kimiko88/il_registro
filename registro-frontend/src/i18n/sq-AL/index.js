@@ -244,6 +244,8 @@ export default {
     "statGradesPending": "Nota për Vendosje",
     "actionAttendance": "Merr Mungesat",
     "actionGrades": "Vendos Nota",
+    "viewAttendance": "Prezenca",
+    "viewGrades": "Notat",
     "actionLessons": "Ditari i Klasës",
     "actionAgenda": "Kalendari i Klasës",
     "actionUsers": "Menaxhimi i Përdoruesve",

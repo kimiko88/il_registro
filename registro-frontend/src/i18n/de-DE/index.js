@@ -238,6 +238,8 @@ export default {
     "statGradesPending": "Offene Noten",
     "actionAttendance": "Anwesenheit erfassen",
     "actionGrades": "Noten eingeben",
+    "viewAttendance": "Anwesenheit",
+    "viewGrades": "Noten",
     "actionLessons": "Klassenbuch",
     "actionAgenda": "Klassenkalender",
     "actionUsers": "Benutzerverwaltung",
@@ -902,32 +904,7 @@ export default {
       "q9": "Wie ändere ich Sprache und Dark Mode?",
       "a9": "Unter \"Einstellungen\" im Benutzermenü können Sie aus 9 Sprachen wählen und den Dunkelmodus oder die OpenDyslexic-Schriftart aktivieren.",
       "q10": "Wie kann ich eine kürzlich eingetragene Note widerrufen?",
-      "a10": "Nach jeder Eingabe erscheint unten ein Toast mit der Schaltfläche \"Rückgängig\" (15 Sek. aktiv). Danach direkt in der Zelle bearbeiten.",
-      "attendance": {
-        "title": "Marrja e Mungesave & Nënshkrimi i Mësimit",
-        "desc": "Si të merrni praninë e nxënësve dhe të nënshkruani orën mësimore.",
-        "content": "Dhe regjistroni mungesat dhe temat e mësimit brenda pak sekondave.\n\nHapi 1: Hapni 'Ditari i Klasës' dhe zgjidhni klasën tuaj.\nHapi 2: Shënoni nxënësit si të pranishëm, mungesë ose me vonesë.\nHapi 3: Vendosni temën dhe nënshkruani orën."
-      },
-      "grades": {
-        "title": "Hedhja e Notave dhe Vlerësimi",
-        "desc": "Si të vendosni notat me gojë, me shkrim dhe praktike.",
-        "content": "Menaxhoni notat dhe vlerësimet për secilin nxënës me lehtësi."
-      },
-      "uda": {
-        "title": "Planifikimi i Njësive Mësimore (UdA)",
-        "desc": "Dizajnimi kurrikular sipas kompetencave.",
-        "content": "Strukturoni orët mësimore dhe vlerësoni kompetencat kyçe evropiane."
-      },
-      "agenda": {
-        "title": "Detyrat e Shtëpisë & Kalendari",
-        "desc": "Si të caktoni detyrat dhe provimet.",
-        "content": "Caktoni afatet dhe organizoni ngarkesën e studimit për klasën."
-      },
-      "colloqui": {
-        "title": "Takimet me Prindërit",
-        "desc": "Caktimi i orareve të lira për takime individuale.",
-        "content": "Përcaktoni fashat orare dhe konfirmoni kërkesat e prindërve."
-      }
+      "a10": "Nach jeder Eingabe erscheint unten ein Toast mit der Schaltfläche \"Rückgängig\" (15 Sek. aktiv). Danach direkt in der Zelle bearbeiten."
     },
     "student": {
       "cat_grades": "Meine Noten",
@@ -954,22 +931,7 @@ export default {
       "q9": "Was tue ich, wenn ich mein Passwort vergessen habe?",
       "a9": "Klicken Sie auf der Anmeldeseite auf \"Passwort vergessen?\" und geben Sie Ihre E-Mail-Adresse ein.",
       "q10": "Wie nutze ich die Schnellsuche Strg+K?",
-      "a10": "Drücken Sie Strg+K (oder Cmd+K), um die universelle Suche zu öffnen und sofort zu Fächern, Hausaufgaben oder Menüs zu navigieren.",
-      "grades": {
-        "title": "Konsultimi i Notave & Mesatareve",
-        "desc": "Si të kontrolloni notat dhe ecurinë tuaj akademike.",
-        "content": "Shikoni notat e fundit, mesataret sipas lëndëve dhe simuloni notat kaluese."
-      },
-      "homework": {
-        "title": "Detyrat & Kalendari i Studimit",
-        "desc": "Organizoni detyrat dhe përgatitjet për testet.",
-        "content": "Mbani nën kontroll afatet e detyrave dhe njoftimet nga mësuesit."
-      },
-      "attendance": {
-        "title": "Prania & Arsyetimet",
-        "desc": "Kontrolloni mungesat dhe vonesat tuaja.",
-        "content": "Shikoni statusin e mungesave dhe kërkesave për arsyetim."
-      }
+      "a10": "Drücken Sie Strg+K (oder Cmd+K), um die universelle Suche zu öffnen und sofort zu Fächern, Hausaufgaben oder Menüs zu navigieren."
     },
     "parent": {
       "cat_monitoring": "Kinder-Überwachung",
@@ -996,22 +958,7 @@ export default {
       "q9": "Kann ein zweiter Erziehungsberechtigter Zugang erhalten?",
       "a9": "Das Sekretariat kann mehrere Elternkonten mit dem Schüler verknüpfen. Jeder Erziehungsberechtigte erhält eigene Anmeldedaten.",
       "q10": "Was passiert im Offline-Modus der App?",
-      "a10": "Die App zeigt gespeicherte Daten an. Offline-Formulare werden lokal zwischengespeichert und bei Verbindung synchronisiert.",
-      "grades": {
-        "title": "Vlerësimi & Dëftesa",
-        "desc": "Ndiqni notat dhe vlerësimet e fëmijëve tuaj.",
-        "content": "Qasje e menjëhershme në të gjitha notat, mesataret dhe dëftesat zyrtare."
-      },
-      "attendance": {
-        "title": "Arsyetimi i Mungesave",
-        "desc": "Si të arsyetoni mungesat e fëmijës tuaj online.",
-        "content": "Dërgoni arsyetime për mungesat dhe vonesat me një klikim."
-      },
-      "colloqui": {
-        "title": "Rezervimi i Takimeve me Mësuesit",
-        "desc": "Caktoni takime individuale me stafin mësimdhënës.",
-        "content": "Zgjidhni orarin e përshtatshëm dhe rezervoni takimin online ose në shkollë."
-      }
+      "a10": "Die App zeigt gespeicherte Daten an. Offline-Formulare werden lokal zwischengespeichert und bei Verbindung synchronisiert."
     },
     "secretary": {
       "cat_students": "Schülerkartei",
@@ -1038,37 +985,7 @@ export default {
       "q9": "Wie prüfe ich ausstehende PagoPA-Zahlungen?",
       "a9": "Öffnen Sie \"Finanzen & PagoPA\", um den Zahlungsstatus einzusehen und Zahlungserinnerungen zu senden.",
       "q10": "Wie widerrufe ich ein fehlerhaftes Dokumentenprotokoll?",
-      "a10": "Im Dokumentenarchiv das Protokoll auswählen → \"Mit Begründung widerrufen\". Der Widerruf wird im Audit-Log vermerkt.",
-      "students": {
-        "title": "Menaxhimi i Regjistrit të Nxënësve",
-        "desc": "Kërkimi, regjistrimi dhe përditësimi i të dhënave të nxënësve.",
-        "content": "Administroni dosjet akademike, kontaktet dhe regjistrimet e reja."
-      },
-      "classes": {
-        "title": "Organizimi i Klasave dhe Seksioneve",
-        "desc": "Krijimi i klasave dhe caktimi i mësuesve titullarë.",
-        "content": "Strukturoni vitin shkollor, oraret dhe ndarjen e lëndëve."
-      },
-      "certificates": {
-        "title": "Gjenerimi i Vërtetimeve",
-        "desc": "Lëshimi i dokumenteve zyrtare dhe vërtetimeve të frekuentimit.",
-        "content": "Gjeneroni dokumente me vulë digjitale dhe nënshkrim zyrtar në sekonda."
-      },
-      "timetable": {
-        "title": "Orari Mësimor dhe Zëvendësimet",
-        "desc": "Menaxhimi i orareve javore dhe zëvendësimit të mësuesve.",
-        "content": "Planifikoni orët dhe mbuloni mungesat e mësuesve."
-      },
-      "communications": {
-        "title": "Qarkoret dhe Njoftimet Zyrtare",
-        "desc": "Publikimi i njoftimeve dhe monitorimi i marrjes së dijenisë.",
-        "content": "Dërgoni qarkore zyrtare për stafin, prindërit dhe nxënësit."
-      },
-      "reports": {
-        "title": "Raportet dhe Statistikat",
-        "desc": "Nxjerrja e statistikave dhe eksportimi i të dhënave.",
-        "content": "Gjeneroni raporte të agreguara për frekuentimin dhe rezultatet."
-      }
+      "a10": "Im Dokumentenarchiv das Protokoll auswählen → \"Mit Begründung widerrufen\". Der Widerruf wird im Audit-Log vermerkt."
     },
     "admin": {
       "cat_monitoring": "Systemüberwachung",
@@ -1095,42 +1012,7 @@ export default {
       "q9": "Wie sehe ich die vollständige RBAC-Rechtematrix ein?",
       "a9": "Gehen Sie zu \"Rollen & Berechtigungen\", um die interaktive Matrix aller 9 Rollen einzusehen.",
       "q10": "Wie aktiviere ich den Wartungsmodus der Plattform?",
-      "a10": "Unter \"Systemeinstellungen\" den \"Wartungsmodus\" aktivieren. Benutzern wird ein Informationsbanner angezeigt.",
-      "monitoring": {
-        "title": "Monitorimi i Sistemit",
-        "desc": "Monitorimi i performancës së serverit dhe bazës së të dhënave.",
-        "content": "Kontrolloni gjendjen teknike, memorien RAM dhe shërbimet e sistemit në kohë reale."
-      },
-      "users": {
-        "title": "Menaxhimi i Përdoruesve",
-        "desc": "Krijimi i llogarive, të drejtat dhe politikat e sigurisë.",
-        "content": "Menaxhoni të gjitha llogaritë e përdoruesve dhe konfiguroni 2FA."
-      },
-      "schools": {
-        "title": "Menaxhimi i Institucioneve",
-        "desc": "Konfigurimi i shkollave dhe degëve arsimore.",
-        "content": "Regjistroni kodet zyrtare dhe të dhënat administrative të shkollave."
-      },
-      "security": {
-        "title": "Politikat e Sigurisë",
-        "desc": "Konfigurimi i fjalëkalimeve dhe kërkesave të sigurisë.",
-        "content": "Përshtatni rregullat e sigurisë sipas standardeve më të larta."
-      },
-      "analytics": {
-        "title": "Analitika dhe Parandalimi i Braktisjes",
-        "desc": "Analizë parashikuese për rrezikun e braktisjes shkollore.",
-        "content": "Identifikoni nxënësit me rrezik mungesash dhe rezultatesh të ulëta."
-      },
-      "integrations": {
-        "title": "Integrimet dhe Hyrja me Një Klik (SSO)",
-        "desc": "Lidhja me Google Workspace dhe Microsoft 365.",
-        "content": "Aktivizoni hyrjen me llogaritë institucionale."
-      },
-      "audit": {
-        "title": "Regjistri i Auditimit & Gjurmueshmëria",
-        "desc": "Gjurmimi i plotë i veprimeve të përdoruesve në sistem.",
-        "content": "Regjistër i pandryshueshëm i të gjitha veprimeve për transparencë maksimale."
-      }
+      "a10": "Unter \"Systemeinstellungen\" den \"Wartungsmodus\" aktivieren. Benutzern wird ein Informationsbanner angezeigt."
     }
   },
   "guideCenter": {
@@ -1183,16 +1065,6 @@ export default {
         "title": "Förderplan (PDP / PEI)",
         "desc": "Erstellung und Anwendung von ausgleichenden und befreitenden Maßnahmen.",
         "content": "Das PDP-Modul ermöglicht der Klassenkonferenz die Erstellung individueller Förderpläne.\n\nSchritt 1: Öffnen Sie \"PDP / PEI\" im Klassenmenü.\nSchritt 2: Schüler auswählen und Ausgleichsmaßnahmen (Taschenrechner, Formeln) konfigurieren.\nSchritt 3: Entwurf speichern und den Eltern zur digitalen Bestätigung senden.\nSchritt 4: Aktive Maßnahmen werden bei der täglichen Noteneingabe grafisch angezeigt.\n\nTipp: Nutzen Sie vorgefertigte Rubriken zur schnelleren Erstellung."
-      },
-      "uda": {
-        "title": "Planifikimi i Njësive Mësimore (UdA)",
-        "desc": "Dizajnimi kurrikular sipas kompetencave.",
-        "content": "Strukturoni orët mësimore dhe vlerësoni kompetencat kyçe evropiane."
-      },
-      "colloqui": {
-        "title": "Takimet me Prindërit",
-        "desc": "Caktimi i orareve të lira për takime individuale.",
-        "content": "Përcaktoni fashat orare dhe konfirmoni kërkesat e prindërve."
       }
     },
     "student": {
@@ -1262,21 +1134,6 @@ export default {
         "title": "Online-Entschuldigungen",
         "desc": "Digitale Entschuldigungen für Fehlzeiten und Verspätungen einreichen.",
         "content": "Keine Papierhefte nötig: Fehlzeiten sicher mit PIN oder OTP entschuldigen.\n\nSchritt 1: Öffnen Sie \"Anwesenheit & Entschuldigungen\".\nSchritt 2: Unentschuldigte Fehlzeiten einsehen.\nSchritt 3: Neben dem Datum auf \"Entschuldigen\" klicken, Grund wählen und mit PIN signieren."
-      },
-      "grades": {
-        "title": "Vlerësimi & Dëftesa",
-        "desc": "Ndiqni notat dhe vlerësimet e fëmijëve tuaj.",
-        "content": "Qasje e menjëhershme në të gjitha notat, mesataret dhe dëftesat zyrtare."
-      },
-      "attendance": {
-        "title": "Arsyetimi i Mungesave",
-        "desc": "Si të arsyetoni mungesat e fëmijës tuaj online.",
-        "content": "Dërgoni arsyetime për mungesat dhe vonesat me një klikim."
-      },
-      "colloqui": {
-        "title": "Rezervimi i Takimeve me Mësuesit",
-        "desc": "Caktoni takime individuale me stafin mësimdhënës.",
-        "content": "Zgjidhni orarin e përshtatshëm dhe rezervoni takimin online ose në shkollë."
       }
     },
     "secretary": {

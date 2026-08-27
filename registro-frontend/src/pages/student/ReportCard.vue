@@ -61,9 +61,9 @@
 
         <div class="row q-col-gutter-md">
           <div class="col-12 col-md-6">
-            <div class="text-subtitle2 text-slate-500">{{ t('usersPage.roleStudents') || 'Studente/ssa' }}</div>
+            <div class="text-subtitle2 text-slate-500">{{ t('roleDashboards.student') || 'Studente/ssa' }}</div>
             <div class="text-h6 text-weight-bold text-slate-800">
-              {{ reportData?.student_name || `${authStore.user?.first_name || ''} ${authStore.user?.last_name || ''}`.trim() || 'Studente' }}
+              {{ studentDisplayName }}
             </div>
             <div class="text-caption text-slate-500">Codice Fiscale: {{ authStore.user?.fiscal_code || reportData?.fiscal_code || 'N/D' }}</div>
           </div>
@@ -212,6 +212,15 @@ const authStore = useAuthStore()
 const selectedSemester = ref(1)
 const reportData = ref(null)
 const deficiencies = ref([])
+
+const studentDisplayName = computed(() => {
+  const loggedName = `${authStore.user?.first_name || ''} ${authStore.user?.last_name || ''}`.trim()
+  const repName = reportData.value?.student_name
+  if (repName && !repName.startsWith('Studente ') && !repName.includes(authStore.user?.id || '---')) {
+    return repName
+  }
+  return loggedName || repName || 'Studente'
+})
 
 const attendanceStats = reactive({
   absences: 0,

@@ -6,6 +6,20 @@ import { Quasar } from 'quasar'
 import Dashboard from '@/pages/Dashboard.vue'
 import { useAuthStore } from '@/stores/auth'
 
+vi.mock('vue-router', () => ({
+    useRouter: () => ({
+        push: vi.fn(),
+        replace: vi.fn()
+    })
+}))
+
+vi.mock('@/services/api', () => ({
+    default: {
+        get: vi.fn().mockResolvedValue({ data: [] }),
+        post: vi.fn().mockResolvedValue({ data: {} })
+    }
+}))
+
 vi.mock('@/services/dashboardService', () => ({
     default: {
         getDashboardStats: vi.fn().mockImplementation((role) => {
@@ -31,19 +45,23 @@ describe('Dashboard.vue', () => {
     let wrapper
 
     beforeEach(() => {
+        const pinia = createTestingPinia({
+            createSpy: vi.fn,
+            initialState: {
+                auth: {
+                    user: { first_name: 'TestUser', role: 'student' },
+                    userRole: 'student'
+                }
+            },
+            stubActions: false
+        })
+        setActivePinia(pinia)
+
         wrapper = mount(Dashboard, {
             global: {
                 plugins: [
                     [Quasar, {}],
-                    createTestingPinia({
-                        createSpy: vi.fn,
-                        initialState: {
-                            auth: {
-                                user: { first_name: 'TestUser', role: 'student' },
-                                userRole: 'student'
-                            }
-                        }
-                    })
+                    pinia
                 ],
                 stubs: {
                     'q-page': { template: '<div><slot /></div>' },

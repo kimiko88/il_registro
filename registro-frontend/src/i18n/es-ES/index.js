@@ -238,6 +238,8 @@ export default {
     "statGradesPending": "Notas por Poner",
     "actionAttendance": "Pasar Lista",
     "actionGrades": "Poner Notas",
+    "viewAttendance": "Asistencia",
+    "viewGrades": "Notas",
     "actionLessons": "Registro de Clases",
     "actionAgenda": "Agenda de Clase",
     "actionUsers": "Gestión de Usuarios",
@@ -626,32 +628,7 @@ export default {
       "q9": "¿Cómo cambio el idioma de la interfaz y el modo oscuro?",
       "a9": "En \"Configuración\" del menú de usuario, elige entre 9 idiomas y activa el modo oscuro o la fuente OpenDyslexic.",
       "q10": "¿Cómo puedo deshacer una nota introducida recientemente?",
-      "a10": "Tras guardar, aparece una notificación con un botón \"Deshacer\" activo durante 15 segundos. Después, edita directamente la celda.",
-      "attendance": {
-        "title": "Marrja e Mungesave & Nënshkrimi i Mësimit",
-        "desc": "Si të merrni praninë e nxënësve dhe të nënshkruani orën mësimore.",
-        "content": "Dhe regjistroni mungesat dhe temat e mësimit brenda pak sekondave.\n\nHapi 1: Hapni 'Ditari i Klasës' dhe zgjidhni klasën tuaj.\nHapi 2: Shënoni nxënësit si të pranishëm, mungesë ose me vonesë.\nHapi 3: Vendosni temën dhe nënshkruani orën."
-      },
-      "grades": {
-        "title": "Hedhja e Notave dhe Vlerësimi",
-        "desc": "Si të vendosni notat me gojë, me shkrim dhe praktike.",
-        "content": "Menaxhoni notat dhe vlerësimet për secilin nxënës me lehtësi."
-      },
-      "uda": {
-        "title": "Planifikimi i Njësive Mësimore (UdA)",
-        "desc": "Dizajnimi kurrikular sipas kompetencave.",
-        "content": "Strukturoni orët mësimore dhe vlerësoni kompetencat kyçe evropiane."
-      },
-      "agenda": {
-        "title": "Detyrat e Shtëpisë & Kalendari",
-        "desc": "Si të caktoni detyrat dhe provimet.",
-        "content": "Caktoni afatet dhe organizoni ngarkesën e studimit për klasën."
-      },
-      "colloqui": {
-        "title": "Takimet me Prindërit",
-        "desc": "Caktimi i orareve të lira për takime individuale.",
-        "content": "Përcaktoni fashat orare dhe konfirmoni kërkesat e prindërve."
-      }
+      "a10": "Tras guardar, aparece una notificación con un botón \"Deshacer\" activo durante 15 segundos. Después, edita directamente la celda."
     },
     "student": {
       "cat_grades": "Mis Notas",
@@ -678,22 +655,7 @@ export default {
       "q9": "¿Qué hago si he olvidado mi contraseña?",
       "a9": "En la pantalla de inicio de sesión, haz clic en \"¿Has olvidado tu contraseña?\" e introduce tu correo electrónico.",
       "q10": "¿Cómo uso la búsqueda rápida Ctrl+K?",
-      "a10": "Presiona Ctrl+K (o Cmd+K) para abrir la búsqueda universal y navegar instantáneamente.",
-      "grades": {
-        "title": "Konsultimi i Notave & Mesatareve",
-        "desc": "Si të kontrolloni notat dhe ecurinë tuaj akademike.",
-        "content": "Shikoni notat e fundit, mesataret sipas lëndëve dhe simuloni notat kaluese."
-      },
-      "homework": {
-        "title": "Detyrat & Kalendari i Studimit",
-        "desc": "Organizoni detyrat dhe përgatitjet për testet.",
-        "content": "Mbani nën kontroll afatet e detyrave dhe njoftimet nga mësuesit."
-      },
-      "attendance": {
-        "title": "Prania & Arsyetimet",
-        "desc": "Kontrolloni mungesat dhe vonesat tuaja.",
-        "content": "Shikoni statusin e mungesave dhe kërkesave për arsyetim."
-      }
+      "a10": "Presiona Ctrl+K (o Cmd+K) para abrir la búsqueda universal y navegar instantáneamente."
     },
     "parent": {
       "cat_monitoring": "Seguimiento de Hijos",
@@ -720,22 +682,7 @@ export default {
       "q9": "¿Puede un segundo progenitor tener un usuario propio?",
       "a9": "La secretaría puede vincular varias cuentas de tutores legales al mismo estudiante con credenciales individuales.",
       "q10": "¿Qué ocurre al usar la aplicación sin conexión?",
-      "a10": "La aplicación muestra los datos guardados en caché. Las gestiones realizadas se sincronizan al recuperar la conexión.",
-      "grades": {
-        "title": "Vlerësimi & Dëftesa",
-        "desc": "Ndiqni notat dhe vlerësimet e fëmijëve tuaj.",
-        "content": "Qasje e menjëhershme në të gjitha notat, mesataret dhe dëftesat zyrtare."
-      },
-      "attendance": {
-        "title": "Arsyetimi i Mungesave",
-        "desc": "Si të arsyetoni mungesat e fëmijës tuaj online.",
-        "content": "Dërgoni arsyetime për mungesat dhe vonesat me një klikim."
-      },
-      "colloqui": {
-        "title": "Rezervimi i Takimeve me Mësuesit",
-        "desc": "Caktoni takime individuale me stafin mësimdhënës.",
-        "content": "Zgjidhni orarin e përshtatshëm dhe rezervoni takimin online ose në shkollë."
-      }
+      "a10": "La aplicación muestra los datos guardados en caché. Las gestiones realizadas se sincronizan al recuperar la conexión."
     },
     "secretary": {
       "cat_students": "Fichero de Alumnos",
@@ -762,37 +709,7 @@ export default {
       "q9": "¿Cómo compruebo el estado de los cobros PagoPA?",
       "a9": "Abre \"Finanzas y PagoPA\" para revisar el estado de los pagos y emitir recordatorios de cobro.",
       "q10": "¿Cómo anulo un número de protocolo emitido por error?",
-      "a10": "En el archivo documental, selecciona el protocolo → \"Anular con justificación\". La acción queda registrada en el Audit Log.",
-      "students": {
-        "title": "Menaxhimi i Regjistrit të Nxënësve",
-        "desc": "Kërkimi, regjistrimi dhe përditësimi i të dhënave të nxënësve.",
-        "content": "Administroni dosjet akademike, kontaktet dhe regjistrimet e reja."
-      },
-      "classes": {
-        "title": "Organizimi i Klasave dhe Seksioneve",
-        "desc": "Krijimi i klasave dhe caktimi i mësuesve titullarë.",
-        "content": "Strukturoni vitin shkollor, oraret dhe ndarjen e lëndëve."
-      },
-      "certificates": {
-        "title": "Gjenerimi i Vërtetimeve",
-        "desc": "Lëshimi i dokumenteve zyrtare dhe vërtetimeve të frekuentimit.",
-        "content": "Gjeneroni dokumente me vulë digjitale dhe nënshkrim zyrtar në sekonda."
-      },
-      "timetable": {
-        "title": "Orari Mësimor dhe Zëvendësimet",
-        "desc": "Menaxhimi i orareve javore dhe zëvendësimit të mësuesve.",
-        "content": "Planifikoni orët dhe mbuloni mungesat e mësuesve."
-      },
-      "communications": {
-        "title": "Qarkoret dhe Njoftimet Zyrtare",
-        "desc": "Publikimi i njoftimeve dhe monitorimi i marrjes së dijenisë.",
-        "content": "Dërgoni qarkore zyrtare për stafin, prindërit dhe nxënësit."
-      },
-      "reports": {
-        "title": "Raportet dhe Statistikat",
-        "desc": "Nxjerrja e statistikave dhe eksportimi i të dhënave.",
-        "content": "Gjeneroni raporte të agreguara për frekuentimin dhe rezultatet."
-      }
+      "a10": "En el archivo documental, selecciona el protocolo → \"Anular con justificación\". La acción queda registrada en el Audit Log."
     },
     "admin": {
       "cat_monitoring": "Supervisión del Sistema",
@@ -819,42 +736,7 @@ export default {
       "q9": "¿Cómo reviso la matriz completa de permisos RBAC?",
       "a9": "Accede a \"Roles y Permisos\" para consultar la matriz interactiva de accesos de los 9 roles del sistema.",
       "q10": "¿Cómo activo el modo mantenimiento de la plataforma?",
-      "a10": "En \"Configuración del Sistema\", activa el \"Modo Mantenimiento\". Se mostrará un aviso informativo a los usuarios.",
-      "monitoring": {
-        "title": "Monitorimi i Sistemit",
-        "desc": "Monitorimi i performancës së serverit dhe bazës së të dhënave.",
-        "content": "Kontrolloni gjendjen teknike, memorien RAM dhe shërbimet e sistemit në kohë reale."
-      },
-      "users": {
-        "title": "Menaxhimi i Përdoruesve",
-        "desc": "Krijimi i llogarive, të drejtat dhe politikat e sigurisë.",
-        "content": "Menaxhoni të gjitha llogaritë e përdoruesve dhe konfiguroni 2FA."
-      },
-      "schools": {
-        "title": "Menaxhimi i Institucioneve",
-        "desc": "Konfigurimi i shkollave dhe degëve arsimore.",
-        "content": "Regjistroni kodet zyrtare dhe të dhënat administrative të shkollave."
-      },
-      "security": {
-        "title": "Politikat e Sigurisë",
-        "desc": "Konfigurimi i fjalëkalimeve dhe kërkesave të sigurisë.",
-        "content": "Përshtatni rregullat e sigurisë sipas standardeve më të larta."
-      },
-      "analytics": {
-        "title": "Analitika dhe Parandalimi i Braktisjes",
-        "desc": "Analizë parashikuese për rrezikun e braktisjes shkollore.",
-        "content": "Identifikoni nxënësit me rrezik mungesash dhe rezultatesh të ulëta."
-      },
-      "integrations": {
-        "title": "Integrimet dhe Hyrja me Një Klik (SSO)",
-        "desc": "Lidhja me Google Workspace dhe Microsoft 365.",
-        "content": "Aktivizoni hyrjen me llogaritë institucionale."
-      },
-      "audit": {
-        "title": "Regjistri i Auditimit & Gjurmueshmëria",
-        "desc": "Gjurmimi i plotë i veprimeve të përdoruesve në sistem.",
-        "content": "Regjistër i pandryshueshëm i të gjitha veprimeve për transparencë maksimale."
-      }
+      "a10": "En \"Configuración del Sistema\", activa el \"Modo Mantenimiento\". Se mostrará un aviso informativo a los usuarios."
     }
   },
   "guideCenter": {
@@ -907,16 +789,6 @@ export default {
         "title": "Plan Individualizado (PDP / PEI)",
         "desc": "Elaboración de medidas compensatorias y dispensatorias para necesidades específicas.",
         "content": "El módulo PDP permite al equipo docente diseñar planes de aprendizaje adaptados.\n\nPaso 1: Accede a 'PDP / PEI' desde el menú de la clase.\nPaso 2: Selecciona al alumno y configura las medidas compensatorias y dispensatorias.\nPaso 3: Guarda el borrador y envíalo a los padres para firma digital.\nPaso 4: Las medidas activas se muestran con iconos de aviso durante la evaluación.\n\nSugerencia: Usa las rúbricas predefinidas para agilizar la redacción."
-      },
-      "uda": {
-        "title": "Planifikimi i Njësive Mësimore (UdA)",
-        "desc": "Dizajnimi kurrikular sipas kompetencave.",
-        "content": "Strukturoni orët mësimore dhe vlerësoni kompetencat kyçe evropiane."
-      },
-      "colloqui": {
-        "title": "Takimet me Prindërit",
-        "desc": "Caktimi i orareve të lira për takime individuale.",
-        "content": "Përcaktoni fashat orare dhe konfirmoni kërkesat e prindërve."
       }
     },
     "student": {
@@ -986,21 +858,6 @@ export default {
         "title": "Justificación de Faltas Online",
         "desc": "Justifica las ausencias y retrasos de tus hijos por internet.",
         "content": "Olvídate de los justificantes en papel: justifica ausencias con tu PIN o código OTP.\n\nPaso 1: Abre 'Asistencia y Justificaciones'.\nPaso 2: Consulta las faltas pendientes marcadas en rojo.\nPaso 3: Haz clic en 'Justificar', selecciona el motivo (Enfermedad, Familia) y confirma con tu PIN."
-      },
-      "grades": {
-        "title": "Vlerësimi & Dëftesa",
-        "desc": "Ndiqni notat dhe vlerësimet e fëmijëve tuaj.",
-        "content": "Qasje e menjëhershme në të gjitha notat, mesataret dhe dëftesat zyrtare."
-      },
-      "attendance": {
-        "title": "Arsyetimi i Mungesave",
-        "desc": "Si të arsyetoni mungesat e fëmijës tuaj online.",
-        "content": "Dërgoni arsyetime për mungesat dhe vonesat me një klikim."
-      },
-      "colloqui": {
-        "title": "Rezervimi i Takimeve me Mësuesit",
-        "desc": "Caktoni takime individuale me stafin mësimdhënës.",
-        "content": "Zgjidhni orarin e përshtatshëm dhe rezervoni takimin online ose në shkollë."
       }
     },
     "secretary": {
@@ -1863,278 +1720,278 @@ export default {
     "sessionWorkPreserved": "Se conservaron los cambios no guardados"
   },
   "onboardingExtra": {
-    "completionTitle": "Great job!",
-    "completionDesc": "You completed the initial overview",
-    "openGuide": "Open Guide",
+    "openGuide": "Abrir Guía Completa",
     "viewAllFeatures": "Descubrir todas las funciones",
+    "completionTitle": "¡Excelente trabajo! 🎉",
+    "completionDesc": "Has completado la introducción inicial. Puedes consultar la guía completa en cualquier momento desde el botón ? de la barra superior.",
     "teacher": {
-      "step7_title": "Docencia y Evaluación > Registro Electrónico",
-      "step7_desc": "Firma digitalmente cada clase con un clic. El registro guarda materias y horas.",
-      "step8_title": "Atención a la Diversidad > Adaptaciones Curriculares",
-      "step8_desc": "Consulta los planes de apoyo y adaptaciones para cada estudiante.",
+      "step7_title": "Docencia y Evaluación > Registro Electrónico y Firmas",
+      "step7_desc": "En el menú 'Docencia y Evaluación > Registro de Clase', firma digitalmente cada clase con un clic. El registro guarda automáticamente los temas impartidos, las horas lectivas y las anotaciones privadas.",
       "step7_bullets": [
-        "Firma digitale lezione",
-        "Argomenti lezione",
-        "Annotazioni private",
-        "Registro ore"
+        "Firma digital de clase",
+        "Temas de la lección",
+        "Anotaciones privadas",
+        "Registro de horas"
       ],
+      "step8_title": "Docencia y Evaluación > Competencias y Unidades Didácticas (UDA)",
+      "step8_desc": "En el menú 'Docencia y Evaluación > Calificaciones', evalúa las competencias del alumnado según los descriptores UE, gestiona las Unidades Didácticas de Aprendizaje (UDA) y las programaciones anuales.",
       "step8_bullets": [
-        "Competenze UE",
-        "Unità Didattiche",
-        "Piano di lavoro",
-        "Rubriche valutative"
+        "Competencias UE",
+        "Unidades Didácticas",
+        "Plan de trabajo",
+        "Rúbricas de evaluación"
       ],
       "step1_bullets": [
-        "Lezioni di oggi",
-        "Notifiche recenti",
-        "Accesso rapido",
-        "Riepilogo classe"
+        "Clases de hoy",
+        "Notificaciones recientes",
+        "Accesos rápidos",
+        "Resumen del aula"
       ],
       "step2_bullets": [
-        "Registro presenze",
-        "Argomenti lezione",
-        "Firma digitale",
-        "Gestione assenze"
+        "Registro de asistencia",
+        "Temas de la lección",
+        "Firma digital",
+        "Gestión de faltas"
       ],
       "step3_bullets": [
-        "Voti orali e scritti",
-        "Media classe",
-        "Grafico distribuzione",
-        "Download tabelle"
+        "Notas orales y escritas",
+        "Media del grupo",
+        "Gráfico de distribución",
+        "Descarga de tablas"
       ],
       "step4_bullets": [
-        "Compiti e verifiche",
-        "Calendario attività",
-        "Messaggi classe",
-        "Circolare genitori"
+        "Tareas y exámenes",
+        "Calendario de actividades",
+        "Mensajes al grupo",
+        "Circulares a familias"
       ],
       "step5_bullets": [
-        "Disponibilità colloqui",
-        "Prenotazioni genitori",
-        "Video colloquio",
-        "Storico incontri"
+        "Disponibilidad de tutorías",
+        "Citas de padres y tutores",
+        "Videotutorías",
+        "Historial de reuniones"
       ],
       "step6_bullets": [
-        "Tema e lingua",
-        "Notifiche push",
-        "Password",
-        "Profilo pubblico"
+        "Tema e idioma",
+        "Notificaciones push",
+        "Cambio de contraseña",
+        "Perfil público"
       ]
     },
     "student": {
-      "step7_title": "PCTO e Competenze",
-      "step7_desc": "Monitora le tue ore di PCTO (ex alternanza), visualizza le certificazioni di competenza e costruisci il tuo portfolio digitale.",
+      "step7_title": "Prácticas y Competencias",
+      "step7_desc": "Monitorea tus horas de prácticas y formación en centros de trabajo, consulta los certificados de competencias y construye tu portfolio digital.",
       "step7_bullets": [
-        "Ore PCTO",
-        "Certificazioni",
-        "Portfolio digitale",
-        "Valutazione tutor"
+        "Horas de prácticas",
+        "Certificaciones",
+        "Portfolio digital",
+        "Evaluación del tutor"
       ],
-      "step8_title": "Comunicazioni e Bacheca",
-      "step8_desc": "Consulta tutte le comunicazioni della scuola, leggi le circolari, rispondi ai sondaggi e visualizza gli avvisi personalizzati.",
+      "step8_title": "Comunicaciones y Tablón de Anuncios",
+      "step8_desc": "Consulta todas las comunicaciones del centro educativo, lee las circulares, responde a encuestas y revisa los avisos personalizados.",
       "step8_bullets": [
-        "Circolari scuola",
-        "Sondaggi e risposte",
-        "Avvisi personalizzati",
-        "Comunicazioni docenti"
+        "Circulares del centro",
+        "Encuestas y respuestas",
+        "Avisos personalizados",
+        "Mensajes del profesorado"
       ],
       "step1_bullets": [
-        "Compiti in scadenza",
-        "Ultime notifiche",
-        "Media voti",
-        "Prossime verifiche"
+        "Tareas pendientes",
+        "Últimas notificaciones",
+        "Nota media",
+        "Próximos exámenes"
       ],
       "step2_bullets": [
-        "Voti per materia",
-        "Media aggiornata",
-        "Grafico andamento",
-        "Confronto trimestri"
+        "Notas por asignatura",
+        "Media actualizada",
+        "Gráfico de evolución",
+        "Comparativa de periodos"
       ],
       "step3_bullets": [
-        "Presenze mensili",
-        "Contatore assenze",
-        "Ritardi e uscite",
-        "Giustificazioni"
+        "Asistencia mensual",
+        "Contador de faltas",
+        "Retrasos y salidas",
+        "Justificantes"
       ],
       "step4_bullets": [
-        "Compiti assegnati",
-        "Scadenze per materia",
-        "Materiali didattici",
-        "Link e risorse"
+        "Tareas asignadas",
+        "Plazos por materia",
+        "Materiales didácticos",
+        "Enlaces y recursos"
       ],
       "step5_bullets": [
-        "Pagella digitale",
-        "Download PDF",
-        "Certificati",
-        "Modulistica"
+        "Boletín digital",
+        "Descarga en PDF",
+        "Certificados",
+        "Formularios"
       ],
       "step6_bullets": [
-        "Vacanze scolastiche",
-        "Date verifiche",
-        "Attività extra",
-        "Gite ed eventi"
+        "Vacaciones escolares",
+        "Fechas de exámenes",
+        "Actividades extra",
+        "Excursiones y eventos"
       ]
     },
     "parent": {
-      "step7_title": "Giustificazioni e Autorizzazioni",
-      "step7_desc": "Invia giustifiche per le assenze dei tuoi figli direttamente dall'app, gestisci le autorizzazioni per uscite anticipate e attività speciali.",
+      "step7_title": "Justificantes y Autorizaciones",
+      "step7_desc": "Envía justificantes por las faltas de asistencia de tus hijos directamente desde la aplicación y gestiona las autorizaciones para salidas anticipadas y excursiones.",
       "step7_bullets": [
-        "Giustifiche online",
-        "Autorizzazioni uscite",
-        "Attività speciali",
-        "Storico assenze"
+        "Justificantes online",
+        "Permisos de salida",
+        "Actividades especiales",
+        "Historial de faltas"
       ],
-      "step8_title": "Statistiche e Andamento",
-      "step8_desc": "Visualizza grafici di andamento scolastico nel tempo, confronta le prestazioni tra materie e monitora l'evoluzione dei risultati.",
+      "step8_title": "Estadísticas y Rendimiento",
+      "step8_desc": "Consulta gráficos de evolución escolar a lo largo del tiempo, compara el rendimiento entre asignaturas y monitorea los resultados.",
       "step8_bullets": [
-        "Grafico andamento",
-        "Confronto materie",
-        "Trend temporale",
-        "Obiettivi raggiunti"
+        "Gráfico de evolución",
+        "Comparativa de materias",
+        "Tendencia temporal",
+        "Objetivos alcanzados"
       ],
       "step1_bullets": [
-        "Riepilogo figli",
-        "Ultime notifiche",
-        "Messaggi non letti",
-        "Appuntamenti"
+        "Resumen de hijos/as",
+        "Últimas notificaciones",
+        "Mensajes no leídos",
+        "Citas programadas"
       ],
       "step2_bullets": [
-        "Profilo scolastico",
-        "Documenti figlio",
-        "Contatti docenti",
-        "Dati iscrizione"
+        "Expediente escolar",
+        "Documentos del alumno",
+        "Contacto de profesores",
+        "Datos de matrícula"
       ],
       "step3_bullets": [
-        "Voti in tempo reale",
-        "Media per materia",
-        "Presenze giornaliere",
-        "Alert automatici"
+        "Notas en tiempo real",
+        "Media por materia",
+        "Asistencia diaria",
+        "Alertas automáticas"
       ],
       "step4_bullets": [
-        "Circolari scuola",
-        "Avvisi docenti",
-        "Comunicazioni urgenti",
-        "Bacheca digitale"
+        "Circulares del centro",
+        "Avisos de profesores",
+        "Avisos urgentes",
+        "Tablón digital"
       ],
       "step5_bullets": [
-        "Prenota colloquio",
-        "Scelta orario",
-        "Conferma email",
-        "Modifica prenotazione"
+        "Reservar tutoría",
+        "Elección de horario",
+        "Confirmación por email",
+        "Modificar cita"
       ],
       "step6_bullets": [
-        "Rette e tasse",
-        "Storico pagamenti",
-        "Scarica ricevute",
-        "Richiedi documenti"
+        "Tasas y pagos",
+        "Historial de pagos",
+        "Descargar recibos",
+        "Solicitar certificados"
       ]
     },
     "secretary": {
-      "step7_title": "Iscrizioni e Anagrafe",
-      "step7_desc": "Gestisci le iscrizioni annuali, mantieni aggiornata l'anagrafe studenti, gestisci trasferimenti in entrata/uscita e situazioni speciali.",
+      "step7_title": "Matriculaciones y Expedientes",
+      "step7_desc": "Gestiona las matriculaciones anuales, mantén actualizado el censo de estudiantes, tramita traslados de entrada/salida y situaciones especiales.",
       "step7_bullets": [
-        "Iscrizioni annuali",
-        "Trasferimenti",
-        "Alunni BES/DSA",
-        "Situazioni speciali"
+        "Matrículas anuales",
+        "Traslados",
+        "Alumnado con NEAE",
+        "Casos especiales"
       ],
-      "step8_title": "Circolari e Comunicazioni",
-      "step8_desc": "Crea e pubblica circolari, gestisci la bacheca digitale, invia comunicazioni massive a classi o categorie di utenti con firma digitale.",
+      "step8_title": "Circulares y Comunicados",
+      "step8_desc": "Crea y publica circulares, gestiona el tablón digital y envía comunicaciones masivas a grupos o perfiles de usuarios con firma digital.",
       "step8_bullets": [
-        "Crea circolari",
-        "Firma digitale",
-        "Destinatari multipli",
-        "Storico pubblicazioni"
+        "Crear circulares",
+        "Firma digital",
+        "Destinatarios múltiples",
+        "Historial de publicaciones"
       ],
       "step1_bullets": [
-        "Attività pendenti",
-        "Richieste in arrivo",
-        "Statistiche istituto",
-        "Alert sistema"
+        "Tareas pendientes",
+        "Solicitudes entrantes",
+        "Estadísticas del centro",
+        "Alertas del sistema"
       ],
       "step2_bullets": [
-        "Elenco classi",
-        "Assegnazione docenti",
-        "Orario settimanale",
-        "Storico modifiche"
+        "Listado de grupos",
+        "Asignación docente",
+        "Horario semanal",
+        "Historial de cambios"
       ],
       "step3_bullets": [
-        "Certificato iscrizione",
-        "Attestato frequenza",
-        "Export PDF",
-        "Firma digitale"
+        "Certificado de matrícula",
+        "Certificado de asistencia",
+        "Exportación a PDF",
+        "Sello digital"
       ],
       "step4_bullets": [
-        "Orario scolastico",
-        "Gestione sostituzioni",
-        "Attività extra",
-        "Avvisi docenti"
+        "Horario escolar",
+        "Gestión de sustituciones",
+        "Actividades extra",
+        "Avisos al profesorado"
       ],
       "step5_bullets": [
-        "Report presenze",
-        "Export MIF/ministeriali",
-        "Grafici statistici",
-        "Filtri avanzati"
+        "Informes de asistencia",
+        "Exportaciones oficiales",
+        "Gráficos estadísticos",
+        "Filtros avanzados"
       ],
       "step6_bullets": [
-        "Crea utenti",
-        "Assegna ruoli",
-        "Reset password",
-        "Gestione accessi"
+        "Crear usuarios",
+        "Asignar roles",
+        "Restablecer clave",
+        "Gestión de accesos"
       ]
     },
     "admin": {
-      "step7_title": "Gestione Scuole e Istituti",
-      "step7_desc": "Crea e configura nuovi istituti scolastici, gestisci i parametri specifici di ogni scuola, assegna admin di plesso e monitora l'attività.",
+      "step7_title": "Gestión de Centros y Sedes",
+      "step7_desc": "Crea y configura nuevos centros educativos, gestiona los parámetros específicos de cada sede, asigna administradores locales y monitoriza la actividad.",
       "step7_bullets": [
-        "Nuovi istituti",
-        "Config per scuola",
-        "Admin di plesso",
-        "Multi-tenant"
+        "Nuevos centros",
+        "Configuración por sede",
+        "Admin de centro",
+        "Multi-inquilino"
       ],
-      "step8_title": "Integrazioni e API",
-      "step8_desc": "Gestisci le integrazioni con sistemi esterni (Google Workspace, Microsoft 365, LMS), configura i webhook e monitora le chiamate API.",
+      "step8_title": "Integraciones y API",
+      "step8_desc": "Gestiona integraciones con plataformas externas (Google Workspace, Microsoft 365, LMS), configura webhooks y monitoriza el tráfico de la API.",
       "step8_bullets": [
         "Google Workspace",
         "Microsoft 365",
-        "Webhook config",
-        "API monitoring"
+        "Configuración Webhook",
+        "Monitorización API"
       ],
       "step1_bullets": [
-        "Stato sistema",
-        "Utenti attivi",
-        "Sessioni aperte",
-        "Errori recenti"
+        "Estado del sistema",
+        "Usuarios activos",
+        "Sesiones abiertas",
+        "Errores recientes"
       ],
       "step2_bullets": [
-        "CPU e memoria",
-        "Risposta API",
-        "Log in tempo reale",
-        "Alert soglie"
+        "Uso de CPU y memoria",
+        "Latencia de la API",
+        "Registros en tiempo real",
+        "Alertas por umbrales"
       ],
       "step3_bullets": [
-        "Crea utenti",
-        "Assegna ruoli",
-        "Gestisci scuole",
-        "Import massivo"
+        "Crear usuarios",
+        "Asignar roles (RBAC)",
+        "Gestionar centros",
+        "Importación masiva CSV"
       ],
       "step4_bullets": [
-        "Uso piattaforma",
-        "Report periodici",
-        "Trend utenti",
-        "Export dati"
+        "Uso de la plataforma",
+        "Informes periódicos",
+        "Evolución de usuarios",
+        "Exportar datos"
       ],
       "step5_bullets": [
-        "Log immutabili",
-        "Filtri avanzati",
-        "Export audit",
-        "GDPR compliance"
+        "Registros inmutables",
+        "Filtros de seguridad",
+        "Exportar auditoría",
+        "Cumplimiento RGPD"
       ],
       "step6_bullets": [
-        "Policy password",
-        "2FA obbligatorio",
+        "Política de contraseñas",
+        "2FA obligatorio",
         "Feature flags",
-        "Manutenzione"
+        "Modo mantenimiento"
       ]
     }
   },
