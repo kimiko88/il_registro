@@ -83,7 +83,37 @@ registro-frontend/src/
   - `?` (o `Shift + /`) → Apri Dialogo Guida Scorciatoie
   - `Escape` → Chiudi modale o interrompi lettura vocale
 
-### 3.6. Dichiarazione di Accessibilità AgID & Meccanismo di Feedback End-to-End
+### 3.6. Dettatura Vocale (Speech-to-Text - STT)
+- **Tecnologia**: Web Speech Recognition API nativa (`SpeechRecognition` / `webkitSpeechRecognition`), composable [`useSpeechToText.js`](file:///c:/Users/chimi/Desktop/Programmazione/Registrov2/registro-frontend/src/composables/useSpeechToText.js).
+- **Componente**: [`SpeechToTextButton.vue`](file:///c:/Users/chimi/Desktop/Programmazione/Registrov2/registro-frontend/src/components/Common/SpeechToTextButton.vue) con animazione pulse di registrazione, indicatore visivo di stato, tooltip ed attivazione rapida via `Alt + D`.
+- **Casi d'uso**: Inserimento vocale mani-libere di note disciplinari, giudizi analitici nei PDP/PEI, relazioni per gli scrutini, verbali e giustificazioni per utenti con disabilità motorie agli arti superiori o disgrafia.
+
+### 3.7. Sincronizzazione Cloud delle Preferenze Accessibilità (Cross-Device)
+- **Database**: Tabella PostgreSQL `user_accessibility_preferences` (migrazione [`096_create_user_accessibility_preferences.sql`](file:///c:/Users/chimi/Desktop/Programmazione/Registrov2/registro-backend/migrations/096_create_user_accessibility_preferences.sql)).
+- **Endpoint REST**:
+  - `GET /api/v1/user/accessibility-settings` *(Recupera il layout A11y dell'utente autenticato)*
+  - `PUT /api/v1/user/accessibility-settings` *(Salva/aggiorna le preferenze A11y nel profilo cloud)*
+- **Funzionamento**: Quando uno studente DSA o docente ipovedente effettua il login da qualsiasi postazione (LIM, computer della scuola, tablet o PC di casa), le sue preferenze visive e di lettura si applicano automaticamente.
+
+### 3.8. Modalità "Focus / Lettura Pulita" per Alunni ADHD e DSA
+- **Scopo**: Attivazione con un clic (`FocusModeToggle.vue`) per eliminare il carico cognitivo (*cognitive overload*).
+- **Stile Visivo**: Applicazione della classe `.focus-mode-active` che nasconde i menu laterali ed i widget decorativi, centrando il testo della lezione o del circolare con larghezza massima di 920px e spaziatura rilassata (interlinea 1.85x).
+
+### 3.9. Sintesi Narrata e Tabelle Accessibili per i Grafici (WCAG 1.1.1)
+- **Componente**: [`AccessibleChartSummary.vue`](file:///c:/Users/chimi/Desktop/Programmazione/Registrov2/registro-frontend/src/components/Common/AccessibleChartSummary.vue).
+- **Descrizione**: Converte i grafici dell'andamento dei voti e delle presenze in una sintesi in linguaggio naturale (es: *"Media 7.4, 12 elementi analizzati, Voto Max 9..."*) ed una tabella HTML ad alto contrasto (`q-table`) navigabile da tastiera e lettori dello schermo.
+
+### 3.10. Annunciatore Dinamico per Screen Reader (`aria-live` Announcer)
+- **Composable & Componente**: [`useA11yAnnouncer.js`](file:///c:/Users/chimi/Desktop/Programmazione/Registrov2/registro-frontend/src/composables/useA11yAnnouncer.js) e [`ScreenReaderAnnouncer.vue`](file:///c:/Users/chimi/Desktop/Programmazione/Registrov2/registro-frontend/src/components/Common/ScreenReaderAnnouncer.vue).
+- **Funzionamento**: Gestisce regioni visivamente nascoste `aria-live="polite"` e `aria-live="assertive"` per annunciare vocalmente agli utenti non vedenti (NVDA/JAWS/VoiceOver) il salvataggio di voti, la registrazione delle presenze e le notifiche WebSocket in tempo reale.
+
+### 3.11. Skip Links Avanzati e Navigazione Tastiera (WCAG 2.4.1)
+- **Componente**: [`SkipLinks.vue`](file:///c:/Users/chimi/Desktop/Programmazione/Registrov2/registro-frontend/src/components/Common/SkipLinks.vue) integrato in top di [`MainLayout.vue`](file:///c:/Users/chimi/Desktop/Programmazione/Registrov2/registro-frontend/src/layouts/MainLayout.vue).
+- **Scorciatoie**: Compare al primo impulso del tasto `TAB` consentendo il salto immediato al contenuto principale (`#main-content`), al menu di navigazione (`#main-nav`) ed al pannello accessibilità (`#a11y-panel`).
+
+---
+
+## 3.12. Dichiarazione di Accessibilità AgID & Meccanismo di Feedback End-to-End
 - **Pagina Dedicata Frontend**: `/accessibility-statement` (e alias `/dichiarazione-accessibilita`).
 - **Sezioni Principali**:
   1. Stato di conformità (WCAG 2.2 AA / AAA).
@@ -116,6 +146,7 @@ go test ./internal/accessibility/...
 ```
 
 File di test:
-- Frontend: `registro-frontend/tests/unit/accessibility/accessibilitySuite.spec.js` (12 test unitari dedicati).
+- Frontend: `registro-frontend/tests/unit/accessibility/accessibilitySuite.spec.js` e `newA11yFeatures.spec.js`.
 - Backend: `registro-backend/internal/accessibility/service_test.go`.
+
 

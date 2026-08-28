@@ -297,8 +297,41 @@ Invia una segnalazione di accessibilità associando automaticamente l'ID utente 
 Recupera l'elenco delle segnalazioni pervenute (riservato agli amministratori e al Responsabile della Transizione Digitale - RTD).
 - Query params: `status` (`open`, `in_progress`, `resolved`), `school_id`, `limit`, `offset`.
 
+### `GET /api/v1/user/accessibility-settings`
+Recupera le preferenze di accessibilità salvate nel cloud per l'utente autenticato (font, contrasto, righello, spaziatura, focus mode, tts).
+
+### `PUT /api/v1/user/accessibility-settings`
+Salva o aggiorna le preferenze di accessibilità dell'utente nel database cloud.
+
+**Request body:**
+```json
+{
+  "settings": {
+    "currentTheme": "indigo",
+    "dsaFont": true,
+    "fontFamily": "opendyslexic",
+    "fontSize": "normal",
+    "highContrast": false,
+    "highContrastMode": "none",
+    "colorblindMode": "none",
+    "readingRuler": false,
+    "readingRulerHeight": 40,
+    "readingRulerOpacity": 0.35,
+    "lineHeight": "relaxed",
+    "letterSpacing": "normal",
+    "wordSpacing": "normal",
+    "ttsEnabled": true,
+    "ttsRate": 1.0,
+    "ttsPitch": 1.0,
+    "focusHighlight": true,
+    "isFocusMode": false
+  }
+}
+```
+
 ### `PATCH /api/v1/admin/accessibility-feedbacks/:id/status`
 Aggiorna lo stato di presa in carico o risoluzione della segnalazione con note di riscontro.
+
 
 ---
 
@@ -350,8 +383,19 @@ Attribuzione del credito scolastico da parte del Consiglio di Classe con motivaz
 
 ## WebSocket Notifiche
 
-### `GET /api/v1/ws`
-Connessione WebSocket in tempo reale per notifiche su voti, presenze, circolari e sostituzioni.
+### `POST /api/v1/auth/ws-ticket`
+Rilascia un ticket monouso opaco (`ticket`) valido 30 secondi per autenticare la successiva connessione WebSocket (richiede JWT Bearer token).
+
+**Response `200 OK`:**
+```json
+{
+  "ticket": "wst_abcdef123456..."
+}
+```
+
+### `GET /api/v1/ws?ticket=<ticket>`
+Connessione WebSocket in tempo reale per notifiche su voti, presenze, circolari e sostituzioni (autenticata dal parametro `ticket`).
+
 
 ---
 

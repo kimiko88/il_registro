@@ -4,9 +4,12 @@
 
 > ⚠️ **Stato del progetto: Beta funzionante** — Il progetto è attualmente in fase di sviluppo attivo. Le funzionalità principali sono operative e testabili tramite la demo online, ma **non è ancora consigliato per l'uso in produzione** in ambienti scolastici reali. API, struttura del database e configurazioni potrebbero subire modifiche prima del rilascio stabile.
 
+🇮🇹 **Versione Italiana** | 🇬🇧 **[English Version](./README_EN.md)**
+
 **Online Demo**: [https://registro-scuola.netlify.app](https://registro-scuola.netlify.app)
-**Demo accounts & passwords**: [example_accounts.md](./example_accounts.md)
+**Demo accounts & passwords**: [example_accounts.md](/example_accounts.md)
 _**Nota bene**_: alcune password, come quella per l'account superadmin, potrebbero essere state modificate per motivi di sicurezza.
+
 
 [![Discord Members](https://img.shields.io/discord/426912293134270465.svg?label=Discord&logo=discord)](https://discord.gg/Qh5XjQxwb)
 [![Backend CI](https://github.com/kimiko88/il_registro/actions/workflows/ci.yml/badge.svg)](https://github.com/kimiko88/il_registro/actions/workflows/ci.yml)
@@ -57,12 +60,6 @@ _**Nota bene**_: alcune password, come quella per l'account superadmin, potrebbe
 7. **`07_parent_portal_mobile.png` — Portale Genitori & PWA Mobile**
    - _Descrizione_: Vista responsive mobile del portale genitori con presa visione circolari, giustifica assenze e libretto voti.
 
-<a href="./docs/images/08_accessibility_opendyslexic.png"><img src="./docs/images/08_accessibility_opendyslexic.png" width="49.5%"/></a>
-
-8. **`08_accessibility_opendyslexic.png` — Accessibilità & Font DSA**
-
-- _Descrizione_: Dettaglio dell'interfaccia con font OpenDyslexic attivo e modalità ad alto contrasto.
-
 ---
 
 ## 🏛️ Perché il_registro?
@@ -90,7 +87,7 @@ L'obiettivo è fornire alla _res pubblica_ — scuole, comuni, Stato — uno str
 
 Il progetto nasce dall'esperienza diretta in aula e dalla necessità quotidiana di disporre di uno strumento di registro elettronico che fosse **aperto, moderno e realmente al servizio della scuola pubblica** — senza costi di licenza e senza cedere i dati degli studenti a soggetti privati.
 
-> _"Da docente, sto provando a costruire lo strumento che avrei voluto avere."_
+> _"Da docente, sto provando a costruire lo strumento pubblico e libero che vorrei avere in classe."_
 
 ## Panoramica
 
