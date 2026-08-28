@@ -351,7 +351,6 @@ func main() {
 			scrutinyH := scrutiny.NewHandler(scrutinySvc, pdfWorkerClient)
 			scrutinyH.RegisterRoutes(protected)
 
-
 			subjectsRepo := subjects.NewRepository(database)
 			subjectsSvc := subjects.NewService(subjectsRepo)
 			subjectsH := subjects.NewHandler(subjectsSvc)

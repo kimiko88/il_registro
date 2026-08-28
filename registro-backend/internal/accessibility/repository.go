@@ -15,7 +15,6 @@ type Repository interface {
 	UpsertUserPreferences(ctx context.Context, userID string, settingsJSON string) error
 }
 
-
 type postgresRepository struct {
 	db *sql.DB
 }
@@ -171,4 +170,3 @@ func joinClauses(clauses []string) string {
 	}
 	return res
 }
-

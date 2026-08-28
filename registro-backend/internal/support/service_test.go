@@ -175,4 +175,3 @@ func TestSupportHandler_Security(t *testing.T) {
 		mockUsers.AssertExpectations(t)
 	})
 }
-

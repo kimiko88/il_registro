@@ -230,4 +230,3 @@ func (h *Handler) DeletePeiGoal(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
-

@@ -53,7 +53,6 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	}
 }
 
-
 func parseSemester(semStr string) int {
 	if s, err := strconv.Atoi(semStr); err == nil && (s == 1 || s == 2) {
 		return s
@@ -462,4 +461,3 @@ func (h *Handler) GetPdfJobStatus(c *gin.Context) {
 
 	c.JSON(http.StatusOK, status)
 }
-

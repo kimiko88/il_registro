@@ -153,4 +153,3 @@ func GetOrGenerateKeys(privatePath, publicPath string) (*rsa.PrivateKey, *rsa.Pu
 
 	return priv, pub, nil
 }
-

@@ -197,4 +197,3 @@ func (h *Handler) GetPreference(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, pref)
 }
-

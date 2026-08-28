@@ -150,4 +150,3 @@ func TestRubricsHandler_ListByStudent_GuardianCheck(t *testing.T) {
 		mockUsers.AssertExpectations(t)
 	})
 }
-

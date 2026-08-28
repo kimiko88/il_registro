@@ -18,7 +18,6 @@ func main() {
 		log.Printf("Warning: error reading config file: %v", err)
 	}
 
-
 	redisAddr := fmt.Sprintf("%s:%s", cfg.Redis.Host, cfg.Redis.Port)
 	if cfg.Redis.Host == "" {
 		redisAddr = "localhost:6379"

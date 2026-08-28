@@ -42,7 +42,6 @@ func (m *mockRepository) UpsertUserPreferences(ctx context.Context, userID strin
 	return nil
 }
 
-
 func TestSubmitFeedbackValidation(t *testing.T) {
 	repo := &mockRepository{}
 	svc := accessibility.NewService(repo)

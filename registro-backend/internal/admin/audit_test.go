@@ -105,4 +105,3 @@ func TestCanAccessSchool_MultiTenancyIsolation(t *testing.T) {
 		assert.False(t, CanAccessSchool(c, "school-B"))
 	})
 }
-

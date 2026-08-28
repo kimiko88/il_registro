@@ -12,9 +12,9 @@ import (
 type ScrutinyPdfHandlerFunc func(ctx context.Context, payload ScrutinyPdfPayload) ([]byte, error)
 
 type Server struct {
-	asynqServer          *asynq.Server
-	client               *Client
-	scrutinyHandlerFunc  ScrutinyPdfHandlerFunc
+	asynqServer         *asynq.Server
+	client              *Client
+	scrutinyHandlerFunc ScrutinyPdfHandlerFunc
 }
 
 func NewServer(redisAddr string, concurrency int, client *Client, scrutinyHandler ScrutinyPdfHandlerFunc) *Server {

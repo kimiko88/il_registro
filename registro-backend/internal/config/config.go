@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-
 type Config struct {
 	Server    ServerConfig
 	Database  DatabaseConfig
@@ -25,7 +24,6 @@ type RedisConfig struct {
 	Host string
 	Port string
 }
-
 
 type ElearningConfig struct {
 	GoogleClientID        string

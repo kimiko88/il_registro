@@ -159,4 +159,3 @@ func (h *Handler) SaveMyPreferences(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Preferenze di accessibilità salvate con successo"})
 }
-

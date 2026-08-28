@@ -42,4 +42,3 @@ type UserAccessibilityPreferences struct {
 type SavePreferencesRequest struct {
 	Settings map[string]interface{} `json:"settings" binding:"required"`
 }
-

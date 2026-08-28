@@ -110,4 +110,3 @@ func (s *service) SaveUserPreferences(ctx context.Context, userID string, settin
 	}
 	return s.repo.UpsertUserPreferences(ctx, userID, string(bytes))
 }
-

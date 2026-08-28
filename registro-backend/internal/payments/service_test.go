@@ -95,4 +95,3 @@ func TestPaymentsService_Pay(t *testing.T) {
 		assert.ErrorIs(t, err, ErrUnauthorized)
 	})
 }
-
