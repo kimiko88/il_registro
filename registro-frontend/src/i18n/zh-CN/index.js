@@ -2177,5 +2177,12 @@ export default {
       "selectStudent": "Select Child / Student",
       "notes": "Notes for Teacher"
     }
+  },
+  "a11y": {
+    "sttListening": "正在聆听... 请说话",
+    "sttTooltip": "语音听写 (Alt+D)",
+    "focusModeTitle": "专注模式 (ADHD/DSA)",
+    "asyncPdfQueue": "后台 PDF 生成"
   }
 }
+

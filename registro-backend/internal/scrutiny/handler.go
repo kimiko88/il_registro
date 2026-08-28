@@ -2,22 +2,29 @@ package scrutiny
 
 import (
 	"errors"
+
 	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 
+	"registro-backend/internal/pdfworker"
 	pkgLogger "registro-backend/pkg/logger"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type Handler struct {
-	service *Service
+	service         *Service
+	pdfWorkerClient *pdfworker.Client
 }
 
-func NewHandler(service *Service) *Handler {
-	return &Handler{service: service}
+func NewHandler(service *Service, pdfWorkerClient *pdfworker.Client) *Handler {
+	return &Handler{
+		service:         service,
+		pdfWorkerClient: pdfWorkerClient,
+	}
 }
 
 func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
@@ -34,6 +41,10 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 		scrutiny.POST("/class/:classId/close", h.Close)
 		scrutiny.GET("/export/:studentId/pdf", h.ExportPagellaPDF)
 
+		// Async Worker Queue PDF Routes
+		scrutiny.POST("/class/:classId/async-pdf", h.EnqueueAsyncScrutinyPdf)
+		scrutiny.GET("/pdf-jobs/:job_id", h.GetPdfJobStatus)
+
 		// Deficiencies & Deferred Scrutiny Routes
 		scrutiny.POST("/deficiencies", h.SaveDeficiency)
 		scrutiny.GET("/deficiencies/student/:studentId", h.GetStudentDeficiencies)
@@ -41,6 +52,7 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 		scrutiny.POST("/deferred", h.SaveDeferredScrutiny)
 	}
 }
+
 
 func parseSemester(semStr string) int {
 	if s, err := strconv.Atoi(semStr); err == nil && (s == 1 || s == 2) {
@@ -402,3 +414,52 @@ func (h *Handler) SaveDeferredScrutiny(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "deferred scrutiny saved successfully"})
 }
+
+func (h *Handler) EnqueueAsyncScrutinyPdf(c *gin.Context) {
+	classID := c.Param("classId")
+	semester := c.DefaultQuery("semester", "1")
+	actorID := c.GetString("user_id")
+
+	if h.pdfWorkerClient == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "async pdf worker queue not configured"})
+		return
+	}
+
+	jobID := uuid.New().String()
+	payload := pdfworker.ScrutinyPdfPayload{
+		JobID:       jobID,
+		ClassID:     classID,
+		Period:      semester,
+		RequestedBy: actorID,
+	}
+
+	jobStatus, err := h.pdfWorkerClient.EnqueueScrutinyPdf(c.Request.Context(), payload)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to enqueue async pdf job: %v", err)})
+		return
+	}
+
+	c.JSON(http.StatusAccepted, gin.H{
+		"message":    "PDF generation job enqueued successfully",
+		"job_id":     jobStatus.JobID,
+		"status":     jobStatus.Status,
+		"status_url": fmt.Sprintf("/api/v1/scrutiny/pdf-jobs/%s", jobStatus.JobID),
+	})
+}
+
+func (h *Handler) GetPdfJobStatus(c *gin.Context) {
+	jobID := c.Param("job_id")
+	if h.pdfWorkerClient == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "async pdf worker queue not configured"})
+		return
+	}
+
+	status, err := h.pdfWorkerClient.GetJobStatus(c.Request.Context(), jobID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "job not found or expired"})
+		return
+	}
+
+	c.JSON(http.StatusOK, status)
+}
+

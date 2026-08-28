@@ -2152,5 +2152,12 @@ export default {
       "selectStudent": "Select Child / Student",
       "notes": "Notes for Teacher"
     }
+  },
+  "a11y": {
+    "sttListening": "Слухаю... говоріть зараз",
+    "sttTooltip": "Голосовий диктант (Alt+D)",
+    "focusModeTitle": "Режим Фокусу (ADHD/DSA)",
+    "asyncPdfQueue": "Генерація PDF у фоновому режимі"
   }
 }
+

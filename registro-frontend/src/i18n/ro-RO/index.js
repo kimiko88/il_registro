@@ -2152,5 +2152,12 @@ export default {
       "selectStudent": "Select Child / Student",
       "notes": "Notes for Teacher"
     }
+  },
+  "a11y": {
+    "sttListening": "Ascultare în curs... vorbiți acum",
+    "sttTooltip": "Dictare vocală (Alt+D)",
+    "focusModeTitle": "Mod Focus (ADHD/DSA)",
+    "asyncPdfQueue": "Generare PDF în fundal"
   }
 }
+

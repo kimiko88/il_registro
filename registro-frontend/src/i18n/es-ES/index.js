@@ -2152,5 +2152,12 @@ export default {
       "selectStudent": "Seleccionar Hijo / Estudiante",
       "notes": "Notas para el Docente"
     }
+  },
+  "a11y": {
+    "sttListening": "Escuchando... hable ahora",
+    "sttTooltip": "Dictado por voz (Alt+D)",
+    "focusModeTitle": "Modo Enfoque (ADHD/DSA)",
+    "asyncPdfQueue": "Generación de PDF en segundo plano"
   }
 }
+

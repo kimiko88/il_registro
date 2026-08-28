@@ -2164,6 +2164,11 @@ export default {
     "highContrastLabel": "High Contrast",
     "colorblindLabel": "Color Blindness Filters",
     "textSpacingLabel": "Text Spacing (WCAG 1.4.12)",
-    "feedbackSent": "Accessibility feedback sent successfully"
+    "feedbackSent": "Accessibility feedback sent successfully",
+    "sttListening": "Listening... speak now",
+    "sttTooltip": "Voice Dictation (Alt+D)",
+    "focusModeTitle": "Focus Mode (ADHD/DSA)",
+    "asyncPdfQueue": "Background PDF Generation"
   }
 }
+

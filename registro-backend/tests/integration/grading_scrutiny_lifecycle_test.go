@@ -26,7 +26,7 @@ func TestIntegration_Grading_Scrutiny_Lifecycle(t *testing.T) {
 
 	mockClassesRepo := &mockClassesRepoForScrutiny{}
 	scrutinySvc := scrutiny.NewService(mockScrutinyRepo, mockGradesRepo, mockClassesRepo, mockUserRepo, mockAbsenceRepo)
-	scrutinyHandler := scrutiny.NewHandler(scrutinySvc)
+	scrutinyHandler := scrutiny.NewHandler(scrutinySvc, nil)
 
 	r := gin.New()
 	r.GET("/grades/classes/:classID", func(c *gin.Context) {

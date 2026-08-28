@@ -2152,5 +2152,12 @@ export default {
       "selectStudent": "Kind / Schüler auswählen",
       "notes": "Notizen für die Lehrkraft"
     }
+  },
+  "a11y": {
+    "sttListening": "Zuhören... sprechen Sie jetzt",
+    "sttTooltip": "Spracheingabe (Alt+D)",
+    "focusModeTitle": "Fokus-Modus (ADHD/DSA)",
+    "asyncPdfQueue": "Hintergrund-PDF-Generierung"
   }
 }
+

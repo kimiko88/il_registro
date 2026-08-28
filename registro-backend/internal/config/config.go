@@ -12,6 +12,7 @@ import (
 type Config struct {
 	Server    ServerConfig
 	Database  DatabaseConfig
+	Redis     RedisConfig
 	JWT       JWTConfig
 	Supabase  SupabaseConfig
 	SPID      SPIDConfig
@@ -19,6 +20,12 @@ type Config struct {
 	Mail      MailConfig
 	Elearning ElearningConfig
 }
+
+type RedisConfig struct {
+	Host string
+	Port string
+}
+
 
 type ElearningConfig struct {
 	GoogleClientID        string
@@ -92,6 +99,8 @@ func LoadConfig() (*Config, error) {
 	viper.SetDefault("SERVER_PORT", "8080")
 	viper.SetDefault("SERVER_MODE", "release")
 	viper.SetDefault("DB_SSLMODE", "require")
+	viper.SetDefault("REDIS_HOST", "localhost")
+	viper.SetDefault("REDIS_PORT", "6379")
 	viper.SetDefault("SUPABASE_STORAGE_BUCKET", "documents")
 
 	config := &Config{
@@ -107,6 +116,11 @@ func LoadConfig() (*Config, error) {
 			Name:     viper.GetString("DB_NAME"),
 			SSLMode:  viper.GetString("DB_SSLMODE"),
 		},
+		Redis: RedisConfig{
+			Host: viper.GetString("REDIS_HOST"),
+			Port: viper.GetString("REDIS_PORT"),
+		},
+
 		JWT: JWTConfig{
 			Secret: viper.GetString("JWT_SECRET"),
 		},

@@ -110,7 +110,7 @@ func TestHandler_GetStudentDeficiencies_Unauthorized(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 	svc := NewService(nil, nil, nil, nil, nil)
-	h := NewHandler(svc)
+	h := NewHandler(svc, nil)
 
 	r.GET("/api/v1/scrutiny/deficiencies/student/:studentId", h.GetStudentDeficiencies)
 
@@ -125,7 +125,7 @@ func TestHandler_SaveDeficiency_MissingParams(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 	svc := NewService(nil, nil, nil, nil, nil)
-	h := NewHandler(svc)
+	h := NewHandler(svc, nil)
 
 	r.POST("/api/v1/scrutiny/deficiencies", func(c *gin.Context) {
 		c.Set("user_id", "teacher-1")
@@ -147,7 +147,7 @@ func TestHandler_SaveDeficiency_ForbiddenForStudent(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 	svc := NewService(nil, nil, nil, nil, nil)
-	h := NewHandler(svc)
+	h := NewHandler(svc, nil)
 
 	r.POST("/api/v1/scrutiny/deficiencies", func(c *gin.Context) {
 		c.Set("user_id", "stud-1")
@@ -168,7 +168,7 @@ func TestHandler_GetStudentDeficiencies_ForbiddenForOtherStudent(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 	svc := NewService(nil, nil, nil, nil, nil)
-	h := NewHandler(svc)
+	h := NewHandler(svc, nil)
 
 	r.GET("/api/v1/scrutiny/deficiencies/student/:studentId", func(c *gin.Context) {
 		c.Set("user_id", "stud-1")

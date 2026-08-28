@@ -2297,5 +2297,12 @@ export default {
       "selectStudent": "Select Child / Student",
       "notes": "Notes for Teacher"
     }
+  },
+  "a11y": {
+    "sttListening": "Duke dëgjuar... flisni tani",
+    "sttTooltip": "Diktat me zë (Alt+D)",
+    "focusModeTitle": "Modali i Fokusit (ADHD/DSA)",
+    "asyncPdfQueue": "Gjenerimi i PDF në prapavijë"
   }
 }
+

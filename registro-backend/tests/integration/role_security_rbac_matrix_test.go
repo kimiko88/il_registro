@@ -307,7 +307,7 @@ func TestRoleSecurityRBACMatrix(t *testing.T) {
 				mScrutiny.On("GetOverview", mock.Anything, schoolID).Return(map[string]interface{}{"status": "ok"}, nil).Maybe()
 
 				scrutinySvc := scrutiny.NewService(mScrutiny, mGrade, mClass, mUser, mAtt)
-				scrutinyH := scrutiny.NewHandler(scrutinySvc)
+				scrutinyH := scrutiny.NewHandler(scrutinySvc, nil)
 
 				r := gin.New()
 				g := r.Group("/api/v1")

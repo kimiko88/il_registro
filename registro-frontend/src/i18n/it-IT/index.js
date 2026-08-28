@@ -2164,6 +2164,11 @@ export default {
     "highContrastLabel": "Contrasto Elevato",
     "colorblindLabel": "Filtri Daltonismo",
     "textSpacingLabel": "Spaziatura Testo (WCAG 1.4.12)",
-    "feedbackSent": "Segnalazione di accessibilità inviata con successo"
+    "feedbackSent": "Segnalazione di accessibilità inviata con successo",
+    "sttListening": "Ascolto in corso... parla ora",
+    "sttTooltip": "Dettatura Vocale (Alt+D)",
+    "focusModeTitle": "Modalità Focus (ADHD/DSA)",
+    "asyncPdfQueue": "Generazione PDF in background"
   }
 }
+

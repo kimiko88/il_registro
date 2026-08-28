@@ -2297,5 +2297,12 @@ export default {
       "selectStudent": "Select Child / Student",
       "notes": "Notes for Teacher"
     }
+  },
+  "a11y": {
+    "sttListening": "جاري الاستماع... تحدث الآن",
+    "sttTooltip": "الإملاء الصوتي (Alt+D)",
+    "focusModeTitle": "وضع التركيز (ADHD/DSA)",
+    "asyncPdfQueue": "إنشاء PDF في الخلفية"
   }
 }
+

@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
+
 	"net/http"
 	"os"
 	"os/signal"
@@ -42,7 +44,9 @@ import (
 	"registro-backend/internal/parents"
 	"registro-backend/internal/payments"
 	"registro-backend/internal/pcto"
+	"registro-backend/internal/pdfworker"
 	"registro-backend/internal/pdp"
+
 	"registro-backend/internal/postgres"
 	"registro-backend/internal/recovery"
 	"registro-backend/internal/reports"
@@ -338,10 +342,15 @@ func main() {
 			textbooksH := textbooks.NewHandler(textbooksSvc)
 			textbooksH.RegisterRoutes(protected)
 
+			redisAddr := fmt.Sprintf("%s:%s", cfg.Redis.Host, cfg.Redis.Port)
+			pdfWorkerClient := pdfworker.NewClient(redisAddr)
+			defer pdfWorkerClient.Close()
+
 			scrutinyRepo := scrutiny.NewRepository(database)
 			scrutinySvc := scrutiny.NewService(scrutinyRepo, gradesRepo, classesRepo, usersRepo, attendanceRepo)
-			scrutinyH := scrutiny.NewHandler(scrutinySvc)
+			scrutinyH := scrutiny.NewHandler(scrutinySvc, pdfWorkerClient)
 			scrutinyH.RegisterRoutes(protected)
+
 
 			subjectsRepo := subjects.NewRepository(database)
 			subjectsSvc := subjects.NewService(subjectsRepo)

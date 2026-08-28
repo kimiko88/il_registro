@@ -299,7 +299,7 @@ func TestFullSchoolYearLifecycle(t *testing.T) {
 		mScrutiny.On("GetOverview", mock.Anything, schoolID).Return(map[string]interface{}{"status": "ok"}, nil)
 
 		scrutinySvc := scrutiny.NewService(mScrutiny, mGrade, mClass, mUser, mAtt)
-		scrutinyH := scrutiny.NewHandler(scrutinySvc)
+		scrutinyH := scrutiny.NewHandler(scrutinySvc, nil)
 
 		rScrutiny := gin.New()
 		gScrutiny := rScrutiny.Group("/api/v1")
@@ -329,7 +329,7 @@ func TestFullSchoolYearLifecycle(t *testing.T) {
 		mScrutiny.On("ExportAll", mock.Anything, schoolID).Return([]byte("pdf-data"), nil)
 
 		scrutinySvc := scrutiny.NewService(mScrutiny, mGrade, mClass, mUser, mAtt)
-		scrutinyH := scrutiny.NewHandler(scrutinySvc)
+		scrutinyH := scrutiny.NewHandler(scrutinySvc, nil)
 
 		rFinal := gin.New()
 		gFinal := rFinal.Group("/api/v1")
