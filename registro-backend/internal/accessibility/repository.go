@@ -11,7 +11,10 @@ type Repository interface {
 	List(ctx context.Context, schoolID, status string, limit, offset int) ([]AccessibilityFeedback, int, error)
 	GetByID(ctx context.Context, id string) (*AccessibilityFeedback, error)
 	UpdateStatus(ctx context.Context, id, status, responseNotes string) error
+	GetUserPreferences(ctx context.Context, userID string) (string, error)
+	UpsertUserPreferences(ctx context.Context, userID string, settingsJSON string) error
 }
+
 
 type postgresRepository struct {
 	db *sql.DB
@@ -134,6 +137,30 @@ func (r *postgresRepository) UpdateStatus(ctx context.Context, id, status, respo
 	return err
 }
 
+func (r *postgresRepository) GetUserPreferences(ctx context.Context, userID string) (string, error) {
+	query := `SELECT settings::text FROM user_accessibility_preferences WHERE user_id = $1`
+	var settings string
+	err := r.db.QueryRowContext(ctx, query, userID).Scan(&settings)
+	if err == sql.ErrNoRows {
+		return "{}", nil
+	}
+	if err != nil {
+		return "", err
+	}
+	return settings, nil
+}
+
+func (r *postgresRepository) UpsertUserPreferences(ctx context.Context, userID string, settingsJSON string) error {
+	query := `
+		INSERT INTO user_accessibility_preferences (user_id, settings, updated_at)
+		VALUES ($1, $2::jsonb, NOW())
+		ON CONFLICT (user_id)
+		DO UPDATE SET settings = EXCLUDED.settings, updated_at = NOW()
+	`
+	_, err := r.db.ExecContext(ctx, query, userID, settingsJSON)
+	return err
+}
+
 func joinClauses(clauses []string) string {
 	res := ""
 	for i, c := range clauses {
@@ -144,3 +171,4 @@ func joinClauses(clauses []string) string {
 	}
 	return res
 }
+

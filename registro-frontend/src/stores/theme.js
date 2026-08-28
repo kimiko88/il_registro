@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia'
 import { setCssVar } from 'quasar'
+import api from '@/services/api'
+
 
 export const THEMES = [
     {
@@ -116,9 +118,11 @@ export const useThemeStore = defineStore('theme', {
         colorblindMode: localStorage.getItem('il_registro_colorblind_mode') || 'none', // 'none' | 'protanopia' | 'deuteranopia' | 'tritanopia' | 'monochrome'
         highContrastMode: localStorage.getItem('il_registro_contrast_mode') || 'none', // 'none' | 'high_contrast' | 'oled_amber' | 'oled_green' | 'inverted'
         focusHighlight: localStorage.getItem('il_registro_focus_highlight') !== 'false', // default true
-        
+        isFocusMode: localStorage.getItem('il_registro_focus_mode') === 'true',
+
         keyboardShortcutsHelpOpen: false
     }),
+
     getters: {
         activeThemeObj: (state) => {
             return THEMES.find(t => t.id === state.currentTheme) || THEMES[0]
@@ -241,13 +245,67 @@ export const useThemeStore = defineStore('theme', {
             this.ttsPitch = pitch || 1.0
             localStorage.setItem('il_registro_tts_pitch', this.ttsPitch)
         },
-        toggleFocusHighlight(enabled) {
-            this.focusHighlight = enabled !== undefined ? enabled : !this.focusHighlight
-            localStorage.setItem('il_registro_focus_highlight', this.focusHighlight)
+        toggleFocusMode(enabled) {
+            this.isFocusMode = enabled !== undefined ? enabled : !this.isFocusMode
+            localStorage.setItem('il_registro_focus_mode', this.isFocusMode)
             this.applyAccessibility()
+            this.syncWithCloud()
         },
         toggleKeyboardShortcutsHelp(open) {
             this.keyboardShortcutsHelpOpen = open !== undefined ? open : !this.keyboardShortcutsHelpOpen
+        },
+        async syncWithCloud() {
+            try {
+                const settingsPayload = {
+                    currentTheme: this.currentTheme,
+                    dsaFont: this.dsaFont,
+                    fontFamily: this.fontFamily,
+                    fontSize: this.fontSize,
+                    highContrast: this.highContrast,
+                    highContrastMode: this.highContrastMode,
+                    colorblindMode: this.colorblindMode,
+                    readingRuler: this.readingRuler,
+                    readingRulerHeight: this.readingRulerHeight,
+                    readingRulerOpacity: this.readingRulerOpacity,
+                    lineHeight: this.lineHeight,
+                    letterSpacing: this.letterSpacing,
+                    wordSpacing: this.wordSpacing,
+                    ttsEnabled: this.ttsEnabled,
+                    ttsRate: this.ttsRate,
+                    ttsPitch: this.ttsPitch,
+                    focusHighlight: this.focusHighlight,
+                    isFocusMode: this.isFocusMode
+                }
+                await api.put('/user/accessibility-settings', { settings: settingsPayload })
+            } catch (e) {
+                // Ignore sync errors if unauthenticated or offline
+            }
+        },
+        async loadFromCloud() {
+            try {
+                const res = await api.get('/user/accessibility-settings')
+                if (res.data && typeof res.data === 'object' && Object.keys(res.data).length > 0) {
+                    const s = res.data
+                    if (s.currentTheme) this.setTheme(s.currentTheme)
+                    if (s.fontFamily) this.setFontFamily(s.fontFamily)
+                    if (s.fontSize) this.setFontSize(s.fontSize)
+                    if (s.highContrastMode !== undefined) this.setHighContrastMode(s.highContrastMode)
+                    if (s.colorblindMode !== undefined) this.setColorblindMode(s.colorblindMode)
+                    if (s.readingRuler !== undefined) this.toggleReadingRuler(s.readingRuler)
+                    if (s.readingRulerHeight) this.setReadingRulerHeight(s.readingRulerHeight)
+                    if (s.readingRulerOpacity) this.setReadingRulerOpacity(s.readingRulerOpacity)
+                    if (s.lineHeight) this.setLineHeight(s.lineHeight)
+                    if (s.letterSpacing) this.setLetterSpacing(s.letterSpacing)
+                    if (s.wordSpacing) this.setWordSpacing(s.wordSpacing)
+                    if (s.ttsEnabled !== undefined) this.toggleTts(s.ttsEnabled)
+                    if (s.ttsRate) this.setTtsRate(s.ttsRate)
+                    if (s.ttsPitch) this.setTtsPitch(s.ttsPitch)
+                    if (s.focusHighlight !== undefined) this.toggleFocusHighlight(s.focusHighlight)
+                    if (s.isFocusMode !== undefined) this.toggleFocusMode(s.isFocusMode)
+                }
+            } catch (e) {
+                // Fallback to local settings
+            }
         },
         resetAccessibility() {
             this.dsaFont = false
@@ -262,6 +320,7 @@ export const useThemeStore = defineStore('theme', {
             this.wordSpacing = 'normal'
             this.ttsEnabled = false
             this.focusHighlight = true
+            this.isFocusMode = false
 
             localStorage.removeItem('il_registro_dsa_font')
             localStorage.removeItem('il_registro_font_family')
@@ -275,8 +334,10 @@ export const useThemeStore = defineStore('theme', {
             localStorage.removeItem('il_registro_word_spacing')
             localStorage.removeItem('il_registro_tts_enabled')
             localStorage.removeItem('il_registro_focus_highlight')
+            localStorage.removeItem('il_registro_focus_mode')
 
             this.applyAccessibility()
+            this.syncWithCloud()
         },
         applyAccessibility() {
             if (typeof document !== 'undefined') {
@@ -327,8 +388,9 @@ export const useThemeStore = defineStore('theme', {
                 if (this.highContrastMode === 'oled_green') body.classList.add('contrast-oled-green')
                 if (this.highContrastMode === 'inverted') body.classList.add('contrast-inverted')
 
-                // Focus Highlight
+                // Focus Highlight & Focus Mode
                 body.classList.toggle('focus-visible-high', this.focusHighlight)
+                body.classList.toggle('focus-mode-active', this.isFocusMode)
             }
         },
         initTheme() {
@@ -336,3 +398,4 @@ export const useThemeStore = defineStore('theme', {
         }
     }
 })
+

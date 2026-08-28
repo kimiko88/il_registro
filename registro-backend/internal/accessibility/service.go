@@ -3,6 +3,7 @@ package accessibility
 import (
 	"context"
 	"crypto/rand"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math/big"
@@ -15,6 +16,8 @@ type Service interface {
 	SubmitFeedback(ctx context.Context, req *CreateFeedbackRequest, userID, schoolID, userAgent, ipAddress *string) (*FeedbackResponse, error)
 	ListFeedbacks(ctx context.Context, schoolID, status string, limit, offset int) ([]AccessibilityFeedback, int, error)
 	UpdateFeedbackStatus(ctx context.Context, id, status, responseNotes string) error
+	GetUserPreferences(ctx context.Context, userID string) (string, error)
+	SaveUserPreferences(ctx context.Context, userID string, settings map[string]interface{}) error
 }
 
 type service struct {
@@ -86,3 +89,25 @@ func (s *service) UpdateFeedbackStatus(ctx context.Context, id, status, response
 	}
 	return s.repo.UpdateStatus(ctx, id, status, responseNotes)
 }
+
+func (s *service) GetUserPreferences(ctx context.Context, userID string) (string, error) {
+	if strings.TrimSpace(userID) == "" {
+		return "", errors.New("user_id obbligatorio")
+	}
+	return s.repo.GetUserPreferences(ctx, userID)
+}
+
+func (s *service) SaveUserPreferences(ctx context.Context, userID string, settings map[string]interface{}) error {
+	if strings.TrimSpace(userID) == "" {
+		return errors.New("user_id obbligatorio")
+	}
+	if settings == nil {
+		settings = make(map[string]interface{})
+	}
+	bytes, err := json.Marshal(settings)
+	if err != nil {
+		return fmt.Errorf("impossibile serializzare le impostazioni: %w", err)
+	}
+	return s.repo.UpsertUserPreferences(ctx, userID, string(bytes))
+}
+

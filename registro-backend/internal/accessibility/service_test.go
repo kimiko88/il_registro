@@ -34,6 +34,15 @@ func (m *mockRepository) UpdateStatus(ctx context.Context, id, status, responseN
 	return nil
 }
 
+func (m *mockRepository) GetUserPreferences(ctx context.Context, userID string) (string, error) {
+	return `{"dsaFont":true}`, nil
+}
+
+func (m *mockRepository) UpsertUserPreferences(ctx context.Context, userID string, settingsJSON string) error {
+	return nil
+}
+
+
 func TestSubmitFeedbackValidation(t *testing.T) {
 	repo := &mockRepository{}
 	svc := accessibility.NewService(repo)

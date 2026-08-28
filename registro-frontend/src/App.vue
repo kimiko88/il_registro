@@ -272,4 +272,20 @@ body.contrast-inverted {
   font-size: 0.8em;
   margin-right: 2px;
 }
+
+/* Focus Mode (ADHD & DSA Clean Reading Layout) */
+body.focus-mode-active .q-drawer {
+  display: none !important;
+}
+body.focus-mode-active .q-page-container {
+  padding-left: 0 !important;
+  max-width: 920px !important;
+  margin: 0 auto !important;
+  line-height: 1.85 !important;
+}
+body.focus-mode-active .q-page {
+  padding: 24px !important;
+  font-size: 1.1rem !important;
+}
 </style>
+

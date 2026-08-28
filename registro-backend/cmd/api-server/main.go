@@ -261,6 +261,10 @@ func main() {
 			protected.POST("/accessibility/feedback", a11yH.SubmitPublic)
 			protected.GET("/admin/accessibility-feedbacks", adminMiddleware.RequireAdminOrSuperAdmin(), a11yH.List)
 			protected.PATCH("/admin/accessibility-feedbacks/:id/status", adminMiddleware.RequireAdminOrSuperAdmin(), a11yH.UpdateStatus)
+
+			protected.GET("/user/accessibility-settings", a11yH.GetMyPreferences)
+			protected.PUT("/user/accessibility-settings", a11yH.SaveMyPreferences)
+
 			usersGroup := protected.Group("/users")
 			{
 				usersGroup.GET("/me/children", usersH.GetMyChildren)

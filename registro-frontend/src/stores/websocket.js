@@ -7,6 +7,7 @@ import { useCommunicationsStore } from './communications'
 import { useScrutinyStore } from './scrutiny'
 import { Notify } from 'quasar'
 import { i18n } from '@/i18n'
+import { getBaseURL } from '@/services/api'
 
 const escapeHtml = (str) => {
     if (!str) return ''
@@ -78,8 +79,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
         }
 
         // 1. Acquire single-use WS ticket via REST API (Bearer token in Authorization header)
-        const rawUrl = import.meta.env.VITE_API_URL
-        let baseUrl = rawUrl ? rawUrl.replace(/\/+$/, '') : `${window.location.protocol}//${window.location.host}/api/v1`
+        const baseUrl = getBaseURL()
 
         let ticket = null
         try {

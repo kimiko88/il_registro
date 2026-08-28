@@ -1,11 +1,10 @@
 <template>
   <q-layout view="hHh Lpr lFf">
-    <!-- Skip to main content link for Accessibility (a11y) -->
-    <a href="#main-content" class="sr-only focus:not-sr-only q-pa-sm bg-primary text-white text-weight-bold shadow-2" style="position: absolute; top: 4px; left: 4px; z-index: 9999; border-radius: 8px;">
-      {{ t('layout.skipToContent') }}
-    </a>
+    <SkipLinks />
+    <ScreenReaderAnnouncer />
 
     <q-header class="glass-effect text-slate-900 q-py-xs" :class="$q.dark.isActive ? 'bg-dark' : 'bg-white'" role="banner">
+
       <q-toolbar role="navigation" :aria-label="t('layout.mainNav')">
         <q-btn
           flat
@@ -105,7 +104,11 @@
           </q-list>
         </q-btn-dropdown>
 
+        <!-- Focus Mode (ADHD / DSA Clean Reading) -->
+        <FocusModeToggle class="q-mr-sm" />
+
         <!-- Accessibility Quick Toggle Menu -->
+
         <q-btn-dropdown
           flat
           round
@@ -549,9 +552,13 @@ import HelpCenterPanel from '@/components/Common/HelpCenterPanel.vue'
 import SessionReauthDialog from '@/components/Common/SessionReauthDialog.vue'
 import ReadingRuler from '@/components/Common/ReadingRuler.vue'
 import KeyboardShortcutsDialog from '@/components/Common/KeyboardShortcutsDialog.vue'
+import SkipLinks from '@/components/Common/SkipLinks.vue'
+import ScreenReaderAnnouncer from '@/components/Common/ScreenReaderAnnouncer.vue'
+import FocusModeToggle from '@/components/Common/FocusModeToggle.vue'
 import { useSessionReauth } from '@/composables/useSessionReauth'
 import { useGlobalKeyboardShortcuts } from '@/composables/useGlobalKeyboardShortcuts'
 import { setReauthHandler } from '@/services/api'
+
 
 useGlobalKeyboardShortcuts()
 
@@ -848,7 +855,12 @@ async function handleLogout() {
     loggingOut.value = false
   }
 }
+
+onMounted(() => {
+  themeStore.loadFromCloud()
+})
 </script>
+
 
 <style scoped>
 .sr-only {

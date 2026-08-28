@@ -32,3 +32,14 @@ type FeedbackResponse struct {
 	ProtocolNumber string `json:"protocol_number"`
 	Message        string `json:"message"`
 }
+
+type UserAccessibilityPreferences struct {
+	UserID    string    `json:"user_id"`
+	Settings  string    `json:"settings"` // Raw JSON or JSON string
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+type SavePreferencesRequest struct {
+	Settings map[string]interface{} `json:"settings" binding:"required"`
+}
+

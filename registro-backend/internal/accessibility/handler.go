@@ -110,3 +110,53 @@ func (h *Handler) UpdateStatus(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Stato segnalazione aggiornato con successo"})
 }
+
+// GetMyPreferences recupera le impostazioni di accessibilità dell'utente autenticato
+func (h *Handler) GetMyPreferences(c *gin.Context) {
+	userIDVal, exists := c.Get("user_id")
+	if !exists || userIDVal == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Utente non autenticato"})
+		return
+	}
+	userID, ok := userIDVal.(string)
+	if !ok || userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "ID utente non valido"})
+		return
+	}
+
+	settingsJSON, err := h.svc.GetUserPreferences(c.Request.Context(), userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Impossibile recuperare le preferenze: " + err.Error()})
+		return
+	}
+
+	c.Data(http.StatusOK, "application/json; charset=utf-8", []byte(settingsJSON))
+}
+
+// SaveMyPreferences salva o aggiorna le impostazioni di accessibilità dell'utente autenticato
+func (h *Handler) SaveMyPreferences(c *gin.Context) {
+	userIDVal, exists := c.Get("user_id")
+	if !exists || userIDVal == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Utente non autenticato"})
+		return
+	}
+	userID, ok := userIDVal.(string)
+	if !ok || userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "ID utente non valido"})
+		return
+	}
+
+	var req SavePreferencesRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Formato preferenze non valido: " + err.Error()})
+		return
+	}
+
+	if err := h.svc.SaveUserPreferences(c.Request.Context(), userID, req.Settings); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Impossibile salvare le preferenze: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Preferenze di accessibilità salvate con successo"})
+}
+
