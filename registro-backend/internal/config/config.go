@@ -2,10 +2,12 @@ package config
 
 import (
 	"log"
+	"os"
 	"strings"
 
 	"github.com/spf13/viper"
 )
+
 
 type Config struct {
 	Server    ServerConfig
@@ -78,9 +80,13 @@ func LoadConfig() (*Config, error) {
 	viper.SetConfigFile(".env")
 	viper.AutomaticEnv()
 
-	// If .env file exists, read it, otherwise ignore error (for docker env vars)
+	// If .env file exists, read it, otherwise ignore error (for docker/render env vars)
 	if err := viper.ReadInConfig(); err != nil {
-		log.Printf("Warning: error reading config file: %s", err)
+		if !os.IsNotExist(err) {
+			if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+				log.Printf("Warning: error reading config file: %v", err)
+			}
+		}
 	}
 
 	viper.SetDefault("SERVER_PORT", "8080")
