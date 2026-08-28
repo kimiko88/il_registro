@@ -14,6 +14,7 @@ type Service interface {
 	ListCertificates(ctx context.Context, schoolID, studentID string, certType CertificateType, year string) ([]Certificate, error)
 	DeleteCertificate(ctx context.Context, id, actorID, actorRole string) error
 	GeneratePDFBytes(ctx context.Context, id string) ([]byte, error)
+	GetUserRepo() users.Repository
 }
 
 type service struct {
@@ -26,6 +27,10 @@ func NewService(repo Repository, userRepo users.Repository) Service {
 		repo:     repo,
 		userRepo: userRepo,
 	}
+}
+
+func (s *service) GetUserRepo() users.Repository {
+	return s.userRepo
 }
 
 func (s *service) GenerateCertificate(ctx context.Context, actorID, schoolID string, req GenerateCertificateRequest) (*Certificate, []byte, error) {

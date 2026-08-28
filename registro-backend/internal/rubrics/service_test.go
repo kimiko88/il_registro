@@ -2,8 +2,13 @@ package rubrics
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
+	"registro-backend/internal/users"
+
+	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -113,3 +118,36 @@ func TestRubricsService_CreateAndAssess(t *testing.T) {
 		assert.Equal(t, 7.5, ass.TotalScore)
 	})
 }
+
+type MockUsersRepo struct {
+	mock.Mock
+	users.Repository
+}
+
+func (m *MockUsersRepo) IsGuardian(ctx context.Context, parentID, studentID string) (bool, error) {
+	args := m.Called(ctx, parentID, studentID)
+	return args.Bool(0), args.Error(1)
+}
+
+func TestRubricsHandler_ListByStudent_GuardianCheck(t *testing.T) {
+	mockRepo := new(MockRubricsRepo)
+	mockUsers := new(MockUsersRepo)
+	svc := NewService(mockRepo, mockUsers)
+	h := NewHandler(svc)
+
+	t.Run("Parent is not guardian -> Forbidden", func(t *testing.T) {
+		mockUsers.On("IsGuardian", mock.Anything, "parent-1", "std-2").Return(false, nil).Once()
+
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Set("user_id", "parent-1")
+		c.Set("role", "parent")
+		c.Params = gin.Params{{Key: "studentID", Value: "std-2"}}
+		c.Request, _ = http.NewRequest("GET", "/rubrics/assessments/student/std-2", nil)
+
+		h.ListByStudent(c)
+		assert.Equal(t, http.StatusForbidden, w.Code)
+		mockUsers.AssertExpectations(t)
+	})
+}
+

@@ -176,3 +176,42 @@ func TestTeacherActivitiesService_GetByTeacherDateRange(t *testing.T) {
 		t.Error("expected error when date range exceeds 1 year")
 	}
 }
+
+func TestTeacherActivitiesService_GetByID_Authorization(t *testing.T) {
+	repo := newMockRepo()
+	svc := NewService(repo)
+	todayStr := time.Now().Format("2006-01-02")
+
+	created, err := svc.Create("teacher-1", CreateTeacherActivityRequest{
+		Date:         todayStr,
+		StartHour:    1,
+		Duration:     2,
+		ActivityType: "riunione",
+		Description:  "Consiglio straordinario",
+	})
+	if err != nil {
+		t.Fatalf("failed to create: %v", err)
+	}
+
+	t.Run("owner can get by ID", func(t *testing.T) {
+		res, err := svc.GetByID("teacher-1", "teacher", created.ID)
+		if err != nil || res == nil {
+			t.Fatalf("expected success, got: %v", err)
+		}
+	})
+
+	t.Run("admin can get by ID", func(t *testing.T) {
+		res, err := svc.GetByID("admin-1", "admin", created.ID)
+		if err != nil || res == nil {
+			t.Fatalf("expected success, got: %v", err)
+		}
+	})
+
+	t.Run("other teacher cannot get by ID", func(t *testing.T) {
+		_, err := svc.GetByID("teacher-2", "teacher", created.ID)
+		if err == nil {
+			t.Fatal("expected unauthorized error for other teacher")
+		}
+	})
+}
+

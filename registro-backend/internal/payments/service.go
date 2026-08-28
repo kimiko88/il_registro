@@ -43,6 +43,12 @@ func (s *Service) List(ctx context.Context, actorID, actorRole, schoolID, target
 	switch actorRole {
 	case "parent":
 		if targetStudentID != "" {
+			if s.userRepo != nil {
+				isG, errG := s.userRepo.IsGuardian(ctx, actorID, targetStudentID)
+				if errG != nil || !isG {
+					return nil, ErrUnauthorized
+				}
+			}
 			list, err = s.repo.ListByStudent(ctx, schoolID, targetStudentID)
 		} else {
 			list, err = s.repo.ListByParent(ctx, schoolID, actorID)
@@ -91,6 +97,18 @@ func (s *Service) GetByID(ctx context.Context, actorID, actorRole, schoolID, id 
 	if actorRole != "superadmin" && schoolID != "" && p.SchoolID != "" && p.SchoolID != schoolID {
 		return nil, ErrUnauthorized
 	}
+	if actorRole == "student" {
+		if p.StudentID != actorID {
+			return nil, ErrUnauthorized
+		}
+	} else if actorRole == "parent" {
+		if s.userRepo != nil && p.StudentID != "" {
+			isG, errG := s.userRepo.IsGuardian(ctx, actorID, p.StudentID)
+			if errG != nil || !isG {
+				return nil, ErrUnauthorized
+			}
+		}
+	}
 	return p, nil
 }
 
@@ -105,6 +123,18 @@ func (s *Service) Pay(ctx context.Context, actorID, actorRole, id, method string
 	p, err := s.repo.GetByID(ctx, id)
 	if err != nil || p == nil {
 		return nil, ErrPaymentNotFound
+	}
+	if actorRole == "student" {
+		if p.StudentID != actorID {
+			return nil, ErrUnauthorized
+		}
+	} else if actorRole == "parent" {
+		if s.userRepo != nil && p.StudentID != "" {
+			isG, errG := s.userRepo.IsGuardian(ctx, actorID, p.StudentID)
+			if errG != nil || !isG {
+				return nil, ErrUnauthorized
+			}
+		}
 	}
 	if p.Status == "paid" {
 		return nil, fmt.Errorf("questo contributo o tassa è già stato pagato")

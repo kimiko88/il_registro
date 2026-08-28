@@ -115,9 +115,14 @@ func (h *Handler) DownloadPDF(c *gin.Context) {
 		return
 	}
 	if role == "parent" {
-		// Parent can only download certificate if it belongs to their child or themselves
 		if cert.StudentID != userID {
-			// If not matching direct userID, service will verify parent-child relationship downstream when fetching child data
+			if uRepo := h.service.GetUserRepo(); uRepo != nil {
+				isG, err := uRepo.IsGuardian(c.Request.Context(), userID, cert.StudentID)
+				if err != nil || !isG {
+					c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: cannot access certificate of another student"})
+					return
+				}
+			}
 		}
 	}
 

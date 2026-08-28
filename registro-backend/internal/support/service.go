@@ -3,6 +3,8 @@ package support
 import (
 	"context"
 	"errors"
+
+	"registro-backend/internal/users"
 )
 
 var (
@@ -18,14 +20,24 @@ type Service interface {
 	UpdateGoalProgress(ctx context.Context, id, status string) error
 	ListPeiGoals(ctx context.Context, schoolID, studentID string) ([]SupportPeiGoal, error)
 	DeletePeiGoal(ctx context.Context, id string) error
+	GetUserRepo() users.Repository
 }
 
 type service struct {
-	repo Repository
+	repo     Repository
+	userRepo users.Repository
 }
 
-func NewService(repo Repository) Service {
-	return &service{repo: repo}
+func NewService(repo Repository, uRepo ...users.Repository) Service {
+	s := &service{repo: repo}
+	if len(uRepo) > 0 && uRepo[0] != nil {
+		s.userRepo = uRepo[0]
+	}
+	return s
+}
+
+func (s *service) GetUserRepo() users.Repository {
+	return s.userRepo
 }
 
 func (s *service) CreateDiaryEntry(ctx context.Context, schoolID, teacherID string, req CreateDiaryEntryRequest) (*SupportDiaryEntry, error) {

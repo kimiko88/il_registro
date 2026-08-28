@@ -73,8 +73,13 @@ func (h *Handler) GetEvents(c *gin.Context) {
 
 func (h *Handler) RegisterStudent(c *gin.Context) {
 	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "student" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: solo gli studenti possono iscriversi agli eventi di orientamento"})
 		return
 	}
 
@@ -99,8 +104,13 @@ func (h *Handler) RegisterStudent(c *gin.Context) {
 
 func (h *Handler) GetMyEvents(c *gin.Context) {
 	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "student" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: riservato agli studenti"})
 		return
 	}
 
@@ -145,8 +155,13 @@ func (h *Handler) MarkAttendance(c *gin.Context) {
 
 func (h *Handler) SavePreference(c *gin.Context) {
 	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "student" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: solo gli studenti possono salvare preferenze di orientamento"})
 		return
 	}
 
@@ -165,8 +180,13 @@ func (h *Handler) SavePreference(c *gin.Context) {
 
 func (h *Handler) GetPreference(c *gin.Context) {
 	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "student" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: riservato agli studenti"})
 		return
 	}
 
@@ -177,3 +197,4 @@ func (h *Handler) GetPreference(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, pref)
 }
+

@@ -184,7 +184,7 @@ func main() {
 	extraSvc := extracurricular.NewService(extraRepo)
 	notifSvc := notifications.NewService(notifRepo)
 	tripsSvc := trips.NewService(tripsRepo)
-	rubricsSvc := rubrics.NewService(rubricsRepo)
+	rubricsSvc := rubrics.NewService(rubricsRepo, usersRepo)
 
 	wsTicketStore := wsticket.NewStore()
 
@@ -401,7 +401,7 @@ func main() {
 			recoveryH.RegisterRoutes(protected)
 
 			supportRepo := support.NewRepository(database)
-			supportSvc := support.NewService(supportRepo)
+			supportSvc := support.NewService(supportRepo, usersRepo)
 			supportH := support.NewHandler(supportSvc)
 			supportH.RegisterRoutes(protected)
 

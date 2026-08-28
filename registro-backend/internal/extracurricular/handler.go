@@ -68,8 +68,13 @@ func (h *Handler) ListCourses(c *gin.Context) {
 func (h *Handler) EnrollStudent(c *gin.Context) {
 	courseID := c.Param("id")
 	studentID := c.GetString("user_id")
+	role := c.GetString("role")
 	if studentID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "student" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: solo gli studenti possono iscriversi ai corsi"})
 		return
 	}
 

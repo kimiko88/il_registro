@@ -74,16 +74,25 @@ func TestPaymentsService_Pay(t *testing.T) {
 	mockRepo := new(MockRepository)
 	svc := NewService(mockRepo)
 
-	t.Run("Pay pending item", func(t *testing.T) {
-		payment := &SchoolPayment{ID: "pay-1", Title: "Assicurazione", Amount: 10.0, Status: "pending"}
-		paidPayment := &SchoolPayment{ID: "pay-1", Title: "Assicurazione", Amount: 10.0, Status: "paid", ReceiptNumber: "REC-1"}
+	t.Run("Pay pending item by student", func(t *testing.T) {
+		payment := &SchoolPayment{ID: "pay-1", StudentID: "student-1", Title: "Assicurazione", Amount: 10.0, Status: "pending"}
+		paidPayment := &SchoolPayment{ID: "pay-1", StudentID: "student-1", Title: "Assicurazione", Amount: 10.0, Status: "paid", ReceiptNumber: "REC-1"}
 
 		mockRepo.On("GetByID", mock.Anything, "pay-1").Return(payment, nil).Once()
-		mockRepo.On("Pay", mock.Anything, "pay-1", "parent-1", "PagoPA", mock.Anything, mock.Anything).Return(nil).Once()
+		mockRepo.On("Pay", mock.Anything, "pay-1", "student-1", "PagoPA", mock.Anything, mock.Anything).Return(nil).Once()
 		mockRepo.On("GetByID", mock.Anything, "pay-1").Return(paidPayment, nil).Once()
 
-		res, err := svc.Pay(context.Background(), "parent-1", "parent", "pay-1", "PagoPA")
+		res, err := svc.Pay(context.Background(), "student-1", "student", "pay-1", "PagoPA")
 		assert.NoError(t, err)
 		assert.Equal(t, "paid", res.Status)
 	})
+
+	t.Run("Pay pending item by other student forbidden", func(t *testing.T) {
+		payment := &SchoolPayment{ID: "pay-1", StudentID: "student-1", Title: "Assicurazione", Amount: 10.0, Status: "pending"}
+		mockRepo.On("GetByID", mock.Anything, "pay-1").Return(payment, nil).Once()
+
+		_, err := svc.Pay(context.Background(), "student-2", "student", "pay-1", "PagoPA")
+		assert.ErrorIs(t, err, ErrUnauthorized)
+	})
 }
+
