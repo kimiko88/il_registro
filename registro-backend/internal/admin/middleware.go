@@ -123,14 +123,14 @@ func CanAccessSchool(c *gin.Context, schoolID string) bool {
 		return false
 	}
 
-	// Superadmin, Admin, and Secretary roles have access to school details
-	if role == "superadmin" || role == "admin" || role == "secretary" {
+	// Only Superadmin has global access across all schools
+	if role == "superadmin" {
 		return true
 	}
 
 	userSchoolID, exists := auth.GetSchoolID(c)
 	if !exists || userSchoolID == "" {
-		return true
+		return false
 	}
 
 	return userSchoolID == schoolID

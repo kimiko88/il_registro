@@ -70,8 +70,13 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 
 func (h *Handler) CreateSlot(c *gin.Context) {
 	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "teacher" && role != "admin" && role != "superadmin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: solo i docenti o amministratori possono creare slot di colloquio"})
 		return
 	}
 	schoolID := c.GetString("school_id")
@@ -400,6 +405,17 @@ func (h *Handler) CancelBookingAlias(c *gin.Context) {
 }
 
 func (h *Handler) CreateGeneralMeeting(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "admin" && role != "superadmin" && role != "principal" && role != "vice_principal" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: solo la presidenza, segreteria o amministratori possono indire assemblee generali"})
+		return
+	}
+
 	var req CreateGeneralParentMeetingRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -490,6 +506,17 @@ func (h *Handler) ListQueueTickets(c *gin.Context) {
 }
 
 func (h *Handler) UpdateTicketStatus(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "teacher" && role != "admin" && role != "superadmin" && role != "principal" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: non autorizzato alla gestione dello stato del ticket"})
+		return
+	}
+
 	ticketID := c.Param("ticket_id")
 	var body struct {
 		Status string `json:"status" binding:"required"`

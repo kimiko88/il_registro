@@ -71,6 +71,10 @@ func (h *Handler) ExportPagellaPDF(c *gin.Context) {
 			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
 			return
 		}
+		if strings.HasPrefix(err.Error(), "forbidden") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -96,6 +100,10 @@ func (h *Handler) GetMatrix(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, ErrScrutinyNotValidated) || err == ErrScrutinyNotValidated {
 			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+			return
+		}
+		if strings.HasPrefix(err.Error(), "forbidden") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
 		pkgLogger.Log.Error("failed to get scrutiny matrix", "error", err, "classId", classID)

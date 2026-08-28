@@ -4,10 +4,13 @@
 .idea/
 .vscode/
 
-# Environment variables
+# Environment variables & Secrets
 .env
 .env.local
 .env.*.local
+*.pem
+*.key
+certs/
 
 # Backend (Go)
 go.work

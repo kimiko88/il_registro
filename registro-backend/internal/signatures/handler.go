@@ -147,11 +147,22 @@ func (h *Handler) GetQualifiedByDocument(c *gin.Context) {
 // GET /api/v1/sidi/export/:school_id?tipologia=SCRUTINI&academic_year=2025/2026
 func (h *Handler) ExportSidi(c *gin.Context) {
 	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	callerSchoolID := c.GetString("school_id")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
+	if role != "principal" && role != "vice_principal" && role != "admin" && role != "superadmin" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: solo la presidenza, segreteria o amministratori possono esportare i flussi SIDI"})
+		return
+	}
 	schoolID := c.Param("school_id")
+	if role != "superadmin" && callerSchoolID != "" && callerSchoolID != schoolID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: non autorizzato per questa scuola"})
+		return
+	}
+
 	tipologia := c.DefaultQuery("tipologia", "SCRUTINI")
 	academicYear := c.DefaultQuery("academic_year", "2025/2026")
 	schoolName := c.DefaultQuery("school_name", "Istituto Scolastico")
@@ -177,6 +188,17 @@ func (h *Handler) ExportSidi(c *gin.Context) {
 // DownloadCadPackage genera e scarica il pacchetto di conservazione sostitutiva.
 // GET /api/v1/signatures/cad-preservation/download?academic_year=2025/2026
 func (h *Handler) DownloadCadPackage(c *gin.Context) {
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	role := c.GetString("role")
+	if role != "principal" && role != "vice_principal" && role != "admin" && role != "superadmin" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: solo la presidenza, segreteria o amministratori possono scaricare il pacchetto di conservazione CAD"})
+		return
+	}
+
 	schoolID := c.GetString("school_id")
 	year := c.Query("academic_year")
 

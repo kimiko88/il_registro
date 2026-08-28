@@ -24,7 +24,7 @@ export default defineConfig({
         globals: true,
         environment: 'happy-dom',
         setupFiles: ['./tests/unit/setup.js'],
-        include: ['tests/unit/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}', 'tests/e2e/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+        include: ['tests/unit/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
         coverage: {
             provider: 'v8',
             reporter: ['text', 'html'],

@@ -78,10 +78,11 @@ func (h *Handler) GetByClass(c *gin.Context) {
 		return
 	}
 	actorRole := getRole(c)
+	schoolID := c.GetString(ContextKeySchoolID)
 	classID := c.Param("classId")
 	year := c.DefaultQuery("year", "")
 
-	plans, err := h.svc.GetByClass(c.Request.Context(), actorRole, classID, year)
+	plans, err := h.svc.GetByClass(c.Request.Context(), actorRole, schoolID, classID, year)
 	if handleErr(c, err) {
 		return
 	}
