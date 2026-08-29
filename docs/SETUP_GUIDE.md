@@ -20,7 +20,7 @@ Questa guida descrive come configurare l'ambiente di sviluppo e produzione per i
 
 | Strumento      | Versione minima | Verifica                 |
 | -------------- | --------------- | ------------------------ |
-| Go             | 1.25            | `go version`             |
+| Go             | 1.27            | `go version`             |
 | Node.js        | 20+ (LTS / 24)  | `node --version`         |
 | npm            | 10+             | `npm --version`          |
 | PostgreSQL     | 16+             | `psql --version`         |
@@ -111,6 +111,7 @@ npm run build
 ### Errore: `open private_key.pem: permission denied` (Deploy su Render / Docker)
 
 Nei container in sola lettura o in produzione senza permessi di scrittura sulla cartella root dell'app:
+
 1. Genera una chiave RSA in locale: `openssl genrsa -out private_key.pem 2048`
 2. Copia il contenuto di `private_key.pem` e incollalo come variabile d'ambiente `RSA_PRIVATE_KEY` (o `JWT_PRIVATE_KEY`) nel pannello Environment di Render.
 3. Il backend caricherà automaticamente la chiave dalla variabile d'ambiente senza richiedere la scrittura su disco.
@@ -130,4 +131,3 @@ Verifica che `VITE_API_URL` nel frontend punti alla porta corretta del backend e
 ```bash
 lsof -ti:8080 | xargs kill -9
 ```
-

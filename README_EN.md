@@ -12,7 +12,7 @@ _*Note*_: Some passwords, such as the superadmin account, may have been updated 
 
 [![Discord Members](https://img.shields.io/discord/426912293134270465.svg?label=Discord&logo=discord)](https://discord.gg/Qh5XjQxwb)
 [![Backend CI](https://github.com/kimiko88/il_registro/actions/workflows/ci.yml/badge.svg)](https://github.com/kimiko88/il_registro/actions/workflows/ci.yml)
-[![Go Version](https://img.shields.io/badge/go-1.25%2B-blue)](https://go.dev/)
+[![Go Version](https://img.shields.io/badge/go-1.27%2B-blue)](https://go.dev/)
 [![Vue Version](https://img.shields.io/badge/vue-3.x-brightgreen)](https://vuejs.org/)
 [![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-blue.svg)](./LICENSE)
 [![Google Antigravity](https://img.shields.io/badge/IDE-Google%20Antigravity-4285F4?logo=google&logoColor=white)](https://antigravity.google)
@@ -113,20 +113,20 @@ il_registro is designed to be **self-hosted by schools, municipalities, regions,
 
 ## Key Features
 
-| Domain                    | Features                                                                                                                                  |
-| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| **Authentication & SSO**  | JWT (15min access + refresh rotation), MFA TOTP, SPID, CIE, **Google Workspace & MS Teams SSO**                                           |
-| **Roles**                 | `superadmin`, `admin`, `secretary`, `teacher`, `student`, `parent`                                                                        |
-| **Grades & Evaluation**   | Fast entry, **Keyboard Matrix View**, weighted averages, target grade simulator, special educational needs (BES/DSA) measures            |
-| **Attendance & Lessons**  | Daily register, **1-Click Class Sign**, absences, tardiness, parent justifications, absenteeism alerts                                    |
-| **PDP / PEI (BES & DSA)** | **Personalized Educational Plans**, compensatory/dispensatory measures, digital parent signature/approval, diagnosis data protection      |
-| **Business Intelligence** | **School Dropout & Absenteeism Dashboards**, 1st vs 2nd Term progress analytics for school leadership                                     |
-| **E-Learning Sync**       | **Google Classroom & Microsoft Teams**: automatic sync for assignments, grades, and classes                                               |
-| **Communications**        | School circulars, urgent announcements with **Mandatory Read Acknowledgment**, real-time WebSocket notifications                           |
-| **Accessibility & UX**    | **OpenDyslexic DSA Font**, high contrast, **Global Search `Ctrl+K`**, **Toast & Undo (15s)**, Daily Timeline, Skeleton screens           |
-| **Scrutinies**            | Final report cards, conduct grades, school credits allocation                                                                             |
-| **PCTO & Timetables**     | Internship hours tracking, school timetable schedule, parent-teacher conference booking                                                   |
-| **PWA & Mobile**          | Installable on mobile devices with offline support                                                                                        |
+| Domain                    | Features                                                                                                                             |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| **Authentication & SSO**  | JWT (15min access + refresh rotation), MFA TOTP, SPID, CIE, **Google Workspace & MS Teams SSO**                                      |
+| **Roles**                 | `superadmin`, `admin`, `secretary`, `teacher`, `student`, `parent`                                                                   |
+| **Grades & Evaluation**   | Fast entry, **Keyboard Matrix View**, weighted averages, target grade simulator, special educational needs (BES/DSA) measures        |
+| **Attendance & Lessons**  | Daily register, **1-Click Class Sign**, absences, tardiness, parent justifications, absenteeism alerts                               |
+| **PDP / PEI (BES & DSA)** | **Personalized Educational Plans**, compensatory/dispensatory measures, digital parent signature/approval, diagnosis data protection |
+| **Business Intelligence** | **School Dropout & Absenteeism Dashboards**, 1st vs 2nd Term progress analytics for school leadership                                |
+| **E-Learning Sync**       | **Google Classroom & Microsoft Teams**: automatic sync for assignments, grades, and classes                                          |
+| **Communications**        | School circulars, urgent announcements with **Mandatory Read Acknowledgment**, real-time WebSocket notifications                     |
+| **Accessibility & UX**    | **OpenDyslexic DSA Font**, high contrast, **Global Search `Ctrl+K`**, **Toast & Undo (15s)**, Daily Timeline, Skeleton screens       |
+| **Scrutinies**            | Final report cards, conduct grades, school credits allocation                                                                        |
+| **PCTO & Timetables**     | Internship hours tracking, school timetable schedule, parent-teacher conference booking                                              |
+| **PWA & Mobile**          | Installable on mobile devices with offline support                                                                                   |
 
 ---
 
@@ -134,7 +134,7 @@ il_registro is designed to be **self-hosted by schools, municipalities, regions,
 
 ### Prerequisites
 
-- [Go](https://go.dev/) 1.25+
+- [Go](https://go.dev/) 1.27+
 - [Node.js](https://nodejs.org/) 18+ (LTS)
 - [Docker](https://www.docker.com/) and Docker Compose
 - [Make](https://www.gnu.org/software/make/)
@@ -199,7 +199,7 @@ Go was chosen for the backend for reasons beyond technology trends:
 | Document                                                     | Description                                                  |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | [docs/ABOUT.md](./docs/ABOUT.md)                             | Overview, external library rationale, stack, and testing     |
-| [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)               | Architecture, layers, design patterns, data flow diagrams   |
+| [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)               | Architecture, layers, design patterns, data flow diagrams    |
 | [docs/SETUP_GUIDE.md](./docs/SETUP_GUIDE.md)                 | Local setup, Docker, production, and troubleshooting         |
 | [docs/FRONTEND_GUIDE.md](./docs/FRONTEND_GUIDE.md)           | Frontend guide: components, Pinia stores, routing, testing   |
 | [docs/API_REFERENCE.md](./docs/API_REFERENCE.md)             | Complete API reference with request/response schemas         |

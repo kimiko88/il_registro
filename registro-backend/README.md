@@ -3,7 +3,7 @@
 > Registro elettronico scolastico — API REST in Go
 
 [![CI](https://github.com/kimiko88/il_registro/actions/workflows/ci.yml/badge.svg)](https://github.com/kimiko88/il_registro/actions/workflows/ci.yml)
-[![Go Version](https://img.shields.io/badge/go-1.25%2B-blue)](https://go.dev/)
+[![Go Version](https://img.shields.io/badge/go-1.27%2B-blue)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-MIT-green)](../LICENSE)
 
 Backend completo per un registro elettronico scolastico italiano, sviluppato in **Go** con architettura modulare ispirata a Clean Architecture / Domain-Driven Design. Gestisce autenticazione multi-ruolo, voti, presenze, comunicazioni, orari, scrutini e molto altro.
@@ -65,7 +65,7 @@ Backend completo per un registro elettronico scolastico italiano, sviluppato in 
 
 | Componente         | Tecnologia                                       |
 | ------------------ | ------------------------------------------------ |
-| Language           | Go 1.25+                                         |
+| Language           | Go 1.27+                                         |
 | Web Framework      | [Gin](https://github.com/gin-gonic/gin)          |
 | Database           | PostgreSQL 15+                                   |
 | Cache / Rate limit | Redis 7+                                         |
@@ -140,7 +140,7 @@ Il sistema usa un modello **RBAC** con 6 ruoli. La registrazione di nuovi utenti
 
 ## Prerequisiti
 
-- **Go** 1.25 o superiore
+- **Go** 1.27 o superiore
 - **PostgreSQL** 15+
 - **Redis** 7+
 - **Docker** e **Docker Compose** (opzionale, consigliato)

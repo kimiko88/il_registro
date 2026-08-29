@@ -10,10 +10,9 @@
 **Demo accounts & passwords**: [example_accounts.md](/example_accounts.md)
 _**Nota bene**_: alcune password, come quella per l'account superadmin, potrebbero essere state modificate per motivi di sicurezza.
 
-
 [![Discord Members](https://img.shields.io/discord/426912293134270465.svg?label=Discord&logo=discord)](https://discord.gg/Qh5XjQxwb)
 [![Backend CI](https://github.com/kimiko88/il_registro/actions/workflows/ci.yml/badge.svg)](https://github.com/kimiko88/il_registro/actions/workflows/ci.yml)
-[![Go Version](https://img.shields.io/badge/go-1.25%2B-blue)](https://go.dev/)
+[![Go Version](https://img.shields.io/badge/go-1.27%2B-blue)](https://go.dev/)
 [![Vue Version](https://img.shields.io/badge/vue-3.x-brightgreen)](https://vuejs.org/)
 [![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-blue.svg)](./LICENSE)
 [![Google Antigravity](https://img.shields.io/badge/IDE-Google%20Antigravity-4285F4?logo=google&logoColor=white)](https://antigravity.google)
@@ -135,7 +134,7 @@ il_registro è pensato per essere **auto-ospitato da scuole, Comuni, Regioni o d
 
 ### Prerequisiti
 
-- [Go](https://go.dev/) 1.25+
+- [Go](https://go.dev/) 1.27+
 - [Node.js](https://nodejs.org/) 18+ (LTS)
 - [Docker](https://www.docker.com/) e Docker Compose
 - [Make](https://www.gnu.org/software/make/)

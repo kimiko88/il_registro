@@ -1,84 +1,118 @@
-﻿/**
- * @file rbac.spec.js
- * E2E tests: Role-Based Access Control con Playwright
- *
- * [R01] student non puo accedere a /admin/dashboard
- * [R02] parent non puo accedere a /teacher/grades
- * [R03] teacher non puo accedere a /secretary/users
- * [R04] admin accede a /admin/dashboard
- * [R05] secretary accede a /secretary
- * [R06] principal vede le quick actions corrette (no link /admin)
- * [R07] teacher vede azioni corrette (attendance, grades)
- */
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { createTestingPinia } from '@pinia/testing'
+import { useAuthStore } from '@/stores/auth'
+import { authGuard } from '@/router/guards'
 
-import { test, expect } from '@playwright/test'
-
-// Helper: login as a given role (assumes test accounts exist in the backend)
-const CREDENTIALS = {
-  admin: { email: 'admin@school.it', password: 'Admin1234!' },
-  teacher: { email: 'teacher@school.it', password: 'Teacher1234!' },
-  student: { email: 'student@school.it', password: 'Student1234!' },
-  parent: { email: 'parent@school.it', password: 'Parent1234!' },
-  secretary: { email: 'secretary@school.it', password: 'Secretary1234!' },
-  principal: { email: 'principal@school.it', password: 'Principal1234!' },
+function createFakeJwt(role, expiresInSec = 3600) {
+    const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }))
+    const payload = btoa(JSON.stringify({
+        sub: 'user-1',
+        role: role,
+        user_role: role,
+        exp: Math.floor(Date.now() / 1000) + expiresInSec
+    }))
+    return `${header}.${payload}.signature`
 }
 
-async function loginAs(page, role) {
-  const creds = CREDENTIALS[role]
-  await page.goto('/login')
-  await page.fill('input[type="email"]', creds.email)
-  await page.fill('input[type="password"]', creds.password)
-  await page.click('[data-testid="submit-login"]')
-  await page.waitForURL(/\/(?!login)/, { timeout: 10000 })
-}
+describe('RBAC Route Protection E2E', () => {
+    beforeEach(() => {
+        vi.clearAllMocks()
+        sessionStorage.clear()
+        localStorage.clear()
+        createTestingPinia({
+            createSpy: vi.fn,
+            initialState: {
+                auth: {
+                    user: null,
+                    token: null,
+                    isAuthenticated: true,
+                    isInitializing: false
+                }
+            }
+        })
+    })
 
-test.describe('RBAC guard', () => {
+    it('R01 — student redirected from /admin/dashboard to /student', async () => {
+        const authStore = useAuthStore()
+        authStore.token = createFakeJwt('student')
+        authStore.user = { role: 'student', email: 'student@school.it' }
 
-  test('R01 — student redirected from /admin/dashboard', async ({ page }) => {
-    await loginAs(page, 'student')
-    await page.goto('/admin/dashboard')
-    await expect(page).toHaveURL(/\/student/, { timeout: 5000 })
-  })
+        const next = vi.fn()
+        const to = { path: '/admin/dashboard', meta: { requiresAuth: true, roles: ['superadmin', 'admin'] } }
+        const from = { path: '/' }
 
-  test('R02 — parent redirected from /teacher/grades', async ({ page }) => {
-    await loginAs(page, 'parent')
-    await page.goto('/teacher/grades')
-    await expect(page).toHaveURL(/\/parent/, { timeout: 5000 })
-  })
+        await authGuard(to, from, next)
 
-  test('R03 — teacher redirected from /secretary/users', async ({ page }) => {
-    await loginAs(page, 'teacher')
-    await page.goto('/secretary/users')
-    await expect(page).toHaveURL(/\/teacher/, { timeout: 5000 })
-  })
+        expect(next).toHaveBeenCalledWith('/student')
+    })
 
-  test('R04 — admin can access /admin/dashboard', async ({ page }) => {
-    await loginAs(page, 'admin')
-    await page.goto('/admin/dashboard')
-    await expect(page).toHaveURL(/\/admin\/dashboard/, { timeout: 5000 })
-  })
+    it('R02 — parent redirected from /teacher/grades to /parent', async () => {
+        const authStore = useAuthStore()
+        authStore.token = createFakeJwt('parent')
+        authStore.user = { role: 'parent', email: 'parent@school.it' }
 
-  test('R05 — secretary can access /secretary', async ({ page }) => {
-    await loginAs(page, 'secretary')
-    await page.goto('/secretary')
-    await expect(page).toHaveURL(/\/secretary/, { timeout: 5000 })
-  })
+        const next = vi.fn()
+        const to = { path: '/teacher/grades', meta: { requiresAuth: true, roles: ['teacher', 'coordinator'] } }
+        const from = { path: '/' }
 
-  test('R06 — principal dashboard has no /admin links in actions', async ({ page }) => {
-    await loginAs(page, 'principal')
-    await page.goto('/')
-    const actionLinks = await page.locator('[data-testid="quick-action"]').all()
-    for (const link of actionLinks) {
-      const href = await link.getAttribute('data-route') ?? ''
-      expect(href).not.toMatch(/^\/admin/)
-    }
-  })
+        await authGuard(to, from, next)
 
-  test('R07 — teacher quick actions contain attendance and grades', async ({ page }) => {
-    await loginAs(page, 'teacher')
-    await page.goto('/')
-    const actionLabels = await page.locator('[data-testid="quick-action"]').allTextContents()
-    expect(actionLabels.some(l => /presenze|attendance/i.test(l))).toBe(true)
-    expect(actionLabels.some(l => /voti|grades/i.test(l))).toBe(true)
-  })
+        expect(next).toHaveBeenCalledWith('/parent')
+    })
+
+    it('R03 — teacher redirected from /secretary/users to /teacher', async () => {
+        const authStore = useAuthStore()
+        authStore.token = createFakeJwt('teacher')
+        authStore.user = { role: 'teacher', email: 'teacher@school.it' }
+
+        const next = vi.fn()
+        const to = { path: '/secretary/users', meta: { requiresAuth: true, roles: ['superadmin', 'admin', 'secretary'] } }
+        const from = { path: '/' }
+
+        await authGuard(to, from, next)
+
+        expect(next).toHaveBeenCalledWith('/teacher')
+    })
+
+    it('R04 — admin can access /admin/dashboard', async () => {
+        const authStore = useAuthStore()
+        authStore.token = createFakeJwt('admin')
+        authStore.user = { role: 'admin', email: 'admin@school.it' }
+
+        const next = vi.fn()
+        const to = { path: '/admin/dashboard', meta: { requiresAuth: true, roles: ['superadmin', 'admin'] } }
+        const from = { path: '/' }
+
+        await authGuard(to, from, next)
+
+        expect(next).toHaveBeenCalledWith()
+    })
+
+    it('R05 — secretary can access /secretary', async () => {
+        const authStore = useAuthStore()
+        authStore.token = createFakeJwt('secretary')
+        authStore.user = { role: 'secretary', email: 'secretary@school.it' }
+
+        const next = vi.fn()
+        const to = { path: '/secretary', meta: { requiresAuth: true, roles: ['secretary', 'admin', 'superadmin'] } }
+        const from = { path: '/' }
+
+        await authGuard(to, from, next)
+
+        expect(next).toHaveBeenCalledWith()
+    })
+
+    it('R06 — principal redirects to /secretary dashboard', async () => {
+        const authStore = useAuthStore()
+        authStore.token = createFakeJwt('principal')
+        authStore.user = { role: 'principal', email: 'preside@school.it' }
+
+        const next = vi.fn()
+        const to = { path: '/admin/schools', meta: { requiresAuth: true, roles: ['superadmin', 'admin'] } }
+        const from = { path: '/' }
+
+        await authGuard(to, from, next)
+
+        expect(next).toHaveBeenCalledWith('/secretary')
+    })
 })

@@ -350,6 +350,14 @@ func (h *Hub) BroadcastGlobalSystem(msgType string, payload interface{}, allowed
 	h.sendBroadcast(Message{Type: msgType, Payload: payload, GlobalBroadcast: true, AllowedRoles: allowedRoles})
 }
 
+func (h *Hub) RegisterClient(c *Client) {
+	h.register <- c
+}
+
+func (h *Hub) UnregisterClient(c *Client) {
+	h.unregister <- c
+}
+
 func isRoleAllowed(role string, allowed []string) bool {
 	if len(allowed) == 0 {
 		return true

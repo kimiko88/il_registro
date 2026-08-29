@@ -25,7 +25,7 @@ Benvenuto nel Wiki di **il_registro**. Questa guida completa è pensata per svil
 
 ### Backend 🐹
 
-- **Linguaggio**: Go (v1.25+)
+- **Linguaggio**: Go (v1.27+)
 - **Framework Web**: [Gin Gonic](https://github.com/gin-gonic/gin)
 - **Database**: PostgreSQL (v16+) con indici parziali B-tree (`WHERE deleted_at IS NULL`) per tabelle ad alto volume.
 - **Autenticazione**: JWT (RSA SHA256 / HMAC) con Refresh Token, MFA (TOTP) e Rate Limiting dedicato (5 req/min) per endpoint di auth.
@@ -91,6 +91,7 @@ graph TD
 ### D. Architettura e Sincronizzazione Orario Scolastico
 
 L'orario scolastico si basa sulla tabella `class_schedules` in PostgreSQL come unica fonte di verità.
+
 - **Vista Classe (`ScheduleGrid.vue`)**: organizza l'orario per ora (1ª-8ª) e giorno (Lunedì-Sabato), abbinando materia, docente ed aula.
 - **Vista Docente (`TeacherScheduleGrid.vue`)**: ricava l'orario individuale del docente unendo `class_schedules` con `classes` (`JOIN classes c ON cs.class_id = c.id`).
 - **Sincronizzazione Bidirezionale**: quando la Segreteria o un docente modifica l'orario settimanale del docente, le modifiche si riflettono istantaneamente sulle classi coinvolte e viceversa, mantenendo una consistenza atomica dei dati.
