@@ -2,9 +2,15 @@ package teacher_activities
 
 import (
 	"errors"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
 )
+
 
 type mockRepo struct {
 	activities map[string]*TeacherFreeActivity
@@ -214,3 +220,51 @@ func TestTeacherActivitiesService_GetByID_Authorization(t *testing.T) {
 		}
 	})
 }
+
+func TestTeacherActivitiesHandler_List_RBAC(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	repo := newMockRepo()
+	svc := NewService(repo)
+	h := NewHandler(svc)
+
+	t.Run("Unauthenticated is 401", func(t *testing.T) {
+		r := gin.New()
+		h.RegisterRoutes(r.Group("/api"))
+
+		req := httptest.NewRequest("GET", "/api/teacher/free-activities", nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+		assert.Equal(t, http.StatusUnauthorized, w.Code)
+	})
+
+	t.Run("Student is 403", func(t *testing.T) {
+		r := gin.New()
+		r.Use(func(c *gin.Context) {
+			c.Set("user_id", "student-1")
+			c.Set("role", "student")
+			c.Next()
+		})
+		h.RegisterRoutes(r.Group("/api"))
+
+		req := httptest.NewRequest("GET", "/api/teacher/free-activities", nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+		assert.Equal(t, http.StatusForbidden, w.Code)
+	})
+
+	t.Run("Teacher is 200", func(t *testing.T) {
+		r := gin.New()
+		r.Use(func(c *gin.Context) {
+			c.Set("user_id", "teacher-1")
+			c.Set("role", "teacher")
+			c.Next()
+		})
+		h.RegisterRoutes(r.Group("/api"))
+
+		req := httptest.NewRequest("GET", "/api/teacher/free-activities", nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+		assert.Equal(t, http.StatusOK, w.Code)
+	})
+}
+

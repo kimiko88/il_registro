@@ -455,7 +455,8 @@ func (r *AdminRepository) ListAdminUsers(ctx context.Context, offset, limit int,
 			u.school_id, 
 			s.name as school_name,
 			u.is_active,
-			u.created_at
+			u.created_at,
+			(SELECT created_at FROM user_sessions WHERE user_id = u.id ORDER BY created_at DESC LIMIT 1) as last_login
 		FROM users u
 		LEFT JOIN schools s ON u.school_id = s.id
 		WHERE u.role = 'admin'
@@ -491,6 +492,7 @@ func (r *AdminRepository) ListAdminUsers(ctx context.Context, offset, limit int,
 		var u admin.AdminUserResponse
 		var schoolID sql.NullString
 		var schoolName sql.NullString
+		var lastLogin sql.NullTime
 
 		err := rows.Scan(
 			&u.ID,
@@ -502,6 +504,7 @@ func (r *AdminRepository) ListAdminUsers(ctx context.Context, offset, limit int,
 			&schoolName,
 			&u.IsActive,
 			&u.CreatedAt,
+			&lastLogin,
 		)
 		if err != nil {
 			return nil, 0, err
@@ -513,9 +516,6 @@ func (r *AdminRepository) ListAdminUsers(ctx context.Context, offset, limit int,
 		if schoolName.Valid {
 			u.SchoolName = &schoolName.String
 		}
-
-		var lastLogin sql.NullTime
-		_ = r.db.QueryRowContext(ctx, "SELECT created_at FROM user_sessions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1", u.ID).Scan(&lastLogin)
 		if lastLogin.Valid {
 			u.LastLoginAt = &lastLogin.Time
 		}
@@ -530,15 +530,16 @@ func (r *AdminRepository) ListAdminUsers(ctx context.Context, offset, limit int,
 func (r *AdminRepository) GetAdminUserByID(ctx context.Context, adminID string) (*admin.AdminUserResponse, error) {
 	query := `
 		SELECT 
-			u.id,
-			u.email,
-			u.first_name,
-			u.last_name,
-			u.role,
-			u.school_id,
+			u.id, 
+			u.email, 
+			u.first_name, 
+			u.last_name, 
+			u.role, 
+			u.school_id, 
 			s.name as school_name,
 			u.is_active,
-			u.created_at
+			u.created_at,
+			(SELECT created_at FROM user_sessions WHERE user_id = u.id ORDER BY created_at DESC LIMIT 1) as last_login
 		FROM users u
 		LEFT JOIN schools s ON u.school_id = s.id
 		WHERE u.id = $1 AND u.role = 'admin'
@@ -547,6 +548,7 @@ func (r *AdminRepository) GetAdminUserByID(ctx context.Context, adminID string) 
 	var u admin.AdminUserResponse
 	var schoolID sql.NullString
 	var schoolName sql.NullString
+	var lastLogin sql.NullTime
 
 	err := r.db.QueryRowContext(ctx, query, adminID).Scan(
 		&u.ID,
@@ -558,6 +560,7 @@ func (r *AdminRepository) GetAdminUserByID(ctx context.Context, adminID string) 
 		&schoolName,
 		&u.IsActive,
 		&u.CreatedAt,
+		&lastLogin,
 	)
 	if err == sql.ErrNoRows {
 		return nil, fmt.Errorf("admin user not found")
@@ -572,9 +575,6 @@ func (r *AdminRepository) GetAdminUserByID(ctx context.Context, adminID string) 
 	if schoolName.Valid {
 		u.SchoolName = &schoolName.String
 	}
-
-	var lastLogin sql.NullTime
-	_ = r.db.QueryRowContext(ctx, "SELECT created_at FROM user_sessions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1", u.ID).Scan(&lastLogin)
 	if lastLogin.Valid {
 		u.LastLoginAt = &lastLogin.Time
 	}
@@ -607,22 +607,26 @@ func (r *AdminRepository) CreateAdminUser(ctx context.Context, req *admin.Create
 		return nil, err
 	}
 
-	var schoolName string
+	var schoolName sql.NullString
 	if req.SchoolID != nil {
 		_ = r.db.QueryRowContext(ctx, "SELECT name FROM schools WHERE id = $1", req.SchoolID).Scan(&schoolName)
 	}
 
-	return &admin.AdminUserResponse{
-		ID:         id,
-		Email:      req.Email,
-		FirstName:  req.FirstName,
-		LastName:   req.LastName,
-		Role:       req.Role,
-		SchoolID:   req.SchoolID,
-		SchoolName: &schoolName,
-		IsActive:   true,
-		CreatedAt:  createdAt,
-	}, nil
+	resp := &admin.AdminUserResponse{
+		ID:        id,
+		Email:     req.Email,
+		FirstName: req.FirstName,
+		LastName:  req.LastName,
+		Role:      req.Role,
+		SchoolID:  req.SchoolID,
+		IsActive:  true,
+		CreatedAt: createdAt,
+	}
+	if schoolName.Valid {
+		resp.SchoolName = &schoolName.String
+	}
+
+	return resp, nil
 }
 
 // UpdateAdminUser updates an admin user

@@ -78,6 +78,10 @@ func (s *Service) CreateTrip(ctx context.Context, teacherID, schoolID string, re
 	return t, nil
 }
 
+func (s *Service) GetUserRepo() users.Repository {
+	return s.userRepo
+}
+
 func (s *Service) ListTrips(ctx context.Context, schoolID, studentID string) ([]*EducationalTrip, error) {
 	return s.repo.ListTrips(ctx, schoolID, studentID)
 }
@@ -90,7 +94,11 @@ func (s *Service) GetTripByID(ctx context.Context, id string) (*EducationalTrip,
 // Bug 131: when the actor is a parent, verifies guardianship before recording consent.
 func (s *Service) SubmitConsent(ctx context.Context, actorID, actorRole, ipAddress string, req SubmitConsentRequest) error {
 	var parentID *string
-	if actorRole == "parent" {
+	if actorRole == "student" {
+		if actorID != req.StudentID {
+			return errors.New("unauthorized: cannot submit consent for another student")
+		}
+	} else if actorRole == "parent" {
 		// Bug 131: verify guardianship
 		if s.userRepo != nil {
 			isGuardian, err := s.userRepo.IsGuardian(ctx, actorID, req.StudentID)
@@ -116,6 +124,7 @@ func (s *Service) SubmitConsent(ctx context.Context, actorID, actorRole, ipAddre
 
 	return s.repo.SubmitConsent(ctx, c)
 }
+
 
 func (s *Service) ListConsents(ctx context.Context, tripID string) ([]*TripConsent, error) {
 	return s.repo.ListConsents(ctx, tripID)

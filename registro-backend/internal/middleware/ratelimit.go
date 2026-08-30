@@ -88,8 +88,12 @@ func getBackend() rateLimiterBackend {
 	}
 	// Lazy init (compatibilità per i test che non chiamano InitRateLimiter)
 	InitRateLimiter("")
-	return *activeBackendPtr.Load()
+	if p := activeBackendPtr.Load(); p != nil {
+		return *p
+	}
+	return newMemoryBackend()
 }
+
 
 // ---------------------------------------------------------------------------
 // Redis backend

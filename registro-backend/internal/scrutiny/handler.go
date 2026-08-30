@@ -10,6 +10,7 @@ import (
 
 	"registro-backend/internal/pdfworker"
 	pkgLogger "registro-backend/pkg/logger"
+	"registro-backend/pkg/upload"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -92,7 +93,7 @@ func (h *Handler) ExportPagellaPDF(c *gin.Context) {
 
 	filename := fmt.Sprintf("pagella_%s_semestre%d.pdf", studentID, semester)
 	c.Header("Content-Type", "application/pdf")
-	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+	c.Header("Content-Disposition", upload.FormatContentDisposition(filename))
 	c.Data(http.StatusOK, "application/pdf", pdfBytes)
 }
 
@@ -415,9 +416,19 @@ func (h *Handler) SaveDeferredScrutiny(c *gin.Context) {
 }
 
 func (h *Handler) EnqueueAsyncScrutinyPdf(c *gin.Context) {
+	actorID := c.GetString("user_id")
+	actorRole := c.GetString("role")
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: insufficient permissions"})
+		return
+	}
+
 	classID := c.Param("classId")
 	semester := c.DefaultQuery("semester", "1")
-	actorID := c.GetString("user_id")
 
 	if h.pdfWorkerClient == nil {
 		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "async pdf worker queue not configured"})
@@ -447,6 +458,12 @@ func (h *Handler) EnqueueAsyncScrutinyPdf(c *gin.Context) {
 }
 
 func (h *Handler) GetPdfJobStatus(c *gin.Context) {
+	actorID := c.GetString("user_id")
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
 	jobID := c.Param("job_id")
 	if h.pdfWorkerClient == nil {
 		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "async pdf worker queue not configured"})
@@ -461,3 +478,4 @@ func (h *Handler) GetPdfJobStatus(c *gin.Context) {
 
 	c.JSON(http.StatusOK, status)
 }
+

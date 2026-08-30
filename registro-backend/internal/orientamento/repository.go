@@ -131,9 +131,19 @@ func (r *repository) MarkAttendance(ctx context.Context, eventID, studentID stri
 	if attended {
 		status = "Attended"
 	}
-	_, err := r.db.ExecContext(ctx, `UPDATE orientamento_participations SET attended=$1, status=$2 WHERE event_id=$3 AND student_id=$4`, attended, status, eventID, studentID)
+	query := `
+		UPDATE orientamento_participations 
+		SET attended = $1, status = $2 
+		WHERE event_id = $3::uuid AND (
+			student_id = $4::uuid OR 
+			student_id IN (SELECT id FROM students WHERE user_id = $4::uuid OR id = $4::uuid) OR
+			student_id IN (SELECT user_id FROM students WHERE id = $4::uuid OR user_id = $4::uuid)
+		)
+	`
+	_, err := r.db.ExecContext(ctx, query, attended, status, eventID, studentID)
 	return err
 }
+
 
 func (r *repository) SavePreference(ctx context.Context, p *StudentPreference) error {
 	query := `

@@ -22,7 +22,13 @@ func TestAsyncPdfWorkerIntegration_HandlerRouting(t *testing.T) {
 	h := scrutiny.NewHandler(svc, nil)
 
 	v1 := r.Group("/api/v1")
+	v1.Use(func(c *gin.Context) {
+		c.Set("user_id", "teacher-user-1")
+		c.Set("role", "teacher")
+		c.Next()
+	})
 	h.RegisterRoutes(v1)
+
 
 	t.Run("POST /api/v1/scrutiny/class/:classId/async-pdf safely handles unconfigured queue", func(t *testing.T) {
 		req := httptest.NewRequest("POST", "/api/v1/scrutiny/class/class-10A/async-pdf?semester=2", nil)

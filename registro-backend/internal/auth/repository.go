@@ -74,7 +74,10 @@ type Repository interface {
 	// GetRecentLoginAttemptsByEmail counts failed attempts for an email across ALL IPs since `since`.
 	// Used for anti-IP-rotation rate limiting (max 20 in 1 hour).
 	GetRecentLoginAttemptsByEmail(ctx context.Context, email string, since time.Time) (int, error)
+	// CleanOldLoginAttempts deletes login attempt records older than `olderThan`.
+	CleanOldLoginAttempts(ctx context.Context, olderThan time.Duration) error
 }
+
 
 type repository struct {
 	db *sql.DB
@@ -525,6 +528,13 @@ func (r *repository) GetRecentLoginAttemptsByEmail(ctx context.Context, email st
 	var count int
 	err := r.db.QueryRowContext(ctx, query, email, since).Scan(&count)
 	return count, err
+}
+
+func (r *repository) CleanOldLoginAttempts(ctx context.Context, olderThan time.Duration) error {
+	cutoff := time.Now().Add(-olderThan)
+	query := `DELETE FROM login_attempts WHERE attempted_at < $1`
+	_, err := r.db.ExecContext(ctx, query, cutoff)
+	return err
 }
 
 func (r *repository) GetPasswordHistory(ctx context.Context, userID string) ([]string, error) {

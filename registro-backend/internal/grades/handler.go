@@ -365,7 +365,7 @@ func (h *Handler) Export(c *gin.Context) {
 	}
 
 	filename := fmt.Sprintf("grades_export_%s.%s", time.Now().Format("20060102_150405"), format)
-	c.Header("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, filename))
+	c.Header("Content-Disposition", upload.FormatContentDisposition(filename))
 	c.Data(http.StatusOK, contentType, data)
 }
 
@@ -770,7 +770,7 @@ func (h *Handler) DownloadSemesterReportPDF(c *gin.Context) {
 	}
 
 	filename := fmt.Sprintf("pagella_q%d_%s.pdf", sem, sanitizeFilenameParam(targetStudentID))
-	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+	c.Header("Content-Disposition", upload.FormatContentDisposition(filename))
 	c.Data(http.StatusOK, "application/pdf", pdfData)
 }
 

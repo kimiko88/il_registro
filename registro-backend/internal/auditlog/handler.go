@@ -4,8 +4,10 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
-	"registro-backend/pkg/logger"
 	"strconv"
+
+	"registro-backend/pkg/logger"
+	"registro-backend/pkg/upload"
 
 	"github.com/gin-gonic/gin"
 )
@@ -87,7 +89,7 @@ func (h *Handler) ExportCSV(c *gin.Context) {
 	}
 
 	c.Header("Content-Type", "text/csv")
-	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"audit_logs_%s.csv\"", c.GetString("school_id")))
+	c.Header("Content-Disposition", upload.FormatContentDisposition(fmt.Sprintf("audit_logs_%s.csv", c.GetString("school_id"))))
 	c.Data(http.StatusOK, "text/csv", csvBytes)
 }
 

@@ -49,3 +49,15 @@ func TestAuth_Register_InvalidSchoolID(t *testing.T) {
 	assert.Contains(t, err.Error(), "invalid school ID")
 	mockRepo.AssertExpectations(t)
 }
+
+func TestAuth_CleanOldLoginAttempts(t *testing.T) {
+	mockRepo := new(MockRepository)
+	ctx := context.Background()
+
+	mockRepo.On("CleanOldLoginAttempts", ctx, 30*24*time.Hour).Return(nil).Once()
+
+	err := mockRepo.CleanOldLoginAttempts(ctx, 30*24*time.Hour)
+	assert.NoError(t, err)
+	mockRepo.AssertExpectations(t)
+}
+

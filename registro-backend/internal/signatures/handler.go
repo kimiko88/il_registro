@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	"registro-backend/pkg/upload"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -179,7 +181,7 @@ func (h *Handler) ExportSidi(c *gin.Context) {
 
 	filename := fmt.Sprintf("SIDI_%s_%s_%s.zip", schoolID, tipologia, time.Now().Format("20060102_150405"))
 	c.Header("Content-Type", "application/zip")
-	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+	c.Header("Content-Disposition", upload.FormatContentDisposition(filename))
 	c.Header("X-SIDI-Hash-Integrita", record.HashIntegrità)
 	c.Header("X-SIDI-Stato", record.StatoTrasmissione)
 	c.Data(http.StatusOK, "application/zip", zipBytes)
@@ -212,6 +214,7 @@ func (h *Handler) DownloadCadPackage(c *gin.Context) {
 
 	filename := fmt.Sprintf("conservazione_CAD_%s_%s.zip", schoolID, time.Now().Format("20060102_150405"))
 	c.Header("Content-Type", "application/zip")
-	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+	c.Header("Content-Disposition", upload.FormatContentDisposition(filename))
 	c.Data(http.StatusOK, "application/zip", zipBytes)
 }
+

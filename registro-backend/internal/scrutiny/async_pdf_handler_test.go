@@ -16,6 +16,11 @@ import (
 func TestEnqueueAsyncScrutinyPdf_NoWorkerClient(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		c.Set("user_id", "teacher-1")
+		c.Set("role", "teacher")
+		c.Next()
+	})
 
 	svc := scrutiny.NewService(nil, nil, nil, nil, nil)
 	h := scrutiny.NewHandler(svc, nil)
@@ -29,9 +34,45 @@ func TestEnqueueAsyncScrutinyPdf_NoWorkerClient(t *testing.T) {
 	assert.Equal(t, http.StatusServiceUnavailable, w.Code)
 }
 
+func TestEnqueueAsyncScrutinyPdf_RBAC(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	t.Run("Unauthenticated is 401", func(t *testing.T) {
+		r := gin.New()
+		h := scrutiny.NewHandler(scrutiny.NewService(nil, nil, nil, nil, nil), nil)
+		r.POST("/api/v1/scrutiny/class/:classId/async-pdf", h.EnqueueAsyncScrutinyPdf)
+
+		req := httptest.NewRequest("POST", "/api/v1/scrutiny/class/class-123/async-pdf", nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+		assert.Equal(t, http.StatusUnauthorized, w.Code)
+	})
+
+	t.Run("Student is 403", func(t *testing.T) {
+		r := gin.New()
+		r.Use(func(c *gin.Context) {
+			c.Set("user_id", "student-1")
+			c.Set("role", "student")
+			c.Next()
+		})
+		h := scrutiny.NewHandler(scrutiny.NewService(nil, nil, nil, nil, nil), nil)
+		r.POST("/api/v1/scrutiny/class/:classId/async-pdf", h.EnqueueAsyncScrutinyPdf)
+
+		req := httptest.NewRequest("POST", "/api/v1/scrutiny/class/class-123/async-pdf", nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+		assert.Equal(t, http.StatusForbidden, w.Code)
+	})
+}
+
 func TestGetPdfJobStatus_NoWorkerClient(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		c.Set("user_id", "teacher-1")
+		c.Set("role", "teacher")
+		c.Next()
+	})
 
 	svc := scrutiny.NewService(nil, nil, nil, nil, nil)
 	h := scrutiny.NewHandler(svc, nil)
@@ -44,6 +85,7 @@ func TestGetPdfJobStatus_NoWorkerClient(t *testing.T) {
 
 	assert.Equal(t, http.StatusServiceUnavailable, w.Code)
 }
+
 
 func TestTaskPayloadStructure(t *testing.T) {
 	payload := pdfworker.ScrutinyPdfPayload{

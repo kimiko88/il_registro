@@ -88,8 +88,13 @@ func (h *Handler) CreateProject(c *gin.Context) {
 
 func (h *Handler) GetProjects(c *gin.Context) {
 	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "teacher" && role != "admin" && role != "superadmin" && role != "secretary" && role != "tutor" && role != "principal" && role != "vice_principal" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: consultazione progetti PCTO riservata al personale scolastico"})
 		return
 	}
 
@@ -101,6 +106,7 @@ func (h *Handler) GetProjects(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, res)
 }
+
 
 func (h *Handler) AssignStudent(c *gin.Context) {
 	userID := c.GetString("user_id")

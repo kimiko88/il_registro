@@ -1,6 +1,7 @@
 package student_goals
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -57,7 +58,7 @@ func (h *Handler) ListByStudent(c *gin.Context) {
 
 	goals, err := h.service.ListByStudent(c.Request.Context(), uid, role, studentID)
 	if err != nil {
-		if err.Error() == "unauthorized: cannot view goals of another student" || err.Error() == "unauthorized: non sei tutore legale di questo studente" {
+		if errors.Is(err, ErrUnauthorizedStudent) || errors.Is(err, ErrNotGuardian) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
@@ -83,7 +84,7 @@ func (h *Handler) UpdateStatus(c *gin.Context) {
 	}
 
 	if err := h.service.UpdateGoalStatus(c.Request.Context(), uid, role, id, req.Status); err != nil {
-		if err.Error() == "unauthorized" {
+		if errors.Is(err, ErrUnauthorized) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
@@ -92,3 +93,4 @@ func (h *Handler) UpdateStatus(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "status updated"})
 }
+

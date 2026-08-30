@@ -177,6 +177,10 @@ func (m *MockAuthRepository) ChangePasswordTx(ctx context.Context, userID, passw
 	args := m.Called(ctx, userID, passwordHash)
 	return args.Error(0)
 }
+func (m *MockAuthRepository) CleanOldLoginAttempts(ctx context.Context, olderThan time.Duration) error {
+	args := m.Called(ctx, olderThan)
+	return args.Error(0)
+}
 
 // MockUsersRepository mocks users.Repository
 type MockUsersRepository struct {

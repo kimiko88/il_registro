@@ -237,7 +237,9 @@ func (r *PostgresRepository) Update(ctx context.Context, user *User) error {
 	}
 
 	// Sync is_staff to teachers table if teacher profile exists
-	_, _ = tx.ExecContext(ctx, `UPDATE teachers SET is_staff = $1 WHERE user_id = $2::uuid OR id = $2::uuid`, user.IsStaff, user.ID)
+	if _, err := tx.ExecContext(ctx, `UPDATE teachers SET is_staff = $1 WHERE user_id = $2::uuid OR id = $2::uuid`, user.IsStaff, user.ID); err != nil {
+		return err
+	}
 
 	// Role-Specific Profile Upsert
 	if user.SchoolID != nil {

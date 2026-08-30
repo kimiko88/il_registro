@@ -187,7 +187,8 @@ func main() {
 	verbaliSvc := verbali.NewService(verbaliRepo)
 	extraSvc := extracurricular.NewService(extraRepo)
 	notifSvc := notifications.NewService(notifRepo)
-	tripsSvc := trips.NewService(tripsRepo)
+	tripsSvc := trips.NewService(tripsRepo, usersRepo)
+
 	rubricsSvc := rubrics.NewService(rubricsRepo, usersRepo)
 
 	wsTicketStore := wsticket.NewStore()
@@ -403,9 +404,10 @@ func main() {
 			parentsH.RegisterRoutes(protected)
 
 			creditsRepo := credits.NewRepository(database)
-			creditsSvc := credits.NewService(creditsRepo)
+			creditsSvc := credits.NewService(creditsRepo, usersRepo)
 			creditsH := credits.NewHandler(creditsSvc)
 			creditsH.RegisterRoutes(protected)
+
 
 			recoveryRepo := recovery.NewRepository(database)
 			recoverySvc := recovery.NewService(recoveryRepo)
@@ -453,9 +455,10 @@ func main() {
 			udaH.RegisterRoutes(protected)
 
 			compRepo := competencies.NewRepository(database)
-			compSvc := competencies.NewService(compRepo)
+			compSvc := competencies.NewService(compRepo, usersRepo)
 			compH := competencies.NewHandler(compSvc)
 			compH.RegisterRoutes(protected)
+
 
 			// Attività libere docente (ore a disposizione, riunioni, gita, formazione, etc.)
 			teacherActRepo := teacher_activities.NewRepository(database)

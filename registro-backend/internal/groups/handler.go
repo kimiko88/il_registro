@@ -69,6 +69,28 @@ func (h *Handler) ListGroups(c *gin.Context) {
 	teacherID := c.Query("teacher_id")
 	studentID := c.Query("student_id")
 
+	if teacherID != "" {
+		if role == "teacher" && teacherID != userID {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: non puoi consultare i gruppi di un altro docente"})
+			return
+		}
+		if role == "student" || role == "parent" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: accesso non autorizzato"})
+			return
+		}
+	}
+
+	if studentID != "" {
+		if role == "student" && studentID != userID {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: non puoi consultare i gruppi di un altro studente"})
+			return
+		}
+	}
+
+	if role == "student" && studentID == "" && teacherID == "" {
+		studentID = userID
+	}
+
 	var groups []Group
 	var err error
 
@@ -77,6 +99,10 @@ func (h *Handler) ListGroups(c *gin.Context) {
 	} else if studentID != "" {
 		groups, err = h.service.ListGroupsByStudent(c.Request.Context(), studentID)
 	} else if schoolID != "" {
+		if role == "student" || role == "parent" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: consultazione dell'elenco completo dei gruppi riservata al personale scolastico"})
+			return
+		}
 		groups, err = h.service.ListGroupsBySchool(c.Request.Context(), schoolID)
 	} else {
 		groups = []Group{}
@@ -89,6 +115,7 @@ func (h *Handler) ListGroups(c *gin.Context) {
 
 	c.JSON(http.StatusOK, groups)
 }
+
 
 func (h *Handler) GetGroup(c *gin.Context) {
 	userID := c.GetString("user_id")

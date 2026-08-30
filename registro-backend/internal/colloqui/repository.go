@@ -401,10 +401,14 @@ func (r *PostgresRepository) UpdateBookingStatus(ctx context.Context, bookingID 
 		INSERT INTO colloquio_history (booking_id, new_status, changed_by, changed_at, reason)
 		VALUES ($1::uuid, $2, $3::uuid, NOW(), $4)
 	`
-	_, _ = tx.ExecContext(ctx, historyQuery, bookingID, string(status), changedByUUID, reason)
+	if _, err := tx.ExecContext(ctx, historyQuery, bookingID, string(status), changedByUUID, reason); err != nil {
+		return err
+	}
 
 	return tx.Commit()
 }
+
+
 
 // IsGuardian verifica che parentUserID sia tutore legale di studentUserID tramite la
 // tabella parent_students (Bug 97/129).

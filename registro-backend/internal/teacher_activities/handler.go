@@ -37,8 +37,13 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 // Query params: from (YYYY-MM-DD), to (YYYY-MM-DD)
 func (h *Handler) List(c *gin.Context) {
 	teacherID := c.GetString("user_id")
+	role := c.GetString("role")
 	if teacherID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "teacher" && role != "admin" && role != "superadmin" && role != "principal" && role != "vice_principal" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 
@@ -62,6 +67,7 @@ func (h *Handler) List(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, res)
 }
+
 
 // GetByID restituisce una singola attività per ID.
 func (h *Handler) GetByID(c *gin.Context) {

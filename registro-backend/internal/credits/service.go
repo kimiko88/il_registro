@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
+	"registro-backend/internal/users"
 )
 
 var (
@@ -16,15 +18,26 @@ type Service interface {
 	AssignCredit(ctx context.Context, actorID, schoolID string, req AssignCreditRequest) (*StudentSchoolCredit, error)
 	ListClassCredits(ctx context.Context, classID, academicYear string) ([]StudentSchoolCredit, error)
 	GetStudentSummary(ctx context.Context, studentID string) (*StudentCreditSummary, error)
+	GetUserRepo() users.Repository
 }
 
 type service struct {
-	repo Repository
+	repo     Repository
+	userRepo users.Repository
 }
 
-func NewService(repo Repository) Service {
-	return &service{repo: repo}
+func NewService(repo Repository, uRepo ...users.Repository) Service {
+	svc := &service{repo: repo}
+	if len(uRepo) > 0 && uRepo[0] != nil {
+		svc.userRepo = uRepo[0]
+	}
+	return svc
 }
+
+func (s *service) GetUserRepo() users.Repository {
+	return s.userRepo
+}
+
 
 func (s *service) CalculateSuggestedCredit(gradeLevel int, average float64, conductGrade int, pctoHours int, hasExtracurricular bool) CreditCalculationResult {
 	return CalculateCreditRange(gradeLevel, average, conductGrade, pctoHours, hasExtracurricular)

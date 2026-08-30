@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"time"
 
+	"registro-backend/pkg/upload"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -55,7 +57,7 @@ func (h *Handler) ExportGradesExcel(c *gin.Context) {
 
 	filename := fmt.Sprintf("matrice_voti_%s_q%d_%s.xlsx", classID, semester, time.Now().Format("20060102_150405"))
 	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+	c.Header("Content-Disposition", upload.FormatContentDisposition(filename))
 	c.Data(http.StatusOK, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", excelBytes)
 }
 
@@ -68,7 +70,7 @@ func (h *Handler) ExportSidiStudentsXML(c *gin.Context) {
 	}
 	filename := fmt.Sprintf("sidi_anagrafe_alunni_%s.xml", time.Now().Format("20060102_150405"))
 	c.Header("Content-Type", "application/xml")
-	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+	c.Header("Content-Disposition", upload.FormatContentDisposition(filename))
 	c.Data(http.StatusOK, "application/xml", xmlBytes)
 }
 
@@ -82,7 +84,7 @@ func (h *Handler) ExportSidiScrutiniXML(c *gin.Context) {
 	}
 	filename := fmt.Sprintf("sidi_scrutini_q%d_%s.xml", sem, time.Now().Format("20060102_150405"))
 	c.Header("Content-Type", "application/xml")
-	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+	c.Header("Content-Disposition", upload.FormatContentDisposition(filename))
 	c.Data(http.StatusOK, "application/xml", xmlBytes)
 }
 
@@ -95,6 +97,7 @@ func (h *Handler) ExportSidiAttendanceCSV(c *gin.Context) {
 	}
 	filename := fmt.Sprintf("sidi_assenze_%s.csv", time.Now().Format("20060102_150405"))
 	c.Header("Content-Type", "text/csv")
-	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+	c.Header("Content-Disposition", upload.FormatContentDisposition(filename))
 	c.Data(http.StatusOK, "text/csv", csvBytes)
 }
+

@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"strings"
 
+	"registro-backend/pkg/upload"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -277,6 +279,7 @@ func (h *Handler) ExportPDF(c *gin.Context) {
 	}
 	filename := "verbale_" + shortID + "_" + dateStr + ".pdf"
 	c.Header("Content-Type", "application/pdf")
-	c.Header("Content-Disposition", "attachment; filename=\""+filename+"\"")
+	c.Header("Content-Disposition", upload.FormatContentDisposition(filename))
 	c.Data(http.StatusOK, "application/pdf", pdfBytes)
 }
+

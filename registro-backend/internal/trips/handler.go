@@ -62,6 +62,13 @@ func (h *Handler) ListTrips(c *gin.Context) {
 	if role == "parent" {
 		childID := c.Query("student_id")
 		if childID != "" {
+			if uRepo := h.service.GetUserRepo(); uRepo != nil {
+				isG, err := uRepo.IsGuardian(c.Request.Context(), userID, childID)
+				if err != nil || !isG {
+					c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: non sei tutore legale di questo studente"})
+					return
+				}
+			}
 			targetStudentID = childID
 		}
 	}
@@ -101,7 +108,7 @@ func (h *Handler) SubmitConsent(c *gin.Context) {
 	if req.TripID == "" && c.Param("id") != "" {
 		req.TripID = c.Param("id")
 	}
-	if req.StudentID == "" && role == "student" {
+	if role == "student" {
 		req.StudentID = userID
 	}
 	if req.Status == "" {
@@ -114,6 +121,7 @@ func (h *Handler) SubmitConsent(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "trip consent submitted successfully"})
 }
+
 
 func (h *Handler) ListConsents(c *gin.Context) {
 	userID := c.GetString("user_id")

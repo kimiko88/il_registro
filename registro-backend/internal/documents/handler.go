@@ -1,6 +1,7 @@
 package documents
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"path/filepath"
@@ -11,6 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
+
 
 type Handler struct {
 	service  Service
@@ -409,8 +411,11 @@ func (h *Handler) ExportDocument(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	filename := fmt.Sprintf("document_%s.%s", id, format)
+	c.Header("Content-Disposition", upload.FormatContentDisposition(filename))
 	c.Data(http.StatusOK, contentType, data)
 }
+
 func (h *Handler) ListDocuments(c *gin.Context) {
 	docType := c.Query("type")
 	var dt *DocType

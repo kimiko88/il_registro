@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"registro-backend/pkg/upload"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -133,7 +135,7 @@ func (h *Handler) DownloadPDF(c *gin.Context) {
 	}
 
 	c.Header("Content-Type", "application/pdf")
-	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"certificato_%s.pdf\"", id))
+	c.Header("Content-Disposition", upload.FormatContentDisposition(fmt.Sprintf("certificato_%s.pdf", id)))
 	c.Data(http.StatusOK, "application/pdf", pdfBytes)
 }
 
