@@ -229,3 +229,67 @@ func TestGeneratePDFBytes_NotFound(t *testing.T) {
 	assert.Error(t, err)
 	assert.Nil(t, pdf)
 }
+
+func TestDeleteCertificate_StaffRoles(t *testing.T) {
+	ctx := context.Background()
+
+	// Superadmin is authorized
+	repo := new(MockRepository)
+	svc := NewService(repo, nil)
+	repo.On("SoftDelete", ctx, "cert-10").Return(nil).Once()
+	err := svc.DeleteCertificate(ctx, "cert-10", "staff-1", "superadmin")
+	assert.NoError(t, err)
+	repo.AssertExpectations(t)
+
+	// Secretary, Teacher, Student are unauthorized
+	for _, role := range []string{"secretary", "teacher", "student", "parent"} {
+		err := svc.DeleteCertificate(ctx, "cert-10", "user-1", role)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "unauthorized")
+	}
+}
+
+func TestGenerateCertificate_Errors(t *testing.T) {
+	ctx := context.Background()
+	schoolID := "school-1"
+	studentID := "student-1"
+
+	t.Run("UserLookupError", func(t *testing.T) {
+		repo := new(MockRepository)
+		userRepo := new(MockUsersRepository)
+		svc := NewService(repo, userRepo)
+
+		userRepo.On("GetByID", ctx, studentID).Return(nil, errors.New("user db error")).Once()
+
+		_, _, err := svc.GenerateCertificate(ctx, "admin-1", schoolID, GenerateCertificateRequest{
+			StudentID: studentID,
+			Type:      CertIscrizione,
+		})
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "user db error")
+	})
+
+	t.Run("NextProtocolFallbackAndCreateError", func(t *testing.T) {
+		repo := new(MockRepository)
+		userRepo := new(MockUsersRepository)
+		svc := NewService(repo, userRepo)
+
+		userRepo.On("GetByID", ctx, studentID).Return(&users.User{
+			ID:        studentID,
+			FirstName: "Mario",
+			LastName:  "Rossi",
+			SchoolID:  &schoolID,
+		}, nil).Once()
+		repo.On("NextProtocolNo", ctx, schoolID).Return("", errors.New("protocol seq error")).Once()
+		repo.On("Create", ctx, mock.AnythingOfType("*certificates.Certificate")).Return(errors.New("db insert error")).Once()
+
+		_, _, err := svc.GenerateCertificate(ctx, "admin-1", schoolID, GenerateCertificateRequest{
+			StudentID: studentID,
+			Type:      CertIscrizione,
+		})
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "failed to create certificate record")
+	})
+}
+
+

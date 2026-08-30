@@ -66,9 +66,9 @@ func (s *service) SetSchoolYear(ctx context.Context, actorID, actorRole, schoolI
 		CreatedBy: actorID,
 	}
 	if err := s.repo.UpsertYear(settings); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("impossibile salvare le impostazioni: %w", err)
 	}
-	return s.buildYearResponse(ctx, settings)
+	return s.buildYearResponse(settings)
 }
 
 func (s *service) GetSchoolYear(ctx context.Context, schoolID string) (*SchoolYearResponse, error) {
@@ -79,10 +79,10 @@ func (s *service) GetSchoolYear(ctx context.Context, schoolID string) (*SchoolYe
 		}
 		return nil, err
 	}
-	return s.buildYearResponse(ctx, settings)
+	return s.buildYearResponse(settings)
 }
 
-func (s *service) buildYearResponse(ctx context.Context, settings *SchoolYearSettings) (*SchoolYearResponse, error) {
+func (s *service) buildYearResponse(settings *SchoolYearSettings) (*SchoolYearResponse, error) {
 	teachingDays, err := s.repo.CountTeachingDays(settings.SchoolID, settings.StartDate, settings.EndDate)
 	if err != nil {
 		fmt.Printf("[SchoolCalendar Error] CountTeachingDays failed for school %s: %v\n", settings.SchoolID, err)

@@ -98,6 +98,9 @@ func (r *PostgresRepository) List(ctx context.Context, userID, schoolID string) 
 		m.ReceiverIDs = receivers
 		msgs = append(msgs, m)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	if msgs == nil {
 		msgs = []*Message{}
 	}
@@ -151,11 +154,15 @@ func (r *PostgresRepository) ListBacheca(ctx context.Context, schoolID, userID s
 		m.ReceiverIDs = receivers
 		msgs = append(msgs, m)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	if msgs == nil {
 		msgs = []*Message{}
 	}
 	return msgs, nil
 }
+
 
 func (r *PostgresRepository) Delete(ctx context.Context, id string) error {
 	_, err := r.db.ExecContext(ctx, "DELETE FROM communications WHERE id = $1::uuid", id)
@@ -198,6 +205,9 @@ func (r *PostgresRepository) GetSignatures(ctx context.Context, communicationID 
 		}
 		names = append(names, name)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return names, nil
 }
 
@@ -239,6 +249,9 @@ func (r *PostgresRepository) GetSignatureReport(ctx context.Context, communicati
 		sig.IPAddress = ""
 		report.Signatures = append(report.Signatures, sig)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 
 	report.SignedCount = len(report.Signatures)
 	if report.TotalRecipients > 0 {
@@ -250,6 +263,7 @@ func (r *PostgresRepository) GetSignatureReport(ctx context.Context, communicati
 
 	return report, nil
 }
+
 
 var ErrNotFound = errors.New("communication not found")
 
@@ -385,8 +399,12 @@ func (r *PostgresRepository) ListCircolari(ctx context.Context, schoolID, userID
 		m.IsOfficialCircular = true
 		msgs = append(msgs, m)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return msgs, nil
 }
+
 
 func (r *PostgresRepository) Ack(ctx context.Context, communicationID, userID string) error {
 	query := `

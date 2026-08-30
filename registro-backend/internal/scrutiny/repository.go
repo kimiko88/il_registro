@@ -266,6 +266,9 @@ func (r *postgresRepository) GetDeficienciesByStudent(ctx context.Context, stude
 		}
 		res = append(res, def)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return res, nil
 }
 
@@ -311,8 +314,12 @@ func (r *postgresRepository) GetDeficienciesByClass(ctx context.Context, classID
 		}
 		res = append(res, def)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return res, nil
 }
+
 
 func (r *postgresRepository) SaveDeferredScrutiny(ctx context.Context, req *SaveDeferredScrutinyRequest) error {
 	tx, err := r.db.BeginTx(ctx, nil)

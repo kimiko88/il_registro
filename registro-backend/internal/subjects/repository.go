@@ -67,8 +67,12 @@ func (r *PostgresRepository) List(ctx context.Context, schoolID string) ([]Subje
 		s.Description = desc.String
 		subjects = append(subjects, s)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return subjects, nil
 }
+
 
 func (r *PostgresRepository) Get(ctx context.Context, id string) (*Subject, error) {
 	query := `SELECT id, school_id, name, code, description, is_mandatory, created_at FROM subjects WHERE id = $1`

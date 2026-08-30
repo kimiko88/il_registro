@@ -102,9 +102,13 @@ func (r *postgresRepository) List(ctx context.Context, schoolID, status string, 
 		}
 		feedbacks = append(feedbacks, f)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, 0, err
+	}
 
 	return feedbacks, total, nil
 }
+
 
 func (r *postgresRepository) GetByID(ctx context.Context, id string) (*AccessibilityFeedback, error) {
 	query := `

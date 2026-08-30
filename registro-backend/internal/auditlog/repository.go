@@ -155,5 +155,9 @@ func (r *repository) List(ctx context.Context, p FilterParams) ([]AuditEvent, in
 		}
 		logs = append(logs, ev)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, 0, err
+	}
 	return logs, total, nil
 }
+

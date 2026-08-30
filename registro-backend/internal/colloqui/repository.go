@@ -555,10 +555,18 @@ func (r *PostgresRepository) GetGeneralMeeting(ctx context.Context, id string) (
 		defer slotRows.Close()
 		for slotRows.Next() {
 			var s GeneralMeetingTeacherSlot
-			_ = slotRows.Scan(&s.ID, &s.MeetingID, &s.TeacherID, &s.TeacherName, &s.SubjectName, &s.RoomOrTable, &s.MeetURL, &s.MaxBookings, &s.BookedCount)
+			if err := slotRows.Scan(&s.ID, &s.MeetingID, &s.TeacherID, &s.TeacherName, &s.SubjectName, &s.RoomOrTable, &s.MeetURL, &s.MaxBookings, &s.BookedCount); err != nil {
+				return nil, err
+			}
 			m.TeacherSlots = append(m.TeacherSlots, s)
 		}
+		if err := slotRows.Err(); err != nil {
+			return nil, err
+		}
+	} else if !errors.Is(err, sql.ErrNoRows) {
+		return nil, err
 	}
+
 
 	return &m, nil
 }

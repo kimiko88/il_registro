@@ -194,8 +194,12 @@ func (r *repository) GetVersions(docID string) ([]DocumentVersion, error) {
 		}
 		vers = append(vers, v)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return vers, nil
 }
+
 
 func (r *repository) FindByClass(classID string) ([]Document, error) {
 	return r.queryDocs(`SELECT * FROM documents_enhanced WHERE class_id=$1 AND deleted_at IS NULL`, classID)
@@ -255,6 +259,9 @@ func (r *repository) GetSignatures(docID string) ([]DocumentSignature, error) {
 		}
 		sigs = append(sigs, s)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return sigs, nil
 }
 
@@ -272,6 +279,9 @@ func (r *repository) GetTemplates(schoolID string) ([]DocumentTemplate, error) {
 			return nil, err
 		}
 		tpls = append(tpls, t)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return tpls, nil
 }
@@ -322,5 +332,9 @@ func (r *repository) queryDocs(query string, args ...interface{}) ([]Document, e
 		}
 		docs = append(docs, d)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return docs, nil
 }
+

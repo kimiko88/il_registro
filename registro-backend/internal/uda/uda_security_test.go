@@ -56,11 +56,9 @@ func TestListAll_FiltersBySchool(t *testing.T) {
 			"uda-2": {ID: "uda-2", SchoolID: "school-2", Title: "UDA School 2"},
 		},
 	}
-	svc := &Service{repo: (*Repository)(nil)}
-	_ = svc
-
 	// Teacher from school-1 only sees school-1 UDAs
 	res, err := repo.ListBySchool(context.Background(), "school-1")
+
 	assert.NoError(t, err)
 	assert.Len(t, res, 1)
 	assert.Equal(t, "uda-1", res[0].ID)

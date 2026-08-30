@@ -101,7 +101,9 @@ var RoleDefinitions = map[string][]Permission{
 		AttendanceRead, AttendanceUpdate,
 		SchedulingRead, SchedulingCreate,
 		DocumentRead, DocumentCreate, DocumentUpdate, DocumentDelete,
+		PCTORead, PCTOCreate, PCTOUpdate, PCTODelete,
 	},
+
 	"principal": {
 		UserRead, UserExport, UserAudit,
 		AuditRead,

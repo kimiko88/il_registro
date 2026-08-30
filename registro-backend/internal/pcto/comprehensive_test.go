@@ -59,6 +59,73 @@ func TestService_LogHours(t *testing.T) {
 	repo := new(MockRepo)
 	svc := NewService(repo)
 
+	// Valid logging
 	err := svc.LogHours(context.Background(), "s1", LogHourRequest{ProjectID: "p1", Date: "2025-01-05", Hours: 4})
 	assert.NoError(t, err)
+
+	// Zero or negative hours rejected
+	err = svc.LogHours(context.Background(), "s1", LogHourRequest{ProjectID: "p1", Date: "2025-01-05", Hours: 0})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "hours must be greater than 0")
+
+	err = svc.LogHours(context.Background(), "s1", LogHourRequest{ProjectID: "p1", Date: "2025-01-05", Hours: -2})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "hours must be greater than 0")
+
+	// Invalid date format rejected
+	err = svc.LogHours(context.Background(), "s1", LogHourRequest{ProjectID: "p1", Date: "invalid-date", Hours: 3})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid date format")
 }
+
+func TestService_CreateProject_Validation(t *testing.T) {
+	repo := new(MockRepo)
+	svc := NewService(repo)
+	ctx := context.Background()
+
+	// End before start rejected
+	err := svc.CreateProject(ctx, "school1", "secretary", "t1", CreateProjectRequest{
+		Title:     "Project",
+		Type:      "Internal",
+		StartDate: "2025-06-01",
+		EndDate:   "2025-05-01",
+	})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "end_date cannot be before start_date")
+
+	// Invalid date format rejected
+	err = svc.CreateProject(ctx, "school1", "secretary", "t1", CreateProjectRequest{
+		Title:     "Project",
+		Type:      "Internal",
+		StartDate: "invalid",
+		EndDate:   "2025-05-01",
+	})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid start_date format")
+}
+
+func TestService_UpdateAndDelete_CreatorCheck(t *testing.T) {
+	repo := new(MockRepo)
+	svc := NewService(repo)
+	ctx := context.Background()
+
+	// Mock project created by t1
+	tutor := "t1"
+	repo.On("GetProjectByID", ctx, "p1").Return(&Project{ID: "p1", CreatedBy: "t1", SchoolTutorID: &tutor}, nil)
+
+	// Secretary s2 (who has PCTOUpdate permission) is not the creator, so update is blocked
+	err := svc.UpdateProject(ctx, "s2", "secretary", "p1", CreateProjectRequest{Title: "Updated"})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "unauthorized: not the creator")
+
+	// Secretary s2 is not creator, so delete is blocked
+	err = svc.DeleteProject(ctx, "s2", "secretary", "p1")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "unauthorized: not the creator")
+
+	// Admin is authorized even if not the creator
+	err = svc.UpdateProject(ctx, "admin1", "admin", "p1", CreateProjectRequest{Title: "Updated By Admin"})
+	assert.NoError(t, err)
+}
+
+

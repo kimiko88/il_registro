@@ -46,8 +46,13 @@ func (r *repository) GetEvents(ctx context.Context, schoolID string) ([]Event, e
 	var events []Event
 	for rows.Next() {
 		var e Event
-		_ = rows.Scan(&e.ID, &e.SchoolID, &e.Title, &e.Description, &e.Category, &e.Date, &e.EndDate, &e.Location, &e.Hours, &e.MaxAttendees, &e.CreatedBy)
+		if err := rows.Scan(&e.ID, &e.SchoolID, &e.Title, &e.Description, &e.Category, &e.Date, &e.EndDate, &e.Location, &e.Hours, &e.MaxAttendees, &e.CreatedBy); err != nil {
+			return nil, err
+		}
 		events = append(events, e)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return events, nil
 }
@@ -114,8 +119,12 @@ func (r *repository) GetParticipations(ctx context.Context, studentID string) ([
 		}
 		parts = append(parts, p)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return parts, nil
 }
+
 
 func (r *repository) MarkAttendance(ctx context.Context, eventID, studentID string, attended bool) error {
 	status := "NoShow"

@@ -129,5 +129,66 @@ func TestPaymentsService_Create(t *testing.T) {
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "maggiore di zero")
 	})
+
+	t.Run("Create payment by unauthorized role fails", func(t *testing.T) {
+		req := CreatePaymentRequest{
+			StudentID: "student-1",
+			Title:     "Quota",
+			Amount:    15.0,
+		}
+		_, err := svc.Create(context.Background(), "student-1", "student", "school-1", req)
+		assert.ErrorIs(t, err, ErrUnauthorized)
+	})
 }
+
+func TestPaymentsService_GetByID(t *testing.T) {
+	mockRepo := new(MockRepository)
+	svc := NewService(mockRepo)
+
+	t.Run("GetByID student success", func(t *testing.T) {
+		payment := &SchoolPayment{ID: "p-1", StudentID: "s-1", SchoolID: "sch-1", Amount: 50.0}
+		mockRepo.On("GetByID", mock.Anything, "p-1").Return(payment, nil).Once()
+
+		res, err := svc.GetByID(context.Background(), "s-1", "student", "sch-1", "p-1")
+		assert.NoError(t, err)
+		assert.Equal(t, payment, res)
+	})
+
+	t.Run("GetByID other student unauthorized", func(t *testing.T) {
+		payment := &SchoolPayment{ID: "p-1", StudentID: "s-1", SchoolID: "sch-1", Amount: 50.0}
+		mockRepo.On("GetByID", mock.Anything, "p-1").Return(payment, nil).Once()
+
+		_, err := svc.GetByID(context.Background(), "s-2", "student", "sch-1", "p-1")
+		assert.ErrorIs(t, err, ErrUnauthorized)
+	})
+
+	t.Run("GetByID unauthorized role rejected", func(t *testing.T) {
+		payment := &SchoolPayment{ID: "p-1", StudentID: "s-1", SchoolID: "sch-1", Amount: 50.0}
+		mockRepo.On("GetByID", mock.Anything, "p-1").Return(payment, nil).Once()
+
+		_, err := svc.GetByID(context.Background(), "t-1", "teacher", "sch-1", "p-1")
+		assert.ErrorIs(t, err, ErrUnauthorized)
+	})
+
+	t.Run("GetByID wrong school rejected", func(t *testing.T) {
+		payment := &SchoolPayment{ID: "p-1", StudentID: "s-1", SchoolID: "sch-1", Amount: 50.0}
+		mockRepo.On("GetByID", mock.Anything, "p-1").Return(payment, nil).Once()
+
+		_, err := svc.GetByID(context.Background(), "adm-1", "admin", "sch-2", "p-1")
+		assert.ErrorIs(t, err, ErrUnauthorized)
+	})
+}
+
+func TestPaymentsService_Pay_AlreadyPaid(t *testing.T) {
+	mockRepo := new(MockRepository)
+	svc := NewService(mockRepo)
+
+	payment := &SchoolPayment{ID: "p-1", StudentID: "s-1", Status: "paid"}
+	mockRepo.On("GetByID", mock.Anything, "p-1").Return(payment, nil).Once()
+
+	_, err := svc.Pay(context.Background(), "s-1", "student", "p-1", "PagoPA")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "già stato pagato")
+}
+
 

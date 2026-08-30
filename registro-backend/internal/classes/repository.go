@@ -94,8 +94,12 @@ func (r *PostgresRepository) GetClassSubjects(ctx context.Context, classID strin
 		}
 		results = append(results, cs)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return results, nil
 }
+
 
 // ... existing methods ...
 

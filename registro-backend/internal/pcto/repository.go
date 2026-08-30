@@ -61,6 +61,9 @@ func (r *repository) GetProjects(ctx context.Context, schoolID string) ([]Projec
 		}
 		projects = append(projects, p)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return projects, nil
 }
 
@@ -111,8 +114,13 @@ func (r *repository) GetParticipationsByProject(ctx context.Context, projectID s
 	var parts []Participation
 	for rows.Next() {
 		var p Participation
-		_ = rows.Scan(&p.ID, &p.ProjectID, &p.StudentID, &p.Status, &p.HoursCompleted)
+		if err := rows.Scan(&p.ID, &p.ProjectID, &p.StudentID, &p.Status, &p.HoursCompleted); err != nil {
+			return nil, err
+		}
 		parts = append(parts, p)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return parts, nil
 }
@@ -135,8 +143,13 @@ func (r *repository) GetParticipationsByStudent(ctx context.Context, studentID s
 	var parts []Participation
 	for rows.Next() {
 		var p Participation
-		_ = rows.Scan(&p.ID, &p.ProjectID, &p.StudentID, &p.Status, &p.HoursCompleted)
+		if err := rows.Scan(&p.ID, &p.ProjectID, &p.StudentID, &p.Status, &p.HoursCompleted); err != nil {
+			return nil, err
+		}
 		parts = append(parts, p)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return parts, nil
 }
@@ -190,15 +203,21 @@ func (r *repository) GetHours(ctx context.Context, participationID string) ([]Ho
 	for rows.Next() {
 		var h HourLog
 		var verifiedBy sql.NullString
-		_ = rows.Scan(&h.ID, &h.ParticipationID, &h.Date, &h.Hours, &h.Activity, &h.Verified, &verifiedBy)
+		if err := rows.Scan(&h.ID, &h.ParticipationID, &h.Date, &h.Hours, &h.Activity, &h.Verified, &verifiedBy); err != nil {
+			return nil, err
+		}
 		if verifiedBy.Valid {
 			val := verifiedBy.String
 			h.VerifiedBy = &val
 		}
 		logs = append(logs, h)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return logs, nil
 }
+
 
 func (r *repository) GetHourLogByID(ctx context.Context, id string) (*HourLog, error) {
 	var h HourLog
@@ -262,8 +281,12 @@ func (r *repository) GetCompanies(ctx context.Context, schoolID string) ([]Compa
 		}
 		comps = append(comps, c)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return comps, nil
 }
+
 
 func (r *repository) GetStats(ctx context.Context, schoolID string) (*PCTOStats, error) {
 	stats := &PCTOStats{}

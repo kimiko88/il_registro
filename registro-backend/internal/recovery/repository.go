@@ -104,13 +104,19 @@ func (r *repository) GetCourseByID(ctx context.Context, id string) (*RecoveryCou
 		SELECT id, course_id, session_date::text, start_time, end_time, room, topic, created_at
 		FROM recovery_course_sessions WHERE course_id = $1 ORDER BY session_date ASC, start_time ASC
 	`, id)
-	if err == nil {
-		defer sessRows.Close()
-		for sessRows.Next() {
-			var s RecoveryCourseSession
-			_ = sessRows.Scan(&s.ID, &s.CourseID, &s.SessionDate, &s.StartTime, &s.EndTime, &s.Room, &s.Topic, &s.CreatedAt)
-			rc.Sessions = append(rc.Sessions, s)
+	if err != nil {
+		return nil, err
+	}
+	defer sessRows.Close()
+	for sessRows.Next() {
+		var s RecoveryCourseSession
+		if err := sessRows.Scan(&s.ID, &s.CourseID, &s.SessionDate, &s.StartTime, &s.EndTime, &s.Room, &s.Topic, &s.CreatedAt); err != nil {
+			return nil, err
 		}
+		rc.Sessions = append(rc.Sessions, s)
+	}
+	if err := sessRows.Err(); err != nil {
+		return nil, err
 	}
 
 	// Fetch students
@@ -125,16 +131,23 @@ func (r *repository) GetCourseByID(ctx context.Context, id string) (*RecoveryCou
 		WHERE rcs.course_id = $1
 		ORDER BY u.last_name ASC
 	`, id)
-	if err == nil {
-		defer stRows.Close()
-		for stRows.Next() {
-			var st RecoveryCourseStudent
-			_ = stRows.Scan(&st.ID, &st.CourseID, &st.StudentID, &st.StudentName, &st.ClassName, &st.AttendanceHours, &st.Notes)
-			rc.Students = append(rc.Students, st)
+	if err != nil {
+		return nil, err
+	}
+	defer stRows.Close()
+	for stRows.Next() {
+		var st RecoveryCourseStudent
+		if err := stRows.Scan(&st.ID, &st.CourseID, &st.StudentID, &st.StudentName, &st.ClassName, &st.AttendanceHours, &st.Notes); err != nil {
+			return nil, err
 		}
+		rc.Students = append(rc.Students, st)
+	}
+	if err := stRows.Err(); err != nil {
+		return nil, err
 	}
 
 	return &rc, nil
+
 }
 
 func (r *repository) ListCourses(ctx context.Context, schoolID, academicYear, teacherID string) ([]RecoveryCourse, error) {
@@ -221,14 +234,17 @@ func (r *repository) RecordRecoveryTest(ctx context.Context, t *RecoveryTest) er
 		if t.Outcome == "non_recuperato" {
 			defStatus = "non_recuperato"
 		}
-		_, _ = tx.ExecContext(ctx, `
+		if _, err := tx.ExecContext(ctx, `
 			UPDATE student_deficiencies
 			SET status = $1, recovery_grade = $2, recovery_date = $3::date, updated_at = NOW()
 			WHERE id = $4
-		`, defStatus, t.Grade, t.TestDate, *t.DeficiencyID)
+		`, defStatus, t.Grade, t.TestDate, *t.DeficiencyID); err != nil {
+			return fmt.Errorf("failed to update deficiency status: %w", err)
+		}
 	}
 
 	return tx.Commit()
+
 }
 
 func (r *repository) ListRecoveryTests(ctx context.Context, schoolID, classID, studentID string) ([]RecoveryTest, error) {

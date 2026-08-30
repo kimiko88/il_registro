@@ -184,6 +184,9 @@ func (h *FascicoloHandler) GetFascicolo(c *gin.Context) {
 				items = append(items, v)
 			}
 		}
+		if err := rows.Err(); err != nil {
+			return
+		}
 		if len(items) > 0 {
 			mu.Lock()
 			voti = items
@@ -213,6 +216,9 @@ func (h *FascicoloHandler) GetFascicolo(c *gin.Context) {
 			if err := rows.Scan(&p.ID, &p.Date, &p.Status, &p.Notes); err == nil {
 				items = append(items, p)
 			}
+		}
+		if err := rows.Err(); err != nil {
+			return
 		}
 		if len(items) > 0 {
 			mu.Lock()
@@ -245,6 +251,9 @@ func (h *FascicoloHandler) GetFascicolo(c *gin.Context) {
 				items = append(items, n)
 			}
 		}
+		if err := rows.Err(); err != nil {
+			return
+		}
 		if len(items) > 0 {
 			mu.Lock()
 			note = items
@@ -274,6 +283,9 @@ func (h *FascicoloHandler) GetFascicolo(c *gin.Context) {
 			if err := rows.Scan(&p.ID, &p.Title, &p.Company, &p.Hours, &p.Date); err == nil {
 				items = append(items, p)
 			}
+		}
+		if err := rows.Err(); err != nil {
+			return
 		}
 		if len(items) > 0 {
 			mu.Lock()
@@ -306,6 +318,9 @@ func (h *FascicoloHandler) GetFascicolo(c *gin.Context) {
 				items = append(items, c)
 			}
 		}
+		if err := rows.Err(); err != nil {
+			return
+		}
 		if len(items) > 0 {
 			mu.Lock()
 			compiti = items
@@ -336,12 +351,16 @@ func (h *FascicoloHandler) GetFascicolo(c *gin.Context) {
 				items = append(items, d)
 			}
 		}
+		if err := rows.Err(); err != nil {
+			return
+		}
 		if len(items) > 0 {
 			mu.Lock()
 			documenti = items
 			mu.Unlock()
 		}
 	}()
+
 
 	wg.Wait()
 

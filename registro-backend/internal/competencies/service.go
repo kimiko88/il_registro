@@ -145,17 +145,18 @@ func (r *Repository) GetByClass(ctx context.Context, classID, subjectID string) 
 
 	rows, err := r.db.QueryContext(ctx, query, classID)
 	if err != nil {
-		return []StudentCompetencyEvaluation{}, nil
+		return nil, err
 	}
 	defer rows.Close()
 
 	var result []StudentCompetencyEvaluation
 	for rows.Next() {
 		var sc StudentCompetencyEvaluation
-		if err := rows.Scan(&sc.StudentID, &sc.StudentName); err == nil {
-			sc.Evaluations = make(map[string]string)
-			result = append(result, sc)
+		if err := rows.Scan(&sc.StudentID, &sc.StudentName); err != nil {
+			return nil, err
 		}
+		sc.Evaluations = make(map[string]string)
+		result = append(result, sc)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -170,28 +171,34 @@ func (r *Repository) GetByClass(ctx context.Context, classID, subjectID string) 
 			FROM competence_evaluations
 			WHERE ($1 = '' OR class_id = $1::uuid) AND ($2 = '' OR subject_id::text = $2)`
 		evalRows, err := r.db.QueryContext(ctx, evalQuery, classID, subjectID)
-		if err == nil {
-			defer evalRows.Close()
-			evalMap := make(map[string]map[string]string)
-			for evalRows.Next() {
-				var stID, code, lvl string
-				if err := evalRows.Scan(&stID, &code, &lvl); err == nil {
-					if evalMap[stID] == nil {
-						evalMap[stID] = make(map[string]string)
-					}
-					evalMap[stID][code] = lvl
-				}
+		if err != nil {
+			return nil, err
+		}
+		defer evalRows.Close()
+		evalMap := make(map[string]map[string]string)
+		for evalRows.Next() {
+			var stID, code, lvl string
+			if err := evalRows.Scan(&stID, &code, &lvl); err != nil {
+				return nil, err
 			}
-			for i := range result {
-				if m, ok := evalMap[result[i].StudentID]; ok {
-					result[i].Evaluations = m
-				}
+			if evalMap[stID] == nil {
+				evalMap[stID] = make(map[string]string)
+			}
+			evalMap[stID][code] = lvl
+		}
+		if err := evalRows.Err(); err != nil {
+			return nil, err
+		}
+		for i := range result {
+			if m, ok := evalMap[result[i].StudentID]; ok {
+				result[i].Evaluations = m
 			}
 		}
 	}
 
 	return result, nil
 }
+
 
 type Service struct {
 	repo *Repository

@@ -81,8 +81,12 @@ func (r *repository) ListNonTeachingDays(schoolID string) ([]NonTeachingDay, err
 		}
 		res = append(res, d)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return res, nil
 }
+
 
 func (r *repository) CountTeachingDays(schoolID string, from, to time.Time) (int, error) {
 	// Genera la serie di date e sottrae i giorni non didattici e i weekend.
