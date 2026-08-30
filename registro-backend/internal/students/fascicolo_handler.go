@@ -361,7 +361,6 @@ func (h *FascicoloHandler) GetFascicolo(c *gin.Context) {
 		}
 	}()
 
-
 	wg.Wait()
 
 	fascicolo := StudentFascicolo{

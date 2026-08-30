@@ -50,5 +50,3 @@ func TestExportSidiAttendanceCSV(t *testing.T) {
 	assert.Contains(t, csvStr, "CODICE_FISCALE;COGNOME;NOME;CLASSE;ORE_ASSENZA_GIUSTIFICATE")
 	assert.Contains(t, csvStr, "RSSMRA08A01H501U;Rossi;Mario")
 }
-
-

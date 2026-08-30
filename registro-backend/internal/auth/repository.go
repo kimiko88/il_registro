@@ -78,7 +78,6 @@ type Repository interface {
 	CleanOldLoginAttempts(ctx context.Context, olderThan time.Duration) error
 }
 
-
 type repository struct {
 	db *sql.DB
 }

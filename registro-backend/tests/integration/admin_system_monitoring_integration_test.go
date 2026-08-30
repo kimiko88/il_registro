@@ -18,8 +18,12 @@ import (
 
 type mockMonitoringAdminRepo struct{}
 
-func (m *mockMonitoringAdminRepo) CountSchools(_ context.Context, _ *string) (int64, error) { return 1, nil }
-func (m *mockMonitoringAdminRepo) CountUsers(_ context.Context, _ *string) (int64, error)   { return 10, nil }
+func (m *mockMonitoringAdminRepo) CountSchools(_ context.Context, _ *string) (int64, error) {
+	return 1, nil
+}
+func (m *mockMonitoringAdminRepo) CountUsers(_ context.Context, _ *string) (int64, error) {
+	return 10, nil
+}
 func (m *mockMonitoringAdminRepo) CountUsersByRole(_ context.Context, _ string, _ *string) (int64, error) {
 	return 5, nil
 }

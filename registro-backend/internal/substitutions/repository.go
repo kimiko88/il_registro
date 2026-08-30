@@ -38,7 +38,6 @@ func NewRepository(db *sql.DB) *PostgresRepository {
 	return &PostgresRepository{db: db}
 }
 
-
 func (r *PostgresRepository) Create(ctx context.Context, s *Substitution) error {
 	s.ID = uuid.New().String()
 	s.CreatedAt = time.Now()
@@ -246,7 +245,6 @@ func (r *PostgresRepository) GetAvailableTeachers(ctx context.Context, schoolID 
 	}
 	return list, nil
 }
-
 
 func (r *PostgresRepository) GetTeacherProfileID(ctx context.Context, userID string) (string, error) {
 	if _, err := uuid.Parse(userID); err != nil {

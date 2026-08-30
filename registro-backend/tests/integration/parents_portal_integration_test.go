@@ -62,7 +62,6 @@ func (m *mockGradesForParentsRepo) FindByStudent(_ context.Context, studentID st
 	return m.studentGrades[studentID], nil
 }
 
-
 type mockAttendanceForParentsRepo struct {
 	attendance.Repository
 }

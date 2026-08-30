@@ -93,7 +93,6 @@ func TestGetWeightConfigs_Ordering(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 
-
 // TestGetClassSubjectAverage_SchoolMatch verifies class average retrieval.
 func TestGetClassSubjectAverage_SchoolMatch(t *testing.T) {
 	mockRepo := new(MockRepository)

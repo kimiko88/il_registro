@@ -160,4 +160,3 @@ func (r *repository) List(ctx context.Context, p FilterParams) ([]AuditEvent, in
 	}
 	return logs, total, nil
 }
-

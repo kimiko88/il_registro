@@ -163,7 +163,6 @@ func (r *PostgresRepository) ListBacheca(ctx context.Context, schoolID, userID s
 	return msgs, nil
 }
 
-
 func (r *PostgresRepository) Delete(ctx context.Context, id string) error {
 	_, err := r.db.ExecContext(ctx, "DELETE FROM communications WHERE id = $1::uuid", id)
 	return err
@@ -263,7 +262,6 @@ func (r *PostgresRepository) GetSignatureReport(ctx context.Context, communicati
 
 	return report, nil
 }
-
 
 var ErrNotFound = errors.New("communication not found")
 
@@ -404,7 +402,6 @@ func (r *PostgresRepository) ListCircolari(ctx context.Context, schoolID, userID
 	}
 	return msgs, nil
 }
-
 
 func (r *PostgresRepository) Ack(ctx context.Context, communicationID, userID string) error {
 	query := `

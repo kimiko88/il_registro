@@ -42,4 +42,3 @@ func Connect(cfg config.DatabaseConfig) (*sql.DB, error) {
 	logger.Log.Info("Connected to database successfully")
 	return db, nil
 }
-

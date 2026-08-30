@@ -140,4 +140,3 @@ func TestSignDocument_ValidationAndErrors(t *testing.T) {
 		mockUsers.AssertExpectations(t)
 	})
 }
-

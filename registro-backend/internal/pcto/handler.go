@@ -107,7 +107,6 @@ func (h *Handler) GetProjects(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-
 func (h *Handler) AssignStudent(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")

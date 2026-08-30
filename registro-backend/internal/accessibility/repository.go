@@ -109,7 +109,6 @@ func (r *postgresRepository) List(ctx context.Context, schoolID, status string, 
 	return feedbacks, total, nil
 }
 
-
 func (r *postgresRepository) GetByID(ctx context.Context, id string) (*AccessibilityFeedback, error) {
 	query := `
 		SELECT id, protocol_number, name, email, barrier_type, description,

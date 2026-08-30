@@ -38,7 +38,6 @@ func (s *service) GetUserRepo() users.Repository {
 	return s.userRepo
 }
 
-
 func (s *service) CalculateSuggestedCredit(gradeLevel int, average float64, conductGrade int, pctoHours int, hasExtracurricular bool) CreditCalculationResult {
 	return CalculateCreditRange(gradeLevel, average, conductGrade, pctoHours, hasExtracurricular)
 }

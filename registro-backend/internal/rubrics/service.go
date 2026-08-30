@@ -147,7 +147,6 @@ func (s *Service) AssessStudent(ctx context.Context, teacherID, rubricID string,
 		d = time.Now()
 	}
 
-
 	assessment := &RubricAssessment{
 		RubricID:   rubricID,
 		StudentID:  req.StudentID,

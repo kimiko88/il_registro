@@ -320,7 +320,6 @@ func (r *postgresRepository) GetDeficienciesByClass(ctx context.Context, classID
 	return res, nil
 }
 
-
 func (r *postgresRepository) SaveDeferredScrutiny(ctx context.Context, req *SaveDeferredScrutinyRequest) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {

@@ -60,4 +60,3 @@ func TestAuth_CleanOldLoginAttempts(t *testing.T) {
 	assert.NoError(t, err)
 	mockRepo.AssertExpectations(t)
 }
-

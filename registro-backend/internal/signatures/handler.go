@@ -65,7 +65,6 @@ func (h *Handler) SignDocument(c *gin.Context) {
 	c.JSON(http.StatusCreated, sig)
 }
 
-
 func (h *Handler) GetSignatures(c *gin.Context) {
 	userID := c.GetString("user_id")
 	if userID == "" {
@@ -217,4 +216,3 @@ func (h *Handler) DownloadCadPackage(c *gin.Context) {
 	c.Header("Content-Disposition", upload.FormatContentDisposition(filename))
 	c.Data(http.StatusOK, "application/zip", zipBytes)
 }
-

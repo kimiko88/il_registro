@@ -303,4 +303,3 @@ func (m *mockUserRepoForComms) IsGuardian(ctx context.Context, parentID, student
 func (m *mockUserRepoForComms) ChangePasswordTx(ctx context.Context, userID, newPasswordHash string) error {
 	return nil
 }
-

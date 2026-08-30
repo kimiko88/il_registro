@@ -48,4 +48,3 @@ func NewReportCardPdfTask(payload ReportCardPdfPayload) (*asynq.Task, error) {
 	}
 	return asynq.NewTask(TypeReportCardPdf, data, asynq.MaxRetry(3)), nil
 }
-

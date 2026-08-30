@@ -38,4 +38,3 @@ func TestSanitizeHeader_CRLFInjection(t *testing.T) {
 		assert.NotContains(t, cleaned, "\n")
 	}
 }
-

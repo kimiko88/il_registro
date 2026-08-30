@@ -345,7 +345,6 @@ func (m *MockRepository) DeleteWeightConfig(ctx context.Context, id string) erro
 	return args.Error(0)
 }
 
-
 func (m *MockRepository) GetStudentClassAndSchoolInfo(ctx context.Context, studentID string) (string, string, string, string, error) {
 	for _, call := range m.ExpectedCalls {
 		if call.Method == "GetStudentClassAndSchoolInfo" {

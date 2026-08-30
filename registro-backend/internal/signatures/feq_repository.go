@@ -114,7 +114,6 @@ func (r *feqRepo) FindQualifiedByDocumentID(ctx context.Context, docID string) (
 	return result, nil
 }
 
-
 // RevokeQualified imposta revoked_at e revocation_reason (FIX #4 — CRL/OCSP).
 // La RLS PostgreSQL consente UPDATE solo su is_valid/revoked_at/revocation_reason.
 func (r *feqRepo) RevokeQualified(ctx context.Context, id string, reason string) error {

@@ -260,7 +260,6 @@ func (s *SidiExportService) GenerateSidiPackage(
 		return nil, nil, err
 	}
 
-
 	// FIX SIDI #3: nota versione XSD nel README
 	readme := fmt.Sprintf(
 		"PACCHETTO TRASMISSIONE SIDI/MIUR\n================================\n"+

@@ -80,7 +80,6 @@ func GenerateCadPreservationPackage(ctx context.Context, schoolID string, year s
 		schoolID, year,
 	)
 
-
 	yearPrefix := year
 	if len(year) >= 4 {
 		yearPrefix = year[:4]

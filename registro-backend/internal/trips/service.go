@@ -125,7 +125,6 @@ func (s *Service) SubmitConsent(ctx context.Context, actorID, actorRole, ipAddre
 	return s.repo.SubmitConsent(ctx, c)
 }
 
-
 func (s *Service) ListConsents(ctx context.Context, tripID string) ([]*TripConsent, error) {
 	return s.repo.ListConsents(ctx, tripID)
 }

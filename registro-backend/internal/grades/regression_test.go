@@ -66,7 +66,9 @@ func (m *RegressionMockRepo) Create(ctx context.Context, g *Grade) error        
 func (m *RegressionMockRepo) Update(ctx context.Context, g *Grade, h *GradeHistory) error { return nil }
 func (m *RegressionMockRepo) Delete(ctx context.Context, id, teacherID string) error      { return nil }
 func (m *RegressionMockRepo) SoftDelete(ctx context.Context, id, modifiedBy string) error { return nil }
-func (m *RegressionMockRepo) FindByID(ctx context.Context, id string) (*Grade, error)     { return nil, nil }
+func (m *RegressionMockRepo) FindByID(ctx context.Context, id string) (*Grade, error) {
+	return nil, nil
+}
 func (m *RegressionMockRepo) FindByStudent(ctx context.Context, studentID string) ([]Grade, error) {
 	return m.data, nil // Return all data for filtering check
 }
@@ -110,10 +112,14 @@ func (m *RegressionMockRepo) FindWithFilterPaginated(ctx context.Context, f Grad
 	res, err := m.FindWithFilter(ctx, f)
 	return res, len(res), err
 }
-func (m *RegressionMockRepo) BatchCreate(ctx context.Context, grades []*Grade) error                 { return nil }
-func (m *RegressionMockRepo) GetHistory(ctx context.Context, gradeID string) ([]GradeHistory, error) { return nil, nil }
-func (m *RegressionMockRepo) FindByTeacher(ctx context.Context, teacherID string) ([]Grade, error)   { return nil, nil }
-func (m *RegressionMockRepo) CreateTest(ctx context.Context, test *ClassTest) error                  { return nil }
+func (m *RegressionMockRepo) BatchCreate(ctx context.Context, grades []*Grade) error { return nil }
+func (m *RegressionMockRepo) GetHistory(ctx context.Context, gradeID string) ([]GradeHistory, error) {
+	return nil, nil
+}
+func (m *RegressionMockRepo) FindByTeacher(ctx context.Context, teacherID string) ([]Grade, error) {
+	return nil, nil
+}
+func (m *RegressionMockRepo) CreateTest(ctx context.Context, test *ClassTest) error { return nil }
 func (m *RegressionMockRepo) FindTestsByClassAndSubject(ctx context.Context, classID string, subjectID string) ([]ClassTest, error) {
 	return nil, nil
 }
@@ -122,8 +128,12 @@ func (m *RegressionMockRepo) UpdateTest(ctx context.Context, test *ClassTest) er
 func (m *RegressionMockRepo) FindUpcomingTestsByClass(ctx context.Context, classID string) ([]ClassTest, error) {
 	return nil, nil
 }
-func (m *RegressionMockRepo) FindGradesByTestID(ctx context.Context, testID string) ([]Grade, error) { return nil, nil }
-func (m *RegressionMockRepo) FindTestByID(ctx context.Context, id string) (*ClassTest, error)        { return nil, nil }
+func (m *RegressionMockRepo) FindGradesByTestID(ctx context.Context, testID string) ([]Grade, error) {
+	return nil, nil
+}
+func (m *RegressionMockRepo) FindTestByID(ctx context.Context, id string) (*ClassTest, error) {
+	return nil, nil
+}
 
 // fix: FindEnrolledSubjects era mancante nel mock causando errore di compilazione
 func (m *RegressionMockRepo) FindEnrolledSubjects(ctx context.Context, studentID string, semester int) ([]string, error) {

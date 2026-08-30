@@ -324,4 +324,3 @@ func TestScrutiny_ValidationRoleAuthorization(t *testing.T) {
 		}
 	}
 }
-

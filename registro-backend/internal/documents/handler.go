@@ -13,7 +13,6 @@ import (
 	"github.com/google/uuid"
 )
 
-
 type Handler struct {
 	service  Service
 	uploader upload.StorageUploader

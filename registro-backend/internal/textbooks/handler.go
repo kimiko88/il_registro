@@ -99,7 +99,6 @@ func (h *Handler) List(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-
 func (h *Handler) Delete(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")

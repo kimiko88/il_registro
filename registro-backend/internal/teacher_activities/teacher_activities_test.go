@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-
 type mockRepo struct {
 	activities map[string]*TeacherFreeActivity
 }
@@ -267,4 +266,3 @@ func TestTeacherActivitiesHandler_List_RBAC(t *testing.T) {
 		assert.Equal(t, http.StatusOK, w.Code)
 	})
 }
-

@@ -717,7 +717,6 @@ func (m *MockGradesRepository) UpsertWeightConfig(ctx context.Context, cfg *grad
 	return args.Get(0).(*grades.GradeWeightConfig), args.Error(1)
 }
 
-
 func (m *MockGradesRepository) GetStudentClassAndSchoolInfo(ctx context.Context, studentID string) (string, string, string, string, error) {
 	for _, call := range m.ExpectedCalls {
 		if call.Method == "GetStudentClassAndSchoolInfo" {

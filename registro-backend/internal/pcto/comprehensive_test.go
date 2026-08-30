@@ -127,5 +127,3 @@ func TestService_UpdateAndDelete_CreatorCheck(t *testing.T) {
 	err = svc.UpdateProject(ctx, "admin1", "admin", "p1", CreateProjectRequest{Title: "Updated By Admin"})
 	assert.NoError(t, err)
 }
-
-

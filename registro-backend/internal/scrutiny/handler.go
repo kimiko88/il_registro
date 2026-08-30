@@ -478,4 +478,3 @@ func (h *Handler) GetPdfJobStatus(c *gin.Context) {
 
 	c.JSON(http.StatusOK, status)
 }
-

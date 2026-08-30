@@ -282,4 +282,3 @@ func (h *Handler) ExportPDF(c *gin.Context) {
 	c.Header("Content-Disposition", upload.FormatContentDisposition(filename))
 	c.Data(http.StatusOK, "application/pdf", pdfBytes)
 }
-

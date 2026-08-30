@@ -132,4 +132,3 @@ func (h *Handler) GetStudentSummary(c *gin.Context) {
 
 	c.JSON(http.StatusOK, summary)
 }
-

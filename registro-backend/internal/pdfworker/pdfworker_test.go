@@ -55,4 +55,3 @@ func TestJobStatusStruct(t *testing.T) {
 	assert.Equal(t, now, status.CreatedAt)
 	assert.Equal(t, now, status.UpdatedAt)
 }
-

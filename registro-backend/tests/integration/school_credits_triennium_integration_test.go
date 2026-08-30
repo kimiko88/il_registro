@@ -155,14 +155,14 @@ func TestCredits_Assign_OutOfRangeRequiresDeliberation(t *testing.T) {
 
 	// Grade level 3 with average 6.0 allows max 8 credits, attempting 12 without notes
 	body, _ := json.Marshal(credits.AssignCreditRequest{
-		StudentID:          "student-triennio-2",
-		ClassID:            "class-3A",
-		AcademicYear:       "2025/2026",
-		GradeLevel:         3,
-		GradeAverage:       6.0,
-		ConductGrade:       7,
-		AssignedCredit:     12,
-		DeliberationNotes:  "", // Empty notes -> must fail
+		StudentID:         "student-triennio-2",
+		ClassID:           "class-3A",
+		AcademicYear:      "2025/2026",
+		GradeLevel:        3,
+		GradeAverage:      6.0,
+		ConductGrade:      7,
+		AssignedCredit:    12,
+		DeliberationNotes: "", // Empty notes -> must fail
 	})
 
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/credits/assign", bytes.NewReader(body))

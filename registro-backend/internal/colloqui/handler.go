@@ -526,7 +526,6 @@ func (h *Handler) ListQueueTickets(c *gin.Context) {
 	c.JSON(http.StatusOK, tickets)
 }
 
-
 func (h *Handler) UpdateTicketStatus(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")

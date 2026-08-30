@@ -408,7 +408,6 @@ func main() {
 			creditsH := credits.NewHandler(creditsSvc)
 			creditsH.RegisterRoutes(protected)
 
-
 			recoveryRepo := recovery.NewRepository(database)
 			recoverySvc := recovery.NewService(recoveryRepo)
 			recoveryH := recovery.NewHandler(recoverySvc)
@@ -458,7 +457,6 @@ func main() {
 			compSvc := competencies.NewService(compRepo, usersRepo)
 			compH := competencies.NewHandler(compSvc)
 			compH.RegisterRoutes(protected)
-
 
 			// Attività libere docente (ore a disposizione, riunioni, gita, formazione, etc.)
 			teacherActRepo := teacher_activities.NewRepository(database)

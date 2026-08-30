@@ -190,5 +190,3 @@ func TestPaymentsService_Pay_AlreadyPaid(t *testing.T) {
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "già stato pagato")
 }
-
-

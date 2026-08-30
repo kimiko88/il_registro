@@ -13,7 +13,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-
 type mockColloquiRepo struct {
 	mock.Mock
 	Repository
@@ -72,7 +71,6 @@ func (m *mockColloquiRepo) BookQueueTicket(ctx context.Context, t *GeneralMeetin
 	args := m.Called(ctx, t)
 	return args.Error(0)
 }
-
 
 func (m *mockColloquiRepo) ListQueueTickets(ctx context.Context, meetingID, teacherID, parentID string) ([]GeneralMeetingQueueTicket, error) {
 	args := m.Called(ctx, meetingID, teacherID, parentID)
@@ -138,5 +136,3 @@ func TestColloqui_QueueTicket_Security(t *testing.T) {
 		mockRepo.AssertExpectations(t)
 	})
 }
-
-

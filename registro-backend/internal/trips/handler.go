@@ -122,7 +122,6 @@ func (h *Handler) SubmitConsent(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "trip consent submitted successfully"})
 }
 
-
 func (h *Handler) ListConsents(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")

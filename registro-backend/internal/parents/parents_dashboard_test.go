@@ -118,14 +118,22 @@ func (m *mockGradesRepoForParentTest) FindByStudent(ctx context.Context, student
 	}
 	return args.Get(0).([]grades.Grade), args.Error(1)
 }
-func (m *mockGradesRepoForParentTest) Create(ctx context.Context, g *grades.Grade) error             { return nil }
-func (m *mockGradesRepoForParentTest) BatchCreate(ctx context.Context, grades []*grades.Grade) error { return nil }
+func (m *mockGradesRepoForParentTest) Create(ctx context.Context, g *grades.Grade) error { return nil }
+func (m *mockGradesRepoForParentTest) BatchCreate(ctx context.Context, grades []*grades.Grade) error {
+	return nil
+}
 func (m *mockGradesRepoForParentTest) Update(ctx context.Context, g *grades.Grade, h *grades.GradeHistory) error {
 	return nil
 }
-func (m *mockGradesRepoForParentTest) Delete(ctx context.Context, id, deletedBy string) error         { return nil }
-func (m *mockGradesRepoForParentTest) SoftDelete(ctx context.Context, id, modifiedBy string) error    { return nil }
-func (m *mockGradesRepoForParentTest) FindByID(ctx context.Context, id string) (*grades.Grade, error) { return nil, nil }
+func (m *mockGradesRepoForParentTest) Delete(ctx context.Context, id, deletedBy string) error {
+	return nil
+}
+func (m *mockGradesRepoForParentTest) SoftDelete(ctx context.Context, id, modifiedBy string) error {
+	return nil
+}
+func (m *mockGradesRepoForParentTest) FindByID(ctx context.Context, id string) (*grades.Grade, error) {
+	return nil, nil
+}
 func (m *mockGradesRepoForParentTest) FindByClass(ctx context.Context, classID string, semester int) ([]grades.Grade, error) {
 	return nil, nil
 }
@@ -150,15 +158,19 @@ func (m *mockGradesRepoForParentTest) GetHistory(ctx context.Context, gradeID st
 func (m *mockGradesRepoForParentTest) FindEnrolledSubjects(ctx context.Context, studentID string, semester int) ([]string, error) {
 	return nil, nil
 }
-func (m *mockGradesRepoForParentTest) CreateTest(ctx context.Context, test *grades.ClassTest) error { return nil }
+func (m *mockGradesRepoForParentTest) CreateTest(ctx context.Context, test *grades.ClassTest) error {
+	return nil
+}
 func (m *mockGradesRepoForParentTest) FindTestsByClassAndSubject(ctx context.Context, classID, subjectID string) ([]grades.ClassTest, error) {
 	return nil, nil
 }
 func (m *mockGradesRepoForParentTest) FindUpcomingTestsByClass(ctx context.Context, classID string) ([]grades.ClassTest, error) {
 	return nil, nil
 }
-func (m *mockGradesRepoForParentTest) DeleteTest(ctx context.Context, id string) error              { return nil }
-func (m *mockGradesRepoForParentTest) UpdateTest(ctx context.Context, test *grades.ClassTest) error { return nil }
+func (m *mockGradesRepoForParentTest) DeleteTest(ctx context.Context, id string) error { return nil }
+func (m *mockGradesRepoForParentTest) UpdateTest(ctx context.Context, test *grades.ClassTest) error {
+	return nil
+}
 func (m *mockGradesRepoForParentTest) FindGradesByTestID(ctx context.Context, testID string) ([]grades.Grade, error) {
 	return nil, nil
 }
@@ -171,7 +183,9 @@ func (m *mockGradesRepoForParentTest) GetWeightConfigs(ctx context.Context, scho
 func (m *mockGradesRepoForParentTest) UpsertWeightConfig(ctx context.Context, cfg *grades.GradeWeightConfig) (*grades.GradeWeightConfig, error) {
 	return nil, nil
 }
-func (m *mockGradesRepoForParentTest) DeleteWeightConfig(ctx context.Context, id string) error { return nil }
+func (m *mockGradesRepoForParentTest) DeleteWeightConfig(ctx context.Context, id string) error {
+	return nil
+}
 
 func (m *mockGradesRepoForParentTest) GetStudentClassAndSchoolInfo(ctx context.Context, studentID string) (studentName, className, classID, schoolID string, err error) {
 	return "", "", "", "", nil

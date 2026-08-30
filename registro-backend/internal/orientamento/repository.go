@@ -125,7 +125,6 @@ func (r *repository) GetParticipations(ctx context.Context, studentID string) ([
 	return parts, nil
 }
 
-
 func (r *repository) MarkAttendance(ctx context.Context, eventID, studentID string, attended bool) error {
 	status := "NoShow"
 	if attended {
@@ -143,7 +142,6 @@ func (r *repository) MarkAttendance(ctx context.Context, eventID, studentID stri
 	_, err := r.db.ExecContext(ctx, query, attended, status, eventID, studentID)
 	return err
 }
-
 
 func (r *repository) SavePreference(ctx context.Context, p *StudentPreference) error {
 	query := `

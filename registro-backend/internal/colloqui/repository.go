@@ -408,8 +408,6 @@ func (r *PostgresRepository) UpdateBookingStatus(ctx context.Context, bookingID 
 	return tx.Commit()
 }
 
-
-
 // IsGuardian verifica che parentUserID sia tutore legale di studentUserID tramite la
 // tabella parent_students (Bug 97/129).
 func (r *PostgresRepository) IsGuardian(ctx context.Context, parentUserID, studentUserID string) (bool, error) {
@@ -570,7 +568,6 @@ func (r *PostgresRepository) GetGeneralMeeting(ctx context.Context, id string) (
 	} else if !errors.Is(err, sql.ErrNoRows) {
 		return nil, err
 	}
-
 
 	return &m, nil
 }

@@ -100,4 +100,3 @@ func (h *Handler) ExportSidiAttendanceCSV(c *gin.Context) {
 	c.Header("Content-Disposition", upload.FormatContentDisposition(filename))
 	c.Data(http.StatusOK, "text/csv", csvBytes)
 }
-

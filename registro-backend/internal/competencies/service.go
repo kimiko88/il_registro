@@ -12,7 +12,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-
 type Evaluation struct {
 	ID             string    `json:"id" db:"id"`
 	SchoolID       string    `json:"school_id" db:"school_id"`
@@ -202,7 +201,6 @@ func (r *Repository) GetByClass(ctx context.Context, classID, subjectID string) 
 	return result, nil
 }
 
-
 type Service struct {
 	repo     *Repository
 	userRepo users.Repository
@@ -252,7 +250,6 @@ func (s *Service) GetClassEvaluations(ctx context.Context, classID, subjectID st
 	}
 	return s.repo.GetByClass(ctx, classID, subjectID)
 }
-
 
 // Handler HTTP
 type Handler struct {
@@ -396,4 +393,3 @@ func (h *Handler) BatchSave(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "valutazioni per competenze salvate con successo"})
 }
-

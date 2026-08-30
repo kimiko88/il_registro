@@ -11,15 +11,14 @@ import (
 
 var (
 	ErrUnauthorizedStudent = errors.New("unauthorized: cannot view goals of another student")
-	ErrNotGuardian        = errors.New("unauthorized: non sei tutore legale di questo studente")
-	ErrUnauthorized       = errors.New("unauthorized")
+	ErrNotGuardian         = errors.New("unauthorized: non sei tutore legale di questo studente")
+	ErrUnauthorized        = errors.New("unauthorized")
 )
 
 type Service struct {
 	repo     Repository
 	userRepo users.Repository
 }
-
 
 func NewService(repo Repository, uRepo ...users.Repository) *Service {
 	if repo == nil {
@@ -85,4 +84,3 @@ func (s *Service) UpdateGoalStatus(ctx context.Context, actorID, actorRole, id s
 
 	return s.repo.UpdateStatus(ctx, id, status)
 }
-

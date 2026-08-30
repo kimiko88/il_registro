@@ -195,4 +195,3 @@ func TestExportDocument_ContentDispositionHeader(t *testing.T) {
 	assert.Equal(t, "application/pdf", w.Header().Get("Content-Type"))
 	mockSvc.AssertExpectations(t)
 }
-

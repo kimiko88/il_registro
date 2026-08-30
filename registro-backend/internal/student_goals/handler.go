@@ -93,4 +93,3 @@ func (h *Handler) UpdateStatus(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "status updated"})
 }
-

@@ -148,7 +148,6 @@ func (r *PostgresRepository) GetByClass(ctx context.Context, classID string) ([]
 	return results, nil
 }
 
-
 func (r *PostgresRepository) normalizeTeacherID(ctx context.Context, teacherID *string) *string {
 	if teacherID == nil {
 		return nil

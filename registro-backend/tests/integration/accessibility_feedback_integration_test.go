@@ -147,7 +147,7 @@ func TestIntegration_Accessibility_Feedback_And_Preferences_Workflow(t *testing.
 
 	var listResp struct {
 		Feedbacks []accessibility.AccessibilityFeedback `json:"feedbacks"`
-		Total     int                                    `json:"total"`
+		Total     int                                   `json:"total"`
 	}
 	err = json.Unmarshal(wList.Body.Bytes(), &listResp)
 	require.NoError(t, err)
@@ -169,10 +169,10 @@ func TestIntegration_Accessibility_Feedback_And_Preferences_Workflow(t *testing.
 	// 4. Save and retrieve user custom accessibility preferences (Dyslexia font & High contrast)
 	prefPayload := accessibility.SavePreferencesRequest{
 		Settings: map[string]interface{}{
-			"high_contrast":  true,
-			"dyslexia_font":  true,
-			"font_scaling":   1.2,
-			"reduce_motion":  true,
+			"high_contrast": true,
+			"dyslexia_font": true,
+			"font_scaling":  1.2,
+			"reduce_motion": true,
 		},
 	}
 	bodyPref, _ := json.Marshal(prefPayload)

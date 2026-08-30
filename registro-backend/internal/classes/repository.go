@@ -100,7 +100,6 @@ func (r *PostgresRepository) GetClassSubjects(ctx context.Context, classID strin
 	return results, nil
 }
 
-
 // ... existing methods ...
 
 func (r *PostgresRepository) ListByTeacher(ctx context.Context, teacherUserID string, schoolYear string) ([]Class, error) {

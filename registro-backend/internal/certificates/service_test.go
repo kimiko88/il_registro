@@ -291,5 +291,3 @@ func TestGenerateCertificate_Errors(t *testing.T) {
 		assert.Contains(t, err.Error(), "failed to create certificate record")
 	})
 }
-
-

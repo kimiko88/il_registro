@@ -137,7 +137,6 @@ func (r *repository) List(ctx context.Context, schoolID, studentID string, certT
 	return result, nil
 }
 
-
 func (r *repository) SoftDelete(ctx context.Context, id string) error {
 	query := `UPDATE certificates SET is_deleted = true WHERE id = $1`
 	_, err := r.db.ExecContext(ctx, query, id)

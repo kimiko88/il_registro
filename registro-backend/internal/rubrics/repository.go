@@ -136,7 +136,6 @@ func (r *PostgresRepository) GetRubricByID(ctx context.Context, id string) (*Rub
 	return rub, nil
 }
 
-
 func (r *PostgresRepository) ListRubrics(ctx context.Context, schoolID, teacherID string) ([]*Rubric, error) {
 	query := `
 		SELECT id, school_id, teacher_id, subject_id, title, COALESCE(description, ''), created_at
@@ -314,4 +313,3 @@ func (r *PostgresRepository) ListAssessmentsByClass(ctx context.Context, classID
 	}
 	return list, nil
 }
-

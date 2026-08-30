@@ -86,7 +86,6 @@ func TestGetPdfJobStatus_NoWorkerClient(t *testing.T) {
 	assert.Equal(t, http.StatusServiceUnavailable, w.Code)
 }
 
-
 func TestTaskPayloadStructure(t *testing.T) {
 	payload := pdfworker.ScrutinyPdfPayload{
 		JobID:       "job-1",

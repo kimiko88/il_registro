@@ -117,7 +117,6 @@ func (s *Service) GetByID(ctx context.Context, actorID, actorRole, schoolID, id 
 	return p, nil
 }
 
-
 func (s *Service) Pay(ctx context.Context, actorID, actorRole, id, method string) (*SchoolPayment, error) {
 	if actorID == "" {
 		return nil, ErrUnauthorized
@@ -146,7 +145,6 @@ func (s *Service) Pay(ctx context.Context, actorID, actorRole, id, method string
 	if p.Status == "paid" {
 		return nil, fmt.Errorf("questo contributo o tassa è già stato pagato")
 	}
-
 
 	if method == "" {
 		method = "PagoPA"

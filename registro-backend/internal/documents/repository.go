@@ -200,7 +200,6 @@ func (r *repository) GetVersions(docID string) ([]DocumentVersion, error) {
 	return vers, nil
 }
 
-
 func (r *repository) FindByClass(classID string) ([]Document, error) {
 	return r.queryDocs(`SELECT * FROM documents_enhanced WHERE class_id=$1 AND deleted_at IS NULL`, classID)
 }
@@ -337,4 +336,3 @@ func (r *repository) queryDocs(query string, args ...interface{}) ([]Document, e
 	}
 	return docs, nil
 }
-

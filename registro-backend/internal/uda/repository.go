@@ -224,7 +224,6 @@ func (r *Repository) ListAll(ctx context.Context) ([]*UdaPlan, error) {
 	return plans, nil
 }
 
-
 func (r *Repository) Update(ctx context.Context, id string, req UpdateUdaRequest) (*UdaPlan, error) {
 	compJSON, _ := json.Marshal(req.Competencies)
 	query := `

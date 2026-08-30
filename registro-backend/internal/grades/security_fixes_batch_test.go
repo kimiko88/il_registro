@@ -143,4 +143,3 @@ func TestBulkImport_TeacherAssignmentEnforcement(t *testing.T) {
 	assert.NotNil(t, res)
 	assert.Equal(t, 1, res.Imported)
 }
-

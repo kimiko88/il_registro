@@ -133,7 +133,6 @@ func TestRubricsService_CreateAndAssess(t *testing.T) {
 	})
 }
 
-
 type MockUsersRepo struct {
 	mock.Mock
 	users.Repository

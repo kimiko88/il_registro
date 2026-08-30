@@ -11,13 +11,13 @@ import (
 
 func TestElearningService_GetProvidersStatus(t *testing.T) {
 	cfg := config.ElearningConfig{
-		GoogleClientID:     "google-client-123",
-		GoogleClientSecret: "google-secret-456",
-		GoogleRedirectURI:  "https://app.school.it/auth/google",
-		MicrosoftClientID:  "ms-client-789",
+		GoogleClientID:        "google-client-123",
+		GoogleClientSecret:    "google-secret-456",
+		GoogleRedirectURI:     "https://app.school.it/auth/google",
+		MicrosoftClientID:     "ms-client-789",
 		MicrosoftClientSecret: "ms-secret-000",
 		MicrosoftRedirectURI:  "https://app.school.it/auth/microsoft",
-		MicrosoftTenantID:  "ms-tenant-111",
+		MicrosoftTenantID:     "ms-tenant-111",
 	}
 
 	svc := NewService(cfg)
@@ -75,7 +75,6 @@ func TestElearningService_SyncEndpoints(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Contains(t, resCourses.Message, "google")
 	assert.Greater(t, resCourses.Count, 0)
-
 
 	resAssignments, err := svc.SyncAssignments(ctx, "user-1", "google", "class-1")
 	assert.NoError(t, err)

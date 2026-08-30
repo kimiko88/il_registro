@@ -92,4 +92,3 @@ func TestGetFascicolo_AdminAndSecretaryAllowed(t *testing.T) {
 	rSec.ServeHTTP(wSec, reqSec)
 	assert.Equal(t, http.StatusOK, wSec.Code)
 }
-

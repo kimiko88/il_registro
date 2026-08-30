@@ -116,7 +116,6 @@ func (h *Handler) ListGroups(c *gin.Context) {
 	c.JSON(http.StatusOK, groups)
 }
 
-
 func (h *Handler) GetGroup(c *gin.Context) {
 	userID := c.GetString("user_id")
 	if userID == "" {

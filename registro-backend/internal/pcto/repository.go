@@ -218,7 +218,6 @@ func (r *repository) GetHours(ctx context.Context, participationID string) ([]Ho
 	return logs, nil
 }
 
-
 func (r *repository) GetHourLogByID(ctx context.Context, id string) (*HourLog, error) {
 	var h HourLog
 	var verifiedBy sql.NullString
@@ -286,7 +285,6 @@ func (r *repository) GetCompanies(ctx context.Context, schoolID string) ([]Compa
 	}
 	return comps, nil
 }
-
 
 func (r *repository) GetStats(ctx context.Context, schoolID string) (*PCTOStats, error) {
 	stats := &PCTOStats{}

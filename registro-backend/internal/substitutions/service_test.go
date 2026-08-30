@@ -278,5 +278,3 @@ func TestSubstitutions_ListAndAssign_ErrorPropagation(t *testing.T) {
 		}
 	})
 }
-
-

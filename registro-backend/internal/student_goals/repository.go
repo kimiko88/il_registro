@@ -93,7 +93,6 @@ func (r *PostgresRepository) ListByStudent(ctx context.Context, studentID string
 	return list, nil
 }
 
-
 func (r *PostgresRepository) UpdateStatus(ctx context.Context, id string, status GoalStatus) error {
 	var completedAt *time.Time
 	if status == StatusCompleted {

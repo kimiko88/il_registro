@@ -58,13 +58,19 @@ func TestIntegration_Grading_Scrutiny_Lifecycle(t *testing.T) {
 
 type mockGradesRepoForScrutiny struct{}
 
-func (m *mockGradesRepoForScrutiny) Create(ctx context.Context, g *grades.Grade) error                 { return nil }
-func (m *mockGradesRepoForScrutiny) BatchCreate(ctx context.Context, gradesList []*grades.Grade) error { return nil }
+func (m *mockGradesRepoForScrutiny) Create(ctx context.Context, g *grades.Grade) error { return nil }
+func (m *mockGradesRepoForScrutiny) BatchCreate(ctx context.Context, gradesList []*grades.Grade) error {
+	return nil
+}
 func (m *mockGradesRepoForScrutiny) Update(ctx context.Context, g *grades.Grade, history *grades.GradeHistory) error {
 	return nil
 }
-func (m *mockGradesRepoForScrutiny) Delete(ctx context.Context, id string, deletedBy string) error { return nil }
-func (m *mockGradesRepoForScrutiny) SoftDelete(ctx context.Context, id, modifiedBy string) error    { return nil }
+func (m *mockGradesRepoForScrutiny) Delete(ctx context.Context, id string, deletedBy string) error {
+	return nil
+}
+func (m *mockGradesRepoForScrutiny) SoftDelete(ctx context.Context, id, modifiedBy string) error {
+	return nil
+}
 func (m *mockGradesRepoForScrutiny) FindByID(ctx context.Context, id string) (*grades.Grade, error) {
 	return &grades.Grade{ID: id, GradeValue: 8}, nil
 }
@@ -99,9 +105,13 @@ func (m *mockGradesRepoForScrutiny) UpsertWeightConfig(ctx context.Context, cfg 
 func (m *mockGradesRepoForScrutiny) GetWeightConfig(schoolID, subjectID, classID string) (*grades.GradeWeightConfig, error) {
 	return nil, nil
 }
-func (m *mockGradesRepoForScrutiny) DeleteWeightConfig(ctx context.Context, id string) error          { return nil }
-func (m *mockGradesRepoForScrutiny) CreateTest(ctx context.Context, testData *grades.ClassTest) error { return nil }
-func (m *mockGradesRepoForScrutiny) DeleteTest(ctx context.Context, id string) error                  { return nil }
+func (m *mockGradesRepoForScrutiny) DeleteWeightConfig(ctx context.Context, id string) error {
+	return nil
+}
+func (m *mockGradesRepoForScrutiny) CreateTest(ctx context.Context, testData *grades.ClassTest) error {
+	return nil
+}
+func (m *mockGradesRepoForScrutiny) DeleteTest(ctx context.Context, id string) error { return nil }
 func (m *mockGradesRepoForScrutiny) FindByClass(ctx context.Context, classID string, semester int) ([]grades.Grade, error) {
 	return []grades.Grade{}, nil
 }
@@ -138,7 +148,9 @@ func (m *mockGradesRepoForScrutiny) GetHistory(ctx context.Context, gradeID stri
 func (m *mockGradesRepoForScrutiny) GetWeightConfigs(ctx context.Context, schoolID, subjectID, classID string) ([]grades.GradeWeightConfig, error) {
 	return []grades.GradeWeightConfig{}, nil
 }
-func (m *mockGradesRepoForScrutiny) UpdateTest(ctx context.Context, test *grades.ClassTest) error { return nil }
+func (m *mockGradesRepoForScrutiny) UpdateTest(ctx context.Context, test *grades.ClassTest) error {
+	return nil
+}
 
 func (m *mockGradesRepoForScrutiny) GetStudentClassAndSchoolInfo(ctx context.Context, studentID string) (string, string, string, string, error) {
 	return "", "", "", "", nil

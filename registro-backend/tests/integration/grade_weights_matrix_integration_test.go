@@ -94,7 +94,6 @@ func (m *mockGradeWeightsRepo) FindBySubject(ctx context.Context, subjectID stri
 	return res, nil
 }
 
-
 type mockUserRepoForWeights struct {
 	users.Repository
 }

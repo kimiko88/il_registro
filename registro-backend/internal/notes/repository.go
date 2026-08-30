@@ -31,7 +31,6 @@ func NewRepository(db *sql.DB) Repository {
 	return &PostgresRepository{db: db}
 }
 
-
 func (r *PostgresRepository) Create(ctx context.Context, n *StudentNote) error {
 	if n.ID == "" {
 		n.ID = uuid.New().String()

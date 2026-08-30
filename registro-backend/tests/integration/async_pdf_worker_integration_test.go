@@ -29,7 +29,6 @@ func TestAsyncPdfWorkerIntegration_HandlerRouting(t *testing.T) {
 	})
 	h.RegisterRoutes(v1)
 
-
 	t.Run("POST /api/v1/scrutiny/class/:classId/async-pdf safely handles unconfigured queue", func(t *testing.T) {
 		req := httptest.NewRequest("POST", "/api/v1/scrutiny/class/class-10A/async-pdf?semester=2", nil)
 		w := httptest.NewRecorder()

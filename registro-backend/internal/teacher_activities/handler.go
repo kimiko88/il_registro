@@ -68,7 +68,6 @@ func (h *Handler) List(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-
 // GetByID restituisce una singola attività per ID.
 func (h *Handler) GetByID(c *gin.Context) {
 	teacherID := c.GetString("user_id")

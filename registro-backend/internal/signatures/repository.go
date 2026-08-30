@@ -50,4 +50,3 @@ func (r *repository) FindByDocumentID(ctx context.Context, docID string) ([]Sign
 	}
 	return sigs, nil
 }
-
