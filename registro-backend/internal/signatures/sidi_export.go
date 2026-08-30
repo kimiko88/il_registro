@@ -253,12 +253,13 @@ func (s *SidiExportService) GenerateSidiPackage(
 	if err := addFile("TrasmissioneSIDI.xml", fullXML); err != nil {
 		return nil, nil, err
 	}
-	if err := addFile("IntegritaHash.txt", []byte(fmt.Sprintf(
+	if err := addFile("IntegritaHash.txt", fmt.Appendf(nil,
 		"File: TrasmissioneSIDI.xml\nAlgoritmo: SHA-256\nHash: %s\nData: %s\n",
 		xmlHashHex, now.Format(time.RFC3339),
-	))); err != nil {
+	)); err != nil {
 		return nil, nil, err
 	}
+
 
 	// FIX SIDI #3: nota versione XSD nel README
 	readme := fmt.Sprintf(

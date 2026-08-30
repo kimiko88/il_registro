@@ -117,7 +117,22 @@ func TestRubricsService_CreateAndAssess(t *testing.T) {
 		assert.NotNil(t, ass)
 		assert.Equal(t, 7.5, ass.TotalScore)
 	})
+
+	t.Run("AssessStudent_InvalidDate", func(t *testing.T) {
+		req := CreateAssessmentRequest{
+			StudentID: "std-1",
+			ClassID:   "class-1",
+			Date:      "invalid-date",
+			Scores: []CriterionScore{
+				{CriterionID: "crit-1", LevelID: "lvl-1", Score: 4.0},
+			},
+		}
+		_, err := svc.AssessStudent(ctx, "teacher-1", "rubric-1", req)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "formato data non valido")
+	})
 }
+
 
 type MockUsersRepo struct {
 	mock.Mock

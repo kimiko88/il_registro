@@ -120,14 +120,22 @@ func (r *PostgresRepository) GetRubricByID(ctx context.Context, id string) (*Rub
 					c.Levels = append(c.Levels, l)
 				}
 			}
+			if err := lRows.Err(); err != nil {
+				lRows.Close()
+				return nil, err
+			}
 			lRows.Close()
 		}
 
 		rub.Criteria = append(rub.Criteria, c)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 
 	return rub, nil
 }
+
 
 func (r *PostgresRepository) ListRubrics(ctx context.Context, schoolID, teacherID string) ([]*Rubric, error) {
 	query := `
@@ -160,6 +168,9 @@ func (r *PostgresRepository) ListRubrics(ctx context.Context, schoolID, teacherI
 		rub.Criteria = make([]Criterion, count) // allocate length for count
 
 		list = append(list, rub)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return list, nil
@@ -253,6 +264,9 @@ func (r *PostgresRepository) ListAssessmentsByStudent(ctx context.Context, stude
 		}
 		list = append(list, a)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return list, nil
 }
 
@@ -281,5 +295,9 @@ func (r *PostgresRepository) ListAssessmentsByClass(ctx context.Context, classID
 		}
 		list = append(list, a)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return list, nil
 }
+

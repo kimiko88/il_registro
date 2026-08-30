@@ -139,13 +139,14 @@ func (s *Service) AssessStudent(ctx context.Context, teacherID, rubricID string,
 	var d time.Time
 	if req.Date != "" {
 		parsed, err := time.Parse("2006-01-02", req.Date)
-		if err == nil {
-			d = parsed
+		if err != nil {
+			return nil, fmt.Errorf("formato data non valido %q: atteso YYYY-MM-DD: %w", req.Date, err)
 		}
-	}
-	if d.IsZero() {
+		d = parsed
+	} else {
 		d = time.Now()
 	}
+
 
 	assessment := &RubricAssessment{
 		RubricID:   rubricID,

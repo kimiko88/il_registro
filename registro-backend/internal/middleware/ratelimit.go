@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -27,7 +28,9 @@ type rateLimiterBackend interface {
 }
 
 var (
-	activeBackend     rateLimiterBackend
+	// activeBackendPtr è un atomic pointer per evitare data race tra la scrittura
+	// in InitRateLimiter (tramite sync.Once) e la lettura in getBackend().
+	activeBackendPtr  atomic.Pointer[rateLimiterBackend]
 	activeBackendOnce sync.Once
 )
 
@@ -42,26 +45,25 @@ var (
 // trigger a lazy in-memory init (backward-compatible, single-instance only).
 func InitRateLimiter(redisURL string) {
 	activeBackendOnce.Do(func() {
+		var b rateLimiterBackend
 		if redisURL != "" {
 			opt, err := redis.ParseURL(redisURL)
 			if err != nil {
 				log.Printf("ratelimit: invalid REDIS_URL (%v) — falling back to in-memory limiter", err)
 			} else {
 				rdb := redis.NewClient(opt)
-				pingCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+				ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 				defer cancel()
-				if pingErr := rdb.Ping(pingCtx).Err(); pingErr != nil {
+				if _, pingErr := rdb.Ping(ctx).Result(); pingErr != nil {
 					log.Printf("ratelimit: Redis ping failed (%v) — falling back to in-memory limiter", pingErr)
-					_ = rdb.Close()
 				} else {
-					activeBackend = &redisBackend{
+					b = &redisBackend{
 						limiter:     redis_rate.NewLimiter(rdb),
-						globalLimit: redis_rate.PerSecond(5),
+						globalLimit: redis_rate.PerSecond(10),
 						authLimit:   redis_rate.PerMinute(5),
 						fallback:    newMemoryBackend(),
 					}
 					log.Println("ratelimit: using Redis-backed distributed rate limiter with in-memory fallback")
-					return
 				}
 			}
 		} else {
@@ -70,18 +72,23 @@ func InitRateLimiter(redisURL string) {
 					"(not distributed; unsuitable for multi-instance deployments)")
 			}
 		}
-		activeBackend = newMemoryBackend()
+		if b == nil {
+			b = newMemoryBackend()
+		}
+		// Scrittura atomica: visibile a tutte le goroutine che leggono tramite Load()
+		activeBackendPtr.Store(&b)
 	})
 }
 
-// getBackend returns the active backend, performing a lazy in-memory init if
-// InitRateLimiter was never called (backward-compatible for tests).
+// getBackend restituisce il backend attivo. La lettura usa atomic.Load() per essere
+// race-free anche quando chiamata concorrentemente prima di InitRateLimiter.
 func getBackend() rateLimiterBackend {
-	if activeBackend != nil {
-		return activeBackend
+	if p := activeBackendPtr.Load(); p != nil {
+		return *p
 	}
+	// Lazy init (compatibilità per i test che non chiamano InitRateLimiter)
 	InitRateLimiter("")
-	return activeBackend
+	return *activeBackendPtr.Load()
 }
 
 // ---------------------------------------------------------------------------

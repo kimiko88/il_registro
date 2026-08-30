@@ -300,13 +300,9 @@ func (s *Service) ChangePassword(ctx context.Context, userID string, req ChangeP
 		return err
 	}
 
-	now := time.Now()
-	user.PasswordHash = string(hash)
-	user.PasswordChangedAt = &now
-	if err := s.repo.Update(ctx, user); err != nil {
-		return err
-	}
-	if err := s.repo.AddPasswordHistory(ctx, userID, string(hash)); err != nil {
+	// ChangePasswordTx aggiorna password e history in un'unica transazione atomica.
+	// Questo garantisce che se la history fallisce, anche la password non viene salvata.
+	if err := s.repo.ChangePasswordTx(ctx, userID, string(hash)); err != nil {
 		return err
 	}
 	_ = s.repo.RevokeAllUserTokens(ctx, userID)

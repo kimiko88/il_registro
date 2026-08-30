@@ -141,6 +141,11 @@ func (m *MockRepository) GetGuardians(ctx context.Context, studentProfileID stri
 	return args.Get(0).([]GuardianInfo), args.Error(1)
 }
 
+func (m *MockRepository) ChangePasswordTx(ctx context.Context, userID, newPasswordHash string) error {
+	args := m.Called(ctx, userID, newPasswordHash)
+	return args.Error(0)
+}
+
 func (m *MockRepository) GetFascicoloSummary(ctx context.Context, studentID string, isActive bool) (map[string]interface{}, error) {
 	args := m.Called(ctx, studentID, isActive)
 	if args.Get(0) == nil {
@@ -436,8 +441,7 @@ func TestService_ChangePassword(t *testing.T) {
 				user := &User{ID: "user-123", PasswordHash: string(oldHashedPassword)}
 				mockRepo.On("GetByID", mock.Anything, "user-123").Return(user, nil)
 				mockRepo.On("GetPasswordHistory", mock.Anything, "user-123").Return([]string{}, nil)
-				mockRepo.On("Update", mock.Anything, mock.AnythingOfType("*users.User")).Return(nil)
-				mockRepo.On("AddPasswordHistory", mock.Anything, "user-123", mock.Anything).Return(nil)
+				mockRepo.On("ChangePasswordTx", mock.Anything, "user-123", mock.Anything).Return(nil)
 			},
 			wantErr: false,
 		},

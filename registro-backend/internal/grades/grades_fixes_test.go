@@ -66,11 +66,11 @@ func TestGradesFixes_BatchCreateGrades_Deduplication(t *testing.T) {
 		},
 	}
 
-	mockRepo.On("BatchCreate", mock.MatchedBy(func(deduped []*Grade) bool {
+	mockRepo.On("BatchCreate", mock.Anything, mock.MatchedBy(func(deduped []*Grade) bool {
 		return len(deduped) == 1
 	})).Return(nil).Once()
 
-	err := svc.BatchCreateGrades("t1", "teacher", "sch1", gradesInput)
+	err := svc.BatchCreateGrades(context.Background(), "t1", "teacher", "sch1", gradesInput)
 	assert.NoError(t, err)
 	mockRepo.AssertExpectations(t)
 }

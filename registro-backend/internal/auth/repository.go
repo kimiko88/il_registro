@@ -186,10 +186,18 @@ func (r *repository) GetMFASecret(ctx context.Context, userID string) (string, e
 	query := `SELECT mfa_secret FROM users WHERE id = $1 AND deleted_at IS NULL`
 	var secret sql.NullString
 	err := r.db.QueryRowContext(ctx, query, userID).Scan(&secret)
-	if err == sql.ErrNoRows || !secret.Valid || secret.String == "" {
+	if err != nil {
+		if err == sql.ErrNoRows {
+			// Utente non trovato → MFA non configurata
+			return "", ErrMFANotEnabled
+		}
+		// Errore DB reale: propaga invece di mascherare con ErrMFANotEnabled
+		return "", err
+	}
+	if !secret.Valid || secret.String == "" {
 		return "", ErrMFANotEnabled
 	}
-	return secret.String, err
+	return secret.String, nil
 }
 
 func (r *repository) SaveTempMFASecret(ctx context.Context, userID, secret string) error {
@@ -364,22 +372,37 @@ func (r *repository) RotateRefreshTokenTx(ctx context.Context, oldID string, new
 }
 
 func (r *repository) CreatePasswordResetToken(ctx context.Context, token *PasswordResetToken) error {
-	// Invalidate any existing active reset tokens for this user before creating a new one
-	_, _ = r.db.ExecContext(ctx, `UPDATE password_reset_tokens SET used = true WHERE user_id = $1 AND used = false`, token.UserID)
+	// Invalidazione del vecchio token e inserimento del nuovo avvengono in una
+	// singola transazione per evitare race condition: se il processo crasha tra
+	// i due statement, l'utente non si ritrova senza token validi.
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
 
-	query := `
-		INSERT INTO password_reset_tokens (id, user_id, token, expires_at, used, created_at)
-		VALUES ($1, $2, $3, $4, false, $5)
-	`
+	// Invalida tutti i token attivi precedenti per questo utente
+	if _, err := tx.ExecContext(ctx,
+		`UPDATE password_reset_tokens SET used = true WHERE user_id = $1 AND used = false`,
+		token.UserID,
+	); err != nil {
+		return err
+	}
+
 	token.ID = uuid.New().String()
 	token.CreatedAt = time.Now()
 	token.Used = false
 
 	hashed := hashToken(token.Token)
-	_, err := r.db.ExecContext(ctx, query,
+	if _, err := tx.ExecContext(ctx,
+		`INSERT INTO password_reset_tokens (id, user_id, token, expires_at, used, created_at)
+		 VALUES ($1, $2, $3, $4, false, $5)`,
 		token.ID, token.UserID, hashed, token.ExpiresAt, token.CreatedAt,
-	)
-	return err
+	); err != nil {
+		return err
+	}
+
+	return tx.Commit()
 }
 
 func (r *repository) GetPasswordResetToken(ctx context.Context, token string) (*PasswordResetToken, error) {

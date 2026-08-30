@@ -16,151 +16,335 @@ type MockRepository struct {
 }
 
 // Implement ONLY methods used in Service logic for these tests
-func (m *MockRepository) Create(grade *Grade) error {
-	args := m.Called(grade)
+func (m *MockRepository) Create(ctx context.Context, grade *Grade) error {
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "Create" && len(call.Arguments) == 1 {
+			return m.Called(grade).Error(0)
+		}
+	}
+	args := m.Called(ctx, grade)
 	return args.Error(0)
 }
-func (m *MockRepository) FindByStudent(studentID string) ([]Grade, error) {
-	args := m.Called(studentID)
-	// Return copy to safe modification during map
+func (m *MockRepository) FindByStudent(ctx context.Context, studentID string) ([]Grade, error) {
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "FindByStudent" && len(call.Arguments) == 1 {
+			args := m.Called(studentID)
+			if args.Get(0) == nil {
+				return nil, args.Error(1)
+			}
+			return args.Get(0).([]Grade), args.Error(1)
+		}
+	}
+	args := m.Called(ctx, studentID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]Grade), args.Error(1)
 }
-func (m *MockRepository) FindByClass(classID string, semester int) ([]Grade, error) {
-	args := m.Called(classID, semester)
+func (m *MockRepository) FindByClass(ctx context.Context, classID string, semester int) ([]Grade, error) {
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "FindByClass" && len(call.Arguments) == 2 {
+			args := m.Called(classID, semester)
+			if args.Get(0) == nil {
+				return nil, args.Error(1)
+			}
+			return args.Get(0).([]Grade), args.Error(1)
+		}
+	}
+	args := m.Called(ctx, classID, semester)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]Grade), args.Error(1)
 }
-func (m *MockRepository) FindByClassAndSubject(classID, subjectID string, semester int) ([]Grade, error) {
-	args := m.Called(classID, subjectID, semester)
+func (m *MockRepository) FindByClassAndSubject(ctx context.Context, classID, subjectID string, semester int) ([]Grade, error) {
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "FindByClassAndSubject" && len(call.Arguments) == 3 {
+			args := m.Called(classID, subjectID, semester)
+			if args.Get(0) == nil {
+				return nil, args.Error(1)
+			}
+			return args.Get(0).([]Grade), args.Error(1)
+		}
+	}
+	args := m.Called(ctx, classID, subjectID, semester)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]Grade), args.Error(1)
 }
-func (m *MockRepository) FindBySubject(subjectID string, semester int) ([]Grade, error) {
-	args := m.Called(subjectID, semester)
+func (m *MockRepository) FindBySubject(ctx context.Context, subjectID string, semester int) ([]Grade, error) {
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "FindBySubject" && len(call.Arguments) == 2 {
+			args := m.Called(subjectID, semester)
+			if args.Get(0) == nil {
+				return nil, args.Error(1)
+			}
+			return args.Get(0).([]Grade), args.Error(1)
+		}
+	}
+	args := m.Called(ctx, subjectID, semester)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]Grade), args.Error(1)
 }
-func (m *MockRepository) FindByID(id string) (*Grade, error) {
-	args := m.Called(id)
+func (m *MockRepository) FindByID(ctx context.Context, id string) (*Grade, error) {
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "FindByID" && len(call.Arguments) == 1 {
+			args := m.Called(id)
+			if args.Get(0) == nil {
+				return nil, args.Error(1)
+			}
+			return args.Get(0).(*Grade), args.Error(1)
+		}
+	}
+	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*Grade), args.Error(1)
 }
-func (m *MockRepository) Update(grade *Grade, history *GradeHistory) error {
-	args := m.Called(grade, history)
+func (m *MockRepository) Update(ctx context.Context, grade *Grade, history *GradeHistory) error {
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "Update" && len(call.Arguments) == 2 {
+			return m.Called(grade, history).Error(0)
+		}
+	}
+	args := m.Called(ctx, grade, history)
 	return args.Error(0)
 }
-func (m *MockRepository) Delete(id, teacherID string) error {
-	args := m.Called(id, teacherID)
+func (m *MockRepository) Delete(ctx context.Context, id, teacherID string) error {
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "Delete" && len(call.Arguments) == 2 {
+			return m.Called(id, teacherID).Error(0)
+		}
+	}
+	args := m.Called(ctx, id, teacherID)
 	return args.Error(0)
 }
-func (m *MockRepository) BatchCreate(grades []*Grade) error {
-	args := m.Called(grades)
+func (m *MockRepository) BatchCreate(ctx context.Context, grades []*Grade) error {
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "BatchCreate" && len(call.Arguments) == 1 {
+			return m.Called(grades).Error(0)
+		}
+	}
+	args := m.Called(ctx, grades)
 	return args.Error(0)
 }
-func (m *MockRepository) FindByTeacher(teacherID string) ([]Grade, error) {
-	args := m.Called(teacherID)
+func (m *MockRepository) FindByTeacher(ctx context.Context, teacherID string) ([]Grade, error) {
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "FindByTeacher" && len(call.Arguments) == 1 {
+			args := m.Called(teacherID)
+			if args.Get(0) == nil {
+				return nil, args.Error(1)
+			}
+			return args.Get(0).([]Grade), args.Error(1)
+		}
+	}
+	args := m.Called(ctx, teacherID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]Grade), args.Error(1)
 }
-func (m *MockRepository) GetHistory(gradeID string) ([]GradeHistory, error) {
-	args := m.Called(gradeID)
+func (m *MockRepository) GetHistory(ctx context.Context, gradeID string) ([]GradeHistory, error) {
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "GetHistory" && len(call.Arguments) == 1 {
+			args := m.Called(gradeID)
+			if args.Get(0) == nil {
+				return nil, args.Error(1)
+			}
+			return args.Get(0).([]GradeHistory), args.Error(1)
+		}
+	}
+	args := m.Called(ctx, gradeID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]GradeHistory), args.Error(1)
 }
-func (m *MockRepository) FindWithFilter(filter GradeFilter) ([]Grade, error) {
-	args := m.Called(filter)
+func (m *MockRepository) FindWithFilter(ctx context.Context, filter GradeFilter) ([]Grade, error) {
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "FindWithFilter" && len(call.Arguments) == 1 {
+			args := m.Called(filter)
+			if args.Get(0) == nil {
+				return nil, args.Error(1)
+			}
+			return args.Get(0).([]Grade), args.Error(1)
+		}
+	}
+	args := m.Called(ctx, filter)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]Grade), args.Error(1)
 }
-func (m *MockRepository) FindWithFilterPaginated(filter GradeFilter) ([]Grade, int, error) {
-	args := m.Called(filter)
+func (m *MockRepository) FindWithFilterPaginated(ctx context.Context, filter GradeFilter) ([]Grade, int, error) {
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "FindWithFilterPaginated" && len(call.Arguments) == 1 {
+			args := m.Called(filter)
+			if args.Get(0) == nil {
+				return nil, args.Int(1), args.Error(2)
+			}
+			return args.Get(0).([]Grade), args.Int(1), args.Error(2)
+		}
+	}
+	args := m.Called(ctx, filter)
 	if args.Get(0) == nil {
 		return nil, args.Int(1), args.Error(2)
 	}
 	return args.Get(0).([]Grade), args.Int(1), args.Error(2)
 }
-func (m *MockRepository) FindEnrolledSubjects(studentID string, semester int) ([]string, error) {
-	args := m.Called(studentID, semester)
+func (m *MockRepository) FindEnrolledSubjects(ctx context.Context, studentID string, semester int) ([]string, error) {
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "FindEnrolledSubjects" && len(call.Arguments) == 2 {
+			args := m.Called(studentID, semester)
+			if args.Get(0) == nil {
+				return nil, args.Error(1)
+			}
+			return args.Get(0).([]string), args.Error(1)
+		}
+	}
+	args := m.Called(ctx, studentID, semester)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]string), args.Error(1)
 }
-func (m *MockRepository) CreateTest(test *ClassTest) error {
-	args := m.Called(test)
+func (m *MockRepository) CreateTest(ctx context.Context, test *ClassTest) error {
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "CreateTest" && len(call.Arguments) == 1 {
+			return m.Called(test).Error(0)
+		}
+	}
+	args := m.Called(ctx, test)
 	return args.Error(0)
 }
-func (m *MockRepository) FindTestsByClassAndSubject(classID string, subjectID string) ([]ClassTest, error) {
-	args := m.Called(classID, subjectID)
+func (m *MockRepository) FindTestsByClassAndSubject(ctx context.Context, classID string, subjectID string) ([]ClassTest, error) {
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "FindTestsByClassAndSubject" && len(call.Arguments) == 2 {
+			args := m.Called(classID, subjectID)
+			if args.Get(0) == nil {
+				return nil, args.Error(1)
+			}
+			return args.Get(0).([]ClassTest), args.Error(1)
+		}
+	}
+	args := m.Called(ctx, classID, subjectID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]ClassTest), args.Error(1)
 }
-func (m *MockRepository) FindUpcomingTestsByClass(classID string) ([]ClassTest, error) {
-	args := m.Called(classID)
+func (m *MockRepository) FindUpcomingTestsByClass(ctx context.Context, classID string) ([]ClassTest, error) {
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "FindUpcomingTestsByClass" && len(call.Arguments) == 1 {
+			args := m.Called(classID)
+			if args.Get(0) == nil {
+				return nil, args.Error(1)
+			}
+			return args.Get(0).([]ClassTest), args.Error(1)
+		}
+	}
+	args := m.Called(ctx, classID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]ClassTest), args.Error(1)
 }
-func (m *MockRepository) DeleteTest(id string) error {
-	args := m.Called(id)
+func (m *MockRepository) DeleteTest(ctx context.Context, id string) error {
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "DeleteTest" && len(call.Arguments) == 1 {
+			return m.Called(id).Error(0)
+		}
+	}
+	args := m.Called(ctx, id)
 	return args.Error(0)
 }
-func (m *MockRepository) UpdateTest(test *ClassTest) error {
-	args := m.Called(test)
+func (m *MockRepository) UpdateTest(ctx context.Context, test *ClassTest) error {
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "UpdateTest" && len(call.Arguments) == 1 {
+			return m.Called(test).Error(0)
+		}
+	}
+	args := m.Called(ctx, test)
 	return args.Error(0)
 }
-func (m *MockRepository) FindTestByID(id string) (*ClassTest, error) {
-	args := m.Called(id)
+func (m *MockRepository) FindTestByID(ctx context.Context, id string) (*ClassTest, error) {
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "FindTestByID" && len(call.Arguments) == 1 {
+			args := m.Called(id)
+			if args.Get(0) == nil {
+				return nil, args.Error(1)
+			}
+			return args.Get(0).(*ClassTest), args.Error(1)
+		}
+	}
+	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*ClassTest), args.Error(1)
 }
-func (m *MockRepository) FindGradesByTestID(testID string) ([]Grade, error) {
-	args := m.Called(testID)
+func (m *MockRepository) FindGradesByTestID(ctx context.Context, testID string) ([]Grade, error) {
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "FindGradesByTestID" && len(call.Arguments) == 1 {
+			args := m.Called(testID)
+			if args.Get(0) == nil {
+				return nil, args.Error(1)
+			}
+			return args.Get(0).([]Grade), args.Error(1)
+		}
+	}
+	args := m.Called(ctx, testID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]Grade), args.Error(1)
 }
-func (m *MockRepository) GetWeightConfigs(schoolID, subjectID, classID string) ([]GradeWeightConfig, error) {
-	args := m.Called(schoolID, subjectID, classID)
+func (m *MockRepository) GetWeightConfigs(ctx context.Context, schoolID, subjectID, classID string) ([]GradeWeightConfig, error) {
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "GetWeightConfigs" && len(call.Arguments) == 3 {
+			args := m.Called(schoolID, subjectID, classID)
+			if args.Get(0) == nil {
+				return nil, args.Error(1)
+			}
+			return args.Get(0).([]GradeWeightConfig), args.Error(1)
+		}
+	}
+	args := m.Called(ctx, schoolID, subjectID, classID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]GradeWeightConfig), args.Error(1)
 }
-func (m *MockRepository) UpsertWeightConfig(cfg *GradeWeightConfig) (*GradeWeightConfig, error) {
-	args := m.Called(cfg)
+func (m *MockRepository) UpsertWeightConfig(ctx context.Context, cfg *GradeWeightConfig) (*GradeWeightConfig, error) {
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "UpsertWeightConfig" && len(call.Arguments) == 1 {
+			args := m.Called(cfg)
+			if args.Get(0) == nil {
+				return nil, args.Error(1)
+			}
+			return args.Get(0).(*GradeWeightConfig), args.Error(1)
+		}
+	}
+	args := m.Called(ctx, cfg)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*GradeWeightConfig), args.Error(1)
 }
-func (m *MockRepository) DeleteWeightConfig(id string) error {
-	args := m.Called(id)
+func (m *MockRepository) DeleteWeightConfig(ctx context.Context, id string) error {
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "DeleteWeightConfig" && len(call.Arguments) == 1 {
+			return m.Called(id).Error(0)
+		}
+	}
+	args := m.Called(ctx, id)
 	return args.Error(0)
 }
+
 
 func (m *MockRepository) GetStudentClassAndSchoolInfo(ctx context.Context, studentID string) (string, string, string, string, error) {
 	for _, call := range m.ExpectedCalls {
@@ -312,6 +496,9 @@ func (m *MockUserRepo) GetPasswordHistory(ctx context.Context, userID string) ([
 	return nil, nil
 }
 func (m *MockUserRepo) AddPasswordHistory(ctx context.Context, userID, passwordHash string) error {
+	return nil
+}
+func (m *MockUserRepo) ChangePasswordTx(ctx context.Context, userID, passwordHash string) error {
 	return nil
 }
 func (m *MockUserRepo) GetFascicoloSummary(ctx context.Context, studentID string, isActive bool) (map[string]interface{}, error) {

@@ -314,7 +314,7 @@ func (h *Handler) BulkImport(c *gin.Context) {
 	}
 
 	schoolID := c.GetString("school_id")
-	result, err := h.service.BulkImport(teacherID, schoolID, file, semester)
+	result, err := h.service.BulkImport(c.Request.Context(), teacherID, schoolID, file, semester)
 	if err != nil {
 		respond500(c, "BulkImport error", err)
 		return
@@ -347,7 +347,7 @@ func (h *Handler) Export(c *gin.Context) {
 
 	filter := h.parseFilter(c)
 
-	data, contentType, err := h.service.Export(teacherID, schoolID, filter, format)
+	data, contentType, err := h.service.Export(c.Request.Context(), teacherID, schoolID, filter, format)
 	if err != nil {
 		respond500(c, "Export error", err)
 		return
@@ -1185,7 +1185,7 @@ func (h *Handler) ListWeightConfigs(c *gin.Context) {
 	subjectID := c.Query("subject_id")
 	classID := c.Query("class_id")
 
-	configs, err := h.service.GetWeightConfigs(schoolID, subjectID, classID)
+	configs, err := h.service.GetWeightConfigs(c.Request.Context(), schoolID, subjectID, classID)
 	if err != nil {
 		respond500(c, "ListWeightConfigs error", err)
 		return

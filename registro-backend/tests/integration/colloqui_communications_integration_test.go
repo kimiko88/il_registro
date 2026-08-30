@@ -300,3 +300,7 @@ func (m *mockUserRepoForComms) IsActive(ctx context.Context, id string) (bool, e
 func (m *mockUserRepoForComms) IsGuardian(ctx context.Context, parentID, studentID string) (bool, error) {
 	return true, nil
 }
+func (m *mockUserRepoForComms) ChangePasswordTx(ctx context.Context, userID, newPasswordHash string) error {
+	return nil
+}
+

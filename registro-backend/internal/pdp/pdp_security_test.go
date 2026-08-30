@@ -81,6 +81,9 @@ func (m *mockUserRepoForPdp) BulkCreate(ctx context.Context, users []users.User)
 func (m *mockUserRepoForPdp) BulkDelete(ctx context.Context, ids []string) (int, error) {
 	return 0, nil
 }
+func (m *mockUserRepoForPdp) ChangePasswordTx(ctx context.Context, userID, newPasswordHash string) error {
+	return nil
+}
 
 type mockPdpRepoForSecTest struct {
 	plans map[string]*PdpPlan

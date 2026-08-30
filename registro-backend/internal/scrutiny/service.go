@@ -139,7 +139,7 @@ func (s *Service) buildMatrix(ctx context.Context, classID string, semester int,
 	}
 
 	// Fetch all grades for class once to avoid N+1 queries (N students * M subjects)
-	allClassGrades, err := s.gradeRepo.FindByClass(classID, semester)
+	allClassGrades, err := s.gradeRepo.FindByClass(ctx, classID, semester)
 	if err != nil {
 		logger.Log.Errorf("scrutiny FindByClass error: %v", err)
 		return nil, fmt.Errorf("failed to load grades for class %s: %w", classID, err)
@@ -288,7 +288,7 @@ func (s *Service) GetOverview(ctx context.Context, actorID, actorRole, schoolID 
 		if recErr != nil {
 			logger.Log.Warnf("GetOverview: error fetching scrutiny records for %s: %v", c.ID, recErr)
 		}
-		allGrades, grErr := s.gradeRepo.FindByClass(c.ID, sem)
+		allGrades, grErr := s.gradeRepo.FindByClass(ctx, c.ID, sem)
 		if grErr != nil {
 			logger.Log.Warnf("GetOverview: error fetching grades for class %s: %v", c.ID, grErr)
 		}

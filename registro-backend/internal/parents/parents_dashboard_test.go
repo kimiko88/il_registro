@@ -96,69 +96,83 @@ func (m *mockUserRepoForParentTest) BulkCreate(ctx context.Context, users []user
 func (m *mockUserRepoForParentTest) BulkDelete(ctx context.Context, ids []string) (int, error) {
 	return 0, nil
 }
+func (m *mockUserRepoForParentTest) ChangePasswordTx(ctx context.Context, userID, newPasswordHash string) error {
+	return nil
+}
 
 type mockGradesRepoForParentTest struct{ mock.Mock }
 
-func (m *mockGradesRepoForParentTest) FindByStudent(studentID string) ([]grades.Grade, error) {
-	args := m.Called(studentID)
+func (m *mockGradesRepoForParentTest) FindByStudent(ctx context.Context, studentID string) ([]grades.Grade, error) {
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "FindByStudent" && len(call.Arguments) == 1 {
+			args := m.Called(studentID)
+			if args.Get(0) == nil {
+				return nil, args.Error(1)
+			}
+			return args.Get(0).([]grades.Grade), args.Error(1)
+		}
+	}
+	args := m.Called(ctx, studentID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]grades.Grade), args.Error(1)
 }
-func (m *mockGradesRepoForParentTest) Create(g *grades.Grade) error             { return nil }
-func (m *mockGradesRepoForParentTest) BatchCreate(grades []*grades.Grade) error { return nil }
-func (m *mockGradesRepoForParentTest) Update(g *grades.Grade, h *grades.GradeHistory) error {
+func (m *mockGradesRepoForParentTest) Create(ctx context.Context, g *grades.Grade) error             { return nil }
+func (m *mockGradesRepoForParentTest) BatchCreate(ctx context.Context, grades []*grades.Grade) error { return nil }
+func (m *mockGradesRepoForParentTest) Update(ctx context.Context, g *grades.Grade, h *grades.GradeHistory) error {
 	return nil
 }
-func (m *mockGradesRepoForParentTest) Delete(id, deletedBy string) error         { return nil }
-func (m *mockGradesRepoForParentTest) FindByID(id string) (*grades.Grade, error) { return nil, nil }
-func (m *mockGradesRepoForParentTest) FindByClass(classID string, semester int) ([]grades.Grade, error) {
+func (m *mockGradesRepoForParentTest) Delete(ctx context.Context, id, deletedBy string) error         { return nil }
+func (m *mockGradesRepoForParentTest) SoftDelete(ctx context.Context, id, modifiedBy string) error    { return nil }
+func (m *mockGradesRepoForParentTest) FindByID(ctx context.Context, id string) (*grades.Grade, error) { return nil, nil }
+func (m *mockGradesRepoForParentTest) FindByClass(ctx context.Context, classID string, semester int) ([]grades.Grade, error) {
 	return nil, nil
 }
-func (m *mockGradesRepoForParentTest) FindByClassAndSubject(classID, subjectID string, semester int) ([]grades.Grade, error) {
+func (m *mockGradesRepoForParentTest) FindByClassAndSubject(ctx context.Context, classID, subjectID string, semester int) ([]grades.Grade, error) {
 	return nil, nil
 }
-func (m *mockGradesRepoForParentTest) FindBySubject(subjectID string, semester int) ([]grades.Grade, error) {
+func (m *mockGradesRepoForParentTest) FindBySubject(ctx context.Context, subjectID string, semester int) ([]grades.Grade, error) {
 	return nil, nil
 }
-func (m *mockGradesRepoForParentTest) FindWithFilter(filter grades.GradeFilter) ([]grades.Grade, error) {
+func (m *mockGradesRepoForParentTest) FindWithFilter(ctx context.Context, filter grades.GradeFilter) ([]grades.Grade, error) {
 	return nil, nil
 }
-func (m *mockGradesRepoForParentTest) FindWithFilterPaginated(filter grades.GradeFilter) ([]grades.Grade, int, error) {
+func (m *mockGradesRepoForParentTest) FindWithFilterPaginated(ctx context.Context, filter grades.GradeFilter) ([]grades.Grade, int, error) {
 	return nil, 0, nil
 }
-func (m *mockGradesRepoForParentTest) FindByTeacher(teacherID string) ([]grades.Grade, error) {
+func (m *mockGradesRepoForParentTest) FindByTeacher(ctx context.Context, teacherID string) ([]grades.Grade, error) {
 	return nil, nil
 }
-func (m *mockGradesRepoForParentTest) GetHistory(gradeID string) ([]grades.GradeHistory, error) {
+func (m *mockGradesRepoForParentTest) GetHistory(ctx context.Context, gradeID string) ([]grades.GradeHistory, error) {
 	return nil, nil
 }
-func (m *mockGradesRepoForParentTest) FindEnrolledSubjects(studentID string, semester int) ([]string, error) {
+func (m *mockGradesRepoForParentTest) FindEnrolledSubjects(ctx context.Context, studentID string, semester int) ([]string, error) {
 	return nil, nil
 }
-func (m *mockGradesRepoForParentTest) CreateTest(test *grades.ClassTest) error { return nil }
-func (m *mockGradesRepoForParentTest) FindTestsByClassAndSubject(classID, subjectID string) ([]grades.ClassTest, error) {
+func (m *mockGradesRepoForParentTest) CreateTest(ctx context.Context, test *grades.ClassTest) error { return nil }
+func (m *mockGradesRepoForParentTest) FindTestsByClassAndSubject(ctx context.Context, classID, subjectID string) ([]grades.ClassTest, error) {
 	return nil, nil
 }
-func (m *mockGradesRepoForParentTest) FindUpcomingTestsByClass(classID string) ([]grades.ClassTest, error) {
+func (m *mockGradesRepoForParentTest) FindUpcomingTestsByClass(ctx context.Context, classID string) ([]grades.ClassTest, error) {
 	return nil, nil
 }
-func (m *mockGradesRepoForParentTest) DeleteTest(id string) error              { return nil }
-func (m *mockGradesRepoForParentTest) UpdateTest(test *grades.ClassTest) error { return nil }
-func (m *mockGradesRepoForParentTest) FindGradesByTestID(testID string) ([]grades.Grade, error) {
+func (m *mockGradesRepoForParentTest) DeleteTest(ctx context.Context, id string) error              { return nil }
+func (m *mockGradesRepoForParentTest) UpdateTest(ctx context.Context, test *grades.ClassTest) error { return nil }
+func (m *mockGradesRepoForParentTest) FindGradesByTestID(ctx context.Context, testID string) ([]grades.Grade, error) {
 	return nil, nil
 }
-func (m *mockGradesRepoForParentTest) FindTestByID(id string) (*grades.ClassTest, error) {
+func (m *mockGradesRepoForParentTest) FindTestByID(ctx context.Context, id string) (*grades.ClassTest, error) {
 	return nil, nil
 }
-func (m *mockGradesRepoForParentTest) GetWeightConfigs(schoolID, subjectID, classID string) ([]grades.GradeWeightConfig, error) {
+func (m *mockGradesRepoForParentTest) GetWeightConfigs(ctx context.Context, schoolID, subjectID, classID string) ([]grades.GradeWeightConfig, error) {
 	return nil, nil
 }
-func (m *mockGradesRepoForParentTest) UpsertWeightConfig(cfg *grades.GradeWeightConfig) (*grades.GradeWeightConfig, error) {
+func (m *mockGradesRepoForParentTest) UpsertWeightConfig(ctx context.Context, cfg *grades.GradeWeightConfig) (*grades.GradeWeightConfig, error) {
 	return nil, nil
 }
-func (m *mockGradesRepoForParentTest) DeleteWeightConfig(id string) error { return nil }
+func (m *mockGradesRepoForParentTest) DeleteWeightConfig(ctx context.Context, id string) error { return nil }
+
 func (m *mockGradesRepoForParentTest) GetStudentClassAndSchoolInfo(ctx context.Context, studentID string) (studentName, className, classID, schoolID string, err error) {
 	return "", "", "", "", nil
 }

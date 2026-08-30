@@ -17,6 +17,12 @@ func NewValidator(db *sql.DB) *Validator {
 	return &Validator{db: db}
 }
 
+// IsAvailable restituisce true se il validatore ha una connessione DB attiva.
+// Usato dal service per evitare accesso diretto al campo db interno.
+func (v *Validator) IsAvailable() bool {
+	return v != nil && v.db != nil
+}
+
 // ValidateGradeValue checks if the grade value matches the grade type requirements.
 // In the Italian school system, grades range from 1 to 10 (with -1 indicating absence).
 func (v *Validator) ValidateGradeValue(value float64, gradeType string) error {

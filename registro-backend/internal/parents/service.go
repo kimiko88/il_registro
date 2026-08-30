@@ -49,7 +49,7 @@ func (s *Service) GetDashboard(ctx context.Context, parentUserID string) (*Paren
 		}
 
 		// Fetch grades by student user_id
-		if gradesList, err := s.gradesRepo.FindByStudent(child.UserID); err == nil {
+		if gradesList, err := s.gradesRepo.FindByStudent(ctx, child.UserID); err == nil {
 			var sum float64
 			var count int
 			for _, g := range gradesList {
@@ -94,7 +94,7 @@ func (s *Service) GetChildGradesAverage(ctx context.Context, parentUserID, stude
 		return 0, ErrUnauthorized
 	}
 
-	gradesList, err := s.gradesRepo.FindByStudent(studentID)
+	gradesList, err := s.gradesRepo.FindByStudent(ctx, studentID)
 	if err != nil {
 		return 0, err
 	}

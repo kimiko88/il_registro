@@ -197,17 +197,8 @@ func (s *Service) Login(ctx context.Context, req *LoginRequest, ipAddress, userA
 		return nil, err
 	}
 
-	// Sanitize UserAgent: strip control characters, null bytes, carriage returns, and newlines
-	userAgent = strings.Map(func(r rune) rune {
-		if r < 32 || r == 127 {
-			return -1
-		}
-		return r
-	}, userAgent)
-
-	if len(userAgent) > 512 {
-		userAgent = userAgent[:512]
-	}
+	// Sanitize UserAgent before storing (strips control chars, limits length)
+	userAgent = sanitizeUserAgent(userAgent)
 
 	// Store refresh token
 	rt := &RefreshToken{
@@ -320,16 +311,8 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken, ipAddress, use
 	if newUserAgent == "" {
 		newUserAgent = rt.UserAgent
 	}
-	// Sanitize UserAgent: strip control characters, null bytes, carriage returns, and newlines
-	newUserAgent = strings.Map(func(r rune) rune {
-		if r < 32 || r == 127 {
-			return -1
-		}
-		return r
-	}, newUserAgent)
-	if len(newUserAgent) > 512 {
-		newUserAgent = newUserAgent[:512]
-	}
+	// Sanitize UserAgent before storing (strips control chars, limits length)
+	newUserAgent = sanitizeUserAgent(newUserAgent)
 
 	// Store the new refresh token in DB and revoke old token in single transaction
 	newRt := &RefreshToken{
@@ -662,4 +645,19 @@ func (s *Service) recordSuccessfulAttempt(ctx context.Context, email, ipAddress 
 		AttemptedAt: time.Now(),
 	}
 	_ = s.repo.RecordLoginAttempt(ctx, attempt)
+}
+
+// sanitizeUserAgent rimuove caratteri di controllo (< 32 o DEL/127) dallo UserAgent
+// e lo tronca a 512 byte per evitare log injection e overflow nel DB.
+func sanitizeUserAgent(ua string) string {
+	ua = strings.Map(func(r rune) rune {
+		if r < 32 || r == 127 {
+			return -1
+		}
+		return r
+	}, ua)
+	if len(ua) > 512 {
+		ua = ua[:512]
+	}
+	return ua
 }

@@ -58,9 +58,10 @@ type mockGradesForParentsRepo struct {
 	studentGrades map[string][]grades.Grade
 }
 
-func (m *mockGradesForParentsRepo) FindByStudent(studentID string) ([]grades.Grade, error) {
+func (m *mockGradesForParentsRepo) FindByStudent(_ context.Context, studentID string) ([]grades.Grade, error) {
 	return m.studentGrades[studentID], nil
 }
+
 
 type mockAttendanceForParentsRepo struct {
 	attendance.Repository

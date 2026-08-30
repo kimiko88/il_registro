@@ -95,3 +95,39 @@ func TestPaymentsService_Pay(t *testing.T) {
 		assert.ErrorIs(t, err, ErrUnauthorized)
 	})
 }
+
+func TestPaymentsService_Create(t *testing.T) {
+	mockRepo := new(MockRepository)
+	svc := NewService(mockRepo)
+
+	t.Run("Create valid payment", func(t *testing.T) {
+		mockRepo.On("Create", mock.Anything, mock.MatchedBy(func(p *SchoolPayment) bool {
+			return p.Amount == 25.5 && p.SchoolID == "school-1"
+		})).Return(nil).Once()
+
+		req := CreatePaymentRequest{
+			StudentID:   "student-1",
+			Title:       "Assicurazione Scolastica",
+			Description: "Quota annuale",
+			Amount:      25.5,
+			DueDate:     "2026-10-31",
+		}
+		p, err := svc.Create(context.Background(), "admin-1", "admin", "school-1", req)
+		assert.NoError(t, err)
+		assert.NotNil(t, p)
+		assert.Equal(t, 25.5, p.Amount)
+	})
+
+	t.Run("Create payment with non-positive amount fails", func(t *testing.T) {
+		req := CreatePaymentRequest{
+			StudentID: "student-1",
+			Title:     "Importo non valido",
+			Amount:    -10.0,
+			DueDate:   "2026-10-31",
+		}
+		_, err := svc.Create(context.Background(), "admin-1", "admin", "school-1", req)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "maggiore di zero")
+	})
+}
+

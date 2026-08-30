@@ -32,7 +32,7 @@ func newMockGradeWeightsRepo() *mockGradeWeightsRepo {
 	}
 }
 
-func (m *mockGradeWeightsRepo) UpsertWeightConfig(cfg *grades.GradeWeightConfig) (*grades.GradeWeightConfig, error) {
+func (m *mockGradeWeightsRepo) UpsertWeightConfig(ctx context.Context, cfg *grades.GradeWeightConfig) (*grades.GradeWeightConfig, error) {
 	if cfg.ID == "" {
 		cfg.ID = "cfg-1"
 	}
@@ -40,7 +40,7 @@ func (m *mockGradeWeightsRepo) UpsertWeightConfig(cfg *grades.GradeWeightConfig)
 	return cfg, nil
 }
 
-func (m *mockGradeWeightsRepo) GetWeightConfigs(schoolID, subjectID, classID string) ([]grades.GradeWeightConfig, error) {
+func (m *mockGradeWeightsRepo) GetWeightConfigs(ctx context.Context, schoolID, subjectID, classID string) ([]grades.GradeWeightConfig, error) {
 	return m.configs, nil
 }
 
@@ -48,7 +48,7 @@ func (m *mockGradeWeightsRepo) ListWeightConfigs(schoolID, subjectID string) ([]
 	return m.configs, nil
 }
 
-func (m *mockGradeWeightsRepo) CreateTest(test *grades.ClassTest) error {
+func (m *mockGradeWeightsRepo) CreateTest(ctx context.Context, test *grades.ClassTest) error {
 	if test.ID == "" {
 		test.ID = "test-matrix-1"
 	}
@@ -57,7 +57,7 @@ func (m *mockGradeWeightsRepo) CreateTest(test *grades.ClassTest) error {
 	return nil
 }
 
-func (m *mockGradeWeightsRepo) BatchCreate(gList []*grades.Grade) error {
+func (m *mockGradeWeightsRepo) BatchCreate(ctx context.Context, gList []*grades.Grade) error {
 	for _, g := range gList {
 		if g.ID == "" {
 			g.ID = "grade-" + g.StudentID
@@ -67,14 +67,14 @@ func (m *mockGradeWeightsRepo) BatchCreate(gList []*grades.Grade) error {
 	return nil
 }
 
-func (m *mockGradeWeightsRepo) CreateTestWithGrades(test *grades.ClassTest, gList []*grades.Grade) error {
-	if err := m.CreateTest(test); err != nil {
+func (m *mockGradeWeightsRepo) CreateTestWithGrades(ctx context.Context, test *grades.ClassTest, gList []*grades.Grade) error {
+	if err := m.CreateTest(ctx, test); err != nil {
 		return err
 	}
-	return m.BatchCreate(gList)
+	return m.BatchCreate(ctx, gList)
 }
 
-func (m *mockGradeWeightsRepo) FindByStudent(studentID string) ([]grades.Grade, error) {
+func (m *mockGradeWeightsRepo) FindByStudent(ctx context.Context, studentID string) ([]grades.Grade, error) {
 	var res []grades.Grade
 	for _, g := range m.grades {
 		if g.StudentID == studentID {
@@ -84,7 +84,7 @@ func (m *mockGradeWeightsRepo) FindByStudent(studentID string) ([]grades.Grade, 
 	return res, nil
 }
 
-func (m *mockGradeWeightsRepo) FindBySubject(subjectID string, limit int) ([]grades.Grade, error) {
+func (m *mockGradeWeightsRepo) FindBySubject(ctx context.Context, subjectID string, limit int) ([]grades.Grade, error) {
 	var res []grades.Grade
 	for _, g := range m.grades {
 		if g.SubjectID == subjectID {
@@ -93,6 +93,7 @@ func (m *mockGradeWeightsRepo) FindBySubject(subjectID string, limit int) ([]gra
 	}
 	return res, nil
 }
+
 
 type mockUserRepoForWeights struct {
 	users.Repository

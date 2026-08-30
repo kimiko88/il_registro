@@ -58,7 +58,7 @@ func TestGradesService_Export(t *testing.T) {
 			{ID: "1", StudentID: "s1", GradeValue: 10, Date: time.Now(), TeacherID: "t1"},
 		}, nil)
 
-		data, contentType, err := service.Export("t1", "school-1", grades.GradeFilter{}, "csv")
+		data, contentType, err := service.Export(context.Background(), "t1", "school-1", grades.GradeFilter{}, "csv")
 
 		assert.NoError(t, err)
 		assert.Equal(t, "text/csv", contentType)

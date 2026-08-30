@@ -58,18 +58,18 @@ func (m *mockServiceForDeprecationTest) AddGrade(ctx context.Context, teacherID 
 	}
 	return args.Get(0).(*GradeResponse), args.Error(1)
 }
-func (m *mockServiceForDeprecationTest) BatchCreateGrades(teacherID, actorRole, schoolID string, grades []*Grade) error {
-	return m.Called(teacherID, actorRole, schoolID, grades).Error(0)
+func (m *mockServiceForDeprecationTest) BatchCreateGrades(ctx context.Context, teacherID, actorRole, schoolID string, grades []*Grade) error {
+	return m.Called(ctx, teacherID, actorRole, schoolID, grades).Error(0)
 }
-func (m *mockServiceForDeprecationTest) BulkImport(teacherID, schoolID string, r io.Reader, semester int) (*ImportResult, error) {
-	args := m.Called(teacherID, schoolID, r, semester)
+func (m *mockServiceForDeprecationTest) BulkImport(ctx context.Context, teacherID, schoolID string, r io.Reader, semester int) (*ImportResult, error) {
+	args := m.Called(ctx, teacherID, schoolID, r, semester)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*ImportResult), args.Error(1)
 }
-func (m *mockServiceForDeprecationTest) Export(teacherID, schoolID string, filter GradeFilter, format string) ([]byte, string, error) {
-	args := m.Called(teacherID, schoolID, filter, format)
+func (m *mockServiceForDeprecationTest) Export(ctx context.Context, teacherID, schoolID string, filter GradeFilter, format string) ([]byte, string, error) {
+	args := m.Called(ctx, teacherID, schoolID, filter, format)
 	if args.Get(0) == nil {
 		return nil, "", args.Error(2)
 	}
@@ -145,7 +145,7 @@ func (m *mockServiceForDeprecationTest) GetChildSemesterReport(ctx context.Conte
 	return args.Get(0).(*SemesterReportResponse), args.Error(1)
 }
 func (m *mockServiceForDeprecationTest) CreateTestWithGrades(ctx context.Context, teacherID string, req CreateClassTestRequest) (*ClassTest, error) {
-	args := m.Called(teacherID, req)
+	args := m.Called(ctx, teacherID, req)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -166,13 +166,22 @@ func (m *mockServiceForDeprecationTest) GetUpcomingTestsByClass(ctx context.Cont
 	return args.Get(0).([]ClassTestResponse), args.Error(1)
 }
 func (m *mockServiceForDeprecationTest) DeleteClassTest(ctx context.Context, teacherID string, testID string) error {
-	return m.Called(teacherID, testID).Error(0)
+	return m.Called(ctx, teacherID, testID).Error(0)
 }
 func (m *mockServiceForDeprecationTest) UpdateClassTest(ctx context.Context, teacherID string, testID string, req UpdateClassTestRequest) error {
-	return m.Called(teacherID, testID, req).Error(0)
+	return m.Called(ctx, teacherID, testID, req).Error(0)
 }
-func (m *mockServiceForDeprecationTest) GetWeightConfigs(schoolID, subjectID, classID string) ([]GradeWeightConfig, error) {
-	args := m.Called(schoolID, subjectID, classID)
+func (m *mockServiceForDeprecationTest) GetWeightConfigs(ctx context.Context, schoolID, subjectID, classID string) ([]GradeWeightConfig, error) {
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "GetWeightConfigs" && len(call.Arguments) == 3 {
+			args := m.Called(schoolID, subjectID, classID)
+			if args.Get(0) == nil {
+				return nil, args.Error(1)
+			}
+			return args.Get(0).([]GradeWeightConfig), args.Error(1)
+		}
+	}
+	args := m.Called(ctx, schoolID, subjectID, classID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}

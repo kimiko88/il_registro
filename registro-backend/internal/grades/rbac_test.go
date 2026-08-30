@@ -163,9 +163,9 @@ func TestBatchCreateGrades_RoleEnforcement(t *testing.T) {
 			svc := newTestService(repo, userRepo)
 
 			grades := []*Grade{{StudentID: "s1", SchoolID: schoolID, GradeValue: 7, GradeType: "numeric"}}
-			repo.On("BatchCreate", mock.Anything).Return(nil).Once()
+			repo.On("BatchCreate", mock.Anything, mock.Anything).Return(nil).Once()
 
-			err := svc.BatchCreateGrades("actor-1", role, schoolID, grades)
+			err := svc.BatchCreateGrades(context.Background(), "actor-1", role, schoolID, grades)
 			assert.NoError(t, err)
 			repo.AssertExpectations(t)
 		})
@@ -178,7 +178,7 @@ func TestBatchCreateGrades_RoleEnforcement(t *testing.T) {
 			svc := newTestService(repo, userRepo)
 
 			grades := []*Grade{{StudentID: "s1", SchoolID: schoolID, GradeValue: 7, GradeType: "numeric"}}
-			err := svc.BatchCreateGrades("actor-1", role, schoolID, grades)
+			err := svc.BatchCreateGrades(context.Background(), "actor-1", role, schoolID, grades)
 			assert.ErrorIs(t, err, ErrUnauthorized)
 		})
 	}
@@ -191,9 +191,9 @@ func TestBatchCreateGrades_SuperadminBypassesSchoolCheck(t *testing.T) {
 	svc := newTestService(repo, userRepo)
 
 	grade := &Grade{StudentID: "s1", SchoolID: "other-school", GradeValue: 7, GradeType: "numeric"}
-	repo.On("BatchCreate", mock.Anything).Return(nil).Once()
+	repo.On("BatchCreate", mock.Anything, mock.Anything).Return(nil).Once()
 
-	err := svc.BatchCreateGrades("superadmin-1", "superadmin", "school-1", []*Grade{grade})
+	err := svc.BatchCreateGrades(context.Background(), "superadmin-1", "superadmin", "school-1", []*Grade{grade})
 	assert.NoError(t, err)
 	repo.AssertExpectations(t)
 }
@@ -205,7 +205,7 @@ func TestBatchCreateGrades_CrossSchoolDenied(t *testing.T) {
 	svc := newTestService(repo, userRepo)
 
 	grade := &Grade{StudentID: "s1", SchoolID: "other-school", GradeValue: 7, GradeType: "numeric"}
-	err := svc.BatchCreateGrades("teacher-1", "teacher", "school-1", []*Grade{grade})
+	err := svc.BatchCreateGrades(context.Background(), "teacher-1", "teacher", "school-1", []*Grade{grade})
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "cannot create grades for another school")
 }
@@ -476,6 +476,6 @@ func TestBatchCreateGrades_EmptySliceIsNoop(t *testing.T) {
 	// Even a denied role returns nil when the slice is empty because the
 	// role check happens before the loop, but the empty-guard comes first.
 	// This test documents the current contract: empty == no-op regardless of role.
-	err := svc.BatchCreateGrades("actor", "teacher", "school-1", []*Grade{})
+	err := svc.BatchCreateGrades(context.Background(), "actor", "teacher", "school-1", []*Grade{})
 	assert.NoError(t, err)
 }

@@ -54,6 +54,7 @@ func (h *Handler) SignDocument(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	req.IPAddress = c.ClientIP()
 	sig, err := h.svc.SignDocument(userID, req)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -61,6 +62,7 @@ func (h *Handler) SignDocument(c *gin.Context) {
 	}
 	c.JSON(http.StatusCreated, sig)
 }
+
 
 func (h *Handler) GetSignatures(c *gin.Context) {
 	userID := c.GetString("user_id")

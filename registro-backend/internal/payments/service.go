@@ -97,20 +97,26 @@ func (s *Service) GetByID(ctx context.Context, actorID, actorRole, schoolID, id 
 	if actorRole != "superadmin" && schoolID != "" && p.SchoolID != "" && p.SchoolID != schoolID {
 		return nil, ErrUnauthorized
 	}
-	if actorRole == "student" {
+	switch actorRole {
+	case "student":
 		if p.StudentID != actorID {
 			return nil, ErrUnauthorized
 		}
-	} else if actorRole == "parent" {
+	case "parent":
 		if s.userRepo != nil && p.StudentID != "" {
 			isG, errG := s.userRepo.IsGuardian(ctx, actorID, p.StudentID)
 			if errG != nil || !isG {
 				return nil, ErrUnauthorized
 			}
 		}
+	case "admin", "superadmin", "secretary", "principal", "vice_principal":
+		// Authorized staff
+	default:
+		return nil, ErrUnauthorized
 	}
 	return p, nil
 }
+
 
 func (s *Service) Pay(ctx context.Context, actorID, actorRole, id, method string) (*SchoolPayment, error) {
 	if actorID == "" {
@@ -124,11 +130,12 @@ func (s *Service) Pay(ctx context.Context, actorID, actorRole, id, method string
 	if err != nil || p == nil {
 		return nil, ErrPaymentNotFound
 	}
-	if actorRole == "student" {
+	switch actorRole {
+	case "student":
 		if p.StudentID != actorID {
 			return nil, ErrUnauthorized
 		}
-	} else if actorRole == "parent" {
+	case "parent":
 		if s.userRepo != nil && p.StudentID != "" {
 			isG, errG := s.userRepo.IsGuardian(ctx, actorID, p.StudentID)
 			if errG != nil || !isG {
@@ -139,6 +146,7 @@ func (s *Service) Pay(ctx context.Context, actorID, actorRole, id, method string
 	if p.Status == "paid" {
 		return nil, fmt.Errorf("questo contributo o tassa è già stato pagato")
 	}
+
 
 	if method == "" {
 		method = "PagoPA"
@@ -159,6 +167,9 @@ func (s *Service) Pay(ctx context.Context, actorID, actorRole, id, method string
 func (s *Service) Create(ctx context.Context, actorID, actorRole, schoolID string, req CreatePaymentRequest) (*SchoolPayment, error) {
 	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" {
 		return nil, ErrUnauthorized
+	}
+	if req.Amount <= 0 {
+		return nil, fmt.Errorf("l'importo del pagamento deve essere maggiore di zero")
 	}
 	if schoolID == "" {
 		return nil, fmt.Errorf("school_id is required")

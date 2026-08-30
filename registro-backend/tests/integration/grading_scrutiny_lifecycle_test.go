@@ -58,19 +58,20 @@ func TestIntegration_Grading_Scrutiny_Lifecycle(t *testing.T) {
 
 type mockGradesRepoForScrutiny struct{}
 
-func (m *mockGradesRepoForScrutiny) Create(g *grades.Grade) error                 { return nil }
-func (m *mockGradesRepoForScrutiny) BatchCreate(gradesList []*grades.Grade) error { return nil }
-func (m *mockGradesRepoForScrutiny) Update(g *grades.Grade, history *grades.GradeHistory) error {
+func (m *mockGradesRepoForScrutiny) Create(ctx context.Context, g *grades.Grade) error                 { return nil }
+func (m *mockGradesRepoForScrutiny) BatchCreate(ctx context.Context, gradesList []*grades.Grade) error { return nil }
+func (m *mockGradesRepoForScrutiny) Update(ctx context.Context, g *grades.Grade, history *grades.GradeHistory) error {
 	return nil
 }
-func (m *mockGradesRepoForScrutiny) Delete(id string, deletedBy string) error { return nil }
-func (m *mockGradesRepoForScrutiny) FindByID(id string) (*grades.Grade, error) {
+func (m *mockGradesRepoForScrutiny) Delete(ctx context.Context, id string, deletedBy string) error { return nil }
+func (m *mockGradesRepoForScrutiny) SoftDelete(ctx context.Context, id, modifiedBy string) error    { return nil }
+func (m *mockGradesRepoForScrutiny) FindByID(ctx context.Context, id string) (*grades.Grade, error) {
 	return &grades.Grade{ID: id, GradeValue: 8}, nil
 }
-func (m *mockGradesRepoForScrutiny) FindByStudent(studentID string) ([]grades.Grade, error) {
+func (m *mockGradesRepoForScrutiny) FindByStudent(ctx context.Context, studentID string) ([]grades.Grade, error) {
 	return []grades.Grade{}, nil
 }
-func (m *mockGradesRepoForScrutiny) FindByClassAndSubject(classID, subjectID string, semester int) ([]grades.Grade, error) {
+func (m *mockGradesRepoForScrutiny) FindByClassAndSubject(ctx context.Context, classID, subjectID string, semester int) ([]grades.Grade, error) {
 	return []grades.Grade{}, nil
 }
 func (m *mockGradesRepoForScrutiny) GetClassAverage(classID string) (float64, error) { return 7.5, nil }
@@ -92,52 +93,53 @@ func (m *mockGradesRepoForScrutiny) IsStudentInClass(studentID, classID string) 
 func (m *mockGradesRepoForScrutiny) IsClassInSchool(classID, schoolID string) (bool, error) {
 	return true, nil
 }
-func (m *mockGradesRepoForScrutiny) UpsertWeightConfig(cfg *grades.GradeWeightConfig) (*grades.GradeWeightConfig, error) {
+func (m *mockGradesRepoForScrutiny) UpsertWeightConfig(ctx context.Context, cfg *grades.GradeWeightConfig) (*grades.GradeWeightConfig, error) {
 	return cfg, nil
 }
 func (m *mockGradesRepoForScrutiny) GetWeightConfig(schoolID, subjectID, classID string) (*grades.GradeWeightConfig, error) {
 	return nil, nil
 }
-func (m *mockGradesRepoForScrutiny) DeleteWeightConfig(id string) error          { return nil }
-func (m *mockGradesRepoForScrutiny) CreateTest(testData *grades.ClassTest) error { return nil }
-func (m *mockGradesRepoForScrutiny) DeleteTest(id string) error                  { return nil }
-func (m *mockGradesRepoForScrutiny) FindByClass(classID string, semester int) ([]grades.Grade, error) {
+func (m *mockGradesRepoForScrutiny) DeleteWeightConfig(ctx context.Context, id string) error          { return nil }
+func (m *mockGradesRepoForScrutiny) CreateTest(ctx context.Context, testData *grades.ClassTest) error { return nil }
+func (m *mockGradesRepoForScrutiny) DeleteTest(ctx context.Context, id string) error                  { return nil }
+func (m *mockGradesRepoForScrutiny) FindByClass(ctx context.Context, classID string, semester int) ([]grades.Grade, error) {
 	return []grades.Grade{}, nil
 }
-func (m *mockGradesRepoForScrutiny) FindBySubject(subjectID string, semester int) ([]grades.Grade, error) {
+func (m *mockGradesRepoForScrutiny) FindBySubject(ctx context.Context, subjectID string, semester int) ([]grades.Grade, error) {
 	return []grades.Grade{}, nil
 }
-func (m *mockGradesRepoForScrutiny) FindByTeacher(teacherID string) ([]grades.Grade, error) {
+func (m *mockGradesRepoForScrutiny) FindByTeacher(ctx context.Context, teacherID string) ([]grades.Grade, error) {
 	return []grades.Grade{}, nil
 }
-func (m *mockGradesRepoForScrutiny) FindEnrolledSubjects(studentID string, semester int) ([]string, error) {
+func (m *mockGradesRepoForScrutiny) FindEnrolledSubjects(ctx context.Context, studentID string, semester int) ([]string, error) {
 	return []string{}, nil
 }
-func (m *mockGradesRepoForScrutiny) FindGradesByTestID(testID string) ([]grades.Grade, error) {
+func (m *mockGradesRepoForScrutiny) FindGradesByTestID(ctx context.Context, testID string) ([]grades.Grade, error) {
 	return []grades.Grade{}, nil
 }
-func (m *mockGradesRepoForScrutiny) FindTestByID(id string) (*grades.ClassTest, error) {
+func (m *mockGradesRepoForScrutiny) FindTestByID(ctx context.Context, id string) (*grades.ClassTest, error) {
 	return &grades.ClassTest{ID: id}, nil
 }
-func (m *mockGradesRepoForScrutiny) FindTestsByClassAndSubject(classID string, subjectID string) ([]grades.ClassTest, error) {
+func (m *mockGradesRepoForScrutiny) FindTestsByClassAndSubject(ctx context.Context, classID string, subjectID string) ([]grades.ClassTest, error) {
 	return []grades.ClassTest{}, nil
 }
-func (m *mockGradesRepoForScrutiny) FindUpcomingTestsByClass(classID string) ([]grades.ClassTest, error) {
+func (m *mockGradesRepoForScrutiny) FindUpcomingTestsByClass(ctx context.Context, classID string) ([]grades.ClassTest, error) {
 	return []grades.ClassTest{}, nil
 }
-func (m *mockGradesRepoForScrutiny) FindWithFilter(filter grades.GradeFilter) ([]grades.Grade, error) {
+func (m *mockGradesRepoForScrutiny) FindWithFilter(ctx context.Context, filter grades.GradeFilter) ([]grades.Grade, error) {
 	return []grades.Grade{}, nil
 }
-func (m *mockGradesRepoForScrutiny) FindWithFilterPaginated(filter grades.GradeFilter) ([]grades.Grade, int, error) {
+func (m *mockGradesRepoForScrutiny) FindWithFilterPaginated(ctx context.Context, filter grades.GradeFilter) ([]grades.Grade, int, error) {
 	return []grades.Grade{}, 0, nil
 }
-func (m *mockGradesRepoForScrutiny) GetHistory(gradeID string) ([]grades.GradeHistory, error) {
+func (m *mockGradesRepoForScrutiny) GetHistory(ctx context.Context, gradeID string) ([]grades.GradeHistory, error) {
 	return []grades.GradeHistory{}, nil
 }
-func (m *mockGradesRepoForScrutiny) GetWeightConfigs(schoolID, subjectID, classID string) ([]grades.GradeWeightConfig, error) {
+func (m *mockGradesRepoForScrutiny) GetWeightConfigs(ctx context.Context, schoolID, subjectID, classID string) ([]grades.GradeWeightConfig, error) {
 	return []grades.GradeWeightConfig{}, nil
 }
-func (m *mockGradesRepoForScrutiny) UpdateTest(test *grades.ClassTest) error { return nil }
+func (m *mockGradesRepoForScrutiny) UpdateTest(ctx context.Context, test *grades.ClassTest) error { return nil }
+
 func (m *mockGradesRepoForScrutiny) GetStudentClassAndSchoolInfo(ctx context.Context, studentID string) (string, string, string, string, error) {
 	return "", "", "", "", nil
 }
