@@ -33,6 +33,16 @@ il_registro/
 │   └── WIKI.md              # Wiki di progetto
 ├── registro-backend/        # Go API server
 ├── registro-frontend/       # Vue 3 + Quasar SPA/PWA
+├── android/                 # Progetto Multi-Modulo Android (Kotlin & Jetpack Compose)
+│   ├── student/             # App Studente
+│   ├── parent/              # App Genitore
+│   ├── teacher/             # App Docente
+│   └── secretary/           # App Segreteria
+├── ios/                     # Progetto Multi-Target iOS (Swift & SwiftUI / SPM)
+│   ├── student/             # App Studente
+│   ├── parent/              # App Genitore
+│   ├── teacher/             # App Docente
+│   └── secretary/           # App Segreteria
 ├── CHANGELOG.md
 ├── CONTRIBUTING.md
 ├── SECURITY.md
@@ -150,3 +160,15 @@ Middleware Go:
 | **In-Memory Store Caching**       | Frontend, `useGradesStore`     | Evita refetch inutili durante la navigazione                  |
 | **Pinia Global Error Bus**        | Frontend, `stores/error.js`    | Raccolta e notifica centralizzata di eccezioni                |
 | **Router-Integrated Interceptor** | Frontend, `services/api.js`    | Reindirizzamento SPA senza ricaricamento pagina su 401        |
+| **Mobile Declarative Reactive UI**| Android/iOS (`android/`, `ios/`)| Interfacce native con Jetpack Compose e SwiftUI               |
+| **Multi-Role Mobile Isolation**   | Android/iOS                     | Applicazioni e target dedicati per Studente, Genitore, Docente, Segreteria |
+| **Offline-First Mobile Cache**    | Mobile, `OfflineCacheManager`   | Accesso sicuro offline a voti, compiti ed orario con validazione temporale |
+| **Mobile Real-Time WebSocket**    | Mobile, `WebSocketClient/Manager`| Ricezione istantanea di notifiche, voti e stato code colloqui |
+
+---
+
+## Architettura Mobile (Android & iOS)
+
+Le applicazioni native sono organizzate per ruolo utente con architetture moderne e reattive:
+- **Android**: Architettura Multi-Modulo Gradle (`:student`, `:parent`, `:teacher`, `:secretary`), Kotlin 1.9, Jetpack Compose Material 3, ViewModel con Coroutines, Retrofit/OkHttp, Biometria (`BiometricPrompt`), WebSocket e Cache Offline.
+- **iOS**: Architettura Multi-Target Swift Package Manager (`Package.swift`), Swift 5.9, SwiftUI Declarative UI, Observable ViewModels, `URLSession` asincrono (`async/await`), Biometria (`LocalAuthentication`), WebSocket (`URLSessionWebSocketTask`) e Cache Offline.

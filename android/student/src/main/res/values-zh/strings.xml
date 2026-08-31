@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">电子成绩册 - 学生</string>
+    <string name="welcome_student">你好，%1$s！</string>
+    <string name="gpa_average">平均成绩</string>
+    <string name="absences_count">缺勤次数</string>
+    <string name="lates_count">迟到次数</string>
+    <string name="recent_grades">最新成绩</string>
+    <string name="today_lessons">今日课程表</string>
+    <string name="dashboard_title">我的控制台</string>
+    <string name="grades_title">我的成绩</string>
+    <string name="agenda_title">家庭作业与日程</string>
+    <string name="attendance_title">出勤与请假</string>
+    <string name="report_card_title">官方成绩单</string>
+</resources>

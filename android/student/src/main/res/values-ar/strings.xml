@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">دفتر المدرسة - الطالب</string>
+    <string name="welcome_student">مرحباً، %1$s!</string>
+    <string name="gpa_average">المعدل العام</string>
+    <string name="absences_count">الغياب</string>
+    <string name="lates_count">التأخير</string>
+    <string name="recent_grades">آخر الدرجات</string>
+    <string name="today_lessons">جدول دروس اليوم</string>
+    <string name="dashboard_title">لوحة التحكم</string>
+    <string name="grades_title">درجاتي</string>
+    <string name="agenda_title">الواجبات والمواعيد</string>
+    <string name="attendance_title">الحضور والغياب</string>
+    <string name="report_card_title">الشهادة الرسمية</string>
+</resources>

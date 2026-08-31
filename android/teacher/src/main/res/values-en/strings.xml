@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">School Register - Teacher</string>
+    <string name="teacher_dashboard_title">Class Register</string>
+    <string name="sign_hour">Sign Lesson Hour</string>
+    <string name="take_attendance">Take Attendance</string>
+    <string name="add_grade">Add Grade</string>
+    <string name="scrutiny_board">Scrutiny Board</string>
+    <string name="select_class">Selected Class:</string>
+    <string name="signed_hours_today">Hours Signed Today</string>
+</resources>

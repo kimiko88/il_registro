@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Registro Escolar - Docente</string>
+    <string name="teacher_dashboard_title">Registro de Clase</string>
+    <string name="sign_hour">Firmar Hora de Clase</string>
+    <string name="take_attendance">Pasar Lista</string>
+    <string name="add_grade">Poner Nota</string>
+    <string name="scrutiny_board">Junta de Evaluación</string>
+    <string name="select_class">Clase Seleccionada:</string>
+    <string name="signed_hours_today">Horas Firmadas Hoy</string>
+</resources>

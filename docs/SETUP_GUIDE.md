@@ -104,6 +104,19 @@ npm run test:unit
 npm run build
 ```
 
+### Setup & Test Mobile (Android & iOS)
+
+Per istruzioni dettagliate su come configurare, compilare ed eseguire i test delle **8 applicazioni mobile native** (Android e iOS per Studente, Genitore, Docente e Segreteria), consulta la guida dedicata:
+👉 **[Guida Setup & Test Mobile](MOBILE_SETUP_GUIDE.md)**
+
+```bash
+# Esecuzione test Android (da /android)
+./gradlew test
+
+# Esecuzione test iOS (da /ios)
+swift test
+```
+
 ---
 
 ## Troubleshooting

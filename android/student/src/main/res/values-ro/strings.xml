@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">Catalog Școlar - Elev</string>
+    <string name="welcome_student">Salut, %1$s!</string>
+    <string name="gpa_average">Media generală</string>
+    <string name="absences_count">Absențe</string>
+    <string name="lates_count">Întârzieri</string>
+    <string name="recent_grades">Ultimele note</string>
+    <string name="today_lessons">Orarul de azi</string>
+    <string name="dashboard_title">Panoul meu</string>
+    <string name="grades_title">Notele mele</string>
+    <string name="agenda_title">Teme și activități</string>
+    <string name="attendance_title">Prezență și absențe</string>
+    <string name="report_card_title">Foaia matricolă oficială</string>
+</resources>

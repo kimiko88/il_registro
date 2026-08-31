@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Registro Escolar - Secretaría</string>
+    <string name="secretary_dashboard_title">Gestión de Secretaría y Admin</string>
+    <string name="user_management">Gestión de Usuarios</string>
+    <string name="scrutiny_supervision">Supervisión de Evaluaciones</string>
+    <string name="generate_certificates">Generar Certificados</string>
+    <string name="audit_logs">Registro de Auditoría</string>
+    <string name="total_students">Estudiantes Matriculados</string>
+    <string name="total_teachers">Profesores Activos</string>
+</resources>

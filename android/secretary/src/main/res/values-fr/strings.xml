@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Cahier Scolaire - Secrétariat</string>
+    <string name="secretary_dashboard_title">Gestion Secrétariat &amp; Admin</string>
+    <string name="user_management">Gestion des Utilisateurs</string>
+    <string name="scrutiny_supervision">Supervision des Conseils</string>
+    <string name="generate_certificates">Génération de Certificats</string>
+    <string name="audit_logs">Journal d\'Audit</string>
+    <string name="total_students">Élèves Inscrits</string>
+    <string name="total_teachers">Enseignants Actifs</string>
+</resources>

@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">School Register - Administration</string>
+    <string name="secretary_dashboard_title">Secretary &amp; Admin Panel</string>
+    <string name="user_management">User Management</string>
+    <string name="scrutiny_supervision">Scrutiny Supervision</string>
+    <string name="generate_certificates">Certificates Generation</string>
+    <string name="audit_logs">Audit Logs</string>
+    <string name="total_students">Enrolled Students</string>
+    <string name="total_teachers">Active Teachers</string>
+</resources>

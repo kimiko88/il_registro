@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Cahier Scolaire - Parents</string>
+    <string name="parent_dashboard_title">Portail des Familles</string>
+    <string name="child_grades">Notes des Enfants</string>
+    <string name="child_attendance">Présence et Justificatifs</string>
+    <string name="upcoming_colloqui">Rendez-vous Enseignants</string>
+    <string name="user_management">Gestion des Utilisateurs</string>
+</resources>

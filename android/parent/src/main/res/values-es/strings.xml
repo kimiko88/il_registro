@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Registro Escolar - Padres</string>
+    <string name="parent_dashboard_title">Portal de Familias</string>
+    <string name="child_grades">Calificaciones Hijos</string>
+    <string name="child_attendance">Asistencia y Justificaciones</string>
+    <string name="upcoming_colloqui">Reuniones con Profesores</string>
+    <string name="user_management">Gestión de Usuarios</string>
+</resources>

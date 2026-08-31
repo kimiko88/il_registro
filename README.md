@@ -98,6 +98,8 @@ Il progetto è organizzato come **monorepo** con backend Go e frontend Vue 3:
 il_registro/
 ├── registro-backend/    # API REST in Go (Gin + PostgreSQL + Redis)
 ├── registro-frontend/   # SPA/PWA in Vue 3 + Quasar
+├── android/             # App Native Android (Kotlin & Jetpack Compose: Studente, Genitore, Docente, Segreteria)
+├── ios/                 # App Native iOS (Swift & SwiftUI / SPM: Studente, Genitore, Docente, Segreteria)
 ├── docs/                # Documentazione tecnica dettagliata
 ├── .github/workflows/   # Pipeline CI/CD
 ├── CHANGELOG.md         # Storico delle versioni
@@ -115,10 +117,12 @@ il_registro è pensato per essere **auto-ospitato da scuole, Comuni, Regioni o d
 
 | Area                      | Funzionalità                                                                                                                              |
 | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| **App Mobile Native**     | **Android & iOS Native** per Studente, Genitore, Docente e Segreteria (Kotlin Compose & SwiftUI, biometria, offline, 11 lingue)           |
 | **Autenticazione & SSO**  | JWT (access 15min + refresh rotation), MFA TOTP, SPID, CIE, **Google Workspace & MS Teams SSO**                                           |
 | **Ruoli**                 | `superadmin`, `admin`, `secretary`, `teacher`, `student`, `parent`                                                                        |
 | **Voti & Valutazioni**    | Inserimento rapido, **Matrix View a Tastiera**, medie ponderate, simulatore voto target, misure compensative BES/DSA                      |
 | **Presenze & Lezioni**    | Registro giornaliero, **Firma Ora 1-Click**, assenze, ritardi, giustificazioni, alert assenteismo                                         |
+| **Scrutini & Differiti**  | Tabellone scrutinio, delibere condotta, credito scolastico, **Scrutinio Differito (saldo debiti formativi)**                            |
 | **PDP / PEI (BES & DSA)** | **Gestione Piani Didattici Personalizzati**, misure compensative/dispensative, firma/approvazione digitale genitore e protezione diagnosi |
 | **Business Intelligence** | **Dashboard Dispersione Scolastica & Assenteismo**, report andamento 1° vs 2° Quadrimestre per la dirigenza                               |
 | **E-Learning Sync**       | **Google Classroom & Microsoft Teams**: sincronizzazione automatica compiti, voti e classi                                                |

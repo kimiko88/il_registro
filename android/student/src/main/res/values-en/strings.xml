@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">School Register - Student</string>
+    <string name="dashboard_title">My Dashboard</string>
+    <string name="welcome_student">Hi, %1$s!</string>
+    <string name="grades_title">My Grades</string>
+    <string name="agenda_title">Homework &amp; Tasks</string>
+    <string name="attendance_title">Attendance &amp; Absences</string>
+    <string name="report_card_title">My Report Card</string>
+    <string name="gpa_average">Overall Average</string>
+    <string name="recent_grades">Recent Grades</string>
+    <string name="today_lessons">Today\'s Schedule</string>
+    <string name="absences_count">Total Absences</string>
+    <string name="lates_count">Total Lates</string>
+    <string name="no_data">No data available</string>
+</resources>

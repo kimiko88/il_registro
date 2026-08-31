@@ -56,6 +56,16 @@ func (m *mockOrientRepo) GetPreference(ctx context.Context, studentID string) (*
 	return args.Get(0).(*orientamento.StudentPreference), args.Error(1)
 }
 
+func (m *mockOrientRepo) SaveCapolavoro(ctx context.Context, c *orientamento.Capolavoro) error {
+	return nil
+}
+func (m *mockOrientRepo) GetCapolavori(ctx context.Context, studentID string) ([]orientamento.Capolavoro, error) {
+	return nil, nil
+}
+func (m *mockOrientRepo) GetCurriculumStudente(ctx context.Context, studentID string) (*orientamento.CurriculumStudenteSummary, error) {
+	return nil, nil
+}
+
 func TestOrientamento_MarkAttendance(t *testing.T) {
 	mockRepo := new(mockOrientRepo)
 	svc := orientamento.NewService(mockRepo)

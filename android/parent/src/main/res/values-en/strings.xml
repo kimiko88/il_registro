@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">School Register - Parents</string>
+    <string name="parent_dashboard_title">Child Oversight</string>
+    <string name="switch_child">Select Child:</string>
+    <string name="justify_absence">Justify Absences</string>
+    <string name="book_colloquio">Book Meeting</string>
+    <string name="child_grades">Child\'s Grades</string>
+    <string name="child_attendance">Attendance &amp; Justifications</string>
+    <string name="pending_justifications">Absences to Justify</string>
+    <string name="upcoming_colloqui">Upcoming Meetings</string>
+    <string name="no_pending_justifications">No pending absences to justify</string>
+</resources>

@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Registro Scuola - Genitori</string>
+    <string name="parent_dashboard_title">Supervisione Figli</string>
+    <string name="switch_child">Seleziona Figlio:</string>
+    <string name="justify_absence">Giustifica Assenze</string>
+    <string name="book_colloquio">Prenota Colloquio</string>
+    <string name="child_grades">Voti del Figlio</string>
+    <string name="child_attendance">Presenze &amp; Giustifiche</string>
+    <string name="pending_justifications">Assenze da Giustificare</string>
+    <string name="upcoming_colloqui">Prossimi Colloqui</string>
+    <string name="no_pending_justifications">Nessuna assenza da giustificare</string>
+</resources>

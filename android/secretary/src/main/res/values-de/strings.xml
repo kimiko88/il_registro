@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Schulregister - Sekretariat</string>
+    <string name="secretary_dashboard_title">Verwaltung &amp; Administration</string>
+    <string name="user_management">Benutzerverwaltung</string>
+    <string name="scrutiny_supervision">Aufsicht Notenkonferenzen</string>
+    <string name="generate_certificates">Bescheinigungen erstellen</string>
+    <string name="audit_logs">Audit-Protokoll</string>
+    <string name="total_students">Eingeschriebene Schüler</string>
+    <string name="total_teachers">Aktive Lehrkräfte</string>
+</resources>

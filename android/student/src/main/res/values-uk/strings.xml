@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">Електронний Журнал - Учень</string>
+    <string name="welcome_student">Привіт, %1$s!</string>
+    <string name="gpa_average">Середній бал</string>
+    <string name="absences_count">Пропуски</string>
+    <string name="lates_count">Запізнення</string>
+    <string name="recent_grades">Останні оцінки</string>
+    <string name="today_lessons">Розклад на сьогодні</string>
+    <string name="dashboard_title">Головна панель</string>
+    <string name="grades_title">Мої оцінки</string>
+    <string name="agenda_title">Завдання та розклад</string>
+    <string name="attendance_title">Відвідуваність</string>
+    <string name="report_card_title">Підсумковий табель</string>
+</resources>

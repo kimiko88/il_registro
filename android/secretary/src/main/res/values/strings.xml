@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Registro Scuola - Segreteria</string>
+    <string name="secretary_dashboard_title">Gestione Segreteria &amp; Admin</string>
+    <string name="user_management">Gestione Utenti</string>
+    <string name="scrutiny_supervision">Supervisione Scrutini</string>
+    <string name="generate_certificates">Generazione Certificati</string>
+    <string name="audit_logs">Registro Audit</string>
+    <string name="total_students">Studenti Iscritti</string>
+    <string name="total_teachers">Docenti Attivi</string>
+</resources>

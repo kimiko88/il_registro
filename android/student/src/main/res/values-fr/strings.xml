@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">Registre Scolaire - Élève</string>
+    <string name="dashboard_title">Mon Tableau de Bord</string>
+    <string name="welcome_student">Salut, %1$s !</string>
+    <string name="grades_title">Mes Notes</string>
+    <string name="agenda_title">Devoirs &amp; Agenda</string>
+    <string name="attendance_title">Présences &amp; Absences</string>
+    <string name="report_card_title">Mon Bulletin</string>
+    <string name="gpa_average">Moyenne Générale</string>
+    <string name="recent_grades">Dernières Notes</string>
+    <string name="today_lessons">Emploi du Temps d\'Aujourd\'hui</string>
+    <string name="absences_count">Absences Totales</string>
+    <string name="lates_count">Retards Totaux</string>
+    <string name="no_data">Aucune donnée disponible</string>
+</resources>

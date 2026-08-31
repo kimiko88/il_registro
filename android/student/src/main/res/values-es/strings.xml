@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">Registro Escolar - Estudiante</string>
+    <string name="dashboard_title">Mi Panel</string>
+    <string name="welcome_student">¡Hola, %1$s!</string>
+    <string name="grades_title">Mis Calificaciones</string>
+    <string name="agenda_title">Deberes y Tareas</string>
+    <string name="attendance_title">Asistencia y Faltas</string>
+    <string name="report_card_title">Mi Boletín de Notas</string>
+    <string name="gpa_average">Promedio General</string>
+    <string name="recent_grades">Últimas Notas</string>
+    <string name="today_lessons">Horario de Hoy</string>
+    <string name="absences_count">Faltas Totales</string>
+    <string name="lates_count">Retrasos Totales</string>
+    <string name="no_data">Sin datos disponibles</string>
+</resources>

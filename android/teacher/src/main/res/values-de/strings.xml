@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Schulregister - Lehrkraft</string>
+    <string name="teacher_dashboard_title">Klassenbuch</string>
+    <string name="sign_hour">Unterrichtsstunde unterschreiben</string>
+    <string name="take_attendance">Anwesenheit erfassen</string>
+    <string name="add_grade">Note eintragen</string>
+    <string name="scrutiny_board">Notenkonferenz</string>
+    <string name="select_class">Ausgewählte Klasse:</string>
+    <string name="signed_hours_today">Heute signierte Stunden</string>
+</resources>

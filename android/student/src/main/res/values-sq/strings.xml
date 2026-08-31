@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">Regjistri Shkollor - Nxënës</string>
+    <string name="welcome_student">Përshëndetje, %1$s!</string>
+    <string name="gpa_average">Mesatarja e përgjithshme</string>
+    <string name="absences_count">Mungesat</string>
+    <string name="lates_count">Vonesat</string>
+    <string name="recent_grades">Notat e fundit</string>
+    <string name="today_lessons">Orari i mësimit sot</string>
+    <string name="dashboard_title">Paneli im</string>
+    <string name="grades_title">Notat e mia</string>
+    <string name="agenda_title">Detyrat dhe axhenda</string>
+    <string name="attendance_title">Pjesëmarrja dhe mungesat</string>
+    <string name="report_card_title">Dëftesa zyrtare</string>
+</resources>

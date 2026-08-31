@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Schulregister - Eltern</string>
+    <string name="parent_dashboard_title">Elternportal</string>
+    <string name="child_grades">Noten der Kinder</string>
+    <string name="child_attendance">Anwesenheit &amp; Entschuldigungen</string>
+    <string name="upcoming_colloqui">Elternsprechtag</string>
+    <string name="user_management">Benutzerverwaltung</string>
+</resources>

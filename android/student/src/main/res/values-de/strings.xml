@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">Schulregister - Schüler</string>
+    <string name="welcome_student">Hallo, %1$s!</string>
+    <string name="gpa_average">Notendurchschnitt</string>
+    <string name="absences_count">Fehlzeiten</string>
+    <string name="lates_count">Verspätungen</string>
+    <string name="recent_grades">Letzte Noten</string>
+    <string name="today_lessons">Heutiger Stundenplan</string>
+    <string name="dashboard_title">Mein Dashboard</string>
+    <string name="grades_title">Meine Noten</string>
+    <string name="agenda_title">Hausaufgaben &amp; Termine</string>
+    <string name="attendance_title">Anwesenheit &amp; Fehlzeiten</string>
+    <string name="report_card_title">Offizielles Zeugnis</string>
+</resources>
