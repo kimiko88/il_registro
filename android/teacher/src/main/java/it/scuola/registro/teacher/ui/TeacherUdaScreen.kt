@@ -2,6 +2,7 @@ package it.scuola.registro.teacher.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -10,20 +11,33 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import it.scuola.registro.teacher.R
+
+data class TeacherUdaItem(
+    val id: String,
+    val title: String,
+    val subjects: String,
+    val targetCompetencies: String,
+    val statusText: String = "In Corso"
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TeacherUdaScreen(onBack: () -> Unit = {}) {
+fun TeacherUdaScreen(
+    udas: List<TeacherUdaItem> = emptyList(),
+    onBack: () -> Unit = {}
+) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Unità di Apprendimento (UdA)", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.teacher_dashboard_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Indietro")
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
@@ -43,31 +57,29 @@ fun TeacherUdaScreen(onBack: () -> Unit = {}) {
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Programmazione Didattica Interdisciplinare", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                        Text("Gestione UdA, traguardi di competenza chiave europei e rubriche di valutazione del Consiglio.", fontSize = 12.sp, color = Color.DarkGray)
+                        Text(stringResource(R.string.teacher_dashboard_title), fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Text(stringResource(R.string.my_classes_title), fontSize = 12.sp, color = Color.DarkGray)
                     }
                 }
             }
 
-            item {
-                Text("UdA Attive nel Consiglio di Classe", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-            }
-
-            item {
-                Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
-                    Column(modifier = Modifier.padding(14.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text("UdA: Cittadinanza Digitale & IA", fontWeight = FontWeight.Bold)
-                            Surface(color = Color(0xFF10B981), shape = RoundedCornerShape(6.dp)) {
-                                Text("In Corso (2° Quadrimestre)", color = Color.White, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), fontSize = 10.sp)
+            if (udas.isNotEmpty()) {
+                items(udas) { item ->
+                    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
+                        Column(modifier = Modifier.padding(14.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(item.title, fontWeight = FontWeight.Bold)
+                                Surface(color = Color(0xFF10B981), shape = RoundedCornerShape(6.dp)) {
+                                    Text(item.statusText, color = Color.White, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), fontSize = 10.sp)
+                                }
                             }
+                            Text(item.subjects, fontSize = 12.sp, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(vertical = 4.dp))
+                            Text(item.targetCompetencies, fontSize = 12.sp, color = Color.Gray)
                         }
-                        Text("Discipline Coinvolte: Informatica, Italiano, Filosofia", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(vertical = 4.dp))
-                        Text("Competenze Target: Competenza digitale, Pensiero critico, Collaborazione", fontSize = 12.sp, color = Color.Gray)
                     }
                 }
             }

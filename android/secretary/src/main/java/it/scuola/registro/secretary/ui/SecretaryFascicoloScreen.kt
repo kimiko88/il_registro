@@ -7,23 +7,34 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import it.scuola.registro.secretary.R
+
+data class SecretaryFascicoloData(
+    val studentNameAndClass: String = "",
+    val fiscalCode: String = "",
+    val sidiCode: String = "",
+    val vaccineStatus: String = ""
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SecretaryFascicoloScreen(onBack: () -> Unit = {}) {
+fun SecretaryFascicoloScreen(
+    fascicolo: SecretaryFascicoloData = SecretaryFascicoloData(),
+    onBack: () -> Unit = {}
+) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Fascicolo Elettronico Studente", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.secretary_dashboard_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Indietro")
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
@@ -43,32 +54,34 @@ fun SecretaryFascicoloScreen(onBack: () -> Unit = {}) {
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Dossier Unico e Storico Carriera Scolastica", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                        Text("Anagrafica ministeriale SIDI, storico iscrizioni, certificati vaccinali, intolleranze alimentari e percorsi BES/DSA.", fontSize = 12.sp, color = Color.DarkGray)
+                        Text(stringResource(R.string.secretary_dashboard_title), fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Text(stringResource(R.string.stats_title), fontSize = 12.sp, color = Color.DarkGray)
                     }
                 }
             }
 
-            item {
-                Text("Dati Fascicolo: Mario Rossi (Classe 3ª A)", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-            }
+            if (fascicolo.studentNameAndClass.isNotEmpty()) {
+                item {
+                    Text(fascicolo.studentNameAndClass, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                }
 
-            item {
-                Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
-                    Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("Codice Fiscale:", fontWeight = FontWeight.SemiBold)
-                            Text("RSSMRA08A01H501Z", fontWeight = FontWeight.Bold)
-                        }
-                        Divider()
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("Codice SIDI Ministeriale:", fontWeight = FontWeight.SemiBold)
-                            Text("SIDI-1049281", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                        }
-                        Divider()
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("Stato Vaccinale:", fontWeight = FontWeight.SemiBold)
-                            Text("Regolare (Conforme L. 119/2017)", fontWeight = FontWeight.Bold, color = Color(0xFF10B981))
+                item {
+                    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
+                        Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text(stringResource(R.string.profile_title), fontWeight = FontWeight.SemiBold)
+                                Text(fascicolo.fiscalCode, fontWeight = FontWeight.Bold)
+                            }
+                            Divider()
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text(stringResource(R.string.secretary_dashboard_title), fontWeight = FontWeight.SemiBold)
+                                Text(fascicolo.sidiCode, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                            }
+                            Divider()
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text(stringResource(R.string.classes_title), fontWeight = FontWeight.SemiBold)
+                                Text(fascicolo.vaccineStatus, fontWeight = FontWeight.Bold, color = Color(0xFF10B981))
+                            }
                         }
                     }
                 }

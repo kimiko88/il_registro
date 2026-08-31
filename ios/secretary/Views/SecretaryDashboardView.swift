@@ -3,9 +3,11 @@ import SwiftUI
 public struct SecretaryDashboardView: View {
     @ObservedObject public var viewModel: SecretaryViewModel
     @State private var selectedTab = 0
+    public var auditLogs: [String] = []
 
-    public init(viewModel: SecretaryViewModel = SecretaryViewModel()) {
+    public init(viewModel: SecretaryViewModel = SecretaryViewModel(), auditLogs: [String] = []) {
         self.viewModel = viewModel
+        self.auditLogs = auditLogs
     }
 
     public var body: some View {
@@ -26,7 +28,7 @@ public struct SecretaryDashboardView: View {
                 .tabItem { Label(NSLocalizedString("generate_certificates", comment: ""), systemImage: "doc.badge.arrow.up.fill") }
                 .tag(3)
 
-            SecretaryAuditTab()
+            SecretaryAuditTab(auditLogs: auditLogs)
                 .tabItem { Label(NSLocalizedString("audit_logs", comment: ""), systemImage: "shield.lefthalf.filled") }
                 .tag(4)
         }
@@ -45,7 +47,7 @@ struct SecretaryOverviewTab: View {
                         VStack(alignment: .leading, spacing: 8) {
                             Image(systemName: "person.3.fill")
                                 .foregroundColor(.purple)
-                            Text("\(viewModel.users.count.coerceAtLeast(1248))")
+                            Text("\(viewModel.users.count)")
                                 .font(.title2)
                                 .fontWeight(.bold)
                             Text(NSLocalizedString("total_students", comment: ""))
@@ -60,7 +62,7 @@ struct SecretaryOverviewTab: View {
                         VStack(alignment: .leading, spacing: 8) {
                             Image(systemName: "graduationcap.fill")
                                 .foregroundColor(.purple)
-                            Text("94")
+                            Text("\(viewModel.classes.count)")
                                 .font(.title2)
                                 .fontWeight(.bold)
                             Text(NSLocalizedString("total_teachers", comment: ""))
@@ -80,21 +82,23 @@ struct SecretaryOverviewTab: View {
     }
 }
 
-private extension Int {
-    func coerceAtLeast(_ min: Int) -> Int {
-        return self > min ? self : min
-    }
-}
-
 struct SecretaryUsersTab: View {
     @ObservedObject var viewModel: SecretaryViewModel
 
     var body: some View {
         NavigationView {
-            List(viewModel.users) { user in
-                VStack(alignment: .leading) {
-                    Text(user.name).fontWeight(.semibold)
-                    Text(user.role).font(.caption).foregroundColor(.secondary)
+            List {
+                if viewModel.users.isEmpty {
+                    Text(NSLocalizedString("user_management", comment: ""))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                } else {
+                    ForEach(viewModel.users) { user in
+                        VStack(alignment: .leading) {
+                            Text(user.name).fontWeight(.semibold)
+                            Text(user.role).font(.caption).foregroundColor(.secondary)
+                        }
+                    }
                 }
             }
             .navigationTitle(NSLocalizedString("user_management", comment: ""))
@@ -107,14 +111,22 @@ struct SecretaryScrutinyTab: View {
 
     var body: some View {
         NavigationView {
-            List(viewModel.classes) { cls in
-                HStack {
-                    Text(cls.name)
-                    Spacer()
-                    Text("Operativo nel DB")
+            List {
+                if viewModel.classes.isEmpty {
+                    Text(NSLocalizedString("scrutiny_supervision", comment: ""))
                         .font(.caption)
-                        .fontWeight(.bold)
-                        .foregroundColor(.green)
+                        .foregroundColor(.secondary)
+                } else {
+                    ForEach(viewModel.classes) { cls in
+                        HStack {
+                            Text(cls.name)
+                            Spacer()
+                            Text("Operativo")
+                                .font(.caption)
+                                .fontWeight(.bold)
+                                .foregroundColor(.green)
+                        }
+                    }
                 }
             }
             .navigationTitle(NSLocalizedString("scrutiny_supervision", comment: ""))
@@ -127,13 +139,21 @@ struct SecretaryCertificatesTab: View {
 
     var body: some View {
         NavigationView {
-            List(viewModel.certificates) { cert in
-                HStack {
-                    Text(cert.title)
-                    Spacer()
-                    Button("PDF") {}
-                        .buttonStyle(.borderedProminent)
-                        .tint(.purple)
+            List {
+                if viewModel.certificates.isEmpty {
+                    Text(NSLocalizedString("generate_certificates", comment: ""))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                } else {
+                    ForEach(viewModel.certificates) { cert in
+                        HStack {
+                            Text(cert.title)
+                            Spacer()
+                            Button("PDF") {}
+                                .buttonStyle(.borderedProminent)
+                                .tint(.purple)
+                        }
+                    }
                 }
             }
             .navigationTitle(NSLocalizedString("generate_certificates", comment: ""))
@@ -142,17 +162,21 @@ struct SecretaryCertificatesTab: View {
 }
 
 struct SecretaryAuditTab: View {
-    let logs = [
-        "31 Ago 11:20 • Accesso SuperAdmin",
-        "31 Ago 10:45 • Generazione Certificato Matricola 412",
-        "31 Ago 09:30 • Chiusura Scrutinio Classe 3A"
-    ]
+    var auditLogs: [String] = []
 
     var body: some View {
         NavigationView {
-            List(logs, id: \.self) { log in
-                Label(log, systemImage: "shield.fill")
-                    .font(.caption)
+            List {
+                if auditLogs.isEmpty {
+                    Text(NSLocalizedString("audit_logs", comment: ""))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                } else {
+                    ForEach(auditLogs, id: \.self) { log in
+                        Label(log, systemImage: "shield.fill")
+                            .font(.caption)
+                    }
+                }
             }
             .navigationTitle(NSLocalizedString("audit_logs", comment: ""))
         }

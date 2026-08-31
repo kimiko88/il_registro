@@ -1,6 +1,13 @@
-"dashboard_title" = "我的控制台";
+"dashboard_title" = "我的控制面板";
 "grades_title" = "我的成绩";
-"agenda_title" = "作业与日程";
+"agenda_title" = "家庭作业与日程";
 "attendance_title" = "出勤与缺勤";
 "report_card_title" = "我的成绩单";
-"gpa_average" = "平均总分";
+"gpa_average" = "总平均分";
+"cancel" = "取消";
+"save" = "保存";
+"title" = "标题";
+"description" = "描述";
+"reflection" = "反思总结";
+"details" = "详情";
+"add" = "添加";

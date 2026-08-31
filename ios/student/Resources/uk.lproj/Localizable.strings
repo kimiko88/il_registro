@@ -3,4 +3,11 @@
 "agenda_title" = "Домашні Завдання та Розклад";
 "attendance_title" = "Відвідуваність та Пропуски";
 "report_card_title" = "Мій Табель";
-"gpa_average" = "Середній Бал";
+"gpa_average" = "Загальний Середній Бал";
+"cancel" = "Скасувати";
+"save" = "Зберегти";
+"title" = "Заголовок";
+"description" = "Опис";
+"reflection" = "Критичний аналіз";
+"details" = "Деталі";
+"add" = "Додати";

@@ -1,54 +1,62 @@
 import SwiftUI
 
-struct StudentCurriculumView: View {
-    var body: some View {
+public struct CurriculumSectionModel: Identifiable, Equatable {
+    public let id: String
+    public let title: String
+    public let description: String
+
+    public init(id: String = UUID().uuidString, title: String, description: String) {
+        self.id = id
+        self.title = title
+        self.description = description
+    }
+}
+
+public struct StudentCurriculumView: View {
+    public var sections: [CurriculumSectionModel]
+    public var onDownloadPdf: (() -> Void)?
+
+    public init(sections: [CurriculumSectionModel] = [], onDownloadPdf: (() -> Void)? = nil) {
+        self.sections = sections
+        self.onDownloadPdf = onDownloadPdf
+    }
+
+    public var body: some View {
         NavigationView {
             List {
-                Section(header: Text("Dossier Esame di Stato")) {
+                Section(header: Text(NSLocalizedString("dashboard_title", comment: ""))) {
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Curriculum dello Studente Ufficiale")
+                            Text(NSLocalizedString("dashboard_title", comment: ""))
                                 .fontWeight(.bold)
-                            Text("Modello conforme alle Linee Guida MIM")
+                            Text(NSLocalizedString("grades_title", comment: ""))
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
                         Spacer()
-                        Button(action: {}) {
+                        Button(action: { onDownloadPdf?() }) {
                             Label("PDF", systemImage: "arrow.down.doc.fill")
                         }
                         .buttonStyle(.borderedProminent)
                     }
                 }
 
-                Section(header: Text("Riepilogo delle Sezioni")) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("1. Percorso degli Studi")
-                            .font(.headline)
-                        Text("Liceo Scientifico Statale (5 Anni) • Crediti: 35/40")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-
-                        Divider()
-
-                        Text("2. Certificazioni Riconosciute")
-                            .font(.headline)
-                        Text("Cambridge English B2 First • ICDL Full Standard")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-
-                        Divider()
-
-                        Text("3. Percorsi PCTO & Orientamento")
-                            .font(.headline)
-                        Text("120 ore PCTO validate • 30 ore Orientamento svolte")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
+                if !sections.isEmpty {
+                    Section(header: Text("Sezioni")) {
+                        ForEach(sections) { sec in
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(sec.title)
+                                    .font(.headline)
+                                Text(sec.description)
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding(.vertical, 4)
+                        }
                     }
-                    .padding(.vertical, 4)
                 }
             }
-            .navigationTitle("Curriculum Studente")
+            .navigationTitle(NSLocalizedString("dashboard_title", comment: ""))
         }
     }
 }

@@ -1,5 +1,19 @@
 import SwiftUI
 
+public struct StudentAttendanceRecordModel: Identifiable, Equatable {
+    public let id: String
+    public let date: String
+    public let type: String
+    public let isJustified: Bool
+
+    public init(id: String = UUID().uuidString, date: String, type: String, isJustified: Bool = true) {
+        self.id = id
+        self.date = date
+        self.type = type
+        self.isJustified = isJustified
+    }
+}
+
 public struct StudentDashboardView: View {
     @ObservedObject public var viewModel: StudentViewModel
     @State private var studentName: String = "Mario Rossi"
@@ -29,7 +43,7 @@ public struct StudentDashboardView: View {
                 }
                 .tag(2)
 
-            StudentAttendanceView()
+            StudentAttendanceView(records: [])
                 .tabItem {
                     Label(NSLocalizedString("attendance_title", comment: ""), systemImage: "checkmark.circle.fill")
                 }
@@ -57,7 +71,7 @@ struct StudentHomeView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         HStack {
                             VStack(alignment: .leading, spacing: 4) {
-                                Text("Ciao, \(studentName)!")
+                                Text("\(NSLocalizedString("welcome_student", comment: "")) \(studentName)")
                                     .font(.title)
                                     .fontWeight(.bold)
                                     .foregroundColor(.white)
@@ -127,7 +141,7 @@ struct StudentGradesView: View {
     var body: some View {
         NavigationView {
             List {
-                Section(header: Text("Riepilogo Database")) {
+                Section(header: Text(NSLocalizedString("grades_title", comment: ""))) {
                     HStack {
                         Text(NSLocalizedString("gpa_average", comment: ""))
                             .fontWeight(.semibold)
@@ -181,7 +195,7 @@ struct StudentAgendaView: View {
                             Text(task.taskDescription)
                                 .font(.caption)
                                 .foregroundColor(.secondary)
-                            Text("Scadenza: \(task.dueDate)")
+                            Text("\(NSLocalizedString("agenda_title", comment: "")): \(task.dueDate)")
                                 .font(.caption2)
                                 .foregroundColor(.purple)
                         }
@@ -196,37 +210,28 @@ struct StudentAgendaView: View {
 
 // 4. Attendance View
 struct StudentAttendanceView: View {
+    public var records: [StudentAttendanceRecordModel] = []
+
     var body: some View {
         NavigationView {
             List {
-                Section(header: Text("Riepilogo Presenze Anno Scolastico")) {
-                    HStack {
-                        Text("Giorni di Presenza")
-                        Spacer()
-                        Text("184").fontWeight(.bold).foregroundColor(.green)
-                    }
-                    HStack {
-                        Text("Assenze Totali")
-                        Spacer()
-                        Text("3").fontWeight(.bold).foregroundColor(.red)
-                    }
-                    HStack {
-                        Text("Ritardi")
-                        Spacer()
-                        Text("1").fontWeight(.bold).foregroundColor(.orange)
-                    }
-                }
-
-                Section(header: Text("Storico Giustificazioni")) {
-                    HStack {
-                        Text("26 Ago 2026 • Assenza")
-                        Spacer()
-                        Label("Giustificata", systemImage: "checkmark.seal.fill").foregroundColor(.green).font(.caption)
-                    }
-                    HStack {
-                        Text("18 Ago 2026 • Ritardo 1a ora")
-                        Spacer()
-                        Label("Giustificata", systemImage: "checkmark.seal.fill").foregroundColor(.green).font(.caption)
+                Section(header: Text(NSLocalizedString("attendance_title", comment: ""))) {
+                    if records.isEmpty {
+                        Text(NSLocalizedString("attendance_title", comment: ""))
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    } else {
+                        ForEach(records) { item in
+                            HStack {
+                                Text("\(item.date) • \(item.type)")
+                                Spacer()
+                                if item.isJustified {
+                                    Label(NSLocalizedString("attendance_title", comment: ""), systemImage: "checkmark.seal.fill")
+                                        .foregroundColor(.green)
+                                        .font(.caption)
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -244,14 +249,11 @@ struct StudentReportCardView: View {
             ScrollView {
                 VStack(spacing: 16) {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Documento di Valutazione Ufficiale")
+                        Text(NSLocalizedString("report_card_title", comment: ""))
                             .font(.headline)
                             .fontWeight(.bold)
                             .foregroundColor(.white)
-                        Text("Esito Scrutinio: AMMESSO / PROMOSSO")
-                            .font(.subheadline)
-                            .foregroundColor(.white.opacity(0.9))
-                        Text("Media Voti: \(String(format: "%.1f", viewModel.calculateGPA()))")
+                        Text("\(NSLocalizedString("gpa_average", comment: "")): \(String(format: "%.1f", viewModel.calculateGPA()))")
                             .font(.caption)
                             .foregroundColor(.white.opacity(0.8))
                     }
@@ -274,19 +276,6 @@ struct StudentReportCardView: View {
                         }
                         .padding()
                         .background(Color(UIColor.secondarySystemGroupedBackground))
-                        .cornerRadius(12)
-                    }
-
-                    Button(action: {}) {
-                        HStack {
-                            Image(systemName: "arrow.down.doc.fill")
-                            Text("Scarica Pagella Ufficiale (PDF)")
-                                .fontWeight(.semibold)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.purple)
-                        .foregroundColor(.white)
                         .cornerRadius(12)
                     }
                 }

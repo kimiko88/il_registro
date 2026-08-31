@@ -2,6 +2,7 @@ package it.scuola.registro.secretary.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -10,20 +11,32 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import it.scuola.registro.secretary.R
+
+data class SecretarySidiFlowItem(
+    val id: String,
+    val flowName: String,
+    val description: String = ""
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SecretarySidiSyncScreen(onBack: () -> Unit = {}) {
+fun SecretarySidiSyncScreen(
+    flows: List<SecretarySidiFlowItem> = emptyList(),
+    onExportFlow: (String) -> Unit = {},
+    onBack: () -> Unit = {}
+) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Sincronizzazione Flussi SIDI (MIM)", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.secretary_dashboard_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Indietro")
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
@@ -43,38 +56,28 @@ fun SecretarySidiSyncScreen(onBack: () -> Unit = {}) {
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Tracciati Record & Flussi SIDI Ministeriali", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                        Text("Esportazione pacchetti XML per Anagrafe Nazionale Studenti ed Esiti Scrutini.", fontSize = 12.sp, color = Color.DarkGray)
+                        Text(stringResource(R.string.secretary_dashboard_title), fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Text(stringResource(R.string.system_logs), fontSize = 12.sp, color = Color.DarkGray)
                     }
                 }
             }
 
-            item {
-                Text("Flussi Disponibili per l'Export", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-            }
-
-            item {
-                Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
-                    Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (flows.isNotEmpty()) {
+                items(flows) { item ->
+                    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth().padding(14.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("1. Flusso Anagrafe Nazionale Studenti (ANS)", fontWeight = FontWeight.SemiBold)
-                            Button(onClick = {}, shape = RoundedCornerShape(8.dp)) {
-                                Text("Esporta XML", fontSize = 11.sp)
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(item.flowName, fontWeight = FontWeight.SemiBold)
+                                if (item.description.isNotBlank()) {
+                                    Text(item.description, fontSize = 12.sp, color = Color.Gray)
+                                }
                             }
-                        }
-                        Divider()
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text("2. Esiti Scrutini Differiti (Debiti Settembre)", fontWeight = FontWeight.SemiBold)
-                            Button(onClick = {}, shape = RoundedCornerShape(8.dp)) {
-                                Text("Esporta XML", fontSize = 11.sp)
+                            Button(onClick = { onExportFlow(item.id) }, shape = RoundedCornerShape(8.dp)) {
+                                Text("XML", fontSize = 11.sp)
                             }
                         }
                     }

@@ -1,6 +1,13 @@
 "dashboard_title" = "Mi Panel";
 "grades_title" = "Mis Calificaciones";
-"agenda_title" = "Tareas & Agenda";
-"attendance_title" = "Asistencia & Faltas";
-"report_card_title" = "Mi Boletín de Notas";
+"agenda_title" = "Tareas y Agenda";
+"attendance_title" = "Asistencia y Ausencias";
+"report_card_title" = "Mi Boletín";
 "gpa_average" = "Promedio General";
+"cancel" = "Cancelar";
+"save" = "Guardar";
+"title" = "Título";
+"description" = "Descripción";
+"reflection" = "Reflexión crítica";
+"details" = "Detalles";
+"add" = "Añadir";

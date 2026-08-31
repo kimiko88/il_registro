@@ -1,6 +1,13 @@
 "dashboard_title" = "لوحة التحكم الخاصة بي";
 "grades_title" = "درجاتي";
-"agenda_title" = "الواجبات وجدول المواعيد";
+"agenda_title" = "الواجبات المنزلية والجدol";
 "attendance_title" = "الحضور والغياب";
-"report_card_title" = "بطاقة الدرجات";
+"report_card_title" = "بطاقة تقريري";
 "gpa_average" = "المعدل العام";
+"cancel" = "إلغاء";
+"save" = "حفظ";
+"title" = "العنوان";
+"description" = "الوصف";
+"reflection" = "تأمل نقدي";
+"details" = "التفاصيل";
+"add" = "إضافة";

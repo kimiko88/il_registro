@@ -22,7 +22,7 @@ import it.scuola.registro.teacher.viewmodel.TeacherViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TeacherRegisterScreen(
-    viewModel: TeacherViewModel = remember { TeacherViewModel().apply { loadSessionData() } },
+    viewModel: TeacherViewModel = remember { TeacherViewModel() },
     onLogout: () -> Unit = {}
 ) {
     var selectedTab by remember { mutableStateOf(0) }
@@ -77,7 +77,7 @@ fun TeacherRegisterScreen(
                     selected = selectedTab == 3,
                     onClick = { selectedTab = 3 },
                     icon = { Icon(Icons.Default.EditCalendar, contentDescription = null) },
-                    label = { Text("Agenda", fontSize = 10.sp) }
+                    label = { Text(stringResource(R.string.teacher_dashboard_title), fontSize = 10.sp) }
                 )
                 NavigationBarItem(
                     selected = selectedTab == 4,
@@ -103,8 +103,8 @@ fun TeacherRegisterScreen(
 @Composable
 fun TeacherFirmaTab(viewModel: TeacherViewModel) {
     val session = viewModel.activeSession
-    var topic by remember { mutableStateOf(session?.lessonTopic ?: "Equazioni e disequazioni esponenziali") }
-    var isSigned by remember { mutableStateOf(session?.isSigned ?: true) }
+    var topic by remember(session) { mutableStateOf(session?.lessonTopic ?: "") }
+    var isSigned by remember(session) { mutableStateOf(session?.isSigned ?: false) }
 
     LazyColumn(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         item {
@@ -116,12 +116,12 @@ fun TeacherFirmaTab(viewModel: TeacherViewModel) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(stringResource(R.string.sign_hour), fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text("${stringResource(R.string.select_class)} ${session?.className ?: "3A"} • ${session?.subject ?: "Matematica"}", fontSize = 13.sp, color = Color.Gray)
+                    Text("${stringResource(R.string.select_class)} ${session?.className ?: ""} • ${session?.subject ?: ""}", fontSize = 13.sp, color = Color.Gray)
                     Spacer(modifier = Modifier.height(12.dp))
                     OutlinedTextField(
                         value = topic,
                         onValueChange = { topic = it },
-                        label = { Text("Argomento Lezione") },
+                        label = { Text(stringResource(R.string.sign_hour)) },
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(modifier = Modifier.height(12.dp))
@@ -136,7 +136,7 @@ fun TeacherFirmaTab(viewModel: TeacherViewModel) {
                     ) {
                         Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(if (isSigned) "Ora Lezione Firmata" else stringResource(R.string.sign_hour))
+                        Text(if (isSigned) stringResource(R.string.lesson_signed) else stringResource(R.string.sign_hour))
                     }
                 }
             }
@@ -152,30 +152,36 @@ fun TeacherAppelloTab(viewModel: TeacherViewModel) {
         item {
             Text(stringResource(R.string.take_attendance), fontWeight = FontWeight.Bold, fontSize = 16.sp)
         }
-        items(students) { student ->
-            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(14.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(text = student.studentName, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        FilterChip(
-                            selected = student.status == "presente",
-                            onClick = { viewModel.updateStudentStatus(student.studentId, "presente") },
-                            label = { Text("P") }
-                        )
-                        FilterChip(
-                            selected = student.status == "assente",
-                            onClick = { viewModel.updateStudentStatus(student.studentId, "assente") },
-                            label = { Text("A") }
-                        )
-                        FilterChip(
-                            selected = student.status == "ritardo",
-                            onClick = { viewModel.updateStudentStatus(student.studentId, "ritardo") },
-                            label = { Text("R") }
-                        )
+        if (students.isEmpty()) {
+            item {
+                Text(stringResource(R.string.select_class), color = Color.Gray, fontSize = 13.sp)
+            }
+        } else {
+            items(students) { student ->
+                Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(14.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(text = student.studentName, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            FilterChip(
+                                selected = student.status == "presente",
+                                onClick = { viewModel.updateStudentStatus(student.studentId, "presente") },
+                                label = { Text("P") }
+                            )
+                            FilterChip(
+                                selected = student.status == "assente",
+                                onClick = { viewModel.updateStudentStatus(student.studentId, "assente") },
+                                label = { Text("A") }
+                            )
+                            FilterChip(
+                                selected = student.status == "ritardo",
+                                onClick = { viewModel.updateStudentStatus(student.studentId, "ritardo") },
+                                label = { Text("R") }
+                            )
+                        }
                     }
                 }
             }
@@ -191,16 +197,22 @@ fun TeacherGradesEntryTab(viewModel: TeacherViewModel) {
         item {
             Text(stringResource(R.string.add_grade), fontWeight = FontWeight.Bold, fontSize = 16.sp)
         }
-        items(students) { student ->
-            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(14.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(student.studentName, fontWeight = FontWeight.SemiBold)
-                    Button(onClick = { viewModel.submitGradeForStudent(student.studentId, 8.0, 1.0, "Scritto", "") }, shape = RoundedCornerShape(6.dp)) {
-                        Text(stringResource(R.string.add_grade), fontSize = 12.sp)
+        if (students.isEmpty()) {
+            item {
+                Text(stringResource(R.string.select_class), color = Color.Gray, fontSize = 13.sp)
+            }
+        } else {
+            items(students) { student ->
+                Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(14.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(student.studentName, fontWeight = FontWeight.SemiBold)
+                        Button(onClick = { viewModel.submitGradeForStudent(student.studentId, 8.0, 1.0, "Scritto", "") }, shape = RoundedCornerShape(6.dp)) {
+                            Text(stringResource(R.string.add_grade), fontSize = 12.sp)
+                        }
                     }
                 }
             }
@@ -214,12 +226,12 @@ fun TeacherAgendaTab(viewModel: TeacherViewModel) {
         item {
             Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Assegna Compito / Verifica", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text(stringResource(R.string.teacher_dashboard_title), fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     Spacer(modifier = Modifier.height(8.dp))
                     Button(onClick = { }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(8.dp)) {
                         Icon(Icons.Default.Add, contentDescription = null)
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Nuovo Compito in Agenda")
+                        Text(stringResource(R.string.teacher_dashboard_title))
                     }
                 }
             }
@@ -239,7 +251,7 @@ fun TeacherScrutinyTab(viewModel: TeacherViewModel) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(stringResource(R.string.scrutiny_board), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text("Delibera voti finali, condotta e saldo debiti formativi", color = Color.White.copy(alpha = 0.8f), fontSize = 13.sp)
+                    Text(stringResource(R.string.scrutiny_board), color = Color.White.copy(alpha = 0.8f), fontSize = 13.sp)
                     Spacer(modifier = Modifier.height(12.dp))
                     Button(
                         onClick = { },
@@ -248,7 +260,7 @@ fun TeacherScrutinyTab(viewModel: TeacherViewModel) {
                     ) {
                         Icon(Icons.Default.EventRepeat, contentDescription = null)
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Sessione Scrutinio Differito")
+                        Text(stringResource(R.string.scrutiny_board))
                     }
                 }
             }

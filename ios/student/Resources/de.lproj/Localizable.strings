@@ -1,6 +1,13 @@
 "dashboard_title" = "Mein Dashboard";
 "grades_title" = "Meine Noten";
 "agenda_title" = "Hausaufgaben & Agenda";
-"attendance_title" = "Anwesenheit & Fehltage";
+"attendance_title" = "Anwesenheit & Abwesenheiten";
 "report_card_title" = "Mein Zeugnis";
 "gpa_average" = "Gesamtdurchschnitt";
+"cancel" = "Abbrechen";
+"save" = "Speichern";
+"title" = "Titel";
+"description" = "Beschreibung";
+"reflection" = "Kritische Reflexion";
+"details" = "Details";
+"add" = "Hinzufügen";

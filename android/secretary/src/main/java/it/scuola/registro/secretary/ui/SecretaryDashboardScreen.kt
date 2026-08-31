@@ -21,7 +21,8 @@ import it.scuola.registro.secretary.viewmodel.SecretaryViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SecretaryDashboardScreen(
-    viewModel: SecretaryViewModel = remember { SecretaryViewModel().apply { loadSampleData() } },
+    viewModel: SecretaryViewModel = remember { SecretaryViewModel() },
+    auditLogs: List<String> = emptyList(),
     onLogout: () -> Unit = {}
 ) {
     var selectedTab by remember { mutableStateOf(0) }
@@ -58,7 +59,7 @@ fun SecretaryDashboardScreen(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
                     icon = { Icon(Icons.Default.Dashboard, contentDescription = null) },
-                    label = { Text("Pannello", fontSize = 11.sp) }
+                    label = { Text(stringResource(R.string.secretary_dashboard_title), fontSize = 10.sp) }
                 )
                 NavigationBarItem(
                     selected = selectedTab == 1,
@@ -93,7 +94,7 @@ fun SecretaryDashboardScreen(
                 1 -> SecretaryUsersTab(viewModel)
                 2 -> SecretaryScrutinyTab(viewModel)
                 3 -> SecretaryCertificatesTab(viewModel)
-                4 -> SecretaryAuditTab()
+                4 -> SecretaryAuditTab(auditLogs)
             }
         }
     }
@@ -101,20 +102,22 @@ fun SecretaryDashboardScreen(
 
 @Composable
 fun SecretaryOverviewTab(viewModel: SecretaryViewModel) {
+    val studentCount = viewModel.getUsersByRole("student").size
+    val teacherCount = viewModel.getUsersByRole("teacher").size
+
     LazyColumn(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                MetricCard(modifier = Modifier.weight(1f), title = stringResource(R.string.total_students), value = "${viewModel.getUsersByRole("student").size.coerceAtLeast(1248)}", icon = Icons.Default.People)
-                MetricCard(modifier = Modifier.weight(1f), title = stringResource(R.string.total_teachers), value = "${viewModel.getUsersByRole("teacher").size.coerceAtLeast(94)}", icon = Icons.Default.School)
+                MetricCard(modifier = Modifier.weight(1f), title = stringResource(R.string.total_students), value = studentCount.toString(), icon = Icons.Default.People)
+                MetricCard(modifier = Modifier.weight(1f), title = stringResource(R.string.total_teachers), value = teacherCount.toString(), icon = Icons.Default.School)
             }
         }
         item {
             Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Stato Sistema & Operazioni", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text(stringResource(R.string.secretary_dashboard_title), fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("Anno Scolastico Attivo: 2025/2026", fontSize = 13.sp, color = Color.Gray)
-                    Text("Server API & Database: Operativi (Latenza 14ms)", fontSize = 13.sp, color = Color(0xFF10B981))
+                    Text(stringResource(R.string.system_logs), fontSize = 13.sp, color = Color.Gray)
                 }
             }
         }
@@ -132,23 +135,29 @@ fun SecretaryUsersTab(viewModel: SecretaryViewModel) {
                 Button(onClick = { }, shape = RoundedCornerShape(8.dp)) {
                     Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Nuovo Utente", fontSize = 12.sp)
+                    Text(stringResource(R.string.add_user_button), fontSize = 12.sp)
                 }
             }
         }
-        items(users) { user ->
-            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(14.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text("${user.firstName} ${user.lastName}", fontWeight = FontWeight.Bold)
-                        Text("${user.role} • ${user.email}", fontSize = 12.sp, color = Color.Gray)
-                    }
-                    IconButton(onClick = { }) {
-                        Icon(Icons.Default.Edit, contentDescription = null, tint = Color(0xFF581C87))
+        if (users.isEmpty()) {
+            item {
+                Text(stringResource(R.string.user_management), color = Color.Gray, fontSize = 13.sp)
+            }
+        } else {
+            items(users) { user ->
+                Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(14.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text("${user.firstName} ${user.lastName}", fontWeight = FontWeight.Bold)
+                            Text("${user.role} • ${user.email}", fontSize = 12.sp, color = Color.Gray)
+                        }
+                        IconButton(onClick = { }) {
+                            Icon(Icons.Default.Edit, contentDescription = null, tint = Color(0xFF581C87))
+                        }
                     }
                 }
             }
@@ -164,19 +173,25 @@ fun SecretaryScrutinyTab(viewModel: SecretaryViewModel) {
         item {
             Text(stringResource(R.string.scrutiny_supervision), fontWeight = FontWeight.Bold, fontSize = 16.sp)
         }
-        items(classes) { cls ->
-            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(14.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(cls.className, fontWeight = FontWeight.Bold)
-                    Surface(
-                        color = if (cls.isLocked) Color(0xFF10B981) else Color(0xFFEA580C),
-                        shape = RoundedCornerShape(6.dp)
+        if (classes.isEmpty()) {
+            item {
+                Text(stringResource(R.string.scrutiny_supervision), color = Color.Gray, fontSize = 13.sp)
+            }
+        } else {
+            items(classes) { cls ->
+                Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(14.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(if (cls.isLocked) "Bloccato/Chiuso" else "Aperto/In corso", color = Color.White, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), fontSize = 12.sp)
+                        Text(cls.className, fontWeight = FontWeight.Bold)
+                        Surface(
+                            color = if (cls.isLocked) Color(0xFF10B981) else Color(0xFFEA580C),
+                            shape = RoundedCornerShape(6.dp)
+                        ) {
+                            Text(if (cls.isLocked) "Bloccato/Chiuso" else "Aperto/In corso", color = Color.White, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), fontSize = 12.sp)
+                        }
                     }
                 }
             }
@@ -192,18 +207,24 @@ fun SecretaryCertificatesTab(viewModel: SecretaryViewModel) {
         item {
             Text(stringResource(R.string.generate_certificates), fontWeight = FontWeight.Bold, fontSize = 16.sp)
         }
-        items(certs) { cert ->
-            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(14.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text("Certificato: ${cert.certificateType}", fontWeight = FontWeight.Medium, fontSize = 13.sp)
-                    Button(onClick = { }, shape = RoundedCornerShape(8.dp)) {
-                        Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("PDF", fontSize = 12.sp)
+        if (certs.isEmpty()) {
+            item {
+                Text(stringResource(R.string.generate_certificates), color = Color.Gray, fontSize = 13.sp)
+            }
+        } else {
+            items(certs) { cert ->
+                Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(14.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Certificato: ${cert.certificateType}", fontWeight = FontWeight.Medium, fontSize = 13.sp)
+                        Button(onClick = { }, shape = RoundedCornerShape(8.dp)) {
+                            Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("PDF", fontSize = 12.sp)
+                        }
                     }
                 }
             }
@@ -212,22 +233,23 @@ fun SecretaryCertificatesTab(viewModel: SecretaryViewModel) {
 }
 
 @Composable
-fun SecretaryAuditTab() {
-    val logs = listOf(
-        "31 Ago 11:20 • Login SuperAdmin da IP sicuro",
-        "31 Ago 10:45 • Generazione certificato iscrizione matricola 412",
-        "31 Ago 09:30 • Chiusura scrutinio classe 3A"
-    )
+fun SecretaryAuditTab(auditLogs: List<String> = emptyList()) {
     LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         item {
             Text(stringResource(R.string.audit_logs), fontWeight = FontWeight.Bold, fontSize = 16.sp)
         }
-        items(logs) { log ->
-            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp)) {
-                Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Security, contentDescription = null, tint = Color(0xFF581C87))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(log, fontSize = 12.sp)
+        if (auditLogs.isEmpty()) {
+            item {
+                Text(stringResource(R.string.audit_logs), color = Color.Gray, fontSize = 13.sp)
+            }
+        } else {
+            items(auditLogs) { log ->
+                Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp)) {
+                    Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Security, contentDescription = null, tint = Color(0xFF581C87))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(log, fontSize = 12.sp)
+                    }
                 }
             }
         }

@@ -2,6 +2,7 @@ package it.scuola.registro.teacher.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -10,20 +11,33 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import it.scuola.registro.teacher.R
+
+data class TeacherRecoveryCourseItem(
+    val id: String,
+    val title: String,
+    val enrolledDetails: String,
+    val examDateDetails: String,
+    val statusText: String = "In Corso"
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TeacherRecoveryCoursesScreen(onBack: () -> Unit = {}) {
+fun TeacherRecoveryCoursesScreen(
+    courses: List<TeacherRecoveryCourseItem> = emptyList(),
+    onBack: () -> Unit = {}
+) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Corsi di Recupero & PAI", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.teacher_dashboard_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Indietro")
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
@@ -43,31 +57,29 @@ fun TeacherRecoveryCoursesScreen(onBack: () -> Unit = {}) {
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Corsi di Recupero Debiti Formativi", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                        Text("Gestione sessioni di recupero estivo / pomeridiano e prove di verifica finale.", fontSize = 12.sp, color = Color.DarkGray)
+                        Text(stringResource(R.string.teacher_dashboard_title), fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Text(stringResource(R.string.my_classes_title), fontSize = 12.sp, color = Color.DarkGray)
                     }
                 }
             }
 
-            item {
-                Text("Corsi Attivi Assegnati", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-            }
-
-            item {
-                Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
-                    Column(modifier = Modifier.padding(14.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text("Corso di Recupero Matematica 3ª", fontWeight = FontWeight.Bold)
-                            Surface(color = Color(0xFF10B981), shape = RoundedCornerShape(6.dp)) {
-                                Text("In Corso (8/10 ore)", color = Color.White, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), fontSize = 10.sp)
+            if (courses.isNotEmpty()) {
+                items(courses) { item ->
+                    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
+                        Column(modifier = Modifier.padding(14.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(item.title, fontWeight = FontWeight.Bold)
+                                Surface(color = Color(0xFF10B981), shape = RoundedCornerShape(6.dp)) {
+                                    Text(item.statusText, color = Color.White, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), fontSize = 10.sp)
+                                }
                             }
+                            Text(item.enrolledDetails, fontSize = 12.sp, color = Color.Gray, modifier = Modifier.padding(vertical = 4.dp))
+                            Text(item.examDateDetails, fontSize = 12.sp, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
                         }
-                        Text("Studenti Iscritti: 8 studenti con sospensione del giudizio", fontSize = 12.sp, color = Color.Gray, modifier = Modifier.padding(vertical = 4.dp))
-                        Text("Data Prova di Verifica Finale: 28 Agosto 2026", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
                     }
                 }
             }

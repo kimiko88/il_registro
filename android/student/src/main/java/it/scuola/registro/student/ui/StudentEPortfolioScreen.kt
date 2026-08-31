@@ -2,6 +2,7 @@ package it.scuola.registro.student.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -10,26 +11,39 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import it.scuola.registro.student.R
+
+data class StudentCapolavoroItem(
+    val id: String,
+    val title: String,
+    val schoolYear: String,
+    val description: String,
+    val selfEvaluation: String
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StudentEPortfolioScreen(onBack: () -> Unit = {}) {
+fun StudentEPortfolioScreen(
+    capolavori: List<StudentCapolavoroItem> = emptyList(),
+    onAddCapolavoro: (String, String, String) -> Unit = { _, _, _ -> },
+    onBack: () -> Unit = {}
+) {
     var showDialog by remember { mutableStateOf(false) }
     var title by remember { mutableStateOf("") }
-    var year by remember { mutableStateOf("2025/2026") }
     var description by remember { mutableStateOf("") }
     var reflection by remember { mutableStateOf("") }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("E-Portfolio & Capolavori (MIM)", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.dashboard_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Indietro")
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
@@ -40,7 +54,7 @@ fun StudentEPortfolioScreen(onBack: () -> Unit = {}) {
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = Color.White
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Carica Capolavoro")
+                Icon(Icons.Default.Add, contentDescription = "Add")
             }
         }
     ) { padding ->
@@ -58,40 +72,30 @@ fun StudentEPortfolioScreen(onBack: () -> Unit = {}) {
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Orientamento & E-Portfolio", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                        Text("Linee Guida Nazionali per l'Orientamento (D.M. 328/2022)", fontSize = 12.sp, color = Color.DarkGray)
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text("Ore Orientamento Svolte:", fontSize = 13.sp)
-                            Text("30 / 30 h (Target Raggiunto)", fontWeight = FontWeight.Bold, color = Color(0xFF0D9488))
-                        }
+                        Text(stringResource(R.string.dashboard_title), fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Text(stringResource(R.string.grades_title), fontSize = 12.sp, color = Color.DarkGray)
                     }
                 }
             }
 
-            item {
-                Text("I Tuoi Capolavori Selezionati", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-            }
-
-            item {
-                Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
-                    Column(modifier = Modifier.padding(14.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text("Progetto Registro Elettronico Open Source", fontWeight = FontWeight.Bold)
-                            Surface(color = Color(0xFF8B5CF6), shape = RoundedCornerShape(6.dp)) {
-                                Text("A.S. 2025/2026", color = Color.White, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), fontSize = 10.sp)
+            if (capolavori.isNotEmpty()) {
+                items(capolavori) { item ->
+                    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
+                        Column(modifier = Modifier.padding(14.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(item.title, fontWeight = FontWeight.Bold)
+                                Surface(color = Color(0xFF8B5CF6), shape = RoundedCornerShape(6.dp)) {
+                                    Text(item.schoolYear, color = Color.White, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), fontSize = 10.sp)
+                                }
                             }
-                        }
-                        Text("Sviluppo di un modulo concorrente in Go e applicazione mobile nativa per la scuola pubblica.", fontSize = 13.sp, color = Color.DarkGray, modifier = Modifier.padding(vertical = 4.dp))
-                        Surface(color = Color(0xFFF3F4F6), shape = RoundedCornerShape(8.dp), modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
-                            Text("Autovalutazione: Ho accresciuto la capacità di problem solving e lavoro in team.", fontSize = 12.sp, color = Color.Gray, modifier = Modifier.padding(8.dp))
+                            Text(item.description, fontSize = 13.sp, color = Color.DarkGray, modifier = Modifier.padding(vertical = 4.dp))
+                            Surface(color = Color(0xFFF3F4F6), shape = RoundedCornerShape(8.dp), modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
+                                Text(item.selfEvaluation, fontSize = 12.sp, color = Color.Gray, modifier = Modifier.padding(8.dp))
+                            }
                         }
                     }
                 }
@@ -102,32 +106,38 @@ fun StudentEPortfolioScreen(onBack: () -> Unit = {}) {
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
-            title = { Text("Nuovo Capolavoro E-Portfolio") },
+            title = { Text(stringResource(R.string.dashboard_title)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
                         value = title,
                         onValueChange = { title = it },
-                        label = { Text("Titolo Capolavoro *") },
+                        label = { Text("Title *") },
                         modifier = Modifier.fillMaxWidth()
                     )
                     OutlinedTextField(
                         value = description,
                         onValueChange = { description = it },
-                        label = { Text("Descrizione") },
+                        label = { Text("Description") },
                         modifier = Modifier.fillMaxWidth()
                     )
                     OutlinedTextField(
                         value = reflection,
                         onValueChange = { reflection = it },
-                        label = { Text("Riflessione critica") },
+                        label = { Text("Reflection") },
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
             },
             confirmButton = {
-                Button(onClick = { showDialog = false }) {
-                    Text("Salva")
+                Button(onClick = {
+                    onAddCapolavoro(title, description, reflection)
+                    title = ""
+                    description = ""
+                    reflection = ""
+                    showDialog = false
+                }) {
+                    Text(stringResource(R.string.sign_hour))
                 }
             },
             dismissButton = {

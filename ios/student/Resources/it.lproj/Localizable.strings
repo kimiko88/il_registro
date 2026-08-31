@@ -4,3 +4,10 @@
 "attendance_title" = "Presenze & Assenze";
 "report_card_title" = "La Mia Pagella";
 "gpa_average" = "Media Generale";
+"cancel" = "Annulla";
+"save" = "Salva";
+"title" = "Titolo";
+"description" = "Descrizione";
+"reflection" = "Riflessione critica";
+"details" = "Dettagli";
+"add" = "Aggiungi";

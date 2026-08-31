@@ -1,6 +1,13 @@
 "dashboard_title" = "Paneli Im";
 "grades_title" = "Notat e Mia";
-"agenda_title" = "Detyrat & Axhenda";
-"attendance_title" = "Pjesëmarrja & Mungesat";
+"agenda_title" = "Detyrat dhe Axhenda";
+"attendance_title" = "Pjesëmarrja dhe Mungesat";
 "report_card_title" = "Dëftesa Ime";
 "gpa_average" = "Mesatarja e Përgjithshme";
+"cancel" = "Anulo";
+"save" = "Ruaj";
+"title" = "Titulli";
+"description" = "Përshkrimi";
+"reflection" = "Reflektim kritik";
+"details" = "Detajet";
+"add" = "Shto";

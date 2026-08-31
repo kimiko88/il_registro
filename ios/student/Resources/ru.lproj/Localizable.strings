@@ -3,4 +3,11 @@
 "agenda_title" = "Домашние Задания и Расписание";
 "attendance_title" = "Посещаемость и Пропуски";
 "report_card_title" = "Мой Табель";
-"gpa_average" = "Средний Балл";
+"gpa_average" = "Общий Средний Балл";
+"cancel" = "Отмена";
+"save" = "Сохранить";
+"title" = "Заголовок";
+"description" = "Описание";
+"reflection" = "Критический анализ";
+"details" = "Детали";
+"add" = "Добавить";

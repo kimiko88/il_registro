@@ -23,7 +23,7 @@ public struct TeacherRegisterView: View {
                 .tag(2)
 
             TeacherAgendaTab()
-                .tabItem { Label("Agenda", systemImage: "calendar.badge.plus") }
+                .tabItem { Label(NSLocalizedString("teacher_dashboard_title", comment: ""), systemImage: "calendar.badge.plus") }
                 .tag(3)
 
             TeacherScrutinyTab()
@@ -45,17 +45,17 @@ struct TeacherFirmaTab: View {
                         Text(NSLocalizedString("sign_hour", comment: ""))
                             .font(.headline)
                             .fontWeight(.bold)
-                        Text("\(NSLocalizedString("select_class", comment: "")) \(viewModel.currentSession?.className ?? "3A") • \(viewModel.currentSession?.subject ?? "Matematica")")
+                        Text("\(NSLocalizedString("select_class", comment: "")) \(viewModel.currentSession?.className ?? "") • \(viewModel.currentSession?.subject ?? "")")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
 
-                        TextField("Argomento della Lezione", text: $viewModel.lessonTopic)
+                        TextField(NSLocalizedString("sign_hour", comment: ""), text: $viewModel.lessonTopic)
                             .textFieldStyle(.roundedBorder)
 
                         Button(action: { _ = viewModel.signLesson(topic: viewModel.lessonTopic) }) {
                             HStack {
                                 Image(systemName: viewModel.isHourSigned ? "checkmark.circle.fill" : "pencil.line")
-                                Text(viewModel.isHourSigned ? "Ora Lezione Firmata" : NSLocalizedString("sign_hour", comment: ""))
+                                Text(viewModel.isHourSigned ? NSLocalizedString("lesson_signed", comment: "") : NSLocalizedString("sign_hour", comment: ""))
                                     .fontWeight(.semibold)
                             }
                             .frame(maxWidth: .infinity)
@@ -122,10 +122,10 @@ struct TeacherAgendaTab: View {
         NavigationView {
             List {
                 Button(action: {}) {
-                    Label("Assegna Nuovo Compito in Agenda", systemImage: "plus.circle.fill")
+                    Label(NSLocalizedString("teacher_dashboard_title", comment: ""), systemImage: "plus.circle.fill")
                 }
             }
-            .navigationTitle("Agenda di Classe")
+            .navigationTitle(NSLocalizedString("teacher_dashboard_title", comment: ""))
         }
     }
 }
@@ -140,12 +140,12 @@ struct TeacherScrutinyTab: View {
                             .font(.headline)
                             .fontWeight(.bold)
                             .foregroundColor(.white)
-                        Text("Delibera voti finali, condotta e verifiche debiti")
+                        Text(NSLocalizedString("scrutiny_board", comment: ""))
                             .font(.subheadline)
                             .foregroundColor(.white.opacity(0.8))
                         
                         Button(action: {}) {
-                            Text("Sessione Scrutinio Differito")
+                            Text(NSLocalizedString("scrutiny_board", comment: ""))
                                 .fontWeight(.semibold)
                                 .frame(maxWidth: .infinity)
                                 .padding()

@@ -21,10 +21,17 @@ import it.scuola.registro.parent.data.ParentChild
 import it.scuola.registro.parent.data.PendingAbsence
 import it.scuola.registro.parent.viewmodel.ParentViewModel
 
+data class ParentGradeDisplayItem(
+    val subject: String,
+    val gradeWithDetails: String
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ParentDashboardScreen(
-    viewModel: ParentViewModel = remember { ParentViewModel().apply { loadSampleData() } },
+    viewModel: ParentViewModel = remember { ParentViewModel() },
+    gradesList: List<ParentGradeDisplayItem> = emptyList(),
+    circularsList: List<String> = emptyList(),
     onLogout: () -> Unit = {}
 ) {
     val children = viewModel.children
@@ -41,7 +48,7 @@ fun ParentDashboardScreen(
                             1 -> stringResource(R.string.child_grades)
                             2 -> stringResource(R.string.child_attendance)
                             3 -> stringResource(R.string.upcoming_colloqui)
-                            else -> "Avvisi & Circolari"
+                            else -> stringResource(R.string.parent_dashboard_title)
                         },
                         fontWeight = FontWeight.Bold
                     )
@@ -63,7 +70,7 @@ fun ParentDashboardScreen(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
                     icon = { Icon(Icons.Default.FamilyRestroom, contentDescription = null) },
-                    label = { Text("Figli", fontSize = 11.sp) }
+                    label = { Text(stringResource(R.string.parent_dashboard_title), fontSize = 10.sp) }
                 )
                 NavigationBarItem(
                     selected = selectedTab == 1,
@@ -87,7 +94,7 @@ fun ParentDashboardScreen(
                     selected = selectedTab == 4,
                     onClick = { selectedTab = 4 },
                     icon = { Icon(Icons.Default.Campaign, contentDescription = null) },
-                    label = { Text("Avvisi", fontSize = 11.sp) }
+                    label = { Text(stringResource(R.string.parent_dashboard_title), fontSize = 10.sp) }
                 )
             }
         }
@@ -130,10 +137,10 @@ fun ParentDashboardScreen(
                 selectedChild?.let { child ->
                     when (selectedTab) {
                         0 -> ParentOverviewTab(child)
-                        1 -> ParentGradesTab(child)
+                        1 -> ParentGradesTab(gradesList)
                         2 -> ParentJustificationsTab(viewModel)
                         3 -> ParentColloquiTab(viewModel)
-                        4 -> ParentCommunicationsTab()
+                        4 -> ParentCommunicationsTab(circularsList)
                     }
                 } ?: run {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -160,7 +167,7 @@ fun ParentOverviewTab(child: ParentChild) {
                     Spacer(modifier = Modifier.height(12.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                         Surface(color = Color.White.copy(alpha = 0.2f), shape = RoundedCornerShape(8.dp)) {
-                            Text("Stato: Iscritto e Attivo", color = Color.White, modifier = Modifier.padding(6.dp), fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.parent_dashboard_title), color = Color.White, modifier = Modifier.padding(6.dp), fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -170,23 +177,23 @@ fun ParentOverviewTab(child: ParentChild) {
 }
 
 @Composable
-fun ParentGradesTab(child: ParentChild) {
-    val sampleGrades = listOf(
-        "Matematica" to "8.5 (Scritto)",
-        "Italiano" to "8.0 (Orale)",
-        "Fisica" to "7.5 (Scritto)",
-        "Inglese" to "9.0 (Pratico)"
-    )
+fun ParentGradesTab(grades: List<ParentGradeDisplayItem>) {
     LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        items(sampleGrades) { (sub, grade) ->
-            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(14.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(sub, fontWeight = FontWeight.Bold)
-                    Text(grade, color = Color(0xFF0D9488), fontWeight = FontWeight.SemiBold)
+        if (grades.isEmpty()) {
+            item {
+                Text(stringResource(R.string.child_grades), fontSize = 13.sp, color = Color.Gray)
+            }
+        } else {
+            items(grades) { item ->
+                Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(14.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(item.subject, fontWeight = FontWeight.Bold)
+                        Text(item.gradeWithDetails, color = Color(0xFF0D9488), fontWeight = FontWeight.SemiBold)
+                    }
                 }
             }
         }
@@ -219,7 +226,7 @@ fun ParentJustificationsTab(viewModel: ParentViewModel) {
                         }
                         if (item.isJustified) {
                             Surface(color = Color(0xFF10B981), shape = RoundedCornerShape(6.dp)) {
-                                Text("Giustificata", color = Color.White, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), fontSize = 12.sp)
+                                Text(stringResource(R.string.pending_justifications), color = Color.White, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), fontSize = 12.sp)
                             }
                         } else {
                             Button(onClick = { viewModel.justifyAbsence(item.id, "Motivata") }, shape = RoundedCornerShape(8.dp)) {
@@ -257,7 +264,7 @@ fun ParentColloquiTab(viewModel: ParentViewModel) {
                         colors = ButtonDefaults.buttonColors(containerColor = if (slot.isConfirmed) Color(0xFF10B981) else Color(0xFF0D9488)),
                         shape = RoundedCornerShape(8.dp)
                     ) {
-                        Text(if (slot.isConfirmed) "Prenotato" else stringResource(R.string.book_colloquio), fontSize = 12.sp)
+                        Text(if (slot.isConfirmed) stringResource(R.string.upcoming_colloqui) else stringResource(R.string.book_colloquio), fontSize = 12.sp)
                     }
                 }
             }
@@ -266,19 +273,20 @@ fun ParentColloquiTab(viewModel: ParentViewModel) {
 }
 
 @Composable
-fun ParentCommunicationsTab() {
-    val circulars = listOf(
-        "Circolare n. 42: Calendario incontri scuola-famiglia",
-        "Circolare n. 41: Protocollo uscite didattiche e viaggi",
-        "Circolare n. 40: Attivazione registro elettronico"
-    )
+fun ParentCommunicationsTab(circulars: List<String> = emptyList()) {
     LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        items(circulars) { c ->
-            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
-                Row(modifier = Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Description, contentDescription = null, tint = Color(0xFF0F172A))
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(c, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+        if (circulars.isEmpty()) {
+            item {
+                Text(stringResource(R.string.parent_dashboard_title), fontSize = 13.sp, color = Color.Gray)
+            }
+        } else {
+            items(circulars) { c ->
+                Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
+                    Row(modifier = Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Description, contentDescription = null, tint = Color(0xFF0F172A))
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(c, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                    }
                 }
             }
         }

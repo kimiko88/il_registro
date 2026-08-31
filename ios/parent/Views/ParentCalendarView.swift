@@ -1,42 +1,57 @@
 import SwiftUI
 
-struct ParentCalendarView: View {
-    var body: some View {
+public struct ParentCalendarEventModel: Identifiable, Equatable {
+    public let id: String
+    public let title: String
+    public let dateText: String
+    public let details: String
+    public let tag: String
+
+    public init(id: String = UUID().uuidString, title: String, dateText: String, details: String, tag: String) {
+        self.id = id
+        self.title = title
+        self.dateText = dateText
+        self.details = details
+        self.tag = tag
+    }
+}
+
+public struct ParentCalendarView: View {
+    public var events: [ParentCalendarEventModel]
+
+    public init(events: [ParentCalendarEventModel] = []) {
+        self.events = events
+    }
+
+    public var body: some View {
         NavigationView {
             List {
-                Section(header: Text("Festività e Chiusure")) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack {
-                            Text("Ponte Festa della Repubblica")
-                                .fontWeight(.bold)
-                            Spacer()
-                            Text("1-2 Giugno")
-                                .font(.caption2)
-                                .foregroundColor(.blue)
-                        }
-                        Text("Sospensione delle lezioni deliberate dal Consiglio")
-                            .font(.subheadline)
+                Section(header: Text(NSLocalizedString("parent_dashboard_title", comment: ""))) {
+                    if events.isEmpty {
+                        Text(NSLocalizedString("parent_dashboard_title", comment: ""))
+                            .font(.caption)
                             .foregroundColor(.secondary)
-                    }
-                    .padding(.vertical, 4)
-
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack {
-                            Text("Termine Lezioni A.S. 2025/2026")
-                                .fontWeight(.bold)
-                            Spacer()
-                            Text("6 Giugno")
-                                .font(.caption2)
-                                .foregroundColor(.green)
+                    } else {
+                        ForEach(events) { ev in
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack {
+                                    Text(ev.title)
+                                        .fontWeight(.bold)
+                                    Spacer()
+                                    Text(ev.dateText)
+                                        .font(.caption2)
+                                        .foregroundColor(.blue)
+                                }
+                                Text(ev.details)
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding(.vertical, 4)
                         }
-                        Text("Ultimo giorno di scuola • Uscita ore 12:00")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
                     }
-                    .padding(.vertical, 4)
                 }
             }
-            .navigationTitle("Calendario Scolastico")
+            .navigationTitle(NSLocalizedString("parent_dashboard_title", comment: ""))
         }
     }
 }

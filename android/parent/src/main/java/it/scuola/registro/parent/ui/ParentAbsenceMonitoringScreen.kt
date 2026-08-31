@@ -10,20 +10,31 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import it.scuola.registro.parent.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ParentAbsenceMonitoringScreen(onBack: () -> Unit = {}) {
+fun ParentAbsenceMonitoringScreen(
+    studentName: String = "",
+    absentHours: Int = 0,
+    maxAllowedAbsentHours: Int = 247,
+    totalYearHours: Int = 990,
+    onBack: () -> Unit = {}
+) {
+    val progress = if (maxAllowedAbsentHours > 0) (absentHours.toFloat() / maxAllowedAbsentHours.toFloat()).coerceIn(0f, 1f) else 0f
+    val isCritical = progress > 0.8f
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Monitoraggio Limite Assenze", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.parent_dashboard_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Indietro")
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
@@ -43,14 +54,16 @@ fun ParentAbsenceMonitoringScreen(onBack: () -> Unit = {}) {
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Validità Anno Scolastico (D.P.R. 122/2009)", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                        Text("Per la validità dell'anno è richiesta la frequenza di almeno il 75% del monte ore personalizzato (max 25% di assenze).", fontSize = 12.sp, color = Color.DarkGray)
+                        Text(stringResource(R.string.parent_dashboard_title), fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Text(stringResource(R.string.pending_justifications), fontSize = 12.sp, color = Color.DarkGray)
                     }
                 }
             }
 
-            item {
-                Text("Stato Monte Ore: Mario Rossi", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            if (studentName.isNotEmpty()) {
+                item {
+                    Text(studentName, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                }
             }
 
             item {
@@ -61,22 +74,22 @@ fun ParentAbsenceMonitoringScreen(onBack: () -> Unit = {}) {
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("Ore di Assenza Effettuate:", fontWeight = FontWeight.SemiBold)
-                            Text("54 Ore / 247 Ore Max (5.4%)", fontWeight = FontWeight.Bold, color = Color(0xFF10B981))
+                            Text(stringResource(R.string.pending_justifications), fontWeight = FontWeight.SemiBold)
+                            Text(
+                                "$absentHours / $maxAllowedAbsentHours h",
+                                fontWeight = FontWeight.Bold,
+                                color = if (isCritical) Color(0xFFEF4444) else Color(0xFF10B981)
+                            )
                         }
                         LinearProgressIndicator(
-                            progress = 0.22f, // 54/247 = 22% of the max allowed absences
+                            progress = progress,
                             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                            color = Color(0xFF10B981)
+                            color = if (isCritical) Color(0xFFEF4444) else Color(0xFF10B981)
                         )
                         Divider()
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("Monte Ore Totale Annuale:", fontWeight = FontWeight.SemiBold)
-                            Text("990 Ore", fontWeight = FontWeight.Bold)
-                        }
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("Stato Frequenza:", fontWeight = FontWeight.SemiBold)
-                            Text("Regolare (Anno Pienamente Valido)", fontWeight = FontWeight.Bold, color = Color(0xFF10B981))
+                            Text("Monte Ore Totale:", fontWeight = FontWeight.SemiBold)
+                            Text("$totalYearHours h", fontWeight = FontWeight.Bold)
                         }
                     }
                 }

@@ -29,7 +29,7 @@ data class LessonItem(val hour: String, val subject: String, val room: String)
 @Composable
 fun StudentDashboardScreen(
     studentName: String = "Mario Rossi",
-    viewModel: StudentViewModel = remember { StudentViewModel().apply { loadSampleData() } },
+    viewModel: StudentViewModel = remember { StudentViewModel() },
     onLogout: () -> Unit = {}
 ) {
     var selectedTab by remember { mutableStateOf(0) }

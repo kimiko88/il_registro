@@ -1,44 +1,47 @@
 import SwiftUI
 
-struct StudentAccessibilityFeedbackView: View {
+public struct StudentAccessibilityFeedbackView: View {
     @State private var barrierType = "Contrasto / Visibilità"
     @State private var description = ""
     @State private var submitted = false
+    public var onSubmitFeedback: ((String, String) -> Void)?
 
-    var body: some View {
+    public init(onSubmitFeedback: ((String, String) -> Void)? = nil) {
+        self.onSubmitFeedback = onSubmitFeedback
+    }
+
+    public var body: some View {
         NavigationView {
             Form {
                 if submitted {
                     Section {
                         VStack(alignment: .leading, spacing: 6) {
-                            Text("Segnalazione Inviata con Successo!")
+                            Text(NSLocalizedString("dashboard_title", comment: ""))
                                 .fontWeight(.bold)
                                 .foregroundColor(.green)
-                            Text("Protocollo: A11Y-2026-0528-0912")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
                         }
                     }
                 } else {
-                    Section(header: Text("Meccanismo di Feedback AgID")) {
-                        Text("Segnala all'RTD eventuali barriere di accessibilità o problemi WCAG.")
+                    Section(header: Text(NSLocalizedString("dashboard_title", comment: ""))) {
+                        Text(NSLocalizedString("grades_title", comment: ""))
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
 
-                    Section(header: Text("Dati Segnalazione")) {
-                        TextField("Tipologia", text: $barrierType)
+                    Section(header: Text(NSLocalizedString("dashboard_title", comment: ""))) {
+                        TextField(NSLocalizedString("dashboard_title", comment: ""), text: $barrierType)
                         TextEditor(text: $description)
                             .frame(height: 100)
 
-                        Button("Invia Segnalazione all'RTD") {
+                        Button(NSLocalizedString("dashboard_title", comment: "")) {
+                            onSubmitFeedback?(barrierType, description)
                             submitted = true
                         }
                         .disabled(description.isEmpty)
                     }
                 }
             }
-            .navigationTitle("Accessibilità AgID")
+            .navigationTitle(NSLocalizedString("dashboard_title", comment: ""))
         }
     }
 }

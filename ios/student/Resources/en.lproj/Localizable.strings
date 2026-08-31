@@ -4,3 +4,10 @@
 "attendance_title" = "Attendance & Absences";
 "report_card_title" = "My Report Card";
 "gpa_average" = "General GPA";
+"cancel" = "Cancel";
+"save" = "Save";
+"title" = "Title";
+"description" = "Description";
+"reflection" = "Critical reflection";
+"details" = "Details";
+"add" = "Add";

@@ -1,42 +1,70 @@
 import SwiftUI
 
-struct ParentAnagraficaView: View {
-    var body: some View {
+public struct ParentFamilyDataModel: Equatable {
+    public var guardianName: String
+    public var phone: String
+    public var email: String
+    public var enrollmentStatus: String
+
+    public init(guardianName: String = "", phone: String = "", email: String = "", enrollmentStatus: String = "") {
+        self.guardianName = guardianName
+        self.phone = phone
+        self.email = email
+        self.enrollmentStatus = enrollmentStatus
+    }
+}
+
+public struct ParentAnagraficaView: View {
+    public var familyData: ParentFamilyDataModel
+
+    public init(familyData: ParentFamilyDataModel = ParentFamilyDataModel()) {
+        self.familyData = familyData
+    }
+
+    public var body: some View {
         NavigationView {
             List {
-                Section(header: Text("Dati Anagrafici & Contatti")) {
-                    HStack {
-                        Text("Tutore Principale")
-                        Spacer()
-                        Text("Giuseppe Rossi (Padre)")
-                            .fontWeight(.bold)
+                Section(header: Text(NSLocalizedString("parent_dashboard_title", comment: ""))) {
+                    if !familyData.guardianName.isEmpty {
+                        HStack {
+                            Text("Tutore")
+                            Spacer()
+                            Text(familyData.guardianName)
+                                .fontWeight(.bold)
+                        }
                     }
 
-                    HStack {
-                        Text("Telefono Emergenza")
-                        Spacer()
-                        Text("+39 333 1234567")
-                            .fontWeight(.bold)
-                            .foregroundColor(.blue)
+                    if !familyData.phone.isEmpty {
+                        HStack {
+                            Text("Telefono")
+                            Spacer()
+                            Text(familyData.phone)
+                                .fontWeight(.bold)
+                                .foregroundColor(.blue)
+                        }
                     }
 
-                    HStack {
-                        Text("Email Istituzionale")
-                        Spacer()
-                        Text("famiglia.rossi@email.it")
-                            .foregroundColor(.secondary)
+                    if !familyData.email.isEmpty {
+                        HStack {
+                            Text("Email")
+                            Spacer()
+                            Text(familyData.email)
+                                .foregroundColor(.secondary)
+                        }
                     }
 
-                    HStack {
-                        Text("Stato Iscrizione")
-                        Spacer()
-                        Text("Confermata A.S. 25/26")
-                            .fontWeight(.bold)
-                            .foregroundColor(.green)
+                    if !familyData.enrollmentStatus.isEmpty {
+                        HStack {
+                            Text("Stato Iscrizione")
+                            Spacer()
+                            Text(familyData.enrollmentStatus)
+                                .fontWeight(.bold)
+                                .foregroundColor(.green)
+                        }
                     }
                 }
             }
-            .navigationTitle("Dati Famiglia")
+            .navigationTitle(NSLocalizedString("parent_dashboard_title", comment: ""))
         }
     }
 }

@@ -1,34 +1,64 @@
 import SwiftUI
 
-struct TeacherDailySubstitutionsView: View {
-    var body: some View {
+public struct TeacherSubstitutionModel: Identifiable, Equatable {
+    public let id: String
+    public let hourText: String
+    public let className: String
+    public let absentTeacherAndLocation: String
+    public let activityDetails: String
+
+    public init(id: String = UUID().uuidString, hourText: String, className: String, absentTeacherAndLocation: String, activityDetails: String) {
+        self.id = id
+        self.hourText = hourText
+        self.className = className
+        self.absentTeacherAndLocation = absentTeacherAndLocation
+        self.activityDetails = activityDetails
+    }
+}
+
+public struct TeacherDailySubstitutionsView: View {
+    public var substitutions: [TeacherSubstitutionModel]
+
+    public init(substitutions: [TeacherSubstitutionModel] = []) {
+        self.substitutions = substitutions
+    }
+
+    public var body: some View {
         NavigationView {
             List {
-                Section(header: Text("Coperture Assegnate Oggi")) {
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack {
-                            Text("3ª Ora (10:00 - 11:00)")
-                                .fontWeight(.bold)
-                            Spacer()
-                            Text("Classe 2ª C")
-                                .font(.caption2)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(Color.blue.opacity(0.2))
-                                .foregroundColor(.blue)
-                                .cornerRadius(4)
-                        }
-                        Text("Docente: Prof. Gialli • Lab Lingue 1")
-                            .font(.subheadline)
-                            .foregroundColor(.blue)
-                        Text("Attività: Sorveglianza e compiti Classroom")
+                Section(header: Text(NSLocalizedString("teacher_dashboard_title", comment: ""))) {
+                    if substitutions.isEmpty {
+                        Text(NSLocalizedString("teacher_dashboard_title", comment: ""))
                             .font(.caption)
                             .foregroundColor(.secondary)
+                    } else {
+                        ForEach(substitutions) { item in
+                            VStack(alignment: .leading, spacing: 6) {
+                                HStack {
+                                    Text(item.hourText)
+                                        .fontWeight(.bold)
+                                    Spacer()
+                                    Text(item.className)
+                                        .font(.caption2)
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 2)
+                                        .background(Color.blue.opacity(0.2))
+                                        .foregroundColor(.blue)
+                                        .cornerRadius(4)
+                                }
+                                Text(item.absentTeacherAndLocation)
+                                    .font(.subheadline)
+                                    .foregroundColor(.blue)
+                                Text(item.activityDetails)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding(.vertical, 4)
+                        }
                     }
-                    .padding(.vertical, 4)
                 }
             }
-            .navigationTitle("Supplenze del Giorno")
+            .navigationTitle(NSLocalizedString("teacher_dashboard_title", comment: ""))
         }
     }
 }

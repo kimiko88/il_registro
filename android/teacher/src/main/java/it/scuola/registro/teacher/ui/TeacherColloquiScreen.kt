@@ -2,6 +2,7 @@ package it.scuola.registro.teacher.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -10,20 +11,33 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import it.scuola.registro.teacher.R
+
+data class TeacherColloquioBookingItem(
+    val id: String,
+    val parentAndStudent: String,
+    val timeSlot: String,
+    val location: String,
+    val reason: String
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TeacherColloquiScreen(onBack: () -> Unit = {}) {
+fun TeacherColloquiScreen(
+    colloqui: List<TeacherColloquioBookingItem> = emptyList(),
+    onBack: () -> Unit = {}
+) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Gestione Ricevimento Famiglie", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.teacher_dashboard_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Indietro")
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
@@ -43,31 +57,29 @@ fun TeacherColloquiScreen(onBack: () -> Unit = {}) {
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Orario di Ricevimento Settimanale", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                        Text("Configura slot orari, visualizza le prenotazioni dei genitori e inserisci annotazioni post-colloquio.", fontSize = 12.sp, color = Color.DarkGray)
+                        Text(stringResource(R.string.teacher_dashboard_title), fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Text(stringResource(R.string.my_classes_title), fontSize = 12.sp, color = Color.DarkGray)
                     }
                 }
             }
 
-            item {
-                Text("Genitori Prenotati per Mercoledì", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-            }
-
-            item {
-                Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
-                    Column(modifier = Modifier.padding(14.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text("Genitore: Sig. Rossi (Studente: Mario Rossi)", fontWeight = FontWeight.Bold)
-                            Surface(color = Color(0xFF3B82F6), shape = RoundedCornerShape(6.dp)) {
-                                Text("Ore 10:00 - 10:15", color = Color.White, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), fontSize = 10.sp)
+            if (colloqui.isNotEmpty()) {
+                items(colloqui) { item ->
+                    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
+                        Column(modifier = Modifier.padding(14.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(item.parentAndStudent, fontWeight = FontWeight.Bold)
+                                Surface(color = Color(0xFF3B82F6), shape = RoundedCornerShape(6.dp)) {
+                                    Text(item.timeSlot, color = Color.White, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), fontSize = 10.sp)
+                                }
                             }
+                            Text(item.location, fontSize = 12.sp, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(vertical = 4.dp))
+                            Text(item.reason, fontSize = 12.sp, color = Color.Gray)
                         }
-                        Text("Modalità: In Presenza • Aula Ricevimento 12", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(vertical = 4.dp))
-                        Text("Motivo Richiesta: Andamento didattico e recupero verifiche scritte", fontSize = 12.sp, color = Color.Gray)
                     }
                 }
             }

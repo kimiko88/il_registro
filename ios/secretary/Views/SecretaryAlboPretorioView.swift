@@ -1,34 +1,64 @@
 import SwiftUI
 
-struct SecretaryAlboPretorioView: View {
-    var body: some View {
+public struct SecretaryAlboActModel: Identifiable, Equatable {
+    public let id: String
+    public let title: String
+    public let actCodeAndCategory: String
+    public let datesAndHash: String
+    public let statusText: String
+
+    public init(id: String = UUID().uuidString, title: String, actCodeAndCategory: String, datesAndHash: String, statusText: String = "In Pubblicazione") {
+        self.id = id
+        self.title = title
+        self.actCodeAndCategory = actCodeAndCategory
+        self.datesAndHash = datesAndHash
+        self.statusText = statusText
+    }
+}
+
+public struct SecretaryAlboPretorioView: View {
+    public var acts: [SecretaryAlboActModel]
+
+    public init(acts: [SecretaryAlboActModel] = []) {
+        self.acts = acts
+    }
+
+    public var body: some View {
         NavigationView {
             List {
-                Section(header: Text("Albo Pretorio Online (D.Lgs. 33/2013)")) {
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack {
-                            Text("Determina Dirigenziale N. 104")
-                                .fontWeight(.bold)
-                            Spacer()
-                            Text("Affisso (15gg)")
-                                .font(.caption2)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(Color.green.opacity(0.2))
-                                .foregroundColor(.green)
-                                .cornerRadius(4)
-                        }
-                        Text("ALBO-2026-00342 • Fornitura Lab STEM PNRR")
-                            .font(.subheadline)
-                            .foregroundColor(.blue)
-                        Text("Affisso: 25 Maggio • Scadenza: 09 Giugno • SHA-256")
+                Section(header: Text(NSLocalizedString("secretary_dashboard_title", comment: ""))) {
+                    if acts.isEmpty {
+                        Text(NSLocalizedString("secretary_dashboard_title", comment: ""))
                             .font(.caption)
                             .foregroundColor(.secondary)
+                    } else {
+                        ForEach(acts) { item in
+                            VStack(alignment: .leading, spacing: 6) {
+                                HStack {
+                                    Text(item.title)
+                                        .fontWeight(.bold)
+                                    Spacer()
+                                    Text(item.statusText)
+                                        .font(.caption2)
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 2)
+                                        .background(Color.green.opacity(0.2))
+                                        .foregroundColor(.green)
+                                        .cornerRadius(4)
+                                }
+                                Text(item.actCodeAndCategory)
+                                    .font(.subheadline)
+                                    .foregroundColor(.blue)
+                                Text(item.datesAndHash)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding(.vertical, 4)
+                        }
                     }
-                    .padding(.vertical, 4)
                 }
             }
-            .navigationTitle("Albo Pretorio")
+            .navigationTitle(NSLocalizedString("secretary_dashboard_title", comment: ""))
         }
     }
 }

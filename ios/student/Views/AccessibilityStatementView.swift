@@ -1,28 +1,36 @@
 import SwiftUI
 
-struct AccessibilityStatementView: View {
-    var body: some View {
+public struct AccessibilityStatementView: View {
+    public var rtdEmail: String
+    public var complianceStatus: String
+
+    public init(rtdEmail: String = "rtd@scuola.edu.it", complianceStatus: String = "Totalmente Conforme") {
+        self.rtdEmail = rtdEmail
+        self.complianceStatus = complianceStatus
+    }
+
+    public var body: some View {
         NavigationView {
             List {
-                Section(header: Text("Conformità AgID / WCAG 2.2 AA")) {
+                Section(header: Text(NSLocalizedString("dashboard_title", comment: ""))) {
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("Stato: Totalmente Conforme")
+                        Text(complianceStatus)
                             .fontWeight(.bold)
                             .foregroundColor(.green)
-                        Text("Supporto completo a VoiceOver, testo dinamico, alto contrasto e filtri visivi.")
+                        Text(NSLocalizedString("grades_title", comment: ""))
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
                     .padding(.vertical, 4)
                 }
 
-                Section(header: Text("Contatti RTD")) {
-                    Text("Email RTD: rtd@scuola.edu.it")
+                Section(header: Text(NSLocalizedString("dashboard_title", comment: ""))) {
+                    Text("RTD: \(rtdEmail)")
                         .font(.caption)
                         .foregroundColor(.blue)
                 }
             }
-            .navigationTitle("Accessibilità AgID")
+            .navigationTitle(NSLocalizedString("dashboard_title", comment: ""))
         }
     }
 }

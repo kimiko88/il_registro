@@ -2,6 +2,7 @@ package it.scuola.registro.secretary.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -10,20 +11,33 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import it.scuola.registro.secretary.R
+
+data class SecretaryTransferItem(
+    val id: String,
+    val title: String,
+    val destinationAndClass: String,
+    val datesAndProtocol: String,
+    val statusText: String = "Rilasciato"
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SecretaryTransfersScreen(onBack: () -> Unit = {}) {
+fun SecretaryTransfersScreen(
+    transfers: List<SecretaryTransferItem> = emptyList(),
+    onBack: () -> Unit = {}
+) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Trasferimenti & Nulla Osta", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.secretary_dashboard_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Indietro")
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
@@ -43,31 +57,29 @@ fun SecretaryTransfersScreen(onBack: () -> Unit = {}) {
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Gestione Mobilità e Iscrizioni Pregresse", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                        Text("Rilascio Nulla Osta in uscita, accoglimento domande di trasferimento in ingresso e passaggio fascicolo SIDI.", fontSize = 12.sp, color = Color.DarkGray)
+                        Text(stringResource(R.string.secretary_dashboard_title), fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Text(stringResource(R.string.stats_title), fontSize = 12.sp, color = Color.DarkGray)
                     }
                 }
             }
 
-            item {
-                Text("Pratiche di Mobilità Studenti", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-            }
-
-            item {
-                Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
-                    Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text("Nulla Osta in Uscita - Studente: L. B.", fontWeight = FontWeight.Bold)
-                            Surface(color = Color(0xFF10B981), shape = RoundedCornerShape(6.dp)) {
-                                Text("Rilasciato dal DS", color = Color.White, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), fontSize = 10.sp)
+            if (transfers.isNotEmpty()) {
+                items(transfers) { item ->
+                    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
+                        Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(item.title, fontWeight = FontWeight.Bold)
+                                Surface(color = Color(0xFF10B981), shape = RoundedCornerShape(6.dp)) {
+                                    Text(item.statusText, color = Color.White, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), fontSize = 10.sp)
+                                }
                             }
+                            Text(item.destinationAndClass, fontSize = 12.sp, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
+                            Text(item.datesAndProtocol, fontSize = 12.sp, color = Color.Gray)
                         }
-                        Text("Istituto Destinazione: Liceo Scientifico 'Galilei' • Classe: 2ª B", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
-                        Text("Data Rilascio: 25 Maggio 2026 • Protocollo: NO-2026-0392 • Trasmissione SIDI: Completata", fontSize = 12.sp, color = Color.Gray)
                     }
                 }
             }
