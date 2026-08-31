@@ -45,7 +45,6 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
 
 - [x] **Scuola di Prova (Simulazione Completa & Test)**: Creata scuola ("Scuola di Prova") con 2 classi (2A, 2B) da 10 studenti e 10 genitori ciascuna, 4 docenti con cattedre distribuite su 4 discipline (Matematica, Italiano, Inglese, Storia), docente coordinatore (Docente 1 per la classe 2A), rappresentante di classe studenti e rappresentante dei genitori per classe. Assegnata pagella provvisoria 1° semestre a tutti gli studenti consultabile dai genitori. Creati profili per admin e segreteria. Test di integrazione superato con successo (`scuola_prova_workflow_test.go`).
 
-
 ---
 
 ## 📋 Backlog — Funzionalità & Miglioramenti
@@ -241,4 +240,50 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
   - **6. Skip Links Avanzati (WCAG 2.4.1)**: Integrato `SkipLinks.vue` con salti a `#main-content`, `#main-nav`, `#a11y-panel` attivabile con `Tab`.
   - **Test & Conformità**: Suite `newA11yFeatures.spec.js` e test backend Go superati al 100%.
 
+  Implementa PARTE 1: Modulo Flussi XML & SIDI (Ministero dell'Istruzione)
 
+1. Architettura Database & Codici SIDI
+   Migrazione Schema (migrations/099_add_sidi_codes_and_exports.sql):
+   Aggiunta colonna sidi_code univoca nelle tabelle students, teachers, classes e schools.
+   Creazione della tabella sidi_exports per il tracciamento di ogni flusso generato:
+   Campi: id, school_id, export_type (ANS_ANAGRAFE, SCRUTINIO_GIUGNO, SCRUTINIO_SETTEMBRE_DEBITI, FREQUENZE), school_year, file_name, status (DRAFT, VALIDATED, EXPORTED, UPLOADED_TO_SIDI), validation_errors (JSONB), created_by, timestamp.
+2. Backend Go (internal/sidi)
+   Package internal/sidi/xsd:
+   Struct Go con annotazioni XML conformi alle specifiche XSD ministeriali ufficiali del MIM (codifica UTF-8, intestazione flussoSIDI, nodo testata, elenco datiScuola, studenti, valutazioniFinali).
+   Motore di Validazione Preventiva (validator.go):
+   Controllo di coerenza prima dell'export:
+   Verifica completezza Codici Fiscali e validità formale.
+   Verifica presenza Codice SIDI per ogni studente iscritto.
+   Verifica quadratura crediti formativi (Classi 3ª, 4ª, 5ª) e delibere per studenti non ammessi / debiti formativi.
+   Generatore & Compressor (builder.go):
+   Generazione dell'albero XML e packaging automatico in bundle .zip con checksum MD5/SHA-256 pronto per il caricamento diretto sul portale SIDI.
+3. Frontend Web & Mobile (Segreteria)
+   Wizard Segreteria (src/pages/secretary/SidiExports.vue):
+   Step 1: Scelta dell'anno scolastico e del tipo di flusso (Es. Esiti Scrutinio Finale Giugno o Scrutinio Differito Settembre).
+   Step 2: Esecuzione del controllo di congruenza in tempo reale con evidenziazione grafica delle anomalie (es. "2 studenti privi di codice SIDI").
+   Step 3: Risoluzione guidata dei dati mancanti e download del file XML certificato.
+   ✍️ PARTE 2: Firma Elettronica Qualificata & Avanzata (FEQ / FEA a norma CAD)
+4. Inquadramento Normativo & Standard
+   Conformità eIDAS (Reg. UE 910/2014) e CAD (D.Lgs. 82/2005):
+   FEA (Firma Elettronica Avanzata): per docenti del Consiglio di Classe tramite credenziali SPID Livello 2 / CIE con invio OTP SMS/Push.
+   FEQ (Firma Elettronica Qualificata): per il Dirigente Scolastico e il Segretario verbalizzante con certificato qualificato su HSM (Hardware Security Module) remoto.
+   Formato Firma: PAdES (PDF nativo con visual signature block e certificato X.509 incorporato) e CAdES (.p7m).
+5. Architettura Provider-Agnostic nel Backend (internal/signatures)
+   Pattern Strategy & Adapter Interface:
+   go
+   type RemoteSignatureProvider interface {
+   Authenticate(ctx context.Context, creds SignerCredentials) (*SignerSession, error)
+   SignPDF(ctx context.Context, pdfBytes []byte, opts SignatureOptions) ([]byte, error)
+   VerifySignature(ctx context.Context, signedPDF []byte) (*VerificationResult, error)
+   ApplyTimestamp(ctx context.Context, docBytes []byte) ([]byte, error)
+   }
+   Provider supportati via Driver modulari:
+   ArubaSignAdapter: Chiamate SOAP/REST ai servizi Aruba OTP con credenziali HSM.
+   InfoCertGoSignAdapter: Integrazione REST API InfoCert GoSign / eSignAnyWhere.
+   NamirialSignAdapter: Connessione a Namirial Remote Signature Engine.
+   SpidFeaAdapter: Firma avanzata con sessione SPID/CIE e consenso crittografico a norma Linee Guida AgID.
+6. Flusso Operativo dello Scrutinio Elettronico
+   Chiusura Scrutinio: La Segreteria o il Coordinatore congela il tabellone voti e genera il Verbale Ufficiale PDF/A-1a (con hash SHA-256 memorizzato nel DB).
+   Firma Collegiale Docenti (FEA): I docenti del Consiglio ricevono una notifica push (Web o App Mobile Docente) $\rightarrow$ inseriscono il proprio PIN/OTP o confermano con biometrica/SPID $\rightarrow$ il sistema applica la firma PAdES individuale nel rispettivo box firma.
+   Firma Finale & Sigillo del Dirigente (FEQ): Il Dirigente appone la Firma Qualificata e la Marca Temporale (Time-Stamping RFC 3161) che rende il documento immodificabile ed opponibile a terzi.
+   Conservazione a Norma: Il file firmato viene inviato al modulo di conservazione a norma per la conservazione decennale obbligatoria per legge.
