@@ -57,6 +57,7 @@ import (
 	"registro-backend/internal/schoolsettings"
 	"registro-backend/internal/scrutiny"
 	"registro-backend/internal/search"
+	"registro-backend/internal/sidi"
 	"registro-backend/internal/signatures"
 	"registro-backend/internal/student_goals"
 	"registro-backend/internal/students"
@@ -477,6 +478,11 @@ func main() {
 
 			// Firme qualificate FEQ/FES + SIDI export + CAD preservation
 			signaturesH.RegisterRoutes(protected)
+
+			// Modulo Flussi SIDI MIM
+			sidiSvc := sidi.NewService(database)
+			sidiH := sidi.NewHandler(sidiSvc)
+			sidiH.RegisterRoutes(protected)
 
 			adminH.RegisterRoutes(protected, adminMiddleware)
 		}

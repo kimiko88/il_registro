@@ -243,10 +243,12 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
   Implementa PARTE 1: Modulo Flussi XML & SIDI (Ministero dell'Istruzione)
 
 1. Architettura Database & Codici SIDI
+
    Migrazione Schema (migrations/099_add_sidi_codes_and_exports.sql):
    Aggiunta colonna sidi_code univoca nelle tabelle students, teachers, classes e schools.
    Creazione della tabella sidi_exports per il tracciamento di ogni flusso generato:
    Campi: id, school_id, export_type (ANS_ANAGRAFE, SCRUTINIO_GIUGNO, SCRUTINIO_SETTEMBRE_DEBITI, FREQUENZE), school_year, file_name, status (DRAFT, VALIDATED, EXPORTED, UPLOADED_TO_SIDI), validation_errors (JSONB), created_by, timestamp.
+
 2. Backend Go (internal/sidi)
    Package internal/sidi/xsd:
    Struct Go con annotazioni XML conformi alle specifiche XSD ministeriali ufficiali del MIM (codifica UTF-8, intestazione flussoSIDI, nodo testata, elenco datiScuola, studenti, valutazioniFinali).
