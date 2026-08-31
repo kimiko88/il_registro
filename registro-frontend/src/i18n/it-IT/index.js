@@ -1564,7 +1564,20 @@ export default {
       "scrutiny": {
         "title": "Scrutinio & Valutazione Finale",
         "desc": "Procedura riservata per la gestione delle proposte di voto e verbalizzazione CdC.",
-        "content": "Il tabellone dello scrutinio raccoglie i voti proposti da tutti i docenti del Consiglio di Classe per il 1° Quadrimestre o lo Scrutinio Finale.\n\nPassaggio 1: Seleziona la classe e il periodo di scrutinio.\nPassaggio 2: Verifica la colonna della media proposta per ciascuno studente e inserisci il voto finale deliberato dal CdC.\nPassaggio 3: Inserisci la valutazione di condotta e il giudizio sintetico di livello.\nPassaggio 4: Se sei coordinatore di classe, verifica la validazione di tutti i docenti e blocca il tabellone.\nPassaggio 5: Stampa il verbale dello scrutinio o invialo alla segreteria in formato digitale.\n\nAttenzione: Una volta chiuso lo scrutinio dal coordinatore, le modifiche ai voti richiedono lo sblocco motivato della segreteria."
+        "content": "Il tabellone dello scrutinio raccoglie i voti proposti da tutti i docenti del Consiglio di Classe per il 1° Quadrimestre o lo Scrutinio Finale.\n\nPassaggio 1: Seleziona la classe e il periodo di scrutinio.\nPassaggio 2: Verifica la colonna della media proposta per ciascuno studente e inserisci il voto finale deliberato dal CdC.\nPassaggio 3: Inserisci la valutazione di condotta e il giudizio sintetico di livello.\nPassaggio 4: Se sei coordinatore di classe, verifica la validazione di tutti i docenti e blocca il tabellone.\nPassaggio 5: Stampa il verbale dello scrutinio o invialo alla segreteria in formato digitale.\n\nAttenzione: Una volta chiuso lo scrutinio dal coordinatore, le modifiche ai voti richiedono lo sblocco motivato della segreteria.",
+        "period1": "Scrutinio 1° Semestre",
+        "period2": "Scrutinio 2° Semestre / Finale",
+        "deferredScrutiny": "Scrutinio Differito (Debiti)",
+        "deferredBannerTitle": "Sessione Scrutinio Differito (Esami di Recupero Debiti)",
+        "deferredBannerBody": "Delibera definitiva dell'esito finale e verifica del saldo dei debiti formativi per gli studenti con giudizio sospeso.",
+        "deferredAction": "Scrutinio Differito (Esami Recupero)",
+        "deferredModalTitle": "Scrutinio Differito — {name}",
+        "deferredModalSubtitle": "Verifica del saldo dei debiti formativi post-esami di recupero",
+        "promotedDebtsCleared": "Promosso con debiti saldati",
+        "notPromotedDebtsNotCleared": "Non promosso (Debiti non saldati)",
+        "deferredNotes": "Note Verbale Scrutinio Differito",
+        "deliberateDeferred": "Delibera Scrutinio Differito",
+        "deferredSaved": "Scrutinio differito registrato con successo!"
       },
       "pdp": {
         "title": "Piano Didattico Personalizzato (PDP / PEI)",

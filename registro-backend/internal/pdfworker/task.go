@@ -11,6 +11,8 @@ import (
 const (
 	TypeScrutinyPdf   = "pdf:generate_scrutiny"
 	TypeReportCardPdf = "pdf:generate_report_card"
+	TypeRegisterPdf   = "pdf:generate_register"
+	TypeVerbalePdf    = "pdf:generate_verbale"
 )
 
 // ScrutinyPdfPayload contains parameters for generating a scrutiny PDF
@@ -26,8 +28,26 @@ type ScrutinyPdfPayload struct {
 type ReportCardPdfPayload struct {
 	JobID       string `json:"job_id"`
 	StudentID   string `json:"student_id"`
+	ClassID     string `json:"class_id"`
 	SchoolYear  string `json:"school_year"`
 	Period      string `json:"period"`
+	RequestedBy string `json:"requested_by"`
+}
+
+// RegisterPdfPayload contains parameters for generating a class/grade register PDF
+type RegisterPdfPayload struct {
+	JobID       string `json:"job_id"`
+	ClassID     string `json:"class_id"`
+	SubjectID   string `json:"subject_id,omitempty"`
+	SchoolYear  string `json:"school_year"`
+	Period      string `json:"period"`
+	RequestedBy string `json:"requested_by"`
+}
+
+// VerbalePdfPayload contains parameters for generating a verbale PDF
+type VerbalePdfPayload struct {
+	JobID       string `json:"job_id"`
+	VerbaleID   string `json:"verbale_id"`
 	RequestedBy string `json:"requested_by"`
 }
 
@@ -47,4 +67,22 @@ func NewReportCardPdfTask(payload ReportCardPdfPayload) (*asynq.Task, error) {
 		return nil, fmt.Errorf("failed to marshal report card payload: %w", err)
 	}
 	return asynq.NewTask(TypeReportCardPdf, data, asynq.MaxRetry(3)), nil
+}
+
+// NewRegisterPdfTask creates an asynq.Task for register PDF generation
+func NewRegisterPdfTask(payload RegisterPdfPayload) (*asynq.Task, error) {
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal register payload: %w", err)
+	}
+	return asynq.NewTask(TypeRegisterPdf, data, asynq.MaxRetry(3)), nil
+}
+
+// NewVerbalePdfTask creates an asynq.Task for verbale PDF generation
+func NewVerbalePdfTask(payload VerbalePdfPayload) (*asynq.Task, error) {
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal verbale payload: %w", err)
+	}
+	return asynq.NewTask(TypeVerbalePdf, data, asynq.MaxRetry(3)), nil
 }

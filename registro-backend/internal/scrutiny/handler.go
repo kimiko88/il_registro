@@ -44,6 +44,7 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 
 		// Async Worker Queue PDF Routes
 		scrutiny.POST("/class/:classId/async-pdf", h.EnqueueAsyncScrutinyPdf)
+		scrutiny.POST("/export/:studentId/async-pdf", h.EnqueueAsyncReportCardPdf)
 		scrutiny.GET("/pdf-jobs/:job_id", h.GetPdfJobStatus)
 
 		// Deficiencies & Deferred Scrutiny Routes
@@ -66,6 +67,11 @@ func parseSemester(semStr string) int {
 }
 
 func (h *Handler) ExportPagellaPDF(c *gin.Context) {
+	if h.pdfWorkerClient != nil && c.Query("sync") != "true" {
+		h.EnqueueAsyncReportCardPdf(c)
+		return
+	}
+
 	studentID := c.Param("studentId")
 	classID := c.Query("class_id")
 	semester := parseSemester(c.DefaultQuery("semester", "1"))
@@ -477,4 +483,43 @@ func (h *Handler) GetPdfJobStatus(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, status)
+}
+
+func (h *Handler) EnqueueAsyncReportCardPdf(c *gin.Context) {
+	actorID := c.GetString("user_id")
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	studentID := c.Param("studentId")
+	classID := c.Query("class_id")
+	semester := c.DefaultQuery("semester", "1")
+
+	if h.pdfWorkerClient == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "async pdf worker queue not configured"})
+		return
+	}
+
+	jobID := uuid.New().String()
+	payload := pdfworker.ReportCardPdfPayload{
+		JobID:       jobID,
+		StudentID:   studentID,
+		ClassID:     classID,
+		Period:      semester,
+		RequestedBy: actorID,
+	}
+
+	jobStatus, err := h.pdfWorkerClient.EnqueueReportCardPdf(c.Request.Context(), payload)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to enqueue async report card pdf job: %v", err)})
+		return
+	}
+
+	c.JSON(http.StatusAccepted, gin.H{
+		"message":    "Report card PDF generation job enqueued successfully",
+		"job_id":     jobStatus.JobID,
+		"status":     jobStatus.Status,
+		"status_url": fmt.Sprintf("/api/v1/scrutiny/pdf-jobs/%s", jobStatus.JobID),
+	})
 }

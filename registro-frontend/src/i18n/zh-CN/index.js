@@ -1059,7 +1059,20 @@ export default {
       "scrutiny": {
         "title": "期末评议与终考 (Scrutinio)",
         "desc": "拟定成绩、品行评语及评议会议记录。",
-        "content": "评议汇总表归集所有任课教师的拟定成绩。\n\n步骤 1: 选择班级与评议学期。\n步骤 2: 核对拟定平均分并输入决议成绩。\n步骤 3: 录入品行得分与综合评语。\n步骤 4: 班主任确认无误后锁定评议表。\n步骤 5: 导出并打印官方 PDF 评议记录。\n\n注意: 班主任锁定后，修改需联系教务处解锁。"
+        "content": "评议汇总表归集所有任课教师的拟定成绩。\n\n步骤 1: 选择班级与评议学期。\n步骤 2: 核对拟定平均分并输入决议成绩。\n步骤 3: 录入品行得分与综合评语。\n步骤 4: 班主任确认无误后锁定评议表。\n步骤 5: 导出并打印官方 PDF 评议记录。\n\n注意: 班主任锁定后，修改需联系教务处解锁。",
+        "period1": "第一学期考评",
+        "period2": "第二学期 / 期末考评",
+        "deferredScrutiny": "延期考评（补考/消除不及格）",
+        "deferredBannerTitle": "延期考评会议（补考与科目消除）",
+        "deferredBannerBody": "对暂缓决定的学生进行最终评定及补考消除不及格科目的核查。",
+        "deferredAction": "延期考评（补考）",
+        "deferredModalTitle": "延期考评 — {name}",
+        "deferredModalSubtitle": "补考后不及格科目消除情况核查",
+        "promotedDebtsCleared": "升级（不及格已消除）",
+        "notPromotedDebtsNotCleared": "未升级（不及格未消除）",
+        "deferredNotes": "延期考评会议记录备注",
+        "deliberateDeferred": "通过延期考评决议",
+        "deferredSaved": "延期考评成功记录！"
       },
       "pdp": {
         "title": "个性化教育计划 (PDP / PEI)",

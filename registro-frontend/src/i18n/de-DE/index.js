@@ -1059,7 +1059,20 @@ export default {
       "scrutiny": {
         "title": "Notenkonferenz & Scrutiny",
         "desc": "Ablauf für Notenvorschläge, Betragen und Konferenzprotokolle.",
-        "content": "Die Konferenzansicht konsolidiert die Notenvorschläge aller Fachlehrer für das Halbjahr oder Schuljahresende.\n\nSchritt 1: Klasse und Konferenzperiode auswählen.\nSchritt 2: Vorschlagsdurchschnitt prüfen und Endnote eintragen.\nSchritt 3: Betragensnote und Gesamturteil eingeben.\nSchritt 4: Als Klassenleiter den Validierungsstatus prüfen und die Notentabelle sperren.\nSchritt 5: Konferenzprotokoll als PDF exportieren und drucken.\n\nAchtung: Nach der Sperrung durch den Klassenleiter erfordern Änderungen eine Freischaltung."
+        "content": "Die Konferenzansicht konsolidiert die Notenvorschläge aller Fachlehrer für das Halbjahr oder Schuljahresende.\n\nSchritt 1: Klasse und Konferenzperiode auswählen.\nSchritt 2: Vorschlagsdurchschnitt prüfen und Endnote eintragen.\nSchritt 3: Betragensnote und Gesamturteil eingeben.\nSchritt 4: Als Klassenleiter den Validierungsstatus prüfen und die Notentabelle sperren.\nSchritt 5: Konferenzprotokoll als PDF exportieren und drucken.\n\nAchtung: Nach der Sperrung durch den Klassenleiter erfordern Änderungen eine Freischaltung.",
+        "period1": "Notenkonferenz 1. Halbjahr",
+        "period2": "Notenkonferenz 2. Halbjahr / Endnote",
+        "deferredScrutiny": "Aufgeschobene Notenkonferenz (Nachprüfungen)",
+        "deferredBannerTitle": "Sitzung Aufgeschobene Notenkonferenz (Nachprüfungen)",
+        "deferredBannerBody": "Endgültige Beschlussfassung über das Gesamtergebnis und Überprüfung des Ausgleichs von Lernrückständen für Schüler mit ausgesetztem Urteil.",
+        "deferredAction": "Aufgeschobene Notenkonferenz (Nachprüfungen)",
+        "deferredModalTitle": "Aufgeschobene Notenkonferenz — {name}",
+        "deferredModalSubtitle": "Überprüfung des Ausgleichs von Lernrückständen nach den Nachprüfungen",
+        "promotedDebtsCleared": "Versetzt (Lernrückstände ausgeglichen)",
+        "notPromotedDebtsNotCleared": "Nicht versetzt (Lernrückstände nicht ausgeglichen)",
+        "deferredNotes": "Protokollnotizen der aufgeschobenen Notenkonferenz",
+        "deliberateDeferred": "Beschluss aufgeschobene Notenkonferenz fassen",
+        "deferredSaved": "Aufgeschobene Notenkonferenz erfolgreich registriert!"
       },
       "pdp": {
         "title": "Förderplan (PDP / PEI)",

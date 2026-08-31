@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import api from '../services/api';
 import { gradeService } from '../services/gradeService';
+import { handleAsyncPdfDownload } from '../utils/pdfHelper';
 import { i18n } from '@/i18n';
 
 const calcClassAverage = (state, semester = 0) => {
@@ -268,39 +269,16 @@ export const useGradesStore = defineStore('grades', {
         async downloadReportCardPDF(semester = 1) {
             this.loading = true;
             this.error = null;
-            let url = null;
-            let link = null;
             try {
-                const response = await gradeService.downloadReportCardPDF(semester);
-                const blob = new Blob([response.data], { type: 'application/pdf' });
-                url = window.URL.createObjectURL(blob);
-                link = document.createElement('a');
-                link.href = url;
-                link.setAttribute('download', `pagella_q${semester}.pdf`);
-                document.body.appendChild(link);
-                link.click();
+                await handleAsyncPdfDownload(
+                    () => gradeService.downloadReportCardPDF(semester),
+                    `pagella_q${semester}.pdf`
+                );
             } catch (err) {
                 this.error = err.response?.data?.error || err.message || 'Errore durante il download del PDF della pagella';
                 console.error("Error downloading report card PDF:", err);
                 throw err;
             } finally {
-                if (link) {
-                    try {
-                        if (link.parentNode) {
-                            link.parentNode.removeChild(link);
-                        } else if (typeof link.remove === 'function') {
-                            link.remove();
-                        }
-                    } catch (e) {
-                        console.debug("Failed to remove anchor element:", e);
-                    }
-                }
-                if (url) {
-                    const objectUrl = url;
-                    setTimeout(() => {
-                        window.URL.revokeObjectURL(objectUrl);
-                    }, 1000);
-                }
                 this.loading = false;
             }
         },

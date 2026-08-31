@@ -73,6 +73,90 @@ func (c *Client) EnqueueScrutinyPdf(ctx context.Context, payload ScrutinyPdfPayl
 	return jobStatus, nil
 }
 
+// EnqueueReportCardPdf enqueues a report card PDF job and stores initial pending status in Redis
+func (c *Client) EnqueueReportCardPdf(ctx context.Context, payload ReportCardPdfPayload) (*JobStatus, error) {
+	task, err := NewReportCardPdfTask(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	info, err := c.asynqClient.EnqueueContext(ctx, task, asynq.Queue("default"), asynq.Retention(1*time.Hour))
+	if err != nil {
+		return nil, fmt.Errorf("failed to enqueue report card task: %w", err)
+	}
+
+	jobStatus := &JobStatus{
+		JobID:     payload.JobID,
+		Status:    "pending",
+		TaskType:  TypeReportCardPdf,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	if err := c.UpdateJobStatus(ctx, jobStatus); err != nil {
+		return nil, err
+	}
+
+	_ = info
+	return jobStatus, nil
+}
+
+// EnqueueRegisterPdf enqueues a register PDF job and stores initial pending status in Redis
+func (c *Client) EnqueueRegisterPdf(ctx context.Context, payload RegisterPdfPayload) (*JobStatus, error) {
+	task, err := NewRegisterPdfTask(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	info, err := c.asynqClient.EnqueueContext(ctx, task, asynq.Queue("default"), asynq.Retention(1*time.Hour))
+	if err != nil {
+		return nil, fmt.Errorf("failed to enqueue register task: %w", err)
+	}
+
+	jobStatus := &JobStatus{
+		JobID:     payload.JobID,
+		Status:    "pending",
+		TaskType:  TypeRegisterPdf,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	if err := c.UpdateJobStatus(ctx, jobStatus); err != nil {
+		return nil, err
+	}
+
+	_ = info
+	return jobStatus, nil
+}
+
+// EnqueueVerbalePdf enqueues a verbale PDF job and stores initial pending status in Redis
+func (c *Client) EnqueueVerbalePdf(ctx context.Context, payload VerbalePdfPayload) (*JobStatus, error) {
+	task, err := NewVerbalePdfTask(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	info, err := c.asynqClient.EnqueueContext(ctx, task, asynq.Queue("default"), asynq.Retention(1*time.Hour))
+	if err != nil {
+		return nil, fmt.Errorf("failed to enqueue verbale task: %w", err)
+	}
+
+	jobStatus := &JobStatus{
+		JobID:     payload.JobID,
+		Status:    "pending",
+		TaskType:  TypeVerbalePdf,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	if err := c.UpdateJobStatus(ctx, jobStatus); err != nil {
+		return nil, err
+	}
+
+	_ = info
+	return jobStatus, nil
+}
+
 // UpdateJobStatus updates job status JSON in Redis with 24h expiration
 func (c *Client) UpdateJobStatus(ctx context.Context, status *JobStatus) error {
 	status.UpdatedAt = time.Now()

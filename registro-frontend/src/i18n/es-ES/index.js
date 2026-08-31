@@ -783,7 +783,20 @@ export default {
       "scrutiny": {
         "title": "Evaluación Final y Scrutinio",
         "desc": "Procedimiento para propuesta de notas, conducta y actas de evaluación.",
-        "content": "El panel del equipo docente consolida las propuestas de nota de todas las asignaturas.\n\nPaso 1: Selecciona el grupo y el periodo de evaluación.\nPaso 2: Revisa la media propuesta e introduce la nota acordada.\nPaso 3: Introduce la nota de conducta y la valoración global.\nPaso 4: Como tutor, bloquea el panel una vez validado por todos.\nPaso 5: Exporta e imprime el acta oficial en PDF.\n\nAtención: Tras el bloqueo del tutor, cualquier cambio requiere desbloqueo de secretaría."
+        "content": "El panel del equipo docente consolida las propuestas de nota de todas las asignaturas.\n\nPaso 1: Selecciona el grupo y el periodo de evaluación.\nPaso 2: Revisa la media propuesta e introduce la nota acordada.\nPaso 3: Introduce la nota de conducta y la valoración global.\nPaso 4: Como tutor, bloquea el panel una vez validado por todos.\nPaso 5: Exporta e imprime el acta oficial en PDF.\n\nAtención: Tras el bloqueo del tutor, cualquier cambio requiere desbloqueo de secretaría.",
+        "period1": "Evaluación 1.er Semestre",
+        "period2": "Evaluación 2.º Semestre / Final",
+        "deferredScrutiny": "Evaluación Diferida (Recuperaciones)",
+        "deferredBannerTitle": "Sesión de Evaluación Diferida (Exámenes de Recuperación)",
+        "deferredBannerBody": "Resolución definitiva de la decisión final y verificación de la subsanación de materias pendientes para alumnos con juicio suspendido.",
+        "deferredAction": "Evaluación Diferida (Recuperaciones)",
+        "deferredModalTitle": "Evaluación Diferida — {name}",
+        "deferredModalSubtitle": "Verificación de la subsanación de materias pendientes tras exámenes de recuperación",
+        "promotedDebtsCleared": "Promociona (Pendientes subsanadas)",
+        "notPromotedDebtsNotCleared": "No promociona (Pendientes no subsanadas)",
+        "deferredNotes": "Notas de acta de la evaluación diferida",
+        "deliberateDeferred": "Aprobar resolución de evaluación diferida",
+        "deferredSaved": "¡Evaluación diferida registrada con éxito!"
       },
       "pdp": {
         "title": "Plan Individualizado (PDP / PEI)",

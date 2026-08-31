@@ -1204,7 +1204,20 @@ export default {
       "scrutiny": {
         "title": "Scrutiny & Term-End Evaluation",
         "desc": "Procedure for proposed term grades, conduct evaluation, and class council minutes.",
-        "content": "The scrutiny grid consolidates proposed grades from all subject teachers for 1st Term or Final Scrutiny.\n\nStep 1: Select class and scrutiny term.\nStep 2: Verify the proposed GPA column and enter final deliberated grade.\nStep 3: Enter conduct mark and overall qualitative evaluation level.\nStep 4: If class coordinator, verify validation status across all teachers and lock tabellone.\nStep 5: Export and print official scrutiny minutes PDF.\n\nWarning: Once locked by coordinator, grade edits require administrative unlock."
+        "content": "The scrutiny grid consolidates proposed grades from all subject teachers for 1st Term or Final Scrutiny.\n\nStep 1: Select class and scrutiny term.\nStep 2: Verify the proposed GPA column and enter final deliberated grade.\nStep 3: Enter conduct mark and overall qualitative evaluation level.\nStep 4: If class coordinator, verify validation status across all teachers and lock tabellone.\nStep 5: Export and print official scrutiny minutes PDF.\n\nWarning: Once locked by coordinator, grade edits require administrative unlock.",
+        "period1": "1st Term Scrutiny",
+        "period2": "2nd Term / Final Scrutiny",
+        "deferredScrutiny": "Deferred Scrutiny (Deficiencies)",
+        "deferredBannerTitle": "Deferred Scrutiny Session (Recovery Exams)",
+        "deferredBannerBody": "Final resolution of evaluation outcome and verification of cleared academic deficiencies for students with suspended judgment.",
+        "deferredAction": "Deferred Scrutiny (Recovery Exams)",
+        "deferredModalTitle": "Deferred Scrutiny — {name}",
+        "deferredModalSubtitle": "Verification of cleared subject deficiencies post-recovery exams",
+        "promotedDebtsCleared": "Promoted (Deficiencies cleared)",
+        "notPromotedDebtsNotCleared": "Not promoted (Deficiencies not cleared)",
+        "deferredNotes": "Deferred Scrutiny Minutes Notes",
+        "deliberateDeferred": "Pass Deferred Scrutiny Resolution",
+        "deferredSaved": "Deferred scrutiny recorded successfully!"
       },
       "pdp": {
         "title": "Personalized Education Plan (PDP / PEI)",

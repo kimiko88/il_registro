@@ -7,7 +7,7 @@
 🇮🇹 **Italian Version**: [README.md](./README.md) | 🇬🇧 **English Version**
 
 **Online Demo**: [https://registro-scuola.netlify.app](https://registro-scuola.netlify.app)
-**Demo accounts & passwords**: [example_accounts.md](/example_accounts.md)
+**Demo accounts & passwords**: [example_accounts.md](./docs/example_accounts.md)
 _*Note*_: Some passwords, such as the superadmin account, may have been updated for security reasons.
 
 [![Discord Members](https://img.shields.io/discord/426912293134270465.svg?label=Discord&logo=discord)](https://discord.gg/Qh5XjQxwb)

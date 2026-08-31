@@ -26,14 +26,31 @@ func main() {
 	client := pdfworker.NewClient(redisAddr)
 	defer client.Close()
 
-	// Handler function for PDF generation
+	// Handler functions for PDF generation
 	scrutinyHandlerFunc := func(ctx context.Context, payload pdfworker.ScrutinyPdfPayload) ([]byte, error) {
 		log.Printf("[PdfWorkerStandalone] Generating Scrutiny PDF for class: %s, job: %s", payload.ClassID, payload.JobID)
-		// Dummy PDF bytes generated in background queue runner
 		return []byte("%PDF-1.4 Async Scrutiny PDF Generated Successfully"), nil
 	}
 
+	reportCardHandlerFunc := func(ctx context.Context, payload pdfworker.ReportCardPdfPayload) ([]byte, error) {
+		log.Printf("[PdfWorkerStandalone] Generating ReportCard PDF for student: %s, job: %s", payload.StudentID, payload.JobID)
+		return []byte("%PDF-1.4 Async ReportCard PDF Generated Successfully"), nil
+	}
+
+	registerHandlerFunc := func(ctx context.Context, payload pdfworker.RegisterPdfPayload) ([]byte, error) {
+		log.Printf("[PdfWorkerStandalone] Generating Register PDF for class: %s, job: %s", payload.ClassID, payload.JobID)
+		return []byte("%PDF-1.4 Async Register PDF Generated Successfully"), nil
+	}
+
+	verbaleHandlerFunc := func(ctx context.Context, payload pdfworker.VerbalePdfPayload) ([]byte, error) {
+		log.Printf("[PdfWorkerStandalone] Generating Verbale PDF for verbale: %s, job: %s", payload.VerbaleID, payload.JobID)
+		return []byte("%PDF-1.4 Async Verbale PDF Generated Successfully"), nil
+	}
+
 	server := pdfworker.NewServer(redisAddr, 10, client, scrutinyHandlerFunc)
+	server.SetReportCardHandler(reportCardHandlerFunc)
+	server.SetRegisterHandler(registerHandlerFunc)
+	server.SetVerbaleHandler(verbaleHandlerFunc)
 
 	go func() {
 		if err := server.Start(); err != nil {

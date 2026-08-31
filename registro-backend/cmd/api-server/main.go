@@ -347,6 +347,9 @@ func main() {
 			pdfWorkerClient := pdfworker.NewClient(redisAddr)
 			defer pdfWorkerClient.Close()
 
+			gradesH.SetPdfWorkerClient(pdfWorkerClient)
+			verbaliH.SetPdfWorkerClient(pdfWorkerClient)
+
 			scrutinyRepo := scrutiny.NewRepository(database)
 			scrutinySvc := scrutiny.NewService(scrutinyRepo, gradesRepo, classesRepo, usersRepo, attendanceRepo)
 			scrutinyH := scrutiny.NewHandler(scrutinySvc, pdfWorkerClient)
