@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">电子登记册 - 教务秘书处</string>
+    <string name="secretary_dashboard_title">教务秘书处与管理控制台</string>
+    <string name="user_management">用户管理</string>
+    <string name="scrutiny_supervision">期末评审监督</string>
+    <string name="generate_certificates">生成证明文件</string>
+    <string name="audit_logs">审计日志</string>
+    <string name="total_students">注册在校生</string>
+    <string name="total_teachers">在职教师</string>
+</resources>

@@ -3,8 +3,12 @@ package it.scuola.registro.parent.viewmodel
 import it.scuola.registro.parent.data.ColloquioBooking
 import it.scuola.registro.parent.data.ParentChild
 import it.scuola.registro.parent.data.PendingAbsence
+import it.scuola.registro.parent.network.HttpParentApiService
+import it.scuola.registro.parent.network.ParentApiService
 
-class ParentViewModel {
+class ParentViewModel(
+    private val apiService: ParentApiService = HttpParentApiService()
+) {
     var children = mutableListOf<ParentChild>()
         private set
 
@@ -15,6 +19,36 @@ class ParentViewModel {
 
     var availableColloqui = mutableListOf<ColloquioBooking>()
         private set
+
+    var isLoading: Boolean = false
+        private set
+
+    var errorMessage: String? = null
+        private set
+
+    suspend fun loadFromDatabase(token: String): Boolean {
+        isLoading = true
+        errorMessage = null
+        try {
+            val childrenResult = apiService.getChildren(token)
+            if (childrenResult.isSuccess) {
+                children = childrenResult.getOrNull()?.toMutableList() ?: mutableListOf()
+                if (children.isNotEmpty()) {
+                    selectedChildId = children.first().id
+                    val absencesResult = apiService.getAbsences(token, selectedChildId)
+                    if (absencesResult.isSuccess) {
+                        pendingAbsences = absencesResult.getOrNull()?.toMutableList() ?: mutableListOf()
+                    }
+                }
+            }
+            isLoading = false
+            return true
+        } catch (e: Exception) {
+            errorMessage = e.localizedMessage
+            isLoading = false
+            return false
+        }
+    }
 
     fun loadSampleData() {
         children = mutableListOf(

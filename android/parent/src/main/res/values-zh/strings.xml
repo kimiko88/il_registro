@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">电子登记册 - 家长</string>
+    <string name="parent_dashboard_title">子女学情监督</string>
+    <string name="switch_child">选择子女:</string>
+    <string name="justify_absence">缺勤说明/请假</string>
+    <string name="book_colloquio">预约家长会</string>
+    <string name="child_grades">子女成绩</string>
+    <string name="child_attendance">出勤与说明</string>
+    <string name="pending_justifications">待说明的缺勤</string>
+    <string name="upcoming_colloqui">即将到来的家长会</string>
+    <string name="no_pending_justifications">暂无待处理的缺勤说明</string>
+</resources>

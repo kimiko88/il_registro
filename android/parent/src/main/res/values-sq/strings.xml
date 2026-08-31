@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Regjistri Shkollor - Prindërit</string>
+    <string name="parent_dashboard_title">Mbikëqyrja e Fëmijëve</string>
+    <string name="switch_child">Zgjidh Fëmijën:</string>
+    <string name="justify_absence">Justifiko Mungesat</string>
+    <string name="book_colloquio">Rezervo Takim</string>
+    <string name="child_grades">Notat e Fëmijës</string>
+    <string name="child_attendance">Pjesëmarrja &amp; Justifikimet</string>
+    <string name="pending_justifications">Mungesa për Justifikim</string>
+    <string name="upcoming_colloqui">Takimet e Ardhshme</string>
+    <string name="no_pending_justifications">Asnjë mungesë për justifikim</string>
+</resources>

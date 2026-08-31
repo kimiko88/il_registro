@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Catalog Școlar - Părinți</string>
+    <string name="parent_dashboard_title">Supraveghere Copii</string>
+    <string name="switch_child">Selectează Copilul:</string>
+    <string name="justify_absence">Motivează Absențe</string>
+    <string name="book_colloquio">Programează Întâlnire</string>
+    <string name="child_grades">Notele Copilului</string>
+    <string name="child_attendance">Prezențe &amp; Motivări</string>
+    <string name="pending_justifications">Absențe de Motivat</string>
+    <string name="upcoming_colloqui">Următoarele Întâlniri</string>
+    <string name="no_pending_justifications">Nicio absență de motivat</string>
+</resources>

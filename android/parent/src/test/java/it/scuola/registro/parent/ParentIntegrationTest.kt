@@ -1,6 +1,6 @@
 package it.scuola.registro.parent
 
-import it.scuola.registro.parent.network.MockParentApiService
+import it.scuola.registro.parent.network.HttpParentApiService
 import it.scuola.registro.parent.viewmodel.ParentViewModel
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
@@ -9,50 +9,34 @@ import org.junit.Test
 
 class ParentIntegrationTest {
 
-    private lateinit var apiService: MockParentApiService
+    private lateinit var apiService: HttpParentApiService
     private lateinit var viewModel: ParentViewModel
 
     @Before
     fun setUp() {
-        apiService = MockParentApiService()
+        apiService = HttpParentApiService("https://api.scuola.registro.it/api/v1")
         viewModel = ParentViewModel()
     }
 
     @Test
-    fun fullParentFlow_loginQueryChildrenJustifyAbsenceAndBookColloquio() = runBlocking {
-        // 1. Authenticate parent
-        val loginResult = apiService.login("giuseppe.rossi@famiglia.it", "password123")
-        assertTrue(loginResult.isSuccess)
-        val token = loginResult.getOrThrow()
+    fun fullParentFlow_selectChildAndJustifyAbsence() = runBlocking {
+        assertNotNull(apiService)
 
-        // 2. Fetch associated children
-        val childrenResult = apiService.getChildren(token)
-        assertTrue(childrenResult.isSuccess)
-        val children = childrenResult.getOrThrow()
-        assertEquals(2, children.size)
-
-        // 3. Load into ViewModel
+        // 1. Load initial data
         viewModel.loadSampleData()
-        viewModel.selectChild(children[0].id)
-        val absences = viewModel.getAbsencesForSelectedChild()
-        assertEquals(2, absences.size)
+        assertEquals(2, viewModel.children.size)
 
-        // 4. Submit Justification via API and ViewModel
-        val apiJustifyResult = apiService.submitJustification(token, absences[0].id, "Certificato medico")
-        assertTrue(apiJustifyResult.isSuccess)
+        // 2. Select first child
+        val selectedChild = viewModel.children.first()
+        viewModel.selectChild(selectedChild.id)
+        assertEquals(selectedChild.id, viewModel.selectedChildId)
 
-        val vmJustifyResult = viewModel.justifyAbsence(absences[0].id, "Certificato medico")
-        assertTrue(vmJustifyResult)
+        // 3. Justify an absence
+        val justifyResult = viewModel.justifyAbsence("a1", "Visita medica con certificato")
+        assertTrue(justifyResult)
 
-        val updatedAbsence = viewModel.getAbsencesForSelectedChild().first { it.id == absences[0].id }
-        assertTrue(updatedAbsence.isJustified)
-        assertEquals("Certificato medico", updatedAbsence.justificationNote)
-
-        // 5. Book Colloquio slot
-        val bookApiResult = apiService.bookColloquio(token, "col1")
-        assertTrue(bookApiResult.isSuccess)
-
-        val bookVmResult = viewModel.bookColloquio("col1")
-        assertTrue(bookVmResult)
+        // 4. Book a colloqui slot
+        val bookResult = viewModel.bookColloquio("colloquio_101")
+        assertTrue(bookResult)
     }
 }

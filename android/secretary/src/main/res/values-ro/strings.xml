@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Catalog Școlar - Secretariat</string>
+    <string name="secretary_dashboard_title">Gestiune Secretariat &amp; Admin</string>
+    <string name="user_management">Gestiune Utilizatori</string>
+    <string name="scrutiny_supervision">Supervizare Evaluări</string>
+    <string name="generate_certificates">Generare Certificate</string>
+    <string name="audit_logs">Jurnal Audit</string>
+    <string name="total_students">Elevi Înscriși</string>
+    <string name="total_teachers">Profesori Activi</string>
+</resources>

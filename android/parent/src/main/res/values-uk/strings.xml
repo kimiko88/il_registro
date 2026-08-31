@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Шкільний Журнал - Батьки</string>
+    <string name="parent_dashboard_title">Нагляд за Дітьми</string>
+    <string name="switch_child">Обрати Дитину:</string>
+    <string name="justify_absence">Пояснити Пропуски</string>
+    <string name="book_colloquio">Записатися на Консультацію</string>
+    <string name="child_grades">Оцінки Дитини</string>
+    <string name="child_attendance">Відвідуваність та Пояснення</string>
+    <string name="pending_justifications">Пропуски для Пояснення</string>
+    <string name="upcoming_colloqui">Найближчі Консультації</string>
+    <string name="no_pending_justifications">Немає пропусків для пояснення</string>
+</resources>

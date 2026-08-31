@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">السجل المدرسي - السكرتارية</string>
+    <string name="secretary_dashboard_title">إدارة السكرتارية ولوحة الإدارة</string>
+    <string name="user_management">إدارة المستخدمين</string>
+    <string name="scrutiny_supervision">الإشراف على التقييمات</string>
+    <string name="generate_certificates">إصدار الشهادات</string>
+    <string name="audit_logs">سجل التدقيق</string>
+    <string name="total_students">الطلاب المسجلون</string>
+    <string name="total_teachers">المعلمون النشطون</string>
+</resources>

@@ -1,35 +1,48 @@
 import SwiftUI
 
-struct StudentEquipmentView: View {
-    var body: some View {
+public struct StudentEquipmentModel: Identifiable, Equatable {
+    public let id: String
+    public let resourceName: String
+    public let details: String
+    public let isHighlighted: Bool
+
+    public init(id: String = UUID().uuidString, resourceName: String, details: String, isHighlighted: Bool = false) {
+        self.id = id
+        self.resourceName = resourceName
+        self.details = details
+        self.isHighlighted = isHighlighted
+    }
+}
+
+public struct StudentEquipmentView: View {
+    public var equipment: [StudentEquipmentModel]
+
+    public init(equipment: [StudentEquipmentModel] = []) {
+        self.equipment = equipment
+    }
+
+    public var body: some View {
         NavigationView {
             List {
-                Section(header: Text("Dotazioni e Risorse Assegnate")) {
-                    HStack {
-                        Text("Armadietto Personale")
-                        Spacer()
-                        Text("ARM-104 (Piano 1)")
-                            .fontWeight(.bold)
-                            .foregroundColor(.blue)
-                    }
-
-                    HStack {
-                        Text("Badge Accesso NFC")
-                        Spacer()
-                        Text("NFC-99120-STUD")
-                            .fontWeight(.bold)
-                    }
-
-                    HStack {
-                        Text("Chromebook Comodato")
-                        Spacer()
-                        Text("ASUS 14\" (CB-8821)")
-                            .fontWeight(.bold)
-                            .foregroundColor(.green)
+                Section(header: Text(NSLocalizedString("dashboard_title", comment: ""))) {
+                    if equipment.isEmpty {
+                        Text(NSLocalizedString("dashboard_title", comment: ""))
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    } else {
+                        ForEach(equipment) { item in
+                            HStack {
+                                Text(item.resourceName)
+                                Spacer()
+                                Text(item.details)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(item.isHighlighted ? .blue : .primary)
+                            }
+                        }
                     }
                 }
             }
-            .navigationTitle("Dotazioni & Badge")
+            .navigationTitle(NSLocalizedString("dashboard_title", comment: ""))
         }
     }
 }

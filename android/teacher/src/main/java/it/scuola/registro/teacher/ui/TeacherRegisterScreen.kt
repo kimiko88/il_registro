@@ -16,21 +16,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import it.scuola.registro.teacher.R
-
-data class StudentAttendance(val name: String, var isPresent: Boolean, var isLate: Boolean, var grade: String = "")
+import it.scuola.registro.teacher.data.StudentRollCall
+import it.scuola.registro.teacher.viewmodel.TeacherViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TeacherRegisterScreen(onLogout: () -> Unit = {}) {
+fun TeacherRegisterScreen(
+    viewModel: TeacherViewModel = remember { TeacherViewModel().apply { loadSessionData() } },
+    onLogout: () -> Unit = {}
+) {
     var selectedTab by remember { mutableStateOf(0) }
-    val students = remember {
-        mutableStateListOf(
-            StudentAttendance("Banchi Andrea", isPresent = true, isLate = false, grade = "8"),
-            StudentAttendance("Bianchi Elena", isPresent = true, isLate = false, grade = "7.5"),
-            StudentAttendance("Ferrari Matteo", isPresent = false, isLate = false, grade = ""),
-            StudentAttendance("Rossi Sofia", isPresent = true, isLate = true, grade = "8.5")
-        )
-    }
 
     Scaffold(
         topBar = {
@@ -40,9 +35,9 @@ fun TeacherRegisterScreen(onLogout: () -> Unit = {}) {
                         when (selectedTab) {
                             0 -> stringResource(R.string.teacher_dashboard_title)
                             1 -> stringResource(R.string.take_attendance)
-                            2 -> "Inserimento Voti"
-                            3 -> "Agenda di Classe"
-                            else -> "Tabellone Scrutini"
+                            2 -> stringResource(R.string.add_grade)
+                            3 -> stringResource(R.string.teacher_dashboard_title)
+                            else -> stringResource(R.string.scrutiny_board)
                         },
                         fontWeight = FontWeight.Bold
                     )
@@ -63,52 +58,53 @@ fun TeacherRegisterScreen(onLogout: () -> Unit = {}) {
                 NavigationBarItem(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
-                    icon = { Icon(Icons.Default.MenuBook, contentDescription = "Registro") },
-                    label = { Text("Registro", fontSize = 11.sp) }
+                    icon = { Icon(Icons.Default.MenuBook, contentDescription = null) },
+                    label = { Text(stringResource(R.string.teacher_dashboard_title), fontSize = 10.sp) }
                 )
                 NavigationBarItem(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
-                    icon = { Icon(Icons.Default.Checklist, contentDescription = "Appello") },
-                    label = { Text("Appello", fontSize = 11.sp) }
+                    icon = { Icon(Icons.Default.Checklist, contentDescription = null) },
+                    label = { Text(stringResource(R.string.take_attendance), fontSize = 10.sp) }
                 )
                 NavigationBarItem(
                     selected = selectedTab == 2,
                     onClick = { selectedTab = 2 },
-                    icon = { Icon(Icons.Default.Grade, contentDescription = "Voti") },
-                    label = { Text("Voti", fontSize = 11.sp) }
+                    icon = { Icon(Icons.Default.Grade, contentDescription = null) },
+                    label = { Text(stringResource(R.string.add_grade), fontSize = 10.sp) }
                 )
                 NavigationBarItem(
                     selected = selectedTab == 3,
                     onClick = { selectedTab = 3 },
-                    icon = { Icon(Icons.Default.EditCalendar, contentDescription = "Agenda") },
-                    label = { Text("Agenda", fontSize = 11.sp) }
+                    icon = { Icon(Icons.Default.EditCalendar, contentDescription = null) },
+                    label = { Text("Agenda", fontSize = 10.sp) }
                 )
                 NavigationBarItem(
                     selected = selectedTab == 4,
                     onClick = { selectedTab = 4 },
-                    icon = { Icon(Icons.Default.Gavel, contentDescription = "Scrutini") },
-                    label = { Text("Scrutini", fontSize = 11.sp) }
+                    icon = { Icon(Icons.Default.Gavel, contentDescription = null) },
+                    label = { Text(stringResource(R.string.scrutiny_board), fontSize = 10.sp) }
                 )
             }
         }
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp)) {
             when (selectedTab) {
-                0 -> TeacherFirmaTab()
-                1 -> TeacherAppelloTab(students)
-                2 -> TeacherGradesEntryTab(students)
-                3 -> TeacherAgendaTab()
-                4 -> TeacherScrutinyTab()
+                0 -> TeacherFirmaTab(viewModel)
+                1 -> TeacherAppelloTab(viewModel)
+                2 -> TeacherGradesEntryTab(viewModel)
+                3 -> TeacherAgendaTab(viewModel)
+                4 -> TeacherScrutinyTab(viewModel)
             }
         }
     }
 }
 
 @Composable
-fun TeacherFirmaTab() {
-    var topic by remember { mutableStateOf("Equazioni e disequazioni esponenziali") }
-    var isSigned by remember { mutableStateOf(true) }
+fun TeacherFirmaTab(viewModel: TeacherViewModel) {
+    val session = viewModel.activeSession
+    var topic by remember { mutableStateOf(session?.lessonTopic ?: "Equazioni e disequazioni esponenziali") }
+    var isSigned by remember { mutableStateOf(session?.isSigned ?: true) }
 
     LazyColumn(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         item {
@@ -118,9 +114,9 @@ fun TeacherFirmaTab() {
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Firma Registro di Classe", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Text(stringResource(R.string.sign_hour), fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text("Classe 3A • Matematica (1a e 2a ora)", fontSize = 13.sp, color = Color.Gray)
+                    Text("${stringResource(R.string.select_class)} ${session?.className ?: "3A"} • ${session?.subject ?: "Matematica"}", fontSize = 13.sp, color = Color.Gray)
                     Spacer(modifier = Modifier.height(12.dp))
                     OutlinedTextField(
                         value = topic,
@@ -130,14 +126,17 @@ fun TeacherFirmaTab() {
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     Button(
-                        onClick = { isSigned = true },
+                        onClick = {
+                            viewModel.signLessonHour(topic)
+                            isSigned = true
+                        },
                         shape = RoundedCornerShape(10.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = if (isSigned) Color(0xFF10B981) else Color(0xFF2563EB)),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(if (isSigned) "Ora Lezione Firmata" else "Firma Ora di Lezione")
+                        Text(if (isSigned) "Ora Lezione Firmata" else stringResource(R.string.sign_hour))
                     }
                 }
             }
@@ -146,10 +145,12 @@ fun TeacherFirmaTab() {
 }
 
 @Composable
-fun TeacherAppelloTab(students: List<StudentAttendance>) {
+fun TeacherAppelloTab(viewModel: TeacherViewModel) {
+    val students = viewModel.rollCallList
+
     LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
-            Text("Rilevazione Presenze (Appello Giornaliero)", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            Text(stringResource(R.string.take_attendance), fontWeight = FontWeight.Bold, fontSize = 16.sp)
         }
         items(students) { student ->
             Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
@@ -158,21 +159,21 @@ fun TeacherAppelloTab(students: List<StudentAttendance>) {
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(text = student.name, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+                    Text(text = student.studentName, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         FilterChip(
-                            selected = student.isPresent,
-                            onClick = { student.isPresent = true; student.isLate = false },
+                            selected = student.status == "presente",
+                            onClick = { viewModel.updateStudentStatus(student.studentId, "presente") },
                             label = { Text("P") }
                         )
                         FilterChip(
-                            selected = !student.isPresent,
-                            onClick = { student.isPresent = false; student.isLate = false },
+                            selected = student.status == "assente",
+                            onClick = { viewModel.updateStudentStatus(student.studentId, "assente") },
                             label = { Text("A") }
                         )
                         FilterChip(
-                            selected = student.isLate,
-                            onClick = { student.isPresent = true; student.isLate = true },
+                            selected = student.status == "ritardo",
+                            onClick = { viewModel.updateStudentStatus(student.studentId, "ritardo") },
                             label = { Text("R") }
                         )
                     }
@@ -183,10 +184,12 @@ fun TeacherAppelloTab(students: List<StudentAttendance>) {
 }
 
 @Composable
-fun TeacherGradesEntryTab(students: List<StudentAttendance>) {
+fun TeacherGradesEntryTab(viewModel: TeacherViewModel) {
+    val students = viewModel.rollCallList
+
     LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
-            Text("Inserimento Valutazioni & Voti Pesati", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            Text(stringResource(R.string.add_grade), fontWeight = FontWeight.Bold, fontSize = 16.sp)
         }
         items(students) { student ->
             Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
@@ -195,12 +198,9 @@ fun TeacherGradesEntryTab(students: List<StudentAttendance>) {
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(student.name, fontWeight = FontWeight.SemiBold)
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(if (student.grade.isNotEmpty()) "Voto: ${student.grade}" else "N/A", fontWeight = FontWeight.Bold, color = Color(0xFF2563EB))
-                        Button(onClick = { }, shape = RoundedCornerShape(6.dp)) {
-                            Text("Assegna", fontSize = 12.sp)
-                        }
+                    Text(student.studentName, fontWeight = FontWeight.SemiBold)
+                    Button(onClick = { viewModel.submitGradeForStudent(student.studentId, 8.0, 1.0, "Scritto", "") }, shape = RoundedCornerShape(6.dp)) {
+                        Text(stringResource(R.string.add_grade), fontSize = 12.sp)
                     }
                 }
             }
@@ -209,7 +209,7 @@ fun TeacherGradesEntryTab(students: List<StudentAttendance>) {
 }
 
 @Composable
-fun TeacherAgendaTab() {
+fun TeacherAgendaTab(viewModel: TeacherViewModel) {
     LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
             Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)) {
@@ -228,7 +228,7 @@ fun TeacherAgendaTab() {
 }
 
 @Composable
-fun TeacherScrutinyTab() {
+fun TeacherScrutinyTab(viewModel: TeacherViewModel) {
     LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
             Card(
@@ -237,7 +237,7 @@ fun TeacherScrutinyTab() {
                 colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B))
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Gestione Scrutini & Scrutini Differiti", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text(stringResource(R.string.scrutiny_board), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     Spacer(modifier = Modifier.height(4.dp))
                     Text("Delibera voti finali, condotta e saldo debiti formativi", color = Color.White.copy(alpha = 0.8f), fontSize = 13.sp)
                     Spacer(modifier = Modifier.height(12.dp))
@@ -248,7 +248,7 @@ fun TeacherScrutinyTab() {
                     ) {
                         Icon(Icons.Default.EventRepeat, contentDescription = null)
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Apri Sessione Scrutinio Differito")
+                        Text("Sessione Scrutinio Differito")
                     }
                 }
             }

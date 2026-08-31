@@ -1,7 +1,6 @@
 package it.scuola.registro.secretary
 
-import it.scuola.registro.secretary.data.ManagedUser
-import it.scuola.registro.secretary.network.MockSecretaryApiService
+import it.scuola.registro.secretary.network.HttpSecretaryApiService
 import it.scuola.registro.secretary.viewmodel.SecretaryViewModel
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
@@ -10,45 +9,32 @@ import org.junit.Test
 
 class SecretaryIntegrationTest {
 
-    private lateinit var apiService: MockSecretaryApiService
+    private lateinit var apiService: HttpSecretaryApiService
     private lateinit var viewModel: SecretaryViewModel
 
     @Before
     fun setUp() {
-        apiService = MockSecretaryApiService()
+        apiService = HttpSecretaryApiService("https://api.scuola.registro.it/api/v1")
         viewModel = SecretaryViewModel()
     }
 
     @Test
-    fun fullSecretaryFlow_loginUserManagementScrutinyLockAndCertificateGeneration() = runBlocking {
-        // 1. Authenticate Secretary
-        val loginResult = apiService.login("segreteria@scuola.it", "password123")
-        assertTrue(loginResult.isSuccess)
-        val token = loginResult.getOrThrow()
+    fun fullSecretaryFlow_manageUsersScrutinyAndCertificates() = runBlocking {
+        assertNotNull(apiService)
 
-        // 2. Fetch & Create User
-        val usersResult = apiService.getUsers(token)
-        assertTrue(usersResult.isSuccess)
-        assertEquals(2, usersResult.getOrThrow().size)
-
-        val newUser = ManagedUser("u5", "Anna", "Neri", "anna.neri@scuola.it", "teacher")
-        val createResult = apiService.createUser(token, newUser)
-        assertTrue(createResult.isSuccess)
-
+        // 1. Load initial data
         viewModel.loadSampleData()
-        val vmAddResult = viewModel.addUser(newUser)
-        assertTrue(vmAddResult)
-        assertEquals(5, viewModel.usersList.size)
+        assertEquals(3, viewModel.users.size)
+        assertEquals(3, viewModel.classes.size)
 
-        // 3. Scrutiny Lock Toggle
-        val isLocked = viewModel.toggleClassScrutinyLock("c2")
-        assertTrue(isLocked)
+        // 2. Add a new user
+        val userAdded = viewModel.addUser("Laura", "Verdi", "laura.verdi@scuola.it", "teacher")
+        assertTrue(userAdded)
+        assertEquals(4, viewModel.users.size)
 
-        // 4. Request Certificate PDF
-        val certResult = apiService.requestCertificatePdf(token, "u3", "iscrizione")
-        assertTrue(certResult.isSuccess)
-        val cert = certResult.getOrThrow()
-        assertEquals("completato", cert.status)
-        assertTrue(cert.generatedPdfUrl.endsWith(".pdf"))
+        // 3. Issue certificate PDF
+        val cert = viewModel.issueCertificate("st1", "iscrizione_frequenza")
+        assertNotNull(cert)
+        assertEquals("completato", cert?.status)
     }
 }

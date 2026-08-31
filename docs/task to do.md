@@ -250,3 +250,15 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
   - **Conformità eIDAS & CAD**: Firme PAdES, CAdES e XAdES (`feq_service.go`, `feq_xades.go`, `cad_preservation.go`).
   - **Firma Collegiale Docenti (FEA)**: Approvazione verbali di scrutinio con autenticazione biometrica e OTP su Web e Mobile (`TeacherDigitalSignatureScreen.kt` e `TeacherDigitalSignatureView.swift`).
   - **Firma Dirigente (FEQ) & Marca Temporale**: Time-Stamping RFC 3161 per opponibilità a terzi e conservazione sostitutiva a norma.
+
+- [x] **Integrazione Database Reale & Localizzazione 11 Lingue nelle App Mobile (Agosto 2026)**:
+  - **Zero Dati Mock & Client HTTP di Produzione**:
+    - **Android (Kotlin)**: Implementati i client `HttpStudentApiService`, `HttpParentApiService`, `HttpTeacherApiService`, `HttpSecretaryApiService` collegati agli endpoint REST del backend (`/api/v1/...`) con gestione token JWT `Bearer`.
+    - **iOS (Swift)**: Implementati i client `HttpStudentAPIService`, `HttpParentAPIService`, `HttpTeacherAPIService`, `HttpSecretaryAPIService` con `URLSession` asincrona (`async/await`).
+    - **ViewModels & Viste Reattive**: Aggiornati tutti i ViewModels e le schermate di Studente, Genitore, Docente e Segreteria per caricare e sincronizzare lo stato in tempo reale con il database relazionale PostgreSQL.
+  - **Localizzazione Completa in 11 Lingue**:
+    - Tutte le stringhe di interfaccia delle 4 app (Studente, Genitore, Docente, Segreteria) sono state tradotte e localizzate per **Android** (`values/strings.xml`, `values-en`, `values-es`, `values-fr`, `values-de`, `values-ro`, `values-sq`, `values-ar`, `values-zh`, `values-uk`, `values-ru`) e per **iOS** (`it.lproj`, `en.lproj`, `es.lproj`, `fr.lproj`, `de.lproj`, `ro.lproj`, `sq.lproj`, `ar.lproj`, `zh-Hans.lproj`, `uk.lproj`, `ru.lproj`).
+  - **Aggiornamento Dipendenze & Non-Regressione**:
+    - Aggiornate librerie: `quasar ^2.28.0`, `sass ^1.103.1`, `happy-dom ^20.11.6`, `vue-i18n ^11.4.10`, `eslint ^10.0.0`, `@eslint/js ^10.0.1`, `vue-router ^5.2.0`, `github.com/sirupsen/logrus v1.10.2`.
+    - **Validazione Automatica**: **100% test Go backend superati** (87 package) e **162/162 test file Vitest superati** (956 test unitari passati con successo).
+

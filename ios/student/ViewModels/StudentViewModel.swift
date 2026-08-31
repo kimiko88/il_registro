@@ -37,8 +37,37 @@ public struct HomeworkItemModel: Identifiable, Equatable {
 public class StudentViewModel: ObservableObject {
     @Published public var grades: [GradeItemModel] = []
     @Published public var homework: [HomeworkItemModel] = []
+    @Published public var isLoading: Bool = false
+    @Published public var errorMessage: String? = nil
 
-    public init() {
+    private let apiService: StudentAPIServiceProtocol
+
+    public init(apiService: StudentAPIServiceProtocol = HttpStudentAPIService()) {
+        self.apiService = apiService
+    }
+
+    public func loadFromDatabase(token: String) async {
+        await MainActor.run {
+            self.isLoading = true
+            self.errorMessage = nil
+        }
+        do {
+            let fetchedGrades = try await apiService.fetchGrades(token: token)
+            let fetchedHomework = try await apiService.fetchHomework(token: token)
+            await MainActor.run {
+                self.grades = fetchedGrades
+                self.homework = fetchedHomework
+                self.isLoading = false
+            }
+        } catch {
+            await MainActor.run {
+                self.errorMessage = error.localizedDescription
+                self.isLoading = false
+            }
+        }
+    }
+
+    public func loadSampleData() {
         loadData()
     }
 
@@ -47,8 +76,7 @@ public class StudentViewModel: ObservableObject {
             GradeItemModel(id: "1", subject: "Matematica", grade: 8.5, weight: 1.0, type: "Scritto", date: "30 Ago"),
             GradeItemModel(id: "2", subject: "Matematica", grade: 7.0, weight: 1.0, type: "Orale", date: "15 Ago"),
             GradeItemModel(id: "3", subject: "Italiano", grade: 8.0, weight: 1.0, type: "Tema", date: "28 Ago"),
-            GradeItemModel(id: "4", subject: "Inglese", grade: 9.0, weight: 1.0, type: "Pratico", date: "25 Ago"),
-            GradeItemModel(id: "5", subject: "Fisica", grade: 7.0, weight: 1.0, type: "Scritto", date: "22 Ago")
+            GradeItemModel(id: "4", subject: "Inglese", grade: 9.0, weight: 1.0, type: "Pratico", date: "25 Ago")
         ]
 
         homework = [

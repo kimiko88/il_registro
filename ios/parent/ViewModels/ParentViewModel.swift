@@ -14,6 +14,20 @@ public struct ChildItemModel: Identifiable, Equatable {
     }
 }
 
+public struct ParentChildModel: Identifiable, Equatable {
+    public let id: String
+    public let firstName: String
+    public let lastName: String
+    public let className: String
+
+    public init(id: String, firstName: String, lastName: String, className: String) {
+        self.id = id
+        self.firstName = firstName
+        self.lastName = lastName
+        self.className = className
+    }
+}
+
 public struct AbsenceModel: Identifiable, Equatable {
     public let id: String
     public let childId: String
@@ -36,8 +50,40 @@ public class ParentViewModel: ObservableObject {
     @Published public var children: [ChildItemModel] = []
     @Published public var selectedChildId: String = ""
     @Published public var absences: [AbsenceModel] = []
+    @Published public var isLoading: Bool = false
+    @Published public var errorMessage: String? = nil
 
-    public init() {
+    private let apiService: ParentAPIServiceProtocol
+
+    public init(apiService: ParentAPIServiceProtocol = HttpParentAPIService()) {
+        self.apiService = apiService
+    }
+
+    public func loadFromDatabase(token: String) async {
+        await MainActor.run {
+            self.isLoading = true
+            self.errorMessage = nil
+        }
+        do {
+            let fetchedChildren = try await apiService.fetchChildren(token: token)
+            await MainActor.run {
+                self.children = fetchedChildren.map {
+                    ChildItemModel(id: $0.id, firstName: $0.firstName, lastName: $0.lastName, className: $0.className)
+                }
+                if let first = self.children.first {
+                    self.selectedChildId = first.id
+                }
+                self.isLoading = false
+            }
+        } catch {
+            await MainActor.run {
+                self.errorMessage = error.localizedDescription
+                self.isLoading = false
+            }
+        }
+    }
+
+    public func loadSampleData() {
         loadData()
     }
 
@@ -63,10 +109,10 @@ public class ParentViewModel: ObservableObject {
         return absences.filter { $0.childId == selectedChildId }
     }
 
-    public func justifyAbsence(id: String, note: String) -> Bool {
+    public func justifyAbsence(id: String, reason: String) -> Bool {
         guard let index = absences.firstIndex(where: { $0.id == id }) else { return false }
         absences[index].isJustified = true
-        absences[index].justificationNote = note
+        absences[index].justificationNote = reason
         return true
     }
 }

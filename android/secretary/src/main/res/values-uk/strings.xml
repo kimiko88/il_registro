@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Шкільний Журнал - Секретаріат</string>
+    <string name="secretary_dashboard_title">Управління Секретаріатом та Адміністрацією</string>
+    <string name="user_management">Управління Користувачами</string>
+    <string name="scrutiny_supervision">Нагляд за Оцінюванням</string>
+    <string name="generate_certificates">Генерація Довідок</string>
+    <string name="audit_logs">Журнал Аудиту</string>
+    <string name="total_students">Зарахованих Учнів</string>
+    <string name="total_teachers">Активних Вчителів</string>
+</resources>

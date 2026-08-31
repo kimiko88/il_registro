@@ -1,40 +1,29 @@
 import SwiftUI
 
-struct ChildModel: Identifiable, Hashable {
-    let id = UUID()
-    let name: String
-    let className: String
-}
-
-struct ParentDashboardView: View {
-    let children = [
-        ChildModel(name: "Marco Rossi", className: "Classe 2A"),
-        ChildModel(name: "Giulia Rossi", className: "Classe 4B")
-    ]
-    
-    @State private var selectedChild: ChildModel
+public struct ParentDashboardView: View {
+    @ObservedObject public var viewModel: ParentViewModel
     @State private var selectedTab = 0
-    
-    init() {
-        _selectedChild = State(initialValue: children.first!)
+
+    public init(viewModel: ParentViewModel = ParentViewModel()) {
+        self.viewModel = viewModel
     }
 
-    var body: some View {
+    public var body: some View {
         TabView(selection: $selectedTab) {
-            ParentHomeTab(selectedChild: selectedChild, children: children)
-                .tabItem { Label("Figli", systemImage: "figure.2.and.child.holdinghands") }
+            ParentHomeTab(viewModel: viewModel)
+                .tabItem { Label(NSLocalizedString("my_children", comment: ""), systemImage: "figure.2.and.child.holdinghands") }
                 .tag(0)
 
-            ParentGradesTab(selectedChild: selectedChild)
+            ParentGradesTab(viewModel: viewModel)
                 .tabItem { Label("Voti", systemImage: "chart.bar.doc.horizontal.fill") }
                 .tag(1)
 
-            ParentAttendanceTab(selectedChild: selectedChild)
-                .tabItem { Label("Giustifiche", systemImage: "checkmark.circle.fill") }
+            ParentAttendanceTab(viewModel: viewModel)
+                .tabItem { Label(NSLocalizedString("pending_absences", comment: ""), systemImage: "checkmark.circle.fill") }
                 .tag(2)
 
             ParentColloquiTab()
-                .tabItem { Label("Colloqui", systemImage: "calendar.badge.clock") }
+                .tabItem { Label(NSLocalizedString("book_colloqui", comment: ""), systemImage: "calendar.badge.clock") }
                 .tag(3)
 
             ParentCircularsTab()
@@ -46,57 +35,51 @@ struct ParentDashboardView: View {
 }
 
 struct ParentHomeTab: View {
-    let selectedChild: ChildModel
-    let children: [ChildModel]
+    @ObservedObject var viewModel: ParentViewModel
 
     var body: some View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 20) {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text(selectedChild.name)
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                        Text(selectedChild.className)
-                            .font(.subheadline)
-                            .foregroundColor(.white.opacity(0.8))
-                        HStack(spacing: 16) {
-                            Text("Media Generale: 8.1")
-                                .font(.caption)
-                                .fontWeight(.semibold)
-                                .padding(8)
-                                .background(Color.white.opacity(0.2))
-                                .cornerRadius(8)
+                    ForEach(viewModel.children) { child in
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("\(child.firstName) \(child.lastName)")
+                                .font(.title2)
+                                .fontWeight(.bold)
                                 .foregroundColor(.white)
-                            Text("Assenze Totali: 2")
-                                .font(.caption)
-                                .fontWeight(.semibold)
-                                .padding(8)
-                                .background(Color.white.opacity(0.2))
-                                .cornerRadius(8)
-                                .foregroundColor(.white)
+                            Text(child.className)
+                                .font(.subheadline)
+                                .foregroundColor(.white.opacity(0.8))
+                            HStack(spacing: 16) {
+                                Text("Stato: Attivo nel database")
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                    .padding(8)
+                                    .background(Color.white.opacity(0.2))
+                                    .cornerRadius(8)
+                                    .foregroundColor(.white)
+                            }
                         }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding()
+                        .background(Color(red: 0.06, green: 0.15, blue: 0.28))
+                        .cornerRadius(16)
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding()
-                    .background(Color(red: 0.06, green: 0.15, blue: 0.28))
-                    .cornerRadius(16)
                 }
                 .padding()
             }
-            .navigationTitle("Supervisione Figli")
+            .navigationTitle(NSLocalizedString("parent_dashboard_title", comment: ""))
         }
     }
 }
 
 struct ParentGradesTab: View {
-    let selectedChild: ChildModel
+    @ObservedObject var viewModel: ParentViewModel
 
     var body: some View {
         NavigationView {
             List {
-                Section(header: Text("Valutazioni 1° Quadrimestre")) {
+                Section(header: Text("Valutazioni Figlio")) {
                     HStack {
                         Text("Matematica")
                         Spacer()
@@ -120,28 +103,38 @@ struct ParentGradesTab: View {
 }
 
 struct ParentAttendanceTab: View {
-    let selectedChild: ChildModel
+    @ObservedObject var viewModel: ParentViewModel
 
     var body: some View {
         NavigationView {
             List {
-                Section(header: Text("Assenze & Ritardi da Giustificare")) {
-                    HStack {
-                        VStack(alignment: .leading) {
-                            Text("26 Ago 2026")
-                                .fontWeight(.bold)
-                            Text("Assenza per motivi di salute")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                Section(header: Text(NSLocalizedString("pending_absences", comment: ""))) {
+                    ForEach(viewModel.absences) { item in
+                        HStack {
+                            VStack(alignment: .leading) {
+                                Text(item.date)
+                                    .fontWeight(.bold)
+                                Text(item.type)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            Spacer()
+                            if item.isJustified {
+                                Text("Giustificata")
+                                    .font(.caption)
+                                    .foregroundColor(.green)
+                            } else {
+                                Button(NSLocalizedString("justify_action", comment: "")) {
+                                    _ = viewModel.justifyAbsence(id: item.id, reason: "Motivata")
+                                }
+                                .buttonStyle(.borderedProminent)
+                                .tint(Color(red: 0.05, green: 0.58, blue: 0.53))
+                            }
                         }
-                        Spacer()
-                        Button("Giustifica") {}
-                            .buttonStyle(.borderedProminent)
-                            .tint(Color(red: 0.05, green: 0.58, blue: 0.53))
                     }
                 }
             }
-            .navigationTitle("Giustifiche")
+            .navigationTitle(NSLocalizedString("pending_absences", comment: ""))
         }
     }
 }
@@ -159,12 +152,12 @@ struct ParentColloquiTab: View {
                             .foregroundColor(.secondary)
                     }
                     Spacer()
-                    Button("Prenota") {}
+                    Button(NSLocalizedString("book_colloqui", comment: "")) {}
                         .buttonStyle(.borderedProminent)
                         .tint(Color(red: 0.05, green: 0.58, blue: 0.53))
                 }
             }
-            .navigationTitle("Ricevimento Famiglie")
+            .navigationTitle(NSLocalizedString("book_colloqui", comment: ""))
         }
     }
 }

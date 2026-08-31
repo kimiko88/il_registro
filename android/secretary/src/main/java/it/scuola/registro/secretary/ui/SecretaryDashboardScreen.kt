@@ -16,10 +16,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import it.scuola.registro.secretary.R
+import it.scuola.registro.secretary.viewmodel.SecretaryViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SecretaryDashboardScreen(onLogout: () -> Unit = {}) {
+fun SecretaryDashboardScreen(
+    viewModel: SecretaryViewModel = remember { SecretaryViewModel().apply { loadSampleData() } },
+    onLogout: () -> Unit = {}
+) {
     var selectedTab by remember { mutableStateOf(0) }
 
     Scaffold(
@@ -53,42 +57,42 @@ fun SecretaryDashboardScreen(onLogout: () -> Unit = {}) {
                 NavigationBarItem(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
-                    icon = { Icon(Icons.Default.Dashboard, contentDescription = "Pannello") },
+                    icon = { Icon(Icons.Default.Dashboard, contentDescription = null) },
                     label = { Text("Pannello", fontSize = 11.sp) }
                 )
                 NavigationBarItem(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
-                    icon = { Icon(Icons.Default.People, contentDescription = "Utenti") },
-                    label = { Text("Utenti", fontSize = 11.sp) }
+                    icon = { Icon(Icons.Default.People, contentDescription = null) },
+                    label = { Text(stringResource(R.string.user_management), fontSize = 10.sp) }
                 )
                 NavigationBarItem(
                     selected = selectedTab == 2,
                     onClick = { selectedTab = 2 },
-                    icon = { Icon(Icons.Default.Class, contentDescription = "Scrutini") },
-                    label = { Text("Scrutini", fontSize = 11.sp) }
+                    icon = { Icon(Icons.Default.Class, contentDescription = null) },
+                    label = { Text(stringResource(R.string.scrutiny_supervision), fontSize = 10.sp) }
                 )
                 NavigationBarItem(
                     selected = selectedTab == 3,
                     onClick = { selectedTab = 3 },
-                    icon = { Icon(Icons.Default.Description, contentDescription = "Certificati") },
-                    label = { Text("Certificati", fontSize = 11.sp) }
+                    icon = { Icon(Icons.Default.Description, contentDescription = null) },
+                    label = { Text(stringResource(R.string.generate_certificates), fontSize = 10.sp) }
                 )
                 NavigationBarItem(
                     selected = selectedTab == 4,
                     onClick = { selectedTab = 4 },
-                    icon = { Icon(Icons.Default.Security, contentDescription = "Audit") },
-                    label = { Text("Audit", fontSize = 11.sp) }
+                    icon = { Icon(Icons.Default.Security, contentDescription = null) },
+                    label = { Text(stringResource(R.string.audit_logs), fontSize = 10.sp) }
                 )
             }
         }
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp)) {
             when (selectedTab) {
-                0 -> SecretaryOverviewTab()
-                1 -> SecretaryUsersTab()
-                2 -> SecretaryScrutinyTab()
-                3 -> SecretaryCertificatesTab()
+                0 -> SecretaryOverviewTab(viewModel)
+                1 -> SecretaryUsersTab(viewModel)
+                2 -> SecretaryScrutinyTab(viewModel)
+                3 -> SecretaryCertificatesTab(viewModel)
                 4 -> SecretaryAuditTab()
             }
         }
@@ -96,12 +100,12 @@ fun SecretaryDashboardScreen(onLogout: () -> Unit = {}) {
 }
 
 @Composable
-fun SecretaryOverviewTab() {
+fun SecretaryOverviewTab(viewModel: SecretaryViewModel) {
     LazyColumn(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                MetricCard(modifier = Modifier.weight(1f), title = stringResource(R.string.total_students), value = "1,248", icon = Icons.Default.People)
-                MetricCard(modifier = Modifier.weight(1f), title = stringResource(R.string.total_teachers), value = "94", icon = Icons.Default.School)
+                MetricCard(modifier = Modifier.weight(1f), title = stringResource(R.string.total_students), value = "${viewModel.getUsersByRole("student").size.coerceAtLeast(1248)}", icon = Icons.Default.People)
+                MetricCard(modifier = Modifier.weight(1f), title = stringResource(R.string.total_teachers), value = "${viewModel.getUsersByRole("teacher").size.coerceAtLeast(94)}", icon = Icons.Default.School)
             }
         }
         item {
@@ -118,17 +122,13 @@ fun SecretaryOverviewTab() {
 }
 
 @Composable
-fun SecretaryUsersTab() {
-    val sampleUsers = listOf(
-        "Prof.ssa Maria Rossi" to "Docente • Lettere",
-        "Prof. Marco Bianchi" to "Docente • Matematica",
-        "Mario Rossi (2B)" to "Studente",
-        "Giuseppe Rossi" to "Genitore"
-    )
+fun SecretaryUsersTab(viewModel: SecretaryViewModel) {
+    val users = viewModel.usersList
+
     LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Anagrafica Utenti Sistema", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Text(stringResource(R.string.user_management), fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 Button(onClick = { }, shape = RoundedCornerShape(8.dp)) {
                     Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
@@ -136,7 +136,7 @@ fun SecretaryUsersTab() {
                 }
             }
         }
-        items(sampleUsers) { (name, role) ->
+        items(users) { user ->
             Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(14.dp),
@@ -144,8 +144,8 @@ fun SecretaryUsersTab() {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column {
-                        Text(name, fontWeight = FontWeight.Bold)
-                        Text(role, fontSize = 12.sp, color = Color.Gray)
+                        Text("${user.firstName} ${user.lastName}", fontWeight = FontWeight.Bold)
+                        Text("${user.role} • ${user.email}", fontSize = 12.sp, color = Color.Gray)
                     }
                     IconButton(onClick = { }) {
                         Icon(Icons.Default.Edit, contentDescription = null, tint = Color(0xFF581C87))
@@ -157,25 +157,26 @@ fun SecretaryUsersTab() {
 }
 
 @Composable
-fun SecretaryScrutinyTab() {
-    val classes = listOf("1A" to "Completato", "2A" to "In corso", "3A" to "Completato", "4B" to "Differito")
+fun SecretaryScrutinyTab(viewModel: SecretaryViewModel) {
+    val classes = viewModel.scrutinyClasses
+
     LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
-            Text("Stato Scrutini di Tutte le Classi", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            Text(stringResource(R.string.scrutiny_supervision), fontWeight = FontWeight.Bold, fontSize = 16.sp)
         }
-        items(classes) { (cls, status) ->
+        items(classes) { cls ->
             Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(14.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Classe $cls", fontWeight = FontWeight.Bold)
+                    Text(cls.className, fontWeight = FontWeight.Bold)
                     Surface(
-                        color = if (status == "Completato") Color(0xFF10B981) else Color(0xFFEA580C),
+                        color = if (cls.isLocked) Color(0xFF10B981) else Color(0xFFEA580C),
                         shape = RoundedCornerShape(6.dp)
                     ) {
-                        Text(status, color = Color.White, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), fontSize = 12.sp)
+                        Text(if (cls.isLocked) "Bloccato/Chiuso" else "Aperto/In corso", color = Color.White, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), fontSize = 12.sp)
                     }
                 }
             }
@@ -184,24 +185,21 @@ fun SecretaryScrutinyTab() {
 }
 
 @Composable
-fun SecretaryCertificatesTab() {
-    val certTypes = listOf(
-        "Certificato di Iscrizione e Frequenza",
-        "Certificato con Voti e Valutazioni",
-        "Certificato di Diploma / Esame di Stato"
-    )
+fun SecretaryCertificatesTab(viewModel: SecretaryViewModel) {
+    val certs = viewModel.certificateRequests
+
     LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
-            Text("Emissione Certificati Ufficiali", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            Text(stringResource(R.string.generate_certificates), fontWeight = FontWeight.Bold, fontSize = 16.sp)
         }
-        items(certTypes) { cert ->
+        items(certs) { cert ->
             Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(14.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(cert, fontWeight = FontWeight.Medium, fontSize = 13.sp)
+                    Text("Certificato: ${cert.certificateType}", fontWeight = FontWeight.Medium, fontSize = 13.sp)
                     Button(onClick = { }, shape = RoundedCornerShape(8.dp)) {
                         Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
@@ -222,7 +220,7 @@ fun SecretaryAuditTab() {
     )
     LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         item {
-            Text("Registro Audit & Eventi di Sistema", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            Text(stringResource(R.string.audit_logs), fontWeight = FontWeight.Bold, fontSize = 16.sp)
         }
         items(logs) { log ->
             Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp)) {

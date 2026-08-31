@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Школьный Журнал - Родители</string>
+    <string name="parent_dashboard_title">Контроль Успеваемости Детей</string>
+    <string name="switch_child">Выбрать Ребёнка:</string>
+    <string name="justify_absence">Подтвердить Пропуски</string>
+    <string name="book_colloquio">Запись на Консультацию</string>
+    <string name="child_grades">Оценки Ребёнка</string>
+    <string name="child_attendance">Посещаемость и Подтверждения</string>
+    <string name="pending_justifications">Пропуски для Подтверждения</string>
+    <string name="upcoming_colloqui">Ближайшие Консультации</string>
+    <string name="no_pending_justifications">Нет пропусков для подтверждения</string>
+</resources>

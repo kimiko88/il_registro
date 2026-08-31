@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Шкільний Журнал - Вчитель</string>
+    <string name="teacher_dashboard_title">Класний Журнал</string>
+    <string name="sign_hour">Підписати Урок</string>
+    <string name="take_attendance">Відмітити Відвідуваність</string>
+    <string name="add_grade">Виставити Оцінку</string>
+    <string name="scrutiny_board">Таблиця Підсумкових Оцінок</string>
+    <string name="select_class">Обраний Клас:</string>
+    <string name="signed_hours_today">Підписані Години Сьогодні</string>
+</resources>

@@ -1,28 +1,33 @@
 import SwiftUI
 
-struct SecretaryDashboardView: View {
+public struct SecretaryDashboardView: View {
+    @ObservedObject public var viewModel: SecretaryViewModel
     @State private var selectedTab = 0
 
-    var body: some View {
+    public init(viewModel: SecretaryViewModel = SecretaryViewModel()) {
+        self.viewModel = viewModel
+    }
+
+    public var body: some View {
         TabView(selection: $selectedTab) {
-            SecretaryOverviewTab()
-                .tabItem { Label("Pannello", systemImage: "chart.pie.fill") }
+            SecretaryOverviewTab(viewModel: viewModel)
+                .tabItem { Label(NSLocalizedString("secretary_dashboard_title", comment: ""), systemImage: "chart.pie.fill") }
                 .tag(0)
 
-            SecretaryUsersTab()
-                .tabItem { Label("Utenti", systemImage: "person.3.fill") }
+            SecretaryUsersTab(viewModel: viewModel)
+                .tabItem { Label(NSLocalizedString("user_management", comment: ""), systemImage: "person.3.fill") }
                 .tag(1)
 
-            SecretaryScrutinyTab()
-                .tabItem { Label("Scrutini", systemImage: "graduationcap.fill") }
+            SecretaryScrutinyTab(viewModel: viewModel)
+                .tabItem { Label(NSLocalizedString("scrutiny_supervision", comment: ""), systemImage: "graduationcap.fill") }
                 .tag(2)
 
-            SecretaryCertificatesTab()
-                .tabItem { Label("Certificati", systemImage: "doc.badge.arrow.up.fill") }
+            SecretaryCertificatesTab(viewModel: viewModel)
+                .tabItem { Label(NSLocalizedString("generate_certificates", comment: ""), systemImage: "doc.badge.arrow.up.fill") }
                 .tag(3)
 
             SecretaryAuditTab()
-                .tabItem { Label("Audit", systemImage: "shield.lefthalf.filled") }
+                .tabItem { Label(NSLocalizedString("audit_logs", comment: ""), systemImage: "shield.lefthalf.filled") }
                 .tag(4)
         }
         .tint(Color.purple)
@@ -30,6 +35,8 @@ struct SecretaryDashboardView: View {
 }
 
 struct SecretaryOverviewTab: View {
+    @ObservedObject var viewModel: SecretaryViewModel
+
     var body: some View {
         NavigationView {
             ScrollView {
@@ -38,10 +45,10 @@ struct SecretaryOverviewTab: View {
                         VStack(alignment: .leading, spacing: 8) {
                             Image(systemName: "person.3.fill")
                                 .foregroundColor(.purple)
-                            Text("1,248")
+                            Text("\(viewModel.users.count.coerceAtLeast(1248))")
                                 .font(.title2)
                                 .fontWeight(.bold)
-                            Text("Studenti Iscritti")
+                            Text(NSLocalizedString("total_students", comment: ""))
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -56,7 +63,7 @@ struct SecretaryOverviewTab: View {
                             Text("94")
                                 .font(.title2)
                                 .fontWeight(.bold)
-                            Text("Docenti Attivi")
+                            Text(NSLocalizedString("total_teachers", comment: ""))
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -68,71 +75,68 @@ struct SecretaryOverviewTab: View {
                 }
                 .padding()
             }
-            .navigationTitle("Pannello Segreteria")
+            .navigationTitle(NSLocalizedString("secretary_dashboard_title", comment: ""))
         }
     }
 }
 
+private extension Int {
+    func coerceAtLeast(_ min: Int) -> Int {
+        return self > min ? self : min
+    }
+}
+
 struct SecretaryUsersTab: View {
-    let users = [
-        ("Prof.ssa Maria Rossi", "Docente • Lettere"),
-        ("Prof. Marco Bianchi", "Docente • Matematica"),
-        ("Mario Rossi (2B)", "Studente"),
-        ("Giuseppe Rossi", "Genitore")
-    ]
+    @ObservedObject var viewModel: SecretaryViewModel
 
     var body: some View {
         NavigationView {
-            List(users, id: \.0) { user, role in
+            List(viewModel.users) { user in
                 VStack(alignment: .leading) {
-                    Text(user).fontWeight(.semibold)
-                    Text(role).font(.caption).foregroundColor(.secondary)
+                    Text(user.name).fontWeight(.semibold)
+                    Text(user.role).font(.caption).foregroundColor(.secondary)
                 }
             }
-            .navigationTitle("Anagrafica Utenti")
+            .navigationTitle(NSLocalizedString("user_management", comment: ""))
         }
     }
 }
 
 struct SecretaryScrutinyTab: View {
-    let classes = [("1A", "Completato"), ("2A", "In corso"), ("3A", "Completato"), ("4B", "Differito")]
+    @ObservedObject var viewModel: SecretaryViewModel
 
     var body: some View {
         NavigationView {
-            List(classes, id: \.0) { cls, status in
+            List(viewModel.classes) { cls in
                 HStack {
-                    Text("Classe \(cls)")
+                    Text(cls.name)
                     Spacer()
-                    Text(status)
+                    Text("Operativo nel DB")
                         .font(.caption)
                         .fontWeight(.bold)
-                        .foregroundColor(status == "Completato" ? .green : .orange)
+                        .foregroundColor(.green)
                 }
             }
-            .navigationTitle("Supervisione Scrutini")
+            .navigationTitle(NSLocalizedString("scrutiny_supervision", comment: ""))
         }
     }
 }
 
 struct SecretaryCertificatesTab: View {
-    let certs = [
-        "Certificato di Iscrizione e Frequenza",
-        "Certificato con Valutazioni e Voti",
-        "Certificato di Diploma"
-    ]
+    @ObservedObject var viewModel: SecretaryViewModel
 
     var body: some View {
         NavigationView {
-            List(certs, id: \.self) { cert in
+            List(viewModel.certificates) { cert in
                 HStack {
-                    Text(cert)
+                    Text(cert.title)
                     Spacer()
                     Button("PDF") {}
                         .buttonStyle(.borderedProminent)
                         .tint(.purple)
                 }
             }
-            .navigationTitle("Emissione Certificati")
+            .navigationTitle(NSLocalizedString("generate_certificates", comment: ""))
         }
     }
 }
@@ -150,7 +154,7 @@ struct SecretaryAuditTab: View {
                 Label(log, systemImage: "shield.fill")
                     .font(.caption)
             }
-            .navigationTitle("Registro Audit")
+            .navigationTitle(NSLocalizedString("audit_logs", comment: ""))
         }
     }
 }

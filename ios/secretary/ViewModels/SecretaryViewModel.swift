@@ -1,5 +1,21 @@
 import Foundation
 
+public struct SecretaryUserModel: Identifiable, Equatable {
+    public let id: String
+    public let firstName: String
+    public let lastName: String
+    public let email: String
+    public let role: String
+
+    public init(id: String, firstName: String, lastName: String, email: String, role: String) {
+        self.id = id
+        self.firstName = firstName
+        self.lastName = lastName
+        self.email = email
+        self.role = role
+    }
+}
+
 public struct ManagedUserModel: Identifiable, Equatable {
     public let id: String
     public let name: String
@@ -9,6 +25,16 @@ public struct ManagedUserModel: Identifiable, Equatable {
         self.id = id
         self.name = name
         self.role = role
+    }
+}
+
+public struct SecretaryClassModel: Identifiable, Equatable {
+    public let id: String
+    public let name: String
+
+    public init(id: String, name: String) {
+        self.id = id
+        self.name = name
     }
 }
 
@@ -28,18 +54,51 @@ public struct CertificateItemModel: Identifiable, Equatable {
 
 public class SecretaryViewModel: ObservableObject {
     @Published public var users: [ManagedUserModel] = []
+    @Published public var classes: [SecretaryClassModel] = []
     @Published public var certificates: [CertificateItemModel] = []
+    @Published public var isLoading: Bool = false
+    @Published public var errorMessage: String? = nil
 
-    public init() {
+    private let apiService: SecretaryAPIServiceProtocol
+
+    public init(apiService: SecretaryAPIServiceProtocol = HttpSecretaryAPIService()) {
+        self.apiService = apiService
+    }
+
+    public func loadFromDatabase(token: String) async {
+        await MainActor.run {
+            self.isLoading = true
+            self.errorMessage = nil
+        }
+        do {
+            let fetchedUsers = try await apiService.fetchUsers(token: token)
+            await MainActor.run {
+                self.users = fetchedUsers.map {
+                    ManagedUserModel(id: $0.id, name: "\($0.firstName) \($0.lastName)", role: $0.role)
+                }
+                self.isLoading = false
+            }
+        } catch {
+            await MainActor.run {
+                self.errorMessage = error.localizedDescription
+                self.isLoading = false
+            }
+        }
+    }
+
+    public func loadSampleData() {
         loadData()
     }
 
     public func loadData() {
         users = [
             ManagedUserModel(id: "u1", name: "Prof.ssa Maria Rossi", role: "Docente"),
-            ManagedUserModel(id: "u2", name: "Prof. Marco Bianchi", role: "Docente"),
-            ManagedUserModel(id: "u3", name: "Mario Rossi (2B)", role: "Studente"),
-            ManagedUserModel(id: "u4", name: "Giuseppe Rossi", role: "Genitore")
+            ManagedUserModel(id: "u2", name: "Prof. Marco Bianchi", role: "Docente")
+        ]
+
+        classes = [
+            SecretaryClassModel(id: "c1", name: "Classe 1A"),
+            SecretaryClassModel(id: "c2", name: "Classe 2A")
         ]
 
         certificates = [
@@ -54,9 +113,17 @@ public class SecretaryViewModel: ObservableObject {
         return true
     }
 
+    public func addUser(firstName: String, lastName: String, email: String, role: String) -> Bool {
+        return addUser(name: "\(firstName) \(lastName)", role: role)
+    }
+
     public func issueCertificate(title: String) -> CertificateItemModel {
         let newCert = CertificateItemModel(id: UUID().uuidString, title: title, status: "pronto", pdfUrl: "/api/v1/cert/gen_\(UUID().uuidString).pdf")
         certificates.append(newCert)
         return newCert
+    }
+
+    public func requestCertificate(studentId: String, type: String) -> CertificateItemModel {
+        return issueCertificate(title: "Certificato \(type)")
     }
 }

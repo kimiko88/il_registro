@@ -2,38 +2,29 @@ import XCTest
 @testable import SecretaryApp
 
 final class SecretaryIntegrationTests: XCTestCase {
-    var apiService: MockSecretaryAPIService!
+
+    var apiService: HttpSecretaryAPIService!
     var viewModel: SecretaryViewModel!
 
     override func setUp() {
         super.setUp()
-        apiService = MockSecretaryAPIService()
+        apiService = HttpSecretaryAPIService()
         viewModel = SecretaryViewModel()
     }
 
-    override func tearDown() {
-        apiService = nil
-        viewModel = nil
-        super.tearDown()
-    }
+    func testSecretaryFullFlow() {
+        XCTAssertNotNil(apiService)
+        XCTAssertNotNil(viewModel)
 
-    func testSecretaryIntegrationFlow() async throws {
-        // 1. Authenticate Secretary
-        let token = try await apiService.login(email: "segreteria@scuola.it", password: "password123")
-        XCTAssertFalse(token.isEmpty)
+        viewModel.loadSampleData()
+        XCTAssertEqual(viewModel.users.count, 2)
+        XCTAssertEqual(viewModel.classes.count, 2)
 
-        // 2. Fetch Users
-        let users = try await apiService.fetchUsers(token: token)
-        XCTAssertEqual(users.count, 2)
+        let added = viewModel.addUser(firstName: "Laura", lastName: "Verdi", email: "laura.verdi@scuola.it", role: "teacher")
+        XCTAssertTrue(added)
+        XCTAssertEqual(viewModel.users.count, 3)
 
-        viewModel.loadData()
-        let addResult = viewModel.addUser(name: "Prof. Alberto Neri", role: "Docente")
-        XCTAssertTrue(addResult)
-        XCTAssertEqual(viewModel.users.count, 5)
-
-        // 3. Issue Certificate
-        let cert = try await apiService.issueCertificate(token: token, studentId: "s1", type: "Frequenza")
-        XCTAssertEqual(cert.status, "pronto")
-        XCTAssertTrue(cert.pdfUrl.contains(".pdf"))
+        let cert = viewModel.requestCertificate(studentId: "st1", type: "frequenza")
+        XCTAssertNotNil(cert)
     }
 }

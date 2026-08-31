@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Regjistri Shkollor - Sekretaria</string>
+    <string name="secretary_dashboard_title">Menaxhimi i Sekretarisë &amp; Admin</string>
+    <string name="user_management">Menaxhimi i Përdoruesve</string>
+    <string name="scrutiny_supervision">Mbikëqyrja e Vlerësimeve</string>
+    <string name="generate_certificates">Gjenerimi i Certifikatave</string>
+    <string name="audit_logs">Regjistri i Auditimit</string>
+    <string name="total_students">Nxënës të Regjistruar</string>
+    <string name="total_teachers">Mësues Aktivë</string>
+</resources>

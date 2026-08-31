@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Catalog Școlar - Profesor</string>
+    <string name="teacher_dashboard_title">Catalogul Clasei</string>
+    <string name="sign_hour">Semnează Ora de Curs</string>
+    <string name="take_attendance">Prezență</string>
+    <string name="add_grade">Adaugă Notă</string>
+    <string name="scrutiny_board">Tablou Evaluare</string>
+    <string name="select_class">Clasa Selectată:</string>
+    <string name="signed_hours_today">Ore Semnate Azi</string>
+</resources>

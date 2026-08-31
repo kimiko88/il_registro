@@ -1,22 +1,25 @@
 import SwiftUI
 
-struct TeacherRegisterView: View {
+public struct TeacherRegisterView: View {
+    @ObservedObject public var viewModel: TeacherViewModel
     @State private var selectedTab = 0
-    @State private var lessonTopic = "Equazioni e disequazioni esponenziali"
-    @State private var isHourSigned = true
 
-    var body: some View {
+    public init(viewModel: TeacherViewModel = TeacherViewModel()) {
+        self.viewModel = viewModel
+    }
+
+    public var body: some View {
         TabView(selection: $selectedTab) {
-            TeacherFirmaTab(topic: $lessonTopic, isSigned: $isHourSigned)
-                .tabItem { Label("Registro", systemImage: "pencil.and.list.clipboard") }
+            TeacherFirmaTab(viewModel: viewModel)
+                .tabItem { Label(NSLocalizedString("teacher_dashboard_title", comment: ""), systemImage: "pencil.and.list.clipboard") }
                 .tag(0)
 
-            TeacherAppelloTab()
-                .tabItem { Label("Appello", systemImage: "checkmark.rectangle.stack.fill") }
+            TeacherAppelloTab(viewModel: viewModel)
+                .tabItem { Label(NSLocalizedString("take_attendance", comment: ""), systemImage: "checkmark.rectangle.stack.fill") }
                 .tag(1)
 
-            TeacherGradesTab()
-                .tabItem { Label("Voti", systemImage: "chart.bar.fill") }
+            TeacherGradesTab(viewModel: viewModel)
+                .tabItem { Label(NSLocalizedString("add_grade", comment: ""), systemImage: "chart.bar.fill") }
                 .tag(2)
 
             TeacherAgendaTab()
@@ -24,7 +27,7 @@ struct TeacherRegisterView: View {
                 .tag(3)
 
             TeacherScrutinyTab()
-                .tabItem { Label("Scrutini", systemImage: "graduationcap.fill") }
+                .tabItem { Label(NSLocalizedString("scrutiny_board", comment: ""), systemImage: "graduationcap.fill") }
                 .tag(4)
         }
         .tint(Color.blue)
@@ -32,33 +35,32 @@ struct TeacherRegisterView: View {
 }
 
 struct TeacherFirmaTab: View {
-    @Binding var topic: String
-    @Binding var isSigned: Bool
+    @ObservedObject var viewModel: TeacherViewModel
 
     var body: some View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 20) {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Firma Registro di Classe")
+                        Text(NSLocalizedString("sign_hour", comment: ""))
                             .font(.headline)
                             .fontWeight(.bold)
-                        Text("Classe 3A • Matematica (1a e 2a ora)")
+                        Text("\(NSLocalizedString("select_class", comment: "")) \(viewModel.currentSession?.className ?? "3A") • \(viewModel.currentSession?.subject ?? "Matematica")")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
 
-                        TextField("Argomento della Lezione", text: $topic)
+                        TextField("Argomento della Lezione", text: $viewModel.lessonTopic)
                             .textFieldStyle(.roundedBorder)
 
-                        Button(action: { isSigned = true }) {
+                        Button(action: { _ = viewModel.signLesson(topic: viewModel.lessonTopic) }) {
                             HStack {
-                                Image(systemName: isSigned ? "checkmark.circle.fill" : "pencil.line")
-                                Text(isSigned ? "Ora Lezione Firmata" : "Firma Ora Lezione")
+                                Image(systemName: viewModel.isHourSigned ? "checkmark.circle.fill" : "pencil.line")
+                                Text(viewModel.isHourSigned ? "Ora Lezione Firmata" : NSLocalizedString("sign_hour", comment: ""))
                                     .fontWeight(.semibold)
                             }
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(isSigned ? Color.green : Color.blue)
+                            .background(viewModel.isHourSigned ? Color.green : Color.blue)
                             .foregroundColor(.white)
                             .cornerRadius(12)
                         }
@@ -69,46 +71,48 @@ struct TeacherFirmaTab: View {
                 }
                 .padding()
             }
-            .navigationTitle("Registro di Classe")
+            .navigationTitle(NSLocalizedString("teacher_dashboard_title", comment: ""))
         }
     }
 }
 
 struct TeacherAppelloTab: View {
-    let students = ["Banchi Andrea", "Bianchi Elena", "Ferrari Matteo", "Rossi Sofia"]
+    @ObservedObject var viewModel: TeacherViewModel
 
     var body: some View {
         NavigationView {
-            List(students, id: \.self) { student in
+            List(viewModel.students) { student in
                 HStack {
-                    Text(student).fontWeight(.medium)
+                    Text(student.name).fontWeight(.medium)
                     Spacer()
-                    Button("Presente") {}
-                        .buttonStyle(.borderedProminent)
-                        .tint(.green)
+                    Button(student.status) {
+                        _ = viewModel.toggleAttendance(studentId: student.id, status: student.status == "presente" ? "assente" : "presente")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(student.status == "presente" ? .green : .red)
                 }
             }
-            .navigationTitle("Appello & Presenze")
+            .navigationTitle(NSLocalizedString("take_attendance", comment: ""))
         }
     }
 }
 
 struct TeacherGradesTab: View {
+    @ObservedObject var viewModel: TeacherViewModel
+
     var body: some View {
         NavigationView {
-            List {
+            List(viewModel.students) { student in
                 HStack {
-                    Text("Banchi Andrea")
+                    Text(student.name)
                     Spacer()
-                    Text("8 (Scritto)").foregroundColor(.blue).fontWeight(.bold)
-                }
-                HStack {
-                    Text("Bianchi Elena")
-                    Spacer()
-                    Text("7.5 (Orale)").foregroundColor(.blue).fontWeight(.bold)
+                    Button(NSLocalizedString("add_grade", comment: "")) {
+                        _ = viewModel.insertGrade(studentId: student.id, grade: 8.0, type: "Scritto")
+                    }
+                    .buttonStyle(.bordered)
                 }
             }
-            .navigationTitle("Inserimento Voti")
+            .navigationTitle(NSLocalizedString("add_grade", comment: ""))
         }
     }
 }
@@ -132,7 +136,7 @@ struct TeacherScrutinyTab: View {
             ScrollView {
                 VStack(spacing: 16) {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Tabellone Scrutini & Scrutini Differiti")
+                        Text(NSLocalizedString("scrutiny_board", comment: ""))
                             .font(.headline)
                             .fontWeight(.bold)
                             .foregroundColor(.white)
@@ -141,7 +145,7 @@ struct TeacherScrutinyTab: View {
                             .foregroundColor(.white.opacity(0.8))
                         
                         Button(action: {}) {
-                            Text("Sessione Scrutinio Differito (Debiti)")
+                            Text("Sessione Scrutinio Differito")
                                 .fontWeight(.semibold)
                                 .frame(maxWidth: .infinity)
                                 .padding()
@@ -156,7 +160,7 @@ struct TeacherScrutinyTab: View {
                 }
                 .padding()
             }
-            .navigationTitle("Gestione Scrutini")
+            .navigationTitle(NSLocalizedString("scrutiny_board", comment: ""))
         }
     }
 }

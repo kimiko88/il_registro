@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">السجل المدرسي - أولياء الأمور</string>
+    <string name="parent_dashboard_title">متابعة الأبناء</string>
+    <string name="switch_child">اختر الابن:</string>
+    <string name="justify_absence">تبرير الغياب</string>
+    <string name="book_colloquio">حجز مقابلة</string>
+    <string name="child_grades">درجات الابن</string>
+    <string name="child_attendance">الحضور والتبريرات</string>
+    <string name="pending_justifications">الغياب المعلق للتبرير</string>
+    <string name="upcoming_colloqui">المقابلات القادمة</string>
+    <string name="no_pending_justifications">لا يوجد غياب معلق للتبرير</string>
+</resources>

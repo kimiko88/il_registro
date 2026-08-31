@@ -1,55 +1,43 @@
 import SwiftUI
 
-struct GradeModel: Identifiable {
-    let id = UUID()
-    let subject: String
-    let value: Double
-    let date: String
-    let type: String
-}
-
-struct HomeworkModel: Identifiable {
-    let id = UUID()
-    let subject: String
-    let description: String
-    let dueDate: String
-    var isDone: Bool
-}
-
-struct StudentDashboardView: View {
+public struct StudentDashboardView: View {
+    @ObservedObject public var viewModel: StudentViewModel
     @State private var studentName: String = "Mario Rossi"
-    @State private var gpaAverage: Double = 7.8
     @State private var selectedTab = 0
 
-    var body: some View {
+    public init(viewModel: StudentViewModel = StudentViewModel()) {
+        self.viewModel = viewModel
+    }
+
+    public var body: some View {
         TabView(selection: $selectedTab) {
-            StudentHomeView(studentName: studentName, gpaAverage: gpaAverage)
+            StudentHomeView(studentName: studentName, viewModel: viewModel)
                 .tabItem {
-                    Label("Home", systemImage: "house.fill")
+                    Label(NSLocalizedString("dashboard_title", comment: ""), systemImage: "house.fill")
                 }
                 .tag(0)
 
-            StudentGradesView()
+            StudentGradesView(viewModel: viewModel)
                 .tabItem {
-                    Label("Voti", systemImage: "chart.bar.doc.horizontal.fill")
+                    Label(NSLocalizedString("grades_title", comment: ""), systemImage: "chart.bar.doc.horizontal.fill")
                 }
                 .tag(1)
 
-            StudentAgendaView()
+            StudentAgendaView(viewModel: viewModel)
                 .tabItem {
-                    Label("Agenda", systemImage: "calendar")
+                    Label(NSLocalizedString("agenda_title", comment: ""), systemImage: "calendar")
                 }
                 .tag(2)
 
             StudentAttendanceView()
                 .tabItem {
-                    Label("Presenze", systemImage: "checkmark.circle.fill")
+                    Label(NSLocalizedString("attendance_title", comment: ""), systemImage: "checkmark.circle.fill")
                 }
                 .tag(3)
 
-            StudentReportCardView()
+            StudentReportCardView(viewModel: viewModel)
                 .tabItem {
-                    Label("Pagella", systemImage: "doc.text.fill")
+                    Label(NSLocalizedString("report_card_title", comment: ""), systemImage: "doc.text.fill")
                 }
                 .tag(4)
         }
@@ -60,20 +48,12 @@ struct StudentDashboardView: View {
 // 1. Home View
 struct StudentHomeView: View {
     let studentName: String
-    let gpaAverage: Double
-
-    let recentGrades = [
-        GradeModel(subject: "Matematica", value: 8.5, date: "30 Ago", type: "Scritto"),
-        GradeModel(subject: "Italiano", value: 7.5, date: "28 Ago", type: "Orale"),
-        GradeModel(subject: "Inglese", value: 8.0, date: "25 Ago", type: "Pratico"),
-        GradeModel(subject: "Fisica", value: 7.0, date: "22 Ago", type: "Scritto")
-    ]
+    @ObservedObject var viewModel: StudentViewModel
 
     var body: some View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 20) {
-                    // Youthful Hero Header Card
                     VStack(alignment: .leading, spacing: 12) {
                         HStack {
                             VStack(alignment: .leading, spacing: 4) {
@@ -81,7 +61,7 @@ struct StudentHomeView: View {
                                     .font(.title)
                                     .fontWeight(.bold)
                                     .foregroundColor(.white)
-                                Text("Media Generale: \(String(format: "%.1f", gpaAverage))")
+                                Text("\(NSLocalizedString("gpa_average", comment: "")): \(String(format: "%.1f", viewModel.calculateGPA()))")
                                     .font(.subheadline)
                                     .padding(.horizontal, 10)
                                     .padding(.vertical, 4)
@@ -100,14 +80,13 @@ struct StudentHomeView: View {
                     .cornerRadius(20)
                     .shadow(color: Color.indigo.opacity(0.3), radius: 10, x: 0, y: 5)
 
-                    // Recent Grades Section
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Ultimi Voti Inseriti")
+                        Text(NSLocalizedString("grades_title", comment: ""))
                             .font(.headline)
                             .fontWeight(.bold)
                             .accessibilityAddTraits(.isHeader)
 
-                        ForEach(recentGrades) { grade in
+                        ForEach(viewModel.grades) { grade in
                             HStack {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(grade.subject)
@@ -118,13 +97,13 @@ struct StudentHomeView: View {
                                         .foregroundColor(.secondary)
                                 }
                                 Spacer()
-                                Text(String(format: "%.1f", grade.value))
+                                Text(String(format: "%.1f", grade.grade))
                                     .font(.headline)
                                     .fontWeight(.bold)
                                     .foregroundColor(.white)
                                     .padding(.horizontal, 12)
                                     .padding(.vertical, 6)
-                                    .background(grade.value >= 6.0 ? Color.green : Color.red)
+                                    .background(grade.grade >= 6.0 ? Color.green : Color.red)
                                     .cornerRadius(10)
                             }
                             .padding()
@@ -135,7 +114,7 @@ struct StudentHomeView: View {
                 }
                 .padding()
             }
-            .navigationTitle("La Mia Dashboard")
+            .navigationTitle(NSLocalizedString("dashboard_title", comment: ""))
             .background(Color(UIColor.systemGroupedBackground).ignoresSafeArea())
         }
     }
@@ -143,31 +122,24 @@ struct StudentHomeView: View {
 
 // 2. Grades View
 struct StudentGradesView: View {
-    let allGrades = [
-        GradeModel(subject: "Matematica", value: 8.5, date: "30 Ago", type: "Scritto"),
-        GradeModel(subject: "Italiano", value: 8.0, date: "28 Ago", type: "Tema"),
-        GradeModel(subject: "Inglese", value: 9.0, date: "25 Ago", type: "Pratico"),
-        GradeModel(subject: "Fisica", value: 7.0, date: "22 Ago", type: "Scritto"),
-        GradeModel(subject: "Storia", value: 8.0, date: "18 Ago", type: "Orale"),
-        GradeModel(subject: "Filosofia", value: 8.5, date: "12 Ago", type: "Orale")
-    ]
+    @ObservedObject var viewModel: StudentViewModel
 
     var body: some View {
         NavigationView {
             List {
-                Section(header: Text("Riepilogo Quadrimestre")) {
+                Section(header: Text("Riepilogo Database")) {
                     HStack {
-                        Text("Media Voti Totale")
+                        Text(NSLocalizedString("gpa_average", comment: ""))
                             .fontWeight(.semibold)
                         Spacer()
-                        Text("7.9")
+                        Text(String(format: "%.1f", viewModel.calculateGPA()))
                             .fontWeight(.bold)
                             .foregroundColor(.purple)
                     }
                 }
 
-                Section(header: Text("Tutte le Valutazioni")) {
-                    ForEach(allGrades) { grade in
+                Section(header: Text(NSLocalizedString("grades_title", comment: ""))) {
+                    ForEach(viewModel.grades) { grade in
                         HStack {
                             VStack(alignment: .leading) {
                                 Text(grade.subject)
@@ -177,38 +149,36 @@ struct StudentGradesView: View {
                                     .foregroundColor(.secondary)
                             }
                             Spacer()
-                            Text(String(format: "%.1f", grade.value))
+                            Text(String(format: "%.1f", grade.grade))
                                 .fontWeight(.bold)
-                                .foregroundColor(grade.value >= 6 ? .green : .red)
+                                .foregroundColor(grade.grade >= 6 ? .green : .red)
                         }
                     }
                 }
             }
-            .navigationTitle("I Miei Voti")
+            .navigationTitle(NSLocalizedString("grades_title", comment: ""))
         }
     }
 }
 
 // 3. Agenda View
 struct StudentAgendaView: View {
-    @State private var tasks = [
-        HomeworkModel(subject: "Matematica", description: "Esercizi pag 142 disequazioni esponenziali", dueDate: "Domani", isDone: false),
-        HomeworkModel(subject: "Fisica", description: "Relazione moto rettilineo uniforme", dueDate: "Tra 2 giorni", isDone: false),
-        HomeworkModel(subject: "Italiano", description: "Capitolo 8 I Promessi Sposi", dueDate: "Tra 3 giorni", isDone: true)
-    ]
+    @ObservedObject var viewModel: StudentViewModel
 
     var body: some View {
         NavigationView {
             List {
-                ForEach($tasks) { $task in
+                ForEach(viewModel.homework) { task in
                     HStack {
-                        Image(systemName: task.isDone ? "checkmark.circle.fill" : "circle")
-                            .foregroundColor(task.isDone ? .green : .gray)
-                            .onTapGesture { task.isDone.toggle() }
+                        Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
+                            .foregroundColor(task.isCompleted ? .green : .gray)
+                            .onTapGesture {
+                                _ = viewModel.toggleHomework(id: task.id)
+                            }
                         VStack(alignment: .leading) {
                             Text(task.subject)
                                 .fontWeight(.semibold)
-                            Text(task.description)
+                            Text(task.taskDescription)
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                             Text("Scadenza: \(task.dueDate)")
@@ -219,7 +189,7 @@ struct StudentAgendaView: View {
                     .padding(.vertical, 4)
                 }
             }
-            .navigationTitle("Compiti & Agenda")
+            .navigationTitle(NSLocalizedString("agenda_title", comment: ""))
         }
     }
 }
@@ -260,32 +230,28 @@ struct StudentAttendanceView: View {
                     }
                 }
             }
-            .navigationTitle("Presenze & Assenze")
+            .navigationTitle(NSLocalizedString("attendance_title", comment: ""))
         }
     }
 }
 
 // 5. Report Card View
 struct StudentReportCardView: View {
-    let reportGrades = [
-        ("Italiano", 8), ("Latino", 7), ("Inglese", 8),
-        ("Storia", 8), ("Matematica", 8), ("Fisica", 7),
-        ("Scienze", 8), ("Arte", 9), ("Scienze Motorie", 9)
-    ]
+    @ObservedObject var viewModel: StudentViewModel
 
     var body: some View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 16) {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Documento di Valutazione Finale")
+                        Text("Documento di Valutazione Ufficiale")
                             .font(.headline)
                             .fontWeight(.bold)
                             .foregroundColor(.white)
-                        Text("Esito Scrutinio: PROMOSSO / AMMESSO")
+                        Text("Esito Scrutinio: AMMESSO / PROMOSSO")
                             .font(.subheadline)
                             .foregroundColor(.white.opacity(0.9))
-                        Text("Condotta: 9 • Credito: 8")
+                        Text("Media Voti: \(String(format: "%.1f", viewModel.calculateGPA()))")
                             .font(.caption)
                             .foregroundColor(.white.opacity(0.8))
                     }
@@ -294,16 +260,16 @@ struct StudentReportCardView: View {
                     .background(Color.purple)
                     .cornerRadius(16)
 
-                    ForEach(reportGrades, id: \.0) { subject, grade in
+                    ForEach(viewModel.grades) { grade in
                         HStack {
-                            Text(subject).fontWeight(.medium)
+                            Text(grade.subject).fontWeight(.medium)
                             Spacer()
-                            Text("\(grade)")
+                            Text(String(format: "%.1f", grade.grade))
                                 .fontWeight(.bold)
                                 .foregroundColor(.white)
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 4)
-                                .background(grade >= 6 ? Color.green : Color.red)
+                                .background(grade.grade >= 6 ? Color.green : Color.red)
                                 .cornerRadius(8)
                         }
                         .padding()
@@ -326,7 +292,7 @@ struct StudentReportCardView: View {
                 }
                 .padding()
             }
-            .navigationTitle("La Mia Pagella")
+            .navigationTitle(NSLocalizedString("report_card_title", comment: ""))
             .background(Color(UIColor.systemGroupedBackground).ignoresSafeArea())
         }
     }

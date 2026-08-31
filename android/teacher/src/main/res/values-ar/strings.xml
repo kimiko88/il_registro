@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">السجل المدرسي - المعلم</string>
+    <string name="teacher_dashboard_title">سجل الفصل</string>
+    <string name="sign_hour">توقيع الحصة</string>
+    <string name="take_attendance">تسجيل الحضور</string>
+    <string name="add_grade">إضافة درجة</string>
+    <string name="scrutiny_board">لوحة التقييم النهائي</string>
+    <string name="select_class">الفصل المختار:</string>
+    <string name="signed_hours_today">الحصص الموقعة اليوم</string>
+</resources>

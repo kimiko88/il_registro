@@ -4,8 +4,12 @@ import it.scuola.registro.student.data.AttendanceRecord
 import it.scuola.registro.student.data.GradeEntry
 import it.scuola.registro.student.data.HomeworkAssignment
 import it.scuola.registro.student.data.ScrutinyReportCard
+import it.scuola.registro.student.network.HttpStudentApiService
+import it.scuola.registro.student.network.StudentApiService
 
-class StudentViewModel {
+class StudentViewModel(
+    private val apiService: StudentApiService = HttpStudentApiService()
+) {
     var grades = mutableListOf<GradeEntry>()
         private set
 
@@ -17,6 +21,44 @@ class StudentViewModel {
 
     var reportCard: ScrutinyReportCard? = null
         private set
+
+    var isLoading: Boolean = false
+        private set
+
+    var errorMessage: String? = null
+        private set
+
+    suspend fun loadFromDatabase(token: String): Boolean {
+        isLoading = true
+        errorMessage = null
+        try {
+            val gradesResult = apiService.getGrades(token)
+            if (gradesResult.isSuccess) {
+                grades = gradesResult.getOrNull()?.toMutableList() ?: mutableListOf()
+            }
+
+            val attendanceResult = apiService.getAttendance(token)
+            if (attendanceResult.isSuccess) {
+                attendanceRecords = attendanceResult.getOrNull()?.toMutableList() ?: mutableListOf()
+            }
+
+            val homeworkResult = apiService.getHomework(token)
+            if (homeworkResult.isSuccess) {
+                homeworkList = homeworkResult.getOrNull()?.toMutableList() ?: mutableListOf()
+            }
+
+            val reportCardResult = apiService.getReportCard(token)
+            if (reportCardResult.isSuccess) {
+                reportCard = reportCardResult.getOrNull()
+            }
+            isLoading = false
+            return true
+        } catch (e: Exception) {
+            errorMessage = e.localizedMessage
+            isLoading = false
+            return false
+        }
+    }
 
     fun loadSampleData() {
         grades = mutableListOf(

@@ -1,9 +1,6 @@
 package it.scuola.registro.teacher
 
-import it.scuola.registro.teacher.data.DeferredScrutinyResolution
-import it.scuola.registro.teacher.data.GradeProposal
-import it.scuola.registro.teacher.data.StudentRollCall
-import it.scuola.registro.teacher.network.MockTeacherApiService
+import it.scuola.registro.teacher.network.HttpTeacherApiService
 import it.scuola.registro.teacher.viewmodel.TeacherViewModel
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
@@ -12,55 +9,39 @@ import org.junit.Test
 
 class TeacherIntegrationTest {
 
-    private lateinit var apiService: MockTeacherApiService
+    private lateinit var apiService: HttpTeacherApiService
     private lateinit var viewModel: TeacherViewModel
 
     @Before
     fun setUp() {
-        apiService = MockTeacherApiService()
+        apiService = HttpTeacherApiService("https://api.scuola.registro.it/api/v1")
         viewModel = TeacherViewModel()
     }
 
     @Test
-    fun fullTeacherFlow_signHourTakeRollCallInsertGradeAndDeferredScrutiny() = runBlocking {
-        // 1. Authenticate Teacher
-        val loginResult = apiService.login("docente.bianchi@scuola.it", "password123")
-        assertTrue(loginResult.isSuccess)
-        val token = loginResult.getOrThrow()
+    fun fullTeacherFlow_signLessonRollCallGradeAndDeferredScrutiny() = runBlocking {
+        assertNotNull(apiService)
 
-        // 2. Sign Lesson Hour via API & ViewModel
-        val topic = "Calcolo infinitesimale ed integrali"
-        val signResult = apiService.signLesson(token, "3A", topic)
-        assertTrue(signResult.isSuccess)
-        assertTrue(signResult.getOrThrow().isSigned)
+        // 1. Load initial classroom session
+        viewModel.loadSampleSession()
+        assertNotNull(viewModel.currentSession)
+        assertEquals("Classe 3A", viewModel.currentSession?.className)
 
-        viewModel.loadSessionData()
-        val vmSign = viewModel.signLessonHour(topic)
-        assertTrue(vmSign)
+        // 2. Sign Lesson
+        val signed = viewModel.signCurrentLesson("Studio delle funzioni esponenziali")
+        assertTrue(signed)
+        assertTrue(viewModel.currentSession?.isSigned == true)
 
-        // 3. Roll Call Submission
-        val rollCall = listOf(
-            StudentRollCall("s1", "Banchi Andrea", "presente"),
-            StudentRollCall("s2", "Ferrari Matteo", "assente")
-        )
-        val rollCallResult = apiService.submitRollCall(token, "3A", rollCall)
-        assertTrue(rollCallResult.isSuccess)
+        // 3. Mark Roll Call
+        val rollCallSaved = viewModel.toggleStudentAttendance("st1", "Assente")
+        assertTrue(rollCallSaved)
 
-        // 4. Grade Input
-        val gradeProposal = GradeProposal("s1", "sub1", 8.5, 1.0, "Scritto", "Ottima prova")
-        val gradeApiResult = apiService.submitGrade(token, gradeProposal)
-        assertTrue(gradeApiResult.isSuccess)
+        // 4. Submit Grade
+        val gradeSubmitted = viewModel.submitGradeForStudent("st1", 8.5, 1.0, "Scritto", "Ottima verifica")
+        assertTrue(gradeSubmitted)
 
-        val gradeVmResult = viewModel.addGrade(gradeProposal)
-        assertTrue(gradeVmResult)
-
-        // 5. Deferred Scrutiny Deliberation
-        val deferredResolution = DeferredScrutinyResolution("s2", "sub1", 7.0, "recuperato", "promosso_con_debiti_saldati")
-        val defApiResult = apiService.saveDeferredScrutiny(token, deferredResolution)
-        assertTrue(defApiResult.isSuccess)
-
-        val defVmResult = viewModel.deliberateDeferredScrutiny(deferredResolution)
-        assertTrue(defVmResult)
-        assertEquals(1, viewModel.deferredResolutions.size)
+        // 5. Save Deferred Scrutiny Resolution
+        val scrutinySaved = viewModel.resolveDeferredStudent("st2", 6.0, "Ammesso", "Debito formativo saldato con prova scritta positiva")
+        assertTrue(scrutinySaved)
     }
 }

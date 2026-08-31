@@ -1,70 +1,100 @@
 import SwiftUI
 
-struct TeacherDigitalSignatureView: View {
+public struct DocumentToSignModel: Identifiable, Equatable {
+    public let id: String
+    public let title: String
+    public let subtitle: String
+    public var isSigned: Bool
+
+    public init(id: String = UUID().uuidString, title: String, subtitle: String, isSigned: Bool = false) {
+        self.id = id
+        self.title = title
+        self.subtitle = subtitle
+        self.isSigned = isSigned
+    }
+}
+
+public struct TeacherDigitalSignatureView: View {
+    public var documents: [DocumentToSignModel]
     @State private var showingOtpAlert = false
     @State private var otpCode = ""
-    @State private var isSigned = false
+    @State private var signedDocIds: Set<String> = []
 
-    var body: some View {
+    public init(documents: [DocumentToSignModel] = []) {
+        self.documents = documents
+    }
+
+    public var body: some View {
         NavigationView {
             List {
-                Section(header: Text("Firma Elettronica Avanzata (CAD)")) {
+                Section(header: Text(NSLocalizedString("teacher_dashboard_title", comment: ""))) {
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("Verbali di Scrutinio e Registri")
+                        Text(NSLocalizedString("sign_hour", comment: ""))
                             .font(.headline)
-                        Text("Firma collegiale PAdES con validità legale probatoria.")
+                        Text(NSLocalizedString("scrutiny_board", comment: ""))
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
                     .padding(.vertical, 4)
                 }
 
-                Section(header: Text("Documenti da Firmare")) {
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack {
-                            Text("Verbale Scrutinio 3ª A")
-                                .fontWeight(.bold)
-                            Spacer()
-                            Text(isSigned ? "Firmato (PAdES)" : "In Attesa")
-                                .font(.caption2)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(isSigned ? Color.green.opacity(0.2) : Color.orange.opacity(0.2))
-                                .foregroundColor(isSigned ? .green : .orange)
-                                .cornerRadius(4)
-                        }
-                        Text("Scrutinio Finale Giugno • 11/12 Docenti Firmati")
-                            .font(.subheadline)
+                Section(header: Text("Documenti")) {
+                    if documents.isEmpty {
+                        Text(NSLocalizedString("select_class", comment: ""))
+                            .font(.caption)
                             .foregroundColor(.secondary)
+                    } else {
+                        ForEach(documents) { doc in
+                            let signed = doc.isSigned || signedDocIds.contains(doc.id)
+                            VStack(alignment: .leading, spacing: 6) {
+                                HStack {
+                                    Text(doc.title)
+                                        .fontWeight(.bold)
+                                    Spacer()
+                                    Text(signed ? "Firmato (PAdES)" : "In Attesa")
+                                        .font(.caption2)
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 2)
+                                        .background(signed ? Color.green.opacity(0.2) : Color.orange.opacity(0.2))
+                                        .foregroundColor(signed ? .green : .orange)
+                                        .cornerRadius(4)
+                                }
+                                Text(doc.subtitle)
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
 
-                        if !isSigned {
-                            Button(action: { showingOtpAlert = true }) {
-                                Label("Firma con Biometria / OTP", systemImage: "signature")
+                                if !signed {
+                                    Button(action: { showingOtpAlert = true }) {
+                                        Label(NSLocalizedString("sign_hour", comment: ""), systemImage: "signature")
+                                    }
+                                    .buttonStyle(.borderedProminent)
+                                    .padding(.top, 4)
+                                }
                             }
-                            .buttonStyle(.borderedProminent)
-                            .padding(.top, 4)
+                            .padding(.vertical, 4)
                         }
                     }
-                    .padding(.vertical, 4)
                 }
             }
-            .navigationTitle("Firma Verbali")
+            .navigationTitle(NSLocalizedString("sign_hour", comment: ""))
             .sheet(isPresented: $showingOtpAlert) {
                 NavigationView {
                     Form {
-                        Section(header: Text("Inserimento OTP di Sicurezza")) {
-                            TextField("Codice a 6 cifre", text: $otpCode)
+                        Section(header: Text("OTP")) {
+                            TextField("OTP", text: $otpCode)
                                 .keyboardType(.numberPad)
                         }
                     }
-                    .navigationTitle("Autorizzazione Firma")
+                    .navigationTitle("OTP")
                     .toolbar {
                         ToolbarItem(placement: .cancellationAction) {
                             Button("Annulla") { showingOtpAlert = false }
                         }
                         ToolbarItem(placement: .confirmationAction) {
-                            Button("Apponi Firma") {
-                                isSigned = true
+                            Button("OK") {
+                                if let first = documents.first {
+                                    signedDocIds.insert(first.id)
+                                }
                                 showingOtpAlert = false
                             }
                         }
