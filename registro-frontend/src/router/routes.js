@@ -106,6 +106,7 @@ export default [
             { path: 'secretary/meetings', component: () => import('@/pages/secretary/Meetings.vue'), meta: { title: 'Organizzazione Riunioni', roles: ['secretary'] } },
             { path: 'secretary/certificates', component: () => import('@/pages/secretary/Certificates.vue'), meta: { title: 'Certificati & Attestati', roles: ['secretary', 'admin', 'superadmin', 'principal', 'vice_principal'] } },
             { path: 'secretary/substitutions', component: () => import('@/pages/secretary/Substitutions.vue'), meta: { title: 'Gestione Sostituzioni Docenti', roles: ['secretary', 'admin', 'superadmin', 'principal', 'vice_principal'] } },
+            { path: 'secretary/sidi', component: () => import('@/pages/secretary/SidiExports.vue'), meta: { title: 'Flussi SIDI (MIM)', roles: ['secretary', 'admin', 'superadmin', 'principal', 'vice_principal'] } },
             { path: 'secretary/students/:id/fascicolo', component: () => import('@/pages/secretary/FascicoloStudente.vue'), meta: { title: 'Fascicolo Studente', roles: ['secretary', 'principal', 'vice_principal'] } },
 
             // Teacher Routes (Supports both 'teacher' and 'coordinator')
