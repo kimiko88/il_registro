@@ -39,11 +39,11 @@ func TestGetLimiter_RaceConditionSafety(t *testing.T) {
 
 func TestSecurityHeaders_CSPNoUnsafeInlineAndSanitizedBackendURL(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	os.Setenv("BACKEND_URL", "http://api.example.com; script-src 'unsafe-inline'")
-	os.Setenv("BACKEND_WS_URL", "ws://api.example.com/ws\n")
+	_ = os.Setenv("BACKEND_URL", "http://api.example.com; script-src 'unsafe-inline'")
+	_ = os.Setenv("BACKEND_WS_URL", "ws://api.example.com/ws\n")
 	defer func() {
-		os.Unsetenv("BACKEND_URL")
-		os.Unsetenv("BACKEND_WS_URL")
+		_ = os.Unsetenv("BACKEND_URL")
+		_ = os.Unsetenv("BACKEND_WS_URL")
 	}()
 
 	r := gin.New()

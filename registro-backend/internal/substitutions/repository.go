@@ -97,7 +97,7 @@ func (r *PostgresRepository) ListBySchool(ctx context.Context, schoolID, date st
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var list []*Substitution
 	for rows.Next() {
@@ -155,7 +155,7 @@ func (r *PostgresRepository) ListByTeacher(ctx context.Context, teacherID string
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var list []*Substitution
 	for rows.Next() {
