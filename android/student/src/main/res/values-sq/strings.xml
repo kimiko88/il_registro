@@ -1,14 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Regjistri Shkollor - Nxënës</string>
+    <string name="app_name">Regjistri - Nxënësi</string>
+    <string name="dashboard_title">Paneli Im</string>
     <string name="welcome_student">Përshëndetje, %1$s!</string>
-    <string name="gpa_average">Mesatarja e përgjithshme</string>
-    <string name="absences_count">Mungesat</string>
-    <string name="lates_count">Vonesat</string>
-    <string name="recent_grades">Notat e fundit</string>
-    <string name="today_lessons">Orari i mësimit sot</string>
-    <string name="dashboard_title">Paneli im</string>
-    <string name="grades_title">Notat e mia</string>
-    <string name="agenda_title">Detyrat dhe axhenda</string>
-    <string name="attendance_title">Pjesëmarrja dhe mungesat</string>
-    <string name="report_card_title">Dëftesa zyrtare</string>
+    <string name="grades_title">Notat e Mia</string>
+    <string name="agenda_title">Detyrat &amp; Axhenda</string>
+    <string name="attendance_title">Pjesëmarrja &amp; Mungesat</string>
+    <string name="report_card_title">Dëftesa Ime</string>
+    <string name="gpa_average">Mesatarja e Përgjithshme</string>
+    <string name="recent_grades">Notat e Fundit</string>
+    <string name="today_lessons">Orari i Sotëm</string>
+    <string name="absences_count">Mungesa Totale</string>
+    <string name="lates_count">Vonesa Totale</string>
+    <string name="no_data">Nuk ka të dhëna të disponueshme</string>
+    <string name="login_subtitle">Hyni në llogarinë tuaj</string>
+    <string name="email_label">Email Nxënësi</string>
+    <string name="password_label">Fjalëkalimi</string>
+    <string name="btn_login">HYR</string>
+    <string name="err_enter_credentials">Vendosni email-in dhe fjalëkalimin</string>
+    <string name="logout">Dil</string>
+    <string name="settings">Cilësimet</string>
+    <string name="badges_title">Distinktivët e Mi</string>
+    <string name="pcto_title">Programet e Praktikës</string>
 </resources>

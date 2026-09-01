@@ -151,7 +151,7 @@ func (r *repository) BatchCreate(ctx context.Context, grades []*Grade) error {
 	if err != nil {
 		return fmt.Errorf("prepare batch statement error: %w", err)
 	}
-	defer stmt.Close()
+	defer func() { _ = stmt.Close() }()
 
 	for _, grade := range grades {
 		err := stmt.QueryRowContext(ctx,
@@ -423,7 +423,6 @@ func (r *repository) FindWithFilter(ctx context.Context, filter GradeFilter) ([]
 	if filter.IsPublished != nil {
 		conditions = append(conditions, fmt.Sprintf("is_published = $%d", argIdx))
 		args = append(args, *filter.IsPublished)
-		argIdx++
 	}
 
 	if len(conditions) > 0 {
@@ -612,17 +611,7 @@ func (r *repository) scanGradesCtx(ctx context.Context, query string, args ...in
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
-	return r.scanRows(rows)
-}
-
-// scanGrades è mantenuto per retrocompatibilità interna dove ctx non è disponibile.
-func (r *repository) scanGrades(query string, args ...interface{}) ([]Grade, error) {
-	rows, err := r.db.Query(query, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	return r.scanRows(rows)
 }
 
@@ -902,7 +891,7 @@ func (r *repository) GetTeacherNamesByClass(ctx context.Context, classID string)
 	if err != nil {
 		return teacherMap, err
 	}
-	defer tRows.Close()
+	defer func() { _ = tRows.Close() }()
 	for tRows.Next() {
 		var subID, tName string
 		if scanErr := tRows.Scan(&subID, &tName); scanErr == nil {
@@ -924,7 +913,7 @@ func (r *repository) GetSubjectNamesMap(ctx context.Context, schoolID string) (m
 	if err != nil {
 		return subjectNameMap, err
 	}
-	defer sRows.Close()
+	defer func() { _ = sRows.Close() }()
 	for sRows.Next() {
 		var id, name string
 		if scanErr := sRows.Scan(&id, &name); scanErr == nil {

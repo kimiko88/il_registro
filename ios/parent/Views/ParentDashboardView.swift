@@ -26,17 +26,20 @@ public struct ParentColloquioSlotModel: Identifiable, Equatable {
 
 public struct ParentDashboardView: View {
     @ObservedObject public var viewModel: ParentViewModel
+    public var token: String
     @State private var selectedTab = 0
     public var grades: [ParentGradeDisplayModel] = []
     public var colloquioSlots: [ParentColloquioSlotModel] = []
     public var circulars: [String] = []
 
     public init(
+        token: String = "",
         viewModel: ParentViewModel = ParentViewModel(),
         grades: [ParentGradeDisplayModel] = [],
         colloquioSlots: [ParentColloquioSlotModel] = [],
         circulars: [String] = []
     ) {
+        self.token = token
         self.viewModel = viewModel
         self.grades = grades
         self.colloquioSlots = colloquioSlots
@@ -46,7 +49,7 @@ public struct ParentDashboardView: View {
     public var body: some View {
         TabView(selection: $selectedTab) {
             ParentHomeTab(viewModel: viewModel)
-                .tabItem { Label(NSLocalizedString("my_children", comment: ""), systemImage: "figure.2.and.child.holdinghands") }
+                .tabItem { Label(NSLocalizedString("parent_dashboard_title", comment: ""), systemImage: "house.fill") }
                 .tag(0)
 
             ParentGradesTab(grades: grades)
@@ -66,6 +69,11 @@ public struct ParentDashboardView: View {
                 .tag(4)
         }
         .tint(Color(red: 0.05, green: 0.58, blue: 0.53))
+        .task {
+            if !token.isEmpty {
+                await viewModel.loadFromDatabase(token: token)
+            }
+        }
     }
 }
 

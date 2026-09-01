@@ -2,7 +2,9 @@ import SwiftUI
 
 struct LoginView: View {
     @Binding var isLoggedIn: Bool
+    @Binding var token: String
     @Binding var studentName: String
+    var apiService: StudentAPIServiceProtocol = HttpStudentAPIService()
     
     @State private var email = ""
     @State private var password = ""
@@ -63,8 +65,23 @@ struct LoginView: View {
                             return
                         }
                         isLoading = true
-                        studentName = "Mario Rossi"
-                        isLoggedIn = true
+                        errorMessage = nil
+                        Task {
+                            do {
+                                let receivedToken = try await apiService.login(email: email.trimmingCharacters(in: .whitespacesAndNewlines), password: password)
+                                await MainActor.run {
+                                    self.token = receivedToken
+                                    self.studentName = "Studente"
+                                    self.isLoggedIn = true
+                                    self.isLoading = false
+                                }
+                            } catch {
+                                await MainActor.run {
+                                    self.errorMessage = error.localizedDescription
+                                    self.isLoading = false
+                                }
+                            }
+                        }
                     }) {
                         if isLoading {
                             ProgressView()
@@ -80,6 +97,7 @@ struct LoginView: View {
                                 .cornerRadius(12)
                         }
                     }
+                    .disabled(isLoading)
                 }
                 .padding(24)
                 .background(Color(UIColor.secondarySystemGroupedBackground).opacity(0.95))

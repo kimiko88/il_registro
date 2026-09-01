@@ -2,10 +2,12 @@ import SwiftUI
 
 public struct SecretaryDashboardView: View {
     @ObservedObject public var viewModel: SecretaryViewModel
+    public var token: String
     @State private var selectedTab = 0
     public var auditLogs: [String] = []
 
-    public init(viewModel: SecretaryViewModel = SecretaryViewModel(), auditLogs: [String] = []) {
+    public init(token: String = "", viewModel: SecretaryViewModel = SecretaryViewModel(), auditLogs: [String] = []) {
+        self.token = token
         self.viewModel = viewModel
         self.auditLogs = auditLogs
     }
@@ -33,6 +35,11 @@ public struct SecretaryDashboardView: View {
                 .tag(4)
         }
         .tint(Color.purple)
+        .task {
+            if !token.isEmpty {
+                await viewModel.loadFromDatabase(token: token)
+            }
+        }
     }
 }
 

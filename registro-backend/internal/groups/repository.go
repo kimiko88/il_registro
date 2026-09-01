@@ -253,7 +253,7 @@ func (r *repository) AddStudents(ctx context.Context, groupID string, studentIDs
 	if err != nil {
 		return err
 	}
-	defer stmt.Close()
+	defer func() { _ = stmt.Close() }()
 
 	for _, sid := range studentIDs {
 		if sid == "" {

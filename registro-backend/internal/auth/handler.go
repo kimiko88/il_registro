@@ -99,10 +99,7 @@ func setRefreshTokenCookie(c *gin.Context, token string, maxAge int) {
 	ginMode := os.Getenv("GIN_MODE")
 	cookieSecure := os.Getenv("COOKIE_SECURE")
 
-	isSecure := false
-	if cookieSecure == "true" || appEnv == "production" || ginMode == "release" || isHTTPSRequest(c) {
-		isSecure = true
-	}
+	isSecure := cookieSecure == "true" || appEnv == "production" || ginMode == "release" || isHTTPSRequest(c)
 	if cookieSecure == "false" && appEnv != "production" && ginMode != "release" {
 		isSecure = false
 	}

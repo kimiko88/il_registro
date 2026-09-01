@@ -176,7 +176,7 @@ func (h *FascicoloHandler) GetFascicolo(c *gin.Context) {
 		if err != nil {
 			return
 		}
-		defer rows.Close()
+		defer func() { _ = rows.Close() }()
 		var items []VotoItem
 		for rows.Next() {
 			var v VotoItem

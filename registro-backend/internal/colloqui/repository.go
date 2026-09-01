@@ -447,7 +447,7 @@ func (r *PostgresRepository) CreateGeneralMeeting(ctx context.Context, m *Genera
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	query := `
 		INSERT INTO general_parent_meetings (
@@ -554,7 +554,7 @@ func (r *PostgresRepository) GetGeneralMeeting(ctx context.Context, id string) (
 		ORDER BY u.last_name ASC
 	`, id)
 	if err == nil {
-		defer slotRows.Close()
+		defer func() { _ = slotRows.Close() }()
 		for slotRows.Next() {
 			var s GeneralMeetingTeacherSlot
 			if err := slotRows.Scan(&s.ID, &s.MeetingID, &s.TeacherID, &s.TeacherName, &s.SubjectName, &s.RoomOrTable, &s.MeetURL, &s.MaxBookings, &s.BookedCount); err != nil {
@@ -577,7 +577,7 @@ func (r *PostgresRepository) BookQueueTicket(ctx context.Context, t *GeneralMeet
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	// Get next progressive ticket number for this teacher & meeting
 	var maxTicket sql.NullInt64

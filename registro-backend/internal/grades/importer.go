@@ -102,7 +102,7 @@ func ParseXLSXGrades(r io.Reader, semester int) ([]ImportRequest, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	rows, err := f.GetRows("Grades")
 	if err != nil {

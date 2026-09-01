@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Registro - Studente</string>
     <string name="dashboard_title">La Mia Dashboard</string>
@@ -12,4 +13,13 @@
     <string name="absences_count">Assenze Totali</string>
     <string name="lates_count">Ritardi Totali</string>
     <string name="no_data">Nessun dato disponibile</string>
+    <string name="login_subtitle">Accedi al tuo account</string>
+    <string name="email_label">Email Studente</string>
+    <string name="password_label">Password</string>
+    <string name="btn_login">ACCEDI</string>
+    <string name="err_enter_credentials">Inserisci email e password</string>
+    <string name="logout">Disconnetti</string>
+    <string name="settings">Impostazioni</string>
+    <string name="badges_title">I Miei Badge</string>
+    <string name="pcto_title">Percorsi PCTO</string>
 </resources>

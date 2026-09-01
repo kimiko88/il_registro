@@ -1,14 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Catalog Școlar - Elev</string>
-    <string name="welcome_student">Salut, %1$s!</string>
-    <string name="gpa_average">Media generală</string>
-    <string name="absences_count">Absențe</string>
-    <string name="lates_count">Întârzieri</string>
-    <string name="recent_grades">Ultimele note</string>
-    <string name="today_lessons">Orarul de azi</string>
-    <string name="dashboard_title">Panoul meu</string>
-    <string name="grades_title">Notele mele</string>
-    <string name="agenda_title">Teme și activități</string>
-    <string name="attendance_title">Prezență și absențe</string>
-    <string name="report_card_title">Foaia matricolă oficială</string>
+    <string name="app_name">Catalog - Elev</string>
+    <string name="dashboard_title">Panoul Meu</string>
+    <string name="welcome_student">Bună, %1$s!</string>
+    <string name="grades_title">Notele Mele</string>
+    <string name="agenda_title">Teme &amp; Agendă</string>
+    <string name="attendance_title">Prezențe &amp; Absențe</string>
+    <string name="report_card_title">Carnetul Meu de Note</string>
+    <string name="gpa_average">Media Generală</string>
+    <string name="recent_grades">Ultimele Note</string>
+    <string name="today_lessons">Orarul de Azi</string>
+    <string name="absences_count">Total Absențe</string>
+    <string name="lates_count">Total Întârzieri</string>
+    <string name="no_data">Nu există date disponibile</string>
+    <string name="login_subtitle">Conectează-te la contul tău</string>
+    <string name="email_label">Email Elev</string>
+    <string name="password_label">Parolă</string>
+    <string name="btn_login">CONECTARE</string>
+    <string name="err_enter_credentials">Introduceți emailul și parola</string>
+    <string name="logout">Deconectare</string>
+    <string name="settings">Setări</string>
+    <string name="badges_title">Insignele Mele</string>
+    <string name="pcto_title">Programe Stagii</string>
 </resources>

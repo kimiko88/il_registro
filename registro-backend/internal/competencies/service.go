@@ -176,7 +176,7 @@ func (r *Repository) GetByClass(ctx context.Context, classID, subjectID string) 
 		if err != nil {
 			return nil, err
 		}
-		defer evalRows.Close()
+		defer func() { _ = evalRows.Close() }()
 		evalMap := make(map[string]map[string]string)
 		for evalRows.Next() {
 			var stID, code, lvl string

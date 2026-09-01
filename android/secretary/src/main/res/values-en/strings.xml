@@ -1,10 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">School Register - Administration</string>
-    <string name="secretary_dashboard_title">Secretary &amp; Admin Panel</string>
+    <string name="app_name">Register - Secretary</string>
+    <string name="secretary_dashboard_title">Secretary Register</string>
     <string name="user_management">User Management</string>
     <string name="scrutiny_supervision">Scrutiny Supervision</string>
-    <string name="generate_certificates">Certificates Generation</string>
+    <string name="generate_certificates">Certificates &amp; Records</string>
     <string name="audit_logs">Audit Logs</string>
-    <string name="total_students">Enrolled Students</string>
-    <string name="total_teachers">Active Teachers</string>
+    <string name="create_user">Create New User</string>
+    <string name="download_pdf">Download PDF Minutes</string>
+    <string name="login_subtitle">Log in to the administrative panel</string>
+    <string name="email_label">Secretary Email</string>
+    <string name="password_label">Password</string>
+    <string name="btn_login">LOG IN TO PANEL</string>
+    <string name="err_enter_credentials">Enter email and password</string>
+    <string name="logout">Log out</string>
 </resources>

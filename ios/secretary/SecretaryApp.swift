@@ -3,13 +3,14 @@ import SwiftUI
 @main
 struct SecretaryApp: App {
     @State private var isLoggedIn = false
+    @State private var token = ""
 
     var body: some Scene {
         WindowGroup {
             if isLoggedIn {
-                SecretaryDashboardView()
+                SecretaryDashboardView(token: token)
             } else {
-                LoginView(isLoggedIn: $isLoggedIn)
+                LoginView(isLoggedIn: $isLoggedIn, token: $token)
             }
         }
     }

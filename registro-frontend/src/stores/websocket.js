@@ -81,7 +81,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
         // 1. Acquire single-use WS ticket via REST API (Bearer token in Authorization header)
         const baseUrl = getBaseURL()
 
-        let ticket = null
+        let ticket
         try {
             const controller = new AbortController()
             const timeoutId = setTimeout(() => controller.abort(), 5000)
@@ -109,7 +109,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
         }
 
         // 2. Build WebSocket URL with opaque ticket parameter
-        let wsUrl = ''
+        let wsUrl
         if (baseUrl.startsWith('http://') || baseUrl.startsWith('https://')) {
             wsUrl = `${baseUrl.replace(/^http/, 'ws')}/ws`
         } else if (baseUrl.startsWith('/')) {

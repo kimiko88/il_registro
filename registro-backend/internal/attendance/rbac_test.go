@@ -201,8 +201,6 @@ func (m *mockUserRepo) ChangePasswordTx(_ context.Context, _, _ string) error { 
 // Helpers
 // ---------------------------------------------------------------------------
 
-func strPtr(s string) *string { return &s }
-
 func makeService(r *mockRepo, u *mockUserRepo) Service {
 	return NewService(r, u, nil, nil)
 }

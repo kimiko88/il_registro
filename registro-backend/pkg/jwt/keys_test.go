@@ -62,7 +62,7 @@ func TestGetOrGenerateKeys_FromEnvVar(t *testing.T) {
 		t.Errorf("expected private key loaded from env to match")
 	}
 
-	if pubLoaded.N.Cmp(privKey.PublicKey.N) != 0 {
+	if pubLoaded.N.Cmp(privKey.N) != 0 {
 		t.Errorf("expected public key derived from env private key to match")
 	}
 }

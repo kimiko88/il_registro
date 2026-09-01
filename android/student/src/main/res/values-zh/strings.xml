@@ -1,14 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">电子成绩册 - 学生</string>
+    <string name="app_name">电子班级日志 - 学生</string>
+    <string name="dashboard_title">我的仪表板</string>
     <string name="welcome_student">你好，%1$s！</string>
+    <string name="grades_title">我的成绩</string>
+    <string name="agenda_title">作业与日程</string>
+    <string name="attendance_title">出勤与缺勤</string>
+    <string name="report_card_title">我的成绩单</string>
     <string name="gpa_average">平均成绩</string>
-    <string name="absences_count">缺勤次数</string>
-    <string name="lates_count">迟到次数</string>
     <string name="recent_grades">最新成绩</string>
     <string name="today_lessons">今日课程表</string>
-    <string name="dashboard_title">我的控制台</string>
-    <string name="grades_title">我的成绩</string>
-    <string name="agenda_title">家庭作业与日程</string>
-    <string name="attendance_title">出勤与请假</string>
-    <string name="report_card_title">官方成绩单</string>
+    <string name="absences_count">总缺勤次数</string>
+    <string name="lates_count">总迟到次数</string>
+    <string name="no_data">暂无可用数据</string>
+    <string name="login_subtitle">登录您的账户</string>
+    <string name="email_label">学生邮箱</string>
+    <string name="password_label">密码</string>
+    <string name="btn_login">登录</string>
+    <string name="err_enter_credentials">请输入邮箱和密码</string>
+    <string name="logout">登出</string>
+    <string name="settings">设置</string>
+    <string name="badges_title">我的徽章</string>
+    <string name="pcto_title">实习项目</string>
 </resources>

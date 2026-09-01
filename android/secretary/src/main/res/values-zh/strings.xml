@@ -1,10 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">电子登记册 - 教务秘书处</string>
-    <string name="secretary_dashboard_title">教务秘书处与管理控制台</string>
+    <string name="app_name">电子班级日志 - 教务秘书处</string>
+    <string name="secretary_dashboard_title">教务管理日志</string>
     <string name="user_management">用户管理</string>
-    <string name="scrutiny_supervision">期末评审监督</string>
-    <string name="generate_certificates">生成证明文件</string>
-    <string name="audit_logs">审计日志</string>
-    <string name="total_students">注册在校生</string>
-    <string name="total_teachers">在职教师</string>
+    <string name="scrutiny_supervision">期末评议监督</string>
+    <string name="generate_certificates">证书与证明文件</string>
+    <string name="audit_logs">系统审计日志</string>
+    <string name="create_user">创建新用户</string>
+    <string name="download_pdf">下载PDF会议纪要</string>
+    <string name="login_subtitle">登录管理控制台</string>
+    <string name="email_label">教务处邮箱</string>
+    <string name="password_label">密码</string>
+    <string name="btn_login">登录管理后台</string>
+    <string name="err_enter_credentials">请输入邮箱和密码</string>
+    <string name="logout">登出</string>
 </resources>

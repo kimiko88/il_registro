@@ -1,10 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">السجل المدرسي - المعلم</string>
-    <string name="teacher_dashboard_title">سجل الفصل</string>
-    <string name="sign_hour">توقيع الحصة</string>
-    <string name="take_attendance">تسجيل الحضور</string>
+    <string name="app_name">السجل - المعلم</string>
+    <string name="teacher_dashboard_title">سجل المعلم</string>
+    <string name="take_attendance">تفقد الحضور</string>
     <string name="add_grade">إضافة درجة</string>
-    <string name="scrutiny_board">لوحة التقييم النهائي</string>
-    <string name="select_class">الفصل المختار:</string>
-    <string name="signed_hours_today">الحصص الموقعة اليوم</string>
+    <string name="scrutiny_board">مجلس التقييم</string>
+    <string name="sign_hour">توقيع حصة الدرس</string>
+    <string name="lesson_topic">موضوع الدرس</string>
+    <string name="select_class">اختر الفصل</string>
+    <string name="login_subtitle">تسجيل الدخول إلى لوحة المعلم</string>
+    <string name="email_label">البريد الإلكتروني للمعلم</string>
+    <string name="password_label">كلمة المرور</string>
+    <string name="btn_login">تسجيل الدخول إلى السجل</string>
+    <string name="err_enter_credentials">أدخل البريد الإلكتروني وكلمة المرور</string>
+    <string name="logout">تسجيل الخروج</string>
+    <string name="save">حفظ</string>
+    <string name="cancel">إلغاء</string>
+    <string name="present">حاضر</string>
+    <string name="absent">غائب</string>
+    <string name="late">متأخر</string>
 </resources>

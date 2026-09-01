@@ -251,14 +251,14 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
   - **Firma Collegiale Docenti (FEA)**: Approvazione verbali di scrutinio con autenticazione biometrica e OTP su Web e Mobile (`TeacherDigitalSignatureScreen.kt` e `TeacherDigitalSignatureView.swift`).
   - **Firma Dirigente (FEQ) & Marca Temporale**: Time-Stamping RFC 3161 per opponibilità a terzi e conservazione sostitutiva a norma.
 
-- [x] **Integrazione Database Reale & Localizzazione 11 Lingue nelle App Mobile (Agosto 2026)**:
+- [x] **Integrazione Database Reale & Localizzazione 11 Lingue nelle App Mobile**:
   - **Zero Dati Mock & Client HTTP di Produzione**:
-    - **Android (Kotlin)**: Implementati i client `HttpStudentApiService`, `HttpParentApiService`, `HttpTeacherApiService`, `HttpSecretaryApiService` collegati agli endpoint REST del backend (`/api/v1/...`) con gestione token JWT `Bearer`.
-    - **iOS (Swift)**: Implementati i client `HttpStudentAPIService`, `HttpParentAPIService`, `HttpTeacherAPIService`, `HttpSecretaryAPIService` con `URLSession` asincrona (`async/await`).
-    - **ViewModels & Viste Reattive**: Aggiornati tutti i ViewModels e le schermate di Studente, Genitore, Docente e Segreteria per caricare e sincronizzare lo stato in tempo reale con il database relazionale PostgreSQL.
+    - **Android (Kotlin)**: Eliminati tutti i token mock e login fittizi in `LoginScreen.kt`, `MainActivity.kt` e `DashboardScreen` nei 4 moduli (`student`, `teacher`, `parent`, `secretary`). Autenticazione reale via `Http*ApiService` e caricamento dati via `loadFromDatabase(token)`.
+    - **iOS (Swift)**: Eliminati tutti i mock login in `LoginView.swift`, `*App.swift` e `*DashboardView.swift` nei 4 moduli (`student`, `teacher`, `parent`, `secretary`). Autenticazione reale via `Http*APIService` e caricamento asincrono via `.task { await viewModel.loadFromDatabase(token: token) }`.
   - **Localizzazione Completa in 11 Lingue**:
-    - Tutte le stringhe di interfaccia delle 4 app (Studente, Genitore, Docente, Segreteria) sono state tradotte e localizzate per **Android** (`values/strings.xml`, `values-en`, `values-es`, `values-fr`, `values-de`, `values-ro`, `values-sq`, `values-ar`, `values-zh`, `values-uk`, `values-ru`) e per **iOS** (`it.lproj`, `en.lproj`, `es.lproj`, `fr.lproj`, `de.lproj`, `ro.lproj`, `sq.lproj`, `ar.lproj`, `zh-Hans.lproj`, `uk.lproj`, `ru.lproj`).
-  - **Aggiornamento Dipendenze & Non-Regressione**:
-    - Aggiornate librerie: `quasar ^2.28.0`, `sass ^1.103.1`, `happy-dom ^20.11.6`, `vue-i18n ^11.4.10`, `eslint ^10.0.0`, `@eslint/js ^10.0.1`, `vue-router ^5.2.0`, `github.com/sirupsen/logrus v1.10.2`.
-    - **Validazione Automatica**: **100% test Go backend superati** (87 package) e **162/162 test file Vitest superati** (956 test unitari passati con successo).
+    - Generati e allineati al 100% tutti i file `strings.xml` per **Android** (`values`, `values-en`, `values-es`, `values-fr`, `values-de`, `values-ro`, `values-sq`, `values-ar`, `values-zh`, `values-uk`, `values-ru`) e `Localizable.strings` per **iOS** (`it.lproj`, `en.lproj`, `es.lproj`, `fr.lproj`, `de.lproj`, `ro.lproj`, `sq.lproj`, `ar.lproj`, `zh-Hans.lproj`, `uk.lproj`, `ru.lproj`).
+  - **Linting & Validazione Completa**:
+    - **ESLint**: 0 errori, 0 warning (`npx eslint src/`).
+    - **Vitest Frontend**: 162/162 suite superate, 959/959 test passati.
+    - **Go Backend**: 100% test superati (87 package).
 

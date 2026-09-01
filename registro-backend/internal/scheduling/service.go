@@ -49,15 +49,15 @@ type service struct {
 }
 
 func NewService(repo Repository, teacherRepo teachers.Repository, notif NotificationSender, calendar CalendarExporter, analytics AnalyticsTracker) Service {
-	var n NotificationSender = notif
+	n := notif
 	if n == nil {
 		n = NewNotificationService()
 	}
-	var c CalendarExporter = calendar
+	c := calendar
 	if c == nil {
 		c = NewCalendarService()
 	}
-	var a AnalyticsTracker = analytics
+	a := analytics
 	if a == nil {
 		a = NewAnalyticsService(repo)
 	}

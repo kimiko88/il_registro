@@ -23,7 +23,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     var isLoggedIn by remember { mutableStateOf(false) }
                     var authToken by remember { mutableStateOf<String?>(null) }
-                    var loggedInStudentName by remember { mutableStateOf("Mario Rossi") }
+                    var loggedInStudentName by remember { mutableStateOf("Studente") }
 
                     if (isLoggedIn) {
                         StudentDashboardScreen(

@@ -1,10 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Schulregister - Lehrkraft</string>
-    <string name="teacher_dashboard_title">Klassenbuch</string>
-    <string name="sign_hour">Unterrichtsstunde unterschreiben</string>
-    <string name="take_attendance">Anwesenheit erfassen</string>
-    <string name="add_grade">Note eintragen</string>
-    <string name="scrutiny_board">Notenkonferenz</string>
-    <string name="select_class">Ausgewählte Klasse:</string>
-    <string name="signed_hours_today">Heute signierte Stunden</string>
+    <string name="app_name">Klassenbuch - Lehrkraft</string>
+    <string name="teacher_dashboard_title">Lehrkraft-Register</string>
+    <string name="take_attendance">Anwesenheitskontrolle</string>
+    <string name="add_grade">Neue Note</string>
+    <string name="scrutiny_board">Zeugniskonferenz</string>
+    <string name="sign_hour">Unterrichtsstunde signieren</string>
+    <string name="lesson_topic">Unterrichtsthema</string>
+    <string name="select_class">Klasse auswählen</string>
+    <string name="login_subtitle">Melden Sie sich an</string>
+    <string name="email_label">Lehrer-E-Mail</string>
+    <string name="password_label">Passwort</string>
+    <string name="btn_login">INS KLASSENBUCH EINLOGGEN</string>
+    <string name="err_enter_credentials">E-Mail und Passwort eingeben</string>
+    <string name="logout">Abmelden</string>
+    <string name="save">Speichern</string>
+    <string name="cancel">Abbrechen</string>
+    <string name="present">Anwesend</string>
+    <string name="absent">Abwesend</string>
+    <string name="late">Verspätet</string>
 </resources>

@@ -478,10 +478,9 @@ const saveStudentScrutiny = async (studentId, silent = false) => {
 const saveAll = async () => {
   saving.value = true
   let successCount = 0
-  let totalCount = 0
   try {
     const studentIds = Object.keys(scrutinyData)
-    totalCount = studentIds.length
+    const totalCount = studentIds.length
     for (const sid of studentIds) {
       const ok = await saveStudentScrutiny(sid, true)
       if (ok) successCount++

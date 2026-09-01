@@ -108,7 +108,7 @@ func (r *postgresRepository) GetRecord(ctx context.Context, studentID, classID s
 	if err != nil {
 		return nil, err
 	}
-	defer gRows.Close()
+	defer func() { _ = gRows.Close() }()
 
 	for gRows.Next() {
 		var g ScrutinyGrade

@@ -102,7 +102,7 @@ func main() {
 	if err != nil {
 		logger.Log.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer database.Close()
+	defer func() { _ = database.Close() }()
 
 	// 4. Setup Authentication (Keys & Managers)
 	privateKey, publicKey, err := jwt.GetOrGenerateKeys("private_key.pem", "public_key.pem")
@@ -346,7 +346,7 @@ func main() {
 
 			redisAddr := fmt.Sprintf("%s:%s", cfg.Redis.Host, cfg.Redis.Port)
 			pdfWorkerClient := pdfworker.NewClient(redisAddr)
-			defer pdfWorkerClient.Close()
+			defer func() { _ = pdfWorkerClient.Close() }()
 
 			gradesH.SetPdfWorkerClient(pdfWorkerClient)
 			verbaliH.SetPdfWorkerClient(pdfWorkerClient)

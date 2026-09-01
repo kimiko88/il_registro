@@ -1,12 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">السجل المدرسي - أولياء الأمور</string>
-    <string name="parent_dashboard_title">متابعة الأبناء</string>
-    <string name="switch_child">اختر الابن:</string>
+    <string name="app_name">السجل - ولي الأمر</string>
+    <string name="parent_dashboard_title">بوابة أولياء الأمور</string>
+    <string name="my_children">أبنائي</string>
+    <string name="child_grades">درجات الابن</string>
+    <string name="pending_absences">الغيابات المعلقة لتبريرها</string>
+    <string name="book_colloqui">حجز موعد مقابلة</string>
+    <string name="switch_child">تبديل الابن</string>
     <string name="justify_absence">تبرير الغياب</string>
     <string name="book_colloquio">حجز مقابلة</string>
-    <string name="child_grades">درجات الابن</string>
-    <string name="child_attendance">الحضور والتبريرات</string>
-    <string name="pending_justifications">الغياب المعلق للتبرير</string>
-    <string name="upcoming_colloqui">المقابلات القادمة</string>
-    <string name="no_pending_justifications">لا يوجد غياب معلق للتبرير</string>
+    <string name="pending_justifications">التبريرات المعلقة</string>
+    <string name="no_pending_justifications">لا توجد غيابات معلقة للتبرير</string>
+    <string name="login_subtitle">تسجيل الدخول إلى بوابة أولياء الأمور</string>
+    <string name="email_label">البريد الإلكتروني لولي الأمر</string>
+    <string name="password_label">كلمة المرور</string>
+    <string name="btn_login">تسجيل الدخول إلى البوابة</string>
+    <string name="err_enter_credentials">أدخل البريد الإلكتروني وكلمة المرور</string>
+    <string name="logout">تسجيل الخروج</string>
 </resources>

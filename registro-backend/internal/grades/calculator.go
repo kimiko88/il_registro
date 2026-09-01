@@ -154,7 +154,8 @@ func (c *Calculator) calculateStandardDeviationFromValues(vals []float64, mean f
 	}
 	var varianceSum float64
 	for _, v := range vals {
-		varianceSum += math.Pow(v-mean, 2)
+		diff := v - mean
+		varianceSum += diff * diff
 	}
 	return math.Sqrt(varianceSum / float64(len(vals)-1))
 }
@@ -194,7 +195,7 @@ func (c *Calculator) CalculateBellCurve(grades []Grade) (mean, stdDev, skewness,
 	var skewSum, kurtSum float64
 	for _, v := range vals {
 		z := (v - mean) / stdDev
-		skewSum += math.Pow(z, 3)
+		skewSum += z * z * z
 		kurtSum += math.Pow(z, 4)
 	}
 
@@ -206,7 +207,7 @@ func (c *Calculator) CalculateBellCurve(grades []Grade) (mean, stdDev, skewness,
 	// in the correction term). Return 0 rather than mixing population and
 	// sample estimators.
 	if n > 3 {
-		kurtosis = ((n*(n+1))/((n-1)*(n-2)*(n-3)))*kurtSum - ((3 * math.Pow(n-1, 2)) / ((n - 2) * (n - 3)))
+		kurtosis = ((n*(n+1))/((n-1)*(n-2)*(n-3)))*kurtSum - ((3 * (n - 1) * (n - 1)) / ((n - 2) * (n - 3)))
 	} else {
 		// n == 3: insufficient degrees of freedom for the sample excess kurtosis.
 		kurtosis = 0

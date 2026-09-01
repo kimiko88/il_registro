@@ -121,10 +121,10 @@ func (r *PostgresRepository) GetRubricByID(ctx context.Context, id string) (*Rub
 				}
 			}
 			if err := lRows.Err(); err != nil {
-				lRows.Close()
+				_ = lRows.Close()
 				return nil, err
 			}
-			lRows.Close()
+			_ = lRows.Close()
 		}
 
 		rub.Criteria = append(rub.Criteria, c)
@@ -173,7 +173,7 @@ func (r *PostgresRepository) ListRubrics(ctx context.Context, schoolID, teacherI
 					rub.Criteria = append(rub.Criteria, c)
 				}
 			}
-			cRows.Close()
+			_ = cRows.Close()
 		}
 		if rub.Criteria == nil {
 			rub.Criteria = []Criterion{}

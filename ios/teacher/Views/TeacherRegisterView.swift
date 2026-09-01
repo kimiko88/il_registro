@@ -2,9 +2,11 @@ import SwiftUI
 
 public struct TeacherRegisterView: View {
     @ObservedObject public var viewModel: TeacherViewModel
+    public var token: String
     @State private var selectedTab = 0
 
-    public init(viewModel: TeacherViewModel = TeacherViewModel()) {
+    public init(token: String = "", viewModel: TeacherViewModel = TeacherViewModel()) {
+        self.token = token
         self.viewModel = viewModel
     }
 
@@ -31,6 +33,11 @@ public struct TeacherRegisterView: View {
                 .tag(4)
         }
         .tint(Color.blue)
+        .task {
+            if !token.isEmpty {
+                await viewModel.loadFromDatabase(token: token)
+            }
+        }
     }
 }
 

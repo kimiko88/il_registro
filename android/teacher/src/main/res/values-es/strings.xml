@@ -1,10 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Registro Escolar - Docente</string>
-    <string name="teacher_dashboard_title">Registro de Clase</string>
-    <string name="sign_hour">Firmar Hora de Clase</string>
+    <string name="app_name">Registro - Docente</string>
+    <string name="teacher_dashboard_title">Registro Docente</string>
     <string name="take_attendance">Pasar Lista</string>
-    <string name="add_grade">Poner Nota</string>
+    <string name="add_grade">Nueva Nota</string>
     <string name="scrutiny_board">Junta de Evaluación</string>
-    <string name="select_class">Clase Seleccionada:</string>
-    <string name="signed_hours_today">Horas Firmadas Hoy</string>
+    <string name="sign_hour">Firmar Hora de Clase</string>
+    <string name="lesson_topic">Tema de la Clase</string>
+    <string name="select_class">Seleccionar Clase</string>
+    <string name="login_subtitle">Inicia sesión en tu panel</string>
+    <string name="email_label">Correo del Docente</string>
+    <string name="password_label">Contraseña</string>
+    <string name="btn_login">INICIAR SESIÓN EN EL REGISTRO</string>
+    <string name="err_enter_credentials">Ingresa correo y contraseña</string>
+    <string name="logout">Cerrar sesión</string>
+    <string name="save">Guardar</string>
+    <string name="cancel">Cancelar</string>
+    <string name="present">Presente</string>
+    <string name="absent">Ausente</string>
+    <string name="late">Retraso</string>
 </resources>

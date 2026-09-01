@@ -1,10 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Шкільний Журнал - Секретаріат</string>
-    <string name="secretary_dashboard_title">Управління Секретаріатом та Адміністрацією</string>
-    <string name="user_management">Управління Користувачами</string>
-    <string name="scrutiny_supervision">Нагляд за Оцінюванням</string>
-    <string name="generate_certificates">Генерація Довідок</string>
-    <string name="audit_logs">Журнал Аудиту</string>
-    <string name="total_students">Зарахованих Учнів</string>
-    <string name="total_teachers">Активних Вчителів</string>
+    <string name="app_name">Журнал - Секретаріат</string>
+    <string name="secretary_dashboard_title">Секретаріат</string>
+    <string name="user_management">Керування Користувачами</string>
+    <string name="scrutiny_supervision">Нагляд за Атестацією</string>
+    <string name="generate_certificates">Довідки та Документи</string>
+    <string name="audit_logs">Журнали Аудиту</string>
+    <string name="create_user">Створити Нового Користувача</string>
+    <string name="download_pdf">Завантажити Протокол PDF</string>
+    <string name="login_subtitle">Увійдіть до адміністративної панелі</string>
+    <string name="email_label">Електронна пошта секретаріату</string>
+    <string name="password_label">Пароль</string>
+    <string name="btn_login">УВІЙТИ В ПАНЕЛЬ</string>
+    <string name="err_enter_credentials">Введіть електронну пошту та пароль</string>
+    <string name="logout">Вийти</string>
 </resources>

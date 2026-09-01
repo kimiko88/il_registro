@@ -1,14 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Электронный Журнал - Ученик</string>
+    <string name="app_name">Журнал - Ученик</string>
+    <string name="dashboard_title">Моя Панель</string>
     <string name="welcome_student">Привет, %1$s!</string>
-    <string name="gpa_average">Средний балл</string>
-    <string name="absences_count">Пропуски</string>
-    <string name="lates_count">Опоздания</string>
-    <string name="recent_grades">Последние оценки</string>
-    <string name="today_lessons">Расписание на сегодня</string>
-    <string name="dashboard_title">Главная панель</string>
-    <string name="grades_title">Мои оценки</string>
-    <string name="agenda_title">Задания и расписание</string>
-    <string name="attendance_title">Посещаемость</string>
-    <string name="report_card_title">Итоговый табель</string>
+    <string name="grades_title">Мои Оценки</string>
+    <string name="agenda_title">Домашние задания &amp; Расписание</string>
+    <string name="attendance_title">Посещаемость &amp; Пропуски</string>
+    <string name="report_card_title">Мой Табель</string>
+    <string name="gpa_average">Средний Балл</string>
+    <string name="recent_grades">Последние Оценки</string>
+    <string name="today_lessons">Расписание на Сегодня</string>
+    <string name="absences_count">Всего Пропусков</string>
+    <string name="lates_count">Всего Опозданий</string>
+    <string name="no_data">Нет доступных данных</string>
+    <string name="login_subtitle">Войдите в свой аккаунт</string>
+    <string name="email_label">Электронная почта ученика</string>
+    <string name="password_label">Пароль</string>
+    <string name="btn_login">ВОЙТИ</string>
+    <string name="err_enter_credentials">Введите электронную почту и пароль</string>
+    <string name="logout">Выйти</string>
+    <string name="settings">Настройки</string>
+    <string name="badges_title">Мои Значки</string>
+    <string name="pcto_title">Программы Практики</string>
 </resources>

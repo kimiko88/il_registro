@@ -29,7 +29,7 @@ data class LessonItem(val hour: String, val subject: String, val room: String)
 @Composable
 fun StudentDashboardScreen(
     token: String? = null,
-    studentName: String = "Mario Rossi",
+    studentName: String = "Studente",
     viewModel: StudentViewModel = remember { StudentViewModel() },
     onLogout: () -> Unit = {}
 ) {

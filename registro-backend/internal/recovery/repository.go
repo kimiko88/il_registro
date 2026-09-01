@@ -107,7 +107,7 @@ func (r *repository) GetCourseByID(ctx context.Context, id string) (*RecoveryCou
 	if err != nil {
 		return nil, err
 	}
-	defer sessRows.Close()
+	defer func() { _ = sessRows.Close() }()
 	for sessRows.Next() {
 		var s RecoveryCourseSession
 		if err := sessRows.Scan(&s.ID, &s.CourseID, &s.SessionDate, &s.StartTime, &s.EndTime, &s.Room, &s.Topic, &s.CreatedAt); err != nil {
@@ -134,7 +134,7 @@ func (r *repository) GetCourseByID(ctx context.Context, id string) (*RecoveryCou
 	if err != nil {
 		return nil, err
 	}
-	defer stRows.Close()
+	defer func() { _ = stRows.Close() }()
 	for stRows.Next() {
 		var st RecoveryCourseStudent
 		if err := stRows.Scan(&st.ID, &st.CourseID, &st.StudentID, &st.StudentName, &st.ClassName, &st.AttendanceHours, &st.Notes); err != nil {

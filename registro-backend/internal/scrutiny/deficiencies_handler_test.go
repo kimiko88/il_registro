@@ -17,6 +17,9 @@ type mockDeficiencyRepo struct {
 	mock.Mock
 }
 
+// Compile-time check that mockDeficiencyRepo satisfies Repository.
+var _ Repository = (*mockDeficiencyRepo)(nil)
+
 func (m *mockDeficiencyRepo) SaveRecord(ctx context.Context, record *ScrutinyRecord) error {
 	return nil
 }

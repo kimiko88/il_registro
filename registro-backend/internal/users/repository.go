@@ -537,12 +537,12 @@ func (r *PostgresRepository) BulkCreate(ctx context.Context, users []User) (int,
 	}
 	defer func() { _ = tx.Rollback() }()
 
-	// Prepare COPY statement
-	stmt, err := tx.PrepareContext(ctx, pq.CopyIn("users", "id", "email", "password_hash", "first_name", "last_name", "fiscal_code", "role", "created_at", "updated_at"))
+	// Use raw COPY statement instead of deprecated pq.CopyIn helper
+	stmt, err := tx.PrepareContext(ctx, "COPY users (id, email, password_hash, first_name, last_name, fiscal_code, role, created_at, updated_at) FROM STDIN")
 	if err != nil {
 		return 0, nil, err
 	}
-	defer stmt.Close()
+	defer func() { _ = stmt.Close() }()
 
 	var errs []string
 	count := 0

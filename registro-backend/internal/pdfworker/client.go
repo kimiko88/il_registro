@@ -37,7 +37,7 @@ func NewClient(redisAddr string) *Client {
 
 func (c *Client) Close() error {
 	if c.asynqClient != nil {
-		c.asynqClient.Close()
+		_ = c.asynqClient.Close()
 	}
 	if c.rdb != nil {
 		return c.rdb.Close()

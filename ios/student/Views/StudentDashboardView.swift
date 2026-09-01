@@ -16,10 +16,13 @@ public struct StudentAttendanceRecordModel: Identifiable, Equatable {
 
 public struct StudentDashboardView: View {
     @ObservedObject public var viewModel: StudentViewModel
-    @State private var studentName: String = "Mario Rossi"
+    public var token: String
+    @State private var studentName: String
     @State private var selectedTab = 0
 
-    public init(viewModel: StudentViewModel = StudentViewModel()) {
+    public init(token: String = "", studentName: String = "Studente", viewModel: StudentViewModel = StudentViewModel()) {
+        self.token = token
+        self._studentName = State(initialValue: studentName)
         self.viewModel = viewModel
     }
 
@@ -56,6 +59,11 @@ public struct StudentDashboardView: View {
                 .tag(4)
         }
         .tint(Color.purple)
+        .task {
+            if !token.isEmpty {
+                await viewModel.loadFromDatabase(token: token)
+            }
+        }
     }
 }
 

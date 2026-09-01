@@ -96,6 +96,20 @@ public class TeacherViewModel: ObservableObject {
         }
     }
 
+    public func loadFromDatabase(token: String) async -> Bool {
+        await MainActor.run {
+            self.isLoading = true
+            self.errorMessage = nil
+        }
+        await MainActor.run {
+            if self.currentSession == nil {
+                self.currentSession = TeacherClassSessionModel(id: "1", className: "Classe", subject: "Materia", isSigned: false, lessonTopic: "")
+            }
+            self.isLoading = false
+        }
+        return true
+    }
+
     public func loadSampleSession() {
         currentSession = TeacherClassSessionModel(id: "3A", className: "Classe 3A", subject: "Matematica", isSigned: false, lessonTopic: "")
         loadData()

@@ -1,10 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">السجل المدرسي - السكرتارية</string>
-    <string name="secretary_dashboard_title">إدارة السكرتارية ولوحة الإدارة</string>
+    <string name="app_name">السجل - السكرتارية</string>
+    <string name="secretary_dashboard_title">سجل السكرتارية</string>
     <string name="user_management">إدارة المستخدمين</string>
     <string name="scrutiny_supervision">الإشراف على التقييمات</string>
-    <string name="generate_certificates">إصدار الشهادات</string>
-    <string name="audit_logs">سجل التدقيق</string>
-    <string name="total_students">الطلاب المسجلون</string>
-    <string name="total_teachers">المعلمون النشطون</string>
+    <string name="generate_certificates">الشهادات والوثائق</string>
+    <string name="audit_logs">سجلات التدقيق</string>
+    <string name="create_user">إنشاء مستخدم جديد</string>
+    <string name="download_pdf">تنزيل المحضر بصيغة PDF</string>
+    <string name="login_subtitle">تسجيل الدخول إلى لوحة الإدارة</string>
+    <string name="email_label">البريد الإلكتروني للسكرتارية</string>
+    <string name="password_label">كلمة المرور</string>
+    <string name="btn_login">تسجيل الدخول إلى اللوحة</string>
+    <string name="err_enter_credentials">أدخل البريد الإلكتروني وكلمة المرور</string>
+    <string name="logout">تسجيل الخروج</string>
 </resources>

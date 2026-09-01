@@ -1,10 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Школьный Журнал - Учитель</string>
-    <string name="teacher_dashboard_title">Классный Журнал</string>
+    <string name="app_name">Журнал - Учитель</string>
+    <string name="teacher_dashboard_title">Журнал Учителя</string>
+    <string name="take_attendance">Перекличка</string>
+    <string name="add_grade">Новая Оценка</string>
+    <string name="scrutiny_board">Педагогический Совет</string>
     <string name="sign_hour">Подписать Урок</string>
-    <string name="take_attendance">Отметить Посещаемость</string>
-    <string name="add_grade">Выставить Оценку</string>
-    <string name="scrutiny_board">Таблица Итоговых Оценок</string>
-    <string name="select_class">Выбранный Класс:</string>
-    <string name="signed_hours_today">Подписанные Часы Сегодня</string>
+    <string name="lesson_topic">Тема Урока</string>
+    <string name="select_class">Выбрать Класс</string>
+    <string name="login_subtitle">Войдите в кабинет учителя</string>
+    <string name="email_label">Электронная почта учителя</string>
+    <string name="password_label">Пароль</string>
+    <string name="btn_login">ВОЙТИ В ЖУРНАЛ</string>
+    <string name="err_enter_credentials">Введите электронную почту и пароль</string>
+    <string name="logout">Выйти</string>
+    <string name="save">Сохранить</string>
+    <string name="cancel">Отмена</string>
+    <string name="present">Присутствует</string>
+    <string name="absent">Отсутствует</string>
+    <string name="late">Опоздал</string>
 </resources>
