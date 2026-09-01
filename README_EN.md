@@ -19,6 +19,7 @@ _*Note*_: Some passwords, such as the superadmin account, may have been updated 
 [![Google Gemini](https://img.shields.io/badge/AI-Google%20Gemini-4285F4?logo=google&logoColor=white)](https://gemini.google.com)
 [![Anthropic Claude](https://img.shields.io/badge/AI-Anthropic%20Claude-D97757?logo=anthropic&logoColor=white)](https://anthropic.com)
 [![Status](https://img.shields.io/badge/status-working%20beta-yellow)](https://github.com/kimiko88/il_registro)
+[![codecov](https://codecov.io/github/kimiko88/il_registro/graph/badge.svg?token=2946K0BLDX)](https://codecov.io/github/kimiko88/il_registro)
 
 ---
 
