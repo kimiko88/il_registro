@@ -104,6 +104,13 @@ func setRefreshTokenCookie(c *gin.Context, token string, maxAge int) {
 		isSecure = false
 	}
 	domain := os.Getenv("COOKIE_DOMAIN")
+	sameSite := http.SameSiteLaxMode
+	if os.Getenv("COOKIE_SAMESITE") == "strict" {
+		sameSite = http.SameSiteStrictMode
+	} else if os.Getenv("COOKIE_SAMESITE") == "none" && isSecure {
+		sameSite = http.SameSiteNoneMode
+	}
+
 	http.SetCookie(c.Writer, &http.Cookie{
 		Name:     "refreshToken",
 		Value:    token,
@@ -112,7 +119,7 @@ func setRefreshTokenCookie(c *gin.Context, token string, maxAge int) {
 		Domain:   domain,
 		Secure:   isSecure,
 		HttpOnly: true,
-		SameSite: http.SameSiteStrictMode,
+		SameSite: sameSite,
 	})
 }
 
@@ -167,7 +174,7 @@ func (h *Handler) RefreshToken(c *gin.Context) {
 	}
 
 	if rt == "" {
-		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "missing refresh_token"})
+		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "missing refresh token"})
 		return
 	}
 

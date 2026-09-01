@@ -46,8 +46,8 @@ func TestLoadConfig_DefaultsAndEnv(t *testing.T) {
 }
 
 func TestLoadConfig_TrimsHttpPrefix(t *testing.T) {
-	os.Setenv("DB_HOST", "http://localhost")
-	defer os.Unsetenv("DB_HOST")
+	_ = os.Setenv("DB_HOST", "http://localhost")
+	defer func() { _ = os.Unsetenv("DB_HOST") }()
 
 	cfg, err := LoadConfig()
 	if err != nil {

@@ -117,7 +117,7 @@ func (r *repository) CreateSlotsBatch(ctx context.Context, slots []ColloquioSlot
 	if err != nil {
 		return err
 	}
-	defer stmt.Close()
+	defer func() { _ = stmt.Close() }()
 
 	for _, s := range slots {
 		var overlapCount int

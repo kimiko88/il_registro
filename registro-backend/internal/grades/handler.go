@@ -293,7 +293,7 @@ func (h *Handler) BulkImport(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	if err := upload.ValidateUpload(file, fileHeader); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

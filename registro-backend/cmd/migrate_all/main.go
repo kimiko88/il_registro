@@ -81,7 +81,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to open database connection: %v", err)
 	}
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	if err := db.Ping(); err != nil {
 		log.Fatalf("Failed to connect to database (is it running and port 5432 exposed?): %v", err)

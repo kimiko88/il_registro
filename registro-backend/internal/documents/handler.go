@@ -101,7 +101,7 @@ func (h *Handler) UploadFile(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Campo 'file' mancante nel form"})
 		return
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	// Validate size + real MIME type via magic bytes
 	if err := upload.ValidateUpload(file, header); err != nil {

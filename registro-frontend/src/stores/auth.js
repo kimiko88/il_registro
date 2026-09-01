@@ -202,9 +202,10 @@ export const useAuthStore = defineStore('auth', () => {
                     updateTokens(access_token, null, fullUser || user.value)
                 }
             } catch (err) {
-                console.warn('Initial session restore failed:', err)
-                if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+                if (err.response && (err.response.status === 400 || err.response.status === 401 || err.response.status === 403)) {
                     logout()
+                } else {
+                    console.warn('Initial session restore failed:', err)
                 }
             } finally {
                 isInitializing.value = false

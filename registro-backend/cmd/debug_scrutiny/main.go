@@ -25,7 +25,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("DB open error: %v", err)
 	}
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	if err := db.Ping(); err != nil {
 		log.Fatalf("DB ping error: %v", err)

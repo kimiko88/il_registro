@@ -10,14 +10,14 @@ import (
 
 func TestWS_AllowedOrigins_DynamicEvaluation(t *testing.T) {
 	// Memoized allowed origins
-	os.Setenv("ALLOWED_ORIGINS", "https://app1.example.com")
+	_ = os.Setenv("ALLOWED_ORIGINS", "https://app1.example.com")
 	origins1 := allowedOrigins()
 	assert.NotNil(t, origins1)
 
 	origins2 := allowedOrigins()
 	assert.Equal(t, origins1, origins2)
 
-	os.Unsetenv("ALLOWED_ORIGINS")
+	_ = os.Unsetenv("ALLOWED_ORIGINS")
 }
 
 func TestWS_Hub_DroppedMessageMetrics(t *testing.T) {

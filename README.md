@@ -19,6 +19,7 @@ _**Nota bene**_: alcune password, come quella per l'account superadmin, potrebbe
 [![Google Gemini](https://img.shields.io/badge/AI-Google%20Gemini-4285F4?logo=google&logoColor=white)](https://gemini.google.com)
 [![Anthropic Claude](https://img.shields.io/badge/AI-Anthropic%20Claude-D97757?logo=anthropic&logoColor=white)](https://anthropic.com)
 [![Status](https://img.shields.io/badge/status-beta%20funzionante-yellow)](https://github.com/kimiko88/il_registro)
+[![codecov](https://codecov.io/github/kimiko88/il_registro/graph/badge.svg?token=2946K0BLDX)](https://codecov.io/github/kimiko88/il_registro)
 
 ---
 
@@ -122,7 +123,7 @@ il_registro è pensato per essere **auto-ospitato da scuole, Comuni, Regioni o d
 | **Ruoli**                 | `superadmin`, `admin`, `secretary`, `teacher`, `student`, `parent`                                                                        |
 | **Voti & Valutazioni**    | Inserimento rapido, **Matrix View a Tastiera**, medie ponderate, simulatore voto target, misure compensative BES/DSA                      |
 | **Presenze & Lezioni**    | Registro giornaliero, **Firma Ora 1-Click**, assenze, ritardi, giustificazioni, alert assenteismo                                         |
-| **Scrutini & Differiti**  | Tabellone scrutinio, delibere condotta, credito scolastico, **Scrutinio Differito (saldo debiti formativi)**                            |
+| **Scrutini & Differiti**  | Tabellone scrutinio, delibere condotta, credito scolastico, **Scrutinio Differito (saldo debiti formativi)**                              |
 | **PDP / PEI (BES & DSA)** | **Gestione Piani Didattici Personalizzati**, misure compensative/dispensative, firma/approvazione digitale genitore e protezione diagnosi |
 | **Business Intelligence** | **Dashboard Dispersione Scolastica & Assenteismo**, report andamento 1° vs 2° Quadrimestre per la dirigenza                               |
 | **E-Learning Sync**       | **Google Classroom & Microsoft Teams**: sincronizzazione automatica compiti, voti e classi                                                |

@@ -63,7 +63,7 @@ func (v *Validator) ValidateJudgmentString(judgment string) error {
 			return nil
 		}
 	}
-	return errors.New("Giudizio non valido")
+	return errors.New("giudizio non valido")
 }
 
 // ValidateTeacherCanGrade verifies that the teacher is assigned to teach the given
@@ -74,7 +74,7 @@ func (v *Validator) ValidateTeacherCanGrade(teacherUserID string, subjectID stri
 		return fmt.Errorf("teacher validation error: %w", err)
 	}
 	if !assigned {
-		return errors.New("Insegnante non assegnato a questa materia in questa classe")
+		return errors.New("insegnante non assegnato a questa materia in questa classe")
 	}
 	return nil
 }
@@ -118,16 +118,16 @@ func (v *Validator) ValidateStudentEnrolled(studentID string, semester int) erro
 func (v *Validator) ValidateGradeDate(date time.Time, semester int) error {
 	now := time.Now()
 	if date.After(now.Add(24 * time.Hour)) {
-		return errors.New("Data non può essere nel futuro")
+		return errors.New("data non può essere nel futuro")
 	}
 	if date.Before(now.AddDate(-10, 0, 0)) {
-		return errors.New("Data troppo vecchia")
+		return errors.New("data troppo vecchia")
 	}
 
 	start, end := GetSemesterDateRange(semester)
 	if date.Before(start) || date.After(end) {
 		return fmt.Errorf(
-			"Data fuori dal range del quadrimestre (Sem %d: %s - %s)",
+			"data fuori dal range del quadrimestre (Sem %d: %s - %s)",
 			semester, start.Format("2006-01-02"), end.Format("2006-01-02"),
 		)
 	}
@@ -137,7 +137,7 @@ func (v *Validator) ValidateGradeDate(date time.Time, semester int) error {
 // ValidateDescription checks description length only.
 func (v *Validator) ValidateDescription(desc string) error {
 	if len(desc) > 500 {
-		return errors.New("Descrizione max 500 caratteri")
+		return errors.New("descrizione max 500 caratteri")
 	}
 	return nil
 }
@@ -145,7 +145,7 @@ func (v *Validator) ValidateDescription(desc string) error {
 // ValidateGradeNotLocked checks if grading is locked for the given semester.
 func (v *Validator) ValidateGradeNotLocked(semester int) error {
 	if IsInLockPeriod(semester, time.Now()) {
-		return errors.New("Periodo in chiusura scrutini, modifiche non consentite")
+		return errors.New("periodo in chiusura scrutini, modifiche non consentite")
 	}
 	return nil
 }

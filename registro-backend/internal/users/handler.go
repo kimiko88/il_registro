@@ -290,7 +290,7 @@ func (h *Handler) BulkImport(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "file required"})
 		return
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 	if header.Size > 10*1024*1024 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "file size exceeds 10MB limit"})
 		return
