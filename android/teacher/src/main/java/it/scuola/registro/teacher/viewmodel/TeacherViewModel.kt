@@ -31,6 +31,24 @@ class TeacherViewModel(
     var errorMessage: String? = null
         private set
 
+    suspend fun loadFromDatabase(token: String): Boolean {
+        isLoading = true
+        errorMessage = null
+        val result = apiService.getClasses(token)
+        isLoading = false
+        return if (result.isSuccess) {
+            val classes = result.getOrNull() ?: emptyList()
+            if (classes.isNotEmpty()) {
+                activeSession = classes.first()
+                currentSession = activeSession
+            }
+            true
+        } else {
+            errorMessage = result.exceptionOrNull()?.localizedMessage
+            false
+        }
+    }
+
     suspend fun signLessonViaApi(token: String, classId: String, topic: String): Boolean {
         isLoading = true
         errorMessage = null

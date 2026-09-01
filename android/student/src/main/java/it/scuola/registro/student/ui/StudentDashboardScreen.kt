@@ -28,11 +28,18 @@ data class LessonItem(val hour: String, val subject: String, val room: String)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StudentDashboardScreen(
+    token: String? = null,
     studentName: String = "Mario Rossi",
     viewModel: StudentViewModel = remember { StudentViewModel() },
     onLogout: () -> Unit = {}
 ) {
     var selectedTab by remember { mutableStateOf(0) }
+
+    LaunchedEffect(token) {
+        if (!token.isNullOrBlank()) {
+            viewModel.loadFromDatabase(token)
+        }
+    }
 
     Scaffold(
         topBar = {

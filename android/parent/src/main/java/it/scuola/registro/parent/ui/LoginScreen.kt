@@ -18,15 +18,18 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 
 @Composable
 fun ParentLoginScreen(
+    apiService: it.scuola.registro.parent.network.ParentApiService = remember { it.scuola.registro.parent.network.HttpParentApiService() },
     onLoginSuccess: (token: String, parentName: String) -> Unit
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    val coroutineScope = rememberCoroutineScope()
 
     Box(
         modifier = Modifier
@@ -39,7 +42,7 @@ fun ParentLoginScreen(
                 .fillMaxWidth(0.9f)
                 .padding(16.dp),
             shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
             Column(
                 modifier = Modifier.padding(24.dp),
@@ -50,18 +53,18 @@ fun ParentLoginScreen(
                     imageVector = Icons.Default.FamilyRestroom,
                     contentDescription = null,
                     tint = Color(0xFF0F172A),
-                    modifier = Modifier.size(56.dp)
+                    modifier = Modifier.size(52.dp)
                 )
 
                 Text(
-                    text = "Registro Genitori",
-                    fontSize = 24.sp,
+                    text = "Registro Famiglie",
+                    fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF0F172A)
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Text(
-                    text = "Accedi al portale di supervisione",
+                    text = "Accedi al portale genitori",
                     fontSize = 14.sp,
                     color = Color.Gray
                 )
@@ -100,13 +103,24 @@ fun ParentLoginScreen(
                             return@Button
                         }
                         isLoading = true
-                        onLoginSuccess("mock_token_parent", "Giuseppe Rossi")
+                        errorMessage = null
+                        coroutineScope.launch {
+                            val result = apiService.login(email.trim(), password)
+                            isLoading = false
+                            if (result.isSuccess) {
+                                val token = result.getOrNull() ?: ""
+                                onLoginSuccess(token, "Genitore")
+                            } else {
+                                errorMessage = result.exceptionOrNull()?.localizedMessage ?: "Errore di accesso"
+                            }
+                        }
                     },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),
                     shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F172A))
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F172A)),
+                    enabled = !isLoading
                 ) {
                     if (isLoading) {
                         CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))

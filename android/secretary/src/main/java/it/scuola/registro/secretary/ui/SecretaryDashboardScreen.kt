@@ -21,11 +21,18 @@ import it.scuola.registro.secretary.viewmodel.SecretaryViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SecretaryDashboardScreen(
+    token: String? = null,
     viewModel: SecretaryViewModel = remember { SecretaryViewModel() },
     auditLogs: List<String> = emptyList(),
     onLogout: () -> Unit = {}
 ) {
     var selectedTab by remember { mutableStateOf(0) }
+
+    LaunchedEffect(token) {
+        if (!token.isNullOrBlank()) {
+            viewModel.loadFromDatabase(token)
+        }
+    }
 
     Scaffold(
         topBar = {

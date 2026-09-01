@@ -29,11 +29,18 @@ data class ParentGradeDisplayItem(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ParentDashboardScreen(
+    token: String? = null,
     viewModel: ParentViewModel = remember { ParentViewModel() },
     gradesList: List<ParentGradeDisplayItem> = emptyList(),
     circularsList: List<String> = emptyList(),
     onLogout: () -> Unit = {}
 ) {
+    LaunchedEffect(token) {
+        if (!token.isNullOrBlank()) {
+            viewModel.loadFromDatabase(token)
+        }
+    }
+
     val children = viewModel.children
     val selectedChild = children.find { it.id == viewModel.selectedChildId } ?: children.firstOrNull()
     var selectedTab by remember { mutableStateOf(0) }

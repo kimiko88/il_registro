@@ -16,6 +16,7 @@ import java.net.URL
 
 interface TeacherApiService {
     suspend fun login(email: String, password: String): Result<String>
+    suspend fun getClasses(token: String): Result<List<ClassSession>>
     suspend fun signLesson(token: String, classId: String, topic: String): Result<ClassSession>
     suspend fun submitRollCall(token: String, classId: String, records: List<StudentRollCall>): Result<Boolean>
     suspend fun submitGrade(token: String, proposal: GradeProposal): Result<Boolean>
@@ -55,6 +56,42 @@ class HttpTeacherApiService(
                 } else {
                     val err = BufferedReader(InputStreamReader(conn.errorStream ?: conn.inputStream)).use { it.readText() }
                     Result.failure(Exception("Login fallito (HTTP $responseCode): $err"))
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+
+    override suspend fun getClasses(token: String): Result<List<ClassSession>> =
+        withContext(Dispatchers.IO) {
+            try {
+                val url = URL("$baseUrl/teacher/classes")
+                val conn = (url.openConnection() as HttpURLConnection).apply {
+                    requestMethod = "GET"
+                    setRequestProperty("Authorization", "Bearer $token")
+                    connectTimeout = 10000
+                    readTimeout = 10000
+                }
+                if (conn.responseCode in 200..299) {
+                    val response = BufferedReader(InputStreamReader(conn.inputStream)).use { it.readText() }
+                    val arr = JSONArray(response)
+                    val list = mutableListOf<ClassSession>()
+                    for (i in 0 until arr.length()) {
+                        val obj = arr.getJSONObject(i)
+                        list.add(
+                            ClassSession(
+                                classId = obj.optString("id", "$i"),
+                                className = obj.optString("name", obj.optString("class_name", "Classe")),
+                                subject = obj.optString("subject_name", obj.optString("subject", "Materia")),
+                                hourSlot = "Orario lezioni",
+                                isSigned = false,
+                                lessonTopic = ""
+                            )
+                        )
+                    }
+                    Result.success(list)
+                } else {
+                    Result.failure(Exception("Errore caricamento classi: HTTP ${conn.responseCode}"))
                 }
             } catch (e: Exception) {
                 Result.failure(e)

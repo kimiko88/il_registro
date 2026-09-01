@@ -18,15 +18,18 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 
 @Composable
 fun TeacherLoginScreen(
+    apiService: it.scuola.registro.teacher.network.TeacherApiService = remember { it.scuola.registro.teacher.network.HttpTeacherApiService() },
     onLoginSuccess: (token: String, teacherName: String) -> Unit
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    val coroutineScope = rememberCoroutineScope()
 
     Box(
         modifier = Modifier
@@ -39,7 +42,7 @@ fun TeacherLoginScreen(
                 .fillMaxWidth(0.9f)
                 .padding(16.dp),
             shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
             Column(
                 modifier = Modifier.padding(24.dp),
@@ -50,18 +53,18 @@ fun TeacherLoginScreen(
                     imageVector = Icons.Default.MenuBook,
                     contentDescription = null,
                     tint = Color(0xFF2563EB),
-                    modifier = Modifier.size(56.dp)
+                    modifier = Modifier.size(52.dp)
                 )
 
                 Text(
                     text = "Registro Docente",
-                    fontSize = 24.sp,
+                    fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1E293B)
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Text(
-                    text = "Accedi per gestire le lezioni",
+                    text = "Accedi alla tua cattedra",
                     fontSize = 14.sp,
                     color = Color.Gray
                 )
@@ -100,13 +103,24 @@ fun TeacherLoginScreen(
                             return@Button
                         }
                         isLoading = true
-                        onLoginSuccess("mock_token_teacher", "Prof. Bianchi")
+                        errorMessage = null
+                        coroutineScope.launch {
+                            val result = apiService.login(email.trim(), password)
+                            isLoading = false
+                            if (result.isSuccess) {
+                                val token = result.getOrNull() ?: ""
+                                onLoginSuccess(token, "Docente")
+                            } else {
+                                errorMessage = result.exceptionOrNull()?.localizedMessage ?: "Errore di accesso"
+                            }
+                        }
                     },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),
                     shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB))
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB)),
+                    enabled = !isLoading
                 ) {
                     if (isLoading) {
                         CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))

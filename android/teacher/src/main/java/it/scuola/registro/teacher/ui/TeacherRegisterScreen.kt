@@ -22,10 +22,17 @@ import it.scuola.registro.teacher.viewmodel.TeacherViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TeacherRegisterScreen(
+    token: String? = null,
     viewModel: TeacherViewModel = remember { TeacherViewModel() },
     onLogout: () -> Unit = {}
 ) {
     var selectedTab by remember { mutableStateOf(0) }
+
+    LaunchedEffect(token) {
+        if (!token.isNullOrBlank()) {
+            viewModel.loadFromDatabase(token)
+        }
+    }
 
     Scaffold(
         topBar = {

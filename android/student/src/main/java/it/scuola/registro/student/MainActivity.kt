@@ -22,13 +22,22 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     var isLoggedIn by remember { mutableStateOf(false) }
+                    var authToken by remember { mutableStateOf<String?>(null) }
                     var loggedInStudentName by remember { mutableStateOf("Mario Rossi") }
 
                     if (isLoggedIn) {
-                        StudentDashboardScreen(studentName = loggedInStudentName)
+                        StudentDashboardScreen(
+                            token = authToken,
+                            studentName = loggedInStudentName,
+                            onLogout = {
+                                isLoggedIn = false
+                                authToken = null
+                            }
+                        )
                     } else {
                         StudentLoginScreen(
                             onLoginSuccess = { token, studentName ->
+                                authToken = token
                                 loggedInStudentName = studentName
                                 isLoggedIn = true
                             }

@@ -22,12 +22,14 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun StudentLoginScreen(
+    apiService: it.scuola.registro.student.network.StudentApiService = remember { it.scuola.registro.student.network.HttpStudentApiService() },
     onLoginSuccess: (token: String, studentName: String) -> Unit
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    val coroutineScope = rememberCoroutineScope()
 
     Box(
         modifier = Modifier
@@ -62,14 +64,14 @@ fun StudentLoginScreen(
                 )
 
                 Text(
-                    text = "Registro Studente",
+                    text = stringResource(R.string.app_name),
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF1E293B)
                 )
 
                 Text(
-                    text = "Accedi al tuo account",
+                    text = stringResource(R.string.dashboard_title),
                     fontSize = 14.sp,
                     color = Color.Gray
                 )
@@ -77,7 +79,7 @@ fun StudentLoginScreen(
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it; errorMessage = null },
-                    label = { Text("Email Studente") },
+                    label = { Text("Email") },
                     leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
@@ -112,14 +114,30 @@ fun StudentLoginScreen(
                             return@Button
                         }
                         isLoading = true
-                        // Simulate API login call
-                        onLoginSuccess("mock_token_123", "Mario Rossi")
+                        errorMessage = null
+                        coroutineScope.launch {
+                            val result = apiService.login(email.trim(), password)
+                            isLoading = false
+                            if (result.isSuccess) {
+                                val pair = result.getOrNull()
+                                if (pair != null) {
+                                    val (token, user) = pair
+                                    val fullName = "${user.firstName} ${user.lastName}".trim().ifEmpty { "Studente" }
+                                    onLoginSuccess(token, fullName)
+                                } else {
+                                    errorMessage = "Dati utente non validi"
+                                }
+                            } else {
+                                errorMessage = result.exceptionOrNull()?.localizedMessage ?: "Errore di accesso"
+                            }
+                        }
                     },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),
                     shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7C3AED))
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7C3AED)),
+                    enabled = !isLoading
                 ) {
                     if (isLoading) {
                         CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))

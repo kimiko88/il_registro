@@ -18,12 +18,20 @@ class MainActivity : ComponentActivity() {
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     var isLoggedIn by remember { mutableStateOf(false) }
+                    var authToken by remember { mutableStateOf<String?>(null) }
 
                     if (isLoggedIn) {
-                        ParentDashboardScreen()
+                        ParentDashboardScreen(
+                            token = authToken,
+                            onLogout = {
+                                isLoggedIn = false
+                                authToken = null
+                            }
+                        )
                     } else {
                         ParentLoginScreen(
-                            onLoginSuccess = { _, _ ->
+                            onLoginSuccess = { token, _ ->
+                                authToken = token
                                 isLoggedIn = true
                             }
                         )

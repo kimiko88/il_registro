@@ -18,15 +18,18 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 
 @Composable
 fun SecretaryLoginScreen(
+    apiService: it.scuola.registro.secretary.network.SecretaryApiService = remember { it.scuola.registro.secretary.network.HttpSecretaryApiService() },
     onLoginSuccess: (token: String, adminName: String) -> Unit
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    val coroutineScope = rememberCoroutineScope()
 
     Box(
         modifier = Modifier
@@ -39,7 +42,7 @@ fun SecretaryLoginScreen(
                 .fillMaxWidth(0.9f)
                 .padding(16.dp),
             shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
             Column(
                 modifier = Modifier.padding(24.dp),
@@ -50,18 +53,18 @@ fun SecretaryLoginScreen(
                     imageVector = Icons.Default.AdminPanelSettings,
                     contentDescription = null,
                     tint = Color(0xFF581C87),
-                    modifier = Modifier.size(56.dp)
+                    modifier = Modifier.size(52.dp)
                 )
 
                 Text(
                     text = "Registro Segreteria",
-                    fontSize = 24.sp,
+                    fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF581C87)
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Text(
-                    text = "Portale Amministrativo",
+                    text = "Accedi al pannello amministrativo",
                     fontSize = 14.sp,
                     color = Color.Gray
                 )
@@ -100,13 +103,24 @@ fun SecretaryLoginScreen(
                             return@Button
                         }
                         isLoading = true
-                        onLoginSuccess("mock_token_sec", "Admin Segreteria")
+                        errorMessage = null
+                        coroutineScope.launch {
+                            val result = apiService.login(email.trim(), password)
+                            isLoading = false
+                            if (result.isSuccess) {
+                                val token = result.getOrNull() ?: ""
+                                onLoginSuccess(token, "Segreteria")
+                            } else {
+                                errorMessage = result.exceptionOrNull()?.localizedMessage ?: "Errore di accesso"
+                            }
+                        }
                     },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),
                     shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF581C87))
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF581C87)),
+                    enabled = !isLoading
                 ) {
                     if (isLoading) {
                         CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
