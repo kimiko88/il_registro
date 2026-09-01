@@ -72,7 +72,7 @@ func (r *repository) ListNonTeachingDays(schoolID string) ([]NonTeachingDay, err
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	var res []NonTeachingDay
 	for rows.Next() {
 		var d NonTeachingDay
@@ -126,7 +126,7 @@ func (r *repository) ListAcademicPeriods(schoolID string) ([]AcademicPeriod, err
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var list []AcademicPeriod
 	for rows.Next() {

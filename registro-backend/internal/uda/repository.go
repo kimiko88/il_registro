@@ -50,7 +50,7 @@ func (r *Repository) ListByClass(ctx context.Context, classID string) ([]*UdaPla
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var plans []*UdaPlan
 	for rows.Next() {
@@ -141,7 +141,7 @@ func (r *Repository) ListBySchool(ctx context.Context, schoolID string) ([]*UdaP
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var plans []*UdaPlan
 	for rows.Next() {
@@ -192,7 +192,7 @@ func (r *Repository) ListAll(ctx context.Context) ([]*UdaPlan, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var plans []*UdaPlan
 	for rows.Next() {

@@ -128,7 +128,7 @@ func (r *repository) GetByTeacher(teacherID, fromDate, toDate string) ([]Teacher
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var results []TeacherFreeActivity
 	for rows.Next() {

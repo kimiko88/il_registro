@@ -42,7 +42,7 @@ func (r *PostgresRepository) List(ctx context.Context, schoolID string) ([]Teach
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var teachers []Teacher
 	for rows.Next() {
@@ -120,7 +120,7 @@ func (r *PostgresRepository) GetSubjects(ctx context.Context, teacherID string) 
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var results []TeacherSubject
 	for rows.Next() {
@@ -151,7 +151,7 @@ func (r *PostgresRepository) GetBySubject(ctx context.Context, subjectID string)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var teachers []Teacher
 	for rows.Next() {

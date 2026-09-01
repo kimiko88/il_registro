@@ -230,7 +230,7 @@ func (r *PostgresRepository) GetAvailableTeachers(ctx context.Context, schoolID 
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch teachers: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var list []TeacherCandidate
 	for rows.Next() {

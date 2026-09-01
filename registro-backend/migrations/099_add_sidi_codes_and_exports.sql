@@ -21,3 +21,5 @@ CREATE TABLE IF NOT EXISTS sidi_exports (
 );
 
 CREATE INDEX IF NOT EXISTS idx_sidi_exports_school ON sidi_exports(school_id);
+
+ALTER TABLE sidi_exports ENABLE ROW LEVEL SECURITY;

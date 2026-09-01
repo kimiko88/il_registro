@@ -82,7 +82,7 @@ func (r *PostgresRepository) GetChildren(ctx context.Context, parentUserID strin
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var children []StudentChild
 	for rows.Next() {
@@ -422,7 +422,7 @@ func (r *PostgresRepository) List(ctx context.Context, filter UserFilter) ([]Use
 	if err != nil {
 		return nil, 0, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var users []User
 	for rows.Next() {
@@ -471,7 +471,7 @@ func (r *PostgresRepository) ListByIDs(ctx context.Context, ids []string) ([]Use
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var users []User
 	for rows.Next() {
@@ -515,7 +515,7 @@ func (r *PostgresRepository) GetAuditLogs(ctx context.Context, userID string, li
 	if err != nil {
 		return nil, 0, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		var l AuditLog
@@ -656,7 +656,7 @@ func (r *PostgresRepository) GetStudentsByClass(ctx context.Context, classID str
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var users []User
 	for rows.Next() {
@@ -705,7 +705,7 @@ func (r *PostgresRepository) GetGuardians(ctx context.Context, studentProfileID 
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var guardians []GuardianInfo
 	for rows.Next() {
@@ -733,7 +733,7 @@ func (r *PostgresRepository) GetPasswordHistory(ctx context.Context, userID stri
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var history []string
 	for rows.Next() {

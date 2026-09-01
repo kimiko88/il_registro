@@ -53,7 +53,7 @@ func (r *PostgresRepository) ListMeetings(ctx context.Context, schoolID, classID
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var meetings []*CouncilMeeting
 	for rows.Next() {
@@ -139,7 +139,7 @@ func (r *PostgresRepository) ListVerbali(ctx context.Context, meetingID string, 
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var list []*MeetingVerbale
 	for rows.Next() {
@@ -184,7 +184,7 @@ func (r *PostgresRepository) GetSignatures(ctx context.Context, verbaleID string
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var sigs []VerbaleSignature
 	for rows.Next() {

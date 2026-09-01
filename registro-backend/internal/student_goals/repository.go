@@ -74,7 +74,7 @@ func (r *PostgresRepository) ListByStudent(ctx context.Context, studentID string
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var list []*StudentGoal
 	for rows.Next() {
