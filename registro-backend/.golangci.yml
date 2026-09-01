@@ -12,3 +12,15 @@ linters:
     - ineffassign
     - staticcheck
     - unused
+
+linters-settings:
+  errcheck:
+    exclude-functions:
+      # Standard library resource cleanup - idiomatic Go, safe to ignore
+      - (*database/sql.Rows).Close
+      - (*database/sql.DB).Close
+      - (*database/sql.Tx).Rollback
+      - (*database/sql.Stmt).Close
+      - (*os.File).Close
+      - os.Setenv
+      - os.Unsetenv
