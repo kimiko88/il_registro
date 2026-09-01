@@ -45,7 +45,7 @@ func (r *repository) GetEvents(ctx context.Context, schoolID string) ([]Event, e
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	var events []Event
 	for rows.Next() {
 		var e Event
@@ -85,7 +85,7 @@ func (r *repository) GetParticipations(ctx context.Context, studentID string) ([
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	var parts []Participation
 	for rows.Next() {
 		var p Participation
@@ -193,7 +193,7 @@ func (r *repository) GetCapolavori(ctx context.Context, studentID string) ([]Cap
 	if err != nil {
 		return []Capolavoro{}, nil
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var list []Capolavoro
 	for rows.Next() {
