@@ -117,12 +117,12 @@ func (r *repository) BatchCreate(atts []*Attendance) error {
 				a.Justified, a.JustifiedBy, a.JustifiedAt, a.Notes, a.EntryTime, a.ExitTime,
 			).Scan(&a.ID)
 			if err != nil {
-				stmt.Close()
+				_ = stmt.Close()
 				_ = tx.Rollback()
 				return fmt.Errorf("batch insert error: %w", err)
 			}
 		}
-		stmt.Close()
+		_ = stmt.Close()
 		if err := tx.Commit(); err != nil {
 			return err
 		}

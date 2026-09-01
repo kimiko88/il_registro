@@ -30,7 +30,7 @@ func (r *repository) CreateCourse(ctx context.Context, c *RecoveryCourse, sessio
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	queryCourse := `
 		INSERT INTO recovery_courses (
@@ -206,7 +206,7 @@ func (r *repository) RecordRecoveryTest(ctx context.Context, t *RecoveryTest) er
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	query := `
 		INSERT INTO recovery_tests (

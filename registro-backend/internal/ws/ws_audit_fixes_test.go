@@ -10,8 +10,8 @@ import (
 )
 
 func TestWS_AllowedOrigins_Memoized(t *testing.T) {
-	os.Setenv("ALLOWED_ORIGINS", "http://localhost:3000,http://example.com")
-	defer os.Unsetenv("ALLOWED_ORIGINS")
+	_ = os.Setenv("ALLOWED_ORIGINS", "http://localhost:3000,http://example.com")
+	defer func() { _ = os.Unsetenv("ALLOWED_ORIGINS") }()
 
 	origins := getAllowedOrigins()
 	assert.True(t, origins["http://localhost:3000"])
