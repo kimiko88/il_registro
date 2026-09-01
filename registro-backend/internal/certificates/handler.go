@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"registro-backend/pkg/upload"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -115,9 +117,14 @@ func (h *Handler) DownloadPDF(c *gin.Context) {
 		return
 	}
 	if role == "parent" {
-		// Parent can only download certificate if it belongs to their child or themselves
 		if cert.StudentID != userID {
-			// If not matching direct userID, service will verify parent-child relationship downstream when fetching child data
+			if uRepo := h.service.GetUserRepo(); uRepo != nil {
+				isG, err := uRepo.IsGuardian(c.Request.Context(), userID, cert.StudentID)
+				if err != nil || !isG {
+					c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: cannot access certificate of another student"})
+					return
+				}
+			}
 		}
 	}
 
@@ -128,7 +135,7 @@ func (h *Handler) DownloadPDF(c *gin.Context) {
 	}
 
 	c.Header("Content-Type", "application/pdf")
-	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"certificato_%s.pdf\"", id))
+	c.Header("Content-Disposition", upload.FormatContentDisposition(fmt.Sprintf("certificato_%s.pdf", id)))
 	c.Data(http.StatusOK, "application/pdf", pdfBytes)
 }
 

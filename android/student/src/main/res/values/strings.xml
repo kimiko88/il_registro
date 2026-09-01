@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Registro - Studente</string>
+    <string name="dashboard_title">La Mia Dashboard</string>
+    <string name="welcome_student">Ciao, %1$s!</string>
+    <string name="grades_title">I Miei Voti</string>
+    <string name="agenda_title">Compiti &amp; Agenda</string>
+    <string name="attendance_title">Presenze &amp; Assenze</string>
+    <string name="report_card_title">La Mia Pagella</string>
+    <string name="gpa_average">Media Generale</string>
+    <string name="recent_grades">Ultimi Voti Inseriti</string>
+    <string name="today_lessons">Orario Lezioni Oggi</string>
+    <string name="absences_count">Assenze Totali</string>
+    <string name="lates_count">Ritardi Totali</string>
+    <string name="no_data">Nessun dato disponibile</string>
+    <string name="login_subtitle">Accedi al tuo account</string>
+    <string name="email_label">Email Studente</string>
+    <string name="password_label">Password</string>
+    <string name="btn_login">ACCEDI</string>
+    <string name="err_enter_credentials">Inserisci email e password</string>
+    <string name="logout">Disconnetti</string>
+    <string name="settings">Impostazioni</string>
+    <string name="badges_title">I Miei Badge</string>
+    <string name="pcto_title">Percorsi PCTO</string>
+</resources>

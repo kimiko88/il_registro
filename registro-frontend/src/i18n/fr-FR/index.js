@@ -1059,7 +1059,20 @@ export default {
       "scrutiny": {
         "title": "Conseil de Classe & Scrutinio",
         "desc": "Procédure des propositions de notes, appréciations et procès-verbaux.",
-        "content": "Le tableau du conseil de classe consolide les propositions de notes de tous les enseignants.\n\nÉtape 1 : Sélectionnez la classe et la période de conseil.\nÉtape 2 : Vérifiez la moyenne proposée et saisissez la note délibérée.\nÉtape 3 : Saisissez la note de conduite et l'appréciation globale.\nÉtape 4 : En tant que professeur principal, verrouillez le tableau une fois validé.\nÉtape 5 : Exprimez et imprimez le procès-verbal en PDF.\n\nAttention : Après verrouillage, toute modification exige un déverrouillage administratif."
+        "content": "Le tableau du conseil de classe consolide les propositions de notes de tous les enseignants.\n\nÉtape 1 : Sélectionnez la classe et la période de conseil.\nÉtape 2 : Vérifiez la moyenne proposée et saisissez la note délibérée.\nÉtape 3 : Saisissez la note de conduite et l'appréciation globale.\nÉtape 4 : En tant que professeur principal, verrouillez le tableau une fois validé.\nÉtape 5 : Exprimez et imprimez le procès-verbal en PDF.\n\nAttention : Après verrouillage, toute modification exige un déverrouillage administratif.",
+        "period1": "Conseil de Classe 1er Semestre",
+        "period2": "Conseil de Classe 2e Semestre / Final",
+        "deferredScrutiny": "Conseil de classe différé (Rattrapages)",
+        "deferredBannerTitle": "Session Conseil de Classe Différé (Examens de Rattrapage)",
+        "deferredBannerBody": "Délibération définitive de la décision finale et vérification de l'apurement des lacunes pour les élèves en décision suspendue.",
+        "deferredAction": "Conseil Différé (Examens de Rattrapage)",
+        "deferredModalTitle": "Conseil Différé — {name}",
+        "deferredModalSubtitle": "Vérification de l'apurement des lacunes académiques après rattrapages",
+        "promotedDebtsCleared": "Admis (Lacunes apurées)",
+        "notPromotedDebtsNotCleared": "Non admis (Lacunes non apurées)",
+        "deferredNotes": "Notes de procès-verbal du conseil différé",
+        "deliberateDeferred": "Délibérer le conseil différé",
+        "deferredSaved": "Conseil différé enregistré avec succès !"
       },
       "pdp": {
         "title": "Plan d'Accompagnement (PDP / PEI)",
@@ -2152,5 +2165,12 @@ export default {
       "selectStudent": "Sélectionner Enfant / Élève",
       "notes": "Notes pour l'Enseignant"
     }
+  },
+  "a11y": {
+    "sttListening": "Écoute en cours... parlez maintenant",
+    "sttTooltip": "Dictée vocale (Alt+D)",
+    "focusModeTitle": "Mode Focus (ADHD/DSA)",
+    "asyncPdfQueue": "Génération PDF en arrière-plan"
   }
 }
+

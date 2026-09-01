@@ -35,14 +35,6 @@ type PostgresRepository struct {
 }
 
 func NewRepository(db *sql.DB) *PostgresRepository {
-	// Auto-migrate missing columns for substitutions table
-	_, _ = db.Exec(`
-		ALTER TABLE substitutions
-		ADD COLUMN IF NOT EXISTS signed_by_substitute BOOLEAN NOT NULL DEFAULT FALSE,
-		ADD COLUMN IF NOT EXISTS signature_timestamp TIMESTAMP WITH TIME ZONE,
-		ADD COLUMN IF NOT EXISTS signature_hash VARCHAR(255),
-		ADD COLUMN IF NOT EXISTS official_register_notes TEXT;
-	`)
 	return &PostgresRepository{db: db}
 }
 
@@ -103,7 +95,7 @@ func (r *PostgresRepository) ListBySchool(ctx context.Context, schoolID, date st
 	`
 	rows, err := r.db.QueryContext(ctx, query, schoolID, validDate)
 	if err != nil {
-		return []*Substitution{}, nil
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -117,7 +109,7 @@ func (r *PostgresRepository) ListBySchool(ctx context.Context, schoolID, date st
 			&s.Hour, &s.SubjectID, &s.Notes, &s.Status,
 			&s.SignedBySubstitute, &sigTs, &s.SignatureHash, &s.OfficialRegisterNotes, &s.CreatedAt,
 		); err != nil {
-			return []*Substitution{}, nil
+			return nil, err
 		}
 		if subTeacher.Valid {
 			s.SubstituteTeacherID = &subTeacher.String
@@ -127,10 +119,13 @@ func (r *PostgresRepository) ListBySchool(ctx context.Context, schoolID, date st
 		}
 		list = append(list, s)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	if list == nil {
 		list = []*Substitution{}
 	}
-	return list, rows.Err()
+	return list, nil
 }
 
 func (r *PostgresRepository) ListByTeacher(ctx context.Context, teacherID string, date string) ([]*Substitution, error) {
@@ -158,7 +153,7 @@ func (r *PostgresRepository) ListByTeacher(ctx context.Context, teacherID string
 	`
 	rows, err := r.db.QueryContext(ctx, query, teacherID, validDate)
 	if err != nil {
-		return []*Substitution{}, nil
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -172,7 +167,7 @@ func (r *PostgresRepository) ListByTeacher(ctx context.Context, teacherID string
 			&s.Hour, &s.SubjectID, &s.Notes, &s.Status,
 			&s.SignedBySubstitute, &sigTs, &s.SignatureHash, &s.OfficialRegisterNotes, &s.CreatedAt,
 		); err != nil {
-			return []*Substitution{}, nil
+			return nil, err
 		}
 		if subTeacher.Valid {
 			s.SubstituteTeacherID = &subTeacher.String
@@ -182,10 +177,13 @@ func (r *PostgresRepository) ListByTeacher(ctx context.Context, teacherID string
 		}
 		list = append(list, s)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	if list == nil {
 		list = []*Substitution{}
 	}
-	return list, rows.Err()
+	return list, nil
 }
 
 func (r *PostgresRepository) AssignSubstitute(ctx context.Context, id string, substituteTeacherID string, notes string) error {
@@ -237,11 +235,15 @@ func (r *PostgresRepository) GetAvailableTeachers(ctx context.Context, schoolID 
 	var list []TeacherCandidate
 	for rows.Next() {
 		var tc TeacherCandidate
-		if err := rows.Scan(&tc.TeacherID, &tc.UserID, &tc.TeacherName); err == nil {
-			list = append(list, tc)
+		if err := rows.Scan(&tc.TeacherID, &tc.UserID, &tc.TeacherName); err != nil {
+			return nil, err
 		}
+		list = append(list, tc)
 	}
-	return list, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return list, nil
 }
 
 func (r *PostgresRepository) GetTeacherProfileID(ctx context.Context, userID string) (string, error) {

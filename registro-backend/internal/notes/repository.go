@@ -28,11 +28,6 @@ type PostgresRepository struct {
 }
 
 func NewRepository(db *sql.DB) Repository {
-	_, _ = db.Exec(`
-		ALTER TABLE student_notes ADD COLUMN IF NOT EXISTS deletion_reason TEXT DEFAULT '';
-		ALTER TABLE student_notes ADD COLUMN IF NOT EXISTS is_viewed_by_parent BOOLEAN DEFAULT false;
-		ALTER TABLE student_notes ADD COLUMN IF NOT EXISTS parent_viewed_at TIMESTAMP WITH TIME ZONE NULL;
-	`)
 	return &PostgresRepository{db: db}
 }
 

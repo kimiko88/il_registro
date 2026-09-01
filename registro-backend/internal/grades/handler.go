@@ -11,10 +11,12 @@ import (
 	"strings"
 	"time"
 
+	"registro-backend/internal/pdfworker"
 	"registro-backend/pkg/logger"
 	"registro-backend/pkg/upload"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 var filenameParamRegex = regexp.MustCompile(`[^a-zA-Z0-9_-]`)
@@ -33,9 +35,10 @@ func respond500(c *gin.Context, msg string, err error) {
 }
 
 type Handler struct {
-	service   Service
-	analytics AnalyticsService
-	validator *Validator
+	service         Service
+	analytics       AnalyticsService
+	validator       *Validator
+	pdfWorkerClient *pdfworker.Client
 }
 
 func NewHandler(s Service, a AnalyticsService, v ...*Validator) *Handler {
@@ -44,6 +47,10 @@ func NewHandler(s Service, a AnalyticsService, v ...*Validator) *Handler {
 		h.validator = v[0]
 	}
 	return h
+}
+
+func (h *Handler) SetPdfWorkerClient(client *pdfworker.Client) {
+	h.pdfWorkerClient = client
 }
 
 func (h *Handler) legacyWeightConfig(handler gin.HandlerFunc) gin.HandlerFunc {
@@ -71,6 +78,8 @@ func (h *Handler) RegisterRoutes(router *gin.RouterGroup) {
 
 		// Retrieval
 		grades.GET("/export", h.Export)
+		grades.POST("/export/async-pdf", h.EnqueueAsyncRegisterPdf)
+		grades.GET("/pdf-jobs/:job_id", h.GetPdfJobStatus)
 		grades.POST("/bulk-import", h.BulkImport)
 		// Weight Config — configurable per-category weights for weighted averages
 		grades.GET("/weight-configs", h.ListWeightConfigs)
@@ -314,7 +323,7 @@ func (h *Handler) BulkImport(c *gin.Context) {
 	}
 
 	schoolID := c.GetString("school_id")
-	result, err := h.service.BulkImport(teacherID, schoolID, file, semester)
+	result, err := h.service.BulkImport(c.Request.Context(), teacherID, schoolID, file, semester)
 	if err != nil {
 		respond500(c, "BulkImport error", err)
 		return
@@ -345,9 +354,14 @@ func (h *Handler) Export(c *gin.Context) {
 		return
 	}
 
+	if format == "pdf" && h.pdfWorkerClient != nil && c.Query("sync") != "true" {
+		h.EnqueueAsyncRegisterPdf(c)
+		return
+	}
+
 	filter := h.parseFilter(c)
 
-	data, contentType, err := h.service.Export(teacherID, schoolID, filter, format)
+	data, contentType, err := h.service.Export(c.Request.Context(), teacherID, schoolID, filter, format)
 	if err != nil {
 		respond500(c, "Export error", err)
 		return
@@ -365,7 +379,7 @@ func (h *Handler) Export(c *gin.Context) {
 	}
 
 	filename := fmt.Sprintf("grades_export_%s.%s", time.Now().Format("20060102_150405"), format)
-	c.Header("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, filename))
+	c.Header("Content-Disposition", upload.FormatContentDisposition(filename))
 	c.Data(http.StatusOK, contentType, data)
 }
 
@@ -721,6 +735,34 @@ func (h *Handler) GetSemesterReport(c *gin.Context) {
 }
 
 func (h *Handler) DownloadSemesterReportPDF(c *gin.Context) {
+	if h.pdfWorkerClient != nil && c.Query("sync") != "true" {
+		actorID := c.GetString("user_id")
+		targetStudentID := actorID
+		if c.Query("student_id") != "" {
+			targetStudentID = c.Query("student_id")
+		}
+		semStr := c.Param("semester")
+		jobID := uuid.New().String()
+		payload := pdfworker.ReportCardPdfPayload{
+			JobID:       jobID,
+			StudentID:   targetStudentID,
+			Period:      semStr,
+			RequestedBy: actorID,
+		}
+		jobStatus, err := h.pdfWorkerClient.EnqueueReportCardPdf(c.Request.Context(), payload)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to enqueue async pdf job: %v", err)})
+			return
+		}
+		c.JSON(http.StatusAccepted, gin.H{
+			"message":    "PDF generation job enqueued successfully",
+			"job_id":     jobStatus.JobID,
+			"status":     jobStatus.Status,
+			"status_url": fmt.Sprintf("/api/v1/grades/pdf-jobs/%s", jobStatus.JobID),
+		})
+		return
+	}
+
 	actorID := c.GetString("user_id")
 	role := c.GetString("role")
 	if actorID == "" {
@@ -770,7 +812,7 @@ func (h *Handler) DownloadSemesterReportPDF(c *gin.Context) {
 	}
 
 	filename := fmt.Sprintf("pagella_q%d_%s.pdf", sem, sanitizeFilenameParam(targetStudentID))
-	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+	c.Header("Content-Disposition", upload.FormatContentDisposition(filename))
 	c.Data(http.StatusOK, "application/pdf", pdfData)
 }
 
@@ -1185,7 +1227,7 @@ func (h *Handler) ListWeightConfigs(c *gin.Context) {
 	subjectID := c.Query("subject_id")
 	classID := c.Query("class_id")
 
-	configs, err := h.service.GetWeightConfigs(schoolID, subjectID, classID)
+	configs, err := h.service.GetWeightConfigs(c.Request.Context(), schoolID, subjectID, classID)
 	if err != nil {
 		respond500(c, "ListWeightConfigs error", err)
 		return
@@ -1254,4 +1296,70 @@ func (h *Handler) SetWeightConfig(c *gin.Context) {
 // Deprecated: GetWeightConfig is a legacy alias kept for backwards compatibility.
 func (h *Handler) GetWeightConfig(c *gin.Context) {
 	h.ListWeightConfigs(c)
+}
+
+func (h *Handler) EnqueueAsyncRegisterPdf(c *gin.Context) {
+	actorID := c.GetString("user_id")
+	role := c.GetString("role")
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "teacher" && role != "admin" && role != "superadmin" && role != "principal" && role != "vice_principal" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: export reserved to staff"})
+		return
+	}
+
+	classID := c.Query("class_id")
+	subjectID := c.Query("subject_id")
+	semester := c.DefaultQuery("semester", "1")
+
+	if h.pdfWorkerClient == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "async pdf worker queue not configured"})
+		return
+	}
+
+	jobID := uuid.New().String()
+	payload := pdfworker.RegisterPdfPayload{
+		JobID:       jobID,
+		ClassID:     classID,
+		SubjectID:   subjectID,
+		Period:      semester,
+		RequestedBy: actorID,
+	}
+
+	jobStatus, err := h.pdfWorkerClient.EnqueueRegisterPdf(c.Request.Context(), payload)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to enqueue async register pdf job: %v", err)})
+		return
+	}
+
+	c.JSON(http.StatusAccepted, gin.H{
+		"message":    "Register PDF generation job enqueued successfully",
+		"job_id":     jobStatus.JobID,
+		"status":     jobStatus.Status,
+		"status_url": fmt.Sprintf("/api/v1/grades/pdf-jobs/%s", jobStatus.JobID),
+	})
+}
+
+func (h *Handler) GetPdfJobStatus(c *gin.Context) {
+	actorID := c.GetString("user_id")
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	jobID := c.Param("job_id")
+	if h.pdfWorkerClient == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "async pdf worker queue not configured"})
+		return
+	}
+
+	status, err := h.pdfWorkerClient.GetJobStatus(c.Request.Context(), jobID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "job not found or expired"})
+		return
+	}
+
+	c.JSON(http.StatusOK, status)
 }

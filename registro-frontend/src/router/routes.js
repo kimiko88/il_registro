@@ -89,6 +89,7 @@ export default [
 
             // Secretary Routes
             { path: 'secretary', component: () => import('@/pages/secretary/Index.vue'), meta: { title: 'Pannello Segreteria', roles: ['secretary', 'principal', 'vice_principal'] } },
+            { path: 'secretary/dashboard', redirect: '/secretary' },
             { path: 'secretary/documents', component: () => import('@/pages/secretary/Documents.vue'), meta: { title: 'Gestione Documenti', roles: ['secretary', 'principal', 'vice_principal'] } },
             { path: 'secretary/users', component: () => import('@/pages/secretary/Users.vue'), meta: { title: 'Anagrafica Utenti', roles: ['secretary', 'principal', 'vice_principal'] } },
             { path: 'secretary/students', component: () => import('@/pages/secretary/Students.vue'), meta: { title: 'Anagrafica Studenti', roles: ['secretary', 'principal', 'vice_principal'] } },
@@ -105,10 +106,12 @@ export default [
             { path: 'secretary/meetings', component: () => import('@/pages/secretary/Meetings.vue'), meta: { title: 'Organizzazione Riunioni', roles: ['secretary'] } },
             { path: 'secretary/certificates', component: () => import('@/pages/secretary/Certificates.vue'), meta: { title: 'Certificati & Attestati', roles: ['secretary', 'admin', 'superadmin', 'principal', 'vice_principal'] } },
             { path: 'secretary/substitutions', component: () => import('@/pages/secretary/Substitutions.vue'), meta: { title: 'Gestione Sostituzioni Docenti', roles: ['secretary', 'admin', 'superadmin', 'principal', 'vice_principal'] } },
+            { path: 'secretary/sidi', component: () => import('@/pages/secretary/SidiExports.vue'), meta: { title: 'Flussi SIDI (MIM)', roles: ['secretary', 'admin', 'superadmin', 'principal', 'vice_principal'] } },
             { path: 'secretary/students/:id/fascicolo', component: () => import('@/pages/secretary/FascicoloStudente.vue'), meta: { title: 'Fascicolo Studente', roles: ['secretary', 'principal', 'vice_principal'] } },
 
             // Teacher Routes (Supports both 'teacher' and 'coordinator')
             { path: 'teacher', component: () => import('@/pages/teacher/Index.vue'), meta: { title: 'Pannello Docente', roles: ['teacher', 'coordinator'] } },
+            { path: 'teacher/dashboard', redirect: '/teacher' },
             { path: 'teacher/grades', component: () => import('@/pages/teacher/Grades.vue'), meta: { title: 'Gestione Voti', roles: ['teacher', 'coordinator'] } },
             { path: 'teacher/attendance', component: () => import('@/pages/teacher/Attendance.vue'), meta: { title: 'Registro Appello & Presenze', roles: ['teacher', 'coordinator'] } },
             { path: 'teacher/classes', component: () => import('@/pages/teacher/Classes.vue'), meta: { title: 'Le Mie Classi', roles: ['teacher', 'coordinator'] } },
@@ -138,6 +141,7 @@ export default [
 
             // Student Routes
             { path: 'student', component: () => import('@/pages/student/Index.vue'), meta: { title: 'Pannello Studente', roles: ['student'] } },
+            { path: 'student/dashboard', redirect: '/student' },
             { path: 'student/grades', component: () => import('@/pages/student/Grades.vue'), meta: { title: 'I Miei Voti', roles: ['student'] } },
             { path: 'student/attendance', component: () => import('@/pages/student/Attendance.vue'), meta: { title: 'Presenze & Assenze', roles: ['student'] } },
             { path: 'student/documents', component: () => import('@/pages/student/Documents.vue'), meta: { title: 'Documenti Studente', roles: ['student'] } },
@@ -157,6 +161,7 @@ export default [
 
             // Parent Routes
             { path: 'parent', component: () => import('@/pages/parent/Index.vue'), meta: { title: 'Pannello Famiglie', roles: ['parent'] } },
+            { path: 'parent/dashboard', redirect: '/parent' },
             { path: 'parent/children', component: () => import('@/pages/parent/Children.vue'), meta: { title: 'Figli Associati', roles: ['parent'] } },
             { path: 'parent/grades', component: () => import('@/pages/parent/Grades.vue'), meta: { title: 'Valutazioni Figli', roles: ['parent'] } },
             { path: 'parent/report-card', component: () => import('@/pages/parent/ReportCard.vue'), meta: { title: 'Pagella Scolastica', roles: ['parent'] } },
@@ -206,7 +211,9 @@ export default [
                 },
                 meta: { title: 'Profilo Utente', roles: ['superadmin', 'admin', 'secretary', 'teacher', 'student', 'parent', 'principal', 'vice_principal', 'coordinator'] }
             },
-            { path: 'support', component: () => import('@/pages/Support.vue'), meta: { title: 'Supporto & Assistenza', roles: ['superadmin', 'admin', 'secretary', 'teacher', 'student', 'parent'] } }
+            { path: 'support', component: () => import('@/pages/Support.vue'), meta: { title: 'Supporto & Assistenza', roles: ['superadmin', 'admin', 'secretary', 'teacher', 'student', 'parent'] } },
+            { path: 'accessibility-statement', component: () => import('@/pages/AccessibilityStatement.vue'), meta: { title: 'Dichiarazione di Accessibilità (AgID)', requiresAuth: false } },
+            { path: 'dichiarazione-accessibilita', redirect: '/accessibility-statement' }
         ]
     },
     {

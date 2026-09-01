@@ -104,13 +104,8 @@ func (s *Service) SignVerbale(ctx context.Context, verbaleID, userID, ipAddress 
 	}
 
 	// Bug 139: verify the signer is secretary or president
-	isAuthorized := false
-	if v.SecretaryID != nil && *v.SecretaryID == userID {
-		isAuthorized = true
-	}
-	if v.PresidentID != nil && *v.PresidentID == userID {
-		isAuthorized = true
-	}
+	isAuthorized := (v.SecretaryID != nil && *v.SecretaryID == userID) ||
+		(v.PresidentID != nil && *v.PresidentID == userID)
 	// NOTE: for full participant list verification, add ParticipantIDs to MeetingVerbale
 	// and verify: for _, pid := range v.ParticipantIDs { if pid == userID { isAuthorized = true } }
 	if !isAuthorized {

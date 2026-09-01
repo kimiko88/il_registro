@@ -94,6 +94,9 @@ func (r *PostgresRepository) GetClassSubjects(ctx context.Context, classID strin
 		}
 		results = append(results, cs)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return results, nil
 }
 
@@ -380,7 +383,7 @@ func (r *PostgresRepository) BulkMigrateStudents(ctx context.Context, migrations
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	stmtUpdateClass, err := tx.PrepareContext(ctx, `
 		UPDATE students
@@ -390,7 +393,7 @@ func (r *PostgresRepository) BulkMigrateStudents(ctx context.Context, migrations
 	if err != nil {
 		return err
 	}
-	defer stmtUpdateClass.Close()
+	defer func() { _ = stmtUpdateClass.Close() }()
 
 	stmtUnassignClass, err := tx.PrepareContext(ctx, `
 		UPDATE students
@@ -400,7 +403,7 @@ func (r *PostgresRepository) BulkMigrateStudents(ctx context.Context, migrations
 	if err != nil {
 		return err
 	}
-	defer stmtUnassignClass.Close()
+	defer func() { _ = stmtUnassignClass.Close() }()
 
 	for _, item := range migrations {
 		switch item.Action {

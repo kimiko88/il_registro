@@ -165,66 +165,8 @@
 
              <!-- Accessibility Tab -->
              <q-tab-panel name="accessibility" class="q-pa-xl">
-                 <div class="row items-center q-mb-xl">
-                   <q-avatar color="indigo-50" text-color="indigo-700" icon="accessibility_new" size="48px" class="q-mr-md" />
-                   <div>
-                     <div class="text-h5 text-weight-bold text-slate-800">Accessibilità Visiva &amp; Modalità di Lettura</div>
-                     <div class="text-caption text-slate-500">Impostazioni generali per la leggibilità e l'accessibilità visiva (DSA / WCAG 2.1 AAA)</div>
-                   </div>
-                 </div>
-
-                 <div class="row q-col-gutter-lg">
-                   <!-- Font OpenDyslexic (DSA) -->
-                   <div class="col-12 col-md-6">
-                     <q-card flat bordered class="q-pa-md rounded-xl bg-white full-height shadow-sm">
-                       <div class="row items-center justify-between q-mb-sm">
-                         <div class="row items-center">
-                           <q-avatar color="indigo-50" text-color="indigo-700" icon="spellcheck" size="44px" class="q-mr-sm" />
-                           <div>
-                             <div class="text-subtitle1 text-weight-bold text-slate-800">Font OpenDyslexic (Alta Leggibilità DSA)</div>
-                             <div class="text-caption text-slate-500">Attiva il carattere specifico per la dislessia e la facilitazione di lettura</div>
-                           </div>
-                         </div>
-                         <q-toggle
-                           v-model="themeStore.dsaFont"
-                           color="indigo"
-                           size="lg"
-                           @update:model-value="themeStore.toggleDsaFont"
-                         />
-                       </div>
-                       <q-separator class="q-my-sm" />
-                       <div class="q-pa-md bg-slate-50 rounded-lg text-slate-700 text-body2 q-mt-sm border border-slate-100" :class="{ 'dsa-font-active': themeStore.dsaFont }">
-                         <span class="text-weight-bold">Anteprima Testo:</span> Piattaforma scolastica istituzionale con supporto all'accessibilità visiva ed inclusione digitale.
-                       </div>
-                     </q-card>
-                   </div>
-
-                   <!-- Contrasto Elevato -->
-                   <div class="col-12 col-md-6">
-                     <q-card flat bordered class="q-pa-md rounded-xl bg-white full-height shadow-sm">
-                       <div class="row items-center justify-between q-mb-sm">
-                         <div class="row items-center">
-                           <q-avatar color="amber-50" text-color="amber-9" icon="contrast" size="44px" class="q-mr-sm" />
-                           <div>
-                             <div class="text-subtitle1 text-weight-bold text-slate-800">Modalità Contrasto Elevato</div>
-                             <div class="text-caption text-slate-500">Definizione netta dei bordi delle componenti e contrasto aumentato</div>
-                           </div>
-                         </div>
-                         <q-toggle
-                           v-model="themeStore.highContrast"
-                           color="amber-9"
-                           size="lg"
-                           @update:model-value="themeStore.toggleHighContrast"
-                         />
-                       </div>
-                       <q-separator class="q-my-sm" />
-                       <div class="q-pa-md bg-slate-50 rounded-lg text-slate-700 text-body2 q-mt-sm border border-slate-100" :class="{ 'high-contrast-active': themeStore.highContrast }">
-                         <span class="text-weight-bold">Anteprima Contrasto:</span> Modalità attiva per l'incremento di nitidezza della grafica e dei controlli.
-                       </div>
-                     </q-card>
-                   </div>
-                 </div>
-              </q-tab-panel>
+                 <AccessibilitySettingsPanel />
+             </q-tab-panel>
 
              <!-- Account / Password Tab -->
              <q-tab-panel name="account" class="q-pa-xl">
@@ -336,6 +278,7 @@ import { useAuthStore } from '@/stores/auth'
 import { userService } from '@/services/userService'
 import adminService from '@/services/adminService'
 import api from '@/services/api'
+import AccessibilitySettingsPanel from '@/components/Common/AccessibilitySettingsPanel.vue'
 
 import { useI18n } from 'vue-i18n'
 

@@ -28,6 +28,15 @@
       </div>
     </div>
 
+    <!-- Banner Sessione Scrutinio Differito -->
+    <q-banner v-if="period === 3" rounded class="bg-deep-orange-1 text-deep-orange-10 border border-deep-orange-3 q-mb-md q-pa-md shadow-xs">
+      <template v-slot:avatar>
+        <q-icon name="event_repeat" color="deep-orange-8" size="md" />
+      </template>
+      <div class="text-weight-bold text-subtitle1">{{ $t('help.teacher.scrutiny.deferredBannerTitle') }}</div>
+      <div class="text-body2">{{ $t('help.teacher.scrutiny.deferredBannerBody') }}</div>
+    </q-banner>
+
     <div v-if="!selectedClassId" class="flex flex-center" style="height: 60vh">
         <q-card class="glass-card text-center q-pa-xl rounded-2xl border-slate-100 shadow-soft">
             <q-icon name="rocket_launch" size="80px" color="primary" class="q-mb-md opacity-80" />
@@ -77,6 +86,9 @@
             <q-tr :props="props" class="hover-row">
               <q-td class="text-weight-bold text-slate-800 sticky-col bg-white">
                 {{ props.row.student_name }}
+                <q-badge v-if="['Sospeso', 'Giudizio Sospeso'].includes(props.row.record?.final_decision)" color="deep-orange" class="q-ml-xs">
+                  Sospeso
+                </q-badge>
               </q-td>
               
               <!-- Attendance Stats -->
@@ -133,7 +145,7 @@
                 <q-btn flat round dense icon="warning" color="amber-9" @click="openDeficiencyModal(props.row)">
                   <q-tooltip>Argomenti Carenze & Recuperi</q-tooltip>
                 </q-btn>
-                <q-btn v-if="period === 2" flat round dense icon="event_repeat" color="deep-orange" @click="openDeferredModal(props.row)">
+                <q-btn v-if="period === 2 || period === 3 || ['Sospeso', 'Giudizio Sospeso'].includes(props.row.record?.final_decision)" flat round dense icon="event_repeat" color="deep-orange" @click="openDeferredModal(props.row)">
                   <q-tooltip>Scrutinio Differito (Esami Recupero)</q-tooltip>
                 </q-btn>
               </q-td>
@@ -223,8 +235,8 @@
       <q-card style="min-width: 600px" class="rounded-xl">
         <q-card-section class="bg-deep-orange-8 text-white row items-center justify-between">
           <div>
-            <div class="text-h6 text-weight-bold">Scrutinio Differito — {{ selectedStudent?.student_name }}</div>
-            <div class="text-caption">Verifica del saldo dei debiti formativi post-esami di recupero</div>
+            <div class="text-h6 text-weight-bold">{{ $t('help.teacher.scrutiny.deferredModalTitle', { name: selectedStudent?.student_name }) }}</div>
+            <div class="text-caption">{{ $t('help.teacher.scrutiny.deferredModalSubtitle') }}</div>
           </div>
           <q-btn flat round icon="close" v-close-popup />
         </q-card-section>
@@ -264,19 +276,19 @@
           <q-select
             v-model="deferredForm.final_decision"
             :options="[
-              { label: 'Promosso con debiti saldati', value: 'promosso_con_debiti_saldati' },
-              { label: 'Non promosso (Debiti non saldati)', value: 'non_promosso' }
+              { label: $t('help.teacher.scrutiny.promotedDebtsCleared'), value: 'promosso_con_debiti_saldati' },
+              { label: $t('help.teacher.scrutiny.notPromotedDebtsNotCleared'), value: 'non_promosso' }
             ]"
             label="Delibera Finale Scrutinio Differito *"
             outlined dense emit-value map-options
           />
 
-          <q-input v-model="deferredForm.notes" type="textarea" rows="2" label="Note Verbale Scrutinio Differito" outlined />
+          <q-input v-model="deferredForm.notes" type="textarea" rows="2" :label="$t('help.teacher.scrutiny.deferredNotes')" outlined />
         </q-card-section>
 
         <q-card-actions align="right" class="q-pa-md bg-slate-50">
           <q-btn flat label="Annulla" v-close-popup />
-          <q-btn color="deep-orange-8" label="Delibera Scrutinio Differito" unelevated @click="saveDeferredScrutiny" :loading="savingDeferred" />
+          <q-btn color="deep-orange-8" :label="$t('help.teacher.scrutiny.deliberateDeferred')" unelevated @click="saveDeferredScrutiny" :loading="savingDeferred" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -284,7 +296,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, watch } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
 import { scrutinyService } from '@/services/scrutinyService'
@@ -300,9 +312,10 @@ const schoolYearStore = useSchoolYearStore()
 
 const selectedClassId = ref(null)
 const period = ref(1)
-const periodOptions = ref([
-  { label: 'Scrutinio 1° Semestre', value: 1 },
-  { label: 'Scrutinio 2° Semestre / Finale', value: 2 }
+const periodOptions = computed(() => [
+  { label: t('help.teacher.scrutiny.period1'), value: 1 },
+  { label: t('help.teacher.scrutiny.period2'), value: 2 },
+  { label: t('help.teacher.scrutiny.deferredScrutiny'), value: 3 }
 ])
 const loading = ref(false)
 const saving = ref(false)
@@ -400,7 +413,8 @@ watch([selectedClassId, period], () => {
 const fetchMatrix = async () => {
   loading.value = true
   try {
-    const res = await scrutinyService.getMatrix(selectedClassId.value, period.value)
+    const fetchSemester = period.value === 3 ? 2 : period.value
+    const res = await scrutinyService.getMatrix(selectedClassId.value, fetchSemester)
     
     const newScrutinyData = {}
     const students = res.data.students || []
@@ -464,10 +478,9 @@ const saveStudentScrutiny = async (studentId, silent = false) => {
 const saveAll = async () => {
   saving.value = true
   let successCount = 0
-  let totalCount = 0
   try {
     const studentIds = Object.keys(scrutinyData)
-    totalCount = studentIds.length
+    const totalCount = studentIds.length
     for (const sid of studentIds) {
       const ok = await saveStudentScrutiny(sid, true)
       if (ok) successCount++
@@ -545,7 +558,7 @@ const saveDeferredScrutiny = async () => {
       }))
     }
     await scrutinyService.saveDeferredScrutiny(payload)
-    $q.notify({ type: 'positive', message: 'Scrutinio differito registrato con successo!' })
+    $q.notify({ type: 'positive', message: t('help.teacher.scrutiny.deferredSaved') })
     showDeferredModal.value = false
     fetchMatrix()
   } catch {

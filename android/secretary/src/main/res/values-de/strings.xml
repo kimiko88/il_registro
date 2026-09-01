@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Klassenbuch - Sekretariat</string>
+    <string name="secretary_dashboard_title">Sekretariats-Register</string>
+    <string name="user_management">Benutzerverwaltung</string>
+    <string name="scrutiny_supervision">Zeugnisaufsicht</string>
+    <string name="generate_certificates">Bescheinigungen &amp; Urkunden</string>
+    <string name="audit_logs">Systemprotokolle</string>
+    <string name="create_user">Neuen Benutzer erstellen</string>
+    <string name="download_pdf">PDF-Protokoll herunterladen</string>
+    <string name="login_subtitle">Melden Sie sich im Verwaltungsbereich an</string>
+    <string name="email_label">Sekretariats-E-Mail</string>
+    <string name="password_label">Passwort</string>
+    <string name="btn_login">INS VERWALTUNGSPANEL EINLOGGEN</string>
+    <string name="err_enter_credentials">E-Mail und Passwort eingeben</string>
+    <string name="logout">Abmelden</string>
+</resources>

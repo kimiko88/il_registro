@@ -19,11 +19,23 @@ services:
     ports:
       - "6379:6379"
 
-  # Placeholder for Supabase: implementing a full local Supabase stack is very heavy.
-  # We recommend using the hosted Supabase or their CLI for local dev: `supabase start`
-  # For this compose, we assume specific services like Auth/Storage connect to REAL Supabase or CLI-hosted one.
-  # If you strictly want a service named "supabase", we can mock it or use a second postgres.
-  # Here we add a comment explaining integration.
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    restart: always
+    ports:
+      - "6432:6432"
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-user}
+      DB_PASSWORD: ${DB_PASSWORD:-password}
+      DB_NAME: ${DB_NAME:-registro}
+      LISTEN_PORT: 6432
+      POOL_MODE: transaction
+      MAX_CLIENT_CONN: 1000
+      DEFAULT_POOL_SIZE: 20
+    depends_on:
+      - db
 
   api:
     build:
@@ -35,10 +47,11 @@ services:
       - ..:/app
     depends_on:
       - db
+      - pgbouncer
       - redis
     environment:
-      DB_HOST: db
-      DB_PORT: 5432
+      DB_HOST: pgbouncer
+      DB_PORT: 6432
       DB_USER: ${DB_USER:-user}
       DB_PASSWORD: ${DB_PASSWORD:-password}
       DB_NAME: ${DB_NAME:-registro}
@@ -48,5 +61,20 @@ services:
       SUPABASE_URL: ${SUPABASE_URL}
       SUPABASE_KEY: ${SUPABASE_KEY}
 
+  pdf-worker:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    command: ["./pdf-worker.exe"]
+    depends_on:
+      - db
+      - redis
+    environment:
+      DB_HOST: pgbouncer
+      DB_PORT: 6432
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+
 volumes:
   postgres_data:
+

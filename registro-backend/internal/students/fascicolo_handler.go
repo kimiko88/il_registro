@@ -132,6 +132,22 @@ func (h *FascicoloHandler) GetFascicolo(c *gin.Context) {
 		}
 	}
 
+	studentUUID := studentID
+	userUUID := studentID
+	if h.db != nil {
+		var sID, uID string
+		err := h.db.QueryRowContext(c.Request.Context(), `
+			SELECT s.id::text, s.user_id::text
+			FROM students s
+			WHERE s.id::text = $1 OR s.user_id::text = $1
+			LIMIT 1
+		`, studentID).Scan(&sID, &uID)
+		if err == nil {
+			studentUUID = sID
+			userUUID = uID
+		}
+	}
+
 	semester, _ := strconv.Atoi(c.DefaultQuery("semester", "1"))
 
 	voti := []VotoItem{}
@@ -154,19 +170,22 @@ func (h *FascicoloHandler) GetFascicolo(c *gin.Context) {
 		rows, err := h.db.QueryContext(c.Request.Context(),
 			`SELECT id, subject_id, grade_value, grade_category, date
 			 FROM grades
-			 WHERE student_id = $1 AND semester = $2 AND is_published = true AND deleted_at IS NULL
-			 ORDER BY date DESC`, studentID, semester,
+			 WHERE (student_id::text = $1 OR student_id::text = $2) AND semester = $3 AND is_published = true AND deleted_at IS NULL
+			 ORDER BY date DESC`, studentUUID, userUUID, semester,
 		)
 		if err != nil {
 			return
 		}
-		defer rows.Close()
+		defer func() { _ = rows.Close() }()
 		var items []VotoItem
 		for rows.Next() {
 			var v VotoItem
 			if err := rows.Scan(&v.ID, &v.SubjectID, &v.Value, &v.Category, &v.Date); err == nil {
 				items = append(items, v)
 			}
+		}
+		if err := rows.Err(); err != nil {
+			return
 		}
 		if len(items) > 0 {
 			mu.Lock()
@@ -184,8 +203,8 @@ func (h *FascicoloHandler) GetFascicolo(c *gin.Context) {
 		rows, err := h.db.QueryContext(c.Request.Context(),
 			`SELECT id, date, status, COALESCE(notes, '')
 			 FROM attendance
-			 WHERE student_id = $1
-			 ORDER BY date DESC`, studentID,
+			 WHERE (student_id::text = $1 OR student_id::text = $2)
+			 ORDER BY date DESC`, studentUUID, userUUID,
 		)
 		if err != nil {
 			return
@@ -197,6 +216,9 @@ func (h *FascicoloHandler) GetFascicolo(c *gin.Context) {
 			if err := rows.Scan(&p.ID, &p.Date, &p.Status, &p.Notes); err == nil {
 				items = append(items, p)
 			}
+		}
+		if err := rows.Err(); err != nil {
+			return
 		}
 		if len(items) > 0 {
 			mu.Lock()
@@ -215,8 +237,8 @@ func (h *FascicoloHandler) GetFascicolo(c *gin.Context) {
 			`SELECT dn.id, COALESCE(u.first_name || ' ' || u.last_name, 'Docente'), dn.description, dn.created_at
 			 FROM disciplinary_notes dn
 			 LEFT JOIN users u ON dn.author_id = u.id
-			 WHERE dn.student_id = $1
-			 ORDER BY dn.created_at DESC`, studentID,
+			 WHERE (dn.student_id::text = $1 OR dn.student_id::text = $2)
+			 ORDER BY dn.created_at DESC`, studentUUID, userUUID,
 		)
 		if err != nil {
 			return
@@ -228,6 +250,9 @@ func (h *FascicoloHandler) GetFascicolo(c *gin.Context) {
 			if err := rows.Scan(&n.ID, &n.AuthorName, &n.Description, &n.Date); err == nil {
 				items = append(items, n)
 			}
+		}
+		if err := rows.Err(); err != nil {
+			return
 		}
 		if len(items) > 0 {
 			mu.Lock()
@@ -245,8 +270,8 @@ func (h *FascicoloHandler) GetFascicolo(c *gin.Context) {
 		rows, err := h.db.QueryContext(c.Request.Context(),
 			`SELECT id, title, COALESCE(company_name, ''), hours, date
 			 FROM pcto_activities
-			 WHERE student_id = $1
-			 ORDER BY date DESC`, studentID,
+			 WHERE (student_id::text = $1 OR student_id::text = $2)
+			 ORDER BY date DESC`, studentUUID, userUUID,
 		)
 		if err != nil {
 			return
@@ -258,6 +283,9 @@ func (h *FascicoloHandler) GetFascicolo(c *gin.Context) {
 			if err := rows.Scan(&p.ID, &p.Title, &p.Company, &p.Hours, &p.Date); err == nil {
 				items = append(items, p)
 			}
+		}
+		if err := rows.Err(); err != nil {
+			return
 		}
 		if len(items) > 0 {
 			mu.Lock()
@@ -276,8 +304,8 @@ func (h *FascicoloHandler) GetFascicolo(c *gin.Context) {
 			`SELECT hw.id, hw.title, hw.subject_id, hw.due_date, COALESCE(hw.description, '')
 			 FROM homeworks hw
 			 JOIN class_students cs ON hw.class_id = cs.class_id
-			 WHERE cs.student_id = $1
-			 ORDER BY hw.due_date DESC`, studentID,
+			 WHERE (cs.student_id::text = $1 OR cs.student_id::text = $2)
+			 ORDER BY hw.due_date DESC`, studentUUID, userUUID,
 		)
 		if err != nil {
 			return
@@ -289,6 +317,9 @@ func (h *FascicoloHandler) GetFascicolo(c *gin.Context) {
 			if err := rows.Scan(&c.ID, &c.Title, &c.SubjectID, &c.DueDate, &c.Description); err == nil {
 				items = append(items, c)
 			}
+		}
+		if err := rows.Err(); err != nil {
+			return
 		}
 		if len(items) > 0 {
 			mu.Lock()
@@ -306,8 +337,8 @@ func (h *FascicoloHandler) GetFascicolo(c *gin.Context) {
 		rows, err := h.db.QueryContext(c.Request.Context(),
 			`SELECT id, title, type, status, created_at
 			 FROM student_documents
-			 WHERE student_id = $1
-			 ORDER BY created_at DESC`, studentID,
+			 WHERE (student_id::text = $1 OR student_id::text = $2)
+			 ORDER BY created_at DESC`, studentUUID, userUUID,
 		)
 		if err != nil {
 			return
@@ -319,6 +350,9 @@ func (h *FascicoloHandler) GetFascicolo(c *gin.Context) {
 			if err := rows.Scan(&d.ID, &d.Title, &d.Type, &d.Status, &d.CreatedAt); err == nil {
 				items = append(items, d)
 			}
+		}
+		if err := rows.Err(); err != nil {
+			return
 		}
 		if len(items) > 0 {
 			mu.Lock()

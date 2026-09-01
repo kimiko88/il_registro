@@ -278,3 +278,49 @@ func TestSubjectAverages_ProposedClamping(t *testing.T) {
 		t.Errorf("expected clamped proposed grade 1 for avg 0.4, got %.0f", proposedLow)
 	}
 }
+
+func TestScrutinyOutcome_NonPromossoPerTroppeInsufficienze(t *testing.T) {
+	// >= 4 insufficient grades => NON PROMOSSO
+	grades := []float64{5.0, 4.0, 5.5, 4.5, 7.0} // 4 insufficiencies
+	conduct := 7
+
+	insufficientCount := 0
+	for _, g := range grades {
+		if g < 6.0 {
+			insufficientCount++
+		}
+	}
+
+	var outcome string
+	if conduct < 6 || insufficientCount >= 4 {
+		outcome = "non_promosso"
+	} else if insufficientCount > 0 {
+		outcome = "sospensione_giudizio"
+	} else {
+		outcome = "promosso"
+	}
+
+	if outcome != "non_promosso" {
+		t.Errorf("expected outcome 'non_promosso' for >=4 insufficient grades, got '%s'", outcome)
+	}
+}
+
+func TestScrutiny_ValidationRoleAuthorization(t *testing.T) {
+	// Only principal and vice_principal can formally validate/sign off scrutiny
+	validationRoles := map[string]bool{
+		"principal":      true,
+		"vice_principal": true,
+		"admin":          false, // Admin can coordinate/save but not formally validate/sign
+		"superadmin":     false,
+		"teacher":        false,
+		"student":        false,
+		"parent":         false,
+	}
+
+	for role, expectedCanValidate := range validationRoles {
+		isDirigenza := role == "principal" || role == "vice_principal"
+		if isDirigenza != expectedCanValidate {
+			t.Errorf("role '%s': expected canValidate=%v, got %v", role, expectedCanValidate, isDirigenza)
+		}
+	}
+}

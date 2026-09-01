@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import api from '@/services/api'
+import { handleAsyncPdfDownload } from '@/utils/pdfHelper'
 
 export const useCertificatesStore = defineStore('certificates', {
     state: () => ({
@@ -47,38 +48,14 @@ export const useCertificatesStore = defineStore('certificates', {
         },
 
         async downloadPDF(id) {
-            let url = null
-            let link = null
             try {
-                const response = await api.get(`/certificates/${id}/pdf`, {
-                    responseType: 'blob',
-                    timeout: 60000
-                })
-                const blob = new Blob([response.data], { type: 'application/pdf' })
-                url = window.URL.createObjectURL(blob)
-                link = document.createElement('a')
-                link.href = url
-                link.setAttribute('download', `certificato_${id}.pdf`)
-                document.body.appendChild(link)
-                link.click()
+                await handleAsyncPdfDownload(
+                    () => api.get(`/certificates/${id}/pdf`, { responseType: 'blob', timeout: 60000 }),
+                    `certificato_${id}.pdf`
+                )
             } catch (err) {
                 console.error('Error downloading certificate PDF:', err)
                 throw err
-            } finally {
-                if (link) {
-                    try {
-                        if (link.parentNode) {
-                            link.parentNode.removeChild(link)
-                        } else if (typeof link.remove === 'function') {
-                            link.remove()
-                        }
-                    } catch (e) {
-                        console.debug('Failed to remove anchor element:', e)
-                    }
-                }
-                if (url) {
-                    window.URL.revokeObjectURL(url)
-                }
             }
         },
 

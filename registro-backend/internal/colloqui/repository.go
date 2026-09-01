@@ -401,7 +401,9 @@ func (r *PostgresRepository) UpdateBookingStatus(ctx context.Context, bookingID 
 		INSERT INTO colloquio_history (booking_id, new_status, changed_by, changed_at, reason)
 		VALUES ($1::uuid, $2, $3::uuid, NOW(), $4)
 	`
-	_, _ = tx.ExecContext(ctx, historyQuery, bookingID, string(status), changedByUUID, reason)
+	if _, err := tx.ExecContext(ctx, historyQuery, bookingID, string(status), changedByUUID, reason); err != nil {
+		return err
+	}
 
 	return tx.Commit()
 }
@@ -445,7 +447,7 @@ func (r *PostgresRepository) CreateGeneralMeeting(ctx context.Context, m *Genera
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	query := `
 		INSERT INTO general_parent_meetings (
@@ -552,12 +554,19 @@ func (r *PostgresRepository) GetGeneralMeeting(ctx context.Context, id string) (
 		ORDER BY u.last_name ASC
 	`, id)
 	if err == nil {
-		defer slotRows.Close()
+		defer func() { _ = slotRows.Close() }()
 		for slotRows.Next() {
 			var s GeneralMeetingTeacherSlot
-			_ = slotRows.Scan(&s.ID, &s.MeetingID, &s.TeacherID, &s.TeacherName, &s.SubjectName, &s.RoomOrTable, &s.MeetURL, &s.MaxBookings, &s.BookedCount)
+			if err := slotRows.Scan(&s.ID, &s.MeetingID, &s.TeacherID, &s.TeacherName, &s.SubjectName, &s.RoomOrTable, &s.MeetURL, &s.MaxBookings, &s.BookedCount); err != nil {
+				return nil, err
+			}
 			m.TeacherSlots = append(m.TeacherSlots, s)
 		}
+		if err := slotRows.Err(); err != nil {
+			return nil, err
+		}
+	} else if !errors.Is(err, sql.ErrNoRows) {
+		return nil, err
 	}
 
 	return &m, nil
@@ -568,7 +577,7 @@ func (r *PostgresRepository) BookQueueTicket(ctx context.Context, t *GeneralMeet
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	// Get next progressive ticket number for this teacher & meeting
 	var maxTicket sql.NullInt64

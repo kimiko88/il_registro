@@ -243,6 +243,9 @@ func (m *MockUserRepo) GetFascicoloSummary(ctx context.Context, studentID string
 func (m *MockUserRepo) IsActive(ctx context.Context, id string) (bool, error) {
 	return true, nil
 }
+func (m *MockUserRepo) ChangePasswordTx(ctx context.Context, userID, newPasswordHash string) error {
+	return nil
+}
 
 func TestAttendanceService_MarkAttendance(t *testing.T) {
 	mockRepo := new(MockAttendanceRepo)

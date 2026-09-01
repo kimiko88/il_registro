@@ -1,0 +1,14 @@
+"app_name" = "Register - Secretary";
+"secretary_dashboard_title" = "Secretary Register";
+"user_management" = "User Management";
+"scrutiny_supervision" = "Scrutiny Supervision";
+"generate_certificates" = "Certificates & Records";
+"audit_logs" = "Audit Logs";
+"create_user" = "Create New User";
+"download_pdf" = "Download PDF Minutes";
+"login_subtitle" = "Log in to the administrative panel";
+"email_label" = "Secretary Email";
+"password_label" = "Password";
+"btn_login" = "LOG IN TO PANEL";
+"err_enter_credentials" = "Enter email and password";
+"logout" = "Log out";

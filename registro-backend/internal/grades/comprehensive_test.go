@@ -22,18 +22,18 @@ func TestValidateGradeValue(t *testing.T) {
 		wantErrMsg string
 	}{
 		{"Valid numeric 7.5", 7.5, string(GradeTypeNumeric), false, ""},
-		{"Invalid numeric 0", 0, string(GradeTypeNumeric), true, "Voto deve essere tra 1 e 10"},
+		{"Invalid numeric 0", 0, string(GradeTypeNumeric), true, "voto deve essere tra 1 e 10"},
 		{"Valid numeric 10", 10, string(GradeTypeNumeric), false, ""},
-		{"Invalid numeric > 10", 10.1, string(GradeTypeNumeric), true, "Voto deve essere tra 1 e 10"},
-		{"Invalid numeric < 0 (except -1)", -2, string(GradeTypeNumeric), true, "Voto deve essere tra 1 e 10"},
+		{"Invalid numeric > 10", 10.1, string(GradeTypeNumeric), true, "voto deve essere tra 1 e 10"},
+		{"Invalid numeric < 0 (except -1)", -2, string(GradeTypeNumeric), true, "voto deve essere tra 1 e 10"},
 		{"Valid numeric -1 (absence)", -1, string(GradeTypeNumeric), false, ""},
-		{"Invalid judgment value", -1, string(GradeTypeJudgment), true, "Valore giudizio fuori range"},
+		{"Invalid judgment value", -1, string(GradeTypeJudgment), true, "valore giudizio fuori range"},
 		{"Valid judgment value", 6, string(GradeTypeJudgment), false, ""},
 		{"Valid credit", 5, string(GradeTypeCredit), false, ""},
-		{"Invalid credit", 0, string(GradeTypeCredit), true, "Credito"},
-		{"Invalid credit > 25", 26, string(GradeTypeCredit), true, "Credito"},
+		{"Invalid credit", 0, string(GradeTypeCredit), true, "credito"},
+		{"Invalid credit > 25", 26, string(GradeTypeCredit), true, "credito"},
 		{"Valid competence", 3, string(GradeTypeCompetence), false, ""},
-		{"Invalid competence", 5, string(GradeTypeCompetence), true, "Livello competenza non valido"},
+		{"Invalid competence", 5, string(GradeTypeCompetence), true, "livello competenza non valido"},
 	}
 
 	for _, tt := range tests {
@@ -79,7 +79,13 @@ func TestValidateDescription(t *testing.T) {
 
 func TestValidateGradeDate(t *testing.T) {
 	v := NewValidator(nil)
-	// Semester 1: 2025-09-01 -> 2026-01-31
+
+	currentYear := time.Now().Year()
+	if time.Now().Month() < time.September {
+		currentYear--
+	}
+	validSem1Date := fmt.Sprintf("%d-09-01", currentYear)
+	wrongSemDate := fmt.Sprintf("%d-03-01", currentYear+1) // March of same school year = Sem 2
 
 	tests := []struct {
 		name     string
@@ -87,10 +93,10 @@ func TestValidateGradeDate(t *testing.T) {
 		semester int
 		wantErr  bool
 	}{
-		{"Valid Date Sem 1", "2025-10-15", 1, false},
+		{"Valid Date Sem 1", validSem1Date, 1, false},
 		{"Too Old", "2010-01-01", 1, true},
-		{"Future Warning (Simulated)", "2030-01-01", 1, true}, // Assuming run in 2025
-		{"Wrong Semester", "2026-03-01", 1, true},             // March is Sem 2
+		{"Future Warning (Simulated)", "2030-01-01", 1, true},
+		{"Wrong Semester", wrongSemDate, 1, true}, // March is Sem 2
 	}
 
 	for _, tt := range tests {

@@ -48,7 +48,7 @@ func (r *Repository) ListByClass(ctx context.Context, classID string) ([]*UdaPla
 
 	rows, err := r.db.QueryContext(ctx, query, classID)
 	if err != nil {
-		return []*UdaPlan{}, nil
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -65,13 +65,16 @@ func (r *Repository) ListByClass(ctx context.Context, classID string) ([]*UdaPla
 			&p.Objectives, &p.Methodologies, &p.EvaluationCriteria,
 			&p.Status, &p.CreatedAt, &p.UpdatedAt,
 		); err != nil {
-			return []*UdaPlan{}, nil
+			return nil, err
 		}
 		_ = json.Unmarshal(compBytes, &p.Competencies)
 		if p.Competencies == nil {
 			p.Competencies = []string{}
 		}
 		plans = append(plans, p)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	if plans == nil {
 		plans = []*UdaPlan{}
@@ -136,7 +139,7 @@ func (r *Repository) ListBySchool(ctx context.Context, schoolID string) ([]*UdaP
 
 	rows, err := r.db.QueryContext(ctx, query, schoolID)
 	if err != nil {
-		return []*UdaPlan{}, nil
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -153,13 +156,16 @@ func (r *Repository) ListBySchool(ctx context.Context, schoolID string) ([]*UdaP
 			&p.Objectives, &p.Methodologies, &p.EvaluationCriteria,
 			&p.Status, &p.CreatedAt, &p.UpdatedAt,
 		); err != nil {
-			return []*UdaPlan{}, nil
+			return nil, err
 		}
 		_ = json.Unmarshal(compBytes, &p.Competencies)
 		if p.Competencies == nil {
 			p.Competencies = []string{}
 		}
 		plans = append(plans, p)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	if plans == nil {
 		plans = []*UdaPlan{}
@@ -184,7 +190,7 @@ func (r *Repository) ListAll(ctx context.Context) ([]*UdaPlan, error) {
 
 	rows, err := r.db.QueryContext(ctx, query)
 	if err != nil {
-		return []*UdaPlan{}, nil
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -201,13 +207,16 @@ func (r *Repository) ListAll(ctx context.Context) ([]*UdaPlan, error) {
 			&p.Objectives, &p.Methodologies, &p.EvaluationCriteria,
 			&p.Status, &p.CreatedAt, &p.UpdatedAt,
 		); err != nil {
-			return []*UdaPlan{}, nil
+			return nil, err
 		}
 		_ = json.Unmarshal(compBytes, &p.Competencies)
 		if p.Competencies == nil {
 			p.Competencies = []string{}
 		}
 		plans = append(plans, p)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	if plans == nil {
 		plans = []*UdaPlan{}

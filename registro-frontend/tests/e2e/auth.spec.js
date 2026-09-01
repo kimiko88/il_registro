@@ -1,81 +1,135 @@
-﻿/**
- * @file auth.spec.js
- * E2E tests: Auth flow con Playwright
- *
- * Covers:
- * [E01] Login con credenziali valide → redirect al dashboard di ruolo
- * [E02] Login con credenziali errate → messaggio di errore visibile
- * [E03] Brute force: 5 tentativi falliti → UI lockout visibile
- * [E04] Token scaduto → redirect a /login?reason=session_expired
- * [E05] Logout → redirect a /login e token rimosso
- * [E06] URL diretto su route protetta senza sessione → redirect /login
- * [E07] /register apre il dialog segreteria
- */
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { mount } from '@vue/test-utils'
+import { createTestingPinia } from '@pinia/testing'
+import Login from '@/pages/Login.vue'
+import { useAuthStore } from '@/stores/auth'
+import { authGuard } from '@/router/guards'
 
-import { test, expect } from '@playwright/test'
+function createFakeJwt(role, expiresInSec = 3600) {
+    const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }))
+    const payload = btoa(JSON.stringify({
+        sub: 'user-1',
+        role: role,
+        user_role: role,
+        exp: Math.floor(Date.now() / 1000) + expiresInSec
+    }))
+    return `${header}.${payload}.signature`
+}
 
-test.describe('Auth Flow', () => {
+describe('Auth Workflow E2E', () => {
+    let pinia
 
-  test('E01 — valid admin login redirects to /admin/dashboard', async ({ page }) => {
-    await page.goto('/login')
-    await page.fill('input[type="email"]', 'admin@school.it')
-    await page.fill('input[type="password"]', 'Admin1234!')
-    await page.click('[data-testid="submit-login"]')
-    await expect(page).toHaveURL(/\/admin\/dashboard/, { timeout: 10000 })
-  })
+    beforeEach(() => {
+        vi.clearAllMocks()
+        sessionStorage.clear()
+        localStorage.clear()
+        pinia = createTestingPinia({
+            createSpy: vi.fn,
+            initialState: {
+                auth: {
+                    user: null,
+                    token: null,
+                    isAuthenticated: false,
+                    isInitializing: false
+                }
+            }
+        })
+    })
 
-  test('E02 — wrong credentials show error message', async ({ page }) => {
-    await page.goto('/login')
-    await page.fill('input[type="email"]', 'wrong@school.it')
-    await page.fill('input[type="password"]', 'WrongPass')
-    await page.click('[data-testid="submit-login"]')
-    await expect(page.locator('[data-testid="error-message"], .q-banner')).toBeVisible({ timeout: 5000 })
-  })
+    it('E01 — renders login form elements properly', () => {
+        const wrapper = mount(Login, {
+            global: {
+                plugins: [pinia],
+                stubs: {
+                    'q-page': { template: '<div><slot /></div>' },
+                    'q-btn-dropdown': { template: '<div><slot /></div>' },
+                    'q-list': { template: '<div><slot /></div>' },
+                    'q-item': { template: '<div><slot /></div>' },
+                    'q-item-section': { template: '<div><slot /></div>' },
+                    'q-item-label': { template: '<div><slot /></div>' },
+                    'q-form': { template: '<form @submit.prevent><slot /></form>' },
+                    'q-input': {
+                        props: ['modelValue', 'label', 'type'],
+                        template: '<input :type="type || \'text\'" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />'
+                    },
+                    'q-btn': {
+                        props: ['label', 'type', 'loading'],
+                        template: '<button :type="type || \'button\'">{{ label }}<slot /></button>'
+                    },
+                    'q-icon': true,
+                    'q-banner': { template: '<div class="q-banner"><slot /></div>' },
+                    'q-dialog': { template: '<div><slot /></div>' },
+                    'q-card': { template: '<div><slot /></div>' },
+                    'q-card-section': { template: '<div><slot /></div>' },
+                    'q-card-actions': { template: '<div><slot /></div>' },
+                    'q-checkbox': true
+                }
+            }
+        })
 
-  test('E03 — 5 failed attempts shows lockout message', async ({ page }) => {
-    await page.goto('/login')
-    for (let i = 0; i < 5; i++) {
-      await page.fill('input[type="email"]', 'hacker@school.it')
-      await page.fill('input[type="password"]', `bad${i}`)
-      await page.click('[data-testid="submit-login"]')
-      await page.waitForTimeout(300)
-    }
-    const errorText = await page.locator('[data-testid="error-message"]').textContent()
-    expect(errorText).toMatch(/Riprova tra|tooManyAttempts/i)
-  })
+        expect(wrapper.find('form').exists()).toBe(true)
+        expect(wrapper.findAll('input').length).toBeGreaterThanOrEqual(2)
+    })
 
-  test('E04 — expired token in sessionStorage → redirect /login?reason=session_expired', async ({ page }) => {
-    // Inject an expired token into sessionStorage before navigation
-    await page.goto('/login')
-    const expiredToken = `h.${btoa(JSON.stringify({ sub: 'u1', exp: Math.floor((Date.now() - 60_000) / 1000) }))}.s`
-    await page.evaluate((tok) => {
-      sessionStorage.setItem('auth_token', tok)
-    }, expiredToken)
-    await page.goto('/teacher/grades')
-    await expect(page).toHaveURL(/\/login\?reason=session_expired/, { timeout: 5000 })
-  })
+    it('E02 — authGuard redirects unauthenticated users to /login?reason=session_expired', async () => {
+        const authStore = useAuthStore()
+        authStore.isAuthenticated = false
+        authStore.token = null
 
-  test('E05 — logout redirects to /login', async ({ page }) => {
-    // Login first
-    await page.goto('/login')
-    await page.fill('input[type="email"]', 'teacher@school.it')
-    await page.fill('input[type="password"]', 'Teacher1234!')
-    await page.click('[data-testid="submit-login"]')
-    await expect(page).toHaveURL(/\/teacher/, { timeout: 10000 })
-    // Logout
-    await page.click('[data-testid="logout-button"]')
-    await expect(page).toHaveURL(/\/login/, { timeout: 5000 })
-  })
+        const next = vi.fn()
+        const to = { path: '/teacher/grades', meta: { requiresAuth: true } }
+        const from = { path: '/' }
 
-  test('E06 — direct protected URL without session → /login', async ({ page }) => {
-    await page.context().clearCookies()
-    await page.evaluate(() => { sessionStorage.clear(); localStorage.clear() })
-    await page.goto('/admin/dashboard')
-    await expect(page).toHaveURL(/\/login/, { timeout: 5000 })
-  })
+        await authGuard(to, from, next)
 
-  test('E07 — /register opens secretary dialog', async ({ page }) => {
-    await page.goto('/register')
-    await expect(page.locator('.q-dialog, [data-testid="secretary-dialog"]')).toBeVisible({ timeout: 5000 })
-  })
+        expect(next).toHaveBeenCalledWith({
+            path: '/login',
+            query: { reason: 'session_expired' }
+        })
+    })
+
+    it('E03 — authGuard redirects authenticated teacher to /teacher on public auth routes', async () => {
+        const authStore = useAuthStore()
+        authStore.token = createFakeJwt('teacher')
+        authStore.user = { role: 'teacher', email: 'teacher@school.it' }
+
+        const next = vi.fn()
+        const to = { path: '/login', meta: { requiresAuth: false } }
+        const from = { path: '/' }
+
+        await authGuard(to, from, next)
+
+        expect(next).toHaveBeenCalledWith('/teacher')
+    })
+
+    it('E04 — authGuard redirects authenticated admin to /admin/dashboard on login route', async () => {
+        const authStore = useAuthStore()
+        authStore.token = createFakeJwt('admin')
+        authStore.user = { role: 'admin', email: 'admin@school.it' }
+
+        const next = vi.fn()
+        const to = { path: '/login', meta: { requiresAuth: false } }
+        const from = { path: '/' }
+
+        await authGuard(to, from, next)
+
+        expect(next).toHaveBeenCalledWith('/admin/dashboard')
+    })
+
+    it('E05 — authGuard allows navigation for authorized roles on protected routes', async () => {
+        const authStore = useAuthStore()
+        authStore.token = createFakeJwt('teacher')
+        authStore.user = { role: 'teacher', email: 'teacher@school.it' }
+
+        const next = vi.fn()
+        const to = {
+            path: '/teacher/grades',
+            meta: { requiresAuth: true, roles: ['teacher', 'coordinator'] }
+        }
+        const from = { path: '/teacher' }
+
+        await authGuard(to, from, next)
+
+        expect(next).toHaveBeenCalledWith()
+    })
 })

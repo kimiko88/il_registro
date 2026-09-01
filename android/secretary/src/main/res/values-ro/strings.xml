@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Catalog - Secretariat</string>
+    <string name="secretary_dashboard_title">Secretariat Școlar</string>
+    <string name="user_management">Gestionare Utilizatori</string>
+    <string name="scrutiny_supervision">Supervizare Situații Școlare</string>
+    <string name="generate_certificates">Adeverințe &amp; Documente</string>
+    <string name="audit_logs">Jurnal de Audit</string>
+    <string name="create_user">Creează Utilizator Nou</string>
+    <string name="download_pdf">Descarcă Proces-Verbal PDF</string>
+    <string name="login_subtitle">Conectați-vă la panoul administrativ</string>
+    <string name="email_label">Email Secretariat</string>
+    <string name="password_label">Parolă</string>
+    <string name="btn_login">CONECTARE ÎN PANOU</string>
+    <string name="err_enter_credentials">Introduceți emailul și parola</string>
+    <string name="logout">Deconectare</string>
+</resources>

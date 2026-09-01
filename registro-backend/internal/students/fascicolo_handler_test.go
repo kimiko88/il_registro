@@ -59,3 +59,36 @@ func TestGetFascicolo_ForbiddenForOtherStudent(t *testing.T) {
 
 	assert.Equal(t, http.StatusForbidden, w.Code)
 }
+
+func TestGetFascicolo_AdminAndSecretaryAllowed(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	handler := NewFascicoloHandler(nil)
+
+	// Admin test
+	rAdmin := gin.New()
+	rAdmin.Use(func(c *gin.Context) {
+		c.Set("user_id", "admin-1")
+		c.Set("role", "admin")
+		c.Next()
+	})
+	handler.RegisterRoutes(rAdmin.Group("/"))
+
+	reqAdmin, _ := http.NewRequest("GET", "/students/student-999/fascicolo", nil)
+	wAdmin := httptest.NewRecorder()
+	rAdmin.ServeHTTP(wAdmin, reqAdmin)
+	assert.Equal(t, http.StatusOK, wAdmin.Code)
+
+	// Secretary test
+	rSec := gin.New()
+	rSec.Use(func(c *gin.Context) {
+		c.Set("user_id", "sec-1")
+		c.Set("role", "secretary")
+		c.Next()
+	})
+	handler.RegisterRoutes(rSec.Group("/"))
+
+	reqSec, _ := http.NewRequest("GET", "/students/student-999/fascicolo", nil)
+	wSec := httptest.NewRecorder()
+	rSec.ServeHTTP(wSec, reqSec)
+	assert.Equal(t, http.StatusOK, wSec.Code)
+}

@@ -9,6 +9,12 @@ import (
 	"registro-backend/internal/users"
 )
 
+var (
+	ErrUnauthorizedStudent = errors.New("unauthorized: cannot view goals of another student")
+	ErrNotGuardian         = errors.New("unauthorized: non sei tutore legale di questo studente")
+	ErrUnauthorized        = errors.New("unauthorized")
+)
+
 type Service struct {
 	repo     Repository
 	userRepo users.Repository
@@ -52,7 +58,7 @@ func (s *Service) CreateGoal(ctx context.Context, teacherID string, req CreateGo
 
 func (s *Service) ListByStudent(ctx context.Context, actorID, actorRole, studentID string) ([]*StudentGoal, error) {
 	if actorRole == "student" && actorID != studentID {
-		return nil, errors.New("unauthorized: cannot view goals of another student")
+		return nil, ErrUnauthorizedStudent
 	}
 	if actorRole == "parent" && s.userRepo != nil {
 		isGuardian, err := s.userRepo.IsGuardian(ctx, actorID, studentID)
@@ -60,7 +66,7 @@ func (s *Service) ListByStudent(ctx context.Context, actorID, actorRole, student
 			return nil, fmt.Errorf("errore verifica tutela: %w", err)
 		}
 		if !isGuardian {
-			return nil, errors.New("unauthorized: non sei tutore legale di questo studente")
+			return nil, ErrNotGuardian
 		}
 	}
 	return s.repo.ListByStudent(ctx, studentID)
@@ -73,7 +79,7 @@ func (s *Service) UpdateGoalStatus(ctx context.Context, actorID, actorRole, id s
 	}
 
 	if g.TeacherID != actorID && g.StudentID != actorID && actorRole != "admin" && actorRole != "superadmin" {
-		return errors.New("unauthorized")
+		return ErrUnauthorized
 	}
 
 	return s.repo.UpdateStatus(ctx, id, status)

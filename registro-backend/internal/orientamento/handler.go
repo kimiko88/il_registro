@@ -27,6 +27,11 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	grp.GET("/my-events", h.GetMyEvents)
 	grp.POST("/preference", h.SavePreference)
 	grp.GET("/preference", h.GetPreference)
+
+	// E-Portfolio Capolavori & Curriculum dello Studente (MIM Orientamento)
+	grp.POST("/capolavoro", h.SaveCapolavoro)
+	grp.GET("/capolavori", h.GetCapolavori)
+	grp.GET("/curriculum-studente", h.GetCurriculumStudente)
 }
 
 func (h *Handler) CreateEvent(c *gin.Context) {
@@ -73,8 +78,13 @@ func (h *Handler) GetEvents(c *gin.Context) {
 
 func (h *Handler) RegisterStudent(c *gin.Context) {
 	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "student" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: solo gli studenti possono iscriversi agli eventi di orientamento"})
 		return
 	}
 
@@ -99,8 +109,13 @@ func (h *Handler) RegisterStudent(c *gin.Context) {
 
 func (h *Handler) GetMyEvents(c *gin.Context) {
 	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "student" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: riservato agli studenti"})
 		return
 	}
 
@@ -145,8 +160,13 @@ func (h *Handler) MarkAttendance(c *gin.Context) {
 
 func (h *Handler) SavePreference(c *gin.Context) {
 	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "student" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: solo gli studenti possono salvare preferenze di orientamento"})
 		return
 	}
 
@@ -165,8 +185,13 @@ func (h *Handler) SavePreference(c *gin.Context) {
 
 func (h *Handler) GetPreference(c *gin.Context) {
 	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "student" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: riservato agli studenti"})
 		return
 	}
 
@@ -176,4 +201,59 @@ func (h *Handler) GetPreference(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, pref)
+}
+
+func (h *Handler) SaveCapolavoro(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "student" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: solo gli studenti possono caricare capolavori nell'E-Portfolio"})
+		return
+	}
+
+	var req Capolavoro
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.service.SaveCapolavoro(c.Request.Context(), userID, req); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusCreated, gin.H{"message": "capolavoro salvato con successo nell'E-Portfolio"})
+}
+
+func (h *Handler) GetCapolavori(c *gin.Context) {
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	list, err := h.service.GetCapolavori(c.Request.Context(), userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, list)
+}
+
+func (h *Handler) GetCurriculumStudente(c *gin.Context) {
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	summary, err := h.service.GetCurriculumStudente(c.Request.Context(), userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, summary)
 }

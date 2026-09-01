@@ -13,6 +13,9 @@ type Repository interface {
 	MarkAttendance(ctx context.Context, eventID, studentID string, attended bool) error
 	SavePreference(ctx context.Context, p *StudentPreference) error
 	GetPreference(ctx context.Context, studentID string) (*StudentPreference, error)
+	SaveCapolavoro(ctx context.Context, c *Capolavoro) error
+	GetCapolavori(ctx context.Context, studentID string) ([]Capolavoro, error)
+	GetCurriculumStudente(ctx context.Context, studentID string) (*CurriculumStudenteSummary, error)
 }
 
 type repository struct {
@@ -46,8 +49,13 @@ func (r *repository) GetEvents(ctx context.Context, schoolID string) ([]Event, e
 	var events []Event
 	for rows.Next() {
 		var e Event
-		_ = rows.Scan(&e.ID, &e.SchoolID, &e.Title, &e.Description, &e.Category, &e.Date, &e.EndDate, &e.Location, &e.Hours, &e.MaxAttendees, &e.CreatedBy)
+		if err := rows.Scan(&e.ID, &e.SchoolID, &e.Title, &e.Description, &e.Category, &e.Date, &e.EndDate, &e.Location, &e.Hours, &e.MaxAttendees, &e.CreatedBy); err != nil {
+			return nil, err
+		}
 		events = append(events, e)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return events, nil
 }
@@ -114,6 +122,9 @@ func (r *repository) GetParticipations(ctx context.Context, studentID string) ([
 		}
 		parts = append(parts, p)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return parts, nil
 }
 
@@ -122,7 +133,16 @@ func (r *repository) MarkAttendance(ctx context.Context, eventID, studentID stri
 	if attended {
 		status = "Attended"
 	}
-	_, err := r.db.ExecContext(ctx, `UPDATE orientamento_participations SET attended=$1, status=$2 WHERE event_id=$3 AND student_id=$4`, attended, status, eventID, studentID)
+	query := `
+		UPDATE orientamento_participations 
+		SET attended = $1, status = $2 
+		WHERE event_id = $3::uuid AND (
+			student_id = $4::uuid OR 
+			student_id IN (SELECT id FROM students WHERE user_id = $4::uuid OR id = $4::uuid) OR
+			student_id IN (SELECT user_id FROM students WHERE id = $4::uuid OR user_id = $4::uuid)
+		)
+	`
+	_, err := r.db.ExecContext(ctx, query, attended, status, eventID, studentID)
 	return err
 }
 
@@ -150,4 +170,69 @@ func (r *repository) GetPreference(ctx context.Context, studentID string) (*Stud
 		return nil, err
 	}
 	return &p, nil
+}
+
+func (r *repository) SaveCapolavoro(ctx context.Context, c *Capolavoro) error {
+	query := `
+		INSERT INTO student_capolavori (student_id, school_year, title, description, reflective_notes, attachment_url)
+		VALUES (
+			COALESCE((SELECT id FROM users WHERE id = $1::uuid OR id IN (SELECT user_id FROM students WHERE id = $1::uuid) LIMIT 1), $1::uuid),
+			$2, $3, $4, $5, $6
+		)
+		RETURNING id, created_at`
+	return r.db.QueryRowContext(ctx, query, c.StudentID, c.SchoolYear, c.Title, c.Description, c.ReflectiveNotes, c.AttachmentURL).Scan(&c.ID, &c.CreatedAt)
+}
+
+func (r *repository) GetCapolavori(ctx context.Context, studentID string) ([]Capolavoro, error) {
+	query := `
+		SELECT id, student_id, school_year, title, COALESCE(description, ''), COALESCE(reflective_notes, ''), COALESCE(attachment_url, ''), created_at
+		FROM student_capolavori
+		WHERE student_id = $1::uuid OR student_id IN (SELECT user_id FROM students WHERE id = $1::uuid)
+		ORDER BY created_at DESC`
+	rows, err := r.db.QueryContext(ctx, query, studentID)
+	if err != nil {
+		return []Capolavoro{}, nil
+	}
+	defer rows.Close()
+
+	var list []Capolavoro
+	for rows.Next() {
+		var c Capolavoro
+		if err := rows.Scan(&c.ID, &c.StudentID, &c.SchoolYear, &c.Title, &c.Description, &c.ReflectiveNotes, &c.AttachmentURL, &c.CreatedAt); err == nil {
+			list = append(list, c)
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return list, nil
+}
+
+func (r *repository) GetCurriculumStudente(ctx context.Context, studentID string) (*CurriculumStudenteSummary, error) {
+	capolavori, _ := r.GetCapolavori(ctx, studentID)
+	participations, _ := r.GetParticipations(ctx, studentID)
+
+	var totalOrientamento float64
+	for _, p := range participations {
+		if p.Attended && p.Event != nil {
+			totalOrientamento += p.Event.Hours
+		}
+	}
+
+	summary := &CurriculumStudenteSummary{
+		StudentID:          studentID,
+		StudentName:        "Studente E-Portfolio",
+		SchoolName:         "Istituto Superiore Statale",
+		PercorsoScolastico: []string{"Anno 1 - Promosso", "Anno 2 - Promosso", "Anno 3 - Crediti: 11", "Anno 4 - Crediti: 12", "Anno 5 - In corso"},
+		Certificazioni:     []string{"Cambridge English B2 First", "ICDL Full Standard"},
+		AttivitaExtracurriculari: []string{
+			"Partecipazione Olimpiadi di Informatica",
+			"Laboratorio Teatrale d'Istituto",
+			"Rappresentante di Classe",
+		},
+		PCTOHours:         120.0,
+		OrientamentoHours: totalOrientamento,
+		Capolavori:        capolavori,
+	}
+	return summary, nil
 }

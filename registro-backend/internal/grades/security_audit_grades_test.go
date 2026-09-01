@@ -55,8 +55,8 @@ func (m *mockGradesServiceAudit) GenerateSemesterReportPDF(ctx context.Context, 
 	return args.Get(0).([]byte), args.Error(1)
 }
 
-func (m *mockGradesServiceAudit) BulkImport(teacherID, schoolID string, r io.Reader, semester int) (*ImportResult, error) {
-	args := m.Called(teacherID, schoolID, r, semester)
+func (m *mockGradesServiceAudit) BulkImport(ctx context.Context, teacherID, schoolID string, r io.Reader, semester int) (*ImportResult, error) {
+	args := m.Called(ctx, teacherID, schoolID, r, semester)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Regjistri - Sekretaria</string>
+    <string name="secretary_dashboard_title">Sekretaria Shkollore</string>
+    <string name="user_management">Menaxhimi i Përdoruesve</string>
+    <string name="scrutiny_supervision">Mbikëqyrja e Vlerësimeve</string>
+    <string name="generate_certificates">Vërtetime &amp; Dokumente</string>
+    <string name="audit_logs">Regjistrat e Auditimit</string>
+    <string name="create_user">Krijo Përdorues të Ri</string>
+    <string name="download_pdf">Shkarko Procesverbalin PDF</string>
+    <string name="login_subtitle">Hyni në panelin administrativ</string>
+    <string name="email_label">Email Sekretaria</string>
+    <string name="password_label">Fjalëkalimi</string>
+    <string name="btn_login">HYR NË PANEL</string>
+    <string name="err_enter_credentials">Vendosni email-in dhe fjalëkalimin</string>
+    <string name="logout">Dil</string>
+</resources>

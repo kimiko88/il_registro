@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"time"
 
+	"registro-backend/internal/users"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -145,17 +147,18 @@ func (r *Repository) GetByClass(ctx context.Context, classID, subjectID string) 
 
 	rows, err := r.db.QueryContext(ctx, query, classID)
 	if err != nil {
-		return []StudentCompetencyEvaluation{}, nil
+		return nil, err
 	}
 	defer rows.Close()
 
 	var result []StudentCompetencyEvaluation
 	for rows.Next() {
 		var sc StudentCompetencyEvaluation
-		if err := rows.Scan(&sc.StudentID, &sc.StudentName); err == nil {
-			sc.Evaluations = make(map[string]string)
-			result = append(result, sc)
+		if err := rows.Scan(&sc.StudentID, &sc.StudentName); err != nil {
+			return nil, err
 		}
+		sc.Evaluations = make(map[string]string)
+		result = append(result, sc)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -170,22 +173,27 @@ func (r *Repository) GetByClass(ctx context.Context, classID, subjectID string) 
 			FROM competence_evaluations
 			WHERE ($1 = '' OR class_id = $1::uuid) AND ($2 = '' OR subject_id::text = $2)`
 		evalRows, err := r.db.QueryContext(ctx, evalQuery, classID, subjectID)
-		if err == nil {
-			defer evalRows.Close()
-			evalMap := make(map[string]map[string]string)
-			for evalRows.Next() {
-				var stID, code, lvl string
-				if err := evalRows.Scan(&stID, &code, &lvl); err == nil {
-					if evalMap[stID] == nil {
-						evalMap[stID] = make(map[string]string)
-					}
-					evalMap[stID][code] = lvl
-				}
+		if err != nil {
+			return nil, err
+		}
+		defer func() { _ = evalRows.Close() }()
+		evalMap := make(map[string]map[string]string)
+		for evalRows.Next() {
+			var stID, code, lvl string
+			if err := evalRows.Scan(&stID, &code, &lvl); err != nil {
+				return nil, err
 			}
-			for i := range result {
-				if m, ok := evalMap[result[i].StudentID]; ok {
-					result[i].Evaluations = m
-				}
+			if evalMap[stID] == nil {
+				evalMap[stID] = make(map[string]string)
+			}
+			evalMap[stID][code] = lvl
+		}
+		if err := evalRows.Err(); err != nil {
+			return nil, err
+		}
+		for i := range result {
+			if m, ok := evalMap[result[i].StudentID]; ok {
+				result[i].Evaluations = m
 			}
 		}
 	}
@@ -194,11 +202,20 @@ func (r *Repository) GetByClass(ctx context.Context, classID, subjectID string) 
 }
 
 type Service struct {
-	repo *Repository
+	repo     *Repository
+	userRepo users.Repository
 }
 
-func NewService(repo *Repository) *Service {
-	return &Service{repo: repo}
+func NewService(repo *Repository, uRepo ...users.Repository) *Service {
+	svc := &Service{repo: repo}
+	if len(uRepo) > 0 && uRepo[0] != nil {
+		svc.userRepo = uRepo[0]
+	}
+	return svc
+}
+
+func (s *Service) GetUserRepo() users.Repository {
+	return s.userRepo
 }
 
 func IsValidCompetencyLevel(level string) bool {
@@ -221,10 +238,16 @@ func (s *Service) SaveEvaluation(ctx context.Context, schoolID, evaluatorID stri
 }
 
 func (s *Service) GetStudentEvaluations(ctx context.Context, studentID string, semester int) ([]*Evaluation, error) {
+	if s.repo == nil {
+		return []*Evaluation{}, nil
+	}
 	return s.repo.GetByStudent(ctx, studentID, semester)
 }
 
 func (s *Service) GetClassEvaluations(ctx context.Context, classID, subjectID string) ([]StudentCompetencyEvaluation, error) {
+	if s.repo == nil {
+		return []StudentCompetencyEvaluation{}, nil
+	}
 	return s.repo.GetByClass(ctx, classID, subjectID)
 }
 
@@ -253,6 +276,11 @@ func (h *Handler) GetClassEvaluations(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
+	role := c.GetString("role")
+	if role != "teacher" && role != "admin" && role != "superadmin" && role != "principal" && role != "vice_principal" && role != "secretary" && role != "coordinator" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: class competency evaluations restricted to teaching staff and administration"})
+		return
+	}
 	classID := c.Query("class_id")
 	subjectID := c.Query("subject_id")
 	evals, err := h.service.GetClassEvaluations(c.Request.Context(), classID, subjectID)
@@ -274,6 +302,15 @@ func (h *Handler) GetStudentEvaluations(c *gin.Context) {
 	if role == "student" && userID != studentID {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: cannot view other students evaluations"})
 		return
+	}
+	if role == "parent" {
+		if uRepo := h.service.GetUserRepo(); uRepo != nil {
+			isG, err := uRepo.IsGuardian(c.Request.Context(), userID, studentID)
+			if err != nil || !isG {
+				c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: non sei il tutore legale di questo studente"})
+				return
+			}
+		}
 	}
 	sem := 0
 	evals, err := h.service.GetStudentEvaluations(c.Request.Context(), studentID, sem)
@@ -332,19 +369,24 @@ func (h *Handler) BatchSave(c *gin.Context) {
 
 	for _, studentEval := range req.Evaluations {
 		for code, level := range studentEval.Evaluations {
-			if IsValidCompetencyLevel(level) {
-				var subj *string
-				if req.SubjectID != "" {
-					subj = &req.SubjectID
-				}
-				_, _ = h.service.SaveEvaluation(c.Request.Context(), schoolID, evaluatorID, SaveEvaluationRequest{
-					StudentID:      studentEval.StudentID,
-					ClassID:        req.ClassID,
-					SubjectID:      subj,
-					CompetenceCode: code,
-					CompetenceName: code,
-					Level:          level,
-				})
+			if !IsValidCompetencyLevel(level) {
+				c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("livello non valido per competenza %s: %s", code, level)})
+				return
+			}
+			var subj *string
+			if req.SubjectID != "" {
+				subj = &req.SubjectID
+			}
+			if _, err := h.service.SaveEvaluation(c.Request.Context(), schoolID, evaluatorID, SaveEvaluationRequest{
+				StudentID:      studentEval.StudentID,
+				ClassID:        req.ClassID,
+				SubjectID:      subj,
+				CompetenceCode: code,
+				CompetenceName: code,
+				Level:          level,
+			}); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("errore nel salvataggio della valutazione per studente %s: %v", studentEval.StudentID, err)})
+				return
 			}
 		}
 	}

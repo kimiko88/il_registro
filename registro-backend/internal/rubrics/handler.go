@@ -167,6 +167,15 @@ func (h *Handler) ListByStudent(c *gin.Context) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: cannot view assessments of another student"})
 		return
 	}
+	if role == "parent" {
+		if uRepo := h.service.GetUserRepo(); uRepo != nil {
+			isG, err := uRepo.IsGuardian(c.Request.Context(), userID, studentID)
+			if err != nil || !isG {
+				c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: cannot view assessments of another student"})
+				return
+			}
+		}
+	}
 
 	list, err := h.service.ListAssessmentsByStudent(c.Request.Context(), studentID)
 	if err != nil {

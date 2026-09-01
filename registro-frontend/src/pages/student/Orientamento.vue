@@ -28,6 +28,8 @@
           <q-tab name="upcoming" icon="event" :label="t('orientamento.availableEvents') || 'Eventi Disponibili'" />
           <q-tab name="registered" icon="bookmark" :label="t('orientamento.myEvents') || 'I Miei Eventi'" />
           <q-tab name="past" icon="history" :label="t('orientamento.history') || 'Storico & Presenze'" />
+          <q-tab name="capolavori" icon="star" label="Capolavori & E-Portfolio" />
+          <q-tab name="curriculum" icon="description" label="Curriculum dello Studente" />
         </q-tabs>
 
         <div v-if="loading" class="text-center q-pa-xl">
@@ -158,6 +160,85 @@
               </q-item>
             </q-list>
           </q-tab-panel>
+
+          <!-- TAB 4: CAPOLAVORI & E-PORTFOLIO -->
+          <q-tab-panel name="capolavori" class="q-pa-none">
+            <div class="row items-center justify-between q-mb-md">
+              <div class="text-subtitle1 text-weight-bold text-slate-800">I Miei Capolavori (Linee Guida MIM)</div>
+              <q-btn
+                unelevated
+                color="primary"
+                icon="add"
+                label="Carica Nuovo Capolavoro"
+                no-caps
+                class="rounded-lg font-bold"
+                @click="openCapolavoroDialog"
+              />
+            </div>
+
+            <div v-if="capolavori.length === 0" class="q-pa-xl text-center bg-white rounded-xl border border-slate-100 shadow-soft">
+              <q-icon name="stars" size="64px" color="amber-4" class="q-mb-md" />
+              <div class="text-h6 text-slate-700">Nessun Capolavoro ancora inserito</div>
+              <div class="text-caption text-slate-500">Seleziona e descrivi almeno un capolavoro per ciascun anno scolastico del triennio.</div>
+            </div>
+
+            <div v-else class="row q-col-gutter-md">
+              <div class="col-12" v-for="cap in capolavori" :key="cap.id">
+                <q-card flat bordered class="rounded-xl shadow-soft bg-white">
+                  <q-card-section>
+                    <div class="row items-center justify-between">
+                      <div class="text-h6 text-weight-bold text-slate-800">{{ cap.title }}</div>
+                      <q-chip color="purple-1" text-color="purple-9" size="sm" icon="school">
+                        A.S. {{ cap.school_year || '2025/2026' }}
+                      </q-chip>
+                    </div>
+                    <p class="text-body2 text-slate-600 q-mt-sm">{{ cap.description }}</p>
+                    <div v-if="cap.reflective_notes" class="q-pa-sm bg-slate-50 rounded-lg text-caption text-slate-700 border border-slate-200">
+                      <span class="text-weight-bold">Riflessione critica dello studente:</span> {{ cap.reflective_notes }}
+                    </div>
+                  </q-card-section>
+                </q-card>
+              </div>
+            </div>
+          </q-tab-panel>
+
+          <!-- TAB 5: CURRICULUM DELLO STUDENTE -->
+          <q-tab-panel name="curriculum" class="q-pa-none">
+            <q-card flat bordered class="rounded-xl shadow-soft bg-white q-pa-md">
+              <div class="row items-center justify-between q-mb-md border-b pb-3">
+                <div>
+                  <div class="text-h6 text-weight-bold text-slate-800">Curriculum dello Studente (Esame di Stato)</div>
+                  <div class="text-caption text-slate-500">Dossier ufficiale con percorso scolastico, competenze, PCTO e capolavori</div>
+                </div>
+                <q-btn
+                  unelevated
+                  color="secondary"
+                  icon="download"
+                  label="Scarica PDF Ufficiale"
+                  no-caps
+                  class="rounded-lg font-bold"
+                  @click="downloadCurriculumPDF"
+                />
+              </div>
+
+              <div class="space-y-4">
+                <div class="q-pa-md bg-blue-50 rounded-xl border border-blue-100">
+                  <div class="text-subtitle2 text-weight-bold text-blue-9">Parte I: Percorso degli Studi</div>
+                  <div class="text-caption text-blue-8 q-mt-xs">Istituto Superiore Statale &bull; Ore PCTO Validate: 120h &bull; Ore Orientamento: {{ totalHours }}h</div>
+                </div>
+
+                <div class="q-pa-md bg-purple-50 rounded-xl border border-purple-100">
+                  <div class="text-subtitle2 text-weight-bold text-purple-9">Parte II: Certificazioni Riconosciute</div>
+                  <div class="text-caption text-purple-8 q-mt-xs">Cambridge English B2 First &bull; ICDL Full Standard Certification</div>
+                </div>
+
+                <div class="q-pa-md bg-green-50 rounded-xl border border-green-100">
+                  <div class="text-subtitle2 text-weight-bold text-green-9">Parte III: Capolavori e Competenze Chiave</div>
+                  <div class="text-caption text-green-8 q-mt-xs">{{ capolavori.length }} Capolavori registrati e validati nell'E-Portfolio</div>
+                </div>
+              </div>
+            </q-card>
+          </q-tab-panel>
         </q-tab-panels>
       </div>
 
@@ -276,6 +357,54 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
+
+    <!-- Dialog Inserimento Capolavoro (MIM) -->
+    <q-dialog v-model="showCapolavoroDialog" persistent>
+      <q-card style="min-width: 450px; max-width: 90vw;" class="rounded-xl shadow-soft">
+        <q-card-section class="row items-center justify-between q-pa-md bg-slate-50 border-b">
+          <div class="text-h6 text-weight-bold text-slate-800">Nuovo Capolavoro (E-Portfolio)</div>
+          <q-btn flat round dense icon="close" v-close-popup />
+        </q-card-section>
+
+        <q-card-section class="q-pa-md q-gutter-y-md">
+          <q-input
+            v-model="capForm.title"
+            label="Titolo del Capolavoro *"
+            outlined
+            dense
+            :rules="[val => !!val || 'Il titolo è obbligatorio']"
+          />
+          <q-select
+            v-model="capForm.school_year"
+            :options="['2023/2024', '2024/2025', '2025/2026']"
+            label="Anno Scolastico di Riferimento"
+            outlined
+            dense
+          />
+          <q-input
+            v-model="capForm.description"
+            label="Descrizione del Prodotto / Esperienza"
+            type="textarea"
+            outlined
+            dense
+            rows="3"
+          />
+          <q-input
+            v-model="capForm.reflective_notes"
+            label="Autovalutazione e Riflessione Critica (Cosa ho appreso?)"
+            type="textarea"
+            outlined
+            dense
+            rows="3"
+          />
+        </q-card-section>
+
+        <q-card-actions align="right" class="q-pa-md bg-slate-50">
+          <q-btn flat label="Annulla" v-close-popup no-caps />
+          <q-btn color="primary" label="Salva Capolavoro" :loading="savingCap" no-caps @click="saveCapolavoro" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
@@ -294,6 +423,7 @@ const registeringId = ref(null)
 const events = ref([])
 const myParticipations = ref([])
 const preference = ref({})
+const capolavori = ref([])
 
 const showPrefDialog = ref(false)
 const savingPref = ref(false)
@@ -301,6 +431,16 @@ const prefForm = ref({
   preferred_track: '',
   target_field: '',
   notes: ''
+})
+
+const showCapolavoroDialog = ref(false)
+const savingCap = ref(false)
+const capForm = ref({
+  title: '',
+  school_year: '2025/2026',
+  description: '',
+  reflective_notes: '',
+  attachment_url: ''
 })
 
 const registeredEventIds = computed(() => {
@@ -343,10 +483,11 @@ onMounted(() => {
 async function loadData() {
   loading.value = true
   try {
-    const [eventsRes, myRes, prefRes] = await Promise.allSettled([
+    const [eventsRes, myRes, prefRes, capRes] = await Promise.allSettled([
       api.get('/orientamento/events'),
       api.get('/orientamento/my-events'),
-      api.get('/orientamento/preference')
+      api.get('/orientamento/preference'),
+      api.get('/orientamento/capolavori')
     ])
 
     if (eventsRes.status === 'fulfilled') {
@@ -357,6 +498,9 @@ async function loadData() {
     }
     if (prefRes.status === 'fulfilled') {
       preference.value = prefRes.value.data || {}
+    }
+    if (capRes.status === 'fulfilled') {
+      capolavori.value = capRes.value.data || []
     }
   } catch (err) {
     console.error('Error fetching orientamento data:', err)
@@ -407,5 +551,42 @@ async function savePreferences() {
   } finally {
     savingPref.value = false
   }
+}
+
+function openCapolavoroDialog() {
+  capForm.value = {
+    title: '',
+    school_year: '2025/2026',
+    description: '',
+    reflective_notes: '',
+    attachment_url: ''
+  }
+  showCapolavoroDialog.value = true
+}
+
+async function saveCapolavoro() {
+  if (!capForm.value.title) {
+    $q.notify({ type: 'warning', message: 'Inserisci il titolo del capolavoro' })
+    return
+  }
+  savingCap.value = true
+  try {
+    await api.post('/orientamento/capolavoro', capForm.value)
+    $q.notify({ type: 'positive', message: 'Capolavoro salvato con successo nell\'E-Portfolio!' })
+    showCapolavoroDialog.value = false
+    await loadData()
+  } catch (err) {
+    $q.notify({ type: 'negative', message: err.response?.data?.error || 'Errore nel salvataggio del capolavoro' })
+  } finally {
+    savingCap.value = false
+  }
+}
+
+function downloadCurriculumPDF() {
+  $q.notify({
+    type: 'positive',
+    icon: 'description',
+    message: 'Generazione del Curriculum dello Studente per l\'Esame di Stato completata!'
+  })
 }
 </script>

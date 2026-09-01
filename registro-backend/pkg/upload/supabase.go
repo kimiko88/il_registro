@@ -62,7 +62,7 @@ func (s *SupabaseUploader) UploadFile(ctx context.Context, storagePath string, c
 	if err != nil {
 		return "", fmt.Errorf("impossibile eseguire la richiesta di upload su Supabase: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
 		bodyBytes, _ := io.ReadAll(resp.Body)

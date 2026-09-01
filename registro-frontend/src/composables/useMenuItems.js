@@ -53,6 +53,7 @@ export function useMenuItems(role) {
                 icon: 'manage_accounts',
                 children: [
                     { label: 'Gestione Sostituzioni', icon: 'swap_horiz', path: '/secretary/substitutions' },
+                    { label: 'Flussi SIDI', icon: 'cloud_sync', path: '/secretary/sidi' },
                     { label: 'Comunicazioni', icon: 'email', path: '/secretary/communications' },
                     { label: 'Report', icon: 'assessment', path: '/secretary/reports' },
                     { label: 'PCTO', icon: 'work', path: '/secretary/pcto' },

@@ -37,8 +37,13 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 // Query params: from (YYYY-MM-DD), to (YYYY-MM-DD)
 func (h *Handler) List(c *gin.Context) {
 	teacherID := c.GetString("user_id")
+	role := c.GetString("role")
 	if teacherID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "teacher" && role != "admin" && role != "superadmin" && role != "principal" && role != "vice_principal" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 
@@ -66,13 +71,18 @@ func (h *Handler) List(c *gin.Context) {
 // GetByID restituisce una singola attività per ID.
 func (h *Handler) GetByID(c *gin.Context) {
 	teacherID := c.GetString("user_id")
+	role := c.GetString("role")
 	if teacherID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 	id := c.Param("id")
-	res, err := h.service.GetByID(id)
+	res, err := h.service.GetByID(teacherID, role, id)
 	if err != nil {
+		if strings.HasPrefix(err.Error(), "unauthorized") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
 		if err == sql.ErrNoRows || strings.Contains(err.Error(), "no rows") {
 			c.JSON(http.StatusNotFound, gin.H{"error": "attività non trovata"})
 			return

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Журнал - Родители</string>
+    <string name="parent_dashboard_title">Родительский Портал</string>
+    <string name="my_children">Мои Дети</string>
+    <string name="child_grades">Оценки Ребенка</string>
+    <string name="pending_absences">Пропуски для Объяснения</string>
+    <string name="book_colloqui">Записаться на Собеседование</string>
+    <string name="switch_child">Сменить Ребенка</string>
+    <string name="justify_absence">Объяснить Пропуск</string>
+    <string name="book_colloquio">Записаться на Встречу</string>
+    <string name="pending_justifications">Ожидают Объяснения</string>
+    <string name="no_pending_justifications">Нет пропусков для объяснения</string>
+    <string name="login_subtitle">Войдите в родительский портал</string>
+    <string name="email_label">Электронная почта родителей</string>
+    <string name="password_label">Пароль</string>
+    <string name="btn_login">ВОЙТИ В ПОРТАЛ</string>
+    <string name="err_enter_credentials">Введите электронную почту и пароль</string>
+    <string name="logout">Выйти</string>
+</resources>

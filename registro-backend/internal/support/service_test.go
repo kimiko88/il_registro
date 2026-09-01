@@ -2,8 +2,14 @@ package support
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 
+	"registro-backend/internal/users"
+
+	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -114,4 +120,58 @@ func TestSupportService_PeiGoals(t *testing.T) {
 	repo.On("UpdatePeiGoalProgress", mock.Anything, "goal-1", "raggiunto").Return(nil).Once()
 	err = svc.UpdateGoalProgress(context.Background(), "goal-1", "raggiunto")
 	assert.NoError(t, err)
+}
+
+type MockUsersRepo struct {
+	mock.Mock
+	users.Repository
+}
+
+func (m *MockUsersRepo) IsGuardian(ctx context.Context, parentID, studentID string) (bool, error) {
+	args := m.Called(ctx, parentID, studentID)
+	return args.Bool(0), args.Error(1)
+}
+
+func TestSupportHandler_Security(t *testing.T) {
+	repo := new(MockSupportRepo)
+	mockUsers := new(MockUsersRepo)
+	svc := NewService(repo, mockUsers)
+	h := NewHandler(svc)
+
+	t.Run("CreateDiaryEntry_ForbiddenForStudent", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Set("user_id", "student-1")
+		c.Set("role", "student")
+		c.Request, _ = http.NewRequest("POST", "/support/diaries", strings.NewReader(`{"topic_and_activities":"test"}`))
+		c.Request.Header.Set("Content-Type", "application/json")
+
+		h.CreateDiaryEntry(c)
+		assert.Equal(t, http.StatusForbidden, w.Code)
+	})
+
+	t.Run("ListPeiGoals_ParentWithoutStudentID_BadRequest", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Set("user_id", "parent-1")
+		c.Set("role", "parent")
+		c.Request, _ = http.NewRequest("GET", "/support/pei-goals", nil)
+
+		h.ListPeiGoals(c)
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+	})
+
+	t.Run("ListPeiGoals_ParentNotGuardian_Forbidden", func(t *testing.T) {
+		mockUsers.On("IsGuardian", mock.Anything, "parent-1", "student-2").Return(false, nil).Once()
+
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Set("user_id", "parent-1")
+		c.Set("role", "parent")
+		c.Request, _ = http.NewRequest("GET", "/support/pei-goals?student_id=student-2", nil)
+
+		h.ListPeiGoals(c)
+		assert.Equal(t, http.StatusForbidden, w.Code)
+		mockUsers.AssertExpectations(t)
+	})
 }

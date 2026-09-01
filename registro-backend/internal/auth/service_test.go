@@ -199,6 +199,11 @@ func (m *MockRepository) RevokeAllUserTokens(ctx context.Context, userID string)
 	return args.Error(0)
 }
 
+func (m *MockRepository) CleanOldLoginAttempts(ctx context.Context, olderThan time.Duration) error {
+	args := m.Called(ctx, olderThan)
+	return args.Error(0)
+}
+
 // Helper to create service with mocks
 func setupTest(t *testing.T) (*Service, *MockRepository) {
 	t.Helper()

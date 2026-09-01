@@ -4,10 +4,13 @@
 .idea/
 .vscode/
 
-# Environment variables
+# Environment variables & Secrets
 .env
 .env.local
 .env.*.local
+*.pem
+*.key
+certs/
 
 # Backend (Go)
 go.work
@@ -31,5 +34,24 @@ go.work.sum
 /registro-frontend/tests/unit/coverage
 /registro-frontend/coverage/*
 
-docs/promotion.md
-docs/task to do.md
+# Android (Kotlin/Gradle)
+.gradle/
+**/build/
+android/*/.gradle/
+android/*/build/
+android/*/*.iml
+android/*/.idea/
+*.apk
+*.aab
+*.aar
+local.properties
+
+# iOS (Swift/Xcode)
+*.xcodeproj/project.xcworkspace
+*.xcodeproj/xcuserdata/
+*.xcworkspace
+DerivedData/
+.swiftpm/
+ios/*/.build/
+ios/*/*.xcodeproj/project.xcworkspace
+ios/*/*.xcodeproj/xcuserdata/

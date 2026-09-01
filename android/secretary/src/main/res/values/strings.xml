@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Registro - Segreteria</string>
+    <string name="secretary_dashboard_title">Registro Segreteria</string>
+    <string name="user_management">Gestione Utenti</string>
+    <string name="scrutiny_supervision">Supervisione Scrutini</string>
+    <string name="generate_certificates">Certificati &amp; Atti</string>
+    <string name="audit_logs">Log di Sistema</string>
+    <string name="create_user">Crea Nuovo Utente</string>
+    <string name="download_pdf">Scarica Verbale PDF</string>
+    <string name="login_subtitle">Accedi al pannello amministrativo</string>
+    <string name="email_label">Email Segreteria</string>
+    <string name="password_label">Password</string>
+    <string name="btn_login">ACCEDI AL PANNELLO</string>
+    <string name="err_enter_credentials">Inserisci email e password</string>
+    <string name="logout">Disconnetti</string>
+</resources>

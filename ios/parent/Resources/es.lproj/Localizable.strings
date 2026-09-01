@@ -1,0 +1,17 @@
+"app_name" = "Registro - Padre";
+"parent_dashboard_title" = "Portal de Familias";
+"my_children" = "Mis Hijos";
+"child_grades" = "Calificaciones del Hijo";
+"pending_absences" = "Ausencias por Justificar";
+"book_colloqui" = "Reservar Tutoría";
+"switch_child" = "Cambiar Hijo";
+"justify_absence" = "Justificar Ausencia";
+"book_colloquio" = "Reservar Tutoría";
+"pending_justifications" = "Justificaciones Pendientes";
+"no_pending_justifications" = "No hay ausencias pendientes de justificar";
+"login_subtitle" = "Inicia sesión en el portal de padres";
+"email_label" = "Correo del Padre/Madre";
+"password_label" = "Contraseña";
+"btn_login" = "INICIAR SESIÓN EN EL PORTAL";
+"err_enter_credentials" = "Ingresa correo y contraseña";
+"logout" = "Cerrar sesión";

@@ -117,7 +117,12 @@ func TestRoleSecurityRBACMatrix(t *testing.T) {
 				g.Use(setAuthHeader("user-1", currentRole, schoolID))
 				g.POST("/grades", gH.AddGrade)
 
-				body := fmt.Sprintf(`{"student_id":"%s","subject_id":"subj-1","grade_value":8.0,"grade_type":"numeric","semester":1,"date":"2025-10-15"}`, studentID)
+				gradeYear := time.Now().Year()
+				if time.Now().Month() < time.September {
+					gradeYear--
+				}
+				gradeDate := fmt.Sprintf("%d-09-01", gradeYear)
+				body := fmt.Sprintf(`{"student_id":"%s","subject_id":"subj-1","grade_value":8.0,"grade_type":"numeric","semester":1,"date":"%s"}`, studentID, gradeDate)
 				req := httptest.NewRequest("POST", "/api/v1/grades", bytes.NewBufferString(body))
 				req.Header.Set("Content-Type", "application/json")
 				res := httptest.NewRecorder()
@@ -307,7 +312,7 @@ func TestRoleSecurityRBACMatrix(t *testing.T) {
 				mScrutiny.On("GetOverview", mock.Anything, schoolID).Return(map[string]interface{}{"status": "ok"}, nil).Maybe()
 
 				scrutinySvc := scrutiny.NewService(mScrutiny, mGrade, mClass, mUser, mAtt)
-				scrutinyH := scrutiny.NewHandler(scrutinySvc)
+				scrutinyH := scrutiny.NewHandler(scrutinySvc, nil)
 
 				r := gin.New()
 				g := r.Group("/api/v1")

@@ -82,6 +82,9 @@ func (m *DummyUserRepo) IsActive(ctx context.Context, id string) (bool, error) {
 	args := m.Called(ctx, id)
 	return args.Bool(0), args.Error(1)
 }
+func (m *DummyUserRepo) ChangePasswordTx(ctx context.Context, userID, newPasswordHash string) error {
+	return nil
+}
 
 func TestMiddleware_ActiveCache_CachesDisabledUserAndInvalidates(t *testing.T) {
 	gin.SetMode(gin.TestMode)

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Журнал - Учень</string>
+    <string name="dashboard_title">Моя Панель</string>
+    <string name="welcome_student">Привіт, %1$s!</string>
+    <string name="grades_title">Мої Оцінки</string>
+    <string name="agenda_title">Домашні завдання &amp; Розклад</string>
+    <string name="attendance_title">Відвідуваність &amp; Пропуски</string>
+    <string name="report_card_title">Мій Табель</string>
+    <string name="gpa_average">Середній Бал</string>
+    <string name="recent_grades">Останні Оцінки</string>
+    <string name="today_lessons">Розклад на Сьогодні</string>
+    <string name="absences_count">Всього Пропусків</string>
+    <string name="lates_count">Всього Запізнень</string>
+    <string name="no_data">Немає доступних даних</string>
+    <string name="login_subtitle">Увійдіть у свій акаунт</string>
+    <string name="email_label">Електронна пошта учня</string>
+    <string name="password_label">Пароль</string>
+    <string name="btn_login">УВІЙТИ</string>
+    <string name="err_enter_credentials">Введіть електронну пошту та пароль</string>
+    <string name="logout">Вийти</string>
+    <string name="settings">Налаштування</string>
+    <string name="badges_title">Мої Значки</string>
+    <string name="pcto_title">Програми Практики</string>
+</resources>

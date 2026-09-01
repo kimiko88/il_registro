@@ -6,7 +6,7 @@
 
 ## 📌 GitHub Metadata / About Info
 
-- **Tagline**: Sistema di Registro Elettronico Scolastico moderno e completo per le scuole italiane (Go 1.25, Vue 3, Quasar, PostgreSQL 16+, PWA, i18n, WAI-ARIA).
+- **Tagline**: Sistema di Registro Elettronico Scolastico moderno e completo per le scuole italiane (Go 1.27, Vue 3, Quasar, PostgreSQL 16+, PWA, i18n, WAI-ARIA).
 - **Licenza**: [PolyForm Noncommercial 1.0.0](../LICENSE) — Gratuita e libera per scuole pubbliche, università, enti ed istituzioni pubbliche.
 - **Topics / Tags**:
   `registro-elettronico` `scuola-italiana` `go` `golang` `vue3` `quasar-framework` `pinia` `postgresql` `spid` `cie` `pwa` `education` `school-management` `rest-api` `i18n` `accessibility`
@@ -24,7 +24,7 @@ il_registro/
 └── docs/               # Documentazione tecnica e guide per sviluppatori
 ```
 
-### Backend (Go 1.25+)
+### Backend (Go 1.27+)
 
 - **[Gin Gonic](https://github.com/gin-gonic/gin)** (`github.com/gin-gonic/gin`): Framework HTTP ad alte prestazioni per il routing REST, middleware di sicurezza e gestione delle richieste JSON.
 - **[lib/pq](https://github.com/lib/pq)** (`github.com/lib/pq`): Driver nativo PostgreSQL con supporto ad indici parziali `WHERE deleted_at IS NULL` per velocizzare il soft delete.

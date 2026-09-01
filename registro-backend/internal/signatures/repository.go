@@ -45,5 +45,8 @@ func (r *repository) FindByDocumentID(ctx context.Context, docID string) ([]Sign
 		}
 		sigs = append(sigs, s)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return sigs, nil
 }

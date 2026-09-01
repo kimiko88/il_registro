@@ -45,10 +45,7 @@ func (s *Service) CreateNote(ctx context.Context, teacherID, schoolID string, re
 	if req.TargetRole == "" {
 		req.TargetRole = "all"
 	}
-	isApproved := true
-	if req.Type == "disciplinary" {
-		isApproved = false // Disciplinary notes require principal/admin approval before being published
-	}
+	isApproved := req.Type != "disciplinary" // Disciplinary notes require principal/admin approval before being published
 	n := &StudentNote{
 		SchoolID:   schoolID,
 		TeacherID:  teacherID,
@@ -141,9 +138,10 @@ func (s *Service) DeleteNote(ctx context.Context, actorID, actorRole, noteID str
 }
 
 func (s *Service) ListNotes(ctx context.Context, filter NoteFilter) ([]StudentNote, error) {
-	if filter.ActorRole == "student" {
+	switch filter.ActorRole {
+	case "student":
 		filter.StudentID = filter.ActorID
-	} else if filter.ActorRole == "parent" {
+	case "parent":
 		if filter.StudentID == "" {
 			return nil, ErrUnauthorizedParent
 		}

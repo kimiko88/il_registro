@@ -51,7 +51,7 @@ func (i *Importer) ParseXLSX(r io.Reader) ([]User, []string, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	// Assume first sheet
 	rows, err := f.GetRows(f.GetSheetList()[0])

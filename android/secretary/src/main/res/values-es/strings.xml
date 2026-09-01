@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Registro - Secretaría</string>
+    <string name="secretary_dashboard_title">Registro Secretaría</string>
+    <string name="user_management">Gestión de Usuarios</string>
+    <string name="scrutiny_supervision">Supervisión de Evaluaciones</string>
+    <string name="generate_certificates">Certificados y Actas</string>
+    <string name="audit_logs">Registros de Auditoría</string>
+    <string name="create_user">Crear Nuevo Usuario</string>
+    <string name="download_pdf">Descargar Acta en PDF</string>
+    <string name="login_subtitle">Inicia sesión en el panel de administración</string>
+    <string name="email_label">Correo de Secretaría</string>
+    <string name="password_label">Contraseña</string>
+    <string name="btn_login">INICIAR SESIÓN EN EL PANEL</string>
+    <string name="err_enter_credentials">Ingresa correo y contraseña</string>
+    <string name="logout">Cerrar sesión</string>
+</resources>

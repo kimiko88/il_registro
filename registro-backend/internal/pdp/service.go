@@ -102,11 +102,24 @@ func (s *Service) GetByStudent(ctx context.Context, actorID, actorRole, actorSch
 
 // GetByClass returns all PDP/PEI plans for an entire class.
 // Only teachers, coordinators and dirigenza can access this.
-func (s *Service) GetByClass(ctx context.Context, actorRole, classID, academicYear string) ([]*PdpPlan, error) {
+func (s *Service) GetByClass(ctx context.Context, actorRole, actorSchoolID, classID, academicYear string) ([]*PdpPlan, error) {
 	if !canViewClassPDP(actorRole) {
 		return nil, ErrUnauthorized
 	}
-	return s.repo.GetByClass(ctx, classID, academicYear)
+	plans, err := s.repo.GetByClass(ctx, classID, academicYear)
+	if err != nil {
+		return nil, err
+	}
+	if actorRole != "superadmin" && actorSchoolID != "" {
+		filtered := make([]*PdpPlan, 0, len(plans))
+		for _, p := range plans {
+			if p.SchoolID == "" || p.SchoolID == actorSchoolID {
+				filtered = append(filtered, p)
+			}
+		}
+		return filtered, nil
+	}
+	return plans, nil
 }
 
 // GetByID returns a single plan by ID.

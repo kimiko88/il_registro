@@ -13,13 +13,13 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	rows, err := db.Query("SELECT id, email, role, school_id FROM users WHERE role = 'admin'")
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	fmt.Println("Admin users in DB:")
 	count := 0
@@ -31,6 +31,9 @@ func main() {
 		}
 		fmt.Printf("- %s (ID: %s) Role: %s, SchoolID: %v\n", email, id, role, schoolID)
 		count++
+	}
+	if err := rows.Err(); err != nil {
+		log.Fatal(err)
 	}
 	fmt.Printf("Total found: %d\n", count)
 }

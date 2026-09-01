@@ -7,6 +7,7 @@ import { useAttendanceStore } from './attendance'
 import { useCommunicationsStore } from './communications'
 import { useScrutinyStore } from './scrutiny'
 import { useParentStore } from './parent'
+import { useWebSocketStore } from './websocket'
 
 import { isTokenExpired, getRoleFromToken } from '../utils/jwt'
 

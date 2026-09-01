@@ -12,7 +12,7 @@ if (typeof setApiRouter === 'function') {
     setApiRouter(router)
 }
 
-router.beforeEach(authGuard)
+router.beforeEach((to, from) => authGuard(to, from))
 
 router.afterEach((to) => {
     const base = 'Registro Elettronico'

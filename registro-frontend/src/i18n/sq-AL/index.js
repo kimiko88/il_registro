@@ -1900,7 +1900,20 @@ export default {
       "scrutiny": {
         "title": "Scrutiny & Term-End Evaluation",
         "desc": "Procedure for proposed term grades, conduct evaluation, and class council minutes.",
-        "content": "The scrutiny grid consolidates proposed grades from all subject teachers for 1st Term or Final Scrutiny.\n\nStep 1: Select class and scrutiny term.\nStep 2: Verify the proposed GPA column and enter final deliberated grade.\nStep 3: Enter conduct mark and overall qualitative evaluation level.\nStep 4: If class coordinator, verify validation status across all teachers and lock tabellone.\nStep 5: Export and print official scrutiny minutes PDF.\n\nWarning: Once locked by coordinator, grade edits require administrative unlock."
+        "content": "The scrutiny grid consolidates proposed grades from all subject teachers for 1st Term or Final Scrutiny.\n\nStep 1: Select class and scrutiny term.\nStep 2: Verify the proposed GPA column and enter final deliberated grade.\nStep 3: Enter conduct mark and overall qualitative evaluation level.\nStep 4: If class coordinator, verify validation status across all teachers and lock tabellone.\nStep 5: Export and print official scrutiny minutes PDF.\n\nWarning: Once locked by coordinator, grade edits require administrative unlock.",
+        "period1": "Vlerësimi Semestri 1",
+        "period2": "Vlerësimi Semestri 2 / Përfundimtar",
+        "deferredScrutiny": "Vlerësim i Shtyrë (Provimet e Vjeshtës)",
+        "deferredBannerTitle": "Sessioni i Vlerësimit të Shtyrë (Provimet e Prapambetjeve)",
+        "deferredBannerBody": "Vendim përfundimtar mbi rezultatin dhe verifikimi i shlyerjes së prapambetjeve për nxënësit me vendim të pezulluar.",
+        "deferredAction": "Vlerësim i Shtyrë (Vjeshtë)",
+        "deferredModalTitle": "Vlerësim i Shtyrë — {name}",
+        "deferredModalSubtitle": "Verifikimi i shlyerjes së prapambetjeve pas provimeve të vjeshtës",
+        "promotedDebtsCleared": "Kalohet (Prapambetjet e shlyera)",
+        "notPromotedDebtsNotCleared": "Nuk kalohet (Prapambetjet e pashlyera)",
+        "deferredNotes": "Shënime të procesverbalit të vlerësimit të shtyrë",
+        "deliberateDeferred": "Mirato vendimin e vlerësimit të shtyrë",
+        "deferredSaved": "Vlerësimi i shtyrë u regjistrua me sukses!"
       },
       "pdp": {
         "title": "Personalized Education Plan (PDP / PEI)",
@@ -2297,5 +2310,12 @@ export default {
       "selectStudent": "Select Child / Student",
       "notes": "Notes for Teacher"
     }
+  },
+  "a11y": {
+    "sttListening": "Duke dëgjuar... flisni tani",
+    "sttTooltip": "Diktat me zë (Alt+D)",
+    "focusModeTitle": "Modali i Fokusit (ADHD/DSA)",
+    "asyncPdfQueue": "Gjenerimi i PDF në prapavijë"
   }
 }
+

@@ -12,73 +12,73 @@ import (
 
 type Repository interface {
 	// Create inserts a new grade
-	Create(grade *Grade) error
+	Create(ctx context.Context, grade *Grade) error
 
 	// BatchCreate inserts multiple grades in a transaction
-	BatchCreate(grades []*Grade) error
+	BatchCreate(ctx context.Context, grades []*Grade) error
 
 	// Update modifies an existing grade and logs the change to history
-	Update(grade *Grade, history *GradeHistory) error
+	Update(ctx context.Context, grade *Grade, history *GradeHistory) error
 
 	// Delete performs a soft delete
-	Delete(id string, deletedBy string) error
+	Delete(ctx context.Context, id string, deletedBy string) error
 
 	// FindByID retrieves a single grade
-	FindByID(id string) (*Grade, error)
+	FindByID(ctx context.Context, id string) (*Grade, error)
 
 	// FindByStudent retrieves all grades for a student
-	FindByStudent(studentID string) ([]Grade, error)
+	FindByStudent(ctx context.Context, studentID string) ([]Grade, error)
 
 	// FindByClassAndSubject retrieves grades for a specific class context
-	FindByClassAndSubject(classID string, subjectID string, semester int) ([]Grade, error)
+	FindByClassAndSubject(ctx context.Context, classID string, subjectID string, semester int) ([]Grade, error)
 
 	// FindByClass retrieves all grades for a class (across all subjects)
-	FindByClass(classID string, semester int) ([]Grade, error)
+	FindByClass(ctx context.Context, classID string, semester int) ([]Grade, error)
 
 	// FindBySubject retrieves all grades for a subject (across classes if needed, or filtered)
-	FindBySubject(subjectID string, semester int) ([]Grade, error)
+	FindBySubject(ctx context.Context, subjectID string, semester int) ([]Grade, error)
 
 	// FindWithFilter generic filter for export/advanced search
-	FindWithFilter(filter GradeFilter) ([]Grade, error)
+	FindWithFilter(ctx context.Context, filter GradeFilter) ([]Grade, error)
 
 	// FindWithFilterPaginated returns a page of grades and the total count.
-	FindWithFilterPaginated(filter GradeFilter) ([]Grade, int, error)
+	FindWithFilterPaginated(ctx context.Context, filter GradeFilter) ([]Grade, int, error)
 
 	// FindByTeacher retrieves grades assigned by a teacher (optional utility)
-	FindByTeacher(teacherID string) ([]Grade, error)
+	FindByTeacher(ctx context.Context, teacherID string) ([]Grade, error)
 
 	// GetHistory retrieves the modification history of a grade
-	GetHistory(gradeID string) ([]GradeHistory, error)
+	GetHistory(ctx context.Context, gradeID string) ([]GradeHistory, error)
 
 	// FindEnrolledSubjects returns the subject IDs a student is enrolled in for a given semester.
 	// Used by GetSemesterReport to count subjects with no grades as failed.
-	FindEnrolledSubjects(studentID string, semester int) ([]string, error)
+	FindEnrolledSubjects(ctx context.Context, studentID string, semester int) ([]string, error)
 
 	// CreateTest inserts a new class test
-	CreateTest(test *ClassTest) error
+	CreateTest(ctx context.Context, test *ClassTest) error
 
 	// FindTestsByClassAndSubject retrieves class tests
-	FindTestsByClassAndSubject(classID string, subjectID string) ([]ClassTest, error)
+	FindTestsByClassAndSubject(ctx context.Context, classID string, subjectID string) ([]ClassTest, error)
 
 	// FindUpcomingTestsByClass retrieves all upcoming tests for a class (today or future)
-	FindUpcomingTestsByClass(classID string) ([]ClassTest, error)
+	FindUpcomingTestsByClass(ctx context.Context, classID string) ([]ClassTest, error)
 
 	// DeleteTest deletes a test (cascade delete will handle grades in DB)
-	DeleteTest(id string) error
+	DeleteTest(ctx context.Context, id string) error
 
 	// UpdateTest updates a class test's metadata
-	UpdateTest(test *ClassTest) error
+	UpdateTest(ctx context.Context, test *ClassTest) error
 
 	// FindGradesByTestID retrieves all grades linked to a class test
-	FindGradesByTestID(testID string) ([]Grade, error)
+	FindGradesByTestID(ctx context.Context, testID string) ([]Grade, error)
 
 	// FindTestByID retrieves a single class test by its ID
-	FindTestByID(id string) (*ClassTest, error)
+	FindTestByID(ctx context.Context, id string) (*ClassTest, error)
 
 	// Weight Config
-	GetWeightConfigs(schoolID, subjectID, classID string) ([]GradeWeightConfig, error)
-	UpsertWeightConfig(cfg *GradeWeightConfig) (*GradeWeightConfig, error)
-	DeleteWeightConfig(id string) error
+	GetWeightConfigs(ctx context.Context, schoolID, subjectID, classID string) ([]GradeWeightConfig, error)
+	UpsertWeightConfig(ctx context.Context, cfg *GradeWeightConfig) (*GradeWeightConfig, error)
+	DeleteWeightConfig(ctx context.Context, id string) error
 
 	// CheckClassAccessPermission checks user access to a class in DB
 	CheckClassAccessPermission(ctx context.Context, actorID, actorRole, classID string) (bool, error)
@@ -100,7 +100,7 @@ func NewRepository(db *sql.DB) Repository {
 	return &repository{db: db}
 }
 
-func (r *repository) Create(grade *Grade) error {
+func (r *repository) Create(ctx context.Context, grade *Grade) error {
 	query := `
 		INSERT INTO grades (
 			student_id, school_id, subject_id, teacher_id,
@@ -114,7 +114,7 @@ func (r *repository) Create(grade *Grade) error {
 			$14, $15, $16, $17, NOW(), NOW()
 		) RETURNING id`
 
-	err := r.db.QueryRow(query,
+	err := r.db.QueryRowContext(ctx, query,
 		grade.StudentID, grade.SchoolID, grade.SubjectID, grade.TeacherID,
 		grade.GradeValue, grade.GradeType, grade.Semester, grade.Date,
 		grade.Description, grade.RubricID, grade.Weight, grade.IsPublished, grade.PublishedAt,
@@ -127,8 +127,8 @@ func (r *repository) Create(grade *Grade) error {
 	return nil
 }
 
-func (r *repository) BatchCreate(grades []*Grade) error {
-	tx, err := r.db.Begin()
+func (r *repository) BatchCreate(ctx context.Context, grades []*Grade) error {
+	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("batch create begin tx error: %w", err)
 	}
@@ -147,14 +147,14 @@ func (r *repository) BatchCreate(grades []*Grade) error {
 			$14, $15, $16, $17, NOW(), NOW()
 		) RETURNING id`
 
-	stmt, err := tx.Prepare(query)
+	stmt, err := tx.PrepareContext(ctx, query)
 	if err != nil {
 		return fmt.Errorf("prepare batch statement error: %w", err)
 	}
-	defer stmt.Close()
+	defer func() { _ = stmt.Close() }()
 
 	for _, grade := range grades {
-		err := stmt.QueryRow(
+		err := stmt.QueryRowContext(ctx,
 			grade.StudentID, grade.SchoolID, grade.SubjectID, grade.TeacherID,
 			grade.GradeValue, grade.GradeType, grade.Semester, grade.Date,
 			grade.Description, grade.RubricID, grade.Weight, grade.IsPublished, grade.PublishedAt,
@@ -169,8 +169,8 @@ func (r *repository) BatchCreate(grades []*Grade) error {
 	return tx.Commit()
 }
 
-func (r *repository) Update(grade *Grade, history *GradeHistory) error {
-	tx, err := r.db.Begin()
+func (r *repository) Update(ctx context.Context, grade *Grade, history *GradeHistory) error {
+	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("begin transaction error: %w", err)
 	}
@@ -193,7 +193,7 @@ func (r *repository) Update(grade *Grade, history *GradeHistory) error {
 			updated_at = NOW()
 		WHERE id = $13::uuid AND deleted_at IS NULL`
 
-	_, err = tx.Exec(updateQuery,
+	_, err = tx.ExecContext(ctx, updateQuery,
 		grade.GradeValue, grade.GradeType, grade.Semester, grade.Date,
 		grade.Description, grade.RubricID, grade.Weight, grade.IsPublished, grade.PublishedAt,
 		grade.GradeCategory, grade.EvaluationType, grade.ModifiedBy, grade.ID,
@@ -210,7 +210,7 @@ func (r *repository) Update(grade *Grade, history *GradeHistory) error {
 				modified_by, modified_at, reason
 			) VALUES ($1::uuid, $2, $3, $4, $5, $6, NOW(), $7) RETURNING id`
 
-		err = tx.QueryRow(historyQuery,
+		err = tx.QueryRowContext(ctx, historyQuery,
 			grade.ID, history.OldValue, history.NewValue,
 			history.OldDescription, history.NewDescription,
 			history.ModifiedBy, history.Reason,
@@ -224,9 +224,9 @@ func (r *repository) Update(grade *Grade, history *GradeHistory) error {
 	return tx.Commit()
 }
 
-func (r *repository) Delete(id string, deletedBy string) error {
+func (r *repository) Delete(ctx context.Context, id string, deletedBy string) error {
 	query := `UPDATE grades SET deleted_at = NOW(), modified_by = $1 WHERE id = $2::uuid AND deleted_at IS NULL`
-	res, err := r.db.Exec(query, deletedBy, id)
+	res, err := r.db.ExecContext(ctx, query, deletedBy, id)
 	if err != nil {
 		return fmt.Errorf("delete grade error: %w", err)
 	}
@@ -236,7 +236,7 @@ func (r *repository) Delete(id string, deletedBy string) error {
 	return nil
 }
 
-func (r *repository) FindByID(id string) (*Grade, error) {
+func (r *repository) FindByID(ctx context.Context, id string) (*Grade, error) {
 	query := `
 		SELECT id, student_id, school_id, subject_id, teacher_id, 
 			       grade_value, grade_type, semester, date, 
@@ -246,7 +246,7 @@ func (r *repository) FindByID(id string) (*Grade, error) {
 		WHERE id = $1::uuid AND deleted_at IS NULL`
 
 	var g Grade
-	err := r.db.QueryRow(query, id).Scan(
+	err := r.db.QueryRowContext(ctx, query, id).Scan(
 		&g.ID, &g.StudentID, &g.SchoolID, &g.SubjectID, &g.TeacherID,
 		&g.GradeValue, &g.GradeType, &g.Semester, &g.Date,
 		&g.Description, &g.RubricID, &g.Weight, &g.IsPublished, &g.PublishedAt,
@@ -261,7 +261,7 @@ func (r *repository) FindByID(id string) (*Grade, error) {
 	return &g, nil
 }
 
-func (r *repository) FindByStudent(studentID string) ([]Grade, error) {
+func (r *repository) FindByStudent(ctx context.Context, studentID string) ([]Grade, error) {
 	query := `
 		SELECT g.id, g.student_id, g.school_id, g.subject_id, g.teacher_id, 
 			       g.grade_value, g.grade_type, g.semester, g.date, 
@@ -278,10 +278,10 @@ func (r *repository) FindByStudent(studentID string) ([]Grade, error) {
 		) AND g.deleted_at IS NULL
 		ORDER BY g.date DESC`
 
-	return r.scanGrades(query, studentID)
+	return r.scanGradesCtx(ctx, query, studentID)
 }
 
-func (r *repository) FindByClassAndSubject(classID string, subjectID string, semester int) ([]Grade, error) {
+func (r *repository) FindByClassAndSubject(ctx context.Context, classID string, subjectID string, semester int) ([]Grade, error) {
 	var query string
 	var args []interface{}
 
@@ -309,10 +309,10 @@ func (r *repository) FindByClassAndSubject(classID string, subjectID string, sem
 		args = []interface{}{classID, subjectID}
 	}
 
-	return r.scanGrades(query, args...)
+	return r.scanGradesCtx(ctx, query, args...)
 }
 
-func (r *repository) FindByClass(classID string, semester int) ([]Grade, error) {
+func (r *repository) FindByClass(ctx context.Context, classID string, semester int) ([]Grade, error) {
 	var query string
 	var args []interface{}
 
@@ -340,10 +340,10 @@ func (r *repository) FindByClass(classID string, semester int) ([]Grade, error) 
 		args = []interface{}{classID}
 	}
 
-	return r.scanGrades(query, args...)
+	return r.scanGradesCtx(ctx, query, args...)
 }
 
-func (r *repository) FindBySubject(subjectID string, semester int) ([]Grade, error) {
+func (r *repository) FindBySubject(ctx context.Context, subjectID string, semester int) ([]Grade, error) {
 	var query string
 	var args []interface{}
 
@@ -369,10 +369,10 @@ func (r *repository) FindBySubject(subjectID string, semester int) ([]Grade, err
 		args = []interface{}{subjectID}
 	}
 
-	return r.scanGrades(query, args...)
+	return r.scanGradesCtx(ctx, query, args...)
 }
 
-func (r *repository) FindWithFilter(filter GradeFilter) ([]Grade, error) {
+func (r *repository) FindWithFilter(ctx context.Context, filter GradeFilter) ([]Grade, error) {
 	baseQuery := `
 		SELECT id, student_id, school_id, subject_id, teacher_id, 
 			       grade_value, grade_type, semester, date, 
@@ -423,7 +423,6 @@ func (r *repository) FindWithFilter(filter GradeFilter) ([]Grade, error) {
 	if filter.IsPublished != nil {
 		conditions = append(conditions, fmt.Sprintf("is_published = $%d", argIdx))
 		args = append(args, *filter.IsPublished)
-		argIdx++
 	}
 
 	if len(conditions) > 0 {
@@ -432,13 +431,13 @@ func (r *repository) FindWithFilter(filter GradeFilter) ([]Grade, error) {
 
 	baseQuery += " ORDER BY date DESC"
 
-	return r.scanGrades(baseQuery, args...)
+	return r.scanGradesCtx(ctx, baseQuery, args...)
 }
 
 // FindWithFilterPaginated returns a page of grades matching the filter together
 // with the total count of matching rows (before pagination).
 // filter.Page is 1-based; filter.PageSize defaults to 50 when <= 0.
-func (r *repository) FindWithFilterPaginated(filter GradeFilter) ([]Grade, int, error) {
+func (r *repository) FindWithFilterPaginated(ctx context.Context, filter GradeFilter) ([]Grade, int, error) {
 	baseWhere := `FROM grades WHERE deleted_at IS NULL`
 
 	var args []interface{}
@@ -518,14 +517,14 @@ func (r *repository) FindWithFilterPaginated(filter GradeFilter) ([]Grade, int, 
 		fmt.Sprintf(" ORDER BY date DESC, created_at DESC LIMIT $%d OFFSET $%d", argIdx, argIdx+1)
 	args = append(args, pageSize, offset)
 
-	grades, err := r.scanGrades(paginatedQuery, args...)
+	grades, err := r.scanGradesCtx(ctx, paginatedQuery, args...)
 	if err != nil {
 		return nil, 0, err
 	}
 	return grades, total, nil
 }
 
-func (r *repository) FindByTeacher(teacherID string) ([]Grade, error) {
+func (r *repository) FindByTeacher(ctx context.Context, teacherID string) ([]Grade, error) {
 	query := `
 		SELECT id, student_id, school_id, subject_id, teacher_id, 
 			       grade_value, grade_type, semester, date, 
@@ -535,10 +534,10 @@ func (r *repository) FindByTeacher(teacherID string) ([]Grade, error) {
 		WHERE teacher_id = $1::uuid AND deleted_at IS NULL
 		ORDER BY date DESC`
 
-	return r.scanGrades(query, teacherID)
+	return r.scanGradesCtx(ctx, query, teacherID)
 }
 
-func (r *repository) GetHistory(gradeID string) ([]GradeHistory, error) {
+func (r *repository) GetHistory(ctx context.Context, gradeID string) ([]GradeHistory, error) {
 	query := `
 		SELECT id, grade_id, old_value, new_value, 
 		       old_description, new_description, 
@@ -547,7 +546,7 @@ func (r *repository) GetHistory(gradeID string) ([]GradeHistory, error) {
 		WHERE grade_id = $1::uuid
 		ORDER BY modified_at DESC`
 
-	rows, err := r.db.Query(query, gradeID)
+	rows, err := r.db.QueryContext(ctx, query, gradeID)
 	if err != nil {
 		return nil, fmt.Errorf("query history error: %w", err)
 	}
@@ -576,7 +575,7 @@ func (r *repository) GetHistory(gradeID string) ([]GradeHistory, error) {
 // semester is accepted for API consistency but not used in the query because
 // class_subjects does not carry a semester column; the caller filters by semester
 // at the grade level.
-func (r *repository) FindEnrolledSubjects(studentID string, semester int) ([]string, error) {
+func (r *repository) FindEnrolledSubjects(ctx context.Context, studentID string, semester int) ([]string, error) {
 	if _, err := uuid.Parse(studentID); err != nil {
 		return []string{}, nil
 	}
@@ -589,7 +588,7 @@ func (r *repository) FindEnrolledSubjects(studentID string, semester int) ([]str
 		)
 		WHERE (st.id = $1::uuid OR st.user_id = $1::uuid)`
 
-	rows, err := r.db.Query(query, studentID)
+	rows, err := r.db.QueryContext(ctx, query, studentID)
 	if err != nil {
 		return nil, fmt.Errorf("FindEnrolledSubjects error: %w", err)
 	}
@@ -606,13 +605,13 @@ func (r *repository) FindEnrolledSubjects(studentID string, semester int) ([]str
 	return subjects, rows.Err()
 }
 
-// Helper to scan rows into Grade slice
-func (r *repository) scanGrades(query string, args ...interface{}) ([]Grade, error) {
-	rows, err := r.db.Query(query, args...)
+// scanGradesCtx esegue query con context e scannerizza i risultati in una slice di Grade.
+func (r *repository) scanGradesCtx(ctx context.Context, query string, args ...interface{}) ([]Grade, error) {
+	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	return r.scanRows(rows)
 }
 
@@ -637,7 +636,7 @@ func (r *repository) scanRows(rows *sql.Rows) ([]Grade, error) {
 }
 
 // CreateTest inserts a new class test
-func (r *repository) CreateTest(test *ClassTest) error {
+func (r *repository) CreateTest(ctx context.Context, test *ClassTest) error {
 	query := `
 		INSERT INTO class_tests (
 			class_id, subject_id, teacher_id, title, date,
@@ -647,7 +646,7 @@ func (r *repository) CreateTest(test *ClassTest) error {
 			$6, $7, $8, NOW(), NOW()
 		) RETURNING id`
 
-	err := r.db.QueryRow(query,
+	err := r.db.QueryRowContext(ctx, query,
 		test.ClassID, test.SubjectID, test.TeacherID, test.Title, test.Date,
 		test.TeacherNotes, test.ParentNotes, test.EvaluationType,
 	).Scan(&test.ID)
@@ -659,7 +658,7 @@ func (r *repository) CreateTest(test *ClassTest) error {
 }
 
 // FindTestsByClassAndSubject retrieves class tests
-func (r *repository) FindTestsByClassAndSubject(classID string, subjectID string) ([]ClassTest, error) {
+func (r *repository) FindTestsByClassAndSubject(ctx context.Context, classID string, subjectID string) ([]ClassTest, error) {
 	query := `
 		SELECT id, class_id, subject_id, teacher_id, title, date,
 		       teacher_notes, parent_notes, evaluation_type, created_at, updated_at
@@ -667,7 +666,7 @@ func (r *repository) FindTestsByClassAndSubject(classID string, subjectID string
 		WHERE class_id = $1::uuid AND subject_id = $2::uuid
 		ORDER BY date DESC, created_at DESC`
 
-	rows, err := r.db.Query(query, classID, subjectID)
+	rows, err := r.db.QueryContext(ctx, query, classID, subjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -692,7 +691,7 @@ func (r *repository) FindTestsByClassAndSubject(classID string, subjectID string
 }
 
 // FindUpcomingTestsByClass retrieves upcoming tests for a class (today or future)
-func (r *repository) FindUpcomingTestsByClass(classID string) ([]ClassTest, error) {
+func (r *repository) FindUpcomingTestsByClass(ctx context.Context, classID string) ([]ClassTest, error) {
 	query := `
 		SELECT id, class_id, subject_id, teacher_id, title, date,
 		       teacher_notes, parent_notes, evaluation_type, created_at, updated_at
@@ -700,7 +699,7 @@ func (r *repository) FindUpcomingTestsByClass(classID string) ([]ClassTest, erro
 		WHERE class_id = $1::uuid AND date >= CURRENT_DATE
 		ORDER BY date ASC`
 
-	rows, err := r.db.Query(query, classID)
+	rows, err := r.db.QueryContext(ctx, query, classID)
 	if err != nil {
 		return nil, err
 	}
@@ -725,9 +724,9 @@ func (r *repository) FindUpcomingTestsByClass(classID string) ([]ClassTest, erro
 }
 
 // DeleteTest deletes a test (cascade delete will handle grades in DB)
-func (r *repository) DeleteTest(id string) error {
+func (r *repository) DeleteTest(ctx context.Context, id string) error {
 	query := `DELETE FROM class_tests WHERE id = $1::uuid`
-	res, err := r.db.Exec(query, id)
+	res, err := r.db.ExecContext(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("delete test error: %w", err)
 	}
@@ -738,13 +737,13 @@ func (r *repository) DeleteTest(id string) error {
 }
 
 // UpdateTest updates a class test's metadata
-func (r *repository) UpdateTest(test *ClassTest) error {
+func (r *repository) UpdateTest(ctx context.Context, test *ClassTest) error {
 	query := `
 		UPDATE class_tests
 		SET title = $1, date = $2, teacher_notes = $3, parent_notes = $4, evaluation_type = $5, updated_at = NOW()
 		WHERE id = $6::uuid`
 
-	res, err := r.db.Exec(query,
+	res, err := r.db.ExecContext(ctx, query,
 		test.Title, test.Date, test.TeacherNotes, test.ParentNotes, test.EvaluationType, test.ID,
 	)
 	if err != nil {
@@ -757,7 +756,7 @@ func (r *repository) UpdateTest(test *ClassTest) error {
 }
 
 // FindGradesByTestID retrieves all grades linked to a class test
-func (r *repository) FindGradesByTestID(testID string) ([]Grade, error) {
+func (r *repository) FindGradesByTestID(ctx context.Context, testID string) ([]Grade, error) {
 	query := `
 		SELECT id, student_id, school_id, subject_id, teacher_id, 
 			       grade_value, grade_type, semester, date, 
@@ -765,16 +764,16 @@ func (r *repository) FindGradesByTestID(testID string) ([]Grade, error) {
 			       grade_category, evaluation_type, COALESCE(created_by::text, ''), created_at, updated_at, test_id
 		FROM grades 
 		WHERE test_id = $1::uuid AND deleted_at IS NULL`
-	return r.scanGrades(query, testID)
+	return r.scanGradesCtx(ctx, query, testID)
 }
 
-func (r *repository) FindTestByID(id string) (*ClassTest, error) {
+func (r *repository) FindTestByID(ctx context.Context, id string) (*ClassTest, error) {
 	query := `
 		SELECT id, class_id, subject_id, teacher_id, title, date, teacher_notes, parent_notes, evaluation_type, created_at, updated_at
 		FROM class_tests
 		WHERE id = $1::uuid`
 	var t ClassTest
-	err := r.db.QueryRow(query, id).Scan(
+	err := r.db.QueryRowContext(ctx, query, id).Scan(
 		&t.ID, &t.ClassID, &t.SubjectID, &t.TeacherID, &t.Title, &t.Date, &t.TeacherNotes, &t.ParentNotes, &t.EvaluationType, &t.CreatedAt, &t.UpdatedAt,
 	)
 	if err != nil {
@@ -788,7 +787,7 @@ func (r *repository) FindTestByID(id string) (*ClassTest, error) {
 
 // --- Grade Weight Config ---
 
-func (r *repository) GetWeightConfigs(schoolID, subjectID, classID string) ([]GradeWeightConfig, error) {
+func (r *repository) GetWeightConfigs(ctx context.Context, schoolID, subjectID, classID string) ([]GradeWeightConfig, error) {
 	query := `
 		SELECT id, school_id, subject_id, class_id, grade_category, evaluation_type, weight, created_by
 		FROM grade_weight_configs
@@ -800,7 +799,7 @@ func (r *repository) GetWeightConfigs(schoolID, subjectID, classID string) ([]Gr
 		  (CASE WHEN class_id IS NOT NULL THEN 1 ELSE 0 END) DESC,
 		  grade_category, evaluation_type
 	`
-	rows, err := r.db.Query(query, schoolID, subjectID, classID)
+	rows, err := r.db.QueryContext(ctx, query, schoolID, subjectID, classID)
 	if err != nil {
 		return nil, fmt.Errorf("GetWeightConfigs: %w", err)
 	}
@@ -817,7 +816,7 @@ func (r *repository) GetWeightConfigs(schoolID, subjectID, classID string) ([]Gr
 	return results, rows.Err()
 }
 
-func (r *repository) UpsertWeightConfig(cfg *GradeWeightConfig) (*GradeWeightConfig, error) {
+func (r *repository) UpsertWeightConfig(ctx context.Context, cfg *GradeWeightConfig) (*GradeWeightConfig, error) {
 	query := `
 		INSERT INTO grade_weight_configs
 			(school_id, subject_id, class_id, grade_category, evaluation_type, weight, created_by)
@@ -826,7 +825,7 @@ func (r *repository) UpsertWeightConfig(cfg *GradeWeightConfig) (*GradeWeightCon
 		DO UPDATE SET weight = EXCLUDED.weight, updated_at = now()
 		RETURNING id, school_id, subject_id, class_id, grade_category, evaluation_type, weight, created_by
 	`
-	row := r.db.QueryRow(query,
+	row := r.db.QueryRowContext(ctx, query,
 		cfg.SchoolID, cfg.SubjectID, cfg.ClassID,
 		cfg.GradeCategory, cfg.EvaluationType,
 		cfg.Weight, cfg.CreatedBy,
@@ -838,8 +837,8 @@ func (r *repository) UpsertWeightConfig(cfg *GradeWeightConfig) (*GradeWeightCon
 	return &result, nil
 }
 
-func (r *repository) DeleteWeightConfig(id string) error {
-	res, err := r.db.Exec(`DELETE FROM grade_weight_configs WHERE id = $1::uuid`, id)
+func (r *repository) DeleteWeightConfig(ctx context.Context, id string) error {
+	res, err := r.db.ExecContext(ctx, `DELETE FROM grade_weight_configs WHERE id = $1::uuid`, id)
 	if err != nil {
 		return err
 	}
@@ -892,7 +891,7 @@ func (r *repository) GetTeacherNamesByClass(ctx context.Context, classID string)
 	if err != nil {
 		return teacherMap, err
 	}
-	defer tRows.Close()
+	defer func() { _ = tRows.Close() }()
 	for tRows.Next() {
 		var subID, tName string
 		if scanErr := tRows.Scan(&subID, &tName); scanErr == nil {
@@ -914,7 +913,7 @@ func (r *repository) GetSubjectNamesMap(ctx context.Context, schoolID string) (m
 	if err != nil {
 		return subjectNameMap, err
 	}
-	defer sRows.Close()
+	defer func() { _ = sRows.Close() }()
 	for sRows.Next() {
 		var id, name string
 		if scanErr := sRows.Scan(&id, &name); scanErr == nil {

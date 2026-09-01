@@ -103,12 +103,10 @@ func (r *repository) List(ctx context.Context, schoolID, studentID string, certT
 	if certType != "" {
 		query += fmt.Sprintf(" AND c.type = $%d", argID)
 		args = append(args, certType)
-		argID++
 	}
 	if year != "" {
 		query += fmt.Sprintf(" AND c.academic_year = $%d", argID)
 		args = append(args, year)
-		argID++
 	}
 
 	query += " ORDER BY c.issued_at DESC"
@@ -117,7 +115,7 @@ func (r *repository) List(ctx context.Context, schoolID, studentID string, certT
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var result []Certificate
 	for rows.Next() {
@@ -130,6 +128,9 @@ func (r *repository) List(ctx context.Context, schoolID, studentID string, certT
 			return nil, err
 		}
 		result = append(result, c)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return result, nil
 }

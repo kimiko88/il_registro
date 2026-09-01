@@ -1,0 +1,14 @@
+"app_name" = "Журнал - Секретариат";
+"secretary_dashboard_title" = "Секретариат";
+"user_management" = "Управление Пользователями";
+"scrutiny_supervision" = "Надзор за Аттестацией";
+"generate_certificates" = "Справки и Документы";
+"audit_logs" = "Журналы Аудита";
+"create_user" = "Создать Нового Пользователя";
+"download_pdf" = "Скачать Протокол PDF";
+"login_subtitle" = "Войдите в административную панель";
+"email_label" = "Электронная почта секретариата";
+"password_label" = "Пароль";
+"btn_login" = "ВОЙТИ В ПАНЕЛЬ";
+"err_enter_credentials" = "Введите электронную почту и пароль";
+"logout" = "Выйти";

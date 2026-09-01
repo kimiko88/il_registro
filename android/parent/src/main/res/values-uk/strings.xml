@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Журнал - Батьки</string>
+    <string name="parent_dashboard_title">Батьківський Портал</string>
+    <string name="my_children">Мої Діти</string>
+    <string name="child_grades">Оцінки Дитини</string>
+    <string name="pending_absences">Пропуски для Пояснення</string>
+    <string name="book_colloqui">Записатися на Співбесіду</string>
+    <string name="switch_child">Змінити Дитину</string>
+    <string name="justify_absence">Пояснити Пропуск</string>
+    <string name="book_colloquio">Записатися на Зустріч</string>
+    <string name="pending_justifications">Очікують Пояснення</string>
+    <string name="no_pending_justifications">Немає пропусків для пояснення</string>
+    <string name="login_subtitle">Увійдіть до батьківського порталу</string>
+    <string name="email_label">Електронна пошта батьків</string>
+    <string name="password_label">Пароль</string>
+    <string name="btn_login">УВІЙТИ В ПОРТАЛ</string>
+    <string name="err_enter_credentials">Введіть електронну пошту та пароль</string>
+    <string name="logout">Вийти</string>
+</resources>

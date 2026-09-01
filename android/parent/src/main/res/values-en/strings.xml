@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Register - Parent</string>
+    <string name="parent_dashboard_title">Family Portal</string>
+    <string name="my_children">My Children</string>
+    <string name="child_grades">Child Grades</string>
+    <string name="pending_absences">Absences to Justify</string>
+    <string name="book_colloqui">Book Parent-Teacher Meeting</string>
+    <string name="switch_child">Switch Child</string>
+    <string name="justify_absence">Justify Absence</string>
+    <string name="book_colloquio">Book Meeting</string>
+    <string name="pending_justifications">Pending Justifications</string>
+    <string name="no_pending_justifications">No pending absences to justify</string>
+    <string name="login_subtitle">Log in to the parent portal</string>
+    <string name="email_label">Parent Email</string>
+    <string name="password_label">Password</string>
+    <string name="btn_login">LOG IN TO PORTAL</string>
+    <string name="err_enter_credentials">Enter email and password</string>
+    <string name="logout">Log out</string>
+</resources>

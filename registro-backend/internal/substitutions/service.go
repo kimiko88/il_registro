@@ -176,7 +176,7 @@ func (s *serviceImpl) RecommendSubstitutes(ctx context.Context, schoolID, classI
 
 		reason := "Disponibile per supplenza"
 		if len(reasons) > 0 {
-			reason = fmt.Sprintf("%s", reasons[0])
+			reason = reasons[0]
 			if len(reasons) > 1 {
 				reason += fmt.Sprintf(" • %s", reasons[1])
 			}

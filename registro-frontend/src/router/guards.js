@@ -4,7 +4,19 @@ import { isTokenExpired } from 'src/utils/jwt'
 // Shared in-flight promise to prevent concurrent initAuth calls
 let _initAuthPromise = null
 
-export const authGuard = async (to, from, next) => {
+export const authGuard = async (to, from, ...rest) => {
+    const next = typeof rest[0] === 'function' ? rest[0] : null
+    const proceed = (target) => {
+        if (next) {
+            if (target !== undefined) {
+                next(target)
+            } else {
+                next()
+            }
+        }
+        return target
+    }
+
     const authStore = useAuthStore()
 
     // If initAuth is currently running or token is missing with stored user session,
@@ -40,24 +52,20 @@ export const authGuard = async (to, from, next) => {
             to.matched?.some(record => publicRoutes.includes(record.path))
 
         if (authStore.isAuthenticated && isAuthEntry) {
-            next(getUserDashboard(currentRole))
-            return
+            return proceed(getUserDashboard(currentRole))
         }
-        next()
-        return
+        return proceed()
     }
 
     // Client-side JWT expiry check (second layer — backend is the primary authority)
     if (authStore.token && isTokenExpired(authStore.token)) {
         authStore.logout?.()
-        next({ path: '/login', query: { reason: 'session_expired' } })
-        return
+        return proceed({ path: '/login', query: { reason: 'session_expired' } })
     }
 
     // If not authenticated or no valid role present from JWT, redirect to login
     if (!authStore.isAuthenticated || !currentRole) {
-        next({ path: '/login', query: { reason: 'session_expired' } })
-        return
+        return proceed({ path: '/login', query: { reason: 'session_expired' } })
     }
 
     // Role-based access control (deny-by-default for specified role lists)
@@ -70,10 +78,9 @@ export const authGuard = async (to, from, next) => {
             if (import.meta.env.DEV) {
                 console.warn(`Access denied: role '${currentRole}' is not allowed for path '${to.path}'`)
             }
-            next(getUserDashboard(currentRole))
-            return
+            return proceed(getUserDashboard(currentRole))
         }
     }
 
-    next()
+    return proceed()
 }

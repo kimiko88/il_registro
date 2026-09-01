@@ -239,3 +239,42 @@ func TestSubstitutionStatusConstants(t *testing.T) {
 		t.Errorf("expected 'cancelled', got '%s'", StatusCancelled)
 	}
 }
+
+func TestSubstitutions_ListAndAssign_ErrorPropagation(t *testing.T) {
+	t.Run("ListBySchool propagates error", func(t *testing.T) {
+		repo := &mockSubstitutionRepo{getErr: errors.New("db disconnect")}
+		svc := NewService(repo)
+
+		_, err := svc.ListBySchool(context.Background(), "school-1", "2026-01-15")
+		if err == nil {
+			t.Error("expected error from ListBySchool, got nil")
+		}
+	})
+
+	t.Run("AssignSubstitute forbidden for unauthorized role", func(t *testing.T) {
+		repo := &mockSubstitutionRepo{}
+		svc := NewService(repo)
+
+		err := svc.AssignSubstitute(context.Background(), "sub-1", "student", AssignSubstituteRequest{
+			SubstituteTeacherID: "t-2",
+		})
+		if err == nil {
+			t.Error("expected error for student role on AssignSubstitute, got nil")
+		}
+	})
+
+	t.Run("SignRegister by wrong teacher forbidden", func(t *testing.T) {
+		teacherID := "t-assigned"
+		repo := &mockSubstitutionRepo{
+			subs: []*Substitution{
+				{ID: "sub-1", SubstituteTeacherID: &teacherID},
+			},
+		}
+		svc := NewService(repo)
+
+		err := svc.SignRegister(context.Background(), "sub-1", "t-wrong", "Note registro")
+		if err == nil {
+			t.Error("expected unauthorized error for wrong teacher signing register, got nil")
+		}
+	})
+}

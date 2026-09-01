@@ -57,15 +57,15 @@ type Repository interface {
 
 	// Guardianship
 	IsActive(ctx context.Context, id string) (bool, error)
+
+	// ChangePasswordTx aggiorna la password e inserisce la history in una singola transazione.
+	// Garantisce che la history non venga mai persa anche in caso di crash parziale.
+	ChangePasswordTx(ctx context.Context, userID, newPasswordHash string) error
 }
 
 type PostgresRepository struct {
 	db *sql.DB
 }
-
-// ... existing NewRepository ...
-
-// ... existing methods ...
 
 func (r *PostgresRepository) GetChildren(ctx context.Context, parentUserID string) ([]StudentChild, error) {
 	query := `
@@ -99,10 +99,6 @@ func (r *PostgresRepository) GetChildren(ctx context.Context, parentUserID strin
 }
 
 func NewRepository(db *sql.DB) Repository {
-	_, _ = db.Exec(`
-		ALTER TABLE users ADD COLUMN IF NOT EXISTS is_staff BOOLEAN DEFAULT false;
-		ALTER TABLE teachers ADD COLUMN IF NOT EXISTS is_staff BOOLEAN DEFAULT false;
-	`)
 	return &PostgresRepository{db: db}
 }
 
@@ -241,7 +237,9 @@ func (r *PostgresRepository) Update(ctx context.Context, user *User) error {
 	}
 
 	// Sync is_staff to teachers table if teacher profile exists
-	_, _ = tx.ExecContext(ctx, `UPDATE teachers SET is_staff = $1 WHERE user_id = $2::uuid OR id = $2::uuid`, user.IsStaff, user.ID)
+	if _, err := tx.ExecContext(ctx, `UPDATE teachers SET is_staff = $1 WHERE user_id = $2::uuid OR id = $2::uuid`, user.IsStaff, user.ID); err != nil {
+		return err
+	}
 
 	// Role-Specific Profile Upsert
 	if user.SchoolID != nil {
@@ -455,14 +453,19 @@ func (r *PostgresRepository) ListByIDs(ctx context.Context, ids []string) ([]Use
 	if len(ids) == 0 {
 		return nil, nil
 	}
-	// Construct IN clause
+	// Costruisce la clausola IN con placeholder tipizzati UUID
 	placeholders := make([]string, len(ids))
 	args := make([]interface{}, len(ids))
 	for i, id := range ids {
 		placeholders[i] = fmt.Sprintf("$%d::uuid", i+1)
 		args[i] = id
 	}
-	query := fmt.Sprintf("SELECT id, email, first_name, last_name, role FROM users WHERE id IN (%s)", strings.Join(placeholders, ","))
+	// AND deleted_at IS NULL: esclude gli utenti soft-deleted per evitare
+	// che appaiano validi nei check di autorizzazione (es. BulkDeleteUsers)
+	query := fmt.Sprintf(
+		"SELECT id, email, first_name, last_name, role, school_id FROM users WHERE id IN (%s) AND deleted_at IS NULL",
+		strings.Join(placeholders, ","),
+	)
 
 	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
@@ -473,7 +476,7 @@ func (r *PostgresRepository) ListByIDs(ctx context.Context, ids []string) ([]Use
 	var users []User
 	for rows.Next() {
 		var u User
-		if err := rows.Scan(&u.ID, &u.Email, &u.FirstName, &u.LastName, &u.Role); err != nil {
+		if err := rows.Scan(&u.ID, &u.Email, &u.FirstName, &u.LastName, &u.Role, &u.SchoolID); err != nil {
 			return nil, err
 		}
 		users = append(users, u)
@@ -534,12 +537,12 @@ func (r *PostgresRepository) BulkCreate(ctx context.Context, users []User) (int,
 	}
 	defer func() { _ = tx.Rollback() }()
 
-	// Prepare COPY statement
-	stmt, err := tx.PrepareContext(ctx, pq.CopyIn("users", "id", "email", "password_hash", "first_name", "last_name", "fiscal_code", "role", "created_at", "updated_at"))
+	// Use raw COPY statement instead of deprecated pq.CopyIn helper
+	stmt, err := tx.PrepareContext(ctx, "COPY users (id, email, password_hash, first_name, last_name, fiscal_code, role, created_at, updated_at) FROM STDIN")
 	if err != nil {
 		return 0, nil, err
 	}
-	defer stmt.Close()
+	defer func() { _ = stmt.Close() }()
 
 	var errs []string
 	count := 0
@@ -610,6 +613,35 @@ func (r *PostgresRepository) IsActive(ctx context.Context, id string) (bool, err
 		return false, err
 	}
 	return isActive, nil
+}
+
+// ChangePasswordTx aggiorna la password e la history in una singola transazione atomica.
+// Questo evita lo scenario in cui la password viene aggiornata ma la history non viene registrata,
+// causando l'accettazione di password già usate nei controlli futuri.
+func (r *PostgresRepository) ChangePasswordTx(ctx context.Context, userID, newPasswordHash string) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("begin tx: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	// 1. Aggiorna password e timestamp
+	if _, err := tx.ExecContext(ctx,
+		`UPDATE users SET password_hash = $1, password_changed_at = NOW(), updated_at = NOW() WHERE id = $2::uuid AND deleted_at IS NULL`,
+		newPasswordHash, userID,
+	); err != nil {
+		return fmt.Errorf("update password: %w", err)
+	}
+
+	// 2. Inserisce nella history (stesso commit)
+	if _, err := tx.ExecContext(ctx,
+		`INSERT INTO user_password_history (user_id, password_hash) VALUES ($1::uuid, $2)`,
+		userID, newPasswordHash,
+	); err != nil {
+		return fmt.Errorf("insert password history: %w", err)
+	}
+
+	return tx.Commit()
 }
 func (r *PostgresRepository) GetStudentsByClass(ctx context.Context, classID string) ([]User, error) {
 	if classID == "" {
@@ -744,14 +776,18 @@ func (r *PostgresRepository) GetFascicoloSummary(ctx context.Context, studentID 
 		status = "Active"
 	}
 
-	docCount := 0
-	_ = r.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM student_documents WHERE student_id = $1`, studentID).Scan(&docCount)
-
-	notesCount := 0
-	_ = r.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM disciplinary_notes WHERE student_id = $1`, studentID).Scan(&notesCount)
-
-	pctoHours := 0
-	_ = r.db.QueryRowContext(ctx, `SELECT COALESCE(SUM(hours), 0) FROM pcto_activities WHERE student_id = $1`, studentID).Scan(&pctoHours)
+	// Unica query con subquery scalari per ridurre i round-trip al DB da 3 a 1.
+	// Ogni subquery restituisce un singolo scalare e non può fallire silenziosamente.
+	query := `
+		SELECT
+			(SELECT COUNT(*) FROM student_documents  WHERE student_id = $1) AS doc_count,
+			(SELECT COUNT(*) FROM disciplinary_notes  WHERE student_id = $1) AS notes_count,
+			(SELECT COALESCE(SUM(hours), 0) FROM pcto_activities WHERE student_id = $1) AS pcto_hours
+	`
+	var docCount, notesCount, pctoHours int
+	if err := r.db.QueryRowContext(ctx, query, studentID).Scan(&docCount, &notesCount, &pctoHours); err != nil {
+		return nil, fmt.Errorf("GetFascicoloSummary: %w", err)
+	}
 
 	return map[string]interface{}{
 		"status":          status,

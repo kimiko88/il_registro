@@ -92,7 +92,10 @@
                   <div class="text-caption">Da: <strong>{{ selectedMessage.sender }}</strong> &lt;{{ selectedMessage.email }}&gt;</div>
                 </div>
               </div>
-              <div class="text-caption text-grey">{{ selectedMessage.fullDate }}</div>
+              <div class="row items-center gap-sm">
+                <TextToSpeechButton :text="(selectedMessage.subject || '') + '. ' + (selectedMessage.body || '')" size="md" color="primary" />
+                <div class="text-caption text-grey">{{ selectedMessage.fullDate }}</div>
+              </div>
             </q-card-section>
             <q-separator />
             
@@ -137,6 +140,7 @@ import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
 import { useParentStore } from '@/stores/parent'
 import { communicationService } from '@/services/communicationService'
+import TextToSpeechButton from '@/components/Common/TextToSpeechButton.vue'
 
 const $q = useQuasar()
 const { t } = useI18n()

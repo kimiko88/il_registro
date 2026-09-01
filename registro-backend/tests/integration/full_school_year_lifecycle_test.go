@@ -216,7 +216,12 @@ func TestFullSchoolYearLifecycle(t *testing.T) {
 		g3.Use(setAuth("sec-1", "secretary", schoolID))
 		g3.POST("/classes", classH.Create)
 
-		bodyClass := fmt.Sprintf(`{"name":"1","section":"A","academic_year":"2025-2026","school_id":"%s"}`, schoolID)
+		yearStart := time.Now().Year()
+		if time.Now().Month() < time.September {
+			yearStart--
+		}
+		academicYear := fmt.Sprintf("%d-%d", yearStart, yearStart+1)
+		bodyClass := fmt.Sprintf(`{"name":"1","section":"A","academic_year":"%s","school_id":"%s"}`, academicYear, schoolID)
 		reqC := httptest.NewRequest("POST", "/api/v1/classes", bytes.NewBufferString(bodyClass))
 		reqC.Header.Set("Content-Type", "application/json")
 		resC := httptest.NewRecorder()
@@ -274,7 +279,12 @@ func TestFullSchoolYearLifecycle(t *testing.T) {
 		gGrade.Use(setAuth(teacher1ID, "teacher", schoolID))
 		gGrade.POST("/grades", gradeH.AddGrade)
 
-		bodyGrade := fmt.Sprintf(`{"student_id":"%s","subject_id":"subj-math","grade_value":8.5,"grade_type":"numeric","semester":1,"date":"2025-10-15"}`, studentID)
+		yearStart := time.Now().Year()
+		if time.Now().Month() < time.September {
+			yearStart--
+		}
+		gradeDate := fmt.Sprintf("%d-09-01", yearStart)
+		bodyGrade := fmt.Sprintf(`{"student_id":"%s","subject_id":"subj-math","grade_value":8.5,"grade_type":"numeric","semester":1,"date":"%s"}`, studentID, gradeDate)
 		reqG := httptest.NewRequest("POST", "/api/v1/grades", bytes.NewBufferString(bodyGrade))
 		reqG.Header.Set("Content-Type", "application/json")
 		resG := httptest.NewRecorder()
@@ -299,7 +309,7 @@ func TestFullSchoolYearLifecycle(t *testing.T) {
 		mScrutiny.On("GetOverview", mock.Anything, schoolID).Return(map[string]interface{}{"status": "ok"}, nil)
 
 		scrutinySvc := scrutiny.NewService(mScrutiny, mGrade, mClass, mUser, mAtt)
-		scrutinyH := scrutiny.NewHandler(scrutinySvc)
+		scrutinyH := scrutiny.NewHandler(scrutinySvc, nil)
 
 		rScrutiny := gin.New()
 		gScrutiny := rScrutiny.Group("/api/v1")
@@ -329,7 +339,7 @@ func TestFullSchoolYearLifecycle(t *testing.T) {
 		mScrutiny.On("ExportAll", mock.Anything, schoolID).Return([]byte("pdf-data"), nil)
 
 		scrutinySvc := scrutiny.NewService(mScrutiny, mGrade, mClass, mUser, mAtt)
-		scrutinyH := scrutiny.NewHandler(scrutinySvc)
+		scrutinyH := scrutiny.NewHandler(scrutinySvc, nil)
 
 		rFinal := gin.New()
 		gFinal := rFinal.Group("/api/v1")

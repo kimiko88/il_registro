@@ -1564,7 +1564,20 @@ export default {
       "scrutiny": {
         "title": "Scrutinio & Valutazione Finale",
         "desc": "Procedura riservata per la gestione delle proposte di voto e verbalizzazione CdC.",
-        "content": "Il tabellone dello scrutinio raccoglie i voti proposti da tutti i docenti del Consiglio di Classe per il 1° Quadrimestre o lo Scrutinio Finale.\n\nPassaggio 1: Seleziona la classe e il periodo di scrutinio.\nPassaggio 2: Verifica la colonna della media proposta per ciascuno studente e inserisci il voto finale deliberato dal CdC.\nPassaggio 3: Inserisci la valutazione di condotta e il giudizio sintetico di livello.\nPassaggio 4: Se sei coordinatore di classe, verifica la validazione di tutti i docenti e blocca il tabellone.\nPassaggio 5: Stampa il verbale dello scrutinio o invialo alla segreteria in formato digitale.\n\nAttenzione: Una volta chiuso lo scrutinio dal coordinatore, le modifiche ai voti richiedono lo sblocco motivato della segreteria."
+        "content": "Il tabellone dello scrutinio raccoglie i voti proposti da tutti i docenti del Consiglio di Classe per il 1° Quadrimestre o lo Scrutinio Finale.\n\nPassaggio 1: Seleziona la classe e il periodo di scrutinio.\nPassaggio 2: Verifica la colonna della media proposta per ciascuno studente e inserisci il voto finale deliberato dal CdC.\nPassaggio 3: Inserisci la valutazione di condotta e il giudizio sintetico di livello.\nPassaggio 4: Se sei coordinatore di classe, verifica la validazione di tutti i docenti e blocca il tabellone.\nPassaggio 5: Stampa il verbale dello scrutinio o invialo alla segreteria in formato digitale.\n\nAttenzione: Una volta chiuso lo scrutinio dal coordinatore, le modifiche ai voti richiedono lo sblocco motivato della segreteria.",
+        "period1": "Scrutinio 1° Semestre",
+        "period2": "Scrutinio 2° Semestre / Finale",
+        "deferredScrutiny": "Scrutinio Differito (Debiti)",
+        "deferredBannerTitle": "Sessione Scrutinio Differito (Esami di Recupero Debiti)",
+        "deferredBannerBody": "Delibera definitiva dell'esito finale e verifica del saldo dei debiti formativi per gli studenti con giudizio sospeso.",
+        "deferredAction": "Scrutinio Differito (Esami Recupero)",
+        "deferredModalTitle": "Scrutinio Differito — {name}",
+        "deferredModalSubtitle": "Verifica del saldo dei debiti formativi post-esami di recupero",
+        "promotedDebtsCleared": "Promosso con debiti saldati",
+        "notPromotedDebtsNotCleared": "Non promosso (Debiti non saldati)",
+        "deferredNotes": "Note Verbale Scrutinio Differito",
+        "deliberateDeferred": "Delibera Scrutinio Differito",
+        "deferredSaved": "Scrutinio differito registrato con successo!"
       },
       "pdp": {
         "title": "Piano Didattico Personalizzato (PDP / PEI)",
@@ -2152,5 +2165,23 @@ export default {
       "selectStudent": "Seleziona Figlio / Studente",
       "notes": "Note per il Docente"
     }
+  },
+  "a11y": {
+    "panelTitle": "Impostazioni di Accessibilità & Inclusione Visiva",
+    "panelSubtitle": "Personalizza l'esperienza visiva, i font, la sintesi vocale e gli strumenti di supporto DSA in conformità alle Linee Guida AgID / WCAG 2.2.",
+    "statementTitle": "Dichiarazione di Accessibilità",
+    "shortcutsTitle": "Scorciatoie da Tastiera & Accessibilità",
+    "shortcutsSubtitle": "Usa la combinazione di tasti per navigare rapidamente nel registro senza utilizzare il mouse.",
+    "ttsLabel": "Sintesi Vocale (TTS)",
+    "rulerLabel": "Righello di Lettura (Focus Mask)",
+    "highContrastLabel": "Contrasto Elevato",
+    "colorblindLabel": "Filtri Daltonismo",
+    "textSpacingLabel": "Spaziatura Testo (WCAG 1.4.12)",
+    "feedbackSent": "Segnalazione di accessibilità inviata con successo",
+    "sttListening": "Ascolto in corso... parla ora",
+    "sttTooltip": "Dettatura Vocale (Alt+D)",
+    "focusModeTitle": "Modalità Focus (ADHD/DSA)",
+    "asyncPdfQueue": "Generazione PDF in background"
   }
 }
+

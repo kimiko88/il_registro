@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Regjistri - Prindi</string>
+    <string name="parent_dashboard_title">Portali i Familjes</string>
+    <string name="my_children">Fëmijët e Mi</string>
+    <string name="child_grades">Notat e Fëmijës</string>
+    <string name="pending_absences">Mungesat për t'u Arsyetuar</string>
+    <string name="book_colloqui">Rezervo Takim</string>
+    <string name="switch_child">Ndrysho Fëmijën</string>
+    <string name="justify_absence">Arsyeto Mungesën</string>
+    <string name="book_colloquio">Rezervo Takim</string>
+    <string name="pending_justifications">Arsyetime në Pritje</string>
+    <string name="no_pending_justifications">Nuk ka mungesa për t'u arsyetuar</string>
+    <string name="login_subtitle">Hyni në portalin e prindërve</string>
+    <string name="email_label">Email Prindi</string>
+    <string name="password_label">Fjalëkalimi</string>
+    <string name="btn_login">HYR NË PORTAL</string>
+    <string name="err_enter_credentials">Vendosni email-in dhe fjalëkalimin</string>
+    <string name="logout">Dil</string>
+</resources>

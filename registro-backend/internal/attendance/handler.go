@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"registro-backend/pkg/logger"
+	"registro-backend/pkg/upload"
 
 	"github.com/gin-gonic/gin"
 )
@@ -550,7 +551,7 @@ func (h *Handler) ExportAttendance(c *gin.Context) {
 	}, classID)
 	filename := fmt.Sprintf("presenze_%s_%s.csv", safeClassID, date)
 	c.Header("Content-Type", "text/csv; charset=utf-8")
-	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+	c.Header("Content-Disposition", upload.FormatContentDisposition(filename))
 
 	var buf bytes.Buffer
 	buf.Write([]byte{0xEF, 0xBB, 0xBF})

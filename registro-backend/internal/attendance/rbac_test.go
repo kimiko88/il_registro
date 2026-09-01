@@ -194,13 +194,12 @@ func (m *mockUserRepo) GetGuardians(_ context.Context, _ string) ([]users.Guardi
 func (m *mockUserRepo) GetFascicoloSummary(_ context.Context, _ string, _ bool) (map[string]interface{}, error) {
 	return nil, nil
 }
-func (m *mockUserRepo) IsActive(_ context.Context, _ string) (bool, error) { return true, nil }
+func (m *mockUserRepo) IsActive(_ context.Context, _ string) (bool, error)    { return true, nil }
+func (m *mockUserRepo) ChangePasswordTx(_ context.Context, _, _ string) error { return nil }
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-func strPtr(s string) *string { return &s }
 
 func makeService(r *mockRepo, u *mockUserRepo) Service {
 	return NewService(r, u, nil, nil)

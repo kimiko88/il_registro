@@ -1,0 +1,17 @@
+"app_name" = "Registre - Parent";
+"parent_dashboard_title" = "Espace Famille";
+"my_children" = "Mes Enfants";
+"child_grades" = "Notes de l'Enfant";
+"pending_absences" = "Absences à Justifier";
+"book_colloqui" = "Réserver un Rendez-vous";
+"switch_child" = "Changer d'Enfant";
+"justify_absence" = "Justifier l'Absence";
+"book_colloquio" = "Prendre Rendez-vous";
+"pending_justifications" = "Justifications en Attente";
+"no_pending_justifications" = "Aucune absence à justifier";
+"login_subtitle" = "Connectez-vous à l'espace parents";
+"email_label" = "Email Parent";
+"password_label" = "Mot de passe";
+"btn_login" = "SE CONNECTER AU PORTAIL";
+"err_enter_credentials" = "Entrez votre email et mot de passe";
+"logout" = "Se déconnecter";

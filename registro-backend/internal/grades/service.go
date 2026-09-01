@@ -35,9 +35,9 @@ type Service interface {
 	GetClassGrades(ctx context.Context, actorID string, actorRole string, classID string, filter GradeFilter) (*ClassGradesResponse, error)
 	GetSubjectGrades(ctx context.Context, actorID string, actorRole string, subjectID string, filter GradeFilter) (*SubjectStatsResponse, error)
 	AddGrade(ctx context.Context, teacherID string, req CreateGradeRequest) (*GradeResponse, error)
-	BatchCreateGrades(teacherID, actorRole, schoolID string, grades []*Grade) error
-	BulkImport(teacherID, schoolID string, r io.Reader, semester int) (*ImportResult, error)
-	Export(teacherID, schoolID string, filter GradeFilter, format string) ([]byte, string, error)
+	BatchCreateGrades(ctx context.Context, teacherID, actorRole, schoolID string, grades []*Grade) error
+	BulkImport(ctx context.Context, teacherID, schoolID string, r io.Reader, semester int) (*ImportResult, error)
+	Export(ctx context.Context, teacherID, schoolID string, filter GradeFilter, format string) ([]byte, string, error)
 	UpdateGrade(ctx context.Context, teacherID string, gradeID string, req UpdateGradeRequest) (*GradeResponse, error)
 	DeleteGrade(ctx context.Context, teacherID string, gradeID string) error
 
@@ -62,7 +62,7 @@ type Service interface {
 	UpdateClassTest(ctx context.Context, teacherID string, testID string, req UpdateClassTestRequest) error
 
 	// Weight Config
-	GetWeightConfigs(schoolID, subjectID, classID string) ([]GradeWeightConfig, error)
+	GetWeightConfigs(ctx context.Context, schoolID, subjectID, classID string) ([]GradeWeightConfig, error)
 	UpsertWeightConfig(actorID, actorRole, schoolID string, req UpsertWeightConfigRequest) (*GradeWeightConfig, error)
 	DeleteWeightConfig(actorID, actorRole, schoolID, configID string) error
 }
@@ -126,7 +126,7 @@ func (s *service) GetStudentGradesWithFilter(ctx context.Context, actorID string
 	}
 
 	if filter.Semester == 0 && filter.SubjectID == "" && filter.GradeType == "" && filter.IsPublished == nil {
-		grades, err := s.repo.FindByStudent(studentID)
+		grades, err := s.repo.FindByStudent(ctx, studentID)
 		if err != nil {
 			return nil, err
 		}
@@ -149,7 +149,7 @@ func (s *service) GetStudentGradesWithFilter(ctx context.Context, actorID string
 	}
 
 	filter.StudentID = studentID
-	grades, err := s.repo.FindWithFilter(filter)
+	grades, err := s.repo.FindWithFilter(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
@@ -170,7 +170,7 @@ func (s *service) GetStudentGradesPaged(ctx context.Context, actorID string, act
 	}
 
 	filter.StudentID = studentID
-	grades, total, err := s.repo.FindWithFilterPaginated(filter)
+	grades, total, err := s.repo.FindWithFilterPaginated(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
@@ -231,7 +231,7 @@ func (s *service) GetClassGrades(ctx context.Context, actorID string, actorRole 
 		}
 	}
 
-	grades, err := s.repo.FindByClassAndSubject(classID, filter.SubjectID, filter.Semester)
+	grades, err := s.repo.FindByClassAndSubject(ctx, classID, filter.SubjectID, filter.Semester)
 	if err != nil {
 		return nil, err
 	}
@@ -334,7 +334,7 @@ func (s *service) GetSubjectGrades(ctx context.Context, actorID string, actorRol
 		}
 	}
 
-	grades, err := s.repo.FindBySubject(subjectID, filter.Semester)
+	grades, err := s.repo.FindBySubject(ctx, subjectID, filter.Semester)
 	if err != nil {
 		return nil, err
 	}
@@ -446,7 +446,7 @@ func (s *service) AddGrade(ctx context.Context, teacherID string, req CreateGrad
 		grade.Weight = 1.0
 	}
 
-	if err := s.repo.Create(grade); err != nil {
+	if err := s.repo.Create(ctx, grade); err != nil {
 		return nil, fmt.Errorf("failed to create grade: %w", err)
 	}
 
@@ -458,7 +458,7 @@ func (s *service) AddGrade(ctx context.Context, teacherID string, req CreateGrad
 	return &resp, nil
 }
 
-func (s *service) BatchCreateGrades(teacherID, actorRole, schoolID string, grades []*Grade) error {
+func (s *service) BatchCreateGrades(ctx context.Context, teacherID, actorRole, schoolID string, grades []*Grade) error {
 	if actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin" {
 		return ErrUnauthorized
 	}
@@ -492,10 +492,10 @@ func (s *service) BatchCreateGrades(teacherID, actorRole, schoolID string, grade
 		seen[key] = true
 		deduped = append(deduped, g)
 	}
-	return s.repo.BatchCreate(deduped)
+	return s.repo.BatchCreate(ctx, deduped)
 }
 
-func (s *service) BulkImport(teacherID, schoolID string, file io.Reader, semester int) (*ImportResult, error) {
+func (s *service) BulkImport(ctx context.Context, teacherID, schoolID string, file io.Reader, semester int) (*ImportResult, error) {
 	// ParseCSVGrades now receives the caller-chosen semester so that grades
 	// are assigned to the correct period instead of a CSV-embedded or hardcoded default.
 	reqs, err := ParseCSVGrades(file, semester)
@@ -503,7 +503,6 @@ func (s *service) BulkImport(teacherID, schoolID string, file io.Reader, semeste
 		return nil, err
 	}
 
-	ctx := context.Background()
 	teacherUser, err := s.userRepo.GetByID(ctx, teacherID)
 	if err != nil || teacherUser == nil {
 		return nil, fmt.Errorf("teacher user not found: %w", err)
@@ -532,7 +531,7 @@ func (s *service) BulkImport(teacherID, schoolID string, file io.Reader, semeste
 			return nil, fmt.Errorf("row %d: semestre %d non valido (deve essere 1 o 2)", idx+1, req.Semester)
 		}
 		if teacherUser.Role != "admin" && teacherUser.Role != "superadmin" && s.validator != nil {
-			if s.validator.db != nil {
+			if s.validator.IsAvailable() {
 				assignedSub, knownSub := assignedSubjectsCache[req.SubjectID]
 				if !knownSub {
 					var err error
@@ -562,7 +561,7 @@ func (s *service) BulkImport(teacherID, schoolID string, file io.Reader, semeste
 		}
 	}
 
-	res, err := ProcessBulkImport(s.repo, reqs, teacherID, teacherProfileID, schoolID)
+	res, err := ProcessBulkImport(ctx, s.repo, reqs, teacherID, teacherProfileID, schoolID)
 	if err != nil {
 		return nil, err
 	}
@@ -570,26 +569,26 @@ func (s *service) BulkImport(teacherID, schoolID string, file io.Reader, semeste
 	return &res, nil
 }
 
-func (s *service) Export(teacherID, schoolID string, filter GradeFilter, format string) ([]byte, string, error) {
+func (s *service) Export(ctx context.Context, teacherID, schoolID string, filter GradeFilter, format string) ([]byte, string, error) {
 	if teacherID == "" {
 		return nil, "", ErrUnauthorized
 	}
 	// Force the filter to strictly scope export to the authenticated teacher's grades
-	teacherProfileID, err := s.resolveTeacherProfileID(context.Background(), teacherID)
+	teacherProfileID, err := s.resolveTeacherProfileID(ctx, teacherID)
 	if err == nil && teacherProfileID != "" {
 		filter.TeacherID = teacherProfileID
 	} else {
 		filter.TeacherID = teacherID
 	}
 	if schoolID == "" && s.userRepo != nil {
-		if tUser, uErr := s.userRepo.GetByID(context.Background(), teacherID); uErr == nil && tUser != nil && tUser.SchoolID != nil {
+		if tUser, uErr := s.userRepo.GetByID(ctx, teacherID); uErr == nil && tUser != nil && tUser.SchoolID != nil {
 			schoolID = *tUser.SchoolID
 		}
 	}
 	if schoolID != "" {
 		filter.SchoolID = schoolID
 	}
-	grades, err := s.repo.FindWithFilter(filter)
+	grades, err := s.repo.FindWithFilter(ctx, filter)
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to fetch grades for export: %w", err)
 	}
@@ -622,7 +621,7 @@ func (s *service) Export(teacherID, schoolID string, filter GradeFilter, format 
 }
 
 func (s *service) UpdateGrade(ctx context.Context, teacherID string, gradeID string, req UpdateGradeRequest) (*GradeResponse, error) {
-	grade, err := s.repo.FindByID(gradeID)
+	grade, err := s.repo.FindByID(ctx, gradeID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch grade: %w", err)
 	}
@@ -712,7 +711,7 @@ func (s *service) UpdateGrade(ctx context.Context, teacherID string, gradeID str
 
 	grade.ModifiedBy = &teacherID
 
-	if err := s.repo.Update(grade, history); err != nil {
+	if err := s.repo.Update(ctx, grade, history); err != nil {
 		return nil, fmt.Errorf("failed to update grade: %w", err)
 	}
 
@@ -721,7 +720,7 @@ func (s *service) UpdateGrade(ctx context.Context, teacherID string, gradeID str
 }
 
 func (s *service) DeleteGrade(ctx context.Context, teacherID string, gradeID string) error {
-	grade, err := s.repo.FindByID(gradeID)
+	grade, err := s.repo.FindByID(ctx, gradeID)
 	if err != nil {
 		return fmt.Errorf("failed to fetch grade: %w", err)
 	}
@@ -752,7 +751,7 @@ func (s *service) DeleteGrade(ctx context.Context, teacherID string, gradeID str
 		return err
 	}
 
-	if err := s.repo.Delete(gradeID, teacherID); err != nil {
+	if err := s.repo.Delete(ctx, gradeID, teacherID); err != nil {
 		return fmt.Errorf("failed to delete grade: %w", err)
 	}
 	return nil
@@ -810,7 +809,7 @@ func (s *service) GetChildAverages(ctx context.Context, parentID string, student
 }
 
 func (s *service) GetMyGrades(ctx context.Context, studentID string, filter GradeFilter) (*MyGradesResponse, error) {
-	allGrades, err := s.repo.FindByStudent(studentID)
+	allGrades, err := s.repo.FindByStudent(ctx, studentID)
 	if err != nil {
 		return nil, err
 	}
@@ -870,7 +869,7 @@ func (s *service) GetMyGrades(ctx context.Context, studentID string, filter Grad
 }
 
 func (s *service) GetMyAverages(ctx context.Context, studentID string) (*StudentAveragesResponse, error) {
-	grades, err := s.repo.FindByStudent(studentID)
+	grades, err := s.repo.FindByStudent(ctx, studentID)
 	if err != nil {
 		return nil, err
 	}
@@ -968,7 +967,7 @@ func (s *service) GetMyTrend(ctx context.Context, actorID string, actorRole stri
 			return nil, ErrUnauthorized
 		}
 	}
-	grades, err := s.repo.FindByStudent(studentID)
+	grades, err := s.repo.FindByStudent(ctx, studentID)
 	if err != nil {
 		return nil, err
 	}
@@ -1113,7 +1112,7 @@ func (s *service) GetSemesterReport(ctx context.Context, actorID string, actorRo
 		}
 	}
 
-	grades, err := s.repo.FindByStudent(studentID)
+	grades, err := s.repo.FindByStudent(ctx, studentID)
 	if err != nil {
 		return nil, err
 	}
@@ -1143,7 +1142,7 @@ func (s *service) GetSemesterReport(ctx context.Context, actorID string, actorRo
 		subMap[g.SubjectID] = append(subMap[g.SubjectID], g)
 	}
 
-	enrolledSubjects, enrollErr := s.repo.FindEnrolledSubjects(studentID, semester)
+	enrolledSubjects, enrollErr := s.repo.FindEnrolledSubjects(ctx, studentID, semester)
 
 	teacherMap := make(map[string]string)
 	if s.repo != nil && classID != "" {
@@ -1434,7 +1433,7 @@ func (s *service) CreateTestWithGrades(ctx context.Context, teacherID string, re
 		EvaluationType: req.EvaluationType,
 	}
 
-	if err := s.repo.CreateTest(test); err != nil {
+	if err := s.repo.CreateTest(ctx, test); err != nil {
 		return nil, fmt.Errorf("failed to create test: %w", err)
 	}
 
@@ -1488,7 +1487,7 @@ func (s *service) CreateTestWithGrades(ctx context.Context, teacherID string, re
 	}
 
 	if len(gradesList) > 0 {
-		if err := s.repo.BatchCreate(gradesList); err != nil {
+		if err := s.repo.BatchCreate(ctx, gradesList); err != nil {
 			return nil, fmt.Errorf("failed to insert grades for test: %w", err)
 		}
 		if s.broadcaster != nil {
@@ -1530,7 +1529,7 @@ func (s *service) GetClassTests(ctx context.Context, actorID string, actorRole s
 		return nil, err
 	}
 
-	tests, err := s.repo.FindTestsByClassAndSubject(classID, subjectID)
+	tests, err := s.repo.FindTestsByClassAndSubject(ctx, classID, subjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -1558,7 +1557,7 @@ func (s *service) GetUpcomingTestsByClass(ctx context.Context, actorID string, a
 		return nil, err
 	}
 
-	tests, err := s.repo.FindUpcomingTestsByClass(classID)
+	tests, err := s.repo.FindUpcomingTestsByClass(ctx, classID)
 	if err != nil {
 		return nil, err
 	}
@@ -1581,7 +1580,7 @@ func (s *service) GetUpcomingTestsByClass(ctx context.Context, actorID string, a
 }
 
 func (s *service) DeleteClassTest(ctx context.Context, teacherID string, testID string) error {
-	test, err := s.repo.FindTestByID(testID)
+	test, err := s.repo.FindTestByID(ctx, testID)
 	if err != nil {
 		return err
 	}
@@ -1595,7 +1594,7 @@ func (s *service) DeleteClassTest(ctx context.Context, teacherID string, testID 
 	if test.TeacherID != teacherID && test.TeacherID != teacherProfileID {
 		return ErrUnauthorized
 	}
-	return s.repo.DeleteTest(testID)
+	return s.repo.DeleteTest(ctx, testID)
 }
 
 func (s *service) UpdateClassTest(ctx context.Context, teacherID string, testID string, req UpdateClassTestRequest) error {
@@ -1613,7 +1612,7 @@ func (s *service) UpdateClassTest(ctx context.Context, teacherID string, testID 
 		return fmt.Errorf("could not resolve teacher profile ID: %w", err)
 	}
 
-	test, err := s.repo.FindTestByID(testID)
+	test, err := s.repo.FindTestByID(ctx, testID)
 	if err != nil {
 		return fmt.Errorf("could not resolve test details: %w", err)
 	}
@@ -1639,11 +1638,11 @@ func (s *service) UpdateClassTest(ctx context.Context, teacherID string, testID 
 	test.ParentNotes = req.ParentNotes
 	test.EvaluationType = req.EvaluationType
 
-	if err := s.repo.UpdateTest(test); err != nil {
+	if err := s.repo.UpdateTest(ctx, test); err != nil {
 		return fmt.Errorf("failed to update test metadata: %w", err)
 	}
 
-	existingGrades, err := s.repo.FindGradesByTestID(testID)
+	existingGrades, err := s.repo.FindGradesByTestID(ctx, testID)
 	if err != nil {
 		return fmt.Errorf("failed to fetch existing grades for test: %w", err)
 	}
@@ -1672,7 +1671,7 @@ func (s *service) UpdateClassTest(ctx context.Context, teacherID string, testID 
 
 		if gInput.GradeValue == nil || *gInput.GradeValue < 0 {
 			if exists {
-				if err := s.repo.Delete(existingGrade.ID, teacherID); err != nil {
+				if err := s.repo.Delete(ctx, existingGrade.ID, teacherID); err != nil {
 					return fmt.Errorf("failed to delete grade for student %s: %w", gInput.StudentID, err)
 				}
 			}
@@ -1709,7 +1708,7 @@ func (s *service) UpdateClassTest(ctx context.Context, teacherID string, testID 
 			existingGrade.EvaluationType = evalType
 			existingGrade.Semester = Semester(validSemester(req.Semester))
 
-			if err := s.repo.Update(&existingGrade, history); err != nil {
+			if err := s.repo.Update(ctx, &existingGrade, history); err != nil {
 				return fmt.Errorf("failed to update grade for student %s: %w", gInput.StudentID, err)
 			}
 		} else {
@@ -1730,7 +1729,7 @@ func (s *service) UpdateClassTest(ctx context.Context, teacherID string, testID 
 				CreatedBy:      teacherID,
 				TestID:         &testID,
 			}
-			if err := s.repo.BatchCreate([]*Grade{grade}); err != nil {
+			if err := s.repo.BatchCreate(ctx, []*Grade{grade}); err != nil {
 				return fmt.Errorf("failed to insert new grade for student %s: %w", gInput.StudentID, err)
 			}
 		}
@@ -1742,8 +1741,8 @@ func (s *service) UpdateClassTest(ctx context.Context, teacherID string, testID 
 // --- Grade Weight Config ---
 
 // GetWeightConfigs returns the weight configurations for a given school/subject/class.
-func (s *service) GetWeightConfigs(schoolID, subjectID, classID string) ([]GradeWeightConfig, error) {
-	configs, err := s.repo.GetWeightConfigs(schoolID, subjectID, classID)
+func (s *service) GetWeightConfigs(ctx context.Context, schoolID, subjectID, classID string) ([]GradeWeightConfig, error) {
+	configs, err := s.repo.GetWeightConfigs(ctx, schoolID, subjectID, classID)
 	if err != nil {
 		return nil, fmt.Errorf("GetWeightConfigs: %w", err)
 	}
@@ -1780,7 +1779,7 @@ func (s *service) UpsertWeightConfig(actorID, actorRole, schoolID string, req Up
 		Weight:         req.Weight,
 		CreatedBy:      actorID,
 	}
-	return s.repo.UpsertWeightConfig(cfg)
+	return s.repo.UpsertWeightConfig(context.Background(), cfg)
 }
 
 // DeleteWeightConfig removes a weight configuration entry.
@@ -1791,7 +1790,7 @@ func (s *service) DeleteWeightConfig(actorID, actorRole, schoolID, configID stri
 	if configID == "" {
 		return fmt.Errorf("config id required")
 	}
-	return s.repo.DeleteWeightConfig(configID)
+	return s.repo.DeleteWeightConfig(context.Background(), configID)
 }
 
 func (s *service) resolveTeacherProfileID(ctx context.Context, userID string) (string, error) {

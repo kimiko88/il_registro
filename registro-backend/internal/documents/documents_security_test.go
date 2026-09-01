@@ -169,3 +169,29 @@ func TestSignDocument_PrincipalAllowed_TeacherForbidden(t *testing.T) {
 	r2.ServeHTTP(w2, req2)
 	assert.Equal(t, http.StatusOK, w2.Code)
 }
+
+func TestExportDocument_ContentDispositionHeader(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	mockSvc := new(mockServiceForSecTest)
+	h := NewHandler(mockSvc)
+
+	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		c.Set("user_id", "teacher-1")
+		c.Set("role", "teacher")
+		c.Set("school_id", "school-1")
+	})
+	h.RegisterRoutes(r.Group("/api/v1"))
+
+	mockSvc.On("ExportDocument", mock.Anything, "teacher", "school-1", "doc-123", "pdf").
+		Return([]byte("%PDF-dummy"), "application/pdf", nil).Once()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodGet, "/api/v1/documents/doc-123/export?format=pdf", nil)
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, `attachment; filename="document_doc-123.pdf"`, w.Header().Get("Content-Disposition"))
+	assert.Equal(t, "application/pdf", w.Header().Get("Content-Type"))
+	mockSvc.AssertExpectations(t)
+}

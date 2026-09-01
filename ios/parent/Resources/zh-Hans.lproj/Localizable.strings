@@ -1,0 +1,17 @@
+"app_name" = "电子班级日志 - 家长";
+"parent_dashboard_title" = "家长门户";
+"my_children" = "我的孩子";
+"child_grades" = "子女成绩";
+"pending_absences" = "待请假缺勤";
+"book_colloqui" = "预约家长会";
+"switch_child" = "切换孩子";
+"justify_absence" = "缺勤请假说明";
+"book_colloquio" = "预约面谈";
+"pending_justifications" = "待审批请假";
+"no_pending_justifications" = "无待处理缺勤";
+"login_subtitle" = "登录家长门户";
+"email_label" = "家长邮箱";
+"password_label" = "密码";
+"btn_login" = "登录家长门户";
+"err_enter_credentials" = "请输入邮箱和密码";
+"logout" = "登出";

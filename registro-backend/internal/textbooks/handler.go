@@ -79,14 +79,17 @@ func (h *Handler) Update(c *gin.Context) {
 
 func (h *Handler) List(c *gin.Context) {
 	userID := c.GetString("user_id")
+	role := c.GetString("role")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 
-	schoolID := c.Query("school_id")
-	if schoolID == "" {
-		schoolID = c.GetString("school_id")
+	schoolID := c.GetString("school_id")
+	if role == "superadmin" {
+		if querySchoolID := c.Query("school_id"); querySchoolID != "" {
+			schoolID = querySchoolID
+		}
 	}
 	res, err := h.service.ListTextbooks(c.Request.Context(), schoolID)
 	if err != nil {

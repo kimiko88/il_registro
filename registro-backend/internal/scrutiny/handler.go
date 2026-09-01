@@ -2,22 +2,30 @@ package scrutiny
 
 import (
 	"errors"
+
 	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 
+	"registro-backend/internal/pdfworker"
 	pkgLogger "registro-backend/pkg/logger"
+	"registro-backend/pkg/upload"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type Handler struct {
-	service *Service
+	service         *Service
+	pdfWorkerClient *pdfworker.Client
 }
 
-func NewHandler(service *Service) *Handler {
-	return &Handler{service: service}
+func NewHandler(service *Service, pdfWorkerClient *pdfworker.Client) *Handler {
+	return &Handler{
+		service:         service,
+		pdfWorkerClient: pdfWorkerClient,
+	}
 }
 
 func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
@@ -33,6 +41,11 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 		scrutiny.POST("/class/:classId/validate", h.Validate)
 		scrutiny.POST("/class/:classId/close", h.Close)
 		scrutiny.GET("/export/:studentId/pdf", h.ExportPagellaPDF)
+
+		// Async Worker Queue PDF Routes
+		scrutiny.POST("/class/:classId/async-pdf", h.EnqueueAsyncScrutinyPdf)
+		scrutiny.POST("/export/:studentId/async-pdf", h.EnqueueAsyncReportCardPdf)
+		scrutiny.GET("/pdf-jobs/:job_id", h.GetPdfJobStatus)
 
 		// Deficiencies & Deferred Scrutiny Routes
 		scrutiny.POST("/deficiencies", h.SaveDeficiency)
@@ -54,6 +67,11 @@ func parseSemester(semStr string) int {
 }
 
 func (h *Handler) ExportPagellaPDF(c *gin.Context) {
+	if h.pdfWorkerClient != nil && c.Query("sync") != "true" {
+		h.EnqueueAsyncReportCardPdf(c)
+		return
+	}
+
 	studentID := c.Param("studentId")
 	classID := c.Query("class_id")
 	semester := parseSemester(c.DefaultQuery("semester", "1"))
@@ -71,13 +89,17 @@ func (h *Handler) ExportPagellaPDF(c *gin.Context) {
 			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
 			return
 		}
+		if strings.HasPrefix(err.Error(), "forbidden") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	filename := fmt.Sprintf("pagella_%s_semestre%d.pdf", studentID, semester)
 	c.Header("Content-Type", "application/pdf")
-	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+	c.Header("Content-Disposition", upload.FormatContentDisposition(filename))
 	c.Data(http.StatusOK, "application/pdf", pdfBytes)
 }
 
@@ -96,6 +118,10 @@ func (h *Handler) GetMatrix(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, ErrScrutinyNotValidated) || err == ErrScrutinyNotValidated {
 			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+			return
+		}
+		if strings.HasPrefix(err.Error(), "forbidden") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
 		pkgLogger.Log.Error("failed to get scrutiny matrix", "error", err, "classId", classID)
@@ -393,4 +419,107 @@ func (h *Handler) SaveDeferredScrutiny(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "deferred scrutiny saved successfully"})
+}
+
+func (h *Handler) EnqueueAsyncScrutinyPdf(c *gin.Context) {
+	actorID := c.GetString("user_id")
+	actorRole := c.GetString("role")
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: insufficient permissions"})
+		return
+	}
+
+	classID := c.Param("classId")
+	semester := c.DefaultQuery("semester", "1")
+
+	if h.pdfWorkerClient == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "async pdf worker queue not configured"})
+		return
+	}
+
+	jobID := uuid.New().String()
+	payload := pdfworker.ScrutinyPdfPayload{
+		JobID:       jobID,
+		ClassID:     classID,
+		Period:      semester,
+		RequestedBy: actorID,
+	}
+
+	jobStatus, err := h.pdfWorkerClient.EnqueueScrutinyPdf(c.Request.Context(), payload)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to enqueue async pdf job: %v", err)})
+		return
+	}
+
+	c.JSON(http.StatusAccepted, gin.H{
+		"message":    "PDF generation job enqueued successfully",
+		"job_id":     jobStatus.JobID,
+		"status":     jobStatus.Status,
+		"status_url": fmt.Sprintf("/api/v1/scrutiny/pdf-jobs/%s", jobStatus.JobID),
+	})
+}
+
+func (h *Handler) GetPdfJobStatus(c *gin.Context) {
+	actorID := c.GetString("user_id")
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	jobID := c.Param("job_id")
+	if h.pdfWorkerClient == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "async pdf worker queue not configured"})
+		return
+	}
+
+	status, err := h.pdfWorkerClient.GetJobStatus(c.Request.Context(), jobID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "job not found or expired"})
+		return
+	}
+
+	c.JSON(http.StatusOK, status)
+}
+
+func (h *Handler) EnqueueAsyncReportCardPdf(c *gin.Context) {
+	actorID := c.GetString("user_id")
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	studentID := c.Param("studentId")
+	classID := c.Query("class_id")
+	semester := c.DefaultQuery("semester", "1")
+
+	if h.pdfWorkerClient == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "async pdf worker queue not configured"})
+		return
+	}
+
+	jobID := uuid.New().String()
+	payload := pdfworker.ReportCardPdfPayload{
+		JobID:       jobID,
+		StudentID:   studentID,
+		ClassID:     classID,
+		Period:      semester,
+		RequestedBy: actorID,
+	}
+
+	jobStatus, err := h.pdfWorkerClient.EnqueueReportCardPdf(c.Request.Context(), payload)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to enqueue async report card pdf job: %v", err)})
+		return
+	}
+
+	c.JSON(http.StatusAccepted, gin.H{
+		"message":    "Report card PDF generation job enqueued successfully",
+		"job_id":     jobStatus.JobID,
+		"status":     jobStatus.Status,
+		"status_url": fmt.Sprintf("/api/v1/scrutiny/pdf-jobs/%s", jobStatus.JobID),
+	})
 }

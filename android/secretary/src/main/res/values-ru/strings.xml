@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Журнал - Секретариат</string>
+    <string name="secretary_dashboard_title">Секретариат</string>
+    <string name="user_management">Управление Пользователями</string>
+    <string name="scrutiny_supervision">Надзор за Аттестацией</string>
+    <string name="generate_certificates">Справки и Документы</string>
+    <string name="audit_logs">Журналы Аудита</string>
+    <string name="create_user">Создать Нового Пользователя</string>
+    <string name="download_pdf">Скачать Протокол PDF</string>
+    <string name="login_subtitle">Войдите в административную панель</string>
+    <string name="email_label">Электронная почта секретариата</string>
+    <string name="password_label">Пароль</string>
+    <string name="btn_login">ВОЙТИ В ПАНЕЛЬ</string>
+    <string name="err_enter_credentials">Введите электронную почту и пароль</string>
+    <string name="logout">Выйти</string>
+</resources>

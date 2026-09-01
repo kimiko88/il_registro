@@ -1595,7 +1595,20 @@ export default {
       "scrutiny": {
         "title": "Încheiere Medii",
         "desc": "Centralizatorul notelor pentru consiliul profesoral.",
-        "content": "Diriginții și profesorii finalizează mediile semestriale și aprecierile de nivel."
+        "content": "Diriginții și profesorii finalizează mediile semestriale și aprecierile de nivel.",
+        "period1": "Scrutin Semestrul 1",
+        "period2": "Scrutin Semestrul 2 / Final",
+        "deferredScrutiny": "Scrutin Amânat (Corigențe)",
+        "deferredBannerTitle": "Sesiune Scrutin Amânat (Examene de Corigență)",
+        "deferredBannerBody": "Hotărâre definitivă a rezultatului final și verificarea lichidării corigențelor pentru elevii cu situație neîncheiată.",
+        "deferredAction": "Scrutin Amânat (Examene Corigență)",
+        "deferredModalTitle": "Scrutin Amânat — {name}",
+        "deferredModalSubtitle": "Verificarea lichidării corigențelor după examenele de recuperare",
+        "promotedDebtsCleared": "Promovat (Corigențe lichidate)",
+        "notPromotedDebtsNotCleared": "Nepromovat (Corigențe nelichidate)",
+        "deferredNotes": "Note proces-verbal scrutin amânat",
+        "deliberateDeferred": "Adoptă hotărâre scrutin amânat",
+        "deferredSaved": "Scrutin amânat înregistrat cu succes!"
       },
       "pdp": {
         "title": "Plan Educațional Personalizat",
@@ -2152,5 +2165,12 @@ export default {
       "selectStudent": "Select Child / Student",
       "notes": "Notes for Teacher"
     }
+  },
+  "a11y": {
+    "sttListening": "Ascultare în curs... vorbiți acum",
+    "sttTooltip": "Dictare vocală (Alt+D)",
+    "focusModeTitle": "Mod Focus (ADHD/DSA)",
+    "asyncPdfQueue": "Generare PDF în fundal"
   }
 }
+

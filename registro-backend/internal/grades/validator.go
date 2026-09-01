@@ -17,29 +17,35 @@ func NewValidator(db *sql.DB) *Validator {
 	return &Validator{db: db}
 }
 
+// IsAvailable restituisce true se il validatore ha una connessione DB attiva.
+// Usato dal service per evitare accesso diretto al campo db interno.
+func (v *Validator) IsAvailable() bool {
+	return v != nil && v.db != nil
+}
+
 // ValidateGradeValue checks if the grade value matches the grade type requirements.
 // In the Italian school system, grades range from 1 to 10 (with -1 indicating absence).
 func (v *Validator) ValidateGradeValue(value float64, gradeType string) error {
 	switch GradeType(gradeType) {
 	case GradeTypeNumeric, "":
 		if (value < 1.0 && value != -1.0) || value > 10.0 {
-			return errors.New("Voto deve essere tra 1 e 10, o -1 per assenza")
+			return errors.New("voto deve essere tra 1 e 10, o -1 per assenza")
 		}
 	case GradeTypeJudgment:
 		if value < 1.0 || value > 10.0 {
-			return errors.New("Valore giudizio fuori range (1-10)")
+			return errors.New("valore giudizio fuori range (1-10)")
 		}
 	case GradeTypeCredit:
 		if value < 1.0 || value > 25.0 {
-			return errors.New("Credito scolastico deve essere compreso tra 1 e 25")
+			return errors.New("credito scolastico deve essere compreso tra 1 e 25")
 		}
 	case GradeTypeCompetence:
 		if value < 1 || value > 4 {
-			return errors.New("Livello competenza non valido (1-4)")
+			return errors.New("livello competenza non valido (1-4)")
 		}
 	default:
 		if (value < 1.0 && value != -1.0) || value > 10.0 {
-			return errors.New("Voto deve essere tra 1 e 10, o -1 per assenza")
+			return errors.New("voto deve essere tra 1 e 10, o -1 per assenza")
 		}
 	}
 	return nil

@@ -1,6 +1,7 @@
 package grades
 
 import (
+	"context"
 	"math"
 	"strconv"
 	"strings"
@@ -36,7 +37,7 @@ func (a *analyticsService) GetStudentAverage(studentID string, subjectID string)
 		StudentID: studentID,
 		SubjectID: subjectID,
 	}
-	grades, err := a.repo.FindWithFilter(filter)
+	grades, err := a.repo.FindWithFilter(context.Background(), filter)
 	if err != nil {
 		return 0, err
 	}
@@ -53,7 +54,7 @@ func (a *analyticsService) GetStudentAverage(studentID string, subjectID string)
 
 func (a *analyticsService) GetClassAverage(classID string, subjectID string) (float64, error) {
 	// Fetch all semesters for class and subject in a single optimized query (semester 0 = all)
-	allGrades, err := a.repo.FindByClassAndSubject(classID, subjectID, 0)
+	allGrades, err := a.repo.FindByClassAndSubject(context.Background(), classID, subjectID, 0)
 	if err != nil {
 		return 0, err
 	}
@@ -72,7 +73,7 @@ func (a *analyticsService) GetClassAverage(classID string, subjectID string) (fl
 
 func (a *analyticsService) GetClassAnalysis(classID string, semester int) (*AnalyticsClassResponse, error) {
 	// 1. Fetch Grades
-	grades, err := a.repo.FindByClass(classID, semester)
+	grades, err := a.repo.FindByClass(context.Background(), classID, semester)
 	if err != nil {
 		return nil, err
 	}
@@ -281,7 +282,7 @@ func (a *analyticsService) GetClassAnalysis(classID string, semester int) (*Anal
 }
 
 func (a *analyticsService) GetSubjectAnalysis(subjectID string, semester int) (*AnalyticsSubjectResponse, error) {
-	grades, err := a.repo.FindBySubject(subjectID, semester)
+	grades, err := a.repo.FindBySubject(context.Background(), subjectID, semester)
 	if err != nil {
 		return nil, err
 	}
@@ -320,7 +321,7 @@ func (a *analyticsService) GetSubjectAnalysis(subjectID string, semester int) (*
 }
 
 func (a *analyticsService) GetStudentProfile(studentID string, semester int) (*AnalyticsStudentResponse, error) {
-	grades, err := a.repo.FindByStudent(studentID)
+	grades, err := a.repo.FindByStudent(context.Background(), studentID)
 	if err != nil {
 		return nil, err
 	}
@@ -426,7 +427,7 @@ func (a *analyticsService) GetSchoolStatistics(year string, schoolID ...string) 
 	if len(schoolID) > 0 && schoolID[0] != "" {
 		filter.SchoolID = schoolID[0]
 	}
-	allGrades, err := a.repo.FindWithFilter(filter)
+	allGrades, err := a.repo.FindWithFilter(context.Background(), filter)
 	if err != nil {
 		return nil, err
 	}

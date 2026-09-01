@@ -27,6 +27,13 @@ func (m *ValidationMockRepo) SavePreference(ctx context.Context, p *StudentPrefe
 func (m *ValidationMockRepo) GetPreference(ctx context.Context, s string) (*StudentPreference, error) {
 	return &StudentPreference{StudentID: s}, nil
 }
+func (m *ValidationMockRepo) SaveCapolavoro(ctx context.Context, c *Capolavoro) error { return nil }
+func (m *ValidationMockRepo) GetCapolavori(ctx context.Context, s string) ([]Capolavoro, error) {
+	return nil, nil
+}
+func (m *ValidationMockRepo) GetCurriculumStudente(ctx context.Context, s string) (*CurriculumStudenteSummary, error) {
+	return nil, nil
+}
 
 func TestRegression_CreateEvent_Validation(t *testing.T) {
 	repo := new(ValidationMockRepo)

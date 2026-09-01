@@ -2,8 +2,13 @@ package teacher_activities
 
 import (
 	"errors"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
 )
 
 type mockRepo struct {
@@ -175,4 +180,89 @@ func TestTeacherActivitiesService_GetByTeacherDateRange(t *testing.T) {
 	if err == nil {
 		t.Error("expected error when date range exceeds 1 year")
 	}
+}
+
+func TestTeacherActivitiesService_GetByID_Authorization(t *testing.T) {
+	repo := newMockRepo()
+	svc := NewService(repo)
+	todayStr := time.Now().Format("2006-01-02")
+
+	created, err := svc.Create("teacher-1", CreateTeacherActivityRequest{
+		Date:         todayStr,
+		StartHour:    1,
+		Duration:     2,
+		ActivityType: "riunione",
+		Description:  "Consiglio straordinario",
+	})
+	if err != nil {
+		t.Fatalf("failed to create: %v", err)
+	}
+
+	t.Run("owner can get by ID", func(t *testing.T) {
+		res, err := svc.GetByID("teacher-1", "teacher", created.ID)
+		if err != nil || res == nil {
+			t.Fatalf("expected success, got: %v", err)
+		}
+	})
+
+	t.Run("admin can get by ID", func(t *testing.T) {
+		res, err := svc.GetByID("admin-1", "admin", created.ID)
+		if err != nil || res == nil {
+			t.Fatalf("expected success, got: %v", err)
+		}
+	})
+
+	t.Run("other teacher cannot get by ID", func(t *testing.T) {
+		_, err := svc.GetByID("teacher-2", "teacher", created.ID)
+		if err == nil {
+			t.Fatal("expected unauthorized error for other teacher")
+		}
+	})
+}
+
+func TestTeacherActivitiesHandler_List_RBAC(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	repo := newMockRepo()
+	svc := NewService(repo)
+	h := NewHandler(svc)
+
+	t.Run("Unauthenticated is 401", func(t *testing.T) {
+		r := gin.New()
+		h.RegisterRoutes(r.Group("/api"))
+
+		req := httptest.NewRequest("GET", "/api/teacher/free-activities", nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+		assert.Equal(t, http.StatusUnauthorized, w.Code)
+	})
+
+	t.Run("Student is 403", func(t *testing.T) {
+		r := gin.New()
+		r.Use(func(c *gin.Context) {
+			c.Set("user_id", "student-1")
+			c.Set("role", "student")
+			c.Next()
+		})
+		h.RegisterRoutes(r.Group("/api"))
+
+		req := httptest.NewRequest("GET", "/api/teacher/free-activities", nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+		assert.Equal(t, http.StatusForbidden, w.Code)
+	})
+
+	t.Run("Teacher is 200", func(t *testing.T) {
+		r := gin.New()
+		r.Use(func(c *gin.Context) {
+			c.Set("user_id", "teacher-1")
+			c.Set("role", "teacher")
+			c.Next()
+		})
+		h.RegisterRoutes(r.Group("/api"))
+
+		req := httptest.NewRequest("GET", "/api/teacher/free-activities", nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+		assert.Equal(t, http.StatusOK, w.Code)
+	})
 }

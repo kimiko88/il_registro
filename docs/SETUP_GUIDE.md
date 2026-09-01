@@ -20,7 +20,7 @@ Questa guida descrive come configurare l'ambiente di sviluppo e produzione per i
 
 | Strumento      | Versione minima | Verifica                 |
 | -------------- | --------------- | ------------------------ |
-| Go             | 1.25            | `go version`             |
+| Go             | 1.27            | `go version`             |
 | Node.js        | 20+ (LTS / 24)  | `node --version`         |
 | npm            | 10+             | `npm --version`          |
 | PostgreSQL     | 16+             | `psql --version`         |
@@ -104,9 +104,30 @@ npm run test:unit
 npm run build
 ```
 
+### Setup & Test Mobile (Android & iOS)
+
+Per istruzioni dettagliate su come configurare, compilare ed eseguire i test delle **8 applicazioni mobile native** (Android e iOS per Studente, Genitore, Docente e Segreteria), consulta la guida dedicata:
+👉 **[Guida Setup & Test Mobile](MOBILE_SETUP_GUIDE.md)**
+
+```bash
+# Esecuzione test Android (da /android)
+./gradlew test
+
+# Esecuzione test iOS (da /ios)
+swift test
+```
+
 ---
 
 ## Troubleshooting
+
+### Errore: `open private_key.pem: permission denied` (Deploy su Render / Docker)
+
+Nei container in sola lettura o in produzione senza permessi di scrittura sulla cartella root dell'app:
+
+1. Genera una chiave RSA in locale: `openssl genrsa -out private_key.pem 2048`
+2. Copia il contenuto di `private_key.pem` e incollalo come variabile d'ambiente `RSA_PRIVATE_KEY` (o `JWT_PRIVATE_KEY`) nel pannello Environment di Render.
+3. Il backend caricherà automaticamente la chiave dalla variabile d'ambiente senza richiedere la scrittura su disco.
 
 ### Errore: `JWT_SECRET non impostato`
 

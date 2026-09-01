@@ -2,6 +2,7 @@ package config
 
 import (
 	"log"
+	"os"
 	"strings"
 
 	"github.com/spf13/viper"
@@ -10,12 +11,18 @@ import (
 type Config struct {
 	Server    ServerConfig
 	Database  DatabaseConfig
+	Redis     RedisConfig
 	JWT       JWTConfig
 	Supabase  SupabaseConfig
 	SPID      SPIDConfig
 	CIE       CIEConfig
 	Mail      MailConfig
 	Elearning ElearningConfig
+}
+
+type RedisConfig struct {
+	Host string
+	Port string
 }
 
 type ElearningConfig struct {
@@ -78,14 +85,20 @@ func LoadConfig() (*Config, error) {
 	viper.SetConfigFile(".env")
 	viper.AutomaticEnv()
 
-	// If .env file exists, read it, otherwise ignore error (for docker env vars)
+	// If .env file exists, read it, otherwise ignore error (for docker/render env vars)
 	if err := viper.ReadInConfig(); err != nil {
-		log.Printf("Warning: error reading config file: %s", err)
+		if !os.IsNotExist(err) {
+			if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+				log.Printf("Warning: error reading config file: %v", err)
+			}
+		}
 	}
 
 	viper.SetDefault("SERVER_PORT", "8080")
 	viper.SetDefault("SERVER_MODE", "release")
 	viper.SetDefault("DB_SSLMODE", "require")
+	viper.SetDefault("REDIS_HOST", "localhost")
+	viper.SetDefault("REDIS_PORT", "6379")
 	viper.SetDefault("SUPABASE_STORAGE_BUCKET", "documents")
 
 	config := &Config{
@@ -101,6 +114,11 @@ func LoadConfig() (*Config, error) {
 			Name:     viper.GetString("DB_NAME"),
 			SSLMode:  viper.GetString("DB_SSLMODE"),
 		},
+		Redis: RedisConfig{
+			Host: viper.GetString("REDIS_HOST"),
+			Port: viper.GetString("REDIS_PORT"),
+		},
+
 		JWT: JWTConfig{
 			Secret: viper.GetString("JWT_SECRET"),
 		},

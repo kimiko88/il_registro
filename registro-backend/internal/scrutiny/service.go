@@ -56,6 +56,10 @@ func (s *Service) isDirigenzaOrCoordinator(ctx context.Context, actorID, actorRo
 }
 
 func (s *Service) GetMatrix(ctx context.Context, actorID, actorRole, classID string, semester int) (*ScrutinyMatrix, error) {
+	if actorRole == "student" || actorRole == "parent" {
+		return nil, errors.New("forbidden: studenti e genitori non possono accedere alla matrice generale di classe dello scrutinio")
+	}
+
 	isCoordinator, isDirigenza, err := s.isDirigenzaOrCoordinator(ctx, actorID, actorRole, classID)
 	if err != nil {
 		logger.Log.Errorf("scrutiny isDirigenzaOrCoordinator error: %v", err)
@@ -69,7 +73,7 @@ func (s *Service) GetMatrix(ctx context.Context, actorID, actorRole, classID str
 		return nil, err
 	}
 
-	// If caller is NOT coordinator or dirigenza (e.g. parent, student, or subject teacher),
+	// If caller is NOT coordinator or dirigenza (e.g. subject teacher),
 	// check if scrutiny has been validated.
 	if !isCoordinator && !isDirigenza {
 		if actorRole == "teacher" {
@@ -101,6 +105,10 @@ func (s *Service) GetMatrix(ctx context.Context, actorID, actorRole, classID str
 		}
 	}
 
+	return s.buildMatrix(ctx, classID, semester, records)
+}
+
+func (s *Service) buildMatrix(ctx context.Context, classID string, semester int, records []ScrutinyRecord) (*ScrutinyMatrix, error) {
 	// 2. Get Class Subjects
 	subjects, err := s.classRepo.GetClassSubjects(ctx, classID)
 	if err != nil {
@@ -131,7 +139,7 @@ func (s *Service) GetMatrix(ctx context.Context, actorID, actorRole, classID str
 	}
 
 	// Fetch all grades for class once to avoid N+1 queries (N students * M subjects)
-	allClassGrades, err := s.gradeRepo.FindByClass(classID, semester)
+	allClassGrades, err := s.gradeRepo.FindByClass(ctx, classID, semester)
 	if err != nil {
 		logger.Log.Errorf("scrutiny FindByClass error: %v", err)
 		return nil, fmt.Errorf("failed to load grades for class %s: %w", classID, err)
@@ -280,7 +288,7 @@ func (s *Service) GetOverview(ctx context.Context, actorID, actorRole, schoolID 
 		if recErr != nil {
 			logger.Log.Warnf("GetOverview: error fetching scrutiny records for %s: %v", c.ID, recErr)
 		}
-		allGrades, grErr := s.gradeRepo.FindByClass(c.ID, sem)
+		allGrades, grErr := s.gradeRepo.FindByClass(ctx, c.ID, sem)
 		if grErr != nil {
 			logger.Log.Warnf("GetOverview: error fetching grades for class %s: %v", c.ID, grErr)
 		}
@@ -595,10 +603,60 @@ func (s *Service) SaveScrutiny(ctx context.Context, coordinatorID, actorRole, ac
 }
 
 func (s *Service) ExportPagellaPDF(ctx context.Context, actorID, actorRole, classID, studentID string, semester int) ([]byte, error) {
-	matrix, err := s.GetMatrix(ctx, actorID, actorRole, classID, semester)
+	if actorRole == "student" {
+		if actorID != studentID {
+			return nil, errors.New("forbidden: lo studente può scaricare solo la propria pagella")
+		}
+	} else if actorRole == "parent" {
+		isGuardian, err := s.userRepo.IsGuardian(ctx, actorID, studentID)
+		if err != nil || !isGuardian {
+			return nil, errors.New("forbidden: genitore non autorizzato per questo studente")
+		}
+	} else if actorRole == "teacher" {
+		isCoordinator, isDirigenza, _ := s.isDirigenzaOrCoordinator(ctx, actorID, actorRole, classID)
+		if !isCoordinator && !isDirigenza {
+			clsSubs, err := s.classRepo.GetClassSubjects(ctx, classID)
+			if err != nil {
+				return nil, err
+			}
+			isTeacherAssigned := false
+			for _, cs := range clsSubs {
+				if cs.TeacherID != nil && *cs.TeacherID == actorID {
+					isTeacherAssigned = true
+					break
+				}
+			}
+			if !isTeacherAssigned {
+				return nil, errors.New("forbidden: docente non appartenente al consiglio di classe")
+			}
+		}
+	} else if actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "vice_principal" && actorRole != "secretary" {
+		return nil, errors.New("forbidden: ruolo non autorizzato all'esportazione pagella")
+	}
+
+	records, err := s.repo.ListRecordsByClass(ctx, classID, semester)
 	if err != nil {
 		return nil, err
 	}
+
+	if actorRole == "student" || actorRole == "parent" {
+		isValidated := false
+		for _, r := range records {
+			if r.Status == "validated" {
+				isValidated = true
+				break
+			}
+		}
+		if !isValidated {
+			return nil, ErrScrutinyNotValidated
+		}
+	}
+
+	matrix, err := s.buildMatrix(ctx, classID, semester, records)
+	if err != nil {
+		return nil, err
+	}
+
 	return GeneratePagellaPDF(matrix, studentID)
 }
 

@@ -1,0 +1,14 @@
+"app_name" = "Klassenbuch - Sekretariat";
+"secretary_dashboard_title" = "Sekretariats-Register";
+"user_management" = "Benutzerverwaltung";
+"scrutiny_supervision" = "Zeugnisaufsicht";
+"generate_certificates" = "Bescheinigungen & Urkunden";
+"audit_logs" = "Systemprotokolle";
+"create_user" = "Neuen Benutzer erstellen";
+"download_pdf" = "PDF-Protokoll herunterladen";
+"login_subtitle" = "Melden Sie sich im Verwaltungsbereich an";
+"email_label" = "Sekretariats-E-Mail";
+"password_label" = "Passwort";
+"btn_login" = "INS VERWALTUNGSPANEL EINLOGGEN";
+"err_enter_credentials" = "E-Mail und Passwort eingeben";
+"logout" = "Abmelden";

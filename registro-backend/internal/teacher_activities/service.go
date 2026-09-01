@@ -19,7 +19,7 @@ var validActivityTypes = map[string]bool{
 // Service definisce la logica di business per le attività libere del docente.
 type Service interface {
 	Create(teacherID string, req CreateTeacherActivityRequest) (*TeacherActivityResponse, error)
-	GetByID(id string) (*TeacherActivityResponse, error)
+	GetByID(actorID, actorRole, id string) (*TeacherActivityResponse, error)
 	Update(teacherID, id string, req UpdateTeacherActivityRequest) (*TeacherActivityResponse, error)
 	Delete(teacherID, id string) error
 	GetByTeacher(teacherID, fromDate, toDate string) ([]TeacherActivityResponse, error)
@@ -68,10 +68,13 @@ func (s *service) Create(teacherID string, req CreateTeacherActivityRequest) (*T
 	return s.toResponse(act), nil
 }
 
-func (s *service) GetByID(id string) (*TeacherActivityResponse, error) {
+func (s *service) GetByID(actorID, actorRole, id string) (*TeacherActivityResponse, error) {
 	act, err := s.repo.GetByID(id)
 	if err != nil {
 		return nil, err
+	}
+	if act.TeacherID != actorID && actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "vice_principal" {
+		return nil, errors.New("unauthorized: non puoi visualizzare l'attività di un altro docente")
 	}
 	return s.toResponse(act), nil
 }

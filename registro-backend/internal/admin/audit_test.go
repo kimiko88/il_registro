@@ -76,3 +76,32 @@ func TestUpdateSchool_PassesSchoolFilter(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 }
+
+func TestCanAccessSchool_MultiTenancyIsolation(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	t.Run("superadmin can access any school", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Set("role", "superadmin")
+		assert.True(t, CanAccessSchool(c, "any-school-id"))
+	})
+
+	t.Run("admin can only access own school", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Set("role", "admin")
+		c.Set("school_id", "school-A")
+		assert.True(t, CanAccessSchool(c, "school-A"))
+		assert.False(t, CanAccessSchool(c, "school-B"))
+	})
+
+	t.Run("secretary can only access own school", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Set("role", "secretary")
+		c.Set("school_id", "school-A")
+		assert.True(t, CanAccessSchool(c, "school-A"))
+		assert.False(t, CanAccessSchool(c, "school-B"))
+	})
+}

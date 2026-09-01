@@ -52,9 +52,11 @@ func TestIntegration_Credits_AssignAndSummary(t *testing.T) {
 	protected := r.Group("")
 	protected.Use(func(c *gin.Context) {
 		c.Set("user_id", "teacher-1")
+		c.Set("role", "teacher")
 		c.Set("school_id", "school-1")
 		c.Next()
 	})
+
 	handler.RegisterRoutes(protected)
 
 	// 1. Calculate endpoint test
@@ -216,6 +218,7 @@ func TestIntegration_Support_Workflow(t *testing.T) {
 	protected.Use(func(c *gin.Context) {
 		c.Set("user_id", "teacher-1")
 		c.Set("teacher_id", "teacher-1")
+		c.Set("role", "teacher")
 		c.Set("school_id", "school-1")
 		c.Next()
 	})

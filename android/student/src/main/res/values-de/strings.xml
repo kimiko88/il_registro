@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Klassenbuch - Schüler</string>
+    <string name="dashboard_title">Mein Dashboard</string>
+    <string name="welcome_student">Hallo, %1$s!</string>
+    <string name="grades_title">Meine Noten</string>
+    <string name="agenda_title">Hausaufgaben &amp; Agenda</string>
+    <string name="attendance_title">Anwesenheit &amp; Fehlzeiten</string>
+    <string name="report_card_title">Mein Zeugnis</string>
+    <string name="gpa_average">Notendurchschnitt</string>
+    <string name="recent_grades">Neueste Noten</string>
+    <string name="today_lessons">Heutiger Stundenplan</string>
+    <string name="absences_count">Fehlzeiten Gesamt</string>
+    <string name="lates_count">Verspätungen Gesamt</string>
+    <string name="no_data">Keine Daten verfügbar</string>
+    <string name="login_subtitle">Melden Sie sich an</string>
+    <string name="email_label">Schüler-E-Mail</string>
+    <string name="password_label">Passwort</string>
+    <string name="btn_login">ANMELDEN</string>
+    <string name="err_enter_credentials">E-Mail und Passwort eingeben</string>
+    <string name="logout">Abmelden</string>
+    <string name="settings">Einstellungen</string>
+    <string name="badges_title">Meine Abzeichen</string>
+    <string name="pcto_title">Praktikumsprogramme</string>
+</resources>

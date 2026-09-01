@@ -45,7 +45,7 @@ Grazie per l'interesse nel contribuire a **il_registro**! Questa guida descrive 
 
 ```bash
 # Prerequisiti
-# - Go 1.25+
+# - Go 1.27+
 # - Docker e Docker Compose
 # - Make
 

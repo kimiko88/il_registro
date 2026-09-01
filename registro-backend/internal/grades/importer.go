@@ -1,6 +1,7 @@
 package grades
 
 import (
+	"context"
 	"encoding/csv"
 	"fmt"
 	"io"
@@ -101,7 +102,7 @@ func ParseXLSXGrades(r io.Reader, semester int) ([]ImportRequest, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	rows, err := f.GetRows("Grades")
 	if err != nil {
@@ -166,7 +167,7 @@ func ParseXLSXGrades(r io.Reader, semester int) ([]ImportRequest, error) {
 }
 
 // ProcessBulkImport inserts the parsed ImportRequests via the repository.
-func ProcessBulkImport(repo Repository, reqs []ImportRequest, teacherID string, teacherProfileID string, schoolID string) (ImportResult, error) {
+func ProcessBulkImport(ctx context.Context, repo Repository, reqs []ImportRequest, teacherID string, teacherProfileID string, schoolID string) (ImportResult, error) {
 	res := ImportResult{}
 
 	var grades []*Grade
@@ -207,7 +208,7 @@ func ProcessBulkImport(repo Repository, reqs []ImportRequest, teacherID string, 
 	}
 
 	if len(grades) > 0 {
-		err := repo.BatchCreate(grades)
+		err := repo.BatchCreate(ctx, grades)
 		if err != nil {
 			return res, fmt.Errorf("failed to import grades batch: %w", err)
 		}

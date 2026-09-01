@@ -1,0 +1,17 @@
+"app_name" = "Register - Parent";
+"parent_dashboard_title" = "Family Portal";
+"my_children" = "My Children";
+"child_grades" = "Child Grades";
+"pending_absences" = "Absences to Justify";
+"book_colloqui" = "Book Parent-Teacher Meeting";
+"switch_child" = "Switch Child";
+"justify_absence" = "Justify Absence";
+"book_colloquio" = "Book Meeting";
+"pending_justifications" = "Pending Justifications";
+"no_pending_justifications" = "No pending absences to justify";
+"login_subtitle" = "Log in to the parent portal";
+"email_label" = "Parent Email";
+"password_label" = "Password";
+"btn_login" = "LOG IN TO PORTAL";
+"err_enter_credentials" = "Enter email and password";
+"logout" = "Log out";

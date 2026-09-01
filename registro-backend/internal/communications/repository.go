@@ -98,6 +98,9 @@ func (r *PostgresRepository) List(ctx context.Context, userID, schoolID string) 
 		m.ReceiverIDs = receivers
 		msgs = append(msgs, m)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	if msgs == nil {
 		msgs = []*Message{}
 	}
@@ -151,6 +154,9 @@ func (r *PostgresRepository) ListBacheca(ctx context.Context, schoolID, userID s
 		m.ReceiverIDs = receivers
 		msgs = append(msgs, m)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	if msgs == nil {
 		msgs = []*Message{}
 	}
@@ -198,6 +204,9 @@ func (r *PostgresRepository) GetSignatures(ctx context.Context, communicationID 
 		}
 		names = append(names, name)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return names, nil
 }
 
@@ -238,6 +247,9 @@ func (r *PostgresRepository) GetSignatureReport(ctx context.Context, communicati
 		// SEC-31: Redact personal IP address telemetry from API reports
 		sig.IPAddress = ""
 		report.Signatures = append(report.Signatures, sig)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	report.SignedCount = len(report.Signatures)
@@ -384,6 +396,9 @@ func (r *PostgresRepository) ListCircolari(ctx context.Context, schoolID, userID
 		m.ReceiverIDs = receivers
 		m.IsOfficialCircular = true
 		msgs = append(msgs, m)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return msgs, nil
 }

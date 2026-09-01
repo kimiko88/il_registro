@@ -67,6 +67,9 @@ func (r *PostgresRepository) List(ctx context.Context, schoolID string) ([]Subje
 		s.Description = desc.String
 		subjects = append(subjects, s)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return subjects, nil
 }
 

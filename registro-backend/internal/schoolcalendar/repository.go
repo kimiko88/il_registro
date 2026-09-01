@@ -81,6 +81,9 @@ func (r *repository) ListNonTeachingDays(schoolID string) ([]NonTeachingDay, err
 		}
 		res = append(res, d)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return res, nil
 }
 

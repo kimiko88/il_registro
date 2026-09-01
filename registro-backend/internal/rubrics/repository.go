@@ -120,10 +120,17 @@ func (r *PostgresRepository) GetRubricByID(ctx context.Context, id string) (*Rub
 					c.Levels = append(c.Levels, l)
 				}
 			}
-			lRows.Close()
+			if err := lRows.Err(); err != nil {
+				_ = lRows.Close()
+				return nil, err
+			}
+			_ = lRows.Close()
 		}
 
 		rub.Criteria = append(rub.Criteria, c)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return rub, nil
@@ -154,12 +161,29 @@ func (r *PostgresRepository) ListRubrics(ctx context.Context, schoolID, teacherI
 			return nil, err
 		}
 
-		// Count criteria
-		var count int
-		_ = r.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM rubric_criteria WHERE rubric_id = $1::uuid`, rub.ID).Scan(&count)
-		rub.Criteria = make([]Criterion, count) // allocate length for count
+		// Fetch Criteria
+		cRows, cErr := r.db.QueryContext(ctx, `
+			SELECT id, rubric_id, name, COALESCE(description, ''), max_score
+			FROM rubric_criteria WHERE rubric_id = $1::uuid ORDER BY name
+		`, rub.ID)
+		if cErr == nil {
+			for cRows.Next() {
+				var c Criterion
+				if err := cRows.Scan(&c.ID, &c.RubricID, &c.Name, &c.Description, &c.MaxScore); err == nil {
+					rub.Criteria = append(rub.Criteria, c)
+				}
+			}
+			_ = cRows.Close()
+		}
+		if rub.Criteria == nil {
+			rub.Criteria = []Criterion{}
+		}
 
 		list = append(list, rub)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return list, nil
@@ -253,6 +277,9 @@ func (r *PostgresRepository) ListAssessmentsByStudent(ctx context.Context, stude
 		}
 		list = append(list, a)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return list, nil
 }
 
@@ -280,6 +307,9 @@ func (r *PostgresRepository) ListAssessmentsByClass(ctx context.Context, classID
 			return nil, err
 		}
 		list = append(list, a)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return list, nil
 }

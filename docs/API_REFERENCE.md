@@ -28,6 +28,11 @@ Questo documento descrive gli endpoint REST e le connessioni WebSocket del backe
 - [Libri di Testo](#libri-di-testo)
 - [Scrutinio e Pagelle](#scrutinio-e-pagelle)
 - [Export e Reportistica (Excel, PDF, SIDI)](#export-e-reportistica-excel-pdf-sidi)
+- [Accessibilità & Segnalazione Barriere (AgID / WCAG 2.2)](#accessibilità--segnalazione-barriere-agid--wcag-22)
+- [Registro di Sostegno & PEI](#registro-di-sostegno--pei)
+- [Ricevimento Generale Scuola-Famiglia](#ricevimento-generale-scuola-famiglia)
+- [Corsi di Recupero & Debiti (PAI)](#corsi-di-recupero--debiti-pai)
+- [Credito Scolastico Triennio](#credito-scolastico-triennio)
 - [WebSocket Notifiche](#websocket-notifiche)
 - [Codici di Errore Strutturati](#codici-di-errore-strutturati)
 - [Struttura Risposte](#struttura-risposte)
@@ -259,10 +264,138 @@ Esporta i flussi dati aggregati per il portale ministeriale SIDI.
 
 ---
 
+---
+
+## Accessibilità & Segnalazione Barriere (AgID / WCAG 2.2)
+
+### `POST /api/v1/public/accessibility-feedback`
+Invia una segnalazione di barriera digitale da parte di chiunque (studenti, genitori, docenti, cittadini). Non richiede autenticazione.
+
+**Request body:**
+```json
+{
+  "name": "Mario Rossi",
+  "email": "mario.rossi@example.com",
+  "barrier_type": "contrast",
+  "description": "Contrasto visivo insufficiente sui testi delle circolari in modalità scura."
+}
+```
+
+**Response `201 Created`:**
+```json
+{
+  "id": "uuid",
+  "protocol_number": "A11Y-2026-0827-1042",
+  "message": "Segnalazione registrata con successo con protocollo A11Y-2026-0827-1042"
+}
+```
+
+### `POST /api/v1/accessibility/feedback`
+Invia una segnalazione di accessibilità associando automaticamente l'ID utente e la scuola dell'utente autenticato.
+
+### `GET /api/v1/admin/accessibility-feedbacks`
+Recupera l'elenco delle segnalazioni pervenute (riservato agli amministratori e al Responsabile della Transizione Digitale - RTD).
+- Query params: `status` (`open`, `in_progress`, `resolved`), `school_id`, `limit`, `offset`.
+
+### `GET /api/v1/user/accessibility-settings`
+Recupera le preferenze di accessibilità salvate nel cloud per l'utente autenticato (font, contrasto, righello, spaziatura, focus mode, tts).
+
+### `PUT /api/v1/user/accessibility-settings`
+Salva o aggiorna le preferenze di accessibilità dell'utente nel database cloud.
+
+**Request body:**
+```json
+{
+  "settings": {
+    "currentTheme": "indigo",
+    "dsaFont": true,
+    "fontFamily": "opendyslexic",
+    "fontSize": "normal",
+    "highContrast": false,
+    "highContrastMode": "none",
+    "colorblindMode": "none",
+    "readingRuler": false,
+    "readingRulerHeight": 40,
+    "readingRulerOpacity": 0.35,
+    "lineHeight": "relaxed",
+    "letterSpacing": "normal",
+    "wordSpacing": "normal",
+    "ttsEnabled": true,
+    "ttsRate": 1.0,
+    "ttsPitch": 1.0,
+    "focusHighlight": true,
+    "isFocusMode": false
+  }
+}
+```
+
+### `PATCH /api/v1/admin/accessibility-feedbacks/:id/status`
+Aggiorna lo stato di presa in carico o risoluzione della segnalazione con note di riscontro.
+
+
+---
+
+## Registro di Sostegno & PEI
+
+### `GET /api/v1/support/diary`
+Recupera le annotazioni del diario di sostegno per studente e classe.
+
+### `POST /api/v1/support/diary`
+Crea una nuova voce di diario con tipologia attività (`in_classe`, `laboratorio`, `aula_sostegno`), note educatore OEPA/ASACOM e flag di condivisione con la famiglia.
+
+### `GET /api/v1/support/goals` e `POST /api/v1/support/goals`
+Gestione obiettivi PEI (Assi: autonomia, cognitiva, comunicazionale, relazionale, linguistica, sensoriale).
+
+---
+
+## Ricevimento Generale Scuola-Famiglia
+
+### `GET /api/v1/general-meetings/slots`
+Lista gli slot orari disponibili per i colloqui generali pomeridiani.
+
+### `POST /api/v1/general-meetings/book`
+Prenotazione colloquio generale da parte del genitore.
+
+### `GET /api/v1/general-meetings/live-queue`
+Coda in tempo reale dello stato delle stanze virtuali o fisiche per i docenti.
+
+---
+
+## Corsi di Recupero & Debiti (PAI)
+
+### `GET /api/v1/recovery/courses` e `POST /api/v1/recovery/courses`
+Pianificazione corsi di recupero estivi o infrannuali per carenze formative e debiti scolastici.
+
+### `GET /api/v1/recovery/tests` e `POST /api/v1/recovery/tests/evaluate`
+Registrazione esiti e verbali delle prove di recupero debiti per gli scrutini integrativi.
+
+---
+
+## Credito Scolastico Triennio
+
+### `GET /api/v1/credits/calculator`
+Calcolo automatico della fascia di credito scolastico (D.Lgs. 62/2017) in base alla media dei voti della classe 3ª, 4ª o 5ª.
+
+### `POST /api/v1/credits/allocations`
+Attribuzione del credito scolastico da parte del Consiglio di Classe con motivazione e punti integrativi.
+
+---
+
 ## WebSocket Notifiche
 
-### `GET /api/v1/ws`
-Connessione WebSocket in tempo reale per notifiche su voti, presenze, circolari e sostituzioni.
+### `POST /api/v1/auth/ws-ticket`
+Rilascia un ticket monouso opaco (`ticket`) valido 30 secondi per autenticare la successiva connessione WebSocket (richiede JWT Bearer token).
+
+**Response `200 OK`:**
+```json
+{
+  "ticket": "wst_abcdef123456..."
+}
+```
+
+### `GET /api/v1/ws?ticket=<ticket>`
+Connessione WebSocket in tempo reale per notifiche su voti, presenze, circolari e sostituzioni (autenticata dal parametro `ticket`).
+
 
 ---
 

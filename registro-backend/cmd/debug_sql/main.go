@@ -14,7 +14,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	fmt.Println("Testing /api/v1/users query...")
 	usersQuery := `
@@ -31,7 +31,7 @@ func main() {
 		fmt.Printf("Users Query Error: %v\n", err)
 	} else {
 		fmt.Println("Users Query: OK")
-		rows.Close()
+		_ = rows.Close()
 	}
 
 	fmt.Println("\nTesting /api/v1/classes query...")
@@ -42,6 +42,6 @@ func main() {
 		fmt.Printf("Classes Query Error: %v\n", err)
 	} else {
 		fmt.Println("Classes Query: OK")
-		rows2.Close()
+		_ = rows2.Close()
 	}
 }

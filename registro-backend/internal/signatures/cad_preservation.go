@@ -67,18 +67,18 @@ func GenerateCadPreservationPackage(ctx context.Context, schoolID string, year s
 
 	// Documenti da conservare: in produzione vengono caricati dal DB.
 	// Ogni contenuto produce un hash SHA-256 reale (non hardcoded).
-	regClasseContent := []byte(fmt.Sprintf(
+	regClasseContent := fmt.Appendf(nil,
 		`<RegistroDiClasse><Scuola>%s</Scuola><Anno>%s</Anno><DataChiusura>%s</DataChiusura></RegistroDiClasse>`,
 		schoolID, year, now.Format("2006-01-02"),
-	))
-	verbaleContent := []byte(fmt.Sprintf(
+	)
+	verbaleContent := fmt.Appendf(nil,
 		`<VerbaleScrutinio><Scuola>%s</Scuola><Anno>%s</Anno><Periodo>Q1</Periodo><DataScrutinio>%s</DataScrutinio></VerbaleScrutinio>`,
 		schoolID, year, now.Format("2006-01-02"),
-	))
-	certContent := []byte(fmt.Sprintf(
+	)
+	certContent := fmt.Appendf(nil,
 		`<CertificazioneCompetenze><Scuola>%s</Scuola><Anno>%s</Anno><NormativaRif>DM 742/2017</NormativaRif></CertificazioneCompetenze>`,
 		schoolID, year,
-	))
+	)
 
 	yearPrefix := year
 	if len(year) >= 4 {

@@ -108,6 +108,9 @@ func (r *feqRepo) FindQualifiedByDocumentID(ctx context.Context, docID string) (
 		}
 		result = append(result, s)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return result, nil
 }
 

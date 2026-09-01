@@ -3,19 +3,28 @@ package verbali
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
+
+	"registro-backend/internal/pdfworker"
+	"registro-backend/pkg/upload"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
 type Handler struct {
-	service *Service
+	service         *Service
+	pdfWorkerClient *pdfworker.Client
 }
 
 func NewHandler(s *Service) *Handler {
 	return &Handler{service: s}
+}
+
+func (h *Handler) SetPdfWorkerClient(client *pdfworker.Client) {
+	h.pdfWorkerClient = client
 }
 
 func isAllowedVerbaliRole(role string) bool {
@@ -38,6 +47,8 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 		v.POST("/:id/sign", h.SignVerbale)
 		v.GET("/:id/signatures", h.GetSignatures)
 		v.GET("/:id/pdf", h.ExportPDF)
+		v.POST("/:id/async-pdf", h.EnqueueAsyncVerbalePdf)
+		v.GET("/pdf-jobs/:job_id", h.GetPdfJobStatus)
 	}
 }
 
@@ -242,6 +253,11 @@ func (h *Handler) GetSignatures(c *gin.Context) {
 }
 
 func (h *Handler) ExportPDF(c *gin.Context) {
+	if h.pdfWorkerClient != nil && c.Query("sync") != "true" {
+		h.EnqueueAsyncVerbalePdf(c)
+		return
+	}
+
 	id := c.Param("id")
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
@@ -277,6 +293,68 @@ func (h *Handler) ExportPDF(c *gin.Context) {
 	}
 	filename := "verbale_" + shortID + "_" + dateStr + ".pdf"
 	c.Header("Content-Type", "application/pdf")
-	c.Header("Content-Disposition", "attachment; filename=\""+filename+"\"")
+	c.Header("Content-Disposition", upload.FormatContentDisposition(filename))
 	c.Data(http.StatusOK, "application/pdf", pdfBytes)
+}
+
+func (h *Handler) EnqueueAsyncVerbalePdf(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if !isAllowedVerbaliRole(role) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
+	id := c.Param("id")
+
+	if h.pdfWorkerClient == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "async pdf worker queue not configured"})
+		return
+	}
+
+	jobID := uuid.New().String()
+	payload := pdfworker.VerbalePdfPayload{
+		JobID:       jobID,
+		VerbaleID:   id,
+		RequestedBy: userID,
+	}
+
+	jobStatus, err := h.pdfWorkerClient.EnqueueVerbalePdf(c.Request.Context(), payload)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to enqueue async verbale pdf job: %v", err)})
+		return
+	}
+
+	c.JSON(http.StatusAccepted, gin.H{
+		"message":    "Verbale PDF generation job enqueued successfully",
+		"job_id":     jobStatus.JobID,
+		"status":     jobStatus.Status,
+		"status_url": fmt.Sprintf("/api/v1/verbali/pdf-jobs/%s", jobStatus.JobID),
+	})
+}
+
+func (h *Handler) GetPdfJobStatus(c *gin.Context) {
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	jobID := c.Param("job_id")
+	if h.pdfWorkerClient == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "async pdf worker queue not configured"})
+		return
+	}
+
+	status, err := h.pdfWorkerClient.GetJobStatus(c.Request.Context(), jobID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "job not found or expired"})
+		return
+	}
+
+	c.JSON(http.StatusOK, status)
 }

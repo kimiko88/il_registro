@@ -2,6 +2,7 @@ package unit
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -30,7 +31,12 @@ func TestGradesService_GetMyGrades(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, resp)
 		if len(resp.Semesters) > 0 {
-			assert.Equal(t, "2025-09-01", resp.Semesters[0].StartDate)
+			schoolYear := time.Now().Year()
+			if time.Now().Month() < time.September {
+				schoolYear--
+			}
+			expectedStart := fmt.Sprintf("%d-09-01", schoolYear)
+			assert.Equal(t, expectedStart, resp.Semesters[0].StartDate)
 		}
 	})
 
@@ -58,7 +64,7 @@ func TestGradesService_Export(t *testing.T) {
 			{ID: "1", StudentID: "s1", GradeValue: 10, Date: time.Now(), TeacherID: "t1"},
 		}, nil)
 
-		data, contentType, err := service.Export("t1", "school-1", grades.GradeFilter{}, "csv")
+		data, contentType, err := service.Export(context.Background(), "t1", "school-1", grades.GradeFilter{}, "csv")
 
 		assert.NoError(t, err)
 		assert.Equal(t, "text/csv", contentType)

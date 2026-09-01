@@ -4,13 +4,15 @@
 
 > ⚠️ **Stato del progetto: Beta funzionante** — Il progetto è attualmente in fase di sviluppo attivo. Le funzionalità principali sono operative e testabili tramite la demo online, ma **non è ancora consigliato per l'uso in produzione** in ambienti scolastici reali. API, struttura del database e configurazioni potrebbero subire modifiche prima del rilascio stabile.
 
+🇮🇹 **Versione Italiana** | 🇬🇧 **[English Version](./README_EN.md)**
+
 **Online Demo**: [https://registro-scuola.netlify.app](https://registro-scuola.netlify.app)
-**Demo accounts & passwords**: [example_accounts.md](./example_accounts.md)
+**Demo accounts & passwords**: [example_accounts.md](./docs/example_accounts.md)
 _**Nota bene**_: alcune password, come quella per l'account superadmin, potrebbero essere state modificate per motivi di sicurezza.
 
 [![Discord Members](https://img.shields.io/discord/426912293134270465.svg?label=Discord&logo=discord)](https://discord.gg/Qh5XjQxwb)
 [![Backend CI](https://github.com/kimiko88/il_registro/actions/workflows/ci.yml/badge.svg)](https://github.com/kimiko88/il_registro/actions/workflows/ci.yml)
-[![Go Version](https://img.shields.io/badge/go-1.25%2B-blue)](https://go.dev/)
+[![Go Version](https://img.shields.io/badge/go-1.27%2B-blue)](https://go.dev/)
 [![Vue Version](https://img.shields.io/badge/vue-3.x-brightgreen)](https://vuejs.org/)
 [![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-blue.svg)](./LICENSE)
 [![Google Antigravity](https://img.shields.io/badge/IDE-Google%20Antigravity-4285F4?logo=google&logoColor=white)](https://antigravity.google)
@@ -57,12 +59,6 @@ _**Nota bene**_: alcune password, come quella per l'account superadmin, potrebbe
 7. **`07_parent_portal_mobile.png` — Portale Genitori & PWA Mobile**
    - _Descrizione_: Vista responsive mobile del portale genitori con presa visione circolari, giustifica assenze e libretto voti.
 
-<a href="./docs/images/08_accessibility_opendyslexic.png"><img src="./docs/images/08_accessibility_opendyslexic.png" width="49.5%"/></a>
-
-8. **`08_accessibility_opendyslexic.png` — Accessibilità & Font DSA**
-
-- _Descrizione_: Dettaglio dell'interfaccia con font OpenDyslexic attivo e modalità ad alto contrasto.
-
 ---
 
 ## 🏛️ Perché il_registro?
@@ -90,7 +86,7 @@ L'obiettivo è fornire alla _res pubblica_ — scuole, comuni, Stato — uno str
 
 Il progetto nasce dall'esperienza diretta in aula e dalla necessità quotidiana di disporre di uno strumento di registro elettronico che fosse **aperto, moderno e realmente al servizio della scuola pubblica** — senza costi di licenza e senza cedere i dati degli studenti a soggetti privati.
 
-> _"Da docente, sto provando a costruire lo strumento che avrei voluto avere."_
+> _"Da docente, sto provando a costruire lo strumento pubblico e libero che vorrei avere in classe."_
 
 ## Panoramica
 
@@ -102,6 +98,8 @@ Il progetto è organizzato come **monorepo** con backend Go e frontend Vue 3:
 il_registro/
 ├── registro-backend/    # API REST in Go (Gin + PostgreSQL + Redis)
 ├── registro-frontend/   # SPA/PWA in Vue 3 + Quasar
+├── android/             # App Native Android (Kotlin & Jetpack Compose: Studente, Genitore, Docente, Segreteria)
+├── ios/                 # App Native iOS (Swift & SwiftUI / SPM: Studente, Genitore, Docente, Segreteria)
 ├── docs/                # Documentazione tecnica dettagliata
 ├── .github/workflows/   # Pipeline CI/CD
 ├── CHANGELOG.md         # Storico delle versioni
@@ -119,10 +117,12 @@ il_registro è pensato per essere **auto-ospitato da scuole, Comuni, Regioni o d
 
 | Area                      | Funzionalità                                                                                                                              |
 | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| **App Mobile Native**     | **Android & iOS Native** per Studente, Genitore, Docente e Segreteria (Kotlin Compose & SwiftUI, biometria, offline, 11 lingue)           |
 | **Autenticazione & SSO**  | JWT (access 15min + refresh rotation), MFA TOTP, SPID, CIE, **Google Workspace & MS Teams SSO**                                           |
 | **Ruoli**                 | `superadmin`, `admin`, `secretary`, `teacher`, `student`, `parent`                                                                        |
 | **Voti & Valutazioni**    | Inserimento rapido, **Matrix View a Tastiera**, medie ponderate, simulatore voto target, misure compensative BES/DSA                      |
 | **Presenze & Lezioni**    | Registro giornaliero, **Firma Ora 1-Click**, assenze, ritardi, giustificazioni, alert assenteismo                                         |
+| **Scrutini & Differiti**  | Tabellone scrutinio, delibere condotta, credito scolastico, **Scrutinio Differito (saldo debiti formativi)**                            |
 | **PDP / PEI (BES & DSA)** | **Gestione Piani Didattici Personalizzati**, misure compensative/dispensative, firma/approvazione digitale genitore e protezione diagnosi |
 | **Business Intelligence** | **Dashboard Dispersione Scolastica & Assenteismo**, report andamento 1° vs 2° Quadrimestre per la dirigenza                               |
 | **E-Learning Sync**       | **Google Classroom & Microsoft Teams**: sincronizzazione automatica compiti, voti e classi                                                |
@@ -138,7 +138,7 @@ il_registro è pensato per essere **auto-ospitato da scuole, Comuni, Regioni o d
 
 ### Prerequisiti
 
-- [Go](https://go.dev/) 1.25+
+- [Go](https://go.dev/) 1.27+
 - [Node.js](https://nodejs.org/) 18+ (LTS)
 - [Docker](https://www.docker.com/) e Docker Compose
 - [Make](https://www.gnu.org/software/make/)

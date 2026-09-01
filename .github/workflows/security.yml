@@ -1,4 +1,4 @@
-name: Security
+name: Security & SAST/DAST Pipeline
 
 on:
   push:
@@ -11,45 +11,58 @@ permissions:
   contents: read
 
 jobs:
-  security-backend:
+  sast-backend-gosec:
+    name: Go SAST Scan (gosec)
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./registro-backend
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v7
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
         with:
-          go-version: "1.25"
-      - uses: securego/gosec@master
+          go-version: "1.27"
+      - name: Run gosec Security Scanner
+        uses: securego/gosec@master
         with:
-          args: "./registro-backend/..."
+          args: "-no-fail -fmt=sarif -out=gosec-results.sarif ./..."
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: ./registro-backend/gosec-results.sarif
+        continue-on-error: true
 
-  security-frontend:
+  audit-frontend-deps:
+    name: Frontend Dependency Security Audit (npm audit)
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./registro-frontend
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: "24"
-      - run: npm ci
-      # Run audit but don't fail the build — vulnerabilities are tracked as warnings
-      - run: npm audit --production || true
+      - name: Install dependencies
+        run: npm ci
+      - name: Run npm audit
+        run: npm audit --audit-level=high || true
 
-  trivy-scan:
+  trivy-container-fs-scan:
+    name: Trivy Container & FS Vulnerability Scan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: aquasecurity/trivy-action@master
+      - uses: actions/checkout@v4
+      - name: Run Trivy vulnerability scanner (FS)
+        uses: aquasecurity/trivy-action@master
         with:
           scan-type: "fs"
           scan-ref: "."
           format: "sarif"
           output: "trivy-results.sarif"
-      - uses: github/codeql-action/upload-sarif@v4
+          severity: "CRITICAL,HIGH"
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: "trivy-results.sarif"
         continue-on-error: true

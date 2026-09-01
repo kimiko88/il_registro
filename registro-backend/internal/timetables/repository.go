@@ -96,6 +96,9 @@ func (r *PostgresRepository) GetTeacherSchedule(ctx context.Context, userID stri
 		}
 		results = append(results, cs)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	if results == nil {
 		results = []ClassSchedule{}
 	}
@@ -135,6 +138,9 @@ func (r *PostgresRepository) GetByClass(ctx context.Context, classID string) ([]
 			cs.TeacherName = strings.TrimSpace(tLast.String + " " + tFirst.String)
 		}
 		results = append(results, cs)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	if results == nil {
 		results = []ClassSchedule{}

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Catalog - Profesor</string>
+    <string name="teacher_dashboard_title">Catalog Profesor</string>
+    <string name="take_attendance">Prezență</string>
+    <string name="add_grade">Notă Nouă</string>
+    <string name="scrutiny_board">Consiliu Profesoral</string>
+    <string name="sign_hour">Semnează Ora de Curs</string>
+    <string name="lesson_topic">Subiectul Lecției</string>
+    <string name="select_class">Selectează Clasa</string>
+    <string name="login_subtitle">Conectați-vă la catedră</string>
+    <string name="email_label">Email Profesor</string>
+    <string name="password_label">Parolă</string>
+    <string name="btn_login">CONECTARE ÎN CATALOG</string>
+    <string name="err_enter_credentials">Introduceți emailul și parola</string>
+    <string name="logout">Deconectare</string>
+    <string name="save">Salvează</string>
+    <string name="cancel">Anulează</string>
+    <string name="present">Prezent</string>
+    <string name="absent">Absent</string>
+    <string name="late">Întârziat</string>
+</resources>

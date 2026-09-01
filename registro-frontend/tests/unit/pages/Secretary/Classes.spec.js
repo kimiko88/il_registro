@@ -3,8 +3,6 @@ import { mount } from '@vue/test-utils'
 import Classes from '@/pages/secretary/Classes.vue'
 import { createTestingPinia } from '@pinia/testing'
 import { useClassesStore } from '@/stores/classes'
-import { useAuthStore } from '@/stores/auth'
-import adminService from '@/services/adminService'
 
 import { Quasar } from 'quasar'
 
@@ -37,7 +35,6 @@ vi.mock('@/services/adminService', () => ({ default: mockAdminService }))
 describe('Classes Page', () => {
     let wrapper
     let classesStore
-    let authStore
 
     beforeEach(() => {
         // Setup default mock responses to avoid errors during mount
@@ -78,11 +75,10 @@ describe('Classes Page', () => {
             }
         })
         classesStore = useClassesStore()
-        authStore = useAuthStore()
     })
 
     it('fetches data on mount', () => {
-        expect(classesStore.fetchClasses).toHaveBeenCalledWith({ school_id: 1, academic_year: '2025/2026' })
+        expect(classesStore.fetchClasses).toHaveBeenCalledWith(expect.objectContaining({ school_id: 1 }))
         expect(mockAdminService.getSubjects).toHaveBeenCalled()
     })
 

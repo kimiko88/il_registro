@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
+
 	"net/http"
 	"os"
 	"os/signal"
@@ -11,6 +13,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"registro-backend/internal/accessibility"
 	"registro-backend/internal/admin"
 	"registro-backend/internal/agenda"
 	"registro-backend/internal/attendance"
@@ -41,7 +44,9 @@ import (
 	"registro-backend/internal/parents"
 	"registro-backend/internal/payments"
 	"registro-backend/internal/pcto"
+	"registro-backend/internal/pdfworker"
 	"registro-backend/internal/pdp"
+
 	"registro-backend/internal/postgres"
 	"registro-backend/internal/recovery"
 	"registro-backend/internal/reports"
@@ -52,6 +57,7 @@ import (
 	"registro-backend/internal/schoolsettings"
 	"registro-backend/internal/scrutiny"
 	"registro-backend/internal/search"
+	"registro-backend/internal/sidi"
 	"registro-backend/internal/signatures"
 	"registro-backend/internal/student_goals"
 	"registro-backend/internal/students"
@@ -96,7 +102,7 @@ func main() {
 	if err != nil {
 		logger.Log.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer database.Close()
+	defer func() { _ = database.Close() }()
 
 	// 4. Setup Authentication (Keys & Managers)
 	privateKey, publicKey, err := jwt.GetOrGenerateKeys("private_key.pem", "public_key.pem")
@@ -182,8 +188,9 @@ func main() {
 	verbaliSvc := verbali.NewService(verbaliRepo)
 	extraSvc := extracurricular.NewService(extraRepo)
 	notifSvc := notifications.NewService(notifRepo)
-	tripsSvc := trips.NewService(tripsRepo)
-	rubricsSvc := rubrics.NewService(rubricsRepo)
+	tripsSvc := trips.NewService(tripsRepo, usersRepo)
+
+	rubricsSvc := rubrics.NewService(rubricsRepo, usersRepo)
 
 	wsTicketStore := wsticket.NewStore()
 
@@ -212,6 +219,10 @@ func main() {
 	tripsH := trips.NewHandler(tripsSvc)
 	rubricsH := rubrics.NewHandler(rubricsSvc)
 	schoolCalendarH := schoolcalendar.NewHandler(schoolCalendarSvc)
+
+	a11yRepo := accessibility.NewRepository(database)
+	a11ySvc := accessibility.NewService(a11yRepo)
+	a11yH := accessibility.NewHandler(a11ySvc)
 
 	elearningSvc := elearning.NewService(cfg.Elearning)
 	elearningH := elearning.NewHandler(elearningSvc)
@@ -244,6 +255,7 @@ func main() {
 
 		authH.RegisterRoutes(api, authMiddleware)
 		api.GET("/public/schools", schoolsH.ListPublic)
+		api.POST("/public/accessibility-feedback", a11yH.SubmitPublic)
 
 		api.GET("/ws", authMiddleware.AuthenticateWSTicket(wsTicketStore), func(c *gin.Context) {
 			wsHandler.Listen(c)
@@ -252,6 +264,13 @@ func main() {
 		protected := api.Group("/")
 		protected.Use(authMiddleware.Authenticate())
 		{
+			protected.POST("/accessibility/feedback", a11yH.SubmitPublic)
+			protected.GET("/admin/accessibility-feedbacks", adminMiddleware.RequireAdminOrSuperAdmin(), a11yH.List)
+			protected.PATCH("/admin/accessibility-feedbacks/:id/status", adminMiddleware.RequireAdminOrSuperAdmin(), a11yH.UpdateStatus)
+
+			protected.GET("/user/accessibility-settings", a11yH.GetMyPreferences)
+			protected.PUT("/user/accessibility-settings", a11yH.SaveMyPreferences)
+
 			usersGroup := protected.Group("/users")
 			{
 				usersGroup.GET("/me/children", usersH.GetMyChildren)
@@ -325,9 +344,16 @@ func main() {
 			textbooksH := textbooks.NewHandler(textbooksSvc)
 			textbooksH.RegisterRoutes(protected)
 
+			redisAddr := fmt.Sprintf("%s:%s", cfg.Redis.Host, cfg.Redis.Port)
+			pdfWorkerClient := pdfworker.NewClient(redisAddr)
+			defer func() { _ = pdfWorkerClient.Close() }()
+
+			gradesH.SetPdfWorkerClient(pdfWorkerClient)
+			verbaliH.SetPdfWorkerClient(pdfWorkerClient)
+
 			scrutinyRepo := scrutiny.NewRepository(database)
 			scrutinySvc := scrutiny.NewService(scrutinyRepo, gradesRepo, classesRepo, usersRepo, attendanceRepo)
-			scrutinyH := scrutiny.NewHandler(scrutinySvc)
+			scrutinyH := scrutiny.NewHandler(scrutinySvc, pdfWorkerClient)
 			scrutinyH.RegisterRoutes(protected)
 
 			subjectsRepo := subjects.NewRepository(database)
@@ -382,7 +408,7 @@ func main() {
 			parentsH.RegisterRoutes(protected)
 
 			creditsRepo := credits.NewRepository(database)
-			creditsSvc := credits.NewService(creditsRepo)
+			creditsSvc := credits.NewService(creditsRepo, usersRepo)
 			creditsH := credits.NewHandler(creditsSvc)
 			creditsH.RegisterRoutes(protected)
 
@@ -392,7 +418,7 @@ func main() {
 			recoveryH.RegisterRoutes(protected)
 
 			supportRepo := support.NewRepository(database)
-			supportSvc := support.NewService(supportRepo)
+			supportSvc := support.NewService(supportRepo, usersRepo)
 			supportH := support.NewHandler(supportSvc)
 			supportH.RegisterRoutes(protected)
 
@@ -432,7 +458,7 @@ func main() {
 			udaH.RegisterRoutes(protected)
 
 			compRepo := competencies.NewRepository(database)
-			compSvc := competencies.NewService(compRepo)
+			compSvc := competencies.NewService(compRepo, usersRepo)
 			compH := competencies.NewHandler(compSvc)
 			compH.RegisterRoutes(protected)
 
@@ -452,6 +478,11 @@ func main() {
 
 			// Firme qualificate FEQ/FES + SIDI export + CAD preservation
 			signaturesH.RegisterRoutes(protected)
+
+			// Modulo Flussi SIDI MIM
+			sidiSvc := sidi.NewService(database)
+			sidiH := sidi.NewHandler(sidiSvc)
+			sidiH.RegisterRoutes(protected)
 
 			adminH.RegisterRoutes(protected, adminMiddleware)
 		}

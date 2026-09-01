@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Registro - Padre</string>
+    <string name="parent_dashboard_title">Portal de Familias</string>
+    <string name="my_children">Mis Hijos</string>
+    <string name="child_grades">Calificaciones del Hijo</string>
+    <string name="pending_absences">Ausencias por Justificar</string>
+    <string name="book_colloqui">Reservar Tutoría</string>
+    <string name="switch_child">Cambiar Hijo</string>
+    <string name="justify_absence">Justificar Ausencia</string>
+    <string name="book_colloquio">Reservar Tutoría</string>
+    <string name="pending_justifications">Justificaciones Pendientes</string>
+    <string name="no_pending_justifications">No hay ausencias pendientes de justificar</string>
+    <string name="login_subtitle">Inicia sesión en el portal de padres</string>
+    <string name="email_label">Correo del Padre/Madre</string>
+    <string name="password_label">Contraseña</string>
+    <string name="btn_login">INICIAR SESIÓN EN EL PORTAL</string>
+    <string name="err_enter_credentials">Ingresa correo y contraseña</string>
+    <string name="logout">Cerrar sesión</string>
+</resources>

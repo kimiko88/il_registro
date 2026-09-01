@@ -113,3 +113,30 @@ func TestSignDocument_InvalidTOTP_Rejected(t *testing.T) {
 	assert.Contains(t, err.Error(), "OTP non valido")
 	mockUsers.AssertExpectations(t)
 }
+
+func TestSignDocument_ValidationAndErrors(t *testing.T) {
+	mockRepo := new(MockRepo)
+	mockDocs := new(MockDocs)
+	mockUsers := new(MockUserRepo)
+	svc := NewService(mockRepo, mockDocs, mockUsers)
+
+	t.Run("Empty DocumentID", func(t *testing.T) {
+		_, err := svc.SignDocument("u1", SignRequest{DocumentID: "", Pin: "123456"})
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "document_id is required")
+	})
+
+	t.Run("Empty PIN", func(t *testing.T) {
+		_, err := svc.SignDocument("u1", SignRequest{DocumentID: "doc-1", Pin: ""})
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "pin is required")
+	})
+
+	t.Run("User Lookup Error", func(t *testing.T) {
+		mockUsers.On("GetByID", mock.Anything, "non-existent").Return(nil, assert.AnError).Once()
+		_, err := svc.SignDocument("non-existent", SignRequest{DocumentID: "doc-1", Pin: "123456"})
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "failed to retrieve user")
+		mockUsers.AssertExpectations(t)
+	})
+}

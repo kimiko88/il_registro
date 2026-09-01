@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"time"
+
+	"registro-backend/internal/users"
 )
 
 var (
@@ -13,14 +15,23 @@ var (
 )
 
 type Service struct {
-	repo Repository
+	repo     Repository
+	userRepo users.Repository
 }
 
-func NewService(repo Repository) *Service {
+func NewService(repo Repository, uRepo ...users.Repository) *Service {
 	if repo == nil {
 		panic("rubrics.NewService: repo must not be nil")
 	}
-	return &Service{repo: repo}
+	s := &Service{repo: repo}
+	if len(uRepo) > 0 && uRepo[0] != nil {
+		s.userRepo = uRepo[0]
+	}
+	return s
+}
+
+func (s *Service) GetUserRepo() users.Repository {
+	return s.userRepo
 }
 
 func (s *Service) CreateRubric(ctx context.Context, schoolID, teacherID string, req CreateRubricRequest) (*Rubric, error) {
@@ -128,11 +139,11 @@ func (s *Service) AssessStudent(ctx context.Context, teacherID, rubricID string,
 	var d time.Time
 	if req.Date != "" {
 		parsed, err := time.Parse("2006-01-02", req.Date)
-		if err == nil {
-			d = parsed
+		if err != nil {
+			return nil, fmt.Errorf("formato data non valido %q: atteso YYYY-MM-DD: %w", req.Date, err)
 		}
-	}
-	if d.IsZero() {
+		d = parsed
+	} else {
 		d = time.Now()
 	}
 

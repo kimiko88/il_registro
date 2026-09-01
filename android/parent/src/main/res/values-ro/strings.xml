@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Catalog - Părinte</string>
+    <string name="parent_dashboard_title">Portalul Părinților</string>
+    <string name="my_children">Copiii Mei</string>
+    <string name="child_grades">Note Copil</string>
+    <string name="pending_absences">Absențe de Motivat</string>
+    <string name="book_colloqui">Programare Ședință</string>
+    <string name="switch_child">Schimbă Copilul</string>
+    <string name="justify_absence">Motivează Absența</string>
+    <string name="book_colloquio">Programează Întâlnire</string>
+    <string name="pending_justifications">Motivări în Așteptare</string>
+    <string name="no_pending_justifications">Nicio absență de motivat</string>
+    <string name="login_subtitle">Conectați-vă la portalul părinților</string>
+    <string name="email_label">Email Părinte</string>
+    <string name="password_label">Parolă</string>
+    <string name="btn_login">CONECTARE ÎN PORTAL</string>
+    <string name="err_enter_credentials">Introduceți emailul și parola</string>
+    <string name="logout">Deconectare</string>
+</resources>
