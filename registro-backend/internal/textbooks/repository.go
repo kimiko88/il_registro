@@ -55,7 +55,7 @@ func (r *postgresRepository) List(ctx context.Context, schoolID string) ([]Textb
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var res []Textbook
 	for rows.Next() {
@@ -97,7 +97,7 @@ func (r *postgresRepository) ListByClass(ctx context.Context, classID string) ([
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var res []ClassTextbook
 	for rows.Next() {

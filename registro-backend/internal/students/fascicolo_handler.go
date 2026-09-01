@@ -209,7 +209,7 @@ func (h *FascicoloHandler) GetFascicolo(c *gin.Context) {
 		if err != nil {
 			return
 		}
-		defer rows.Close()
+		defer func() { _ = rows.Close() }()
 		var items []PresenzaItem
 		for rows.Next() {
 			var p PresenzaItem
@@ -243,7 +243,7 @@ func (h *FascicoloHandler) GetFascicolo(c *gin.Context) {
 		if err != nil {
 			return
 		}
-		defer rows.Close()
+		defer func() { _ = rows.Close() }()
 		var items []NotaItem
 		for rows.Next() {
 			var n NotaItem
@@ -276,7 +276,7 @@ func (h *FascicoloHandler) GetFascicolo(c *gin.Context) {
 		if err != nil {
 			return
 		}
-		defer rows.Close()
+		defer func() { _ = rows.Close() }()
 		var items []PCTOItem
 		for rows.Next() {
 			var p PCTOItem
@@ -310,7 +310,7 @@ func (h *FascicoloHandler) GetFascicolo(c *gin.Context) {
 		if err != nil {
 			return
 		}
-		defer rows.Close()
+		defer func() { _ = rows.Close() }()
 		var items []CompitoItem
 		for rows.Next() {
 			var c CompitoItem
@@ -343,7 +343,7 @@ func (h *FascicoloHandler) GetFascicolo(c *gin.Context) {
 		if err != nil {
 			return
 		}
-		defer rows.Close()
+		defer func() { _ = rows.Close() }()
 		var items []DocumentoItem
 		for rows.Next() {
 			var d DocumentoItem

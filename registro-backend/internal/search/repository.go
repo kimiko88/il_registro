@@ -133,7 +133,7 @@ func (r *PostgresRepository) GlobalSearch(ctx context.Context, actorRole, school
 		if err != nil {
 			return nil, err
 		}
-		defer rows.Close()
+		defer func() { _ = rows.Close() }()
 		for rows.Next() {
 			var id, subject, ctype, body string
 			if err := rows.Scan(&id, &subject, &ctype, &body); err == nil {
@@ -168,7 +168,7 @@ func (r *PostgresRepository) GlobalSearch(ctx context.Context, actorRole, school
 		if err != nil {
 			return nil, err
 		}
-		defer rows.Close()
+		defer func() { _ = rows.Close() }()
 		for rows.Next() {
 			var id, topic, notes, ltype string
 			if err := rows.Scan(&id, &topic, &notes, &ltype); err == nil {

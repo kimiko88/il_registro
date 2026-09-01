@@ -78,7 +78,7 @@ func (r *PostgresRepository) GetTeacherSchedule(ctx context.Context, userID stri
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var results []ClassSchedule
 	for rows.Next() {
@@ -121,7 +121,7 @@ func (r *PostgresRepository) GetByClass(ctx context.Context, classID string) ([]
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var results []ClassSchedule
 	for rows.Next() {

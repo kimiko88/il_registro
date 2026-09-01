@@ -15,3 +15,5 @@ CREATE TABLE IF NOT EXISTS student_capolavori (
 );
 
 CREATE INDEX IF NOT EXISTS idx_student_capolavori_student_id ON student_capolavori(student_id);
+
+ALTER TABLE student_capolavori ENABLE ROW LEVEL SECURITY;
