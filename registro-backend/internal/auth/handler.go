@@ -174,7 +174,7 @@ func (h *Handler) RefreshToken(c *gin.Context) {
 	}
 
 	if rt == "" {
-		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "missing refresh token"})
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "missing refresh_token"})
 		return
 	}
 

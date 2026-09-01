@@ -119,7 +119,7 @@ func (s *service) GetExports(ctx context.Context, schoolID string) ([]ExportReco
 	if err != nil {
 		return []ExportRecord{}, nil
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var list []ExportRecord
 	for rows.Next() {
