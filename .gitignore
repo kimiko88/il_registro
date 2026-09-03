@@ -55,3 +55,4 @@ DerivedData/
 ios/*/.build/
 ios/*/*.xcodeproj/project.xcworkspace
 ios/*/*.xcodeproj/xcuserdata/
+docs/mobile_instruction.md

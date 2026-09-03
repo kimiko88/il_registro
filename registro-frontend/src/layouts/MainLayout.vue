@@ -84,7 +84,7 @@
 
               <q-item-section>
                 <q-item-label class="text-weight-bold row items-center justify-between">
-                  <span>{{ themeOption.name }}</span>
+                  <span>{{ getThemeName(themeOption, t, te) }}</span>
                   <q-chip
                     dense
                     size="xs"
@@ -92,11 +92,11 @@
                     text-color="grey-9"
                     class="text-weight-medium"
                   >
-                    {{ themeOption.recommendedRole }}
+                    {{ getThemeRole(themeOption, t, te) }}
                   </q-chip>
                 </q-item-label>
                 <q-item-label caption class="text-grey-7">
-                  {{ themeOption.description }}
+                  {{ getThemeDescription(themeOption, t, te) }}
                 </q-item-label>
               </q-item-section>
 
@@ -538,7 +538,7 @@
                   </q-avatar>
                   <div>
                     <div class="text-weight-bold text-body2">{{ $q.dark.isActive ? t('layout.darkMode') : t('layout.lightMode') }}</div>
-                    <div class="text-caption text-grey-7">{{ $q.dark.isActive ? 'OLED Dark' : 'Standard Light' }}</div>
+                    <div class="text-caption text-grey-7">{{ $q.dark.isActive ? (t('layout.darkModeDesc') || 'OLED Dark') : (t('layout.lightModeDesc') || 'Standard Light') }}</div>
                   </div>
                 </div>
                 <q-toggle
@@ -573,8 +573,8 @@
                   </q-avatar>
                 </q-item-section>
                 <q-item-section>
-                  <q-item-label class="text-body2 text-weight-medium">{{ themeOption.name }}</q-item-label>
-                  <q-item-label caption class="text-grey-7 text-xs">{{ themeOption.recommendedRole }}</q-item-label>
+                  <q-item-label class="text-body2 text-weight-medium">{{ getThemeName(themeOption, t, te) }}</q-item-label>
+                  <q-item-label caption class="text-grey-7 text-xs">{{ getThemeRole(themeOption, t, te) }} • {{ getThemeDescription(themeOption, t, te) }}</q-item-label>
                 </q-item-section>
                 <q-item-section side v-if="themeStore.currentTheme === themeOption.id">
                   <q-icon name="check_circle" color="primary" size="18px" />
@@ -817,7 +817,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useTeacherStore } from '@/stores/teacher'
 import { useClassesStore } from '@/stores/classes'
-import { useThemeStore, THEMES } from '@/stores/theme'
+import { useThemeStore, THEMES, getThemeName, getThemeDescription, getThemeRole } from '@/stores/theme'
 import { useSchoolYearStore } from '@/stores/schoolYear'
 import { useAuth } from '@/composables/useAuth'
 import { useMenuItems } from '@/composables/useMenuItems'
@@ -907,6 +907,11 @@ const menuLabelToKeyMap = {
   'Voti': 'grades',
   'Presenze': 'attendance',
   'Didattica': 'didactics',
+  'Credito Scolastico': 'credits',
+  'Corsi Recupero & PAI': 'recovery',
+  'Registro Sostegno & PEI': 'supportRegister',
+  'Ricevimento Generale': 'generalMeetings',
+  'Flussi SIDI': 'sidi',
   'Piani PDP / PEI': 'pdp',
   'Piano PDP / PEI': 'pdp',
   'Rubriche Valutative': 'rubrics',

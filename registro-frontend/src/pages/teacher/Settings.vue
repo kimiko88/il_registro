@@ -48,13 +48,13 @@
         
         <!-- Tab 1: Lingua & Localizzazione -->
         <q-tab-panel name="general" class="q-pa-md">
-          <div class="text-h6 text-weight-bold text-slate-800 q-mb-xs">Lingua &amp; Formato Data</div>
-          <div class="text-caption text-slate-500 q-mb-md">Configura le opzioni della lingua di interfaccia e visualizzazione temporale</div>
+          <div class="text-h6 text-weight-bold text-slate-800 q-mb-xs">{{ t('settingsPage.langAndDateFormat') || 'Lingua & Formato Data' }}</div>
+          <div class="text-caption text-slate-500 q-mb-md">{{ t('settingsPage.langAndDateSub') || 'Configura le opzioni della lingua di interfaccia e visualizzazione temporale' }}</div>
 
           <div class="row q-col-gutter-lg">
             <div class="col-12 col-md-6">
               <q-card flat bordered class="q-pa-md rounded-xl bg-white">
-                <div class="text-subtitle2 text-weight-bold q-mb-sm text-slate-700">Lingua dell'Applicazione</div>
+                <div class="text-subtitle2 text-weight-bold q-mb-sm text-slate-700">{{ t('settingsPage.appLanguage') || "Lingua dell'Applicazione" }}</div>
                 <q-select
                   v-model="selectedLocale"
                   :options="localeOptions"
@@ -77,7 +77,7 @@
                   </template>
                 </q-select>
 
-                <div class="text-subtitle2 text-weight-bold q-mb-sm text-slate-700">Formato Data Predefinito</div>
+                <div class="text-subtitle2 text-weight-bold q-mb-sm text-slate-700">{{ t('settingsPage.defaultDateFormat') || 'Formato Data Predefinito' }}</div>
                 <q-select
                   v-model="generalSettings.dateFormat"
                   :options="[
@@ -92,13 +92,10 @@
                   class="rounded-lg q-mb-md"
                 />
 
-                <div class="text-subtitle2 text-weight-bold q-mb-sm text-slate-700">Primo Giorno della Settimana</div>
+                <div class="text-subtitle2 text-weight-bold q-mb-sm text-slate-700">{{ t('settingsPage.firstDayOfWeek') || 'Primo Giorno della Settimana' }}</div>
                 <q-option-group
                   v-model="generalSettings.firstDayOfWeek"
-                  :options="[
-                    { label: 'Lunedì', value: 1 },
-                    { label: 'Domenica', value: 0 }
-                  ]"
+                  :options="firstDayOfWeekOptions"
                   color="primary"
                   inline
                 />
@@ -107,13 +104,10 @@
 
             <div class="col-12 col-md-6">
               <q-card flat bordered class="q-pa-md rounded-xl bg-white">
-                <div class="text-subtitle2 text-weight-bold q-mb-sm text-slate-700">Fuso Orario &amp; Formato Ora</div>
+                <div class="text-subtitle2 text-weight-bold q-mb-sm text-slate-700">{{ t('settingsPage.timeFormatAndTimezone') || 'Fuso Orario & Formato Ora' }}</div>
                 <q-select
                   v-model="generalSettings.timeFormat"
-                  :options="[
-                    { label: '24 Ore (Es. 14:30)', value: '24h' },
-                    { label: '12 Ore AM/PM (Es. 2:30 PM)', value: '12h' }
-                  ]"
+                  :options="timeFormatOptions"
                   emit-value
                   map-options
                   outlined
@@ -121,7 +115,7 @@
                   class="rounded-lg q-mb-md"
                 />
 
-                <div class="text-subtitle2 text-weight-bold q-mb-sm text-slate-700">Fuso Orario Predefinito</div>
+                <div class="text-subtitle2 text-weight-bold q-mb-sm text-slate-700">{{ t('settingsPage.defaultTimezone') || 'Fuso Orario Predefinito' }}</div>
                 <q-select
                   v-model="generalSettings.timezone"
                   :options="[
@@ -141,23 +135,23 @@
 
         <!-- Tab 2: Sicurezza & Cambio Password -->
         <q-tab-panel name="security" class="q-pa-md">
-          <div class="text-h6 text-weight-bold text-slate-800 q-mb-xs">Sicurezza Account &amp; Modifica Password</div>
-          <div class="text-caption text-slate-500 q-mb-md">Aggiorna la tua password di accesso ed imposta la sicurezza del tuo profilo</div>
+          <div class="text-h6 text-weight-bold text-slate-800 q-mb-xs">{{ t('settingsPage.accountSecurityAndPwd') || 'Sicurezza Account & Modifica Password' }}</div>
+          <div class="text-caption text-slate-500 q-mb-md">{{ t('settingsPage.accountSecuritySub') || 'Aggiorna la tua password di accesso ed imposta la sicurezza del tuo profilo' }}</div>
 
           <div class="row q-col-gutter-lg">
             <div class="col-12 col-md-7">
               <q-card flat bordered class="q-pa-md rounded-xl bg-white">
-                <div class="text-subtitle2 text-weight-bold text-slate-700 q-mb-md">Modifica Password</div>
+                <div class="text-subtitle2 text-weight-bold text-slate-700 q-mb-md">{{ t('settingsPage.editPassword') || 'Modifica Password' }}</div>
 
                 <q-form @submit.prevent="changePassword" class="q-gutter-md">
                   <q-input
                     v-model="pwdForm.currentPassword"
                     :type="showCurrentPwd ? 'text' : 'password'"
-                    label="Password Attuale *"
+                    :label="t('settingsPage.currentPasswordLabel') || 'Password Attuale *'"
                     outlined
                     dense
                     class="rounded-lg"
-                    :rules="[val => !!val || 'Inserisci la password attuale']"
+                    :rules="[val => !!val || (t('settingsPage.currentPasswordReq') || 'Inserisci la password attuale')]"
                   >
                     <template v-slot:append>
                       <q-icon
@@ -171,13 +165,13 @@
                   <q-input
                     v-model="pwdForm.newPassword"
                     :type="showNewPwd ? 'text' : 'password'"
-                    label="Nuova Password *"
+                    :label="t('settingsPage.newPasswordLabel') || 'Nuova Password *'"
                     outlined
                     dense
                     class="rounded-lg"
                     :rules="[
-                      val => !!val || 'Inserisci la nuova password',
-                      val => val.length >= 8 || 'La password deve contenere almeno 8 caratteri'
+                      val => !!val || (t('settingsPage.newPasswordReq') || 'Inserisci la nuova password'),
+                      val => val.length >= 8 || (t('settingsPage.passwordMin8') || 'La password deve contenere almeno 8 caratteri')
                     ]"
                   >
                     <template v-slot:append>
@@ -192,7 +186,7 @@
                   <!-- Indicatori di Forza Password -->
                   <div v-if="pwdForm.newPassword" class="q-mb-xs">
                     <div class="row items-center justify-between text-caption text-grey-7 q-mb-xs">
-                      <span>Forza Password:</span>
+                      <span>{{ t('settingsPage.passwordStrength') || 'Forza Password:' }}</span>
                       <span class="text-weight-bold" :class="passwordStrengthColorText">{{ passwordStrengthLabel }}</span>
                     </div>
                     <q-linear-progress :value="passwordStrengthValue" :color="passwordStrengthColor" class="rounded-borders" style="height: 6px" />
@@ -201,13 +195,13 @@
                   <q-input
                     v-model="pwdForm.confirmPassword"
                     :type="showConfirmPwd ? 'text' : 'password'"
-                    label="Conferma Nuova Password *"
+                    :label="t('settingsPage.confirmPasswordLabel') || 'Conferma Nuova Password *'"
                     outlined
                     dense
                     class="rounded-lg"
                     :rules="[
-                      val => !!val || 'Conferma la nuova password',
-                      val => val === pwdForm.newPassword || 'Le password non coincidono'
+                      val => !!val || (t('settingsPage.confirmPasswordReq') || 'Conferma la nuova password'),
+                      val => val === pwdForm.newPassword || (t('settingsPage.passwordMismatch') || 'Le password non coincidono')
                     ]"
                   >
                     <template v-slot:append>
@@ -224,7 +218,7 @@
                       type="submit"
                       color="primary"
                       icon="lock_reset"
-                      label="Aggiorna Password"
+                      :label="t('settingsPage.updatePasswordBtn') || 'Aggiorna Password'"
                       unelevated
                       :loading="updatingPassword"
                     />
@@ -235,20 +229,20 @@
 
             <div class="col-12 col-md-5">
               <q-card flat bordered class="q-pa-md rounded-xl bg-white">
-                <div class="text-subtitle2 text-weight-bold text-slate-700 q-mb-sm">Autenticazione a Due Fattori (2FA)</div>
+                <div class="text-subtitle2 text-weight-bold text-slate-700 q-mb-sm">{{ t('settingsPage.twoFactorTitle') || 'Autenticazione a Due Fattori (2FA)' }}</div>
                 <div class="text-caption text-slate-500 q-mb-md">
-                  Proteggi il tuo account docente aggiungendo un livello di sicurezza extra tramite app OTP (Google Authenticator, Authy).
+                  {{ t('settingsPage.twoFactorDesc') || 'Proteggi il tuo account docente aggiungendo un livello di sicurezza extra tramite app OTP (Google Authenticator, Authy).' }}
                 </div>
 
                 <div class="row items-center justify-between q-pa-sm bg-slate-50 rounded-lg">
                   <div class="row items-center">
                     <q-icon name="phonelink_lock" color="primary" size="28px" class="q-mr-sm" />
                     <div>
-                      <div class="text-weight-bold text-slate-800">Stato 2FA</div>
-                      <div class="text-caption text-grey-6">{{ mfaEnabled ? 'Attivo' : 'Non Attivo' }}</div>
+                      <div class="text-weight-bold text-slate-800">{{ t('settingsPage.twoFactorStatus') || 'Stato 2FA' }}</div>
+                      <div class="text-caption text-grey-6">{{ mfaEnabled ? (t('settingsPage.active') || 'Attivo') : (t('settingsPage.inactive') || 'Non Attivo') }}</div>
                     </div>
                   </div>
-                  <q-badge :color="mfaEnabled ? 'positive' : 'grey-6'" :label="mfaEnabled ? 'Abilitato' : 'Disabilitato'" />
+                  <q-badge :color="mfaEnabled ? 'positive' : 'grey-6'" :label="mfaEnabled ? (t('settingsPage.enabled') || 'Abilitato') : (t('settingsPage.disabled') || 'Disabilitato')" />
                 </div>
               </q-card>
             </div>
@@ -257,8 +251,8 @@
 
         <!-- Tab 3: Notifiche & Avvisi -->
         <q-tab-panel name="notifications" class="q-pa-md">
-          <div class="text-h6 text-weight-bold text-slate-800 q-mb-xs">Preferenze Notifiche Docente</div>
-          <div class="text-caption text-slate-500 q-mb-md">Seleziona come e quando desideri ricevere comunicazioni ed avvisi dal sistema scolastico</div>
+          <div class="text-h6 text-weight-bold text-slate-800 q-mb-xs">{{ t('settingsPage.teacherNotifPref') || 'Preferenze Notifiche Docente' }}</div>
+          <div class="text-caption text-slate-500 q-mb-md">{{ t('settingsPage.teacherNotifSub') || 'Seleziona come e quando desideri ricevere comunicazioni ed avvisi dal sistema scolastico' }}</div>
 
           <q-card flat bordered class="q-pa-md rounded-xl bg-white">
             <q-list separator>
@@ -267,8 +261,8 @@
                   <q-icon name="email" color="indigo" />
                 </q-item-section>
                 <q-item-section>
-                  <q-item-label class="text-weight-bold">Notifiche Email Circolari &amp; Comunicati</q-item-label>
-                  <q-item-label caption>Ricevi una copia via email di ogni nuova circolare pubblicata dal Dirigente o dalla Segreteria.</q-item-label>
+                  <q-item-label class="text-weight-bold">{{ t('settingsPage.emailCircularsTitle') || 'Notifiche Email Circolari & Comunicati' }}</q-item-label>
+                  <q-item-label caption>{{ t('settingsPage.emailCircularsDesc') || 'Ricevi una copia via email di ogni nuova circolare pubblicata dal Dirigente o dalla Segreteria.' }}</q-item-label>
                 </q-item-section>
                 <q-item-section side>
                   <q-toggle v-model="notificationSettings.emailCirculars" color="indigo" />
@@ -280,8 +274,8 @@
                   <q-icon name="swap_horiz" color="amber-9" />
                 </q-item-section>
                 <q-item-section>
-                  <q-item-label class="text-weight-bold">Avvisi Sostituzioni Lezioni</q-item-label>
-                  <q-item-label caption>Notifica immediata quando ti viene assegnata una sostituzione o supplenza.</q-item-label>
+                  <q-item-label class="text-weight-bold">{{ t('settingsPage.substitutionsAlertTitle') || 'Avvisi Sostituzioni Lezioni' }}</q-item-label>
+                  <q-item-label caption>{{ t('settingsPage.substitutionsAlertDesc') || 'Notifica immediata quando ti viene assegnata una sostituzione o supplenza.' }}</q-item-label>
                 </q-item-section>
                 <q-item-section side>
                   <q-toggle v-model="notificationSettings.substituteAlerts" color="amber-9" />
@@ -293,8 +287,8 @@
                   <q-icon name="event" color="teal" />
                 </q-item-section>
                 <q-item-section>
-                  <q-item-label class="text-weight-bold">Prenotazioni Colloqui Famiglie</q-item-label>
-                  <q-item-label caption>Invia notifica quando un genitore prenota o annulla un appuntamento per il ricevimento.</q-item-label>
+                  <q-item-label class="text-weight-bold">{{ t('settingsPage.colloquiBookingsTitle') || 'Prenotazioni Colloqui Famiglie' }}</q-item-label>
+                  <q-item-label caption>{{ t('settingsPage.colloquiBookingsDesc') || 'Invia notifica quando un genitore prenota o annulla un appuntamento per il ricevimento.' }}</q-item-label>
                 </q-item-section>
                 <q-item-section side>
                   <q-toggle v-model="notificationSettings.parentColloqui" color="teal" />
@@ -306,8 +300,8 @@
                   <q-icon name="analytics" color="purple" />
                 </q-item-section>
                 <q-item-section>
-                  <q-item-label class="text-weight-bold">Promemoria Scrutini &amp; Consegna Voti</q-item-label>
-                  <q-item-label caption>Avvisi automatici in prossimità della chiusura del tabellone voti per il consiglio di classe.</q-item-label>
+                  <q-item-label class="text-weight-bold">{{ t('settingsPage.scrutinyDeadlinesTitle') || 'Promemoria Scrutini & Consegna Voti' }}</q-item-label>
+                  <q-item-label caption>{{ t('settingsPage.scrutinyDeadlinesDesc') || 'Avvisi automatici in prossimità della chiusura del tabellone voti per il consiglio di classe.' }}</q-item-label>
                 </q-item-section>
                 <q-item-section side>
                   <q-toggle v-model="notificationSettings.scrutinyDeadlines" color="purple" />
@@ -319,8 +313,8 @@
                   <q-icon name="volume_up" color="deep-orange" />
                 </q-item-section>
                 <q-item-section>
-                  <q-item-label class="text-weight-bold">Suoni di Notifica In-App</q-item-label>
-                  <q-item-label caption>Riproduci un breve segnale acustico all'arrivo di nuove notifiche nel registro.</q-item-label>
+                  <q-item-label class="text-weight-bold">{{ t('settingsPage.inAppSoundsTitle') || 'Suoni di Notifica In-App' }}</q-item-label>
+                  <q-item-label caption>{{ t('settingsPage.inAppSoundsDesc') || 'Riproduci un breve segnale acustico all\'arrivo di nuove notifiche nel registro.' }}</q-item-label>
                 </q-item-section>
                 <q-item-section side>
                   <q-toggle v-model="notificationSettings.soundEnabled" color="deep-orange" />
@@ -332,22 +326,16 @@
 
         <!-- Tab 4: Personalizzazione Registro -->
         <q-tab-panel name="register" class="q-pa-md">
-          <div class="text-h6 text-weight-bold text-slate-800 q-mb-xs">Personalizzazione Registro &amp; Griglia Voti</div>
-          <div class="text-caption text-slate-500 q-mb-md">Adatta l'aspetto grafico e il comportamento predefinito del registro elettronico</div>
+          <div class="text-h6 text-weight-bold text-slate-800 q-mb-xs">{{ t('settingsPage.registerCustomizationTitle') || 'Personalizzazione Registro & Griglia Voti' }}</div>
+          <div class="text-caption text-slate-500 q-mb-md">{{ t('settingsPage.registerCustomizationSub') || "Adatta l'aspetto grafico e il comportamento predefinito del registro elettronico" }}</div>
 
           <div class="row q-col-gutter-lg">
             <div class="col-12 col-md-6">
               <q-card flat bordered class="q-pa-md rounded-xl bg-white">
-                <div class="text-subtitle2 text-weight-bold text-slate-700 q-mb-sm">Pagina Iniziale Predefinita (Landing Page)</div>
+                <div class="text-subtitle2 text-weight-bold text-slate-700 q-mb-sm">{{ t('settingsPage.landingPageTitle') || 'Pagina Iniziale Predefinita (Landing Page)' }}</div>
                 <q-select
                   v-model="registerSettings.defaultLanding"
-                  :options="[
-                    { label: 'Dashboard Generale', value: '/teacher' },
-                    { label: 'Le Mie Classi', value: '/teacher/classes' },
-                    { label: 'Registro Appello & Presenze', value: '/teacher/attendance' },
-                    { label: 'Gestione Voti', value: '/teacher/grades' },
-                    { label: 'Agenda & Compiti', value: '/teacher/agenda' }
-                  ]"
+                  :options="landingPageOptions"
                   emit-value
                   map-options
                   outlined
@@ -355,14 +343,10 @@
                   class="rounded-lg q-mb-md"
                 />
 
-                <div class="text-subtitle2 text-weight-bold text-slate-700 q-mb-sm">Formato Visualizzazione Voti</div>
+                <div class="text-subtitle2 text-weight-bold text-slate-700 q-mb-sm">{{ t('settingsPage.gradeDisplayFormat') || 'Formato Visualizzazione Voti' }}</div>
                 <q-select
                   v-model="registerSettings.gradeFormat"
-                  :options="[
-                    { label: 'Decimali Standard (Es. 7,5 o 7.5)', value: 'decimal' },
-                    { label: 'Simboli e Frazioni (Es. 7+, 7½, 8-)', value: 'fractional' },
-                    { label: 'Centesimi (Es. 75/100)', value: 'centesimal' }
-                  ]"
+                  :options="gradeFormatOptions"
                   emit-value
                   map-options
                   outlined
@@ -370,13 +354,10 @@
                   class="rounded-lg q-mb-md"
                 />
 
-                <div class="text-subtitle2 text-weight-bold text-slate-700 q-mb-sm">Separatore dei Decimali</div>
+                <div class="text-subtitle2 text-weight-bold text-slate-700 q-mb-sm">{{ t('settingsPage.decimalSeparator') || 'Separatore dei Decimali' }}</div>
                 <q-select
                   v-model="registerSettings.decimalSeparator"
-                  :options="[
-                    { label: 'Virgola ( , ) — Standard Italiano (es. 7,5)', value: ',' },
-                    { label: 'Punto ( . ) — Standard Internazionale (es. 7.5)', value: '.' }
-                  ]"
+                  :options="decimalSeparatorOptions"
                   emit-value
                   map-options
                   outlined
@@ -385,7 +366,7 @@
                 />
 
                 <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs">
-                  <div class="text-weight-bold text-slate-700 q-mb-xs">Anteprima Visualizzazione Voti Live:</div>
+                  <div class="text-weight-bold text-slate-700 q-mb-xs">{{ t('settingsPage.livePreviewTitle') || 'Anteprima Visualizzazione Voti Live:' }}</div>
                   <div class="row q-col-gutter-xs">
                     <div class="col-4 text-center">
                       <span class="text-caption text-grey-7">Voto 7.5:</span><br>
@@ -406,12 +387,12 @@
 
             <div class="col-12 col-md-6">
               <q-card flat bordered class="q-pa-md rounded-xl bg-white">
-                <div class="text-subtitle2 text-weight-bold text-slate-700 q-mb-sm">Opzioni Visualizzazione Layout</div>
+                <div class="text-subtitle2 text-weight-bold text-slate-700 q-mb-sm">{{ t('settingsPage.layoutDisplayOptions') || 'Opzioni Visualizzazione Layout' }}</div>
                 <q-list separator>
                   <q-item tag="label" v-ripple>
                     <q-item-section>
-                      <q-item-label class="text-weight-bold">Griglia Registro Compatta</q-item-label>
-                      <q-item-label caption>Riduci il padding delle tabelle per mostrare più studenti e colonne contemporaneamente.</q-item-label>
+                      <q-item-label class="text-weight-bold">{{ t('settingsPage.compactGridTitle') || 'Griglia Registro Compatta' }}</q-item-label>
+                      <q-item-label caption>{{ t('settingsPage.compactGridDesc') || 'Riduci il padding delle tabelle per mostrare più studenti e colonne contemporaneamente.' }}</q-item-label>
                     </q-item-section>
                     <q-item-section side>
                       <q-toggle v-model="registerSettings.compactGrid" color="primary" />
@@ -420,8 +401,8 @@
 
                   <q-item tag="label" v-ripple>
                     <q-item-section>
-                      <q-item-label class="text-weight-bold">Mostra Foto Studenti nell'Appello</q-item-label>
-                      <q-item-label caption>Visualizza l'avatar o la fototessera dello studente nella schermata di appello.</q-item-label>
+                      <q-item-label class="text-weight-bold">{{ t('settingsPage.showPhotosTitle') || "Mostra Foto Studenti nell'Appello" }}</q-item-label>
+                      <q-item-label caption>{{ t('settingsPage.showPhotosDesc') || "Visualizza l'avatar o la fototessera dello studente nella schermata di appello." }}</q-item-label>
                     </q-item-section>
                     <q-item-section side>
                       <q-toggle v-model="registerSettings.showStudentPhotos" color="primary" />
@@ -435,15 +416,15 @@
 
         <!-- Tab 5: Firma Digitale & PIN -->
         <q-tab-panel name="signature" class="q-pa-md">
-          <div class="text-h6 text-weight-bold text-slate-800 q-mb-xs">Firma Digitale &amp; PIN Veloce Lezioni</div>
-          <div class="text-caption text-slate-500 q-mb-md">Gestisci il codice PIN per la firma immediata del registro di classe</div>
+          <div class="text-h6 text-weight-bold text-slate-800 q-mb-xs">{{ t('settingsPage.digitalSignatureTitle') || 'Firma Digitale & PIN Veloce Lezioni' }}</div>
+          <div class="text-caption text-slate-500 q-mb-md">{{ t('settingsPage.digitalSignatureSub') || 'Gestisci il codice PIN per la firma immediata del registro di classe' }}</div>
 
           <div class="row q-col-gutter-lg">
             <div class="col-12 col-md-6">
               <q-card flat bordered class="q-pa-md rounded-xl bg-white">
-                <div class="text-subtitle2 text-weight-bold text-slate-700 q-mb-sm">PIN Veloce Registro (4 Cifre)</div>
+                <div class="text-subtitle2 text-weight-bold text-slate-700 q-mb-sm">{{ t('settingsPage.quickPinTitle') || 'PIN Veloce Registro (4 Cifre)' }}</div>
                 <div class="text-caption text-slate-500 q-mb-md">
-                  Il PIN veloce ti consente di firmare e validare l'ora di lezione sul registro di classe senza dover reinserire la password completa.
+                  {{ t('settingsPage.quickPinDesc') || "Il PIN veloce ti consente di firmare e validare l'ora di lezione sul registro di classe senza dover reinserire la password completa." }}
                 </div>
 
                 <div class="row q-col-gutter-sm items-center q-mb-md">
@@ -453,14 +434,14 @@
                       type="password"
                       mask="####"
                       maxlength="4"
-                      label="PIN Veloce (4 cifre)"
+                      :label="t('settingsPage.quickPinLabel') || 'PIN Veloce (4 cifre)'"
                       outlined
                       dense
                       class="rounded-lg"
                     />
                   </div>
                   <div class="col-4">
-                    <q-btn color="primary" label="Salva PIN" unelevated class="full-width" @click="savePin" />
+                    <q-btn color="primary" :label="t('settingsPage.savePinBtn') || 'Salva PIN'" unelevated class="full-width" @click="savePin" />
                   </div>
                 </div>
               </q-card>
@@ -479,7 +460,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { useI18n } from 'vue-i18n'
 import { useThemeStore } from '@/stores/theme'
@@ -499,6 +480,39 @@ const savingAll = ref(false)
 // Lingua e Localizzazione
 const selectedLocale = ref(normalizeLocale(locale.value))
 const localeOptions = SUPPORTED_LOCALES
+
+watch(locale, (newLoc) => {
+  selectedLocale.value = normalizeLocale(newLoc)
+})
+
+const firstDayOfWeekOptions = computed(() => [
+  { label: t('settingsPage.monday') || 'Lunedì', value: 1 },
+  { label: t('settingsPage.sunday') || 'Domenica', value: 0 }
+])
+
+const timeFormatOptions = computed(() => [
+  { label: t('settingsPage.timeFormat24') || '24 Ore (Es. 14:30)', value: '24h' },
+  { label: t('settingsPage.timeFormat12') || '12 Ore AM/PM (Es. 2:30 PM)', value: '12h' }
+])
+
+const landingPageOptions = computed(() => [
+  { label: t('settingsPage.landingDashboard') || 'Dashboard Generale', value: '/teacher' },
+  { label: t('settingsPage.landingClasses') || 'Le Mie Classi', value: '/teacher/classes' },
+  { label: t('settingsPage.landingAttendance') || 'Registro Appello & Presenze', value: '/teacher/attendance' },
+  { label: t('settingsPage.landingGrades') || 'Gestione Voti', value: '/teacher/grades' },
+  { label: t('settingsPage.landingAgenda') || 'Agenda & Compiti', value: '/teacher/agenda' }
+])
+
+const gradeFormatOptions = computed(() => [
+  { label: t('settingsPage.gradeFormatDecimal') || 'Decimali Standard (Es. 7,5 o 7.5)', value: 'decimal' },
+  { label: t('settingsPage.gradeFormatFractional') || 'Simboli e Frazioni (Es. 7+, 7½, 8-)', value: 'fractional' },
+  { label: t('settingsPage.gradeFormatCentesimal') || 'Centesimi (Es. 75/100)', value: 'centesimal' }
+])
+
+const decimalSeparatorOptions = computed(() => [
+  { label: t('settingsPage.commaSeparator') || 'Virgola ( , ) — Standard Italiano (es. 7,5)', value: ',' },
+  { label: t('settingsPage.dotSeparator') || 'Punto ( . ) — Standard Internazionale (es. 7.5)', value: '.' }
+])
 
 const generalSettings = reactive({
   dateFormat: 'DD/MM/YYYY',
@@ -545,10 +559,10 @@ const passwordStrengthValue = computed(() => {
 
 const passwordStrengthLabel = computed(() => {
   const v = passwordStrengthValue.value
-  if (v <= 0.25) return 'Debole'
-  if (v <= 0.5) return 'Media'
-  if (v <= 0.75) return 'Buona'
-  return 'Forte'
+  if (v <= 0.25) return t('settingsPage.strengthWeak') || 'Debole'
+  if (v <= 0.5) return t('settingsPage.strengthMedium') || 'Media'
+  if (v <= 0.75) return t('settingsPage.strengthGood') || 'Buona'
+  return t('settingsPage.strengthStrong') || 'Forte'
 })
 
 const passwordStrengthColor = computed(() => {

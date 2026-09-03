@@ -47,8 +47,8 @@
             <div class="flex items-center gap-sm">
               <q-avatar size="40px" color="indigo-50" text-color="indigo-700" icon="spellcheck" />
               <div>
-                <div class="text-subtitle1 text-weight-bold text-slate-800">Font OpenDyslexic (DSA)</div>
-                <div class="text-caption text-slate-500">Font specifico per la dislessia e difficoltà di decodifica</div>
+                <div class="text-subtitle1 text-weight-bold text-slate-800">{{ t('a11y.dsaFontTitle') || 'Font OpenDyslexic (DSA)' }}</div>
+                <div class="text-caption text-slate-500">{{ t('a11y.dsaFontSub') || 'Font specifico per la dislessia e difficoltà di decodifica' }}</div>
               </div>
             </div>
             <q-toggle
@@ -60,7 +60,7 @@
           </div>
 
           <div class="q-mt-sm">
-            <div class="text-caption text-weight-bold text-slate-700 q-mb-xs">Font Alternativi ad Alta Leggibilità</div>
+            <div class="text-caption text-weight-bold text-slate-700 q-mb-xs">{{ t('a11y.highReadabilityFonts') || 'Font Alternativi ad Alta Leggibilità' }}</div>
             <q-select
               v-model="themeStore.fontFamily"
               :options="fontFamilyOptions"
@@ -73,7 +73,7 @@
           </div>
 
           <div class="q-mt-sm">
-            <div class="text-caption text-weight-bold text-slate-700 q-mb-xs">Dimensione Caratteri</div>
+            <div class="text-caption text-weight-bold text-slate-700 q-mb-xs">{{ t('a11y.fontSizeLabel') || 'Dimensione Caratteri' }}</div>
             <q-btn-toggle
               v-model="themeStore.fontSize"
               :options="fontSizeOptions"
@@ -90,7 +90,7 @@
 
           <q-separator class="q-my-md" />
           <div class="q-pa-sm bg-slate-50 rounded-lg text-slate-700 text-caption border border-slate-100" :class="{ 'dsa-font-active': themeStore.dsaFont }">
-            <strong>Anteprima:</strong> Il registro elettronico supporta l'inclusione scolastica e l'apprendimento personalizzato.
+            {{ t('a11y.dsaPreview') || "Anteprima: Il registro elettronico supporta l'inclusione scolastica e l'apprendimento personalizzato." }}
           </div>
         </q-card>
       </div>
@@ -102,8 +102,8 @@
             <div class="flex items-center gap-sm">
               <q-avatar size="40px" color="amber-50" text-color="amber-9" icon="straighten" />
               <div>
-                <div class="text-subtitle1 text-weight-bold text-slate-800">Righello di Lettura (Focus Mask)</div>
-                <div class="text-caption text-slate-500">Guida orizzontale che segue il cursore per non perdere il rigo</div>
+                <div class="text-subtitle1 text-weight-bold text-slate-800">{{ t('a11y.readingRulerTitle') || 'Righello di Lettura (Focus Mask)' }}</div>
+                <div class="text-caption text-slate-500">{{ t('a11y.readingRulerSub') || 'Guida orizzontale che segue il cursore per non perdere il rigo' }}</div>
               </div>
             </div>
             <q-toggle
@@ -116,7 +116,7 @@
 
           <div class="q-mt-sm">
             <div class="row justify-between items-center text-caption text-weight-bold text-slate-700">
-              <span>Altezza Finestra di Lettura</span>
+              <span>{{ t('a11y.rulerHeightLabel') || 'Altezza Finestra di Lettura' }}</span>
               <span class="text-amber-9">{{ themeStore.readingRulerHeight }} px</span>
             </div>
             <q-slider
@@ -131,7 +131,7 @@
 
           <div class="q-mt-xs">
             <div class="row justify-between items-center text-caption text-weight-bold text-slate-700">
-              <span>Intensità Maschera Oscurante</span>
+              <span>{{ t('a11y.rulerMaskLabel') || 'Intensità Maschera Oscurante' }}</span>
               <span class="text-amber-9">{{ Math.round(themeStore.readingRulerOpacity * 100) }}%</span>
             </div>
             <q-slider
@@ -147,7 +147,7 @@
           <q-separator class="q-my-sm" />
           <div class="text-caption text-grey-7">
             <q-icon name="lightbulb" color="amber-9" size="xs" class="q-mr-xs" />
-            Suggerimento: Premi <code>Alt + R</code> per accendere/spegnere il righello, oppure usa <code>Alt + ↑ / ↓</code>.
+            {{ t('a11y.rulerHint') || 'Suggerimento: Premi Alt + R per accendere/spegnere il righello, oppure usa Alt + ↑ / ↓.' }}
           </div>
         </q-card>
       </div>
@@ -158,14 +158,14 @@
           <div class="flex items-center gap-sm q-mb-sm">
             <q-avatar size="40px" color="blue-50" text-color="blue-700" icon="format_line_spacing" />
             <div>
-              <div class="text-subtitle1 text-weight-bold text-slate-800">Spaziatura Testo & Interlinea</div>
-              <div class="text-caption text-slate-500">Regolazione fine per il criterio di conformità WCAG 1.4.12</div>
+              <div class="text-subtitle1 text-weight-bold text-slate-800">{{ t('a11y.textSpacingTitle') || 'Spaziatura Testo & Interlinea' }}</div>
+              <div class="text-caption text-slate-500">{{ t('a11y.textSpacingSub') || 'Regolazione fine per il criterio di conformità WCAG 1.4.12' }}</div>
             </div>
           </div>
 
           <div class="row q-col-gutter-sm q-mt-xs">
             <div class="col-12 col-sm-4">
-              <div class="text-caption text-weight-bold text-slate-700 q-mb-xs">Interlinea</div>
+              <div class="text-caption text-weight-bold text-slate-700 q-mb-xs">{{ t('a11y.lineHeightLabel') || 'Interlinea' }}</div>
               <q-select
                 v-model="themeStore.lineHeight"
                 :options="lineHeightOptions"
@@ -177,7 +177,7 @@
               />
             </div>
             <div class="col-12 col-sm-4">
-              <div class="text-caption text-weight-bold text-slate-700 q-mb-xs">Spazio Lettere</div>
+              <div class="text-caption text-weight-bold text-slate-700 q-mb-xs">{{ t('a11y.letterSpacingLabel') || 'Spazio Lettere' }}</div>
               <q-select
                 v-model="themeStore.letterSpacing"
                 :options="letterSpacingOptions"
@@ -189,7 +189,7 @@
               />
             </div>
             <div class="col-12 col-sm-4">
-              <div class="text-caption text-weight-bold text-slate-700 q-mb-xs">Spazio Parole</div>
+              <div class="text-caption text-weight-bold text-slate-700 q-mb-xs">{{ t('a11y.wordSpacingLabel') || 'Spazio Parole' }}</div>
               <q-select
                 v-model="themeStore.wordSpacing"
                 :options="wordSpacingOptions"
@@ -204,7 +204,7 @@
 
           <q-separator class="q-my-md" />
           <div class="row items-center justify-between">
-            <div class="text-caption text-weight-medium text-slate-700">Evidenziazione Focus Tastiera (Focus Ring)</div>
+            <div class="text-caption text-weight-medium text-slate-700">{{ t('a11y.focusHighlightLabel') || 'Evidenziazione Focus Tastiera (Focus Ring)' }}</div>
             <q-toggle
               v-model="themeStore.focusHighlight"
               color="primary"
@@ -222,8 +222,8 @@
             <div class="flex items-center gap-sm">
               <q-avatar size="40px" color="teal-50" text-color="teal-8" icon="volume_up" />
               <div>
-                <div class="text-subtitle1 text-weight-bold text-slate-800">Sintesi Vocale Nativa (TTS)</div>
-                <div class="text-caption text-slate-500">Lettura ad alta voce con Web Speech API</div>
+                <div class="text-subtitle1 text-weight-bold text-slate-800">{{ t('a11y.ttsNativeTitle') || 'Sintesi Vocale Nativa (TTS)' }}</div>
+                <div class="text-caption text-slate-500">{{ t('a11y.ttsNativeSub') || 'Lettura ad alta voce con Web Speech API' }}</div>
               </div>
             </div>
             <q-toggle
@@ -236,7 +236,7 @@
 
           <div class="q-mt-sm">
             <div class="row justify-between items-center text-caption text-weight-bold text-slate-700">
-              <span>Velocità di Lettura</span>
+              <span>{{ t('a11y.ttsSpeedLabel') || 'Velocità di Lettura' }}</span>
               <span class="text-teal-8">{{ themeStore.ttsRate.toFixed(1) }}x</span>
             </div>
             <q-slider
@@ -250,9 +250,9 @@
           </div>
 
           <div class="q-mt-sm flex justify-between items-center">
-            <div class="text-caption text-slate-600">Test audio di verifica:</div>
+            <div class="text-caption text-slate-600">{{ t('a11y.ttsAudioTest') || 'Test audio di verifica:' }}</div>
             <TextToSpeechButton
-              text="Benvenuto nel registro elettronico scolastico accessibile e inclusivo."
+              :text="t('a11y.ttsWelcomeSample') || 'Benvenuto nel registro elettronico scolastico accessibile e inclusivo.'"
               color="teal"
               size="md"
               :flat="false"
@@ -267,12 +267,12 @@
         <q-card flat bordered class="rounded-xl q-pa-md bg-white shadow-sm">
           <div class="text-subtitle1 text-weight-bold text-slate-800 flex items-center gap-sm q-mb-md">
             <q-avatar size="36px" color="purple-50" text-color="purple-8" icon="palette" />
-            Contrasto Visivo & Filtri per Daltonismo (Color Blindness)
+            {{ t('a11y.colorblindContrastTitle') || 'Contrasto Visivo & Filtri per Daltonismo (Color Blindness)' }}
           </div>
 
           <div class="row q-col-gutter-md">
             <div class="col-12 col-md-6">
-              <div class="text-caption text-weight-bold text-slate-700 q-mb-xs">Filtro Ottico per Daltonismo</div>
+              <div class="text-caption text-weight-bold text-slate-700 q-mb-xs">{{ t('a11y.colorblindFilterLabel') || 'Filtro Ottico per Daltonismo' }}</div>
               <q-select
                 v-model="themeStore.colorblindMode"
                 :options="colorblindOptions"
@@ -285,7 +285,7 @@
             </div>
 
             <div class="col-12 col-md-6">
-              <div class="text-caption text-weight-bold text-slate-700 q-mb-xs">Modalità di Contrasto & OLED</div>
+              <div class="text-caption text-weight-bold text-slate-700 q-mb-xs">{{ t('a11y.contrastOledLabel') || 'Modalità di Contrasto & OLED' }}</div>
               <q-select
                 v-model="themeStore.highContrastMode"
                 :options="contrastOptions"
@@ -301,10 +301,10 @@
           <div class="q-mt-md row items-center justify-between bg-slate-50 q-pa-sm rounded-lg border border-slate-100">
             <div class="text-caption text-slate-600">
               <q-icon name="verified" color="positive" size="xs" class="q-mr-xs" />
-              Tutti i voti e gli esiti associano pattern visivi (<code>▼</code> / <code>✓</code>) oltre al colore, nel rispetto di <strong>WCAG 1.4.1</strong>.
+              {{ t('a11y.wcagVisualPatternsNotice') || 'Tutti i voti e gli esiti associano pattern visivi (▼ / ✓) oltre al colore, nel rispetto di WCAG 1.4.1.' }}
             </div>
             <router-link to="/accessibility-statement" class="text-caption text-primary text-weight-bold">
-              Consulta la Dichiarazione AgID →
+              {{ t('a11y.agidConsultStatement') || 'Consulta la Dichiarazione AgID →' }}
             </router-link>
           </div>
         </q-card>
@@ -314,58 +314,61 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useThemeStore } from 'src/stores/theme'
 import TextToSpeechButton from 'src/components/Common/TextToSpeechButton.vue'
 
+const { t } = useI18n()
 const themeStore = useThemeStore()
 
-const fontFamilyOptions = [
-  { label: 'Predefinito di Sistema (Inter / Sans-Serif)', value: 'default' },
-  { label: 'OpenDyslexic (Alta Leggibilità DSA)', value: 'opendyslexic' },
-  { label: 'Lexend (Ottimizzato per fluidità di lettura)', value: 'lexend' },
-  { label: 'Fredoka (Carattere arrotondato e morbido)', value: 'fredoka' },
-  { label: 'Roboto (Neutro e chiaro)', value: 'roboto' }
-]
+const fontFamilyOptions = computed(() => [
+  { label: t('a11y.fontDefault') || 'Predefinito di Sistema (Inter / Sans-Serif)', value: 'default' },
+  { label: t('a11y.fontOpenDyslexic') || 'OpenDyslexic (Alta Leggibilità DSA)', value: 'opendyslexic' },
+  { label: t('a11y.fontLexend') || 'Lexend (Ottimizzato per fluidità di lettura)', value: 'lexend' },
+  { label: t('a11y.fontFredoka') || 'Fredoka (Carattere arrotondato e morbido)', value: 'fredoka' },
+  { label: t('a11y.fontRoboto') || 'Roboto (Neutro e chiaro)', value: 'roboto' }
+])
 
-const fontSizeOptions = [
-  { label: 'Standard (100%)', value: 'normal' },
-  { label: 'Grande (110%)', value: 'large' },
-  { label: 'Molto Grande (122%)', value: 'xlarge' }
-]
+const fontSizeOptions = computed(() => [
+  { label: t('a11y.sizeNormal') || 'Standard (100%)', value: 'normal' },
+  { label: t('a11y.sizeLarge') || 'Grande (110%)', value: 'large' },
+  { label: t('a11y.sizeXLarge') || 'Molto Grande (122%)', value: 'xlarge' }
+])
 
-const lineHeightOptions = [
-  { label: 'Standard (1.5x)', value: 'normal' },
+const lineHeightOptions = computed(() => [
+  { label: t('a11y.spacingNormal') ? `${t('a11y.spacingNormal')} (1.5x)` : 'Standard (1.5x)', value: 'normal' },
   { label: 'Rilassata (1.8x)', value: 'relaxed' },
   { label: 'Ampia (2.1x)', value: 'loose' }
-]
+])
 
-const letterSpacingOptions = [
-  { label: 'Standard', value: 'normal' },
-  { label: 'Ampio (+0.08em)', value: 'wide' },
-  { label: 'Molto Ampio (+0.16em)', value: 'wider' }
-]
+const letterSpacingOptions = computed(() => [
+  { label: t('a11y.spacingNormal') || 'Standard', value: 'normal' },
+  { label: t('a11y.spacingWide') ? `${t('a11y.spacingWide')} (+0.08em)` : 'Ampio (+0.08em)', value: 'wide' },
+  { label: t('a11y.spacingWider') ? `${t('a11y.spacingWider')} (+0.16em)` : 'Molto Ampio (+0.16em)', value: 'wider' }
+])
 
-const wordSpacingOptions = [
-  { label: 'Standard', value: 'normal' },
-  { label: 'Ampio (+0.18em)', value: 'wide' },
-  { label: 'Molto Ampio (+0.32em)', value: 'wider' }
-]
+const wordSpacingOptions = computed(() => [
+  { label: t('a11y.spacingNormal') || 'Standard', value: 'normal' },
+  { label: t('a11y.spacingWide') ? `${t('a11y.spacingWide')} (+0.18em)` : 'Ampio (+0.18em)', value: 'wide' },
+  { label: t('a11y.spacingWider') ? `${t('a11y.spacingWider')} (+0.32em)` : 'Molto Ampio (+0.32em)', value: 'wider' }
+])
 
-const colorblindOptions = [
-  { label: 'Nessun filtro (Colori Standard)', value: 'none' },
-  { label: 'Protanopia (Insensibilità al rosso)', value: 'protanopia' },
-  { label: 'Deuteranopia (Insensibilità al verde)', value: 'deuteranopia' },
-  { label: 'Tritanopia (Insensibilità al blu/giallo)', value: 'tritanopia' },
-  { label: 'Monocromatico (Scala di Grigi)', value: 'monochrome' }
-]
+const colorblindOptions = computed(() => [
+  { label: t('a11y.cbNone') || 'Nessun filtro (Colori Standard)', value: 'none' },
+  { label: t('a11y.cbProtanopia') || 'Protanopia (Insensibilità al rosso)', value: 'protanopia' },
+  { label: t('a11y.cbDeuteranopia') || 'Deuteranopia (Insensibilità al verde)', value: 'deuteranopia' },
+  { label: t('a11y.cbTritanopia') || 'Tritanopia (Insensibilità al blu/giallo)', value: 'tritanopia' },
+  { label: t('a11y.cbMonochrome') || 'Monocromatico (Scala di Grigi)', value: 'monochrome' }
+])
 
-const contrastOptions = [
-  { label: 'Contrasto Standard', value: 'none' },
-  { label: 'Contrasto Elevato (Bordi netti & +35% contrasto)', value: 'high_contrast' },
-  { label: 'OLED Pure Black con Testo Ambra / Giallo', value: 'oled_amber' },
-  { label: 'OLED Pure Black con Testo Verde Fosforo', value: 'oled_green' },
-  { label: 'Colori Invertiti (Negativo)', value: 'inverted' }
-]
+const contrastOptions = computed(() => [
+  { label: t('a11y.contrastStandard') || 'Contrasto Standard', value: 'none' },
+  { label: t('a11y.contrastHigh') || 'Contrasto Elevato (Bordi netti & +35% contrasto)', value: 'high_contrast' },
+  { label: t('a11y.contrastOledAmber') || 'OLED Pure Black con Testo Ambra / Giallo', value: 'oled_amber' },
+  { label: t('a11y.contrastOledGreen') || 'OLED Pure Black con Testo Verde Fosforo', value: 'oled_green' },
+  { label: t('a11y.contrastInverted') || 'Colori Invertiti (Negativo)', value: 'inverted' }
+])
 </script>
 
 <style scoped>

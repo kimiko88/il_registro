@@ -177,11 +177,11 @@
                     <q-avatar size="28px" :color="themeOpt.badgeColor" text-color="white" class="q-mr-xs">
                       <q-icon :name="themeOpt.icon" size="16px" />
                     </q-avatar>
-                    <span class="text-weight-bold text-slate-800">{{ themeOpt.name }}</span>
+                    <span class="text-weight-bold text-slate-800">{{ getThemeName(themeOpt, t, te) }}</span>
                   </div>
                   <q-icon v-if="themeStore.currentTheme === themeOpt.id" name="check" color="indigo" size="20px" />
                 </div>
-                <div class="text-caption text-slate-500">{{ themeOpt.description }}</div>
+                <div class="text-caption text-slate-500">{{ getThemeDescription(themeOpt, t, te) }}</div>
               </q-card>
             </div>
           </div>
@@ -293,7 +293,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useThemeStore, THEMES } from '@/stores/theme'
+import { useThemeStore, THEMES, getThemeName, getThemeDescription } from '@/stores/theme'
 import { useQuasar } from 'quasar'
 import { userService } from '@/services/userService'
 import { useAuthStore } from '@/stores/auth'
