@@ -18,14 +18,17 @@
           :key="'drawer-toggle'"
         />
 
-        <q-toolbar-title class="text-weight-bold text-primary">
-          <span role="heading" aria-level="1">Registro Elettronico</span>
+        <q-toolbar-title class="text-weight-bold text-primary ellipsis text-subtitle1 q-pl-xs" style="min-width: 0;">
+          <span role="heading" aria-level="1">
+            <span class="gt-xs">Registro Elettronico</span>
+            <span class="lt-sm">Registro</span>
+          </span>
         </q-toolbar-title>
 
         <q-space />
         
-        <!-- School Year Selector for Teachers -->
-        <div v-if="isTeacherRole" class="q-mr-sm row items-center" key="school-year-container">
+        <!-- School Year Selector for Teachers (Desktop / Tablet) -->
+        <div v-if="isTeacherRole" class="gt-sm q-mr-sm row items-center" key="school-year-container">
           <q-select
             v-model="schoolYearStore.selectedSchoolYear"
             :options="schoolYearStore.availableSchoolYears"
@@ -44,14 +47,14 @@
           </q-select>
         </div>
 
-        <!-- Theme Selector Menu -->
+        <!-- Theme Selector Menu (Desktop / Tablet) -->
         <q-btn-dropdown
           flat
           round
           dense
           icon="palette"
           color="primary"
-          class="q-mr-sm"
+          class="gt-sm q-mr-xs"
           key="theme-toggle"
           :aria-label="t('layout.themeAriaLabel')"
         >
@@ -104,18 +107,17 @@
           </q-list>
         </q-btn-dropdown>
 
-        <!-- Focus Mode (ADHD / DSA Clean Reading) -->
-        <FocusModeToggle class="q-mr-sm" />
+        <!-- Focus Mode (ADHD / DSA Clean Reading - Desktop/Tablet) -->
+        <FocusModeToggle class="gt-sm q-mr-xs" />
 
-        <!-- Accessibility Quick Toggle Menu -->
-
+        <!-- Accessibility Quick Toggle Menu (Desktop / Tablet) -->
         <q-btn-dropdown
           flat
           round
           dense
           icon="accessibility_new"
           color="primary"
-          class="q-mr-sm"
+          class="gt-sm q-mr-xs"
           key="accessibility-toggle"
           :aria-label="t('layout.a11yAriaLabel')"
         >
@@ -219,26 +221,26 @@
               <q-item-section avatar>
                 <q-icon name="keyboard" size="20px" />
               </q-item-section>
-              <q-item-section class="text-weight-bold">Scorciatoie da Tastiera (?)</q-item-section>
+              <q-item-section class="text-weight-bold">{{ t('a11y.shortcutsTitle') || 'Scorciatoie da Tastiera (?)' }}</q-item-section>
             </q-item>
 
             <q-item clickable to="/accessibility-statement" class="rounded-lg q-mx-xs text-grey-8">
               <q-item-section avatar>
                 <q-icon name="verified_user" size="20px" color="positive" />
               </q-item-section>
-              <q-item-section class="text-weight-medium text-caption">Dichiarazione AgID / WCAG 2.2</q-item-section>
+              <q-item-section class="text-weight-medium text-caption">{{ t('layout.footerA11yStatement') || 'Dichiarazione AgID / WCAG 2.2' }}</q-item-section>
             </q-item>
           </q-list>
         </q-btn-dropdown>
 
-        <!-- Language Selector Menu -->
+        <!-- Language Selector Menu (Desktop / Tablet) -->
         <q-btn-dropdown
           flat
           round
           dense
           icon="language"
           color="primary"
-          class="q-mr-sm"
+          class="gt-sm q-mr-xs"
           key="language-toggle"
           aria-label="Seleziona Lingua"
         >
@@ -274,21 +276,21 @@
           </q-list>
         </q-btn-dropdown>
 
-        <!-- Dark Mode Toggle -->
-        <q-btn flat round dense :icon="$q.dark.isActive ? 'light_mode' : 'dark_mode'" @click="$q.dark.toggle()" color="primary" class="q-mr-sm" :key="'dark-toggle'" :aria-label="$q.dark.isActive ? t('layout.lightMode') : t('layout.darkMode')">
+        <!-- Dark Mode Toggle (Desktop / Tablet) -->
+        <q-btn flat round dense :icon="$q.dark.isActive ? 'light_mode' : 'dark_mode'" @click="$q.dark.toggle()" color="primary" class="gt-sm q-mr-xs" :key="'dark-toggle'" :aria-label="$q.dark.isActive ? t('layout.lightMode') : t('layout.darkMode')">
            <q-tooltip>{{ $q.dark.isActive ? t('layout.lightMode') : t('layout.darkMode') }}</q-tooltip>
         </q-btn>
 
-        <!-- Fullscreen Toggle -->
+        <!-- Fullscreen Toggle (Desktop/Tablet) -->
         <q-btn 
           v-if="$q.fullscreen"
           flat 
           round 
           dense 
+          class="gt-sm q-mr-xs"
           :icon="$q.fullscreen.isActive ? 'fullscreen_exit' : 'fullscreen'" 
           @click="$q.fullscreen.toggle()" 
           color="primary" 
-          class="q-mr-sm"
           :key="'fullscreen-toggle'"
           :aria-label="$q.fullscreen.isActive ? t('layout.exitFullscreen') : t('layout.enterFullscreen')"
         >
@@ -301,23 +303,23 @@
           dense
           color="primary"
           icon="search"
-          class="q-mr-sm search-shortcut-btn"
+          class="q-mr-xs search-shortcut-btn"
           :aria-label="t('common.search')"
           @click="globalSearchRef?.open()"
           key="global-search-btn"
         >
           <q-tooltip>{{ t('common.search') }}</q-tooltip>
-          <q-badge floating transparent class="search-kbd-badge">K</q-badge>
+          <q-badge floating transparent class="search-kbd-badge gt-xs">K</q-badge>
         </q-btn>
 
-        <!-- Help Center -->
+        <!-- Help Center (Desktop / Tablet) -->
         <q-btn
           flat
           round
           dense
           icon="help_outline"
           color="primary"
-          class="q-mr-sm"
+          class="gt-xs q-mr-xs"
           :aria-label="t('help.openHelp')"
           @click="helpCenterRef?.open()"
           key="help-center-btn"
@@ -326,11 +328,26 @@
         </q-btn>
 
         <!-- Notifications -->
-        <q-btn flat round dense icon="notifications" color="primary" class="q-mr-sm" :aria-label="t('notifications.title')" @click="navigateToNotifications">
+        <q-btn flat round dense icon="notifications" color="primary" class="q-mr-xs" :aria-label="t('notifications.title')" @click="navigateToNotifications">
           <q-tooltip>{{ t('notifications.title') }}</q-tooltip>
         </q-btn>
 
-        <q-btn flat round dense icon="account_circle" color="primary" :aria-label="t('nav.profile')" @click="navigateToProfile" />
+        <q-btn flat round dense icon="account_circle" color="primary" class="q-mr-xs" :aria-label="t('nav.profile')" @click="navigateToProfile" />
+
+        <!-- Quick Settings & Customization Right Drawer Toggle (Mobile only) -->
+        <q-btn
+          flat
+          round
+          dense
+          icon="tune"
+          color="primary"
+          class="lt-md"
+          :aria-label="t('layout.quickSettings') || 'Opzioni e Accessibilità'"
+          @click="toggleRightDrawer"
+          key="quick-settings-mobile-btn"
+        >
+          <q-tooltip>{{ t('layout.quickSettings') || 'Opzioni e Accessibilità' }}</q-tooltip>
+        </q-btn>
 
       </q-toolbar>
     </q-header>
@@ -357,6 +374,24 @@
             </div>
           </div>
           <div class="absolute-bottom-right q-mr-n-lg q-mb-n-lg" style="width: 90px; height: 90px; border-radius: 50%; background: rgba(255,255,255,0.1)" aria-hidden="true"></div>
+        </div>
+
+        <!-- School Year Selector for Teachers on Mobile Drawer -->
+        <div v-if="isTeacherRole" class="lt-md q-pa-sm bg-slate-50 border-b border-slate-100">
+          <q-select
+            v-model="schoolYearStore.selectedSchoolYear"
+            :options="schoolYearStore.availableSchoolYears"
+            dense
+            outlined
+            options-dense
+            bg-color="white"
+            :label="t('layout.schoolYear')"
+            :aria-label="t('layout.schoolYearSelect')"
+          >
+            <template v-slot:prepend>
+              <q-icon name="event" color="primary" size="18px" />
+            </template>
+          </q-select>
         </div>
 
         <!-- Menu Items -->
@@ -468,6 +503,252 @@
       </div>
     </q-drawer>
 
+    <!-- Right Drawer: Quick Settings, Themes & Accessibility for Mobile -->
+    <q-drawer
+      side="right"
+      v-model="rightDrawerOpen"
+      overlay
+      bordered
+      :width="320"
+      :class="$q.dark.isActive ? 'bg-dark' : 'bg-white'"
+      role="region"
+      :aria-label="t('layout.quickSettings') || 'Opzioni e Accessibilità'"
+    >
+      <div class="column full-height no-wrap">
+        <!-- Header -->
+        <div class="q-pa-md bg-primary text-white row items-center justify-between shadow-soft">
+          <div class="row items-center gap-sm">
+            <q-icon name="tune" size="22px" />
+            <div class="text-subtitle1 text-weight-bold">{{ t('layout.quickSettings') || 'Opzioni e Accessibilità' }}</div>
+          </div>
+          <q-btn flat round dense icon="close" color="white" @click="rightDrawerOpen = false" :aria-label="t('common.close') || 'Chiudi'" />
+        </div>
+
+        <q-scroll-area class="col q-pa-md">
+          <!-- 1. Modalità Scura / Chiara -->
+          <div class="q-mb-md">
+            <div class="text-caption text-weight-bold text-uppercase text-grey-7 letter-spacing-1 q-mb-xs">
+              {{ t('layout.themeAriaLabel') || 'Aspetto' }}
+            </div>
+            <q-card flat bordered class="rounded-xl q-pa-sm" :class="$q.dark.isActive ? 'bg-grey-9' : 'bg-slate-50'">
+              <div class="row items-center justify-between">
+                <div class="row items-center gap-sm">
+                  <q-avatar size="36px" :color="$q.dark.isActive ? 'indigo-9' : 'amber-1'" :text-color="$q.dark.isActive ? 'amber-3' : 'amber-9'">
+                    <q-icon :name="$q.dark.isActive ? 'dark_mode' : 'light_mode'" size="20px" />
+                  </q-avatar>
+                  <div>
+                    <div class="text-weight-bold text-body2">{{ $q.dark.isActive ? t('layout.darkMode') : t('layout.lightMode') }}</div>
+                    <div class="text-caption text-grey-7">{{ $q.dark.isActive ? 'OLED Dark' : 'Standard Light' }}</div>
+                  </div>
+                </div>
+                <q-toggle
+                  v-model="$q.dark.isActive"
+                  @update:model-value="$q.dark.set"
+                  color="primary"
+                  dense
+                />
+              </div>
+            </q-card>
+          </div>
+
+          <!-- 2. Tema Visivo e Palette -->
+          <div class="q-mb-md">
+            <div class="text-caption text-weight-bold text-uppercase text-grey-7 letter-spacing-1 q-mb-xs">
+              {{ t('layout.themesTitle') || 'Temi & Palette' }}
+            </div>
+            <q-list class="rounded-xl border border-slate-200 overflow-hidden" :class="$q.dark.isActive ? 'bg-grey-9 border-grey-8' : 'bg-white'">
+              <q-item
+                v-for="themeOption in THEMES"
+                :key="themeOption.id"
+                clickable
+                @click="themeStore.setTheme(themeOption.id)"
+                :active="themeStore.currentTheme === themeOption.id"
+                active-class="bg-indigo-50 text-primary text-weight-bold"
+                dense
+                class="q-py-sm"
+              >
+                <q-item-section avatar min-width="36px">
+                  <q-avatar size="28px" :color="themeOption.badgeColor" text-color="white">
+                    <q-icon :name="themeOption.icon" size="16px" />
+                  </q-avatar>
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label class="text-body2 text-weight-medium">{{ themeOption.name }}</q-item-label>
+                  <q-item-label caption class="text-grey-7 text-xs">{{ themeOption.recommendedRole }}</q-item-label>
+                </q-item-section>
+                <q-item-section side v-if="themeStore.currentTheme === themeOption.id">
+                  <q-icon name="check_circle" color="primary" size="18px" />
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </div>
+
+          <!-- 3. Lingua -->
+          <div class="q-mb-md">
+            <div class="text-caption text-weight-bold text-uppercase text-grey-7 letter-spacing-1 q-mb-xs">
+              {{ t('common.language') || 'Lingua' }}
+            </div>
+            <q-select
+              v-model="currentLocaleValue"
+              :options="SUPPORTED_LOCALES"
+              option-value="value"
+              option-label="label"
+              emit-value
+              map-options
+              outlined
+              dense
+              rounded
+              :bg-color="$q.dark.isActive ? 'grey-9' : 'white'"
+              @update:model-value="changeAppLanguage"
+            >
+              <template v-slot:prepend>
+                <q-icon name="language" color="primary" size="18px" />
+              </template>
+              <template v-slot:option="scope">
+                <q-item v-bind="scope.itemProps" dense>
+                  <q-item-section avatar min-width="28px">
+                    <span style="font-size: 1.1rem;">{{ scope.opt.flag }}</span>
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label class="text-body2">{{ scope.opt.label }}</q-item-label>
+                  </q-item-section>
+                  <q-item-section side v-if="currentLocaleValue === scope.opt.value">
+                    <q-icon name="check" color="primary" size="16px" />
+                  </q-item-section>
+                </q-item>
+              </template>
+            </q-select>
+          </div>
+
+          <!-- 4. Accessibilità & Inclusione (A11y) -->
+          <div class="q-mb-md">
+            <div class="text-caption text-weight-bold text-uppercase text-grey-7 letter-spacing-1 q-mb-xs flex items-center justify-between">
+              <span>{{ t('layout.a11yTitle') || 'Accessibilità' }}</span>
+              <q-btn flat round dense icon="help_outline" size="xs" @click="themeStore.toggleKeyboardShortcutsHelp(true)">
+                <q-tooltip>{{ t('a11y.shortcutsTitle') || 'Scorciatoie da tastiera (?)' }}</q-tooltip>
+              </q-btn>
+            </div>
+
+            <q-list class="rounded-xl border border-slate-200 overflow-hidden" :class="$q.dark.isActive ? 'bg-grey-9 border-grey-8' : 'bg-white'">
+              <!-- Font OpenDyslexic -->
+              <q-item dense class="q-py-xs">
+                <q-item-section avatar min-width="36px">
+                  <q-avatar size="28px" color="indigo-50" text-color="indigo-700">
+                    <q-icon name="spellcheck" size="16px" />
+                  </q-avatar>
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label class="text-body2 text-weight-medium">{{ t('settingsPage.fontDyslexic') || 'OpenDyslexic (DSA)' }}</q-item-label>
+                  <q-item-label caption class="text-grey-7 text-xs">{{ t('layout.dsaFontDesc') || 'Font ad alta leggibilità' }}</q-item-label>
+                </q-item-section>
+                <q-item-section side>
+                  <q-toggle
+                    v-model="themeStore.dsaFont"
+                    color="indigo"
+                    dense
+                    @update:model-value="themeStore.toggleDsaFont"
+                  />
+                </q-item-section>
+              </q-item>
+
+              <!-- Righello di Lettura -->
+              <q-item dense class="q-py-xs">
+                <q-item-section avatar min-width="36px">
+                  <q-avatar size="28px" color="amber-50" text-color="amber-9">
+                    <q-icon name="straighten" size="16px" />
+                  </q-avatar>
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label class="text-body2 text-weight-medium">{{ t('layout.readingRulerTitle') || 'Righello di Lettura' }}</q-item-label>
+                  <q-item-label caption class="text-grey-7 text-xs">{{ t('layout.readingRulerDesc') || 'Guida visiva riga per riga' }}</q-item-label>
+                </q-item-section>
+                <q-item-section side>
+                  <q-toggle
+                    v-model="themeStore.readingRuler"
+                    color="amber-9"
+                    dense
+                    @update:model-value="themeStore.toggleReadingRuler"
+                  />
+                </q-item-section>
+              </q-item>
+
+              <!-- TTS -->
+              <q-item dense class="q-py-xs">
+                <q-item-section avatar min-width="36px">
+                  <q-avatar size="28px" color="teal-50" text-color="teal-8">
+                    <q-icon name="volume_up" size="16px" />
+                  </q-avatar>
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label class="text-body2 text-weight-medium">{{ t('layout.ttsTitle') || 'Sintesi Vocale (TTS)' }}</q-item-label>
+                  <q-item-label caption class="text-grey-7 text-xs">{{ t('layout.ttsDesc') || 'Lettura vocale compiti e avvisi' }}</q-item-label>
+                </q-item-section>
+                <q-item-section side>
+                  <q-toggle
+                    v-model="themeStore.ttsEnabled"
+                    color="teal"
+                    dense
+                    @update:model-value="themeStore.toggleTts"
+                  />
+                </q-item-section>
+              </q-item>
+
+              <!-- Contrasto Elevato -->
+              <q-item dense class="q-py-xs">
+                <q-item-section avatar min-width="36px">
+                  <q-avatar size="28px" color="grey-2" text-color="dark">
+                    <q-icon name="contrast" size="16px" />
+                  </q-avatar>
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label class="text-body2 text-weight-medium">{{ t('layout.highContrast') || 'Contrasto Elevato' }}</q-item-label>
+                  <q-item-label caption class="text-grey-7 text-xs">{{ t('layout.highContrastDesc') || 'Contrasto massimo 21:1' }}</q-item-label>
+                </q-item-section>
+                <q-item-section side>
+                  <q-toggle
+                    v-model="themeStore.highContrast"
+                    color="dark"
+                    dense
+                    @update:model-value="themeStore.toggleHighContrast"
+                  />
+                </q-item-section>
+              </q-item>
+
+              <q-separator />
+
+              <!-- Scorciatoie & Dichiarazione AgID -->
+              <q-item clickable dense class="q-py-xs text-primary" @click="themeStore.toggleKeyboardShortcutsHelp(true); rightDrawerOpen = false">
+                <q-item-section avatar min-width="36px">
+                  <q-icon name="keyboard" size="18px" />
+                </q-item-section>
+                <q-item-section class="text-body2 text-weight-medium">{{ t('a11y.shortcutsTitle') || 'Scorciatoie da Tastiera (?)' }}</q-item-section>
+              </q-item>
+
+              <q-item clickable dense to="/accessibility-statement" class="q-py-xs text-grey-8" @click="rightDrawerOpen = false">
+                <q-item-section avatar min-width="36px">
+                  <q-icon name="verified_user" size="18px" color="positive" />
+                </q-item-section>
+                <q-item-section class="text-body2 text-weight-medium">{{ t('layout.footerA11yStatement') || 'Dichiarazione AgID / WCAG 2.2' }}</q-item-section>
+              </q-item>
+            </q-list>
+          </div>
+
+          <!-- 5. Centro Assistenza & Guida -->
+          <div class="q-mb-md">
+            <q-btn
+              outline
+              color="primary"
+              icon="help_outline"
+              :label="t('help.openHelp') || 'Centro Assistenza'"
+              class="full-width rounded-xl"
+              no-caps
+              @click="helpCenterRef?.open(); rightDrawerOpen = false"
+            />
+          </div>
+        </q-scroll-area>
+      </div>
+    </q-drawer>
+
     <!-- Global Search Modal (Ctrl+K) -->
     <GlobalSearch ref="globalSearchRef" />
 
@@ -513,15 +794,15 @@
     <!-- Accessible Footer with AgID Statement & Shortcuts Link -->
     <q-footer class="bg-slate-900 text-white text-caption q-py-xs q-px-md print-hide" role="contentinfo">
       <div class="row items-center justify-between">
-        <div>© 2026 Registro Elettronico Scolastico • Conforme AgID & WCAG 2.2 AA</div>
+        <div>{{ t('layout.footerCopyright') || '© 2026 Registro Elettronico Scolastico • Conforme AgID & WCAG 2.2 AA' }}</div>
         <div class="flex items-center gap-md">
           <router-link to="/accessibility-statement" class="text-amber-4 text-weight-medium text-decoration-none flex items-center">
             <q-icon name="accessibility" size="xs" class="q-mr-xs" />
-            Dichiarazione di Accessibilità (AgID)
+            {{ t('layout.footerA11yStatement') || 'Dichiarazione di Accessibilità (AgID)' }}
           </router-link>
           <a href="#" @click.prevent="themeStore.toggleKeyboardShortcutsHelp(true)" class="text-grey-4 text-decoration-none flex items-center">
             <q-icon name="keyboard" size="xs" class="q-mr-xs" />
-            Scorciatoie ( ? )
+            {{ t('layout.footerShortcuts') || 'Scorciatoie ( ? )' }}
           </a>
         </div>
       </div>
@@ -729,7 +1010,10 @@ onMounted(() => {
 })
 
 watch(() => route.path, () => {
-  if ($q.screen.lt.md) leftDrawerOpen.value = false
+  if ($q.screen.lt.md) {
+    leftDrawerOpen.value = false
+    rightDrawerOpen.value = false
+  }
 })
 
 // Dynamic Breadcrumbs
@@ -761,6 +1045,7 @@ const { user, userName, userRole } = storeToRefs(authStore)
 const { logout } = useAuth()
 
 const leftDrawerOpen = ref(false)
+const rightDrawerOpen = ref(false)
 const loggingOut = ref(false)
 
 // Get role label for display
@@ -832,6 +1117,10 @@ const isCategoryActive = (category) => {
 
 function toggleLeftDrawer() {
   leftDrawerOpen.value = !leftDrawerOpen.value
+}
+
+function toggleRightDrawer() {
+  rightDrawerOpen.value = !rightDrawerOpen.value
 }
 
 async function handleLogout() {

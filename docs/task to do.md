@@ -262,3 +262,21 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
     - **Vitest Frontend**: 162/162 suite superate, 959/959 test passati.
     - **Go Backend**: 100% test superati (87 package).
 
+- [x] **Risoluzione Monitoraggio Superadmin, Codecov Frontend e Aumento Copertura Test Backend**:
+  - **Fix Monitoraggio Dashboard Superadmin**:
+    - Risolto mismatch tra stati backend (`healthy`, `degraded`, `unhealthy`) e frontend (`Monitoring.vue`): normalizzazione helper `getServiceColor` e `getServiceLabel` che supportano `healthy`, `ok`, `up` (ONLINE), `degraded`, `warning` (DEGRADATO), `in-memory` (IN-MEMORY), `unhealthy` (OFFLINE).
+    - Aggiunto probe Redis dinamico in `internal/admin/handler.go` con fallback chiaro `in-memory` per l'ambiente di sviluppo o installazioni senza cluster Redis dedicato.
+    - Aggiornati i test unitari in `Monitoring.spec.js` con verifica di tutti gli stati di servizio.
+  - **Integrazione Codecov per il Frontend**:
+    - Vitest configurato con reporter `['text', 'html', 'lcov', 'json']` in `vitest.config.js` ed esclusioni mirate (`src/main.js`, `boot`, `i18n`, `router`, test).
+    - Aggiunto script `"test:coverage": "vitest run --coverage"` in `package.json`.
+    - Creato `codecov.yml` nella root con flag separati (`backend` e `frontend`) e blocco `ignore` per escludere file non idonei alla coverage (`cmd/**`, `migrations/**`, database adapter `internal/postgres/**`, file di test, router/i18n).
+    - Aggiornato workflow GitHub Actions `.github/workflows/tests.yml` per generare e caricare `lcov.info` con flag `frontend`.
+  - **Aumento Copertura Test Backend**:
+    - `internal/uda`: introdotta `RepositoryInterface`, scritti test completi per `Service` e `Handler` (coverage salita da 0.0% a **46.6%**).
+    - `internal/verbali`: scritti test unitari per tutti i metodi di `Service`, `handler.go`, generazione PDF in memoria con `fpdf` (coverage salita da 4.3% a **63.0%**).
+    - `internal/teachers`: scritti test unitari per `handler.go` (`List`, `Get`, `GetSubjects`, `AssignSubject`, `RemoveSubject`, `GetDashboardStats`, `getSchoolID`) e `service.go` (coverage salita da 6.4% a **40.6%**).
+    - `internal/handler`: scritti test unitari per `HealthHandler` (`Health`, `Ready`, `Metrics`) (coverage salita da 0.0% a **91.7%**).
+    - `internal/recovery`: scritti test unitari per `Service` e `handler.go` (coverage salita da 8.9% a **46.0%**).
+    - `internal/extracurricular`: scritti test unitari per `handler.go` (coverage salita da 11.6% a **40.2%**).
+    - `internal/orientamento`: scritti test unitari per `handler.go` (coverage salita da 6.2% a **43.8%**).

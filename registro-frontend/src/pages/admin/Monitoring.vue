@@ -49,12 +49,12 @@
               <div>
                 <div class="text-caption text-slate-500 text-uppercase letter-spacing-1">{{ svc.label }}</div>
                 <q-chip
-                  :color="svc.status === 'ok' ? 'positive' : svc.status === 'degraded' ? 'warning' : 'negative'"
+                  :color="getServiceColor(svc.status)"
                   text-color="white"
                   size="sm"
                   class="text-weight-bold q-mt-xs"
                 >
-                  {{ svc.status === 'ok' ? 'ONLINE' : svc.status === 'degraded' ? 'DEGRADATO' : 'OFFLINE' }}
+                  {{ getServiceLabel(svc.status) }}
                 </q-chip>
               </div>
             </q-card-section>
@@ -144,15 +144,47 @@ onMounted(() => {
 })
 onUnmounted(() => clearInterval(pollInterval))
 
+const isOnline = (status) => {
+  const s = String(status || '').toLowerCase()
+  return s === 'ok' || s === 'healthy' || s === 'up' || s === 'online'
+}
+
+const isDegraded = (status) => {
+  const s = String(status || '').toLowerCase()
+  return s === 'degraded' || s === 'warning'
+}
+
+const isInMemory = (status) => {
+  const s = String(status || '').toLowerCase()
+  return s === 'in-memory' || s === 'local' || s === 'not_configured'
+}
+
+const getServiceColor = (status) => {
+  if (isOnline(status)) return 'positive'
+  if (isDegraded(status)) return 'warning'
+  if (isInMemory(status)) return 'info'
+  return 'negative'
+}
+
+const getServiceLabel = (status) => {
+  if (isOnline(status)) return 'ONLINE'
+  if (isDegraded(status)) return 'DEGRADATO'
+  if (isInMemory(status)) return 'IN-MEMORY'
+  return 'OFFLINE'
+}
+
 const overallStatus = computed(() => health.value?.status || 'unknown')
 
 const services = computed(() => {
   if (!health.value) return []
   const s = health.value.services || {}
+  const redisDetail = s.redis_ping_ms != null
+    ? `Ping: ${s.redis_ping_ms}ms`
+    : (isInMemory(s.redis) ? 'Modalità In-Memory' : null)
   return [
     { name: 'api',      label: 'API Server',    icon: 'cloud',          color: 'indigo',  status: s.api      || 'unknown', detail: health.value.api_version ? `v${health.value.api_version}` : null },
     { name: 'db',       label: 'Database',      icon: 'storage',        color: 'blue',    status: s.database || 'unknown', detail: s.db_ping_ms != null ? `Ping: ${s.db_ping_ms}ms` : null },
-    { name: 'redis',    label: 'Cache Redis',   icon: 'memory',         color: 'red',     status: s.redis    || 'unknown', detail: s.redis_ping_ms != null ? `Ping: ${s.redis_ping_ms}ms` : null },
+    { name: 'redis',    label: 'Cache Redis',   icon: 'memory',         color: 'red',     status: s.redis    || 'unknown', detail: redisDetail },
     { name: 'storage',  label: 'Storage',       icon: 'folder',         color: 'amber',   status: s.storage  || 'unknown', detail: null }
   ]
 })

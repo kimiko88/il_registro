@@ -4,17 +4,17 @@
       <div>
         <h1 class="text-h4 text-weight-bold text-slate-800 q-my-none">
           <q-icon name="settings" color="primary" class="q-mr-sm" />
-          {{ t('settings.title') || 'Impostazioni Docente' }}
+          {{ t('settingsPage.teacherTitle') || t('settings.title') || 'Impostazioni Docente' }}
         </h1>
         <p class="text-subtitle1 text-slate-500 q-mb-none">
-          Personalizza preferenze, sicurezza, lingua e notifiche per il tuo registro elettronico
+          {{ t('settingsPage.teacherSubtitle') || 'Personalizza preferenze, sicurezza, lingua e notifiche per il tuo registro elettronico' }}
         </p>
       </div>
       <div>
         <q-btn
           color="primary"
           icon="save"
-          label="Salva Tutte le Preferenze"
+          :label="t('settingsPage.saveAll') || 'Salva Tutte le Preferenze'"
           unelevated
           class="rounded-lg shadow-sm"
           :loading="savingAll"
@@ -34,12 +34,12 @@
         class="text-slate-600 bg-white border-b border-slate-100"
         narrow-indicator
       >
-        <q-tab name="general" icon="language" label="Lingua & Localizzazione" />
-        <q-tab name="accessibility" icon="accessibility_new" label="Accessibilità Visiva (DSA & Contrasto)" />
-        <q-tab name="security" icon="lock" label="Sicurezza & Password" />
-        <q-tab name="notifications" icon="notifications" label="Notifiche & Avvisi" />
-        <q-tab name="register" icon="tune" label="Personalizzazione Registro" />
-        <q-tab name="signature" icon="draw" label="Firma Digitale & PIN" />
+        <q-tab name="general" icon="language" :label="t('settingsPage.tabGeneral') || 'Lingua & Localizzazione'" />
+        <q-tab name="accessibility" icon="accessibility_new" :label="t('settingsPage.tabAccessibility') || 'Accessibilità Visiva (DSA & Contrasto)'" />
+        <q-tab name="security" icon="lock" :label="t('settingsPage.tabSecurity') || 'Sicurezza & Password'" />
+        <q-tab name="notifications" icon="notifications" :label="t('settingsPage.tabNotifications') || 'Notifiche & Avvisi'" />
+        <q-tab name="register" icon="tune" :label="t('settingsPage.tabRegister') || 'Personalizzazione Registro'" />
+        <q-tab name="signature" icon="draw" :label="t('settingsPage.tabSignature') || 'Firma Digitale & PIN'" />
       </q-tabs>
 
       <q-separator />

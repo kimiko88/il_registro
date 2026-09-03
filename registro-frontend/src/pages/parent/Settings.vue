@@ -3,10 +3,10 @@
     <div class="row items-center justify-between q-mb-lg">
       <div>
         <h1 class="text-h4 text-weight-bold text-slate-800 q-my-none">
-          Impostazioni Genitore
+          {{ t('settingsPage.parentTitle') || 'Impostazioni Genitore' }}
         </h1>
         <p class="text-subtitle1 text-slate-500 q-mt-xs q-mb-none">
-          Personalizza font, preferenze visive, notifiche per i tuoi figli e sicurezza dell'account.
+          {{ t('settingsPage.parentSubtitle') || 'Personalizza font, preferenze visive, notifiche per i tuoi figli e sicurezza dell\'account.' }}
         </p>
       </div>
     </div>
@@ -27,8 +27,8 @@
                 <q-icon name="font_download" color="primary" />
               </q-item-section>
               <q-item-section>
-                <q-item-label>Font &amp; Leggibilità</q-item-label>
-                <q-item-label caption>Scelta dei font e temi</q-item-label>
+                <q-item-label>{{ t('settingsPage.tabAppearance') || 'Font & Leggibilità' }}</q-item-label>
+                <q-item-label caption>{{ t('settingsPage.tabAppearanceSub') || 'Scelta dei font e temi' }}</q-item-label>
               </q-item-section>
             </q-item>
 
@@ -43,8 +43,8 @@
                 <q-icon name="family_restroom" color="purple" />
               </q-item-section>
               <q-item-section>
-                <q-item-label>Notifiche Figli</q-item-label>
-                <q-item-label caption>Avvisi presenze e voti</q-item-label>
+                <q-item-label>{{ t('settingsPage.tabChildren') || 'Notifiche Figli' }}</q-item-label>
+                <q-item-label caption>{{ t('settingsPage.tabChildrenSub') || 'Avvisi presenze e voti' }}</q-item-label>
               </q-item-section>
             </q-item>
 
@@ -59,8 +59,8 @@
                 <q-icon name="accessibility_new" color="secondary" />
               </q-item-section>
               <q-item-section>
-                <q-item-label>Accessibilità</q-item-label>
-                <q-item-label caption>OpenDyslexic e contrasto</q-item-label>
+                <q-item-label>{{ t('settingsPage.tabAccessibility') || 'Accessibilità' }}</q-item-label>
+                <q-item-label caption>{{ t('settingsPage.tabAccessibilitySub') || 'OpenDyslexic e contrasto' }}</q-item-label>
               </q-item-section>
             </q-item>
 
@@ -75,8 +75,8 @@
                 <q-icon name="security" color="teal" />
               </q-item-section>
               <q-item-section>
-                <q-item-label>Sicurezza &amp; Password</q-item-label>
-                <q-item-label caption>Credenziali ed il tuo account</q-item-label>
+                <q-item-label>{{ t('settingsPage.tabSecurity') || 'Sicurezza & Password' }}</q-item-label>
+                <q-item-label caption>{{ t('settingsPage.tabSecuritySub') || 'Credenziali ed il tuo account' }}</q-item-label>
               </q-item-section>
             </q-item>
           </q-list>
@@ -87,9 +87,9 @@
       <div class="col-12 col-md-9">
         <!-- SECTION 1: FONT & APPEARANCE -->
         <q-card v-if="activeSection === 'appearance'" flat bordered class="rounded-xl bg-white q-pa-lg shadow-sm">
-          <div class="text-h6 text-weight-bold text-slate-800 q-mb-xs">Scelta dei Font &amp; Leggibilità</div>
+          <div class="text-h6 text-weight-bold text-slate-800 q-mb-xs">{{ t('settingsPage.fontTitle') || 'Scelta dei Font & Leggibilità' }}</div>
           <div class="text-caption text-slate-500 q-mb-lg">
-            Scegli il font tipografico preferito per la lettura di circolari, valutazioni e documenti scolastici.
+            {{ t('settingsPage.fontSubtitle') }}
           </div>
 
           <div class="row q-col-gutter-md q-mb-xl">
@@ -115,7 +115,7 @@
                   class="q-pa-sm bg-slate-100/80 rounded-lg text-slate-700 text-caption font-bold"
                   :style="{ fontFamily: font.previewFont }"
                 >
-                  Anteprima: Valutazioni e comunicazione scuola-famiglia.
+                  {{ t('settingsPage.fontPreview') || 'Anteprima: 1 2 3 4 5 6 7 8 9 0 - ABC abc' }}
                 </div>
               </q-card>
             </div>
@@ -124,9 +124,9 @@
           <q-separator class="q-my-lg" />
 
           <!-- Font Size Selection -->
-          <div class="text-h6 text-weight-bold text-slate-800 q-mb-xs">Dimensione del Testo</div>
+          <div class="text-h6 text-weight-bold text-slate-800 q-mb-xs">{{ t('settingsPage.fontSizeTitle') || 'Dimensione del Testo' }}</div>
           <div class="text-caption text-slate-500 q-mb-md">
-            Regola l'ingrandimento dei caratteri in tutto il registro.
+            {{ t('settingsPage.fontSizeSubtitle') }}
           </div>
 
           <div class="row q-col-gutter-md q-mb-xl">
@@ -153,15 +153,15 @@
           <q-separator class="q-my-lg" />
 
           <!-- Theme Palette Selection -->
-          <div class="text-h6 text-weight-bold text-slate-800 q-mb-xs">Temi Visivi dell'Interfaccia</div>
+          <div class="text-h6 text-weight-bold text-slate-800 q-mb-xs">{{ t('settingsPage.themesTitle') || 'Temi Visivi dell\'Interfaccia' }}</div>
           <div class="text-caption text-slate-500 q-mb-md">
-            Seleziona lo stile visivo ed i colori dell'applicazione.
+            {{ t('settingsPage.themesSubtitle') }}
           </div>
 
           <div class="row q-col-gutter-md">
             <div
-              v-for="t in THEMES"
-              :key="t.id"
+              v-for="themeOpt in THEMES"
+              :key="themeOpt.id"
               class="col-12 col-sm-6 col-md-4"
             >
               <q-card
@@ -169,19 +169,19 @@
                 bordered
                 clickable
                 class="q-pa-md rounded-xl transition-all"
-                :class="themeStore.currentTheme === t.id ? 'border-2 border-indigo-600 bg-indigo-50/30 shadow-sm' : 'bg-white'"
-                @click="themeStore.setTheme(t.id)"
+                :class="themeStore.currentTheme === themeOpt.id ? 'border-2 border-indigo-600 bg-indigo-50/30 shadow-sm' : 'bg-white'"
+                @click="themeStore.setTheme(themeOpt.id)"
               >
                 <div class="row items-center justify-between q-mb-xs">
                   <div class="row items-center">
-                    <q-avatar size="28px" :color="t.badgeColor" text-color="white" class="q-mr-xs">
-                      <q-icon :name="t.icon" size="16px" />
+                    <q-avatar size="28px" :color="themeOpt.badgeColor" text-color="white" class="q-mr-xs">
+                      <q-icon :name="themeOpt.icon" size="16px" />
                     </q-avatar>
-                    <span class="text-weight-bold text-slate-800">{{ t.name }}</span>
+                    <span class="text-weight-bold text-slate-800">{{ themeOpt.name }}</span>
                   </div>
-                  <q-icon v-if="themeStore.currentTheme === t.id" name="check" color="indigo" size="20px" />
+                  <q-icon v-if="themeStore.currentTheme === themeOpt.id" name="check" color="indigo" size="20px" />
                 </div>
-                <div class="text-caption text-slate-500">{{ t.description }}</div>
+                <div class="text-caption text-slate-500">{{ themeOpt.description }}</div>
               </q-card>
             </div>
           </div>
@@ -189,9 +189,9 @@
 
         <!-- SECTION 2: NOTIFICATIONS FOR CHILDREN -->
         <q-card v-if="activeSection === 'children'" flat bordered class="rounded-xl bg-white q-pa-lg shadow-sm">
-          <div class="text-h6 text-weight-bold text-slate-800 q-mb-xs">Notifiche &amp; Avvisi Figli</div>
+          <div class="text-h6 text-weight-bold text-slate-800 q-mb-xs">{{ t('settingsPage.childrenNotifTitle') || 'Notifiche & Avvisi Figli' }}</div>
           <div class="text-caption text-slate-500 q-mb-lg">
-            Imposta gli avvisi in tempo reale per presenze, voti, note e circolari.
+            {{ t('settingsPage.childrenNotifSubtitle') }}
           </div>
 
           <q-list divider class="rounded-xl">
@@ -200,8 +200,8 @@
                 <q-icon name="event_busy" color="negative" />
               </q-item-section>
               <q-item-section>
-                <q-item-label class="text-weight-bold">Assenze, Ritardi ed Uscite</q-item-label>
-                <q-item-label caption>Avviso immediato in caso di assenza non giustificata o ingresso in ritardo</q-item-label>
+                <q-item-label class="text-weight-bold">{{ t('settingsPage.notifyAttendance') || 'Assenze, Ritardi ed Uscite' }}</q-item-label>
+                <q-item-label caption>{{ t('settingsPage.notifyAttendanceSub') }}</q-item-label>
               </q-item-section>
               <q-item-section side>
                 <q-toggle v-model="notifAttendance" color="negative" />
@@ -213,8 +213,8 @@
                 <q-icon name="grade" color="primary" />
               </q-item-section>
               <q-item-section>
-                <q-item-label class="text-weight-bold">Pubblicazione Nuove Valutazioni</q-item-label>
-                <q-item-label caption>Notifica quando i docenti inseriscono un voto o un giudizio</q-item-label>
+                <q-item-label class="text-weight-bold">{{ t('settingsPage.notifyGrades') || 'Pubblicazione Nuove Valutazioni' }}</q-item-label>
+                <q-item-label caption>{{ t('settingsPage.notifyGradesSub') }}</q-item-label>
               </q-item-section>
               <q-item-section side>
                 <q-toggle v-model="notifGrades" color="primary" />
@@ -226,8 +226,8 @@
                 <q-icon name="campaign" color="amber-9" />
               </q-item-section>
               <q-item-section>
-                <q-item-label class="text-weight-bold">Circolari da Firmare</q-item-label>
-                <q-item-label caption>Promemoria per comunicati e circolari che richiedono presa visione</q-item-label>
+                <q-item-label class="text-weight-bold">{{ t('settingsPage.notifyComms') || 'Circolari da Firmare' }}</q-item-label>
+                <q-item-label caption>{{ t('settingsPage.notifyCommsSub') }}</q-item-label>
               </q-item-section>
               <q-item-section side>
                 <q-toggle v-model="notifCirculars" color="amber-9" />
@@ -243,16 +243,16 @@
 
         <!-- SECTION 4: SECURITY -->
         <q-card v-if="activeSection === 'security'" flat bordered class="rounded-xl bg-white q-pa-lg shadow-sm">
-          <div class="text-h6 text-weight-bold text-slate-800 q-mb-xs">Sicurezza &amp; Password</div>
+          <div class="text-h6 text-weight-bold text-slate-800 q-mb-xs">{{ t('settingsPage.securityTitle') || 'Sicurezza & Password' }}</div>
           <div class="text-caption text-slate-500 q-mb-lg">
-            Modifica la password del tuo account genitore.
+            {{ t('settingsPage.securitySubtitle') }}
           </div>
 
           <q-form @submit.prevent="changePassword" class="q-gutter-y-md style-form">
             <q-input
               v-model="pwdCurrent"
               type="password"
-              label="Password Attuale"
+              :label="t('settingsPage.currentPassword') || 'Password Attuale'"
               outlined
               dense
               class="rounded-lg"
@@ -260,7 +260,7 @@
             <q-input
               v-model="pwdNew"
               type="password"
-              label="Nuova Password (almeno 8 caratteri)"
+              :label="(t('settingsPage.newPassword') || 'Nuova Password') + ' (' + (t('settingsPage.passwordMinLength') || 'almeno 8 caratteri') + ')'"
               outlined
               dense
               class="rounded-lg"
@@ -268,7 +268,7 @@
             <q-input
               v-model="pwdConfirm"
               type="password"
-              label="Conferma Nuova Password"
+              :label="t('settingsPage.confirmPassword') || 'Conferma Nuova Password'"
               outlined
               dense
               class="rounded-lg"
@@ -278,7 +278,7 @@
               <q-btn
                 type="submit"
                 color="primary"
-                label="Aggiorna Password"
+                :label="t('settingsPage.saveChanges') || 'Aggiorna Password'"
                 unelevated
                 class="rounded-lg font-bold"
                 :loading="savingPwd"

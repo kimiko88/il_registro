@@ -11,7 +11,7 @@
     
     <q-card class="glass-card shadow-soft overflow-hidden">
       <q-list separator>
-        <q-item-label header class="text-uppercase letter-spacing-1 text-slate-400 text-weight-bold">Generale & Configurazione</q-item-label>
+        <q-item-label header class="text-uppercase letter-spacing-1 text-slate-400 text-weight-bold">{{ t('settings.generalConfig') || 'Generale & Configurazione' }}</q-item-label>
         
         <!-- Lingua -->
         <q-item clickable v-ripple class="q-py-md" @click="openLanguageDialog">
@@ -25,7 +25,7 @@
             <q-item-label caption>{{ currentLanguageLabel }}</q-item-label>
           </q-item-section>
           <q-item-section side>
-            <q-badge color="primary" label="Attivo" class="q-mr-sm" />
+            <q-badge color="primary" :label="t('settings.badgeActive') || 'Attivo'" class="q-mr-sm" />
             <q-icon name="chevron_right" color="slate-300" />
           </q-item-section>
         </q-item>
@@ -55,11 +55,11 @@
             </div>
           </q-item-section>
           <q-item-section>
-            <q-item-label class="text-weight-bold text-slate-700">Cambio Password Personale</q-item-label>
-            <q-item-label caption>Modifica la tua password di accesso al sistema</q-item-label>
+            <q-item-label class="text-weight-bold text-slate-700">{{ t('settings.changePasswordTitle') || 'Cambio Password Personale' }}</q-item-label>
+            <q-item-label caption>{{ t('settings.changePasswordSub') || 'Modifica la tua password di accesso al sistema' }}</q-item-label>
           </q-item-section>
           <q-item-section side>
-            <q-badge color="primary" label="Sicuro" class="q-mr-sm" />
+            <q-badge color="primary" :label="t('settings.badgeSecure') || 'Sicuro'" class="q-mr-sm" />
             <q-icon name="chevron_right" color="slate-300" />
           </q-item-section>
         </q-item>

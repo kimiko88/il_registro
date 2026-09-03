@@ -5,13 +5,13 @@
       <div class="q-mb-xl text-center">
         <q-avatar size="64px" color="primary" text-color="white" icon="accessibility_new" class="q-mb-md shadow-2" />
         <h1 class="text-h4 text-weight-bold text-primary q-my-none">
-          {{ $t('a11y.statementTitle') || 'Dichiarazione di Accessibilità' }}
+          {{ t('a11y.statementTitle') || 'Dichiarazione di Accessibilità' }}
         </h1>
         <div class="text-subtitle1 text-grey-7 q-mt-sm">
-          Conforme alle Linee Guida AgID, Legge 4/2004 (Legge Stanca) e Direttiva UE 2016/2102
+          {{ t('a11y.statementSubtitle') || 'Conforme alle Linee Guida AgID, Legge 4/2004 (Legge Stanca) e Direttiva UE 2016/2102' }}
         </div>
         <div class="text-caption text-grey-6 q-mt-xs">
-          Ultimo aggiornamento: 27 Agosto 2026 • Livello di conformità: WCAG 2.2 AA / AAA
+          {{ t('a11y.statementUpdate') || 'Ultimo aggiornamento: 27 Agosto 2026 • Livello di conformità: WCAG 2.2 AA / AAA' }}
         </div>
       </div>
 
@@ -20,29 +20,29 @@
         <div class="col-12 col-sm-6 col-md-3">
           <q-card flat bordered class="rounded-xl text-center q-pa-md bg-white">
             <q-icon name="check_circle" color="positive" size="36px" />
-            <div class="text-subtitle2 text-weight-bold q-mt-xs">Stato Conformità</div>
-            <div class="text-caption text-grey-8">Pienamente Conforme WCAG 2.2 AA</div>
+            <div class="text-subtitle2 text-weight-bold q-mt-xs">{{ t('a11y.complianceStatus') || 'Stato Conformità' }}</div>
+            <div class="text-caption text-grey-8">{{ t('a11y.complianceStatusVal') || 'Pienamente Conforme WCAG 2.2 AA' }}</div>
           </q-card>
         </div>
         <div class="col-12 col-sm-6 col-md-3">
           <q-card flat bordered class="rounded-xl text-center q-pa-md bg-white">
             <q-icon name="record_voice_over" color="primary" size="36px" />
-            <div class="text-subtitle2 text-weight-bold q-mt-xs">Text-to-Speech</div>
-            <div class="text-caption text-grey-8">Sintesi Vocale Web Speech API</div>
+            <div class="text-subtitle2 text-weight-bold q-mt-xs">{{ t('a11y.ttsCardTitle') || 'Text-to-Speech' }}</div>
+            <div class="text-caption text-grey-8">{{ t('a11y.ttsCardVal') || 'Sintesi Vocale Web Speech API' }}</div>
           </q-card>
         </div>
         <div class="col-12 col-sm-6 col-md-3">
           <q-card flat bordered class="rounded-xl text-center q-pa-md bg-white">
             <q-icon name="font_download" color="accent" size="36px" />
-            <div class="text-subtitle2 text-weight-bold q-mt-xs">Supporto DSA</div>
-            <div class="text-caption text-grey-8">OpenDyslexic & Righello Lettura</div>
+            <div class="text-subtitle2 text-weight-bold q-mt-xs">{{ t('a11y.dsaSupportTitle') || 'Supporto DSA' }}</div>
+            <div class="text-caption text-grey-8">{{ t('a11y.dsaSupportVal') || 'OpenDyslexic & Righello Lettura' }}</div>
           </q-card>
         </div>
         <div class="col-12 col-sm-6 col-md-3">
           <q-card flat bordered class="rounded-xl text-center q-pa-md bg-white">
             <q-icon name="palette" color="secondary" size="36px" />
-            <div class="text-subtitle2 text-weight-bold q-mt-xs">Daltonismo & OLED</div>
-            <div class="text-caption text-grey-8">Filtri ottici e contrasti 21:1</div>
+            <div class="text-subtitle2 text-weight-bold q-mt-xs">{{ t('a11y.colorblindTitle') || 'Daltonismo & OLED' }}</div>
+            <div class="text-caption text-grey-8">{{ t('a11y.colorblindVal') || 'Filtri ottici e contrasti 21:1' }}</div>
           </q-card>
         </div>
       </div>
@@ -53,10 +53,10 @@
         <q-card flat bordered class="rounded-xl q-pa-lg bg-white shadow-soft">
           <h2 class="text-h6 text-weight-bold text-primary flex items-center gap-sm q-my-none">
             <q-icon name="school" size="24px" />
-            1. Impegno per l'Inclusione Scolastica Digitale
+            {{ t('a11y.sec1Title') || "1. Impegno per l'Inclusione Scolastica Digitale" }}
           </h2>
           <div class="text-body1 text-grey-9 q-mt-md leading-relaxed">
-            L'Istituzione Scolastica si impegna a rendere il proprio Registro Elettronico e i servizi digitali accessibili a tutti gli utenti (studenti, docenti, genitori, personale ATA), in conformità alla <strong>Legge 9 gennaio 2004, n. 4</strong>, al <strong>Decreto Legislativo 10 agosto 2018, n. 106</strong> e alle <strong>Linee Guida AgID sull'Accessibilità degli strumenti informatici</strong>.
+            {{ t('a11y.sec1Text') || "L'Istituzione Scolastica si impegna a rendere il proprio Registro Elettronico e i servizi digitali accessibili a tutti gli utenti (studenti, docenti, genitori, personale ATA), in conformità alla Legge 9 gennaio 2004, n. 4, al Decreto Legislativo 10 agosto 2018, n. 106 e alle Linee Guida AgID sull'Accessibilità degli strumenti informatici." }}
           </div>
         </q-card>
 
@@ -64,17 +64,17 @@
         <q-card flat bordered class="rounded-xl q-pa-lg bg-white shadow-soft">
           <h2 class="text-h6 text-weight-bold text-primary flex items-center gap-sm q-my-none">
             <q-icon name="settings_accessibility" size="24px" />
-            2. Misure e Tecnologie di Accessibilità Integrate
+            {{ t('a11y.sec2Title') || '2. Misure e Tecnologie di Accessibilità Integrate' }}
           </h2>
           <div class="text-body1 text-grey-9 q-mt-md">
-            L'applicazione include funzionalità di accessibilità avanzate e native attivabili dal pannello rapido o nelle Impostazioni:
+            {{ t('a11y.sec2Intro') || "L'applicazione include funzionalità di accessibilità avanzate e native attivabili dal pannello rapido o nelle Impostazioni:" }}
             <ul class="q-pl-md q-gutter-y-xs q-mt-sm">
-              <li><strong>Sintesi Vocale TTS (Text-to-Speech)</strong>: Lettura audio nativa di circolari, note, compiti e argomenti delle lezioni.</li>
-              <li><strong>Supporto DSA & Font Inclusivi</strong>: Caratteri ad alta leggibilità (<em>OpenDyslexic, Lexend, Fredoka</em>) e regolazione interlinea / spaziatura lettere (WCAG 1.4.12).</li>
-              <li><strong>Righello di Lettura & Focus Mask</strong>: Maschera visiva orizzontale a contrasto per guidare la lettura su tabelle dense e testi lunghi.</li>
-              <li><strong>Filtri Daltonismo & Contrasti OLED</strong>: Palette ottimizzate per Protanopia, Deuteranopia, Tritanopia e modalità nero assoluto ad alto contrasto (Ambra/Verde).</li>
-              <li><strong>Navigazione da Tastiera & Focus Visibile</strong>: Supporto completo con tasto <code>Tab</code>, indicatore di focus ad altissima visibilità e scorciatoie rapide globali (premi <code>?</code> per la lista).</li>
-              <li><strong>Compatibilità Screen Reader</strong>: Struttura semantica HTML5, attributi <code>aria-live</code> per aggiornamenti in tempo reale e attributi <code>scope</code> sulle tabelle.</li>
+              <li>{{ t('a11y.sec2Tts') }}</li>
+              <li>{{ t('a11y.sec2Dsa') }}</li>
+              <li>{{ t('a11y.sec2Ruler') }}</li>
+              <li>{{ t('a11y.sec2Color') }}</li>
+              <li>{{ t('a11y.sec2Keyboard') }}</li>
+              <li>{{ t('a11y.sec2ScreenReader') }}</li>
             </ul>
           </div>
         </q-card>
@@ -83,22 +83,22 @@
         <q-card flat bordered class="rounded-xl q-pa-lg bg-white shadow-soft" id="feedback-section">
           <h2 class="text-h6 text-weight-bold text-primary flex items-center gap-sm q-my-none">
             <q-icon name="feedback" size="24px" />
-            3. Meccanismo di Feedback & Segnalazione Barriere Digitali
+            {{ t('a11y.sec3Title') || '3. Meccanismo di Feedback & Segnalazione Barriere Digitali' }}
           </h2>
           <div class="text-body1 text-grey-9 q-mt-md">
-            Se riscontri qualsiasi difficoltà di accesso o desideri richiedere informazioni e contenuti in un formato alternativo accessibile, puoi inviare una segnalazione compilando il modulo sottostante:
+            {{ t('a11y.sec3Intro') || 'Se riscontri qualsiasi difficoltà di accesso o desideri richiedere informazioni e contenuti in un formato alternativo accessibile, puoi inviare una segnalazione compilando il modulo sottostante:' }}
             
             <!-- Feedback Confirmation Banner -->
             <q-banner v-if="submittedProtocol" rounded class="bg-positive text-white q-mt-md shadow-1">
               <template v-slot:avatar>
                 <q-icon name="verified" size="32px" />
               </template>
-              <div class="text-subtitle1 text-weight-bold">Segnalazione Registrata Correttamente</div>
+              <div class="text-subtitle1 text-weight-bold">{{ t('a11y.feedbackSuccessTitle') || 'Segnalazione Registrata Correttamente' }}</div>
               <div>
-                La tua segnalazione è stata protocollata con codice <strong>{{ submittedProtocol }}</strong> ed è stata presa in carico dal Responsabile della Transizione Digitale (RTD). Riceverai riscontro all'indirizzo email indicato entro i termini di legge (30 giorni).
+                {{ t('a11y.feedbackSuccessText', { protocol: submittedProtocol }) || `La tua segnalazione è stata protocollata con codice ${submittedProtocol} ed è stata presa in carico dal Responsabile della Transizione Digitale (RTD). Riceverai riscontro all'indirizzo email indicato entro i termini di legge (30 giorni).` }}
               </div>
               <template v-slot:action>
-                <q-btn flat color="white" label="Nuova Segnalazione" @click="submittedProtocol = null" />
+                <q-btn flat color="white" :label="t('a11y.newFeedbackBtn') || 'Nuova Segnalazione'" @click="submittedProtocol = null" />
               </template>
             </q-banner>
           </div>
@@ -108,20 +108,20 @@
               <div class="col-12 col-sm-6">
                 <q-input
                   v-model="feedbackForm.name"
-                  label="Nome e Cognome *"
+                  :label="t('a11y.fullNameLabel') || 'Nome e Cognome *'"
                   outlined
                   dense
-                  :rules="[val => !!val || 'Campo obbligatorio']"
+                  :rules="[val => !!val || t('a11y.requiredField') || 'Campo obbligatorio']"
                 />
               </div>
               <div class="col-12 col-sm-6">
                 <q-input
                   v-model="feedbackForm.email"
-                  label="Email di Contatto *"
+                  :label="t('a11y.emailLabel') || 'Email di Contatto *'"
                   type="email"
                   outlined
                   dense
-                  :rules="[val => !!val || 'Campo obbligatorio']"
+                  :rules="[val => !!val || t('a11y.requiredField') || 'Campo obbligatorio']"
                 />
               </div>
             </div>
@@ -129,7 +129,7 @@
             <q-select
               v-model="feedbackForm.barrierType"
               :options="barrierOptions"
-              label="Tipologia di Barriera / Segnalazione *"
+              :label="t('a11y.barrierTypeLabel') || 'Tipologia di Barriera / Segnalazione *'"
               outlined
               dense
               emit-value
@@ -139,10 +139,10 @@
             <q-input
               v-model="feedbackForm.description"
               type="textarea"
-              label="Descrizione dettagliata della problematica riscontrata e pagina/sezione interessata *"
+              :label="t('a11y.descLabel') || 'Descrizione dettagliata della problematica riscontrata e pagina/sezione interessata *'"
               outlined
               rows="4"
-              :rules="[val => !!val || 'Descrivi la problematica riscontrata']"
+              :rules="[val => !!val || t('a11y.describeIssue') || 'Descrivi la problematica riscontrata']"
             />
 
             <div class="flex justify-end">
@@ -150,7 +150,7 @@
                 type="submit"
                 color="primary"
                 icon="send"
-                label="Invia Segnalazione di Accessibilità"
+                :label="t('a11y.submitBtn') || 'Invia Segnalazione di Accessibilità'"
                 :loading="sendingFeedback"
                 unelevated
                 no-caps
@@ -165,13 +165,13 @@
         <q-card flat bordered class="rounded-xl q-pa-lg bg-white shadow-soft">
           <h2 class="text-h6 text-weight-bold text-primary flex items-center gap-sm q-my-none">
             <q-icon name="gavel" size="24px" />
-            4. Procedura di Attuazione (Difensore Civico per il Digitale)
+            {{ t('a11y.sec4Title') || '4. Procedura di Attuazione (Difensore Civico per il Digitale)' }}
           </h2>
           <div class="text-body1 text-grey-9 q-mt-md">
-            In caso di risposta insoddisfacente o mancata risposta entro 30 giorni dalla notifica o dalla richiesta di informazioni accessibili, il cittadino può inoltrare una segnalazione al <strong>Difensore Civico per il Digitale</strong> tramite l'apposito servizio istituito presso l'<strong>AgID</strong> all'indirizzo:
+            {{ t('a11y.sec4Text') || "In caso di risposta insoddisfacente o mancata risposta entro 30 giorni dalla notifica o dalla richiesta di informazioni accessibili, il cittadino può inoltrare una segnalazione al Difensore Civico per il Digitale tramite l'apposito servizio istituito presso l'AgID all'indirizzo:" }}
             <div class="q-mt-sm">
               <a href="https://www.agid.gov.it" target="_blank" rel="noopener" class="text-primary text-weight-bold">
-                https://www.agid.gov.it - Agenzia per l'Italia Digitale
+                {{ t('a11y.agidLinkText') || "https://www.agid.gov.it - Agenzia per l'Italia Digitale" }}
               </a>
             </div>
           </div>
@@ -182,11 +182,13 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
+import { useI18n } from 'vue-i18n'
 import { accessibilityService } from '@/services/accessibilityService'
 
 const $q = useQuasar()
+const { t } = useI18n()
 const sendingFeedback = ref(false)
 const submittedProtocol = ref(null)
 
@@ -197,19 +199,19 @@ const feedbackForm = ref({
   description: ''
 })
 
-const barrierOptions = [
-  { label: 'Contrasto visivo o leggibilità del testo', value: 'contrast' },
-  { label: 'Difficoltà di navigazione con tastiera o screen reader', value: 'keyboard' },
-  { label: 'Problemi con la sintesi vocale (TTS) o lettura compiti/circolari', value: 'tts' },
-  { label: 'Contenuto non accessibile in formato PDF o documento', value: 'documents' },
-  { label: 'Altra barriera digitale o suggerimento di miglioramento', value: 'other' }
-]
+const barrierOptions = computed(() => [
+  { label: t('a11y.barrierContrast') || 'Contrasto visivo o leggibilità del testo', value: 'contrast' },
+  { label: t('a11y.barrierKeyboard') || 'Difficoltà di navigazione con tastiera o screen reader', value: 'keyboard' },
+  { label: t('a11y.barrierTts') || 'Problemi con la sintesi vocale (TTS) o lettura compiti/circolari', value: 'tts' },
+  { label: t('a11y.barrierDocuments') || 'Contenuto non accessibile in formato PDF o documento', value: 'documents' },
+  { label: t('a11y.barrierOther') || 'Altra barriera digitale o suggerimento di miglioramento', value: 'other' }
+])
 
 async function submitFeedback() {
   if (!feedbackForm.value.name || !feedbackForm.value.email || !feedbackForm.value.description) {
     $q.notify({
       type: 'warning',
-      message: 'Compila tutti i campi obbligatori'
+      message: t('a11y.fillRequired') || 'Compila tutti i campi obbligatori'
     })
     return
   }
@@ -221,7 +223,7 @@ async function submitFeedback() {
     $q.notify({
       type: 'positive',
       icon: 'check_circle',
-      message: `Grazie! Segnalazione inviata con successo. Protocollo: ${submittedProtocol.value}`,
+      message: t('a11y.feedbackSentProtocol', { protocol: submittedProtocol.value }) || `Grazie! Segnalazione inviata con successo. Protocollo: ${submittedProtocol.value}`,
       timeout: 7000
     })
     feedbackForm.value = {
@@ -231,7 +233,7 @@ async function submitFeedback() {
       description: ''
     }
   } catch (error) {
-    const errorMsg = error.response?.data?.error || error.message || 'Errore durante l\'invio della segnalazione'
+    const errorMsg = error.response?.data?.error || error.message || t('a11y.feedbackError') || 'Errore durante l\'invio della segnalazione'
     $q.notify({
       type: 'negative',
       icon: 'error',

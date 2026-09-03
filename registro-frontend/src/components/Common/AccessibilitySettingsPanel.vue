@@ -16,7 +16,7 @@
           outline
           color="primary"
           icon="keyboard"
-          label="Scorciatoie Tastiera (?)"
+          :label="$t('a11y.shortcutsBtn') || 'Scorciatoie Tastiera (?)'"
           no-caps
           rounded
           dense
@@ -27,14 +27,14 @@
           flat
           color="negative"
           icon="restore"
-          label="Ripristina Predefiniti"
+          :label="$t('a11y.resetDefaults') || 'Ripristina Predefiniti'"
           no-caps
           rounded
           dense
           class="q-px-sm"
           @click="themeStore.resetAccessibility"
         >
-          <q-tooltip>Reimposta tutte le opzioni di accessibilità ai valori standard</q-tooltip>
+          <q-tooltip>{{ $t('a11y.resetDefaultsTooltip') || 'Reimposta tutte le opzioni di accessibilità ai valori standard' }}</q-tooltip>
         </q-btn>
       </div>
     </div>

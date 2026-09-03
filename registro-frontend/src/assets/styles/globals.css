@@ -709,3 +709,65 @@ body {
         transform: none !important;
     }
 }
+
+/* ==========================================================================
+   Mobile Responsive Overrides (Evita schiacciamento laterale)
+   ========================================================================== */
+@media (max-width: 599px) {
+    /* Riduci i padding eccessivi su viewport mobile per evitare layout schiacciato */
+    .q-pa-xl {
+        padding: 16px !important;
+    }
+    .q-px-xl {
+        padding-left: 14px !important;
+        padding-right: 14px !important;
+    }
+    .q-py-xl {
+        padding-top: 14px !important;
+        padding-bottom: 14px !important;
+    }
+    .q-pa-lg {
+        padding: 14px !important;
+    }
+    .q-px-lg {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+    }
+    .q-py-lg {
+        padding-top: 12px !important;
+        padding-bottom: 12px !important;
+    }
+    .q-page {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+    }
+    .glass-card {
+        padding: 14px !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    .q-card {
+        max-width: 100% !important;
+    }
+    .q-dialog__inner > div {
+        max-width: 96vw !important;
+        min-width: unset !important;
+        width: 100% !important;
+    }
+    /* Adattamento tipografia titoli su schermi stretti */
+    .text-h3 {
+        font-size: 1.75rem !important;
+        line-height: 2.1rem !important;
+    }
+    .text-h4 {
+        font-size: 1.4rem !important;
+        line-height: 1.75rem !important;
+    }
+    .text-h5 {
+        font-size: 1.15rem !important;
+        line-height: 1.45rem !important;
+    }
+}
