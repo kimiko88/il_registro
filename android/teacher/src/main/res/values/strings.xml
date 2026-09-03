@@ -19,4 +19,6 @@
     <string name="present">Presente</string>
     <string name="absent">Assente</string>
     <string name="late">Ritardo</string>
+    <string name="my_classes_title">Le Mie Classi</string>
+    <string name="lesson_signed">Lezione Firmata</string>
 </resources>

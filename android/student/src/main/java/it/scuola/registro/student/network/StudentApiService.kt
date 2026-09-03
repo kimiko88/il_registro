@@ -24,7 +24,7 @@ interface StudentApiService {
 }
 
 class HttpStudentApiService(
-    private val baseUrl: String = "https://api.scuola.registro.it/api/v1"
+    private val baseUrl: String = "https://registro-backend-fdu2.onrender.com/api/v1"
 ) : StudentApiService {
 
     override suspend fun login(email: String, password: String): Result<Pair<String, StudentUser>> =
@@ -51,16 +51,21 @@ class HttpStudentApiService(
                 if (responseCode in 200..299) {
                     val response = BufferedReader(InputStreamReader(conn.inputStream)).use { it.readText() }
                     val json = JSONObject(response)
-                    val token = json.optString("token", json.optString("access_token"))
                     val userObj = json.optJSONObject("user") ?: JSONObject()
-                    val user = StudentUser(
-                        id = userObj.optString("id", "s1"),
-                        firstName = userObj.optString("first_name", userObj.optString("name", "Studente")),
-                        lastName = userObj.optString("last_name", ""),
-                        email = userObj.optString("email", email),
-                        className = userObj.optString("class_name", "Classe")
-                    )
-                    Result.success(Pair(token, user))
+                    val role = userObj.optString("role")
+                    if (role != "student") {
+                        Result.failure(Exception("Accesso non consentito: questo account non appartiene a uno studente."))
+                    } else {
+                        val token = json.optString("token", json.optString("access_token"))
+                        val user = StudentUser(
+                            id = userObj.optString("id", "s1"),
+                            firstName = userObj.optString("first_name", userObj.optString("name", "Studente")),
+                            lastName = userObj.optString("last_name", ""),
+                            email = userObj.optString("email", email),
+                            className = userObj.optString("class_name", "Classe")
+                        )
+                        Result.success(Pair(token, user))
+                    }
                 } else {
                     val err = BufferedReader(InputStreamReader(conn.errorStream ?: conn.inputStream)).use { it.readText() }
                     Result.failure(Exception("Login fallito (HTTP $responseCode): $err"))

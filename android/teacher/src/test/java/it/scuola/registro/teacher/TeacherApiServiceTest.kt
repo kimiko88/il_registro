@@ -12,7 +12,7 @@ class TeacherApiServiceTest {
 
     @Before
     fun setUp() {
-        apiService = HttpTeacherApiService("https://api.scuola.registro.it/api/v1")
+        apiService = HttpTeacherApiService("https://registro-backend-fdu2.onrender.com/api/v1")
     }
 
     @Test

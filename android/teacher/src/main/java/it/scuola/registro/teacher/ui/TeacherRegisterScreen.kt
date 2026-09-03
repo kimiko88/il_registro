@@ -171,7 +171,7 @@ fun TeacherAppelloTab(viewModel: TeacherViewModel) {
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(text = student.studentName, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+                        Text(text = student.fullName, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
                         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                             FilterChip(
                                 selected = student.status == "presente",
@@ -216,7 +216,7 @@ fun TeacherGradesEntryTab(viewModel: TeacherViewModel) {
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(student.studentName, fontWeight = FontWeight.SemiBold)
+                        Text(student.fullName, fontWeight = FontWeight.SemiBold)
                         Button(onClick = { viewModel.submitGradeForStudent(student.studentId, 8.0, 1.0, "Scritto", "") }, shape = RoundedCornerShape(6.dp)) {
                             Text(stringResource(R.string.add_grade), fontSize = 12.sp)
                         }

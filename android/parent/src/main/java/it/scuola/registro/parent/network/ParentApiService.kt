@@ -22,7 +22,7 @@ interface ParentApiService {
 }
 
 class HttpParentApiService(
-    private val baseUrl: String = "https://api.scuola.registro.it/api/v1"
+    private val baseUrl: String = "https://registro-backend-fdu2.onrender.com/api/v1"
 ) : ParentApiService {
 
     override suspend fun login(email: String, password: String): Result<String> =
@@ -49,8 +49,14 @@ class HttpParentApiService(
                 if (responseCode in 200..299) {
                     val response = BufferedReader(InputStreamReader(conn.inputStream)).use { it.readText() }
                     val json = JSONObject(response)
-                    val token = json.optString("token", json.optString("access_token"))
-                    Result.success(token)
+                    val userObj = json.optJSONObject("user")
+                    val role = userObj?.optString("role")
+                    if (role != "parent") {
+                        Result.failure(Exception("Accesso non consentito: questo account non appartiene a un genitore."))
+                    } else {
+                        val token = json.optString("token", json.optString("access_token"))
+                        Result.success(token)
+                    }
                 } else {
                     val err = BufferedReader(InputStreamReader(conn.errorStream ?: conn.inputStream)).use { it.readText() }
                     Result.failure(Exception("Login fallito (HTTP $responseCode): $err"))
@@ -117,7 +123,7 @@ class HttpParentApiService(
                         list.add(
                             PendingAbsence(
                                 id = obj.optString("id", i.toString()),
-                                studentId = childId,
+                                childId = childId,
                                 date = obj.optString("date", ""),
                                 type = obj.optString("type", "Assenza"),
                                 reason = obj.optString("reason", ""),

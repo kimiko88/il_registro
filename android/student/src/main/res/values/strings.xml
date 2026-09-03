@@ -22,4 +22,10 @@
     <string name="settings">Impostazioni</string>
     <string name="badges_title">I Miei Badge</string>
     <string name="pcto_title">Percorsi PCTO</string>
+    <string name="restriction_server_url_title">URL Server Scuola (MDM)</string>
+    <string name="restriction_server_url_desc">URL endpoint del server backend distribuito tramite MDM</string>
+    <string name="restriction_school_code_title">Codice Meccanografico Scuola</string>
+    <string name="restriction_school_code_desc">Codice identificativo ministeriale dell\'istituto scolastico</string>
+    <string name="restriction_kiosk_mode_title">Modalità Kiosk Esame / Tablet Condiviso</string>
+    <string name="restriction_kiosk_mode_desc">Disabilita navigazione esterna e lock dell\'app</string>
 </resources>

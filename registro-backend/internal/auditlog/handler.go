@@ -36,8 +36,8 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 
 func (h *Handler) List(c *gin.Context) {
 	role := c.GetString("role")
-	if role != "admin" && role != "superadmin" && role != "system_auditor" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "access restricted to admin, superadmin, and system_auditor"})
+	if role != "admin" && role != "superadmin" && role != "system_auditor" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "access restricted to admin, superadmin, secretary, and system_auditor"})
 		return
 	}
 
@@ -67,8 +67,8 @@ func (h *Handler) List(c *gin.Context) {
 
 func (h *Handler) ExportCSV(c *gin.Context) {
 	role := c.GetString("role")
-	if role != "admin" && role != "superadmin" && role != "system_auditor" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "access restricted to admin, superadmin, and system_auditor"})
+	if role != "admin" && role != "superadmin" && role != "system_auditor" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "access restricted to admin, superadmin, secretary, and system_auditor"})
 		return
 	}
 

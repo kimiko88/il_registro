@@ -9,7 +9,7 @@
     <string name="report_card_title">Mon Bulletin</string>
     <string name="gpa_average">Moyenne Générale</string>
     <string name="recent_grades">Dernières Notes</string>
-    <string name="today_lessons">Emploi du Temps Aujourd'hui</string>
+    <string name="today_lessons">Emploi du Temps Aujourd\'hui</string>
     <string name="absences_count">Total des Absences</string>
     <string name="lates_count">Total des Retards</string>
     <string name="no_data">Aucune donnée disponible</string>

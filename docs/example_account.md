@@ -56,7 +56,7 @@ Tutti gli account utilizzano la password predefinita: **`password`**.
 | **Docente 4 (Storia)**     | `docente4@scuola.it`                                 | Insegna in 2A e 2B                          |
 | **Studente 1 (Classe 2A)** | `studentea_1@scuola.it`                              | **Rappresentante di Classe (Studenti)**     |
 | **Studenti 2A (2-10)**     | `studentea_2@scuola.it` ... `studentea_10@scuola.it` | 10 Studenti in Classe 2A                    |
-| **Genitore 1 (Classe 2A)** | `genitorea_1@scuola.it`                              | **Rappresentante dei Genitori (2A)**        |
+| **Genitore 1 (Classe 2A)** | `genitore2a_1@scuola.it`                             | **Rappresentante dei Genitori (2A)**        |
 | **Genitori 2A (2-10)**     | `genitorea_2@scuola.it` ... `genitorea_10@scuola.it` | Genitori associati agli studenti di 2A      |
 | **Studenti 2B (1-10)**     | `studenteb_1@scuola.it` ... `studenteb_10@scuola.it` | 10 Studenti in Classe 2B                    |
 | **Genitore 1 (Classe 2B)** | `genitoreb_1@scuola.it`                              | **Rappresentante dei Genitori (2B)**        |

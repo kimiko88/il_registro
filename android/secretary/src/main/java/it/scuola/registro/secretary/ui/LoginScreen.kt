@@ -108,8 +108,9 @@ fun SecretaryLoginScreen(
                             val result = apiService.login(email.trim(), password)
                             isLoading = false
                             if (result.isSuccess) {
-                                val token = result.getOrNull() ?: ""
-                                onLoginSuccess(token, "Segreteria")
+                                val (token, profile) = result.getOrNull() ?: Pair("", null)
+                                val name = profile?.let { "${it.firstName} ${it.lastName}".trim() } ?: "Segreteria"
+                                onLoginSuccess(token, name)
                             } else {
                                 errorMessage = result.exceptionOrNull()?.localizedMessage ?: "Errore di accesso"
                             }

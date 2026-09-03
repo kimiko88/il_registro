@@ -9,7 +9,7 @@ public protocol ParentAPIServiceProtocol {
 public class HttpParentAPIService: ParentAPIServiceProtocol {
     private let baseURL: URL
 
-    public init(baseURL: URL = URL(string: "https://api.scuola.registro.it/api/v1")!) {
+    public init(baseURL: URL = URL(string: "https://registro-backend-fdu2.onrender.com/api/v1")!) {
         self.baseURL = baseURL
     }
 
@@ -27,9 +27,15 @@ public class HttpParentAPIService: ParentAPIServiceProtocol {
             throw NSError(domain: "ParentAPI", code: 401, userInfo: [NSLocalizedDescriptionKey: "Credenziali non valide"])
         }
 
-        if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-           let token = json["token"] as? String ?? json["access_token"] as? String {
-            return token
+        if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
+            let userObj = json["user"] as? [String: Any]
+            let role = userObj?["role"] as? String
+            guard role == "parent" else {
+                throw NSError(domain: "ParentAPI", code: 403, userInfo: [NSLocalizedDescriptionKey: "Accesso non consentito: questo account non appartiene a un genitore."])
+            }
+            if let token = json["token"] as? String ?? json["access_token"] as? String {
+                return token
+            }
         }
         throw NSError(domain: "ParentAPI", code: 500, userInfo: [NSLocalizedDescriptionKey: "Token mancante"])
     }

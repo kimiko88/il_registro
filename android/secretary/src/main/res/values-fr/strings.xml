@@ -5,10 +5,10 @@
     <string name="user_management">Gestion des Utilisateurs</string>
     <string name="scrutiny_supervision">Supervision des Conseils</string>
     <string name="generate_certificates">Certificats &amp; Actes</string>
-    <string name="audit_logs">Journaux d'Audit</string>
+    <string name="audit_logs">Journaux d\'Audit</string>
     <string name="create_user">Créer un Nouvel Utilisateur</string>
     <string name="download_pdf">Télécharger le Procès-Verbal PDF</string>
-    <string name="login_subtitle">Accédez au panneau d'administration</string>
+    <string name="login_subtitle">Accédez au panneau d\'administration</string>
     <string name="email_label">Email Secrétariat</string>
     <string name="password_label">Mot de passe</string>
     <string name="btn_login">SE CONNECTER AU PANNEAU</string>

@@ -1,22 +1,22 @@
 <restrictions xmlns:android="http://schemas.android.com/apk/res/android">
     <restriction
         android:key="server_url"
-        android:title="URL Server Scuola (MDM)"
+        android:title="@string/restriction_server_url_title"
         android:restrictionType="string"
-        android:description="URL endpoint del server backend distribuito tramite MDM"
+        android:description="@string/restriction_server_url_desc"
         android:defaultValue="https://registro.scuola.it/api/v1" />
 
     <restriction
         android:key="school_code"
-        android:title="Codice Meccanografico Scuola"
+        android:title="@string/restriction_school_code_title"
         android:restrictionType="string"
-        android:description="Codice identificativo ministeriale dell'istituto scolastico"
+        android:description="@string/restriction_school_code_desc"
         android:defaultValue="" />
 
     <restriction
         android:key="kiosk_mode_enabled"
-        android:title="Modalità Kiosk Esame / Tablet Condiviso"
+        android:title="@string/restriction_kiosk_mode_title"
         android:restrictionType="bool"
-        android:description="Disabilita navigazione esterna e lock dell'app"
+        android:description="@string/restriction_kiosk_mode_desc"
         android:defaultValue="false" />
 </restrictions>

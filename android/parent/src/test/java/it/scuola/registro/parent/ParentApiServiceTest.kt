@@ -12,7 +12,7 @@ class ParentApiServiceTest {
 
     @Before
     fun setUp() {
-        apiService = HttpParentApiService("https://api.scuola.registro.it/api/v1")
+        apiService = HttpParentApiService("https://registro-backend-fdu2.onrender.com/api/v1")
     }
 
     @Test

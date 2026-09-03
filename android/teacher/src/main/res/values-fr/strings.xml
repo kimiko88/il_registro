@@ -5,7 +5,7 @@
     <string name="take_attendance">Appel</string>
     <string name="add_grade">Nouvelle Note</string>
     <string name="scrutiny_board">Conseil de Classe</string>
-    <string name="sign_hour">Signer l'Heure de Cours</string>
+    <string name="sign_hour">Signer l\'Heure de Cours</string>
     <string name="lesson_topic">Sujet du Cours</string>
     <string name="select_class">Sélectionner la Classe</string>
     <string name="login_subtitle">Accédez à votre espace enseignant</string>

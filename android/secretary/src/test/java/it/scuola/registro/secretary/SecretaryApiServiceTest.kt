@@ -12,7 +12,7 @@ class SecretaryApiServiceTest {
 
     @Before
     fun setUp() {
-        apiService = HttpSecretaryApiService("https://api.scuola.registro.it/api/v1")
+        apiService = HttpSecretaryApiService("https://registro-backend-fdu2.onrender.com/api/v1")
     }
 
     @Test

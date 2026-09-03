@@ -9,7 +9,7 @@ public protocol StudentAPIServiceProtocol {
 public class HttpStudentAPIService: StudentAPIServiceProtocol {
     private let baseURL: URL
 
-    public init(baseURL: URL = URL(string: "https://api.scuola.registro.it/api/v1")!) {
+    public init(baseURL: URL = URL(string: "https://registro-backend-fdu2.onrender.com/api/v1")!) {
         self.baseURL = baseURL
     }
 
@@ -27,9 +27,15 @@ public class HttpStudentAPIService: StudentAPIServiceProtocol {
             throw NSError(domain: "StudentAPI", code: 401, userInfo: [NSLocalizedDescriptionKey: "Credenziali non valide o errore server"])
         }
 
-        if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-           let token = json["token"] as? String ?? json["access_token"] as? String {
-            return token
+        if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
+            let userObj = json["user"] as? [String: Any]
+            let role = userObj?["role"] as? String
+            guard role == "student" else {
+                throw NSError(domain: "StudentAPI", code: 403, userInfo: [NSLocalizedDescriptionKey: "Accesso non consentito: questo account non appartiene a uno studente."])
+            }
+            if let token = json["token"] as? String ?? json["access_token"] as? String {
+                return token
+            }
         }
         throw NSError(domain: "StudentAPI", code: 500, userInfo: [NSLocalizedDescriptionKey: "Token non presente nella risposta"])
     }

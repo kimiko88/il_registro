@@ -17,4 +17,7 @@
     <string name="btn_login">ACCEDI AL PORTALE</string>
     <string name="err_enter_credentials">Inserisci email e password</string>
     <string name="logout">Disconnetti</string>
+    <string name="child_attendance">Presenze</string>
+    <string name="upcoming_colloqui">Prossimi Colloqui</string>
+    <string name="sign_hour">Conferma</string>
 </resources>
