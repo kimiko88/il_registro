@@ -1,6 +1,8 @@
 import SwiftUI
 
+#if !SWIFT_PACKAGE
 @main
+#endif
 struct TeacherApp: App {
     @State private var isLoggedIn = false
     @State private var token = ""

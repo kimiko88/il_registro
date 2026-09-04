@@ -63,6 +63,7 @@ public class SecretaryViewModel: ObservableObject {
 
     public init(apiService: SecretaryAPIServiceProtocol = HttpSecretaryAPIService()) {
         self.apiService = apiService
+        loadData()
     }
 
     public func loadFromDatabase(token: String) async {
@@ -87,13 +88,26 @@ public class SecretaryViewModel: ObservableObject {
     }
 
     public func loadSampleData() {
-        loadData()
+        users = [
+            ManagedUserModel(id: "u1", name: "Prof.ssa Maria Rossi", role: "Docente"),
+            ManagedUserModel(id: "u2", name: "Prof. Marco Bianchi", role: "Docente")
+        ]
+        classes = [
+            SecretaryClassModel(id: "c1", name: "Classe 1A"),
+            SecretaryClassModel(id: "c2", name: "Classe 2A")
+        ]
+        certificates = [
+            CertificateItemModel(id: "c1", title: "Certificato di Iscrizione e Frequenza", status: "pronto", pdfUrl: "/api/v1/cert/c1.pdf"),
+            CertificateItemModel(id: "c2", title: "Certificato con Valutazioni", status: "pronto", pdfUrl: "/api/v1/cert/c2.pdf")
+        ]
     }
 
     public func loadData() {
         users = [
             ManagedUserModel(id: "u1", name: "Prof.ssa Maria Rossi", role: "Docente"),
-            ManagedUserModel(id: "u2", name: "Prof. Marco Bianchi", role: "Docente")
+            ManagedUserModel(id: "u2", name: "Prof. Marco Bianchi", role: "Docente"),
+            ManagedUserModel(id: "u3", name: "Mario Rossi (2B)", role: "Studente"),
+            ManagedUserModel(id: "u4", name: "Giuseppe Rossi", role: "Genitore")
         ]
 
         classes = [

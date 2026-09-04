@@ -6,11 +6,21 @@ public struct ParentColloquioSlotModel: Identifiable, Equatable {
     public let timeAndLocation: String
     public let statusText: String
 
+    public var teacherName: String { teacherAndSubject }
+    public var timeSlot: String { timeAndLocation }
+
     public init(id: String = UUID().uuidString, teacherAndSubject: String, timeAndLocation: String, statusText: String = "Disponibile") {
         self.id = id
         self.teacherAndSubject = teacherAndSubject
         self.timeAndLocation = timeAndLocation
         self.statusText = statusText
+    }
+
+    public init(id: String = UUID().uuidString, teacherName: String, timeSlot: String) {
+        self.id = id
+        self.teacherAndSubject = teacherName
+        self.timeAndLocation = timeSlot
+        self.statusText = "Disponibile"
     }
 }
 

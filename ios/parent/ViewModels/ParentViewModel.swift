@@ -57,6 +57,7 @@ public class ParentViewModel: ObservableObject {
 
     public init(apiService: ParentAPIServiceProtocol = HttpParentAPIService()) {
         self.apiService = apiService
+        loadData()
     }
 
     public func loadFromDatabase(token: String) async {
@@ -114,5 +115,9 @@ public class ParentViewModel: ObservableObject {
         absences[index].isJustified = true
         absences[index].justificationNote = reason
         return true
+    }
+
+    public func justifyAbsence(id: String, note: String) -> Bool {
+        return justifyAbsence(id: id, reason: note)
     }
 }

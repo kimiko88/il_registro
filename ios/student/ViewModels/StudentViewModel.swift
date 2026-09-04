@@ -44,6 +44,7 @@ public class StudentViewModel: ObservableObject {
 
     public init(apiService: StudentAPIServiceProtocol = HttpStudentAPIService()) {
         self.apiService = apiService
+        loadData()
     }
 
     public func loadFromDatabase(token: String) async {
@@ -76,7 +77,8 @@ public class StudentViewModel: ObservableObject {
             GradeItemModel(id: "1", subject: "Matematica", grade: 8.5, weight: 1.0, type: "Scritto", date: "30 Ago"),
             GradeItemModel(id: "2", subject: "Matematica", grade: 7.0, weight: 1.0, type: "Orale", date: "15 Ago"),
             GradeItemModel(id: "3", subject: "Italiano", grade: 8.0, weight: 1.0, type: "Tema", date: "28 Ago"),
-            GradeItemModel(id: "4", subject: "Inglese", grade: 9.0, weight: 1.0, type: "Pratico", date: "25 Ago")
+            GradeItemModel(id: "4", subject: "Inglese", grade: 9.0, weight: 1.0, type: "Pratico", date: "25 Ago"),
+            GradeItemModel(id: "5", subject: "Fisica", grade: 7.0, weight: 1.0, type: "Scritto", date: "22 Ago")
         ]
 
         homework = [

@@ -12,18 +12,6 @@ public struct ParentGradeDisplayModel: Identifiable, Equatable {
     }
 }
 
-public struct ParentColloquioSlotModel: Identifiable, Equatable {
-    public let id: String
-    public let teacherName: String
-    public let timeSlot: String
-
-    public init(id: String = UUID().uuidString, teacherName: String, timeSlot: String) {
-        self.id = id
-        self.teacherName = teacherName
-        self.timeSlot = timeSlot
-    }
-}
-
 public struct ParentDashboardView: View {
     @ObservedObject public var viewModel: ParentViewModel
     public var token: String

@@ -3,9 +3,12 @@ import XCTest
 final class ParentE2ETests: XCTestCase {
     var app: XCUIApplication!
 
-    override func setUp() {
-        super.setUp()
+    override func setUpWithError() throws {
+        try super.setUpWithError()
         continueAfterFailure = false
+        guard ProcessInfo.processInfo.environment["XCUI_TARGET_APPLICATION_BUNDLE_PATH"] != nil else {
+            throw XCTSkip("Skipping UI test: No target application configured.")
+        }
         app = XCUIApplication()
         app.launch()
     }

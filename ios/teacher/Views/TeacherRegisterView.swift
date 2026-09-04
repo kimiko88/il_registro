@@ -35,7 +35,7 @@ public struct TeacherRegisterView: View {
         .tint(Color.blue)
         .task {
             if !token.isEmpty {
-                await viewModel.loadFromDatabase(token: token)
+                _ = await viewModel.loadFromDatabase(token: token)
             }
         }
     }
