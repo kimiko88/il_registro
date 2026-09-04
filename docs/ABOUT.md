@@ -6,10 +6,10 @@
 
 ## 📌 GitHub Metadata / About Info
 
-- **Tagline**: Sistema di Registro Elettronico Scolastico moderno e completo per le scuole italiane (Go 1.27, Vue 3, Quasar, PostgreSQL 16+, PWA, i18n, WAI-ARIA).
-- **Licenza**: [PolyForm Noncommercial 1.0.0](../LICENSE) — Gratuita e libera per scuole pubbliche, università, enti ed istituzioni pubbliche.
+- **Tagline**: Sistema di Registro Elettronico Scolastico moderno e completo per le scuole italiane (Go 1.27, Vue 3, Quasar, PostgreSQL 16+, App Native Android & iOS, PWA, i18n, WAI-ARIA).
+- **Licenza**: [PolyForm Noncommercial 1.0.0](../LICENSE) — Gratuita e libera per scuole pubbliche, università, enti ed istituzioni pubbliche (valida per Backend, Frontend Web e App Mobile Native Android & iOS).
 - **Topics / Tags**:
-  `registro-elettronico` `scuola-italiana` `go` `golang` `vue3` `quasar-framework` `pinia` `postgresql` `spid` `cie` `pwa` `education` `school-management` `rest-api` `i18n` `accessibility`
+  `registro-elettronico` `scuola-italiana` `go` `golang` `vue3` `quasar-framework` `pinia` `postgresql` `spid` `cie` `pwa` `android` `jetpack-compose` `ios` `swiftui` `education` `school-management` `rest-api` `i18n` `accessibility`
 
 ---
 
@@ -21,6 +21,8 @@ il_registro è strutturato come **monorepo decoupled**:
 il_registro/
 ├── registro-backend/   # Service Layer REST API in Go
 ├── registro-frontend/  # Web Application SPA/PWA in Vue 3 + Quasar
+├── android/            # Progetto Multi-Modulo Android (Kotlin Compose: :student, :parent, :teacher, :secretary) [Alpha]
+├── ios/                # Progetto iOS (SwiftUI, Xcode + SPM: Studente, Docente, Genitore, Segreteria) [Alpha]
 └── docs/               # Documentazione tecnica e guide per sviluppatori
 ```
 
@@ -42,6 +44,13 @@ il_registro/
 - **[Vue Router](https://router.vuejs.org/)**: SPA Routing con Navigation Guards per il controllo degli accessi basato sui ruoli (`superadmin`, `admin`, `secretary`, `teacher`, `student`, `parent`).
 - **[Axios](https://axios-http.com/)**: Client HTTP con interceptor per l'iniezione automatica dell'header `Authorization: Bearer <token>`, refresh trasparente in caso di 401 e reindirizzamento SPA senza ricaricamento pagina via Vue Router.
 - **[Vue I18n](https://vue-i18n.intlify.dev/)**: Internazionalizzazione completa con dizionari `it-IT`, `en-US`, `de-DE` per menu, notifiche, form e errori.
+
+### Mobile Native — Android & iOS (Fase Alpha — Non stabile e incompleta)
+
+> ⚠️ **Nota sullo sviluppo Mobile**: I sorgenti delle applicazioni native in `android/` e `ios/` sono in fase **Alpha sperimentale**, attivamente sviluppate ma non stabili né complete. Condividono la licenza [PolyForm Noncommercial 1.0.0](../LICENSE).
+
+- **[Kotlin & Jetpack Compose](https://developer.android.com/jetpack/compose)** (`android/`): 4 moduli nativi (`:student`, `:parent`, `:teacher`, `:secretary`), Material 3 UI, Biometria, Offline Cache, 11 lingue.
+- **[Swift & SwiftUI](https://developer.apple.com/swift/)** (`ios/`): Progetto Xcode (`RegistroStudente.xcodeproj`) e Swift Package Manager con 4 schemi/target (`RegistroStudente`, `RegistroDocente`, `RegistroGenitore`, `RegistroSegreteria`), LocalAuthentication, 11 lingue.
 
 ---
 

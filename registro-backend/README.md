@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/kimiko88/il_registro/actions/workflows/ci.yml/badge.svg)](https://github.com/kimiko88/il_registro/actions/workflows/ci.yml)
 [![Go Version](https://img.shields.io/badge/go-1.27%2B-blue)](https://go.dev/)
-[![License](https://img.shields.io/badge/license-MIT-green)](../LICENSE)
+[![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-blue.svg)](../LICENSE)
 
 Backend completo per un registro elettronico scolastico italiano, sviluppato in **Go** con architettura modulare ispirata a Clean Architecture / Domain-Driven Design. Gestisce autenticazione multi-ruolo, voti, presenze, comunicazioni, orari, scrutini e molto altro.
 

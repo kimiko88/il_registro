@@ -104,17 +104,27 @@ npm run test:unit
 npm run build
 ```
 
-### Setup & Test Mobile (Android & iOS)
+### Setup & Test Mobile (Android & iOS — Fase Alpha)
 
-Per istruzioni dettagliate su come configurare, compilare ed eseguire i test delle **8 applicazioni mobile native** (Android e iOS per Studente, Genitore, Docente e Segreteria), consulta la guida dedicata:
-👉 **[Guida Setup & Test Mobile](MOBILE_SETUP_GUIDE.md)**
+> [!WARNING]
+> **Fase Alpha (Non stabile e incompleta)**: Le applicazioni mobile native sono in fase di sviluppo attivo e testing iniziale. **Non sono stabili né adatte all'uso in produzione**.
+>
+> 📄 **Licenza**: Anche tutte le applicazioni mobile native sono rilasciate sotto la licenza **[PolyForm Noncommercial 1.0.0](../LICENSE)**.
+
+Per le istruzioni operative dettagliate su come configurare, compilare ed eseguire le **8 applicazioni mobile native** (Android e iOS per Studente, Genitore, Docente e Segreteria), consulta le guide dedicate:
+- 👉 **[Guida di Configurazione e Architettura Mobile](MOBILE_SETUP_GUIDE.md)**
+- 👉 **[Istruzioni di Avvio e Testing Mobile](mobile_instruction.md)**
 
 ```bash
-# Esecuzione test Android (da /android)
+# Esecuzione test Android (dalla cartella /android)
 ./gradlew test
 
-# Esecuzione test iOS (da /ios)
+# Esecuzione test iOS (dalla cartella /ios con Swift Package Manager)
 swift test
+
+# Per avviare i progetti nei rispettivi IDE:
+# - Android: apri la cartella ./android con Android Studio
+# - iOS: apri ./ios/RegistroStudente/RegistroStudente.xcodeproj con Xcode su macOS
 ```
 
 ---

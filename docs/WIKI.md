@@ -40,14 +40,22 @@ Benvenuto nel Wiki di **il_registro**. Questa guida completa è pensata per svil
 - **Routing & Interceptor**: Vue Router integrato con Axios (`setApiRouter`) per reindirizzamento SPA senza full page reloads.
 - **Real-time Notifications**: Store WebSocket con monitoraggio attivo dei riconnessioni e stato errori (`reconnectAttempts`, `hasFailedPermanently`).
 
+### Mobile Native (Fase Alpha — Non stabile e incompleta) 📱
+
+- **Android**: Multi-Modulo Gradle (`:student`, `:parent`, `:teacher`, `:secretary`), Kotlin, Jetpack Compose Material 3, ViewModel con Coroutines, Biometria, Offline Cache, 11 lingue.
+- **iOS**: Progetto Xcode (`RegistroStudente.xcodeproj` con 4 target: Studente, Docente, Genitore, Segreteria) + Swift Package Manager (`Package.swift`), Swift, SwiftUI, Biometria, 11 lingue.
+- **Licenza & Stato**: Come l'applicativo web e il backend, le app mobile sono rilasciate con licenza **[PolyForm Noncommercial 1.0.0](../LICENSE)**. Si trovano in **fase Alpha sperimentale, non stabili e incomplete** (non destinate alla produzione).
+
 ---
 
 ## 2. Architettura del Sistema
 
 ```mermaid
 graph TD
-    Client[Browser / Client Vue 3 App] -->|HTTPS REST / JSON| Gateway[Gin Web Router API v1]
-    Client -->|WebSocket| WS[WebSocket Hub]
+    ClientWeb[Browser / Client Vue 3 App] -->|HTTPS REST / JSON| Gateway[Gin Web Router API v1]
+    ClientWeb -->|WebSocket| WS[WebSocket Hub]
+    ClientMobile[Native Apps Android & iOS - Alpha] -->|HTTPS REST / JSON| Gateway
+    ClientMobile -->|WebSocket| WS
 
     subgraph Backend Go API Server
         Gateway --> AuthMw[JWT Auth, Rate Limit & RBAC Middleware]
