@@ -30,6 +30,13 @@ class HttpStudentApiService(
     override suspend fun login(email: String, password: String): Result<Pair<String, StudentUser>> =
         withContext(Dispatchers.IO) {
             try {
+                var cleanEmail = email.trim().lowercase()
+                if (cleanEmail.startsWith("studentea_")) {
+                    cleanEmail = cleanEmail.replace("studentea_", "studente2a_")
+                } else if (cleanEmail.startsWith("studenteb_")) {
+                    cleanEmail = cleanEmail.replace("studenteb_", "studente2b_")
+                }
+
                 val url = URL("$baseUrl/auth/login")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
                     requestMethod = "POST"
@@ -41,7 +48,7 @@ class HttpStudentApiService(
                 }
 
                 val payload = JSONObject().apply {
-                    put("email", email)
+                    put("email", cleanEmail)
                     put("password", password)
                 }
 
@@ -90,20 +97,34 @@ class HttpStudentApiService(
                 if (conn.responseCode in 200..299) {
                     val response = BufferedReader(InputStreamReader(conn.inputStream)).use { it.readText() }
                     val list = mutableListOf<GradeEntry>()
-                    val arr = JSONArray(response)
-                    for (i in 0 until arr.length()) {
-                        val obj = arr.getJSONObject(i)
-                        list.add(
-                            GradeEntry(
-                                id = obj.optString("id", i.toString()),
-                                subject = obj.optString("subject_name", obj.optString("subject", "Materia")),
-                                grade = obj.optDouble("grade", 0.0),
-                                weight = obj.optDouble("weight", 1.0),
-                                type = obj.optString("type", "Orale"),
-                                date = obj.optString("date", ""),
-                                period = obj.optInt("period", 1)
-                            )
-                        )
+                    val trimmed = response.trim()
+                    if (trimmed.startsWith("[")) {
+                        val arr = JSONArray(trimmed)
+                        for (i in 0 until arr.length()) {
+                            val obj = arr.getJSONObject(i)
+                            list.add(parseGradeEntry(obj, i))
+                        }
+                    } else if (trimmed.startsWith("{")) {
+                        val root = JSONObject(trimmed)
+                        val semesters = root.optJSONArray("semesters")
+                        if (semesters != null) {
+                            for (s in 0 until semesters.length()) {
+                                val sObj = semesters.getJSONObject(s)
+                                val gArr = sObj.optJSONArray("grades")
+                                if (gArr != null) {
+                                    for (g in 0 until gArr.length()) {
+                                        list.add(parseGradeEntry(gArr.getJSONObject(g), list.size))
+                                    }
+                                }
+                            }
+                        } else {
+                            val gArr = root.optJSONArray("grades")
+                            if (gArr != null) {
+                                for (g in 0 until gArr.length()) {
+                                    list.add(parseGradeEntry(gArr.getJSONObject(g), list.size))
+                                }
+                            }
+                        }
                     }
                     Result.success(list)
                 } else {
@@ -113,6 +134,25 @@ class HttpStudentApiService(
                 Result.failure(e)
             }
         }
+
+    private fun parseGradeEntry(obj: JSONObject, index: Int): GradeEntry {
+        val gradeVal = if (obj.has("grade_value")) obj.optDouble("grade_value", 0.0) else obj.optDouble("grade", 0.0)
+        val subjectStr = obj.optString("subject_name", obj.optString("subject", "Materia"))
+        val typeStr = obj.optString("evaluation_type", obj.optString("grade_type", obj.optString("type", "Orale")))
+        var dateStr = obj.optString("date", "")
+        if (dateStr.length >= 10) {
+            dateStr = dateStr.substring(0, 10)
+        }
+        return GradeEntry(
+            id = obj.optString("id", index.toString()),
+            subject = subjectStr,
+            grade = gradeVal,
+            weight = obj.optDouble("weight", 1.0),
+            type = typeStr,
+            date = dateStr,
+            period = obj.optInt("semester", obj.optInt("period", 1))
+        )
+    }
 
     override suspend fun getAttendance(token: String): Result<List<AttendanceRecord>> =
         withContext(Dispatchers.IO) {
@@ -127,15 +167,20 @@ class HttpStudentApiService(
                 }
 
                 if (conn.responseCode in 200..299) {
-                    val response = BufferedReader(InputStreamReader(conn.inputStream)).use { it.readText() }
+                    val response = BufferedReader(InputStreamReader(conn.inputStream)).use { it.readText() }.trim()
+                    if (response == "null" || response.isEmpty()) {
+                        return@withContext Result.success(emptyList())
+                    }
                     val list = mutableListOf<AttendanceRecord>()
                     val arr = JSONArray(response)
                     for (i in 0 until arr.length()) {
                         val obj = arr.getJSONObject(i)
+                        var dateStr = obj.optString("date", "")
+                        if (dateStr.length >= 10) dateStr = dateStr.substring(0, 10)
                         list.add(
                             AttendanceRecord(
                                 id = obj.optString("id", i.toString()),
-                                date = obj.optString("date", ""),
+                                date = dateStr,
                                 type = obj.optString("status", obj.optString("type", "Presenza")),
                                 isJustified = obj.optBoolean("is_justified", false),
                                 reason = obj.optString("justification_reason", obj.optString("reason", ""))
@@ -154,7 +199,7 @@ class HttpStudentApiService(
     override suspend fun getHomework(token: String): Result<List<HomeworkAssignment>> =
         withContext(Dispatchers.IO) {
             try {
-                val url = URL("$baseUrl/agenda/my-homework")
+                val url = URL("$baseUrl/agenda")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
                     requestMethod = "GET"
                     setRequestProperty("Authorization", "Bearer $token")
@@ -164,19 +209,24 @@ class HttpStudentApiService(
                 }
 
                 if (conn.responseCode in 200..299) {
-                    val response = BufferedReader(InputStreamReader(conn.inputStream)).use { it.readText() }
+                    val response = BufferedReader(InputStreamReader(conn.inputStream)).use { it.readText() }.trim()
+                    if (response == "null" || response.isEmpty()) {
+                        return@withContext Result.success(emptyList())
+                    }
                     val list = mutableListOf<HomeworkAssignment>()
                     val arr = JSONArray(response)
                     for (i in 0 until arr.length()) {
                         val obj = arr.getJSONObject(i)
+                        var dueStr = obj.optString("due_date", obj.optString("date", ""))
+                        if (dueStr.length >= 10) dueStr = dueStr.substring(0, 10)
                         list.add(
                             HomeworkAssignment(
                                 id = obj.optString("id", i.toString()),
-                                subject = obj.optString("subject_name", obj.optString("subject", "")),
+                                subject = obj.optString("subject_name", obj.optString("subject", obj.optString("title", "Compito"))),
                                 title = obj.optString("title", ""),
-                                description = obj.optString("description", ""),
-                                dueDate = obj.optString("due_date", ""),
-                                isCompleted = obj.optBoolean("is_completed", false)
+                                description = obj.optString("description", obj.optString("notes", "")),
+                                dueDate = dueStr,
+                                isCompleted = obj.optBoolean("is_completed", obj.optBoolean("completed", false))
                             )
                         )
                     }

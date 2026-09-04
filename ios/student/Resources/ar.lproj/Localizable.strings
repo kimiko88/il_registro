@@ -1,6 +1,6 @@
 "app_name" = "السجل - الطالب";
 "dashboard_title" = "لوحتي الرئيسية";
-"welcome_student" = "مرحباً، %1$s!";
+"welcome_student" = "مرحباً، %@!";
 "grades_title" = "درجاتي";
 "agenda_title" = "الواجبات وجدول الأعمال";
 "attendance_title" = "الحضور والغياب";
@@ -26,3 +26,18 @@
 "restriction_school_code_desc" = "رمز التعريف الرسمي للمؤسسة التعليمية";
 "restriction_kiosk_mode_title" = "وضع كشك الامتحانات / الجهاز المشترك";
 "restriction_kiosk_mode_desc" = "تعطيل التنقل الخارجي وقفل التطبيق";
+"tab_home" = "الرئيسية";
+"tab_grades" = "الدرجات";
+"tab_agenda" = "المهام";
+"tab_attendance" = "الحضور";
+"tab_report_card" = "الشهادة";
+"grade_type_written" = "كتابي";
+"grade_type_oral" = "شفهي";
+"grade_type_practical" = "عملي";
+"grade_type_test" = "اختبار";
+"grade_type_project" = "مشروع";
+"grade_type_lab" = "مختبر";
+"attendance_present" = "حاضر";
+"attendance_absent" = "غائب";
+"attendance_late" = "متأخر";
+"attendance_early_exit" = "مغادرة مبكرة";

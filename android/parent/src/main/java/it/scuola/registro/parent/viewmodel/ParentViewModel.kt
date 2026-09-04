@@ -37,10 +37,6 @@ class ParentViewModel(
     var errorMessage by mutableStateOf<String?>(null)
         private set
 
-    init {
-        loadSampleData()
-    }
-
     suspend fun loadFromDatabase(token: String): Boolean {
         isLoading = true
         errorMessage = null

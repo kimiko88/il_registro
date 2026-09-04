@@ -1,6 +1,6 @@
 "app_name" = "Registro - Estudiante";
 "dashboard_title" = "Mi Panel";
-"welcome_student" = "¡Hola, %1$s!";
+"welcome_student" = "¡Hola, %@!";
 "grades_title" = "Mis Calificaciones";
 "agenda_title" = "Deberes y Agenda";
 "attendance_title" = "Asistencias y Ausencias";
@@ -26,3 +26,18 @@
 "restriction_school_code_desc" = "Código de identificación oficial de la escuela";
 "restriction_kiosk_mode_title" = "Modo Kiosco de Examen / Tableta Compartida";
 "restriction_kiosk_mode_desc" = "Desactiva la navegación externa y bloquea la aplicación";
+"tab_home" = "Inicio";
+"tab_grades" = "Notas";
+"tab_agenda" = "Agenda";
+"tab_attendance" = "Asistencia";
+"tab_report_card" = "Boletín";
+"grade_type_written" = "Escrito";
+"grade_type_oral" = "Oral";
+"grade_type_practical" = "Práctico";
+"grade_type_test" = "Test";
+"grade_type_project" = "Proyecto";
+"grade_type_lab" = "Laboratorio";
+"attendance_present" = "Presente";
+"attendance_absent" = "Ausente";
+"attendance_late" = "Retraso";
+"attendance_early_exit" = "Salida anticipada";

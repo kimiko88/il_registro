@@ -57,7 +57,6 @@ public class ParentViewModel: ObservableObject {
 
     public init(apiService: ParentAPIServiceProtocol = HttpParentAPIService()) {
         self.apiService = apiService
-        loadData()
     }
 
     public func loadFromDatabase(token: String) async {
@@ -67,6 +66,10 @@ public class ParentViewModel: ObservableObject {
         }
         do {
             let fetchedChildren = try await apiService.fetchChildren(token: token)
+            var allAbsences: [AbsenceModel] = []
+            if let firstChild = fetchedChildren.first {
+                allAbsences = try await apiService.fetchAbsences(token: token, childId: firstChild.id)
+            }
             await MainActor.run {
                 self.children = fetchedChildren.map {
                     ChildItemModel(id: $0.id, firstName: $0.firstName, lastName: $0.lastName, className: $0.className)
@@ -74,6 +77,7 @@ public class ParentViewModel: ObservableObject {
                 if let first = self.children.first {
                     self.selectedChildId = first.id
                 }
+                self.absences = allAbsences
                 self.isLoading = false
             }
         } catch {

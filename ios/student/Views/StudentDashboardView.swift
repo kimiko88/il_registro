@@ -1,60 +1,49 @@
 import SwiftUI
 
-public struct StudentAttendanceRecordModel: Identifiable, Equatable {
-    public let id: String
-    public let date: String
-    public let type: String
-    public let isJustified: Bool
-
-    public init(id: String = UUID().uuidString, date: String, type: String, isJustified: Bool = true) {
-        self.id = id
-        self.date = date
-        self.type = type
-        self.isJustified = isJustified
-    }
-}
 
 public struct StudentDashboardView: View {
     @ObservedObject public var viewModel: StudentViewModel
     public var token: String
+    public var onLogout: (() -> Void)?
     @State private var studentName: String
     @State private var selectedTab = 0
 
-    public init(token: String = "", studentName: String = "Studente", viewModel: StudentViewModel = StudentViewModel()) {
+    public init(token: String = "", studentName: String = "Studente", viewModel: StudentViewModel = StudentViewModel(), onLogout: (() -> Void)? = nil) {
         self.token = token
+        self.onLogout = onLogout
         self._studentName = State(initialValue: studentName)
         self.viewModel = viewModel
     }
 
     public var body: some View {
         TabView(selection: $selectedTab) {
-            StudentHomeView(studentName: studentName, viewModel: viewModel)
+            StudentHomeView(studentName: studentName, viewModel: viewModel, onLogout: onLogout)
                 .tabItem {
-                    Label(NSLocalizedString("dashboard_title", comment: ""), systemImage: "house.fill")
+                    Label(NSLocalizedString("tab_home", comment: ""), systemImage: "house.fill")
                 }
                 .tag(0)
 
             StudentGradesView(viewModel: viewModel)
                 .tabItem {
-                    Label(NSLocalizedString("grades_title", comment: ""), systemImage: "chart.bar.doc.horizontal.fill")
+                    Label(NSLocalizedString("tab_grades", comment: ""), systemImage: "chart.bar.doc.horizontal.fill")
                 }
                 .tag(1)
 
             StudentAgendaView(viewModel: viewModel)
                 .tabItem {
-                    Label(NSLocalizedString("agenda_title", comment: ""), systemImage: "calendar")
+                    Label(NSLocalizedString("tab_agenda", comment: ""), systemImage: "calendar")
                 }
                 .tag(2)
 
-            StudentAttendanceView(records: [])
+            StudentAttendanceView(viewModel: viewModel)
                 .tabItem {
-                    Label(NSLocalizedString("attendance_title", comment: ""), systemImage: "checkmark.circle.fill")
+                    Label(NSLocalizedString("tab_attendance", comment: ""), systemImage: "checkmark.circle.fill")
                 }
                 .tag(3)
 
             StudentReportCardView(viewModel: viewModel)
                 .tabItem {
-                    Label(NSLocalizedString("report_card_title", comment: ""), systemImage: "doc.text.fill")
+                    Label(NSLocalizedString("tab_report_card", comment: ""), systemImage: "doc.text.fill")
                 }
                 .tag(4)
         }
@@ -71,6 +60,7 @@ public struct StudentDashboardView: View {
 struct StudentHomeView: View {
     let studentName: String
     @ObservedObject var viewModel: StudentViewModel
+    var onLogout: (() -> Void)? = nil
 
     var body: some View {
         NavigationView {
@@ -79,7 +69,7 @@ struct StudentHomeView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         HStack {
                             VStack(alignment: .leading, spacing: 4) {
-                                Text("\(NSLocalizedString("welcome_student", comment: "")) \(studentName)")
+                                Text(String(format: NSLocalizedString("welcome_student", comment: ""), studentName))
                                     .font(.title)
                                     .fontWeight(.bold)
                                     .foregroundColor(.white)
@@ -114,7 +104,7 @@ struct StudentHomeView: View {
                                     Text(grade.subject)
                                         .font(.body)
                                         .fontWeight(.semibold)
-                                    Text("\(grade.type) • \(grade.date)")
+                                    Text("\(grade.localizedType) • \(grade.date)")
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                 }
@@ -137,6 +127,25 @@ struct StudentHomeView: View {
                 .padding()
             }
             .navigationTitle(NSLocalizedString("dashboard_title", comment: ""))
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    if let onLogout = onLogout {
+                        Button(action: onLogout) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "rectangle.portrait.and.arrow.right")
+                                Text(NSLocalizedString("logout", comment: ""))
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                            }
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(Color.red.opacity(0.85))
+                            .cornerRadius(8)
+                        }
+                    }
+                }
+            }
             .background(Color(UIColor.systemGroupedBackground).ignoresSafeArea())
         }
     }
@@ -161,19 +170,26 @@ struct StudentGradesView: View {
                 }
 
                 Section(header: Text(NSLocalizedString("grades_title", comment: ""))) {
-                    ForEach(viewModel.grades) { grade in
-                        HStack {
-                            VStack(alignment: .leading) {
-                                Text(grade.subject)
-                                    .fontWeight(.semibold)
-                                Text("\(grade.type) • \(grade.date)")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
+                    if viewModel.grades.isEmpty {
+                        Text("Nessun voto registrato")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .padding(.vertical, 8)
+                    } else {
+                        ForEach(viewModel.grades) { grade in
+                            HStack {
+                                VStack(alignment: .leading) {
+                                    Text(grade.subject)
+                                        .fontWeight(.semibold)
+                                    Text("\(grade.localizedType) • \(grade.date)")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                Spacer()
+                                Text(String(format: "%.1f", grade.grade))
+                                    .fontWeight(.bold)
+                                    .foregroundColor(grade.grade >= 6 ? .green : .red)
                             }
-                            Spacer()
-                            Text(String(format: "%.1f", grade.grade))
-                                .fontWeight(.bold)
-                                .foregroundColor(grade.grade >= 6 ? .green : .red)
                         }
                     }
                 }
@@ -190,25 +206,32 @@ struct StudentAgendaView: View {
     var body: some View {
         NavigationView {
             List {
-                ForEach(viewModel.homework) { task in
-                    HStack {
-                        Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
-                            .foregroundColor(task.isCompleted ? .green : .gray)
-                            .onTapGesture {
-                                _ = viewModel.toggleHomework(id: task.id)
+                if viewModel.homework.isEmpty {
+                    Text("Nessun compito assegnato in agenda")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .padding(.vertical, 8)
+                } else {
+                    ForEach(viewModel.homework) { task in
+                        HStack {
+                            Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
+                                .foregroundColor(task.isCompleted ? .green : .gray)
+                                .onTapGesture {
+                                    _ = viewModel.toggleHomework(id: task.id)
+                                }
+                            VStack(alignment: .leading) {
+                                Text(task.subject)
+                                    .fontWeight(.semibold)
+                                Text(task.taskDescription)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                Text("\(NSLocalizedString("agenda_title", comment: "")): \(task.dueDate)")
+                                    .font(.caption2)
+                                    .foregroundColor(.purple)
                             }
-                        VStack(alignment: .leading) {
-                            Text(task.subject)
-                                .fontWeight(.semibold)
-                            Text(task.taskDescription)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                            Text("\(NSLocalizedString("agenda_title", comment: "")): \(task.dueDate)")
-                                .font(.caption2)
-                                .foregroundColor(.purple)
                         }
+                        .padding(.vertical, 4)
                     }
-                    .padding(.vertical, 4)
                 }
             }
             .navigationTitle(NSLocalizedString("agenda_title", comment: ""))
@@ -218,23 +241,24 @@ struct StudentAgendaView: View {
 
 // 4. Attendance View
 struct StudentAttendanceView: View {
-    public var records: [StudentAttendanceRecordModel] = []
+    @ObservedObject var viewModel: StudentViewModel
 
     var body: some View {
         NavigationView {
             List {
                 Section(header: Text(NSLocalizedString("attendance_title", comment: ""))) {
-                    if records.isEmpty {
-                        Text(NSLocalizedString("attendance_title", comment: ""))
-                            .font(.caption)
+                    if viewModel.attendance.isEmpty {
+                        Text("Nessuna assenza o ritardo registrato")
+                            .font(.subheadline)
                             .foregroundColor(.secondary)
+                            .padding(.vertical, 8)
                     } else {
-                        ForEach(records) { item in
+                        ForEach(viewModel.attendance) { item in
                             HStack {
-                                Text("\(item.date) • \(item.type)")
+                                Text("\(item.date) • \(item.localizedType)")
                                 Spacer()
                                 if item.isJustified {
-                                    Label(NSLocalizedString("attendance_title", comment: ""), systemImage: "checkmark.seal.fill")
+                                    Label("Giustificata", systemImage: "checkmark.seal.fill")
                                         .foregroundColor(.green)
                                         .font(.caption)
                                 }
@@ -270,21 +294,28 @@ struct StudentReportCardView: View {
                     .background(Color.purple)
                     .cornerRadius(16)
 
-                    ForEach(viewModel.grades) { grade in
-                        HStack {
-                            Text(grade.subject).fontWeight(.medium)
-                            Spacer()
-                            Text(String(format: "%.1f", grade.grade))
-                                .fontWeight(.bold)
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 4)
-                                .background(grade.grade >= 6 ? Color.green : Color.red)
-                                .cornerRadius(8)
+                    if viewModel.grades.isEmpty {
+                        Text("Nessuna valutazione registrata al momento")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .padding()
+                    } else {
+                        ForEach(viewModel.grades) { grade in
+                            HStack {
+                                Text(grade.subject).fontWeight(.medium)
+                                Spacer()
+                                Text(String(format: "%.1f", grade.grade))
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 4)
+                                    .background(grade.grade >= 6 ? Color.green : Color.red)
+                                    .cornerRadius(8)
+                            }
+                            .padding()
+                            .background(Color(UIColor.secondarySystemGroupedBackground))
+                            .cornerRadius(12)
                         }
-                        .padding()
-                        .background(Color(UIColor.secondarySystemGroupedBackground))
-                        .cornerRadius(12)
                     }
                 }
                 .padding()

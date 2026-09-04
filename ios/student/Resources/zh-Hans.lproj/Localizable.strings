@@ -1,6 +1,6 @@
 "app_name" = "电子花名册 - 学生";
 "dashboard_title" = "我的仪表盘";
-"welcome_student" = "你好，%1$s！";
+"welcome_student" = "你好，%@！";
 "grades_title" = "我的成绩";
 "agenda_title" = "作业与日程";
 "attendance_title" = "考勤与缺勤";
@@ -26,3 +26,18 @@
 "restriction_school_code_desc" = "教育机构官方识别代码";
 "restriction_kiosk_mode_title" = "考试专用锁定模式 / 共享平板";
 "restriction_kiosk_mode_desc" = "禁用外部导航并锁定应用程序";
+"tab_home" = "首页";
+"tab_grades" = "成绩";
+"tab_agenda" = "日程";
+"tab_attendance" = "考勤";
+"tab_report_card" = "成绩单";
+"grade_type_written" = "笔试";
+"grade_type_oral" = "口试";
+"grade_type_practical" = "实操";
+"grade_type_test" = "测试";
+"grade_type_project" = "项目";
+"grade_type_lab" = "实验";
+"attendance_present" = "出勤";
+"attendance_absent" = "缺勤";
+"attendance_late" = "迟到";
+"attendance_early_exit" = "早退";

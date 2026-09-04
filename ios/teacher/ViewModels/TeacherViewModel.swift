@@ -71,7 +71,6 @@ public class TeacherViewModel: ObservableObject {
 
     public init(apiService: TeacherAPIServiceProtocol = HttpTeacherAPIService()) {
         self.apiService = apiService
-        loadData()
     }
 
     public func signLessonViaApi(token: String, classId: String, topic: String) async -> Bool {
@@ -102,13 +101,26 @@ public class TeacherViewModel: ObservableObject {
             self.isLoading = true
             self.errorMessage = nil
         }
-        await MainActor.run {
-            if self.currentSession == nil {
-                self.currentSession = TeacherClassSessionModel(id: "1", className: "Classe", subject: "Materia", isSigned: false, lessonTopic: "")
+        do {
+            let classes = try await apiService.fetchClasses(token: token)
+            var session = classes.first
+            var classStudents: [RollCallStudent] = []
+            if let firstClass = session {
+                classStudents = try await apiService.fetchClassStudents(token: token, classId: firstClass.id)
             }
-            self.isLoading = false
+            await MainActor.run {
+                self.currentSession = session
+                self.students = classStudents
+                self.isLoading = false
+            }
+            return true
+        } catch {
+            await MainActor.run {
+                self.errorMessage = error.localizedDescription
+                self.isLoading = false
+            }
+            return false
         }
-        return true
     }
 
     public func loadSampleSession() {

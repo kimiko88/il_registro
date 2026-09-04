@@ -1,6 +1,6 @@
 "app_name" = "Журнал - Ученик";
 "dashboard_title" = "Моя панель";
-"welcome_student" = "Привет, %1$s!";
+"welcome_student" = "Привет, %@!";
 "grades_title" = "Мои оценки";
 "agenda_title" = "Домашние задания и расписание";
 "attendance_title" = "Посещаемость и пропуски";
@@ -26,3 +26,18 @@
 "restriction_school_code_desc" = "Идентификационный код учебного заведения";
 "restriction_kiosk_mode_title" = "Режим экзаменационного киоска / Общий планшет";
 "restriction_kiosk_mode_desc" = "Отключает внешнюю навигацию и блокирует приложение";
+"tab_home" = "Главная";
+"tab_grades" = "Оценки";
+"tab_agenda" = "Дневник";
+"tab_attendance" = "Посещаемость";
+"tab_report_card" = "Табель";
+"grade_type_written" = "Письменный";
+"grade_type_oral" = "Устный";
+"grade_type_practical" = "Практический";
+"grade_type_test" = "Тест";
+"grade_type_project" = "Проект";
+"grade_type_lab" = "Лабораторная";
+"attendance_present" = "Присутствует";
+"attendance_absent" = "Отсутствует";
+"attendance_late" = "Опоздание";
+"attendance_early_exit" = "Ранний уход";

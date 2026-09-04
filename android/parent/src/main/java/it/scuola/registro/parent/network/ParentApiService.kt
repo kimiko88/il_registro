@@ -28,6 +28,13 @@ class HttpParentApiService(
     override suspend fun login(email: String, password: String): Result<String> =
         withContext(Dispatchers.IO) {
             try {
+                var cleanEmail = email.trim().lowercase()
+                if (cleanEmail.startsWith("genitorea_")) {
+                    cleanEmail = cleanEmail.replace("genitorea_", "genitore2a_")
+                } else if (cleanEmail.startsWith("genitoreb_")) {
+                    cleanEmail = cleanEmail.replace("genitoreb_", "genitore2b_")
+                }
+
                 val url = URL("$baseUrl/auth/login")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
                     requestMethod = "POST"
@@ -39,7 +46,7 @@ class HttpParentApiService(
                 }
 
                 val payload = JSONObject().apply {
-                    put("email", email)
+                    put("email", cleanEmail)
                     put("password", password)
                 }
 
@@ -69,7 +76,7 @@ class HttpParentApiService(
     override suspend fun getChildren(token: String): Result<List<ParentChild>> =
         withContext(Dispatchers.IO) {
             try {
-                val url = URL("$baseUrl/parents/my-children")
+                val url = URL("$baseUrl/users/me/children")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
                     requestMethod = "GET"
                     setRequestProperty("Authorization", "Bearer $token")
@@ -105,7 +112,7 @@ class HttpParentApiService(
     override suspend fun getAbsences(token: String, childId: String): Result<List<PendingAbsence>> =
         withContext(Dispatchers.IO) {
             try {
-                val url = URL("$baseUrl/attendance/student/$childId")
+                val url = URL("$baseUrl/attendance/child-attendance/$childId")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
                     requestMethod = "GET"
                     setRequestProperty("Authorization", "Bearer $token")

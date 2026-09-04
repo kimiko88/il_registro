@@ -23,4 +23,18 @@ final class StudentIntegrationTests: XCTestCase {
         let toggled = viewModel.toggleHomework(id: "1")
         XCTAssertTrue(toggled)
     }
+
+    func testRealStudentLoginAndFetchGrades() async throws {
+        let token = try await apiService.login(email: "studentea_1@scuola.it", password: "password")
+        XCTAssertFalse(token.isEmpty)
+        XCTAssertEqual(apiService.lastStudentName, "Studente2A_1 Test")
+
+        let grades = try await apiService.fetchGrades(token: token)
+        XCTAssertFalse(grades.isEmpty)
+        XCTAssertTrue(grades.contains(where: { $0.subject == "Matematica" }))
+
+        await viewModel.loadFromDatabase(token: token)
+        XCTAssertFalse(viewModel.grades.isEmpty)
+        XCTAssertGreaterThan(viewModel.calculateGPA(), 6.0)
+    }
 }

@@ -54,10 +54,10 @@ Tutti gli account utilizzano la password predefinita: **`password`**.
 | **Docente 2 (Italiano)**   | `docente2@scuola.it`                                 | Insegna in 2A e 2B                          |
 | **Docente 3 (Inglese)**    | `docente3@scuola.it`                                 | Insegna in 2A e 2B                          |
 | **Docente 4 (Storia)**     | `docente4@scuola.it`                                 | Insegna in 2A e 2B                          |
-| **Studente 1 (Classe 2A)** | `studentea_1@scuola.it`                              | **Rappresentante di Classe (Studenti)**     |
-| **Studenti 2A (2-10)**     | `studentea_2@scuola.it` ... `studentea_10@scuola.it` | 10 Studenti in Classe 2A                    |
-| **Genitore 1 (Classe 2A)** | `genitore2a_1@scuola.it`                             | **Rappresentante dei Genitori (2A)**        |
-| **Genitori 2A (2-10)**     | `genitorea_2@scuola.it` ... `genitorea_10@scuola.it` | Genitori associati agli studenti di 2A      |
-| **Studenti 2B (1-10)**     | `studenteb_1@scuola.it` ... `studenteb_10@scuola.it` | 10 Studenti in Classe 2B                    |
-| **Genitore 1 (Classe 2B)** | `genitoreb_1@scuola.it`                              | **Rappresentante dei Genitori (2B)**        |
-| **Genitori 2B (2-10)**     | `genitoreb_2@scuola.it` ... `genitoreb_10@scuola.it` | Genitori associati agli studenti di 2B      |
+| **Studente 1 (Classe 2A)** | `studente2a_1@scuola.it` *(o `studentea_1@scuola.it`)* | **Rappresentante di Classe (Studenti)** |
+| **Studenti 2A (2-10)**     | `studente2a_2@scuola.it` ... `studente2a_10@scuola.it` | 10 Studenti in Classe 2A                |
+| **Genitore 1 (Classe 2A)** | `genitore2a_1@scuola.it` *(o `genitorea_1@scuola.it`)* | **Rappresentante dei Genitori (2A)**    |
+| **Genitori 2A (2-10)**     | `genitore2a_2@scuola.it` ... `genitore2a_10@scuola.it` | Genitori associati agli studenti di 2A  |
+| **Studenti 2B (1-10)**     | `studente2b_1@scuola.it` *(o `studenteb_1@scuola.it`)* | 10 Studenti in Classe 2B                |
+| **Genitore 1 (Classe 2B)** | `genitore2b_1@scuola.it` *(o `genitoreb_1@scuola.it`)* | **Rappresentante dei Genitori (2B)**    |
+| **Genitori 2B (2-10)**     | `genitore2b_2@scuola.it` ... `genitore2b_10@scuola.it` | Genitori associati agli studenti di 2B  |

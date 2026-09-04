@@ -1,6 +1,6 @@
 "app_name" = "Register - Student";
 "dashboard_title" = "My Dashboard";
-"welcome_student" = "Hello, %1$s!";
+"welcome_student" = "Hello, %@!";
 "grades_title" = "My Grades";
 "agenda_title" = "Homework & Agenda";
 "attendance_title" = "Attendance & Absences";
@@ -26,3 +26,18 @@
 "restriction_school_code_desc" = "Official school identification code";
 "restriction_kiosk_mode_title" = "Exam Kiosk / Shared Tablet Mode";
 "restriction_kiosk_mode_desc" = "Disables external navigation and locks app";
+"tab_home" = "Home";
+"tab_grades" = "Grades";
+"tab_agenda" = "Agenda";
+"tab_attendance" = "Attendance";
+"tab_report_card" = "Report Card";
+"grade_type_written" = "Written";
+"grade_type_oral" = "Oral";
+"grade_type_practical" = "Practical";
+"grade_type_test" = "Test";
+"grade_type_project" = "Project";
+"grade_type_lab" = "Laboratory";
+"attendance_present" = "Present";
+"attendance_absent" = "Absent";
+"attendance_late" = "Late";
+"attendance_early_exit" = "Early Exit";

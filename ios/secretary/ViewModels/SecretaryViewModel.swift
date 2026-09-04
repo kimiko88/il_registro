@@ -63,7 +63,6 @@ public class SecretaryViewModel: ObservableObject {
 
     public init(apiService: SecretaryAPIServiceProtocol = HttpSecretaryAPIService()) {
         self.apiService = apiService
-        loadData()
     }
 
     public func loadFromDatabase(token: String) async {
@@ -72,11 +71,19 @@ public class SecretaryViewModel: ObservableObject {
             self.errorMessage = nil
         }
         do {
-            let fetchedUsers = try await apiService.fetchUsers(token: token)
+            async let fetchedUsers = apiService.fetchUsers(token: token)
+            async let fetchedClasses = apiService.fetchClasses(token: token)
+            async let fetchedCertificates = apiService.fetchCertificates(token: token)
+
+            let (u, cl, cert) = try await (fetchedUsers, fetchedClasses, fetchedCertificates)
+
             await MainActor.run {
-                self.users = fetchedUsers.map {
-                    ManagedUserModel(id: $0.id, name: "\($0.firstName) \($0.lastName)", role: $0.role)
+                self.users = u.map {
+                    let fullName = "\($0.firstName) \($0.lastName)".trimmingCharacters(in: .whitespacesAndNewlines)
+                    return ManagedUserModel(id: $0.id, name: fullName.isEmpty ? $0.email : fullName, role: $0.role)
                 }
+                self.classes = cl
+                self.certificates = cert
                 self.isLoading = false
             }
         } catch {

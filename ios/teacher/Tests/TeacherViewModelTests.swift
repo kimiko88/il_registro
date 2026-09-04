@@ -7,11 +7,19 @@ final class TeacherViewModelTests: XCTestCase {
     override func setUp() {
         super.setUp()
         viewModel = TeacherViewModel()
+        viewModel.loadSampleSession()
     }
 
     override func tearDown() {
         viewModel = nil
         super.tearDown()
+    }
+
+    func testInitialStateIsEmpty() {
+        let freshVM = TeacherViewModel()
+        XCTAssertTrue(freshVM.students.isEmpty)
+        XCTAssertTrue(freshVM.grades.isEmpty)
+        XCTAssertNil(freshVM.currentSession)
     }
 
     func testSignLesson() {

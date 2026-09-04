@@ -1,6 +1,6 @@
 "app_name" = "Registro - Studente";
 "dashboard_title" = "La Mia Dashboard";
-"welcome_student" = "Ciao, %1$s!";
+"welcome_student" = "Ciao, %@!";
 "grades_title" = "I Miei Voti";
 "agenda_title" = "Compiti & Agenda";
 "attendance_title" = "Presenze & Assenze";
@@ -26,3 +26,18 @@
 "restriction_school_code_desc" = "Codice identificativo ministeriale dell'istituto scolastico";
 "restriction_kiosk_mode_title" = "Modalità Kiosk Esame / Tablet Condiviso";
 "restriction_kiosk_mode_desc" = "Disabilita navigazione esterna e lock dell'app";
+"tab_home" = "Home";
+"tab_grades" = "Voti";
+"tab_agenda" = "Agenda";
+"tab_attendance" = "Presenze";
+"tab_report_card" = "Pagella";
+"grade_type_written" = "Scritto";
+"grade_type_oral" = "Orale";
+"grade_type_practical" = "Pratico";
+"grade_type_test" = "Test";
+"grade_type_project" = "Progetto";
+"grade_type_lab" = "Laboratorio";
+"attendance_present" = "Presenza";
+"attendance_absent" = "Assenza";
+"attendance_late" = "Ritardo";
+"attendance_early_exit" = "Uscita Anticipata";

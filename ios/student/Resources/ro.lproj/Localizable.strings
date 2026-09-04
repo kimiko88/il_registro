@@ -1,6 +1,6 @@
 "app_name" = "Catalog - Elev";
 "dashboard_title" = "Panoul Meu";
-"welcome_student" = "Bună, %1$s!";
+"welcome_student" = "Bună, %@!";
 "grades_title" = "Notele Mele";
 "agenda_title" = "Teme & Agendă";
 "attendance_title" = "Prezențe & Absențe";
@@ -26,3 +26,18 @@
 "restriction_school_code_desc" = "Codul oficial de identificare al unității de învățământ";
 "restriction_kiosk_mode_title" = "Mod Kiosk Examen / Tabletă Partajată";
 "restriction_kiosk_mode_desc" = "Dezactivează navigarea externă și blochează aplicația";
+"tab_home" = "Acasă";
+"tab_grades" = "Note";
+"tab_agenda" = "Agendă";
+"tab_attendance" = "Prezențe";
+"tab_report_card" = "Carnet";
+"grade_type_written" = "Scris";
+"grade_type_oral" = "Oral";
+"grade_type_practical" = "Practic";
+"grade_type_test" = "Test";
+"grade_type_project" = "Proiect";
+"grade_type_lab" = "Laborator";
+"attendance_present" = "Prezent";
+"attendance_absent" = "Absent";
+"attendance_late" = "Întârziere";
+"attendance_early_exit" = "Plecarea timpurie";

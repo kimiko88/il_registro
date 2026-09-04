@@ -1,6 +1,6 @@
 "app_name" = "Regjistri - Nxënësi";
 "dashboard_title" = "Paneli Im";
-"welcome_student" = "Përshëndetje, %1$s!";
+"welcome_student" = "Përshëndetje, %@!";
 "grades_title" = "Notat e Mia";
 "agenda_title" = "Detyrat & Ditari";
 "attendance_title" = "Pjesëmarrja & Mungesat";
@@ -26,3 +26,18 @@
 "restriction_school_code_desc" = "Kodi zyrtar i identifikimit të institucionit arsimor";
 "restriction_kiosk_mode_title" = "Modaliteti Kiosk Provimi / Pajisje e Përbashkët";
 "restriction_kiosk_mode_desc" = "Çaktivizon lundrimin e jashtëm dhe bllokon aplikacionin";
+"tab_home" = "Kryefaqja";
+"tab_grades" = "Notat";
+"tab_agenda" = "Ditari";
+"tab_attendance" = "Pjesëmarrja";
+"tab_report_card" = "Dëftesa";
+"grade_type_written" = "Me shkrim";
+"grade_type_oral" = "Me gojë";
+"grade_type_practical" = "Praktik";
+"grade_type_test" = "Test";
+"grade_type_project" = "Projekt";
+"grade_type_lab" = "Laborator";
+"attendance_present" = "I pranishëm";
+"attendance_absent" = "Mungesë";
+"attendance_late" = "Vonesë";
+"attendance_early_exit" = "Dalje e parakohshme";

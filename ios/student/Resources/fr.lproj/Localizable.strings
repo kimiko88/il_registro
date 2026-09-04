@@ -1,6 +1,6 @@
 "app_name" = "Registre - Élève";
 "dashboard_title" = "Mon tableau de bord";
-"welcome_student" = "Bonjour, %1$s !";
+"welcome_student" = "Bonjour, %@ !";
 "grades_title" = "Mes notes";
 "agenda_title" = "Devoirs & Agenda";
 "attendance_title" = "Présences & Absences";
@@ -26,3 +26,18 @@
 "restriction_school_code_desc" = "Identifiant officiel de l'établissement scolaire";
 "restriction_kiosk_mode_title" = "Mode Kiosque d'examen / Tablette partagée";
 "restriction_kiosk_mode_desc" = "Désactive la navigation externe et verrouille l'application";
+"tab_home" = "Accueil";
+"tab_grades" = "Notes";
+"tab_agenda" = "Agenda";
+"tab_attendance" = "Présences";
+"tab_report_card" = "Bulletin";
+"grade_type_written" = "Écrit";
+"grade_type_oral" = "Oral";
+"grade_type_practical" = "Pratique";
+"grade_type_test" = "Test";
+"grade_type_project" = "Projet";
+"grade_type_lab" = "Laboratoire";
+"attendance_present" = "Présent";
+"attendance_absent" = "Absent";
+"attendance_late" = "Retard";
+"attendance_early_exit" = "Sortie anticipée";
