@@ -15,3 +15,15 @@
 "btn_login" = "LOG IN TO PORTAL";
 "err_enter_credentials" = "Enter email and password";
 "logout" = "Log out";
+"child_attendance" = "Attendance";
+"upcoming_colloqui" = "Upcoming Meetings";
+"sign_hour" = "Confirm";
+"communications" = "Communications";
+"no_circulars" = "No circulars or communications available";
+"no_children_found" = "No associated student found";
+"no_grades" = "No grades available";
+"status_justified" = "Justified";
+"colloquio_confirmed" = "Booked";
+"btn_justify" = "Justify";
+"err_login_failed" = "Login failed";
+"no_data" = "No data available";

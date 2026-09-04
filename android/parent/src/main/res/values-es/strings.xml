@@ -1,20 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Registro - Padre</string>
-    <string name="parent_dashboard_title">Portal de Familias</string>
+    <string name="parent_dashboard_title">Portal Familiar</string>
     <string name="my_children">Mis Hijos</string>
     <string name="child_grades">Calificaciones del Hijo</string>
     <string name="pending_absences">Ausencias por Justificar</string>
-    <string name="book_colloqui">Reservar Tutoría</string>
-    <string name="switch_child">Cambiar Hijo</string>
+    <string name="book_colloqui">Reservar Cita</string>
+    <string name="switch_child">Cambiar de Hijo</string>
     <string name="justify_absence">Justificar Ausencia</string>
-    <string name="book_colloquio">Reservar Tutoría</string>
+    <string name="book_colloquio">Reservar Cita</string>
     <string name="pending_justifications">Justificaciones Pendientes</string>
     <string name="no_pending_justifications">No hay ausencias pendientes de justificar</string>
-    <string name="login_subtitle">Inicia sesión en el portal de padres</string>
-    <string name="email_label">Correo del Padre/Madre</string>
+    <string name="login_subtitle">Inicia sesión en el portal para padres</string>
+    <string name="email_label">Correo del Padre</string>
     <string name="password_label">Contraseña</string>
-    <string name="btn_login">INICIAR SESIÓN EN EL PORTAL</string>
-    <string name="err_enter_credentials">Ingresa correo y contraseña</string>
+    <string name="btn_login">ACCEDER AL PORTAL</string>
+    <string name="err_enter_credentials">Introduce correo y contraseña</string>
     <string name="logout">Cerrar sesión</string>
+    <string name="child_attendance">Asistencia</string>
+    <string name="upcoming_colloqui">Próximas Citas</string>
+    <string name="sign_hour">Confirmar</string>
+    <string name="communications">Comunicaciones</string>
+    <string name="no_circulars">No hay circulares o comunicaciones disponibles</string>
+    <string name="no_children_found">No se encontró ningún alumno asociado</string>
+    <string name="no_grades">No hay calificaciones disponibles</string>
+    <string name="status_justified">Justificada</string>
+    <string name="colloquio_confirmed">Reservado</string>
+    <string name="btn_justify">Justificar</string>
+    <string name="err_login_failed">Error al iniciar sesión</string>
+    <string name="no_data">No hay datos disponibles</string>
 </resources>

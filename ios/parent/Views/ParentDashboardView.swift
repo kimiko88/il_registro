@@ -57,15 +57,15 @@ public struct ParentDashboardView: View {
                 .tag(1)
 
             ParentAttendanceTab(viewModel: viewModel)
-                .tabItem { Label(NSLocalizedString("pending_absences", comment: ""), systemImage: "checkmark.circle.fill") }
+                .tabItem { Label(NSLocalizedString("pending_justifications", comment: ""), systemImage: "checkmark.circle.fill") }
                 .tag(2)
 
             ParentColloquiTab(colloquioSlots: colloquioSlots)
-                .tabItem { Label(NSLocalizedString("book_colloqui", comment: ""), systemImage: "calendar.badge.clock") }
+                .tabItem { Label(NSLocalizedString("upcoming_colloqui", comment: ""), systemImage: "calendar.badge.clock") }
                 .tag(3)
 
             ParentCircularsTab(circulars: circulars)
-                .tabItem { Label(NSLocalizedString("parent_dashboard_title", comment: ""), systemImage: "megaphone.fill") }
+                .tabItem { Label(NSLocalizedString("communications", comment: ""), systemImage: "megaphone.fill") }
                 .tag(4)
         }
         .tint(Color(red: 0.05, green: 0.58, blue: 0.53))
@@ -84,29 +84,36 @@ struct ParentHomeTab: View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 20) {
-                    ForEach(viewModel.children) { child in
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("\(child.firstName) \(child.lastName)")
-                                .font(.title2)
-                                .fontWeight(.bold)
-                                .foregroundColor(.white)
-                            Text(child.className)
-                                .font(.subheadline)
-                                .foregroundColor(.white.opacity(0.8))
-                            HStack(spacing: 16) {
-                                Text(NSLocalizedString("parent_dashboard_title", comment: ""))
-                                    .font(.caption)
-                                    .fontWeight(.semibold)
-                                    .padding(8)
-                                    .background(Color.white.opacity(0.2))
-                                    .cornerRadius(8)
+                    if viewModel.children.isEmpty {
+                        Text(NSLocalizedString("no_children_found", comment: ""))
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .padding(.top, 40)
+                    } else {
+                        ForEach(viewModel.children) { child in
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("\(child.firstName) \(child.lastName)")
+                                    .font(.title2)
+                                    .fontWeight(.bold)
                                     .foregroundColor(.white)
+                                Text(child.className)
+                                    .font(.subheadline)
+                                    .foregroundColor(.white.opacity(0.8))
+                                HStack(spacing: 16) {
+                                    Text(NSLocalizedString("parent_dashboard_title", comment: ""))
+                                        .font(.caption)
+                                        .fontWeight(.semibold)
+                                        .padding(8)
+                                        .background(Color.white.opacity(0.2))
+                                        .cornerRadius(8)
+                                        .foregroundColor(.white)
+                                }
                             }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding()
+                            .background(Color(red: 0.06, green: 0.15, blue: 0.28))
+                            .cornerRadius(16)
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding()
-                        .background(Color(red: 0.06, green: 0.15, blue: 0.28))
-                        .cornerRadius(16)
                     }
                 }
                 .padding()
@@ -124,7 +131,7 @@ struct ParentGradesTab: View {
             List {
                 Section(header: Text(NSLocalizedString("child_grades", comment: ""))) {
                     if grades.isEmpty {
-                        Text(NSLocalizedString("child_grades", comment: ""))
+                        Text(NSLocalizedString("no_grades", comment: ""))
                             .font(.caption)
                             .foregroundColor(.secondary)
                     } else {
@@ -149,7 +156,7 @@ struct ParentAttendanceTab: View {
     var body: some View {
         NavigationView {
             List {
-                Section(header: Text(NSLocalizedString("pending_absences", comment: ""))) {
+                Section(header: Text(NSLocalizedString("pending_justifications", comment: ""))) {
                     if viewModel.absences.isEmpty {
                         Text(NSLocalizedString("no_pending_justifications", comment: ""))
                             .font(.caption)
@@ -166,11 +173,11 @@ struct ParentAttendanceTab: View {
                                 }
                                 Spacer()
                                 if item.isJustified {
-                                    Text(NSLocalizedString("pending_absences", comment: ""))
+                                    Text(NSLocalizedString("status_justified", comment: ""))
                                         .font(.caption)
                                         .foregroundColor(.green)
                                 } else {
-                                    Button(NSLocalizedString("justify_action", comment: "")) {
+                                    Button(NSLocalizedString("btn_justify", comment: "")) {
                                         _ = viewModel.justifyAbsence(id: item.id, reason: "Motivata")
                                     }
                                     .buttonStyle(.borderedProminent)
@@ -181,7 +188,7 @@ struct ParentAttendanceTab: View {
                     }
                 }
             }
-            .navigationTitle(NSLocalizedString("pending_absences", comment: ""))
+            .navigationTitle(NSLocalizedString("pending_justifications", comment: ""))
         }
     }
 }
@@ -193,7 +200,7 @@ struct ParentColloquiTab: View {
         NavigationView {
             List {
                 if colloquioSlots.isEmpty {
-                    Text(NSLocalizedString("book_colloqui", comment: ""))
+                    Text(NSLocalizedString("no_data", comment: ""))
                         .font(.caption)
                         .foregroundColor(.secondary)
                 } else {
@@ -207,14 +214,14 @@ struct ParentColloquiTab: View {
                                     .foregroundColor(.secondary)
                             }
                             Spacer()
-                            Button(NSLocalizedString("book_colloqui", comment: "")) {}
+                            Button(NSLocalizedString("book_colloquio", comment: "")) {}
                                 .buttonStyle(.borderedProminent)
                                 .tint(Color(red: 0.05, green: 0.58, blue: 0.53))
                         }
                     }
                 }
             }
-            .navigationTitle(NSLocalizedString("book_colloqui", comment: ""))
+            .navigationTitle(NSLocalizedString("upcoming_colloqui", comment: ""))
         }
     }
 }
@@ -226,7 +233,7 @@ struct ParentCircularsTab: View {
         NavigationView {
             List {
                 if circulars.isEmpty {
-                    Text(NSLocalizedString("parent_dashboard_title", comment: ""))
+                    Text(NSLocalizedString("no_circulars", comment: ""))
                         .font(.caption)
                         .foregroundColor(.secondary)
                 } else {
@@ -235,7 +242,7 @@ struct ParentCircularsTab: View {
                     }
                 }
             }
-            .navigationTitle(NSLocalizedString("parent_dashboard_title", comment: ""))
+            .navigationTitle(NSLocalizedString("communications", comment: ""))
         }
     }
 }

@@ -1,30 +1,45 @@
 package it.scuola.registro.parent.viewmodel
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import it.scuola.registro.parent.data.ColloquioBooking
 import it.scuola.registro.parent.data.ParentChild
 import it.scuola.registro.parent.data.PendingAbsence
 import it.scuola.registro.parent.network.HttpParentApiService
 import it.scuola.registro.parent.network.ParentApiService
+import it.scuola.registro.parent.ui.ParentGradeDisplayItem
 
 class ParentViewModel(
     private val apiService: ParentApiService = HttpParentApiService()
 ) {
-    var children = mutableListOf<ParentChild>()
+    var children by mutableStateOf<List<ParentChild>>(emptyList())
         private set
 
-    var selectedChildId: String = ""
+    var selectedChildId by mutableStateOf("")
 
-    var pendingAbsences = mutableListOf<PendingAbsence>()
+    var pendingAbsences = mutableStateListOf<PendingAbsence>()
         private set
 
-    var availableColloqui = mutableListOf<ColloquioBooking>()
+    var availableColloqui = mutableStateListOf<ColloquioBooking>()
         private set
 
-    var isLoading: Boolean = false
+    var gradesList by mutableStateOf<List<ParentGradeDisplayItem>>(emptyList())
         private set
 
-    var errorMessage: String? = null
+    var circularsList by mutableStateOf<List<String>>(emptyList())
         private set
+
+    var isLoading by mutableStateOf(false)
+        private set
+
+    var errorMessage by mutableStateOf<String?>(null)
+        private set
+
+    init {
+        loadSampleData()
+    }
 
     suspend fun loadFromDatabase(token: String): Boolean {
         isLoading = true
@@ -32,12 +47,17 @@ class ParentViewModel(
         try {
             val childrenResult = apiService.getChildren(token)
             if (childrenResult.isSuccess) {
-                children = childrenResult.getOrNull()?.toMutableList() ?: mutableListOf()
-                if (children.isNotEmpty()) {
-                    selectedChildId = children.first().id
+                val apiChildren = childrenResult.getOrNull()
+                if (!apiChildren.isNullOrEmpty()) {
+                    children = apiChildren
+                    selectedChildId = apiChildren.first().id
                     val absencesResult = apiService.getAbsences(token, selectedChildId)
                     if (absencesResult.isSuccess) {
-                        pendingAbsences = absencesResult.getOrNull()?.toMutableList() ?: mutableListOf()
+                        val apiAbsences = absencesResult.getOrNull()
+                        if (!apiAbsences.isNullOrEmpty()) {
+                            pendingAbsences.clear()
+                            pendingAbsences.addAll(apiAbsences)
+                        }
                     }
                 }
             }
@@ -51,21 +71,36 @@ class ParentViewModel(
     }
 
     fun loadSampleData() {
-        children = mutableListOf(
+        children = listOf(
             ParentChild("c1", "Marco", "Rossi", "Classe 2A"),
             ParentChild("c2", "Giulia", "Rossi", "Classe 4B")
         )
         selectedChildId = "c1"
 
-        pendingAbsences = mutableListOf(
+        pendingAbsences.clear()
+        pendingAbsences.addAll(listOf(
             PendingAbsence("a1", "c1", "2026-08-26", "Assenza", "Motivi di salute", false),
             PendingAbsence("a2", "c1", "2026-08-18", "Ritardo", "Ingresso 2a ora", false),
             PendingAbsence("a3", "c2", "2026-08-20", "Assenza", "Visita medica", false)
-        )
+        ))
 
-        availableColloqui = mutableListOf(
+        availableColloqui.clear()
+        availableColloqui.addAll(listOf(
             ColloquioBooking("col1", "Prof. Bianchi", "Matematica", "2026-09-03 15:30", false),
             ColloquioBooking("col2", "Prof.ssa Rossi", "Italiano", "2026-09-04 16:00", true)
+        ))
+
+        gradesList = listOf(
+            ParentGradeDisplayItem("Matematica", "8½ (Scritto - 28/08)"),
+            ParentGradeDisplayItem("Italiano", "7 (Orale - 25/08)"),
+            ParentGradeDisplayItem("Inglese", "8 (Pratico - 22/08)"),
+            ParentGradeDisplayItem("Scienze", "7½ (Scritto - 19/08)")
+        )
+
+        circularsList = listOf(
+            "Circolare n. 12: Inizio anno scolastico e orario provvisorio",
+            "Circolare n. 11: Modalità di prenotazione colloqui quadrimestrali",
+            "Circolare n. 10: Uscite didattiche e autorizzazioni genitori"
         )
     }
 

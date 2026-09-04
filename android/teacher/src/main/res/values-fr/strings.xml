@@ -1,22 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Registre - Enseignant</string>
-    <string name="teacher_dashboard_title">Cahier de Texte Enseignant</string>
-    <string name="take_attendance">Appel</string>
-    <string name="add_grade">Nouvelle Note</string>
-    <string name="scrutiny_board">Conseil de Classe</string>
-    <string name="sign_hour">Signer l\'Heure de Cours</string>
-    <string name="lesson_topic">Sujet du Cours</string>
-    <string name="select_class">Sélectionner la Classe</string>
+    <string name="teacher_dashboard_title">Portail Enseignant</string>
+    <string name="take_attendance">Faire l\'appel</string>
+    <string name="add_grade">Ajouter une note</string>
+    <string name="scrutiny_board">Conseil de classe</string>
+    <string name="sign_hour">Signer l\'heure de cours</string>
+    <string name="lesson_topic">Sujet du cours</string>
+    <string name="select_class">Sélectionner la classe</string>
     <string name="login_subtitle">Accédez à votre espace enseignant</string>
-    <string name="email_label">Email Enseignant</string>
+    <string name="email_label">E-mail enseignant</string>
     <string name="password_label">Mot de passe</string>
-    <string name="btn_login">SE CONNECTER AU REGISTRE</string>
-    <string name="err_enter_credentials">Entrez votre email et mot de passe</string>
-    <string name="logout">Se déconnecter</string>
+    <string name="btn_login">ACCÉDER AU REGISTRE</string>
+    <string name="err_enter_credentials">Saisissez l\'e-mail et le mot de passe</string>
+    <string name="logout">Déconnexion</string>
     <string name="save">Enregistrer</string>
     <string name="cancel">Annuler</string>
     <string name="present">Présent</string>
     <string name="absent">Absent</string>
     <string name="late">En retard</string>
+    <string name="my_classes_title">Mes classes</string>
+    <string name="lesson_signed">Cours signé</string>
 </resources>

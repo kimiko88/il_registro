@@ -1,12 +1,12 @@
 "app_name" = "Register - Teacher";
-"teacher_dashboard_title" = "Teacher Register";
-"take_attendance" = "Roll Call";
-"add_grade" = "New Grade";
+"teacher_dashboard_title" = "Teacher Portal";
+"take_attendance" = "Take Attendance";
+"add_grade" = "Add Grade";
 "scrutiny_board" = "Scrutiny Board";
 "sign_hour" = "Sign Lesson Hour";
 "lesson_topic" = "Lesson Topic";
 "select_class" = "Select Class";
-"login_subtitle" = "Log in to your dashboard";
+"login_subtitle" = "Log in to your teaching desk";
 "email_label" = "Teacher Email";
 "password_label" = "Password";
 "btn_login" = "LOG IN TO REGISTER";
@@ -17,3 +17,5 @@
 "present" = "Present";
 "absent" = "Absent";
 "late" = "Late";
+"my_classes_title" = "My Classes";
+"lesson_signed" = "Lesson Signed";

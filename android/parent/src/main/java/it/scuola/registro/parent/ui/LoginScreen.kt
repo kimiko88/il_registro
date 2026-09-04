@@ -6,18 +6,20 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.FamilyRestroom
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import it.scuola.registro.parent.R
 import kotlinx.coroutines.launch
 
 @Composable
@@ -30,6 +32,8 @@ fun ParentLoginScreen(
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     val coroutineScope = rememberCoroutineScope()
+    val errCredentialsText = stringResource(R.string.err_enter_credentials)
+    val errLoginFailedText = stringResource(R.string.err_login_failed)
 
     Box(
         modifier = Modifier
@@ -57,14 +61,14 @@ fun ParentLoginScreen(
                 )
 
                 Text(
-                    text = "Registro Famiglie",
+                    text = stringResource(R.string.parent_dashboard_title),
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Text(
-                    text = "Accedi al portale genitori",
+                    text = stringResource(R.string.login_subtitle),
                     fontSize = 14.sp,
                     color = Color.Gray
                 )
@@ -72,7 +76,7 @@ fun ParentLoginScreen(
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it; errorMessage = null },
-                    label = { Text("Email Genitore") },
+                    label = { Text(stringResource(R.string.email_label)) },
                     leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
@@ -83,7 +87,7 @@ fun ParentLoginScreen(
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it; errorMessage = null },
-                    label = { Text("Password") },
+                    label = { Text(stringResource(R.string.password_label)) },
                     leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
                     visualTransformation = PasswordVisualTransformation(),
                     singleLine = true,
@@ -99,7 +103,7 @@ fun ParentLoginScreen(
                 Button(
                     onClick = {
                         if (email.isBlank() || password.isBlank()) {
-                            errorMessage = "Inserisci email e password"
+                            errorMessage = errCredentialsText
                             return@Button
                         }
                         isLoading = true
@@ -111,7 +115,7 @@ fun ParentLoginScreen(
                                 val token = result.getOrNull() ?: ""
                                 onLoginSuccess(token, "Genitore")
                             } else {
-                                errorMessage = result.exceptionOrNull()?.localizedMessage ?: "Errore di accesso"
+                                errorMessage = result.exceptionOrNull()?.localizedMessage ?: errLoginFailedText
                             }
                         }
                     },
@@ -125,7 +129,7 @@ fun ParentLoginScreen(
                     if (isLoading) {
                         CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
                     } else {
-                        Text("ACCEDI", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Text(stringResource(R.string.btn_login), fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     }
                 }
             }

@@ -1,20 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Catalog - Părinte</string>
-    <string name="parent_dashboard_title">Portalul Părinților</string>
+    <string name="parent_dashboard_title">Portal Familie</string>
     <string name="my_children">Copiii Mei</string>
-    <string name="child_grades">Note Copil</string>
+    <string name="child_grades">Notele Copilului</string>
     <string name="pending_absences">Absențe de Motivat</string>
     <string name="book_colloqui">Programare Ședință</string>
     <string name="switch_child">Schimbă Copilul</string>
     <string name="justify_absence">Motivează Absența</string>
-    <string name="book_colloquio">Programează Întâlnire</string>
+    <string name="book_colloquio">Programare Ședință</string>
     <string name="pending_justifications">Motivări în Așteptare</string>
     <string name="no_pending_justifications">Nicio absență de motivat</string>
-    <string name="login_subtitle">Conectați-vă la portalul părinților</string>
+    <string name="login_subtitle">Autentificare în portalul părinților</string>
     <string name="email_label">Email Părinte</string>
     <string name="password_label">Parolă</string>
-    <string name="btn_login">CONECTARE ÎN PORTAL</string>
+    <string name="btn_login">ACCESEAZĂ PORTALUL</string>
     <string name="err_enter_credentials">Introduceți emailul și parola</string>
     <string name="logout">Deconectare</string>
+    <string name="child_attendance">Prezențe</string>
+    <string name="upcoming_colloqui">Următoarele Ședințe</string>
+    <string name="sign_hour">Confirmă</string>
+    <string name="communications">Comunicări</string>
+    <string name="no_circulars">Nicio circulară sau comunicare disponibilă</string>
+    <string name="no_children_found">Niciun elev asociat găsit</string>
+    <string name="no_grades">Nicio notă disponibilă</string>
+    <string name="status_justified">Motivată</string>
+    <string name="colloquio_confirmed">Programat</string>
+    <string name="btn_justify">Motivează</string>
+    <string name="err_login_failed">Autentificare eșuată</string>
+    <string name="no_data">Nicio informație disponibilă</string>
 </resources>

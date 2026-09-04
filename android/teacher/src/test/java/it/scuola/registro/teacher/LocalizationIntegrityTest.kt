@@ -1,4 +1,4 @@
-package it.scuola.registro.student
+package it.scuola.registro.teacher
 
 import org.junit.Assert.*
 import org.junit.Test

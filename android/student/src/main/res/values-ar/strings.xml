@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">السجل - الطالب</string>
-    <string name="dashboard_title">لوحة التحكم الخاصة بي</string>
+    <string name="dashboard_title">لوحتي الرئيسية</string>
     <string name="welcome_student">مرحباً، %1$s!</string>
     <string name="grades_title">درجاتي</string>
-    <string name="agenda_title">الواجبات والجدول</string>
+    <string name="agenda_title">الواجبات وجدول الأعمال</string>
     <string name="attendance_title">الحضور والغياب</string>
-    <string name="report_card_title">شهادتي المدرسية</string>
+    <string name="report_card_title">شهادة درجاتي</string>
     <string name="gpa_average">المعدل العام</string>
-    <string name="recent_grades">أحدث الدرجات</string>
-    <string name="today_lessons">جدول دروس اليوم</string>
+    <string name="recent_grades">أحدث الدرجات المدخلة</string>
+    <string name="today_lessons">جدول حصص اليوم</string>
     <string name="absences_count">إجمالي الغيابات</string>
     <string name="lates_count">إجمالي التأخيرات</string>
-    <string name="no_data">لا تتوفر بيانات</string>
+    <string name="no_data">لا توجد بيانات متاحة</string>
     <string name="login_subtitle">تسجيل الدخول إلى حسابك</string>
     <string name="email_label">البريد الإلكتروني للطالب</string>
     <string name="password_label">كلمة المرور</string>
@@ -21,5 +21,11 @@
     <string name="logout">تسجيل الخروج</string>
     <string name="settings">الإعدادات</string>
     <string name="badges_title">شاراتي</string>
-    <string name="pcto_title">برامج التدريب المهني</string>
+    <string name="pcto_title">مسارات التدريب العملي (PCTO)</string>
+    <string name="restriction_server_url_title">رابط خادم المدرسة (MDM)</string>
+    <string name="restriction_server_url_desc">نقطة نهاية الخادم الموزعة عبر إدارة الأجهزة</string>
+    <string name="restriction_school_code_title">الرمز الوزاري للمدرسة</string>
+    <string name="restriction_school_code_desc">رمز التعريف الرسمي للمؤسسة التعليمية</string>
+    <string name="restriction_kiosk_mode_title">وضع كشك الامتحانات / الجهاز المشترك</string>
+    <string name="restriction_kiosk_mode_desc">تعطيل التنقل الخارجي وقفل التطبيق</string>
 </resources>

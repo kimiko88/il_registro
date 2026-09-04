@@ -22,8 +22,6 @@
     <string name="add_user_button">Add User</string>
     <string name="profile_title">Profile &amp; Settings</string>
     <string name="classes_title">Classes</string>
-
-    <!-- User Management -->
     <string name="edit_user">Edit User</string>
     <string name="delete_user">Delete User</string>
     <string name="first_name_label">First Name</string>
@@ -47,8 +45,6 @@
     <string name="user_created_success">User created successfully</string>
     <string name="user_updated_success">User updated successfully</string>
     <string name="user_deleted_success">User deleted successfully</string>
-
-    <!-- Certificates -->
     <string name="new_certificate_btn">Generate Certificate</string>
     <string name="new_certificate_dialog_title">New Certificate</string>
     <string name="select_student_label">Select Student</string>
@@ -64,16 +60,12 @@
     <string name="issued_at_prefix">Issued on:</string>
     <string name="no_certificates_found">No issued certificates found in archive</string>
     <string name="certificate_generated_success">Certificate generated and protocolled successfully</string>
-
-    <!-- Audit Logs -->
     <string name="no_audit_logs">No events recorded in system logs</string>
     <string name="actor_label">Operator:</string>
     <string name="action_label">Action:</string>
     <string name="ip_label">IP:</string>
     <string name="time_label">Date/Time:</string>
     <string name="btn_refresh">Refresh</string>
-
-    <!-- Profile & Password Change -->
     <string name="my_account_title">Account Details</string>
     <string name="security_settings_title">Security &amp; Password</string>
     <string name="current_password_label">Current Password</string>
@@ -87,4 +79,3 @@
     <string name="school_info_title">School Information</string>
     <string name="app_version_label">Registro App v2.4.0 (Official Build)</string>
 </resources>
-

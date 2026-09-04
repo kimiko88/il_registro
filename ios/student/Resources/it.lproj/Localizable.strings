@@ -1,6 +1,6 @@
 "app_name" = "Registro - Studente";
 "dashboard_title" = "La Mia Dashboard";
-"welcome_student" = "Ciao, %@!";
+"welcome_student" = "Ciao, %1$s!";
 "grades_title" = "I Miei Voti";
 "agenda_title" = "Compiti & Agenda";
 "attendance_title" = "Presenze & Assenze";
@@ -20,3 +20,9 @@
 "settings" = "Impostazioni";
 "badges_title" = "I Miei Badge";
 "pcto_title" = "Percorsi PCTO";
+"restriction_server_url_title" = "URL Server Scuola (MDM)";
+"restriction_server_url_desc" = "URL endpoint del server backend distribuito tramite MDM";
+"restriction_school_code_title" = "Codice Meccanografico Scuola";
+"restriction_school_code_desc" = "Codice identificativo ministeriale dell'istituto scolastico";
+"restriction_kiosk_mode_title" = "Modalità Kiosk Esame / Tablet Condiviso";
+"restriction_kiosk_mode_desc" = "Disabilita navigazione esterna e lock dell'app";
