@@ -12,6 +12,7 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
 
 ### ⚡ Frontend JavaScript (`/registro-frontend`)
 
+- [x] `#73` `fast-uri`: 3.1.5 → **3.1.7** (risolto security bump in `package-lock.json`)
 - [x] `#11` `vitest`: 0.34.6 → **4.0.16**
 - [x] `#10` `@vitest/coverage-v8`: 0.34.6 → **4.0.16**
 - [x] `#9` `pinia`: 2.3.1 → **3.0.4**
