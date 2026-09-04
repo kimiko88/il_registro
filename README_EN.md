@@ -2,12 +2,14 @@
 
 > 🏛️ A **public, open, and free** electronic school register for the Italian educational system — designed and built by a teacher, for public schools.
 
-> ⚠️ **Project Status: Working Beta** — The project is currently under active development. Core features are operational and testable via the online demo, but **it is not yet recommended for production use** in real school environments. APIs, database schema, and configurations may change before the stable release.
+> ⚠️ **Project Status**:
+> - **Web Platform (Go Backend + Vue 3 Frontend)**: **Working Beta** — Core features are operational and testable via the online demo, but it is not yet recommended for real production use.
+> - **Native Mobile Applications (Android & iOS)**: **Alpha Stage (Unstable & Incomplete)** — Currently under active development and initial testing; **unstable, incomplete, and NOT suitable for production use**.
 
 🇮🇹 **Italian Version**: [README.md](./README.md) | 🇬🇧 **English Version**
 
 **Online Demo**: [https://registro-scuola.netlify.app](https://registro-scuola.netlify.app)
-**Demo accounts & passwords**: [example_accounts.md](./docs/example_accounts.md)
+**Demo accounts & passwords**: [example_account.md](./docs/example_account.md)
 _*Note*_: Some passwords, such as the superadmin account, may have been updated for security reasons.
 
 [![Discord Members](https://img.shields.io/discord/426912293134270465.svg?label=Discord&logo=discord)](https://discord.gg/Qh5XjQxwb)
@@ -18,7 +20,7 @@ _*Note*_: Some passwords, such as the superadmin account, may have been updated 
 [![Google Antigravity](https://img.shields.io/badge/IDE-Google%20Antigravity-4285F4?logo=google&logoColor=white)](https://antigravity.google)
 [![Google Gemini](https://img.shields.io/badge/AI-Google%20Gemini-4285F4?logo=google&logoColor=white)](https://gemini.google.com)
 [![Anthropic Claude](https://img.shields.io/badge/AI-Anthropic%20Claude-D97757?logo=anthropic&logoColor=white)](https://anthropic.com)
-[![Status](https://img.shields.io/badge/status-working%20beta-yellow)](https://github.com/kimiko88/il_registro)
+[![Status](https://img.shields.io/badge/status-web%20beta%20%7C%20mobile%20alpha-orange)](https://github.com/kimiko88/il_registro)
 [![codecov](https://codecov.io/github/kimiko88/il_registro/graph/badge.svg?token=2946K0BLDX)](https://codecov.io/github/kimiko88/il_registro)
 
 ---
@@ -99,6 +101,8 @@ Organized as a **monorepo** with a Go backend and Vue 3 frontend:
 il_registro/
 ├── registro-backend/    # REST API in Go (Gin + PostgreSQL + Redis)
 ├── registro-frontend/   # SPA/PWA in Vue 3 + Quasar
+├── android/             # Android Native Apps (Kotlin Compose: :student, :parent, :teacher, :secretary) [Alpha]
+├── ios/                 # iOS Native Apps (SwiftUI, Xcode + SPM: Student, Teacher, Parent, Secretary) [Alpha]
 ├── docs/                # Detailed technical documentation
 ├── .github/workflows/   # CI/CD Pipelines
 ├── CHANGELOG.md         # Version history
@@ -116,6 +120,7 @@ il_registro is designed to be **self-hosted by schools, municipalities, regions,
 
 | Domain                    | Features                                                                                                                             |
 | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| **Native Mobile Apps (Alpha)**| **Native Android & iOS (Alpha Stage — Unstable & Incomplete)** for Student, Parent, Teacher, and Secretary (Kotlin Compose & SwiftUI, biometrics, offline, 11 languages) |
 | **Authentication & SSO**  | JWT (15min access + refresh rotation), MFA TOTP, SPID, CIE, **Google Workspace & MS Teams SSO**                                      |
 | **Roles**                 | `superadmin`, `admin`, `secretary`, `teacher`, `student`, `parent`                                                                   |
 | **Grades & Evaluation**   | Fast entry, **Keyboard Matrix View**, weighted averages, target grade simulator, special educational needs (BES/DSA) measures        |
@@ -202,10 +207,15 @@ Go was chosen for the backend for reasons beyond technology trends:
 | [docs/ABOUT.md](./docs/ABOUT.md)                             | Overview, external library rationale, stack, and testing     |
 | [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)               | Architecture, layers, design patterns, data flow diagrams    |
 | [docs/SETUP_GUIDE.md](./docs/SETUP_GUIDE.md)                 | Local setup, Docker, production, and troubleshooting         |
+| [docs/MOBILE_SETUP_GUIDE.md](./docs/MOBILE_SETUP_GUIDE.md)   | Setup, testing, and build guide for native mobile apps       |
+| [docs/mobile_instruction.md](./docs/mobile_instruction.md)   | Operational run instructions and mobile/PWA testing guide   |
 | [docs/FRONTEND_GUIDE.md](./docs/FRONTEND_GUIDE.md)           | Frontend guide: components, Pinia stores, routing, testing   |
 | [docs/API_REFERENCE.md](./docs/API_REFERENCE.md)             | Complete API reference with request/response schemas         |
+| [docs/example_account.md](./docs/example_account.md)         | Demo and test seed account credentials                       |
 | [registro-backend/README.md](./registro-backend/README.md)   | Specific Go backend guide                                    |
 | [registro-frontend/README.md](./registro-frontend/README.md) | Specific Vue/Quasar frontend guide                           |
+| [android/README.md](./android/README.md)                     | Quick guide for Android submodules                           |
+| [ios/README.md](./ios/README.md)                             | Quick guide for iOS Xcode/SPM targets                        |
 | [CHANGELOG.md](./CHANGELOG.md)                               | Release history and breaking changes                         |
 | [CONTRIBUTING.md](./CONTRIBUTING.md)                         | Contribution guidelines, branch strategy, commit conventions |
 | [SECURITY.md](./SECURITY.md)                                 | Vulnerability reporting & GDPR compliance policy             |
@@ -242,11 +252,23 @@ cd registro-frontend && npm run test:coverage
 cd registro-frontend && npx playwright test
 ```
 
+### Mobile Testing (Android & iOS — Alpha Stage)
+
+```bash
+# Android unit tests (Gradle)
+cd android && ./gradlew test
+
+# iOS test suite (Swift Package Manager)
+cd ios && swift test
+```
+
 ---
 
 ## License
 
-This project is licensed under the **[PolyForm Noncommercial 1.0.0](./LICENSE)**.
+This project — **including the Go backend, the web frontend, and all native mobile applications for Android and iOS** — is licensed under the **[PolyForm Noncommercial 1.0.0](./LICENSE)**.
+
+> 📄 **Mobile License Notice**: The native Android and iOS applications (including all Student, Parent, Teacher, and Secretary modules) share the exact same license as the rest of the project.
 
 **Use for public schools, municipalities, regional authorities, universities, research institutions, and public entities is completely free and unrestricted** — because student data and educational tools belong in public hands.
 

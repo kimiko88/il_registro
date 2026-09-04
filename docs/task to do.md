@@ -280,3 +280,16 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
     - `internal/recovery`: scritti test unitari per `Service` e `handler.go` (coverage salita da 8.9% a **46.0%**).
     - `internal/extracurricular`: scritti test unitari per `handler.go` (coverage salita da 11.6% a **40.2%**).
     - `internal/orientamento`: scritti test unitari per `handler.go` (coverage salita da 6.2% a **43.8%**).
+
+- [x] **Integrazione Progetto Xcode Multi-Target & Schemi Eseguibili per Tutti i Ruoli (iOS)**:
+  - **Integrazione Xcode `RegistroStudente.xcodeproj`**: Aggiunti schemi e target eseguibili per `RegistroDocente`, `RegistroGenitore` e `RegistroSegreteria` in aggiunta a `RegistroStudente`.
+  - **Viste Root Specifiche per Ruolo & Migrazione Test UI**: Create le viste principali e migrati i test di interfaccia alla nuova directory `RegistroStudenteUITests`.
+  - **Layer Compatibilità AppKit**: Supporto compatibilità AppKit per test automation e arricchimento sample data nei ViewModel.
+  - **Icone Applicative Cross-Platform**: Aggiunti asset icone per le app mobile.
+
+- [x] **Riorganizzazione Completa della Documentazione (Stato Alpha & Licenza Mobile Condivisa)**:
+  - **Stato Alpha Non Stabile e Incompleto**: Evidenziato chiaramente in tutta la documentazione (`README.md`, `README_EN.md`, `docs/MOBILE_SETUP_GUIDE.md`, `docs/mobile_instruction.md`, `docs/SETUP_GUIDE.md`, `docs/ARCHITECTURE.md`, `docs/ABOUT.md`, `docs/WIKI.md`, `android/README.md`, `ios/README.md`) che le app native mobile sono in **fase Alpha sperimentale, non stabile e incompleta**, non adatte alla produzione.
+  - **Licenza Condivisa PolyForm Noncommercial 1.0.0**: Sottolineato che l'intero stack mobile (Android e iOS per tutti i 4 ruoli) condivide la medesima licenza dell'applicazione web e del backend.
+  - **Guide di Cartella Dedicate**: Creati i file `android/README.md` e `ios/README.md` come punti di accesso rapidi per sviluppatori con indicazioni operative per Android Studio e Xcode.
+  - **Risoluzione Collegamenti Rotti**: Corretto il link `example_accounts.md` in `example_account.md` e censiti tutti i documenti mobile nelle tabelle di navigazione.
+  - **Correzione Badge Licenza Backend**: Allineato il badge licenza in `registro-backend/README.md` a `PolyForm Noncommercial 1.0.0`.
