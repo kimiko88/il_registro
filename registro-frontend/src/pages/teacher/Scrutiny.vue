@@ -162,13 +162,13 @@
 
     <!-- Dialog: Argomenti Carenze & Recuperi -->
     <q-dialog v-model="showDeficiencyModal">
-      <q-card style="min-width: 550px" class="rounded-xl">
+      <q-card style="width: min(550px, 95vw); max-width: 95vw;" class="rounded-xl">
         <q-card-section class="bg-amber-700 text-white row items-center justify-between">
           <div>
             <div class="text-h6 text-weight-bold">Argomenti Carenze — {{ selectedStudent?.student_name }}</div>
             <div class="text-caption">Indicazione delle lacune da recuperare (visibile a studente e genitori)</div>
           </div>
-          <q-btn flat round icon="close" v-close-popup />
+          <q-btn flat round icon="close" v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pa-md space-y-4">
@@ -232,13 +232,13 @@
 
     <!-- Dialog: Scrutinio Differito (Saldo Debiti Formativi) -->
     <q-dialog v-model="showDeferredModal">
-      <q-card style="min-width: 600px" class="rounded-xl">
+      <q-card style="width: min(600px, 95vw); max-width: 95vw;" class="rounded-xl">
         <q-card-section class="bg-deep-orange-8 text-white row items-center justify-between">
           <div>
             <div class="text-h6 text-weight-bold">{{ $t('help.teacher.scrutiny.deferredModalTitle', { name: selectedStudent?.student_name }) }}</div>
             <div class="text-caption">{{ $t('help.teacher.scrutiny.deferredModalSubtitle') }}</div>
           </div>
-          <q-btn flat round icon="close" v-close-popup />
+          <q-btn flat round icon="close" v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pa-md space-y-4">

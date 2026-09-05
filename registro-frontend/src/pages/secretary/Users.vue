@@ -25,7 +25,7 @@
            />
            <q-btn unelevated :label="t('common.addClass') || 'Nuova Classe'" color="primary" icon="add" class="rounded-lg shadow-sm" no-caps @click="openClassDialog" />
            <q-btn outline :label="t('gradesPage.importCSV') || 'Importa CSV'" color="primary" icon="upload" class="rounded-lg" no-caps @click="showImport=true" />
-           <q-btn flat icon="history" :label="t('dashboardPage.auditLogs') || 'Log Attività'" class="rounded-lg text-slate-400" no-caps @click="$router.push('/secretary/audit-logs')" />
+           <q-btn v-if="isSuperAdmin" flat icon="history" :label="t('dashboardPage.auditLogs') || 'Log Attività'" class="rounded-lg text-slate-400" no-caps @click="$router.push('/admin/audit-logs')" />
        </div>
     </div>
 
@@ -47,7 +47,7 @@
         <q-card style="display: flex; flex-direction: column; width: 650px; max-width: 95vw; max-height: 90vh;" class="rounded-xl overflow-hidden shadow-24 bg-white">
             <q-card-section class="bg-gradient-primary text-white q-pa-lg row items-center justify-between">
                 <div class="text-h5 text-weight-bold">{{ isEditing ? (t('common.edit') || 'Modifica Profilo') : (t('common.add') || 'Crea Nuovo Profilo') }}</div>
-                <q-btn icon="close" flat round dense v-close-popup />
+                <q-btn icon="close" flat round dense v-close-popup :aria-label="t('common.close') || 'Chiudi'" />
             </q-card-section>
             
             <q-card-section class="q-pa-xl scroll" style="flex: 1; overflow-y: auto;">
@@ -165,10 +165,10 @@
 
     <!-- Create Class Dialog -->
     <q-dialog v-model="showClassDialog" class="premium-dialog">
-        <q-card style="min-width: 450px" class="rounded-xl overflow-hidden shadow-24 bg-white">
+        <q-card style="width: min(500px, 95vw); max-width: 95vw;" class="rounded-xl overflow-hidden shadow-24 bg-white">
             <q-card-section class="bg-gradient-primary text-white q-pa-lg row items-center justify-between">
                 <div class="text-h5 text-weight-bold">Nuova Classe</div>
-                <q-btn icon="close" flat round dense v-close-popup />
+                <q-btn icon="close" flat round dense v-close-popup :aria-label="t('common.close') || 'Chiudi'" />
             </q-card-section>
             <q-card-section class="q-pa-xl">
                  <q-form @submit="saveClass" class="q-gutter-y-lg">
@@ -186,10 +186,10 @@
 
     <!-- Import Dialog -->
     <q-dialog v-model="showImport" class="premium-dialog">
-        <q-card style="min-width: 450px" class="rounded-xl overflow-hidden shadow-24 bg-white">
+        <q-card style="width: min(500px, 95vw); max-width: 95vw;" class="rounded-xl overflow-hidden shadow-24 bg-white">
              <q-card-section class="bg-gradient-primary text-white q-pa-lg row items-center justify-between">
                 <div class="text-h5 text-weight-bold">Importazione Massiva</div>
-                <q-btn icon="close" flat round dense v-close-popup />
+                <q-btn icon="close" flat round dense v-close-popup :aria-label="t('common.close') || 'Chiudi'" />
             </q-card-section>
             <q-card-section class="q-pa-xl">
                 <div class="text-body1 text-slate-500 q-mb-lg">Seleziona un file CSV o Excel contenente l'elenco degli utenti da importare.</div>
@@ -212,7 +212,7 @@
         <q-card class="bg-slate-50 rounded-xl overflow-hidden shadow-24">
             <q-card-section class="bg-white border-b border-slate-100 q-pa-lg row items-center justify-between">
                 <div class="text-h5 text-weight-bold text-slate-800">Materie Docente: <span class="text-primary">{{ currentTeacherName }}</span></div>
-                <q-btn icon="close" flat round dense v-close-popup color="slate-400" />
+                <q-btn icon="close" flat round dense v-close-popup color="slate-400" :aria-label="t('common.close') || 'Chiudi'" />
             </q-card-section>
 
             <q-card-section class="q-pa-xl">
@@ -265,7 +265,7 @@
 
     <!-- Reset Password Dialog -->
     <q-dialog v-model="showResetPwdDialog" class="premium-dialog">
-        <q-card style="min-width: 400px" class="rounded-xl overflow-hidden shadow-24 bg-white">
+        <q-card style="width: min(450px, 95vw); max-width: 95vw;" class="rounded-xl overflow-hidden shadow-24 bg-white">
             <q-card-section class="bg-gradient-primary text-white q-pa-lg">
                 <div class="text-h5 text-weight-bold">Reset Password</div>
                 <div class="text-subtitle1 opacity-80">{{ resetTargetName }}</div>
@@ -284,13 +284,13 @@
 
     <!-- Multi-step CSV Import Dialog -->
     <q-dialog v-model="showImport" persistent>
-      <q-card style="min-width: 650px; max-width: 800px" class="rounded-xl overflow-hidden bg-white shadow-24">
+      <q-card style="width: min(750px, 95vw); max-width: 95vw;" class="rounded-xl overflow-hidden bg-white shadow-24">
         <q-card-section class="bg-primary text-white row items-center justify-between q-py-md">
           <div class="text-h6 text-weight-bold">
             <q-icon name="upload_file" class="q-mr-xs" />
             Importazione Utenti da CSV
           </div>
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pa-none">
@@ -448,12 +448,14 @@ import adminService from '@/services/adminService';
 import { useAuthStore } from '@/stores/auth';
 import { usePermissions } from '@/composables/usePermissions';
 import { useUsersStore } from '@/stores/users';
+import { useTableExport } from '@/composables/useTableExport';
 
 const $q = useQuasar();
 const { t } = useI18n();
 const authStore = useAuthStore();
 const usersStore = useUsersStore();
 const { isSuperAdmin } = usePermissions();
+const { exportTableCsv } = useTableExport();
 const loading = ref(false);
 const showUserDialog = ref(false);
 const showClassDialog = ref(false);
@@ -819,34 +821,21 @@ const closeImportModal = () => {
     fetchUsers();
 };
 
-const sanitizeCSVCell = (val) => {
-    if (val === null || val === undefined) return '""';
-    let str = String(val);
-    if (/^[=+\-@\t\r]/.test(str)) {
-        str = "'" + str;
-    }
-    return `"${str.replace(/"/g, '""')}"`;
-};
+const userExportColumns = [
+    { name: 'id', label: 'ID', field: 'id' },
+    { name: 'first_name', label: 'Nome', field: 'first_name' },
+    { name: 'last_name', label: 'Cognome', field: 'last_name' },
+    { name: 'email', label: 'Email', field: 'email' },
+    { name: 'role', label: 'Ruolo', field: 'role' },
+    { name: 'class_name', label: 'Classe', field: u => u.class_name || '' }
+];
 
 const exportUsers = () => {
-    const header = ['ID', 'Nome', 'Cognome', 'Email', 'Ruolo', 'Classe'].map(sanitizeCSVCell).join(',');
-    const rows = filteredUsers.value.map(u => [
-        u.id,
-        u.first_name,
-        u.last_name,
-        u.email,
-        u.role,
-        u.class_name || ''
-    ].map(sanitizeCSVCell).join(','));
-
-    const content = [header, ...rows].join('\r\n');
-
-    const status = exportFile(
-        'utenti_esportazione.csv',
-        content,
-        'text/csv'
-    );
-    if (!status) $q.notify({ type: 'negative', message: 'Esportazione fallita' });
+    exportTableCsv({
+        filename: 'utenti_esportazione.csv',
+        columns: userExportColumns,
+        rows: filteredUsers.value
+    });
 };
 
 // Teacher Subjects Logic

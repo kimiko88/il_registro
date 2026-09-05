@@ -151,13 +151,13 @@
 
     <!-- Create / Edit Substitution Dialog -->
     <q-dialog v-model="showCreateDialog" persistent>
-      <q-card style="min-width: 500px" class="rounded-xl overflow-hidden shadow-24 bg-white">
+      <q-card style="width: min(550px, 95vw); max-width: 95vw;" class="rounded-xl overflow-hidden shadow-24 bg-white">
         <q-card-section class="bg-primary text-white q-pa-lg row items-center justify-between">
           <div class="text-h6 text-weight-bold">
             <q-icon :name="isEditingSub ? 'edit' : 'add_circle'" class="q-mr-xs" />
             {{ isEditingSub ? 'Modifica Richiesta Sostituzione' : 'Nuova Richiesta Sostituzione' }}
           </div>
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pa-lg space-y-4">
@@ -230,7 +230,7 @@
 
     <!-- Assign Substitute Dialog -->
     <q-dialog v-model="showAssignDialog" persistent>
-      <q-card style="min-width: 550px" class="rounded-xl overflow-hidden shadow-24 bg-white">
+      <q-card style="width: min(550px, 95vw); max-width: 95vw;" class="rounded-xl overflow-hidden shadow-24 bg-white">
         <q-card-section class="bg-primary text-white q-pa-lg row items-center justify-between">
           <div>
             <div class="text-h6 text-weight-bold">Assegna Docente Sostituto</div>
@@ -238,7 +238,7 @@
               Ora {{ selectedSub.hour || selectedSub.hour_index || 1 }}ª · Classe {{ getClassName(selectedSub) }} · Data {{ selectedSub.date ? selectedSub.date.substring(0, 10) : '' }}
             </div>
           </div>
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pa-lg">

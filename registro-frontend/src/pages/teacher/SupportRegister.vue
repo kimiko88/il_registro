@@ -72,12 +72,17 @@
       <q-tab-panels v-model="activeTab" animated>
         <!-- Tab Diario di Bordo -->
         <q-tab-panel name="diary">
+          <div v-if="loadingDiary" class="q-pa-md q-gutter-y-sm" role="status" aria-label="Caricamento diario">
+            <q-skeleton type="rect" height="46px" class="rounded-borders" />
+            <q-skeleton type="rect" height="40px" class="rounded-borders" />
+            <q-skeleton type="rect" height="40px" class="rounded-borders" />
+          </div>
           <q-table
+            v-else
             :rows="diaryEntries"
             :columns="diaryColumns"
             row-key="id"
-            :loading="loadingDiary"
-            no-data-label="Nessuna voce nel diario di sostegno registrata"
+            :no-data-label="$t('support.noDiary') || 'Nessuna voce nel diario di sostegno registrata'"
             flat
           >
             <template #body-cell-activity_type="props">
@@ -117,12 +122,17 @@
 
         <!-- Tab Obiettivi PEI -->
         <q-tab-panel name="pei">
+          <div v-if="loadingPei" class="q-pa-md q-gutter-y-sm" role="status" aria-label="Caricamento obiettivi PEI">
+            <q-skeleton type="rect" height="46px" class="rounded-borders" />
+            <q-skeleton type="rect" height="40px" class="rounded-borders" />
+            <q-skeleton type="rect" height="40px" class="rounded-borders" />
+          </div>
           <q-table
+            v-else
             :rows="peiGoals"
             :columns="peiColumns"
             row-key="id"
-            :loading="loadingPei"
-            no-data-label="Nessun obiettivo PEI inserito"
+            :no-data-label="$t('support.noGoals') || 'Nessun obiettivo PEI inserito'"
             flat
           >
             <template #body-cell-pei_type="props">
@@ -161,11 +171,11 @@
 
     <!-- Dialog Nuova Voce Diario -->
     <q-dialog v-model="newDiaryDialog" persistent>
-      <q-card style="min-width: 550px; max-width: 700px;" class="rounded-borders">
+      <q-card style="width: min(650px, 95vw); max-width: 95vw;" class="rounded-borders">
         <q-card-section class="row items-center q-pb-none">
           <div class="text-h6 text-weight-bold text-primary">{{ $t('support.dialog.newDiaryTitle') }}</div>
           <q-space />
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pt-md">
@@ -299,11 +309,11 @@
 
     <!-- Dialog Nuovo Obiettivo PEI -->
     <q-dialog v-model="newGoalDialog" persistent>
-      <q-card style="min-width: 500px; max-width: 600px;" class="rounded-borders">
+      <q-card style="width: min(550px, 95vw); max-width: 95vw;" class="rounded-borders">
         <q-card-section class="row items-center q-pb-none">
           <div class="text-h6 text-weight-bold text-secondary">{{ $t('support.dialog.newPeiGoalTitle') }}</div>
           <q-space />
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pt-md">
@@ -407,10 +417,12 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
+import { useI18n } from 'vue-i18n'
 import supportService from 'src/services/supportService'
 import api from 'src/services/api'
 
 const $q = useQuasar()
+const { t } = useI18n()
 
 const activeTab = ref('diary')
 const selectedStudentId = ref('')
@@ -429,33 +441,33 @@ const teacherOptions = ref([])
 const classOptions = ref([])
 
 const studentFilterOptions = computed(() => [
-  { label: 'Tutti gli studenti', value: '' },
+  { label: t('support.filterAllStudents') || 'Tutti gli studenti', value: '' },
   ...studentOptions.value
 ])
 
-const activityTypeOptions = [
-  { label: 'In Classe con Docente Curricolare', value: 'in_classe' },
-  { label: 'Laboratorio Didattico', value: 'laboratorio' },
-  { label: 'Aula Sostegno / Spazio Dedicato', value: 'aula_sostegno' },
-  { label: 'Attività Individualizzata 1:1', value: 'individuale' },
-  { label: 'Piccolo Gruppo Cooperativo', value: 'piccolo_gruppo' }
-]
+const activityTypeOptions = computed(() => [
+  { label: t('support.activityTypes.in_classe') || 'In Classe con Docente Curricolare', value: 'in_classe' },
+  { label: t('support.activityTypes.laboratorio') || 'Laboratorio Didattico', value: 'laboratorio' },
+  { label: t('support.activityTypes.aula_sostegno') || 'Aula Sostegno', value: 'aula_sostegno' },
+  { label: t('support.activityTypes.individuale') || 'Attività Individuale 1:1', value: 'individuale' },
+  { label: t('support.activityTypes.piccolo_gruppo') || 'Piccolo Gruppo', value: 'piccolo_gruppo' }
+])
 
-const axisOptions = [
-  { label: 'Autonomia e Cura della Persona', value: 'autonomia' },
-  { label: 'Cognitiva, Neuropsicologica e Apprendimento', value: 'cognitiva' },
-  { label: 'Comunicazione e Linguaggio', value: 'comunicazionale' },
-  { label: 'Relazionale e Socializzazione', value: 'relazionale' },
-  { label: 'Sensoriale e Motoria', value: 'sensoriale' }
-]
+const axisOptions = computed(() => [
+  { label: t('support.axes.autonomia') || 'Autonomia e Cura della Persona', value: 'autonomia' },
+  { label: t('support.axes.cognitiva') || 'Cognitiva, Neuropsicologica e Apprendimento', value: 'cognitiva' },
+  { label: t('support.axes.comunicazionale') || 'Comunicazione e Linguaggio', value: 'comunicazionale' },
+  { label: t('support.axes.relazionale') || 'Relazionale e Socializzazione', value: 'relazionale' },
+  { label: t('support.axes.sensoriale') || 'Sensoriale e Motoria', value: 'sensoriale' }
+])
 
-const progressStatusOptions = [
-  { label: 'Non Avviato', value: 'non_avviato' },
-  { label: 'Iniziale', value: 'iniziale' },
-  { label: 'Intermedio', value: 'intermedio' },
-  { label: 'Avanzato', value: 'avanzato' },
-  { label: 'Raggiunto', value: 'raggiunto' }
-]
+const progressStatusOptions = computed(() => [
+  { label: t('support.progressStatuses.non_avviato') || 'Non Avviato', value: 'non_avviato' },
+  { label: t('support.progressStatuses.iniziale') || 'Iniziale', value: 'iniziale' },
+  { label: t('support.progressStatuses.intermedio') || 'Intermedio', value: 'intermedio' },
+  { label: t('support.progressStatuses.avanzato') || 'Avanzato', value: 'avanzato' },
+  { label: t('support.progressStatuses.raggiunto') || 'Raggiunto', value: 'raggiunto' }
+])
 
 const diaryForm = ref({
   student_id: '',
@@ -480,25 +492,25 @@ const goalForm = ref({
   progress_status: 'non_avviato'
 })
 
-const diaryColumns = [
-  { name: 'entry_date', label: 'Data', field: 'entry_date', align: 'center', sortable: true },
-  { name: 'time_slot', label: 'Ora', field: 'time_slot', align: 'center' },
-  { name: 'student_name', label: 'Studente', field: 'student_name', align: 'left', sortable: true },
-  { name: 'activity_type', label: 'Tipo Attività', field: 'activity_type', align: 'center' },
-  { name: 'co_teacher_name', label: 'Docente Compresenza', field: 'co_teacher_name', align: 'left' },
-  { name: 'topic_and_activities', label: 'Argomenti & Attività', field: 'topic_and_activities', align: 'left' },
-  { name: 'is_shared_with_family', label: 'Famiglia', field: 'is_shared_with_family', align: 'center' },
-  { name: 'actions', label: 'Azioni', field: 'actions', align: 'right' }
-]
+const diaryColumns = computed(() => [
+  { name: 'entry_date', label: t('support.columns.date') || 'Data', field: 'entry_date', align: 'center', sortable: true },
+  { name: 'time_slot', label: t('support.columns.slot') || 'Ora', field: 'time_slot', align: 'center' },
+  { name: 'student_name', label: t('support.columns.student') || 'Studente', field: 'student_name', align: 'left', sortable: true },
+  { name: 'activity_type', label: t('support.columns.activityType') || 'Tipo Attività', field: 'activity_type', align: 'center' },
+  { name: 'co_teacher_name', label: t('support.columns.coTeacher') || 'Docente Compresenza', field: 'co_teacher_name', align: 'left' },
+  { name: 'topic_and_activities', label: t('support.columns.topics') || 'Argomenti & Attività', field: 'topic_and_activities', align: 'left' },
+  { name: 'is_shared_with_family', label: t('support.columns.family') || 'Famiglia', field: 'is_shared_with_family', align: 'center' },
+  { name: 'actions', label: t('support.columns.actions') || 'Azioni', field: 'actions', align: 'right' }
+])
 
-const peiColumns = [
-  { name: 'student_name', label: 'Studente', field: 'student_name', align: 'left', sortable: true },
-  { name: 'pei_type', label: 'Tipo PEI', field: 'pei_type', align: 'center' },
-  { name: 'axis', label: 'Asse di Sviluppo', field: 'axis', align: 'left' },
-  { name: 'title', label: 'Obiettivo', field: 'title', align: 'left' },
-  { name: 'expected_term', label: 'Termine', field: 'expected_term', align: 'center' },
-  { name: 'progress_status', label: 'Avanzamento', field: 'progress_status', align: 'center' }
-]
+const peiColumns = computed(() => [
+  { name: 'student_name', label: t('support.columns.student') || 'Studente', field: 'student_name', align: 'left', sortable: true },
+  { name: 'pei_type', label: t('support.columns.peiType') || 'Tipo PEI', field: 'pei_type', align: 'center' },
+  { name: 'axis', label: t('support.columns.axis') || 'Asse di Sviluppo', field: 'axis', align: 'left' },
+  { name: 'title', label: t('support.columns.goal') || 'Obiettivo', field: 'title', align: 'left' },
+  { name: 'expected_term', label: t('support.columns.term') || 'Termine', field: 'expected_term', align: 'center' },
+  { name: 'progress_status', label: t('support.columns.progress') || 'Avanzamento', field: 'progress_status', align: 'center' }
+])
 
 function extractList(response) {
   if (!response) return []

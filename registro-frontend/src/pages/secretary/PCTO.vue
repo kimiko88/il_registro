@@ -111,9 +111,10 @@
 
     <!-- Project Dialog -->
     <q-dialog v-model="dialog" persistent class="premium-dialog">
-      <q-card style="min-width: 600px" class="rounded-xl overflow-hidden shadow-24">
-        <q-card-section class="bg-gradient-primary text-white q-pa-lg">
+      <q-card style="width: min(600px, 95vw); max-width: 95vw;" class="rounded-xl overflow-hidden shadow-24">
+        <q-card-section class="bg-gradient-primary text-white q-pa-lg row items-center justify-between">
           <div class="text-h5 text-weight-bold">{{ isEdit ? 'Modifica Progetto' : 'Nuovo Progetto PCTO' }}</div>
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pa-xl">
@@ -223,9 +224,10 @@
 
     <!-- Add Company Dialog -->
     <q-dialog v-model="showAddCompany" class="premium-dialog">
-      <q-card style="min-width: 450px" class="rounded-xl overflow-hidden shadow-24 bg-white">
-        <q-card-section class="bg-gradient-primary text-white q-pa-lg">
+      <q-card style="width: min(450px, 95vw); max-width: 95vw;" class="rounded-xl overflow-hidden shadow-24 bg-white">
+        <q-card-section class="bg-gradient-primary text-white q-pa-lg row items-center justify-between">
           <div class="text-h5 text-weight-bold">Nuova Azienda</div>
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
         <q-card-section class="q-pa-xl">
           <q-form @submit="addCompany" class="q-gutter-y-lg">

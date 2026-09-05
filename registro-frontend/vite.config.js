@@ -9,7 +9,31 @@ export default defineConfig({
   build: {
     // Use esbuild instead of terser to avoid serialize-javascript
     // crypto.randomUUID() error in CI / Node < 20 environments
-    minify: 'esbuild'
+    minify: 'esbuild',
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('quasar') || id.includes('@quasar')) {
+              return 'vendor-quasar'
+            }
+            if (id.includes('chart.js') || id.includes('vue-chartjs')) {
+              return 'vendor-charts'
+            }
+            if (id.includes('vue-i18n')) {
+              return 'vendor-i18n'
+            }
+            if (id.includes('vue') || id.includes('pinia') || id.includes('vue-router') || id.includes('axios')) {
+              return 'vendor-vue'
+            }
+          }
+          if (id.includes('/src/i18n/it-IT/') || id.includes('\\src\\i18n\\it-IT\\') ||
+              id.endsWith('/src/i18n/index.js') || id.endsWith('\\src\\i18n\\index.js')) {
+            return 'app-i18n'
+          }
+        }
+      }
+    }
   },
   plugins: [
     vue({
@@ -58,6 +82,8 @@ export default defineConfig({
         ]
       },
       workbox: {
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/api/],
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
         runtimeCaching: [
           {

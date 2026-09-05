@@ -80,11 +80,11 @@
 
     <!-- Dialog Create/Edit Class -->
     <q-dialog v-model="showDialog" persistent class="premium-dialog">
-      <q-card style="min-width: 450px" class="rounded-xl overflow-hidden shadow-24">
+      <q-card style="width: min(480px, 95vw); max-width: 95vw;" class="rounded-xl overflow-hidden shadow-24">
         <q-card-section class="bg-gradient-primary text-white row items-center q-pa-lg">
           <div class="text-h6 text-weight-bold">{{ isEdit ? 'Modifica Classe' : 'Nuova Classe' }}</div>
           <q-space />
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pa-xl">

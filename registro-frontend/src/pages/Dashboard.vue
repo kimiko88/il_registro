@@ -76,9 +76,9 @@
 
                 <!-- Menu per Segreteria -->
                 <q-list style="min-width: 240px" v-else-if="currentRole === 'secretary'">
-                  <q-item clickable @click="router.push('/secretary/audit-log')">
-                    <q-item-section avatar><q-icon name="fact_check" color="primary" /></q-item-section>
-                    <q-item-section>{{ $t('dashboardPage.auditLogs') || 'Audit Log' }}</q-item-section>
+                  <q-item clickable @click="router.push('/secretary/students')">
+                    <q-item-section avatar><q-icon name="school" color="primary" /></q-item-section>
+                    <q-item-section>{{ $t('studentsPage.title') || 'Anagrafica Studenti' }}</q-item-section>
                   </q-item>
                   <q-item clickable @click="router.push('/secretary/users')">
                     <q-item-section avatar><q-icon name="people" color="secondary" /></q-item-section>
@@ -327,12 +327,12 @@
 
     <!-- Dialog Pianifica Bozza Lezione (Solo Docente) -->
     <q-dialog v-if="currentRole === 'teacher'" v-model="showDraftDialog" persistent>
-      <q-card style="min-width: 500px; max-width: 650px" class="rounded-xl">
+      <q-card style="width: min(600px, 95vw); max-width: 95vw;" class="rounded-xl">
         <q-card-section class="bg-primary text-white row items-center justify-between">
           <div class="text-h6 text-weight-bold">
             <q-icon name="edit_note" class="q-mr-xs" /> {{ $t('udaPage.createTitle') || 'Pianifica Bozza Lezione' }}
           </div>
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pa-md q-gutter-y-sm">
@@ -367,12 +367,12 @@
 
     <!-- Dialog Elenco Bozze Salvate (Solo Docente) -->
     <q-dialog v-if="currentRole === 'teacher'" v-model="showDraftsListDialog">
-      <q-card style="min-width: 600px" class="rounded-xl">
+      <q-card style="width: min(600px, 95vw); max-width: 95vw;" class="rounded-xl">
         <q-card-section class="bg-secondary text-white row items-center justify-between">
           <div class="text-h6 text-weight-bold">
             <q-icon name="collections_bookmark" class="q-mr-xs" /> {{ t('dashboardPage.draftsListTitle') }}
           </div>
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pa-md">

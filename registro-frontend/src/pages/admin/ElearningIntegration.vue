@@ -5,10 +5,10 @@
       <div>
         <h1 class="text-h4 text-weight-bold text-slate-800 q-my-none row items-center">
           <q-icon name="hub" color="primary" class="q-mr-sm" />
-          Piattaforme E-Learning & Single Sign-On (SSO)
+          {{ t('elearningPage.title') }}
         </h1>
         <p class="text-subtitle1 text-slate-500 q-mt-xs q-mb-none">
-          Integrazione e sincronizzazione automatica con Google Classroom e Microsoft Teams
+          {{ t('elearningPage.subtitle') }}
         </p>
       </div>
     </div>
@@ -30,19 +30,19 @@
               :text-color="googleConnected ? 'white' : 'grey-8'"
               class="text-weight-bold"
             >
-              {{ googleConnected ? '✓ Connesso' : 'Non configurato' }}
+              {{ googleConnected ? '✓ ' + t('elearningPage.connected') : t('elearningPage.notConfigured') }}
             </q-chip>
           </q-card-section>
 
           <q-card-section class="q-pa-md text-slate-700">
             <p class="text-body2">
-              Sincronizza automaticamente le classi, i compiti assegnati ed i voti tra il Registro Elettronico e Google Classroom.
+              {{ t('elearningPage.googleDesc') }}
             </p>
 
             <div class="q-gutter-y-xs q-my-md">
-              <div class="row items-center"><q-icon name="check_circle" color="emerald" class="q-mr-xs" /> Single Sign-On (SSO) con Google OAuth2</div>
-              <div class="row items-center"><q-icon name="check_circle" color="emerald" class="q-mr-xs" /> Importazione automatica corsi e studenti</div>
-              <div class="row items-center"><q-icon name="check_circle" color="emerald" class="q-mr-xs" /> Sync compiti in classe e valutazioni</div>
+              <div class="row items-center"><q-icon name="check_circle" color="emerald" class="q-mr-xs" /> {{ t('elearningPage.googleF1') }}</div>
+              <div class="row items-center"><q-icon name="check_circle" color="emerald" class="q-mr-xs" /> {{ t('elearningPage.googleF2') }}</div>
+              <div class="row items-center"><q-icon name="check_circle" color="emerald" class="q-mr-xs" /> {{ t('elearningPage.googleF3') }}</div>
             </div>
           </q-card-section>
 
@@ -53,14 +53,14 @@
               v-if="!googleConnected"
               color="emerald-7"
               icon="login"
-              label="Connetti Google Workspace"
+              :label="t('elearningPage.connectGoogle')"
               unelevated
               class="rounded-lg text-weight-bold"
               @click="connectGoogle"
             />
             <div v-else class="row q-gutter-xs">
-              <q-btn flat color="primary" icon="sync" label="Sincronizza Corsi" @click="syncGoogleCourses" />
-              <q-btn flat color="negative" icon="link_off" label="Disconnetti" @click="googleConnected = false" />
+              <q-btn flat color="primary" icon="sync" :label="t('elearningPage.syncGoogle')" @click="syncGoogleCourses" />
+              <q-btn flat color="negative" icon="link_off" :label="t('elearningPage.disconnect')" @click="googleConnected = false" />
             </div>
           </q-card-actions>
         </q-card>
@@ -82,19 +82,19 @@
               :text-color="msConnected ? 'white' : 'grey-8'"
               class="text-weight-bold"
             >
-              {{ msConnected ? '✓ Connesso' : 'Non configurato' }}
+              {{ msConnected ? '✓ ' + t('elearningPage.connected') : t('elearningPage.notConfigured') }}
             </q-chip>
           </q-card-section>
 
           <q-card-section class="q-pa-md text-slate-700">
             <p class="text-body2">
-              Integrazione nativa con Microsoft Teams Education via Microsoft Graph API per la gestione dei canali di classe e delle valutazioni.
+              {{ t('elearningPage.teamsDesc') }}
             </p>
 
             <div class="q-gutter-y-xs q-my-md">
-              <div class="row items-center"><q-icon name="check_circle" color="indigo" class="q-mr-xs" /> Entra con account Microsoft 365 dell'Istituto</div>
-              <div class="row items-center"><q-icon name="check_circle" color="indigo" class="q-mr-xs" /> Sincronizzazione automatica team e canali di classe</div>
-              <div class="row items-center"><q-icon name="check_circle" color="indigo" class="q-mr-xs" /> Esportazione voti nel registro docente</div>
+              <div class="row items-center"><q-icon name="check_circle" color="indigo" class="q-mr-xs" /> {{ t('elearningPage.teamsF1') }}</div>
+              <div class="row items-center"><q-icon name="check_circle" color="indigo" class="q-mr-xs" /> {{ t('elearningPage.teamsF2') }}</div>
+              <div class="row items-center"><q-icon name="check_circle" color="indigo" class="q-mr-xs" /> {{ t('elearningPage.teamsF3') }}</div>
             </div>
           </q-card-section>
 
@@ -105,14 +105,14 @@
               v-if="!msConnected"
               color="indigo-7"
               icon="login"
-              label="Connetti Microsoft 365"
+              :label="t('elearningPage.connectTeams')"
               unelevated
               class="rounded-lg text-weight-bold"
               @click="connectMicrosoft"
             />
             <div v-else class="row q-gutter-xs">
-              <q-btn flat color="primary" icon="sync" label="Sincronizza Team" @click="syncMsTeams" />
-              <q-btn flat color="negative" icon="link_off" label="Disconnetti" @click="msConnected = false" />
+              <q-btn flat color="primary" icon="sync" :label="t('elearningPage.syncTeams')" @click="syncMsTeams" />
+              <q-btn flat color="negative" icon="link_off" :label="t('elearningPage.disconnect')" @click="msConnected = false" />
             </div>
           </q-card-actions>
         </q-card>
@@ -159,9 +159,9 @@ async function connectGoogle() {
   try {
     await elearningService.connectGoogleClassroom('auth-code-demo')
     googleConnected.value = true
-    $q.notify({ type: 'positive', message: 'Google Classroom connesso con successo!' })
+    $q.notify({ type: 'positive', message: t('elearningPage.googleConnectedSuccess') })
   } catch (e) {
-    $q.notify({ type: 'negative', message: 'Errore durante la connessione con Google Classroom' })
+    $q.notify({ type: 'negative', message: t('elearningPage.googleConnectError') })
   }
 }
 
@@ -169,27 +169,27 @@ async function connectMicrosoft() {
   try {
     await elearningService.connectMicrosoftTeams('auth-code-demo')
     msConnected.value = true
-    $q.notify({ type: 'positive', message: 'Microsoft Teams connesso con successo!' })
+    $q.notify({ type: 'positive', message: t('elearningPage.teamsConnectedSuccess') })
   } catch (e) {
-    $q.notify({ type: 'negative', message: 'Errore durante la connessione con Microsoft Teams' })
+    $q.notify({ type: 'negative', message: t('elearningPage.teamsConnectError') })
   }
 }
 
 async function syncGoogleCourses() {
   try {
     const res = await elearningService.syncCourses('google')
-    $q.notify({ type: 'positive', message: res.data?.message || 'Sincronizzazione Google Classroom completata' })
+    $q.notify({ type: 'positive', message: res.data?.message || t('elearningPage.syncSuccess') })
   } catch (e) {
-    $q.notify({ type: 'negative', message: 'Errore sincronizzazione corsi Google' })
+    $q.notify({ type: 'negative', message: t('elearningPage.syncError') })
   }
 }
 
 async function syncMsTeams() {
   try {
     const res = await elearningService.syncCourses('microsoft')
-    $q.notify({ type: 'positive', message: res.data?.message || 'Sincronizzazione Microsoft Teams completata' })
+    $q.notify({ type: 'positive', message: res.data?.message || t('elearningPage.syncSuccess') })
   } catch (e) {
-    $q.notify({ type: 'negative', message: 'Errore sincronizzazione Teams' })
+    $q.notify({ type: 'negative', message: t('elearningPage.syncError') })
   }
 }
 

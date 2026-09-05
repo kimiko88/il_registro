@@ -2,8 +2,8 @@
   <q-page class="q-pa-md">
     <div class="row items-center q-mb-md">
       <div class="col">
-        <div class="text-h4 text-weight-bold">Audit Logs</div>
-        <div class="text-subtitle1 text-grey-7">Monitoraggio attività di sistema</div>
+        <div class="text-h4 text-weight-bold">{{ t('adminAudit.title') || 'Audit Logs' }}</div>
+        <div class="text-subtitle1 text-grey-7">{{ t('adminAudit.subtitle') || 'Monitoraggio attività di sistema' }}</div>
       </div>
     </div>
 
@@ -11,12 +11,11 @@
     <q-card class="q-mb-md">
       <q-card-section>
         <div class="row q-col-gutter-md">
-           <!-- Date Range Filters can come here later -->
-          <div class="col-12 col-md-4">
-             <q-select
+          <div class="col-12 col-sm-6 col-md-4">
+            <q-select
               v-model="filters.action"
               :options="actionOptions"
-              label="Tipo Azione"
+              :label="t('adminAudit.actionType')"
               dense
               outlined
               clearable
@@ -25,14 +24,25 @@
               @update:model-value="fetchLogs"
             />
           </div>
-           <div class="col-12 col-md-4">
+          <div class="col-12 col-sm-6 col-md-4">
             <q-btn
               outline
               color="primary"
               icon="refresh"
-              label="Aggiorna"
+              :label="t('adminAudit.refresh')"
               @click="fetchLogs"
               :loading="loading"
+              class="full-width"
+            />
+          </div>
+          <div class="col-12 col-sm-12 col-md-4">
+            <q-btn
+              outline
+              color="secondary"
+              icon="download"
+              :label="t('adminAudit.export')"
+              @click="exportAuditLogs"
+              :disable="logs.length === 0"
               class="full-width"
             />
           </div>
@@ -50,6 +60,12 @@
         :loading="loading"
         @request="onRequest"
       >
+        <template v-slot:no-data>
+          <div class="full-width row flex-center text-grey q-gutter-sm q-py-lg">
+            <q-icon size="2em" name="sentiment_dissatisfied" />
+            <span>{{ t('adminAudit.noLogs') }}</span>
+          </div>
+        </template>
         <template v-slot:body="props">
           <q-tr :props="props">
             <q-td key="created_at" :props="props">
@@ -84,13 +100,15 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
+import { useTableExport } from '@/composables/useTableExport'
 import adminService from '@/services/adminService'
 
 const $q = useQuasar()
 const { t } = useI18n()
+const { exportTableCsv } = useTableExport()
 const logs = ref([])
 const loading = ref(false)
 
@@ -104,22 +122,30 @@ const pagination = ref({
   rowsNumber: 0
 })
 
-const columns = [
-  { name: 'created_at', label: 'Data/Ora', align: 'left', field: 'created_at', sortable: true },
-  { name: 'admin_name', label: 'Admin', align: 'left', field: 'admin_name' },
-  { name: 'action_type', label: 'Azione', align: 'center', field: 'action_type' },
-  { name: 'target', label: 'Target', align: 'left', field: 'target' },
-  { name: 'school_name', label: 'Scuola', align: 'left', field: 'school_name' },
-  { name: 'details', label: 'Dettagli', align: 'left', field: 'details' }
-]
+const exportAuditLogs = () => {
+  exportTableCsv({
+    filename: `audit_logs_${new Date().toISOString().split('T')[0]}.csv`,
+    columns: columns.value,
+    rows: logs.value
+  })
+}
 
-const actionOptions = [
-  { label: 'Tutti', value: null },
-  { label: 'Create', value: 'create' },
-  { label: 'Update', value: 'update' },
-  { label: 'Delete', value: 'delete' },
-  { label: 'Login', value: 'login' }
-]
+const columns = computed(() => [
+  { name: 'created_at', label: t('adminAudit.colDateTime'), align: 'left', field: 'created_at', sortable: true },
+  { name: 'admin_name', label: t('adminAudit.colAdmin'), align: 'left', field: 'admin_name' },
+  { name: 'action_type', label: t('adminAudit.colAction'), align: 'center', field: 'action_type' },
+  { name: 'target', label: t('adminAudit.colTarget'), align: 'left', field: 'target' },
+  { name: 'school_name', label: t('adminAudit.colSchool'), align: 'left', field: 'school_name' },
+  { name: 'details', label: t('adminAudit.colDetails'), align: 'left', field: 'details' }
+])
+
+const actionOptions = computed(() => [
+  { label: t('adminAudit.all') || 'Tutti', value: null },
+  { label: t('adminAudit.create') || 'Create', value: 'create' },
+  { label: t('adminAudit.update') || 'Update', value: 'update' },
+  { label: t('adminAudit.delete') || 'Delete', value: 'delete' },
+  { label: t('adminAudit.login') || 'Login', value: 'login' }
+])
 
 const getActionColor = (action) => {
   switch(action) {
@@ -146,7 +172,7 @@ const fetchLogs = async () => {
   } catch (error) {
     $q.notify({
       type: 'negative',
-      message: 'Errore caricamento logs',
+      message: t('adminAudit.errorLoading') || 'Errore caricamento logs',
       caption: error.message
     })
   } finally {

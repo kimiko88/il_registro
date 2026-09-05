@@ -1,7 +1,8 @@
 <template>
-  <q-card style="min-width: 600px">
-    <q-card-section>
+  <q-card style="width: min(600px, 95vw); max-width: 95vw;">
+    <q-card-section class="row items-center justify-between">
         <div class="text-h6">{{ t('communicationsPage.newCircular') }}</div>
+        <q-btn icon="close" flat round dense v-close-popup :aria-label="t('common.close') || 'Chiudi'" />
     </q-card-section>
 
     <q-card-section>

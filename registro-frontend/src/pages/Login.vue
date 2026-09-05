@@ -124,7 +124,7 @@
           <div class="text-h6 text-weight-bold row items-center">
             <q-icon name="contact_support" class="q-mr-sm" size="24px" /> {{ t('login.contactTitle') }}
           </div>
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pa-lg">

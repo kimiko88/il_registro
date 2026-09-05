@@ -1,6 +1,6 @@
 <template>
   <q-dialog v-model="isOpen" persistent>
-    <q-card style="min-width: 400px">
+    <q-card style="width: min(450px, 95vw); max-width: 95vw;">
       <q-card-section>
         <div class="text-h6">{{ t('gradesPage.insertGrade') || 'Inserisci Voto' }}</div>
         <div class="text-subtitle2">{{ studentName }}</div>

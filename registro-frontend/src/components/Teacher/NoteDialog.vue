@@ -1,6 +1,6 @@
 <template>
   <q-dialog v-model="visible" persistent>
-    <q-card style="min-width: 400px">
+    <q-card style="width: min(450px, 95vw); max-width: 95vw;">
       <q-card-section>
         <div class="text-h6">{{ noteToEdit ? ($t('common.edit') || 'Modifica') : ($t('classRegister.addNote') || 'Nuova Nota') }}</div>
         <div class="text-subtitle2" v-if="student">{{ $t('classRegister.tableHeaderStudent') }}: {{ student.name || `${student.last_name || ''} ${student.first_name || ''}` }}</div>

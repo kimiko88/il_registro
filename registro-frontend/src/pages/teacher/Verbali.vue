@@ -20,7 +20,7 @@
           <q-td :props="props">
             <q-btn
               color="secondary"
-              label="Firma con IP"
+              :label="t('verbaliPage.signIp') || 'Firma con IP'"
               icon="draw"
               size="sm"
               unelevated
@@ -32,11 +32,11 @@
     </q-card>
 
     <q-dialog v-model="showDialog">
-      <q-card style="min-width: 500px">
+      <q-card style="width: min(500px, 95vw); max-width: 95vw;">
         <q-card-section class="row items-center q-pb-none">
           <div class="text-h6">{{ t('verbaliPage.createTitle') }}</div>
           <q-space />
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section>
@@ -89,7 +89,7 @@ const loadVerbali = async () => {
     const res = await verbaliService.getVerbali()
     verbali.value = res.data || []
   } catch (err) {
-    $q.notify({ type: 'negative', message: 'Errore caricamento verbali' })
+    $q.notify({ type: 'negative', message: t('common.error') || 'Errore caricamento verbali' })
   } finally {
     loading.value = false
   }
@@ -99,11 +99,11 @@ const createVerbale = async () => {
   submitting.value = true
   try {
     await verbaliService.createVerbale(form.value)
-    $q.notify({ type: 'positive', message: 'Verbale creato con successo' })
+    $q.notify({ type: 'positive', message: t('verbaliPage.createSuccess') || 'Verbale creato con successo' })
     showDialog.value = false
     loadVerbali()
   } catch (err) {
-    $q.notify({ type: 'negative', message: 'Errore creazione verbale' })
+    $q.notify({ type: 'negative', message: t('common.error') || 'Errore creazione verbale' })
   } finally {
     submitting.value = false
   }
@@ -112,10 +112,10 @@ const createVerbale = async () => {
 const signVerbale = async (id) => {
   try {
     await verbaliService.signVerbale(id)
-    $q.notify({ type: 'positive', message: 'Firma registrata con audit IP!' })
+    $q.notify({ type: 'positive', message: t('verbaliPage.signedSuccess') || 'Firma registrata con audit IP!' })
     loadVerbali()
   } catch (err) {
-    $q.notify({ type: 'negative', message: 'Errore firma verbale' })
+    $q.notify({ type: 'negative', message: t('verbaliPage.signError') || 'Errore firma verbale' })
   }
 }
 

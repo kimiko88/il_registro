@@ -65,9 +65,10 @@ describe('SchoolCredits.vue', () => {
           'q-dialog': true,
           'q-form': true,
           'q-input': true,
-          'q-select': true,
+          'q-select': { template: '<div class="q-select-stub"><slot /></div>' },
           'q-checkbox': true,
-          'q-space': true
+          'q-space': true,
+          'q-skeleton': true
         }
       }
     })

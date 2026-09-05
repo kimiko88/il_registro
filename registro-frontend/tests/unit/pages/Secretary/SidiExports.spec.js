@@ -34,14 +34,15 @@ describe('SidiExports.vue Page', () => {
           'q-btn': true,
           'q-card': { template: '<div><slot /></div>' },
           'q-card-section': { template: '<div><slot /></div>' },
-          'q-select': true,
+          'q-select': { template: '<div class="q-select-stub"><slot /></div>' },
           'q-banner': true,
           'q-chip': true,
           'q-list': { template: '<div><slot /></div>' },
           'q-item': { template: '<div><slot /></div>' },
           'q-item-section': { template: '<div><slot /></div>' },
           'q-item-label': { template: '<div><slot /></div>' },
-          'q-avatar': true
+          'q-avatar': true,
+          'q-skeleton': true
         }
       }
     })

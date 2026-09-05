@@ -146,10 +146,10 @@
 
     <!-- Dialog 1: Create Rubric -->
     <q-dialog v-model="createRubricDialog">
-      <q-card style="min-width: 600px; max-width: 800px" class="rounded-xl overflow-hidden">
+      <q-card style="width: min(700px, 95vw); max-width: 95vw;" class="rounded-xl overflow-hidden">
         <q-card-section class="bg-primary text-white row items-center justify-between q-py-md">
           <div class="text-h6 text-weight-bold">Nuova Rubrica Valutativa</div>
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pa-md space-y-4 max-h-70vh overflow-y-auto">
@@ -228,13 +228,13 @@
 
     <!-- Dialog 2: Assess Student -->
     <q-dialog v-model="assessmentDialog">
-      <q-card style="min-width: 550px; max-width: 700px" class="rounded-xl overflow-hidden">
+      <q-card style="width: min(650px, 95vw); max-width: 95vw;" class="rounded-xl overflow-hidden">
         <q-card-section class="bg-positive text-white row items-center justify-between q-py-md">
           <div>
             <div class="text-h6 text-weight-bold">Valutazione con Rubrica</div>
             <div class="text-caption">{{ targetRubric?.title }}</div>
           </div>
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pa-md space-y-4 max-h-70vh overflow-y-auto">

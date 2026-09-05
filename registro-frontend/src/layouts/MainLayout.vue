@@ -1,5 +1,7 @@
 <template>
   <q-layout view="hHh Lpr lFf">
+    <OfflineBanner />
+    <InactivityDialog />
     <SkipLinks />
     <ScreenReaderAnnouncer />
 
@@ -159,8 +161,8 @@
                 </q-avatar>
               </q-item-section>
               <q-item-section>
-                <q-item-label class="text-weight-bold">Righello di Lettura</q-item-label>
-                <q-item-label caption class="text-grey-7">Guida visiva riga per riga</q-item-label>
+                <q-item-label class="text-weight-bold">{{ t('layout.readingRulerTitle') || 'Righello di Lettura' }}</q-item-label>
+                <q-item-label caption class="text-grey-7">{{ t('layout.readingRulerDesc') || 'Guida visiva riga per riga' }}</q-item-label>
               </q-item-section>
               <q-item-section side>
                 <q-toggle
@@ -180,8 +182,8 @@
                 </q-avatar>
               </q-item-section>
               <q-item-section>
-                <q-item-label class="text-weight-bold">Sintesi Vocale (TTS)</q-item-label>
-                <q-item-label caption class="text-grey-7">Lettura vocale compiti e avvisi</q-item-label>
+                <q-item-label class="text-weight-bold">{{ t('layout.ttsTitle') || 'Sintesi Vocale (TTS)' }}</q-item-label>
+                <q-item-label caption class="text-grey-7">{{ t('layout.ttsDesc') || 'Lettura vocale compiti e avvisi' }}</q-item-label>
               </q-item-section>
               <q-item-section side>
                 <q-toggle
@@ -242,7 +244,7 @@
           color="primary"
           class="gt-sm q-mr-xs"
           key="language-toggle"
-          aria-label="Seleziona Lingua"
+          :aria-label="t('common.language') || 'Seleziona Lingua'"
         >
           <q-tooltip>{{ t('common.language') }}</q-tooltip>
           <q-list style="min-width: 220px" class="q-py-xs">
@@ -295,6 +297,22 @@
           :aria-label="$q.fullscreen.isActive ? t('layout.exitFullscreen') : t('layout.enterFullscreen')"
         >
            <q-tooltip>{{ $q.fullscreen.isActive ? t('layout.exitFullscreen') : t('layout.enterFullscreen') }}</q-tooltip>
+        </q-btn>
+
+        <!-- PWA Install Prompt Button -->
+        <q-btn
+          v-if="canInstall"
+          flat
+          round
+          dense
+          color="positive"
+          icon="install_mobile"
+          class="q-mr-xs"
+          :aria-label="t('pwa.installBtn')"
+          @click="promptInstall"
+          key="pwa-install-btn"
+        >
+          <q-tooltip>{{ t('pwa.installTooltip') }}</q-tooltip>
         </q-btn>
 
         <!-- Global Search Ctrl+K -->
@@ -398,7 +416,7 @@
         <q-scroll-area class="col">
           <div class="q-pa-sm">
             <div class="text-overline text-grey-5 q-px-sm q-mb-xs letter-spacing-2" aria-hidden="true">{{ t('common.mainMenu') }}</div>
-            <q-list dense padding class="q-gutter-y-xs" aria-label="Navigazione principale" role="menu">
+            <q-list dense padding class="q-gutter-y-xs" :aria-label="t('layout.mainNav') || 'Navigazione principale'" role="menu">
               <template v-for="(item, idx) in menuItems" :key="item.path || item.category || idx">
                 <!-- Group Category with children -->
                 <q-expansion-item
@@ -733,7 +751,20 @@
             </q-list>
           </div>
 
-          <!-- 5. Centro Assistenza & Guida -->
+          <!-- 5. PWA Install (Mobile Drawer) -->
+          <div v-if="canInstall" class="q-mb-md">
+            <q-btn
+              unelevated
+              color="positive"
+              icon="install_mobile"
+              :label="t('pwa.installBtn')"
+              class="full-width rounded-xl"
+              no-caps
+              @click="promptInstall(); rightDrawerOpen = false"
+            />
+          </div>
+
+          <!-- 6. Centro Assistenza & Guida -->
           <div class="q-mb-md">
             <q-btn
               outline
@@ -836,17 +867,24 @@ import KeyboardShortcutsDialog from '@/components/Common/KeyboardShortcutsDialog
 import SkipLinks from '@/components/Common/SkipLinks.vue'
 import ScreenReaderAnnouncer from '@/components/Common/ScreenReaderAnnouncer.vue'
 import FocusModeToggle from '@/components/Common/FocusModeToggle.vue'
+import OfflineBanner from '@/components/Common/OfflineBanner.vue'
+import InactivityDialog from '@/components/Common/InactivityDialog.vue'
+import { useA11yAnnouncer } from '@/composables/useA11yAnnouncer'
 import { useSessionReauth } from '@/composables/useSessionReauth'
 import { useGlobalKeyboardShortcuts } from '@/composables/useGlobalKeyboardShortcuts'
+import { usePwaInstall } from '@/composables/usePwaInstall'
 import { setReauthHandler } from '@/services/api'
 
 
 useGlobalKeyboardShortcuts()
 
+const { canInstall, promptInstall } = usePwaInstall()
+
 const globalSearchRef = ref(null)
 const tourRef = ref(null)
 const helpDrawerRef = ref(null)
 const helpCenterRef = ref(null)
+const { announce } = useA11yAnnouncer()
 
 function handleRestartTour() {
   // Clear the flag so the tour shows again, then start it
@@ -866,11 +904,13 @@ const currentLocaleValue = computed(() => normalizeLocale(locale.value))
 
 function changeAppLanguage(langCode) {
   applyLocale(langCode, i18n, $q)
+  const msg = t('notifications.languageChanged') || 'Lingua aggiornata con successo'
   $q.notify({
     type: 'positive',
     icon: 'language',
-    message: t('notifications.languageChanged') || 'Lingua aggiornata con successo'
+    message: msg
   })
+  announce(msg)
 }
 
 const menuLabelToKeyMap = {

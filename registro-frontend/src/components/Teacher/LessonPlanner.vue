@@ -285,13 +285,13 @@
 
     <!-- Lesson Details Dialog -->
     <q-dialog v-model="detailsDialog">
-      <q-card style="min-width: 460px">
+      <q-card style="width: min(500px, 95vw); max-width: 95vw;">
         <q-card-section class="row items-center justify-between bg-primary text-white">
           <div class="text-h6 row items-center">
             <q-icon name="menu_book" class="q-mr-sm" />
             Dettagli Lezione
           </div>
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
         <q-card-section class="q-gutter-sm" v-if="selectedLesson">
           <div class="text-subtitle1 text-weight-bold text-primary">{{ selectedLesson.topic }}</div>
@@ -326,12 +326,13 @@
 
     <!-- New / Edit Lesson Dialog -->
     <q-dialog v-model="lessonDialog" persistent>
-      <q-card style="min-width: 480px">
-        <q-card-section>
+      <q-card style="width: min(500px, 95vw); max-width: 95vw;">
+        <q-card-section class="row items-center justify-between">
           <div class="text-h6">
             <q-icon name="menu_book" class="q-mr-xs" color="primary" />
             {{ isEditingLesson ? 'Modifica Lezione' : 'Nuova Lezione' }}
           </div>
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
         <q-card-section class="q-gutter-md">
           <q-select
@@ -462,12 +463,13 @@
 
     <!-- New Homework Dialog -->
     <q-dialog v-model="homeworkDialog" persistent>
-      <q-card style="min-width: 420px">
-        <q-card-section>
+      <q-card style="width: min(450px, 95vw); max-width: 95vw;">
+        <q-card-section class="row items-center justify-between">
           <div class="text-h6">
             <q-icon name="assignment" class="q-mr-xs" color="orange" />
             Assegna Compito
           </div>
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
         <q-card-section class="q-gutter-md">
           <q-select
@@ -505,12 +507,12 @@
 
     <!-- New / Edit Free Activity Dialog -->
     <q-dialog v-model="freeActivityDialog" persistent>
-      <q-card style="min-width: 480px; max-width: 600px">
+      <q-card style="width: min(550px, 95vw); max-width: 95vw;">
         <q-card-section class="bg-teal-8 text-white row items-center">
           <q-icon name="event_busy" class="q-mr-sm" size="24px" />
           <span class="text-h6">{{ isEditingFreeActivity ? 'Modifica Attività Libera' : 'Nuova Attività Libera' }}</span>
           <q-space />
-          <q-btn flat round dense icon="close" v-close-popup />
+          <q-btn flat round dense icon="close" v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
         <q-card-section class="q-gutter-md q-pt-md">
           <q-banner class="bg-teal-1 text-teal-9 rounded-borders" dense>

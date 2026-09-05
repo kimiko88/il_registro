@@ -61,11 +61,11 @@
 
     <!-- Dialog Crea / Modifica Gruppo -->
     <q-dialog v-model="showDialog" persistent>
-      <q-card style="min-width: 450px" class="q-pa-md">
+      <q-card style="width: min(500px, 95vw); max-width: 95vw;" class="q-pa-md">
         <q-card-section class="row items-center">
           <div class="text-h6">{{ isEdit ? 'Modifica Gruppo' : 'Nuovo Gruppo Linguistico / Articolato' }}</div>
           <q-space />
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-gutter-md">
@@ -82,11 +82,11 @@
 
     <!-- Dialog Studenti del Gruppo -->
     <q-dialog v-model="showStudentsDialog">
-      <q-card style="min-width: 550px" class="q-pa-md">
+      <q-card style="width: min(550px, 95vw); max-width: 95vw;" class="q-pa-md">
         <q-card-section class="row items-center">
           <div class="text-h6">Studenti del Gruppo: {{ selectedGroup?.name }}</div>
           <q-space />
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section>

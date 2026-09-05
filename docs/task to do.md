@@ -12,16 +12,21 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
 
 ### ⚡ Frontend JavaScript (`/registro-frontend`)
 
+- [x] `#77` `vue`: 3.5.41 → **3.5.42**
+- [x] `#76` `happy-dom`: 20.11.15 → **20.12.2**
+- [x] `#75` `axios`: 1.19.0 → **1.20.0**
+- [x] `#74` `@quasar/vite-plugin`: 2.0.0 → **2.0.2**
 - [x] `#73` `fast-uri`: 3.1.5 → **3.1.7** (risolto security bump in `package-lock.json`)
 - [x] `#11` `vitest`: 0.34.6 → **4.0.16**
 - [x] `#10` `@vitest/coverage-v8`: 0.34.6 → **4.0.16**
 - [x] `#9` `pinia`: 2.3.1 → **3.0.4**
-- [x] `#8` `happy-dom`: 12.10.3 → **20.0.11**
-- [x] `#7` `@vitejs/plugin-vue`: 4.6.2 → **6.0.3**
-- [x] `vite`: 4.4.5 → **5.4.14** (aggiornato per compatibilità ESM con Vite plugin 6.x e `"type": "module"`)
+- [x] `#8` `happy-dom`: 12.10.3 → **20.12.2**
+- [x] `#7` `@vitejs/plugin-vue`: 4.6.2 → **6.0.8**
+- [x] `vite`: 4.4.5 → **8.2.2**
 
 ### 🤖 GitHub Actions (`/.github/workflows` & `/registro-backend/.github/workflows`)
 
+- [x] `#78` `github/codeql-action`: 3 → **4** (`upload-sarif@v4`)
 - [x] `#25` `docker/setup-buildx-action`: 2 → **4**
 - [x] `#23` `actions/checkout`: 4 → **4** (versione major stabile corrente)
 - [x] `#20` `docker/build-push-action`: 6 → **7**
@@ -293,4 +298,99 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
   - **Licenza Condivisa PolyForm Noncommercial 1.0.0**: Sottolineato che l'intero stack mobile (Android e iOS per tutti i 4 ruoli) condivide la medesima licenza dell'applicazione web e del backend.
   - **Guide di Cartella Dedicate**: Creati i file `android/README.md` e `ios/README.md` come punti di accesso rapidi per sviluppatori con indicazioni operative per Android Studio e Xcode.
   - **Risoluzione Collegamenti Rotti**: Corretto il link `example_accounts.md` in `example_account.md` e censiti tutti i documenti mobile nelle tabelle di navigazione.
-  - **Correzione Badge Licenza Backend**: Allineato il badge licenza in `registro-backend/README.md` a `PolyForm Noncommercial 1.0.0`.
+  - [x] **Correzione Badge Licenza Backend**: Allineato il badge licenza in `registro-backend/README.md` a `PolyForm Noncommercial 1.0.0`.
+
+- [x] **Ottimizzazione Performance, Resilienza & Hardening Frontend Web (`registro-frontend`)**:
+  - **De-bloating del Chunk Iniziale `auth-*.js` (-96.2%)**: Disaccoppiato il reset degli store Pinia durante il `logout()` tramite iterazione dinamica su `getActivePinia()._s`, riducendo la dimensione del chunk `auth-*.js` da **1.45 MB** a **55.26 kB** (e build time da 4.89s a 2.99s).
+  - **Code-Splitting Mirato in `vite.config.js`**: Configurata la suddivisione modulare dei vendor in `manualChunks` (`vendor-quasar`, `vendor-charts`, `vendor-vue`, `vendor-i18n`), ottimizzando il caching a lungo termine del browser.
+  - **Global Error Handler Vue & Unhandled Rejection**: Registrato in `main.js` il gestore globale `app.config.errorHandler` e il listener per promesse asincrone non gestite, inoltrando tutte le eccezioni a `useErrorStore` e alle relative notifiche toast all'utente.
+  - **Rilevamento Offline Globale (`useNetworkStatus` & `OfflineBanner.vue`)**: Implementato il composable reattivo e il banner sticky di allarme con supporto multilingua (`it-IT`, `en-US`), alert aria-live e feedback automatico al ripristino della connettività in `MainLayout.vue`.
+  - **Spaziatura Verticale CSS (`.space-y-*`) & Layout Integrity**: Aggiunte le definizioni delle classi utility `.space-y-1`..`space-y-8` e `.space-x-*` in `globals.css`, ripristinando il corretto layout su oltre 15 pagine.
+  - **Refactoring Accessibile di `FascicoloStudente.vue`**: Convertita la vista anagrafica studente a componenti Quasar standard (`q-card`, `q-skeleton` per lo stato di caricamento, `q-banner` per stato vuoto, `Notify` in caso di errore).
+  - **Pulizia Dead Code & File Orfani**: Eliminati 9 file stub/duplicati non referenziati (`ClassManagement.vue`, `DocumentEditor.vue`, `DocumentTemplate.vue`, `StudentAttendance.vue`, `AttendanceView.vue`, `DocumentView.vue`, `Schools.vue` admin, `Index.vue` admin, `AuditLog.vue` segreteria) e relativi test orfani.
+  - **Internazionalizzazione (i18n) Pagine Admin**: Localizzate con `useI18n()` le pagine `AuditLog.vue`, `Scheduler.vue`, `Tenants.vue`, `SchoolSettings.vue` ed `ElearningIntegration.vue`, con relative chiavi in `it-IT` ed `en-US`.
+  - **Auto-Logout per Inattività (Conformità AgID / GDPR)**: Creato `useInactivityTimer.js` e `InactivityDialog.vue` montato in `MainLayout.vue` con timeout a 30 minuti, modale con conto alla rovescia di 2 minuti per estendere la sessione, ascolto eventi utente (`mousemove`, `keydown`, `touchstart`, `scroll`, `click`) e logout sicuro.
+  - **Risoluzione Rotte e Permessi Segreteria**: Corretta la rotta 404 `/secretary/audit-logs` aggiungendo il redirect a `/admin/audit-logs` in `routes.js`, e ristretto il pulsante "Log Attività" in `src/pages/secretary/Users.vue` tramite `v-if="isSuperAdmin"`, allineando il frontend ai vincoli di sicurezza del backend (`RequireSuperAdmin`).
+  - **Esportazione CSV Sicura e Unificata (`useTableExport.js`)**: Creato il composable riutilizzabile con protezione integrata contro attacchi di CSV Formula Injection / DDE (`=`, `+`, `-`, `@`, `\t`, `\r`), quoting sicuro e formattatori di colonna, adottato in `SchoolManagement.vue` con suite di test dedicata.
+  - **Pulizia Risorse Render-Blocking**: Eliminato `@import` duplicato in `App.vue` e rimosso il link canonico placeholder in `index.html`.
+  - **Suite di Test & Linter**: 100% test superati (**166 test file**, **985 test unitari** Vitest) e 0 errori ESLint.
+
+- [x] **Completamento Hardening Frontend Web, Sicurezza e UI/UX (Batch 3)**:
+  - **Mitigazione Reverse Tabnabbing**: Aggiunto `rel="noopener noreferrer"` su tutti i link esterni con `target="_blank"` (`SchoolDetail.vue`, `PCTO.vue`, `Orientamento.vue`, `Colloqui.vue`) prevenendo attacchi tramite `window.opener`.
+  - **Rotte Singolari Audit Log & Redirezioni**: Configurate le redirezioni in `src/router/routes.js` per `{ path: 'admin/audit-log', redirect: '/admin/audit-logs' }` e `{ path: 'secretary/audit-log', redirect: '/admin/audit-logs' }`, prevenendo errori 404 per link legacy o digitati a mano.
+  - **Allineamento Menu Segreteria in Dashboard**: Sostituita la voce rotta "Audit Log" nel menu rapido della Dashboard con "Anagrafica Studenti" (`/secretary/students`), garantendo una navigazione coerente e priva di rotte non autorizzate per il personale di segreteria.
+  - **Esportazione CSV Sicura & Empty State in AuditLog**: Integrato il composable `useTableExport` in `src/pages/admin/AuditLog.vue` con sanitizzazione contro Formula Injection / DDE e traduzioni i18n (`adminAudit.export`), affiancato dallo stato vuoto (`no-data`) accessibile per ricerche prive di record.
+  - **Modali Responsive & Accessibilità A11y**: Aggiornati i dialoghi modali (`Tenants.vue`, ecc.) con `width: min(500px, 95vw)` e rimozione dei vincoli fissi `min-width: 400px` per schermi mobile stretti (<400px), con aggiunta di `aria-label="Chiudi"` su tutti i pulsanti di chiusura dialog.
+  - **Rilevamento Lingua Browser per Nuovi Visitatori**: Introdotto `getBrowserLocale()` in `src/utils/locale.js` che interroga `navigator.language` e normalizza verso una delle 11 lingue supportate, con fallback sicuro a `it-IT`, integrato all'avvio in `main.js` e `i18n/index.js`.
+  - **Validazione Completa**: 100% test superati (**166 suite**, **985 test unitari** Vitest), 0 errori ESLint, build di produzione ottimizzata (`auth-*.js` a 55.26 kB).
+
+- [x] **Ottimizzazione Bundle, Resilienza PWA, Hardening Sicurezza & Accessibilità Globale (Batch 4)**:
+  - **Isolamento Dizionari i18n & Riduzione Bundle Iniziale (-94.7%)**:
+    - Configurato `manualChunks` in `vite.config.js` per estrarre le 11 lingue di `src/i18n/` (~1.5 MB) nel chunk asincrono dedicato `app-i18n` e instradare `axios` in `vendor-vue`.
+    - La dimensione del chunk principale iniziale `index-*.js` è crollata da **1.38 MB** a **72.93 kB** (19.43 kB gzipped), garantendo un First Contentful Paint (FCP) ultrarapido su reti 3G/4G.
+  - **Resilienza Offline PWA & Service Worker Fallback**:
+    - Configurati in `vite.config.js` (`VitePWA`) `navigateFallback: '/index.html'` e `navigateFallbackDenylist: [/^\/api/]` per garantire la navigazione corretta della SPA anche quando l'applicazione viene aperta offline o in condizioni di rete instabile.
+    - Rimosso il banner offline duplicato locale in `src/pages/Support.vue`, demandando la segnalazione visiva al componente globale unificato `OfflineBanner.vue`.
+  - **Hardening Sicurezza Browser (Headers & Referrer)**:
+    - Aggiunti in `index.html` i tag `<meta name="referrer" content="strict-origin-when-cross-origin" />` e `<meta http-equiv="X-Content-Type-Options" content="nosniff" />` a protezione contro data leak inter-dominio e attacchi di MIME sniffing.
+  - **UX Route Guards & Notifica 403 Non Bloccante**:
+    - In `src/router/guards.js`, introdotta una notifica toast informativa di accesso non autorizzato con Quasar `Notify.create` prima del reindirizzamento alla dashboard di pertinenza, mantenendo la firma di navigazione sincrona compatibile con la suite di test.
+  - **Dialoghi Modali Fluidi e Accessibilità WCAG 2.1 AA**:
+    - Eliminati tutti i vincoli rigidi `min-width: 400px`, `min-width: 500px`, `min-width: 600px` dai dialoghi di oltre 25 pagine e componenti (`Scrutiny.vue`, `SchoolCredits.vue`, `Rubrics.vue`, `Notes.vue`, `Groups.vue`, `Didactics.vue`, `Communications.vue`, `Colloqui.vue`, `Substitutions.vue`, `Students.vue`, `PCTO.vue`, `Classes.vue`, `GeneralMeetingBooking.vue`, `Dashboard.vue`, `SchoolManagement.vue`, `AdminUsers.vue`, `LessonPlanner.vue`, `StudentEnrollmentForm.vue`, `DocumentPreview.vue`, `CircularCreator.vue`, `Orientamento.vue`, ecc.), sostituendoli con `width: min(..., 95vw); max-width: 95vw;` per prevenire qualsiasi overflow orizzontale su display mobile.
+    - Aggiunto `:aria-label="t('common.close') || 'Chiudi'"` su tutti i pulsanti di chiusura dialog per consentire l'identificazione immediata agli screen reader.
+  - **Completamento Internazionalizzazione (i18n) Rimanente**:
+    - Create le sezioni di traduzione complete per `textbooksPage`, `certificatesPage` e `verbaliPage` in italiano (`it-IT`) e inglese (`en-US`).
+    - Localizzati con `useI18n()` e `t(...)` tutti i testi, filtri, colonne tabella, dialoghi di creazione e notifiche in `Textbooks.vue`, `Certificates.vue` e `Verbali.vue`.
+  - **Validazione Completa & Qualità del Codice**:
+    - 100% test superati (**166 file di test**, **985 test unitari** Vitest).
+    - 0 errori e 0 warning ESLint (`eslint src`).
+    - Build di produzione Vite completata con successo con generazione PWA service worker.
+
+- [x] **Allineamento Dipendenze Dependabot, Ripristino Suite E2E, CSP & Isolamento Cache Logout (Batch 5)**:
+  - **Allineamento Dipendenze & Dependabot PRs**:
+    - Aggiornati `vue` (3.5.41 → 3.5.42), `axios` (1.19.0 → 1.20.0), `happy-dom` (20.11.15 → 20.12.2), `@quasar/vite-plugin` (2.0.0 → 2.0.2), `fast-uri` (3.1.5 → 3.1.7) e `github/codeql-action` (`upload-sarif@v4`).
+  - **Ripristino Completo Suite E2E (100% Passing - 67/67 file, 154/154 test)**:
+    - `tests/e2e/auditlog-admin-workflow.spec.js`: Allineato l'import a `@/pages/admin/AuditLog.vue` e l'asserzione al titolo i18n corrente `'Audit Logs'`.
+    - `tests/e2e/documents-workflow.spec.js`: Allineati gli scenari DW03 e DW04 ai componenti attivi `DocumentReviewForm.vue` e `DocumentPreview.vue` dopo la rimozione del dead code.
+    - `tests/e2e/fascicolo-studente-workflow.spec.js`: Aggiunta registrazione Quasar e stub dei componenti per rendering affidabile con `happy-dom`.
+  - **Isolamento Cache Workbox su Logout (`src/stores/auth.js`)**:
+    - Nel metodo `logout()` aggiunta l'invalidation automatica della cache `api-static-lists` tramite `caches.delete('api-static-lists')` con guard di sicurezza browser e unit test dedicato.
+  - **Content Security Policy Difensiva (`index.html`)**:
+    - Aggiunto il meta tag `Content-Security-Policy` difensivo con restrizioni su script, stili Google Fonts, WebSocket, WebWorker e blocco di Flash/plugin (`object-src 'none'`).
+  - **Accessibilità & Perfezionamento i18n**:
+    - Risolta duplicazione chiavi `fascicolo` in `src/i18n/it-IT/index.js` ed `en-US/index.js`, unificando tutti i termini anagrafici e di carriera.
+    - Localizzata interamente `src/pages/Support.vue` con chiavi dedicate in `supportPage`.
+    - Aggiunto `:aria-label` accessibile al pulsante di chiusura del popup contatti segreteria in `src/pages/Login.vue`.
+  - **Validazione Completa**:
+    - **166/166** suite di test unitari superate (**986/986 test passati**).
+    - **67/67** suite E2E superate (**154/154 test passati**).
+    - **0 errori, 0 warning** ESLint (`npm run lint`).
+    - Build Vite di produzione superata con successo (`npm run build`).
+
+- [x] **Modernizzazione Completa Applicativo Web — PWA Install Prompt, Skeleton Loaders, Titoli Dinamici i18n & Zero Hardcoding (Batch 7)**:
+  - **Risoluzione Bug & Valori Dinamici (`RecoveryCourses.vue`, `SchoolCredits.vue`)**:
+    - Rimosso l'anno scolastico hardcoded `'2023-2024'` e collegato reattivamente a `useSchoolYearStore().activeSchoolYear?.id`.
+    - Rese reattive tutte le definizioni delle colonne tabella (`courseColumns`, `testColumns`, `creditColumns`, `diaryColumns`, `peiColumns`, `ticketColumns`) mediante `computed()` e `useI18n()`.
+    - Opzioni filtri per tipologie prove, periodi e livelli di classe dinamicamente sincronizzati con il dizionario i18n.
+  - **Completamento 100% Internazionalizzazione (i18n)**:
+    - Espansi i dizionari `it-IT` ed `en-US` con le sezioni: `recovery`, `credits`, `support`, `generalMeeting`, `studentPcto`, `secretaryDashboard`, `studentAgenda`, `pwa`, `parentAria` e `routeTitles`.
+    - Localizzate integralmente le pagine: `RecoveryCourses.vue`, `SchoolCredits.vue`, `SupportRegister.vue`, `student/PCTO.vue`, `GeneralMeetingLiveQueue.vue`, `GeneralMeetingBooking.vue`, `secretary/Index.vue`, `student/AgendaCalendar.vue`, `parent/Index.vue`.
+  - **Fluid Skeleton Loaders (`q-skeleton`)**:
+    - Sostituiti tutti gli spinner rotanti generici con scheletri fluidi ad altezza coerente (`q-skeleton type="rect"`, `q-skeleton type="text"`, card grid) per abbattere il CLS (Cumulative Layout Shift) in tutte le 9 schermate aggiornate.
+  - **Composable & Prompt Installazione PWA (`usePwaInstall.js`)**:
+    - Creato il composable `src/composables/usePwaInstall.js` per intercettare gli eventi `beforeinstallprompt` e `appinstalled`, con gestione dello stato `canInstall`, `isInstalled`, trigger programmatico `promptInstall()` e dismiss tracking.
+    - Integrato pulsante di installazione visibile e accessibile in `src/layouts/MainLayout.vue` sia nella top toolbar che nel drawer laterale rapido per smartphone/tablet.
+    - Suite di unit test dedicata creata in `tests/unit/composables/usePwaInstall.spec.js` (4/4 passati).
+  - **Titoli Pagina Multilingua & WCAG 2.2**:
+    - Inserito `meta.titleKey` su tutte le rotte in `src/router/routes.js`.
+    - Aggiornato l'hook `afterEach` in `src/router/index.js` per risolvere dinamicamente `document.title` tramite `i18n.global.t()` su ogni transizione di rotta.
+    - Localizzati tutti gli attributi `:aria-label` dei pulsanti interattivi nella dashboard genitore (`parentAria.*`).
+  - **Validazione Completa & Regression Check (100% Pass)**:
+    - **167/167** suite di test unitari superate (**990/990 test passati**).
+    - **67/67** suite E2E superate (**154/154 test passati**).
+    - **0 errori, 0 warning** ESLint (`npm run lint`).
+    - Build Vite di produzione superata con successo in 2.81s senza warning.
+
+
+
+

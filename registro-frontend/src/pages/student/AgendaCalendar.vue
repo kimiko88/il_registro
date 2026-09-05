@@ -21,8 +21,18 @@
       </div>
     </div>
 
-    <div v-if="agendaStore.loading" class="row justify-center q-my-xl">
-      <q-spinner color="primary" size="40px" />
+    <div v-if="agendaStore.loading" class="row q-col-gutter-md q-my-md">
+      <div v-for="n in 3" :key="n" class="col-12 col-md-6 col-lg-4">
+        <q-card flat bordered class="q-pa-md rounded-borders">
+          <div class="row items-center justify-between q-mb-md">
+            <q-skeleton type="QChip" width="80px" />
+            <q-skeleton type="text" width="120px" />
+          </div>
+          <q-skeleton type="text" class="text-h6 q-mb-sm" />
+          <q-skeleton type="text" width="60%" class="q-mb-xs" />
+          <q-skeleton type="text" width="40%" />
+        </q-card>
+      </div>
     </div>
 
     <div v-else-if="filteredHomeworks.length === 0" class="text-center q-my-xl q-pa-lg bg-grey-1 rounded-lg bordered">
@@ -41,15 +51,15 @@
             >
               {{ (item.type || 'compito').toUpperCase() }}
             </q-chip>
-            <div class="text-caption text-grey">Scadenza: {{ formatDate(item.due_date || item.date) }}</div>
+            <div class="text-caption text-grey">{{ $t('studentAgenda.dueDate') }} {{ formatDate(item.due_date || item.date) }}</div>
           </q-card-section>
 
           <q-card-section>
             <div class="text-h6 text-weight-bold" :class="{ 'text-strike text-grey': isItemCompleted(item.id) }">
               {{ item.description || item.title }}
             </div>
-            <div class="text-subtitle2 text-grey-7" v-if="item.teacher_name">Docente: {{ item.teacher_name }}</div>
-            <div class="text-caption text-grey-6" v-if="item.subject_name">Materia: {{ item.subject_name }}</div>
+            <div class="text-subtitle2 text-grey-7" v-if="item.teacher_name">{{ $t('studentAgenda.teacher') }} {{ item.teacher_name }}</div>
+            <div class="text-caption text-grey-6" v-if="item.subject_name">{{ $t('studentAgenda.subject') }} {{ item.subject_name }}</div>
           </q-card-section>
 
           <q-separator />
@@ -58,7 +68,7 @@
             <q-checkbox
               :model-value="isItemCompleted(item.id)"
               @update:model-value="(val) => toggleCompleted(item.id, val)"
-              label="Segna come fatto"
+              :label="$t('studentAgenda.markAsDone')"
               color="positive"
             />
             <q-btn flat round icon="event" color="grey" />

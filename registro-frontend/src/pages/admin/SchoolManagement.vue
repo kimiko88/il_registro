@@ -188,9 +188,10 @@
 
     <!-- Create/Edit Dialog -->
     <q-dialog v-model="showCreateDialog" persistent>
-      <q-card style="min-width: 600px">
-        <q-card-section>
+      <q-card style="width: min(600px, 95vw); max-width: 95vw;">
+        <q-card-section class="row items-center justify-between">
           <div class="text-h6">{{ editingSchool ? 'Modifica Scuola' : 'Nuova Scuola' }}</div>
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section>
@@ -280,8 +281,9 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
-import { useQuasar, exportFile, debounce } from 'quasar'
+import { useQuasar, debounce } from 'quasar'
 import { usePermissions } from '@/composables/usePermissions'
+import { useTableExport } from '@/composables/useTableExport'
 import adminService from '@/services/adminService'
 
 const router = useRouter()
@@ -293,6 +295,7 @@ const {
   canDeleteSchools,
   canEditSchool
 } = usePermissions()
+const { exportTableCsv } = useTableExport()
 
 const schools = ref([])
 const selected = ref([])
@@ -480,42 +483,12 @@ const deleteSelected = () => {
 }
 
 // Export CSV
-function wrapCsvValue (val, formatFn) {
-  let formatted = formatFn !== void 0
-    ? formatFn(val)
-    : val
-
-  formatted = formatted === void 0 || formatted === null
-    ? ''
-    : String(formatted)
-
-  formatted = formatted.split('"').join('""')
-  return `"${formatted}"`
-}
-
 const exportTable = () => {
-  const content = [columns.map(col => wrapCsvValue(col.label))].concat(
-    schools.value.map(row => columns.map(col => wrapCsvValue(
-      typeof col.field === 'function'
-        ? col.field(row)
-        : row[col.field === void 0 ? col.name : col.field],
-      col.format
-    )).join(','))
-  ).join('\r\n')
-
-  const status = exportFile(
-    'scuole-export.csv',
-    content,
-    'text/csv'
-  )
-
-  if (status !== true) {
-    $q.notify({
-      message: 'Browser denied file download...',
-      color: 'negative',
-      icon: 'warning'
-    })
-  }
+  exportTableCsv({
+    filename: 'scuole-export.csv',
+    columns,
+    rows: schools.value
+  })
 }
 
 const focusSearch = () => {

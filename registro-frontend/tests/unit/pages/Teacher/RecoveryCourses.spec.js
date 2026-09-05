@@ -70,7 +70,8 @@ describe('RecoveryCourses.vue', () => {
           'q-select': true,
           'q-banner': true,
           'q-chip': true,
-          'q-space': true
+          'q-space': true,
+          'q-skeleton': true
         }
       }
     })

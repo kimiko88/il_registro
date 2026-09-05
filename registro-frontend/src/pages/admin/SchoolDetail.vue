@@ -51,7 +51,7 @@
                   <q-item-section>
                     <q-item-label caption>Sito Web</q-item-label>
                     <q-item-label>
-                      <a v-if="school.website" :href="school.website" target="_blank">{{ school.website }}</a>
+                      <a v-if="school.website" :href="school.website" target="_blank" rel="noopener noreferrer">{{ school.website }}</a>
                       <span v-else>N/D</span>
                     </q-item-label>
                   </q-item-section>
@@ -193,7 +193,7 @@
 
          <!-- Class Dialog -->
          <q-dialog v-model="showClassDialog">
-            <q-card style="min-width: 400px">
+            <q-card style="width: min(450px, 95vw); max-width: 95vw;">
                 <q-card-section>
                     <div class="text-h6">{{ editingClass ? 'Modifica Classe' : 'Nuova Classe' }}</div>
                 </q-card-section>
@@ -227,7 +227,7 @@
 
          <!-- User Dialog -->
          <q-dialog v-model="showUserDialog">
-            <q-card style="min-width: 500px">
+            <q-card style="width: min(550px, 95vw); max-width: 95vw;">
                 <q-card-section>
                     <div class="text-h6">{{ editingUser ? 'Modifica Utente' : 'Nuovo Utente' }}</div>
                 </q-card-section>
