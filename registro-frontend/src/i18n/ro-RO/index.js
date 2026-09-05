@@ -3109,7 +3109,11 @@ export default {
     "parentPanel": "Panou Părinți",
     "settings": "Setări Profil",
     "support": "Asistență & Ghiduri",
-    "accessibility": "Declarație de Accesibilitate"
+    "accessibility": "Declarație de Accesibilitate",
+    "login": "Autentificare în Sistem",
+    "register": "Înregistrare",
+    "forgotPassword": "Recuperare Parolă",
+    "notFound": "Pagina nu a fost găsită"
   },
   "secretaryClasses": {
     "newClass": "Clasă Nouă",

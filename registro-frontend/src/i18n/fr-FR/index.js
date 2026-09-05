@@ -3109,7 +3109,11 @@ export default {
     "parentPanel": "Espace Famille",
     "settings": "Paramètres du Profil",
     "support": "Aide & Assistance",
-    "accessibility": "Déclaration d'Accessibilité"
+    "accessibility": "Déclaration d'Accessibilité",
+    "login": "Connexion au Système",
+    "register": "Inscription",
+    "forgotPassword": "Récupération du Mot de Passe",
+    "notFound": "Page Non Trouvée"
   },
   "secretaryClasses": {
     "newClass": "Nouvelle Classe",

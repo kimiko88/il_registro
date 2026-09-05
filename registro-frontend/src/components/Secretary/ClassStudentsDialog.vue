@@ -14,7 +14,7 @@
           </div>
         </div>
         <q-space />
-        <q-btn icon="close" flat round dense v-close-popup />
+        <q-btn icon="close" flat round dense v-close-popup :aria-label="t('common.close') || 'Chiudi'" />
       </q-card-section>
 
       <q-card-section class="q-pa-md col overflow-y-auto">
@@ -64,7 +64,7 @@
                   </q-item-section>
 
                   <q-item-section side class="shrink-0">
-                    <q-btn flat round dense color="negative" icon="person_remove" @click="removeStudentFromClass(student)">
+                    <q-btn flat round dense color="negative" icon="person_remove" :aria-label="t('secretaryClasses.removeFromClass') || 'Rimuovi studente dalla classe'" @click="removeStudentFromClass(student)">
                       <q-tooltip>{{ t('secretaryClasses.removeFromClass') }}</q-tooltip>
                     </q-btn>
                   </q-item-section>
@@ -127,7 +127,7 @@
                     </q-item-label>
                   </q-item-section>
                   <q-item-section side class="shrink-0">
-                    <q-btn flat round size="sm" color="cyan-8" icon="person_add" @click="assignStudentToClass(uSt.id)">
+                    <q-btn flat round size="sm" color="cyan-8" icon="person_add" :aria-label="t('secretaryClasses.assignToClass') || 'Assegna studente alla classe'" @click="assignStudentToClass(uSt.id)">
                       <q-tooltip>{{ t('secretaryClasses.assignToClass') }}</q-tooltip>
                     </q-btn>
                   </q-item-section>

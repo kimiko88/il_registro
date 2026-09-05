@@ -89,7 +89,7 @@
         <q-card-section class="bg-primary text-white row items-center">
           <div class="text-h6"><q-icon name="key" class="q-mr-sm" />Cambio Password Personale</div>
           <q-space />
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-form @submit="savePassword">
@@ -165,7 +165,7 @@
         <q-card-section class="bg-primary text-white row items-center">
           <div class="text-h6"><q-icon name="security" class="q-mr-sm" />Configurazione Sicurezza</div>
           <q-space />
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pa-lg">
@@ -227,7 +227,7 @@
         <q-card-section class="bg-amber-8 text-white row items-center">
           <div class="text-h6"><q-icon name="notifications" class="q-mr-sm" />Preferenze Notifiche & Alert</div>
           <q-space />
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pa-lg">
@@ -289,7 +289,7 @@
         <q-card-section class="bg-indigo text-white row items-center">
           <div class="text-h6"><q-icon name="language" class="q-mr-sm" />Impostazioni Lingua (i18n)</div>
           <q-space />
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pa-lg">

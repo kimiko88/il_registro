@@ -222,30 +222,30 @@ export default [
     {
         path: '/login',
         component: () => import('@/layouts/LoginLayout.vue'),
-        meta: { requiresAuth: false },
+        meta: { requiresAuth: false, titleKey: 'routeTitles.login' },
         children: [
-            { path: '', component: () => import('@/pages/Login.vue'), meta: { title: 'Accesso al Sistema', requiresAuth: false } }
+            { path: '', component: () => import('@/pages/Login.vue'), meta: { title: 'Accesso al Sistema', titleKey: 'routeTitles.login', requiresAuth: false } }
         ]
     },
     {
         path: '/register',
         component: () => import('@/layouts/LoginLayout.vue'),
-        meta: { requiresAuth: false },
+        meta: { requiresAuth: false, titleKey: 'routeTitles.register' },
         children: [
-            { path: '', component: () => import('@/pages/Login.vue'), meta: { title: 'Registrazione', requiresAuth: false } }
+            { path: '', component: () => import('@/pages/Login.vue'), meta: { title: 'Registrazione', titleKey: 'routeTitles.register', requiresAuth: false } }
         ]
     },
     {
         path: '/forgot-password',
         component: () => import('@/layouts/LoginLayout.vue'),
-        meta: { requiresAuth: false },
+        meta: { requiresAuth: false, titleKey: 'routeTitles.forgotPassword' },
         children: [
-            { path: '', component: () => import('@/pages/Login.vue'), meta: { title: 'Recupero Password', requiresAuth: false } }
+            { path: '', component: () => import('@/pages/Login.vue'), meta: { title: 'Recupero Password', titleKey: 'routeTitles.forgotPassword', requiresAuth: false } }
         ]
     },
     {
         path: '/:catchAll(.*)*',
         component: () => import('@/pages/NotFound.vue'),
-        meta: { title: 'Pagina non trovata', requiresAuth: false }
+        meta: { title: 'Pagina non trovata', titleKey: 'routeTitles.notFound', requiresAuth: false }
     }
 ]

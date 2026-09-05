@@ -55,22 +55,22 @@
 
         <template #body-cell-actions="props">
           <q-td :props="props" class="text-right">
-            <q-btn flat round dense icon="menu_book" color="indigo" @click="openAssignmentsDialog(props.row)">
+            <q-btn flat round dense icon="menu_book" color="indigo" :aria-label="t('secretaryClasses.manageAssignments') || 'Gestione Materie & Docenti'" @click="openAssignmentsDialog(props.row)">
               <q-tooltip>Gestione Materie & Docenti</q-tooltip>
             </q-btn>
-            <q-btn flat round dense icon="groups" color="cyan-9" @click="openStudentsDialog(props.row)">
+            <q-btn flat round dense icon="groups" color="cyan-9" :aria-label="t('secretaryClasses.manageStudents') || 'Gestione Studenti della Classe'" @click="openStudentsDialog(props.row)">
               <q-tooltip>Gestione Studenti della Classe</q-tooltip>
             </q-btn>
-            <q-btn flat round dense icon="auto_stories" color="emerald" @click="openTextbooksDialog(props.row)">
+            <q-btn flat round dense icon="auto_stories" color="emerald" :aria-label="t('routeTitles.textbooks') || 'Libri di Testo'" @click="openTextbooksDialog(props.row)">
               <q-tooltip>Libri di Testo</q-tooltip>
             </q-btn>
-            <q-btn flat round dense icon="calendar_today" color="orange" @click="openScheduleDialog(props.row)">
+            <q-btn flat round dense icon="calendar_today" color="orange" :aria-label="t('routeTitles.timetable') || 'Orario Settimanale'" @click="openScheduleDialog(props.row)">
               <q-tooltip>Orario Settimanale</q-tooltip>
             </q-btn>
-            <q-btn flat round dense icon="edit" color="primary" @click="openDialog(props.row)">
+            <q-btn flat round dense icon="edit" color="primary" :aria-label="t('common.edit') || 'Modifica Classe'" @click="openDialog(props.row)">
               <q-tooltip>Modifica Classe</q-tooltip>
             </q-btn>
-            <q-btn flat round dense icon="delete" color="negative" @click="confirmDelete(props.row)">
+            <q-btn flat round dense icon="delete" color="negative" :aria-label="t('common.delete') || 'Elimina Classe'" @click="confirmDelete(props.row)">
               <q-tooltip>Elimina Classe</q-tooltip>
             </q-btn>
           </q-td>
@@ -99,90 +99,13 @@
     />
 
     <!-- Textbooks Dialog -->
-    <q-dialog v-model="showTextbooksDialog">
-      <q-card style="width: min(1100px, 95vw); max-height: 90vh;" class="rounded-xl overflow-hidden shadow-24 bg-white column no-wrap">
-        <q-card-section class="bg-gradient-premium text-white row items-center q-pa-md shrink-0">
-          <div class="row items-center">
-            <q-avatar color="white-20" text-color="white" icon="auto_stories" class="q-mr-sm" size="36px" />
-            <div>
-              <div class="text-h6 text-weight-bold">Adozioni Libri - Classe {{ currentClass?.name }}{{ currentClass?.section }}</div>
-              <div class="text-subtitle2 opacity-80">{{ currentClass?.academic_year }}</div>
-            </div>
-          </div>
-          <q-space />
-          <q-btn icon="close" flat round dense v-close-popup />
-        </q-card-section>
-
-        <q-card-section class="q-pa-md col overflow-y-auto">
-          <div class="row q-col-gutter-md">
-            <div class="col-12 col-md-7">
-              <q-table
-                title="Libri Adottati"
-                :rows="classTextbooks"
-                :columns="textbookColumns"
-                row-key="id"
-                flat
-                class="bg-transparent border-slate-100 rounded-xl"
-              >
-                <template #header-cell="props">
-                  <q-th :props="props" class="text-slate-500 font-bold">
-                    {{ props.col.label }}
-                  </q-th>
-                </template>
-
-                <template #body-cell-actions="props">
-                  <q-td :props="props" auto-width>
-                    <q-btn flat round dense color="negative" icon="delete" @click="removeTextbook(props.row)" />
-                  </q-td>
-                </template>
-              </q-table>
-            </div>
-            
-            <div class="col-12 col-md-5">
-              <q-card flat class="rounded-xl bg-slate-50 q-pa-md border-slate-200">
-                <div class="row items-center justify-between q-mb-md">
-                  <div class="text-subtitle1 text-weight-bold text-slate-800">Adotta Libro</div>
-                  <q-btn flat dense icon="add" label="Nuovo Libro" color="primary" no-caps @click="openCreateTextbook" />
-                </div>
-                <q-form @submit="addTextbookToClass" class="q-gutter-y-md">
-                  <q-select
-                    v-model="textbookForm.textbook_id"
-                    :options="allTextbooksOptions"
-                    label="Libro *"
-                    outlined
-                    dense
-                    emit-value
-                    map-options
-                    :rules="[val => !!val || 'Seleziona libro']"
-                  >
-                    <template #no-option>
-                      <q-item>
-                        <q-item-section class="text-grey">Nessun libro in catalogo</q-item-section>
-                      </q-item>
-                      <q-item clickable @click="openCreateTextbook">
-                        <q-item-section class="text-primary text-weight-bold">CREA NUOVO LIBRO</q-item-section>
-                      </q-item>
-                    </template>
-                  </q-select>
-                  <q-select
-                    v-model="textbookForm.subject_id"
-                    :options="subjectOptions"
-                    label="Materia *"
-                    outlined
-                    dense
-                    emit-value
-                    map-options
-                    :rules="[val => !!val || 'Seleziona materia']"
-                  />
-                  <q-checkbox v-model="textbookForm.is_optional" label="Il libro è opzionale" class="text-slate-700" />
-                  <q-btn type="submit" label="Conferma Adozione" color="primary" class="full-width rounded-lg q-py-sm shadow-sm q-mt-md" no-caps />
-                </q-form>
-              </q-card>
-            </div>
-          </div>
-        </q-card-section>
-      </q-card>
-    </q-dialog>
+    <ClassTextbooksDialog
+      v-model="showTextbooksDialog"
+      :target-class="currentClass"
+      :subject-options="subjectOptions"
+      :school-id="authStore.user?.school_id || ''"
+      @updated="refreshClasses"
+    />
 
     <!-- Schedule Dialog -->
     <q-dialog v-model="showScheduleDialog">
@@ -234,49 +157,7 @@
       </q-card>
     </q-dialog>
 
-    <!-- Create Textbook Dialog -->
-    <q-dialog v-model="showCreateTextbookDialog">
-      <q-card style="display: flex; flex-direction: column; width: min(550px, 95vw); max-height: 90vh;" class="rounded-xl shadow-24 bg-white">
-        <q-card-section class="bg-primary text-white row items-center justify-between q-pa-md">
-          <div class="text-subtitle1 font-bold">
-            <q-icon name="menu_book" class="q-mr-xs" />
-            Nuovo Libro Scolastico (Catalogo)
-          </div>
-          <q-btn icon="close" flat round dense v-close-popup />
-        </q-card-section>
 
-        <q-card-section class="q-pa-md scroll" style="flex: 1; overflow-y: auto;">
-
-          <q-form @submit="createTextbookInCatalog" class="q-gutter-y-md">
-            <q-input v-model="newTextbook.title" label="Titolo del Libro *" outlined dense :rules="[val => !!val || 'Obbligatorio']" />
-            <q-input v-model="newTextbook.author" label="Autore / Autori *" outlined dense :rules="[val => !!val || 'Obbligatorio']" />
-            <q-input v-model="newTextbook.publisher" label="Casa Editrice *" outlined dense :rules="[val => !!val || 'Obbligatorio']" />
-            <q-input v-model="newTextbook.isbn" label="Codice ISBN *" outlined dense :rules="[val => !!val || 'Obbligatorio']" />
-            
-            <q-select
-              v-model="newTextbook.subject_id"
-              :options="subjectOptions"
-              label="Materia associata"
-              outlined dense emit-value map-options clearable
-            />
-            
-            <div class="row q-col-gutter-md">
-              <div class="col-6">
-                <q-input v-model.number="newTextbook.price" label="Prezzo (€)" type="number" step="0.01" outlined dense />
-              </div>
-              <div class="col-6">
-                <q-input v-model="newTextbook.volume" label="Volume (es. 1, Unico)" outlined dense />
-              </div>
-            </div>
-
-            <div class="row justify-end q-gutter-sm q-mt-md">
-              <q-btn flat label="Annulla" v-close-popup no-caps />
-              <q-btn type="submit" label="Salva Libro" color="primary" class="rounded-lg q-px-md" no-caps :loading="savingTextbook" />
-            </div>
-          </q-form>
-        </q-card-section>
-      </q-card>
-    </q-dialog>
 
 
     <!-- Academic Year Migration Wizard Dialog -->
@@ -494,12 +375,12 @@ import { useAuthStore } from '@/stores/auth'
 import adminService from '@/services/adminService'
 import api from '@/services/api'
 import { useQuasar } from 'quasar'
-import { textbookService } from '@/services/textbookService'
 import { useI18n } from 'vue-i18n'
 import ScheduleGrid from '@/components/Secretary/ScheduleGrid.vue'
 import ClassFormDialog from '@/components/Secretary/ClassFormDialog.vue'
 import ClassAssignmentsDialog from '@/components/Secretary/ClassAssignmentsDialog.vue'
 import ClassStudentsDialog from '@/components/Secretary/ClassStudentsDialog.vue'
+import ClassTextbooksDialog from '@/components/Secretary/ClassTextbooksDialog.vue'
 
 const $q = useQuasar()
 const { t } = useI18n()
@@ -560,24 +441,6 @@ const assignForm = reactive({
 })
 
 const showTextbooksDialog = ref(false)
-const showCreateTextbookDialog = ref(false)
-const savingTextbook = ref(false)
-const classTextbooks = ref([])
-const allTextbooks = ref([])
-const textbookForm = reactive({
-    textbook_id: null,
-    subject_id: null,
-    is_optional: false
-})
-const newTextbook = reactive({
-    title: '',
-    author: '',
-    publisher: '',
-    isbn: '',
-    subject_id: null,
-    price: null,
-    volume: ''
-})
 
 const form = reactive({
   id: null,
@@ -596,19 +459,9 @@ const columns = [
   { name: 'actions', label: 'Azioni', align: 'right' }
 ]
 
-
-const textbookColumns = [
-    { name: 'subject', label: 'Materia', field: 'subject_name', align: 'left' },
-    { name: 'title', label: 'Titolo', field: 'title', align: 'left' },
-    { name: 'author', label: 'Autore', field: 'author', align: 'left' },
-    { name: 'optional', label: 'Opz.', field: row => row.is_optional ? 'Sì' : 'No', align: 'center' },
-    { name: 'actions', label: 'Azioni', align: 'right' }
-]
-
 const subjectOptions = computed(() => subjects.value.map(s => ({ label: s.name, value: s.id })))
 const teacherOptions = computed(() => teachers.value.map(t => ({ label: `${t.last_name} ${t.first_name}`, value: t.id })))
 const teacherUserOptions = computed(() => teachers.value.map(t => ({ label: `${t.last_name} ${t.first_name}`, value: t.user_id })))
-const allTextbooksOptions = computed(() => allTextbooks.value.map(b => ({ label: b.title, value: b.id })))
 
 onMounted(() => {
   if (authStore.user?.school_id) {
@@ -646,14 +499,12 @@ const onYearChange = () => {
 
 const fetchSchoolData = async () => {
     try {
-        const [sRes, tRes, bRes] = await Promise.all([
+        const [sRes, tRes] = await Promise.all([
             adminService.getSubjects(authStore.user.school_id),
-            adminService.getTeachersList(authStore.user.school_id),
-            textbookService.getAll()
+            adminService.getTeachersList(authStore.user.school_id)
         ])
         subjects.value = sRes.data || []
         teachers.value = tRes.data || []
-        allTextbooks.value = bRes.data || []
     } catch(e) {
         console.error("Error loading school data", e)
     }
@@ -775,75 +626,9 @@ const createSubject = async () => {
 }
 
 // Textbooks Logic
-const openTextbooksDialog = async (row) => {
+const openTextbooksDialog = (row) => {
     currentClass.value = row
     showTextbooksDialog.value = true
-    fetchClassTextbooks(row.id)
-}
-
-const fetchClassTextbooks = async (classId) => {
-    try {
-        const res = await textbookService.listByClass(classId)
-        classTextbooks.value = res.data || []
-    } catch(e) {
-        $q.notify({ type: 'negative', message: 'Errore caricamento libri' })
-    }
-}
-
-const addTextbookToClass = async () => {
-    try {
-        await textbookService.assignToClass(currentClass.value.id, textbookForm)
-        $q.notify({ type: 'positive', message: 'Libro adottato' })
-        fetchClassTextbooks(currentClass.value.id)
-    } catch(e) {
-        $q.notify({ type: 'negative', message: 'Errore adozione libro' })
-    }
-}
-
-const removeTextbook = async (row) => {
-    try {
-        await textbookService.removeFromClass(row.id)
-        $q.notify({ type: 'positive', message: 'Adozione rimossa' })
-        fetchClassTextbooks(currentClass.value.id)
-    } catch(e) {
-        $q.notify({ type: 'negative', message: 'Errore rimozione' })
-    }
-}
-
-const openCreateTextbook = () => {
-    Object.assign(newTextbook, {
-        title: '',
-        author: '',
-        publisher: '',
-        isbn: '',
-        subject_id: textbookForm.subject_id || null,
-        price: null,
-        volume: ''
-    })
-    showCreateTextbookDialog.value = true
-}
-
-const createTextbookInCatalog = async () => {
-    savingTextbook.value = true
-    try {
-        const payload = {
-            ...newTextbook,
-            school_id: authStore.user.school_id
-        }
-        const res = await textbookService.create(payload)
-        $q.notify({ type: 'positive', message: 'Nuovo libro creato nel catalogo' })
-        showCreateTextbookDialog.value = false
-        await fetchSchoolData()
-        const createdId = res.data?.id || res.data?.data?.id
-        if (createdId) {
-            textbookForm.textbook_id = createdId
-        }
-    } catch (e) {
-        console.error('Error creating textbook', e)
-        $q.notify({ type: 'negative', message: 'Errore durante la creazione del libro' })
-    } finally {
-        savingTextbook.value = false
-    }
 }
 
 
@@ -1121,6 +906,7 @@ defineExpose({
     form,
     showAssignmentsDialog,
     showStudentsDialog,
+    showTextbooksDialog,
     showSubjectDialog,
     currentClass,
     assignments,
@@ -1131,6 +917,7 @@ defineExpose({
     confirmDelete,
     openAssignmentsDialog,
     openStudentsDialog,
+    openTextbooksDialog,
     addAssignment,
     removeAssignment,
     openCreateSubject,

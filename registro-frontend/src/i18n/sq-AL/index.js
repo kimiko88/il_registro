@@ -3254,7 +3254,11 @@ export default {
     "parentPanel": "Hapësira e Prindërve",
     "settings": "Cilësimet e Profilit",
     "support": "Ndihma & Udhëzuesit",
-    "accessibility": "Deklarata e Aksesueshmërisë"
+    "accessibility": "Deklarata e Aksesueshmërisë",
+    "login": "Hyrje në Sistem",
+    "register": "Regjistrim",
+    "forgotPassword": "Rikthimi i Fjalëkalimit",
+    "notFound": "Faqja nuk u gjet"
   },
   "secretaryClasses": {
     "newClass": "Klasë e Re",

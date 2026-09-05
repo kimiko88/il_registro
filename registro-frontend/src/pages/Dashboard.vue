@@ -388,7 +388,7 @@
               </q-item-section>
               <q-item-section side class="row items-center q-gutter-xs">
                 <q-btn color="positive" size="sm" icon="check" :label="t('dashboardPage.signAndRegister')" @click="registerDraftNow(draft, idx)" />
-                <q-btn flat round dense icon="delete" color="negative" @click="deleteDraft(idx)" />
+                <q-btn flat round dense icon="delete" color="negative" :aria-label="t('common.delete') || 'Elimina bozza'" @click="deleteDraft(idx)" />
               </q-item-section>
             </q-item>
           </q-list>
