@@ -3134,7 +3134,11 @@ export default {
     "parentPanel": "家长互动专区",
     "settings": "个人账户偏好设置",
     "support": "操作手册与技术支持",
-    "accessibility": "信息无障碍声明"
+    "accessibility": "信息无障碍声明",
+    "login": "系统登录",
+    "register": "注册账号",
+    "forgotPassword": "找回密码",
+    "notFound": "页面未找到"
   },
   "secretaryClasses": {
     "newClass": "新增教学班级",

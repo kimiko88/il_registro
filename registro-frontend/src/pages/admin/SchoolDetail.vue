@@ -7,7 +7,7 @@
     <div v-else-if="school">
       <!-- Header -->
       <div class="row items-center q-mb-lg">
-        <q-btn flat round icon="arrow_back" @click="$router.back()" class="q-mr-sm" />
+        <q-btn flat round icon="arrow_back" :aria-label="t('common.back') || 'Torna indietro'" @click="$router.back()" class="q-mr-sm" />
         <div>
           <div class="text-h4 text-weight-bold">{{ school.name }}</div>
           <div class="text-subtitle1 text-grey-7">{{ school.code }} - {{ school.city }} ({{ school.province }})</div>
@@ -137,8 +137,8 @@
                    </template>
                    <template v-slot:body-cell-actions="props">
                      <q-td :props="props" auto-width>
-                        <q-btn flat round size="sm" icon="edit" color="primary" @click="editClass(props.row)" />
-                        <q-btn flat round size="sm" icon="delete" color="negative" @click="confirmDeleteClass(props.row)" />
+                        <q-btn flat round size="sm" icon="edit" color="primary" :aria-label="t('common.edit') || 'Modifica classe'" @click="editClass(props.row)" />
+                        <q-btn flat round size="sm" icon="delete" color="negative" :aria-label="t('common.delete') || 'Elimina classe'" @click="confirmDeleteClass(props.row)" />
                      </q-td>
                    </template>
                </q-table>
@@ -182,8 +182,8 @@
                    </template>
                    <template v-slot:body-cell-actions="props">
                      <q-td :props="props" auto-width>
-                        <q-btn flat round size="sm" icon="edit" color="primary" @click="editUser(props.row)" />
-                        <q-btn flat round size="sm" icon="delete" color="negative" @click="confirmDeleteUser(props.row)" />
+                        <q-btn flat round size="sm" icon="edit" color="primary" :aria-label="t('common.edit') || 'Modifica utente'" @click="editUser(props.row)" />
+                        <q-btn flat round size="sm" icon="delete" color="negative" :aria-label="t('common.delete') || 'Elimina utente'" @click="confirmDeleteUser(props.row)" />
                      </q-td>
                    </template>
                </q-table>

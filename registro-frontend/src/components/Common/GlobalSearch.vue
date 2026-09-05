@@ -26,7 +26,7 @@
               @keydown.arrow-down.prevent="moveDown"
               @keydown.arrow-up.prevent="moveUp"
             />
-            <q-btn flat round dense icon="close" size="sm" color="grey-6" @click="close" />
+            <q-btn flat round dense icon="close" size="sm" color="grey-6" :aria-label="t('common.close') || 'Chiudi'" @click="close" />
           </div>
 
           <q-separator />

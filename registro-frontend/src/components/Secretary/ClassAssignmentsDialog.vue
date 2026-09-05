@@ -10,7 +10,7 @@
           </div>
         </div>
         <q-space />
-        <q-btn icon="close" flat round dense v-close-popup />
+        <q-btn icon="close" flat round dense v-close-popup :aria-label="t('common.close') || 'Chiudi'" />
       </q-card-section>
 
       <q-card-section class="q-pa-md col overflow-y-auto">
@@ -32,7 +32,7 @@
 
               <template #body-cell-actions="props">
                 <q-td :props="props" auto-width>
-                  <q-btn flat round dense color="negative" icon="delete" @click="removeAssignment(props.row)" />
+                  <q-btn flat round dense color="negative" icon="delete" :aria-label="t('common.delete') || 'Rimuovi assegnazione materia'" @click="removeAssignment(props.row)" />
                 </q-td>
               </template>
             </q-table>

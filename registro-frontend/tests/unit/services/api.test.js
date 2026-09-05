@@ -25,7 +25,11 @@ describe('api.js — getBaseURL', () => {
   const originalEnv = import.meta.env.VITE_API_URL
 
   afterEach(() => {
-    import.meta.env.VITE_API_URL = originalEnv
+    if (originalEnv === undefined) {
+      delete import.meta.env.VITE_API_URL
+    } else {
+      import.meta.env.VITE_API_URL = originalEnv
+    }
   })
 
   it('returns default /api/v1 when VITE_API_URL is undefined or empty', () => {

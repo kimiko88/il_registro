@@ -117,6 +117,12 @@ export const useAuthStore = defineStore('auth', () => {
                         if (typeof store.clearCache === 'function') {
                             store.clearCache()
                         }
+                        if (typeof store.invalidateCache === 'function') {
+                            store.invalidateCache()
+                        }
+                        if (typeof store.reset === 'function') {
+                            store.reset()
+                        }
                         if (typeof store.$reset === 'function') {
                             store.$reset()
                         }

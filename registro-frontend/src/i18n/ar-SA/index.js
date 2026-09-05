@@ -3254,7 +3254,11 @@ export default {
     "parentPanel": "بوابة ولي الأمر",
     "settings": "إعدادات الملف الشخصي",
     "support": "المساعدة والدعم",
-    "accessibility": "إعلان إمكانية الوصول"
+    "accessibility": "إعلان إمكانية الوصول",
+    "login": "تسجيل الدخول إلى النظام",
+    "register": "تسجيل جديد",
+    "forgotPassword": "استعادة كلمة المرور",
+    "notFound": "الصفحة غير موجودة"
   },
   "secretaryClasses": {
     "newClass": "فصل جديد",

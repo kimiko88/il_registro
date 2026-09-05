@@ -33,7 +33,7 @@
           {{ t('offlineBanner.onlineText') || 'Connessione a Internet ripristinata.' }}
         </span>
       </div>
-      <q-btn flat round dense icon="close" size="xs" color="white" @click="showBackOnline = false" />
+      <q-btn flat round dense icon="close" size="xs" color="white" :aria-label="t('common.close') || 'Chiudi avviso online'" @click="showBackOnline = false" />
     </div>
   </transition>
 </template>

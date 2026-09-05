@@ -3109,7 +3109,11 @@ export default {
     "parentPanel": "Кабінет Батьків",
     "settings": "Налаштування Профілю",
     "support": "Допомога та Інструкції",
-    "accessibility": "Декларація Доступності"
+    "accessibility": "Декларація Доступності",
+    "login": "Вхід до системи",
+    "register": "Реєстрація",
+    "forgotPassword": "Відновлення пароля",
+    "notFound": "Сторінку не знайдено"
   },
   "secretaryClasses": {
     "newClass": "Новий Клас",

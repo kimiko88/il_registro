@@ -3109,7 +3109,11 @@ export default {
     "parentPanel": "Family Dashboard",
     "settings": "Profile Settings",
     "support": "Support & Guides",
-    "accessibility": "Accessibility Statement"
+    "accessibility": "Accessibility Statement",
+    "login": "System Login",
+    "register": "Registration",
+    "forgotPassword": "Password Recovery",
+    "notFound": "Page Not Found"
   },
   "secretaryClasses": {
     "newClass": "New Class",
