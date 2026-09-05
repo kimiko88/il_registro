@@ -37,7 +37,7 @@
     "eslint": "^10.0.0",
     "eslint-plugin-vue": "^10.10.0",
     "globals": "^16.0.0",
-    "happy-dom": "^20.11.6",
+    "happy-dom": "^20.12.2",
     "postcss": "^8.4.14",
     "sass": "^1.103.1",
     "vite": "^8.2.2",
