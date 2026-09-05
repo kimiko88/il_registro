@@ -10,7 +10,7 @@
         <q-badge color="red" floating v-if="studentStore.notifications.length">{{ studentStore.notifications.length }}</q-badge>
         <q-menu>
              <q-list style="min-width: 300px">
-                 <q-item-label header>Notifiche</q-item-label>
+                 <q-item-label header>{{ $t('dashboardPage.notifications') || 'Notifiche' }}</q-item-label>
                  <q-item v-for="n in studentStore.notifications" :key="n.id" clickable v-close-popup>
                      <q-item-section avatar><q-icon :name="n.icon || 'notifications'" :color="n.color || 'primary'" /></q-item-section>
                      <q-item-section>
@@ -206,7 +206,7 @@
                  <q-item>
                      <q-item-section avatar><q-icon name="wifi" color="green" /></q-item-section>
                      <q-item-section>
-                         <q-item-label>Online</q-item-label>
+                         <q-item-label>{{ $t('dashboardPage.online') || 'Online' }}</q-item-label>
                          <q-item-label caption>{{ $t('dashboardPage.syncedNow') || 'Sincronizzato adesso' }}</q-item-label>
                      </q-item-section>
                  </q-item>
@@ -225,10 +225,11 @@ import { gradeService } from 'src/services/gradeService'
 import { attendanceService } from 'src/services/attendanceService'
 import { pctoService } from 'src/services/pctoService'
 import { communicationService } from 'src/services/communicationService'
+import dashboardService from 'src/services/dashboardService'
 import adminService from 'src/services/adminService'
 import api from 'src/services/api'
 
-const { t } = useI18n();
+const { t, locale: currentLocale } = useI18n();
 const studentStore = useStudentStore();
 
 const averageGrade = ref('-')
@@ -250,7 +251,7 @@ const getGradeColor = (val) => {
 
 const formatEventDate = (dateStr) => {
     if (!dateStr) return ''
-    return new Date(dateStr).toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })
+    return new Date(dateStr).toLocaleDateString(currentLocale.value || 'it-IT', { day: '2-digit', month: 'short' })
 }
 
 const getSubjectName = (id) => {
@@ -279,7 +280,22 @@ const fetchSubjects = async () => {
 
 const fetchDashboardData = async () => {
     try {
-        // Grades
+        // Fast aggregated stats from backend
+        try {
+            const stats = await dashboardService.getDashboardStats('student')
+            if (stats) {
+                if (stats.average_grade != null && stats.average_grade > 0) {
+                    averageGrade.value = Number(stats.average_grade).toFixed(1)
+                }
+                if (stats.presence_rate != null || stats.attendance_rate != null) {
+                    attendanceRate.value = Math.round(stats.presence_rate ?? stats.attendance_rate)
+                }
+            }
+        } catch {
+            // Non-blocking fallback
+        }
+
+        // Detailed Grades
         const gradesRes = await gradeService.getMyGrades()
         const allGrades = []
         if (gradesRes.data && gradesRes.data.semesters) {
@@ -291,7 +307,7 @@ const fetchDashboardData = async () => {
         if (validGrades.length > 0) {
             const sum = validGrades.reduce((acc, g) => acc + Number(g.grade_value), 0)
             averageGrade.value = (sum / validGrades.length).toFixed(1)
-        } else {
+        } else if (averageGrade.value === '-') {
             averageGrade.value = '-'
         }
         
@@ -300,7 +316,7 @@ const fetchDashboardData = async () => {
             id: g.id,
             subject: getSubjectName(g.subject_id),
             value: g.grade_value === -1 ? 'A' : g.grade_value,
-            date: new Date(g.date).toLocaleDateString('it-IT'),
+            date: new Date(g.date).toLocaleDateString(currentLocale.value || 'it-IT'),
             type: g.grade_type,
             description: g.description
         }))
