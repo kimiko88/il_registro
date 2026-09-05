@@ -24,6 +24,12 @@ describe('Pinia Stores TTL & Cache Invalidation', () => {
         vi.clearAllMocks()
     })
 
+    it('exports 2-minute cache TTL constants for all stores', () => {
+        expect(TEACHER_CACHE_TTL).toBe(120000)
+        expect(STUDENT_CACHE_TTL).toBe(120000)
+        expect(PARENT_CACHE_TTL).toBe(120000)
+    })
+
     describe('useTeacherStore TTL Caching', () => {
         it('caches profile fetch and bypasses with force: true or invalidateCache()', async () => {
             const store = useTeacherStore()
