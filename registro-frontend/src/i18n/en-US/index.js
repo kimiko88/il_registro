@@ -3030,7 +3030,9 @@ export default {
     "installTitle": "Install School Register",
     "installBtn": "Install App",
     "installTooltip": "Install as native application on your device",
-    "dismiss": "Later"
+    "dismiss": "Later",
+    "updateAvailable": "A new version of School Register is available.",
+    "reloadNow": "Update Now"
   },
   "parentAria": {
     "selectChild": "Select child to view",
@@ -3038,6 +3040,7 @@ export default {
     "childInitial": "Initial for {name}",
     "loading": "Loading in progress",
     "averageGrade": "Grade average",
+    "pendingJustifications": "Pending justifications",
     "noChildAssociated": "No child associated",
     "contactSecretary": "Contact the secretariat if you think this is an error.",
     "upcomingEvents": "Upcoming Events",

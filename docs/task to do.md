@@ -417,3 +417,26 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
     - `go vet ./...`: 100% pulito su tutti i package e suite di integrazione.
     - `go test ./...`: 100% superato su tutti gli 87 package interni e test di integrazione.
     - Compilazione binario di produzione `cmd/api-server` verificata con successo (`go build -o bin/api-server.exe cmd/api-server/main.go`).
+
+- [x] **Modernizzazione Frontend, Live Stats Alignment, Code-Splitting Shell & Notifica PWA (Batch 9)**:
+  - **Allineamento Dati Live Dashboard (`src/pages/Dashboard.vue`)**:
+    - Risolto mismatch di chiavi JSON per il ruolo genitore (`parent`): sincronizzati `total_children` (fallback `children_count`), `upcoming_meetings` (fallback `upcoming_colloqui`), `active_communications` (fallback `unread_communications`) e `pending_justifications` (fallback `documents_count`). Ora le statistiche reali del genitore compaiono immediatamente senza ricadere sul valore `'0'`.
+    - Normalizzato il calcolo delle statistiche studente con `average_grade` e `presence_rate ?? attendance_rate`.
+  - **Integrazione Statistiche Aggregate & Locale Dinamico (`src/pages/student/Index.vue`)**:
+    - Integrata la chiamata preliminare a `dashboardService.getDashboardStats('student')` in `fetchDashboardData()`, garantendo caricamento istantaneo di media e percentuale presenze prima dell'elaborazione delle valutazioni analitiche.
+    - Sostituite tutte le formattazioni di data statiche `toLocaleDateString('it-IT')` con `toLocaleDateString(currentLocale.value || 'it-IT')`.
+    - Localizzate con `t(...)` tutte le etichette header e di stato (`dashboardPage.notifications`, `dashboardPage.online`, `dashboardPage.systemStatus`).
+  - **Code-Splitting & Riduzione Chunk `MainLayout.vue` (-40.3%)**:
+    - Convertite le importazioni sincrone dei modali e cassetti ausiliari in importazioni asincrone dinamiche con `defineAsyncComponent()` (`OnboardingTour`, `HelpCenterPanel`, `HelpDrawer`, `KeyboardShortcutsDialog`, `SessionReauthDialog`, `InactivityDialog`, `ReadingRuler`).
+    - La dimensione del chunk principale della shell applicativa `MainLayout.js` è scesa da **99.71 kB** a **59.53 kB** (15.08 kB gzipped), con scorporo di `OnboardingTour` (9.99 kB) e `HelpCenterPanel` (18.61 kB) in chunk dedicati on-demand.
+  - **Sistema Notifica Aggiornamento PWA (`usePwaUpdate` & `PwaUpdateBanner.vue`)**:
+    - Creato il composable `src/composables/usePwaUpdate.js` per monitorare in modo reattivo lo stato del Service Worker (`updatefound`, `installed`, active controller).
+    - Creato e montato in `MainLayout.vue` il componente accessibile `src/components/Common/PwaUpdateBanner.vue` con alert role, icona `system_update`, pulsante "Aggiorna Ora" (`pwa.reloadNow`) e dismiss.
+    - Aggiunte le traduzioni in `it-IT` ed `en-US` (`pwa.updateAvailable`, `pwa.reloadNow`, `parentAria.pendingJustifications`).
+    - Suite di unit test dedicata in `tests/unit/composables/usePwaUpdate.spec.js` (4/4 test passati).
+  - **Validazione Completa & CI/CD**:
+    - **168/168** suite di unit test superate (**994/994 test passati**).
+    - **67/67** suite E2E superate (**154/154 test passati**).
+    - **0 errori, 0 warning** ESLint (`npm run lint`).
+    - Build di produzione Vite completata con successo con generazione Service Worker PWA.
+

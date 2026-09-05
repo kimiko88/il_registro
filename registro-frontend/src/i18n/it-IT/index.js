@@ -3030,7 +3030,9 @@ export default {
     "installTitle": "Installa Registro Elettronico",
     "installBtn": "Installa App",
     "installTooltip": "Installa come applicazione sul tuo dispositivo",
-    "dismiss": "Più tardi"
+    "dismiss": "Più tardi",
+    "updateAvailable": "È disponibile una nuova versione del Registro Elettronico.",
+    "reloadNow": "Aggiorna Ora"
   },
   "parentAria": {
     "selectChild": "Seleziona figlio da visualizzare",
@@ -3038,6 +3040,7 @@ export default {
     "childInitial": "Iniziale di {name}",
     "loading": "Caricamento in corso",
     "averageGrade": "Media voti",
+    "pendingJustifications": "Giustificazioni in sospeso",
     "noChildAssociated": "Nessun figlio associato",
     "contactSecretary": "Contatta la segreteria se ritieni ci sia un errore.",
     "upcomingEvents": "Prossimi Eventi",

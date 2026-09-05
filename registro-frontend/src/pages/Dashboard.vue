@@ -640,18 +640,20 @@ const fetchDashboardData = async () => {
                     { label: t('dashboardPage.statGradesPending'), value: data.grades_pending_count ?? '0', icon: 'grade', color: 'red' }
                 ]
             } else if (role === 'student') {
+                const avg = data.average_grade != null && data.average_grade > 0 ? Number(data.average_grade).toFixed(1) : '-'
+                const att = (data.presence_rate ?? data.attendance_rate) != null ? Math.round(data.presence_rate ?? data.attendance_rate) + '%' : '-'
                 realStats.value = [
-                    { label: t('roleDashboards.averageGrade'), value: data.average_grade ?? '-', icon: 'grade', color: 'indigo' },
-                    { label: t('roleDashboards.attendanceRate'), value: data.attendance_rate != null ? data.attendance_rate + '%' : '-', icon: 'how_to_reg', color: 'cyan' },
+                    { label: t('roleDashboards.averageGrade'), value: avg, icon: 'grade', color: 'indigo' },
+                    { label: t('roleDashboards.attendanceRate'), value: att, icon: 'how_to_reg', color: 'cyan' },
                     { label: t('agendaPage.homework'), value: data.homework_count ?? '0', icon: 'assignment', color: 'amber' },
                     { label: t('documentsPage.title'), value: data.documents_count ?? '0', icon: 'description', color: 'purple' }
                 ]
             } else if (role === 'parent') {
                 realStats.value = [
-                    { label: t('nav.myChildren'), value: data.children_count ?? '0', icon: 'family_restroom', color: 'indigo' },
-                    { label: t('nav.colloqui'), value: data.upcoming_colloqui ?? '0', icon: 'event', color: 'cyan' },
-                    { label: t('nav.communications'), value: data.unread_communications ?? '0', icon: 'email', color: 'amber' },
-                    { label: t('documentsPage.title'), value: data.documents_count ?? '0', icon: 'description', color: 'purple' }
+                    { label: t('nav.myChildren'), value: data.total_children ?? data.children_count ?? '0', icon: 'family_restroom', color: 'indigo' },
+                    { label: t('nav.colloqui'), value: data.upcoming_meetings ?? data.upcoming_colloqui ?? '0', icon: 'event', color: 'cyan' },
+                    { label: t('nav.communications'), value: data.active_communications ?? data.unread_communications ?? '0', icon: 'email', color: 'amber' },
+                    { label: t('parentAria.pendingJustifications') || 'Giustificazioni', value: data.pending_justifications ?? data.documents_count ?? '0', icon: 'pending_actions', color: 'red' }
                 ]
             }
 
