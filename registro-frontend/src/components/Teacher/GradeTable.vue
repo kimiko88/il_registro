@@ -17,17 +17,16 @@
           
           <q-td key="grades" :props="props">
             <div class="row q-gutter-xs">
-              <q-badge
+              <GradeBadge
                 v-for="grade in getStudentGrades(props.row.id)"
                 :key="grade.id"
-                :color="getGradeColor(grade.value)"
+                :value="grade.value"
+                :type="grade.type"
+                :date="grade.date"
+                :notes="grade.description"
+                :dense="true"
                 class="cursor-pointer"
-              >
-                {{ grade.value }}
-                <q-tooltip>
-                  {{ grade.type }} - {{ grade.date }}<br>{{ grade.description }}
-                </q-tooltip>
-              </q-badge>
+              />
               <q-btn
                 round flat dense icon="add" size="xs" color="grey-7"
                 @click="$emit('add-grade', props.row)"
@@ -48,6 +47,7 @@
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useGradesStore } from '@/stores/grades';
+import GradeBadge from '@/components/Common/GradeBadge.vue';
 
 const { t } = useI18n();
 defineProps({
@@ -67,12 +67,6 @@ const getStudentGrades = (studentId) => {
   return gradesStore.getGradesByStudent(studentId);
 };
 
-const getGradeColor = (val) => {
-  if (val >= 9) return 'green-7';
-  if (val >= 6) return 'blue-7';
-  return 'red-7';
-};
-
 const calculateAverage = (studentId) => {
   const grades = getStudentGrades(studentId);
   if (!grades.length) return '-';
@@ -82,7 +76,6 @@ const calculateAverage = (studentId) => {
 
 defineExpose({
     getStudentGrades,
-    getGradeColor,
     calculateAverage
 })
 </script>

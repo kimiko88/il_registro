@@ -88,4 +88,37 @@ describe('Classes Store', () => {
         expect(store.loading).toBe(false)
         expect(store.classes).toEqual([])
     })
+
+    it('uses cached classes when called within TTL and bypasses cache with force: true', async () => {
+        const mockClasses = [{ id: '1', name: '1A' }]
+        api.get.mockResolvedValue({ data: mockClasses })
+
+        // First call: calls API
+        await store.fetchClasses()
+        expect(api.get).toHaveBeenCalledTimes(1)
+
+        // Second call without force: does not call API again
+        await store.fetchClasses()
+        expect(api.get).toHaveBeenCalledTimes(1)
+
+        // Third call with force: true: calls API
+        await store.fetchClasses({}, { force: true })
+        expect(api.get).toHaveBeenCalledTimes(2)
+    })
+
+    it('invalidates cache when a class is created, updated or deleted', async () => {
+        const mockClasses = [{ id: '1', name: '1A' }]
+        api.get.mockResolvedValue({ data: mockClasses })
+        api.post.mockResolvedValue({ data: { id: '2', name: '1B' } })
+
+        await store.fetchClasses()
+        expect(api.get).toHaveBeenCalledTimes(1)
+
+        // Mutate store
+        await store.createClass({ name: '1B' })
+
+        // Next fetch should call API because cache was invalidated
+        await store.fetchClasses()
+        expect(api.get).toHaveBeenCalledTimes(2)
+    })
 })

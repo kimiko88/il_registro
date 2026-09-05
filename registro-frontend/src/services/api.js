@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { useAuthStore } from '@/stores/auth';
+import { useErrorStore } from '@/stores/error';
 
 export const getBaseURL = () => {
     const rawUrl = import.meta.env.VITE_API_URL;
@@ -153,6 +154,8 @@ api.interceptors.response.use(
 
         if (!error.response) {
             error.userMessage = appI18n?.global?.t ? appI18n.global.t('errors.connectionError') : 'Errore di connessione al server. Verifica la tua connessione e riprova.';
+            // Report network errors to error store
+            try { useErrorStore().reportError(error, error.userMessage); } catch { /* Pinia not ready */ }
             return Promise.reject(error);
         }
 
@@ -160,10 +163,13 @@ api.interceptors.response.use(
 
         if (error.response.status === 403) {
             error.userMessage = serverMsg || (appI18n?.global?.t ? appI18n.global.t('errors.forbidden') : 'Non disponi dei permessi necessari per completare questa operazione.');
+            try { useErrorStore().reportError(error, error.userMessage); } catch { /* Pinia not ready */ }
         } else if (error.response.status === 429) {
             error.userMessage = serverMsg || (appI18n?.global?.t ? appI18n.global.t('errors.rateLimit') : 'Troppi tentativi di accesso. Riprova tra un minuto.');
+            try { useErrorStore().reportError(error, error.userMessage); } catch { /* Pinia not ready */ }
         } else if (error.response.status >= 500) {
             error.userMessage = serverMsg || (appI18n?.global?.t ? appI18n.global.t('errors.serverError') : 'Si è verificato un errore sul server. Riprova più tardi.');
+            try { useErrorStore().reportError(error, error.userMessage); } catch { /* Pinia not ready */ }
         } else if (serverMsg && typeof serverMsg === 'string') {
             error.userMessage = serverMsg;
         }

@@ -495,8 +495,32 @@ body {
     border-color: var(--border-color) !important;
 }
 
-.body--dark .q-page.bg-slate-50 {
+.body--dark .q-page.bg-slate-50,
+.body--dark .q-page.bg-grey-1,
+.body--dark .q-page.bg-grey-2,
+.body--dark .q-page.bg-slate-100,
+.body--dark .q-page.bg-gray-100 {
     background-color: var(--bg-primary) !important;
+}
+
+/* Dark mode: Quasar list items and expansion items */
+.body--dark .q-expansion-item__container {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+.body--dark .q-list {
+    color: var(--text-primary) !important;
+}
+
+.body--dark .bg-red-1 {
+    background-color: rgba(220, 38, 38, 0.12) !important;
+    color: var(--text-primary) !important;
+}
+
+.body--dark .bg-green-1 {
+    background-color: rgba(22, 163, 74, 0.12) !important;
+    color: var(--text-primary) !important;
 }
 
 .body--dark .q-tabs {

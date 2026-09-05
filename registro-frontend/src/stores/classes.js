@@ -26,13 +26,18 @@ function formatClassItem(c) {
     };
 }
 
+export const CLASSES_CACHE_TTL = 3 * 60 * 1000; // 3 minutes
+
 export const useClassesStore = defineStore('classes', {
     state: () => ({
         classes: [],
         allSchoolClassesAndGroups: [],
         selectedClassId: null,
         loading: false,
-        error: null
+        error: null,
+        _lastFetchClasses: 0,
+        _lastFetchAssigned: 0,
+        _lastFetchAll: 0,
     }),
 
     getters: {
@@ -57,12 +62,28 @@ export const useClassesStore = defineStore('classes', {
     },
 
     actions: {
-        async fetchClasses(params = {}) {
+        invalidateCache() {
+            this._lastFetchClasses = 0;
+            this._lastFetchAssigned = 0;
+            this._lastFetchAll = 0;
+        },
+
+        async fetchClasses(params = {}, options = {}) {
+            const hasParams = params && Object.keys(params).length > 0;
+            const isFresh = !options.force && !hasParams && this.classes.length > 0 && (Date.now() - this._lastFetchClasses < CLASSES_CACHE_TTL);
+            if (isFresh) {
+                return this.classes;
+            }
+
             this.loading = true;
             try {
                 const response = await api.get('/classes', { params });
                 const raw = response.data || [];
                 this.classes = raw.map(formatClassItem);
+                if (!hasParams) {
+                    this._lastFetchClasses = Date.now();
+                }
+                return this.classes;
             } catch (err) {
                 this.error = 'Failed to fetch classes';
                 console.error(err);
@@ -71,12 +92,19 @@ export const useClassesStore = defineStore('classes', {
             }
         },
 
-        async fetchAssignedClasses() {
+        async fetchAssignedClasses(options = {}) {
+            const isFresh = !options.force && this.classes.length > 0 && (Date.now() - this._lastFetchAssigned < CLASSES_CACHE_TTL);
+            if (isFresh) {
+                return this.classes;
+            }
+
             this.loading = true;
             try {
                 const response = await api.get('/teacher/classes');
                 const raw = response.data || [];
                 this.classes = raw.map(formatClassItem);
+                this._lastFetchAssigned = Date.now();
+                return this.classes;
             } catch (err) {
                 this.error = 'Failed to fetch assigned classes';
                 console.error(err);
@@ -85,7 +113,12 @@ export const useClassesStore = defineStore('classes', {
             }
         },
 
-        async fetchAllSchoolClassesAndGroups() {
+        async fetchAllSchoolClassesAndGroups(options = {}) {
+            const isFresh = !options.force && this.allSchoolClassesAndGroups.length > 0 && (Date.now() - this._lastFetchAll < CLASSES_CACHE_TTL);
+            if (isFresh) {
+                return this.allSchoolClassesAndGroups;
+            }
+
             this.loading = true;
             try {
                 const [cRes, gRes] = await Promise.all([
@@ -114,6 +147,7 @@ export const useClassesStore = defineStore('classes', {
 
                 const combined = [...formattedClasses, ...formattedGroups];
                 this.allSchoolClassesAndGroups = combined;
+                this._lastFetchAll = Date.now();
                 return combined;
             } catch (err) {
                 console.error('Failed to fetch all school classes and groups:', err);
@@ -128,6 +162,7 @@ export const useClassesStore = defineStore('classes', {
                 const response = await api.post('/classes', classData);
                 const item = formatClassItem(response.data);
                 this.classes.push(item);
+                this.invalidateCache();
                 return item;
             } catch (err) {
                 this.error = 'Failed to create class';
@@ -142,6 +177,7 @@ export const useClassesStore = defineStore('classes', {
                 if (index !== -1) {
                     this.classes[index] = formatClassItem(response.data);
                 }
+                this.invalidateCache();
             } catch (err) {
                 this.error = 'Failed to update class';
                 throw err;
@@ -155,6 +191,7 @@ export const useClassesStore = defineStore('classes', {
                 if (this.selectedClassId === id) {
                     this.selectedClassId = null;
                 }
+                this.invalidateCache();
             } catch (err) {
                 this.error = 'Failed to delete class';
                 throw err;

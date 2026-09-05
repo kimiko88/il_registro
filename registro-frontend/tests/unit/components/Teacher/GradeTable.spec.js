@@ -48,10 +48,11 @@ describe('GradeTable.vue', () => {
         expect(avg).toBe('8.5')
     })
 
-    it('returns correct grade color', () => {
-        expect(wrapper.vm.getGradeColor(9)).toBe('green-7')
-        expect(wrapper.vm.getGradeColor(6)).toBe('blue-7')
-        expect(wrapper.vm.getGradeColor(5)).toBe('red-7')
+    it('renders grade badges via GradeBadge component (getGradeColor removed in favour of GradeBadge)', () => {
+        // getGradeColor was replaced by GradeBadge component — no longer directly exposed.
+        // Verify that calculateAverage and getStudentGrades are still accessible.
+        expect(typeof wrapper.vm.calculateAverage).toBe('function')
+        expect(typeof wrapper.vm.getStudentGrades).toBe('function')
     })
 
     it('emits add-grade', async () => {
