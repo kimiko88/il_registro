@@ -28,7 +28,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@pinia/testing": "^2.0.1",
-    "@quasar/vite-plugin": "^2.0.0",
+    "@quasar/vite-plugin": "^2.0.2",
     "@vitejs/plugin-vue": "^6.0.8",
     "@vitest/coverage-v8": "^4.0.16",
     "@vue/test-utils": "^2.4.1",
