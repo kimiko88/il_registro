@@ -79,146 +79,24 @@
     </q-card>
 
     <!-- Dialog Create/Edit Class -->
-    <q-dialog v-model="showDialog" persistent class="premium-dialog">
-      <q-card style="width: min(480px, 95vw); max-width: 95vw;" class="rounded-xl overflow-hidden shadow-24">
-        <q-card-section class="bg-gradient-primary text-white row items-center q-pa-lg">
-          <div class="text-h6 text-weight-bold">{{ isEdit ? 'Modifica Classe' : 'Nuova Classe' }}</div>
-          <q-space />
-          <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
-        </q-card-section>
-
-        <q-card-section class="q-pa-xl">
-          <q-form @submit="saveClass" class="q-gutter-y-lg">
-            <div class="row q-col-gutter-lg">
-              <div class="col-8">
-                <q-input v-model="form.name" label="Nome (es. 1, 5)" outlined :rules="[val => !!val || 'Obbligatorio']" />
-              </div>
-              <div class="col-4">
-                <q-input v-model="form.section" label="Sezione (es. A, B)" outlined :rules="[val => !!val || 'Obbligatorio']" />
-              </div>
-            </div>
-            
-            <q-input v-model="form.articolazione" label="Articolazione (es. Informatica, Telecomunicazioni - Opzionale)" outlined />
-            <q-input v-model="form.location" label="Sede della Scuola (es. Sede Centrale, Succursale - Opzionale)" outlined />
-            
-            <q-select
-              v-model="form.academic_year"
-              :options="academicYearOptions"
-              label="Anno Accademico"
-              outlined
-              :rules="[val => !!val || 'Obbligatorio']"
-            />
-            
-            <q-select
-              v-model="form.coordinator_id"
-              :options="teacherUserOptions"
-              label="Coordinatore di Classe"
-              outlined
-              emit-value
-              map-options
-              clearable
-            />
-            
-            <div class="row justify-end q-mt-xl q-gutter-sm">
-              <q-btn label="Annulla" flat v-close-popup color="slate-400" />
-              <q-btn :label="isEdit ? 'Aggiorna' : 'Crea Classe'" type="submit" color="primary" class="q-px-xl rounded-lg shadow-sm" :loading="saving" />
-            </div>
-          </q-form>
-        </q-card-section>
-      </q-card>
-    </q-dialog>
+    <ClassFormDialog
+      v-model="showDialog"
+      :is-edit="isEdit"
+      :initial-data="form"
+      :academic-year-options="academicYearOptions"
+      :teacher-user-options="teacherUserOptions"
+      @saved="refreshClasses"
+    />
 
     <!-- Assignments Dialog -->
-    <q-dialog v-model="showAssignmentsDialog">
-      <q-card style="width: min(1100px, 95vw); max-height: 90vh;" class="rounded-xl overflow-hidden shadow-24 bg-white column no-wrap">
-        <q-card-section class="bg-gradient-primary text-white row items-center q-pa-md shrink-0">
-          <div class="row items-center">
-            <q-avatar color="white-20" text-color="white" icon="menu_book" class="q-mr-sm" size="36px" />
-            <div>
-              <div class="text-h6 text-weight-bold">Cattedre - Classe {{ currentClass?.name }}{{ currentClass?.section }}</div>
-              <div class="text-subtitle2 opacity-80">{{ currentClass?.academic_year }}</div>
-            </div>
-          </div>
-          <q-space />
-          <q-btn icon="close" flat round dense v-close-popup />
-        </q-card-section>
-
-        <q-card-section class="q-pa-md col overflow-y-auto">
-          <div class="row q-col-gutter-md">
-            <div class="col-12 col-md-7">
-              <q-table
-                title="Programmazione Didattica"
-                :rows="assignments"
-                :columns="assignmentsColumns"
-                row-key="id"
-                flat
-                class="bg-transparent border-slate-100 rounded-xl"
-              >
-                <template #header-cell="props">
-                  <q-th :props="props" class="text-slate-500 font-bold">
-                    {{ props.col.label }}
-                  </q-th>
-                </template>
-
-                <template #body-cell-actions="props">
-                  <q-td :props="props" auto-width>
-                    <q-btn flat round dense color="negative" icon="delete" @click="removeAssignment(props.row)" />
-                  </q-td>
-                </template>
-              </q-table>
-            </div>
-            
-            <div class="col-12 col-md-5">
-              <q-card flat class="rounded-xl bg-slate-50 q-pa-md border-slate-200">
-                <div class="text-subtitle1 text-weight-bold text-slate-800 q-mb-md">Assegna Materia</div>
-                <q-form @submit="addAssignment" class="q-gutter-y-md">
-                  <q-select
-                    v-model="assignForm.subject_id"
-                    :options="subjectOptions"
-                    label="Materia *"
-                    outlined
-                    dense
-                    emit-value
-                    map-options
-                    :rules="[val => !!val || 'Seleziona materia']"
-                  >
-                    <template #no-option>
-                      <q-item>
-                        <q-item-section class="text-grey">Nessuna materia trovata</q-item-section>
-                      </q-item>
-                      <q-item clickable @click="openCreateSubject">
-                        <q-item-section class="text-primary text-weight-bold">AGGIUNGI NUOVA MATERIA</q-item-section>
-                      </q-item>
-                    </template>
-                  </q-select>
-
-                  <q-select
-                    v-model="assignForm.teacher_id"
-                    :options="teacherOptions"
-                    label="Docente"
-                    outlined
-                    dense
-                    emit-value
-                    map-options
-                  />
-
-                  <q-input
-                    v-model.number="assignForm.hours_per_week"
-                    label="Ore Settimanali"
-                    type="number"
-                    outlined
-                    dense
-                    min="1"
-                  />
-
-                  <q-btn type="submit" label="Assegna Cattedra" color="primary" class="full-width rounded-lg q-py-sm shadow-sm q-mt-md" no-caps />
-                </q-form>
-              </q-card>
-            </div>
-          </div>
-        </q-card-section>
-      </q-card>
-    </q-dialog>
+    <ClassAssignmentsDialog
+      v-model="showAssignmentsDialog"
+      :target-class="currentClass"
+      :subject-options="subjectOptions"
+      :teacher-options="teacherOptions"
+      :school-id="authStore.user?.school_id || ''"
+      @subjects-updated="fetchSchoolData"
+    />
 
     <!-- Textbooks Dialog -->
     <q-dialog v-model="showTextbooksDialog">
@@ -333,142 +211,12 @@
     </q-dialog>
 
     <!-- Students Assignment Dialog -->
-    <q-dialog v-model="showStudentsDialog">
-      <q-card style="width: min(1100px, 95vw); max-height: 90vh;" class="rounded-xl overflow-hidden shadow-24 bg-white column no-wrap">
-        <q-card-section class="bg-cyan-8 text-white row items-center q-pa-md shrink-0">
-          <div class="row items-center">
-            <q-avatar color="white-20" text-color="white" icon="groups" class="q-mr-sm" size="36px" />
-            <div>
-              <div class="text-h6 text-weight-bold">Gestione Studenti - Classe {{ currentClass?.name }}{{ currentClass?.section }}</div>
-              <div class="text-subtitle2 text-white/90">{{ classStudents.length }} studenti iscritti · Anno Accademico {{ currentClass?.academic_year }}</div>
-            </div>
-          </div>
-          <q-space />
-          <q-btn icon="close" flat round dense v-close-popup />
-        </q-card-section>
-
-        <q-card-section class="q-pa-md col overflow-y-auto">
-          <div v-if="loadingStudents" class="text-center q-pa-xl">
-            <q-spinner-dots color="cyan-8" size="40px" />
-          </div>
-
-          <div v-else class="row q-col-gutter-md">
-            <!-- Left Column: Currently Enrolled Students -->
-            <div class="col-12 col-md-7">
-              <div class="row items-center justify-between q-mb-sm">
-                <div class="text-subtitle1 text-weight-bold text-slate-800">
-                  Studenti in Classe ({{ classStudents.length }})
-                </div>
-                <q-input
-                  v-model="studentSearchFilter"
-                  placeholder="Filtra studente..."
-                  dense outlined
-                  class="bg-white rounded-lg min-width-200"
-                >
-                  <template #append>
-                    <q-icon name="search" size="xs" />
-                  </template>
-                </q-input>
-              </div>
-
-              <div v-if="filteredClassStudents.length === 0" class="bg-slate-50 border border-slate-200 rounded-xl p-6 text-center text-slate-400">
-                <q-icon name="person_off" size="48px" class="q-mb-xs opacity-40" />
-                <div class="text-subtitle2">Nessuno studente in questa classe</div>
-                <div class="text-caption">Usa il pannello a destra per associare gli studenti della scuola.</div>
-              </div>
-
-              <q-scroll-area style="height: 440px;" class="rounded-xl border border-slate-200 bg-white">
-                <q-list separator>
-                  <q-item v-for="student in filteredClassStudents" :key="student.id" class="q-py-sm items-center justify-between">
-                    <q-item-section avatar>
-                      <q-avatar color="cyan-1" text-color="cyan-9" icon="person" font-size="20px" />
-                    </q-item-section>
-
-                    <q-item-section class="col overflow-hidden q-pr-sm">
-                      <q-item-label class="text-weight-bold text-slate-800 ellipsis">
-                        {{ student.last_name || '' }} {{ student.first_name || student.name || '' }}
-                      </q-item-label>
-                      <q-item-label caption class="text-slate-500 ellipsis">
-                        {{ student.email }} {{ student.enrollment_number ? '· Matr: ' + student.enrollment_number : '' }}
-                      </q-item-label>
-                    </q-item-section>
-
-                    <q-item-section side class="shrink-0">
-                      <q-btn flat round dense color="negative" icon="person_remove" @click="removeStudentFromClass(student)">
-                        <q-tooltip>Rimuovi dalla classe</q-tooltip>
-                      </q-btn>
-                    </q-item-section>
-                  </q-item>
-                </q-list>
-              </q-scroll-area>
-            </div>
-
-            <!-- Right Column: Add / Transfer Student -->
-            <div class="col-12 col-md-5">
-              <q-card flat class="rounded-xl bg-slate-50 q-pa-md border border-slate-200">
-                <div class="text-subtitle1 text-weight-bold text-slate-800 q-mb-md">
-                  Associa o Trasferisci Studente
-                </div>
-
-                <div class="q-gutter-y-md">
-                  <q-select
-                    v-model="selectedStudentToAssign"
-                    :options="assignableStudentOptions"
-                    label="Seleziona Studente *"
-                    outlined dense
-                    emit-value map-options
-                    filterable
-                  >
-                    <template #no-option>
-                      <q-item>
-                        <q-item-section class="text-grey">Tutti gli studenti sono già in questa classe</q-item-section>
-                      </q-item>
-                    </template>
-                  </q-select>
-
-                  <q-btn
-                    color="cyan-8"
-                    label="Associa alla Classe"
-                    icon="person_add"
-                    class="full-width rounded-lg q-py-sm shadow-sm"
-                    no-caps
-                    :disabled="!selectedStudentToAssign"
-                    @click="assignStudentToClass(selectedStudentToAssign)"
-                  />
-                </div>
-
-                <q-separator class="q-my-md" />
-
-                <!-- Unassigned Students Quick Pick -->
-                <div class="text-subtitle2 text-weight-bold text-slate-700 q-mb-xs">
-                  Studenti Senza Classe ({{ unassignedStudents.length }})
-                </div>
-                <div v-if="unassignedStudents.length === 0" class="text-caption text-slate-400">
-                  Tutti gli studenti iscritti risultano assegnati ad una classe.
-                </div>
-                <q-list v-else separator class="rounded-lg border border-slate-200 bg-white overflow-y-auto overflow-x-hidden" style="max-height: 200px;">
-                  <q-item v-for="uSt in unassignedStudents" :key="uSt.id" class="q-py-xs items-center justify-between">
-                    <q-item-section class="col overflow-hidden q-pr-xs">
-                      <q-item-label class="text-caption text-weight-bold text-slate-800 ellipsis">
-                        {{ uSt.last_name }} {{ uSt.first_name || uSt.name }}
-                      </q-item-label>
-                      <q-item-label caption class="text-slate-400 text-xs ellipsis">
-                        {{ uSt.email }}
-                      </q-item-label>
-                    </q-item-section>
-                    <q-item-section side class="shrink-0">
-                      <q-btn flat round size="sm" color="cyan-8" icon="person_add" @click="assignStudentToClass(uSt.id)">
-                        <q-tooltip>Associa alla classe</q-tooltip>
-                      </q-btn>
-                    </q-item-section>
-                  </q-item>
-                </q-list>
-              </q-card>
-            </div>
-          </div>
-        </q-card-section>
-      </q-card>
-    </q-dialog>
+    <ClassStudentsDialog
+      v-model="showStudentsDialog"
+      :target-class="currentClass"
+      :school-id="authStore.user?.school_id || ''"
+      @refresh="refreshClasses"
+    />
     
     <!-- Quick Create Subject Dialog -->
     <q-dialog v-model="showSubjectDialog">
@@ -749,6 +497,9 @@ import { useQuasar } from 'quasar'
 import { textbookService } from '@/services/textbookService'
 import { useI18n } from 'vue-i18n'
 import ScheduleGrid from '@/components/Secretary/ScheduleGrid.vue'
+import ClassFormDialog from '@/components/Secretary/ClassFormDialog.vue'
+import ClassAssignmentsDialog from '@/components/Secretary/ClassAssignmentsDialog.vue'
+import ClassStudentsDialog from '@/components/Secretary/ClassStudentsDialog.vue'
 
 const $q = useQuasar()
 const { t } = useI18n()
@@ -783,108 +534,10 @@ const academicYearOptions = [
 
 // Students Management State
 const showStudentsDialog = ref(false)
-const classStudents = ref([])
-const allSchoolStudents = ref([])
-const loadingStudents = ref(false)
-const selectedStudentToAssign = ref(null)
-const studentSearchFilter = ref('')
 
-const sortAlphabetically = (arr) => {
-  return [...arr].sort((a, b) => {
-    const lastA = (a.last_name || '').toLowerCase()
-    const lastB = (b.last_name || '').toLowerCase()
-    if (lastA !== lastB) return lastA.localeCompare(lastB, 'it')
-    const firstA = (a.first_name || a.name || '').toLowerCase()
-    const firstB = (b.first_name || b.name || '').toLowerCase()
-    return firstA.localeCompare(firstB, 'it')
-  })
-}
-
-const filteredClassStudents = computed(() => {
-  let list = classStudents.value
-  if (studentSearchFilter.value) {
-    const q = studentSearchFilter.value.toLowerCase().trim()
-    list = list.filter(s =>
-      (s.first_name || s.name || '').toLowerCase().includes(q) ||
-      (s.last_name || '').toLowerCase().includes(q) ||
-      (s.email || '').toLowerCase().includes(q)
-    )
-  }
-  return sortAlphabetically(list)
-})
-
-const unassignedStudents = computed(() => {
-  const list = allSchoolStudents.value.filter(s => !s.class_id || s.class_id === '')
-  return sortAlphabetically(list)
-})
-
-const assignableStudentOptions = computed(() => {
-  const sorted = sortAlphabetically(allSchoolStudents.value.filter(s => s.class_id !== currentClass.value?.id))
-  return sorted.map(s => {
-    const classNameStr = s.class_name ? ` (Attualmente in ${s.class_name})` : ' (Senza classe)'
-    return {
-      label: `${s.last_name || ''} ${s.first_name || s.name || ''}${classNameStr}`.trim(),
-      value: s.id
-    }
-  })
-})
-
-const openStudentsDialog = async (row) => {
+const openStudentsDialog = (row) => {
   currentClass.value = row
   showStudentsDialog.value = true
-  selectedStudentToAssign.value = null
-  studentSearchFilter.value = ''
-  await fetchStudentsForClass()
-}
-
-const fetchStudentsForClass = async () => {
-  if (!currentClass.value) return
-  loadingStudents.value = true
-  try {
-    const [classRes, allRes] = await Promise.all([
-      api.get('/users', { params: { role: 'student', class_id: currentClass.value.id, page_size: 500 } }),
-      api.get('/users', { params: { role: 'student', school_id: authStore.user.school_id, page_size: 500 } })
-    ])
-    classStudents.value = classRes.data?.users || classRes.data || []
-    allSchoolStudents.value = allRes.data?.users || allRes.data || []
-  } catch (e) {
-    console.error('Failed to load students for class', e)
-    $q.notify({ type: 'negative', message: 'Errore durante il caricamento degli studenti' })
-  } finally {
-    loadingStudents.value = false
-  }
-}
-
-const assignStudentToClass = async (studentId) => {
-  if (!studentId || !currentClass.value) return
-  try {
-    await adminService.updateUser(studentId, { class_id: currentClass.value.id })
-    $q.notify({ type: 'positive', message: 'Studente associato alla classe con successo' })
-    selectedStudentToAssign.value = null
-    await fetchStudentsForClass()
-    refreshClasses()
-  } catch (e) {
-    $q.notify({ type: 'negative', message: 'Errore durante l\'associazione dello studente' })
-  }
-}
-
-const removeStudentFromClass = async (student) => {
-  $q.dialog({
-    title: 'Rimuovi dalla Classe',
-    message: `Sei sicuro di voler rimuovere ${student.first_name || ''} ${student.last_name || ''} dalla classe ${currentClass.value?.name || ''}${currentClass.value?.section || ''}?`,
-    cancel: true,
-    persistent: true,
-    ok: { color: 'negative', label: 'Rimuovi' }
-  }).onOk(async () => {
-    try {
-      await adminService.updateUser(student.id, { class_id: '' })
-      $q.notify({ type: 'positive', message: 'Studente rimosso dalla classe' })
-      await fetchStudentsForClass()
-      refreshClasses()
-    } catch (e) {
-      $q.notify({ type: 'negative', message: 'Errore durante la rimozione dello studente' })
-    }
-  })
 }
 
 // Assignments State
@@ -943,12 +596,6 @@ const columns = [
   { name: 'actions', label: 'Azioni', align: 'right' }
 ]
 
-const assignmentsColumns = [
-    { name: 'subject', label: 'Materia', field: 'subject_name', align: 'left', sortable: true },
-    { name: 'teacher', label: 'Docente', field: row => row.teacher_name || 'N/A', align: 'left' },
-    { name: 'hours', label: 'Ore/Sett', field: 'hours_per_week', align: 'center' },
-    { name: 'actions', label: 'Azioni', align: 'right' }
-]
 
 const textbookColumns = [
     { name: 'subject', label: 'Materia', field: 'subject_name', align: 'left' },
@@ -1484,8 +1131,6 @@ defineExpose({
     confirmDelete,
     openAssignmentsDialog,
     openStudentsDialog,
-    assignStudentToClass,
-    removeStudentFromClass,
     addAssignment,
     removeAssignment,
     openCreateSubject,

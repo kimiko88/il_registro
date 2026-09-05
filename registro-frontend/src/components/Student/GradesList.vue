@@ -19,9 +19,7 @@
             <q-list separator>
                 <q-item v-for="grade in grades" :key="grade.id">
                     <q-item-section avatar>
-                         <q-badge :color="getGradeColor(grade.value)" class="text-subtitle1 q-pa-xs">
-                             {{ grade.value }}
-                         </q-badge>
+                         <GradeBadge :value="grade.value" :dense="true" />
                     </q-item-section>
                     <q-item-section>
                         <q-item-label>{{ grade.description }}</q-item-label>
@@ -40,15 +38,11 @@
 
 <script setup>
 import { useI18n } from 'vue-i18n';
+import GradeBadge from '@/components/Common/GradeBadge.vue';
 
 const { t } = useI18n();
 defineProps(['gradesBySubject', 'averages', 'getTrend']);
 
-const getGradeColor = (val) => {
-    if (val >= 8) return 'green';
-    if (val >= 6) return 'blue';
-    return 'red';
-};
 
 const getAverageColor = (val) => {
     return val >= 6 ? 'text-green' : 'text-red';

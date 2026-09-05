@@ -72,4 +72,22 @@ describe('Schools Store', () => {
         expect(store.error).toBe('Fail')
         expect(store.loading).toBe(false)
     })
+
+    it('uses cached schools when called within TTL and bypasses cache with force: true', async () => {
+        mockSchoolService.getSchools.mockResolvedValue({
+            data: { items: [{ id: 1, name: 'S1' }], total: 1 }
+        })
+
+        // Call 1: calls API
+        await store.fetchSchools()
+        expect(mockSchoolService.getSchools).toHaveBeenCalledTimes(1)
+
+        // Call 2 within TTL: no API call
+        await store.fetchSchools()
+        expect(mockSchoolService.getSchools).toHaveBeenCalledTimes(1)
+
+        // Call 3 with force: true: calls API
+        await store.fetchSchools({}, { force: true })
+        expect(mockSchoolService.getSchools).toHaveBeenCalledTimes(2)
+    })
 })
