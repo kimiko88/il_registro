@@ -391,6 +391,29 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
     - **0 errori, 0 warning** ESLint (`npm run lint`).
     - Build Vite di produzione superata con successo in 2.81s senza warning.
 
-
-
-
+- [x] **Audit Completo Backend, Modernizzazione Architetturale & Zero Mock (Batch 8)**:
+  - **Sostituzione Mock con Aggregazione Dati Live (Opzione A)**:
+    - Eliminati gli handler mock inline hardcoded in `cmd/api-server/main.go` per `/api/v1/students/dashboard/stats` e `/api/v1/parents/dashboard/stats`.
+    - **Dashboard Studente Live (`internal/students/dashboard_service.go`)**: Creato il servizio aggregatore con calcolo in tempo reale su PostgreSQL di `average_grade` (media voti da `grades`), `attendance_rate` / `presence_rate` (percentuale frequenza da `attendance`), `homework_count` (compiti assegnati da `homeworks`), `documents_count` (documenti condivisi da `documents_enhanced`), `total_grades` (totale valutazioni ricevute) e `upcoming_tests` (verifiche future da `class_tests`). Suite di test unitari con mock sqlmock passata al 100%.
+    - **Dashboard Genitore Live (`internal/parents`)**: Esteso il repository, service e handler (`GetDashboardStats`) con aggregazione live su tutti i figli associati al genitore: `total_children`, `active_communications` (conteggio circolari non lette), `pending_justifications` (assenze/ritardi da giustificare), `upcoming_meetings` (colloqui prenotati futuri con docenti) e `average_grade` complessiva dei figli. Aggiornati i test di integrazione con scenario dedicato `TestParents_DashboardStats` (passato).
+  - **Isolamento Multi-Tenant & Sicurezza Verbali (`internal/verbali`)**:
+    - Introdotto il metodo `ClassBelongsToSchool(ctx, classID, schoolID)` in `Repository` e `PostgresRepository` per verificare l'appartenenza della classe all'istituto dell'utente autenticato prima della creazione di un consiglio di classe (`CreateMeeting`).
+    - Bloccati tentativi di associazione cross-tenant con errore esplicito `ErrClassSchoolMismatch`. Suite di test unitari e test di integrazione aggiornati con scenario `TestCreateMeeting_CrossTenantBlocked` (passati).
+  - **CORS & Middleware Errori Modernizzato**:
+    - Aggiornato `internal/middleware/cors.go` includendo l'origine di sviluppo Quasar `http://localhost:9000` negli `allowedOrigins` predefiniti.
+    - Modernizzato `internal/middleware/error.go` sostituendo il vecchio status code sentinel `-1` con logging strutturato contestuale `logger.Log.Errorf` e gestione pulita degli errori interni.
+  - **Propagazione Cancellazione Query & Context DB (Opzione B)**:
+    - Migrati tutti i metodi repository SQL legacy da `Query`/`Exec`/`Begin` a `QueryContext`/`ExecContext`/`BeginTx` per supportare il tracing distribuito e il graceful cancel dei contesti HTTP chiusi dal client in:
+      - `internal/documents/repository.go` (`BeginTx`, `QueryContext`)
+      - `internal/attendance/repository.go` (`BeginTx`, `QueryContext`)
+      - `internal/lessons/repository.go` (`QueryContext`)
+      - `internal/teacher_activities/repository.go` (`QueryContext`)
+      - `internal/schoolcalendar/repository.go` (`ExecContext`, `QueryContext`, `QueryRowContext`)
+      - `internal/didactic_materials/repository.go` (`QueryContext`, `QueryRowContext`, `ExecContext`)
+    - Aggiunti i controlli di integrità dello streaming `rows.Err()` su tutti i cicli di scansione `rows.Next()` in `internal/attendance/repository.go` (`FindByClassAndDate`, `FindByStudent`, `GetAnalytics`, `FindPendingJustifications`, `FindPendingJustificationsForTeacher`, `FindUnjustifiedByStudent`, `GetStudentAttendanceStats`).
+  - **Eliminazione Dead Code & Package Stub Orfani (Opzione C)**:
+    - Rimossi i package stub non utilizzati e abbandonati in `registro-backend/pkg/`: `pkg/cache` (client Redis obsoleto), `pkg/fcm` (stub notifiche FCM non referenziato) e `pkg/websocket` (stub isolato sostituito dal modulo attivo `internal/ws`).
+  - **Validazione Completa & CI/CD**:
+    - `go vet ./...`: 100% pulito su tutti i package e suite di integrazione.
+    - `go test ./...`: 100% superato su tutti gli 87 package interni e test di integrazione.
+    - Compilazione binario di produzione `cmd/api-server` verificata con successo (`go build -o bin/api-server.exe cmd/api-server/main.go`).

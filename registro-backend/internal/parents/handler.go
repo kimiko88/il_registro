@@ -18,9 +18,26 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	p := r.Group("/parents")
 	{
 		p.GET("/dashboard", h.GetDashboard)
+		p.GET("/dashboard/stats", h.GetDashboardStats)
 		p.GET("/child/:studentId/grades-average", h.GetChildGradesAverage)
 	}
 }
+
+func (h *Handler) GetDashboardStats(c *gin.Context) {
+	parentID := c.GetString("user_id")
+	if parentID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	stats, err := h.service.GetDashboardStats(c.Request.Context(), parentID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, stats)
+}
+
 
 func (h *Handler) GetDashboard(c *gin.Context) {
 	parentID := c.GetString("user_id")

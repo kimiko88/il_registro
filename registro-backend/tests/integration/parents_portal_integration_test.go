@@ -28,6 +28,19 @@ func (m *mockParentsRepo) GetChildrenByParentUserID(_ context.Context, parentUse
 	return m.childrenMap[parentUserID], nil
 }
 
+func (m *mockParentsRepo) GetDashboardStats(_ context.Context, parentUserID string, childUserIDs []string) (*parents.ParentDashboardStatsResponse, error) {
+	return &parents.ParentDashboardStatsResponse{
+		ChildrenCount:        len(childUserIDs),
+		UpcomingColloqui:     1,
+		UnreadCommunications: 2,
+		DocumentsCount:       3,
+		TotalChildren:        len(childUserIDs),
+		UnreadMessages:       2,
+		PendingPayments:      0,
+	}, nil
+}
+
+
 type mockUsersForParentsRepo struct {
 	users.Repository
 	childrenMap map[string][]users.StudentChild
@@ -242,3 +255,33 @@ func TestParents_Unauthorized_NoAuth(t *testing.T) {
 
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
 }
+
+// PAR06 — Dashboard stats endpoint returns aggregated metrics
+func TestParents_DashboardStats(t *testing.T) {
+	pRepo := &mockParentsRepo{
+		childrenMap: map[string][]string{
+			"parent-1": {"student-u1"},
+		},
+	}
+	uRepo := &mockUsersForParentsRepo{
+		childrenMap: map[string][]users.StudentChild{
+			"parent-1": {{ID: "s-1", UserID: "student-u1", FirstName: "Marco", LastName: "Rossi"}},
+		},
+	}
+	gRepo := &mockGradesForParentsRepo{}
+
+	r := setupParentsRouter(pRepo, uRepo, gRepo, "parent-1")
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/parents/dashboard/stats", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	var stats parents.ParentDashboardStatsResponse
+	err := json.Unmarshal(w.Body.Bytes(), &stats)
+	assert.NoError(t, err)
+	assert.Equal(t, 1, stats.ChildrenCount)
+	assert.Equal(t, 1, stats.TotalChildren)
+	assert.Equal(t, 1, stats.UpcomingColloqui)
+	assert.Equal(t, 2, stats.UnreadCommunications)
+}
+

@@ -1,9 +1,11 @@
 package documents
 
 import (
+	"context"
 	"database/sql"
 	"registro-backend/pkg/crypto"
 )
+
 
 type Repository interface {
 	Create(doc *Document, initialContent string) error
@@ -44,7 +46,8 @@ func NewRepository(db *sql.DB) Repository {
 }
 
 func (r *repository) Create(d *Document, content string) error {
-	tx, err := r.db.Begin()
+	ctx := context.Background()
+	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
@@ -85,7 +88,8 @@ func (r *repository) Create(d *Document, content string) error {
 }
 
 func (r *repository) Update(d *Document, newContent, changeLog string) error {
-	tx, err := r.db.Begin()
+	ctx := context.Background()
+	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
@@ -180,7 +184,7 @@ func (r *repository) GetContent(docID string, version int) (string, error) {
 
 func (r *repository) GetVersions(docID string) ([]DocumentVersion, error) {
 	query := `SELECT id, version_num, created_by, created_at, change_log FROM document_versions WHERE document_id=$1 ORDER BY version_num DESC`
-	rows, err := r.db.Query(query, docID)
+	rows, err := r.db.QueryContext(context.Background(), query, docID)
 	if err != nil {
 		return nil, err
 	}
@@ -217,7 +221,8 @@ func (r *repository) GetReviewQueue(schoolID string) ([]Document, error) {
 }
 
 func (r *repository) AddSignature(sig *DocumentSignature) error {
-	tx, err := r.db.Begin()
+	ctx := context.Background()
+	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
@@ -244,7 +249,7 @@ func (r *repository) AddSignature(sig *DocumentSignature) error {
 }
 
 func (r *repository) GetSignatures(docID string) ([]DocumentSignature, error) {
-	rows, err := r.db.Query(`SELECT signer_id, signed_at FROM document_signatures WHERE document_id=$1`, docID)
+	rows, err := r.db.QueryContext(context.Background(), `SELECT signer_id, signed_at FROM document_signatures WHERE document_id=$1`, docID)
 	if err != nil {
 		return nil, err
 	}
@@ -266,7 +271,7 @@ func (r *repository) GetSignatures(docID string) ([]DocumentSignature, error) {
 
 // Templates
 func (r *repository) GetTemplates(schoolID string) ([]DocumentTemplate, error) {
-	rows, err := r.db.Query(`SELECT id, name, type, content FROM document_templates WHERE school_id=$1 AND is_active=TRUE`, schoolID)
+	rows, err := r.db.QueryContext(context.Background(), `SELECT id, name, type, content FROM document_templates WHERE school_id=$1 AND is_active=TRUE`, schoolID)
 	if err != nil {
 		return nil, err
 	}
@@ -313,7 +318,7 @@ func (r *repository) DeleteTemplate(id string) error {
 func (r *repository) queryDocs(query string, args ...interface{}) ([]Document, error) {
 	// Note: SELECT * is dangerous if schema changes, explicit columns preferred in prod.
 	// For brevity using explicit scan of known cols matching FindByID
-	rows, err := r.db.Query(query, args...)
+	rows, err := r.db.QueryContext(context.Background(), query, args...)
 	if err != nil {
 		return nil, err
 	}

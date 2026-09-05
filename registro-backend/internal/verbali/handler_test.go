@@ -66,7 +66,9 @@ func TestHandler_Verbali(t *testing.T) {
 	rTeacher := setupVerbaliRouter(svc, "teacher", "teacher-1", "school-1")
 
 	// CreateMeeting
+	mockRepo.On("ClassBelongsToSchool", mock.Anything, "class-1", "school-1").Return(true, nil).Once()
 	mockRepo.On("CreateMeeting", mock.Anything, mock.Anything).Return(nil).Once()
+
 	body, _ := json.Marshal(CreateMeetingRequest{
 		ClassID:   "class-1",
 		Title:     "Consiglio Ordinario",

@@ -87,7 +87,7 @@ func (r *repository) BatchCreate(atts []*Attendance) error {
 		}
 		chunk := atts[i:end]
 
-		tx, err := r.db.Begin()
+		tx, err := r.db.BeginTx(context.Background(), nil)
 		if err != nil {
 			return err
 		}
@@ -173,7 +173,7 @@ func (r *repository) FindByClassAndDate(classID string, date time.Time) ([]Atten
 		FROM attendance 
 		WHERE class_id=$1::uuid AND date=$2`
 
-	rows, err := r.db.Query(query, classID, date)
+	rows, err := r.db.QueryContext(context.Background(), query, classID, date)
 	if err != nil {
 		return nil, err
 	}
@@ -190,7 +190,7 @@ func (r *repository) FindByClassAndDate(classID string, date time.Time) ([]Atten
 		}
 		res = append(res, a)
 	}
-	return res, nil
+	return res, rows.Err()
 }
 
 func (r *repository) FindByStudent(studentID string, startDate, endDate time.Time) ([]Attendance, error) {
@@ -204,7 +204,7 @@ func (r *repository) FindByStudent(studentID string, startDate, endDate time.Tim
 		) AND date BETWEEN $2 AND $3
 		ORDER BY date DESC`
 
-	rows, err := r.db.Query(query, studentID, startDate, endDate)
+	rows, err := r.db.QueryContext(context.Background(), query, studentID, startDate, endDate)
 	if err != nil {
 		return nil, err
 	}
@@ -221,7 +221,7 @@ func (r *repository) FindByStudent(studentID string, startDate, endDate time.Tim
 		}
 		res = append(res, a)
 	}
-	return res, nil
+	return res, rows.Err()
 }
 
 func (r *repository) GetStats(studentID string) (*SummaryResponse, error) {
@@ -327,6 +327,9 @@ func (r *repository) GetAnalytics(ctx context.Context, schoolID string) (*Analyt
 		}
 		res.TopAbsentees = append(res.TopAbsentees, name)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	if res.TopAbsentees == nil {
 		res.TopAbsentees = []string{}
 	}
@@ -414,7 +417,7 @@ func (r *repository) FindPendingJustifications(classID, schoolID string) ([]Just
 		  AND ($2::text = '' OR u.school_id::text = $2::text OR s.school_id::text = $2::text)
 		  AND j.status = 'pending'`
 
-	rows, err := r.db.Query(query, classID, schoolID)
+	rows, err := r.db.QueryContext(context.Background(), query, classID, schoolID)
 	if err != nil {
 		return nil, err
 	}
@@ -428,7 +431,7 @@ func (r *repository) FindPendingJustifications(classID, schoolID string) ([]Just
 		}
 		res = append(res, j)
 	}
-	return res, nil
+	return res, rows.Err()
 }
 
 func (r *repository) FindPendingJustificationsForTeacher(ctx context.Context, teacherID, schoolID string) ([]Justification, error) {
@@ -468,7 +471,7 @@ func (r *repository) FindPendingJustificationsForTeacher(ctx context.Context, te
 		}
 		res = append(res, j)
 	}
-	return res, nil
+	return res, rows.Err()
 }
 
 func (r *repository) DeleteJustification(id string) error {
@@ -592,7 +595,7 @@ func (r *repository) FindUnjustifiedByStudent(studentID string) ([]Attendance, e
 		  AND COALESCE(justified, false) = false AND COALESCE(parent_justified, false) = false
 		ORDER BY date DESC
 	`
-	rows, err := r.db.Query(query, studentID)
+	rows, err := r.db.QueryContext(context.Background(), query, studentID)
 	if err != nil {
 		return nil, err
 	}
@@ -608,6 +611,9 @@ func (r *repository) FindUnjustifiedByStudent(studentID string) ([]Attendance, e
 			return nil, err
 		}
 		result = append(result, a)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	if result == nil {
 		result = []Attendance{}
@@ -695,15 +701,21 @@ func (r *repository) GetStudentAttendanceStats(studentID string) (*AttendanceSta
 		GROUP BY to_char(date, 'YYYY-MM'), m_name
 		ORDER BY to_char(date, 'YYYY-MM')
 	`
-	rows, err := r.db.Query(mQuery, studentID)
-	if err == nil {
-		for rows.Next() {
-			var ma MonthlyAttendance
-			if err := rows.Scan(&ma.Month, &ma.Present, &ma.Absent); err == nil {
-				stats.MonthlyBreakdown = append(stats.MonthlyBreakdown, ma)
-			}
+	rows, err := r.db.QueryContext(context.Background(), mQuery, studentID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var ma MonthlyAttendance
+		if err := rows.Scan(&ma.Month, &ma.Present, &ma.Absent); err != nil {
+			return nil, err
 		}
-		rows.Close()
+		stats.MonthlyBreakdown = append(stats.MonthlyBreakdown, ma)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	if stats.MonthlyBreakdown == nil {
