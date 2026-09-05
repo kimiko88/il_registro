@@ -156,7 +156,7 @@
 
     <!-- Create/Edit Dialog -->
     <q-dialog v-model="showDialog" persistent>
-      <q-card style="min-width: 500px">
+      <q-card style="width: min(550px, 95vw); max-width: 95vw;">
         <q-card-section>
           <div class="text-h6">{{ editingAdmin ? 'Modifica Admin' : 'Nuovo Admin' }}</div>
         </q-card-section>
@@ -232,11 +232,11 @@
 
     <!-- Activity Log Dialog -->
      <q-dialog v-model="showActivityDialog">
-      <q-card style="min-width: 600px; max-width: 900px">
+      <q-card style="width: min(750px, 95vw); max-width: 95vw;">
         <q-card-section class="row items-center">
           <div class="text-h6">Log Attività: {{ selectedAdminForActivity?.first_name }} {{ selectedAdminForActivity?.last_name }}</div>
           <q-space />
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pa-none">

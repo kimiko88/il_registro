@@ -45,7 +45,8 @@ describe('GeneralMeetingLiveQueue.vue', () => {
           'q-badge': { template: '<span class="q-badge"><slot /></span>' },
           'q-icon': true,
           'q-tooltip': true,
-          'q-select': true
+          'q-skeleton': true,
+          'q-select': { template: '<div class="q-select-stub"><slot /></div>' }
         }
       }
     })

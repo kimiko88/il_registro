@@ -24,7 +24,7 @@
           <q-card class="ticket-card shadow-2 rounded-borders">
             <q-card-section class="bg-primary text-white flex justify-between items-center">
               <div>
-                <div class="text-caption text-blue-2">{{ ticket.meeting_title || 'Ricevimento Generale' }}</div>
+                <div class="text-caption text-blue-2">{{ ticket.meeting_title || $t('generalMeeting.generalMeetingFallback') }}</div>
                 <div class="text-h4 text-weight-bolder">#{{ ticket.ticket_number }}</div>
               </div>
               <q-badge
@@ -37,12 +37,19 @@
 
             <q-card-section>
               <div class="text-subtitle1 text-weight-bold">{{ ticket.teacher_name }}</div>
-              <div class="text-caption text-grey-7">Postazione: {{ ticket.room_or_table || 'Aula Magna' }}</div>
-              <div class="text-caption text-primary q-mt-xs">Orario Stimato di Chiamata: <strong>{{ ticket.scheduled_time }}</strong></div>
-              <div class="text-caption text-grey-8 q-mt-xs">Studente: {{ ticket.student_name }}</div>
+              <div class="text-caption text-grey-7">{{ $t('generalMeeting.station') }} {{ ticket.room_or_table || $t('generalMeeting.stationFallback') }}</div>
+              <div class="text-caption text-primary q-mt-xs">{{ $t('generalMeeting.estimatedCallTime') }} <strong>{{ ticket.scheduled_time }}</strong></div>
+              <div class="text-caption text-grey-8 q-mt-xs">{{ $t('generalMeeting.studentLabel') }} {{ ticket.student_name }}</div>
             </q-card-section>
           </q-card>
         </div>
+      </div>
+    </div>
+
+    <!-- Skeleton Loader while loading meetings -->
+    <div v-if="loading && meetings.length === 0" class="row q-col-gutter-md q-mb-lg">
+      <div v-for="n in 3" :key="n" class="col-12 col-md-4">
+        <q-skeleton type="rect" height="160px" class="rounded-borders" />
       </div>
     </div>
 
@@ -52,7 +59,7 @@
       {{ $t('generalMeeting.availableEvents') }}
     </div>
 
-    <div v-if="meetings.length === 0" class="q-pa-lg text-center text-grey-6 text-italic bg-white rounded-borders shadow-1">
+    <div v-if="meetings.length === 0 && !loading" class="q-pa-lg text-center text-grey-6 text-italic bg-white rounded-borders shadow-1">
       {{ $t('generalMeeting.noEventsAvailable') }}
     </div>
 
@@ -62,10 +69,10 @@
           <div>
             <div class="text-h6 text-weight-bold text-primary">{{ meeting.title }}</div>
             <div class="text-caption text-grey-8">
-              Data: <strong>{{ meeting.event_date }}</strong> | Orario: <strong>{{ meeting.start_time }} - {{ meeting.end_time }}</strong> | Slot per genitore: <strong>{{ meeting.slot_duration_minutes }} min</strong>
+              {{ $t('generalMeeting.dateLabel') }} <strong>{{ meeting.event_date }}</strong> | {{ $t('generalMeeting.timeRangeLabel') }} <strong>{{ meeting.start_time }} - {{ meeting.end_time }}</strong> | {{ $t('generalMeeting.slotDurationLabel') }} <strong>{{ meeting.slot_duration_minutes }} min</strong>
             </div>
           </div>
-          <q-badge color="primary" :label="meeting.location_type === 'in_presenza' ? 'In Presenza' : 'Online'" />
+          <q-badge color="primary" :label="meeting.location_type === 'in_presenza' ? $t('generalMeeting.inPerson') : $t('generalMeeting.online')" />
         </q-card-section>
 
         <q-separator />
@@ -82,9 +89,9 @@
               <q-card flat bordered class="rounded-borders hover-elevate">
                 <q-card-section>
                   <div class="text-weight-bold text-primary">{{ slot.teacher_name }}</div>
-                  <div class="text-caption text-grey-7">{{ slot.subject_name || 'Docente di Classe' }}</div>
-                  <div class="text-caption text-grey-6 q-mt-xs">Postazione: {{ slot.room_or_table || 'Aula Magna' }}</div>
-                  <div class="text-caption text-secondary q-mt-xs">Prenotati: {{ slot.booked_count }} / {{ slot.max_bookings }}</div>
+                  <div class="text-caption text-grey-7">{{ slot.subject_name || $t('generalMeeting.classTeacher') }}</div>
+                  <div class="text-caption text-grey-6 q-mt-xs">{{ $t('generalMeeting.station') }} {{ slot.room_or_table || $t('generalMeeting.stationFallback') }}</div>
+                  <div class="text-caption text-secondary q-mt-xs">{{ $t('generalMeeting.booked') }} {{ slot.booked_count }} / {{ slot.max_bookings }}</div>
                 </q-card-section>
                 <q-card-actions align="right">
                   <q-btn
@@ -106,11 +113,11 @@
 
     <!-- Booking Confirmation Dialog -->
     <q-dialog v-model="bookingDialog" persistent>
-      <q-card style="min-width: 450px; max-width: 550px;" class="rounded-borders">
+      <q-card style="width: min(500px, 95vw); max-width: 95vw;" class="rounded-borders">
         <q-card-section class="row items-center q-pb-none">
           <div class="text-h6 text-weight-bold text-primary">{{ $t('generalMeeting.confirmBookingTitle') }}</div>
           <q-space />
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pt-md">
@@ -136,7 +143,7 @@
               type="textarea"
               rows="2"
               :label="$t('generalMeeting.form.notes')"
-              placeholder="Note o richieste specifiche..."
+              :placeholder="$t('generalMeeting.notesPlaceholder')"
               outlined
               dense
             />
@@ -154,15 +161,18 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
 import colloquiService from 'src/services/colloquiService'
 import api from 'src/services/api'
 
+const { t } = useI18n()
 const $q = useQuasar()
 
 const meetings = ref([])
 const myTickets = ref([])
 const childrenOptions = ref([])
+const loading = ref(false)
 
 const bookingDialog = ref(false)
 const bookingLoading = ref(false)
@@ -187,6 +197,7 @@ function extractList(response) {
 }
 
 async function loadData() {
+  loading.value = true
   try {
     const [meetingsRes, childrenRes] = await Promise.allSettled([
       colloquiService.listGeneralMeetings(),
@@ -222,6 +233,8 @@ async function loadData() {
     }
   } catch (err) {
     console.error('Error loading parent general meeting data', err)
+  } finally {
+    loading.value = false
   }
 }
 
@@ -244,12 +257,12 @@ async function submitBookingTicket() {
     const ticket = res.data
     $q.notify({
       type: 'positive',
-      message: `Biglietto #${ticket.ticket_number} prenotato! Orario stimato: ${ticket.scheduled_time}`
+      message: t('generalMeeting.ticketBooked', { number: ticket.ticket_number, time: ticket.scheduled_time })
     })
     bookingDialog.value = false
     loadData()
   } catch (err) {
-    $q.notify({ type: 'negative', message: 'Errore durante la prenotazione del biglietto' })
+    $q.notify({ type: 'negative', message: t('generalMeeting.ticketBookingError') })
   } finally {
     bookingLoading.value = false
   }

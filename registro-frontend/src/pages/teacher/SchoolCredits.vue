@@ -99,12 +99,17 @@
 
     <!-- Tabellone Crediti Classe -->
     <q-card class="shadow-2 rounded-borders">
+      <div v-if="loadingCredits" class="q-pa-md q-gutter-y-sm" role="status" aria-label="Caricamento crediti">
+        <q-skeleton type="rect" height="46px" class="rounded-borders" />
+        <q-skeleton type="rect" height="40px" class="rounded-borders" />
+        <q-skeleton type="rect" height="40px" class="rounded-borders" />
+      </div>
       <q-table
+        v-else
         :rows="classCredits"
         :columns="creditColumns"
         row-key="id"
-        :loading="loadingCredits"
-        no-data-label="Seleziona una classe del triennio (3ª, 4ª o 5ª) per visualizzare i crediti assegnati"
+        :no-data-label="$t('credits.noCreditsSelected') || 'Seleziona una classe del triennio (3ª, 4ª o 5ª) per visualizzare i crediti assegnati'"
         flat
       >
         <template #body-cell-grade_average="props">
@@ -146,11 +151,11 @@
 
     <!-- Dialog Calcolatore & Assegnazione Credito -->
     <q-dialog v-model="calculatorDialog" persistent>
-      <q-card style="min-width: 520px; max-width: 650px;" class="rounded-borders">
+      <q-card style="width: min(600px, 95vw); max-width: 95vw;" class="rounded-borders">
         <q-card-section class="row items-center q-pb-none">
           <div class="text-h6 text-weight-bold text-primary">{{ $t('credits.calcModalTitle') }}</div>
           <q-space />
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pt-md">
@@ -171,11 +176,7 @@
               <div class="col-12 col-md-6">
                 <q-select
                   v-model.number="calcForm.grade_level"
-                  :options="[
-                    { label: '3° Anno (Classe III)', value: 3 },
-                    { label: '4° Anno (Classe IV)', value: 4 },
-                    { label: '5° Anno (Classe V)', value: 5 }
-                  ]"
+                  :options="gradeLevelOptions"
                   emit-value
                   map-options
                   :label="$t('credits.form.gradeLevel')"
@@ -282,12 +283,16 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
+import { useI18n } from 'vue-i18n'
+import { useSchoolYearStore } from '@/stores/schoolYear'
 import creditService from 'src/services/creditService'
 import api from 'src/services/api'
 
 const $q = useQuasar()
+const { t } = useI18n()
+const schoolYearStore = useSchoolYearStore()
 
 const selectedClassId = ref('')
 const classOptions = ref([])
@@ -298,10 +303,16 @@ const loadingCredits = ref(false)
 const calculatorDialog = ref(false)
 const savingCredit = ref(false)
 
+const gradeLevelOptions = computed(() => [
+  { label: t('credits.gradeLevels.grade3') || '3° Anno (Classe III)', value: 3 },
+  { label: t('credits.gradeLevels.grade4') || '4° Anno (Classe IV)', value: 4 },
+  { label: t('credits.gradeLevels.grade5') || '5° Anno (Classe V)', value: 5 }
+])
+
 const calcForm = ref({
   student_id: '',
   class_id: '',
-  academic_year: '2024/2025',
+  academic_year: schoolYearStore.selectedSchoolYear || '2024/2025',
   grade_level: 3,
   grade_average: 7.5,
   conduct_grade: 8,
@@ -318,16 +329,16 @@ const calcResult = ref({
   motivation: ''
 })
 
-const creditColumns = [
-  { name: 'student_name', label: 'Studente', field: 'student_name', align: 'left', sortable: true },
-  { name: 'grade_level', label: 'Anno', field: 'grade_level', align: 'center', format: val => `${val}ª` },
-  { name: 'grade_average', label: 'Media Voti (M)', field: 'grade_average', align: 'center' },
-  { name: 'conduct_grade', label: 'Condotta', field: 'conduct_grade', align: 'center' },
-  { name: 'band', label: 'Fascia Ministeriale', field: 'base_credit_range_min', align: 'center' },
-  { name: 'assigned_credit', label: 'Credito Assegnato', field: 'assigned_credit', align: 'center' },
-  { name: 'deliberation_notes', label: 'Motivazione / Delibera', field: 'deliberation_notes', align: 'left' },
-  { name: 'actions', label: 'Azioni', field: 'actions', align: 'right' }
-]
+const creditColumns = computed(() => [
+  { name: 'student_name', label: t('credits.columns.student') || 'Studente', field: 'student_name', align: 'left', sortable: true },
+  { name: 'grade_level', label: t('credits.columns.year') || 'Anno', field: 'grade_level', align: 'center', format: val => `${val}ª` },
+  { name: 'grade_average', label: t('credits.columns.average') || 'Media Voti (M)', field: 'grade_average', align: 'center' },
+  { name: 'conduct_grade', label: t('credits.columns.conduct') || 'Condotta', field: 'conduct_grade', align: 'center' },
+  { name: 'band', label: t('credits.columns.band') || 'Fascia Ministeriale', field: 'base_credit_range_min', align: 'center' },
+  { name: 'assigned_credit', label: t('credits.columns.assignedCredit') || 'Credito Assegnato', field: 'assigned_credit', align: 'center' },
+  { name: 'deliberation_notes', label: t('credits.columns.deliberation') || 'Motivazione / Delibera', field: 'deliberation_notes', align: 'left' },
+  { name: 'actions', label: t('credits.columns.actions') || 'Azioni', field: 'actions', align: 'right' }
+])
 
 function extractList(response) {
   if (!response) return []

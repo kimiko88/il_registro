@@ -14,7 +14,9 @@ import 'quasar/src/css/index.sass'
 // Global styles
 import './assets/styles/globals.css'
 
-const savedLang = getSavedLocale()
+import { useErrorStore } from './stores/error'
+
+const savedLang = getSavedLocale(true)
 
 if (typeof setApiI18n === 'function') {
   setApiI18n(i18n)
@@ -28,10 +30,35 @@ if (typeof setApiRouter === 'function') {
 applyLocale(savedLang, i18n)
 
 const app = createApp(App)
+const pinia = createPinia()
 
-app.use(createPinia())
+app.use(pinia)
 app.use(router)
 app.use(i18n)
+
+app.config.errorHandler = (err, instance, info) => {
+  console.error('[Vue Global Error Handler]:', err, info)
+  try {
+    const errorStore = useErrorStore()
+    errorStore.reportError(err)
+  } catch (storeErr) {
+    console.error('Error reporting to errorStore:', storeErr)
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('unhandledrejection', (event) => {
+    console.error('[Unhandled Promise Rejection]:', event.reason)
+    try {
+      const errorStore = useErrorStore()
+      if (event.reason) {
+        errorStore.reportError(event.reason)
+      }
+    } catch {
+      // Store reporting guard
+    }
+  })
+}
 app.use(Quasar, {
     plugins: {
         Notify,

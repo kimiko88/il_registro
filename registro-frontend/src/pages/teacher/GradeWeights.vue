@@ -89,7 +89,7 @@
 
     <!-- Dialog -->
     <q-dialog v-model="dialog" persistent>
-      <q-card style="min-width: 400px">
+      <q-card style="width: min(450px, 95vw); max-width: 95vw;">
         <q-card-section class="bg-primary text-white">
           <div class="text-h6">{{ editingId ? 'Modifica Peso' : 'Nuovo Peso' }}</div>
         </q-card-section>

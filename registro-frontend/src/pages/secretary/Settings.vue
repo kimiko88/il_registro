@@ -237,7 +237,7 @@
 
     <!-- Holiday Dialog -->
     <q-dialog v-model="holidayDialog.show" persistent class="premium-dialog">
-      <q-card style="min-width: 500px" class="rounded-xl overflow-hidden shadow-24">
+      <q-card style="width: min(500px, 95vw); max-width: 95vw;" class="rounded-xl overflow-hidden shadow-24">
         <q-card-section class="bg-gradient-primary text-white q-pa-lg">
           <div class="text-h5 text-weight-bold">{{ holidayDialog.editIndex !== null ? 'Modifica Chiusura' : 'Nuova Chiusura' }}</div>
         </q-card-section>

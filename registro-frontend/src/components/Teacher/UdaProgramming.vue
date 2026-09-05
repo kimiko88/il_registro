@@ -82,10 +82,10 @@
 
     <!-- Create/Edit Modal -->
     <q-dialog v-model="showDialog" persistent>
-      <q-card style="min-width: 500px; max-width: 700px">
+      <q-card style="width: min(650px, 95vw); max-width: 95vw;">
         <q-card-section class="bg-primary text-white row items-center justify-between">
           <div class="text-h6">{{ editMode ? (t('common.edit') || 'Modifica UdA') : (t('udaPage.newUda') || 'Nuova Unità di Apprendimento (UdA)') }}</div>
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pa-md q-gutter-sm">

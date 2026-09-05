@@ -134,13 +134,13 @@
 
     <!-- Create Note Dialog -->
     <q-dialog v-model="dialogVisible">
-      <q-card style="min-width: 450px; max-width: 550px" class="rounded-xl overflow-hidden">
+      <q-card style="width: min(500px, 95vw); max-width: 95vw;" class="rounded-xl overflow-hidden">
         <q-card-section class="bg-primary text-white row items-center justify-between q-py-md">
           <div class="text-h6 text-weight-bold">
             <q-icon name="edit_note" class="q-mr-xs" />
             Nuova Nota Disciplinare / Annotazione
           </div>
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pa-md space-y-4">

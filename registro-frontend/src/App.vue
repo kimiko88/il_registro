@@ -110,8 +110,6 @@ watch(() => authStore.isAuthenticated, (val) => {
 </script>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&family=Fredoka:wght@400;600;700&family=Lexend:wght@300;400;500;600;700&family=Roboto:wght@400;500;700&display=swap');
-
 @font-face {
   font-family: 'OpenDyslexic';
   src: url('https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/otf/OpenDyslexic-Regular.otf') format('opentype');

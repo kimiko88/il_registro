@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createTestingPinia } from '@pinia/testing'
 import { Quasar } from 'quasar'
-import AuditLog from '@/pages/secretary/AuditLog.vue'
+import AuditLog from '@/pages/admin/AuditLog.vue'
 
 describe('Secretary and Admin Audit Log Workflow E2E', () => {
     let pinia
@@ -41,6 +41,6 @@ describe('Secretary and Admin Audit Log Workflow E2E', () => {
         })
 
         expect(wrapper.exists()).toBe(true)
-        expect(wrapper.text()).toContain('Audit Log di Sistema')
+        expect(wrapper.text()).toContain('Audit Logs')
     })
 })

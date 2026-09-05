@@ -81,10 +81,11 @@ describe('GeneralMeetingBooking.vue', () => {
           'q-separator': { template: '<hr />' },
           'q-icon': true,
           'q-tooltip': true,
+          'q-skeleton': true,
           'q-dialog': true,
           'q-form': true,
           'q-input': true,
-          'q-select': true,
+          'q-select': { template: '<div class="q-select-stub"><slot /></div>' },
           'q-space': true
         }
       }

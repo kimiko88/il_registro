@@ -114,6 +114,7 @@ config.global.stubs = {
     'q-chip': true,
     'q-avatar': true,
     'q-spinner': true,
+    'q-skeleton': true,
     'q-tooltip': true,
     'q-card': true,
     'q-card-section': true,

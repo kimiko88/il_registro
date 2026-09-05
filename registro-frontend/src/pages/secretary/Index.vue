@@ -24,7 +24,10 @@
             />
             <div class="q-ml-lg">
               <div class="text-subtitle2 text-slate-500 text-uppercase letter-spacing-1">{{ stat.label }}</div>
-              <div class="text-h3 text-weight-bold text-slate-800">{{ stat.value }}</div>
+              <div class="text-h3 text-weight-bold text-slate-800">
+                <q-skeleton v-if="loading" type="text" width="48px" />
+                <span v-else>{{ stat.value }}</span>
+              </div>
             </div>
           </q-card-section>
           <div :class="`bg-${stat.color}-500`" style="height: 4px; opacity: 0.8"></div>
@@ -53,7 +56,7 @@
                  <q-item-label caption class="text-slate-500">{{ item.author }} • {{ item.date }}</q-item-label>
                </q-item-section>
                <q-item-section side>
-                 <q-chip size="sm" color="orange-100" text-color="orange-800" label="In Revisione" class="text-weight-bold rounded-lg" />
+                 <q-chip size="sm" color="orange-100" text-color="orange-800" :label="$t('secretaryDashboard.inReview')" class="text-weight-bold rounded-lg" />
                </q-item-section>
              </q-item>
            </q-list>
@@ -83,7 +86,7 @@
                      </q-item-section>
                  </q-item>
              </q-list>
-             <div v-else class="q-pa-xl text-center text-slate-400">Nessuna attività recente</div>
+             <div v-else class="q-pa-xl text-center text-slate-400">{{ $t('secretaryDashboard.noRecentActivity') }}</div>
         </q-card>
       </div>
 
@@ -91,7 +94,7 @@
       <div class="col-12 col-md-4">
         <q-card class="rounded-xl shadow-soft border-slate-100 bg-white overflow-hidden q-mb-lg">
           <q-card-section class="q-pa-lg">
-            <div class="text-h5 text-weight-bold text-slate-800 q-mb-lg">Azioni Rapide</div>
+            <div class="text-h5 text-weight-bold text-slate-800 q-mb-lg">{{ $t('secretaryDashboard.quickActions') }}</div>
             <div class="column q-gutter-y-md">
               <q-btn 
                 color="indigo" 
@@ -102,7 +105,7 @@
                 unelevated
                 align="left"
                 icon="campaign" 
-                label="Nuova Circolare" 
+                :label="$t('secretaryDashboard.newCircular')" 
                 to="/secretary/communications" 
               />
               <q-btn 
@@ -114,7 +117,7 @@
                 unelevated
                 align="left"
                 icon="person_add" 
-                label="Registra Utente" 
+                :label="$t('secretaryDashboard.registerUser')" 
                 to="/secretary/users" 
               />
               <q-btn 
@@ -126,7 +129,7 @@
                 unelevated
                 align="left"
                 icon="upload_file" 
-                label="Carica Documento" 
+                :label="$t('secretaryDashboard.uploadDoc')" 
                 to="/secretary/documents" 
               />
               <q-btn 
@@ -139,7 +142,7 @@
                 unelevated
                 align="left"
                 icon="settings" 
-                label="Impostazioni" 
+                :label="$t('secretaryDashboard.settings')" 
                 to="/secretary/settings" 
               />
             </div>
@@ -151,7 +154,7 @@
              <q-card-section class="q-pa-lg">
                   <div class="text-h6 text-weight-bold q-mb-md row items-center no-wrap">
                     <q-icon name="auto_awesome" class="q-mr-sm" />
-                    Avvisi di Sistema
+                    {{ $t('secretaryDashboard.systemAnnouncements') }}
                   </div>
                   <div class="column q-gutter-y-md" v-if="announcements.length > 0">
                       <div v-for="ann in announcements" :key="ann.id" class="glass-effect q-pa-md rounded-lg border-white-10 cursor-pointer hover-scale">
@@ -159,7 +162,7 @@
                         <div class="text-caption opacity-80">{{ ann.date || 'Recente' }}</div>
                       </div>
                   </div>
-                  <div v-else class="text-caption opacity-80 italic">Nessun avviso importante al momento.</div>
+                  <div v-else class="text-caption opacity-80 italic">{{ $t('secretaryDashboard.noAnnouncements') }}</div>
              </q-card-section>
         </q-card>
       </div>
@@ -168,20 +171,29 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
 import { useRouter } from 'vue-router'
 import adminService from 'src/services/adminService'
 import documentService from 'src/services/documentService'
 
+const { t, locale } = useI18n()
 const $q = useQuasar()
 const router = useRouter()
 
-const statsCards = ref([
-    { label: 'Pendenti', value: '0', icon: 'pending_actions', color: 'orange' },
-    { label: 'Circolari', value: '0', icon: 'campaign', color: 'blue' },
-    { label: 'Studenti', value: '0', icon: 'school', color: 'green' },
-    { label: 'Docenti', value: '0', icon: 'work', color: 'purple' }
+const statsCounts = ref({
+    pending: '0',
+    circulars: '0',
+    students: '0',
+    teachers: '0'
+})
+
+const statsCards = computed(() => [
+    { label: t('secretaryDashboard.pending'), value: statsCounts.value.pending, icon: 'pending_actions', color: 'orange' },
+    { label: t('secretaryDashboard.circulars'), value: statsCounts.value.circulars, icon: 'campaign', color: 'blue' },
+    { label: t('secretaryDashboard.students'), value: statsCounts.value.students, icon: 'school', color: 'green' },
+    { label: t('secretaryDashboard.teachers'), value: statsCounts.value.teachers, icon: 'work', color: 'purple' }
 ])
 
 const pendingReviews = ref([])
@@ -194,10 +206,10 @@ const fetchData = async () => {
     try {
         const statsRes = await adminService.getDashboardStats()
         if (statsRes.data) {
-            statsCards.value[0].value = statsRes.data.pending_documents_count || '0'
-            statsCards.value[1].value = statsRes.data.announcements_count || '0'
-            statsCards.value[2].value = statsRes.data.total_students || '0'
-            statsCards.value[3].value = statsRes.data.total_teachers || '0'
+            statsCounts.value.pending = statsRes.data.pending_documents_count || '0'
+            statsCounts.value.circulars = statsRes.data.announcements_count || '0'
+            statsCounts.value.students = statsRes.data.total_students || '0'
+            statsCounts.value.teachers = statsRes.data.total_teachers || '0'
             recentEvents.value = statsRes.data.recent_events || []
         }
 
@@ -206,8 +218,8 @@ const fetchData = async () => {
             pendingReviews.value = docRes.data.items.slice(0, 5).map(d => ({
                 id: d.id,
                 title: d.title,
-                author: d.author || 'Docente',
-                date: new Date(d.created_at).toLocaleDateString('it-IT')
+                author: d.author || t('secretaryDashboard.teacherFallback'),
+                date: new Date(d.created_at).toLocaleDateString(locale.value || 'it-IT')
             }))
         }
 
@@ -235,9 +247,9 @@ const getEventColor = (type) => {
 const formatDate = (dateString) => {
     const date = new Date(dateString)
     const diff = new Date() - date
-    if (diff < 3600000) return `${Math.floor(diff / 60000)} min fa`
-    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h fa`
-    return date.toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })
+    if (diff < 3600000) return `${Math.floor(diff / 60000)} ${t('secretaryDashboard.minAgo')}`
+    if (diff < 86400000) return `${Math.floor(diff / 3600000)}${t('secretaryDashboard.hoursAgo')}`
+    return date.toLocaleDateString(locale.value || 'it-IT', { day: '2-digit', month: 'short' })
 }
 
 onMounted(fetchData)
