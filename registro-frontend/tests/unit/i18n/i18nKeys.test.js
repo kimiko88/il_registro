@@ -27,7 +27,11 @@ const allMessages = {
 
 describe('i18n Dictionary Integrity across all 11 Supported Languages', () => {
   const supportedLocales = ['it-IT', 'en-US', 'de-DE', 'fr-FR', 'es-ES', 'ro-RO', 'sq-AL', 'ru-RU', 'uk-UA', 'ar-SA', 'zh-CN']
-  const requiredSections = ['roles', 'layout', 'categories', 'nav', 'notifications', 'help']
+  const requiredSections = [
+    'roles', 'layout', 'categories', 'nav', 'notifications', 'help',
+    'secretaryClasses', 'parentProfile', 'parentColloqui', 'textbooksPage',
+    'certificatesPage', 'sidiExports', 'routeTitles', 'adminAudit', 'schedulerPage'
+  ]
 
   supportedLocales.forEach((locale) => {
     describe(`Locale: ${locale}`, () => {
@@ -36,7 +40,7 @@ describe('i18n Dictionary Integrity across all 11 Supported Languages', () => {
       })
 
       requiredSections.forEach((section) => {
-        it(`contains required section "${section}"`, () => {
+        it(`contains section "${section}"`, () => {
           const dict = allMessages[locale]
           expect(dict[section]).toBeDefined()
           expect(typeof dict[section]).toBe('object')
@@ -59,6 +63,35 @@ describe('i18n Dictionary Integrity across all 11 Supported Languages', () => {
         expect(layout.mainNav).toBeDefined()
         expect(layout.dsaFontDesc).toBeDefined()
         expect(layout.highContrast).toBeDefined()
+      })
+
+      it('contains all leaf keys defined in it-IT', () => {
+        function getLeafKeys(obj, prefix = '') {
+          let keys = []
+          for (const [k, v] of Object.entries(obj)) {
+            const p = prefix ? prefix + '.' + k : k
+            if (v && typeof v === 'object' && !Array.isArray(v)) {
+              keys = keys.concat(getLeafKeys(v, p))
+            } else {
+              keys.push(p)
+            }
+          }
+          return keys
+        }
+
+        const itKeys = getLeafKeys(allMessages['it-IT'])
+        const dict = allMessages[locale]
+
+        itKeys.forEach((keyPath) => {
+          const parts = keyPath.split('.')
+          let cur = dict
+          for (const p of parts) {
+            expect(cur).toBeDefined()
+            cur = cur[p]
+          }
+          expect(cur).toBeDefined()
+          expect(typeof cur === 'string' || Array.isArray(cur)).toBe(true)
+        })
       })
     })
   })
