@@ -60,6 +60,10 @@ func (m *MockRepository) GetSignatures(ctx context.Context, verbaleID string) ([
 	}
 	return args.Get(0).([]VerbaleSignature), args.Error(1)
 }
+func (m *MockRepository) ClassBelongsToSchool(ctx context.Context, classID, schoolID string) (bool, error) {
+	args := m.Called(ctx, classID, schoolID)
+	return args.Bool(0), args.Error(1)
+}
 
 func TestCreateMeetingAndVerbale(t *testing.T) {
 	mockRepo := new(MockRepository)
@@ -74,6 +78,7 @@ func TestCreateMeetingAndVerbale(t *testing.T) {
 		Agenda:    "Approvazione piano didattico",
 	}
 
+	mockRepo.On("ClassBelongsToSchool", mock.Anything, "class-1", "school-1").Return(true, nil).Once()
 	mockRepo.On("CreateMeeting", mock.Anything, mock.MatchedBy(func(m *CouncilMeeting) bool {
 		return m.Title == "Consiglio di Classe di Novembre"
 	})).Return(nil).Once()
@@ -81,6 +86,7 @@ func TestCreateMeetingAndVerbale(t *testing.T) {
 	m, err := svc.CreateMeeting(context.Background(), "t-1", "school-1", reqMeeting)
 	assert.NoError(t, err)
 	assert.NotNil(t, m)
+
 
 	mockRepo.On("GetMeetingByID", mock.Anything, "m-1").Return(m, nil).Once()
 	mockRepo.On("CreateVerbale", mock.Anything, mock.MatchedBy(func(v *MeetingVerbale) bool {
@@ -97,6 +103,27 @@ func TestCreateMeetingAndVerbale(t *testing.T) {
 	assert.NotNil(t, v)
 	mockRepo.AssertExpectations(t)
 }
+
+func TestCreateMeeting_CrossTenantBlocked(t *testing.T) {
+	mockRepo := new(MockRepository)
+	svc := NewService(mockRepo)
+
+	reqMeeting := CreateMeetingRequest{
+		ClassID:   "class-other-school",
+		Title:     "Consiglio di Classe",
+		Date:      "2025-11-10",
+		StartTime: "16:00",
+		EndTime:   "17:30",
+	}
+
+	mockRepo.On("ClassBelongsToSchool", mock.Anything, "class-other-school", "school-1").Return(false, nil).Once()
+
+	_, err := svc.CreateMeeting(context.Background(), "t-1", "school-1", reqMeeting)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "does not belong to school")
+	mockRepo.AssertExpectations(t)
+}
+
 
 func TestSignVerbale(t *testing.T) {
 	mockRepo := new(MockRepository)

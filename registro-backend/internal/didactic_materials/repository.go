@@ -1,6 +1,7 @@
 package didactic_materials
 
 import (
+	"context"
 	"database/sql"
 )
 
@@ -31,7 +32,7 @@ func (r *repository) Create(m *DidacticMaterial) error {
 		FROM inserted
 		LEFT JOIN users u ON inserted.teacher_id = u.id
 	`
-	return r.db.QueryRow(query,
+	return r.db.QueryRowContext(context.Background(), query,
 		m.SchoolID, m.ClassID, m.SubjectID, m.TeacherID,
 		m.Title, m.Description, m.AttachmentURL,
 	).Scan(&m.ID, &m.TeacherName)
@@ -47,7 +48,7 @@ func (r *repository) GetByClass(classID string) ([]DidacticMaterial, error) {
 		WHERE dm.class_id = $1
 		ORDER BY dm.created_at DESC
 	`
-	rows, err := r.db.Query(query, classID)
+	rows, err := r.db.QueryContext(context.Background(), query, classID)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +80,7 @@ func (r *repository) GetByID(id string) (*DidacticMaterial, error) {
 		WHERE dm.id = $1
 	`
 	var m DidacticMaterial
-	err := r.db.QueryRow(query, id).Scan(
+	err := r.db.QueryRowContext(context.Background(), query, id).Scan(
 		&m.ID, &m.SchoolID, &m.ClassID, &m.SubjectID, &m.TeacherID,
 		&m.TeacherName, &m.Title, &m.Description, &m.AttachmentURL,
 		&m.CreatedAt, &m.UpdatedAt,
@@ -92,12 +93,12 @@ func (r *repository) GetByID(id string) (*DidacticMaterial, error) {
 
 func (r *repository) Delete(id string, teacherID string) error {
 	query := `DELETE FROM didactic_materials WHERE id = $1 AND teacher_id = $2`
-	_, err := r.db.Exec(query, id, teacherID)
+	_, err := r.db.ExecContext(context.Background(), query, id, teacherID)
 	return err
 }
 
 func (r *repository) DeleteByID(id string) error {
 	query := `DELETE FROM didactic_materials WHERE id = $1`
-	_, err := r.db.Exec(query, id)
+	_, err := r.db.ExecContext(context.Background(), query, id)
 	return err
 }

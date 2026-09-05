@@ -17,7 +17,9 @@ func buildOriginsMap() map[string]bool {
 			"http://localhost:5173",
 			"http://localhost:3000",
 			"http://localhost:8080",
+			"http://localhost:9000",
 		}
+
 	}
 	originsMap := make(map[string]bool)
 	for _, o := range allowedOrigins {
