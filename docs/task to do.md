@@ -559,5 +559,50 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
   - **Validazione Completa & Regression Check**:
     - **183/183** suite di unit test superate (**1203/1203 test passati**) — +3 nuove suite (`useIdempotency.spec.js`, `PrintHeader.spec.js`), +41 nuovi test.
     - **0 errori, 0 warning** ESLint (`npm run lint`).
-    - `go vet ./...`: 100% pulito (exit code 0).
 
+- [x] **Batch 15: Global ErrorBoundary, Desktop Web Notifications, Matrice Voti UX, Caching Layer Redis/Memory, Prometheus Observability & Migration Down CLI (Settembre 2026)**:
+  - **Frontend — Global Error Boundary (`src/components/Common/ErrorBoundary.vue`)**:
+    - Creato componente `ErrorBoundary.vue` basato sul hook Vue 3 `onErrorCaptured((err, instance, info) => { ... return false })`.
+    - Isola i guasti e previene lo smontaggio dell'applicazione ("white-screen of death") presentando una fallback card accessibile WCAG con titolo e descrizione localizzati, stack/dettagli tecnici collassabili, pulsante "Riprova" con re-mount reattivo dei componenti figli e pulsante "Torna alla Dashboard".
+    - Inoltra automaticamente tutti gli errori non gestiti a `useErrorStore().reportError(...)`.
+    - Avvolto `<router-view />` in `src/App.vue` con `<ErrorBoundary>`.
+    - Suite di unit test dedicata in `tests/unit/components/Common/ErrorBoundary.spec.js` (4/4 test passati).
+  - **Frontend — Desktop Web Notifications su Eventi WebSocket (`src/stores/websocket.js`)**:
+    - Implementata la funzione `sendDesktopNotification({ title, body, icon, tag })` basata sulla Notification API nativa del browser con focus automatico della finestra al click.
+    - Integrata in `handleMessage` per notifiche desktop immediate anche quando il browser è ridotto a icona o la scheda è in background su: nuovi voti (`GRADE_ADDED`), circolari (`NEW_COMMUNICATION`), assenze/ritardi (`ATTENDANCE_ABSENT`), note disciplinari (`NOTE_ADDED`), esiti scrutinio (`SCRUTINY_PUBLISHED`) e prenotazioni colloqui (`SLOT_BOOKED`).
+    - Suite di unit test aggiornata in `tests/unit/stores/websocket.test.js` (5/5 test passati).
+  - **Frontend — Matrice Voti Docente con Navigazione da Tastiera Bidirezionale (`src/components/Teacher/GradeMatrixGrid.vue`)**:
+    - Abilitata la navigazione a griglia stile foglio di calcolo (Excel / Google Sheets):
+      - Tasto `ArrowRight` sul campo voto sposta il focus sulle note dello stesso studente (`noteRefs[idx]`).
+      - Tasto `ArrowLeft` sul campo note sposta il focus sul voto dello stesso studente (`inputRefs[idx]`).
+      - Tasti `ArrowDown`, `ArrowUp` e `Enter` sul campo note permettono lo scorrimento verticale rapido tra gli alunni senza toccare il mouse.
+    - Suite di unit test `tests/unit/components/Teacher/GradeMatrixGrid.spec.js` aggiornata a 7/7 test passati.
+  - **Backend — Layer di Caching Unificato ad Alte Prestazioni (`internal/cache`)**:
+    - Creata interfaccia `Cache` (`Get`, `Set`, `Delete`, `DeletePrefix`, `Close`) con `ErrCacheMiss`.
+    - Implementazione `RedisCache` per cluster/istanze multi-nodo via Redis.
+    - Implementazione `MemoryCache` concorrente thread-safe (`sync.RWMutex`) con goroutine janitor per l'evizione automatica degli elementi con TTL scaduto.
+    - Factory `NewCache(redisURL)` con auto-fallback trasparente in memoria per ambienti di sviluppo/test.
+    - Integrato Cache-Aside con TTL di 1 ora e invalidazione su scrittura (`Create`, `Update`, `Delete`) in `internal/schools` (`ListPublic` con header `X-Cache: HIT/MISS`).
+    - Inizializzato `appCache` e connesso a `main.go`.
+    - Suite di unit test dedicata in `internal/cache/cache_test.go` e `internal/schools/schools_cache_test.go`.
+  - **Backend — Observability Avanzata Prometheus & Correlation ID (`internal/metrics` + `internal/middleware/logging.go`)**:
+    - Creato package `internal/metrics` con registro atomico per throughput e latenze HTTP con normalizzazione automatica dei path UUID (`:id`) per prevenire la cardinality explosion.
+    - Esteso l'endpoint `/metrics` (`internal/handler/health.go`) con formato Prometheus standard: `go_goroutines`, `go_memstats_alloc_bytes`, `go_memstats_sys_bytes`, `db_open_connections`, `db_in_use_connections`, `db_idle_connections`, `db_wait_count`, `http_requests_total` e `http_request_duration_ms_total`.
+    - Aggiornato `LoggerMiddleware` con generazione/propagazione del correlation header `X-Request-ID` nelle risposte e nei log strutturati Logrus.
+    - Suite di unit test in `internal/metrics/metrics_test.go`.
+  - **Backend — CLI Rollback Migrazioni SQL (`cmd/migrate_down/main.go`)**:
+    - Creata utility CLI per il reverse engineering e rollback controllato delle migrazioni SQL DDL (generazione statement `DROP INDEX`, `ALTER TABLE DROP COLUMN`, `DROP TABLE`).
+    - Supporto per flag `--dry-run` per visualizzare le istruzioni SQL generate prima dell'esecuzione sul database.
+  - **Validazione Completa & Regression Check**:
+    - **184/184** suite di unit test superate (**1210/1210 test passati**) — +1 nuova suite (`ErrorBoundary.spec.js`), +7 nuovi test.
+    - **0 errori, 0 warning** ESLint (`npm run lint`).
+    - Build Vite di produzione superata con successo in 5.33s (PWA Service Worker generato).
+    - `go test` e `go vet ./...`: 100% pulito (exit code 0).
+    - Compilazione binari `cmd/api-server` e `cmd/migrate_down` verificata con successo.
+
+- [x] **Localizzazione Completa `ErrorBoundary.vue` (11 Lingue) & Risoluzione Warning Linter Go**:
+  - **Localizzazione i18n**: Aggiunte le chiavi di traduzione (`somethingWentWrong`, `errorBoundaryHelp`, `technicalDetails`, `retry`, `backToHome`) sotto la sezione `common` per tutte le 11 lingue supportate dal registro (`it-IT`, `en-US`, `es-ES`, `fr-FR`, `de-DE`, `ro-RO`, `sq-AL`, `ru-RU`, `uk-UA`, `ar-SA`, `zh-CN`).
+  - **Integrazione `ErrorBoundary.vue`**: Collegati i messaggi di fallback, i dettagli tecnici e le etichette delle azioni con `t('common.*')` preservando i fallback in lingua italiana.
+  - **Risoluzione Linter Go `cmd/migrate_down/main.go`**: Aggiunto controllo `scanner.Err()` dopo il ciclo `for scanner.Scan()` nel caricamento del file `.env`.
+  - **Risoluzione Linter Go `internal/schools/repository.go`**: Aggiunto controllo `rows.Err()` dopo il ciclo `for rows.Next()` in `List` delle scuole.
+  - **Validazione**: Suite di test i18n (`i18nKeys.test.js`, 231/231 asserzioni), unit test completi frontend (184/184 suite, 1210/1210 test), `npm run lint` (0 errori/warning), backend `go vet ./...` e `go test ./...` tutti superati.

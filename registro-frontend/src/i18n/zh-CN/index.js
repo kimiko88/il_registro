@@ -1,5 +1,10 @@
 export default {
   "common": {
+    "somethingWentWrong": "发生意外错误",
+    "errorBoundaryHelp": "应用程序的此部分遇到了意外问题。您可以重试或返回仪表板。",
+    "technicalDetails": "技术细节",
+    "retry": "重试",
+    "backToHome": "返回仪表板",
     "category": "类别",
     "year": "学年",
     "download": "下载",

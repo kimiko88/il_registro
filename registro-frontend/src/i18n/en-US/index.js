@@ -1,5 +1,10 @@
 export default {
   "common": {
+    "somethingWentWrong": "An unexpected error occurred",
+    "errorBoundaryHelp": "This section of the application encountered an unexpected issue. You can try again or return to the dashboard.",
+    "technicalDetails": "Technical details",
+    "retry": "Retry",
+    "backToHome": "Back to Dashboard",
     "category": "Category",
     "year": "Year",
     "download": "Download",

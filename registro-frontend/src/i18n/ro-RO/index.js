@@ -1,5 +1,10 @@
 export default {
   "common": {
+    "somethingWentWrong": "A apărut o eroare neașteptată",
+    "errorBoundaryHelp": "Această secțiune a aplicației a întâmpinat o problemă neașteptată. Puteți reîncerca sau reveni la panoul principal.",
+    "technicalDetails": "Detalii tehnice",
+    "retry": "Reîncearcă",
+    "backToHome": "Înapoi la Panou",
     "category": "Categorie",
     "year": "An",
     "download": "Descarcă",

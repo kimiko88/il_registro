@@ -1,5 +1,10 @@
 export default {
   "common": {
+    "somethingWentWrong": "Ein unerwarteter Fehler ist aufgetreten",
+    "errorBoundaryHelp": "In diesem Bereich der Anwendung ist ein unerwartetes Problem aufgetreten. Sie können es erneut versuchen oder zum Dashboard zurückkehren.",
+    "technicalDetails": "Technische Details",
+    "retry": "Wiederholen",
+    "backToHome": "Zurück zum Dashboard",
     "category": "Kategorie",
     "year": "Jahr",
     "download": "Herunterladen",
