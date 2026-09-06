@@ -27,6 +27,28 @@ function formatClassItem(c) {
 }
 
 export const CLASSES_CACHE_TTL = 3 * 60 * 1000; // 3 minutes
+const CLASSES_STORAGE_KEY = 'registro_cached_classes';
+const ASSIGNED_CLASSES_STORAGE_KEY = 'registro_cached_assigned_classes';
+
+function loadCachedClasses(key = CLASSES_STORAGE_KEY) {
+    try {
+        if (typeof localStorage === 'undefined') return [];
+        const raw = localStorage.getItem(key);
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+    } catch {
+        return [];
+    }
+}
+
+function saveCachedClasses(classes, key = CLASSES_STORAGE_KEY) {
+    try {
+        if (typeof localStorage !== 'undefined' && Array.isArray(classes)) {
+            localStorage.setItem(key, JSON.stringify(classes));
+        }
+    } catch { /* storage quota exceeded */ }
+}
 
 export const useClassesStore = defineStore('classes', {
     state: () => ({
@@ -68,6 +90,15 @@ export const useClassesStore = defineStore('classes', {
             this._lastFetchAll = 0;
         },
 
+        initFromCache() {
+            if (this.classes.length === 0) {
+                const cached = loadCachedClasses(CLASSES_STORAGE_KEY);
+                if (cached.length > 0) {
+                    this.classes = cached;
+                }
+            }
+        },
+
         async fetchClasses(params = {}, options = {}) {
             const hasParams = params && Object.keys(params).length > 0;
             const isFresh = !options.force && !hasParams && this.classes.length > 0 && (Date.now() - this._lastFetchClasses < CLASSES_CACHE_TTL);
@@ -82,11 +113,23 @@ export const useClassesStore = defineStore('classes', {
                 this.classes = raw.map(formatClassItem);
                 if (!hasParams) {
                     this._lastFetchClasses = Date.now();
+                    saveCachedClasses(this.classes, CLASSES_STORAGE_KEY);
                 }
                 return this.classes;
             } catch (err) {
                 this.error = 'Failed to fetch classes';
                 console.error(err);
+                // Return stale cached data on network error so UI remains functional
+                if (this.classes && this.classes.length > 0) {
+                    return this.classes;
+                }
+                if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+                    const cached = loadCachedClasses(CLASSES_STORAGE_KEY);
+                    if (cached.length > 0) {
+                        this.classes = cached;
+                        return this.classes;
+                    }
+                }
             } finally {
                 this.loading = false;
             }
@@ -104,10 +147,21 @@ export const useClassesStore = defineStore('classes', {
                 const raw = response.data || [];
                 this.classes = raw.map(formatClassItem);
                 this._lastFetchAssigned = Date.now();
+                saveCachedClasses(this.classes, ASSIGNED_CLASSES_STORAGE_KEY);
                 return this.classes;
             } catch (err) {
                 this.error = 'Failed to fetch assigned classes';
                 console.error(err);
+                if (this.classes && this.classes.length > 0) {
+                    return this.classes;
+                }
+                if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+                    const cached = loadCachedClasses(ASSIGNED_CLASSES_STORAGE_KEY);
+                    if (cached.length > 0) {
+                        this.classes = cached;
+                        return this.classes;
+                    }
+                }
             } finally {
                 this.loading = false;
             }

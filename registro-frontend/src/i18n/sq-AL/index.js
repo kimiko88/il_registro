@@ -3032,7 +3032,21 @@ export default {
     "pendingQueue": "Nuk ka lidhje me internetin. {count} ndryshime lokale në radhë për t'u sinkronizuar.",
     "inQueue": "NË RADHË",
     "syncedSuccess": "Lidhja u rikthye: {count} operacione u sinkronizuan me sukses.",
-    "enqueuedOffline": "Veprimi u ruajt lokalisht. Do të sinkronizohet automatikisht sapo të rikthehet lidhja."
+    "enqueuedOffline": "Veprimi u ruajt lokalisht. Do të sinkronizohet automatikisht sapo të rikthehet lidhja.",
+    "viewQueue": "Kliko për të menaxhuar veprimet në radhë"
+  },
+  "offlineQueue": {
+    "title": "Radha e veprimeve offline",
+    "pendingItems": "veprime në pritje të sinkronizimit",
+    "allSynced": "Nuk ka veprime në pritje",
+    "allSyncedSub": "Të gjitha ndryshimet e bëra janë dërguar me sukses në server.",
+    "retries": "tentativa të dështuara",
+    "backoff": "në pritje të ritentimit",
+    "removeItemTooltip": "Hiq nga radha",
+    "clearAll": "Pastro radhën",
+    "syncNow": "Sinkronizo tani",
+    "confirmClearTitle": "Të pastrohet radha?",
+    "confirmClearMessage": "Ndryshimet e ruajtura lokalisht që nuk janë sinkronizuar ende do të humbasin."
   },
   "inactivity": {
     "warningTitle": "Seanca po skadon",

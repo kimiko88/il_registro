@@ -30,7 +30,8 @@ describe('i18n Dictionary Integrity across all 11 Supported Languages', () => {
   const requiredSections = [
     'roles', 'layout', 'categories', 'nav', 'notifications', 'help',
     'secretaryClasses', 'parentProfile', 'parentColloqui', 'textbooksPage',
-    'certificatesPage', 'sidiExports', 'routeTitles', 'adminAudit', 'schedulerPage'
+    'certificatesPage', 'sidiExports', 'routeTitles', 'adminAudit', 'schedulerPage',
+    'offlineBanner', 'offlineQueue'
   ]
 
   supportedLocales.forEach((locale) => {

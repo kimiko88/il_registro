@@ -2887,7 +2887,21 @@ export default {
     "pendingQueue": "Pas de connexion Internet. {count} modifications en file d'attente prêtes pour la synchronisation.",
     "inQueue": "EN ATTENTE",
     "syncedSuccess": "Connexion rétablie : {count} opérations synchronisées avec succès.",
-    "enqueuedOffline": "Opération enregistrée localement. Elle sera synchronisée automatiquement dès le retour en ligne."
+    "enqueuedOffline": "Opération enregistrée localement. Elle sera synchronisée automatiquement dès le retour en ligne.",
+    "viewQueue": "Cliquer pour gérer les opérations en file d'attente"
+  },
+  "offlineQueue": {
+    "title": "File d'attente hors ligne",
+    "pendingItems": "opérations en attente de synchronisation",
+    "allSynced": "Aucune opération en attente",
+    "allSyncedSub": "Toutes les modifications effectuées ont été transmises avec succès au serveur.",
+    "retries": "tentatives échouées",
+    "backoff": "attente de temporisation",
+    "removeItemTooltip": "Supprimer de la file d'attente",
+    "clearAll": "Vider la file",
+    "syncNow": "Synchroniser maintenant",
+    "confirmClearTitle": "Vider la file d'attente ?",
+    "confirmClearMessage": "Les modifications enregistrées localement et non encore synchronisées seront perdues."
   },
   "inactivity": {
     "warningTitle": "Session sur le point d'expirer",

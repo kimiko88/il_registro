@@ -2912,7 +2912,21 @@ export default {
     "pendingQueue": "网络已断开。已将 {count} 项更改保存在本地队列，重新连线后将自动同步。",
     "inQueue": "排队中",
     "syncedSuccess": "网络已恢复：已成功同步 {count} 项操作。",
-    "enqueuedOffline": "操作已保存在本地，网络恢复后将自动同步。"
+    "enqueuedOffline": "操作已保存在本地，网络恢复后将自动同步。",
+    "viewQueue": "点击管理排队操作"
+  },
+  "offlineQueue": {
+    "title": "离线操作队列",
+    "pendingItems": "项操作等待同步",
+    "allSynced": "暂无待处理操作",
+    "allSyncedSub": "所有更改已成功同步至服务器。",
+    "retries": "次失败尝试",
+    "backoff": "等待退避重试",
+    "removeItemTooltip": "从队列中移除",
+    "clearAll": "清空队列",
+    "syncNow": "立即同步",
+    "confirmClearTitle": "清空队列？",
+    "confirmClearMessage": "本地保存但尚未同步的更改将会丢失。"
   },
   "inactivity": {
     "warningTitle": "登录会话即将超时",

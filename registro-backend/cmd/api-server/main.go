@@ -241,6 +241,8 @@ func main() {
 	r.Use(middleware.CORSMiddleware())
 	r.Use(middleware.SecurityHeadersMiddleware())
 	r.Use(middleware.RateLimitMiddleware())
+	// 30-second context timeout to cancel hanging queries and free connection pools
+	r.Use(middleware.TimeoutMiddleware(30 * time.Second))
 	// Compress JSON/text responses (60-80% size reduction). Excluded: /metrics (Prometheus plain text).
 	r.Use(gzip.Gzip(gzip.DefaultCompression, gzip.WithExcludedPaths([]string{"/metrics"})))
 

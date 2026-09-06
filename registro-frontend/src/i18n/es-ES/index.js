@@ -2887,7 +2887,21 @@ export default {
     "pendingQueue": "Sin conexión a Internet. {count} cambios locales en cola para sincronizar al volver a conectarse.",
     "inQueue": "EN COLA",
     "syncedSuccess": "Conexión restablecida: {count} operaciones sincronizadas con éxito.",
-    "enqueuedOffline": "Operación guardada localmente. Se sincronizará automáticamente al volver a tener conexión."
+    "enqueuedOffline": "Operación guardada localmente. Se sincronizará automáticamente al volver a tener conexión.",
+    "viewQueue": "Haga clic para gestionar las operaciones en cola"
+  },
+  "offlineQueue": {
+    "title": "Cola de Operaciones Fuera de Línea",
+    "pendingItems": "operaciones pendientes de sincronización",
+    "allSynced": "No hay operaciones pendientes",
+    "allSyncedSub": "Todos los cambios realizados se han enviado correctamente al servidor.",
+    "retries": "intentos fallidos",
+    "backoff": "esperando reintento",
+    "removeItemTooltip": "Eliminar de la cola",
+    "clearAll": "Vaciar cola",
+    "syncNow": "Sincronizar ahora",
+    "confirmClearTitle": "¿Vaciar la cola?",
+    "confirmClearMessage": "Los cambios guardados localmente que aún no se hayan sincronizado se perderán."
   },
   "inactivity": {
     "warningTitle": "Sesión a punto de caducar",

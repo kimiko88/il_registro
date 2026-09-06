@@ -2887,7 +2887,21 @@ export default {
     "pendingQueue": "No internet connection. {count} local changes queued for auto-sync once back online.",
     "inQueue": "QUEUED",
     "syncedSuccess": "Connection restored: {count} operations synchronized successfully.",
-    "enqueuedOffline": "Operation saved locally. It will be synced automatically once back online."
+    "enqueuedOffline": "Operation saved locally. It will be synced automatically once back online.",
+    "viewQueue": "Click to manage queued operations"
+  },
+  "offlineQueue": {
+    "title": "Offline Operations Queue",
+    "pendingItems": "operations waiting to be synchronized",
+    "allSynced": "No pending operations",
+    "allSyncedSub": "All changes made have been successfully sent to the server.",
+    "retries": "failed attempts",
+    "backoff": "waiting backoff",
+    "removeItemTooltip": "Remove from queue",
+    "clearAll": "Clear Queue",
+    "syncNow": "Sync Now",
+    "confirmClearTitle": "Clear queue?",
+    "confirmClearMessage": "Local changes that have not yet been synchronized will be lost."
   },
   "inactivity": {
     "warningTitle": "Session Expiring",

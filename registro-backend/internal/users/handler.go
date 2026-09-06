@@ -2,9 +2,13 @@ package users
 
 import (
 	"errors"
+	"io"
 	"net/http"
+	"path/filepath"
 	"strconv"
 	"strings"
+
+	"registro-backend/pkg/upload"
 
 	"github.com/gin-gonic/gin"
 )
@@ -295,6 +299,24 @@ func (h *Handler) BulkImport(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "file size exceeds 10MB limit"})
 		return
 	}
+
+	ext := strings.ToLower(filepath.Ext(header.Filename))
+	if ext != ".csv" && ext != ".xlsx" && ext != ".xls" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "formato non supportato: sono consentiti solo file CSV ed Excel (.xlsx, .xls)"})
+		return
+	}
+
+	if err := upload.ValidateUpload(file, header); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if seeker, ok := file.(io.Seeker); ok {
+		if _, err := seeker.Seek(0, io.SeekStart); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "errore nel riposizionamento del file"})
+			return
+		}
+	}
+
 	res, err := h.service.BulkImport(c.Request.Context(), getActorRole(c), getSchoolID(c), file, header.Filename)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

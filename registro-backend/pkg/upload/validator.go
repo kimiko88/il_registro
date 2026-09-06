@@ -34,6 +34,10 @@ var allowedMIMETypes = map[string]bool{
 	"application/vnd.openxmlformats-officedocument.wordprocessingml.document":   true,
 	"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":         true,
 	"application/vnd.openxmlformats-officedocument.presentationml.presentation": true,
+	"application/vnd.ms-excel": true,
+	// Plain text & CSV data
+	"text/plain": true,
+	"text/csv":   true,
 	// LibreOffice / OpenDocument formats
 	"application/vnd.oasis.opendocument.text":         true,
 	"application/vnd.oasis.opendocument.spreadsheet":  true,

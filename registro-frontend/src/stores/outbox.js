@@ -233,9 +233,11 @@ export const useOutboxStore = defineStore('outbox', () => {
                         failed++
                         console.warn('[outbox] Discarding permanently failing item:', item.url, err.response?.status)
                     } else {
-                        // Exponential backoff: min(1000 * 2^attempts, 30000) ms
-                        const backoffMs = Math.min(1000 * Math.pow(2, item.attempts), 30000)
-                        item.nextRetryAt = Date.now() + backoffMs
+                        // Apply exponential backoff only for 5xx server errors so 4xx validation errors don't delay queue drain
+                        if (err.response?.status >= 500) {
+                            const backoffMs = Math.min(1000 * Math.pow(2, item.attempts), 30000)
+                            item.nextRetryAt = Date.now() + backoffMs
+                        }
                         persistQueue(queue.value)
                         idbSafePut(item)
                     }

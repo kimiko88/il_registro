@@ -2887,7 +2887,21 @@ export default {
     "pendingQueue": "Lipsă conexiune la Internet. {count} modificări salvate local în așteptare pentru sincronizare.",
     "inQueue": "ÎN COADĂ",
     "syncedSuccess": "Conexiune restabilită: {count} operațiuni sincronizate cu succes.",
-    "enqueuedOffline": "Operațiune salvată local. Se va sincroniza automat la revenirea conexiunii."
+    "enqueuedOffline": "Operațiune salvată local. Se va sincroniza automat la revenirea conexiunii.",
+    "viewQueue": "Faceți clic pentru a gestiona operațiunile în așteptare"
+  },
+  "offlineQueue": {
+    "title": "Coadă de operațiuni offline",
+    "pendingItems": "operațiuni în așteptare de sincronizare",
+    "allSynced": "Nicio operațiune în așteptare",
+    "allSyncedSub": "Toate modificările efectuate au fost transmise cu succes către server.",
+    "retries": "încercări eșuate",
+    "backoff": "așteptare temporizare",
+    "removeItemTooltip": "Elimină din coadă",
+    "clearAll": "Golește coada",
+    "syncNow": "Sincronizează acum",
+    "confirmClearTitle": "Goliți coada?",
+    "confirmClearMessage": "Modificările salvate local care nu au fost încă sincronizate se vor pierde."
   },
   "inactivity": {
     "warningTitle": "Sesiunea este pe cale să expire",
