@@ -810,4 +810,284 @@ body {
 .space-x-2 > :not([hidden]) ~ :not([hidden]) { margin-left: 0.5rem; }
 .space-x-3 > :not([hidden]) ~ :not([hidden]) { margin-left: 0.75rem; }
 .space-x-4 > :not([hidden]) ~ :not([hidden]) { margin-left: 1rem; }
+
+/* ==========================================================================
+   @media print — Stili di stampa universali
+   Supporta: pagelle, verbali di scrutinio, circolari, registri presenze.
+   La classe `.print-optimized` è riservata alle pagine documento.
+   ========================================================================== */
+@media print {
+    /* ── 1. Reset pagina e tipografia ────────────────────────────────────── */
+    *,
+    *::before,
+    *::after {
+        box-shadow: none !important;
+        text-shadow: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        transition: none !important;
+        animation: none !important;
+    }
+
+    @page {
+        size: A4 portrait;
+        margin: 15mm 12mm 15mm 12mm;
+    }
+
+    html,
+    body {
+        width: 210mm;
+        background: #fff !important;
+        color: #000 !important;
+        font-size: 11pt;
+        line-height: 1.4;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    /* ── 2. Nascondi elementi non pertinenti alla stampa ─────────────────── */
+
+    /* Layout chrome: header, sidebar, FAB, toolbar */
+    .q-header,
+    .q-footer,
+    .q-drawer,
+    .q-drawer__backdrop,
+    .q-page-container > .q-drawer-container,
+    .q-fab,
+    .q-toolbar,
+    header[role="banner"],
+    nav[role="navigation"],
+    aside,
+    [data-no-print],
+    .no-print {
+        display: none !important;
+    }
+
+    /* Banner e notifiche */
+    .offline-banner,
+    .pwa-update-banner,
+    .q-notifications,
+    .q-notification,
+    .q-dialog,
+    .skip-links,
+    .help-fab,
+    .accessibility-fab,
+    .reading-ruler,
+    .inactivity-dialog,
+    .session-reauth-dialog {
+        display: none !important;
+    }
+
+    /* Pulsanti azione: salva, annulla, export, filtri */
+    .q-btn[data-action],
+    .action-buttons,
+    .filter-bar,
+    .export-btn,
+    .q-tabs,
+    .q-tab-panels > .q-tab-panel:not(.active-tab-panel),
+    [class*="btn-"],
+    .print-hide {
+        display: none !important;
+    }
+
+    /* ── 3. Layout pagina principale ─────────────────────────────────────── */
+
+    /* Il contenuto principale occupa tutta la larghezza */
+    .q-page,
+    .q-page-container,
+    main,
+    [role="main"] {
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    /* Le card diventano blocchi semplici senza bordi decorativi */
+    .q-card,
+    .glass-card,
+    .glass-effect,
+    .q-card__section {
+        background: #fff !important;
+        border: 1px solid #ccc !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        break-inside: avoid;
+    }
+
+    /* ── 4. Tabelle ──────────────────────────────────────────────────────── */
+    table,
+    .q-table,
+    .q-table__container {
+        width: 100% !important;
+        font-size: 9pt;
+        border-collapse: collapse !important;
+        break-inside: auto;
+    }
+
+    th,
+    .q-table thead th {
+        background: #e8e8e8 !important;
+        color: #000 !important;
+        font-weight: bold;
+        border: 1px solid #999 !important;
+        padding: 4pt 6pt !important;
+    }
+
+    td,
+    .q-table tbody td {
+        border: 1px solid #ccc !important;
+        padding: 3pt 5pt !important;
+        color: #000 !important;
+        background: #fff !important;
+    }
+
+    tr {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+    /* Righe alternate */
+    .q-table tbody tr:nth-child(even) td {
+        background: #f5f5f5 !important;
+    }
+
+    /* ── 5. Controllo interruzioni di pagina ─────────────────────────────── */
+
+    h1, h2, h3 {
+        break-after: avoid;
+        page-break-after: avoid;
+    }
+
+    p, blockquote, figure {
+        orphans: 3;
+        widows: 3;
+    }
+
+    /* Sezioni documento: evita interruzione interna */
+    .section-card,
+    .grade-section,
+    .attendance-section,
+    .student-summary {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+    /* Forza interruzione prima di nuove sezioni principali */
+    .page-break-before {
+        break-before: page;
+        page-break-before: always;
+    }
+
+    /* ── 6. Link: mostra URL solo per link esterni ───────────────────────── */
+    a[href^="http"]::after,
+    a[href^="https"]::after {
+        content: " (" attr(href) ")";
+        font-size: 8pt;
+        color: #555;
+    }
+
+    a[href^="/"]:after,
+    a[href^="#"]:after {
+        content: "";
+    }
+
+    /* ── 7. Chip, badge e indicatori di stato ─────────────────────────────── */
+    .q-chip,
+    .q-badge {
+        border: 1px solid #999 !important;
+        color: #000 !important;
+        background: #eee !important;
+    }
+
+    /* Badge voti: mantieni leggibilità (es. sfondo verde/rosso) */
+    .grade-badge-pass,
+    .grade-badge-fail {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    /* ── 8. Intestazione istituzionale (componente PrintHeader.vue) ───────── */
+    .print-header {
+        display: block !important;
+        border-bottom: 2px solid #333;
+        padding-bottom: 6pt;
+        margin-bottom: 12pt;
+        text-align: center;
+    }
+
+    .print-header__title {
+        font-size: 16pt;
+        font-weight: bold;
+        margin: 0 0 2pt 0;
+    }
+
+    .print-header__subtitle {
+        font-size: 10pt;
+        color: #555;
+        margin: 0;
+    }
+
+    .print-header__meta {
+        font-size: 9pt;
+        color: #777;
+        margin-top: 3pt;
+    }
+
+    /* Nascondi l'header istituzionale in modalità schermo */
+    /* (visible only in print via CSS above — see PrintHeader.vue) */
+
+    /* ── 9. Classe `.print-optimized` per pagine documento ───────────────── */
+
+    /* Pagelle, verbali, certificati, circolari */
+    .print-optimized .q-page {
+        padding: 0 !important;
+    }
+
+    .print-optimized .document-title {
+        font-size: 18pt;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 8pt;
+    }
+
+    .print-optimized .document-subtitle {
+        font-size: 12pt;
+        text-align: center;
+        margin-bottom: 16pt;
+        color: #444;
+    }
+
+    .print-optimized .student-header {
+        display: flex;
+        justify-content: space-between;
+        border-bottom: 1px solid #333;
+        padding-bottom: 6pt;
+        margin-bottom: 10pt;
+    }
+
+    /* Firma docente / dirigente */
+    .print-optimized .signature-line {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 20pt;
+        gap: 40pt;
+    }
+
+    .print-optimized .signature-box {
+        text-align: center;
+        min-width: 80pt;
+        border-top: 1px solid #000;
+        padding-top: 3pt;
+        font-size: 9pt;
+    }
+}
+
+/* PrintHeader.vue è visibile SOLO in stampa (nascosto via CSS in @media screen) */
+@media screen {
+    .print-header {
+        display: none !important;
+    }
+}
+
 

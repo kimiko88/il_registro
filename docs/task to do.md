@@ -530,19 +530,34 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
       - **67/67** suite E2E superate (**154/154 test passati**).
       - **0 errori, 0 warning** ESLint (`npm run lint`).
       - Build Vite di produzione superata con successo in 2.85s (PWA Service Worker generato).
-  - **Batch 13: Risoluzione Violazione CSP Font OpenDyslexic & Azzeramento Warning i18n Intlify (83 Chiavi su 11 Lingue)**:
-    - **Risoluzione CSP Font OpenDyslexic**:
-      - Aggiornata la direttiva `font-src` in `registro-frontend/index.html` aggiungendo `https://cdn.jsdelivr.net`.
-      - Aggiornato il middleware `SecurityHeadersMiddleware` in `registro-backend/internal/middleware/security.go` autorizzando `https://cdn.jsdelivr.net data:` nella direttiva `font-src`.
-      - Eseguiti i test di sicurezza backend (`go test ./tests/unit/security_headers_test.go` -> PASS).
-    - **Azzeramento Globale Warning Intlify (83 Chiavi Sincronizzate al 100% su 11 Lingue)**:
-      - Risolti tutti i warning riscontrati in console (`gradesPage.selectClassPrompt`, `common.onlineSynced`, `common.class`, `common.student`, `common.attendance`, `common.conduct`, `common.outcome`, `common.average`, `help.teacher.scrutiny.*`, `dashboardPage.online`, `attendancePage.*`, `roleDashboards.student`, `orientamento.*`).
-      - Scansionato l'intero albero `src/` e identificate tutte le 83 chiavi residue mancanti nei dizionari i18n (`classRegister`, `homework`, `documentsPage`, `certificatesPage`, `signaturesPage`, `secretaryClasses`, `settings`, `studentsPage`, `support`, `usersPage`).
-      - Generate e sincronizzate tutte le 83 chiavi su tutte le 11 lingue supportate (`it-IT`, `en-US`, `es-ES`, `fr-FR`, `de-DE`, `ro-RO`, `sq-AL`, `ru-RU`, `uk-UA`, `ar-SA`, `zh-CN`).
-      - Verificata la completa assenza di chiavi mancanti (scanner `scratch/save_all_missing.mjs` -> 0 missing keys).
-    - **Validazione Completa & Regression Check**:
-      - **180/180** suite di unit test superate (**1162/1162 test passati**).
-      - **209/209** verifiche di simmetria i18n superate su 11 lingue (`tests/unit/i18n/i18nKeys.test.js`).
-      - **67/67** suite E2E superate (**154/154 test passati**).
-      - **0 errori, 0 warning** ESLint (`npm run lint`).
-      - Build Vite di produzione superata con successo in 2.83s.
+  - **Batch 13: Risoluzione Violazione CSP Font OpenDyslexic & Azzeramento Warning i18n Intlify (83 Chiavi su 11 Lingue)**: - **Risoluzione CSP Font OpenDyslexic**: - Aggiornata la direttiva `font-src` in `registro-frontend/index.html` aggiungendo `https://cdn.jsdelivr.net`. - Aggiornato il middleware `SecurityHeadersMiddleware` in `registro-backend/internal/middleware/security.go` autorizzando `https://cdn.jsdelivr.net data:` nella direttiva `font-src`. - Eseguiti i test di sicurezza backend (`go test ./tests/unit/security_headers_test.go` -> PASS). - **Azzeramento Globale Warning Intlify (83 Chiavi Sincronizzate al 100% su 11 Lingue)**: - Risolti tutti i warning riscontrati in console (`gradesPage.selectClassPrompt`, `common.onlineSynced`, `common.class`, `common.student`, `common.attendance`, `common.conduct`, `common.outcome`, `common.average`, `help.teacher.scrutiny.*`, `dashboardPage.online`, `attendancePage.*`, `roleDashboards.student`, `orientamento.*`). - Scansionato l'intero albero `src/` e identificate tutte le 83 chiavi residue mancanti nei dizionari i18n (`classRegister`, `homework`, `documentsPage`, `certificatesPage`, `signaturesPage`, `secretaryClasses`, `settings`, `studentsPage`, `support`, `usersPage`). - Generate e sincronizzate tutte le 83 chiavi su tutte le 11 lingue supportate (`it-IT`, `en-US`, `es-ES`, `fr-FR`, `de-DE`, `ro-RO`, `sq-AL`, `ru-RU`, `uk-UA`, `ar-SA`, `zh-CN`). - Verificata la completa assenza di chiavi mancanti (scanner `scratch/save_all_missing.mjs` -> 0 missing keys). - **Validazione Completa & Regression Check**: - **180/180** suite di unit test superate (**1162/1162 test passati**). - **209/209** verifiche di simmetria i18n superate su 11 lingue (`tests/unit/i18n/i18nKeys.test.js`). - **67/67** suite E2E superate (**154/154 test passati**). - **0 errori, 0 warning** ESLint (`npm run lint`). - Build Vite di produzione superata con successo in 2.83s.
+
+- [x] **Batch 14: Indici Composti SQL, Idempotency Key, @media print, .env.example & Type Definitions (Settembre 2026)**:
+  - **Migrazione SQL `101_add_composite_indexes.sql` — 10 Indici Composti**:
+    - `grades(class_id, subject_id, created_at DESC)` e `grades(student_id, created_at DESC)` per query voti docente/studente.
+    - `attendance(class_id, date DESC)` e `attendance(student_id, date DESC)` per presenze giornaliere e storico studente.
+    - `class_tests(class_id, subject_id, test_date DESC)` per verifiche imminenti.
+    - `homeworks(class_id, due_date ASC)` per compiti con scadenza futura (`due_date >= CURRENT_DATE`).
+    - `communications(school_id, created_at DESC)` per bacheca circolari.
+    - `audit_log(actor_id, created_at DESC)` per storico audit per attore.
+    - `users(school_id, role, created_at DESC)` per listing utenti per scuola/ruolo.
+    - `colloquio_slots(teacher_id, date ASC)` e `colloquio_bookings(parent_id, status)` per colloqui.
+    - Tutti gli indici usano `IF NOT EXISTS` e condizioni `WHERE deleted_at IS NULL` (idempotenti e safe to re-run).
+  - **Frontend — Idempotency Key Automatica su Operazioni Critiche**:
+    - Creato composable `src/composables/useIdempotency.js` con generazione UUID v4 (con fallback per browser legacy), `generateKey()`, `rotateKey()` e `currentKey` readonly.
+    - Aggiunta logica nell'interceptor Axios (`src/services/api.js`) per iniettare automaticamente l'header `Idempotency-Key` su tutte le richieste `POST`/`PUT`/`PATCH` verso endpoint critici (`/grades`, `/grades/bulk`, `/attendance`, `/class-tests`, `/payments`, `/signatures`, `/firme`, `/verbali`) senza che ogni service call debba gestirlo manualmente. L'header non viene sovrascritto se già impostato manualmente da `useIdempotency`.
+    - Suite di unit test `tests/unit/composables/useIdempotency.spec.js` (8/8 test passati).
+  - **Frontend — CSS `@media print` Universale**:
+    - Aggiunto blocco `@media print` completo in `src/assets/styles/globals.css` con: reset pagina A4 (15mm×12mm margini), nascondere navbar/sidebar/FAB/toolbar/banner/dialogs/help, ottimizzazione tabelle con bordi e sfondi neutri, controllo interruzioni di pagina (`break-inside: avoid`, `orphans`, `widows`), URL link esterni stampati, chip/badge in bianco/nero.
+    - Classe `.print-optimized` per pagine documento con `document-title`, `document-subtitle`, `student-header`, `signature-line`, `signature-box` e `.page-break-before`.
+    - Classe `.print-header` visibile solo in stampa, nascosta via `@media screen`.
+    - Creato componente `src/components/Common/PrintHeader.vue` — intestazione istituzionale visibile solo in stampa con props `schoolName`, `schoolSubtitle`, `documentType`, `academicYear` e data di stampa auto-localizzata; accessibile con `role="banner"` e `aria-label`.
+    - Suite di unit test `tests/unit/components/Common/PrintHeader.spec.js` (8/8 test passati).
+  - **Developer Experience (DX)**:
+    - Creato `registro-frontend/.env.example` con documentazione di tutte le variabili VITE_ necessarie (`VITE_API_URL`, future `VITE_VAPID_PUBLIC_KEY`, `VITE_SENTRY_DSN`) con note di sicurezza e istruzioni di setup.
+    - Creato `src/types/api.d.js` con 20+ type definitions JSDoc per i principali modelli API (`User`, `Grade`, `AttendanceRecord`, `Communication`, `ColloquioSlot`, `ScrutinyRecord`, `ApiResponse<T>`, `PaginatedResponse`) per migliorare l'autocomplete IDE senza migration a TypeScript.
+  - **Validazione Completa & Regression Check**:
+    - **183/183** suite di unit test superate (**1203/1203 test passati**) — +3 nuove suite (`useIdempotency.spec.js`, `PrintHeader.spec.js`), +41 nuovi test.
+    - **0 errori, 0 warning** ESLint (`npm run lint`).
+    - `go vet ./...`: 100% pulito (exit code 0).
+
