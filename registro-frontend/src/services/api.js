@@ -14,6 +14,37 @@ export const getBaseURL = () => {
     return `${cleaned}/api/v1`;
 };
 
+/**
+ * Genera un UUID v4 per le chiavi di idempotenza.
+ * Usa crypto.randomUUID() se disponibile, con fallback manuale.
+ */
+function _generateIdempotencyKey() {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        return crypto.randomUUID();
+    }
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = (Math.random() * 16) | 0;
+        const v = c === 'x' ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+    });
+}
+
+/**
+ * Endpoint critici su cui viene aggiunto automaticamente l'header Idempotency-Key.
+ * Il backend può usare questa chiave per deduplicare richieste duplicate
+ * (doppio click, retry di rete) e restituire la risposta già elaborata.
+ */
+const IDEMPOTENT_ENDPOINTS = [
+    '/grades',
+    '/grades/bulk',
+    '/attendance',
+    '/class-tests',
+    '/payments',
+    '/signatures',
+    '/firme',
+    '/verbali',
+];
+
 const api = axios.create({
     baseURL: getBaseURL(),
     timeout: 15000,
@@ -72,6 +103,20 @@ api.interceptors.request.use(
                 config.url = '/' + config.url.substring('api/v1/'.length);
             }
         }
+
+        // ── Idempotency-Key automatico su POST/PUT/PATCH critici ────────────
+        // Aggiunto solo se l'header non è già presente (es. impostato da useIdempotency).
+        // Previene doppi inserimenti su retry di rete (timeout, 502/503) senza
+        // che ogni service call debba gestirlo manualmente.
+        const method = (config.method || '').toLowerCase();
+        if (['post', 'put', 'patch'].includes(method) && !config.headers['Idempotency-Key']) {
+            const url = config.url || '';
+            const isIdempotentEndpoint = IDEMPOTENT_ENDPOINTS.some(ep => url.includes(ep));
+            if (isIdempotentEndpoint) {
+                config.headers['Idempotency-Key'] = _generateIdempotencyKey();
+            }
+        }
+        // ─────────────────────────────────────────────────────────────────────
 
         return config;
     },
