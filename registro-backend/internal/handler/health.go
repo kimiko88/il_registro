@@ -28,6 +28,12 @@ func (h *HealthHandler) Ready(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "READY"})
 }
 
+// Ping is a lightweight no-auth, no-DB endpoint used by the frontend to verify
+// real backend reachability (navigator.onLine alone is not reliable).
+func (h *HealthHandler) Ping(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"ok": true})
+}
+
 func (h *HealthHandler) Metrics(c *gin.Context) {
 	stats := h.db.Stats()
 	metrics := fmt.Sprintf(`# HELP db_open_connections The number of established connections both in use and idle.

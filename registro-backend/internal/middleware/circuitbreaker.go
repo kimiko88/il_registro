@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -18,7 +19,13 @@ func InitCircuitBreaker() {
 		failureRatio := float64(counts.TotalFailures) / float64(counts.Requests)
 		return counts.Requests >= 3 && failureRatio >= 0.6
 	}
-	settings.Timeout = 5 * time.Second
+	// 30s before attempting half-open (was 5s — too aggressive, caused flapping).
+	settings.Timeout = 30 * time.Second
+	// Allow at most 2 trial requests in half-open state before declaring fully open/closed.
+	settings.MaxRequests = 2
+	settings.OnStateChange = func(name string, from, to gobreaker.State) {
+		log.Printf("[CircuitBreaker] %s: %s → %s", name, from.String(), to.String())
+	}
 
 	CB = gobreaker.NewCircuitBreaker(settings)
 }

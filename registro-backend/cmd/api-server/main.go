@@ -249,6 +249,10 @@ func main() {
 		r.GET("/ready", healthH.Ready)
 		r.GET("/metrics", healthH.Metrics)
 
+		// Lightweight connectivity probe used by the frontend health-check.
+		// No auth, no DB — responds in <1ms.
+		api.GET("/ping", healthH.Ping)
+
 		api.GET("/swagger/doc.json", func(c *gin.Context) {
 			c.File("../docs/openapi.yaml")
 		})
@@ -263,6 +267,7 @@ func main() {
 
 		protected := api.Group("/")
 		protected.Use(authMiddleware.Authenticate())
+		protected.Use(middleware.IdempotencyMiddleware())
 		{
 			protected.POST("/accessibility/feedback", a11yH.SubmitPublic)
 			protected.GET("/admin/accessibility-feedbacks", adminMiddleware.RequireAdminOrSuperAdmin(), a11yH.List)
