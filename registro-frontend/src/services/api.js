@@ -152,6 +152,31 @@ api.interceptors.response.use(
     async (error) => {
         const originalRequest = error?.config;
 
+        // ── Automatic retry for transient server errors ──────────────────────
+        // Retry up to 2 times on 502/503/504 and network timeouts.
+        // Skip: auth endpoints (avoid loops), 4xx (client errors), already-retried requests.
+        if (originalRequest && !originalRequest._retryCount) {
+            originalRequest._retryCount = 0;
+        }
+        const isRetryable =
+            originalRequest &&
+            !originalRequest._isRetryRequest &&
+            (originalRequest._retryCount || 0) < 2 &&
+            !originalRequest.url?.includes('/auth/') &&
+            (
+                error.code === 'ECONNABORTED' ||
+                (error.response?.status >= 502 && error.response?.status <= 504)
+            );
+
+        if (isRetryable) {
+            originalRequest._retryCount = (originalRequest._retryCount || 0) + 1;
+            originalRequest._isRetryRequest = true;
+            const delay = 500 * originalRequest._retryCount; // 500ms, then 1000ms
+            await new Promise(resolve => setTimeout(resolve, delay));
+            return api(originalRequest);
+        }
+        // ─────────────────────────────────────────────────────────────────────
+
         if (!error.response) {
             error.userMessage = appI18n?.global?.t ? appI18n.global.t('errors.connectionError') : 'Errore di connessione al server. Verifica la tua connessione e riprova.';
             // Report network errors to error store

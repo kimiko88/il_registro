@@ -46,4 +46,40 @@ func TestHealthHandler(t *testing.T) {
 		assert.Equal(t, http.StatusServiceUnavailable, w.Code)
 		assert.Contains(t, w.Body.String(), `"status":"DOWN"`)
 	}
+
+	// 4. Ping endpoint - GET and HEAD
+	{
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Request = httptest.NewRequest(http.MethodGet, "/api/v1/ping", nil)
+		h.Ping(c)
+		assert.Equal(t, http.StatusOK, w.Code)
+		assert.Contains(t, w.Body.String(), `"ok":true`)
+	}
+	{
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Request = httptest.NewRequest(http.MethodHead, "/api/v1/ping", nil)
+		h.Ping(c)
+		assert.Equal(t, http.StatusOK, w.Code)
+		assert.Empty(t, w.Body.String())
+	}
+
+	// 5. Ping route matching via Gin Engine
+	{
+		r := gin.New()
+		r.GET("/api/v1/ping", h.Ping)
+		r.HEAD("/api/v1/ping", h.Ping)
+
+		reqHead := httptest.NewRequest(http.MethodHead, "/api/v1/ping", nil)
+		wHead := httptest.NewRecorder()
+		r.ServeHTTP(wHead, reqHead)
+		assert.Equal(t, http.StatusOK, wHead.Code)
+
+		reqGet := httptest.NewRequest(http.MethodGet, "/api/v1/ping", nil)
+		wGet := httptest.NewRecorder()
+		r.ServeHTTP(wGet, reqGet)
+		assert.Equal(t, http.StatusOK, wGet.Code)
+		assert.Contains(t, wGet.Body.String(), `"ok":true`)
+	}
 }

@@ -31,11 +31,19 @@ function getPingUrl() {
  */
 async function checkRealConnectivity() {
     try {
-        const res = await fetch(getPingUrl(), {
+        let res = await fetch(getPingUrl(), {
             method: 'HEAD',
             cache: 'no-store',
             signal: AbortSignal.timeout(3000)
         })
+        // Fallback to GET if server or proxy does not support HEAD
+        if (res.status === 404 || res.status === 405) {
+            res = await fetch(getPingUrl(), {
+                method: 'GET',
+                cache: 'no-store',
+                signal: AbortSignal.timeout(3000)
+            })
+        }
         if (res.ok) {
             const wasDown = !isOnline.value
             isOnline.value = true

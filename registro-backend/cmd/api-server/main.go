@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 
 	"registro-backend/internal/accessibility"
@@ -240,18 +241,25 @@ func main() {
 	r.Use(middleware.CORSMiddleware())
 	r.Use(middleware.SecurityHeadersMiddleware())
 	r.Use(middleware.RateLimitMiddleware())
+	// Compress JSON/text responses (60-80% size reduction). Excluded: /metrics (Prometheus plain text).
+	r.Use(gzip.Gzip(gzip.DefaultCompression, gzip.WithExcludedPaths([]string{"/metrics"})))
 
 	middleware.InitCircuitBreaker()
 
 	api := r.Group("/api/v1")
 	{
 		r.GET("/health", healthH.Health)
+		r.HEAD("/health", healthH.Health)
 		r.GET("/ready", healthH.Ready)
+		r.HEAD("/ready", healthH.Ready)
 		r.GET("/metrics", healthH.Metrics)
 
 		// Lightweight connectivity probe used by the frontend health-check.
 		// No auth, no DB — responds in <1ms.
 		api.GET("/ping", healthH.Ping)
+		api.HEAD("/ping", healthH.Ping)
+		r.GET("/ping", healthH.Ping)
+		r.HEAD("/ping", healthH.Ping)
 
 		api.GET("/swagger/doc.json", func(c *gin.Context) {
 			c.File("../docs/openapi.yaml")
