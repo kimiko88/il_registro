@@ -109,17 +109,21 @@ export default defineConfig({
             }
           },
           {
-            // API responses caching: Stale-while-revalidate for static list resources
+            // API responses caching: Stale-while-revalidate for static list resources and class rosters
             urlPattern: ({ url }) => {
               return url.pathname.includes('/teachers') ||
                      url.pathname.includes('/subjects') ||
-                     url.pathname.includes('/schools')
+                     url.pathname.includes('/schools') ||
+                     url.pathname.includes('/classes') ||
+                     url.pathname.includes('/students') ||
+                     url.pathname.includes('/academic-years') ||
+                     url.pathname.includes('/school-year')
             },
             handler: 'StaleWhileRevalidate',
             options: {
               cacheName: 'api-static-lists',
               expiration: {
-                maxEntries: 30,
+                maxEntries: 100,
                 maxAgeSeconds: 60 * 60 * 24 // 24 hours
               },
               cacheableResponse: {

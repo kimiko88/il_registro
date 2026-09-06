@@ -2887,7 +2887,21 @@ export default {
     "pendingQueue": "Nessuna connessione a Internet. {count} modifiche salvate in locale verranno sincronizzate al ripristino.",
     "inQueue": "IN CODA",
     "syncedSuccess": "Connessione ripristinata: {count} operazioni sincronizzate con successo.",
-    "enqueuedOffline": "Operazione salvata in locale. Verrà sincronizzata automaticamente al ritorno della connessione."
+    "enqueuedOffline": "Operazione salvata in locale. Verrà sincronizzata automaticamente al ritorno della connessione.",
+    "viewQueue": "Clicca per gestire le operazioni in coda"
+  },
+  "offlineQueue": {
+    "title": "Coda Operazioni Offline",
+    "pendingItems": "operazioni in attesa di sincronizzazione",
+    "allSynced": "Nessuna operazione in sospeso",
+    "allSyncedSub": "Tutte le modifiche effettuate sono state inviate con successo al server.",
+    "retries": "tentativi falliti",
+    "backoff": "in attesa backoff",
+    "removeItemTooltip": "Elimina dalla coda",
+    "clearAll": "Svuota Coda",
+    "syncNow": "Sincronizza Ora",
+    "confirmClearTitle": "Svuotare la coda?",
+    "confirmClearMessage": "Le modifiche salvate in locale non ancora sincronizzate andranno perse."
   },
   "inactivity": {
     "warningTitle": "Sessione in scadenza",

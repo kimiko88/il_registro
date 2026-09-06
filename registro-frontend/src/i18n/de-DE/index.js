@@ -2887,7 +2887,21 @@ export default {
     "pendingQueue": "Keine Internetverbindung. {count} lokale Änderungen in der Warteschlange für die Synchronisierung.",
     "inQueue": "IN WARTESCHLANGE",
     "syncedSuccess": "Verbindung wiederhergestellt: {count} Vorgänge erfolgreich synchronisiert.",
-    "enqueuedOffline": "Vorgang lokal gespeichert. Er wird automatisch synchronisiert, sobald Sie wieder online sind."
+    "enqueuedOffline": "Vorgang lokal gespeichert. Er wird automatisch synchronisiert, sobald Sie wieder online sind.",
+    "viewQueue": "Klicken, um Warteschlange zu verwalten"
+  },
+  "offlineQueue": {
+    "title": "Offline-Warteschlange",
+    "pendingItems": "Vorgänge warten auf Synchronisierung",
+    "allSynced": "Keine ausstehenden Vorgänge",
+    "allSyncedSub": "Alle vorgenommenen Änderungen wurden erfolgreich an den Server übermittelt.",
+    "retries": "fehlgeschlagene Versuche",
+    "backoff": "Backoff aktiv",
+    "removeItemTooltip": "Aus Warteschlange entfernen",
+    "clearAll": "Warteschlange leeren",
+    "syncNow": "Jetzt synchronisieren",
+    "confirmClearTitle": "Warteschlange leeren?",
+    "confirmClearMessage": "Lokal gespeicherte Änderungen, die noch nicht synchronisiert wurden, gehen verloren."
   },
   "inactivity": {
     "warningTitle": "Sitzung läuft ab",
