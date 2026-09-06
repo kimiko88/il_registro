@@ -251,7 +251,13 @@ export default {
     "confirmMultiHourMsg": "Do you want to sign and record attendance for {count} consecutive hours (from hour {start} to hour {end}) with the same topics and attendance?",
     "multiHourSaved": "✓ Successfully saved and signed lessons for hours {start} - {end}",
     "noPreviousLesson": "No previous lesson found for this subject.",
-    "previousLessonLoaded": "✓ Topics loaded from previous lesson of {date}"
+    "previousLessonLoaded": "✓ Topics loaded from previous lesson of {date}",
+    "printPersonalRegister": "Print Teacher Register (PDF)",
+    "personalRegister": "Teacher Personal Register",
+    "personalRegisterDesc": "Official archive register with grade grid, weighted averages, attendance tally and signed lessons",
+    "printMonthlyJournal": "Print Monthly Class Journal (PDF)",
+    "monthlyJournal": "Official Monthly Class Journal",
+    "monthlyJournalDesc": "Official PDF generation with teacher signatures, daily attendance, justifications and disciplinary notes"
   },
   "dashboardPage": {
     "viewYourHomework": "عرض واجباتك وأنشطتك",
@@ -2429,7 +2435,11 @@ export default {
   "admin": {
     "apiRequests": "طلبات API",
     "userDeleted": "تم حذف المستخدم بنجاح",
-    "userDeleteError": "حدث خطأ أثناء حذف المستخدم"
+    "userDeleteError": "حدث خطأ أثناء حذف المستخدم",
+    "dataIntegrity": "School Data Integrity & Linter",
+    "dataIntegritySubtitle": "Preemptive scanning for relational anomalies, overlapping lessons, weekend grades, and orphaned students",
+    "runIntegrityCheck": "Run Data Diagnostic",
+    "integrityPassed": "No anomalies found: database is fully coherent."
   },
   "auth": {
     "sessionExpired": "انتهت صلاحية الجلسة",
@@ -3674,5 +3684,47 @@ export default {
     "filterClass": "Filter by Class",
     "filterRisk": "Filter by Risk",
     "dprThresholdNotice": "Critical absence threshold: 25% of annual course hours (DPR 122/2009 art. 14)"
+  },
+  "rubrics": {
+    "descriptiveEvaluation": "Descriptive Evaluation Matrix (O.M. 172/2020)",
+    "descriptiveDesc": "Assessment by learning objectives and ministerial proficiency levels (Advanced, Intermediate, Basic, In Acquisition)",
+    "addObjective": "Add Objective",
+    "levelAdvanced": "Advanced",
+    "levelIntermediate": "Intermediate",
+    "levelBasic": "Basic",
+    "levelInitial": "In Acquisition",
+    "objectiveName": "Learning Objective Name"
+  },
+  "substitutions": {
+    "dispatcherTab": "Live Dispatcher Grid (1st-6th Period)",
+    "listTab": "Detailed Substitutions List",
+    "uncoveredClass": "Uncovered Class",
+    "assignSubQuick": "Quick Assign"
+  },
+  "student": {
+    "planner": {
+      "title": "Homework Planner & To-Do List",
+      "subtitle": "Interactive digital agenda tracking assignments and deadlines",
+      "completed": "Completed",
+      "todo": "To Do",
+      "tabTitle": "To-Do Agenda",
+      "myNotes": "Personal study notes",
+      "allDone": "All homework has been completed!"
+    }
+  },
+  "parent": {
+    "absenceLimit": {
+      "title": "25% Absence Limit (D.P.R. 122/2009)",
+      "subtitle": "Academic year validity tracking (min. 75% attendance)",
+      "ariaLabel": "Absence summary and 25% limit tracking DPR 122/2009",
+      "remainingHours": "Remaining allowable hours",
+      "totalHours": "Absent Hours",
+      "latesAndExits": "Lates / Early Exits",
+      "statusOk": "Regular (<15%)",
+      "statusWarning": "Warning (≥15%)",
+      "statusDanger": "High Risk (≥20%)",
+      "statusCritical": "Limit Exceeded (>25%)",
+      "legalTitle": "Legal Reference (Art. 14 DPR 122/2009)"
+    }
   }
 }

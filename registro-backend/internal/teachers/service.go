@@ -74,3 +74,11 @@ func (s *Service) GetDashboardStats(ctx context.Context, authenticatedUserID, te
 	}
 	return s.repo.GetDashboardStats(ctx, teacherUserID)
 }
+
+func (s *Service) GeneratePersonalRegisterPDF(ctx context.Context, teacherID, classID, subjectID string) ([]byte, error) {
+	data, err := s.repo.GetPersonalRegisterData(ctx, teacherID, classID, subjectID)
+	if err != nil {
+		return nil, err
+	}
+	return GenerateTeacherRegisterPDF(data)
+}

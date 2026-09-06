@@ -17,7 +17,19 @@
              class="rounded-lg text-weight-bold"
              @click="toggleSubstitutionMode"
            />
-           <q-btn color="secondary" icon="download" :label="$t('classRegister.exportCSV')" unelevated dense @click="exportCSV" />
+            <q-btn color="secondary" icon="download" :label="$t('classRegister.exportCSV')" unelevated dense @click="exportCSV" />
+            <q-btn
+              color="indigo"
+              icon="picture_as_pdf"
+              :label="$t('classRegister.printPersonalRegister') || 'Stampa Registro Personale'"
+              unelevated
+              dense
+              class="rounded-lg text-weight-bold"
+              :loading="printingRegister"
+              @click="printPersonalRegister"
+            >
+              <q-tooltip>{{ $t('classRegister.printPersonalRegisterTooltip') || 'Scarica il registro personale del docente con voti, assenze e lezioni firmate' }}</q-tooltip>
+            </q-btn>
        </div>
     </div>
 
@@ -512,6 +524,7 @@ import { useAuthStore } from '@/stores/auth'
 import { attendanceService } from 'src/services/attendanceService'
 import { lessonService } from 'src/services/lessonService'
 import api from '@/services/api'
+import { teacherService } from '@/services/teacherService'
 import NoteDialog from 'src/components/Teacher/NoteDialog.vue'
 import StudentAttendanceDetailDialog from '@/components/Teacher/StudentAttendanceDetailDialog.vue'
 import SkeletonTable from '@/components/Common/SkeletonTable.vue'
@@ -1287,6 +1300,33 @@ const exportCSV = async () => {
         $q.notify({ type: 'positive', message: 'Export CSV completato!' })
     } catch (err) {
         $q.notify({ type: 'negative', message: "Errore durante l'export CSV" })
+    }
+}
+
+const printingRegister = ref(false)
+const printPersonalRegister = async () => {
+    printingRegister.value = true
+    try {
+        const classId = typeof selectedClass.value === 'object' ? selectedClass.value?.id : selectedClass.value
+        const res = await teacherService.getPersonalRegisterPDF({
+            class_id: classId || undefined,
+            teacher_id: currentTeacherId.value || undefined
+        })
+        const blob = new Blob([res.data], { type: 'application/pdf' })
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.setAttribute('download', `registro_personale_docente_${date.value}.pdf`)
+        document.body.appendChild(link)
+        link.click()
+        link.remove()
+        window.URL.revokeObjectURL(url)
+        $q.notify({ type: 'positive', message: 'Registro Personale PDF scaricato con successo!' })
+    } catch (err) {
+        console.error('Failed to print personal register', err)
+        $q.notify({ type: 'negative', message: 'Errore durante la generazione del registro personale' })
+    } finally {
+        printingRegister.value = false
     }
 }
 </script>

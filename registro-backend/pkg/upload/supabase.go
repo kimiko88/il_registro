@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"registro-backend/pkg/circuitbreaker"
 )
 
 // StorageUploader defines an interface for uploading files to remote storage.
@@ -58,16 +60,23 @@ func (s *SupabaseUploader) UploadFile(ctx context.Context, storagePath string, c
 		req.Header.Set("Content-Type", "application/octet-stream")
 	}
 
-	resp, err := s.HTTPClient.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("impossibile eseguire la richiesta di upload su Supabase: %w", err)
-	}
-	defer func() { _ = resp.Body.Close() }()
+	rawRes, err := circuitbreaker.Storage().Execute(func() (interface{}, error) {
+		resp, err := s.HTTPClient.Do(req)
+		if err != nil {
+			return nil, fmt.Errorf("impossibile eseguire la richiesta di upload su Supabase: %w", err)
+		}
+		defer func() { _ = resp.Body.Close() }()
 
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		return "", fmt.Errorf("upload su Supabase Storage fallito (status %d): %s", resp.StatusCode, string(bodyBytes))
+		if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+			bodyBytes, _ := io.ReadAll(resp.Body)
+			return nil, fmt.Errorf("upload su Supabase Storage fallito (status %d): %s", resp.StatusCode, string(bodyBytes))
+		}
+		return true, nil
+	})
+	if err != nil {
+		return "", err
 	}
+	_ = rawRes
 
 	publicURL := fmt.Sprintf("%s/storage/v1/object/public/%s/%s", s.URL, bucket, storagePath)
 	return publicURL, nil

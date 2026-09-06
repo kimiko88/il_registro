@@ -82,4 +82,14 @@ func TestHealthHandler(t *testing.T) {
 		assert.Equal(t, http.StatusOK, wGet.Code)
 		assert.Contains(t, wGet.Body.String(), `"ok":true`)
 	}
+
+	// 6. Live probe (Kubernetes Liveness)
+	{
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		h.Live(c)
+		assert.Equal(t, http.StatusOK, w.Code)
+		assert.Contains(t, w.Body.String(), `"status":"alive"`)
+		assert.Contains(t, w.Body.String(), `"timestamp"`)
+	}
 }

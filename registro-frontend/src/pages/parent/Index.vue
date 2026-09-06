@@ -115,6 +115,14 @@
         />
       </div>
 
+      <!-- Absence Limit 25% Monitoring Widget (Art. 14 DPR 122/2009) -->
+      <div class="col-12 q-mb-md">
+        <AbsenceLimitWidget
+          :student-id="selectedChildId"
+          :student-name="selectedChild ? `${selectedChild.first_name || selectedChild.firstName} ${selectedChild.last_name || selectedChild.lastName}` : ''"
+        />
+      </div>
+
       <!-- Recent Grades -->
       <div class="col-12 col-md-8">
         <q-card class="shadow-sm rounded-lg" role="region" :aria-label="$t('gradesPage.title')">
@@ -204,6 +212,7 @@ import { attendanceService } from '@/services/attendanceService'
 import { communicationService } from '@/services/communicationService'
 import { colloquiService } from '@/services/colloquiService'
 import GradeAnalyticsCharts from '@/components/Student/GradeAnalyticsCharts.vue'
+import AbsenceLimitWidget from '@/components/Parent/AbsenceLimitWidget.vue'
 
 
 

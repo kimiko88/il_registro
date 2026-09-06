@@ -86,6 +86,13 @@ func (m *MockRepository) BulkMigrateStudents(ctx context.Context, migrations []S
 	args := m.Called(ctx, migrations)
 	return args.Error(0)
 }
+func (m *MockRepository) GetMonthlyJournalData(ctx context.Context, classID string, year, month int) (*MonthlyJournalData, error) {
+	args := m.Called(ctx, classID, year, month)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*MonthlyJournalData), args.Error(1)
+}
 
 func TestService_CreateClass(t *testing.T) {
 	tests := []struct {

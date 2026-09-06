@@ -245,6 +245,13 @@
         </div>
       </div>
 
+      <!-- 🔍 Diagnostic Linter: Verifica Congruità Dati Scolastici -->
+      <div class="row q-mb-lg">
+        <div class="col-12">
+          <DataIntegrityCard />
+        </div>
+      </div>
+
       <!-- 📊 Business Intelligence & Dashboard Dispersione Scolastica (Presidenza) -->
       <div class="row q-col-gutter-lg q-mb-lg">
         <!-- Student a Rischio Table / Cruscotto Rischio Dispersione -->
@@ -368,6 +375,7 @@ import { usePermissions } from '@/composables/usePermissions'
 import adminService from '@/services/adminService'
 import api from '@/services/api'
 import DropoutRiskTable from '@/components/Admin/DropoutRiskTable.vue'
+import DataIntegrityCard from '@/components/Admin/DataIntegrityCard.vue'
 
 const $q = useQuasar()
 const { t } = useI18n()

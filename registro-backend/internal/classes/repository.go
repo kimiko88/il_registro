@@ -23,6 +23,7 @@ type Repository interface {
 	GetLessonTopics(ctx context.Context, classID string) ([]LessonTopic, error)
 	GetDisciplinaryNotes(ctx context.Context, classID string) ([]DisciplinaryNoteReport, error)
 	BulkMigrateStudents(ctx context.Context, migrations []StudentMigrationItem) error
+	GetMonthlyJournalData(ctx context.Context, classID string, year, month int) (*MonthlyJournalData, error)
 }
 
 type PostgresRepository struct {
@@ -421,4 +422,199 @@ func (r *PostgresRepository) BulkMigrateStudents(ctx context.Context, migrations
 	}
 
 	return tx.Commit()
+}
+
+func (r *PostgresRepository) GetMonthlyJournalData(ctx context.Context, classID string, year, month int) (*MonthlyJournalData, error) {
+	if year <= 0 {
+		year = time.Now().Year()
+	}
+	if month < 1 || month > 12 {
+		month = int(time.Now().Month())
+	}
+
+	monthNames := []string{
+		"Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno",
+		"Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre",
+	}
+
+	tFirst := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
+	tNext := tFirst.AddDate(0, 1, 0)
+	daysInMonth := int(tNext.Sub(tFirst).Hours() / 24)
+
+	data := &MonthlyJournalData{
+		Month:             month,
+		Year:              year,
+		MonthName:         monthNames[month-1],
+		DaysInMonth:       daysInMonth,
+		Students:          make([]MonthlyStudentAttendance, 0),
+		Lessons:           make([]MonthlyLesson, 0),
+		DisciplinaryNotes: make([]MonthlyDisciplinaryNote, 0),
+	}
+
+	// 1. Class & School metadata
+	classQuery := `
+		SELECT COALESCE(al.name || ' ', '') || c.section,
+		       COALESCE(s.name, 'Istituto Scolastico Statale'),
+		       COALESCE(u.first_name || ' ' || u.last_name, 'Non Assegnato')
+		FROM classes c
+		LEFT JOIN academic_levels al ON c.level_id = al.id
+		JOIN schools s ON c.school_id = s.id
+		LEFT JOIN users u ON c.coordinator_id = u.id
+		WHERE c.id = $1::uuid`
+	_ = r.db.QueryRowContext(ctx, classQuery, classID).Scan(&data.ClassName, &data.SchoolName, &data.CoordinatorName)
+
+	if data.ClassName == "" {
+		data.ClassName = "Classe Non Trovata"
+	}
+	if data.SchoolName == "" {
+		data.SchoolName = "Istituto Scolastico"
+	}
+
+	// 2. Students list
+	studentMap := make(map[string]*MonthlyStudentAttendance)
+	studentOrder := make([]string, 0)
+	stQuery := `
+		SELECT s.id::text, COALESCE(u.last_name || ' ' || u.first_name, 'Studente')
+		FROM students s
+		JOIN users u ON s.user_id = u.id
+		WHERE s.class_id = $1::uuid AND s.deleted_at IS NULL AND u.deleted_at IS NULL
+		ORDER BY u.last_name, u.first_name`
+	if rows, err := r.db.QueryContext(ctx, stQuery, classID); err == nil {
+		defer rows.Close()
+		for rows.Next() {
+			var sid, sname string
+			if err := rows.Scan(&sid, &sname); err == nil {
+				st := &MonthlyStudentAttendance{
+					ID:          sid,
+					Name:        sname,
+					DailyStatus: make(map[int]string),
+				}
+				studentMap[sid] = st
+				studentOrder = append(studentOrder, sid)
+			}
+		}
+	}
+
+	// 3. Attendance across month
+	startDateStr := tFirst.Format("2006-01-02")
+	endDateStr := tNext.Format("2006-01-02")
+	attQuery := `
+		SELECT a.student_id::text, EXTRACT(DAY FROM a.date)::int, a.status
+		FROM attendance a
+		WHERE a.class_id = $1::uuid
+		  AND a.date >= $2 AND a.date < $3`
+	if rows, err := r.db.QueryContext(ctx, attQuery, classID, startDateStr, endDateStr); err == nil {
+		defer rows.Close()
+		for rows.Next() {
+			var sid, status string
+			var dayNum int
+			if err := rows.Scan(&sid, &dayNum, &status); err == nil {
+				if st, ok := studentMap[sid]; ok {
+					code := "P"
+					switch status {
+					case "Absent":
+						code = "A"
+						st.TotalA++
+					case "Late":
+						code = "R"
+						st.TotalR++
+					case "LeftEarly":
+						code = "U"
+						st.TotalU++
+					case "Exempt":
+						code = "G"
+					case "Present":
+						code = "P"
+						st.TotalP++
+					default:
+						code = "P"
+						st.TotalP++
+					}
+					st.DailyStatus[dayNum] = code
+				}
+			}
+		}
+	}
+
+	totalA := 0
+	totalR := 0
+	totalU := 0
+	totalP := 0
+	for _, sid := range studentOrder {
+		st := studentMap[sid]
+		totalA += st.TotalA
+		totalR += st.TotalR
+		totalU += st.TotalU
+		totalP += st.TotalP
+		data.Students = append(data.Students, *st)
+	}
+
+	// 4. Lessons in month
+	lessonsQuery := `
+		SELECT TO_CHAR(l.date, 'DD/MM/YYYY'), COALESCE(l.hour, 1),
+		       COALESCE(u.first_name || ' ' || u.last_name, 'Docente'),
+		       COALESCE(sub.name, 'Materia'), l.topic, l.type
+		FROM class_lessons l
+		JOIN users u ON l.teacher_id = u.id
+		JOIN subjects sub ON l.subject_id = sub.id
+		WHERE l.class_id = $1::uuid
+		  AND l.date >= $2 AND l.date < $3
+		ORDER BY l.date, l.hour LIMIT 120`
+	if rows, err := r.db.QueryContext(ctx, lessonsQuery, classID, startDateStr, endDateStr); err == nil {
+		defer rows.Close()
+		for rows.Next() {
+			var l MonthlyLesson
+			if err := rows.Scan(&l.Date, &l.Hour, &l.TeacherName, &l.SubjectName, &l.Topic, &l.Type); err == nil {
+				data.Lessons = append(data.Lessons, l)
+			}
+		}
+	}
+
+	// 5. Disciplinary Notes in month
+	notesQuery := `
+		SELECT TO_CHAR(sn.date, 'DD/MM/YYYY'),
+		       COALESCE(su.last_name || ' ' || su.first_name, 'Alunno'),
+		       COALESCE(tu.last_name || ' ' || tu.first_name, 'Docente'),
+		       sn.description, sn.note_type
+		FROM student_notes sn
+		JOIN students s ON sn.student_id = s.id
+		JOIN users su ON s.user_id = su.id
+		LEFT JOIN users tu ON sn.teacher_id = tu.id
+		WHERE sn.class_id = $1::uuid
+		  AND sn.date >= $2 AND sn.date < $3
+		ORDER BY sn.date`
+	if rows, err := r.db.QueryContext(ctx, notesQuery, classID, startDateStr, endDateStr); err == nil {
+		defer rows.Close()
+		for rows.Next() {
+			var n MonthlyDisciplinaryNote
+			if err := rows.Scan(&n.Date, &n.StudentName, &n.TeacherName, &n.Description, &n.NoteType); err == nil {
+				data.DisciplinaryNotes = append(data.DisciplinaryNotes, n)
+			}
+		}
+	}
+
+	// 6. Aggregate stats
+	schoolDaysCount := 0
+	for d := 1; d <= daysInMonth; d++ {
+		tDay := time.Date(year, time.Month(month), d, 0, 0, 0, 0, time.UTC)
+		if tDay.Weekday() != time.Sunday {
+			schoolDaysCount++
+		}
+	}
+
+	totalEntries := totalP + totalA + totalR + totalU
+	attRate := 100.0
+	if totalEntries > 0 {
+		attRate = float64(totalP+totalR+totalU) / float64(totalEntries) * 100.0
+	}
+
+	data.Stats = MonthlyJournalStats{
+		TotalSchoolDays: schoolDaysCount,
+		TotalAbsences:   totalA,
+		TotalLates:      totalR,
+		TotalEarlyExits: totalU,
+		AttendanceRate:  attRate,
+	}
+
+	return data, nil
 }

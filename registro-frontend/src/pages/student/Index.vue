@@ -145,46 +145,10 @@
           </q-list>
         </q-card>
         
-        <!-- Upcoming Events & Homework from Agenda -->
-        <q-card class="glass-card shadow-soft overflow-hidden">
-            <q-card-section class="row items-center justify-between q-pa-lg">
-                <div>
-                    <div class="text-h5 text-weight-bold text-outfit row items-center">
-                        <q-icon name="assignment" color="primary" class="q-mr-sm" size="24px" />
-                        <span>{{ $t('agendaPage.dueHomework') || 'Compiti & Verifiche in Arrivo' }}</span>
-                    </div>
-                    <div class="text-caption text-slate-500 q-mt-xs">{{ $t('agendaPage.organizeStudy') || 'Organizza le tue prossime scadenze di studio' }}</div>
-                </div>
-                <q-btn flat :label="$t('common.viewAll') || 'Vedi Tutti'" color="primary" to="/student/homework" no-caps />
-            </q-card-section>
-            <q-separator color="white" style="opacity: 0.1" />
-
-            <q-list separator>
-                <q-item v-for="event in upcomingEvents" :key="event.id" class="q-py-md cursor-pointer hover:bg-slate-50" @click="$router.push('/student/homework')">
-                    <q-item-section avatar>
-                        <q-avatar :color="event.color ? `${event.color}-1` : 'primary-1'" :text-color="event.color || 'primary'" :icon="event.icon || 'assignment'" size="42px" />
-                    </q-item-section>
-                    <q-item-section>
-                        <q-item-label class="text-weight-bold text-slate-800 text-subtitle1">{{ event.title }}</q-item-label>
-                        <q-item-label caption class="text-slate-500">
-                            <span>{{ $t('agendaPage.due') || 'Scadenza' }}: {{ formatEventDate(event.start_date || event.date) }}</span>
-                            <span v-if="event.start_time || event.time"> • Ore {{ event.start_time || event.time }}</span>
-                            <span v-if="event.subject_name"> • {{ event.subject_name }}</span>
-                        </q-item-label>
-                    </q-item-section>
-                    <q-item-section side v-if="event.type">
-                        <q-chip :color="event.color || 'primary'" text-color="white" size="sm" class="text-weight-bold uppercase">{{ event.type }}</q-chip>
-                    </q-item-section>
-                </q-item>
-                <q-item v-if="!upcomingEvents.length">
-                    <q-item-section class="text-center text-slate-500 q-py-xl">
-                        <q-icon name="task_alt" size="48px" color="positive" class="q-mb-sm opacity-80" />
-                        <div class="text-subtitle1 text-weight-bold">{{ $t('agendaPage.noPendingHomework') || 'Nessun compito o verifica in arrivo' }}</div>
-                        <div class="text-caption">{{ $t('agendaPage.allCaughtUp') || 'Sei in pari con tutte le attività!' }}</div>
-                    </q-item-section>
-                </q-item>
-            </q-list>
-        </q-card>
+        <!-- Interactive Homework Planner & Digital Diary -->
+        <div class="q-mb-lg">
+          <HomeworkPlanner />
+        </div>
       </div>
 
       <!-- Quick Actions Sidebar -->
@@ -237,6 +201,7 @@ import dashboardService from 'src/services/dashboardService'
 import adminService from 'src/services/adminService'
 import api from 'src/services/api'
 import GradeAnalyticsCharts from '@/components/Student/GradeAnalyticsCharts.vue'
+import HomeworkPlanner from '@/components/Student/HomeworkPlanner.vue'
 
 const { t, locale: currentLocale } = useI18n();
 const studentStore = useStudentStore();
@@ -257,11 +222,6 @@ const getGradeColor = (val) => {
     if (v >= 8) return 'green-6';
     if (v >= 6) return 'orange-6';
     return 'red-6';
-}
-
-const formatEventDate = (dateStr) => {
-    if (!dateStr) return ''
-    return new Date(dateStr).toLocaleDateString(currentLocale.value || 'it-IT', { day: '2-digit', month: 'short' })
 }
 
 const getSubjectName = (id) => {

@@ -229,6 +229,11 @@ export const adminService = {
 
     updateSchoolSetting(key, value) {
         return api.put(`/admin/settings/${key}`, { value: String(value) })
+    },
+
+    // ========== Data Integrity Diagnostics ==========
+    getDataIntegrity() {
+        return api.get('/admin/data-integrity')
     }
 }
 

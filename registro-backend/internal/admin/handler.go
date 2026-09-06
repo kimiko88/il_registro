@@ -482,6 +482,7 @@ func (h *Handler) RegisterRoutes(router *gin.RouterGroup, middleware *Middleware
 		adminGroup.GET("/system/metrics", middleware.RequireAdminOrSuperAdmin(), h.GetSystemMetrics)
 		adminGroup.GET("/system/health", middleware.RequireAdminOrSuperAdmin(), h.GetSystemHealth)
 		adminGroup.GET("/analytics/user-growth", middleware.RequireAdminOrSuperAdmin(), middleware.SetSchoolFilter(), h.GetUserGrowth)
+		adminGroup.GET("/data-integrity", middleware.RequireAdminOrSuperAdmin(), middleware.SetSchoolFilter(), h.CheckDataIntegrity)
 
 		// Restricted admin routes (admin and superadmin only)
 		restricted := adminGroup.Group("/")
@@ -710,4 +711,25 @@ func (h *Handler) GetUserGrowth(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, growth)
+}
+
+// CheckDataIntegrity runs a comprehensive diagnostic linter on school data
+// GET /api/v1/admin/data-integrity
+func (h *Handler) CheckDataIntegrity(c *gin.Context) {
+	filterSchoolID := GetFilteredSchoolID(c)
+	var schoolFilter *string
+	if filterSchoolID != "" {
+		schoolFilter = &filterSchoolID
+	}
+
+	report, err := h.service.CheckDataIntegrity(c.Request.Context(), schoolFilter)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error:   "failed to check data integrity",
+			Message: err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, report)
 }

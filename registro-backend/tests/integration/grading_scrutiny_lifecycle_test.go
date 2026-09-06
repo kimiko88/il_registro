@@ -243,3 +243,10 @@ func (m *mockClassesRepoForScrutiny) GetDisciplinaryNotes(ctx context.Context, c
 func (m *mockClassesRepoForScrutiny) BulkMigrateStudents(ctx context.Context, migrations []classes.StudentMigrationItem) error {
 	return nil
 }
+func (m *mockClassesRepoForScrutiny) GetMonthlyJournalData(ctx context.Context, classID string, year, month int) (*classes.MonthlyJournalData, error) {
+	return &classes.MonthlyJournalData{
+		ClassName: "3A",
+		Year:      year,
+		Month:     month,
+	}, nil
+}

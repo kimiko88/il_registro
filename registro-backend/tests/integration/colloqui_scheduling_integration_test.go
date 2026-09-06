@@ -46,6 +46,9 @@ func (m *mockTeacherRepoForScheduling) RemoveSubject(_ context.Context, _, _ str
 func (m *mockTeacherRepoForScheduling) GetDashboardStats(_ context.Context, _ string) (map[string]interface{}, error) {
 	return nil, nil
 }
+func (m *mockTeacherRepoForScheduling) GetPersonalRegisterData(_ context.Context, _, _, _ string) (*teachers.TeacherRegisterData, error) {
+	return &teachers.TeacherRegisterData{}, nil
+}
 
 // ─── Mock Scheduling Repository ───────────────────────────────────────────
 
