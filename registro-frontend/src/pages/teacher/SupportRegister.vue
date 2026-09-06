@@ -45,7 +45,7 @@
           map-options
           outlined
           dense
-          bg-color="white"
+          :bg-color="$q.dark.isActive ? 'dark' : 'white'"
           style="min-width: 250px;"
           @update:model-value="onStudentChanged"
         />

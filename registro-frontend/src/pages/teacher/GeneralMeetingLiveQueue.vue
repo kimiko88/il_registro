@@ -20,7 +20,7 @@
           map-options
           outlined
           dense
-          bg-color="white"
+          :bg-color="$q.dark.isActive ? 'dark' : 'white'"
           style="min-width: 250px;"
           :label="$t('generalMeeting.selectMeeting')"
           @update:model-value="loadQueueTickets"

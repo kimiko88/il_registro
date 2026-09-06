@@ -271,189 +271,51 @@
                 <div class="text-subtitle1 opacity-80">{{ resetTargetName }}</div>
             </q-card-section>
             <q-card-section class="q-pa-xl">
-                <q-input v-model="newPassword" label="Nuova Password" type="password" outlined />
-                <div class="text-caption text-slate-400 q-mt-sm">Inserire una password sicura di almeno 8 caratteri.</div>
-                
-                <div class="row justify-end q-mt-xl q-gutter-sm">
-                  <q-btn flat label="Annulla" color="slate-400" v-close-popup no-caps />
-                  <q-btn color="primary" label="Aggiorna Password" class="q-px-xl rounded-lg shadow-sm" no-caps @click="handleResetPwd" :disable="newPassword.length < 8" />
-                </div>
+                <q-form @submit="handleResetPwd" class="q-gutter-y-md">
+                    <q-input
+                      v-model="newPassword"
+                      label="Nuova Password"
+                      type="password"
+                      outlined
+                      :rules="[
+                        val => (!!val && val.length >= 8) || 'Inserire una password sicura di almeno 8 caratteri'
+                      ]"
+                    />
+                    <div class="text-caption text-slate-400">Inserire una password sicura di almeno 8 caratteri.</div>
+                    
+                    <div class="row justify-end q-mt-lg q-gutter-sm">
+                      <q-btn flat label="Annulla" color="slate-400" v-close-popup no-caps />
+                      <q-btn color="primary" label="Aggiorna Password" type="submit" class="q-px-xl rounded-lg shadow-sm" no-caps />
+                    </div>
+                </q-form>
             </q-card-section>
         </q-card>
     </q-dialog>
 
     <!-- Multi-step CSV Import Dialog -->
-    <q-dialog v-model="showImport" persistent>
-      <q-card style="width: min(750px, 95vw); max-width: 95vw;" class="rounded-xl overflow-hidden bg-white shadow-24">
-        <q-card-section class="bg-primary text-white row items-center justify-between q-py-md">
-          <div class="text-h6 text-weight-bold">
-            <q-icon name="upload_file" class="q-mr-xs" />
-            Importazione Utenti da CSV
-          </div>
-          <q-btn icon="close" flat round dense v-close-popup :aria-label="t('common.close') || 'Chiudi'" />
-        </q-card-section>
-
-        <q-card-section class="q-pa-none">
-          <q-stepper v-model="importStep" animated color="primary" flat>
-            <!-- Step 1: Configurazione -->
-            <q-step :name="1" title="Configurazione" icon="settings" :done="importStep > 1">
-              <div class="space-y-4 q-pa-md">
-                <q-select
-                  v-model="importRole"
-                  :options="[
-                    { label: 'Studenti', value: 'student' },
-                    { label: 'Docenti', value: 'teacher' },
-                    { label: 'Genitori', value: 'parent' }
-                  ]"
-                  label="Tipo Utenti da Importare"
-                  outlined
-                  dense
-                  emit-value
-                  map-options
-                />
-
-                <q-select
-                  v-if="importRole === 'student'"
-                  v-model="importClassId"
-                  :options="classOptions"
-                  label="Classe Destinazione"
-                  outlined
-                  dense
-                  emit-value
-                  map-options
-                />
-
-                <q-toggle v-model="sendWelcomeEmail" label="Invia email di benvenuto con credenziali temporanee" />
-
-                <div class="q-pt-sm">
-                  <q-btn
-                    flat
-                    color="primary"
-                    icon="download"
-                    label="Scarica Template CSV Esempio"
-                    no-caps
-                    @click="downloadCsvTemplate"
-                  />
-                </div>
-              </div>
-
-              <div class="row justify-end q-pa-md border-t border-slate-200">
-                <q-btn color="primary" label="Avanti" no-caps @click="importStep = 2" />
-              </div>
-            </q-step>
-
-            <!-- Step 2: Upload File & Preview -->
-            <q-step :name="2" title="Caricamento File" icon="cloud_upload" :done="importStep > 2">
-              <div class="q-pa-md space-y-4">
-                <q-file
-                  v-model="importFile"
-                  label="Seleziona File CSV (.csv max 10MB)"
-                  outlined
-                  dense
-                  accept=".csv"
-                  @update:model-value="onCsvFileSelected"
-                >
-                  <template v-slot:prepend>
-                    <q-icon name="attach_file" />
-                  </template>
-                </q-file>
-
-                <div v-if="previewRows.length > 0" class="q-mt-md">
-                  <div class="text-subtitle2 text-weight-bold text-slate-700 q-mb-xs">Anteprima prime 5 righe</div>
-                  <q-table
-                    flat
-                    dense
-                    bordered
-                    :rows="previewRows"
-                    hide-pagination
-                    :pagination="{ rowsPerPage: 0 }"
-                  />
-                </div>
-              </div>
-
-              <div class="row justify-between q-pa-md border-t border-slate-200">
-                <q-btn flat label="Indietro" color="slate-600" no-caps @click="importStep = 1" />
-                <q-btn
-                  color="primary"
-                  label="Esegui Importazione"
-                  :loading="importing"
-                  :disable="!importFile"
-                  no-caps
-                  @click="runBulkImport"
-                />
-              </div>
-            </q-step>
-
-            <!-- Step 3: Risultato -->
-            <q-step :name="3" title="Risultato" icon="check_circle">
-              <div class="q-pa-md space-y-4">
-                <q-banner class="bg-positive text-white rounded-lg">
-                  <template v-slot:avatar>
-                    <q-icon name="check_circle" size="md" />
-                  </template>
-                  <div class="text-weight-bold">
-                    {{ importResult?.imported || 0 }} Utenti Importati Con Successo!
-                  </div>
-                  <div v-if="importResult?.skipped > 0" class="text-caption">
-                    {{ importResult.skipped }} righe saltate o non valide.
-                  </div>
-                </q-banner>
-
-                <div v-if="importResult?.errors && importResult.errors.length > 0">
-                  <div class="text-subtitle2 text-weight-bold text-negative q-mb-xs">Errori Riscontrati</div>
-                  <q-list bordered separator class="rounded-lg bg-red-50">
-                    <q-item v-for="(err, idx) in importResult.errors" :key="idx" dense>
-                      <q-item-section avatar>
-                        <q-icon name="warning" color="negative" size="xs" />
-                      </q-item-section>
-                      <q-item-section>
-                        <q-item-label class="text-caption text-negative">
-                          Riga {{ err.row }}: {{ err.reason }}
-                        </q-item-label>
-                      </q-item-section>
-                    </q-item>
-                  </q-list>
-                </div>
-              </div>
-
-              <div class="row justify-between q-pa-md border-t border-slate-200">
-                <q-btn
-                  v-if="importResult?.errors?.length > 0"
-                  flat
-                  color="negative"
-                  icon="download"
-                  label="Scarica Report Errori"
-                  no-caps
-                  @click="downloadErrorReport"
-                />
-                <div v-else />
-
-                <q-btn color="primary" label="Chiudi e Aggiorna Lista" no-caps @click="closeImportModal" />
-              </div>
-            </q-step>
-          </q-stepper>
-        </q-card-section>
-      </q-card>
-    </q-dialog>
+    <CsvUserImportDialog
+      v-model="showImport"
+      :class-options="classOptions"
+      @imported="fetchUsers"
+    />
   </q-page>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, reactive, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useQuasar, exportFile } from 'quasar';
+import { useQuasar } from 'quasar';
 import UserTable from '@/components/Secretary/UserTable.vue';
+import CsvUserImportDialog from '@/components/Secretary/CsvUserImportDialog.vue';
 import { userService } from '@/services/userService';
 import adminService from '@/services/adminService';
 import { useAuthStore } from '@/stores/auth';
 import { usePermissions } from '@/composables/usePermissions';
-import { useUsersStore } from '@/stores/users';
 import { useTableExport } from '@/composables/useTableExport';
 
 const $q = useQuasar();
 const { t } = useI18n();
 const authStore = useAuthStore();
-const usersStore = useUsersStore();
 const { isSuperAdmin } = usePermissions();
 const { exportTableCsv } = useTableExport();
 const loading = ref(false);
@@ -744,81 +606,8 @@ const bulkDelete = (selected) => {
     });
 };
 
-const importStep = ref(1);
-const importRole = ref('student');
-const importClassId = ref(null);
-const sendWelcomeEmail = ref(false);
-const previewRows = ref([]);
-const importResult = ref(null);
-const importing = ref(false);
-
-const downloadCsvTemplate = () => {
-    let templateHeader = 'cognome,nome,codice_fiscale,data_nascita,email,classe\nRossi,Mario,RSSMRA00A01H501Z,2008-01-01,mario@example.com,1A';
-    if (importRole.value === 'teacher') {
-        templateHeader = 'cognome,nome,codice_fiscale,email,materie\nBianchi,Anna,BNCNNA80B41H501X,anna@example.com,"Matematica,Fisica"';
-    } else if (importRole.value === 'parent') {
-        templateHeader = 'cognome,nome,codice_fiscale,email\nVerdi,Giuseppe,VRDGPP75A01H501Y,giuseppe@example.com';
-    }
-    exportFile(`template_import_${importRole.value}.csv`, templateHeader, 'text/csv');
-};
-
-const onCsvFileSelected = (file) => {
-    if (!file) {
-        previewRows.value = [];
-        return;
-    }
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        const text = e.target.result || '';
-        const lines = text.split(/\r?\n/).filter(l => l.trim() !== '');
-        previewRows.value = lines.slice(1, 6).map((line, idx) => {
-            const parts = line.split(',');
-            return {
-                riga: idx + 2,
-                cognome: parts[0] || '',
-                nome: parts[1] || '',
-                codice_fiscale: parts[2] || '',
-                email: parts[3] || parts[4] || ''
-            };
-        });
-    };
-    reader.readAsText(file);
-};
-
-const runBulkImport = async () => {
-    if (!importFile.value) return;
-    importing.value = true;
-    try {
-        const formData = new FormData();
-        formData.append('file', importFile.value);
-        formData.append('role', importRole.value);
-        if (importClassId.value) formData.append('class_id', importClassId.value);
-        formData.append('send_welcome_email', sendWelcomeEmail.value.toString());
-
-        importResult.value = await usersStore.bulkImportUsers(formData);
-        importStep.value = 3;
-    } catch(e) {
-        $q.notify({ type: 'negative', message: 'Errore durante l\'importazione CSV' });
-    } finally {
-        importing.value = false;
-    }
-};
-
-const handleImport = runBulkImport;
-
-const downloadErrorReport = () => {
-    if (!importResult.value || !importResult.value.errors) return;
-    const errContent = 'Riga,Motivo Errore\n' + importResult.value.errors.map(e => `${e.row},"${e.reason}"`).join('\n');
-    exportFile('report_errori_import.csv', errContent, 'text/csv');
-};
-
-const closeImportModal = () => {
+const handleImport = async () => {
     showImport.value = false;
-    importStep.value = 1;
-    importFile.value = null;
-    previewRows.value = [];
-    importResult.value = null;
-    fetchUsers();
 };
 
 const userExportColumns = [

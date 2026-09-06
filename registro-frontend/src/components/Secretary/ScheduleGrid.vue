@@ -84,7 +84,7 @@
             <q-icon name="edit_calendar" class="q-mr-xs" />
             {{ editingCell ? `${days[editingCell.day - 1]?.label} - ${editingCell.hour}ª Ora` : 'Assegna Ora' }}
           </div>
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pa-md space-y-3">

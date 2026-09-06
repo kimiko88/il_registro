@@ -9,6 +9,8 @@
       selection="multiple"
       v-model:selected="selected"
       flat
+      virtual-scroll
+      :virtual-scroll-item-size="48"
       class="bg-transparent"
     >
       <template v-slot:top>

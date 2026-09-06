@@ -20,7 +20,7 @@
           map-options
           outlined
           dense
-          bg-color="white"
+          :bg-color="$q.dark.isActive ? 'dark' : 'white'"
           style="min-width: 180px;"
           :label="$t('credits.selectClass')"
           @update:model-value="onClassChanged"

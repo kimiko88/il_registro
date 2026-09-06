@@ -68,7 +68,27 @@ export default {
     "viewAll": "عرض الكل",
     "noStudentsFound": "لم يتم العثور على طلاب",
     "readOnlySaveBtn": "الحفظ معطل (للقراءة فقط)",
-    "children": "الأبناء المرتبطون"
+    "children": "الأبناء المرتبطون",
+    "onlineSynced": "متصل - البيانات متزامنة",
+    "offlineSaved": "غير متصل - تم حفظ التغييرات محلياً",
+    "class": "الفصل",
+    "student": "طالب",
+    "attendance": "الحضور",
+    "conduct": "السلوك",
+    "outcome": "النتيجة",
+    "average": "المعدل",
+    "approved": "معتمد",
+    "pending": "قيد الانتظار",
+    "completed": "مكتمل",
+    "create": "إنشاء",
+    "update": "تحديث",
+    "required": "حقل مطلوب",
+    "reserved": "سري",
+    "saved": "تم الحفظ بنجاح",
+    "schoolYear": "العام الدراسي",
+    "subject": "المادة",
+    "title": "العنوان",
+    "warning": "تحذير"
   },
   "notFound": {
     "title": "الصفحة غير موجودة",
@@ -206,9 +226,28 @@ export default {
     "absencePercentage": "نسبة الغياب",
     "monthlyBreakdown": "التفصيل الشهري",
     "month": "الشهر",
-    "unjustifiedList": "الغياب والتأخير غير المبرر"
+    "unjustifiedList": "الغياب والتأخير غير المبرر",
+    "outOfClass": "خارج الفصل",
+    "activityType": "نوع النشاط",
+    "duration": "المدة (ساعات)",
+    "editLesson": "تعديل الدرس",
+    "newLesson": "درس جديد",
+    "hour": "ساعة الدرس",
+    "lessonTopic": "موضوع الدرس",
+    "lessonType": "نوع الدرس",
+    "subject": "المادة"
   },
   "dashboardPage": {
+    "viewYourHomework": "عرض واجباتك وأنشطتك",
+    "upcomingHomework": "المهام والواجبات القادمة",
+    "upcomingHomeworkSub": "نظّم دراستك: الواجبات والاختبارات والمواعيد النهائية",
+    "allHomework": "جميع الواجبات",
+    "teacherLabel": "المعلم",
+    "noPendingHomework": "لا توجد واجبات معلقة",
+    "allCaughtUp": "أنت مواكب لجميع المهام والأنشطة الدراسية!",
+    "dueToday": "اليوم",
+    "dueTomorrow": "غدًا",
+    "dueInDays": "خلال {days} أيام",
     "greetingMorning": "صباح الخير",
     "greetingAfternoon": "مساء الخير",
     "greetingEvening": "مساء النور",
@@ -257,7 +296,10 @@ export default {
     "recentGrades": "آخر الدرجات",
     "noChildren": "لا يوجد أبناء مرتبطون",
     "systemStatus": "حالة النظام",
-    "syncedNow": "تمت المزامنة الآن"
+    "syncedNow": "تمت المزامنة الآن",
+    "online": "متصل",
+    "notifications": "الإشعارات",
+    "teacher": "المعلم"
   },
   "agendaPage": {
     "title": "الأجندة والتقويم التعليمي",
@@ -295,9 +337,48 @@ export default {
     "detailsOf": "تفاصيل يوم",
     "lessonsHeld": "الدروس المنجزة",
     "noLessons": "لم يتم تسجيل دروس في هذا التاريخ.",
-    "noDueHomework": "لا توجد واجبات مستحقة في هذا التاريخ."
+    "noDueHomework": "لا توجد واجبات مستحقة في هذا التاريخ.",
+    "thisWeek": "هذا الأسبوع",
+    "monthView": "عرض شهري",
+    "weekView": "عرض أسبوعي",
+    "dayView": "عرض يومي",
+    "quickNew": "+ جديد",
+    "moreCount": "+{count} آخرين",
+    "eventTitle": "عنوان الحدث *",
+    "eventDescription": "الوصف / التفاصيل",
+    "eventType": "نوع الحدث *",
+    "targetClass": "الفصل المستهدف *",
+    "eventDate": "التاريخ *",
+    "startTime": "وقت البدء",
+    "endTime": "وقت الانتهاء",
+    "saveChanges": "حفظ التغييرات",
+    "createEvent": "إنشاء الحدث",
+    "deleteEvent": "حذف الحدث",
+    "weekTitle": "الأسبوع",
+    "confirmDeleteTitle": "حذف الحدث",
+    "confirmDeleteMsg": "هل أنت متأكد من رغبتك في حذف هذا الحدث من جدول المواعيد؟",
+    "eventCreated": "تم إنشاء الحدث بنجاح",
+    "eventUpdated": "تم تعديل الحدث بنجاح",
+    "eventDeleted": "تم حذف الحدث بنجاح",
+    "allDay": "طوال اليوم"
   },
   "usersPage": {
+    "importTitle": "استيراد المستخدمين من CSV",
+    "stepConfig": "الإعدادات",
+    "stepUpload": "رفع الملف",
+    "stepResult": "النتيجة",
+    "userTypeToImport": "نوع المستخدمين المراد استيرادهم",
+    "sendWelcomeEmail": "إرسال بريد إلكتروني ترحيبي مع بيانات اعتماد مؤقتة",
+    "downloadTemplate": "تنزيل نموذج CSV تجريبي",
+    "selectCsvFile": "حدد ملف CSV (.csv بحد أقصى 10 ميجابايت)",
+    "previewRowsTitle": "معاينة أول 5 صفوف",
+    "runImport": "تنفيذ الاستيراد",
+    "importSuccessCount": "تم استيراد {count} مستخدمين بنجاح!",
+    "skippedRowsCount": "تم تخطي أو عدم صلاحية {count} صفوف.",
+    "errorsEncountered": "الأخطاء المكتشفة",
+    "rowError": "الصف {row}: {reason}",
+    "downloadErrorReport": "تنزيل تقرير الأخطاء",
+    "closeAndUpdate": "إغلاق وتحديث القائمة",
     "title": "إدارة المستخدمين",
     "searchPlaceholder": "البحث بالاسم أو البريد أو الهوية...",
     "newUser": "مستخدم جديد",
@@ -318,7 +399,9 @@ export default {
     "resetPassword": "إعادة تعيين كلمة المرور",
     "manageSubjects": "تعيين المواد",
     "deleteAccount": "حذف الحساب",
-    "noUsersFound": "لم يتم العثور على مستخدمين"
+    "noUsersFound": "لم يتم العثور على مستخدمين",
+    "importError": "خطأ أثناء استيراد CSV",
+    "targetClass": "الفصل المستهدف"
   },
   "supportPage": {
     "title": "مركز الدعم والأسئلة الشائعة",
@@ -412,7 +495,8 @@ export default {
     "tabGrades": "درجاتي",
     "homework": "الواجبات المنزلية",
     "documents": "الملف الوثائقي والمستندات",
-    "schoolManagement": "إدارة المدارس"
+    "schoolManagement": "إدارة المدارس",
+    "student": "طالب/ـة"
   },
   "udaPage": {
     "subjectLabel": "المادة *",
@@ -518,6 +602,32 @@ export default {
     "levelD": "D - أولي"
   },
   "gradesPage": {
+    "createTestTitle": "إنشاء اختبار جديد",
+    "editTestTitle": "تعديل الاختبار المجمع",
+    "testDetails": "تفاصيل الاختبار",
+    "testTitle": "عنوان الاختبار",
+    "teacherNotes": "ملاحظات المعلم (داخلية)",
+    "parentNotes": "ملاحظات لأولياء الأمور (مرئية)",
+    "studentGrades": "درجات الطلاب",
+    "insertedCount": "مدخلة",
+    "allAbsentMarked": "تم تحديد جميع الطلاب كغائبين",
+    "saveTestAndGrades": "حفظ الاختبار والدرجات",
+    "saveEditTest": "حفظ تعديلات الاختبار",
+    "overlappingWarning": "تحذير: لدى الفصل بالفعل {count} اختبارات مجدولة في {date}! (الحد الأقصى الموصى به: 2)",
+    "testSavedSuccess": "تم حفظ الاختبار \"{title}\" و {count} درجات بنجاح!",
+    "testEditSuccess": "تم تعديل الاختبار بنجاح!",
+    "testSaveError": "خطأ في حفظ الاختبار",
+    "testEditError": "خطأ أثناء تعديل الاختبار",
+    "deleteTestConfirmTitle": "تأكيد حذف الاختبار",
+    "deleteTestConfirmMsg": "هل أنت متأكد من حذف الاختبار \"{title}\"؟ سيتم حذف {count} درجات مرتبطة به نهائياً.",
+    "deleteTestSuccess": "تم حذف الاختبار بنجاح!",
+    "deleteTestError": "خطأ أثناء حذف الاختبار",
+    "noPermissionNotOwner": "ليس لديك إذن لإدارة الاختبارات في فصل غير مخصص لك",
+    "testsHistory": "قائمة الاختبارات",
+    "noTestsFound": "لم يتم العثور على اختبارات",
+    "noTestsFoundDesc": "لا توجد اختبارات مسجلة لهذه المادة بعد.",
+    "createFirstTest": "إنشاء الاختبار الأول",
+    "selectClassSub": "اختر فصلاً من القائمة العلوية للوصول إلى السجل:",
     "cannotEditOtherTeacherGrade": "لا يمكنك تعديل درجات رصدها معلم آخر",
     "sharedGradesCaption": "درجات مشتركة مع الفصل",
     "confirmDeleteGrade": "هل أنت متأكد من حذف هذه الدرجة؟",
@@ -607,7 +717,17 @@ export default {
     "sufficient": "ناجح",
     "insufficient": "راسب",
     "absent": "غائب",
-    "subject": "المادة"
+    "subject": "المادة",
+    "selectClassPrompt": "اختر فصلاً",
+    "evalType": "نوع التقييم",
+    "markAllAbsent": "تحديد الكل كغائبين",
+    "noStudentsInClass": "لم يتم تحميل أي طلاب لهذا الفصل",
+    "testDate": "تاريخ الاختبار",
+    "types": {
+      "written": "تحريري",
+      "oral": "شفهي",
+      "practical": "عملي"
+    }
   },
   "didacticsPage": {
     "title": "المواد التعليمية والمصادر",
@@ -688,7 +808,16 @@ export default {
       "equivalentTest": "اختبار مكافئ",
       "textToSpeech": "القارئ الصوتي",
       "conceptMaps": "خرائط المفاهيم"
-    }
+    },
+    "createFirst": "إنشاء الخطة الأولى",
+    "clinicalDiagnosis": "التشخيص الإكلينيكي (خاص بالمعلمين)",
+    "restrictedFile": "مرفق التقرير الطبي (خاص بمعلمي الفصل فقط)",
+    "noneSpecified": "لم يتم تحديد أي منها",
+    "approvedFamily": "✓ معتمد من العائلة",
+    "sharedPending": "تمت المشاركة (قيد الانتظار)",
+    "internalDraft": "مسودة داخلية",
+    "hideFromFamily": "إخفاء عن العائلة",
+    "shareWithFamily": "مشاركة مع العائلة"
   },
   "rubricsPage": {
     "title": "معايير تقييم الكفايات (Rubrics)",
@@ -920,7 +1049,10 @@ export default {
     "downloadStarted": "جاري تحميل الوثيقة: {title}",
     "upload": "رفع مستند",
     "tableTitle": "المستندات الرسمية",
-    "noDocs": "لا توجد مستندات في هذا القسم حالياً."
+    "noDocs": "لا توجد مستندات في هذا القسم حالياً.",
+    "certsDesc": "شهادات القيد والحضور المستخرجة تلقائياً.",
+    "downloading": "جارٍ التنزيل...",
+    "previewNotAvailable": "المعاينة غير متاحة في وضع عدم الاتصال."
   },
   "notesPage": {
     "title": "إدارة الملاحظات السلوكية والتنبيهات",
@@ -1193,7 +1325,8 @@ export default {
     "mfaCaption": "اشتراط المصادقة الثنائية باستخدام TOTP لجميع الموظفين.",
     "minPasswordLength": "الحد الأدنى لطول كلمة المرور",
     "sessionTimeout": "مهلة خمول الجلسة",
-    "maxLoginAttempts": "محاولات الدخول الفاشلة قبل الحظر"
+    "maxLoginAttempts": "محاولات الدخول الفاشلة قبل الحظر",
+    "general": "عام"
   },
   "search": {
     "placeholder": "ابحث عن الطلاب والمعلمين والسكرتارية والفصول والإعلانات والقوائم…",
@@ -1350,6 +1483,21 @@ export default {
         "title": "مقابلات أولياء الأمور",
         "desc": "تحديد أوقات الاستقبال للمقابلات الفردية.",
         "content": "حدد الفترات الزمنية المتاحة وأكّد طلبات أولياء الأمور."
+      },
+      "scrutiny": {
+        "period1": "الفصل الدراسي الأول",
+        "period2": "التقييم النهائي (الفصل الثاني)",
+        "deferredScrutiny": "التقييم المؤجل / استدراك المواد",
+        "deferredBannerTitle": "جلسة التقييم المؤجل نشطة",
+        "deferredBannerBody": "في هذه الجلسة، يمكن البت في رفع تعليق التقييم للطلاب الذين لديهم مواد دراسية مستحقة.",
+        "deferredModalTitle": "التقييم المؤجل: {name}",
+        "deferredModalSubtitle": "تقييم امتحانات الملحق وتصفية المواد الدراسية",
+        "deferredNotes": "المحضر / ملاحظات استكمال الحكم",
+        "deferredSaved": "تم حفظ نتيجة التقييم المؤجل بنجاح",
+        "deliberateDeferred": "البت في التعليق",
+        "notPromotedDebtsNotCleared": "راسب (لم يتم استدراك المواد)",
+        "promotedDebtsCleared": "ناجح (تم استدراك المواد)",
+        "closeConfirmMsg": "هل أنت متأكد من رغبتك في إغلاق واعتماد التقييم للفصل المحدد؟ هذا الإجراء نهائي."
       }
     },
     "student": {
@@ -2252,7 +2400,8 @@ export default {
     "documentsSubmitted": "المستندات المقدمة",
     "completeEnrollment": "إتمام التسجيل",
     "enrollmentSuccess": "تم تسجيل الطالب بنجاح!",
-    "studentFile": "بطاقة الطالب"
+    "studentFile": "بطاقة الطالب",
+    "title": "سجل الطلاب"
   },
   "classesPage": {
     "currentClass": "الفصل الحالي"
@@ -2364,7 +2513,16 @@ export default {
   "attendancePage": {
     "title": "الحضور والغياب",
     "subtitle": "متابعة الحضور والتأخير وأعذار الغياب",
-    "tableTitle": "جدول الحضور"
+    "tableTitle": "جدول الحضور",
+    "justified": "مبرر",
+    "parentManagedJustifications": "التبريرات تتم إدارتها مباشرة من قبل أولياء الأمور",
+    "requestJustification": "طلب تبرير",
+    "selectAbsence": "اختر الغياب لتبريره",
+    "timeDetail": "تفاصيل الوقت",
+    "reason": "السبب",
+    "reasonFamily": "أسباب عائلية",
+    "reasonHealth": "أسباب صحية",
+    "warningAbsenceLimit": "لقد وصلت إلى حد التنبيه الخاص بالغياب. يرجى تسوية وضعك لتجنب أي مشاكل دراسية."
   },
   "reportCardPage": {
     "title": "الشهادة والتقييم النهائي",
@@ -2558,7 +2716,8 @@ export default {
       "goalDescription": "Description & Strategies",
       "expectedTerm": "Target Term",
       "status": "Progress Status"
-    }
+    },
+    "noGoals": "لم يتم إدخال أي أهداف للخطة التربوية الفردية"
   },
   "generalMeeting": {
     "teacherQueueTitle": "Afternoon General Parent-Teacher Conference",
@@ -2869,7 +3028,11 @@ export default {
   "offlineBanner": {
     "offlineText": "لا يوجد اتصال بالإنترنت. قد لا يتم حفظ التعديلات.",
     "offlineBadge": "غير متصل",
-    "onlineText": "تمت استعادة الاتصال بالإنترنت."
+    "onlineText": "تمت استعادة الاتصال بالإنترنت.",
+    "pendingQueue": "لا يوجد اتصال بالإنترنت. {count} تعديلات محفوظة محلياً بانتظار المزامنة التلقائية.",
+    "inQueue": "قيد الانتظار",
+    "syncedSuccess": "تمت استعادة الاتصال: تمت مزامنة {count} عمليات بنجاح.",
+    "enqueuedOffline": "تم حفظ العملية محلياً. ستتم مزامنتها تلقائياً عند استعادة الاتصال."
   },
   "inactivity": {
     "warningTitle": "الجلسة على وشك الانتهاء",
@@ -3001,7 +3164,8 @@ export default {
     },
     "loadError": "حدث خطأ أثناء تحميل الشهادات",
     "generateSuccess": "تم إصدار الشهادة بنجاح!",
-    "generateError": "حدث خطأ أثناء إصدار الشهادة"
+    "generateError": "حدث خطأ أثناء إصدار الشهادة",
+    "enrollmentCert": "شهادة القيد"
   },
   "sidiExports": {
     "title": "التصدير الوزاري والربط الحكومي (نور / مسار)",
@@ -3261,6 +3425,42 @@ export default {
     "notFound": "الصفحة غير موجودة"
   },
   "secretaryClasses": {
+    "migrationTitle": "ترحيل الطلاب والانتقال إلى العام الدراسي الجديد",
+    "migrationSubtitle": "إدارة ترقية الفصول والناجحين والراسبين والخريجين",
+    "migrationProcedure": "إجراءات الانتقال للعام الجديد",
+    "migrationProcedureDesc": "حدد العام الدراسي المصدر والعام المستهدف. يمكنك تكوين حالة كل طالب بسرعة (ناجح، معيد، خريج، أو منقول).",
+    "sourceYear": "العام المصدر (الأصل)",
+    "targetYear": "العام المستهدف (الجديد)",
+    "filterByClass": "تصفية حسب الفصل (أو جميع الفصول)",
+    "allSourceClasses": "جميع فصول العام المصدر",
+    "studentsToProcess": "الطلاب المطلوب معالجتهم",
+    "markAllPromoted": "تحديد الكل كناجحين",
+    "smartDefaults": "تخرج الصف الخامس / ترقية 1-4",
+    "markAllRepeater": "تحديد الكل كمعيدين",
+    "loadingMigration": "جارٍ تحميل الطلاب وإعداد فصول العام المستهدف...",
+    "noStudentsFound": "لم يتم العثور على طلاب مطابقين للمعايير المحددة.",
+    "currentClassLabel": "الفصل الحالي",
+    "actionPromoted": "ناجح/ـة",
+    "actionRepeater": "معيد/ة",
+    "actionGraduated": "خريج/ـة",
+    "actionLeft": "منقول/ـة",
+    "targetClassLabel": "الفصل المستهدف",
+    "noClassUnassigned": "بدون فصل (غير مخصص)",
+    "migrationSummaryTitle": "ملخص الترحيل",
+    "promotedCount": "الناجحون",
+    "repeaterCount": "المعيدون",
+    "graduatedCount": "الخريجون",
+    "leftCount": "المنقولون / المنسحبون",
+    "btnConfigureStudents": "التالي: تكوين الطلاب",
+    "btnVerifySummary": "التالي: مراجعة الملخص",
+    "btnExecuteMigration": "تأكيد وتنفيذ الترحيل",
+    "migrationSuccess": "تم ترحيل العام الدراسي بنجاح!",
+    "migrationError": "حدث خطأ أثناء تنفيذ الترحيل",
+    "migrationLoadError": "حدث خطأ أثناء تحميل بيانات الترحيل",
+    "scheduleTitle": "الجدول الأسبوعي - الفصل",
+    "scheduleSaved": "تم حفظ الجدول بنجاح",
+    "scheduleSaveError": "حدث خطأ أثناء حفظ الجدول",
+    "scheduleLoadError": "حدث خطأ أثناء تحميل الجدول",
     "newClass": "فصل جديد",
     "editClass": "تعديل الفصل",
     "createClass": "إنشاء الفصل",
@@ -3315,6 +3515,100 @@ export default {
     "subjectName": "اسم المادة",
     "createSubject": "إنشاء المادة",
     "subjectCreated": "تم إنشاء المادة",
-    "createSubjectError": "حدث خطأ أثناء إنشاء المادة"
+    "createSubjectError": "حدث خطأ أثناء إنشاء المادة",
+    "manageAssignments": "إدارة المواد والمعلمين",
+    "manageStudents": "إدارة طلاب الفصل"
+  },
+  "groupsPage": {
+    "title": "إدارة المجموعات اللغوية والمشتركة",
+    "subtitle": "إنشاء وإدارة مجموعات تضم طلاباً من فصول دراسية متعددة",
+    "newGroup": "مجموعة جديدة",
+    "createGroup": "إنشاء مجموعة",
+    "loading": "جاري تحميل المجموعات...",
+    "noGroups": "لم يتم العثور على مجموعات لغوية أو مشتركة",
+    "noGroupsDesc": "أنشئ مجموعتك الأولى لتدريس طلاب من فصول مختلفة في نفس الوقت",
+    "students": "طلاب",
+    "teacher": "المعلم",
+    "academicYear": "العام الدراسي",
+    "editGroup": "تعديل المجموعة",
+    "deleteGroup": "حذف",
+    "groupName": "اسم المجموعة",
+    "groupNamePlaceholder": "اسم المجموعة (مثال: إنجليزي B2 3A-3B)",
+    "description": "الوصف / ملاحظات",
+    "confirmDelete": "تأكيد الحذف",
+    "confirmDeleteDesc": "هل أنت متأكد من رغبتك في حذف هذه المجموعة؟",
+    "groupDeleted": "تم حذف المجموعة",
+    "deleteError": "خطأ أثناء الحذف",
+    "groupSaved": "تم تحديث المجموعة بنجاح",
+    "groupCreated": "تم إنشاء المجموعة بنجاح",
+    "save": "حفظ",
+    "create": "إنشاء",
+    "studentListTitle": "طلاب المجموعة: {name}",
+    "noStudents": "لا يوجد طلاب مسجلون في هذه المجموعة."
+  },
+  "scrutinyPage": {
+    "title": "مجلس التدقيق والمراجعة الأكاديمية",
+    "subtitle": "إدارة الدرجات النهائية ومواد الرسوب والبرامج العلاجية",
+    "closeScrutiny": "إغلاق التدقيق",
+    "saveFinal": "حفظ التدقيق النهائي",
+    "classCouncil": "مجلس الفصل",
+    "notCoordinator": "لست منسقاً لأي فصل في هذا التدقيق.",
+    "selectClassPrompt": "اختر فصلاً لبدء عملية التدقيق.",
+    "deficiencyTitle": "موضوعات الاستدراك — {name}",
+    "deficiencySubtitle": "بيان الفجوات والمفاهيم المطلوب استدراكها (مرئي للطالب وولي الأمر)",
+    "deficiencySubject": "مادة الرسوب",
+    "deficiencyTopics": "الموضوعات المطلوب استدراكها *",
+    "recoveryMode": "طريقة الاستدراك",
+    "recoveryStatus": "حالة الاستدراك",
+    "recoveryGrade": "درجة اختبار الاستدراك",
+    "recoveryDate": "تاريخ اختبار الاستدراك",
+    "saveDeficiency": "حفظ الاستدراك",
+    "noDeficiencies": "لا توجد مواد استدراكية مسجلة لهذا الطالب.",
+    "individualStudy": "دراسة فردية",
+    "summerCourse": "دورة صيفية علاجية",
+    "helpDesk": "ساعات الدعم والإرشاد",
+    "toRecover": "مطلوب الاستدراك",
+    "inProgress": "قيد المتابعة",
+    "recovered": "تم الاستدراك",
+    "notRecovered": "لم يستدرك"
+  },
+  "studentDetail": {
+    "title": "تفاصيل الطالب",
+    "personalInfo": "البيانات الشخصية",
+    "fullName": "الاسم الكامل",
+    "fiscalCode": "الرقم الضريبي",
+    "class": "الصف",
+    "email": "البريد الإلكتروني",
+    "phone": "الهاتف",
+    "birthDate": "تاريخ الميلاد",
+    "attendanceSummary": "ملخص الحضور",
+    "totalAbsences": "إجمالي الغياب",
+    "lates": "التأخيرات",
+    "earlyExits": "الخروج المبكر",
+    "justified": "المبررة",
+    "absenceRate": "نسبة الغياب",
+    "risk": "مستوى الخطر",
+    "riskHigh": "مرتفع",
+    "riskMedium": "متوسط",
+    "riskLow": "منخفض",
+    "todayAttendanceByHour": "الحضور اليوم حسب الحصص",
+    "hourNotRegistered": "الحصة {hour}: غير مسجلة",
+    "hourStatus": "الحصة {hour}: {status}"
+  },
+  "orientamento": {
+    "availableEvents": "الفعاليات المتاحة",
+    "myEvents": "فعالياتي",
+    "history": "السجل والحضور"
+  },
+  "homework": {
+    "assign": "تعيين",
+    "assignHomework": "تعيين واجب منزلي",
+    "description": "وصف الواجب",
+    "dueDate": "تاريخ التسليم"
+  },
+  "signaturesPage": {
+    "signNow": "وقّع الآن",
+    "signed": "تم التوقيع",
+    "signedOn": "تم التوقيع بتاريخ"
   }
-}
+};

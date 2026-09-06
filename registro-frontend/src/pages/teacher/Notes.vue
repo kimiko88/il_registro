@@ -65,8 +65,8 @@
 
       <div v-else-if="filteredNotes.length === 0" class="text-center q-pa-xl text-slate-400">
         <q-icon name="assignment_turned_in" size="64px" class="q-mb-md opacity-40" />
-        <div class="text-h6">Nessuna nota trovata</div>
-        <div class="text-caption">Seleziona una classe o aggiungi una nuova annotazione disciplinare.</div>
+        <div class="text-h6">{{ t('notesPage.noNotes') }}</div>
+        <div class="text-caption">{{ t('notesPage.noNotesDesc') }}</div>
       </div>
 
       <q-list v-else separator class="rounded-lg">
@@ -80,7 +80,7 @@
           <q-item-section>
             <div class="row items-center justify-between q-mb-xs">
               <div class="row items-center q-gutter-xs">
-                <span class="text-weight-bold text-slate-800 text-subtitle1">{{ n.teacher_name || 'Docente' }}</span>
+                <span class="text-weight-bold text-slate-800 text-subtitle1">{{ n.teacher_name || t('notesPage.teacher') }}</span>
                 <span class="text-caption text-slate-400">· {{ formatDate(n.date) }}</span>
               </div>
               <div class="row items-center q-gutter-xs">
@@ -92,7 +92,7 @@
                   class="text-weight-bold"
                   :icon="n.is_approved ? 'check_circle' : 'hourglass_empty'"
                 >
-                  {{ n.is_approved ? 'Approvata Admin' : 'In attesa di approvazione Admin' }}
+                  {{ n.is_approved ? (t('common.approved') || 'Approvata Admin') : (t('common.pending') || 'In attesa') }}
                 </q-chip>
                 <q-chip
                   size="xs"
@@ -101,7 +101,7 @@
                   class="text-weight-bold"
                   :icon="n.is_viewed_by_parent ? 'visibility' : 'visibility_off'"
                 >
-                  {{ n.is_viewed_by_parent ? 'Letta dal genitore' : 'Non ancora letta' }}
+                  {{ n.is_viewed_by_parent ? (t('notesPage.notifiedParents') || 'Letta') : (t('notesPage.notifyParent') || 'Non ancora letta') }}
                 </q-chip>
                 <q-chip
                   size="xs"
@@ -110,7 +110,7 @@
                   class="text-weight-bold"
                   :icon="n.is_reserved ? 'lock' : 'public'"
                 >
-                  {{ n.is_reserved ? 'Riservata Coordinatore' : 'Standard' }}
+                  {{ n.is_reserved ? (t('common.reserved') || 'Riservata') : 'Standard' }}
                 </q-chip>
                 <q-chip size="xs" :color="getTypeColor(n.type)" text-color="white" class="text-weight-bold uppercase">
                   {{ n.type }}
@@ -121,12 +121,12 @@
             <div class="text-body2 text-slate-700 q-mt-xs">{{ n.note }}</div>
 
             <div class="text-caption text-slate-400 q-mt-sm" v-if="n.subject_name">
-              Materia: <span class="text-weight-medium text-slate-600">{{ n.subject_name }}</span>
+              {{ t('common.subject') || 'Materia' }}: <span class="text-weight-medium text-slate-600">{{ n.subject_name }}</span>
             </div>
           </q-item-section>
 
           <q-item-section side>
-            <q-btn flat round icon="delete" color="negative" size="sm" @click="confirmDelete(n.id)" />
+            <q-btn flat round icon="delete" color="negative" size="sm" :aria-label="t('common.delete') || 'Elimina'" @click="confirmDelete(n.id)" />
           </q-item-section>
         </q-item>
       </q-list>
@@ -135,85 +135,91 @@
     <!-- Create Note Dialog -->
     <q-dialog v-model="dialogVisible">
       <q-card style="width: min(500px, 95vw); max-width: 95vw;" class="rounded-xl overflow-hidden">
-        <q-card-section class="bg-primary text-white row items-center justify-between q-py-md">
-          <div class="text-h6 text-weight-bold">
-            <q-icon name="edit_note" class="q-mr-xs" />
-            Nuova Nota Disciplinare / Annotazione
-          </div>
-          <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
-        </q-card-section>
-
-        <q-card-section class="q-pa-md space-y-4">
-          <!-- Class & Student Select -->
-          <div class="row q-col-gutter-sm">
-            <div class="col-12 col-sm-6">
-              <q-select
-                v-model="form.class_id"
-                :options="classOptions"
-                label="Classe *"
-                outlined dense
-                emit-value map-options
-                @update:model-value="onDialogClassChange"
-              />
+        <q-form @submit="saveNote" greedy>
+          <q-card-section class="bg-primary text-white row items-center justify-between q-py-md">
+            <div class="text-h6 text-weight-bold">
+              <q-icon name="edit_note" class="q-mr-xs" />
+              {{ t('notesPage.createTitle') || 'Nuova Nota Disciplinare / Annotazione' }}
             </div>
-            <div class="col-12 col-sm-6">
-              <q-select
-                v-model="form.student_id"
-                :options="dialogStudentOptions"
-                label="Studente *"
-                outlined dense
-                emit-value map-options
-              />
-            </div>
-          </div>
+            <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
+          </q-card-section>
 
-          <!-- Note Type & Date -->
-          <div class="row q-col-gutter-sm">
-            <div class="col-12 col-sm-6">
-              <q-select
-                v-model="form.type"
-                :options="typeOptions"
-                label="Tipo Nota *"
-                outlined dense
-                emit-value map-options
-              />
+          <q-card-section class="q-pa-md space-y-4">
+            <!-- Class & Student Select -->
+            <div class="row q-col-gutter-sm">
+              <div class="col-12 col-sm-6">
+                <q-select
+                  v-model="form.class_id"
+                  :options="classOptions"
+                  :label="t('common.class') || 'Classe *'"
+                  outlined dense
+                  emit-value map-options
+                  :rules="[val => !!val || t('common.requiredField') || 'Seleziona una classe']"
+                  @update:model-value="onDialogClassChange"
+                />
+              </div>
+              <div class="col-12 col-sm-6">
+                <q-select
+                  v-model="form.student_id"
+                  :options="dialogStudentOptions"
+                  :label="t('notesPage.selectStudent') || 'Studente *'"
+                  outlined dense
+                  emit-value map-options
+                  :rules="[val => !!val || t('common.requiredField') || 'Seleziona uno studente']"
+                />
+              </div>
             </div>
-            <div class="col-12 col-sm-6">
-              <q-input
-                v-model="form.date"
-                type="date"
-                label="Data *"
-                outlined dense
-              />
+
+            <!-- Note Type & Date -->
+            <div class="row q-col-gutter-sm">
+              <div class="col-12 col-sm-6">
+                <q-select
+                  v-model="form.type"
+                  :options="typeOptions"
+                  :label="t('notesPage.noteTypeLabel') || 'Tipo Nota *'"
+                  outlined dense
+                  emit-value map-options
+                  :rules="[val => !!val || t('common.requiredField') || 'Seleziona il tipo']"
+                />
+              </div>
+              <div class="col-12 col-sm-6">
+                <q-input
+                  v-model="form.date"
+                  type="date"
+                  :label="t('notesPage.dateTime') || 'Data *'"
+                  outlined dense
+                  :rules="[val => !!val || t('common.requiredField') || 'Data obbligatoria']"
+                />
+              </div>
             </div>
-          </div>
 
-          <!-- Note Body Textarea -->
-          <q-input
-            v-model="form.note"
-            label="Testo della Nota *"
-            outlined
-            type="textarea"
-            rows="4"
-            :rules="[val => !!val || 'Inserisci il testo della nota']"
-          />
-
-          <!-- Reserved Toggle -->
-          <div class="bg-red-50 border border-red-200 q-pa-sm rounded-lg">
-            <q-toggle
-              v-model="form.is_reserved"
-              label="Nota Riservata (visibile SOLO a coordinatore e dirigenza/admin)"
-              color="negative"
+            <!-- Note Body Textarea -->
+            <q-input
+              v-model="form.note"
+              :label="t('notesPage.descriptionLabel') || 'Testo della Nota *'"
+              outlined
+              type="textarea"
+              rows="4"
+              :rules="[val => (!!val && val.trim().length > 0) || t('common.requiredField') || 'Inserisci il testo della nota']"
             />
-          </div>
-        </q-card-section>
 
-        <q-separator />
+            <!-- Reserved Toggle -->
+            <div class="bg-red-50 border border-red-200 q-pa-sm rounded-lg">
+              <q-toggle
+                v-model="form.is_reserved"
+                label="Nota Riservata (visibile SOLO a coordinatore e dirigenza/admin)"
+                color="negative"
+              />
+            </div>
+          </q-card-section>
 
-        <q-card-actions align="right" class="q-pa-md">
-          <q-btn flat label="Annulla" v-close-popup />
-          <q-btn color="primary" label="Salva Nota" :loading="saving" @click="saveNote" />
-        </q-card-actions>
+          <q-separator />
+
+          <q-card-actions align="right" class="q-pa-md">
+            <q-btn flat :label="t('common.cancel') || 'Annulla'" v-close-popup />
+            <q-btn color="primary" type="submit" :label="t('notesPage.saveNote') || 'Salva Nota'" :loading="saving" />
+          </q-card-actions>
+        </q-form>
       </q-card>
     </q-dialog>
   </q-page>
@@ -360,10 +366,6 @@ async function openDialog() {
 }
 
 async function saveNote() {
-  if (!form.note || !form.class_id || !form.student_id) {
-    $q.notify({ type: 'warning', message: 'Compila tutti i campi obbligatori' })
-    return
-  }
   saving.value = true
   try {
     await notesStore.addNote({
@@ -387,17 +389,17 @@ async function saveNote() {
 
 async function confirmDelete(id) {
   $q.dialog({
-    title: 'Conferma Eliminazione',
-    message: 'Sei sicuro di voler eliminare questa nota?',
+    title: t('common.confirm') || 'Conferma Eliminazione',
+    message: t('notesPage.deleteNote') || 'Sei sicuro di voler eliminare questa nota?',
     cancel: true,
     persistent: true
   }).onOk(async () => {
     try {
       await notesStore.deleteNote(id)
-      $q.notify({ type: 'positive', message: 'Nota eliminata' })
+      $q.notify({ type: 'positive', message: t('common.success') || 'Nota eliminata' })
       await loadNotes()
     } catch {
-      $q.notify({ type: 'negative', message: 'Errore durante l\'eliminazione' })
+      $q.notify({ type: 'negative', message: t('common.error') || 'Errore durante l\'eliminazione' })
     }
   })
 }

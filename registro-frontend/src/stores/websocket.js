@@ -132,7 +132,6 @@ export const useWebSocketStore = defineStore('websocket', () => {
         }
 
         socket.value.onopen = () => {
-            console.log('WebSocket: Connected')
             isConnected.value = true
             reconnectAttempts.value = 0
             if (reconnectTimer.value) {
@@ -156,7 +155,6 @@ export const useWebSocketStore = defineStore('websocket', () => {
         }
 
         socket.value.onclose = (event) => {
-            console.log('WebSocket: Closed', event)
             isConnected.value = false
             socket.value = null
             stopHeartbeat()
@@ -224,7 +222,6 @@ export const useWebSocketStore = defineStore('websocket', () => {
             reconnectTimer.value = null
             try {
                 if (authStore.isAuthenticated && authStore.token) {
-                    console.log(`WebSocket: Executing reconnect attempt ${reconnectAttempts.value}`)
                     await connect()
                 } else {
                     disconnect()

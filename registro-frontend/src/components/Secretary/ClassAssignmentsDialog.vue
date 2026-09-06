@@ -1,4 +1,5 @@
 <template>
+  <div>
   <q-dialog :model-value="modelValue" @update:model-value="$emit('update:modelValue', $event)">
     <q-card style="width: min(1100px, 95vw); max-height: 90vh;" class="rounded-xl overflow-hidden shadow-24 bg-white column no-wrap">
       <q-card-section class="bg-gradient-primary text-white row items-center q-pa-md shrink-0">
@@ -91,7 +92,7 @@
       <q-card-section class="bg-gradient-primary text-white row items-center q-pa-md">
         <div class="text-h6 text-weight-bold">{{ t('secretaryClasses.newSubject') }}</div>
         <q-space />
-        <q-btn icon="close" flat round dense v-close-popup />
+        <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
       </q-card-section>
       <q-card-section class="q-pa-lg">
         <q-input
@@ -106,6 +107,7 @@
       </q-card-section>
     </q-card>
   </q-dialog>
+  </div>
 </template>
 
 <script setup>
@@ -137,7 +139,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'subjects-updated'])
 
 const { t } = useI18n()
 const $q = useQuasar()

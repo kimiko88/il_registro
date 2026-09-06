@@ -6,7 +6,7 @@
           <q-icon name="keyboard" size="28px" />
           {{ t('a11y.shortcutsTitle') || 'Scorciatoie da Tastiera & Accessibilità' }}
         </div>
-        <q-btn icon="close" flat round dense v-close-popup />
+        <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
       </q-card-section>
 
       <q-card-section class="q-pt-sm">

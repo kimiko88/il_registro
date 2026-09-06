@@ -122,7 +122,7 @@
             <q-icon name="auto_stories" class="q-mr-xs" />
             {{ isEditing ? t('udaPage.editUda') : t('udaPage.createUda') }}
           </div>
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-form @submit.prevent="saveUda" class="q-pa-lg">
@@ -227,7 +227,7 @@
             <div class="text-h6 text-weight-bold">{{ selectedUda.title }}</div>
             <div class="text-caption opacity-80">{{ selectedUda.subject_name }} · {{ t('classRegister.classLabel', { name: selectedUda.class_name }) }}</div>
           </div>
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pa-lg q-gutter-y-md">

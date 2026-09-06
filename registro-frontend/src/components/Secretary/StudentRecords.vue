@@ -7,7 +7,7 @@
           <div class="text-subtitle2 opacity-80">{{ student?.first_name }} {{ student?.last_name }}</div>
         </div>
         <q-space />
-        <q-btn icon="close" flat round dense v-close-popup />
+        <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
       </q-card-section>
 
       <q-tabs

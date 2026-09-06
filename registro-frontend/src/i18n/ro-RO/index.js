@@ -68,7 +68,27 @@ export default {
     "viewAll": "Vezi Toate",
     "noStudentsFound": "Niciun elev găsit",
     "readOnlySaveBtn": "Salvare dezactivată (Doar citire)",
-    "children": "Copii asociați"
+    "children": "Copii asociați",
+    "onlineSynced": "Online - Date sincronizate",
+    "offlineSaved": "Deconectat - Modificări salvate local",
+    "class": "Clasă",
+    "student": "Elev",
+    "attendance": "Prezență",
+    "conduct": "Purtare",
+    "outcome": "Rezultat",
+    "average": "Medie",
+    "approved": "Aprobat",
+    "pending": "În așteptare",
+    "completed": "Finalizat",
+    "create": "Creați",
+    "update": "Actualizați",
+    "required": "Câmp obligatoriu",
+    "reserved": "Confidențial",
+    "saved": "Salvat cu succes",
+    "schoolYear": "An Școlar",
+    "subject": "Materie",
+    "title": "Titlu",
+    "warning": "Atenție"
   },
   "notFound": {
     "title": "Pagina nu a fost găsită",
@@ -206,9 +226,28 @@ export default {
     "absencePercentage": "Procentaj Absențe",
     "monthlyBreakdown": "Repartizare Lunară Prezențe",
     "month": "Lună",
-    "unjustifiedList": "Absențe și Întârzieri de Motivat"
+    "unjustifiedList": "Absențe și Întârzieri de Motivat",
+    "outOfClass": "În afara clasei",
+    "activityType": "Tip Activitate",
+    "duration": "Durată (ore)",
+    "editLesson": "Editează Lecția",
+    "newLesson": "Lecție Nouă",
+    "hour": "Ora Lecției",
+    "lessonTopic": "Subiectul Lecției",
+    "lessonType": "Tipul Lecției",
+    "subject": "Materie"
   },
   "dashboardPage": {
+    "viewYourHomework": "Vezi temele și activitățile tale",
+    "upcomingHomework": "Următoarele teme de efectuat",
+    "upcomingHomeworkSub": "Organizează-ți studiul: teme, teste și termene limită",
+    "allHomework": "Toate temele",
+    "teacherLabel": "Profesor",
+    "noPendingHomework": "Nicio temă în așteptare",
+    "allCaughtUp": "Ești la zi cu toate sarcinile și activitățile de studiu!",
+    "dueToday": "Azi",
+    "dueTomorrow": "Mâine",
+    "dueInDays": "În {days} zile",
     "greetingMorning": "Bună dimineața",
     "greetingAfternoon": "Bună ziua",
     "greetingEvening": "Bună seara",
@@ -257,7 +296,10 @@ export default {
     "recentGrades": "Ultimele Note",
     "noChildren": "Niciun copil asociat",
     "systemStatus": "Stare Sistem",
-    "syncedNow": "Sincronizat acum"
+    "syncedNow": "Sincronizat acum",
+    "online": "Online",
+    "notifications": "Notificări",
+    "teacher": "Profesor"
   },
   "agendaPage": {
     "title": "Agendă & Calendar Didactic",
@@ -295,9 +337,48 @@ export default {
     "detailsOf": "Detalii pentru",
     "lessonsHeld": "Lecții Desfășurate",
     "noLessons": "Nicio lecție înregistrată la această dată.",
-    "noDueHomework": "Nicio temă cu termen la această dată."
+    "noDueHomework": "Nicio temă cu termen la această dată.",
+    "thisWeek": "Săptămâna Aceasta",
+    "monthView": "Vizualizare Lunară",
+    "weekView": "Vizualizare Săptămânală",
+    "dayView": "Vizualizare Zilnică",
+    "quickNew": "+ Nou",
+    "moreCount": "+{count} altele",
+    "eventTitle": "Titlu Eveniment *",
+    "eventDescription": "Descriere / Detalii",
+    "eventType": "Tip Eveniment *",
+    "targetClass": "Clasă Destinatară *",
+    "eventDate": "Dată *",
+    "startTime": "Oră Început",
+    "endTime": "Oră Sfârșit",
+    "saveChanges": "Salvare Modificări",
+    "createEvent": "Creare Eveniment",
+    "deleteEvent": "Ștergere Eveniment",
+    "weekTitle": "Săptămână",
+    "confirmDeleteTitle": "Ștergere Eveniment",
+    "confirmDeleteMsg": "Sigur doriți să ștergeți acest eveniment din agendă?",
+    "eventCreated": "Eveniment creat cu succes",
+    "eventUpdated": "Eveniment actualizat cu succes",
+    "eventDeleted": "Eveniment șters cu succes",
+    "allDay": "Toată ziua"
   },
   "usersPage": {
+    "importTitle": "Import utilizatori din CSV",
+    "stepConfig": "Configurare",
+    "stepUpload": "Încărcare fișier",
+    "stepResult": "Rezultat",
+    "userTypeToImport": "Tipul utilizatorilor de importat",
+    "sendWelcomeEmail": "Trimiteți email de bun venit cu acreditări temporare",
+    "downloadTemplate": "Descărcați șablonul CSV demonstrativ",
+    "selectCsvFile": "Selectați fișierul CSV (.csv max 10MB)",
+    "previewRowsTitle": "Previzualizare primele 5 rânduri",
+    "runImport": "Execută importul",
+    "importSuccessCount": "{count} utilizatori importați cu succes!",
+    "skippedRowsCount": "{count} rânduri omise sau nevalide.",
+    "errorsEncountered": "Erori întâmpinate",
+    "rowError": "Rândul {row}: {reason}",
+    "downloadErrorReport": "Descărcați raportul de erori",
+    "closeAndUpdate": "Închideți și actualizați lista",
     "title": "Gestiune Utilizatori",
     "searchPlaceholder": "Căutare după nume, email, CNP...",
     "newUser": "Utilizator Nou",
@@ -318,7 +399,9 @@ export default {
     "resetPassword": "Resetare Parolă",
     "manageSubjects": "Alocare Materii",
     "deleteAccount": "Șterge Cont",
-    "noUsersFound": "Niciun utilizator găsit"
+    "noUsersFound": "Niciun utilizator găsit",
+    "importError": "Eroare în timpul importului CSV",
+    "targetClass": "Clasă Țintă"
   },
   "supportPage": {
     "title": "Centru de Asistență & FAQ",
@@ -412,7 +495,8 @@ export default {
     "tabGrades": "Notele Mele",
     "homework": "Teme pentru acasă",
     "documents": "Dosar Documentar & Acte",
-    "schoolManagement": "Gestiune Școli"
+    "schoolManagement": "Gestiune Școli",
+    "student": "Elev/ă"
   },
   "udaPage": {
     "subjectLabel": "Materie *",
@@ -518,6 +602,32 @@ export default {
     "levelD": "D - Inițial"
   },
   "gradesPage": {
+    "createTestTitle": "Creați o lucrare nouă",
+    "editTestTitle": "Editează lucrarea în bloc",
+    "testDetails": "Detalii lucrare",
+    "testTitle": "Titlu lucrare",
+    "teacherNotes": "Note pentru profesor (Interne)",
+    "parentNotes": "Note pentru părinți (Vizibile)",
+    "studentGrades": "Note elevi",
+    "insertedCount": "introduse",
+    "allAbsentMarked": "Toți elevii au fost marcați ca absenți",
+    "saveTestAndGrades": "Salvează lucrarea și notele",
+    "saveEditTest": "Salvează modificările lucrării",
+    "overlappingWarning": "Atenție: Clasa are deja {count} lucrări programate pe {date}! (Maxim recomandat: 2)",
+    "testSavedSuccess": "Lucrarea „{title}” și {count} note salvate cu succes!",
+    "testEditSuccess": "Lucrare modificată cu succes!",
+    "testSaveError": "Eroare la salvarea lucrării",
+    "testEditError": "Eroare la modificarea lucrării",
+    "deleteTestConfirmTitle": "Confirmare ștergere lucrare",
+    "deleteTestConfirmMsg": "Sigur doriți să ștergeți lucrarea „{title}”? Vor fi șterse definitiv {count} note conectate.",
+    "deleteTestSuccess": "Lucrare ștearsă cu succes!",
+    "deleteTestError": "Eroare la ștergerea lucrării",
+    "noPermissionNotOwner": "Nu aveți permisiunea de a gestiona lucrări într-o clasă nealocată",
+    "testsHistory": "Listă lucrări",
+    "noTestsFound": "Nicio lucrare găsită",
+    "noTestsFoundDesc": "Nu există încă lucrări înregistrate pentru această materie.",
+    "createFirstTest": "Creați prima lucrare",
+    "selectClassSub": "Alegeți o clasă din meniul superior pentru a accesa catalogul:",
     "cannotEditOtherTeacherGrade": "Nu puteți modifica notele puse de un alt profesor",
     "sharedGradesCaption": "Note vizibile pentru clasă",
     "confirmDeleteGrade": "Sigur doriți să ștergeți această notă?",
@@ -607,7 +717,17 @@ export default {
     "sufficient": "Promovat",
     "insufficient": "Nepromovat",
     "absent": "Absent",
-    "subject": "Disciplină"
+    "subject": "Disciplină",
+    "selectClassPrompt": "Selectați o Clasă",
+    "evalType": "Tip Evaluare",
+    "markAllAbsent": "Marcați toți ca absenți",
+    "noStudentsInClass": "Niciun elev încărcat pentru această clasă",
+    "testDate": "Data Lucrării",
+    "types": {
+      "written": "Scris",
+      "oral": "Oral",
+      "practical": "Practic"
+    }
   },
   "didacticsPage": {
     "title": "Materiale Didactice & Resurse",
@@ -688,7 +808,16 @@ export default {
       "equivalentTest": "Proba echivalentă",
       "textToSpeech": "Sinteză vocală",
       "conceptMaps": "Hărți conceptuale"
-    }
+    },
+    "createFirst": "Creează primul plan",
+    "clinicalDiagnosis": "Diagnostic Clinic (rezervat cadrelor didactice)",
+    "restrictedFile": "Atașament Diagnostic Medical (Doar Profesorii Clasei)",
+    "noneSpecified": "Nespecificat",
+    "approvedFamily": "✓ Aprobat de Familie",
+    "sharedPending": "Partajat (în așteptare)",
+    "internalDraft": "Ciornă Internă",
+    "hideFromFamily": "Ascunde de Familie",
+    "shareWithFamily": "Partajează cu Familia"
   },
   "rubricsPage": {
     "title": "Rubrici de Evaluare a Competențelor",
@@ -920,7 +1049,10 @@ export default {
     "downloadStarted": "Se descarcă documentul: {title}",
     "upload": "Încarcă Document",
     "tableTitle": "Documente Oficiale",
-    "noDocs": "Nu există documente disponibile în această secțiune."
+    "noDocs": "Nu există documente disponibile în această secțiune.",
+    "certsDesc": "Certificate de înscriere și frecvență generate automat.",
+    "downloading": "Descărcare în curs...",
+    "previewNotAvailable": "Previzualizarea nu este disponibilă offline."
   },
   "notesPage": {
     "title": "Gestiune Note Disciplinare & Observații",
@@ -1193,7 +1325,8 @@ export default {
     "mfaCaption": "Solicită autentificare în doi pași cu cod TOTP pentru tot personalul și administratorii.",
     "minPasswordLength": "Lungime Minimă Parolă",
     "sessionTimeout": "Timp Expirare Sesiune Inactivă",
-    "maxLoginAttempts": "Încercări Eșuate Înainte de Blocare"
+    "maxLoginAttempts": "Încercări Eșuate Înainte de Blocare",
+    "general": "General"
   },
   "search": {
     "placeholder": "Căutați elevi, profesori, secretariat, clase, circulare, meniuri…",
@@ -1325,7 +1458,22 @@ export default {
       "q9": "Cum schimb limba și tema întunecată?",
       "a9": "Accesați \"Setări > Profil\". Puteți alege limba dorită și activa modul Dark sau fontul pentru dislexie.",
       "q10": "Cum anulez o prezență sau o notă introdusă din greșeală?",
-      "a10": "După fiecare introducere apare un mesaj temporar cu butonul \"Anulează\" activ timp de 15 secunde."
+      "a10": "După fiecare introducere apare un mesaj temporar cu butonul \"Anulează\" activ timp de 15 secunde.",
+      "scrutiny": {
+        "period1": "Semestrul 1 / Trimestru",
+        "period2": "Evaluare Finală (Semestrul 2)",
+        "deferredScrutiny": "Evaluare Amânată / Recuperare Corigențe",
+        "deferredBannerTitle": "Sesiune de Evaluare Amânată Activă",
+        "deferredBannerBody": "În această sesiune se poate delibera rezolvarea suspendării deciziei pentru elevii cu corigențe.",
+        "deferredModalTitle": "Evaluare Amânată: {name}",
+        "deferredModalSubtitle": "Evaluarea examenelor de corigență și lichidarea datoriilor școlare",
+        "deferredNotes": "Proces-verbal / Note privind decizia",
+        "deferredSaved": "Rezultatul evaluării amânate a fost salvat cu succes",
+        "deliberateDeferred": "Deliberare Suspendare",
+        "notPromotedDebtsNotCleared": "Nepromovat (corigențe nelichidate)",
+        "promotedDebtsCleared": "Promovat (corigențe lichidate)",
+        "closeConfirmMsg": "Sigur doriți să închideți și să sigilați evaluarea pentru clasa selectată? Operațiunea este definitivă."
+      }
     },
     "student": {
       "cat_grades": "Notele Mele",
@@ -2107,7 +2255,8 @@ export default {
     "documentsSubmitted": "Documente Depuse",
     "completeEnrollment": "Finalizează Înscrierea",
     "enrollmentSuccess": "Înscrierea a fost finalizată cu succes!",
-    "studentFile": "Fișa Elevului"
+    "studentFile": "Fișa Elevului",
+    "title": "Registrul Elevilor"
   },
   "classesPage": {
     "currentClass": "Clasa Curentă"
@@ -2219,7 +2368,16 @@ export default {
   "attendancePage": {
     "title": "Prezență & Absențe",
     "subtitle": "Evidența prezenței, întârzierilor și motivărilor",
-    "tableTitle": "Tabel Prezență"
+    "tableTitle": "Tabel Prezență",
+    "justified": "Motivată",
+    "parentManagedJustifications": "Motivări gestionate direct de Părinți",
+    "requestJustification": "Solicitați motivare",
+    "selectAbsence": "Selectați absența de motivat",
+    "timeDetail": "Detalii Orare",
+    "reason": "Motiv",
+    "reasonFamily": "Motive Familiale",
+    "reasonHealth": "Motive Medicale",
+    "warningAbsenceLimit": "Ați atins limita de avertizare pentru absențe. Vă rugăm să vă regularizați situația școlară."
   },
   "reportCardPage": {
     "title": "Foaie Matricolă & Evaluare Finală",
@@ -2413,7 +2571,8 @@ export default {
       "goalDescription": "Description & Strategies",
       "expectedTerm": "Target Term",
       "status": "Progress Status"
-    }
+    },
+    "noGoals": "Niciun obiectiv PEI introdus"
   },
   "generalMeeting": {
     "teacherQueueTitle": "Afternoon General Parent-Teacher Conference",
@@ -2724,7 +2883,11 @@ export default {
   "offlineBanner": {
     "offlineText": "Lipsă conexiune la Internet. Modificările ar putea să nu fie salvate.",
     "offlineBadge": "OFFLINE",
-    "onlineText": "Conexiune la Internet restabilită."
+    "onlineText": "Conexiune la Internet restabilită.",
+    "pendingQueue": "Lipsă conexiune la Internet. {count} modificări salvate local în așteptare pentru sincronizare.",
+    "inQueue": "ÎN COADĂ",
+    "syncedSuccess": "Conexiune restabilită: {count} operațiuni sincronizate cu succes.",
+    "enqueuedOffline": "Operațiune salvată local. Se va sincroniza automat la revenirea conexiunii."
   },
   "inactivity": {
     "warningTitle": "Sesiunea este pe cale să expire",
@@ -2856,7 +3019,8 @@ export default {
     },
     "loadError": "Eroare la încărcarea certificatelor",
     "generateSuccess": "Adeverință generată cu succes!",
-    "generateError": "Eroare la generarea adeverinței"
+    "generateError": "Eroare la generarea adeverinței",
+    "enrollmentCert": "Certificat de Înscriere"
   },
   "sidiExports": {
     "title": "Exporturi Ministeriale (SIDI / SIIIR)",
@@ -3116,6 +3280,42 @@ export default {
     "notFound": "Pagina nu a fost găsită"
   },
   "secretaryClasses": {
+    "migrationTitle": "Migrare Elevi și Trecere în Noul An Școlar",
+    "migrationSubtitle": "Gestionați avansarea claselor, promovați, repetenți și absolvenți",
+    "migrationProcedure": "Procedură de Trecere în Noul An",
+    "migrationProcedureDesc": "Selectați anul școlar sursă și anul școlar destinație. Configurați rapid starea fiecărui elev (Promovat, Repetent, Absolvent sau Transferat).",
+    "sourceYear": "An Sursă (Origine)",
+    "targetYear": "An Destinație (An Nou)",
+    "filterByClass": "Filtrează după Clasă (sau Toate Clasele)",
+    "allSourceClasses": "Toate clasele din anul sursă",
+    "studentsToProcess": "Elevi de Procesat",
+    "markAllPromoted": "Marchează Toți Promovați",
+    "smartDefaults": "Absolvire cl. a 5-a / Promovare cl. 1-4",
+    "markAllRepeater": "Marchează Toți Repetenți",
+    "loadingMigration": "Se încarcă elevii și se pregătesc clasele din anul destinație...",
+    "noStudentsFound": "Niciun elev găsit pentru criteriile selectate.",
+    "currentClassLabel": "Clasa Actuală",
+    "actionPromoted": "Promovat/ă",
+    "actionRepeater": "Repetent/ă",
+    "actionGraduated": "Absolvent/ă",
+    "actionLeft": "Transferat/ă",
+    "targetClassLabel": "Clasa Destinație",
+    "noClassUnassigned": "Nicio clasă (Neatribuit)",
+    "migrationSummaryTitle": "Rezumat Migrare",
+    "promotedCount": "Promovați",
+    "repeaterCount": "Repetenți",
+    "graduatedCount": "Absolvenți",
+    "leftCount": "Transferați / Retrași",
+    "btnConfigureStudents": "Înainte: Configurare Elevi",
+    "btnVerifySummary": "Înainte: Verificare Rezumat",
+    "btnExecuteMigration": "Confirmă și Execută Migrarea",
+    "migrationSuccess": "Migrarea anului școlar s-a finalizat cu succes!",
+    "migrationError": "Eroare la executarea migrării",
+    "migrationLoadError": "Eroare la încărcarea datelor de migrare",
+    "scheduleTitle": "Orar Săptămânal - Clasa",
+    "scheduleSaved": "Orar salvat cu succes",
+    "scheduleSaveError": "Eroare la salvarea orarului",
+    "scheduleLoadError": "Eroare la încărcarea orarului",
     "newClass": "Clasă Nouă",
     "editClass": "Editează Clasa",
     "createClass": "Creează Clasa",
@@ -3170,6 +3370,100 @@ export default {
     "subjectName": "Nume Disciplină",
     "createSubject": "Creează Disciplină",
     "subjectCreated": "Disciplină creată",
-    "createSubjectError": "Eroare la crearea disciplinei"
+    "createSubjectError": "Eroare la crearea disciplinei",
+    "manageAssignments": "Gestionare Materii și Profesori",
+    "manageStudents": "Gestionare Elevi din Clasă"
+  },
+  "groupsPage": {
+    "title": "Gestionare Grupe Lingvistice și Combinate",
+    "subtitle": "Creați și gestionați grupe formate din elevi din mai multe clase",
+    "newGroup": "Grup Nou",
+    "createGroup": "Creare Grup",
+    "loading": "Se încarcă grupele...",
+    "noGroups": "Nu a fost găsit niciun grup lingvistic sau combinat",
+    "noGroupsDesc": "Creați primul grup pentru a preda elevilor din clase diferite",
+    "students": "elevi",
+    "teacher": "Profesor",
+    "academicYear": "An școlar",
+    "editGroup": "Editare Grup",
+    "deleteGroup": "Șterge",
+    "groupName": "Nume Grup",
+    "groupNamePlaceholder": "Nume Grup (ex. Engleză B2 3A-3B)",
+    "description": "Descriere / Notițe",
+    "confirmDelete": "Confirmare ștergere",
+    "confirmDeleteDesc": "Sigur doriți să ștergeți acest grup?",
+    "groupDeleted": "Grup șters",
+    "deleteError": "Eroare la ștergerea grupului",
+    "groupSaved": "Grup actualizat cu succes",
+    "groupCreated": "Grup creat cu succes",
+    "save": "Salvează",
+    "create": "Creează",
+    "studentListTitle": "Elevii Grupului: {name}",
+    "noStudents": "Niciun elev atribuit acestui grup."
+  },
+  "scrutinyPage": {
+    "title": "Consiliu Profesoral și Evaluare Diferențiată",
+    "subtitle": "Gestionarea notelor finale, a corigențelor și a recuperării materiei",
+    "closeScrutiny": "Închidere Consiliu",
+    "saveFinal": "Salvare Notare Finală",
+    "classCouncil": "Consiliu Profesoral",
+    "notCoordinator": "Nu sunteți diriginte/coordonator pentru acest consiliu.",
+    "selectClassPrompt": "Selectați o clasă pentru a începe consiliul.",
+    "deficiencyTitle": "Materii cu Corigență — {name}",
+    "deficiencySubtitle": "Indicarea lacunelor de recuperat (vizibil pentru elev și părinți)",
+    "deficiencySubject": "Materia cu Corigență",
+    "deficiencyTopics": "Teme de Recuperat / Lacune Specifice *",
+    "recoveryMode": "Modalitate de Recuperare",
+    "recoveryStatus": "Stare Recuperare",
+    "recoveryGrade": "Notă Examen Corigență",
+    "recoveryDate": "Dată Examen Corigență",
+    "saveDeficiency": "Salvare Corigență",
+    "noDeficiencies": "Nicio corigență sau restanță înregistrată pentru acest elev.",
+    "individualStudy": "Studiu Individual",
+    "summerCourse": "Curs de Vară",
+    "helpDesk": "Meditații Remediale",
+    "toRecover": "De Recuperat",
+    "inProgress": "În Curs",
+    "recovered": "Recuperat",
+    "notRecovered": "Nerecuperat"
+  },
+  "studentDetail": {
+    "title": "Detalii Elev",
+    "personalInfo": "Date Personale",
+    "fullName": "Nume complet",
+    "fiscalCode": "Cod Numeric Personal",
+    "class": "Clasă",
+    "email": "Email",
+    "phone": "Telefon",
+    "birthDate": "Data Nașterii",
+    "attendanceSummary": "Rezumat Prezență",
+    "totalAbsences": "Absențe Totale",
+    "lates": "Întârzieri",
+    "earlyExits": "Plecări Anticipate",
+    "justified": "Motivate",
+    "absenceRate": "Rată absențe",
+    "risk": "Risc",
+    "riskHigh": "RIDICAT",
+    "riskMedium": "MEDIU",
+    "riskLow": "SCĂZUT",
+    "todayAttendanceByHour": "Prezență Azi pe Ore",
+    "hourNotRegistered": "Ora {hour}: neînregistrată",
+    "hourStatus": "Ora {hour}: {status}"
+  },
+  "orientamento": {
+    "availableEvents": "Evenimente Disponibile",
+    "myEvents": "Evenimentele Mele",
+    "history": "Istoric și Prezență"
+  },
+  "homework": {
+    "assign": "Atribuiți",
+    "assignHomework": "Atribuiți Temă",
+    "description": "Descrierea Temei",
+    "dueDate": "Termen Limită"
+  },
+  "signaturesPage": {
+    "signNow": "Semnează Acum",
+    "signed": "Semnat",
+    "signedOn": "Semnat la"
   }
-}
+};
