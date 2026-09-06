@@ -358,6 +358,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useQuasar, date } from 'quasar'
+import { useAuthStore } from '@/stores/auth'
 import { useClassesStore } from '@/stores/classes'
 import { useGradesStore } from '@/stores/grades'
 import { lessonService } from '@/services/lessonService'
