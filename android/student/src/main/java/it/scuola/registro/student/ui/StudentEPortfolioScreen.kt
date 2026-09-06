@@ -137,7 +137,7 @@ fun StudentEPortfolioScreen(
                     reflection = ""
                     showDialog = false
                 }) {
-                    Text(stringResource(R.string.sign_hour))
+                    Text("Aggiungi")
                 }
             },
             dismissButton = {

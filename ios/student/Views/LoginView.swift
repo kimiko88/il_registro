@@ -1,17 +1,29 @@
 import SwiftUI
 
-struct LoginView: View {
-    @Binding var isLoggedIn: Bool
-    @Binding var token: String
-    @Binding var studentName: String
-    var apiService: StudentAPIServiceProtocol = HttpStudentAPIService()
+public struct LoginView: View {
+    @Binding public var isLoggedIn: Bool
+    @Binding public var token: String
+    @Binding public var studentName: String
+    public var apiService: StudentAPIServiceProtocol
     
-    @State private var email = ""
-    @State private var password = ""
+    @State private var email = "studentea_1@scuola.it"
+    @State private var password = "password"
     @State private var isLoading = false
     @State private var errorMessage: String? = nil
 
-    var body: some View {
+    public init(
+        isLoggedIn: Binding<Bool>,
+        token: Binding<String>,
+        studentName: Binding<String>,
+        apiService: StudentAPIServiceProtocol = HttpStudentAPIService()
+    ) {
+        self._isLoggedIn = isLoggedIn
+        self._token = token
+        self._studentName = studentName
+        self.apiService = apiService
+    }
+
+    public var body: some View {
         ZStack {
             StudentTheme.primaryGradient
                 .ignoresSafeArea()
@@ -27,7 +39,7 @@ struct LoginView: View {
                         .fontWeight(.bold)
                         .foregroundColor(.white)
                     
-                    Text("Accedi al tuo account")
+                    Text(NSLocalizedString("login_subtitle", comment: ""))
                         .font(.subheadline)
                         .foregroundColor(.white.opacity(0.8))
                 }
@@ -36,7 +48,7 @@ struct LoginView: View {
                     HStack {
                         Image(systemName: "envelope.fill")
                             .foregroundColor(.gray)
-                        TextField("Email Studente", text: $email)
+                        TextField(NSLocalizedString("email_label", comment: ""), text: $email)
                             .autocapitalization(.none)
                             .keyboardType(.emailAddress)
                     }
@@ -47,7 +59,8 @@ struct LoginView: View {
                     HStack {
                         Image(systemName: "lock.fill")
                             .foregroundColor(.gray)
-                        SecureField("Password", text: $password)
+                        SecureField(NSLocalizedString("password_label", comment: ""), text: $password)
+                            .onSubmit(performLogin)
                     }
                     .padding()
                     .background(Color(UIColor.systemBackground))
@@ -59,35 +72,12 @@ struct LoginView: View {
                             .foregroundColor(.red)
                     }
                     
-                    Button(action: {
-                        if email.isEmpty || password.isEmpty {
-                            errorMessage = "Inserisci email e password"
-                            return
-                        }
-                        isLoading = true
-                        errorMessage = nil
-                        Task {
-                            do {
-                                let receivedToken = try await apiService.login(email: email.trimmingCharacters(in: .whitespacesAndNewlines), password: password)
-                                await MainActor.run {
-                                    self.token = receivedToken
-                                    self.studentName = "Studente"
-                                    self.isLoggedIn = true
-                                    self.isLoading = false
-                                }
-                            } catch {
-                                await MainActor.run {
-                                    self.errorMessage = error.localizedDescription
-                                    self.isLoading = false
-                                }
-                            }
-                        }
-                    }) {
+                    Button(action: performLogin) {
                         if isLoading {
                             ProgressView()
                                 .tint(.white)
                         } else {
-                            Text("ACCEDI")
+                            Text(NSLocalizedString("btn_login", comment: ""))
                                 .font(.headline)
                                 .fontWeight(.bold)
                                 .foregroundColor(.white)
@@ -103,6 +93,31 @@ struct LoginView: View {
                 .background(Color(UIColor.secondarySystemGroupedBackground).opacity(0.95))
                 .cornerRadius(24)
                 .padding(.horizontal, 20)
+            }
+        }
+    }
+
+    private func performLogin() {
+        if email.isEmpty || password.isEmpty {
+            errorMessage = NSLocalizedString("err_enter_credentials", comment: "")
+            return
+        }
+        isLoading = true
+        errorMessage = nil
+        Task {
+            do {
+                let receivedToken = try await apiService.login(email: email.trimmingCharacters(in: .whitespacesAndNewlines), password: password)
+                await MainActor.run {
+                    self.token = receivedToken
+                    self.studentName = apiService.lastStudentName ?? "Studente"
+                    self.isLoggedIn = true
+                    self.isLoading = false
+                }
+            } catch {
+                await MainActor.run {
+                    self.errorMessage = error.localizedDescription
+                    self.isLoading = false
+                }
             }
         }
     }

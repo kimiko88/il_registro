@@ -660,6 +660,29 @@ func (s *Service) ExportPagellaPDF(ctx context.Context, actorID, actorRole, clas
 	return GeneratePagellaPDF(matrix, studentID)
 }
 
+func (s *Service) ExportClassPagelleZIP(ctx context.Context, actorID, actorRole, classID string, semester int) ([]byte, error) {
+	if actorRole == "teacher" {
+		isCoordinator, isDirigenza, _ := s.isDirigenzaOrCoordinator(ctx, actorID, actorRole, classID)
+		if !isCoordinator && !isDirigenza {
+			return nil, errors.New("forbidden: solo il coordinatore di classe o la dirigenza può scaricare tutte le pagelle")
+		}
+	} else if actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "vice_principal" && actorRole != "secretary" {
+		return nil, errors.New("forbidden: ruolo non autorizzato all'esportazione pagelle di classe")
+	}
+
+	records, err := s.repo.ListRecordsByClass(ctx, classID, semester)
+	if err != nil {
+		return nil, err
+	}
+
+	matrix, err := s.buildMatrix(ctx, classID, semester, records)
+	if err != nil {
+		return nil, err
+	}
+
+	return GenerateClassPagelleZIP(matrix)
+}
+
 func (s *Service) SaveDeficiency(ctx context.Context, actorID, actorRole string, req *SaveDeficiencyRequest) error {
 	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "teacher" && actorRole != "secretary" && actorRole != "principal" && actorRole != "vice_principal" {
 		return errors.New("forbidden: non hai i permessi per inserire o modificare carenze")

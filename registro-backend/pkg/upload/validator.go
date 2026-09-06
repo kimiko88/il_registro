@@ -34,6 +34,10 @@ var allowedMIMETypes = map[string]bool{
 	"application/vnd.openxmlformats-officedocument.wordprocessingml.document":   true,
 	"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":         true,
 	"application/vnd.openxmlformats-officedocument.presentationml.presentation": true,
+	"application/vnd.ms-excel": true,
+	// Plain text & CSV data
+	"text/plain": true,
+	"text/csv":   true,
 	// LibreOffice / OpenDocument formats
 	"application/vnd.oasis.opendocument.text":         true,
 	"application/vnd.oasis.opendocument.spreadsheet":  true,
@@ -110,4 +114,30 @@ func DetectMIME(file multipart.File) (string, error) {
 
 	mtype := mimetype.Detect(head)
 	return mtype.String(), nil
+}
+
+// ValidateAndSanitize checks the file size and magic bytes against the allowlist,
+// then strips any privacy-invasive EXIF/camera metadata if the file is an image.
+// Returns the clean sanitized bytes, the verified MIME type, and any validation error.
+func ValidateAndSanitize(file multipart.File, header *multipart.FileHeader) ([]byte, string, error) {
+	if err := ValidateUpload(file, header); err != nil {
+		return nil, "", err
+	}
+
+	detectedMIME, err := DetectMIME(file)
+	if err != nil {
+		return nil, "", err
+	}
+
+	sanitizedBytes, err := StripImageMetadata(file, detectedMIME)
+	if err != nil {
+		return nil, "", err
+	}
+
+	// Rewind file for any subsequent callers if seeker
+	if seeker, ok := file.(io.Seeker); ok {
+		_, _ = seeker.Seek(0, io.SeekStart)
+	}
+
+	return sanitizedBytes, detectedMIME, nil
 }

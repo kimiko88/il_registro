@@ -290,7 +290,7 @@
             <div class="text-subtitle1 text-weight-bold text-slate-800">Risorse & Strumenti</div>
           </q-card-section>
           <q-list separator>
-            <q-item clickable v-ripple href="https://www.universitaly.it/" target="_blank">
+            <q-item clickable v-ripple href="https://www.universitaly.it/" target="_blank" rel="noopener noreferrer">
               <q-item-section avatar><q-icon name="public" color="blue" /></q-item-section>
               <q-item-section>
                 <q-item-label class="text-weight-medium">Universitaly</q-item-label>
@@ -298,7 +298,7 @@
               </q-item-section>
               <q-item-section side><q-icon name="open_in_new" size="xs" /></q-item-section>
             </q-item>
-            <q-item clickable v-ripple href="https://www.invalsi.it/" target="_blank">
+            <q-item clickable v-ripple href="https://www.invalsi.it/" target="_blank" rel="noopener noreferrer">
               <q-item-section avatar><q-icon name="school" color="teal" /></q-item-section>
               <q-item-section>
                 <q-item-label class="text-weight-medium">INVALSI & Competenze</q-item-label>
@@ -321,10 +321,10 @@
 
     <!-- Career Guidance Preference Dialog -->
     <q-dialog v-model="showPrefDialog">
-      <q-card style="min-width: 400px; max-width: 90vw;" class="rounded-xl shadow-24 bg-white">
+      <q-card style="width: min(500px, 95vw); max-width: 95vw;" class="rounded-xl shadow-24 bg-white">
         <q-card-section class="bg-primary text-white row items-center justify-between">
           <div class="text-h6 text-weight-bold">Preferenze Post-Diploma</div>
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pa-md q-gutter-y-md">
@@ -360,10 +360,10 @@
 
     <!-- Dialog Inserimento Capolavoro (MIM) -->
     <q-dialog v-model="showCapolavoroDialog" persistent>
-      <q-card style="min-width: 450px; max-width: 90vw;" class="rounded-xl shadow-soft">
+      <q-card style="width: min(500px, 95vw); max-width: 95vw;" class="rounded-xl shadow-soft">
         <q-card-section class="row items-center justify-between q-pa-md bg-slate-50 border-b">
           <div class="text-h6 text-weight-bold text-slate-800">Nuovo Capolavoro (E-Portfolio)</div>
-          <q-btn flat round dense icon="close" v-close-popup />
+          <q-btn flat round dense icon="close" v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pa-md q-gutter-y-md">

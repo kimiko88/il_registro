@@ -5,8 +5,14 @@ import { useGradesStore } from 'src/stores/grades';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Mock Quasar
-const mockNotify = vi.fn();
+const { mockNotify } = vi.hoisted(() => ({
+    mockNotify: vi.fn()
+}));
+
 vi.mock('quasar', () => ({
+    Notify: {
+        create: mockNotify
+    },
     useQuasar: () => ({
         notify: mockNotify
     })
@@ -46,5 +52,24 @@ describe('useGradeEntry', () => {
         const result = await submitGrade(validData);
         expect(result).toBe(true);
         expect(mockNotify).toHaveBeenCalledWith(expect.objectContaining({ type: 'positive' }));
+    });
+
+    it('gracefully handles network errors by enqueuing into offline outbox', async () => {
+        const { submitGrade } = useGradeEntry();
+        const gradesStore = useGradesStore();
+
+        const networkErr = new Error('Network Error');
+        networkErr.code = 'ERR_NETWORK';
+        gradesStore.addGrade = vi.fn().mockRejectedValue(networkErr);
+
+        const validData = {
+            studentId: 's1',
+            value: 9,
+            type: 'Oral',
+            date: '2025-01-02'
+        };
+
+        const result = await submitGrade(validData);
+        expect(result).toBe(true);
     });
 });

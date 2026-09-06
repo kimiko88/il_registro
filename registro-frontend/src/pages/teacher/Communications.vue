@@ -135,7 +135,7 @@
 
         <!-- Circolare detail dialog with PAdES/CAdES Signed Attachment -->
         <q-dialog v-model="showCircolare">
-          <q-card style="min-width:550px; max-width:750px">
+          <q-card style="width: min(650px, 95vw); max-width: 95vw;">
             <q-card-section class="bg-primary text-white">
               <div class="text-h6">{{ selectedCircolare?.subject || selectedCircolare?.title }}</div>
               <div class="text-caption">{{ formatDate(selectedCircolare?.created_at) }}</div>
@@ -169,11 +169,11 @@
 
     <!-- Compose Dialog with PAdES attachment option -->
     <q-dialog v-model="showCompose">
-        <q-card style="min-width: 600px">
+        <q-card style="width: min(650px, 95vw); max-width: 95vw;">
             <q-card-section class="row items-center q-pb-none">
                 <div class="text-h6">Nuovo Messaggio / Circolare con Allegato Firmato</div>
                 <q-space />
-                <q-btn icon="close" flat round v-close-popup />
+                <q-btn icon="close" flat round v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
             </q-card-section>
 
             <q-card-section>
@@ -199,11 +199,11 @@
 
     <!-- Unread Users Dialog -->
     <q-dialog v-model="showUnreadDialog">
-        <q-card style="min-width: 400px">
+        <q-card style="width: min(450px, 95vw); max-width: 95vw;">
             <q-card-section class="row items-center q-pb-none">
                 <div class="text-h6">Destinatari che non hanno letto</div>
                 <q-space />
-                <q-btn icon="close" flat round v-close-popup />
+                <q-btn icon="close" flat round v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
             </q-card-section>
             <q-card-section>
                 <q-list separator v-if="unreadUsersList.length > 0">

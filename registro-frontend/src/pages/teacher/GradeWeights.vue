@@ -80,8 +80,8 @@
         </template>
         <template #body-cell-actions="{ row }">
           <q-td class="text-right">
-            <q-btn flat round icon="edit" color="primary" size="sm" @click="openDialog(row)" />
-            <q-btn flat round icon="delete" color="negative" size="sm" @click="deleteConfig(row.id)" />
+            <q-btn flat round icon="edit" color="primary" size="sm" :aria-label="t('common.edit') || 'Modifica configurazione peso'" @click="openDialog(row)" />
+            <q-btn flat round icon="delete" color="negative" size="sm" :aria-label="t('common.delete') || 'Elimina configurazione peso'" @click="deleteConfig(row.id)" />
           </q-td>
         </template>
       </q-table>
@@ -89,7 +89,7 @@
 
     <!-- Dialog -->
     <q-dialog v-model="dialog" persistent>
-      <q-card style="min-width: 400px">
+      <q-card style="width: min(450px, 95vw); max-width: 95vw;">
         <q-card-section class="bg-primary text-white">
           <div class="text-h6">{{ editingId ? 'Modifica Peso' : 'Nuovo Peso' }}</div>
         </q-card-section>

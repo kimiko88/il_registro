@@ -22,7 +22,7 @@ class StudentWebSocketClientTest {
         var disconnected = false
 
         wsClient.connect(
-            wsUrl = "wss://api.scuola.it/ws",
+            wsUrl = "wss://registro-backend-fdu2.onrender.com/api/v1/ws",
             token = "jwt_student_token",
             listener = object : WebSocketListener {
                 override fun onConnected() {

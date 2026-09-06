@@ -1,22 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Журнал - Вчитель</string>
-    <string name="teacher_dashboard_title">Журнал Вчителя</string>
+    <string name="teacher_dashboard_title">Портал для вчителів</string>
     <string name="take_attendance">Перекличка</string>
-    <string name="add_grade">Нова Оцінка</string>
-    <string name="scrutiny_board">Педагогічна Рада</string>
-    <string name="sign_hour">Підписати Урок</string>
-    <string name="lesson_topic">Тема Уроку</string>
-    <string name="select_class">Обрати Клас</string>
-    <string name="login_subtitle">Увійдіть до кабінету вчителя</string>
-    <string name="email_label">Електронна пошта вчителя</string>
+    <string name="add_grade">Додати оцінку</string>
+    <string name="scrutiny_board">Педагогічна рада</string>
+    <string name="sign_hour">Підписати урок</string>
+    <string name="lesson_topic">Тема уроку</string>
+    <string name="select_class">Оберіть клас</string>
+    <string name="login_subtitle">Увійдіть до вчительського кабінету</string>
+    <string name="email_label">Email вчителя</string>
     <string name="password_label">Пароль</string>
-    <string name="btn_login">УВІЙТИ В ЖУРНАЛ</string>
-    <string name="err_enter_credentials">Введіть електронну пошту та пароль</string>
+    <string name="btn_login">УВІЙТИ ДО ЖУРНАЛУ</string>
+    <string name="err_enter_credentials">Введіть email та пароль</string>
     <string name="logout">Вийти</string>
     <string name="save">Зберегти</string>
     <string name="cancel">Скасувати</string>
     <string name="present">Присутній</string>
     <string name="absent">Відсутній</string>
-    <string name="late">Запізнився</string>
+    <string name="late">Запізнення</string>
+    <string name="my_classes_title">Мої класи</string>
+    <string name="lesson_signed">Урок підписано</string>
 </resources>

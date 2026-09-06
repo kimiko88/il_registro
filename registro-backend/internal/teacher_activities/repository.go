@@ -1,6 +1,7 @@
 package teacher_activities
 
 import (
+	"context"
 	"database/sql"
 )
 
@@ -124,7 +125,7 @@ func (r *repository) GetByTeacher(teacherID, fromDate, toDate string) ([]Teacher
 		  AND ($3 = '' OR tfa.date <= $3::date)
 		ORDER BY tfa.date DESC, tfa.start_hour ASC
 	`
-	rows, err := r.db.Query(query, teacherID, fromDate, toDate)
+	rows, err := r.db.QueryContext(context.Background(), query, teacherID, fromDate, toDate)
 	if err != nil {
 		return nil, err
 	}

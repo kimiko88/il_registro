@@ -15,12 +15,11 @@ public struct AppConfig {
      *    Usa il dominio pubblico HTTPS, ad esempio:
      *    "https://registro.tuascuola.it/api/v1"
      */
-    public static var baseURL: String = "http://localhost:8080/api/v1"
-
+    public static var baseURL: String = "https://registro-backend-fdu2.onrender.com/api/v1"
     /**
      * URL WEBSOCKET PER AGGIORNAMENTI LIVE & NOTIFICHE IN TEMPO REALE
      */
-    public static var wsURL: String = "ws://localhost:8080/api/v1/ws"
+    public static var wsURL: String = "wss://registro-backend-fdu2.onrender.com/api/v1/ws"
 
     public static let timeoutInterval: TimeInterval = 30.0
 }

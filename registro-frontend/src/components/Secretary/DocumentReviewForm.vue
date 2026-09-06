@@ -1,5 +1,5 @@
 <template>
-  <q-card style="min-width: 400px">
+  <q-card style="width: min(450px, 95vw); max-width: 95vw;">
     <q-card-section>
       <div class="text-h6">{{ t('documentsPage.reviewTitle') || 'Revisiona Documento' }}</div>
       <div class="text-subtitle2">{{ doc?.title }}</div>

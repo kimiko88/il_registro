@@ -108,7 +108,7 @@
           <div class="text-h6 text-weight-bold">
             Eventi del {{ selectedDateFormatted }}
           </div>
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pa-md">

@@ -1,25 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Registre - Élève</string>
-    <string name="dashboard_title">Mon Tableau de Bord</string>
+    <string name="dashboard_title">Mon tableau de bord</string>
     <string name="welcome_student">Bonjour, %1$s !</string>
-    <string name="grades_title">Mes Notes</string>
+    <string name="grades_title">Mes notes</string>
     <string name="agenda_title">Devoirs &amp; Agenda</string>
     <string name="attendance_title">Présences &amp; Absences</string>
-    <string name="report_card_title">Mon Bulletin</string>
-    <string name="gpa_average">Moyenne Générale</string>
-    <string name="recent_grades">Dernières Notes</string>
-    <string name="today_lessons">Emploi du Temps Aujourd'hui</string>
-    <string name="absences_count">Total des Absences</string>
-    <string name="lates_count">Total des Retards</string>
+    <string name="report_card_title">Mon bulletin de notes</string>
+    <string name="gpa_average">Moyenne générale</string>
+    <string name="recent_grades">Dernières notes ajoutées</string>
+    <string name="today_lessons">Emploi du temps du jour</string>
+    <string name="absences_count">Total des absences</string>
+    <string name="lates_count">Total des retards</string>
     <string name="no_data">Aucune donnée disponible</string>
     <string name="login_subtitle">Connectez-vous à votre compte</string>
-    <string name="email_label">Email Élève</string>
+    <string name="email_label">E-mail élève</string>
     <string name="password_label">Mot de passe</string>
-    <string name="btn_login">SE CONNECTER</string>
-    <string name="err_enter_credentials">Entrez votre email et mot de passe</string>
-    <string name="logout">Se déconnecter</string>
+    <string name="btn_login">CONNEXION</string>
+    <string name="err_enter_credentials">Saisissez l\'e-mail et le mot de passe</string>
+    <string name="logout">Déconnexion</string>
     <string name="settings">Paramètres</string>
-    <string name="badges_title">Mes Badges</string>
-    <string name="pcto_title">Parcours Professionnels</string>
+    <string name="badges_title">Mes badges</string>
+    <string name="pcto_title">Stages en entreprise (PCTO)</string>
+    <string name="restriction_server_url_title">URL du serveur de l\'école (MDM)</string>
+    <string name="restriction_server_url_desc">Point de terminaison du serveur déployé via MDM</string>
+    <string name="restriction_school_code_title">Code officiel de l\'établissement</string>
+    <string name="restriction_school_code_desc">Identifiant officiel de l\'établissement scolaire</string>
+    <string name="restriction_kiosk_mode_title">Mode Kiosque d\'examen / Tablette partagée</string>
+    <string name="restriction_kiosk_mode_desc">Désactive la navigation externe et verrouille l\'application</string>
 </resources>

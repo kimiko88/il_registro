@@ -1,8 +1,10 @@
 package admin
 
 import (
+	"context"
 	"fmt"
 	"net/http"
+	"os"
 	"runtime"
 	"strings"
 	"time"
@@ -10,6 +12,7 @@ import (
 	"registro-backend/internal/auth"
 
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 )
 
 var startTime = time.Now()
@@ -632,14 +635,49 @@ func (h *Handler) GetSystemHealth(c *gin.Context) {
 		overall = "degraded"
 	}
 
+	// Redis health check
+	redisStatus := "in-memory"
+	var redisPingMs *int64
+	redisURL := os.Getenv("REDIS_URL")
+	if redisURL == "" && os.Getenv("REDIS_HOST") != "" {
+		port := os.Getenv("REDIS_PORT")
+		if port == "" {
+			port = "6379"
+		}
+		redisURL = fmt.Sprintf("redis://%s:%s", os.Getenv("REDIS_HOST"), port)
+	}
+
+	if redisURL != "" {
+		if opt, err := redis.ParseURL(redisURL); err == nil {
+			rdb := redis.NewClient(opt)
+			defer rdb.Close()
+			pingCtx, cancel := context.WithTimeout(c.Request.Context(), 500*time.Millisecond)
+			defer cancel()
+			start := time.Now()
+			if _, pingErr := rdb.Ping(pingCtx).Result(); pingErr == nil {
+				duration := time.Since(start).Milliseconds()
+				redisPingMs = &duration
+				redisStatus = "healthy"
+			} else {
+				redisStatus = "unhealthy"
+			}
+		}
+	}
+
+	servicesMap := gin.H{
+		"api":        "healthy",
+		"database":   dbStatus,
+		"storage":    "healthy",
+		"redis":      redisStatus,
+		"db_ping_ms": dbPingMs,
+	}
+	if redisPingMs != nil {
+		servicesMap["redis_ping_ms"] = *redisPingMs
+	}
+
 	health := gin.H{
-		"status": overall,
-		"services": gin.H{
-			"api":        "healthy",
-			"database":   dbStatus,
-			"storage":    "healthy",
-			"db_ping_ms": dbPingMs,
-		},
+		"status":   overall,
+		"services": servicesMap,
 		"metrics": gin.H{
 			"memory_percent":  memPercent,
 			"goroutines":      runtime.NumGoroutine(),

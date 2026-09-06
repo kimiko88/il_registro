@@ -2,10 +2,10 @@ package handler
 
 import (
 	"database/sql"
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"registro-backend/internal/metrics"
 )
 
 type HealthHandler struct {
@@ -28,18 +28,17 @@ func (h *HealthHandler) Ready(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "READY"})
 }
 
-func (h *HealthHandler) Metrics(c *gin.Context) {
-	stats := h.db.Stats()
-	metrics := fmt.Sprintf(`# HELP db_open_connections The number of established connections both in use and idle.
-# TYPE db_open_connections gauge
-db_open_connections %d
-# HELP db_in_use_connections The number of connections currently in use.
-# TYPE db_in_use_connections gauge
-db_in_use_connections %d
-# HELP db_idle_connections The number of idle connections.
-# TYPE db_idle_connections gauge
-db_idle_connections %d
-`, stats.OpenConnections, stats.InUse, stats.Idle)
+// Ping is a lightweight no-auth, no-DB endpoint used by the frontend to verify
+// real backend reachability (navigator.onLine alone is not reliable).
+func (h *HealthHandler) Ping(c *gin.Context) {
+	if c.Request.Method == http.MethodHead {
+		c.Status(http.StatusOK)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"ok": true})
+}
 
-	c.Data(http.StatusOK, "text/plain; version=0.0.4", []byte(metrics))
+func (h *HealthHandler) Metrics(c *gin.Context) {
+	output := metrics.DefaultRegistry.GeneratePrometheus(h.db)
+	c.Data(http.StatusOK, "text/plain; version=0.0.4; charset=utf-8", []byte(output))
 }

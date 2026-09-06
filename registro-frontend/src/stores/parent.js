@@ -2,18 +2,30 @@ import { defineStore } from 'pinia'
 import api from '../services/api'
 import { ref, computed } from 'vue'
 
+export const PARENT_CACHE_TTL = 2 * 60 * 1000 // 2 minutes
+
 export const useParentStore = defineStore('parent', () => {
     const children = ref([])
     const selectedChildId = ref(localStorage.getItem('selectedChildId') || null)
     const loading = ref(false)
     const error = ref(null)
+    const _lastFetch = ref(0)
 
     const selectedChild = computed(() => {
         if (!selectedChildId.value) return children.value[0] || null
         return children.value.find(c => c.id === selectedChildId.value) || children.value[0] || null
     })
 
-    async function fetchChildren() {
+    function invalidateCache() {
+        _lastFetch.value = 0
+    }
+
+    async function fetchChildren(options = {}) {
+        const isFresh = !options.force && children.value.length > 0 && (Date.now() - _lastFetch.value < PARENT_CACHE_TTL)
+        if (isFresh) {
+            return children.value
+        }
+
         loading.value = true
         error.value = null
         try {
@@ -27,6 +39,8 @@ export const useParentStore = defineStore('parent', () => {
                 schoolName: c.school_name ?? c.schoolName,
                 className: c['class'] ?? c.className
             }))
+
+            _lastFetch.value = Date.now()
 
             // Validate the stored selectedChildId still belongs to this user's children
             if (selectedChildId.value) {
@@ -43,6 +57,7 @@ export const useParentStore = defineStore('parent', () => {
                 selectedChildId.value = children.value[0].id
                 localStorage.setItem('selectedChildId', selectedChildId.value)
             }
+            return children.value
         } catch (err) {
             console.error('Failed to fetch children:', err)
             children.value = []
@@ -65,6 +80,7 @@ export const useParentStore = defineStore('parent', () => {
     function reset() {
         children.value = []
         selectedChildId.value = null
+        _lastFetch.value = 0
         localStorage.removeItem('selectedChildId')
     }
 
@@ -74,8 +90,10 @@ export const useParentStore = defineStore('parent', () => {
         selectedChild,
         loading,
         error,
+        _lastFetch,
         fetchChildren,
         selectChild,
+        invalidateCache,
         reset
     }
 })

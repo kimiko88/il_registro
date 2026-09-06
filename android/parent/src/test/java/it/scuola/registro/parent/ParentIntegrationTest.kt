@@ -14,7 +14,7 @@ class ParentIntegrationTest {
 
     @Before
     fun setUp() {
-        apiService = HttpParentApiService("https://api.scuola.registro.it/api/v1")
+        apiService = HttpParentApiService("https://registro-backend-fdu2.onrender.com/api/v1")
         viewModel = ParentViewModel()
     }
 
@@ -36,7 +36,7 @@ class ParentIntegrationTest {
         assertTrue(justifyResult)
 
         // 4. Book a colloqui slot
-        val bookResult = viewModel.bookColloquio("colloquio_101")
+        val bookResult = viewModel.bookColloquio("col1")
         assertTrue(bookResult)
     }
 }

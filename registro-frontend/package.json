@@ -11,16 +11,17 @@
     "build": "vite build",
     "test": "vitest",
     "test:unit": "vitest run tests/unit",
+    "test:coverage": "vitest run --coverage",
     "test:e2e": "vitest run tests/e2e",
     "lint": "eslint src"
   },
   "dependencies": {
     "@quasar/extras": "^2.0.4",
-    "axios": "^1.18.1",
+    "axios": "^1.20.0",
     "chart.js": "^4.5.1",
     "pinia": "^4.0.2",
     "quasar": "^2.28.0",
-    "vue": "^3.5.41",
+    "vue": "^3.5.42",
     "vue-chartjs": "^5.3.3",
     "vue-i18n": "^11.4.10",
     "vue-router": "^5.3.0"
@@ -28,7 +29,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@pinia/testing": "^2.0.1",
-    "@quasar/vite-plugin": "^2.0.0",
+    "@quasar/vite-plugin": "^2.0.2",
     "@vitejs/plugin-vue": "^6.0.8",
     "@vitest/coverage-v8": "^4.0.16",
     "@vue/test-utils": "^2.4.1",
@@ -37,7 +38,7 @@
     "eslint": "^10.0.0",
     "eslint-plugin-vue": "^10.10.0",
     "globals": "^16.0.0",
-    "happy-dom": "^20.11.6",
+    "happy-dom": "^20.12.2",
     "postcss": "^8.4.14",
     "sass": "^1.103.1",
     "vite": "^8.2.2",

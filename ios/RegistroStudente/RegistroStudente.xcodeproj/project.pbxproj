@@ -1,0 +1,1092 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		59D1A86FA20C03496DE564A1 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CCC1098E87AFD48BCDDF0AB8 /* Foundation.framework */; };
+		5F3716451AD1956315CC1B8A /* ParentApp in Frameworks */ = {isa = PBXBuildFile; productRef = 4F0213A6D3DA357E5213EDD9 /* ParentApp */; };
+		86F3C778C67724A0B6346B27 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CCC1098E87AFD48BCDDF0AB8 /* Foundation.framework */; };
+		9EC7019B74F0E4E6AFE83C05 /* SecretaryApp in Frameworks */ = {isa = PBXBuildFile; productRef = 8F46EC5DA6CADA213E68B7D9 /* SecretaryApp */; };
+		AC872872EE20D4215ACED098 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CCC1098E87AFD48BCDDF0AB8 /* Foundation.framework */; };
+		BD116AEB839332F9D5799C71 /* TeacherApp in Frameworks */ = {isa = PBXBuildFile; productRef = 2C719545B8432DBC27E7C9A9 /* TeacherApp */; };
+		D6F31835304AD98D00039BDF /* StudentApp in Frameworks */ = {isa = PBXBuildFile; productRef = D6F31834304AD98D00039BDF /* StudentApp */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		D6F31816304AD92A00039BDF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D6F317FC304AD92900039BDF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D6F31803304AD92900039BDF;
+			remoteInfo = RegistroStudente;
+		};
+		D6F31820304AD92A00039BDF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D6F317FC304AD92900039BDF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D6F31803304AD92900039BDF;
+			remoteInfo = RegistroStudente;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		11D908C32BF83D6CFFE6B016 /* RegistroSegreteria.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RegistroSegreteria.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		2A385C7347AC880E2D851003 /* RegistroDocente.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RegistroDocente.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CBE0AFBA0DEEDD8F3180FDFA /* RegistroGenitore.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RegistroGenitore.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CCC1098E87AFD48BCDDF0AB8 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		D6F31804304AD92900039BDF /* RegistroStudente.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RegistroStudente.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D6F31815304AD92A00039BDF /* RegistroStudenteTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RegistroStudenteTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D6F3181F304AD92A00039BDF /* RegistroStudenteUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RegistroStudenteUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		37A3D26E284D46BDAFE94C9C /* Exceptions for "RegistroSegreteria" folder in "RegistroSegreteria" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 7A3D8087CE7061046ED5125E /* RegistroSegreteria */;
+		};
+		94B72BBB544A59405DDF63A8 /* Exceptions for "RegistroGenitore" folder in "RegistroGenitore" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 27DC376F75F0D12B3CDA7F04 /* RegistroGenitore */;
+		};
+		D6F31827304AD92A00039BDF /* Exceptions for "RegistroStudente" folder in "RegistroStudente" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = D6F31803304AD92900039BDF /* RegistroStudente */;
+		};
+		E01CEDBB0B0650C42E1C3B26 /* Exceptions for "RegistroDocente" folder in "RegistroDocente" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = A76D1DAD5240A8D832E2E4AD /* RegistroDocente */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		59A242E2FD73C804DD128D79 /* RegistroGenitore */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				94B72BBB544A59405DDF63A8 /* Exceptions for "RegistroGenitore" folder in "RegistroGenitore" target */,
+			);
+			path = RegistroGenitore;
+			sourceTree = "<group>";
+		};
+		99B42B3E4C3938D39D0CBC12 /* RegistroSegreteria */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				37A3D26E284D46BDAFE94C9C /* Exceptions for "RegistroSegreteria" folder in "RegistroSegreteria" target */,
+			);
+			path = RegistroSegreteria;
+			sourceTree = "<group>";
+		};
+		D6F31806304AD92900039BDF /* RegistroStudente */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				D6F31827304AD92A00039BDF /* Exceptions for "RegistroStudente" folder in "RegistroStudente" target */,
+			);
+			path = RegistroStudente;
+			sourceTree = "<group>";
+		};
+		D6F31818304AD92A00039BDF /* RegistroStudenteTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = RegistroStudenteTests;
+			sourceTree = "<group>";
+		};
+		D6F31822304AD92A00039BDF /* RegistroStudenteUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = RegistroStudenteUITests;
+			sourceTree = "<group>";
+		};
+		D962EB40D536504E218979D2 /* RegistroDocente */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				E01CEDBB0B0650C42E1C3B26 /* Exceptions for "RegistroDocente" folder in "RegistroDocente" target */,
+			);
+			path = RegistroDocente;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		092F21176333C5D49E8BAECF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				59D1A86FA20C03496DE564A1 /* Foundation.framework in Frameworks */,
+				BD116AEB839332F9D5799C71 /* TeacherApp in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6E22BA000FD6C9ED2D55428C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AC872872EE20D4215ACED098 /* Foundation.framework in Frameworks */,
+				5F3716451AD1956315CC1B8A /* ParentApp in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AAB11C65DD938684F2704193 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				86F3C778C67724A0B6346B27 /* Foundation.framework in Frameworks */,
+				9EC7019B74F0E4E6AFE83C05 /* SecretaryApp in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D6F31801304AD92900039BDF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D6F31835304AD98D00039BDF /* StudentApp in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D6F31812304AD92A00039BDF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D6F3181C304AD92A00039BDF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		4893C9E4DA48A80AB8858B08 /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				CCC1098E87AFD48BCDDF0AB8 /* Foundation.framework */,
+			);
+			name = iOS;
+			sourceTree = "<group>";
+		};
+		D6F317FB304AD92900039BDF = {
+			isa = PBXGroup;
+			children = (
+				D6F31806304AD92900039BDF /* RegistroStudente */,
+				D6F31818304AD92A00039BDF /* RegistroStudenteTests */,
+				D6F31822304AD92A00039BDF /* RegistroStudenteUITests */,
+				D6F31805304AD92900039BDF /* Products */,
+				E7D0D244F973F738B70EEEF7 /* Frameworks */,
+				D962EB40D536504E218979D2 /* RegistroDocente */,
+				59A242E2FD73C804DD128D79 /* RegistroGenitore */,
+				99B42B3E4C3938D39D0CBC12 /* RegistroSegreteria */,
+			);
+			sourceTree = "<group>";
+		};
+		D6F31805304AD92900039BDF /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D6F31804304AD92900039BDF /* RegistroStudente.app */,
+				D6F31815304AD92A00039BDF /* RegistroStudenteTests.xctest */,
+				D6F3181F304AD92A00039BDF /* RegistroStudenteUITests.xctest */,
+				2A385C7347AC880E2D851003 /* RegistroDocente.app */,
+				CBE0AFBA0DEEDD8F3180FDFA /* RegistroGenitore.app */,
+				11D908C32BF83D6CFFE6B016 /* RegistroSegreteria.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		E7D0D244F973F738B70EEEF7 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				4893C9E4DA48A80AB8858B08 /* iOS */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		27DC376F75F0D12B3CDA7F04 /* RegistroGenitore */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E72BE60CDA267F4537DF2BAA /* Build configuration list for PBXNativeTarget "RegistroGenitore" */;
+			buildPhases = (
+				8B38138AC56C6BFE1E8FA2A9 /* Sources */,
+				6E22BA000FD6C9ED2D55428C /* Frameworks */,
+				CB25E77F2386B61E08C65CDF /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				59A242E2FD73C804DD128D79 /* RegistroGenitore */,
+			);
+			name = RegistroGenitore;
+			packageProductDependencies = (
+				4F0213A6D3DA357E5213EDD9 /* ParentApp */,
+			);
+			productName = RegistroGenitore;
+			productReference = CBE0AFBA0DEEDD8F3180FDFA /* RegistroGenitore.app */;
+			productType = "com.apple.product-type.application";
+		};
+		7A3D8087CE7061046ED5125E /* RegistroSegreteria */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1C41EF96A2193391DF33C9FB /* Build configuration list for PBXNativeTarget "RegistroSegreteria" */;
+			buildPhases = (
+				E08FFA4F1DD7AE39CCA9621E /* Sources */,
+				AAB11C65DD938684F2704193 /* Frameworks */,
+				1D0CE2B6138CC9F6D5BBAF9A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				99B42B3E4C3938D39D0CBC12 /* RegistroSegreteria */,
+			);
+			name = RegistroSegreteria;
+			packageProductDependencies = (
+				8F46EC5DA6CADA213E68B7D9 /* SecretaryApp */,
+			);
+			productName = RegistroSegreteria;
+			productReference = 11D908C32BF83D6CFFE6B016 /* RegistroSegreteria.app */;
+			productType = "com.apple.product-type.application";
+		};
+		A76D1DAD5240A8D832E2E4AD /* RegistroDocente */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 326D0E60E8386D0B1BBEA206 /* Build configuration list for PBXNativeTarget "RegistroDocente" */;
+			buildPhases = (
+				A94B86742DB805F9FE00478C /* Sources */,
+				092F21176333C5D49E8BAECF /* Frameworks */,
+				C9AFC749B03FB2A5C8527069 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				D962EB40D536504E218979D2 /* RegistroDocente */,
+			);
+			name = RegistroDocente;
+			packageProductDependencies = (
+				2C719545B8432DBC27E7C9A9 /* TeacherApp */,
+			);
+			productName = RegistroDocente;
+			productReference = 2A385C7347AC880E2D851003 /* RegistroDocente.app */;
+			productType = "com.apple.product-type.application";
+		};
+		D6F31803304AD92900039BDF /* RegistroStudente */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D6F31828304AD92A00039BDF /* Build configuration list for PBXNativeTarget "RegistroStudente" */;
+			buildPhases = (
+				D6F31800304AD92900039BDF /* Sources */,
+				D6F31801304AD92900039BDF /* Frameworks */,
+				D6F31802304AD92900039BDF /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				D6F31806304AD92900039BDF /* RegistroStudente */,
+			);
+			name = RegistroStudente;
+			packageProductDependencies = (
+				D6F31834304AD98D00039BDF /* StudentApp */,
+			);
+			productName = RegistroStudente;
+			productReference = D6F31804304AD92900039BDF /* RegistroStudente.app */;
+			productType = "com.apple.product-type.application";
+		};
+		D6F31814304AD92A00039BDF /* RegistroStudenteTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D6F3182D304AD92A00039BDF /* Build configuration list for PBXNativeTarget "RegistroStudenteTests" */;
+			buildPhases = (
+				D6F31811304AD92A00039BDF /* Sources */,
+				D6F31812304AD92A00039BDF /* Frameworks */,
+				D6F31813304AD92A00039BDF /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D6F31817304AD92A00039BDF /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				D6F31818304AD92A00039BDF /* RegistroStudenteTests */,
+			);
+			name = RegistroStudenteTests;
+			productName = RegistroStudenteTests;
+			productReference = D6F31815304AD92A00039BDF /* RegistroStudenteTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		D6F3181E304AD92A00039BDF /* RegistroStudenteUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D6F31830304AD92A00039BDF /* Build configuration list for PBXNativeTarget "RegistroStudenteUITests" */;
+			buildPhases = (
+				D6F3181B304AD92A00039BDF /* Sources */,
+				D6F3181C304AD92A00039BDF /* Frameworks */,
+				D6F3181D304AD92A00039BDF /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D6F31821304AD92A00039BDF /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				D6F31822304AD92A00039BDF /* RegistroStudenteUITests */,
+			);
+			name = RegistroStudenteUITests;
+			productName = RegistroStudenteUITests;
+			productReference = D6F3181F304AD92A00039BDF /* RegistroStudenteUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		D6F317FC304AD92900039BDF /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2660;
+				LastUpgradeCheck = 2660;
+				TargetAttributes = {
+					D6F31803304AD92900039BDF = {
+						CreatedOnToolsVersion = 26.6;
+					};
+					D6F31814304AD92A00039BDF = {
+						CreatedOnToolsVersion = 26.6;
+						TestTargetID = D6F31803304AD92900039BDF;
+					};
+					D6F3181E304AD92A00039BDF = {
+						CreatedOnToolsVersion = 26.6;
+						TestTargetID = D6F31803304AD92900039BDF;
+					};
+				};
+			};
+			buildConfigurationList = D6F317FF304AD92900039BDF /* Build configuration list for PBXProject "RegistroStudente" */;
+			developmentRegion = it;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				it,
+				en,
+				Base,
+			);
+			mainGroup = D6F317FB304AD92900039BDF;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				D6F31833304AD98D00039BDF /* XCLocalSwiftPackageReference "../../ios" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = D6F31805304AD92900039BDF /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D6F31803304AD92900039BDF /* RegistroStudente */,
+				D6F31814304AD92A00039BDF /* RegistroStudenteTests */,
+				D6F3181E304AD92A00039BDF /* RegistroStudenteUITests */,
+				A76D1DAD5240A8D832E2E4AD /* RegistroDocente */,
+				27DC376F75F0D12B3CDA7F04 /* RegistroGenitore */,
+				7A3D8087CE7061046ED5125E /* RegistroSegreteria */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		1D0CE2B6138CC9F6D5BBAF9A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C9AFC749B03FB2A5C8527069 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CB25E77F2386B61E08C65CDF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D6F31802304AD92900039BDF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D6F31813304AD92A00039BDF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D6F3181D304AD92A00039BDF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		8B38138AC56C6BFE1E8FA2A9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A94B86742DB805F9FE00478C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D6F31800304AD92900039BDF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D6F31811304AD92A00039BDF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D6F3181B304AD92A00039BDF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E08FFA4F1DD7AE39CCA9621E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		D6F31817304AD92A00039BDF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D6F31803304AD92900039BDF /* RegistroStudente */;
+			targetProxy = D6F31816304AD92A00039BDF /* PBXContainerItemProxy */;
+		};
+		D6F31821304AD92A00039BDF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D6F31803304AD92900039BDF /* RegistroStudente */;
+			targetProxy = D6F31820304AD92A00039BDF /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		01AC3A77DA39522A8798D392 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = RegistroSegreteria/RegistroSegreteria.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = RegistroSegreteria/Info.plist;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.fabriziochimienti.RegistroSegreteria;
+				PRODUCT_NAME = RegistroSegreteria;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		038D75F6605F4D97D7037B18 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = RegistroDocente/RegistroDocente.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = RegistroDocente/Info.plist;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.fabriziochimienti.RegistroDocente;
+				PRODUCT_NAME = RegistroDocente;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		1625D90629AE7A3298DB5CBC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = RegistroSegreteria/RegistroSegreteria.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = RegistroSegreteria/Info.plist;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.fabriziochimienti.RegistroSegreteria;
+				PRODUCT_NAME = RegistroSegreteria;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		1D7FAE70D6EF45E5DEA57425 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = RegistroGenitore/RegistroGenitore.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = RegistroGenitore/Info.plist;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.fabriziochimienti.RegistroGenitore;
+				PRODUCT_NAME = RegistroGenitore;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		8856395316C2809106445359 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = RegistroGenitore/RegistroGenitore.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = RegistroGenitore/Info.plist;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.fabriziochimienti.RegistroGenitore;
+				PRODUCT_NAME = RegistroGenitore;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		B326835851B680CF9DEA6057 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = RegistroDocente/RegistroDocente.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = RegistroDocente/Info.plist;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.fabriziochimienti.RegistroDocente;
+				PRODUCT_NAME = RegistroDocente;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		D6F31829304AD92A00039BDF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = RegistroStudente/RegistroStudente.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = RegistroStudente/Info.plist;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.fabriziochimienti.RegistroStudente;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		D6F3182A304AD92A00039BDF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = RegistroStudente/RegistroStudente.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = RegistroStudente/Info.plist;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.fabriziochimienti.RegistroStudente;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		D6F3182B304AD92A00039BDF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		D6F3182C304AD92A00039BDF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		D6F3182E304AD92A00039BDF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.fabriziochimienti.RegistroStudenteTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/RegistroStudente.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/RegistroStudente";
+			};
+			name = Debug;
+		};
+		D6F3182F304AD92A00039BDF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.fabriziochimienti.RegistroStudenteTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/RegistroStudente.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/RegistroStudente";
+			};
+			name = Release;
+		};
+		D6F31831304AD92A00039BDF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.fabriziochimienti.RegistroStudenteUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = RegistroStudente;
+			};
+			name = Debug;
+		};
+		D6F31832304AD92A00039BDF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.fabriziochimienti.RegistroStudenteUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = RegistroStudente;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1C41EF96A2193391DF33C9FB /* Build configuration list for PBXNativeTarget "RegistroSegreteria" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				01AC3A77DA39522A8798D392 /* Release */,
+				1625D90629AE7A3298DB5CBC /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		326D0E60E8386D0B1BBEA206 /* Build configuration list for PBXNativeTarget "RegistroDocente" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				038D75F6605F4D97D7037B18 /* Release */,
+				B326835851B680CF9DEA6057 /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D6F317FF304AD92900039BDF /* Build configuration list for PBXProject "RegistroStudente" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D6F3182B304AD92A00039BDF /* Debug */,
+				D6F3182C304AD92A00039BDF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D6F31828304AD92A00039BDF /* Build configuration list for PBXNativeTarget "RegistroStudente" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D6F31829304AD92A00039BDF /* Debug */,
+				D6F3182A304AD92A00039BDF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D6F3182D304AD92A00039BDF /* Build configuration list for PBXNativeTarget "RegistroStudenteTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D6F3182E304AD92A00039BDF /* Debug */,
+				D6F3182F304AD92A00039BDF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D6F31830304AD92A00039BDF /* Build configuration list for PBXNativeTarget "RegistroStudenteUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D6F31831304AD92A00039BDF /* Debug */,
+				D6F31832304AD92A00039BDF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E72BE60CDA267F4537DF2BAA /* Build configuration list for PBXNativeTarget "RegistroGenitore" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8856395316C2809106445359 /* Release */,
+				1D7FAE70D6EF45E5DEA57425 /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		D6F31833304AD98D00039BDF /* XCLocalSwiftPackageReference "../../ios" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../../ios;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		2C719545B8432DBC27E7C9A9 /* TeacherApp */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D6F31833304AD98D00039BDF /* XCLocalSwiftPackageReference "../../ios" */;
+			productName = TeacherApp;
+		};
+		4F0213A6D3DA357E5213EDD9 /* ParentApp */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D6F31833304AD98D00039BDF /* XCLocalSwiftPackageReference "../../ios" */;
+			productName = ParentApp;
+		};
+		8F46EC5DA6CADA213E68B7D9 /* SecretaryApp */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D6F31833304AD98D00039BDF /* XCLocalSwiftPackageReference "../../ios" */;
+			productName = SecretaryApp;
+		};
+		D6F31834304AD98D00039BDF /* StudentApp */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = StudentApp;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = D6F317FC304AD92900039BDF /* Project object */;
+}

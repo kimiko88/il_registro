@@ -1,5 +1,6 @@
 import { useAuthStore } from 'src/stores/auth'
 import { isTokenExpired } from 'src/utils/jwt'
+import { Notify } from 'quasar'
 
 // Shared in-flight promise to prevent concurrent initAuth calls
 let _initAuthPromise = null
@@ -78,6 +79,17 @@ export const authGuard = async (to, from, ...rest) => {
             if (import.meta.env.DEV) {
                 console.warn(`Access denied: role '${currentRole}' is not allowed for path '${to.path}'`)
             }
+            try {
+                if (typeof Notify !== 'undefined' && typeof Notify.create === 'function') {
+                    Notify.create({
+                        type: 'warning',
+                        message: 'Accesso negato: non disponi dei permessi necessari per questa sezione.',
+                        icon: 'lock',
+                        position: 'top',
+                        timeout: 3000
+                    })
+                }
+            } catch { /* ignore notification failure in test/headless */ }
             return proceed(getUserDashboard(currentRole))
         }
     }

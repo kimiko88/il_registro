@@ -90,6 +90,10 @@ func (m *mockVerbaliRepo) GetSignatures(ctx context.Context, verbaleID string) (
 	return m.sigs[verbaleID], nil
 }
 
+func (m *mockVerbaliRepo) ClassBelongsToSchool(ctx context.Context, classID, schoolID string) (bool, error) {
+	return true, nil
+}
+
 func TestIntegration_Verbali_Meeting_Workflow(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 

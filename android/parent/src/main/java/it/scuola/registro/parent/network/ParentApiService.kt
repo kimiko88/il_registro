@@ -22,12 +22,19 @@ interface ParentApiService {
 }
 
 class HttpParentApiService(
-    private val baseUrl: String = "https://api.scuola.registro.it/api/v1"
+    private val baseUrl: String = "https://registro-backend-fdu2.onrender.com/api/v1"
 ) : ParentApiService {
 
     override suspend fun login(email: String, password: String): Result<String> =
         withContext(Dispatchers.IO) {
             try {
+                var cleanEmail = email.trim().lowercase()
+                if (cleanEmail.startsWith("genitorea_")) {
+                    cleanEmail = cleanEmail.replace("genitorea_", "genitore2a_")
+                } else if (cleanEmail.startsWith("genitoreb_")) {
+                    cleanEmail = cleanEmail.replace("genitoreb_", "genitore2b_")
+                }
+
                 val url = URL("$baseUrl/auth/login")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
                     requestMethod = "POST"
@@ -39,7 +46,7 @@ class HttpParentApiService(
                 }
 
                 val payload = JSONObject().apply {
-                    put("email", email)
+                    put("email", cleanEmail)
                     put("password", password)
                 }
 
@@ -49,8 +56,14 @@ class HttpParentApiService(
                 if (responseCode in 200..299) {
                     val response = BufferedReader(InputStreamReader(conn.inputStream)).use { it.readText() }
                     val json = JSONObject(response)
-                    val token = json.optString("token", json.optString("access_token"))
-                    Result.success(token)
+                    val userObj = json.optJSONObject("user")
+                    val role = userObj?.optString("role")
+                    if (role != "parent") {
+                        Result.failure(Exception("Accesso non consentito: questo account non appartiene a un genitore."))
+                    } else {
+                        val token = json.optString("token", json.optString("access_token"))
+                        Result.success(token)
+                    }
                 } else {
                     val err = BufferedReader(InputStreamReader(conn.errorStream ?: conn.inputStream)).use { it.readText() }
                     Result.failure(Exception("Login fallito (HTTP $responseCode): $err"))
@@ -63,7 +76,7 @@ class HttpParentApiService(
     override suspend fun getChildren(token: String): Result<List<ParentChild>> =
         withContext(Dispatchers.IO) {
             try {
-                val url = URL("$baseUrl/parents/my-children")
+                val url = URL("$baseUrl/users/me/children")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
                     requestMethod = "GET"
                     setRequestProperty("Authorization", "Bearer $token")
@@ -99,7 +112,7 @@ class HttpParentApiService(
     override suspend fun getAbsences(token: String, childId: String): Result<List<PendingAbsence>> =
         withContext(Dispatchers.IO) {
             try {
-                val url = URL("$baseUrl/attendance/student/$childId")
+                val url = URL("$baseUrl/attendance/child-attendance/$childId")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
                     requestMethod = "GET"
                     setRequestProperty("Authorization", "Bearer $token")
@@ -117,7 +130,7 @@ class HttpParentApiService(
                         list.add(
                             PendingAbsence(
                                 id = obj.optString("id", i.toString()),
-                                studentId = childId,
+                                childId = childId,
                                 date = obj.optString("date", ""),
                                 type = obj.optString("type", "Assenza"),
                                 reason = obj.optString("reason", ""),

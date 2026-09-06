@@ -95,14 +95,14 @@
 
     <!-- Upload Dialog -->
     <q-dialog v-model="uploadDialog" persistent>
-      <q-card style="min-width: 480px" class="q-pa-sm">
+      <q-card style="width: min(500px, 95vw); max-width: 95vw;" class="q-pa-sm">
         <q-card-section class="row items-center">
           <div class="text-h6 text-weight-bold text-outfit">
             <q-icon name="cloud_upload" color="primary" class="q-mr-xs" />
             Condividi Materiale
           </div>
           <q-space />
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-gutter-md q-pt-none">

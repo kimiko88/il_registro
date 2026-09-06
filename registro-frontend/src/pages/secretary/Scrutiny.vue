@@ -110,7 +110,7 @@
           </div>
           <div class="row items-center q-gutter-sm">
             <q-btn color="white" text-color="primary" icon="file_download" label="Esporta Excel" no-caps @click="exportClassExcel" />
-            <q-btn icon="close" flat round dense v-close-popup />
+            <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
           </div>
         </q-card-section>
 
@@ -180,7 +180,7 @@
 
     <!-- Finalize Confirmation Dialog -->
     <q-dialog v-model="finalizeModal">
-      <q-card style="min-width: 400px" class="rounded-xl overflow-hidden">
+      <q-card style="width: min(450px, 95vw); max-width: 95vw;" class="rounded-xl overflow-hidden">
         <q-card-section class="bg-warning text-white row items-center">
           <q-icon name="warning" size="md" class="q-mr-sm" />
           <div class="text-h6 text-weight-bold">Conferma Finalizzazione Scrutinio</div>

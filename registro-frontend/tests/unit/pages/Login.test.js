@@ -152,3 +152,15 @@ describe('T17 — /register path opens secretary dialog on mount', () => {
   })
 })
 
+// T18
+describe('T18 — error message reactivity on language change', () => {
+  it('updates errorMessage when changeLanguage is triggered', async () => {
+    const wrapper = createWrapper()
+    wrapper.vm.errorKey = 'login.sessionExpired'
+    wrapper.vm.errorMessage = 'Sessione scaduta'
+    wrapper.vm.changeLanguage('en')
+    expect(wrapper.vm.errorMessage).toBeTruthy()
+  })
+})
+
+

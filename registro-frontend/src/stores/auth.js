@@ -1,14 +1,7 @@
-import { defineStore } from 'pinia'
+import { defineStore, getActivePinia } from 'pinia'
 import { ref, computed } from 'vue'
 import axios from 'axios'
 import { resetApiState, clearLocalSession, getBaseURL } from '../services/api'
-import { useGradesStore } from './grades'
-import { useAttendanceStore } from './attendance'
-import { useCommunicationsStore } from './communications'
-import { useScrutinyStore } from './scrutiny'
-import { useParentStore } from './parent'
-import { useWebSocketStore } from './websocket'
-
 import { isTokenExpired, getRoleFromToken } from '../utils/jwt'
 
 const parseUser = (val) => {
@@ -113,49 +106,41 @@ export const useAuthStore = defineStore('auth', () => {
         token.value = null
 
         try {
-            const wsStore = useWebSocketStore()
-            wsStore.disconnect(true)
+            const pinia = getActivePinia()
+            if (pinia && pinia._s) {
+                for (const [storeId, store] of pinia._s.entries()) {
+                    if (storeId === 'auth') continue
+                    try {
+                        if (storeId === 'websocket' && typeof store.disconnect === 'function') {
+                            store.disconnect(true)
+                        }
+                        if (typeof store.clearCache === 'function') {
+                            store.clearCache()
+                        }
+                        if (typeof store.invalidateCache === 'function') {
+                            store.invalidateCache()
+                        }
+                        if (typeof store.reset === 'function') {
+                            store.reset()
+                        }
+                        if (typeof store.$reset === 'function') {
+                            store.$reset()
+                        }
+                    } catch {
+                        // Store cleanup guard
+                    }
+                }
+            }
         } catch {
-            // WebSocket store not initialized or already closed
-        }
-
-        try {
-            const gradesStore = useGradesStore()
-            gradesStore.clearCache()
-        } catch {
-            // Grades store not initialized
-        }
-
-        try {
-            const attendanceStore = useAttendanceStore()
-            if (typeof attendanceStore.$reset === 'function') attendanceStore.$reset()
-        } catch (_e) {
-            // Store not initialized
-        }
-
-        try {
-            const communicationsStore = useCommunicationsStore()
-            if (typeof communicationsStore.$reset === 'function') communicationsStore.$reset()
-        } catch (_e) {
-            // Store not initialized
-        }
-
-        try {
-            const scrutinyStore = useScrutinyStore()
-            if (typeof scrutinyStore.$reset === 'function') scrutinyStore.$reset()
-        } catch (_e) {
-            // Store not initialized
-        }
-
-        try {
-            const parentStore = useParentStore()
-            if (typeof parentStore.$reset === 'function') parentStore.$reset()
-        } catch (_e) {
-            // Store not initialized
+            // Pinia context not active or already disposed
         }
 
         clearLocalSession()
         resetApiState()
+
+        if (typeof window !== 'undefined' && 'caches' in window) {
+            caches.delete('api-static-lists').catch(() => {})
+        }
     }
 
     function updateUser(userData) {

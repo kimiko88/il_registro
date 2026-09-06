@@ -1,24 +1,24 @@
 <template>
   <q-dialog v-model="isOpen" persistent>
-    <q-card class="keyboard-shortcuts-card q-pa-md" style="min-width: 550px; max-width: 700px; border-radius: 16px;">
+    <q-card class="keyboard-shortcuts-card q-pa-md" style="width: min(700px, 95vw); max-width: 95vw; border-radius: 16px;">
       <q-card-section class="row items-center justify-between q-pb-none">
         <div class="text-h6 text-weight-bold flex items-center gap-sm text-primary">
           <q-icon name="keyboard" size="28px" />
-          {{ $t('a11y.shortcutsTitle') || 'Scorciatoie da Tastiera & Accessibilità' }}
+          {{ t('a11y.shortcutsTitle') || 'Scorciatoie da Tastiera & Accessibilità' }}
         </div>
-        <q-btn icon="close" flat round dense v-close-popup />
+        <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
       </q-card-section>
 
       <q-card-section class="q-pt-sm">
         <div class="text-caption text-grey-7 q-mb-md">
-          {{ $t('a11y.shortcutsSubtitle') || 'Usa la combinazione di tasti per navigare rapidamente nel registro senza utilizzare il mouse.' }}
+          {{ t('a11y.shortcutsSubtitle') || 'Usa la combinazione di tasti per navigare rapidamente nel registro senza utilizzare il mouse.' }}
         </div>
 
         <q-input
           v-model="filterQuery"
           dense
           outlined
-          placeholder="Cerca comando o scorciatoia..."
+          :placeholder="t('a11y.shortcutsSearch') || 'Cerca comando o scorciatoia...'"
           class="q-mb-md"
           clearable
         >
@@ -50,7 +50,7 @@
       </q-card-section>
 
       <q-card-actions align="right" class="q-pt-none">
-        <q-btn flat label="Chiudi (Esc)" color="primary" v-close-popup no-caps />
+        <q-btn flat :label="(t('common.close') || 'Chiudi') + ' (Esc)'" color="primary" v-close-popup no-caps />
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -58,8 +58,10 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useThemeStore } from 'src/stores/theme'
 
+const { t, locale } = useI18n()
 const themeStore = useThemeStore()
 
 const isOpen = computed({
@@ -69,34 +71,37 @@ const isOpen = computed({
 
 const filterQuery = ref('')
 
-const shortcutGroups = [
-  {
-    category: 'Navigazione Globale (Ruolo Docente & Segreteria)',
+const shortcutGroups = computed(() => {
+  const _ = locale && typeof locale === 'object' ? locale.value : locale
+  return [
+    {
+      category: t('a11y.shortcutsCatGlobal') || 'Navigazione Globale (Ruolo Docente & Segreteria)',
     items: [
-      { description: 'Vai alla Dashboard', keys: ['Alt', '1'] },
-      { description: 'Vai al Registro Voti', keys: ['Alt', 'V'] },
-      { description: 'Vai al Registro Presenze', keys: ['Alt', 'P'] },
-      { description: 'Vai all\'Agenda & Compiti', keys: ['Alt', 'A'] },
-      { description: 'Attiva Ricerca Globale', keys: ['Alt', 'S'] }
+      { description: t('a11y.shortcutDashboard') || 'Vai alla Dashboard', keys: ['Alt', '1'] },
+      { description: t('a11y.shortcutGrades') || 'Vai al Registro Voti', keys: ['Alt', 'V'] },
+      { description: t('a11y.shortcutAttendance') || 'Vai al Registro Presenze', keys: ['Alt', 'P'] },
+      { description: t('a11y.shortcutAgenda') || 'Vai all\'Agenda & Compiti', keys: ['Alt', 'A'] },
+      { description: t('a11y.shortcutSearch') || 'Attiva Ricerca Globale', keys: ['Alt', 'S'] }
     ]
   },
   {
-    category: 'Funzionalità di Accessibilità (A11y)',
+    category: t('a11y.shortcutsCatA11y') || 'Funzionalità di Accessibilità (A11y)',
     items: [
-      { description: 'Mostra / Nascondi Guida Scorciatoie', keys: ['?'] },
-      { description: 'Attiva / Disattiva Righello di Lettura', keys: ['Alt', 'R'] },
-      { description: 'Sposta Righello Su / Giù', keys: ['Alt', '↑ / ↓'] },
-      { description: 'Attiva / Disattiva Lettura Vocale (TTS)', keys: ['Alt', 'T'] },
-      { description: 'Salta al Contenuto Principale (Skip to Main)', keys: ['Tab (Inizio Pagina)'] },
-      { description: 'Chiudi Modale / Annulla Operazione', keys: ['Esc'] }
+      { description: t('a11y.shortcutHelp') || 'Mostra / Nascondi Guida Scorciatoie', keys: ['?'] },
+      { description: t('a11y.shortcutRuler') || 'Attiva / Disattiva Righello di Lettura', keys: ['Alt', 'R'] },
+      { description: t('a11y.shortcutRulerMove') || 'Sposta Righello Su / Giù', keys: ['Alt', '↑ / ↓'] },
+      { description: t('a11y.shortcutTts') || 'Attiva / Disattiva Lettura Vocale (TTS)', keys: ['Alt', 'T'] },
+      { description: t('a11y.shortcutSkip') || 'Salta al Contenuto Principale (Skip to Main)', keys: [t('a11y.keyTabStart') || 'Tab (Inizio Pagina)'] },
+      { description: t('a11y.shortcutEsc') || 'Chiudi Modale / Annulla Operazione', keys: ['Esc'] }
     ]
   }
-]
+]})
 
 const filteredGroups = computed(() => {
-  if (!filterQuery.value) return shortcutGroups
+  const groups = shortcutGroups.value
+  if (!filterQuery.value) return groups
   const q = filterQuery.value.toLowerCase()
-  return shortcutGroups
+  return groups
     .map(g => ({
       ...g,
       items: g.items.filter(i =>

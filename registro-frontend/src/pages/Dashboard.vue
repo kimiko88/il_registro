@@ -76,9 +76,9 @@
 
                 <!-- Menu per Segreteria -->
                 <q-list style="min-width: 240px" v-else-if="currentRole === 'secretary'">
-                  <q-item clickable @click="router.push('/secretary/audit-log')">
-                    <q-item-section avatar><q-icon name="fact_check" color="primary" /></q-item-section>
-                    <q-item-section>{{ $t('dashboardPage.auditLogs') || 'Audit Log' }}</q-item-section>
+                  <q-item clickable @click="router.push('/secretary/students')">
+                    <q-item-section avatar><q-icon name="school" color="primary" /></q-item-section>
+                    <q-item-section>{{ $t('studentsPage.title') || 'Anagrafica Studenti' }}</q-item-section>
                   </q-item>
                   <q-item clickable @click="router.push('/secretary/users')">
                     <q-item-section avatar><q-icon name="people" color="secondary" /></q-item-section>
@@ -180,7 +180,7 @@
                   flat
                   color="primary"
                   icon="assignment"
-                  label="Vedi i Tuoi Compiti & Attività"
+                  :label="$t('dashboardPage.viewYourHomework') || 'Vedi i Tuoi Compiti & Attività'"
                   class="q-mt-sm"
                   to="/student/homework"
                 />
@@ -195,10 +195,10 @@
             <div>
               <div class="text-h6 text-weight-bold text-dark row items-center">
                 <q-icon name="assignment" color="primary" class="q-mr-sm" size="24px" />
-                <span>Prossimi Compiti da Svolgere</span>
+                <span>{{ $t('dashboardPage.upcomingHomework') || 'Prossimi Compiti da Svolgere' }}</span>
               </div>
               <div class="text-caption text-slate-500 q-mt-xs">
-                Organizza il tuo studio: compiti, verifiche e consegne in arrivo
+                {{ $t('dashboardPage.upcomingHomeworkSub') || 'Organizza il tuo studio: compiti, verifiche e consegne in arrivo' }}
               </div>
             </div>
             <q-btn
@@ -206,7 +206,7 @@
               dense
               color="primary"
               icon="open_in_new"
-              label="Tutti i Compiti"
+              :label="$t('dashboardPage.allHomework') || 'Tutti i Compiti'"
               no-caps
               :to="currentRole === 'student' ? '/student/homework' : '/parent/didactics'"
               class="text-weight-bold"
@@ -250,7 +250,7 @@
                     {{ hw.title || hw.description }}
                   </q-item-label>
                   <q-item-label caption v-if="hw.teacher" class="text-slate-400">
-                    Docente: {{ hw.teacher }}
+                    {{ $t('dashboardPage.teacherLabel') || 'Docente' }}: {{ hw.teacher }}
                   </q-item-label>
                 </q-item-section>
 
@@ -274,8 +274,12 @@
 
             <div v-else class="text-center q-pa-lg text-slate-500">
               <q-icon name="task_alt" size="48px" color="positive" class="q-mb-sm opacity-80" />
-              <div class="text-subtitle1 text-weight-bold text-slate-700">Nessun compito in sospeso</div>
-              <div class="text-caption text-slate-500">Sei in pari con tutte le consegne e le attività di studio!</div>
+              <div class="text-subtitle1 text-weight-bold text-slate-700">
+                {{ $t('dashboardPage.noPendingHomework') || 'Nessun compito in sospeso' }}
+              </div>
+              <div class="text-caption text-slate-500">
+                {{ $t('dashboardPage.allCaughtUp') || 'Sei in pari con tutte le consegne e le attività di studio!' }}
+              </div>
             </div>
           </q-card-section>
         </q-card>
@@ -327,12 +331,12 @@
 
     <!-- Dialog Pianifica Bozza Lezione (Solo Docente) -->
     <q-dialog v-if="currentRole === 'teacher'" v-model="showDraftDialog" persistent>
-      <q-card style="min-width: 500px; max-width: 650px" class="rounded-xl">
+      <q-card style="width: min(600px, 95vw); max-width: 95vw;" class="rounded-xl">
         <q-card-section class="bg-primary text-white row items-center justify-between">
           <div class="text-h6 text-weight-bold">
             <q-icon name="edit_note" class="q-mr-xs" /> {{ $t('udaPage.createTitle') || 'Pianifica Bozza Lezione' }}
           </div>
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pa-md q-gutter-y-sm">
@@ -367,12 +371,12 @@
 
     <!-- Dialog Elenco Bozze Salvate (Solo Docente) -->
     <q-dialog v-if="currentRole === 'teacher'" v-model="showDraftsListDialog">
-      <q-card style="min-width: 600px" class="rounded-xl">
+      <q-card style="width: min(600px, 95vw); max-width: 95vw;" class="rounded-xl">
         <q-card-section class="bg-secondary text-white row items-center justify-between">
           <div class="text-h6 text-weight-bold">
             <q-icon name="collections_bookmark" class="q-mr-xs" /> {{ t('dashboardPage.draftsListTitle') }}
           </div>
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pa-md">
@@ -388,7 +392,7 @@
               </q-item-section>
               <q-item-section side class="row items-center q-gutter-xs">
                 <q-btn color="positive" size="sm" icon="check" :label="t('dashboardPage.signAndRegister')" @click="registerDraftNow(draft, idx)" />
-                <q-btn flat round dense icon="delete" color="negative" @click="deleteDraft(idx)" />
+                <q-btn flat round dense icon="delete" color="negative" :aria-label="t('common.delete') || 'Elimina bozza'" @click="deleteDraft(idx)" />
               </q-item-section>
             </q-item>
           </q-list>
@@ -640,18 +644,20 @@ const fetchDashboardData = async () => {
                     { label: t('dashboardPage.statGradesPending'), value: data.grades_pending_count ?? '0', icon: 'grade', color: 'red' }
                 ]
             } else if (role === 'student') {
+                const avg = data.average_grade != null && data.average_grade > 0 ? Number(data.average_grade).toFixed(1) : '-'
+                const att = (data.presence_rate ?? data.attendance_rate) != null ? Math.round(data.presence_rate ?? data.attendance_rate) + '%' : '-'
                 realStats.value = [
-                    { label: t('roleDashboards.averageGrade'), value: data.average_grade ?? '-', icon: 'grade', color: 'indigo' },
-                    { label: t('roleDashboards.attendanceRate'), value: data.attendance_rate != null ? data.attendance_rate + '%' : '-', icon: 'how_to_reg', color: 'cyan' },
+                    { label: t('roleDashboards.averageGrade'), value: avg, icon: 'grade', color: 'indigo' },
+                    { label: t('roleDashboards.attendanceRate'), value: att, icon: 'how_to_reg', color: 'cyan' },
                     { label: t('agendaPage.homework'), value: data.homework_count ?? '0', icon: 'assignment', color: 'amber' },
                     { label: t('documentsPage.title'), value: data.documents_count ?? '0', icon: 'description', color: 'purple' }
                 ]
             } else if (role === 'parent') {
                 realStats.value = [
-                    { label: t('nav.myChildren'), value: data.children_count ?? '0', icon: 'family_restroom', color: 'indigo' },
-                    { label: t('nav.colloqui'), value: data.upcoming_colloqui ?? '0', icon: 'event', color: 'cyan' },
-                    { label: t('nav.communications'), value: data.unread_communications ?? '0', icon: 'email', color: 'amber' },
-                    { label: t('documentsPage.title'), value: data.documents_count ?? '0', icon: 'description', color: 'purple' }
+                    { label: t('nav.myChildren'), value: data.total_children ?? data.children_count ?? '0', icon: 'family_restroom', color: 'indigo' },
+                    { label: t('nav.colloqui'), value: data.upcoming_meetings ?? data.upcoming_colloqui ?? '0', icon: 'event', color: 'cyan' },
+                    { label: t('nav.communications'), value: data.active_communications ?? data.unread_communications ?? '0', icon: 'email', color: 'amber' },
+                    { label: t('parentAria.pendingJustifications') || 'Giustificazioni', value: data.pending_justifications ?? data.documents_count ?? '0', icon: 'pending_actions', color: 'red' }
                 ]
             }
 
@@ -721,10 +727,14 @@ const getDueRelativeText = (dateStr) => {
     const now = new Date()
     now.setHours(0, 0, 0, 0)
     const diffDays = Math.round((target - now) / (1000 * 60 * 60 * 24))
-    if (diffDays === 0) return 'Oggi'
-    if (diffDays === 1) return 'Domani'
-    if (diffDays > 1 && diffDays <= 7) return `Tra ${diffDays} giorni`
-    return target.toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })
+    if (diffDays === 0) return t('dashboardPage.dueToday') || 'Oggi'
+    if (diffDays === 1) return t('dashboardPage.dueTomorrow') || 'Domani'
+    if (diffDays > 1 && diffDays <= 7) return t('dashboardPage.dueInDays', { days: diffDays }) || `Tra ${diffDays} giorni`
+    try {
+        return target.toLocaleDateString(currentLocale.value || 'it-IT', { day: '2-digit', month: 'short' })
+    } catch {
+        return target.toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })
+    }
 }
 
 const getDueRelativeColor = (dateStr) => {
@@ -744,7 +754,11 @@ const formatDateOnly = (dateString) => {
     if (!dateString) return '-'
     const d = new Date(dateString)
     if (isNaN(d.getTime())) return dateString
-    return d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    try {
+        return d.toLocaleDateString(currentLocale.value || 'it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    } catch {
+        return d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    }
 }
 
 const getEventIcon = (type) => {

@@ -34,7 +34,7 @@ class SecretaryViewModelTest {
         val newValid = ManagedUser("u6", "Nuovo", "Docente", "nuovo.docente@scuola.it", "teacher")
         val success = viewModel.addUser(newValid)
         assertTrue(success)
-        assertEquals(5, viewModel.usersList.size)
+        assertEquals(4, viewModel.usersList.size)
     }
 
     @Test

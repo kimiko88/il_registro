@@ -1,15 +1,15 @@
 "app_name" = "السجل - المعلم";
-"teacher_dashboard_title" = "سجل المعلم";
-"take_attendance" = "تفقد الحضور";
+"teacher_dashboard_title" = "بوابة المعلمين";
+"take_attendance" = "تسجيل الحضور";
 "add_grade" = "إضافة درجة";
-"scrutiny_board" = "مجلس التقييم";
-"sign_hour" = "توقيع حصة الدرس";
+"scrutiny_board" = "لجنة التدقيق والتقييم";
+"sign_hour" = "توقيع الحصة الدراسية";
 "lesson_topic" = "موضوع الدرس";
 "select_class" = "اختر الفصل";
-"login_subtitle" = "تسجيل الدخول إلى لوحة المعلم";
+"login_subtitle" = "تسجيل الدخول إلى مكتب المعلم";
 "email_label" = "البريد الإلكتروني للمعلم";
 "password_label" = "كلمة المرور";
-"btn_login" = "تسجيل الدخول إلى السجل";
+"btn_login" = "دخول السجل";
 "err_enter_credentials" = "أدخل البريد الإلكتروني وكلمة المرور";
 "logout" = "تسجيل الخروج";
 "save" = "حفظ";
@@ -17,3 +17,5 @@
 "present" = "حاضر";
 "absent" = "غائب";
 "late" = "متأخر";
+"my_classes_title" = "فصولي";
+"lesson_signed" = "تم توقيع الدرس";

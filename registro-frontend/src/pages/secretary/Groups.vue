@@ -76,7 +76,7 @@
             <q-icon name="groups" class="q-mr-xs" />
             Nuovo Gruppo Linguistico / Articolato
           </div>
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pa-lg q-gutter-y-md">
@@ -112,7 +112,7 @@
             <div class="text-h6 text-weight-bold">Gestione Studenti: {{ selectedGroup.name }}</div>
             <div class="text-caption opacity-90">Seleziona o deseleziona gli alunni da includere nel gruppo articolato</div>
           </div>
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pa-md">

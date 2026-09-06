@@ -66,6 +66,10 @@ public class ParentViewModel: ObservableObject {
         }
         do {
             let fetchedChildren = try await apiService.fetchChildren(token: token)
+            var allAbsences: [AbsenceModel] = []
+            if let firstChild = fetchedChildren.first {
+                allAbsences = try await apiService.fetchAbsences(token: token, childId: firstChild.id)
+            }
             await MainActor.run {
                 self.children = fetchedChildren.map {
                     ChildItemModel(id: $0.id, firstName: $0.firstName, lastName: $0.lastName, className: $0.className)
@@ -73,6 +77,7 @@ public class ParentViewModel: ObservableObject {
                 if let first = self.children.first {
                     self.selectedChildId = first.id
                 }
+                self.absences = allAbsences
                 self.isLoading = false
             }
         } catch {
@@ -114,5 +119,9 @@ public class ParentViewModel: ObservableObject {
         absences[index].isJustified = true
         absences[index].justificationNote = reason
         return true
+    }
+
+    public func justifyAbsence(id: String, note: String) -> Bool {
+        return justifyAbsence(id: id, reason: note)
     }
 }

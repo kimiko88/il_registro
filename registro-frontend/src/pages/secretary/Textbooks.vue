@@ -2,14 +2,14 @@
   <q-page padding class="bg-slate-50">
     <div class="row items-center q-mb-lg">
       <div class="col">
-        <h1 class="text-h4 text-weight-bold text-slate-800 q-my-none">Gestione Libri di Testo</h1>
-        <p class="text-subtitle1 text-slate-500 q-mb-none">Catalogo dei testi adottati e in adozione</p>
+        <h1 class="text-h4 text-weight-bold text-slate-800 q-my-none">{{ t('textbooksPage.title') }}</h1>
+        <p class="text-subtitle1 text-slate-500 q-mb-none">{{ t('textbooksPage.subtitle') }}</p>
       </div>
       <div class="col-auto">
         <q-btn 
           color="primary" 
           icon="add" 
-          label="Nuovo Libro" 
+          :label="t('textbooksPage.newBook')" 
           class="rounded-lg q-px-md shadow-soft" 
           @click="openCreateDialog" 
         />
@@ -55,10 +55,10 @@
           <q-td :props="props" auto-width>
             <div class="row q-gutter-xs">
               <q-btn flat round dense color="primary" icon="edit" @click="openEditDialog(props.row)">
-                <q-tooltip>Modifica</q-tooltip>
+                <q-tooltip>{{ t('common.edit') }}</q-tooltip>
               </q-btn>
               <q-btn flat round dense color="negative" icon="delete" @click="confirmDelete(props.row)">
-                <q-tooltip>Elimina</q-tooltip>
+                <q-tooltip>{{ t('common.delete') }}</q-tooltip>
               </q-btn>
             </div>
           </q-td>
@@ -67,8 +67,8 @@
         <template v-slot:no-data>
           <div class="full-width column flex-center q-pa-xl text-slate-400">
             <q-icon name="auto_stories" size="80px" class="opacity-20" />
-            <div class="text-h6 q-mt-md">Nessun libro trovato</div>
-            <p>Inizia aggiungendo un nuovo testo al catalogo.</p>
+            <div class="text-h6 q-mt-md">{{ t('textbooksPage.noDataTitle') }}</div>
+            <p>{{ t('textbooksPage.noDataSubtitle') }}</p>
           </div>
         </template>
       </q-table>
@@ -79,10 +79,10 @@
       <q-card style="display: flex; flex-direction: column; width: 550px; max-width: 95vw; max-height: 90vh;" class="glass-card overflow-hidden bg-white">
         <q-card-section class="bg-gradient-primary text-white q-pa-lg row items-center">
           <div class="text-h5 text-weight-bold text-outfit">
-            {{ isEdit ? 'Modifica Libro' : 'Nuovo Libro di Testo' }}
+            {{ isEdit ? t('textbooksPage.editBook') : t('textbooksPage.createTitle') }}
           </div>
           <q-space />
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pa-xl scroll" style="flex: 1; overflow-y: auto;">
@@ -90,41 +90,41 @@
           <q-form @submit="saveTextbook" class="q-gutter-y-lg">
             <q-input 
               v-model="form.title" 
-              label="Titolo" 
+              :label="t('textbooksPage.colTitle')" 
               outlined 
-              placeholder="Inserisci il titolo del libro"
-              :rules="[val => !!val || 'Obbligatorio']" 
+              :placeholder="t('textbooksPage.placeholderTitle')"
+              :rules="[val => !!val || t('common.requiredField')]" 
             />
             
             <div class="row q-col-gutter-md">
               <div class="col-12 col-md-6">
-                <q-input v-model="form.author" label="Autore" outlined placeholder="Nome dell'autore" />
+                <q-input v-model="form.author" :label="t('textbooksPage.colAuthor')" outlined :placeholder="t('textbooksPage.placeholderAuthor')" />
               </div>
               <div class="col-12 col-md-6">
-                <q-input v-model="form.subject" label="Materia Scolastica" outlined placeholder="es. Matematica, Italiano..." />
+                <q-input v-model="form.subject" :label="t('textbooksPage.colSubject')" outlined :placeholder="t('textbooksPage.placeholderSubject')" />
               </div>
             </div>
 
             <div class="row q-col-gutter-md">
               <div class="col-12 col-md-6">
-                <q-input v-model="form.publisher" label="Editore" outlined placeholder="Casa editrice" />
+                <q-input v-model="form.publisher" :label="t('textbooksPage.colPublisher')" outlined :placeholder="t('textbooksPage.placeholderPublisher')" />
               </div>
               <div class="col-12 col-md-6">
-                <q-input v-model="form.isbn" label="ISBN" outlined placeholder="Codice ISBN-13" />
+                <q-input v-model="form.isbn" :label="t('textbooksPage.colIsbn')" outlined :placeholder="t('textbooksPage.placeholderIsbn')" />
               </div>
             </div>
 
             <div class="row q-col-gutter-md">
               <div class="col-12 col-md-4">
-                <q-input v-model.number="form.price" label="Prezzo (€)" type="number" step="0.01" outlined />
+                <q-input v-model.number="form.price" :label="t('textbooksPage.colPrice') + ' (€)'" type="number" step="0.01" outlined />
               </div>
             </div>
             
             <div class="row justify-end q-mt-xl q-gutter-sm">
-              <q-btn flat label="Annulla" v-close-popup class="rounded-lg" />
+              <q-btn flat :label="t('common.cancel')" v-close-popup class="rounded-lg" />
               <q-btn 
                 type="submit" 
-                :label="isEdit ? 'Aggiorna' : 'Crea Libro'" 
+                :label="isEdit ? (t('common.update') || 'Aggiorna') : (t('common.create') || 'Crea Libro')" 
                 color="primary" 
                 class="q-px-xl rounded-lg shadow-sm" 
                 :loading="saving"
@@ -139,7 +139,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, reactive } from 'vue'
+import { ref, computed, onMounted, reactive } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
 import { textbookService } from '@/services/textbookService'
@@ -162,15 +162,15 @@ const form = reactive({
   price: 0
 })
 
-const columns = [
-  { name: 'title', label: 'Titolo', field: 'title', align: 'left', sortable: true },
-  { name: 'subject', label: 'Materia', field: 'subject', align: 'left', sortable: true },
-  { name: 'author', label: 'Autore', field: 'author', align: 'left', sortable: true },
-  { name: 'isbn', label: 'ISBN', field: 'isbn', align: 'left' },
-  { name: 'publisher', label: 'Editore', field: 'publisher', align: 'left', sortable: true },
-  { name: 'price', label: 'Prezzo', field: 'price', align: 'right', sortable: true },
-  { name: 'actions', label: 'Azioni', align: 'center' }
-]
+const columns = computed(() => [
+  { name: 'title', label: t('textbooksPage.colTitle'), field: 'title', align: 'left', sortable: true },
+  { name: 'subject', label: t('textbooksPage.colSubject'), field: 'subject', align: 'left', sortable: true },
+  { name: 'author', label: t('textbooksPage.colAuthor'), field: 'author', align: 'left', sortable: true },
+  { name: 'isbn', label: t('textbooksPage.colIsbn'), field: 'isbn', align: 'left' },
+  { name: 'publisher', label: t('textbooksPage.colPublisher'), field: 'publisher', align: 'left', sortable: true },
+  { name: 'price', label: t('textbooksPage.colPrice'), field: 'price', align: 'right', sortable: true },
+  { name: 'actions', label: t('textbooksPage.colActions'), align: 'center' }
+])
 
 onMounted(fetchTextbooks)
 
@@ -212,15 +212,15 @@ async function saveTextbook() {
   try {
     if (isEdit.value) {
       await textbookService.update(selectedId.value, form)
-      $q.notify({ type: 'positive', message: 'Libro aggiornato con successo' })
+      $q.notify({ type: 'positive', message: t('textbooksPage.updateSuccess') })
     } else {
       await textbookService.create(form)
-      $q.notify({ type: 'positive', message: 'Libro creato con successo' })
+      $q.notify({ type: 'positive', message: t('textbooksPage.saveSuccess') })
     }
     showDialog.value = false
     fetchTextbooks()
   } catch (e) {
-    $q.notify({ type: 'negative', message: 'Errore durante il salvataggio' })
+    $q.notify({ type: 'negative', message: t('textbooksPage.saveError') })
   } finally {
     saving.value = false
   }
@@ -228,22 +228,22 @@ async function saveTextbook() {
 
 async function confirmDelete(row) {
   $q.dialog({
-    title: 'Conferma Eliminazione',
-    message: `Sei sicuro di voler eliminare il libro "${row.title}"? Questa azione non può essere annullata.`,
+    title: t('textbooksPage.deleteConfirmTitle'),
+    message: t('textbooksPage.deleteConfirmMsg', { title: row.title }),
     cancel: true,
     persistent: true,
     ok: {
       color: 'negative',
-      label: 'Elimina',
+      label: t('common.delete'),
       flat: false
     }
   }).onOk(async () => {
     try {
       await textbookService.delete(row.id)
-      $q.notify({ type: 'positive', message: 'Libro eliminato' })
+      $q.notify({ type: 'positive', message: t('textbooksPage.deleteSuccess') })
       fetchTextbooks()
     } catch (err) {
-      $q.notify({ type: 'negative', message: 'Errore durante l\'eliminazione' })
+      $q.notify({ type: 'negative', message: t('textbooksPage.deleteError') })
     }
   })
 }

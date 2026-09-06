@@ -78,27 +78,23 @@ describe('Documents Management Workflow', () => {
         expect(wrapper.find('q-page-stub').exists() || wrapper.exists()).toBe(true)
     })
 
-    it('DW03 — DocumentEditor component can be mounted with template data', async () => {
-        const { default: DocumentEditor } = await import('@/components/Teacher/DocumentEditor.vue')
-        const wrapper = shallowMount(DocumentEditor, {
-            global: { plugins: [buildPinia('teacher')] },
+    it('DW03 — DocumentReviewForm component can be mounted with review props', async () => {
+        const { default: DocumentReviewForm } = await import('@/components/Secretary/DocumentReviewForm.vue')
+        const wrapper = shallowMount(DocumentReviewForm, {
+            global: { plugins: [buildPinia('secretary')] },
             props: {
-                modelValue: '<p>Contenuto iniziale</p>',
-                documentType: 'PDP'
+                doc: { id: 'doc-1', title: 'PDP Mario Rossi', type: 'PDP', status: 'pending' }
             }
         })
         expect(wrapper.exists()).toBe(true)
     })
 
-    it('DW04 — DocumentTemplate component renders template selector with options', async () => {
-        const { default: DocumentTemplate } = await import('@/components/Teacher/DocumentTemplate.vue')
-        const wrapper = shallowMount(DocumentTemplate, {
-            global: { plugins: [buildPinia('teacher')] },
+    it('DW04 — DocumentPreview component renders document preview container', async () => {
+        const { default: DocumentPreview } = await import('@/components/Secretary/DocumentPreview.vue')
+        const wrapper = shallowMount(DocumentPreview, {
+            global: { plugins: [buildPinia('secretary')] },
             props: {
-                templates: [
-                    { id: 't1', name: 'Modello PDP', type: 'PDP' },
-                    { id: 't2', name: 'Modello PFI', type: 'PFI' }
-                ]
+                doc: { id: 'doc-1', title: 'Anteprima Documento', url: 'https://example.com/doc.pdf' }
             }
         })
         expect(wrapper.exists()).toBe(true)

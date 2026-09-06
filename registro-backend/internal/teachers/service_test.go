@@ -404,3 +404,56 @@ func TestNewService(t *testing.T) {
 	assert.NotNil(t, service)
 	assert.Equal(t, mockRepo, service.repo)
 }
+
+func TestService_GetDashboardStats(t *testing.T) {
+	ctx := context.Background()
+
+	// 1. Unauthorized when accessing another teacher's dashboard without admin/secretary role
+	mockRepo := new(MockRepository)
+	svc := NewService(mockRepo)
+	_, err := svc.GetDashboardStats(ctx, "teacher-1", "teacher-2", "teacher")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "unauthorized")
+
+	// 2. Authorized when accessing own dashboard
+	mockRepo.On("GetDashboardStats", ctx, "teacher-1").Return(map[string]interface{}{"ok": true}, nil).Once()
+	stats, err := svc.GetDashboardStats(ctx, "teacher-1", "teacher-1", "teacher")
+	assert.NoError(t, err)
+	assert.NotNil(t, stats)
+
+	// 3. Authorized when admin accesses another teacher's dashboard
+	mockRepo.On("GetDashboardStats", ctx, "teacher-2").Return(map[string]interface{}{"ok": true}, nil).Once()
+	stats, err = svc.GetDashboardStats(ctx, "admin-1", "teacher-2", "admin")
+	assert.NoError(t, err)
+	assert.NotNil(t, stats)
+
+	mockRepo.AssertExpectations(t)
+}
+
+func TestService_AssignRemoveSubject_Permissions(t *testing.T) {
+	ctx := context.Background()
+	mockRepo := new(MockRepository)
+	svc := NewService(mockRepo)
+
+	// Unauthorized role for Assign
+	err := svc.AssignSubject(ctx, "student", "school-1", "t-1", "s-1")
+	assert.Error(t, err)
+
+	// Unauthorized role for Remove
+	err = svc.RemoveSubject(ctx, "parent", "school-1", "t-1", "s-1")
+	assert.Error(t, err)
+
+	// Cross school for Assign
+	mockRepo.On("Get", ctx, "t-1").Return(&Teacher{ID: "t-1", SchoolID: "school-A"}, nil).Once()
+	err = svc.AssignSubject(ctx, "admin", "school-B", "t-1", "s-1")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "belongs to another school")
+
+	// Cross school for Remove
+	mockRepo.On("Get", ctx, "t-1").Return(&Teacher{ID: "t-1", SchoolID: "school-A"}, nil).Once()
+	err = svc.RemoveSubject(ctx, "admin", "school-B", "t-1", "s-1")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "belongs to another school")
+
+	mockRepo.AssertExpectations(t)
+}

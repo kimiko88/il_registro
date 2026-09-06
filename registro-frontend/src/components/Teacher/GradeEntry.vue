@@ -128,7 +128,9 @@
              </q-td>
              
              <q-td key="actions" :props="props" auto-width>
-                 <q-btn flat round icon="history" color="grey-7" tooltip="Vedi Dettagli" />
+                 <q-btn flat round icon="history" color="grey-7" :aria-label="t('common.details') || 'Vedi Dettagli'">
+                   <q-tooltip>{{ t('common.details') || 'Vedi Dettagli' }}</q-tooltip>
+                 </q-btn>
              </q-td>
           </q-tr>
        </template>
@@ -138,7 +140,7 @@
                <div class="text-caption">
                   <q-icon name="offline_pin" color="green" v-if="isOnline" />
                   <q-icon name="signal_wifi_off" color="warning" v-else />
-                  {{ isOnline ? 'Online - Dati sincronizzati' : 'Offline - Modifiche salvate in locale' }}
+                  {{ isOnline ? (t('common.onlineSynced') || 'Online - Dati sincronizzati') : (t('common.offlineSaved') || 'Offline - Modifiche salvate in locale') }}
                </div>
                <div>
                   <q-btn label="Salva Tutti" color="primary" icon="save_alt" @click="saveAll" :disable="!hasChanges" />

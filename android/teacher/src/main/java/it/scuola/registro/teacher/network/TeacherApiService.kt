@@ -24,7 +24,7 @@ interface TeacherApiService {
 }
 
 class HttpTeacherApiService(
-    private val baseUrl: String = "https://api.scuola.registro.it/api/v1"
+    private val baseUrl: String = "https://registro-backend-fdu2.onrender.com/api/v1"
 ) : TeacherApiService {
 
     override suspend fun login(email: String, password: String): Result<String> =
@@ -51,8 +51,14 @@ class HttpTeacherApiService(
                 if (responseCode in 200..299) {
                     val response = BufferedReader(InputStreamReader(conn.inputStream)).use { it.readText() }
                     val json = JSONObject(response)
-                    val token = json.optString("token", json.optString("access_token"))
-                    Result.success(token)
+                    val userObj = json.optJSONObject("user")
+                    val role = userObj?.optString("role")
+                    if (role != "teacher" && role != "coordinator") {
+                        Result.failure(Exception("Accesso non consentito: questo account non appartiene a un docente."))
+                    } else {
+                        val token = json.optString("token", json.optString("access_token"))
+                        Result.success(token)
+                    }
                 } else {
                     val err = BufferedReader(InputStreamReader(conn.errorStream ?: conn.inputStream)).use { it.readText() }
                     Result.failure(Exception("Login fallito (HTTP $responseCode): $err"))
@@ -235,8 +241,8 @@ class HttpTeacherApiService(
                     put("student_id", resolution.studentId)
                     put("subject_id", resolution.subjectId)
                     put("recovery_grade", resolution.recoveryGrade)
-                    put("final_outcome", resolution.finalOutcome)
-                    put("deliberation_notes", resolution.deliberationNotes)
+                    put("final_outcome", resolution.status)
+                    put("deliberation_notes", resolution.finalDecision)
                 }
 
                 OutputStreamWriter(conn.outputStream).use { it.write(payload.toString()) }

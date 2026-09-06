@@ -71,11 +71,19 @@ public class SecretaryViewModel: ObservableObject {
             self.errorMessage = nil
         }
         do {
-            let fetchedUsers = try await apiService.fetchUsers(token: token)
+            async let fetchedUsers = apiService.fetchUsers(token: token)
+            async let fetchedClasses = apiService.fetchClasses(token: token)
+            async let fetchedCertificates = apiService.fetchCertificates(token: token)
+
+            let (u, cl, cert) = try await (fetchedUsers, fetchedClasses, fetchedCertificates)
+
             await MainActor.run {
-                self.users = fetchedUsers.map {
-                    ManagedUserModel(id: $0.id, name: "\($0.firstName) \($0.lastName)", role: $0.role)
+                self.users = u.map {
+                    let fullName = "\($0.firstName) \($0.lastName)".trimmingCharacters(in: .whitespacesAndNewlines)
+                    return ManagedUserModel(id: $0.id, name: fullName.isEmpty ? $0.email : fullName, role: $0.role)
                 }
+                self.classes = cl
+                self.certificates = cert
                 self.isLoading = false
             }
         } catch {
@@ -87,13 +95,26 @@ public class SecretaryViewModel: ObservableObject {
     }
 
     public func loadSampleData() {
-        loadData()
+        users = [
+            ManagedUserModel(id: "u1", name: "Prof.ssa Maria Rossi", role: "Docente"),
+            ManagedUserModel(id: "u2", name: "Prof. Marco Bianchi", role: "Docente")
+        ]
+        classes = [
+            SecretaryClassModel(id: "c1", name: "Classe 1A"),
+            SecretaryClassModel(id: "c2", name: "Classe 2A")
+        ]
+        certificates = [
+            CertificateItemModel(id: "c1", title: "Certificato di Iscrizione e Frequenza", status: "pronto", pdfUrl: "/api/v1/cert/c1.pdf"),
+            CertificateItemModel(id: "c2", title: "Certificato con Valutazioni", status: "pronto", pdfUrl: "/api/v1/cert/c2.pdf")
+        ]
     }
 
     public func loadData() {
         users = [
             ManagedUserModel(id: "u1", name: "Prof.ssa Maria Rossi", role: "Docente"),
-            ManagedUserModel(id: "u2", name: "Prof. Marco Bianchi", role: "Docente")
+            ManagedUserModel(id: "u2", name: "Prof. Marco Bianchi", role: "Docente"),
+            ManagedUserModel(id: "u3", name: "Mario Rossi (2B)", role: "Studente"),
+            ManagedUserModel(id: "u4", name: "Giuseppe Rossi", role: "Genitore")
         ]
 
         classes = [

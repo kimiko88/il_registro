@@ -18,7 +18,10 @@
         row-key="id"
         flat
         class="bg-white"
-        :pagination="{ rowsPerPage: 10 }"
+        virtual-scroll
+        :virtual-scroll-item-size="48"
+        :pagination="{ rowsPerPage: 25 }"
+        :rows-per-page-options="[10, 25, 50, 100, 0]"
       >
         <template v-slot:top-right>
           <q-input dense debounce="300" v-model="filter" placeholder="Cerca studente..." outlined class="bg-white">
@@ -52,7 +55,7 @@
         <q-card-section class="row items-center q-pa-lg border-b border-slate-100">
           <div class="text-h6 text-weight-bold">{{ isEditing ? 'Modifica Studente' : 'Nuova Iscrizione' }}</div>
           <q-space />
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pa-lg scroll" style="flex: 1; overflow-y: auto;">
@@ -102,12 +105,12 @@
 
     <!-- Guardians Management Dialog -->
     <q-dialog v-model="showGuardiansDialog">
-      <q-card style="min-width: 600px; max-width: 90vw;" class="rounded-xl shadow-2xl overflow-hidden">
+      <q-card style="width: min(650px, 95vw); max-width: 95vw;" class="rounded-xl shadow-2xl overflow-hidden">
         <q-card-section class="bg-indigo-600 text-white row items-center">
           <div class="text-h6 text-weight-bold">Genitori / Tutori</div>
           <q-space />
           <div class="text-subtitle2">{{ selectedStudent?.last_name }} {{ selectedStudent?.first_name }}</div>
-          <q-btn icon="close" flat round dense v-close-popup class="q-ml-md" />
+          <q-btn icon="close" flat round dense v-close-popup class="q-ml-md" :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pa-md">

@@ -63,11 +63,12 @@
                                            class="q-mr-xs rounded-pill"
                                            :href="meeting.meet_link || settings.meetLink"
                                            target="_blank"
+                                           rel="noopener noreferrer"
                                          />
                                          <q-badge :color="getStatusColor(meeting.status)" rounded class="q-mr-sm">
                                            {{ formatStatusLabel(meeting.status) }}
                                          </q-badge>
-                                         <q-btn flat round dense color="negative" icon="cancel" @click="confirmCancelBooking(meeting)" />
+                                         <q-btn flat round dense color="negative" icon="cancel" aria-label="Annulla prenotazione" @click="confirmCancelBooking(meeting)" />
                                      </div>
                                  </q-item-section>
                              </q-item>
@@ -153,11 +154,11 @@
 
     <!-- Create Slot Dialog -->
     <q-dialog v-model="showSlotDialog" persistent>
-        <q-card style="min-width: 450px" class="rounded-xl">
+        <q-card style="width: min(480px, 95vw); max-width: 95vw;" class="rounded-xl">
             <q-card-section class="row items-center q-pb-none">
                 <div class="text-h6">Crea Disponibilità</div>
                 <q-space />
-                <q-btn icon="close" flat round dense v-close-popup />
+                <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
             </q-card-section>
 
             <q-card-section class="q-pa-md">

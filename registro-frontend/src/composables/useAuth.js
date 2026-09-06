@@ -87,6 +87,35 @@ export function useAuth() {
         return errData?.error || errData?.message || getTranslation('errors.serverError', 'Si è verificato un errore sul server. Riprova più tardi.')
     }
 
+    function getLoginErrorKey(err) {
+        if (!err) return 'errors.serverError'
+        const errData = err.response?.data
+        const code = errData?.code
+        if (code && i18n?.global?.te && i18n.global.te(`errors.${code}`)) {
+            return `errors.${code}`
+        }
+        const raw = String(errData?.error || err.message || err).toLowerCase()
+        if (raw.includes('invalid credentials') || raw.includes('invalid email') || raw.includes('password')) {
+            return 'errors.invalidCredentials'
+        }
+        if (raw.includes('too many') || raw.includes('rate limit') || raw.includes('429')) {
+            return 'errors.rateLimit'
+        }
+        if (raw.includes('unauthorized')) {
+            return 'errors.unauthorized'
+        }
+        if (raw.includes('not found')) {
+            return 'errors.userNotFound'
+        }
+        if (raw.includes('disabled') || raw.includes('suspended') || raw.includes('blocked')) {
+            return 'errors.accountDisabled'
+        }
+        if (raw.includes('network') || raw.includes('failed to fetch') || raw.includes('timeout')) {
+            return 'errors.connectionError'
+        }
+        return 'errors.serverError'
+    }
+
     async function logout() {
         try {
             await authService.logout()
@@ -104,6 +133,7 @@ export function useAuth() {
         user,
         isAuthenticated,
         login,
-        logout
+        logout,
+        getLoginErrorKey
     }
 }

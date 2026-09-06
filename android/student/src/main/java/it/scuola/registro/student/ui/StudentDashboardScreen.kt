@@ -76,31 +76,31 @@ fun StudentDashboardScreen(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
                     icon = { Icon(Icons.Default.Dashboard, contentDescription = null) },
-                    label = { Text(stringResource(R.string.dashboard_title), fontSize = 10.sp) }
+                    label = { Text(stringResource(R.string.tab_home), fontSize = 10.sp) }
                 )
                 NavigationBarItem(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
                     icon = { Icon(Icons.Default.Grade, contentDescription = null) },
-                    label = { Text(stringResource(R.string.grades_title), fontSize = 10.sp) }
+                    label = { Text(stringResource(R.string.tab_grades), fontSize = 10.sp) }
                 )
                 NavigationBarItem(
                     selected = selectedTab == 2,
                     onClick = { selectedTab = 2 },
                     icon = { Icon(Icons.Default.EventNote, contentDescription = null) },
-                    label = { Text(stringResource(R.string.agenda_title), fontSize = 10.sp) }
+                    label = { Text(stringResource(R.string.tab_agenda), fontSize = 10.sp) }
                 )
                 NavigationBarItem(
                     selected = selectedTab == 3,
                     onClick = { selectedTab = 3 },
                     icon = { Icon(Icons.Default.CheckCircleOutline, contentDescription = null) },
-                    label = { Text(stringResource(R.string.attendance_title), fontSize = 10.sp) }
+                    label = { Text(stringResource(R.string.tab_attendance), fontSize = 10.sp) }
                 )
                 NavigationBarItem(
                     selected = selectedTab == 4,
                     onClick = { selectedTab = 4 },
                     icon = { Icon(Icons.Default.Description, contentDescription = null) },
-                    label = { Text(stringResource(R.string.report_card_title), fontSize = 10.sp) }
+                    label = { Text(stringResource(R.string.tab_report_card), fontSize = 10.sp) }
                 )
             }
         }
@@ -355,7 +355,7 @@ fun StudentAttendanceTab(viewModel: StudentViewModel) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column {
-                        Text("${record.date} • ${record.type}", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                        Text("${record.date} • ${getLocalizedAttendanceType(record.type)}", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                         if (record.reason.isNotBlank()) {
                             Text(record.reason, fontSize = 12.sp, color = Color.Gray)
                         }
@@ -464,7 +464,7 @@ fun GradeCard(grade: GradeEntry) {
         ) {
             Column {
                 Text(text = grade.subject, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                Text(text = "${grade.type} • ${grade.date}", fontSize = 12.sp, color = Color.Gray)
+                Text(text = "${getLocalizedGradeType(grade.type)} • ${grade.date}", fontSize = 12.sp, color = Color.Gray)
             }
             Surface(
                 color = if (grade.grade >= 6.0) Color(0xFF10B981) else Color(0xFFEF4444),
@@ -479,5 +479,29 @@ fun GradeCard(grade: GradeEntry) {
                 )
             }
         }
+    }
+}
+
+@Composable
+fun getLocalizedGradeType(type: String): String {
+    return when (type.trim().lowercase()) {
+        "written", "scritto" -> stringResource(R.string.grade_type_written)
+        "oral", "orale" -> stringResource(R.string.grade_type_oral)
+        "practical", "pratico" -> stringResource(R.string.grade_type_practical)
+        "test" -> stringResource(R.string.grade_type_test)
+        "project", "progetto" -> stringResource(R.string.grade_type_project)
+        "lab", "laboratory", "laboratorio" -> stringResource(R.string.grade_type_lab)
+        else -> type
+    }
+}
+
+@Composable
+fun getLocalizedAttendanceType(type: String): String {
+    return when (type.trim().lowercase()) {
+        "present", "presenza" -> stringResource(R.string.attendance_present)
+        "absent", "assenza" -> stringResource(R.string.attendance_absent)
+        "late", "ritardo" -> stringResource(R.string.attendance_late)
+        "early_exit", "uscita anticipata", "uscita_anticipata" -> stringResource(R.string.attendance_early_exit)
+        else -> type
     }
 }

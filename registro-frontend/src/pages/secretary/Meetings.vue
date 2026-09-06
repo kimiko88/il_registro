@@ -46,7 +46,7 @@
 
     <!-- Create Dialog -->
     <q-dialog v-model="showCreateDialog" persistent>
-      <q-card style="min-width: 450px">
+      <q-card style="width: min(500px, 95vw); max-width: 95vw;">
         <q-card-section class="bg-primary text-white">
           <div class="text-h6">Nuova Assemblea / Incontro</div>
         </q-card-section>
@@ -77,10 +77,10 @@
 
     <!-- Registrations List Dialog -->
     <q-dialog v-model="showRegistrationsDialog">
-      <q-card style="min-width: 500px">
+      <q-card style="width: min(550px, 95vw); max-width: 95vw;">
         <q-card-section class="bg-primary text-white row items-center justify-between">
           <div class="text-h6">Iscritti — {{ selectedMeeting?.title }}</div>
-          <q-btn flat round icon="close" color="white" v-close-popup />
+          <q-btn flat round icon="close" color="white" v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
         <q-card-section>
           <div v-if="loadingRegs" class="text-center q-pa-md">

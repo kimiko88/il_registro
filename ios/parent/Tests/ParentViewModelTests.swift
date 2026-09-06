@@ -7,11 +7,19 @@ final class ParentViewModelTests: XCTestCase {
     override func setUp() {
         super.setUp()
         viewModel = ParentViewModel()
+        viewModel.loadSampleData()
     }
 
     override func tearDown() {
         viewModel = nil
         super.tearDown()
+    }
+
+    func testInitialStateIsEmpty() {
+        let freshVM = ParentViewModel()
+        XCTAssertTrue(freshVM.children.isEmpty)
+        XCTAssertTrue(freshVM.absences.isEmpty)
+        XCTAssertEqual(freshVM.selectedChildId, "")
     }
 
     func testSelectChildFiltering() {

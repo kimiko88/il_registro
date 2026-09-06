@@ -346,7 +346,7 @@
                             <q-icon name="check_circle" class="q-mr-xs" size="12px" /> {{ $t('classRegister.present') }}
                         </q-badge>
                         <q-badge v-else-if="student.status === 'OutOfClass'" color="teal" class="q-px-sm q-py-xs">
-                            <q-icon name="meeting_room" class="q-mr-xs" size="12px" /> Fuori Aula
+                            <q-icon name="meeting_room" class="q-mr-xs" size="12px" /> {{ $t('classRegister.outOfClass') }}
                         </q-badge>
                         <q-badge v-else-if="student.status === 'Absent'" color="negative" class="q-px-sm q-py-xs">
                             <q-icon name="cancel" class="q-mr-xs" size="12px" /> {{ $t('classRegister.absent') }}
@@ -377,7 +377,7 @@
                         ]"
                     >
                         <template v-slot:present><q-tooltip>{{ $t('classRegister.present') }}</q-tooltip></template>
-                        <template v-slot:outofclass><q-tooltip>Fuori Aula</q-tooltip></template>
+                        <template v-slot:outofclass><q-tooltip>{{ $t('classRegister.outOfClass') }}</q-tooltip></template>
                         <template v-slot:absent><q-tooltip>{{ $t('classRegister.absent') }}</q-tooltip></template>
                         <template v-slot:late><q-tooltip>{{ $t('classRegister.late') }}</q-tooltip></template>
                         <template v-slot:early><q-tooltip>{{ $t('classRegister.earlyExit') }}</q-tooltip></template>
@@ -454,143 +454,12 @@
         :class-id="String(typeof selectedClass === 'object' ? selectedClass.id : selectedClass)"
     />
 
-    <!-- Student Detail Dialog -->
-    <q-dialog v-model="showStudentPanel" maximized-if-mobile>
-        <q-card style="min-width: 340px; max-width: 520px; width: 100%">
-            <q-bar class="bg-indigo-8 text-white">
-                <q-icon name="person" class="q-mr-sm" />
-                <span class="text-subtitle2 text-weight-bold">
-                    {{ panelStudent?.last_name }} {{ panelStudent?.first_name }}
-                </span>
-                <q-space />
-                <q-btn flat round dense icon="close" v-close-popup />
-            </q-bar>
-
-            <q-card-section class="q-pa-md">
-                <!-- Loading -->
-                <div v-if="panelLoading" class="row justify-center q-pa-lg">
-                    <q-spinner color="primary" size="40px" />
-                </div>
-
-                <template v-else>
-                    <!-- Personal Info -->
-                    <div class="text-caption text-weight-bold text-grey-6 q-mb-xs text-uppercase letter-spacing-wide">Dati Anagrafici</div>
-                    <q-list bordered separator rounded class="q-mb-md">
-                        <q-item dense>
-                            <q-item-section avatar><q-icon name="badge" color="indigo" /></q-item-section>
-                            <q-item-section>
-                                <q-item-label caption>Nome completo</q-item-label>
-                                <q-item-label>{{ panelStudentInfo?.last_name }} {{ panelStudentInfo?.first_name }}</q-item-label>
-                            </q-item-section>
-                        </q-item>
-                        <q-item dense v-if="panelStudentInfo?.fiscal_code">
-                            <q-item-section avatar><q-icon name="fingerprint" color="indigo" /></q-item-section>
-                            <q-item-section>
-                                <q-item-label caption>Codice Fiscale</q-item-label>
-                                <q-item-label class="text-mono">{{ panelStudentInfo.fiscal_code }}</q-item-label>
-                            </q-item-section>
-                        </q-item>
-                        <q-item dense v-if="panelStudentInfo?.class_name">
-                            <q-item-section avatar><q-icon name="class" color="indigo" /></q-item-section>
-                            <q-item-section>
-                                <q-item-label caption>Classe</q-item-label>
-                                <q-item-label>{{ panelStudentInfo.class_name }}</q-item-label>
-                            </q-item-section>
-                        </q-item>
-                        <q-item dense v-if="panelStudentInfo?.email">
-                            <q-item-section avatar><q-icon name="email" color="indigo" /></q-item-section>
-                            <q-item-section>
-                                <q-item-label caption>Email</q-item-label>
-                                <q-item-label>{{ panelStudentInfo.email }}</q-item-label>
-                            </q-item-section>
-                        </q-item>
-                        <q-item dense v-if="panelStudentInfo?.phone_number">
-                            <q-item-section avatar><q-icon name="phone" color="indigo" /></q-item-section>
-                            <q-item-section>
-                                <q-item-label caption>Telefono</q-item-label>
-                                <q-item-label>{{ panelStudentInfo.phone_number }}</q-item-label>
-                            </q-item-section>
-                        </q-item>
-                        <q-item dense v-if="panelStudentInfo?.date_of_birth">
-                            <q-item-section avatar><q-icon name="cake" color="indigo" /></q-item-section>
-                            <q-item-section>
-                                <q-item-label caption>Data di Nascita</q-item-label>
-                                <q-item-label>{{ formatDate(panelStudentInfo.date_of_birth) }}</q-item-label>
-                            </q-item-section>
-                        </q-item>
-                    </q-list>
-
-                    <!-- Attendance Summary -->
-                    <div class="text-caption text-weight-bold text-grey-6 q-mb-xs text-uppercase">Riepilogo Presenze</div>
-                    <div class="row q-col-gutter-sm q-mb-md">
-                        <div class="col-6">
-                            <q-card flat bordered class="text-center q-pa-sm">
-                                <div class="text-h5 text-negative text-weight-bold">{{ panelSummary?.total_absences ?? '—' }}</div>
-                                <div class="text-caption text-grey-7">Assenze Totali</div>
-                            </q-card>
-                        </div>
-                        <div class="col-6">
-                            <q-card flat bordered class="text-center q-pa-sm">
-                                <div class="text-h5 text-warning text-weight-bold">{{ panelSummary?.total_lates ?? '—' }}</div>
-                                <div class="text-caption text-grey-7">Ritardi</div>
-                            </q-card>
-                        </div>
-                        <div class="col-6">
-                            <q-card flat bordered class="text-center q-pa-sm">
-                                <div class="text-h5 text-purple text-weight-bold">{{ panelSummary?.total_early_exits ?? '—' }}</div>
-                                <div class="text-caption text-grey-7">Uscite Anticipate</div>
-                            </q-card>
-                        </div>
-                        <div class="col-6">
-                            <q-card flat bordered class="text-center q-pa-sm">
-                                <div class="text-h5 text-positive text-weight-bold">{{ panelSummary?.justified_count ?? '—' }}</div>
-                                <div class="text-caption text-grey-7">Giustificate</div>
-                            </q-card>
-                        </div>
-                    </div>
-
-                    <!-- Absence Rate + Risk -->
-                    <div v-if="panelSummary" class="q-mb-sm">
-                        <div class="row items-center justify-between q-mb-xs">
-                            <span class="text-caption text-grey-7">Tasso assenza</span>
-                            <span class="text-caption text-weight-bold" :class="panelSummary.absence_rate > 25 ? 'text-negative' : panelSummary.absence_rate > 10 ? 'text-warning' : 'text-positive'">
-                                {{ panelSummary.absence_rate?.toFixed(1) }}%
-                            </span>
-                        </div>
-                        <q-linear-progress
-                            :value="(panelSummary.absence_rate || 0) / 100"
-                            :color="panelSummary.absence_rate > 25 ? 'negative' : panelSummary.absence_rate > 10 ? 'warning' : 'positive'"
-                            rounded
-                            size="8px"
-                            class="q-mb-xs"
-                        />
-                        <q-chip
-                            dense
-                            :color="panelSummary.risk_level === 'high' ? 'negative' : panelSummary.risk_level === 'medium' ? 'warning' : 'positive'"
-                            text-color="white"
-                            :icon="panelSummary.risk_level === 'high' ? 'warning' : panelSummary.risk_level === 'medium' ? 'info' : 'check_circle'"
-                        >
-                            Rischio: {{ panelSummary.risk_level === 'high' ? 'ALTO' : panelSummary.risk_level === 'medium' ? 'MEDIO' : 'BASSO' }}
-                        </q-chip>
-                    </div>
-
-                    <!-- Today's attendance for this student -->
-                    <div class="text-caption text-weight-bold text-grey-6 q-mt-md q-mb-xs text-uppercase">Presenze Oggi per Ora</div>
-                    <div class="row q-gutter-xs">
-                        <q-badge
-                            v-for="h in 8" :key="h"
-                            :color="getHourBadgeColor(panelStudent, h)"
-                            :label="String(h) + 'ª'"
-                            class="text-weight-bold"
-                            style="font-size: 11px; padding: 4px 8px"
-                        >
-                            <q-tooltip>{{ getHourLabel(panelStudent, h) }}</q-tooltip>
-                        </q-badge>
-                    </div>
-                </template>
-            </q-card-section>
-        </q-card>
-    </q-dialog>
+    <!-- Student Detail Dialog (Modular) -->
+    <StudentAttendanceDetailDialog
+        v-model="showStudentPanel"
+        :student="panelStudent"
+        :all-today-attendance="allTodayAttendance"
+    />
 
   </q-page>
 </template>
@@ -606,8 +475,10 @@ import { attendanceService } from 'src/services/attendanceService'
 import { lessonService } from 'src/services/lessonService'
 import api from '@/services/api'
 import NoteDialog from 'src/components/Teacher/NoteDialog.vue'
+import StudentAttendanceDetailDialog from '@/components/Teacher/StudentAttendanceDetailDialog.vue'
 import SkeletonTable from '@/components/Common/SkeletonTable.vue'
 import { useSchoolYearStore } from '@/stores/schoolYear'
+import { useOfflineSync } from '@/composables/useOfflineSync'
 
 const $q = useQuasar()
 let t = (key, fallback) => (typeof fallback === 'string' ? fallback : key)
@@ -623,6 +494,7 @@ const classesStore = useClassesStore()
 const gradesStore = useGradesStore()
 const authStore = useAuthStore()
 const schoolYearStore = useSchoolYearStore()
+const { executeWithOfflineQueue } = useOfflineSync()
 
 // Current teacher ID from auth token
 const currentTeacherId = computed(() => authStore.user?.id || null)
@@ -751,37 +623,12 @@ const selectedStudentForNote = ref(null)
 // ── Student Detail Panel ──────────────────────────────────────
 const showStudentPanel = ref(false)
 const panelStudent = ref(null)
-const panelStudentInfo = ref(null)
-const panelSummary = ref(null)
-const panelLoading = ref(false)
 
-async function openStudentPanel(student) {
+function openStudentPanel(student) {
     panelStudent.value = student
-    panelStudentInfo.value = null
-    panelSummary.value = null
-    panelLoading.value = true
     showStudentPanel.value = true
-    try {
-        const [infoRes, summaryRes] = await Promise.allSettled([
-            api.get(`/users/${student.id}`),
-            attendanceService.getStudentSummary(student.id)
-        ])
-        if (infoRes.status === 'fulfilled') panelStudentInfo.value = infoRes.value.data
-        if (summaryRes.status === 'fulfilled') panelSummary.value = summaryRes.value
-    } catch (e) {
-        // individual errors handled above via allSettled
-    } finally {
-        panelLoading.value = false
-    }
 }
 // ─────────────────────────────────────────────────────────────
-
-// Formatta una data ISO (YYYY-MM-DD) in formato italiano (dd/mm/yyyy)
-function formatDate(isoDate) {
-    if (!isoDate) return ''
-    const [y, m, d] = isoDate.split('-')
-    return `${d}/${m}/${y}`
-}
 
 const selectedHour = ref(1)
 
@@ -849,13 +696,15 @@ const getHourLabel = (student, hour) => {
     const rec = allTodayAttendance.value.find(r =>
         r.student_id === student.id && String(r.hour) === String(hour)
     )
-    if (!rec) return `Ora ${hour}: non registrata`
+    if (!rec) return t('studentDetail.hourNotRegistered', { hour })
     const statusLabels = {
-        Present: 'Presente', OutOfClass: 'Fuori Aula', Absent: 'Assente',
-        Late: `Ritardo${rec.entry_time ? ' ore ' + rec.entry_time : ''}`,
-        LeftEarly: `Uscita anticipata${rec.exit_time ? ' ore ' + rec.exit_time : ''}`
+        Present: t('classRegister.present'),
+        OutOfClass: t('classRegister.outOfClass'),
+        Absent: t('classRegister.absent'),
+        Late: `${t('classRegister.late')}${rec.entry_time ? ` (${rec.entry_time})` : ''}`,
+        LeftEarly: `${t('classRegister.earlyExit')}${rec.exit_time ? ` (${rec.exit_time})` : ''}`
     }
-    return `Ora ${hour}: ${statusLabels[rec.status] || rec.status}`
+    return t('studentDetail.hourStatus', { hour, status: statusLabels[rec.status] || rec.status })
 }
 
 const toggleSubstitutionMode = async () => {
@@ -1091,8 +940,8 @@ const saveUnifiedRecord = async () => {
         // Effective subject ID: only pass a valid UUID, never empty string
         const effectiveSubjectId = (!isSubstitutionMode.value && lessonSubjectId.value) ? lessonSubjectId.value : ''
 
-        // 1. Save Attendance Record
-        await api.post('/attendance/mark-bulk', {
+        // 1. Save Attendance Record (resilient with Offline Outbox)
+        const markBulkPayload = {
             class_id: classId,
             date: date.value,
             hour: selectedHour.value,
@@ -1104,7 +953,12 @@ const saveUnifiedRecord = async () => {
                 entry_time: (s.status === 'Late' && s.entry_time?.trim()) ? s.entry_time : null,
                 exit_time: (s.status === 'LeftEarly' && s.exit_time?.trim()) ? s.exit_time : null
             }))
-        })
+        }
+
+        const markResult = await executeWithOfflineQueue(
+            { url: '/attendance/mark-bulk', method: 'post', data: markBulkPayload },
+            { title: `Presenze Classe - Ora ${selectedHour.value}` }
+        )
 
         // 2. Save Lesson Signature if topic specified
         if (lessonTopic.value?.trim()) {
@@ -1123,29 +977,50 @@ const saveUnifiedRecord = async () => {
             
             let lessonId = currentHourLesson.value?.id
             if (currentHourLesson.value && !isReadOnly.value) {
-                await lessonService.updateLesson(lessonId, lessonPayload)
+                await executeWithOfflineQueue(
+                    { url: `/lessons/${lessonId}`, method: 'put', data: lessonPayload },
+                    { title: `Aggiorna Lezione - Ora ${selectedHour.value}` }
+                )
             } else {
-                const lessonRes = await lessonService.createLesson(lessonPayload)
+                const lessonRes = await executeWithOfflineQueue(
+                    { url: '/lessons', method: 'post', data: lessonPayload },
+                    { title: `Firma Lezione - Ora ${selectedHour.value}` }
+                )
                 lessonId = lessonRes.data?.id
             }
 
             // 3. Save Homework if checked
             if (assignHomework.value && homeworkDesc.value && lessonId) {
-                await lessonService.createHomework({
-                    class_id: classId,
-                    subject_id: effectiveSubjectId || null,
-                    lesson_id: lessonId,
-                    due_date: homeworkDue.value || date.value,
-                    description: homeworkDesc.value
-                })
+                await executeWithOfflineQueue(
+                    {
+                        url: '/homeworks',
+                        method: 'post',
+                        data: {
+                            class_id: classId,
+                            subject_id: effectiveSubjectId || null,
+                            lesson_id: lessonId,
+                            due_date: homeworkDue.value || date.value,
+                            description: homeworkDesc.value
+                        }
+                    },
+                    { title: `Compiti Assegnati - Ora ${selectedHour.value}` }
+                )
             }
         }
 
         localStorage.removeItem(`attendance_draft_${classId}_${date.value}_${selectedHour.value}`)
         lastAutosaveTime.value = ''
 
-        $q.notify({ type: 'positive', message: `✓ Registro e Firma Lezione salvati — Ora ${selectedHour.value}` })
-        fetchData()
+        if (markResult?.offline || markResult?.enqueued) {
+            $q.notify({
+                type: 'warning',
+                icon: 'cloud_queue',
+                message: `✓ Salvato in locale (offline) — Ora ${selectedHour.value}. Sincronizzazione automatica al ripristino della rete.`
+            })
+        } else {
+            $q.notify({ type: 'positive', message: `✓ Registro e Firma Lezione salvati — Ora ${selectedHour.value}` })
+            fetchData()
+        }
 
     } catch (error) {
         $q.notify({ type: 'negative', message: 'Errore durante il salvataggio' })

@@ -5,7 +5,7 @@
         <div class="text-h5 text-weight-bold text-outfit">{{ t('documentsPage.templateManagement') || 'Gestione Modelli Documenti' }}</div>
         <q-space />
         <q-btn icon="add" :label="t('documentsPage.newTemplate') || 'Nuovo Modello'" color="white" text-color="primary" class="rounded-lg q-mr-sm" @click="openCreate" />
-        <q-btn icon="close" flat round dense v-close-popup />
+        <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
       </q-card-section>
 
       <q-card-section class="col q-pa-lg scroll">
@@ -51,7 +51,7 @@
         <q-card-section class="row items-center q-pa-md border-b">
           <div class="text-h6 text-weight-bold">{{ editingTemplate?.id ? (t('documentsPage.editTemplate') || 'Modifica Modello') : (t('documentsPage.newTemplate') || 'Nuovo Modello') }}</div>
           <q-space />
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="col q-pa-lg scroll">

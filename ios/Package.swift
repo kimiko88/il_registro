@@ -19,7 +19,8 @@ let package = Package(
         .target(
             name: "StudentApp",
             path: "student",
-            exclude: ["Tests"]
+            exclude: ["Tests"],
+            resources: [.process("Resources")]
         ),
         .testTarget(
             name: "StudentAppTests",
@@ -31,7 +32,8 @@ let package = Package(
         .target(
             name: "ParentApp",
             path: "parent",
-            exclude: ["Tests"]
+            exclude: ["Tests"],
+            resources: [.process("Resources")]
         ),
         .testTarget(
             name: "ParentAppTests",
@@ -43,7 +45,8 @@ let package = Package(
         .target(
             name: "TeacherApp",
             path: "teacher",
-            exclude: ["Tests"]
+            exclude: ["Tests"],
+            resources: [.process("Resources")]
         ),
         .testTarget(
             name: "TeacherAppTests",
@@ -55,7 +58,8 @@ let package = Package(
         .target(
             name: "SecretaryApp",
             path: "secretary",
-            exclude: ["Tests"]
+            exclude: ["Tests"],
+            resources: [.process("Resources")]
         ),
         .testTarget(
             name: "SecretaryAppTests",

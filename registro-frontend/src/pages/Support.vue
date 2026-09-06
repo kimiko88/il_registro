@@ -20,13 +20,6 @@
       </div>
     </div>
 
-    <!-- Offline Banner -->
-    <q-banner v-if="!isOnline" class="bg-warning text-white rounded-borders q-mb-lg shadow-sm" dense>
-      <template v-slot:avatar>
-        <q-icon name="cloud_off" />
-      </template>
-      {{ $t('supportPage.offlineBanner') }}
-    </q-banner>
 
     <div class="row q-col-gutter-lg">
       <!-- FAQ Section -->
@@ -78,7 +71,7 @@
             </template>
             <div v-else class="text-center q-pa-xl text-grey-5">
               <q-icon name="sentiment_dissatisfied" size="3em" class="q-mb-sm" />
-              <div>Nessuna risposta trovata per "{{ searchQuery }}"</div>
+              <div>{{ $t('supportPage.noFaqFound', { query: searchQuery }) }}</div>
             </div>
           </q-list>
         </q-card>
@@ -89,27 +82,27 @@
         <q-card class="shadow-sm rounded-lg bg-white q-pa-md">
           <div class="text-h6 text-slate-800 q-mb-md">
             <q-icon name="mail" color="primary" class="q-mr-xs" />
-            Contatta Assistenza
+            {{ $t('supportPage.contactTitle') }}
           </div>
 
           <q-form @submit.prevent="handleSubmitTicket" class="q-gutter-y-md">
             <q-input
               v-model="ticket.subject"
-              label="Oggetto"
+              :label="$t('supportPage.subjectLabel')"
               outlined
               dense
               required
-              :rules="[val => !!val || 'Oggetto richiesto']"
+              :rules="[val => !!val || $t('supportPage.subjectRequired')]"
             />
             <q-input
               v-model="ticket.message"
-              label="Messaggio"
+              :label="$t('supportPage.messageLabel')"
               type="textarea"
               outlined
               dense
               autogrow
               required
-              :rules="[val => !!val || 'Messaggio richiesto']"
+              :rules="[val => !!val || $t('supportPage.messageRequired')]"
             />
             
             <q-btn 
@@ -120,7 +113,7 @@
               class="full-width rounded-md"
               :loading="submitting"
             >
-              {{ isOnline ? 'Invia Richiesta' : 'Salva in coda offline' }}
+              {{ isOnline ? $t('supportPage.submitOnline') : $t('supportPage.submitOffline') }}
             </q-btn>
           </q-form>
 
@@ -128,7 +121,7 @@
           <div v-if="queuedTickets.length > 0" class="q-mt-lg">
             <div class="text-subtitle2 text-grey-7 q-mb-sm">
               <q-icon name="hourglass_empty" color="warning" />
-              Richieste in coda offline ({{ queuedTickets.length }})
+              {{ $t('supportPage.queuedTitle', { count: queuedTickets.length }) }}
             </div>
             <q-list bordered dense class="rounded-borders">
               <q-item v-for="(t, idx) in queuedTickets" :key="idx">
@@ -137,7 +130,7 @@
                   <q-item-label caption class="ellipsis">{{ t.message }}</q-item-label>
                 </q-item-section>
                 <q-item-section side>
-                  <q-badge color="warning">In attesa</q-badge>
+                  <q-badge color="warning">{{ $t('supportPage.pending') }}</q-badge>
                 </q-item-section>
               </q-item>
             </q-list>

@@ -37,7 +37,7 @@ final class WebSocketManagerTests: XCTestCase {
     }
 
     func testConnectAndReceive() {
-        guard let url = URL(string: "wss://api.scuola.it/ws") else { return }
+        guard let url = URL(string: "wss://registro-backend-fdu2.onrender.com/api/v1/ws") else { return }
         manager.connect(url: url, token: "test_token")
         XCTAssertTrue(manager.isConnected)
         XCTAssertTrue(delegate.connected)

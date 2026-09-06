@@ -2,6 +2,9 @@ package upload
 
 import (
 	"bytes"
+	"image"
+	"image/color"
+	"image/png"
 	"mime/multipart"
 	"strings"
 	"testing"
@@ -140,5 +143,63 @@ func TestValidateUpload_SeekReset(t *testing.T) {
 
 	if !strings.HasPrefix(buf.String(), "%PDF-1.4") {
 		t.Errorf("expected file pointer to be reset to 0, but content was: %s", buf.String())
+	}
+}
+
+func TestValidateAndSanitize_ValidPNG(t *testing.T) {
+	img := image.NewRGBA(image.Rect(0, 0, 8, 8))
+	for x := 0; x < 8; x++ {
+		for y := 0; y < 8; y++ {
+			img.Set(x, y, color.RGBA{R: 100, G: 150, B: 200, A: 255})
+		}
+	}
+
+	var rawBuf bytes.Buffer
+	if err := png.Encode(&rawBuf, img); err != nil {
+		t.Fatalf("png encode failed: %v", err)
+	}
+
+	rawBytes := rawBuf.Bytes()
+	file := newMockFile(rawBytes)
+	header := &multipart.FileHeader{
+		Filename: "avatar.png",
+		Size:     int64(len(rawBytes)),
+	}
+
+	sanitized, mime, err := ValidateAndSanitize(file, header)
+	if err != nil {
+		t.Fatalf("expected valid PNG to pass ValidateAndSanitize, got: %v", err)
+	}
+	if mime != "image/png" {
+		t.Errorf("expected mime image/png, got %s", mime)
+	}
+	if len(sanitized) == 0 {
+		t.Errorf("expected non-empty sanitized bytes")
+	}
+
+	// Verify sanitized bytes decode cleanly as image
+	decoded, err := png.Decode(bytes.NewReader(sanitized))
+	if err != nil {
+		t.Fatalf("failed to decode sanitized image: %v", err)
+	}
+	if decoded.Bounds().Dx() != 8 || decoded.Bounds().Dy() != 8 {
+		t.Errorf("unexpected image bounds: %v", decoded.Bounds())
+	}
+}
+
+func TestValidateAndSanitize_DisallowedFile(t *testing.T) {
+	scriptContent := []byte("#!/bin/bash\nrm -rf /")
+	file := newMockFile(scriptContent)
+	header := &multipart.FileHeader{
+		Filename: "script.sh",
+		Size:     int64(len(scriptContent)),
+	}
+
+	_, _, err := ValidateAndSanitize(file, header)
+	if err == nil {
+		t.Fatal("expected script file to be rejected by ValidateAndSanitize")
+	}
+	if err != ErrFileTypeNotAllowed {
+		t.Errorf("expected ErrFileTypeNotAllowed, got %v", err)
 	}
 }

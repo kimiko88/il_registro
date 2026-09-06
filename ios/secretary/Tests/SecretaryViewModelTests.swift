@@ -7,11 +7,19 @@ final class SecretaryViewModelTests: XCTestCase {
     override func setUp() {
         super.setUp()
         viewModel = SecretaryViewModel()
+        viewModel.loadSampleData()
     }
 
     override func tearDown() {
         viewModel = nil
         super.tearDown()
+    }
+
+    func testInitialStateIsEmpty() {
+        let freshVM = SecretaryViewModel()
+        XCTAssertTrue(freshVM.users.isEmpty)
+        XCTAssertTrue(freshVM.classes.isEmpty)
+        XCTAssertTrue(freshVM.certificates.isEmpty)
     }
 
     func testAddUser() {
@@ -20,7 +28,7 @@ final class SecretaryViewModelTests: XCTestCase {
 
         let success = viewModel.addUser(name: "Prof. Alberto Neri", role: "Docente")
         XCTAssertTrue(success)
-        XCTAssertEqual(viewModel.users.count, 5)
+        XCTAssertEqual(viewModel.users.count, 3)
     }
 
     func testIssueCertificate() {

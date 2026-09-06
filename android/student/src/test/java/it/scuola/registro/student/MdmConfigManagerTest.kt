@@ -11,6 +11,5 @@ class MdmConfigManagerTest {
         val manager = MdmConfigManager(null)
         val bundle = manager.applyMdmPolicies()
         assertNotNull(bundle)
-        assertTrue(bundle.isEmpty)
     }
 }

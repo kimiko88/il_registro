@@ -15,3 +15,15 @@
 "btn_login" = "ACCEDI AL PORTALE";
 "err_enter_credentials" = "Inserisci email e password";
 "logout" = "Disconnetti";
+"child_attendance" = "Presenze";
+"upcoming_colloqui" = "Prossimi Colloqui";
+"sign_hour" = "Conferma";
+"communications" = "Comunicazioni";
+"no_circulars" = "Nessuna circolare o comunicazione presente";
+"no_children_found" = "Nessun alunno associato o disponibile";
+"no_grades" = "Nessun voto disponibile";
+"status_justified" = "Giustificata";
+"colloquio_confirmed" = "Prenotato";
+"btn_justify" = "Giustifica";
+"err_login_failed" = "Errore di accesso";
+"no_data" = "Nessun dato disponibile";

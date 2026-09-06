@@ -2,14 +2,14 @@
   <q-page class="q-pa-md bg-grey-1">
     <div class="row items-center q-mb-lg">
       <div>
-        <h1 class="text-h4 text-weight-bold text-primary q-my-none">Configurazione Istituto & Feature Flags</h1>
-        <div class="text-subtitle2 text-grey-7">Gestisci le regole d'istituto, le autorizzazioni e i flussi di lavoro</div>
+        <h1 class="text-h4 text-weight-bold text-primary q-my-none">{{ t('schoolSettingsPage.title') }}</h1>
+        <div class="text-subtitle2 text-grey-7">{{ t('schoolSettingsPage.subtitle') }}</div>
       </div>
       <q-space />
       <q-btn
         color="primary"
         icon="save"
-        label="Salva Modifiche"
+        :label="t('schoolSettingsPage.saveChanges')"
         :loading="saving"
         @click="saveSettings"
       />
@@ -17,7 +17,7 @@
 
     <q-card v-if="loading" class="q-pa-lg text-center shadow-2">
       <q-spinner color="primary" size="3em" />
-      <div class="q-mt-sm text-grey-7">Caricamento impostazioni in corso...</div>
+      <div class="q-mt-sm text-grey-7">{{ t('schoolSettingsPage.loadingSettings') }}</div>
     </q-card>
 
     <div v-else class="row q-col-gutter-md">
@@ -25,15 +25,15 @@
       <div class="col-12 col-md-6">
         <q-card class="shadow-2 rounded-borders">
           <q-card-section class="bg-primary text-white">
-            <div class="text-h6"><q-icon name="gavel" class="q-mr-sm" />Note & Disciplina</div>
-            <div class="text-caption opacity-80">Regole di convalida e visibilità delle sanzioni disciplinari</div>
+            <div class="text-h6"><q-icon name="gavel" class="q-mr-sm" />{{ t('schoolSettingsPage.notesAndDiscipline') }}</div>
+            <div class="text-caption opacity-80">{{ t('schoolSettingsPage.notesAndDisciplineDesc') }}</div>
           </q-card-section>
           <q-card-section class="q-pa-md">
             <q-item tag="label" v-ripple>
               <q-item-section>
-                <q-item-label class="text-weight-bold">Convalida Note Disciplinari dalla Dirigenza</q-item-label>
+                <q-item-label class="text-weight-bold">{{ t('schoolSettingsPage.principalApprovalForNotes') }}</q-item-label>
                 <q-item-label caption>
-                  Le note disciplinari richiedono l'approvazione del Dirigente/Vice Dirigente prima di essere visibili a studenti e genitori.
+                  {{ t('schoolSettingsPage.principalApprovalForNotesDesc') }}
                 </q-item-label>
               </q-item-section>
               <q-item-section side>
@@ -48,15 +48,15 @@
       <div class="col-12 col-md-6">
         <q-card class="shadow-2 rounded-borders">
           <q-card-section class="bg-indigo-9 text-white">
-            <div class="text-h6"><q-icon name="visibility" class="q-mr-sm" />Visibilità Voti & Medie</div>
-            <div class="text-caption opacity-80">Permessi di consultazione per genitori e alunni</div>
+            <div class="text-h6"><q-icon name="visibility" class="q-mr-sm" />{{ t('schoolSettingsPage.gradesVisibility') }}</div>
+            <div class="text-caption opacity-80">{{ t('schoolSettingsPage.gradesVisibilityDesc') }}</div>
           </q-card-section>
           <q-card-section class="q-pa-md">
             <q-item tag="label" v-ripple>
               <q-item-section>
-                <q-item-label class="text-weight-bold">Mostra Voti ai Genitori</q-item-label>
+                <q-item-label class="text-weight-bold">{{ t('schoolSettingsPage.showGradesToParents') }}</q-item-label>
                 <q-item-label caption>
-                  Consente ai genitori di visualizzare le singole valutazioni in tempo reale sul registro.
+                  {{ t('schoolSettingsPage.showGradesToParentsDesc') }}
                 </q-item-label>
               </q-item-section>
               <q-item-section side>
@@ -68,9 +68,9 @@
 
             <q-item tag="label" v-ripple>
               <q-item-section>
-                <q-item-label class="text-weight-bold">Mostra Medie di Classe agli Studenti</q-item-label>
+                <q-item-label class="text-weight-bold">{{ t('schoolSettingsPage.showAveragesToStudents') }}</q-item-label>
                 <q-item-label caption>
-                  Abilita il grafico ed il confronto della media individuale con la media di classe.
+                  {{ t('schoolSettingsPage.showAveragesToStudentsDesc') }}
                 </q-item-label>
               </q-item-section>
               <q-item-section side>
@@ -85,15 +85,15 @@
       <div class="col-12 col-md-6">
         <q-card class="shadow-2 rounded-borders">
           <q-card-section class="bg-teal-8 text-white">
-            <div class="text-h6"><q-icon name="assessment" class="q-mr-sm" />Scrutini & Flussi di Lavoro</div>
-            <div class="text-caption opacity-80">Protezioni per le sessioni di scrutinio finale</div>
+            <div class="text-h6"><q-icon name="assessment" class="q-mr-sm" />{{ t('schoolSettingsPage.scrutinyWorkflow') }}</div>
+            <div class="text-caption opacity-80">{{ t('schoolSettingsPage.scrutinyWorkflowDesc') }}</div>
           </q-card-section>
           <q-card-section class="q-pa-md">
             <q-item tag="label" v-ripple>
               <q-item-section>
-                <q-item-label class="text-weight-bold">Blocco Modifica Scrutinio dopo la Validazione</q-item-label>
+                <q-item-label class="text-weight-bold">{{ t('schoolSettingsPage.lockScrutinyAfterValidation') }}</q-item-label>
                 <q-item-label caption>
-                  Una volta che lo scrutinio è validato dal Dirigente, le valutazioni finali non possono più essere verificate o modificate.
+                  {{ t('schoolSettingsPage.lockScrutinyAfterValidationDesc') }}
                 </q-item-label>
               </q-item-section>
               <q-item-section side>
@@ -108,15 +108,15 @@
       <div class="col-12 col-md-6">
         <q-card class="shadow-2 rounded-borders">
           <q-card-section class="bg-deep-orange-8 text-white">
-            <div class="text-h6"><q-icon name="security" class="q-mr-sm" />Sicurezza & Supplenze</div>
-            <div class="text-caption opacity-80">Autenticazione avanzata e notifiche notifiche per supplenti</div>
+            <div class="text-h6"><q-icon name="security" class="q-mr-sm" />{{ t('schoolSettingsPage.securityAndSubstitutes') }}</div>
+            <div class="text-caption opacity-80">{{ t('schoolSettingsPage.securityAndSubstitutesDesc') }}</div>
           </q-card-section>
           <q-card-section class="q-pa-md">
             <q-item tag="label" v-ripple>
               <q-item-section>
-                <q-item-label class="text-weight-bold">Obbligo MFA per il Personale Docente/ATA</q-item-label>
+                <q-item-label class="text-weight-bold">{{ t('schoolSettingsPage.mfaForStaff') }}</q-item-label>
                 <q-item-label caption>
-                  Richiede l'autenticazione a due fattori (2FA) per tutti i docenti ed il personale di segreteria.
+                  {{ t('schoolSettingsPage.mfaForStaffDesc') }}
                 </q-item-label>
               </q-item-section>
               <q-item-section side>
@@ -128,9 +128,9 @@
 
             <q-item tag="label" v-ripple>
               <q-item-section>
-                <q-item-label class="text-weight-bold">Notifiche Assegnazione Supplenze</q-item-label>
+                <q-item-label class="text-weight-bold">{{ t('schoolSettingsPage.substituteNotifications') }}</q-item-label>
                 <q-item-label caption>
-                  Invia una notifica istantanea al docente quando viene assegnato come supplente per una lezione.
+                  {{ t('schoolSettingsPage.substituteNotificationsDesc') }}
                 </q-item-label>
               </q-item-section>
               <q-item-section side>
@@ -170,7 +170,7 @@ const fetchSettings = async () => {
     const res = await schoolSettingsService.getSettings();
     settings.value = res.data;
   } catch (err) {
-    $q.notify({ type: 'negative', message: 'Errore nel caricamento delle impostazioni: ' + (err.response?.data?.error || err.message) });
+    $q.notify({ type: 'negative', message: `${t('schoolSettingsPage.loadError')}: ${err.response?.data?.error || err.message}` });
   } finally {
     loading.value = false;
   }
@@ -180,9 +180,9 @@ const saveSettings = async () => {
   saving.value = true;
   try {
     await schoolSettingsService.updateSettings(settings.value);
-    $q.notify({ type: 'positive', message: 'Impostazioni aggiornate con successo' });
+    $q.notify({ type: 'positive', message: t('schoolSettingsPage.saveSuccess') });
   } catch (err) {
-    $q.notify({ type: 'negative', message: 'Errore durante il salvataggio: ' + (err.response?.data?.error || err.message) });
+    $q.notify({ type: 'negative', message: `${t('schoolSettingsPage.saveError')}: ${err.response?.data?.error || err.message}` });
   } finally {
     saving.value = false;
   }

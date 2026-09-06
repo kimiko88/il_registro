@@ -93,12 +93,17 @@
       <q-tab-panels v-model="activeTab" animated>
         <!-- Tab Corsi -->
         <q-tab-panel name="courses">
+          <div v-if="loadingCourses" class="q-pa-md q-gutter-y-sm" role="status" aria-label="Caricamento corsi">
+            <q-skeleton type="rect" height="46px" class="rounded-borders" />
+            <q-skeleton type="rect" height="40px" class="rounded-borders" />
+            <q-skeleton type="rect" height="40px" class="rounded-borders" />
+          </div>
           <q-table
+            v-else
             :rows="courses"
             :columns="courseColumns"
             row-key="id"
-            :loading="loadingCourses"
-            no-data-label="Nessun corso di recupero pianificato"
+            :no-data-label="$t('recovery.noCourses') || 'Nessun corso di recupero pianificato'"
             flat
           >
             <template #body-cell-status="props">
@@ -130,12 +135,17 @@
 
         <!-- Tab Prove Integrative -->
         <q-tab-panel name="tests">
+          <div v-if="loadingTests" class="q-pa-md q-gutter-y-sm" role="status" aria-label="Caricamento prove">
+            <q-skeleton type="rect" height="46px" class="rounded-borders" />
+            <q-skeleton type="rect" height="40px" class="rounded-borders" />
+            <q-skeleton type="rect" height="40px" class="rounded-borders" />
+          </div>
           <q-table
+            v-else
             :rows="tests"
             :columns="testColumns"
             row-key="id"
-            :loading="loadingTests"
-            no-data-label="Nessuna prova integrativa registrata"
+            :no-data-label="$t('recovery.noTests') || 'Nessuna prova integrativa registrata'"
             flat
           >
             <template #body-cell-grade="props">
@@ -174,11 +184,11 @@
 
     <!-- Dialog Creazione Corso -->
     <q-dialog v-model="createCourseDialog" persistent>
-      <q-card style="min-width: 550px; max-width: 700px;" class="rounded-borders">
+      <q-card style="width: min(650px, 95vw); max-width: 95vw;" class="rounded-borders">
         <q-card-section class="row items-center q-pb-none">
           <div class="text-h6 text-weight-bold text-primary">{{ $t('recovery.dialog.newCourseTitle') }}</div>
           <q-space />
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pt-md">
@@ -257,11 +267,11 @@
 
     <!-- Dialog Registrazione Prova Settembre -->
     <q-dialog v-model="recordTestDialog" persistent>
-      <q-card style="min-width: 500px; max-width: 600px;" class="rounded-borders">
+      <q-card style="width: min(550px, 95vw); max-width: 95vw;" class="rounded-borders">
         <q-card-section class="row items-center q-pb-none">
           <div class="text-h6 text-weight-bold text-secondary">{{ $t('recovery.dialog.recordTestTitle') }}</div>
           <q-space />
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pt-md">
@@ -380,10 +390,14 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
+import { useI18n } from 'vue-i18n'
+import { useSchoolYearStore } from '@/stores/schoolYear'
 import recoveryService from 'src/services/recoveryService'
 import api from 'src/services/api'
 
 const $q = useQuasar()
+const { t } = useI18n()
+const schoolYearStore = useSchoolYearStore()
 
 const activeTab = ref('courses')
 const courses = ref([])
@@ -400,18 +414,18 @@ const subjectOptions = ref([])
 const studentOptions = ref([])
 const classOptions = ref([])
 
-const periodOptions = [
-  { label: 'Estivo (Luglio/Agosto)', value: 'summer' },
-  { label: 'Intermedio (1° Quadrimestre)', value: 'intermedio' },
-  { label: 'Pomeridiano Continuativo', value: 'pomeridiano' }
-]
+const periodOptions = computed(() => [
+  { label: t('recovery.periods.summer') || 'Estivo (Luglio/Agosto)', value: 'summer' },
+  { label: t('recovery.periods.intermediate') || 'Intermedio (1° Quadrimestre)', value: 'intermedio' },
+  { label: t('recovery.periods.afternoon') || 'Pomeridiano Continuativo', value: 'pomeridiano' }
+])
 
-const testTypeOptions = [
-  { label: 'Scritto', value: 'written' },
-  { label: 'Orale', value: 'oral' },
-  { label: 'Pratico / Laboratorio', value: 'practical' },
-  { label: 'Misto (Scritto + Orale)', value: 'mixed' }
-]
+const testTypeOptions = computed(() => [
+  { label: t('recovery.testTypes.written') || 'Scritto', value: 'written' },
+  { label: t('recovery.testTypes.oral') || 'Orale', value: 'oral' },
+  { label: t('recovery.testTypes.practical') || 'Pratico / Laboratorio', value: 'practical' },
+  { label: t('recovery.testTypes.mixed') || 'Misto (Scritto + Orale)', value: 'mixed' }
+])
 
 const courseForm = ref({
   title: '',
@@ -420,7 +434,7 @@ const courseForm = ref({
   total_hours: 10,
   room: '',
   description: '',
-  academic_year: '2024/2025',
+  academic_year: schoolYearStore.selectedSchoolYear || '2024/2025',
   teacher_id: '',
   sessions: [],
   student_ids: []
@@ -441,26 +455,26 @@ const resolvedDebtsCount = computed(() => {
   return tests.value.filter(t => t.outcome === 'recuperato').length
 })
 
-const courseColumns = [
-  { name: 'title', label: 'Titolo Corso', field: 'title', align: 'left', sortable: true },
-  { name: 'subject_name', label: 'Materia', field: 'subject_name', align: 'left' },
-  { name: 'period', label: 'Periodo', field: 'period', align: 'center' },
-  { name: 'total_hours', label: 'Ore Totali', field: 'total_hours', align: 'center' },
-  { name: 'room', label: 'Aula', field: 'room', align: 'center' },
-  { name: 'status', label: 'Stato', field: 'status', align: 'center' },
-  { name: 'actions', label: 'Azioni', field: 'actions', align: 'right' }
-]
+const courseColumns = computed(() => [
+  { name: 'title', label: t('recovery.columns.title') || 'Corso / Titolo', field: 'title', align: 'left', sortable: true },
+  { name: 'subject_name', label: t('recovery.columns.subject') || 'Materia', field: 'subject_name', align: 'left' },
+  { name: 'period', label: t('recovery.columns.period') || 'Periodo', field: 'period', align: 'center', format: val => t(`recovery.periods.${val}`) || val },
+  { name: 'total_hours', label: t('recovery.columns.hours') || 'Ore Totali', field: 'total_hours', align: 'center', format: val => `${val}h` },
+  { name: 'room', label: t('recovery.columns.room') || 'Aula', field: 'room', align: 'center' },
+  { name: 'status', label: t('recovery.columns.status') || 'Stato', field: 'status', align: 'center' },
+  { name: 'actions', label: t('recovery.columns.actions') || 'Azioni', field: 'actions', align: 'right' }
+])
 
-const testColumns = [
-  { name: 'student_name', label: 'Studente', field: 'student_name', align: 'left', sortable: true },
-  { name: 'class_name', label: 'Classe', field: 'class_name', align: 'center' },
-  { name: 'subject_name', label: 'Materia', field: 'subject_name', align: 'left' },
-  { name: 'test_date', label: 'Data Prova', field: 'test_date', align: 'center', sortable: true },
-  { name: 'grade', label: 'Voto Prova', field: 'grade', align: 'center' },
-  { name: 'outcome', label: 'Scioglimento Debito', field: 'outcome', align: 'center' },
-  { name: 'final_deliberation', label: 'Esito Scrutinio', field: 'final_deliberation', align: 'center' },
-  { name: 'verbale_number', label: 'N° Verbale', field: 'verbale_number', align: 'center' }
-]
+const testColumns = computed(() => [
+  { name: 'student_name', label: t('recovery.columns.student') || 'Studente', field: 'student_name', align: 'left', sortable: true },
+  { name: 'class_name', label: t('recovery.columns.class') || 'Classe', field: 'class_name', align: 'center' },
+  { name: 'subject_name', label: t('recovery.columns.subject') || 'Materia', field: 'subject_name', align: 'left' },
+  { name: 'test_date', label: t('recovery.columns.date') || 'Data Prova', field: 'test_date', align: 'center', sortable: true },
+  { name: 'grade', label: t('recovery.columns.grade') || 'Voto Prova', field: 'grade', align: 'center' },
+  { name: 'outcome', label: t('recovery.columns.outcome') || 'Esito Debito', field: 'outcome', align: 'center' },
+  { name: 'final_deliberation', label: t('recovery.columns.deliberation') || 'Esito Scrutinio', field: 'final_deliberation', align: 'center' },
+  { name: 'verbale_number', label: t('recovery.columns.verbale') || 'N° Verbale', field: 'verbale_number', align: 'center' }
+])
 
 function getStatusColor(status) {
   switch (status) {
@@ -534,8 +548,8 @@ function openRecordTestDialog() {
 function viewCourseDetails(course) {
   $q.dialog({
     title: course.title,
-    message: `Materia: ${course.subject_name || 'N/A'}\nOre: ${course.total_hours}h\nAula: ${course.room || 'N/A'}\nDescrizione: ${course.description || 'Nessuna descrizione'}`,
-    ok: 'Chiudi'
+    message: `${t('recovery.form.subject') || 'Materia'}: ${course.subject_name || 'N/A'}\n${t('recovery.form.hours') || 'Ore'}: ${course.total_hours}h\n${t('recovery.form.room') || 'Aula'}: ${course.room || 'N/A'}\n${t('recovery.form.description') || 'Descrizione'}: ${course.description || 'N/A'}`,
+    ok: t('common.close') || 'Chiudi'
   })
 }
 
@@ -543,11 +557,11 @@ async function submitCreateCourse() {
   savingCourse.value = true
   try {
     await recoveryService.createCourse(courseForm.value)
-    $q.notify({ type: 'positive', message: 'Corso di recupero creato con successo' })
+    $q.notify({ type: 'positive', message: t('common.saved') || 'Corso di recupero creato con successo' })
     createCourseDialog.value = false
     loadData()
   } catch (err) {
-    $q.notify({ type: 'negative', message: 'Errore durante la creazione del corso' })
+    $q.notify({ type: 'negative', message: t('common.error') || 'Errore durante la creazione del corso' })
   } finally {
     savingCourse.value = false
   }
@@ -557,11 +571,11 @@ async function submitRecordTest() {
   savingTest.value = true
   try {
     await recoveryService.recordTest(testForm.value)
-    $q.notify({ type: 'positive', message: 'Prova integrativa e scioglimento debito registrati' })
+    $q.notify({ type: 'positive', message: t('common.saved') || 'Prova integrativa e scioglimento debito registrati' })
     recordTestDialog.value = false
     loadData()
   } catch (err) {
-    $q.notify({ type: 'negative', message: 'Errore durante la registrazione della prova' })
+    $q.notify({ type: 'negative', message: t('common.error') || 'Errore durante la registrazione della prova' })
   } finally {
     savingTest.value = false
   }

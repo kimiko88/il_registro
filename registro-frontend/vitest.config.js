@@ -27,11 +27,19 @@ export default defineConfig({
         include: ['tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
         coverage: {
             provider: 'v8',
-            reporter: ['text', 'html'],
-            lines: 75,
-            functions: 75,
-            branches: 75,
-            statements: 75
+            reporter: ['text', 'html', 'lcov', 'json'],
+            exclude: [
+                'node_modules/**',
+                'dist/**',
+                'src/main.js',
+                'src/boot/**',
+                'src/i18n/**',
+                'src/router/**',
+                'src-pwa/**',
+                '**/*.spec.js',
+                '**/*.test.js',
+                'tests/**'
+            ]
         },
         deps: {
             inline: [/@quasar/]

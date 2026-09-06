@@ -1,18 +1,46 @@
-# General
+# ==============================================================================
+# General & OS
+# ==============================================================================
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
 *.log
 .idea/
 .vscode/
+*.swp
+*~
 
-# Environment variables & Secrets
+# ==============================================================================
+# Environment Variables, Secrets & Sensitive Data
+# ==============================================================================
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
+*.env
 *.pem
 *.key
+*.cert
+*.cer
+*.crt
+*.der
 certs/
+secrets/
+*.secret
+*.secrets
+*credentials*.json
+*secrets*.json
+*secrets*.plist
+*secrets*.yaml
+*secrets*.yml
+private_key.*
+jwt_secret*
 
+# ==============================================================================
 # Backend (Go)
+# ==============================================================================
 go.work
 go.work.sum
 /registro-backend/bin/
@@ -21,9 +49,13 @@ go.work.sum
 /registro-backend/*.exe
 /registro-backend/*.test
 /registro-backend/coverage.txt
+/registro-backend/coverage.out
+/registro-backend/coverage.html
 /registro-backend/docker/supabase/
 
+# ==============================================================================
 # Frontend (Node.js/Vue)
+# ==============================================================================
 /registro-frontend/node_modules/
 /registro-frontend/dist/
 /registro-frontend/.quasar/
@@ -32,9 +64,12 @@ go.work.sum
 /registro-frontend/yarn-error.log*
 /registro-frontend/tests/e2e/reports
 /registro-frontend/tests/unit/coverage
+/registro-frontend/coverage/
 /registro-frontend/coverage/*
 
+# ==============================================================================
 # Android (Kotlin/Gradle)
+# ==============================================================================
 .gradle/
 **/build/
 android/*/.gradle/
@@ -44,14 +79,58 @@ android/*/.idea/
 *.apk
 *.aab
 *.aar
+*.jks
+*.keystore
 local.properties
+google-services.json
 
-# iOS (Swift/Xcode)
-*.xcodeproj/project.xcworkspace
-*.xcodeproj/xcuserdata/
-*.xcworkspace
-DerivedData/
+# ==============================================================================
+# iOS & Apple Ecosystem (Swift, Xcode, SwiftPM, Fastlane)
+# ==============================================================================
+# Sensitive Certificates, Profiles & Keys
+*.p12
+*.p8
+AuthKey_*.p8
+*.mobileprovision
+*.provisionprofile
+*GoogleService-Info*.plist
+appstore_api_key.json
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+
+# Swift Package Manager
+.build/
+**/.build/
 .swiftpm/
-ios/*/.build/
-ios/*/*.xcodeproj/project.xcworkspace
-ios/*/*.xcodeproj/xcuserdata/
+**/.swiftpm/
+
+# Xcode Build & Derived Data
+build/
+DerivedData/
+**/DerivedData/
+*.moved-aside
+*.xcuserstate
+*.xcscmblueprint
+*.xccheckout
+*.playground/xcuserdata/
+
+# User-specific Xcode state (never track user settings)
+xcuserdata/
+*/xcuserdata/
+*/*.xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcodeproj/*xcuserdata/
+*.xcodeproj/project.xcworkspace
+*.xcworkspace/xcuserdata/
+*.xcworkspace/*xcuserdata/
+
+# Built binaries & archives
+*.app
+*.dSYM/
+*.dSYM.zip
+*.ipa
+*.pkg
+# Local only documentation / drafts
+docs/promotion.md

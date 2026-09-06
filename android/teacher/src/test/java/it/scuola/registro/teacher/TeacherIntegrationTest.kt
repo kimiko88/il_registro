@@ -14,7 +14,7 @@ class TeacherIntegrationTest {
 
     @Before
     fun setUp() {
-        apiService = HttpTeacherApiService("https://api.scuola.registro.it/api/v1")
+        apiService = HttpTeacherApiService("https://registro-backend-fdu2.onrender.com/api/v1")
         viewModel = TeacherViewModel()
     }
 
@@ -33,15 +33,15 @@ class TeacherIntegrationTest {
         assertTrue(viewModel.currentSession?.isSigned == true)
 
         // 3. Mark Roll Call
-        val rollCallSaved = viewModel.toggleStudentAttendance("st1", "Assente")
+        val rollCallSaved = viewModel.toggleStudentAttendance("s1", "Assente")
         assertTrue(rollCallSaved)
 
         // 4. Submit Grade
-        val gradeSubmitted = viewModel.submitGradeForStudent("st1", 8.5, 1.0, "Scritto", "Ottima verifica")
+        val gradeSubmitted = viewModel.submitGradeForStudent("s1", 8.5, 1.0, "Scritto", "Ottima verifica")
         assertTrue(gradeSubmitted)
 
         // 5. Save Deferred Scrutiny Resolution
-        val scrutinySaved = viewModel.resolveDeferredStudent("st2", 6.0, "Ammesso", "Debito formativo saldato con prova scritta positiva")
+        val scrutinySaved = viewModel.resolveDeferredStudent("s2", 6.0, "Ammesso", "Debito formativo saldato con prova scritta positiva")
         assertTrue(scrutinySaved)
     }
 }

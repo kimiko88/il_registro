@@ -94,6 +94,33 @@ export const THEMES = [
     }
 ]
 
+export function getThemeName(theme, t, te) {
+    if (!theme) return ''
+    const id = typeof theme === 'object' ? theme.id : theme
+    const key = `themes.${id}.name`
+    if (te && te(key) && t) return t(key)
+    const obj = THEMES.find(th => th.id === id)
+    return obj ? obj.name : (theme.name || '')
+}
+
+export function getThemeDescription(theme, t, te) {
+    if (!theme) return ''
+    const id = typeof theme === 'object' ? theme.id : theme
+    const key = `themes.${id}.description`
+    if (te && te(key) && t) return t(key)
+    const obj = THEMES.find(th => th.id === id)
+    return obj ? obj.description : (theme.description || '')
+}
+
+export function getThemeRole(theme, t, te) {
+    if (!theme) return ''
+    const id = typeof theme === 'object' ? theme.id : theme
+    const key = `themes.${id}.recommendedRole`
+    if (te && te(key) && t) return t(key)
+    const obj = THEMES.find(th => th.id === id)
+    return obj ? obj.recommendedRole : (theme.recommendedRole || '')
+}
+
 export const useThemeStore = defineStore('theme', {
     state: () => ({
         currentTheme: localStorage.getItem('il_registro_theme') || 'indigo',

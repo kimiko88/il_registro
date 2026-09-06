@@ -7,11 +7,19 @@ final class StudentViewModelTests: XCTestCase {
     override func setUp() {
         super.setUp()
         viewModel = StudentViewModel()
+        viewModel.loadSampleData()
     }
 
     override func tearDown() {
         viewModel = nil
         super.tearDown()
+    }
+
+    func testInitialStateIsEmpty() {
+        let freshVM = StudentViewModel()
+        XCTAssertTrue(freshVM.grades.isEmpty)
+        XCTAssertTrue(freshVM.homework.isEmpty)
+        XCTAssertTrue(freshVM.attendance.isEmpty)
     }
 
     func testCalculateGPA() {

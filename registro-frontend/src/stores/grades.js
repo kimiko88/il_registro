@@ -47,7 +47,9 @@ export const useGradesStore = defineStore('grades', {
         },
         classAverage: (state) => (semester = 0) => {
             return calcClassAverage(state, semester);
-        }
+        },
+        // Public alias used by websocket.js reconnect-refresh.
+        currentClassId: (state) => state._lastClassId,
     },
 
     actions: {

@@ -1,25 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">电子班级日志 - 学生</string>
-    <string name="dashboard_title">我的仪表板</string>
+    <string name="app_name">电子花名册 - 学生</string>
+    <string name="dashboard_title">我的仪表盘</string>
     <string name="welcome_student">你好，%1$s！</string>
     <string name="grades_title">我的成绩</string>
     <string name="agenda_title">作业与日程</string>
-    <string name="attendance_title">出勤与缺勤</string>
+    <string name="attendance_title">考勤与缺勤</string>
     <string name="report_card_title">我的成绩单</string>
-    <string name="gpa_average">平均成绩</string>
+    <string name="gpa_average">总平均成绩</string>
     <string name="recent_grades">最新成绩</string>
     <string name="today_lessons">今日课程表</string>
     <string name="absences_count">总缺勤次数</string>
     <string name="lates_count">总迟到次数</string>
-    <string name="no_data">暂无可用数据</string>
-    <string name="login_subtitle">登录您的账户</string>
+    <string name="no_data">暂无数据</string>
+    <string name="login_subtitle">登录你的账户</string>
     <string name="email_label">学生邮箱</string>
     <string name="password_label">密码</string>
     <string name="btn_login">登录</string>
     <string name="err_enter_credentials">请输入邮箱和密码</string>
-    <string name="logout">登出</string>
+    <string name="logout">退出登录</string>
     <string name="settings">设置</string>
     <string name="badges_title">我的徽章</string>
-    <string name="pcto_title">实习项目</string>
+    <string name="pcto_title">工作实习路径 (PCTO)</string>
+    <string name="restriction_server_url_title">学校服务器地址 (MDM)</string>
+    <string name="restriction_server_url_desc">通过MDM分发的后端服务器终端URL</string>
+    <string name="restriction_school_code_title">学校官方代码</string>
+    <string name="restriction_school_code_desc">教育机构官方识别代码</string>
+    <string name="restriction_kiosk_mode_title">考试专用锁定模式 / 共享平板</string>
+    <string name="restriction_kiosk_mode_desc">禁用外部导航并锁定应用程序</string>
 </resources>

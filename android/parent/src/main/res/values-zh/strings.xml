@@ -1,20 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">电子班级日志 - 家长</string>
+    <string name="app_name">电子花名册 - 家长</string>
     <string name="parent_dashboard_title">家长门户</string>
     <string name="my_children">我的孩子</string>
-    <string name="child_grades">子女成绩</string>
-    <string name="pending_absences">待请假缺勤</string>
+    <string name="child_grades">孩子成绩</string>
+    <string name="pending_absences">待说明的缺勤</string>
     <string name="book_colloqui">预约家长会</string>
     <string name="switch_child">切换孩子</string>
-    <string name="justify_absence">缺勤请假说明</string>
-    <string name="book_colloquio">预约面谈</string>
-    <string name="pending_justifications">待审批请假</string>
+    <string name="justify_absence">提交缺勤说明</string>
+    <string name="book_colloquio">预约会面</string>
+    <string name="pending_justifications">待处理的请假条</string>
     <string name="no_pending_justifications">无待处理缺勤</string>
     <string name="login_subtitle">登录家长门户</string>
     <string name="email_label">家长邮箱</string>
     <string name="password_label">密码</string>
-    <string name="btn_login">登录家长门户</string>
+    <string name="btn_login">登录门户</string>
     <string name="err_enter_credentials">请输入邮箱和密码</string>
-    <string name="logout">登出</string>
+    <string name="logout">退出登录</string>
+    <string name="child_attendance">考勤记录</string>
+    <string name="upcoming_colloqui">近期会面</string>
+    <string name="sign_hour">确认</string>
+    <string name="communications">通知与通告</string>
+    <string name="no_circulars">暂无通知通告</string>
+    <string name="no_children_found">未找到关联学生</string>
+    <string name="no_grades">暂无成绩记录</string>
+    <string name="status_justified">已说明</string>
+    <string name="colloquio_confirmed">已预约</string>
+    <string name="btn_justify">说明</string>
+    <string name="err_login_failed">登录失败</string>
+    <string name="no_data">暂无数据</string>
 </resources>

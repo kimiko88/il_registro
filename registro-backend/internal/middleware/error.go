@@ -1,21 +1,22 @@
 package middleware
 
 import (
-	"log"
+	"registro-backend/pkg/logger"
 
 	"github.com/gin-gonic/gin"
 )
 
+// ErrorMiddleware catches unhandled Gin errors and logs them with structured logger.
 func ErrorMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Next()
 
 		if len(c.Errors) > 0 {
-			// Change this to use structured logger later
 			for _, e := range c.Errors {
-				log.Printf("Error: %s", e.Error())
+				if logger.Log != nil {
+					logger.Log.Errorf("[MiddlewareError] %s: %v", c.Request.URL.Path, e.Err)
+				}
 			}
-			c.JSON(-1, c.Errors)
 		}
 	}
 }

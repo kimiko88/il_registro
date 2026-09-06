@@ -101,11 +101,9 @@
               flat bordered
             >
                 <template v-slot:body-cell-value="props">
-                    <q-td :props="props">
-                        <q-badge :color="getGradeColor(props.value)" class="text-body2 q-px-sm">
-                            {{ props.value }}
-                        </q-badge>
-                    </q-td>
+                <q-td :props="props">
+                    <GradeBadge :value="props.value" />
+                </q-td>
                 </template>
             </q-table>
         </div>
@@ -120,21 +118,13 @@ import { useI18n } from 'vue-i18n'
 import { gradeService } from '@/services/gradeService'
 import api from '@/services/api'
 import { useStudentStore } from '@/stores/student'
+import GradeBadge from '@/components/Common/GradeBadge.vue'
 
 const $q = useQuasar()
 const { t } = useI18n()
 const studentStore = useStudentStore()
 const gradesLoading = ref(true)
 
-const getGradeColor = (val) => {
-    if (!val || val === 'A') return 'grey'
-    const v = parseFloat(val)
-    if (isNaN(v)) return 'grey'
-    if (v >= 8) return 'green-7'
-    if (v >= 6) return 'blue-7'
-    if (v >= 5) return 'amber-8'
-    return 'red-7'
-}
 
 const periodOptions = computed(() => [
     t('gradesPage.periods.all'),

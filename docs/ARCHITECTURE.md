@@ -33,16 +33,18 @@ il_registro/
 │   └── WIKI.md              # Wiki di progetto
 ├── registro-backend/        # Go API server
 ├── registro-frontend/       # Vue 3 + Quasar SPA/PWA
-├── android/                 # Progetto Multi-Modulo Android (Kotlin & Jetpack Compose)
-│   ├── student/             # App Studente
-│   ├── parent/              # App Genitore
-│   ├── teacher/             # App Docente
-│   └── secretary/           # App Segreteria
-├── ios/                     # Progetto Multi-Target iOS (Swift & SwiftUI / SPM)
-│   ├── student/             # App Studente
-│   ├── parent/              # App Genitore
-│   ├── teacher/             # App Docente
-│   └── secretary/           # App Segreteria
+├── android/                 # Progetto Multi-Modulo Android (Kotlin & Jetpack Compose) [Fase Alpha]
+│   ├── student/             # App Studente (:student)
+│   ├── parent/              # App Genitore (:parent)
+│   ├── teacher/             # App Docente (:teacher)
+│   └── secretary/           # App Segreteria (:secretary)
+├── ios/                     # Progetto iOS (Swift & SwiftUI, Xcode + SPM) [Fase Alpha]
+│   ├── RegistroStudente/    # Progetto Xcode integrato (RegistroStudente.xcodeproj, target per i 4 ruoli)
+│   ├── Package.swift        # Swift Package Manager manifest
+│   ├── student/             # Sorgenti modulo Studente
+│   ├── parent/              # Sorgenti modulo Genitore
+│   ├── teacher/             # Sorgenti modulo Docente
+│   └── secretary/           # Sorgenti modulo Segreteria
 ├── CHANGELOG.md
 ├── CONTRIBUTING.md
 ├── SECURITY.md
@@ -167,8 +169,32 @@ Middleware Go:
 
 ---
 
-## Architettura Mobile (Android & iOS)
+## Architettura Mobile (Android & iOS — Fase Alpha)
 
-Le applicazioni native sono organizzate per ruolo utente con architetture moderne e reattive:
-- **Android**: Architettura Multi-Modulo Gradle (`:student`, `:parent`, `:teacher`, `:secretary`), Kotlin 1.9, Jetpack Compose Material 3, ViewModel con Coroutines, Retrofit/OkHttp, Biometria (`BiometricPrompt`), WebSocket e Cache Offline.
-- **iOS**: Architettura Multi-Target Swift Package Manager (`Package.swift`), Swift 5.9, SwiftUI Declarative UI, Observable ViewModels, `URLSession` asincrono (`async/await`), Biometria (`LocalAuthentication`), WebSocket (`URLSessionWebSocketTask`) e Cache Offline.
+> [!WARNING]
+> **STATO ALPHA — NON STABILE E INCOMPLETO**  
+> Le applicazioni mobile native per Android e iOS sono attualmente in **fase Alpha**. Il codice è in fase di sviluppo attivo, sperimentale, **non stabile e incompleto**. **NON sono destinate all'uso in produzione**.
+
+> [!IMPORTANT]
+> **LICENZA CONDIVISA**  
+> Anche tutte le applicazioni mobile native (Android e iOS per Studente, Genitore, Docente e Segreteria) sono distribuite sotto la medesima licenza dell'intero applicativo: **[PolyForm Noncommercial License 1.0.0](../LICENSE)**.
+
+Le applicazioni native sono organizzate per ruolo utente con architetture moderne, reattive e client HTTP connessi direttamente alle API di produzione (senza mock data):
+
+### Android Architecture
+- **Multi-Modulo Gradle**: Sottomoduli `:student`, `:parent`, `:teacher`, `:secretary` coordinati da `settings.gradle.kts`.
+- **UI & Toolkit**: Kotlin 1.9+, Jetpack Compose con componenti Material 3 dedicati per ciascun ruolo.
+- **State & Concurrency**: Architecture Components ViewModel con Kotlin Coroutines e StateFlow.
+- **Networking & API**: Client HTTP reali (`Http*ApiService`) che dialogano con l'API Go (`/api/v1`) con rotazione token JWT.
+- **Funzionalità Avanzate**: Autenticazione biometrica (`BiometricPrompt`), supporto a 11 lingue (`strings.xml`), WebSocket per notifiche real-time e cache offline (`OfflineCacheManager`).
+
+### iOS Architecture
+- **Xcode Project & SPM**: Progetto Xcode integrato `ios/RegistroStudente/RegistroStudente.xcodeproj` contenente schemi e target eseguibili per tutti i 4 ruoli:
+  - `RegistroStudente` (StudentApp)
+  - `RegistroDocente` (TeacherApp)
+  - `RegistroGenitore` (ParentApp)
+  - `RegistroSegreteria` (SecretaryApp)
+  Inoltre è presente il manifest Swift Package Manager (`Package.swift`) per compilazione e testing headless via CLI (`swift test`).
+- **UI & Framework**: Swift 5.9+, SwiftUI Declarative UI con navigazione nativa e layout responsive.
+- **Networking & Concurrency**: Client asincroni `URLSession` con `async/await`, token refresh trasparente, biometria nativa (`LocalAuthentication`).
+- **Localizzazione**: 11 lingue supportate tramite bundle `Localizable.strings` (`it`, `en`, `es`, `fr`, `de`, `ro`, `sq`, `ar` con RTL, `zh-Hans`, `uk`, `ru`).

@@ -121,9 +121,7 @@
               >
                 <template v-slot:body-cell-value="props">
                   <q-td :props="props">
-                    <q-badge :color="getGradeColor(props.value)" class="text-subtitle2 q-pa-xs">
-                      {{ props.value }}
-                    </q-badge>
+                    <GradeBadge :value="props.value" />
                   </q-td>
                 </template>
               </q-table>
@@ -142,6 +140,7 @@ import { storeToRefs } from 'pinia'
 import { useQuasar } from 'quasar'
 import { gradeService } from '@/services/gradeService'
 import adminService from '@/services/adminService'
+import GradeBadge from '@/components/Common/GradeBadge.vue'
 
 const $q = useQuasar()
 const { t } = useI18n()
@@ -322,12 +321,6 @@ const subjectsBelowSufficiency = computed(() => {
     })
 })
 
-function getGradeColor(val) {
-  if (val === 'A' || val === -1) return 'grey';
-  if (val < 6) return 'negative';
-  if (val >= 8) return 'positive';
-  return 'orange';
-}
 
 const downloadReport = async () => {
   try {

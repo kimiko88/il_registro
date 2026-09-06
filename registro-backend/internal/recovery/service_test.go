@@ -147,3 +147,44 @@ func TestRecoveryService_RecordTestOutcome(t *testing.T) {
 	_, errInvalid := svc.RecordTestOutcome(context.Background(), "school-1", "teacher-1", reqInvalid)
 	assert.ErrorIs(t, errInvalid, ErrInvalidGrade)
 }
+
+func TestService_RemainingMethods(t *testing.T) {
+	ctx := context.Background()
+	repo := new(MockRecoveryRepo)
+	svc := NewService(repo)
+
+	// 1. GetCourse - Found
+	repo.On("GetCourseByID", ctx, "c-1").Return(&RecoveryCourse{ID: "c-1", Title: "Recupero"}, nil).Once()
+	c, err := svc.GetCourse(ctx, "c-1")
+	assert.NoError(t, err)
+	assert.Equal(t, "c-1", c.ID)
+
+	// 2. GetCourse - Not found
+	repo.On("GetCourseByID", ctx, "c-404").Return(nil, nil).Once()
+	_, err = svc.GetCourse(ctx, "c-404")
+	assert.ErrorIs(t, err, ErrCourseNotFound)
+
+	// 3. ListCourses
+	repo.On("ListCourses", ctx, "s-1", "2026", "t-1").Return([]RecoveryCourse{{ID: "c-1"}}, nil).Once()
+	list, err := svc.ListCourses(ctx, "s-1", "2026", "t-1")
+	assert.NoError(t, err)
+	assert.Len(t, list, 1)
+
+	// 4. UpdateStatus
+	repo.On("UpdateCourseStatus", ctx, "c-1", "completed").Return(nil).Once()
+	err = svc.UpdateStatus(ctx, "c-1", "completed")
+	assert.NoError(t, err)
+
+	// 5. UpdateAttendance
+	repo.On("UpdateStudentAttendance", ctx, "c-1", "s-1", 5.0, "presente").Return(nil).Once()
+	err = svc.UpdateAttendance(ctx, "c-1", "s-1", 5.0, "presente")
+	assert.NoError(t, err)
+
+	// 6. ListTests
+	repo.On("ListRecoveryTests", ctx, "s-1", "class-1", "student-1").Return([]RecoveryTest{{ID: "t-1"}}, nil).Once()
+	tests, err := svc.ListTests(ctx, "s-1", "class-1", "student-1")
+	assert.NoError(t, err)
+	assert.Len(t, tests, 1)
+
+	repo.AssertExpectations(t)
+}

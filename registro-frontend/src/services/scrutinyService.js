@@ -30,6 +30,13 @@ export const scrutinyService = {
             timeout: 60000
         })
     },
+    exportClassScrutinyZip(classId, semester = 1) {
+        return api.get(`/scrutiny/class/${classId}/export-zip`, {
+            params: { semester: cleanSem(semester) },
+            responseType: 'blob',
+            timeout: 90000
+        })
+    },
 
     // Deficiency & Deferred Scrutiny API helpers
     saveDeficiency(data) {
