@@ -68,7 +68,27 @@ export default {
     "viewAll": "Shiko të Gjitha",
     "noStudentsFound": "Nuk u gjet asnjë nxënës",
     "readOnlySaveBtn": "Ruajtja është çaktivizuar (Vetëm lexim)",
-    "children": "Fëmijët e lidhur"
+    "children": "Fëmijët e lidhur",
+    "onlineSynced": "Në linjë - Të dhënat u sinkronizuan",
+    "offlineSaved": "Jashtë linje - Ndryshimet u ruajtën lokalisht",
+    "class": "Klasa",
+    "student": "Nxënës",
+    "attendance": "Pjesëmarrja",
+    "conduct": "Sjellja",
+    "outcome": "Përfundimi",
+    "average": "Mesatarja",
+    "approved": "E miratuar",
+    "pending": "Në pritje",
+    "completed": "E përfunduar",
+    "create": "Krijo",
+    "update": "Përditëso",
+    "required": "Fushë e detyrueshme",
+    "reserved": "Konfidenciale",
+    "saved": "U ruajt me sukses",
+    "schoolYear": "Viti Shkollor",
+    "subject": "Lënda",
+    "title": "Titulli",
+    "warning": "Kujdes"
   },
   "notFound": {
     "title": "Faqja nuk u gjet",
@@ -206,9 +226,28 @@ export default {
     "absencePercentage": "Përqindja e Mungesave",
     "monthlyBreakdown": "Ndarja Mujore e Pjesëmarrjes",
     "month": "Muaji",
-    "unjustifiedList": "Mungesa dhe Vonesa për t'u Arsyetuar"
+    "unjustifiedList": "Mungesa dhe Vonesa për t'u Arsyetuar",
+    "outOfClass": "Jashtë Klasës",
+    "activityType": "Lloji i Aktivitetit",
+    "duration": "Kohëzgjatja (orë)",
+    "editLesson": "Modifiko Mësimin",
+    "newLesson": "Mësim i Ri",
+    "hour": "Ora e Mësimit",
+    "lessonTopic": "Tema e Mësimit",
+    "lessonType": "Lloji i Mësimit",
+    "subject": "Lënda"
   },
   "dashboardPage": {
+    "viewYourHomework": "Shiko detyrat dhe aktivitetet e tua",
+    "upcomingHomework": "Detyrat e ardhshme për t'u kryer",
+    "upcomingHomeworkSub": "Organizo mësimet: detyra, provime dhe dorëzime të ardhshme",
+    "allHomework": "Të gjitha detyrat",
+    "teacherLabel": "Mësimdhënësi",
+    "noPendingHomework": "Asnjë detyrë pezull",
+    "allCaughtUp": "Jeni plotësisht në rregull me të gjitha detyrat!",
+    "dueToday": "Sot",
+    "dueTomorrow": "Nesër",
+    "dueInDays": "Për {days} ditë",
     "greetingMorning": "Mirëmëngjes",
     "greetingAfternoon": "Mirëdita",
     "greetingEvening": "Mirëmbrëma",
@@ -257,7 +296,10 @@ export default {
     "recentGrades": "Notat e Fundit",
     "noChildren": "Nuk ka fëmijë të lidhur",
     "systemStatus": "Gjendja e Sistemit",
-    "syncedNow": "Sinkronizuar tani"
+    "syncedNow": "Sinkronizuar tani",
+    "online": "Në linjë",
+    "notifications": "Njoftime",
+    "teacher": "Mësues"
   },
   "agendaPage": {
     "title": "Agenda & Kalendari Didaktik",
@@ -295,9 +337,48 @@ export default {
     "detailsOf": "Detajet e",
     "lessonsHeld": "Mësimet e Zhvilluara",
     "noLessons": "Nuk ka mësime të regjistruara në këtë datë.",
-    "noDueHomework": "Nuk ka detyra me afat në këtë datë."
+    "noDueHomework": "Nuk ka detyra me afat në këtë datë.",
+    "thisWeek": "Këtë Javë",
+    "monthView": "Pamje Mujore",
+    "weekView": "Pamje Javore",
+    "dayView": "Pamje Ditore",
+    "quickNew": "+ E Re",
+    "moreCount": "+{count} të tjera",
+    "eventTitle": "Titulli i Ngjarjes *",
+    "eventDescription": "Përshkrimi / Detaje",
+    "eventType": "Lloji i Ngjarjes *",
+    "targetClass": "Klasa Marrëse *",
+    "eventDate": "Data *",
+    "startTime": "Ora e Fillimit",
+    "endTime": "Ora e Mbarimit",
+    "saveChanges": "Ruaj Ndryshimet",
+    "createEvent": "Krijo Ngjarje",
+    "deleteEvent": "Fshij Ngjarjen",
+    "weekTitle": "Java",
+    "confirmDeleteTitle": "Fshij Ngjarjen",
+    "confirmDeleteMsg": "A jeni të sigurt që dëshironi ta fshini këtë ngjarje nga ditari?",
+    "eventCreated": "Ngjarja u krijua me sukses",
+    "eventUpdated": "Ngjarja u modifikua me sukses",
+    "eventDeleted": "Ngjarja u hoq me sukses",
+    "allDay": "Gjithë ditën"
   },
   "usersPage": {
+    "importTitle": "Importimi i përdoruesve nga CSV",
+    "stepConfig": "Konfigurimi",
+    "stepUpload": "Ngarkimi i skedarit",
+    "stepResult": "Rezultati",
+    "userTypeToImport": "Lloji i përdoruesve për t'u importuar",
+    "sendWelcomeEmail": "Dërgo email mirëseardhjeje me kredenciale të përkohshme",
+    "downloadTemplate": "Shkarko modelin shembull CSV",
+    "selectCsvFile": "Zgjidh skedarin CSV (.csv maks 10MB)",
+    "previewRowsTitle": "Pamja paraprake e 5 rreshtave të parë",
+    "runImport": "Kryej importimin",
+    "importSuccessCount": "{count} përdorues u importuan me sukses!",
+    "skippedRowsCount": "{count} rreshta u kapërcyen ose të pavlefshëm.",
+    "errorsEncountered": "Gabimet e hasura",
+    "rowError": "Rreshti {row}: {reason}",
+    "downloadErrorReport": "Shkarko raportin e gabimeve",
+    "closeAndUpdate": "Mbyll dhe përditëso listën",
     "title": "Menaxhimi i Përdoruesve",
     "searchPlaceholder": "Kërko sipas emrit, email-it, kodit personal...",
     "newUser": "Përdorues i Ri",
@@ -318,7 +399,9 @@ export default {
     "resetPassword": "Rivendos Fjalëkalimin",
     "manageSubjects": "Cakto Lëndët",
     "deleteAccount": "Fshi Llogarinë",
-    "noUsersFound": "Nuk u gjet asnjë përdorues"
+    "noUsersFound": "Nuk u gjet asnjë përdorues",
+    "importError": "Gabim gjatë importimit CSV",
+    "targetClass": "Klasa e Destinacionit"
   },
   "supportPage": {
     "title": "Qendra e Mbështetjes & Pyetjet e Shpeshta",
@@ -412,7 +495,8 @@ export default {
     "tabGrades": "Notat e Mia",
     "homework": "Detyrat e shtëpisë",
     "documents": "Dosja Dokumentare & Aktet",
-    "schoolManagement": "Menaxhimi i Shkollave"
+    "schoolManagement": "Menaxhimi i Shkollave",
+    "student": "Nxënës/e"
   },
   "udaPage": {
     "subjectLabel": "Lënda *",
@@ -518,6 +602,32 @@ export default {
     "levelD": "D - Fillestar"
   },
   "gradesPage": {
+    "createTestTitle": "Krijo vlerësim të ri",
+    "editTestTitle": "Modifiko vlerësimin në bllok",
+    "testDetails": "Detajet e vlerësimit",
+    "testTitle": "Titulli i vlerësimit",
+    "teacherNotes": "Shënime për mësuesin (të brendshme)",
+    "parentNotes": "Shënime për prindërit (të dukshme)",
+    "studentGrades": "Notat e nxënësve",
+    "insertedCount": "të vendosura",
+    "allAbsentMarked": "Të gjithë nxënësit u shënuan si mungues",
+    "saveTestAndGrades": "Ruaj vlerësimin dhe notat",
+    "saveEditTest": "Ruaj ndryshimet e vlerësimit",
+    "overlappingWarning": "Kujdes: Klasa ka tashmë {count} vlerësime të planifikuara më {date}! (Maksimumi i rekomanduar: 2)",
+    "testSavedSuccess": "Vlerësimi \"{title}\" dhe {count} nota u ruajtën me sukses!",
+    "testEditSuccess": "Vlerësimi u modifikua me sukses!",
+    "testSaveError": "Gabim gjatë ruajtjes së vlerësimit",
+    "testEditError": "Gabim gjatë modifikimit të vlerësimit",
+    "deleteTestConfirmTitle": "Konfirmo fshirjen e vlerësimit",
+    "deleteTestConfirmMsg": "Je i sigurt që dëshiron të fshish vlerësimin \"{title}\"? {count} nota të lidhura do të fshihen përgjithmonë.",
+    "deleteTestSuccess": "Vlerësimi u fshi me sukses!",
+    "deleteTestError": "Gabim gjatë fshirjes së vlerësimit",
+    "noPermissionNotOwner": "Nuk keni leje të menaxhoni vlerësime në një klasë të pacaktuar",
+    "testsHistory": "Lista e vlerësimeve",
+    "noTestsFound": "Nuk u gjet asnjë vlerësim",
+    "noTestsFoundDesc": "Nuk ka ende vlerësime të regjistruara për këtë lëndë.",
+    "createFirstTest": "Krijo vlerësimin e parë",
+    "selectClassSub": "Zgjidh një klasë nga menuja e sipërme për të hyrë në regjistër:",
     "cannotEditOtherTeacherGrade": "Nuk mund të ndryshoni notat e vendosura nga një mësues tjetër",
     "sharedGradesCaption": "Nota të ndara me klasën",
     "confirmDeleteGrade": "A jeni të sigurt që dëshironi ta fshini këtë notë?",
@@ -607,7 +717,17 @@ export default {
     "sufficient": "Kalues",
     "insufficient": "Mbetës",
     "absent": "Mungon",
-    "subject": "Lënda"
+    "subject": "Lënda",
+    "selectClassPrompt": "Zgjidhni një Klasë",
+    "evalType": "Lloji i Vlerësimit",
+    "markAllAbsent": "Shëno të gjithë si mungesë",
+    "noStudentsInClass": "Nuk ka nxënës të ngarkuar për këtë klasë",
+    "testDate": "Data e Vlerësimit",
+    "types": {
+      "written": "Me shkrim",
+      "oral": "Me gojë",
+      "practical": "Praktik"
+    }
   },
   "didacticsPage": {
     "title": "Materiale Didaktike & Burime",
@@ -688,7 +808,16 @@ export default {
       "equivalentTest": "Test ekuivalent",
       "textToSpeech": "Sintezë zanore",
       "conceptMaps": "Harta konceptuale"
-    }
+    },
+    "createFirst": "Krijo planin e parë",
+    "clinicalDiagnosis": "Diagnoza Klinike (vetëm për mësimdhënësit)",
+    "restrictedFile": "Bashkëngjitje Mjekësore (Vetëm për Mësuesit e Klasës)",
+    "noneSpecified": "Asnjë e specifikuar",
+    "approvedFamily": "✓ Miratuar nga Familja",
+    "sharedPending": "Ndarë (në pritje)",
+    "internalDraft": "Draft i Brendshëm",
+    "hideFromFamily": "Fshih nga Familja",
+    "shareWithFamily": "Ndaj me Familjen"
   },
   "rubricsPage": {
     "title": "Rubrikat e Vlerësimit të Kompetencave",
@@ -920,7 +1049,10 @@ export default {
     "downloadStarted": "Duke shkarkuar dokumentin: {title}",
     "upload": "Ngarko Dokument",
     "tableTitle": "Dokumente Zyrtare",
-    "noDocs": "Nuk ka dokumente të disponueshme në këtë seksion."
+    "noDocs": "Nuk ka dokumente të disponueshme në këtë seksion.",
+    "certsDesc": "Vërtetime regjistrimi dhe frekuentimi të gjeneruara automatikisht.",
+    "downloading": "Po shkarkohet...",
+    "previewNotAvailable": "Pamja paraprake nuk është e disponueshme jashtë linje."
   },
   "notesPage": {
     "title": "Vërejtjet Disiplinore & Shënimet",
@@ -1193,7 +1325,8 @@ export default {
     "mfaCaption": "Kërko autentifikim me dy faktorë me kod TOTP për të gjithë stafin dhe administratorët.",
     "minPasswordLength": "Gjatësia Minimale e Fjalëkalimit",
     "sessionTimeout": "Koha e Skadimit të Seancës Pasive",
-    "maxLoginAttempts": "Tentativa të Dështuara Para Bllokimit"
+    "maxLoginAttempts": "Tentativa të Dështuara Para Bllokimit",
+    "general": "Përgjithshme"
   },
   "search": {
     "placeholder": "Kërkoni nxënës, mësues, sekretari, klasa, njoftime, meny…",
@@ -1350,6 +1483,21 @@ export default {
         "title": "Takimet me Prindërit",
         "desc": "Caktimi i orareve të lira për takime individuale.",
         "content": "Përcaktoni fashat orare dhe konfirmoni kërkesat e prindërve."
+      },
+      "scrutiny": {
+        "period1": "Semestri 1 / Tremujori",
+        "period2": "Vlerësimi Përfundimtar (Semestri 2)",
+        "deferredScrutiny": "Vlerësim i Shtyrë / Rikuperim Detyrimesh",
+        "deferredBannerTitle": "Seanca e Vlerësimit të Shtyrë është Aktive",
+        "deferredBannerBody": "Në këtë seancë mund të vendoset për zgjidhjen e pezullimit për nxënësit me lëndë të mbetura.",
+        "deferredModalTitle": "Vlerësim i Shtyrë: {name}",
+        "deferredModalSubtitle": "Vlerësimi i provimeve plotësuese dhe shlyerja e detyrimeve mësimore",
+        "deferredNotes": "Procesverbal / Shënime mbi vlerësimin",
+        "deferredSaved": "Përfundimi i vlerësimit të shtyrë u ruajt me sukses",
+        "deliberateDeferred": "Vendos mbi Pezullimin",
+        "notPromotedDebtsNotCleared": "I pamiratuar (detyrime të pashlyera)",
+        "promotedDebtsCleared": "I miratuar (detyrime të shlyera)",
+        "closeConfirmMsg": "Jeni të sigurt që dëshironi të mbyllni dhe vulosni vlerësimin për klasën e zgjedhur? Ky veprim është përfundimtar."
       }
     },
     "student": {
@@ -2252,7 +2400,8 @@ export default {
     "documentsSubmitted": "Dokumentet e Paraqitura",
     "completeEnrollment": "Përfundo Regjistrimin",
     "enrollmentSuccess": "Regjistrimi u krye me sukses!",
-    "studentFile": "Skeda e Nxënësit"
+    "studentFile": "Skeda e Nxënësit",
+    "title": "Regjistri i Nxënësve"
   },
   "classesPage": {
     "currentClass": "Klasa Aktuale"
@@ -2364,7 +2513,16 @@ export default {
   "attendancePage": {
     "title": "Prania & Mungesat",
     "subtitle": "Regjistrimi i pranisë, vonesave dhe arsyetimeve",
-    "tableTitle": "Pasqyra e Pranisë"
+    "tableTitle": "Pasqyra e Pranisë",
+    "justified": "E justifikuar",
+    "parentManagedJustifications": "Justifikimet menaxhohen drejtpërdrejt nga Prindërit",
+    "requestJustification": "Kërko justifikim",
+    "selectAbsence": "Zgjidhni mungesën për të justifikuar",
+    "timeDetail": "Detaji i Orarit",
+    "reason": "Arsyeja",
+    "reasonFamily": "Arsye Familjare",
+    "reasonHealth": "Arsye Shëndetësore",
+    "warningAbsenceLimit": "Keni arritur kufirin e paralajmërimit për mungesat. Rregulloni pjesëmarrjen për të shmangur penalizimet."
   },
   "reportCardPage": {
     "title": "Dëftesa & Vlerësimi Përfundimtar",
@@ -2558,7 +2716,8 @@ export default {
       "goalDescription": "Description & Strategies",
       "expectedTerm": "Target Term",
       "status": "Progress Status"
-    }
+    },
+    "noGoals": "Nuk është futur asnjë objektiv PEI"
   },
   "generalMeeting": {
     "teacherQueueTitle": "Afternoon General Parent-Teacher Conference",
@@ -2869,7 +3028,11 @@ export default {
   "offlineBanner": {
     "offlineText": "Nuk ka lidhje me internetin. Ndryshimet mund të mos ruhen.",
     "offlineBadge": "JASHTË LINJE",
-    "onlineText": "Lidhja me internetin u rikthye."
+    "onlineText": "Lidhja me internetin u rikthye.",
+    "pendingQueue": "Nuk ka lidhje me internetin. {count} ndryshime lokale në radhë për t'u sinkronizuar.",
+    "inQueue": "NË RADHË",
+    "syncedSuccess": "Lidhja u rikthye: {count} operacione u sinkronizuan me sukses.",
+    "enqueuedOffline": "Veprimi u ruajt lokalisht. Do të sinkronizohet automatikisht sapo të rikthehet lidhja."
   },
   "inactivity": {
     "warningTitle": "Seanca po skadon",
@@ -3001,7 +3164,8 @@ export default {
     },
     "loadError": "Gabim gjatë ngarkimit të vërtetimeve",
     "generateSuccess": "Vërtetimi u gjenerua me sukses!",
-    "generateError": "Gabim gjatë gjenerimit të vërtetimit"
+    "generateError": "Gabim gjatë gjenerimit të vërtetimit",
+    "enrollmentCert": "Vërtetim Regjistrimi"
   },
   "sidiExports": {
     "title": "Eksportet Zyrtare & Ministriale",
@@ -3261,6 +3425,42 @@ export default {
     "notFound": "Faqja nuk u gjet"
   },
   "secretaryClasses": {
+    "migrationTitle": "Migrimi i Nxënësve dhe Kalimi i Vitit Shkollor",
+    "migrationSubtitle": "Menaxhoni përparimin e klasave, të kaluarit, përsëritësit dhe të diplomuarit",
+    "migrationProcedure": "Procedura e Kalimit të Vitit Shkollor",
+    "migrationProcedureDesc": "Zgjidhni vitin shkollor burimor dhe atë të destinacionit. Mund të konfiguroni me shpejtësi statusin e secilit nxënës (I Kaluar, Përsëritës, I Diplomuar ose I Transferuar).",
+    "sourceYear": "Viti Burimor (Origjina)",
+    "targetYear": "Viti i Destinacionit (Viti i Ri)",
+    "filterByClass": "Filtro sipas Klasës (ose Të Gjitha Klasat)",
+    "allSourceClasses": "Të gjitha klasat e vitit burimor",
+    "studentsToProcess": "Nxënës për t'u Përpunuar",
+    "markAllPromoted": "Shëno të Gjithë të Kaluar",
+    "smartDefaults": "Diplomo Klasën 5 / Kalo Klasat 1-4",
+    "markAllRepeater": "Shëno të Gjithë Përsëritës",
+    "loadingMigration": "Po ngarkohen nxënësit dhe po përgatiten klasat e vitit të ri...",
+    "noStudentsFound": "Nuk u gjet asnjë nxënës për kriteret e zgjedhura.",
+    "currentClassLabel": "Klasa Aktuale",
+    "actionPromoted": "I/E Kaluar",
+    "actionRepeater": "Përsëritës/e",
+    "actionGraduated": "I/E Diplomuar",
+    "actionLeft": "I/E Transferuar",
+    "targetClassLabel": "Klasa e Destinacionit",
+    "noClassUnassigned": "Pa klasë (I pa caktuar)",
+    "migrationSummaryTitle": "Përmbledhja e Migrimit",
+    "promotedCount": "Të Kaluar",
+    "repeaterCount": "Përsëritës",
+    "graduatedCount": "Të Diplomuar",
+    "leftCount": "Të Transferuar / Të Tërhequr",
+    "btnConfigureStudents": "Përpara: Konfiguro Nxënësit",
+    "btnVerifySummary": "Përpara: Verifiko Përmbledhjen",
+    "btnExecuteMigration": "Konfirmo dhe Ekzekuto Migrimin",
+    "migrationSuccess": "Migrimi i vitit shkollor u krye me sukses!",
+    "migrationError": "Gabim gjatë ekzekutimit të migrimit",
+    "migrationLoadError": "Gabim gjatë ngarkimit të të dhënave të migrimit",
+    "scheduleTitle": "Orari Javor - Klasa",
+    "scheduleSaved": "Orari u ruajt me sukses",
+    "scheduleSaveError": "Gabim gjatë ruajtjes së orarit",
+    "scheduleLoadError": "Gabim gjatë ngarkimit të orarit",
     "newClass": "Klasë e Re",
     "editClass": "Ndrysho Klasën",
     "createClass": "Krijo Klasën",
@@ -3315,6 +3515,100 @@ export default {
     "subjectName": "Emri i Lëndës",
     "createSubject": "Krijo Lëndën",
     "subjectCreated": "Lënda u krijua",
-    "createSubjectError": "Gabim gjatë krijimit të lëndës"
+    "createSubjectError": "Gabim gjatë krijimit të lëndës",
+    "manageAssignments": "Menaxhimi i Lëndëve dhe Mësuesve",
+    "manageStudents": "Menaxhimi i Nxënësve të Klasës"
+  },
+  "groupsPage": {
+    "title": "Menaxhimi i Grupeve Gjuhësore & të Kombinuara",
+    "subtitle": "Krijoni dhe menaxhoni grupe nxënësish nga disa klasa",
+    "newGroup": "Grup i Ri",
+    "createGroup": "Krijo Grup",
+    "loading": "Po ngarkohen grupet...",
+    "noGroups": "Nuk u gjet asnjë grup gjuhësor apo i kombinuar",
+    "noGroupsDesc": "Krijoni grupin tuaj të parë për mësim me nxënës të klasave të ndryshme",
+    "students": "nxënës",
+    "teacher": "Mësimdhënës",
+    "academicYear": "Viti akademik",
+    "editGroup": "Modifiko Grupin",
+    "deleteGroup": "Fshij",
+    "groupName": "Emri i Grupit",
+    "groupNamePlaceholder": "Emri i Grupit (p.sh. Anglisht B2 3A-3B)",
+    "description": "Përshkrimi / Shënime",
+    "confirmDelete": "Konfirmo fshirjen",
+    "confirmDeleteDesc": "A jeni të sigurt që dëshironi ta fshini këtë grup?",
+    "groupDeleted": "Grupi u fshi",
+    "deleteError": "Gabim gjatë fshirjes",
+    "groupSaved": "Grupi u përditësua me sukses",
+    "groupCreated": "Grupi u krijua me sukses",
+    "save": "Ruaj",
+    "create": "Krijo",
+    "studentListTitle": "Nxënësit e Grupit: {name}",
+    "noStudents": "Asnjë nxënës i caktuar në këtë grup."
+  },
+  "scrutinyPage": {
+    "title": "Këshilli i Klasës & Provimet Riparuese",
+    "subtitle": "Menaxhimi i notave përfundimtare, mbetjeve dhe shlyerjes së lëndëve",
+    "closeScrutiny": "Mbyll Këshillin",
+    "saveFinal": "Ruaj Notat Përfundimtare",
+    "classCouncil": "Këshilli i Klasës",
+    "notCoordinator": "Ju nuk jeni kujdestar i ndonjë klase për këtë këshill.",
+    "selectClassPrompt": "Zgjidhni një klasë për të filluar këshillin.",
+    "deficiencyTitle": "Lëndët e Mbetura — {name}",
+    "deficiencySubtitle": "Të dhëna mbi mangësitë për shlyerje (të dukshme për nxënësin dhe prindërit)",
+    "deficiencySubject": "Lënda e Mbetur",
+    "deficiencyTopics": "Temat e Mbetura / Mangësi Specifike *",
+    "recoveryMode": "Mënyra e Shlyerjes",
+    "recoveryStatus": "Gjendja e Shlyerjes",
+    "recoveryGrade": "Nota e Provimit Riparues",
+    "recoveryDate": "Data e Provimit Riparues",
+    "saveDeficiency": "Ruaj Mangësinë",
+    "noDeficiencies": "Nuk ka lëndë të mbetura për këtë nxënës.",
+    "individualStudy": "Studim Individual",
+    "summerCourse": "Kurs Veror",
+    "helpDesk": "Konsultime Mësimore",
+    "toRecover": "Për Shlyerje",
+    "inProgress": "Në Proces",
+    "recovered": "Shlyer",
+    "notRecovered": "I Pashlyer"
+  },
+  "studentDetail": {
+    "title": "Detajet e Nxënësit",
+    "personalInfo": "Të Dhënat Personale",
+    "fullName": "Emri i plotë",
+    "fiscalCode": "Kodi Fiskal",
+    "class": "Klasa",
+    "email": "Email",
+    "phone": "Telefon",
+    "birthDate": "Datëlindja",
+    "attendanceSummary": "Përmbledhja e Pjesëmarrjes",
+    "totalAbsences": "Mungesa Totale",
+    "lates": "Vonesa",
+    "earlyExits": "Dalje të Hershme",
+    "justified": "Të Arsyetuara",
+    "absenceRate": "Norma e mungesave",
+    "risk": "Rreziku",
+    "riskHigh": "I LARTË",
+    "riskMedium": "I MESËM",
+    "riskLow": "I ULËT",
+    "todayAttendanceByHour": "Pjesëmarrja Sot sipas Orëve",
+    "hourNotRegistered": "Ora {hour}: e paregjistruar",
+    "hourStatus": "Ora {hour}: {status}"
+  },
+  "orientamento": {
+    "availableEvents": "Ngjarjet e Disponueshme",
+    "myEvents": "Ngjarjet e Mia",
+    "history": "Historiku dhe Pjesëmarrja"
+  },
+  "homework": {
+    "assign": "Cakto",
+    "assignHomework": "Cakto Detyrë",
+    "description": "Përshkrimi i Detyrës",
+    "dueDate": "Afati i Dorëzimit"
+  },
+  "signaturesPage": {
+    "signNow": "Nënshkruaj Tani",
+    "signed": "E nënshkruar",
+    "signedOn": "Nënshkruar më"
   }
-}
+};

@@ -7,8 +7,8 @@
 
     <!-- Filters -->
     <div class="row q-gutter-md q-mb-md">
-        <q-select dense outlined v-model="filter.class" :options="classes" :label="t('nav.classes')" style="min-width: 120px" bg-color="white" />
-        <q-select dense outlined v-model="filter.type" :options="['Tutti', 'PDP', 'PFI', 'PCTO', 'Programmazione']" :label="t('documentsPage.docType')" style="min-width: 150px" bg-color="white" />
+        <q-select dense outlined v-model="filter.class" :options="classes" :label="t('nav.classes')" style="min-width: 120px" :bg-color="$q.dark.isActive ? 'dark' : 'white'" />
+        <q-select dense outlined v-model="filter.type" :options="['Tutti', 'PDP', 'PFI', 'PCTO', 'Programmazione']" :label="t('documentsPage.docType')" style="min-width: 150px" :bg-color="$q.dark.isActive ? 'dark' : 'white'" />
     </div>
 
     <!-- Documents Grid -->
@@ -49,7 +49,7 @@
     <q-dialog v-model="showCreateDialog" maximized transition-show="slide-up" transition-hide="slide-down">
         <q-card class="bg-grey-1">
             <q-toolbar class="bg-primary text-white">
-                <q-btn flat round dense icon="close" v-close-popup />
+                <q-btn flat round dense icon="close" v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
                 <q-toolbar-title>Editor Documento</q-toolbar-title>
                 <q-btn flat label="Salva Bozza" icon="save" class="q-mr-sm" />
                 <q-btn flat label="Pubblica / Invia" icon="send" />

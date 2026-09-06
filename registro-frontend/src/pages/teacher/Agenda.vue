@@ -106,7 +106,7 @@
         :color="selectedTypeFilter === 'altro' ? 'grey-7' : 'grey-3'"
         :text-color="selectedTypeFilter === 'altro' ? 'white' : 'dark'"
         @click="selectedTypeFilter = 'altro'"
-      >Altro</q-chip>
+      >{{ $t('agendaPage.other') }}</q-chip>
     </div>
 
     <!-- VIEW 1: FULL MONTH VIEW (MESE) - GOOGLE CALENDAR STYLE -->
@@ -114,7 +114,7 @@
       <!-- Month Navigation Controls Header -->
       <div class="bg-slate-100 border-b-2 border-slate-300 px-6 py-3.5 row items-center justify-between">
         <div class="row items-center gap-3">
-          <q-btn unelevated color="primary" label="Oggi" no-caps class="rounded-lg font-bold px-4" @click="today" />
+          <q-btn unelevated color="primary" :label="$t('agendaPage.today')" no-caps class="rounded-lg font-bold px-4" @click="today" />
           <div class="row items-center">
             <q-btn flat round dense icon="chevron_left" color="slate-700" size="md" @click="prevMonth" />
             <q-btn flat round dense icon="chevron_right" color="slate-700" size="md" @click="nextMonth" />
@@ -125,7 +125,7 @@
         </div>
 
         <div class="text-caption font-bold text-slate-500 uppercase tracking-widest bg-slate-200 px-3 py-1 rounded-full">
-          Vista Mensile
+          {{ $t('agendaPage.monthView') }}
         </div>
       </div>
 
@@ -169,7 +169,7 @@
               </span>
 
               <span class="gcal-add-btn">
-                + Nuovo
+                {{ $t('agendaPage.quickNew') }}
               </span>
             </div>
 
@@ -206,7 +206,7 @@
                 class="text-[11px] font-bold text-blue-700 px-1 pt-0.5 hover:underline cursor-pointer"
                 @click.stop="selectDateIso(d.iso); viewMode = 'giorno'"
               >
-                +{{ (getEventsForDay(d.iso).length + getAllDayEventsForDay(d.iso).length) - 3 }} altri
+                {{ $t('agendaPage.moreCount', { count: (getEventsForDay(d.iso).length + getAllDayEventsForDay(d.iso).length) - 3 }) }}
               </div>
             </div>
           </div>
@@ -219,17 +219,17 @@
       <!-- Week Header Controls -->
       <div class="bg-slate-100 border-b-2 border-slate-300 px-6 py-3.5 row items-center justify-between">
         <div class="row items-center gap-3">
-          <q-btn unelevated color="primary" label="Questa Settimana" no-caps class="rounded-lg font-bold px-4" @click="thisWeek" />
+          <q-btn unelevated color="primary" :label="$t('agendaPage.thisWeek')" no-caps class="rounded-lg font-bold px-4" @click="thisWeek" />
           <div class="row items-center">
             <q-btn flat round dense icon="chevron_left" color="slate-700" size="md" @click="prevWeek" />
             <q-btn flat round dense icon="chevron_right" color="slate-700" size="md" @click="nextWeek" />
           </div>
           <div class="text-subtitle1 font-extrabold text-slate-800 ml-2">
-            Settimana {{ weekTitle }}
+            {{ $t('agendaPage.weekTitle') }} {{ weekTitle }}
           </div>
         </div>
         <div class="text-caption font-bold text-slate-500 uppercase tracking-widest bg-slate-200 px-3 py-1 rounded-full">
-          Vista Settimanale
+          {{ $t('agendaPage.weekView') }}
         </div>
       </div>
 
@@ -350,7 +350,7 @@
       <!-- Day Header Controls -->
       <div class="bg-slate-100 border-b-2 border-slate-300 px-6 py-3.5 row items-center justify-between">
         <div class="row items-center gap-3">
-          <q-btn unelevated color="primary" label="Oggi" no-caps class="rounded-lg font-bold px-4" @click="today" />
+          <q-btn unelevated color="primary" :label="$t('agendaPage.today')" no-caps class="rounded-lg font-bold px-4" @click="today" />
           <div class="row items-center">
             <q-btn flat round dense icon="chevron_left" color="slate-700" size="md" @click="prevDay" />
             <q-btn flat round dense icon="chevron_right" color="slate-700" size="md" @click="nextDay" />
@@ -360,7 +360,7 @@
           </div>
         </div>
         <div class="text-caption font-bold text-slate-500 uppercase tracking-widest bg-slate-200 px-3 py-1 rounded-full">
-          Vista Giornaliera
+          {{ $t('agendaPage.dayView') }}
         </div>
       </div>
 
@@ -375,7 +375,7 @@
           >
             {{ currentDayNumber }}
           </span>
-          <q-badge v-if="isoSelectedDate === isTodayIso" color="primary" label="Oggi" class="q-ml-sm text-weight-bold" />
+          <q-badge v-if="isoSelectedDate === isTodayIso" color="primary" :label="$t('agendaPage.today')" class="q-ml-sm text-weight-bold" />
         </div>
       </div>
 
@@ -469,183 +469,33 @@
       <q-btn round color="primary" icon="add" size="lg" class="shadow-lg" @click="openCreateDialog()" />
     </q-page-sticky>
 
-    <!-- Create / Edit / View Event Dialog -->
-    <q-dialog v-model="dialogVisible">
-      <q-card style="width: min(600px, 95vw)" class="rounded-xl overflow-hidden shadow-24 border-slate-300">
-        <q-card-section class="bg-primary text-white row items-center justify-between q-py-md">
-          <div class="text-h6 text-weight-bold">
-            <q-icon :name="isEditMode ? (isCurrentAuthor ? 'edit_calendar' : 'info') : 'event_available'" class="q-mr-xs" />
-            {{ !isEditMode ? 'Nuovo Evento Agenda' : (isCurrentAuthor ? 'Modifica Evento Agenda' : 'Dettagli Evento Agenda') }}
-          </div>
-          <q-btn icon="close" flat round dense v-close-popup />
-        </q-card-section>
-
-        <!-- Read-Only Notice for Non-Authors -->
-        <div v-if="isEditMode && !isCurrentAuthor" class="bg-amber-50 border-b border-amber-200 q-pa-sm text-amber-900 text-caption row items-center gap-2">
-          <q-icon name="info" size="18px" color="amber-9" />
-          <span>Creato da <strong>{{ currentEventTeacherName }}</strong>. Solo l'autore dell'evento può apportare modifiche o eliminarlo.</span>
-        </div>
-
-        <q-form ref="formRef" @submit.prevent="saveEvent">
-          <q-card-section class="q-pa-md">
-            <!-- Title Input -->
-            <q-input
-              v-model="form.title"
-              label="Titolo Evento *"
-              outlined
-              dense
-              tabindex="1"
-              class="q-mb-md"
-              :readonly="isEditMode && !isCurrentAuthor"
-              :rules="[val => !!val || 'Il titolo è obbligatorio']"
-            />
-
-            <!-- Description Input -->
-            <q-input
-              v-model="form.description"
-              label="Descrizione / Dettagli"
-              outlined
-              dense
-              type="textarea"
-              rows="3"
-              tabindex="2"
-              class="q-mb-md"
-              :readonly="isEditMode && !isCurrentAuthor"
-            />
-
-            <!-- Row 1: Event Type & Class Select -->
-            <div class="row q-col-gutter-md q-mb-md">
-              <div class="col-12 col-sm-6">
-                <q-select
-                  v-model="form.type"
-                  :options="typeOptions"
-                  label="Tipo Evento *"
-                  outlined dense
-                  emit-value
-                  map-options
-                  tabindex="3"
-                  :disable="isEditMode && !isCurrentAuthor"
-                />
-              </div>
-              <div class="col-12 col-sm-6">
-                <q-select
-                  v-model="form.class_id"
-                  :options="classOptions"
-                  label="Classe Destinataria *"
-                  outlined dense
-                  emit-value
-                  map-options
-                  tabindex="4"
-                  :disable="isEditMode && !isCurrentAuthor"
-                  :rules="[val => !!val || 'Seleziona una classe']"
-                />
-              </div>
-            </div>
-
-            <!-- All-Day Toggle -->
-            <div class="row items-center justify-between bg-blue-50/60 q-pa-sm rounded-lg border border-blue-200 q-mb-md">
-              <div>
-                <div class="text-subtitle2 text-slate-800 font-semibold">📌 Tutto il Giorno</div>
-                <div class="text-caption text-slate-500">L'evento impegna l'intera giornata senza orario specifico</div>
-              </div>
-              <q-toggle v-model="form.all_day" color="primary" :disable="isEditMode && !isCurrentAuthor" />
-            </div>
-
-            <!-- Row 2: Date & Time Inputs -->
-            <div class="row q-col-gutter-md q-mb-md">
-              <div class="col-12" :class="form.all_day ? 'col-sm-12' : 'col-sm-4'">
-                <q-input
-                  v-model="form.date"
-                  type="date"
-                  label="Data *"
-                  outlined dense
-                  tabindex="5"
-                  :readonly="isEditMode && !isCurrentAuthor"
-                  :rules="[val => !!val || 'La data è obbligatoria']"
-                />
-              </div>
-              <div v-if="!form.all_day" class="col-6 col-sm-4">
-                <q-input
-                  v-model="form.start_time"
-                  type="time"
-                  label="Ora Inizio"
-                  outlined dense
-                  tabindex="6"
-                  :readonly="isEditMode && !isCurrentAuthor"
-                />
-              </div>
-              <div v-if="!form.all_day" class="col-6 col-sm-4">
-                <q-input
-                  v-model="form.end_time"
-                  type="time"
-                  label="Ora Fine"
-                  outlined dense
-                  tabindex="7"
-                  :readonly="isEditMode && !isCurrentAuthor"
-                />
-              </div>
-            </div>
-
-            <!-- Toggle: Visible to Students -->
-            <div class="row items-center justify-between bg-slate-50 q-pa-md rounded-lg border border-slate-200">
-              <div>
-                <div class="text-subtitle2 text-slate-700">Visibile agli Studenti & Genitori</div>
-                <div class="text-caption text-slate-500">Se disattivato, l'evento sarà visibile solo ai docenti della classe</div>
-              </div>
-              <q-toggle v-model="form.visible_to_students" color="primary" :disable="isEditMode && !isCurrentAuthor" />
-            </div>
-          </q-card-section>
-
-          <q-card-actions align="between" class="q-pa-md bg-slate-50 border-t border-slate-100">
-            <q-btn
-              v-if="isEditMode && isCurrentAuthor"
-              color="negative"
-              flat
-              icon="delete"
-              label="Elimina"
-              no-caps
-              @click="confirmDelete"
-            />
-            <div v-else />
-
-            <div class="row q-gutter-sm">
-              <q-btn flat label="Chiudi" no-caps v-close-popup />
-              <q-btn
-                v-if="!isEditMode || isCurrentAuthor"
-                type="submit"
-                color="primary"
-                unelevated
-                :label="isEditMode ? 'Salva Modifiche' : 'Crea Evento'"
-                :loading="saving"
-                no-caps
-              />
-            </div>
-          </q-card-actions>
-        </q-form>
-      </q-card>
-    </q-dialog>
+    <!-- Create / Edit / View Event Dialog Component -->
+    <AgendaEventDialog
+      v-model="dialogVisible"
+      :event="selectedEvent"
+      :class-options="classOptions"
+      :initial-date="dialogInitialDate"
+      :initial-hour="dialogInitialHour"
+      @saved="loadAgendaEvents"
+      @deleted="loadAgendaEvents"
+    />
   </q-page>
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, onUnmounted, nextTick } from 'vue'
-import { useQuasar, date as qdate } from 'quasar'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { date as qdate } from 'quasar'
 import { useAgendaStore } from '@/stores/agenda'
 import { useClassesStore } from '@/stores/classes'
-import { useAuthStore } from '@/stores/auth'
+import AgendaEventDialog from '@/components/Teacher/AgendaEventDialog.vue'
 
-const $q = useQuasar()
 const agendaStore = useAgendaStore()
 const classesStore = useClassesStore()
-const authStore = useAuthStore()
 
-const formRef = ref(null)
 const dialogVisible = ref(false)
-const isEditMode = ref(false)
-const editId = ref(null)
-const currentEventTeacherId = ref(null)
-const currentEventTeacherName = ref('')
-const saving = ref(false)
+const selectedEvent = ref(null)
+const dialogInitialDate = ref('')
+const dialogInitialHour = ref('')
 
 const weekScrollContainer = ref(null)
 const dayScrollContainer = ref(null)
@@ -709,27 +559,6 @@ function formatYMD(d) {
 // 24 Hours list from 00:00 to 23:00
 const hoursList = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`)
 
-const form = reactive({
-  title: '',
-  description: '',
-  type: 'compito',
-  all_day: false,
-  class_id: '',
-  date: formatYMD(new Date()),
-  start_time: '09:00',
-  end_time: '10:00',
-  visible_to_students: true
-})
-
-const typeOptions = [
-  { label: 'Compito per casa', value: 'compito' },
-  { label: 'Compito in classe', value: 'verifica' },
-  { label: 'Interrogazione', value: 'interrogazione' },
-  { label: 'Avviso di Classe', value: 'avviso' },
-  { label: 'Evento / Uscita Didattica', value: 'evento' },
-  { label: 'Altro', value: 'altro' }
-]
-
 const classOptions = computed(() => {
   return classesStore.classes.map(c => {
     let nameText = c.name || `Classe ${c.id}`
@@ -761,14 +590,6 @@ function getFormattedClassName(ev) {
   }
   return ev.class_name || 'Classe'
 }
-
-const isCurrentAuthor = computed(() => {
-  if (!isEditMode.value) return true // Creating new event
-  const currentUserId = authStore.user?.id
-  const eventTeacherId = currentEventTeacherId.value
-  if (!eventTeacherId || !currentUserId) return false
-  return eventTeacherId === currentUserId
-})
 
 const isoSelectedDate = computed(() => {
   if (!selectedDate.value) return formatYMD(new Date())
@@ -1032,117 +853,15 @@ function today() {
 }
 
 function openCreateDialog(isoDate, hourStr) {
-  isEditMode.value = false
-  editId.value = null
-  currentEventTeacherId.value = authStore.user?.id
-  currentEventTeacherName.value = `${authStore.user?.first_name || ''} ${authStore.user?.last_name || ''}`
-  form.title = ''
-  form.description = ''
-  form.type = 'compito'
-  form.all_day = false
-  form.class_id = classOptions.value[0]?.value || ''
-  form.date = isoDate || isoSelectedDate.value
-  form.start_time = hourStr || '09:00'
-  
-  if (hourStr) {
-    const h = parseInt(hourStr.split(':')[0], 10)
-    const nextH = (h + 1 < 24) ? String(h + 1).padStart(2, '0') : '23'
-    form.end_time = `${nextH}:00`
-  } else {
-    form.end_time = '10:00'
-  }
-  
-  form.visible_to_students = true
+  selectedEvent.value = null
+  dialogInitialDate.value = isoDate || isoSelectedDate.value
+  dialogInitialHour.value = hourStr || ''
   dialogVisible.value = true
 }
 
 function openEditDialog(ev) {
-  isEditMode.value = true
-  editId.value = ev.id
-  currentEventTeacherId.value = ev.teacher_id
-  currentEventTeacherName.value = ev.teacher_name || 'Docente'
-  form.title = ev.title || ''
-  form.description = ev.description || ''
-  form.type = ev.type || 'compito'
-  form.all_day = !!ev.all_day
-  form.class_id = ev.class_id || ''
-  form.date = ev.date ? ev.date.substring(0, 10) : isoSelectedDate.value
-  form.start_time = ev.start_time || '09:00'
-  form.end_time = ev.end_time || '10:00'
-  form.visible_to_students = ev.visible_to_students !== false
+  selectedEvent.value = ev
   dialogVisible.value = true
-}
-
-async function saveEvent() {
-  if (!isCurrentAuthor.value) return
-
-  if (!form.title || !form.class_id || !form.date) {
-    $q.notify({ type: 'warning', message: 'Compila tutti i campi obbligatori' })
-    return
-  }
-
-  if (!form.all_day) {
-    if (!form.start_time || !form.end_time) {
-      $q.notify({ type: 'warning', message: 'Inserisci sia l\'ora di inizio che l\'ora di fine' })
-      return
-    }
-    if (form.end_time <= form.start_time) {
-      $q.notify({ type: 'warning', message: 'L\'ora di fine deve essere successiva all\'ora di inizio' })
-      return
-    }
-  }
-
-  saving.value = true
-  try {
-    const payload = {
-      title: form.title,
-      description: form.description,
-      type: form.type,
-      all_day: form.all_day,
-      class_id: form.class_id,
-      date: form.date,
-      start_time: form.all_day ? '00:00' : form.start_time,
-      end_time: form.all_day ? '23:59' : form.end_time,
-      visible_to_students: form.visible_to_students
-    }
-
-    if (isEditMode.value) {
-      await agendaStore.updateEvent(editId.value, payload)
-      $q.notify({ type: 'positive', message: 'Evento modificato con successo' })
-    } else {
-      await agendaStore.createEvent(payload)
-      $q.notify({ type: 'positive', message: 'Evento creato con successo' })
-    }
-    dialogVisible.value = false
-    await loadAgendaEvents()
-  } catch (e) {
-    $q.notify({ type: 'negative', message: e.response?.data?.error || 'Errore durante il salvataggio' })
-  } finally {
-    saving.value = false
-  }
-}
-
-async function confirmDelete() {
-  if (!isCurrentAuthor.value) return
-
-  $q.dialog({
-    title: 'Conferma Eliminazione',
-    message: `Sei sicuro di voler eliminare l'evento "${form.title || 'selezionato'}" dall'agenda?`,
-    cancel: true,
-    persistent: true
-  }).onOk(async () => {
-    saving.value = true
-    try {
-      await agendaStore.deleteEvent(editId.value)
-      $q.notify({ type: 'positive', message: 'Evento eliminato con successo' })
-      dialogVisible.value = false
-      await loadAgendaEvents()
-    } catch (e) {
-      $q.notify({ type: 'negative', message: e.response?.data?.error || 'Errore durante l\'eliminazione' })
-    } finally {
-      saving.value = false
-    }
-  })
 }
 
 function getTypeBgClass(type) {

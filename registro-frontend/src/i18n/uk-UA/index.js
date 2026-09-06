@@ -68,7 +68,27 @@ export default {
     "viewAll": "Переглянути всі",
     "noStudentsFound": "Учнів не знайдено",
     "readOnlySaveBtn": "Збереження вимкнено (Лише для читання)",
-    "children": "Прикріплені діти"
+    "children": "Прикріплені діти",
+    "onlineSynced": "В мережі - Дані синхронізовано",
+    "offlineSaved": "Не в мережі - Зміни збережено локально",
+    "class": "Клас",
+    "student": "Учень",
+    "attendance": "Відвідуваність",
+    "conduct": "Поведінка",
+    "outcome": "Результат",
+    "average": "Середній бал",
+    "approved": "Схвалено",
+    "pending": "В очікуванні",
+    "completed": "Завершено",
+    "create": "Створити",
+    "update": "Оновити",
+    "required": "Обов'язкове поле",
+    "reserved": "Конфіденційно",
+    "saved": "Успішно збережено",
+    "schoolYear": "Навчальний рік",
+    "subject": "Предмет",
+    "title": "Заголовок",
+    "warning": "Увага"
   },
   "notFound": {
     "title": "Сторінку не знайдено",
@@ -206,9 +226,28 @@ export default {
     "absencePercentage": "Відсоток пропусків",
     "monthlyBreakdown": "Щомісячна деталізація",
     "month": "Місяць",
-    "unjustifiedList": "Неповажні пропуски та запізнення"
+    "unjustifiedList": "Неповажні пропуски та запізнення",
+    "outOfClass": "Поза класом",
+    "activityType": "Тип діяльності",
+    "duration": "Тривалість (години)",
+    "editLesson": "Редагувати урок",
+    "newLesson": "Новий урок",
+    "hour": "Година уроку",
+    "lessonTopic": "Тема уроку",
+    "lessonType": "Тип уроку",
+    "subject": "Предмет"
   },
   "dashboardPage": {
+    "viewYourHomework": "Переглянути домашні завдання та діяльність",
+    "upcomingHomework": "Найближчі домашні завдання",
+    "upcomingHomeworkSub": "Організуйте навчання: завдання, контрольні та терміни здачі",
+    "allHomework": "Усі завдання",
+    "teacherLabel": "Вчитель",
+    "noPendingHomework": "Немає невиконаних завдань",
+    "allCaughtUp": "Ви встигаєте з усіма завданнями та роботами!",
+    "dueToday": "Сьогодні",
+    "dueTomorrow": "Завтра",
+    "dueInDays": "Через {days} дн.",
     "greetingMorning": "Доброго ранку",
     "greetingAfternoon": "Доброго дня",
     "greetingEvening": "Доброго вечора",
@@ -257,7 +296,10 @@ export default {
     "recentGrades": "Останні оцінки",
     "noChildren": "Немає прив'язаних дітей",
     "systemStatus": "Стан системи",
-    "syncedNow": "Синхронізовано щойно"
+    "syncedNow": "Синхронізовано щойно",
+    "online": "В мережі",
+    "notifications": "Сповіщення",
+    "teacher": "Вчитель"
   },
   "agendaPage": {
     "title": "Розклад та навчальний календар",
@@ -295,9 +337,48 @@ export default {
     "detailsOf": "Деталі на",
     "lessonsHeld": "Проведені уроки",
     "noLessons": "На цю дату уроків не зареєстровано.",
-    "noDueHomework": "На цю дату немає завдань із терміном здачі."
+    "noDueHomework": "На цю дату немає завдань із терміном здачі.",
+    "thisWeek": "Цього Тижня",
+    "monthView": "Місяць",
+    "weekView": "Тиждень",
+    "dayView": "День",
+    "quickNew": "+ Додати",
+    "moreCount": "+{count} ще",
+    "eventTitle": "Назва Події *",
+    "eventDescription": "Опис / Подробиці",
+    "eventType": "Тип Події *",
+    "targetClass": "Клас-Одержувач *",
+    "eventDate": "Дата *",
+    "startTime": "Час Початку",
+    "endTime": "Час Завершення",
+    "saveChanges": "Зберегти Зміни",
+    "createEvent": "Створити Подію",
+    "deleteEvent": "Видалити Подію",
+    "weekTitle": "Тиждень",
+    "confirmDeleteTitle": "Видалити Подію",
+    "confirmDeleteMsg": "Ви впевнені, що хочете видалити цю подію з розкладу?",
+    "eventCreated": "Подію успішно створено",
+    "eventUpdated": "Подію успішно оновлено",
+    "eventDeleted": "Подію успішно видалено",
+    "allDay": "Весь день"
   },
   "usersPage": {
+    "importTitle": "Імпорт користувачів із CSV",
+    "stepConfig": "Налаштування",
+    "stepUpload": "Завантаження файлу",
+    "stepResult": "Результат",
+    "userTypeToImport": "Тип користувачів для імпорту",
+    "sendWelcomeEmail": "Надіслати вітальний лист із тимчасовими обліковими даними",
+    "downloadTemplate": "Завантажити зразок шаблону CSV",
+    "selectCsvFile": "Виберіть файл CSV (.csv макс. 10 МБ)",
+    "previewRowsTitle": "Попередній перегляд перших 5 рядків",
+    "runImport": "Виконати імпорт",
+    "importSuccessCount": "{count} користувачів успішно імпортовано!",
+    "skippedRowsCount": "{count} рядків пропущено або недійсні.",
+    "errorsEncountered": "Виявлені помилки",
+    "rowError": "Рядок {row}: {reason}",
+    "downloadErrorReport": "Завантажити звіт про помилки",
+    "closeAndUpdate": "Закрити та оновити список",
     "title": "Керування користувачами",
     "searchPlaceholder": "Пошук за ім'ям, email, номером...",
     "newUser": "Новий користувач",
@@ -318,7 +399,9 @@ export default {
     "resetPassword": "Скинути пароль",
     "manageSubjects": "Призначити предмети",
     "deleteAccount": "Видалити обліковий запис",
-    "noUsersFound": "Користувачів не знайдено"
+    "noUsersFound": "Користувачів не знайдено",
+    "importError": "Помилка під час імпорту CSV",
+    "targetClass": "Цільовий клас"
   },
   "supportPage": {
     "title": "Центр підтримки та FAQ",
@@ -412,7 +495,8 @@ export default {
     "tabGrades": "Мої оцінки",
     "homework": "Домашні завдання",
     "documents": "Документальна справа та акти",
-    "schoolManagement": "Керування школами"
+    "schoolManagement": "Керування школами",
+    "student": "Учень/иця"
   },
   "udaPage": {
     "subjectLabel": "Предмет *",
@@ -518,6 +602,32 @@ export default {
     "levelD": "D - Початковий"
   },
   "gradesPage": {
+    "createTestTitle": "Створити нову контрольну роботу",
+    "editTestTitle": "Масове редагування контрольної роботи",
+    "testDetails": "Деталі роботи",
+    "testTitle": "Назва роботи",
+    "teacherNotes": "Примітки вчителя (внутрішні)",
+    "parentNotes": "Примітки для батьків (видимі)",
+    "studentGrades": "Оцінки учнів",
+    "insertedCount": "введено",
+    "allAbsentMarked": "Всі учні позначені як відсутні",
+    "saveTestAndGrades": "Зберегти роботу та оцінки",
+    "saveEditTest": "Зберегти зміни роботи",
+    "overlappingWarning": "Увага: у класу вже заплановано {count} робіт на {date}! (Рекомендований макс.: 2)",
+    "testSavedSuccess": "Робота \"{title}\" та {count} оцінок успішно збережені!",
+    "testEditSuccess": "Робота успішно змінена!",
+    "testSaveError": "Помилка при збереженні контрольної роботи",
+    "testEditError": "Помилка при зміні контрольної роботи",
+    "deleteTestConfirmTitle": "Підтвердження видалення роботи",
+    "deleteTestConfirmMsg": "Ви впевнені, що хочете видалити роботу \"{title}\"? Буде остаточно видалено {count} пов'язаних оцінок.",
+    "deleteTestSuccess": "Робота успішно видалена!",
+    "deleteTestError": "Помилка при видаленні роботи",
+    "noPermissionNotOwner": "У вас немає дозволу керувати роботами у не призначеному вам класі",
+    "testsHistory": "Список контрольних робіт",
+    "noTestsFound": "Контрольних робіт не знайдено",
+    "noTestsFoundDesc": "Для цього предмета ще немає зареєстрованих робіт.",
+    "createFirstTest": "Створити першу роботу",
+    "selectClassSub": "Виберіть клас у верхньому меню, щоб відкрити журнал:",
     "cannotEditOtherTeacherGrade": "Ви не можете редагувати оцінки інших вчителів",
     "sharedGradesCaption": "Оцінки, відкриті для класу",
     "confirmDeleteGrade": "Ви впевнені, що хочете видалити цю оцінку?",
@@ -607,7 +717,17 @@ export default {
     "sufficient": "Зараховано",
     "insufficient": "Не зараховано",
     "absent": "Н",
-    "subject": "Предмет"
+    "subject": "Предмет",
+    "selectClassPrompt": "Виберіть клас",
+    "evalType": "Тип оцінки",
+    "markAllAbsent": "Позначити всіх як відсутніх",
+    "noStudentsInClass": "Немає учнів для цього класу",
+    "testDate": "Дата контрольної",
+    "types": {
+      "written": "Письмовий",
+      "oral": "Усний",
+      "practical": "Практичний"
+    }
   },
   "didacticsPage": {
     "title": "Навчальні матеріали та ресурси",
@@ -688,7 +808,16 @@ export default {
       "equivalentTest": "Еквівалентне завдання",
       "textToSpeech": "Синтез мовлення",
       "conceptMaps": "Концептуальні карти"
-    }
+    },
+    "createFirst": "Створити перший план",
+    "clinicalDiagnosis": "Клінічний Діагноз (тільки для вчителів)",
+    "restrictedFile": "Медичний Висновок (Тільки для Вчителів Класу)",
+    "noneSpecified": "Не вказано",
+    "approvedFamily": "✓ Затверджено Родиною",
+    "sharedPending": "Надіслано (очікування)",
+    "internalDraft": "Внутрішній Чернетка",
+    "hideFromFamily": "Приховати від Родини",
+    "shareWithFamily": "Поділитися з Родиною"
   },
   "rubricsPage": {
     "title": "Критеріальні рубрики оцінювання",
@@ -920,7 +1049,10 @@ export default {
     "downloadStarted": "Завантаження документа: {title}",
     "upload": "Завантажити документ",
     "tableTitle": "Офіційні документи",
-    "noDocs": "У цьому розділі документів поки немає."
+    "noDocs": "У цьому розділі документів поки немає.",
+    "certsDesc": "Автоматично сформовані довідки про навчання та відвідуваність.",
+    "downloading": "Завантаження...",
+    "previewNotAvailable": "Попередній перегляд недоступний у режимі офлайн."
   },
   "notesPage": {
     "title": "Дисциплінарні зауваження",
@@ -1193,7 +1325,8 @@ export default {
     "mfaCaption": "Вимагати двофакторну автентифікацію TOTP для всіх співробітників.",
     "minPasswordLength": "Мінімальна довжина пароля",
     "sessionTimeout": "Час неактивності сесії",
-    "maxLoginAttempts": "Невдалі спроби до блокування"
+    "maxLoginAttempts": "Невдалі спроби до блокування",
+    "general": "Загальні"
   },
   "search": {
     "placeholder": "Пошук учнів, вчителів, секретаріату, класів, оголошень, меню…",
@@ -1325,7 +1458,22 @@ export default {
       "q9": "Як змінити мову інтерфейсу та темну тему?",
       "a9": "У меню користувацьких налаштувань виберіть одну з 9 мов та увімкніть темний режим або шрифт OpenDyslexic.",
       "q10": "Як скасувати випадково виставлену оцінку?",
-      "a10": "Після введення оцінки внизу екрана на 15 секунд з’являється сповіщення з кнопкою \"Скасувати\"."
+      "a10": "Після введення оцінки внизу екрана на 15 секунд з’являється сповіщення з кнопкою \"Скасувати\".",
+      "scrutiny": {
+        "period1": "1-й семестр / триместр",
+        "period2": "Підсумкова атестація (2-й семестр)",
+        "deferredScrutiny": "Відкладена атестація / Ліквідація заборгованостей",
+        "deferredBannerTitle": "Активна сесія відкладеної атестації",
+        "deferredBannerBody": "У цій сесії можна ухвалити рішення щодо зняття відстрочки рішення для учнів з академічною заборгованістю.",
+        "deferredModalTitle": "Відкладена атестація: {name}",
+        "deferredModalSubtitle": "Оцінювання повторних іспитів та погашення академічних заборгованостей",
+        "deferredNotes": "Протокол / Примітки до рішення",
+        "deferredSaved": "Результат відкладеної атестації успішно збережено",
+        "deliberateDeferred": "Рішення щодо відстрочки",
+        "notPromotedDebtsNotCleared": "Не переведено (заборгованості не ліквідовано)",
+        "promotedDebtsCleared": "Переведено (заборгованості ліквідовано)",
+        "closeConfirmMsg": "Ви впевнені, що хочете завершити та зафіксувати атестацію для вибраного класу? Операція остаточна."
+      }
     },
     "student": {
       "cat_grades": "Мої оцінки",
@@ -2107,7 +2255,8 @@ export default {
     "documentsSubmitted": "Подані документи",
     "completeEnrollment": "Завершити зарахування",
     "enrollmentSuccess": "Зарахування успішно завершено!",
-    "studentFile": "Картка учня"
+    "studentFile": "Картка учня",
+    "title": "Реєстр учнів"
   },
   "classesPage": {
     "currentClass": "Поточний клас"
@@ -2219,7 +2368,16 @@ export default {
   "attendancePage": {
     "title": "Відвідуваність та пропуски",
     "subtitle": "Облік відвідуваності, запізнень та пояснювальних записок",
-    "tableTitle": "Таблиця відвідуваності"
+    "tableTitle": "Таблиця відвідуваності",
+    "justified": "Виправдано",
+    "parentManagedJustifications": "Виправдання відсутності оформлюються батьками",
+    "requestJustification": "Запросити виправдання",
+    "selectAbsence": "Виберіть відсутність для виправдання",
+    "timeDetail": "Час / Деталі",
+    "reason": "Причина",
+    "reasonFamily": "Сімейні обставини",
+    "reasonHealth": "За станом здоров'я",
+    "warningAbsenceLimit": "Ви досягли межі попередження щодо пропусків. Врегулюйте пропуски для уникнення проблем."
   },
   "reportCardPage": {
     "title": "Табель та підсумкове оцінювання",
@@ -2413,7 +2571,8 @@ export default {
       "goalDescription": "Description & Strategies",
       "expectedTerm": "Target Term",
       "status": "Progress Status"
-    }
+    },
+    "noGoals": "Цілі індивідуального плану не внесено"
   },
   "generalMeeting": {
     "teacherQueueTitle": "Afternoon General Parent-Teacher Conference",
@@ -2724,7 +2883,11 @@ export default {
   "offlineBanner": {
     "offlineText": "Немає підключення до Інтернету. Зміни можуть не зберегтися.",
     "offlineBadge": "ОФЛАЙН",
-    "onlineText": "З'єднання з Інтернетом відновлено."
+    "onlineText": "З'єднання з Інтернетом відновлено.",
+    "pendingQueue": "Немає підключення до Інтернету. {count} локальних змін у черзі на синхронізацію.",
+    "inQueue": "У ЧЕРЗІ",
+    "syncedSuccess": "З'єднання відновлено: {count} операцій успішно синхронізовано.",
+    "enqueuedOffline": "Дію збережено локально. Її буде автоматично синхронізовано після відновлення мережі."
   },
   "inactivity": {
     "warningTitle": "Сеанс завершується",
@@ -2856,7 +3019,8 @@ export default {
     },
     "loadError": "Помилка завантаження довідок",
     "generateSuccess": "Довідку успішно сформовано!",
-    "generateError": "Помилка під час формування довідки"
+    "generateError": "Помилка під час формування довідки",
+    "enrollmentCert": "Довідка про навчання"
   },
   "sidiExports": {
     "title": "Державна Звітність та Вивантаження (АІКОМ)",
@@ -3116,6 +3280,42 @@ export default {
     "notFound": "Сторінку не знайдено"
   },
   "secretaryClasses": {
+    "migrationTitle": "Переведення Учнів та Перехід на Новий Навчальний Рік",
+    "migrationSubtitle": "Керування переведенням класів, переведеними, другорічниками та випускниками",
+    "migrationProcedure": "Процедура Переходу на Новий Навчальний Рік",
+    "migrationProcedureDesc": "Виберіть вихідний та цільовий навчальний рік. Швидко налаштуйте статус кожного учня (Переведений, Повторний курс, Випускник або Переведений до іншого закладу).",
+    "sourceYear": "Вихідний Рік",
+    "targetYear": "Цільовий Рік (Новий Рік)",
+    "filterByClass": "Фільтр за Класом (або Всі Класи)",
+    "allSourceClasses": "Усі класи вихідного року",
+    "studentsToProcess": "Учнів для Обробки",
+    "markAllPromoted": "Позначити Всіх як Переведених",
+    "smartDefaults": "Випуск 5 кл. / Переведення 1-4 кл.",
+    "markAllRepeater": "Позначити Всіх на Повторний курс",
+    "loadingMigration": "Завантаження учнів та підготовка класів цільового року...",
+    "noStudentsFound": "Учнів за вибраними критеріями не знайдено.",
+    "currentClassLabel": "Поточний Клас",
+    "actionPromoted": "Переведений(а)",
+    "actionRepeater": "Повторний курс",
+    "actionGraduated": "Випускник(ця)",
+    "actionLeft": "Вибув(ла)",
+    "targetClassLabel": "Цільовий Клас",
+    "noClassUnassigned": "Без класу (Не призначено)",
+    "migrationSummaryTitle": "Підсумок Переведення",
+    "promotedCount": "Переведені",
+    "repeaterCount": "Повторний курс",
+    "graduatedCount": "Випускники",
+    "leftCount": "Вибулі / Відраховані",
+    "btnConfigureStudents": "Далі: Налаштування Учнів",
+    "btnVerifySummary": "Далі: Перевірка Підсумку",
+    "btnExecuteMigration": "Підтвердити та Виконати Переведення",
+    "migrationSuccess": "Перехід на новий навчальний рік успішно завершено!",
+    "migrationError": "Помилка під час виконання переведення",
+    "migrationLoadError": "Помилка завантаження даних переведення",
+    "scheduleTitle": "Розклад на Тиждень - Клас",
+    "scheduleSaved": "Розклад успішно збережено",
+    "scheduleSaveError": "Помилка збереження розкладу",
+    "scheduleLoadError": "Помилка завантаження розкладу",
     "newClass": "Новий Клас",
     "editClass": "Редагувати Клас",
     "createClass": "Створити Клас",
@@ -3170,6 +3370,100 @@ export default {
     "subjectName": "Назва Предмета",
     "createSubject": "Створити Предмет",
     "subjectCreated": "Предмет створено",
-    "createSubjectError": "Помилка під час створення предмета"
+    "createSubjectError": "Помилка під час створення предмета",
+    "manageAssignments": "Керування предметами та викладачами",
+    "manageStudents": "Керування учнями класу"
+  },
+  "groupsPage": {
+    "title": "Керування Мовними та Збірними Групами",
+    "subtitle": "Створення та ведення груп учнів з декількох класів",
+    "newGroup": "Нова Група",
+    "createGroup": "Створити Групу",
+    "loading": "Завантаження груп...",
+    "noGroups": "Мовних або збірних груп не знайдено",
+    "noGroupsDesc": "Створіть свою першу групу для спільних занять учнів з різних класів",
+    "students": "учнів",
+    "teacher": "Вчитель",
+    "academicYear": "Навчальний рік",
+    "editGroup": "Редагувати Групу",
+    "deleteGroup": "Видалити",
+    "groupName": "Назва Групи",
+    "groupNamePlaceholder": "Назва Групи (напр. Англійська B2 3A-3B)",
+    "description": "Опис / Примітки",
+    "confirmDelete": "Підтвердження видалення",
+    "confirmDeleteDesc": "Ви впевнені, що хочете видалити цю групу?",
+    "groupDeleted": "Групу видалено",
+    "deleteError": "Помилка під час видалення",
+    "groupSaved": "Групу успішно оновлено",
+    "groupCreated": "Групу успішно створено",
+    "save": "Зберегти",
+    "create": "Створити",
+    "studentListTitle": "Учні Групи: {name}",
+    "noStudents": "У цій групі ще немає учнів."
+  },
+  "scrutinyPage": {
+    "title": "Педрада та Ліквідація Академічних Заборгованостей",
+    "subtitle": "Підсумкові оцінки, теми заборгованостей та ліквідація академічних боргів",
+    "closeScrutiny": "Закрити Педраду",
+    "saveFinal": "Зберегти Підсумки",
+    "classCouncil": "Педрада Класу",
+    "notCoordinator": "Ви не є куратором класу для цієї педради.",
+    "selectClassPrompt": "Оберіть клас для початку педради.",
+    "deficiencyTitle": "Теми Заборгованостей — {name}",
+    "deficiencySubtitle": "Перелік тем для ліквідації боргу (доступний учню та батькам)",
+    "deficiencySubject": "Предмет Заборгованості",
+    "deficiencyTopics": "Теми / Специфічні Прогалини *",
+    "recoveryMode": "Форма Ліквідації Боргу",
+    "recoveryStatus": "Статус Заборгованості",
+    "recoveryGrade": "Оцінка за Перескладання",
+    "recoveryDate": "Дата Перескладання",
+    "saveDeficiency": "Зберегти Заборгованість",
+    "noDeficiencies": "У цього учня немає заборгованостей.",
+    "individualStudy": "Самостійне Опрацювання",
+    "summerCourse": "Літній Курс",
+    "helpDesk": "Консультації",
+    "toRecover": "До Ліквідації",
+    "inProgress": "У Процесі",
+    "recovered": "Складено",
+    "notRecovered": "Не Складено"
+  },
+  "studentDetail": {
+    "title": "Дані учня",
+    "personalInfo": "Особисті дані",
+    "fullName": "Повне ім'я",
+    "fiscalCode": "ІПН",
+    "class": "Клас",
+    "email": "Ел. пошта",
+    "phone": "Телефон",
+    "birthDate": "Дата народження",
+    "attendanceSummary": "Підсумок відвідуваності",
+    "totalAbsences": "Всього пропусків",
+    "lates": "Запізнення",
+    "earlyExits": "Ранні виходи",
+    "justified": "Поважні",
+    "absenceRate": "Відсоток пропусків",
+    "risk": "Ризик",
+    "riskHigh": "ВИСОКИЙ",
+    "riskMedium": "СЕРЕДНІЙ",
+    "riskLow": "НИЗЬКИЙ",
+    "todayAttendanceByHour": "Відвідуваність сьогодні за уроками",
+    "hourNotRegistered": "Урок {hour}: не відмічено",
+    "hourStatus": "Урок {hour}: {status}"
+  },
+  "orientamento": {
+    "availableEvents": "Доступні заходи",
+    "myEvents": "Мої заходи",
+    "history": "Історія та відвідуваність"
+  },
+  "homework": {
+    "assign": "Призначити",
+    "assignHomework": "Задати домашнє завдання",
+    "description": "Опис завдання",
+    "dueDate": "Термін здачі"
+  },
+  "signaturesPage": {
+    "signNow": "Підписати зараз",
+    "signed": "Підписано",
+    "signedOn": "Підписано"
   }
-}
+};

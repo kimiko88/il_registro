@@ -38,7 +38,7 @@
             dense
             outlined
             options-dense
-            bg-color="white"
+            :bg-color="$q.dark.isActive ? 'dark' : 'white'"
             style="min-width: 140px"
             :label="t('layout.schoolYear')"
             key="school-year-select"
@@ -403,7 +403,7 @@
             dense
             outlined
             options-dense
-            bg-color="white"
+            :bg-color="$q.dark.isActive ? 'dark' : 'white'"
             :label="t('layout.schoolYear')"
             :aria-label="t('layout.schoolYearSelect')"
           >

@@ -36,6 +36,8 @@
         :loading="classesStore.loading"
         row-key="id"
         flat
+        virtual-scroll
+        :virtual-scroll-item-size="48"
         class="bg-transparent"
         :pagination="{ rowsPerPage: 10 }"
       >
@@ -108,30 +110,14 @@
     />
 
     <!-- Schedule Dialog -->
-    <q-dialog v-model="showScheduleDialog">
-      <q-card style="width: min(1200px, 95vw); max-height: 90vh;" class="rounded-xl overflow-hidden shadow-24 bg-white column no-wrap">
-        <q-card-section class="bg-primary text-white row items-center q-pa-md shrink-0">
-          <div class="row items-center">
-            <q-avatar color="white-20" text-color="white" icon="calendar_today" class="q-mr-sm" size="36px" />
-            <div>
-              <div class="text-h6 text-weight-bold">Orario Settimanale - Classe {{ currentClass?.name }}{{ currentClass?.section }}</div>
-              <div class="text-subtitle2 text-white/80">{{ currentClass?.academic_year }}</div>
-            </div>
-          </div>
-          <q-space />
-          <q-btn icon="close" flat round dense v-close-popup />
-        </q-card-section>
-
-        <q-card-section class="q-pa-md col overflow-y-auto">
-          <ScheduleGrid 
-            :assignments="assignments"
-            :initial-schedule="currentSchedule"
-            :loading="scheduleLoading"
-            @save="saveSchedule"
-          />
-        </q-card-section>
-      </q-card>
-    </q-dialog>
+    <ClassScheduleDialog
+      v-model="showScheduleDialog"
+      :current-class="currentClass"
+      :assignments="assignments"
+      :current-schedule="currentSchedule"
+      :loading="scheduleLoading"
+      @save="saveSchedule"
+    />
 
     <!-- Students Assignment Dialog -->
     <ClassStudentsDialog
@@ -144,16 +130,24 @@
     <!-- Quick Create Subject Dialog -->
     <q-dialog v-model="showSubjectDialog">
       <q-card style="min-width: 350px" class="rounded-xl shadow-24 bg-white">
-        <q-card-section class="q-pa-lg">
-          <div class="text-h6 text-weight-bold text-slate-800">Nuova Materia</div>
-        </q-card-section>
-        <q-card-section class="q-px-lg q-pb-lg">
-          <q-input v-model="newSubjectName" label="Nome Materia" outlined autofocus @keyup.enter="createSubject" />
-        </q-card-section>
-        <q-card-actions align="right" class="q-pa-lg bg-slate-50">
-          <q-btn flat label="Annulla" v-close-popup color="slate-400" />
-          <q-btn label="Crea" color="primary" class="rounded-lg q-px-lg" @click="createSubject" />
-        </q-card-actions>
+        <q-form @submit="createSubject">
+          <q-card-section class="q-pa-lg">
+            <div class="text-h6 text-weight-bold text-slate-800">Nuova Materia</div>
+          </q-card-section>
+          <q-card-section class="q-px-lg q-pb-lg">
+            <q-input
+              v-model="newSubjectName"
+              label="Nome Materia"
+              outlined
+              autofocus
+              :rules="[val => (!!val && val.trim().length > 0) || (t('common.requiredField') || 'Campo obbligatorio')]"
+            />
+          </q-card-section>
+          <q-card-actions align="right" class="q-pa-lg bg-slate-50">
+            <q-btn flat label="Annulla" v-close-popup color="slate-400" no-caps />
+            <q-btn label="Crea" color="primary" type="submit" class="rounded-lg q-px-lg" no-caps />
+          </q-card-actions>
+        </q-form>
       </q-card>
     </q-dialog>
 
@@ -161,209 +155,14 @@
 
 
     <!-- Academic Year Migration Wizard Dialog -->
-    <q-dialog v-model="showMigrationDialog" persistent class="premium-dialog">
-      <q-card style="width: min(1000px, 95vw); max-height: 90vh;" class="rounded-xl overflow-hidden shadow-24 bg-white column no-wrap">
-        <!-- Header -->
-        <q-card-section class="bg-indigo-9 text-white row items-center q-pa-md shrink-0">
-          <div class="row items-center">
-            <q-avatar color="white-20" text-color="white" icon="published_with_changes" class="q-mr-sm" size="36px" />
-            <div>
-              <div class="text-h6 text-weight-bold">Migrazione Studenti e Passaggio d'Anno</div>
-              <div class="text-subtitle2 text-white/90">Gestisci avanzamento classi, promossi, bocciati e diplomati</div>
-            </div>
-          </div>
-          <q-space />
-          <q-btn icon="close" flat round dense v-close-popup />
-        </q-card-section>
-
-        <!-- Body / Stepper -->
-        <q-card-section class="q-pa-md col overflow-y-auto">
-          <!-- Step 1: Configuration -->
-          <div v-if="migrationStep === 1" class="q-gutter-y-md">
-            <div class="bg-indigo-50 border border-indigo-100 rounded-xl q-pa-md text-indigo-9">
-              <div class="text-weight-bold flex items-center gap-2">
-                <q-icon name="info" size="sm" /> Procedura di Passaggio d'Anno
-              </div>
-              <div class="text-caption q-mt-xs">
-                Seleziona l'Anno Scolastico sorgente di origine (es. 2024/2025) e quello di destinazione per il nuovo anno.
-                Potrai configurare rapidamente per ciascuno studente lo stato (Promosso, Bocciato, Diplomato o Trasferito).
-              </div>
-            </div>
-
-            <div class="row q-col-gutter-md q-mt-sm">
-              <div class="col-12 col-md-6">
-                <q-select
-                  v-model="migrationSourceYear"
-                  :options="academicYearOptions"
-                  label="Anno Sorgente (Origine)"
-                  outlined dense
-                />
-              </div>
-              <div class="col-12 col-md-6">
-                <q-select
-                  v-model="migrationTargetYear"
-                  :options="academicYearOptions"
-                  label="Anno Destinazione (Nuovo Anno)"
-                  outlined dense
-                />
-              </div>
-              <div class="col-12">
-                <q-select
-                  v-model="migrationSourceClassId"
-                  :options="migrationClassOptions"
-                  label="Filtra per Classe (oppure Tutte le Classi)"
-                  outlined dense
-                  emit-value map-options
-                />
-              </div>
-            </div>
-          </div>
-
-          <!-- Step 2: Student Outcomes & Classes Setup -->
-          <div v-else-if="migrationStep === 2" class="q-gutter-y-md">
-            <!-- Group Actions Toolbar -->
-            <div class="row items-center justify-between bg-slate-50 border border-slate-200 rounded-xl q-pa-sm">
-              <div class="text-subtitle2 text-weight-bold text-slate-700">
-                Studenti da Elaborare: {{ migrationStudents.length }}
-              </div>
-              <div class="row q-gutter-xs">
-                <q-btn size="xs" color="positive" icon="done_all" label="Segna Tutti Promossi" no-caps unelevated @click="setAllMigrationAction('promoted')" />
-                <q-btn size="xs" color="purple" icon="school" label="Diploma 5° / Promuovi 1-4°" no-caps unelevated @click="setSmartMigrationDefaults()" />
-                <q-btn size="xs" color="negative" icon="block" label="Segna Tutti Bocciati" no-caps unelevated @click="setAllMigrationAction('repeater')" />
-              </div>
-            </div>
-
-            <!-- Loading dots if fetching -->
-            <div v-if="migrationLoading" class="text-center q-pa-xl">
-              <q-spinner-dots color="indigo-7" size="40px" />
-              <div class="text-caption text-slate-500 q-mt-sm">Caricamento studenti e predisposizione classi dell'anno destinazione...</div>
-            </div>
-
-            <!-- Students List with Actions -->
-            <div v-else-if="migrationStudents.length === 0" class="text-center q-pa-xl text-slate-400 border rounded-xl bg-slate-50">
-              Nessuno studente trovato per i criteri selezionati.
-            </div>
-
-            <q-scroll-area v-else style="height: 420px;" class="rounded-xl border border-slate-200 bg-white">
-              <q-list separator dense>
-                <q-item v-for="st in migrationStudents" :key="st.student_id" class="q-py-sm items-center justify-between">
-                  <!-- Student Info -->
-                  <q-item-section style="width: 250px" class="shrink-0">
-                    <q-item-label class="text-weight-bold text-slate-800 ellipsis">
-                      {{ st.last_name }} {{ st.first_name || st.name }}
-                    </q-item-label>
-                    <q-item-label caption class="text-slate-400 text-xs ellipsis">
-                      Classe Attuale: <q-badge color="cyan-8" :label="st.current_class_name" class="q-ml-xs" />
-                    </q-item-label>
-                  </q-item-section>
-
-                  <!-- Action Buttons -->
-                  <q-item-section class="col q-px-sm">
-                    <q-btn-toggle
-                      v-model="st.action"
-                      dense
-                      toggle-color="indigo-7"
-                      size="xs"
-                      no-caps
-                      spread
-                      :options="[
-                        { label: '🟢 Promosso/a', value: 'promoted' },
-                        { label: '🔴 Bocciato/a', value: 'repeater' },
-                        { label: '🎓 Diplomato/a', value: 'graduated' },
-                        { label: '🚪 Trasferito/a', value: 'left' }
-                      ]"
-                      @update:model-value="onStudentActionChange(st)"
-                    />
-                  </q-item-section>
-
-                  <!-- Target Class Selector -->
-                  <q-item-section style="width: 220px" class="shrink-0 q-pl-sm">
-                    <q-select
-                      v-if="st.action === 'promoted' || st.action === 'repeater'"
-                      v-model="st.target_class_id"
-                      :options="getTargetClassOptions(st)"
-                      label="Classe Destinazione"
-                      outlined dense emit-value map-options
-                      style="font-size: 11px;"
-                    />
-                    <div v-else class="text-caption text-slate-400 text-italic text-center">
-                      Nessuna classe (Disassociato)
-                    </div>
-                  </q-item-section>
-                </q-item>
-              </q-list>
-            </q-scroll-area>
-          </div>
-
-          <!-- Step 3: Confirmation Summary -->
-          <div v-else-if="migrationStep === 3" class="q-gutter-y-md">
-            <div class="text-subtitle1 text-weight-bold text-slate-800">
-              Riepilogo Migrazione (da {{ migrationSourceYear }} a {{ migrationTargetYear }})
-            </div>
-
-            <div class="row q-col-gutter-md">
-              <div class="col-6 col-md-3">
-                <q-card flat class="bg-emerald-50 border border-emerald-200 text-emerald-9 q-pa-md text-center rounded-xl">
-                  <div class="text-h4 text-weight-bold">{{ migrationSummary.promoted }}</div>
-                  <div class="text-caption text-weight-medium">Promossi</div>
-                </q-card>
-              </div>
-              <div class="col-6 col-md-3">
-                <q-card flat class="bg-rose-50 border border-rose-200 text-rose-9 q-pa-md text-center rounded-xl">
-                  <div class="text-h4 text-weight-bold">{{ migrationSummary.repeater }}</div>
-                  <div class="text-caption text-weight-medium">Bocciati</div>
-                </q-card>
-              </div>
-              <div class="col-6 col-md-3">
-                <q-card flat class="bg-purple-50 border border-purple-200 text-purple-9 q-pa-md text-center rounded-xl">
-                  <div class="text-h4 text-weight-bold">{{ migrationSummary.graduated }}</div>
-                  <div class="text-caption text-weight-medium">Diplomati</div>
-                </q-card>
-              </div>
-              <div class="col-6 col-md-3">
-                <q-card flat class="bg-slate-100 border border-slate-200 text-slate-7 q-pa-md text-center rounded-xl">
-                  <div class="text-h4 text-weight-bold">{{ migrationSummary.left }}</div>
-                  <div class="text-caption text-weight-medium">Trasferiti / Ritirati</div>
-                </q-card>
-              </div>
-            </div>
-          </div>
-        </q-card-section>
-
-        <!-- Footer Actions -->
-        <q-card-actions align="right" class="q-pa-md bg-slate-50 border-t border-slate-200 shrink-0">
-          <q-btn v-if="migrationStep > 1" flat label="Indietro" color="slate-600" :disabled="migrationLoading" @click="migrationStep--" />
-          <q-space />
-          <q-btn flat label="Annulla" v-close-popup color="slate-500" />
-          <q-btn
-            v-if="migrationStep === 1"
-            color="indigo-7"
-            label="Avanti: Configura Studenti"
-            icon-right="arrow_forward"
-            no-caps class="rounded-lg q-px-md"
-            @click="goToStep2"
-          />
-          <q-btn
-            v-else-if="migrationStep === 2"
-            color="indigo-7"
-            label="Avanti: Verifica Riepilogo"
-            icon-right="arrow_forward"
-            no-caps class="rounded-lg q-px-md"
-            :disabled="migrationStudents.length === 0"
-            @click="migrationStep = 3"
-          />
-          <q-btn
-            v-else-if="migrationStep === 3"
-            color="emerald-7"
-            label="Conferma ed Esegui Migrazione"
-            icon="check_circle"
-            no-caps class="rounded-lg q-px-lg shadow-sm"
-            :loading="migrationLoading"
-            @click="executeMigration"
-          />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
+    <ClassYearMigrationDialog
+      v-model="showMigrationDialog"
+      :academic-year-options="academicYearOptions"
+      :current-year-str="selectedYear || currentYearStr"
+      :classes="classesStore.classes"
+      :school-id="authStore.user?.school_id || ''"
+      @migrated="onMigrationComplete"
+    />
 
   </q-page>
 </template>
@@ -373,14 +172,14 @@ import { ref, onMounted, reactive, computed, watch } from 'vue'
 import { useClassesStore } from '@/stores/classes'
 import { useAuthStore } from '@/stores/auth'
 import adminService from '@/services/adminService'
-import api from '@/services/api'
 import { useQuasar } from 'quasar'
 import { useI18n } from 'vue-i18n'
-import ScheduleGrid from '@/components/Secretary/ScheduleGrid.vue'
 import ClassFormDialog from '@/components/Secretary/ClassFormDialog.vue'
 import ClassAssignmentsDialog from '@/components/Secretary/ClassAssignmentsDialog.vue'
 import ClassStudentsDialog from '@/components/Secretary/ClassStudentsDialog.vue'
 import ClassTextbooksDialog from '@/components/Secretary/ClassTextbooksDialog.vue'
+import ClassScheduleDialog from '@/components/Secretary/ClassScheduleDialog.vue'
+import ClassYearMigrationDialog from '@/components/Secretary/ClassYearMigrationDialog.vue'
 
 const $q = useQuasar()
 const { t } = useI18n()
@@ -665,239 +464,13 @@ const saveSchedule = async (entries) => {
 
 // Academic Year Migration State & Methods
 const showMigrationDialog = ref(false)
-const migrationStep = ref(1)
-const migrationLoading = ref(false)
-const migrationSourceYear = ref(currentYearStr)
-const migrationTargetYear = ref(`${currentStart + 1}/${currentStart + 2}`)
-const migrationSourceClassId = ref(null)
-
-const targetYearClasses = ref([])
-const migrationStudents = ref([])
-
-const migrationClassOptions = computed(() => {
-  return [
-    { label: 'Tutte le classi dell\'anno sorgente', value: null },
-    ...classesStore.classes.map(c => ({
-      label: `${c.name}${c.section} (${c.academic_year})`,
-      value: c.id
-    }))
-  ]
-})
 
 const openMigrationWizard = () => {
-  migrationStep.value = 1
-  migrationSourceYear.value = selectedYear.value || currentYearStr
-  migrationSourceClassId.value = null
   showMigrationDialog.value = true
 }
 
-const autoCreateMissingTargetClasses = async () => {
-  const existingNames = new Set(targetYearClasses.value.map(c => `${c.name}${c.section}`))
-  const sourceClasses = migrationSourceClassId.value
-    ? classesStore.classes.filter(c => c.id === migrationSourceClassId.value)
-    : classesStore.classes
-
-  for (const sc of sourceClasses) {
-    const section = sc.section || ''
-    const rawName = sc.name || ''
-    const match = rawName.match(/^(\d+)(.*)$/)
-    const gradeNum = match ? parseInt(match[1]) : null
-    const restName = match ? match[2] : rawName
-
-    // Repeater class target
-    const repeaterTargetName = `${sc.name}${section}`
-    if (!existingNames.has(repeaterTargetName)) {
-      try {
-        const created = await adminService.createClass({
-          name: sc.name,
-          section: sc.section,
-          articolazione: sc.articolazione || '',
-          academic_year: migrationTargetYear.value
-        })
-        targetYearClasses.value.push(created.data)
-        existingNames.add(repeaterTargetName)
-      } catch (e) {
-        console.error('Failed auto-creating repeater target class', e)
-      }
-    }
-
-    // Promoted class target
-    if (gradeNum && gradeNum < 5) {
-      const nextGradeName = `${gradeNum + 1}${restName}`
-      const promotedTargetName = `${nextGradeName}${section}`
-      if (!existingNames.has(promotedTargetName)) {
-        try {
-          const created = await adminService.createClass({
-            name: nextGradeName,
-            section: sc.section,
-            articolazione: sc.articolazione || '',
-            academic_year: migrationTargetYear.value
-          })
-          targetYearClasses.value.push(created.data)
-          existingNames.add(promotedTargetName)
-        } catch (e) {
-          console.error('Failed auto-creating promoted target class', e)
-        }
-      }
-    }
-  }
-}
-
-const goToStep2 = async () => {
-  migrationLoading.value = true
-  migrationStep.value = 2
-  try {
-    const targetClassesRes = await adminService.getSchoolClasses(authStore.user.school_id, migrationTargetYear.value)
-    targetYearClasses.value = targetClassesRes.data || []
-
-    await autoCreateMissingTargetClasses()
-
-    let sourceClassesToProcess = []
-    if (migrationSourceClassId.value) {
-      sourceClassesToProcess = classesStore.classes.filter(c => c.id === migrationSourceClassId.value)
-    } else {
-      sourceClassesToProcess = classesStore.classes.filter(c => c.academic_year === migrationSourceYear.value)
-    }
-
-    const studentPromises = sourceClassesToProcess.map(c =>
-      api.get('/users', { params: { role: 'student', class_id: c.id, page_size: 500 } }).then(res => ({
-        class: c,
-        students: res.data?.users || res.data || []
-      }))
-    )
-
-    const classResults = await Promise.all(studentPromises)
-    const items = []
-
-    for (const cr of classResults) {
-      const cName = `${cr.class.name}${cr.class.section}`
-      const rawName = cr.class.name || ''
-      const match = rawName.match(/^(\d+)(.*)$/)
-      const gradeNum = match ? parseInt(match[1]) : null
-      const restName = match ? match[2] : rawName
-
-      for (const st of cr.students) {
-        let action = 'promoted'
-        if (gradeNum >= 5) {
-          action = 'graduated'
-        }
-
-        let targetClassId = null
-        if (action === 'promoted' && gradeNum && gradeNum < 5) {
-          const nextName = `${gradeNum + 1}${restName}`
-          const foundTarget = targetYearClasses.value.find(tc => tc.name === nextName && tc.section === cr.class.section)
-          if (foundTarget) targetClassId = foundTarget.id
-        }
-
-        items.push({
-          student_id: st.id,
-          first_name: st.first_name || st.name || '',
-          last_name: st.last_name || '',
-          email: st.email || '',
-          current_class_id: cr.class.id,
-          current_class_name: cName,
-          current_grade: gradeNum,
-          current_section: cr.class.section,
-          action: action,
-          target_class_id: targetClassId
-        })
-      }
-    }
-
-    migrationStudents.value = sortAlphabetically(items)
-  } catch (e) {
-    console.error('Error setting up migration step 2', e)
-    $q.notify({ type: 'negative', message: 'Errore nel caricamento dati per la migrazione' })
-  } finally {
-    migrationLoading.value = false
-  }
-}
-
-const onStudentActionChange = (st) => {
-  if (st.action === 'promoted') {
-    if (st.current_grade && st.current_grade < 5) {
-      const nextName = `${st.current_grade + 1}`
-      const foundTarget = targetYearClasses.value.find(tc => tc.name.startsWith(nextName) && tc.section === st.current_section)
-      if (foundTarget) st.target_class_id = foundTarget.id
-    } else {
-      st.target_class_id = null
-    }
-  } else if (st.action === 'repeater') {
-    const foundTarget = targetYearClasses.value.find(tc => tc.name.startsWith(`${st.current_grade}`) && tc.section === st.current_section)
-    if (foundTarget) st.target_class_id = foundTarget.id
-  } else {
-    st.target_class_id = null
-  }
-}
-
-const setAllMigrationAction = (action) => {
-  migrationStudents.value.forEach(st => {
-    st.action = action
-    onStudentActionChange(st)
-  })
-}
-
-const setSmartMigrationDefaults = () => {
-  migrationStudents.value.forEach(st => {
-    if (st.current_grade >= 5) {
-      st.action = 'graduated'
-    } else {
-      st.action = 'promoted'
-    }
-    onStudentActionChange(st)
-  })
-}
-
-const getTargetClassOptions = (_st) => {
-  return targetYearClasses.value.map(c => ({
-    label: `${c.name}${c.section}${c.articolazione ? ' ('+c.articolazione+')' : ''}`,
-    value: c.id
-  }))
-}
-
-const migrationSummary = computed(() => {
-  const summary = { promoted: 0, repeater: 0, graduated: 0, left: 0 }
-  migrationStudents.value.forEach(st => {
-    if (summary[st.action] !== undefined) {
-      summary[st.action]++
-    }
-  })
-  return summary
-})
-
-const executeMigration = async () => {
-  migrationLoading.value = true
-  try {
-    const payload = {
-      source_academic_year: migrationSourceYear.value,
-      target_academic_year: migrationTargetYear.value,
-      migrations: migrationStudents.value.map(st => ({
-        student_id: st.student_id,
-        action: st.action,
-        target_class_id: (st.action === 'promoted' || st.action === 'repeater') ? st.target_class_id : null
-      }))
-    }
-
-    await api.post('/classes/migrate-students', payload)
-
-    $q.notify({
-      type: 'positive',
-      message: 'Migrazione anno scolastico completata con successo!',
-      caption: `${migrationSummary.value.promoted} Promossi, ${migrationSummary.value.repeater} Bocciati, ${migrationSummary.value.graduated} Diplomati`
-    })
-
-    showMigrationDialog.value = false
-    await classesStore.fetchClasses(selectedYear.value)
-  } catch (e) {
-    console.error('Migration failed', e)
-    $q.notify({
-      type: 'negative',
-      message: 'Errore durante l\'esecuzione della migrazione',
-      caption: e.response?.data?.error || e.message
-    })
-  } finally {
-    migrationLoading.value = false
-  }
+const onMigrationComplete = async () => {
+  await refreshClasses()
 }
 
 defineExpose({

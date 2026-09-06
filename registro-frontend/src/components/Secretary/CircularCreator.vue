@@ -7,7 +7,13 @@
 
     <q-card-section>
         <q-form @submit="sendCircular" class="q-gutter-md">
-            <q-input v-model="form.title" :label="t('communicationsPage.titleLabel')" outlined dense :rules="[val => !!val || t('common.error')]" />
+            <q-input
+              v-model="form.title"
+              :label="t('communicationsPage.titleLabel')"
+              outlined
+              dense
+              :rules="[val => (!!val && val.trim().length > 0) || (t('common.requiredField') || 'Campo obbligatorio')]"
+            />
             
             <div class="text-subtitle2">{{ t('communicationsPage.recipientRole') }}</div>
             <div class="row q-gutter-sm">

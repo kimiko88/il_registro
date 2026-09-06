@@ -68,7 +68,27 @@ export default {
     "viewAll": "Смотреть все",
     "noStudentsFound": "Учащиеся не найдены",
     "readOnlySaveBtn": "Сохранение отключено (Только чтение)",
-    "children": "Прикрепленные дети"
+    "children": "Прикрепленные дети",
+    "onlineSynced": "В сети - Данные синхронизированы",
+    "offlineSaved": "Не в сети - Изменения сохранены локально",
+    "class": "Класс",
+    "student": "Ученик",
+    "attendance": "Посещаемость",
+    "conduct": "Поведение",
+    "outcome": "Результат",
+    "average": "Средний балл",
+    "approved": "Одобрено",
+    "pending": "В ожидании",
+    "completed": "Завершено",
+    "create": "Создать",
+    "update": "Обновить",
+    "required": "Обязательное поле",
+    "reserved": "Конфиденциально",
+    "saved": "Успешно сохранено",
+    "schoolYear": "Учебный год",
+    "subject": "Предмет",
+    "title": "Заголовок",
+    "warning": "Внимание"
   },
   "notFound": {
     "title": "Страница не найдена",
@@ -206,9 +226,28 @@ export default {
     "absencePercentage": "Процент пропусков",
     "monthlyBreakdown": "Ежемесячная детализация",
     "month": "Месяц",
-    "unjustifiedList": "Неуважительные пропуски и опоздания"
+    "unjustifiedList": "Неуважительные пропуски и опоздания",
+    "outOfClass": "Вне класса",
+    "activityType": "Тип деятельности",
+    "duration": "Длительность (часы)",
+    "editLesson": "Редактировать урок",
+    "newLesson": "Новый урок",
+    "hour": "Час урока",
+    "lessonTopic": "Тема урока",
+    "lessonType": "Тип урока",
+    "subject": "Предмет"
   },
   "dashboardPage": {
+    "viewYourHomework": "Посмотреть домашние задания и задания",
+    "upcomingHomework": "Предстоящие домашние задания",
+    "upcomingHomeworkSub": "Планируйте учебу: задания, тесты и дедлайны",
+    "allHomework": "Все задания",
+    "teacherLabel": "Преподаватель",
+    "noPendingHomework": "Нет ожидающих заданий",
+    "allCaughtUp": "Вы выполнили все текущие задания и работы!",
+    "dueToday": "Сегодня",
+    "dueTomorrow": "Завтра",
+    "dueInDays": "Через {days} дн.",
     "greetingMorning": "Доброе утро",
     "greetingAfternoon": "Добрый день",
     "greetingEvening": "Добрый вечер",
@@ -257,7 +296,10 @@ export default {
     "recentGrades": "Последние оценки",
     "noChildren": "Нет прикрепленных детей",
     "systemStatus": "Статус системы",
-    "syncedNow": "Синхронизировано только что"
+    "syncedNow": "Синхронизировано только что",
+    "online": "В сети",
+    "notifications": "Уведомления",
+    "teacher": "Преподаватель"
   },
   "agendaPage": {
     "title": "Расписание и учебный календарь",
@@ -295,9 +337,48 @@ export default {
     "detailsOf": "Детали на",
     "lessonsHeld": "Проведенные уроки",
     "noLessons": "На эту дату уроков не зарегистрировано.",
-    "noDueHomework": "На эту дату нет заданий со сроком сдачи."
+    "noDueHomework": "На эту дату нет заданий со сроком сдачи.",
+    "thisWeek": "Эта Неделя",
+    "monthView": "Месяц",
+    "weekView": "Неделя",
+    "dayView": "День",
+    "quickNew": "+ Добавить",
+    "moreCount": "+{count} еще",
+    "eventTitle": "Название События *",
+    "eventDescription": "Описание / Подробности",
+    "eventType": "Тип События *",
+    "targetClass": "Класс-Получатель *",
+    "eventDate": "Дата *",
+    "startTime": "Время Начала",
+    "endTime": "Время Окончания",
+    "saveChanges": "Сохранить Изменения",
+    "createEvent": "Создать Событие",
+    "deleteEvent": "Удалить Событие",
+    "weekTitle": "Неделя",
+    "confirmDeleteTitle": "Удалить Событие",
+    "confirmDeleteMsg": "Вы уверены, что хотите удалить это событие из дневника?",
+    "eventCreated": "Событие успешно создано",
+    "eventUpdated": "Событие успешно обновлено",
+    "eventDeleted": "Событие успешно удалено",
+    "allDay": "Весь день"
   },
   "usersPage": {
+    "importTitle": "Импорт пользователей из CSV",
+    "stepConfig": "Настройка",
+    "stepUpload": "Загрузка файла",
+    "stepResult": "Результат",
+    "userTypeToImport": "Тип импортируемых пользователей",
+    "sendWelcomeEmail": "Отправить приветственное письмо с временными учетными данными",
+    "downloadTemplate": "Скачать образец шаблона CSV",
+    "selectCsvFile": "Выберите файл CSV (.csv макс. 10 МБ)",
+    "previewRowsTitle": "Предварительный просмотр первых 5 строк",
+    "runImport": "Выполнить импорт",
+    "importSuccessCount": "{count} пользователей успешно импортировано!",
+    "skippedRowsCount": "{count} строк пропущено или недействительно.",
+    "errorsEncountered": "Обнаруженные ошибки",
+    "rowError": "Строка {row}: {reason}",
+    "downloadErrorReport": "Скачать отчет об ошибках",
+    "closeAndUpdate": "Закрыть и обновить список",
     "title": "Управление пользователями",
     "searchPlaceholder": "Поиск по имени, email, номеру...",
     "newUser": "Новый пользователь",
@@ -318,7 +399,9 @@ export default {
     "resetPassword": "Сбросить пароль",
     "manageSubjects": "Назначить предметы",
     "deleteAccount": "Удалить аккаунт",
-    "noUsersFound": "Пользователи не найдены"
+    "noUsersFound": "Пользователи не найдены",
+    "importError": "Ошибка при импорте CSV",
+    "targetClass": "Целевой класс"
   },
   "supportPage": {
     "title": "Центр поддержки и FAQ",
@@ -412,7 +495,8 @@ export default {
     "tabGrades": "Мои оценки",
     "homework": "Домашние задания",
     "documents": "Документальное досье и акты",
-    "schoolManagement": "Управление школами"
+    "schoolManagement": "Управление школами",
+    "student": "Ученик/ца"
   },
   "udaPage": {
     "subjectLabel": "Предмет *",
@@ -518,6 +602,32 @@ export default {
     "levelD": "D - Начальный"
   },
   "gradesPage": {
+    "createTestTitle": "Создать новую контрольную работу",
+    "editTestTitle": "Массовое редактирование контрольной работы",
+    "testDetails": "Детали работы",
+    "testTitle": "Название работы",
+    "teacherNotes": "Заметки учителя (внутренние)",
+    "parentNotes": "Заметки для родителей (видимые)",
+    "studentGrades": "Оценки учеников",
+    "insertedCount": "введено",
+    "allAbsentMarked": "Все ученики отмечены как отсутствующие",
+    "saveTestAndGrades": "Сохранить работу и оценки",
+    "saveEditTest": "Сохранить изменения работы",
+    "overlappingWarning": "Внимание: у класса уже запланировано {count} проверочных работ на {date}! (Рекомендуемый макс.: 2)",
+    "testSavedSuccess": "Работа \"{title}\" и {count} оценок успешно сохранены!",
+    "testEditSuccess": "Работа успешно изменена!",
+    "testSaveError": "Ошибка при сохранении контрольной работы",
+    "testEditError": "Ошибка при изменении контрольной работы",
+    "deleteTestConfirmTitle": "Подтверждение удаления работы",
+    "deleteTestConfirmMsg": "Вы уверены, что хотите удалить работу \"{title}\"? Будут безвозвратно удалены {count} связанных оценок.",
+    "deleteTestSuccess": "Работа успешно удалена!",
+    "deleteTestError": "Ошибка при удалении работы",
+    "noPermissionNotOwner": "У вас нет прав для управления работами в не назначенных вам классах",
+    "testsHistory": "Список проверочных работ",
+    "noTestsFound": "Контрольные работы не найдены",
+    "noTestsFoundDesc": "Для этого предмета еще не зарегистрировано контрольных работ.",
+    "createFirstTest": "Создать первую работу",
+    "selectClassSub": "Выберите класс из верхнего меню, чтобы открыть журнал:",
     "cannotEditOtherTeacherGrade": "Вы не можете редактировать оценки других учителей",
     "sharedGradesCaption": "Оценки, доступные классу",
     "confirmDeleteGrade": "Вы уверены, что хотите удалить эту оценку?",
@@ -607,7 +717,17 @@ export default {
     "sufficient": "Зачет",
     "insufficient": "Незачет",
     "absent": "Н",
-    "subject": "Предмет"
+    "subject": "Предмет",
+    "selectClassPrompt": "Выберите класс",
+    "evalType": "Тип оценки",
+    "markAllAbsent": "Отметить всех как отсутствующих",
+    "noStudentsInClass": "Для этого класса нет учеников",
+    "testDate": "Дата контрольной",
+    "types": {
+      "written": "Письменный",
+      "oral": "Устный",
+      "practical": "Практический"
+    }
   },
   "didacticsPage": {
     "title": "Учебные материалы и ресурсы",
@@ -688,7 +808,16 @@ export default {
       "equivalentTest": "Эквивалентное задание",
       "textToSpeech": "Синтез речи",
       "conceptMaps": "Концептуальные карты"
-    }
+    },
+    "createFirst": "Создать первый план",
+    "clinicalDiagnosis": "Клинический Диагноз (только для учителей)",
+    "restrictedFile": "Медицинское Заключение (Только для Учителей Класса)",
+    "noneSpecified": "Не указано",
+    "approvedFamily": "✓ Утверждено Семьей",
+    "sharedPending": "Отправлено (ожидание)",
+    "internalDraft": "Внутренний Черновик",
+    "hideFromFamily": "Скрыть от Семьи",
+    "shareWithFamily": "Поделиться с Семьей"
   },
   "rubricsPage": {
     "title": "Критериальные рубрики оценки",
@@ -920,7 +1049,10 @@ export default {
     "downloadStarted": "Скачивание документа: {title}",
     "upload": "Загрузить документ",
     "tableTitle": "Официальные документы",
-    "noDocs": "В данном разделе документов пока нет."
+    "noDocs": "В данном разделе документов пока нет.",
+    "certsDesc": "Автоматически сгенерированные справки об обучении и посещаемости.",
+    "downloading": "Загрузка...",
+    "previewNotAvailable": "Предварительный просмотр недоступен в автономном режиме."
   },
   "notesPage": {
     "title": "Дисциплинарные замечания",
@@ -1193,7 +1325,8 @@ export default {
     "mfaCaption": "Требовать двухфакторную аутентификацию TOTP для всех сотрудников.",
     "minPasswordLength": "Минимальная длина пароля",
     "sessionTimeout": "Время неактивности сессии",
-    "maxLoginAttempts": "Неудачные попытки до блокировки"
+    "maxLoginAttempts": "Неудачные попытки до блокировки",
+    "general": "Общие"
   },
   "search": {
     "placeholder": "Поиск учеников, учителей, секретариата, классов, объявлений, меню…",
@@ -1325,7 +1458,22 @@ export default {
       "q9": "Как изменить язык интерфейса и тёмную тему?",
       "a9": "В меню пользовательских настроек выберите один из 9 языков и включите тёмный режим или шрифт OpenDyslexic.",
       "q10": "Как отменить случайно выставленную оценку?",
-      "a10": "После ввода оценки внизу экрана на 15 секунд появляется всплывающее уведомление с кнопкой \"Отменить\"."
+      "a10": "После ввода оценки внизу экрана на 15 секунд появляется всплывающее уведомление с кнопкой \"Отменить\".",
+      "scrutiny": {
+        "period1": "1-й семестр / триместр",
+        "period2": "Итоговая аттестация (2-й семестр)",
+        "deferredScrutiny": "Отложенная аттестация / Пересдача задолженностей",
+        "deferredBannerTitle": "Активна сессия отложенной аттестации",
+        "deferredBannerBody": "В этой сессии можно принять решение о снятии отсрочки решения для учащихся с академической задолженностью.",
+        "deferredModalTitle": "Отложенная аттестация: {name}",
+        "deferredModalSubtitle": "Оценка повторных экзаменов и погашение академических задолженностей",
+        "deferredNotes": "Протокол / Примечания к решению",
+        "deferredSaved": "Результат отложенной аттестации успешно сохранен",
+        "deliberateDeferred": "Решение по отсрочке",
+        "notPromotedDebtsNotCleared": "Не переведен (задолженности не погашены)",
+        "promotedDebtsCleared": "Переведен (задолженности погашены)",
+        "closeConfirmMsg": "Вы уверены, что хотите завершить и зафиксировать аттестацию для выбранного класса? Операция окончательна."
+      }
     },
     "student": {
       "cat_grades": "Мои оценки",
@@ -2107,7 +2255,8 @@ export default {
     "documentsSubmitted": "Предоставленные документы",
     "completeEnrollment": "Завершить зачисление",
     "enrollmentSuccess": "Зачисление успешно завершено!",
-    "studentFile": "Карточка учащегося"
+    "studentFile": "Карточка учащегося",
+    "title": "Реестр учащихся"
   },
   "classesPage": {
     "currentClass": "Текущий класс"
@@ -2219,7 +2368,16 @@ export default {
   "attendancePage": {
     "title": "Посещаемость и пропуски",
     "subtitle": "Учет посещаемости, опозданий и объяснительных записок",
-    "tableTitle": "Таблица посещаемости"
+    "tableTitle": "Таблица посещаемости",
+    "justified": "Оправдано",
+    "parentManagedJustifications": "Оправдания отсутствия оформляются родителями",
+    "requestJustification": "Запросить оправдание",
+    "selectAbsence": "Выберите отсутствие для оправдания",
+    "timeDetail": "Время / Детали",
+    "reason": "Причина",
+    "reasonFamily": "Семейные обстоятельства",
+    "reasonHealth": "По состоянию здоровья",
+    "warningAbsenceLimit": "Вы достигли порога предупреждения по пропускам. Урегулируйте пропуски во избежание проблем."
   },
   "reportCardPage": {
     "title": "Табель и итоговая аттестация",
@@ -2413,7 +2571,8 @@ export default {
       "goalDescription": "Description & Strategies",
       "expectedTerm": "Target Term",
       "status": "Progress Status"
-    }
+    },
+    "noGoals": "Цели индивидуального плана не внесены"
   },
   "generalMeeting": {
     "teacherQueueTitle": "Afternoon General Parent-Teacher Conference",
@@ -2724,7 +2883,11 @@ export default {
   "offlineBanner": {
     "offlineText": "Отсутствует подключение к Интернету. Изменения могут не сохраниться.",
     "offlineBadge": "ОФЛАЙН",
-    "onlineText": "Подключение к Интернету восстановлено."
+    "onlineText": "Подключение к Интернету восстановлено.",
+    "pendingQueue": "Отсутствует подключение к Интернету. {count} изменений в очереди на синхронизацию.",
+    "inQueue": "В ОЧЕРЕДИ",
+    "syncedSuccess": "Соединение восстановлено: {count} операций успешно синхронизировано.",
+    "enqueuedOffline": "Действие сохранено локально. Оно будет синхронизировано автоматически при восстановлении связи."
   },
   "inactivity": {
     "warningTitle": "Сессия завершается",
@@ -2856,7 +3019,8 @@ export default {
     },
     "loadError": "Ошибка при загрузке справок",
     "generateSuccess": "Справка успешно сформирована!",
-    "generateError": "Ошибка при формировании справки"
+    "generateError": "Ошибка при формировании справки",
+    "enrollmentCert": "Справка об обучении"
   },
   "sidiExports": {
     "title": "Государственная Отчётность и Выгрузки",
@@ -3116,6 +3280,42 @@ export default {
     "notFound": "Страница не найдена"
   },
   "secretaryClasses": {
+    "migrationTitle": "Перевод Учащихся и Переход на Новый Учебный Год",
+    "migrationSubtitle": "Управление переводом классов, переведёнными, второгодниками и выпускниками",
+    "migrationProcedure": "Процедура Перехода на Новый Учебный Год",
+    "migrationProcedureDesc": "Выберите исходный и целевой учебный год. Быстро настройте статус для каждого учащегося (Переведён, Оставлен на повторный год, Выпускник или Переведён в другую школу).",
+    "sourceYear": "Исходный Год",
+    "targetYear": "Целевой Год (Новый Год)",
+    "filterByClass": "Фильтр по Классу (или Все Классы)",
+    "allSourceClasses": "Все классы исходного года",
+    "studentsToProcess": "Учащихся для Обработки",
+    "markAllPromoted": "Отметить Всех как Переведённых",
+    "smartDefaults": "Выпуск 5 кл. / Перевод 1-4 кл.",
+    "markAllRepeater": "Отметить Всех как Второгодников",
+    "loadingMigration": "Загрузка учащихся и подготовка классов целевого года...",
+    "noStudentsFound": "Учащиеся по выбранным критериям не найдены.",
+    "currentClassLabel": "Текущий Класс",
+    "actionPromoted": "Переведён(а)",
+    "actionRepeater": "Второгодник",
+    "actionGraduated": "Выпускник(ца)",
+    "actionLeft": "Выбыл(а)",
+    "targetClassLabel": "Целевой Класс",
+    "noClassUnassigned": "Без класса (Не назначен)",
+    "migrationSummaryTitle": "Сводка Перевода",
+    "promotedCount": "Переведены",
+    "repeaterCount": "Второгодники",
+    "graduatedCount": "Выпускники",
+    "leftCount": "Выбывшие / Отчисленные",
+    "btnConfigureStudents": "Далее: Настройка Учащихся",
+    "btnVerifySummary": "Далее: Проверка Сводки",
+    "btnExecuteMigration": "Подтвердить и Выполнить Перевод",
+    "migrationSuccess": "Перевод на новый учебный год успешно завершён!",
+    "migrationError": "Ошибка при выполнении перевода",
+    "migrationLoadError": "Ошибка при загрузке данных для перевода",
+    "scheduleTitle": "Расписание на Неделю - Класс",
+    "scheduleSaved": "Расписание успешно сохранено",
+    "scheduleSaveError": "Ошибка при сохранении расписания",
+    "scheduleLoadError": "Ошибка при загрузке расписания",
     "newClass": "Новый Класс",
     "editClass": "Редактировать Класс",
     "createClass": "Создать Класс",
@@ -3170,6 +3370,100 @@ export default {
     "subjectName": "Название Предмета",
     "createSubject": "Создать Предмет",
     "subjectCreated": "Предмет создан",
-    "createSubjectError": "Ошибка при создании предмета"
+    "createSubjectError": "Ошибка при создании предмета",
+    "manageAssignments": "Управление предметами и преподавателями",
+    "manageStudents": "Управление учащимися класса"
+  },
+  "groupsPage": {
+    "title": "Управление Языковыми и Сборными Группами",
+    "subtitle": "Создание и ведение групп из учеников нескольких классов",
+    "newGroup": "Новая Группа",
+    "createGroup": "Создать Группу",
+    "loading": "Загрузка групп...",
+    "noGroups": "Языковых или сборных групп не найдено",
+    "noGroupsDesc": "Создайте свою первую группу для совместных занятий учеников из разных классов",
+    "students": "учеников",
+    "teacher": "Учитель",
+    "academicYear": "Учебный год",
+    "editGroup": "Редактировать Группу",
+    "deleteGroup": "Удалить",
+    "groupName": "Название Группы",
+    "groupNamePlaceholder": "Название Группы (напр. Английский B2 3A-3B)",
+    "description": "Описание / Заметки",
+    "confirmDelete": "Подтверждение удаления",
+    "confirmDeleteDesc": "Вы уверены, что хотите удалить эту группу?",
+    "groupDeleted": "Группа удалена",
+    "deleteError": "Ошибка при удалении",
+    "groupSaved": "Группа успешно обновлена",
+    "groupCreated": "Группа успешно создана",
+    "save": "Сохранить",
+    "create": "Создать",
+    "studentListTitle": "Ученики Группы: {name}",
+    "noStudents": "В этой группе пока нет учеников."
+  },
+  "scrutinyPage": {
+    "title": "Педсовет и Пересдачи Задолженностей",
+    "subtitle": "Итоговые отметки, темы задолженностей и ликвидация академических долгов",
+    "closeScrutiny": "Закрыть Педсовет",
+    "saveFinal": "Сохранить Итоги",
+    "classCouncil": "Педсовет Класса",
+    "notCoordinator": "Вы не являетесь куратором класса для этого педсовета.",
+    "selectClassPrompt": "Выберите класс для начала педсовета.",
+    "deficiencyTitle": "Темы Задолженностей — {name}",
+    "deficiencySubtitle": "Список тем для ликвидации долга (доступен ученику и родителям)",
+    "deficiencySubject": "Предмет Задолженности",
+    "deficiencyTopics": "Темы / Конкретные Пробелы *",
+    "recoveryMode": "Форма Ликвидации Долга",
+    "recoveryStatus": "Статус Задолженности",
+    "recoveryGrade": "Оценка за Пересдачу",
+    "recoveryDate": "Дата Пересдачи",
+    "saveDeficiency": "Сохранить Задолженность",
+    "noDeficiencies": "У этого ученика нет задолженностей.",
+    "individualStudy": "Самостоятельное Изучение",
+    "summerCourse": "Летний Курс",
+    "helpDesk": "Дополнительные Занятия",
+    "toRecover": "К Ликвидации",
+    "inProgress": "В Процессе",
+    "recovered": "Сдано",
+    "notRecovered": "Не Сдано"
+  },
+  "studentDetail": {
+    "title": "Данные ученика",
+    "personalInfo": "Личные данные",
+    "fullName": "Полное имя",
+    "fiscalCode": "ИНН",
+    "class": "Класс",
+    "email": "Эл. почта",
+    "phone": "Телефон",
+    "birthDate": "Дата рождения",
+    "attendanceSummary": "Сводка посещаемости",
+    "totalAbsences": "Всего пропусков",
+    "lates": "Опоздания",
+    "earlyExits": "Ранние уходы",
+    "justified": "Уважительные",
+    "absenceRate": "Процент пропусков",
+    "risk": "Риск",
+    "riskHigh": "ВЫСОКИЙ",
+    "riskMedium": "СРЕДНИЙ",
+    "riskLow": "НИЗКИЙ",
+    "todayAttendanceByHour": "Посещаемость сегодня по урокам",
+    "hourNotRegistered": "Урок {hour}: не отмечен",
+    "hourStatus": "Урок {hour}: {status}"
+  },
+  "orientamento": {
+    "availableEvents": "Доступные мероприятия",
+    "myEvents": "Мои мероприятия",
+    "history": "История и посещаемость"
+  },
+  "homework": {
+    "assign": "Назначить",
+    "assignHomework": "Задать домашнее задание",
+    "description": "Описание задания",
+    "dueDate": "Срок сдачи"
+  },
+  "signaturesPage": {
+    "signNow": "Подписать сейчас",
+    "signed": "Подписано",
+    "signedOn": "Подписано"
   }
-}
+};

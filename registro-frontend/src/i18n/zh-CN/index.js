@@ -68,7 +68,27 @@ export default {
     "viewAll": "查看全部",
     "noStudentsFound": "未找到学生",
     "readOnlySaveBtn": "保存已禁用（只读模式）",
-    "children": "关联子女"
+    "children": "关联子女",
+    "onlineSynced": "在线 - 数据已同步",
+    "offlineSaved": "离线 - 更改已保存在本地",
+    "class": "班级",
+    "student": "学生",
+    "attendance": "出勤",
+    "conduct": "操行",
+    "outcome": "结果",
+    "average": "平均分",
+    "approved": "已批准",
+    "pending": "待处理",
+    "completed": "已完成",
+    "create": "创建",
+    "update": "更新",
+    "required": "必填项",
+    "reserved": "机密",
+    "saved": "保存成功",
+    "schoolYear": "学年",
+    "subject": "科目",
+    "title": "标题",
+    "warning": "警告"
   },
   "notFound": {
     "title": "页面未找到",
@@ -206,9 +226,28 @@ export default {
     "absencePercentage": "缺勤率",
     "monthlyBreakdown": "每月考勤明细",
     "month": "月份",
-    "unjustifiedList": "未假缺勤与迟到"
+    "unjustifiedList": "未假缺勤与迟到",
+    "outOfClass": "教室外",
+    "activityType": "活动类型",
+    "duration": "时长（小时）",
+    "editLesson": "编辑课程",
+    "newLesson": "新建课程",
+    "hour": "课时",
+    "lessonTopic": "课程主题",
+    "lessonType": "课程类型",
+    "subject": "科目"
   },
   "dashboardPage": {
+    "viewYourHomework": "查看作业与学习活动",
+    "upcomingHomework": "待完成的近期作业",
+    "upcomingHomeworkSub": "合理规划学习：作业、测验与截止日期",
+    "allHomework": "全部作业",
+    "teacherLabel": "教师",
+    "noPendingHomework": "暂无待办作业",
+    "allCaughtUp": "所有作业与学习任务均已按时完成！",
+    "dueToday": "今天",
+    "dueTomorrow": "明天",
+    "dueInDays": "{days}天后",
     "greetingMorning": "早上好",
     "greetingAfternoon": "下午好",
     "greetingEvening": "晚上好",
@@ -257,7 +296,10 @@ export default {
     "recentGrades": "最新成绩",
     "noChildren": "未关联子女",
     "systemStatus": "系统状态",
-    "syncedNow": "刚刚已同步"
+    "syncedNow": "刚刚已同步",
+    "online": "在线",
+    "notifications": "通知",
+    "teacher": "教师"
   },
   "agendaPage": {
     "title": "日程与教学日历",
@@ -295,9 +337,48 @@ export default {
     "detailsOf": "详情日期",
     "lessonsHeld": "已授课程",
     "noLessons": "该日期无已记录课程。",
-    "noDueHomework": "该日期无待交作业。"
+    "noDueHomework": "该日期无待交作业。",
+    "thisWeek": "本周",
+    "monthView": "月视图",
+    "weekView": "周视图",
+    "dayView": "日视图",
+    "quickNew": "+ 新建",
+    "moreCount": "+{count} 项更多",
+    "eventTitle": "日程标题 *",
+    "eventDescription": "描述 / 详情",
+    "eventType": "日程类型 *",
+    "targetClass": "目标班级 *",
+    "eventDate": "日期 *",
+    "startTime": "开始时间",
+    "endTime": "结束时间",
+    "saveChanges": "保存修改",
+    "createEvent": "创建日程",
+    "deleteEvent": "删除日程",
+    "weekTitle": "第几周",
+    "confirmDeleteTitle": "删除日程",
+    "confirmDeleteMsg": "您确定要从校历日程中删除此事项吗？",
+    "eventCreated": "日程创建成功",
+    "eventUpdated": "日程更新成功",
+    "eventDeleted": "日程删除成功",
+    "allDay": "全天事项"
   },
   "usersPage": {
+    "importTitle": "从 CSV 导入用户",
+    "stepConfig": "配置",
+    "stepUpload": "文件上传",
+    "stepResult": "结果",
+    "userTypeToImport": "要导入的用户类型",
+    "sendWelcomeEmail": "发送包含临时凭据的欢迎邮件",
+    "downloadTemplate": "下载 CSV 示例模板",
+    "selectCsvFile": "选择 CSV 文件（.csv 最大 10MB）",
+    "previewRowsTitle": "预览前 5 行",
+    "runImport": "执行导入",
+    "importSuccessCount": "成功导入 {count} 位用户！",
+    "skippedRowsCount": "{count} 行已跳过或无效。",
+    "errorsEncountered": "遇到的错误",
+    "rowError": "第 {row} 行：{reason}",
+    "downloadErrorReport": "下载错误报告",
+    "closeAndUpdate": "关闭并刷新列表",
     "title": "用户账号管理",
     "searchPlaceholder": "按姓名、邮箱、身份证号搜索...",
     "newUser": "新建用户",
@@ -318,7 +399,9 @@ export default {
     "resetPassword": "重置密码",
     "manageSubjects": "任教科目分配",
     "deleteAccount": "删除账号",
-    "noUsersFound": "未检索到匹配用户"
+    "noUsersFound": "未检索到匹配用户",
+    "importError": "CSV 导入时出错",
+    "targetClass": "目标班级"
   },
   "supportPage": {
     "title": "帮助中心与常见问题",
@@ -412,7 +495,8 @@ export default {
     "tabGrades": "我的成绩",
     "homework": "家庭作业",
     "documents": "文件档案与法令",
-    "schoolManagement": "学校管理"
+    "schoolManagement": "学校管理",
+    "student": "学生"
   },
   "udaPage": {
     "subjectLabel": "科目 *",
@@ -518,6 +602,32 @@ export default {
     "levelD": "D - 起步/待提高"
   },
   "gradesPage": {
+    "createTestTitle": "创建新测验",
+    "editTestTitle": "批量修改测验",
+    "testDetails": "测验详情",
+    "testTitle": "测验标题",
+    "teacherNotes": "教师备注（内部）",
+    "parentNotes": "家长备注（可见）",
+    "studentGrades": "学生成绩",
+    "insertedCount": "已输入",
+    "allAbsentMarked": "所有学生已标记为缺勤",
+    "saveTestAndGrades": "保存测验和成绩",
+    "saveEditTest": "保存测验更改",
+    "overlappingWarning": "警告：该班级在 {date} 已安排了 {count} 场测验！（建议最多：2场）",
+    "testSavedSuccess": "测验 \"{title}\" 及 {count} 条成绩已成功保存！",
+    "testEditSuccess": "测验修改成功！",
+    "testSaveError": "保存测验时出错",
+    "testEditError": "修改测验时出错",
+    "deleteTestConfirmTitle": "确认删除测验",
+    "deleteTestConfirmMsg": "确定要删除测验 \"{title}\" 吗？关联的 {count} 条成绩将被永久删除。",
+    "deleteTestSuccess": "测验已成功删除！",
+    "deleteTestError": "删除测验时出错",
+    "noPermissionNotOwner": "您无权管理非执教班级的测验",
+    "testsHistory": "测验列表",
+    "noTestsFound": "未找到测验",
+    "noTestsFoundDesc": "该科目暂无测验记录。",
+    "createFirstTest": "创建首场测验",
+    "selectClassSub": "从顶部菜单选择一个班级以访问记分册：",
     "cannotEditOtherTeacherGrade": "您无法修改其他教师录入的成绩",
     "sharedGradesCaption": "向全班公布的成绩",
     "confirmDeleteGrade": "您确定要删除此项成绩吗？",
@@ -607,7 +717,17 @@ export default {
     "sufficient": "及格",
     "insufficient": "不及格",
     "absent": "缺席",
-    "subject": "科目"
+    "subject": "科目",
+    "selectClassPrompt": "选择班级",
+    "evalType": "评估类型",
+    "markAllAbsent": "全部标记为缺席",
+    "noStudentsInClass": "该班级未加载任何学生",
+    "testDate": "测验日期",
+    "types": {
+      "written": "笔试",
+      "oral": "口试",
+      "practical": "实践"
+    }
   },
   "didacticsPage": {
     "title": "教学资源与课件",
@@ -688,7 +808,16 @@ export default {
       "equivalentTest": "等效测试",
       "textToSpeech": "语音合成",
       "conceptMaps": "概念图/思维导图"
-    }
+    },
+    "createFirst": "创建首个教学方案",
+    "clinicalDiagnosis": "临床评估记录（仅教师可见）",
+    "restrictedFile": "医学诊断附件（仅本班授课教师可见）",
+    "noneSpecified": "未指定",
+    "approvedFamily": "✓ 家长已确认签署",
+    "sharedPending": "已共享（待确认）",
+    "internalDraft": "校内草稿",
+    "hideFromFamily": "对家长隐藏",
+    "shareWithFamily": "与家长共享"
   },
   "rubricsPage": {
     "title": "能力评估量规 (Rubrics)",
@@ -920,7 +1049,10 @@ export default {
     "downloadStarted": "正在下载文档: {title}",
     "upload": "上传文件",
     "tableTitle": "正式公文列表",
-    "noDocs": "当前分类下暂无文档公文。"
+    "noDocs": "当前分类下暂无文档公文。",
+    "certsDesc": "自动生成的在读证明与出勤证明。",
+    "downloading": "正在下载...",
+    "previewNotAvailable": "离线状态下无法预览。"
   },
   "notesPage": {
     "title": "纪律处分与行为记录",
@@ -1193,7 +1325,8 @@ export default {
     "mfaCaption": "要求所有教职工和管理员使用 TOTP 进行双重验证。",
     "minPasswordLength": "密码最小长度",
     "sessionTimeout": "会话空闲超时",
-    "maxLoginAttempts": "锁定前的最大失败尝试次数"
+    "maxLoginAttempts": "锁定前的最大失败尝试次数",
+    "general": "常规"
   },
   "search": {
     "placeholder": "搜索学生、教师、教务、班级、通知、菜单项…",
@@ -1325,7 +1458,22 @@ export default {
       "q9": "如何切换界面语言与暗黑模式？",
       "a9": "在用户菜单的“设置”中，可在9种语言间无缝切换，并开启暗黑模式或 OpenDyslexic 易读字体。",
       "q10": "如何撤销刚刚误输入的成绩？",
-      "a10": "保存成绩后，屏幕底部将出现15秒内有效的“撤销”浮条。超时后可直接在单元格修改。"
+      "a10": "保存成绩后，屏幕底部将出现15秒内有效的“撤销”浮条。超时后可直接在单元格修改。",
+      "scrutiny": {
+        "period1": "第一学期 / 第一阶段",
+        "period2": "期末评审（第二学期）",
+        "deferredScrutiny": "延期评审 / 补考及清算",
+        "deferredBannerTitle": "延期评审会议进行中",
+        "deferredBannerBody": "在此阶段，可对有挂科学分的学生做出最终决议并解除成绩悬置。",
+        "deferredModalTitle": "延期评审：{name}",
+        "deferredModalSubtitle": "补考评估及学业缺陷清算",
+        "deferredNotes": "纪要 / 决议补充说明",
+        "deferredSaved": "延期评审结果保存成功",
+        "deliberateDeferred": "审议悬置决议",
+        "notPromotedDebtsNotCleared": "未通过升学（学分未补清）",
+        "promotedDebtsCleared": "升学（已补清学分）",
+        "closeConfirmMsg": "您确定要关闭并封存所选班级的评审结果吗？此操作无法撤销。"
+      }
     },
     "student": {
       "cat_grades": "我的成绩",
@@ -2132,7 +2280,8 @@ export default {
     "documentsSubmitted": "已递交证明文件",
     "completeEnrollment": "完成入学注册",
     "enrollmentSuccess": "新生入学注册成功！",
-    "studentFile": "学籍卡片"
+    "studentFile": "学籍卡片",
+    "title": "学生花名册"
   },
   "classesPage": {
     "currentClass": "当前班级"
@@ -2244,7 +2393,16 @@ export default {
   "attendancePage": {
     "title": "考勤与出勤管理",
     "subtitle": "出勤记录、迟到登记与请假条管理",
-    "tableTitle": "出勤概览表"
+    "tableTitle": "出勤概览表",
+    "justified": "已准假",
+    "parentManagedJustifications": "请假由家长直接管理",
+    "requestJustification": "申请请假",
+    "selectAbsence": "选择要补假的缺席记录",
+    "timeDetail": "时间详情",
+    "reason": "原因",
+    "reasonFamily": "家庭原因",
+    "reasonHealth": "健康原因",
+    "warningAbsenceLimit": "您的缺勤已达预警阈值。请及时补交假条，以免影响学年考核。"
   },
   "reportCardPage": {
     "title": "期末综合成绩报告单",
@@ -2438,7 +2596,8 @@ export default {
       "goalDescription": "Description & Strategies",
       "expectedTerm": "Target Term",
       "status": "Progress Status"
-    }
+    },
+    "noGoals": "未录入个性化教育计划（PEI）目标"
   },
   "generalMeeting": {
     "teacherQueueTitle": "Afternoon General Parent-Teacher Conference",
@@ -2749,7 +2908,11 @@ export default {
   "offlineBanner": {
     "offlineText": "网络连接已中断，您的更改可能无法及时保存。",
     "offlineBadge": "离线状态",
-    "onlineText": "网络连接已恢复正常。"
+    "onlineText": "网络连接已恢复正常。",
+    "pendingQueue": "网络已断开。已将 {count} 项更改保存在本地队列，重新连线后将自动同步。",
+    "inQueue": "排队中",
+    "syncedSuccess": "网络已恢复：已成功同步 {count} 项操作。",
+    "enqueuedOffline": "操作已保存在本地，网络恢复后将自动同步。"
   },
   "inactivity": {
     "warningTitle": "登录会话即将超时",
@@ -2881,7 +3044,8 @@ export default {
     },
     "loadError": "加载学籍证明记录出错",
     "generateSuccess": "学籍证明生成成功！",
-    "generateError": "生成证明文件时发生错误"
+    "generateError": "生成证明文件时发生错误",
+    "enrollmentCert": "学籍在读证明"
   },
   "sidiExports": {
     "title": "国家教育管理信息系统 (SIDI) 数据报送",
@@ -3141,6 +3305,42 @@ export default {
     "notFound": "页面未找到"
   },
   "secretaryClasses": {
+    "migrationTitle": "学生升学与新学年过渡",
+    "migrationSubtitle": "管理班级晋升、升级生、留级生与毕业生",
+    "migrationProcedure": "学年过渡流程",
+    "migrationProcedureDesc": "选择源学年与目标学年。可快速为每位学生配置状态（升级、留级、毕业或转学）。",
+    "sourceYear": "源学年（原学年）",
+    "targetYear": "目标学年（新学年）",
+    "filterByClass": "按班级筛选（或全部班级）",
+    "allSourceClasses": "源学年所有班级",
+    "studentsToProcess": "待处理学生数",
+    "markAllPromoted": "全部标记为升级",
+    "smartDefaults": "五年级毕业 / 1-4年级升级",
+    "markAllRepeater": "全部标记为留级",
+    "loadingMigration": "正在加载学生并准备目标学年班级...",
+    "noStudentsFound": "未找到符合所选条件的学生。",
+    "currentClassLabel": "当前班级",
+    "actionPromoted": "升级",
+    "actionRepeater": "留级",
+    "actionGraduated": "毕业",
+    "actionLeft": "转学",
+    "targetClassLabel": "目标班级",
+    "noClassUnassigned": "无班级（未分配）",
+    "migrationSummaryTitle": "升学迁移汇总",
+    "promotedCount": "升级",
+    "repeaterCount": "留级",
+    "graduatedCount": "毕业",
+    "leftCount": "转学 / 离校",
+    "btnConfigureStudents": "下一步：配置学生",
+    "btnVerifySummary": "下一步：核对汇总",
+    "btnExecuteMigration": "确认并执行升学迁移",
+    "migrationSuccess": "学年升学迁移已成功完成！",
+    "migrationError": "执行升学迁移时出错",
+    "migrationLoadError": "加载升学迁移数据时出错",
+    "scheduleTitle": "每周课程表 - 班级",
+    "scheduleSaved": "课程表保存成功",
+    "scheduleSaveError": "保存课程表时出错",
+    "scheduleLoadError": "加载课程表时出错",
     "newClass": "新增教学班级",
     "editClass": "修改班级属性",
     "createClass": "确认创建班级",
@@ -3195,6 +3395,100 @@ export default {
     "subjectName": "学科课程全称",
     "createSubject": "保存新设学科",
     "subjectCreated": "新学科已成功开设！",
-    "createSubjectError": "创建新学科时发生错误"
+    "createSubjectError": "创建新学科时发生错误",
+    "manageAssignments": "学科与教师管理",
+    "manageStudents": "班级学生管理"
+  },
+  "groupsPage": {
+    "title": "语言与分流组合小组管理",
+    "subtitle": "创建并管理跨班级组成的学生教学小组",
+    "newGroup": "新建小组",
+    "createGroup": "创建小组",
+    "loading": "正在加载小组...",
+    "noGroups": "未找到语言或组合小组",
+    "noGroupsDesc": "创建您的第一个跨班级小组，在同一时段为不同班级学生授课",
+    "students": "名学生",
+    "teacher": "授课教师",
+    "academicYear": "学年",
+    "editGroup": "修改小组",
+    "deleteGroup": "删除",
+    "groupName": "小组名称",
+    "groupNamePlaceholder": "小组名称 (例如: 英语 B2 3A-3B)",
+    "description": "描述 / 备注",
+    "confirmDelete": "确认删除",
+    "confirmDeleteDesc": "您确定要删除此小组吗？",
+    "groupDeleted": "小组已删除",
+    "deleteError": "删除失败",
+    "groupSaved": "小组更新成功",
+    "groupCreated": "小组创建成功",
+    "save": "保存",
+    "create": "创建",
+    "studentListTitle": "小组成员: {name}",
+    "noStudents": "此小组暂无关联学生。"
+  },
+  "scrutinyPage": {
+    "title": "期末学术评审与补考审核",
+    "subtitle": "期末成绩审核、未达标知识点与补考方案管理",
+    "closeScrutiny": "结束评审",
+    "saveFinal": "保存终审决议",
+    "classCouncil": "班级评议委员会",
+    "notCoordinator": "您不是任何班级的评议协调员。",
+    "selectClassPrompt": "请选择一个班级开始评审流程。",
+    "deficiencyTitle": "补考内容与知识盲区 — {name}",
+    "deficiencySubtitle": "待弥补的知识盲区（学生和家长可见）",
+    "deficiencySubject": "待补考科目",
+    "deficiencyTopics": "具体补考知识点 / 薄弱环节 *",
+    "recoveryMode": "补考与辅导形式",
+    "recoveryStatus": "补考状态",
+    "recoveryGrade": "补考成绩",
+    "recoveryDate": "补考日期",
+    "saveDeficiency": "保存补考记录",
+    "noDeficiencies": "该学生暂无需要补考的学业缺漏。",
+    "individualStudy": "自主复习",
+    "summerCourse": "暑期辅导班",
+    "helpDesk": "课后答疑指导",
+    "toRecover": "待补考",
+    "inProgress": "辅导中",
+    "recovered": "已达标",
+    "notRecovered": "未达标"
+  },
+  "studentDetail": {
+    "title": "学生详情",
+    "personalInfo": "个人信息",
+    "fullName": "姓名",
+    "fiscalCode": "税号",
+    "class": "班级",
+    "email": "电子邮件",
+    "phone": "电话",
+    "birthDate": "出生日期",
+    "attendanceSummary": "出勤摘要",
+    "totalAbsences": "总缺勤",
+    "lates": "迟到",
+    "earlyExits": "早退",
+    "justified": "已请假",
+    "absenceRate": "缺勤率",
+    "risk": "风险",
+    "riskHigh": "高",
+    "riskMedium": "中",
+    "riskLow": "低",
+    "todayAttendanceByHour": "今日各课时出勤",
+    "hourNotRegistered": "第 {hour} 节：未记录",
+    "hourStatus": "第 {hour} 节：{status}"
+  },
+  "orientamento": {
+    "availableEvents": "可用活动",
+    "myEvents": "我的活动",
+    "history": "历史与出勤"
+  },
+  "homework": {
+    "assign": "布置",
+    "assignHomework": "布置作业",
+    "description": "作业描述",
+    "dueDate": "截止日期"
+  },
+  "signaturesPage": {
+    "signNow": "立即签署",
+    "signed": "已签署",
+    "signedOn": "签署于"
   }
-}
+};

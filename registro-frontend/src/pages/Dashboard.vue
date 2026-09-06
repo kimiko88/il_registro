@@ -180,7 +180,7 @@
                   flat
                   color="primary"
                   icon="assignment"
-                  label="Vedi i Tuoi Compiti & Attività"
+                  :label="$t('dashboardPage.viewYourHomework') || 'Vedi i Tuoi Compiti & Attività'"
                   class="q-mt-sm"
                   to="/student/homework"
                 />
@@ -195,10 +195,10 @@
             <div>
               <div class="text-h6 text-weight-bold text-dark row items-center">
                 <q-icon name="assignment" color="primary" class="q-mr-sm" size="24px" />
-                <span>Prossimi Compiti da Svolgere</span>
+                <span>{{ $t('dashboardPage.upcomingHomework') || 'Prossimi Compiti da Svolgere' }}</span>
               </div>
               <div class="text-caption text-slate-500 q-mt-xs">
-                Organizza il tuo studio: compiti, verifiche e consegne in arrivo
+                {{ $t('dashboardPage.upcomingHomeworkSub') || 'Organizza il tuo studio: compiti, verifiche e consegne in arrivo' }}
               </div>
             </div>
             <q-btn
@@ -206,7 +206,7 @@
               dense
               color="primary"
               icon="open_in_new"
-              label="Tutti i Compiti"
+              :label="$t('dashboardPage.allHomework') || 'Tutti i Compiti'"
               no-caps
               :to="currentRole === 'student' ? '/student/homework' : '/parent/didactics'"
               class="text-weight-bold"
@@ -250,7 +250,7 @@
                     {{ hw.title || hw.description }}
                   </q-item-label>
                   <q-item-label caption v-if="hw.teacher" class="text-slate-400">
-                    Docente: {{ hw.teacher }}
+                    {{ $t('dashboardPage.teacherLabel') || 'Docente' }}: {{ hw.teacher }}
                   </q-item-label>
                 </q-item-section>
 
@@ -274,8 +274,12 @@
 
             <div v-else class="text-center q-pa-lg text-slate-500">
               <q-icon name="task_alt" size="48px" color="positive" class="q-mb-sm opacity-80" />
-              <div class="text-subtitle1 text-weight-bold text-slate-700">Nessun compito in sospeso</div>
-              <div class="text-caption text-slate-500">Sei in pari con tutte le consegne e le attività di studio!</div>
+              <div class="text-subtitle1 text-weight-bold text-slate-700">
+                {{ $t('dashboardPage.noPendingHomework') || 'Nessun compito in sospeso' }}
+              </div>
+              <div class="text-caption text-slate-500">
+                {{ $t('dashboardPage.allCaughtUp') || 'Sei in pari con tutte le consegne e le attività di studio!' }}
+              </div>
             </div>
           </q-card-section>
         </q-card>
@@ -723,10 +727,14 @@ const getDueRelativeText = (dateStr) => {
     const now = new Date()
     now.setHours(0, 0, 0, 0)
     const diffDays = Math.round((target - now) / (1000 * 60 * 60 * 24))
-    if (diffDays === 0) return 'Oggi'
-    if (diffDays === 1) return 'Domani'
-    if (diffDays > 1 && diffDays <= 7) return `Tra ${diffDays} giorni`
-    return target.toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })
+    if (diffDays === 0) return t('dashboardPage.dueToday') || 'Oggi'
+    if (diffDays === 1) return t('dashboardPage.dueTomorrow') || 'Domani'
+    if (diffDays > 1 && diffDays <= 7) return t('dashboardPage.dueInDays', { days: diffDays }) || `Tra ${diffDays} giorni`
+    try {
+        return target.toLocaleDateString(currentLocale.value || 'it-IT', { day: '2-digit', month: 'short' })
+    } catch {
+        return target.toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })
+    }
 }
 
 const getDueRelativeColor = (dateStr) => {
@@ -746,7 +754,11 @@ const formatDateOnly = (dateString) => {
     if (!dateString) return '-'
     const d = new Date(dateString)
     if (isNaN(d.getTime())) return dateString
-    return d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    try {
+        return d.toLocaleDateString(currentLocale.value || 'it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    } catch {
+        return d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    }
 }
 
 const getEventIcon = (type) => {

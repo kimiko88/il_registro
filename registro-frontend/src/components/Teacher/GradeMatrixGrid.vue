@@ -1,12 +1,15 @@
 <template>
-  <q-card class="rounded-xl shadow-xs border bg-white">
+  <q-card
+    class="rounded-xl shadow-xs border"
+    :class="$q.dark.isActive ? 'bg-dark border-grey-8 text-white' : 'bg-white text-slate-800'"
+  >
     <q-card-section class="row items-center justify-between q-pb-sm">
       <div>
-        <div class="text-h6 text-weight-bold text-slate-800 row items-center">
+        <div class="text-h6 text-weight-bold row items-center" :class="$q.dark.isActive ? 'text-white' : 'text-slate-800'">
           <q-icon name="grid_on" color="primary" class="q-mr-sm" />
           {{ t('gradesPage.matrixViewTitle') || 'Inserimento Rapido Voti in Griglia (Matrix View)' }}
         </div>
-        <div class="text-caption text-slate-500">
+        <div class="text-caption" :class="$q.dark.isActive ? 'text-grey-4' : 'text-slate-500'">
           {{ t('gradesPage.matrixViewKbdHint') || 'Usa TAB, INVIO o le FRECCE per spostarti velocemente tra gli studenti' }}
         </div>
       </div>
@@ -30,18 +33,26 @@
       <div class="table-responsive">
         <table class="matrix-table full-width">
           <thead>
-            <tr class="bg-slate-100 text-slate-700 text-left">
+            <tr
+              class="text-left"
+              :class="$q.dark.isActive ? 'bg-grey-9 text-grey-3' : 'bg-slate-100 text-slate-700'"
+            >
               <th class="q-pa-sm" style="width: 40px">#</th>
               <th class="q-pa-sm">{{ t('competenciesPage.student') || 'Alunno' }}</th>
-              <th class="q-pa-sm" style="width: 140px">{{ t('classRegister.tableHeaderGrade') || 'Voto (1-10)' }}</th>
+              <th class="q-pa-sm" style="width: 150px">{{ t('classRegister.tableHeaderGrade') || 'Voto (1-10)' }}</th>
               <th class="q-pa-sm" style="width: 220px">{{ t('gradesPage.besDsaMeasures') || 'Misure BES / DSA' }}</th>
               <th class="q-pa-sm">{{ t('classRegister.tableHeaderGradeNotes') || 'Note / Descrizione' }}</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(student, idx) in students" :key="student.id" class="border-b hover:bg-slate-50">
-              <td class="q-pa-sm text-grey-6 text-weight-bold">{{ idx + 1 }}</td>
-              <td class="q-pa-sm text-weight-bold text-slate-800">
+            <tr
+              v-for="(student, idx) in students"
+              :key="student.id"
+              class="border-b"
+              :class="$q.dark.isActive ? 'hover:bg-grey-8 border-grey-8' : 'hover:bg-slate-50 border-slate-200'"
+            >
+              <td class="q-pa-sm text-weight-bold" :class="$q.dark.isActive ? 'text-grey-5' : 'text-grey-6'">{{ idx + 1 }}</td>
+              <td class="q-pa-sm text-weight-bold" :class="$q.dark.isActive ? 'text-white' : 'text-slate-800'">
                 {{ student.last_name }} {{ student.first_name }}
               </td>
               <td class="q-pa-sm">
@@ -49,15 +60,31 @@
                   v-model.number="student.grade_value"
                   type="number"
                   step="0.25"
-                  min="1" max="10"
-                  dense outlined
-                  class="bg-white text-weight-bold text-center"
-                  input-class="text-weight-bold text-primary text-center"
+                  min="1"
+                  max="10"
+                  dense
+                  outlined
+                  class="text-weight-bold text-center"
+                  :class="$q.dark.isActive ? 'bg-grey-9' : 'bg-white'"
+                  :input-class="isGradeInvalid(student.grade_value) ? 'text-weight-bold text-negative text-center' : 'text-weight-bold text-primary text-center'"
+                  :rules="[
+                    val => val === null || val === undefined || val === '' ||
+                      (!isNaN(val) && Number(val) >= 1 && Number(val) <= 10) ||
+                      (t('gradesPage.gradeRuleError') || '1-10')
+                  ]"
+                  lazy-rules
+                  hide-bottom-space
                   :ref="el => inputRefs[idx] = el"
                   @keydown.enter.prevent="focusNext(idx)"
                   @keydown.down.prevent="focusNext(idx)"
                   @keydown.up.prevent="focusPrev(idx)"
-                />
+                >
+                  <template v-if="isGradeInvalid(student.grade_value)" #append>
+                    <q-icon name="warning" color="negative" size="xs">
+                      <q-tooltip class="bg-negative">{{ t('gradesPage.gradeRuleError') || 'Il voto deve essere compreso tra 1 e 10' }}</q-tooltip>
+                    </q-icon>
+                  </template>
+                </q-input>
               </td>
               <td class="q-pa-sm">
                 <CompensativeMeasuresSelector v-model="student.compensative_measures" />
@@ -65,9 +92,10 @@
               <td class="q-pa-sm">
                 <q-input
                   v-model="student.notes"
-                  dense outlined
+                  dense
+                  outlined
                   :placeholder="t('common.optionalNotes') || 'Note facoltative'"
-                  class="bg-white"
+                  :class="$q.dark.isActive ? 'bg-grey-9' : 'bg-white'"
                 />
               </td>
             </tr>
@@ -83,6 +111,7 @@ import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
 import api from '@/services/api'
+import { useOfflineSync } from '@/composables/useOfflineSync'
 import CompensativeMeasuresSelector from './CompensativeMeasuresSelector.vue'
 
 const { t } = useI18n()
@@ -103,10 +132,17 @@ const props = defineProps({
 
 const emit = defineEmits(['saved'])
 const $q = useQuasar()
+const { executeWithOfflineQueue } = useOfflineSync()
 
 const saving = ref(false)
 const inputRefs = ref([])
 const students = ref([])
+
+function isGradeInvalid(val) {
+  if (val === null || val === undefined || val === '') return false
+  const num = Number(val)
+  return isNaN(num) || num < 1 || num > 10
+}
 
 watch(() => props.studentsList, (val) => {
   students.value = (val || []).map(s => ({
@@ -138,6 +174,16 @@ async function saveAllGrades() {
     return
   }
 
+  // Pre-save range check (1 - 10)
+  const hasInvalid = gradesToSave.some(s => isGradeInvalid(s.grade_value))
+  if (hasInvalid) {
+    $q.notify({
+      type: 'warning',
+      message: t('gradesPage.gradeRuleError') || 'Tutti i voti inseriti devono essere compresi tra 1 e 10'
+    })
+    return
+  }
+
   saving.value = true
   try {
     const payload = {
@@ -147,15 +193,20 @@ async function saveAllGrades() {
       date: new Date().toISOString().split('T')[0],
       grades: gradesToSave.map(s => ({
         student_id: s.id,
-        grade_value: s.grade_value,
+        grade_value: Number(s.grade_value),
         description: s.notes || (t('gradesPage.matrixGradeDesc') || 'Valutazione in griglia'),
         compensative_measures: s.compensative_measures
       }))
     }
-    await api.post('/grades/bulk', payload)
-    $q.notify({ type: 'positive', message: t('common.success') })
+    const res = await executeWithOfflineQueue(
+      { url: '/grades/bulk', method: 'post', data: payload },
+      { title: t('gradesPage.saveAllGrades') || 'Salvataggio voti griglia' }
+    )
+    if (!res?.offline && !res?.enqueued) {
+      $q.notify({ type: 'positive', message: t('common.success') })
+    }
     emit('saved')
-  } catch (err) {
+  } catch {
     $q.notify({ type: 'negative', message: t('common.error') })
   } finally {
     saving.value = false
@@ -168,7 +219,11 @@ async function saveAllGrades() {
   border-collapse: collapse;
 }
 .matrix-table th, .matrix-table td {
-  border: 1px solid #e2e8f0;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+body.body--dark .matrix-table th,
+body.body--dark .matrix-table td {
+  border: 1px solid rgba(71, 85, 105, 0.6);
 }
 kbd {
   font-size: 11px;

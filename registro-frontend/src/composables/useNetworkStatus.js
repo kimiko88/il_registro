@@ -1,4 +1,4 @@
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, getCurrentInstance } from 'vue'
 
 const isOnline = ref(typeof navigator !== 'undefined' ? navigator.onLine : true)
 const wasOffline = ref(false)
@@ -22,9 +22,13 @@ function initNetworkListeners() {
 }
 
 export function useNetworkStatus() {
-    onMounted(() => {
+    if (getCurrentInstance()) {
+        onMounted(() => {
+            initNetworkListeners()
+        })
+    } else {
         initNetworkListeners()
-    })
+    }
 
     return {
         isOnline,

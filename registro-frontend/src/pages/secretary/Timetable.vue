@@ -1,13 +1,13 @@
 <template>
-  <q-page padding class="bg-slate-50 min-h-screen">
+  <q-page padding class="min-h-screen" :class="$q.dark.isActive ? 'bg-dark text-white' : 'bg-slate-50 text-slate-800'">
     <!-- Top Header -->
     <div class="row items-center justify-between q-mb-lg gap-4">
       <div>
-        <h1 class="text-h4 text-weight-bold text-slate-800 q-my-none row items-center gap-2">
+        <h1 class="text-h4 text-weight-bold q-my-none row items-center gap-2" :class="$q.dark.isActive ? 'text-white' : 'text-slate-800'">
           <q-icon name="schedule" color="primary" size="36px" />
           {{ t('timetablePage.title') || 'Orario Scolastico & Cattedre' }}
         </h1>
-        <p class="text-subtitle1 text-slate-500 q-mt-xs q-mb-none">
+        <p class="text-subtitle1 q-mt-xs q-mb-none" :class="$q.dark.isActive ? 'text-grey-4' : 'text-slate-500'">
           {{ t('timetablePage.subtitle') || 'Gestisci l\'orario delle lezioni per classe o consulta l\'orario settimanale dei singoli docenti.' }}
         </p>
       </div>
@@ -19,7 +19,8 @@
           flat
           dense
           no-caps
-          class="bg-slate-200 rounded-xl q-pa-xs border border-slate-300 shadow-xs"
+          class="rounded-xl q-pa-xs shadow-xs"
+          :class="$q.dark.isActive ? 'bg-grey-9 border border-grey-7 text-white' : 'bg-slate-200 border border-slate-300'"
           :options="[
             { label: t('timetablePage.classSchedule') || 'Orario per Classe', value: 'class', icon: 'groups' },
             { label: t('timetablePage.teacherSchedule') || 'Orario per Docente', value: 'teacher', icon: 'person' }
@@ -63,7 +64,7 @@
     </div>
 
     <!-- Filters Bar -->
-    <q-card flat bordered class="rounded-2xl bg-white q-pa-md q-mb-lg shadow-sm">
+    <q-card flat bordered class="rounded-2xl q-pa-md q-mb-lg shadow-sm" :class="$q.dark.isActive ? 'bg-dark border-grey-8' : 'bg-white'">
       <div class="row items-center q-col-gutter-md">
         <!-- Class Selector (Mode = Class) -->
         <div v-if="viewMode === 'class'" class="col-12 col-sm-6 col-md-4">
@@ -76,7 +77,7 @@
             label="Seleziona Classe *"
             outlined
             dense
-            bg-color="white"
+            :bg-color="$q.dark.isActive ? 'dark' : 'white'"
             class="rounded-lg"
           >
             <template v-slot:prepend>
@@ -96,7 +97,7 @@
             label="Seleziona Docente *"
             outlined
             dense
-            bg-color="white"
+            :bg-color="$q.dark.isActive ? 'dark' : 'white'"
             class="rounded-lg"
           >
             <template v-slot:prepend>
@@ -117,22 +118,22 @@
     </q-card>
 
     <!-- Main Content Area -->
-    <div v-if="loading" class="text-center q-pa-xl bg-white rounded-2xl border border-slate-200 shadow-sm">
+    <div v-if="loading" class="text-center q-pa-xl rounded-2xl border shadow-sm" :class="$q.dark.isActive ? 'bg-dark border-grey-8 text-grey-4' : 'bg-white border-slate-200 text-slate-500'">
       <q-spinner-dots color="primary" size="60px" />
-      <div class="text-slate-500 q-mt-md">Caricamento orario scolastico...</div>
+      <div class="q-mt-md" :class="$q.dark.isActive ? 'text-grey-4' : 'text-slate-500'">Caricamento orario scolastico...</div>
     </div>
 
     <!-- Mode: CLASS -->
     <div v-else-if="viewMode === 'class'">
-      <div v-if="!selectedClass" class="text-center q-pa-xl bg-white rounded-2xl border border-slate-200 shadow-sm text-slate-500">
+      <div v-if="!selectedClass" class="text-center q-pa-xl rounded-2xl border shadow-sm" :class="$q.dark.isActive ? 'bg-dark border-grey-8 text-grey-4' : 'bg-white border-slate-200 text-slate-500'">
         <q-icon name="touch_app" size="72px" class="q-mb-md opacity-30" />
-        <div class="text-h6 text-slate-700">Seleziona una Classe</div>
-        <div class="text-caption text-slate-400">Scegli una classe dal menu in alto per visualizzare o modificare l'orario delle lezioni.</div>
+        <div class="text-h6" :class="$q.dark.isActive ? 'text-white' : 'text-slate-700'">Seleziona una Classe</div>
+        <div class="text-caption" :class="$q.dark.isActive ? 'text-grey-4' : 'text-slate-400'">Scegli una classe dal menu in alto per visualizzare o modificare l'orario delle lezioni.</div>
       </div>
 
       <div v-else-if="isEditing">
-        <q-card flat bordered class="rounded-2xl bg-white q-pa-lg shadow-sm">
-          <div class="text-subtitle1 text-weight-bold text-slate-800 q-mb-md row items-center gap-2">
+        <q-card flat bordered class="rounded-2xl q-pa-lg shadow-sm" :class="$q.dark.isActive ? 'bg-dark border-grey-8' : 'bg-white'">
+          <div class="text-subtitle1 text-weight-bold q-mb-md row items-center gap-2" :class="$q.dark.isActive ? 'text-white' : 'text-slate-800'">
             <q-icon name="edit_calendar" color="primary" />
             Composizione Orario Settimanale - {{ currentClassInfo?.label || 'Classe' }}
           </div>
@@ -145,42 +146,42 @@
         </q-card>
       </div>
 
-      <div v-else-if="scheduleEntries.length === 0" class="text-center q-pa-xl bg-white rounded-2xl border border-slate-200 shadow-sm text-slate-500">
+      <div v-else-if="scheduleEntries.length === 0" class="text-center q-pa-xl rounded-2xl border shadow-sm" :class="$q.dark.isActive ? 'bg-dark border-grey-8 text-grey-4' : 'bg-white border-slate-200 text-slate-500'">
         <q-icon name="event_busy" size="72px" class="q-mb-md opacity-30 text-amber-500" />
-        <div class="text-h6 text-slate-700">Orario non ancora configurato</div>
-        <div class="text-caption text-slate-400 q-mb-lg">Non risulta un orario scolastico salvato per questa classe. Puoi configurarlo ora.</div>
+        <div class="text-h6" :class="$q.dark.isActive ? 'text-white' : 'text-slate-700'">Orario non ancora configurato</div>
+        <div class="text-caption q-mb-lg" :class="$q.dark.isActive ? 'text-grey-4' : 'text-slate-400'">Non risulta un orario scolastico salvato per questa classe. Puoi configurarlo ora.</div>
         <q-btn label="Configura Orario Ora" color="primary" icon="edit_calendar" no-caps class="rounded-xl q-px-lg shadow-xs" @click="isEditing = true" />
       </div>
 
       <!-- Class Timetable Read-Only Table -->
-      <q-card v-else flat bordered class="rounded-2xl bg-white overflow-hidden shadow-sm">
+      <q-card v-else flat bordered class="rounded-2xl overflow-hidden shadow-sm" :class="$q.dark.isActive ? 'bg-dark border-grey-8' : 'bg-white'">
         <div class="grid-scroll">
           <table class="timetable-grid">
             <thead>
-              <tr class="bg-slate-100 border-b border-slate-300">
-                <th class="hour-col py-3 text-center text-slate-700 font-bold text-xs uppercase tracking-wider border-r border-slate-300">Ora</th>
-                <th v-for="day in days" :key="day.value" class="day-col py-3 text-center text-slate-700 font-bold text-xs uppercase tracking-wider border-r border-slate-200">
+              <tr class="border-b" :class="$q.dark.isActive ? 'bg-grey-9 text-grey-3 border-grey-8' : 'bg-slate-100 border-slate-300'">
+                <th class="hour-col py-3 text-center font-bold text-xs uppercase tracking-wider border-r" :class="$q.dark.isActive ? 'text-grey-3 border-grey-8' : 'text-slate-700 border-slate-300'">Ora</th>
+                <th v-for="day in days" :key="day.value" class="day-col py-3 text-center font-bold text-xs uppercase tracking-wider border-r" :class="$q.dark.isActive ? 'text-grey-3 border-grey-8' : 'text-slate-700 border-slate-200'">
                   {{ day.label }}
                 </th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="hour in 8" :key="hour" class="border-b border-slate-200">
-                <td class="hour-cell font-bold text-center bg-slate-50 text-slate-700 border-r border-slate-300 py-2">{{ hour }}ª ora</td>
+              <tr v-for="hour in 8" :key="hour" class="border-b" :class="$q.dark.isActive ? 'border-grey-8' : 'border-slate-200'">
+                <td class="hour-cell font-bold text-center border-r py-2" :class="$q.dark.isActive ? 'bg-grey-9 text-grey-3 border-grey-8' : 'bg-slate-50 text-slate-700 border-slate-300'">{{ hour }}ª ora</td>
                 <td 
                   v-for="day in 6" 
                   :key="day" 
-                  class="schedule-cell p-2 border-r border-slate-200"
-                  :class="{ 'has-content': getCell(day, hour) }"
+                  class="schedule-cell p-2 border-r"
+                  :class="[{ 'has-content': getCell(day, hour) }, $q.dark.isActive ? 'border-grey-8' : 'border-slate-200']"
                 >
-                  <div v-if="getCell(day, hour)" class="cell-content p-2 rounded-xl bg-indigo-50/80 border border-indigo-200 shadow-2xs">
-                    <div class="text-subtitle2 text-weight-bold text-indigo-900 leading-tight">{{ getCell(day, hour).subject_name }}</div>
-                    <div class="text-caption text-weight-bold text-slate-700 mt-0.5">{{ getCell(day, hour).teacher_name || 'Docente non assegnato' }}</div>
-                    <div v-if="getCell(day, hour).room" class="text-caption text-slate-500 mt-0.5">
+                  <div v-if="getCell(day, hour)" class="cell-content p-2 rounded-xl border shadow-2xs" :class="$q.dark.isActive ? 'bg-indigo-10/70 border-indigo-7 text-white' : 'bg-indigo-50/80 border-indigo-200'">
+                    <div class="text-subtitle2 text-weight-bold leading-tight" :class="$q.dark.isActive ? 'text-indigo-2' : 'text-indigo-900'">{{ getCell(day, hour).subject_name }}</div>
+                    <div class="text-caption text-weight-bold mt-0.5" :class="$q.dark.isActive ? 'text-grey-3' : 'text-slate-700'">{{ getCell(day, hour).teacher_name || 'Docente non assegnato' }}</div>
+                    <div v-if="getCell(day, hour).room" class="text-caption mt-0.5" :class="$q.dark.isActive ? 'text-grey-4' : 'text-slate-500'">
                       <q-icon name="room" size="xs" class="q-mr-xs" />Aula: {{ getCell(day, hour).room }}
                     </div>
                   </div>
-                  <div v-else class="empty-cell text-center text-slate-300 text-caption">-</div>
+                  <div v-else class="empty-cell text-center text-caption" :class="$q.dark.isActive ? 'text-grey-6' : 'text-slate-300'">-</div>
                 </td>
               </tr>
             </tbody>
@@ -191,15 +192,15 @@
 
     <!-- Mode: TEACHER -->
     <div v-else-if="viewMode === 'teacher'">
-      <div v-if="!selectedTeacher" class="text-center q-pa-xl bg-white rounded-2xl border border-slate-200 shadow-sm text-slate-500">
+      <div v-if="!selectedTeacher" class="text-center q-pa-xl rounded-2xl border shadow-sm" :class="$q.dark.isActive ? 'bg-dark border-grey-8 text-grey-4' : 'bg-white border-slate-200 text-slate-500'">
         <q-icon name="badge" size="72px" class="q-mb-md opacity-30" />
-        <div class="text-h6 text-slate-700">Seleziona un Docente</div>
-        <div class="text-caption text-slate-400">Scegli un docente dal menu in alto per visualizzare o modificare il suo orario completo di insegnamento.</div>
+        <div class="text-h6" :class="$q.dark.isActive ? 'text-white' : 'text-slate-700'">Seleziona un Docente</div>
+        <div class="text-caption" :class="$q.dark.isActive ? 'text-grey-4' : 'text-slate-400'">Scegli un docente dal menu in alto per visualizzare o modificare il suo orario completo di insegnamento.</div>
       </div>
 
       <div v-else-if="isTeacherEditing">
-        <q-card flat bordered class="rounded-2xl bg-white q-pa-lg shadow-sm">
-          <div class="text-subtitle1 text-weight-bold text-slate-800 q-mb-md row items-center gap-2">
+        <q-card flat bordered class="rounded-2xl q-pa-lg shadow-sm" :class="$q.dark.isActive ? 'bg-dark border-grey-8' : 'bg-white'">
+          <div class="text-subtitle1 text-weight-bold q-mb-md row items-center gap-2" :class="$q.dark.isActive ? 'text-white' : 'text-slate-800'">
             <q-icon name="edit_calendar" color="positive" />
             Composizione Orario Docente - {{ teacherOptions.find(t => t.id === selectedTeacher)?.label }}
           </div>
@@ -213,42 +214,42 @@
         </q-card>
       </div>
 
-      <div v-else-if="teacherScheduleEntries.length === 0" class="text-center q-pa-xl bg-white rounded-2xl border border-slate-200 shadow-sm text-slate-500">
+      <div v-else-if="teacherScheduleEntries.length === 0" class="text-center q-pa-xl rounded-2xl border shadow-sm" :class="$q.dark.isActive ? 'bg-dark border-grey-8 text-grey-4' : 'bg-white border-slate-200 text-slate-500'">
         <q-icon name="event_busy" size="72px" class="q-mb-md opacity-30 text-amber-500" />
-        <div class="text-h6 text-slate-700">Nessuna lezione a orario</div>
-        <div class="text-caption text-slate-400 q-mb-lg">Non risultano lezioni assegnate a questo docente negli orari delle classi. Puoi configurarle ora.</div>
+        <div class="text-h6" :class="$q.dark.isActive ? 'text-white' : 'text-slate-700'">Nessuna lezione a orario</div>
+        <div class="text-caption q-mb-lg" :class="$q.dark.isActive ? 'text-grey-4' : 'text-slate-400'">Non risultano lezioni assegnate a questo docente negli orari delle classi. Puoi configurarle ora.</div>
         <q-btn label="Configura Orario Docente Ora" color="positive" icon="edit_calendar" no-caps class="rounded-xl q-px-lg shadow-xs font-bold" @click="isTeacherEditing = true" />
       </div>
 
       <!-- Teacher Timetable Read-Only Table -->
-      <q-card v-else flat bordered class="rounded-2xl bg-white overflow-hidden shadow-sm">
+      <q-card v-else flat bordered class="rounded-2xl overflow-hidden shadow-sm" :class="$q.dark.isActive ? 'bg-dark border-grey-8' : 'bg-white'">
         <div class="grid-scroll">
           <table class="timetable-grid">
             <thead>
-              <tr class="bg-slate-100 border-b border-slate-300">
-                <th class="hour-col py-3 text-center text-slate-700 font-bold text-xs uppercase tracking-wider border-r border-slate-300">Ora</th>
-                <th v-for="day in days" :key="day.value" class="day-col py-3 text-center text-slate-700 font-bold text-xs uppercase tracking-wider border-r border-slate-200">
+              <tr class="border-b" :class="$q.dark.isActive ? 'bg-grey-9 text-grey-3 border-grey-8' : 'bg-slate-100 border-slate-300'">
+                <th class="hour-col py-3 text-center font-bold text-xs uppercase tracking-wider border-r" :class="$q.dark.isActive ? 'text-grey-3 border-grey-8' : 'text-slate-700 border-slate-300'">Ora</th>
+                <th v-for="day in days" :key="day.value" class="day-col py-3 text-center font-bold text-xs uppercase tracking-wider border-r" :class="$q.dark.isActive ? 'text-grey-3 border-grey-8' : 'text-slate-700 border-slate-200'">
                   {{ day.label }}
                 </th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="hour in 8" :key="hour" class="border-b border-slate-200">
-                <td class="hour-cell font-bold text-center bg-slate-50 text-slate-700 border-r border-slate-300 py-2">{{ hour }}ª ora</td>
+              <tr v-for="hour in 8" :key="hour" class="border-b" :class="$q.dark.isActive ? 'border-grey-8' : 'border-slate-200'">
+                <td class="hour-cell font-bold text-center border-r py-2" :class="$q.dark.isActive ? 'bg-grey-9 text-grey-3 border-grey-8' : 'bg-slate-50 text-slate-700 border-slate-300'">{{ hour }}ª ora</td>
                 <td 
                   v-for="day in 6" 
                   :key="day" 
-                  class="schedule-cell p-2 border-r border-slate-200"
-                  :class="{ 'has-content': getTeacherCell(day, hour) }"
+                  class="schedule-cell p-2 border-r"
+                  :class="[{ 'has-content': getTeacherCell(day, hour) }, $q.dark.isActive ? 'border-grey-8' : 'border-slate-200']"
                 >
-                  <div v-if="getTeacherCell(day, hour)" class="cell-content p-2 rounded-xl bg-emerald-50/80 border border-emerald-200 shadow-2xs">
-                    <div class="text-subtitle2 text-weight-bold text-emerald-900 leading-tight">{{ getTeacherCell(day, hour).subject_name }}</div>
-                    <div class="text-caption text-weight-bold text-slate-700 mt-0.5">Classe: {{ getTeacherCellClassName(getTeacherCell(day, hour)) }}</div>
-                    <div v-if="getTeacherCell(day, hour).room" class="text-caption text-slate-500 mt-0.5">
+                  <div v-if="getTeacherCell(day, hour)" class="cell-content p-2 rounded-xl border shadow-2xs" :class="$q.dark.isActive ? 'bg-emerald-10/70 border-emerald-7 text-white' : 'bg-emerald-50/80 border-emerald-200'">
+                    <div class="text-subtitle2 text-weight-bold leading-tight" :class="$q.dark.isActive ? 'text-emerald-2' : 'text-emerald-900'">{{ getTeacherCell(day, hour).subject_name }}</div>
+                    <div class="text-caption text-weight-bold mt-0.5" :class="$q.dark.isActive ? 'text-grey-3' : 'text-slate-700'">Classe: {{ getTeacherCellClassName(getTeacherCell(day, hour)) }}</div>
+                    <div v-if="getTeacherCell(day, hour).room" class="text-caption mt-0.5" :class="$q.dark.isActive ? 'text-grey-4' : 'text-slate-500'">
                       <q-icon name="room" size="xs" class="q-mr-xs" />Aula: {{ getTeacherCell(day, hour).room }}
                     </div>
                   </div>
-                  <div v-else class="empty-cell text-center text-slate-300 text-caption">-</div>
+                  <div v-else class="empty-cell text-center text-caption" :class="$q.dark.isActive ? 'text-grey-6' : 'text-slate-300'">-</div>
                 </td>
               </tr>
             </tbody>
@@ -259,17 +260,17 @@
 
     <!-- Modal Gestione Cattedre / Materie della classe -->
     <q-dialog v-model="showSubjectsDialog">
-      <q-card style="width: min(900px, 95vw); max-height: 90vh;" class="rounded-2xl overflow-hidden shadow-24 bg-white column">
+      <q-card style="width: min(900px, 95vw); max-height: 90vh;" class="rounded-2xl overflow-hidden shadow-24 column" :class="$q.dark.isActive ? 'bg-dark text-white' : 'bg-white text-slate-800'">
         <q-card-section class="bg-indigo-7 text-white row items-center justify-between q-pa-lg col-auto">
           <div class="text-h6 text-weight-bold">Cattedre &amp; Materie - {{ currentClassInfo?.label }}</div>
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pa-lg scroll col" style="flex: 1; overflow-y: auto;">
           <div class="row q-col-gutter-lg">
             <!-- Left: Existing Assignments -->
             <div class="col-12 col-md-7">
-              <div class="text-subtitle2 font-bold text-slate-700 q-mb-sm">Materie e Docenti Assegnati</div>
+              <div class="text-subtitle2 font-bold q-mb-sm" :class="$q.dark.isActive ? 'text-grey-3' : 'text-slate-700'">Materie e Docenti Assegnati</div>
               <q-table
                 :rows="classAssignments"
                 :columns="assignmentColumns"
@@ -289,8 +290,8 @@
 
             <!-- Right: Add New Assignment -->
             <div class="col-12 col-md-5">
-              <q-card flat class="rounded-xl bg-slate-50 q-pa-md border border-slate-200">
-                <div class="text-subtitle2 font-bold text-slate-800 q-mb-md">Assegna Cattedra a Classe</div>
+              <q-card flat class="rounded-xl q-pa-md border" :class="$q.dark.isActive ? 'bg-grey-9 border-grey-8' : 'bg-slate-50 border-slate-200'">
+                <div class="text-subtitle2 font-bold q-mb-md" :class="$q.dark.isActive ? 'text-grey-2' : 'text-slate-800'">Assegna Cattedra a Classe</div>
                 <q-form @submit="addAssignment" class="q-gutter-y-md">
                   <q-select
                     v-model="assignForm.subject_id"

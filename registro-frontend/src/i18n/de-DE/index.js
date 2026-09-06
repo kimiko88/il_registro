@@ -68,7 +68,27 @@ export default {
     "viewAll": "Alle Anzeigen",
     "noStudentsFound": "Keine Schüler gefunden",
     "readOnlySaveBtn": "Speichern deaktiviert (Nur-Lese-Modus)",
-    "children": "Verknüpfte Kinder"
+    "children": "Verknüpfte Kinder",
+    "onlineSynced": "Online - Daten synchronisiert",
+    "offlineSaved": "Offline - Änderungen lokal gespeichert",
+    "class": "Klasse",
+    "student": "Schüler",
+    "attendance": "Anwesenheit",
+    "conduct": "Betragen",
+    "outcome": "Ergebnis",
+    "average": "Durchschnitt",
+    "approved": "Genehmigt",
+    "pending": "Ausstehend",
+    "completed": "Abgeschlossen",
+    "create": "Erstellen",
+    "update": "Aktualisieren",
+    "required": "Pflichtfeld",
+    "reserved": "Vertraulich",
+    "saved": "Erfolgreich gespeichert",
+    "schoolYear": "Schuljahr",
+    "subject": "Fach",
+    "title": "Titel",
+    "warning": "Warnung"
   },
   "notFound": {
     "title": "Seite nicht gefunden",
@@ -206,9 +226,28 @@ export default {
     "absencePercentage": "Fehlzeitenquote",
     "monthlyBreakdown": "Monatliche Anwesenheitsübersicht",
     "month": "Monat",
-    "unjustifiedList": "Unentschuldigte Fehlzeiten und Verspätungen"
+    "unjustifiedList": "Unentschuldigte Fehlzeiten und Verspätungen",
+    "outOfClass": "Außerhalb des Klassenzimmers",
+    "activityType": "Aktivitätsart",
+    "duration": "Dauer (Stunden)",
+    "editLesson": "Lektion bearbeiten",
+    "newLesson": "Neue Lektion",
+    "hour": "Unterrichtsstunde",
+    "lessonTopic": "Thema der Lektion",
+    "lessonType": "Unterrichtsart",
+    "subject": "Fach"
   },
   "dashboardPage": {
+    "viewYourHomework": "Deine Aufgaben & Aktivitäten ansehen",
+    "upcomingHomework": "Anstehende Hausaufgaben & Fristen",
+    "upcomingHomeworkSub": "Organisiere dein Lernen: Hausaufgaben, Tests und Abgaben",
+    "allHomework": "Alle Hausaufgaben",
+    "teacherLabel": "Lehrkraft",
+    "noPendingHomework": "Keine ausstehenden Aufgaben",
+    "allCaughtUp": "Du bist mit allen Aufgaben auf dem neuesten Stand!",
+    "dueToday": "Heute",
+    "dueTomorrow": "Morgen",
+    "dueInDays": "In {days} Tagen",
     "greetingMorning": "Guten Morgen",
     "greetingAfternoon": "Guten Tag",
     "greetingEvening": "Guten Abend",
@@ -257,7 +296,10 @@ export default {
     "recentGrades": "Aktuelle Noten",
     "noChildren": "Keine verknüpften Kinder",
     "systemStatus": "Systemstatus",
-    "syncedNow": "Gerade synchronisiert"
+    "syncedNow": "Gerade synchronisiert",
+    "online": "Online",
+    "notifications": "Benachrichtigungen",
+    "teacher": "Lehrkraft"
   },
   "agendaPage": {
     "title": "Agenda & Unterrichtskalender",
@@ -295,9 +337,48 @@ export default {
     "detailsOf": "Details vom",
     "lessonsHeld": "Gehaltene Unterrichtsstunden",
     "noLessons": "Kein Unterricht an diesem Datum eingetragen.",
-    "noDueHomework": "Keine Hausaufgaben mit Abgabe an diesem Datum."
+    "noDueHomework": "Keine Hausaufgaben mit Abgabe an diesem Datum.",
+    "thisWeek": "Diese Woche",
+    "monthView": "Monatsansicht",
+    "weekView": "Wochenansicht",
+    "dayView": "Tagesansicht",
+    "quickNew": "+ Neu",
+    "moreCount": "+{count} weitere",
+    "eventTitle": "Termintitel *",
+    "eventDescription": "Beschreibung / Details",
+    "eventType": "Termintyp *",
+    "targetClass": "Zielklasse *",
+    "eventDate": "Datum *",
+    "startTime": "Beginn",
+    "endTime": "Ende",
+    "saveChanges": "Änderungen Speichern",
+    "createEvent": "Termin Erstellen",
+    "deleteEvent": "Termin Löschen",
+    "weekTitle": "Woche",
+    "confirmDeleteTitle": "Termin Löschen",
+    "confirmDeleteMsg": "Möchten Sie diesen Termin wirklich aus dem Kalender löschen?",
+    "eventCreated": "Termin erfolgreich erstellt",
+    "eventUpdated": "Termin erfolgreich aktualisiert",
+    "eventDeleted": "Termin erfolgreich entfernt",
+    "allDay": "Ganztägig"
   },
   "usersPage": {
+    "importTitle": "Benutzer-Import per CSV",
+    "stepConfig": "Konfiguration",
+    "stepUpload": "Datei-Upload",
+    "stepResult": "Ergebnis",
+    "userTypeToImport": "Zu importierender Benutzertyp",
+    "sendWelcomeEmail": "Willkommens-E-Mail mit temporären Zugangsdaten senden",
+    "downloadTemplate": "Beispiel-CSV-Vorlage herunterladen",
+    "selectCsvFile": "CSV-Datei auswählen (.csv max. 10 MB)",
+    "previewRowsTitle": "Vorschau der ersten 5 Zeilen",
+    "runImport": "Import ausführen",
+    "importSuccessCount": "{count} Benutzer erfolgreich importiert!",
+    "skippedRowsCount": "{count} Zeilen übersprungen oder ungültig.",
+    "errorsEncountered": "Aufgetretene Fehler",
+    "rowError": "Zeile {row}: {reason}",
+    "downloadErrorReport": "Fehlerbericht herunterladen",
+    "closeAndUpdate": "Schließen und Liste aktualisieren",
     "title": "Benutzerverwaltung",
     "searchPlaceholder": "Nach Name, E-Mail, ID suchen...",
     "newUser": "Neuer Benutzer",
@@ -318,7 +399,9 @@ export default {
     "resetPassword": "Passwort zurücksetzen",
     "manageSubjects": "Fächer zuweisen",
     "deleteAccount": "Konto löschen",
-    "noUsersFound": "Keine Benutzer gefunden"
+    "noUsersFound": "Keine Benutzer gefunden",
+    "importError": "Fehler beim CSV-Import",
+    "targetClass": "Zielklasse"
   },
   "supportPage": {
     "title": "Support-Center & FAQ",
@@ -412,7 +495,8 @@ export default {
     "tabGrades": "Meine Noten",
     "homework": "Hausaufgaben",
     "documents": "Dokumentenakte & Urkunden",
-    "schoolManagement": "Schulverwaltung"
+    "schoolManagement": "Schulverwaltung",
+    "student": "Schüler/in"
   },
   "udaPage": {
     "subjectLabel": "Fach *",
@@ -518,6 +602,32 @@ export default {
     "levelD": "D - Anfangsstufe"
   },
   "gradesPage": {
+    "createTestTitle": "Neue Klassenarbeit erstellen",
+    "editTestTitle": "Klassenarbeit im Block bearbeiten",
+    "testDetails": "Test-Details",
+    "testTitle": "Test-Titel",
+    "teacherNotes": "Notizen für Lehrkraft (Intern)",
+    "parentNotes": "Notizen für Eltern (Sichtbar)",
+    "studentGrades": "Schülernoten",
+    "insertedCount": "eingetragen",
+    "allAbsentMarked": "Alle Schüler als abwesend markiert",
+    "saveTestAndGrades": "Arbeit und Noten speichern",
+    "saveEditTest": "Änderungen speichern",
+    "overlappingWarning": "Achtung: Die Klasse hat am {date} bereits {count} Arbeiten geplant! (Empfohlen max: 2)",
+    "testSavedSuccess": "Arbeit „{title}“ und {count} Noten erfolgreich gespeichert!",
+    "testEditSuccess": "Arbeit erfolgreich geändert!",
+    "testSaveError": "Fehler beim Speichern der Arbeit",
+    "testEditError": "Fehler beim Bearbeiten der Arbeit",
+    "deleteTestConfirmTitle": "Löschen der Arbeit bestätigen",
+    "deleteTestConfirmMsg": "Möchten Sie die Arbeit „{title}“ wirklich löschen? {count} verknüpfte Noten werden unwiderruflich gelöscht.",
+    "deleteTestSuccess": "Arbeit erfolgreich gelöscht!",
+    "deleteTestError": "Fehler beim Löschen der Arbeit",
+    "noPermissionNotOwner": "Sie haben keine Berechtigung, Arbeiten in einer nicht zugewiesenen Klasse zu verwalten",
+    "testsHistory": "Klassenarbeiten-Übersicht",
+    "noTestsFound": "Keine Arbeiten gefunden",
+    "noTestsFoundDesc": "Für dieses Fach sind noch keine Arbeiten registriert.",
+    "createFirstTest": "Erste Arbeit erstellen",
+    "selectClassSub": "Wählen Sie eine Klasse aus dem oberen Menü, um auf das Notenbuch zuzugreifen:",
     "cannotEditOtherTeacherGrade": "Sie können keine Noten anderer Lehrkräfte bearbeiten",
     "sharedGradesCaption": "Mit der Klasse geteilte Noten",
     "confirmDeleteGrade": "Möchten Sie diese Note wirklich löschen?",
@@ -607,7 +717,17 @@ export default {
     "sufficient": "Bestanden",
     "insufficient": "Nicht bestanden",
     "absent": "Abwesend",
-    "subject": "Fach"
+    "subject": "Fach",
+    "selectClassPrompt": "Wählen Sie eine Klasse",
+    "evalType": "Bewertungsart",
+    "markAllAbsent": "Alle als abwesend markieren",
+    "noStudentsInClass": "Keine Schüler für diese Klasse geladen",
+    "testDate": "Prüfungsdatum",
+    "types": {
+      "written": "Schriftlich",
+      "oral": "Mündlich",
+      "practical": "Praktisch"
+    }
   },
   "didacticsPage": {
     "title": "Unterrichtsmaterialien & Ressourcen",
@@ -688,7 +808,16 @@ export default {
       "equivalentTest": "Gleichwertige Prüfung",
       "textToSpeech": "Sprachsynthese",
       "conceptMaps": "Mindmaps / Konzeptkarten"
-    }
+    },
+    "createFirst": "Ersten Plan erstellen",
+    "clinicalDiagnosis": "Klinische Diagnose (nur für Lehrkräfte)",
+    "restrictedFile": "Medizinischer Anhang (nur für Klassenlehrkräfte)",
+    "noneSpecified": "Keine angegeben",
+    "approvedFamily": "✓ Von Familie genehmigt",
+    "sharedPending": "Geteilt (ausstehend)",
+    "internalDraft": "Interner Entwurf",
+    "hideFromFamily": "Vor Familie verbergen",
+    "shareWithFamily": "Mit Familie teilen"
   },
   "rubricsPage": {
     "title": "Bewertungsrubriken für Kompetenzen",
@@ -920,7 +1049,10 @@ export default {
     "downloadStarted": "Download Dokument: {title}",
     "upload": "Dokument hochladen",
     "tableTitle": "Offizielle Dokumente",
-    "noDocs": "In diesem Bereich sind keine Dokumente vorhanden."
+    "noDocs": "In diesem Bereich sind keine Dokumente vorhanden.",
+    "certsDesc": "Automatisch erstellte Immatrikulations- und Anwesenheitsbescheinigungen.",
+    "downloading": "Wird heruntergeladen...",
+    "previewNotAvailable": "Vorschau offline nicht verfügbar."
   },
   "notesPage": {
     "title": "Eintragungen & Ordnungsmaßnahmen",
@@ -1193,7 +1325,8 @@ export default {
     "mfaCaption": "Zwei-Faktor-Authentifizierung (TOTP) für alle Mitarbeiter und Administratoren vorschreiben.",
     "minPasswordLength": "Mindestpasswortlänge",
     "sessionTimeout": "Sitzungs-Inaktivitäts-Timeout",
-    "maxLoginAttempts": "Fehlgeschlagene Anmeldeversuche"
+    "maxLoginAttempts": "Fehlgeschlagene Anmeldeversuche",
+    "general": "Allgemein"
   },
   "search": {
     "placeholder": "Suchen nach Schülern, Lehrern, Sekretariat, Klassen, Mitteilungen, Menüpunkten…",
@@ -1325,7 +1458,22 @@ export default {
       "q9": "Wie ändere ich Sprache und Dark Mode?",
       "a9": "Unter \"Einstellungen\" im Benutzermenü können Sie aus 9 Sprachen wählen und den Dunkelmodus oder die OpenDyslexic-Schriftart aktivieren.",
       "q10": "Wie kann ich eine kürzlich eingetragene Note widerrufen?",
-      "a10": "Nach jeder Eingabe erscheint unten ein Toast mit der Schaltfläche \"Rückgängig\" (15 Sek. aktiv). Danach direkt in der Zelle bearbeiten."
+      "a10": "Nach jeder Eingabe erscheint unten ein Toast mit der Schaltfläche \"Rückgängig\" (15 Sek. aktiv). Danach direkt in der Zelle bearbeiten.",
+      "scrutiny": {
+        "period1": "1. Halbjahr / Trimester",
+        "period2": "Schlussnotenkonferenz (2. Halbjahr)",
+        "deferredScrutiny": "Nachprüfungskonferenz / Schuldenabbau",
+        "deferredBannerTitle": "Sitzung zur Nachprüfungskonferenz aktiv",
+        "deferredBannerBody": "In dieser Sitzung kann über die Aufhebung der Urteilsaussetzung bei Schülern mit Nachprüfungen entschieden werden.",
+        "deferredModalTitle": "Nachprüfung: {name}",
+        "deferredModalSubtitle": "Bewertung von Nachprüfungen und Ausgleich von Defiziten",
+        "deferredNotes": "Protokoll / Anmerkungen zur Urteilsfindung",
+        "deferredSaved": "Ergebnis der Nachprüfungskonferenz erfolgreich gespeichert",
+        "deliberateDeferred": "Über Aussetzung entscheiden",
+        "notPromotedDebtsNotCleared": "Nicht versetzt (Defizite nicht ausgeglichen)",
+        "promotedDebtsCleared": "Versetzt (Defizite ausgeglichen)",
+        "closeConfirmMsg": "Sind Sie sicher, dass Sie die Notenkonferenz für die ausgewählte Klasse abschließen und sperren möchten? Dieser Vorgang ist endgültig."
+      }
     },
     "student": {
       "cat_grades": "Meine Noten",
@@ -2107,7 +2255,8 @@ export default {
     "documentsSubmitted": "Eingereichte Dokumente",
     "completeEnrollment": "Einschreibung abschließen",
     "enrollmentSuccess": "Einschreibung erfolgreich abgeschlossen!",
-    "studentFile": "Schülerstammblatt"
+    "studentFile": "Schülerstammblatt",
+    "title": "Schülerverzeichnis"
   },
   "classesPage": {
     "currentClass": "Aktuelle Klasse"
@@ -2219,7 +2368,16 @@ export default {
   "attendancePage": {
     "title": "Anwesenheit & Fehlzeiten",
     "subtitle": "Erfassung von Anwesenheit, Verspätungen und Entschuldigungen",
-    "tableTitle": "Anwesenheitsübersicht"
+    "tableTitle": "Anwesenheitsübersicht",
+    "justified": "Entschuldigt",
+    "parentManagedJustifications": "Entschuldigungen werden direkt von den Eltern verwaltet",
+    "requestJustification": "Entschuldigung anfordern",
+    "selectAbsence": "Zu entschuldigende Abwesenheit auswählen",
+    "timeDetail": "Zeitdetails",
+    "reason": "Grund",
+    "reasonFamily": "Familiäre Gründe",
+    "reasonHealth": "Gesundheitliche Gründe",
+    "warningAbsenceLimit": "Sie haben die Warngrenze für Fehlzeiten erreicht. Bitte regeln Sie Ihre Fehlzeiten rechtzeitig."
   },
   "reportCardPage": {
     "title": "Zeugnis & Schlussbewertung",
@@ -2413,7 +2571,8 @@ export default {
       "goalDescription": "Beschreibung",
       "expectedTerm": "Zielzeitraum",
       "status": "Status"
-    }
+    },
+    "noGoals": "Keine Förderplanziele eingetragen"
   },
   "generalMeeting": {
     "teacherQueueTitle": "Allgemeiner Elternsprechtag am Nachmittag",
@@ -2724,7 +2883,11 @@ export default {
   "offlineBanner": {
     "offlineText": "Keine Internetverbindung. Änderungen werden eventuell nicht gespeichert.",
     "offlineBadge": "OFFLINE",
-    "onlineText": "Internetverbindung wiederhergestellt."
+    "onlineText": "Internetverbindung wiederhergestellt.",
+    "pendingQueue": "Keine Internetverbindung. {count} lokale Änderungen in der Warteschlange für die Synchronisierung.",
+    "inQueue": "IN WARTESCHLANGE",
+    "syncedSuccess": "Verbindung wiederhergestellt: {count} Vorgänge erfolgreich synchronisiert.",
+    "enqueuedOffline": "Vorgang lokal gespeichert. Er wird automatisch synchronisiert, sobald Sie wieder online sind."
   },
   "inactivity": {
     "warningTitle": "Sitzung läuft ab",
@@ -2856,7 +3019,8 @@ export default {
     },
     "loadError": "Fehler beim Laden der Bescheinigungen",
     "generateSuccess": "Bescheinigung erfolgreich erstellt!",
-    "generateError": "Fehler beim Erstellen der Bescheinigung"
+    "generateError": "Fehler beim Erstellen der Bescheinigung",
+    "enrollmentCert": "Immatrikulationsbescheinigung"
   },
   "sidiExports": {
     "title": "Behördliche Datenübermittlung & Statistik",
@@ -3116,6 +3280,42 @@ export default {
     "notFound": "Seite nicht gefunden"
   },
   "secretaryClasses": {
+    "migrationTitle": "Schülermigration & Schuljahreswechsel",
+    "migrationSubtitle": "Klassenübergang, Versetzte, Wiederholer und Absolventen verwalten",
+    "migrationProcedure": "Verfahren zum Schuljahreswechsel",
+    "migrationProcedureDesc": "Wählen Sie das Quell-Schuljahr und das Ziel-Schuljahr aus. Konfigurieren Sie schnell den Status jedes Schülers (Versetzt, Wiederholer, Absolvent oder Gewechselt).",
+    "sourceYear": "Quelljahr (Ursprung)",
+    "targetYear": "Zieljahr (Neues Schuljahr)",
+    "filterByClass": "Nach Klasse filtern (oder alle Klassen)",
+    "allSourceClasses": "Alle Klassen des Quelljahres",
+    "studentsToProcess": "Zu bearbeitende Schüler",
+    "markAllPromoted": "Alle als Versetzt markieren",
+    "smartDefaults": "5. Klasse Abschluss / 1.-4. Versetzen",
+    "markAllRepeater": "Alle als Wiederholer markieren",
+    "loadingMigration": "Schüler laden und Zielklassen vorbereiten...",
+    "noStudentsFound": "Keine Schüler für die ausgewählten Kriterien gefunden.",
+    "currentClassLabel": "Aktuelle Klasse",
+    "actionPromoted": "Versetzt",
+    "actionRepeater": "Wiederholer",
+    "actionGraduated": "Absolvent",
+    "actionLeft": "Gewechselt",
+    "targetClassLabel": "Zielklasse",
+    "noClassUnassigned": "Keine Klasse (Nicht zugewiesen)",
+    "migrationSummaryTitle": "Zusammenfassung der Migration",
+    "promotedCount": "Versetzt",
+    "repeaterCount": "Wiederholer",
+    "graduatedCount": "Absolventen",
+    "leftCount": "Gewechselt / Ausgeschieden",
+    "btnConfigureStudents": "Weiter: Schüler konfigurieren",
+    "btnVerifySummary": "Weiter: Zusammenfassung prüfen",
+    "btnExecuteMigration": "Bestätigen & Migration ausführen",
+    "migrationSuccess": "Schuljahresmigration erfolgreich abgeschlossen!",
+    "migrationError": "Fehler bei der Ausführung der Migration",
+    "migrationLoadError": "Fehler beim Laden der Migrationsdaten",
+    "scheduleTitle": "Wochenstundenplan - Klasse",
+    "scheduleSaved": "Stundenplan erfolgreich gespeichert",
+    "scheduleSaveError": "Fehler beim Speichern des Stundenplans",
+    "scheduleLoadError": "Fehler beim Laden des Stundenplans",
     "newClass": "Neue Klasse",
     "editClass": "Klasse Bearbeiten",
     "createClass": "Klasse Anlegen",
@@ -3170,6 +3370,100 @@ export default {
     "subjectName": "Fachbezeichnung",
     "createSubject": "Fach Anlegen",
     "subjectCreated": "Fach angelegt",
-    "createSubjectError": "Fehler beim Anlegen des Fachs"
+    "createSubjectError": "Fehler beim Anlegen des Fachs",
+    "manageAssignments": "Fächer- und Lehrkraftverwaltung",
+    "manageStudents": "Schüler der Klasse verwalten"
+  },
+  "groupsPage": {
+    "title": "Verwaltung von Sprach- und Kombinationsgruppen",
+    "subtitle": "Gruppen aus Schülern mehrerer Klassen erstellen und verwalten",
+    "newGroup": "Neue Gruppe",
+    "createGroup": "Gruppe Erstellen",
+    "loading": "Gruppen werden geladen...",
+    "noGroups": "Keine Sprach- oder Kombinationsgruppe gefunden",
+    "noGroupsDesc": "Erstellen Sie Ihre erste Gruppe für klassenübergreifenden Unterricht",
+    "students": "Schüler",
+    "teacher": "Lehrkraft",
+    "academicYear": "Schuljahr",
+    "editGroup": "Gruppe Bearbeiten",
+    "deleteGroup": "Löschen",
+    "groupName": "Gruppenname",
+    "groupNamePlaceholder": "Gruppenname (z.B. Englisch B2 3A-3B)",
+    "description": "Beschreibung / Notizen",
+    "confirmDelete": "Löschen bestätigen",
+    "confirmDeleteDesc": "Möchten Sie diese Gruppe wirklich löschen?",
+    "groupDeleted": "Gruppe gelöscht",
+    "deleteError": "Fehler beim Löschen",
+    "groupSaved": "Gruppe erfolgreich aktualisiert",
+    "groupCreated": "Gruppe erfolgreich erstellt",
+    "save": "Speichern",
+    "create": "Erstellen",
+    "studentListTitle": "Schüler der Gruppe: {name}",
+    "noStudents": "Dieser Gruppe sind keine Schüler zugewiesen."
+  },
+  "scrutinyPage": {
+    "title": "Notenkonferenz & Nachprüfungen",
+    "subtitle": "Verwaltung von Endnoten, Lernrückständen und Fördermaßnahmen",
+    "closeScrutiny": "Konferenz Schließen",
+    "saveFinal": "Abschlussnoten Speichern",
+    "classCouncil": "Klassenkonferenz",
+    "notCoordinator": "Sie sind für diese Klassenkonferenz nicht als Koordinator eingeteilt.",
+    "selectClassPrompt": "Wählen Sie eine Klasse aus, um die Notenkonferenz zu starten.",
+    "deficiencyTitle": "Lernrückstände — {name}",
+    "deficiencySubtitle": "Dokumentation der aufzuholenden Lücken (sichtbar für Schüler und Eltern)",
+    "deficiencySubject": "Fach mit Rückstand",
+    "deficiencyTopics": "Themengebiete / Spezifische Lücken *",
+    "recoveryMode": "Fördermaßnahme",
+    "recoveryStatus": "Förderstatus",
+    "recoveryGrade": "Note der Nachprüfung",
+    "recoveryDate": "Datum der Nachprüfung",
+    "saveDeficiency": "Rückstand Speichern",
+    "noDeficiencies": "Keine Lernrückstände für diesen Schüler verzeichnet.",
+    "individualStudy": "Selbststudium",
+    "summerCourse": "Sommerförderkurs",
+    "helpDesk": "Lernförderung",
+    "toRecover": "Aufzuholen",
+    "inProgress": "In Bearbeitung",
+    "recovered": "Bestanden",
+    "notRecovered": "Nicht Bestanden"
+  },
+  "studentDetail": {
+    "title": "Schülerdetails",
+    "personalInfo": "Persönliche Daten",
+    "fullName": "Vollständiger Name",
+    "fiscalCode": "Steuernummer",
+    "class": "Klasse",
+    "email": "E-Mail",
+    "phone": "Telefon",
+    "birthDate": "Geburtsdatum",
+    "attendanceSummary": "Anwesenheitsübersicht",
+    "totalAbsences": "Fehltage Gesamt",
+    "lates": "Verspätungen",
+    "earlyExits": "Vorzeitiges Verlassen",
+    "justified": "Entschuldigt",
+    "absenceRate": "Fehlzeitenquote",
+    "risk": "Risiko",
+    "riskHigh": "HOCH",
+    "riskMedium": "MITTEL",
+    "riskLow": "NIEDRIG",
+    "todayAttendanceByHour": "Heutige Anwesenheit nach Stunde",
+    "hourNotRegistered": "Stunde {hour}: nicht erfasst",
+    "hourStatus": "Stunde {hour}: {status}"
+  },
+  "orientamento": {
+    "availableEvents": "Verfügbare Veranstaltungen",
+    "myEvents": "Meine Veranstaltungen",
+    "history": "Verlauf & Anwesenheit"
+  },
+  "homework": {
+    "assign": "Zuweisen",
+    "assignHomework": "Hausaufgabe aufgeben",
+    "description": "Beschreibung der Hausaufgabe",
+    "dueDate": "Fälligkeitsdatum"
+  },
+  "signaturesPage": {
+    "signNow": "Jetzt unterschreiben",
+    "signed": "Unterschrieben",
+    "signedOn": "Unterzeichnet am"
   }
-}
+};

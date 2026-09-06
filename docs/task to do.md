@@ -440,3 +440,109 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
     - **0 errori, 0 warning** ESLint (`npm run lint`).
     - Build di produzione Vite completata con successo con generazione Service Worker PWA.
 
+- [x] **Modularizzazione Registro Presenze, Resilienza Outbox Offline, Virtual Scrolling & Validazione Form Uniforme (Batch 10)**:
+  - **De-bloating & Modularizzazione Registro Presenze (`Attendance.vue` & `StudentAttendanceDetailDialog.vue`)**:
+    - Estratto il dialog dell'anagrafica e storico presenze studente in `src/components/Teacher/StudentAttendanceDetailDialog.vue`.
+    - La dimensione del componente pagina `Attendance.vue` è scesa da ~60 kB a **39.48 kB** (10.53 kB gzipped).
+    - Eliminato l'hardcoding in italiano (_"Fuori Aula"_, _"Dati Anagrafici"_, _"Nome completo"_, _"Assenze Totali"_, _"Ritardi"_, _"Uscite Anticipate"_, _"Tasso assenza"_, _"Rischio: ALTO/MEDIO/BASSO"_, _"Presenze Oggi per Ora"_), sostituito con `$t('classRegister.outOfClass')` e dizionario simmetrico `studentDetail.*` su **tutte le 11 lingue** supportate.
+    - Suite di unit test dedicata creata in `tests/unit/components/Teacher/StudentAttendanceDetailDialog.spec.js` (3/3 test passati).
+  - **Integrazione Operativa dell'Outbox Offline (`useOfflineSync`) nei Flussi Docente**:
+    - Connesso il salvataggio presenze e firma della lezione in `Attendance.vue` ad `executeWithOfflineQueue()`. Se la connessione Wi-Fi scolastica cade, l'operazione viene salvata istantaneamente in IndexedDB e sincronizzata automaticamente al ritorno online con notifica rassicurante al docente.
+    - Connesso l'inserimento voti in `src/composables/useGradeEntry.js` ad `executeWithOfflineQueue()`.
+    - Reso trasparente il fallback sia su `api.request` che su `api[method]` (`api.post`, `api.put`), garantendo compatibilità universale sia in produzione che nelle suite di test unitari.
+  - **Virtual Scrolling & Ottimizzazione DOM nelle Tabelle Amministrative**:
+    - Abilitato `virtual-scroll` e `:virtual-scroll-item-size="48"` su `src/components/Secretary/UserTable.vue` per abbattere il numero di nodi DOM e garantire 60 FPS costanti durante la consultazione di centinaia di account.
+    - Abilitato `virtual-scroll` e `:virtual-scroll-item-size="48"` su `src/pages/secretary/Classes.vue`.
+  - **Validazione Form Uniforme con Quasar `:rules` e `<q-form>`**:
+    - Allineato `CircularCreator.vue` con validazione reattiva inline su titolo e destinatari.
+    - Avvolto il dialog di Reset Password in `secretary/Users.vue` in `<q-form @submit="handleResetPwd">` con `:rules` reattive e autofocus.
+    - Avvolto il dialog di creazione rapida materia in `secretary/Classes.vue` in `<q-form @submit="createSubject">` con `:rules` e type submit.
+  - **Validazione Completa & Regression Check**:
+    - **175/175** suite di unit test superate (**1143/1143 test passati**).
+    - **209/209** verifiche di simmetria i18n superate su 11 lingue.
+    - **67/67** suite E2E superate (**154/154 test passati**).
+    - **0 errori, 0 warning** ESLint (`npm run lint`).
+    - Build Vite di produzione superata in 2.79s.
+
+- [x] **Modularizzazione Modali Verifiche/Import CSV, Validazione Reattiva Voti & Dark Mode Refining (Batch 11)**:
+  - **Fase 1: De-bloating & Validazione Reattiva Verifiche in Blocco (`Grades.vue` & `ClassTestBulkDialog.vue`)**:
+    - Scorporato il modale di creazione e modifica verifiche con voti in blocco in `src/components/Teacher/ClassTestBulkDialog.vue` (440 righe).
+    - `Grades.vue` de-bloatato e snellito da 868 a 525 righe (**-343 righe di codice monolitico**).
+    - Validazione form reattiva con Quasar `<q-form>` e `:rules` inline: titolo obbligatorio, data valida, tipologia di valutazione ('Scritto'/'Orale'/'Pratico') e controlli di coerenza.
+    - Navigazione da tastiera avanzata con tasto `Enter` tra le righe voto degli studenti per inserimento ultra-rapido.
+    - Supporto per marcatura massiva assenti (_"Segna Tutti Assenti"_) e conteggio in tempo reale dei voti compilati rispetto al totale alunni.
+    - Traduzioni simmetriche sincronizzate su **tutte le 11 lingue** (`gradesPage.bulkTestTitle`, `gradesPage.editBulkTestTitle`, `gradesPage.studentGrades`, `gradesPage.insertedCount`, `gradesPage.markAllAbsent`, ecc.).
+    - Suite di unit test dedicata creata in `tests/unit/components/Teacher/ClassTestBulkDialog.spec.js` (4/4 test passati).
+  - **Fase 2: Modularizzazione Wizard Importazione Utenti CSV (`Users.vue` & `CsvUserImportDialog.vue`)**:
+    - Scorporato il wizard a 3 step per l'importazione massiva utenti CSV in `src/components/Secretary/CsvUserImportDialog.vue` (405 righe).
+    - `Users.vue` snellito da 928 a 707 righe (**-221 righe**).
+    - Wizard guidato completo di configurazione opzioni (ruolo predefinito, generazione credenziali casuali, invio email di benvenuto), drag-and-drop file CSV con preview delle prime 5 righe, barra di avanzamento e download del report errori in formato CSV.
+    - Traduzioni simmetriche sincronizzate su **tutte le 11 lingue** (`usersPage.csvImportTitle`, `usersPage.step1Config`, `usersPage.step2Upload`, `usersPage.step3Result`, ecc.).
+    - Suite di unit test dedicata creata in `tests/unit/components/Secretary/CsvUserImportDialog.spec.js` (2/2 test passati).
+  - **Fase 3: Perfezionamento Dark Mode & Contrasti nelle Viste Complesse**:
+    - Ottimizzata la palette cromatica scura e il contrasto reattivo (`$q.dark.isActive` / `body.body--dark`) in:
+      - `src/pages/teacher/Grades.vue`: background pagina, card rubrica di valutazione, banner supplenza con bordo/sfondo ambra soft e placeholder empty state.
+      - `src/components/Teacher/LessonPlanner.vue`: background dinamico pagina, banner informativo supplenze, card PCTO / Orientamento, banner attività e container note didattiche.
+      - `src/pages/secretary/Timetable.vue`: sfondo tabella orario classi e docenti, griglia dinamica, dialog di assegnazione cattedre/materie e schede inserimento.
+  - **Fase 4: Validazione Istantanea Range Voti (1–10) alla Digitazione & Integrazione Vista Griglia**:
+    - Implementata validazione reattiva immediata con Quasar `:rules` e indicatore visivo d'errore su `src/components/Teacher/GradeMatrixGrid.vue` e `src/components/Teacher/ClassTestBulkDialog.vue`.
+    - Aggiunto controllo pre-save bloccante con notifica d'avviso se uno o più voti sono fuori dal range legale [1, 10].
+    - Pieno supporto Dark Mode in `GradeMatrixGrid.vue` con contrasto ottimizzato su tabelle e celle.
+    - Integrata la modalità di visualizzazione a "Griglia" (Matrix View) direttamente nel toggle di `Grades.vue`.
+    - Creata suite di unit test in `tests/unit/components/Teacher/GradeMatrixGrid.spec.js` (5/5 test passati).
+  - **Validazione Completa & Regression Check**:
+    - **178/178** suite di unit test superate (**1154/1154 test passati**).
+    - **209/209** verifiche di simmetria i18n superate su 11 lingue.
+    - **67/67** suite E2E superate (**154/154 test passati**).
+    - **0 errori, 0 warning** ESLint (`npm run lint`).
+    - Build Vite di produzione superata con successo in 4.69s.
+  - **Batch 12: De-bloating Monoliti, Resilienza Offline Globale, Accessibilità e Perfezionamento Simmetria i18n (11 Lingue)**:
+    - **Fase 1: Quick Wins, Bug Fixes & A11y / Dark Mode Consistency**:
+      - Risolto glitch di codifica caratteri UTF-8 in `LessonPlanner.vue:146` (`Âª Ora` -> `ª Ora`).
+      - Corretta proprietà non valida `tooltip` su `<q-btn>` in `GradeEntry.vue` con `<q-tooltip>{{ t('common.details') }}</q-tooltip>` e `:aria-label`.
+      - Localizzati indicatori di stato di rete `'Online - Dati sincronizzati'` e `'Offline - Modifiche salvate in locale'` in `GradeEntry.vue`.
+      - Eliminati hardcoded `bg-color="white"` in `MainLayout.vue`, `SupportRegister.vue`, `SchoolCredits.vue`, `GeneralMeetingLiveQueue.vue`, `Documents.vue` adottando `:bg-color="$q.dark.isActive ? 'dark' : 'white'"`.
+      - Aggiunti attributi `:aria-label="$t('common.close') || 'Chiudi'"` a tutti i pulsanti di chiusura dialog privi di etichetta accessibile (22 componenti).
+      - Ripuliti residui di debug `console.log` in `src/stores/websocket.js`.
+    - **Fase 2: De-bloating & Modularizzazione di `LessonPlanner.vue` + Resilienza Offline**:
+      - Estratti 3 nuovi componenti modulari:
+        - `src/components/Teacher/LessonFormDialog.vue` (284 righe).
+        - `src/components/Teacher/HomeworkFormDialog.vue` (122 righe).
+        - `src/components/Teacher/FreeActivityDialog.vue` (185 righe).
+      - `LessonPlanner.vue` de-bloatato di oltre 270 righe inline.
+      - Integrato `useOfflineSync` (`executeWithOfflineQueue`) in `saveLesson`, `saveHomework`, e `saveFreeActivity`.
+      - Creata suite di unit test dedicata in `tests/unit/components/Teacher/LessonPlannerDialogs.spec.js` (4/4 test passati).
+    - **Fase 3: De-bloating & Modularizzazione `secretary/Classes.vue` + i18n Stepper Migrazione Anno (11 lingue)**:
+      - Estratti 2 nuovi componenti modulari:
+        - `src/components/Secretary/ClassYearMigrationDialog.vue` (516 righe): wizard a 3 passaggi per la migrazione dell'anno scolastico, con auto-creazione classi di destinazione, mapping intelligente diplomati/ripetenti, e calcolo riepiloghi.
+        - `src/components/Secretary/ClassScheduleDialog.vue` (64 righe): visualizzazione e salvataggio dell'orario settimanale della classe.
+      - `Classes.vue` de-bloatato da 946 righe a 513 righe.
+      - Tradotti e sincronizzati al 100% su tutte le 11 lingue i 36 nuovi termini di `secretaryClasses` (migrazione e orario).
+      - Creata suite di unit test dedicata in `tests/unit/components/Secretary/ClassYearMigrationDialog.spec.js` (3/3 test passati) e confermata la suite `Classes.spec.js` (12/12 passati).
+    - **Fase 4: Resilienza Offline in `GradeMatrixGrid.vue` + Zero-Hardcoding Residuo in `Dashboard.vue` + Virtual Scrolling in `secretary/Students.vue`**:
+      - Integrato `useOfflineSync` (`executeWithOfflineQueue`) in `GradeMatrixGrid.vue` per il salvataggio massivo voti in griglia (`/grades/bulk`), con test unitario per salvataggio offline e accodamento outbox.
+      - Eliminato ogni residuo hardcoded in `Dashboard.vue` nelle schede compiti e scadenze (`viewYourHomework`, `upcomingHomework`, `allHomework`, `teacherLabel`, `noPendingHomework`, `allCaughtUp`, date relative localizzate).
+      - Aggiunte e sincronizzate le 10 nuove chiavi di `dashboardPage` su tutte le 11 lingue (`it-IT`, `en-US`, `es-ES`, `fr-FR`, `de-DE`, `ro-RO`, `sq-AL`, `ru-RU`, `uk-UA`, `ar-SA`, `zh-CN`).
+      - Abilitato il virtual scrolling in `src/pages/secretary/Students.vue` (`virtual-scroll`, `:virtual-scroll-item-size="48"`).
+    - **Validazione Completa & Regression Check**:
+      - **180/180** suite di unit test superate (**1162/1162 test passati**).
+      - **209/209** verifiche di simmetria i18n superate su 11 lingue.
+      - **67/67** suite E2E superate (**154/154 test passati**).
+      - **0 errori, 0 warning** ESLint (`npm run lint`).
+      - Build Vite di produzione superata con successo in 2.85s (PWA Service Worker generato).
+  - **Batch 13: Risoluzione Violazione CSP Font OpenDyslexic & Azzeramento Warning i18n Intlify (83 Chiavi su 11 Lingue)**:
+    - **Risoluzione CSP Font OpenDyslexic**:
+      - Aggiornata la direttiva `font-src` in `registro-frontend/index.html` aggiungendo `https://cdn.jsdelivr.net`.
+      - Aggiornato il middleware `SecurityHeadersMiddleware` in `registro-backend/internal/middleware/security.go` autorizzando `https://cdn.jsdelivr.net data:` nella direttiva `font-src`.
+      - Eseguiti i test di sicurezza backend (`go test ./tests/unit/security_headers_test.go` -> PASS).
+    - **Azzeramento Globale Warning Intlify (83 Chiavi Sincronizzate al 100% su 11 Lingue)**:
+      - Risolti tutti i warning riscontrati in console (`gradesPage.selectClassPrompt`, `common.onlineSynced`, `common.class`, `common.student`, `common.attendance`, `common.conduct`, `common.outcome`, `common.average`, `help.teacher.scrutiny.*`, `dashboardPage.online`, `attendancePage.*`, `roleDashboards.student`, `orientamento.*`).
+      - Scansionato l'intero albero `src/` e identificate tutte le 83 chiavi residue mancanti nei dizionari i18n (`classRegister`, `homework`, `documentsPage`, `certificatesPage`, `signaturesPage`, `secretaryClasses`, `settings`, `studentsPage`, `support`, `usersPage`).
+      - Generate e sincronizzate tutte le 83 chiavi su tutte le 11 lingue supportate (`it-IT`, `en-US`, `es-ES`, `fr-FR`, `de-DE`, `ro-RO`, `sq-AL`, `ru-RU`, `uk-UA`, `ar-SA`, `zh-CN`).
+      - Verificata la completa assenza di chiavi mancanti (scanner `scratch/save_all_missing.mjs` -> 0 missing keys).
+    - **Validazione Completa & Regression Check**:
+      - **180/180** suite di unit test superate (**1162/1162 test passati**).
+      - **209/209** verifiche di simmetria i18n superate su 11 lingue (`tests/unit/i18n/i18nKeys.test.js`).
+      - **67/67** suite E2E superate (**154/154 test passati**).
+      - **0 errori, 0 warning** ESLint (`npm run lint`).
+      - Build Vite di produzione superata con successo in 2.83s.

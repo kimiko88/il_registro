@@ -68,7 +68,27 @@ export default {
     "viewAll": "View All",
     "noStudentsFound": "No students found",
     "readOnlySaveBtn": "Save disabled (Read-only)",
-    "children": "Linked children"
+    "children": "Linked children",
+    "onlineSynced": "Online - Data synchronized",
+    "offlineSaved": "Offline - Changes saved locally",
+    "class": "Class",
+    "student": "Student",
+    "attendance": "Attendance",
+    "conduct": "Conduct",
+    "outcome": "Outcome",
+    "average": "Average",
+    "approved": "Approved",
+    "pending": "Pending",
+    "completed": "Completed",
+    "create": "Create",
+    "update": "Update",
+    "required": "Required field",
+    "reserved": "Confidential",
+    "saved": "Saved successfully",
+    "schoolYear": "School Year",
+    "subject": "Subject",
+    "title": "Title",
+    "warning": "Warning"
   },
   "notFound": {
     "title": "Page Not Found",
@@ -206,9 +226,28 @@ export default {
     "absencePercentage": "Absence Rate",
     "monthlyBreakdown": "Monthly Attendance Breakdown",
     "month": "Month",
-    "unjustifiedList": "Unjustified Absences and Tardies"
+    "unjustifiedList": "Unjustified Absences and Tardies",
+    "outOfClass": "Out of Class",
+    "activityType": "Activity Type",
+    "duration": "Duration (hours)",
+    "editLesson": "Edit Lesson",
+    "newLesson": "New Lesson",
+    "hour": "Lesson Hour",
+    "lessonTopic": "Lesson Topic",
+    "lessonType": "Lesson Type",
+    "subject": "Subject"
   },
   "dashboardPage": {
+    "viewYourHomework": "View Your Homework & Activities",
+    "upcomingHomework": "Upcoming Tasks & Deadlines",
+    "upcomingHomeworkSub": "Organize your study: homework, tests, and upcoming assignments",
+    "allHomework": "All Homework",
+    "teacherLabel": "Teacher",
+    "noPendingHomework": "No pending tasks",
+    "allCaughtUp": "You are completely up to date with all assignments!",
+    "dueToday": "Today",
+    "dueTomorrow": "Tomorrow",
+    "dueInDays": "In {days} days",
     "greetingMorning": "Good morning",
     "greetingAfternoon": "Good afternoon",
     "greetingEvening": "Good evening",
@@ -257,7 +296,10 @@ export default {
     "recentGrades": "Recent Grades",
     "noChildren": "No linked children",
     "systemStatus": "System Status",
-    "syncedNow": "Synced just now"
+    "syncedNow": "Synced just now",
+    "online": "Online",
+    "notifications": "Notifications",
+    "teacher": "Teacher"
   },
   "agendaPage": {
     "title": "Agenda & Teaching Calendar",
@@ -295,9 +337,48 @@ export default {
     "detailsOf": "Details for",
     "lessonsHeld": "Completed Lessons",
     "noLessons": "No lessons recorded for this date.",
-    "noDueHomework": "No homework due on this date."
+    "noDueHomework": "No homework due on this date.",
+    "thisWeek": "This Week",
+    "monthView": "Monthly View",
+    "weekView": "Weekly View",
+    "dayView": "Daily View",
+    "quickNew": "+ New",
+    "moreCount": "+{count} more",
+    "eventTitle": "Event Title *",
+    "eventDescription": "Description / Details",
+    "eventType": "Event Type *",
+    "targetClass": "Target Class *",
+    "eventDate": "Date *",
+    "startTime": "Start Time",
+    "endTime": "End Time",
+    "saveChanges": "Save Changes",
+    "createEvent": "Create Event",
+    "deleteEvent": "Delete Event",
+    "weekTitle": "Week",
+    "confirmDeleteTitle": "Delete Event",
+    "confirmDeleteMsg": "Are you sure you want to delete this event from the agenda?",
+    "eventCreated": "Event created successfully",
+    "eventUpdated": "Event updated successfully",
+    "eventDeleted": "Event deleted successfully",
+    "allDay": "All Day"
   },
   "usersPage": {
+    "importTitle": "CSV User Import",
+    "stepConfig": "Configuration",
+    "stepUpload": "File Upload",
+    "stepResult": "Result",
+    "userTypeToImport": "User Type to Import",
+    "sendWelcomeEmail": "Send welcome email with temporary credentials",
+    "downloadTemplate": "Download Sample CSV Template",
+    "selectCsvFile": "Select CSV File (.csv max 10MB)",
+    "previewRowsTitle": "Preview first 5 rows",
+    "runImport": "Run Import",
+    "importSuccessCount": "{count} Users Imported Successfully!",
+    "skippedRowsCount": "{count} rows skipped or invalid.",
+    "errorsEncountered": "Errors Encountered",
+    "rowError": "Row {row}: {reason}",
+    "downloadErrorReport": "Download Error Report",
+    "closeAndUpdate": "Close and Refresh List",
     "title": "User Management",
     "searchPlaceholder": "Search by name, email...",
     "newUser": "New User",
@@ -318,7 +399,9 @@ export default {
     "resetPassword": "Reset Password",
     "manageSubjects": "Manage Subjects",
     "deleteAccount": "Delete Account",
-    "noUsersFound": "No users found"
+    "noUsersFound": "No users found",
+    "importError": "Error during CSV import",
+    "targetClass": "Target Class"
   },
   "supportPage": {
     "title": "Support Center & FAQ",
@@ -412,7 +495,8 @@ export default {
     "tabGrades": "My Grades",
     "homework": "Homework",
     "documents": "Document Dossier & Acts",
-    "schoolManagement": "School Management"
+    "schoolManagement": "School Management",
+    "student": "Student"
   },
   "udaPage": {
     "subjectLabel": "Subject *",
@@ -518,6 +602,32 @@ export default {
     "noEvaluationsFound": "Nessuna valutazione delle competenze trovata"
   },
   "gradesPage": {
+    "createTestTitle": "Create New Class Test",
+    "editTestTitle": "Bulk Edit Class Test",
+    "testDetails": "Test Details",
+    "testTitle": "Test Title",
+    "teacherNotes": "Teacher Notes (Internal)",
+    "parentNotes": "Notes for Parents (Visible on board)",
+    "studentGrades": "Student Grades",
+    "insertedCount": "entered",
+    "allAbsentMarked": "All students marked as absent",
+    "saveTestAndGrades": "Save Test and Grades",
+    "saveEditTest": "Save Test Changes",
+    "overlappingWarning": "Warning: The class already has {count} tests scheduled on {date}! (Recommended max: 2)",
+    "testSavedSuccess": "Test \"{title}\" and {count} grades saved successfully!",
+    "testEditSuccess": "Test modified successfully!",
+    "testSaveError": "Error saving class test",
+    "testEditError": "Error updating class test",
+    "deleteTestConfirmTitle": "Confirm Test Deletion",
+    "deleteTestConfirmMsg": "Are you sure you want to delete test \"{title}\"? {count} linked grades will be permanently deleted. This action cannot be undone.",
+    "deleteTestSuccess": "Test deleted successfully!",
+    "deleteTestError": "Error deleting class test",
+    "noPermissionNotOwner": "You do not have permission to manage tests in a class that is not assigned to you",
+    "testsHistory": "Class Tests List",
+    "noTestsFound": "No class tests found",
+    "noTestsFoundDesc": "There are no tests or assessments recorded for this subject yet.",
+    "createFirstTest": "Create First Test",
+    "selectClassSub": "Choose a class from the top menu to access the gradebook:",
     "cannotEditOtherTeacherGrade": "You cannot edit grades created by another teacher",
     "sharedGradesCaption": "Grades shared with class",
     "confirmDeleteGrade": "Are you sure you want to delete this grade?",
@@ -607,7 +717,17 @@ export default {
     "sufficient": "Sufficient",
     "insufficient": "Insufficient",
     "absent": "Absent",
-    "subject": "Subject"
+    "subject": "Subject",
+    "selectClassPrompt": "Select a Class",
+    "evalType": "Evaluation Type",
+    "markAllAbsent": "Mark all as absent",
+    "noStudentsInClass": "No students loaded for this class",
+    "testDate": "Test Date",
+    "types": {
+      "written": "Written",
+      "oral": "Oral",
+      "practical": "Practical"
+    }
   },
   "didacticsPage": {
     "title": "Didactic Materials & Resources",
@@ -688,7 +808,16 @@ export default {
       "equivalentTest": "Equivalent Test",
       "textToSpeech": "Text-to-Speech",
       "conceptMaps": "Concept Maps"
-    }
+    },
+    "createFirst": "Create First Plan",
+    "clinicalDiagnosis": "Clinical Diagnosis (Teachers only)",
+    "restrictedFile": "Medical Diagnosis Attachment (Class Teachers Only)",
+    "noneSpecified": "None specified",
+    "approvedFamily": "✓ Approved by Family",
+    "sharedPending": "Shared (Pending)",
+    "internalDraft": "Internal Draft",
+    "hideFromFamily": "Hide from Family",
+    "shareWithFamily": "Share with Family"
   },
   "rubricsPage": {
     "title": "Assessment Rubrics for Competencies",
@@ -920,7 +1049,10 @@ export default {
     "downloadStarted": "Downloading document: {title}",
     "upload": "Ngarko Dokument",
     "tableTitle": "Dokumente Zyrtare",
-    "noDocs": "Nuk ka dokumente të disponueshme në këtë seksion."
+    "noDocs": "Nuk ka dokumente të disponueshme në këtë seksion.",
+    "certsDesc": "Automatically generated Enrollment and Attendance Certificates.",
+    "downloading": "Downloading...",
+    "previewNotAvailable": "Preview not available offline."
   },
   "notesPage": {
     "title": "Disciplinary Notes & Reminders",
@@ -1193,7 +1325,8 @@ export default {
     "mfaCaption": "Require TOTP multi-factor authentication for all staff and administrative users.",
     "minPasswordLength": "Minimum Password Length",
     "sessionTimeout": "Session Inactivity Timeout",
-    "maxLoginAttempts": "Failed Login Attempts Threshold"
+    "maxLoginAttempts": "Failed Login Attempts Threshold",
+    "general": "General"
   },
   "search": {
     "placeholder": "Search students, teachers, secretary, classes, notices, menu items…",
@@ -1241,7 +1374,22 @@ export default {
       "q9": "How do I change my interface language and dark mode?",
       "a9": "Go to \"Settings\" in your user menu. Choose from 9 languages (Italian, English, German, French, Spanish, Russian, Ukrainian, Arabic, Chinese) and enable Dark Mode or OpenDyslexic font.",
       "q10": "How can I undo a recently entered grade or attendance mark?",
-      "a10": "After any entry, an animated toast appears at the bottom with an \"Undo\" button active for 15 seconds. If elapsed, edit the cell directly in the grade or attendance grid."
+      "a10": "After any entry, an animated toast appears at the bottom with an \"Undo\" button active for 15 seconds. If elapsed, edit the cell directly in the grade or attendance grid.",
+      "scrutiny": {
+        "period1": "1st Period / Term",
+        "period2": "Final Scrutiny (2nd Period)",
+        "deferredScrutiny": "Deferred Scrutiny / Debt Recovery",
+        "deferredBannerTitle": "Deferred Scrutiny Session Active",
+        "deferredBannerBody": "In this session, you can resolve the suspension of judgment for students with educational debts.",
+        "deferredModalTitle": "Deferred Scrutiny: {name}",
+        "deferredModalSubtitle": "Assessment of remedial exams and clearance of educational debts",
+        "deferredNotes": "Minutes / Notes on judgment integration",
+        "deferredSaved": "Deferred scrutiny outcome saved successfully",
+        "deliberateDeferred": "Deliberate Suspension",
+        "notPromotedDebtsNotCleared": "Not promoted (debts not cleared)",
+        "promotedDebtsCleared": "Promoted (debts cleared)",
+        "closeConfirmMsg": "Are you sure you want to close and seal the scrutiny for the selected class? This operation is final."
+      }
     },
     "student": {
       "cat_grades": "My Grades",
@@ -1747,7 +1895,8 @@ export default {
     "documentsSubmitted": "Submitted Documents",
     "completeEnrollment": "Complete Enrollment",
     "enrollmentSuccess": "Enrollment completed successfully",
-    "studentFile": "Dossier"
+    "studentFile": "Dossier",
+    "title": "Student Registry"
   },
   "classesPage": {
     "currentClass": "Current Class"
@@ -2219,7 +2368,16 @@ export default {
   "attendancePage": {
     "title": "Attendance & Absences",
     "subtitle": "Attendance tracking, absences, and justifications",
-    "tableTitle": "Attendance Overview"
+    "tableTitle": "Attendance Overview",
+    "justified": "Justified",
+    "parentManagedJustifications": "Justifications managed directly by Parents",
+    "requestJustification": "Request Justification",
+    "selectAbsence": "Select Absence to Justify",
+    "timeDetail": "Time Detail",
+    "reason": "Reason",
+    "reasonFamily": "Family Reasons",
+    "reasonHealth": "Health Reasons",
+    "warningAbsenceLimit": "You have reached the absence warning threshold. Please regularize your attendance to avoid school year issues."
   },
   "reportCardPage": {
     "title": "Final Evaluation Report Card",
@@ -2413,7 +2571,8 @@ export default {
       "goalDescription": "Description & Strategies",
       "expectedTerm": "Target Term",
       "status": "Progress Status"
-    }
+    },
+    "noGoals": "No IEP goals entered"
   },
   "generalMeeting": {
     "teacherQueueTitle": "Afternoon General Parent-Teacher Conference",
@@ -2612,44 +2771,44 @@ export default {
   },
   "themes": {
     "indigo": {
-        "name": "Modern Indigo",
-        "description": "Classic academic style, elegant and balanced",
-        "recommendedRole": "All Roles"
+      "name": "Modern Indigo",
+      "description": "Classic academic style, elegant and balanced",
+      "recommendedRole": "All Roles"
     },
     "arcade": {
-        "name": "Arcade Gamer 🎮",
-        "description": "Tactile 3D gaming layout with Fredoka font and lively animations",
-        "recommendedRole": "Students / Gaming"
+      "name": "Arcade Gamer 🎮",
+      "description": "Tactile 3D gaming layout with Fredoka font and lively animations",
+      "recommendedRole": "Students / Gaming"
     },
     "cosmic": {
-        "name": "Cosmic Explorer 🚀",
-        "description": "Galactic glassmorphism, neon accents and futuristic Poppins font",
-        "recommendedRole": "Students / Space"
+      "name": "Cosmic Explorer 🚀",
+      "description": "Galactic glassmorphism, neon accents and futuristic Poppins font",
+      "recommendedRole": "Students / Space"
     },
     "bubblepop": {
-        "name": "Candy Bubble Pop 🍬",
-        "description": "Smooth 28px rounded curves, candy colors and bouncy animations",
-        "recommendedRole": "Students / Fun"
+      "name": "Candy Bubble Pop 🍬",
+      "description": "Smooth 28px rounded curves, candy colors and bouncy animations",
+      "recommendedRole": "Students / Fun"
     },
     "emerald": {
-        "name": "Emerald School",
-        "description": "Fresh and energetic green and emerald shades",
-        "recommendedRole": "Students"
+      "name": "Emerald School",
+      "description": "Fresh and energetic green and emerald shades",
+      "recommendedRole": "Students"
     },
     "sunset": {
-        "name": "Sunset Velvet",
-        "description": "Warm, enveloping shades of sunset violet and pink",
-        "recommendedRole": "Parents & Teachers"
+      "name": "Sunset Velvet",
+      "description": "Warm, enveloping shades of sunset violet and pink",
+      "recommendedRole": "Parents & Teachers"
     },
     "amber": {
-        "name": "Amber Horizon",
-        "description": "Warm, relaxing editorial style optimized for comfortable reading",
-        "recommendedRole": "Teachers"
+      "name": "Amber Horizon",
+      "description": "Warm, relaxing editorial style optimized for comfortable reading",
+      "recommendedRole": "Teachers"
     },
     "cyber": {
-        "name": "Cyber Dark",
-        "description": "High-contrast dark design with luminous neon accents",
-        "recommendedRole": "Tech & Night"
+      "name": "Cyber Dark",
+      "description": "High-contrast dark design with luminous neon accents",
+      "recommendedRole": "Tech & Night"
     }
   },
   "adminAudit": {
@@ -2724,7 +2883,11 @@ export default {
   "offlineBanner": {
     "offlineText": "No internet connection. Changes may not be saved.",
     "offlineBadge": "OFFLINE",
-    "onlineText": "Internet connection restored."
+    "onlineText": "Internet connection restored.",
+    "pendingQueue": "No internet connection. {count} local changes queued for auto-sync once back online.",
+    "inQueue": "QUEUED",
+    "syncedSuccess": "Connection restored: {count} operations synchronized successfully.",
+    "enqueuedOffline": "Operation saved locally. It will be synced automatically once back online."
   },
   "inactivity": {
     "warningTitle": "Session Expiring",
@@ -2856,7 +3019,8 @@ export default {
     },
     "loadError": "Error loading certificates",
     "generateSuccess": "Certificate generated successfully!",
-    "generateError": "Error generating certificate"
+    "generateError": "Error generating certificate",
+    "enrollmentCert": "Enrollment Certificate"
   },
   "sidiExports": {
     "title": "SIDI Flows & Ministry Records (MIM)",
@@ -3116,6 +3280,42 @@ export default {
     "notFound": "Page Not Found"
   },
   "secretaryClasses": {
+    "migrationTitle": "Student Migration & Academic Year Rollover",
+    "migrationSubtitle": "Manage class progression, promotions, repeaters, and graduates",
+    "migrationProcedure": "Academic Year Rollover Procedure",
+    "migrationProcedureDesc": "Select the source academic year and target academic year. Configure each student's outcome (Promoted, Repeater, Graduated, or Transferred).",
+    "sourceYear": "Source Year (Origin)",
+    "targetYear": "Target Year (New Year)",
+    "filterByClass": "Filter by Class (or All Classes)",
+    "allSourceClasses": "All classes in source year",
+    "studentsToProcess": "Students to Process",
+    "markAllPromoted": "Mark All Promoted",
+    "smartDefaults": "Graduate 5th / Promote 1st-4th",
+    "markAllRepeater": "Mark All Repeaters",
+    "loadingMigration": "Loading students and preparing target year classes...",
+    "noStudentsFound": "No students found matching selected criteria.",
+    "currentClassLabel": "Current Class",
+    "actionPromoted": "Promoted",
+    "actionRepeater": "Repeater",
+    "actionGraduated": "Graduated",
+    "actionLeft": "Transferred",
+    "targetClassLabel": "Target Class",
+    "noClassUnassigned": "No class (Unassigned)",
+    "migrationSummaryTitle": "Migration Summary",
+    "promotedCount": "Promoted",
+    "repeaterCount": "Repeaters",
+    "graduatedCount": "Graduates",
+    "leftCount": "Transferred / Withdrawn",
+    "btnConfigureStudents": "Next: Configure Students",
+    "btnVerifySummary": "Next: Review Summary",
+    "btnExecuteMigration": "Confirm & Run Migration",
+    "migrationSuccess": "Academic year migration completed successfully!",
+    "migrationError": "Error during migration execution",
+    "migrationLoadError": "Error loading migration data",
+    "scheduleTitle": "Weekly Schedule - Class",
+    "scheduleSaved": "Schedule saved successfully",
+    "scheduleSaveError": "Error saving schedule",
+    "scheduleLoadError": "Error loading schedule",
     "newClass": "New Class",
     "editClass": "Edit Class",
     "createClass": "Create Class",
@@ -3170,7 +3370,100 @@ export default {
     "subjectName": "Subject Name",
     "createSubject": "Create Subject",
     "subjectCreated": "Subject created",
-    "createSubjectError": "Error creating subject"
+    "createSubjectError": "Error creating subject",
+    "manageAssignments": "Manage Subjects & Teachers",
+    "manageStudents": "Manage Class Students"
+  },
+  "groupsPage": {
+    "title": "Language & Combined Groups Management",
+    "subtitle": "Create and manage groups made of students from multiple classes",
+    "newGroup": "New Group",
+    "createGroup": "Create Group",
+    "loading": "Loading groups...",
+    "noGroups": "No language or combined group found",
+    "noGroupsDesc": "Create your first group to teach students from different classes at the same time",
+    "students": "students",
+    "teacher": "Teacher",
+    "academicYear": "Academic year",
+    "editGroup": "Edit Group",
+    "deleteGroup": "Delete",
+    "groupName": "Group Name",
+    "groupNamePlaceholder": "Group Name (e.g. English B2 3A-3B)",
+    "description": "Description / Notes",
+    "confirmDelete": "Confirm deletion",
+    "confirmDeleteDesc": "Are you sure you want to delete this group?",
+    "groupDeleted": "Group deleted",
+    "deleteError": "Error deleting group",
+    "groupSaved": "Group updated successfully",
+    "groupCreated": "Group created successfully",
+    "save": "Save",
+    "create": "Create",
+    "studentListTitle": "Group Students: {name}",
+    "noStudents": "No student assigned to this group."
+  },
+  "scrutinyPage": {
+    "title": "Academic & Deferred Scrutiny",
+    "subtitle": "Management of final grades, deficiencies topics and recovery courses",
+    "closeScrutiny": "Close Scrutiny",
+    "saveFinal": "Save Final Scrutiny",
+    "classCouncil": "Class Council",
+    "notCoordinator": "You are not coordinator of any class for scrutiny.",
+    "selectClassPrompt": "Select a class to start the scrutiny process.",
+    "deficiencyTitle": "Deficiency Topics — {name}",
+    "deficiencySubtitle": "Deficiencies and gaps to recover (visible to student and parents)",
+    "deficiencySubject": "Deficiency Subject",
+    "deficiencyTopics": "Deficiency Topics / Specific Gaps *",
+    "recoveryMode": "Recovery Mode",
+    "recoveryStatus": "Recovery Status",
+    "recoveryGrade": "Recovery Exam Grade",
+    "recoveryDate": "Recovery Exam Date",
+    "saveDeficiency": "Save Deficiency",
+    "noDeficiencies": "No deficiency or academic debt recorded for this student.",
+    "individualStudy": "Individual Study",
+    "summerCourse": "Summer Recovery Course",
+    "helpDesk": "Tutoring Help Desk",
+    "toRecover": "To Recover",
+    "inProgress": "In Progress",
+    "recovered": "Recovered",
+    "notRecovered": "Not Recovered"
+  },
+  "studentDetail": {
+    "title": "Student Details",
+    "personalInfo": "Personal Information",
+    "fullName": "Full Name",
+    "fiscalCode": "Tax Code",
+    "class": "Class",
+    "email": "Email",
+    "phone": "Phone",
+    "birthDate": "Date of Birth",
+    "attendanceSummary": "Attendance Summary",
+    "totalAbsences": "Total Absences",
+    "lates": "Late Entries",
+    "earlyExits": "Early Exits",
+    "justified": "Justified",
+    "absenceRate": "Absence Rate",
+    "risk": "Risk",
+    "riskHigh": "HIGH",
+    "riskMedium": "MEDIUM",
+    "riskLow": "LOW",
+    "todayAttendanceByHour": "Today's Attendance by Hour",
+    "hourNotRegistered": "Hour {hour}: not recorded",
+    "hourStatus": "Hour {hour}: {status}"
+  },
+  "orientamento": {
+    "availableEvents": "Available Events",
+    "myEvents": "My Events",
+    "history": "History & Attendance"
+  },
+  "homework": {
+    "assign": "Assign",
+    "assignHomework": "Assign Homework",
+    "description": "Homework Description",
+    "dueDate": "Due Date"
+  },
+  "signaturesPage": {
+    "signNow": "Sign Now",
+    "signed": "Signed",
+    "signedOn": "Signed on"
   }
-}
-
+};

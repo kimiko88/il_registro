@@ -114,7 +114,7 @@ func SecurityHeadersMiddleware() gin.HandlerFunc {
 				"default-src 'self'; "+
 					"script-src 'self' 'nonce-%s'; "+
 					"style-src 'self' 'nonce-%s' https://fonts.googleapis.com; "+
-					"font-src 'self' https://fonts.gstatic.com; "+
+					"font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net data:; "+
 					"img-src 'self' data: https://cdn.quasar.dev; "+
 					"connect-src %s; "+
 					"object-src 'none'; "+
