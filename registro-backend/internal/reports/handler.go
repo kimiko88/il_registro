@@ -26,6 +26,8 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 		rep.GET("/sidi/students", h.ExportSidiStudentsXML)
 		rep.GET("/sidi/scrutini", h.ExportSidiScrutiniXML)
 		rep.GET("/sidi/attendance", h.ExportSidiAttendanceCSV)
+		rep.GET("/dropout-risk", h.GetDropoutRisk)
+		rep.GET("/dropout-risk/export", h.ExportDropoutRiskCSV)
 	}
 }
 
@@ -99,4 +101,36 @@ func (h *Handler) ExportSidiAttendanceCSV(c *gin.Context) {
 	c.Header("Content-Type", "text/csv")
 	c.Header("Content-Disposition", upload.FormatContentDisposition(filename))
 	c.Data(http.StatusOK, "text/csv", csvBytes)
+}
+
+func (h *Handler) GetDropoutRisk(c *gin.Context) {
+	classID := c.Query("class_id")
+	riskFilter := c.Query("risk_level")
+
+	items, err := h.service.GetDropoutRisk(c.Request.Context(), classID, riskFilter)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"data":  items,
+		"count": len(items),
+	})
+}
+
+func (h *Handler) ExportDropoutRiskCSV(c *gin.Context) {
+	classID := c.Query("class_id")
+	riskFilter := c.Query("risk_level")
+
+	csvBytes, err := h.service.ExportDropoutRiskCSV(c.Request.Context(), classID, riskFilter)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	filename := fmt.Sprintf("piano_supporto_dispersione_%s.csv", time.Now().Format("20060102_150405"))
+	c.Header("Content-Type", "text/csv; charset=utf-8")
+	c.Header("Content-Disposition", upload.FormatContentDisposition(filename))
+	c.Data(http.StatusOK, "text/csv; charset=utf-8", csvBytes)
 }

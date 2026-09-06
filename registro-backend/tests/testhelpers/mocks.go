@@ -348,6 +348,10 @@ func (m *MockUsersRepository) GetParentProfile(ctx context.Context, parentUserID
 	args := m.Called(ctx, parentUserID)
 	return args.String(0), args.Error(1)
 }
+func (m *MockUsersRepository) ApplyDataRetention(ctx context.Context, schoolID *string, cutoffDate time.Time) (int, error) {
+	args := m.Called(ctx, schoolID, cutoffDate)
+	return args.Int(0), args.Error(1)
+}
 
 // MockGradesRepository mocks grades.Repository
 type MockGradesRepository struct {

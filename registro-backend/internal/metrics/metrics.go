@@ -12,17 +12,19 @@ import (
 )
 
 type Registry struct {
-	mu           sync.RWMutex
-	requestCount map[string]*uint64
-	latencies    map[string]*uint64
+	mu               sync.RWMutex
+	requestCount     map[string]*uint64
+	latencies        map[string]*uint64
+	slowRequestCount map[string]*uint64
 }
 
 var DefaultRegistry = NewRegistry()
 
 func NewRegistry() *Registry {
 	return &Registry{
-		requestCount: make(map[string]*uint64),
-		latencies:    make(map[string]*uint64),
+		requestCount:     make(map[string]*uint64),
+		latencies:        make(map[string]*uint64),
+		slowRequestCount: make(map[string]*uint64),
 	}
 }
 
@@ -53,6 +55,27 @@ func (r *Registry) RecordRequest(method, path string, status int, duration time.
 	if lat != nil {
 		atomic.AddUint64(lat, uint64(duration.Milliseconds()))
 	}
+}
+
+func (r *Registry) RecordSlowRequest(method, path string, duration time.Duration) {
+	normPath := normalizePath(path)
+	key := fmt.Sprintf(`method="%s",path="%s"`, method, normPath)
+
+	r.mu.RLock()
+	cnt, ok := r.slowRequestCount[key]
+	r.mu.RUnlock()
+
+	if !ok {
+		r.mu.Lock()
+		if cnt, ok = r.slowRequestCount[key]; !ok {
+			var newCnt uint64
+			r.slowRequestCount[key] = &newCnt
+			cnt = &newCnt
+		}
+		r.mu.Unlock()
+	}
+
+	atomic.AddUint64(cnt, 1)
 }
 
 // normalizePath replaces UUID segments and numeric IDs with :id to prevent high cardinality
@@ -134,6 +157,14 @@ func (r *Registry) GeneratePrometheus(db *sql.DB) string {
 		buf.WriteString("# TYPE http_request_duration_ms_total counter\n")
 		for label, lat := range r.latencies {
 			fmt.Fprintf(&buf, "http_request_duration_ms_total{%s} %d\n", label, atomic.LoadUint64(lat))
+		}
+	}
+
+	if len(r.slowRequestCount) > 0 {
+		buf.WriteString("# HELP http_slow_requests_total Total number of HTTP requests exceeding 150ms latency threshold.\n")
+		buf.WriteString("# TYPE http_slow_requests_total counter\n")
+		for label, cnt := range r.slowRequestCount {
+			fmt.Fprintf(&buf, "http_slow_requests_total{%s} %d\n", label, atomic.LoadUint64(cnt))
 		}
 	}
 

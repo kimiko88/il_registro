@@ -532,6 +532,42 @@ func (h *Handler) DeleteGDPR(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "user pseudonymized"})
 }
 
+// 14. POST /api/v1/admin/gdpr/retention
+func (h *Handler) ApplyDataRetention(c *gin.Context) {
+	actorID := getActorID(c)
+	role := getActorRole(c)
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if role != "admin" && role != "superadmin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only admins can execute GDPR retention policy"})
+		return
+	}
+
+	var req RetentionRequest
+	if err := c.ShouldBindJSON(&req); err != nil && err != io.EOF {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body: " + err.Error()})
+		return
+	}
+
+	// Non-superadmins can only apply retention to their own school
+	if role != "superadmin" {
+		schoolID := getSchoolID(c)
+		if schoolID != "" {
+			req.SchoolID = &schoolID
+		}
+	}
+
+	result, err := h.service.ApplyDataRetention(c.Request.Context(), role, req.SchoolID, req.RetentionYears)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}
+
 // 15. PATCH /api/v1/users/{id}/disable-mfa
 func (h *Handler) DisableMFA(c *gin.Context) {
 	actorID := getActorID(c)

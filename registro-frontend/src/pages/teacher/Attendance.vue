@@ -188,7 +188,23 @@
                         :placeholder="$t('classRegister.topicPlaceholder')"
                         :readonly="isReadOnly"
                         :bg-color="isReadOnly ? 'grey-2' : 'white'"
-                    />
+                    >
+                        <template v-slot:append>
+                            <q-btn
+                                v-if="!isReadOnly && !isSubstitutionMode"
+                                round
+                                dense
+                                flat
+                                icon="history_edu"
+                                color="primary"
+                                :loading="loadingLastLesson"
+                                :disable="!lessonSubjectId"
+                                @click="copyLastLessonTopic"
+                            >
+                                <q-tooltip>{{ $t('classRegister.reuseLastLesson') || 'Riprendi argomenti ultima lezione' }}</q-tooltip>
+                            </q-btn>
+                        </template>
+                    </q-input>
                 </div>
                 <div class="col-12 col-md-3">
                     <q-select
@@ -431,8 +447,9 @@
                     :loading="saving"
                 />
             </div>
-            <div>
-                <q-btn
+            <div class="row items-center q-gutter-sm">
+                <q-btn-dropdown
+                  split
                   :label="isReadOnly ? $t('classRegister.readOnlySaveBtn') : (currentHourLesson ? $t('classRegister.updateSaveBtn') : $t('classRegister.saveBtn'))"
                   :color="isReadOnly ? 'grey-6' : isSubstitutionMode ? 'deep-orange' : 'primary'"
                   size="md"
@@ -441,7 +458,28 @@
                   @click="saveUnifiedRecord"
                   :loading="saving"
                   :disable="!selectedClass || isReadOnly"
-                />
+                >
+                    <q-list dense class="rounded-borders">
+                        <q-item clickable v-close-popup @click="saveMultiHour(2)" :disable="selectedHour >= 8 || isReadOnly">
+                            <q-item-section avatar>
+                                <q-icon name="filter_2" color="primary" />
+                            </q-item-section>
+                            <q-item-section>
+                                <q-item-label class="text-weight-bold">{{ $t('classRegister.sign2Hours') }}</q-item-label>
+                                <q-item-label caption>{{ $t('classRegister.sign2HoursDesc', { start: selectedHour, end: Number(selectedHour) + 1 }) }}</q-item-label>
+                            </q-item-section>
+                        </q-item>
+                        <q-item clickable v-close-popup @click="saveMultiHour(3)" :disable="selectedHour >= 7 || isReadOnly">
+                            <q-item-section avatar>
+                                <q-icon name="filter_3" color="primary" />
+                            </q-item-section>
+                            <q-item-section>
+                                <q-item-label class="text-weight-bold">{{ $t('classRegister.sign3Hours') }}</q-item-label>
+                                <q-item-label caption>{{ $t('classRegister.sign3HoursDesc', { start: selectedHour, mid: Number(selectedHour) + 1, end: Number(selectedHour) + 2 }) }}</q-item-label>
+                            </q-item-section>
+                        </q-item>
+                    </q-list>
+                </q-btn-dropdown>
             </div>
         </q-card-actions>
     </q-card>
@@ -507,6 +545,7 @@ const allSchoolClasses = ref([])
 
 // Lesson Form State
 const lessonTopic = ref('')
+const loadingLastLesson = ref(false)
 const lessonType = ref('Frontale')
 const activityType = ref('standard')
 const lessonSubjectId = ref(null)
@@ -1027,6 +1066,156 @@ const saveUnifiedRecord = async () => {
     } finally {
         saving.value = false
     }
+}
+
+const copyLastLessonTopic = async () => {
+    if (!selectedClass.value || !lessonSubjectId.value) return
+    loadingLastLesson.value = true
+    try {
+        const classId = typeof selectedClass.value === 'object' ? selectedClass.value?.id : selectedClass.value
+        const res = await lessonService.getLessons(classId, lessonSubjectId.value)
+        const lessonsList = Array.isArray(res.data) ? res.data : []
+        const curDate = date.value
+        const curHour = Number(selectedHour.value)
+        const prevLessons = lessonsList.filter(l => {
+            if (!l.topic || !l.topic.trim()) return false
+            if (l.date < curDate) return true
+            if (l.date === curDate && Number(l.hour) < curHour) return true
+            return false
+        })
+
+        const targetLesson = prevLessons.length > 0 ? prevLessons[0] : lessonsList.find(l => l.topic && l.topic.trim())
+
+        if (targetLesson && targetLesson.topic) {
+            lessonTopic.value = targetLesson.topic
+            if (targetLesson.notes && !lessonNotes.value) {
+                lessonNotes.value = targetLesson.notes
+            }
+            $q.notify({
+                type: 'positive',
+                message: t('classRegister.previousLessonLoaded', { date: targetLesson.date }) || `✓ Argomenti ripresi dall'ultima lezione del ${targetLesson.date}`
+            })
+        } else {
+            $q.notify({
+                type: 'info',
+                message: t('classRegister.noPreviousLesson') || 'Nessuna lezione precedente trovata per questa materia.'
+            })
+        }
+    } catch (error) {
+        console.error('Error fetching last lesson:', error)
+        $q.notify({ type: 'warning', message: 'Impossibile recuperare l\'ultima lezione' })
+    } finally {
+        loadingLastLesson.value = false
+    }
+}
+
+const saveMultiHour = async (hoursCount) => {
+    const startH = Number(selectedHour.value)
+    const endH = startH + hoursCount - 1
+    if (endH > 8) {
+        $q.notify({ type: 'warning', message: 'L\'intervallo di ore supera l\'8ª ora.' })
+        return
+    }
+    const unmarked = students.value.filter(s => !s.status)
+    if (unmarked.length > 0) {
+        $q.notify({ type: 'warning', message: `${unmarked.length} alunni senza presenza assegnata.` })
+        return
+    }
+
+    $q.dialog({
+        title: t('classRegister.confirmMultiHourTitle') || 'Conferma Firma Consecutiva',
+        message: t('classRegister.confirmMultiHourMsg', { count: hoursCount, start: startH, end: endH }) ||
+            `Vuoi firmare e registrare le presenze per ${hoursCount} ore consecutive (dall'ora ${startH}ª all'ora ${endH}ª) con gli stessi argomenti e presenze?`,
+        cancel: true,
+        persistent: true,
+        ok: { label: 'Conferma e Firma', color: 'primary' }
+    }).onOk(async () => {
+        saving.value = true
+        try {
+            const classId = typeof selectedClass.value === 'object' ? selectedClass.value?.id : selectedClass.value
+            const effectiveSubjectId = (!isSubstitutionMode.value && lessonSubjectId.value) ? lessonSubjectId.value : ''
+
+            for (let h = startH; h <= endH; h++) {
+                // 1. Mark Bulk Attendance for hour h
+                const markBulkPayload = {
+                    class_id: classId,
+                    date: date.value,
+                    hour: h,
+                    subject_id: effectiveSubjectId,
+                    is_substitution: isSubstitutionMode.value,
+                    statuses: students.value.map(s => ({
+                        student_id: s.id,
+                        status: s.status,
+                        entry_time: (s.status === 'Late' && s.entry_time?.trim()) ? s.entry_time : null,
+                        exit_time: (s.status === 'LeftEarly' && s.exit_time?.trim()) ? s.exit_time : null
+                    }))
+                }
+                await executeWithOfflineQueue(
+                    { url: '/attendance/mark-bulk', method: 'post', data: markBulkPayload },
+                    { title: `Presenze Classe - Ora ${h}` }
+                )
+
+                // 2. Save Lesson Signature for hour h if topic specified
+                if (lessonTopic.value?.trim()) {
+                    const lessonPayload = {
+                        class_id: classId,
+                        subject_id: effectiveSubjectId || null,
+                        date: date.value,
+                        hour: h,
+                        duration: 1,
+                        topic: lessonTopic.value,
+                        type: isSubstitutionMode.value ? 'Supplenza' : lessonType.value,
+                        activity_type: activityType.value || 'standard',
+                        is_co_teaching: isCoTeaching.value,
+                        notes: lessonNotes.value
+                    }
+
+                    const existingLessonForHour = dailyLessons.value.find(l => Number(l.hour) === h)
+                    if (existingLessonForHour && existingLessonForHour.teacher_id === currentTeacherId.value) {
+                        await executeWithOfflineQueue(
+                            { url: `/lessons/${existingLessonForHour.id}`, method: 'put', data: lessonPayload },
+                            { title: `Aggiorna Lezione - Ora ${h}` }
+                        )
+                    } else {
+                        await executeWithOfflineQueue(
+                            { url: '/lessons', method: 'post', data: lessonPayload },
+                            { title: `Firma Lezione - Ora ${h}` }
+                        )
+                    }
+                }
+
+                localStorage.removeItem(`attendance_draft_${classId}_${date.value}_${h}`)
+            }
+
+            if (assignHomework.value && homeworkDesc.value) {
+                await executeWithOfflineQueue(
+                    {
+                        url: '/homeworks',
+                        method: 'post',
+                        data: {
+                            class_id: classId,
+                            subject_id: effectiveSubjectId || null,
+                            due_date: homeworkDue.value || date.value,
+                            description: homeworkDesc.value
+                        }
+                    },
+                    { title: `Compiti Assegnati - Ore ${startH}-${endH}` }
+                )
+            }
+
+            lastAutosaveTime.value = ''
+            $q.notify({
+                type: 'positive',
+                message: t('classRegister.multiHourSaved', { start: startH, end: endH }) || `✓ Salvate e firmate con successo le lezioni per le ore ${startH} - ${endH}`
+            })
+            await fetchData()
+        } catch (error) {
+            console.error(error)
+            $q.notify({ type: 'negative', message: 'Errore durante il salvataggio delle lezioni consecutive' })
+        } finally {
+            saving.value = false
+        }
+    })
 }
 
 const deleteUnifiedRecord = () => {

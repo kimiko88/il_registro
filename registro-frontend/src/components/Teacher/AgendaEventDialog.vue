@@ -71,6 +71,39 @@
             </div>
           </div>
 
+          <!-- Anti-Overlap Warning Banner for Class Tests -->
+          <transition appear enter-active-class="animated fadeIn" leave-active-class="animated fadeOut">
+            <div v-if="testConflicts.hasConflict" class="q-mb-md">
+              <q-banner rounded dense class="bg-amber-50 text-amber-10 rounded-borders border border-amber-300 shadow-1 q-pa-sm">
+                <template v-slot:avatar>
+                  <q-icon name="warning_amber" color="amber-9" size="28px" />
+                </template>
+                <div class="text-subtitle2 font-bold text-amber-9">
+                  {{ t('agendaPage.conflictWarningTitle') || 'Possibile Sovrapposizione Verifiche' }}
+                </div>
+                <div v-if="testConflicts.sameDay.length >= 1" class="text-caption text-amber-9 q-mt-xs">
+                  <strong>{{ t('agendaPage.conflictDailyWarning', { count: testConflicts.sameDay.length, date: form.date }) }}</strong>
+                  <ul class="q-my-xs q-pl-md">
+                    <li v-for="tst in testConflicts.sameDay" :key="tst.id">
+                      {{ tst.title }} <span v-if="tst.teacher_name">({{ tst.teacher_name }})</span>
+                    </li>
+                  </ul>
+                </div>
+                <div v-if="testConflicts.sameWeek.length >= 2" class="text-caption text-amber-9 q-mt-xs">
+                  <strong>{{ t('agendaPage.conflictWeeklyWarning', { count: testConflicts.sameWeek.length, from: testConflicts.weekRange.split(' - ')[0], to: testConflicts.weekRange.split(' - ')[1] }) }}</strong>
+                  <ul class="q-my-xs q-pl-md">
+                    <li v-for="tst in testConflicts.sameWeek" :key="tst.id">
+                      {{ (tst.date || '').substring(0, 10) }}: {{ tst.title }} <span v-if="tst.teacher_name">({{ tst.teacher_name }})</span>
+                    </li>
+                  </ul>
+                </div>
+                <div class="text-caption text-grey-8 italic q-mt-xs">
+                  {{ t('agendaPage.conflictNotice') || 'Le linee guida didattiche raccomandano di evitare più verifiche nello stesso giorno o più di 2 nella stessa settimana.' }}
+                </div>
+              </q-banner>
+            </div>
+          </transition>
+
           <!-- All-Day Toggle -->
           <div class="row items-center justify-between bg-blue-50/60 q-pa-sm rounded-lg border border-blue-200 q-mb-md">
             <div>
@@ -253,6 +286,58 @@ function formatYMD(d) {
   const day = String(d.getDate()).padStart(2, '0')
   return `${year}-${month}-${day}`
 }
+
+function getWeekInterval(dateStr) {
+  if (!dateStr) return null
+  const parts = dateStr.split('-')
+  if (parts.length < 3) return null
+  const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]))
+  if (isNaN(d.getTime())) return null
+  const day = d.getDay()
+  const diffToMon = d.getDate() - day + (day === 0 ? -6 : 1)
+  const monday = new Date(d.getFullYear(), d.getMonth(), diffToMon)
+  const sunday = new Date(d.getFullYear(), d.getMonth(), diffToMon + 6)
+  return {
+    mondayStr: formatYMD(monday),
+    sundayStr: formatYMD(sunday)
+  }
+}
+
+const testConflicts = computed(() => {
+  if (form.type !== 'verifica' || !form.class_id || !form.date) {
+    return { hasConflict: false, sameDay: [], sameWeek: [], weekRange: '' }
+  }
+
+  const currentId = props.event?.id
+  const targetDate = form.date.substring(0, 10)
+  const week = getWeekInterval(targetDate)
+
+  const classTests = (agendaStore.events || []).filter(e => {
+    if (e.id && currentId && String(e.id) === String(currentId)) return false
+    if (String(e.class_id) !== String(form.class_id)) return false
+    return e.type === 'verifica'
+  })
+
+  const sameDay = classTests.filter(e => {
+    const evDate = (e.date || '').substring(0, 10)
+    return evDate === targetDate
+  })
+
+  const sameWeek = classTests.filter(e => {
+    const evDate = (e.date || '').substring(0, 10)
+    if (!week) return false
+    return evDate >= week.mondayStr && evDate <= week.sundayStr
+  })
+
+  const hasConflict = sameDay.length >= 1 || sameWeek.length >= 2
+
+  return {
+    hasConflict,
+    sameDay,
+    sameWeek,
+    weekRange: week ? `${week.mondayStr} - ${week.sundayStr}` : ''
+  }
+})
 
 function syncForm() {
   if (props.event) {

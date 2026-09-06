@@ -247,60 +247,9 @@
 
       <!-- 📊 Business Intelligence & Dashboard Dispersione Scolastica (Presidenza) -->
       <div class="row q-col-gutter-lg q-mb-lg">
-        <!-- Student a Rischio Table -->
+        <!-- Student a Rischio Table / Cruscotto Rischio Dispersione -->
         <div class="col-12 col-md-7">
-          <q-card class="glass-card shadow-soft rounded-xl border border-slate-100 full-height">
-            <q-card-section class="q-pa-lg">
-              <div class="row items-center justify-between q-mb-md">
-                <div>
-                  <div class="text-h5 text-weight-bold text-outfit text-slate-800 row items-center">
-                    <q-icon name="warning_amber" color="negative" class="q-mr-xs" />
-                    Monitoraggio Dispersione Scolastica & Assenteismo
-                  </div>
-                  <div class="text-caption text-slate-500">Studenti a rischio di insuccesso o abbandono (Assenze > 25% o Media &lt; 6.0)</div>
-                </div>
-                <q-chip color="red-1" text-color="red-9" class="font-bold" size="sm">
-                  {{ atRiskStudents.length }} Studenti Attenzionati
-                </q-chip>
-              </div>
-
-              <div v-if="atRiskStudents.length === 0" class="text-center text-slate-400 q-pa-xl">
-                <q-icon name="check_circle" size="48px" color="positive" class="q-mb-sm" /><br />
-                <div class="text-weight-bold text-slate-700">Nessuno studente a rischio di dispersione rilevato</div>
-                <div class="text-caption text-grey-6">Tutti gli studenti iscritti mantengono frequenza e media voti nella norma.</div>
-              </div>
-
-              <q-table
-                v-else
-                dense
-                flat
-                :rows="atRiskStudents"
-                :columns="riskColumns"
-                row-key="id"
-                :pagination="{ rowsPerPage: 5 }"
-                class="bg-transparent"
-              >
-                <template v-slot:body-cell-risk_level="props">
-                  <q-td :props="props">
-                    <q-chip
-                      dense
-                      :color="props.row.risk_level === 'Alto' ? 'negative' : 'warning'"
-                      text-color="white"
-                      class="text-weight-bold"
-                      size="xs"
-                    >
-                      {{ props.row.risk_level }}
-                    </q-chip>
-                  </q-td>
-                </template>
-                <template v-slot:body-cell-actions="props">
-                  <q-td :props="props" align="right">
-                    <q-btn flat round dense icon="contact_mail" color="primary" size="sm" title="Contatta Famiglia" />
-                  </q-td>
-                </template>
-              </q-table>
-            </q-card-section>
-          </q-card>
+          <DropoutRiskTable />
         </div>
 
         <!-- Comparison Quadrimestrale / Classi -->
@@ -418,6 +367,7 @@ import { useQuasar } from 'quasar'
 import { usePermissions } from '@/composables/usePermissions'
 import adminService from '@/services/adminService'
 import api from '@/services/api'
+import DropoutRiskTable from '@/components/Admin/DropoutRiskTable.vue'
 
 const $q = useQuasar()
 const { t } = useI18n()
@@ -430,15 +380,6 @@ const userGrowthHistory = ref([])   // [{ label: 'Gen', value: 120 }, ...]
 const recentAuditEvents = ref([])
 const hoveredIndex = ref(null)
 const hoveredDonut  = ref(null)
-
-const riskColumns = [
-  { name: 'student', label: 'Studente', field: 'student', align: 'left', sortable: true },
-  { name: 'class', label: 'Classe', field: 'class', align: 'center' },
-  { name: 'absences', label: 'Assenze %', field: 'absences', align: 'center', sortable: true },
-  { name: 'average', label: 'Media', field: 'average', align: 'center', sortable: true },
-  { name: 'risk_level', label: 'Livello Rischio', field: 'risk_level', align: 'center' },
-  { name: 'actions', label: 'Azione', field: 'actions', align: 'right' }
-]
 
 const atRiskStudents = ref([])
 const classComparisons = ref([])
