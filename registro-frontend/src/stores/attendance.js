@@ -12,6 +12,9 @@ export const useAttendanceStore = defineStore('attendance', {
         error: null,
         justifications: [], // Pending justification requests
         _requestId: 0,
+        // Tracked to allow reconnect-refresh in websocket.js
+        currentClassId: null,
+        currentDate: null,
     }),
 
     getters: {
@@ -33,6 +36,9 @@ export const useAttendanceStore = defineStore('attendance', {
         async fetchDailyAttendance(classId, date) {
             this.loading = true;
             this.error = null;
+            // Track context so reconnect-refresh (websocket.js) can re-call correctly.
+            this.currentClassId = classId;
+            this.currentDate = date;
             const currentReqId = ++this._requestId;
             try {
                 const response = await attendanceService.getByClass(classId, date);
@@ -58,6 +64,13 @@ export const useAttendanceStore = defineStore('attendance', {
                 if (currentReqId === this._requestId) {
                     this.loading = false;
                 }
+            }
+        },
+
+        // Alias used by websocket.js reconnect-refresh (keeps last-known classId + date).
+        async fetchAttendance(classId) {
+            if (classId && this.currentDate) {
+                return this.fetchDailyAttendance(classId, this.currentDate);
             }
         },
 

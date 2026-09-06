@@ -31,6 +31,10 @@ func (h *HealthHandler) Ready(c *gin.Context) {
 // Ping is a lightweight no-auth, no-DB endpoint used by the frontend to verify
 // real backend reachability (navigator.onLine alone is not reliable).
 func (h *HealthHandler) Ping(c *gin.Context) {
+	if c.Request.Method == http.MethodHead {
+		c.Status(http.StatusOK)
+		return
+	}
 	c.JSON(http.StatusOK, gin.H{"ok": true})
 }
 
