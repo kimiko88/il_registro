@@ -3,6 +3,37 @@
 Tutte le modifiche rilevanti a questo progetto sono documentate in questo file.
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/).
 
+## [0.8.0] — 2026-09-06
+
+### Aggiunto & Migliorato
+
+- **Backend (`registro-backend`)**:
+  - **Stampa PDF Registro Personale del Docente (`internal/teachers`)**: Generatore PDF vettoriale conforme ai requisiti ministeriali per la conservazione annuale agli atti (`GET /api/v1/teachers/registro-personale/pdf`). Include testata istituzionale, griglia cronologica dei voti per quadrimestre (scritti, orali, pratici, media pesata), computo assenze per materia e registro delle lezioni firmate con blocco finale di firma.
+  - **Giornale di Classe Ufficiale del Mese (`internal/classes`)**: Generatore PDF ufficiale mensile (`GET /api/v1/classes/:id/giornale-mensile/pdf`) con matrice presenze giornaliera codificata (**P**, **A**, **R**, **U**, **G**), verbale lezioni firmate da ciascun docente, registro note disciplinari e blocco convalida coordinatore/dirigente.
+  - **Verifica Congruità Dati Scolastici (`internal/admin`, `internal/postgres`)**: Motore diagnostico relazionale (`GET /api/v1/admin/data-integrity`) che individua proattivamente studenti orfani, classi prive di coordinatore, lezioni sovrapposte, voti domenicali/festivi e genitori senza alunni collegati.
+  - **Cloud-Native Kubernetes Probes (`/live` e `/ready`)**: Endpoint standard cloud-native (`/live` e `/ready`) con verifica concorrente e misurazione latenza (ms) di PostgreSQL e Redis, conteggio goroutine e monitoraggio memoria allocata.
+  - **Circuit Breaker per Integrazioni Esterne (`pkg/circuitbreaker`)**: Package di resilienza basato su `sony/gobreaker` con fail-fast `ErrCircuitOpen` integrato nel client Supabase Storage per isolare degradazioni o latenze esterne.
+  - **Rate Limiting Differenziato IETF (`internal/middleware`)**: Tiered rate limiter con header standard IETF (`RateLimit-Limit`, `RateLimit-Remaining`, `RateLimit-Reset`, `Retry-After`) per endpoint critici (auth, export PDF/ZIP, upload).
+  - **GDPR Data Retention Policy (`internal/users`)**: Procedura di pseudonimizzazione a cascata (`POST /api/v1/admin/gdpr/retention`) per studenti diplomati o disattivati da oltre N anni, preservando lo storico voti per gli obblighi di conservazione.
+  - **Cruscotto Rischio Dispersione Scolastica (`internal/reports`)**: Motore euristico anti-dispersione (`GET /api/v1/reports/dropout-risk`) basato su soglia 25% assenze (DPR 122/2009), 3+ materie con media < 5.0 e ritardi/uscite frequenti.
+  - **Swagger UI & OpenAPI (`/swagger`)**: Interfaccia interattiva Swagger UI integrata e collegata alla specifica OpenAPI `/swagger/doc.json`.
+  - **School Seeder CLI (`cmd/seed_school`)**: Comando CLI per popolare in 1-click un intero istituto realistico con classi, docenti, materie, 120 studenti, calendari, presenze, voti e circolari.
+
+- **Frontend (`registro-frontend`)**:
+  - **Matrice Valutazione Descrittiva O.M. 172/2020 (`DescriptiveEvaluationMatrix.vue`)**: Valutazione primaria e secondaria di I grado per obiettivi disciplinari con i 4 livelli ministeriali (*Avanzato*, *Intermedio*, *Base*, *In via di prima acquisizione*), note per studente ed export CSV; integrata in `Rubrics.vue`.
+  - **Planner Compiti & To-Do List dello Studente (`HomeworkPlanner.vue`)**: Diario interattivo con tracciamento completamento compiti sincronizzato via API (`POST`/`DELETE /agenda/:id/complete`), filtri per materia/scadenza e note personali; integrato in `Index.vue` e `Homework.vue`.
+  - **Riepilogo Assenze & Limite 25% Famiglia (`AbsenceLimitWidget.vue`)**: Widget conforme all'art. 14, comma 7 DPR 122/2009 con conteggio ore assenza su monte ore annuo, pin visivo sulla soglia di legge del 25%, calcolo ore residue e alert preventivi; integrato in `Index.vue` e `Attendance.vue`.
+  - **Tabellone Visuale Sostituzioni Live 1ª-6ª Ora (`Substitutions.vue`)**: Matrice oraria interattiva classi × ore con evidenziazione classi scoperte, raccomandazione automatica supplenti e assegnazione con 1 click.
+  - **Firma Veloce Blocchi Orari & Copia Argomenti (`Attendance.vue`)**: Firma rapida per lezioni consecutive di 2 o 3 ore con argomenti replicati e pulsante "Riprendi argomenti ultima lezione".
+  - **Anti-Sovrapposizione Verifiche (`AgendaEventDialog.vue`)**: Allerta tempestiva per $\ge 1$ verifica nello stesso giorno o $\ge 2$ nella stessa settimana per la stessa classe.
+  - **Global Spotlight Ctrl+K (`GlobalSearchDialog.vue`)**: Ricerca universale istantanea accessibile da tastiera per studenti, classi, materie e comandi rapidi.
+  - **Idempotency Key Automatica (`useIdempotency.js`)**: Generazione automatica di header `Idempotency-Key` su richieste HTTP mutative critiche.
+  - **Global ErrorBoundary (`ErrorBoundary.vue`)**: Isolamento errori a livello di componente con fallback card WCAG, dettagli collassabili e re-mount reattivo.
+  - **Internazionalizzazione (i18n)**: Tutte le nuove etichette sincronizzate al 100% su 11 lingue (`it-IT`, `en-US`, `es-ES`, `fr-FR`, `de-DE`, `ro-RO`, `sq-AL`, `ru-RU`, `zh-CN`, `uk-UA`, `ar-SA`).
+  - **Test Suite**: Espansione a **190 test suite** e **1228 unit test passati al 100%**, con **0 errori e 0 warning** ESLint e Go vet.
+
+---
+
 ## [0.7.0] — 2026-08-24
 
 ### Corretto & Migliorato

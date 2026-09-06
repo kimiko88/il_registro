@@ -143,6 +143,8 @@ I composabili in `src/composables/` incapsulano la logica reattiva, l'interazion
 6. **`useDraftAutosave.js`**: Salvataggio automatico debounced in `localStorage` con deep-clone serializzabile, ripristino istantaneo e cleanup automatizzato su unmount del componente.
 7. **`useUndoToast.js`**: Notifiche transitorie con countdown visivo e possibilità di revocare l'azione entro 15 secondi (`notifyWithUndo`).
 8. **`useGradeFormatter.js`**: Formattazione coerente dei voti (decimale con virgola/punto, frazionario o centesimale) in base alle preferenze dell'istituto.
+9. **`useIdempotency.js`**: Generazione automatica e rotazione di header standard `Idempotency-Key` (UUID v4) iniettati dall'interceptor Axios per scongiurare mutazioni duplicate (voti, presenze, firme, pagamenti).
+10. **`useOutboxStore.js`**: Coda locale IndexedDB/Storage FIFO per la memorizzazione di azioni offline dei docenti con sincronizzazione automatica in background al ripristino della connettività.
 
 ---
 
@@ -151,6 +153,12 @@ I composabili in `src/composables/` incapsulano la logica reattiva, l'interazion
 1. **Gestione Sicura dei Valori di Progresso**: In componenti come `GradeChart.vue`, sanitizzare sempre i valori numerici (`getProgressValue`, `getProgressColor`) per evitare calcoli `NaN / 10` e warning di rendering Quasar in caso di medie non disponibili (`'-'`).
 2. **Protezione Multi-Stream Asincrono**: In componenti come `TimelineActivityFeed.vue`, utilizzare sempre `Array.isArray()` sulle risposte aggregate (`Promise.allSettled`) prima di invocare metodi come `.slice()` o `.map()`.
 3. **Validazione Props & Default Fallbacks**: Dichiarare sempre prop types espliciti e valori di default per array e oggetti (`() => []`, `() => ({})`).
+4. **Matrice Valutazione Descrittiva (`DescriptiveEvaluationMatrix.vue`)**: Conforme all'O.M. 172/2020 con 4 livelli (*Avanzato*, *Intermedio*, *Base*, *In via di prima acquisizione*), gestione dinamica obiettivi, note pedagogiche individuali ed export CSV per scuola primaria e secondaria di I grado.
+5. **Card Diagnostica Dati (`DataIntegrityCard.vue`)**: Scansione in tempo reale di anomalie relazionali (studenti orfani, classi senza coordinatore, lezioni sovrapposte, voti festivi) con badge di severità e azioni correttive per la segreteria.
+6. **Diario To-Do & Planner (`HomeworkPlanner.vue`)**: Tracciamento completamento compiti sincronizzato bidirezionalmente via API (`POST`/`DELETE /agenda/:id/complete`) con raggruppamento per data di scadenza e note personali di studio.
+7. **Widget Limite Assenze 25% (`AbsenceLimitWidget.vue`)**: Verifica automatica della frequenza minima del 75% per la validità dell'anno scolastico (art. 14 comma 7 DPR 122/2009) con barra visiva, marker sul 25% e calcolo predittivo delle ore residue consentite.
+8. **Spotlight Globale (`GlobalSearchDialog.vue`)**: Ricerca unificata `Ctrl+K` con navigazione da tastiera, debounce e indicizzazione istantanea di studenti, classi, materie e comandi rapidi.
+9. **Isolamento Errori (`ErrorBoundary.vue`)**: Componente di cattura errori reattivo con card fallback accessibile WCAG e ripristino dello stato applicativo senza perdita di sessione.
 
 ---
 
@@ -175,10 +183,11 @@ Il registro implementa un sistema coerente di tema scuro (`.body--dark`) gestito
 La suite di test frontend è sviluppata con **Vitest** e **Vue Test Utils**:
 
 - **Comando di esecuzione**: `npm run test:unit`
-- **Metriche**: **159 test suite**, **950 unit test passati al 100%** (0 errori, 0 fallimenti).
+- **Metriche**: **190 test suite**, **1228 unit test passati al 100%** (0 errori, 0 fallimenti).
+- **Linter**: `npm run lint` (**0 errori, 0 warning** su tutto il codice sorgente).
 - **Copertura**:
   - `tests/unit/components/`: Test dedicati per componenti Admin, Common, Parent, Secretary, Student e Teacher.
-  - `tests/unit/composables/`: Test dedicati per tutti i composabili (`useSpeechSynthesis`, `useGlobalKeyboardShortcuts`, `useDraftAutosave`, `usePermissions`, ecc.).
+  - `tests/unit/composables/`: Test dedicati per tutti i composabili (`useSpeechSynthesis`, `useGlobalKeyboardShortcuts`, `useDraftAutosave`, `usePermissions`, `useIdempotency`, `useOutboxStore`, ecc.).
   - `tests/unit/accessibility/`: Suite completa per compliance WCAG 2.2, AgID, TTS, Reading Ruler e invio segnalazioni.
   - `tests/unit/security/`: Test di anti-regressione RBAC, XSS DOMPurify sanitization, CSV injection prevention, route guards e token security.
 

@@ -166,6 +166,12 @@ Middleware Go:
 | **Multi-Role Mobile Isolation**   | Android/iOS                     | Applicazioni e target dedicati per Studente, Genitore, Docente, Segreteria |
 | **Offline-First Mobile Cache**    | Mobile, `OfflineCacheManager`   | Accesso sicuro offline a voti, compiti ed orario con validazione temporale |
 | **Mobile Real-Time WebSocket**    | Mobile, `WebSocketClient/Manager`| Ricezione istantanea di notifiche, voti e stato code colloqui |
+| **Circuit Breaker Pattern**       | Backend, `pkg/circuitbreaker`  | Resilienza e fail-fast immediato (`ErrCircuitOpen`) su integrazioni esterne (Supabase Storage, SIDI, Webhook) |
+| **Deep Dependency Probes**        | Backend, `internal/handler`    | Verifiche cloud-native concorrenti (`/live`, `/ready`) con latenze DB/Redis in ms, goroutine e heap memory |
+| **Relational Integrity Linter**   | Backend, `internal/postgres`   | Scansione proattiva delle anomalie (studenti orfani, classi senza coordinatore, lezioni sovrapposte, voti festivi) |
+| **Descriptive Assessment Matrix** | Frontend, `DescriptiveEvaluationMatrix` | Valutazione per obiettivi su 4 livelli ministeriali (O.M. 172/2020) con matrice interattiva ed export CSV |
+| **Statutory Absence Forecasting** | Frontend, `AbsenceLimitWidget` | Monitoraggio e calcolo predittivo della soglia 25% assenze per la validità dell'anno (Art. 14 DPR 122/2009) |
+| **Idempotency-Key Injection**     | Frontend, `useIdempotency.js`  | Prevenzione duplicazioni su richieste mutative critiche con header HTTP `Idempotency-Key` automatico |
 
 ---
 
