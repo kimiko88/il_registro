@@ -650,7 +650,7 @@ func (h *Handler) GetSystemHealth(c *gin.Context) {
 	if redisURL != "" {
 		if opt, err := redis.ParseURL(redisURL); err == nil {
 			rdb := redis.NewClient(opt)
-			defer rdb.Close()
+			defer func() { _ = rdb.Close() }()
 			pingCtx, cancel := context.WithTimeout(c.Request.Context(), 500*time.Millisecond)
 			defer cancel()
 			start := time.Now()
