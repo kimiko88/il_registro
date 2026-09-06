@@ -28,6 +28,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
     const lastError = ref(null)
     const heartbeatTimer = ref(null)
     const isReconnecting = ref(false)
+    const wasDisconnected = ref(false) // true after first disconnect — used to trigger data refresh on reconnect
     const authStore = useAuthStore()
 
     const debounceTimers = {}
@@ -132,6 +133,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
         }
 
         socket.value.onopen = () => {
+            const isReconnect = wasDisconnected.value
             isConnected.value = true
             reconnectAttempts.value = 0
             if (reconnectTimer.value) {
@@ -139,6 +141,24 @@ export const useWebSocketStore = defineStore('websocket', () => {
                 reconnectTimer.value = null
             }
             startHeartbeat()
+
+            // After a disconnect, messages may have been missed. Silently refresh
+            // critical data stores so the UI reflects the latest server state.
+            if (isReconnect) {
+                wasDisconnected.value = false
+                try {
+                    const gradesStore = useGradesStore()
+                    if (gradesStore.currentClassId) {
+                        gradesStore.fetchGrades(gradesStore.currentClassId, null, true)
+                    }
+                } catch { /* store not ready */ }
+                try {
+                    const attendanceStore = useAttendanceStore()
+                    if (attendanceStore.currentClassId) {
+                        attendanceStore.fetchAttendance(attendanceStore.currentClassId)
+                    }
+                } catch { /* store not ready */ }
+            }
         }
 
         socket.value.onmessage = (event) => {
@@ -159,6 +179,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
             socket.value = null
             stopHeartbeat()
             if (!event.wasClean && event.code !== 1000 && !hasFailedPermanently.value) {
+                wasDisconnected.value = true
                 attemptReconnect()
             }
         }
@@ -181,6 +202,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
         isConnected.value = false
         isReconnecting.value = false
         reconnectAttempts.value = 0
+        wasDisconnected.value = false
         if (resetPermanentFlag) {
             hasFailedPermanently.value = false
             lastError.value = null

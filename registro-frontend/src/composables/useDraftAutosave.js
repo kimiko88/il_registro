@@ -1,20 +1,38 @@
-import { watch, onBeforeUnmount, getCurrentInstance, ref, toRaw } from 'vue'
+import { watch, onBeforeUnmount, getCurrentInstance, ref, computed, toRaw } from 'vue'
 
 const DRAFT_PREFIX = 'il_registro_draft_'
+/** Bozze più vecchie di 24 ore vengono scartate automaticamente al restore. */
+const DRAFT_TTL_MS = 24 * 60 * 60 * 1000
 
 export function useDraftAutosave(storageKey, dataRef, debounceMs = 1500) {
     const key = DRAFT_PREFIX + storageKey
     const savedAt = ref(null)
     let debounceTimer = null
 
-    // Check if a draft exists on init
+    // Check if a non-expired draft exists on init
     const hasDraft = ref(false)
     try {
         const raw = localStorage.getItem(key)
-        hasDraft.value = !!raw
+        if (raw) {
+            const parsed = JSON.parse(raw)
+            const age = parsed?.savedAt ? Date.now() - new Date(parsed.savedAt).getTime() : Infinity
+            hasDraft.value = age < DRAFT_TTL_MS
+            if (!hasDraft.value) localStorage.removeItem(key) // clean up expired draft immediately
+        }
     } catch {
         hasDraft.value = false
     }
+
+    /** Human-readable age of the saved draft, e.g. "5 minuti fa" */
+    const draftAge = computed(() => {
+        if (!savedAt.value) return null
+        const diffMs = Date.now() - savedAt.value.getTime()
+        const diffMins = Math.floor(diffMs / 60_000)
+        if (diffMins < 1) return 'pochi secondi fa'
+        if (diffMins < 60) return `${diffMins} minut${diffMins === 1 ? 'o' : 'i'} fa`
+        const diffHours = Math.floor(diffMins / 60)
+        return `${diffHours} or${diffHours === 1 ? 'a' : 'e'} fa`
+    })
 
     // Restore draft data into the dataRef
     function restoreDraft() {
@@ -22,6 +40,16 @@ export function useDraftAutosave(storageKey, dataRef, debounceMs = 1500) {
             const raw = localStorage.getItem(key)
             if (!raw) return false
             const saved = JSON.parse(raw)
+            // Discard drafts older than DRAFT_TTL_MS to avoid surfacing stale data.
+            if (saved?.savedAt) {
+                const age = Date.now() - new Date(saved.savedAt).getTime()
+                if (age > DRAFT_TTL_MS) {
+                    localStorage.removeItem(key)
+                    hasDraft.value = false
+                    return false
+                }
+                savedAt.value = new Date(saved.savedAt)
+            }
             if (saved && saved.data !== undefined) {
                 if (typeof dataRef.value === 'object' && dataRef.value !== null) {
                     Object.assign(dataRef.value, saved.data)
@@ -94,5 +122,5 @@ export function useDraftAutosave(storageKey, dataRef, debounceMs = 1500) {
         })
     }
 
-    return { hasDraft, restoreDraft, clearDraft, savedAt, stop }
+    return { hasDraft, draftAge, restoreDraft, clearDraft, savedAt, stop }
 }

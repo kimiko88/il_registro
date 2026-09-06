@@ -15,6 +15,7 @@ import 'quasar/src/css/index.sass'
 import './assets/styles/globals.css'
 
 import { useErrorStore } from './stores/error'
+import { useOutboxStore } from './stores/outbox'
 
 const savedLang = getSavedLocale(true)
 
@@ -84,3 +85,7 @@ app.use(Quasar, {
 })
 
 app.mount('#app')
+
+// Initialize the offline outbox: loads pending operations from IndexedDB.
+// Done after mount so Pinia is fully available.
+useOutboxStore().init().catch(e => console.warn('[outbox] init failed:', e))
