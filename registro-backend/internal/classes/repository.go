@@ -510,7 +510,7 @@ func (r *PostgresRepository) GetMonthlyJournalData(ctx context.Context, classID 
 			var dayNum int
 			if err := rows.Scan(&sid, &dayNum, &status); err == nil {
 				if st, ok := studentMap[sid]; ok {
-					code := "P"
+					var code string
 					switch status {
 					case "Absent":
 						code = "A"

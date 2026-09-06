@@ -25,12 +25,6 @@ type teacherSeed struct {
 	Subject   string
 }
 
-type studentSeed struct {
-	FirstName string
-	LastName  string
-	Gender    string // "M" or "F"
-}
-
 func main() {
 	dbURL := os.Getenv("DATABASE_URL")
 	if dbURL == "" {
