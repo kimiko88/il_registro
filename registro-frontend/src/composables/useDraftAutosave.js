@@ -15,9 +15,17 @@ export function useDraftAutosave(storageKey, dataRef, debounceMs = 1500) {
         const raw = localStorage.getItem(key)
         if (raw) {
             const parsed = JSON.parse(raw)
-            const age = parsed?.savedAt ? Date.now() - new Date(parsed.savedAt).getTime() : Infinity
-            hasDraft.value = age < DRAFT_TTL_MS
-            if (!hasDraft.value) localStorage.removeItem(key) // clean up expired draft immediately
+            let isExpired = false
+            if (parsed?.savedAt) {
+                const savedTime = new Date(parsed.savedAt).getTime()
+                if (!isNaN(savedTime) && (Date.now() - savedTime > DRAFT_TTL_MS)) {
+                    isExpired = true
+                }
+            }
+            hasDraft.value = !isExpired
+            if (isExpired) {
+                localStorage.removeItem(key)
+            }
         }
     } catch {
         hasDraft.value = false

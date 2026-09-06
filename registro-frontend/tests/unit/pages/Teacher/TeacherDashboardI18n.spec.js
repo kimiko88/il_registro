@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { setActivePinia, createPinia } from 'pinia'
-import { ref } from 'vue'
 
 const { currentLocale } = vi.hoisted(() => {
   const { ref } = require('vue')
@@ -50,7 +49,7 @@ vi.mock('vue-router', () => ({
 }))
 
 import { Quasar } from 'quasar'
-import TeacherIndex from '@/pages/Teacher/Index.vue'
+import TeacherIndex from '@/pages/teacher/Index.vue'
 import { useTeacherStore } from '@/stores/teacher'
 import { useClassesStore } from '@/stores/classes'
 

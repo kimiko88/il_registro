@@ -645,4 +645,12 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
     - **186/186** suite di unit test superate (**1217/1217 test passati**) — +2 nuove suite frontend (`GlobalSearch.spec.js`, `GradeAnalyticsCharts.spec.js`), +7 nuovi test.
     - **0 errori, 0 warning** ESLint (`npm run lint`).
     - Backend: `go vet ./...` (0 errori/warning) e tutti i test `go test` superati (subjects, classes, scrutiny, upload, cache, metrics).
+    - **Risoluzione `golangci-lint` (errcheck & staticcheck)**:
+      - `internal/admin/handler.go`: Aggiunta soppressione esplicita dell'errore di chiusura client Redis `defer func() { _ = rdb.Close() }()` per soddisfare `errcheck`.
+      - `internal/metrics/metrics.go`: Sostituite tutte le chiamate `buf.WriteString(fmt.Sprintf(...))` con `fmt.Fprintf(&buf, ...)` per conformità alla regola staticcheck QF1012 ed eliminazione di allocazioni intermedie.
+    - **Risoluzione Test CI Linux / Runner**:
+      - `tests/unit/pages/Teacher/TeacherDashboardI18n.spec.js`: Corretto il path di import `@/pages/Teacher/Index.vue` nel path case-sensitive corretto `@/pages/teacher/Index.vue` per compatibilità con ambienti Linux.
+      - `src/composables/useDraftAutosave.js`: Corretta la logica di calcolo TTL su inizializzazione; ora gestisce in modo sicuro campi `savedAt` vuoti (`""`) o non-ISO senza calcolare `NaN` e senza considerare erroneamente scaduta una bozza valida (risolto test `DA04` in `composables-advanced-workflow.spec.js`).
+
+
 
