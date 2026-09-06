@@ -240,7 +240,18 @@ export default {
     "hour": "Година уроку",
     "lessonTopic": "Тема уроку",
     "lessonType": "Тип уроку",
-    "subject": "Предмет"
+    "subject": "Предмет",
+    "reuseLastLesson": "Reuse last lesson topics",
+    "signConsecutive": "Sign Consecutive Hours",
+    "sign2Hours": "Sign 2 consecutive hours",
+    "sign2HoursDesc": "Hours {start} and {end} (same topics and attendance)",
+    "sign3Hours": "Sign 3 consecutive hours",
+    "sign3HoursDesc": "Hours {start}, {mid} and {end}",
+    "confirmMultiHourTitle": "Confirm Consecutive Signature",
+    "confirmMultiHourMsg": "Do you want to sign and record attendance for {count} consecutive hours (from hour {start} to hour {end}) with the same topics and attendance?",
+    "multiHourSaved": "✓ Successfully saved and signed lessons for hours {start} - {end}",
+    "noPreviousLesson": "No previous lesson found for this subject.",
+    "previousLessonLoaded": "✓ Topics loaded from previous lesson of {date}"
   },
   "dashboardPage": {
     "viewYourHomework": "Переглянути домашні завдання та діяльність",
@@ -365,7 +376,11 @@ export default {
     "eventCreated": "Подію успішно створено",
     "eventUpdated": "Подію успішно оновлено",
     "eventDeleted": "Подію успішно видалено",
-    "allDay": "Весь день"
+    "allDay": "Весь день",
+    "conflictWarningTitle": "Potential Test Overlap",
+    "conflictDailyWarning": "There is already {count} other test scheduled for this class on the same day ({date}):",
+    "conflictWeeklyWarning": "Warning: there are already {count} tests scheduled for this class this week ({from} - {to}):",
+    "conflictNotice": "Educational guidelines recommend avoiding multiple tests on the same day or more than 2 in the same week."
   },
   "usersPage": {
     "importTitle": "Імпорт користувачів із CSV",
@@ -2817,10 +2832,10 @@ export default {
     }
   },
   "adminAudit": {
-    "title": "Журнал Аудиту",
-    "subtitle": "Моніторинг подій безпеки та дій користувачів",
-    "actionType": "Тип Дії",
-    "refresh": "Оновити",
+    "title": "Audit Logs & Activity Tracking",
+    "subtitle": "Access and sensitive operations audit trail (DPO & GDPR Compliance)",
+    "actionType": "Action Type",
+    "refresh": "Refresh",
     "all": "Усі",
     "create": "Створення",
     "update": "Зміна",
@@ -2833,8 +2848,14 @@ export default {
     "colSchool": "Заклад",
     "colDetails": "Відомості",
     "errorLoading": "Помилка завантаження журналу",
-    "export": "Експорт у CSV",
-    "noLogs": "Немає зареєстрованих подій"
+    "export": "Export Audit Log (CSV)",
+    "noLogs": "Немає зареєстрованих подій",
+    "filterActor": "Filter by User",
+    "filterTarget": "Entity Type",
+    "filterIp": "IP Address",
+    "filterFrom": "From Date",
+    "filterTo": "To Date",
+    "exportSuccess": "Audit log exported successfully"
   },
   "schedulerPage": {
     "title": "Генератор Розкладу Занять",
@@ -3488,5 +3509,25 @@ export default {
     "signNow": "Підписати зараз",
     "signed": "Підписано",
     "signedOn": "Підписано"
+  },
+  "dropoutRisk": {
+    "title": "Early Warning Dropout Risk Dashboard",
+    "subtitle": "Preventive dropout monitoring under Art. 14 DPR 122/2009",
+    "student": "Student",
+    "class": "Class",
+    "riskLevel": "Risk Level",
+    "riskLow": "Low",
+    "riskMedium": "Medium",
+    "riskHigh": "High",
+    "riskCritical": "Critical",
+    "absenceRate": "Absence Rate",
+    "failingSubjects": "Failing Subjects",
+    "anomalousDelays": "Lates / Early Exits",
+    "exportPlan": "Export Support Plan (CSV)",
+    "exportSuccess": "Support plan exported successfully",
+    "noStudentsAtRisk": "No students at critical dropout risk detected",
+    "filterClass": "Filter by Class",
+    "filterRisk": "Filter by Risk",
+    "dprThresholdNotice": "Critical absence threshold: 25% of annual course hours (DPR 122/2009 art. 14)"
   }
-};
+}

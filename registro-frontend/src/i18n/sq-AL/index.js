@@ -240,7 +240,18 @@ export default {
     "hour": "Ora e Mësimit",
     "lessonTopic": "Tema e Mësimit",
     "lessonType": "Lloji i Mësimit",
-    "subject": "Lënda"
+    "subject": "Lënda",
+    "reuseLastLesson": "Reuse last lesson topics",
+    "signConsecutive": "Sign Consecutive Hours",
+    "sign2Hours": "Sign 2 consecutive hours",
+    "sign2HoursDesc": "Hours {start} and {end} (same topics and attendance)",
+    "sign3Hours": "Sign 3 consecutive hours",
+    "sign3HoursDesc": "Hours {start}, {mid} and {end}",
+    "confirmMultiHourTitle": "Confirm Consecutive Signature",
+    "confirmMultiHourMsg": "Do you want to sign and record attendance for {count} consecutive hours (from hour {start} to hour {end}) with the same topics and attendance?",
+    "multiHourSaved": "✓ Successfully saved and signed lessons for hours {start} - {end}",
+    "noPreviousLesson": "No previous lesson found for this subject.",
+    "previousLessonLoaded": "✓ Topics loaded from previous lesson of {date}"
   },
   "dashboardPage": {
     "viewYourHomework": "Shiko detyrat dhe aktivitetet e tua",
@@ -365,7 +376,11 @@ export default {
     "eventCreated": "Ngjarja u krijua me sukses",
     "eventUpdated": "Ngjarja u modifikua me sukses",
     "eventDeleted": "Ngjarja u hoq me sukses",
-    "allDay": "Gjithë ditën"
+    "allDay": "Gjithë ditën",
+    "conflictWarningTitle": "Potential Test Overlap",
+    "conflictDailyWarning": "There is already {count} other test scheduled for this class on the same day ({date}):",
+    "conflictWeeklyWarning": "Warning: there are already {count} tests scheduled for this class this week ({from} - {to}):",
+    "conflictNotice": "Educational guidelines recommend avoiding multiple tests on the same day or more than 2 in the same week."
   },
   "usersPage": {
     "importTitle": "Importimi i përdoruesve nga CSV",
@@ -2962,10 +2977,10 @@ export default {
     }
   },
   "adminAudit": {
-    "title": "Regjistrat e Auditimit",
-    "subtitle": "Monitorimi i veprimtarive dhe sigurisë së sistemit",
-    "actionType": "Lloji i Veprimit",
-    "refresh": "Rifresko",
+    "title": "Audit Logs & Activity Tracking",
+    "subtitle": "Access and sensitive operations audit trail (DPO & GDPR Compliance)",
+    "actionType": "Action Type",
+    "refresh": "Refresh",
     "all": "Të Gjitha",
     "create": "Krijim",
     "update": "Modifikim",
@@ -2978,8 +2993,14 @@ export default {
     "colSchool": "Shkolla",
     "colDetails": "Hollësi",
     "errorLoading": "Gabim gjatë ngarkimit të regjistrave",
-    "export": "Eksporto CSV",
-    "noLogs": "Nuk ka ngjarje të regjistruara"
+    "export": "Export Audit Log (CSV)",
+    "noLogs": "Nuk ka ngjarje të regjistruara",
+    "filterActor": "Filter by User",
+    "filterTarget": "Entity Type",
+    "filterIp": "IP Address",
+    "filterFrom": "From Date",
+    "filterTo": "To Date",
+    "exportSuccess": "Audit log exported successfully"
   },
   "schedulerPage": {
     "title": "Gjeneruesi i Orarit Shkollor",
@@ -3633,5 +3654,25 @@ export default {
     "signNow": "Nënshkruaj Tani",
     "signed": "E nënshkruar",
     "signedOn": "Nënshkruar më"
+  },
+  "dropoutRisk": {
+    "title": "Early Warning Dropout Risk Dashboard",
+    "subtitle": "Preventive dropout monitoring under Art. 14 DPR 122/2009",
+    "student": "Student",
+    "class": "Class",
+    "riskLevel": "Risk Level",
+    "riskLow": "Low",
+    "riskMedium": "Medium",
+    "riskHigh": "High",
+    "riskCritical": "Critical",
+    "absenceRate": "Absence Rate",
+    "failingSubjects": "Failing Subjects",
+    "anomalousDelays": "Lates / Early Exits",
+    "exportPlan": "Export Support Plan (CSV)",
+    "exportSuccess": "Support plan exported successfully",
+    "noStudentsAtRisk": "No students at critical dropout risk detected",
+    "filterClass": "Filter by Class",
+    "filterRisk": "Filter by Risk",
+    "dprThresholdNotice": "Critical absence threshold: 25% of annual course hours (DPR 122/2009 art. 14)"
   }
-};
+}

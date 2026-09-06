@@ -24,6 +24,7 @@ type FilterParams struct {
 	ActorID    string
 	Action     string
 	EntityType string
+	IPAddress  string
 	From       string
 	To         string
 	Page       int

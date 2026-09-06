@@ -3,6 +3,7 @@ package users
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -152,6 +153,11 @@ func (m *MockRepository) GetFascicoloSummary(ctx context.Context, studentID stri
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(map[string]interface{}), args.Error(1)
+}
+
+func (m *MockRepository) ApplyDataRetention(ctx context.Context, schoolID *string, cutoffDate time.Time) (int, error) {
+	args := m.Called(ctx, schoolID, cutoffDate)
+	return args.Int(0), args.Error(1)
 }
 
 func TestService_CreateUser(t *testing.T) {

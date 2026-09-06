@@ -240,7 +240,18 @@ export default {
     "hour": "Ora Lecției",
     "lessonTopic": "Subiectul Lecției",
     "lessonType": "Tipul Lecției",
-    "subject": "Materie"
+    "subject": "Materie",
+    "reuseLastLesson": "Reuse last lesson topics",
+    "signConsecutive": "Sign Consecutive Hours",
+    "sign2Hours": "Sign 2 consecutive hours",
+    "sign2HoursDesc": "Hours {start} and {end} (same topics and attendance)",
+    "sign3Hours": "Sign 3 consecutive hours",
+    "sign3HoursDesc": "Hours {start}, {mid} and {end}",
+    "confirmMultiHourTitle": "Confirm Consecutive Signature",
+    "confirmMultiHourMsg": "Do you want to sign and record attendance for {count} consecutive hours (from hour {start} to hour {end}) with the same topics and attendance?",
+    "multiHourSaved": "✓ Successfully saved and signed lessons for hours {start} - {end}",
+    "noPreviousLesson": "No previous lesson found for this subject.",
+    "previousLessonLoaded": "✓ Topics loaded from previous lesson of {date}"
   },
   "dashboardPage": {
     "viewYourHomework": "Vezi temele și activitățile tale",
@@ -365,7 +376,11 @@ export default {
     "eventCreated": "Eveniment creat cu succes",
     "eventUpdated": "Eveniment actualizat cu succes",
     "eventDeleted": "Eveniment șters cu succes",
-    "allDay": "Toată ziua"
+    "allDay": "Toată ziua",
+    "conflictWarningTitle": "Potential Test Overlap",
+    "conflictDailyWarning": "There is already {count} other test scheduled for this class on the same day ({date}):",
+    "conflictWeeklyWarning": "Warning: there are already {count} tests scheduled for this class this week ({from} - {to}):",
+    "conflictNotice": "Educational guidelines recommend avoiding multiple tests on the same day or more than 2 in the same week."
   },
   "usersPage": {
     "importTitle": "Import utilizatori din CSV",
@@ -2817,10 +2832,10 @@ export default {
     }
   },
   "adminAudit": {
-    "title": "Jurnale de Audit",
-    "subtitle": "Monitorizarea activității și a securității sistemului",
-    "actionType": "Tip Acțiune",
-    "refresh": "Reîmprospătează",
+    "title": "Audit Logs & Activity Tracking",
+    "subtitle": "Access and sensitive operations audit trail (DPO & GDPR Compliance)",
+    "actionType": "Action Type",
+    "refresh": "Refresh",
     "all": "Toate",
     "create": "Creare",
     "update": "Modificare",
@@ -2833,8 +2848,14 @@ export default {
     "colSchool": "Școală",
     "colDetails": "Detalii",
     "errorLoading": "Eroare la încărcarea jurnalelor",
-    "export": "Exportă CSV",
-    "noLogs": "Niciun eveniment înregistrat"
+    "export": "Export Audit Log (CSV)",
+    "noLogs": "Niciun eveniment înregistrat",
+    "filterActor": "Filter by User",
+    "filterTarget": "Entity Type",
+    "filterIp": "IP Address",
+    "filterFrom": "From Date",
+    "filterTo": "To Date",
+    "exportSuccess": "Audit log exported successfully"
   },
   "schedulerPage": {
     "title": "Generator Orare Școlare",
@@ -3488,5 +3509,25 @@ export default {
     "signNow": "Semnează Acum",
     "signed": "Semnat",
     "signedOn": "Semnat la"
+  },
+  "dropoutRisk": {
+    "title": "Early Warning Dropout Risk Dashboard",
+    "subtitle": "Preventive dropout monitoring under Art. 14 DPR 122/2009",
+    "student": "Student",
+    "class": "Class",
+    "riskLevel": "Risk Level",
+    "riskLow": "Low",
+    "riskMedium": "Medium",
+    "riskHigh": "High",
+    "riskCritical": "Critical",
+    "absenceRate": "Absence Rate",
+    "failingSubjects": "Failing Subjects",
+    "anomalousDelays": "Lates / Early Exits",
+    "exportPlan": "Export Support Plan (CSV)",
+    "exportSuccess": "Support plan exported successfully",
+    "noStudentsAtRisk": "No students at critical dropout risk detected",
+    "filterClass": "Filter by Class",
+    "filterRisk": "Filter by Risk",
+    "dprThresholdNotice": "Critical absence threshold: 25% of annual course hours (DPR 122/2009 art. 14)"
   }
-};
+}

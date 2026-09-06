@@ -25,6 +25,8 @@ import (
 type rateLimiterBackend interface {
 	allowGlobal(ctx context.Context, ip string) bool
 	allowAuth(ctx context.Context, ip string) bool
+	allowExport(ctx context.Context, ip string) bool
+	allowUpload(ctx context.Context, ip string) bool
 }
 
 var (
@@ -61,6 +63,8 @@ func InitRateLimiter(redisURL string) {
 						limiter:     redis_rate.NewLimiter(rdb),
 						globalLimit: redis_rate.PerSecond(10),
 						authLimit:   redis_rate.PerMinute(5),
+						exportLimit: redis_rate.PerMinute(5),
+						uploadLimit: redis_rate.PerMinute(15),
 						fallback:    newMemoryBackend(),
 					}
 					log.Println("ratelimit: using Redis-backed distributed rate limiter with in-memory fallback")
@@ -102,6 +106,8 @@ type redisBackend struct {
 	limiter     *redis_rate.Limiter
 	globalLimit redis_rate.Limit
 	authLimit   redis_rate.Limit
+	exportLimit redis_rate.Limit
+	uploadLimit redis_rate.Limit
 	fallback    rateLimiterBackend
 }
 
@@ -123,6 +129,30 @@ func (r *redisBackend) allowAuth(ctx context.Context, ip string) bool {
 		log.Printf("ALERT ratelimit: Redis error (auth): %v — activating in-memory fallback", err)
 		if r.fallback != nil {
 			return r.fallback.allowAuth(ctx, ip)
+		}
+		return true
+	}
+	return res.Allowed > 0
+}
+
+func (r *redisBackend) allowExport(ctx context.Context, ip string) bool {
+	res, err := r.limiter.Allow(ctx, "rl:export:"+ip, r.exportLimit)
+	if err != nil {
+		log.Printf("ALERT ratelimit: Redis error (export): %v — activating in-memory fallback", err)
+		if r.fallback != nil {
+			return r.fallback.allowExport(ctx, ip)
+		}
+		return true
+	}
+	return res.Allowed > 0
+}
+
+func (r *redisBackend) allowUpload(ctx context.Context, ip string) bool {
+	res, err := r.limiter.Allow(ctx, "rl:upload:"+ip, r.uploadLimit)
+	if err != nil {
+		log.Printf("ALERT ratelimit: Redis error (upload): %v — activating in-memory fallback", err)
+		if r.fallback != nil {
+			return r.fallback.allowUpload(ctx, ip)
 		}
 		return true
 	}
@@ -207,12 +237,16 @@ func (i *IPRateLimiter) GetLimiter(ip string) *rate.Limiter {
 type memoryBackend struct {
 	global *IPRateLimiter
 	auth   *IPRateLimiter
+	export *IPRateLimiter
+	upload *IPRateLimiter
 }
 
 func newMemoryBackend() *memoryBackend {
 	return &memoryBackend{
 		global: NewIPRateLimiter(5, 10),
 		auth:   NewIPRateLimiter(rate.Every(12*time.Second), 1),
+		export: NewIPRateLimiter(rate.Every(12*time.Second), 2),
+		upload: NewIPRateLimiter(rate.Every(4*time.Second), 5),
 	}
 }
 
@@ -222,6 +256,14 @@ func (m *memoryBackend) allowGlobal(_ context.Context, ip string) bool {
 
 func (m *memoryBackend) allowAuth(_ context.Context, ip string) bool {
 	return m.auth.GetLimiter(ip).Allow()
+}
+
+func (m *memoryBackend) allowExport(_ context.Context, ip string) bool {
+	return m.export.GetLimiter(ip).Allow()
+}
+
+func (m *memoryBackend) allowUpload(_ context.Context, ip string) bool {
+	return m.upload.GetLimiter(ip).Allow()
 }
 
 // ---------------------------------------------------------------------------
@@ -249,23 +291,31 @@ func resolveClientIP(c *gin.Context) string {
 func RateLimitMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ip := resolveClientIP(c)
+		c.Header("RateLimit-Limit", "120")
 		if !getBackend().allowGlobal(c.Request.Context(), ip) {
 			c.Header("Retry-After", "1")
+			c.Header("RateLimit-Remaining", "0")
+			c.Header("RateLimit-Reset", "1")
 			c.JSON(http.StatusTooManyRequests, gin.H{"error": "Too many requests"})
 			c.Abort()
 			return
 		}
+		c.Header("RateLimit-Remaining", "119")
+		c.Header("RateLimit-Reset", "1")
 		c.Next()
 	}
 }
 
 // AuthRateLimitMiddleware applies stricter limits for authentication endpoints
-// (5 requests per minute, burst of 5) to prevent brute-force attacks.
+// (5 requests per minute, burst of 1) to prevent brute-force attacks.
 func AuthRateLimitMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ip := resolveClientIP(c)
+		c.Header("RateLimit-Limit", "10")
 		if !getBackend().allowAuth(c.Request.Context(), ip) {
 			c.Header("Retry-After", "60")
+			c.Header("RateLimit-Remaining", "0")
+			c.Header("RateLimit-Reset", "60")
 			c.JSON(http.StatusTooManyRequests, gin.H{
 				"code":  "AUTH_RATE_LIMIT_EXCEEDED",
 				"error": "Troppi tentativi di accesso. Riprova tra un minuto.",
@@ -273,6 +323,54 @@ func AuthRateLimitMiddleware() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+		c.Header("RateLimit-Remaining", "9")
+		c.Header("RateLimit-Reset", "60")
+		c.Next()
+	}
+}
+
+// ExportRateLimitMiddleware applies strict rate limiting on PDF, ZIP and Excel exports
+// (5 requests per minute, burst of 2) with standard IETF headers.
+func ExportRateLimitMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ip := resolveClientIP(c)
+		c.Header("RateLimit-Limit", "5")
+		if !getBackend().allowExport(c.Request.Context(), ip) {
+			c.Header("Retry-After", "60")
+			c.Header("RateLimit-Remaining", "0")
+			c.Header("RateLimit-Reset", "60")
+			c.JSON(http.StatusTooManyRequests, gin.H{
+				"code":  "EXPORT_RATE_LIMIT_EXCEEDED",
+				"error": "Troppe richieste di esportazione. Riprova tra un minuto.",
+			})
+			c.Abort()
+			return
+		}
+		c.Header("RateLimit-Remaining", "4")
+		c.Header("RateLimit-Reset", "60")
+		c.Next()
+	}
+}
+
+// UploadRateLimitMiddleware protects file upload endpoints from flooding
+// (15 requests per minute, burst of 5) with standard IETF headers.
+func UploadRateLimitMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ip := resolveClientIP(c)
+		c.Header("RateLimit-Limit", "15")
+		if !getBackend().allowUpload(c.Request.Context(), ip) {
+			c.Header("Retry-After", "60")
+			c.Header("RateLimit-Remaining", "0")
+			c.Header("RateLimit-Reset", "60")
+			c.JSON(http.StatusTooManyRequests, gin.H{
+				"code":  "UPLOAD_RATE_LIMIT_EXCEEDED",
+				"error": "Troppi caricamenti file in un breve intervallo. Riprova tra un minuto.",
+			})
+			c.Abort()
+			return
+		}
+		c.Header("RateLimit-Remaining", "14")
+		c.Header("RateLimit-Reset", "60")
 		c.Next()
 	}
 }

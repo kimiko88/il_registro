@@ -10,8 +10,8 @@
     <!-- Filters -->
     <q-card class="q-mb-md">
       <q-card-section>
-        <div class="row q-col-gutter-md">
-          <div class="col-12 col-sm-6 col-md-4">
+        <div class="row q-col-gutter-md items-center">
+          <div class="col-12 col-sm-6 col-md-3">
             <q-select
               v-model="filters.action"
               :options="actionOptions"
@@ -24,26 +24,65 @@
               @update:model-value="fetchLogs"
             />
           </div>
-          <div class="col-12 col-sm-6 col-md-4">
+          <div class="col-12 col-sm-6 col-md-3">
+            <q-input
+              v-model="filters.actor"
+              :label="t('adminAudit.filterActor') || 'Utente / ID'"
+              dense
+              outlined
+              clearable
+              @keyup.enter="fetchLogs"
+            >
+              <template v-slot:prepend>
+                <q-icon name="person" />
+              </template>
+            </q-input>
+          </div>
+          <div class="col-12 col-sm-6 col-md-3">
+            <q-input
+              v-model="filters.fromDate"
+              type="date"
+              :label="t('adminAudit.filterFrom') || 'Dalla Data'"
+              dense
+              outlined
+              clearable
+              @update:model-value="fetchLogs"
+            />
+          </div>
+          <div class="col-12 col-sm-6 col-md-3">
+            <q-input
+              v-model="filters.toDate"
+              type="date"
+              :label="t('adminAudit.filterTo') || 'Alla Data'"
+              dense
+              outlined
+              clearable
+              @update:model-value="fetchLogs"
+            />
+          </div>
+          <div class="col-12 row justify-end q-gutter-sm q-mt-xs">
+            <q-btn
+              flat
+              color="grey-7"
+              icon="clear_all"
+              label="Reset Filtri"
+              @click="resetFilters"
+            />
             <q-btn
               outline
               color="primary"
-              icon="refresh"
-              :label="t('adminAudit.refresh')"
+              icon="search"
+              :label="t('adminAudit.refresh') || 'Filtra'"
               @click="fetchLogs"
               :loading="loading"
-              class="full-width"
             />
-          </div>
-          <div class="col-12 col-sm-12 col-md-4">
             <q-btn
-              outline
+              unelevated
               color="secondary"
               icon="download"
-              :label="t('adminAudit.export')"
+              :label="t('adminAudit.export') || 'Esporta CSV'"
               @click="exportAuditLogs"
               :disable="logs.length === 0"
-              class="full-width"
             />
           </div>
         </div>
@@ -113,8 +152,19 @@ const logs = ref([])
 const loading = ref(false)
 
 const filters = reactive({
-  action: null
+  action: null,
+  actor: '',
+  fromDate: '',
+  toDate: ''
 })
+
+const resetFilters = () => {
+  filters.action = null
+  filters.actor = ''
+  filters.fromDate = ''
+  filters.toDate = ''
+  fetchLogs()
+}
 
 const pagination = ref({
   page: 1,
@@ -163,10 +213,13 @@ const fetchLogs = async () => {
     const params = {
       page: pagination.value.page,
       page_size: pagination.value.rowsPerPage,
-      action: filters.action || undefined
+      action: filters.action || undefined,
+      admin_id: filters.actor || undefined,
+      from_date: filters.fromDate || undefined,
+      to_date: filters.toDate || undefined
     }
     const response = await adminService.getAuditLogs(params)
-    logs.value = response.data.items || []
+    logs.value = response.data.items || response.data.data || []
     const totalCount = response.data.total !== undefined ? Number(response.data.total) : logs.value.length
     pagination.value.rowsNumber = totalCount
   } catch (error) {

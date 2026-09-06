@@ -94,8 +94,8 @@ func (r *repository) List(ctx context.Context, p FilterParams) ([]AuditEvent, in
 		argID++
 	}
 	if p.ActorID != "" {
-		where += fmt.Sprintf(" AND actor_id = $%d", argID)
-		args = append(args, p.ActorID)
+		where += fmt.Sprintf(" AND (actor_id ILIKE $%d OR actor_name ILIKE $%d)", argID, argID)
+		args = append(args, "%"+p.ActorID+"%")
 		argID++
 	}
 	if p.Action != "" {
@@ -104,8 +104,13 @@ func (r *repository) List(ctx context.Context, p FilterParams) ([]AuditEvent, in
 		argID++
 	}
 	if p.EntityType != "" {
-		where += fmt.Sprintf(" AND entity_type = $%d", argID)
-		args = append(args, p.EntityType)
+		where += fmt.Sprintf(" AND entity_type ILIKE $%d", argID)
+		args = append(args, "%"+p.EntityType+"%")
+		argID++
+	}
+	if p.IPAddress != "" {
+		where += fmt.Sprintf(" AND ip_address ILIKE $%d", argID)
+		args = append(args, "%"+p.IPAddress+"%")
 		argID++
 	}
 	if p.From != "" {

@@ -3,6 +3,7 @@ package grades
 import (
 	"context"
 	"testing"
+	"time"
 
 	"registro-backend/internal/users"
 
@@ -502,6 +503,9 @@ func (m *MockUserRepo) ChangePasswordTx(ctx context.Context, userID, passwordHas
 }
 func (m *MockUserRepo) GetFascicoloSummary(ctx context.Context, studentID string, isActive bool) (map[string]interface{}, error) {
 	return nil, nil
+}
+func (m *MockUserRepo) ApplyDataRetention(ctx context.Context, schoolID *string, cutoffDate time.Time) (int, error) {
+	return 0, nil
 }
 
 func TestAddGrade(t *testing.T) {

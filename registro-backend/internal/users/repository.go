@@ -43,6 +43,7 @@ type Repository interface {
 	HardDelete(ctx context.Context, id string) error // Actual DB delete
 	RevokeAllUserTokens(ctx context.Context, userID string) error
 	ClearTempMFASecret(ctx context.Context, userID string) error
+	ApplyDataRetention(ctx context.Context, schoolID *string, cutoffDate time.Time) (int, error)
 
 	// Relationships
 	IsGuardian(ctx context.Context, parentUserID string, studentUserID string) (bool, error)
@@ -795,4 +796,41 @@ func (r *PostgresRepository) GetFascicoloSummary(ctx context.Context, studentID 
 		"notes_count":     notesCount,
 		"pcto_hours":      pctoHours,
 	}, nil
+}
+
+func (r *PostgresRepository) ApplyDataRetention(ctx context.Context, schoolID *string, cutoffDate time.Time) (int, error) {
+	query := `
+		UPDATE users
+		SET first_name = 'Anonimo',
+		    last_name = 'Studente-' || SUBSTRING(MD5(id::text || NOW()::text), 1, 8),
+		    email = 'anon_' || SUBSTRING(MD5(id::text || NOW()::text), 1, 10) || '@retention.local',
+		    fiscal_code = NULL,
+		    phone_number = NULL,
+		    job_title = NULL,
+		    password_hash = '',
+		    mfa_secret = '',
+		    mfa_enabled = false,
+		    is_active = false,
+		    email_verified = false,
+		    deleted_at = COALESCE(deleted_at, NOW()),
+		    pseudonymized_at = NOW(),
+		    updated_at = NOW()
+		WHERE role = 'student'
+		  AND pseudonymized_at IS NULL
+		  AND ($1::uuid IS NULL OR school_id = $1::uuid)
+		  AND (
+		    (deleted_at IS NOT NULL AND deleted_at <= $2)
+		    OR (is_active = false AND updated_at <= $2)
+		    OR (created_at <= $2 AND is_active = false)
+		  )
+	`
+	res, err := r.db.ExecContext(ctx, query, schoolID, cutoffDate)
+	if err != nil {
+		return 0, err
+	}
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return 0, err
+	}
+	return int(rows), nil
 }

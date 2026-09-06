@@ -240,7 +240,18 @@ export default {
     "hour": "Ora Lezione",
     "lessonTopic": "Argomento della Lezione",
     "lessonType": "Tipo di Lezione",
-    "subject": "Materia"
+    "subject": "Materia",
+    "reuseLastLesson": "Riprendi argomenti ultima lezione",
+    "signConsecutive": "Firma Blocco Consecutivo",
+    "sign2Hours": "Firma 2 ore consecutive",
+    "sign2HoursDesc": "Ore {start}ª e {end}ª (stessi argomenti e presenze)",
+    "sign3Hours": "Firma 3 ore consecutive",
+    "sign3HoursDesc": "Ore {start}ª, {mid}ª e {end}ª",
+    "confirmMultiHourTitle": "Conferma Firma Consecutiva",
+    "confirmMultiHourMsg": "Vuoi firmare e registrare le presenze per {count} ore consecutive (dall'ora {start}ª all'ora {end}ª) con gli stessi argomenti e presenze?",
+    "multiHourSaved": "✓ Salvate e firmate con successo le lezioni per le ore {start} - {end}",
+    "noPreviousLesson": "Nessuna lezione precedente trovata per questa materia.",
+    "previousLessonLoaded": "✓ Argomenti ripresi dall'ultima lezione del {date}"
   },
   "dashboardPage": {
     "viewYourHomework": "Vedi i Tuoi Compiti & Attività",
@@ -365,7 +376,11 @@ export default {
     "eventCreated": "Evento creato con successo",
     "eventUpdated": "Evento modificato con successo",
     "eventDeleted": "Evento rimosso con successo",
-    "allDay": "Tutto il giorno"
+    "allDay": "Tutto il giorno",
+    "conflictWarningTitle": "Possibile Sovrapposizione Verifiche",
+    "conflictDailyWarning": "C'è già {count} altra verifica programmata per questa classe lo stesso giorno ({date}):",
+    "conflictWeeklyWarning": "Attenzione: ci sono già {count} verifiche programmate per questa classe nella settimana ({from} - {to}):",
+    "conflictNotice": "Le linee guida didattiche raccomandano di evitare più verifiche nello stesso giorno o più di 2 nella stessa settimana."
   },
   "usersPage": {
     "importTitle": "Importazione Utenti da CSV",
@@ -2817,8 +2832,8 @@ export default {
     }
   },
   "adminAudit": {
-    "title": "Audit Logs",
-    "subtitle": "Monitoraggio attività e sicurezza di sistema",
+    "title": "Audit Logs & Tracciamento Attività",
+    "subtitle": "Tracciamento accessi e operazioni sensibili (DPO & GDPR Compliance)",
     "actionType": "Tipo Azione",
     "refresh": "Aggiorna",
     "all": "Tutti",
@@ -2833,8 +2848,14 @@ export default {
     "colSchool": "Scuola",
     "colDetails": "Dettagli",
     "errorLoading": "Errore caricamento logs",
-    "export": "Esporta CSV",
-    "noLogs": "Nessun evento registrato"
+    "export": "Esporta Audit Log (CSV)",
+    "noLogs": "Nessun evento registrato",
+    "filterActor": "Filtra per Utente",
+    "filterTarget": "Tipo Entità",
+    "filterIp": "Indirizzo IP",
+    "filterFrom": "Dalla Data",
+    "filterTo": "Alla Data",
+    "exportSuccess": "Audit Log esportato con successo"
   },
   "schedulerPage": {
     "title": "Generatore Orario Scolastico",
@@ -3488,5 +3509,25 @@ export default {
     "signNow": "Firma Ora",
     "signed": "Firmato",
     "signedOn": "Firmato il"
+  },
+  "dropoutRisk": {
+    "title": "Cruscotto Rischio Dispersione Scolastica (Early Warning)",
+    "subtitle": "Monitoraggio preventivo dispersione ai sensi dell'art. 14 DPR 122/2009",
+    "student": "Studente",
+    "class": "Classe",
+    "riskLevel": "Livello di Rischio",
+    "riskLow": "Basso",
+    "riskMedium": "Moderato",
+    "riskHigh": "Alto",
+    "riskCritical": "Critico",
+    "absenceRate": "Tasso Assenze",
+    "failingSubjects": "Materie Insufficienti",
+    "anomalousDelays": "Ritardi / Uscite",
+    "exportPlan": "Esporta Piano di Supporto (CSV)",
+    "exportSuccess": "Piano di supporto scaricato con successo",
+    "noStudentsAtRisk": "Nessuno studente ad alto rischio dispersione rilevato",
+    "filterClass": "Filtra per Classe",
+    "filterRisk": "Filtra per Rischio",
+    "dprThresholdNotice": "Soglia critica assenze: 25% del monte ore annuale (DPR 122/2009 art. 14 c. 7)"
   }
-};
+}

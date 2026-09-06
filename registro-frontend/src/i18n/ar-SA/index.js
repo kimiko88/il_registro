@@ -240,7 +240,18 @@ export default {
     "hour": "ساعة الدرس",
     "lessonTopic": "موضوع الدرس",
     "lessonType": "نوع الدرس",
-    "subject": "المادة"
+    "subject": "المادة",
+    "reuseLastLesson": "Reuse last lesson topics",
+    "signConsecutive": "Sign Consecutive Hours",
+    "sign2Hours": "Sign 2 consecutive hours",
+    "sign2HoursDesc": "Hours {start} and {end} (same topics and attendance)",
+    "sign3Hours": "Sign 3 consecutive hours",
+    "sign3HoursDesc": "Hours {start}, {mid} and {end}",
+    "confirmMultiHourTitle": "Confirm Consecutive Signature",
+    "confirmMultiHourMsg": "Do you want to sign and record attendance for {count} consecutive hours (from hour {start} to hour {end}) with the same topics and attendance?",
+    "multiHourSaved": "✓ Successfully saved and signed lessons for hours {start} - {end}",
+    "noPreviousLesson": "No previous lesson found for this subject.",
+    "previousLessonLoaded": "✓ Topics loaded from previous lesson of {date}"
   },
   "dashboardPage": {
     "viewYourHomework": "عرض واجباتك وأنشطتك",
@@ -365,7 +376,11 @@ export default {
     "eventCreated": "تم إنشاء الحدث بنجاح",
     "eventUpdated": "تم تعديل الحدث بنجاح",
     "eventDeleted": "تم حذف الحدث بنجاح",
-    "allDay": "طوال اليوم"
+    "allDay": "طوال اليوم",
+    "conflictWarningTitle": "Potential Test Overlap",
+    "conflictDailyWarning": "There is already {count} other test scheduled for this class on the same day ({date}):",
+    "conflictWeeklyWarning": "Warning: there are already {count} tests scheduled for this class this week ({from} - {to}):",
+    "conflictNotice": "Educational guidelines recommend avoiding multiple tests on the same day or more than 2 in the same week."
   },
   "usersPage": {
     "importTitle": "استيراد المستخدمين من CSV",
@@ -2962,10 +2977,10 @@ export default {
     }
   },
   "adminAudit": {
-    "title": "سجلات التدقيق الأمني",
-    "subtitle": "مراقبة الأنشطة وأمان النظام",
-    "actionType": "نوع الإجراء",
-    "refresh": "تحديث",
+    "title": "Audit Logs & Activity Tracking",
+    "subtitle": "Access and sensitive operations audit trail (DPO & GDPR Compliance)",
+    "actionType": "Action Type",
+    "refresh": "Refresh",
     "all": "الكل",
     "create": "إنشاء",
     "update": "تعديل",
@@ -2978,8 +2993,14 @@ export default {
     "colSchool": "المدرسة",
     "colDetails": "التفاصيل",
     "errorLoading": "حدث خطأ أثناء تحميل السجلات",
-    "export": "تصدير CSV",
-    "noLogs": "لا توجد أحداث مسجلة"
+    "export": "Export Audit Log (CSV)",
+    "noLogs": "لا توجد أحداث مسجلة",
+    "filterActor": "Filter by User",
+    "filterTarget": "Entity Type",
+    "filterIp": "IP Address",
+    "filterFrom": "From Date",
+    "filterTo": "To Date",
+    "exportSuccess": "Audit log exported successfully"
   },
   "schedulerPage": {
     "title": "منشئ الجداول المدرسية",
@@ -3633,5 +3654,25 @@ export default {
     "signNow": "وقّع الآن",
     "signed": "تم التوقيع",
     "signedOn": "تم التوقيع بتاريخ"
+  },
+  "dropoutRisk": {
+    "title": "Early Warning Dropout Risk Dashboard",
+    "subtitle": "Preventive dropout monitoring under Art. 14 DPR 122/2009",
+    "student": "Student",
+    "class": "Class",
+    "riskLevel": "Risk Level",
+    "riskLow": "Low",
+    "riskMedium": "Medium",
+    "riskHigh": "High",
+    "riskCritical": "Critical",
+    "absenceRate": "Absence Rate",
+    "failingSubjects": "Failing Subjects",
+    "anomalousDelays": "Lates / Early Exits",
+    "exportPlan": "Export Support Plan (CSV)",
+    "exportSuccess": "Support plan exported successfully",
+    "noStudentsAtRisk": "No students at critical dropout risk detected",
+    "filterClass": "Filter by Class",
+    "filterRisk": "Filter by Risk",
+    "dprThresholdNotice": "Critical absence threshold: 25% of annual course hours (DPR 122/2009 art. 14)"
   }
-};
+}
