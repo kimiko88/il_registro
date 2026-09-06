@@ -254,6 +254,29 @@ export const useWebSocketStore = defineStore('websocket', () => {
         }, delay)
     }
 
+    function sendDesktopNotification({ title, body, icon = '/favicon.ico', tag }) {
+        if (typeof window === 'undefined' || !('Notification' in window)) return null
+        if (Notification.permission !== 'granted') return null
+
+        try {
+            const notif = new Notification(title, {
+                body,
+                icon,
+                tag: tag || `ws_${Date.now()}`
+            })
+            notif.onclick = () => {
+                if (typeof window !== 'undefined') {
+                    window.focus()
+                }
+                notif.close()
+            }
+            return notif
+        } catch (e) {
+            console.debug('Failed to display desktop notification:', e)
+            return null
+        }
+    }
+
     function handleMessage(message) {
         if (!message || !message.type) return
 
@@ -277,14 +300,20 @@ export const useWebSocketStore = defineStore('websocket', () => {
                     console.debug('Failed to refresh grades store:', err)
                 }
                 const subjectFallback = t ? t('gradesPage.student') : 'Materia'
+                const gradeMsg = message.type === 'GRADE_DELETED'
+                    ? (t ? t('notifications.wsGradeDeleted', { subject: escapeHtml(payload.subject_name || subjectFallback) }) : `Voto eliminato per ${escapeHtml(payload.subject_name || subjectFallback)}`)
+                    : (t ? t('notifications.wsGradeUpdated', { value: escapeHtml(payload.grade_value || ''), subject: escapeHtml(payload.subject_name || subjectFallback) }) : `Aggiornamento voto: ${escapeHtml(payload.grade_value || '')} (${escapeHtml(payload.subject_name || subjectFallback)})`)
+
                 Notify.create({
-                    message: message.type === 'GRADE_DELETED'
-                        ? (t ? t('notifications.wsGradeDeleted', { subject: escapeHtml(payload.subject_name || subjectFallback) }) : `Voto eliminato per ${escapeHtml(payload.subject_name || subjectFallback)}`)
-                        : (t ? t('notifications.wsGradeUpdated', { value: escapeHtml(payload.grade_value || ''), subject: escapeHtml(payload.subject_name || subjectFallback) }) : `Aggiornamento voto: ${escapeHtml(payload.grade_value || '')} (${escapeHtml(payload.subject_name || subjectFallback)})`),
+                    message: gradeMsg,
                     color: 'info',
                     icon: 'school',
                     position: 'top-right',
                     attrs: { role: 'alert' }
+                })
+                sendDesktopNotification({
+                    title: 'Registro Elettronico - Voti',
+                    body: gradeMsg.replace(/<[^>]+>/g, '')
                 })
                 break
             }
@@ -299,12 +328,17 @@ export const useWebSocketStore = defineStore('websocket', () => {
                 } catch (err) {
                     console.debug('Failed to refresh attendance store:', err)
                 }
+                const attMsg = t ? t('notifications.wsAttendanceUpdated', { status: escapeHtml(payload.status || '') }) : `Aggiornamento presenze: ${escapeHtml(payload.status || 'Presenza registrata')}`
                 Notify.create({
-                    message: t ? t('notifications.wsAttendanceUpdated', { status: escapeHtml(payload.status || '') }) : `Aggiornamento presenze: ${escapeHtml(payload.status || 'Presenza registrata')}`,
+                    message: attMsg,
                     color: 'warning',
                     icon: 'warning',
                     position: 'top-right',
                     attrs: { role: 'alert' }
+                })
+                sendDesktopNotification({
+                    title: 'Registro Elettronico - Presenze',
+                    body: attMsg.replace(/<[^>]+>/g, '')
                 })
                 break
             }
@@ -315,12 +349,17 @@ export const useWebSocketStore = defineStore('websocket', () => {
                 } catch (err) {
                     console.debug('Failed to refresh attendance store:', err)
                 }
+                const justAppMsg = t ? t('notifications.wsJustificationApproved', { reason: escapeHtml(payload.reason || '') }) : `Giustifica approvata: ${escapeHtml(payload.reason || '')}`
                 Notify.create({
-                    message: t ? t('notifications.wsJustificationApproved', { reason: escapeHtml(payload.reason || '') }) : `Giustifica approvata: ${escapeHtml(payload.reason || '')}`,
+                    message: justAppMsg,
                     color: 'positive',
                     icon: 'check_circle',
                     position: 'top-right',
                     attrs: { role: 'alert' }
+                })
+                sendDesktopNotification({
+                    title: 'Registro Elettronico - Giustifiche',
+                    body: justAppMsg.replace(/<[^>]+>/g, '')
                 })
                 break
             }
@@ -331,12 +370,17 @@ export const useWebSocketStore = defineStore('websocket', () => {
                 } catch (err) {
                     console.debug('Failed to refresh attendance store:', err)
                 }
+                const justRejMsg = t ? t('notifications.wsJustificationRejected', { reason: escapeHtml(payload.reason || '') }) : `Giustifica non approvata: ${escapeHtml(payload.reason || '')}`
                 Notify.create({
-                    message: t ? t('notifications.wsJustificationRejected', { reason: escapeHtml(payload.reason || '') }) : `Giustifica non approvata: ${escapeHtml(payload.reason || '')}`,
+                    message: justRejMsg,
                     color: 'negative',
                     icon: 'cancel',
                     position: 'top-right',
                     attrs: { role: 'alert' }
+                })
+                sendDesktopNotification({
+                    title: 'Registro Elettronico - Giustifiche',
+                    body: justRejMsg.replace(/<[^>]+>/g, '')
                 })
                 break
             }
@@ -348,22 +392,32 @@ export const useWebSocketStore = defineStore('websocket', () => {
                 } catch (err) {
                     console.debug('Failed to refresh communications store:', err)
                 }
+                const commMsg = t ? t('notifications.wsNewCommunication', { title: escapeHtml(payload.title || '') }) : `Nuova comunicazione: ${escapeHtml(payload.title || 'Circolare scolastica')}`
                 Notify.create({
-                    message: t ? t('notifications.wsNewCommunication', { title: escapeHtml(payload.title || '') }) : `Nuova comunicazione: ${escapeHtml(payload.title || 'Circolare scolastica')}`,
+                    message: commMsg,
                     color: 'primary',
                     icon: 'mail',
                     position: 'top-right',
                     attrs: { role: 'alert' }
                 })
+                sendDesktopNotification({
+                    title: 'Registro Elettronico - Comunicazioni',
+                    body: commMsg.replace(/<[^>]+>/g, '')
+                })
                 break
             }
             case 'NOTE_ADDED': {
+                const noteMsg = t ? t('notifications.wsNoteAdded', { title: escapeHtml(payload.title || '') }) : `Nuova nota disciplinare registrata: ${escapeHtml(payload.title || '')}`
                 Notify.create({
-                    message: t ? t('notifications.wsNoteAdded', { title: escapeHtml(payload.title || '') }) : `Nuova nota disciplinare registrata: ${escapeHtml(payload.title || '')}`,
+                    message: noteMsg,
                     color: 'negative',
                     icon: 'report_problem',
                     position: 'top-right',
                     attrs: { role: 'alert' }
+                })
+                sendDesktopNotification({
+                    title: 'Registro Elettronico - Note Disciplinari',
+                    body: noteMsg.replace(/<[^>]+>/g, '')
                 })
                 break
             }
@@ -374,12 +428,17 @@ export const useWebSocketStore = defineStore('websocket', () => {
                 } catch (err) {
                     console.debug('Failed to refresh scrutiny store:', err)
                 }
+                const scrutinyMsg = t ? t('notifications.wsScrutinyPublished', { student: escapeHtml(payload.student_name || '') }) : `Esito scrutinio pubblicato per ${escapeHtml(payload.student_name || 'lo studente')}`
                 Notify.create({
-                    message: t ? t('notifications.wsScrutinyPublished', { student: escapeHtml(payload.student_name || '') }) : `Esito scrutinio pubblicato per ${escapeHtml(payload.student_name || 'lo studente')}`,
+                    message: scrutinyMsg,
                     color: 'positive',
                     icon: 'assignment_turned_in',
                     position: 'top-right',
                     attrs: { role: 'alert' }
+                })
+                sendDesktopNotification({
+                    title: 'Registro Elettronico - Scrutinio',
+                    body: scrutinyMsg.replace(/<[^>]+>/g, '')
                 })
                 break
             }
@@ -395,23 +454,33 @@ export const useWebSocketStore = defineStore('websocket', () => {
             }
             case 'SLOT_BOOKED':
             case 'SLOT_CANCELLED': {
+                const slotMsg = t ? t('notifications.wsSlotUpdated', { msg: escapeHtml(payload.message || '') }) : `Aggiornamento colloquio: ${escapeHtml(payload.message || message.type)}`
                 Notify.create({
-                    message: t ? t('notifications.wsSlotUpdated', { msg: escapeHtml(payload.message || '') }) : `Aggiornamento colloquio: ${escapeHtml(payload.message || message.type)}`,
+                    message: slotMsg,
                     color: 'accent',
                     icon: 'event',
                     position: 'top-right',
                     attrs: { role: 'alert' }
                 })
+                sendDesktopNotification({
+                    title: 'Registro Elettronico - Colloqui',
+                    body: slotMsg.replace(/<[^>]+>/g, '')
+                })
                 break
             }
             default:
                 if ((message.type === 'NOTIFICATION' || message.type === 'SYSTEM_ALERT') && (payload.title || payload.body)) {
+                    const alertMsg = payload.title ? `${escapeHtml(payload.title)}: ${escapeHtml(payload.body)}` : escapeHtml(payload.body)
                     Notify.create({
-                        message: payload.title ? `${escapeHtml(payload.title)}: ${escapeHtml(payload.body)}` : escapeHtml(payload.body),
+                        message: alertMsg,
                         color: 'info',
                         icon: 'notifications',
                         position: 'top-right',
                         attrs: { role: 'alert' }
+                    })
+                    sendDesktopNotification({
+                        title: payload.title || 'Registro Elettronico',
+                        body: payload.body || ''
                     })
                 }
                 break
@@ -421,6 +490,8 @@ export const useWebSocketStore = defineStore('websocket', () => {
     return {
         connect,
         disconnect,
+        handleMessage,
+        sendDesktopNotification,
         isConnected,
         reconnectAttempts,
         hasFailedPermanently,

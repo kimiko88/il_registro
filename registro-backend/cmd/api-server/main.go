@@ -20,6 +20,7 @@ import (
 	"registro-backend/internal/attendance"
 	"registro-backend/internal/auditlog"
 	"registro-backend/internal/auth"
+	"registro-backend/internal/cache"
 	"registro-backend/internal/certificates"
 	"registro-backend/internal/classes"
 	"registro-backend/internal/colloqui"
@@ -115,6 +116,8 @@ func main() {
 	mfaService := auth.NewMFAService("RegistroElettronico")
 	wsHub := ws.NewHub(os.Getenv("REDIS_URL"))
 	go wsHub.Run(ctx)
+	appCache := cache.NewCache(os.Getenv("REDIS_URL"))
+	defer func() { _ = appCache.Close() }()
 
 	// 5. Setup Repositories
 	authRepo := auth.NewRepository(database)
@@ -198,7 +201,7 @@ func main() {
 	// 7. Setup Handlers
 	authH := auth.NewHandler(authSvc, wsTicketStore)
 	usersH := users.NewHandler(usersSvc)
-	schoolsH := schools.NewHandler(schoolsSvc)
+	schoolsH := schools.NewHandler(schoolsSvc, appCache)
 	classesH := classes.NewHandler(classesSvc)
 	gradesH := grades.NewHandler(gradesSvc, gradesAnalytics)
 	attendanceH := attendance.NewHandler(attendanceSvc)

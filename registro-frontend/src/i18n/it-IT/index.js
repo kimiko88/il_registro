@@ -1,5 +1,10 @@
 export default {
   "common": {
+    "somethingWentWrong": "Si è verificato un errore imprevisto",
+    "errorBoundaryHelp": "Questa sezione dell'applicazione ha riscontrato un problema imprevisto. Puoi riprovare o tornare alla pagina principale.",
+    "technicalDetails": "Dettagli tecnici",
+    "retry": "Riprova",
+    "backToHome": "Torna alla Dashboard",
     "category": "Categoria",
     "year": "Anno",
     "download": "Scarica",

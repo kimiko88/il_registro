@@ -1,5 +1,10 @@
 export default {
   "common": {
+    "somethingWentWrong": "Ndodhi një gabim i papritur",
+    "errorBoundaryHelp": "Ky seksion i aplikacionit hasi një problem të papritur. Mund të provoni përsëri ose të ktheheni në panelin kryesor.",
+    "technicalDetails": "Detajet teknike",
+    "retry": "Provo përsëri",
+    "backToHome": "Kthehu në Panelin Kryesor",
     "category": "Kategoria",
     "year": "Viti",
     "download": "Shkarko",

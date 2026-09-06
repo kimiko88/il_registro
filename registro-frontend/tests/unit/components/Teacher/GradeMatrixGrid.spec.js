@@ -189,4 +189,28 @@ describe('GradeMatrixGrid.vue', () => {
       Object.defineProperty(navigator, 'onLine', { value: originalOnLine, configurable: true });
     }
   });
+
+  it('navigates between grade and note inputs via arrow handlers', () => {
+    const wrapper = mount(GradeMatrixGrid, {
+      props: {
+        studentsList: studentsSample,
+        subjectId: 'sub-1',
+        classId: 'cls-1'
+      },
+      global: {
+        stubs: commonStubs
+      }
+    });
+
+    const mockNoteFocus = vi.fn();
+    const mockGradeFocus = vi.fn();
+    wrapper.vm.noteRefs[0] = { focus: mockNoteFocus };
+    wrapper.vm.inputRefs[0] = { focus: mockGradeFocus };
+
+    wrapper.vm.handleGradeArrowRight(0);
+    expect(mockNoteFocus).toHaveBeenCalled();
+
+    wrapper.vm.handleNoteArrowLeft(0, { target: { selectionStart: 0 } });
+    expect(mockGradeFocus).toHaveBeenCalled();
+  });
 });

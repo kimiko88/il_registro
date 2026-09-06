@@ -1,5 +1,10 @@
 export default {
   "common": {
+    "somethingWentWrong": "Une erreur inattendue s'est produite",
+    "errorBoundaryHelp": "Cette section de l'application a rencontré un problème inattendu. Vous pouvez réessayer ou revenir au tableau de bord.",
+    "technicalDetails": "Détails techniques",
+    "retry": "Réessayer",
+    "backToHome": "Retour au Tableau de bord",
     "category": "Catégorie",
     "year": "Année",
     "download": "Télécharger",

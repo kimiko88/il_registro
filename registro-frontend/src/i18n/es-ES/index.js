@@ -1,5 +1,10 @@
 export default {
   "common": {
+    "somethingWentWrong": "Se ha producido un error inesperado",
+    "errorBoundaryHelp": "Esta sección de la aplicación ha encontrado un problema inesperado. Puedes reintentar o volver al panel principal.",
+    "technicalDetails": "Detalles técnicos",
+    "retry": "Reintentar",
+    "backToHome": "Volver al Panel",
     "category": "Categoría",
     "year": "Año",
     "download": "Descargar",

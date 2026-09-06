@@ -1,5 +1,10 @@
 export default {
   "common": {
+    "somethingWentWrong": "حدث خطأ غير متوقع",
+    "errorBoundaryHelp": "واجه هذا القسم من التطبيق مشكلة غير متوقعة. يمكنك إعادة المحاولة أو العودة إلى لوحة التحكم.",
+    "technicalDetails": "التفاصيل الفنية",
+    "retry": "إعادة المحاولة",
+    "backToHome": "العودة إلى لوحة التحكم",
     "category": "الفئة",
     "year": "السنة",
     "download": "تحميل",

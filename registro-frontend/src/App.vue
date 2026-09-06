@@ -1,5 +1,7 @@
 <template>
-  <router-view />
+  <ErrorBoundary>
+    <router-view />
+  </ErrorBoundary>
 
   <!-- Modal di conferma ricarica pagina (F5 / Ctrl+R) -->
   <q-dialog v-model="showReloadConfirmDialog" persistent>
@@ -36,6 +38,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import ErrorBoundary from '@/components/Common/ErrorBoundary.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useWebSocketStore } from '@/stores/websocket'
 import { useThemeStore } from '@/stores/theme'

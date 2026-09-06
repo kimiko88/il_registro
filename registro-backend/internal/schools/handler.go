@@ -1,20 +1,28 @@
 package schools
 
 import (
+	"encoding/json"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"registro-backend/internal/cache"
 )
 
 // Handler handles HTTP requests for schools
 type Handler struct {
 	service *Service
+	cache   cache.Cache
 }
 
-// NewHandler creates a new schools handler
-func NewHandler(service *Service) *Handler {
-	return &Handler{service: service}
+// NewHandler creates a new schools handler with optional caching
+func NewHandler(service *Service, c ...cache.Cache) *Handler {
+	h := &Handler{service: service}
+	if len(c) > 0 && c[0] != nil {
+		h.cache = c[0]
+	}
+	return h
 }
 
 // Create handles school creation
@@ -36,6 +44,10 @@ func (h *Handler) Create(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
+	}
+
+	if h.cache != nil {
+		_ = h.cache.Delete(c.Request.Context(), "public:schools:list")
 	}
 
 	c.JSON(http.StatusCreated, school)
@@ -112,6 +124,10 @@ func (h *Handler) Update(c *gin.Context) {
 		return
 	}
 
+	if h.cache != nil {
+		_ = h.cache.Delete(c.Request.Context(), "public:schools:list")
+	}
+
 	c.JSON(http.StatusOK, gin.H{"message": "school updated"})
 }
 
@@ -132,12 +148,26 @@ func (h *Handler) Delete(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	if h.cache != nil {
+		_ = h.cache.Delete(c.Request.Context(), "public:schools:list")
+	}
+
 	c.JSON(http.StatusOK, gin.H{"message": "school deleted"})
 }
 
 // ListPublic returns a list of public school contacts for unauthenticated users (e.g. login contact secretary dialog)
 // GET /public/schools
 func (h *Handler) ListPublic(c *gin.Context) {
+	cacheKey := "public:schools:list"
+	if h.cache != nil {
+		if cached, err := h.cache.Get(c.Request.Context(), cacheKey); err == nil && cached != "" {
+			c.Header("X-Cache", "HIT")
+			c.Data(http.StatusOK, "application/json; charset=utf-8", []byte(cached))
+			return
+		}
+	}
+
 	params := ListParams{Page: 1, PageSize: 100}
 	schools, _, err := h.service.List(c.Request.Context(), &params)
 	if err != nil {
@@ -175,7 +205,15 @@ func (h *Handler) ListPublic(c *gin.Context) {
 		})
 	}
 
-	c.JSON(http.StatusOK, gin.H{"items": list})
+	res := gin.H{"items": list}
+	if h.cache != nil {
+		if data, err := json.Marshal(res); err == nil {
+			_ = h.cache.Set(c.Request.Context(), cacheKey, string(data), 1*time.Hour)
+		}
+	}
+
+	c.Header("X-Cache", "MISS")
+	c.JSON(http.StatusOK, res)
 }
 
 // RegisterRoutes registers all school routes

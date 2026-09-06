@@ -78,6 +78,7 @@
                   @keydown.enter.prevent="focusNext(idx)"
                   @keydown.down.prevent="focusNext(idx)"
                   @keydown.up.prevent="focusPrev(idx)"
+                  @keydown.right="handleGradeArrowRight(idx)"
                 >
                   <template v-if="isGradeInvalid(student.grade_value)" #append>
                     <q-icon name="warning" color="negative" size="xs">
@@ -96,6 +97,11 @@
                   outlined
                   :placeholder="t('common.optionalNotes') || 'Note facoltative'"
                   :class="$q.dark.isActive ? 'bg-grey-9' : 'bg-white'"
+                  :ref="el => noteRefs[idx] = el"
+                  @keydown.enter.prevent="focusNextNote(idx)"
+                  @keydown.down.prevent="focusNextNote(idx)"
+                  @keydown.up.prevent="focusPrevNote(idx)"
+                  @keydown.left="handleNoteArrowLeft(idx, $event)"
                 />
               </td>
             </tr>
@@ -136,6 +142,7 @@ const { executeWithOfflineQueue } = useOfflineSync()
 
 const saving = ref(false)
 const inputRefs = ref([])
+const noteRefs = ref([])
 const students = ref([])
 
 function isGradeInvalid(val) {
@@ -164,6 +171,33 @@ function focusNext(idx) {
 function focusPrev(idx) {
   if (idx > 0 && inputRefs.value[idx - 1]) {
     inputRefs.value[idx - 1].focus()
+  }
+}
+
+function handleGradeArrowRight(idx) {
+  if (noteRefs.value[idx]) {
+    noteRefs.value[idx].focus()
+  }
+}
+
+function handleNoteArrowLeft(idx, event) {
+  const target = event?.target
+  if (!target || target.selectionStart === 0) {
+    if (inputRefs.value[idx]) {
+      inputRefs.value[idx].focus()
+    }
+  }
+}
+
+function focusNextNote(idx) {
+  if (idx < students.value.length - 1 && noteRefs.value[idx + 1]) {
+    noteRefs.value[idx + 1].focus()
+  }
+}
+
+function focusPrevNote(idx) {
+  if (idx > 0 && noteRefs.value[idx - 1]) {
+    noteRefs.value[idx - 1].focus()
   }
 }
 
