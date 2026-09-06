@@ -121,19 +121,22 @@ il_registro è pensato per essere **auto-ospitato da scuole, Comuni, Regioni o d
 | Area                      | Funzionalità                                                                                                                              |
 | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | **App Mobile Native (Alpha)** | **Android & iOS Native (Fase Alpha non stabile e incompleta)** per Studente, Genitore, Docente e Segreteria (Kotlin Compose & SwiftUI, biometria, offline, 11 lingue) |
-| **Autenticazione & SSO**  | JWT (access 15min + refresh rotation), MFA TOTP, SPID, CIE, **Google Workspace & MS Teams SSO**                                           |
+| **Autenticazione & SSO**  | JWT (access 15min + refresh rotation), MFA TOTP, **Google Workspace & MS Teams SSO**, OAuth2/OIDC                                        |
 | **Ruoli**                 | `superadmin`, `admin`, `secretary`, `teacher`, `student`, `parent`                                                                        |
-| **Voti & Valutazioni**    | Inserimento rapido, **Matrix View a Tastiera**, medie ponderate, simulatore voto target, misure compensative BES/DSA                      |
-| **Presenze & Lezioni**    | Registro giornaliero, **Firma Ora 1-Click**, assenze, ritardi, giustificazioni, alert assenteismo                                         |
+| **Voti & Valutazioni**    | Inserimento rapido, **Matrix View a Tastiera**, medie ponderate, simulatore voto target, **Matrice Descrittiva O.M. 172/2020 (4 livelli ministeriali)**, misure BES/DSA |
+| **Presenze & Lezioni**    | Registro giornaliero, **Firma Ora 1-Click**, firma rapida lezioni consecutive (2-3h), copia argomenti ultima lezione, alert assenteismo  |
+| **Atti Ufficiali (PDF)**  | **Registro Personale del Docente PDF** (quadrimestri, medie pesate, lezioni), **Giornale di Classe Mensile PDF** con matrice presenze codificata (P, A, R, U, G) |
+| **Diagnostica & Linter**  | **Data Integrity Scanner**: controllo preventivo incongruenze relazionali (studenti orfani, classi senza coordinatore, lezioni sovrapposte) |
+| **Supplenze & Dispatcher**| **Tabellone Orario Live (1ª-6ª Ora)** con visualizzazione classi scoperte e raccomandazione automatica supplenti con assegnazione 1-click |
+| **Portale Famiglia & Studente** | **Monitoraggio Limite Assenze 25% (DPR 122/2009)** con calcolo ore residue, **Planner Compiti & To-Do List** sincronizzato via API |
 | **Scrutini & Differiti**  | Tabellone scrutinio, delibere condotta, credito scolastico, **Scrutinio Differito (saldo debiti formativi)**                              |
 | **PDP / PEI (BES & DSA)** | **Gestione Piani Didattici Personalizzati**, misure compensative/dispensative, firma/approvazione digitale genitore e protezione diagnosi |
-| **Business Intelligence** | **Dashboard Dispersione Scolastica & Assenteismo**, report andamento 1° vs 2° Quadrimestre per la dirigenza                               |
+| **Business Intelligence** | **Dashboard Dispersione Scolastica & Early Warning (DPR 122/2009)**, export piano di supporto CSV, report andamento quadrimestri          |
+| **Cloud-Native & Resilienza** | **Kubernetes Probes (`/live`, `/ready`)** con deep dependency check (DB, Redis, goroutine, RAM), **Circuit Breaker** su integrazioni esterne |
 | **E-Learning Sync**       | **Google Classroom & Microsoft Teams**: sincronizzazione automatica compiti, voti e classi                                                |
-| **Comunicazioni**         | Circolari, comunicazioni urgenti con **Presa d'Atto obbligatoria**, notifiche real-time WebSocket                                         |
+| **Comunicazioni**         | Circolari, comunicazioni urgenti con **Presa d'Atto obbligatoria**, notifiche real-time WebSocket e Web Push                              |
 | **Accessibilità & UX**    | **Font DSA OpenDyslexic**, alto contrasto, **Ricerca Globale `Ctrl+K`**, **Toast & Undo (15s)**, Timeline del Giorno, Skeleton screens    |
-| **Scrutini**              | Pagelle, voti di condotta, crediti scolastici                                                                                             |
-| **PCTO & Orari**          | Tracciamento ore alternanza scuola-lavoro, orario scolastico e gestione colloqui                                                          |
-| **PWA & Mobile**          | Installabile su dispositivi mobili, supporto offline                                                                                      |
+| **PWA & Offline Outbox**  | Installabile su desktop/mobile (PWA), **Coda Outbox Offline** per operazioni docente con sync FIFO automatico                             |
 
 ---
 

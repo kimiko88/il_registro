@@ -3,6 +3,7 @@ package reports
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"fmt"
 	"registro-backend/internal/scrutiny"
 
@@ -11,12 +12,21 @@ import (
 
 type Service struct {
 	scrutinySvc *scrutiny.Service
+	db          *sql.DB
 }
 
-func NewService(scrutinySvc *scrutiny.Service) *Service {
-	return &Service{
+func NewService(scrutinySvc *scrutiny.Service, db ...*sql.DB) *Service {
+	s := &Service{
 		scrutinySvc: scrutinySvc,
 	}
+	if len(db) > 0 {
+		s.db = db[0]
+	}
+	return s
+}
+
+func (s *Service) SetDB(db *sql.DB) {
+	s.db = db
 }
 
 // sanitizeExcelField prevents Excel formula injection by prepending a tab

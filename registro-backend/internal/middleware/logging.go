@@ -40,6 +40,11 @@ func LoggerMiddleware() gin.HandlerFunc {
 		duration := time.Since(start)
 		metrics.DefaultRegistry.RecordRequest(c.Request.Method, path, c.Writer.Status(), duration)
 
+		isSlow := duration > 150*time.Millisecond
+		if isSlow {
+			metrics.DefaultRegistry.RecordSlowRequest(c.Request.Method, path, duration)
+		}
+
 		if logger.Log != nil {
 			// Read auth context set by the JWT middleware (may be nil for public routes).
 			userID, _ := c.Get("user_id")
@@ -55,6 +60,10 @@ func LoggerMiddleware() gin.HandlerFunc {
 				"client_ip":  c.ClientIP(),
 				"user_agent": c.Request.UserAgent(),
 			}
+			if isSlow {
+				fields["slow_query"] = true
+				fields["slow_threshold_ms"] = 150
+			}
 			// Only append identity fields when present to keep public-route logs clean.
 			if userID != nil && userID != "" {
 				fields["user_id"] = userID
@@ -65,7 +74,11 @@ func LoggerMiddleware() gin.HandlerFunc {
 				fields["query"] = raw
 			}
 
-			logger.Log.WithFields(fields).Info("request")
+			if isSlow {
+				logger.Log.WithFields(fields).Warn("slow_request_alert")
+			} else {
+				logger.Log.WithFields(fields).Info("request")
+			}
 		}
 	}
 }

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"registro-backend/internal/colloqui"
 	"registro-backend/internal/communications"
@@ -302,4 +303,7 @@ func (m *mockUserRepoForComms) IsGuardian(ctx context.Context, parentID, student
 }
 func (m *mockUserRepoForComms) ChangePasswordTx(ctx context.Context, userID, newPasswordHash string) error {
 	return nil
+}
+func (m *mockUserRepoForComms) ApplyDataRetention(ctx context.Context, schoolID *string, cutoffDate time.Time) (int, error) {
+	return 0, nil
 }

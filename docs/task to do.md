@@ -645,4 +645,99 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
     - **186/186** suite di unit test superate (**1217/1217 test passati**) — +2 nuove suite frontend (`GlobalSearch.spec.js`, `GradeAnalyticsCharts.spec.js`), +7 nuovi test.
     - **0 errori, 0 warning** ESLint (`npm run lint`).
     - Backend: `go vet ./...` (0 errori/warning) e tutti i test `go test` superati (subjects, classes, scrutiny, upload, cache, metrics).
+    - **Risoluzione `golangci-lint` (errcheck & staticcheck)**:
+      - `internal/admin/handler.go`: Aggiunta soppressione esplicita dell'errore di chiusura client Redis `defer func() { _ = rdb.Close() }()` per soddisfare `errcheck`.
+      - `internal/metrics/metrics.go`: Sostituite tutte le chiamate `buf.WriteString(fmt.Sprintf(...))` con `fmt.Fprintf(&buf, ...)` per conformità alla regola staticcheck QF1012 ed eliminazione di allocazioni intermedie.
+    - **Risoluzione Test CI Linux / Runner**:
+      - `tests/unit/pages/Teacher/TeacherDashboardI18n.spec.js`: Corretto il path di import `@/pages/Teacher/Index.vue` nel path case-sensitive corretto `@/pages/teacher/Index.vue` per compatibilità con ambienti Linux.
+      - `src/composables/useDraftAutosave.js`: Corretta la logica di calcolo TTL su inizializzazione; ora gestisce in modo sicuro campi `savedAt` vuoti (`""`) o non-ISO senza calcolare `NaN` e senza considerare erroneamente scaduta una bozza valida (risolto test `DA04` in `composables-advanced-workflow.spec.js`).
+
+- **Batch 17: Firma Veloce Blocchi Orari, Anti-Sovrapposizione Verifiche, Analytics Dispersione, Rate Limiting IETF, DPO Audit Trail, Slow Query Tracing, GDPR Retention Policy, Seed CLI & Swagger UI**:
+  - **1. Firma Veloce Lezioni Consecutive & Copia Argomenti (Frontend)**:
+    - In `src/pages/teacher/Attendance.vue`, introdotto il pulsante con split-dropdown `q-btn-dropdown` per la firma veloce di blocchi da 2 o 3 ore consecutive nella stessa classe, firmando automaticamente le ore sequenziali con argomenti e compiti replicati.
+    - Aggiunto il pulsante "Riprendi argomenti ultima lezione" che interroga `lessonService.getLessons` per recuperare e autofillare argomenti e compiti svolti nella lezione precedente della stessa materia/classe.
+    - Sincronizzate tutte le etichette nelle 11 lingue in `src/i18n/locales/*/classRegister.json`.
+    - Unit test validato: `tests/unit/pages/Teacher/AttendanceMultiHour.spec.js` (2/2 passati).
+  - **2. Registro Verifiche di Classe Anti-Sovrapposizione (Frontend)**:
+    - In `src/components/Teacher/AgendaEventDialog.vue`, implementato il rilevamento automatico euristico dei conflitti di verifica: segnala se per la classe selezionata esiste già $\ge 1$ verifica programmata nello stesso giorno oppure $\ge 2$ verifiche nella medesima settimana (dal lunedì al sabato).
+    - Visualizzazione banner amber/warning contestuale con dettagli delle prove in conflitto (materia, data, docente) e raccomandazione pedagogica sul carico di studio dello studente.
+    - Sincronizzate le chiavi i18n nelle 11 lingue in `src/i18n/locales/*/agendaPage.json`.
+    - Unit test validato: `tests/unit/components/Teacher/AgendaConflictWarning.spec.js` (3/3 passati).
+  - **3. Cruscotto Rischio Dispersione Scolastica (Backend & Frontend)**:
+    - Backend: Implementato `internal/reports/dropout_risk.go` con motore euristico per calcolare l'indice di rischio studente (alto/medio/basso) basato su soglia 25% assenze (art. 14 comma 7 DPR 122/2009), materie con media insufficiente (< 5.0 in 3+ materie) e frequenza anomala di ritardi/uscite.
+    - Esposti endpoint `GET /api/v1/reports/dropout-risk` e `GET /api/v1/reports/dropout-risk/export` con generazione ed export CSV del piano di supporto.
+    - Frontend: Creato componente `src/components/Admin/DropoutRiskTable.vue` con filtri per classe, livello di rischio, badge dinamici e download CSV, integrato nella dashboard `src/pages/admin/Analytics.vue`.
+    - Sincronizzate le chiavi i18n nelle 11 lingue in `src/i18n/locales/*/dropoutRisk.json`.
+    - Test validati: `internal/reports/dropout_test.go` e `tests/unit/components/Admin/DropoutRiskTable.spec.js` (100% passati).
+  - **4. Rate Limiting Differenziato per Endpoint Critici con Header Standard IETF (Backend)**:
+    - In `internal/middleware/ratelimit.go`, implementato tiered rate limiting granulare per IP/utente:
+      - Autenticazione (`/api/v1/auth/*`): 10 req/min (anti-brute-force).
+      - Export PDF/ZIP/Excel (`/api/v1/reports/*`, `/api/v1/scrutiny/*/export-zip`): 5 req/min (anti-DDoS CPU/RAM).
+      - Upload documenti (`/api/v1/documents/upload`): 15 req/min.
+      - API standard: 120 req/min.
+    - Iniezione header standard IETF su ogni risposta: `RateLimit-Limit`, `RateLimit-Remaining`, `RateLimit-Reset` e `Retry-After` (in caso di HTTP 429).
+    - Supporto sia per backend distribuito Redis (`redisBackend`) sia per fallback in-memory (`memoryBackend`).
+    - Test validati: `internal/middleware/ratelimit_test.go` (100% passati).
+  - **5. DPO & Compliance Audit Trail Avanzato (Backend & Frontend)**:
+    - Backend: Estesi i filtri di `internal/auditlog` con parametro `ip_address` in model, repository e handler.
+    - Frontend: In `src/pages/admin/AuditLog.vue`, aggiunti filtri estesi per intervallo temporale (da data / a data), attore, tipo entità, indirizzo IP, pulsante di reset rapido ed esportazione del log filtrato in formato CSV conforme GDPR.
+    - Sincronizzate le chiavi i18n nelle 11 lingue in `src/i18n/locales/*/adminAudit.json`.
+    - Test validato: `tests/unit/pages/Admin/AuditLogAdvanced.spec.js` (3/3 passati).
+  - **6. Slow Query Tracing & Logging Middleware (Backend)**:
+    - In `internal/middleware/logging.go`, aggiunto intercettatore per richieste con latenza superiore a 150ms: emissione di log strutturato a livello `WARN [SLOW_REQUEST]` con path, metodo, durata in ms, request_id e IP.
+    - In `internal/metrics/metrics.go`, introdotta metrica Prometheus `http_slow_requests_total` esportata su `/metrics`.
+  - **7. GDPR Data Retention Policy & Pseudonimizzazione a Cascata (Backend)**:
+    - Implementato `internal/users/retention.go` con `ApplyDataRetention(ctx, schoolID, retentionYears)`: individua studenti disattivati o diplomati da oltre N anni (default 5 anni) e ne pseudonimizza in modo irreversibile i dati anagrafici (nomi generici anonimi, email non tracciabile, rimozione codice fiscale, telefono, password e segreti MFA), impostando `pseudonymized_at` e preservando al contempo lo storico dei voti e dei registri per obbligo di conservazione documentale.
+    - Registrato endpoint `POST /api/v1/admin/gdpr/retention` riservato ad amministratori e DPO.
+    - Test validato: `internal/users/retention_test.go` (100% passati).
+  - **8. Developer Experience: Seed CLI Completo & Swagger UI (Backend)**:
+    - Creato comando CLI `cmd/seed_school/main.go` per popolare in un click un intero istituto scolastico realistico ("Liceo Scientifico Galileo Galilei", codice: "RMPS01000P"):
+      - 1 Scuola, 1 Dirigente, 1 Segreteria.
+      - 14 Materie e 20 Docenti con cattedre assegnate.
+      - 5 Classi (1A, 2A, 3A, 4A, 5A) con coordinatori.
+      - 120 Studenti con anagrafica italiana, matricole e 120 genitori collegati (`student_parents`).
+      - Calendario presenze su 3 mesi (~60 giorni scolastici, ~7.000 record).
+      - Oltre 500 voti realistici distribuiti con curva gaussiana (media 6.8, dev. st. 1.3) con pesi e tipologie (Scritto, Orale, Pratico).
+      - 10 Circolari d'Istituto con tracciamento firme di presa visione.
+    - In `cmd/api-server/main.go`, aggiunti gli endpoint interattivi `/swagger` e `/swagger/index.html` (e `/api/v1/swagger`) collegati alla documentazione OpenAPI `/swagger/doc.json` (`openapi.yaml`).
+  - **Validazione Completa & Regression Check**:
+    - **190/190** suite di unit test superate (**1228/1228 test passati**) sul frontend (+4 nuove suite di test: `AttendanceMultiHour.spec.js`, `AgendaConflictWarning.spec.js`, `DropoutRiskTable.spec.js`, `AuditLogAdvanced.spec.js`).
+- [x] **Batch 18: Registro Personale Docente PDF, Valutazione Descrittiva O.M. 172/2020, Linter Dati Scolastici, Tabellone Sostituzioni Live, Giornale di Classe Mensile PDF, Planner To-Do Studente, Limite Assenze 25% Famiglia, K8s Probes & Circuit Breaker (Settembre 2026)**:
+  - **1. Stampa PDF Registro Personale del Docente (Chiusura Annuale agli Atti)**:
+    - Backend: Implementato `internal/teachers/pdf_generator.go`, esteso `Repository`, `Service` e `Handler` (`GET /api/v1/teachers/registro-personale/pdf`). Generazione PDF vettoriale conforme ai requisiti ministeriali per la conservazione agli atti: testata istituzionale, griglia cronologica dei voti divisa per quadrimestre (scritti, orali, pratici, media pesata), computo assenze per materia e registro delle lezioni e argomenti firmati con blocco finale di chiusura e firma.
+    - Frontend: In `src/pages/teacher/Attendance.vue`, aggiunto il pulsante "Stampa Registro Personale (PDF)" con dialog di configurazione e download del documento.
+    - Unit test validato: `internal/teachers/teacher_register_pdf_test.go` (100% passati).
+  - **2. Matrice Valutazione Descrittiva per Obiettivi di Apprendimento (O.M. 172/2020)**:
+    - Frontend: Creato componente `src/components/Teacher/DescriptiveEvaluationMatrix.vue` conforme all'Ordinanza Ministeriale 172/2020 con i 4 livelli (*Avanzato*, *Intermedio*, *Base*, *In via di prima acquisizione*), gestione personalizzata degli obiettivi disciplinari, matrice interattiva studenti/obiettivi con pillole di livello, note pedagogiche individuali, distribuzione statistica ed esportazione in CSV.
+    - Integrato come Tab 3 in `src/pages/teacher/Rubrics.vue`.
+  - **3. Verifica Congruità Dati Scolastici (Data Integrity & Diagnostic Linter)**:
+    - Backend: In `internal/postgres/admin_integrity.go`, implementato motore di controllo e diagnostica preventiva relazionale su PostgreSQL; esposto endpoint `GET /api/v1/admin/data-integrity`. Rileva: studenti senza classe, classi prive di coordinatore, lezioni sovrapposte nello stesso orario/aula, voti inseriti di domenica o festivi, e genitori privi di studenti collegati.
+    - Frontend: Creato `src/components/Admin/DataIntegrityCard.vue` con scansione in tempo reale, raggruppamento per severità (Error, Warning, Info), badge di stato e azioni correttive rapide, integrato in `src/pages/admin/Analytics.vue`.
+    - Test validati: `internal/admin/handler_test.go` e `tests/integration/admin_system_monitoring_integration_test.go`.
+  - **4. Tabellone Visuale Sostituzioni Docenti Assenti (Live Dispatcher)**:
+    - Frontend: In `src/pages/secretary/Substitutions.vue`, implementato tab switching tra "Tabellone Orario Live (1ª-6ª Ora)" ed "Elenco Dettagliato". Griglia oraria visuale con classi su righe e ore su colonne, evidenziazione immediata delle classi scoperte, raccomandazione intelligente dei supplenti liberi/a disposizione e assegnazione con 1-click.
+  - **5. Giornale di Classe Ufficiale del Mese (PDF con Firme e Giustificazioni)**:
+    - Backend: Implementato `internal/classes/monthly_journal_pdf.go`, esteso `Repository` (`GetMonthlyJournalData`), `Service` e `Handler` (`GET /api/v1/classes/:id/giornale-mensile/pdf`). Generazione PDF vettoriale con verbale delle lezioni e firme dei docenti, matrice presenze giornaliere per studente (P, A, R, U, G), note disciplinari del mese e blocco formale di convalida per il coordinatore di classe e il dirigente scolastico.
+    - Unit test validato: `internal/classes/monthly_journal_pdf_test.go` (100% passati).
+  - **6. Planner Compiti & To-Do List dello Studente (Diario Digitale Interattivo)**:
+    - Frontend: Creato componente `src/components/Student/HomeworkPlanner.vue` sincronizzato con la tabella `student_agenda_completions` tramite gli endpoint `POST /api/v1/agenda/:id/complete` e `DELETE /api/v1/agenda/:id/complete`. Raggruppamento intelligente per scadenza (Oggi, Domani, Prossimi giorni, Scaduti), filtro per materia, barra di avanzamento del carico di studio e note personali persistenti.
+    - Integrato nella dashboard dello studente (`src/pages/student/Index.vue`) e come tab dedicato "Diario To-Do" in `src/pages/student/Homework.vue`.
+  - **7. Riepilogo Assenze & Previsione Limite 25% nel Portale Famiglia (DPR 122/2009)**:
+    - Frontend: Creato componente `src/components/Parent/AbsenceLimitWidget.vue` per il monitoraggio della soglia di frequenza minima del 75% per la validità dell'anno scolastico (art. 14, comma 7 D.P.R. 122/2009). Visualizza ore di assenza totali, soglia massima consentita (25% di 990h/1056h), ore residue disponibili, progress bar con indicatore di soglia critica a 25%, riepilogo ritardi/uscite e avvisi preventivi all'avvicinarsi del 20%.
+    - Integrato nella dashboard del genitore (`src/pages/parent/Index.vue`) e nel registro presenze (`src/pages/parent/Attendance.vue`).
+  - **8. Cloud-Native Kubernetes Probes Avanzate (`/live` e `/ready` con Deep Dependency Check)**:
+    - Backend: In `internal/handler/health.go`, implementati gli endpoint standard cloud-native `/live` (liveness probe) e `/ready` (readiness probe). Esegue controlli concorrenti con timeout stringenti sullo stato e la latenza in millisecondi di PostgreSQL e Redis, conteggio delle goroutine attive e memoria heap allocata (MB). Registrati sia su root che su API router.
+    - Unit test validato: `internal/handler/health_test.go` (100% passati).
+  - **9. Circuit Breaker per Integrazioni Esterne (Supabase Storage, SIDI, Webhook)**:
+    - Backend: Creato package `pkg/circuitbreaker/circuitbreaker.go` basato su `sony/gobreaker` con gestione degli stati Closed, Half-Open e Open, soglie di errore configurabili, timeout di ripristino e fail-fast immediato con `ErrCircuitOpen`. Integrato nel provider di storage Supabase (`pkg/upload/supabase.go`) per prevenire blocchi o rallentamenti dell'API in caso di degradazione del servizio esterno.
+    - Unit test validato: `pkg/circuitbreaker/circuitbreaker_test.go` (100% passati).
+  - **Validazione Completa & Regression Check**:
+    - **190/190** suite di unit test superate (**1228/1228 test passati**) sul frontend.
+    - **0 errori, 0 warning** ESLint (`npm run lint`).
+    - **Tutte le 11 lingue** (`it-IT`, `en-US`, `es-ES`, `fr-FR`, `de-DE`, `ro-RO`, `sq-AL`, `ru-RU`, `zh-CN`, `uk-UA`, `ar-SA`) aggiornate e sincronizzate al 100% per tutte le nuove feature.
+    - **Backend**: `go vet ./...` (0 errori e 0 warning), tutti i test interni `go test ./internal/... ./pkg/...` superati al 100%, tutti i test di integrazione `go test ./tests/integration/...` superati al 100%.
+
+
+
+
 

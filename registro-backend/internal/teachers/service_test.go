@@ -72,6 +72,14 @@ func (m *MockRepository) GetDashboardStats(ctx context.Context, teacherUserID st
 	return args.Get(0).(map[string]interface{}), args.Error(1)
 }
 
+func (m *MockRepository) GetPersonalRegisterData(ctx context.Context, teacherID, classID, subjectID string) (*TeacherRegisterData, error) {
+	args := m.Called(ctx, teacherID, classID, subjectID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*TeacherRegisterData), args.Error(1)
+}
+
 func TestService_ListTeachers(t *testing.T) {
 	tests := []struct {
 		name     string

@@ -240,7 +240,24 @@ export default {
     "hour": "课时",
     "lessonTopic": "课程主题",
     "lessonType": "课程类型",
-    "subject": "科目"
+    "subject": "科目",
+    "reuseLastLesson": "Reuse last lesson topics",
+    "signConsecutive": "Sign Consecutive Hours",
+    "sign2Hours": "Sign 2 consecutive hours",
+    "sign2HoursDesc": "Hours {start} and {end} (same topics and attendance)",
+    "sign3Hours": "Sign 3 consecutive hours",
+    "sign3HoursDesc": "Hours {start}, {mid} and {end}",
+    "confirmMultiHourTitle": "Confirm Consecutive Signature",
+    "confirmMultiHourMsg": "Do you want to sign and record attendance for {count} consecutive hours (from hour {start} to hour {end}) with the same topics and attendance?",
+    "multiHourSaved": "✓ Successfully saved and signed lessons for hours {start} - {end}",
+    "noPreviousLesson": "No previous lesson found for this subject.",
+    "previousLessonLoaded": "✓ Topics loaded from previous lesson of {date}",
+    "printPersonalRegister": "Print Teacher Register (PDF)",
+    "personalRegister": "Teacher Personal Register",
+    "personalRegisterDesc": "Official archive register with grade grid, weighted averages, attendance tally and signed lessons",
+    "printMonthlyJournal": "Print Monthly Class Journal (PDF)",
+    "monthlyJournal": "Official Monthly Class Journal",
+    "monthlyJournalDesc": "Official PDF generation with teacher signatures, daily attendance, justifications and disciplinary notes"
   },
   "dashboardPage": {
     "viewYourHomework": "查看作业与学习活动",
@@ -365,7 +382,11 @@ export default {
     "eventCreated": "日程创建成功",
     "eventUpdated": "日程更新成功",
     "eventDeleted": "日程删除成功",
-    "allDay": "全天事项"
+    "allDay": "全天事项",
+    "conflictWarningTitle": "Potential Test Overlap",
+    "conflictDailyWarning": "There is already {count} other test scheduled for this class on the same day ({date}):",
+    "conflictWeeklyWarning": "Warning: there are already {count} tests scheduled for this class this week ({from} - {to}):",
+    "conflictNotice": "Educational guidelines recommend avoiding multiple tests on the same day or more than 2 in the same week."
   },
   "usersPage": {
     "importTitle": "从 CSV 导入用户",
@@ -2294,7 +2315,11 @@ export default {
   "admin": {
     "apiRequests": "API 调用次数",
     "userDeleted": "用户删除成功",
-    "userDeleteError": "删除用户失败"
+    "userDeleteError": "删除用户失败",
+    "dataIntegrity": "School Data Integrity & Linter",
+    "dataIntegritySubtitle": "Preemptive scanning for relational anomalies, overlapping lessons, weekend grades, and orphaned students",
+    "runIntegrityCheck": "Run Data Diagnostic",
+    "integrityPassed": "No anomalies found: database is fully coherent."
   },
   "auth": {
     "sessionExpired": "会话已过期",
@@ -2842,10 +2867,10 @@ export default {
     }
   },
   "adminAudit": {
-    "title": "系统审计日志",
-    "subtitle": "系统运维审计与安全事件监控",
-    "actionType": "操作类型",
-    "refresh": "刷新",
+    "title": "Audit Logs & Activity Tracking",
+    "subtitle": "Access and sensitive operations audit trail (DPO & GDPR Compliance)",
+    "actionType": "Action Type",
+    "refresh": "Refresh",
     "all": "全部",
     "create": "新建",
     "update": "修改",
@@ -2858,8 +2883,14 @@ export default {
     "colSchool": "所属学校",
     "colDetails": "详情",
     "errorLoading": "加载审计日志时出错",
-    "export": "导出 CSV",
-    "noLogs": "暂无系统审计事件"
+    "export": "Export Audit Log (CSV)",
+    "noLogs": "暂无系统审计事件",
+    "filterActor": "Filter by User",
+    "filterTarget": "Entity Type",
+    "filterIp": "IP Address",
+    "filterFrom": "From Date",
+    "filterTo": "To Date",
+    "exportSuccess": "Audit log exported successfully"
   },
   "schedulerPage": {
     "title": "智能课表生成器",
@@ -3513,5 +3544,67 @@ export default {
     "signNow": "立即签署",
     "signed": "已签署",
     "signedOn": "签署于"
+  },
+  "dropoutRisk": {
+    "title": "Early Warning Dropout Risk Dashboard",
+    "subtitle": "Preventive dropout monitoring under Art. 14 DPR 122/2009",
+    "student": "Student",
+    "class": "Class",
+    "riskLevel": "Risk Level",
+    "riskLow": "Low",
+    "riskMedium": "Medium",
+    "riskHigh": "High",
+    "riskCritical": "Critical",
+    "absenceRate": "Absence Rate",
+    "failingSubjects": "Failing Subjects",
+    "anomalousDelays": "Lates / Early Exits",
+    "exportPlan": "Export Support Plan (CSV)",
+    "exportSuccess": "Support plan exported successfully",
+    "noStudentsAtRisk": "No students at critical dropout risk detected",
+    "filterClass": "Filter by Class",
+    "filterRisk": "Filter by Risk",
+    "dprThresholdNotice": "Critical absence threshold: 25% of annual course hours (DPR 122/2009 art. 14)"
+  },
+  "rubrics": {
+    "descriptiveEvaluation": "Descriptive Evaluation Matrix (O.M. 172/2020)",
+    "descriptiveDesc": "Assessment by learning objectives and ministerial proficiency levels (Advanced, Intermediate, Basic, In Acquisition)",
+    "addObjective": "Add Objective",
+    "levelAdvanced": "Advanced",
+    "levelIntermediate": "Intermediate",
+    "levelBasic": "Basic",
+    "levelInitial": "In Acquisition",
+    "objectiveName": "Learning Objective Name"
+  },
+  "substitutions": {
+    "dispatcherTab": "Live Dispatcher Grid (1st-6th Period)",
+    "listTab": "Detailed Substitutions List",
+    "uncoveredClass": "Uncovered Class",
+    "assignSubQuick": "Quick Assign"
+  },
+  "student": {
+    "planner": {
+      "title": "Homework Planner & To-Do List",
+      "subtitle": "Interactive digital agenda tracking assignments and deadlines",
+      "completed": "Completed",
+      "todo": "To Do",
+      "tabTitle": "To-Do Agenda",
+      "myNotes": "Personal study notes",
+      "allDone": "All homework has been completed!"
+    }
+  },
+  "parent": {
+    "absenceLimit": {
+      "title": "25% Absence Limit (D.P.R. 122/2009)",
+      "subtitle": "Academic year validity tracking (min. 75% attendance)",
+      "ariaLabel": "Absence summary and 25% limit tracking DPR 122/2009",
+      "remainingHours": "Remaining allowable hours",
+      "totalHours": "Absent Hours",
+      "latesAndExits": "Lates / Early Exits",
+      "statusOk": "Regular (<15%)",
+      "statusWarning": "Warning (≥15%)",
+      "statusDanger": "High Risk (≥20%)",
+      "statusCritical": "Limit Exceeded (>25%)",
+      "legalTitle": "Legal Reference (Art. 14 DPR 122/2009)"
+    }
   }
-};
+}

@@ -348,6 +348,10 @@ func (m *MockUsersRepository) GetParentProfile(ctx context.Context, parentUserID
 	args := m.Called(ctx, parentUserID)
 	return args.String(0), args.Error(1)
 }
+func (m *MockUsersRepository) ApplyDataRetention(ctx context.Context, schoolID *string, cutoffDate time.Time) (int, error) {
+	args := m.Called(ctx, schoolID, cutoffDate)
+	return args.Int(0), args.Error(1)
+}
 
 // MockGradesRepository mocks grades.Repository
 type MockGradesRepository struct {
@@ -979,4 +983,11 @@ func (m *MockClassesRepository) GetDisciplinaryNotes(ctx context.Context, classI
 func (m *MockClassesRepository) BulkMigrateStudents(ctx context.Context, migrations []classes.StudentMigrationItem) error {
 	args := m.Called(ctx, migrations)
 	return args.Error(0)
+}
+func (m *MockClassesRepository) GetMonthlyJournalData(ctx context.Context, classID string, year, month int) (*classes.MonthlyJournalData, error) {
+	args := m.Called(ctx, classID, year, month)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*classes.MonthlyJournalData), args.Error(1)
 }

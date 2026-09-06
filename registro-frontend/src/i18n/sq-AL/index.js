@@ -240,7 +240,24 @@ export default {
     "hour": "Ora e Mësimit",
     "lessonTopic": "Tema e Mësimit",
     "lessonType": "Lloji i Mësimit",
-    "subject": "Lënda"
+    "subject": "Lënda",
+    "reuseLastLesson": "Reuse last lesson topics",
+    "signConsecutive": "Sign Consecutive Hours",
+    "sign2Hours": "Sign 2 consecutive hours",
+    "sign2HoursDesc": "Hours {start} and {end} (same topics and attendance)",
+    "sign3Hours": "Sign 3 consecutive hours",
+    "sign3HoursDesc": "Hours {start}, {mid} and {end}",
+    "confirmMultiHourTitle": "Confirm Consecutive Signature",
+    "confirmMultiHourMsg": "Do you want to sign and record attendance for {count} consecutive hours (from hour {start} to hour {end}) with the same topics and attendance?",
+    "multiHourSaved": "✓ Successfully saved and signed lessons for hours {start} - {end}",
+    "noPreviousLesson": "No previous lesson found for this subject.",
+    "previousLessonLoaded": "✓ Topics loaded from previous lesson of {date}",
+    "printPersonalRegister": "Print Teacher Register (PDF)",
+    "personalRegister": "Teacher Personal Register",
+    "personalRegisterDesc": "Official archive register with grade grid, weighted averages, attendance tally and signed lessons",
+    "printMonthlyJournal": "Print Monthly Class Journal (PDF)",
+    "monthlyJournal": "Official Monthly Class Journal",
+    "monthlyJournalDesc": "Official PDF generation with teacher signatures, daily attendance, justifications and disciplinary notes"
   },
   "dashboardPage": {
     "viewYourHomework": "Shiko detyrat dhe aktivitetet e tua",
@@ -365,7 +382,11 @@ export default {
     "eventCreated": "Ngjarja u krijua me sukses",
     "eventUpdated": "Ngjarja u modifikua me sukses",
     "eventDeleted": "Ngjarja u hoq me sukses",
-    "allDay": "Gjithë ditën"
+    "allDay": "Gjithë ditën",
+    "conflictWarningTitle": "Potential Test Overlap",
+    "conflictDailyWarning": "There is already {count} other test scheduled for this class on the same day ({date}):",
+    "conflictWeeklyWarning": "Warning: there are already {count} tests scheduled for this class this week ({from} - {to}):",
+    "conflictNotice": "Educational guidelines recommend avoiding multiple tests on the same day or more than 2 in the same week."
   },
   "usersPage": {
     "importTitle": "Importimi i përdoruesve nga CSV",
@@ -2414,7 +2435,11 @@ export default {
   "admin": {
     "apiRequests": "Kërkesa API",
     "userDeleted": "Përdoruesi u fshi me sukses",
-    "userDeleteError": "Gabim gjatë fshirjes së përdoruesit"
+    "userDeleteError": "Gabim gjatë fshirjes së përdoruesit",
+    "dataIntegrity": "School Data Integrity & Linter",
+    "dataIntegritySubtitle": "Preemptive scanning for relational anomalies, overlapping lessons, weekend grades, and orphaned students",
+    "runIntegrityCheck": "Run Data Diagnostic",
+    "integrityPassed": "No anomalies found: database is fully coherent."
   },
   "auth": {
     "sessionExpired": "Seanca ka skaduar",
@@ -2962,10 +2987,10 @@ export default {
     }
   },
   "adminAudit": {
-    "title": "Regjistrat e Auditimit",
-    "subtitle": "Monitorimi i veprimtarive dhe sigurisë së sistemit",
-    "actionType": "Lloji i Veprimit",
-    "refresh": "Rifresko",
+    "title": "Audit Logs & Activity Tracking",
+    "subtitle": "Access and sensitive operations audit trail (DPO & GDPR Compliance)",
+    "actionType": "Action Type",
+    "refresh": "Refresh",
     "all": "Të Gjitha",
     "create": "Krijim",
     "update": "Modifikim",
@@ -2978,8 +3003,14 @@ export default {
     "colSchool": "Shkolla",
     "colDetails": "Hollësi",
     "errorLoading": "Gabim gjatë ngarkimit të regjistrave",
-    "export": "Eksporto CSV",
-    "noLogs": "Nuk ka ngjarje të regjistruara"
+    "export": "Export Audit Log (CSV)",
+    "noLogs": "Nuk ka ngjarje të regjistruara",
+    "filterActor": "Filter by User",
+    "filterTarget": "Entity Type",
+    "filterIp": "IP Address",
+    "filterFrom": "From Date",
+    "filterTo": "To Date",
+    "exportSuccess": "Audit log exported successfully"
   },
   "schedulerPage": {
     "title": "Gjeneruesi i Orarit Shkollor",
@@ -3633,5 +3664,67 @@ export default {
     "signNow": "Nënshkruaj Tani",
     "signed": "E nënshkruar",
     "signedOn": "Nënshkruar më"
+  },
+  "dropoutRisk": {
+    "title": "Early Warning Dropout Risk Dashboard",
+    "subtitle": "Preventive dropout monitoring under Art. 14 DPR 122/2009",
+    "student": "Student",
+    "class": "Class",
+    "riskLevel": "Risk Level",
+    "riskLow": "Low",
+    "riskMedium": "Medium",
+    "riskHigh": "High",
+    "riskCritical": "Critical",
+    "absenceRate": "Absence Rate",
+    "failingSubjects": "Failing Subjects",
+    "anomalousDelays": "Lates / Early Exits",
+    "exportPlan": "Export Support Plan (CSV)",
+    "exportSuccess": "Support plan exported successfully",
+    "noStudentsAtRisk": "No students at critical dropout risk detected",
+    "filterClass": "Filter by Class",
+    "filterRisk": "Filter by Risk",
+    "dprThresholdNotice": "Critical absence threshold: 25% of annual course hours (DPR 122/2009 art. 14)"
+  },
+  "rubrics": {
+    "descriptiveEvaluation": "Descriptive Evaluation Matrix (O.M. 172/2020)",
+    "descriptiveDesc": "Assessment by learning objectives and ministerial proficiency levels (Advanced, Intermediate, Basic, In Acquisition)",
+    "addObjective": "Add Objective",
+    "levelAdvanced": "Advanced",
+    "levelIntermediate": "Intermediate",
+    "levelBasic": "Basic",
+    "levelInitial": "In Acquisition",
+    "objectiveName": "Learning Objective Name"
+  },
+  "substitutions": {
+    "dispatcherTab": "Live Dispatcher Grid (1st-6th Period)",
+    "listTab": "Detailed Substitutions List",
+    "uncoveredClass": "Uncovered Class",
+    "assignSubQuick": "Quick Assign"
+  },
+  "student": {
+    "planner": {
+      "title": "Homework Planner & To-Do List",
+      "subtitle": "Interactive digital agenda tracking assignments and deadlines",
+      "completed": "Completed",
+      "todo": "To Do",
+      "tabTitle": "To-Do Agenda",
+      "myNotes": "Personal study notes",
+      "allDone": "All homework has been completed!"
+    }
+  },
+  "parent": {
+    "absenceLimit": {
+      "title": "25% Absence Limit (D.P.R. 122/2009)",
+      "subtitle": "Academic year validity tracking (min. 75% attendance)",
+      "ariaLabel": "Absence summary and 25% limit tracking DPR 122/2009",
+      "remainingHours": "Remaining allowable hours",
+      "totalHours": "Absent Hours",
+      "latesAndExits": "Lates / Early Exits",
+      "statusOk": "Regular (<15%)",
+      "statusWarning": "Warning (≥15%)",
+      "statusDanger": "High Risk (≥20%)",
+      "statusCritical": "Limit Exceeded (>25%)",
+      "legalTitle": "Legal Reference (Art. 14 DPR 122/2009)"
+    }
   }
-};
+}

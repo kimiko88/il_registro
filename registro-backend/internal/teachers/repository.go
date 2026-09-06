@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -19,6 +20,7 @@ type Repository interface {
 	AssignSubject(ctx context.Context, teacherID, subjectID string) error
 	RemoveSubject(ctx context.Context, teacherID, subjectID string) error
 	GetDashboardStats(ctx context.Context, teacherUserID string) (map[string]interface{}, error)
+	GetPersonalRegisterData(ctx context.Context, teacherID, classID, subjectID string) (*TeacherRegisterData, error)
 }
 
 type PostgresRepository struct {
@@ -272,4 +274,228 @@ func (r *PostgresRepository) GetDashboardStats(ctx context.Context, teacherUserI
 	}
 
 	return stats, nil
+}
+
+func (r *PostgresRepository) GetPersonalRegisterData(ctx context.Context, teacherID, classID, subjectID string) (*TeacherRegisterData, error) {
+	data := &TeacherRegisterData{
+		AcademicYear: "2023/2024",
+		Students:     make([]TeacherRegisterStudent, 0),
+		Lessons:      make([]TeacherRegisterLesson, 0),
+	}
+
+	// 1. Teacher & School details
+	teacherQuery := `
+		SELECT COALESCE(u.first_name || ' ' || u.last_name, 'Docente'), COALESCE(s.name, 'Istituto Comprensivo Statale')
+		FROM teachers t
+		JOIN users u ON t.user_id = u.id
+		LEFT JOIN schools s ON t.school_id = s.id
+		WHERE t.id = NULLIF($1, '')::uuid OR t.user_id = NULLIF($1, '')::uuid
+		LIMIT 1`
+	_ = r.db.QueryRowContext(ctx, teacherQuery, teacherID).Scan(&data.TeacherName, &data.SchoolName)
+	if data.TeacherName == "" {
+		data.TeacherName = "Docente"
+	}
+	if data.SchoolName == "" {
+		data.SchoolName = "Istituto Scolastico"
+	}
+
+	// 2. Class & Subject determination
+	if classID == "" || subjectID == "" {
+		assignQuery := `
+			SELECT cs.class_id::text, cs.subject_id::text,
+			       COALESCE(al.name || ' ', '') || c.section, COALESCE(sub.name, 'Materia')
+			FROM class_subjects cs
+			JOIN classes c ON cs.class_id = c.id
+			JOIN subjects sub ON cs.subject_id = sub.id
+			LEFT JOIN academic_levels al ON c.level_id = al.id
+			WHERE cs.teacher_id = NULLIF($1, '')::uuid OR cs.teacher_id IN (SELECT id FROM teachers WHERE user_id = NULLIF($1, '')::uuid)
+			LIMIT 1`
+		_ = r.db.QueryRowContext(ctx, assignQuery, teacherID).Scan(&classID, &subjectID, &data.ClassName, &data.SubjectName)
+	} else {
+		classQuery := `SELECT COALESCE(al.name || ' ', '') || c.section FROM classes c LEFT JOIN academic_levels al ON c.level_id = al.id WHERE c.id = NULLIF($1, '')::uuid`
+		_ = r.db.QueryRowContext(ctx, classQuery, classID).Scan(&data.ClassName)
+		subQuery := `SELECT name FROM subjects WHERE id = NULLIF($1, '')::uuid`
+		_ = r.db.QueryRowContext(ctx, subQuery, subjectID).Scan(&data.SubjectName)
+	}
+
+	if data.ClassName == "" {
+		data.ClassName = "Classe Non Specificata"
+	}
+	if data.SubjectName == "" {
+		data.SubjectName = "Materia Generale"
+	}
+
+	// 3. Students list
+	studentMap := make(map[string]*TeacherRegisterStudent)
+	studentOrder := make([]string, 0)
+	if classID != "" {
+		stQuery := `
+			SELECT s.id::text, COALESCE(u.last_name || ' ' || u.first_name, 'Studente')
+			FROM students s
+			JOIN users u ON s.user_id = u.id
+			WHERE s.class_id = NULLIF($1, '')::uuid AND s.deleted_at IS NULL AND u.deleted_at IS NULL
+			ORDER BY u.last_name, u.first_name`
+		if rows, err := r.db.QueryContext(ctx, stQuery, classID); err == nil {
+			defer rows.Close()
+			for rows.Next() {
+				var sid, sname string
+				if err := rows.Scan(&sid, &sname); err == nil {
+					st := &TeacherRegisterStudent{
+						ID:          sid,
+						Name:        sname,
+						Q1Written:   "-",
+						Q1Oral:      "-",
+						Q1Practical: "-",
+						Q1Avg:       "-",
+						Q2Written:   "-",
+						Q2Oral:      "-",
+						Q2Practical: "-",
+						Q2Avg:       "-",
+						FinalAvg:    "-",
+						Absences:    0,
+					}
+					studentMap[sid] = st
+					studentOrder = append(studentOrder, sid)
+				}
+			}
+		}
+
+		// 4. Grades aggregation
+		gradesQuery := `
+			SELECT student_id::text, grade_value, grade_type, semester
+			FROM grades
+			WHERE class_id = NULLIF($1, '')::uuid 
+			  AND (subject_id = NULLIF($2, '')::uuid OR $2 = '')
+			  AND deleted_at IS NULL`
+		if rows, err := r.db.QueryContext(ctx, gradesQuery, classID, subjectID); err == nil {
+			defer rows.Close()
+			type studentGrades struct {
+				q1Written, q1Oral, q1Prac []float64
+				q2Written, q2Oral, q2Prac []float64
+			}
+			stGradesMap := make(map[string]*studentGrades)
+
+			for rows.Next() {
+				var sid string
+				var val float64
+				var gType string
+				var sem int
+				if err := rows.Scan(&sid, &val, &gType, &sem); err == nil {
+					if _, ok := stGradesMap[sid]; !ok {
+						stGradesMap[sid] = &studentGrades{}
+					}
+					sg := stGradesMap[sid]
+					if sem == 1 {
+						switch gType {
+						case "Written":
+							sg.q1Written = append(sg.q1Written, val)
+						case "Oral":
+							sg.q1Oral = append(sg.q1Oral, val)
+						case "Practical":
+							sg.q1Prac = append(sg.q1Prac, val)
+						default:
+							sg.q1Oral = append(sg.q1Oral, val)
+						}
+					} else {
+						switch gType {
+						case "Written":
+							sg.q2Written = append(sg.q2Written, val)
+						case "Oral":
+							sg.q2Oral = append(sg.q2Oral, val)
+						case "Practical":
+							sg.q2Prac = append(sg.q2Prac, val)
+						default:
+							sg.q2Oral = append(sg.q2Oral, val)
+						}
+					}
+				}
+			}
+
+			formatAvg := func(vals []float64) (string, float64, bool) {
+				if len(vals) == 0 {
+					return "-", 0, false
+				}
+				sum := 0.0
+				for _, v := range vals {
+					sum += v
+				}
+				avg := sum / float64(len(vals))
+				return fmt.Sprintf("%.1f", avg), avg, true
+			}
+
+			for sid, sg := range stGradesMap {
+				if st, ok := studentMap[sid]; ok {
+					st.Q1Written, _, _ = formatAvg(sg.q1Written)
+					st.Q1Oral, _, _ = formatAvg(sg.q1Oral)
+					st.Q1Practical, _, _ = formatAvg(sg.q1Prac)
+					allQ1 := append(append(sg.q1Written, sg.q1Oral...), sg.q1Prac...)
+					_, q1AvgVal, hasQ1 := formatAvg(allQ1)
+					if hasQ1 {
+						st.Q1Avg = fmt.Sprintf("%.2f", q1AvgVal)
+					}
+
+					st.Q2Written, _, _ = formatAvg(sg.q2Written)
+					st.Q2Oral, _, _ = formatAvg(sg.q2Oral)
+					st.Q2Practical, _, _ = formatAvg(sg.q2Prac)
+					allQ2 := append(append(sg.q2Written, sg.q2Oral...), sg.q2Prac...)
+					_, q2AvgVal, hasQ2 := formatAvg(allQ2)
+					if hasQ2 {
+						st.Q2Avg = fmt.Sprintf("%.2f", q2AvgVal)
+					}
+
+					allGrades := append(allQ1, allQ2...)
+					_, finalAvgVal, hasFinal := formatAvg(allGrades)
+					if hasFinal {
+						st.FinalAvg = fmt.Sprintf("%.2f", finalAvgVal)
+					}
+				}
+			}
+		}
+
+		// 5. Subject Absences count
+		absQuery := `
+			SELECT student_id::text, COUNT(*)
+			FROM attendance
+			WHERE class_id = NULLIF($1, '')::uuid
+			  AND (subject_id = NULLIF($2, '')::uuid OR $2 = '' OR subject_id IS NULL)
+			  AND status = 'Absent'
+			GROUP BY student_id`
+		if rows, err := r.db.QueryContext(ctx, absQuery, classID, subjectID); err == nil {
+			defer rows.Close()
+			for rows.Next() {
+				var sid string
+				var count int
+				if err := rows.Scan(&sid, &count); err == nil {
+					if st, ok := studentMap[sid]; ok {
+						st.Absences = count
+					}
+				}
+			}
+		}
+
+		// 6. Signed lessons
+		lessonsQuery := `
+			SELECT TO_CHAR(l.date, 'DD/MM/YYYY'), COALESCE(l.hour, 1), l.topic, l.type,
+			       COALESCE(u.first_name || ' ' || u.last_name, '')
+			FROM class_lessons l
+			JOIN users u ON l.teacher_id = u.id
+			WHERE l.class_id = NULLIF($1, '')::uuid
+			  AND (l.subject_id = NULLIF($2, '')::uuid OR $2 = '')
+			ORDER BY l.date, l.hour LIMIT 80`
+		if rows, err := r.db.QueryContext(ctx, lessonsQuery, classID, subjectID); err == nil {
+			defer rows.Close()
+			for rows.Next() {
+				var l TeacherRegisterLesson
+				if err := rows.Scan(&l.Date, &l.Hour, &l.Topic, &l.Type, &l.SignedBy); err == nil {
+					data.Lessons = append(data.Lessons, l)
+				}
+			}
+		}
+	}
+
+	for _, sid := range studentOrder {
+		data.Students = append(data.Students, *studentMap[sid])
+	}
+
+	return data, nil
 }

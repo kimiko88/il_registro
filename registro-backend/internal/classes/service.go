@@ -163,3 +163,14 @@ func (s *Service) BulkMigrateStudents(ctx context.Context, schoolID string, req 
 	}
 	return s.repo.BulkMigrateStudents(ctx, req.Migrations)
 }
+
+func (s *Service) GenerateMonthlyJournalPDF(ctx context.Context, schoolID, classID string, year, month int) ([]byte, error) {
+	if err := s.checkClassSchool(ctx, schoolID, classID); err != nil {
+		return nil, err
+	}
+	data, err := s.repo.GetMonthlyJournalData(ctx, classID, year, month)
+	if err != nil {
+		return nil, err
+	}
+	return GenerateMonthlyJournalPDF(data)
+}

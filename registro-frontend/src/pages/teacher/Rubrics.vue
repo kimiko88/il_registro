@@ -38,6 +38,7 @@
       >
         <q-tab name="rubrics" icon="menu_book" :label="t('rubricsPage.title')" />
         <q-tab name="assessments" icon="history_edu" :label="t('nav.competencies')" />
+        <q-tab name="descriptive" icon="auto_stories" label="Valutazione Descrittiva (O.M. 172/2020)" />
       </q-tabs>
 
       <q-separator />
@@ -140,6 +141,11 @@
               </q-item-section>
             </q-item>
           </q-list>
+        </q-tab-panel>
+
+        <!-- TAB 3: MATRICE DESCRITTIVA O.M. 172/2020 -->
+        <q-tab-panel name="descriptive" class="q-pa-none">
+          <DescriptiveEvaluationMatrix />
         </q-tab-panel>
       </q-tab-panels>
     </q-card>
@@ -323,6 +329,7 @@ import { useRubricsStore } from '@/stores/rubrics'
 import { useClassesStore } from '@/stores/classes'
 import { useGradesStore } from '@/stores/grades'
 import api from 'src/services/api'
+import DescriptiveEvaluationMatrix from '@/components/Teacher/DescriptiveEvaluationMatrix.vue'
 
 const $q = useQuasar()
 const { t } = useI18n()

@@ -43,6 +43,9 @@ func (m *MockTeacherRepo) RemoveSubject(ctx context.Context, teacherID, subjectI
 func (m *MockTeacherRepo) GetDashboardStats(ctx context.Context, teacherUserID string) (map[string]interface{}, error) {
 	return nil, nil
 }
+func (m *MockTeacherRepo) GetPersonalRegisterData(ctx context.Context, teacherID, classID, subjectID string) (*teachers.TeacherRegisterData, error) {
+	return &teachers.TeacherRegisterData{}, nil
+}
 
 func (m *MockRepo) CreateSlot(ctx context.Context, s *ColloquioSlot) error {
 	s.ID = "new-id"

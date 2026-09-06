@@ -121,18 +121,21 @@ il_registro is designed to be **self-hosted by schools, municipalities, regions,
 | Domain                    | Features                                                                                                                             |
 | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
 | **Native Mobile Apps (Alpha)**| **Native Android & iOS (Alpha Stage — Unstable & Incomplete)** for Student, Parent, Teacher, and Secretary (Kotlin Compose & SwiftUI, biometrics, offline, 11 languages) |
-| **Authentication & SSO**  | JWT (15min access + refresh rotation), MFA TOTP, SPID, CIE, **Google Workspace & MS Teams SSO**                                      |
+| **Authentication & SSO**  | JWT (15min access + refresh rotation), MFA TOTP, **Google Workspace & MS Teams SSO**, OAuth2/OIDC                                    |
 | **Roles**                 | `superadmin`, `admin`, `secretary`, `teacher`, `student`, `parent`                                                                   |
-| **Grades & Evaluation**   | Fast entry, **Keyboard Matrix View**, weighted averages, target grade simulator, special educational needs (BES/DSA) measures        |
-| **Attendance & Lessons**  | Daily register, **1-Click Class Sign**, absences, tardiness, parent justifications, absenteeism alerts                               |
+| **Grades & Evaluation**   | Fast entry, **Keyboard Matrix View**, weighted averages, target grade simulator, **Descriptive Matrix (O.M. 172/2020 4 proficiency levels)**, BES/DSA measures |
+| **Attendance & Lessons**  | Daily register, **1-Click Class Sign**, fast consecutive multi-hour signing (2-3h), reuse previous lesson topics, absenteeism alerts  |
+| **Official Records (PDF)**| **Teacher Personal Register PDF** (terms, weighted averages, signed lessons), **Monthly Class Journal PDF** with coded presence matrix (P, A, R, U, G) |
+| **Diagnostic & Linter**   | **School Data Integrity Linter**: proactive checks for relational issues (orphaned students, uncoordinated classes, lesson overlaps) |
+| **Substitutions & Dispatcher** | **Live Hourly Dispatcher Grid (1st-6th period)** with uncovered classes detection and 1-click substitute recommendation and assignment |
+| **Parent & Student Portals** | **25% Absence Limit Tracking (DPR 122/2009)** with remaining hours forecasting, **Interactive Homework Planner & To-Do List**      |
 | **PDP / PEI (BES & DSA)** | **Personalized Educational Plans**, compensatory/dispensatory measures, digital parent signature/approval, diagnosis data protection |
-| **Business Intelligence** | **School Dropout & Absenteeism Dashboards**, 1st vs 2nd Term progress analytics for school leadership                                |
+| **Business Intelligence** | **School Dropout & Early Warning Dashboard (DPR 122/2009)**, CSV support plan export, term progress analytics                       |
+| **Cloud-Native & Resilience** | **Kubernetes Probes (`/live`, `/ready`)** with deep dependency checks (DB, Redis, goroutines, RAM), **Circuit Breaker** for remote services |
 | **E-Learning Sync**       | **Google Classroom & Microsoft Teams**: automatic sync for assignments, grades, and classes                                          |
-| **Communications**        | School circulars, urgent announcements with **Mandatory Read Acknowledgment**, real-time WebSocket notifications                     |
+| **Communications**        | School circulars, urgent announcements with **Mandatory Read Acknowledgment**, real-time WebSocket & Web Push notifications          |
 | **Accessibility & UX**    | **OpenDyslexic DSA Font**, high contrast, **Global Search `Ctrl+K`**, **Toast & Undo (15s)**, Daily Timeline, Skeleton screens       |
-| **Scrutinies**            | Final report cards, conduct grades, school credits allocation                                                                        |
-| **PCTO & Timetables**     | Internship hours tracking, school timetable schedule, parent-teacher conference booking                                              |
-| **PWA & Mobile**          | Installable on mobile devices with offline support                                                                                   |
+| **PWA & Offline Outbox**  | Desktop & mobile installable (PWA), **Offline Outbox Queue** for teacher actions with automatic FIFO background synchronization      |
 
 ---
 

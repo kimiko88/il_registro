@@ -7,6 +7,7 @@
       </div>
       <q-tabs v-model="tab" dense class="text-grey" active-color="primary" indicator-color="primary" align="justify" narrow-indicator aria-label="Sezioni agenda e compiti">
         <q-tab name="compiti" :label="t('agendaPage.homeworkList') || 'Lista Compiti'" icon="list" />
+        <q-tab name="planner" :label="t('student.planner.tabTitle') || 'Diario To-Do'" icon="checklist" />
         <q-tab name="agenda" :label="t('agendaPage.agendaLessons') || 'Agenda & Lezioni'" icon="calendar_month" />
       </q-tabs>
     </div>
@@ -56,6 +57,11 @@
             </q-item>
           </q-card>
         </div>
+      </q-tab-panel>
+
+      <!-- Planner To-Do Tab -->
+      <q-tab-panel name="planner" class="q-pa-none">
+        <HomeworkPlanner />
       </q-tab-panel>
 
       <!-- Agenda Tab -->
@@ -155,6 +161,7 @@ import { useQuasar, date } from 'quasar'
 import { useStudentStore } from '@/stores/student'
 import { lessonService } from '@/services/lessonService'
 import adminService from '@/services/adminService'
+import HomeworkPlanner from '@/components/Student/HomeworkPlanner.vue'
 
 const $q = useQuasar()
 const { t } = useI18n()

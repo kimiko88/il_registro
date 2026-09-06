@@ -371,6 +371,16 @@ func (s *Service) LogAdminAction(ctx context.Context, adminID, actionType, targe
 	return s.repo.LogAdminAction(ctx, adminID, actionType, target, targetID, schoolID, details)
 }
 
+// UpdateSetting updates a school setting
+func (s *Service) UpdateSetting(ctx context.Context, schoolID, key, value string) error {
+	return s.repo.UpdateSetting(ctx, schoolID, key, value)
+}
+
+// CheckDataIntegrity runs diagnostic checks across school entities
+func (s *Service) CheckDataIntegrity(ctx context.Context, schoolID *string) (*DataIntegrityReport, error) {
+	return s.repo.CheckDataIntegrity(ctx, schoolID)
+}
+
 // GetSchoolSetting retrieves a school setting
 func (s *Service) GetSchoolSetting(ctx context.Context, schoolID, key string) (string, error) {
 	return s.repo.GetSetting(ctx, schoolID, key)
