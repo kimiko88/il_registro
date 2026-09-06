@@ -41,6 +41,7 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 		scrutiny.POST("/class/:classId/validate", h.Validate)
 		scrutiny.POST("/class/:classId/close", h.Close)
 		scrutiny.GET("/export/:studentId/pdf", h.ExportPagellaPDF)
+		scrutiny.GET("/class/:classId/export-zip", h.ExportClassPagelleZIP)
 
 		// Async Worker Queue PDF Routes
 		scrutiny.POST("/class/:classId/async-pdf", h.EnqueueAsyncScrutinyPdf)
@@ -101,6 +102,37 @@ func (h *Handler) ExportPagellaPDF(c *gin.Context) {
 	c.Header("Content-Type", "application/pdf")
 	c.Header("Content-Disposition", upload.FormatContentDisposition(filename))
 	c.Data(http.StatusOK, "application/pdf", pdfBytes)
+}
+
+func (h *Handler) ExportClassPagelleZIP(c *gin.Context) {
+	classID := c.Param("classId")
+	semester := parseSemester(c.DefaultQuery("semester", "1"))
+	actorID := c.GetString("user_id")
+	actorRole := c.GetString("role")
+
+	if actorID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	zipBytes, err := h.service.ExportClassPagelleZIP(c.Request.Context(), actorID, actorRole, classID, semester)
+	if err != nil {
+		if errors.Is(err, ErrScrutinyNotValidated) || err == ErrScrutinyNotValidated {
+			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+			return
+		}
+		if strings.HasPrefix(err.Error(), "forbidden") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	filename := fmt.Sprintf("pagelle_classe_%s_semestre%d.zip", classID, semester)
+	c.Header("Content-Type", "application/zip")
+	c.Header("Content-Disposition", upload.FormatContentDisposition(filename))
+	c.Data(http.StatusOK, "application/zip", zipBytes)
 }
 
 func (h *Handler) GetMatrix(c *gin.Context) {

@@ -3421,6 +3421,10 @@ export default {
     "noStudents": "Niciun elev atribuit acestui grup."
   },
   "scrutinyPage": {
+    "exportZip": "Exportă Foi Matricole (ZIP)",
+    "downloadPagella": "Descarcă Foaie Matricolă (PDF)",
+    "zipExportSuccess": "Arhiva ZIP a foilor matricole descărcată cu succes",
+    "zipExportError": "Eroare la exportul arhivei ZIP",
     "title": "Consiliu Profesoral și Evaluare Diferențiată",
     "subtitle": "Gestionarea notelor finale, a corigențelor și a recuperării materiei",
     "closeScrutiny": "Închidere Consiliu",

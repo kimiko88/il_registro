@@ -7,6 +7,15 @@
       </div>
       <div class="col-auto">
         <div class="row q-gutter-md glass-card q-pa-sm rounded-xl border-slate-200 items-center">
+          <q-btn
+            v-if="selectedClassId && matrix.students && matrix.students.length > 0"
+            color="secondary"
+            icon="archive"
+            :label="$t('scrutinyPage.exportZip') || 'Esporta Pagelle (ZIP)'"
+            unelevated
+            :loading="exportingZip"
+            @click="exportClassZip"
+          />
           <q-btn v-if="selectedClassId" color="negative" icon="lock" :label="$t('scrutinyPage.closeScrutiny')" unelevated @click="closeScrutiny" />
           <q-select
             v-model="selectedClassId"
@@ -141,6 +150,9 @@
               <q-td align="center" class="q-gutter-xs">
                 <q-btn flat round dense icon="save" color="primary" @click="saveStudentScrutiny(props.row.student_id)">
                   <q-tooltip>{{ $t('common.save') }}</q-tooltip>
+                </q-btn>
+                <q-btn flat round dense icon="picture_as_pdf" color="indigo" @click="exportSinglePagella(props.row.student_id)">
+                  <q-tooltip>{{ $t('scrutinyPage.downloadPagella') || 'Scarica Pagella (PDF)' }}</q-tooltip>
                 </q-btn>
                 <q-btn flat round dense icon="warning" color="amber-9" @click="openDeficiencyModal(props.row)">
                   <q-tooltip>{{ $t('scrutinyPage.deficiencySubtitle') }}</q-tooltip>
@@ -592,6 +604,56 @@ const closeScrutiny = () => {
       $q.notify({ type: 'negative', message: t('common.error') || 'Errore durante la chiusura dello scrutinio' })
     }
   })
+}
+
+const exportingZip = ref(false)
+
+const exportClassZip = async () => {
+  if (!selectedClassId.value) return
+  exportingZip.value = true
+  try {
+    const res = await scrutinyService.exportClassScrutinyZip(selectedClassId.value, period.value)
+    const blob = new Blob([res.data], { type: 'application/zip' })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `pagelle_classe_${selectedClassId.value}_semestre${period.value}.zip`)
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.URL.revokeObjectURL(url)
+    $q.notify({
+      type: 'positive',
+      message: t('scrutinyPage.zipExportSuccess') || 'Archivio ZIP delle pagelle scaricato con successo'
+    })
+  } catch (err) {
+    $q.notify({
+      type: 'negative',
+      message: err.response?.data?.error || t('scrutinyPage.zipExportError') || 'Errore durante l\'esportazione dello ZIP'
+    })
+  } finally {
+    exportingZip.value = false
+  }
+}
+
+const exportSinglePagella = async (studentId) => {
+  try {
+    const res = await scrutinyService.exportPagellaPDF(studentId, selectedClassId.value, period.value)
+    const blob = new Blob([res.data], { type: 'application/pdf' })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `pagella_${studentId}_semestre${period.value}.pdf`)
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.URL.revokeObjectURL(url)
+  } catch (err) {
+    $q.notify({
+      type: 'negative',
+      message: err.response?.data?.error || 'Errore durante lo scaricamento della pagella'
+    })
+  }
 }
 </script>
 

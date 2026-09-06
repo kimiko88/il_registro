@@ -109,6 +109,14 @@
 
     <!-- Main Content Area -->
     <div class="row q-col-gutter-lg">
+      <!-- Analytics Charts: Grade Trend & Presence -->
+      <div class="col-12 q-mb-md">
+        <GradeAnalyticsCharts
+          :grades="allStudentGrades"
+          :attendance-rate="attendanceRate"
+        />
+      </div>
+
       <!-- Recent Grades -->
       <div class="col-12 col-md-8">
         <q-card class="glass-card shadow-soft q-mb-lg overflow-hidden">
@@ -228,6 +236,7 @@ import { communicationService } from 'src/services/communicationService'
 import dashboardService from 'src/services/dashboardService'
 import adminService from 'src/services/adminService'
 import api from 'src/services/api'
+import GradeAnalyticsCharts from '@/components/Student/GradeAnalyticsCharts.vue'
 
 const { t, locale: currentLocale } = useI18n();
 const studentStore = useStudentStore();
@@ -237,6 +246,7 @@ const attendanceRate = ref(100)
 const pctoHours = ref(0)
 const unreadMessages = ref(0)
 const subjects = ref([])
+const allStudentGrades = ref([])
 
 const recentGrades = ref([])
 const upcomingEvents = ref([])
@@ -312,6 +322,11 @@ const fetchDashboardData = async () => {
         }
         
         allGrades.sort((a, b) => new Date(b.date) - new Date(a.date))
+        allStudentGrades.value = allGrades.map(g => ({
+            ...g,
+            subject: getSubjectName(g.subject_id),
+            grade_value: g.grade_value
+        }))
         recentGrades.value = allGrades.slice(0, 5).map(g => ({
             id: g.id,
             subject: getSubjectName(g.subject_id),

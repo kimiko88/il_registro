@@ -3421,6 +3421,10 @@ export default {
     "noStudents": "Aucun élève affecté à ce groupe."
   },
   "scrutinyPage": {
+    "exportZip": "Exporter Bulletins (ZIP)",
+    "downloadPagella": "Télécharger Bulletin (PDF)",
+    "zipExportSuccess": "Archive ZIP des bulletins téléchargée avec succès",
+    "zipExportError": "Erreur lors de l'exportation du ZIP",
     "title": "Conseil de Classe & Évaluation Différée",
     "subtitle": "Gestion des notes finales, lacunes et rattrapages scolaires",
     "closeScrutiny": "Clôturer le Conseil",

@@ -8,7 +8,7 @@
         @click.self="close"
         role="dialog"
         aria-modal="true"
-        aria-label="Ricerca globale"
+        aria-label="Ricerca globale e comandi rapidi"
       >
         <div class="global-search-container">
           <!-- Search Input -->
@@ -18,7 +18,7 @@
               ref="inputRef"
               v-model="query"
               class="search-native-input col"
-              :placeholder="t('search.placeholder')"
+              :placeholder="t('search.placeholder') || 'Cerca studenti, classi, circolari o azioni rapide... (Ctrl+K)'"
               autocomplete="off"
               spellcheck="false"
               @keydown.escape="close"
@@ -31,14 +31,44 @@
 
           <q-separator />
 
-          <!-- No input hint -->
-          <div v-if="!query" class="search-hint q-pa-lg text-center text-grey-6">
-            <q-icon name="keyboard" size="32px" class="q-mb-sm opacity-50" /><br />
-            <span class="text-caption">{{ t('search.hint') }}</span>
-            <div class="row justify-center q-mt-md q-gutter-sm">
-              <q-chip dense outline color="grey-5" :label="'↑↓ ' + t('search.navigate')" />
-              <q-chip dense outline color="grey-5" :label="'Enter ' + t('search.open')" />
-              <q-chip dense outline color="grey-5" :label="'Esc ' + t('search.close')" />
+          <!-- No input: Quick Actions & Navigation shortcuts -->
+          <div v-if="!query" class="q-pa-sm">
+            <div class="text-caption text-weight-bold text-grey-7 q-px-md q-pt-xs q-pb-xs letter-spacing-1 text-uppercase">
+              {{ t('search.quickActions') || 'Azioni Rapide & Scorciatoie' }}
+            </div>
+            <q-list dense class="q-py-xs">
+              <q-item
+                v-for="(item, idx) in defaultItems"
+                :key="item.id"
+                clickable
+                class="search-result-item rounded-lg q-mx-sm q-py-xs"
+                :class="{ 'result-highlighted': highlightedIndex === idx }"
+                @click="openResult(item)"
+                @mouseenter="highlightedIndex = idx"
+              >
+                <q-item-section avatar min-width="36px">
+                  <q-avatar :color="item.color || 'primary'" text-color="white" size="30px">
+                    <q-icon :name="item.icon || 'bolt'" size="16px" />
+                  </q-avatar>
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label class="text-weight-bold text-body2">
+                    {{ item.label }}
+                  </q-item-label>
+                  <q-item-label caption class="text-grey-6">{{ item.subtitle }}</q-item-label>
+                </q-item-section>
+                <q-item-section side>
+                  <q-chip dense outline size="xs" color="grey-6" class="text-weight-medium">
+                    {{ item.action ? 'Azione' : 'Vai' }}
+                  </q-chip>
+                </q-item-section>
+              </q-item>
+            </q-list>
+
+            <div class="row justify-center q-pt-sm q-pb-xs q-gutter-xs text-caption text-grey-6">
+              <q-chip dense outline color="grey-5" :label="'↑↓ ' + (t('search.navigate') || 'Naviga')" />
+              <q-chip dense outline color="grey-5" :label="'Enter ' + (t('search.open') || 'Apri')" />
+              <q-chip dense outline color="grey-5" :label="'Esc ' + (t('search.close') || 'Chiudi')" />
             </div>
           </div>
 
@@ -50,14 +80,14 @@
           <!-- No results -->
           <div v-else-if="query && results.length === 0" class="q-pa-lg text-center text-grey-6">
             <q-icon name="search_off" size="32px" class="opacity-50 q-mb-sm" /><br />
-            <span class="text-caption">{{ t('search.noResults') }} "<strong>{{ query }}</strong>"</span>
+            <span class="text-caption">{{ t('search.noResults') || 'Nessun risultato per' }} "<strong>{{ query }}</strong>"</span>
           </div>
 
           <!-- Results -->
           <q-scroll-area v-else style="max-height: 420px;">
             <q-list class="q-py-sm">
               <template v-for="(group, gi) in groupedResults" :key="gi">
-                <q-item-label header class="text-caption text-weight-bold text-primary q-px-md q-pt-sm q-pb-xs letter-spacing-1">
+                <q-item-label header class="text-caption text-weight-bold text-primary q-px-md q-pt-sm q-pb-xs letter-spacing-1 text-uppercase">
                   {{ group.label }}
                 </q-item-label>
                 <q-item
@@ -69,13 +99,13 @@
                   @click="openResult(item)"
                   @mouseenter="highlightedIndex = getGlobalIndex(gi, ii)"
                 >
-                  <q-item-section avatar>
-                    <q-avatar :color="item.color || 'primary'" text-color="white" size="34px">
+                  <q-item-section avatar min-width="36px">
+                    <q-avatar :color="item.color || 'primary'" text-color="white" size="32px">
                       <q-icon :name="item.icon || 'search'" size="18px" />
                     </q-avatar>
                   </q-item-section>
                   <q-item-section>
-                    <q-item-label class="text-weight-bold">
+                    <q-item-label class="text-weight-bold text-body2">
                       <span v-html="highlight(item.label)"></span>
                     </q-item-label>
                     <q-item-label caption class="text-grey-6">{{ item.subtitle }}</q-item-label>
@@ -96,29 +126,35 @@
 <script setup>
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
-import api from '@/services/api'
-import { debounce } from 'quasar'
+import { useQuasar, debounce } from 'quasar'
 import { useI18n } from 'vue-i18n'
+import { useAuthStore } from '@/stores/auth'
+import { useThemeStore } from '@/stores/theme'
+import api from '@/services/api'
 
 // ── State ──────────────────────────────────────────────────────────────────
 const { t } = useI18n()
+const $q = useQuasar()
+const router = useRouter()
+const authStore = useAuthStore()
+const themeStore = useThemeStore()
+
 const isOpen = ref(false)
 const query = ref('')
 const loading = ref(false)
 const highlightedIndex = ref(0)
 const inputRef = ref(null)
-
 const apiResults = ref([])
-
-const router = useRouter()
-const authStore = useAuthStore()
 
 // ── Keyboard shortcut ───────────────────────────────────────────────────────
 function onKeydown(e) {
-  if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
     e.preventDefault()
-    open()
+    if (isOpen.value) {
+      close()
+    } else {
+      open()
+    }
   }
 }
 onMounted(() => window.addEventListener('keydown', onKeydown))
@@ -128,6 +164,7 @@ function open() {
   isOpen.value = true
   query.value = ''
   highlightedIndex.value = 0
+  apiResults.value = []
   nextTick(() => inputRef.value?.focus())
 }
 function close() {
@@ -136,51 +173,139 @@ function close() {
   apiResults.value = []
 }
 
-// ── Search logic ────────────────────────────────────────────────────────────
-const role = computed(() => authStore.userRole)
+// ── Role & Context ─────────────────────────────────────────────────────────
+const role = computed(() => (authStore.userRole || authStore.user?.role || 'user').toLowerCase())
 
-// Static menu items that match the current role
-const menuItems = computed(() => {
-  const base = {
-    teacher: [
-      { id: 'm-1', label: 'Gestione Voti', icon: 'grade', color: 'indigo', route: '/teacher/grades', subtitle: 'Menu → Valutazione' },
-      { id: 'm-2', label: 'Presenze e Registro', icon: 'how_to_reg', color: 'teal', route: '/teacher/attendance', subtitle: 'Menu → Didattica' },
-      { id: 'm-3', label: 'Agenda e Impegni', icon: 'edit_calendar', color: 'orange', route: '/teacher/agenda', subtitle: 'Menu → Organizzazione' },
-      { id: 'm-4', label: 'Scrutinio e Pagelle', icon: 'analytics', color: 'purple', route: '/teacher/scrutiny', subtitle: 'Menu → Didattica' },
-      { id: 'm-5', label: 'Colloqui con Genitori', icon: 'event', color: 'pink', route: '/teacher/colloqui', subtitle: 'Menu → Organizzazione' },
-      { id: 'm-6', label: 'Registro Supplenze e Sostituzioni', icon: 'swap_horiz', color: 'cyan', route: '/teacher/substitutions', subtitle: 'Menu → Organizzazione' },
-      { id: 'm-7', label: 'Programmazione UdA', icon: 'auto_stories', color: 'deep-orange', route: '/teacher/uda', subtitle: 'Menu → Curricolo' },
-      { id: 'm-8', label: 'Valutazione Competenze', icon: 'stars', color: 'blue-8', route: '/teacher/competencies', subtitle: 'Menu → Curricolo' },
-    ],
-    secretary: [
-      { id: 'm-1', label: 'Gestione Studenti', icon: 'school', color: 'indigo', route: '/secretary/students', subtitle: 'Menu → Anagrafiche' },
-      { id: 'm-2', label: 'Gestione Utenti e Segreteria', icon: 'people', color: 'teal', route: '/secretary/users', subtitle: 'Menu → Anagrafiche' },
-      { id: 'm-3', label: 'Gestione Classi', icon: 'room', color: 'orange', route: '/secretary/classes', subtitle: 'Menu → Anagrafiche' },
-      { id: 'm-4', label: 'Documenti e Fascicoli', icon: 'description', color: 'purple', route: '/secretary/documents', subtitle: 'Menu → Atti' },
-      { id: 'm-5', label: 'Comunicazioni e Circolari', icon: 'email', color: 'pink', route: '/secretary/communications', subtitle: 'Menu → Servizi' },
-    ],
-    admin: [
-      { id: 'm-1', label: 'Gestione Utenti', icon: 'people', color: 'indigo', route: '/admin/users', subtitle: 'Menu → Admin' },
-      { id: 'm-2', label: 'Impostazioni Sistema', icon: 'settings', color: 'grey-8', route: '/admin/settings', subtitle: 'Menu → Admin' },
-      { id: 'm-3', label: 'Analytics e Log', icon: 'analytics', color: 'green-8', route: '/admin/analytics', subtitle: 'Menu → Admin' },
-    ]
-  }
-  return base[role.value] || base.teacher || []
+// Quick Actions
+const quickActions = computed(() => {
+  return [
+    {
+      id: 'qa-dark',
+      label: $q.dark.isActive ? (t('layout.lightMode') || 'Passa a Modalità Chiara') : (t('layout.darkMode') || 'Passa a Modalità Scura'),
+      subtitle: t('layout.themeAriaLabel') || 'Personalizzazione Aspetto',
+      icon: $q.dark.isActive ? 'light_mode' : 'dark_mode',
+      color: 'amber-9',
+      group: t('search.quickActions') || 'Azioni Rapide',
+      action: () => $q.dark.toggle()
+    },
+    {
+      id: 'qa-contrast',
+      label: t('layout.highContrast') || 'Contrasto Elevato',
+      subtitle: t('layout.highContrastDesc') || 'Accessibilità Visiva WCAG 2.2',
+      icon: 'contrast',
+      color: 'blue-grey-8',
+      group: t('search.quickActions') || 'Azioni Rapide',
+      action: () => themeStore.toggleHighContrast()
+    },
+    {
+      id: 'qa-shortcuts',
+      label: t('a11y.shortcutsTitle') || 'Scorciatoie da Tastiera',
+      subtitle: 'Guida comandi rapidi (?)',
+      icon: 'keyboard',
+      color: 'purple',
+      group: t('search.quickActions') || 'Azioni Rapide',
+      action: () => themeStore.toggleKeyboardShortcutsHelp(true)
+    }
+  ]
 })
 
-// Debounced API search
+// Static menu items matching current role
+const menuItems = computed(() => {
+  const map = {
+    teacher: [
+      { id: 'm-1', label: t('nav.grades') || 'Gestione Voti', icon: 'grade', color: 'indigo', route: '/teacher/grades', subtitle: 'Valutazione e verifiche' },
+      { id: 'm-2', label: t('nav.attendance') || 'Presenze e Registro', icon: 'how_to_reg', color: 'teal', route: '/teacher/attendance', subtitle: 'Appello giornaliero e lezioni' },
+      { id: 'm-3', label: t('nav.agenda') || 'Agenda e Compiti', icon: 'edit_calendar', color: 'orange-8', route: '/teacher/agenda', subtitle: 'Pianificazione didattica' },
+      { id: 'm-4', label: t('nav.scrutiny') || 'Scrutinio e Pagelle', icon: 'analytics', color: 'purple', route: '/teacher/scrutiny', subtitle: 'Valutazioni periodiche' },
+      { id: 'm-5', label: t('nav.colloqui') || 'Colloqui con Genitori', icon: 'event', color: 'pink', route: '/teacher/colloqui', subtitle: 'Ricevimento famiglie' },
+      { id: 'm-6', label: t('nav.communications') || 'Circolari e Comunicazioni', icon: 'email', color: 'blue-8', route: '/teacher/communications', subtitle: 'Bacheca avvisi' }
+    ],
+    student: [
+      { id: 'm-s1', label: t('nav.myGrades') || 'I Miei Voti', icon: 'grade', color: 'indigo', route: '/student/grades', subtitle: 'Riepilogo valutazioni' },
+      { id: 'm-s2', label: t('nav.attendance') || 'Presenze e Assenze', icon: 'event_available', color: 'teal', route: '/student/attendance', subtitle: 'Storico orario e giustifiche' },
+      { id: 'm-s3', label: t('nav.homework') || 'Compiti e Lezioni', icon: 'assignment', color: 'orange-8', route: '/student/homework', subtitle: 'Scadenze e studio' },
+      { id: 'm-s4', label: t('nav.communications') || 'Circolari e Avvisi', icon: 'email', color: 'blue-8', route: '/student/communications', subtitle: 'Comunicazioni scuola' },
+      { id: 'm-s5', label: t('nav.reportCard') || 'Pagella e Documenti', icon: 'description', color: 'purple', route: '/student/report-card', subtitle: 'Scheda di valutazione' }
+    ],
+    parent: [
+      { id: 'm-p1', label: t('nav.childrenGrades') || 'Voti dei Figli', icon: 'grade', color: 'indigo', route: '/parent/grades', subtitle: 'Riepilogo valutazioni' },
+      { id: 'm-p2', label: t('nav.justifications') || 'Giustifiche e Assenze', icon: 'verified', color: 'teal', route: '/parent/justifications', subtitle: 'Giustifica assenze e ritardi' },
+      { id: 'm-p3', label: t('nav.colloqui') || 'Prenota Colloqui', icon: 'event', color: 'pink', route: '/parent/colloqui', subtitle: 'Incontra i docenti' },
+      { id: 'm-p4', label: t('nav.communications') || 'Circolari e Avvisi', icon: 'email', color: 'blue-8', route: '/parent/communications', subtitle: 'Bacheca della scuola' }
+    ],
+    secretary: [
+      { id: 'm-sec1', label: t('nav.students') || 'Gestione Studenti', icon: 'school', color: 'indigo', route: '/secretary/students', subtitle: 'Anagrafiche e iscrizioni' },
+      { id: 'm-sec2', label: t('nav.classes') || 'Gestione Classi', icon: 'room', color: 'teal', route: '/secretary/classes', subtitle: 'Sezioni e coordinamento' },
+      { id: 'm-sec3', label: t('nav.users') || 'Gestione Utenti', icon: 'people', color: 'orange-8', route: '/secretary/users', subtitle: 'Docenti, ATA e account' },
+      { id: 'm-sec4', label: t('nav.documents') || 'Protocollo e Documenti', icon: 'description', color: 'purple', route: '/secretary/documents', subtitle: 'Atti e certificati' },
+      { id: 'm-sec5', label: t('nav.timetable') || 'Orario Scolastico', icon: 'schedule', color: 'blue-8', route: '/secretary/timetable', subtitle: 'Gestione orari lezioni' }
+    ],
+    admin: [
+      { id: 'm-a1', label: t('nav.adminUsers') || 'Gestione Utenti', icon: 'people', color: 'indigo', route: '/admin/users', subtitle: 'Amministrazione account' },
+      { id: 'm-a2', label: t('nav.adminSettings') || 'Impostazioni Sistema', icon: 'settings', color: 'grey-8', route: '/admin/settings', subtitle: 'Configurazione registro' },
+      { id: 'm-a3', label: t('nav.auditLog') || 'Registro Audit e Log', icon: 'security', color: 'green-8', route: '/admin/audit-log', subtitle: 'Tracciamento attività' }
+    ]
+  }
+  return map[role.value] || map.teacher
+})
+
+// Default items shown when search box is empty
+const defaultItems = computed(() => {
+  return [...quickActions.value, ...menuItems.value.slice(0, 4)]
+})
+
+// ── Search logic ────────────────────────────────────────────────────────────
+function getRouteForResult(item) {
+  const currentRole = role.value
+  const type = (item.type || '').toLowerCase()
+
+  if (type === 'communication') {
+    if (currentRole === 'student') return '/student/communications'
+    if (currentRole === 'parent') return '/parent/communications'
+    if (currentRole === 'secretary') return '/secretary/communications'
+    return '/teacher/communications'
+  }
+  if (type === 'lesson') {
+    return currentRole === 'student' ? '/student/homework' : '/teacher/lessons'
+  }
+  if (type === 'class') {
+    if (currentRole === 'secretary' || currentRole === 'admin') return '/secretary/classes'
+    return '/teacher/attendance'
+  }
+  if (type === 'student') {
+    if (currentRole === 'secretary') return '/secretary/students'
+    if (currentRole === 'teacher') return '/teacher/grades'
+    if (currentRole === 'parent') return '/parent/grades'
+    return '/student/grades'
+  }
+  if (type === 'teacher') {
+    if (currentRole === 'parent') return '/parent/colloqui'
+    return '/secretary/users'
+  }
+  if (type === 'document') {
+    return currentRole === 'secretary' ? '/secretary/documents' : '/teacher/documents'
+  }
+  return '/dashboard'
+}
+
+// Debounced API search: uses GET /search for all authenticated users, and /search/global only for superadmin
 const doSearch = debounce(async (q) => {
-  if (!q || q.length < 2) { apiResults.value = []; loading.value = false; return }
+  if (!q || q.length < 2) {
+    apiResults.value = []
+    loading.value = false
+    return
+  }
   loading.value = true
   try {
-    const res = await api.get('/search/global', { params: { q, limit: 12 } })
+    const endpoint = role.value === 'superadmin' ? '/search/global' : '/search'
+    const res = await api.get(endpoint, { params: { q, limit: 15 } })
     apiResults.value = res.data?.results || []
-  } catch {
+  } catch (_err) {
     apiResults.value = []
   } finally {
     loading.value = false
   }
-}, 280)
+}, 250)
 
 watch(query, (q) => {
   loading.value = !!q && q.length >= 2
@@ -188,36 +313,70 @@ watch(query, (q) => {
   highlightedIndex.value = 0
 })
 
-// ── Grouped results ─────────────────────────────────────────────────────────
+// Grouped results
 const results = computed(() => {
-  const q = query.value.toLowerCase()
+  const q = (query.value || '').toLowerCase().trim()
   if (!q) return []
 
   const items = []
 
-  // Transform backend API search items
+  // 1. Matched Quick Actions
+  const matchedActions = quickActions.value.filter(a =>
+    a.label.toLowerCase().includes(q) || a.subtitle.toLowerCase().includes(q)
+  )
+  items.push(...matchedActions)
+
+  // 2. Matched Menu Items
+  const matchedMenu = menuItems.value.filter(m =>
+    m.label.toLowerCase().includes(q) || m.subtitle?.toLowerCase().includes(q)
+  ).map(m => ({
+    ...m,
+    group: t('search.navigation') || 'Navigazione & Pagine'
+  }))
+  items.push(...matchedMenu)
+
+  // 3. Transform backend API search items
   for (const r of apiResults.value) {
-    const typeLabel = r.type === 'communication' ? 'Bacheca & Circolari' : (r.type === 'lesson' ? 'Lezioni & Argomenti' : (r.type === 'class' ? 'Classi' : 'Utenti & Anagrafiche'))
-    const iconName = r.type === 'communication' ? 'email' : (r.type === 'lesson' ? 'menu_book' : (r.type === 'class' ? 'room' : (r.type === 'student' ? 'school' : 'person')))
-    const iconColor = r.type === 'communication' ? 'pink' : (r.type === 'lesson' ? 'indigo' : (r.type === 'class' ? 'orange' : 'teal'))
-    const targetRoute = r.type === 'communication' ? '/teacher/communications' : (r.type === 'lesson' ? '/teacher/lessons' : (r.type === 'class' ? '/secretary/classes' : '/secretary/users'))
+    const groupName = r.type === 'communication'
+      ? (t('nav.communications') || 'Circolari & Avvisi')
+      : (r.type === 'lesson'
+        ? (t('nav.lessons') || 'Lezioni & Didattica')
+        : (r.type === 'class'
+          ? (t('nav.classes') || 'Classi & Sezioni')
+          : (r.type === 'student'
+            ? (t('common.student') || 'Studenti')
+            : (t('common.users') || 'Utenti & Anagrafiche'))))
+
+    const iconName = r.type === 'communication'
+      ? 'email'
+      : (r.type === 'lesson'
+        ? 'menu_book'
+        : (r.type === 'class'
+          ? 'room'
+          : (r.type === 'student'
+            ? 'school'
+            : 'person')))
+
+    const iconColor = r.type === 'communication'
+      ? 'pink'
+      : (r.type === 'lesson'
+        ? 'indigo'
+        : (r.type === 'class'
+          ? 'orange-8'
+          : (r.type === 'student'
+            ? 'teal'
+            : 'blue-8')))
 
     items.push({
-      id: r.id,
+      id: r.id || `api-${Math.random()}`,
       label: r.title || r.name,
       subtitle: r.description || r.subtitle || r.type,
-      group: typeLabel,
+      group: groupName,
       icon: iconName,
       color: iconColor,
-      route: targetRoute
+      route: getRouteForResult(r)
     })
   }
-
-  // Filter menu items locally
-  const menuMatches = menuItems.value.filter(m =>
-    m.label.toLowerCase().includes(q) || m.subtitle?.toLowerCase().includes(q)
-  )
-  items.push(...menuMatches)
 
   return items
 })
@@ -225,7 +384,7 @@ const results = computed(() => {
 const groupedResults = computed(() => {
   const groups = {}
   for (const item of results.value) {
-    const g = item.group || (item.route?.startsWith('/teacher') ? 'Voce di Menu' : 'Risultati')
+    const g = item.group || (t('search.results') || 'Risultati')
     if (!groups[g]) groups[g] = []
     groups[g].push(item)
   }
@@ -234,9 +393,13 @@ const groupedResults = computed(() => {
 
 // ── Navigation helpers ───────────────────────────────────────────────────────
 let _totalFlat = []
-watch(groupedResults, (gr) => {
-  _totalFlat = gr.flatMap(g => g.items)
-})
+watch([groupedResults, defaultItems, query], () => {
+  if (!query.value) {
+    _totalFlat = defaultItems.value
+  } else {
+    _totalFlat = groupedResults.value.flatMap(g => g.items)
+  }
+}, { immediate: true })
 
 function getGlobalIndex(gi, ii) {
   let idx = 0
@@ -245,7 +408,8 @@ function getGlobalIndex(gi, ii) {
 }
 
 function moveDown() {
-  highlightedIndex.value = Math.min(highlightedIndex.value + 1, (_totalFlat.length || 1) - 1)
+  const maxIdx = (_totalFlat.length || 1) - 1
+  highlightedIndex.value = Math.min(highlightedIndex.value + 1, maxIdx)
 }
 function moveUp() {
   highlightedIndex.value = Math.max(highlightedIndex.value - 1, 0)
@@ -257,7 +421,9 @@ function selectHighlighted() {
 
 function openResult(item) {
   close()
-  if (item.route) {
+  if (typeof item.action === 'function') {
+    item.action()
+  } else if (item.route) {
     router.push(item.route)
   } else if (item.url && /^https?:\/\//i.test(item.url)) {
     window.open(item.url, '_blank', 'noopener,noreferrer')
@@ -277,13 +443,14 @@ function escapeHtml(str) {
 function highlight(text) {
   if (!text) return ''
   const safeText = escapeHtml(text)
-  if (!query.value) return safeText
-  const escaped = escapeHtml(query.value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const q = (query.value || '').trim()
+  if (!q) return safeText
+  const escaped = escapeHtml(q).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   return safeText.replace(new RegExp(`(${escaped})`, 'gi'), '<mark class="search-highlight">$1</mark>')
 }
 
 // Expose open() so MainLayout can call it
-defineExpose({ open, close })
+defineExpose({ open, close, isOpen, query })
 </script>
 
 <style scoped>
@@ -339,18 +506,10 @@ defineExpose({ open, close })
 }
 
 .result-highlighted {
-  background: rgba(99, 102, 241, 0.08) !important;
+  background: rgba(99, 102, 241, 0.1) !important;
 }
 .body--dark .result-highlighted {
-  background: rgba(99, 102, 241, 0.18) !important;
-}
-
-.search-hint {
-  min-height: 160px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  background: rgba(99, 102, 241, 0.22) !important;
 }
 
 :deep(.search-highlight) {

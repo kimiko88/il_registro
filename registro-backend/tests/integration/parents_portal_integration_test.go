@@ -40,7 +40,6 @@ func (m *mockParentsRepo) GetDashboardStats(_ context.Context, parentUserID stri
 	}, nil
 }
 
-
 type mockUsersForParentsRepo struct {
 	users.Repository
 	childrenMap map[string][]users.StudentChild
@@ -284,4 +283,3 @@ func TestParents_DashboardStats(t *testing.T) {
 	assert.Equal(t, 1, stats.UpcomingColloqui)
 	assert.Equal(t, 2, stats.UnreadCommunications)
 }
-

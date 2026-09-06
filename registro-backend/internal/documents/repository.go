@@ -6,7 +6,6 @@ import (
 	"registro-backend/pkg/crypto"
 )
 
-
 type Repository interface {
 	Create(doc *Document, initialContent string) error
 	Update(doc *Document, newContent, changeLog string) error

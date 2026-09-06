@@ -107,6 +107,14 @@
         </q-card>
       </div>
 
+      <!-- Analytics Charts: Grade Trend & Presence -->
+      <div class="col-12 q-mb-md">
+        <GradeAnalyticsCharts
+          :grades="allChildGrades"
+          :attendance-rate="childAttendanceRate"
+        />
+      </div>
+
       <!-- Recent Grades -->
       <div class="col-12 col-md-8">
         <q-card class="shadow-sm rounded-lg" role="region" :aria-label="$t('gradesPage.title')">
@@ -195,6 +203,7 @@ import { gradeService } from '@/services/gradeService'
 import { attendanceService } from '@/services/attendanceService'
 import { communicationService } from '@/services/communicationService'
 import { colloquiService } from '@/services/colloquiService'
+import GradeAnalyticsCharts from '@/components/Student/GradeAnalyticsCharts.vue'
 
 
 
@@ -207,8 +216,10 @@ const parentName = computed(() => authStore.user?.first_name || authStore.user?.
 
 const averageGrade = ref('-')
 const totalAbsences = ref(0)
+const childAttendanceRate = ref(100)
 const unreadCount = ref(0)
 const recentGrades = ref([])
+const allChildGrades = ref([])
 const upcomingTests = ref([])
 const nextColloquio = ref(null)
 const dataLoading = ref(false)
@@ -260,13 +271,20 @@ const fetchChildData = async () => {
             averageGrade.value = '-'
         }
         allGrades.sort((a, b) => new Date(b.date) - new Date(a.date))
+        allChildGrades.value = allGrades
         recentGrades.value = allGrades.slice(0, 5)
 
         // Fetch Attendance
         const attRes = await attendanceService.getChildAttendance(selectedChildId.value)
         if (attRes.data) {
             const records = Array.isArray(attRes.data) ? attRes.data : (attRes.data.records || [])
-            totalAbsences.value = records.filter(r => r.status === 'absent').length
+            const absences = records.filter(r => r.status === 'absent').length
+            totalAbsences.value = absences
+            if (records.length > 0) {
+                childAttendanceRate.value = Math.round(((records.length - absences) / records.length) * 100)
+            } else {
+                childAttendanceRate.value = 100
+            }
         }
 
         // Fetch Unread Communications

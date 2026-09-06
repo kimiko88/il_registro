@@ -1,17 +1,27 @@
 package classes
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
+	"time"
+
+	"registro-backend/internal/cache"
 
 	"github.com/gin-gonic/gin"
 )
 
 type Handler struct {
 	service *Service
+	cache   cache.Cache
 }
 
-func NewHandler(service *Service) *Handler {
-	return &Handler{service: service}
+func NewHandler(service *Service, c ...cache.Cache) *Handler {
+	var appCache cache.Cache
+	if len(c) > 0 {
+		appCache = c[0]
+	}
+	return &Handler{service: service, cache: appCache}
 }
 
 func getSchoolID(c *gin.Context) string {
@@ -218,6 +228,11 @@ func (h *Handler) AssignSubject(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	if h.cache != nil {
+		_ = h.cache.Delete(c.Request.Context(), fmt.Sprintf("class:subjects:%s", c.Param("id")))
+	}
+
 	c.Status(http.StatusCreated)
 }
 
@@ -234,11 +249,28 @@ func (h *Handler) GetClassSubjects(c *gin.Context) {
 		return
 	}
 
-	res, err := h.service.GetClassSubjects(c.Request.Context(), schoolID, c.Param("id"))
+	classID := c.Param("id")
+	cacheKey := fmt.Sprintf("class:subjects:%s", classID)
+	if h.cache != nil {
+		if cached, err := h.cache.Get(c.Request.Context(), cacheKey); err == nil && cached != "" {
+			c.Header("X-Cache", "HIT")
+			c.Data(http.StatusOK, "application/json; charset=utf-8", []byte(cached))
+			return
+		}
+	}
+
+	res, err := h.service.GetClassSubjects(c.Request.Context(), schoolID, classID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	if h.cache != nil {
+		if jsonBytes, err := json.Marshal(res); err == nil {
+			_ = h.cache.Set(c.Request.Context(), cacheKey, string(jsonBytes), 30*time.Minute)
+		}
+	}
+	c.Header("X-Cache", "MISS")
 	c.JSON(http.StatusOK, res)
 }
 
@@ -263,6 +295,11 @@ func (h *Handler) RemoveSubject(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	if h.cache != nil {
+		_ = h.cache.Delete(c.Request.Context(), fmt.Sprintf("class:subjects:%s", c.Param("id")))
+	}
+
 	c.Status(http.StatusNoContent)
 }
 
