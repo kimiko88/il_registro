@@ -331,6 +331,35 @@
           <q-badge floating transparent class="search-kbd-badge gt-xs">K</q-badge>
         </q-btn>
 
+        <!-- Offline Outbox Status Badge & Dialog Trigger -->
+        <q-btn
+          v-if="outboxStore.hasPending || !isOnline"
+          flat
+          round
+          dense
+          :color="!isOnline ? 'negative' : (outboxStore.isSyncing ? 'primary' : 'warning')"
+          :icon="outboxStore.isSyncing ? 'sync' : (outboxStore.hasPending ? 'cloud_queue' : 'wifi_off')"
+          class="q-mr-xs"
+          :class="{ 'animate-spin': outboxStore.isSyncing }"
+          :aria-label="t('offlineQueue.title') || 'Coda Operazioni Offline'"
+          @click="showOutboxDialog = true"
+          key="outbox-status-btn"
+        >
+          <q-badge
+            v-if="outboxStore.hasPending"
+            floating
+            :color="!isOnline ? 'negative' : 'warning'"
+            text-color="dark"
+            class="text-weight-bolder"
+            rounded
+          >
+            {{ outboxStore.pendingCount }}
+          </q-badge>
+          <q-tooltip>
+            {{ outboxStore.hasPending ? `${outboxStore.pendingCount} ${t('offlineQueue.pendingItems') || 'operazioni in attesa di sincronizzazione'}` : (t('offlineBanner.offlineText') || 'Offline') }}
+          </q-tooltip>
+        </q-btn>
+
         <!-- Help Center (Desktop / Tablet) -->
         <q-btn
           flat
@@ -784,6 +813,9 @@
     <!-- Global Search Modal (Ctrl+K) -->
     <GlobalSearch ref="globalSearchRef" />
 
+    <!-- Outbox Queue Dialog (accessible from navbar button) -->
+    <OutboxQueueDialog v-model="showOutboxDialog" />
+
     <q-page-container role="main" id="main-content" tabindex="-1">
       <!-- Dynamic Breadcrumb Navigation Header -->
       <div v-if="breadcrumbs.length > 0" class="q-px-md q-pt-md">
@@ -873,6 +905,9 @@ const SessionReauthDialog = defineAsyncComponent(() => import('@/components/Comm
 const ReadingRuler = defineAsyncComponent(() => import('@/components/Common/ReadingRuler.vue'))
 const KeyboardShortcutsDialog = defineAsyncComponent(() => import('@/components/Common/KeyboardShortcutsDialog.vue'))
 const InactivityDialog = defineAsyncComponent(() => import('@/components/Common/InactivityDialog.vue'))
+const OutboxQueueDialog = defineAsyncComponent(() => import('@/components/Common/OutboxQueueDialog.vue'))
+import { useOutboxStore } from '@/stores/outbox'
+import { useNetworkStatus } from '@/composables/useNetworkStatus'
 import { useA11yAnnouncer } from '@/composables/useA11yAnnouncer'
 import { useSessionReauth } from '@/composables/useSessionReauth'
 import { useGlobalKeyboardShortcuts } from '@/composables/useGlobalKeyboardShortcuts'
@@ -883,6 +918,9 @@ import { setReauthHandler } from '@/services/api'
 useGlobalKeyboardShortcuts()
 
 const { canInstall, promptInstall } = usePwaInstall()
+const outboxStore = useOutboxStore()
+const { isOnline } = useNetworkStatus()
+const showOutboxDialog = ref(false)
 
 const globalSearchRef = ref(null)
 const tourRef = ref(null)

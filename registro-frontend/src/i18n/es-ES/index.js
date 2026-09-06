@@ -3421,6 +3421,10 @@ export default {
     "noStudents": "Ningún alumno asignado a este grupo."
   },
   "scrutinyPage": {
+    "exportZip": "Exportar Boletines (ZIP)",
+    "downloadPagella": "Descargar Boletín (PDF)",
+    "zipExportSuccess": "Archivo ZIP de boletines descargado con éxito",
+    "zipExportError": "Error al exportar el archivo ZIP",
     "title": "Evaluación Colegiada y Diferida",
     "subtitle": "Gestión de notas finales, materias pendientes y recuperación de materias",
     "closeScrutiny": "Cerrar Evaluación",

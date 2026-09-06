@@ -3421,6 +3421,10 @@ export default {
     "noStudents": "No student assigned to this group."
   },
   "scrutinyPage": {
+    "exportZip": "Export Report Cards (ZIP)",
+    "downloadPagella": "Download Report Card (PDF)",
+    "zipExportSuccess": "Report cards ZIP archive downloaded successfully",
+    "zipExportError": "Error exporting ZIP archive",
     "title": "Academic & Deferred Scrutiny",
     "subtitle": "Management of final grades, deficiencies topics and recovery courses",
     "closeScrutiny": "Close Scrutiny",

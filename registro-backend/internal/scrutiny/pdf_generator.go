@@ -1,8 +1,10 @@
 package scrutiny
 
 import (
+	"archive/zip"
 	"bytes"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/go-pdf/fpdf"
@@ -99,6 +101,49 @@ func GeneratePagellaPDF(matrix *ScrutinyMatrix, studentID string) ([]byte, error
 		return nil, err
 	}
 	return buf.Bytes(), nil
+}
+
+func GenerateClassPagelleZIP(matrix *ScrutinyMatrix) ([]byte, error) {
+	if matrix == nil || len(matrix.Students) == 0 {
+		return nil, fmt.Errorf("nessuno studente presente nella matrice di scrutinio")
+	}
+
+	var buf bytes.Buffer
+	zipWriter := zip.NewWriter(&buf)
+
+	for _, student := range matrix.Students {
+		pdfBytes, err := GeneratePagellaPDF(matrix, student.StudentID)
+		if err != nil {
+			continue
+		}
+
+		safeName := sanitizeFilename(student.StudentName)
+		if safeName == "" {
+			safeName = student.StudentID
+		}
+		filename := fmt.Sprintf("Pagella_%s_Semestre_%d.pdf", safeName, matrix.Semester)
+
+		fileWriter, err := zipWriter.Create(filename)
+		if err != nil {
+			return nil, err
+		}
+		if _, err := fileWriter.Write(pdfBytes); err != nil {
+			return nil, err
+		}
+	}
+
+	if err := zipWriter.Close(); err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
+}
+
+func sanitizeFilename(s string) string {
+	s = sanitize(s)
+	s = strings.ReplaceAll(s, " ", "_")
+	reg := regexp.MustCompile(`[^a-zA-Z0-9_\-\.]`)
+	return reg.ReplaceAllString(s, "")
 }
 
 func sanitize(s string) string {

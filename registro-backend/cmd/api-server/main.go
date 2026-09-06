@@ -202,7 +202,7 @@ func main() {
 	authH := auth.NewHandler(authSvc, wsTicketStore)
 	usersH := users.NewHandler(usersSvc)
 	schoolsH := schools.NewHandler(schoolsSvc, appCache)
-	classesH := classes.NewHandler(classesSvc)
+	classesH := classes.NewHandler(classesSvc, appCache)
 	gradesH := grades.NewHandler(gradesSvc, gradesAnalytics)
 	attendanceH := attendance.NewHandler(attendanceSvc)
 	docsUploader := upload.NewSupabaseUploader(cfg.Supabase.URL, cfg.Supabase.Key, cfg.Supabase.Bucket)
@@ -376,7 +376,7 @@ func main() {
 
 			subjectsRepo := subjects.NewRepository(database)
 			subjectsSvc := subjects.NewService(subjectsRepo)
-			subjectsH := subjects.NewHandler(subjectsSvc)
+			subjectsH := subjects.NewHandler(subjectsSvc, appCache)
 			subjectsH.RegisterRoutes(protected)
 
 			goalsRepo := student_goals.NewRepository(database)
@@ -443,7 +443,6 @@ func main() {
 			studentDashboardSvc := students.NewDashboardService(database)
 			studentDashboardH := students.NewDashboardHandler(studentDashboardSvc)
 			studentDashboardH.RegisterRoutes(protected)
-
 
 			tenantsRepo := tenants.NewRepository(database)
 			tenantsSvc := tenants.NewService(tenantsRepo)

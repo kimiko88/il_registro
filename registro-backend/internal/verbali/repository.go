@@ -21,7 +21,6 @@ type Repository interface {
 	ClassBelongsToSchool(ctx context.Context, classID, schoolID string) (bool, error)
 }
 
-
 type PostgresRepository struct {
 	db *sql.DB
 }
@@ -208,4 +207,3 @@ func (r *PostgresRepository) ClassBelongsToSchool(ctx context.Context, classID, 
 	err := r.db.QueryRowContext(ctx, query, classID, schoolID).Scan(&exists)
 	return exists, err
 }
-

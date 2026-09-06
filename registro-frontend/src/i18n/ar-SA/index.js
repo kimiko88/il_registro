@@ -3566,6 +3566,10 @@ export default {
     "noStudents": "لا يوجد طلاب مسجلون في هذه المجموعة."
   },
   "scrutinyPage": {
+    "exportZip": "تصدير بطاقات الدرجات (ZIP)",
+    "downloadPagella": "تحميل بطاقة الدرجات (PDF)",
+    "zipExportSuccess": "تم تنزيل أرشيف بطاقات الدرجات ZIP بنجاح",
+    "zipExportError": "خطأ أثناء تصدير أرشيف ZIP",
     "title": "مجلس التدقيق والمراجعة الأكاديمية",
     "subtitle": "إدارة الدرجات النهائية ومواد الرسوب والبرامج العلاجية",
     "closeScrutiny": "إغلاق التدقيق",

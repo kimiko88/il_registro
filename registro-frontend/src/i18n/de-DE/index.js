@@ -3421,6 +3421,10 @@ export default {
     "noStudents": "Dieser Gruppe sind keine Schüler zugewiesen."
   },
   "scrutinyPage": {
+    "exportZip": "Zeugnisse exportieren (ZIP)",
+    "downloadPagella": "Zeugnis herunterladen (PDF)",
+    "zipExportSuccess": "ZIP-Archiv der Zeugnisse erfolgreich heruntergeladen",
+    "zipExportError": "Fehler beim Exportieren des ZIP-Archivs",
     "title": "Notenkonferenz & Nachprüfungen",
     "subtitle": "Verwaltung von Endnoten, Lernrückständen und Fördermaßnahmen",
     "closeScrutiny": "Konferenz Schließen",

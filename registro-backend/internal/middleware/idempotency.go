@@ -13,9 +13,9 @@ const idempotencyTTL = 10 * time.Minute
 const idempotencyHeader = "Idempotency-Key"
 
 type cachedResponse struct {
-	status  int
-	body    []byte
-	headers map[string]string
+	status   int
+	body     []byte
+	headers  map[string]string
 	storedAt time.Time
 }
 

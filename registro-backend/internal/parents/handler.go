@@ -38,7 +38,6 @@ func (h *Handler) GetDashboardStats(c *gin.Context) {
 	c.JSON(http.StatusOK, stats)
 }
 
-
 func (h *Handler) GetDashboard(c *gin.Context) {
 	parentID := c.GetString("user_id")
 	if parentID == "" {

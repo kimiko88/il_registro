@@ -3421,6 +3421,10 @@ export default {
     "noStudents": "Nessuno studente assegnato a questo gruppo."
   },
   "scrutinyPage": {
+    "exportZip": "Esporta Pagelle (ZIP)",
+    "downloadPagella": "Scarica Pagella (PDF)",
+    "zipExportSuccess": "Archivio ZIP delle pagelle scaricato con successo",
+    "zipExportError": "Errore durante l'esportazione dello ZIP",
     "title": "Scrutinio Accademico & Differito",
     "subtitle": "Gestione voti finali, argomenti delle carenze e recupero debiti formativi",
     "closeScrutiny": "Chiudi Scrutinio",

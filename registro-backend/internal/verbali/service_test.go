@@ -87,7 +87,6 @@ func TestCreateMeetingAndVerbale(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, m)
 
-
 	mockRepo.On("GetMeetingByID", mock.Anything, "m-1").Return(m, nil).Once()
 	mockRepo.On("CreateVerbale", mock.Anything, mock.MatchedBy(func(v *MeetingVerbale) bool {
 		return v.Title == "Verbale n.1"
@@ -123,7 +122,6 @@ func TestCreateMeeting_CrossTenantBlocked(t *testing.T) {
 	assert.Contains(t, err.Error(), "does not belong to school")
 	mockRepo.AssertExpectations(t)
 }
-
 
 func TestSignVerbale(t *testing.T) {
 	mockRepo := new(MockRepository)

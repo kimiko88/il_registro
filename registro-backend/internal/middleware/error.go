@@ -20,4 +20,3 @@ func ErrorMiddleware() gin.HandlerFunc {
 		}
 	}
 }
-

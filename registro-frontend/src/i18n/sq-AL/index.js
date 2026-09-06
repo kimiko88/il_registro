@@ -3566,6 +3566,10 @@ export default {
     "noStudents": "Asnjë nxënës i caktuar në këtë grup."
   },
   "scrutinyPage": {
+    "exportZip": "Eksporto Dëftesat (ZIP)",
+    "downloadPagella": "Shkarko Dëftesën (PDF)",
+    "zipExportSuccess": "Arkiva ZIP e dëftesave u shkarkua me sukses",
+    "zipExportError": "Gabim gjatë eksportimit të arkivës ZIP",
     "title": "Këshilli i Klasës & Provimet Riparuese",
     "subtitle": "Menaxhimi i notave përfundimtare, mbetjeve dhe shlyerjes së lëndëve",
     "closeScrutiny": "Mbyll Këshillin",

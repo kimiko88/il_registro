@@ -606,3 +606,43 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
   - **Risoluzione Linter Go `cmd/migrate_down/main.go`**: Aggiunto controllo `scanner.Err()` dopo il ciclo `for scanner.Scan()` nel caricamento del file `.env`.
   - **Risoluzione Linter Go `internal/schools/repository.go`**: Aggiunto controllo `rows.Err()` dopo il ciclo `for rows.Next()` in `List` delle scuole.
   - **Validazione**: Suite di test i18n (`i18nKeys.test.js`, 231/231 asserzioni), unit test completi frontend (184/184 suite, 1210/1210 test), `npm run lint` (0 errori/warning), backend `go vet ./...` e `go test ./...` tutti superati.
+
+- [x] **Batch 16: Global Spotlight Ctrl+K, Drawer Outbox Offline, Caching Layer Materie/Roster, Grafici Trend Voti & Presenze SVG, Export ZIP Pagelle, Magic Bytes & EXIF Stripping (Settembre 2026)**:
+  - **Frontend — Global Spotlight Ctrl+K Potenziato (`src/components/Common/GlobalSearch.vue`)**:
+    - Corretto l'endpoint di ricerca tenant da `/search/global` (riservato al superadmin) a `/search` (con fallback automatico per superadmin), garantendo il funzionamento per tutti i ruoli (docente, studente, genitore, segreteria, preside).
+    - Aggiunta sezione "Azioni Rapide / Comandi" direttamente nella palette: toggle Dark Mode, toggle Contrasto Elevato, apertura Guida Scorciatoie da tastiera.
+    - Navigazione intelligente per ruolo utente con suggerimenti mirati per sezioni specifiche (es. Pagelle, Registro di Classe, Colloqui, Circolari).
+    - Navigazione da tastiera completa (`ArrowUp`, `ArrowDown`, `Enter`, `Escape`) e reset automatico al close.
+    - Suite di unit test dedicata in `tests/unit/components/Common/GlobalSearch.spec.js` (4/4 test passati).
+  - **Frontend — Outbox Offline Accessibile & Sincronizzazione (`src/layouts/MainLayout.vue`)**:
+    - Aggiunto pulsante persistente nella top toolbar con icona dinamica nuvola/sync (`cloud_done`, `cloud_upload`, `cloud_off`) e badge reattivo con il conteggio `outboxStore.pendingCount`.
+    - Collegato direttamente alla finestra di dialogo `<OutboxQueueDialog v-model="showOutboxDialog" />` accessibile in qualsiasi momento sia online che offline per visualizzare, forzare o scartare le operazioni in sospeso.
+  - **Backend — Caching Layer Roster & Materie (`internal/subjects`, `internal/classes`)**:
+    - Integrata cache ad alte prestazioni Cache-Aside con TTL di 30 minuti e header di diagnostica `X-Cache: HIT/MISS`:
+      - `subjects:school:%s` per l'elenco materie per istituto scolastico.
+      - `class:subjects:%s` per l'elenco materie associate a una specifica classe.
+    - Invalidazione immediata e mirata all'atto di scritture (`Create`, `Update`, `Delete` materia; `AssignSubject`, `RemoveSubject` da classe).
+    - Costruttori con pattern variadico `NewHandler(service, c ...cache.Cache)` per garantire retrocompatibilità al 100% con test di integrazione esistenti.
+    - Suite di unit test dedicate in `internal/subjects/subjects_cache_test.go` e `internal/classes/classes_cache_test.go`.
+  - **Frontend — Grafici Trend Voti & Presenze SVG Nativi (`src/components/Student/GradeAnalyticsCharts.vue`)**:
+    - Creato componente puramente nativo SVG (zero librerie terze, leggero e reattivo) con:
+      - Sparkline ad andamento cronologico con smoothing spline cubico / bezier, area di riempimento con gradiente armonico, linea guida della sufficienza (6.0 tratteggiata) e punti dati interattivi con hover tooltip nativo SVG.
+      - Donut/radial progress nativo SVG per il tasso di presenza con marcatore della soglia minima MIUR (75%) e codice cromatico (Verde >=90%, Ambra >=75%, Rosso <75%).
+      - Barra di distribuzione segmentata dei voti (<6 Insufficienti, 6-7.5 Sufficienti, 8-10 Ottimi) con percentuali e pillole di conteggio.
+    - Integrato nella dashboard dello studente (`src/pages/student/Index.vue`) e del genitore (`src/pages/parent/Index.vue`).
+    - Suite di unit test dedicata in `tests/unit/components/Student/GradeAnalyticsCharts.spec.js` (3/3 test passati).
+  - **Backend + Frontend — Export Archivio ZIP Pagelle di Classe (`internal/scrutiny`, `src/pages/teacher/Scrutiny.vue`)**:
+    - Backend: Implementata funzione `GenerateClassPagelleZIP` in `internal/scrutiny/pdf_generator.go` con compressione `archive/zip` in streaming, generazione concorrente/sequenziale dei PDF singoli con sanitizzazione dei filename (`Pagella_Nome_Cognome_Semestre_X.pdf`).
+    - Aggiunto metodo `ExportClassPagelleZIP` in `internal/scrutiny/service.go` ed esposto endpoint `GET /api/v1/scrutiny/class/:classId/export-zip` con header `Content-Disposition` sicuro.
+    - Frontend: Aggiunto metodo `exportClassScrutinyZip` in `src/services/scrutinyService.js` e pulsante "Esporta Pagelle (ZIP)" nella toolbar dello scrutinio docente, oltre al download del singolo PDF studente dalla riga della tabella.
+    - Sincronizzate le chiavi i18n (`exportZip`, `downloadPagella`, `zipExportSuccess`, `zipExportError`) su tutte le 11 lingue gestite.
+    - Suite di unit test in `internal/scrutiny/zip_export_test.go`.
+  - **Backend — Magic Bytes File Upload & EXIF Metadata Stripping (`pkg/upload`)**:
+    - Implementata funzione `StripImageMetadata` in `pkg/upload/sanitizer.go` che decodifica le immagini raster (JPEG, PNG, GIF) e le ricodifica in formati canonici, rimuovendo automaticamente qualsiasi metadato EXIF, geotag GPS di privacy, fotocamera e commenti arbitrari.
+    - Aggiunta funzione unificata `ValidateAndSanitize` in `pkg/upload/validator.go` che combina la verifica di dimensione massima, sniffing dei magic bytes con allowlist e stripping privacy.
+    - Suite di unit test estesa in `pkg/upload/sanitizer_test.go` e `pkg/upload/validator_test.go` (100% passati).
+  - **Validazione Completa & Regression Check**:
+    - **186/186** suite di unit test superate (**1217/1217 test passati**) — +2 nuove suite frontend (`GlobalSearch.spec.js`, `GradeAnalyticsCharts.spec.js`), +7 nuovi test.
+    - **0 errori, 0 warning** ESLint (`npm run lint`).
+    - Backend: `go vet ./...` (0 errori/warning) e tutti i test `go test` superati (subjects, classes, scrutiny, upload, cache, metrics).
+

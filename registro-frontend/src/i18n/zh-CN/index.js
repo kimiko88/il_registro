@@ -3446,6 +3446,10 @@ export default {
     "noStudents": "此小组暂无关联学生。"
   },
   "scrutinyPage": {
+    "exportZip": "导出成绩单 (ZIP)",
+    "downloadPagella": "下载成绩单 (PDF)",
+    "zipExportSuccess": "成绩单ZIP压缩包下载成功",
+    "zipExportError": "导出ZIP压缩包时出错",
     "title": "期末学术评审与补考审核",
     "subtitle": "期末成绩审核、未达标知识点与补考方案管理",
     "closeScrutiny": "结束评审",
