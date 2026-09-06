@@ -40,4 +40,7 @@ type Repository interface {
 	// Settings
 	GetSetting(ctx context.Context, schoolID, key string) (string, error)
 	UpdateSetting(ctx context.Context, schoolID, key, value string) error
+
+	// Data Integrity
+	CheckDataIntegrity(ctx context.Context, schoolID *string) (*DataIntegrityReport, error)
 }

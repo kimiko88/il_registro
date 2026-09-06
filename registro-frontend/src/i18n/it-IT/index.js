@@ -251,7 +251,13 @@ export default {
     "confirmMultiHourMsg": "Vuoi firmare e registrare le presenze per {count} ore consecutive (dall'ora {start}ª all'ora {end}ª) con gli stessi argomenti e presenze?",
     "multiHourSaved": "✓ Salvate e firmate con successo le lezioni per le ore {start} - {end}",
     "noPreviousLesson": "Nessuna lezione precedente trovata per questa materia.",
-    "previousLessonLoaded": "✓ Argomenti ripresi dall'ultima lezione del {date}"
+    "previousLessonLoaded": "✓ Argomenti ripresi dall'ultima lezione del {date}",
+    "printPersonalRegister": "Stampa Registro Personale (PDF)",
+    "personalRegister": "Registro Personale del Docente",
+    "personalRegisterDesc": "Generazione registro ministeriale agli atti con griglia voti, medie pesate, computo presenze e lezioni firmate",
+    "printMonthlyJournal": "Stampa Giornale Mensile (PDF)",
+    "monthlyJournal": "Giornale di Classe Ufficiale del Mese",
+    "monthlyJournalDesc": "Generazione PDF ufficiale con firme docenti, presenze giornaliere, giustificazioni e note disciplinari"
   },
   "dashboardPage": {
     "viewYourHomework": "Vedi i Tuoi Compiti & Attività",
@@ -2284,7 +2290,11 @@ export default {
   "admin": {
     "apiRequests": "Richieste API",
     "userDeleted": "Utente eliminato con successo",
-    "userDeleteError": "Errore durante l'eliminazione dell'utente"
+    "userDeleteError": "Errore durante l'eliminazione dell'utente",
+    "dataIntegrity": "Verifica Congruità Dati Scolastici",
+    "dataIntegritySubtitle": "Scansione preventiva di anomalie relazionali, lezioni sovrapposte, voti nei weekend e studenti orfani",
+    "runIntegrityCheck": "Esegui Scansione Dati",
+    "integrityPassed": "Nessuna anomalia riscontrata: la base dati scolastica è coerente."
   },
   "auth": {
     "sessionExpired": "Sessione scaduta",
@@ -3529,5 +3539,47 @@ export default {
     "filterClass": "Filtra per Classe",
     "filterRisk": "Filtra per Rischio",
     "dprThresholdNotice": "Soglia critica assenze: 25% del monte ore annuale (DPR 122/2009 art. 14 c. 7)"
+  },
+  "rubrics": {
+    "descriptiveEvaluation": "Matrice Valutazione Descrittiva (O.M. 172/2020)",
+    "descriptiveDesc": "Valutazione per obiettivi e livelli ministeriali (Avanzato, Intermedio, Base, In via di prima acquisizione)",
+    "addObjective": "Aggiungi Obiettivo",
+    "levelAdvanced": "Avanzato",
+    "levelIntermediate": "Intermedio",
+    "levelBasic": "Base",
+    "levelInitial": "In via di prima acquisizione",
+    "objectiveName": "Nome Obiettivo di Apprendimento"
+  },
+  "substitutions": {
+    "dispatcherTab": "Tabellone Orario Live (1ª-6ª Ora)",
+    "listTab": "Elenco Dettagliato Sostituzioni",
+    "uncoveredClass": "Classe Scoperta",
+    "assignSubQuick": "Assegna Subito"
+  },
+  "student": {
+    "planner": {
+      "title": "Planner Compiti & To-Do List",
+      "subtitle": "Diario digitale interattivo con tracciamento completamento compiti e scadenze",
+      "completed": "Completato",
+      "todo": "Da Svolgere",
+      "tabTitle": "Diario To-Do",
+      "myNotes": "Note personali di studio",
+      "allDone": "Tutti i compiti sono stati completati!"
+    }
+  },
+  "parent": {
+    "absenceLimit": {
+      "title": "Limite Assenze 25% (D.P.R. 122/2009)",
+      "subtitle": "Monitoraggio soglia validità anno scolastico (min. 75% frequenza)",
+      "ariaLabel": "Riepilogo Assenze e Monitoraggio Limite 25% DPR 122/2009",
+      "remainingHours": "Ore residue consentite",
+      "totalHours": "Ore di Assenza",
+      "latesAndExits": "Ritardi / Uscite",
+      "statusOk": "Regolare (<15%)",
+      "statusWarning": "Attenzione (≥15%)",
+      "statusDanger": "Rischio Elevato (≥20%)",
+      "statusCritical": "Soglia Superata (>25%)",
+      "legalTitle": "Riferimento Normativo (Art. 14 DPR 122/2009)"
+    }
   }
 }

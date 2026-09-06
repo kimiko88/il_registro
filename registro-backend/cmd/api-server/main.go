@@ -255,6 +255,8 @@ func main() {
 	{
 		r.GET("/health", healthH.Health)
 		r.HEAD("/health", healthH.Health)
+		r.GET("/live", healthH.Live)
+		r.HEAD("/live", healthH.Live)
 		r.GET("/ready", healthH.Ready)
 		r.HEAD("/ready", healthH.Ready)
 		r.GET("/metrics", healthH.Metrics)
@@ -263,6 +265,12 @@ func main() {
 		// No auth, no DB — responds in <1ms.
 		api.GET("/ping", healthH.Ping)
 		api.HEAD("/ping", healthH.Ping)
+		api.GET("/health", healthH.Health)
+		api.HEAD("/health", healthH.Health)
+		api.GET("/live", healthH.Live)
+		api.HEAD("/live", healthH.Live)
+		api.GET("/ready", healthH.Ready)
+		api.HEAD("/ready", healthH.Ready)
 		r.GET("/ping", healthH.Ping)
 		r.HEAD("/ping", healthH.Ping)
 

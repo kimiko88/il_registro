@@ -702,8 +702,41 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
     - In `cmd/api-server/main.go`, aggiunti gli endpoint interattivi `/swagger` e `/swagger/index.html` (e `/api/v1/swagger`) collegati alla documentazione OpenAPI `/swagger/doc.json` (`openapi.yaml`).
   - **Validazione Completa & Regression Check**:
     - **190/190** suite di unit test superate (**1228/1228 test passati**) sul frontend (+4 nuove suite di test: `AttendanceMultiHour.spec.js`, `AgendaConflictWarning.spec.js`, `DropoutRiskTable.spec.js`, `AuditLogAdvanced.spec.js`).
+- [x] **Batch 18: Registro Personale Docente PDF, Valutazione Descrittiva O.M. 172/2020, Linter Dati Scolastici, Tabellone Sostituzioni Live, Giornale di Classe Mensile PDF, Planner To-Do Studente, Limite Assenze 25% Famiglia, K8s Probes & Circuit Breaker (Settembre 2026)**:
+  - **1. Stampa PDF Registro Personale del Docente (Chiusura Annuale agli Atti)**:
+    - Backend: Implementato `internal/teachers/pdf_generator.go`, esteso `Repository`, `Service` e `Handler` (`GET /api/v1/teachers/registro-personale/pdf`). Generazione PDF vettoriale conforme ai requisiti ministeriali per la conservazione agli atti: testata istituzionale, griglia cronologica dei voti divisa per quadrimestre (scritti, orali, pratici, media pesata), computo assenze per materia e registro delle lezioni e argomenti firmati con blocco finale di chiusura e firma.
+    - Frontend: In `src/pages/teacher/Attendance.vue`, aggiunto il pulsante "Stampa Registro Personale (PDF)" con dialog di configurazione e download del documento.
+    - Unit test validato: `internal/teachers/teacher_register_pdf_test.go` (100% passati).
+  - **2. Matrice Valutazione Descrittiva per Obiettivi di Apprendimento (O.M. 172/2020)**:
+    - Frontend: Creato componente `src/components/Teacher/DescriptiveEvaluationMatrix.vue` conforme all'Ordinanza Ministeriale 172/2020 con i 4 livelli (*Avanzato*, *Intermedio*, *Base*, *In via di prima acquisizione*), gestione personalizzata degli obiettivi disciplinari, matrice interattiva studenti/obiettivi con pillole di livello, note pedagogiche individuali, distribuzione statistica ed esportazione in CSV.
+    - Integrato come Tab 3 in `src/pages/teacher/Rubrics.vue`.
+  - **3. Verifica Congruità Dati Scolastici (Data Integrity & Diagnostic Linter)**:
+    - Backend: In `internal/postgres/admin_integrity.go`, implementato motore di controllo e diagnostica preventiva relazionale su PostgreSQL; esposto endpoint `GET /api/v1/admin/data-integrity`. Rileva: studenti senza classe, classi prive di coordinatore, lezioni sovrapposte nello stesso orario/aula, voti inseriti di domenica o festivi, e genitori privi di studenti collegati.
+    - Frontend: Creato `src/components/Admin/DataIntegrityCard.vue` con scansione in tempo reale, raggruppamento per severità (Error, Warning, Info), badge di stato e azioni correttive rapide, integrato in `src/pages/admin/Analytics.vue`.
+    - Test validati: `internal/admin/handler_test.go` e `tests/integration/admin_system_monitoring_integration_test.go`.
+  - **4. Tabellone Visuale Sostituzioni Docenti Assenti (Live Dispatcher)**:
+    - Frontend: In `src/pages/secretary/Substitutions.vue`, implementato tab switching tra "Tabellone Orario Live (1ª-6ª Ora)" ed "Elenco Dettagliato". Griglia oraria visuale con classi su righe e ore su colonne, evidenziazione immediata delle classi scoperte, raccomandazione intelligente dei supplenti liberi/a disposizione e assegnazione con 1-click.
+  - **5. Giornale di Classe Ufficiale del Mese (PDF con Firme e Giustificazioni)**:
+    - Backend: Implementato `internal/classes/monthly_journal_pdf.go`, esteso `Repository` (`GetMonthlyJournalData`), `Service` e `Handler` (`GET /api/v1/classes/:id/giornale-mensile/pdf`). Generazione PDF vettoriale con verbale delle lezioni e firme dei docenti, matrice presenze giornaliere per studente (P, A, R, U, G), note disciplinari del mese e blocco formale di convalida per il coordinatore di classe e il dirigente scolastico.
+    - Unit test validato: `internal/classes/monthly_journal_pdf_test.go` (100% passati).
+  - **6. Planner Compiti & To-Do List dello Studente (Diario Digitale Interattivo)**:
+    - Frontend: Creato componente `src/components/Student/HomeworkPlanner.vue` sincronizzato con la tabella `student_agenda_completions` tramite gli endpoint `POST /api/v1/agenda/:id/complete` e `DELETE /api/v1/agenda/:id/complete`. Raggruppamento intelligente per scadenza (Oggi, Domani, Prossimi giorni, Scaduti), filtro per materia, barra di avanzamento del carico di studio e note personali persistenti.
+    - Integrato nella dashboard dello studente (`src/pages/student/Index.vue`) e come tab dedicato "Diario To-Do" in `src/pages/student/Homework.vue`.
+  - **7. Riepilogo Assenze & Previsione Limite 25% nel Portale Famiglia (DPR 122/2009)**:
+    - Frontend: Creato componente `src/components/Parent/AbsenceLimitWidget.vue` per il monitoraggio della soglia di frequenza minima del 75% per la validità dell'anno scolastico (art. 14, comma 7 D.P.R. 122/2009). Visualizza ore di assenza totali, soglia massima consentita (25% di 990h/1056h), ore residue disponibili, progress bar con indicatore di soglia critica a 25%, riepilogo ritardi/uscite e avvisi preventivi all'avvicinarsi del 20%.
+    - Integrato nella dashboard del genitore (`src/pages/parent/Index.vue`) e nel registro presenze (`src/pages/parent/Attendance.vue`).
+  - **8. Cloud-Native Kubernetes Probes Avanzate (`/live` e `/ready` con Deep Dependency Check)**:
+    - Backend: In `internal/handler/health.go`, implementati gli endpoint standard cloud-native `/live` (liveness probe) e `/ready` (readiness probe). Esegue controlli concorrenti con timeout stringenti sullo stato e la latenza in millisecondi di PostgreSQL e Redis, conteggio delle goroutine attive e memoria heap allocata (MB). Registrati sia su root che su API router.
+    - Unit test validato: `internal/handler/health_test.go` (100% passati).
+  - **9. Circuit Breaker per Integrazioni Esterne (Supabase Storage, SIDI, Webhook)**:
+    - Backend: Creato package `pkg/circuitbreaker/circuitbreaker.go` basato su `sony/gobreaker` con gestione degli stati Closed, Half-Open e Open, soglie di errore configurabili, timeout di ripristino e fail-fast immediato con `ErrCircuitOpen`. Integrato nel provider di storage Supabase (`pkg/upload/supabase.go`) per prevenire blocchi o rallentamenti dell'API in caso di degradazione del servizio esterno.
+    - Unit test validato: `pkg/circuitbreaker/circuitbreaker_test.go` (100% passati).
+  - **Validazione Completa & Regression Check**:
+    - **190/190** suite di unit test superate (**1228/1228 test passati**) sul frontend.
     - **0 errori, 0 warning** ESLint (`npm run lint`).
-    - **Backend**: `go vet ./...` (0 errori/warning), tutti gli unit test `go test ./internal/...` superati al 100%, e tutti i test di integrazione `go test ./tests/...` superati al 100%.
+    - **Tutte le 11 lingue** (`it-IT`, `en-US`, `es-ES`, `fr-FR`, `de-DE`, `ro-RO`, `sq-AL`, `ru-RU`, `zh-CN`, `uk-UA`, `ar-SA`) aggiornate e sincronizzate al 100% per tutte le nuove feature.
+    - **Backend**: `go vet ./...` (0 errori e 0 warning), tutti i test interni `go test ./internal/... ./pkg/...` superati al 100%, tutti i test di integrazione `go test ./tests/integration/...` superati al 100%.
+
 
 
 

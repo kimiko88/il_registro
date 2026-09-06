@@ -984,3 +984,10 @@ func (m *MockClassesRepository) BulkMigrateStudents(ctx context.Context, migrati
 	args := m.Called(ctx, migrations)
 	return args.Error(0)
 }
+func (m *MockClassesRepository) GetMonthlyJournalData(ctx context.Context, classID string, year, month int) (*classes.MonthlyJournalData, error) {
+	args := m.Called(ctx, classID, year, month)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*classes.MonthlyJournalData), args.Error(1)
+}

@@ -142,11 +142,38 @@ func (h *Handler) GetDashboardStats(c *gin.Context) {
 	c.JSON(http.StatusOK, stats)
 }
 
+func (h *Handler) GetPersonalRegisterPDF(c *gin.Context) {
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	teacherID := c.Query("teacher_id")
+	if teacherID == "" {
+		teacherID = userID
+	}
+
+	classID := c.Query("class_id")
+	subjectID := c.Query("subject_id")
+
+	pdfBytes, err := h.service.GeneratePersonalRegisterPDF(c.Request.Context(), teacherID, classID, subjectID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.Header("Content-Type", "application/pdf")
+	c.Header("Content-Disposition", "attachment; filename=registro_personale_docente.pdf")
+	c.Data(http.StatusOK, "application/pdf", pdfBytes)
+}
+
 func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	group := rg.Group("/teachers")
 	{
 		group.GET("", h.List)
 		group.GET("/dashboard/stats", h.GetDashboardStats)
+		group.GET("/registro-personale/pdf", h.GetPersonalRegisterPDF)
 		group.GET("/:id", h.Get)
 		group.GET("/:id/subjects", h.GetSubjects)
 		group.POST("/:id/subjects", h.AssignSubject)
