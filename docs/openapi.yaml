@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Registro Elettronico V2 API
   description: API REST per la gestione scolastica (Auth, Utenti, Voti, Presenze, Comunicazioni, Documenti, Colloqui, Agenda).
-  version: 0.7.0
+  version: 0.8.0
 servers:
   - url: http://localhost:8080/api/v1
     description: Local Development Server
@@ -289,6 +289,155 @@ paths:
           description: Lista segnalazioni e totale
         '403':
           description: Permessi insufficienti
+  /teachers/registro-personale/pdf:
+    get:
+      summary: Esporta Registro Personale del Docente in PDF
+      tags:
+        - Docenti
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: class_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: subject_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: File PDF del registro personale
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Parametri mancanti
+        '403':
+          description: Permessi insufficienti
+  /classes/{id}/giornale-mensile/pdf:
+    get:
+      summary: Esporta Giornale di Classe Mensile Ufficiale in PDF
+      tags:
+        - Classi
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: year
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: month
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: File PDF del giornale mensile
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '403':
+          description: Permessi insufficienti
+  /admin/data-integrity:
+    get:
+      summary: Verifica e diagnostica congruita dati scolastici
+      tags:
+        - Amministrazione
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Risultato scansione anomalie del database
+        '403':
+          description: Riservato ad amministratori e segreteria
+  /live:
+    get:
+      summary: Kubernetes Liveness Probe
+      tags:
+        - Sistema
+      responses:
+        '200':
+          description: Server attivo
+  /ready:
+    get:
+      summary: Kubernetes Deep Readiness Probe
+      tags:
+        - Sistema
+      responses:
+        '200':
+          description: Connessioni DB, Redis e runtime operative
+        '503':
+          description: Servizio non pronto o dipendenze non raggiungibili
+  /agenda/{id}/complete:
+    post:
+      summary: Contrassegna compito come completato
+      tags:
+        - Agenda
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Segnato come completato
+    delete:
+      summary: Rimuove completamento compito
+      tags:
+        - Agenda
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Completamento rimosso
+  /reports/dropout-risk:
+    get:
+      summary: Calcola indice di rischio dispersione scolastica
+      tags:
+        - Reportistica
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: class_id
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Indice rischio studenti e indicatori
+  /admin/gdpr/retention:
+    post:
+      summary: Esegue pseudonimizzazione dati studenti ai sensi del GDPR
+      tags:
+        - Amministrazione
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Dati pseudonimizzati con successo
 components:
   securitySchemes:
     BearerAuth:
