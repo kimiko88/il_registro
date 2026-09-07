@@ -493,6 +493,9 @@ func (r *PostgresRepository) GetMonthlyJournalData(ctx context.Context, classID 
 				studentOrder = append(studentOrder, sid)
 			}
 		}
+		if err := rows.Err(); err != nil {
+			return nil, err
+		}
 	}
 
 	// 3. Attendance across month
@@ -534,6 +537,9 @@ func (r *PostgresRepository) GetMonthlyJournalData(ctx context.Context, classID 
 				}
 			}
 		}
+		if err := rows.Err(); err != nil {
+			return nil, err
+		}
 	}
 
 	totalA := 0
@@ -568,6 +574,9 @@ func (r *PostgresRepository) GetMonthlyJournalData(ctx context.Context, classID 
 				data.Lessons = append(data.Lessons, l)
 			}
 		}
+		if err := rows.Err(); err != nil {
+			return nil, err
+		}
 	}
 
 	// 5. Disciplinary Notes in month
@@ -590,6 +599,9 @@ func (r *PostgresRepository) GetMonthlyJournalData(ctx context.Context, classID 
 			if err := rows.Scan(&n.Date, &n.StudentName, &n.TeacherName, &n.Description, &n.NoteType); err == nil {
 				data.DisciplinaryNotes = append(data.DisciplinaryNotes, n)
 			}
+		}
+		if err := rows.Err(); err != nil {
+			return nil, err
 		}
 	}
 
