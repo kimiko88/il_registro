@@ -2,7 +2,7 @@
 //  RegistroStudenteUITests.swift
 //  RegistroStudenteUITests
 //
-//  Created by Fabrizio Chimienti on 04/09/2026.
+//  Created by kimiko88 on 04/09/2026.
 //
 
 import XCTest

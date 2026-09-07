@@ -876,7 +876,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, defineAsyncComponent } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useTeacherStore } from '@/stores/teacher'
@@ -897,15 +897,14 @@ import FocusModeToggle from '@/components/Common/FocusModeToggle.vue'
 import OfflineBanner from '@/components/Common/OfflineBanner.vue'
 import PwaUpdateBanner from '@/components/Common/PwaUpdateBanner.vue'
 
-// Lazy loaded modal and drawer components for code-splitting & optimal initial bundle size
-const OnboardingTour = defineAsyncComponent(() => import('@/components/Common/OnboardingTour.vue'))
-const HelpDrawer = defineAsyncComponent(() => import('@/components/Common/HelpDrawer.vue'))
-const HelpCenterPanel = defineAsyncComponent(() => import('@/components/Common/HelpCenterPanel.vue'))
-const SessionReauthDialog = defineAsyncComponent(() => import('@/components/Common/SessionReauthDialog.vue'))
-const ReadingRuler = defineAsyncComponent(() => import('@/components/Common/ReadingRuler.vue'))
-const KeyboardShortcutsDialog = defineAsyncComponent(() => import('@/components/Common/KeyboardShortcutsDialog.vue'))
-const InactivityDialog = defineAsyncComponent(() => import('@/components/Common/InactivityDialog.vue'))
-const OutboxQueueDialog = defineAsyncComponent(() => import('@/components/Common/OutboxQueueDialog.vue'))
+import OnboardingTour from '@/components/Common/OnboardingTour.vue'
+import HelpDrawer from '@/components/Common/HelpDrawer.vue'
+import HelpCenterPanel from '@/components/Common/HelpCenterPanel.vue'
+import SessionReauthDialog from '@/components/Common/SessionReauthDialog.vue'
+import ReadingRuler from '@/components/Common/ReadingRuler.vue'
+import KeyboardShortcutsDialog from '@/components/Common/KeyboardShortcutsDialog.vue'
+import InactivityDialog from '@/components/Common/InactivityDialog.vue'
+import OutboxQueueDialog from '@/components/Common/OutboxQueueDialog.vue'
 import { useOutboxStore } from '@/stores/outbox'
 import { useNetworkStatus } from '@/composables/useNetworkStatus'
 import { useA11yAnnouncer } from '@/composables/useA11yAnnouncer'

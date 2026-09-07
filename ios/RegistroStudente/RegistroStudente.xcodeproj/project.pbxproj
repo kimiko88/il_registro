@@ -530,7 +530,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.fabriziochimienti.RegistroSegreteria;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kimiko88.RegistroSegreteria;
 				PRODUCT_NAME = RegistroSegreteria;
 				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -567,7 +567,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.fabriziochimienti.RegistroDocente;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kimiko88.RegistroDocente;
 				PRODUCT_NAME = RegistroDocente;
 				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -604,7 +604,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.fabriziochimienti.RegistroSegreteria;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kimiko88.RegistroSegreteria;
 				PRODUCT_NAME = RegistroSegreteria;
 				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -640,7 +640,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.fabriziochimienti.RegistroGenitore;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kimiko88.RegistroGenitore;
 				PRODUCT_NAME = RegistroGenitore;
 				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -676,7 +676,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.fabriziochimienti.RegistroGenitore;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kimiko88.RegistroGenitore;
 				PRODUCT_NAME = RegistroGenitore;
 				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -713,7 +713,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.fabriziochimienti.RegistroDocente;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kimiko88.RegistroDocente;
 				PRODUCT_NAME = RegistroDocente;
 				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -747,7 +747,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.fabriziochimienti.RegistroStudente;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kimiko88.RegistroStudente;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -780,7 +780,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.fabriziochimienti.RegistroStudente;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kimiko88.RegistroStudente;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -920,7 +920,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.fabriziochimienti.RegistroStudenteTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kimiko88.RegistroStudenteTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -941,7 +941,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.fabriziochimienti.RegistroStudenteTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kimiko88.RegistroStudenteTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -960,7 +960,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.fabriziochimienti.RegistroStudenteUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kimiko88.RegistroStudenteUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -979,7 +979,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.fabriziochimienti.RegistroStudenteUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kimiko88.RegistroStudenteUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
