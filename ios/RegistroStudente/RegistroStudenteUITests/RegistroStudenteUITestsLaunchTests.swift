@@ -3,7 +3,6 @@
 //  RegistroStudenteUITests
 //
 //  Created by kimiko88 on 04/09/2026.
-//
 
 import XCTest
 
